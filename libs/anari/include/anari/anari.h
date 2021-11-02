@@ -115,7 +115,7 @@ typedef void _ANARIObject;
 typedef _ANARIObject *ANARIObject, *ANARILibrary, *ANARIDevice, *ANARICamera,
     *ANARIData, *ANARIArray, *ANARIArray1D, *ANARIArray2D, *ANARIArray3D,
     *ANARIFrame, *ANARIGeometry, *ANARIGroup, *ANARIInstance,
-    *ANARILight, *ANARIMaterial, *ANARIObject, *ANARIRenderer, *ANARISampler,
+    *ANARILight, *ANARIMaterial, *ANARIRenderer, *ANARISampler,
     *ANARISurface, *ANARISpatialField, *ANARIVolume, *ANARIWorld;
 #endif
 
