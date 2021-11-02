@@ -66,8 +66,6 @@ struct Array1D : public Array
 
   size_t size() const;
 
-  void rangeUpdated(size_t start, size_t count);
-
   void privatize() override;
 
  private:
@@ -89,8 +87,6 @@ struct Array2D : public Array
 
   size_t size(int dim) const;
   uvec2 size() const;
-
-  void rangeUpdated(size_t start1, size_t count1, size_t start2, size_t count2);
 
   void privatize() override;
 
@@ -116,13 +112,6 @@ struct Array3D : public Array
   size_t size(int dim) const;
   uvec3 size() const;
 
-  void rangeUpdated(size_t start1,
-      size_t count1,
-      size_t start2,
-      size_t count2,
-      size_t start3,
-      size_t count3);
-
   void privatize() override;
 
  private:
@@ -142,8 +131,6 @@ struct ObjectArray : public Array
   ArrayShape shape() const override;
 
   size_t size() const;
-
-  void rangeUpdated(size_t start, size_t count);
 
   void privatize() override;
 

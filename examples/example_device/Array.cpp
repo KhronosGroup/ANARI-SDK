@@ -92,11 +92,6 @@ size_t Array1D::size() const
   return m_size;
 }
 
-void Array1D::rangeUpdated(size_t start, size_t count)
-{
-  throw std::runtime_error("not implemented");
-}
-
 void Array1D::privatize()
 {
   makePrivatizedCopy(size());
@@ -134,12 +129,6 @@ size_t Array2D::size(int dim) const
 uvec2 Array2D::size() const
 {
   return uvec2(uint32_t(size(0)), uint32_t(size(1)));
-}
-
-void Array2D::rangeUpdated(
-    size_t start1, size_t count1, size_t start2, size_t count2)
-{
-  throw std::runtime_error("not implemented");
 }
 
 void Array2D::privatize()
@@ -182,16 +171,6 @@ size_t Array3D::size(int dim) const
 uvec3 Array3D::size() const
 {
   return uvec3(uint32_t(size(0)), uint32_t(size(1)), uint32_t(size(2)));
-}
-
-void Array3D::rangeUpdated(size_t start1,
-    size_t count1,
-    size_t start2,
-    size_t count2,
-    size_t start3,
-    size_t count3)
-{
-  throw std::runtime_error("not implemented");
 }
 
 void Array3D::privatize()
@@ -238,11 +217,6 @@ ArrayShape ObjectArray::shape() const
 size_t ObjectArray::size() const
 {
   return m_handleArray.size();
-}
-
-void ObjectArray::rangeUpdated(size_t start, size_t count)
-{
-  throw std::runtime_error("not implemented");
 }
 
 void ObjectArray::privatize()

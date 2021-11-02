@@ -283,33 +283,6 @@ void ExampleDevice::unmapArray(ANARIArray a)
   referenceFromHandle<Array>(a).unmap();
 }
 
-void ExampleDevice::arrayRangeUpdated1D(
-    ANARIArray1D a, uint64_t start, uint64_t count)
-{
-  referenceFromHandle<Array1D>(a).rangeUpdated(start, count);
-}
-
-void ExampleDevice::arrayRangeUpdated2D(ANARIArray2D a,
-    uint64_t startIndex1,
-    uint64_t startIndex2,
-    uint64_t elementCount1,
-    uint64_t elementCount2)
-{
-  throw std::runtime_error("not implemented");
-}
-
-void ExampleDevice::arrayRangeUpdated3D(ANARIArray3D a,
-    uint64_t start1,
-    uint64_t start2,
-    uint64_t start3,
-    uint64_t count1,
-    uint64_t count2,
-    uint64_t count3)
-{
-  referenceFromHandle<Array3D>(a).rangeUpdated(
-      start1, count1, start2, count2, start3, count3);
-}
-
 // Renderable Objects /////////////////////////////////////////////////////////
 
 ANARILight ExampleDevice::newLight(const char *type)

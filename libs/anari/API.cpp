@@ -291,46 +291,6 @@ extern "C" void anariUnmapArray(ANARIDevice d, ANARIArray a) ANARI_CATCH_BEGIN
 }
 ANARI_CATCH_END_NORETURN()
 
-extern "C" void anariArrayRangeUpdated1D(ANARIDevice d,
-    ANARIArray1D a,
-    uint64_t startIndex1,
-    uint64_t elementCount1) ANARI_CATCH_BEGIN
-{
-  deviceRef(d).arrayRangeUpdated1D(a, startIndex1, elementCount1);
-}
-ANARI_CATCH_END_NORETURN()
-
-extern "C" void anariArrayRangeUpdated2D(ANARIDevice d,
-    ANARIArray2D a,
-    uint64_t startIndex1,
-    uint64_t startIndex2,
-    uint64_t elementCount1,
-    uint64_t elementCount2) ANARI_CATCH_BEGIN
-{
-  deviceRef(d).arrayRangeUpdated2D(
-      a, startIndex1, startIndex2, elementCount1, elementCount2);
-}
-ANARI_CATCH_END_NORETURN()
-
-extern "C" void anariArrayRangeUpdated3D(ANARIDevice d,
-    ANARIArray3D a,
-    uint64_t startIndex1,
-    uint64_t startIndex2,
-    uint64_t startIndex3,
-    uint64_t elementCount1,
-    uint64_t elementCount2,
-    uint64_t elementCount3) ANARI_CATCH_BEGIN
-{
-  deviceRef(d).arrayRangeUpdated3D(a,
-      startIndex1,
-      startIndex2,
-      startIndex3,
-      elementCount1,
-      elementCount2,
-      elementCount3);
-}
-ANARI_CATCH_END_NORETURN()
-
 ///////////////////////////////////////////////////////////////////////////////
 // Renderable Objects /////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////

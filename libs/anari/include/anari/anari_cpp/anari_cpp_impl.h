@@ -313,7 +313,7 @@ inline Array3D newArray(Device d,
       d, nullptr, nullptr, nullptr, type, numItems1, numItems2, numItems3);
 }
 
-// Updates //
+// Data Updates //
 
 inline void *map(Device d, Array a)
 {
@@ -323,42 +323,6 @@ inline void *map(Device d, Array a)
 inline void unmap(Device d, Array a)
 {
   anariUnmapArray(d, a);
-}
-
-inline void rangeUpdated(
-    Device d, Array1D arr, uint64_t startIndex1, uint64_t elementCount1)
-{
-  anariArrayRangeUpdated1D(d, arr, startIndex1, elementCount1);
-}
-
-inline void rangeUpdated(Device d,
-    Array2D arr,
-    uint64_t startIndex1,
-    uint64_t startIndex2,
-    uint64_t elementCount1,
-    uint64_t elementCount2)
-{
-  anariArrayRangeUpdated2D(
-      d, arr, startIndex1, startIndex2, elementCount1, elementCount2);
-}
-
-inline void rangeUpdated(Device d,
-    Array3D arr,
-    uint64_t startIndex1,
-    uint64_t startIndex2,
-    uint64_t startIndex3,
-    uint64_t elementCount1,
-    uint64_t elementCount2,
-    uint64_t elementCount3)
-{
-  anariArrayRangeUpdated3D(d,
-      arr,
-      startIndex1,
-      startIndex2,
-      startIndex3,
-      elementCount1,
-      elementCount2,
-      elementCount3);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

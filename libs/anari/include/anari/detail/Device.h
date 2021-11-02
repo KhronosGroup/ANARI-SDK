@@ -82,23 +82,6 @@ struct Device
   ANARI_INTERFACE virtual void *mapArray(ANARIArray) = 0;
   ANARI_INTERFACE virtual void unmapArray(ANARIArray) = 0;
 
-  ANARI_INTERFACE virtual void arrayRangeUpdated1D(
-      ANARIArray1D, uint64_t startIndex1, uint64_t elementCount1) = 0;
-
-  ANARI_INTERFACE virtual void arrayRangeUpdated2D(ANARIArray2D,
-      uint64_t startIndex1,
-      uint64_t startIndex2,
-      uint64_t elementCount1,
-      uint64_t elementCount2) = 0;
-
-  ANARI_INTERFACE virtual void arrayRangeUpdated3D(ANARIArray3D,
-      uint64_t startIndex1,
-      uint64_t startIndex2,
-      uint64_t startIndex3,
-      uint64_t elementCount1,
-      uint64_t elementCount2,
-      uint64_t elementCount3) = 0;
-
   // Renderable Objects ///////////////////////////////////////////////////////
 
   ANARI_INTERFACE virtual ANARILight newLight(const char *type) = 0;

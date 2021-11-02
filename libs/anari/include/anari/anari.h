@@ -187,25 +187,6 @@ ANARI_INTERFACE ANARIArray3D anariNewArray3D(ANARIDevice,
 ANARI_INTERFACE void *anariMapArray(ANARIDevice, ANARIArray);
 ANARI_INTERFACE void anariUnmapArray(ANARIDevice, ANARIArray);
 
-ANARI_INTERFACE void anariArrayRangeUpdated1D(
-    ANARIDevice, ANARIArray1D, uint64_t startIndex1, uint64_t elementCount1);
-
-ANARI_INTERFACE void anariArrayRangeUpdated2D(ANARIDevice,
-    ANARIArray2D,
-    uint64_t startIndex1,
-    uint64_t startIndex2,
-    uint64_t elementCount1,
-    uint64_t elementCount2);
-
-ANARI_INTERFACE void anariArrayRangeUpdated3D(ANARIDevice,
-    ANARIArray3D,
-    uint64_t startIndex1,
-    uint64_t startIndex2,
-    uint64_t startIndex3,
-    uint64_t elementCount1,
-    uint64_t elementCount2,
-    uint64_t elementCount3);
-
 // Renderable Objects /////////////////////////////////////////////////////////
 
 ANARI_INTERFACE ANARILight anariNewLight(ANARIDevice, const char *type);

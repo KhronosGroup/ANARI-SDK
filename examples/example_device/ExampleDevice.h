@@ -70,23 +70,6 @@ struct ExampleDevice : public Device,
   void *mapArray(ANARIArray) override;
   void unmapArray(ANARIArray) override;
 
-  void arrayRangeUpdated1D(
-      ANARIArray1D, uint64_t startIndex1, uint64_t elementCount1) override;
-
-  void arrayRangeUpdated2D(ANARIArray2D,
-      uint64_t startIndex1,
-      uint64_t startIndex2,
-      uint64_t elementCount1,
-      uint64_t elementCount2) override;
-
-  void arrayRangeUpdated3D(ANARIArray3D,
-      uint64_t startIndex1,
-      uint64_t startIndex2,
-      uint64_t startIndex3,
-      uint64_t elementCount1,
-      uint64_t elementCount2,
-      uint64_t elementCount3) override;
-
   // Renderable Objects ///////////////////////////////////////////////////////
 
   ANARILight newLight(const char *type) override;

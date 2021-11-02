@@ -149,29 +149,10 @@ Array3D newArray(Device d,
     uint64_t numItems2,
     uint64_t numItems3);
 
-// Updates
+// Data Updates
 
 void *map(Device, Array);
 void unmap(Device, Array);
-
-void rangeUpdated(
-    Device, Array1D, uint64_t startIndex1, uint64_t elementCount1);
-
-void rangeUpdated(Device,
-    Array2D,
-    uint64_t startIndex1,
-    uint64_t startIndex2,
-    uint64_t elementCount1,
-    uint64_t elementCount2);
-
-void rangeUpdated(Device,
-    Array3D,
-    uint64_t startIndex1,
-    uint64_t startIndex2,
-    uint64_t startIndex3,
-    uint64_t elementCount1,
-    uint64_t elementCount2,
-    uint64_t elementCount3);
 
 // Object + Parameter Lifetime Management //
 
