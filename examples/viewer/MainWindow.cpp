@@ -174,6 +174,8 @@ MainWindow::MainWindow(const glm::uvec2 &windowSize)
   glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 2);
   glfwWindowHint (GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
   glfwWindowHint (GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  // On retina display, render with low resolution and scale up
+  glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_FALSE);
 #endif
 
   // Request a window that is IEC standard RGB color space capable
