@@ -168,6 +168,14 @@ MainWindow::MainWindow(const glm::uvec2 &windowSize)
     throw std::runtime_error("Failed to initialize GLFW!");
   }
 
+#ifdef __APPLE__
+  // On macOS, make sure we get a 3.2 core context
+  glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 2);
+  glfwWindowHint (GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+  glfwWindowHint (GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+#endif
+
   // Request a window that is IEC standard RGB color space capable
   glfwWindowHint(GLFW_SRGB_CAPABLE, GLFW_TRUE);
 
