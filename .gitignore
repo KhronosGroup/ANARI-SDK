@@ -1,0 +1,6 @@
+_*/
+*vscode*
+build/
+cmake-build-*
+docs/gen/*
+docs/out/*
