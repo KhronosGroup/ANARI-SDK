@@ -121,7 +121,7 @@ struct ExampleDevice : public Device,
 
   // FrameBuffer Manipulation /////////////////////////////////////////////////
 
-  ANARIFrame frameCreate() override;
+  ANARIFrame newFrame() override;
 
   const void *frameBufferMap(ANARIFrame fb, const char *channel) override;
 

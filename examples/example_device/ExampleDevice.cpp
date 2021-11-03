@@ -428,7 +428,7 @@ void ExampleDevice::retain(ANARIObject o)
 
 // Frame Manipulation /////////////////////////////////////////////////////////
 
-ANARIFrame ExampleDevice::frameCreate()
+ANARIFrame ExampleDevice::newFrame()
 {
   return createObjectForAPI<Frame, ANARIFrame>();
 }

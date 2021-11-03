@@ -138,7 +138,7 @@ struct Device
 
   // FrameBuffer Manipulation /////////////////////////////////////////////////
 
-  ANARI_INTERFACE virtual ANARIFrame frameCreate() = 0;
+  ANARI_INTERFACE virtual ANARIFrame newFrame() = 0;
 
   ANARI_INTERFACE virtual const void *frameBufferMap(
       ANARIFrame fb, const char *channel) = 0;

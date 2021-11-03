@@ -471,7 +471,7 @@ ANARI_CATCH_END(0)
 
 extern "C" ANARIFrame anariNewFrame(ANARIDevice d) ANARI_CATCH_BEGIN
 {
-  return deviceRef(d).frameCreate();
+  return deviceRef(d).newFrame();
 }
 ANARI_CATCH_END(nullptr)
 
