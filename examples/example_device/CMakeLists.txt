@@ -5,6 +5,16 @@ set(CMAKE_CXX_STANDARD 17)
 
 project(anari_library_example LANGUAGES CXX)
 
+if(APPLE)
+  if(CMAKE_C_COMPILER_ID MATCHES "Clang")
+    set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp")
+    set(OpenMP_C_LIB_NAMES "omp")
+  endif()
+  if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp")
+    set(OpenMP_CXX_LIB_NAMES "omp")
+  endif()
+endif()
 find_package(OpenMP)
 
 if(EXISTS ${CMAKE_SOURCE_DIR}/.git AND IS_DIRECTORY ${CMAKE_SOURCE_DIR}/.git)
