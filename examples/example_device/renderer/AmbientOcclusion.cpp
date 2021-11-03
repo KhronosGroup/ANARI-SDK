@@ -35,13 +35,9 @@ static void rayMarchVolume(const Ray &ray,
     if (!std::isnan(s)) {
       vec3 c = model->colorOf(s);
       float o = model->opacityOf(s);
-      float co = glm::clamp(o * stepSize, 0.f, 1.f);
 
-      c *= co;
-      o *= co;
-
-      color += (1.f - opacity) * c;
-      opacity += (1.f - opacity) * o;
+      color += stepSize * (1.f - opacity) * c * o;
+      opacity += stepSize * (1.f - opacity) * o;
     }
 
     currentInterval.lower += stepSize;
@@ -95,7 +91,9 @@ RenderedSample AmbientOcclusion::renderSample(Ray ray, const World &world) const
 
   int numVolumesHit = 0;
 
-  while (opacity < 0.99f) {
+  constexpr float MaxOpacity = 0.99f;
+
+  while (opacity < MaxOpacity) {
     auto hit = closestHit(ray, world);
 
     if (hit)
@@ -122,9 +120,13 @@ RenderedSample AmbientOcclusion::renderSample(Ray ray, const World &world) const
       rayMarchVolume(ray, *hit, m_volumeStepFactor, superColor, opacity);
       ray.t.lower = hit->t.upper + 1e-6f;
       ray.skipVolumes = true;
+      if (opacity >= MaxOpacity) { // as we won't enter the loop again
+        superColor += vec3((1.f - opacity) * m_bgColor);
+        opacity += (1.f - opacity) * m_bgColor.w;
+      }
     } else {
       superColor += vec3((1.f - opacity) * m_bgColor);
-      opacity = 1.f;
+      opacity += (1.f - opacity) * m_bgColor.w;
       break;
     }
   }
