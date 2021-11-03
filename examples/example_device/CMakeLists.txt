@@ -15,7 +15,10 @@ if(APPLE)
     set(OpenMP_CXX_LIB_NAMES "omp")
   endif()
 endif()
-find_package(OpenMP)
+
+if (NOT WIN32)
+  find_package(OpenMP)
+endif()
 
 if(EXISTS ${CMAKE_SOURCE_DIR}/.git AND IS_DIRECTORY ${CMAKE_SOURCE_DIR}/.git)
   find_package(Git REQUIRED)
@@ -76,8 +79,11 @@ PUBLIC
   anari_utilities
 PRIVATE
   glm
-  $<$<BOOL:${OpenMP_CXX_FOUND}>:OpenMP::OpenMP_CXX>
 )
+
+if (NOT WIN32 AND TARGET OpenMP::OpenMP_CXX)
+  target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX)
+endif()
 
 target_compile_definitions(${PROJECT_NAME}
 PRIVATE
