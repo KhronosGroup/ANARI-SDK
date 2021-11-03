@@ -7,13 +7,28 @@ This repository contains the source for the ANARI API SDK. This includes:
 
 - [Front-end library](libs/anari)
 - [API utilties and helpers](libs/anari_utilities) (mostly for implementations)
-- [Example device implementation](examples/example_device)
+- [Example device implementation](examples/example_device) (not for production use)
 - [Example applications](examples/)
 - [Interactive sample viewer](examples/viewer)
 - [Unit tests](tests/unit)
 - [Regression tests](tests/regression)
 
-### Building the SDK
+The 1.0 provisional ANARI specification can be found on the Khronos website
+[here](https://www.khronos.org/registry/ANARI/).
+
+Please note that the example device, sample applications, and tests do not yet
+fully cover the entire specification and are still a work-in-progress. These
+are expected to be completed in full on or before the official 1.0 ANARI
+specification release.
+
+The SDK is tested on Linux, but is also intended to be usable on other operating
+systems such as macOS and Windows.
+
+If you find any problems with the SDK, please do not hesitate to
+[open an issue](https://github.com/KhronosGroup/ANARI-SDK/issues/new) on this
+project!
+
+## Building the SDK
 
 The repository uses CMake 3.11+ to build the library, example implementation,
 sample apps, and tests. For example, to build (must be in a separate directory
@@ -41,7 +56,7 @@ CMake. This can be invoked from your build directory with (on any platform):
 % cmake --build . -t install
 ```
 
-### Using the SDK after install with CMake
+## Using the SDK after install with CMake
 
 The ANARI SDK exports CMake targets for the main front-end library and utilities
 helper library. The targets which are exported are as follows:
@@ -53,7 +68,7 @@ These targets can be found with CMake via `find_package(anari)`. There is an
 example provided to demonstrate what consuming the ANARI SDK with CMake looks
 like [here](examples/cmake_find_anari).
 
-### Running the examples
+## Running the examples
 
 The basic tutorial app (built by default) uses the `example` device as an
 example, which can be run with:
@@ -77,3 +92,12 @@ be loaded on the command line directly.
 The regression test binary used to render the test scenes without a window
 (results saved out as PNG images) uses the same mechanisms as the viewer to
 select/override which library is loaded at runtime.
+
+### Using the provided ExampleDevice implementation
+
+The [example device implementation](examples/example_device) is provided as a
+starting point for users exploring the SDK and implementors to see how the API
+might be implemented. It currently uses OpenMP multi-threading for
+simplicity and is not built to be a robust and fast rendering engine. Users
+should look to use hardware-optimized ANARI implementations which are shipped
+independently from the SDK.
