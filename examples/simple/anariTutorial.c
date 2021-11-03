@@ -14,6 +14,7 @@
 #include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 // anari
 #include "anari/anari.h"
@@ -29,7 +30,7 @@ void writePPM(
     return;
   }
   fprintf(file, "P6\n%i %i\n255\n", size_x, size_y);
-  unsigned char *out = (unsigned char *)alloca(3 * size_x);
+  unsigned char *out = (unsigned char *)malloc(3 * size_x);
   for (int y = 0; y < size_y; y++) {
     const unsigned char *in =
         (const unsigned char *)&pixel[(size_y - 1 - y) * size_x];
@@ -42,6 +43,7 @@ void writePPM(
   }
   fprintf(file, "\n");
   fclose(file);
+  free(out);
 }
 
 /******************************************************************/
@@ -304,11 +306,11 @@ int main(int argc, const char **argv)
 
   // access frame and write its content as PNG file
   const uint32_t *fb = (uint32_t *)anariMapFrame(dev, frame, "color");
-  writePPM("firstFrame.png", imgSize[0], imgSize[1], fb);
+  writePPM("firstFrame.ppm", imgSize[0], imgSize[1], fb);
   anariUnmapFrame(dev, frame, "color");
 
   printf("done!\n");
-  printf("rendering 10 accumulated frames to accumulatedFrame.png...");
+  printf("rendering 10 accumulated frames to accumulatedFrame.ppm...");
 
   // render 10 more frames, which are accumulated to result in a better
   //   converged image
@@ -318,7 +320,7 @@ int main(int argc, const char **argv)
   }
 
   fb = (uint32_t *)anariMapFrame(dev, frame, "color");
-  writePPM("accumulatedFrame.png", imgSize[0], imgSize[1], fb);
+  writePPM("accumulatedFrame.ppm", imgSize[0], imgSize[1], fb);
   anariUnmapFrame(dev, frame, "color");
 
   printf("done!\n");
