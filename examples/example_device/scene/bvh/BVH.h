@@ -63,8 +63,6 @@ struct BVH
   size_t node_count = 0;
 };
 
-static_assert(sizeof(BVH::Node) == 32, "BVH::Node is too big!");
-
 // Inlined definitions ////////////////////////////////////////////////////////
 
 BVH_ALWAYS_INLINE void BVH::Node::setBounds(const box3 &bbox)
