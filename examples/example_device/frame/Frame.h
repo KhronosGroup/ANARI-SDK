@@ -27,7 +27,7 @@ struct Frame : public Object
       void *ptr,
       ANARIWaitMask mask) override;
 
-  void commit();
+  void commit() override;
   void *mapColorBuffer();
   float *mapDepthBuffer();
 
