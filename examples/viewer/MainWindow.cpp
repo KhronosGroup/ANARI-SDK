@@ -10,7 +10,7 @@
 #include <unordered_map>
 // imgui headers
 #include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl2.h"
+#include "imgui_impl_opengl3.h"
 #include "imgui_stdlib.h"
 // stb_image
 #include "stb_image_write.h"
@@ -231,7 +231,7 @@ MainWindow::MainWindow(const glm::uvec2 &windowSize)
   ImGui::CreateContext();
   ImGui::StyleColorsDark();
   ImGui_ImplGlfw_InitForOpenGL(g_window, true);
-  ImGui_ImplOpenGL2_Init();
+  ImGui_ImplOpenGL3_Init();
 
   ImGuiIO &io = ImGui::GetIO();
   io.FontGlobalScale = 1.25f;
@@ -356,7 +356,7 @@ void MainWindow::mainLoop()
     while (!glfwWindowShouldClose(g_window) && !g_quitNextFrame) {
       // Update the User-Interface
       glfwPollEvents();
-      ImGui_ImplOpenGL2_NewFrame();
+      ImGui_ImplOpenGL3_NewFrame();
       ImGui_ImplGlfw_NewFrame();
       ImGui::NewFrame();
       buildUI();
@@ -372,7 +372,7 @@ void MainWindow::mainLoop()
     while (!glfwWindowShouldClose(g_window) && !g_quitNextFrame) {
       // Update the User-Interface
       glfwPollEvents();
-      ImGui_ImplOpenGL2_NewFrame();
+      ImGui_ImplOpenGL3_NewFrame();
       ImGui_ImplGlfw_NewFrame();
       ImGui::NewFrame();
       buildUI();
@@ -508,7 +508,7 @@ void MainWindow::display()
       GL_NEAREST);
 
   ImGui::Render();
-  ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
+  ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
   glfwSwapBuffers(g_window);
 }
@@ -618,7 +618,7 @@ void MainWindow::cleanup()
   anariRelease(device, camera);
   anariRelease(device, frame);
 
-  ImGui_ImplOpenGL2_Shutdown();
+  ImGui_ImplOpenGL3_Shutdown();
   ImGui_ImplGlfw_Shutdown();
   ImGui::DestroyContext();
 

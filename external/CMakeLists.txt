@@ -59,12 +59,13 @@ add_library(imgui_glfw OBJECT
   ${imgui_src_LOCATION}/imgui_widgets.cpp
 
   ${imgui_src_LOCATION}/backends/imgui_impl_glfw.cpp
-  ${imgui_src_LOCATION}/backends/imgui_impl_opengl2.cpp
+  ${imgui_src_LOCATION}/backends/imgui_impl_opengl3.cpp
 
   ${imgui_src_LOCATION}/misc/cpp/imgui_stdlib.cpp
 )
 
-target_link_libraries(imgui_glfw PUBLIC glfw OpenGL::GL)
+target_link_libraries(imgui_glfw PUBLIC glfw OpenGL::GL glad)
+target_compile_definitions(imgui_glfw PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLAD)
 
 target_include_directories(imgui_glfw
 PUBLIC
