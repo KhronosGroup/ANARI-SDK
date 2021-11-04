@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Note that this version of the tutorial directly links to
-// libanari_library_reference, which exports a function to directly
-// construct the "reference" device. This lets you avoid the need to load a
+// libanari_library_example, which exports a function to directly
+// construct the "example" devic. This lets you avoid the need to load a
 // module first (which opens a shared library at runtime). Thus the only
 // difference between this and 'anariTutorial.c' is how the device is created.
 
@@ -11,7 +11,7 @@
 #include <stdint.h>
 #include <stdio.h>
 // anari
-#include "anari/devices/reference.h"
+#include "anari/devices/example.h"
 // stb_image
 #include "stb_image_write.h"
 
