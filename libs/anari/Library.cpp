@@ -125,8 +125,10 @@ void *loadANARILibrary(const std::string &libName)
   std::string errorMessage;
 
   void *lib = loadLibrary(libName, false, errorMessage);
-  if (!lib)
+  if (!lib) {
+    errorMessage = "(unanchored library load attempt failed)\n";
     lib = loadLibrary(libName, true, errorMessage);
+  }
 
   if (!lib)
     throw std::runtime_error(errorMessage);
