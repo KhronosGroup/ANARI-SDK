@@ -20,6 +20,8 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 set(CMAKE_BUILD_TYPE_INIT "Release")
 
+set(CMAKE_INSTALL_RPATH "$ORIGIN")
+
 ## Establish project
 
 project(anari VERSION 1.0.0 LANGUAGES C CXX)
