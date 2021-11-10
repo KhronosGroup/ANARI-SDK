@@ -157,9 +157,9 @@ void unmap(Device, Array);
 // Object + Parameter Lifetime Management //
 
 template <typename T>
-void setParameter(Device d, Object o, const char *name, T v);
+void setParameter(Device d, Object o, const char *name, T &&v);
 
-void setParameter(Device d, Object o, const char *name, const std::string &v);
+void setParameter(Device d, Object o, const char *name, std::string v);
 
 template <typename T>
 void setAndReleaseParameter(Device d, Object o, const char *name, const T &v);

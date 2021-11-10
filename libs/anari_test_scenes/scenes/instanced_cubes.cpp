@@ -114,8 +114,13 @@ void InstancedCubes::commit()
         auto rot_x = glm::rotate(glm::mat4(1.f), float(x), glm::vec3(1, 0, 0));
         auto rot_y = glm::rotate(glm::mat4(1.f), float(y), glm::vec3(0, 1, 0));
         auto rot_z = glm::rotate(glm::mat4(1.f), float(z), glm::vec3(0, 0, 1));
-        glm::mat4x3 xfm = tl * rot_x * rot_y * rot_z;
-        anari::setParameter(d, inst, "transform", xfm);
+
+        { // NOTE: exercise anari::setParameter with C-array type
+          glm::mat4x3 _xfm = tl * rot_x * rot_y * rot_z;
+          float xfm[12];
+          std::memcpy(xfm, &_xfm, sizeof(_xfm));
+          anari::setParameter(d, inst, "transform", xfm);
+        }
 
         anari::setParameter(d, inst, "group", group);
         anari::commit(d, inst);

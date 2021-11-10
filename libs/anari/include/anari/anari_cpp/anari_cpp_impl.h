@@ -330,24 +330,27 @@ inline void unmap(Device d, Array a)
 ///////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-inline void setParameter(ANARIDevice d, ANARIObject o, const char *name, T v)
+inline void setParameter(ANARIDevice d, ANARIObject o, const char *name, T &&v)
 {
-  constexpr bool validType = ANARITypeFor<T>::value != ANARI_UNKNOWN;
-  constexpr bool isString = ANARITypeFor<T>::value == ANARI_STRING;
-  static_assert(validType,
+  using TYPE = typename std::remove_reference<T>::type;
+  constexpr bool validType = ANARITypeFor<TYPE>::value != ANARI_UNKNOWN;
+  constexpr bool isStringLiteral = std::is_convertible<T, const char *>::value;
+  constexpr bool isVoidPtr = ANARITypeFor<TYPE>::value == ANARI_VOID_POINTER;
+  static_assert(validType || isStringLiteral,
       "Only types corresponding to ANARIDataType values can be set "
       "as parameters on ANARI objects.");
-  if (isString)
-    anariSetParameter(d, o, name, ANARI_STRING, *((const char **)&v));
+  if (isStringLiteral)
+    anariSetParameter(d, o, name, ANARI_STRING, (const char *)&v);
+  else if (isVoidPtr)
+    anariSetParameter(d, o, name, ANARI_VOID_POINTER, *((const void **)&v));
   else
-    anariSetParameter(d, o, name, ANARITypeFor<T>::value, &v);
+    anariSetParameter(d, o, name, ANARITypeFor<TYPE>::value, &v);
 }
 
-template <>
-inline void setParameter<void *>(
-    ANARIDevice d, ANARIObject o, const char *name, void *v)
+inline void setParameter(
+    ANARIDevice d, ANARIObject o, const char *name, std::string v)
 {
-  anariSetParameter(d, o, name, ANARI_VOID_POINTER, v);
+  setParameter(d, o, name, v.c_str());
 }
 
 template <typename T>
@@ -358,12 +361,6 @@ inline void setAndReleaseParameter(
       "anari::setAndReleaseParameter() can only set ANARI objects as parameters");
   setParameter(d, o, name, v);
   anariRelease(d, v);
-}
-
-inline void setParameter(
-    ANARIDevice d, ANARIObject o, const char *name, const std::string &v)
-{
-  setParameter(d, o, name, v.c_str());
 }
 
 inline void unsetParameter(Device d, Object o, const char *id)

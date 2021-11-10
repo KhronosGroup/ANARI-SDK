@@ -21,13 +21,26 @@ struct ANARITypeFor
   struct ANARITypeFor<type>                                                    \
   {                                                                            \
     static constexpr int value = anari_type;                                   \
+  };                                                                           \
+                                                                               \
+  template <>                                                                  \
+  struct ANARITypeFor<const type>                                              \
+  {                                                                            \
+    static constexpr int value = anari_type;                                   \
+  };
+
+#define ANARI_TYPEFOR_SPECIALIZATION_STRING(type, anari_type)                  \
+  template <>                                                                  \
+  struct ANARITypeFor<type>                                                    \
+  {                                                                            \
+    static constexpr int value = anari_type;                                   \
   };
 
 ANARI_TYPEFOR_SPECIALIZATION(void *, ANARI_VOID_POINTER);
-ANARI_TYPEFOR_SPECIALIZATION(char *, ANARI_STRING);
-ANARI_TYPEFOR_SPECIALIZATION(char[], ANARI_STRING);
-ANARI_TYPEFOR_SPECIALIZATION(const char *, ANARI_STRING);
-ANARI_TYPEFOR_SPECIALIZATION(const char[], ANARI_STRING);
+ANARI_TYPEFOR_SPECIALIZATION_STRING(char *, ANARI_STRING);
+ANARI_TYPEFOR_SPECIALIZATION_STRING(char[], ANARI_STRING);
+ANARI_TYPEFOR_SPECIALIZATION_STRING(const char *, ANARI_STRING);
+ANARI_TYPEFOR_SPECIALIZATION_STRING(const char[], ANARI_STRING);
 ANARI_TYPEFOR_SPECIALIZATION(bool, ANARI_BOOL);
 ANARI_TYPEFOR_SPECIALIZATION(signed char, ANARI_INT8);
 ANARI_TYPEFOR_SPECIALIZATION(unsigned char, ANARI_UINT8);
@@ -57,9 +70,11 @@ ANARI_TYPEFOR_SPECIALIZATION(long long[4], ANARI_INT64_VEC4);
 ANARI_TYPEFOR_SPECIALIZATION(unsigned long long[2], ANARI_UINT64_VEC2);
 ANARI_TYPEFOR_SPECIALIZATION(unsigned long long[3], ANARI_UINT64_VEC3);
 ANARI_TYPEFOR_SPECIALIZATION(unsigned long long[4], ANARI_UINT64_VEC4);
+
 ANARI_TYPEFOR_SPECIALIZATION(float[2], ANARI_FLOAT32_VEC2);
 ANARI_TYPEFOR_SPECIALIZATION(float[3], ANARI_FLOAT32_VEC3);
 ANARI_TYPEFOR_SPECIALIZATION(float[4], ANARI_FLOAT32_VEC4);
+ANARI_TYPEFOR_SPECIALIZATION(float[12], ANARI_FLOAT32_MAT3x4);
 
 ANARI_TYPEFOR_SPECIALIZATION(ANARILibrary, ANARI_LIBRARY);
 ANARI_TYPEFOR_SPECIALIZATION(ANARIObject, ANARI_OBJECT);
@@ -88,7 +103,12 @@ ANARI_TYPEFOR_SPECIALIZATION(
 
 ANARI_TYPEFOR_SPECIALIZATION(ANARIDataType, ANARI_DATA_TYPE);
 
-#define ANARI_TYPEFOR_DEFINITION(type) constexpr int ANARITypeFor<type>::value
+#define ANARI_TYPEFOR_DEFINITION(type)                                         \
+  constexpr int ANARITypeFor<type>::value;                                     \
+  constexpr int ANARITypeFor<const type>::value
+
+#define ANARI_TYPEFOR_DEFINITION_STRING(type)                                  \
+  constexpr int ANARITypeFor<type>::value;
 
 // Infer whether ANARI_DATA_TYPE is an object or array ////////////////////////
 

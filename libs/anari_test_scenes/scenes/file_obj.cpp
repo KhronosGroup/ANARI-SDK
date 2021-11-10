@@ -94,8 +94,8 @@ static void loadObj(
 
   std::vector<ANARIMaterial> materials;
 
-  ANARIMaterial defaultMaterial = anariNewMaterial(d, "matte");
-  anariCommit(d, defaultMaterial);
+  auto defaultMaterial = anari::newObject<anari::Material>(d, "matte");
+  anari::commit(d, defaultMaterial);
 
   for (auto &mat : objdata.materials) {
     auto m = anari::newObject<anari::Material>(d, "matte");
@@ -113,7 +113,7 @@ static void loadObj(
         anari::setAndReleaseParameter(d, m, "map_kd", map_kd);
     }
 
-    anariCommit(d, m);
+    anari::commit(d, m);
 
     materials.push_back(m);
   }
@@ -226,7 +226,7 @@ static void loadObj(
       d, world, "instance", anari::newArray(d, &instance));
   anari::release(d, instance);
 
-  anariCommit(d, world);
+  anari::commit(d, world);
 
   for (auto &m : meshes)
     anari::release(d, m);
