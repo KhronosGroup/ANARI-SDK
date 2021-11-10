@@ -1,0 +1,55 @@
+## Copyright 2021 The Khronos Group
+## SPDX-License-Identifier: Apache-2.0
+
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+
+stages:
+  - build
+  - test
+  - doc
+
+#### Job Templates ############################################################
+
+.job_template: &docker_job
+  image: ubuntu:20.04
+
+.job_template: &build_job
+  stage: build
+
+.job_template: &build_artifacts
+  artifacts:
+    paths:
+      - install
+    expire_in: 10 day
+
+.job_template: &test_job
+  stage: test
+  artifacts:
+    paths:
+      - images
+    expire_in: 10 day
+
+#### Concrete Jobs ############################################################
+
+## Build ##
+
+build-example-device:
+  <<: *docker_job
+  <<: *build_job
+  <<: *build_artifacts
+  script: ci/generic_build_ubuntu.sh
+
+build-header-gen:
+  <<: *docker_job
+  <<: *build_job
+  <<: *build_artifacts
+  script: ci/generic_build_ubuntu.sh -DANARI_USE_GENERATED_HEADERS=ON
+
+## Regression ##
+
+test-example-device:
+  <<: *docker_job
+  <<: *test_job
+  needs: [build-example-device]
+  script: ci/generic_test_ubuntu.sh example
