@@ -175,7 +175,7 @@ struct Device
       void *defaultStatusCBUserPtr = nullptr);
 
  protected:
-  ANARIDevice this_device() const;
+  ANARI_INTERFACE ANARIDevice this_device() const;
 
   ANARI_INTERFACE ANARIStatusCallback defaultStatusCallback() const;
   ANARI_INTERFACE void *defaultStatusCallbackUserPtr() const;

@@ -14,10 +14,12 @@ typedef struct
 {
   const char *desc;
   bool req;
-  union
+  union Def
   {
     int i;
     vec4 v;
+    Def(int i);
+    Def(vec4 v);
   } def;
 } ParameterInfo;
 
