@@ -7,9 +7,12 @@
 #include <string>
 #include <typeinfo>
 
+// anari
+#include "anari/anari.h"
+
 namespace anari {
 
-std::string demangle(const char *name);
+ANARI_INTERFACE std::string demangle(const char *name);
 
 template <class T>
 inline std::string nameOf()

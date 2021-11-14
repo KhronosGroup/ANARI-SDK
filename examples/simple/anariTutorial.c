@@ -10,7 +10,11 @@
 //   raster renderer, there is no improvement to the initial rendering, so
 //   both images will appear the same.
 
+#ifdef _WIN32
+#include <malloc.h>
+#else
 #include <alloca.h>
+#endif
 #include <errno.h>
 #include <stdint.h>
 #include <stdio.h>

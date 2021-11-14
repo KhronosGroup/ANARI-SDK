@@ -89,6 +89,7 @@ endif()
 target_compile_definitions(${PROJECT_NAME}
 PRIVATE
   -DDEVICE_VERSION=${REFERENCE_DEVICE_VERSION}
+  "anari_EXPORTS"
 )
 
 install(TARGETS ${PROJECT_NAME}

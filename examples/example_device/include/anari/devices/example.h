@@ -9,7 +9,7 @@
 extern "C" {
 #endif
 
-ANARIDevice anariNewExampleDevice();
+ANARI_INTERFACE ANARIDevice anariNewExampleDevice();
 
 #ifdef __cplusplus
 } // extern "C"

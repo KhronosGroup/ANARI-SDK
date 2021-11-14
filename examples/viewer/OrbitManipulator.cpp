@@ -9,7 +9,7 @@ namespace manipulators {
 
 static float degreesToRadians(float degrees)
 {
-  return degrees * M_PI / 180.f;
+  return degrees * glm::pi<float>() / 180.f;
 }
 
 static glm::vec3 azelToDirection(float az, float el, OrbitAxis axis)
