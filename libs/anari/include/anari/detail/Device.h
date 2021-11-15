@@ -29,7 +29,7 @@ inline B *allocate_object(Args... args)
   return new T(args...);
 }
 
-struct Device
+struct ANARI_INTERFACE Device
 {
   /////////////////////////////////////////////////////////////////////////////
   // Main virtual interface to accepting API calls
@@ -37,29 +37,29 @@ struct Device
 
   // Device API ///////////////////////////////////////////////////////////////
 
-  ANARI_INTERFACE virtual int deviceImplements(const char *extension) = 0;
+  virtual int deviceImplements(const char *extension) = 0;
 
-  ANARI_INTERFACE virtual void deviceSetParameter(
+  virtual void deviceSetParameter(
       const char *id, ANARIDataType type, const void *mem) = 0;
 
-  ANARI_INTERFACE virtual void deviceUnsetParameter(const char *id) = 0;
+  virtual void deviceUnsetParameter(const char *id) = 0;
 
-  ANARI_INTERFACE virtual void deviceCommit() = 0;
+  virtual void deviceCommit() = 0;
 
-  ANARI_INTERFACE virtual void deviceRetain() = 0;
+  virtual void deviceRetain() = 0;
 
-  ANARI_INTERFACE virtual void deviceRelease() = 0;
+  virtual void deviceRelease() = 0;
 
   // Data Arrays //////////////////////////////////////////////////////////////
 
-  ANARI_INTERFACE virtual ANARIArray1D newArray1D(void *appMemory,
+  virtual ANARIArray1D newArray1D(void *appMemory,
       ANARIMemoryDeleter deleter,
       void *userdata,
       ANARIDataType,
       uint64_t numItems1,
       uint64_t byteStride1) = 0;
 
-  ANARI_INTERFACE virtual ANARIArray2D newArray2D(void *appMemory,
+  virtual ANARIArray2D newArray2D(void *appMemory,
       ANARIMemoryDeleter deleter,
       void *userdata,
       ANARIDataType,
@@ -68,7 +68,7 @@ struct Device
       uint64_t byteStride1,
       uint64_t byteStride2) = 0;
 
-  ANARI_INTERFACE virtual ANARIArray3D newArray3D(void *appMemory,
+  virtual ANARIArray3D newArray3D(void *appMemory,
       ANARIMemoryDeleter deleter,
       void *userdata,
       ANARIDataType,
@@ -79,57 +79,54 @@ struct Device
       uint64_t byteStride2,
       uint64_t byteStride3) = 0;
 
-  ANARI_INTERFACE virtual void *mapArray(ANARIArray) = 0;
-  ANARI_INTERFACE virtual void unmapArray(ANARIArray) = 0;
+  virtual void *mapArray(ANARIArray) = 0;
+  virtual void unmapArray(ANARIArray) = 0;
 
   // Renderable Objects ///////////////////////////////////////////////////////
 
-  ANARI_INTERFACE virtual ANARILight newLight(const char *type) = 0;
+  virtual ANARILight newLight(const char *type) = 0;
 
-  ANARI_INTERFACE virtual ANARICamera newCamera(const char *type) = 0;
+  virtual ANARICamera newCamera(const char *type) = 0;
 
-  ANARI_INTERFACE virtual ANARIGeometry newGeometry(const char *type) = 0;
-  ANARI_INTERFACE virtual ANARISpatialField newSpatialField(
-      const char *type) = 0;
+  virtual ANARIGeometry newGeometry(const char *type) = 0;
+  virtual ANARISpatialField newSpatialField(const char *type) = 0;
 
-  ANARI_INTERFACE virtual ANARISurface newSurface() = 0;
-  ANARI_INTERFACE virtual ANARIVolume newVolume(const char *type) = 0;
+  virtual ANARISurface newSurface() = 0;
+  virtual ANARIVolume newVolume(const char *type) = 0;
 
   // Surface Meta-Data ////////////////////////////////////////////////////////
 
-  ANARI_INTERFACE virtual ANARIMaterial newMaterial(
-      const char *material_type) = 0;
+  virtual ANARIMaterial newMaterial(const char *material_type) = 0;
 
-  ANARI_INTERFACE virtual ANARISampler newSampler(const char *type) = 0;
+  virtual ANARISampler newSampler(const char *type) = 0;
 
   // Instancing ///////////////////////////////////////////////////////////////
 
-  ANARI_INTERFACE virtual ANARIGroup newGroup() = 0;
+  virtual ANARIGroup newGroup() = 0;
 
-  ANARI_INTERFACE virtual ANARIInstance newInstance() = 0;
+  virtual ANARIInstance newInstance() = 0;
 
   // Top-level Worlds /////////////////////////////////////////////////////////
 
-  ANARI_INTERFACE virtual ANARIWorld newWorld() = 0;
+  virtual ANARIWorld newWorld() = 0;
 
   // Object + Parameter Lifetime Management ///////////////////////////////////
 
-  ANARI_INTERFACE virtual void setParameter(ANARIObject object,
+  virtual void setParameter(ANARIObject object,
       const char *name,
       ANARIDataType type,
       const void *mem) = 0;
 
-  ANARI_INTERFACE virtual void unsetParameter(
-      ANARIObject object, const char *name) = 0;
+  virtual void unsetParameter(ANARIObject object, const char *name) = 0;
 
-  ANARI_INTERFACE virtual void commit(ANARIObject object) = 0;
+  virtual void commit(ANARIObject object) = 0;
 
-  ANARI_INTERFACE virtual void release(ANARIObject _obj) = 0;
-  ANARI_INTERFACE virtual void retain(ANARIObject _obj) = 0;
+  virtual void release(ANARIObject _obj) = 0;
+  virtual void retain(ANARIObject _obj) = 0;
 
   // Object Query Interface ///////////////////////////////////////////////////
 
-  ANARI_INTERFACE virtual int getProperty(ANARIObject object,
+  virtual int getProperty(ANARIObject object,
       const char *name,
       ANARIDataType type,
       void *mem,
@@ -138,47 +135,44 @@ struct Device
 
   // FrameBuffer Manipulation /////////////////////////////////////////////////
 
-  ANARI_INTERFACE virtual ANARIFrame newFrame() = 0;
+  virtual ANARIFrame newFrame() = 0;
 
-  ANARI_INTERFACE virtual const void *frameBufferMap(
-      ANARIFrame fb, const char *channel) = 0;
+  virtual const void *frameBufferMap(ANARIFrame fb, const char *channel) = 0;
 
-  ANARI_INTERFACE virtual void frameBufferUnmap(
-      ANARIFrame fb, const char *channel) = 0;
+  virtual void frameBufferUnmap(ANARIFrame fb, const char *channel) = 0;
 
   // Frame Rendering //////////////////////////////////////////////////////////
 
-  ANARI_INTERFACE virtual ANARIRenderer newRenderer(const char *type) = 0;
+  virtual ANARIRenderer newRenderer(const char *type) = 0;
 
-  ANARI_INTERFACE virtual void renderFrame(ANARIFrame) = 0;
-  ANARI_INTERFACE virtual int frameReady(ANARIFrame, ANARIWaitMask) = 0;
-  ANARI_INTERFACE virtual void discardFrame(ANARIFrame) = 0;
+  virtual void renderFrame(ANARIFrame) = 0;
+  virtual int frameReady(ANARIFrame, ANARIWaitMask) = 0;
+  virtual void discardFrame(ANARIFrame) = 0;
 
   /////////////////////////////////////////////////////////////////////////////
   // Extension interface
   /////////////////////////////////////////////////////////////////////////////
 
-  ANARI_INTERFACE virtual ANARIObject newObject(
-      const char *objectType, const char *type);
+  virtual ANARIObject newObject(const char *objectType, const char *type);
 
-  ANARI_INTERFACE virtual void (*getProcAddress(const char *name))(void);
+  virtual void (*getProcAddress(const char *name))(void);
 
   /////////////////////////////////////////////////////////////////////////////
   // Helper/other functions and data members
   /////////////////////////////////////////////////////////////////////////////
 
-  ANARI_INTERFACE Device() = default;
-  ANARI_INTERFACE virtual ~Device() = default;
+  Device() = default;
+  virtual ~Device() = default;
 
-  ANARI_INTERFACE static Device *createDevice(const char *type,
+  static Device *createDevice(const char *type,
       ANARIStatusCallback defaultStatusCB = nullptr,
       void *defaultStatusCBUserPtr = nullptr);
 
  protected:
-  ANARI_INTERFACE ANARIDevice this_device() const;
+  ANARIDevice this_device() const;
 
-  ANARI_INTERFACE ANARIStatusCallback defaultStatusCallback() const;
-  ANARI_INTERFACE void *defaultStatusCallbackUserPtr() const;
+  ANARIStatusCallback defaultStatusCallback() const;
+  void *defaultStatusCallbackUserPtr() const;
 
  public:
   // NOTE: Unsuccessful to get the declaration of anariNewDevice() declared

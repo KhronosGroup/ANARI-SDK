@@ -522,7 +522,7 @@ extern "C" void anariDiscardFrame(ANARIDevice d, ANARIFrame f) ANARI_CATCH_BEGIN
 }
 ANARI_CATCH_END_NORETURN()
 
-ANARI_INTERFACE ANARIObject anariNewObject(
+ANARIObject anariNewObject(
     ANARIDevice d, const char *objectType, const char *type) ANARI_CATCH_BEGIN
 {
   return deviceRef(d).newObject(objectType, type);

@@ -17,7 +17,7 @@ ANARIParameter Renderer::g_parameters[] = {
     {NULL, ANARI_UNKNOWN}};
 
 ParameterInfo::Def::Def(int i) : i(i) {}
-ParameterInfo::Def::Def(vec4 v) : v(v) {};
+ParameterInfo::Def::Def(vec4 v) : v(v) {}
 
 ParameterInfo Renderer::g_parameterinfos[] = {
     {"background color and alpha (RGBA)", false, {vec4(1.f)}},

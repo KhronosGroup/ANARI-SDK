@@ -5,11 +5,13 @@
 
 #include "anari/anari.h"
 
+#include "../../../interface.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-ANARI_INTERFACE ANARIDevice anariNewExampleDevice();
+EXAMPLE_DEVICE_INTERFACE ANARIDevice anariNewExampleDevice();
 
 #ifdef __cplusplus
 } // extern "C"
