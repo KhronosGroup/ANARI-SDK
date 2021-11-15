@@ -19,24 +19,24 @@ enum RefType
   ALL
 };
 
-class RefCounted
+class ANARI_INTERFACE RefCounted
 {
  public:
-  ANARI_INTERFACE RefCounted() = default;
-  ANARI_INTERFACE virtual ~RefCounted() = default;
+  RefCounted() = default;
+  virtual ~RefCounted() = default;
 
-  ANARI_INTERFACE RefCounted(const RefCounted &) = delete;
-  ANARI_INTERFACE RefCounted(RefCounted &&) = delete;
+  RefCounted(const RefCounted &) = delete;
+  RefCounted(RefCounted &&) = delete;
 
-  ANARI_INTERFACE RefCounted &operator=(const RefCounted &) = delete;
-  ANARI_INTERFACE RefCounted &operator=(RefCounted &&) = delete;
+  RefCounted &operator=(const RefCounted &) = delete;
+  RefCounted &operator=(RefCounted &&) = delete;
 
-  ANARI_INTERFACE void refInc(RefType = PUBLIC) const;
-  ANARI_INTERFACE void refDec(RefType = PUBLIC) const;
-  ANARI_INTERFACE uint64_t useCount(RefType = ALL) const;
+  void refInc(RefType = PUBLIC) const;
+  void refDec(RefType = PUBLIC) const;
+  uint64_t useCount(RefType = ALL) const;
 
  private:
-  ANARI_INTERFACE uint64_t internalRefCount() const;
+  uint64_t internalRefCount() const;
 
   static constexpr uint64_t m_publicRefMask = 0x00000000FFFFFFFF;
   static constexpr uint64_t m_internalRefMask = 0xFFFFFFFF00000000;

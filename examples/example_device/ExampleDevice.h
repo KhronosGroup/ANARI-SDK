@@ -10,14 +10,16 @@
 // std
 #include <vector>
 
+#include "interface.h"
+
 namespace anari {
 namespace example_device {
 
 struct Object;
 
-struct ExampleDevice : public Device,
-                         public RefCounted,
-                         public ParameterizedObject
+struct EXAMPLE_DEVICE_INTERFACE ExampleDevice : public Device,
+                                                public RefCounted,
+                                                public ParameterizedObject
 {
   /////////////////////////////////////////////////////////////////////////////
   // Main interface to accepting API calls

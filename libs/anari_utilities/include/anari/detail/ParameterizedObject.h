@@ -14,20 +14,20 @@ namespace anari {
 
 constexpr int PARAM_LOCAL_STORAGE_SIZE = sizeof(float) * 3 * 4;
 
-struct ParameterizedObject
+struct ANARI_INTERFACE ParameterizedObject
 {
-  ANARI_INTERFACE ParameterizedObject() = default;
-  ANARI_INTERFACE virtual ~ParameterizedObject() = default;
+  ParameterizedObject() = default;
+  virtual ~ParameterizedObject() = default;
 
-  struct Param
+  struct ANARI_INTERFACE Param
   {
-    ANARI_INTERFACE Param(const std::string &name);
-    ANARI_INTERFACE virtual ~Param() = default;
+    Param(const std::string &name);
+    virtual ~Param() = default;
 
     template <typename T>
     void set(const T &v);
 
-    ANARI_INTERFACE void setDirect(Any v);
+    void setDirect(Any v);
 
     std::string name;
     ANARIDataType type{ANARI_UNKNOWN};
@@ -38,24 +38,23 @@ struct ParameterizedObject
     bool locallyStored{false};
   };
 
-  ANARI_INTERFACE bool hasParam(const std::string &name);
+  bool hasParam(const std::string &name);
 
   template <typename T>
   void setParam(const std::string &name, const T &t);
 
-  ANARI_INTERFACE Any getParamDirect(const std::string &name);
-  ANARI_INTERFACE void setParamDirect(const std::string &name, Any v);
+  Any getParamDirect(const std::string &name);
+  void setParamDirect(const std::string &name, Any v);
 
   template <typename T>
   T getParam(const std::string &name, T valIfNotFound);
 
-  ANARI_INTERFACE void removeParam(const std::string &name);
+  void removeParam(const std::string &name);
 
-  ANARI_INTERFACE void resetAllParamQueryStatus();
+  void resetAllParamQueryStatus();
 
  protected:
-  ANARI_INTERFACE Param *findParam(
-      const std::string &name, bool addIfNotExist = false);
+  Param *findParam(const std::string &name, bool addIfNotExist = false);
 
   std::vector<std::shared_ptr<Param>>::iterator params_begin();
   std::vector<std::shared_ptr<Param>>::iterator params_end();

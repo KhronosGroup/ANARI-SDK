@@ -532,24 +532,27 @@ void ExampleDevice::flushCommitBuffer()
 
 static char deviceName[] = "example";
 
-ANARI_DEFINE_LIBRARY_NEW_DEVICE(example, subtype)
+extern "C" EXAMPLE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_NEW_DEVICE(
+    example, subtype)
 {
   if (subtype == std::string("default") || subtype == std::string("example"))
     return (ANARIDevice) new anari::example_device::ExampleDevice();
   return nullptr;
 }
 
-ANARI_DEFINE_LIBRARY_INIT(example)
+extern "C" EXAMPLE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_INIT(example)
 {
   printf("...loaded example library!\n");
 }
 
-ANARI_DEFINE_LIBRARY_GET_DEVICE_SUBTYPES(example, libdata)
+extern "C" EXAMPLE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_DEVICE_SUBTYPES(
+    example, libdata)
 {
   static const char *devices[] = {deviceName, nullptr};
   return devices;
 }
-ANARI_DEFINE_LIBRARY_GET_OBJECT_SUBTYPES(
+
+extern "C" EXAMPLE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_SUBTYPES(
     example, libdata, deviceSubtype, objectType)
 {
   if (objectType == ANARI_RENDERER) {
@@ -563,14 +566,17 @@ ANARI_DEFINE_LIBRARY_GET_OBJECT_SUBTYPES(
   }
   return nullptr;
 }
-ANARI_DEFINE_LIBRARY_GET_OBJECT_PARAMETERS(
+
+extern "C" EXAMPLE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_PARAMETERS(
     example, libdata, deviceSubtype, objectSubtype, objectType)
 {
   if (objectType == ANARI_RENDERER)
     return anari::example_device::Renderer::g_parameters;
   return nullptr;
 }
-ANARI_DEFINE_LIBRARY_GET_PARAMETER_PROPERTY(example,
+
+extern "C" EXAMPLE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_PARAMETER_PROPERTY(
+    example,
     libdata,
     deviceSubtype,
     objectSubtype,
@@ -606,7 +612,7 @@ ANARI_DEFINE_LIBRARY_GET_PARAMETER_PROPERTY(example,
   return nullptr;
 }
 
-extern "C" ANARIDevice anariNewExampleDevice()
+extern "C" EXAMPLE_DEVICE_INTERFACE ANARIDevice anariNewExampleDevice()
 {
   return (ANARIDevice) new anari::example_device::ExampleDevice();
 }

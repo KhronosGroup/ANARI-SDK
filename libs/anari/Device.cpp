@@ -10,13 +10,12 @@ namespace anari {
 
 // extension functions ////////////////////////////////////////////////////////
 
-ANARI_INTERFACE ANARIObject Device::newObject(
-    const char *objectType, const char *type)
+ANARIObject Device::newObject(const char *objectType, const char *type)
 {
   return nullptr;
 }
 
-ANARI_INTERFACE void (*Device::getProcAddress(const char *name))(void)
+void (*Device::getProcAddress(const char *name))(void)
 {
   return nullptr;
 }
