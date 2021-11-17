@@ -23,6 +23,8 @@ struct Library
 
   void *libraryData() const;
 
+  ANARIDevice newDevice(const char *subtype) const;
+
   const char *defaultDeviceName() const;
   ANARIStatusCallback defaultStatusCB() const;
   void *defaultStatusCBUserPtr() const;
@@ -51,6 +53,9 @@ struct Library
   std::string m_defaultDeviceName;
   ANARIStatusCallback m_defaultStatusCB{nullptr};
   void *m_defaultStatusCBUserPtr{nullptr};
+
+  using NewDeviceFcn = ANARIDevice (*)(const char *);
+  NewDeviceFcn m_newDeviceFcn{nullptr};
 
   using FreeFcn = void (*)(void *);
   FreeFcn m_freeFcn{nullptr};
@@ -84,7 +89,11 @@ struct Library
   GetObjectParameterPropertyFcn m_getObjectParameterPropertyFcn{nullptr};
 };
 
-// [REQUIRED] Define the initialization function when library is loaded.
+// [REQUIRED] Define the function which allocates Device objects by subtype
+#define ANARI_DEFINE_LIBRARY_NEW_DEVICE(libname, type)                         \
+  extern "C" ANARIDevice anari_library_##libname##_new_device(const char *type)
+
+// [OPTIONAL] Define the initialization function when library is loaded.
 #define ANARI_DEFINE_LIBRARY_INIT(libname)                                     \
   extern "C" void anari_library_##libname##_init()
 

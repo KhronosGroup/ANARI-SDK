@@ -132,14 +132,14 @@ extern "C" ANARIDevice anariNewDevice(
     ANARILibrary l, const char *deviceType) ANARI_CATCH_BEGIN
 {
   THROW_IF_NULL_STRING(deviceType)
-
   auto &lib = libraryRef(l);
-
-  if (std::string(deviceType) == "default")
-    deviceType = lib.defaultDeviceName();
-
-  return (ANARIDevice)Device::createDevice(
-      deviceType, lib.defaultStatusCB(), lib.defaultStatusCBUserPtr());
+  auto _d = lib.newDevice(deviceType);
+  if (!_d)
+    return nullptr;
+  auto &d = deviceRef(_d);
+  d.m_defaultStatusCB = lib.defaultStatusCB();
+  d.m_defaultStatusCBUserPtr = lib.defaultStatusCBUserPtr();
+  return _d;
 }
 ANARI_CATCH_END(nullptr)
 

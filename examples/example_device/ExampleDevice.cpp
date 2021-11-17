@@ -531,10 +531,16 @@ void ExampleDevice::flushCommitBuffer()
 
 static char deviceName[] = "example";
 
+ANARI_DEFINE_LIBRARY_NEW_DEVICE(example, subtype)
+{
+  if (subtype == std::string("default") || subtype == std::string("example"))
+    return (ANARIDevice) new anari::example_device::ExampleDevice();
+  return nullptr;
+}
+
 ANARI_DEFINE_LIBRARY_INIT(example)
 {
   printf("...loaded example library!\n");
-  anari::Device::registerType<anari::example_device::ExampleDevice>(deviceName);
 }
 
 ANARI_DEFINE_LIBRARY_GET_DEVICE_SUBTYPES(example, libdata)

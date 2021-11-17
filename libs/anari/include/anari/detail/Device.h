@@ -174,44 +174,19 @@ struct Device
       ANARIStatusCallback defaultStatusCB = nullptr,
       void *defaultStatusCBUserPtr = nullptr);
 
-  template <typename T>
-  static void registerType(const char *type);
-
-  template <typename T>
-  static void registerLayer();
-
  protected:
   ANARIDevice this_device() const;
 
   ANARI_INTERFACE ANARIStatusCallback defaultStatusCallback() const;
   ANARI_INTERFACE void *defaultStatusCallbackUserPtr() const;
 
- private:
-  ANARI_INTERFACE static void registerType(
-      const char *type, FactoryFcn<Device> f);
-
-  ANARI_INTERFACE static void registerLayer(FactoryFcn<Device, Device *> f);
-
+ public:
+  // NOTE: Unsuccessful to get the declaration of anariNewDevice() declared
+  // correctly as a friend function to keep these private.
   ANARIStatusCallback m_defaultStatusCB{nullptr};
   void *m_defaultStatusCBUserPtr{nullptr};
 };
 
 ANARI_TYPEFOR_SPECIALIZATION(Device *, ANARI_DEVICE);
-
-// Inlined defintions /////////////////////////////////////////////////////////
-
-template <typename T>
-inline void Device::registerType(const char *type)
-{
-  Device *(*fcn)() = &allocate_object<Device, T>;
-  Device::registerType(type, fcn);
-}
-
-template <typename T>
-inline void Device::registerLayer()
-{
-  FactoryFcn<Device, Device *> fcn = &allocate_object<Device, T, Device *>;
-  Device::registerLayer(fcn);
-}
 
 } // namespace anari

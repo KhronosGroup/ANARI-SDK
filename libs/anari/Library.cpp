@@ -165,15 +165,20 @@ Library::Library(
   m_lib = lib;
 
   std::string prefix = "anari_library_" + std::string(name);
-  std::string initFcnName = prefix + "_init";
-  InitFcn initFcn = (InitFcn)getSymbolAddress(m_lib, initFcnName);
 
-  if (!initFcn) {
-    throw std::runtime_error(
-        "failed to find init function for " + std::string(name) + " library");
+  std::string newDeviceFcnName = prefix + "_new_device";
+  m_newDeviceFcn = (NewDeviceFcn)getSymbolAddress(m_lib, newDeviceFcnName);
+
+  if (!m_newDeviceFcn) {
+    throw std::runtime_error("failed to find newDevice() function for "
+        + std::string(name) + " library");
   }
 
-  initFcn();
+  std::string initFcnName = prefix + "_init";
+  auto initFcn = (InitFcn)getSymbolAddress(m_lib, initFcnName);
+
+  if (initFcn)
+    initFcn();
 
   std::string allocFcnName = prefix + "_allocate";
   AllocFcn allocFcn = (AllocFcn)getSymbolAddress(m_lib, allocFcnName);
@@ -246,6 +251,11 @@ Library::~Library()
 void *Library::libraryData() const
 {
   return m_libraryData;
+}
+
+ANARIDevice Library::newDevice(const char *subtype) const
+{
+  return m_newDeviceFcn ? m_newDeviceFcn(subtype) : nullptr;
 }
 
 const char *Library::defaultDeviceName() const
