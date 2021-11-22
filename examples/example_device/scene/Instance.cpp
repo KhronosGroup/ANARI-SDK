@@ -19,12 +19,14 @@ void Instance::commit()
 
   m_xfm.reset();
   m_invXfm.reset();
+  m_normXfm.reset();
 
   if (hasParam("transform")) {
     mat4 xfm = getParam<mat4x3>("transform", mat4x3(1));
     b = xfmBox(xfm, b);
     m_xfm = xfm;
     m_invXfm = glm::inverse(xfm);
+    m_normXfm = glm::transpose(glm::inverse(mat3(xfm)));
   }
 
   SceneObject::setBounds(b);
