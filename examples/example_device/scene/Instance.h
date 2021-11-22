@@ -19,6 +19,7 @@ struct Instance : public SceneObject
  private:
   std::optional<mat4> m_xfm;
   std::optional<mat4> m_invXfm;
+  std::optional<mat3> m_normXfm;
   IntrusivePtr<Group> m_group;
 };
 
@@ -32,9 +33,9 @@ inline PotentialHit Instance::intersect(const Ray &_ray, size_t instID) const
   Ray ray = m_invXfm.has_value() ? xfmRay(m_invXfm.value(), _ray) : _ray;
   auto hit = m_group->intersect(ray, instID);
 
-  if (m_xfm.has_value() && hit.has_value() && hit->geomID.has_value()) {
+  if (m_normXfm.has_value() && hit.has_value() && hit->geomID.has_value()) {
     GeometryInfo &gi = getGeometryInfo(hit);
-    gi.normal = xfmVec(m_xfm.value(), gi.normal);
+    gi.normal = m_normXfm.value() * vec(gi.normal);
   }
 
   return hit;
