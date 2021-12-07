@@ -195,22 +195,14 @@ static void loadObj(
   anari::setAndReleaseParameter(
       d, group, "surface", anari::newArray(d, meshes.data(), meshes.size()));
 
-  auto light1 = anari::newObject<anari::Light>(d, "ambient");
-  anari::setParameter(d, light1, "intensity", 0.5f);
-  anari::commit(d, light1);
+  auto light = anari::newObject<anari::Light>(d, "distant");
+  anari::setParameter(d, light, "direction", glm::vec3(-1, -2, -1));
+  anari::setParameter(d, light, "irradiance", 4.f);
+  anari::commit(d, light);
 
-  auto light2 = anari::newObject<anari::Light>(d, "distant");
-  anari::setParameter(d, light2, "direction", glm::vec3(-1, -2, -1));
-  anari::setParameter(d, light2, "intensity", 1.0f);
-  anari::commit(d, light2);
+  anari::setAndReleaseParameter(d, group, "light", anari::newArray(d, &light));
 
-  anari::Light lights[] = {light1, light2};
-
-  anari::setAndReleaseParameter(
-      d, group, "light", anari::newArray(d, lights, 2));
-
-  anari::release(d, light1);
-  anari::release(d, light2);
+  anari::release(d, light);
 
   anari::commit(d, group);
 

@@ -31,7 +31,7 @@ struct TestScene : public ParameterizedObject
   TestScene(anari::Device device);
 
   Camera createDefaultCameraFromWorld(anari::World);
-  void setDefaultAmbientLight(anari::World);
+  void setDefaultLight(anari::World);
 
   anari::Device m_device{nullptr};
 };

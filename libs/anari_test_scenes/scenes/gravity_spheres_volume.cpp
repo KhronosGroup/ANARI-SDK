@@ -182,7 +182,7 @@ void GravityVolume::commit()
       d, m_world, "volume", anari::newArray(d, &volume));
   anari::release(d, volume);
 
-  setDefaultAmbientLight(m_world);
+  setDefaultLight(m_world);
 
   anari::commit(d, m_world);
 }

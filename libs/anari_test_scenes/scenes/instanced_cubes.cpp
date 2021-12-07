@@ -140,7 +140,7 @@ void InstancedCubes::commit()
   for (auto i : instances)
     anari::release(d, i);
 
-  setDefaultAmbientLight(m_world);
+  setDefaultLight(m_world);
 
   anari::commit(d, m_world);
 }

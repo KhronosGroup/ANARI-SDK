@@ -38,7 +38,7 @@ void RandomSpheres::commit()
 
   // Build this scene top-down to stress commit ordering guarantees
 
-  setDefaultAmbientLight(m_world);
+  setDefaultLight(m_world);
 
   auto surface = anari::newObject<anari::Surface>(d);
   auto geom = anari::newObject<anari::Geometry>(d, "sphere");

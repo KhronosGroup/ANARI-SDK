@@ -67,9 +67,11 @@ void TestScene::computeNextFrame()
   // no-op
 }
 
-void TestScene::setDefaultAmbientLight(anari::World w)
+void TestScene::setDefaultLight(anari::World w)
 {
-  auto light = anari::newObject<anari::Light>(m_device, "ambient");
+  auto light = anari::newObject<anari::Light>(m_device, "directional");
+  anari::setParameter(m_device, light, "direction", glm::vec3(0, -1, 0));
+  anari::setParameter(m_device, light, "irradiance", 4.f);
   anari::commit(m_device, light);
   anari::setAndReleaseParameter(
       m_device, w, "light", anari::newArray(m_device, &light));
