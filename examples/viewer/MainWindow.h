@@ -43,7 +43,7 @@ class MainWindow
 
   void buildUI();
 
-  void commitOutstandingHandles();
+  void updateScene();
 
   void cleanup();
 
@@ -77,7 +77,6 @@ class MainWindow
   std::vector<anari::scenes::ParameterInfo> sceneParams;
 
   // Collection of ANARI handles to commit before the next frame
-  std::vector<ANARIObject> objectsToCommit;
   bool commitScene{true};
   bool resetCameraPosition{true};
 

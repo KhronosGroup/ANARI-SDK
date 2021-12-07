@@ -15,8 +15,6 @@
 // stb_image
 #include "stb_image_write.h"
 
-#define COMMIT_OBJECTS_IMMEDIATELY 1
-
 static GLFWwindow *g_window = nullptr;
 static bool g_quitNextFrame = false;
 static bool g_saveNextFrame = false;
@@ -125,7 +123,7 @@ void frame_show(ANARIDevice dev, ANARIFrame frame, MainWindow *window)
 
     anariUnmapFrame(dev, frame, "color");
 
-    window->commitOutstandingHandles();
+    window->updateScene();
   }
 }
 
@@ -347,7 +345,7 @@ void MainWindow::updateCamera()
 /*   render-once profile.                                              */
 void MainWindow::mainLoop()
 {
-  commitOutstandingHandles();
+  updateScene();
 
   if (useContinuation) {
     // Continuation rendering profile
@@ -582,14 +580,10 @@ void MainWindow::buildUI()
 
 void MainWindow::addObjectToCommit(ANARIObject obj)
 {
-#if COMMIT_OBJECTS_IMMEDIATELY
   anariCommit(device, obj);
-#else
-  objectsToCommit.push_back(obj);
-#endif
 }
 
-void MainWindow::commitOutstandingHandles()
+void MainWindow::updateScene()
 {
   if (commitScene) {
     try {
@@ -603,12 +597,6 @@ void MainWindow::commitOutstandingHandles()
   if (resetCameraPosition) {
     resetCamera();
     resetCameraPosition = false;
-  }
-
-  if (!objectsToCommit.empty()) {
-    for (auto &h : objectsToCommit)
-      anariCommit(device, h);
-    objectsToCommit.clear();
   }
 }
 
