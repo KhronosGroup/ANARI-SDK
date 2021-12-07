@@ -17,7 +17,7 @@
 namespace anari {
 namespace scenes {
 
-using FactoryMap = std::map<std::string, TestScene *(*)(ANARIDevice)>;
+using FactoryMap = std::map<std::string, TestScene *(*)(anari::Device)>;
 using FactoryPtr = std::unique_ptr<FactoryMap>;
 
 static FactoryPtr g_scenes;
@@ -38,7 +38,7 @@ static void init()
   }
 }
 
-SceneHandle createScene(ANARIDevice d, const char *name)
+SceneHandle createScene(anari::Device d, const char *name)
 {
   if (g_scenes.get() == nullptr)
     init();
@@ -58,7 +58,7 @@ void commit(SceneHandle s)
   s->commit();
 }
 
-ANARIWorld getWorld(SceneHandle s)
+anari::World getWorld(SceneHandle s)
 {
   return s->world();
 }

@@ -8,21 +8,21 @@
 namespace anari {
 namespace scenes {
 
-TestScene *sceneTexturedCube(ANARIDevice d);
+TestScene *sceneTexturedCube(anari::Device d);
 
 struct TexturedCube : public TestScene
 {
-  TexturedCube(ANARIDevice d);
+  TexturedCube(anari::Device d);
   ~TexturedCube();
 
-  ANARIWorld world() override;
+  anari::World world() override;
 
   std::vector<Camera> cameras() override;
 
   void commit() override;
 
  private:
-  ANARIWorld m_world{nullptr};
+  anari::World m_world{nullptr};
 };
 
 } // namespace scenes

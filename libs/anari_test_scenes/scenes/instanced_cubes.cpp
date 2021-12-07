@@ -58,17 +58,17 @@ static std::vector<glm::vec4> colors = {
 
 // CornelBox definitions //////////////////////////////////////////////////////
 
-InstancedCubes::InstancedCubes(ANARIDevice d) : TestScene(d)
+InstancedCubes::InstancedCubes(anari::Device d) : TestScene(d)
 {
-  m_world = anariNewWorld(m_device);
+  m_world = anari::newObject<anari::World>(m_device);
 }
 
 InstancedCubes::~InstancedCubes()
 {
-  anariRelease(m_device, m_world);
+  anari::release(m_device, m_world);
 }
 
-ANARIWorld InstancedCubes::world()
+anari::World InstancedCubes::world()
 {
   return m_world;
 }
@@ -99,7 +99,8 @@ void InstancedCubes::commit()
   anari::commit(d, surface);
 
   auto group = anari::newObject<anari::Group>(d);
-  anari::setParameter(d, group, "surface", anari::newArray(d, &surface));
+  anari::setAndReleaseParameter(
+      d, group, "surface", anari::newArray(d, &surface));
   anari::commit(d, group);
 
   anari::release(d, surface);
@@ -144,7 +145,7 @@ void InstancedCubes::commit()
   anari::commit(d, m_world);
 }
 
-TestScene *sceneInstancedCubes(ANARIDevice d)
+TestScene *sceneInstancedCubes(anari::Device d)
 {
   return new InstancedCubes(d);
 }

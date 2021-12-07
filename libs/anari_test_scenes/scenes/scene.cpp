@@ -8,17 +8,17 @@
 namespace anari {
 namespace scenes {
 
-TestScene::TestScene(ANARIDevice device) : m_device(device)
+TestScene::TestScene(anari::Device device) : m_device(device)
 {
-  anariRetain(m_device, m_device);
+  anari::retain(m_device, m_device);
 }
 
 TestScene::~TestScene()
 {
-  anariRelease(m_device, m_device);
+  anari::release(m_device, m_device);
 }
 
-Camera TestScene::createDefaultCameraFromWorld(ANARIWorld w)
+Camera TestScene::createDefaultCameraFromWorld(anari::World w)
 {
   box3 bounds;
 
@@ -67,7 +67,7 @@ void TestScene::computeNextFrame()
   // no-op
 }
 
-void TestScene::setDefaultAmbientLight(ANARIWorld w)
+void TestScene::setDefaultAmbientLight(anari::World w)
 {
   auto light = anari::newObject<anari::Light>(m_device, "ambient");
   anari::commit(m_device, light);

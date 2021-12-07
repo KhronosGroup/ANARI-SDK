@@ -8,14 +8,14 @@
 namespace anari {
 namespace scenes {
 
-RandomSpheres::RandomSpheres(ANARIDevice d) : TestScene(d)
+RandomSpheres::RandomSpheres(anari::Device d) : TestScene(d)
 {
-  m_world = anariNewWorld(m_device);
+  m_world = anari::newObject<anari::World>(m_device);
 }
 
 RandomSpheres::~RandomSpheres()
 {
-  anariRelease(m_device, m_world);
+  anari::release(m_device, m_world);
 }
 
 std::vector<ParameterInfo> RandomSpheres::parameters()
@@ -27,7 +27,7 @@ std::vector<ParameterInfo> RandomSpheres::parameters()
   };
 }
 
-ANARIWorld RandomSpheres::world()
+anari::World RandomSpheres::world()
 {
   return m_world;
 }
@@ -116,7 +116,7 @@ void RandomSpheres::commit()
   anari::release(d, mat);
 }
 
-TestScene *sceneRandomSpheres(ANARIDevice d)
+TestScene *sceneRandomSpheres(anari::Device d)
 {
   return new RandomSpheres(d);
 }

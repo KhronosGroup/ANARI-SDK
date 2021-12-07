@@ -220,17 +220,17 @@ static std::vector<glm::vec4> colors = {
 
 // CornelBox definitions //////////////////////////////////////////////////////
 
-CornellBox::CornellBox(ANARIDevice d) : TestScene(d)
+CornellBox::CornellBox(anari::Device d) : TestScene(d)
 {
-  m_world = anariNewWorld(m_device);
+  m_world = anari::newObject<anari::World>(m_device);
 }
 
 CornellBox::~CornellBox()
 {
-  anariRelease(m_device, m_world);
+  anari::release(m_device, m_world);
 }
 
-ANARIWorld CornellBox::world()
+anari::World CornellBox::world()
 {
   return m_world;
 }
@@ -285,7 +285,7 @@ void CornellBox::commit()
   anari::commit(d, m_world);
 }
 
-TestScene *sceneCornellBox(ANARIDevice d)
+TestScene *sceneCornellBox(anari::Device d)
 {
   return new CornellBox(d);
 }

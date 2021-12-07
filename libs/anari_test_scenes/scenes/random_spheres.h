@@ -8,21 +8,21 @@
 namespace anari {
 namespace scenes {
 
-TestScene *sceneRandomSpheres(ANARIDevice d);
+TestScene *sceneRandomSpheres(anari::Device d);
 
 struct RandomSpheres : public TestScene
 {
-  RandomSpheres(ANARIDevice d);
+  RandomSpheres(anari::Device d);
   ~RandomSpheres();
 
   std::vector<ParameterInfo> parameters() override;
 
-  ANARIWorld world() override;
+  anari::World world() override;
 
   void commit() override;
 
  private:
-  ANARIWorld m_world{nullptr};
+  anari::World m_world{nullptr};
 };
 
 } // namespace scenes

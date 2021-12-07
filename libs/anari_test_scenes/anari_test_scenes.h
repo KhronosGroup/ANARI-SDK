@@ -37,7 +37,7 @@ struct TestScene;
 using SceneHandle = TestScene *;
 
 // Create an instance of a scene
-SceneHandle createScene(ANARIDevice d, const char *name);
+SceneHandle createScene(anari::Device d, const char *name);
 
 // Set a scene parameter to be applied on the next 'commit()'
 void setParameter(SceneHandle s, const std::string &name, Any val);
@@ -46,7 +46,7 @@ void setParameter(SceneHandle s, const std::string &name, Any val);
 void commit(SceneHandle s);
 
 // Get the ANARI world handle from the underlying scene: do not need to release
-ANARIWorld getWorld(SceneHandle s);
+anari::World getWorld(SceneHandle s);
 
 // Get the world-space bounds of the underlying scene
 Bounds getBounds(SceneHandle s);

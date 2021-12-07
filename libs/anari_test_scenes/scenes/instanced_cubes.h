@@ -8,19 +8,19 @@
 namespace anari {
 namespace scenes {
 
-TestScene *sceneInstancedCubes(ANARIDevice d);
+TestScene *sceneInstancedCubes(anari::Device d);
 
 struct InstancedCubes : public TestScene
 {
-  InstancedCubes(ANARIDevice d);
+  InstancedCubes(anari::Device d);
   ~InstancedCubes();
 
-  ANARIWorld world() override;
+  anari::World world() override;
 
   void commit() override;
 
  private:
-  ANARIWorld m_world{nullptr};
+  anari::World m_world{nullptr};
 };
 
 } // namespace scenes

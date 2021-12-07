@@ -30,7 +30,7 @@ static std::string pathOf(const std::string &filename)
   return filename.substr(0, pos + 1);
 }
 
-static ANARISampler loadTexture(ANARIDevice d, std::string filename)
+static ANARISampler loadTexture(anari::Device d, std::string filename)
 {
   anari::Sampler tex = nullptr;
 
@@ -65,7 +65,7 @@ struct OBJData
 };
 
 static void loadObj(
-    ANARIDevice d, const std::string &fileName, ANARIWorld *_world)
+    anari::Device d, const std::string &fileName, anari::World *_world)
 {
   auto &world = *_world;
 
@@ -237,7 +237,7 @@ static void loadObj(
 
 // FileObj definitions ////////////////////////////////////////////////////////
 
-FileObj::FileObj(ANARIDevice d) : TestScene(d)
+FileObj::FileObj(anari::Device d) : TestScene(d)
 {
   m_world = anari::newObject<anari::World>(m_device);
 }
@@ -255,7 +255,7 @@ std::vector<ParameterInfo> FileObj::parameters()
   };
 }
 
-ANARIWorld FileObj::world()
+anari::World FileObj::world()
 {
   return m_world;
 }
@@ -270,7 +270,7 @@ void FileObj::commit()
   loadObj(m_device, filename, &m_world);
 }
 
-TestScene *sceneFileObj(ANARIDevice d)
+TestScene *sceneFileObj(anari::Device d)
 {
   return new FileObj(d);
 }

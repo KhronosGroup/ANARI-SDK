@@ -8,21 +8,21 @@
 namespace anari {
 namespace scenes {
 
-TestScene *sceneFileObj(ANARIDevice d);
+TestScene *sceneFileObj(anari::Device d);
 
 struct FileObj : public TestScene
 {
-  FileObj(ANARIDevice d);
+  FileObj(anari::Device d);
   ~FileObj();
 
   std::vector<ParameterInfo> parameters() override;
 
-  ANARIWorld world() override;
+  anari::World world() override;
 
   void commit() override;
 
  private:
-  ANARIWorld m_world{nullptr};
+  anari::World m_world{nullptr};
 };
 
 } // namespace scenes

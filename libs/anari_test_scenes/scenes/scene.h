@@ -15,7 +15,7 @@ using box3 = std::array<glm::vec3, 2>; // bounds_lower, bounds_upper;
 
 struct TestScene : public ParameterizedObject
 {
-  virtual ANARIWorld world() = 0;
+  virtual anari::World world() = 0;
   virtual box3 bounds();
   virtual std::vector<Camera> cameras();
   virtual std::vector<ParameterInfo> parameters();
@@ -28,12 +28,12 @@ struct TestScene : public ParameterizedObject
   ~TestScene();
 
  protected:
-  TestScene(ANARIDevice device);
+  TestScene(anari::Device device);
 
-  Camera createDefaultCameraFromWorld(ANARIWorld);
-  void setDefaultAmbientLight(ANARIWorld);
+  Camera createDefaultCameraFromWorld(anari::World);
+  void setDefaultAmbientLight(anari::World);
 
-  ANARIDevice m_device{nullptr};
+  anari::Device m_device{nullptr};
 };
 
 } // namespace scenes

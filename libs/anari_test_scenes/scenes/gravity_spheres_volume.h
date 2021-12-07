@@ -8,21 +8,21 @@
 namespace anari {
 namespace scenes {
 
-TestScene *sceneGravitySphereVolume(ANARIDevice d);
+TestScene *sceneGravitySphereVolume(anari::Device d);
 
 struct GravityVolume : public TestScene
 {
-  GravityVolume(ANARIDevice d);
+  GravityVolume(anari::Device d);
   ~GravityVolume();
 
   std::vector<ParameterInfo> parameters() override;
 
-  ANARIWorld world() override;
+  anari::World world() override;
 
   void commit() override;
 
  private:
-  ANARIWorld m_world{nullptr};
+  anari::World m_world{nullptr};
 };
 
 } // namespace scenes

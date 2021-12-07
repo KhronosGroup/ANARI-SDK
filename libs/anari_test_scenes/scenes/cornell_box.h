@@ -8,19 +8,19 @@
 namespace anari {
 namespace scenes {
 
-TestScene *sceneCornellBox(ANARIDevice d);
+TestScene *sceneCornellBox(anari::Device d);
 
 struct CornellBox : public TestScene
 {
-  CornellBox(ANARIDevice d);
+  CornellBox(anari::Device d);
   ~CornellBox();
 
-  ANARIWorld world() override;
+  anari::World world() override;
 
   void commit() override;
 
  private:
-  ANARIWorld m_world{nullptr};
+  anari::World m_world{nullptr};
 };
 
 } // namespace scenes

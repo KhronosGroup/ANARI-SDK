@@ -77,7 +77,7 @@ static std::vector<float> generateVoxels(
   return voxels;
 }
 
-GravityVolume::GravityVolume(ANARIDevice d) : TestScene(d)
+GravityVolume::GravityVolume(anari::Device d) : TestScene(d)
 {
   m_world = anari::newObject<anari::World>(m_device);
 }
@@ -95,14 +95,14 @@ std::vector<ParameterInfo> GravityVolume::parameters()
   };
 }
 
-ANARIWorld GravityVolume::world()
+anari::World GravityVolume::world()
 {
   return m_world;
 }
 
 void GravityVolume::commit()
 {
-  ANARIDevice d = m_device;
+  anari::Device d = m_device;
 
   const bool withGeometry = getParam<bool>("withGeometry", false);
   const int volumeDims = 128;
@@ -120,9 +120,9 @@ void GravityVolume::commit()
       "data",
       anari::newArray(
           d, voxels.data(), volumeDims, volumeDims, volumeDims, 0, 0, 0));
-  anariCommit(d, field);
+  anari::commit(d, field);
 
-  auto volume = anariNewVolume(d, "scivis");
+  auto volume = anari::newObject<anari::Volume>(d, "scivis");
   anari::setAndReleaseParameter(d, volume, "field", field);
 
   {
@@ -154,7 +154,7 @@ void GravityVolume::commit()
           return p.center;
         });
 
-    ANARIGeometry geom = anariNewGeometry(d, "sphere");
+    ANARIGeometry geom = anari::newObject<anari::Geometry>(d, "sphere");
     anari::setAndReleaseParameter(d,
         geom,
         "vertex.position",
@@ -172,7 +172,7 @@ void GravityVolume::commit()
 
     anari::setAndReleaseParameter(
         d, m_world, "surface", anari::newArray(d, &surface));
-    anariRelease(d, surface);
+    anari::release(d, surface);
   } else {
     anari::setParameter<anari::Array1D>(
         d, m_world, "surface", ANARI_INVALID_HANDLE);
@@ -187,7 +187,7 @@ void GravityVolume::commit()
   anari::commit(d, m_world);
 }
 
-TestScene *sceneGravitySphereVolume(ANARIDevice d)
+TestScene *sceneGravitySphereVolume(anari::Device d)
 {
   return new GravityVolume(d);
 }

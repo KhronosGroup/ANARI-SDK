@@ -39,7 +39,7 @@ static std::vector<glm::vec2> texcoords = {
     //
 };
 
-static anari::Array2D makeTextureData(ANARIDevice d, int dim)
+static anari::Array2D makeTextureData(anari::Device d, int dim)
 {
   auto *data = new glm::vec3[dim * dim];
 
@@ -59,9 +59,9 @@ static anari::Array2D makeTextureData(ANARIDevice d, int dim)
 
 // CornelBox definitions //////////////////////////////////////////////////////
 
-TexturedCube::TexturedCube(ANARIDevice d) : TestScene(d)
+TexturedCube::TexturedCube(anari::Device d) : TestScene(d)
 {
-  m_world = anariNewWorld(m_device);
+  m_world = anari::newObject<anari::World>(m_device);
 }
 
 TexturedCube::~TexturedCube()
@@ -69,73 +69,60 @@ TexturedCube::~TexturedCube()
   anari::release(m_device, m_world);
 }
 
-ANARIWorld TexturedCube::world()
+anari::World TexturedCube::world()
 {
   return m_world;
 }
 
 void TexturedCube::commit()
 {
-  ANARIDevice d = m_device;
+  anari::Device d = m_device;
 
-  ANARIArray1D vertexData = anariNewArray1D(d,
-      vertices.data(),
-      nullptr,
-      nullptr,
-      ANARI_FLOAT32_VEC3,
-      vertices.size());
+  auto geom = anari::newObject<anari::Geometry>(d, "mesh");
+  anari::setAndReleaseParameter(d,
+      geom,
+      "vertex.position",
+      anari::newArray(d, vertices.data(), vertices.size()));
+  anari::setAndReleaseParameter(d,
+      geom,
+      "vertex.texcoord",
+      anari::newArray(d, texcoords.data(), texcoords.size()));
+  anari::setAndReleaseParameter(
+      d, geom, "index", anari::newArray(d, indices.data(), indices.size()));
+  anari::commit(d, geom);
 
-  ANARIArray1D texcoordData = anariNewArray1D(d,
-      texcoords.data(),
-      nullptr,
-      nullptr,
-      ANARI_FLOAT32_VEC2,
-      texcoords.size());
-
-  ANARIArray1D indexData = anariNewArray1D(
-      d, indices.data(), nullptr, nullptr, ANARI_UINT32_VEC3, indices.size());
-
-  ANARIGeometry geom = anariNewGeometry(d, "mesh");
-  anari::setAndReleaseParameter(d, geom, "vertex.position", vertexData);
-  anari::setAndReleaseParameter(d, geom, "vertex.texcoord", texcoordData);
-  anari::setAndReleaseParameter(d, geom, "index", indexData);
-  anariCommit(d, geom);
-
-  ANARISurface surface = anariNewSurface(d);
+  auto surface = anari::newObject<anari::Surface>(d);
   anari::setAndReleaseParameter(d, surface, "geometry", geom);
 
-  ANARISampler tex = anariNewSampler(d, "texture2d");
+  auto tex = anari::newObject<anari::Sampler>(d, "texture2d");
   anari::setAndReleaseParameter(d, tex, "data", makeTextureData(d, 8));
   anari::setParameter(d, tex, "filter", "nearest");
-  anariCommit(d, tex);
+  anari::commit(d, tex);
 
-  ANARIMaterial mat = anariNewMaterial(d, "matte");
+  auto mat = anari::newObject<anari::Material>(d, "matte");
   anari::setAndReleaseParameter(d, mat, "map_kd", tex);
-  anariCommit(d, mat);
+  anari::commit(d, mat);
   anari::setAndReleaseParameter(d, surface, "material", mat);
-  anariCommit(d, surface);
+  anari::commit(d, surface);
 
-  ANARIArray1D surfaceArray =
-      anariNewArray1D(d, &surface, nullptr, nullptr, ANARI_SURFACE, 1);
+  auto group = anari::newObject<anari::Group>(d);
+  anari::setAndReleaseParameter(
+      d, group, "surface", anari::newArray(d, &surface));
+  anari::commit(d, group);
 
-  ANARIGroup group = anariNewGroup(d);
-  anari::setParameter(d, group, "surface", surfaceArray);
-  anariCommit(d, group);
+  anari::release(d, surface);
 
-  anariRelease(d, surfaceArray);
-  anariRelease(d, surface);
-
-  std::vector<ANARIInstance> instances;
+  std::vector<anari::Instance> instances;
 
   auto createInstance = [&](float rotation, glm::vec3 axis) {
-    ANARIInstance inst = anariNewInstance(d);
+    auto inst = anari::newObject<anari::Instance>(d);
 
     auto tl = glm::translate(glm::mat4(1.f), glm::vec3(0, 0, .5f));
     auto rot = glm::rotate(glm::mat4(1.f), rotation, axis);
     glm::mat4x3 xfm = rot * tl;
     anari::setParameter(d, inst, "transform", xfm);
     anari::setParameter(d, inst, "group", group);
-    anariCommit(d, inst);
+    anari::commit(d, inst);
     return inst;
   };
 
@@ -146,18 +133,18 @@ void TexturedCube::commit()
   instances.push_back(createInstance(glm::radians(90.f), glm::vec3(1, 0, 0)));
   instances.push_back(createInstance(glm::radians(270.f), glm::vec3(1, 0, 0)));
 
-  ANARIArray1D instanceArray = anariNewArray1D(
-      d, instances.data(), nullptr, nullptr, ANARI_INSTANCE, instances.size());
+  anari::setAndReleaseParameter(d,
+      m_world,
+      "instance",
+      anari::newArray(d, instances.data(), instances.size()));
 
-  anari::setAndReleaseParameter(d, m_world, "instance", instanceArray);
-
-  anariRelease(d, group);
+  anari::release(d, group);
   for (auto i : instances)
-    anariRelease(d, i);
+    anari::release(d, i);
 
   setDefaultAmbientLight(m_world);
 
-  anariCommit(d, m_world);
+  anari::commit(d, m_world);
 }
 
 std::vector<Camera> TexturedCube::cameras()
@@ -170,7 +157,7 @@ std::vector<Camera> TexturedCube::cameras()
   return {cam};
 }
 
-TestScene *sceneTexturedCube(ANARIDevice d)
+TestScene *sceneTexturedCube(anari::Device d)
 {
   return new TexturedCube(d);
 }
