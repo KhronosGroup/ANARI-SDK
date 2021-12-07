@@ -47,7 +47,6 @@ add_library(${PROJECT_NAME} SHARED
 
   material/Material.cpp
   material/Matte.cpp
-  material/OBJ.cpp
 
   renderer/AmbientOcclusion.cpp
   renderer/Debug.cpp

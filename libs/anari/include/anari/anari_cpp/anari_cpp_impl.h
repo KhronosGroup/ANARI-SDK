@@ -353,6 +353,12 @@ inline void setParameter(
   setParameter(d, o, name, v.c_str());
 }
 
+inline void setParameter(
+    Device d, Object o, const char *name, ANARIDataType type, const void *v)
+{
+  anariSetParameter(d, o, name, type, v);
+}
+
 template <typename T>
 inline void setAndReleaseParameter(
     ANARIDevice d, ANARIObject o, const char *name, const T &v)

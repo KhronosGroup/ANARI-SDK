@@ -3,7 +3,6 @@
 
 #include "Material.h"
 // specific types
-#include "OBJ.h"
 #include "Matte.h"
 
 namespace anari {
@@ -15,8 +14,9 @@ static void init()
 {
   g_materials = std::make_unique<FactoryMap<Material>>();
 
-  g_materials->emplace("obj", []() -> Material * { return new OBJ; });
   g_materials->emplace("matte", []() -> Material * { return new Matte; });
+  g_materials->emplace(
+      "transparentMatte", []() -> Material * { return new Matte; });
 }
 
 Material *Material::createInstance(const char *type)

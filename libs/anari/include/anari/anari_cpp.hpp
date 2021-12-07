@@ -161,6 +161,9 @@ void setParameter(Device d, Object o, const char *name, T &&v);
 
 void setParameter(Device d, Object o, const char *name, std::string v);
 
+void setParameter(
+    Device d, Object o, const char *name, ANARIDataType type, const void *v);
+
 template <typename T>
 void setAndReleaseParameter(Device d, Object o, const char *name, const T &v);
 

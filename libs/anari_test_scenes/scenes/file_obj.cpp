@@ -98,19 +98,15 @@ static void loadObj(
   anari::commit(d, defaultMaterial);
 
   for (auto &mat : objdata.materials) {
-    auto m = anari::newObject<anari::Material>(d, "matte");
+    auto m = anari::newObject<anari::Material>(d, "transparentMatte");
 
-    anariSetParameter(d, m, "tf", ANARI_FLOAT32_VEC3, &mat.transmittance[0]);
-    anariSetParameter(d, m, "kd", ANARI_FLOAT32_VEC3, &mat.diffuse[0]);
-    anariSetParameter(d, m, "ks", ANARI_FLOAT32_VEC3, &mat.specular[0]);
-
-    anari::setParameter(d, m, "ns", mat.shininess);
-    anari::setParameter(d, m, "d", mat.dissolve);
+    anari::setParameter(d, m, "color", ANARI_FLOAT32_VEC3, &mat.diffuse[0]);
+    anari::setParameter(d, m, "opacity", mat.dissolve);
 
     if (!mat.diffuse_texname.empty()) {
       auto map_kd = loadTexture(d, basePath + mat.diffuse_texname);
       if (map_kd)
-        anari::setAndReleaseParameter(d, m, "map_kd", map_kd);
+        anari::setAndReleaseParameter(d, m, "map_color", map_kd);
     }
 
     anari::commit(d, m);
