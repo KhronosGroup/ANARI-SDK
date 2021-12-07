@@ -384,11 +384,8 @@ void ExampleDevice::setParameter(
 
   if (fcn)
     fcn(object, name, mem);
-  else {
-    std::stringstream ss;
-    ss << "unknown handler to set parameter on object: " << type;
-    throw std::runtime_error(ss.str());
-  }
+  else
+    fprintf(stderr, "warning - no parameter setter for type '%i'\n", int(type));
 }
 
 void ExampleDevice::unsetParameter(ANARIObject o, const char *name)

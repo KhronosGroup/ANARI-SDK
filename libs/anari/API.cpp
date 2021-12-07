@@ -31,19 +31,10 @@
 #define ANARI_CATCH_BEGIN try {
 #define ANARI_CATCH_END(a)                                                     \
   }                                                                            \
-  catch (const std::bad_alloc &)                                               \
-  {                                                                            \
-    printf("ANARI BAD ALLOC\n");                                               \
-    return a;                                                                  \
-  }                                                                            \
-  catch (const std::exception &e)                                              \
-  {                                                                            \
-    printf("ANARI ERROR: %s\n", e.what());                                     \
-    return a;                                                                  \
-  }                                                                            \
   catch (...)                                                                  \
   {                                                                            \
-    printf("ANARI UNKOWN EXCEPTION\n");                                        \
+    fprintf(stderr, "TERMINATING DUE TO UNCAUGHT ANARI EXCEPTION\n");          \
+    std::terminate();                                                          \
     return a;                                                                  \
   }
 #define ANARI_NORETURN /**/
