@@ -7,4 +7,12 @@ include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@_Exports.cmake")
 
 check_required_components("@PROJECT_NAME@")
 
+if (NOT TARGET anari::anari)
+  message(FATAL_ERROR "CMAKE_PREFIX_PATH or anari_DIR are pointing to an \
+  ANARI-SDK build directory. Please do a full install of the SDK \
+  (e.g. 'make install') and point to where you installed it \
+  (CMAKE_INSTALL_PREFIX in your build of ANARI-SDK). \
+  Consuming ANARI-SDK from a build directory is not supported.")
+endif()
+
 set(ANARI_FOUND TRUE)
