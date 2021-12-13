@@ -78,7 +78,7 @@ void TexturedCube::commit()
 {
   anari::Device d = m_device;
 
-  auto geom = anari::newObject<anari::Geometry>(d, "mesh");
+  auto geom = anari::newObject<anari::Geometry>(d, "triangle");
   anari::setAndReleaseParameter(d,
       geom,
       "vertex.position",
@@ -87,8 +87,10 @@ void TexturedCube::commit()
       geom,
       "vertex.texcoord",
       anari::newArray(d, texcoords.data(), texcoords.size()));
-  anari::setAndReleaseParameter(
-      d, geom, "index", anari::newArray(d, indices.data(), indices.size()));
+  anari::setAndReleaseParameter(d,
+      geom,
+      "primitive.index",
+      anari::newArray(d, indices.data(), indices.size()));
   anari::commit(d, geom);
 
   auto surface = anari::newObject<anari::Surface>(d);

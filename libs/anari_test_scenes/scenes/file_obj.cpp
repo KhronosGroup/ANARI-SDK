@@ -161,7 +161,7 @@ static void loadObj(
       }
     }
 
-    auto geom = anari::newObject<anari::Geometry>(d, "mesh");
+    auto geom = anari::newObject<anari::Geometry>(d, "triangle");
 
     anari::setAndReleaseParameter(
         d, geom, "vertex.position", anari::newArray(d, v.data(), v.size()));

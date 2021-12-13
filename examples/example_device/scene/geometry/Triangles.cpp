@@ -70,8 +70,7 @@ void Triangles::commit()
 {
   Geometry::commit();
 
-  m_indices = getParamObject<Array1D>(
-      "primitive.index", getParamObject<Array1D>("index"));
+  m_indices = getParamObject<Array1D>("primitive.index");
   m_vertices = getParamObject<Array1D>("vertex.position");
   m_colorData = getParamObject<Array1D>("vertex.color");
 

@@ -121,7 +121,7 @@ int main(int argc, const char **argv)
 
   // create and setup surface and mesh
   //   A mesh requires an index, plus arrays of: locations & colors
-  ANARIGeometry mesh = anariNewGeometry(dev, "mesh");
+  ANARIGeometry mesh = anariNewGeometry(dev, "triangle");
 
   // Set the vertex locations
   ANARIArray1D array =
@@ -139,14 +139,14 @@ int main(int argc, const char **argv)
   // Set the index
   array = anariNewArray1D(dev, index, 0, 0, ANARI_UINT32_VEC3, 2, 0);
   anariCommit(dev, array);
-  anariSetParameter(dev, mesh, "index", ANARI_ARRAY1D, &array);
+  anariSetParameter(dev, mesh, "primitive.index", ANARI_ARRAY1D, &array);
   anariRelease(dev, array);
 
   // Affect all the mesh values
   anariCommit(dev, mesh);
 
   // Set the material rendering parameters
-  ANARIMaterial mat = anariNewMaterial(dev, "obj");
+  ANARIMaterial mat = anariNewMaterial(dev, "matte");
   anariCommit(dev, mat);
 
   // put the mesh into a surface

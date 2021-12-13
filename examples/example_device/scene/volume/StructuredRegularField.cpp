@@ -18,8 +18,8 @@ void StructuredRegularField::commit()
   m_data = m_dataArray->dataAs<float>();
   m_dims = m_dataArray->size();
 
-  m_origin = getParam<vec3>("gridOrigin", vec3(0));
-  m_spacing = getParam<vec3>("gridSpacing", vec3(1));
+  m_origin = getParam<vec3>("origin", vec3(0));
+  m_spacing = getParam<vec3>("spacing", vec3(1));
 
   m_invSpacing = 1.f / m_spacing;
   m_coordUpperBound = vec3(std::nextafter(m_dims.x - 1, 0),

@@ -228,7 +228,7 @@ int main(int argc, const char **argv)
   anariCommit(dev, mesh);
 
   // Set the material rendering parameters
-  ANARIMaterial mat = anariNewMaterial(dev, "obj");
+  ANARIMaterial mat = anariNewMaterial(dev, "matte");
   anariCommit(dev, mat);
 
   // put the mesh into a surface
@@ -302,7 +302,7 @@ int main(int argc, const char **argv)
 
   anariCommit(dev, frame);
 
-  printf("rendering initial frame to firstFrame.png...");
+  printf("rendering initial frame to firstFrame.ppm...");
 
   // render one frame
   anariRenderFrame(dev, frame);

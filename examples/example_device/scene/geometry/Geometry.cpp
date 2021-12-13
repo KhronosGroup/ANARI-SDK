@@ -15,7 +15,6 @@ static void init()
 {
   g_geometries = std::make_unique<FactoryMap<Geometry>>();
 
-  g_geometries->emplace("mesh", []() -> Geometry * { return new Triangles; });
   g_geometries->emplace(
       "triangle", []() -> Geometry * { return new Triangles; });
   g_geometries->emplace("sphere", []() -> Geometry * { return new Spheres; });

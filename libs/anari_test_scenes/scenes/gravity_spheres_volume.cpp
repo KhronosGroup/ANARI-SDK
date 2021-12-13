@@ -113,8 +113,8 @@ void GravityVolume::commit()
   auto voxels = generateVoxels(points, glm::ivec3(volumeDims));
 
   auto field = anari::newObject<anari::SpatialField>(d, "structuredRegular");
-  anari::setParameter(d, field, "gridOrigin", glm::vec3(-1.f));
-  anari::setParameter(d, field, "gridSpacing", glm::vec3(2.f / volumeDims));
+  anari::setParameter(d, field, "origin", glm::vec3(-1.f));
+  anari::setParameter(d, field, "spacing", glm::vec3(2.f / volumeDims));
   anari::setAndReleaseParameter(d,
       field,
       "data",
