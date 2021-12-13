@@ -8,12 +8,12 @@ namespace example_device {
 
 void StructuredRegularField::commit()
 {
-  if (!hasParam("data")) {
+  m_dataArray = getParamObject<Array3D>("data");
+
+  if (!m_dataArray) {
     throw std::runtime_error(
         "missing 'data' object on 'structuredRegular' volume!");
   }
-
-  m_dataArray = getParamObject<Array3D>("data");
 
   m_data = m_dataArray->dataAs<float>();
   m_dims = m_dataArray->size();

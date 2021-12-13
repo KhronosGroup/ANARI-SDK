@@ -74,6 +74,9 @@ void Triangles::commit()
   m_vertices = getParamObject<Array1D>("vertex.position");
   m_colorData = getParamObject<Array1D>("vertex.color");
 
+  if (!m_vertices)
+    throw std::runtime_error("missing 'vertex.position' on triangle geometry");
+
   m_colors = m_colorData ? m_colorData->dataAs<vec4>() : nullptr;
 
   m_triangles.clear();

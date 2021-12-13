@@ -51,6 +51,9 @@ void Spheres::commit()
   m_colorArray = getParamObject<Array1D>("vertex.color");
   m_color = m_colorArray ? m_colorArray->dataAs<vec4>() : m_color;
 
+  if (!m_positionData)
+    throw std::runtime_error("missing 'vertex.position' on sphere geometry");
+
   float globalRadius = getParam<float>("radius", 0.01f);
 
   m_spheres.clear();

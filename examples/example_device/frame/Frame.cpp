@@ -47,6 +47,13 @@ void Frame::commit()
   m_camera = getParamObject<Camera>("camera");
   m_world = getParamObject<World>("world");
 
+  if (!m_renderer)
+    throw std::runtime_error("missing 'renderer' on frame");
+  if (!m_camera)
+    throw std::runtime_error("missing 'camera' on frame");
+  if (!m_world)
+    throw std::runtime_error("missing 'world' on frame");
+
   m_format = getParam<ANARIDataType>("color", ANARI_UFIXED8_RGBA_SRGB);
   m_size = getParam<uvec2>("size", ivec2(10));
   m_invSize = 1.f / vec2(m_size);
