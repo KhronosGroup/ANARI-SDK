@@ -18,17 +18,17 @@
 #include <vector>
 
 #if defined(__MACOSX__) || defined(__APPLE__)
-#define RKCOMMON_LIB_EXT ".dylib"
+#define ANARI_LIB_EXT ".dylib"
 #else
-#define RKCOMMON_LIB_EXT ".so"
+#define ANARI_LIB_EXT ".so"
 #endif
 
 #ifdef _WIN32
-#define LOOKUP_SYM(lib, symbol) GetProcAddress((HMODULE)lib, symbol.c_str());
-#define FREE_LIB(lib) FreeLibrary((HMODULE)lib);
+#define ANARI_LOOKUP_SYM(lib, symbol) GetProcAddress((HMODULE)lib, symbol);
+#define ANARI_FREE_LIB(lib) FreeLibrary((HMODULE)lib);
 #else
-#define LOOKUP_SYM(lib, symbol) dlsym(lib, symbol.c_str());
-#define FREE_LIB(lib) dlclose(lib)
+#define ANARI_LOOKUP_SYM(lib, symbol) dlsym(lib, symbol);
+#define ANARI_FREE_LIB(lib) dlclose(lib)
 #endif
 
 /* Export a symbol to ask the dynamic loader about in order to locate this
@@ -106,7 +106,7 @@ static void *loadLibrary(
     LocalFree(lpMsgBuf);
   }
 #else
-  std::string fullName = libLocation + "lib" + file + RKCOMMON_LIB_EXT;
+  std::string fullName = libLocation + "lib" + file + ANARI_LIB_EXT;
   lib = dlopen(fullName.c_str(), RTLD_LAZY | RTLD_LOCAL);
   if (lib == nullptr) {
     errorMsg += dlerror();
@@ -138,102 +138,41 @@ void *loadANARILibrary(const std::string &libName)
 
 void *getSymbolAddress(void *lib, const std::string &symbol)
 {
-  return LOOKUP_SYM(lib, symbol);
+  return ANARI_LOOKUP_SYM(lib, symbol.c_str());
 }
 
 void freeLibrary(void *lib)
 {
   if (lib)
-    FREE_LIB(lib);
+    ANARI_FREE_LIB(lib);
 }
 
 Library::Library(
-    const char *name, ANARIStatusCallback defaultStatusCB, void *statusCBPtr)
-    : m_defaultDeviceName(name),
-      m_defaultStatusCB(defaultStatusCB),
-      m_defaultStatusCBUserPtr(statusCBPtr)
+    std::string name, ANARIStatusCallback defaultStatusCB, void *statusCBPtr)
 {
   void *lib = nullptr;
-  if (std::string(name) == "debug")
-    lib = loadANARILibrary("debug");
+  if (name == "debug")
+    lib = loadANARILibrary("anari_debug");
   else
     lib = loadANARILibrary(std::string("anari_library_") + name);
 
   if (!lib)
     throw std::runtime_error("failed to load library " + std::string(name));
 
-  m_lib = lib;
+  m_handle = lib;
 
-  std::string prefix = "anari_library_" + std::string(name);
+  std::string initFcnName = "anaribackend_load_library_" + name;
+  auto initFcn =
+      (ANARIBackendLoadLibrary *)getSymbolAddress(m_handle, initFcnName);
 
-  std::string newDeviceFcnName = prefix + "_new_device";
-  m_newDeviceFcn = (NewDeviceFcn)getSymbolAddress(m_lib, newDeviceFcnName);
+  if (!initFcn)
+    throw std::runtime_error(
+        "failed to find load_library function for " + name + " library");
 
-  if (!m_newDeviceFcn) {
-    throw std::runtime_error("failed to find newDevice() function for "
-        + std::string(name) + " library");
-  }
+  m_lib = initFcn(defaultStatusCB, statusCBPtr);
 
-  std::string initFcnName = prefix + "_init";
-  auto initFcn = (InitFcn)getSymbolAddress(m_lib, initFcnName);
-
-  if (initFcn)
-    initFcn();
-
-  std::string allocFcnName = prefix + "_allocate";
-  AllocFcn allocFcn = (AllocFcn)getSymbolAddress(m_lib, allocFcnName);
-
-  if (allocFcn)
-    m_libraryData = allocFcn();
-
-  std::string freeFcnName = prefix + "_free";
-  FreeFcn freeFcn = (FreeFcn)getSymbolAddress(m_lib, freeFcnName);
-
-  if (freeFcn)
-    m_freeFcn = freeFcn;
-
-  std::string loadModuleFcnName = prefix + "_load_module";
-  auto loadModuleFcn = (ModuleFcn)getSymbolAddress(m_lib, loadModuleFcnName);
-
-  if (loadModuleFcn)
-    m_loadModuleFcn = loadModuleFcn;
-
-  std::string unloadModuleFcnName = prefix + "_unload_module";
-  auto unloadModuleFcn =
-      (ModuleFcn)getSymbolAddress(m_lib, unloadModuleFcnName);
-
-  if (unloadModuleFcn)
-    m_unloadModuleFcn = unloadModuleFcn;
-
-  std::string getDeviceSubtypesFcnName = prefix + "_get_device_subtypes";
-  auto getDeviceSubtypesFcn =
-      (GetDeviceSubtypesFcn)getSymbolAddress(m_lib, getDeviceSubtypesFcnName);
-
-  if (getDeviceSubtypesFcn)
-    m_getDeviceSubtypesFcn = getDeviceSubtypesFcn;
-
-  std::string getObjectSubtypesFcnName = prefix + "_get_object_subtypes";
-  auto getObjectSubtypesFcn =
-      (GetObjectSubtypesFcn)getSymbolAddress(m_lib, getObjectSubtypesFcnName);
-
-  if (getObjectSubtypesFcn)
-    m_getObjectSubtypesFcn = getObjectSubtypesFcn;
-
-  std::string getObjectParametersFcnName = prefix + "_get_object_parameters";
-  auto getObjectParametersFcn = (GetObjectParametersFcn)getSymbolAddress(
-      m_lib, getObjectParametersFcnName);
-
-  if (getObjectParametersFcn)
-    m_getObjectParametersFcn = getObjectParametersFcn;
-
-  std::string getObjectParameterPropertyFcnName =
-      prefix + "_get_parameter_property";
-  auto getObjectParameterPropertyFcn =
-      (GetObjectParameterPropertyFcn)getSymbolAddress(
-          m_lib, getObjectParameterPropertyFcnName);
-
-  if (getObjectParameterPropertyFcn)
-    m_getObjectParameterPropertyFcn = getObjectParameterPropertyFcn;
+  if (!m_lib)
+    throw std::runtime_error("failed to initialize " + name + " library");
 
   auto devices = getDeviceSubtypes();
   if (devices && devices[0])
@@ -242,61 +181,43 @@ Library::Library(
 
 Library::~Library()
 {
-  if (m_freeFcn)
-    m_freeFcn(m_libraryData);
+  if (m_lib->unloadLibrary)
+    m_lib->unloadLibrary(m_lib->data);
 
-  freeLibrary(m_lib);
-}
-
-void *Library::libraryData() const
-{
-  return m_libraryData;
-}
-
-ANARIDevice Library::newDevice(const char *subtype) const
-{
-  return m_newDeviceFcn ? m_newDeviceFcn(subtype) : nullptr;
-}
-
-const char *Library::defaultDeviceName() const
-{
-  return m_defaultDeviceName.c_str();
-}
-
-ANARIStatusCallback Library::defaultStatusCB() const
-{
-  return m_defaultStatusCB;
-}
-
-void *Library::defaultStatusCBUserPtr() const
-{
-  return m_defaultStatusCBUserPtr;
+  freeLibrary(m_handle);
 }
 
 void Library::loadModule(const char *name) const
 {
-  if (m_loadModuleFcn)
-    m_loadModuleFcn(libraryData(), name);
+  // TODO
 }
 
 void Library::unloadModule(const char *name) const
 {
-  if (m_unloadModuleFcn)
-    m_unloadModuleFcn(libraryData(), name);
+  // TODO
+}
+
+const char *Library::replaceDefaultDeviceName(const char *deviceSubtype) const
+{
+  if (std::string(deviceSubtype) == "default")
+    return m_defaultDeviceName.c_str();
+  return deviceSubtype;
 }
 
 const char **Library::getDeviceSubtypes()
 {
-  if (m_getDeviceSubtypesFcn)
-    return m_getDeviceSubtypesFcn(libraryData());
+  if (m_lib->getDeviceSubtypes)
+    return m_lib->getDeviceSubtypes(m_lib->data);
+
   return nullptr;
 }
 
 const char **Library::getObjectSubtypes(
     const char *deviceSubtype, ANARIDataType objectType)
 {
-  if (m_getObjectSubtypesFcn)
-    return m_getObjectSubtypesFcn(libraryData(), deviceSubtype, objectType);
+  if (m_lib->getObjectSubtypes)
+    return m_lib->getObjectSubtypes(
+        m_lib->data, replaceDefaultDeviceName(deviceSubtype), objectType);
   return nullptr;
 }
 
@@ -304,29 +225,38 @@ const ANARIParameter *Library::getObjectParameters(const char *deviceSubtype,
     const char *objectSubtype,
     ANARIDataType objectType)
 {
-  if (m_getObjectParametersFcn)
-    return m_getObjectParametersFcn(
-        libraryData(), deviceSubtype, objectSubtype, objectType);
+  if (m_lib->getObjectParameters)
+    return m_lib->getObjectParameters(m_lib->data,
+        replaceDefaultDeviceName(deviceSubtype),
+        objectSubtype,
+        objectType);
   return nullptr;
 }
 
-const void *Library::getParameterProperty(const char *deviceSubtype,
+const void *Library::getParameterInfo(const char *deviceSubtype,
     const char *objectSubtype,
     ANARIDataType objectType,
     const char *parameterName,
     ANARIDataType parameterType,
-    const char *propertyName,
-    ANARIDataType propertyType)
+    const char *infoName,
+    ANARIDataType infoType)
 {
-  if (m_getObjectParameterPropertyFcn)
-    return m_getObjectParameterPropertyFcn(libraryData(),
-        deviceSubtype,
+  if (m_lib->getParameterInfo)
+    return m_lib->getParameterInfo(m_lib->data,
+        replaceDefaultDeviceName(deviceSubtype),
         objectSubtype,
         objectType,
         parameterName,
         parameterType,
-        propertyName,
-        propertyType);
+        infoName,
+        infoType);
+  return nullptr;
+}
+
+ANARIDevice Library::newDevice(const char *subtype) const
+{
+  if (m_lib->newDevice)
+    return m_lib->newDevice(m_lib->data, replaceDefaultDeviceName(subtype));
   return nullptr;
 }
 

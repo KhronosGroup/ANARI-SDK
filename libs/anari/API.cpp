@@ -128,8 +128,6 @@ extern "C" ANARIDevice anariNewDevice(
   if (!_d)
     return nullptr;
   auto &d = deviceRef(_d);
-  d.m_defaultStatusCB = lib.defaultStatusCB();
-  d.m_defaultStatusCBUserPtr = lib.defaultStatusCBUserPtr();
   return _d;
 }
 ANARI_CATCH_END(nullptr)
@@ -157,9 +155,6 @@ extern "C" const char **anariGetObjectSubtypes(ANARILibrary l,
 {
   THROW_IF_NULL_STRING(deviceSubtype);
 
-  if (std::string(deviceSubtype) == "default")
-    deviceSubtype = libraryRef(l).defaultDeviceName();
-
   return libraryRef(l).getObjectSubtypes(deviceSubtype, objectType);
 }
 ANARI_CATCH_END(nullptr)
@@ -171,9 +166,6 @@ extern "C" const ANARIParameter *anariGetObjectParameters(ANARILibrary l,
 {
   THROW_IF_NULL_STRING(deviceSubtype);
   THROW_IF_NULL_STRING(objectSubtype);
-
-  if (std::string(deviceSubtype) == "default")
-    deviceSubtype = libraryRef(l).defaultDeviceName();
 
   return libraryRef(l).getObjectParameters(
       deviceSubtype, objectSubtype, objectType);
@@ -194,10 +186,7 @@ extern "C" const void *anariGetParameterInfo(ANARILibrary l,
   THROW_IF_NULL_STRING(parameterName);
   THROW_IF_NULL_STRING(parameterType);
 
-  if (std::string(deviceSubtype) == "default")
-    deviceSubtype = libraryRef(l).defaultDeviceName();
-
-  return libraryRef(l).getParameterProperty(deviceSubtype,
+  return libraryRef(l).getParameterInfo(deviceSubtype,
       objectSubtype,
       objectType,
       parameterName,
