@@ -119,8 +119,10 @@ inline T ParameterizedObject::getParam(const std::string &name, T valIfNotFound)
     T retval;
     std::memcpy(&retval, param->localStorage, sizeof(T));
     return retval;
-  } else
+  } else if (param->data.is<T>())
     return param->data.get<T>();
+  else
+    return valIfNotFound;
 }
 
 inline void ParameterizedObject::resetAllParamQueryStatus()
