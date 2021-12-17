@@ -174,8 +174,7 @@ void GravityVolume::commit()
         d, m_world, "surface", anari::newArray(d, &surface));
     anari::release(d, surface);
   } else {
-    anari::setParameter<anari::Array1D>(
-        d, m_world, "surface", ANARI_INVALID_HANDLE);
+    anari::unsetParameter(d, m_world, "surface");
   }
 
   anari::setAndReleaseParameter(
