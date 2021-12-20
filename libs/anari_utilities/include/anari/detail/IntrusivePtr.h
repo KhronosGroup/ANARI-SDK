@@ -173,6 +173,8 @@ inline IntrusivePtr<T> &IntrusivePtr<T>::operator=(const IntrusivePtr &input)
 template <typename T>
 inline IntrusivePtr<T> &IntrusivePtr<T>::operator=(IntrusivePtr &&input)
 {
+  if (ptr)
+    ptr->refDec();
   ptr = input.ptr;
   input.ptr = nullptr;
   return *this;
