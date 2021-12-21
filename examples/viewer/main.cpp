@@ -86,7 +86,7 @@ static void initializeANARI()
 /******************************************************************/
 void printUsage()
 {
-  std::cout << "./viewer [{--help|-h}] [{--library|-l} <ANARI library>] [.obj intput file]" << std::endl;
+  std::cout << "./anariViewer [{--help|-h}] [{--library|-l} <ANARI library>] [.obj intput file]" << std::endl;
 }
 
 /******************************************************************/

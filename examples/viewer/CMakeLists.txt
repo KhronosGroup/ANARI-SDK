@@ -1,7 +1,7 @@
 ## Copyright 2021 The Khronos Group
 ## SPDX-License-Identifier: Apache-2.0
 
-project(viewer LANGUAGES CXX)
+project(anariViewer LANGUAGES CXX)
 
 ## Build viewer ##
 

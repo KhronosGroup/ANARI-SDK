@@ -83,7 +83,7 @@ get the library to load. For example it can be run with:
 
 ```bash
 % export ANARI_LIBRARY=example
-% ./viewer /path/to/some/file.obj
+% ./anariViewer /path/to/some/file.obj
 ```
 
 Alternatively, either `--library` or `-l` can be used to override the library to
