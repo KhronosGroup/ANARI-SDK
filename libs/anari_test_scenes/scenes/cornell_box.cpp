@@ -269,13 +269,18 @@ void CornellBox::commit()
       d, m_world, "surface", anari::newArray(d, &surface));
   anari::release(d, surface);
 
-  auto light = anari::newObject<anari::Light>(d, "quad");
-
-  anari::setParameter(d, light, "color", glm::vec3(0.78f, 0.551f, 0.183f));
-  anari::setParameter(d, light, "intensity", 47.f);
-  anari::setParameter(d, light, "position", glm::vec3(-0.23f, 0.98f, -0.16f));
-  anari::setParameter(d, light, "edge1", glm::vec3(0.47f, 0.0f, 0.0f));
-  anari::setParameter(d, light, "edge2", glm::vec3(0.0f, 0.0f, 0.38f));
+  anari::Light light;
+  if (anari::deviceImplements(d, "ANARI_KHR_DEVICE_SYNCHRONIZATION")) {
+    light = anari::newObject<anari::Light>(d, "quad");
+    anari::setParameter(d, light, "color", glm::vec3(0.78f, 0.551f, 0.183f));
+    anari::setParameter(d, light, "intensity", 47.f);
+    anari::setParameter(d, light, "position", glm::vec3(-0.23f, 0.98f, -0.16f));
+    anari::setParameter(d, light, "edge1", glm::vec3(0.47f, 0.0f, 0.0f));
+    anari::setParameter(d, light, "edge2", glm::vec3(0.0f, 0.0f, 0.38f));
+  } else {
+    light = anari::newObject<anari::Light>(d, "directional");
+    anari::setParameter(d, light, "direction", glm::vec3(0.f, -0.5f, 1.f));
+  }
 
   anari::commit(d, light);
 
