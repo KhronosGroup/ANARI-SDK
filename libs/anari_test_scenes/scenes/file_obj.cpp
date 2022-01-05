@@ -30,33 +30,6 @@ static std::string pathOf(const std::string &filename)
   return filename.substr(0, pos + 1);
 }
 
-static ANARISampler loadTexture(anari::Device d, std::string filename)
-{
-  anari::Sampler tex = nullptr;
-
-  std::transform(
-      filename.begin(), filename.end(), filename.begin(), [](char c) {
-        return c == '\\' ? '/' : c;
-      });
-
-  int width, height, n;
-  float *data = stbi_loadf(filename.c_str(), &width, &height, &n, 0);
-
-  if (data && n >= 3) {
-    const int texelType = n == 3 ? ANARI_FLOAT32_VEC3 : ANARI_FLOAT32_VEC4;
-    auto array = anariNewArray2D(
-        d, data, &anari_free, nullptr, texelType, width, height);
-
-    tex = anari::newObject<anari::Sampler>(d, "texture2d");
-    anari::setAndReleaseParameter(d, tex, "data", array);
-    anari::setParameter(d, tex, "filter", "bilinear");
-    anari::commit(d, tex);
-  } else
-    printf("failed to load texture '%s'\n", filename.c_str());
-
-  return tex;
-}
-
 struct OBJData
 {
   tinyobj::attrib_t attrib;
@@ -102,13 +75,6 @@ static void loadObj(
 
     anari::setParameter(d, m, "color", ANARI_FLOAT32_VEC3, &mat.diffuse[0]);
     anari::setParameter(d, m, "opacity", mat.dissolve);
-
-    if (!mat.diffuse_texname.empty()) {
-      auto map_kd = loadTexture(d, basePath + mat.diffuse_texname);
-      if (map_kd)
-        anari::setAndReleaseParameter(d, m, "map_color", map_kd);
-    }
-
     anari::commit(d, m);
 
     materials.push_back(m);
@@ -195,7 +161,7 @@ static void loadObj(
   anari::setAndReleaseParameter(
       d, group, "surface", anari::newArray(d, meshes.data(), meshes.size()));
 
-  auto light = anari::newObject<anari::Light>(d, "distant");
+  auto light = anari::newObject<anari::Light>(d, "directional");
   anari::setParameter(d, light, "direction", glm::vec3(-1, -2, -1));
   anari::setParameter(d, light, "irradiance", 4.f);
   anari::commit(d, light);
