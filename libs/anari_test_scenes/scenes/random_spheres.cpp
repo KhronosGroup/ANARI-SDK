@@ -43,6 +43,8 @@ void RandomSpheres::commit()
   auto surface = anari::newObject<anari::Surface>(d);
   auto geom = anari::newObject<anari::Geometry>(d, "sphere");
   auto mat = anari::newObject<anari::Material>(d, "matte");
+  anari::setParameter(d, mat, "color", "color");
+  anari::commit(d, mat);
 
   anari::setParameter(d, m_world, "surface", anari::newArray(d, &surface));
 

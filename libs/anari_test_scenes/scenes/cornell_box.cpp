@@ -260,6 +260,7 @@ void CornellBox::commit()
   anari::setAndReleaseParameter(d, surface, "geometry", geom);
 
   auto mat = anari::newObject<anari::Material>(d, "matte");
+  anari::setParameter(d, mat, "color", "color");
   anari::commit(d, mat);
   anari::setAndReleaseParameter(d, surface, "material", mat);
 
@@ -270,6 +271,7 @@ void CornellBox::commit()
   anari::release(d, surface);
 
   anari::Light light;
+
   if (anari::deviceImplements(d, "ANARI_KHR_DEVICE_SYNCHRONIZATION")) {
     light = anari::newObject<anari::Light>(d, "quad");
     anari::setParameter(d, light, "color", glm::vec3(0.78f, 0.551f, 0.183f));

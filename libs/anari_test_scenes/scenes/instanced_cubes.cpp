@@ -96,6 +96,7 @@ void InstancedCubes::commit()
   anari::setAndReleaseParameter(d, surface, "geometry", geom);
 
   auto mat = anari::newObject<anari::Material>(d, "matte");
+  anari::setParameter(d, mat, "color", "color");
   anari::commit(d, mat);
   anari::setAndReleaseParameter(d, surface, "material", mat);
   anari::commit(d, surface);

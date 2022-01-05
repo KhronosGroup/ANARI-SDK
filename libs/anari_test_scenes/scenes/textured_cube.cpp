@@ -85,7 +85,7 @@ void TexturedCube::commit()
       anari::newArray(d, vertices.data(), vertices.size()));
   anari::setAndReleaseParameter(d,
       geom,
-      "vertex.texcoord",
+      "vertex.attribute0",
       anari::newArray(d, texcoords.data(), texcoords.size()));
   anari::setAndReleaseParameter(d,
       geom,
@@ -97,12 +97,13 @@ void TexturedCube::commit()
   anari::setAndReleaseParameter(d, surface, "geometry", geom);
 
   auto tex = anari::newObject<anari::Sampler>(d, "texture2d");
-  anari::setAndReleaseParameter(d, tex, "data", makeTextureData(d, 8));
+  anari::setAndReleaseParameter(d, tex, "image", makeTextureData(d, 8));
+  anari::setParameter(d, tex, "inAttribute", "attribute0");
   anari::setParameter(d, tex, "filter", "nearest");
   anari::commit(d, tex);
 
   auto mat = anari::newObject<anari::Material>(d, "matte");
-  anari::setAndReleaseParameter(d, mat, "map_kd", tex);
+  anari::setAndReleaseParameter(d, mat, "color", tex);
   anari::commit(d, mat);
   anari::setAndReleaseParameter(d, surface, "material", mat);
   anari::commit(d, surface);
