@@ -14,7 +14,7 @@ void Perspective::commit()
 {
   Camera::commit();
 
-  float fovy = M_PI * getParam<float>("fovy", 60.f) / 180.f;
+  float fovy = getParam<float>("fovy", glm::radians(60.f));
   float aspect = getParam<float>("aspect", 1.f);
 
   vec2 imgPlaneSize;
