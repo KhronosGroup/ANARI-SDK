@@ -170,7 +170,7 @@ inline Renderer newObject<Renderer>(Device d, const char *subtype)
 // 1D //
 
 template <typename T>
-inline Array1D newArray(Device d,
+inline Array1D newArray1D(Device d,
     T *appMemory,
     MemoryDeleter deleter,
     void *userPtr,
@@ -187,7 +187,7 @@ inline Array1D newArray(Device d,
 }
 
 template <typename T>
-inline Array1D newArray(
+inline Array1D newArray1D(
     Device d, T *appMemory, uint64_t numItems1, uint64_t byteStride1)
 {
   return anariNewArray1D(d,
@@ -199,7 +199,7 @@ inline Array1D newArray(
       byteStride1);
 }
 
-inline Array1D newArray(Device d, ANARIDataType type, uint64_t numItems1)
+inline Array1D newArray1D(Device d, ANARIDataType type, uint64_t numItems1)
 {
   return anariNewArray1D(d, nullptr, nullptr, nullptr, type, numItems1);
 }
@@ -207,7 +207,7 @@ inline Array1D newArray(Device d, ANARIDataType type, uint64_t numItems1)
 // 2D //
 
 template <typename T>
-inline Array2D newArray(Device d,
+inline Array2D newArray2D(Device d,
     T *appMemory,
     MemoryDeleter deleter,
     void *userPtr,
@@ -228,7 +228,7 @@ inline Array2D newArray(Device d,
 }
 
 template <typename T>
-inline Array2D newArray(Device d,
+inline Array2D newArray2D(Device d,
     T *appMemory,
     uint64_t numItems1,
     uint64_t numItems2,
@@ -246,7 +246,7 @@ inline Array2D newArray(Device d,
       byteStride2);
 }
 
-inline Array2D newArray(
+inline Array2D newArray2D(
     Device d, ANARIDataType type, uint64_t numItems1, uint64_t numItems2)
 {
   return anariNewArray2D(
@@ -256,7 +256,7 @@ inline Array2D newArray(
 // 3D //
 
 template <typename T>
-inline Array3D newArray(Device d,
+inline Array3D newArray3D(Device d,
     T *appMemory,
     MemoryDeleter deleter,
     void *userPtr,
@@ -281,7 +281,7 @@ inline Array3D newArray(Device d,
 }
 
 template <typename T>
-inline Array3D newArray(Device d,
+inline Array3D newArray3D(Device d,
     T *appMemory,
     uint64_t numItems1,
     uint64_t numItems2,
@@ -303,7 +303,7 @@ inline Array3D newArray(Device d,
       byteStride3);
 }
 
-inline Array3D newArray(Device d,
+inline Array3D newArray3D(Device d,
     ANARIDataType type,
     uint64_t numItems1,
     uint64_t numItems2,

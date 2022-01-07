@@ -83,7 +83,7 @@ Object newObject(Device d, const char *type, const char *subtype);
 // 1D
 
 template <typename T>
-Array1D newArray(Device,
+Array1D newArray1D(Device,
     T *appMemory,
     MemoryDeleter,
     void *userPtr,
@@ -91,15 +91,15 @@ Array1D newArray(Device,
     uint64_t byteStride1 = 0);
 
 template <typename T>
-Array1D newArray(
+Array1D newArray1D(
     Device, T *appMemory, uint64_t numItems1 = 1, uint64_t byteStride1 = 0);
 
-Array1D newArray(Device d, ANARIDataType type, uint64_t numItems1);
+Array1D newArray1D(Device d, ANARIDataType type, uint64_t numItems1);
 
 // 2D
 
 template <typename T>
-Array2D newArray(Device,
+Array2D newArray2D(Device,
     T *appMemory,
     MemoryDeleter,
     void *userPtr,
@@ -109,20 +109,20 @@ Array2D newArray(Device,
     uint64_t byteStride2 = 0);
 
 template <typename T>
-Array2D newArray(Device,
+Array2D newArray2D(Device,
     T *appMemory,
     uint64_t numItems1,
     uint64_t numItems2,
     uint64_t byteStride1 = 0,
     uint64_t byteStride2 = 0);
 
-Array2D newArray(
+Array2D newArray2D(
     Device d, ANARIDataType type, uint64_t numItems1, uint64_t numItems2);
 
 // 3D
 
 template <typename T>
-Array3D newArray(Device,
+Array3D newArray3D(Device,
     T *appMemory,
     MemoryDeleter,
     void *userPtr,
@@ -134,7 +134,7 @@ Array3D newArray(Device,
     uint64_t byteStride3 = 0);
 
 template <typename T>
-Array3D newArray(Device,
+Array3D newArray3D(Device,
     T *appMemory,
     uint64_t numItems1,
     uint64_t numItems2,
@@ -143,7 +143,7 @@ Array3D newArray(Device,
     uint64_t byteStride2 = 0,
     uint64_t byteStride3 = 0);
 
-Array3D newArray(Device d,
+Array3D newArray3D(Device d,
     ANARIDataType type,
     uint64_t numItems1,
     uint64_t numItems2,

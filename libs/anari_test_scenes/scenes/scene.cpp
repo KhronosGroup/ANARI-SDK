@@ -74,7 +74,7 @@ void TestScene::setDefaultLight(anari::World w)
   anari::setParameter(m_device, light, "irradiance", 4.f);
   anari::commit(m_device, light);
   anari::setAndReleaseParameter(
-      m_device, w, "light", anari::newArray(m_device, &light));
+      m_device, w, "light", anari::newArray1D(m_device, &light));
   anari::release(m_device, light);
 }
 

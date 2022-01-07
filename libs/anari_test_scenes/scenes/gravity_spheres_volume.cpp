@@ -118,8 +118,7 @@ void GravityVolume::commit()
   anari::setAndReleaseParameter(d,
       field,
       "data",
-      anari::newArray(
-          d, voxels.data(), volumeDims, volumeDims, volumeDims, 0, 0, 0));
+      anari::newArray3D(d, voxels.data(), volumeDims, volumeDims, volumeDims));
   anari::commit(d, field);
 
   auto volume = anari::newObject<anari::Volume>(d, "scivis");
@@ -137,11 +136,11 @@ void GravityVolume::commit()
     opacities.emplace_back(1.f);
 
     anari::setAndReleaseParameter(
-        d, volume, "color", anari::newArray(d, colors.data(), colors.size()));
+        d, volume, "color", anari::newArray1D(d, colors.data(), colors.size()));
     anari::setAndReleaseParameter(d,
         volume,
         "opacity",
-        anari::newArray(d, opacities.data(), opacities.size()));
+        anari::newArray1D(d, opacities.data(), opacities.size()));
     anari::setParameter(d, volume, "valueRange", voxelRange);
   }
 
@@ -158,7 +157,7 @@ void GravityVolume::commit()
     anari::setAndReleaseParameter(d,
         geom,
         "vertex.position",
-        anari::newArray(d, positions.data(), positions.size()));
+        anari::newArray1D(d, positions.data(), positions.size()));
     anari::setParameter(d, geom, "radius", 0.05f);
     anari::commit(d, geom);
 
@@ -171,14 +170,14 @@ void GravityVolume::commit()
     anari::commit(d, surface);
 
     anari::setAndReleaseParameter(
-        d, m_world, "surface", anari::newArray(d, &surface));
+        d, m_world, "surface", anari::newArray1D(d, &surface));
     anari::release(d, surface);
   } else {
     anari::unsetParameter(d, m_world, "surface");
   }
 
   anari::setAndReleaseParameter(
-      d, m_world, "volume", anari::newArray(d, &volume));
+      d, m_world, "volume", anari::newArray1D(d, &volume));
   anari::release(d, volume);
 
   setDefaultLight(m_world);

@@ -81,15 +81,15 @@ void InstancedCubes::commit()
   anari::setAndReleaseParameter(d,
       geom,
       "vertex.position",
-      anari::newArray(d, vertices.data(), vertices.size()));
+      anari::newArray1D(d, vertices.data(), vertices.size()));
   anari::setAndReleaseParameter(d,
       geom,
       "vertex.color",
-      anari::newArray(d, colors.data(), colors.size()));
+      anari::newArray1D(d, colors.data(), colors.size()));
   anari::setAndReleaseParameter(d,
       geom,
       "primitive.index",
-      anari::newArray(d, indices.data(), indices.size()));
+      anari::newArray1D(d, indices.data(), indices.size()));
   anari::commit(d, geom);
 
   auto surface = anari::newObject<anari::Surface>(d);
@@ -103,7 +103,7 @@ void InstancedCubes::commit()
 
   auto group = anari::newObject<anari::Group>(d);
   anari::setAndReleaseParameter(
-      d, group, "surface", anari::newArray(d, &surface));
+      d, group, "surface", anari::newArray1D(d, &surface));
   anari::commit(d, group);
 
   anari::release(d, surface);
@@ -138,7 +138,7 @@ void InstancedCubes::commit()
   anari::setAndReleaseParameter(d,
       m_world,
       "instance",
-      anari::newArray(d, instances.data(), instances.size()));
+      anari::newArray1D(d, instances.data(), instances.size()));
 
   for (auto i : instances)
     anari::release(d, i);

@@ -82,15 +82,15 @@ void TexturedCube::commit()
   anari::setAndReleaseParameter(d,
       geom,
       "vertex.position",
-      anari::newArray(d, vertices.data(), vertices.size()));
+      anari::newArray1D(d, vertices.data(), vertices.size()));
   anari::setAndReleaseParameter(d,
       geom,
       "vertex.attribute0",
-      anari::newArray(d, texcoords.data(), texcoords.size()));
+      anari::newArray1D(d, texcoords.data(), texcoords.size()));
   anari::setAndReleaseParameter(d,
       geom,
       "primitive.index",
-      anari::newArray(d, indices.data(), indices.size()));
+      anari::newArray1D(d, indices.data(), indices.size()));
   anari::commit(d, geom);
 
   auto surface = anari::newObject<anari::Surface>(d);
@@ -110,7 +110,7 @@ void TexturedCube::commit()
 
   auto group = anari::newObject<anari::Group>(d);
   anari::setAndReleaseParameter(
-      d, group, "surface", anari::newArray(d, &surface));
+      d, group, "surface", anari::newArray1D(d, &surface));
   anari::commit(d, group);
 
   anari::release(d, surface);
@@ -139,7 +139,7 @@ void TexturedCube::commit()
   anari::setAndReleaseParameter(d,
       m_world,
       "instance",
-      anari::newArray(d, instances.data(), instances.size()));
+      anari::newArray1D(d, instances.data(), instances.size()));
 
   anari::release(d, group);
   for (auto i : instances)

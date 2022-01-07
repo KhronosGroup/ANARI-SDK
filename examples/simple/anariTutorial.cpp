@@ -97,13 +97,13 @@ int main(int argc, const char **argv)
   auto mesh = anari::newObject<anari::Geometry>(d, "triangle");
 
   anari::setAndReleaseParameter(
-      d, mesh, "vertex.position", anari::newArray(d, vertex, 4));
+      d, mesh, "vertex.position", anari::newArray1D(d, vertex, 4));
 
   anari::setAndReleaseParameter(
-      d, mesh, "vertex.color", anari::newArray(d, color, 4));
+      d, mesh, "vertex.color", anari::newArray1D(d, color, 4));
 
   anari::setAndReleaseParameter(
-      d, mesh, "primitive.index", anari::newArray(d, index, 2));
+      d, mesh, "primitive.index", anari::newArray1D(d, index, 2));
 
   anari::commit(d, mesh);
 
@@ -117,13 +117,14 @@ int main(int argc, const char **argv)
 
   // put the surface directly onto the world
   anari::setAndReleaseParameter(
-      d, world, "surface", anari::newArray(d, &surface));
+      d, world, "surface", anari::newArray1D(d, &surface));
   anari::release(d, surface);
 
   // create and setup light for Ambient Occlusion
   auto light = anari::newObject<anari::Light>(d, "directional");
   anari::commit(d, light);
-  anari::setAndReleaseParameter(d, world, "light", anari::newArray(d, &light));
+  anari::setAndReleaseParameter(
+      d, world, "light", anari::newArray1D(d, &light));
   anari::release(d, light);
 
   anari::commit(d, world);

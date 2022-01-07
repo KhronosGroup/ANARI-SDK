@@ -130,12 +130,14 @@ static void loadObj(
     auto geom = anari::newObject<anari::Geometry>(d, "triangle");
 
     anari::setAndReleaseParameter(
-        d, geom, "vertex.position", anari::newArray(d, v.data(), v.size()));
+        d, geom, "vertex.position", anari::newArray1D(d, v.data(), v.size()));
 
     bool allTexCoordsValid = vt.size() == v.size();
     if (allTexCoordsValid) {
-      anari::setAndReleaseParameter(
-          d, geom, "vertex.texcoord", anari::newArray(d, vt.data(), vt.size()));
+      anari::setAndReleaseParameter(d,
+          geom,
+          "vertex.texcoord",
+          anari::newArray1D(d, vt.data(), vt.size()));
     }
 
     anari::commit(d, geom);
@@ -159,14 +161,15 @@ static void loadObj(
   auto group = anari::newObject<anari::Group>(d);
 
   anari::setAndReleaseParameter(
-      d, group, "surface", anari::newArray(d, meshes.data(), meshes.size()));
+      d, group, "surface", anari::newArray1D(d, meshes.data(), meshes.size()));
 
   auto light = anari::newObject<anari::Light>(d, "directional");
   anari::setParameter(d, light, "direction", glm::vec3(-1, -2, -1));
   anari::setParameter(d, light, "irradiance", 4.f);
   anari::commit(d, light);
 
-  anari::setAndReleaseParameter(d, group, "light", anari::newArray(d, &light));
+  anari::setAndReleaseParameter(
+      d, group, "light", anari::newArray1D(d, &light));
 
   anari::release(d, light);
 
@@ -177,7 +180,7 @@ static void loadObj(
   anari::commit(d, instance);
 
   anari::setAndReleaseParameter(
-      d, world, "instance", anari::newArray(d, &instance));
+      d, world, "instance", anari::newArray1D(d, &instance));
   anari::release(d, instance);
 
   anari::commit(d, world);
