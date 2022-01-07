@@ -41,6 +41,7 @@ add_library(${PROJECT_NAME} SHARED
   ExampleDevice.cpp
 
   camera/Camera.cpp
+  camera/Orthographic.cpp
   camera/Perspective.cpp
 
   frame/Frame.cpp

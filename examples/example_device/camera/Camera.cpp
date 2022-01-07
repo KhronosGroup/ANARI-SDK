@@ -3,6 +3,7 @@
 
 #include "Camera.h"
 // specific types
+#include "Orthographic.h"
 #include "Perspective.h"
 
 namespace anari {
@@ -16,6 +17,8 @@ static void init()
 
   g_cameras->emplace(
       "perspective", []() -> Camera * { return new Perspective; });
+  g_cameras->emplace(
+      "orthographic", []() -> Camera * { return new Orthographic; });
 }
 
 Camera *Camera::createInstance(const char *type)
