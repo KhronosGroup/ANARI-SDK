@@ -5,7 +5,7 @@ set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 find_package(Threads REQUIRED)
 
-if(${BUILD_TESTING})
+if(BUILD_TESTING)
   set(GLM_SOURCES anari_cpp_glm_defs.cpp)
   set(GLM_LIBS glm)
 endif()
@@ -19,12 +19,12 @@ add_library(${PROJECT_NAME}
   ${GLM_SOURCES}
 )
 
-if (${ANARI_USE_GENERATED_HEADERS})
+if (ANARI_USE_GENERATED_HEADERS)
   add_dependencies(${PROJECT_NAME} GeneratedHeaders)
   set(GENERATED_HEADER_DIR ${CMAKE_BINARY_DIR}/include)
 endif()
 
-if (NOT ${BUILD_SHARED_LIBS})
+if (NOT BUILD_SHARED_LIBS)
   target_compile_definitions(${PROJECT_NAME} PUBLIC -DANARI_STATIC_DEFINE)
 endif()
 
@@ -73,7 +73,7 @@ install(TARGETS anari
 
 ## Install headers
 
-if (${ANARI_USE_GENERATED_HEADERS})
+if (ANARI_USE_GENERATED_HEADERS)
   install(DIRECTORY ${CMAKE_BINARY_DIR}/include/anari
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     FILES_MATCHING
