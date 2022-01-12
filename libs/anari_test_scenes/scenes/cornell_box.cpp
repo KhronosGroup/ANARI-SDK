@@ -272,7 +272,7 @@ void CornellBox::commit()
 
   anari::Light light;
 
-  if (anari::deviceImplements(d, "ANARI_KHR_DEVICE_SYNCHRONIZATION")) {
+  if (anari::deviceImplements(d, "ANARI_KHR_AREA_LIGHTS")) {
     light = anari::newObject<anari::Light>(d, "quad");
     anari::setParameter(d, light, "color", glm::vec3(0.78f, 0.551f, 0.183f));
     anari::setParameter(d, light, "intensity", 47.f);
