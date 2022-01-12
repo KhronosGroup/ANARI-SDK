@@ -2,5 +2,7 @@
 ## SPDX-License-Identifier: Apache-2.0
 
 add_subdirectory(anari)
-add_subdirectory(anari_test_scenes)
 add_subdirectory(anari_utilities)
+if(${BUILD_TESTING})
+  add_subdirectory(anari_test_scenes)
+endif()
