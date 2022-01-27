@@ -91,11 +91,27 @@ extern "C" ANARILibrary anariLoadLibrary(const char *libraryName,
     libraryName = libraryFromEnv;
   }
 
+  ANARILibrary retval = nullptr;
+
   // Use a unique_ptr to cleanup if the Library constructor throws an exception
-  auto l = make_unique<Library>(libraryName, statusCB, statusCBUserPtr);
-  auto *ptr = l.get();
-  l.release();
-  return (ANARILibrary)ptr;
+  try {
+    auto l = make_unique<Library>(libraryName, statusCB, statusCBUserPtr);
+    retval = (ANARILibrary)l.get();
+    l.release();
+  } catch (...) {
+    std::string msg = "failed to load ANARILibrary '";
+    msg += libraryName;
+    msg += "'";
+    statusCB(statusCBUserPtr,
+        nullptr,
+        nullptr,
+        ANARI_LIBRARY,
+        ANARI_SEVERITY_ERROR,
+        ANARI_STATUS_INVALID_OPERATION,
+        msg.c_str());
+  }
+
+  return retval;
 }
 ANARI_CATCH_END(nullptr)
 
