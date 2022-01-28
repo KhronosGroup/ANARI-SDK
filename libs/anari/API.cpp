@@ -98,10 +98,11 @@ extern "C" ANARILibrary anariLoadLibrary(const char *libraryName,
     auto l = make_unique<Library>(libraryName, statusCB, statusCBUserPtr);
     retval = (ANARILibrary)l.get();
     l.release();
-  } catch (...) {
+  } catch (const std::exception &e) {
     std::string msg = "failed to load ANARILibrary '";
     msg += libraryName;
-    msg += "'";
+    msg += "'\nreason: ";
+    msg += e.what();
     statusCB(statusCBUserPtr,
         nullptr,
         nullptr,
