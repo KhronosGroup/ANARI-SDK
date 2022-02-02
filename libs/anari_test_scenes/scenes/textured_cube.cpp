@@ -96,7 +96,7 @@ void TexturedCube::commit()
   auto surface = anari::newObject<anari::Surface>(d);
   anari::setAndReleaseParameter(d, surface, "geometry", geom);
 
-  auto tex = anari::newObject<anari::Sampler>(d, "texture2d");
+  auto tex = anari::newObject<anari::Sampler>(d, "image2D");
   anari::setAndReleaseParameter(d, tex, "image", makeTextureData(d, 8));
   anari::setParameter(d, tex, "inAttribute", "attribute0");
   anari::setParameter(d, tex, "filter", "nearest");

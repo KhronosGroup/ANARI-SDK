@@ -46,7 +46,8 @@ void RandomSpheres::commit()
   anari::setParameter(d, mat, "color", "color");
   anari::commit(d, mat);
 
-  anari::setParameter(d, m_world, "surface", anari::newArray1D(d, &surface));
+  anari::setAndReleaseParameter(
+      d, m_world, "surface", anari::newArray1D(d, &surface));
 
   anari::commit(d, m_world);
 

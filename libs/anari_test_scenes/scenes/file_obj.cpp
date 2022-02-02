@@ -136,7 +136,7 @@ static void loadObj(
     if (allTexCoordsValid) {
       anari::setAndReleaseParameter(d,
           geom,
-          "vertex.texcoord",
+          "vertex.attribute0",
           anari::newArray1D(d, vt.data(), vt.size()));
     }
 
