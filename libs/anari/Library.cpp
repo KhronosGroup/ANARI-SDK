@@ -87,24 +87,45 @@ static void *loadLibrary(
   std::string libLocation = withAnchor ? library_location() : std::string();
   void *lib = nullptr;
 #ifdef _WIN32
-  std::string fullName = libLocation + file + ".dll";
-  lib = LoadLibrary(fullName.c_str());
-  if (lib == nullptr) {
-    DWORD err = GetLastError();
-    LPTSTR lpMsgBuf;
-    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM
-            | FORMAT_MESSAGE_IGNORE_INSERTS,
-        NULL,
-        err,
-        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-        (LPTSTR)&lpMsgBuf,
-        0,
-        NULL);
+  // Set cwd to library location, to make sure dependent libraries are found as well
+  constexpr int MAX_DIRSIZE = 4096;
+  TCHAR currentWd[MAX_DIRSIZE];
+  DWORD dwRet = 0;
+  if(withAnchor)
+    dwRet = GetCurrentDirectory(MAX_DIRSIZE, currentWd);
 
-    errorMsg = lpMsgBuf;
+  if(dwRet > MAX_DIRSIZE)
+    errorMsg = "library path larger than " + std::to_string(MAX_DIRSIZE) + " characters";
+  else if(withAnchor && dwRet == 0)
+    errorMsg = "GetCurrentDirectory() failed for unknown reason";  
+  else 
+  {
+    SetCurrentDirectory(libLocation.c_str());
 
-    LocalFree(lpMsgBuf);
+    // Load the library
+    std::string fullName = libLocation + file + ".dll";
+    lib = LoadLibrary(fullName.c_str());
+    if (lib == nullptr) {
+      DWORD err = GetLastError();
+      LPTSTR lpMsgBuf;
+      FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM
+              | FORMAT_MESSAGE_IGNORE_INSERTS,
+          NULL,
+          err,
+          MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+          (LPTSTR)&lpMsgBuf,
+          0,
+          NULL);
+
+      errorMsg = lpMsgBuf;
+
+      LocalFree(lpMsgBuf);
+    }
+
+    //Change cwd back to its original value
+    SetCurrentDirectory(currentWd);
   }
+
 #else
   std::string fullName = libLocation + "lib" + file + RKCOMMON_LIB_EXT;
   lib = dlopen(fullName.c_str(), RTLD_LAZY | RTLD_LOCAL);
