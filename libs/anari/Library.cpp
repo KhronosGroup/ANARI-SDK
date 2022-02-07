@@ -90,13 +90,13 @@ static void *loadLibrary(
   // Set cwd to library location, to make sure dependent libraries are found as well
   constexpr int MAX_DIRSIZE = 4096;
   TCHAR currentWd[MAX_DIRSIZE];
-  DWORD dwRet;
+  DWORD dwRet = 0;
   if(withAnchor)
     dwRet = GetCurrentDirectory(MAX_DIRSIZE, currentWd);
 
   if(dwRet > MAX_DIRSIZE)
     errorMsg = "library path larger than " + std::to_string(MAX_DIRSIZE) + " characters";
-  else if(dwRet == 0)
+  else if(withAnchor && dwRet == 0)
     errorMsg = "GetCurrentDirectory() failed for unknown reason";  
   else 
   {
