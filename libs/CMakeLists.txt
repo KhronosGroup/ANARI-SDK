@@ -3,6 +3,7 @@
 
 add_subdirectory(anari)
 add_subdirectory(anari_utilities)
+add_subdirectory(debug_device)
 if(BUILD_TESTING OR BUILD_EXAMPLES)
   add_subdirectory(anari_test_scenes)
 endif()

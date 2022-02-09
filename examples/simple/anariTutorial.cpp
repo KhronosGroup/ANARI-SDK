@@ -65,9 +65,16 @@ int main(int argc, const char **argv)
   uvec3 index[] = {{0, 1, 2}, {1, 2, 3}};
 
   printf("initialize ANARI...");
+  anari::Library m_debug = anari::loadLibrary("debug", statusFunc);
 
   anari::Library m = anari::loadLibrary(g_moduleType, statusFunc);
-  ANARIDevice d = anariNewDevice(m, "default");
+  ANARIDevice w = anariNewDevice(m, "default");
+
+
+  ANARIDevice d = anariNewDevice(m_debug, "debug");
+  anari::setParameter(d, d, "wrappedDevice", w);
+  anariCommit(d, d);
+
 
   if (!d) {
     printf("\n\nERROR: could not load default device in module %s\n",

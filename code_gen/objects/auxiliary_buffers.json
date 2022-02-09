@@ -1,0 +1,26 @@
+{
+    "info" : {
+        "name" : "auxiliary_buffers",
+        "type" : "feature",
+        "dependencies" : []
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_FRAME",
+            "parameters" : [
+                {
+                    "name" : "normal",
+                    "types" : ["ANARI_DATA_TYPE"],
+                    "tags" : [],
+                    "values" : ["ANARI_FIXED16_VEC3", "ANARI_FLOAT32_VEC3"]
+                }, {
+                    "name" : "albedo",
+                    "types" : ["ANARI_DATA_TYPE"],
+                    "tags" : [],
+                    "values" : ["ANARI_UFIXED8_VEC3", "ANARI_UFIXED8_RGB_SRGB", "ANARI_FLOAT32_VEC3"]
+                }
+            ]
+        }
+    ]
+}

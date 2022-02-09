@@ -14,11 +14,6 @@ add_library(${PROJECT_NAME}
   anari_cpp_glm_defs.cpp
 )
 
-if (ANARI_USE_GENERATED_HEADERS)
-  add_dependencies(${PROJECT_NAME} GeneratedHeaders)
-  set(GENERATED_HEADER_DIR ${CMAKE_BINARY_DIR}/include)
-endif()
-
 if (NOT BUILD_SHARED_LIBS)
   target_compile_definitions(${PROJECT_NAME} PUBLIC -DANARI_STATIC_DEFINE)
 endif()
@@ -68,20 +63,7 @@ install(TARGETS anari
 
 ## Install headers
 
-if (ANARI_USE_GENERATED_HEADERS)
-  install(DIRECTORY ${CMAKE_BINARY_DIR}/include/anari
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-    FILES_MATCHING
-      PATTERN *.h
-  )
+install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/include/anari
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
 
-  install(DIRECTORY ${CMAKE_BINARY_DIR}/include/anari_util
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/anari
-    FILES_MATCHING
-      PATTERN *.h
-  )
-else()
-  install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/include/anari
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-  )
-endif()

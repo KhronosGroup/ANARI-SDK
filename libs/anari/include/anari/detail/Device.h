@@ -168,9 +168,9 @@ struct ANARI_INTERFACE Device
       ANARIStatusCallback defaultStatusCB = nullptr,
       void *defaultStatusCBUserPtr = nullptr);
 
- protected:
   ANARIDevice this_device() const;
 
+ protected:
   ANARIStatusCallback defaultStatusCallback() const;
   void *defaultStatusCallbackUserPtr() const;
 

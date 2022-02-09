@@ -1,0 +1,1249 @@
+{
+    "info" : {
+        "name" : "anari_core_objects_1_0",
+        "type" : "core",
+        "dependencies" : []
+    },
+
+    "attributes" : [
+        {
+            "name" : "color",
+            "type" : "ANARI_FLOAT32_VEC4"
+        }, {
+            "name" : "worldPosition",
+            "type" : "ANARI_FLOAT32_VEC4"
+        }, {
+            "name" : "worldNormal",
+            "type" : "ANARI_FLOAT32_VEC4"
+        }, {
+            "name" : "objectPosition",
+            "type" : "ANARI_FLOAT32_VEC4"
+        }, {
+            "name" : "objectNormal",
+            "type" : "ANARI_FLOAT32_VEC4"
+        }, {
+            "name" : "attribute0",
+            "type" : "ANARI_FLOAT32_VEC4"
+        }, {
+            "name" : "attribute1",
+            "type" : "ANARI_FLOAT32_VEC4"
+        }, {
+            "name" : "attribute2",
+            "type" : "ANARI_FLOAT32_VEC4"
+        }, {
+            "name" : "attribute3",
+            "type" : "ANARI_FLOAT32_VEC4"
+        }, {
+            "name" : "primitiveId",
+            "type" : "ANARI_UINT64"
+        }
+    ],
+
+    "objects" : [
+        {
+            "type" : "ANARI_DEVICE",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }
+            ]
+        },{
+            "type" : "ANARI_ARRAY1D",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }
+            ]
+        }, {
+            "type" : "ANARI_ARRAY2D",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }
+            ]
+        }, {
+            "type" : "ANARI_ARRAY3D",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }
+            ]
+        }, {
+            "type" : "ANARI_SAMPLER",
+            "name" : "image1D",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "image",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : ["required"]
+                }, {
+                    "name" : "inAttribute",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : ["attribute"],
+                    "default" : "attribute0"
+                }, {
+                    "name" : "filter",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "default" : "nearest",
+                    "values" : ["nearest", "linear"]
+                }, {
+                    "name" : "wrapMode1",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "default" : "clampToEdge",
+                    "values" : ["clampToEdge", "repeat", "mirrorRepeat"]
+                }, {
+                    "name" : "inTransform",
+                    "types" : ["ANARI_FLOAT32_MAT4"],
+                    "tags" : [],
+                    "default" : [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]
+                }, {
+                    "name" : "outTransform",
+                    "types" : ["ANARI_FLOAT32_MAT4"],
+                    "tags" : [],
+                    "default" : [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]
+                }
+            ]
+        }, {
+            "type" : "ANARI_SAMPLER",
+            "name" : "image2D",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "image",
+                    "types" : ["ANARI_ARRAY2D"],
+                    "tags" : ["required"]
+                }, {
+                    "name" : "inAttribute",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : ["attribute"],
+                    "default" : "attribute0"
+                }, {
+                    "name" : "filter",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "default" : "nearest",
+                    "values" : ["nearest", "linear"]
+                }, {
+                    "name" : "wrapMode1",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "default" : "clampToEdge",
+                    "values" : ["clampToEdge", "repeat", "mirrorRepeat"]
+                }, {
+                    "name" : "wrapMode2",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "default" : "clampToEdge",
+                    "values" : ["clampToEdge", "repeat", "mirrorRepeat"]
+                }, {
+                    "name" : "inTransform",
+                    "types" : ["ANARI_FLOAT32_MAT4"],
+                    "tags" : [],
+                    "default" : [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]
+                }, {
+                    "name" : "outTransform",
+                    "types" : ["ANARI_FLOAT32_MAT4"],
+                    "tags" : [],
+                    "default" : [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]
+                }
+            ]
+        }, {
+            "type" : "ANARI_SAMPLER",
+            "name" : "image3D",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "image",
+                    "types" : ["ANARI_ARRAY3D"],
+                    "tags" : ["required"]
+                }, {
+                    "name" : "inAttribute",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : ["attribute"],
+                    "default" : "attribute0"
+                }, {
+                    "name" : "filter",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "default" : "nearest",
+                    "values" : ["nearest", "linear"]
+                }, {
+                    "name" : "wrapMode1",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "default" : "clampToEdge",
+                    "values" : ["clampToEdge", "repeat", "mirrorRepeat"]
+                }, {
+                    "name" : "wrapMode2",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "default" : "clampToEdge",
+                    "values" : ["clampToEdge", "repeat", "mirrorRepeat"]
+                }, {
+                    "name" : "wrapMode3",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "default" : "clampToEdge",
+                    "values" : ["clampToEdge", "repeat", "mirrorRepeat"]
+                }, {
+                    "name" : "inTransform",
+                    "types" : ["ANARI_FLOAT32_MAT4"],
+                    "tags" : [],
+                    "default" : [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]
+                }, {
+                    "name" : "outTransform",
+                    "types" : ["ANARI_FLOAT32_MAT4"],
+                    "tags" : [],
+                    "default" : [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]
+                }
+            ]
+        }, {
+            "type" : "ANARI_SAMPLER",
+            "name" : "primitive",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "array",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : ["required"]
+                }
+            ]
+        }, {
+            "type" : "ANARI_SAMPLER",
+            "name" : "transform",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "inAttribute",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : ["attribute"],
+                    "default" : "attribute0"
+                }, {
+                    "name" : "transform",
+                    "types" : ["ANARI_FLOAT32_MAT4"],
+                    "tags" : [],
+                    "default" : [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]
+                }
+            ]
+        }, {
+            "type" : "ANARI_VOLUME",
+            "name" : "scivis",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "field",
+                    "types" : ["ANARI_SPATIAL_FIELD"],
+                    "tags" : ["required"]
+                }, {
+                    "name" : "valueRange",
+                    "types" : ["ANARI_FLOAT32_BOX1"],
+                    "tags" : ["required"],
+                    "default" : [0.0, 1.0]
+                }, {
+                    "name" : "color",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : ["required"]
+                }, {
+                    "name" : "color.position",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "opacity",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : ["required"]
+                }, {
+                    "name" : "opacity.position",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "densityScale",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 1
+                }
+            ]
+        }, {
+            "type" : "ANARI_FRAME",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "world",
+                    "types" : ["ANARI_WORLD"],
+                    "tags" : ["required"]
+                }, {
+                    "name" : "renderer",
+                    "types" : ["ANARI_RENDERER"],
+                    "tags" : ["required"]
+                }, {
+                    "name" : "camera",
+                    "types" : ["ANARI_CAMERA"],
+                    "tags" : ["required"]
+                }, {
+                    "name" : "size",
+                    "types" : ["ANARI_UINT32_VEC2"],
+                    "tags" : ["required"]
+                }, {
+                    "name" : "color",
+                    "types" : ["ANARI_DATA_TYPE"],
+                    "tags" : [],
+                    "values" : ["ANARI_UFIXED8_VEC4", "ANARI_UFIXED8_RGBA_SRGB", "ANARI_FLOAT32_VEC4"]
+                }, {
+                    "name" : "depth",
+                    "types" : ["ANARI_DATA_TYPE"],
+                    "tags" : [],
+                    "values" : ["ANARI_FLOAT32"]
+                }
+            ],
+            "properties" : [
+                {
+                    "name" : "duration",
+                    "type" : "ANARI_FLOAT32"
+                }
+            ]
+        }, {
+            "type" : "ANARI_GROUP",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "surface",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "volume",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "light",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }
+            ],
+            "properties" : [
+                {
+                    "name" : "bounds",
+                    "type" : "ANARI_FLOAT32_BOX3"
+                }
+            ]
+        }, {
+            "type" : "ANARI_INSTANCE",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "transform",
+                    "types" : ["ANARI_FLOAT32_MAT3x4"],
+                    "tags" : [],
+                    "default" : [
+                        1.0, 0.0, 0.0,
+                        0.0, 1.0, 0.0,
+                        0.0, 0.0, 1.0,
+                        0.0, 0.0, 0.0
+                    ]
+                }, {
+                    "name" : "group",
+                    "types" : ["ANARI_GROUP"],
+                    "tags" : ["required"]
+                }
+            ],
+            "properties" : [
+                {
+                    "name" : "bounds",
+                    "type" : "ANARI_FLOAT32_BOX3"
+                }
+            ]
+        }, {
+            "type" : "ANARI_WORLD",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "instance",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "surface",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "volume",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "light",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }
+            ],
+            "properties" : [
+                {
+                    "name" : "bounds",
+                    "type" : "ANARI_FLOAT32_BOX3"
+                }
+            ]
+        }, {
+            "type" : "ANARI_RENDERER",
+            "name" : "default",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }
+            ]
+        }, {
+            "type" : "ANARI_CAMERA",
+            "name" : "perspective",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "position",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "default" : [0.0, 0.0, 0.0]
+                }, {
+                    "name" : "direction",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "default" : [0.0, 0.0, -1.0]
+                }, {
+                    "name" : "up",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "default" : [0.0, 1.0, 0.0]
+                }, {
+                    "name" : "transform",
+                    "types" : ["ANARI_FLOAT32_MAT3x4"],
+                    "tags" : [],
+                    "default" : [
+                        1.0, 0.0, 0.0,
+                        0.0, 1.0, 0.0,
+                        0.0, 0.0, 1.0,
+                        0.0, 0.0, 0.0
+                    ]
+                }, {
+                    "name" : "imageRegion",
+                    "types" : ["ANARI_FLOAT32_BOX2"],
+                    "tags" : [],
+                    "default" : [0.0, 0.0, 1.0, 1.0]
+                }, {
+                    "name" : "apertureRadius",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : ["canonical"],
+                    "default" : 0
+                }, {
+                    "name" : "focusDistance",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : ["canonical"],
+                    "default" : 1
+                }, {
+                    "name" : "stereoMode",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "default" : "none",
+                    "values" : ["none", "left", "right", "sideBySide", "topBottom"]
+                }, {
+                    "name" : "interpupillaryDistance",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 0.0635
+                }, {
+                    "name" : "fovy",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 1.0471975512
+                }, {
+                    "name" : "aspect",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 1.0
+                }
+            ]
+        }, {
+            "type" : "ANARI_CAMERA",
+            "name" : "orthographic",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "position",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "default" : [0.0, 0.0, 0.0]
+                }, {
+                    "name" : "direction",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "default" : [0.0, 0.0, -1.0]
+                }, {
+                    "name" : "up",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "default" : [0.0, 1.0, 0.0]
+                }, {
+                    "name" : "transform",
+                    "types" : ["ANARI_FLOAT32_MAT3x4"],
+                    "tags" : [],
+                    "default" : [
+                        1.0, 0.0, 0.0,
+                        0.0, 1.0, 0.0,
+                        0.0, 0.0, 1.0,
+                        0.0, 0.0, 0.0
+                    ]
+                }, {
+                    "name" : "imageRegion",
+                    "types" : ["ANARI_FLOAT32_BOX2"],
+                    "tags" : [],
+                    "default" : [0.0, 0.0, 1.0, 1.0]
+                }, {
+                    "name" : "apertureRadius",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : ["canonical"],
+                    "default" : 0
+                }, {
+                    "name" : "focusDistance",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : ["canonical"],
+                    "default" : 1
+                }, {
+                    "name" : "stereoMode",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "default" : "none",
+                    "values" : ["none", "left", "right", "sideBySide", "topBottom"]
+                }, {
+                    "name" : "interpupillaryDistance",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 0.0635
+                }, {
+                    "name" : "aspect",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 1.0
+                }
+            ]
+        }, {
+            "type" : "ANARI_CAMERA",
+            "name" : "omnidirectional",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "position",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "default" : [0.0, 0.0, 0.0]
+                }, {
+                    "name" : "direction",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "default" : [0.0, 0.0, -1.0]
+                }, {
+                    "name" : "up",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "default" : [0.0, 1.0, 0.0]
+                }, {
+                    "name" : "transform",
+                    "types" : ["ANARI_FLOAT32_MAT3x4"],
+                    "tags" : [],
+                    "default" : [
+                        1.0, 0.0, 0.0,
+                        0.0, 1.0, 0.0,
+                        0.0, 0.0, 1.0,
+                        0.0, 0.0, 0.0
+                    ]
+                }, {
+                    "name" : "imageRegion",
+                    "types" : ["ANARI_FLOAT32_BOX2"],
+                    "tags" : [],
+                    "default" : [0.0, 0.0, 1.0, 1.0]
+                }, {
+                    "name" : "apertureRadius",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : ["canonical"],
+                    "default" : 0
+                }, {
+                    "name" : "focusDistance",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : ["canonical"],
+                    "default" : 1
+                }, {
+                    "name" : "stereoMode",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "default" : "none",
+                    "values" : ["none", "left", "right", "sideBySide", "topBottom"]
+                }, {
+                    "name" : "interpupillaryDistance",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 0.0635
+                }, {
+                    "name" : "layout",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "default" : "equirectangular",
+                    "values" : ["equirectangular"]
+                }
+            ]
+        }, {
+            "type" : "ANARI_LIGHT",
+            "name" : "directional",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "color",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "default" : [1.0, 1.0, 1.0]
+                }, {
+                    "name" : "irridance",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 1.0
+                }, {
+                    "name" : "direction",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "default" : [0.0, 0.0, 1.0]
+                }
+            ]
+        }, {
+            "type" : "ANARI_LIGHT",
+            "name" : "point",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "color",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "default" : [1.0, 1.0, 1.0]
+                }, {
+                    "name" : "position",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "default" : [0.0, 0.0, 0.0]
+                }, {
+                    "name" : "intensity",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 1.0
+                }, {
+                    "name" : "power",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : ["canonical"],
+                    "default" : 1.0
+                }
+            ]
+        }, {
+            "type" : "ANARI_LIGHT",
+            "name" : "spot",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "color",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "default" : [1.0, 1.0, 1.0]
+                }, {
+                    "name" : "position",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "default" : [0.0, 0.0, 0.0]
+                }, {
+                    "name" : "direction",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "default" : [0.0, 0.0, -1.0]
+                }, {
+                    "name" : "openingAngle",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 3.14159265359
+                }, {
+                    "name" : "falloffAngle",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 0.1
+                }, {
+                    "name" : "intensity",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 1.0
+                }, {
+                    "name" : "power",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : ["canonical"],
+                    "default" : 1.0
+                }
+            ]
+        }, {
+            "type" : "ANARI_SPATIAL_FIELD",
+            "name" : "structuredRegular",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "data",
+                    "types" : ["ANARI_ARRAY3D"],
+                    "tags" : ["required"]
+                }, {
+                    "name" : "origin",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "default" : [0.0, 0.0, 0.0]
+                }, {
+                    "name" : "spacing",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "default" : [1.0, 1.0, 1.0]
+                }, {
+                    "name" : "filter",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "default" : "nearest",
+                    "values" : ["nearest", "linear"]
+                }
+            ]
+        }, {
+            "type" : "ANARI_SURFACE",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "geometry",
+                    "types" : ["ANARI_GEOMETRY"],
+                    "tags" : ["required"]
+                }, {
+                    "name" : "material",
+                    "types" : ["ANARI_MATERIAL"],
+                    "tags" : ["required"]
+                }
+            ]
+        }, {
+            "type" : "ANARI_GEOMETRY",
+            "name" : "triangle",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.color",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.attribute0",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.attribute1",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.attribute2",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.attribute3",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.id",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.position",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : ["required"]
+                }, {
+                    "name" : "vertex.normal",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.color",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.attribute0",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.attribute1",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.attribute2",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.attribute3",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.index",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }
+            ]
+        }, {
+            "type" : "ANARI_GEOMETRY",
+            "name" : "quad",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.color",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.attribute0",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.attribute1",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.attribute2",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.attribute3",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.id",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.position",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : ["required"]
+                }, {
+                    "name" : "vertex.normal",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.color",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.attribute0",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.attribute1",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.attribute2",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.attribute3",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.index",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }
+            ]
+        }, {
+            "type" : "ANARI_GEOMETRY",
+            "name" : "sphere",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.color",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.attribute0",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.attribute1",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.attribute2",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.attribute3",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.id",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.position",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : ["required"]
+                }, {
+                    "name" : "vertex.radius",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.color",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.attribute0",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.attribute1",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.attribute2",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.attribute3",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.index",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "radius",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : []
+                }
+            ]
+        }, {
+            "type" : "ANARI_GEOMETRY",
+            "name" : "curve",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.color",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.attribute0",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.attribute1",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.attribute2",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.attribute3",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.id",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.position",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : ["required"]
+                }, {
+                    "name" : "vertex.radius",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.color",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.attribute0",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.attribute1",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.attribute2",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.attribute3",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.index",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "radius",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : []
+                }
+            ]
+        }, {
+            "type" : "ANARI_GEOMETRY",
+            "name" : "cone",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.color",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.attribute0",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.attribute1",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.attribute2",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.attribute3",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.id",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.position",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : ["required"]
+                }, {
+                    "name" : "vertex.radius",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.cap",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.color",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.attribute0",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.attribute1",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.attribute2",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.attribute3",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.index",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "caps",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "default" : "none",
+                    "values" : ["none", "first", "second", "both"]
+
+                }
+            ]
+        }, {
+            "type" : "ANARI_GEOMETRY",
+            "name" : "cylinder",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.color",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.attribute0",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.attribute1",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.attribute2",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.attribute3",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.id",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.position",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : ["required"]
+                }, {
+                    "name" : "vertex.cap",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.color",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.attribute0",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.attribute1",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.attribute2",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.attribute3",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.index",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.radius",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "radius",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : []
+                }, {
+                    "name" : "caps",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "default" : "none",
+                    "values" : ["none", "first", "second", "both"]
+                }
+            ]
+        }, {
+            "type" : "ANARI_MATERIAL",
+            "name" : "matte",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "color",
+                    "types" : ["ANARI_FLOAT32_VEC3", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags" : ["attribute"],
+                    "default" : [0.8, 0.8, 0.8]
+                }
+            ]
+        }, {
+            "type" : "ANARI_MATERIAL",
+            "name" : "transparentMatte",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "color",
+                    "types" : ["ANARI_FLOAT32_VEC3", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags" : ["attribute"],
+                    "default" : [0.8, 0.8, 0.8]
+                }, {
+                    "name" : "opacity",
+                    "types" : ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags" : ["attribute"],
+                    "default" : 1.0
+                }
+            ]
+        }
+    ]
+}

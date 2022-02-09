@@ -174,11 +174,7 @@ Library::Library(
       m_defaultStatusCB(defaultStatusCB),
       m_defaultStatusCBUserPtr(statusCBPtr)
 {
-  void *lib = nullptr;
-  if (std::string(name) == "debug")
-    lib = loadANARILibrary("debug");
-  else
-    lib = loadANARILibrary(std::string("anari_library_") + name);
+  void *lib = loadANARILibrary(std::string("anari_library_") + name);
 
   if (!lib)
     throw std::runtime_error("failed to load library " + std::string(name));

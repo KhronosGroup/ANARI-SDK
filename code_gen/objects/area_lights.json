@@ -1,0 +1,228 @@
+{
+    "info" : {
+        "name" : "area_lights",
+        "type" : "feature",
+        "dependencies" : []
+    },
+
+
+    "objects" : [
+       {
+            "type" : "ANARI_LIGHT",
+            "name" : "directional",
+            "parameters" : [
+                {
+                    "name" : "angularDiameter",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 0.0
+                }, {
+                    "name" : "radiance",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 1.0
+                }, {
+                    "name" : "visible",
+                    "types" : ["ANARI_BOOL"],
+                    "tags" : [],
+                    "default" : 1
+                }
+            ]
+        }, {
+            "type" : "ANARI_LIGHT",
+            "name" : "point",
+            "parameters" : [
+                {
+                    "name" : "radius",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 0.0
+                }, {
+                    "name" : "radiance",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 1.0
+                }, {
+                    "name" : "visible",
+                    "types" : ["ANARI_BOOL"],
+                    "tags" : [],
+                    "default" : 1
+                }
+            ]
+        }, {
+            "type" : "ANARI_LIGHT",
+            "name" : "ring",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "color",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : ["color"],
+                    "default" : [1.0, 1.0, 1.0]
+                }, {
+                    "name" : "position",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "default" : [0.0, 0.0, 0.0]
+                }, {
+                    "name" : "direction",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "default" : [0.0, 0.0, -1.0]
+                }, {
+                    "name" : "openingAngle",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 3.14159265359
+                }, {
+                    "name" : "falloffAngle",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 0.1
+                }, {
+                    "name" : "intensity",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 1.0
+                }, {
+                    "name" : "power",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : ["canonical"],
+                    "default" : 1.0
+                }, {
+                    "name" : "radius",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 0.0
+                }, {
+                    "name" : "innerRadius",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 0.0
+                }, {
+                    "name" : "radiance",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 1.0
+                }, {
+                    "name" : "intensityDistribution",
+                    "types" : ["ANARI_ARRAY1D", "ANARI_ARRAY2D"],
+                    "tags" : []
+                }, {
+                    "name" : "c0",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "default" : [1.0, 0.0, 0.0]
+                }, {
+                    "name" : "visible",
+                    "types" : ["ANARI_BOOL"],
+                    "tags" : [],
+                    "default" : 1
+                }
+            ]
+        }, {
+            "type" : "ANARI_LIGHT",
+            "name" : "quad",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "color",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : ["color"],
+                    "default" : [1.0, 1.0, 1.0]
+                }, {
+                    "name" : "position",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "default" : [0.0, 0.0, 0.0]
+                }, {
+                    "name" : "edge1",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "default" : [1.0, 0.0, 0.0]
+                }, {
+                    "name" : "edge2",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "default" : [0.0, 1.0, 0.0]
+                }, {
+                    "name" : "intensity",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 1.0
+                }, {
+                    "name" : "power",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : ["canonical"],
+                    "default" : 1.0
+                }, {
+                    "name" : "radiance",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 1.0
+                }, {
+                    "name" : "side",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "default" : "front",
+                    "values" : ["front", "back", "both"]
+                }, {
+                    "name" : "intensityDistribution",
+                    "types" : ["ANARI_ARRAY1D", "ANARI_ARRAY2D"],
+                    "tags" : []
+                }, {
+                    "name" : "visible",
+                    "types" : ["ANARI_BOOL"],
+                    "tags" : [],
+                    "default" : 1
+                }
+            ]
+        }, {
+            "type" : "ANARI_LIGHT",
+            "name" : "hdri",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "color",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : ["color"],
+                    "default" : [1.0, 1.0, 1.0]
+                }, {
+                    "name" : "up",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "default" : [0.0, 0.0, 1.0]
+                }, {
+                    "name" : "radiance",
+                    "types" : ["ANARI_ARRAY2D"],
+                    "tags" : []
+                }, {
+                    "name" : "layout",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "default" : "equirectangular",
+                    "values" : ["equirectangular"]
+                }, {
+                    "name" : "scale",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 1
+                }, {
+                    "name" : "visible",
+                    "types" : ["ANARI_BOOL"],
+                    "tags" : [],
+                    "default" : 1
+                }
+            ]
+        }
+    ]
+}

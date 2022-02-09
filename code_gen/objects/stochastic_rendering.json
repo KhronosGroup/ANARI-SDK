@@ -1,0 +1,35 @@
+{
+    "info" : {
+        "name" : "stochastic_rendering",
+        "type" : "feature",
+        "dependencies" : []
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_FRAME",
+            "parameters" : [
+                {
+                    "name" : "accumulation",
+                    "types" : ["ANARI_BOOL"],
+                    "tags" : [],
+                    "default" : 0
+                }, {
+                    "name" : "variance",
+                    "types" : ["ANARI_BOOL"],
+                    "tags" : [],
+                    "default" : 0
+                }
+            ],
+            "properties" : [
+                {
+                    "name" : "progress",
+                    "type" : "ANARI_FLOAT32"
+                }, {
+                    "name" : "variance",
+                    "type" : "ANARI_FLOAT32"
+                }
+            ]
+        }
+    ]
+}
