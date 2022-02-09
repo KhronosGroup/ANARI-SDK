@@ -93,11 +93,23 @@ The regression test binary used to render the test scenes without a window
 (results saved out as PNG images) uses the same mechanisms as the viewer to
 select/override which library is loaded at runtime.
 
-### Using the provided ExampleDevice implementation
+## Available Implementations
+
+### SDK provided ExampleDevice implementation
 
 The [example device implementation](examples/example_device) is provided as a
-starting point for users exploring the SDK and implementors to see how the API
-might be implemented. It currently uses OpenMP multi-threading for
-simplicity and is not built to be a robust and fast rendering engine. Users
-should look to use hardware-optimized ANARI implementations which are shipped
-independently from the SDK.
+starting point for users exploring the SDK and for implementors to see how the
+API might be implemented. It uses OpenMP multi-threading for simplicity and is
+not built to be a robust nor fast rendering engine. Users should look to use
+vendor provided, hardware-optimized ANARI implementations which are shipped
+independently from the SDK. (see below)
+
+### List of publically available implementaions
+
+Below is a list of available ANARI implemenations compatible with this SDK:
+
+- [Intel OSPRay](https://github.com/ospray/anari-ospray)
+- [NVIDIA USD](https://github.com/NVIDIA-Omniverse/AnariUsdDevice)
+
+If you implement a backend to the ANARI SDK, please open a PR to add it to this
+list!
