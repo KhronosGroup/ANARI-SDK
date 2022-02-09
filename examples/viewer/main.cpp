@@ -63,12 +63,19 @@ static void initializeANARI()
   g_library = anariLoadLibrary(g_libraryType.c_str(), statusFunc);
 
   if(g_enableDebug)
-    g_debug = anariLoadLibrary("debug");
+    g_debug = anariLoadLibrary("debug", statusFunc);
 
   if (!g_library)
     throw std::runtime_error("Failed to load ANARI library");
 
   ANARIDevice dev = anariNewDevice(g_library, g_deviceType.c_str());
+  if (g_enableDebug) {
+    ANARIDevice dbg = anariNewDevice(g_debug, "debug");
+    anariSetParameter(dbg, dbg, "wrappedDevice", ANARI_DEVICE, &dev);
+    anariCommit(dbg, dbg);
+    anariRelease(dev, dev);
+    dev = dbg;
+  }
   if (!dev)
     std::exit(1);
 
@@ -86,7 +93,7 @@ static void initializeANARI()
 /******************************************************************/
 void printUsage()
 {
-  std::cout << "./anariViewer [{--help|-h}] [{--library|-l} <ANARI library>] [.obj intput file]" << std::endl;
+  std::cout << "./anariViewer [{--help|-h}] [{--debug|-d}] [{--library|-l} <ANARI library>] [.obj intput file]" << std::endl;
 }
 
 /******************************************************************/

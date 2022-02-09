@@ -1,0 +1,127 @@
+{
+    "info" : {
+        "name" : "example_device",
+        "type" : "device",
+        "dependencies" : [
+            "anari_core_1_0",
+            "anari_core_objects_1_0",
+            "frame_continuation"
+        ]
+    },
+
+    "objects" : [
+       {
+            "type" : "ANARI_RENDERER",
+            "name" : "default",
+            "parameters" : [
+                {
+                    "name" : "backgroundColor",
+                    "types" : ["ANARI_FLOAT32_VEC4"],
+                    "tags" : [],
+                    "default" : [1.0, 1.0, 1.0, 1.0]
+                }, {
+                    "name" : "pixelSamples",
+                    "types" : ["ANARI_INT32"],
+                    "tags" : [],
+                    "default" : 1
+                }
+            ]
+        }, {
+            "type" : "ANARI_RENDERER",
+            "name" : "scivis",
+            "parameters" : [
+                {
+                    "name" : "backgroundColor",
+                    "types" : ["ANARI_FLOAT32_VEC4"],
+                    "tags" : [],
+                    "default" : [1.0, 1.0, 1.0, 1.0]
+                }, {
+                    "name" : "pixelSamples",
+                    "types" : ["ANARI_INT32"],
+                    "tags" : [],
+                    "default" : 1
+                }
+            ]
+        }, {
+            "type" : "ANARI_RENDERER",
+            "name" : "ao",
+            "parameters" : [
+                {
+                    "name" : "backgroundColor",
+                    "types" : ["ANARI_FLOAT32_VEC4"],
+                    "tags" : [],
+                    "default" : [1.0, 1.0, 1.0, 1.0]
+                }, {
+                    "name" : "pixelSamples",
+                    "types" : ["ANARI_INT32"],
+                    "tags" : [],
+                    "default" : 1
+                }
+            ]
+        }, {
+            "type" : "ANARI_RENDERER",
+            "name" : "pathtracer",
+            "parameters" : [
+                {
+                    "name" : "backgroundColor",
+                    "types" : ["ANARI_FLOAT32_VEC4"],
+                    "tags" : [],
+                    "default" : [1.0, 1.0, 1.0, 1.0]
+                }, {
+                    "name" : "pixelSamples",
+                    "types" : ["ANARI_INT32"],
+                    "tags" : [],
+                    "default" : 1
+                }
+            ]
+        }, {
+            "type" : "ANARI_RENDERER",
+            "name" : "debug",
+            "parameters" : [
+                {
+                    "name" : "backgroundColor",
+                    "types" : ["ANARI_FLOAT32_VEC4"],
+                    "tags" : [],
+                    "default" : [1.0, 1.0, 1.0, 1.0]
+                }, {
+                    "name" : "pixelSamples",
+                    "types" : ["ANARI_INT32"],
+                    "tags" : [],
+                    "default" : 1
+                }
+            ]
+        }, {
+            "type" : "ANARI_RENDERER",
+            "name" : "rayCast",
+            "parameters" : [
+                {
+                    "name" : "backgroundColor",
+                    "types" : ["ANARI_FLOAT32_VEC4"],
+                    "tags" : [],
+                    "default" : [1.0, 1.0, 1.0, 1.0]
+                }, {
+                    "name" : "pixelSamples",
+                    "types" : ["ANARI_INT32"],
+                    "tags" : [],
+                    "default" : 1
+                }
+            ]
+        }, {
+            "type" : "ANARI_RENDERER",
+            "name" : "rayDir",
+            "parameters" : [
+                {
+                    "name" : "backgroundColor",
+                    "types" : ["ANARI_FLOAT32_VEC4"],
+                    "tags" : [],
+                    "default" : [1.0, 1.0, 1.0, 1.0]
+                }, {
+                    "name" : "pixelSamples",
+                    "types" : ["ANARI_INT32"],
+                    "tags" : [],
+                    "default" : 1
+                }
+            ]
+        }
+    ]
+}

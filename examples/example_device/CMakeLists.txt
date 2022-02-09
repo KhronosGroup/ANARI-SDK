@@ -33,12 +33,44 @@ else()
   set(REFERENCE_DEVICE_VERSION -1)
 endif()
 
+if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
+  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+
+  add_custom_target(generate_example_device
+    COMMAND ${Python3_EXECUTABLE} ${ANARI_JSON_PATH}/generate_queries.py
+      --json ${ANARI_JSON_PATH}
+      --prefix ExampleDevice
+      --device ${CMAKE_CURRENT_SOURCE_DIR}/example_device.json
+      --namespace example_device
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DEPENDS example_device.json
+  )
+
+  add_dependencies(generate_all generate_example_device)
+
+  add_custom_target(generate_example_debug_objects
+    COMMAND ${Python3_EXECUTABLE} ${ANARI_JSON_PATH}/generate_debug_objects.py
+      --json ${ANARI_JSON_PATH}
+      --device ${CMAKE_CURRENT_SOURCE_DIR}/example_device.json
+      --prefix ExampleDevice
+      --namespace example_device
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DEPENDS example_device.json
+  )
+
+  add_dependencies(generate_all generate_example_debug_objects)
+
+endif()
+
 add_library(${PROJECT_NAME} SHARED
   glm_extras.cpp
 
   Array.cpp
   Object.cpp
   ExampleDevice.cpp
+
+  ExampleDeviceQueries.cpp
+  ExampleDeviceDebugFactory.cpp
 
   camera/Camera.cpp
   camera/Orthographic.cpp
@@ -78,6 +110,7 @@ target_link_libraries(${PROJECT_NAME}
 PUBLIC
   anari
   anari_utilities
+  anari_library_debug
 PRIVATE
   glm::glm
 )

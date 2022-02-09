@@ -3,6 +3,7 @@
 
 # Example device implementation, usable with all example apps below
 add_subdirectory(example_device)
+add_subdirectory(sink_device)
 
 # Example applications which use the ANARI API
 add_subdirectory(simple)

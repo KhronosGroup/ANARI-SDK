@@ -40,12 +40,6 @@ build-example-device:
   <<: *build_artifacts
   script: ci/generic_build_ubuntu.sh
 
-build-header-gen:
-  <<: *docker_job
-  <<: *build_job
-  <<: *build_artifacts
-  script: ci/generic_build_ubuntu.sh -DANARI_USE_GENERATED_HEADERS=ON
-
 ## Regression ##
 
 test-example-device:

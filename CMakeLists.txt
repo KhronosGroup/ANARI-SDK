@@ -36,6 +36,11 @@ option(BUILD_SHARED_LIBS "Build shared libraries instead of static" ON)
 option(BUILD_TESTING "Build tests for CTest" ON)
 option(BUILD_EXAMPLES "Build example applications and example device" ON)
 
+## The generate_all targets collects all offline code generation targets
+
+set(ANARI_JSON_PATH ${CMAKE_SOURCE_DIR}/code_gen)
+add_custom_target(generate_all)
+
 ## Add library and executable targets
 
 set(glm_DIR ${CMAKE_CURRENT_LIST_DIR}/external/glm/lib/cmake/glm)
@@ -44,7 +49,7 @@ mark_as_advanced(glm_DIR)
 
 add_subdirectory(libs)
 add_subdirectory(external)
-add_subdirectory(header_gen)
+add_subdirectory(code_gen)
 if (BUILD_EXAMPLES)
   add_subdirectory(examples)
 endif()

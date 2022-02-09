@@ -1,0 +1,15 @@
+{
+    "info" : {
+        "name" : "extended_device",
+        "type" : "device",
+        "dependencies" : [
+            "anari_core_1_0",
+            "anari_core_objects_1_0",
+            "frame_continuation",
+            "auxiliary_buffers",
+            "area_lights",
+            "stochastic_rendering",
+            "transformation_motion_blur"
+        ]
+    }
+}

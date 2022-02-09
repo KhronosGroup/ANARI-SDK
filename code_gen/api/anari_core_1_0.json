@@ -153,16 +153,6 @@
                 {"name" : "ANARI_LOG_NONE", "value" : 5}
             ]
         }, {
-            "name" : "ANARIDeviceProperty",
-            "baseType" : "int",
-            "values" : [
-                {"name" : "ANARI_DEVICE_VERSION", "value" : 0},
-                {"name" : "ANARI_DEVICE_VERSION_MAJOR", "value" : 1},
-                {"name" : "ANARI_DEVICE_VERSION_MINOR", "value" : 2},
-                {"name" : "ANARI_DEVICE_VERSION_PATCH", "value" : 3},
-                {"name" : "ANARI_DEVICE_SO_VERSION", "value" : 4}
-            ]
-        }, {
             "name" : "ANARIExtension",
             "baseType" : "const char*",
             "values" : []
@@ -212,7 +202,6 @@
         {"name" : "ANARIFuture", "parent" : "ANARIObject"},
         {"name" : "ANARIGeometry", "parent" : "ANARIObject"},
         {"name" : "ANARIGroup", "parent" : "ANARIObject"},
-        {"name" : "ANARIImageOperation", "parent" : "ANARIObject"},
         {"name" : "ANARIInstance", "parent" : "ANARIObject"},
         {"name" : "ANARILight", "parent" : "ANARIObject"},
         {"name" : "ANARIMaterial", "parent" : "ANARIObject"},
@@ -294,13 +283,6 @@
                 {"name" : "type", "type" : "const char*", "default" : "\"default\""}
             ]
         }, {
-            "name" : "anariDeviceGetProperty",
-            "returnType" : "int64_t",
-            "arguments" : [
-                {"name" : "device", "type" : "ANARIDevice"},
-                {"name" : "property", "type" : "ANARIDeviceProperty"}
-            ]
-        }, {
             "name" : "anariDeviceImplements",
             "returnType" : "int",
             "arguments" : [
@@ -362,39 +344,6 @@
             "arguments" : [
                 {"name" : "device", "type" : "ANARIDevice"},
                 {"name" : "array", "type" : "ANARIArray"}
-            ]
-        }, {
-            "name" : "anariArrayRangeUpdated1D",
-            "returnType" : "void",
-            "arguments" : [
-                {"name" : "device", "type" : "ANARIDevice"},
-                {"name" : "array", "type" : "ANARIArray1D"},
-                {"name" : "startIndex1", "type" : "uint64_t"},
-                {"name" : "elementCount1", "type" : "uint64_t"}
-            ]
-        }, {
-            "name" : "anariArrayRangeUpdated2D",
-            "returnType" : "void",
-            "arguments" : [
-                {"name" : "device", "type" : "ANARIDevice"},
-                {"name" : "array", "type" : "ANARIArray2D"},
-                {"name" : "startIndex1", "type" : "uint64_t"},
-                {"name" : "startIndex2", "type" : "uint64_t"},
-                {"name" : "elementCount1", "type" : "uint64_t"},
-                {"name" : "elementCount2", "type" : "uint64_t"}
-            ]
-        }, {
-            "name" : "anariArrayRangeUpdated3D",
-            "returnType" : "void",
-            "arguments" : [
-                {"name" : "device", "type" : "ANARIDevice"},
-                {"name" : "array", "type" : "ANARIArray3D"},
-                {"name" : "startIndex1", "type" : "uint64_t"},
-                {"name" : "startIndex2", "type" : "uint64_t"},
-                {"name" : "startIndex3", "type" : "uint64_t"},
-                {"name" : "elementCount1", "type" : "uint64_t"},
-                {"name" : "elementCount2", "type" : "uint64_t"},
-                {"name" : "elementCount3", "type" : "uint64_t"}
             ]
         }, {
             "name" : "anariNewLight",

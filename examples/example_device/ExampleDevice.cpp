@@ -11,6 +11,10 @@
 #include "material/Material.h"
 #include "renderer/Renderer.h"
 #include "scene/World.h"
+
+// debug interface
+#include "DebugObject.h"
+
 // std
 #include <algorithm>
 #include <chrono>
@@ -350,6 +354,8 @@ ANARIWorld ExampleDevice::newWorld()
   return createObjectForAPI<World, ANARIWorld>();
 }
 
+anari::debug_device::ObjectFactory* getDebugFactory();
+
 int ExampleDevice::getProperty(ANARIObject object,
     const char *name,
     ANARIDataType type,
@@ -364,6 +370,9 @@ int ExampleDevice::getProperty(ANARIObject object,
     std::string_view prop = name;
     if (prop == "version" && type == ANARI_INT32) {
       writeToVoidP(mem, DEVICE_VERSION);
+      return 1;
+    } else if(prop == "debugObjects" && type == ANARI_FUNCTION_POINTER) {
+      writeToVoidP(mem, getDebugFactory);
       return 1;
     }
   } else
@@ -524,6 +533,9 @@ void ExampleDevice::flushCommitBuffer()
   m_objectsToCommit.clear();
 }
 
+const char ** query_object_types(ANARIDataType type);
+const ANARIParameter * query_params(ANARIDataType type, const char *subtype);
+
 } // namespace example_device
 } // namespace anari
 
@@ -552,6 +564,7 @@ extern "C" EXAMPLE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_DEVICE_SUBTYPES(
 extern "C" EXAMPLE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_SUBTYPES(
     example, libdata, deviceSubtype, objectType)
 {
+  /*
   if (objectType == ANARI_RENDERER) {
     static std::vector<const char *> renderers;
     renderers.clear();
@@ -562,14 +575,19 @@ extern "C" EXAMPLE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_SUBTYPES(
     return renderers.data();
   }
   return nullptr;
+  */
+  return anari::example_device::query_object_types(objectType);
 }
 
 extern "C" EXAMPLE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_PARAMETERS(
     example, libdata, deviceSubtype, objectSubtype, objectType)
 {
+  /*
   if (objectType == ANARI_RENDERER)
     return anari::example_device::Renderer::g_parameters;
   return nullptr;
+  */
+  return anari::example_device::query_params(objectType, objectSubtype);
 }
 
 extern "C" EXAMPLE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_PARAMETER_PROPERTY(

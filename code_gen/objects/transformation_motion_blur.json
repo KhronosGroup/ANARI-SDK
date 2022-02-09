@@ -1,0 +1,133 @@
+{
+    "info" : {
+        "name" : "transformation_motion_blur",
+        "type" : "feature",
+        "dependencies" : []
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_INSTANCE",
+            "parameters" : [
+                {
+                    "name" : "motion.transform",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "motion.scale",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "motion.rotation",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "motion.translation",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "time",
+                    "types" : ["ANARI_FLOAT32_BOX1"],
+                    "tags" : [],
+                    "default" : [0.0, 1.0]
+                }
+            ]
+        }, {
+            "type" : "ANARI_CAMERA",
+            "name" : "perspective",
+            "parameters" : [
+                {
+                    "name" : "motion.transform",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "motion.scale",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "motion.rotation",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "motion.translation",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "time",
+                    "types" : ["ANARI_FLOAT32_BOX1"],
+                    "tags" : [],
+                    "default" : [0.0, 1.0]
+                }, {
+                    "name" : "shutter",
+                    "types" : ["ANARI_FLOAT32_BOX1"],
+                    "tags" : [],
+                    "default" : [0.5, 0.5]
+                }
+            ]
+        }, {
+            "type" : "ANARI_CAMERA",
+            "name" : "orthographic",
+            "parameters" : [
+                {
+                    "name" : "motion.transform",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "motion.scale",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "motion.rotation",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "motion.translation",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "time",
+                    "types" : ["ANARI_FLOAT32_BOX1"],
+                    "tags" : [],
+                    "default" : [0.0, 1.0]
+                }, {
+                    "name" : "shutter",
+                    "types" : ["ANARI_FLOAT32_BOX1"],
+                    "tags" : [],
+                    "default" : [0.5, 0.5]
+                }
+            ]
+        }, {
+            "type" : "ANARI_CAMERA",
+            "name" : "omnidirectional",
+            "parameters" : [
+                {
+                    "name" : "motion.transform",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "motion.scale",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "motion.rotation",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "motion.translation",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "time",
+                    "types" : ["ANARI_FLOAT32_BOX1"],
+                    "tags" : [],
+                    "default" : [0.0, 1.0]
+                }, {
+                    "name" : "shutter",
+                    "types" : ["ANARI_FLOAT32_BOX1"],
+                    "tags" : [],
+                    "default" : [0.5, 0.5]
+                }
+            ]
+        }
+    ]
+}
