@@ -13,6 +13,13 @@ add_library(${PROJECT_NAME} STATIC
   scenes/random_spheres.cpp
   scenes/scene.cpp
   scenes/textured_cube.cpp
+  scenes/cornell_box_directional.cpp
+  scenes/cornell_box_point.cpp
+  scenes/cornell_box_hdri.cpp
+  scenes/cornell_box_quad.cpp
+  scenes/cornell_box_ring.cpp
+  scenes/cornell_box_spot.cpp
+  scenes/cornell_box_multilight.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_LIST_DIR})

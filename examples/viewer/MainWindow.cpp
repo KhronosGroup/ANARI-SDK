@@ -28,7 +28,14 @@ static const std::vector<std::string> g_scenes = {
     "instanced_cubes",
     "textured_cube",
     "gravity_spheres_volume",
-    "file_obj"
+    "cornell_box_directional",
+    "cornell_box_point",
+    "cornell_box_spot",
+    //"cornell_box_ring",
+    "cornell_box_quad",
+    //"cornell_box_hdri",
+    "cornell_box_multilight",
+    "file_obj",
     //
 };
 
