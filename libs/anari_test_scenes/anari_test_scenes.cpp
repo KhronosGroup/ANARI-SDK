@@ -13,6 +13,7 @@
 #include "scenes/instanced_cubes.h"
 #include "scenes/random_spheres.h"
 #include "scenes/textured_cube.h"
+#include "scenes/volume_test.h"
 #include "scenes/cornell_box_directional.h"
 #include "scenes/cornell_box_point.h"
 #include "scenes/cornell_box_spot.h"
@@ -42,6 +43,7 @@ static void init()
     scenes["textured_cube"] = &sceneTexturedCube;
     scenes["random_spheres"] = &sceneRandomSpheres;
     scenes["file_obj"] = &sceneFileObj;
+    scenes["volume_test"] = &sceneVolumeTest;
     scenes["cornell_box_directional"] = &sceneCornellBoxDirectional;
     scenes["cornell_box_point"] = &sceneCornellBoxPoint;
     scenes["cornell_box_spot"] = &sceneCornellBoxSpot;
