@@ -35,6 +35,7 @@ static const std::vector<std::string> g_scenes = {
     "cornell_box_quad",
     //"cornell_box_hdri",
     "cornell_box_multilight",
+    "textured_cube_samplers",
     "file_obj",
     //
 };
