@@ -21,6 +21,7 @@
 #include "scenes/cornell_box_quad.h"
 #include "scenes/cornell_box_hdri.h"
 #include "scenes/cornell_box_multilight.h"
+#include "scenes/textured_cube_samplers.h"
 
 namespace anari {
 namespace scenes {
@@ -51,6 +52,7 @@ static void init()
     scenes["cornell_box_quad"] = &sceneCornellBoxQuad;
     scenes["cornell_box_hdri"] = &sceneCornellBoxHDRI;
     scenes["cornell_box_multilight"] = &sceneCornellBoxMultilight;
+    scenes["textured_cube_samplers"] = &sceneTexturedCubeSamplers;
   }
 }
 
