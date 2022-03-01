@@ -16,7 +16,7 @@ std::vector<std::string> g_scenes = {
     "cornell_box",
     "gravity_spheres_volume",
     "instanced_cubes",
-    //"textured_cube",
+    "textured_cube",
     "random_spheres",
     "cornell_box_directional",
     "cornell_box_point",
