@@ -15,6 +15,8 @@ struct CornellBoxDirectional : public TestScene
   CornellBoxDirectional(anari::Device d);
   ~CornellBoxDirectional();
 
+  std::vector<ParameterInfo> parameters() override;
+
   anari::World world() override;
 
   void commit() override;

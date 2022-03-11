@@ -235,9 +235,44 @@ anari::World CornellBoxDirectional::world()
   return m_world;
 }
 
+std::vector<ParameterInfo> CornellBoxDirectional::parameters()
+{
+  return {
+      {"angularDiameter", ANARI_FLOAT32, 0.f, ""},
+      {"irradiance", ANARI_FLOAT32, 2.5f, ""},
+      {"R", ANARI_FLOAT32, 0.220f, ""},
+      {"G", ANARI_FLOAT32, 0.220f, ""},
+      {"B", ANARI_FLOAT32, 0.150f, ""},
+      {"dirX", ANARI_FLOAT32, 0.0f, ""},
+      {"dirY", ANARI_FLOAT32, 0.0f, ""},
+      {"dirZ", ANARI_FLOAT32, 1.0f, ""}
+      //
+  };
+}
+
 void CornellBoxDirectional::commit()
 {
   auto d = m_device;
+
+  anari::Light light;
+
+  float irradiance = getParam<float>("irradiance", 2.5f);
+  float angularDiameter = getParam<float>("angularDiameter", 0.0f);
+
+  float red = getParam<float>("R", 0.22f);
+  float green = getParam<float>("G", 0.22f);
+  float blue = getParam<float>("B", 0.15f);
+
+  float dirX = getParam<float>("dirX", 0.0f);
+  float dirY = getParam<float>("dirY", 0.0f);
+  float dirZ = getParam<float>("dirZ", 1.0f);
+
+  light = anari::newObject<anari::Light>(d, "directional");
+  anari::setParameter(d, light, "color", glm::vec3(red, green, blue));
+  anari::setParameter(d, light, "direction", glm::vec3(dirX, dirY, dirZ));
+  anari::setParameter(d, light, "irradiance", irradiance);
+  anari::setParameter(d, light, "angularDiameter", angularDiameter);
+  // anari::setParameter(d, light, "radiance", 1.f); //irradiance takes precedence if also specified
 
   auto geom = anari::newObject<anari::Geometry>(d, "triangle");
 
@@ -269,15 +304,6 @@ void CornellBoxDirectional::commit()
   anari::setAndReleaseParameter(
       d, m_world, "surface", anari::newArray1D(d, &surface));
   anari::release(d, surface);
-
-  anari::Light light;
-
-  light = anari::newObject<anari::Light>(d, "directional");
-  anari::setParameter(d, light, "color", glm::vec3(0.220f, 0.220f, 0.150f));
-  anari::setParameter(d, light, "direction", glm::vec3(0.f, 0.0f, 1.f));
-  anari::setParameter(d, light, "irradiance", 2.5f);
-  anari::setParameter(d, light, "angularDiameter", 0.f);
-  anari::setParameter(d, light, "radiance", 1.f); //irradiance takes precedence if also specified
 
   anari::commit(d, light);
 

@@ -235,9 +235,64 @@ anari::World CornellBoxRing::world()
   return m_world;
 }
 
+std::vector<ParameterInfo> CornellBoxRing::parameters()
+{
+  return {
+      {"intensity", ANARI_FLOAT32, 5.f, ""},
+      {"openingAngle", ANARI_FLOAT32, 3.14f, ""},
+      {"falloffAngle", ANARI_FLOAT32, 0.0f, ""},
+      {"radius", ANARI_FLOAT32, 1.f, ""},
+      {"innerRadius", ANARI_FLOAT32, 0.f, ""},
+      {"radiance", ANARI_FLOAT32, 1.5f, ""},
+      {"R", ANARI_FLOAT32, 0.220f, ""},
+      {"G", ANARI_FLOAT32, 0.220f, ""},
+      {"B", ANARI_FLOAT32, 0.150f, ""},
+      {"X", ANARI_FLOAT32, 0.0f, ""},
+      {"Y", ANARI_FLOAT32, 0.0f, ""},
+      {"Z", ANARI_FLOAT32, 0.0f, ""}, 
+      {"dirX", ANARI_FLOAT32, 0.0f, ""},
+      {"dirY", ANARI_FLOAT32, 0.0f, ""},
+      {"dirZ", ANARI_FLOAT32, 1.0f, ""}
+      //
+  };
+}
+
 void CornellBoxRing::commit()
 {
   auto d = m_device;
+
+  float intensity = getParam<float>("intensity", 5.f);
+  float openingAngle = getParam<float>("openingAngle", 3.14f);
+  float falloffAngle = getParam<float>("falloffAngle", 0.0f);
+  float radius = getParam<float>("radius", 1.f);
+  float innerRadius = getParam<float>("innerRadius", 0.f);
+  float radiance = getParam<float>("radiance", 1.5f);
+
+  float red = getParam<float>("R", 0.22f);
+  float green = getParam<float>("G", 0.22f);
+  float blue = getParam<float>("B", 0.15f);
+
+  float X = getParam<float>("X", 0.0f);
+  float Y = getParam<float>("Y", 0.0f);
+  float Z = getParam<float>("Z", 0.0f);
+
+  float dirX = getParam<float>("dirX", 0.0f);
+  float dirY = getParam<float>("dirY", 0.0f);
+  float dirZ = getParam<float>("dirZ", 1.0f);
+
+  anari::Light light;
+
+  light = anari::newObject<anari::Light>(d, "ring");
+  anari::setParameter(d, light, "color", glm::vec3(red, green, blue));
+  anari::setParameter(d, light, "position", glm::vec3(X, Y, Z));
+  anari::setParameter(d, light, "direction", glm::vec3(dirX, dirY, dirZ));
+  anari::setParameter(d, light, "openingAngle", openingAngle);
+  anari::setParameter(d, light, "falloffAngle", falloffAngle);
+  anari::setParameter(d, light, "intensity", intensity);
+  //anari::setParameter(d, light, "power", 50.f);
+  anari::setParameter(d, light, "radius", radius);
+  anari::setParameter(d, light, "innerRadius", innerRadius);
+  anari::setParameter(d, light, "radiance", radiance);
 
   auto geom = anari::newObject<anari::Geometry>(d, "triangle");
 
@@ -269,20 +324,6 @@ void CornellBoxRing::commit()
   anari::setAndReleaseParameter(
       d, m_world, "surface", anari::newArray1D(d, &surface));
   anari::release(d, surface);
-
-  anari::Light light;
-
-  //light = anari::newObject<anari::Light>(d, "ring");
-  //anari::setParameter(d, light, "color", glm::vec3(0.220f, 0.220f, 0.150f));
-  //anari::setParameter(d, light, "position", glm::vec3(0.0f, 0.0f, -1.0f));
-  //anari::setParameter(d, light, "direction", glm::vec3(0.0f, 0.0f, 1.0f));
-  //anari::setParameter(d, light, "openingAngle", 1.0f);
-  //anari::setParameter(d, light, "falloffAngle", 0.1f);
-  //anari::setParameter(d, light, "intensity", 5.0f);
-  //anari::setParameter(d, light, "power", 50.f);
-  //anari::setParameter(d, light, "radius", 0.0f);
-  //anari::setParameter(d, light, "innerRadius", 0.0f);
-  //anari::setParameter(d, light, "radiance", 0.5f);
 
   anari::commit(d, light);
 

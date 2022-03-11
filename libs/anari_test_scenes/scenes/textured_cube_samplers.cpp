@@ -78,8 +78,8 @@ std::vector<ParameterInfo> TexturedCubeSamplers::parameters()
 {
   return {
       {"filter", ANARI_BOOL, true, "Use nearest filter (linear will be used instead)"},
-      {"wrapMode1", ANARI_INT32, 1, "1 - clampToEdge, 2 - repeat, 3 - mirrorRepeat"},
-      {"wrapMode2", ANARI_INT32, 1, "1 - clampToEdge, 2 - repeat, 3 - mirrorRepeat"},
+      {"wrapMode1", ANARI_STRING, 1, "1 - clampToEdge, 2 - repeat, 3 - mirrorRepeat"},
+      {"wrapMode2", ANARI_STRING, 1, "1 - clampToEdge, 2 - repeat, 3 - mirrorRepeat"},
       //{"fileName", ANARI_STRING, std::string(), ".obj file to open."}
       //
   };
@@ -92,12 +92,6 @@ void TexturedCubeSamplers::commit()
   const bool filter = getParam<bool>("filter", true);
   int wrapMode1 = getParam<int>("WrapMode1", 1);
   int wrapMode2 = getParam<int>("WrapMode2", 1);
-
-  std::vector<glm::vec4> tArray = {
-      {1.f, 0.f, 0.f, 0.f},
-      {0.f, 1.f, 0.f, 0.f},
-      {0.f, 0.f, 1.f, 0.f},
-      {0.f, 0.f, 0.f, 1.f}};
 
   auto geom = anari::newObject<anari::Geometry>(d, "triangle");
   anari::setAndReleaseParameter(d,
@@ -120,7 +114,15 @@ void TexturedCubeSamplers::commit()
   auto tex = anari::newObject<anari::Sampler>(d, "image2D");
   anari::setAndReleaseParameter(d, tex, "image", makeTextureData(d, 8));
   anari::setParameter(d, tex, "inAttribute", "attribute0");
-  //anari::setParameter(d, tex, "inTransform", anari::newArray2D(d, tArray.data(), tArray.size());
+
+  const float tArray[16] = {
+      0.2f,0.5f,0.4f,0.f,
+      0.1f,0.2f,0.3f,0.f,
+      0.f,0.f,1.f,0.f,
+      0.f,0.f,0.f,1.f
+  };
+  anari::setParameter(d, tex, "inTransform", tArray);
+  
   if (filter) {
       anari::setParameter(d, tex, "filter", "nearest");
       printf("Setting filter to nearest\n");

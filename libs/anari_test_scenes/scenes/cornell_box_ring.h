@@ -17,6 +17,8 @@ struct CornellBoxRing : public TestScene
 
   anari::World world() override;
 
+  std::vector<ParameterInfo> parameters() override;
+
   void commit() override;
 
  private:

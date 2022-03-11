@@ -235,9 +235,72 @@ anari::World CornellBoxQuad::world()
   return m_world;
 }
 
+std::vector<ParameterInfo> CornellBoxQuad::parameters()
+{
+  return {
+      {"intensity", ANARI_FLOAT32, 70.f, ""},
+      {"radiance", ANARI_FLOAT32, 0.5f, ""},
+      {"power", ANARI_FLOAT32, 10.f, ""},
+      {"Double Sided", ANARI_BOOL, true, ""},
+      {"R", ANARI_FLOAT32, 0.78f, ""},
+      {"G", ANARI_FLOAT32, 0.551f, ""},
+      {"B", ANARI_FLOAT32, 0.183f, ""},
+      {"X", ANARI_FLOAT32, -0.23f, ""},
+      {"Y", ANARI_FLOAT32, 0.98f, ""},
+      {"Z", ANARI_FLOAT32, -0.16f, ""},
+      {"edge1X", ANARI_FLOAT32, 0.47f, ""},
+      {"edge1Y", ANARI_FLOAT32, 0.f, ""},
+      {"edge1Z", ANARI_FLOAT32, 0.f, ""},
+      {"edge2X", ANARI_FLOAT32, 0.f, ""},
+      {"edge2Y", ANARI_FLOAT32, 0.f, ""},
+      {"edge2Z", ANARI_FLOAT32, 0.38f, ""}
+      //
+  };
+}
+
 void CornellBoxQuad::commit()
 {
   auto d = m_device;
+
+  float intensity = getParam<float>("intensity", 70.f);
+  float radiance = getParam<float>("radiance", 0.5f);
+  float power = getParam<float>("power", 10.f);
+  bool double_sided = getParam<float>("Double Sided", true);
+
+  float red = getParam<float>("R", 0.78f);
+  float green = getParam<float>("G", 0.551f);
+  float blue = getParam<float>("B", 0.183f);
+
+  float X = getParam<float>("X", -0.23f);
+  float Y = getParam<float>("Y", 0.98f);
+  float Z = getParam<float>("Z", -0.16f);
+
+  float edge1X = getParam<float>("edge1X", 0.47f);
+  float edge1Y = getParam<float>("edge1Y", 0.0f);
+  float edge1Z = getParam<float>("edge1Z", 0.0f);
+
+  float edge2X = getParam<float>("edge2X", 0.0f);
+  float edge2Y = getParam<float>("edge2Y", 0.0f);
+  float edge2Z = getParam<float>("edge2Z", 0.38f);
+
+  anari::Light light;
+
+  light = anari::newObject<anari::Light>(d, "quad");
+  anari::setParameter(d, light, "color", glm::vec3(red, green, blue));
+  anari::setParameter(d, light, "intensity", intensity);
+  anari::setParameter(d, light, "position", glm::vec3(X, Y, Z));
+  anari::setParameter(d, light, "edge1", glm::vec3(edge1X, edge1Y, edge1Z));
+  anari::setParameter(d, light, "edge2", glm::vec3(edge2X, edge2Y, edge2Z));
+  anari::setParameter(
+      d, light, "power", power); // intensity takes precedence if also specified
+  anari::setParameter(d,
+      light,
+      "radiance",
+      radiance); // intensity (or power) takes precedence if also specified
+  anari::setParameter(d,
+      light,
+      "side",
+      double_sided ? "both" : "front"); // currently doesn't work properly
 
   auto geom = anari::newObject<anari::Geometry>(d, "triangle");
 
@@ -269,18 +332,6 @@ void CornellBoxQuad::commit()
   anari::setAndReleaseParameter(
       d, m_world, "surface", anari::newArray1D(d, &surface));
   anari::release(d, surface);
-
-  anari::Light light;
-
-  light = anari::newObject<anari::Light>(d, "quad");
-  anari::setParameter(d, light, "color", glm::vec3(0.78f, 0.551f, 0.183f));
-  anari::setParameter(d, light, "intensity", 70.f);
-  anari::setParameter(d, light, "position", glm::vec3(-0.23f, 0.98f, -0.16f));
-  anari::setParameter(d, light, "edge1", glm::vec3(0.47f, 0.0f, 0.0f));
-  anari::setParameter(d, light, "edge2", glm::vec3(0.0f, 0.0f, 0.38f));
-  anari::setParameter(d, light, "power", 10.0f); // intensity takes precedence if also specified
-  anari::setParameter(d, light, "radiance", 0.5f); // intensity (or power) takes precedence if also specified
-  anari::setParameter(d, light, "side", "both"); // currently doesn't work properly
   
 
   anari::commit(d, light);

@@ -235,9 +235,58 @@ anari::World CornellBoxSpot::world()
   return m_world;
 }
 
+std::vector<ParameterInfo> CornellBoxSpot::parameters()
+{
+  return {
+      {"intensity", ANARI_FLOAT32, 20.f, ""},
+      {"openingAngle", ANARI_FLOAT32, 0.5f, ""},
+      {"falloffAngle", ANARI_FLOAT32, 0.5f, ""},
+      {"power", ANARI_FLOAT32, 50.f, ""},
+      {"R", ANARI_FLOAT32, 1.f, ""},
+      {"G", ANARI_FLOAT32, 0.f, ""},
+      {"B", ANARI_FLOAT32, 0.f, ""},
+      {"X", ANARI_FLOAT32, 0.0f, ""},
+      {"Y", ANARI_FLOAT32, 0.0f, ""},
+      {"Z", ANARI_FLOAT32, -2.0f, ""},
+      {"dirX", ANARI_FLOAT32, 0.0f, ""},
+      {"dirY", ANARI_FLOAT32, 0.0f, ""},
+      {"dirZ", ANARI_FLOAT32, 1.0f, ""}
+      //
+  };
+}
+
 void CornellBoxSpot::commit()
 {
   auto d = m_device;
+
+  float intensity = getParam<float>("intensity", 20.f);
+  float openingAngle = getParam<float>("openingAngle", 0.5f);
+  float falloffAngle = getParam<float>("falloffAngle", 0.5f);
+  float power = getParam<float>("power", 50.f);
+
+  float red = getParam<float>("R", 1.f);
+  float green = getParam<float>("G", 0.f);
+  float blue = getParam<float>("B", 0.f);
+
+  float X = getParam<float>("X", 0.0f);
+  float Y = getParam<float>("Y", 0.0f);
+  float Z = getParam<float>("Z", -2.0f);
+
+  float dirX = getParam<float>("dirX", 0.0f);
+  float dirY = getParam<float>("dirY", 0.0f);
+  float dirZ = getParam<float>("dirZ", 1.0f);
+
+  anari::Light light;
+
+  light = anari::newObject<anari::Light>(d, "spot");
+  anari::setParameter(d, light, "color", glm::vec3(red, green, blue));
+  anari::setParameter(d, light, "position", glm::vec3(X, Y, Z));
+  anari::setParameter(d, light, "direction", glm::vec3(dirX, dirY, dirZ));
+  anari::setParameter(d, light, "openingAngle", openingAngle);
+  anari::setParameter(d, light, "falloffAngle", falloffAngle);
+  anari::setParameter(d, light, "intensity", intensity);
+  anari::setParameter(
+      d, light, "power", power); // intensity takes precedence if also specified
 
   auto geom = anari::newObject<anari::Geometry>(d, "triangle");
 
@@ -269,17 +318,6 @@ void CornellBoxSpot::commit()
   anari::setAndReleaseParameter(
       d, m_world, "surface", anari::newArray1D(d, &surface));
   anari::release(d, surface);
-
-  anari::Light light;
-
-  light = anari::newObject<anari::Light>(d, "spot");
-  anari::setParameter(d, light, "color", glm::vec3(0.220f, 0.220f, 0.150f));
-  anari::setParameter(d, light, "position", glm::vec3(0.0f, 0.0f, -2.0f));
-  anari::setParameter(d, light, "direction", glm::vec3(0.0f, 0.0f, 1.0f));
-  anari::setParameter(d, light, "openingAngle", 0.5f);
-  anari::setParameter(d, light, "falloffAngle", 0.0f);
-  anari::setParameter(d, light, "intensity", 20.0f);
-  anari::setParameter(d, light, "power", 50.f); // intensity takes precedence if also specified
 
   anari::commit(d, light);
 

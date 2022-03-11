@@ -235,9 +235,51 @@ anari::World CornellBoxPoint::world()
   return m_world;
 }
 
+std::vector<ParameterInfo> CornellBoxPoint::parameters()
+{
+  return {
+      {"intensity", ANARI_FLOAT32, 5.f, ""},
+      {"radius", ANARI_FLOAT32, 0.f, ""},
+      {"radiance", ANARI_FLOAT32, 0.5f, ""},
+      {"R", ANARI_FLOAT32, 0.220f, ""},
+      {"G", ANARI_FLOAT32, 0.220f, ""},
+      {"B", ANARI_FLOAT32, 0.150f, ""},
+      {"X", ANARI_FLOAT32, 0.0f, ""},
+      {"Y", ANARI_FLOAT32, 0.0f, ""},
+      {"Z", ANARI_FLOAT32, -1.0f, ""}
+      //
+  };
+}
+
 void CornellBoxPoint::commit()
 {
   auto d = m_device;
+
+  float intensity = getParam<float>("intensity", 5.f);
+  float radius = getParam<float>("radius", 0.f);
+  float radiance = getParam<float>("radiance", 0.5f);
+
+  float red = getParam<float>("R", 0.22f);
+  float green = getParam<float>("G", 0.22f);
+  float blue = getParam<float>("B", 0.15f);
+
+  float X = getParam<float>("X", 0.0f);
+  float Y = getParam<float>("Y", 0.0f);
+  float Z = getParam<float>("Z", -1.0f);
+
+  anari::Light light;
+
+  light = anari::newObject<anari::Light>(d, "point");
+  anari::setParameter(d, light, "color", glm::vec3(red, green, blue));
+  anari::setParameter(d, light, "position", glm::vec3(X, Y, Z));
+  anari::setParameter(d, light, "intensity", intensity);
+  anari::setParameter(
+      d, light, "power", 50.f); // intensity takes precedence if also specified
+  anari::setParameter(d, light, "radius", radius);
+  anari::setParameter(d,
+      light,
+      "radiance",
+      radiance); // intensity (or power) takes precedence if also specified
 
   auto geom = anari::newObject<anari::Geometry>(d, "triangle");
 
@@ -269,16 +311,6 @@ void CornellBoxPoint::commit()
   anari::setAndReleaseParameter(
       d, m_world, "surface", anari::newArray1D(d, &surface));
   anari::release(d, surface);
-
-  anari::Light light;
-
-  light = anari::newObject<anari::Light>(d, "point");
-  anari::setParameter(d, light, "color", glm::vec3(0.220f, 0.220f, 0.150f));
-  anari::setParameter(d, light, "position", glm::vec3(0.0f, 0.0f, -1.0f));
-  anari::setParameter(d, light, "intensity", 5.0f);
-  anari::setParameter(d, light, "power", 50.f); // intensity takes precedence if also specified
-  anari::setParameter(d, light, "radius", 0.0f);
-  anari::setParameter(d, light, "radiance", 0.5f); // intensity (or power) takes precedence if also specified
 
   anari::commit(d, light);
 

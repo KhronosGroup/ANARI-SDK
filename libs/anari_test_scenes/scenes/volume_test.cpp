@@ -90,7 +90,10 @@ VolumeTest::~VolumeTest()
 std::vector<ParameterInfo> VolumeTest::parameters()
 {
   return {
-      {"withGeometry", ANARI_BOOL, false, "Include geometry inside the volume?"}
+      {"withGeometry", ANARI_BOOL, false, "Include geometry inside the volume?"},
+      {"valueRangeLeft", ANARI_FLOAT32, 0.0f, "Sampled values of field are clamped to this range"},
+      {"valueRangeRight", ANARI_FLOAT32, 1.0f, "Sampled values of field are clamped to this range"},
+      {"densityScale", ANARI_FLOAT32, 1.0f, "Makes volumes uniformly thinner or thicker"}
       //
   };
 }
@@ -105,9 +108,14 @@ void VolumeTest::commit()
   anari::Device d = m_device;
 
   const bool withGeometry = getParam<bool>("withGeometry", false);
+  float valueRangeLeft = getParam<float>("valueRangeLeft", 0.0f);
+  float valueRangeRight = getParam<float>("valueRangeRight", 1.0f);
+  float densityScale = getParam<float>("densityScale", 1.0f);
   const int volumeDims = 128;
   const int numPoints = 10;
   const auto voxelRange = glm::vec2(0.f, 10.f);
+
+  float valueRange[2] = {valueRangeLeft, valueRangeRight};
 
   auto points = generatePoints(numPoints);
   auto voxels = generateVoxels(points, glm::ivec3(volumeDims));
@@ -115,14 +123,16 @@ void VolumeTest::commit()
   auto field = anari::newObject<anari::SpatialField>(d, "structuredRegular");
   anari::setParameter(d, field, "origin", glm::vec3(-1.f));
   anari::setParameter(d, field, "spacing", glm::vec3(2.f / volumeDims));
-  anari::setAndReleaseParameter(d,
-      field,
-      "data",
-      anari::newArray3D(d, voxels.data(), volumeDims, volumeDims, volumeDims));
+  anari::setAndReleaseParameter(d, field, "data", anari::newArray3D(d, voxels.data(), volumeDims, volumeDims, volumeDims));
   anari::commit(d, field);
 
   auto volume = anari::newObject<anari::Volume>(d, "scivis");
   anari::setAndReleaseParameter(d, volume, "field", field);
+  anari::setParameter(d, volume, "valueRange", valueRange);
+  anari::setParameter(d, volume, "densityScale", densityScale);
+  //anari::setParameter(d, volume, "color", field);
+  //anari::setParameter(d, volume, "color.position", field);
+  //anari::setParameter(d, volume, "opacity", field);
 
   {
     std::vector<glm::vec3> colors;

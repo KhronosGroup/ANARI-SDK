@@ -235,9 +235,69 @@ anari::World CornellBoxMultilight::world()
   return m_world;
 }
 
+std::vector<ParameterInfo> CornellBoxMultilight::parameters()
+{
+  return {
+      {"Spot intensity", ANARI_FLOAT32, 20.f, ""},
+      {"Spot openingAngle", ANARI_FLOAT32, 0.5f, ""},
+      {"Spot falloffAngle", ANARI_FLOAT32, 0.f, ""},
+      {"Spot power", ANARI_FLOAT32, 50.f, ""},
+      {"Spot R", ANARI_FLOAT32, 0.255f, ""},
+      {"Spot G", ANARI_FLOAT32, 0.f, ""},
+      {"Spot B", ANARI_FLOAT32, 0.f, ""},
+      {"Spot X", ANARI_FLOAT32, 0.0f, ""},
+      {"Spot Y", ANARI_FLOAT32, 0.0f, ""},
+      {"Spot Z", ANARI_FLOAT32, -2.0f, ""},
+      {"Spot dirX", ANARI_FLOAT32, 0.0f, ""},
+      {"Spot dirY", ANARI_FLOAT32, 0.0f, ""},
+      {"Spot dirZ", ANARI_FLOAT32, 1.0f, ""},
+      {"Quad intensity", ANARI_FLOAT32, 20.f, ""},
+      {"Quad radiance", ANARI_FLOAT32, 0.5f, ""},
+      {"Quad power", ANARI_FLOAT32, 100.f, ""},
+      {"Quad Double Sided", ANARI_BOOL, true, ""},
+      {"Quad R", ANARI_FLOAT32, 0.f, ""},
+      {"Quad G", ANARI_FLOAT32, 0.f, ""},
+      {"Quad B", ANARI_FLOAT32, 0.255f, ""},
+      {"Quad X", ANARI_FLOAT32, -0.23f, ""},
+      {"Quad Y", ANARI_FLOAT32, 0.98f, ""},
+      {"Quad Z", ANARI_FLOAT32, -0.16f, ""}
+      //
+  };
+}
+
 void CornellBoxMultilight::commit()
 {
   auto d = m_device;
+
+  float spot_intensity = getParam<float>("Spot intensity", 20.f);
+  float spot_openingAngle = getParam<float>("Spot openingAngle", 0.5f);
+  float spot_falloffAngle = getParam<float>("Spot falloffAngle", 0.f);
+  float spot_power = getParam<float>("Spot power", 50.f);
+
+  float spot_red = getParam<float>("Spot R", 0.255f);
+  float spot_green = getParam<float>("Spot G", 0.0f);
+  float spot_blue = getParam<float>("Spot B", 0.0f);
+
+  float spot_X = getParam<float>("Spot X", 0.0f);
+  float spot_Y = getParam<float>("Spot Y", 0.0f);
+  float spot_Z = getParam<float>("Spot Z", -2.0f);
+
+  float spot_dirX = getParam<float>("Spot dirX", 0.0f);
+  float spot_dirY = getParam<float>("Spot dirY", 0.0f);
+  float spot_dirZ = getParam<float>("Spot dirZ", 1.0f);
+
+  float quad_intensity = getParam<float>("Quad intensity", 20.f);
+  float quad_radiance = getParam<float>("Quad radiance", 0.5f);
+  float quad_power = getParam<float>("Quad power", 100.f);
+  bool double_sided = getParam<float>("Quad Double Sided", true);
+
+  float quad_red = getParam<float>("Quad R", 0.f);
+  float quad_green = getParam<float>("Quad G", 0.f);
+  float quad_blue = getParam<float>("Quad B", 0.255f);
+
+  float quad_X = getParam<float>("Quad X", -0.23f);
+  float quad_Y = getParam<float>("Quad Y", 0.98f);
+  float quad_Z = getParam<float>("Quad Z", -0.16f);
 
   auto geom = anari::newObject<anari::Geometry>(d, "triangle");
 
@@ -273,24 +333,31 @@ void CornellBoxMultilight::commit()
   anari::Light light1;
   anari::Light light2;
 
+
   light1 = anari::newObject<anari::Light>(d, "spot");
-  anari::setParameter(d, light1, "color", glm::vec3(0.255f, 0.0f, 0.0f));
-  anari::setParameter(d, light1, "position", glm::vec3(0.0f, 0.0f, -2.0f));
-  anari::setParameter(d, light1, "direction", glm::vec3(0.0f, 0.0f, 1.0f));
-  anari::setParameter(d, light1, "openingAngle", 0.5f);
-  anari::setParameter(d, light1, "falloffAngle", 0.0f);
-  anari::setParameter(d, light1, "intensity", 20.0f);
-  anari::setParameter(d, light1, "power", 50.f); // intensity takes precedence if also specified
+  anari::setParameter(
+      d, light1, "color", glm::vec3(spot_red, spot_green, spot_blue));
+  anari::setParameter(d, light1, "position", glm::vec3(spot_X, spot_Y, spot_Z));
+  anari::setParameter(
+      d, light1, "direction", glm::vec3(spot_dirX, spot_dirY, spot_dirZ));
+  anari::setParameter(d, light1, "openingAngle", spot_openingAngle);
+  anari::setParameter(d, light1, "falloffAngle", spot_falloffAngle);
+  anari::setParameter(d, light1, "intensity", spot_intensity);
+  anari::setParameter(
+      d, light1, "power", 50.f); // intensity takes precedence if also specified
 
   light2 = anari::newObject<anari::Light>(d, "quad");
-  anari::setParameter(d, light2, "color", glm::vec3(0.0f, 0.0f, 0.255f));
-  anari::setParameter(d, light2, "intensity", 20.0f);
-  anari::setParameter(d, light2, "position", glm::vec3(-0.23f, 0.98f, -0.16f));
+  anari::setParameter(d, light2, "color", glm::vec3(quad_red, quad_green, quad_blue));
+  anari::setParameter(d, light2, "intensity", quad_intensity);
+  anari::setParameter(d, light2, "position", glm::vec3(quad_X, quad_Y, quad_Z));
   anari::setParameter(d, light2, "edge1", glm::vec3(0.47f, 0.0f, 0.0f));
   anari::setParameter(d, light2, "edge2", glm::vec3(0.0f, 0.0f, 0.38f));
-  anari::setParameter(d, light2, "power", 100.0f); // intensity takes precedence if also specified
-  anari::setParameter(d, light2, "radiance", 0.5f);
-  anari::setParameter(d, light2, "side", "front");
+  anari::setParameter(d,
+      light2,
+      "power",
+      quad_power); // intensity takes precedence if also specified
+  anari::setParameter(d, light2, "radiance", quad_radiance);
+  anari::setParameter(d, light2, "side", double_sided ? "both" : "front");
 
   std::vector<anari::Light> light_array = {light1, light2};
 
