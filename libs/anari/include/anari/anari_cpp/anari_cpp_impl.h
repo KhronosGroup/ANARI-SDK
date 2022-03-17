@@ -334,13 +334,16 @@ inline void setParameter(ANARIDevice d, ANARIObject o, const char *name, T &&v)
 {
   using TYPE = typename std::remove_reference<T>::type;
   constexpr bool validType = ANARITypeFor<TYPE>::value != ANARI_UNKNOWN;
-  constexpr bool isStringLiteral = std::is_convertible<T, const char *>::value;
+  constexpr bool isString = std::is_convertible<TYPE, const char *>::value;
+  constexpr bool isStringLiteral = isString && std::is_array<TYPE>::value;
   constexpr bool isVoidPtr = ANARITypeFor<TYPE>::value == ANARI_VOID_POINTER;
-  static_assert(validType || isStringLiteral,
+  static_assert(validType || isString,
       "Only types corresponding to ANARIDataType values can be set "
       "as parameters on ANARI objects.");
   if (isStringLiteral)
     anariSetParameter(d, o, name, ANARI_STRING, (const char *)&v);
+  else if (isString)
+    anariSetParameter(d, o, name, ANARI_STRING, *((const char **)&v));
   else if (isVoidPtr)
     anariSetParameter(d, o, name, ANARI_VOID_POINTER, *((const void **)&v));
   else
