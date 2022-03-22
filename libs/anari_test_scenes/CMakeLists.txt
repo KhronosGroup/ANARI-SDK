@@ -20,6 +20,6 @@ target_link_libraries(${PROJECT_NAME}
 PUBLIC
   anari
   anari_utilities
-  glm
+  glm::glm
   stb_image
 )

@@ -14,7 +14,6 @@ add_executable(${PROJECT_NAME}
 target_compile_definitions(${PROJECT_NAME} PRIVATE GLM_ENABLE_EXPERIMENTAL)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
-  glm
   imgui_glfw
   anari
   anari_test_scenes

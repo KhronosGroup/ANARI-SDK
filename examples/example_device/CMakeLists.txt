@@ -79,7 +79,7 @@ PUBLIC
   anari
   anari_utilities
 PRIVATE
-  glm
+  glm::glm
 )
 
 if (NOT WIN32 AND TARGET OpenMP::OpenMP_CXX)

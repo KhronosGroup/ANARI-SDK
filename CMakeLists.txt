@@ -8,7 +8,7 @@ cmake_minimum_required(VERSION 3.11)
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
-set(CMAKE_C_STANDARD   99)
+set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
@@ -37,6 +37,10 @@ option(BUILD_TESTING "Build tests for CTest" ON)
 option(BUILD_EXAMPLES "Build example applications and example device" ON)
 
 ## Add library and executable targets
+
+set(glm_DIR ${CMAKE_CURRENT_LIST_DIR}/external/glm/lib/cmake/glm)
+find_package(glm REQUIRED)
+mark_as_advanced(glm_DIR)
 
 add_subdirectory(libs)
 add_subdirectory(external)

@@ -5,18 +5,13 @@ set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 find_package(Threads REQUIRED)
 
-if(BUILD_TESTING)
-  set(GLM_SOURCES anari_cpp_glm_defs.cpp)
-  set(GLM_LIBS glm)
-endif()
-
 add_library(${PROJECT_NAME}
   anari_cpp_std_defs.cpp
   API.cpp
   Device.cpp
   Helpers.cpp
   Library.cpp
-  ${GLM_SOURCES}
+  anari_cpp_glm_defs.cpp
 )
 
 if (ANARI_USE_GENERATED_HEADERS)
@@ -41,7 +36,7 @@ PUBLIC
   ${CMAKE_DL_LIBS}
 PRIVATE
   Threads::Threads
-  ${GLM_LIBS}
+  glm::glm
 )
 
 ## Install library + targets

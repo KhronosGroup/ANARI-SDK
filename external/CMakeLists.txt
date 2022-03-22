@@ -21,22 +21,6 @@ endfunction()
 add_subdirectory(stb_image)
 add_subdirectory(glad)
 
-## glm ##
-
-if (BUILD_TESTING)
-  fetch_project(
-    NAME glm_src
-    URL https://github.com/g-truc/glm/archive/0.9.9.8.zip
-    DESTINATION glm
-  )
-  
-  set(glm_DIR "${glm_src_LOCATION}/cmake/glm")
-  find_package(glm REQUIRED)
-  
-  add_library(glm INTERFACE IMPORTED GLOBAL)
-  target_link_libraries(glm INTERFACE glm::glm)
-endif()
-
 ## imgui ##
 
 if (NOT BUILD_VIEWER)
