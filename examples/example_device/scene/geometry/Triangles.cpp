@@ -66,6 +66,13 @@ PotentialHit Triangle::intersect(const Ray &ray, size_t primID) const
 
 // Triangles geometry definitions /////////////////////////////////////////////
 
+ANARIParameter Triangles::g_parameters[] = {
+  {"primitive.index", ANARI_ARRAY1D},
+  {"vertex.position", ANARI_ARRAY1D},
+  {"vertex.color", ANARI_ARRAY1D},
+  {NULL, ANARI_UNKNOWN},
+};
+
 void Triangles::commit()
 {
   Geometry::commit();

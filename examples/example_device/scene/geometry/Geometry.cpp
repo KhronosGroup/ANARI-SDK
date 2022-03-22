@@ -38,6 +38,17 @@ Geometry *Geometry::createInstance(const char *type)
   }
 }
 
+ANARIParameter *Geometry::parameters(const char *_type)
+{
+  std::string type{_type};
+  if (type == "triangle") {
+    return Triangles::g_parameters;
+  } else if (type == "sphere") {
+    return Spheres::g_parameters;
+  }
+  return nullptr;
+}
+
 void Geometry::commit()
 {
   m_colorArray = getParamObject<Array1D>("primitive.color");

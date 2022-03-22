@@ -15,6 +15,7 @@ struct Geometry : public SceneObject
   static Geometry *createInstance(const char *type);
   static FactoryMapPtr<Geometry> g_geometries;
   static void init();
+  static ANARIParameter *parameters(const char *type);
 
   void commit() override;
 

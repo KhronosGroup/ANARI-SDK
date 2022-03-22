@@ -579,8 +579,13 @@ extern "C" EXAMPLE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_SUBTYPES(
 extern "C" EXAMPLE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_PARAMETERS(
     example, libdata, deviceSubtype, objectSubtype, objectType)
 {
+  if (objectType == ANARI_GEOMETRY) {
+    return anari::example_device::Geometry::parameters(objectSubtype);
+  }
+
   if (objectType == ANARI_RENDERER)
     return anari::example_device::Renderer::g_parameters;
+
   return nullptr;
 }
 

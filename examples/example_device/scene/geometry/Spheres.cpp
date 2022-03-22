@@ -42,6 +42,14 @@ PotentialHit Sphere::intersect(const Ray &ray, size_t primID) const
 
 // Spheres geometry definitions ///////////////////////////////////////////////
 
+ANARIParameter Spheres::g_parameters[] = {
+  {"vertex.position", ANARI_ARRAY1D},
+  {"vertex.radius", ANARI_ARRAY1D},
+  {"vertex.color", ANARI_ARRAY1D},
+  {"radius", ANARI_FLOAT32},
+  {NULL, ANARI_UNKNOWN},
+};
+
 void Spheres::commit()
 {
   Geometry::commit();

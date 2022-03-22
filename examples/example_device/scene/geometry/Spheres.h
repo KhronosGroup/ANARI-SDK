@@ -25,6 +25,8 @@ struct Spheres : public IntersectableObject<Sphere, Geometry>
 {
   Spheres() = default;
 
+  static ANARIParameter g_parameters[];
+
   void commit() override;
 
  private:

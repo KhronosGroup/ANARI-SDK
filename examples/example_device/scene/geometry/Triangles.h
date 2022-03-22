@@ -25,6 +25,8 @@ struct Triangles : public IntersectableObject<Triangle, Geometry>
 {
   Triangles() = default;
 
+  static ANARIParameter g_parameters[];
+
   void commit() override;
 
  private:
