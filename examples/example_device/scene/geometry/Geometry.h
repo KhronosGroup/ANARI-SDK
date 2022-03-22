@@ -13,6 +13,8 @@ struct Geometry : public SceneObject
   Geometry();
 
   static Geometry *createInstance(const char *type);
+  static FactoryMapPtr<Geometry> g_geometries;
+  static void init();
 
   void commit() override;
 

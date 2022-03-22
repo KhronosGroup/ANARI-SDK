@@ -8,9 +8,9 @@
 namespace anari {
 namespace example_device {
 
-static FactoryMapPtr<Material> g_materials;
+FactoryMapPtr<Material> Material::g_materials;
 
-static void init()
+void Material::init()
 {
   g_materials = std::make_unique<FactoryMap<Material>>();
 

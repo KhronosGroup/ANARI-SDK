@@ -12,6 +12,8 @@ struct Material : public Object
 {
   Material() = default;
 
+  static FactoryMapPtr<Material> g_materials;
+  static void init();
   static Material *createInstance(const char *type);
 
   virtual vec3 diffuse() const = 0;

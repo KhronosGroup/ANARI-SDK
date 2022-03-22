@@ -11,6 +11,7 @@
 #include "material/Material.h"
 #include "renderer/Renderer.h"
 #include "scene/World.h"
+#include "scene/geometry/Geometry.h"
 // std
 #include <algorithm>
 #include <chrono>
@@ -311,12 +312,9 @@ ANARISurface ExampleDevice::newSurface()
   return createObjectForAPI<Surface, ANARISurface>();
 }
 
-ANARIVolume ExampleDevice::newVolume(const char *_type)
+ANARIVolume ExampleDevice::newVolume(const char *type)
 {
-  std::string type(_type);
-  if (type == "density" || type == "scivis")
-    return createObjectForAPI<Volume, ANARIVolume>();
-  throw std::runtime_error("could not create volume");
+  return (ANARIVolume)Volume::createInstance(type);
 }
 
 // Model Meta-Data ////////////////////////////////////////////////////////////
@@ -552,16 +550,30 @@ extern "C" EXAMPLE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_DEVICE_SUBTYPES(
 extern "C" EXAMPLE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_SUBTYPES(
     example, libdata, deviceSubtype, objectType)
 {
-  if (objectType == ANARI_RENDERER) {
-    static std::vector<const char *> renderers;
-    renderers.clear();
-    anari::example_device::Renderer::init();
-    for (auto &r : *anari::example_device::Renderer::g_renderers)
-      renderers.push_back(r.first.c_str());
-    renderers.push_back(nullptr);
-    return renderers.data();
-  }
+
+#define GET_OBJECT_SUBTYPES(THING, Thing, things)                              \
+  do {                                                                         \
+    if (objectType == ANARI_ ## THING) {                                       \
+      static std::vector<const char *> things;                                 \
+      things.clear();                                                          \
+      anari::example_device::Thing::init();                                    \
+      for (auto &r : *anari::example_device::Thing::g_ ## things)              \
+        things.push_back(r.first.c_str());                                     \
+      things.push_back(nullptr);                                               \
+      return things.data();                                                    \
+    }                                                                          \
+  } while (0)
+
+  GET_OBJECT_SUBTYPES(GEOMETRY, Geometry, geometries);
+  // GET_OBJECT_SUBTYPES(SAMPLER, Sampler, samplers);
+  GET_OBJECT_SUBTYPES(MATERIAL, Material, materials);
+  GET_OBJECT_SUBTYPES(VOLUME, Volume, volumes);
+  // GET_OBJECT_SUBTYPES(LIGHT, Light, lights);
+  GET_OBJECT_SUBTYPES(CAMERA, Camera, cameras);
+  GET_OBJECT_SUBTYPES(RENDERER, Renderer, renderers);
   return nullptr;
+
+#undef GET_OBJECT_SUBTYPES
 }
 
 extern "C" EXAMPLE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_PARAMETERS(

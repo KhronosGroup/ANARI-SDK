@@ -6,6 +6,30 @@
 namespace anari {
 namespace example_device {
 
+FactoryMapPtr<Volume> Volume::g_volumes;
+
+void Volume::init()
+{
+  g_volumes = std::make_unique<FactoryMap<Volume>>();
+
+  g_volumes->emplace("density", []() -> Volume * { return new Volume; });
+  g_volumes->emplace("scivis", []() -> Volume * { return new Volume; });
+}
+
+Volume *Volume::createInstance(const char *type)
+{
+  if (g_volumes.get() == nullptr)
+    init();
+
+  auto *fcn = (*g_volumes)[type];
+
+  if (fcn)
+    return fcn();
+  else {
+    throw std::runtime_error("could not create volume");
+  }
+}
+
 Volume::Volume()
 {
   setCommitPriority(COMMIT_PRIORITY_VOLUME);

@@ -9,9 +9,9 @@
 namespace anari {
 namespace example_device {
 
-static FactoryMapPtr<Camera> g_cameras;
+FactoryMapPtr<Camera> Camera::g_cameras;
 
-static void init()
+void Camera::init()
 {
   g_cameras = std::make_unique<FactoryMap<Camera>>();
 

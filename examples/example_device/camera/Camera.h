@@ -12,9 +12,11 @@ struct Camera : public Object
 {
   Camera() = default;
 
-  virtual void commit() override;
-
+  static FactoryMapPtr<Camera> g_cameras;
+  static void init();
   static Camera *createInstance(const char *type);
+
+  virtual void commit() override;
 
   virtual Ray createRay(const vec2 &screen) const = 0;
 

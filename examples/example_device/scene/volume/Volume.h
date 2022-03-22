@@ -14,6 +14,10 @@ struct Volume : public SceneObject
 {
   Volume();
 
+  static FactoryMapPtr<Volume> g_volumes;
+  static void init();
+  static Volume *createInstance(const char *type);
+
   void commit() override;
 
   vec3 colorOf(float sample) const;

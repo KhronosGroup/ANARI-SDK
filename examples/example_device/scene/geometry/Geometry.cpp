@@ -9,20 +9,19 @@
 namespace anari {
 namespace example_device {
 
-static FactoryMapPtr<Geometry> g_geometries;
+FactoryMapPtr<Geometry> Geometry::g_geometries;
 
-static void init()
+Geometry::Geometry()
 {
+  setCommitPriority(COMMIT_PRIORITY_GEOMETRY);
+}
+
+void Geometry::init() {
   g_geometries = std::make_unique<FactoryMap<Geometry>>();
 
   g_geometries->emplace(
       "triangle", []() -> Geometry * { return new Triangles; });
   g_geometries->emplace("sphere", []() -> Geometry * { return new Spheres; });
-}
-
-Geometry::Geometry()
-{
-  setCommitPriority(COMMIT_PRIORITY_GEOMETRY);
 }
 
 Geometry *Geometry::createInstance(const char *type)
