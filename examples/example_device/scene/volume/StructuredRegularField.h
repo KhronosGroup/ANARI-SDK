@@ -13,6 +13,8 @@ struct StructuredRegularField
 {
   StructuredRegularField() = default;
 
+  static ANARIParameter g_parameters[];
+
   void commit() override;
 
   float sampleAt(const vec3 &coord) const override;

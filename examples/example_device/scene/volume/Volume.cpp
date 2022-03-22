@@ -8,6 +8,14 @@ namespace example_device {
 
 FactoryMapPtr<Volume> Volume::g_volumes;
 
+ANARIParameter Volume::g_parameters[] = {
+  {"field", ANARI_SPATIAL_FIELD},
+  {"valueRange", ANARI_FLOAT32_VEC2},
+  {"color", ANARI_ARRAY1D},
+  {"opacity", ANARI_ARRAY1D},
+  {NULL, ANARI_UNKNOWN},
+};
+
 void Volume::init()
 {
   g_volumes = std::make_unique<FactoryMap<Volume>>();
@@ -27,6 +35,16 @@ Volume *Volume::createInstance(const char *type)
     return fcn();
   else {
     throw std::runtime_error("could not create volume");
+  }
+}
+
+ANARIParameter *Volume::parameters(const char *_type)
+{
+  std::string type(_type);
+  if (type == "density" || type == "scivis") {
+    return Volume::g_parameters;
+  } else {
+    return nullptr;
   }
 }
 

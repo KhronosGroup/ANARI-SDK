@@ -42,6 +42,7 @@ struct Renderer : public Object
   virtual RenderedSample renderSample(Ray ray, const World &world) const = 0;
 
   static Renderer *createInstance(const char *type);
+  static ANARIParameter *parameters(const char *type);
   static FactoryMapPtr<Renderer> g_renderers;
   static void init();
   static ANARIParameter g_parameters[];

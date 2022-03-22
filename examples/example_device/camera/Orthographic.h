@@ -12,6 +12,8 @@ struct Orthographic : public Camera
 {
   Orthographic() = default;
 
+  static ANARIParameter g_parameters[];
+
   void commit() override;
 
   Ray createRay(const vec2 &screen) const override;

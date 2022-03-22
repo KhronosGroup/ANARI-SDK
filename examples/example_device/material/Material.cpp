@@ -33,6 +33,16 @@ Material *Material::createInstance(const char *type)
   }
 }
 
+ANARIParameter *Material::parameters(const char *_type)
+{
+  std::string type(_type);
+  if (type == "matte" || type == "transparentMatte") {
+    return Matte::g_parameters;
+  } else {
+    return nullptr;
+  }
+}
+
 } // namespace example_device
 
 ANARI_TYPEFOR_DEFINITION(example_device::Material *);

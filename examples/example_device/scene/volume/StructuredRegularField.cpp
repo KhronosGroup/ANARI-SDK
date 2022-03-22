@@ -6,6 +6,13 @@
 namespace anari {
 namespace example_device {
 
+ANARIParameter StructuredRegularField::g_parameters[] = {
+  {"data", ANARI_ARRAY3D},
+  {"origin", ANARI_FLOAT32_VEC3},
+  {"spacing", ANARI_FLOAT32_VEC3},
+  {NULL, ANARI_UNKNOWN},
+};
+
 void StructuredRegularField::commit()
 {
   m_dataArray = getParamObject<Array3D>("data");

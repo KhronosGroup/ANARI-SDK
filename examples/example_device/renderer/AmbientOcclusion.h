@@ -12,6 +12,8 @@ struct AmbientOcclusion : public Renderer
 {
   AmbientOcclusion() = default;
 
+  static ANARIParameter g_parameters[];
+
   void commit() override;
 
   RenderedSample renderSample(Ray ray, const World &world) const override;

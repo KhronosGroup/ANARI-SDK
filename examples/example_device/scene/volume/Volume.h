@@ -17,6 +17,8 @@ struct Volume : public SceneObject
   static FactoryMapPtr<Volume> g_volumes;
   static void init();
   static Volume *createInstance(const char *type);
+  static ANARIParameter g_parameters[];
+  static ANARIParameter *parameters(const char *type);
 
   void commit() override;
 

@@ -10,6 +10,15 @@
 namespace anari {
 namespace example_device {
 
+ANARIParameter Perspective::g_parameters[] = {
+  {"position", ANARI_FLOAT32_VEC3},
+  {"direction", ANARI_FLOAT32_VEC3},
+  {"up", ANARI_FLOAT32_VEC3},
+  {"fovy", ANARI_FLOAT32},
+  {"aspect", ANARI_FLOAT32},
+  {NULL, ANARI_UNKNOWN},
+};
+
 void Perspective::commit()
 {
   Camera::commit();

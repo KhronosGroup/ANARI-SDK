@@ -15,6 +15,7 @@ struct Camera : public Object
   static FactoryMapPtr<Camera> g_cameras;
   static void init();
   static Camera *createInstance(const char *type);
+  static ANARIParameter *parameters(const char *type);
 
   virtual void commit() override;
 

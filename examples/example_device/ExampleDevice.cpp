@@ -580,14 +580,25 @@ extern "C" EXAMPLE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_SUBTYPES(
 extern "C" EXAMPLE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_PARAMETERS(
     example, libdata, deviceSubtype, objectSubtype, objectType)
 {
-  if (objectType == ANARI_GEOMETRY) {
-    return anari::example_device::Geometry::parameters(objectSubtype);
-  }
 
-  if (objectType == ANARI_RENDERER)
-    return anari::example_device::Renderer::g_parameters;
+#define GET_OBJECT_PARAMETERS(THING, Thing)                                    \
+  do {                                                                         \
+    if (objectType == ANARI_ ## THING) {                                       \
+      return anari::example_device::Thing::parameters(objectSubtype);          \
+    }                                                                          \
+  } while (0)
 
+  GET_OBJECT_PARAMETERS(GEOMETRY, Geometry);
+  // GET_OBJECT_PARAMETERS(SAMPLER, Sampler);
+  GET_OBJECT_PARAMETERS(RENDERER, Renderer);
+  GET_OBJECT_PARAMETERS(MATERIAL, Material);
+  GET_OBJECT_PARAMETERS(VOLUME, Volume);
+  // GET_OBJECT_PARAMETERS(LIGHT, Light);
+  GET_OBJECT_PARAMETERS(CAMERA, Camera);
+  GET_OBJECT_PARAMETERS(SPATIAL_FIELD, SpatialField);
   return nullptr;
+
+#undef GET_OBJECT_PARAMETERS
 }
 
 extern "C" EXAMPLE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_PARAMETER_PROPERTY(

@@ -15,6 +15,7 @@ struct Material : public Object
   static FactoryMapPtr<Material> g_materials;
   static void init();
   static Material *createInstance(const char *type);
+  static ANARIParameter *parameters(const char *type);
 
   virtual vec3 diffuse() const = 0;
 };

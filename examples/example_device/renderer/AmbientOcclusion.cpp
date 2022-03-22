@@ -75,6 +75,14 @@ static float computeAO(const Ray &ray,
 
 // AmbientOcclusion defintions ////////////////////////////////////////////////
 
+ANARIParameter AmbientOcclusion::g_parameters[] = {
+    {"backgroundColor", ANARI_FLOAT32_VEC4},
+    {"pixelSamples", ANARI_INT32},
+    {"volumeSamplingRate", ANARI_FLOAT32},
+    {"aoSamples", ANARI_INT32},
+    {NULL, ANARI_UNKNOWN}
+};
+
 void AmbientOcclusion::commit()
 {
   m_volumeStepFactor = 1.f / getParam<float>("volumeSamplingRate", 0.125f);

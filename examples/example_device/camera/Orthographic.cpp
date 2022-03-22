@@ -10,6 +10,15 @@
 namespace anari {
 namespace example_device {
 
+ANARIParameter Orthographic::g_parameters[] = {
+  {"position", ANARI_FLOAT32_VEC3},
+  {"direction", ANARI_FLOAT32_VEC3},
+  {"up", ANARI_FLOAT32_VEC3},
+  {"aspect", ANARI_FLOAT32},
+  {"height", ANARI_FLOAT32},
+  {NULL, ANARI_UNKNOWN},
+};
+
 void Orthographic::commit()
 {
   Camera::commit();

@@ -37,6 +37,16 @@ SpatialField *SpatialField::createInstance(const char *type)
   }
 }
 
+ANARIParameter *SpatialField::parameters(const char *_type)
+{
+  std::string type(_type);
+  if (type == "structuredRegular") {
+    return StructuredRegularField::g_parameters;
+  } else {
+    return nullptr;
+  }
+}
+
 void SpatialField::setStepSize(float size)
 {
   m_stepSize = size;

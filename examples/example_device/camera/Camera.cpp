@@ -35,6 +35,18 @@ Camera *Camera::createInstance(const char *type)
   }
 }
 
+ANARIParameter *Camera::parameters(const char *_type)
+{
+  std::string type(_type);
+  if (type == "perspective") {
+    return Perspective::g_parameters;
+  } else if (type == "orthographic") {
+    return Orthographic::g_parameters;
+  } else {
+    return nullptr;
+  }
+}
+
 void Camera::commit()
 {
   m_pos = getParam<vec3>("position", vec3(0.f));

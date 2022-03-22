@@ -12,6 +12,8 @@ struct Matte : public Material
 {
   Matte() = default;
 
+  static ANARIParameter g_parameters[];
+
   void commit() override;
 
   vec3 diffuse() const override;

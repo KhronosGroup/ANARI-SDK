@@ -56,6 +56,22 @@ Renderer *Renderer::createInstance(const char *type)
     throw std::runtime_error("could not create renderer");
 }
 
+ANARIParameter *Renderer::parameters(const char *_type)
+{
+  std::string type(_type);
+  if (type == "RayDir") {
+    return RayDir::g_parameters;
+  } else if (type == "raycast") {
+    return Raycast::g_parameters;
+  } else if (type == "debug") {
+    return Debug::g_parameters;
+  } else if (type == "pathtracer" || type == "scivis" || type == "ao" || type == "default") {
+    return AmbientOcclusion::g_parameters;
+  } else {
+    return nullptr;
+  }
+}
+
 int Renderer::pixelSamples() const
 {
   return m_pixelSamples;

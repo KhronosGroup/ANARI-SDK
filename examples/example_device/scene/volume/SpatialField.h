@@ -15,6 +15,7 @@ struct SpatialField : public SceneObject
   static SpatialField *createInstance(const char *type);
   static FactoryMapPtr<SpatialField> g_spatialFields;
   static void init();
+  static ANARIParameter *parameters(const char *type);
 
   virtual float sampleAt(const vec3 &coord) const = 0;
 
