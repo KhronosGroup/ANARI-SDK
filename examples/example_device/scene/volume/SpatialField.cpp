@@ -8,13 +8,13 @@
 namespace anari {
 namespace example_device {
 
-static FactoryMapPtr<SpatialField> g_volumes;
+FactoryMapPtr<SpatialField> SpatialField::g_spatialFields;
 
-static void init()
+void SpatialField::init()
 {
-  g_volumes = std::make_unique<FactoryMap<SpatialField>>();
+  g_spatialFields = std::make_unique<FactoryMap<SpatialField>>();
 
-  g_volumes->emplace("structuredRegular",
+  g_spatialFields->emplace("structuredRegular",
       []() -> SpatialField * { return new StructuredRegularField; });
 }
 
@@ -25,10 +25,10 @@ SpatialField::SpatialField()
 
 SpatialField *SpatialField::createInstance(const char *type)
 {
-  if (g_volumes.get() == nullptr)
+  if (g_spatialFields.get() == nullptr)
     init();
 
-  auto *fcn = (*g_volumes)[type];
+  auto *fcn = (*g_spatialFields)[type];
 
   if (fcn)
     return fcn();

@@ -13,6 +13,8 @@ struct SpatialField : public SceneObject
   SpatialField();
 
   static SpatialField *createInstance(const char *type);
+  static FactoryMapPtr<SpatialField> g_spatialFields;
+  static void init();
 
   virtual float sampleAt(const vec3 &coord) const = 0;
 
