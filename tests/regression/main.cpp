@@ -25,6 +25,7 @@ std::vector<std::string> g_scenes = {
     "cornell_box_quad",
     //"cornell_box_hdri",
     "cornell_box_multilight",
+    "cornell_box_quad_geom",
     "texture_cube_samplers"
     //
 };

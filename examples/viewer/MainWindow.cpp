@@ -35,6 +35,9 @@ static const std::vector<std::string> g_scenes = {
     "cornell_box_quad",
     //"cornell_box_hdri",
     "cornell_box_multilight",
+    "cornell_box_quad_geom",
+    "cornell_box_cone_geom",
+    "cornell_box_cylinder_geom",
     "textured_cube_samplers",
     "volume_test",
     "file_obj",
@@ -272,6 +275,9 @@ void MainWindow::setDevice(ANARIDevice dev)
       anariDeviceImplements(device, ANARI_KHR_FRAME_COMPLETION_CALLBACK);
 
   camera = anariNewCamera(dev, "perspective");
+  //anari::setParameter(dev, camera, "position", glm::vec3(3.5f, 3.5f, 3.5f));
+  //anari::setParameter(dev, camera, "direction", glm::vec3(1.5f, 1.5f, 1.5f));
+  //anari::setParameter(dev, camera, "up", glm::vec3(1.5f, 1.5f, 1.5f));
   anariCommit(dev, camera);
 
   renderer = anariNewRenderer(dev, "default");
@@ -342,6 +348,9 @@ void MainWindow::setScene(
 
 void MainWindow::updateCamera()
 {
+  //anari::setParameter(device, camera, "position", glm::vec3(0.f, 0.f, 0.f));
+  //anari::setParameter(device, camera, "direction", glm::vec3(0.f, 0.f, 0.f));
+  //anari::setParameter(device, camera, "up", glm::vec3(0.f, 0.f, 0.f));
   anari::setParameter(device, camera, "position", arcball.eye());
   anari::setParameter(device, camera, "direction", arcball.dir());
   anari::setParameter(device, camera, "up", arcball.up());
