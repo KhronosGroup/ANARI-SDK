@@ -22,6 +22,9 @@ add_library(${PROJECT_NAME} STATIC
   scenes/cornell_box_ring.cpp
   scenes/cornell_box_spot.cpp
   scenes/cornell_box_multilight.cpp
+  scenes/cornell_box_quad_geom.cpp
+  scenes/cornell_box_cone_geom.cpp
+  scenes/cornell_box_cylinder_geom.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_LIST_DIR})
