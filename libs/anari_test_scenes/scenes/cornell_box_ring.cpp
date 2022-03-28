@@ -1,7 +1,7 @@
 // Copyright 2021 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-#include "cornell_box_Ring.h"
+#include "cornell_box_ring.h"
 
 namespace anari {
 namespace scenes {
