@@ -70,7 +70,9 @@ void statusFunc(void *userData,
   } else if (severity == ANARI_SEVERITY_PERFORMANCE_WARNING) {
     fprintf(stderr, "[PERF ] %s\n", message);
   } else if (severity == ANARI_SEVERITY_INFO) {
-    fprintf(stderr, "[INFO] %s\n", message);
+    fprintf(stderr, "[INFO ] %s\n", message);
+  } else if (severity == ANARI_SEVERITY_DEBUG) {
+    fprintf(stderr, "[DEBUG] %s\n", message);
   }
 }
 
@@ -137,7 +139,6 @@ int main(int argc, const char **argv)
     printf("  - %s\n", *r);
   }
 
-
   ANARIDevice nested = anariNewDevice(lib, "default");
   ANARIDevice dev = anariNewDevice(trace_lib, "debug");
   anariSetParameter(dev, dev, "wrappedDevice", ANARI_DEVICE, &nested);
@@ -160,8 +161,7 @@ int main(int argc, const char **argv)
   anariSetParameter(dev, camera, "direction", ANARI_FLOAT32_VEC4, cam_view);
   anariSetParameter(dev, camera, "up", ANARI_FLOAT32_VEC3, cam_up);
   // intentionally forget this commit
-  //anariCommit(dev, camera); // commit each object to indicate mods are done
-
+  // anariCommit(dev, camera); // commit each object to indicate mods are done
 
   // The world to be populated with renderable objects
   ANARIWorld world = anariNewWorld(dev);
@@ -215,7 +215,7 @@ int main(int argc, const char **argv)
   anariSetParameter(dev, world, "light", ANARI_ARRAY1D, &array);
   anariRelease(dev, light);
   // intentionally leak one object
-  //anariRelease(dev, array);
+  // anariRelease(dev, array);
 
   anariCommit(dev, world);
 
@@ -253,7 +253,6 @@ int main(int argc, const char **argv)
   const uint32_t *fb = (uint32_t *)anariMapFrame(dev, frame, "color");
 
   anariUnmapFrame(dev, frame, "color");
-
 
   // final cleanups
   anariRelease(dev, renderer);

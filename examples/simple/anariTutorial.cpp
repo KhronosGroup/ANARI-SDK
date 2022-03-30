@@ -37,7 +37,9 @@ void statusFunc(void *userData,
   } else if (severity == ANARI_SEVERITY_PERFORMANCE_WARNING) {
     fprintf(stderr, "[PERF ] %s\n", message);
   } else if (severity == ANARI_SEVERITY_INFO) {
-    fprintf(stderr, "[INFO] %s\n", message);
+    fprintf(stderr, "[INFO ] %s\n", message);
+  } else if (severity == ANARI_SEVERITY_DEBUG) {
+    fprintf(stderr, "[DEBUG] %s\n", message);
   }
 }
 
@@ -70,11 +72,9 @@ int main(int argc, const char **argv)
   anari::Library m = anari::loadLibrary(g_moduleType, statusFunc);
   ANARIDevice w = anariNewDevice(m, "default");
 
-
   ANARIDevice d = anariNewDevice(m_debug, "debug");
   anari::setParameter(d, d, "wrappedDevice", w);
   anariCommit(d, d);
-
 
   if (!d) {
     printf("\n\nERROR: could not load default device in module %s\n",

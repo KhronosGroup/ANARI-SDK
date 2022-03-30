@@ -40,7 +40,9 @@ void statusFunc(void *userData,
   } else if (severity == ANARI_SEVERITY_PERFORMANCE_WARNING) {
     fprintf(stderr, "[PERF ] %s\n", message);
   } else if (severity == ANARI_SEVERITY_INFO) {
-    fprintf(stderr, "[INFO] %s\n", message);
+    fprintf(stderr, "[INFO ] %s\n", message);
+  } else if (severity == ANARI_SEVERITY_DEBUG) {
+    fprintf(stderr, "[DEBUG] %s\n", message);
   }
 }
 
