@@ -44,7 +44,7 @@ void Array::makePrivatizedCopy(size_t numElements)
 {
   void *appMem = m_mem;
 
-  size_t numBytes = numElements * sizeOfDataType(elementType());
+  size_t numBytes = numElements * sizeOf(elementType());
   m_mem = malloc(numBytes);
   std::memcpy(m_mem, appMem, numBytes);
 
