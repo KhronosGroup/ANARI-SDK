@@ -354,7 +354,7 @@ ANARIWorld ExampleDevice::newWorld()
   return createObjectForAPI<World, ANARIWorld>();
 }
 
-anari::debug_device::ObjectFactory* getDebugFactory();
+anari::debug_device::ObjectFactory *getDebugFactory();
 
 int ExampleDevice::getProperty(ANARIObject object,
     const char *name,
@@ -371,7 +371,7 @@ int ExampleDevice::getProperty(ANARIObject object,
     if (prop == "version" && type == ANARI_INT32) {
       writeToVoidP(mem, DEVICE_VERSION);
       return 1;
-    } else if(prop == "debugObjects" && type == ANARI_FUNCTION_POINTER) {
+    } else if (prop == "debugObjects" && type == ANARI_FUNCTION_POINTER) {
       writeToVoidP(mem, getDebugFactory);
       return 1;
     }
@@ -393,8 +393,13 @@ void ExampleDevice::setParameter(
 
   if (fcn)
     fcn(object, name, mem);
-  else
-    fprintf(stderr, "warning - no parameter setter for type '%i'\n", int(type));
+  else {
+    fprintf(stderr,
+        "warning - no parameter setter for type '%s'"
+        ", '%s' parameter will be ignored\n",
+        toString(type),
+        name);
+  }
 }
 
 void ExampleDevice::unsetParameter(ANARIObject o, const char *name)
@@ -533,8 +538,8 @@ void ExampleDevice::flushCommitBuffer()
   m_objectsToCommit.clear();
 }
 
-const char ** query_object_types(ANARIDataType type);
-const ANARIParameter * query_params(ANARIDataType type, const char *subtype);
+const char **query_object_types(ANARIDataType type);
+const ANARIParameter *query_params(ANARIDataType type, const char *subtype);
 
 } // namespace example_device
 } // namespace anari
