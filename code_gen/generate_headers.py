@@ -44,7 +44,10 @@ typedef int ANARIDataType;
             if enum['name'] != 'ANARIDataType':
                 f.write('\ntypedef '+enum['baseType']+' '+enum['name']+';\n')
             for value in enum['values']:
-                f.write('#define '+value['name']+' '+str(value['value'])+'\n')
+                if enum['name'] == 'ANARIDataType':
+                    f.write('#define '+value['name']+' ANARI_DATA_TYPE_DEFINE('+str(value['value'])+')\n')
+                else:
+                    f.write('#define '+value['name']+' '+str(value['value'])+'\n')
 
 def write_anari_header(filename, anari):
     os.makedirs(os.path.dirname(filename), exist_ok=True)
