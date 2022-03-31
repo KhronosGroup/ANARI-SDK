@@ -103,7 +103,7 @@ int main(int argc, const char **argv)
     for(int j = 0;j<sizeof(namedTypes)/sizeof(ANARIDataType);++j) {
       const char **types = anariGetObjectSubtypes(lib, devices[i], namedTypes[j]);
       // print subtypes of named types
-      printf("      %s: ", anari::anari_enum_to_string(namedTypes[j]));
+      printf("      %s: ", anari::toString(namedTypes[j]));
       if(types) {
         for(int k = 0;types[k];++k){
           printf("%s ", types[k]);
@@ -117,11 +117,11 @@ int main(int argc, const char **argv)
       // print subtypes of named types
       if(types) {
         for(int k = 0;types[k];++k){
-          printf("      %s %s:\n", anari::anari_enum_to_string(namedTypes[j]), types[k]);
+          printf("      %s %s:\n", anari::toString(namedTypes[j]), types[k]);
           const ANARIParameter *params = anariGetObjectParameters(lib, devices[i], types[k], namedTypes[j]);
           if(params) {
             for(int l = 0;params[l].name;++l){
-              printf("         %-30s %s\n", params[l].name, anari::anari_enum_to_string(params[l].type));
+              printf("         %-30s %s\n", params[l].name, anari::toString(params[l].type));
             }
           }
         }
@@ -129,11 +129,11 @@ int main(int argc, const char **argv)
     }
 
     for(int j = 0;j<sizeof(anonymousTypes)/sizeof(ANARIDataType);++j) {
-      printf("      %s:\n", anari::anari_enum_to_string(anonymousTypes[j]));
+      printf("      %s:\n", anari::toString(anonymousTypes[j]));
       const ANARIParameter *params = anariGetObjectParameters(lib, devices[i], 0, anonymousTypes[j]);
       if(params) {
         for(int l = 0;params[l].name;++l){
-          printf("         %-30s %s\n", params[l].name, anari::anari_enum_to_string(params[l].type));
+          printf("         %-30s %s\n", params[l].name, anari::toString(params[l].type));
         }
       }
     }

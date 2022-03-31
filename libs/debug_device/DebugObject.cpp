@@ -26,7 +26,7 @@ void GenericDebugObject::check_type(ANARIDataType type, const char *subtype, con
         getType(),
         ANARI_SEVERITY_WARNING,
         ANARI_STATUS_INVALID_ARGUMENT,
-        "anariSetParameter: Invalid type (%s) for parameter \"%s\".", anari_enum_to_string(paramtype), paramname);
+        "anariSetParameter: Invalid type (%s) for parameter \"%s\".", toString(paramtype), paramname);
 }
 
 DebugObjectBase* ObjectFactory::new_by_type(ANARIDataType t, DebugDevice *td, ANARIObject wh, ANARIObject h) {
@@ -62,7 +62,7 @@ void ObjectFactory::unkown_subtype(DebugDevice *td, ANARIDataType t, const char 
           ANARI_DEVICE,
           ANARI_SEVERITY_WARNING,
           ANARI_STATUS_INVALID_ARGUMENT,
-          "anareNew: Unknown subtype \"%s\" of type %s.", name, anari_enum_to_string(t));
+          "anareNew: Unknown subtype \"%s\" of type %s.", name, toString(t));
 
 }
 }

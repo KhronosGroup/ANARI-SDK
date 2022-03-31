@@ -229,7 +229,7 @@ struct ANARITypeProperties { };
 
         f.write("""
 template <typename R, template<int> class F, typename... Args>
-R anari_type_invoke(ANARIDataType type, Args&&... args) {
+R anariTypeInvoke(ANARIDataType type, Args&&... args) {
     switch (type) {
 """)
         for enum in enums['values']:
@@ -243,7 +243,7 @@ R anari_type_invoke(ANARIDataType type, Args&&... args) {
 
 
         f.write("""
-inline size_t anari_sizeof(ANARIDataType type) {
+inline size_t sizeOf(ANARIDataType type) {
     switch (type) {
 """)
         for enum in enums['values']:
@@ -255,7 +255,7 @@ inline size_t anari_sizeof(ANARIDataType type) {
 
 
         f.write("""
-inline size_t anari_components(ANARIDataType type) {
+inline size_t componentsOf(ANARIDataType type) {
     switch (type) {
 """)
         for enum in enums['values']:
@@ -267,7 +267,7 @@ inline size_t anari_components(ANARIDataType type) {
 
 
         f.write("""
-inline const char* anari_enum_to_string(ANARIDataType type) {
+inline const char* toString(ANARIDataType type) {
     switch (type) {
 """)
         for enum in enums['values']:
@@ -278,7 +278,7 @@ inline const char* anari_enum_to_string(ANARIDataType type) {
 
 
         f.write("""
-inline const char* anari_enum_to_typename(ANARIDataType type) {
+inline const char* typenameOf(ANARIDataType type) {
     switch (type) {
 """)
         for enum in enums['values']:
@@ -289,7 +289,7 @@ inline const char* anari_enum_to_typename(ANARIDataType type) {
 
 
         f.write("""
-inline const char* anari_enum_to_varname(ANARIDataType type) {
+inline const char* varnameOf(ANARIDataType type) {
     switch (type) {
 """)
         for enum in enums['values']:
@@ -300,7 +300,7 @@ inline const char* anari_enum_to_varname(ANARIDataType type) {
 
 
         f.write("""
-inline int anari_is_normalized(ANARIDataType type) {
+inline int isNormalized(ANARIDataType type) {
     switch (type) {
 """)
         for enum in enums['values']:

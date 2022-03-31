@@ -1249,7 +1249,7 @@ struct ANARITypeProperties<ANARI_FRAME_COMPLETION_CALLBACK> {
 };
 
 template <typename R, template<int> class F, typename... Args>
-R anari_type_invoke(ANARIDataType type, Args&&... args) {
+R anariTypeInvoke(ANARIDataType type, Args&&... args) {
     switch (type) {
         case ANARI_DATA_TYPE: return F<ANARI_DATA_TYPE>()(std::forward<Args>(args)...);
         case ANARI_STRING: return F<ANARI_STRING>()(std::forward<Args>(args)...);
@@ -1379,7 +1379,7 @@ R anari_type_invoke(ANARIDataType type, Args&&... args) {
 }
 #endif
 
-inline size_t anari_sizeof(ANARIDataType type) {
+inline size_t sizeOf(ANARIDataType type) {
     switch (type) {
         case ANARI_DATA_TYPE: return sizeof(int32_t)*1;
         case ANARI_STRING: return sizeof(const char*)*1;
@@ -1508,7 +1508,7 @@ inline size_t anari_sizeof(ANARIDataType type) {
     }
 }
 
-inline size_t anari_components(ANARIDataType type) {
+inline size_t componentsOf(ANARIDataType type) {
     switch (type) {
         case ANARI_DATA_TYPE: return 1;
         case ANARI_STRING: return 1;
@@ -1637,7 +1637,7 @@ inline size_t anari_components(ANARIDataType type) {
     }
 }
 
-inline const char* anari_enum_to_string(ANARIDataType type) {
+inline const char* toString(ANARIDataType type) {
     switch (type) {
         case ANARI_DATA_TYPE: return "ANARI_DATA_TYPE";
         case ANARI_STRING: return "ANARI_STRING";
@@ -1766,7 +1766,7 @@ inline const char* anari_enum_to_string(ANARIDataType type) {
     }
 }
 
-inline const char* anari_enum_to_typename(ANARIDataType type) {
+inline const char* typenameOf(ANARIDataType type) {
     switch (type) {
         case ANARI_DATA_TYPE: return "int32_t";
         case ANARI_STRING: return "const char*";
@@ -1895,7 +1895,7 @@ inline const char* anari_enum_to_typename(ANARIDataType type) {
     }
 }
 
-inline const char* anari_enum_to_varname(ANARIDataType type) {
+inline const char* varnameOf(ANARIDataType type) {
     switch (type) {
         case ANARI_DATA_TYPE: return "vardata_type";
         case ANARI_STRING: return "varstring";
@@ -2024,7 +2024,7 @@ inline const char* anari_enum_to_varname(ANARIDataType type) {
     }
 }
 
-inline int anari_is_normalized(ANARIDataType type) {
+inline int isNormalized(ANARIDataType type) {
     switch (type) {
         case ANARI_DATA_TYPE: return 0;
         case ANARI_STRING: return 0;

@@ -67,8 +67,8 @@ void DebugBasics::anariNewArray1D(ANARIDevice device, void *appMemory, ANARIMemo
                 if(elementinfo->getType() != dataType) {
                     DEBUG_REPORT(ANARI_SEVERITY_ERROR, ANARI_STATUS_INVALID_ARGUMENT,
                         "%s: Type mismatch in object array at index %d. Array is of type %s but object is %s",
-                        DEBUG_FUNCTION_NAME, i, anari_enum_to_string(dataType),
-                        anari_enum_to_string(elementinfo->getType()));
+                        DEBUG_FUNCTION_NAME, i, toString(dataType),
+                        toString(elementinfo->getType()));
                 }
                 if(elementinfo->getRefCount() <= 0) {
                     DEBUG_REPORT(ANARI_SEVERITY_ERROR, ANARI_STATUS_INVALID_ARGUMENT,
@@ -126,7 +126,7 @@ void DebugBasics::anariSetParameter(ANARIDevice device, ANARIObject object, cons
                 DEBUG_REPORT(ANARI_SEVERITY_WARNING, ANARI_STATUS_NO_ERROR,
                     "%s: Parameter object (%s) is set as %s has type %s.",
                     DEBUG_FUNCTION_NAME, paraminfo->getName(),
-                    anari_enum_to_string(dataType), anari_enum_to_string(paraminfo->getType()));
+                    toString(dataType), toString(paraminfo->getType()));
             }
         } else {
             DEBUG_REPORT(ANARI_SEVERITY_ERROR, ANARI_STATUS_INVALID_ARGUMENT,

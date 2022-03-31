@@ -56,7 +56,7 @@ public:
   ANARIDataType getType() { return ANARI_OBJECT; }
   const char *getName() {
     if(objectName.empty()) {
-      objectName = anari_enum_to_varname(getType()) + std::to_string(uintptr_t(wrappedHandle));
+      objectName = varnameOf(getType()) + std::to_string(uintptr_t(wrappedHandle));
     }
     return objectName.c_str();
   }

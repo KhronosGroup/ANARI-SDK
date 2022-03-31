@@ -64,7 +64,7 @@ ANARIArray1D SinkDevice::newArray1D(void *appMemory,
   if(auto obj = getObject(handle)) {
     if(appMemory == nullptr) {
       obj->userdata = nullptr;
-      obj->memory = new char[anari_sizeof(type)*numItems];
+      obj->memory = new char[sizeOf(type)*numItems];
       obj->deleter = managed_deleter;
     } else {
       obj->userdata = userData;
@@ -88,7 +88,7 @@ ANARIArray2D SinkDevice::newArray2D(void *appMemory,
   if(auto obj = getObject(handle)) {
     if(appMemory == nullptr) {
       obj->userdata = nullptr;
-      obj->memory = new char[anari_sizeof(type)*numItems1*numItems2];
+      obj->memory = new char[sizeOf(type)*numItems1*numItems2];
       obj->deleter = managed_deleter;
     } else {
       obj->userdata = userData;
@@ -114,7 +114,7 @@ ANARIArray3D SinkDevice::newArray3D(void *appMemory,
   if(auto obj = getObject(handle)) {
     if(appMemory == nullptr) {
       obj->userdata = nullptr;
-      obj->memory = new char[anari_sizeof(type)*numItems1*numItems2*numItems3];
+      obj->memory = new char[sizeOf(type)*numItems1*numItems2*numItems3];
       obj->deleter = managed_deleter;
     } else {
       obj->userdata = userData;

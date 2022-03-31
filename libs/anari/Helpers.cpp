@@ -11,7 +11,7 @@ namespace anari {
 
 size_t sizeOfDataType(ANARIDataType type)
 {
-  return anari_sizeof(type);
+  return sizeOf(type);
 }
 
 } // namespace anari
