@@ -2321,9 +2321,9 @@ class material_transparentMatte : public DebugObject<ANARI_MATERIAL> {
    }
 };
 }
-static int sampler_object_hash(const char *str) {
-   static const uint32_t table[] = {0x6e6d000cu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x73720019u,0x0u,0x0u,0x0u,0x73720022u,0x6261000du,0x6867000eu,0x6665000fu,0x34310010u,0x45440013u,0x45440015u,0x45440017u,0x1000014u,0x80000000u,0x1000016u,0x80000001u,0x1000018u,0x80000002u,0x6a69001au,0x6e6d001bu,0x6a69001cu,0x7574001du,0x6a69001eu,0x7776001fu,0x66650020u,0x1000021u,0x80000003u,0x62610023u,0x6f6e0024u,0x74730025u,0x67660026u,0x706f0027u,0x73720028u,0x6e6d0029u,0x100002au,0x80000004u};
-   uint32_t cur = 0x75690000u;
+static int renderer_object_hash(const char *str) {
+   static const uint32_t table[] = {0x66650001u,0x67660002u,0x62610003u,0x76750004u,0x6d6c0005u,0x75740006u,0x1000007u,0x80000000u};
+   uint32_t cur = 0x65640000u;
    for(int i = 0;cur!=0;++i) {
       uint32_t idx = cur&0xFFFFu;
       uint32_t low = (cur>>16u)&0xFFu;
@@ -2343,54 +2343,14 @@ static int sampler_object_hash(const char *str) {
    }
    return -1;
 }
-DebugObjectBase* GenericDeviceDebugFactory::new_sampler(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) {
-   int idx = sampler_object_hash(name);
+DebugObjectBase* GenericDeviceDebugFactory::new_renderer(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) {
+   int idx = renderer_object_hash(name);
    switch(idx) {
       case 0:
-         return new sampler_image1D(td, wh, h);
-      case 1:
-         return new sampler_image2D(td, wh, h);
-      case 2:
-         return new sampler_image3D(td, wh, h);
-      case 3:
-         return new sampler_primitive(td, wh, h);
-      case 4:
-         return new sampler_transform(td, wh, h);
+         return new renderer_default(td, wh, h);
       default:
-         unkown_subtype(td, ANARI_SAMPLER, name);
-         return new DebugObject<ANARI_SAMPLER>(td, wh, h);
-   }
-}
-static int volume_object_hash(const char *str) {
-   static const uint32_t table[] = {0x64630001u,0x6a690002u,0x77760003u,0x6a690004u,0x74730005u,0x1000006u,0x80000000u};
-   uint32_t cur = 0x74730000u;
-   for(int i = 0;cur!=0;++i) {
-      uint32_t idx = cur&0xFFFFu;
-      uint32_t low = (cur>>16u)&0xFFu;
-      uint32_t high = (cur>>24u)&0xFFu;
-      uint32_t c = str[i];
-      if(c>=low && c<high) {
-         cur = table[idx+c-low];
-      } else {
-         break;
-      }
-      if(cur&0x80000000u) {
-         return cur&0xFFFFu;
-      }
-      if(str[i]==0) {
-         break;
-      }
-   }
-   return -1;
-}
-DebugObjectBase* GenericDeviceDebugFactory::new_volume(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) {
-   int idx = volume_object_hash(name);
-   switch(idx) {
-      case 0:
-         return new volume_scivis(td, wh, h);
-      default:
-         unkown_subtype(td, ANARI_VOLUME, name);
-         return new DebugObject<ANARI_VOLUME>(td, wh, h);
+         unkown_subtype(td, ANARI_RENDERER, name);
+         return new DebugObject<ANARI_RENDERER>(td, wh, h);
    }
 }
 static int light_object_hash(const char *str) {
@@ -2507,9 +2467,9 @@ DebugObjectBase* GenericDeviceDebugFactory::new_camera(const char *name, DebugDe
          return new DebugObject<ANARI_CAMERA>(td, wh, h);
    }
 }
-static int spatial_field_object_hash(const char *str) {
-   static const uint32_t table[] = {0x75740001u,0x73720002u,0x76750003u,0x64630004u,0x75740005u,0x76750006u,0x73720007u,0x66650008u,0x65640009u,0x5352000au,0x6665000bu,0x6867000cu,0x7675000du,0x6d6c000eu,0x6261000fu,0x73720010u,0x1000011u,0x80000000u};
-   uint32_t cur = 0x74730000u;
+static int sampler_object_hash(const char *str) {
+   static const uint32_t table[] = {0x6e6d000cu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x73720019u,0x0u,0x0u,0x0u,0x73720022u,0x6261000du,0x6867000eu,0x6665000fu,0x34310010u,0x45440013u,0x45440015u,0x45440017u,0x1000014u,0x80000000u,0x1000016u,0x80000001u,0x1000018u,0x80000002u,0x6a69001au,0x6e6d001bu,0x6a69001cu,0x7574001du,0x6a69001eu,0x7776001fu,0x66650020u,0x1000021u,0x80000003u,0x62610023u,0x6f6e0024u,0x74730025u,0x67660026u,0x706f0027u,0x73720028u,0x6e6d0029u,0x100002au,0x80000004u};
+   uint32_t cur = 0x75690000u;
    for(int i = 0;cur!=0;++i) {
       uint32_t idx = cur&0xFFFFu;
       uint32_t low = (cur>>16u)&0xFFu;
@@ -2529,14 +2489,22 @@ static int spatial_field_object_hash(const char *str) {
    }
    return -1;
 }
-DebugObjectBase* GenericDeviceDebugFactory::new_spatial_field(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) {
-   int idx = spatial_field_object_hash(name);
+DebugObjectBase* GenericDeviceDebugFactory::new_sampler(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) {
+   int idx = sampler_object_hash(name);
    switch(idx) {
       case 0:
-         return new spatial_field_structuredRegular(td, wh, h);
+         return new sampler_image1D(td, wh, h);
+      case 1:
+         return new sampler_image2D(td, wh, h);
+      case 2:
+         return new sampler_image3D(td, wh, h);
+      case 3:
+         return new sampler_primitive(td, wh, h);
+      case 4:
+         return new sampler_transform(td, wh, h);
       default:
-         unkown_subtype(td, ANARI_SPATIAL_FIELD, name);
-         return new DebugObject<ANARI_SPATIAL_FIELD>(td, wh, h);
+         unkown_subtype(td, ANARI_SAMPLER, name);
+         return new DebugObject<ANARI_SAMPLER>(td, wh, h);
    }
 }
 static int material_object_hash(const char *str) {
@@ -2573,9 +2541,9 @@ DebugObjectBase* GenericDeviceDebugFactory::new_material(const char *name, Debug
          return new DebugObject<ANARI_MATERIAL>(td, wh, h);
    }
 }
-static int renderer_object_hash(const char *str) {
-   static const uint32_t table[] = {0x66650001u,0x67660002u,0x62610003u,0x76750004u,0x6d6c0005u,0x75740006u,0x1000007u,0x80000000u};
-   uint32_t cur = 0x65640000u;
+static int volume_object_hash(const char *str) {
+   static const uint32_t table[] = {0x64630001u,0x6a690002u,0x77760003u,0x6a690004u,0x74730005u,0x1000006u,0x80000000u};
+   uint32_t cur = 0x74730000u;
    for(int i = 0;cur!=0;++i) {
       uint32_t idx = cur&0xFFFFu;
       uint32_t low = (cur>>16u)&0xFFu;
@@ -2595,14 +2563,46 @@ static int renderer_object_hash(const char *str) {
    }
    return -1;
 }
-DebugObjectBase* GenericDeviceDebugFactory::new_renderer(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) {
-   int idx = renderer_object_hash(name);
+DebugObjectBase* GenericDeviceDebugFactory::new_volume(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) {
+   int idx = volume_object_hash(name);
    switch(idx) {
       case 0:
-         return new renderer_default(td, wh, h);
+         return new volume_scivis(td, wh, h);
       default:
-         unkown_subtype(td, ANARI_RENDERER, name);
-         return new DebugObject<ANARI_RENDERER>(td, wh, h);
+         unkown_subtype(td, ANARI_VOLUME, name);
+         return new DebugObject<ANARI_VOLUME>(td, wh, h);
+   }
+}
+static int spatial_field_object_hash(const char *str) {
+   static const uint32_t table[] = {0x75740001u,0x73720002u,0x76750003u,0x64630004u,0x75740005u,0x76750006u,0x73720007u,0x66650008u,0x65640009u,0x5352000au,0x6665000bu,0x6867000cu,0x7675000du,0x6d6c000eu,0x6261000fu,0x73720010u,0x1000011u,0x80000000u};
+   uint32_t cur = 0x74730000u;
+   for(int i = 0;cur!=0;++i) {
+      uint32_t idx = cur&0xFFFFu;
+      uint32_t low = (cur>>16u)&0xFFu;
+      uint32_t high = (cur>>24u)&0xFFu;
+      uint32_t c = str[i];
+      if(c>=low && c<high) {
+         cur = table[idx+c-low];
+      } else {
+         break;
+      }
+      if(cur&0x80000000u) {
+         return cur&0xFFFFu;
+      }
+      if(str[i]==0) {
+         break;
+      }
+   }
+   return -1;
+}
+DebugObjectBase* GenericDeviceDebugFactory::new_spatial_field(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) {
+   int idx = spatial_field_object_hash(name);
+   switch(idx) {
+      case 0:
+         return new spatial_field_structuredRegular(td, wh, h);
+      default:
+         unkown_subtype(td, ANARI_SPATIAL_FIELD, name);
+         return new DebugObject<ANARI_SPATIAL_FIELD>(td, wh, h);
    }
 }
 DebugObjectBase* GenericDeviceDebugFactory::new_device(DebugDevice *td, ANARIObject wh, ANARIObject h) {

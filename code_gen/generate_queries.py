@@ -60,12 +60,16 @@ class QueryGenerator:
         for key, value in self.objects.items():
             if value:
                 code += "      case %s:\n"%(key)
+                code += "      {\n"
                 code += "         static const char *%s_subtypes[] = {"%(key)
                 code += ", ".join(["\"%s\""%x for x in value])+", 0};\n"
                 code += "         return %s_subtypes;\n"%key
+                code += "      }\n"
         code += "      default:\n"
+        code += "      {\n"
         code += "         static const char *none_subtypes[] = {0};\n"
         code += "         return none_subtypes;\n"
+        code += "      }\n"
         code += "   }\n"
         code += "}\n"
         return code
@@ -79,12 +83,16 @@ class QueryGenerator:
             for key, value in subtypes.items():
                 if value["parameters_with_types"]:
                     code += "      case %d:\n"%(self.subtype_list.index(key))
+                    code += "      {\n"
                     code += "         static const ANARIParameter %s_params[] = {"%(key)
                     code += ", ".join(["{\"%s\", %s}"%x for x in value["parameters_with_types"]])+", {0, ANARI_UNKNOWN}};\n"
                     code += "         return %s_params;\n"%key
+                    code += "      }\n"
             code += "      default:\n"
+            code += "      {\n"
             code += "         static const ANARIParameter none[] = {{0, ANARI_UNKNOWN}};\n"
             code += "         return none;\n"
+            code += "      }\n"
             code += "   }\n"
             code += "}\n"
 
@@ -97,12 +105,16 @@ class QueryGenerator:
         for type_enum, value in self.anon_objects.items():
                 if value["parameters_with_types"]:
                     code += "      case %s:\n"%(type_enum)
+                    code += "      {\n"
                     code += "         static const ANARIParameter %s_params[] = {"%(type_enum)
                     code += ", ".join(["{\"%s\", %s}"%x for x in value["parameters_with_types"]])+", {0, ANARI_UNKNOWN}};\n"
                     code += "         return %s_params;\n"%type_enum
+                    code += "      }\n"
         code += "      default:\n"
+        code += "      {\n"
         code += "         static const ANARIParameter none[] = {{0, ANARI_UNKNOWN}};\n"
         code += "         return none;\n"
+        code += "      }\n"
         code += "   }\n"
         code += "}\n"
         return code
