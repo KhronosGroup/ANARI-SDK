@@ -14,7 +14,7 @@
 #ifdef SINK_DEVICE_STATIC_DEFINE
 #define SINK_DEVICE_INTERFACE
 #else
-#ifdef sink_device_EXPORTS
+#ifdef anari_library_sink_EXPORTS
 #define SINK_DEVICE_INTERFACE __declspec(dllexport)
 #else
 #define SINK_DEVICE_INTERFACE __declspec(dllimport)

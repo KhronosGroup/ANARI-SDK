@@ -13,7 +13,7 @@
 namespace anari {
 namespace debug_device {
 
-class DebugDevice;
+struct DebugDevice;
 
 struct DebugObjectBase {
 public:
