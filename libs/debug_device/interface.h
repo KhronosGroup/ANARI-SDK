@@ -7,7 +7,7 @@
 #ifdef DEBUG_DEVICE_STATIC_DEFINE
 #define DEBUG_DEVICE_INTERFACE
 #else
-#ifdef example_device_EXPORTS
+#ifdef anari_library_debug_EXPORTS
 #define DEBUG_DEVICE_INTERFACE __declspec(dllexport)
 #else
 #define DEBUG_DEVICE_INTERFACE __declspec(dllimport)

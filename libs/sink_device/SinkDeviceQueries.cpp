@@ -32,204 +32,318 @@ static int subtype_hash(const char *str) {
 const char ** query_object_types(ANARIDataType type) {
    switch(type) {
       case ANARI_SAMPLER:
+      {
          static const char *ANARI_SAMPLER_subtypes[] = {"image1D", "image2D", "image3D", "primitive", "transform", 0};
          return ANARI_SAMPLER_subtypes;
+      }
       case ANARI_VOLUME:
+      {
          static const char *ANARI_VOLUME_subtypes[] = {"scivis", 0};
          return ANARI_VOLUME_subtypes;
+      }
       case ANARI_RENDERER:
+      {
          static const char *ANARI_RENDERER_subtypes[] = {"default", 0};
          return ANARI_RENDERER_subtypes;
+      }
       case ANARI_CAMERA:
+      {
          static const char *ANARI_CAMERA_subtypes[] = {"perspective", "orthographic", "omnidirectional", 0};
          return ANARI_CAMERA_subtypes;
+      }
       case ANARI_LIGHT:
+      {
          static const char *ANARI_LIGHT_subtypes[] = {"directional", "point", "spot", 0};
          return ANARI_LIGHT_subtypes;
+      }
       case ANARI_SPATIAL_FIELD:
+      {
          static const char *ANARI_SPATIAL_FIELD_subtypes[] = {"structuredRegular", 0};
          return ANARI_SPATIAL_FIELD_subtypes;
+      }
       case ANARI_GEOMETRY:
+      {
          static const char *ANARI_GEOMETRY_subtypes[] = {"triangle", "quad", "sphere", "curve", "cone", "cylinder", 0};
          return ANARI_GEOMETRY_subtypes;
+      }
       case ANARI_MATERIAL:
+      {
          static const char *ANARI_MATERIAL_subtypes[] = {"matte", "transparentMatte", 0};
          return ANARI_MATERIAL_subtypes;
+      }
       default:
+      {
          static const char *none_subtypes[] = {0};
          return none_subtypes;
+      }
    }
 }
 static const ANARIParameter * ANARI_GEOMETRY_params(const char *subtype) {
    switch(subtype_hash(subtype)) {
       case 21:
+      {
          static const ANARIParameter triangle_params[] = {{"name", ANARI_STRING}, {"primitive.color", ANARI_ARRAY1D}, {"primitive.attribute0", ANARI_ARRAY1D}, {"primitive.attribute1", ANARI_ARRAY1D}, {"primitive.attribute2", ANARI_ARRAY1D}, {"primitive.attribute3", ANARI_ARRAY1D}, {"primitive.id", ANARI_ARRAY1D}, {"vertex.position", ANARI_ARRAY1D}, {"vertex.normal", ANARI_ARRAY1D}, {"vertex.color", ANARI_ARRAY1D}, {"vertex.attribute0", ANARI_ARRAY1D}, {"vertex.attribute1", ANARI_ARRAY1D}, {"vertex.attribute2", ANARI_ARRAY1D}, {"vertex.attribute3", ANARI_ARRAY1D}, {"primitive.index", ANARI_ARRAY1D}, {0, ANARI_UNKNOWN}};
          return triangle_params;
+      }
       case 18:
+      {
          static const ANARIParameter quad_params[] = {{"name", ANARI_STRING}, {"primitive.color", ANARI_ARRAY1D}, {"primitive.attribute0", ANARI_ARRAY1D}, {"primitive.attribute1", ANARI_ARRAY1D}, {"primitive.attribute2", ANARI_ARRAY1D}, {"primitive.attribute3", ANARI_ARRAY1D}, {"primitive.id", ANARI_ARRAY1D}, {"vertex.position", ANARI_ARRAY1D}, {"vertex.normal", ANARI_ARRAY1D}, {"vertex.color", ANARI_ARRAY1D}, {"vertex.attribute0", ANARI_ARRAY1D}, {"vertex.attribute1", ANARI_ARRAY1D}, {"vertex.attribute2", ANARI_ARRAY1D}, {"vertex.attribute3", ANARI_ARRAY1D}, {"primitive.index", ANARI_ARRAY1D}, {0, ANARI_UNKNOWN}};
          return quad_params;
+      }
       case 16:
+      {
          static const ANARIParameter sphere_params[] = {{"name", ANARI_STRING}, {"primitive.color", ANARI_ARRAY1D}, {"primitive.attribute0", ANARI_ARRAY1D}, {"primitive.attribute1", ANARI_ARRAY1D}, {"primitive.attribute2", ANARI_ARRAY1D}, {"primitive.attribute3", ANARI_ARRAY1D}, {"primitive.id", ANARI_ARRAY1D}, {"vertex.position", ANARI_ARRAY1D}, {"vertex.radius", ANARI_ARRAY1D}, {"vertex.color", ANARI_ARRAY1D}, {"vertex.attribute0", ANARI_ARRAY1D}, {"vertex.attribute1", ANARI_ARRAY1D}, {"vertex.attribute2", ANARI_ARRAY1D}, {"vertex.attribute3", ANARI_ARRAY1D}, {"primitive.index", ANARI_ARRAY1D}, {"radius", ANARI_FLOAT32}, {0, ANARI_UNKNOWN}};
          return sphere_params;
+      }
       case 6:
+      {
          static const ANARIParameter curve_params[] = {{"name", ANARI_STRING}, {"primitive.color", ANARI_ARRAY1D}, {"primitive.attribute0", ANARI_ARRAY1D}, {"primitive.attribute1", ANARI_ARRAY1D}, {"primitive.attribute2", ANARI_ARRAY1D}, {"primitive.attribute3", ANARI_ARRAY1D}, {"primitive.id", ANARI_ARRAY1D}, {"vertex.position", ANARI_ARRAY1D}, {"vertex.radius", ANARI_ARRAY1D}, {"vertex.color", ANARI_ARRAY1D}, {"vertex.attribute0", ANARI_ARRAY1D}, {"vertex.attribute1", ANARI_ARRAY1D}, {"vertex.attribute2", ANARI_ARRAY1D}, {"vertex.attribute3", ANARI_ARRAY1D}, {"primitive.index", ANARI_ARRAY1D}, {"radius", ANARI_FLOAT32}, {0, ANARI_UNKNOWN}};
          return curve_params;
+      }
       case 10:
+      {
          static const ANARIParameter cone_params[] = {{"name", ANARI_STRING}, {"primitive.color", ANARI_ARRAY1D}, {"primitive.attribute0", ANARI_ARRAY1D}, {"primitive.attribute1", ANARI_ARRAY1D}, {"primitive.attribute2", ANARI_ARRAY1D}, {"primitive.attribute3", ANARI_ARRAY1D}, {"primitive.id", ANARI_ARRAY1D}, {"vertex.position", ANARI_ARRAY1D}, {"vertex.radius", ANARI_ARRAY1D}, {"vertex.cap", ANARI_ARRAY1D}, {"vertex.color", ANARI_ARRAY1D}, {"vertex.attribute0", ANARI_ARRAY1D}, {"vertex.attribute1", ANARI_ARRAY1D}, {"vertex.attribute2", ANARI_ARRAY1D}, {"vertex.attribute3", ANARI_ARRAY1D}, {"primitive.index", ANARI_ARRAY1D}, {"caps", ANARI_STRING}, {0, ANARI_UNKNOWN}};
          return cone_params;
+      }
       case 3:
+      {
          static const ANARIParameter cylinder_params[] = {{"name", ANARI_STRING}, {"primitive.color", ANARI_ARRAY1D}, {"primitive.attribute0", ANARI_ARRAY1D}, {"primitive.attribute1", ANARI_ARRAY1D}, {"primitive.attribute2", ANARI_ARRAY1D}, {"primitive.attribute3", ANARI_ARRAY1D}, {"primitive.id", ANARI_ARRAY1D}, {"vertex.position", ANARI_ARRAY1D}, {"vertex.cap", ANARI_ARRAY1D}, {"vertex.color", ANARI_ARRAY1D}, {"vertex.attribute0", ANARI_ARRAY1D}, {"vertex.attribute1", ANARI_ARRAY1D}, {"vertex.attribute2", ANARI_ARRAY1D}, {"vertex.attribute3", ANARI_ARRAY1D}, {"primitive.index", ANARI_ARRAY1D}, {"primitive.radius", ANARI_ARRAY1D}, {"radius", ANARI_FLOAT32}, {"caps", ANARI_STRING}, {0, ANARI_UNKNOWN}};
          return cylinder_params;
+      }
       default:
+      {
          static const ANARIParameter none[] = {{0, ANARI_UNKNOWN}};
          return none;
+      }
    }
 }
 static const ANARIParameter * ANARI_RENDERER_params(const char *subtype) {
    switch(subtype_hash(subtype)) {
       case 0:
+      {
          static const ANARIParameter default_params[] = {{"name", ANARI_STRING}, {0, ANARI_UNKNOWN}};
          return default_params;
+      }
       default:
+      {
          static const ANARIParameter none[] = {{0, ANARI_UNKNOWN}};
          return none;
+      }
    }
 }
 static const ANARIParameter * ANARI_CAMERA_params(const char *subtype) {
    switch(subtype_hash(subtype)) {
       case 7:
+      {
          static const ANARIParameter perspective_params[] = {{"name", ANARI_STRING}, {"position", ANARI_FLOAT32_VEC3}, {"direction", ANARI_FLOAT32_VEC3}, {"up", ANARI_FLOAT32_VEC3}, {"transform", ANARI_FLOAT32_MAT3x4}, {"imageRegion", ANARI_FLOAT32_BOX2}, {"apertureRadius", ANARI_FLOAT32}, {"focusDistance", ANARI_FLOAT32}, {"stereoMode", ANARI_STRING}, {"interpupillaryDistance", ANARI_FLOAT32}, {"fovy", ANARI_FLOAT32}, {"aspect", ANARI_FLOAT32}, {0, ANARI_UNKNOWN}};
          return perspective_params;
+      }
       case 17:
+      {
          static const ANARIParameter orthographic_params[] = {{"name", ANARI_STRING}, {"position", ANARI_FLOAT32_VEC3}, {"direction", ANARI_FLOAT32_VEC3}, {"up", ANARI_FLOAT32_VEC3}, {"transform", ANARI_FLOAT32_MAT3x4}, {"imageRegion", ANARI_FLOAT32_BOX2}, {"apertureRadius", ANARI_FLOAT32}, {"focusDistance", ANARI_FLOAT32}, {"stereoMode", ANARI_STRING}, {"interpupillaryDistance", ANARI_FLOAT32}, {"aspect", ANARI_FLOAT32}, {0, ANARI_UNKNOWN}};
          return orthographic_params;
+      }
       case 20:
+      {
          static const ANARIParameter omnidirectional_params[] = {{"name", ANARI_STRING}, {"position", ANARI_FLOAT32_VEC3}, {"direction", ANARI_FLOAT32_VEC3}, {"up", ANARI_FLOAT32_VEC3}, {"transform", ANARI_FLOAT32_MAT3x4}, {"imageRegion", ANARI_FLOAT32_BOX2}, {"apertureRadius", ANARI_FLOAT32}, {"focusDistance", ANARI_FLOAT32}, {"stereoMode", ANARI_STRING}, {"interpupillaryDistance", ANARI_FLOAT32}, {"layout", ANARI_STRING}, {0, ANARI_UNKNOWN}};
          return omnidirectional_params;
+      }
       default:
+      {
          static const ANARIParameter none[] = {{0, ANARI_UNKNOWN}};
          return none;
+      }
    }
 }
 static const ANARIParameter * ANARI_VOLUME_params(const char *subtype) {
    switch(subtype_hash(subtype)) {
       case 15:
+      {
          static const ANARIParameter scivis_params[] = {{"name", ANARI_STRING}, {"field", ANARI_SPATIAL_FIELD}, {"valueRange", ANARI_FLOAT32_BOX1}, {"color", ANARI_ARRAY1D}, {"color.position", ANARI_ARRAY1D}, {"opacity", ANARI_ARRAY1D}, {"opacity.position", ANARI_ARRAY1D}, {"densityScale", ANARI_FLOAT32}, {0, ANARI_UNKNOWN}};
          return scivis_params;
+      }
       default:
+      {
          static const ANARIParameter none[] = {{0, ANARI_UNKNOWN}};
          return none;
+      }
    }
 }
 static const ANARIParameter * ANARI_LIGHT_params(const char *subtype) {
    switch(subtype_hash(subtype)) {
       case 19:
+      {
          static const ANARIParameter directional_params[] = {{"name", ANARI_STRING}, {"color", ANARI_FLOAT32_VEC3}, {"irridance", ANARI_FLOAT32}, {"direction", ANARI_FLOAT32_VEC3}, {0, ANARI_UNKNOWN}};
          return directional_params;
+      }
       case 13:
+      {
          static const ANARIParameter point_params[] = {{"name", ANARI_STRING}, {"color", ANARI_FLOAT32_VEC3}, {"position", ANARI_FLOAT32_VEC3}, {"intensity", ANARI_FLOAT32}, {"power", ANARI_FLOAT32}, {0, ANARI_UNKNOWN}};
          return point_params;
+      }
       case 9:
+      {
          static const ANARIParameter spot_params[] = {{"name", ANARI_STRING}, {"color", ANARI_FLOAT32_VEC3}, {"position", ANARI_FLOAT32_VEC3}, {"direction", ANARI_FLOAT32_VEC3}, {"openingAngle", ANARI_FLOAT32}, {"falloffAngle", ANARI_FLOAT32}, {"intensity", ANARI_FLOAT32}, {"power", ANARI_FLOAT32}, {0, ANARI_UNKNOWN}};
          return spot_params;
+      }
       default:
+      {
          static const ANARIParameter none[] = {{0, ANARI_UNKNOWN}};
          return none;
+      }
    }
 }
 static const ANARIParameter * ANARI_SPATIAL_FIELD_params(const char *subtype) {
    switch(subtype_hash(subtype)) {
       case 8:
+      {
          static const ANARIParameter structuredRegular_params[] = {{"name", ANARI_STRING}, {"data", ANARI_ARRAY3D}, {"origin", ANARI_FLOAT32_VEC3}, {"spacing", ANARI_FLOAT32_VEC3}, {"filter", ANARI_STRING}, {0, ANARI_UNKNOWN}};
          return structuredRegular_params;
+      }
       default:
+      {
          static const ANARIParameter none[] = {{0, ANARI_UNKNOWN}};
          return none;
+      }
    }
 }
 static const ANARIParameter * ANARI_SAMPLER_params(const char *subtype) {
    switch(subtype_hash(subtype)) {
       case 5:
+      {
          static const ANARIParameter image1D_params[] = {{"name", ANARI_STRING}, {"image", ANARI_ARRAY1D}, {"inAttribute", ANARI_STRING}, {"filter", ANARI_STRING}, {"wrapMode1", ANARI_STRING}, {"inTransform", ANARI_FLOAT32_MAT4}, {"outTransform", ANARI_FLOAT32_MAT4}, {0, ANARI_UNKNOWN}};
          return image1D_params;
+      }
       case 11:
+      {
          static const ANARIParameter image2D_params[] = {{"name", ANARI_STRING}, {"image", ANARI_ARRAY2D}, {"inAttribute", ANARI_STRING}, {"filter", ANARI_STRING}, {"wrapMode1", ANARI_STRING}, {"wrapMode2", ANARI_STRING}, {"inTransform", ANARI_FLOAT32_MAT4}, {"outTransform", ANARI_FLOAT32_MAT4}, {0, ANARI_UNKNOWN}};
          return image2D_params;
+      }
       case 1:
+      {
          static const ANARIParameter image3D_params[] = {{"name", ANARI_STRING}, {"image", ANARI_ARRAY3D}, {"inAttribute", ANARI_STRING}, {"filter", ANARI_STRING}, {"wrapMode1", ANARI_STRING}, {"wrapMode2", ANARI_STRING}, {"wrapMode3", ANARI_STRING}, {"inTransform", ANARI_FLOAT32_MAT4}, {"outTransform", ANARI_FLOAT32_MAT4}, {0, ANARI_UNKNOWN}};
          return image3D_params;
+      }
       case 14:
+      {
          static const ANARIParameter primitive_params[] = {{"name", ANARI_STRING}, {"array", ANARI_ARRAY1D}, {0, ANARI_UNKNOWN}};
          return primitive_params;
+      }
       case 4:
+      {
          static const ANARIParameter transform_params[] = {{"name", ANARI_STRING}, {"inAttribute", ANARI_STRING}, {"transform", ANARI_FLOAT32_MAT4}, {0, ANARI_UNKNOWN}};
          return transform_params;
+      }
       default:
+      {
          static const ANARIParameter none[] = {{0, ANARI_UNKNOWN}};
          return none;
+      }
    }
 }
 static const ANARIParameter * ANARI_MATERIAL_params(const char *subtype) {
    switch(subtype_hash(subtype)) {
       case 12:
+      {
          static const ANARIParameter matte_params[] = {{"name", ANARI_STRING}, {"color", ANARI_FLOAT32_VEC3}, {"color", ANARI_SAMPLER}, {"color", ANARI_STRING}, {0, ANARI_UNKNOWN}};
          return matte_params;
+      }
       case 2:
+      {
          static const ANARIParameter transparentMatte_params[] = {{"name", ANARI_STRING}, {"color", ANARI_FLOAT32_VEC3}, {"color", ANARI_SAMPLER}, {"color", ANARI_STRING}, {"opacity", ANARI_FLOAT32}, {"opacity", ANARI_SAMPLER}, {"opacity", ANARI_STRING}, {0, ANARI_UNKNOWN}};
          return transparentMatte_params;
+      }
       default:
+      {
          static const ANARIParameter none[] = {{0, ANARI_UNKNOWN}};
          return none;
+      }
    }
 }
 const ANARIParameter * query_params(ANARIDataType type, const char *subtype) {
    switch(type) {
       case ANARI_GEOMETRY:
+      {
          return ANARI_GEOMETRY_params(subtype);
+      }
       case ANARI_RENDERER:
+      {
          return ANARI_RENDERER_params(subtype);
+      }
       case ANARI_CAMERA:
+      {
          return ANARI_CAMERA_params(subtype);
+      }
       case ANARI_VOLUME:
+      {
          return ANARI_VOLUME_params(subtype);
+      }
       case ANARI_LIGHT:
+      {
          return ANARI_LIGHT_params(subtype);
+      }
       case ANARI_SPATIAL_FIELD:
+      {
          return ANARI_SPATIAL_FIELD_params(subtype);
+      }
       case ANARI_SAMPLER:
+      {
          return ANARI_SAMPLER_params(subtype);
+      }
       case ANARI_MATERIAL:
+      {
          return ANARI_MATERIAL_params(subtype);
+      }
       case ANARI_DEVICE:
+      {
          static const ANARIParameter ANARI_DEVICE_params[] = {{"name", ANARI_STRING}, {0, ANARI_UNKNOWN}};
          return ANARI_DEVICE_params;
+      }
       case ANARI_ARRAY1D:
+      {
          static const ANARIParameter ANARI_ARRAY1D_params[] = {{"name", ANARI_STRING}, {0, ANARI_UNKNOWN}};
          return ANARI_ARRAY1D_params;
+      }
       case ANARI_ARRAY2D:
+      {
          static const ANARIParameter ANARI_ARRAY2D_params[] = {{"name", ANARI_STRING}, {0, ANARI_UNKNOWN}};
          return ANARI_ARRAY2D_params;
+      }
       case ANARI_ARRAY3D:
+      {
          static const ANARIParameter ANARI_ARRAY3D_params[] = {{"name", ANARI_STRING}, {0, ANARI_UNKNOWN}};
          return ANARI_ARRAY3D_params;
+      }
       case ANARI_FRAME:
+      {
          static const ANARIParameter ANARI_FRAME_params[] = {{"name", ANARI_STRING}, {"world", ANARI_WORLD}, {"renderer", ANARI_RENDERER}, {"camera", ANARI_CAMERA}, {"size", ANARI_UINT32_VEC2}, {"color", ANARI_DATA_TYPE}, {"depth", ANARI_DATA_TYPE}, {0, ANARI_UNKNOWN}};
          return ANARI_FRAME_params;
+      }
       case ANARI_GROUP:
+      {
          static const ANARIParameter ANARI_GROUP_params[] = {{"name", ANARI_STRING}, {"surface", ANARI_ARRAY1D}, {"volume", ANARI_ARRAY1D}, {"light", ANARI_ARRAY1D}, {0, ANARI_UNKNOWN}};
          return ANARI_GROUP_params;
+      }
       case ANARI_INSTANCE:
+      {
          static const ANARIParameter ANARI_INSTANCE_params[] = {{"name", ANARI_STRING}, {"transform", ANARI_FLOAT32_MAT3x4}, {"group", ANARI_GROUP}, {0, ANARI_UNKNOWN}};
          return ANARI_INSTANCE_params;
+      }
       case ANARI_WORLD:
+      {
          static const ANARIParameter ANARI_WORLD_params[] = {{"name", ANARI_STRING}, {"instance", ANARI_ARRAY1D}, {"surface", ANARI_ARRAY1D}, {"volume", ANARI_ARRAY1D}, {"light", ANARI_ARRAY1D}, {0, ANARI_UNKNOWN}};
          return ANARI_WORLD_params;
+      }
       case ANARI_SURFACE:
+      {
          static const ANARIParameter ANARI_SURFACE_params[] = {{"name", ANARI_STRING}, {"geometry", ANARI_GEOMETRY}, {"material", ANARI_MATERIAL}, {0, ANARI_UNKNOWN}};
          return ANARI_SURFACE_params;
+      }
       default:
+      {
          static const ANARIParameter none[] = {{0, ANARI_UNKNOWN}};
          return none;
+      }
    }
 }
 }
