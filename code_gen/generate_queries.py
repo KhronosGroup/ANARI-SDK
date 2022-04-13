@@ -48,8 +48,8 @@ class QueryGenerator:
             self.parameter_index.extend([(obj["type"], name, parameter_list[i]["name"]) for i in range(0, length)])
             offset += length
 
-        self.named_types = list(set([k[0] for k in self.named_objects]))
-        self.subtype_list = list(set([k[1] for k in self.named_objects]))
+        self.named_types = sorted(list(set([k[0] for k in self.named_objects])))
+        self.subtype_list = sorted(list(set([k[1] for k in self.named_objects])))
 
     def preamble(self):
         return "static " + hash_gen.gen_hash_function("subtype_hash", self.subtype_list)
