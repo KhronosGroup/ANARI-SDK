@@ -2619,9 +2619,9 @@ class material_transparentMatte : public DebugObject<ANARI_MATERIAL> {
    }
 };
 }
-static int sampler_object_hash(const char *str) {
-   static const uint32_t table[] = {0x6e6d000cu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x73720019u,0x0u,0x0u,0x0u,0x73720022u,0x6261000du,0x6867000eu,0x6665000fu,0x34310010u,0x45440013u,0x45440015u,0x45440017u,0x1000014u,0x80000000u,0x1000016u,0x80000001u,0x1000018u,0x80000002u,0x6a69001au,0x6e6d001bu,0x6a69001cu,0x7574001du,0x6a69001eu,0x7776001fu,0x66650020u,0x1000021u,0x80000003u,0x62610023u,0x6f6e0024u,0x74730025u,0x67660026u,0x706f0027u,0x73720028u,0x6e6d0029u,0x100002au,0x80000004u};
-   uint32_t cur = 0x75690000u;
+static int camera_object_hash(const char *str) {
+   static const uint32_t table[] = {0x736d0002u,0x66650021u,0x6f6e0008u,0x0u,0x0u,0x0u,0x0u,0x75740016u,0x6a690009u,0x6564000au,0x6a69000bu,0x7372000cu,0x6665000du,0x6463000eu,0x7574000fu,0x6a690010u,0x706f0011u,0x6f6e0012u,0x62610013u,0x6d6c0014u,0x1000015u,0x80000000u,0x69680017u,0x706f0018u,0x68670019u,0x7372001au,0x6261001bu,0x7170001cu,0x6968001du,0x6a69001eu,0x6463001fu,0x1000020u,0x80000001u,0x73720022u,0x74730023u,0x71700024u,0x66650025u,0x64630026u,0x75740027u,0x6a690028u,0x77760029u,0x6665002au,0x100002bu,0x80000002u};
+   uint32_t cur = 0x716f0000u;
    for(int i = 0;cur!=0;++i) {
       uint32_t idx = cur&0xFFFFu;
       uint32_t low = (cur>>16u)&0xFFu;
@@ -2641,58 +2641,22 @@ static int sampler_object_hash(const char *str) {
    }
    return -1;
 }
-DebugObjectBase* ExampleDeviceDebugFactory::new_sampler(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) {
-   int idx = sampler_object_hash(name);
+DebugObjectBase* ExampleDeviceDebugFactory::new_camera(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) {
+   int idx = camera_object_hash(name);
    switch(idx) {
       case 0:
-         return new sampler_image1D(td, wh, h);
+         return new camera_omnidirectional(td, wh, h);
       case 1:
-         return new sampler_image2D(td, wh, h);
+         return new camera_orthographic(td, wh, h);
       case 2:
-         return new sampler_image3D(td, wh, h);
-      case 3:
-         return new sampler_primitive(td, wh, h);
-      case 4:
-         return new sampler_transform(td, wh, h);
+         return new camera_perspective(td, wh, h);
       default:
-         unkown_subtype(td, ANARI_SAMPLER, name);
-         return new DebugObject<ANARI_SAMPLER>(td, wh, h);
-   }
-}
-static int spatial_field_object_hash(const char *str) {
-   static const uint32_t table[] = {0x75740001u,0x73720002u,0x76750003u,0x64630004u,0x75740005u,0x76750006u,0x73720007u,0x66650008u,0x65640009u,0x5352000au,0x6665000bu,0x6867000cu,0x7675000du,0x6d6c000eu,0x6261000fu,0x73720010u,0x1000011u,0x80000000u};
-   uint32_t cur = 0x74730000u;
-   for(int i = 0;cur!=0;++i) {
-      uint32_t idx = cur&0xFFFFu;
-      uint32_t low = (cur>>16u)&0xFFu;
-      uint32_t high = (cur>>24u)&0xFFu;
-      uint32_t c = str[i];
-      if(c>=low && c<high) {
-         cur = table[idx+c-low];
-      } else {
-         break;
-      }
-      if(cur&0x80000000u) {
-         return cur&0xFFFFu;
-      }
-      if(str[i]==0) {
-         break;
-      }
-   }
-   return -1;
-}
-DebugObjectBase* ExampleDeviceDebugFactory::new_spatial_field(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) {
-   int idx = spatial_field_object_hash(name);
-   switch(idx) {
-      case 0:
-         return new spatial_field_structuredRegular(td, wh, h);
-      default:
-         unkown_subtype(td, ANARI_SPATIAL_FIELD, name);
-         return new DebugObject<ANARI_SPATIAL_FIELD>(td, wh, h);
+         unkown_subtype(td, ANARI_CAMERA, name);
+         return new DebugObject<ANARI_CAMERA>(td, wh, h);
    }
 }
 static int geometry_object_hash(const char *str) {
-   static const uint32_t table[] = {0x7a6f0012u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x7675002bu,0x0u,0x7170002fu,0x73720035u,0x6f6e001du,0x0u,0x0u,0x0u,0x0u,0x0u,0x73720020u,0x0u,0x0u,0x0u,0x6d6c0024u,0x6665001eu,0x100001fu,0x80000004u,0x77760021u,0x66650022u,0x1000023u,0x80000003u,0x6a690025u,0x6f6e0026u,0x65640027u,0x66650028u,0x73720029u,0x100002au,0x80000005u,0x6261002cu,0x6564002du,0x100002eu,0x80000001u,0x69680030u,0x66650031u,0x73720032u,0x66650033u,0x1000034u,0x80000002u,0x6a690036u,0x62610037u,0x6f6e0038u,0x68670039u,0x6d6c003au,0x6665003bu,0x100003cu,0x80000000u};
+   static const uint32_t table[] = {0x7a6f0012u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x7675002bu,0x0u,0x7170002fu,0x73720035u,0x6f6e001du,0x0u,0x0u,0x0u,0x0u,0x0u,0x73720020u,0x0u,0x0u,0x0u,0x6d6c0024u,0x6665001eu,0x100001fu,0x80000000u,0x77760021u,0x66650022u,0x1000023u,0x80000001u,0x6a690025u,0x6f6e0026u,0x65640027u,0x66650028u,0x73720029u,0x100002au,0x80000002u,0x6261002cu,0x6564002du,0x100002eu,0x80000003u,0x69680030u,0x66650031u,0x73720032u,0x66650033u,0x1000034u,0x80000004u,0x6a690036u,0x62610037u,0x6f6e0038u,0x68670039u,0x6d6c003au,0x6665003bu,0x100003cu,0x80000005u};
    uint32_t cur = 0x75630000u;
    for(int i = 0;cur!=0;++i) {
       uint32_t idx = cur&0xFFFFu;
@@ -2717,64 +2681,20 @@ DebugObjectBase* ExampleDeviceDebugFactory::new_geometry(const char *name, Debug
    int idx = geometry_object_hash(name);
    switch(idx) {
       case 0:
-         return new geometry_triangle(td, wh, h);
-      case 1:
-         return new geometry_quad(td, wh, h);
-      case 2:
-         return new geometry_sphere(td, wh, h);
-      case 3:
-         return new geometry_curve(td, wh, h);
-      case 4:
          return new geometry_cone(td, wh, h);
-      case 5:
+      case 1:
+         return new geometry_curve(td, wh, h);
+      case 2:
          return new geometry_cylinder(td, wh, h);
+      case 3:
+         return new geometry_quad(td, wh, h);
+      case 4:
+         return new geometry_sphere(td, wh, h);
+      case 5:
+         return new geometry_triangle(td, wh, h);
       default:
          unkown_subtype(td, ANARI_GEOMETRY, name);
          return new DebugObject<ANARI_GEOMETRY>(td, wh, h);
-   }
-}
-static int renderer_object_hash(const char *str) {
-   static const uint32_t table[] = {0x706f0013u,0x0u,0x0u,0x66650015u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x62610023u,0x0u,0x6261002du,0x64630038u,0x1000014u,0x80000002u,0x67620016u,0x7675001bu,0x0u,0x0u,0x0u,0x6261001eu,0x6867001cu,0x100001du,0x80000004u,0x7675001fu,0x6d6c0020u,0x75740021u,0x1000022u,0x80000000u,0x75740024u,0x69680025u,0x75740026u,0x73720027u,0x62610028u,0x64630029u,0x6665002au,0x7372002bu,0x100002cu,0x80000003u,0x7a79002eu,0x4543002fu,0x62610031u,0x6a690035u,0x74730032u,0x75740033u,0x1000034u,0x80000005u,0x73720036u,0x1000037u,0x80000006u,0x6a690039u,0x7776003au,0x6a69003bu,0x7473003cu,0x100003du,0x80000001u};
-   uint32_t cur = 0x74610000u;
-   for(int i = 0;cur!=0;++i) {
-      uint32_t idx = cur&0xFFFFu;
-      uint32_t low = (cur>>16u)&0xFFu;
-      uint32_t high = (cur>>24u)&0xFFu;
-      uint32_t c = str[i];
-      if(c>=low && c<high) {
-         cur = table[idx+c-low];
-      } else {
-         break;
-      }
-      if(cur&0x80000000u) {
-         return cur&0xFFFFu;
-      }
-      if(str[i]==0) {
-         break;
-      }
-   }
-   return -1;
-}
-DebugObjectBase* ExampleDeviceDebugFactory::new_renderer(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) {
-   int idx = renderer_object_hash(name);
-   switch(idx) {
-      case 0:
-         return new renderer_default(td, wh, h);
-      case 1:
-         return new renderer_scivis(td, wh, h);
-      case 2:
-         return new renderer_ao(td, wh, h);
-      case 3:
-         return new renderer_pathtracer(td, wh, h);
-      case 4:
-         return new renderer_debug(td, wh, h);
-      case 5:
-         return new renderer_rayCast(td, wh, h);
-      case 6:
-         return new renderer_rayDir(td, wh, h);
-      default:
-         unkown_subtype(td, ANARI_RENDERER, name);
-         return new DebugObject<ANARI_RENDERER>(td, wh, h);
    }
 }
 static int light_object_hash(const char *str) {
@@ -2847,6 +2767,122 @@ DebugObjectBase* ExampleDeviceDebugFactory::new_material(const char *name, Debug
          return new DebugObject<ANARI_MATERIAL>(td, wh, h);
    }
 }
+static int renderer_object_hash(const char *str) {
+   static const uint32_t table[] = {0x706f0013u,0x0u,0x0u,0x66650015u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x62610023u,0x0u,0x6261002du,0x64630038u,0x1000014u,0x80000000u,0x67620016u,0x7675001bu,0x0u,0x0u,0x0u,0x6261001eu,0x6867001cu,0x100001du,0x80000001u,0x7675001fu,0x6d6c0020u,0x75740021u,0x1000022u,0x80000002u,0x75740024u,0x69680025u,0x75740026u,0x73720027u,0x62610028u,0x64630029u,0x6665002au,0x7372002bu,0x100002cu,0x80000003u,0x7a79002eu,0x4543002fu,0x62610031u,0x6a690035u,0x74730032u,0x75740033u,0x1000034u,0x80000004u,0x73720036u,0x1000037u,0x80000005u,0x6a690039u,0x7776003au,0x6a69003bu,0x7473003cu,0x100003du,0x80000006u};
+   uint32_t cur = 0x74610000u;
+   for(int i = 0;cur!=0;++i) {
+      uint32_t idx = cur&0xFFFFu;
+      uint32_t low = (cur>>16u)&0xFFu;
+      uint32_t high = (cur>>24u)&0xFFu;
+      uint32_t c = str[i];
+      if(c>=low && c<high) {
+         cur = table[idx+c-low];
+      } else {
+         break;
+      }
+      if(cur&0x80000000u) {
+         return cur&0xFFFFu;
+      }
+      if(str[i]==0) {
+         break;
+      }
+   }
+   return -1;
+}
+DebugObjectBase* ExampleDeviceDebugFactory::new_renderer(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) {
+   int idx = renderer_object_hash(name);
+   switch(idx) {
+      case 0:
+         return new renderer_ao(td, wh, h);
+      case 1:
+         return new renderer_debug(td, wh, h);
+      case 2:
+         return new renderer_default(td, wh, h);
+      case 3:
+         return new renderer_pathtracer(td, wh, h);
+      case 4:
+         return new renderer_rayCast(td, wh, h);
+      case 5:
+         return new renderer_rayDir(td, wh, h);
+      case 6:
+         return new renderer_scivis(td, wh, h);
+      default:
+         unkown_subtype(td, ANARI_RENDERER, name);
+         return new DebugObject<ANARI_RENDERER>(td, wh, h);
+   }
+}
+static int sampler_object_hash(const char *str) {
+   static const uint32_t table[] = {0x6e6d000cu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x73720019u,0x0u,0x0u,0x0u,0x73720022u,0x6261000du,0x6867000eu,0x6665000fu,0x34310010u,0x45440013u,0x45440015u,0x45440017u,0x1000014u,0x80000000u,0x1000016u,0x80000001u,0x1000018u,0x80000002u,0x6a69001au,0x6e6d001bu,0x6a69001cu,0x7574001du,0x6a69001eu,0x7776001fu,0x66650020u,0x1000021u,0x80000003u,0x62610023u,0x6f6e0024u,0x74730025u,0x67660026u,0x706f0027u,0x73720028u,0x6e6d0029u,0x100002au,0x80000004u};
+   uint32_t cur = 0x75690000u;
+   for(int i = 0;cur!=0;++i) {
+      uint32_t idx = cur&0xFFFFu;
+      uint32_t low = (cur>>16u)&0xFFu;
+      uint32_t high = (cur>>24u)&0xFFu;
+      uint32_t c = str[i];
+      if(c>=low && c<high) {
+         cur = table[idx+c-low];
+      } else {
+         break;
+      }
+      if(cur&0x80000000u) {
+         return cur&0xFFFFu;
+      }
+      if(str[i]==0) {
+         break;
+      }
+   }
+   return -1;
+}
+DebugObjectBase* ExampleDeviceDebugFactory::new_sampler(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) {
+   int idx = sampler_object_hash(name);
+   switch(idx) {
+      case 0:
+         return new sampler_image1D(td, wh, h);
+      case 1:
+         return new sampler_image2D(td, wh, h);
+      case 2:
+         return new sampler_image3D(td, wh, h);
+      case 3:
+         return new sampler_primitive(td, wh, h);
+      case 4:
+         return new sampler_transform(td, wh, h);
+      default:
+         unkown_subtype(td, ANARI_SAMPLER, name);
+         return new DebugObject<ANARI_SAMPLER>(td, wh, h);
+   }
+}
+static int spatial_field_object_hash(const char *str) {
+   static const uint32_t table[] = {0x75740001u,0x73720002u,0x76750003u,0x64630004u,0x75740005u,0x76750006u,0x73720007u,0x66650008u,0x65640009u,0x5352000au,0x6665000bu,0x6867000cu,0x7675000du,0x6d6c000eu,0x6261000fu,0x73720010u,0x1000011u,0x80000000u};
+   uint32_t cur = 0x74730000u;
+   for(int i = 0;cur!=0;++i) {
+      uint32_t idx = cur&0xFFFFu;
+      uint32_t low = (cur>>16u)&0xFFu;
+      uint32_t high = (cur>>24u)&0xFFu;
+      uint32_t c = str[i];
+      if(c>=low && c<high) {
+         cur = table[idx+c-low];
+      } else {
+         break;
+      }
+      if(cur&0x80000000u) {
+         return cur&0xFFFFu;
+      }
+      if(str[i]==0) {
+         break;
+      }
+   }
+   return -1;
+}
+DebugObjectBase* ExampleDeviceDebugFactory::new_spatial_field(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) {
+   int idx = spatial_field_object_hash(name);
+   switch(idx) {
+      case 0:
+         return new spatial_field_structuredRegular(td, wh, h);
+      default:
+         unkown_subtype(td, ANARI_SPATIAL_FIELD, name);
+         return new DebugObject<ANARI_SPATIAL_FIELD>(td, wh, h);
+   }
+}
 static int volume_object_hash(const char *str) {
    static const uint32_t table[] = {0x64630001u,0x6a690002u,0x77760003u,0x6a690004u,0x74730005u,0x1000006u,0x80000000u};
    uint32_t cur = 0x74730000u;
@@ -2879,45 +2915,6 @@ DebugObjectBase* ExampleDeviceDebugFactory::new_volume(const char *name, DebugDe
          return new DebugObject<ANARI_VOLUME>(td, wh, h);
    }
 }
-static int camera_object_hash(const char *str) {
-   static const uint32_t table[] = {0x736d0002u,0x66650021u,0x6f6e0008u,0x0u,0x0u,0x0u,0x0u,0x75740016u,0x6a690009u,0x6564000au,0x6a69000bu,0x7372000cu,0x6665000du,0x6463000eu,0x7574000fu,0x6a690010u,0x706f0011u,0x6f6e0012u,0x62610013u,0x6d6c0014u,0x1000015u,0x80000002u,0x69680017u,0x706f0018u,0x68670019u,0x7372001au,0x6261001bu,0x7170001cu,0x6968001du,0x6a69001eu,0x6463001fu,0x1000020u,0x80000001u,0x73720022u,0x74730023u,0x71700024u,0x66650025u,0x64630026u,0x75740027u,0x6a690028u,0x77760029u,0x6665002au,0x100002bu,0x80000000u};
-   uint32_t cur = 0x716f0000u;
-   for(int i = 0;cur!=0;++i) {
-      uint32_t idx = cur&0xFFFFu;
-      uint32_t low = (cur>>16u)&0xFFu;
-      uint32_t high = (cur>>24u)&0xFFu;
-      uint32_t c = str[i];
-      if(c>=low && c<high) {
-         cur = table[idx+c-low];
-      } else {
-         break;
-      }
-      if(cur&0x80000000u) {
-         return cur&0xFFFFu;
-      }
-      if(str[i]==0) {
-         break;
-      }
-   }
-   return -1;
-}
-DebugObjectBase* ExampleDeviceDebugFactory::new_camera(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) {
-   int idx = camera_object_hash(name);
-   switch(idx) {
-      case 0:
-         return new camera_perspective(td, wh, h);
-      case 1:
-         return new camera_orthographic(td, wh, h);
-      case 2:
-         return new camera_omnidirectional(td, wh, h);
-      default:
-         unkown_subtype(td, ANARI_CAMERA, name);
-         return new DebugObject<ANARI_CAMERA>(td, wh, h);
-   }
-}
-DebugObjectBase* ExampleDeviceDebugFactory::new_device(DebugDevice *td, ANARIObject wh, ANARIObject h) {
-   return new device(td, wh, h);
-}
 DebugObjectBase* ExampleDeviceDebugFactory::new_array1d(DebugDevice *td, ANARIObject wh, ANARIObject h) {
    return new array1d(td, wh, h);
 }
@@ -2926,6 +2923,9 @@ DebugObjectBase* ExampleDeviceDebugFactory::new_array2d(DebugDevice *td, ANARIOb
 }
 DebugObjectBase* ExampleDeviceDebugFactory::new_array3d(DebugDevice *td, ANARIObject wh, ANARIObject h) {
    return new array3d(td, wh, h);
+}
+DebugObjectBase* ExampleDeviceDebugFactory::new_device(DebugDevice *td, ANARIObject wh, ANARIObject h) {
+   return new device(td, wh, h);
 }
 DebugObjectBase* ExampleDeviceDebugFactory::new_frame(DebugDevice *td, ANARIObject wh, ANARIObject h) {
    return new frame(td, wh, h);
@@ -2936,11 +2936,11 @@ DebugObjectBase* ExampleDeviceDebugFactory::new_group(DebugDevice *td, ANARIObje
 DebugObjectBase* ExampleDeviceDebugFactory::new_instance(DebugDevice *td, ANARIObject wh, ANARIObject h) {
    return new instance(td, wh, h);
 }
-DebugObjectBase* ExampleDeviceDebugFactory::new_world(DebugDevice *td, ANARIObject wh, ANARIObject h) {
-   return new world(td, wh, h);
-}
 DebugObjectBase* ExampleDeviceDebugFactory::new_surface(DebugDevice *td, ANARIObject wh, ANARIObject h) {
    return new surface(td, wh, h);
+}
+DebugObjectBase* ExampleDeviceDebugFactory::new_world(DebugDevice *td, ANARIObject wh, ANARIObject h) {
+   return new world(td, wh, h);
 }
 }
 }

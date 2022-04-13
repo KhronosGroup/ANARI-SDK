@@ -126,11 +126,11 @@ class DebugGenerator:
             code += "};\n"
         code += "}\n"
 
-        named_type_set = {x[0] for x in self.named_objects.keys()}
+        named_type_set = sorted(list({x[0] for x in self.named_objects.keys()}))
 
         for t in named_type_set:
             type_name = t[6:].lower()
-            subtypes = [x[1] for x in self.named_objects.keys() if x[0] == t]
+            subtypes = sorted([x[1] for x in self.named_objects.keys() if x[0] == t])
             code += "static " + hash_gen.gen_hash_function(type_name+"_object_hash", subtypes)
             code += "DebugObjectBase* " + factoryname + "::new_" + type_name + "(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) {\n"
             code += "   int idx = " + type_name + "_object_hash(name);\n"
@@ -144,7 +144,7 @@ class DebugGenerator:
             code += "   }\n"
             code += "}\n"
 
-        for t in self.anon_objects.keys():
+        for t in sorted(self.anon_objects.keys()):
             type_name = t[6:].lower()
             code += "DebugObjectBase* " + factoryname + "::new_" + type_name + "(DebugDevice *td, ANARIObject wh, ANARIObject h) {\n"
             code += "   return new " + type_name + "(td, wh, h);\n"
