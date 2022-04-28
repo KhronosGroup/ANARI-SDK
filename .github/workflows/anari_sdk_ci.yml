@@ -1,4 +1,4 @@
-name: CMake
+name: ANARI-SDK CI
 
 on:
   push:
