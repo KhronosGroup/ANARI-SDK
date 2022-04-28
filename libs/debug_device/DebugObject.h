@@ -9,6 +9,8 @@
 #include "anari/anari.h"
 #include "anari/type_utility.h"
 
+#include "debug_device_exports.h"
+
 #include <iostream>
 namespace anari {
 namespace debug_device {
@@ -36,7 +38,7 @@ public:
 };
 
 
-struct GenericDebugObject : public DebugObjectBase {
+struct DEBUG_DEVICE_INTERFACE GenericDebugObject : public DebugObjectBase {
 public:
   GenericDebugObject() = default;
   GenericDebugObject(DebugDevice *debugDevice, ANARIObject wrappedHandle, ANARIObject handle)
