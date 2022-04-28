@@ -16,7 +16,7 @@
 #include <string>
 #include <cstring>
 
-#include "interface.h"
+#include "debug_device_exports.h"
 
 #include "DebugInterface.h"
 #include "DebugObject.h"
