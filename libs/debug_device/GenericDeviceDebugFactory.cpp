@@ -25,7 +25,7 @@ public:
    DebugObjectBase* new_group(DebugDevice *td, ANARIObject wh, ANARIObject h) override;
    DebugObjectBase* new_instance(DebugDevice *td, ANARIObject wh, ANARIObject h) override;
    DebugObjectBase* new_world(DebugDevice *td, ANARIObject wh, ANARIObject h) override;
-   DebugObjectBase* new_surface(DebugDevice *td, ANARIObject wh, ANARIObject h) override; 
+   DebugObjectBase* new_surface(DebugDevice *td, ANARIObject wh, ANARIObject h) override;
 };
 }
 }
@@ -2353,7 +2353,7 @@ DebugObjectBase* GenericDeviceDebugFactory::new_camera(const char *name, DebugDe
       case 2:
          return new camera_perspective(td, wh, h);
       default:
-         unkown_subtype(td, ANARI_CAMERA, name);
+         unknown_subtype(td, ANARI_CAMERA, name);
          return new DebugObject<ANARI_CAMERA>(td, wh, h);
    }
 }
@@ -2395,7 +2395,7 @@ DebugObjectBase* GenericDeviceDebugFactory::new_geometry(const char *name, Debug
       case 5:
          return new geometry_triangle(td, wh, h);
       default:
-         unkown_subtype(td, ANARI_GEOMETRY, name);
+         unknown_subtype(td, ANARI_GEOMETRY, name);
          return new DebugObject<ANARI_GEOMETRY>(td, wh, h);
    }
 }
@@ -2431,7 +2431,7 @@ DebugObjectBase* GenericDeviceDebugFactory::new_light(const char *name, DebugDev
       case 2:
          return new light_spot(td, wh, h);
       default:
-         unkown_subtype(td, ANARI_LIGHT, name);
+         unknown_subtype(td, ANARI_LIGHT, name);
          return new DebugObject<ANARI_LIGHT>(td, wh, h);
    }
 }
@@ -2465,7 +2465,7 @@ DebugObjectBase* GenericDeviceDebugFactory::new_material(const char *name, Debug
       case 1:
          return new material_transparentMatte(td, wh, h);
       default:
-         unkown_subtype(td, ANARI_MATERIAL, name);
+         unknown_subtype(td, ANARI_MATERIAL, name);
          return new DebugObject<ANARI_MATERIAL>(td, wh, h);
    }
 }
@@ -2497,7 +2497,7 @@ DebugObjectBase* GenericDeviceDebugFactory::new_renderer(const char *name, Debug
       case 0:
          return new renderer_default(td, wh, h);
       default:
-         unkown_subtype(td, ANARI_RENDERER, name);
+         unknown_subtype(td, ANARI_RENDERER, name);
          return new DebugObject<ANARI_RENDERER>(td, wh, h);
    }
 }
@@ -2537,7 +2537,7 @@ DebugObjectBase* GenericDeviceDebugFactory::new_sampler(const char *name, DebugD
       case 4:
          return new sampler_transform(td, wh, h);
       default:
-         unkown_subtype(td, ANARI_SAMPLER, name);
+         unknown_subtype(td, ANARI_SAMPLER, name);
          return new DebugObject<ANARI_SAMPLER>(td, wh, h);
    }
 }
@@ -2569,7 +2569,7 @@ DebugObjectBase* GenericDeviceDebugFactory::new_spatial_field(const char *name, 
       case 0:
          return new spatial_field_structuredRegular(td, wh, h);
       default:
-         unkown_subtype(td, ANARI_SPATIAL_FIELD, name);
+         unknown_subtype(td, ANARI_SPATIAL_FIELD, name);
          return new DebugObject<ANARI_SPATIAL_FIELD>(td, wh, h);
    }
 }
@@ -2601,7 +2601,7 @@ DebugObjectBase* GenericDeviceDebugFactory::new_volume(const char *name, DebugDe
       case 0:
          return new volume_scivis(td, wh, h);
       default:
-         unkown_subtype(td, ANARI_VOLUME, name);
+         unknown_subtype(td, ANARI_VOLUME, name);
          return new DebugObject<ANARI_VOLUME>(td, wh, h);
    }
 }

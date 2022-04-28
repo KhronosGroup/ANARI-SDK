@@ -56,7 +56,7 @@ DebugObjectBase* ObjectFactory::new_by_subtype(ANARIDataType t, const char *name
     default: return new GenericDebugObject(td, wh, h);
   }
 }
-void ObjectFactory::unkown_subtype(DebugDevice *td, ANARIDataType t, const char *name) {
+void ObjectFactory::unknown_subtype(DebugDevice *td, ANARIDataType t, const char *name) {
   td->reportStatus(
           td->this_device(),
           ANARI_DEVICE,
