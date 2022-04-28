@@ -32,5 +32,5 @@ jobs:
 
     - name: Regression Tests
       working-directory: ${{github.workspace}}/build
-      if: ${{ matrix.config == 'Release' }}
+      if: ${{ matrix.config == 'Release' && matrix.os != 'windows-latest' }}
       run: ./anari_regression_tests
