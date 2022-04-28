@@ -139,7 +139,7 @@ class DebugGenerator:
                 code += "      case %d:\n"%i
                 code += "         return new " + t[6:].lower() + "_" + subtypes[i] + "(td, wh, h);\n"
             code += "      default:\n"
-            code += "         unkown_subtype(td, " + t + ", name);\n"
+            code += "         unknown_subtype(td, " + t + ", name);\n"
             code += "         return new DebugObject<"+t+">(td, wh, h);\n"
             code += "   }\n"
             code += "}\n"

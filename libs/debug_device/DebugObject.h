@@ -155,7 +155,7 @@ struct ArrayDebugObject : public GenericArrayDebugObject {
   ANARIDataType getType() { return T; }
 };
 
-class ObjectFactory {
+class DEBUG_DEVICE_INTERFACE ObjectFactory {
 public:
   virtual DebugObjectBase* new_volume(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) {
     return new DebugObject<ANARI_VOLUME>(td, wh, h);
@@ -210,7 +210,7 @@ public:
   }
   DebugObjectBase* new_by_type(ANARIDataType t, DebugDevice *td, ANARIObject wh, ANARIObject h);
   DebugObjectBase* new_by_subtype(ANARIDataType t, const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h);
-  void unkown_subtype(DebugDevice *td, ANARIDataType t, const char *name);
+  void unknown_subtype(DebugDevice *td, ANARIDataType t, const char *name);
   virtual ~ObjectFactory() { }
 };
 
