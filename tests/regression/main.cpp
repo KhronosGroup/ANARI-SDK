@@ -21,6 +21,8 @@ std::vector<std::string> g_scenes = {
     //
 };
 
+std::string g_scene;
+
 glm::uvec2 g_frameSize(1024, 768);
 int g_numPixelSamples = 16;
 std::string g_libraryType = "environment";
@@ -197,6 +199,8 @@ void parseCommandLine(int argc, const char *argv[])
       g_numPixelSamples = std::atoi(argv[++i]);
     } else if (arg == "--renderer") {
       g_rendererType = argv[++i];
+    } else if (arg == "--scene" || arg == "-s") {
+      g_scene = argv[++i];
     } else if (arg == "--image_size") {
       g_frameSize.x = std::atoi(argv[++i]);
       g_frameSize.y = std::atoi(argv[++i]);
@@ -229,8 +233,12 @@ int main(int argc, const char *argv[])
 
   initializeANARI();
 
-  for (auto &scene : g_scenes)
-    renderScene(g_device, scene);
+  if (g_scene.empty()) {
+    for (auto &scene : g_scenes)
+      renderScene(g_device, scene);
+  } else {
+    renderScene(g_device, g_scene);
+  }
 
   anari::release(g_device, g_device);
   if (g_enableDebug)
