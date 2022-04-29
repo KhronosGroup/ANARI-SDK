@@ -16,7 +16,7 @@ add_executable(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME} PRIVATE anari_utilities)
 
-add_test(NAME Any                 COMMAND ${PROJECT_NAME} "[Any]")
-add_test(NAME Optional            COMMAND ${PROJECT_NAME} "[Optional]")
-add_test(NAME ParameterizedObject COMMAND ${PROJECT_NAME} "[ParameterizedObject]")
-add_test(NAME RefCounted          COMMAND ${PROJECT_NAME} "[RefCounted]")
+add_test(NAME unit_test::Any                 COMMAND ${PROJECT_NAME} "[Any]")
+add_test(NAME unit_test::Optional            COMMAND ${PROJECT_NAME} "[Optional]")
+add_test(NAME unit_test::ParameterizedObject COMMAND ${PROJECT_NAME} "[ParameterizedObject]")
+add_test(NAME unit_test::RefCounted          COMMAND ${PROJECT_NAME} "[RefCounted]")
