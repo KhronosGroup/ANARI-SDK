@@ -16,9 +16,7 @@ add_executable(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME} PRIVATE anari_utilities)
 
-if(NOT WIN32) # Tests which are broken on Windows with unknown fixes (for now)
-  add_test(NAME Any                 COMMAND ${PROJECT_NAME} "[Any]")
-  add_test(NAME Optional            COMMAND ${PROJECT_NAME} "[Optional]")
-  add_test(NAME ParameterizedObject COMMAND ${PROJECT_NAME} "[ParameterizedObject]")
-  add_test(NAME RefCounted          COMMAND ${PROJECT_NAME} "[RefCounted]")
-endif()
+add_test(NAME Any                 COMMAND ${PROJECT_NAME} "[Any]")
+add_test(NAME Optional            COMMAND ${PROJECT_NAME} "[Optional]")
+add_test(NAME ParameterizedObject COMMAND ${PROJECT_NAME} "[ParameterizedObject]")
+add_test(NAME RefCounted          COMMAND ${PROJECT_NAME} "[RefCounted]")
