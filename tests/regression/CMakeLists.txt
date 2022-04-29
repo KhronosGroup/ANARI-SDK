@@ -1,7 +1,7 @@
 ## Copyright 2021 The Khronos Group
 ## SPDX-License-Identifier: Apache-2.0
 
-project(anari_regression_tests LANGUAGES CXX)
+project(anari_render_tests LANGUAGES CXX)
 
 add_executable(${PROJECT_NAME} main.cpp)
 
@@ -22,5 +22,5 @@ set(TEST_SCENES
 )
 
 foreach(SCENE ${TEST_SCENES})
-  add_test(NAME "render_test::${SCENE}" COMMAND ${PROJECT_NAME} "--scene ${SCENE}")
+  add_test(NAME render_test::${SCENE} COMMAND ${PROJECT_NAME} --scene ${SCENE})
 endforeach()
