@@ -3,7 +3,7 @@
 
 enable_testing()
 
-project(anari_unit_tests LANGUAGES CXX)
+project(anariUnitTests LANGUAGES CXX)
 
 add_executable(${PROJECT_NAME}
   catch_main.cpp

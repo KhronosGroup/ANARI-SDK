@@ -1,7 +1,7 @@
 ## Copyright 2021 The Khronos Group
 ## SPDX-License-Identifier: Apache-2.0
 
-project(anari_render_tests LANGUAGES CXX)
+project(anariRenderTests LANGUAGES CXX)
 
 add_executable(${PROJECT_NAME} main.cpp)
 
