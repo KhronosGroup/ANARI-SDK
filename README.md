@@ -11,7 +11,7 @@ This repository contains the source for the ANARI API SDK. This includes:
 - [Example applications](examples/)
 - [Interactive sample viewer](examples/viewer)
 - [Unit tests](tests/unit)
-- [Regression tests](tests/regression)
+- [Render tests](tests/render)
 
 The 1.0 provisional ANARI specification can be found on the Khronos website
 [here](https://www.khronos.org/registry/ANARI/).
