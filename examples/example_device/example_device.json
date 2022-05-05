@@ -92,7 +92,7 @@
             ]
         }, {
             "type" : "ANARI_RENDERER",
-            "name" : "rayCast",
+            "name" : "raycast",
             "parameters" : [
                 {
                     "name" : "backgroundColor",
