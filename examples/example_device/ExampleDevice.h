@@ -29,17 +29,6 @@ struct EXAMPLE_DEVICE_INTERFACE ExampleDevice : public DeviceImpl,
 
   int deviceImplements(const char *extension) override;
 
-  void deviceSetParameter(
-      const char *id, ANARIDataType type, const void *mem) override;
-
-  void deviceUnsetParameter(const char *id) override;
-
-  void deviceCommit() override;
-
-  void deviceRetain() override;
-
-  void deviceRelease() override;
-
   // Data Arrays //////////////////////////////////////////////////////////////
 
   ANARIArray1D newArray1D(void *appMemory,
@@ -147,6 +136,10 @@ struct EXAMPLE_DEVICE_INTERFACE ExampleDevice : public DeviceImpl,
   void flushCommitBuffer();
 
  private:
+  void deviceSetParameter(const char *id, ANARIDataType type, const void *mem);
+  void deviceUnsetParameter(const char *id);
+  void deviceCommit();
+
   int m_numThreads{1};
   std::vector<Object *> m_objectsToCommit;
   bool m_needToSortCommits{false};

@@ -3,14 +3,13 @@
 
 #include "DebugDevice.h"
 
-#include "anari/detail/Library.h"
 #include "anari/anari.h"
+#include "anari/detail/Library.h"
 
 #include "DebugBasics.h"
 
 // std
 #include <cstdarg>
-
 
 namespace anari {
 namespace debug_device {
@@ -19,30 +18,36 @@ namespace debug_device {
 // Helper functions ///////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-void DebugDevice::reportStatus(
-  ANARIObject source,
-  ANARIDataType sourceType,
-  ANARIStatusSeverity severity,
-  ANARIStatusCode code,
-  const char *format, ...) {
-    va_list arglist;
-    va_list arglist_copy;
-    va_start(arglist, format);
-    va_copy(arglist_copy, arglist);
-    int count = std::vsnprintf(nullptr, 0, format, arglist);
-    va_end( arglist );
+void DebugDevice::reportStatus(ANARIObject source,
+    ANARIDataType sourceType,
+    ANARIStatusSeverity severity,
+    ANARIStatusCode code,
+    const char *format,
+    ...)
+{
+  va_list arglist;
+  va_list arglist_copy;
+  va_start(arglist, format);
+  va_copy(arglist_copy, arglist);
+  int count = std::vsnprintf(nullptr, 0, format, arglist);
+  va_end(arglist);
 
-    last_status_message.resize(count+1);
+  last_status_message.resize(count + 1);
 
-    va_start(arglist_copy, format);
-    std::vsnprintf(last_status_message.data(), count+1, format, arglist_copy);
-    va_end( arglist_copy );
+  va_start(arglist_copy, format);
+  std::vsnprintf(last_status_message.data(), count + 1, format, arglist_copy);
+  va_end(arglist_copy);
 
-    if(ANARIStatusCallback statusCallback = defaultStatusCallback()) {
-      statusCallback(defaultStatusCallbackUserPtr(), this_device(),
-        source, sourceType, severity, code, last_status_message.data());
-    }
+  if (ANARIStatusCallback statusCallback = defaultStatusCallback()) {
+    statusCallback(defaultStatusCallbackUserPtr(),
+        this_device(),
+        source,
+        sourceType,
+        severity,
+        code,
+        last_status_message.data());
   }
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // DebugDevice definitions //////////////////////////////////////////////////
@@ -53,89 +58,27 @@ int DebugDevice::deviceImplements(const char *_extension)
   return 0;
 }
 
-void DebugDevice::deviceSetParameter(
-    const char *_id, ANARIDataType type, const void *mem)
-{
-  std::string id = _id;
-  if (id == "wrappedDevice" && type == ANARI_DEVICE) {
-    if(staged) {
-      anariRelease(staged, staged);
-    }
-    staged = *static_cast<const ANARIDevice*>(mem);
-    if(staged) {
-      anariRetain(staged, staged);
-    }
-  } else if(staged) {
-    anariSetParameter(staged, staged, _id, type, mem);
-  }
-}
-
-void DebugDevice::deviceUnsetParameter(const char *id)
-{
-  if(wrapped) {
-    anariUnsetParameter(wrapped, wrapped, id);
-  }
-}
-
-ObjectFactory* getDebugFactory();
-
-void DebugDevice::deviceCommit()
-{
-  // skip this for now since thd debug device doesn't understand
-  // device parameters and commits very well
-  //debug->anariCommit(this_device(), this_device());
-
-  if(wrapped != staged) {
-    if(wrapped) {
-      anariRelease(wrapped, wrapped);
-    }
-    wrapped = staged;
-    // reset to generic debug objects
-    debugObjectFactory = getDebugFactory();
-    if(wrapped) {
-      anariRetain(wrapped, wrapped);
-      anariCommit(wrapped, wrapped);
-      ObjectFactory* (*factory_fun)();
-      if(anariGetProperty(wrapped, wrapped, "debugObjects", ANARI_FUNCTION_POINTER,
-        &factory_fun, sizeof(factory_fun), ANARI_NO_WAIT)) {
-        debugObjectFactory = factory_fun();
-      } else {
-        reportStatus(this_device(), ANARI_DEVICE,
-          ANARI_SEVERITY_INFO, ANARI_STATUS_UNKNOWN_ERROR,
-          "Device doesn't provide custom debug objects. Using core feature set.");
-      }
-    }
-  }
-}
-
-void DebugDevice::deviceRetain()
-{
-  this->refInc();
-}
-
-void DebugDevice::deviceRelease()
-{
-  this->refDec();
-}
-
 // Data Arrays ////////////////////////////////////////////////////////////////
 
-struct DeleterWrapperData {
+struct DeleterWrapperData
+{
   DeleterWrapperData(void *u, void *m, ANARIMemoryDeleter d)
-    : userData(u), memory(m), deleter(d) { }
+      : userData(u), memory(m), deleter(d)
+  {}
   void *userData;
   void *memory;
   ANARIMemoryDeleter deleter;
 };
-void deleterWrapper(void *userData, void *memory) {
-  if(userData) {
-    DeleterWrapperData *nested = static_cast<DeleterWrapperData*>(userData);
-    if(nested->deleter) {
+void deleterWrapper(void *userData, void *memory)
+{
+  if (userData) {
+    DeleterWrapperData *nested = static_cast<DeleterWrapperData *>(userData);
+    if (nested->deleter) {
       nested->deleter(nested->userData, nested->memory);
     }
     delete nested;
   }
-  delete[] static_cast<ANARIObject*>(memory);
+  delete[] static_cast<ANARIObject *>(memory);
 }
 
 ANARIArray1D DebugDevice::newArray1D(void *appMemory,
@@ -146,48 +89,72 @@ ANARIArray1D DebugDevice::newArray1D(void *appMemory,
     uint64_t byteStride)
 {
   ANARIArray1D handle;
-  if(isObject(type)) { // object arrays need special treatment
-    ANARIObject *in = static_cast<ANARIObject*>(appMemory);
+  if (isObject(type)) { // object arrays need special treatment
+    ANARIObject *in = static_cast<ANARIObject *>(appMemory);
     ANARIObject *handles = new ANARIObject[numItems];
-    if(byteStride != 0 && byteStride != sizeof(ANARIObject)) {
-      reportStatus(this_device(), ANARI_DEVICE, ANARI_SEVERITY_ERROR, ANARI_STATUS_UNKNOWN_ERROR, "Strided Object arrays not supported in debug device");
-      return 0; //strided handles not supported yet
+    if (byteStride != 0 && byteStride != sizeof(ANARIObject)) {
+      reportStatus(this_device(),
+          ANARI_DEVICE,
+          ANARI_SEVERITY_ERROR,
+          ANARI_STATUS_UNKNOWN_ERROR,
+          "Strided Object arrays not supported in debug device");
+      return 0; // strided handles not supported yet
     }
 
     void *forward = nullptr;
-    if(appMemory != nullptr) {
-      for(int i = 0;i<numItems;i++) {
+    if (appMemory != nullptr) {
+      for (int i = 0; i < numItems; i++) {
         handles[i] = unwrapHandle(in[i]);
       }
       forward = handles;
     }
 
-    debug->anariNewArray1D(this_device(), appMemory, deleter, userData, type, numItems, uint64_t(0));
+    debug->anariNewArray1D(this_device(),
+        appMemory,
+        deleter,
+        userData,
+        type,
+        numItems,
+        uint64_t(0));
 
-    DeleterWrapperData *deleterData = new DeleterWrapperData(userData, appMemory, deleter);
-    handle = anariNewArray1D(wrapped, forward, deleterWrapper, (void*)deleterData, type, numItems, uint64_t(0));
+    DeleterWrapperData *deleterData =
+        new DeleterWrapperData(userData, appMemory, deleter);
+    handle = anariNewArray1D(wrapped,
+        forward,
+        deleterWrapper,
+        (void *)deleterData,
+        type,
+        numItems,
+        uint64_t(0));
     handle = newHandle(handle);
 
-    if(auto info = getDynamicObjectInfo<ArrayDebugObject<ANARI_ARRAY1D>>(handle)) {
+    if (auto info =
+            getDynamicObjectInfo<ArrayDebugObject<ANARI_ARRAY1D>>(handle)) {
       info->handles = handles;
-      if(appMemory != nullptr) {
-        for(int i = 0;i<numItems;i++) {
-          if(auto info2 = getObjectInfo(in[i])) {
+      if (appMemory != nullptr) {
+        for (int i = 0; i < numItems; i++) {
+          if (auto info2 = getObjectInfo(in[i])) {
             info2->referencedBy(handle);
           }
         }
       }
     }
   } else {
-    debug->anariNewArray1D(this_device(), appMemory, deleter, userData, type, numItems, byteStride);
-    handle = anariNewArray1D(wrapped, appMemory, deleter, userData, type, numItems, byteStride);
+    debug->anariNewArray1D(this_device(),
+        appMemory,
+        deleter,
+        userData,
+        type,
+        numItems,
+        byteStride);
+    handle = anariNewArray1D(
+        wrapped, appMemory, deleter, userData, type, numItems, byteStride);
     handle = newHandle(handle);
   }
 
-  if(auto info = getDynamicObjectInfo<ArrayDebugObject<ANARI_ARRAY1D>>(handle)) {
-    info->attachArray(appMemory, type,
-    numItems, 1, 1,
-    byteStride, 0, 0);
+  if (auto info =
+          getDynamicObjectInfo<ArrayDebugObject<ANARI_ARRAY1D>>(handle)) {
+    info->attachArray(appMemory, type, numItems, 1, 1, byteStride, 0, 0);
   }
 
   return handle;
@@ -202,14 +169,30 @@ ANARIArray2D DebugDevice::newArray2D(void *appMemory,
     uint64_t byteStride1,
     uint64_t byteStride2)
 {
-  debug->anariNewArray2D(this_device(), appMemory, deleter, userData, type, numItems1, numItems2, byteStride1, byteStride2);
-  ANARIArray2D handle = anariNewArray2D(wrapped, appMemory, deleter, userData, type, numItems1, numItems2, byteStride1, byteStride2);
+  debug->anariNewArray2D(this_device(),
+      appMemory,
+      deleter,
+      userData,
+      type,
+      numItems1,
+      numItems2,
+      byteStride1,
+      byteStride2);
+  ANARIArray2D handle = anariNewArray2D(wrapped,
+      appMemory,
+      deleter,
+      userData,
+      type,
+      numItems1,
+      numItems2,
+      byteStride1,
+      byteStride2);
   handle = newHandle(handle);
 
-  if(auto info = getDynamicObjectInfo<ArrayDebugObject<ANARI_ARRAY2D>>(handle)) {
-    info->attachArray(appMemory, type,
-    numItems1, numItems2, 1,
-    byteStride1, byteStride2, 0);
+  if (auto info =
+          getDynamicObjectInfo<ArrayDebugObject<ANARI_ARRAY2D>>(handle)) {
+    info->attachArray(
+        appMemory, type, numItems1, numItems2, 1, byteStride1, byteStride2, 0);
   }
   return handle;
 }
@@ -225,14 +208,40 @@ ANARIArray3D DebugDevice::newArray3D(void *appMemory,
     uint64_t byteStride2,
     uint64_t byteStride3)
 {
-  debug->anariNewArray3D(this_device(), appMemory, deleter, userData, type, numItems1, numItems2, numItems3, byteStride1, byteStride2, byteStride3);
-  ANARIArray3D handle = anariNewArray3D(wrapped, appMemory, deleter, userData, type, numItems1, numItems2, numItems3, byteStride1, byteStride2, byteStride3);
+  debug->anariNewArray3D(this_device(),
+      appMemory,
+      deleter,
+      userData,
+      type,
+      numItems1,
+      numItems2,
+      numItems3,
+      byteStride1,
+      byteStride2,
+      byteStride3);
+  ANARIArray3D handle = anariNewArray3D(wrapped,
+      appMemory,
+      deleter,
+      userData,
+      type,
+      numItems1,
+      numItems2,
+      numItems3,
+      byteStride1,
+      byteStride2,
+      byteStride3);
   handle = newHandle(handle);
 
-  if(auto info = getDynamicObjectInfo<ArrayDebugObject<ANARI_ARRAY3D>>(handle)) {
-    info->attachArray(appMemory, type,
-    numItems1, numItems2, numItems3,
-    byteStride1, byteStride2, byteStride3);
+  if (auto info =
+          getDynamicObjectInfo<ArrayDebugObject<ANARI_ARRAY3D>>(handle)) {
+    info->attachArray(appMemory,
+        type,
+        numItems1,
+        numItems2,
+        numItems3,
+        byteStride1,
+        byteStride2,
+        byteStride3);
   }
   return handle;
 }
@@ -242,9 +251,9 @@ void *DebugDevice::mapArray(ANARIArray a)
   debug->anariMapArray(this_device(), a);
   void *result = anariMapArray(wrapped, unwrapHandle(a));
 
-  if(auto info = getDynamicObjectInfo<GenericArrayDebugObject>(a)) {
+  if (auto info = getDynamicObjectInfo<GenericArrayDebugObject>(a)) {
     info->mapArray(result);
-    if(isObject(info->arrayType)) {
+    if (isObject(info->arrayType)) {
       return info->handles;
     } else {
       return result;
@@ -256,15 +265,13 @@ void *DebugDevice::mapArray(ANARIArray a)
 
 void DebugDevice::unmapArray(ANARIArray a)
 {
-
-  if(auto info = getDynamicObjectInfo<GenericArrayDebugObject>(a)) {
-
-    if(isObject(info->arrayType)) {
-      ANARIObject *objMapping = (ANARIObject*)info->mapping;
+  if (auto info = getDynamicObjectInfo<GenericArrayDebugObject>(a)) {
+    if (isObject(info->arrayType)) {
+      ANARIObject *objMapping = (ANARIObject *)info->mapping;
       // translate handles before unmapping
-      for(int i = 0;i<info->numItems1;i++) {
+      for (int i = 0; i < info->numItems1; i++) {
         objMapping[i] = unwrapHandle(info->handles[i]);
-        if(auto info2 = getObjectInfo(info->handles[i])) {
+        if (auto info2 = getObjectInfo(info->handles[i])) {
           info->referencedBy(a);
         }
       }
@@ -368,8 +375,11 @@ int DebugDevice::getProperty(ANARIObject object,
     uint64_t size,
     ANARIWaitMask mask)
 {
+  if (handleIsDevice(object))
+    return 0;
   debug->anariGetProperty(this_device(), object, name, type, mem, size, mask);
-  return anariGetProperty(wrapped, unwrapHandle(object), name, type, mem, size, mask);
+  return anariGetProperty(
+      wrapped, unwrapHandle(object), name, type, mem, size, mask);
 }
 
 // Object + Parameter Lifetime Management /////////////////////////////////////
@@ -377,64 +387,80 @@ int DebugDevice::getProperty(ANARIObject object,
 void DebugDevice::setParameter(
     ANARIObject object, const char *name, ANARIDataType type, const void *mem)
 {
-  const void *unwrapped = mem;
-  // translate object as parameter
-  ANARIObject obj = nullptr;
-  if(isObject(type)) {
-    ANARIObject handle = *static_cast<const ANARIObject*>(mem);
-    if(auto info = getObjectInfo(handle)) {
-      info->referencedBy(object);
+  if (handleIsDevice(object))
+    deviceSetParameter(name, type, mem);
+  else {
+    const void *unwrapped = mem;
+    // translate object as parameter
+    ANARIObject obj = nullptr;
+    if (isObject(type)) {
+      ANARIObject handle = *static_cast<const ANARIObject *>(mem);
+      if (auto info = getObjectInfo(handle)) {
+        info->referencedBy(object);
+      }
+      obj = unwrapHandle(handle);
+      unwrapped = &obj;
     }
-    obj = unwrapHandle(handle);
-    unwrapped = &obj;
-  }
 
-  debug->anariSetParameter(this_device(), object, name, type, mem);
-  anariSetParameter(wrapped, unwrapHandle(object), name, type, unwrapped);
+    debug->anariSetParameter(this_device(), object, name, type, mem);
+    anariSetParameter(wrapped, unwrapHandle(object), name, type, unwrapped);
 
-  if(auto info = getObjectInfo(object)) {
-    info->setParameter(name, type, mem);
+    if (auto info = getObjectInfo(object))
+      info->setParameter(name, type, mem);
   }
 }
 
 void DebugDevice::unsetParameter(ANARIObject object, const char *name)
 {
-  debug->anariUnsetParameter(this_device(), object, name);
-  anariUnsetParameter(wrapped, unwrapHandle(object), name);
+  if (handleIsDevice(object))
+    deviceUnsetParameter(name);
+  else {
+    debug->anariUnsetParameter(this_device(), object, name);
+    anariUnsetParameter(wrapped, unwrapHandle(object), name);
 
-  if(auto info = getObjectInfo(object)) {
-    info->unsetParameter(name);
+    if (auto info = getObjectInfo(object))
+      info->unsetParameter(name);
   }
 }
 
 void DebugDevice::commit(ANARIObject object)
 {
+  if (handleIsDevice(object))
+    deviceCommit();
+  else {
+    debug->anariCommit(this_device(), object);
+    anariCommit(wrapped, unwrapHandle(object));
 
-  debug->anariCommit(this_device(), object);
-  anariCommit(wrapped, unwrapHandle(object));
-
-  if(auto info = getObjectInfo(object)) {
-    info->commit();
+    if (auto info = getObjectInfo(object))
+      info->commit();
   }
 }
 
 void DebugDevice::release(ANARIObject object)
 {
-  debug->anariRelease(this_device(), object);
-  anariRelease(wrapped, unwrapHandle(object));
+  if (!object)
+    return;
+  else if (handleIsDevice(object))
+    this->refDec();
+  else {
+    debug->anariRelease(this_device(), object);
+    anariRelease(wrapped, unwrapHandle(object));
 
-  if(auto info = getObjectInfo(object)) {
-    info->release();
+    if (auto info = getObjectInfo(object))
+      info->release();
   }
 }
 
 void DebugDevice::retain(ANARIObject object)
 {
-  debug->anariRetain(this_device(), object);
-  anariRetain(wrapped, unwrapHandle(object));
+  if (handleIsDevice(object))
+    this->refInc();
+  else {
+    debug->anariRetain(this_device(), object);
+    anariRetain(wrapped, unwrapHandle(object));
 
-  if(auto info = getObjectInfo(object)) {
-    info->retain();
+    if (auto info = getObjectInfo(object))
+      info->retain();
   }
 }
 
@@ -473,7 +499,7 @@ void DebugDevice::renderFrame(ANARIFrame frame)
   debug->anariRenderFrame(this_device(), frame);
   anariRenderFrame(wrapped, unwrapHandle(frame));
 
-  if(auto info = getObjectInfo(frame)) {
+  if (auto info = getObjectInfo(frame)) {
     info->used();
   }
 }
@@ -492,7 +518,73 @@ void DebugDevice::discardFrame(ANARIFrame frame)
 
 // Other DebugDevice definitions ////////////////////////////////////////////
 
-DebugDevice::DebugDevice() : wrapped(nullptr), staged(nullptr), debugObjectFactory(nullptr), deviceInfo{this, this_device(), this_device()}
+void DebugDevice::deviceSetParameter(
+    const char *_id, ANARIDataType type, const void *mem)
+{
+  std::string id = _id;
+  if (id == "wrappedDevice" && type == ANARI_DEVICE) {
+    if (staged) {
+      anariRelease(staged, staged);
+    }
+    staged = *static_cast<const ANARIDevice *>(mem);
+    if (staged) {
+      anariRetain(staged, staged);
+    }
+  } else if (staged) {
+    anariSetParameter(staged, staged, _id, type, mem);
+  }
+}
+
+void DebugDevice::deviceUnsetParameter(const char *id)
+{
+  if (wrapped) {
+    anariUnsetParameter(wrapped, wrapped, id);
+  }
+}
+
+ObjectFactory *getDebugFactory();
+
+void DebugDevice::deviceCommit()
+{
+  // skip this for now since thd debug device doesn't understand
+  // device parameters and commits very well
+  // debug->anariCommit(this_device(), this_device());
+
+  if (wrapped != staged) {
+    if (wrapped) {
+      anariRelease(wrapped, wrapped);
+    }
+    wrapped = staged;
+    // reset to generic debug objects
+    debugObjectFactory = getDebugFactory();
+    if (wrapped) {
+      anariRetain(wrapped, wrapped);
+      anariCommit(wrapped, wrapped);
+      ObjectFactory *(*factory_fun)();
+      if (anariGetProperty(wrapped,
+              wrapped,
+              "debugObjects",
+              ANARI_FUNCTION_POINTER,
+              &factory_fun,
+              sizeof(factory_fun),
+              ANARI_NO_WAIT)) {
+        debugObjectFactory = factory_fun();
+      } else {
+        reportStatus(this_device(),
+            ANARI_DEVICE,
+            ANARI_SEVERITY_INFO,
+            ANARI_STATUS_UNKNOWN_ERROR,
+            "Device doesn't provide custom debug objects. Using core feature set.");
+      }
+    }
+  }
+}
+
+DebugDevice::DebugDevice()
+    : wrapped(nullptr),
+      staged(nullptr),
+      debugObjectFactory(nullptr),
+      deviceInfo{this, this_device(), this_device()}
 {
   // insert the null handle explicitly as that always translates to null
   objectMap[nullptr] = nullptr;
@@ -505,52 +597,58 @@ DebugDevice::DebugDevice() : wrapped(nullptr), staged(nullptr), debugObjectFacto
 
 DebugDevice::~DebugDevice()
 {
-  if(debug) {
+  if (debug) {
     debug->anariReleaseDevice(this_device());
   }
-  if(wrapped) {
+  if (wrapped) {
     anariRelease(wrapped, wrapped);
   }
 }
 
-ANARIObject DebugDevice::newObjectHandle(ANARIObject h, ANARIDataType type, const char *name) {
+ANARIObject DebugDevice::newObjectHandle(
+    ANARIObject h, ANARIDataType type, const char *name)
+{
   ANARIObject idx = (ANARIObject)objects.size();
-  objects.emplace_back(debugObjectFactory->new_by_subtype(type, name, this, idx, h));
+  objects.emplace_back(
+      debugObjectFactory->new_by_subtype(type, name, this, idx, h));
   objectMap[h] = idx;
   return idx;
 }
-ANARIObject DebugDevice::newObjectHandle(ANARIObject h, ANARIDataType type) {
+ANARIObject DebugDevice::newObjectHandle(ANARIObject h, ANARIDataType type)
+{
   ANARIObject idx = (ANARIObject)objects.size();
   objects.emplace_back(debugObjectFactory->new_by_type(type, this, idx, h));
   objectMap[h] = idx;
   return idx;
 }
-ANARIObject DebugDevice::wrapObjectHandle(ANARIObject h, ANARIDataType type) {
-  if(h == wrapped) {
+ANARIObject DebugDevice::wrapObjectHandle(ANARIObject h, ANARIDataType type)
+{
+  if (h == wrapped) {
     return this_device();
   } else {
     auto iter = objectMap.find(h);
-    if(iter != objectMap.end()) {
+    if (iter != objectMap.end()) {
       return objectMap[h];
     } else {
-
       return 0;
     }
   }
 }
-ANARIObject DebugDevice::unwrapObjectHandle(ANARIObject h, ANARIDataType type) {
-  if(h == this_device()) {
+ANARIObject DebugDevice::unwrapObjectHandle(ANARIObject h, ANARIDataType type)
+{
+  if (h == this_device()) {
     return wrapped;
-  } else if((uintptr_t)h < objects.size()) {
+  } else if ((uintptr_t)h < objects.size()) {
     return objects[(uintptr_t)h]->getHandle();
   } else {
     return nullptr;
   }
 }
-DebugObjectBase* DebugDevice::getObjectInfo(ANARIObject h) {
-  if(h == this_device()) {
+DebugObjectBase *DebugDevice::getObjectInfo(ANARIObject h)
+{
+  if (h == this_device()) {
     return &deviceInfo;
-  } else if((uintptr_t)h < objects.size()) {
+  } else if ((uintptr_t)h < objects.size()) {
     return objects[(uintptr_t)h].get();
   } else {
     return nullptr;
@@ -607,4 +705,3 @@ extern "C" DEBUG_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_PARAMETER_PROPERTY(
 {
   return nullptr;
 }
-
