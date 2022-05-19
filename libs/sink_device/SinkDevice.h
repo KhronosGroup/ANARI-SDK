@@ -35,17 +35,6 @@ struct SINK_DEVICE_INTERFACE SinkDevice : public DeviceImpl, public RefCounted
 
   int deviceImplements(const char *extension) override;
 
-  void deviceSetParameter(
-      const char *id, ANARIDataType type, const void *mem) override;
-
-  void deviceUnsetParameter(const char *id) override;
-
-  void deviceCommit() override;
-
-  void deviceRetain() override;
-
-  void deviceRelease() override;
-
   // Data Arrays //////////////////////////////////////////////////////////////
 
   ANARIArray1D newArray1D(void *appMemory,

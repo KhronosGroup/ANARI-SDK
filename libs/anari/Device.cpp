@@ -37,6 +37,11 @@ void *DeviceImpl::defaultStatusCallbackUserPtr() const
   return m_defaultStatusCBUserPtr;
 }
 
+bool DeviceImpl::handleIsDevice(ANARIObject obj) const
+{
+  return static_cast<const void *>(obj) == static_cast<const void *>(this);
+}
+
 ANARI_TYPEFOR_DEFINITION(DeviceImpl *);
 
 } // namespace anari

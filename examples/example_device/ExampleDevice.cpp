@@ -187,36 +187,6 @@ int ExampleDevice::deviceImplements(const char *_extension)
   return 0;
 }
 
-void ExampleDevice::deviceSetParameter(
-    const char *_id, ANARIDataType type, const void *mem)
-{
-  std::string id = _id;
-  if (id == "numThreads" && type == ANARI_INT32)
-    setParam(id, *static_cast<const int *>(mem));
-}
-
-void ExampleDevice::deviceUnsetParameter(const char *id)
-{
-  removeParam(id);
-}
-
-void ExampleDevice::deviceCommit()
-{
-  m_numThreads =
-      getParam<int>("numThreads", std::thread::hardware_concurrency() - 1);
-  m_numThreads = std::max(m_numThreads, 1);
-}
-
-void ExampleDevice::deviceRetain()
-{
-  this->refInc();
-}
-
-void ExampleDevice::deviceRelease()
-{
-  this->refDec();
-}
-
 // Data Arrays ////////////////////////////////////////////////////////////////
 
 ANARIArray1D ExampleDevice::newArray1D(void *appMemory,
@@ -362,6 +332,9 @@ int ExampleDevice::getProperty(ANARIObject object,
     uint64_t size,
     ANARIWaitMask mask)
 {
+  if (handleIsDevice(object))
+    return 0;
+
   if (mask == ANARI_WAIT)
     flushCommitBuffer();
 
@@ -385,8 +358,10 @@ int ExampleDevice::getProperty(ANARIObject object,
 void ExampleDevice::setParameter(
     ANARIObject object, const char *name, ANARIDataType type, const void *mem)
 {
-  if (type == ANARI_UNKNOWN)
-    throw std::runtime_error("cannot set ANARI_UNKNOWN parameter type");
+  if (handleIsDevice(object)) {
+    deviceSetParameter(name, type, mem);
+    return;
+  }
 
   auto *fcn = setParamFcns[type];
 
@@ -403,11 +378,19 @@ void ExampleDevice::setParameter(
 
 void ExampleDevice::unsetParameter(ANARIObject o, const char *name)
 {
-  referenceFromHandle(o).removeParam(name);
+  if (handleIsDevice(o))
+    deviceUnsetParameter(name);
+  else
+    referenceFromHandle(o).removeParam(name);
 }
 
 void ExampleDevice::commit(ANARIObject h)
 {
+  if (handleIsDevice(h)) {
+    deviceCommit();
+    return;
+  }
+
   auto &o = referenceFromHandle(h);
   o.refInc(RefType::INTERNAL);
   if (o.commitPriority() != COMMIT_PRIORITY_DEFAULT)
@@ -419,6 +402,10 @@ void ExampleDevice::release(ANARIObject o)
 {
   if (!o)
     return;
+  else if (handleIsDevice(o)) {
+    this->refDec();
+    return;
+  }
 
   auto &obj = referenceFromHandle(o);
 
@@ -434,7 +421,10 @@ void ExampleDevice::release(ANARIObject o)
 
 void ExampleDevice::retain(ANARIObject o)
 {
-  referenceFromHandle(o).refInc(RefType::PUBLIC);
+  if (handleIsDevice(o))
+    this->refInc();
+  else
+    referenceFromHandle(o).refInc(RefType::PUBLIC);
 }
 
 // Frame Manipulation /////////////////////////////////////////////////////////
@@ -535,6 +525,26 @@ void ExampleDevice::flushCommitBuffer()
   }
 
   m_objectsToCommit.clear();
+}
+
+void ExampleDevice::deviceSetParameter(
+    const char *_id, ANARIDataType type, const void *mem)
+{
+  std::string id = _id;
+  if (id == "numThreads" && type == ANARI_INT32)
+    setParam(id, *static_cast<const int *>(mem));
+}
+
+void ExampleDevice::deviceUnsetParameter(const char *id)
+{
+  removeParam(id);
+}
+
+void ExampleDevice::deviceCommit()
+{
+  m_numThreads =
+      getParam<int>("numThreads", std::thread::hardware_concurrency() - 1);
+  m_numThreads = std::max(m_numThreads, 1);
 }
 
 const char **query_object_types(ANARIDataType type);

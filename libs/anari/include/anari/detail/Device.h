@@ -39,17 +39,6 @@ struct ANARI_INTERFACE DeviceImpl
 
   virtual int deviceImplements(const char *extension) = 0;
 
-  virtual void deviceSetParameter(
-      const char *id, ANARIDataType type, const void *mem) = 0;
-
-  virtual void deviceUnsetParameter(const char *id) = 0;
-
-  virtual void deviceCommit() = 0;
-
-  virtual void deviceRetain() = 0;
-
-  virtual void deviceRelease() = 0;
-
   // Data Arrays //////////////////////////////////////////////////////////////
 
   virtual ANARIArray1D newArray1D(void *appMemory,
@@ -169,6 +158,8 @@ struct ANARI_INTERFACE DeviceImpl
  protected:
   ANARIStatusCallback defaultStatusCallback() const;
   void *defaultStatusCallbackUserPtr() const;
+
+  bool handleIsDevice(ANARIObject obj) const;
 
  public:
   // NOTE: Unsuccessful to get the declaration of anariNewDevice() declared

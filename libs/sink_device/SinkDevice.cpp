@@ -21,18 +21,6 @@ int SinkDevice::deviceImplements(const char *_extension)
   return 0;
 }
 
-void SinkDevice::deviceSetParameter(
-    const char *_id, ANARIDataType type, const void *mem)
-{}
-
-void SinkDevice::deviceUnsetParameter(const char *id) {}
-
-void SinkDevice::deviceCommit() {}
-
-void SinkDevice::deviceRetain() {}
-
-void SinkDevice::deviceRelease() {}
-
 // Data Arrays ////////////////////////////////////////////////////////////////
 
 void managed_deleter(void *userdata, void *memory)

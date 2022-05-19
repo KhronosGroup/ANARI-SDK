@@ -10,11 +10,11 @@
 #include "anari/type_utility.h"
 
 // std
-#include <vector>
-#include <unordered_map>
+#include <cstring>
 #include <memory>
 #include <string>
-#include <cstring>
+#include <unordered_map>
+#include <vector>
 
 #include "debug_device_exports.h"
 
@@ -24,16 +24,14 @@
 namespace anari {
 namespace debug_device {
 
-struct DEBUG_DEVICE_INTERFACE DebugDevice : public DeviceImpl,
-                                              public RefCounted
+struct DEBUG_DEVICE_INTERFACE DebugDevice : public DeviceImpl, public RefCounted
 {
-
-  void reportStatus(
-      ANARIObject source,
+  void reportStatus(ANARIObject source,
       ANARIDataType sourceType,
       ANARIStatusSeverity severity,
       ANARIStatusCode code,
-      const char *format, ...);
+      const char *format,
+      ...);
 
   /////////////////////////////////////////////////////////////////////////////
   // Main interface to accepting API calls
@@ -42,17 +40,6 @@ struct DEBUG_DEVICE_INTERFACE DebugDevice : public DeviceImpl,
   // Device API ///////////////////////////////////////////////////////////////
 
   int deviceImplements(const char *extension) override;
-
-  void deviceSetParameter(
-      const char *id, ANARIDataType type, const void *mem) override;
-
-  void deviceUnsetParameter(const char *id) override;
-
-  void deviceCommit() override;
-
-  void deviceRetain() override;
-
-  void deviceRelease() override;
 
   // Data Arrays //////////////////////////////////////////////////////////////
 
@@ -155,28 +142,48 @@ struct DEBUG_DEVICE_INTERFACE DebugDevice : public DeviceImpl,
   // Helper/other functions and data members
   /////////////////////////////////////////////////////////////////////////////
 
+  void deviceSetParameter(const char *id, ANARIDataType type, const void *mem);
+  void deviceUnsetParameter(const char *id);
+  void deviceCommit();
+
   DebugDevice();
   ~DebugDevice();
 
   ANARIObject newObjectHandle(ANARIObject, ANARIDataType);
-  ANARIObject newObjectHandle(ANARIObject, ANARIDataType, const char*);
+  ANARIObject newObjectHandle(ANARIObject, ANARIDataType, const char *);
   ANARIObject wrapObjectHandle(ANARIObject, ANARIDataType = ANARI_OBJECT);
   ANARIObject unwrapObjectHandle(ANARIObject, ANARIDataType = ANARI_OBJECT);
-  DebugObjectBase* getObjectInfo(ANARIObject);
+  DebugObjectBase *getObjectInfo(ANARIObject);
 
-  template<typename T>
-  T newHandle(T o) { return static_cast<T>(newObjectHandle(o, ANARITypeFor<T>::value)); }
-  template<typename T>
-  T newHandle(T o, const char *name) { return static_cast<T>(newObjectHandle(o, ANARITypeFor<T>::value, name)); }
-  template<typename T>
-  T wrapHandle(T o) { return static_cast<T>(wrapObjectHandle(o, ANARITypeFor<T>::value)); }
-  template<typename T>
-  T unwrapHandle(T o) { return static_cast<T>(unwrapObjectHandle(o, ANARITypeFor<T>::value)); }
+  template <typename T>
+  T newHandle(T o)
+  {
+    return static_cast<T>(newObjectHandle(o, ANARITypeFor<T>::value));
+  }
+  template <typename T>
+  T newHandle(T o, const char *name)
+  {
+    return static_cast<T>(newObjectHandle(o, ANARITypeFor<T>::value, name));
+  }
+  template <typename T>
+  T wrapHandle(T o)
+  {
+    return static_cast<T>(wrapObjectHandle(o, ANARITypeFor<T>::value));
+  }
+  template <typename T>
+  T unwrapHandle(T o)
+  {
+    return static_cast<T>(unwrapObjectHandle(o, ANARITypeFor<T>::value));
+  }
 
-  template<typename T>
-  T* getDynamicObjectInfo(ANARIObject o) { return dynamic_cast<T*>(getObjectInfo(o)); }
+  template <typename T>
+  T *getDynamicObjectInfo(ANARIObject o)
+  {
+    return dynamic_cast<T *>(getObjectInfo(o));
+  }
 
   std::vector<std::unique_ptr<DebugObjectBase>> objects;
+
  private:
   DebugObject<ANARI_DEVICE> deviceInfo;
 
@@ -190,5 +197,5 @@ struct DEBUG_DEVICE_INTERFACE DebugDevice : public DeviceImpl,
   ANARIDevice staged;
 };
 
-} // namespace example_device
+} // namespace debug_device
 } // namespace anari
