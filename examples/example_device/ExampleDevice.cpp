@@ -122,7 +122,6 @@ static void removeParamOnObject(ANARIObject obj, const char *p)
 
 static std::map<int, SetParamFcn *> setParamFcns = {
     declare_param_setter(ANARIDataType),
-    declare_param_setter(Device *),
     declare_param_setter_void_ptr(void *),
     declare_param_setter(ANARIFrameCompletionCallback),
     declare_param_setter(bool),
