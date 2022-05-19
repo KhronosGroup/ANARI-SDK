@@ -568,29 +568,12 @@ extern "C" EXAMPLE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_DEVICE_SUBTYPES(
 extern "C" EXAMPLE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_SUBTYPES(
     example, libdata, deviceSubtype, objectType)
 {
-  /*
-  if (objectType == ANARI_RENDERER) {
-    static std::vector<const char *> renderers;
-    renderers.clear();
-    anari::example_device::Renderer::init();
-    for (auto &r : *anari::example_device::Renderer::g_renderers)
-      renderers.push_back(r.first.c_str());
-    renderers.push_back(nullptr);
-    return renderers.data();
-  }
-  return nullptr;
-  */
   return anari::example_device::query_object_types(objectType);
 }
 
 extern "C" EXAMPLE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_PARAMETERS(
     example, libdata, deviceSubtype, objectSubtype, objectType)
 {
-  /*
-  if (objectType == ANARI_RENDERER)
-    return anari::example_device::Renderer::g_parameters;
-  return nullptr;
-  */
   return anari::example_device::query_params(objectType, objectSubtype);
 }
 
