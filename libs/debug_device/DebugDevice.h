@@ -24,7 +24,7 @@
 namespace anari {
 namespace debug_device {
 
-struct DEBUG_DEVICE_INTERFACE DebugDevice : public Device,
+struct DEBUG_DEVICE_INTERFACE DebugDevice : public DeviceImpl,
                                               public RefCounted
 {
 

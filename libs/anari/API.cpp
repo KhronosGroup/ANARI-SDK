@@ -48,7 +48,7 @@ static std::unique_ptr<T> make_unique(Args &&...args)
 }
 } // namespace
 
-using anari::Device;
+using anari::DeviceImpl;
 using anari::Library;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -63,12 +63,12 @@ static inline Library &libraryRef(ANARILibrary l)
   return *((Library *)l);
 }
 
-static inline Device &deviceRef(ANARIDevice d)
+static inline DeviceImpl &deviceRef(ANARIDevice d)
 {
   if (d == nullptr) {
     throw std::runtime_error("null device provided");
   }
-  return *((Device *)d);
+  return *((DeviceImpl *)d);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

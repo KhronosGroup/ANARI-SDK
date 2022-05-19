@@ -7,8 +7,8 @@
 // anari
 #include "anari/detail/Device.h"
 
-#include <vector>
 #include <memory>
+#include <vector>
 
 #ifdef _WIN32
 #ifdef SINK_DEVICE_STATIC_DEFINE
@@ -29,8 +29,7 @@
 namespace anari {
 namespace sink_device {
 
-struct SINK_DEVICE_INTERFACE SinkDevice : public Device,
-                                              public RefCounted
+struct SINK_DEVICE_INTERFACE SinkDevice : public DeviceImpl, public RefCounted
 {
   // Device API ///////////////////////////////////////////////////////////////
 
@@ -149,52 +148,57 @@ struct SINK_DEVICE_INTERFACE SinkDevice : public Device,
   /////////////////////////////////////////////////////////////////////////////
 
   SinkDevice();
-  ~SinkDevice();
-private:
+  ~SinkDevice() = default;
 
-  struct Object {
+ private:
+  struct Object
+  {
     int64_t refcount = 1;
     ANARIMemoryDeleter deleter = nullptr;
     void *userdata = nullptr;
     void *memory = nullptr;
     ANARIDataType type;
 
-    void *map() {
+    void *map()
+    {
       return memory;
     }
-    void retain() {
+    void retain()
+    {
       refcount += 1;
     }
-    void release() {
+    void release()
+    {
       refcount -= 1;
-      if(refcount == 0 && deleter) {
+      if (refcount == 0 && deleter) {
         deleter(userdata, memory);
         deleter = nullptr;
       }
     }
-    Object(ANARIDataType type) : type(type) {
-
-    }
-    ~Object() {
-      if(deleter) {
-       deleter(userdata, memory);
+    Object(ANARIDataType type) : type(type) {}
+    ~Object()
+    {
+      if (deleter) {
+        deleter(userdata, memory);
       }
     }
   };
 
   std::vector<std::unique_ptr<Object>> objects;
 
-  template<typename T>
-  T nextHandle() {
+  template <typename T>
+  T nextHandle()
+  {
     uintptr_t next = objects.size();
     objects.emplace_back(new Object(ANARITypeFor<T>::value));
     return reinterpret_cast<T>(next);
   }
 
-  template<typename T>
-  Object* getObject(T handle) {
+  template <typename T>
+  Object *getObject(T handle)
+  {
     uintptr_t index = reinterpret_cast<uintptr_t>(handle);
-    if(index < objects.size()) {
+    if (index < objects.size()) {
       return objects[index].get();
     } else {
       return nullptr;

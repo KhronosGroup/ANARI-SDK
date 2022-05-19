@@ -17,7 +17,7 @@ namespace example_device {
 
 struct Object;
 
-struct EXAMPLE_DEVICE_INTERFACE ExampleDevice : public Device,
+struct EXAMPLE_DEVICE_INTERFACE ExampleDevice : public DeviceImpl,
                                                 public RefCounted,
                                                 public ParameterizedObject
 {

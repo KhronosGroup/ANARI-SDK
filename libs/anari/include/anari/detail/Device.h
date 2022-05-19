@@ -29,7 +29,7 @@ inline B *allocate_object(Args... args)
   return new T(args...);
 }
 
-struct ANARI_INTERFACE Device
+struct ANARI_INTERFACE DeviceImpl
 {
   /////////////////////////////////////////////////////////////////////////////
   // Main virtual interface to accepting API calls
@@ -161,12 +161,8 @@ struct ANARI_INTERFACE Device
   // Helper/other functions and data members
   /////////////////////////////////////////////////////////////////////////////
 
-  Device() = default;
-  virtual ~Device() = default;
-
-  static Device *createDevice(const char *type,
-      ANARIStatusCallback defaultStatusCB = nullptr,
-      void *defaultStatusCBUserPtr = nullptr);
+  DeviceImpl() = default;
+  virtual ~DeviceImpl() = default;
 
   ANARIDevice this_device() const;
 
@@ -181,6 +177,6 @@ struct ANARI_INTERFACE Device
   void *m_defaultStatusCBUserPtr{nullptr};
 };
 
-ANARI_TYPEFOR_SPECIALIZATION(Device *, ANARI_DEVICE);
+ANARI_TYPEFOR_SPECIALIZATION(DeviceImpl *, ANARI_DEVICE);
 
 } // namespace anari

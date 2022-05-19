@@ -10,33 +10,33 @@ namespace anari {
 
 // extension functions ////////////////////////////////////////////////////////
 
-ANARIObject Device::newObject(const char *objectType, const char *type)
+ANARIObject DeviceImpl::newObject(const char *objectType, const char *type)
 {
   return nullptr;
 }
 
-void (*Device::getProcAddress(const char *name))(void)
+void (*DeviceImpl::getProcAddress(const char *name))(void)
 {
   return nullptr;
 }
 
 // Device definitions /////////////////////////////////////////////////////////
 
-ANARIDevice Device::this_device() const
+ANARIDevice DeviceImpl::this_device() const
 {
   return (ANARIDevice)this;
 }
 
-ANARIStatusCallback Device::defaultStatusCallback() const
+ANARIStatusCallback DeviceImpl::defaultStatusCallback() const
 {
   return m_defaultStatusCB;
 }
 
-void *Device::defaultStatusCallbackUserPtr() const
+void *DeviceImpl::defaultStatusCallbackUserPtr() const
 {
   return m_defaultStatusCBUserPtr;
 }
 
-ANARI_TYPEFOR_DEFINITION(Device *);
+ANARI_TYPEFOR_DEFINITION(DeviceImpl *);
 
 } // namespace anari
