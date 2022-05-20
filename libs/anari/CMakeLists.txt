@@ -8,7 +8,7 @@ find_package(Threads REQUIRED)
 add_library(${PROJECT_NAME}
   anari_cpp_std_defs.cpp
   API.cpp
-  Device.cpp
+  DeviceImpl.cpp
   Library.cpp
   anari_cpp_glm_defs.cpp
 )

@@ -5,7 +5,7 @@
 
 #include "anari/detail/IntrusivePtr.h"
 // anari
-#include "anari/detail/Device.h"
+#include "anari/detail/DeviceImpl.h"
 
 #include "anari/type_utility.h"
 
