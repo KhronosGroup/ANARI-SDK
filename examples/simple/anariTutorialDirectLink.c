@@ -11,11 +11,9 @@
 #include <stdint.h>
 #include <stdio.h>
 // anari
-#include "anari/devices/example.h"
+#include "anari/ext/example_device/anariNewExampleDevice.h"
 // stb_image
 #include "stb_image_write.h"
-
-const char *g_moduleType = "example";
 
 void statusFunc(void *userData,
     ANARIDevice device,
@@ -87,12 +85,6 @@ int main(int argc, const char **argv)
   // Here we use the direct function which creates the reference device instead
   // of loading it as a module at runtime.
   ANARIDevice dev = anariNewExampleDevice();
-
-  if (!dev) {
-    printf("\n\nERROR: could not load default device in module %s\n",
-        g_moduleType);
-    return 1;
-  }
 
   ANARIStatusCallback statusFuncPtr = &statusFunc;
   anariSetParameter(

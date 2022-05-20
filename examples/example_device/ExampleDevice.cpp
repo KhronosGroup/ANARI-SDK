@@ -4,7 +4,7 @@
 #include "ExampleDevice.h"
 
 #include "anari/backend/Library.h"
-#include "include/anari/devices/example.h"
+#include "anari/ext/example_device/anariNewExampleDevice.h"
 
 #include "Array.h"
 #include "frame/Frame.h"

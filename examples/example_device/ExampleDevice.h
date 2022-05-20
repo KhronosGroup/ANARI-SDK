@@ -10,7 +10,7 @@
 // std
 #include <vector>
 
-#include "interface.h"
+#include "ExampleDeviceInterface.h"
 
 namespace anari {
 namespace example_device {
