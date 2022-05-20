@@ -5,7 +5,7 @@
 
 #include "anari/anari.h"
 
-#include "../../../interface.h"
+#include "ExampleDeviceInterface.h"
 
 #ifdef __cplusplus
 extern "C" {
