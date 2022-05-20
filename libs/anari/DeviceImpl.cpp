@@ -1,7 +1,7 @@
 ﻿// Copyright 2021 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-#include "anari/detail/Device.h"
+#include "anari/detail/DeviceImpl.h"
 
 #include <algorithm>
 #include <stdexcept>
