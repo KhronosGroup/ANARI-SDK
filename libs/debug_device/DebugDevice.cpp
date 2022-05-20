@@ -4,7 +4,7 @@
 #include "DebugDevice.h"
 
 #include "anari/anari.h"
-#include "anari/detail/Library.h"
+#include "anari/backend/Library.h"
 
 #include "DebugBasics.h"
 

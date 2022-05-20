@@ -5,7 +5,7 @@
 
 #include "anari/detail/IntrusivePtr.h"
 // anari
-#include "anari/detail/DeviceImpl.h"
+#include "anari/backend/DeviceImpl.h"
 
 #include <memory>
 #include <vector>
