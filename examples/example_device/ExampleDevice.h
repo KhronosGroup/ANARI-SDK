@@ -5,7 +5,7 @@
 
 #include "anari/detail/IntrusivePtr.h"
 // anari
-#include "anari/detail/DeviceImpl.h"
+#include "anari/backend/DeviceImpl.h"
 #include "anari/detail/ParameterizedObject.h"
 // std
 #include <vector>

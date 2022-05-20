@@ -4,8 +4,8 @@
 // anari
 #include "anari/anari.h"
 #include "anari/anari_cpp/Traits.h"
-#include "anari/detail/DeviceImpl.h"
-#include "anari/detail/Library.h"
+#include "anari/backend/DeviceImpl.h"
+#include "anari/backend/Library.h"
 #include "anari/ext/anari_ext_interface.h"
 // std
 #include <cstdlib>

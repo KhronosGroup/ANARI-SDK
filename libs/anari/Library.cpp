@@ -1,7 +1,7 @@
 // Copyright 2021 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-#include "anari/detail/Library.h"
+#include "anari/backend/Library.h"
 
 // std
 #ifdef _WIN32
@@ -97,8 +97,8 @@ static void *loadLibrary(
   if(dwRet > MAX_DIRSIZE)
     errorMsg = "library path larger than " + std::to_string(MAX_DIRSIZE) + " characters";
   else if(withAnchor && dwRet == 0)
-    errorMsg = "GetCurrentDirectory() failed for unknown reason";  
-  else 
+    errorMsg = "GetCurrentDirectory() failed for unknown reason";
+  else
   {
     SetCurrentDirectory(libLocation.c_str());
 
