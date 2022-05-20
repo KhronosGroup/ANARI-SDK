@@ -3,7 +3,7 @@
 
 #include "catch.hpp"
 
-#include "anari/detail/IntrusivePtr.h"
+#include "anari/backend/utilities/IntrusivePtr.h"
 
 using anari::RefCounted;
 using anari::RefType;

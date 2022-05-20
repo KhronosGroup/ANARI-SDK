@@ -3,7 +3,7 @@
 
 #include "catch.hpp"
 
-#include "anari/detail/ParameterizedObject.h"
+#include "anari/backend/utilities/ParameterizedObject.h"
 
 using anari::ParameterizedObject;
 

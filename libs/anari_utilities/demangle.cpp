@@ -1,7 +1,7 @@
 // Copyright 2021 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-#include "anari/detail/demangle.h"
+#include "anari/backend/utilities/demangle.h"
 
 #ifdef __GNUG__
 #include <cxxabi.h>

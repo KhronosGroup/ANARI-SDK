@@ -3,7 +3,7 @@
 
 #include "catch.hpp"
 
-#include "anari/detail/Optional.h"
+#include "anari/backend/utilities/Optional.h"
 
 using anari::Optional;
 

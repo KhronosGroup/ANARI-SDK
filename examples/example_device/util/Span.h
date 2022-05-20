@@ -3,4 +3,4 @@
 
 #pragma once
 
-#include "anari/detail/Span.h"
+#include "anari/backend/utilities/Span.h"

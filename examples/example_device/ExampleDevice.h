@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include "anari/detail/IntrusivePtr.h"
+#include "anari/backend/utilities/IntrusivePtr.h"
 // anari
 #include "anari/backend/DeviceImpl.h"
-#include "anari/detail/ParameterizedObject.h"
+#include "anari/backend/utilities/ParameterizedObject.h"
 // std
 #include <vector>
 

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "anari/detail/IntrusivePtr.h"
+#include "anari/backend/utilities/IntrusivePtr.h"
 // anari
 #include "anari/backend/DeviceImpl.h"
 

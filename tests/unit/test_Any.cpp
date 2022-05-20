@@ -3,7 +3,7 @@
 
 #include "catch.hpp"
 
-#include "anari/detail/Any.h"
+#include "anari/backend/utilities/Any.h"
 
 using namespace anari;
 

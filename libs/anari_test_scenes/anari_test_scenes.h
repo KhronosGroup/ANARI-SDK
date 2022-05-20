@@ -5,7 +5,7 @@
 
 // anari
 #include "anari/anari_cpp.hpp"
-#include "anari/detail/Any.h"
+#include "anari/backend/utilities/Any.h"
 // anari-glm
 #include "anari/anari_cpp/ext/glm.h"
 // std

@@ -6,7 +6,7 @@
 #include "../anari_test_scenes.h"
 // anari
 #include "anari/anari_cpp/ext/std.h"
-#include "anari/detail/ParameterizedObject.h"
+#include "anari/backend/utilities/ParameterizedObject.h"
 
 namespace anari {
 namespace scenes {
