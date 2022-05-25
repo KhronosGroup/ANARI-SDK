@@ -1,6 +1,6 @@
 {
     "info" : {
-        "name" : "auxiliary_buffers",
+        "name" : "KHR_AUXILIARY_BUFFERS",
         "type" : "feature",
         "dependencies" : []
     },

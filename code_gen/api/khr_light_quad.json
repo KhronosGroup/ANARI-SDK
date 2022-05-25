@@ -1,0 +1,71 @@
+{
+    "info" : {
+        "name" : "KHR_LIGHT_QUAD",
+        "type" : "feature",
+        "dependencies" : []
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_LIGHT",
+            "name" : "quad",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "color",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : ["color"],
+                    "default" : [1.0, 1.0, 1.0]
+                }, {
+                    "name" : "position",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "default" : [0.0, 0.0, 0.0]
+                }, {
+                    "name" : "edge1",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "default" : [1.0, 0.0, 0.0]
+                }, {
+                    "name" : "edge2",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "default" : [0.0, 1.0, 0.0]
+                }, {
+                    "name" : "intensity",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 1.0
+                }, {
+                    "name" : "power",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : ["canonical"],
+                    "default" : 1.0
+                }, {
+                    "name" : "radiance",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 1.0
+                }, {
+                    "name" : "side",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "default" : "front",
+                    "values" : ["front", "back", "both"]
+                }, {
+                    "name" : "intensityDistribution",
+                    "types" : ["ANARI_ARRAY1D", "ANARI_ARRAY2D"],
+                    "tags" : []
+                }, {
+                    "name" : "visible",
+                    "types" : ["ANARI_BOOL"],
+                    "tags" : [],
+                    "default" : 1
+                }
+            ]
+        }
+    ]
+}

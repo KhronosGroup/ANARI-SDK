@@ -48,8 +48,8 @@ class DebugGenerator:
             self.parameter_index.extend([(obj["type"], name, parameter_list[i]["name"]) for i in range(0, length)])
             offset += length
 
-        self.named_types = list(set([k[0] for k in self.named_objects]))
-        self.subtype_list = list(set([k[1] for k in self.named_objects]))
+        self.named_types = sorted(list(set([k[0] for k in self.named_objects])))
+        self.subtype_list = sorted(list(set([k[1] for k in self.named_objects])))
 
 
     def generate_validation_objects_decl(self, factoryname):
@@ -170,8 +170,9 @@ jsons = [entry for j in args.json for entry in j.glob("**/*.json")]
 device = json.load(args.devicespec)
 print("opened " + device["info"]["type"] + " " + device["info"]["name"])
 
+dependencies = merge_anari.crawl_dependencies(device, jsons)
 #merge all dependencies
-for x in device["info"]["dependencies"]:
+for x in dependencies:
     matches = [p for p in jsons if p.stem == x]
     for m in matches:
         merge_anari.merge(device, json.load(open(m)))

@@ -86,7 +86,7 @@ int main(int argc, const char **argv)
     fprintf(stderr, "specify a library name with -l\n");
     return 0;
   }
-  // Use the 'example' library here, this is where the impl(s) come from
+
   ANARILibrary lib = anariLoadLibrary(libraryName, statusFunc, NULL);
 
   const char **devices = anariGetDeviceSubtypes(lib);

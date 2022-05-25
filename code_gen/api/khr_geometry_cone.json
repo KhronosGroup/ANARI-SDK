@@ -1,0 +1,88 @@
+{
+    "info" : {
+        "name" : "KHR_GEOMETRY_CONE",
+        "type" : "feature",
+        "dependencies" : []
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_GEOMETRY",
+            "name" : "cone",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.color",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.attribute0",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.attribute1",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.attribute2",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.attribute3",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.id",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.position",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : ["required"]
+                }, {
+                    "name" : "vertex.radius",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.cap",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.color",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.attribute0",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.attribute1",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.attribute2",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "vertex.attribute3",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "primitive.index",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "caps",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "default" : "none",
+                    "values" : ["none", "first", "second", "both"]
+
+                }
+            ]
+        }
+    ]
+}

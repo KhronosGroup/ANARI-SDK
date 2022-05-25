@@ -1,0 +1,244 @@
+{
+    "info" : {
+        "name" : "anari_core_objects_base_1_0",
+        "type" : "core",
+        "dependencies" : []
+    },
+
+    "attributes" : [
+        {
+            "name" : "color",
+            "type" : "ANARI_FLOAT32_VEC4"
+        }, {
+            "name" : "worldPosition",
+            "type" : "ANARI_FLOAT32_VEC4"
+        }, {
+            "name" : "worldNormal",
+            "type" : "ANARI_FLOAT32_VEC4"
+        }, {
+            "name" : "objectPosition",
+            "type" : "ANARI_FLOAT32_VEC4"
+        }, {
+            "name" : "objectNormal",
+            "type" : "ANARI_FLOAT32_VEC4"
+        }, {
+            "name" : "attribute0",
+            "type" : "ANARI_FLOAT32_VEC4"
+        }, {
+            "name" : "attribute1",
+            "type" : "ANARI_FLOAT32_VEC4"
+        }, {
+            "name" : "attribute2",
+            "type" : "ANARI_FLOAT32_VEC4"
+        }, {
+            "name" : "attribute3",
+            "type" : "ANARI_FLOAT32_VEC4"
+        }, {
+            "name" : "primitiveId",
+            "type" : "ANARI_UINT64"
+        }
+    ],
+
+    "objects" : [
+        {
+            "type" : "ANARI_DEVICE",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                },                {
+                    "name" : "statusCallback",
+                    "types" : ["ANARI_STATUS_CALLBACK"],
+                    "tags" : []
+                },                {
+                    "name" : "statusCallbackUserData",
+                    "types" : ["ANARI_VOID_POINTER"],
+                    "tags" : []
+                }
+            ]
+        },{
+            "type" : "ANARI_ARRAY1D",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }
+            ]
+        }, {
+            "type" : "ANARI_ARRAY2D",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }
+            ]
+        }, {
+            "type" : "ANARI_ARRAY3D",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }
+            ]
+        }, {
+            "type" : "ANARI_FRAME",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "world",
+                    "types" : ["ANARI_WORLD"],
+                    "tags" : ["required"]
+                }, {
+                    "name" : "renderer",
+                    "types" : ["ANARI_RENDERER"],
+                    "tags" : ["required"]
+                }, {
+                    "name" : "camera",
+                    "types" : ["ANARI_CAMERA"],
+                    "tags" : ["required"]
+                }, {
+                    "name" : "size",
+                    "types" : ["ANARI_UINT32_VEC2"],
+                    "tags" : ["required"]
+                }, {
+                    "name" : "color",
+                    "types" : ["ANARI_DATA_TYPE"],
+                    "tags" : [],
+                    "values" : ["ANARI_UFIXED8_VEC4", "ANARI_UFIXED8_RGBA_SRGB", "ANARI_FLOAT32_VEC4"]
+                }, {
+                    "name" : "depth",
+                    "types" : ["ANARI_DATA_TYPE"],
+                    "tags" : [],
+                    "values" : ["ANARI_FLOAT32"]
+                }
+            ],
+            "properties" : [
+                {
+                    "name" : "duration",
+                    "type" : "ANARI_FLOAT32"
+                }
+            ]
+        }, {
+            "type" : "ANARI_GROUP",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "surface",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "volume",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "light",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }
+            ],
+            "properties" : [
+                {
+                    "name" : "bounds",
+                    "type" : "ANARI_FLOAT32_BOX3"
+                }
+            ]
+        }, {
+            "type" : "ANARI_INSTANCE",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "transform",
+                    "types" : ["ANARI_FLOAT32_MAT3x4"],
+                    "tags" : [],
+                    "default" : [
+                        1.0, 0.0, 0.0,
+                        0.0, 1.0, 0.0,
+                        0.0, 0.0, 1.0,
+                        0.0, 0.0, 0.0
+                    ]
+                }, {
+                    "name" : "group",
+                    "types" : ["ANARI_GROUP"],
+                    "tags" : ["required"]
+                }
+            ],
+            "properties" : [
+                {
+                    "name" : "bounds",
+                    "type" : "ANARI_FLOAT32_BOX3"
+                }
+            ]
+        }, {
+            "type" : "ANARI_WORLD",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "instance",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "surface",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "volume",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "light",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }
+            ],
+            "properties" : [
+                {
+                    "name" : "bounds",
+                    "type" : "ANARI_FLOAT32_BOX3"
+                }
+            ]
+        }, {
+            "type" : "ANARI_RENDERER",
+            "name" : "default",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }
+            ]
+        }, {
+            "type" : "ANARI_SURFACE",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "geometry",
+                    "types" : ["ANARI_GEOMETRY"],
+                    "tags" : ["required"]
+                }, {
+                    "name" : "material",
+                    "types" : ["ANARI_MATERIAL"],
+                    "tags" : ["required"]
+                }
+            ]
+        }
+    ]
+}

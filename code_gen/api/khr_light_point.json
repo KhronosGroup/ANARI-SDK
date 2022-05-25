@@ -1,0 +1,41 @@
+{
+    "info" : {
+        "name" : "KHR_LIGHT_POINT",
+        "type" : "feature",
+        "dependencies" : []
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_LIGHT",
+            "name" : "point",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "color",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "default" : [1.0, 1.0, 1.0]
+                }, {
+                    "name" : "position",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "default" : [0.0, 0.0, 0.0]
+                }, {
+                    "name" : "intensity",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 1.0
+                }, {
+                    "name" : "power",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : ["canonical"],
+                    "default" : 1.0
+                }
+            ]
+        }
+    ]
+}

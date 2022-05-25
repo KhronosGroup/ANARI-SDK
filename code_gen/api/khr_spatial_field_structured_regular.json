@@ -1,0 +1,41 @@
+{
+    "info" : {
+        "name" : "KHR_SPATIAL_FIELD_STRUCTURED_REGULAR",
+        "type" : "feature",
+        "dependencies" : []
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_SPATIAL_FIELD",
+            "name" : "structuredRegular",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "data",
+                    "types" : ["ANARI_ARRAY3D"],
+                    "tags" : ["required"]
+                }, {
+                    "name" : "origin",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "default" : [0.0, 0.0, 0.0]
+                }, {
+                    "name" : "spacing",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "default" : [1.0, 1.0, 1.0]
+                }, {
+                    "name" : "filter",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "default" : "nearest",
+                    "values" : ["nearest", "linear"]
+                }
+            ]
+        }
+    ]
+}

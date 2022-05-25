@@ -1,0 +1,82 @@
+{
+    "info" : {
+        "name" : "KHR_CAMERA_PERSPECTIVE",
+        "type" : "feature",
+        "dependencies" : []
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_CAMERA",
+            "name" : "perspective",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "position",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "default" : [0.0, 0.0, 0.0]
+                }, {
+                    "name" : "direction",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "default" : [0.0, 0.0, -1.0]
+                }, {
+                    "name" : "up",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "default" : [0.0, 1.0, 0.0]
+                }, {
+                    "name" : "transform",
+                    "types" : ["ANARI_FLOAT32_MAT3x4"],
+                    "tags" : [],
+                    "default" : [
+                        1.0, 0.0, 0.0,
+                        0.0, 1.0, 0.0,
+                        0.0, 0.0, 1.0,
+                        0.0, 0.0, 0.0
+                    ]
+                }, {
+                    "name" : "imageRegion",
+                    "types" : ["ANARI_FLOAT32_BOX2"],
+                    "tags" : [],
+                    "default" : [0.0, 0.0, 1.0, 1.0]
+                }, {
+                    "name" : "apertureRadius",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : ["canonical"],
+                    "default" : 0
+                }, {
+                    "name" : "focusDistance",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : ["canonical"],
+                    "default" : 1
+                }, {
+                    "name" : "stereoMode",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "default" : "none",
+                    "values" : ["none", "left", "right", "sideBySide", "topBottom"]
+                }, {
+                    "name" : "interpupillaryDistance",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 0.0635
+                }, {
+                    "name" : "fovy",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 1.0471975512
+                }, {
+                    "name" : "aspect",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 1.0
+                }
+            ]
+        }
+    ]
+}

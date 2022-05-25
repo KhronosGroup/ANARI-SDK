@@ -34,8 +34,8 @@ namespace debug_device {
 namespace {
 class device : public DebugObject<ANARI_DEVICE> {
    static int param_hash(const char *str) {
-      static const uint32_t table[] = {0x62610001u,0x6e6d0002u,0x66650003u,0x1000004u,0x80000000u};
-      uint32_t cur = 0x6f6e0000u;
+      static const uint32_t table[] = {0x62610006u,0x0u,0x0u,0x0u,0x0u,0x7574000au,0x6e6d0007u,0x66650008u,0x1000009u,0x80000000u,0x6261000bu,0x7574000cu,0x7675000du,0x7473000eu,0x4443000fu,0x62610010u,0x6d6c0011u,0x6d6c0012u,0x63620013u,0x62610014u,0x64630015u,0x6c6b0016u,0x56000017u,0x80000001u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x7473006du,0x6665006eu,0x7372006fu,0x45440070u,0x62610071u,0x75740072u,0x62610073u,0x1000074u,0x80000002u};
+      uint32_t cur = 0x746e0000u;
       for(int i = 0;cur!=0;++i) {
          uint32_t idx = cur&0xFFFFu;
          uint32_t low = (cur>>16u)&0xFFu;
@@ -64,6 +64,16 @@ class device : public DebugObject<ANARI_DEVICE> {
          case 0: { //name
             ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
             check_type(ANARI_DEVICE, "", paramname, paramtype, name_types);
+            return;
+         }
+         case 1: { //statusCallback
+            ANARIDataType statusCallback_types[] = {ANARI_STATUS_CALLBACK, ANARI_UNKNOWN};
+            check_type(ANARI_DEVICE, "", paramname, paramtype, statusCallback_types);
+            return;
+         }
+         case 2: { //statusCallbackUserData
+            ANARIDataType statusCallbackUserData_types[] = {ANARI_VOID_POINTER, ANARI_UNKNOWN};
+            check_type(ANARI_DEVICE, "", paramname, paramtype, statusCallbackUserData_types);
             return;
          }
          default: // unknown param
@@ -202,6 +212,1646 @@ class array3d : public ArrayDebugObject<ANARI_ARRAY3D> {
    }
    void commit() {
       ArrayDebugObject::commit();
+   }
+};
+class frame : public DebugObject<ANARI_FRAME> {
+   static int param_hash(const char *str) {
+      static const uint32_t table[] = {0x70610015u,0x6665002du,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x62610032u,0x0u,0x0u,0x0u,0x66650036u,0x6a69003eu,0x0u,0x0u,0x0u,0x706f0042u,0x6e6d0024u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6d6c0029u,0x66650025u,0x73720026u,0x62610027u,0x1000028u,0x80000003u,0x706f002au,0x7372002bu,0x100002cu,0x80000005u,0x7170002eu,0x7574002fu,0x69680030u,0x1000031u,0x80000006u,0x6e6d0033u,0x66650034u,0x1000035u,0x80000000u,0x6f6e0037u,0x65640038u,0x66650039u,0x7372003au,0x6665003bu,0x7372003cu,0x100003du,0x80000002u,0x7b7a003fu,0x66650040u,0x1000041u,0x80000004u,0x73720043u,0x6d6c0044u,0x65640045u,0x1000046u,0x80000001u};
+      uint32_t cur = 0x78630000u;
+      for(int i = 0;cur!=0;++i) {
+         uint32_t idx = cur&0xFFFFu;
+         uint32_t low = (cur>>16u)&0xFFu;
+         uint32_t high = (cur>>24u)&0xFFu;
+         uint32_t c = str[i];
+         if(c>=low && c<high) {
+            cur = table[idx+c-low];
+         } else {
+            break;
+         }
+         if(cur&0x80000000u) {
+            return cur&0xFFFFu;
+         }
+         if(str[i]==0) {
+            break;
+         }
+      }
+      return -1;
+   }
+   public:
+   frame(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
+      DebugObject::setParameter(paramname, paramtype, mem);
+      int idx = param_hash(paramname);
+      switch(idx) {
+         case 0: { //name
+            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_FRAME, "", paramname, paramtype, name_types);
+            return;
+         }
+         case 1: { //world
+            ANARIDataType world_types[] = {ANARI_WORLD, ANARI_UNKNOWN};
+            check_type(ANARI_FRAME, "", paramname, paramtype, world_types);
+            return;
+         }
+         case 2: { //renderer
+            ANARIDataType renderer_types[] = {ANARI_RENDERER, ANARI_UNKNOWN};
+            check_type(ANARI_FRAME, "", paramname, paramtype, renderer_types);
+            return;
+         }
+         case 3: { //camera
+            ANARIDataType camera_types[] = {ANARI_CAMERA, ANARI_UNKNOWN};
+            check_type(ANARI_FRAME, "", paramname, paramtype, camera_types);
+            return;
+         }
+         case 4: { //size
+            ANARIDataType size_types[] = {ANARI_UINT32_VEC2, ANARI_UNKNOWN};
+            check_type(ANARI_FRAME, "", paramname, paramtype, size_types);
+            return;
+         }
+         case 5: { //color
+            ANARIDataType color_types[] = {ANARI_DATA_TYPE, ANARI_UNKNOWN};
+            check_type(ANARI_FRAME, "", paramname, paramtype, color_types);
+            return;
+         }
+         case 6: { //depth
+            ANARIDataType depth_types[] = {ANARI_DATA_TYPE, ANARI_UNKNOWN};
+            check_type(ANARI_FRAME, "", paramname, paramtype, depth_types);
+            return;
+         }
+         default: // unknown param
+            unknown_parameter(ANARI_FRAME, "", paramname, paramtype);
+            return;
+      }
+   }
+   void commit() {
+      DebugObject::commit();
+   }
+};
+class group : public DebugObject<ANARI_GROUP> {
+   static int param_hash(const char *str) {
+      static const uint32_t table[] = {0x6a69000bu,0x0u,0x62610010u,0x0u,0x0u,0x0u,0x0u,0x76750014u,0x0u,0x0u,0x706f001bu,0x6867000cu,0x6968000du,0x7574000eu,0x100000fu,0x80000003u,0x6e6d0011u,0x66650012u,0x1000013u,0x80000000u,0x73720015u,0x67660016u,0x62610017u,0x64630018u,0x66650019u,0x100001au,0x80000001u,0x6d6c001cu,0x7675001du,0x6e6d001eu,0x6665001fu,0x1000020u,0x80000002u};
+      uint32_t cur = 0x776c0000u;
+      for(int i = 0;cur!=0;++i) {
+         uint32_t idx = cur&0xFFFFu;
+         uint32_t low = (cur>>16u)&0xFFu;
+         uint32_t high = (cur>>24u)&0xFFu;
+         uint32_t c = str[i];
+         if(c>=low && c<high) {
+            cur = table[idx+c-low];
+         } else {
+            break;
+         }
+         if(cur&0x80000000u) {
+            return cur&0xFFFFu;
+         }
+         if(str[i]==0) {
+            break;
+         }
+      }
+      return -1;
+   }
+   public:
+   group(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
+      DebugObject::setParameter(paramname, paramtype, mem);
+      int idx = param_hash(paramname);
+      switch(idx) {
+         case 0: { //name
+            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_GROUP, "", paramname, paramtype, name_types);
+            return;
+         }
+         case 1: { //surface
+            ANARIDataType surface_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GROUP, "", paramname, paramtype, surface_types);
+            return;
+         }
+         case 2: { //volume
+            ANARIDataType volume_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GROUP, "", paramname, paramtype, volume_types);
+            return;
+         }
+         case 3: { //light
+            ANARIDataType light_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GROUP, "", paramname, paramtype, light_types);
+            return;
+         }
+         default: // unknown param
+            unknown_parameter(ANARI_GROUP, "", paramname, paramtype);
+            return;
+      }
+   }
+   void commit() {
+      DebugObject::commit();
+   }
+};
+class instance : public DebugObject<ANARI_INSTANCE> {
+   static int param_hash(const char *str) {
+      static const uint32_t table[] = {0x7372000eu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x62610013u,0x0u,0x0u,0x0u,0x0u,0x0u,0x73720017u,0x706f000fu,0x76750010u,0x71700011u,0x1000012u,0x80000002u,0x6e6d0014u,0x66650015u,0x1000016u,0x80000000u,0x62610018u,0x6f6e0019u,0x7473001au,0x6766001bu,0x706f001cu,0x7372001du,0x6e6d001eu,0x100001fu,0x80000001u};
+      uint32_t cur = 0x75670000u;
+      for(int i = 0;cur!=0;++i) {
+         uint32_t idx = cur&0xFFFFu;
+         uint32_t low = (cur>>16u)&0xFFu;
+         uint32_t high = (cur>>24u)&0xFFu;
+         uint32_t c = str[i];
+         if(c>=low && c<high) {
+            cur = table[idx+c-low];
+         } else {
+            break;
+         }
+         if(cur&0x80000000u) {
+            return cur&0xFFFFu;
+         }
+         if(str[i]==0) {
+            break;
+         }
+      }
+      return -1;
+   }
+   public:
+   instance(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
+      DebugObject::setParameter(paramname, paramtype, mem);
+      int idx = param_hash(paramname);
+      switch(idx) {
+         case 0: { //name
+            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_INSTANCE, "", paramname, paramtype, name_types);
+            return;
+         }
+         case 1: { //transform
+            ANARIDataType transform_types[] = {ANARI_FLOAT32_MAT3x4, ANARI_UNKNOWN};
+            check_type(ANARI_INSTANCE, "", paramname, paramtype, transform_types);
+            return;
+         }
+         case 2: { //group
+            ANARIDataType group_types[] = {ANARI_GROUP, ANARI_UNKNOWN};
+            check_type(ANARI_INSTANCE, "", paramname, paramtype, group_types);
+            return;
+         }
+         default: // unknown param
+            unknown_parameter(ANARI_INSTANCE, "", paramname, paramtype);
+            return;
+      }
+   }
+   void commit() {
+      DebugObject::commit();
+   }
+};
+class world : public DebugObject<ANARI_WORLD> {
+   static int param_hash(const char *str) {
+      static const uint32_t table[] = {0x6f6e000eu,0x0u,0x0u,0x6a690016u,0x0u,0x6261001bu,0x0u,0x0u,0x0u,0x0u,0x7675001fu,0x0u,0x0u,0x706f0026u,0x7473000fu,0x75740010u,0x62610011u,0x6f6e0012u,0x64630013u,0x66650014u,0x1000015u,0x80000001u,0x68670017u,0x69680018u,0x75740019u,0x100001au,0x80000004u,0x6e6d001cu,0x6665001du,0x100001eu,0x80000000u,0x73720020u,0x67660021u,0x62610022u,0x64630023u,0x66650024u,0x1000025u,0x80000002u,0x6d6c0027u,0x76750028u,0x6e6d0029u,0x6665002au,0x100002bu,0x80000003u};
+      uint32_t cur = 0x77690000u;
+      for(int i = 0;cur!=0;++i) {
+         uint32_t idx = cur&0xFFFFu;
+         uint32_t low = (cur>>16u)&0xFFu;
+         uint32_t high = (cur>>24u)&0xFFu;
+         uint32_t c = str[i];
+         if(c>=low && c<high) {
+            cur = table[idx+c-low];
+         } else {
+            break;
+         }
+         if(cur&0x80000000u) {
+            return cur&0xFFFFu;
+         }
+         if(str[i]==0) {
+            break;
+         }
+      }
+      return -1;
+   }
+   public:
+   world(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
+      DebugObject::setParameter(paramname, paramtype, mem);
+      int idx = param_hash(paramname);
+      switch(idx) {
+         case 0: { //name
+            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_WORLD, "", paramname, paramtype, name_types);
+            return;
+         }
+         case 1: { //instance
+            ANARIDataType instance_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_WORLD, "", paramname, paramtype, instance_types);
+            return;
+         }
+         case 2: { //surface
+            ANARIDataType surface_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_WORLD, "", paramname, paramtype, surface_types);
+            return;
+         }
+         case 3: { //volume
+            ANARIDataType volume_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_WORLD, "", paramname, paramtype, volume_types);
+            return;
+         }
+         case 4: { //light
+            ANARIDataType light_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_WORLD, "", paramname, paramtype, light_types);
+            return;
+         }
+         default: // unknown param
+            unknown_parameter(ANARI_WORLD, "", paramname, paramtype);
+            return;
+      }
+   }
+   void commit() {
+      DebugObject::commit();
+   }
+};
+class renderer_default : public DebugObject<ANARI_RENDERER> {
+   static int param_hash(const char *str) {
+      static const uint32_t table[] = {0x62610001u,0x6e6d0002u,0x66650003u,0x1000004u,0x80000000u};
+      uint32_t cur = 0x6f6e0000u;
+      for(int i = 0;cur!=0;++i) {
+         uint32_t idx = cur&0xFFFFu;
+         uint32_t low = (cur>>16u)&0xFFu;
+         uint32_t high = (cur>>24u)&0xFFu;
+         uint32_t c = str[i];
+         if(c>=low && c<high) {
+            cur = table[idx+c-low];
+         } else {
+            break;
+         }
+         if(cur&0x80000000u) {
+            return cur&0xFFFFu;
+         }
+         if(str[i]==0) {
+            break;
+         }
+      }
+      return -1;
+   }
+   public:
+   renderer_default(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
+      DebugObject::setParameter(paramname, paramtype, mem);
+      int idx = param_hash(paramname);
+      switch(idx) {
+         case 0: { //name
+            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_RENDERER, "default", paramname, paramtype, name_types);
+            return;
+         }
+         default: // unknown param
+            unknown_parameter(ANARI_RENDERER, "default", paramname, paramtype);
+            return;
+      }
+   }
+   void commit() {
+      DebugObject::commit();
+   }
+};
+class surface : public DebugObject<ANARI_SURFACE> {
+   static int param_hash(const char *str) {
+      static const uint32_t table[] = {0x66650008u,0x0u,0x0u,0x0u,0x0u,0x0u,0x62610010u,0x62610018u,0x706f0009u,0x6e6d000au,0x6665000bu,0x7574000cu,0x7372000du,0x7a79000eu,0x100000fu,0x80000001u,0x75740011u,0x66650012u,0x73720013u,0x6a690014u,0x62610015u,0x6d6c0016u,0x1000017u,0x80000002u,0x6e6d0019u,0x6665001au,0x100001bu,0x80000000u};
+      uint32_t cur = 0x6f670000u;
+      for(int i = 0;cur!=0;++i) {
+         uint32_t idx = cur&0xFFFFu;
+         uint32_t low = (cur>>16u)&0xFFu;
+         uint32_t high = (cur>>24u)&0xFFu;
+         uint32_t c = str[i];
+         if(c>=low && c<high) {
+            cur = table[idx+c-low];
+         } else {
+            break;
+         }
+         if(cur&0x80000000u) {
+            return cur&0xFFFFu;
+         }
+         if(str[i]==0) {
+            break;
+         }
+      }
+      return -1;
+   }
+   public:
+   surface(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
+      DebugObject::setParameter(paramname, paramtype, mem);
+      int idx = param_hash(paramname);
+      switch(idx) {
+         case 0: { //name
+            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_SURFACE, "", paramname, paramtype, name_types);
+            return;
+         }
+         case 1: { //geometry
+            ANARIDataType geometry_types[] = {ANARI_GEOMETRY, ANARI_UNKNOWN};
+            check_type(ANARI_SURFACE, "", paramname, paramtype, geometry_types);
+            return;
+         }
+         case 2: { //material
+            ANARIDataType material_types[] = {ANARI_MATERIAL, ANARI_UNKNOWN};
+            check_type(ANARI_SURFACE, "", paramname, paramtype, material_types);
+            return;
+         }
+         default: // unknown param
+            unknown_parameter(ANARI_SURFACE, "", paramname, paramtype);
+            return;
+      }
+   }
+   void commit() {
+      DebugObject::commit();
+   }
+};
+class camera_omnidirectional : public DebugObject<ANARI_CAMERA> {
+   static int param_hash(const char *str) {
+      static const uint32_t table[] = {0x71700015u,0x0u,0x0u,0x6a690023u,0x0u,0x706f002cu,0x0u,0x0u,0x6f6d0039u,0x0u,0x0u,0x6261005au,0x0u,0x62610060u,0x0u,0x706f0064u,0x0u,0x0u,0x7574006cu,0x73720076u,0x7170007fu,0x66650016u,0x73720017u,0x75740018u,0x76750019u,0x7372001au,0x6665001bu,0x5352001cu,0x6261001du,0x6564001eu,0x6a69001fu,0x76750020u,0x74730021u,0x1000022u,0x80000006u,0x73720024u,0x66650025u,0x64630026u,0x75740027u,0x6a690028u,0x706f0029u,0x6f6e002au,0x100002bu,0x80000002u,0x6463002du,0x7675002eu,0x7473002fu,0x45440030u,0x6a690031u,0x74730032u,0x75740033u,0x62610034u,0x6f6e0035u,0x64630036u,0x66650037u,0x1000038u,0x80000007u,0x6261003bu,0x75740045u,0x6867003cu,0x6665003du,0x5352003eu,0x6665003fu,0x68670040u,0x6a690041u,0x706f0042u,0x6f6e0043u,0x1000044u,0x80000005u,0x66650046u,0x73720047u,0x71700048u,0x76750049u,0x7170004au,0x6a69004bu,0x6d6c004cu,0x6d6c004du,0x6261004eu,0x7372004fu,0x7a790050u,0x45440051u,0x6a690052u,0x74730053u,0x75740054u,0x62610055u,0x6f6e0056u,0x64630057u,0x66650058u,0x1000059u,0x80000009u,0x7a79005bu,0x706f005cu,0x7675005du,0x7574005eu,0x100005fu,0x8000000au,0x6e6d0061u,0x66650062u,0x1000063u,0x80000000u,0x74730065u,0x6a690066u,0x75740067u,0x6a690068u,0x706f0069u,0x6f6e006au,0x100006bu,0x80000001u,0x6665006du,0x7372006eu,0x6665006fu,0x706f0070u,0x4e4d0071u,0x706f0072u,0x65640073u,0x66650074u,0x1000075u,0x80000008u,0x62610077u,0x6f6e0078u,0x74730079u,0x6766007au,0x706f007bu,0x7372007cu,0x6e6d007du,0x100007eu,0x80000004u,0x1000080u,0x80000003u};
+      uint32_t cur = 0x76610000u;
+      for(int i = 0;cur!=0;++i) {
+         uint32_t idx = cur&0xFFFFu;
+         uint32_t low = (cur>>16u)&0xFFu;
+         uint32_t high = (cur>>24u)&0xFFu;
+         uint32_t c = str[i];
+         if(c>=low && c<high) {
+            cur = table[idx+c-low];
+         } else {
+            break;
+         }
+         if(cur&0x80000000u) {
+            return cur&0xFFFFu;
+         }
+         if(str[i]==0) {
+            break;
+         }
+      }
+      return -1;
+   }
+   public:
+   camera_omnidirectional(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
+      DebugObject::setParameter(paramname, paramtype, mem);
+      int idx = param_hash(paramname);
+      switch(idx) {
+         case 0: { //name
+            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_CAMERA, "omnidirectional", paramname, paramtype, name_types);
+            return;
+         }
+         case 1: { //position
+            ANARIDataType position_types[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
+            check_type(ANARI_CAMERA, "omnidirectional", paramname, paramtype, position_types);
+            return;
+         }
+         case 2: { //direction
+            ANARIDataType direction_types[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
+            check_type(ANARI_CAMERA, "omnidirectional", paramname, paramtype, direction_types);
+            return;
+         }
+         case 3: { //up
+            ANARIDataType up_types[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
+            check_type(ANARI_CAMERA, "omnidirectional", paramname, paramtype, up_types);
+            return;
+         }
+         case 4: { //transform
+            ANARIDataType transform_types[] = {ANARI_FLOAT32_MAT3x4, ANARI_UNKNOWN};
+            check_type(ANARI_CAMERA, "omnidirectional", paramname, paramtype, transform_types);
+            return;
+         }
+         case 5: { //imageRegion
+            ANARIDataType imageRegion_types[] = {ANARI_FLOAT32_BOX2, ANARI_UNKNOWN};
+            check_type(ANARI_CAMERA, "omnidirectional", paramname, paramtype, imageRegion_types);
+            return;
+         }
+         case 6: { //apertureRadius
+            ANARIDataType apertureRadius_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
+            check_type(ANARI_CAMERA, "omnidirectional", paramname, paramtype, apertureRadius_types);
+            return;
+         }
+         case 7: { //focusDistance
+            ANARIDataType focusDistance_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
+            check_type(ANARI_CAMERA, "omnidirectional", paramname, paramtype, focusDistance_types);
+            return;
+         }
+         case 8: { //stereoMode
+            ANARIDataType stereoMode_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_CAMERA, "omnidirectional", paramname, paramtype, stereoMode_types);
+            return;
+         }
+         case 9: { //interpupillaryDistance
+            ANARIDataType interpupillaryDistance_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
+            check_type(ANARI_CAMERA, "omnidirectional", paramname, paramtype, interpupillaryDistance_types);
+            return;
+         }
+         case 10: { //layout
+            ANARIDataType layout_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_CAMERA, "omnidirectional", paramname, paramtype, layout_types);
+            return;
+         }
+         default: // unknown param
+            unknown_parameter(ANARI_CAMERA, "omnidirectional", paramname, paramtype);
+            return;
+      }
+   }
+   void commit() {
+      DebugObject::commit();
+   }
+};
+class camera_orthographic : public DebugObject<ANARI_CAMERA> {
+   static int param_hash(const char *str) {
+      static const uint32_t table[] = {0x74700015u,0x0u,0x0u,0x6a69002bu,0x0u,0x706f0034u,0x0u,0x0u,0x6f6d0041u,0x0u,0x0u,0x0u,0x0u,0x62610062u,0x0u,0x706f0066u,0x0u,0x0u,0x7574006eu,0x73720078u,0x71700081u,0x66650019u,0x0u,0x0u,0x71700026u,0x7372001au,0x7574001bu,0x7675001cu,0x7372001du,0x6665001eu,0x5352001fu,0x62610020u,0x65640021u,0x6a690022u,0x76750023u,0x74730024u,0x1000025u,0x80000006u,0x66650027u,0x64630028u,0x75740029u,0x100002au,0x8000000au,0x7372002cu,0x6665002du,0x6463002eu,0x7574002fu,0x6a690030u,0x706f0031u,0x6f6e0032u,0x1000033u,0x80000002u,0x64630035u,0x76750036u,0x74730037u,0x45440038u,0x6a690039u,0x7473003au,0x7574003bu,0x6261003cu,0x6f6e003du,0x6463003eu,0x6665003fu,0x1000040u,0x80000007u,0x62610043u,0x7574004du,0x68670044u,0x66650045u,0x53520046u,0x66650047u,0x68670048u,0x6a690049u,0x706f004au,0x6f6e004bu,0x100004cu,0x80000005u,0x6665004eu,0x7372004fu,0x71700050u,0x76750051u,0x71700052u,0x6a690053u,0x6d6c0054u,0x6d6c0055u,0x62610056u,0x73720057u,0x7a790058u,0x45440059u,0x6a69005au,0x7473005bu,0x7574005cu,0x6261005du,0x6f6e005eu,0x6463005fu,0x66650060u,0x1000061u,0x80000009u,0x6e6d0063u,0x66650064u,0x1000065u,0x80000000u,0x74730067u,0x6a690068u,0x75740069u,0x6a69006au,0x706f006bu,0x6f6e006cu,0x100006du,0x80000001u,0x6665006fu,0x73720070u,0x66650071u,0x706f0072u,0x4e4d0073u,0x706f0074u,0x65640075u,0x66650076u,0x1000077u,0x80000008u,0x62610079u,0x6f6e007au,0x7473007bu,0x6766007cu,0x706f007du,0x7372007eu,0x6e6d007fu,0x1000080u,0x80000004u,0x1000082u,0x80000003u};
+      uint32_t cur = 0x76610000u;
+      for(int i = 0;cur!=0;++i) {
+         uint32_t idx = cur&0xFFFFu;
+         uint32_t low = (cur>>16u)&0xFFu;
+         uint32_t high = (cur>>24u)&0xFFu;
+         uint32_t c = str[i];
+         if(c>=low && c<high) {
+            cur = table[idx+c-low];
+         } else {
+            break;
+         }
+         if(cur&0x80000000u) {
+            return cur&0xFFFFu;
+         }
+         if(str[i]==0) {
+            break;
+         }
+      }
+      return -1;
+   }
+   public:
+   camera_orthographic(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
+      DebugObject::setParameter(paramname, paramtype, mem);
+      int idx = param_hash(paramname);
+      switch(idx) {
+         case 0: { //name
+            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_CAMERA, "orthographic", paramname, paramtype, name_types);
+            return;
+         }
+         case 1: { //position
+            ANARIDataType position_types[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
+            check_type(ANARI_CAMERA, "orthographic", paramname, paramtype, position_types);
+            return;
+         }
+         case 2: { //direction
+            ANARIDataType direction_types[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
+            check_type(ANARI_CAMERA, "orthographic", paramname, paramtype, direction_types);
+            return;
+         }
+         case 3: { //up
+            ANARIDataType up_types[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
+            check_type(ANARI_CAMERA, "orthographic", paramname, paramtype, up_types);
+            return;
+         }
+         case 4: { //transform
+            ANARIDataType transform_types[] = {ANARI_FLOAT32_MAT3x4, ANARI_UNKNOWN};
+            check_type(ANARI_CAMERA, "orthographic", paramname, paramtype, transform_types);
+            return;
+         }
+         case 5: { //imageRegion
+            ANARIDataType imageRegion_types[] = {ANARI_FLOAT32_BOX2, ANARI_UNKNOWN};
+            check_type(ANARI_CAMERA, "orthographic", paramname, paramtype, imageRegion_types);
+            return;
+         }
+         case 6: { //apertureRadius
+            ANARIDataType apertureRadius_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
+            check_type(ANARI_CAMERA, "orthographic", paramname, paramtype, apertureRadius_types);
+            return;
+         }
+         case 7: { //focusDistance
+            ANARIDataType focusDistance_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
+            check_type(ANARI_CAMERA, "orthographic", paramname, paramtype, focusDistance_types);
+            return;
+         }
+         case 8: { //stereoMode
+            ANARIDataType stereoMode_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_CAMERA, "orthographic", paramname, paramtype, stereoMode_types);
+            return;
+         }
+         case 9: { //interpupillaryDistance
+            ANARIDataType interpupillaryDistance_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
+            check_type(ANARI_CAMERA, "orthographic", paramname, paramtype, interpupillaryDistance_types);
+            return;
+         }
+         case 10: { //aspect
+            ANARIDataType aspect_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
+            check_type(ANARI_CAMERA, "orthographic", paramname, paramtype, aspect_types);
+            return;
+         }
+         default: // unknown param
+            unknown_parameter(ANARI_CAMERA, "orthographic", paramname, paramtype);
+            return;
+      }
+   }
+   void commit() {
+      DebugObject::commit();
+   }
+};
+class camera_perspective : public DebugObject<ANARI_CAMERA> {
+   static int param_hash(const char *str) {
+      static const uint32_t table[] = {0x74700015u,0x0u,0x0u,0x6a69002bu,0x0u,0x706f0034u,0x0u,0x0u,0x6f6d0056u,0x0u,0x0u,0x0u,0x0u,0x62610077u,0x0u,0x706f007bu,0x0u,0x0u,0x75740083u,0x7372008du,0x71700096u,0x66650019u,0x0u,0x0u,0x71700026u,0x7372001au,0x7574001bu,0x7675001cu,0x7372001du,0x6665001eu,0x5352001fu,0x62610020u,0x65640021u,0x6a690022u,0x76750023u,0x74730024u,0x1000025u,0x80000006u,0x66650027u,0x64630028u,0x75740029u,0x100002au,0x8000000bu,0x7372002cu,0x6665002du,0x6463002eu,0x7574002fu,0x6a690030u,0x706f0031u,0x6f6e0032u,0x1000033u,0x80000002u,0x77630035u,0x76750049u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x7a790054u,0x7473004au,0x4544004bu,0x6a69004cu,0x7473004du,0x7574004eu,0x6261004fu,0x6f6e0050u,0x64630051u,0x66650052u,0x1000053u,0x80000007u,0x1000055u,0x8000000au,0x62610058u,0x75740062u,0x68670059u,0x6665005au,0x5352005bu,0x6665005cu,0x6867005du,0x6a69005eu,0x706f005fu,0x6f6e0060u,0x1000061u,0x80000005u,0x66650063u,0x73720064u,0x71700065u,0x76750066u,0x71700067u,0x6a690068u,0x6d6c0069u,0x6d6c006au,0x6261006bu,0x7372006cu,0x7a79006du,0x4544006eu,0x6a69006fu,0x74730070u,0x75740071u,0x62610072u,0x6f6e0073u,0x64630074u,0x66650075u,0x1000076u,0x80000009u,0x6e6d0078u,0x66650079u,0x100007au,0x80000000u,0x7473007cu,0x6a69007du,0x7574007eu,0x6a69007fu,0x706f0080u,0x6f6e0081u,0x1000082u,0x80000001u,0x66650084u,0x73720085u,0x66650086u,0x706f0087u,0x4e4d0088u,0x706f0089u,0x6564008au,0x6665008bu,0x100008cu,0x80000008u,0x6261008eu,0x6f6e008fu,0x74730090u,0x67660091u,0x706f0092u,0x73720093u,0x6e6d0094u,0x1000095u,0x80000004u,0x1000097u,0x80000003u};
+      uint32_t cur = 0x76610000u;
+      for(int i = 0;cur!=0;++i) {
+         uint32_t idx = cur&0xFFFFu;
+         uint32_t low = (cur>>16u)&0xFFu;
+         uint32_t high = (cur>>24u)&0xFFu;
+         uint32_t c = str[i];
+         if(c>=low && c<high) {
+            cur = table[idx+c-low];
+         } else {
+            break;
+         }
+         if(cur&0x80000000u) {
+            return cur&0xFFFFu;
+         }
+         if(str[i]==0) {
+            break;
+         }
+      }
+      return -1;
+   }
+   public:
+   camera_perspective(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
+      DebugObject::setParameter(paramname, paramtype, mem);
+      int idx = param_hash(paramname);
+      switch(idx) {
+         case 0: { //name
+            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_CAMERA, "perspective", paramname, paramtype, name_types);
+            return;
+         }
+         case 1: { //position
+            ANARIDataType position_types[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
+            check_type(ANARI_CAMERA, "perspective", paramname, paramtype, position_types);
+            return;
+         }
+         case 2: { //direction
+            ANARIDataType direction_types[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
+            check_type(ANARI_CAMERA, "perspective", paramname, paramtype, direction_types);
+            return;
+         }
+         case 3: { //up
+            ANARIDataType up_types[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
+            check_type(ANARI_CAMERA, "perspective", paramname, paramtype, up_types);
+            return;
+         }
+         case 4: { //transform
+            ANARIDataType transform_types[] = {ANARI_FLOAT32_MAT3x4, ANARI_UNKNOWN};
+            check_type(ANARI_CAMERA, "perspective", paramname, paramtype, transform_types);
+            return;
+         }
+         case 5: { //imageRegion
+            ANARIDataType imageRegion_types[] = {ANARI_FLOAT32_BOX2, ANARI_UNKNOWN};
+            check_type(ANARI_CAMERA, "perspective", paramname, paramtype, imageRegion_types);
+            return;
+         }
+         case 6: { //apertureRadius
+            ANARIDataType apertureRadius_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
+            check_type(ANARI_CAMERA, "perspective", paramname, paramtype, apertureRadius_types);
+            return;
+         }
+         case 7: { //focusDistance
+            ANARIDataType focusDistance_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
+            check_type(ANARI_CAMERA, "perspective", paramname, paramtype, focusDistance_types);
+            return;
+         }
+         case 8: { //stereoMode
+            ANARIDataType stereoMode_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_CAMERA, "perspective", paramname, paramtype, stereoMode_types);
+            return;
+         }
+         case 9: { //interpupillaryDistance
+            ANARIDataType interpupillaryDistance_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
+            check_type(ANARI_CAMERA, "perspective", paramname, paramtype, interpupillaryDistance_types);
+            return;
+         }
+         case 10: { //fovy
+            ANARIDataType fovy_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
+            check_type(ANARI_CAMERA, "perspective", paramname, paramtype, fovy_types);
+            return;
+         }
+         case 11: { //aspect
+            ANARIDataType aspect_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
+            check_type(ANARI_CAMERA, "perspective", paramname, paramtype, aspect_types);
+            return;
+         }
+         default: // unknown param
+            unknown_parameter(ANARI_CAMERA, "perspective", paramname, paramtype);
+            return;
+      }
+   }
+   void commit() {
+      DebugObject::commit();
+   }
+};
+class geometry_cone : public DebugObject<ANARI_GEOMETRY> {
+   static int param_hash(const char *str) {
+      static const uint32_t table[] = {0x62610014u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x62610018u,0x0u,0x7372001cu,0x0u,0x0u,0x0u,0x0u,0x0u,0x66650053u,0x71700015u,0x74730016u,0x1000017u,0x80000010u,0x6e6d0019u,0x6665001au,0x100001bu,0x80000000u,0x6a69001du,0x6e6d001eu,0x6a69001fu,0x75740020u,0x6a690021u,0x77760022u,0x66650023u,0x2f2e0024u,0x6a610025u,0x7574002eu,0x0u,0x706f003eu,0x0u,0x0u,0x0u,0x0u,0x0u,0x6f640043u,0x7574002fu,0x73720030u,0x6a690031u,0x63620032u,0x76750033u,0x75740034u,0x66650035u,0x34300036u,0x100003au,0x100003bu,0x100003cu,0x100003du,0x80000002u,0x80000003u,0x80000004u,0x80000005u,0x6d6c003fu,0x706f0040u,0x73720041u,0x1000042u,0x80000001u,0x100004eu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6564004fu,0x80000006u,0x66650050u,0x79780051u,0x1000052u,0x8000000fu,0x73720054u,0x75740055u,0x66650056u,0x79780057u,0x2f2e0058u,0x73610059u,0x7574006bu,0x0u,0x7061007bu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x706f0090u,0x0u,0x62610098u,0x7574006cu,0x7372006du,0x6a69006eu,0x6362006fu,0x76750070u,0x75740071u,0x66650072u,0x34300073u,0x1000077u,0x1000078u,0x1000079u,0x100007au,0x8000000bu,0x8000000cu,0x8000000du,0x8000000eu,0x7170008au,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6d6c008cu,0x100008bu,0x80000009u,0x706f008du,0x7372008eu,0x100008fu,0x8000000au,0x74730091u,0x6a690092u,0x75740093u,0x6a690094u,0x706f0095u,0x6f6e0096u,0x1000097u,0x80000007u,0x65640099u,0x6a69009au,0x7675009bu,0x7473009cu,0x100009du,0x80000008u};
+      uint32_t cur = 0x77630000u;
+      for(int i = 0;cur!=0;++i) {
+         uint32_t idx = cur&0xFFFFu;
+         uint32_t low = (cur>>16u)&0xFFu;
+         uint32_t high = (cur>>24u)&0xFFu;
+         uint32_t c = str[i];
+         if(c>=low && c<high) {
+            cur = table[idx+c-low];
+         } else {
+            break;
+         }
+         if(cur&0x80000000u) {
+            return cur&0xFFFFu;
+         }
+         if(str[i]==0) {
+            break;
+         }
+      }
+      return -1;
+   }
+   public:
+   geometry_cone(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
+      DebugObject::setParameter(paramname, paramtype, mem);
+      int idx = param_hash(paramname);
+      switch(idx) {
+         case 0: { //name
+            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "cone", paramname, paramtype, name_types);
+            return;
+         }
+         case 1: { //primitive.color
+            ANARIDataType primitive_color_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "cone", paramname, paramtype, primitive_color_types);
+            return;
+         }
+         case 2: { //primitive.attribute0
+            ANARIDataType primitive_attribute0_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "cone", paramname, paramtype, primitive_attribute0_types);
+            return;
+         }
+         case 3: { //primitive.attribute1
+            ANARIDataType primitive_attribute1_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "cone", paramname, paramtype, primitive_attribute1_types);
+            return;
+         }
+         case 4: { //primitive.attribute2
+            ANARIDataType primitive_attribute2_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "cone", paramname, paramtype, primitive_attribute2_types);
+            return;
+         }
+         case 5: { //primitive.attribute3
+            ANARIDataType primitive_attribute3_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "cone", paramname, paramtype, primitive_attribute3_types);
+            return;
+         }
+         case 6: { //primitive.id
+            ANARIDataType primitive_id_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "cone", paramname, paramtype, primitive_id_types);
+            return;
+         }
+         case 7: { //vertex.position
+            ANARIDataType vertex_position_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "cone", paramname, paramtype, vertex_position_types);
+            return;
+         }
+         case 8: { //vertex.radius
+            ANARIDataType vertex_radius_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "cone", paramname, paramtype, vertex_radius_types);
+            return;
+         }
+         case 9: { //vertex.cap
+            ANARIDataType vertex_cap_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "cone", paramname, paramtype, vertex_cap_types);
+            return;
+         }
+         case 10: { //vertex.color
+            ANARIDataType vertex_color_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "cone", paramname, paramtype, vertex_color_types);
+            return;
+         }
+         case 11: { //vertex.attribute0
+            ANARIDataType vertex_attribute0_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "cone", paramname, paramtype, vertex_attribute0_types);
+            return;
+         }
+         case 12: { //vertex.attribute1
+            ANARIDataType vertex_attribute1_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "cone", paramname, paramtype, vertex_attribute1_types);
+            return;
+         }
+         case 13: { //vertex.attribute2
+            ANARIDataType vertex_attribute2_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "cone", paramname, paramtype, vertex_attribute2_types);
+            return;
+         }
+         case 14: { //vertex.attribute3
+            ANARIDataType vertex_attribute3_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "cone", paramname, paramtype, vertex_attribute3_types);
+            return;
+         }
+         case 15: { //primitive.index
+            ANARIDataType primitive_index_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "cone", paramname, paramtype, primitive_index_types);
+            return;
+         }
+         case 16: { //caps
+            ANARIDataType caps_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "cone", paramname, paramtype, caps_types);
+            return;
+         }
+         default: // unknown param
+            unknown_parameter(ANARI_GEOMETRY, "cone", paramname, paramtype);
+            return;
+      }
+   }
+   void commit() {
+      DebugObject::commit();
+   }
+};
+class geometry_curve : public DebugObject<ANARI_GEOMETRY> {
+   static int param_hash(const char *str) {
+      static const uint32_t table[] = {0x62610009u,0x0u,0x7372000du,0x0u,0x62610044u,0x0u,0x0u,0x0u,0x6665004au,0x6e6d000au,0x6665000bu,0x100000cu,0x80000000u,0x6a69000eu,0x6e6d000fu,0x6a690010u,0x75740011u,0x6a690012u,0x77760013u,0x66650014u,0x2f2e0015u,0x6a610016u,0x7574001fu,0x0u,0x706f002fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x6f640034u,0x75740020u,0x73720021u,0x6a690022u,0x63620023u,0x76750024u,0x75740025u,0x66650026u,0x34300027u,0x100002bu,0x100002cu,0x100002du,0x100002eu,0x80000002u,0x80000003u,0x80000004u,0x80000005u,0x6d6c0030u,0x706f0031u,0x73720032u,0x1000033u,0x80000001u,0x100003fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x65640040u,0x80000006u,0x66650041u,0x79780042u,0x1000043u,0x8000000eu,0x65640045u,0x6a690046u,0x76750047u,0x74730048u,0x1000049u,0x8000000fu,0x7372004bu,0x7574004cu,0x6665004du,0x7978004eu,0x2f2e004fu,0x73610050u,0x75740062u,0x0u,0x706f0072u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x706f0077u,0x0u,0x6261007fu,0x75740063u,0x73720064u,0x6a690065u,0x63620066u,0x76750067u,0x75740068u,0x66650069u,0x3430006au,0x100006eu,0x100006fu,0x1000070u,0x1000071u,0x8000000au,0x8000000bu,0x8000000cu,0x8000000du,0x6d6c0073u,0x706f0074u,0x73720075u,0x1000076u,0x80000009u,0x74730078u,0x6a690079u,0x7574007au,0x6a69007bu,0x706f007cu,0x6f6e007du,0x100007eu,0x80000007u,0x65640080u,0x6a690081u,0x76750082u,0x74730083u,0x1000084u,0x80000008u};
+      uint32_t cur = 0x776e0000u;
+      for(int i = 0;cur!=0;++i) {
+         uint32_t idx = cur&0xFFFFu;
+         uint32_t low = (cur>>16u)&0xFFu;
+         uint32_t high = (cur>>24u)&0xFFu;
+         uint32_t c = str[i];
+         if(c>=low && c<high) {
+            cur = table[idx+c-low];
+         } else {
+            break;
+         }
+         if(cur&0x80000000u) {
+            return cur&0xFFFFu;
+         }
+         if(str[i]==0) {
+            break;
+         }
+      }
+      return -1;
+   }
+   public:
+   geometry_curve(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
+      DebugObject::setParameter(paramname, paramtype, mem);
+      int idx = param_hash(paramname);
+      switch(idx) {
+         case 0: { //name
+            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "curve", paramname, paramtype, name_types);
+            return;
+         }
+         case 1: { //primitive.color
+            ANARIDataType primitive_color_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "curve", paramname, paramtype, primitive_color_types);
+            return;
+         }
+         case 2: { //primitive.attribute0
+            ANARIDataType primitive_attribute0_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "curve", paramname, paramtype, primitive_attribute0_types);
+            return;
+         }
+         case 3: { //primitive.attribute1
+            ANARIDataType primitive_attribute1_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "curve", paramname, paramtype, primitive_attribute1_types);
+            return;
+         }
+         case 4: { //primitive.attribute2
+            ANARIDataType primitive_attribute2_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "curve", paramname, paramtype, primitive_attribute2_types);
+            return;
+         }
+         case 5: { //primitive.attribute3
+            ANARIDataType primitive_attribute3_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "curve", paramname, paramtype, primitive_attribute3_types);
+            return;
+         }
+         case 6: { //primitive.id
+            ANARIDataType primitive_id_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "curve", paramname, paramtype, primitive_id_types);
+            return;
+         }
+         case 7: { //vertex.position
+            ANARIDataType vertex_position_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "curve", paramname, paramtype, vertex_position_types);
+            return;
+         }
+         case 8: { //vertex.radius
+            ANARIDataType vertex_radius_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "curve", paramname, paramtype, vertex_radius_types);
+            return;
+         }
+         case 9: { //vertex.color
+            ANARIDataType vertex_color_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "curve", paramname, paramtype, vertex_color_types);
+            return;
+         }
+         case 10: { //vertex.attribute0
+            ANARIDataType vertex_attribute0_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "curve", paramname, paramtype, vertex_attribute0_types);
+            return;
+         }
+         case 11: { //vertex.attribute1
+            ANARIDataType vertex_attribute1_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "curve", paramname, paramtype, vertex_attribute1_types);
+            return;
+         }
+         case 12: { //vertex.attribute2
+            ANARIDataType vertex_attribute2_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "curve", paramname, paramtype, vertex_attribute2_types);
+            return;
+         }
+         case 13: { //vertex.attribute3
+            ANARIDataType vertex_attribute3_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "curve", paramname, paramtype, vertex_attribute3_types);
+            return;
+         }
+         case 14: { //primitive.index
+            ANARIDataType primitive_index_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "curve", paramname, paramtype, primitive_index_types);
+            return;
+         }
+         case 15: { //radius
+            ANARIDataType radius_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "curve", paramname, paramtype, radius_types);
+            return;
+         }
+         default: // unknown param
+            unknown_parameter(ANARI_GEOMETRY, "curve", paramname, paramtype);
+            return;
+      }
+   }
+   void commit() {
+      DebugObject::commit();
+   }
+};
+class geometry_cylinder : public DebugObject<ANARI_GEOMETRY> {
+   static int param_hash(const char *str) {
+      static const uint32_t table[] = {0x62610014u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x62610018u,0x0u,0x7372001cu,0x0u,0x62610062u,0x0u,0x0u,0x0u,0x66650068u,0x71700015u,0x74730016u,0x1000017u,0x80000011u,0x6e6d0019u,0x6665001au,0x100001bu,0x80000000u,0x6a69001du,0x6e6d001eu,0x6a69001fu,0x75740020u,0x6a690021u,0x77760022u,0x66650023u,0x2f2e0024u,0x73610025u,0x75740037u,0x0u,0x706f0047u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6f64004cu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6261005cu,0x75740038u,0x73720039u,0x6a69003au,0x6362003bu,0x7675003cu,0x7574003du,0x6665003eu,0x3430003fu,0x1000043u,0x1000044u,0x1000045u,0x1000046u,0x80000002u,0x80000003u,0x80000004u,0x80000005u,0x6d6c0048u,0x706f0049u,0x7372004au,0x100004bu,0x80000001u,0x1000057u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x65640058u,0x80000006u,0x66650059u,0x7978005au,0x100005bu,0x8000000eu,0x6564005du,0x6a69005eu,0x7675005fu,0x74730060u,0x1000061u,0x8000000fu,0x65640063u,0x6a690064u,0x76750065u,0x74730066u,0x1000067u,0x80000010u,0x73720069u,0x7574006au,0x6665006bu,0x7978006cu,0x2f2e006du,0x7161006eu,0x7574007eu,0x0u,0x7061008eu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x706f00a3u,0x7574007fu,0x73720080u,0x6a690081u,0x63620082u,0x76750083u,0x75740084u,0x66650085u,0x34300086u,0x100008au,0x100008bu,0x100008cu,0x100008du,0x8000000au,0x8000000bu,0x8000000cu,0x8000000du,0x7170009du,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6d6c009fu,0x100009eu,0x80000008u,0x706f00a0u,0x737200a1u,0x10000a2u,0x80000009u,0x747300a4u,0x6a6900a5u,0x757400a6u,0x6a6900a7u,0x706f00a8u,0x6f6e00a9u,0x10000aau,0x80000007u};
+      uint32_t cur = 0x77630000u;
+      for(int i = 0;cur!=0;++i) {
+         uint32_t idx = cur&0xFFFFu;
+         uint32_t low = (cur>>16u)&0xFFu;
+         uint32_t high = (cur>>24u)&0xFFu;
+         uint32_t c = str[i];
+         if(c>=low && c<high) {
+            cur = table[idx+c-low];
+         } else {
+            break;
+         }
+         if(cur&0x80000000u) {
+            return cur&0xFFFFu;
+         }
+         if(str[i]==0) {
+            break;
+         }
+      }
+      return -1;
+   }
+   public:
+   geometry_cylinder(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
+      DebugObject::setParameter(paramname, paramtype, mem);
+      int idx = param_hash(paramname);
+      switch(idx) {
+         case 0: { //name
+            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "cylinder", paramname, paramtype, name_types);
+            return;
+         }
+         case 1: { //primitive.color
+            ANARIDataType primitive_color_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "cylinder", paramname, paramtype, primitive_color_types);
+            return;
+         }
+         case 2: { //primitive.attribute0
+            ANARIDataType primitive_attribute0_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "cylinder", paramname, paramtype, primitive_attribute0_types);
+            return;
+         }
+         case 3: { //primitive.attribute1
+            ANARIDataType primitive_attribute1_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "cylinder", paramname, paramtype, primitive_attribute1_types);
+            return;
+         }
+         case 4: { //primitive.attribute2
+            ANARIDataType primitive_attribute2_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "cylinder", paramname, paramtype, primitive_attribute2_types);
+            return;
+         }
+         case 5: { //primitive.attribute3
+            ANARIDataType primitive_attribute3_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "cylinder", paramname, paramtype, primitive_attribute3_types);
+            return;
+         }
+         case 6: { //primitive.id
+            ANARIDataType primitive_id_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "cylinder", paramname, paramtype, primitive_id_types);
+            return;
+         }
+         case 7: { //vertex.position
+            ANARIDataType vertex_position_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "cylinder", paramname, paramtype, vertex_position_types);
+            return;
+         }
+         case 8: { //vertex.cap
+            ANARIDataType vertex_cap_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "cylinder", paramname, paramtype, vertex_cap_types);
+            return;
+         }
+         case 9: { //vertex.color
+            ANARIDataType vertex_color_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "cylinder", paramname, paramtype, vertex_color_types);
+            return;
+         }
+         case 10: { //vertex.attribute0
+            ANARIDataType vertex_attribute0_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "cylinder", paramname, paramtype, vertex_attribute0_types);
+            return;
+         }
+         case 11: { //vertex.attribute1
+            ANARIDataType vertex_attribute1_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "cylinder", paramname, paramtype, vertex_attribute1_types);
+            return;
+         }
+         case 12: { //vertex.attribute2
+            ANARIDataType vertex_attribute2_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "cylinder", paramname, paramtype, vertex_attribute2_types);
+            return;
+         }
+         case 13: { //vertex.attribute3
+            ANARIDataType vertex_attribute3_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "cylinder", paramname, paramtype, vertex_attribute3_types);
+            return;
+         }
+         case 14: { //primitive.index
+            ANARIDataType primitive_index_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "cylinder", paramname, paramtype, primitive_index_types);
+            return;
+         }
+         case 15: { //primitive.radius
+            ANARIDataType primitive_radius_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "cylinder", paramname, paramtype, primitive_radius_types);
+            return;
+         }
+         case 16: { //radius
+            ANARIDataType radius_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "cylinder", paramname, paramtype, radius_types);
+            return;
+         }
+         case 17: { //caps
+            ANARIDataType caps_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "cylinder", paramname, paramtype, caps_types);
+            return;
+         }
+         default: // unknown param
+            unknown_parameter(ANARI_GEOMETRY, "cylinder", paramname, paramtype);
+            return;
+      }
+   }
+   void commit() {
+      DebugObject::commit();
+   }
+};
+class geometry_quad : public DebugObject<ANARI_GEOMETRY> {
+   static int param_hash(const char *str) {
+      static const uint32_t table[] = {0x62610009u,0x0u,0x7372000du,0x0u,0x0u,0x0u,0x0u,0x0u,0x66650044u,0x6e6d000au,0x6665000bu,0x100000cu,0x80000000u,0x6a69000eu,0x6e6d000fu,0x6a690010u,0x75740011u,0x6a690012u,0x77760013u,0x66650014u,0x2f2e0015u,0x6a610016u,0x7574001fu,0x0u,0x706f002fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x6f640034u,0x75740020u,0x73720021u,0x6a690022u,0x63620023u,0x76750024u,0x75740025u,0x66650026u,0x34300027u,0x100002bu,0x100002cu,0x100002du,0x100002eu,0x80000002u,0x80000003u,0x80000004u,0x80000005u,0x6d6c0030u,0x706f0031u,0x73720032u,0x1000033u,0x80000001u,0x100003fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x65640040u,0x80000006u,0x66650041u,0x79780042u,0x1000043u,0x8000000eu,0x73720045u,0x75740046u,0x66650047u,0x79780048u,0x2f2e0049u,0x7161004au,0x7574005au,0x0u,0x706f006au,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x706f006fu,0x0u,0x706f0075u,0x7574005bu,0x7372005cu,0x6a69005du,0x6362005eu,0x7675005fu,0x75740060u,0x66650061u,0x34300062u,0x1000066u,0x1000067u,0x1000068u,0x1000069u,0x8000000au,0x8000000bu,0x8000000cu,0x8000000du,0x6d6c006bu,0x706f006cu,0x7372006du,0x100006eu,0x80000009u,0x73720070u,0x6e6d0071u,0x62610072u,0x6d6c0073u,0x1000074u,0x80000008u,0x74730076u,0x6a690077u,0x75740078u,0x6a690079u,0x706f007au,0x6f6e007bu,0x100007cu,0x80000007u};
+      uint32_t cur = 0x776e0000u;
+      for(int i = 0;cur!=0;++i) {
+         uint32_t idx = cur&0xFFFFu;
+         uint32_t low = (cur>>16u)&0xFFu;
+         uint32_t high = (cur>>24u)&0xFFu;
+         uint32_t c = str[i];
+         if(c>=low && c<high) {
+            cur = table[idx+c-low];
+         } else {
+            break;
+         }
+         if(cur&0x80000000u) {
+            return cur&0xFFFFu;
+         }
+         if(str[i]==0) {
+            break;
+         }
+      }
+      return -1;
+   }
+   public:
+   geometry_quad(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
+      DebugObject::setParameter(paramname, paramtype, mem);
+      int idx = param_hash(paramname);
+      switch(idx) {
+         case 0: { //name
+            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "quad", paramname, paramtype, name_types);
+            return;
+         }
+         case 1: { //primitive.color
+            ANARIDataType primitive_color_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "quad", paramname, paramtype, primitive_color_types);
+            return;
+         }
+         case 2: { //primitive.attribute0
+            ANARIDataType primitive_attribute0_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "quad", paramname, paramtype, primitive_attribute0_types);
+            return;
+         }
+         case 3: { //primitive.attribute1
+            ANARIDataType primitive_attribute1_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "quad", paramname, paramtype, primitive_attribute1_types);
+            return;
+         }
+         case 4: { //primitive.attribute2
+            ANARIDataType primitive_attribute2_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "quad", paramname, paramtype, primitive_attribute2_types);
+            return;
+         }
+         case 5: { //primitive.attribute3
+            ANARIDataType primitive_attribute3_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "quad", paramname, paramtype, primitive_attribute3_types);
+            return;
+         }
+         case 6: { //primitive.id
+            ANARIDataType primitive_id_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "quad", paramname, paramtype, primitive_id_types);
+            return;
+         }
+         case 7: { //vertex.position
+            ANARIDataType vertex_position_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "quad", paramname, paramtype, vertex_position_types);
+            return;
+         }
+         case 8: { //vertex.normal
+            ANARIDataType vertex_normal_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "quad", paramname, paramtype, vertex_normal_types);
+            return;
+         }
+         case 9: { //vertex.color
+            ANARIDataType vertex_color_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "quad", paramname, paramtype, vertex_color_types);
+            return;
+         }
+         case 10: { //vertex.attribute0
+            ANARIDataType vertex_attribute0_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "quad", paramname, paramtype, vertex_attribute0_types);
+            return;
+         }
+         case 11: { //vertex.attribute1
+            ANARIDataType vertex_attribute1_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "quad", paramname, paramtype, vertex_attribute1_types);
+            return;
+         }
+         case 12: { //vertex.attribute2
+            ANARIDataType vertex_attribute2_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "quad", paramname, paramtype, vertex_attribute2_types);
+            return;
+         }
+         case 13: { //vertex.attribute3
+            ANARIDataType vertex_attribute3_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "quad", paramname, paramtype, vertex_attribute3_types);
+            return;
+         }
+         case 14: { //primitive.index
+            ANARIDataType primitive_index_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "quad", paramname, paramtype, primitive_index_types);
+            return;
+         }
+         default: // unknown param
+            unknown_parameter(ANARI_GEOMETRY, "quad", paramname, paramtype);
+            return;
+      }
+   }
+   void commit() {
+      DebugObject::commit();
+   }
+};
+class geometry_sphere : public DebugObject<ANARI_GEOMETRY> {
+   static int param_hash(const char *str) {
+      static const uint32_t table[] = {0x62610009u,0x0u,0x7372000du,0x0u,0x62610044u,0x0u,0x0u,0x0u,0x6665004au,0x6e6d000au,0x6665000bu,0x100000cu,0x80000000u,0x6a69000eu,0x6e6d000fu,0x6a690010u,0x75740011u,0x6a690012u,0x77760013u,0x66650014u,0x2f2e0015u,0x6a610016u,0x7574001fu,0x0u,0x706f002fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x6f640034u,0x75740020u,0x73720021u,0x6a690022u,0x63620023u,0x76750024u,0x75740025u,0x66650026u,0x34300027u,0x100002bu,0x100002cu,0x100002du,0x100002eu,0x80000002u,0x80000003u,0x80000004u,0x80000005u,0x6d6c0030u,0x706f0031u,0x73720032u,0x1000033u,0x80000001u,0x100003fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x65640040u,0x80000006u,0x66650041u,0x79780042u,0x1000043u,0x8000000eu,0x65640045u,0x6a690046u,0x76750047u,0x74730048u,0x1000049u,0x8000000fu,0x7372004bu,0x7574004cu,0x6665004du,0x7978004eu,0x2f2e004fu,0x73610050u,0x75740062u,0x0u,0x706f0072u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x706f0077u,0x0u,0x6261007fu,0x75740063u,0x73720064u,0x6a690065u,0x63620066u,0x76750067u,0x75740068u,0x66650069u,0x3430006au,0x100006eu,0x100006fu,0x1000070u,0x1000071u,0x8000000au,0x8000000bu,0x8000000cu,0x8000000du,0x6d6c0073u,0x706f0074u,0x73720075u,0x1000076u,0x80000009u,0x74730078u,0x6a690079u,0x7574007au,0x6a69007bu,0x706f007cu,0x6f6e007du,0x100007eu,0x80000007u,0x65640080u,0x6a690081u,0x76750082u,0x74730083u,0x1000084u,0x80000008u};
+      uint32_t cur = 0x776e0000u;
+      for(int i = 0;cur!=0;++i) {
+         uint32_t idx = cur&0xFFFFu;
+         uint32_t low = (cur>>16u)&0xFFu;
+         uint32_t high = (cur>>24u)&0xFFu;
+         uint32_t c = str[i];
+         if(c>=low && c<high) {
+            cur = table[idx+c-low];
+         } else {
+            break;
+         }
+         if(cur&0x80000000u) {
+            return cur&0xFFFFu;
+         }
+         if(str[i]==0) {
+            break;
+         }
+      }
+      return -1;
+   }
+   public:
+   geometry_sphere(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
+      DebugObject::setParameter(paramname, paramtype, mem);
+      int idx = param_hash(paramname);
+      switch(idx) {
+         case 0: { //name
+            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "sphere", paramname, paramtype, name_types);
+            return;
+         }
+         case 1: { //primitive.color
+            ANARIDataType primitive_color_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "sphere", paramname, paramtype, primitive_color_types);
+            return;
+         }
+         case 2: { //primitive.attribute0
+            ANARIDataType primitive_attribute0_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "sphere", paramname, paramtype, primitive_attribute0_types);
+            return;
+         }
+         case 3: { //primitive.attribute1
+            ANARIDataType primitive_attribute1_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "sphere", paramname, paramtype, primitive_attribute1_types);
+            return;
+         }
+         case 4: { //primitive.attribute2
+            ANARIDataType primitive_attribute2_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "sphere", paramname, paramtype, primitive_attribute2_types);
+            return;
+         }
+         case 5: { //primitive.attribute3
+            ANARIDataType primitive_attribute3_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "sphere", paramname, paramtype, primitive_attribute3_types);
+            return;
+         }
+         case 6: { //primitive.id
+            ANARIDataType primitive_id_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "sphere", paramname, paramtype, primitive_id_types);
+            return;
+         }
+         case 7: { //vertex.position
+            ANARIDataType vertex_position_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "sphere", paramname, paramtype, vertex_position_types);
+            return;
+         }
+         case 8: { //vertex.radius
+            ANARIDataType vertex_radius_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "sphere", paramname, paramtype, vertex_radius_types);
+            return;
+         }
+         case 9: { //vertex.color
+            ANARIDataType vertex_color_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "sphere", paramname, paramtype, vertex_color_types);
+            return;
+         }
+         case 10: { //vertex.attribute0
+            ANARIDataType vertex_attribute0_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "sphere", paramname, paramtype, vertex_attribute0_types);
+            return;
+         }
+         case 11: { //vertex.attribute1
+            ANARIDataType vertex_attribute1_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "sphere", paramname, paramtype, vertex_attribute1_types);
+            return;
+         }
+         case 12: { //vertex.attribute2
+            ANARIDataType vertex_attribute2_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "sphere", paramname, paramtype, vertex_attribute2_types);
+            return;
+         }
+         case 13: { //vertex.attribute3
+            ANARIDataType vertex_attribute3_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "sphere", paramname, paramtype, vertex_attribute3_types);
+            return;
+         }
+         case 14: { //primitive.index
+            ANARIDataType primitive_index_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "sphere", paramname, paramtype, primitive_index_types);
+            return;
+         }
+         case 15: { //radius
+            ANARIDataType radius_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "sphere", paramname, paramtype, radius_types);
+            return;
+         }
+         default: // unknown param
+            unknown_parameter(ANARI_GEOMETRY, "sphere", paramname, paramtype);
+            return;
+      }
+   }
+   void commit() {
+      DebugObject::commit();
+   }
+};
+class geometry_triangle : public DebugObject<ANARI_GEOMETRY> {
+   static int param_hash(const char *str) {
+      static const uint32_t table[] = {0x62610009u,0x0u,0x7372000du,0x0u,0x0u,0x0u,0x0u,0x0u,0x66650044u,0x6e6d000au,0x6665000bu,0x100000cu,0x80000000u,0x6a69000eu,0x6e6d000fu,0x6a690010u,0x75740011u,0x6a690012u,0x77760013u,0x66650014u,0x2f2e0015u,0x6a610016u,0x7574001fu,0x0u,0x706f002fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x6f640034u,0x75740020u,0x73720021u,0x6a690022u,0x63620023u,0x76750024u,0x75740025u,0x66650026u,0x34300027u,0x100002bu,0x100002cu,0x100002du,0x100002eu,0x80000002u,0x80000003u,0x80000004u,0x80000005u,0x6d6c0030u,0x706f0031u,0x73720032u,0x1000033u,0x80000001u,0x100003fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x65640040u,0x80000006u,0x66650041u,0x79780042u,0x1000043u,0x8000000eu,0x73720045u,0x75740046u,0x66650047u,0x79780048u,0x2f2e0049u,0x7161004au,0x7574005au,0x0u,0x706f006au,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x706f006fu,0x0u,0x706f0075u,0x7574005bu,0x7372005cu,0x6a69005du,0x6362005eu,0x7675005fu,0x75740060u,0x66650061u,0x34300062u,0x1000066u,0x1000067u,0x1000068u,0x1000069u,0x8000000au,0x8000000bu,0x8000000cu,0x8000000du,0x6d6c006bu,0x706f006cu,0x7372006du,0x100006eu,0x80000009u,0x73720070u,0x6e6d0071u,0x62610072u,0x6d6c0073u,0x1000074u,0x80000008u,0x74730076u,0x6a690077u,0x75740078u,0x6a690079u,0x706f007au,0x6f6e007bu,0x100007cu,0x80000007u};
+      uint32_t cur = 0x776e0000u;
+      for(int i = 0;cur!=0;++i) {
+         uint32_t idx = cur&0xFFFFu;
+         uint32_t low = (cur>>16u)&0xFFu;
+         uint32_t high = (cur>>24u)&0xFFu;
+         uint32_t c = str[i];
+         if(c>=low && c<high) {
+            cur = table[idx+c-low];
+         } else {
+            break;
+         }
+         if(cur&0x80000000u) {
+            return cur&0xFFFFu;
+         }
+         if(str[i]==0) {
+            break;
+         }
+      }
+      return -1;
+   }
+   public:
+   geometry_triangle(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
+      DebugObject::setParameter(paramname, paramtype, mem);
+      int idx = param_hash(paramname);
+      switch(idx) {
+         case 0: { //name
+            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "triangle", paramname, paramtype, name_types);
+            return;
+         }
+         case 1: { //primitive.color
+            ANARIDataType primitive_color_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "triangle", paramname, paramtype, primitive_color_types);
+            return;
+         }
+         case 2: { //primitive.attribute0
+            ANARIDataType primitive_attribute0_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "triangle", paramname, paramtype, primitive_attribute0_types);
+            return;
+         }
+         case 3: { //primitive.attribute1
+            ANARIDataType primitive_attribute1_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "triangle", paramname, paramtype, primitive_attribute1_types);
+            return;
+         }
+         case 4: { //primitive.attribute2
+            ANARIDataType primitive_attribute2_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "triangle", paramname, paramtype, primitive_attribute2_types);
+            return;
+         }
+         case 5: { //primitive.attribute3
+            ANARIDataType primitive_attribute3_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "triangle", paramname, paramtype, primitive_attribute3_types);
+            return;
+         }
+         case 6: { //primitive.id
+            ANARIDataType primitive_id_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "triangle", paramname, paramtype, primitive_id_types);
+            return;
+         }
+         case 7: { //vertex.position
+            ANARIDataType vertex_position_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "triangle", paramname, paramtype, vertex_position_types);
+            return;
+         }
+         case 8: { //vertex.normal
+            ANARIDataType vertex_normal_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "triangle", paramname, paramtype, vertex_normal_types);
+            return;
+         }
+         case 9: { //vertex.color
+            ANARIDataType vertex_color_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "triangle", paramname, paramtype, vertex_color_types);
+            return;
+         }
+         case 10: { //vertex.attribute0
+            ANARIDataType vertex_attribute0_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "triangle", paramname, paramtype, vertex_attribute0_types);
+            return;
+         }
+         case 11: { //vertex.attribute1
+            ANARIDataType vertex_attribute1_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "triangle", paramname, paramtype, vertex_attribute1_types);
+            return;
+         }
+         case 12: { //vertex.attribute2
+            ANARIDataType vertex_attribute2_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "triangle", paramname, paramtype, vertex_attribute2_types);
+            return;
+         }
+         case 13: { //vertex.attribute3
+            ANARIDataType vertex_attribute3_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "triangle", paramname, paramtype, vertex_attribute3_types);
+            return;
+         }
+         case 14: { //primitive.index
+            ANARIDataType primitive_index_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "triangle", paramname, paramtype, primitive_index_types);
+            return;
+         }
+         default: // unknown param
+            unknown_parameter(ANARI_GEOMETRY, "triangle", paramname, paramtype);
+            return;
+      }
+   }
+   void commit() {
+      DebugObject::commit();
+   }
+};
+class light_directional : public DebugObject<ANARI_LIGHT> {
+   static int param_hash(const char *str) {
+      static const uint32_t table[] = {0x706f000cu,0x6a690011u,0x0u,0x0u,0x0u,0x0u,0x7372001au,0x0u,0x0u,0x0u,0x0u,0x62610023u,0x6d6c000du,0x706f000eu,0x7372000fu,0x1000010u,0x80000001u,0x73720012u,0x66650013u,0x64630014u,0x75740015u,0x6a690016u,0x706f0017u,0x6f6e0018u,0x1000019u,0x80000003u,0x7372001bu,0x6a69001cu,0x6564001du,0x6261001eu,0x6f6e001fu,0x64630020u,0x66650021u,0x1000022u,0x80000002u,0x6e6d0024u,0x66650025u,0x1000026u,0x80000000u};
+      uint32_t cur = 0x6f630000u;
+      for(int i = 0;cur!=0;++i) {
+         uint32_t idx = cur&0xFFFFu;
+         uint32_t low = (cur>>16u)&0xFFu;
+         uint32_t high = (cur>>24u)&0xFFu;
+         uint32_t c = str[i];
+         if(c>=low && c<high) {
+            cur = table[idx+c-low];
+         } else {
+            break;
+         }
+         if(cur&0x80000000u) {
+            return cur&0xFFFFu;
+         }
+         if(str[i]==0) {
+            break;
+         }
+      }
+      return -1;
+   }
+   public:
+   light_directional(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
+      DebugObject::setParameter(paramname, paramtype, mem);
+      int idx = param_hash(paramname);
+      switch(idx) {
+         case 0: { //name
+            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_LIGHT, "directional", paramname, paramtype, name_types);
+            return;
+         }
+         case 1: { //color
+            ANARIDataType color_types[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
+            check_type(ANARI_LIGHT, "directional", paramname, paramtype, color_types);
+            return;
+         }
+         case 2: { //irridance
+            ANARIDataType irridance_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
+            check_type(ANARI_LIGHT, "directional", paramname, paramtype, irridance_types);
+            return;
+         }
+         case 3: { //direction
+            ANARIDataType direction_types[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
+            check_type(ANARI_LIGHT, "directional", paramname, paramtype, direction_types);
+            return;
+         }
+         default: // unknown param
+            unknown_parameter(ANARI_LIGHT, "directional", paramname, paramtype);
+            return;
+      }
+   }
+   void commit() {
+      DebugObject::commit();
+   }
+};
+class light_point : public DebugObject<ANARI_LIGHT> {
+   static int param_hash(const char *str) {
+      static const uint32_t table[] = {0x706f000eu,0x0u,0x0u,0x0u,0x0u,0x0u,0x6f6e0013u,0x0u,0x0u,0x0u,0x0u,0x6261001cu,0x0u,0x706f0020u,0x6d6c000fu,0x706f0010u,0x73720011u,0x1000012u,0x80000001u,0x75740014u,0x66650015u,0x6f6e0016u,0x74730017u,0x6a690018u,0x75740019u,0x7a79001au,0x100001bu,0x80000003u,0x6e6d001du,0x6665001eu,0x100001fu,0x80000000u,0x78730021u,0x6a690026u,0x0u,0x0u,0x0u,0x6665002cu,0x75740027u,0x6a690028u,0x706f0029u,0x6f6e002au,0x100002bu,0x80000002u,0x7372002du,0x100002eu,0x80000004u};
+      uint32_t cur = 0x71630000u;
+      for(int i = 0;cur!=0;++i) {
+         uint32_t idx = cur&0xFFFFu;
+         uint32_t low = (cur>>16u)&0xFFu;
+         uint32_t high = (cur>>24u)&0xFFu;
+         uint32_t c = str[i];
+         if(c>=low && c<high) {
+            cur = table[idx+c-low];
+         } else {
+            break;
+         }
+         if(cur&0x80000000u) {
+            return cur&0xFFFFu;
+         }
+         if(str[i]==0) {
+            break;
+         }
+      }
+      return -1;
+   }
+   public:
+   light_point(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
+      DebugObject::setParameter(paramname, paramtype, mem);
+      int idx = param_hash(paramname);
+      switch(idx) {
+         case 0: { //name
+            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_LIGHT, "point", paramname, paramtype, name_types);
+            return;
+         }
+         case 1: { //color
+            ANARIDataType color_types[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
+            check_type(ANARI_LIGHT, "point", paramname, paramtype, color_types);
+            return;
+         }
+         case 2: { //position
+            ANARIDataType position_types[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
+            check_type(ANARI_LIGHT, "point", paramname, paramtype, position_types);
+            return;
+         }
+         case 3: { //intensity
+            ANARIDataType intensity_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
+            check_type(ANARI_LIGHT, "point", paramname, paramtype, intensity_types);
+            return;
+         }
+         case 4: { //power
+            ANARIDataType power_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
+            check_type(ANARI_LIGHT, "point", paramname, paramtype, power_types);
+            return;
+         }
+         default: // unknown param
+            unknown_parameter(ANARI_LIGHT, "point", paramname, paramtype);
+            return;
+      }
+   }
+   void commit() {
+      DebugObject::commit();
+   }
+};
+class light_spot : public DebugObject<ANARI_LIGHT> {
+   static int param_hash(const char *str) {
+      static const uint32_t table[] = {0x706f000eu,0x6a690013u,0x0u,0x6261001cu,0x0u,0x0u,0x6f6e0028u,0x0u,0x0u,0x0u,0x0u,0x62610031u,0x71700035u,0x706f0041u,0x6d6c000fu,0x706f0010u,0x73720011u,0x1000012u,0x80000001u,0x73720014u,0x66650015u,0x64630016u,0x75740017u,0x6a690018u,0x706f0019u,0x6f6e001au,0x100001bu,0x80000003u,0x6d6c001du,0x6d6c001eu,0x706f001fu,0x67660020u,0x67660021u,0x42410022u,0x6f6e0023u,0x68670024u,0x6d6c0025u,0x66650026u,0x1000027u,0x80000005u,0x75740029u,0x6665002au,0x6f6e002bu,0x7473002cu,0x6a69002du,0x7574002eu,0x7a79002fu,0x1000030u,0x80000006u,0x6e6d0032u,0x66650033u,0x1000034u,0x80000000u,0x66650036u,0x6f6e0037u,0x6a690038u,0x6f6e0039u,0x6867003au,0x4241003bu,0x6f6e003cu,0x6867003du,0x6d6c003eu,0x6665003fu,0x1000040u,0x80000004u,0x78730042u,0x6a690047u,0x0u,0x0u,0x0u,0x6665004du,0x75740048u,0x6a690049u,0x706f004au,0x6f6e004bu,0x100004cu,0x80000002u,0x7372004eu,0x100004fu,0x80000007u};
+      uint32_t cur = 0x71630000u;
+      for(int i = 0;cur!=0;++i) {
+         uint32_t idx = cur&0xFFFFu;
+         uint32_t low = (cur>>16u)&0xFFu;
+         uint32_t high = (cur>>24u)&0xFFu;
+         uint32_t c = str[i];
+         if(c>=low && c<high) {
+            cur = table[idx+c-low];
+         } else {
+            break;
+         }
+         if(cur&0x80000000u) {
+            return cur&0xFFFFu;
+         }
+         if(str[i]==0) {
+            break;
+         }
+      }
+      return -1;
+   }
+   public:
+   light_spot(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
+      DebugObject::setParameter(paramname, paramtype, mem);
+      int idx = param_hash(paramname);
+      switch(idx) {
+         case 0: { //name
+            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_LIGHT, "spot", paramname, paramtype, name_types);
+            return;
+         }
+         case 1: { //color
+            ANARIDataType color_types[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
+            check_type(ANARI_LIGHT, "spot", paramname, paramtype, color_types);
+            return;
+         }
+         case 2: { //position
+            ANARIDataType position_types[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
+            check_type(ANARI_LIGHT, "spot", paramname, paramtype, position_types);
+            return;
+         }
+         case 3: { //direction
+            ANARIDataType direction_types[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
+            check_type(ANARI_LIGHT, "spot", paramname, paramtype, direction_types);
+            return;
+         }
+         case 4: { //openingAngle
+            ANARIDataType openingAngle_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
+            check_type(ANARI_LIGHT, "spot", paramname, paramtype, openingAngle_types);
+            return;
+         }
+         case 5: { //falloffAngle
+            ANARIDataType falloffAngle_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
+            check_type(ANARI_LIGHT, "spot", paramname, paramtype, falloffAngle_types);
+            return;
+         }
+         case 6: { //intensity
+            ANARIDataType intensity_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
+            check_type(ANARI_LIGHT, "spot", paramname, paramtype, intensity_types);
+            return;
+         }
+         case 7: { //power
+            ANARIDataType power_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
+            check_type(ANARI_LIGHT, "spot", paramname, paramtype, power_types);
+            return;
+         }
+         default: // unknown param
+            unknown_parameter(ANARI_LIGHT, "spot", paramname, paramtype);
+            return;
+      }
+   }
+   void commit() {
+      DebugObject::commit();
+   }
+};
+class material_matte : public DebugObject<ANARI_MATERIAL> {
+   static int param_hash(const char *str) {
+      static const uint32_t table[] = {0x706f000cu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x62610011u,0x6d6c000du,0x706f000eu,0x7372000fu,0x1000010u,0x80000001u,0x6e6d0012u,0x66650013u,0x1000014u,0x80000000u};
+      uint32_t cur = 0x6f630000u;
+      for(int i = 0;cur!=0;++i) {
+         uint32_t idx = cur&0xFFFFu;
+         uint32_t low = (cur>>16u)&0xFFu;
+         uint32_t high = (cur>>24u)&0xFFu;
+         uint32_t c = str[i];
+         if(c>=low && c<high) {
+            cur = table[idx+c-low];
+         } else {
+            break;
+         }
+         if(cur&0x80000000u) {
+            return cur&0xFFFFu;
+         }
+         if(str[i]==0) {
+            break;
+         }
+      }
+      return -1;
+   }
+   public:
+   material_matte(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
+      DebugObject::setParameter(paramname, paramtype, mem);
+      int idx = param_hash(paramname);
+      switch(idx) {
+         case 0: { //name
+            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_MATERIAL, "matte", paramname, paramtype, name_types);
+            return;
+         }
+         case 1: { //color
+            ANARIDataType color_types[] = {ANARI_FLOAT32_VEC3,ANARI_SAMPLER,ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_MATERIAL, "matte", paramname, paramtype, color_types);
+            return;
+         }
+         default: // unknown param
+            unknown_parameter(ANARI_MATERIAL, "matte", paramname, paramtype);
+            return;
+      }
+   }
+   void commit() {
+      DebugObject::commit();
+   }
+};
+class material_transparentMatte : public DebugObject<ANARI_MATERIAL> {
+   static int param_hash(const char *str) {
+      static const uint32_t table[] = {0x706f000du,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x62610012u,0x71700016u,0x6d6c000eu,0x706f000fu,0x73720010u,0x1000011u,0x80000001u,0x6e6d0013u,0x66650014u,0x1000015u,0x80000000u,0x62610017u,0x64630018u,0x6a690019u,0x7574001au,0x7a79001bu,0x100001cu,0x80000002u};
+      uint32_t cur = 0x70630000u;
+      for(int i = 0;cur!=0;++i) {
+         uint32_t idx = cur&0xFFFFu;
+         uint32_t low = (cur>>16u)&0xFFu;
+         uint32_t high = (cur>>24u)&0xFFu;
+         uint32_t c = str[i];
+         if(c>=low && c<high) {
+            cur = table[idx+c-low];
+         } else {
+            break;
+         }
+         if(cur&0x80000000u) {
+            return cur&0xFFFFu;
+         }
+         if(str[i]==0) {
+            break;
+         }
+      }
+      return -1;
+   }
+   public:
+   material_transparentMatte(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
+      DebugObject::setParameter(paramname, paramtype, mem);
+      int idx = param_hash(paramname);
+      switch(idx) {
+         case 0: { //name
+            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_MATERIAL, "transparentMatte", paramname, paramtype, name_types);
+            return;
+         }
+         case 1: { //color
+            ANARIDataType color_types[] = {ANARI_FLOAT32_VEC3,ANARI_SAMPLER,ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_MATERIAL, "transparentMatte", paramname, paramtype, color_types);
+            return;
+         }
+         case 2: { //opacity
+            ANARIDataType opacity_types[] = {ANARI_FLOAT32,ANARI_SAMPLER,ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_MATERIAL, "transparentMatte", paramname, paramtype, opacity_types);
+            return;
+         }
+         default: // unknown param
+            unknown_parameter(ANARI_MATERIAL, "transparentMatte", paramname, paramtype);
+            return;
+      }
+   }
+   void commit() {
+      DebugObject::commit();
    }
 };
 class sampler_image1D : public DebugObject<ANARI_SAMPLER> {
@@ -539,6 +2189,69 @@ class sampler_transform : public DebugObject<ANARI_SAMPLER> {
       DebugObject::commit();
    }
 };
+class spatial_field_structuredRegular : public DebugObject<ANARI_SPATIAL_FIELD> {
+   static int param_hash(const char *str) {
+      static const uint32_t table[] = {0x62610010u,0x0u,0x6a690014u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6261001au,0x7372001eu,0x0u,0x0u,0x0u,0x71700024u,0x75740011u,0x62610012u,0x1000013u,0x80000001u,0x6d6c0015u,0x75740016u,0x66650017u,0x73720018u,0x1000019u,0x80000004u,0x6e6d001bu,0x6665001cu,0x100001du,0x80000000u,0x6a69001fu,0x68670020u,0x6a690021u,0x6f6e0022u,0x1000023u,0x80000002u,0x62610025u,0x64630026u,0x6a690027u,0x6f6e0028u,0x68670029u,0x100002au,0x80000003u};
+      uint32_t cur = 0x74640000u;
+      for(int i = 0;cur!=0;++i) {
+         uint32_t idx = cur&0xFFFFu;
+         uint32_t low = (cur>>16u)&0xFFu;
+         uint32_t high = (cur>>24u)&0xFFu;
+         uint32_t c = str[i];
+         if(c>=low && c<high) {
+            cur = table[idx+c-low];
+         } else {
+            break;
+         }
+         if(cur&0x80000000u) {
+            return cur&0xFFFFu;
+         }
+         if(str[i]==0) {
+            break;
+         }
+      }
+      return -1;
+   }
+   public:
+   spatial_field_structuredRegular(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
+      DebugObject::setParameter(paramname, paramtype, mem);
+      int idx = param_hash(paramname);
+      switch(idx) {
+         case 0: { //name
+            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_SPATIAL_FIELD, "structuredRegular", paramname, paramtype, name_types);
+            return;
+         }
+         case 1: { //data
+            ANARIDataType data_types[] = {ANARI_ARRAY3D, ANARI_UNKNOWN};
+            check_type(ANARI_SPATIAL_FIELD, "structuredRegular", paramname, paramtype, data_types);
+            return;
+         }
+         case 2: { //origin
+            ANARIDataType origin_types[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
+            check_type(ANARI_SPATIAL_FIELD, "structuredRegular", paramname, paramtype, origin_types);
+            return;
+         }
+         case 3: { //spacing
+            ANARIDataType spacing_types[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
+            check_type(ANARI_SPATIAL_FIELD, "structuredRegular", paramname, paramtype, spacing_types);
+            return;
+         }
+         case 4: { //filter
+            ANARIDataType filter_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_SPATIAL_FIELD, "structuredRegular", paramname, paramtype, filter_types);
+            return;
+         }
+         default: // unknown param
+            unknown_parameter(ANARI_SPATIAL_FIELD, "structuredRegular", paramname, paramtype);
+            return;
+      }
+   }
+   void commit() {
+      DebugObject::commit();
+   }
+};
 class volume_scivis : public DebugObject<ANARI_VOLUME> {
    static int param_hash(const char *str) {
       static const uint32_t table[] = {0x706f0014u,0x66650050u,0x0u,0x6a69005cu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x62610061u,0x71700065u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x626100a3u,0x6d6c0015u,0x706f0016u,0x73720017u,0x2f000018u,0x80000003u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x71700047u,0x706f0048u,0x74730049u,0x6a69004au,0x7574004bu,0x6a69004cu,0x706f004du,0x6f6e004eu,0x100004fu,0x80000004u,0x6f6e0051u,0x74730052u,0x6a690053u,0x75740054u,0x7a790055u,0x54530056u,0x64630057u,0x62610058u,0x6d6c0059u,0x6665005au,0x100005bu,0x80000007u,0x6665005du,0x6d6c005eu,0x6564005fu,0x1000060u,0x80000001u,0x6e6d0062u,0x66650063u,0x1000064u,0x80000000u,0x62610066u,0x64630067u,0x6a690068u,0x75740069u,0x7a79006au,0x2f00006bu,0x80000005u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x7170009au,0x706f009bu,0x7473009cu,0x6a69009du,0x7574009eu,0x6a69009fu,0x706f00a0u,0x6f6e00a1u,0x10000a2u,0x80000006u,0x6d6c00a4u,0x767500a5u,0x666500a6u,0x535200a7u,0x626100a8u,0x6f6e00a9u,0x686700aau,0x666500abu,0x10000acu,0x80000002u};
@@ -610,1709 +2323,6 @@ class volume_scivis : public DebugObject<ANARI_VOLUME> {
          }
          default: // unknown param
             unknown_parameter(ANARI_VOLUME, "scivis", paramname, paramtype);
-            return;
-      }
-   }
-   void commit() {
-      DebugObject::commit();
-   }
-};
-class frame : public DebugObject<ANARI_FRAME> {
-   static int param_hash(const char *str) {
-      static const uint32_t table[] = {0x70610015u,0x6665002du,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x62610032u,0x0u,0x0u,0x0u,0x66650036u,0x6a69003eu,0x0u,0x0u,0x0u,0x706f0042u,0x6e6d0024u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6d6c0029u,0x66650025u,0x73720026u,0x62610027u,0x1000028u,0x80000003u,0x706f002au,0x7372002bu,0x100002cu,0x80000005u,0x7170002eu,0x7574002fu,0x69680030u,0x1000031u,0x80000006u,0x6e6d0033u,0x66650034u,0x1000035u,0x80000000u,0x6f6e0037u,0x65640038u,0x66650039u,0x7372003au,0x6665003bu,0x7372003cu,0x100003du,0x80000002u,0x7b7a003fu,0x66650040u,0x1000041u,0x80000004u,0x73720043u,0x6d6c0044u,0x65640045u,0x1000046u,0x80000001u};
-      uint32_t cur = 0x78630000u;
-      for(int i = 0;cur!=0;++i) {
-         uint32_t idx = cur&0xFFFFu;
-         uint32_t low = (cur>>16u)&0xFFu;
-         uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
-         if(c>=low && c<high) {
-            cur = table[idx+c-low];
-         } else {
-            break;
-         }
-         if(cur&0x80000000u) {
-            return cur&0xFFFFu;
-         }
-         if(str[i]==0) {
-            break;
-         }
-      }
-      return -1;
-   }
-   public:
-   frame(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
-   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
-      DebugObject::setParameter(paramname, paramtype, mem);
-      int idx = param_hash(paramname);
-      switch(idx) {
-         case 0: { //name
-            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
-            check_type(ANARI_FRAME, "", paramname, paramtype, name_types);
-            return;
-         }
-         case 1: { //world
-            ANARIDataType world_types[] = {ANARI_WORLD, ANARI_UNKNOWN};
-            check_type(ANARI_FRAME, "", paramname, paramtype, world_types);
-            return;
-         }
-         case 2: { //renderer
-            ANARIDataType renderer_types[] = {ANARI_RENDERER, ANARI_UNKNOWN};
-            check_type(ANARI_FRAME, "", paramname, paramtype, renderer_types);
-            return;
-         }
-         case 3: { //camera
-            ANARIDataType camera_types[] = {ANARI_CAMERA, ANARI_UNKNOWN};
-            check_type(ANARI_FRAME, "", paramname, paramtype, camera_types);
-            return;
-         }
-         case 4: { //size
-            ANARIDataType size_types[] = {ANARI_UINT32_VEC2, ANARI_UNKNOWN};
-            check_type(ANARI_FRAME, "", paramname, paramtype, size_types);
-            return;
-         }
-         case 5: { //color
-            ANARIDataType color_types[] = {ANARI_DATA_TYPE, ANARI_UNKNOWN};
-            check_type(ANARI_FRAME, "", paramname, paramtype, color_types);
-            return;
-         }
-         case 6: { //depth
-            ANARIDataType depth_types[] = {ANARI_DATA_TYPE, ANARI_UNKNOWN};
-            check_type(ANARI_FRAME, "", paramname, paramtype, depth_types);
-            return;
-         }
-         default: // unknown param
-            unknown_parameter(ANARI_FRAME, "", paramname, paramtype);
-            return;
-      }
-   }
-   void commit() {
-      DebugObject::commit();
-   }
-};
-class group : public DebugObject<ANARI_GROUP> {
-   static int param_hash(const char *str) {
-      static const uint32_t table[] = {0x6a69000bu,0x0u,0x62610010u,0x0u,0x0u,0x0u,0x0u,0x76750014u,0x0u,0x0u,0x706f001bu,0x6867000cu,0x6968000du,0x7574000eu,0x100000fu,0x80000003u,0x6e6d0011u,0x66650012u,0x1000013u,0x80000000u,0x73720015u,0x67660016u,0x62610017u,0x64630018u,0x66650019u,0x100001au,0x80000001u,0x6d6c001cu,0x7675001du,0x6e6d001eu,0x6665001fu,0x1000020u,0x80000002u};
-      uint32_t cur = 0x776c0000u;
-      for(int i = 0;cur!=0;++i) {
-         uint32_t idx = cur&0xFFFFu;
-         uint32_t low = (cur>>16u)&0xFFu;
-         uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
-         if(c>=low && c<high) {
-            cur = table[idx+c-low];
-         } else {
-            break;
-         }
-         if(cur&0x80000000u) {
-            return cur&0xFFFFu;
-         }
-         if(str[i]==0) {
-            break;
-         }
-      }
-      return -1;
-   }
-   public:
-   group(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
-   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
-      DebugObject::setParameter(paramname, paramtype, mem);
-      int idx = param_hash(paramname);
-      switch(idx) {
-         case 0: { //name
-            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
-            check_type(ANARI_GROUP, "", paramname, paramtype, name_types);
-            return;
-         }
-         case 1: { //surface
-            ANARIDataType surface_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GROUP, "", paramname, paramtype, surface_types);
-            return;
-         }
-         case 2: { //volume
-            ANARIDataType volume_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GROUP, "", paramname, paramtype, volume_types);
-            return;
-         }
-         case 3: { //light
-            ANARIDataType light_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GROUP, "", paramname, paramtype, light_types);
-            return;
-         }
-         default: // unknown param
-            unknown_parameter(ANARI_GROUP, "", paramname, paramtype);
-            return;
-      }
-   }
-   void commit() {
-      DebugObject::commit();
-   }
-};
-class instance : public DebugObject<ANARI_INSTANCE> {
-   static int param_hash(const char *str) {
-      static const uint32_t table[] = {0x7372000eu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x62610013u,0x0u,0x0u,0x0u,0x0u,0x0u,0x73720017u,0x706f000fu,0x76750010u,0x71700011u,0x1000012u,0x80000002u,0x6e6d0014u,0x66650015u,0x1000016u,0x80000000u,0x62610018u,0x6f6e0019u,0x7473001au,0x6766001bu,0x706f001cu,0x7372001du,0x6e6d001eu,0x100001fu,0x80000001u};
-      uint32_t cur = 0x75670000u;
-      for(int i = 0;cur!=0;++i) {
-         uint32_t idx = cur&0xFFFFu;
-         uint32_t low = (cur>>16u)&0xFFu;
-         uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
-         if(c>=low && c<high) {
-            cur = table[idx+c-low];
-         } else {
-            break;
-         }
-         if(cur&0x80000000u) {
-            return cur&0xFFFFu;
-         }
-         if(str[i]==0) {
-            break;
-         }
-      }
-      return -1;
-   }
-   public:
-   instance(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
-   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
-      DebugObject::setParameter(paramname, paramtype, mem);
-      int idx = param_hash(paramname);
-      switch(idx) {
-         case 0: { //name
-            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
-            check_type(ANARI_INSTANCE, "", paramname, paramtype, name_types);
-            return;
-         }
-         case 1: { //transform
-            ANARIDataType transform_types[] = {ANARI_FLOAT32_MAT3x4, ANARI_UNKNOWN};
-            check_type(ANARI_INSTANCE, "", paramname, paramtype, transform_types);
-            return;
-         }
-         case 2: { //group
-            ANARIDataType group_types[] = {ANARI_GROUP, ANARI_UNKNOWN};
-            check_type(ANARI_INSTANCE, "", paramname, paramtype, group_types);
-            return;
-         }
-         default: // unknown param
-            unknown_parameter(ANARI_INSTANCE, "", paramname, paramtype);
-            return;
-      }
-   }
-   void commit() {
-      DebugObject::commit();
-   }
-};
-class world : public DebugObject<ANARI_WORLD> {
-   static int param_hash(const char *str) {
-      static const uint32_t table[] = {0x6f6e000eu,0x0u,0x0u,0x6a690016u,0x0u,0x6261001bu,0x0u,0x0u,0x0u,0x0u,0x7675001fu,0x0u,0x0u,0x706f0026u,0x7473000fu,0x75740010u,0x62610011u,0x6f6e0012u,0x64630013u,0x66650014u,0x1000015u,0x80000001u,0x68670017u,0x69680018u,0x75740019u,0x100001au,0x80000004u,0x6e6d001cu,0x6665001du,0x100001eu,0x80000000u,0x73720020u,0x67660021u,0x62610022u,0x64630023u,0x66650024u,0x1000025u,0x80000002u,0x6d6c0027u,0x76750028u,0x6e6d0029u,0x6665002au,0x100002bu,0x80000003u};
-      uint32_t cur = 0x77690000u;
-      for(int i = 0;cur!=0;++i) {
-         uint32_t idx = cur&0xFFFFu;
-         uint32_t low = (cur>>16u)&0xFFu;
-         uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
-         if(c>=low && c<high) {
-            cur = table[idx+c-low];
-         } else {
-            break;
-         }
-         if(cur&0x80000000u) {
-            return cur&0xFFFFu;
-         }
-         if(str[i]==0) {
-            break;
-         }
-      }
-      return -1;
-   }
-   public:
-   world(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
-   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
-      DebugObject::setParameter(paramname, paramtype, mem);
-      int idx = param_hash(paramname);
-      switch(idx) {
-         case 0: { //name
-            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
-            check_type(ANARI_WORLD, "", paramname, paramtype, name_types);
-            return;
-         }
-         case 1: { //instance
-            ANARIDataType instance_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_WORLD, "", paramname, paramtype, instance_types);
-            return;
-         }
-         case 2: { //surface
-            ANARIDataType surface_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_WORLD, "", paramname, paramtype, surface_types);
-            return;
-         }
-         case 3: { //volume
-            ANARIDataType volume_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_WORLD, "", paramname, paramtype, volume_types);
-            return;
-         }
-         case 4: { //light
-            ANARIDataType light_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_WORLD, "", paramname, paramtype, light_types);
-            return;
-         }
-         default: // unknown param
-            unknown_parameter(ANARI_WORLD, "", paramname, paramtype);
-            return;
-      }
-   }
-   void commit() {
-      DebugObject::commit();
-   }
-};
-class renderer_default : public DebugObject<ANARI_RENDERER> {
-   static int param_hash(const char *str) {
-      static const uint32_t table[] = {0x62610001u,0x6e6d0002u,0x66650003u,0x1000004u,0x80000000u};
-      uint32_t cur = 0x6f6e0000u;
-      for(int i = 0;cur!=0;++i) {
-         uint32_t idx = cur&0xFFFFu;
-         uint32_t low = (cur>>16u)&0xFFu;
-         uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
-         if(c>=low && c<high) {
-            cur = table[idx+c-low];
-         } else {
-            break;
-         }
-         if(cur&0x80000000u) {
-            return cur&0xFFFFu;
-         }
-         if(str[i]==0) {
-            break;
-         }
-      }
-      return -1;
-   }
-   public:
-   renderer_default(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
-   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
-      DebugObject::setParameter(paramname, paramtype, mem);
-      int idx = param_hash(paramname);
-      switch(idx) {
-         case 0: { //name
-            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
-            check_type(ANARI_RENDERER, "default", paramname, paramtype, name_types);
-            return;
-         }
-         default: // unknown param
-            unknown_parameter(ANARI_RENDERER, "default", paramname, paramtype);
-            return;
-      }
-   }
-   void commit() {
-      DebugObject::commit();
-   }
-};
-class camera_perspective : public DebugObject<ANARI_CAMERA> {
-   static int param_hash(const char *str) {
-      static const uint32_t table[] = {0x74700015u,0x0u,0x0u,0x6a69002bu,0x0u,0x706f0034u,0x0u,0x0u,0x6f6d0056u,0x0u,0x0u,0x0u,0x0u,0x62610077u,0x0u,0x706f007bu,0x0u,0x0u,0x75740083u,0x7372008du,0x71700096u,0x66650019u,0x0u,0x0u,0x71700026u,0x7372001au,0x7574001bu,0x7675001cu,0x7372001du,0x6665001eu,0x5352001fu,0x62610020u,0x65640021u,0x6a690022u,0x76750023u,0x74730024u,0x1000025u,0x80000006u,0x66650027u,0x64630028u,0x75740029u,0x100002au,0x8000000bu,0x7372002cu,0x6665002du,0x6463002eu,0x7574002fu,0x6a690030u,0x706f0031u,0x6f6e0032u,0x1000033u,0x80000002u,0x77630035u,0x76750049u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x7a790054u,0x7473004au,0x4544004bu,0x6a69004cu,0x7473004du,0x7574004eu,0x6261004fu,0x6f6e0050u,0x64630051u,0x66650052u,0x1000053u,0x80000007u,0x1000055u,0x8000000au,0x62610058u,0x75740062u,0x68670059u,0x6665005au,0x5352005bu,0x6665005cu,0x6867005du,0x6a69005eu,0x706f005fu,0x6f6e0060u,0x1000061u,0x80000005u,0x66650063u,0x73720064u,0x71700065u,0x76750066u,0x71700067u,0x6a690068u,0x6d6c0069u,0x6d6c006au,0x6261006bu,0x7372006cu,0x7a79006du,0x4544006eu,0x6a69006fu,0x74730070u,0x75740071u,0x62610072u,0x6f6e0073u,0x64630074u,0x66650075u,0x1000076u,0x80000009u,0x6e6d0078u,0x66650079u,0x100007au,0x80000000u,0x7473007cu,0x6a69007du,0x7574007eu,0x6a69007fu,0x706f0080u,0x6f6e0081u,0x1000082u,0x80000001u,0x66650084u,0x73720085u,0x66650086u,0x706f0087u,0x4e4d0088u,0x706f0089u,0x6564008au,0x6665008bu,0x100008cu,0x80000008u,0x6261008eu,0x6f6e008fu,0x74730090u,0x67660091u,0x706f0092u,0x73720093u,0x6e6d0094u,0x1000095u,0x80000004u,0x1000097u,0x80000003u};
-      uint32_t cur = 0x76610000u;
-      for(int i = 0;cur!=0;++i) {
-         uint32_t idx = cur&0xFFFFu;
-         uint32_t low = (cur>>16u)&0xFFu;
-         uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
-         if(c>=low && c<high) {
-            cur = table[idx+c-low];
-         } else {
-            break;
-         }
-         if(cur&0x80000000u) {
-            return cur&0xFFFFu;
-         }
-         if(str[i]==0) {
-            break;
-         }
-      }
-      return -1;
-   }
-   public:
-   camera_perspective(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
-   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
-      DebugObject::setParameter(paramname, paramtype, mem);
-      int idx = param_hash(paramname);
-      switch(idx) {
-         case 0: { //name
-            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
-            check_type(ANARI_CAMERA, "perspective", paramname, paramtype, name_types);
-            return;
-         }
-         case 1: { //position
-            ANARIDataType position_types[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
-            check_type(ANARI_CAMERA, "perspective", paramname, paramtype, position_types);
-            return;
-         }
-         case 2: { //direction
-            ANARIDataType direction_types[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
-            check_type(ANARI_CAMERA, "perspective", paramname, paramtype, direction_types);
-            return;
-         }
-         case 3: { //up
-            ANARIDataType up_types[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
-            check_type(ANARI_CAMERA, "perspective", paramname, paramtype, up_types);
-            return;
-         }
-         case 4: { //transform
-            ANARIDataType transform_types[] = {ANARI_FLOAT32_MAT3x4, ANARI_UNKNOWN};
-            check_type(ANARI_CAMERA, "perspective", paramname, paramtype, transform_types);
-            return;
-         }
-         case 5: { //imageRegion
-            ANARIDataType imageRegion_types[] = {ANARI_FLOAT32_BOX2, ANARI_UNKNOWN};
-            check_type(ANARI_CAMERA, "perspective", paramname, paramtype, imageRegion_types);
-            return;
-         }
-         case 6: { //apertureRadius
-            ANARIDataType apertureRadius_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
-            check_type(ANARI_CAMERA, "perspective", paramname, paramtype, apertureRadius_types);
-            return;
-         }
-         case 7: { //focusDistance
-            ANARIDataType focusDistance_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
-            check_type(ANARI_CAMERA, "perspective", paramname, paramtype, focusDistance_types);
-            return;
-         }
-         case 8: { //stereoMode
-            ANARIDataType stereoMode_types[] = {ANARI_STRING, ANARI_UNKNOWN};
-            check_type(ANARI_CAMERA, "perspective", paramname, paramtype, stereoMode_types);
-            return;
-         }
-         case 9: { //interpupillaryDistance
-            ANARIDataType interpupillaryDistance_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
-            check_type(ANARI_CAMERA, "perspective", paramname, paramtype, interpupillaryDistance_types);
-            return;
-         }
-         case 10: { //fovy
-            ANARIDataType fovy_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
-            check_type(ANARI_CAMERA, "perspective", paramname, paramtype, fovy_types);
-            return;
-         }
-         case 11: { //aspect
-            ANARIDataType aspect_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
-            check_type(ANARI_CAMERA, "perspective", paramname, paramtype, aspect_types);
-            return;
-         }
-         default: // unknown param
-            unknown_parameter(ANARI_CAMERA, "perspective", paramname, paramtype);
-            return;
-      }
-   }
-   void commit() {
-      DebugObject::commit();
-   }
-};
-class camera_orthographic : public DebugObject<ANARI_CAMERA> {
-   static int param_hash(const char *str) {
-      static const uint32_t table[] = {0x74700015u,0x0u,0x0u,0x6a69002bu,0x0u,0x706f0034u,0x0u,0x0u,0x6f6d0041u,0x0u,0x0u,0x0u,0x0u,0x62610062u,0x0u,0x706f0066u,0x0u,0x0u,0x7574006eu,0x73720078u,0x71700081u,0x66650019u,0x0u,0x0u,0x71700026u,0x7372001au,0x7574001bu,0x7675001cu,0x7372001du,0x6665001eu,0x5352001fu,0x62610020u,0x65640021u,0x6a690022u,0x76750023u,0x74730024u,0x1000025u,0x80000006u,0x66650027u,0x64630028u,0x75740029u,0x100002au,0x8000000au,0x7372002cu,0x6665002du,0x6463002eu,0x7574002fu,0x6a690030u,0x706f0031u,0x6f6e0032u,0x1000033u,0x80000002u,0x64630035u,0x76750036u,0x74730037u,0x45440038u,0x6a690039u,0x7473003au,0x7574003bu,0x6261003cu,0x6f6e003du,0x6463003eu,0x6665003fu,0x1000040u,0x80000007u,0x62610043u,0x7574004du,0x68670044u,0x66650045u,0x53520046u,0x66650047u,0x68670048u,0x6a690049u,0x706f004au,0x6f6e004bu,0x100004cu,0x80000005u,0x6665004eu,0x7372004fu,0x71700050u,0x76750051u,0x71700052u,0x6a690053u,0x6d6c0054u,0x6d6c0055u,0x62610056u,0x73720057u,0x7a790058u,0x45440059u,0x6a69005au,0x7473005bu,0x7574005cu,0x6261005du,0x6f6e005eu,0x6463005fu,0x66650060u,0x1000061u,0x80000009u,0x6e6d0063u,0x66650064u,0x1000065u,0x80000000u,0x74730067u,0x6a690068u,0x75740069u,0x6a69006au,0x706f006bu,0x6f6e006cu,0x100006du,0x80000001u,0x6665006fu,0x73720070u,0x66650071u,0x706f0072u,0x4e4d0073u,0x706f0074u,0x65640075u,0x66650076u,0x1000077u,0x80000008u,0x62610079u,0x6f6e007au,0x7473007bu,0x6766007cu,0x706f007du,0x7372007eu,0x6e6d007fu,0x1000080u,0x80000004u,0x1000082u,0x80000003u};
-      uint32_t cur = 0x76610000u;
-      for(int i = 0;cur!=0;++i) {
-         uint32_t idx = cur&0xFFFFu;
-         uint32_t low = (cur>>16u)&0xFFu;
-         uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
-         if(c>=low && c<high) {
-            cur = table[idx+c-low];
-         } else {
-            break;
-         }
-         if(cur&0x80000000u) {
-            return cur&0xFFFFu;
-         }
-         if(str[i]==0) {
-            break;
-         }
-      }
-      return -1;
-   }
-   public:
-   camera_orthographic(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
-   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
-      DebugObject::setParameter(paramname, paramtype, mem);
-      int idx = param_hash(paramname);
-      switch(idx) {
-         case 0: { //name
-            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
-            check_type(ANARI_CAMERA, "orthographic", paramname, paramtype, name_types);
-            return;
-         }
-         case 1: { //position
-            ANARIDataType position_types[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
-            check_type(ANARI_CAMERA, "orthographic", paramname, paramtype, position_types);
-            return;
-         }
-         case 2: { //direction
-            ANARIDataType direction_types[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
-            check_type(ANARI_CAMERA, "orthographic", paramname, paramtype, direction_types);
-            return;
-         }
-         case 3: { //up
-            ANARIDataType up_types[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
-            check_type(ANARI_CAMERA, "orthographic", paramname, paramtype, up_types);
-            return;
-         }
-         case 4: { //transform
-            ANARIDataType transform_types[] = {ANARI_FLOAT32_MAT3x4, ANARI_UNKNOWN};
-            check_type(ANARI_CAMERA, "orthographic", paramname, paramtype, transform_types);
-            return;
-         }
-         case 5: { //imageRegion
-            ANARIDataType imageRegion_types[] = {ANARI_FLOAT32_BOX2, ANARI_UNKNOWN};
-            check_type(ANARI_CAMERA, "orthographic", paramname, paramtype, imageRegion_types);
-            return;
-         }
-         case 6: { //apertureRadius
-            ANARIDataType apertureRadius_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
-            check_type(ANARI_CAMERA, "orthographic", paramname, paramtype, apertureRadius_types);
-            return;
-         }
-         case 7: { //focusDistance
-            ANARIDataType focusDistance_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
-            check_type(ANARI_CAMERA, "orthographic", paramname, paramtype, focusDistance_types);
-            return;
-         }
-         case 8: { //stereoMode
-            ANARIDataType stereoMode_types[] = {ANARI_STRING, ANARI_UNKNOWN};
-            check_type(ANARI_CAMERA, "orthographic", paramname, paramtype, stereoMode_types);
-            return;
-         }
-         case 9: { //interpupillaryDistance
-            ANARIDataType interpupillaryDistance_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
-            check_type(ANARI_CAMERA, "orthographic", paramname, paramtype, interpupillaryDistance_types);
-            return;
-         }
-         case 10: { //aspect
-            ANARIDataType aspect_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
-            check_type(ANARI_CAMERA, "orthographic", paramname, paramtype, aspect_types);
-            return;
-         }
-         default: // unknown param
-            unknown_parameter(ANARI_CAMERA, "orthographic", paramname, paramtype);
-            return;
-      }
-   }
-   void commit() {
-      DebugObject::commit();
-   }
-};
-class camera_omnidirectional : public DebugObject<ANARI_CAMERA> {
-   static int param_hash(const char *str) {
-      static const uint32_t table[] = {0x71700015u,0x0u,0x0u,0x6a690023u,0x0u,0x706f002cu,0x0u,0x0u,0x6f6d0039u,0x0u,0x0u,0x6261005au,0x0u,0x62610060u,0x0u,0x706f0064u,0x0u,0x0u,0x7574006cu,0x73720076u,0x7170007fu,0x66650016u,0x73720017u,0x75740018u,0x76750019u,0x7372001au,0x6665001bu,0x5352001cu,0x6261001du,0x6564001eu,0x6a69001fu,0x76750020u,0x74730021u,0x1000022u,0x80000006u,0x73720024u,0x66650025u,0x64630026u,0x75740027u,0x6a690028u,0x706f0029u,0x6f6e002au,0x100002bu,0x80000002u,0x6463002du,0x7675002eu,0x7473002fu,0x45440030u,0x6a690031u,0x74730032u,0x75740033u,0x62610034u,0x6f6e0035u,0x64630036u,0x66650037u,0x1000038u,0x80000007u,0x6261003bu,0x75740045u,0x6867003cu,0x6665003du,0x5352003eu,0x6665003fu,0x68670040u,0x6a690041u,0x706f0042u,0x6f6e0043u,0x1000044u,0x80000005u,0x66650046u,0x73720047u,0x71700048u,0x76750049u,0x7170004au,0x6a69004bu,0x6d6c004cu,0x6d6c004du,0x6261004eu,0x7372004fu,0x7a790050u,0x45440051u,0x6a690052u,0x74730053u,0x75740054u,0x62610055u,0x6f6e0056u,0x64630057u,0x66650058u,0x1000059u,0x80000009u,0x7a79005bu,0x706f005cu,0x7675005du,0x7574005eu,0x100005fu,0x8000000au,0x6e6d0061u,0x66650062u,0x1000063u,0x80000000u,0x74730065u,0x6a690066u,0x75740067u,0x6a690068u,0x706f0069u,0x6f6e006au,0x100006bu,0x80000001u,0x6665006du,0x7372006eu,0x6665006fu,0x706f0070u,0x4e4d0071u,0x706f0072u,0x65640073u,0x66650074u,0x1000075u,0x80000008u,0x62610077u,0x6f6e0078u,0x74730079u,0x6766007au,0x706f007bu,0x7372007cu,0x6e6d007du,0x100007eu,0x80000004u,0x1000080u,0x80000003u};
-      uint32_t cur = 0x76610000u;
-      for(int i = 0;cur!=0;++i) {
-         uint32_t idx = cur&0xFFFFu;
-         uint32_t low = (cur>>16u)&0xFFu;
-         uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
-         if(c>=low && c<high) {
-            cur = table[idx+c-low];
-         } else {
-            break;
-         }
-         if(cur&0x80000000u) {
-            return cur&0xFFFFu;
-         }
-         if(str[i]==0) {
-            break;
-         }
-      }
-      return -1;
-   }
-   public:
-   camera_omnidirectional(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
-   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
-      DebugObject::setParameter(paramname, paramtype, mem);
-      int idx = param_hash(paramname);
-      switch(idx) {
-         case 0: { //name
-            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
-            check_type(ANARI_CAMERA, "omnidirectional", paramname, paramtype, name_types);
-            return;
-         }
-         case 1: { //position
-            ANARIDataType position_types[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
-            check_type(ANARI_CAMERA, "omnidirectional", paramname, paramtype, position_types);
-            return;
-         }
-         case 2: { //direction
-            ANARIDataType direction_types[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
-            check_type(ANARI_CAMERA, "omnidirectional", paramname, paramtype, direction_types);
-            return;
-         }
-         case 3: { //up
-            ANARIDataType up_types[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
-            check_type(ANARI_CAMERA, "omnidirectional", paramname, paramtype, up_types);
-            return;
-         }
-         case 4: { //transform
-            ANARIDataType transform_types[] = {ANARI_FLOAT32_MAT3x4, ANARI_UNKNOWN};
-            check_type(ANARI_CAMERA, "omnidirectional", paramname, paramtype, transform_types);
-            return;
-         }
-         case 5: { //imageRegion
-            ANARIDataType imageRegion_types[] = {ANARI_FLOAT32_BOX2, ANARI_UNKNOWN};
-            check_type(ANARI_CAMERA, "omnidirectional", paramname, paramtype, imageRegion_types);
-            return;
-         }
-         case 6: { //apertureRadius
-            ANARIDataType apertureRadius_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
-            check_type(ANARI_CAMERA, "omnidirectional", paramname, paramtype, apertureRadius_types);
-            return;
-         }
-         case 7: { //focusDistance
-            ANARIDataType focusDistance_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
-            check_type(ANARI_CAMERA, "omnidirectional", paramname, paramtype, focusDistance_types);
-            return;
-         }
-         case 8: { //stereoMode
-            ANARIDataType stereoMode_types[] = {ANARI_STRING, ANARI_UNKNOWN};
-            check_type(ANARI_CAMERA, "omnidirectional", paramname, paramtype, stereoMode_types);
-            return;
-         }
-         case 9: { //interpupillaryDistance
-            ANARIDataType interpupillaryDistance_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
-            check_type(ANARI_CAMERA, "omnidirectional", paramname, paramtype, interpupillaryDistance_types);
-            return;
-         }
-         case 10: { //layout
-            ANARIDataType layout_types[] = {ANARI_STRING, ANARI_UNKNOWN};
-            check_type(ANARI_CAMERA, "omnidirectional", paramname, paramtype, layout_types);
-            return;
-         }
-         default: // unknown param
-            unknown_parameter(ANARI_CAMERA, "omnidirectional", paramname, paramtype);
-            return;
-      }
-   }
-   void commit() {
-      DebugObject::commit();
-   }
-};
-class light_directional : public DebugObject<ANARI_LIGHT> {
-   static int param_hash(const char *str) {
-      static const uint32_t table[] = {0x706f000cu,0x6a690011u,0x0u,0x0u,0x0u,0x0u,0x7372001au,0x0u,0x0u,0x0u,0x0u,0x62610023u,0x6d6c000du,0x706f000eu,0x7372000fu,0x1000010u,0x80000001u,0x73720012u,0x66650013u,0x64630014u,0x75740015u,0x6a690016u,0x706f0017u,0x6f6e0018u,0x1000019u,0x80000003u,0x7372001bu,0x6a69001cu,0x6564001du,0x6261001eu,0x6f6e001fu,0x64630020u,0x66650021u,0x1000022u,0x80000002u,0x6e6d0024u,0x66650025u,0x1000026u,0x80000000u};
-      uint32_t cur = 0x6f630000u;
-      for(int i = 0;cur!=0;++i) {
-         uint32_t idx = cur&0xFFFFu;
-         uint32_t low = (cur>>16u)&0xFFu;
-         uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
-         if(c>=low && c<high) {
-            cur = table[idx+c-low];
-         } else {
-            break;
-         }
-         if(cur&0x80000000u) {
-            return cur&0xFFFFu;
-         }
-         if(str[i]==0) {
-            break;
-         }
-      }
-      return -1;
-   }
-   public:
-   light_directional(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
-   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
-      DebugObject::setParameter(paramname, paramtype, mem);
-      int idx = param_hash(paramname);
-      switch(idx) {
-         case 0: { //name
-            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
-            check_type(ANARI_LIGHT, "directional", paramname, paramtype, name_types);
-            return;
-         }
-         case 1: { //color
-            ANARIDataType color_types[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
-            check_type(ANARI_LIGHT, "directional", paramname, paramtype, color_types);
-            return;
-         }
-         case 2: { //irridance
-            ANARIDataType irridance_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
-            check_type(ANARI_LIGHT, "directional", paramname, paramtype, irridance_types);
-            return;
-         }
-         case 3: { //direction
-            ANARIDataType direction_types[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
-            check_type(ANARI_LIGHT, "directional", paramname, paramtype, direction_types);
-            return;
-         }
-         default: // unknown param
-            unknown_parameter(ANARI_LIGHT, "directional", paramname, paramtype);
-            return;
-      }
-   }
-   void commit() {
-      DebugObject::commit();
-   }
-};
-class light_point : public DebugObject<ANARI_LIGHT> {
-   static int param_hash(const char *str) {
-      static const uint32_t table[] = {0x706f000eu,0x0u,0x0u,0x0u,0x0u,0x0u,0x6f6e0013u,0x0u,0x0u,0x0u,0x0u,0x6261001cu,0x0u,0x706f0020u,0x6d6c000fu,0x706f0010u,0x73720011u,0x1000012u,0x80000001u,0x75740014u,0x66650015u,0x6f6e0016u,0x74730017u,0x6a690018u,0x75740019u,0x7a79001au,0x100001bu,0x80000003u,0x6e6d001du,0x6665001eu,0x100001fu,0x80000000u,0x78730021u,0x6a690026u,0x0u,0x0u,0x0u,0x6665002cu,0x75740027u,0x6a690028u,0x706f0029u,0x6f6e002au,0x100002bu,0x80000002u,0x7372002du,0x100002eu,0x80000004u};
-      uint32_t cur = 0x71630000u;
-      for(int i = 0;cur!=0;++i) {
-         uint32_t idx = cur&0xFFFFu;
-         uint32_t low = (cur>>16u)&0xFFu;
-         uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
-         if(c>=low && c<high) {
-            cur = table[idx+c-low];
-         } else {
-            break;
-         }
-         if(cur&0x80000000u) {
-            return cur&0xFFFFu;
-         }
-         if(str[i]==0) {
-            break;
-         }
-      }
-      return -1;
-   }
-   public:
-   light_point(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
-   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
-      DebugObject::setParameter(paramname, paramtype, mem);
-      int idx = param_hash(paramname);
-      switch(idx) {
-         case 0: { //name
-            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
-            check_type(ANARI_LIGHT, "point", paramname, paramtype, name_types);
-            return;
-         }
-         case 1: { //color
-            ANARIDataType color_types[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
-            check_type(ANARI_LIGHT, "point", paramname, paramtype, color_types);
-            return;
-         }
-         case 2: { //position
-            ANARIDataType position_types[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
-            check_type(ANARI_LIGHT, "point", paramname, paramtype, position_types);
-            return;
-         }
-         case 3: { //intensity
-            ANARIDataType intensity_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
-            check_type(ANARI_LIGHT, "point", paramname, paramtype, intensity_types);
-            return;
-         }
-         case 4: { //power
-            ANARIDataType power_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
-            check_type(ANARI_LIGHT, "point", paramname, paramtype, power_types);
-            return;
-         }
-         default: // unknown param
-            unknown_parameter(ANARI_LIGHT, "point", paramname, paramtype);
-            return;
-      }
-   }
-   void commit() {
-      DebugObject::commit();
-   }
-};
-class light_spot : public DebugObject<ANARI_LIGHT> {
-   static int param_hash(const char *str) {
-      static const uint32_t table[] = {0x706f000eu,0x6a690013u,0x0u,0x6261001cu,0x0u,0x0u,0x6f6e0028u,0x0u,0x0u,0x0u,0x0u,0x62610031u,0x71700035u,0x706f0041u,0x6d6c000fu,0x706f0010u,0x73720011u,0x1000012u,0x80000001u,0x73720014u,0x66650015u,0x64630016u,0x75740017u,0x6a690018u,0x706f0019u,0x6f6e001au,0x100001bu,0x80000003u,0x6d6c001du,0x6d6c001eu,0x706f001fu,0x67660020u,0x67660021u,0x42410022u,0x6f6e0023u,0x68670024u,0x6d6c0025u,0x66650026u,0x1000027u,0x80000005u,0x75740029u,0x6665002au,0x6f6e002bu,0x7473002cu,0x6a69002du,0x7574002eu,0x7a79002fu,0x1000030u,0x80000006u,0x6e6d0032u,0x66650033u,0x1000034u,0x80000000u,0x66650036u,0x6f6e0037u,0x6a690038u,0x6f6e0039u,0x6867003au,0x4241003bu,0x6f6e003cu,0x6867003du,0x6d6c003eu,0x6665003fu,0x1000040u,0x80000004u,0x78730042u,0x6a690047u,0x0u,0x0u,0x0u,0x6665004du,0x75740048u,0x6a690049u,0x706f004au,0x6f6e004bu,0x100004cu,0x80000002u,0x7372004eu,0x100004fu,0x80000007u};
-      uint32_t cur = 0x71630000u;
-      for(int i = 0;cur!=0;++i) {
-         uint32_t idx = cur&0xFFFFu;
-         uint32_t low = (cur>>16u)&0xFFu;
-         uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
-         if(c>=low && c<high) {
-            cur = table[idx+c-low];
-         } else {
-            break;
-         }
-         if(cur&0x80000000u) {
-            return cur&0xFFFFu;
-         }
-         if(str[i]==0) {
-            break;
-         }
-      }
-      return -1;
-   }
-   public:
-   light_spot(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
-   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
-      DebugObject::setParameter(paramname, paramtype, mem);
-      int idx = param_hash(paramname);
-      switch(idx) {
-         case 0: { //name
-            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
-            check_type(ANARI_LIGHT, "spot", paramname, paramtype, name_types);
-            return;
-         }
-         case 1: { //color
-            ANARIDataType color_types[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
-            check_type(ANARI_LIGHT, "spot", paramname, paramtype, color_types);
-            return;
-         }
-         case 2: { //position
-            ANARIDataType position_types[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
-            check_type(ANARI_LIGHT, "spot", paramname, paramtype, position_types);
-            return;
-         }
-         case 3: { //direction
-            ANARIDataType direction_types[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
-            check_type(ANARI_LIGHT, "spot", paramname, paramtype, direction_types);
-            return;
-         }
-         case 4: { //openingAngle
-            ANARIDataType openingAngle_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
-            check_type(ANARI_LIGHT, "spot", paramname, paramtype, openingAngle_types);
-            return;
-         }
-         case 5: { //falloffAngle
-            ANARIDataType falloffAngle_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
-            check_type(ANARI_LIGHT, "spot", paramname, paramtype, falloffAngle_types);
-            return;
-         }
-         case 6: { //intensity
-            ANARIDataType intensity_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
-            check_type(ANARI_LIGHT, "spot", paramname, paramtype, intensity_types);
-            return;
-         }
-         case 7: { //power
-            ANARIDataType power_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
-            check_type(ANARI_LIGHT, "spot", paramname, paramtype, power_types);
-            return;
-         }
-         default: // unknown param
-            unknown_parameter(ANARI_LIGHT, "spot", paramname, paramtype);
-            return;
-      }
-   }
-   void commit() {
-      DebugObject::commit();
-   }
-};
-class spatial_field_structuredRegular : public DebugObject<ANARI_SPATIAL_FIELD> {
-   static int param_hash(const char *str) {
-      static const uint32_t table[] = {0x62610010u,0x0u,0x6a690014u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6261001au,0x7372001eu,0x0u,0x0u,0x0u,0x71700024u,0x75740011u,0x62610012u,0x1000013u,0x80000001u,0x6d6c0015u,0x75740016u,0x66650017u,0x73720018u,0x1000019u,0x80000004u,0x6e6d001bu,0x6665001cu,0x100001du,0x80000000u,0x6a69001fu,0x68670020u,0x6a690021u,0x6f6e0022u,0x1000023u,0x80000002u,0x62610025u,0x64630026u,0x6a690027u,0x6f6e0028u,0x68670029u,0x100002au,0x80000003u};
-      uint32_t cur = 0x74640000u;
-      for(int i = 0;cur!=0;++i) {
-         uint32_t idx = cur&0xFFFFu;
-         uint32_t low = (cur>>16u)&0xFFu;
-         uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
-         if(c>=low && c<high) {
-            cur = table[idx+c-low];
-         } else {
-            break;
-         }
-         if(cur&0x80000000u) {
-            return cur&0xFFFFu;
-         }
-         if(str[i]==0) {
-            break;
-         }
-      }
-      return -1;
-   }
-   public:
-   spatial_field_structuredRegular(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
-   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
-      DebugObject::setParameter(paramname, paramtype, mem);
-      int idx = param_hash(paramname);
-      switch(idx) {
-         case 0: { //name
-            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
-            check_type(ANARI_SPATIAL_FIELD, "structuredRegular", paramname, paramtype, name_types);
-            return;
-         }
-         case 1: { //data
-            ANARIDataType data_types[] = {ANARI_ARRAY3D, ANARI_UNKNOWN};
-            check_type(ANARI_SPATIAL_FIELD, "structuredRegular", paramname, paramtype, data_types);
-            return;
-         }
-         case 2: { //origin
-            ANARIDataType origin_types[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
-            check_type(ANARI_SPATIAL_FIELD, "structuredRegular", paramname, paramtype, origin_types);
-            return;
-         }
-         case 3: { //spacing
-            ANARIDataType spacing_types[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
-            check_type(ANARI_SPATIAL_FIELD, "structuredRegular", paramname, paramtype, spacing_types);
-            return;
-         }
-         case 4: { //filter
-            ANARIDataType filter_types[] = {ANARI_STRING, ANARI_UNKNOWN};
-            check_type(ANARI_SPATIAL_FIELD, "structuredRegular", paramname, paramtype, filter_types);
-            return;
-         }
-         default: // unknown param
-            unknown_parameter(ANARI_SPATIAL_FIELD, "structuredRegular", paramname, paramtype);
-            return;
-      }
-   }
-   void commit() {
-      DebugObject::commit();
-   }
-};
-class surface : public DebugObject<ANARI_SURFACE> {
-   static int param_hash(const char *str) {
-      static const uint32_t table[] = {0x66650008u,0x0u,0x0u,0x0u,0x0u,0x0u,0x62610010u,0x62610018u,0x706f0009u,0x6e6d000au,0x6665000bu,0x7574000cu,0x7372000du,0x7a79000eu,0x100000fu,0x80000001u,0x75740011u,0x66650012u,0x73720013u,0x6a690014u,0x62610015u,0x6d6c0016u,0x1000017u,0x80000002u,0x6e6d0019u,0x6665001au,0x100001bu,0x80000000u};
-      uint32_t cur = 0x6f670000u;
-      for(int i = 0;cur!=0;++i) {
-         uint32_t idx = cur&0xFFFFu;
-         uint32_t low = (cur>>16u)&0xFFu;
-         uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
-         if(c>=low && c<high) {
-            cur = table[idx+c-low];
-         } else {
-            break;
-         }
-         if(cur&0x80000000u) {
-            return cur&0xFFFFu;
-         }
-         if(str[i]==0) {
-            break;
-         }
-      }
-      return -1;
-   }
-   public:
-   surface(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
-   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
-      DebugObject::setParameter(paramname, paramtype, mem);
-      int idx = param_hash(paramname);
-      switch(idx) {
-         case 0: { //name
-            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
-            check_type(ANARI_SURFACE, "", paramname, paramtype, name_types);
-            return;
-         }
-         case 1: { //geometry
-            ANARIDataType geometry_types[] = {ANARI_GEOMETRY, ANARI_UNKNOWN};
-            check_type(ANARI_SURFACE, "", paramname, paramtype, geometry_types);
-            return;
-         }
-         case 2: { //material
-            ANARIDataType material_types[] = {ANARI_MATERIAL, ANARI_UNKNOWN};
-            check_type(ANARI_SURFACE, "", paramname, paramtype, material_types);
-            return;
-         }
-         default: // unknown param
-            unknown_parameter(ANARI_SURFACE, "", paramname, paramtype);
-            return;
-      }
-   }
-   void commit() {
-      DebugObject::commit();
-   }
-};
-class geometry_triangle : public DebugObject<ANARI_GEOMETRY> {
-   static int param_hash(const char *str) {
-      static const uint32_t table[] = {0x62610009u,0x0u,0x7372000du,0x0u,0x0u,0x0u,0x0u,0x0u,0x66650044u,0x6e6d000au,0x6665000bu,0x100000cu,0x80000000u,0x6a69000eu,0x6e6d000fu,0x6a690010u,0x75740011u,0x6a690012u,0x77760013u,0x66650014u,0x2f2e0015u,0x6a610016u,0x7574001fu,0x0u,0x706f002fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x6f640034u,0x75740020u,0x73720021u,0x6a690022u,0x63620023u,0x76750024u,0x75740025u,0x66650026u,0x34300027u,0x100002bu,0x100002cu,0x100002du,0x100002eu,0x80000002u,0x80000003u,0x80000004u,0x80000005u,0x6d6c0030u,0x706f0031u,0x73720032u,0x1000033u,0x80000001u,0x100003fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x65640040u,0x80000006u,0x66650041u,0x79780042u,0x1000043u,0x8000000eu,0x73720045u,0x75740046u,0x66650047u,0x79780048u,0x2f2e0049u,0x7161004au,0x7574005au,0x0u,0x706f006au,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x706f006fu,0x0u,0x706f0075u,0x7574005bu,0x7372005cu,0x6a69005du,0x6362005eu,0x7675005fu,0x75740060u,0x66650061u,0x34300062u,0x1000066u,0x1000067u,0x1000068u,0x1000069u,0x8000000au,0x8000000bu,0x8000000cu,0x8000000du,0x6d6c006bu,0x706f006cu,0x7372006du,0x100006eu,0x80000009u,0x73720070u,0x6e6d0071u,0x62610072u,0x6d6c0073u,0x1000074u,0x80000008u,0x74730076u,0x6a690077u,0x75740078u,0x6a690079u,0x706f007au,0x6f6e007bu,0x100007cu,0x80000007u};
-      uint32_t cur = 0x776e0000u;
-      for(int i = 0;cur!=0;++i) {
-         uint32_t idx = cur&0xFFFFu;
-         uint32_t low = (cur>>16u)&0xFFu;
-         uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
-         if(c>=low && c<high) {
-            cur = table[idx+c-low];
-         } else {
-            break;
-         }
-         if(cur&0x80000000u) {
-            return cur&0xFFFFu;
-         }
-         if(str[i]==0) {
-            break;
-         }
-      }
-      return -1;
-   }
-   public:
-   geometry_triangle(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
-   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
-      DebugObject::setParameter(paramname, paramtype, mem);
-      int idx = param_hash(paramname);
-      switch(idx) {
-         case 0: { //name
-            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "triangle", paramname, paramtype, name_types);
-            return;
-         }
-         case 1: { //primitive.color
-            ANARIDataType primitive_color_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "triangle", paramname, paramtype, primitive_color_types);
-            return;
-         }
-         case 2: { //primitive.attribute0
-            ANARIDataType primitive_attribute0_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "triangle", paramname, paramtype, primitive_attribute0_types);
-            return;
-         }
-         case 3: { //primitive.attribute1
-            ANARIDataType primitive_attribute1_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "triangle", paramname, paramtype, primitive_attribute1_types);
-            return;
-         }
-         case 4: { //primitive.attribute2
-            ANARIDataType primitive_attribute2_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "triangle", paramname, paramtype, primitive_attribute2_types);
-            return;
-         }
-         case 5: { //primitive.attribute3
-            ANARIDataType primitive_attribute3_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "triangle", paramname, paramtype, primitive_attribute3_types);
-            return;
-         }
-         case 6: { //primitive.id
-            ANARIDataType primitive_id_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "triangle", paramname, paramtype, primitive_id_types);
-            return;
-         }
-         case 7: { //vertex.position
-            ANARIDataType vertex_position_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "triangle", paramname, paramtype, vertex_position_types);
-            return;
-         }
-         case 8: { //vertex.normal
-            ANARIDataType vertex_normal_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "triangle", paramname, paramtype, vertex_normal_types);
-            return;
-         }
-         case 9: { //vertex.color
-            ANARIDataType vertex_color_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "triangle", paramname, paramtype, vertex_color_types);
-            return;
-         }
-         case 10: { //vertex.attribute0
-            ANARIDataType vertex_attribute0_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "triangle", paramname, paramtype, vertex_attribute0_types);
-            return;
-         }
-         case 11: { //vertex.attribute1
-            ANARIDataType vertex_attribute1_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "triangle", paramname, paramtype, vertex_attribute1_types);
-            return;
-         }
-         case 12: { //vertex.attribute2
-            ANARIDataType vertex_attribute2_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "triangle", paramname, paramtype, vertex_attribute2_types);
-            return;
-         }
-         case 13: { //vertex.attribute3
-            ANARIDataType vertex_attribute3_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "triangle", paramname, paramtype, vertex_attribute3_types);
-            return;
-         }
-         case 14: { //primitive.index
-            ANARIDataType primitive_index_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "triangle", paramname, paramtype, primitive_index_types);
-            return;
-         }
-         default: // unknown param
-            unknown_parameter(ANARI_GEOMETRY, "triangle", paramname, paramtype);
-            return;
-      }
-   }
-   void commit() {
-      DebugObject::commit();
-   }
-};
-class geometry_quad : public DebugObject<ANARI_GEOMETRY> {
-   static int param_hash(const char *str) {
-      static const uint32_t table[] = {0x62610009u,0x0u,0x7372000du,0x0u,0x0u,0x0u,0x0u,0x0u,0x66650044u,0x6e6d000au,0x6665000bu,0x100000cu,0x80000000u,0x6a69000eu,0x6e6d000fu,0x6a690010u,0x75740011u,0x6a690012u,0x77760013u,0x66650014u,0x2f2e0015u,0x6a610016u,0x7574001fu,0x0u,0x706f002fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x6f640034u,0x75740020u,0x73720021u,0x6a690022u,0x63620023u,0x76750024u,0x75740025u,0x66650026u,0x34300027u,0x100002bu,0x100002cu,0x100002du,0x100002eu,0x80000002u,0x80000003u,0x80000004u,0x80000005u,0x6d6c0030u,0x706f0031u,0x73720032u,0x1000033u,0x80000001u,0x100003fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x65640040u,0x80000006u,0x66650041u,0x79780042u,0x1000043u,0x8000000eu,0x73720045u,0x75740046u,0x66650047u,0x79780048u,0x2f2e0049u,0x7161004au,0x7574005au,0x0u,0x706f006au,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x706f006fu,0x0u,0x706f0075u,0x7574005bu,0x7372005cu,0x6a69005du,0x6362005eu,0x7675005fu,0x75740060u,0x66650061u,0x34300062u,0x1000066u,0x1000067u,0x1000068u,0x1000069u,0x8000000au,0x8000000bu,0x8000000cu,0x8000000du,0x6d6c006bu,0x706f006cu,0x7372006du,0x100006eu,0x80000009u,0x73720070u,0x6e6d0071u,0x62610072u,0x6d6c0073u,0x1000074u,0x80000008u,0x74730076u,0x6a690077u,0x75740078u,0x6a690079u,0x706f007au,0x6f6e007bu,0x100007cu,0x80000007u};
-      uint32_t cur = 0x776e0000u;
-      for(int i = 0;cur!=0;++i) {
-         uint32_t idx = cur&0xFFFFu;
-         uint32_t low = (cur>>16u)&0xFFu;
-         uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
-         if(c>=low && c<high) {
-            cur = table[idx+c-low];
-         } else {
-            break;
-         }
-         if(cur&0x80000000u) {
-            return cur&0xFFFFu;
-         }
-         if(str[i]==0) {
-            break;
-         }
-      }
-      return -1;
-   }
-   public:
-   geometry_quad(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
-   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
-      DebugObject::setParameter(paramname, paramtype, mem);
-      int idx = param_hash(paramname);
-      switch(idx) {
-         case 0: { //name
-            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "quad", paramname, paramtype, name_types);
-            return;
-         }
-         case 1: { //primitive.color
-            ANARIDataType primitive_color_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "quad", paramname, paramtype, primitive_color_types);
-            return;
-         }
-         case 2: { //primitive.attribute0
-            ANARIDataType primitive_attribute0_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "quad", paramname, paramtype, primitive_attribute0_types);
-            return;
-         }
-         case 3: { //primitive.attribute1
-            ANARIDataType primitive_attribute1_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "quad", paramname, paramtype, primitive_attribute1_types);
-            return;
-         }
-         case 4: { //primitive.attribute2
-            ANARIDataType primitive_attribute2_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "quad", paramname, paramtype, primitive_attribute2_types);
-            return;
-         }
-         case 5: { //primitive.attribute3
-            ANARIDataType primitive_attribute3_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "quad", paramname, paramtype, primitive_attribute3_types);
-            return;
-         }
-         case 6: { //primitive.id
-            ANARIDataType primitive_id_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "quad", paramname, paramtype, primitive_id_types);
-            return;
-         }
-         case 7: { //vertex.position
-            ANARIDataType vertex_position_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "quad", paramname, paramtype, vertex_position_types);
-            return;
-         }
-         case 8: { //vertex.normal
-            ANARIDataType vertex_normal_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "quad", paramname, paramtype, vertex_normal_types);
-            return;
-         }
-         case 9: { //vertex.color
-            ANARIDataType vertex_color_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "quad", paramname, paramtype, vertex_color_types);
-            return;
-         }
-         case 10: { //vertex.attribute0
-            ANARIDataType vertex_attribute0_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "quad", paramname, paramtype, vertex_attribute0_types);
-            return;
-         }
-         case 11: { //vertex.attribute1
-            ANARIDataType vertex_attribute1_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "quad", paramname, paramtype, vertex_attribute1_types);
-            return;
-         }
-         case 12: { //vertex.attribute2
-            ANARIDataType vertex_attribute2_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "quad", paramname, paramtype, vertex_attribute2_types);
-            return;
-         }
-         case 13: { //vertex.attribute3
-            ANARIDataType vertex_attribute3_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "quad", paramname, paramtype, vertex_attribute3_types);
-            return;
-         }
-         case 14: { //primitive.index
-            ANARIDataType primitive_index_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "quad", paramname, paramtype, primitive_index_types);
-            return;
-         }
-         default: // unknown param
-            unknown_parameter(ANARI_GEOMETRY, "quad", paramname, paramtype);
-            return;
-      }
-   }
-   void commit() {
-      DebugObject::commit();
-   }
-};
-class geometry_sphere : public DebugObject<ANARI_GEOMETRY> {
-   static int param_hash(const char *str) {
-      static const uint32_t table[] = {0x62610009u,0x0u,0x7372000du,0x0u,0x62610044u,0x0u,0x0u,0x0u,0x6665004au,0x6e6d000au,0x6665000bu,0x100000cu,0x80000000u,0x6a69000eu,0x6e6d000fu,0x6a690010u,0x75740011u,0x6a690012u,0x77760013u,0x66650014u,0x2f2e0015u,0x6a610016u,0x7574001fu,0x0u,0x706f002fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x6f640034u,0x75740020u,0x73720021u,0x6a690022u,0x63620023u,0x76750024u,0x75740025u,0x66650026u,0x34300027u,0x100002bu,0x100002cu,0x100002du,0x100002eu,0x80000002u,0x80000003u,0x80000004u,0x80000005u,0x6d6c0030u,0x706f0031u,0x73720032u,0x1000033u,0x80000001u,0x100003fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x65640040u,0x80000006u,0x66650041u,0x79780042u,0x1000043u,0x8000000eu,0x65640045u,0x6a690046u,0x76750047u,0x74730048u,0x1000049u,0x8000000fu,0x7372004bu,0x7574004cu,0x6665004du,0x7978004eu,0x2f2e004fu,0x73610050u,0x75740062u,0x0u,0x706f0072u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x706f0077u,0x0u,0x6261007fu,0x75740063u,0x73720064u,0x6a690065u,0x63620066u,0x76750067u,0x75740068u,0x66650069u,0x3430006au,0x100006eu,0x100006fu,0x1000070u,0x1000071u,0x8000000au,0x8000000bu,0x8000000cu,0x8000000du,0x6d6c0073u,0x706f0074u,0x73720075u,0x1000076u,0x80000009u,0x74730078u,0x6a690079u,0x7574007au,0x6a69007bu,0x706f007cu,0x6f6e007du,0x100007eu,0x80000007u,0x65640080u,0x6a690081u,0x76750082u,0x74730083u,0x1000084u,0x80000008u};
-      uint32_t cur = 0x776e0000u;
-      for(int i = 0;cur!=0;++i) {
-         uint32_t idx = cur&0xFFFFu;
-         uint32_t low = (cur>>16u)&0xFFu;
-         uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
-         if(c>=low && c<high) {
-            cur = table[idx+c-low];
-         } else {
-            break;
-         }
-         if(cur&0x80000000u) {
-            return cur&0xFFFFu;
-         }
-         if(str[i]==0) {
-            break;
-         }
-      }
-      return -1;
-   }
-   public:
-   geometry_sphere(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
-   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
-      DebugObject::setParameter(paramname, paramtype, mem);
-      int idx = param_hash(paramname);
-      switch(idx) {
-         case 0: { //name
-            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "sphere", paramname, paramtype, name_types);
-            return;
-         }
-         case 1: { //primitive.color
-            ANARIDataType primitive_color_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "sphere", paramname, paramtype, primitive_color_types);
-            return;
-         }
-         case 2: { //primitive.attribute0
-            ANARIDataType primitive_attribute0_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "sphere", paramname, paramtype, primitive_attribute0_types);
-            return;
-         }
-         case 3: { //primitive.attribute1
-            ANARIDataType primitive_attribute1_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "sphere", paramname, paramtype, primitive_attribute1_types);
-            return;
-         }
-         case 4: { //primitive.attribute2
-            ANARIDataType primitive_attribute2_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "sphere", paramname, paramtype, primitive_attribute2_types);
-            return;
-         }
-         case 5: { //primitive.attribute3
-            ANARIDataType primitive_attribute3_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "sphere", paramname, paramtype, primitive_attribute3_types);
-            return;
-         }
-         case 6: { //primitive.id
-            ANARIDataType primitive_id_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "sphere", paramname, paramtype, primitive_id_types);
-            return;
-         }
-         case 7: { //vertex.position
-            ANARIDataType vertex_position_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "sphere", paramname, paramtype, vertex_position_types);
-            return;
-         }
-         case 8: { //vertex.radius
-            ANARIDataType vertex_radius_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "sphere", paramname, paramtype, vertex_radius_types);
-            return;
-         }
-         case 9: { //vertex.color
-            ANARIDataType vertex_color_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "sphere", paramname, paramtype, vertex_color_types);
-            return;
-         }
-         case 10: { //vertex.attribute0
-            ANARIDataType vertex_attribute0_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "sphere", paramname, paramtype, vertex_attribute0_types);
-            return;
-         }
-         case 11: { //vertex.attribute1
-            ANARIDataType vertex_attribute1_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "sphere", paramname, paramtype, vertex_attribute1_types);
-            return;
-         }
-         case 12: { //vertex.attribute2
-            ANARIDataType vertex_attribute2_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "sphere", paramname, paramtype, vertex_attribute2_types);
-            return;
-         }
-         case 13: { //vertex.attribute3
-            ANARIDataType vertex_attribute3_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "sphere", paramname, paramtype, vertex_attribute3_types);
-            return;
-         }
-         case 14: { //primitive.index
-            ANARIDataType primitive_index_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "sphere", paramname, paramtype, primitive_index_types);
-            return;
-         }
-         case 15: { //radius
-            ANARIDataType radius_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "sphere", paramname, paramtype, radius_types);
-            return;
-         }
-         default: // unknown param
-            unknown_parameter(ANARI_GEOMETRY, "sphere", paramname, paramtype);
-            return;
-      }
-   }
-   void commit() {
-      DebugObject::commit();
-   }
-};
-class geometry_curve : public DebugObject<ANARI_GEOMETRY> {
-   static int param_hash(const char *str) {
-      static const uint32_t table[] = {0x62610009u,0x0u,0x7372000du,0x0u,0x62610044u,0x0u,0x0u,0x0u,0x6665004au,0x6e6d000au,0x6665000bu,0x100000cu,0x80000000u,0x6a69000eu,0x6e6d000fu,0x6a690010u,0x75740011u,0x6a690012u,0x77760013u,0x66650014u,0x2f2e0015u,0x6a610016u,0x7574001fu,0x0u,0x706f002fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x6f640034u,0x75740020u,0x73720021u,0x6a690022u,0x63620023u,0x76750024u,0x75740025u,0x66650026u,0x34300027u,0x100002bu,0x100002cu,0x100002du,0x100002eu,0x80000002u,0x80000003u,0x80000004u,0x80000005u,0x6d6c0030u,0x706f0031u,0x73720032u,0x1000033u,0x80000001u,0x100003fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x65640040u,0x80000006u,0x66650041u,0x79780042u,0x1000043u,0x8000000eu,0x65640045u,0x6a690046u,0x76750047u,0x74730048u,0x1000049u,0x8000000fu,0x7372004bu,0x7574004cu,0x6665004du,0x7978004eu,0x2f2e004fu,0x73610050u,0x75740062u,0x0u,0x706f0072u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x706f0077u,0x0u,0x6261007fu,0x75740063u,0x73720064u,0x6a690065u,0x63620066u,0x76750067u,0x75740068u,0x66650069u,0x3430006au,0x100006eu,0x100006fu,0x1000070u,0x1000071u,0x8000000au,0x8000000bu,0x8000000cu,0x8000000du,0x6d6c0073u,0x706f0074u,0x73720075u,0x1000076u,0x80000009u,0x74730078u,0x6a690079u,0x7574007au,0x6a69007bu,0x706f007cu,0x6f6e007du,0x100007eu,0x80000007u,0x65640080u,0x6a690081u,0x76750082u,0x74730083u,0x1000084u,0x80000008u};
-      uint32_t cur = 0x776e0000u;
-      for(int i = 0;cur!=0;++i) {
-         uint32_t idx = cur&0xFFFFu;
-         uint32_t low = (cur>>16u)&0xFFu;
-         uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
-         if(c>=low && c<high) {
-            cur = table[idx+c-low];
-         } else {
-            break;
-         }
-         if(cur&0x80000000u) {
-            return cur&0xFFFFu;
-         }
-         if(str[i]==0) {
-            break;
-         }
-      }
-      return -1;
-   }
-   public:
-   geometry_curve(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
-   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
-      DebugObject::setParameter(paramname, paramtype, mem);
-      int idx = param_hash(paramname);
-      switch(idx) {
-         case 0: { //name
-            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "curve", paramname, paramtype, name_types);
-            return;
-         }
-         case 1: { //primitive.color
-            ANARIDataType primitive_color_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "curve", paramname, paramtype, primitive_color_types);
-            return;
-         }
-         case 2: { //primitive.attribute0
-            ANARIDataType primitive_attribute0_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "curve", paramname, paramtype, primitive_attribute0_types);
-            return;
-         }
-         case 3: { //primitive.attribute1
-            ANARIDataType primitive_attribute1_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "curve", paramname, paramtype, primitive_attribute1_types);
-            return;
-         }
-         case 4: { //primitive.attribute2
-            ANARIDataType primitive_attribute2_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "curve", paramname, paramtype, primitive_attribute2_types);
-            return;
-         }
-         case 5: { //primitive.attribute3
-            ANARIDataType primitive_attribute3_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "curve", paramname, paramtype, primitive_attribute3_types);
-            return;
-         }
-         case 6: { //primitive.id
-            ANARIDataType primitive_id_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "curve", paramname, paramtype, primitive_id_types);
-            return;
-         }
-         case 7: { //vertex.position
-            ANARIDataType vertex_position_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "curve", paramname, paramtype, vertex_position_types);
-            return;
-         }
-         case 8: { //vertex.radius
-            ANARIDataType vertex_radius_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "curve", paramname, paramtype, vertex_radius_types);
-            return;
-         }
-         case 9: { //vertex.color
-            ANARIDataType vertex_color_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "curve", paramname, paramtype, vertex_color_types);
-            return;
-         }
-         case 10: { //vertex.attribute0
-            ANARIDataType vertex_attribute0_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "curve", paramname, paramtype, vertex_attribute0_types);
-            return;
-         }
-         case 11: { //vertex.attribute1
-            ANARIDataType vertex_attribute1_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "curve", paramname, paramtype, vertex_attribute1_types);
-            return;
-         }
-         case 12: { //vertex.attribute2
-            ANARIDataType vertex_attribute2_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "curve", paramname, paramtype, vertex_attribute2_types);
-            return;
-         }
-         case 13: { //vertex.attribute3
-            ANARIDataType vertex_attribute3_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "curve", paramname, paramtype, vertex_attribute3_types);
-            return;
-         }
-         case 14: { //primitive.index
-            ANARIDataType primitive_index_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "curve", paramname, paramtype, primitive_index_types);
-            return;
-         }
-         case 15: { //radius
-            ANARIDataType radius_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "curve", paramname, paramtype, radius_types);
-            return;
-         }
-         default: // unknown param
-            unknown_parameter(ANARI_GEOMETRY, "curve", paramname, paramtype);
-            return;
-      }
-   }
-   void commit() {
-      DebugObject::commit();
-   }
-};
-class geometry_cone : public DebugObject<ANARI_GEOMETRY> {
-   static int param_hash(const char *str) {
-      static const uint32_t table[] = {0x62610014u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x62610018u,0x0u,0x7372001cu,0x0u,0x0u,0x0u,0x0u,0x0u,0x66650053u,0x71700015u,0x74730016u,0x1000017u,0x80000010u,0x6e6d0019u,0x6665001au,0x100001bu,0x80000000u,0x6a69001du,0x6e6d001eu,0x6a69001fu,0x75740020u,0x6a690021u,0x77760022u,0x66650023u,0x2f2e0024u,0x6a610025u,0x7574002eu,0x0u,0x706f003eu,0x0u,0x0u,0x0u,0x0u,0x0u,0x6f640043u,0x7574002fu,0x73720030u,0x6a690031u,0x63620032u,0x76750033u,0x75740034u,0x66650035u,0x34300036u,0x100003au,0x100003bu,0x100003cu,0x100003du,0x80000002u,0x80000003u,0x80000004u,0x80000005u,0x6d6c003fu,0x706f0040u,0x73720041u,0x1000042u,0x80000001u,0x100004eu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6564004fu,0x80000006u,0x66650050u,0x79780051u,0x1000052u,0x8000000fu,0x73720054u,0x75740055u,0x66650056u,0x79780057u,0x2f2e0058u,0x73610059u,0x7574006bu,0x0u,0x7061007bu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x706f0090u,0x0u,0x62610098u,0x7574006cu,0x7372006du,0x6a69006eu,0x6362006fu,0x76750070u,0x75740071u,0x66650072u,0x34300073u,0x1000077u,0x1000078u,0x1000079u,0x100007au,0x8000000bu,0x8000000cu,0x8000000du,0x8000000eu,0x7170008au,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6d6c008cu,0x100008bu,0x80000009u,0x706f008du,0x7372008eu,0x100008fu,0x8000000au,0x74730091u,0x6a690092u,0x75740093u,0x6a690094u,0x706f0095u,0x6f6e0096u,0x1000097u,0x80000007u,0x65640099u,0x6a69009au,0x7675009bu,0x7473009cu,0x100009du,0x80000008u};
-      uint32_t cur = 0x77630000u;
-      for(int i = 0;cur!=0;++i) {
-         uint32_t idx = cur&0xFFFFu;
-         uint32_t low = (cur>>16u)&0xFFu;
-         uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
-         if(c>=low && c<high) {
-            cur = table[idx+c-low];
-         } else {
-            break;
-         }
-         if(cur&0x80000000u) {
-            return cur&0xFFFFu;
-         }
-         if(str[i]==0) {
-            break;
-         }
-      }
-      return -1;
-   }
-   public:
-   geometry_cone(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
-   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
-      DebugObject::setParameter(paramname, paramtype, mem);
-      int idx = param_hash(paramname);
-      switch(idx) {
-         case 0: { //name
-            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "cone", paramname, paramtype, name_types);
-            return;
-         }
-         case 1: { //primitive.color
-            ANARIDataType primitive_color_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "cone", paramname, paramtype, primitive_color_types);
-            return;
-         }
-         case 2: { //primitive.attribute0
-            ANARIDataType primitive_attribute0_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "cone", paramname, paramtype, primitive_attribute0_types);
-            return;
-         }
-         case 3: { //primitive.attribute1
-            ANARIDataType primitive_attribute1_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "cone", paramname, paramtype, primitive_attribute1_types);
-            return;
-         }
-         case 4: { //primitive.attribute2
-            ANARIDataType primitive_attribute2_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "cone", paramname, paramtype, primitive_attribute2_types);
-            return;
-         }
-         case 5: { //primitive.attribute3
-            ANARIDataType primitive_attribute3_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "cone", paramname, paramtype, primitive_attribute3_types);
-            return;
-         }
-         case 6: { //primitive.id
-            ANARIDataType primitive_id_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "cone", paramname, paramtype, primitive_id_types);
-            return;
-         }
-         case 7: { //vertex.position
-            ANARIDataType vertex_position_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "cone", paramname, paramtype, vertex_position_types);
-            return;
-         }
-         case 8: { //vertex.radius
-            ANARIDataType vertex_radius_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "cone", paramname, paramtype, vertex_radius_types);
-            return;
-         }
-         case 9: { //vertex.cap
-            ANARIDataType vertex_cap_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "cone", paramname, paramtype, vertex_cap_types);
-            return;
-         }
-         case 10: { //vertex.color
-            ANARIDataType vertex_color_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "cone", paramname, paramtype, vertex_color_types);
-            return;
-         }
-         case 11: { //vertex.attribute0
-            ANARIDataType vertex_attribute0_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "cone", paramname, paramtype, vertex_attribute0_types);
-            return;
-         }
-         case 12: { //vertex.attribute1
-            ANARIDataType vertex_attribute1_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "cone", paramname, paramtype, vertex_attribute1_types);
-            return;
-         }
-         case 13: { //vertex.attribute2
-            ANARIDataType vertex_attribute2_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "cone", paramname, paramtype, vertex_attribute2_types);
-            return;
-         }
-         case 14: { //vertex.attribute3
-            ANARIDataType vertex_attribute3_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "cone", paramname, paramtype, vertex_attribute3_types);
-            return;
-         }
-         case 15: { //primitive.index
-            ANARIDataType primitive_index_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "cone", paramname, paramtype, primitive_index_types);
-            return;
-         }
-         case 16: { //caps
-            ANARIDataType caps_types[] = {ANARI_STRING, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "cone", paramname, paramtype, caps_types);
-            return;
-         }
-         default: // unknown param
-            unknown_parameter(ANARI_GEOMETRY, "cone", paramname, paramtype);
-            return;
-      }
-   }
-   void commit() {
-      DebugObject::commit();
-   }
-};
-class geometry_cylinder : public DebugObject<ANARI_GEOMETRY> {
-   static int param_hash(const char *str) {
-      static const uint32_t table[] = {0x62610014u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x62610018u,0x0u,0x7372001cu,0x0u,0x62610062u,0x0u,0x0u,0x0u,0x66650068u,0x71700015u,0x74730016u,0x1000017u,0x80000011u,0x6e6d0019u,0x6665001au,0x100001bu,0x80000000u,0x6a69001du,0x6e6d001eu,0x6a69001fu,0x75740020u,0x6a690021u,0x77760022u,0x66650023u,0x2f2e0024u,0x73610025u,0x75740037u,0x0u,0x706f0047u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6f64004cu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6261005cu,0x75740038u,0x73720039u,0x6a69003au,0x6362003bu,0x7675003cu,0x7574003du,0x6665003eu,0x3430003fu,0x1000043u,0x1000044u,0x1000045u,0x1000046u,0x80000002u,0x80000003u,0x80000004u,0x80000005u,0x6d6c0048u,0x706f0049u,0x7372004au,0x100004bu,0x80000001u,0x1000057u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x65640058u,0x80000006u,0x66650059u,0x7978005au,0x100005bu,0x8000000eu,0x6564005du,0x6a69005eu,0x7675005fu,0x74730060u,0x1000061u,0x8000000fu,0x65640063u,0x6a690064u,0x76750065u,0x74730066u,0x1000067u,0x80000010u,0x73720069u,0x7574006au,0x6665006bu,0x7978006cu,0x2f2e006du,0x7161006eu,0x7574007eu,0x0u,0x7061008eu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x706f00a3u,0x7574007fu,0x73720080u,0x6a690081u,0x63620082u,0x76750083u,0x75740084u,0x66650085u,0x34300086u,0x100008au,0x100008bu,0x100008cu,0x100008du,0x8000000au,0x8000000bu,0x8000000cu,0x8000000du,0x7170009du,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6d6c009fu,0x100009eu,0x80000008u,0x706f00a0u,0x737200a1u,0x10000a2u,0x80000009u,0x747300a4u,0x6a6900a5u,0x757400a6u,0x6a6900a7u,0x706f00a8u,0x6f6e00a9u,0x10000aau,0x80000007u};
-      uint32_t cur = 0x77630000u;
-      for(int i = 0;cur!=0;++i) {
-         uint32_t idx = cur&0xFFFFu;
-         uint32_t low = (cur>>16u)&0xFFu;
-         uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
-         if(c>=low && c<high) {
-            cur = table[idx+c-low];
-         } else {
-            break;
-         }
-         if(cur&0x80000000u) {
-            return cur&0xFFFFu;
-         }
-         if(str[i]==0) {
-            break;
-         }
-      }
-      return -1;
-   }
-   public:
-   geometry_cylinder(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
-   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
-      DebugObject::setParameter(paramname, paramtype, mem);
-      int idx = param_hash(paramname);
-      switch(idx) {
-         case 0: { //name
-            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "cylinder", paramname, paramtype, name_types);
-            return;
-         }
-         case 1: { //primitive.color
-            ANARIDataType primitive_color_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "cylinder", paramname, paramtype, primitive_color_types);
-            return;
-         }
-         case 2: { //primitive.attribute0
-            ANARIDataType primitive_attribute0_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "cylinder", paramname, paramtype, primitive_attribute0_types);
-            return;
-         }
-         case 3: { //primitive.attribute1
-            ANARIDataType primitive_attribute1_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "cylinder", paramname, paramtype, primitive_attribute1_types);
-            return;
-         }
-         case 4: { //primitive.attribute2
-            ANARIDataType primitive_attribute2_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "cylinder", paramname, paramtype, primitive_attribute2_types);
-            return;
-         }
-         case 5: { //primitive.attribute3
-            ANARIDataType primitive_attribute3_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "cylinder", paramname, paramtype, primitive_attribute3_types);
-            return;
-         }
-         case 6: { //primitive.id
-            ANARIDataType primitive_id_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "cylinder", paramname, paramtype, primitive_id_types);
-            return;
-         }
-         case 7: { //vertex.position
-            ANARIDataType vertex_position_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "cylinder", paramname, paramtype, vertex_position_types);
-            return;
-         }
-         case 8: { //vertex.cap
-            ANARIDataType vertex_cap_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "cylinder", paramname, paramtype, vertex_cap_types);
-            return;
-         }
-         case 9: { //vertex.color
-            ANARIDataType vertex_color_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "cylinder", paramname, paramtype, vertex_color_types);
-            return;
-         }
-         case 10: { //vertex.attribute0
-            ANARIDataType vertex_attribute0_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "cylinder", paramname, paramtype, vertex_attribute0_types);
-            return;
-         }
-         case 11: { //vertex.attribute1
-            ANARIDataType vertex_attribute1_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "cylinder", paramname, paramtype, vertex_attribute1_types);
-            return;
-         }
-         case 12: { //vertex.attribute2
-            ANARIDataType vertex_attribute2_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "cylinder", paramname, paramtype, vertex_attribute2_types);
-            return;
-         }
-         case 13: { //vertex.attribute3
-            ANARIDataType vertex_attribute3_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "cylinder", paramname, paramtype, vertex_attribute3_types);
-            return;
-         }
-         case 14: { //primitive.index
-            ANARIDataType primitive_index_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "cylinder", paramname, paramtype, primitive_index_types);
-            return;
-         }
-         case 15: { //primitive.radius
-            ANARIDataType primitive_radius_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "cylinder", paramname, paramtype, primitive_radius_types);
-            return;
-         }
-         case 16: { //radius
-            ANARIDataType radius_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "cylinder", paramname, paramtype, radius_types);
-            return;
-         }
-         case 17: { //caps
-            ANARIDataType caps_types[] = {ANARI_STRING, ANARI_UNKNOWN};
-            check_type(ANARI_GEOMETRY, "cylinder", paramname, paramtype, caps_types);
-            return;
-         }
-         default: // unknown param
-            unknown_parameter(ANARI_GEOMETRY, "cylinder", paramname, paramtype);
-            return;
-      }
-   }
-   void commit() {
-      DebugObject::commit();
-   }
-};
-class material_matte : public DebugObject<ANARI_MATERIAL> {
-   static int param_hash(const char *str) {
-      static const uint32_t table[] = {0x706f000cu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x62610011u,0x6d6c000du,0x706f000eu,0x7372000fu,0x1000010u,0x80000001u,0x6e6d0012u,0x66650013u,0x1000014u,0x80000000u};
-      uint32_t cur = 0x6f630000u;
-      for(int i = 0;cur!=0;++i) {
-         uint32_t idx = cur&0xFFFFu;
-         uint32_t low = (cur>>16u)&0xFFu;
-         uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
-         if(c>=low && c<high) {
-            cur = table[idx+c-low];
-         } else {
-            break;
-         }
-         if(cur&0x80000000u) {
-            return cur&0xFFFFu;
-         }
-         if(str[i]==0) {
-            break;
-         }
-      }
-      return -1;
-   }
-   public:
-   material_matte(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
-   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
-      DebugObject::setParameter(paramname, paramtype, mem);
-      int idx = param_hash(paramname);
-      switch(idx) {
-         case 0: { //name
-            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
-            check_type(ANARI_MATERIAL, "matte", paramname, paramtype, name_types);
-            return;
-         }
-         case 1: { //color
-            ANARIDataType color_types[] = {ANARI_FLOAT32_VEC3,ANARI_SAMPLER,ANARI_STRING, ANARI_UNKNOWN};
-            check_type(ANARI_MATERIAL, "matte", paramname, paramtype, color_types);
-            return;
-         }
-         default: // unknown param
-            unknown_parameter(ANARI_MATERIAL, "matte", paramname, paramtype);
-            return;
-      }
-   }
-   void commit() {
-      DebugObject::commit();
-   }
-};
-class material_transparentMatte : public DebugObject<ANARI_MATERIAL> {
-   static int param_hash(const char *str) {
-      static const uint32_t table[] = {0x706f000du,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x62610012u,0x71700016u,0x6d6c000eu,0x706f000fu,0x73720010u,0x1000011u,0x80000001u,0x6e6d0013u,0x66650014u,0x1000015u,0x80000000u,0x62610017u,0x64630018u,0x6a690019u,0x7574001au,0x7a79001bu,0x100001cu,0x80000002u};
-      uint32_t cur = 0x70630000u;
-      for(int i = 0;cur!=0;++i) {
-         uint32_t idx = cur&0xFFFFu;
-         uint32_t low = (cur>>16u)&0xFFu;
-         uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
-         if(c>=low && c<high) {
-            cur = table[idx+c-low];
-         } else {
-            break;
-         }
-         if(cur&0x80000000u) {
-            return cur&0xFFFFu;
-         }
-         if(str[i]==0) {
-            break;
-         }
-      }
-      return -1;
-   }
-   public:
-   material_transparentMatte(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
-   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
-      DebugObject::setParameter(paramname, paramtype, mem);
-      int idx = param_hash(paramname);
-      switch(idx) {
-         case 0: { //name
-            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
-            check_type(ANARI_MATERIAL, "transparentMatte", paramname, paramtype, name_types);
-            return;
-         }
-         case 1: { //color
-            ANARIDataType color_types[] = {ANARI_FLOAT32_VEC3,ANARI_SAMPLER,ANARI_STRING, ANARI_UNKNOWN};
-            check_type(ANARI_MATERIAL, "transparentMatte", paramname, paramtype, color_types);
-            return;
-         }
-         case 2: { //opacity
-            ANARIDataType opacity_types[] = {ANARI_FLOAT32,ANARI_SAMPLER,ANARI_STRING, ANARI_UNKNOWN};
-            check_type(ANARI_MATERIAL, "transparentMatte", paramname, paramtype, opacity_types);
-            return;
-         }
-         default: // unknown param
-            unknown_parameter(ANARI_MATERIAL, "transparentMatte", paramname, paramtype);
             return;
       }
    }

@@ -1,0 +1,25 @@
+{
+    "info" : {
+        "name" : "KHR_SAMPLER_PRIMITIVE",
+        "type" : "feature",
+        "dependencies" : []
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_SAMPLER",
+            "name" : "primitive",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "array",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : ["required"]
+                }
+            ]
+        }
+    ]
+}

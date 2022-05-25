@@ -1,0 +1,52 @@
+{
+    "info" : {
+        "name" : "KHR_SAMPLER_IMAGE1D",
+        "type" : "feature",
+        "dependencies" : []
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_SAMPLER",
+            "name" : "image1D",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "image",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : ["required"]
+                }, {
+                    "name" : "inAttribute",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : ["attribute"],
+                    "default" : "attribute0"
+                }, {
+                    "name" : "filter",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "default" : "nearest",
+                    "values" : ["nearest", "linear"]
+                }, {
+                    "name" : "wrapMode1",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "default" : "clampToEdge",
+                    "values" : ["clampToEdge", "repeat", "mirrorRepeat"]
+                }, {
+                    "name" : "inTransform",
+                    "types" : ["ANARI_FLOAT32_MAT4"],
+                    "tags" : [],
+                    "default" : [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]
+                }, {
+                    "name" : "outTransform",
+                    "types" : ["ANARI_FLOAT32_MAT4"],
+                    "tags" : [],
+                    "default" : [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]
+                }
+            ]
+        }
+    ]
+}
