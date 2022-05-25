@@ -1,0 +1,58 @@
+{
+    "info" : {
+        "name" : "KHR_AREA_LIGHTS",
+        "type" : "feature",
+        "dependencies" : [
+            "khr_light_ring",
+            "khr_light_quad",
+            "khr_light_hdri"
+        ]
+    },
+
+
+    "objects" : [
+       {
+            "type" : "ANARI_LIGHT",
+            "name" : "directional",
+            "parameters" : [
+                {
+                    "name" : "angularDiameter",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 0.0
+                }, {
+                    "name" : "radiance",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 1.0
+                }, {
+                    "name" : "visible",
+                    "types" : ["ANARI_BOOL"],
+                    "tags" : [],
+                    "default" : 1
+                }
+            ]
+        }, {
+            "type" : "ANARI_LIGHT",
+            "name" : "point",
+            "parameters" : [
+                {
+                    "name" : "radius",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 0.0
+                }, {
+                    "name" : "radiance",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 1.0
+                }, {
+                    "name" : "visible",
+                    "types" : ["ANARI_BOOL"],
+                    "tags" : [],
+                    "default" : 1
+                }
+            ]
+        }
+    ]
+}

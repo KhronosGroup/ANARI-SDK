@@ -132,6 +132,11 @@
                 {"name" : "ANARI_FLOAT32_BOX3", "value" : 2010, "baseType" : "float", "elements" : 6, "normalized" : false},
                 {"name" : "ANARI_FLOAT32_BOX4", "value" : 2011, "baseType" : "float", "elements" : 8, "normalized" : false},
 
+                {"name" : "ANARI_UINT64_BOX1", "value" : 2104, "baseType" : "uint64_t", "elements" : 2, "normalized" : false},
+                {"name" : "ANARI_UINT64_BOX2", "value" : 2105, "baseType" : "uint64_t", "elements" : 4, "normalized" : false},
+                {"name" : "ANARI_UINT64_BOX3", "value" : 2106, "baseType" : "uint64_t", "elements" : 6, "normalized" : false},
+                {"name" : "ANARI_UINT64_BOX4", "value" : 2107, "baseType" : "uint64_t", "elements" : 8, "normalized" : false},
+
                 {"name" : "ANARI_FLOAT32_MAT2", "value" : 2012, "baseType" : "float", "elements" : 4, "normalized" : false},
                 {"name" : "ANARI_FLOAT32_MAT3", "value" : 2013, "baseType" : "float", "elements" : 9, "normalized" : false},
                 {"name" : "ANARI_FLOAT32_MAT4", "value" : 2014, "baseType" : "float", "elements" : 16, "normalized" : false},
@@ -152,10 +157,6 @@
                 {"name" : "ANARI_LOG_ERROR", "value" : 4},
                 {"name" : "ANARI_LOG_NONE", "value" : 5}
             ]
-        }, {
-            "name" : "ANARIExtension",
-            "baseType" : "const char*",
-            "values" : []
         }, {
             "name" : "ANARIWaitMask",
             "baseType" : "unsigned",

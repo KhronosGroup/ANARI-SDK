@@ -260,7 +260,7 @@ void MainWindow::setDevice(ANARIDevice dev)
 
   // Enable the "continuation rendering" feature profile
   useContinuation =
-      anariDeviceImplements(device, ANARI_KHR_FRAME_COMPLETION_CALLBACK);
+      anariDeviceImplements(device, "ANARI_KHR_FRAME_COMPLETION_CALLBACK");
 
   camera = anariNewCamera(dev, "perspective");
   anariCommit(dev, camera);

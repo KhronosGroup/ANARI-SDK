@@ -1,6 +1,6 @@
 {
     "info" : {
-        "name" : "frame_continuation",
+        "name" : "KHR_FRAME_CONTINUATION",
         "type" : "feature",
         "dependencies" : ["anari_core_1_0"]
     },
@@ -10,11 +10,6 @@
             "name" : "ANARIDataType",
             "values" : [
                 {"name" : "ANARI_FRAME_COMPLETION_CALLBACK", "value" : 203, "baseType" : "ANARIFrameCompletionCallback", "elements" : 1, "normalized" : false}
-            ]
-        }, {
-            "name" : "ANARIExtension",
-            "values" : [
-                {"name" : "ANARI_KHR_FRAME_COMPLETION_CALLBACK", "value" : "\"ANARI_KHR_FRAME_COMPLETION_CALLBACK\""}
             ]
         }
     ],

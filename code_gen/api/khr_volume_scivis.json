@@ -1,0 +1,51 @@
+{
+    "info" : {
+        "name" : "KHR_VOLUME_SCIVIS",
+        "type" : "feature",
+        "dependencies" : []
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_VOLUME",
+            "name" : "scivis",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "field",
+                    "types" : ["ANARI_SPATIAL_FIELD"],
+                    "tags" : ["required"]
+                }, {
+                    "name" : "valueRange",
+                    "types" : ["ANARI_FLOAT32_BOX1"],
+                    "tags" : ["required"],
+                    "default" : [0.0, 1.0]
+                }, {
+                    "name" : "color",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : ["required"]
+                }, {
+                    "name" : "color.position",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "opacity",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : ["required"]
+                }, {
+                    "name" : "opacity.position",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "tags" : []
+                }, {
+                    "name" : "densityScale",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 1
+                }
+            ]
+        }
+    ]
+}

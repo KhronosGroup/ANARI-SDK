@@ -1,6 +1,8 @@
 # Copyright 2021 The Khronos Group
 # SPDX-License-Identifier: Apache-2.0
 
+import json
+
 def check_conflicts(a, b, key, scope):
     a_set = set([x[key] for x in a])
     b_set = set([x[key] for x in b])
@@ -64,11 +66,15 @@ def merge_object_table(core, extension):
                 core.append(obj)
 
 def merge(core, extension):
+    if not "features" in core:
+        core["features"] = []
     for k,v in extension.items():
         if not k in core:
             core[k] = v
         elif k == "info":
             print('merging '+extension[k]['type']+' '+extension[k]["name"])
+            if v["type"] == "feature":
+                core["features"].append(v["name"])
         elif k == "enums" :
             merge_enums(core[k], extension[k])
         elif k == "descriptions":
@@ -78,3 +84,17 @@ def merge(core, extension):
         else:
             check_conflicts(core[k], extension[k], 'name', k)
             core[k].extend(extension[k])
+
+def crawl_dependencies(root, jsons):
+    deps = []
+    deps.extend(reversed(root["info"]["dependencies"].copy()))
+    i = 0
+    while i<len(deps):
+        x = deps[i]
+        i += 1
+        matches = [p for p in jsons if p.stem == x]
+        for m in matches:
+            f = json.load(open(m))
+            deps.extend(reversed(f["info"]["dependencies"]))
+    duplicates = set()
+    return [x for x in reversed(deps) if not (x in duplicates or duplicates.add(x))]

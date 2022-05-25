@@ -1,0 +1,26 @@
+{
+    "info" : {
+        "name" : "KHR_MATERIAL_MATTE",
+        "type" : "feature",
+        "dependencies" : []
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_MATERIAL",
+            "name" : "matte",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "color",
+                    "types" : ["ANARI_FLOAT32_VEC3", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags" : ["attribute"],
+                    "default" : [0.8, 0.8, 0.8]
+                }
+            ]
+        }
+    ]
+}

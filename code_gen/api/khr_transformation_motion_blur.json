@@ -1,6 +1,6 @@
 {
     "info" : {
-        "name" : "transformation_motion_blur",
+        "name" : "KHR_TRANSFORMATION_MOTION_BLUR",
         "type" : "feature",
         "dependencies" : []
     },

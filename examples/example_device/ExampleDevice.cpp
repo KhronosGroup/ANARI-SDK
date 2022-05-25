@@ -182,7 +182,7 @@ static std::map<int, SetParamFcn *> setParamFcns = {
 int ExampleDevice::deviceImplements(const char *_extension)
 {
   std::string extension = _extension;
-  if (extension == ANARI_KHR_FRAME_COMPLETION_CALLBACK)
+  if (extension == "ANARI_KHR_FRAME_COMPLETION_CALLBACK")
     return 1;
   return 0;
 }
@@ -324,6 +324,7 @@ ANARIWorld ExampleDevice::newWorld()
 }
 
 anari::debug_device::ObjectFactory *getDebugFactory();
+const char ** query_extensions();
 
 int ExampleDevice::getProperty(ANARIObject object,
     const char *name,
@@ -346,9 +347,13 @@ int ExampleDevice::getProperty(ANARIObject object,
     } else if (prop == "debugObjects" && type == ANARI_FUNCTION_POINTER) {
       writeToVoidP(mem, getDebugFactory);
       return 1;
+    } else if (prop == "features" && type == ANARI_VOID_POINTER) {
+      writeToVoidP(mem, query_extensions());
+      return 1;
     }
-  } else
+  } else {
     return referenceFromHandle(object).getProperty(name, type, mem, mask);
+  }
 
   return 0;
 }

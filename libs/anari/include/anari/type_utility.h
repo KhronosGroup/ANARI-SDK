@@ -1168,6 +1168,46 @@ struct ANARITypeProperties<ANARI_FLOAT32_BOX4> {
     static constexpr const char* var_name = "varfloat32_box4";
 };
 template<>
+struct ANARITypeProperties<ANARI_UINT64_BOX1> {
+    using base_type = uint64_t;
+    static const int components = 2;
+    using array_type = base_type[2];
+    static constexpr const char* enum_name = "ANARI_UINT64_BOX1";
+    static constexpr const char* type_name = "uint64_t";
+    static constexpr const char* array_name = "uint64_t[2]";
+    static constexpr const char* var_name = "varuint64_box1";
+};
+template<>
+struct ANARITypeProperties<ANARI_UINT64_BOX2> {
+    using base_type = uint64_t;
+    static const int components = 4;
+    using array_type = base_type[4];
+    static constexpr const char* enum_name = "ANARI_UINT64_BOX2";
+    static constexpr const char* type_name = "uint64_t";
+    static constexpr const char* array_name = "uint64_t[4]";
+    static constexpr const char* var_name = "varuint64_box2";
+};
+template<>
+struct ANARITypeProperties<ANARI_UINT64_BOX3> {
+    using base_type = uint64_t;
+    static const int components = 6;
+    using array_type = base_type[6];
+    static constexpr const char* enum_name = "ANARI_UINT64_BOX3";
+    static constexpr const char* type_name = "uint64_t";
+    static constexpr const char* array_name = "uint64_t[6]";
+    static constexpr const char* var_name = "varuint64_box3";
+};
+template<>
+struct ANARITypeProperties<ANARI_UINT64_BOX4> {
+    using base_type = uint64_t;
+    static const int components = 8;
+    using array_type = base_type[8];
+    static constexpr const char* enum_name = "ANARI_UINT64_BOX4";
+    static constexpr const char* type_name = "uint64_t";
+    static constexpr const char* array_name = "uint64_t[8]";
+    static constexpr const char* var_name = "varuint64_box4";
+};
+template<>
 struct ANARITypeProperties<ANARI_FLOAT32_MAT2> {
     using base_type = float;
     static const int components = 4;
@@ -1366,6 +1406,10 @@ R anariTypeInvoke(ANARIDataType type, Args&&... args) {
         case ANARI_FLOAT32_BOX2: return F<ANARI_FLOAT32_BOX2>()(std::forward<Args>(args)...);
         case ANARI_FLOAT32_BOX3: return F<ANARI_FLOAT32_BOX3>()(std::forward<Args>(args)...);
         case ANARI_FLOAT32_BOX4: return F<ANARI_FLOAT32_BOX4>()(std::forward<Args>(args)...);
+        case ANARI_UINT64_BOX1: return F<ANARI_UINT64_BOX1>()(std::forward<Args>(args)...);
+        case ANARI_UINT64_BOX2: return F<ANARI_UINT64_BOX2>()(std::forward<Args>(args)...);
+        case ANARI_UINT64_BOX3: return F<ANARI_UINT64_BOX3>()(std::forward<Args>(args)...);
+        case ANARI_UINT64_BOX4: return F<ANARI_UINT64_BOX4>()(std::forward<Args>(args)...);
         case ANARI_FLOAT32_MAT2: return F<ANARI_FLOAT32_MAT2>()(std::forward<Args>(args)...);
         case ANARI_FLOAT32_MAT3: return F<ANARI_FLOAT32_MAT3>()(std::forward<Args>(args)...);
         case ANARI_FLOAT32_MAT4: return F<ANARI_FLOAT32_MAT4>()(std::forward<Args>(args)...);
@@ -1496,6 +1540,10 @@ inline size_t sizeOf(ANARIDataType type) {
         case ANARI_FLOAT32_BOX2: return sizeof(float)*4;
         case ANARI_FLOAT32_BOX3: return sizeof(float)*6;
         case ANARI_FLOAT32_BOX4: return sizeof(float)*8;
+        case ANARI_UINT64_BOX1: return sizeof(uint64_t)*2;
+        case ANARI_UINT64_BOX2: return sizeof(uint64_t)*4;
+        case ANARI_UINT64_BOX3: return sizeof(uint64_t)*6;
+        case ANARI_UINT64_BOX4: return sizeof(uint64_t)*8;
         case ANARI_FLOAT32_MAT2: return sizeof(float)*4;
         case ANARI_FLOAT32_MAT3: return sizeof(float)*9;
         case ANARI_FLOAT32_MAT4: return sizeof(float)*16;
@@ -1625,6 +1673,10 @@ inline size_t componentsOf(ANARIDataType type) {
         case ANARI_FLOAT32_BOX2: return 4;
         case ANARI_FLOAT32_BOX3: return 6;
         case ANARI_FLOAT32_BOX4: return 8;
+        case ANARI_UINT64_BOX1: return 2;
+        case ANARI_UINT64_BOX2: return 4;
+        case ANARI_UINT64_BOX3: return 6;
+        case ANARI_UINT64_BOX4: return 8;
         case ANARI_FLOAT32_MAT2: return 4;
         case ANARI_FLOAT32_MAT3: return 9;
         case ANARI_FLOAT32_MAT4: return 16;
@@ -1754,6 +1806,10 @@ inline const char* toString(ANARIDataType type) {
         case ANARI_FLOAT32_BOX2: return "ANARI_FLOAT32_BOX2";
         case ANARI_FLOAT32_BOX3: return "ANARI_FLOAT32_BOX3";
         case ANARI_FLOAT32_BOX4: return "ANARI_FLOAT32_BOX4";
+        case ANARI_UINT64_BOX1: return "ANARI_UINT64_BOX1";
+        case ANARI_UINT64_BOX2: return "ANARI_UINT64_BOX2";
+        case ANARI_UINT64_BOX3: return "ANARI_UINT64_BOX3";
+        case ANARI_UINT64_BOX4: return "ANARI_UINT64_BOX4";
         case ANARI_FLOAT32_MAT2: return "ANARI_FLOAT32_MAT2";
         case ANARI_FLOAT32_MAT3: return "ANARI_FLOAT32_MAT3";
         case ANARI_FLOAT32_MAT4: return "ANARI_FLOAT32_MAT4";
@@ -1883,6 +1939,10 @@ inline const char* typenameOf(ANARIDataType type) {
         case ANARI_FLOAT32_BOX2: return "float";
         case ANARI_FLOAT32_BOX3: return "float";
         case ANARI_FLOAT32_BOX4: return "float";
+        case ANARI_UINT64_BOX1: return "uint64_t";
+        case ANARI_UINT64_BOX2: return "uint64_t";
+        case ANARI_UINT64_BOX3: return "uint64_t";
+        case ANARI_UINT64_BOX4: return "uint64_t";
         case ANARI_FLOAT32_MAT2: return "float";
         case ANARI_FLOAT32_MAT3: return "float";
         case ANARI_FLOAT32_MAT4: return "float";
@@ -2012,6 +2072,10 @@ inline const char* varnameOf(ANARIDataType type) {
         case ANARI_FLOAT32_BOX2: return "varfloat32_box2";
         case ANARI_FLOAT32_BOX3: return "varfloat32_box3";
         case ANARI_FLOAT32_BOX4: return "varfloat32_box4";
+        case ANARI_UINT64_BOX1: return "varuint64_box1";
+        case ANARI_UINT64_BOX2: return "varuint64_box2";
+        case ANARI_UINT64_BOX3: return "varuint64_box3";
+        case ANARI_UINT64_BOX4: return "varuint64_box4";
         case ANARI_FLOAT32_MAT2: return "varfloat32_mat2";
         case ANARI_FLOAT32_MAT3: return "varfloat32_mat3";
         case ANARI_FLOAT32_MAT4: return "varfloat32_mat4";
@@ -2141,6 +2205,10 @@ inline int isNormalized(ANARIDataType type) {
         case ANARI_FLOAT32_BOX2: return 0;
         case ANARI_FLOAT32_BOX3: return 0;
         case ANARI_FLOAT32_BOX4: return 0;
+        case ANARI_UINT64_BOX1: return 0;
+        case ANARI_UINT64_BOX2: return 0;
+        case ANARI_UINT64_BOX3: return 0;
+        case ANARI_UINT64_BOX4: return 0;
         case ANARI_FLOAT32_MAT2: return 0;
         case ANARI_FLOAT32_MAT3: return 0;
         case ANARI_FLOAT32_MAT4: return 0;

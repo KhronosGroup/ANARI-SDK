@@ -1,0 +1,36 @@
+{
+    "info" : {
+        "name" : "KHR_LIGHT_DIRECTIONAL",
+        "type" : "feature",
+        "dependencies" : []
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_LIGHT",
+            "name" : "directional",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : []
+                }, {
+                    "name" : "color",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "default" : [1.0, 1.0, 1.0]
+                }, {
+                    "name" : "irridance",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 1.0
+                }, {
+                    "name" : "direction",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "default" : [0.0, 0.0, 1.0]
+                }
+            ]
+        }
+    ]
+}

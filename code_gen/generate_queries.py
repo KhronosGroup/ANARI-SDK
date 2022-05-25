@@ -54,6 +54,16 @@ class QueryGenerator:
     def preamble(self):
         return "static " + hash_gen.gen_hash_function("subtype_hash", self.subtype_list)
 
+    def generate_extension_query(self):
+        code = "const char ** query_extensions() {\n"
+        code += "   static const char *features[] = {\n      "
+        if self.anari["features"]:
+            code += ",\n      ".join(["\"ANARI_%s\""%x for x in self.anari["features"]]) + ",\n"
+        code += "      0\n   };\n"
+        code += "   return features;\n"
+        code += "}\n"
+        return code
+
     def generate_subtype_query(self):
         code = "const char ** query_object_types(ANARIDataType type) {\n"
         code += "   switch(type) {\n"
@@ -186,8 +196,9 @@ jsons = [entry for j in args.json for entry in j.glob("**/*.json")]
 device = json.load(args.devicespec)
 print("opened " + device["info"]["type"] + " " + device["info"]["name"])
 
+dependencies = merge_anari.crawl_dependencies(device, jsons)
 #merge all dependencies
-for x in device["info"]["dependencies"]:
+for x in dependencies:
     matches = [p for p in jsons if p.stem == x]
     for m in matches:
         merge_anari.merge(device, json.load(open(m)))
@@ -207,5 +218,6 @@ with open(args.prefix + "Queries.cpp", mode='w') as f:
     f.write(gen.preamble())
     f.write(gen.generate_subtype_query())
     f.write(gen.generate_parameter_query())
+    f.write(gen.generate_extension_query())
     f.write("}\n")
     f.write("}\n")

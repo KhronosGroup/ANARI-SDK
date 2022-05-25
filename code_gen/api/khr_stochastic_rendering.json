@@ -1,6 +1,6 @@
 {
     "info" : {
-        "name" : "stochastic_rendering",
+        "name" : "KHR_STOCHASTIC_RENDERING",
         "type" : "feature",
         "dependencies" : []
     },
