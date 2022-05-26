@@ -4,52 +4,22 @@ set(CMAKE_CXX_STANDARD 11)
 
 project(anari_library_$namespace LANGUAGES CXX)
 
-if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
-  find_package(Python3 REQUIRED COMPONENTS Interpreter)
-
-  add_custom_target(generate_$namespace)
-
-  add_custom_target(generate_$namespace_objects
-    COMMAND ${Python3_EXECUTABLE} ${ANARI_JSON_PATH}/generate_debug_objects.py
-      --json ${ANARI_JSON_PATH}
-      --device $device_json
-      --prefix $prefix
-      --namespace $namespace
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    DEPENDS $device_json
-  )
-
-  add_custom_target(generate_$namespace_queries
-    COMMAND ${Python3_EXECUTABLE} ${ANARI_JSON_PATH}/generate_queries.py
-      --json ${ANARI_JSON_PATH}
-      --device $device_json
-      --prefix $prefix
-      --namespace $namespace
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    DEPENDS $device_json
-  )
-
-  add_dependencies(generate_$namespace
-    generate_$namespace_objects
-    generate_$namespace_queries)
-
-  add_dependencies(generate_all generate_$namespace)
-endif()
-
 add_library(${PROJECT_NAME} SHARED
-  $prefixDevice.cpp
-  $prefixObjects.cpp
-  $prefixArrayObjects.cpp
-  $prefixFrameObject.cpp
-  $prefixDeviceFactories.cpp
-  $prefixString.cpp
-  $prefixQueries.cpp
-  $prefixDebugFactory.cpp
+  $source_path/$prefixDevice.cpp
+  $source_path/$prefixArrayObjects.cpp
+  $source_path/$prefixFrameObject.cpp
+  $generated_path/$prefixObjects.cpp
+  $generated_path/$prefixDeviceFactories.cpp
+  $generated_path/$prefixString.cpp
+  $generated_path/$prefixQueries.cpp
+  $generated_path/$prefixDebugFactory.cpp
 )
 
 target_include_directories(${PROJECT_NAME}
 PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
+    $source_path
+    $generated_path
 )
 
 target_link_libraries(${PROJECT_NAME}
