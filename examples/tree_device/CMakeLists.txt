@@ -7,52 +7,22 @@ set(CMAKE_CXX_STANDARD 11)
 
 project(anari_library_tree LANGUAGES CXX)
 
-if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
-  find_package(Python3 REQUIRED COMPONENTS Interpreter)
-
-  add_custom_target(generate_tree)
-
-  add_custom_target(generate_tree_objects
-    COMMAND ${Python3_EXECUTABLE} ${ANARI_JSON_PATH}/generate_debug_objects.py
-      --json ${ANARI_JSON_PATH}
-      --device ../../code_gen/devices/extended_device.json
-      --prefix Tree
-      --namespace tree
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    DEPENDS ../../code_gen/devices/extended_device.json
-  )
-
-  add_custom_target(generate_tree_queries
-    COMMAND ${Python3_EXECUTABLE} ${ANARI_JSON_PATH}/generate_queries.py
-      --json ${ANARI_JSON_PATH}
-      --device ../../code_gen/devices/extended_device.json
-      --prefix Tree
-      --namespace tree
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    DEPENDS ../../code_gen/devices/extended_device.json
-  )
-
-  add_dependencies(generate_tree
-    generate_tree_objects
-    generate_tree_queries)
-
-  add_dependencies(generate_all generate_tree)
-endif()
-
 add_library(${PROJECT_NAME} SHARED
-  TreeDevice.cpp
-  TreeObjects.cpp
-  TreeArrayObjects.cpp
-  TreeFrameObject.cpp
-  TreeDeviceFactories.cpp
-  TreeString.cpp
-  TreeQueries.cpp
-  TreeDebugFactory.cpp
+  src/TreeDevice.cpp
+  src/TreeArrayObjects.cpp
+  src/TreeFrameObject.cpp
+  generated/TreeObjects.cpp
+  generated/TreeDeviceFactories.cpp
+  generated/TreeString.cpp
+  generated/TreeQueries.cpp
+  generated/TreeDebugFactory.cpp
 )
 
 target_include_directories(${PROJECT_NAME}
 PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
+    src
+    generated
 )
 
 target_link_libraries(${PROJECT_NAME}
