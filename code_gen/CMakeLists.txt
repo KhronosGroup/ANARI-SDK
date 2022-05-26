@@ -3,6 +3,8 @@
 
 if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
 
+  option(INSTALL_CODE_GEN_SCRIPTS "Install scripts in code_gen/" ON)
+
   find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
   set(API_JSON api/anari_core_1_0.json api/khr_frame_continuation.json)
@@ -32,5 +34,18 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
   )
 
   add_dependencies(generate_all generate_headers)
+
+  if (INSTALL_CODE_GEN_SCRIPTS)
+    install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+      DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/anari
+      FILES_MATCHING
+        PATTERN *.py
+        PATTERN *.h
+        PATTERN *.cpp
+        PATTERN *.json
+        PATTERN templates/CMakeLists.txt
+        PATTERN ./CMakeLists.txt EXCLUDE
+    )
+  endif()
 
 endif()
