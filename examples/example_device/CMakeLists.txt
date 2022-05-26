@@ -37,8 +37,8 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
   find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
   add_custom_target(generate_example_device
-    COMMAND ${Python3_EXECUTABLE} ${ANARI_JSON_PATH}/generate_queries.py
-      --json ${ANARI_JSON_PATH}
+    COMMAND ${Python3_EXECUTABLE} ${ANARI_CODE_GEN_ROOT}/generate_queries.py
+      --json ${ANARI_CODE_GEN_ROOT}
       --prefix ExampleDevice
       --device ${CMAKE_CURRENT_SOURCE_DIR}/example_device.json
       --namespace example_device
@@ -49,8 +49,8 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
   add_dependencies(generate_all generate_example_device)
 
   add_custom_target(generate_example_debug_objects
-    COMMAND ${Python3_EXECUTABLE} ${ANARI_JSON_PATH}/generate_debug_objects.py
-      --json ${ANARI_JSON_PATH}
+    COMMAND ${Python3_EXECUTABLE} ${ANARI_CODE_GEN_ROOT}/generate_debug_objects.py
+      --json ${ANARI_CODE_GEN_ROOT}
       --device ${CMAKE_CURRENT_SOURCE_DIR}/example_device.json
       --prefix ExampleDevice
       --namespace example_device

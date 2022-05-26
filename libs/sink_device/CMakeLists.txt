@@ -9,13 +9,13 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
   find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
   add_custom_target(generate_sink_device
-    COMMAND ${Python3_EXECUTABLE} ${ANARI_JSON_PATH}/generate_queries.py
-      --json ${ANARI_JSON_PATH}
-      --device ${ANARI_JSON_PATH}/devices/generic_device.json
+    COMMAND ${Python3_EXECUTABLE} ${ANARI_CODE_GEN_ROOT}/generate_queries.py
+      --json ${ANARI_CODE_GEN_ROOT}
+      --device ${ANARI_CODE_GEN_ROOT}/devices/generic_device.json
       --prefix SinkDevice
       --namespace sink_device
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    DEPENDS ${ANARI_JSON_PATH}/devices/generic_device.json
+    DEPENDS ${ANARI_CODE_GEN_ROOT}/devices/generic_device.json
   )
 
   add_dependencies(generate_all generate_sink_device)

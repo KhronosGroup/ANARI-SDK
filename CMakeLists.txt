@@ -35,14 +35,17 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 
 include(GNUInstallDirs)
 
+# Built-in CMake options
 option(BUILD_SHARED_LIBS "Build shared libraries instead of static" ON)
 option(BUILD_TESTING "Build tests for CTest" ON)
+# ANARI specific options
 option(BUILD_EXAMPLES "Build example applications and example device" ON)
 
 ## The generate_all targets collects all offline code generation targets
 
-set(ANARI_JSON_PATH ${CMAKE_SOURCE_DIR}/code_gen)
+set(ANARI_CODE_GEN_ROOT ${CMAKE_SOURCE_DIR}/code_gen)
 add_custom_target(generate_all)
+include(cmake/anari_generate_frontend.cmake)
 
 ## Add library and executable targets
 
@@ -64,13 +67,17 @@ endif()
 
 ## Configure CMake find_package() config files ##
 
+set(ANARI_CMAKE_INSTALL_DESTINATION
+  ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}-${PROJECT_VERSION}
+)
+
 include(CMakePackageConfigHelpers)
 
 configure_package_config_file(
   "${PROJECT_SOURCE_DIR}/cmake/${PROJECT_NAME}Config.cmake.in"
   "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
 INSTALL_DESTINATION
-  ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}-${PROJECT_VERSION}
+  ${ANARI_CMAKE_INSTALL_DESTINATION}
 )
 
 write_basic_package_version_file(
@@ -83,5 +90,12 @@ install(FILES
   ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
   ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
 DESTINATION
-  ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}-${PROJECT_VERSION}
+  ${ANARI_CMAKE_INSTALL_DESTINATION}
+)
+
+install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/cmake
+  DESTINATION
+    ${ANARI_CMAKE_INSTALL_DESTINATION}
+  FILES_MATCHING
+    PATTERN *.cmake
 )
