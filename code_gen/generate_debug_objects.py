@@ -54,38 +54,32 @@ class DebugGenerator:
 
     def generate_validation_objects_decl(self, factoryname):
         code = ""
-        code += "namespace anari {\n"
-        code += "namespace debug_device {\n"
-        code += "class " + factoryname + " : public ObjectFactory {\n"
+        code += "class " + factoryname + " : public anari::debug_device::ObjectFactory {\n"
         code += "public:\n"
-        code += "   DebugObjectBase* new_volume(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
-        code += "   DebugObjectBase* new_geometry(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
-        code += "   DebugObjectBase* new_spatial_field(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
-        code += "   DebugObjectBase* new_light(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
-        code += "   DebugObjectBase* new_camera(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
-        code += "   DebugObjectBase* new_material(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
-        code += "   DebugObjectBase* new_sampler(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
-        code += "   DebugObjectBase* new_renderer(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
-        code += "   DebugObjectBase* new_device(DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
-        code += "   DebugObjectBase* new_array1d(DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
-        code += "   DebugObjectBase* new_array2d(DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
-        code += "   DebugObjectBase* new_array3d(DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
-        code += "   DebugObjectBase* new_frame(DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
-        code += "   DebugObjectBase* new_group(DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
-        code += "   DebugObjectBase* new_instance(DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
-        code += "   DebugObjectBase* new_world(DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
-        code += "   DebugObjectBase* new_surface(DebugDevice *td, ANARIObject wh, ANARIObject h) override; \n"
+        code += "   anari::debug_device::DebugObjectBase* new_volume(const char *name, anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
+        code += "   anari::debug_device::DebugObjectBase* new_geometry(const char *name, anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
+        code += "   anari::debug_device::DebugObjectBase* new_spatial_field(const char *name, anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
+        code += "   anari::debug_device::DebugObjectBase* new_light(const char *name, anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
+        code += "   anari::debug_device::DebugObjectBase* new_camera(const char *name, anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
+        code += "   anari::debug_device::DebugObjectBase* new_material(const char *name, anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
+        code += "   anari::debug_device::DebugObjectBase* new_sampler(const char *name, anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
+        code += "   anari::debug_device::DebugObjectBase* new_renderer(const char *name, anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
+        code += "   anari::debug_device::DebugObjectBase* new_device(anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
+        code += "   anari::debug_device::DebugObjectBase* new_array1d(anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
+        code += "   anari::debug_device::DebugObjectBase* new_array2d(anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
+        code += "   anari::debug_device::DebugObjectBase* new_array3d(anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
+        code += "   anari::debug_device::DebugObjectBase* new_frame(anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
+        code += "   anari::debug_device::DebugObjectBase* new_group(anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
+        code += "   anari::debug_device::DebugObjectBase* new_instance(anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
+        code += "   anari::debug_device::DebugObjectBase* new_world(anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
+        code += "   anari::debug_device::DebugObjectBase* new_surface(anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override; \n"
         code += "};\n"
-        code += "}\n"
-        code += "}\n"
         return code
 
     def generate_validation_objects_impl(self, factoryname):
         base = "DebugObject"
         arrayBase = "ArrayDebugObject"
         code = ""
-        code += "namespace anari {\n"
-        code += "namespace debug_device {\n"
         code += "namespace {\n"
         for obj in self.anari["objects"]:
             params = obj["parameters"]
@@ -150,8 +144,6 @@ class DebugGenerator:
             code += "   return new " + type_name + "(td, wh, h);\n"
             code += "}\n"
 
-        code += "}\n"
-        code += "}\n"
         return code
 
 
@@ -214,18 +206,22 @@ with open(args.outdir/(args.prefix + "DebugFactory.cpp"), mode='w') as f:
     f.write("// This file was generated by "+os.path.basename(__file__)+"\n")
     f.write("// Don't make changes to this directly\n\n")
 
+
     if args.header:
         f.write("#include \""+args.prefix+"DebugFactory.h\"\n")
+        f.write("using namespace anari::debug_device;\n")
         f.write(begin_namespaces(args))
     else:
         f.write("#include \"anari/ext/debug/DebugObject.h\"\n")
+        f.write("using namespace anari::debug_device;\n")
         f.write(begin_namespaces(args))
         f.write(gen.generate_validation_objects_decl(args.prefix + "DebugFactory"))
+
 
     f.write(gen.generate_validation_objects_impl(args.prefix + "DebugFactory"))
 
     f.write("anari::debug_device::ObjectFactory* getDebugFactory() {\n")
-    f.write("   static debug_device::" + args.prefix + "DebugFactory f;\n")
+    f.write("   static " + args.prefix + "DebugFactory f;\n")
     f.write("   return &f;\n")
     f.write("}\n")
     f.write(end_namespaces(args))

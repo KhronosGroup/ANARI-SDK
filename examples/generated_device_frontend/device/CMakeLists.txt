@@ -7,6 +7,35 @@ set(CMAKE_CXX_STANDARD 11)
 
 project(anari_library_tree LANGUAGES CXX)
 
+if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
+  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+
+  add_custom_target(generate_Tree_queries
+    COMMAND ${Python3_EXECUTABLE} ${ANARI_CODE_GEN_ROOT}/generate_queries.py
+      --json ${ANARI_CODE_GEN_ROOT}
+      --prefix Tree
+      --device ${CMAKE_CURRENT_SOURCE_DIR}/foo
+      --namespace tree
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DEPENDS foo
+  )
+
+  add_dependencies(generate_all generate_Tree_queries)
+
+  add_custom_target(generate_Tree_debug_objects
+    COMMAND ${Python3_EXECUTABLE} ${ANARI_CODE_GEN_ROOT}/generate_debug_objects.py
+      --json ${ANARI_CODE_GEN_ROOT}
+      --device ${CMAKE_CURRENT_SOURCE_DIR}/foo
+      --prefix Tree
+      --namespace tree
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DEPENDS foo
+  )
+
+  add_dependencies(generate_all generate_Tree_debug_objects)
+
+endif()
+
 add_library(${PROJECT_NAME} SHARED
   src/TreeDevice.cpp
   src/TreeArrayObjects.cpp
@@ -20,16 +49,13 @@ add_library(${PROJECT_NAME} SHARED
 
 target_include_directories(${PROJECT_NAME}
 PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
-    src
-    generated
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
+  src
+  generated
 )
 
 target_link_libraries(${PROJECT_NAME}
 PUBLIC
-  # NOTE: These targets are generated with the install namespace "anari::", but
-  #       just this example uses the local target names because we are in the
-  #       same build project as the SDK itself.
   anari
   anari_utilities
   anari_library_debug

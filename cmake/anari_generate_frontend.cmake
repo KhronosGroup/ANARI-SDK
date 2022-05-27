@@ -18,7 +18,7 @@ function(anari_generate_frontend)
   # options
     ""
   # single-arg options
-    "TARGET;PREFIX;NAMESPACE;DESTINATION;DEFINITIONS;CODE_HEADER_FILE"
+    "TARGET;PREFIX;NAMESPACE;DESTINATION;DEFINITIONS;CODE_HEADER_FILE;EXTRA_OPTIONS;"
   # multi-arg options
     ""
   # string to parse
@@ -52,9 +52,10 @@ function(anari_generate_frontend)
     --device ${FRONTEND_DEFINITIONS}
     ${FRONTEND_CODE_HEADER_FILE}
     --output ${FRONTEND_DESTINATION}
+    ${FRONTEND_EXTRA_OPTIONS}
   )
 
-  if (NOT EXISTS ${FRONTEND_DESTINATION})
+  if (NOT EXISTS ${FRONTEND_DESTINATION}/CMakeLists.txt)
     execute_process(COMMAND ${GENERATE_COMMAND})
   endif()
 

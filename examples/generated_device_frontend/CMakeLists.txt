@@ -24,6 +24,9 @@ anari_generate_frontend(
   NAMESPACE tree
   DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/device
   CODE_HEADER_FILE ${CMAKE_CURRENT_LIST_DIR}/license.txt
+
+# this is only needed when building inside the SDK
+  EXTRA_OPTIONS "--omit_target_prefix;"
 )
 
 add_subdirectory(device)
