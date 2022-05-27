@@ -181,6 +181,20 @@ for x in dependencies:
 #generate files
 gen = DebugGenerator(device)
 
+def begin_namespaces(args):
+    output = ""
+    if args.namespace:
+        for n in args.namespace.split("::"):
+            output += "namespace %s {\n"%n
+    return output
+
+def end_namespaces(args):
+    output = ""
+    if args.namespace:
+        for n in args.namespace.split("::"):
+            output += "}\n"
+    return output
+
 if args.header:
     with open(args.outdir/(args.prefix + "DebugFactory.h"), mode='w') as f:
         f.write("// Copyright 2021 The Khronos Group\n")
@@ -189,8 +203,10 @@ if args.header:
         f.write("// Don't make changes to this directly\n\n")
 
         f.write("#pragma once\n")
-        f.write("#include \"DebugObject.h\"\n")
+        f.write("#include \"anari/ext/debug/DebugObject.h\"\n")
+        f.write(begin_namespaces(args))
         f.write(gen.generate_validation_objects_decl(args.prefix + "DebugFactory"))
+        f.write(end_namespaces(args))
 
 with open(args.outdir/(args.prefix + "DebugFactory.cpp"), mode='w') as f:
     f.write("// Copyright 2021 The Khronos Group\n")
@@ -200,17 +216,16 @@ with open(args.outdir/(args.prefix + "DebugFactory.cpp"), mode='w') as f:
 
     if args.header:
         f.write("#include \""+args.prefix+"DebugFactory.h\"\n")
+        f.write(begin_namespaces(args))
     else:
         f.write("#include \"anari/ext/debug/DebugObject.h\"\n")
+        f.write(begin_namespaces(args))
         f.write(gen.generate_validation_objects_decl(args.prefix + "DebugFactory"))
 
     f.write(gen.generate_validation_objects_impl(args.prefix + "DebugFactory"))
 
-    f.write("namespace anari {\n")
-    f.write("namespace " + args.namespace + " {\n")
     f.write("anari::debug_device::ObjectFactory* getDebugFactory() {\n")
     f.write("   static debug_device::" + args.prefix + "DebugFactory f;\n")
     f.write("   return &f;\n")
     f.write("}\n")
-    f.write("}\n")
-    f.write("}\n")
+    f.write(end_namespaces(args))

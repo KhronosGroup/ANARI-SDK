@@ -13,7 +13,7 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
       --json ${ANARI_CODE_GEN_ROOT}
       --device ${ANARI_CODE_GEN_ROOT}/devices/generic_device.json
       --prefix GenericDevice
-      --namespace debug_device
+      --namespace anari::debug_device
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     DEPENDS ${ANARI_CODE_GEN_ROOT}/devices/generic_device.json
   )
