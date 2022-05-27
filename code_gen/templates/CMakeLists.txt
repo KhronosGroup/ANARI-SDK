@@ -17,16 +17,16 @@ add_library(${PROJECT_NAME} SHARED
 
 target_include_directories(${PROJECT_NAME}
 PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
-    $source_path
-    $generated_path
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
+  $source_path
+  $generated_path
 )
 
 target_link_libraries(${PROJECT_NAME}
 PUBLIC
-  anari
-  anari_utilities
-  anari_library_debug
+  anari::anari
+  anari::anari_utilities
+  anari::anari_library_debug
 )
 
 install(TARGETS ${PROJECT_NAME}
