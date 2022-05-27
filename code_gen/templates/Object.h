@@ -8,8 +8,8 @@
 
 #include "$prefixObjects.h"
 
-namespace anari {
-namespace $namespace {
+$begin_namespaces
+
 void anariDeleteInternal(ANARIDevice, ANARIObject);
 
 class ObjectBase {
@@ -95,5 +95,4 @@ public:
     ParameterPack& parameters() override { return current; }
 };
 
-}
-}
+$end_namespaces

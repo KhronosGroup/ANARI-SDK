@@ -6,6 +6,7 @@
 
 #include "anari/ext/debug/DebugObject.h"
 using namespace anari::debug_device;
+namespace anari_sdk {
 namespace tree {
 class TreeDebugFactory : public anari::debug_device::ObjectFactory {
 public:
@@ -3091,5 +3092,6 @@ DebugObjectBase* TreeDebugFactory::new_world(DebugDevice *td, ANARIObject wh, AN
 anari::debug_device::ObjectFactory* getDebugFactory() {
    static TreeDebugFactory f;
    return &f;
+}
 }
 }

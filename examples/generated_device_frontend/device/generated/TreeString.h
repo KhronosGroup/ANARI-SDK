@@ -5,8 +5,8 @@
 // Don't make changes to this directly
 
 #pragma once
-namespace anari {
-namespace tree {
+namespace anari_sdk{
+namespace tree{
 #define STRING_ENUM_unknown -1
 #define STRING_ENUM_attribute0 0
 #define STRING_ENUM_attribute1 1
@@ -36,5 +36,5 @@ namespace tree {
 #define STRING_ENUM_worldPosition 25
 extern const char *param_strings[];
 int parameter_string_hash(const char *str);
-}
-}
+} //namespace anari_sdk
+} //namespace tree

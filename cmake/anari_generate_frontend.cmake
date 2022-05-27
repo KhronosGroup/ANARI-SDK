@@ -18,7 +18,7 @@ function(anari_generate_frontend)
   # options
     ""
   # single-arg options
-    "TARGET;PREFIX;NAMESPACE;DESTINATION;DEFINITIONS;CODE_HEADER_FILE;EXTRA_OPTIONS;"
+    "TARGET;NAME;PREFIX;NAMESPACE;DESTINATION;DEFINITIONS;CODE_HEADER_FILE;EXTRA_OPTIONS;"
   # multi-arg options
     ""
   # string to parse
@@ -27,16 +27,12 @@ function(anari_generate_frontend)
 
   validate_required_arguments(
     FRONTEND_TARGET
+    FRONTEND_NAME
     FRONTEND_PREFIX
     FRONTEND_NAMESPACE
     FRONTEND_DESTINATION
+    FRONTEND_DEFINITIONS
   )
-
-  if (NOT DEFINED FRONTEND_DEFINITIONS)
-    set(FRONTEND_DEFINITIONS
-      ${ANARI_CODE_GEN_ROOT}/devices/extended_device.json
-    )
-  endif()
 
   if (DEFINED FRONTEND_CODE_HEADER_FILE)
     string(PREPEND FRONTEND_CODE_HEADER_FILE "--header;")
@@ -46,6 +42,7 @@ function(anari_generate_frontend)
   set(GENERATE_COMMAND
     ${Python3_EXECUTABLE}
     ${GENERATE_SCRIPT}
+    --name ${FRONTEND_NAME}
     --json ${ANARI_CODE_GEN_ROOT}
     --namespace ${FRONTEND_NAMESPACE}
     --prefix ${FRONTEND_PREFIX}

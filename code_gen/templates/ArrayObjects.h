@@ -6,8 +6,7 @@
 
 #include <vector>
 
-namespace anari {
-namespace $namespace {
+$begin_namespaces
 
 template<>
 class Object<Array1D> : public ArrayObjectBase {
@@ -114,5 +113,4 @@ public:
     ~Object();
 };
 
-}
-}
+$end_namespaces

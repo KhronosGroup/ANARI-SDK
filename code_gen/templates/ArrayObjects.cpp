@@ -11,8 +11,7 @@ static void managed_deleter(void*, void *appMemory) {
     std::free(appMemory);
 }
 
-namespace anari {
-namespace $namespace {
+$begin_namespaces
 
 Object<Array1D>::Object(ANARIDevice d, ANARIObject handle, void* appMemory,
     ANARIMemoryDeleter deleter, void* userdata, ANARIDataType elementType,
@@ -188,5 +187,4 @@ Object<Array3D>::~Object() {
     }
 }
 
-}
-}
+$end_namespaces
