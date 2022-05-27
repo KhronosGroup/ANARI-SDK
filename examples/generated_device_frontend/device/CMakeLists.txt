@@ -27,6 +27,9 @@ PUBLIC
 
 target_link_libraries(${PROJECT_NAME}
 PUBLIC
+  # NOTE: These targets are generated with the install namespace "anari::", but
+  #       just this example uses the local target names because we are in the
+  #       same build project as the SDK itself.
   anari
   anari_utilities
   anari_library_debug
