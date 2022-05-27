@@ -6,9 +6,7 @@
 #include <cstdlib>
 #include <cstring>
 
-
-namespace anari {
-namespace $namespace {
+$begin_namespaces
 
 Object<Frame>::Object(ANARIDevice d, ANARIObject handle)
  : FrameObjectBase(d, handle), staging(d), current(d)
@@ -65,5 +63,4 @@ int Object<Frame>::frameReady(ANARIWaitMask mask) {
     return 1;
 }
 
-}
-}
+$end_namespaces

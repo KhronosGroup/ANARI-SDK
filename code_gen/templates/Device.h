@@ -29,8 +29,7 @@
 #define DEVICE_INTERFACE
 #endif
 
-namespace anari {
-namespace $namespace {
+$begin_namespaces
 
 void anariRetainInternal(ANARIDevice, ANARIObject);
 void anariReleaseInternal(ANARIDevice, ANARIObject);
@@ -205,9 +204,9 @@ private:
   ANARIStatusCallback statusCallback;
   void* statusCallbackUserData;
 
-  anari::$namespace::Device staging;
-  anari::$namespace::Device current;
+  $namespace::Device staging;
+  $namespace::Device current;
 };
 
-} // namespace $namespace
-} // namespace anari
+$end_namespaces
+

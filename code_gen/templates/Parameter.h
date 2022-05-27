@@ -9,8 +9,7 @@
 
 #include "$prefixString.h"
 
-namespace anari {
-namespace $namespace {
+$begin_namespaces
 
 void anariRetainInternal(ANARIDevice, ANARIObject);
 void anariReleaseInternal(ANARIDevice, ANARIObject);
@@ -50,7 +49,7 @@ public:
 
 template<int T, typename Enable = void>
 class ParameterStorage : public ParameterStorageBase {
-    typename ANARITypeProperties<T>::array_type data;
+    typename anari::ANARITypeProperties<T>::array_type data;
 public:
     ParameterStorage(ANARIDevice device, const void *mem) {
         std::memcpy(data, mem, sizeof(data));
@@ -70,8 +69,8 @@ public:
 };
 
 template<int T>
-class ParameterStorage<T, typename std::enable_if<isObject(T)>::type> : public ParameterStorageBase {
-    typename ANARITypeProperties<T>::array_type data;
+class ParameterStorage<T, typename std::enable_if<anari::isObject(T)>::type> : public ParameterStorageBase {
+    typename anari::ANARITypeProperties<T>::array_type data;
     ANARIDevice device;
 public:
     ParameterStorage(ANARIDevice device, const void *mem) : device(device) {
@@ -212,7 +211,7 @@ public:
     bool set(ANARIDevice device, ANARIDataType type, const void *mem) override {
         if(contains<T...>(type)) {
             ptr->~ParameterStorageBase();
-            ptr = anariTypeInvoke<ParameterStorageBase*, ParameterConstructor>(type, data, device, mem);
+            ptr = anari::anariTypeInvoke<ParameterStorageBase*, ParameterConstructor>(type, data, device, mem);
             return true;
         } else {
             return false;
@@ -242,5 +241,4 @@ public:
     }
 };
 
-}
-}
+$end_namespaces

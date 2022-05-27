@@ -20,8 +20,10 @@ project(generate_device_frontend_example)
 
 anari_generate_frontend(
   TARGET generate_tree_device
+  DEFINITIONS ${CMAKE_CURRENT_SOURCE_DIR}/device/tree_device.json
+  NAME tree
   PREFIX Tree
-  NAMESPACE tree
+  NAMESPACE anari_sdk::tree
   DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/device
   CODE_HEADER_FILE ${CMAKE_CURRENT_LIST_DIR}/license.txt
 

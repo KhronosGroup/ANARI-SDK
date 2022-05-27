@@ -6,8 +6,8 @@
 
 #pragma once
 #include "TreeParameter.h"
-namespace anari {
-namespace tree {
+namespace anari_sdk{
+namespace tree{
 class ParameterPack {
 public:
    virtual bool set(const char *paramname, ANARIDataType type, const void *mem) = 0;
@@ -783,5 +783,5 @@ public:
    const char** paramNames() const override;
    size_t paramCount() const override;
 };
-}
-}
+} //namespace anari_sdk
+} //namespace tree

@@ -5,8 +5,7 @@
 #include "$prefixObject.h"
 #include <vector>
 
-namespace anari {
-namespace $namespace {
+$begin_namespaces
 
 template<>
 class Object<Frame> : public FrameObjectBase {
@@ -34,5 +33,4 @@ public:
     ParameterPack& parameters() override { return current; }
 };
 
-}
-}
+$end_namespaces
