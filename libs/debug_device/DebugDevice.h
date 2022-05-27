@@ -16,10 +16,9 @@
 #include <unordered_map>
 #include <vector>
 
-#include "debug_device_exports.h"
-
 #include "DebugInterface.h"
-#include "DebugObject.h"
+
+#include "anari/ext/debug/DebugObject.h"
 
 namespace anari {
 namespace debug_device {
