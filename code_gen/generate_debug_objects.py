@@ -201,7 +201,7 @@ with open(args.outdir/(args.prefix + "DebugFactory.cpp"), mode='w') as f:
     if args.header:
         f.write("#include \""+args.prefix+"DebugFactory.h\"\n")
     else:
-        f.write("#include \"DebugObject.h\"\n")
+        f.write("#include \"anari/ext/debug/DebugObject.h\"\n")
         f.write(gen.generate_validation_objects_decl(args.prefix + "DebugFactory"))
 
     f.write(gen.generate_validation_objects_impl(args.prefix + "DebugFactory"))

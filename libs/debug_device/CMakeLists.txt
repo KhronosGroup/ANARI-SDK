@@ -30,7 +30,7 @@ add_library(${PROJECT_NAME} SHARED
 
 target_include_directories(${PROJECT_NAME}
 PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -43,4 +43,19 @@ install(TARGETS ${PROJECT_NAME}
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+
+install(TARGETS ${PROJECT_NAME}
+  EXPORT anari_Exports
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    NAMELINK_SKIP
+  # on Windows put the dlls into bin
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  # ... and the import lib into the devel package
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+
+install(
+  FILES DebugObject.h debug_device_exports.h
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/anari/ext/debug
 )

@@ -38,7 +38,7 @@ PRIVATE
 set_target_properties(${PROJECT_NAME}
     PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION ${PROJECT_VERSION_MAJOR})
 
-install(TARGETS anari
+install(TARGETS ${PROJECT_NAME}
   EXPORT anari_Exports
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     NAMELINK_SKIP
@@ -46,11 +46,6 @@ install(TARGETS anari
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   # ... and the import lib into the devel package
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
-
-install(EXPORT anari_Exports
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/anari-${PROJECT_VERSION}
-  NAMESPACE anari::
 )
 
 install(TARGETS anari
