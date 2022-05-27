@@ -5,32 +5,29 @@
 // Don't make changes to this directly
 
 #include "anari/ext/debug/DebugObject.h"
+using namespace anari::debug_device;
 namespace anari {
 namespace debug_device {
-class GenericDeviceDebugFactory : public ObjectFactory {
+class GenericDeviceDebugFactory : public anari::debug_device::ObjectFactory {
 public:
-   DebugObjectBase* new_volume(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) override;
-   DebugObjectBase* new_geometry(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) override;
-   DebugObjectBase* new_spatial_field(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) override;
-   DebugObjectBase* new_light(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) override;
-   DebugObjectBase* new_camera(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) override;
-   DebugObjectBase* new_material(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) override;
-   DebugObjectBase* new_sampler(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) override;
-   DebugObjectBase* new_renderer(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) override;
-   DebugObjectBase* new_device(DebugDevice *td, ANARIObject wh, ANARIObject h) override;
-   DebugObjectBase* new_array1d(DebugDevice *td, ANARIObject wh, ANARIObject h) override;
-   DebugObjectBase* new_array2d(DebugDevice *td, ANARIObject wh, ANARIObject h) override;
-   DebugObjectBase* new_array3d(DebugDevice *td, ANARIObject wh, ANARIObject h) override;
-   DebugObjectBase* new_frame(DebugDevice *td, ANARIObject wh, ANARIObject h) override;
-   DebugObjectBase* new_group(DebugDevice *td, ANARIObject wh, ANARIObject h) override;
-   DebugObjectBase* new_instance(DebugDevice *td, ANARIObject wh, ANARIObject h) override;
-   DebugObjectBase* new_world(DebugDevice *td, ANARIObject wh, ANARIObject h) override;
-   DebugObjectBase* new_surface(DebugDevice *td, ANARIObject wh, ANARIObject h) override;
+   anari::debug_device::DebugObjectBase* new_volume(const char *name, anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;
+   anari::debug_device::DebugObjectBase* new_geometry(const char *name, anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;
+   anari::debug_device::DebugObjectBase* new_spatial_field(const char *name, anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;
+   anari::debug_device::DebugObjectBase* new_light(const char *name, anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;
+   anari::debug_device::DebugObjectBase* new_camera(const char *name, anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;
+   anari::debug_device::DebugObjectBase* new_material(const char *name, anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;
+   anari::debug_device::DebugObjectBase* new_sampler(const char *name, anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;
+   anari::debug_device::DebugObjectBase* new_renderer(const char *name, anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;
+   anari::debug_device::DebugObjectBase* new_device(anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;
+   anari::debug_device::DebugObjectBase* new_array1d(anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;
+   anari::debug_device::DebugObjectBase* new_array2d(anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;
+   anari::debug_device::DebugObjectBase* new_array3d(anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;
+   anari::debug_device::DebugObjectBase* new_frame(anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;
+   anari::debug_device::DebugObjectBase* new_group(anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;
+   anari::debug_device::DebugObjectBase* new_instance(anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;
+   anari::debug_device::DebugObjectBase* new_world(anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;
+   anari::debug_device::DebugObjectBase* new_surface(anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override; 
 };
-}
-}
-namespace anari {
-namespace debug_device {
 namespace {
 class device : public DebugObject<ANARI_DEVICE> {
    static int param_hash(const char *str) {
@@ -2642,12 +2639,8 @@ DebugObjectBase* GenericDeviceDebugFactory::new_surface(DebugDevice *td, ANARIOb
 DebugObjectBase* GenericDeviceDebugFactory::new_world(DebugDevice *td, ANARIObject wh, ANARIObject h) {
    return new world(td, wh, h);
 }
-}
-}
-namespace anari {
-namespace debug_device {
 anari::debug_device::ObjectFactory* getDebugFactory() {
-   static debug_device::GenericDeviceDebugFactory f;
+   static GenericDeviceDebugFactory f;
    return &f;
 }
 }

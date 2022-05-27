@@ -4,6 +4,35 @@ set(CMAKE_CXX_STANDARD 11)
 
 project(anari_library_$namespace LANGUAGES CXX)
 
+if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
+  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+
+  add_custom_target(generate_$prefix_queries
+    COMMAND ${Python3_EXECUTABLE} ${ANARI_CODE_GEN_ROOT}/generate_queries.py
+      --json ${ANARI_CODE_GEN_ROOT}
+      --prefix $prefix
+      --device ${CMAKE_CURRENT_SOURCE_DIR}/$device_json
+      --namespace $namespace
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DEPENDS $device_json
+  )
+
+  add_dependencies(generate_all generate_$prefix_queries)
+
+  add_custom_target(generate_$prefix_debug_objects
+    COMMAND ${Python3_EXECUTABLE} ${ANARI_CODE_GEN_ROOT}/generate_debug_objects.py
+      --json ${ANARI_CODE_GEN_ROOT}
+      --device ${CMAKE_CURRENT_SOURCE_DIR}/$device_json
+      --prefix $prefix
+      --namespace $namespace
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DEPENDS $device_json
+  )
+
+  add_dependencies(generate_all generate_$prefix_debug_objects)
+
+endif()
+
 add_library(${PROJECT_NAME} SHARED
   $source_path/$prefixDevice.cpp
   $source_path/$prefixArrayObjects.cpp
@@ -24,9 +53,9 @@ PUBLIC
 
 target_link_libraries(${PROJECT_NAME}
 PUBLIC
-  anari::anari
-  anari::anari_utilities
-  anari::anari_library_debug
+  $target_prefixanari
+  $target_prefixanari_utilities
+  $target_prefixanari_library_debug
 )
 
 install(TARGETS ${PROJECT_NAME}

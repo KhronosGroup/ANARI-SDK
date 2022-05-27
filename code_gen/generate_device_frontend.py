@@ -247,13 +247,14 @@ class FrontendGenerator:
         return code
 
 parser = argparse.ArgumentParser(description="Generate debug objects for an ANARI device.")
-parser.add_argument("-d", "--device", dest="devicespec", required=True, help="The device json file.")
+parser.add_argument("-d", "--device", dest="devicespec", type=pathlib.Path, required=True, help="The device json file.")
 parser.add_argument("-j", "--json", dest="json", required=True, type=pathlib.Path, action="append", help="Path to the core and extension json root.")
 parser.add_argument("-p", "--prefix", dest="prefix", required=True, help="Prefix for the classes and filenames.")
 parser.add_argument("-n", "--namespace", dest="namespace", required=True, help="Namespace for generated code. Also used as library name.")
 parser.add_argument("-f", "--force", dest="force", action="store_true", help="Force regeneration of all files. This will overwrite edited files.")
 parser.add_argument("-l", "--header", dest="header", help="File containing a header to be inserted at the top of source files")
 parser.add_argument("-o", "--output", dest="outdir", type=pathlib.Path, default=pathlib.Path("."), help="Output directory")
+parser.add_argument("-x", "--omit_target_prefix", dest="omitprefix", action="store_true", help=argparse.SUPPRESS)
 args = parser.parse_args()
 
 templatepath = pathlib.Path(__file__).parent / "templates"
@@ -289,6 +290,9 @@ rootdir.mkdir(parents=True, exist_ok=True)
 gendir.mkdir(parents=True, exist_ok=True)
 srcdir.mkdir(parents=True, exist_ok=True)
 
+targetprefix = "anari::"
+if args.omitprefix:
+    targetprefix = ""
 
 with open(gendir/(args.prefix + "String.h"), mode='w') as f:
     f.write(header)
@@ -367,9 +371,11 @@ def generate_if_not_present(targetdir, name, header, noprefix=False):
             infile = infile.replace("$prefix", args.prefix)
             infile = infile.replace("$generator", os.path.basename(__file__))
             infile = infile.replace("$template", "templates/" + name)
-            infile = infile.replace("$device_json", args.devicespec)
+            #infile = infile.replace("$device_json", str(args.devicespec.relative_to(rootdir)))
+            infile = infile.replace("$device_json", "foo")
             infile = infile.replace("$generated_path", str(gendir.relative_to(rootdir)))
             infile = infile.replace("$source_path", str(srcdir.relative_to(rootdir)))
+            infile = infile.replace("$target_prefix", targetprefix)
             f.write(header)
             f.write(infile)
 

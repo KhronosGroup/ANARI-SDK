@@ -11,8 +11,6 @@
 // debug interface
 #include "anari/ext/debug/DebugObject.h"
 
-#include "RecursivePrint.h"
-
 namespace anari {
 namespace tree {
 
@@ -146,7 +144,6 @@ if(auto obj = fromHandle<FrameObjectBase*>(handle)) {
 void TreeDevice::renderFrame(ANARIFrame handle) {
   if(auto obj = fromHandle<FrameObjectBase*>(handle)) {
     obj->renderFrame();
-    recursivePrint(this, handle);
   }
 }
 int TreeDevice::frameReady(ANARIFrame handle, ANARIWaitMask mask) {
