@@ -6,7 +6,7 @@
 #include <cstdint>
 
 // debug interface
-#include "DebugObject.h"
+#include "anari/ext/debug/DebugObject.h"
 
 namespace anari {
 namespace $namespace {

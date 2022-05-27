@@ -71,6 +71,11 @@ set(ANARI_CMAKE_INSTALL_DESTINATION
   ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}-${PROJECT_VERSION}
 )
 
+install(EXPORT anari_Exports
+  DESTINATION ${ANARI_CMAKE_INSTALL_DESTINATION}
+  NAMESPACE anari::
+)
+
 include(CMakePackageConfigHelpers)
 
 configure_package_config_file(
