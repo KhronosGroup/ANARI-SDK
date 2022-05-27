@@ -13,7 +13,7 @@
 #include "scene/World.h"
 
 // debug interface
-#include "DebugObject.h"
+#include "anari/ext/debug/DebugObject.h"
 
 // std
 #include <algorithm>
