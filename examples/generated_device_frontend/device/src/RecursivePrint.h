@@ -3,16 +3,16 @@
 
 #include <iostream>
 
-namespace anari {
+namespace anari_sdk {
 namespace tree {
 
 template<int T>
 struct param_printer {
     void operator()(ParameterBase &param) {
-        typename ANARITypeProperties<T>::array_type data;
+        typename anari::ANARITypeProperties<T>::array_type data;
         param.get(T, data);
-        int components = ANARITypeProperties<T>::components;
-        std::cout << ANARITypeProperties<T>::enum_name << ' ';
+        int components = anari::ANARITypeProperties<T>::components;
+        std::cout << anari::ANARITypeProperties<T>::enum_name << ' ';
         if(components>1) {
             std::cout << '(';
             std::cout << data[0];
@@ -28,7 +28,7 @@ struct param_printer {
 
 static void printParam(ParameterBase &param) {
     if(param) {
-        anariTypeInvoke<void, param_printer>(param.type(), param);
+        anari::anariTypeInvoke<void, param_printer>(param.type(), param);
     } else {
         std::cout << "nil";
     }
@@ -44,7 +44,7 @@ static void recursivePrint(TreeDevice *d, ANARIObject obj, int depth = 0) {
 
     // print object name
     for(int j = 0;j<depth;++j) { std::cout << "   "; }
-    std::cout << toString(o->type()) << ' ';
+    std::cout << anari::toString(o->type()) << ' ';
     if(o->subtype()) {
         std::cout << o->subtype() << ' ';
     }
@@ -60,7 +60,7 @@ static void recursivePrint(TreeDevice *d, ANARIObject obj, int depth = 0) {
             std::cout << '\n';
         }
         // the parameter holds a h andle descend into that object
-        if(isObject(param.type())) {
+        if(anari::isObject(param.type())) {
             recursivePrint(d, param.getHandle(), depth + 1);
         }
     }
