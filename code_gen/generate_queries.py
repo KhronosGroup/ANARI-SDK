@@ -130,65 +130,15 @@ class QueryGenerator:
         return code
 
 
-    def generate_parameter_index(self):
-        code = ""
 
-        for type_enum in self.named_types:
-            subtypes = {key[1]: params for key,params in self.named_objects.items() if key[0] == type_enum}
-
-            for key, value in subtypes.items():
-                if value["parameters"]:
-                    parameters = [x["name"] for x in value["parameters"]]
-                    code += "static " + hash_gen.gen_hash_function("%s_%s_hash"%(type_enum, key), parameters, value["range"])
-                else:
-                    code += "static int %s_%s_hash(const char *param) {\n"%(type_enum, key)
-                    code += "   return -1;\n"
-                    code += "}\n"
-
-            code += "static int "+type_enum+"_index(const char *subtype, const char *param) {\n"
-            code += "   switch(subtype_hash(subtype)) {\n"
-            for key, value in subtypes.items():
-                if value:
-                    code += "      case %d:\n"%(self.subtype_list.index(key))
-                    code += "         return %s_%s_hash(param);\n"%(type_enum, key)
-            code += "      default:\n"
-            code += "         return -1;\n"
-            code += "   }\n"
-            code += "}\n"
-
-        for key, value in self.anon_objects.items():
-            if value["parameters"]:
-                parameters = [x["name"] for x in value["parameters"]]
-                code += "static " + hash_gen.gen_hash_function("%s_hash"%(key), parameters, value["range"])
-            else:
-                code += "static int %s_hash(const char *param) {\n"%(key)
-                code += "   return -1;\n"
-                code += "}\n"
-
-        code += "int param_index(ANARIDataType type, const char *subtype, const char *param) {\n"
-        code += "   switch(type) {\n"
-        for type_enum in self.named_types:
-            code += "      case %s:\n"%(type_enum)
-            code += "         return %s_index(subtype, param);\n"%type_enum
-
-        for type_enum, value in self.anon_objects.items():
-            if value:
-                code += "      case %s:\n"%(type_enum)
-                code += "         return %s_hash(param);\n"%type_enum
-        code += "      default:\n"
-        code += "         return -1;\n"
-        code += "   }\n"
-        code += "}\n"
-        return code
-
-
-parser = argparse.ArgumentParser(description="Generate debug objects for an ANARI device.")
+parser = argparse.ArgumentParser(description="Generate query functions for an ANARI device.")
 parser.add_argument("-d", "--device", dest="devicespec", type=open, help="The device json file.")
 parser.add_argument("-j", "--json", dest="json", type=pathlib.Path, action="append", help="Path to the core and extension json root.")
 parser.add_argument("-p", "--prefix", dest="prefix", help="Prefix for the classes and filenames.")
 parser.add_argument("-n", "--namespace", dest="namespace", help="Namespace for the classes and filenames.")
 parser.add_argument("-o", "--output", dest="outdir", type=pathlib.Path, default=pathlib.Path("."), help="Output directory")
 args = parser.parse_args()
+
 
 #flattened list of all input jsons in supplied directories
 jsons = [entry for j in args.json for entry in j.glob("**/*.json")]
@@ -207,6 +157,21 @@ for x in dependencies:
 #generate files
 gen = QueryGenerator(device)
 
+
+def begin_namespaces(args):
+    output = ""
+    if args.namespace:
+        for n in args.namespace.split("::"):
+            output += "namespace %s {\n"%n
+    return output
+
+def end_namespaces(args):
+    output = ""
+    if args.namespace:
+        for n in args.namespace.split("::"):
+            output += "}\n"
+    return output
+
 with open(args.outdir/(args.prefix + "Queries.cpp"), mode='w') as f:
     f.write("// Copyright 2021 The Khronos Group\n")
     f.write("// SPDX-License-Identifier: Apache-2.0\n\n")
@@ -214,11 +179,13 @@ with open(args.outdir/(args.prefix + "Queries.cpp"), mode='w') as f:
     f.write("// Don't make changes to this directly\n\n")
 
     f.write("#include <anari/anari.h>\n")
-    f.write("namespace anari {\n")
-    f.write("namespace "+args.namespace+" {\n")
+    f.write(begin_namespaces(args))
+    #f.write("namespace anari {\n")
+    #f.write("namespace "+args.namespace+" {\n")
     f.write(gen.preamble())
     f.write(gen.generate_subtype_query())
     f.write(gen.generate_parameter_query())
     f.write(gen.generate_extension_query())
-    f.write("}\n")
-    f.write("}\n")
+#    f.write("}\n")
+#    f.write("}\n")
+    f.write(end_namespaces(args))

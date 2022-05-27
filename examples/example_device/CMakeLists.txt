@@ -41,7 +41,7 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
       --json ${ANARI_CODE_GEN_ROOT}
       --prefix ExampleDevice
       --device ${CMAKE_CURRENT_SOURCE_DIR}/example_device.json
-      --namespace example_device
+      --namespace anari::example_device
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     DEPENDS example_device.json
   )
@@ -53,7 +53,7 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
       --json ${ANARI_CODE_GEN_ROOT}
       --device ${CMAKE_CURRENT_SOURCE_DIR}/example_device.json
       --prefix ExampleDevice
-      --namespace example_device
+      --namespace anari::example_device
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     DEPENDS example_device.json
   )
