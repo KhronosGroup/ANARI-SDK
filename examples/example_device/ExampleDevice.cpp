@@ -554,7 +554,9 @@ void ExampleDevice::deviceCommit()
 
 const char **query_object_types(ANARIDataType type);
 const ANARIParameter *query_params(ANARIDataType type, const char *subtype);
-
+const void * query_param_info(ANARIDataType type, const char *subtype,
+  const char *paramName, ANARIDataType paramType,
+  const char *infoName, ANARIDataType infoType);
 } // namespace example_device
 } // namespace anari
 
@@ -603,30 +605,14 @@ extern "C" EXAMPLE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_PARAMETER_PROPERTY(
     propertyName,
     propertyType)
 {
-  if (objectType == ANARI_RENDERER) {
-    int i = 0;
-    while (anari::example_device::Renderer::g_parameters[i].name != nullptr) {
-      if (std::string(anari::example_device::Renderer::g_parameters[i].name)
-              == std::string(parameterName)
-          && (anari::example_device::Renderer::g_parameters[i].type
-              == parameterType))
-        break;
 
-      i++;
-    }
-    if (anari::example_device::Renderer::g_parameters[i].name == nullptr)
-      return nullptr;
-    if (propertyType == ANARI_STRING
-        && std::string(propertyName) == std::string("description"))
-      return anari::example_device::Renderer::g_parameterinfos[i].desc;
-    if (propertyType == ANARI_BOOL
-        && std::string(propertyName) == std::string("required"))
-      return &anari::example_device::Renderer::g_parameterinfos[i].req;
-    if (propertyType == parameterType
-        && std::string(propertyName) == std::string("default"))
-      return &anari::example_device::Renderer::g_parameterinfos[i].def;
-  }
-  return nullptr;
+  return anari::example_device::query_param_info(
+    objectType,
+    objectSubtype,
+    parameterName,
+    parameterType,
+    propertyName,
+    propertyType);
 }
 
 extern "C" EXAMPLE_DEVICE_INTERFACE ANARIDevice anariNewExampleDevice()

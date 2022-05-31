@@ -14,14 +14,15 @@ class QueryGenerator:
         self.anari = anari
         self.named_objects = dict()
         self.anon_objects = dict()
-        self.parameter_dict = dict()
-        self.parameter_index = list()
+        self.param_strings = set()
         self.objects = dict()
         type_enums = next(x for x in anari["enums"] if x["name"] == "ANARIDataType")
         self.type_enum_dict = {e["name"]: e for e in type_enums["values"]}
 
         offset = 0
         for obj in anari["objects"]:
+            self.param_strings.update([p["name"] for p in obj["parameters"]])
+
             if not obj["type"] in self.objects:
                 self.objects[obj["type"]] = []
 
@@ -44,15 +45,16 @@ class QueryGenerator:
             else:
                 self.anon_objects[obj["type"]] = param_data
 
-            self.parameter_dict.update({(obj["type"], name, parameter_list[i]["name"]): offset+i for i in range(0, length)})
-            self.parameter_index.extend([(obj["type"], name, parameter_list[i]["name"]) for i in range(0, length)])
             offset += length
 
+        self.param_strings = sorted(list(self.param_strings))
         self.named_types = sorted(list(set([k[0] for k in self.named_objects])))
         self.subtype_list = sorted(list(set([k[1] for k in self.named_objects])))
 
     def preamble(self):
-        return "static " + hash_gen.gen_hash_function("subtype_hash", self.subtype_list)
+        code = "static " + hash_gen.gen_hash_function("subtype_hash", self.subtype_list)
+        code += "static " + hash_gen.gen_hash_function("param_hash", self.param_strings)
+        return code;
 
     def generate_extension_query(self):
         code = "const char ** query_extensions() {\n"
@@ -129,7 +131,143 @@ class QueryGenerator:
         code += "}\n"
         return code
 
+    def check_and_return(self, value_type_name, value):
+        value_type = self.type_enum_dict[value_type_name]
+        code = ""
+        code += "         if("
+        code += "paramType == " + value_type["name"] + " && "
+        code += "infoType == " + value_type["name"] + ") {\n"
+        if value_type["name"] == "ANARI_STRING":
+            code += "            static const char *default_value = \"%s\";\n"%value
+        else:
+            code += "            static const " + value_type["baseType"]
+            code += " default_value[%d]"%value_type["elements"] + " = "
+            if isinstance(value, list):
+                code += "{" + ", ".join([str(x) for x in value]) + "};\n"
+            else:
+                code += "{" + str(value) + "};\n"
+        code += "            return default_value;\n"
+        code += "         } else {\n"
+        code += "            return nullptr;\n"
+        code += "         }\n"
+        return code
 
+    def generate_parameter_info_query(self):
+        code = ""
+        # generate the per parameter query functions
+        info_strings = ["required", "default", "minimum", "maximum", "description", "elementType", "values"]
+        code += "static " + hash_gen.gen_hash_function("info_hash", info_strings)
+        code += "static const int32_t anari_true = 1;"
+        code += "static const int32_t anari_false = 0;"
+        for obj in self.anari["objects"]:
+            objname = obj["type"]
+            if "name" in obj:
+                objname += "_" + obj["name"]
+
+            for param in obj["parameters"]:
+                paramname = param["name"].replace(".", "_")
+                code += "static const void * " + objname + "_" + paramname + "_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {\n"
+                code += "   switch(info_hash(infoName)) {\n"
+
+                # required info always exists
+                code += "      case "+str(info_strings.index("required"))+": // required\n"
+                code += "         if(infoType == ANARI_BOOL) {\n"
+                if "required" in param["tags"]:
+                    code += "            return &anari_true;\n"
+                else:
+                    code += "            return &anari_false;\n"
+                code += "         } else {\n"
+                code += "            return nullptr;\n"
+                code += "         }\n"
+
+                if "default" in param:
+                    code += "      case "+str(info_strings.index("default"))+": // default\n"
+                    code += self.check_and_return(param["types"][0], param["default"])
+
+                if "minimum" in param:
+                    code += "      case "+str(info_strings.index("minimum"))+": // minimum\n"
+                    code += self.check_and_return(param["types"][0], param["minimum"])
+
+                if "maximum" in param:
+                    code += "      case "+str(info_strings.index("maximum"))+": // maximum\n"
+                    code += self.check_and_return(param["types"][0], param["maximum"])
+
+                if "description" in param:
+                    code += "      case "+str(info_strings.index("description"))+": // description\n"
+                    code += "         {\n"
+                    code += "            const char *description = \"%s\";\n"%param["description"]
+                    code += "            return description;\n"
+                    code += "         }\n"
+
+                if "elementType" in param:
+                    code += "      case "+str(info_strings.index("elementType"))+": // elementType\n"
+                    code += "         if(infoType == ANARI_DATA_TYPE) {\n"
+                    code += "            static const ANARIDataType *values[] = {"
+                    code += ", ".join(param["values"]) + ", ANARI_UNKNOWN};\n"
+                    code += "            return values;\n"
+                    code += "         } else {\n"
+                    code += "            return nullptr;\n"
+                    code += "         }\n"
+
+                if "values" in param:
+                    code += "      case "+str(info_strings.index("values"))+": // values\n"
+                    code += "         if(paramType == ANARI_STRING) {\n"
+                    code += "            static const char *values[] = {"
+                    code += ", ".join(["\"%s\""%v for v in param["values"]]) + ", nullptr};\n"
+                    code += "            return values;\n"
+                    code += "         } else {\n"
+                    code += "            return nullptr;\n"
+                    code += "         }\n"
+
+                code += "       default: return nullptr;\n"
+                code += "   }\n"
+                code += "}\n"
+
+
+            code += "static const void * " + objname + "_param_info(const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {\n"
+            code += "   switch(param_hash(paramName)) {\n"
+            for param in obj["parameters"]:
+                paramname = param["name"].replace(".", "_")
+                code += "      case %i:\n"%self.param_strings.index(param["name"])
+                code += "         return " + objname + "_" + paramname + "_info(paramType, infoName, infoType);\n"
+            code += "      default:\n"
+            code += "         return nullptr;\n"
+            code += "   }\n"
+            code += "}\n"
+
+
+
+
+        for type_enum in self.named_types:
+            subtypes = [key[1] for key,params in self.named_objects.items() if key[0] == type_enum]
+            code += "static const void * "+type_enum+"_param_info(const char *subtype, const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {\n"
+            code += "   switch(subtype_hash(subtype)) {\n"
+            for subtype in subtypes:
+                code += "      case %d:\n"%(self.subtype_list.index(subtype))
+                code += "         return %s_%s_param_info(paramName, paramType, infoName, infoType);\n"%(type_enum, subtype)
+            code += "      default:\n"
+            code += "         return nullptr;\n"
+            code += "   }\n"
+            code += "}\n"
+
+        code += "const void * query_param_info(ANARIDataType type, const char *subtype, const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {\n"
+        code += "   switch(type) {\n"
+        for type_enum in self.named_types:
+            code += "      case %s:\n"%(type_enum)
+            code += "         return %s_param_info(subtype, paramName, paramType, infoName, infoType);\n"%type_enum
+
+        for type_enum in self.anon_objects.keys():
+            code += "      case %s:\n"%(type_enum)
+            code += "         return %s_param_info(paramName, paramType, infoName, infoType);\n"%type_enum
+
+        code += "      default:\n"
+        code += "         return nullptr;\n"
+        code += "   }\n"
+        code += "}\n"
+        return code
+
+
+        return code
 
 parser = argparse.ArgumentParser(description="Generate query functions for an ANARI device.")
 parser.add_argument("-d", "--device", dest="devicespec", type=open, help="The device json file.")
@@ -180,12 +318,9 @@ with open(args.outdir/(args.prefix + "Queries.cpp"), mode='w') as f:
 
     f.write("#include <anari/anari.h>\n")
     f.write(begin_namespaces(args))
-    #f.write("namespace anari {\n")
-    #f.write("namespace "+args.namespace+" {\n")
     f.write(gen.preamble())
+    f.write(gen.generate_extension_query())
     f.write(gen.generate_subtype_query())
     f.write(gen.generate_parameter_query())
-    f.write(gen.generate_extension_query())
-#    f.write("}\n")
-#    f.write("}\n")
+    f.write(gen.generate_parameter_info_query())
     f.write(end_namespaces(args))
