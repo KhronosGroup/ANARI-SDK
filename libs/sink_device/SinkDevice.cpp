@@ -286,6 +286,9 @@ SinkDevice::SinkDevice()
 
 const char **query_object_types(ANARIDataType type);
 const ANARIParameter *query_params(ANARIDataType type, const char *subtype);
+const void * query_param_info(ANARIDataType type, const char *subtype,
+  const char *paramName, ANARIDataType paramType,
+  const char *infoName, ANARIDataType infoType);
 
 } // namespace sink_device
 } // namespace anari
@@ -334,5 +337,11 @@ extern "C" SINK_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_PARAMETER_PROPERTY(
     propertyName,
     propertyType)
 {
-  return nullptr;
+  return anari::sink_device::query_param_info(
+    objectType,
+    objectSubtype,
+    parameterName,
+    parameterType,
+    propertyName,
+    propertyType);
 }

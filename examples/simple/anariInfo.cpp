@@ -20,6 +20,14 @@
 #include "anari/anari.h"
 #include "anari/type_utility.h"
 
+const char *helptext =
+"anariInfo -l <library> [-p -t <type> -s <subtype>]\n"
+"   -p: skip parameter listing\n"
+"   -t <type>: only show parameters for objects of a type.\n"
+"      example: -t ANARI_RENDERER\n"
+"   -s <subtype>: only show parameters for objects of a subtype.\n"
+"      example: -s triangle\n";
+
 /******************************************************************/
 /* errorFunc(): the callback to use when an error is encountered */
 void statusFunc(void *userData,
@@ -73,12 +81,40 @@ int main(int argc, const char **argv)
 {
   const char *libraryName = NULL;
   const char *deviceName = NULL;
+  const char *typeFilter = NULL;
+  const char *subtypeFilter = NULL;
+  bool skipParameters = 0;
   for(int i = 1;i<argc;++i) {
-    if(strncmp(argv[i], "-l", 2) == 0 && i+1<argc) {
-      libraryName = argv[++i];
+    if(strncmp(argv[i], "-l", 2) == 0) {
+      if(i+1<argc) {
+        libraryName = argv[++i];
+      } else {
+        fprintf(stderr, "missing argument for -l\n");
+        return 0;
+      }
+    }
+    if(strncmp(argv[i], "-t", 2) == 0) {
+      if(i+1<argc) {
+        typeFilter = argv[++i];
+      } else {
+        fprintf(stderr, "missing argument for -t\n");
+        return 0;
+      }
+    }
+    if(strncmp(argv[i], "-s", 2) == 0) {
+      if(i+1<argc) {
+        subtypeFilter = argv[++i];
+      } else {
+        fprintf(stderr, "missing argument for -s\n");
+        return 0;
+      }
+    }
+    if(strncmp(argv[i], "-p", 2) == 0) {
+      skipParameters = true;
     }
     if(strncmp(argv[i], "-h", 2) == 0) {
-      printf("anariInfo -l <library>\n");
+      puts(helptext);
+      return 0;
     }
   }
 
@@ -111,34 +147,61 @@ int main(int argc, const char **argv)
       }
       printf("\n");
     }
-    printf("   Parameters:\n");
-    for(int j = 0;j<sizeof(namedTypes)/sizeof(ANARIDataType);++j) {
-      const char **types = anariGetObjectSubtypes(lib, devices[i], namedTypes[j]);
-      // print subtypes of named types
-      if(types) {
-        for(int k = 0;types[k];++k){
-          printf("      %s %s:\n", anari::toString(namedTypes[j]), types[k]);
-          const ANARIParameter *params = anariGetObjectParameters(lib, devices[i], types[k], namedTypes[j]);
+
+    if(!skipParameters) {
+      printf("   Parameters:\n");
+      for(int j = 0;j<sizeof(namedTypes)/sizeof(ANARIDataType);++j) {
+        if(typeFilter && strstr(anari::toString(namedTypes[j]), typeFilter) == nullptr) {
+          continue;
+        }
+
+        const char **types = anariGetObjectSubtypes(lib, devices[i], namedTypes[j]);
+        // print subtypes of named types
+        if(types) {
+          for(int k = 0;types[k];++k){
+            if(subtypeFilter && strstr(types[k], subtypeFilter) == nullptr) {
+              continue;
+            }
+            printf("      %s %s:\n", anari::toString(namedTypes[j]), types[k]);
+            const ANARIParameter *params = anariGetObjectParameters(lib, devices[i], types[k], namedTypes[j]);
+            if(params) {
+              for(int l = 0;params[l].name;++l){
+                printf("         %-25s %-25s", params[l].name, anari::toString(params[l].type));
+                int32_t *required = (int32_t*)anariGetParameterInfo(lib, devices[i], types[k], namedTypes[j],
+                  params[l].name, params[l].type, "required", ANARI_BOOL);
+                if(required && *required) {
+                  printf("required");
+                }
+                printf("\n");
+              }
+            }
+          }
+        }
+      }
+
+      if(subtypeFilter == nullptr) {
+        for(int j = 0;j<sizeof(anonymousTypes)/sizeof(ANARIDataType);++j) {
+          if(typeFilter && strstr(anari::toString(anonymousTypes[j]), typeFilter) == nullptr) {
+            continue;
+          }
+
+          printf("      %s:\n", anari::toString(anonymousTypes[j]));
+          const ANARIParameter *params = anariGetObjectParameters(lib, devices[i], 0, anonymousTypes[j]);
           if(params) {
             for(int l = 0;params[l].name;++l){
-              printf("         %-30s %s\n", params[l].name, anari::toString(params[l].type));
+              printf("         %-25s %-25s", params[l].name, anari::toString(params[l].type));
+              int32_t *required = (int32_t*)anariGetParameterInfo(lib, devices[i], nullptr, anonymousTypes[j],
+                params[l].name, params[l].type, "required", ANARI_BOOL);
+              if(required && *required) {
+                printf("required");
+              }
+              printf("\n");
             }
           }
         }
       }
     }
-
-    for(int j = 0;j<sizeof(anonymousTypes)/sizeof(ANARIDataType);++j) {
-      printf("      %s:\n", anari::toString(anonymousTypes[j]));
-      const ANARIParameter *params = anariGetObjectParameters(lib, devices[i], 0, anonymousTypes[j]);
-      if(params) {
-        for(int l = 0;params[l].name;++l){
-          printf("         %-30s %s\n", params[l].name, anari::toString(params[l].type));
-        }
-      }
-    }
   }
-
   anariUnloadLibrary(lib);
 
   return 0;
