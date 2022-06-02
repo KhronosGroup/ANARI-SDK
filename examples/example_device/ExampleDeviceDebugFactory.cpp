@@ -84,7 +84,7 @@ class renderer_default : public DebugObject<ANARI_RENDERER> {
 };
 class renderer_scivis : public DebugObject<ANARI_RENDERER> {
    static int param_hash(const char *str) {
-      static const uint32_t table[] = {0x6261000fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6a69001eu,0x64630010u,0x6c6b0011u,0x68670012u,0x73720013u,0x706f0014u,0x76750015u,0x6f6e0016u,0x65640017u,0x44430018u,0x706f0019u,0x6d6c001au,0x706f001bu,0x7372001cu,0x100001du,0x80000000u,0x7978001fu,0x66650020u,0x6d6c0021u,0x54530022u,0x62610023u,0x6e6d0024u,0x71700025u,0x6d6c0026u,0x66650027u,0x74730028u,0x1000029u,0x80000001u};
+      static const uint32_t table[] = {0x6261000fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6261001eu,0x0u,0x6a690022u,0x64630010u,0x6c6b0011u,0x68670012u,0x73720013u,0x706f0014u,0x76750015u,0x6f6e0016u,0x65640017u,0x44430018u,0x706f0019u,0x6d6c001au,0x706f001bu,0x7372001cu,0x100001du,0x80000001u,0x6e6d001fu,0x66650020u,0x1000021u,0x80000000u,0x79780023u,0x66650024u,0x6d6c0025u,0x54530026u,0x62610027u,0x6e6d0028u,0x71700029u,0x6d6c002au,0x6665002bu,0x7473002cu,0x100002du,0x80000002u};
       uint32_t cur = 0x71620000u;
       for(int i = 0;cur!=0;++i) {
          uint32_t idx = cur&0xFFFFu;
@@ -111,12 +111,17 @@ class renderer_scivis : public DebugObject<ANARI_RENDERER> {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
       switch(idx) {
-         case 0: { //backgroundColor
+         case 0: { //name
+            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_RENDERER, "scivis", paramname, paramtype, name_types);
+            return;
+         }
+         case 1: { //backgroundColor
             ANARIDataType backgroundColor_types[] = {ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             check_type(ANARI_RENDERER, "scivis", paramname, paramtype, backgroundColor_types);
             return;
          }
-         case 1: { //pixelSamples
+         case 2: { //pixelSamples
             ANARIDataType pixelSamples_types[] = {ANARI_INT32, ANARI_UNKNOWN};
             check_type(ANARI_RENDERER, "scivis", paramname, paramtype, pixelSamples_types);
             return;
@@ -132,7 +137,7 @@ class renderer_scivis : public DebugObject<ANARI_RENDERER> {
 };
 class renderer_ao : public DebugObject<ANARI_RENDERER> {
    static int param_hash(const char *str) {
-      static const uint32_t table[] = {0x6261000fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6a69001eu,0x64630010u,0x6c6b0011u,0x68670012u,0x73720013u,0x706f0014u,0x76750015u,0x6f6e0016u,0x65640017u,0x44430018u,0x706f0019u,0x6d6c001au,0x706f001bu,0x7372001cu,0x100001du,0x80000000u,0x7978001fu,0x66650020u,0x6d6c0021u,0x54530022u,0x62610023u,0x6e6d0024u,0x71700025u,0x6d6c0026u,0x66650027u,0x74730028u,0x1000029u,0x80000001u};
+      static const uint32_t table[] = {0x6261000fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6261001eu,0x0u,0x6a690022u,0x64630010u,0x6c6b0011u,0x68670012u,0x73720013u,0x706f0014u,0x76750015u,0x6f6e0016u,0x65640017u,0x44430018u,0x706f0019u,0x6d6c001au,0x706f001bu,0x7372001cu,0x100001du,0x80000001u,0x6e6d001fu,0x66650020u,0x1000021u,0x80000000u,0x79780023u,0x66650024u,0x6d6c0025u,0x54530026u,0x62610027u,0x6e6d0028u,0x71700029u,0x6d6c002au,0x6665002bu,0x7473002cu,0x100002du,0x80000002u};
       uint32_t cur = 0x71620000u;
       for(int i = 0;cur!=0;++i) {
          uint32_t idx = cur&0xFFFFu;
@@ -159,12 +164,17 @@ class renderer_ao : public DebugObject<ANARI_RENDERER> {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
       switch(idx) {
-         case 0: { //backgroundColor
+         case 0: { //name
+            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_RENDERER, "ao", paramname, paramtype, name_types);
+            return;
+         }
+         case 1: { //backgroundColor
             ANARIDataType backgroundColor_types[] = {ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             check_type(ANARI_RENDERER, "ao", paramname, paramtype, backgroundColor_types);
             return;
          }
-         case 1: { //pixelSamples
+         case 2: { //pixelSamples
             ANARIDataType pixelSamples_types[] = {ANARI_INT32, ANARI_UNKNOWN};
             check_type(ANARI_RENDERER, "ao", paramname, paramtype, pixelSamples_types);
             return;
@@ -180,7 +190,7 @@ class renderer_ao : public DebugObject<ANARI_RENDERER> {
 };
 class renderer_pathtracer : public DebugObject<ANARI_RENDERER> {
    static int param_hash(const char *str) {
-      static const uint32_t table[] = {0x6261000fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6a69001eu,0x64630010u,0x6c6b0011u,0x68670012u,0x73720013u,0x706f0014u,0x76750015u,0x6f6e0016u,0x65640017u,0x44430018u,0x706f0019u,0x6d6c001au,0x706f001bu,0x7372001cu,0x100001du,0x80000000u,0x7978001fu,0x66650020u,0x6d6c0021u,0x54530022u,0x62610023u,0x6e6d0024u,0x71700025u,0x6d6c0026u,0x66650027u,0x74730028u,0x1000029u,0x80000001u};
+      static const uint32_t table[] = {0x6261000fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6261001eu,0x0u,0x6a690022u,0x64630010u,0x6c6b0011u,0x68670012u,0x73720013u,0x706f0014u,0x76750015u,0x6f6e0016u,0x65640017u,0x44430018u,0x706f0019u,0x6d6c001au,0x706f001bu,0x7372001cu,0x100001du,0x80000001u,0x6e6d001fu,0x66650020u,0x1000021u,0x80000000u,0x79780023u,0x66650024u,0x6d6c0025u,0x54530026u,0x62610027u,0x6e6d0028u,0x71700029u,0x6d6c002au,0x6665002bu,0x7473002cu,0x100002du,0x80000002u};
       uint32_t cur = 0x71620000u;
       for(int i = 0;cur!=0;++i) {
          uint32_t idx = cur&0xFFFFu;
@@ -207,12 +217,17 @@ class renderer_pathtracer : public DebugObject<ANARI_RENDERER> {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
       switch(idx) {
-         case 0: { //backgroundColor
+         case 0: { //name
+            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_RENDERER, "pathtracer", paramname, paramtype, name_types);
+            return;
+         }
+         case 1: { //backgroundColor
             ANARIDataType backgroundColor_types[] = {ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             check_type(ANARI_RENDERER, "pathtracer", paramname, paramtype, backgroundColor_types);
             return;
          }
-         case 1: { //pixelSamples
+         case 2: { //pixelSamples
             ANARIDataType pixelSamples_types[] = {ANARI_INT32, ANARI_UNKNOWN};
             check_type(ANARI_RENDERER, "pathtracer", paramname, paramtype, pixelSamples_types);
             return;
@@ -228,7 +243,7 @@ class renderer_pathtracer : public DebugObject<ANARI_RENDERER> {
 };
 class renderer_debug : public DebugObject<ANARI_RENDERER> {
    static int param_hash(const char *str) {
-      static const uint32_t table[] = {0x6261000fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6a69001eu,0x64630010u,0x6c6b0011u,0x68670012u,0x73720013u,0x706f0014u,0x76750015u,0x6f6e0016u,0x65640017u,0x44430018u,0x706f0019u,0x6d6c001au,0x706f001bu,0x7372001cu,0x100001du,0x80000000u,0x7978001fu,0x66650020u,0x6d6c0021u,0x54530022u,0x62610023u,0x6e6d0024u,0x71700025u,0x6d6c0026u,0x66650027u,0x74730028u,0x1000029u,0x80000001u};
+      static const uint32_t table[] = {0x6261000fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6261001eu,0x0u,0x6a690022u,0x64630010u,0x6c6b0011u,0x68670012u,0x73720013u,0x706f0014u,0x76750015u,0x6f6e0016u,0x65640017u,0x44430018u,0x706f0019u,0x6d6c001au,0x706f001bu,0x7372001cu,0x100001du,0x80000001u,0x6e6d001fu,0x66650020u,0x1000021u,0x80000000u,0x79780023u,0x66650024u,0x6d6c0025u,0x54530026u,0x62610027u,0x6e6d0028u,0x71700029u,0x6d6c002au,0x6665002bu,0x7473002cu,0x100002du,0x80000002u};
       uint32_t cur = 0x71620000u;
       for(int i = 0;cur!=0;++i) {
          uint32_t idx = cur&0xFFFFu;
@@ -255,12 +270,17 @@ class renderer_debug : public DebugObject<ANARI_RENDERER> {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
       switch(idx) {
-         case 0: { //backgroundColor
+         case 0: { //name
+            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_RENDERER, "debug", paramname, paramtype, name_types);
+            return;
+         }
+         case 1: { //backgroundColor
             ANARIDataType backgroundColor_types[] = {ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             check_type(ANARI_RENDERER, "debug", paramname, paramtype, backgroundColor_types);
             return;
          }
-         case 1: { //pixelSamples
+         case 2: { //pixelSamples
             ANARIDataType pixelSamples_types[] = {ANARI_INT32, ANARI_UNKNOWN};
             check_type(ANARI_RENDERER, "debug", paramname, paramtype, pixelSamples_types);
             return;
@@ -276,7 +296,7 @@ class renderer_debug : public DebugObject<ANARI_RENDERER> {
 };
 class renderer_raycast : public DebugObject<ANARI_RENDERER> {
    static int param_hash(const char *str) {
-      static const uint32_t table[] = {0x6261000fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6a69001eu,0x64630010u,0x6c6b0011u,0x68670012u,0x73720013u,0x706f0014u,0x76750015u,0x6f6e0016u,0x65640017u,0x44430018u,0x706f0019u,0x6d6c001au,0x706f001bu,0x7372001cu,0x100001du,0x80000000u,0x7978001fu,0x66650020u,0x6d6c0021u,0x54530022u,0x62610023u,0x6e6d0024u,0x71700025u,0x6d6c0026u,0x66650027u,0x74730028u,0x1000029u,0x80000001u};
+      static const uint32_t table[] = {0x6261000fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6261001eu,0x0u,0x6a690022u,0x64630010u,0x6c6b0011u,0x68670012u,0x73720013u,0x706f0014u,0x76750015u,0x6f6e0016u,0x65640017u,0x44430018u,0x706f0019u,0x6d6c001au,0x706f001bu,0x7372001cu,0x100001du,0x80000001u,0x6e6d001fu,0x66650020u,0x1000021u,0x80000000u,0x79780023u,0x66650024u,0x6d6c0025u,0x54530026u,0x62610027u,0x6e6d0028u,0x71700029u,0x6d6c002au,0x6665002bu,0x7473002cu,0x100002du,0x80000002u};
       uint32_t cur = 0x71620000u;
       for(int i = 0;cur!=0;++i) {
          uint32_t idx = cur&0xFFFFu;
@@ -303,12 +323,17 @@ class renderer_raycast : public DebugObject<ANARI_RENDERER> {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
       switch(idx) {
-         case 0: { //backgroundColor
+         case 0: { //name
+            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_RENDERER, "raycast", paramname, paramtype, name_types);
+            return;
+         }
+         case 1: { //backgroundColor
             ANARIDataType backgroundColor_types[] = {ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             check_type(ANARI_RENDERER, "raycast", paramname, paramtype, backgroundColor_types);
             return;
          }
-         case 1: { //pixelSamples
+         case 2: { //pixelSamples
             ANARIDataType pixelSamples_types[] = {ANARI_INT32, ANARI_UNKNOWN};
             check_type(ANARI_RENDERER, "raycast", paramname, paramtype, pixelSamples_types);
             return;
@@ -324,7 +349,7 @@ class renderer_raycast : public DebugObject<ANARI_RENDERER> {
 };
 class renderer_rayDir : public DebugObject<ANARI_RENDERER> {
    static int param_hash(const char *str) {
-      static const uint32_t table[] = {0x6261000fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6a69001eu,0x64630010u,0x6c6b0011u,0x68670012u,0x73720013u,0x706f0014u,0x76750015u,0x6f6e0016u,0x65640017u,0x44430018u,0x706f0019u,0x6d6c001au,0x706f001bu,0x7372001cu,0x100001du,0x80000000u,0x7978001fu,0x66650020u,0x6d6c0021u,0x54530022u,0x62610023u,0x6e6d0024u,0x71700025u,0x6d6c0026u,0x66650027u,0x74730028u,0x1000029u,0x80000001u};
+      static const uint32_t table[] = {0x6261000fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6261001eu,0x0u,0x6a690022u,0x64630010u,0x6c6b0011u,0x68670012u,0x73720013u,0x706f0014u,0x76750015u,0x6f6e0016u,0x65640017u,0x44430018u,0x706f0019u,0x6d6c001au,0x706f001bu,0x7372001cu,0x100001du,0x80000001u,0x6e6d001fu,0x66650020u,0x1000021u,0x80000000u,0x79780023u,0x66650024u,0x6d6c0025u,0x54530026u,0x62610027u,0x6e6d0028u,0x71700029u,0x6d6c002au,0x6665002bu,0x7473002cu,0x100002du,0x80000002u};
       uint32_t cur = 0x71620000u;
       for(int i = 0;cur!=0;++i) {
          uint32_t idx = cur&0xFFFFu;
@@ -351,12 +376,17 @@ class renderer_rayDir : public DebugObject<ANARI_RENDERER> {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
       switch(idx) {
-         case 0: { //backgroundColor
+         case 0: { //name
+            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_RENDERER, "rayDir", paramname, paramtype, name_types);
+            return;
+         }
+         case 1: { //backgroundColor
             ANARIDataType backgroundColor_types[] = {ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             check_type(ANARI_RENDERER, "rayDir", paramname, paramtype, backgroundColor_types);
             return;
          }
-         case 1: { //pixelSamples
+         case 2: { //pixelSamples
             ANARIDataType pixelSamples_types[] = {ANARI_INT32, ANARI_UNKNOWN};
             check_type(ANARI_RENDERER, "rayDir", paramname, paramtype, pixelSamples_types);
             return;
