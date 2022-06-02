@@ -1,0 +1,16 @@
+{
+    "info" : {
+        "name" : "tree_device",
+        "type" : "device",
+        "dependencies" : [
+            "anari_core_1_0",
+            "anari_core_objects_all_1_0",
+            "khr_frame_continuation",
+            "khr_auxiliary_buffers",
+            "khr_area_lights",
+            "khr_stochastic_rendering",
+            "khr_transformation_motion_blur",
+            "khr_array1d_region"
+        ]
+    }
+}
