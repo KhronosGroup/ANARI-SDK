@@ -12,24 +12,33 @@
                 {
                     "name" : "motion.transform",
                     "types" : ["ANARI_ARRAY1D"],
-                    "tags" : []
+                    "elementType" : ["ANARI_FLOAT32_MAT4"],
+                    "tags" : [],
+                    "description" : "transforms uniformly spaced in time"
                 }, {
                     "name" : "motion.scale",
                     "types" : ["ANARI_ARRAY1D"],
-                    "tags" : []
+                    "elementType" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "description" : "scale vectors uniformly spaced in time"
                 }, {
                     "name" : "motion.rotation",
                     "types" : ["ANARI_ARRAY1D"],
-                    "tags" : []
+                    "elementType" : ["ANARI_FLOAT32_QUAT_IJKW"],
+                    "tags" : [],
+                    "description" : "rotation quaternions uniformly spaced in time"
                 }, {
                     "name" : "motion.translation",
                     "types" : ["ANARI_ARRAY1D"],
-                    "tags" : []
+                    "elementType" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "description" : "translation vectors uniformly spaced in time"
                 }, {
                     "name" : "time",
                     "types" : ["ANARI_FLOAT32_BOX1"],
                     "tags" : [],
-                    "default" : [0.0, 1.0]
+                    "default" : [0.0, 1.0],
+                    "description" : "time interval associated with first and last key in motion arrays"
                 }
             ]
         }, {
@@ -39,29 +48,39 @@
                 {
                     "name" : "motion.transform",
                     "types" : ["ANARI_ARRAY1D"],
-                    "tags" : []
+                    "elementType" : ["ANARI_FLOAT32_MAT4"],
+                    "tags" : [],
+                    "description" : "transforms uniformly spaced in time"
                 }, {
                     "name" : "motion.scale",
                     "types" : ["ANARI_ARRAY1D"],
-                    "tags" : []
+                    "elementType" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "description" : "scale vectors uniformly spaced in time"
                 }, {
                     "name" : "motion.rotation",
                     "types" : ["ANARI_ARRAY1D"],
-                    "tags" : []
+                    "elementType" : ["ANARI_FLOAT32_QUAT_IJKW"],
+                    "tags" : [],
+                    "description" : "rotation quaternions uniformly spaced in time"
                 }, {
                     "name" : "motion.translation",
                     "types" : ["ANARI_ARRAY1D"],
-                    "tags" : []
+                    "elementType" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "description" : "translation vectors uniformly spaced in time"
                 }, {
                     "name" : "time",
                     "types" : ["ANARI_FLOAT32_BOX1"],
                     "tags" : [],
-                    "default" : [0.0, 1.0]
+                    "default" : [0.0, 1.0],
+                    "description" : "time interval associated with first and last key in motion arrays"
                 }, {
                     "name" : "shutter",
                     "types" : ["ANARI_FLOAT32_BOX1"],
                     "tags" : [],
-                    "default" : [0.5, 0.5]
+                    "default" : [0.5, 0.5],
+                    "description" : "start and end of shutter time"
                 }
             ]
         }, {
@@ -71,29 +90,39 @@
                 {
                     "name" : "motion.transform",
                     "types" : ["ANARI_ARRAY1D"],
-                    "tags" : []
+                    "elementType" : ["ANARI_FLOAT32_MAT4"],
+                    "tags" : [],
+                    "description" : "transforms uniformly spaced in time"
                 }, {
                     "name" : "motion.scale",
                     "types" : ["ANARI_ARRAY1D"],
-                    "tags" : []
+                    "elementType" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "description" : "scale vectors uniformly spaced in time"
                 }, {
                     "name" : "motion.rotation",
                     "types" : ["ANARI_ARRAY1D"],
-                    "tags" : []
+                    "elementType" : ["ANARI_FLOAT32_QUAT_IJKW"],
+                    "tags" : [],
+                    "description" : "rotation quaternions uniformly spaced in time"
                 }, {
                     "name" : "motion.translation",
                     "types" : ["ANARI_ARRAY1D"],
-                    "tags" : []
+                    "elementType" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "description" : "translation vectors uniformly spaced in time"
                 }, {
                     "name" : "time",
                     "types" : ["ANARI_FLOAT32_BOX1"],
                     "tags" : [],
-                    "default" : [0.0, 1.0]
+                    "default" : [0.0, 1.0],
+                    "description" : "time interval associated with first and last key in motion arrays"
                 }, {
                     "name" : "shutter",
                     "types" : ["ANARI_FLOAT32_BOX1"],
                     "tags" : [],
-                    "default" : [0.5, 0.5]
+                    "default" : [0.5, 0.5],
+                    "description" : "start and end of shutter time"
                 }
             ]
         }, {
@@ -103,29 +132,39 @@
                 {
                     "name" : "motion.transform",
                     "types" : ["ANARI_ARRAY1D"],
-                    "tags" : []
+                    "elementType" : ["ANARI_FLOAT32_MAT4"],
+                    "tags" : [],
+                    "description" : "transforms uniformly spaced in time"
                 }, {
                     "name" : "motion.scale",
                     "types" : ["ANARI_ARRAY1D"],
-                    "tags" : []
+                    "elementType" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "description" : "scale vectors uniformly spaced in time"
                 }, {
                     "name" : "motion.rotation",
                     "types" : ["ANARI_ARRAY1D"],
-                    "tags" : []
+                    "elementType" : ["ANARI_FLOAT32_QUAT_IJKW"],
+                    "tags" : [],
+                    "description" : "rotation quaternions uniformly spaced in time"
                 }, {
                     "name" : "motion.translation",
                     "types" : ["ANARI_ARRAY1D"],
-                    "tags" : []
+                    "elementType" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "description" : "translation vectors uniformly spaced in time"
                 }, {
                     "name" : "time",
                     "types" : ["ANARI_FLOAT32_BOX1"],
                     "tags" : [],
-                    "default" : [0.0, 1.0]
+                    "default" : [0.0, 1.0],
+                    "description" : "time interval associated with first and last key in motion arrays"
                 }, {
                     "name" : "shutter",
                     "types" : ["ANARI_FLOAT32_BOX1"],
                     "tags" : [],
-                    "default" : [0.5, 0.5]
+                    "default" : [0.5, 0.5],
+                    "description" : "start and end of shutter time"
                 }
             ]
         }

@@ -9,41 +9,52 @@
         {
             "type" : "ANARI_LIGHT",
             "name" : "hdri",
+            "description" : "hdri light object",
             "parameters" : [
                 {
                     "name" : "name",
                     "types" : ["ANARI_STRING"],
-                    "tags" : []
+                    "tags" : [],
+                    "description" : "optional object name"
                 }, {
                     "name" : "color",
                     "types" : ["ANARI_FLOAT32_VEC3"],
                     "tags" : ["color"],
-                    "default" : [1.0, 1.0, 1.0]
+                    "default" : [1.0, 1.0, 1.0],
+                    "minimum" : [0.0, 0.0, 0.0],
+                    "maximum" : [1.0, 1.0, 1.0],
+                    "description" : "color of the light"
                 }, {
                     "name" : "up",
                     "types" : ["ANARI_FLOAT32_VEC3"],
                     "tags" : [],
-                    "default" : [0.0, 0.0, 1.0]
+                    "default" : [0.0, 0.0, 1.0],
+                    "description" : "up direction of the light in world space"
                 }, {
                     "name" : "radiance",
                     "types" : ["ANARI_ARRAY2D"],
-                    "tags" : []
+                    "elementType" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "description" : "the amount of light emitted by a point on the light source in a direction in W/sr/m^2"
                 }, {
                     "name" : "layout",
                     "types" : ["ANARI_STRING"],
                     "tags" : [],
                     "default" : "equirectangular",
-                    "values" : ["equirectangular"]
+                    "values" : ["equirectangular"],
+                    "description" : "radiance image layout"
                 }, {
                     "name" : "scale",
                     "types" : ["ANARI_FLOAT32"],
                     "tags" : [],
-                    "default" : 1
+                    "default" : 1,
+                    "description" : "scale factor for radiance"
                 }, {
                     "name" : "visible",
                     "types" : ["ANARI_BOOL"],
                     "tags" : [],
-                    "default" : 1
+                    "default" : 1,
+                    "description" : "visibility of the light geometry"
                 }
             ]
         }

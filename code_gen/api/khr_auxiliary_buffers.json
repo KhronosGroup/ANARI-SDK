@@ -13,12 +13,14 @@
                     "name" : "normal",
                     "types" : ["ANARI_DATA_TYPE"],
                     "tags" : [],
-                    "values" : ["ANARI_FIXED16_VEC3", "ANARI_FLOAT32_VEC3"]
+                    "values" : ["ANARI_FIXED16_VEC3", "ANARI_FLOAT32_VEC3"],
+                    "description" : "enables mapping the normal channel as the type specified"
                 }, {
                     "name" : "albedo",
                     "types" : ["ANARI_DATA_TYPE"],
                     "tags" : [],
-                    "values" : ["ANARI_UFIXED8_VEC3", "ANARI_UFIXED8_RGB_SRGB", "ANARI_FLOAT32_VEC3"]
+                    "values" : ["ANARI_UFIXED8_VEC3", "ANARI_UFIXED8_RGB_SRGB", "ANARI_FLOAT32_VEC3"],
+                    "description" : "enables mapping the albedo channel as the type specified"
                 }
             ]
         }

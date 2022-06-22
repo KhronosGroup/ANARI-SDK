@@ -9,16 +9,19 @@
         {
             "type" : "ANARI_MATERIAL",
             "name" : "matte",
+            "description" : "matte material object",
             "parameters" : [
                 {
                     "name" : "name",
                     "types" : ["ANARI_STRING"],
-                    "tags" : []
+                    "tags" : [],
+                    "description" : "optional object name"
                 }, {
                     "name" : "color",
                     "types" : ["ANARI_FLOAT32_VEC3", "ANARI_SAMPLER", "ANARI_STRING"],
                     "tags" : ["attribute"],
-                    "default" : [0.8, 0.8, 0.8]
+                    "default" : [0.8, 0.8, 0.8],
+                    "description" : "diffuse color"
                 }
             ]
         }

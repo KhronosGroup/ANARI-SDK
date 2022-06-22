@@ -9,41 +9,59 @@
         {
             "type" : "ANARI_VOLUME",
             "name" : "scivis",
+            "description" : "scivis volume object",
             "parameters" : [
                 {
                     "name" : "name",
                     "types" : ["ANARI_STRING"],
-                    "tags" : []
+                    "tags" : [],
+                    "description" : "optional object name"
                 }, {
                     "name" : "field",
                     "types" : ["ANARI_SPATIAL_FIELD"],
-                    "tags" : ["required"]
+                    "tags" : ["required"],
+                    "description" : "spatial field used for the field values of the volume"
                 }, {
                     "name" : "valueRange",
                     "types" : ["ANARI_FLOAT32_BOX1"],
-                    "tags" : ["required"],
-                    "default" : [0.0, 1.0]
+                    "tags" : [],
+                    "default" : [0.0, 1.0],
+                    "description" : "sampled values of field are clamped to this range"
                 }, {
                     "name" : "color",
                     "types" : ["ANARI_ARRAY1D"],
-                    "tags" : ["required"]
+                    "elementType" : [
+                        "ANARI_UFIXED8", "ANARI_UFIXED8_VEC2", "ANARI_UFIXED8_VEC3", "ANARI_UFIXED8_VEC4",
+                        "ANARI_UFIXED8_R_SRGB", "ANARI_UFIXED8_RA_SRGB", "ANARI_UFIXED8_RGB_SRGB", "ANARI_UFIXED8_RGBA_SRGB",
+                        "ANARI_UFIXED16", "ANARI_UFIXED16_VEC2", "ANARI_UFIXED16_VEC3", "ANARI_UFIXED16_VEC4",
+                        "ANARI_UFIXED32", "ANARI_UFIXED32_VEC2", "ANARI_UFIXED32_VEC3", "ANARI_UFIXED32_VEC4",
+                        "ANARI_FLOAT32", "ANARI_FLOAT32_VEC2", "ANARI_FLOAT32_VEC3", "ANARI_FLOAT32_VEC4"],
+                    "tags" : ["required"],
+                    "description" : "array to map sampled and clamped field values to color"
                 }, {
                     "name" : "color.position",
                     "types" : ["ANARI_ARRAY1D"],
-                    "tags" : []
+                    "elementType" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "description" : "optional array to position the elements of color values in valueRange"
                 }, {
                     "name" : "opacity",
                     "types" : ["ANARI_ARRAY1D"],
-                    "tags" : ["required"]
+                    "elementType" : ["ANARI_FLOAT32"],
+                    "tags" : ["required"],
+                    "description" : "array to map sampled and clamped field values to opacity"
                 }, {
                     "name" : "opacity.position",
                     "types" : ["ANARI_ARRAY1D"],
-                    "tags" : []
+                    "elementType" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "description" : "optional array to position the elements of opacity values in valueRange"
                 }, {
                     "name" : "densityScale",
                     "types" : ["ANARI_FLOAT32"],
                     "tags" : [],
-                    "default" : 1
+                    "default" : 1,
+                    "description" : "makes volumes uniformly thinner or thicker"
                 }
             ]
         }

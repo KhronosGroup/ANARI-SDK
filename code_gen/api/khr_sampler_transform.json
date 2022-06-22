@@ -9,21 +9,25 @@
         {
             "type" : "ANARI_SAMPLER",
             "name" : "transform",
+            "description" : "transform sampler object",
             "parameters" : [
                 {
                     "name" : "name",
                     "types" : ["ANARI_STRING"],
-                    "tags" : []
+                    "tags" : [],
+                    "description" : "optional object name"
                 }, {
                     "name" : "inAttribute",
                     "types" : ["ANARI_STRING"],
                     "tags" : ["attribute"],
-                    "default" : "attribute0"
+                    "default" : "attribute0",
+                    "description" : "input surface attribute (texture coordinate)"
                 }, {
                     "name" : "transform",
                     "types" : ["ANARI_FLOAT32_MAT4"],
                     "tags" : [],
-                    "default" : [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]
+                    "default" : [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
+                    "description" : "transform applied to the input attribute"
                 }
             ]
         }

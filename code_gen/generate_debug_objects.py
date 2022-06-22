@@ -20,15 +20,23 @@ class DebugGenerator:
         type_enums = next(x for x in anari["enums"] if x["name"] == "ANARIDataType")
         self.type_enum_dict = {e["name"]: e for e in type_enums["values"]}
 
+        features = set()
+
         offset = 0
         for obj in anari["objects"]:
             if not obj["type"] in self.objects:
                 self.objects[obj["type"]] = []
 
+            if "feature" in obj:
+                features.add(obj["feature"])
+
             parameter_list = []
             parameter_type_list = []
             for param in obj["parameters"]:
                 parameter_list.append(param)
+                if "feature" in param:
+                    features.add(param["feature"])
+
                 for t in param["types"]:
                     parameter_type_list.append((param["name"], t))
 
@@ -50,6 +58,7 @@ class DebugGenerator:
 
         self.named_types = sorted(list(set([k[0] for k in self.named_objects])))
         self.subtype_list = sorted(list(set([k[1] for k in self.named_objects])))
+        self.feature_list = sorted(list(features))
 
 
     def generate_validation_objects_decl(self, factoryname):
@@ -72,7 +81,9 @@ class DebugGenerator:
         code += "   anari::debug_device::DebugObjectBase* new_group(anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
         code += "   anari::debug_device::DebugObjectBase* new_instance(anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
         code += "   anari::debug_device::DebugObjectBase* new_world(anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
-        code += "   anari::debug_device::DebugObjectBase* new_surface(anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override; \n"
+        code += "   anari::debug_device::DebugObjectBase* new_surface(anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
+        code += "   void print_summary(anari::debug_device::DebugDevice *td) override;\n"
+        code += "   void use_feature(int feature);"
         code += "};\n"
         return code
 
@@ -93,7 +104,7 @@ class DebugGenerator:
             if params:
                 code += "   static " + hash_gen.gen_hash_function("param_hash", [p["name"] for p in params], indent = "   ")
                 code += "   public:\n"
-                code += "   " + objname + "(DebugDevice *td, ANARIObject wh, ANARIObject h)"
+                code += "   " + objname + "(DebugDevice *td, " + factoryname + " *factory, ANARIObject wh, ANARIObject h)"
                 code += ": " + b + "(td, wh, h) { }\n"
                 code += "   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {\n"
                 code += "      " + b + "::setParameter(paramname, paramtype, mem);\n"
@@ -131,7 +142,7 @@ class DebugGenerator:
             code += "   switch(idx) {\n"
             for i in range(0, len(subtypes)):
                 code += "      case %d:\n"%i
-                code += "         return new " + t[6:].lower() + "_" + subtypes[i] + "(td, wh, h);\n"
+                code += "         return new " + t[6:].lower() + "_" + subtypes[i] + "(td, this, wh, h);\n"
             code += "      default:\n"
             code += "         unknown_subtype(td, " + t + ", name);\n"
             code += "         return new DebugObject<"+t+">(td, wh, h);\n"
@@ -141,9 +152,11 @@ class DebugGenerator:
         for t in sorted(self.anon_objects.keys()):
             type_name = t[6:].lower()
             code += "DebugObjectBase* " + factoryname + "::new_" + type_name + "(DebugDevice *td, ANARIObject wh, ANARIObject h) {\n"
-            code += "   return new " + type_name + "(td, wh, h);\n"
+            code += "   return new " + type_name + "(td, this, wh, h);\n"
             code += "}\n"
 
+        code += "void " + factoryname + "::print_summary(DebugDevice *td) {\n"
+        code += "}\n"
         return code
 
 
@@ -168,7 +181,9 @@ dependencies = merge_anari.crawl_dependencies(device, jsons)
 for x in dependencies:
     matches = [p for p in jsons if p.stem == x]
     for m in matches:
-        merge_anari.merge(device, json.load(open(m)))
+        feature = json.load(open(m))
+        merge_anari.tag_feature(feature)
+        merge_anari.merge(device, feature)
 
 #generate files
 gen = DebugGenerator(device)
