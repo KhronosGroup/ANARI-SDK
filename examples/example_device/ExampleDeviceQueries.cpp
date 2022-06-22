@@ -30,7 +30,7 @@ static int subtype_hash(const char *str) {
    return -1;
 }
 static int param_hash(const char *str) {
-   static const uint32_t table[] = {0x74700017u,0x62610031u,0x70610040u,0x6a610094u,0x0u,0x706100b8u,0x73650102u,0x0u,0x736d011bu,0x0u,0x0u,0x6a6101eeu,0x62610200u,0x62610208u,0x7670020cu,0x7369026du,0x0u,0x666102d5u,0x766902e6u,0x73720378u,0x71700381u,0x70610383u,0x736f03f0u,0x6665001bu,0x0u,0x73720028u,0x7170002cu,0x7372001cu,0x7574001du,0x7675001eu,0x7372001fu,0x66650020u,0x53520021u,0x62610022u,0x65640023u,0x6a690024u,0x76750025u,0x74730026u,0x1000027u,0x80000000u,0x62610029u,0x7a79002au,0x100002bu,0x80000001u,0x6665002du,0x6463002eu,0x7574002fu,0x1000030u,0x80000002u,0x64630032u,0x6c6b0033u,0x68670034u,0x73720035u,0x706f0036u,0x76750037u,0x6f6e0038u,0x65640039u,0x4443003au,0x706f003bu,0x6d6c003cu,0x706f003du,0x7372003eu,0x100003fu,0x80000003u,0x716d004fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6d6c0059u,0x66650053u,0x0u,0x0u,0x74730057u,0x73720054u,0x62610055u,0x1000056u,0x80000004u,0x1000058u,0x80000005u,0x706f005au,0x7372005bu,0x2f00005cu,0x80000006u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x7170008bu,0x706f008cu,0x7473008du,0x6a69008eu,0x7574008fu,0x6a690090u,0x706f0091u,0x6f6e0092u,0x1000093u,0x80000007u,0x7574009du,0x0u,0x0u,0x0u,0x716e00a0u,0x0u,0x0u,0x0u,0x737200b0u,0x6261009eu,0x100009fu,0x80000008u,0x747300a3u,0x0u,0x757400adu,0x6a6900a4u,0x757400a5u,0x7a7900a6u,0x545300a7u,0x646300a8u,0x626100a9u,0x6d6c00aau,0x666500abu,0x10000acu,0x80000009u,0x696800aeu,0x10000afu,0x8000000au,0x666500b1u,0x646300b2u,0x757400b3u,0x6a6900b4u,0x706f00b5u,0x6f6e00b6u,0x10000b7u,0x8000000bu,0x6d6c00c7u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6d6500d2u,0x0u,0x0u,0x0u,0x0u,0x0u,0x776300e1u,0x6d6c00c8u,0x706f00c9u,0x676600cau,0x676600cbu,0x424100ccu,0x6f6e00cdu,0x686700ceu,0x6d6c00cfu,0x666500d0u,0x10000d1u,0x8000000cu,0x6d6c00dau,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x757400ddu,0x656400dbu,0x10000dcu,0x8000000du,0x666500deu,0x737200dfu,0x10000e0u,0x8000000eu,0x767500f5u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x7a790100u,0x747300f6u,0x454400f7u,0x6a6900f8u,0x747300f9u,0x757400fau,0x626100fbu,0x6f6e00fcu,0x646300fdu,0x666500feu,0x10000ffu,0x8000000fu,0x1000101u,0x80000010u,0x706f0110u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x706f0117u,0x6e6d0111u,0x66650112u,0x75740113u,0x73720114u,0x7a790115u,0x1000116u,0x80000011u,0x76750118u,0x71700119u,0x100011au,0x80000012u,0x62610121u,0x7541017du,0x0u,0x0u,0x0u,0x737201e6u,0x68670122u,0x66650123u,0x53000124u,0x80000013u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x66650177u,0x68670178u,0x6a690179u,0x706f017au,0x6f6e017bu,0x100017cu,0x80000014u,0x757401b1u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x737201bau,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x757401c3u,0x666501c9u,0x757401b2u,0x737201b3u,0x6a6901b4u,0x636201b5u,0x767501b6u,0x757401b7u,0x666501b8u,0x10001b9u,0x80000015u,0x626101bbu,0x6f6e01bcu,0x747301bdu,0x676601beu,0x706f01bfu,0x737201c0u,0x6e6d01c1u,0x10001c2u,0x80000016u,0x626101c4u,0x6f6e01c5u,0x646301c6u,0x666501c7u,0x10001c8u,0x80000017u,0x736e01cau,0x747301cfu,0x0u,0x0u,0x0u,0x717001d4u,0x6a6901d0u,0x757401d1u,0x7a7901d2u,0x10001d3u,0x80000018u,0x767501d5u,0x717001d6u,0x6a6901d7u,0x6d6c01d8u,0x6d6c01d9u,0x626101dau,0x737201dbu,0x7a7901dcu,0x454401ddu,0x6a6901deu,0x747301dfu,0x757401e0u,0x626101e1u,0x6f6e01e2u,0x646301e3u,0x666501e4u,0x10001e5u,0x80000019u,0x6a6901e7u,0x656401e8u,0x626101e9u,0x6f6e01eau,0x646301ebu,0x666501ecu,0x10001edu,0x8000001au,0x7a7901f7u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x686701fcu,0x706f01f8u,0x767501f9u,0x757401fau,0x10001fbu,0x8000001bu,0x696801fdu,0x757401feu,0x10001ffu,0x8000001cu,0x75740201u,0x66650202u,0x73720203u,0x6a690204u,0x62610205u,0x6d6c0206u,0x1000207u,0x8000001du,0x6e6d0209u,0x6665020au,0x100020bu,0x8000001eu,0x66610212u,0x0u,0x6a69025du,0x0u,0x0u,0x75740262u,0x64630217u,0x0u,0x0u,0x0u,0x6f6e0253u,0x6a690218u,0x75740219u,0x7a79021au,0x2f00021bu,0x8000001fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x7170024au,0x706f024bu,0x7473024cu,0x6a69024du,0x7574024eu,0x6a69024fu,0x706f0250u,0x6f6e0251u,0x1000252u,0x80000020u,0x6a690254u,0x6f6e0255u,0x68670256u,0x42410257u,0x6f6e0258u,0x68670259u,0x6d6c025au,0x6665025bu,0x100025cu,0x80000021u,0x6867025eu,0x6a69025fu,0x6f6e0260u,0x1000261u,0x80000022u,0x55540263u,0x73720264u,0x62610265u,0x6f6e0266u,0x74730267u,0x67660268u,0x706f0269u,0x7372026au,0x6e6d026bu,0x100026cu,0x80000023u,0x79780277u,0x0u,0x0u,0x0u,0x0u,0x0u,0x78730282u,0x0u,0x0u,0x6a690290u,0x66650278u,0x6d6c0279u,0x5453027au,0x6261027bu,0x6e6d027cu,0x7170027du,0x6d6c027eu,0x6665027fu,0x74730280u,0x1000281u,0x80000024u,0x6a690287u,0x0u,0x0u,0x0u,0x6665028du,0x75740288u,0x6a690289u,0x706f028au,0x6f6e028bu,0x100028cu,0x80000025u,0x7372028eu,0x100028fu,0x80000026u,0x6e6d0291u,0x6a690292u,0x75740293u,0x6a690294u,0x77760295u,0x66650296u,0x2f2e0297u,0x73610298u,0x757402aau,0x0u,0x706f02bau,0x0u,0x0u,0x0u,0x0u,0x0u,0x6f6402bfu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x626102cfu,0x757402abu,0x737202acu,0x6a6902adu,0x636202aeu,0x767502afu,0x757402b0u,0x666502b1u,0x343002b2u,0x10002b6u,0x10002b7u,0x10002b8u,0x10002b9u,0x80000027u,0x80000028u,0x80000029u,0x8000002au,0x6d6c02bbu,0x706f02bcu,0x737202bdu,0x10002beu,0x8000002bu,0x10002cau,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x656402cbu,0x8000002cu,0x666502ccu,0x797802cdu,0x10002ceu,0x8000002du,0x656402d0u,0x6a6902d1u,0x767502d2u,0x747302d3u,0x10002d4u,0x8000002eu,0x656402dau,0x0u,0x0u,0x0u,0x6f6e02dfu,0x6a6902dbu,0x767502dcu,0x747302ddu,0x10002deu,0x8000002fu,0x656402e0u,0x666502e1u,0x737202e2u,0x666502e3u,0x737202e4u,0x10002e5u,0x80000030u,0x7b7a02f3u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x626102f6u,0x0u,0x0u,0x0u,0x666102fcu,0x73720372u,0x666502f4u,0x10002f5u,0x80000031u,0x646302f7u,0x6a6902f8u,0x6f6e02f9u,0x686702fau,0x10002fbu,0x80000032u,0x75740301u,0x0u,0x0u,0x0u,0x7372036au,0x76750302u,0x74730303u,0x44430304u,0x62610305u,0x6d6c0306u,0x6d6c0307u,0x63620308u,0x62610309u,0x6463030au,0x6c6b030bu,0x5600030cu,0x80000033u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x74730362u,0x66650363u,0x73720364u,0x45440365u,0x62610366u,0x75740367u,0x62610368u,0x1000369u,0x80000034u,0x6665036bu,0x706f036cu,0x4e4d036du,0x706f036eu,0x6564036fu,0x66650370u,0x1000371u,0x80000035u,0x67660373u,0x62610374u,0x64630375u,0x66650376u,0x1000377u,0x80000036u,0x62610379u,0x6f6e037au,0x7473037bu,0x6766037cu,0x706f037du,0x7372037eu,0x6e6d037fu,0x1000380u,0x80000037u,0x1000382u,0x80000038u,0x6d6c0392u,0x0u,0x0u,0x0u,0x7372039bu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6d6c03ebu,0x76750393u,0x66650394u,0x53520395u,0x62610396u,0x6f6e0397u,0x68670398u,0x66650399u,0x100039au,0x80000039u,0x7574039cu,0x6665039du,0x7978039eu,0x2f2e039fu,0x736103a0u,0x757403b2u,0x0u,0x706103c2u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x706f03d7u,0x0u,0x706f03ddu,0x0u,0x626103e5u,0x757403b3u,0x737203b4u,0x6a6903b5u,0x636203b6u,0x767503b7u,0x757403b8u,0x666503b9u,0x343003bau,0x10003beu,0x10003bfu,0x10003c0u,0x10003c1u,0x8000003au,0x8000003bu,0x8000003cu,0x8000003du,0x717003d1u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6d6c03d3u,0x10003d2u,0x8000003eu,0x706f03d4u,0x737203d5u,0x10003d6u,0x8000003fu,0x737203d8u,0x6e6d03d9u,0x626103dau,0x6d6c03dbu,0x10003dcu,0x80000040u,0x747303deu,0x6a6903dfu,0x757403e0u,0x6a6903e1u,0x706f03e2u,0x6f6e03e3u,0x10003e4u,0x80000041u,0x656403e6u,0x6a6903e7u,0x767503e8u,0x747303e9u,0x10003eau,0x80000042u,0x767503ecu,0x6e6d03edu,0x666503eeu,0x10003efu,0x80000043u,0x737203f4u,0x0u,0x0u,0x626103f8u,0x6d6c03f5u,0x656403f6u,0x10003f7u,0x80000044u,0x717003f9u,0x4e4d03fau,0x706f03fbu,0x656403fcu,0x666503fdu,0x343103feu,0x1000401u,0x1000402u,0x1000403u,0x80000045u,0x80000046u,0x80000047u};
+   static const uint32_t table[] = {0x74700017u,0x62610031u,0x70610040u,0x6a610094u,0x0u,0x706100b8u,0x73650102u,0x0u,0x736d011bu,0x0u,0x0u,0x6a6101eeu,0x62610200u,0x62610208u,0x7666020cu,0x7369027cu,0x0u,0x666102e4u,0x766902f5u,0x73720387u,0x71700390u,0x70610392u,0x736f03ffu,0x6665001bu,0x0u,0x73720028u,0x7170002cu,0x7372001cu,0x7574001du,0x7675001eu,0x7372001fu,0x66650020u,0x53520021u,0x62610022u,0x65640023u,0x6a690024u,0x76750025u,0x74730026u,0x1000027u,0x80000000u,0x62610029u,0x7a79002au,0x100002bu,0x80000001u,0x6665002du,0x6463002eu,0x7574002fu,0x1000030u,0x80000002u,0x64630032u,0x6c6b0033u,0x68670034u,0x73720035u,0x706f0036u,0x76750037u,0x6f6e0038u,0x65640039u,0x4443003au,0x706f003bu,0x6d6c003cu,0x706f003du,0x7372003eu,0x100003fu,0x80000003u,0x716d004fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6d6c0059u,0x66650053u,0x0u,0x0u,0x74730057u,0x73720054u,0x62610055u,0x1000056u,0x80000004u,0x1000058u,0x80000005u,0x706f005au,0x7372005bu,0x2f00005cu,0x80000006u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x7170008bu,0x706f008cu,0x7473008du,0x6a69008eu,0x7574008fu,0x6a690090u,0x706f0091u,0x6f6e0092u,0x1000093u,0x80000007u,0x7574009du,0x0u,0x0u,0x0u,0x716e00a0u,0x0u,0x0u,0x0u,0x737200b0u,0x6261009eu,0x100009fu,0x80000008u,0x747300a3u,0x0u,0x757400adu,0x6a6900a4u,0x757400a5u,0x7a7900a6u,0x545300a7u,0x646300a8u,0x626100a9u,0x6d6c00aau,0x666500abu,0x10000acu,0x80000009u,0x696800aeu,0x10000afu,0x8000000au,0x666500b1u,0x646300b2u,0x757400b3u,0x6a6900b4u,0x706f00b5u,0x6f6e00b6u,0x10000b7u,0x8000000bu,0x6d6c00c7u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6d6500d2u,0x0u,0x0u,0x0u,0x0u,0x0u,0x776300e1u,0x6d6c00c8u,0x706f00c9u,0x676600cau,0x676600cbu,0x424100ccu,0x6f6e00cdu,0x686700ceu,0x6d6c00cfu,0x666500d0u,0x10000d1u,0x8000000cu,0x6d6c00dau,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x757400ddu,0x656400dbu,0x10000dcu,0x8000000du,0x666500deu,0x737200dfu,0x10000e0u,0x8000000eu,0x767500f5u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x7a790100u,0x747300f6u,0x454400f7u,0x6a6900f8u,0x747300f9u,0x757400fau,0x626100fbu,0x6f6e00fcu,0x646300fdu,0x666500feu,0x10000ffu,0x8000000fu,0x1000101u,0x80000010u,0x706f0110u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x706f0117u,0x6e6d0111u,0x66650112u,0x75740113u,0x73720114u,0x7a790115u,0x1000116u,0x80000011u,0x76750118u,0x71700119u,0x100011au,0x80000012u,0x62610121u,0x7541017du,0x0u,0x0u,0x0u,0x737201e6u,0x68670122u,0x66650123u,0x53000124u,0x80000013u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x66650177u,0x68670178u,0x6a690179u,0x706f017au,0x6f6e017bu,0x100017cu,0x80000014u,0x757401b1u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x737201bau,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x757401c3u,0x666501c9u,0x757401b2u,0x737201b3u,0x6a6901b4u,0x636201b5u,0x767501b6u,0x757401b7u,0x666501b8u,0x10001b9u,0x80000015u,0x626101bbu,0x6f6e01bcu,0x747301bdu,0x676601beu,0x706f01bfu,0x737201c0u,0x6e6d01c1u,0x10001c2u,0x80000016u,0x626101c4u,0x6f6e01c5u,0x646301c6u,0x666501c7u,0x10001c8u,0x80000017u,0x736e01cau,0x747301cfu,0x0u,0x0u,0x0u,0x717001d4u,0x6a6901d0u,0x757401d1u,0x7a7901d2u,0x10001d3u,0x80000018u,0x767501d5u,0x717001d6u,0x6a6901d7u,0x6d6c01d8u,0x6d6c01d9u,0x626101dau,0x737201dbu,0x7a7901dcu,0x454401ddu,0x6a6901deu,0x747301dfu,0x757401e0u,0x626101e1u,0x6f6e01e2u,0x646301e3u,0x666501e4u,0x10001e5u,0x80000019u,0x6a6901e7u,0x656401e8u,0x626101e9u,0x6f6e01eau,0x646301ebu,0x666501ecu,0x10001edu,0x8000001au,0x7a7901f7u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x686701fcu,0x706f01f8u,0x767501f9u,0x757401fau,0x10001fbu,0x8000001bu,0x696801fdu,0x757401feu,0x10001ffu,0x8000001cu,0x75740201u,0x66650202u,0x73720203u,0x6a690204u,0x62610205u,0x6d6c0206u,0x1000207u,0x8000001du,0x6e6d0209u,0x6665020au,0x100020bu,0x8000001eu,0x6766021cu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x66610221u,0x0u,0x6a69026cu,0x0u,0x0u,0x75740271u,0x7473021du,0x6665021eu,0x7574021fu,0x1000220u,0x8000001fu,0x64630226u,0x0u,0x0u,0x0u,0x6f6e0262u,0x6a690227u,0x75740228u,0x7a790229u,0x2f00022au,0x80000020u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x71700259u,0x706f025au,0x7473025bu,0x6a69025cu,0x7574025du,0x6a69025eu,0x706f025fu,0x6f6e0260u,0x1000261u,0x80000021u,0x6a690263u,0x6f6e0264u,0x68670265u,0x42410266u,0x6f6e0267u,0x68670268u,0x6d6c0269u,0x6665026au,0x100026bu,0x80000022u,0x6867026du,0x6a69026eu,0x6f6e026fu,0x1000270u,0x80000023u,0x55540272u,0x73720273u,0x62610274u,0x6f6e0275u,0x74730276u,0x67660277u,0x706f0278u,0x73720279u,0x6e6d027au,0x100027bu,0x80000024u,0x79780286u,0x0u,0x0u,0x0u,0x0u,0x0u,0x78730291u,0x0u,0x0u,0x6a69029fu,0x66650287u,0x6d6c0288u,0x54530289u,0x6261028au,0x6e6d028bu,0x7170028cu,0x6d6c028du,0x6665028eu,0x7473028fu,0x1000290u,0x80000025u,0x6a690296u,0x0u,0x0u,0x0u,0x6665029cu,0x75740297u,0x6a690298u,0x706f0299u,0x6f6e029au,0x100029bu,0x80000026u,0x7372029du,0x100029eu,0x80000027u,0x6e6d02a0u,0x6a6902a1u,0x757402a2u,0x6a6902a3u,0x777602a4u,0x666502a5u,0x2f2e02a6u,0x736102a7u,0x757402b9u,0x0u,0x706f02c9u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6f6402ceu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x626102deu,0x757402bau,0x737202bbu,0x6a6902bcu,0x636202bdu,0x767502beu,0x757402bfu,0x666502c0u,0x343002c1u,0x10002c5u,0x10002c6u,0x10002c7u,0x10002c8u,0x80000028u,0x80000029u,0x8000002au,0x8000002bu,0x6d6c02cau,0x706f02cbu,0x737202ccu,0x10002cdu,0x8000002cu,0x10002d9u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x656402dau,0x8000002du,0x666502dbu,0x797802dcu,0x10002ddu,0x8000002eu,0x656402dfu,0x6a6902e0u,0x767502e1u,0x747302e2u,0x10002e3u,0x8000002fu,0x656402e9u,0x0u,0x0u,0x0u,0x6f6e02eeu,0x6a6902eau,0x767502ebu,0x747302ecu,0x10002edu,0x80000030u,0x656402efu,0x666502f0u,0x737202f1u,0x666502f2u,0x737202f3u,0x10002f4u,0x80000031u,0x7b7a0302u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x62610305u,0x0u,0x0u,0x0u,0x6661030bu,0x73720381u,0x66650303u,0x1000304u,0x80000032u,0x64630306u,0x6a690307u,0x6f6e0308u,0x68670309u,0x100030au,0x80000033u,0x75740310u,0x0u,0x0u,0x0u,0x73720379u,0x76750311u,0x74730312u,0x44430313u,0x62610314u,0x6d6c0315u,0x6d6c0316u,0x63620317u,0x62610318u,0x64630319u,0x6c6b031au,0x5600031bu,0x80000034u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x74730371u,0x66650372u,0x73720373u,0x45440374u,0x62610375u,0x75740376u,0x62610377u,0x1000378u,0x80000035u,0x6665037au,0x706f037bu,0x4e4d037cu,0x706f037du,0x6564037eu,0x6665037fu,0x1000380u,0x80000036u,0x67660382u,0x62610383u,0x64630384u,0x66650385u,0x1000386u,0x80000037u,0x62610388u,0x6f6e0389u,0x7473038au,0x6766038bu,0x706f038cu,0x7372038du,0x6e6d038eu,0x100038fu,0x80000038u,0x1000391u,0x80000039u,0x6d6c03a1u,0x0u,0x0u,0x0u,0x737203aau,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6d6c03fau,0x767503a2u,0x666503a3u,0x535203a4u,0x626103a5u,0x6f6e03a6u,0x686703a7u,0x666503a8u,0x10003a9u,0x8000003au,0x757403abu,0x666503acu,0x797803adu,0x2f2e03aeu,0x736103afu,0x757403c1u,0x0u,0x706103d1u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x706f03e6u,0x0u,0x706f03ecu,0x0u,0x626103f4u,0x757403c2u,0x737203c3u,0x6a6903c4u,0x636203c5u,0x767503c6u,0x757403c7u,0x666503c8u,0x343003c9u,0x10003cdu,0x10003ceu,0x10003cfu,0x10003d0u,0x8000003bu,0x8000003cu,0x8000003du,0x8000003eu,0x717003e0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6d6c03e2u,0x10003e1u,0x8000003fu,0x706f03e3u,0x737203e4u,0x10003e5u,0x80000040u,0x737203e7u,0x6e6d03e8u,0x626103e9u,0x6d6c03eau,0x10003ebu,0x80000041u,0x747303edu,0x6a6903eeu,0x757403efu,0x6a6903f0u,0x706f03f1u,0x6f6e03f2u,0x10003f3u,0x80000042u,0x656403f5u,0x6a6903f6u,0x767503f7u,0x747303f8u,0x10003f9u,0x80000043u,0x767503fbu,0x6e6d03fcu,0x666503fdu,0x10003feu,0x80000044u,0x73720403u,0x0u,0x0u,0x62610407u,0x6d6c0404u,0x65640405u,0x1000406u,0x80000045u,0x71700408u,0x4e4d0409u,0x706f040au,0x6564040bu,0x6665040cu,0x3431040du,0x1000410u,0x1000411u,0x1000412u,0x80000046u,0x80000047u,0x80000048u};
    uint32_t cur = 0x78610000u;
    for(int i = 0;cur!=0;++i) {
       uint32_t idx = cur&0xFFFFu;
@@ -53,6 +53,8 @@ static int param_hash(const char *str) {
 }
 const char ** query_extensions() {
    static const char *features[] = {
+      "ANARI_example_device",
+      "ANARI_CORE",
       "ANARI_KHR_CAMERA_OMNIDIRECTIONAL",
       "ANARI_KHR_CAMERA_ORTHOGRAPHIC",
       "ANARI_KHR_CAMERA_PERSPECTIVE",
@@ -74,6 +76,8 @@ const char ** query_extensions() {
       "ANARI_KHR_SAMPLER_TRANSFORM",
       "ANARI_KHR_SPATIAL_FIELD_STRUCTURED_REGULAR",
       "ANARI_KHR_VOLUME_SCIVIS",
+      "ANARI_CORE_API",
+      "ANARI_SPEC_ALL",
       "ANARI_KHR_FRAME_CONTINUATION",
       0
    };
@@ -297,7 +301,7 @@ static const ANARIParameter * ANARI_SAMPLER_params(const char *subtype) {
       }
       case 16:
       {
-         static const ANARIParameter primitive_params[] = {{"name", ANARI_STRING}, {"array", ANARI_ARRAY1D}, {0, ANARI_UNKNOWN}};
+         static const ANARIParameter primitive_params[] = {{"name", ANARI_STRING}, {"array", ANARI_ARRAY1D}, {"offset", ANARI_UINT64}, {0, ANARI_UNKNOWN}};
          return primitive_params;
       }
       case 24:
@@ -390,7 +394,7 @@ const ANARIParameter * query_params(ANARIDataType type, const char *subtype) {
       }
       case ANARI_INSTANCE:
       {
-         static const ANARIParameter ANARI_INSTANCE_params[] = {{"name", ANARI_STRING}, {"transform", ANARI_FLOAT32_MAT3x4}, {"group", ANARI_GROUP}, {0, ANARI_UNKNOWN}};
+         static const ANARIParameter ANARI_INSTANCE_params[] = {{"name", ANARI_STRING}, {"transform", ANARI_FLOAT32_MAT4}, {"group", ANARI_GROUP}, {0, ANARI_UNKNOWN}};
          return ANARI_INSTANCE_params;
       }
       case ANARI_WORLD:
@@ -411,7 +415,7 @@ const ANARIParameter * query_params(ANARIDataType type, const char *subtype) {
    }
 }
 static int info_hash(const char *str) {
-   static const uint32_t table[] = {0x66650013u,0x6d6c0030u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6a61003bu,0x0u,0x0u,0x0u,0x0u,0x66650050u,0x0u,0x0u,0x0u,0x62610058u,0x74660014u,0x62610022u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x64630027u,0x76750023u,0x6d6c0024u,0x75740025u,0x1000026u,0x80000001u,0x73720028u,0x6a690029u,0x7170002au,0x7574002bu,0x6a69002cu,0x706f002du,0x6f6e002eu,0x100002fu,0x80000004u,0x66650031u,0x6e6d0032u,0x66650033u,0x6f6e0034u,0x75740035u,0x55540036u,0x7a790037u,0x71700038u,0x66650039u,0x100003au,0x80000005u,0x79780044u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6f6e004au,0x6a690045u,0x6e6d0046u,0x76750047u,0x6e6d0048u,0x1000049u,0x80000003u,0x6a69004bu,0x6e6d004cu,0x7675004du,0x6e6d004eu,0x100004fu,0x80000002u,0x72710051u,0x76750052u,0x6a690053u,0x73720054u,0x66650055u,0x65640056u,0x1000057u,0x80000000u,0x6d6c0059u,0x7675005au,0x6665005bu,0x7473005cu,0x100005du,0x80000006u};
+   static const uint32_t table[] = {0x66650013u,0x6d6c0030u,0x6665003bu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6a610042u,0x0u,0x0u,0x0u,0x0u,0x66650057u,0x0u,0x0u,0x0u,0x6261005fu,0x74660014u,0x62610022u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x64630027u,0x76750023u,0x6d6c0024u,0x75740025u,0x1000026u,0x80000001u,0x73720028u,0x6a690029u,0x7170002au,0x7574002bu,0x6a69002cu,0x706f002du,0x6f6e002eu,0x100002fu,0x80000004u,0x66650031u,0x6e6d0032u,0x66650033u,0x6f6e0034u,0x75740035u,0x55540036u,0x7a790037u,0x71700038u,0x66650039u,0x100003au,0x80000005u,0x6261003cu,0x7574003du,0x7675003eu,0x7372003fu,0x66650040u,0x1000041u,0x80000007u,0x7978004bu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6f6e0051u,0x6a69004cu,0x6e6d004du,0x7675004eu,0x6e6d004fu,0x1000050u,0x80000003u,0x6a690052u,0x6e6d0053u,0x76750054u,0x6e6d0055u,0x1000056u,0x80000002u,0x72710058u,0x76750059u,0x6a69005au,0x7372005bu,0x6665005cu,0x6564005du,0x100005eu,0x80000000u,0x6d6c0060u,0x76750061u,0x66650062u,0x74730063u,0x1000064u,0x80000006u};
    uint32_t cur = 0x77640000u;
    for(int i = 0;cur!=0;++i) {
       uint32_t idx = cur&0xFFFFu;
@@ -432,8 +436,8 @@ static int info_hash(const char *str) {
    }
    return -1;
 }
-static const int32_t anari_true = 1;static const int32_t anari_false = 0;static const void * ANARI_RENDERER_default_backgroundColor_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const int32_t anari_true = 1;static const int32_t anari_false = 0;static const void * ANARI_RENDERER_default_backgroundColor_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -449,14 +453,22 @@ static const int32_t anari_true = 1;static const int32_t anari_false = 0;static 
          }
       case 4: // description
          {
-            const char *description = "background color and alpha (RGBA)";
+            static const char *description = "background color and alpha (RGBA)";
             return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "example_device";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 0;
+            return &value;
          }
        default: return nullptr;
    }
 }
-static const void * ANARI_RENDERER_default_pixelSamples_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_RENDERER_default_pixelSamples_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -472,28 +484,49 @@ static const void * ANARI_RENDERER_default_pixelSamples_info(ANARIDataType param
          }
       case 4: // description
          {
-            const char *description = "samples per pixel";
+            static const char *description = "samples per pixel";
             return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "example_device";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 0;
+            return &value;
          }
        default: return nullptr;
    }
 }
-static const void * ANARI_RENDERER_default_name_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_RENDERER_default_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "optional object name";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "CORE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 1;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_RENDERER_default_param_info(const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_RENDERER_default_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
       case 3:
          return ANARI_RENDERER_default_backgroundColor_info(paramType, infoName, infoType);
-      case 36:
+      case 37:
          return ANARI_RENDERER_default_pixelSamples_info(paramType, infoName, infoType);
       case 30:
          return ANARI_RENDERER_default_name_info(paramType, infoName, infoType);
@@ -501,19 +534,32 @@ static const void * ANARI_RENDERER_default_param_info(const char *paramName, ANA
          return nullptr;
    }
 }
-static const void * ANARI_RENDERER_scivis_name_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_RENDERER_scivis_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "optional object name";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "example_device";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 0;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_RENDERER_scivis_backgroundColor_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_RENDERER_scivis_backgroundColor_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -529,14 +575,22 @@ static const void * ANARI_RENDERER_scivis_backgroundColor_info(ANARIDataType par
          }
       case 4: // description
          {
-            const char *description = "background color and alpha (RGBA)";
+            static const char *description = "background color and alpha (RGBA)";
             return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "example_device";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 0;
+            return &value;
          }
        default: return nullptr;
    }
 }
-static const void * ANARI_RENDERER_scivis_pixelSamples_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_RENDERER_scivis_pixelSamples_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -552,37 +606,58 @@ static const void * ANARI_RENDERER_scivis_pixelSamples_info(ANARIDataType paramT
          }
       case 4: // description
          {
-            const char *description = "samples per pixel";
+            static const char *description = "samples per pixel";
             return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "example_device";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 0;
+            return &value;
          }
        default: return nullptr;
    }
 }
-static const void * ANARI_RENDERER_scivis_param_info(const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_RENDERER_scivis_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
       case 30:
          return ANARI_RENDERER_scivis_name_info(paramType, infoName, infoType);
       case 3:
          return ANARI_RENDERER_scivis_backgroundColor_info(paramType, infoName, infoType);
-      case 36:
+      case 37:
          return ANARI_RENDERER_scivis_pixelSamples_info(paramType, infoName, infoType);
       default:
          return nullptr;
    }
 }
-static const void * ANARI_RENDERER_ao_name_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_RENDERER_ao_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "optional object name";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "example_device";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 0;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_RENDERER_ao_backgroundColor_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_RENDERER_ao_backgroundColor_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -598,14 +673,22 @@ static const void * ANARI_RENDERER_ao_backgroundColor_info(ANARIDataType paramTy
          }
       case 4: // description
          {
-            const char *description = "background color and alpha (RGBA)";
+            static const char *description = "background color and alpha (RGBA)";
             return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "example_device";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 0;
+            return &value;
          }
        default: return nullptr;
    }
 }
-static const void * ANARI_RENDERER_ao_pixelSamples_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_RENDERER_ao_pixelSamples_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -621,37 +704,58 @@ static const void * ANARI_RENDERER_ao_pixelSamples_info(ANARIDataType paramType,
          }
       case 4: // description
          {
-            const char *description = "samples per pixel";
+            static const char *description = "samples per pixel";
             return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "example_device";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 0;
+            return &value;
          }
        default: return nullptr;
    }
 }
-static const void * ANARI_RENDERER_ao_param_info(const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_RENDERER_ao_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
       case 30:
          return ANARI_RENDERER_ao_name_info(paramType, infoName, infoType);
       case 3:
          return ANARI_RENDERER_ao_backgroundColor_info(paramType, infoName, infoType);
-      case 36:
+      case 37:
          return ANARI_RENDERER_ao_pixelSamples_info(paramType, infoName, infoType);
       default:
          return nullptr;
    }
 }
-static const void * ANARI_RENDERER_pathtracer_name_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_RENDERER_pathtracer_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "optional object name";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "example_device";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 0;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_RENDERER_pathtracer_backgroundColor_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_RENDERER_pathtracer_backgroundColor_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -667,14 +771,22 @@ static const void * ANARI_RENDERER_pathtracer_backgroundColor_info(ANARIDataType
          }
       case 4: // description
          {
-            const char *description = "background color and alpha (RGBA)";
+            static const char *description = "background color and alpha (RGBA)";
             return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "example_device";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 0;
+            return &value;
          }
        default: return nullptr;
    }
 }
-static const void * ANARI_RENDERER_pathtracer_pixelSamples_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_RENDERER_pathtracer_pixelSamples_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -690,37 +802,58 @@ static const void * ANARI_RENDERER_pathtracer_pixelSamples_info(ANARIDataType pa
          }
       case 4: // description
          {
-            const char *description = "samples per pixel";
+            static const char *description = "samples per pixel";
             return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "example_device";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 0;
+            return &value;
          }
        default: return nullptr;
    }
 }
-static const void * ANARI_RENDERER_pathtracer_param_info(const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_RENDERER_pathtracer_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
       case 30:
          return ANARI_RENDERER_pathtracer_name_info(paramType, infoName, infoType);
       case 3:
          return ANARI_RENDERER_pathtracer_backgroundColor_info(paramType, infoName, infoType);
-      case 36:
+      case 37:
          return ANARI_RENDERER_pathtracer_pixelSamples_info(paramType, infoName, infoType);
       default:
          return nullptr;
    }
 }
-static const void * ANARI_RENDERER_debug_name_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_RENDERER_debug_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "optional object name";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "example_device";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 0;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_RENDERER_debug_backgroundColor_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_RENDERER_debug_backgroundColor_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -736,14 +869,22 @@ static const void * ANARI_RENDERER_debug_backgroundColor_info(ANARIDataType para
          }
       case 4: // description
          {
-            const char *description = "background color and alpha (RGBA)";
+            static const char *description = "background color and alpha (RGBA)";
             return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "example_device";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 0;
+            return &value;
          }
        default: return nullptr;
    }
 }
-static const void * ANARI_RENDERER_debug_pixelSamples_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_RENDERER_debug_pixelSamples_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -759,37 +900,58 @@ static const void * ANARI_RENDERER_debug_pixelSamples_info(ANARIDataType paramTy
          }
       case 4: // description
          {
-            const char *description = "samples per pixel";
+            static const char *description = "samples per pixel";
             return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "example_device";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 0;
+            return &value;
          }
        default: return nullptr;
    }
 }
-static const void * ANARI_RENDERER_debug_param_info(const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_RENDERER_debug_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
       case 30:
          return ANARI_RENDERER_debug_name_info(paramType, infoName, infoType);
       case 3:
          return ANARI_RENDERER_debug_backgroundColor_info(paramType, infoName, infoType);
-      case 36:
+      case 37:
          return ANARI_RENDERER_debug_pixelSamples_info(paramType, infoName, infoType);
       default:
          return nullptr;
    }
 }
-static const void * ANARI_RENDERER_raycast_name_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_RENDERER_raycast_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "optional object name";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "example_device";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 0;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_RENDERER_raycast_backgroundColor_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_RENDERER_raycast_backgroundColor_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -805,14 +967,22 @@ static const void * ANARI_RENDERER_raycast_backgroundColor_info(ANARIDataType pa
          }
       case 4: // description
          {
-            const char *description = "background color and alpha (RGBA)";
+            static const char *description = "background color and alpha (RGBA)";
             return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "example_device";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 0;
+            return &value;
          }
        default: return nullptr;
    }
 }
-static const void * ANARI_RENDERER_raycast_pixelSamples_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_RENDERER_raycast_pixelSamples_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -828,37 +998,58 @@ static const void * ANARI_RENDERER_raycast_pixelSamples_info(ANARIDataType param
          }
       case 4: // description
          {
-            const char *description = "samples per pixel";
+            static const char *description = "samples per pixel";
             return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "example_device";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 0;
+            return &value;
          }
        default: return nullptr;
    }
 }
-static const void * ANARI_RENDERER_raycast_param_info(const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_RENDERER_raycast_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
       case 30:
          return ANARI_RENDERER_raycast_name_info(paramType, infoName, infoType);
       case 3:
          return ANARI_RENDERER_raycast_backgroundColor_info(paramType, infoName, infoType);
-      case 36:
+      case 37:
          return ANARI_RENDERER_raycast_pixelSamples_info(paramType, infoName, infoType);
       default:
          return nullptr;
    }
 }
-static const void * ANARI_RENDERER_rayDir_name_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_RENDERER_rayDir_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "optional object name";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "example_device";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 0;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_RENDERER_rayDir_backgroundColor_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_RENDERER_rayDir_backgroundColor_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -874,14 +1065,22 @@ static const void * ANARI_RENDERER_rayDir_backgroundColor_info(ANARIDataType par
          }
       case 4: // description
          {
-            const char *description = "background color and alpha (RGBA)";
+            static const char *description = "background color and alpha (RGBA)";
             return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "example_device";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 0;
+            return &value;
          }
        default: return nullptr;
    }
 }
-static const void * ANARI_RENDERER_rayDir_pixelSamples_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_RENDERER_rayDir_pixelSamples_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -897,81 +1096,141 @@ static const void * ANARI_RENDERER_rayDir_pixelSamples_info(ANARIDataType paramT
          }
       case 4: // description
          {
-            const char *description = "samples per pixel";
+            static const char *description = "samples per pixel";
             return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "example_device";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 0;
+            return &value;
          }
        default: return nullptr;
    }
 }
-static const void * ANARI_RENDERER_rayDir_param_info(const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_RENDERER_rayDir_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
       case 30:
          return ANARI_RENDERER_rayDir_name_info(paramType, infoName, infoType);
       case 3:
          return ANARI_RENDERER_rayDir_backgroundColor_info(paramType, infoName, infoType);
-      case 36:
+      case 37:
          return ANARI_RENDERER_rayDir_pixelSamples_info(paramType, infoName, infoType);
       default:
          return nullptr;
    }
 }
-static const void * ANARI_DEVICE_name_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_DEVICE_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "optional object name";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "CORE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 1;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_DEVICE_statusCallback_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_DEVICE_statusCallback_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "callback used to report information to the application";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "CORE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 1;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_DEVICE_statusCallbackUserData_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_DEVICE_statusCallbackUserData_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "optional pointer passed as the first argument of the status callback";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "CORE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 1;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_DEVICE_param_info(const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_DEVICE_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
       case 30:
          return ANARI_DEVICE_name_info(paramType, infoName, infoType);
-      case 51:
-         return ANARI_DEVICE_statusCallback_info(paramType, infoName, infoType);
       case 52:
+         return ANARI_DEVICE_statusCallback_info(paramType, infoName, infoType);
+      case 53:
          return ANARI_DEVICE_statusCallbackUserData_info(paramType, infoName, infoType);
       default:
          return nullptr;
    }
 }
-static const void * ANARI_ARRAY1D_name_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_ARRAY1D_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "optional object name";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "CORE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 1;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_ARRAY1D_param_info(const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_ARRAY1D_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
       case 30:
          return ANARI_ARRAY1D_name_info(paramType, infoName, infoType);
@@ -979,18 +1238,31 @@ static const void * ANARI_ARRAY1D_param_info(const char *paramName, ANARIDataTyp
          return nullptr;
    }
 }
-static const void * ANARI_ARRAY2D_name_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_ARRAY2D_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "optional object name";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "CORE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 1;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_ARRAY2D_param_info(const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_ARRAY2D_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
       case 30:
          return ANARI_ARRAY2D_name_info(paramType, infoName, infoType);
@@ -998,18 +1270,31 @@ static const void * ANARI_ARRAY2D_param_info(const char *paramName, ANARIDataTyp
          return nullptr;
    }
 }
-static const void * ANARI_ARRAY3D_name_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_ARRAY3D_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "optional object name";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "CORE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 1;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_ARRAY3D_param_info(const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_ARRAY3D_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
       case 30:
          return ANARI_ARRAY3D_name_info(paramType, infoName, infoType);
@@ -1017,68 +1302,138 @@ static const void * ANARI_ARRAY3D_param_info(const char *paramName, ANARIDataTyp
          return nullptr;
    }
 }
-static const void * ANARI_FRAME_name_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_FRAME_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "optional object name";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "CORE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 1;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_FRAME_world_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_FRAME_world_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_true;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "world to be rendererd";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "CORE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 1;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_FRAME_renderer_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_FRAME_renderer_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_true;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "renderer which renders the frame";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "CORE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 1;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_FRAME_camera_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_FRAME_camera_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_true;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "camera used to render the worlde";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "CORE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 1;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_FRAME_size_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_FRAME_size_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_true;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "size of the frame in pixels (width, height)";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "CORE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 1;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_FRAME_color_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_FRAME_color_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
+         }
+      case 4: // description
+         {
+            static const char *description = "enables mapping the color channel as the type specified";
+            return description;
          }
       case 6: // values
          if(paramType == ANARI_STRING) {
@@ -1087,16 +1442,29 @@ static const void * ANARI_FRAME_color_info(ANARIDataType paramType, const char *
          } else {
             return nullptr;
          }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "CORE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 1;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_FRAME_depth_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_FRAME_depth_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
+         }
+      case 4: // description
+         {
+            static const char *description = "enables mapping the color channel as the type specified";
+            return description;
          }
       case 6: // values
          if(paramType == ANARI_STRING) {
@@ -1105,20 +1473,28 @@ static const void * ANARI_FRAME_depth_info(ANARIDataType paramType, const char *
          } else {
             return nullptr;
          }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "CORE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 1;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_FRAME_param_info(const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_FRAME_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
       case 30:
          return ANARI_FRAME_name_info(paramType, infoName, infoType);
-      case 68:
+      case 69:
          return ANARI_FRAME_world_info(paramType, infoName, infoType);
-      case 48:
+      case 49:
          return ANARI_FRAME_renderer_info(paramType, infoName, infoType);
       case 4:
          return ANARI_FRAME_camera_info(paramType, infoName, infoType);
-      case 49:
+      case 50:
          return ANARI_FRAME_size_info(paramType, infoName, infoType);
       case 6:
          return ANARI_FRAME_color_info(paramType, infoName, infoType);
@@ -1128,57 +1504,130 @@ static const void * ANARI_FRAME_param_info(const char *paramName, ANARIDataType 
          return nullptr;
    }
 }
-static const void * ANARI_GROUP_name_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GROUP_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "optional object name";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "CORE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 1;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GROUP_surface_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GROUP_surface_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "array of surface objects";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_SURFACE, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "CORE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 1;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GROUP_volume_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GROUP_volume_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "array of volume objects";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_VOLUME, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "CORE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 1;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GROUP_light_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GROUP_light_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "array of light objects";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_LIGHT, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "CORE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 1;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GROUP_param_info(const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_GROUP_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
       case 30:
          return ANARI_GROUP_name_info(paramType, infoName, infoType);
-      case 54:
+      case 55:
          return ANARI_GROUP_surface_info(paramType, infoName, infoType);
-      case 67:
+      case 68:
          return ANARI_GROUP_volume_info(paramType, infoName, infoType);
       case 28:
          return ANARI_GROUP_light_info(paramType, infoName, infoType);
@@ -1186,19 +1635,32 @@ static const void * ANARI_GROUP_param_info(const char *paramName, ANARIDataType 
          return nullptr;
    }
 }
-static const void * ANARI_INSTANCE_name_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_INSTANCE_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "optional object name";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "CORE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 1;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_INSTANCE_transform_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_INSTANCE_transform_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -1206,31 +1668,57 @@ static const void * ANARI_INSTANCE_transform_info(ANARIDataType paramType, const
             return nullptr;
          }
       case 1: // default
-         if(paramType == ANARI_FLOAT32_MAT3x4 && infoType == ANARI_FLOAT32_MAT3x4) {
-            static const float default_value[12] = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0};
+         if(paramType == ANARI_FLOAT32_MAT4 && infoType == ANARI_FLOAT32_MAT4) {
+            static const float default_value[16] = {1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0};
             return default_value;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "transform applied to objects in the instance";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "CORE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 1;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_INSTANCE_group_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_INSTANCE_group_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_true;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "group object being instanced";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "CORE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 1;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_INSTANCE_param_info(const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_INSTANCE_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
       case 30:
          return ANARI_INSTANCE_name_info(paramType, infoName, infoType);
-      case 55:
+      case 56:
          return ANARI_INSTANCE_transform_info(paramType, infoName, infoType);
       case 18:
          return ANARI_INSTANCE_group_info(paramType, infoName, infoType);
@@ -1238,70 +1726,163 @@ static const void * ANARI_INSTANCE_param_info(const char *paramName, ANARIDataTy
          return nullptr;
    }
 }
-static const void * ANARI_WORLD_name_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_WORLD_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "optional object name";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "CORE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 1;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_WORLD_instance_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_WORLD_instance_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "array of instance objects in the world";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_INSTANCE, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "CORE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 1;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_WORLD_surface_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_WORLD_surface_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "array of non-instanced surface objects in the world";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_SURFACE, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "CORE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 1;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_WORLD_volume_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_WORLD_volume_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "array of non-instanced volume objects in the world";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_LIGHT, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "CORE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 1;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_WORLD_light_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_WORLD_light_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "array of non-instanced light objects in the world";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_LIGHT, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "CORE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 1;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_WORLD_param_info(const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_WORLD_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
       case 30:
          return ANARI_WORLD_name_info(paramType, infoName, infoType);
       case 23:
          return ANARI_WORLD_instance_info(paramType, infoName, infoType);
-      case 54:
+      case 55:
          return ANARI_WORLD_surface_info(paramType, infoName, infoType);
-      case 67:
+      case 68:
          return ANARI_WORLD_volume_info(paramType, infoName, infoType);
       case 28:
          return ANARI_WORLD_light_info(paramType, infoName, infoType);
@@ -1309,40 +1890,79 @@ static const void * ANARI_WORLD_param_info(const char *paramName, ANARIDataType 
          return nullptr;
    }
 }
-static const void * ANARI_SURFACE_name_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_SURFACE_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "optional object name";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "CORE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 1;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_SURFACE_geometry_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_SURFACE_geometry_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_true;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "geometry object defining the surface geometry";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "CORE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 1;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_SURFACE_material_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_SURFACE_material_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_true;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "material object defining the surface appearance";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "CORE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 1;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_SURFACE_param_info(const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_SURFACE_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
       case 30:
          return ANARI_SURFACE_name_info(paramType, infoName, infoType);
@@ -1354,19 +1974,32 @@ static const void * ANARI_SURFACE_param_info(const char *paramName, ANARIDataTyp
          return nullptr;
    }
 }
-static const void * ANARI_CAMERA_omnidirectional_name_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_CAMERA_omnidirectional_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "optional object name";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_CAMERA_OMNIDIRECTIONAL";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 2;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_CAMERA_omnidirectional_position_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_CAMERA_omnidirectional_position_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -1380,11 +2013,24 @@ static const void * ANARI_CAMERA_omnidirectional_position_info(ANARIDataType par
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "camera position";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_CAMERA_OMNIDIRECTIONAL";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 2;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_CAMERA_omnidirectional_direction_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_CAMERA_omnidirectional_direction_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -1398,11 +2044,24 @@ static const void * ANARI_CAMERA_omnidirectional_direction_info(ANARIDataType pa
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "main viewing direction";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_CAMERA_OMNIDIRECTIONAL";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 2;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_CAMERA_omnidirectional_up_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_CAMERA_omnidirectional_up_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -1416,11 +2075,24 @@ static const void * ANARI_CAMERA_omnidirectional_up_info(ANARIDataType paramType
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "camera up direction";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_CAMERA_OMNIDIRECTIONAL";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 2;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_CAMERA_omnidirectional_transform_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_CAMERA_omnidirectional_transform_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -1434,11 +2106,24 @@ static const void * ANARI_CAMERA_omnidirectional_transform_info(ANARIDataType pa
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "camera transform";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_CAMERA_OMNIDIRECTIONAL";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 2;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_CAMERA_omnidirectional_imageRegion_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_CAMERA_omnidirectional_imageRegion_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -1452,11 +2137,24 @@ static const void * ANARI_CAMERA_omnidirectional_imageRegion_info(ANARIDataType 
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "region mapped to the frame";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_CAMERA_OMNIDIRECTIONAL";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 2;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_CAMERA_omnidirectional_apertureRadius_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_CAMERA_omnidirectional_apertureRadius_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -1470,11 +2168,24 @@ static const void * ANARI_CAMERA_omnidirectional_apertureRadius_info(ANARIDataTy
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "aperture radius";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_CAMERA_OMNIDIRECTIONAL";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 2;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_CAMERA_omnidirectional_focusDistance_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_CAMERA_omnidirectional_focusDistance_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -1488,11 +2199,24 @@ static const void * ANARI_CAMERA_omnidirectional_focusDistance_info(ANARIDataTyp
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "focus distance";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_CAMERA_OMNIDIRECTIONAL";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 2;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_CAMERA_omnidirectional_stereoMode_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_CAMERA_omnidirectional_stereoMode_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -1506,6 +2230,11 @@ static const void * ANARI_CAMERA_omnidirectional_stereoMode_info(ANARIDataType p
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "stereo mode";
+            return description;
+         }
       case 6: // values
          if(paramType == ANARI_STRING) {
             static const char *values[] = {"none", "left", "right", "sideBySide", "topBottom", nullptr};
@@ -1513,11 +2242,19 @@ static const void * ANARI_CAMERA_omnidirectional_stereoMode_info(ANARIDataType p
          } else {
             return nullptr;
          }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_CAMERA_OMNIDIRECTIONAL";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 2;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_CAMERA_omnidirectional_interpupillaryDistance_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_CAMERA_omnidirectional_interpupillaryDistance_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -1531,11 +2268,24 @@ static const void * ANARI_CAMERA_omnidirectional_interpupillaryDistance_info(ANA
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "interpupillary distance for stereo rendering";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_CAMERA_OMNIDIRECTIONAL";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 2;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_CAMERA_omnidirectional_layout_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_CAMERA_omnidirectional_layout_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -1549,6 +2299,11 @@ static const void * ANARI_CAMERA_omnidirectional_layout_info(ANARIDataType param
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "pixel layout";
+            return description;
+         }
       case 6: // values
          if(paramType == ANARI_STRING) {
             static const char *values[] = {"equirectangular", nullptr};
@@ -1556,20 +2311,28 @@ static const void * ANARI_CAMERA_omnidirectional_layout_info(ANARIDataType param
          } else {
             return nullptr;
          }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_CAMERA_OMNIDIRECTIONAL";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 2;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_CAMERA_omnidirectional_param_info(const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_CAMERA_omnidirectional_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
       case 30:
          return ANARI_CAMERA_omnidirectional_name_info(paramType, infoName, infoType);
-      case 37:
+      case 38:
          return ANARI_CAMERA_omnidirectional_position_info(paramType, infoName, infoType);
       case 11:
          return ANARI_CAMERA_omnidirectional_direction_info(paramType, infoName, infoType);
-      case 56:
+      case 57:
          return ANARI_CAMERA_omnidirectional_up_info(paramType, infoName, infoType);
-      case 55:
+      case 56:
          return ANARI_CAMERA_omnidirectional_transform_info(paramType, infoName, infoType);
       case 20:
          return ANARI_CAMERA_omnidirectional_imageRegion_info(paramType, infoName, infoType);
@@ -1577,7 +2340,7 @@ static const void * ANARI_CAMERA_omnidirectional_param_info(const char *paramNam
          return ANARI_CAMERA_omnidirectional_apertureRadius_info(paramType, infoName, infoType);
       case 15:
          return ANARI_CAMERA_omnidirectional_focusDistance_info(paramType, infoName, infoType);
-      case 53:
+      case 54:
          return ANARI_CAMERA_omnidirectional_stereoMode_info(paramType, infoName, infoType);
       case 25:
          return ANARI_CAMERA_omnidirectional_interpupillaryDistance_info(paramType, infoName, infoType);
@@ -1587,19 +2350,32 @@ static const void * ANARI_CAMERA_omnidirectional_param_info(const char *paramNam
          return nullptr;
    }
 }
-static const void * ANARI_CAMERA_orthographic_name_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_CAMERA_orthographic_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "optional object name";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_CAMERA_ORTHOGRAPHIC";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 3;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_CAMERA_orthographic_position_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_CAMERA_orthographic_position_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -1613,11 +2389,24 @@ static const void * ANARI_CAMERA_orthographic_position_info(ANARIDataType paramT
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "camera position";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_CAMERA_ORTHOGRAPHIC";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 3;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_CAMERA_orthographic_direction_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_CAMERA_orthographic_direction_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -1631,11 +2420,24 @@ static const void * ANARI_CAMERA_orthographic_direction_info(ANARIDataType param
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "main viewing direction";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_CAMERA_ORTHOGRAPHIC";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 3;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_CAMERA_orthographic_up_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_CAMERA_orthographic_up_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -1649,11 +2451,24 @@ static const void * ANARI_CAMERA_orthographic_up_info(ANARIDataType paramType, c
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "camera up direction";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_CAMERA_ORTHOGRAPHIC";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 3;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_CAMERA_orthographic_transform_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_CAMERA_orthographic_transform_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -1667,11 +2482,24 @@ static const void * ANARI_CAMERA_orthographic_transform_info(ANARIDataType param
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "camera transform";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_CAMERA_ORTHOGRAPHIC";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 3;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_CAMERA_orthographic_imageRegion_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_CAMERA_orthographic_imageRegion_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -1685,11 +2513,24 @@ static const void * ANARI_CAMERA_orthographic_imageRegion_info(ANARIDataType par
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "region mapped to the frame";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_CAMERA_ORTHOGRAPHIC";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 3;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_CAMERA_orthographic_apertureRadius_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_CAMERA_orthographic_apertureRadius_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -1703,11 +2544,24 @@ static const void * ANARI_CAMERA_orthographic_apertureRadius_info(ANARIDataType 
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "aperture radius";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_CAMERA_ORTHOGRAPHIC";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 3;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_CAMERA_orthographic_focusDistance_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_CAMERA_orthographic_focusDistance_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -1721,11 +2575,24 @@ static const void * ANARI_CAMERA_orthographic_focusDistance_info(ANARIDataType p
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "focus distance";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_CAMERA_ORTHOGRAPHIC";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 3;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_CAMERA_orthographic_stereoMode_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_CAMERA_orthographic_stereoMode_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -1739,6 +2606,11 @@ static const void * ANARI_CAMERA_orthographic_stereoMode_info(ANARIDataType para
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "stereo mode";
+            return description;
+         }
       case 6: // values
          if(paramType == ANARI_STRING) {
             static const char *values[] = {"none", "left", "right", "sideBySide", "topBottom", nullptr};
@@ -1746,11 +2618,19 @@ static const void * ANARI_CAMERA_orthographic_stereoMode_info(ANARIDataType para
          } else {
             return nullptr;
          }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_CAMERA_ORTHOGRAPHIC";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 3;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_CAMERA_orthographic_interpupillaryDistance_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_CAMERA_orthographic_interpupillaryDistance_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -1764,11 +2644,24 @@ static const void * ANARI_CAMERA_orthographic_interpupillaryDistance_info(ANARID
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "interpupillary distance for stereo rendering";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_CAMERA_ORTHOGRAPHIC";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 3;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_CAMERA_orthographic_aspect_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_CAMERA_orthographic_aspect_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -1782,20 +2675,33 @@ static const void * ANARI_CAMERA_orthographic_aspect_info(ANARIDataType paramTyp
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "aspect ratio";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_CAMERA_ORTHOGRAPHIC";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 3;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_CAMERA_orthographic_param_info(const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_CAMERA_orthographic_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
       case 30:
          return ANARI_CAMERA_orthographic_name_info(paramType, infoName, infoType);
-      case 37:
+      case 38:
          return ANARI_CAMERA_orthographic_position_info(paramType, infoName, infoType);
       case 11:
          return ANARI_CAMERA_orthographic_direction_info(paramType, infoName, infoType);
-      case 56:
+      case 57:
          return ANARI_CAMERA_orthographic_up_info(paramType, infoName, infoType);
-      case 55:
+      case 56:
          return ANARI_CAMERA_orthographic_transform_info(paramType, infoName, infoType);
       case 20:
          return ANARI_CAMERA_orthographic_imageRegion_info(paramType, infoName, infoType);
@@ -1803,7 +2709,7 @@ static const void * ANARI_CAMERA_orthographic_param_info(const char *paramName, 
          return ANARI_CAMERA_orthographic_apertureRadius_info(paramType, infoName, infoType);
       case 15:
          return ANARI_CAMERA_orthographic_focusDistance_info(paramType, infoName, infoType);
-      case 53:
+      case 54:
          return ANARI_CAMERA_orthographic_stereoMode_info(paramType, infoName, infoType);
       case 25:
          return ANARI_CAMERA_orthographic_interpupillaryDistance_info(paramType, infoName, infoType);
@@ -1813,19 +2719,32 @@ static const void * ANARI_CAMERA_orthographic_param_info(const char *paramName, 
          return nullptr;
    }
 }
-static const void * ANARI_CAMERA_perspective_name_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_CAMERA_perspective_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "optional object name";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_CAMERA_PERSPECTIVE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 4;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_CAMERA_perspective_position_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_CAMERA_perspective_position_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -1839,11 +2758,24 @@ static const void * ANARI_CAMERA_perspective_position_info(ANARIDataType paramTy
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "camera position";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_CAMERA_PERSPECTIVE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 4;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_CAMERA_perspective_direction_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_CAMERA_perspective_direction_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -1857,11 +2789,24 @@ static const void * ANARI_CAMERA_perspective_direction_info(ANARIDataType paramT
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "main viewing direction";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_CAMERA_PERSPECTIVE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 4;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_CAMERA_perspective_up_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_CAMERA_perspective_up_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -1875,11 +2820,24 @@ static const void * ANARI_CAMERA_perspective_up_info(ANARIDataType paramType, co
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "camera up direction";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_CAMERA_PERSPECTIVE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 4;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_CAMERA_perspective_transform_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_CAMERA_perspective_transform_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -1893,11 +2851,24 @@ static const void * ANARI_CAMERA_perspective_transform_info(ANARIDataType paramT
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "camera transform";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_CAMERA_PERSPECTIVE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 4;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_CAMERA_perspective_imageRegion_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_CAMERA_perspective_imageRegion_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -1911,11 +2882,24 @@ static const void * ANARI_CAMERA_perspective_imageRegion_info(ANARIDataType para
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "region mapped to the frame";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_CAMERA_PERSPECTIVE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 4;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_CAMERA_perspective_apertureRadius_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_CAMERA_perspective_apertureRadius_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -1929,11 +2913,24 @@ static const void * ANARI_CAMERA_perspective_apertureRadius_info(ANARIDataType p
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "aperture radius";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_CAMERA_PERSPECTIVE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 4;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_CAMERA_perspective_focusDistance_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_CAMERA_perspective_focusDistance_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -1947,11 +2944,24 @@ static const void * ANARI_CAMERA_perspective_focusDistance_info(ANARIDataType pa
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "focus distance";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_CAMERA_PERSPECTIVE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 4;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_CAMERA_perspective_stereoMode_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_CAMERA_perspective_stereoMode_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -1965,6 +2975,11 @@ static const void * ANARI_CAMERA_perspective_stereoMode_info(ANARIDataType param
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "stereo mode";
+            return description;
+         }
       case 6: // values
          if(paramType == ANARI_STRING) {
             static const char *values[] = {"none", "left", "right", "sideBySide", "topBottom", nullptr};
@@ -1972,11 +2987,19 @@ static const void * ANARI_CAMERA_perspective_stereoMode_info(ANARIDataType param
          } else {
             return nullptr;
          }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_CAMERA_PERSPECTIVE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 4;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_CAMERA_perspective_interpupillaryDistance_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_CAMERA_perspective_interpupillaryDistance_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -1990,11 +3013,24 @@ static const void * ANARI_CAMERA_perspective_interpupillaryDistance_info(ANARIDa
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "interpupillary distance for stereo rendering";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_CAMERA_PERSPECTIVE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 4;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_CAMERA_perspective_fovy_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_CAMERA_perspective_fovy_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -2008,11 +3044,24 @@ static const void * ANARI_CAMERA_perspective_fovy_info(ANARIDataType paramType, 
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertical field of view in radians";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_CAMERA_PERSPECTIVE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 4;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_CAMERA_perspective_aspect_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_CAMERA_perspective_aspect_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -2026,20 +3075,33 @@ static const void * ANARI_CAMERA_perspective_aspect_info(ANARIDataType paramType
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "aspect ratio";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_CAMERA_PERSPECTIVE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 4;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_CAMERA_perspective_param_info(const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_CAMERA_perspective_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
       case 30:
          return ANARI_CAMERA_perspective_name_info(paramType, infoName, infoType);
-      case 37:
+      case 38:
          return ANARI_CAMERA_perspective_position_info(paramType, infoName, infoType);
       case 11:
          return ANARI_CAMERA_perspective_direction_info(paramType, infoName, infoType);
-      case 56:
+      case 57:
          return ANARI_CAMERA_perspective_up_info(paramType, infoName, infoType);
-      case 55:
+      case 56:
          return ANARI_CAMERA_perspective_transform_info(paramType, infoName, infoType);
       case 20:
          return ANARI_CAMERA_perspective_imageRegion_info(paramType, infoName, infoType);
@@ -2047,7 +3109,7 @@ static const void * ANARI_CAMERA_perspective_param_info(const char *paramName, A
          return ANARI_CAMERA_perspective_apertureRadius_info(paramType, infoName, infoType);
       case 15:
          return ANARI_CAMERA_perspective_focusDistance_info(paramType, infoName, infoType);
-      case 53:
+      case 54:
          return ANARI_CAMERA_perspective_stereoMode_info(paramType, infoName, infoType);
       case 25:
          return ANARI_CAMERA_perspective_interpupillaryDistance_info(paramType, infoName, infoType);
@@ -2059,184 +3121,497 @@ static const void * ANARI_CAMERA_perspective_param_info(const char *paramName, A
          return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_cone_name_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_cone_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "optional object name";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CONE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 5;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_cone_primitive_color_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_cone_primitive_color_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "per primitive color";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_UFIXED8, ANARI_UFIXED8_VEC2, ANARI_UFIXED8_VEC3, ANARI_UFIXED8_VEC4, ANARI_UFIXED8_R_SRGB, ANARI_UFIXED8_RA_SRGB, ANARI_UFIXED8_RGB_SRGB, ANARI_UFIXED8_RGBA_SRGB, ANARI_UFIXED16, ANARI_UFIXED16_VEC2, ANARI_UFIXED16_VEC3, ANARI_UFIXED16_VEC4, ANARI_UFIXED32, ANARI_UFIXED32_VEC2, ANARI_UFIXED32_VEC3, ANARI_UFIXED32_VEC4, ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CONE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 5;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_cone_primitive_attribute0_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_cone_primitive_attribute0_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "per primitive attribute0";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CONE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 5;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_cone_primitive_attribute1_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_cone_primitive_attribute1_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "per primitive attribute1";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CONE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 5;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_cone_primitive_attribute2_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_cone_primitive_attribute2_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "per primitive attribute2";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CONE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 5;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_cone_primitive_attribute3_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_cone_primitive_attribute3_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "per primitive attribute3";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CONE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 5;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_cone_primitive_id_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_cone_primitive_id_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "primitive id";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_UINT32, ANARI_UINT64, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CONE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 5;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_cone_vertex_position_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_cone_vertex_position_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_true;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex position";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CONE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 5;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_cone_vertex_radius_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_cone_vertex_radius_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex radius";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CONE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 5;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_cone_vertex_cap_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_cone_vertex_cap_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex cap type";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_UINT8, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CONE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 5;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_cone_vertex_color_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_cone_vertex_color_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex color";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_UFIXED8, ANARI_UFIXED8_VEC2, ANARI_UFIXED8_VEC3, ANARI_UFIXED8_VEC4, ANARI_UFIXED8_R_SRGB, ANARI_UFIXED8_RA_SRGB, ANARI_UFIXED8_RGB_SRGB, ANARI_UFIXED8_RGBA_SRGB, ANARI_UFIXED16, ANARI_UFIXED16_VEC2, ANARI_UFIXED16_VEC3, ANARI_UFIXED16_VEC4, ANARI_UFIXED32, ANARI_UFIXED32_VEC2, ANARI_UFIXED32_VEC3, ANARI_UFIXED32_VEC4, ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CONE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 5;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_cone_vertex_attribute0_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_cone_vertex_attribute0_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex attribute0";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CONE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 5;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_cone_vertex_attribute1_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_cone_vertex_attribute1_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex attribute1";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CONE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 5;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_cone_vertex_attribute2_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_cone_vertex_attribute2_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex attribute2";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CONE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 5;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_cone_vertex_attribute3_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_cone_vertex_attribute3_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex attribute3";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CONE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 5;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_cone_primitive_index_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_cone_primitive_index_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "index array";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_UINT32_VEC2, ANARI_UINT64_VEC2, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CONE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 5;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_cone_caps_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_cone_caps_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -2250,6 +3625,11 @@ static const void * ANARI_GEOMETRY_cone_caps_info(ANARIDataType paramType, const
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "global cap type";
+            return description;
+         }
       case 6: // values
          if(paramType == ANARI_STRING) {
             static const char *values[] = {"none", "first", "second", "both", nullptr};
@@ -2257,42 +3637,50 @@ static const void * ANARI_GEOMETRY_cone_caps_info(ANARIDataType paramType, const
          } else {
             return nullptr;
          }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CONE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 5;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_cone_param_info(const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_GEOMETRY_cone_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
       case 30:
          return ANARI_GEOMETRY_cone_name_info(paramType, infoName, infoType);
-      case 43:
-         return ANARI_GEOMETRY_cone_primitive_color_info(paramType, infoName, infoType);
-      case 39:
-         return ANARI_GEOMETRY_cone_primitive_attribute0_info(paramType, infoName, infoType);
-      case 40:
-         return ANARI_GEOMETRY_cone_primitive_attribute1_info(paramType, infoName, infoType);
-      case 41:
-         return ANARI_GEOMETRY_cone_primitive_attribute2_info(paramType, infoName, infoType);
-      case 42:
-         return ANARI_GEOMETRY_cone_primitive_attribute3_info(paramType, infoName, infoType);
       case 44:
-         return ANARI_GEOMETRY_cone_primitive_id_info(paramType, infoName, infoType);
-      case 65:
-         return ANARI_GEOMETRY_cone_vertex_position_info(paramType, infoName, infoType);
-      case 66:
-         return ANARI_GEOMETRY_cone_vertex_radius_info(paramType, infoName, infoType);
-      case 62:
-         return ANARI_GEOMETRY_cone_vertex_cap_info(paramType, infoName, infoType);
-      case 63:
-         return ANARI_GEOMETRY_cone_vertex_color_info(paramType, infoName, infoType);
-      case 58:
-         return ANARI_GEOMETRY_cone_vertex_attribute0_info(paramType, infoName, infoType);
-      case 59:
-         return ANARI_GEOMETRY_cone_vertex_attribute1_info(paramType, infoName, infoType);
-      case 60:
-         return ANARI_GEOMETRY_cone_vertex_attribute2_info(paramType, infoName, infoType);
-      case 61:
-         return ANARI_GEOMETRY_cone_vertex_attribute3_info(paramType, infoName, infoType);
+         return ANARI_GEOMETRY_cone_primitive_color_info(paramType, infoName, infoType);
+      case 40:
+         return ANARI_GEOMETRY_cone_primitive_attribute0_info(paramType, infoName, infoType);
+      case 41:
+         return ANARI_GEOMETRY_cone_primitive_attribute1_info(paramType, infoName, infoType);
+      case 42:
+         return ANARI_GEOMETRY_cone_primitive_attribute2_info(paramType, infoName, infoType);
+      case 43:
+         return ANARI_GEOMETRY_cone_primitive_attribute3_info(paramType, infoName, infoType);
       case 45:
+         return ANARI_GEOMETRY_cone_primitive_id_info(paramType, infoName, infoType);
+      case 66:
+         return ANARI_GEOMETRY_cone_vertex_position_info(paramType, infoName, infoType);
+      case 67:
+         return ANARI_GEOMETRY_cone_vertex_radius_info(paramType, infoName, infoType);
+      case 63:
+         return ANARI_GEOMETRY_cone_vertex_cap_info(paramType, infoName, infoType);
+      case 64:
+         return ANARI_GEOMETRY_cone_vertex_color_info(paramType, infoName, infoType);
+      case 59:
+         return ANARI_GEOMETRY_cone_vertex_attribute0_info(paramType, infoName, infoType);
+      case 60:
+         return ANARI_GEOMETRY_cone_vertex_attribute1_info(paramType, infoName, infoType);
+      case 61:
+         return ANARI_GEOMETRY_cone_vertex_attribute2_info(paramType, infoName, infoType);
+      case 62:
+         return ANARI_GEOMETRY_cone_vertex_attribute3_info(paramType, infoName, infoType);
+      case 46:
          return ANARI_GEOMETRY_cone_primitive_index_info(paramType, infoName, infoType);
       case 5:
          return ANARI_GEOMETRY_cone_caps_info(paramType, infoName, infoType);
@@ -2300,409 +3688,1041 @@ static const void * ANARI_GEOMETRY_cone_param_info(const char *paramName, ANARID
          return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_curve_name_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_curve_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "optional object name";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CURVE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 6;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_curve_primitive_color_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_curve_primitive_color_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "per primitive color";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_UFIXED8, ANARI_UFIXED8_VEC2, ANARI_UFIXED8_VEC3, ANARI_UFIXED8_VEC4, ANARI_UFIXED8_R_SRGB, ANARI_UFIXED8_RA_SRGB, ANARI_UFIXED8_RGB_SRGB, ANARI_UFIXED8_RGBA_SRGB, ANARI_UFIXED16, ANARI_UFIXED16_VEC2, ANARI_UFIXED16_VEC3, ANARI_UFIXED16_VEC4, ANARI_UFIXED32, ANARI_UFIXED32_VEC2, ANARI_UFIXED32_VEC3, ANARI_UFIXED32_VEC4, ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CURVE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 6;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_curve_primitive_attribute0_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_curve_primitive_attribute0_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "per primitive attribute0";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CURVE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 6;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_curve_primitive_attribute1_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_curve_primitive_attribute1_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "per primitive attribute1";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CURVE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 6;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_curve_primitive_attribute2_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_curve_primitive_attribute2_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "per primitive attribute2";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CURVE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 6;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_curve_primitive_attribute3_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_curve_primitive_attribute3_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "per primitive attribute3";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CURVE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 6;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_curve_primitive_id_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_curve_primitive_id_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "primitive id";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_UINT32, ANARI_UINT64, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CURVE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 6;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_curve_vertex_position_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_curve_vertex_position_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_true;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex position";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CURVE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 6;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_curve_vertex_radius_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_curve_vertex_radius_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex radius";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CURVE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 6;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_curve_vertex_color_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_curve_vertex_color_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex color";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_UFIXED8, ANARI_UFIXED8_VEC2, ANARI_UFIXED8_VEC3, ANARI_UFIXED8_VEC4, ANARI_UFIXED8_R_SRGB, ANARI_UFIXED8_RA_SRGB, ANARI_UFIXED8_RGB_SRGB, ANARI_UFIXED8_RGBA_SRGB, ANARI_UFIXED16, ANARI_UFIXED16_VEC2, ANARI_UFIXED16_VEC3, ANARI_UFIXED16_VEC4, ANARI_UFIXED32, ANARI_UFIXED32_VEC2, ANARI_UFIXED32_VEC3, ANARI_UFIXED32_VEC4, ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CURVE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 6;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_curve_vertex_attribute0_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_curve_vertex_attribute0_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex attribute0";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CURVE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 6;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_curve_vertex_attribute1_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_curve_vertex_attribute1_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex attribute1";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CURVE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 6;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_curve_vertex_attribute2_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_curve_vertex_attribute2_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex attribute2";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CURVE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 6;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_curve_vertex_attribute3_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_curve_vertex_attribute3_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex attribute3";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CURVE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 6;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_curve_primitive_index_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_curve_primitive_index_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "index array";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_UINT32, ANARI_UINT64, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CURVE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 6;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_curve_radius_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_curve_radius_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "global radius";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CURVE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 6;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_curve_param_info(const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_GEOMETRY_curve_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
       case 30:
          return ANARI_GEOMETRY_curve_name_info(paramType, infoName, infoType);
-      case 43:
-         return ANARI_GEOMETRY_curve_primitive_color_info(paramType, infoName, infoType);
-      case 39:
-         return ANARI_GEOMETRY_curve_primitive_attribute0_info(paramType, infoName, infoType);
-      case 40:
-         return ANARI_GEOMETRY_curve_primitive_attribute1_info(paramType, infoName, infoType);
-      case 41:
-         return ANARI_GEOMETRY_curve_primitive_attribute2_info(paramType, infoName, infoType);
-      case 42:
-         return ANARI_GEOMETRY_curve_primitive_attribute3_info(paramType, infoName, infoType);
       case 44:
-         return ANARI_GEOMETRY_curve_primitive_id_info(paramType, infoName, infoType);
-      case 65:
-         return ANARI_GEOMETRY_curve_vertex_position_info(paramType, infoName, infoType);
-      case 66:
-         return ANARI_GEOMETRY_curve_vertex_radius_info(paramType, infoName, infoType);
-      case 63:
-         return ANARI_GEOMETRY_curve_vertex_color_info(paramType, infoName, infoType);
-      case 58:
-         return ANARI_GEOMETRY_curve_vertex_attribute0_info(paramType, infoName, infoType);
-      case 59:
-         return ANARI_GEOMETRY_curve_vertex_attribute1_info(paramType, infoName, infoType);
-      case 60:
-         return ANARI_GEOMETRY_curve_vertex_attribute2_info(paramType, infoName, infoType);
-      case 61:
-         return ANARI_GEOMETRY_curve_vertex_attribute3_info(paramType, infoName, infoType);
+         return ANARI_GEOMETRY_curve_primitive_color_info(paramType, infoName, infoType);
+      case 40:
+         return ANARI_GEOMETRY_curve_primitive_attribute0_info(paramType, infoName, infoType);
+      case 41:
+         return ANARI_GEOMETRY_curve_primitive_attribute1_info(paramType, infoName, infoType);
+      case 42:
+         return ANARI_GEOMETRY_curve_primitive_attribute2_info(paramType, infoName, infoType);
+      case 43:
+         return ANARI_GEOMETRY_curve_primitive_attribute3_info(paramType, infoName, infoType);
       case 45:
+         return ANARI_GEOMETRY_curve_primitive_id_info(paramType, infoName, infoType);
+      case 66:
+         return ANARI_GEOMETRY_curve_vertex_position_info(paramType, infoName, infoType);
+      case 67:
+         return ANARI_GEOMETRY_curve_vertex_radius_info(paramType, infoName, infoType);
+      case 64:
+         return ANARI_GEOMETRY_curve_vertex_color_info(paramType, infoName, infoType);
+      case 59:
+         return ANARI_GEOMETRY_curve_vertex_attribute0_info(paramType, infoName, infoType);
+      case 60:
+         return ANARI_GEOMETRY_curve_vertex_attribute1_info(paramType, infoName, infoType);
+      case 61:
+         return ANARI_GEOMETRY_curve_vertex_attribute2_info(paramType, infoName, infoType);
+      case 62:
+         return ANARI_GEOMETRY_curve_vertex_attribute3_info(paramType, infoName, infoType);
+      case 46:
          return ANARI_GEOMETRY_curve_primitive_index_info(paramType, infoName, infoType);
-      case 47:
+      case 48:
          return ANARI_GEOMETRY_curve_radius_info(paramType, infoName, infoType);
       default:
          return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_cylinder_name_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_cylinder_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "optional object name";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CYLINDER";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 7;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_cylinder_primitive_color_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_cylinder_primitive_color_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "per primitive color";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_UFIXED8, ANARI_UFIXED8_VEC2, ANARI_UFIXED8_VEC3, ANARI_UFIXED8_VEC4, ANARI_UFIXED8_R_SRGB, ANARI_UFIXED8_RA_SRGB, ANARI_UFIXED8_RGB_SRGB, ANARI_UFIXED8_RGBA_SRGB, ANARI_UFIXED16, ANARI_UFIXED16_VEC2, ANARI_UFIXED16_VEC3, ANARI_UFIXED16_VEC4, ANARI_UFIXED32, ANARI_UFIXED32_VEC2, ANARI_UFIXED32_VEC3, ANARI_UFIXED32_VEC4, ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CYLINDER";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 7;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_cylinder_primitive_attribute0_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_cylinder_primitive_attribute0_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "per primitive attribute0";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CYLINDER";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 7;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_cylinder_primitive_attribute1_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_cylinder_primitive_attribute1_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "per primitive attribute1";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CYLINDER";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 7;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_cylinder_primitive_attribute2_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_cylinder_primitive_attribute2_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "per primitive attribute2";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CYLINDER";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 7;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_cylinder_primitive_attribute3_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_cylinder_primitive_attribute3_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "per primitive attribute3";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CYLINDER";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 7;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_cylinder_primitive_id_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_cylinder_primitive_id_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "primitive id";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_UINT32, ANARI_UINT64, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CYLINDER";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 7;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_cylinder_vertex_position_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_cylinder_vertex_position_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_true;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex position";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CYLINDER";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 7;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_cylinder_vertex_cap_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_cylinder_vertex_cap_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "cylinder cap type";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_UINT8, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CYLINDER";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 7;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_cylinder_vertex_color_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_cylinder_vertex_color_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex color";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_UFIXED8, ANARI_UFIXED8_VEC2, ANARI_UFIXED8_VEC3, ANARI_UFIXED8_VEC4, ANARI_UFIXED8_R_SRGB, ANARI_UFIXED8_RA_SRGB, ANARI_UFIXED8_RGB_SRGB, ANARI_UFIXED8_RGBA_SRGB, ANARI_UFIXED16, ANARI_UFIXED16_VEC2, ANARI_UFIXED16_VEC3, ANARI_UFIXED16_VEC4, ANARI_UFIXED32, ANARI_UFIXED32_VEC2, ANARI_UFIXED32_VEC3, ANARI_UFIXED32_VEC4, ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CYLINDER";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 7;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_cylinder_vertex_attribute0_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_cylinder_vertex_attribute0_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex attribute0";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CYLINDER";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 7;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_cylinder_vertex_attribute1_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_cylinder_vertex_attribute1_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex attribute1";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CYLINDER";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 7;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_cylinder_vertex_attribute2_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_cylinder_vertex_attribute2_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex attribute2";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CYLINDER";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 7;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_cylinder_vertex_attribute3_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_cylinder_vertex_attribute3_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex attribute3";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CYLINDER";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 7;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_cylinder_primitive_index_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_cylinder_primitive_index_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "index array";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_UINT32_VEC2, ANARI_UINT64_VEC2, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CYLINDER";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 7;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_cylinder_primitive_radius_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_cylinder_primitive_radius_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "cylinder radius";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CYLINDER";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 7;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_cylinder_radius_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_cylinder_radius_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "global cylinder radius";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CYLINDER";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 7;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_cylinder_caps_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_cylinder_caps_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -2716,6 +4736,11 @@ static const void * ANARI_GEOMETRY_cylinder_caps_info(ANARIDataType paramType, c
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "global cylinder cap type";
+            return description;
+         }
       case 6: // values
          if(paramType == ANARI_STRING) {
             static const char *values[] = {"none", "first", "second", "both", nullptr};
@@ -2723,44 +4748,52 @@ static const void * ANARI_GEOMETRY_cylinder_caps_info(ANARIDataType paramType, c
          } else {
             return nullptr;
          }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_CYLINDER";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 7;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_cylinder_param_info(const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_GEOMETRY_cylinder_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
       case 30:
          return ANARI_GEOMETRY_cylinder_name_info(paramType, infoName, infoType);
-      case 43:
-         return ANARI_GEOMETRY_cylinder_primitive_color_info(paramType, infoName, infoType);
-      case 39:
-         return ANARI_GEOMETRY_cylinder_primitive_attribute0_info(paramType, infoName, infoType);
-      case 40:
-         return ANARI_GEOMETRY_cylinder_primitive_attribute1_info(paramType, infoName, infoType);
-      case 41:
-         return ANARI_GEOMETRY_cylinder_primitive_attribute2_info(paramType, infoName, infoType);
-      case 42:
-         return ANARI_GEOMETRY_cylinder_primitive_attribute3_info(paramType, infoName, infoType);
       case 44:
-         return ANARI_GEOMETRY_cylinder_primitive_id_info(paramType, infoName, infoType);
-      case 65:
-         return ANARI_GEOMETRY_cylinder_vertex_position_info(paramType, infoName, infoType);
-      case 62:
-         return ANARI_GEOMETRY_cylinder_vertex_cap_info(paramType, infoName, infoType);
-      case 63:
-         return ANARI_GEOMETRY_cylinder_vertex_color_info(paramType, infoName, infoType);
-      case 58:
-         return ANARI_GEOMETRY_cylinder_vertex_attribute0_info(paramType, infoName, infoType);
-      case 59:
-         return ANARI_GEOMETRY_cylinder_vertex_attribute1_info(paramType, infoName, infoType);
-      case 60:
-         return ANARI_GEOMETRY_cylinder_vertex_attribute2_info(paramType, infoName, infoType);
-      case 61:
-         return ANARI_GEOMETRY_cylinder_vertex_attribute3_info(paramType, infoName, infoType);
+         return ANARI_GEOMETRY_cylinder_primitive_color_info(paramType, infoName, infoType);
+      case 40:
+         return ANARI_GEOMETRY_cylinder_primitive_attribute0_info(paramType, infoName, infoType);
+      case 41:
+         return ANARI_GEOMETRY_cylinder_primitive_attribute1_info(paramType, infoName, infoType);
+      case 42:
+         return ANARI_GEOMETRY_cylinder_primitive_attribute2_info(paramType, infoName, infoType);
+      case 43:
+         return ANARI_GEOMETRY_cylinder_primitive_attribute3_info(paramType, infoName, infoType);
       case 45:
-         return ANARI_GEOMETRY_cylinder_primitive_index_info(paramType, infoName, infoType);
+         return ANARI_GEOMETRY_cylinder_primitive_id_info(paramType, infoName, infoType);
+      case 66:
+         return ANARI_GEOMETRY_cylinder_vertex_position_info(paramType, infoName, infoType);
+      case 63:
+         return ANARI_GEOMETRY_cylinder_vertex_cap_info(paramType, infoName, infoType);
+      case 64:
+         return ANARI_GEOMETRY_cylinder_vertex_color_info(paramType, infoName, infoType);
+      case 59:
+         return ANARI_GEOMETRY_cylinder_vertex_attribute0_info(paramType, infoName, infoType);
+      case 60:
+         return ANARI_GEOMETRY_cylinder_vertex_attribute1_info(paramType, infoName, infoType);
+      case 61:
+         return ANARI_GEOMETRY_cylinder_vertex_attribute2_info(paramType, infoName, infoType);
+      case 62:
+         return ANARI_GEOMETRY_cylinder_vertex_attribute3_info(paramType, infoName, infoType);
       case 46:
-         return ANARI_GEOMETRY_cylinder_primitive_radius_info(paramType, infoName, infoType);
+         return ANARI_GEOMETRY_cylinder_primitive_index_info(paramType, infoName, infoType);
       case 47:
+         return ANARI_GEOMETRY_cylinder_primitive_radius_info(paramType, infoName, infoType);
+      case 48:
          return ANARI_GEOMETRY_cylinder_radius_info(paramType, infoName, infoType);
       case 5:
          return ANARI_GEOMETRY_cylinder_caps_info(paramType, infoName, infoType);
@@ -2768,635 +4801,1540 @@ static const void * ANARI_GEOMETRY_cylinder_param_info(const char *paramName, AN
          return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_quad_name_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_quad_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "optional object name";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_QUAD";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 8;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_quad_primitive_color_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_quad_primitive_color_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "per primitive color";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_UFIXED8, ANARI_UFIXED8_VEC2, ANARI_UFIXED8_VEC3, ANARI_UFIXED8_VEC4, ANARI_UFIXED8_R_SRGB, ANARI_UFIXED8_RA_SRGB, ANARI_UFIXED8_RGB_SRGB, ANARI_UFIXED8_RGBA_SRGB, ANARI_UFIXED16, ANARI_UFIXED16_VEC2, ANARI_UFIXED16_VEC3, ANARI_UFIXED16_VEC4, ANARI_UFIXED32, ANARI_UFIXED32_VEC2, ANARI_UFIXED32_VEC3, ANARI_UFIXED32_VEC4, ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_QUAD";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 8;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_quad_primitive_attribute0_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_quad_primitive_attribute0_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "per primitive attribute0";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_QUAD";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 8;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_quad_primitive_attribute1_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_quad_primitive_attribute1_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "per primitive attribute1";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_QUAD";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 8;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_quad_primitive_attribute2_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_quad_primitive_attribute2_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "per primitive attribute2";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_QUAD";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 8;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_quad_primitive_attribute3_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_quad_primitive_attribute3_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "per primitive attribute3";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_QUAD";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 8;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_quad_primitive_id_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_quad_primitive_id_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "primitive id";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_UINT32, ANARI_UINT64, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_QUAD";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 8;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_quad_vertex_position_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_quad_vertex_position_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_true;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex position";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_QUAD";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 8;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_quad_vertex_normal_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_quad_vertex_normal_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex normal";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_QUAD";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 8;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_quad_vertex_color_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_quad_vertex_color_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex color";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_UFIXED8, ANARI_UFIXED8_VEC2, ANARI_UFIXED8_VEC3, ANARI_UFIXED8_VEC4, ANARI_UFIXED8_R_SRGB, ANARI_UFIXED8_RA_SRGB, ANARI_UFIXED8_RGB_SRGB, ANARI_UFIXED8_RGBA_SRGB, ANARI_UFIXED16, ANARI_UFIXED16_VEC2, ANARI_UFIXED16_VEC3, ANARI_UFIXED16_VEC4, ANARI_UFIXED32, ANARI_UFIXED32_VEC2, ANARI_UFIXED32_VEC3, ANARI_UFIXED32_VEC4, ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_QUAD";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 8;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_quad_vertex_attribute0_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_quad_vertex_attribute0_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex attribute0";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_QUAD";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 8;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_quad_vertex_attribute1_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_quad_vertex_attribute1_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex attribute1";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_QUAD";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 8;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_quad_vertex_attribute2_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_quad_vertex_attribute2_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex attribute2";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_QUAD";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 8;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_quad_vertex_attribute3_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_quad_vertex_attribute3_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex attribute3";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_QUAD";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 8;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_quad_primitive_index_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_quad_primitive_index_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "index array";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_UINT32_VEC4, ANARI_UINT64_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_QUAD";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 8;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_quad_param_info(const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_GEOMETRY_quad_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
       case 30:
          return ANARI_GEOMETRY_quad_name_info(paramType, infoName, infoType);
-      case 43:
-         return ANARI_GEOMETRY_quad_primitive_color_info(paramType, infoName, infoType);
-      case 39:
-         return ANARI_GEOMETRY_quad_primitive_attribute0_info(paramType, infoName, infoType);
-      case 40:
-         return ANARI_GEOMETRY_quad_primitive_attribute1_info(paramType, infoName, infoType);
-      case 41:
-         return ANARI_GEOMETRY_quad_primitive_attribute2_info(paramType, infoName, infoType);
-      case 42:
-         return ANARI_GEOMETRY_quad_primitive_attribute3_info(paramType, infoName, infoType);
       case 44:
-         return ANARI_GEOMETRY_quad_primitive_id_info(paramType, infoName, infoType);
-      case 65:
-         return ANARI_GEOMETRY_quad_vertex_position_info(paramType, infoName, infoType);
-      case 64:
-         return ANARI_GEOMETRY_quad_vertex_normal_info(paramType, infoName, infoType);
-      case 63:
-         return ANARI_GEOMETRY_quad_vertex_color_info(paramType, infoName, infoType);
-      case 58:
-         return ANARI_GEOMETRY_quad_vertex_attribute0_info(paramType, infoName, infoType);
-      case 59:
-         return ANARI_GEOMETRY_quad_vertex_attribute1_info(paramType, infoName, infoType);
-      case 60:
-         return ANARI_GEOMETRY_quad_vertex_attribute2_info(paramType, infoName, infoType);
-      case 61:
-         return ANARI_GEOMETRY_quad_vertex_attribute3_info(paramType, infoName, infoType);
+         return ANARI_GEOMETRY_quad_primitive_color_info(paramType, infoName, infoType);
+      case 40:
+         return ANARI_GEOMETRY_quad_primitive_attribute0_info(paramType, infoName, infoType);
+      case 41:
+         return ANARI_GEOMETRY_quad_primitive_attribute1_info(paramType, infoName, infoType);
+      case 42:
+         return ANARI_GEOMETRY_quad_primitive_attribute2_info(paramType, infoName, infoType);
+      case 43:
+         return ANARI_GEOMETRY_quad_primitive_attribute3_info(paramType, infoName, infoType);
       case 45:
+         return ANARI_GEOMETRY_quad_primitive_id_info(paramType, infoName, infoType);
+      case 66:
+         return ANARI_GEOMETRY_quad_vertex_position_info(paramType, infoName, infoType);
+      case 65:
+         return ANARI_GEOMETRY_quad_vertex_normal_info(paramType, infoName, infoType);
+      case 64:
+         return ANARI_GEOMETRY_quad_vertex_color_info(paramType, infoName, infoType);
+      case 59:
+         return ANARI_GEOMETRY_quad_vertex_attribute0_info(paramType, infoName, infoType);
+      case 60:
+         return ANARI_GEOMETRY_quad_vertex_attribute1_info(paramType, infoName, infoType);
+      case 61:
+         return ANARI_GEOMETRY_quad_vertex_attribute2_info(paramType, infoName, infoType);
+      case 62:
+         return ANARI_GEOMETRY_quad_vertex_attribute3_info(paramType, infoName, infoType);
+      case 46:
          return ANARI_GEOMETRY_quad_primitive_index_info(paramType, infoName, infoType);
       default:
          return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_sphere_name_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_sphere_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "optional object name";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_SPHERE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 9;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_sphere_primitive_color_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_sphere_primitive_color_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "per primitive color";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_UFIXED8, ANARI_UFIXED8_VEC2, ANARI_UFIXED8_VEC3, ANARI_UFIXED8_VEC4, ANARI_UFIXED8_R_SRGB, ANARI_UFIXED8_RA_SRGB, ANARI_UFIXED8_RGB_SRGB, ANARI_UFIXED8_RGBA_SRGB, ANARI_UFIXED16, ANARI_UFIXED16_VEC2, ANARI_UFIXED16_VEC3, ANARI_UFIXED16_VEC4, ANARI_UFIXED32, ANARI_UFIXED32_VEC2, ANARI_UFIXED32_VEC3, ANARI_UFIXED32_VEC4, ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_SPHERE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 9;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_sphere_primitive_attribute0_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_sphere_primitive_attribute0_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "per primitive attribute0";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_SPHERE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 9;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_sphere_primitive_attribute1_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_sphere_primitive_attribute1_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "per primitive attribute1";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_SPHERE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 9;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_sphere_primitive_attribute2_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_sphere_primitive_attribute2_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "per primitive attribute2";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_SPHERE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 9;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_sphere_primitive_attribute3_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_sphere_primitive_attribute3_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "per primitive attribute3";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_SPHERE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 9;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_sphere_primitive_id_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_sphere_primitive_id_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "primitive id";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_UINT32, ANARI_UINT64, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_SPHERE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 9;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_sphere_vertex_position_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_sphere_vertex_position_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_true;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "sphere position";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_SPHERE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 9;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_sphere_vertex_radius_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_sphere_vertex_radius_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "sphere radius";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_SPHERE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 9;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_sphere_vertex_color_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_sphere_vertex_color_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex color";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_UFIXED8, ANARI_UFIXED8_VEC2, ANARI_UFIXED8_VEC3, ANARI_UFIXED8_VEC4, ANARI_UFIXED8_R_SRGB, ANARI_UFIXED8_RA_SRGB, ANARI_UFIXED8_RGB_SRGB, ANARI_UFIXED8_RGBA_SRGB, ANARI_UFIXED16, ANARI_UFIXED16_VEC2, ANARI_UFIXED16_VEC3, ANARI_UFIXED16_VEC4, ANARI_UFIXED32, ANARI_UFIXED32_VEC2, ANARI_UFIXED32_VEC3, ANARI_UFIXED32_VEC4, ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_SPHERE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 9;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_sphere_vertex_attribute0_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_sphere_vertex_attribute0_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex attribute0";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_SPHERE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 9;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_sphere_vertex_attribute1_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_sphere_vertex_attribute1_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex attribute1";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_SPHERE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 9;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_sphere_vertex_attribute2_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_sphere_vertex_attribute2_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex attribute2";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_SPHERE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 9;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_sphere_vertex_attribute3_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_sphere_vertex_attribute3_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex attribute3";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_SPHERE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 9;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_sphere_primitive_index_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_sphere_primitive_index_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "index array";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_UINT32, ANARI_UINT64, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_SPHERE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 9;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_sphere_radius_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_sphere_radius_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "global sphere radius";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_SPHERE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 9;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_sphere_param_info(const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_GEOMETRY_sphere_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
       case 30:
          return ANARI_GEOMETRY_sphere_name_info(paramType, infoName, infoType);
-      case 43:
-         return ANARI_GEOMETRY_sphere_primitive_color_info(paramType, infoName, infoType);
-      case 39:
-         return ANARI_GEOMETRY_sphere_primitive_attribute0_info(paramType, infoName, infoType);
-      case 40:
-         return ANARI_GEOMETRY_sphere_primitive_attribute1_info(paramType, infoName, infoType);
-      case 41:
-         return ANARI_GEOMETRY_sphere_primitive_attribute2_info(paramType, infoName, infoType);
-      case 42:
-         return ANARI_GEOMETRY_sphere_primitive_attribute3_info(paramType, infoName, infoType);
       case 44:
-         return ANARI_GEOMETRY_sphere_primitive_id_info(paramType, infoName, infoType);
-      case 65:
-         return ANARI_GEOMETRY_sphere_vertex_position_info(paramType, infoName, infoType);
-      case 66:
-         return ANARI_GEOMETRY_sphere_vertex_radius_info(paramType, infoName, infoType);
-      case 63:
-         return ANARI_GEOMETRY_sphere_vertex_color_info(paramType, infoName, infoType);
-      case 58:
-         return ANARI_GEOMETRY_sphere_vertex_attribute0_info(paramType, infoName, infoType);
-      case 59:
-         return ANARI_GEOMETRY_sphere_vertex_attribute1_info(paramType, infoName, infoType);
-      case 60:
-         return ANARI_GEOMETRY_sphere_vertex_attribute2_info(paramType, infoName, infoType);
-      case 61:
-         return ANARI_GEOMETRY_sphere_vertex_attribute3_info(paramType, infoName, infoType);
+         return ANARI_GEOMETRY_sphere_primitive_color_info(paramType, infoName, infoType);
+      case 40:
+         return ANARI_GEOMETRY_sphere_primitive_attribute0_info(paramType, infoName, infoType);
+      case 41:
+         return ANARI_GEOMETRY_sphere_primitive_attribute1_info(paramType, infoName, infoType);
+      case 42:
+         return ANARI_GEOMETRY_sphere_primitive_attribute2_info(paramType, infoName, infoType);
+      case 43:
+         return ANARI_GEOMETRY_sphere_primitive_attribute3_info(paramType, infoName, infoType);
       case 45:
+         return ANARI_GEOMETRY_sphere_primitive_id_info(paramType, infoName, infoType);
+      case 66:
+         return ANARI_GEOMETRY_sphere_vertex_position_info(paramType, infoName, infoType);
+      case 67:
+         return ANARI_GEOMETRY_sphere_vertex_radius_info(paramType, infoName, infoType);
+      case 64:
+         return ANARI_GEOMETRY_sphere_vertex_color_info(paramType, infoName, infoType);
+      case 59:
+         return ANARI_GEOMETRY_sphere_vertex_attribute0_info(paramType, infoName, infoType);
+      case 60:
+         return ANARI_GEOMETRY_sphere_vertex_attribute1_info(paramType, infoName, infoType);
+      case 61:
+         return ANARI_GEOMETRY_sphere_vertex_attribute2_info(paramType, infoName, infoType);
+      case 62:
+         return ANARI_GEOMETRY_sphere_vertex_attribute3_info(paramType, infoName, infoType);
+      case 46:
          return ANARI_GEOMETRY_sphere_primitive_index_info(paramType, infoName, infoType);
-      case 47:
+      case 48:
          return ANARI_GEOMETRY_sphere_radius_info(paramType, infoName, infoType);
       default:
          return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_triangle_name_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_triangle_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "optional object name";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_TRIANGLE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 10;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_triangle_primitive_color_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_triangle_primitive_color_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "per primitive color";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_UFIXED8, ANARI_UFIXED8_VEC2, ANARI_UFIXED8_VEC3, ANARI_UFIXED8_VEC4, ANARI_UFIXED8_R_SRGB, ANARI_UFIXED8_RA_SRGB, ANARI_UFIXED8_RGB_SRGB, ANARI_UFIXED8_RGBA_SRGB, ANARI_UFIXED16, ANARI_UFIXED16_VEC2, ANARI_UFIXED16_VEC3, ANARI_UFIXED16_VEC4, ANARI_UFIXED32, ANARI_UFIXED32_VEC2, ANARI_UFIXED32_VEC3, ANARI_UFIXED32_VEC4, ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_TRIANGLE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 10;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_triangle_primitive_attribute0_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_triangle_primitive_attribute0_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "per primitive attribute0";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_TRIANGLE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 10;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_triangle_primitive_attribute1_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_triangle_primitive_attribute1_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "per primitive attribute1";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_TRIANGLE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 10;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_triangle_primitive_attribute2_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_triangle_primitive_attribute2_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "per primitive attribute2";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_TRIANGLE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 10;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_triangle_primitive_attribute3_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_triangle_primitive_attribute3_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "per primitive attribute3";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_TRIANGLE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 10;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_triangle_primitive_id_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_triangle_primitive_id_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "primitive id";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_UINT32, ANARI_UINT64, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_TRIANGLE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 10;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_triangle_vertex_position_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_triangle_vertex_position_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_true;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex position";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_TRIANGLE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 10;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_triangle_vertex_normal_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_triangle_vertex_normal_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex normal";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_TRIANGLE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 10;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_triangle_vertex_color_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_triangle_vertex_color_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex color";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_UFIXED8, ANARI_UFIXED8_VEC2, ANARI_UFIXED8_VEC3, ANARI_UFIXED8_VEC4, ANARI_UFIXED8_R_SRGB, ANARI_UFIXED8_RA_SRGB, ANARI_UFIXED8_RGB_SRGB, ANARI_UFIXED8_RGBA_SRGB, ANARI_UFIXED16, ANARI_UFIXED16_VEC2, ANARI_UFIXED16_VEC3, ANARI_UFIXED16_VEC4, ANARI_UFIXED32, ANARI_UFIXED32_VEC2, ANARI_UFIXED32_VEC3, ANARI_UFIXED32_VEC4, ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_TRIANGLE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 10;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_triangle_vertex_attribute0_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_triangle_vertex_attribute0_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex attribute0";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_TRIANGLE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 10;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_triangle_vertex_attribute1_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_triangle_vertex_attribute1_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex attribute1";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_TRIANGLE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 10;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_triangle_vertex_attribute2_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_triangle_vertex_attribute2_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex attribute2";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_TRIANGLE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 10;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_triangle_vertex_attribute3_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_triangle_vertex_attribute3_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "vertex attribute3";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_TRIANGLE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 10;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_triangle_primitive_index_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_GEOMETRY_triangle_primitive_index_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "index array";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_UINT32_VEC3, ANARI_UINT64_VEC3, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_GEOMETRY_TRIANGLE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 10;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_triangle_param_info(const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_GEOMETRY_triangle_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
       case 30:
          return ANARI_GEOMETRY_triangle_name_info(paramType, infoName, infoType);
-      case 43:
-         return ANARI_GEOMETRY_triangle_primitive_color_info(paramType, infoName, infoType);
-      case 39:
-         return ANARI_GEOMETRY_triangle_primitive_attribute0_info(paramType, infoName, infoType);
-      case 40:
-         return ANARI_GEOMETRY_triangle_primitive_attribute1_info(paramType, infoName, infoType);
-      case 41:
-         return ANARI_GEOMETRY_triangle_primitive_attribute2_info(paramType, infoName, infoType);
-      case 42:
-         return ANARI_GEOMETRY_triangle_primitive_attribute3_info(paramType, infoName, infoType);
       case 44:
-         return ANARI_GEOMETRY_triangle_primitive_id_info(paramType, infoName, infoType);
-      case 65:
-         return ANARI_GEOMETRY_triangle_vertex_position_info(paramType, infoName, infoType);
-      case 64:
-         return ANARI_GEOMETRY_triangle_vertex_normal_info(paramType, infoName, infoType);
-      case 63:
-         return ANARI_GEOMETRY_triangle_vertex_color_info(paramType, infoName, infoType);
-      case 58:
-         return ANARI_GEOMETRY_triangle_vertex_attribute0_info(paramType, infoName, infoType);
-      case 59:
-         return ANARI_GEOMETRY_triangle_vertex_attribute1_info(paramType, infoName, infoType);
-      case 60:
-         return ANARI_GEOMETRY_triangle_vertex_attribute2_info(paramType, infoName, infoType);
-      case 61:
-         return ANARI_GEOMETRY_triangle_vertex_attribute3_info(paramType, infoName, infoType);
+         return ANARI_GEOMETRY_triangle_primitive_color_info(paramType, infoName, infoType);
+      case 40:
+         return ANARI_GEOMETRY_triangle_primitive_attribute0_info(paramType, infoName, infoType);
+      case 41:
+         return ANARI_GEOMETRY_triangle_primitive_attribute1_info(paramType, infoName, infoType);
+      case 42:
+         return ANARI_GEOMETRY_triangle_primitive_attribute2_info(paramType, infoName, infoType);
+      case 43:
+         return ANARI_GEOMETRY_triangle_primitive_attribute3_info(paramType, infoName, infoType);
       case 45:
+         return ANARI_GEOMETRY_triangle_primitive_id_info(paramType, infoName, infoType);
+      case 66:
+         return ANARI_GEOMETRY_triangle_vertex_position_info(paramType, infoName, infoType);
+      case 65:
+         return ANARI_GEOMETRY_triangle_vertex_normal_info(paramType, infoName, infoType);
+      case 64:
+         return ANARI_GEOMETRY_triangle_vertex_color_info(paramType, infoName, infoType);
+      case 59:
+         return ANARI_GEOMETRY_triangle_vertex_attribute0_info(paramType, infoName, infoType);
+      case 60:
+         return ANARI_GEOMETRY_triangle_vertex_attribute1_info(paramType, infoName, infoType);
+      case 61:
+         return ANARI_GEOMETRY_triangle_vertex_attribute2_info(paramType, infoName, infoType);
+      case 62:
+         return ANARI_GEOMETRY_triangle_vertex_attribute3_info(paramType, infoName, infoType);
+      case 46:
          return ANARI_GEOMETRY_triangle_primitive_index_info(paramType, infoName, infoType);
       default:
          return nullptr;
    }
 }
-static const void * ANARI_LIGHT_directional_name_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_LIGHT_directional_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "optional object name";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_LIGHT_DIRECTIONAL";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 11;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_LIGHT_directional_color_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_LIGHT_directional_color_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -3410,11 +6348,38 @@ static const void * ANARI_LIGHT_directional_color_info(ANARIDataType paramType, 
          } else {
             return nullptr;
          }
+      case 2: // minimum
+         if(paramType == ANARI_FLOAT32_VEC3 && infoType == ANARI_FLOAT32_VEC3) {
+            static const float default_value[3] = {0.0, 0.0, 0.0};
+            return default_value;
+         } else {
+            return nullptr;
+         }
+      case 3: // maximum
+         if(paramType == ANARI_FLOAT32_VEC3 && infoType == ANARI_FLOAT32_VEC3) {
+            static const float default_value[3] = {1.0, 1.0, 1.0};
+            return default_value;
+         } else {
+            return nullptr;
+         }
+      case 4: // description
+         {
+            static const char *description = "color of the light";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_LIGHT_DIRECTIONAL";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 11;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_LIGHT_directional_irridance_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_LIGHT_directional_irridance_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -3428,11 +6393,24 @@ static const void * ANARI_LIGHT_directional_irridance_info(ANARIDataType paramTy
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "amount of light in W/m^2";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_LIGHT_DIRECTIONAL";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 11;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_LIGHT_directional_direction_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_LIGHT_directional_direction_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -3446,10 +6424,23 @@ static const void * ANARI_LIGHT_directional_direction_info(ANARIDataType paramTy
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "emission direction of the light";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_LIGHT_DIRECTIONAL";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 11;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_LIGHT_directional_param_info(const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_LIGHT_directional_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
       case 30:
          return ANARI_LIGHT_directional_name_info(paramType, infoName, infoType);
@@ -3463,19 +6454,32 @@ static const void * ANARI_LIGHT_directional_param_info(const char *paramName, AN
          return nullptr;
    }
 }
-static const void * ANARI_LIGHT_point_name_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_LIGHT_point_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "optional object name";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_LIGHT_POINT";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 12;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_LIGHT_point_color_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_LIGHT_point_color_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -3489,11 +6493,38 @@ static const void * ANARI_LIGHT_point_color_info(ANARIDataType paramType, const 
          } else {
             return nullptr;
          }
+      case 2: // minimum
+         if(paramType == ANARI_FLOAT32_VEC3 && infoType == ANARI_FLOAT32_VEC3) {
+            static const float default_value[3] = {0.0, 0.0, 0.0};
+            return default_value;
+         } else {
+            return nullptr;
+         }
+      case 3: // maximum
+         if(paramType == ANARI_FLOAT32_VEC3 && infoType == ANARI_FLOAT32_VEC3) {
+            static const float default_value[3] = {1.0, 1.0, 1.0};
+            return default_value;
+         } else {
+            return nullptr;
+         }
+      case 4: // description
+         {
+            static const char *description = "color of the light";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_LIGHT_POINT";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 12;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_LIGHT_point_position_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_LIGHT_point_position_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -3507,11 +6538,24 @@ static const void * ANARI_LIGHT_point_position_info(ANARIDataType paramType, con
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "position of the light source";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_LIGHT_POINT";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 12;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_LIGHT_point_intensity_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_LIGHT_point_intensity_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -3525,11 +6569,24 @@ static const void * ANARI_LIGHT_point_intensity_info(ANARIDataType paramType, co
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "overall amount of light emitted in a direction in W/sr";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_LIGHT_POINT";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 12;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_LIGHT_point_power_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_LIGHT_point_power_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -3543,38 +6600,64 @@ static const void * ANARI_LIGHT_point_power_info(ANARIDataType paramType, const 
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "overall amount of light energy emitted in W";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_LIGHT_POINT";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 12;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_LIGHT_point_param_info(const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_LIGHT_point_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
       case 30:
          return ANARI_LIGHT_point_name_info(paramType, infoName, infoType);
       case 6:
          return ANARI_LIGHT_point_color_info(paramType, infoName, infoType);
-      case 37:
+      case 38:
          return ANARI_LIGHT_point_position_info(paramType, infoName, infoType);
       case 24:
          return ANARI_LIGHT_point_intensity_info(paramType, infoName, infoType);
-      case 38:
+      case 39:
          return ANARI_LIGHT_point_power_info(paramType, infoName, infoType);
       default:
          return nullptr;
    }
 }
-static const void * ANARI_LIGHT_spot_name_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_LIGHT_spot_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "optional object name";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_LIGHT_SPOT";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 13;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_LIGHT_spot_color_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_LIGHT_spot_color_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -3588,11 +6671,38 @@ static const void * ANARI_LIGHT_spot_color_info(ANARIDataType paramType, const c
          } else {
             return nullptr;
          }
+      case 2: // minimum
+         if(paramType == ANARI_FLOAT32_VEC3 && infoType == ANARI_FLOAT32_VEC3) {
+            static const float default_value[3] = {0.0, 0.0, 0.0};
+            return default_value;
+         } else {
+            return nullptr;
+         }
+      case 3: // maximum
+         if(paramType == ANARI_FLOAT32_VEC3 && infoType == ANARI_FLOAT32_VEC3) {
+            static const float default_value[3] = {1.0, 1.0, 1.0};
+            return default_value;
+         } else {
+            return nullptr;
+         }
+      case 4: // description
+         {
+            static const char *description = "color of the light";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_LIGHT_SPOT";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 13;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_LIGHT_spot_position_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_LIGHT_spot_position_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -3606,11 +6716,24 @@ static const void * ANARI_LIGHT_spot_position_info(ANARIDataType paramType, cons
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "position of the light source";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_LIGHT_SPOT";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 13;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_LIGHT_spot_direction_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_LIGHT_spot_direction_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -3624,11 +6747,24 @@ static const void * ANARI_LIGHT_spot_direction_info(ANARIDataType paramType, con
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "the axis of the spot";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_LIGHT_SPOT";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 13;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_LIGHT_spot_openingAngle_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_LIGHT_spot_openingAngle_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -3642,11 +6778,24 @@ static const void * ANARI_LIGHT_spot_openingAngle_info(ANARIDataType paramType, 
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "opening angle in radians";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_LIGHT_SPOT";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 13;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_LIGHT_spot_falloffAngle_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_LIGHT_spot_falloffAngle_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -3660,11 +6809,24 @@ static const void * ANARI_LIGHT_spot_falloffAngle_info(ANARIDataType paramType, 
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "falloff angle in radians";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_LIGHT_SPOT";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 13;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_LIGHT_spot_intensity_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_LIGHT_spot_intensity_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -3678,11 +6840,24 @@ static const void * ANARI_LIGHT_spot_intensity_info(ANARIDataType paramType, con
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "overall amount of light emitted in a direction in W/sr";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_LIGHT_SPOT";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 13;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_LIGHT_spot_power_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_LIGHT_spot_power_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -3696,44 +6871,70 @@ static const void * ANARI_LIGHT_spot_power_info(ANARIDataType paramType, const c
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "overall amount of light energy emitted in W";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_LIGHT_SPOT";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 13;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_LIGHT_spot_param_info(const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_LIGHT_spot_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
       case 30:
          return ANARI_LIGHT_spot_name_info(paramType, infoName, infoType);
       case 6:
          return ANARI_LIGHT_spot_color_info(paramType, infoName, infoType);
-      case 37:
+      case 38:
          return ANARI_LIGHT_spot_position_info(paramType, infoName, infoType);
       case 11:
          return ANARI_LIGHT_spot_direction_info(paramType, infoName, infoType);
-      case 33:
+      case 34:
          return ANARI_LIGHT_spot_openingAngle_info(paramType, infoName, infoType);
       case 12:
          return ANARI_LIGHT_spot_falloffAngle_info(paramType, infoName, infoType);
       case 24:
          return ANARI_LIGHT_spot_intensity_info(paramType, infoName, infoType);
-      case 38:
+      case 39:
          return ANARI_LIGHT_spot_power_info(paramType, infoName, infoType);
       default:
          return nullptr;
    }
 }
-static const void * ANARI_MATERIAL_matte_name_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_MATERIAL_matte_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "optional object name";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_MATERIAL_MATTE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 14;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_MATERIAL_matte_color_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_MATERIAL_matte_color_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -3747,10 +6948,30 @@ static const void * ANARI_MATERIAL_matte_color_info(ANARIDataType paramType, con
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "diffuse color";
+            return description;
+         }
+      case 6: // values
+         if(paramType == ANARI_STRING) {
+            static const char *values[] = {"color", "worldPosition", "worldNormal", "objectPosition", "objectNormal", "attribute0", "attribute1", "attribute2", "attribute3", "primitiveId", nullptr};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_MATERIAL_MATTE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 14;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_MATERIAL_matte_param_info(const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_MATERIAL_matte_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
       case 30:
          return ANARI_MATERIAL_matte_name_info(paramType, infoName, infoType);
@@ -3760,19 +6981,32 @@ static const void * ANARI_MATERIAL_matte_param_info(const char *paramName, ANARI
          return nullptr;
    }
 }
-static const void * ANARI_MATERIAL_transparentMatte_name_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_MATERIAL_transparentMatte_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "optional object name";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_MATERIAL_TRANSPARENT_MATTE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 15;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_MATERIAL_transparentMatte_color_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_MATERIAL_transparentMatte_color_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -3786,11 +7020,31 @@ static const void * ANARI_MATERIAL_transparentMatte_color_info(ANARIDataType par
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "diffuse color";
+            return description;
+         }
+      case 6: // values
+         if(paramType == ANARI_STRING) {
+            static const char *values[] = {"color", "worldPosition", "worldNormal", "objectPosition", "objectNormal", "attribute0", "attribute1", "attribute2", "attribute3", "primitiveId", nullptr};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_MATERIAL_TRANSPARENT_MATTE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 15;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_MATERIAL_transparentMatte_opacity_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_MATERIAL_transparentMatte_opacity_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -3804,45 +7058,98 @@ static const void * ANARI_MATERIAL_transparentMatte_opacity_info(ANARIDataType p
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "opacity";
+            return description;
+         }
+      case 6: // values
+         if(paramType == ANARI_STRING) {
+            static const char *values[] = {"color", "worldPosition", "worldNormal", "objectPosition", "objectNormal", "attribute0", "attribute1", "attribute2", "attribute3", "primitiveId", nullptr};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_MATERIAL_TRANSPARENT_MATTE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 15;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_MATERIAL_transparentMatte_param_info(const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_MATERIAL_transparentMatte_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
       case 30:
          return ANARI_MATERIAL_transparentMatte_name_info(paramType, infoName, infoType);
       case 6:
          return ANARI_MATERIAL_transparentMatte_color_info(paramType, infoName, infoType);
-      case 31:
+      case 32:
          return ANARI_MATERIAL_transparentMatte_opacity_info(paramType, infoName, infoType);
       default:
          return nullptr;
    }
 }
-static const void * ANARI_SAMPLER_image1D_name_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_SAMPLER_image1D_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "optional object name";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_SAMPLER_IMAGE1D";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 16;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_SAMPLER_image1D_image_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_SAMPLER_image1D_image_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_true;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "array backing the sampler";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_UFIXED8, ANARI_UFIXED8_VEC2, ANARI_UFIXED8_VEC3, ANARI_UFIXED8_VEC4, ANARI_UFIXED8_R_SRGB, ANARI_UFIXED8_RA_SRGB, ANARI_UFIXED8_RGB_SRGB, ANARI_UFIXED8_RGBA_SRGB, ANARI_UFIXED16, ANARI_UFIXED16_VEC2, ANARI_UFIXED16_VEC3, ANARI_UFIXED16_VEC4, ANARI_UFIXED32, ANARI_UFIXED32_VEC2, ANARI_UFIXED32_VEC3, ANARI_UFIXED32_VEC4, ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_SAMPLER_IMAGE1D";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 16;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_SAMPLER_image1D_inAttribute_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_SAMPLER_image1D_inAttribute_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -3856,11 +7163,31 @@ static const void * ANARI_SAMPLER_image1D_inAttribute_info(ANARIDataType paramTy
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "input surface attribute (texture coordinate)";
+            return description;
+         }
+      case 6: // values
+         if(paramType == ANARI_STRING) {
+            static const char *values[] = {"color", "worldPosition", "worldNormal", "objectPosition", "objectNormal", "attribute0", "attribute1", "attribute2", "attribute3", "primitiveId", nullptr};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_SAMPLER_IMAGE1D";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 16;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_SAMPLER_image1D_filter_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_SAMPLER_image1D_filter_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -3874,6 +7201,11 @@ static const void * ANARI_SAMPLER_image1D_filter_info(ANARIDataType paramType, c
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "filter mode";
+            return description;
+         }
       case 6: // values
          if(paramType == ANARI_STRING) {
             static const char *values[] = {"nearest", "linear", nullptr};
@@ -3881,11 +7213,19 @@ static const void * ANARI_SAMPLER_image1D_filter_info(ANARIDataType paramType, c
          } else {
             return nullptr;
          }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_SAMPLER_IMAGE1D";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 16;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_SAMPLER_image1D_wrapMode1_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_SAMPLER_image1D_wrapMode1_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -3899,6 +7239,11 @@ static const void * ANARI_SAMPLER_image1D_wrapMode1_info(ANARIDataType paramType
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "wrap mode for the 1st dimension";
+            return description;
+         }
       case 6: // values
          if(paramType == ANARI_STRING) {
             static const char *values[] = {"clampToEdge", "repeat", "mirrorRepeat", nullptr};
@@ -3906,11 +7251,19 @@ static const void * ANARI_SAMPLER_image1D_wrapMode1_info(ANARIDataType paramType
          } else {
             return nullptr;
          }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_SAMPLER_IMAGE1D";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 16;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_SAMPLER_image1D_inTransform_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_SAMPLER_image1D_inTransform_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -3924,11 +7277,24 @@ static const void * ANARI_SAMPLER_image1D_inTransform_info(ANARIDataType paramTy
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "transform applied to the input attribute before sampling";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_SAMPLER_IMAGE1D";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 16;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_SAMPLER_image1D_outTransform_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_SAMPLER_image1D_outTransform_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -3942,10 +7308,23 @@ static const void * ANARI_SAMPLER_image1D_outTransform_info(ANARIDataType paramT
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "transform applied to the sampled values";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_SAMPLER_IMAGE1D";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 16;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_SAMPLER_image1D_param_info(const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_SAMPLER_image1D_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
       case 30:
          return ANARI_SAMPLER_image1D_name_info(paramType, infoName, infoType);
@@ -3955,40 +7334,73 @@ static const void * ANARI_SAMPLER_image1D_param_info(const char *paramName, ANAR
          return ANARI_SAMPLER_image1D_inAttribute_info(paramType, infoName, infoType);
       case 14:
          return ANARI_SAMPLER_image1D_filter_info(paramType, infoName, infoType);
-      case 69:
+      case 70:
          return ANARI_SAMPLER_image1D_wrapMode1_info(paramType, infoName, infoType);
       case 22:
          return ANARI_SAMPLER_image1D_inTransform_info(paramType, infoName, infoType);
-      case 35:
+      case 36:
          return ANARI_SAMPLER_image1D_outTransform_info(paramType, infoName, infoType);
       default:
          return nullptr;
    }
 }
-static const void * ANARI_SAMPLER_image2D_name_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_SAMPLER_image2D_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "optional object name";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_SAMPLER_IMAGE2D";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 17;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_SAMPLER_image2D_image_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_SAMPLER_image2D_image_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_true;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "array backing the sampler";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_UFIXED8, ANARI_UFIXED8_VEC2, ANARI_UFIXED8_VEC3, ANARI_UFIXED8_VEC4, ANARI_UFIXED8_R_SRGB, ANARI_UFIXED8_RA_SRGB, ANARI_UFIXED8_RGB_SRGB, ANARI_UFIXED8_RGBA_SRGB, ANARI_UFIXED16, ANARI_UFIXED16_VEC2, ANARI_UFIXED16_VEC3, ANARI_UFIXED16_VEC4, ANARI_UFIXED32, ANARI_UFIXED32_VEC2, ANARI_UFIXED32_VEC3, ANARI_UFIXED32_VEC4, ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_SAMPLER_IMAGE2D";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 17;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_SAMPLER_image2D_inAttribute_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_SAMPLER_image2D_inAttribute_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -4002,11 +7414,31 @@ static const void * ANARI_SAMPLER_image2D_inAttribute_info(ANARIDataType paramTy
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "input surface attribute (texture coordinate)";
+            return description;
+         }
+      case 6: // values
+         if(paramType == ANARI_STRING) {
+            static const char *values[] = {"color", "worldPosition", "worldNormal", "objectPosition", "objectNormal", "attribute0", "attribute1", "attribute2", "attribute3", "primitiveId", nullptr};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_SAMPLER_IMAGE2D";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 17;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_SAMPLER_image2D_filter_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_SAMPLER_image2D_filter_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -4020,6 +7452,11 @@ static const void * ANARI_SAMPLER_image2D_filter_info(ANARIDataType paramType, c
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "filter mode";
+            return description;
+         }
       case 6: // values
          if(paramType == ANARI_STRING) {
             static const char *values[] = {"nearest", "linear", nullptr};
@@ -4027,11 +7464,19 @@ static const void * ANARI_SAMPLER_image2D_filter_info(ANARIDataType paramType, c
          } else {
             return nullptr;
          }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_SAMPLER_IMAGE2D";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 17;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_SAMPLER_image2D_wrapMode1_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_SAMPLER_image2D_wrapMode1_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -4045,6 +7490,11 @@ static const void * ANARI_SAMPLER_image2D_wrapMode1_info(ANARIDataType paramType
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "wrap mode for the 1st dimension";
+            return description;
+         }
       case 6: // values
          if(paramType == ANARI_STRING) {
             static const char *values[] = {"clampToEdge", "repeat", "mirrorRepeat", nullptr};
@@ -4052,11 +7502,19 @@ static const void * ANARI_SAMPLER_image2D_wrapMode1_info(ANARIDataType paramType
          } else {
             return nullptr;
          }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_SAMPLER_IMAGE2D";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 17;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_SAMPLER_image2D_wrapMode2_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_SAMPLER_image2D_wrapMode2_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -4070,6 +7528,11 @@ static const void * ANARI_SAMPLER_image2D_wrapMode2_info(ANARIDataType paramType
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "wrap mode for the 2nd dimension";
+            return description;
+         }
       case 6: // values
          if(paramType == ANARI_STRING) {
             static const char *values[] = {"clampToEdge", "repeat", "mirrorRepeat", nullptr};
@@ -4077,11 +7540,19 @@ static const void * ANARI_SAMPLER_image2D_wrapMode2_info(ANARIDataType paramType
          } else {
             return nullptr;
          }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_SAMPLER_IMAGE2D";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 17;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_SAMPLER_image2D_inTransform_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_SAMPLER_image2D_inTransform_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -4095,11 +7566,24 @@ static const void * ANARI_SAMPLER_image2D_inTransform_info(ANARIDataType paramTy
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "transform applied to the input attribute before sampling";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_SAMPLER_IMAGE2D";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 17;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_SAMPLER_image2D_outTransform_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_SAMPLER_image2D_outTransform_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -4113,10 +7597,23 @@ static const void * ANARI_SAMPLER_image2D_outTransform_info(ANARIDataType paramT
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "transform applied to the sampled values";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_SAMPLER_IMAGE2D";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 17;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_SAMPLER_image2D_param_info(const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_SAMPLER_image2D_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
       case 30:
          return ANARI_SAMPLER_image2D_name_info(paramType, infoName, infoType);
@@ -4126,42 +7623,75 @@ static const void * ANARI_SAMPLER_image2D_param_info(const char *paramName, ANAR
          return ANARI_SAMPLER_image2D_inAttribute_info(paramType, infoName, infoType);
       case 14:
          return ANARI_SAMPLER_image2D_filter_info(paramType, infoName, infoType);
-      case 69:
-         return ANARI_SAMPLER_image2D_wrapMode1_info(paramType, infoName, infoType);
       case 70:
+         return ANARI_SAMPLER_image2D_wrapMode1_info(paramType, infoName, infoType);
+      case 71:
          return ANARI_SAMPLER_image2D_wrapMode2_info(paramType, infoName, infoType);
       case 22:
          return ANARI_SAMPLER_image2D_inTransform_info(paramType, infoName, infoType);
-      case 35:
+      case 36:
          return ANARI_SAMPLER_image2D_outTransform_info(paramType, infoName, infoType);
       default:
          return nullptr;
    }
 }
-static const void * ANARI_SAMPLER_image3D_name_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_SAMPLER_image3D_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "optional object name";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_SAMPLER_IMAGE3D";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 18;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_SAMPLER_image3D_image_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_SAMPLER_image3D_image_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_true;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "array backing the sampler";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_UFIXED8, ANARI_UFIXED8_VEC2, ANARI_UFIXED8_VEC3, ANARI_UFIXED8_VEC4, ANARI_UFIXED8_R_SRGB, ANARI_UFIXED8_RA_SRGB, ANARI_UFIXED8_RGB_SRGB, ANARI_UFIXED8_RGBA_SRGB, ANARI_UFIXED16, ANARI_UFIXED16_VEC2, ANARI_UFIXED16_VEC3, ANARI_UFIXED16_VEC4, ANARI_UFIXED32, ANARI_UFIXED32_VEC2, ANARI_UFIXED32_VEC3, ANARI_UFIXED32_VEC4, ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_SAMPLER_IMAGE3D";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 18;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_SAMPLER_image3D_inAttribute_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_SAMPLER_image3D_inAttribute_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -4175,11 +7705,31 @@ static const void * ANARI_SAMPLER_image3D_inAttribute_info(ANARIDataType paramTy
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "input surface attribute (texture coordinate)";
+            return description;
+         }
+      case 6: // values
+         if(paramType == ANARI_STRING) {
+            static const char *values[] = {"color", "worldPosition", "worldNormal", "objectPosition", "objectNormal", "attribute0", "attribute1", "attribute2", "attribute3", "primitiveId", nullptr};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_SAMPLER_IMAGE3D";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 18;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_SAMPLER_image3D_filter_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_SAMPLER_image3D_filter_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -4193,6 +7743,11 @@ static const void * ANARI_SAMPLER_image3D_filter_info(ANARIDataType paramType, c
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "filter mode";
+            return description;
+         }
       case 6: // values
          if(paramType == ANARI_STRING) {
             static const char *values[] = {"nearest", "linear", nullptr};
@@ -4200,11 +7755,19 @@ static const void * ANARI_SAMPLER_image3D_filter_info(ANARIDataType paramType, c
          } else {
             return nullptr;
          }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_SAMPLER_IMAGE3D";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 18;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_SAMPLER_image3D_wrapMode1_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_SAMPLER_image3D_wrapMode1_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -4218,6 +7781,11 @@ static const void * ANARI_SAMPLER_image3D_wrapMode1_info(ANARIDataType paramType
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "wrap mode for the 1st dimension";
+            return description;
+         }
       case 6: // values
          if(paramType == ANARI_STRING) {
             static const char *values[] = {"clampToEdge", "repeat", "mirrorRepeat", nullptr};
@@ -4225,11 +7793,19 @@ static const void * ANARI_SAMPLER_image3D_wrapMode1_info(ANARIDataType paramType
          } else {
             return nullptr;
          }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_SAMPLER_IMAGE3D";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 18;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_SAMPLER_image3D_wrapMode2_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_SAMPLER_image3D_wrapMode2_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -4243,6 +7819,11 @@ static const void * ANARI_SAMPLER_image3D_wrapMode2_info(ANARIDataType paramType
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "wrap mode for the 2nd dimension";
+            return description;
+         }
       case 6: // values
          if(paramType == ANARI_STRING) {
             static const char *values[] = {"clampToEdge", "repeat", "mirrorRepeat", nullptr};
@@ -4250,11 +7831,19 @@ static const void * ANARI_SAMPLER_image3D_wrapMode2_info(ANARIDataType paramType
          } else {
             return nullptr;
          }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_SAMPLER_IMAGE3D";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 18;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_SAMPLER_image3D_wrapMode3_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_SAMPLER_image3D_wrapMode3_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -4268,6 +7857,11 @@ static const void * ANARI_SAMPLER_image3D_wrapMode3_info(ANARIDataType paramType
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "wrap mode for the 3rd dimension";
+            return description;
+         }
       case 6: // values
          if(paramType == ANARI_STRING) {
             static const char *values[] = {"clampToEdge", "repeat", "mirrorRepeat", nullptr};
@@ -4275,11 +7869,19 @@ static const void * ANARI_SAMPLER_image3D_wrapMode3_info(ANARIDataType paramType
          } else {
             return nullptr;
          }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_SAMPLER_IMAGE3D";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 18;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_SAMPLER_image3D_inTransform_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_SAMPLER_image3D_inTransform_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -4293,11 +7895,24 @@ static const void * ANARI_SAMPLER_image3D_inTransform_info(ANARIDataType paramTy
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "transform applied to the input attribute before sampling";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_SAMPLER_IMAGE3D";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 18;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_SAMPLER_image3D_outTransform_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_SAMPLER_image3D_outTransform_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -4311,10 +7926,23 @@ static const void * ANARI_SAMPLER_image3D_outTransform_info(ANARIDataType paramT
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "transform applied to the sampled values";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_SAMPLER_IMAGE3D";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 18;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_SAMPLER_image3D_param_info(const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_SAMPLER_image3D_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
       case 30:
          return ANARI_SAMPLER_image3D_name_info(paramType, infoName, infoType);
@@ -4324,65 +7952,144 @@ static const void * ANARI_SAMPLER_image3D_param_info(const char *paramName, ANAR
          return ANARI_SAMPLER_image3D_inAttribute_info(paramType, infoName, infoType);
       case 14:
          return ANARI_SAMPLER_image3D_filter_info(paramType, infoName, infoType);
-      case 69:
-         return ANARI_SAMPLER_image3D_wrapMode1_info(paramType, infoName, infoType);
       case 70:
-         return ANARI_SAMPLER_image3D_wrapMode2_info(paramType, infoName, infoType);
+         return ANARI_SAMPLER_image3D_wrapMode1_info(paramType, infoName, infoType);
       case 71:
+         return ANARI_SAMPLER_image3D_wrapMode2_info(paramType, infoName, infoType);
+      case 72:
          return ANARI_SAMPLER_image3D_wrapMode3_info(paramType, infoName, infoType);
       case 22:
          return ANARI_SAMPLER_image3D_inTransform_info(paramType, infoName, infoType);
-      case 35:
+      case 36:
          return ANARI_SAMPLER_image3D_outTransform_info(paramType, infoName, infoType);
       default:
          return nullptr;
    }
 }
-static const void * ANARI_SAMPLER_primitive_name_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_SAMPLER_primitive_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "optional object name";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_SAMPLER_PRIMITIVE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 19;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_SAMPLER_primitive_array_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_SAMPLER_primitive_array_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_true;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "backing array of the sampler";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_UFIXED8, ANARI_UFIXED8_VEC2, ANARI_UFIXED8_VEC3, ANARI_UFIXED8_VEC4, ANARI_UFIXED8_R_SRGB, ANARI_UFIXED8_RA_SRGB, ANARI_UFIXED8_RGB_SRGB, ANARI_UFIXED8_RGBA_SRGB, ANARI_UFIXED16, ANARI_UFIXED16_VEC2, ANARI_UFIXED16_VEC3, ANARI_UFIXED16_VEC4, ANARI_UFIXED32, ANARI_UFIXED32_VEC2, ANARI_UFIXED32_VEC3, ANARI_UFIXED32_VEC4, ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_SAMPLER_PRIMITIVE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 19;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_SAMPLER_primitive_param_info(const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(param_hash(paramName)) {
-      case 30:
-         return ANARI_SAMPLER_primitive_name_info(paramType, infoName, infoType);
-      case 1:
-         return ANARI_SAMPLER_primitive_array_info(paramType, infoName, infoType);
-      default:
-         return nullptr;
-   }
-}
-static const void * ANARI_SAMPLER_transform_name_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_SAMPLER_primitive_offset_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 1: // default
+         if(paramType == ANARI_UINT64 && infoType == ANARI_UINT64) {
+            static const uint64_t default_value[1] = {0};
+            return default_value;
+         } else {
+            return nullptr;
+         }
+      case 4: // description
+         {
+            static const char *description = "offset added to primitiveId";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_SAMPLER_PRIMITIVE";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 19;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_SAMPLER_transform_inAttribute_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_SAMPLER_primitive_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(param_hash(paramName)) {
+      case 30:
+         return ANARI_SAMPLER_primitive_name_info(paramType, infoName, infoType);
+      case 1:
+         return ANARI_SAMPLER_primitive_array_info(paramType, infoName, infoType);
+      case 31:
+         return ANARI_SAMPLER_primitive_offset_info(paramType, infoName, infoType);
+      default:
+         return nullptr;
+   }
+}
+static const void * ANARI_SAMPLER_transform_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
+      case 0: // required
+         if(infoType == ANARI_BOOL) {
+            return &anari_false;
+         } else {
+            return nullptr;
+         }
+      case 4: // description
+         {
+            static const char *description = "optional object name";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_SAMPLER_TRANSFORM";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 20;
+            return &value;
+         }
+       default: return nullptr;
+   }
+}
+static const void * ANARI_SAMPLER_transform_inAttribute_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -4396,11 +8103,31 @@ static const void * ANARI_SAMPLER_transform_inAttribute_info(ANARIDataType param
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "input surface attribute (texture coordinate)";
+            return description;
+         }
+      case 6: // values
+         if(paramType == ANARI_STRING) {
+            static const char *values[] = {"color", "worldPosition", "worldNormal", "objectPosition", "objectNormal", "attribute0", "attribute1", "attribute2", "attribute3", "primitiveId", nullptr};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_SAMPLER_TRANSFORM";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 20;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_SAMPLER_transform_transform_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_SAMPLER_transform_transform_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -4414,45 +8141,91 @@ static const void * ANARI_SAMPLER_transform_transform_info(ANARIDataType paramTy
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "transform applied to the input attribute";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_SAMPLER_TRANSFORM";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 20;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_SAMPLER_transform_param_info(const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_SAMPLER_transform_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
       case 30:
          return ANARI_SAMPLER_transform_name_info(paramType, infoName, infoType);
       case 21:
          return ANARI_SAMPLER_transform_inAttribute_info(paramType, infoName, infoType);
-      case 55:
+      case 56:
          return ANARI_SAMPLER_transform_transform_info(paramType, infoName, infoType);
       default:
          return nullptr;
    }
 }
-static const void * ANARI_SPATIAL_FIELD_structuredRegular_name_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_SPATIAL_FIELD_structuredRegular_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "optional object name";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_SPATIAL_FIELD_STRUCTURED_REGULAR";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 21;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_SPATIAL_FIELD_structuredRegular_data_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_SPATIAL_FIELD_structuredRegular_data_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_true;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "array of vertex centered scalar values";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_UINT8, ANARI_INT16, ANARI_UINT16, ANARI_FLOAT32, ANARI_FLOAT64, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_SPATIAL_FIELD_STRUCTURED_REGULAR";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 21;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_SPATIAL_FIELD_structuredRegular_origin_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_SPATIAL_FIELD_structuredRegular_origin_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -4466,11 +8239,24 @@ static const void * ANARI_SPATIAL_FIELD_structuredRegular_origin_info(ANARIDataT
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "origin of the grid in object-space";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_SPATIAL_FIELD_STRUCTURED_REGULAR";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 21;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_SPATIAL_FIELD_structuredRegular_spacing_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_SPATIAL_FIELD_structuredRegular_spacing_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -4484,11 +8270,24 @@ static const void * ANARI_SPATIAL_FIELD_structuredRegular_spacing_info(ANARIData
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "size of the grid cells in object-space";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_SPATIAL_FIELD_STRUCTURED_REGULAR";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 21;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_SPATIAL_FIELD_structuredRegular_filter_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_SPATIAL_FIELD_structuredRegular_filter_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -4502,6 +8301,11 @@ static const void * ANARI_SPATIAL_FIELD_structuredRegular_filter_info(ANARIDataT
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "filter mode used to interpolate the grid";
+            return description;
+         }
       case 6: // values
          if(paramType == ANARI_STRING) {
             static const char *values[] = {"nearest", "linear", nullptr};
@@ -4509,18 +8313,26 @@ static const void * ANARI_SPATIAL_FIELD_structuredRegular_filter_info(ANARIDataT
          } else {
             return nullptr;
          }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_SPATIAL_FIELD_STRUCTURED_REGULAR";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 21;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_SPATIAL_FIELD_structuredRegular_param_info(const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_SPATIAL_FIELD_structuredRegular_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
       case 30:
          return ANARI_SPATIAL_FIELD_structuredRegular_name_info(paramType, infoName, infoType);
       case 8:
          return ANARI_SPATIAL_FIELD_structuredRegular_data_info(paramType, infoName, infoType);
-      case 34:
+      case 35:
          return ANARI_SPATIAL_FIELD_structuredRegular_origin_info(paramType, infoName, infoType);
-      case 50:
+      case 51:
          return ANARI_SPATIAL_FIELD_structuredRegular_spacing_info(paramType, infoName, infoType);
       case 14:
          return ANARI_SPATIAL_FIELD_structuredRegular_filter_info(paramType, infoName, infoType);
@@ -4528,33 +8340,59 @@ static const void * ANARI_SPATIAL_FIELD_structuredRegular_param_info(const char 
          return nullptr;
    }
 }
-static const void * ANARI_VOLUME_scivis_name_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_VOLUME_scivis_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "optional object name";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_VOLUME_SCIVIS";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 22;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_VOLUME_scivis_field_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_VOLUME_scivis_field_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_true;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "spatial field used for the field values of the volume";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_VOLUME_SCIVIS";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 22;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_VOLUME_scivis_valueRange_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_VOLUME_scivis_valueRange_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
-            return &anari_true;
+            return &anari_false;
          } else {
             return nullptr;
          }
@@ -4565,55 +8403,148 @@ static const void * ANARI_VOLUME_scivis_valueRange_info(ANARIDataType paramType,
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "sampled values of field are clamped to this range";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_VOLUME_SCIVIS";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 22;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_VOLUME_scivis_color_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_VOLUME_scivis_color_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_true;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "array to map sampled and clamped field values to color";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_UFIXED8, ANARI_UFIXED8_VEC2, ANARI_UFIXED8_VEC3, ANARI_UFIXED8_VEC4, ANARI_UFIXED8_R_SRGB, ANARI_UFIXED8_RA_SRGB, ANARI_UFIXED8_RGB_SRGB, ANARI_UFIXED8_RGBA_SRGB, ANARI_UFIXED16, ANARI_UFIXED16_VEC2, ANARI_UFIXED16_VEC3, ANARI_UFIXED16_VEC4, ANARI_UFIXED32, ANARI_UFIXED32_VEC2, ANARI_UFIXED32_VEC3, ANARI_UFIXED32_VEC4, ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_VOLUME_SCIVIS";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 22;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_VOLUME_scivis_color_position_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_VOLUME_scivis_color_position_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "optional array to position the elements of color values in valueRange";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_VOLUME_SCIVIS";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 22;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_VOLUME_scivis_opacity_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_VOLUME_scivis_opacity_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_true;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "array to map sampled and clamped field values to opacity";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_VOLUME_SCIVIS";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 22;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_VOLUME_scivis_opacity_position_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_VOLUME_scivis_opacity_position_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "optional array to position the elements of opacity values in valueRange";
+            return description;
+         }
+      case 5: // elementType
+         if(infoType == ANARI_DATA_TYPE) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
+            return values;
+         } else {
+            return nullptr;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_VOLUME_SCIVIS";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 22;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_VOLUME_scivis_densityScale_info(ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
-   switch(info_hash(infoName)) {
+static const void * ANARI_VOLUME_scivis_densityScale_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(infoName) {
       case 0: // required
          if(infoType == ANARI_BOOL) {
             return &anari_false;
@@ -4627,24 +8558,37 @@ static const void * ANARI_VOLUME_scivis_densityScale_info(ANARIDataType paramTyp
          } else {
             return nullptr;
          }
+      case 4: // description
+         {
+            static const char *description = "makes volumes uniformly thinner or thicker";
+            return description;
+         }
+      case 7: // feature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_VOLUME_SCIVIS";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int value = 22;
+            return &value;
+         }
        default: return nullptr;
    }
 }
-static const void * ANARI_VOLUME_scivis_param_info(const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_VOLUME_scivis_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
       case 30:
          return ANARI_VOLUME_scivis_name_info(paramType, infoName, infoType);
       case 13:
          return ANARI_VOLUME_scivis_field_info(paramType, infoName, infoType);
-      case 57:
+      case 58:
          return ANARI_VOLUME_scivis_valueRange_info(paramType, infoName, infoType);
       case 6:
          return ANARI_VOLUME_scivis_color_info(paramType, infoName, infoType);
       case 7:
          return ANARI_VOLUME_scivis_color_position_info(paramType, infoName, infoType);
-      case 31:
-         return ANARI_VOLUME_scivis_opacity_info(paramType, infoName, infoType);
       case 32:
+         return ANARI_VOLUME_scivis_opacity_info(paramType, infoName, infoType);
+      case 33:
          return ANARI_VOLUME_scivis_opacity_position_info(paramType, infoName, infoType);
       case 9:
          return ANARI_VOLUME_scivis_densityScale_info(paramType, infoName, infoType);
@@ -4652,7 +8596,7 @@ static const void * ANARI_VOLUME_scivis_param_info(const char *paramName, ANARID
          return nullptr;
    }
 }
-static const void * ANARI_CAMERA_param_info(const char *subtype, const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_CAMERA_param_info(const char *subtype, const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(subtype_hash(subtype)) {
       case 11:
          return ANARI_CAMERA_omnidirectional_param_info(paramName, paramType, infoName, infoType);
@@ -4664,7 +8608,7 @@ static const void * ANARI_CAMERA_param_info(const char *subtype, const char *par
          return nullptr;
    }
 }
-static const void * ANARI_GEOMETRY_param_info(const char *subtype, const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_GEOMETRY_param_info(const char *subtype, const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(subtype_hash(subtype)) {
       case 1:
          return ANARI_GEOMETRY_cone_param_info(paramName, paramType, infoName, infoType);
@@ -4682,7 +8626,7 @@ static const void * ANARI_GEOMETRY_param_info(const char *subtype, const char *p
          return nullptr;
    }
 }
-static const void * ANARI_LIGHT_param_info(const char *subtype, const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_LIGHT_param_info(const char *subtype, const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(subtype_hash(subtype)) {
       case 6:
          return ANARI_LIGHT_directional_param_info(paramName, paramType, infoName, infoType);
@@ -4694,7 +8638,7 @@ static const void * ANARI_LIGHT_param_info(const char *subtype, const char *para
          return nullptr;
    }
 }
-static const void * ANARI_MATERIAL_param_info(const char *subtype, const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_MATERIAL_param_info(const char *subtype, const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(subtype_hash(subtype)) {
       case 10:
          return ANARI_MATERIAL_matte_param_info(paramName, paramType, infoName, infoType);
@@ -4704,7 +8648,7 @@ static const void * ANARI_MATERIAL_param_info(const char *subtype, const char *p
          return nullptr;
    }
 }
-static const void * ANARI_RENDERER_param_info(const char *subtype, const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_RENDERER_param_info(const char *subtype, const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(subtype_hash(subtype)) {
       case 5:
          return ANARI_RENDERER_default_param_info(paramName, paramType, infoName, infoType);
@@ -4724,7 +8668,7 @@ static const void * ANARI_RENDERER_param_info(const char *subtype, const char *p
          return nullptr;
    }
 }
-static const void * ANARI_SAMPLER_param_info(const char *subtype, const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_SAMPLER_param_info(const char *subtype, const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(subtype_hash(subtype)) {
       case 7:
          return ANARI_SAMPLER_image1D_param_info(paramName, paramType, infoName, infoType);
@@ -4740,7 +8684,7 @@ static const void * ANARI_SAMPLER_param_info(const char *subtype, const char *pa
          return nullptr;
    }
 }
-static const void * ANARI_SPATIAL_FIELD_param_info(const char *subtype, const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_SPATIAL_FIELD_param_info(const char *subtype, const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(subtype_hash(subtype)) {
       case 23:
          return ANARI_SPATIAL_FIELD_structuredRegular_param_info(paramName, paramType, infoName, infoType);
@@ -4748,7 +8692,7 @@ static const void * ANARI_SPATIAL_FIELD_param_info(const char *subtype, const ch
          return nullptr;
    }
 }
-static const void * ANARI_VOLUME_param_info(const char *subtype, const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+static const void * ANARI_VOLUME_param_info(const char *subtype, const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(subtype_hash(subtype)) {
       case 20:
          return ANARI_VOLUME_scivis_param_info(paramName, paramType, infoName, infoType);
@@ -4756,7 +8700,7 @@ static const void * ANARI_VOLUME_param_info(const char *subtype, const char *par
          return nullptr;
    }
 }
-const void * query_param_info(ANARIDataType type, const char *subtype, const char *paramName, ANARIDataType paramType, const char *infoName, ANARIDataType infoType) {
+const void * query_param_info_enum(ANARIDataType type, const char *subtype, const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(type) {
       case ANARI_CAMERA:
          return ANARI_CAMERA_param_info(subtype, paramName, paramType, infoName, infoType);
@@ -4796,5 +8740,6 @@ const void * query_param_info(ANARIDataType type, const char *subtype, const cha
          return nullptr;
    }
 }
-}
+const void * query_param_info(ANARIDataType type, const char *subtype, const char *paramName, ANARIDataType paramType, const char *infoNameString, ANARIDataType infoType) {
+   int infoName = info_hash(infoNameString);   return query_param_info_enum(type, subtype, paramName, paramType, infoName, infoType);}}
 }

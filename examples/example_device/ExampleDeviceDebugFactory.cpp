@@ -26,8 +26,9 @@ public:
    anari::debug_device::DebugObjectBase* new_group(anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;
    anari::debug_device::DebugObjectBase* new_instance(anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;
    anari::debug_device::DebugObjectBase* new_world(anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;
-   anari::debug_device::DebugObjectBase* new_surface(anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override; 
-};
+   anari::debug_device::DebugObjectBase* new_surface(anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;
+   void print_summary(anari::debug_device::DebugDevice *td) override;
+   void use_feature(int feature);};
 namespace {
 class renderer_default : public DebugObject<ANARI_RENDERER> {
    static int param_hash(const char *str) {
@@ -53,7 +54,7 @@ class renderer_default : public DebugObject<ANARI_RENDERER> {
       return -1;
    }
    public:
-   renderer_default(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   renderer_default(DebugDevice *td, ExampleDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -106,7 +107,7 @@ class renderer_scivis : public DebugObject<ANARI_RENDERER> {
       return -1;
    }
    public:
-   renderer_scivis(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   renderer_scivis(DebugDevice *td, ExampleDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -159,7 +160,7 @@ class renderer_ao : public DebugObject<ANARI_RENDERER> {
       return -1;
    }
    public:
-   renderer_ao(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   renderer_ao(DebugDevice *td, ExampleDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -212,7 +213,7 @@ class renderer_pathtracer : public DebugObject<ANARI_RENDERER> {
       return -1;
    }
    public:
-   renderer_pathtracer(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   renderer_pathtracer(DebugDevice *td, ExampleDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -265,7 +266,7 @@ class renderer_debug : public DebugObject<ANARI_RENDERER> {
       return -1;
    }
    public:
-   renderer_debug(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   renderer_debug(DebugDevice *td, ExampleDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -318,7 +319,7 @@ class renderer_raycast : public DebugObject<ANARI_RENDERER> {
       return -1;
    }
    public:
-   renderer_raycast(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   renderer_raycast(DebugDevice *td, ExampleDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -371,7 +372,7 @@ class renderer_rayDir : public DebugObject<ANARI_RENDERER> {
       return -1;
    }
    public:
-   renderer_rayDir(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   renderer_rayDir(DebugDevice *td, ExampleDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -424,7 +425,7 @@ class device : public DebugObject<ANARI_DEVICE> {
       return -1;
    }
    public:
-   device(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   device(DebugDevice *td, ExampleDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -477,7 +478,7 @@ class array1d : public ArrayDebugObject<ANARI_ARRAY1D> {
       return -1;
    }
    public:
-   array1d(DebugDevice *td, ANARIObject wh, ANARIObject h): ArrayDebugObject(td, wh, h) { }
+   array1d(DebugDevice *td, ExampleDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): ArrayDebugObject(td, wh, h) { }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       ArrayDebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -520,7 +521,7 @@ class array2d : public ArrayDebugObject<ANARI_ARRAY2D> {
       return -1;
    }
    public:
-   array2d(DebugDevice *td, ANARIObject wh, ANARIObject h): ArrayDebugObject(td, wh, h) { }
+   array2d(DebugDevice *td, ExampleDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): ArrayDebugObject(td, wh, h) { }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       ArrayDebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -563,7 +564,7 @@ class array3d : public ArrayDebugObject<ANARI_ARRAY3D> {
       return -1;
    }
    public:
-   array3d(DebugDevice *td, ANARIObject wh, ANARIObject h): ArrayDebugObject(td, wh, h) { }
+   array3d(DebugDevice *td, ExampleDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): ArrayDebugObject(td, wh, h) { }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       ArrayDebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -606,7 +607,7 @@ class frame : public DebugObject<ANARI_FRAME> {
       return -1;
    }
    public:
-   frame(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   frame(DebugDevice *td, ExampleDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -679,7 +680,7 @@ class group : public DebugObject<ANARI_GROUP> {
       return -1;
    }
    public:
-   group(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   group(DebugDevice *td, ExampleDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -737,7 +738,7 @@ class instance : public DebugObject<ANARI_INSTANCE> {
       return -1;
    }
    public:
-   instance(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   instance(DebugDevice *td, ExampleDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -748,7 +749,7 @@ class instance : public DebugObject<ANARI_INSTANCE> {
             return;
          }
          case 1: { //transform
-            ANARIDataType transform_types[] = {ANARI_FLOAT32_MAT3x4, ANARI_UNKNOWN};
+            ANARIDataType transform_types[] = {ANARI_FLOAT32_MAT4, ANARI_UNKNOWN};
             check_type(ANARI_INSTANCE, "", paramname, paramtype, transform_types);
             return;
          }
@@ -790,7 +791,7 @@ class world : public DebugObject<ANARI_WORLD> {
       return -1;
    }
    public:
-   world(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   world(DebugDevice *td, ExampleDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -853,7 +854,7 @@ class surface : public DebugObject<ANARI_SURFACE> {
       return -1;
    }
    public:
-   surface(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   surface(DebugDevice *td, ExampleDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -906,7 +907,7 @@ class camera_omnidirectional : public DebugObject<ANARI_CAMERA> {
       return -1;
    }
    public:
-   camera_omnidirectional(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   camera_omnidirectional(DebugDevice *td, ExampleDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -999,7 +1000,7 @@ class camera_orthographic : public DebugObject<ANARI_CAMERA> {
       return -1;
    }
    public:
-   camera_orthographic(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   camera_orthographic(DebugDevice *td, ExampleDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -1092,7 +1093,7 @@ class camera_perspective : public DebugObject<ANARI_CAMERA> {
       return -1;
    }
    public:
-   camera_perspective(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   camera_perspective(DebugDevice *td, ExampleDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -1190,7 +1191,7 @@ class geometry_cone : public DebugObject<ANARI_GEOMETRY> {
       return -1;
    }
    public:
-   geometry_cone(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   geometry_cone(DebugDevice *td, ExampleDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -1313,7 +1314,7 @@ class geometry_curve : public DebugObject<ANARI_GEOMETRY> {
       return -1;
    }
    public:
-   geometry_curve(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   geometry_curve(DebugDevice *td, ExampleDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -1431,7 +1432,7 @@ class geometry_cylinder : public DebugObject<ANARI_GEOMETRY> {
       return -1;
    }
    public:
-   geometry_cylinder(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   geometry_cylinder(DebugDevice *td, ExampleDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -1559,7 +1560,7 @@ class geometry_quad : public DebugObject<ANARI_GEOMETRY> {
       return -1;
    }
    public:
-   geometry_quad(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   geometry_quad(DebugDevice *td, ExampleDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -1672,7 +1673,7 @@ class geometry_sphere : public DebugObject<ANARI_GEOMETRY> {
       return -1;
    }
    public:
-   geometry_sphere(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   geometry_sphere(DebugDevice *td, ExampleDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -1790,7 +1791,7 @@ class geometry_triangle : public DebugObject<ANARI_GEOMETRY> {
       return -1;
    }
    public:
-   geometry_triangle(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   geometry_triangle(DebugDevice *td, ExampleDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -1903,7 +1904,7 @@ class light_directional : public DebugObject<ANARI_LIGHT> {
       return -1;
    }
    public:
-   light_directional(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   light_directional(DebugDevice *td, ExampleDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -1961,7 +1962,7 @@ class light_point : public DebugObject<ANARI_LIGHT> {
       return -1;
    }
    public:
-   light_point(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   light_point(DebugDevice *td, ExampleDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -2024,7 +2025,7 @@ class light_spot : public DebugObject<ANARI_LIGHT> {
       return -1;
    }
    public:
-   light_spot(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   light_spot(DebugDevice *td, ExampleDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -2102,7 +2103,7 @@ class material_matte : public DebugObject<ANARI_MATERIAL> {
       return -1;
    }
    public:
-   material_matte(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   material_matte(DebugDevice *td, ExampleDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -2150,7 +2151,7 @@ class material_transparentMatte : public DebugObject<ANARI_MATERIAL> {
       return -1;
    }
    public:
-   material_transparentMatte(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   material_transparentMatte(DebugDevice *td, ExampleDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -2203,7 +2204,7 @@ class sampler_image1D : public DebugObject<ANARI_SAMPLER> {
       return -1;
    }
    public:
-   sampler_image1D(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   sampler_image1D(DebugDevice *td, ExampleDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -2276,7 +2277,7 @@ class sampler_image2D : public DebugObject<ANARI_SAMPLER> {
       return -1;
    }
    public:
-   sampler_image2D(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   sampler_image2D(DebugDevice *td, ExampleDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -2354,7 +2355,7 @@ class sampler_image3D : public DebugObject<ANARI_SAMPLER> {
       return -1;
    }
    public:
-   sampler_image3D(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   sampler_image3D(DebugDevice *td, ExampleDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -2415,8 +2416,8 @@ class sampler_image3D : public DebugObject<ANARI_SAMPLER> {
 };
 class sampler_primitive : public DebugObject<ANARI_SAMPLER> {
    static int param_hash(const char *str) {
-      static const uint32_t table[] = {0x7372000eu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x62610013u,0x7372000fu,0x62610010u,0x7a790011u,0x1000012u,0x80000001u,0x6e6d0014u,0x66650015u,0x1000016u,0x80000000u};
-      uint32_t cur = 0x6f610000u;
+      static const uint32_t table[] = {0x7372000fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x62610014u,0x67660018u,0x73720010u,0x62610011u,0x7a790012u,0x1000013u,0x80000001u,0x6e6d0015u,0x66650016u,0x1000017u,0x80000000u,0x67660019u,0x7473001au,0x6665001bu,0x7574001cu,0x100001du,0x80000002u};
+      uint32_t cur = 0x70610000u;
       for(int i = 0;cur!=0;++i) {
          uint32_t idx = cur&0xFFFFu;
          uint32_t low = (cur>>16u)&0xFFu;
@@ -2437,7 +2438,7 @@ class sampler_primitive : public DebugObject<ANARI_SAMPLER> {
       return -1;
    }
    public:
-   sampler_primitive(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   sampler_primitive(DebugDevice *td, ExampleDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -2450,6 +2451,11 @@ class sampler_primitive : public DebugObject<ANARI_SAMPLER> {
          case 1: { //array
             ANARIDataType array_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
             check_type(ANARI_SAMPLER, "primitive", paramname, paramtype, array_types);
+            return;
+         }
+         case 2: { //offset
+            ANARIDataType offset_types[] = {ANARI_UINT64, ANARI_UNKNOWN};
+            check_type(ANARI_SAMPLER, "primitive", paramname, paramtype, offset_types);
             return;
          }
          default: // unknown param
@@ -2485,7 +2491,7 @@ class sampler_transform : public DebugObject<ANARI_SAMPLER> {
       return -1;
    }
    public:
-   sampler_transform(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   sampler_transform(DebugDevice *td, ExampleDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -2538,7 +2544,7 @@ class spatial_field_structuredRegular : public DebugObject<ANARI_SPATIAL_FIELD> 
       return -1;
    }
    public:
-   spatial_field_structuredRegular(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   spatial_field_structuredRegular(DebugDevice *td, ExampleDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -2601,7 +2607,7 @@ class volume_scivis : public DebugObject<ANARI_VOLUME> {
       return -1;
    }
    public:
-   volume_scivis(DebugDevice *td, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   volume_scivis(DebugDevice *td, ExampleDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -2682,11 +2688,11 @@ DebugObjectBase* ExampleDeviceDebugFactory::new_camera(const char *name, DebugDe
    int idx = camera_object_hash(name);
    switch(idx) {
       case 0:
-         return new camera_omnidirectional(td, wh, h);
+         return new camera_omnidirectional(td, this, wh, h);
       case 1:
-         return new camera_orthographic(td, wh, h);
+         return new camera_orthographic(td, this, wh, h);
       case 2:
-         return new camera_perspective(td, wh, h);
+         return new camera_perspective(td, this, wh, h);
       default:
          unknown_subtype(td, ANARI_CAMERA, name);
          return new DebugObject<ANARI_CAMERA>(td, wh, h);
@@ -2718,17 +2724,17 @@ DebugObjectBase* ExampleDeviceDebugFactory::new_geometry(const char *name, Debug
    int idx = geometry_object_hash(name);
    switch(idx) {
       case 0:
-         return new geometry_cone(td, wh, h);
+         return new geometry_cone(td, this, wh, h);
       case 1:
-         return new geometry_curve(td, wh, h);
+         return new geometry_curve(td, this, wh, h);
       case 2:
-         return new geometry_cylinder(td, wh, h);
+         return new geometry_cylinder(td, this, wh, h);
       case 3:
-         return new geometry_quad(td, wh, h);
+         return new geometry_quad(td, this, wh, h);
       case 4:
-         return new geometry_sphere(td, wh, h);
+         return new geometry_sphere(td, this, wh, h);
       case 5:
-         return new geometry_triangle(td, wh, h);
+         return new geometry_triangle(td, this, wh, h);
       default:
          unknown_subtype(td, ANARI_GEOMETRY, name);
          return new DebugObject<ANARI_GEOMETRY>(td, wh, h);
@@ -2760,11 +2766,11 @@ DebugObjectBase* ExampleDeviceDebugFactory::new_light(const char *name, DebugDev
    int idx = light_object_hash(name);
    switch(idx) {
       case 0:
-         return new light_directional(td, wh, h);
+         return new light_directional(td, this, wh, h);
       case 1:
-         return new light_point(td, wh, h);
+         return new light_point(td, this, wh, h);
       case 2:
-         return new light_spot(td, wh, h);
+         return new light_spot(td, this, wh, h);
       default:
          unknown_subtype(td, ANARI_LIGHT, name);
          return new DebugObject<ANARI_LIGHT>(td, wh, h);
@@ -2796,9 +2802,9 @@ DebugObjectBase* ExampleDeviceDebugFactory::new_material(const char *name, Debug
    int idx = material_object_hash(name);
    switch(idx) {
       case 0:
-         return new material_matte(td, wh, h);
+         return new material_matte(td, this, wh, h);
       case 1:
-         return new material_transparentMatte(td, wh, h);
+         return new material_transparentMatte(td, this, wh, h);
       default:
          unknown_subtype(td, ANARI_MATERIAL, name);
          return new DebugObject<ANARI_MATERIAL>(td, wh, h);
@@ -2830,19 +2836,19 @@ DebugObjectBase* ExampleDeviceDebugFactory::new_renderer(const char *name, Debug
    int idx = renderer_object_hash(name);
    switch(idx) {
       case 0:
-         return new renderer_ao(td, wh, h);
+         return new renderer_ao(td, this, wh, h);
       case 1:
-         return new renderer_debug(td, wh, h);
+         return new renderer_debug(td, this, wh, h);
       case 2:
-         return new renderer_default(td, wh, h);
+         return new renderer_default(td, this, wh, h);
       case 3:
-         return new renderer_pathtracer(td, wh, h);
+         return new renderer_pathtracer(td, this, wh, h);
       case 4:
-         return new renderer_rayDir(td, wh, h);
+         return new renderer_rayDir(td, this, wh, h);
       case 5:
-         return new renderer_raycast(td, wh, h);
+         return new renderer_raycast(td, this, wh, h);
       case 6:
-         return new renderer_scivis(td, wh, h);
+         return new renderer_scivis(td, this, wh, h);
       default:
          unknown_subtype(td, ANARI_RENDERER, name);
          return new DebugObject<ANARI_RENDERER>(td, wh, h);
@@ -2874,15 +2880,15 @@ DebugObjectBase* ExampleDeviceDebugFactory::new_sampler(const char *name, DebugD
    int idx = sampler_object_hash(name);
    switch(idx) {
       case 0:
-         return new sampler_image1D(td, wh, h);
+         return new sampler_image1D(td, this, wh, h);
       case 1:
-         return new sampler_image2D(td, wh, h);
+         return new sampler_image2D(td, this, wh, h);
       case 2:
-         return new sampler_image3D(td, wh, h);
+         return new sampler_image3D(td, this, wh, h);
       case 3:
-         return new sampler_primitive(td, wh, h);
+         return new sampler_primitive(td, this, wh, h);
       case 4:
-         return new sampler_transform(td, wh, h);
+         return new sampler_transform(td, this, wh, h);
       default:
          unknown_subtype(td, ANARI_SAMPLER, name);
          return new DebugObject<ANARI_SAMPLER>(td, wh, h);
@@ -2914,7 +2920,7 @@ DebugObjectBase* ExampleDeviceDebugFactory::new_spatial_field(const char *name, 
    int idx = spatial_field_object_hash(name);
    switch(idx) {
       case 0:
-         return new spatial_field_structuredRegular(td, wh, h);
+         return new spatial_field_structuredRegular(td, this, wh, h);
       default:
          unknown_subtype(td, ANARI_SPATIAL_FIELD, name);
          return new DebugObject<ANARI_SPATIAL_FIELD>(td, wh, h);
@@ -2946,38 +2952,40 @@ DebugObjectBase* ExampleDeviceDebugFactory::new_volume(const char *name, DebugDe
    int idx = volume_object_hash(name);
    switch(idx) {
       case 0:
-         return new volume_scivis(td, wh, h);
+         return new volume_scivis(td, this, wh, h);
       default:
          unknown_subtype(td, ANARI_VOLUME, name);
          return new DebugObject<ANARI_VOLUME>(td, wh, h);
    }
 }
 DebugObjectBase* ExampleDeviceDebugFactory::new_array1d(DebugDevice *td, ANARIObject wh, ANARIObject h) {
-   return new array1d(td, wh, h);
+   return new array1d(td, this, wh, h);
 }
 DebugObjectBase* ExampleDeviceDebugFactory::new_array2d(DebugDevice *td, ANARIObject wh, ANARIObject h) {
-   return new array2d(td, wh, h);
+   return new array2d(td, this, wh, h);
 }
 DebugObjectBase* ExampleDeviceDebugFactory::new_array3d(DebugDevice *td, ANARIObject wh, ANARIObject h) {
-   return new array3d(td, wh, h);
+   return new array3d(td, this, wh, h);
 }
 DebugObjectBase* ExampleDeviceDebugFactory::new_device(DebugDevice *td, ANARIObject wh, ANARIObject h) {
-   return new device(td, wh, h);
+   return new device(td, this, wh, h);
 }
 DebugObjectBase* ExampleDeviceDebugFactory::new_frame(DebugDevice *td, ANARIObject wh, ANARIObject h) {
-   return new frame(td, wh, h);
+   return new frame(td, this, wh, h);
 }
 DebugObjectBase* ExampleDeviceDebugFactory::new_group(DebugDevice *td, ANARIObject wh, ANARIObject h) {
-   return new group(td, wh, h);
+   return new group(td, this, wh, h);
 }
 DebugObjectBase* ExampleDeviceDebugFactory::new_instance(DebugDevice *td, ANARIObject wh, ANARIObject h) {
-   return new instance(td, wh, h);
+   return new instance(td, this, wh, h);
 }
 DebugObjectBase* ExampleDeviceDebugFactory::new_surface(DebugDevice *td, ANARIObject wh, ANARIObject h) {
-   return new surface(td, wh, h);
+   return new surface(td, this, wh, h);
 }
 DebugObjectBase* ExampleDeviceDebugFactory::new_world(DebugDevice *td, ANARIObject wh, ANARIObject h) {
-   return new world(td, wh, h);
+   return new world(td, this, wh, h);
+}
+void ExampleDeviceDebugFactory::print_summary(DebugDevice *td) {
 }
 anari::debug_device::ObjectFactory* getDebugFactory() {
    static ExampleDeviceDebugFactory f;
