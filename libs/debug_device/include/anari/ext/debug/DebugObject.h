@@ -208,9 +208,11 @@ public:
   virtual DebugObjectBase* new_surface(DebugDevice *td, ANARIObject wh, ANARIObject h) {
     return new DebugObject<ANARI_SURFACE>(td, wh, h);
   }
+  virtual void print_summary(DebugDevice *td) { }
   DebugObjectBase* new_by_type(ANARIDataType t, DebugDevice *td, ANARIObject wh, ANARIObject h);
   DebugObjectBase* new_by_subtype(ANARIDataType t, const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h);
   void unknown_subtype(DebugDevice *td, ANARIDataType t, const char *name);
+  void info(DebugDevice *td, const char *format, ...);
   virtual ~ObjectFactory() { }
 };
 
