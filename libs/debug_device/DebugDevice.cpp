@@ -34,7 +34,6 @@ void DebugDevice::reportStatus(ANARIObject source,
 
   last_status_message.resize(count + 1);
 
-  va_start(arglist_copy, format);
   std::vsnprintf(last_status_message.data(), count + 1, format, arglist_copy);
   va_end(arglist_copy);
 
@@ -49,6 +48,32 @@ void DebugDevice::reportStatus(ANARIObject source,
   }
 }
 
+void DebugDevice::vreportStatus(ANARIObject source,
+    ANARIDataType sourceType,
+    ANARIStatusSeverity severity,
+    ANARIStatusCode code,
+    const char *format,
+    va_list arglist)
+{
+  va_list arglist_copy;
+  va_copy(arglist_copy, arglist);
+  int count = std::vsnprintf(nullptr, 0, format, arglist);
+
+  last_status_message.resize(count + 1);
+
+  std::vsnprintf(last_status_message.data(), count + 1, format, arglist_copy);
+  va_end(arglist_copy);
+
+  if (ANARIStatusCallback statusCallback = defaultStatusCallback()) {
+    statusCallback(defaultStatusCallbackUserPtr(),
+        this_device(),
+        source,
+        sourceType,
+        severity,
+        code,
+        last_status_message.data());
+  }
+}
 ///////////////////////////////////////////////////////////////////////////////
 // DebugDevice definitions //////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -597,6 +622,7 @@ DebugDevice::DebugDevice()
 
 DebugDevice::~DebugDevice()
 {
+  debugObjectFactory->print_summary(this);
   if (debug) {
     debug->anariReleaseDevice(this_device());
   }

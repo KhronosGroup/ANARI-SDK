@@ -18,7 +18,18 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
     DEPENDS ${ANARI_CODE_GEN_ROOT}/devices/generic_device.json
   )
 
-  add_dependencies(generate_all generate_generic_debug_objects)
+  add_custom_target(generate_debug_queries
+    COMMAND ${Python3_EXECUTABLE} ${ANARI_CODE_GEN_ROOT}/generate_queries.py
+      --json ${ANARI_CODE_GEN_ROOT}
+      --prefix Extended
+      --device ${ANARI_CODE_GEN_ROOT}/devices/extended_device.json
+      --namespace anari::debug_queries
+      --includefile
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DEPENDS ${ANARI_CODE_GEN_ROOT}/devices/extended_device.json
+  )
+
+  add_dependencies(generate_all generate_generic_debug_objects generate_debug_queries)
 endif()
 
 add_library(${PROJECT_NAME} SHARED

@@ -20,6 +20,8 @@
 
 #include "anari/ext/debug/DebugObject.h"
 
+#include <cstdarg>
+
 namespace anari {
 namespace debug_device {
 
@@ -31,6 +33,13 @@ struct DEBUG_DEVICE_INTERFACE DebugDevice : public DeviceImpl, public RefCounted
       ANARIStatusCode code,
       const char *format,
       ...);
+
+  void vreportStatus(ANARIObject source,
+      ANARIDataType sourceType,
+      ANARIStatusSeverity severity,
+      ANARIStatusCode code,
+      const char *format,
+      va_list);
 
   /////////////////////////////////////////////////////////////////////////////
   // Main interface to accepting API calls

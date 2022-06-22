@@ -4,6 +4,8 @@
 #include "anari/ext/debug/DebugObject.h"
 #include "DebugDevice.h"
 
+#include <cstdarg>
+
 namespace anari {
 namespace debug_device {
 
@@ -56,13 +58,24 @@ DebugObjectBase* ObjectFactory::new_by_subtype(ANARIDataType t, const char *name
     default: return new GenericDebugObject(td, wh, h);
   }
 }
+void ObjectFactory::info(DebugDevice *td, const char *format, ...) {
+  va_list arglist;
+  va_start(arglist, format);
+  td->vreportStatus(
+          td->this_device(),
+          ANARI_DEVICE,
+          ANARI_SEVERITY_INFO,
+          ANARI_STATUS_NO_ERROR,
+          format, arglist);
+  va_end(arglist);
+}
 void ObjectFactory::unknown_subtype(DebugDevice *td, ANARIDataType t, const char *name) {
   td->reportStatus(
           td->this_device(),
           ANARI_DEVICE,
           ANARI_SEVERITY_WARNING,
           ANARI_STATUS_INVALID_ARGUMENT,
-          "anareNew: Unknown subtype \"%s\" of type %s.", name, toString(t));
+          "anariNew: Unknown subtype \"%s\" of type %s.", name, toString(t));
 
 }
 }
