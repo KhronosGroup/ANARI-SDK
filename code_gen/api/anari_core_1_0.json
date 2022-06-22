@@ -9,10 +9,15 @@
             "name" : "ANARIDataType",
             "baseType" : "int",
             "values" : [
+                {"name" : "ANARI_UNKNOWN", "value" : 0,  "baseType" : "int", "elements" : 1, "normalized" : false},
                 {"name" : "ANARI_DATA_TYPE", "value" : 100, "baseType" : "int32_t", "elements" : 1, "normalized" : false},
                 {"name" : "ANARI_STRING", "value" : 101, "baseType" : "const char*", "elements" : 1, "normalized" : false},
                 {"name" : "ANARI_VOID_POINTER", "value" : 102, "baseType" : "void*", "elements" : 1, "normalized" : false},
                 {"name" : "ANARI_BOOL", "value" : 103, "baseType" : "int32_t", "elements" : 1, "normalized" : false},
+
+                {"name" : "ANARI_STRING_LIST", "value" : 150, "baseType" : "const char**", "elements" : 1, "normalized" : false},
+                {"name" : "ANARI_TYPE_LIST", "value" : 151, "baseType" : "ANARIDataType*", "elements" : 1, "normalized" : false},
+                {"name" : "ANARI_PARAMETER_LIST", "value" : 152, "baseType" : "ANARIParameter*", "elements" : 1, "normalized" : false},
 
                 {"name" : "ANARI_FUNCTION_POINTER", "value" : 200, "baseType" : "void(*)(void)", "elements" : 1, "normalized" : false},
                 {"name" : "ANARI_MEMORY_DELETER", "value" : 201, "baseType" : "ANARIMemoryDeleter", "elements" : 1, "normalized" : false},
@@ -143,9 +148,7 @@
                 {"name" : "ANARI_FLOAT32_MAT2x3", "value" : 2015, "baseType" : "float", "elements" : 6, "normalized" : false},
                 {"name" : "ANARI_FLOAT32_MAT3x4", "value" : 2016, "baseType" : "float", "elements" : 12, "normalized" : false},
 
-                {"name" : "ANARI_FLOAT32_QUAT_IJKW", "value" : 2017, "baseType" : "float", "elements" : 4, "normalized" : false},
-
-                {"name" : "ANARI_UNKNOWN", "value" : 9999999,  "baseType" : "int", "elements" : 1, "normalized" : false}
+                {"name" : "ANARI_FLOAT32_QUAT_IJKW", "value" : 2017, "baseType" : "float", "elements" : 4, "normalized" : false}
             ]
         }, {
             "name" : "ANARILogLevel",
