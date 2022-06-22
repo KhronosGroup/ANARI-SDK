@@ -3,6 +3,8 @@
         "name" : "KHR_AREA_LIGHTS",
         "type" : "feature",
         "dependencies" : [
+            "khr_light_directional",
+            "khr_light_point",
             "khr_light_ring",
             "khr_light_quad",
             "khr_light_hdri"
@@ -19,17 +21,20 @@
                     "name" : "angularDiameter",
                     "types" : ["ANARI_FLOAT32"],
                     "tags" : [],
-                    "default" : 0.0
+                    "default" : 0.0,
+                    "description" : "apparent size of the light in radians"
                 }, {
                     "name" : "radiance",
                     "types" : ["ANARI_FLOAT32"],
                     "tags" : [],
-                    "default" : 1.0
+                    "default" : 1.0,
+                    "description" : "the amount of light emitted by a point on the light source in a direction in W/sr/m^2"
                 }, {
                     "name" : "visible",
                     "types" : ["ANARI_BOOL"],
                     "tags" : [],
-                    "default" : 1
+                    "default" : 1,
+                    "description" : "visibility of the light geometry"
                 }
             ]
         }, {
@@ -40,17 +45,20 @@
                     "name" : "radius",
                     "types" : ["ANARI_FLOAT32"],
                     "tags" : [],
-                    "default" : 0.0
+                    "default" : 0.0,
+                    "description" : "radius of the sphere light"
                 }, {
                     "name" : "radiance",
                     "types" : ["ANARI_FLOAT32"],
                     "tags" : [],
-                    "default" : 1.0
+                    "default" : 1.0,
+                    "description" : "the amount of light emitted by a point on the light source in a direction in W/sr/m^2"
                 }, {
                     "name" : "visible",
                     "types" : ["ANARI_BOOL"],
                     "tags" : [],
-                    "default" : 1
+                    "default" : 1,
+                    "description" : "visibility of the light geometry"
                 }
             ]
         }

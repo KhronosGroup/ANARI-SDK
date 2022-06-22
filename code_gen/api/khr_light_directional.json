@@ -9,26 +9,33 @@
         {
             "type" : "ANARI_LIGHT",
             "name" : "directional",
+            "description" : "directional light object",
             "parameters" : [
                 {
                     "name" : "name",
                     "types" : ["ANARI_STRING"],
-                    "tags" : []
+                    "tags" : [],
+                    "description" : "optional object name"
                 }, {
                     "name" : "color",
                     "types" : ["ANARI_FLOAT32_VEC3"],
                     "tags" : [],
-                    "default" : [1.0, 1.0, 1.0]
+                    "default" : [1.0, 1.0, 1.0],
+                    "minimum" : [0.0, 0.0, 0.0],
+                    "maximum" : [1.0, 1.0, 1.0],
+                    "description" : "color of the light"
                 }, {
                     "name" : "irridance",
                     "types" : ["ANARI_FLOAT32"],
                     "tags" : [],
-                    "default" : 1.0
+                    "default" : 1.0,
+                    "description" : "amount of light in W/m^2"
                 }, {
                     "name" : "direction",
                     "types" : ["ANARI_FLOAT32_VEC3"],
                     "tags" : [],
-                    "default" : [0.0, 0.0, 1.0]
+                    "default" : [0.0, 0.0, 1.0],
+                    "description" : "emission direction of the light"
                 }
             ]
         }

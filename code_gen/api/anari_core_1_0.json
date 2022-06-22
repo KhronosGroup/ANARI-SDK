@@ -1,6 +1,6 @@
 {
     "info" : {
-        "name" : "anari_core_1_0",
+        "name" : "CORE_API",
         "type" : "core",
         "dependencies" : []
     },

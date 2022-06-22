@@ -9,31 +9,39 @@
         {
             "type" : "ANARI_LIGHT",
             "name" : "point",
+            "description" : "point light object",
             "parameters" : [
                 {
                     "name" : "name",
                     "types" : ["ANARI_STRING"],
-                    "tags" : []
+                    "tags" : [],
+                    "description" : "optional object name"
                 }, {
                     "name" : "color",
                     "types" : ["ANARI_FLOAT32_VEC3"],
                     "tags" : [],
-                    "default" : [1.0, 1.0, 1.0]
+                    "default" : [1.0, 1.0, 1.0],
+                    "minimum" : [0.0, 0.0, 0.0],
+                    "maximum" : [1.0, 1.0, 1.0],
+                    "description" : "color of the light"
                 }, {
                     "name" : "position",
                     "types" : ["ANARI_FLOAT32_VEC3"],
                     "tags" : [],
-                    "default" : [0.0, 0.0, 0.0]
+                    "default" : [0.0, 0.0, 0.0],
+                    "description" : "position of the light source"
                 }, {
                     "name" : "intensity",
                     "types" : ["ANARI_FLOAT32"],
                     "tags" : [],
-                    "default" : 1.0
+                    "default" : 1.0,
+                    "description" : "overall amount of light emitted in a direction in W/sr"
                 }, {
                     "name" : "power",
                     "types" : ["ANARI_FLOAT32"],
-                    "tags" : ["canonical"],
-                    "default" : 1.0
+                    "tags" : [],
+                    "default" : 1.0,
+                    "description" : "overall amount of light energy emitted in W"
                 }
             ]
         }

@@ -13,21 +13,25 @@
                     "name" : "accumulation",
                     "types" : ["ANARI_BOOL"],
                     "tags" : [],
-                    "default" : 0
+                    "default" : 0,
+                    "description" : "enables accumulation over multiple render calls"
                 }, {
                     "name" : "variance",
                     "types" : ["ANARI_BOOL"],
                     "tags" : [],
-                    "default" : 0
+                    "default" : 0,
+                    "description" : "enables calculation of the variance property"
                 }
             ],
             "properties" : [
                 {
                     "name" : "progress",
-                    "type" : "ANARI_FLOAT32"
+                    "type" : "ANARI_FLOAT32",
+                    "tags" : []
                 }, {
                     "name" : "variance",
-                    "type" : "ANARI_FLOAT32"
+                    "type" : "ANARI_FLOAT32",
+                    "tags" : []
                 }
             ]
         }

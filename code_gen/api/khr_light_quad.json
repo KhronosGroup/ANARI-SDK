@@ -9,61 +9,76 @@
         {
             "type" : "ANARI_LIGHT",
             "name" : "quad",
+            "description" : "quad light object",
             "parameters" : [
                 {
                     "name" : "name",
                     "types" : ["ANARI_STRING"],
-                    "tags" : []
+                    "tags" : [],
+                    "description" : "optional object name"
                 }, {
                     "name" : "color",
                     "types" : ["ANARI_FLOAT32_VEC3"],
                     "tags" : ["color"],
-                    "default" : [1.0, 1.0, 1.0]
+                    "default" : [1.0, 1.0, 1.0],
+                    "minimum" : [0.0, 0.0, 0.0],
+                    "maximum" : [1.0, 1.0, 1.0],
+                    "description" : "color of the light"
                 }, {
                     "name" : "position",
                     "types" : ["ANARI_FLOAT32_VEC3"],
                     "tags" : [],
-                    "default" : [0.0, 0.0, 0.0]
+                    "default" : [0.0, 0.0, 0.0],
+                    "description" : "position of the light source"
                 }, {
                     "name" : "edge1",
                     "types" : ["ANARI_FLOAT32_VEC3"],
                     "tags" : [],
-                    "default" : [1.0, 0.0, 0.0]
+                    "default" : [1.0, 0.0, 0.0],
+                    "description" : "vector of the first edge"
                 }, {
                     "name" : "edge2",
                     "types" : ["ANARI_FLOAT32_VEC3"],
                     "tags" : [],
-                    "default" : [0.0, 1.0, 0.0]
+                    "default" : [0.0, 1.0, 0.0],
+                    "description" : "vector of the second edge"
                 }, {
                     "name" : "intensity",
                     "types" : ["ANARI_FLOAT32"],
                     "tags" : [],
-                    "default" : 1.0
+                    "default" : 1.0,
+                    "description" : "overall amount of light emitted in a direction in W/sr"
                 }, {
                     "name" : "power",
                     "types" : ["ANARI_FLOAT32"],
-                    "tags" : ["canonical"],
-                    "default" : 1.0
+                    "tags" : [],
+                    "default" : 1.0,
+                    "description" : "overall amount of light energy emitted in W"
                 }, {
                     "name" : "radiance",
                     "types" : ["ANARI_FLOAT32"],
                     "tags" : [],
-                    "default" : 1.0
+                    "default" : 1.0,
+                    "description" : "the amount of light emitted by a point on the light source in a direction in W/sr/m^2"
                 }, {
                     "name" : "side",
                     "types" : ["ANARI_STRING"],
                     "tags" : [],
                     "default" : "front",
-                    "values" : ["front", "back", "both"]
+                    "values" : ["front", "back", "both"],
+                    "description" : "light emitting sides of the quad"
                 }, {
                     "name" : "intensityDistribution",
                     "types" : ["ANARI_ARRAY1D", "ANARI_ARRAY2D"],
-                    "tags" : []
+                    "elementType" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "description" : "luminous intensity distribution for photometric lights"
                 }, {
                     "name" : "visible",
                     "types" : ["ANARI_BOOL"],
                     "tags" : [],
-                    "default" : 1
+                    "default" : 1,
+                    "description" : "visibility of the light geometry"
                 }
             ]
         }

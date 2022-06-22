@@ -1,7 +1,7 @@
 {
     "info" : {
-        "name" : "anari_core_objects_all_1_0",
-        "type" : "core",
+        "name" : "SPEC_ALL",
+        "type" : "meta",
         "dependencies" : [
             "anari_core_objects_base_1_0",
             "khr_camera_omnidirectional",

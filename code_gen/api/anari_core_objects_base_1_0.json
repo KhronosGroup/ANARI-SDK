@@ -1,6 +1,6 @@
 {
     "info" : {
-        "name" : "anari_core_objects_base_1_0",
+        "name" : "CORE_OBJECTS",
         "type" : "core",
         "dependencies" : []
     },
@@ -42,201 +42,278 @@
     "objects" : [
         {
             "type" : "ANARI_DEVICE",
+            "description" : "device object",
             "parameters" : [
                 {
                     "name" : "name",
                     "types" : ["ANARI_STRING"],
-                    "tags" : []
+                    "tags" : [],
+                    "description" : "optional object name"
                 },                {
                     "name" : "statusCallback",
                     "types" : ["ANARI_STATUS_CALLBACK"],
-                    "tags" : []
+                    "tags" : [],
+                    "description" : "callback used to report information to the application"
                 },                {
                     "name" : "statusCallbackUserData",
                     "types" : ["ANARI_VOID_POINTER"],
+                    "tags" : [],
+                    "description" : "optional pointer passed as the first argument of the status callback"
+                }
+            ],
+            "properties" : [
+                {
+                    "name" : "version",
+                    "type" : "ANARI_INT32",
+                    "tags" : ["required"]
+                }, {
+                    "name" : "version.major",
+                    "type" : "ANARI_INT32",
                     "tags" : []
+                }, {
+                    "name" : "version.minor",
+                    "type" : "ANARI_INT32",
+                    "tags" : []
+                }, {
+                    "name" : "version.patch",
+                    "type" : "ANARI_INT32",
+                    "tags" : []
+                }, {
+                    "name" : "version.name",
+                    "type" : "ANARI_STRING",
+                    "tags" : []
+                }, {
+                    "name" : "geometryMaxIndex",
+                    "type" : "ANARI_UINT64",
+                    "tags" : ["required"]
                 }
             ]
         },{
             "type" : "ANARI_ARRAY1D",
+            "description" : "one dimensional array object",
             "parameters" : [
                 {
                     "name" : "name",
                     "types" : ["ANARI_STRING"],
-                    "tags" : []
+                    "tags" : [],
+                    "description" : "optional object name"
                 }
             ]
         }, {
             "type" : "ANARI_ARRAY2D",
+            "description" : "two dimensional array object",
             "parameters" : [
                 {
                     "name" : "name",
                     "types" : ["ANARI_STRING"],
-                    "tags" : []
+                    "tags" : [],
+                    "description" : "optional object name"
                 }
             ]
         }, {
             "type" : "ANARI_ARRAY3D",
+            "description" : "three dimensional array object",
             "parameters" : [
                 {
                     "name" : "name",
                     "types" : ["ANARI_STRING"],
-                    "tags" : []
+                    "tags" : [],
+                    "description" : "optional object name"
                 }
             ]
         }, {
             "type" : "ANARI_FRAME",
+            "description" : "frame object",
             "parameters" : [
                 {
                     "name" : "name",
                     "types" : ["ANARI_STRING"],
-                    "tags" : []
+                    "tags" : [],
+                    "description" : "optional object name"
                 }, {
                     "name" : "world",
                     "types" : ["ANARI_WORLD"],
-                    "tags" : ["required"]
+                    "tags" : ["required"],
+                    "description" : "world to be rendererd"
                 }, {
                     "name" : "renderer",
                     "types" : ["ANARI_RENDERER"],
-                    "tags" : ["required"]
+                    "tags" : ["required"],
+                    "description" : "renderer which renders the frame"
                 }, {
                     "name" : "camera",
                     "types" : ["ANARI_CAMERA"],
-                    "tags" : ["required"]
+                    "tags" : ["required"],
+                    "description" : "camera used to render the worlde"
                 }, {
                     "name" : "size",
                     "types" : ["ANARI_UINT32_VEC2"],
-                    "tags" : ["required"]
+                    "tags" : ["required"],
+                    "description" : "size of the frame in pixels (width, height)"
                 }, {
                     "name" : "color",
                     "types" : ["ANARI_DATA_TYPE"],
                     "tags" : [],
-                    "values" : ["ANARI_UFIXED8_VEC4", "ANARI_UFIXED8_RGBA_SRGB", "ANARI_FLOAT32_VEC4"]
+                    "values" : ["ANARI_UFIXED8_VEC4", "ANARI_UFIXED8_RGBA_SRGB", "ANARI_FLOAT32_VEC4"],
+                    "description" : "enables mapping the color channel as the type specified"
                 }, {
                     "name" : "depth",
                     "types" : ["ANARI_DATA_TYPE"],
                     "tags" : [],
-                    "values" : ["ANARI_FLOAT32"]
+                    "values" : ["ANARI_FLOAT32"],
+                    "description" : "enables mapping the color channel as the type specified"
                 }
             ],
             "properties" : [
                 {
                     "name" : "duration",
-                    "type" : "ANARI_FLOAT32"
+                    "type" : "ANARI_FLOAT32",
+                    "tags" : ["required"]
                 }
             ]
         }, {
             "type" : "ANARI_GROUP",
+            "description" : "group object",
             "parameters" : [
                 {
                     "name" : "name",
                     "types" : ["ANARI_STRING"],
-                    "tags" : []
+                    "tags" : [],
+                    "description" : "optional object name"
                 }, {
                     "name" : "surface",
                     "types" : ["ANARI_ARRAY1D"],
-                    "tags" : []
+                    "elementType" : ["ANARI_SURFACE"],
+                    "tags" : [],
+                    "description" : "array of surface objects"
                 }, {
                     "name" : "volume",
                     "types" : ["ANARI_ARRAY1D"],
-                    "tags" : []
+                    "elementType" : ["ANARI_VOLUME"],
+                    "tags" : [],
+                    "description" : "array of volume objects"
                 }, {
                     "name" : "light",
                     "types" : ["ANARI_ARRAY1D"],
-                    "tags" : []
+                    "elementType" : ["ANARI_LIGHT"],
+                    "tags" : [],
+                    "description" : "array of light objects"
                 }
             ],
             "properties" : [
                 {
                     "name" : "bounds",
-                    "type" : "ANARI_FLOAT32_BOX3"
+                    "type" : "ANARI_FLOAT32_BOX3",
+                    "tags" : []
                 }
             ]
         }, {
             "type" : "ANARI_INSTANCE",
+            "description" : "instance object",
             "parameters" : [
                 {
                     "name" : "name",
                     "types" : ["ANARI_STRING"],
-                    "tags" : []
+                    "tags" : [],
+                    "description" : "optional object name"
                 }, {
                     "name" : "transform",
-                    "types" : ["ANARI_FLOAT32_MAT3x4"],
+                    "types" : ["ANARI_FLOAT32_MAT4"],
                     "tags" : [],
                     "default" : [
-                        1.0, 0.0, 0.0,
-                        0.0, 1.0, 0.0,
-                        0.0, 0.0, 1.0,
-                        0.0, 0.0, 0.0
-                    ]
+                        1.0, 0.0, 0.0, 0.0,
+                        0.0, 1.0, 0.0, 0.0,
+                        0.0, 0.0, 1.0, 0.0,
+                        0.0, 0.0, 0.0, 1.0
+                    ],
+                    "description" : "transform applied to objects in the instance"
                 }, {
                     "name" : "group",
                     "types" : ["ANARI_GROUP"],
-                    "tags" : ["required"]
+                    "tags" : ["required"],
+                    "description" : "group object being instanced"
                 }
             ],
             "properties" : [
                 {
                     "name" : "bounds",
-                    "type" : "ANARI_FLOAT32_BOX3"
+                    "type" : "ANARI_FLOAT32_BOX3",
+                    "tags" : []
                 }
             ]
         }, {
             "type" : "ANARI_WORLD",
+            "description" : "world object",
             "parameters" : [
                 {
                     "name" : "name",
                     "types" : ["ANARI_STRING"],
-                    "tags" : []
+                    "tags" : [],
+                    "description" : "optional object name"
                 }, {
                     "name" : "instance",
                     "types" : ["ANARI_ARRAY1D"],
-                    "tags" : []
+                    "elementType" : ["ANARI_INSTANCE"],
+                    "tags" : [],
+                    "description" : "array of instance objects in the world"
                 }, {
                     "name" : "surface",
                     "types" : ["ANARI_ARRAY1D"],
-                    "tags" : []
+                    "elementType" : ["ANARI_SURFACE"],
+                    "tags" : [],
+                    "description" : "array of non-instanced surface objects in the world"
                 }, {
                     "name" : "volume",
                     "types" : ["ANARI_ARRAY1D"],
-                    "tags" : []
+                    "elementType" : ["ANARI_LIGHT"],
+                    "tags" : [],
+                    "description" : "array of non-instanced volume objects in the world"
                 }, {
                     "name" : "light",
                     "types" : ["ANARI_ARRAY1D"],
-                    "tags" : []
+                    "elementType" : ["ANARI_LIGHT"],
+                    "tags" : [],
+                    "description" : "array of non-instanced light objects in the world"
                 }
             ],
             "properties" : [
                 {
                     "name" : "bounds",
-                    "type" : "ANARI_FLOAT32_BOX3"
+                    "type" : "ANARI_FLOAT32_BOX3",
+                    "tags" : []
                 }
             ]
         }, {
             "type" : "ANARI_RENDERER",
+            "description" : "default renderer",
             "name" : "default",
             "parameters" : [
                 {
                     "name" : "name",
                     "types" : ["ANARI_STRING"],
-                    "tags" : []
+                    "tags" : [],
+                    "description" : "optional object name"
                 }
             ]
         }, {
             "type" : "ANARI_SURFACE",
+            "description" : "surface object",
             "parameters" : [
                 {
                     "name" : "name",
                     "types" : ["ANARI_STRING"],
-                    "tags" : []
+                    "tags" : [],
+                    "description" : "optional object name"
                 }, {
                     "name" : "geometry",
                     "types" : ["ANARI_GEOMETRY"],
-                    "tags" : ["required"]
+                    "tags" : ["required"],
+                    "description" : "geometry object defining the surface geometry"
                 }, {
                     "name" : "material",
                     "types" : ["ANARI_MATERIAL"],
-                    "tags" : ["required"]
+                    "tags" : ["required"],
+                    "description" : "material object defining the surface appearance"
                 }
             ]
         }

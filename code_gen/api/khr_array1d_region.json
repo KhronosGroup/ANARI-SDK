@@ -12,7 +12,8 @@
                 {
                     "name" : "region",
                     "types" : ["ANARI_UINT64_BOX1"],
-                    "tags" : []
+                    "tags" : [],
+                    "description" : "active region of the array"
                 }
             ]
         }

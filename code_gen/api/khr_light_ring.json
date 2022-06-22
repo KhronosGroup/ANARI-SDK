@@ -9,75 +9,93 @@
         {
             "type" : "ANARI_LIGHT",
             "name" : "ring",
+            "description" : "ring light object",
             "parameters" : [
                 {
                     "name" : "name",
                     "types" : ["ANARI_STRING"],
-                    "tags" : []
+                    "tags" : [],
+                    "description" : "optional object name"
                 }, {
                     "name" : "color",
                     "types" : ["ANARI_FLOAT32_VEC3"],
                     "tags" : ["color"],
-                    "default" : [1.0, 1.0, 1.0]
+                    "default" : [1.0, 1.0, 1.0],
+                    "minimum" : [0.0, 0.0, 0.0],
+                    "maximum" : [1.0, 1.0, 1.0],
+                    "description" : "color of the light"
                 }, {
                     "name" : "position",
                     "types" : ["ANARI_FLOAT32_VEC3"],
                     "tags" : [],
-                    "default" : [0.0, 0.0, 0.0]
+                    "default" : [0.0, 0.0, 0.0],
+                    "description" : "position of the light source"
                 }, {
                     "name" : "direction",
                     "types" : ["ANARI_FLOAT32_VEC3"],
                     "tags" : [],
-                    "default" : [0.0, 0.0, -1.0]
+                    "default" : [0.0, 0.0, -1.0],
+                    "description" : "the axis the ring is pointing at"
                 }, {
                     "name" : "openingAngle",
                     "types" : ["ANARI_FLOAT32"],
                     "tags" : [],
-                    "default" : 3.14159265359
+                    "default" : 3.14159265359,
+                    "description" : "opening angle in radians"
                 }, {
                     "name" : "falloffAngle",
                     "types" : ["ANARI_FLOAT32"],
                     "tags" : [],
-                    "default" : 0.1
+                    "default" : 0.1,
+                    "description" : "falloff angle in radians"
                 }, {
                     "name" : "intensity",
                     "types" : ["ANARI_FLOAT32"],
                     "tags" : [],
-                    "default" : 1.0
+                    "default" : 1.0,
+                    "description" : "overall amount of light emitted in a direction in W/sr"
                 }, {
                     "name" : "power",
                     "types" : ["ANARI_FLOAT32"],
-                    "tags" : ["canonical"],
-                    "default" : 1.0
+                    "tags" : [],
+                    "default" : 1.0,
+                    "description" : "overall amount of light energy emitted in W"
                 }, {
                     "name" : "radius",
                     "types" : ["ANARI_FLOAT32"],
                     "tags" : [],
-                    "default" : 0.0
+                    "default" : 0.0,
+                    "description" : "outer radius of the ring"
                 }, {
                     "name" : "innerRadius",
                     "types" : ["ANARI_FLOAT32"],
                     "tags" : [],
-                    "default" : 0.0
+                    "default" : 0.0,
+                    "description" : "inner radius of the ring"
                 }, {
                     "name" : "radiance",
                     "types" : ["ANARI_FLOAT32"],
                     "tags" : [],
-                    "default" : 1.0
+                    "default" : 1.0,
+                    "description" : "the amount of light emitted by a point on the light source in a direction in W/sr/m^2"
                 }, {
                     "name" : "intensityDistribution",
                     "types" : ["ANARI_ARRAY1D", "ANARI_ARRAY2D"],
-                    "tags" : []
+                    "elementType" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "description" : "luminous intensity distribution for photometric lights"
                 }, {
                     "name" : "c0",
                     "types" : ["ANARI_FLOAT32_VEC3"],
                     "tags" : [],
-                    "default" : [1.0, 0.0, 0.0]
+                    "default" : [1.0, 0.0, 0.0],
+                    "description" : "direction of the C0-(half)plane"
                 }, {
                     "name" : "visible",
                     "types" : ["ANARI_BOOL"],
                     "tags" : [],
-                    "default" : 1
+                    "default" : 1,
+                    "description" : "visibility of the light geometry"
                 }
             ]
         }

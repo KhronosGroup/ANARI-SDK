@@ -9,15 +9,30 @@
         {
             "type" : "ANARI_SAMPLER",
             "name" : "primitive",
+            "description" : "primitive sampler object",
             "parameters" : [
                 {
                     "name" : "name",
                     "types" : ["ANARI_STRING"],
-                    "tags" : []
+                    "tags" : [],
+                    "description" : "optional object name"
                 }, {
                     "name" : "array",
                     "types" : ["ANARI_ARRAY1D"],
-                    "tags" : ["required"]
+                    "elementType" : [
+                        "ANARI_UFIXED8", "ANARI_UFIXED8_VEC2", "ANARI_UFIXED8_VEC3", "ANARI_UFIXED8_VEC4",
+                        "ANARI_UFIXED8_R_SRGB", "ANARI_UFIXED8_RA_SRGB", "ANARI_UFIXED8_RGB_SRGB", "ANARI_UFIXED8_RGBA_SRGB",
+                        "ANARI_UFIXED16", "ANARI_UFIXED16_VEC2", "ANARI_UFIXED16_VEC3", "ANARI_UFIXED16_VEC4",
+                        "ANARI_UFIXED32", "ANARI_UFIXED32_VEC2", "ANARI_UFIXED32_VEC3", "ANARI_UFIXED32_VEC4",
+                        "ANARI_FLOAT32", "ANARI_FLOAT32_VEC2", "ANARI_FLOAT32_VEC3", "ANARI_FLOAT32_VEC4"],
+                    "tags" : ["required"],
+                    "description" : "backing array of the sampler"
+                }, {
+                    "name" : "offset",
+                    "types" : ["ANARI_UINT64"],
+                    "tags" : [],
+                    "default" : 0,
+                    "description" : "offset added to primitiveId"
                 }
             ]
         }
