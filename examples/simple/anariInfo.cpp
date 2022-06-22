@@ -11,14 +11,19 @@
 #else
 #include <alloca.h>
 #endif
-#include <errno.h>
+
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <type_traits>
+
 // anari
 #include "anari/anari.h"
+#include "anari/anari_cpp.hpp"
 #include "anari/type_utility.h"
+
 
 const char *helptext =
 "anariInfo -l <library> [-p -t <type> -s <subtype>]\n"
@@ -76,6 +81,128 @@ const ANARIDataType namedTypes[] = {
   ANARI_VOLUME
 };
 
+
+template<int T, class Enable = void>
+struct param_printer {
+  void operator()(const void *mem) {
+  }
+};
+
+template<>
+struct param_printer<ANARI_STRING, void> {
+  void operator()(const void *mem) {
+    const char *str = (const char*)mem;
+    printf("\"%s\"", str);
+  }
+};
+
+template<int T>
+struct param_printer<T,
+  typename std::enable_if<
+    std::is_floating_point<
+      typename anari::ANARITypeProperties<T>::base_type
+    >::value
+  >::type> {
+  using base_type = typename anari::ANARITypeProperties<T>::base_type;
+  static const int components = anari::ANARITypeProperties<T>::components;
+  void operator()(const void *mem) {
+    const base_type *data = (base_type*)mem;
+    printf("%.1f", data[0]);
+    for(int i = 1;i<components;++i) {
+      printf(", %.1f", data[i]);
+    }
+  }
+};
+
+template<int T>
+struct param_printer<T,
+  typename std::enable_if<
+    std::is_integral<
+      typename anari::ANARITypeProperties<T>::base_type
+    >::value
+  >::type> {
+  using base_type = typename anari::ANARITypeProperties<T>::base_type;
+  static const int components = anari::ANARITypeProperties<T>::components;
+  void operator()(const void *mem) {
+    const base_type *data = (base_type*)mem;
+    printf("%lld", (long long)data[0]);
+    for(int i = 1;i<components;++i) {
+      printf(", %lld", (long long)data[i]);
+    }
+  }
+};
+
+template<int T>
+struct param_printer<T,
+  typename std::enable_if<
+    anari::isObject(T)
+  >::type> {
+  using base_type = typename anari::ANARITypeProperties<T>::base_type;
+  static const int components = anari::ANARITypeProperties<T>::components;
+  void operator()(const void *mem) {
+    printf("%s", anari::toString(T));
+  }
+};
+
+template<int T>
+struct param_printer_wrapper : public param_printer<T> { };
+
+static void printAnariFromMemory(ANARIDataType t, const void *mem) {
+  anari::anariTypeInvoke<void, param_printer_wrapper>(t, mem);
+}
+
+void print_info(ANARILibrary lib, const char *device, const char *objname, ANARIDataType objtype, const char *paramname, ANARIDataType paramtype, const char *indent) {
+  int32_t *required = (int32_t*)anariGetParameterInfo(lib, device, objname, objtype, paramname, paramtype, "required", ANARI_BOOL);
+  if(required && *required) {
+    printf("%srequired\n", indent);
+  }
+
+  const void *mem = anariGetParameterInfo(lib, device, objname, objtype, paramname, paramtype, "default", paramtype);
+  if(mem) {
+    printf("%sdefault = ", indent);
+    printAnariFromMemory(paramtype, mem);
+    printf("\n");
+  }
+
+  mem = anariGetParameterInfo(lib, device, objname, objtype, paramname, paramtype, "minimum", paramtype);
+  if(mem) {
+    printf("%sminimum = ", indent);
+    printAnariFromMemory(paramtype, mem);
+    printf("\n");
+  }
+
+  mem = anariGetParameterInfo(lib, device, objname, objtype, paramname, paramtype, "maximum", paramtype);
+  if(mem) {
+    printf("%smaximum = ", indent);
+    printAnariFromMemory(paramtype, mem);
+    printf("\n");
+  }
+
+  mem = anariGetParameterInfo(lib, device, objname, objtype, paramname, paramtype, "values", ANARI_STRING_LIST);
+  if(mem) {
+    const char **list = (const char **)mem;
+    printf("%svalues =\n", indent);
+    for(;*list != nullptr;++list) {
+      printf("%s   \"%s\"\n", indent, *list);
+    }
+  }
+
+  mem = anariGetParameterInfo(lib, device, objname, objtype, paramname, paramtype, "elementType", ANARI_TYPE_LIST);
+  if(mem) {
+    const ANARIDataType *list = (const ANARIDataType*)mem;
+    printf("%selementType =\n", indent);
+    for(;*list != ANARI_UNKNOWN;++list) {
+      printf("%s   %s\n", indent, anari::toString(*list));
+    }
+  }
+
+  mem = anariGetParameterInfo(lib, device, objname, objtype, paramname, paramtype, "description", ANARI_STRING_LIST);
+  if(mem) {
+    printf("%sdescription = \"%s\"\n", indent, (const char*)mem);
+  }
+}
+
+
 /******************************************************************/
 int main(int argc, const char **argv)
 {
@@ -83,7 +210,8 @@ int main(int argc, const char **argv)
   const char *deviceName = NULL;
   const char *typeFilter = NULL;
   const char *subtypeFilter = NULL;
-  bool skipParameters = 0;
+  bool skipParameters = false;
+  bool info = false;
   for(int i = 1;i<argc;++i) {
     if(strncmp(argv[i], "-l", 2) == 0) {
       if(i+1<argc) {
@@ -111,6 +239,9 @@ int main(int argc, const char **argv)
     }
     if(strncmp(argv[i], "-p", 2) == 0) {
       skipParameters = true;
+    }
+    if(strncmp(argv[i], "-i", 2) == 0) {
+      info = true;
     }
     if(strncmp(argv[i], "-h", 2) == 0) {
       puts(helptext);
@@ -166,13 +297,10 @@ int main(int argc, const char **argv)
             const ANARIParameter *params = anariGetObjectParameters(lib, devices[i], types[k], namedTypes[j]);
             if(params) {
               for(int l = 0;params[l].name;++l){
-                printf("         %-25s %-25s", params[l].name, anari::toString(params[l].type));
-                int32_t *required = (int32_t*)anariGetParameterInfo(lib, devices[i], types[k], namedTypes[j],
-                  params[l].name, params[l].type, "required", ANARI_BOOL);
-                if(required && *required) {
-                  printf("required");
+                printf("         * %-25s %-25s\n", params[l].name, anari::toString(params[l].type));
+                if(info) {
+                  print_info(lib, devices[i], types[k], namedTypes[j], params[l].name, params[l].type, "            ");
                 }
-                printf("\n");
               }
             }
           }
@@ -189,13 +317,10 @@ int main(int argc, const char **argv)
           const ANARIParameter *params = anariGetObjectParameters(lib, devices[i], 0, anonymousTypes[j]);
           if(params) {
             for(int l = 0;params[l].name;++l){
-              printf("         %-25s %-25s", params[l].name, anari::toString(params[l].type));
-              int32_t *required = (int32_t*)anariGetParameterInfo(lib, devices[i], nullptr, anonymousTypes[j],
-                params[l].name, params[l].type, "required", ANARI_BOOL);
-              if(required && *required) {
-                printf("required");
+              printf("         * %-25s %-25s\n", params[l].name, anari::toString(params[l].type));
+              if(info) {
+                print_info(lib, devices[i], nullptr, anonymousTypes[j], params[l].name, params[l].type, "            ");
               }
-              printf("\n");
             }
           }
         }

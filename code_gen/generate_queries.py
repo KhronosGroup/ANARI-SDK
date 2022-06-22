@@ -203,7 +203,7 @@ class QueryGenerator:
 
                 if "elementType" in param:
                     code += "      case "+str(self.info_strings.index("elementType"))+": // elementType\n"
-                    code += "         if(infoType == ANARI_DATA_TYPE) {\n"
+                    code += "         if(infoType == ANARI_TYPE_LIST) {\n"
                     code += "            static const ANARIDataType values[] = {"
                     code += ", ".join(param["elementType"]) + ", ANARI_UNKNOWN};\n"
                     code += "            return values;\n"
@@ -213,7 +213,7 @@ class QueryGenerator:
 
                 if "values" in param:
                     code += "      case "+str(self.info_strings.index("values"))+": // values\n"
-                    code += "         if(paramType == ANARI_STRING) {\n"
+                    code += "         if(paramType == ANARI_STRING && infoType == ANARI_STRING_LIST) {\n"
                     code += "            static const char *values[] = {"
                     code += ", ".join(["\"%s\""%v for v in param["values"]]) + ", nullptr};\n"
                     code += "            return values;\n"
@@ -223,7 +223,7 @@ class QueryGenerator:
 
                 if "attribute" in param["tags"]:
                     code += "      case "+str(self.info_strings.index("values"))+": // values\n"
-                    code += "         if(paramType == ANARI_STRING) {\n"
+                    code += "         if(paramType == ANARI_STRING && infoType == ANARI_STRING_LIST) {\n"
                     code += "            static const char *values[] = {"
                     code += ", ".join(["\"%s\""%v for v in self.attribute_list]) + ", nullptr};\n"
                     code += "            return values;\n"
