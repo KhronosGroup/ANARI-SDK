@@ -32,6 +32,11 @@ PUBLIC
   anari_utilities
 )
 
+target_compile_definitions(${PROJECT_NAME}
+PRIVATE
+  "anari_library_sink_EXPORTS"
+)
+
 install(TARGETS ${PROJECT_NAME}
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

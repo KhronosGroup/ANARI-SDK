@@ -57,6 +57,11 @@ install(TARGETS ${PROJECT_NAME}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
+target_compile_definitions(${PROJECT_NAME}
+PRIVATE
+  "anari_library_debug_EXPORTS"
+)
+
 install(TARGETS ${PROJECT_NAME}
   EXPORT anari_Exports
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}

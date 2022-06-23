@@ -123,7 +123,7 @@ endif()
 target_compile_definitions(${PROJECT_NAME}
 PRIVATE
   -DDEVICE_VERSION=${REFERENCE_DEVICE_VERSION}
-  "example_device_EXPORTS"
+  "anari_library_example_EXPORTS"
 )
 
 install(TARGETS ${PROJECT_NAME}
