@@ -17,7 +17,7 @@ namespace debug_device {
 
 struct DebugDevice;
 
-struct DebugObjectBase {
+struct DEBUG_DEVICE_INTERFACE DebugObjectBase {
 public:
   virtual ANARIDataType getType() = 0;
   virtual const char *getName() = 0;
@@ -88,7 +88,7 @@ public:
 };
 
 template<int T>
-struct DebugObject : public GenericDebugObject {
+struct DEBUG_DEVICE_INTERFACE DebugObject : public GenericDebugObject {
   DebugObject() = default;
   DebugObject(DebugDevice *debugDevice, ANARIObject wrappedHandle, ANARIObject handle)
   : GenericDebugObject(debugDevice, wrappedHandle, handle)
@@ -98,7 +98,7 @@ struct DebugObject : public GenericDebugObject {
   virtual ANARIDataType getType() { return T; }
 };
 
-struct GenericArrayDebugObject : public GenericDebugObject {
+struct DEBUG_DEVICE_INTERFACE GenericArrayDebugObject : public GenericDebugObject {
 public:
   GenericArrayDebugObject() = default;
   GenericArrayDebugObject(DebugDevice *debugDevice, ANARIObject wrappedHandle, ANARIObject handle)
@@ -145,7 +145,7 @@ public:
 };
 
 template<int T>
-struct ArrayDebugObject : public GenericArrayDebugObject {
+struct DEBUG_DEVICE_INTERFACE ArrayDebugObject : public GenericArrayDebugObject {
   ArrayDebugObject() = default;
   ArrayDebugObject(DebugDevice *debugDevice, ANARIObject wrappedHandle, ANARIObject handle)
   : GenericArrayDebugObject(debugDevice, wrappedHandle, handle)

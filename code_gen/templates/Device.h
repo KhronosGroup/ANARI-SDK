@@ -17,7 +17,7 @@
 #ifdef DEVICE_STATIC_DEFINE
 #define DEVICE_INTERFACE
 #else
-#ifdef anari_library_sink_EXPORTS
+#ifdef anari_library_$libraryname_EXPORTS
 #define DEVICE_INTERFACE __declspec(dllexport)
 #else
 #define DEVICE_INTERFACE __declspec(dllimport)

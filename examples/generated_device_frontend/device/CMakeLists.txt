@@ -63,6 +63,11 @@ PUBLIC
   anari_library_debug
 )
 
+target_compile_definitions(${PROJECT_NAME}
+PRIVATE
+  "anari_library_tree_EXPORTS"
+)
+
 install(TARGETS ${PROJECT_NAME}
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

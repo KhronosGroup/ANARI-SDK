@@ -8,7 +8,7 @@
 namespace anari_sdk{
 namespace tree{
 static int param_hash(const char *str) {
-   static const uint32_t table[] = {0x74630017u,0x0u,0x7030005cu,0x6a6100e2u,0x65640106u,0x7061010du,0x73650157u,0x0u,0x736d0170u,0x0u,0x0u,0x6a61029cu,0x706102aeu,0x706102eeu,0x76700305u,0x736f0366u,0x0u,0x666103bdu,0x766303f1u,0x736904abu,0x717004c0u,0x706104c2u,0x736f0541u,0x64630028u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x63620033u,0x0u,0x68670038u,0x0u,0x66650046u,0x0u,0x73720053u,0x71700057u,0x76750029u,0x6e6d002au,0x7675002bu,0x6d6c002cu,0x6261002du,0x7574002eu,0x6a69002fu,0x706f0030u,0x6f6e0031u,0x1000032u,0x80000000u,0x66650034u,0x65640035u,0x706f0036u,0x1000037u,0x80000001u,0x76750039u,0x6d6c003au,0x6261003bu,0x7372003cu,0x4544003du,0x6a69003eu,0x6261003fu,0x6e6d0040u,0x66650041u,0x75740042u,0x66650043u,0x73720044u,0x1000045u,0x80000002u,0x73720047u,0x75740048u,0x76750049u,0x7372004au,0x6665004bu,0x5352004cu,0x6261004du,0x6564004eu,0x6a69004fu,0x76750050u,0x74730051u,0x1000052u,0x80000003u,0x62610054u,0x7a790055u,0x1000056u,0x80000004u,0x66650058u,0x64630059u,0x7574005au,0x100005bu,0x80000005u,0x100009cu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x716d009du,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6d6c00a7u,0x80000006u,0x666500a1u,0x0u,0x0u,0x747300a5u,0x737200a2u,0x626100a3u,0x10000a4u,0x80000007u,0x10000a6u,0x80000008u,0x706f00a8u,0x737200a9u,0x2f0000aau,0x80000009u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x717000d9u,0x706f00dau,0x747300dbu,0x6a6900dcu,0x757400ddu,0x6a6900deu,0x706f00dfu,0x6f6e00e0u,0x10000e1u,0x8000000au,0x757400ebu,0x0u,0x0u,0x0u,0x716e00eeu,0x0u,0x0u,0x0u,0x737200feu,0x626100ecu,0x10000edu,0x8000000bu,0x747300f1u,0x0u,0x757400fbu,0x6a6900f2u,0x757400f3u,0x7a7900f4u,0x545300f5u,0x646300f6u,0x626100f7u,0x6d6c00f8u,0x666500f9u,0x10000fau,0x8000000cu,0x696800fcu,0x10000fdu,0x8000000du,0x666500ffu,0x64630100u,0x75740101u,0x6a690102u,0x706f0103u,0x6f6e0104u,0x1000105u,0x8000000eu,0x68670107u,0x66650108u,0x33310109u,0x100010bu,0x100010cu,0x8000000fu,0x80000010u,0x6d6c011cu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6d650127u,0x0u,0x0u,0x0u,0x0u,0x0u,0x77630136u,0x6d6c011du,0x706f011eu,0x6766011fu,0x67660120u,0x42410121u,0x6f6e0122u,0x68670123u,0x6d6c0124u,0x66650125u,0x1000126u,0x80000011u,0x6d6c012fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x75740132u,0x65640130u,0x1000131u,0x80000012u,0x66650133u,0x73720134u,0x1000135u,0x80000013u,0x7675014au,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x7a790155u,0x7473014bu,0x4544014cu,0x6a69014du,0x7473014eu,0x7574014fu,0x62610150u,0x6f6e0151u,0x64630152u,0x66650153u,0x1000154u,0x80000014u,0x1000156u,0x80000015u,0x706f0165u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x706f016cu,0x6e6d0166u,0x66650167u,0x75740168u,0x73720169u,0x7a79016au,0x100016bu,0x80000016u,0x7675016du,0x7170016eu,0x100016fu,0x80000017u,0x62610176u,0x754101d2u,0x0u,0x0u,0x0u,0x73720294u,0x68670177u,0x66650178u,0x53000179u,0x80000018u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x666501ccu,0x686701cdu,0x6a6901ceu,0x706f01cfu,0x6f6e01d0u,0x10001d1u,0x80000019u,0x75740206u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x7372020fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x66650218u,0x0u,0x0u,0x0u,0x0u,0x75740221u,0x66650227u,0x75740207u,0x73720208u,0x6a690209u,0x6362020au,0x7675020bu,0x7574020cu,0x6665020du,0x100020eu,0x8000001au,0x62610210u,0x6f6e0211u,0x74730212u,0x67660213u,0x706f0214u,0x73720215u,0x6e6d0216u,0x1000217u,0x8000001bu,0x73720219u,0x5352021au,0x6261021bu,0x6564021cu,0x6a69021du,0x7675021eu,0x7473021fu,0x1000220u,0x8000001cu,0x62610222u,0x6f6e0223u,0x64630224u,0x66650225u,0x1000226u,0x8000001du,0x736e0228u,0x7473022du,0x0u,0x0u,0x0u,0x71700282u,0x6a69022eu,0x7574022fu,0x7a790230u,0x45000231u,0x8000001eu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6a690276u,0x74730277u,0x75740278u,0x73720279u,0x6a69027au,0x6362027bu,0x7675027cu,0x7574027du,0x6a69027eu,0x706f027fu,0x6f6e0280u,0x1000281u,0x8000001fu,0x76750283u,0x71700284u,0x6a690285u,0x6d6c0286u,0x6d6c0287u,0x62610288u,0x73720289u,0x7a79028au,0x4544028bu,0x6a69028cu,0x7473028du,0x7574028eu,0x6261028fu,0x6f6e0290u,0x64630291u,0x66650292u,0x1000293u,0x80000020u,0x6a690295u,0x65640296u,0x62610297u,0x6f6e0298u,0x64630299u,0x6665029au,0x100029bu,0x80000021u,0x7a7902a5u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x686702aau,0x706f02a6u,0x767502a7u,0x757402a8u,0x10002a9u,0x80000022u,0x696802abu,0x757402acu,0x10002adu,0x80000023u,0x757402bdu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x757402c4u,0x666502beu,0x737202bfu,0x6a6902c0u,0x626102c1u,0x6d6c02c2u,0x10002c3u,0x80000024u,0x6a6902c5u,0x706f02c6u,0x6f6e02c7u,0x2f2e02c8u,0x757202c9u,0x706f02ccu,0x646302d4u,0x737202d9u,0x757402cdu,0x626102ceu,0x757402cfu,0x6a6902d0u,0x706f02d1u,0x6f6e02d2u,0x10002d3u,0x80000025u,0x626102d5u,0x6d6c02d6u,0x666502d7u,0x10002d8u,0x80000026u,0x626102dau,0x6f6e02dbu,0x747302dcu,0x6d6602ddu,0x706f02e4u,0x0u,0x0u,0x0u,0x0u,0x0u,0x626102e8u,0x737202e5u,0x6e6d02e6u,0x10002e7u,0x80000027u,0x757402e9u,0x6a6902eau,0x706f02ebu,0x6f6e02ecu,0x10002edu,0x80000028u,0x6e6d02fdu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x73720300u,0x666502feu,0x10002ffu,0x80000029u,0x6e6d0301u,0x62610302u,0x6d6c0303u,0x1000304u,0x8000002au,0x6661030bu,0x0u,0x6a690356u,0x0u,0x0u,0x7574035bu,0x64630310u,0x0u,0x0u,0x0u,0x6f6e034cu,0x6a690311u,0x75740312u,0x7a790313u,0x2f000314u,0x8000002bu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x71700343u,0x706f0344u,0x74730345u,0x6a690346u,0x75740347u,0x6a690348u,0x706f0349u,0x6f6e034au,0x100034bu,0x8000002cu,0x6a69034du,0x6f6e034eu,0x6867034fu,0x42410350u,0x6f6e0351u,0x68670352u,0x6d6c0353u,0x66650354u,0x1000355u,0x8000002du,0x68670357u,0x6a690358u,0x6f6e0359u,0x100035au,0x8000002eu,0x5554035cu,0x7372035du,0x6261035eu,0x6f6e035fu,0x74730360u,0x67660361u,0x706f0362u,0x73720363u,0x6e6d0364u,0x1000365u,0x8000002fu,0x7873036au,0x0u,0x0u,0x6a690378u,0x6a69036fu,0x0u,0x0u,0x0u,0x66650375u,0x75740370u,0x6a690371u,0x706f0372u,0x6f6e0373u,0x1000374u,0x80000030u,0x73720376u,0x1000377u,0x80000031u,0x6e6d0379u,0x6a69037au,0x7574037bu,0x6a69037cu,0x7776037du,0x6665037eu,0x2f2e037fu,0x73610380u,0x75740392u,0x0u,0x706f03a2u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6f6403a7u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x626103b7u,0x75740393u,0x73720394u,0x6a690395u,0x63620396u,0x76750397u,0x75740398u,0x66650399u,0x3430039au,0x100039eu,0x100039fu,0x10003a0u,0x10003a1u,0x80000032u,0x80000033u,0x80000034u,0x80000035u,0x6d6c03a3u,0x706f03a4u,0x737203a5u,0x10003a6u,0x80000036u,0x10003b2u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x656403b3u,0x80000037u,0x666503b4u,0x797803b5u,0x10003b6u,0x80000038u,0x656403b8u,0x6a6903b9u,0x767503bau,0x747303bbu,0x10003bcu,0x80000039u,0x656403c2u,0x0u,0x0u,0x0u,0x6f6703dfu,0x6a6903c3u,0x766103c4u,0x6f6e03d9u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x747303ddu,0x646303dau,0x666503dbu,0x10003dcu,0x8000003au,0x10003deu,0x8000003bu,0x6a6903e7u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x656403ebu,0x706f03e8u,0x6f6e03e9u,0x10003eau,0x8000003cu,0x666503ecu,0x737203edu,0x666503eeu,0x737203efu,0x10003f0u,0x8000003du,0x62610404u,0x0u,0x0u,0x0u,0x0u,0x76750408u,0x7b64040eu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x62610429u,0x0u,0x0u,0x0u,0x6661042fu,0x737204a5u,0x6d6c0405u,0x66650406u,0x1000407u,0x8000003eu,0x75740409u,0x7574040au,0x6665040bu,0x7372040cu,0x100040du,0x8000003fu,0x66650425u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x66650427u,0x1000426u,0x80000040u,0x1000428u,0x80000041u,0x6463042au,0x6a69042bu,0x6f6e042cu,0x6867042du,0x100042eu,0x80000042u,0x75740434u,0x0u,0x0u,0x0u,0x7372049du,0x76750435u,0x74730436u,0x44430437u,0x62610438u,0x6d6c0439u,0x6d6c043au,0x6362043bu,0x6261043cu,0x6463043du,0x6c6b043eu,0x5600043fu,0x80000043u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x74730495u,0x66650496u,0x73720497u,0x45440498u,0x62610499u,0x7574049au,0x6261049bu,0x100049cu,0x80000044u,0x6665049eu,0x706f049fu,0x4e4d04a0u,0x706f04a1u,0x656404a2u,0x666504a3u,0x10004a4u,0x80000045u,0x676604a6u,0x626104a7u,0x646304a8u,0x666504a9u,0x10004aau,0x80000046u,0x6e6d04b5u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x626104b8u,0x666504b6u,0x10004b7u,0x80000047u,0x6f6e04b9u,0x747304bau,0x676604bbu,0x706f04bcu,0x737204bdu,0x6e6d04beu,0x10004bfu,0x80000048u,0x10004c1u,0x80000049u,0x736c04d1u,0x0u,0x0u,0x0u,0x737204e6u,0x0u,0x0u,0x0u,0x74730536u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6d6c053cu,0x767504d8u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6a6904e0u,0x666504d9u,0x535204dau,0x626104dbu,0x6f6e04dcu,0x686704ddu,0x666504deu,0x10004dfu,0x8000004au,0x626104e1u,0x6f6e04e2u,0x646304e3u,0x666504e4u,0x10004e5u,0x8000004bu,0x757404e7u,0x666504e8u,0x797804e9u,0x2f2e04eau,0x736104ebu,0x757404fdu,0x0u,0x7061050du,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x706f0522u,0x0u,0x706f0528u,0x0u,0x62610530u,0x757404feu,0x737204ffu,0x6a690500u,0x63620501u,0x76750502u,0x75740503u,0x66650504u,0x34300505u,0x1000509u,0x100050au,0x100050bu,0x100050cu,0x8000004cu,0x8000004du,0x8000004eu,0x8000004fu,0x7170051cu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6d6c051eu,0x100051du,0x80000050u,0x706f051fu,0x73720520u,0x1000521u,0x80000051u,0x73720523u,0x6e6d0524u,0x62610525u,0x6d6c0526u,0x1000527u,0x80000052u,0x74730529u,0x6a69052au,0x7574052bu,0x6a69052cu,0x706f052du,0x6f6e052eu,0x100052fu,0x80000053u,0x65640531u,0x6a690532u,0x76750533u,0x74730534u,0x1000535u,0x80000054u,0x6a690537u,0x63620538u,0x6d6c0539u,0x6665053au,0x100053bu,0x80000055u,0x7675053du,0x6e6d053eu,0x6665053fu,0x1000540u,0x80000056u,0x73720545u,0x0u,0x0u,0x62610549u,0x6d6c0546u,0x65640547u,0x1000548u,0x80000057u,0x7170054au,0x4e4d054bu,0x706f054cu,0x6564054du,0x6665054eu,0x3431054fu,0x1000552u,0x1000553u,0x1000554u,0x80000058u,0x80000059u,0x8000005au};
+   static const uint32_t table[] = {0x74630017u,0x0u,0x7030005cu,0x6a6100e2u,0x65640106u,0x7061010du,0x73650157u,0x0u,0x736d0170u,0x0u,0x0u,0x6a61029cu,0x706102aeu,0x706102eeu,0x76660305u,0x736f0375u,0x0u,0x666103ccu,0x76630400u,0x736904bau,0x717004cfu,0x706104d1u,0x736f0550u,0x64630028u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x63620033u,0x0u,0x68670038u,0x0u,0x66650046u,0x0u,0x73720053u,0x71700057u,0x76750029u,0x6e6d002au,0x7675002bu,0x6d6c002cu,0x6261002du,0x7574002eu,0x6a69002fu,0x706f0030u,0x6f6e0031u,0x1000032u,0x80000000u,0x66650034u,0x65640035u,0x706f0036u,0x1000037u,0x80000001u,0x76750039u,0x6d6c003au,0x6261003bu,0x7372003cu,0x4544003du,0x6a69003eu,0x6261003fu,0x6e6d0040u,0x66650041u,0x75740042u,0x66650043u,0x73720044u,0x1000045u,0x80000002u,0x73720047u,0x75740048u,0x76750049u,0x7372004au,0x6665004bu,0x5352004cu,0x6261004du,0x6564004eu,0x6a69004fu,0x76750050u,0x74730051u,0x1000052u,0x80000003u,0x62610054u,0x7a790055u,0x1000056u,0x80000004u,0x66650058u,0x64630059u,0x7574005au,0x100005bu,0x80000005u,0x100009cu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x716d009du,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6d6c00a7u,0x80000006u,0x666500a1u,0x0u,0x0u,0x747300a5u,0x737200a2u,0x626100a3u,0x10000a4u,0x80000007u,0x10000a6u,0x80000008u,0x706f00a8u,0x737200a9u,0x2f0000aau,0x80000009u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x717000d9u,0x706f00dau,0x747300dbu,0x6a6900dcu,0x757400ddu,0x6a6900deu,0x706f00dfu,0x6f6e00e0u,0x10000e1u,0x8000000au,0x757400ebu,0x0u,0x0u,0x0u,0x716e00eeu,0x0u,0x0u,0x0u,0x737200feu,0x626100ecu,0x10000edu,0x8000000bu,0x747300f1u,0x0u,0x757400fbu,0x6a6900f2u,0x757400f3u,0x7a7900f4u,0x545300f5u,0x646300f6u,0x626100f7u,0x6d6c00f8u,0x666500f9u,0x10000fau,0x8000000cu,0x696800fcu,0x10000fdu,0x8000000du,0x666500ffu,0x64630100u,0x75740101u,0x6a690102u,0x706f0103u,0x6f6e0104u,0x1000105u,0x8000000eu,0x68670107u,0x66650108u,0x33310109u,0x100010bu,0x100010cu,0x8000000fu,0x80000010u,0x6d6c011cu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6d650127u,0x0u,0x0u,0x0u,0x0u,0x0u,0x77630136u,0x6d6c011du,0x706f011eu,0x6766011fu,0x67660120u,0x42410121u,0x6f6e0122u,0x68670123u,0x6d6c0124u,0x66650125u,0x1000126u,0x80000011u,0x6d6c012fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x75740132u,0x65640130u,0x1000131u,0x80000012u,0x66650133u,0x73720134u,0x1000135u,0x80000013u,0x7675014au,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x7a790155u,0x7473014bu,0x4544014cu,0x6a69014du,0x7473014eu,0x7574014fu,0x62610150u,0x6f6e0151u,0x64630152u,0x66650153u,0x1000154u,0x80000014u,0x1000156u,0x80000015u,0x706f0165u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x706f016cu,0x6e6d0166u,0x66650167u,0x75740168u,0x73720169u,0x7a79016au,0x100016bu,0x80000016u,0x7675016du,0x7170016eu,0x100016fu,0x80000017u,0x62610176u,0x754101d2u,0x0u,0x0u,0x0u,0x73720294u,0x68670177u,0x66650178u,0x53000179u,0x80000018u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x666501ccu,0x686701cdu,0x6a6901ceu,0x706f01cfu,0x6f6e01d0u,0x10001d1u,0x80000019u,0x75740206u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x7372020fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x66650218u,0x0u,0x0u,0x0u,0x0u,0x75740221u,0x66650227u,0x75740207u,0x73720208u,0x6a690209u,0x6362020au,0x7675020bu,0x7574020cu,0x6665020du,0x100020eu,0x8000001au,0x62610210u,0x6f6e0211u,0x74730212u,0x67660213u,0x706f0214u,0x73720215u,0x6e6d0216u,0x1000217u,0x8000001bu,0x73720219u,0x5352021au,0x6261021bu,0x6564021cu,0x6a69021du,0x7675021eu,0x7473021fu,0x1000220u,0x8000001cu,0x62610222u,0x6f6e0223u,0x64630224u,0x66650225u,0x1000226u,0x8000001du,0x736e0228u,0x7473022du,0x0u,0x0u,0x0u,0x71700282u,0x6a69022eu,0x7574022fu,0x7a790230u,0x45000231u,0x8000001eu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6a690276u,0x74730277u,0x75740278u,0x73720279u,0x6a69027au,0x6362027bu,0x7675027cu,0x7574027du,0x6a69027eu,0x706f027fu,0x6f6e0280u,0x1000281u,0x8000001fu,0x76750283u,0x71700284u,0x6a690285u,0x6d6c0286u,0x6d6c0287u,0x62610288u,0x73720289u,0x7a79028au,0x4544028bu,0x6a69028cu,0x7473028du,0x7574028eu,0x6261028fu,0x6f6e0290u,0x64630291u,0x66650292u,0x1000293u,0x80000020u,0x6a690295u,0x65640296u,0x62610297u,0x6f6e0298u,0x64630299u,0x6665029au,0x100029bu,0x80000021u,0x7a7902a5u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x686702aau,0x706f02a6u,0x767502a7u,0x757402a8u,0x10002a9u,0x80000022u,0x696802abu,0x757402acu,0x10002adu,0x80000023u,0x757402bdu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x757402c4u,0x666502beu,0x737202bfu,0x6a6902c0u,0x626102c1u,0x6d6c02c2u,0x10002c3u,0x80000024u,0x6a6902c5u,0x706f02c6u,0x6f6e02c7u,0x2f2e02c8u,0x757202c9u,0x706f02ccu,0x646302d4u,0x737202d9u,0x757402cdu,0x626102ceu,0x757402cfu,0x6a6902d0u,0x706f02d1u,0x6f6e02d2u,0x10002d3u,0x80000025u,0x626102d5u,0x6d6c02d6u,0x666502d7u,0x10002d8u,0x80000026u,0x626102dau,0x6f6e02dbu,0x747302dcu,0x6d6602ddu,0x706f02e4u,0x0u,0x0u,0x0u,0x0u,0x0u,0x626102e8u,0x737202e5u,0x6e6d02e6u,0x10002e7u,0x80000027u,0x757402e9u,0x6a6902eau,0x706f02ebu,0x6f6e02ecu,0x10002edu,0x80000028u,0x6e6d02fdu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x73720300u,0x666502feu,0x10002ffu,0x80000029u,0x6e6d0301u,0x62610302u,0x6d6c0303u,0x1000304u,0x8000002au,0x67660315u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6661031au,0x0u,0x6a690365u,0x0u,0x0u,0x7574036au,0x74730316u,0x66650317u,0x75740318u,0x1000319u,0x8000002bu,0x6463031fu,0x0u,0x0u,0x0u,0x6f6e035bu,0x6a690320u,0x75740321u,0x7a790322u,0x2f000323u,0x8000002cu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x71700352u,0x706f0353u,0x74730354u,0x6a690355u,0x75740356u,0x6a690357u,0x706f0358u,0x6f6e0359u,0x100035au,0x8000002du,0x6a69035cu,0x6f6e035du,0x6867035eu,0x4241035fu,0x6f6e0360u,0x68670361u,0x6d6c0362u,0x66650363u,0x1000364u,0x8000002eu,0x68670366u,0x6a690367u,0x6f6e0368u,0x1000369u,0x8000002fu,0x5554036bu,0x7372036cu,0x6261036du,0x6f6e036eu,0x7473036fu,0x67660370u,0x706f0371u,0x73720372u,0x6e6d0373u,0x1000374u,0x80000030u,0x78730379u,0x0u,0x0u,0x6a690387u,0x6a69037eu,0x0u,0x0u,0x0u,0x66650384u,0x7574037fu,0x6a690380u,0x706f0381u,0x6f6e0382u,0x1000383u,0x80000031u,0x73720385u,0x1000386u,0x80000032u,0x6e6d0388u,0x6a690389u,0x7574038au,0x6a69038bu,0x7776038cu,0x6665038du,0x2f2e038eu,0x7361038fu,0x757403a1u,0x0u,0x706f03b1u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6f6403b6u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x626103c6u,0x757403a2u,0x737203a3u,0x6a6903a4u,0x636203a5u,0x767503a6u,0x757403a7u,0x666503a8u,0x343003a9u,0x10003adu,0x10003aeu,0x10003afu,0x10003b0u,0x80000033u,0x80000034u,0x80000035u,0x80000036u,0x6d6c03b2u,0x706f03b3u,0x737203b4u,0x10003b5u,0x80000037u,0x10003c1u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x656403c2u,0x80000038u,0x666503c3u,0x797803c4u,0x10003c5u,0x80000039u,0x656403c7u,0x6a6903c8u,0x767503c9u,0x747303cau,0x10003cbu,0x8000003au,0x656403d1u,0x0u,0x0u,0x0u,0x6f6703eeu,0x6a6903d2u,0x766103d3u,0x6f6e03e8u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x747303ecu,0x646303e9u,0x666503eau,0x10003ebu,0x8000003bu,0x10003edu,0x8000003cu,0x6a6903f6u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x656403fau,0x706f03f7u,0x6f6e03f8u,0x10003f9u,0x8000003du,0x666503fbu,0x737203fcu,0x666503fdu,0x737203feu,0x10003ffu,0x8000003eu,0x62610413u,0x0u,0x0u,0x0u,0x0u,0x76750417u,0x7b64041du,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x62610438u,0x0u,0x0u,0x0u,0x6661043eu,0x737204b4u,0x6d6c0414u,0x66650415u,0x1000416u,0x8000003fu,0x75740418u,0x75740419u,0x6665041au,0x7372041bu,0x100041cu,0x80000040u,0x66650434u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x66650436u,0x1000435u,0x80000041u,0x1000437u,0x80000042u,0x64630439u,0x6a69043au,0x6f6e043bu,0x6867043cu,0x100043du,0x80000043u,0x75740443u,0x0u,0x0u,0x0u,0x737204acu,0x76750444u,0x74730445u,0x44430446u,0x62610447u,0x6d6c0448u,0x6d6c0449u,0x6362044au,0x6261044bu,0x6463044cu,0x6c6b044du,0x5600044eu,0x80000044u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x747304a4u,0x666504a5u,0x737204a6u,0x454404a7u,0x626104a8u,0x757404a9u,0x626104aau,0x10004abu,0x80000045u,0x666504adu,0x706f04aeu,0x4e4d04afu,0x706f04b0u,0x656404b1u,0x666504b2u,0x10004b3u,0x80000046u,0x676604b5u,0x626104b6u,0x646304b7u,0x666504b8u,0x10004b9u,0x80000047u,0x6e6d04c4u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x626104c7u,0x666504c5u,0x10004c6u,0x80000048u,0x6f6e04c8u,0x747304c9u,0x676604cau,0x706f04cbu,0x737204ccu,0x6e6d04cdu,0x10004ceu,0x80000049u,0x10004d0u,0x8000004au,0x736c04e0u,0x0u,0x0u,0x0u,0x737204f5u,0x0u,0x0u,0x0u,0x74730545u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6d6c054bu,0x767504e7u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6a6904efu,0x666504e8u,0x535204e9u,0x626104eau,0x6f6e04ebu,0x686704ecu,0x666504edu,0x10004eeu,0x8000004bu,0x626104f0u,0x6f6e04f1u,0x646304f2u,0x666504f3u,0x10004f4u,0x8000004cu,0x757404f6u,0x666504f7u,0x797804f8u,0x2f2e04f9u,0x736104fau,0x7574050cu,0x0u,0x7061051cu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x706f0531u,0x0u,0x706f0537u,0x0u,0x6261053fu,0x7574050du,0x7372050eu,0x6a69050fu,0x63620510u,0x76750511u,0x75740512u,0x66650513u,0x34300514u,0x1000518u,0x1000519u,0x100051au,0x100051bu,0x8000004du,0x8000004eu,0x8000004fu,0x80000050u,0x7170052bu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6d6c052du,0x100052cu,0x80000051u,0x706f052eu,0x7372052fu,0x1000530u,0x80000052u,0x73720532u,0x6e6d0533u,0x62610534u,0x6d6c0535u,0x1000536u,0x80000053u,0x74730538u,0x6a690539u,0x7574053au,0x6a69053bu,0x706f053cu,0x6f6e053du,0x100053eu,0x80000054u,0x65640540u,0x6a690541u,0x76750542u,0x74730543u,0x1000544u,0x80000055u,0x6a690546u,0x63620547u,0x6d6c0548u,0x66650549u,0x100054au,0x80000056u,0x7675054cu,0x6e6d054du,0x6665054eu,0x100054fu,0x80000057u,0x73720554u,0x0u,0x0u,0x62610558u,0x6d6c0555u,0x65640556u,0x1000557u,0x80000058u,0x71700559u,0x4e4d055au,0x706f055bu,0x6564055cu,0x6665055du,0x3431055eu,0x1000561u,0x1000562u,0x1000563u,0x80000059u,0x8000005au,0x8000005bu};
    uint32_t cur = 0x78610000u;
    for(int i = 0;cur!=0;++i) {
       uint32_t idx = cur&0xFFFFu;
@@ -36,9 +36,9 @@ bool Device::set(const char *paramname, ANARIDataType type, const void *mem) {
    switch(idx) {
       case 41: //name
          return name.set(device, type, mem);
-      case 67: //statusCallback
+      case 68: //statusCallback
          return statusCallback.set(device, type, mem);
-      case 68: //statusCallbackUserData
+      case 69: //statusCallbackUserData
          return statusCallbackUserData.set(device, type, mem);
       default: // unknown param
          //unknown parameter
@@ -51,10 +51,10 @@ void Device::unset(const char *paramname) {
       case 41: //name
          name.unset();
          return;
-      case 67: //statusCallback
+      case 68: //statusCallback
          statusCallback.unset();
          return;
-      case 68: //statusCallbackUserData
+      case 69: //statusCallbackUserData
          statusCallbackUserData.unset();
          return;
       default: // unknown param
@@ -76,8 +76,8 @@ ParameterBase& Device::operator[](const char *paramname) {
    int idx = param_hash(paramname);
    switch(idx) {
       case 41: return name;
-      case 67: return statusCallback;
-      case 68: return statusCallbackUserData;
+      case 68: return statusCallback;
+      case 69: return statusCallbackUserData;
       default: return empty;
    }
 }
@@ -101,7 +101,7 @@ bool Array1D::set(const char *paramname, ANARIDataType type, const void *mem) {
    switch(idx) {
       case 41: //name
          return name.set(device, type, mem);
-      case 60: //region
+      case 61: //region
          return region.set(device, type, mem);
       default: // unknown param
          //unknown parameter
@@ -114,7 +114,7 @@ void Array1D::unset(const char *paramname) {
       case 41: //name
          name.unset();
          return;
-      case 60: //region
+      case 61: //region
          region.unset();
          return;
       default: // unknown param
@@ -135,7 +135,7 @@ ParameterBase& Array1D::operator[](const char *paramname) {
    int idx = param_hash(paramname);
    switch(idx) {
       case 41: return name;
-      case 60: return region;
+      case 61: return region;
       default: return empty;
    }
 }
@@ -264,13 +264,13 @@ bool Frame::set(const char *paramname, ANARIDataType type, const void *mem) {
    switch(idx) {
       case 41: //name
          return name.set(device, type, mem);
-      case 87: //world
+      case 88: //world
          return world.set(device, type, mem);
-      case 61: //renderer
+      case 62: //renderer
          return renderer.set(device, type, mem);
       case 7: //camera
          return camera.set(device, type, mem);
-      case 65: //size
+      case 66: //size
          return size.set(device, type, mem);
       case 9: //color
          return color.set(device, type, mem);
@@ -282,7 +282,7 @@ bool Frame::set(const char *paramname, ANARIDataType type, const void *mem) {
          return albedo.set(device, type, mem);
       case 0: //accumulation
          return accumulation.set(device, type, mem);
-      case 75: //variance
+      case 76: //variance
          return variance.set(device, type, mem);
       default: // unknown param
          //unknown parameter
@@ -295,16 +295,16 @@ void Frame::unset(const char *paramname) {
       case 41: //name
          name.unset();
          return;
-      case 87: //world
+      case 88: //world
          world.unset();
          return;
-      case 61: //renderer
+      case 62: //renderer
          renderer.unset();
          return;
       case 7: //camera
          camera.unset();
          return;
-      case 65: //size
+      case 66: //size
          size.unset();
          return;
       case 9: //color
@@ -325,7 +325,7 @@ void Frame::unset(const char *paramname) {
             accumulation.set(device, ANARI_BOOL, value);
          }
          return;
-      case 75: //variance
+      case 76: //variance
          {
             int32_t value[] = {0};
             variance.set(device, ANARI_BOOL, value);
@@ -358,16 +358,16 @@ ParameterBase& Frame::operator[](const char *paramname) {
    int idx = param_hash(paramname);
    switch(idx) {
       case 41: return name;
-      case 87: return world;
-      case 61: return renderer;
+      case 88: return world;
+      case 62: return renderer;
       case 7: return camera;
-      case 65: return size;
+      case 66: return size;
       case 9: return color;
       case 13: return depth;
       case 42: return normal;
       case 1: return albedo;
       case 0: return accumulation;
-      case 75: return variance;
+      case 76: return variance;
       default: return empty;
    }
 }
@@ -399,9 +399,9 @@ bool Group::set(const char *paramname, ANARIDataType type, const void *mem) {
    switch(idx) {
       case 41: //name
          return name.set(device, type, mem);
-      case 70: //surface
+      case 71: //surface
          return surface.set(device, type, mem);
-      case 86: //volume
+      case 87: //volume
          return volume.set(device, type, mem);
       case 35: //light
          return light.set(device, type, mem);
@@ -416,10 +416,10 @@ void Group::unset(const char *paramname) {
       case 41: //name
          name.unset();
          return;
-      case 70: //surface
+      case 71: //surface
          surface.unset();
          return;
-      case 86: //volume
+      case 87: //volume
          volume.unset();
          return;
       case 35: //light
@@ -445,8 +445,8 @@ ParameterBase& Group::operator[](const char *paramname) {
    int idx = param_hash(paramname);
    switch(idx) {
       case 41: return name;
-      case 70: return surface;
-      case 86: return volume;
+      case 71: return surface;
+      case 87: return volume;
       case 35: return light;
       default: return empty;
    }
@@ -467,8 +467,8 @@ size_t Group::paramCount() const {
 
 Instance::Instance(ANARIDevice device) : device(device) {
    {
-      float value[] = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0};
-      transform.set(device, ANARI_FLOAT32_MAT3x4, value);
+      float value[] = {1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0};
+      transform.set(device, ANARI_FLOAT32_MAT4, value);
    }
    {
       float value[] = {0.0, 1.0};
@@ -480,7 +480,7 @@ bool Instance::set(const char *paramname, ANARIDataType type, const void *mem) {
    switch(idx) {
       case 41: //name
          return name.set(device, type, mem);
-      case 72: //transform
+      case 73: //transform
          return transform.set(device, type, mem);
       case 23: //group
          return group.set(device, type, mem);
@@ -492,7 +492,7 @@ bool Instance::set(const char *paramname, ANARIDataType type, const void *mem) {
          return motion_rotation.set(device, type, mem);
       case 40: //motion.translation
          return motion_translation.set(device, type, mem);
-      case 71: //time
+      case 72: //time
          return time.set(device, type, mem);
       default: // unknown param
          //unknown parameter
@@ -505,10 +505,10 @@ void Instance::unset(const char *paramname) {
       case 41: //name
          name.unset();
          return;
-      case 72: //transform
+      case 73: //transform
          {
-            float value[] = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0};
-            transform.set(device, ANARI_FLOAT32_MAT3x4, value);
+            float value[] = {1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0};
+            transform.set(device, ANARI_FLOAT32_MAT4, value);
          }
          return;
       case 23: //group
@@ -526,7 +526,7 @@ void Instance::unset(const char *paramname) {
       case 40: //motion.translation
          motion_translation.unset();
          return;
-      case 71: //time
+      case 72: //time
          {
             float value[] = {0.0, 1.0};
             time.set(device, ANARI_FLOAT32_BOX1, value);
@@ -556,13 +556,13 @@ ParameterBase& Instance::operator[](const char *paramname) {
    int idx = param_hash(paramname);
    switch(idx) {
       case 41: return name;
-      case 72: return transform;
+      case 73: return transform;
       case 23: return group;
       case 39: return motion_transform;
       case 38: return motion_scale;
       case 37: return motion_rotation;
       case 40: return motion_translation;
-      case 71: return time;
+      case 72: return time;
       default: return empty;
    }
 }
@@ -593,9 +593,9 @@ bool World::set(const char *paramname, ANARIDataType type, const void *mem) {
          return name.set(device, type, mem);
       case 29: //instance
          return instance.set(device, type, mem);
-      case 70: //surface
+      case 71: //surface
          return surface.set(device, type, mem);
-      case 86: //volume
+      case 87: //volume
          return volume.set(device, type, mem);
       case 35: //light
          return light.set(device, type, mem);
@@ -613,10 +613,10 @@ void World::unset(const char *paramname) {
       case 29: //instance
          instance.unset();
          return;
-      case 70: //surface
+      case 71: //surface
          surface.unset();
          return;
-      case 86: //volume
+      case 87: //volume
          volume.unset();
          return;
       case 35: //light
@@ -644,8 +644,8 @@ ParameterBase& World::operator[](const char *paramname) {
    switch(idx) {
       case 41: return name;
       case 29: return instance;
-      case 70: return surface;
-      case 86: return volume;
+      case 71: return surface;
+      case 87: return volume;
       case 35: return light;
       default: return empty;
    }
@@ -834,13 +834,13 @@ bool CameraOmnidirectional::set(const char *paramname, ANARIDataType type, const
    switch(idx) {
       case 41: //name
          return name.set(device, type, mem);
-      case 48: //position
+      case 49: //position
          return position.set(device, type, mem);
       case 14: //direction
          return direction.set(device, type, mem);
-      case 73: //up
+      case 74: //up
          return up.set(device, type, mem);
-      case 72: //transform
+      case 73: //transform
          return transform.set(device, type, mem);
       case 25: //imageRegion
          return imageRegion.set(device, type, mem);
@@ -848,7 +848,7 @@ bool CameraOmnidirectional::set(const char *paramname, ANARIDataType type, const
          return apertureRadius.set(device, type, mem);
       case 20: //focusDistance
          return focusDistance.set(device, type, mem);
-      case 69: //stereoMode
+      case 70: //stereoMode
          return stereoMode.set(device, type, mem);
       case 32: //interpupillaryDistance
          return interpupillaryDistance.set(device, type, mem);
@@ -862,9 +862,9 @@ bool CameraOmnidirectional::set(const char *paramname, ANARIDataType type, const
          return motion_rotation.set(device, type, mem);
       case 40: //motion.translation
          return motion_translation.set(device, type, mem);
-      case 71: //time
+      case 72: //time
          return time.set(device, type, mem);
-      case 63: //shutter
+      case 64: //shutter
          return shutter.set(device, type, mem);
       default: // unknown param
          //unknown parameter
@@ -877,7 +877,7 @@ void CameraOmnidirectional::unset(const char *paramname) {
       case 41: //name
          name.unset();
          return;
-      case 48: //position
+      case 49: //position
          {
             float value[] = {0.0, 0.0, 0.0};
             position.set(device, ANARI_FLOAT32_VEC3, value);
@@ -889,13 +889,13 @@ void CameraOmnidirectional::unset(const char *paramname) {
             direction.set(device, ANARI_FLOAT32_VEC3, value);
          }
          return;
-      case 73: //up
+      case 74: //up
          {
             float value[] = {0.0, 1.0, 0.0};
             up.set(device, ANARI_FLOAT32_VEC3, value);
          }
          return;
-      case 72: //transform
+      case 73: //transform
          {
             float value[] = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0};
             transform.set(device, ANARI_FLOAT32_MAT3x4, value);
@@ -919,7 +919,7 @@ void CameraOmnidirectional::unset(const char *paramname) {
             focusDistance.set(device, ANARI_FLOAT32, value);
          }
          return;
-      case 69: //stereoMode
+      case 70: //stereoMode
          {
             const char *value = "none";
             stereoMode.set(device, ANARI_STRING, value);
@@ -949,13 +949,13 @@ void CameraOmnidirectional::unset(const char *paramname) {
       case 40: //motion.translation
          motion_translation.unset();
          return;
-      case 71: //time
+      case 72: //time
          {
             float value[] = {0.0, 1.0};
             time.set(device, ANARI_FLOAT32_BOX1, value);
          }
          return;
-      case 63: //shutter
+      case 64: //shutter
          {
             float value[] = {0.5, 0.5};
             shutter.set(device, ANARI_FLOAT32_BOX1, value);
@@ -994,22 +994,22 @@ ParameterBase& CameraOmnidirectional::operator[](const char *paramname) {
    int idx = param_hash(paramname);
    switch(idx) {
       case 41: return name;
-      case 48: return position;
+      case 49: return position;
       case 14: return direction;
-      case 73: return up;
-      case 72: return transform;
+      case 74: return up;
+      case 73: return transform;
       case 25: return imageRegion;
       case 3: return apertureRadius;
       case 20: return focusDistance;
-      case 69: return stereoMode;
+      case 70: return stereoMode;
       case 32: return interpupillaryDistance;
       case 34: return layout;
       case 39: return motion_transform;
       case 38: return motion_scale;
       case 37: return motion_rotation;
       case 40: return motion_translation;
-      case 71: return time;
-      case 63: return shutter;
+      case 72: return time;
+      case 64: return shutter;
       default: return empty;
    }
 }
@@ -1095,13 +1095,13 @@ bool CameraOrthographic::set(const char *paramname, ANARIDataType type, const vo
    switch(idx) {
       case 41: //name
          return name.set(device, type, mem);
-      case 48: //position
+      case 49: //position
          return position.set(device, type, mem);
       case 14: //direction
          return direction.set(device, type, mem);
-      case 73: //up
+      case 74: //up
          return up.set(device, type, mem);
-      case 72: //transform
+      case 73: //transform
          return transform.set(device, type, mem);
       case 25: //imageRegion
          return imageRegion.set(device, type, mem);
@@ -1109,7 +1109,7 @@ bool CameraOrthographic::set(const char *paramname, ANARIDataType type, const vo
          return apertureRadius.set(device, type, mem);
       case 20: //focusDistance
          return focusDistance.set(device, type, mem);
-      case 69: //stereoMode
+      case 70: //stereoMode
          return stereoMode.set(device, type, mem);
       case 32: //interpupillaryDistance
          return interpupillaryDistance.set(device, type, mem);
@@ -1123,9 +1123,9 @@ bool CameraOrthographic::set(const char *paramname, ANARIDataType type, const vo
          return motion_rotation.set(device, type, mem);
       case 40: //motion.translation
          return motion_translation.set(device, type, mem);
-      case 71: //time
+      case 72: //time
          return time.set(device, type, mem);
-      case 63: //shutter
+      case 64: //shutter
          return shutter.set(device, type, mem);
       default: // unknown param
          //unknown parameter
@@ -1138,7 +1138,7 @@ void CameraOrthographic::unset(const char *paramname) {
       case 41: //name
          name.unset();
          return;
-      case 48: //position
+      case 49: //position
          {
             float value[] = {0.0, 0.0, 0.0};
             position.set(device, ANARI_FLOAT32_VEC3, value);
@@ -1150,13 +1150,13 @@ void CameraOrthographic::unset(const char *paramname) {
             direction.set(device, ANARI_FLOAT32_VEC3, value);
          }
          return;
-      case 73: //up
+      case 74: //up
          {
             float value[] = {0.0, 1.0, 0.0};
             up.set(device, ANARI_FLOAT32_VEC3, value);
          }
          return;
-      case 72: //transform
+      case 73: //transform
          {
             float value[] = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0};
             transform.set(device, ANARI_FLOAT32_MAT3x4, value);
@@ -1180,7 +1180,7 @@ void CameraOrthographic::unset(const char *paramname) {
             focusDistance.set(device, ANARI_FLOAT32, value);
          }
          return;
-      case 69: //stereoMode
+      case 70: //stereoMode
          {
             const char *value = "none";
             stereoMode.set(device, ANARI_STRING, value);
@@ -1210,13 +1210,13 @@ void CameraOrthographic::unset(const char *paramname) {
       case 40: //motion.translation
          motion_translation.unset();
          return;
-      case 71: //time
+      case 72: //time
          {
             float value[] = {0.0, 1.0};
             time.set(device, ANARI_FLOAT32_BOX1, value);
          }
          return;
-      case 63: //shutter
+      case 64: //shutter
          {
             float value[] = {0.5, 0.5};
             shutter.set(device, ANARI_FLOAT32_BOX1, value);
@@ -1255,22 +1255,22 @@ ParameterBase& CameraOrthographic::operator[](const char *paramname) {
    int idx = param_hash(paramname);
    switch(idx) {
       case 41: return name;
-      case 48: return position;
+      case 49: return position;
       case 14: return direction;
-      case 73: return up;
-      case 72: return transform;
+      case 74: return up;
+      case 73: return transform;
       case 25: return imageRegion;
       case 3: return apertureRadius;
       case 20: return focusDistance;
-      case 69: return stereoMode;
+      case 70: return stereoMode;
       case 32: return interpupillaryDistance;
       case 5: return aspect;
       case 39: return motion_transform;
       case 38: return motion_scale;
       case 37: return motion_rotation;
       case 40: return motion_translation;
-      case 71: return time;
-      case 63: return shutter;
+      case 72: return time;
+      case 64: return shutter;
       default: return empty;
    }
 }
@@ -1360,13 +1360,13 @@ bool CameraPerspective::set(const char *paramname, ANARIDataType type, const voi
    switch(idx) {
       case 41: //name
          return name.set(device, type, mem);
-      case 48: //position
+      case 49: //position
          return position.set(device, type, mem);
       case 14: //direction
          return direction.set(device, type, mem);
-      case 73: //up
+      case 74: //up
          return up.set(device, type, mem);
-      case 72: //transform
+      case 73: //transform
          return transform.set(device, type, mem);
       case 25: //imageRegion
          return imageRegion.set(device, type, mem);
@@ -1374,7 +1374,7 @@ bool CameraPerspective::set(const char *paramname, ANARIDataType type, const voi
          return apertureRadius.set(device, type, mem);
       case 20: //focusDistance
          return focusDistance.set(device, type, mem);
-      case 69: //stereoMode
+      case 70: //stereoMode
          return stereoMode.set(device, type, mem);
       case 32: //interpupillaryDistance
          return interpupillaryDistance.set(device, type, mem);
@@ -1390,9 +1390,9 @@ bool CameraPerspective::set(const char *paramname, ANARIDataType type, const voi
          return motion_rotation.set(device, type, mem);
       case 40: //motion.translation
          return motion_translation.set(device, type, mem);
-      case 71: //time
+      case 72: //time
          return time.set(device, type, mem);
-      case 63: //shutter
+      case 64: //shutter
          return shutter.set(device, type, mem);
       default: // unknown param
          //unknown parameter
@@ -1405,7 +1405,7 @@ void CameraPerspective::unset(const char *paramname) {
       case 41: //name
          name.unset();
          return;
-      case 48: //position
+      case 49: //position
          {
             float value[] = {0.0, 0.0, 0.0};
             position.set(device, ANARI_FLOAT32_VEC3, value);
@@ -1417,13 +1417,13 @@ void CameraPerspective::unset(const char *paramname) {
             direction.set(device, ANARI_FLOAT32_VEC3, value);
          }
          return;
-      case 73: //up
+      case 74: //up
          {
             float value[] = {0.0, 1.0, 0.0};
             up.set(device, ANARI_FLOAT32_VEC3, value);
          }
          return;
-      case 72: //transform
+      case 73: //transform
          {
             float value[] = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0};
             transform.set(device, ANARI_FLOAT32_MAT3x4, value);
@@ -1447,7 +1447,7 @@ void CameraPerspective::unset(const char *paramname) {
             focusDistance.set(device, ANARI_FLOAT32, value);
          }
          return;
-      case 69: //stereoMode
+      case 70: //stereoMode
          {
             const char *value = "none";
             stereoMode.set(device, ANARI_STRING, value);
@@ -1483,13 +1483,13 @@ void CameraPerspective::unset(const char *paramname) {
       case 40: //motion.translation
          motion_translation.unset();
          return;
-      case 71: //time
+      case 72: //time
          {
             float value[] = {0.0, 1.0};
             time.set(device, ANARI_FLOAT32_BOX1, value);
          }
          return;
-      case 63: //shutter
+      case 64: //shutter
          {
             float value[] = {0.5, 0.5};
             shutter.set(device, ANARI_FLOAT32_BOX1, value);
@@ -1529,14 +1529,14 @@ ParameterBase& CameraPerspective::operator[](const char *paramname) {
    int idx = param_hash(paramname);
    switch(idx) {
       case 41: return name;
-      case 48: return position;
+      case 49: return position;
       case 14: return direction;
-      case 73: return up;
-      case 72: return transform;
+      case 74: return up;
+      case 73: return transform;
       case 25: return imageRegion;
       case 3: return apertureRadius;
       case 20: return focusDistance;
-      case 69: return stereoMode;
+      case 70: return stereoMode;
       case 32: return interpupillaryDistance;
       case 21: return fovy;
       case 5: return aspect;
@@ -1544,8 +1544,8 @@ ParameterBase& CameraPerspective::operator[](const char *paramname) {
       case 38: return motion_scale;
       case 37: return motion_rotation;
       case 40: return motion_translation;
-      case 71: return time;
-      case 63: return shutter;
+      case 72: return time;
+      case 64: return shutter;
       default: return empty;
    }
 }
@@ -1588,35 +1588,35 @@ bool GeometryCone::set(const char *paramname, ANARIDataType type, const void *me
    switch(idx) {
       case 41: //name
          return name.set(device, type, mem);
-      case 54: //primitive.color
+      case 55: //primitive.color
          return primitive_color.set(device, type, mem);
-      case 50: //primitive.attribute0
+      case 51: //primitive.attribute0
          return primitive_attribute0.set(device, type, mem);
-      case 51: //primitive.attribute1
+      case 52: //primitive.attribute1
          return primitive_attribute1.set(device, type, mem);
-      case 52: //primitive.attribute2
+      case 53: //primitive.attribute2
          return primitive_attribute2.set(device, type, mem);
-      case 53: //primitive.attribute3
+      case 54: //primitive.attribute3
          return primitive_attribute3.set(device, type, mem);
-      case 55: //primitive.id
+      case 56: //primitive.id
          return primitive_id.set(device, type, mem);
-      case 83: //vertex.position
+      case 84: //vertex.position
          return vertex_position.set(device, type, mem);
-      case 84: //vertex.radius
+      case 85: //vertex.radius
          return vertex_radius.set(device, type, mem);
-      case 80: //vertex.cap
+      case 81: //vertex.cap
          return vertex_cap.set(device, type, mem);
-      case 81: //vertex.color
+      case 82: //vertex.color
          return vertex_color.set(device, type, mem);
-      case 76: //vertex.attribute0
+      case 77: //vertex.attribute0
          return vertex_attribute0.set(device, type, mem);
-      case 77: //vertex.attribute1
+      case 78: //vertex.attribute1
          return vertex_attribute1.set(device, type, mem);
-      case 78: //vertex.attribute2
+      case 79: //vertex.attribute2
          return vertex_attribute2.set(device, type, mem);
-      case 79: //vertex.attribute3
+      case 80: //vertex.attribute3
          return vertex_attribute3.set(device, type, mem);
-      case 56: //primitive.index
+      case 57: //primitive.index
          return primitive_index.set(device, type, mem);
       case 8: //caps
          return caps.set(device, type, mem);
@@ -1631,49 +1631,49 @@ void GeometryCone::unset(const char *paramname) {
       case 41: //name
          name.unset();
          return;
-      case 54: //primitive.color
+      case 55: //primitive.color
          primitive_color.unset();
          return;
-      case 50: //primitive.attribute0
+      case 51: //primitive.attribute0
          primitive_attribute0.unset();
          return;
-      case 51: //primitive.attribute1
+      case 52: //primitive.attribute1
          primitive_attribute1.unset();
          return;
-      case 52: //primitive.attribute2
+      case 53: //primitive.attribute2
          primitive_attribute2.unset();
          return;
-      case 53: //primitive.attribute3
+      case 54: //primitive.attribute3
          primitive_attribute3.unset();
          return;
-      case 55: //primitive.id
+      case 56: //primitive.id
          primitive_id.unset();
          return;
-      case 83: //vertex.position
+      case 84: //vertex.position
          vertex_position.unset();
          return;
-      case 84: //vertex.radius
+      case 85: //vertex.radius
          vertex_radius.unset();
          return;
-      case 80: //vertex.cap
+      case 81: //vertex.cap
          vertex_cap.unset();
          return;
-      case 81: //vertex.color
+      case 82: //vertex.color
          vertex_color.unset();
          return;
-      case 76: //vertex.attribute0
+      case 77: //vertex.attribute0
          vertex_attribute0.unset();
          return;
-      case 77: //vertex.attribute1
+      case 78: //vertex.attribute1
          vertex_attribute1.unset();
          return;
-      case 78: //vertex.attribute2
+      case 79: //vertex.attribute2
          vertex_attribute2.unset();
          return;
-      case 79: //vertex.attribute3
+      case 80: //vertex.attribute3
          vertex_attribute3.unset();
          return;
-      case 56: //primitive.index
+      case 57: //primitive.index
          primitive_index.unset();
          return;
       case 8: //caps
@@ -1715,21 +1715,21 @@ ParameterBase& GeometryCone::operator[](const char *paramname) {
    int idx = param_hash(paramname);
    switch(idx) {
       case 41: return name;
-      case 54: return primitive_color;
-      case 50: return primitive_attribute0;
-      case 51: return primitive_attribute1;
-      case 52: return primitive_attribute2;
-      case 53: return primitive_attribute3;
-      case 55: return primitive_id;
-      case 83: return vertex_position;
-      case 84: return vertex_radius;
-      case 80: return vertex_cap;
-      case 81: return vertex_color;
-      case 76: return vertex_attribute0;
-      case 77: return vertex_attribute1;
-      case 78: return vertex_attribute2;
-      case 79: return vertex_attribute3;
-      case 56: return primitive_index;
+      case 55: return primitive_color;
+      case 51: return primitive_attribute0;
+      case 52: return primitive_attribute1;
+      case 53: return primitive_attribute2;
+      case 54: return primitive_attribute3;
+      case 56: return primitive_id;
+      case 84: return vertex_position;
+      case 85: return vertex_radius;
+      case 81: return vertex_cap;
+      case 82: return vertex_color;
+      case 77: return vertex_attribute0;
+      case 78: return vertex_attribute1;
+      case 79: return vertex_attribute2;
+      case 80: return vertex_attribute3;
+      case 57: return primitive_index;
       case 8: return caps;
       default: return empty;
    }
@@ -1768,35 +1768,35 @@ bool GeometryCurve::set(const char *paramname, ANARIDataType type, const void *m
    switch(idx) {
       case 41: //name
          return name.set(device, type, mem);
-      case 54: //primitive.color
+      case 55: //primitive.color
          return primitive_color.set(device, type, mem);
-      case 50: //primitive.attribute0
+      case 51: //primitive.attribute0
          return primitive_attribute0.set(device, type, mem);
-      case 51: //primitive.attribute1
+      case 52: //primitive.attribute1
          return primitive_attribute1.set(device, type, mem);
-      case 52: //primitive.attribute2
+      case 53: //primitive.attribute2
          return primitive_attribute2.set(device, type, mem);
-      case 53: //primitive.attribute3
+      case 54: //primitive.attribute3
          return primitive_attribute3.set(device, type, mem);
-      case 55: //primitive.id
+      case 56: //primitive.id
          return primitive_id.set(device, type, mem);
-      case 83: //vertex.position
+      case 84: //vertex.position
          return vertex_position.set(device, type, mem);
-      case 84: //vertex.radius
+      case 85: //vertex.radius
          return vertex_radius.set(device, type, mem);
-      case 81: //vertex.color
+      case 82: //vertex.color
          return vertex_color.set(device, type, mem);
-      case 76: //vertex.attribute0
+      case 77: //vertex.attribute0
          return vertex_attribute0.set(device, type, mem);
-      case 77: //vertex.attribute1
+      case 78: //vertex.attribute1
          return vertex_attribute1.set(device, type, mem);
-      case 78: //vertex.attribute2
+      case 79: //vertex.attribute2
          return vertex_attribute2.set(device, type, mem);
-      case 79: //vertex.attribute3
+      case 80: //vertex.attribute3
          return vertex_attribute3.set(device, type, mem);
-      case 56: //primitive.index
+      case 57: //primitive.index
          return primitive_index.set(device, type, mem);
-      case 59: //radius
+      case 60: //radius
          return radius.set(device, type, mem);
       default: // unknown param
          //unknown parameter
@@ -1809,49 +1809,49 @@ void GeometryCurve::unset(const char *paramname) {
       case 41: //name
          name.unset();
          return;
-      case 54: //primitive.color
+      case 55: //primitive.color
          primitive_color.unset();
          return;
-      case 50: //primitive.attribute0
+      case 51: //primitive.attribute0
          primitive_attribute0.unset();
          return;
-      case 51: //primitive.attribute1
+      case 52: //primitive.attribute1
          primitive_attribute1.unset();
          return;
-      case 52: //primitive.attribute2
+      case 53: //primitive.attribute2
          primitive_attribute2.unset();
          return;
-      case 53: //primitive.attribute3
+      case 54: //primitive.attribute3
          primitive_attribute3.unset();
          return;
-      case 55: //primitive.id
+      case 56: //primitive.id
          primitive_id.unset();
          return;
-      case 83: //vertex.position
+      case 84: //vertex.position
          vertex_position.unset();
          return;
-      case 84: //vertex.radius
+      case 85: //vertex.radius
          vertex_radius.unset();
          return;
-      case 81: //vertex.color
+      case 82: //vertex.color
          vertex_color.unset();
          return;
-      case 76: //vertex.attribute0
+      case 77: //vertex.attribute0
          vertex_attribute0.unset();
          return;
-      case 77: //vertex.attribute1
+      case 78: //vertex.attribute1
          vertex_attribute1.unset();
          return;
-      case 78: //vertex.attribute2
+      case 79: //vertex.attribute2
          vertex_attribute2.unset();
          return;
-      case 79: //vertex.attribute3
+      case 80: //vertex.attribute3
          vertex_attribute3.unset();
          return;
-      case 56: //primitive.index
+      case 57: //primitive.index
          primitive_index.unset();
          return;
-      case 59: //radius
+      case 60: //radius
          radius.unset();
          return;
       default: // unknown param
@@ -1886,21 +1886,21 @@ ParameterBase& GeometryCurve::operator[](const char *paramname) {
    int idx = param_hash(paramname);
    switch(idx) {
       case 41: return name;
-      case 54: return primitive_color;
-      case 50: return primitive_attribute0;
-      case 51: return primitive_attribute1;
-      case 52: return primitive_attribute2;
-      case 53: return primitive_attribute3;
-      case 55: return primitive_id;
-      case 83: return vertex_position;
-      case 84: return vertex_radius;
-      case 81: return vertex_color;
-      case 76: return vertex_attribute0;
-      case 77: return vertex_attribute1;
-      case 78: return vertex_attribute2;
-      case 79: return vertex_attribute3;
-      case 56: return primitive_index;
-      case 59: return radius;
+      case 55: return primitive_color;
+      case 51: return primitive_attribute0;
+      case 52: return primitive_attribute1;
+      case 53: return primitive_attribute2;
+      case 54: return primitive_attribute3;
+      case 56: return primitive_id;
+      case 84: return vertex_position;
+      case 85: return vertex_radius;
+      case 82: return vertex_color;
+      case 77: return vertex_attribute0;
+      case 78: return vertex_attribute1;
+      case 79: return vertex_attribute2;
+      case 80: return vertex_attribute3;
+      case 57: return primitive_index;
+      case 60: return radius;
       default: return empty;
    }
 }
@@ -1941,37 +1941,37 @@ bool GeometryCylinder::set(const char *paramname, ANARIDataType type, const void
    switch(idx) {
       case 41: //name
          return name.set(device, type, mem);
-      case 54: //primitive.color
+      case 55: //primitive.color
          return primitive_color.set(device, type, mem);
-      case 50: //primitive.attribute0
+      case 51: //primitive.attribute0
          return primitive_attribute0.set(device, type, mem);
-      case 51: //primitive.attribute1
+      case 52: //primitive.attribute1
          return primitive_attribute1.set(device, type, mem);
-      case 52: //primitive.attribute2
+      case 53: //primitive.attribute2
          return primitive_attribute2.set(device, type, mem);
-      case 53: //primitive.attribute3
+      case 54: //primitive.attribute3
          return primitive_attribute3.set(device, type, mem);
-      case 55: //primitive.id
+      case 56: //primitive.id
          return primitive_id.set(device, type, mem);
-      case 83: //vertex.position
+      case 84: //vertex.position
          return vertex_position.set(device, type, mem);
-      case 80: //vertex.cap
+      case 81: //vertex.cap
          return vertex_cap.set(device, type, mem);
-      case 81: //vertex.color
+      case 82: //vertex.color
          return vertex_color.set(device, type, mem);
-      case 76: //vertex.attribute0
+      case 77: //vertex.attribute0
          return vertex_attribute0.set(device, type, mem);
-      case 77: //vertex.attribute1
+      case 78: //vertex.attribute1
          return vertex_attribute1.set(device, type, mem);
-      case 78: //vertex.attribute2
+      case 79: //vertex.attribute2
          return vertex_attribute2.set(device, type, mem);
-      case 79: //vertex.attribute3
+      case 80: //vertex.attribute3
          return vertex_attribute3.set(device, type, mem);
-      case 56: //primitive.index
+      case 57: //primitive.index
          return primitive_index.set(device, type, mem);
-      case 57: //primitive.radius
+      case 58: //primitive.radius
          return primitive_radius.set(device, type, mem);
-      case 59: //radius
+      case 60: //radius
          return radius.set(device, type, mem);
       case 8: //caps
          return caps.set(device, type, mem);
@@ -1986,52 +1986,52 @@ void GeometryCylinder::unset(const char *paramname) {
       case 41: //name
          name.unset();
          return;
-      case 54: //primitive.color
+      case 55: //primitive.color
          primitive_color.unset();
          return;
-      case 50: //primitive.attribute0
+      case 51: //primitive.attribute0
          primitive_attribute0.unset();
          return;
-      case 51: //primitive.attribute1
+      case 52: //primitive.attribute1
          primitive_attribute1.unset();
          return;
-      case 52: //primitive.attribute2
+      case 53: //primitive.attribute2
          primitive_attribute2.unset();
          return;
-      case 53: //primitive.attribute3
+      case 54: //primitive.attribute3
          primitive_attribute3.unset();
          return;
-      case 55: //primitive.id
+      case 56: //primitive.id
          primitive_id.unset();
          return;
-      case 83: //vertex.position
+      case 84: //vertex.position
          vertex_position.unset();
          return;
-      case 80: //vertex.cap
+      case 81: //vertex.cap
          vertex_cap.unset();
          return;
-      case 81: //vertex.color
+      case 82: //vertex.color
          vertex_color.unset();
          return;
-      case 76: //vertex.attribute0
+      case 77: //vertex.attribute0
          vertex_attribute0.unset();
          return;
-      case 77: //vertex.attribute1
+      case 78: //vertex.attribute1
          vertex_attribute1.unset();
          return;
-      case 78: //vertex.attribute2
+      case 79: //vertex.attribute2
          vertex_attribute2.unset();
          return;
-      case 79: //vertex.attribute3
+      case 80: //vertex.attribute3
          vertex_attribute3.unset();
          return;
-      case 56: //primitive.index
+      case 57: //primitive.index
          primitive_index.unset();
          return;
-      case 57: //primitive.radius
+      case 58: //primitive.radius
          primitive_radius.unset();
          return;
-      case 59: //radius
+      case 60: //radius
          radius.unset();
          return;
       case 8: //caps
@@ -2074,22 +2074,22 @@ ParameterBase& GeometryCylinder::operator[](const char *paramname) {
    int idx = param_hash(paramname);
    switch(idx) {
       case 41: return name;
-      case 54: return primitive_color;
-      case 50: return primitive_attribute0;
-      case 51: return primitive_attribute1;
-      case 52: return primitive_attribute2;
-      case 53: return primitive_attribute3;
-      case 55: return primitive_id;
-      case 83: return vertex_position;
-      case 80: return vertex_cap;
-      case 81: return vertex_color;
-      case 76: return vertex_attribute0;
-      case 77: return vertex_attribute1;
-      case 78: return vertex_attribute2;
-      case 79: return vertex_attribute3;
-      case 56: return primitive_index;
-      case 57: return primitive_radius;
-      case 59: return radius;
+      case 55: return primitive_color;
+      case 51: return primitive_attribute0;
+      case 52: return primitive_attribute1;
+      case 53: return primitive_attribute2;
+      case 54: return primitive_attribute3;
+      case 56: return primitive_id;
+      case 84: return vertex_position;
+      case 81: return vertex_cap;
+      case 82: return vertex_color;
+      case 77: return vertex_attribute0;
+      case 78: return vertex_attribute1;
+      case 79: return vertex_attribute2;
+      case 80: return vertex_attribute3;
+      case 57: return primitive_index;
+      case 58: return primitive_radius;
+      case 60: return radius;
       case 8: return caps;
       default: return empty;
    }
@@ -2129,33 +2129,33 @@ bool GeometryQuad::set(const char *paramname, ANARIDataType type, const void *me
    switch(idx) {
       case 41: //name
          return name.set(device, type, mem);
-      case 54: //primitive.color
+      case 55: //primitive.color
          return primitive_color.set(device, type, mem);
-      case 50: //primitive.attribute0
+      case 51: //primitive.attribute0
          return primitive_attribute0.set(device, type, mem);
-      case 51: //primitive.attribute1
+      case 52: //primitive.attribute1
          return primitive_attribute1.set(device, type, mem);
-      case 52: //primitive.attribute2
+      case 53: //primitive.attribute2
          return primitive_attribute2.set(device, type, mem);
-      case 53: //primitive.attribute3
+      case 54: //primitive.attribute3
          return primitive_attribute3.set(device, type, mem);
-      case 55: //primitive.id
+      case 56: //primitive.id
          return primitive_id.set(device, type, mem);
-      case 83: //vertex.position
+      case 84: //vertex.position
          return vertex_position.set(device, type, mem);
-      case 82: //vertex.normal
+      case 83: //vertex.normal
          return vertex_normal.set(device, type, mem);
-      case 81: //vertex.color
+      case 82: //vertex.color
          return vertex_color.set(device, type, mem);
-      case 76: //vertex.attribute0
+      case 77: //vertex.attribute0
          return vertex_attribute0.set(device, type, mem);
-      case 77: //vertex.attribute1
+      case 78: //vertex.attribute1
          return vertex_attribute1.set(device, type, mem);
-      case 78: //vertex.attribute2
+      case 79: //vertex.attribute2
          return vertex_attribute2.set(device, type, mem);
-      case 79: //vertex.attribute3
+      case 80: //vertex.attribute3
          return vertex_attribute3.set(device, type, mem);
-      case 56: //primitive.index
+      case 57: //primitive.index
          return primitive_index.set(device, type, mem);
       default: // unknown param
          //unknown parameter
@@ -2168,46 +2168,46 @@ void GeometryQuad::unset(const char *paramname) {
       case 41: //name
          name.unset();
          return;
-      case 54: //primitive.color
+      case 55: //primitive.color
          primitive_color.unset();
          return;
-      case 50: //primitive.attribute0
+      case 51: //primitive.attribute0
          primitive_attribute0.unset();
          return;
-      case 51: //primitive.attribute1
+      case 52: //primitive.attribute1
          primitive_attribute1.unset();
          return;
-      case 52: //primitive.attribute2
+      case 53: //primitive.attribute2
          primitive_attribute2.unset();
          return;
-      case 53: //primitive.attribute3
+      case 54: //primitive.attribute3
          primitive_attribute3.unset();
          return;
-      case 55: //primitive.id
+      case 56: //primitive.id
          primitive_id.unset();
          return;
-      case 83: //vertex.position
+      case 84: //vertex.position
          vertex_position.unset();
          return;
-      case 82: //vertex.normal
+      case 83: //vertex.normal
          vertex_normal.unset();
          return;
-      case 81: //vertex.color
+      case 82: //vertex.color
          vertex_color.unset();
          return;
-      case 76: //vertex.attribute0
+      case 77: //vertex.attribute0
          vertex_attribute0.unset();
          return;
-      case 77: //vertex.attribute1
+      case 78: //vertex.attribute1
          vertex_attribute1.unset();
          return;
-      case 78: //vertex.attribute2
+      case 79: //vertex.attribute2
          vertex_attribute2.unset();
          return;
-      case 79: //vertex.attribute3
+      case 80: //vertex.attribute3
          vertex_attribute3.unset();
          return;
-      case 56: //primitive.index
+      case 57: //primitive.index
          primitive_index.unset();
          return;
       default: // unknown param
@@ -2241,20 +2241,20 @@ ParameterBase& GeometryQuad::operator[](const char *paramname) {
    int idx = param_hash(paramname);
    switch(idx) {
       case 41: return name;
-      case 54: return primitive_color;
-      case 50: return primitive_attribute0;
-      case 51: return primitive_attribute1;
-      case 52: return primitive_attribute2;
-      case 53: return primitive_attribute3;
-      case 55: return primitive_id;
-      case 83: return vertex_position;
-      case 82: return vertex_normal;
-      case 81: return vertex_color;
-      case 76: return vertex_attribute0;
-      case 77: return vertex_attribute1;
-      case 78: return vertex_attribute2;
-      case 79: return vertex_attribute3;
-      case 56: return primitive_index;
+      case 55: return primitive_color;
+      case 51: return primitive_attribute0;
+      case 52: return primitive_attribute1;
+      case 53: return primitive_attribute2;
+      case 54: return primitive_attribute3;
+      case 56: return primitive_id;
+      case 84: return vertex_position;
+      case 83: return vertex_normal;
+      case 82: return vertex_color;
+      case 77: return vertex_attribute0;
+      case 78: return vertex_attribute1;
+      case 79: return vertex_attribute2;
+      case 80: return vertex_attribute3;
+      case 57: return primitive_index;
       default: return empty;
    }
 }
@@ -2290,35 +2290,35 @@ bool GeometrySphere::set(const char *paramname, ANARIDataType type, const void *
    switch(idx) {
       case 41: //name
          return name.set(device, type, mem);
-      case 54: //primitive.color
+      case 55: //primitive.color
          return primitive_color.set(device, type, mem);
-      case 50: //primitive.attribute0
+      case 51: //primitive.attribute0
          return primitive_attribute0.set(device, type, mem);
-      case 51: //primitive.attribute1
+      case 52: //primitive.attribute1
          return primitive_attribute1.set(device, type, mem);
-      case 52: //primitive.attribute2
+      case 53: //primitive.attribute2
          return primitive_attribute2.set(device, type, mem);
-      case 53: //primitive.attribute3
+      case 54: //primitive.attribute3
          return primitive_attribute3.set(device, type, mem);
-      case 55: //primitive.id
+      case 56: //primitive.id
          return primitive_id.set(device, type, mem);
-      case 83: //vertex.position
+      case 84: //vertex.position
          return vertex_position.set(device, type, mem);
-      case 84: //vertex.radius
+      case 85: //vertex.radius
          return vertex_radius.set(device, type, mem);
-      case 81: //vertex.color
+      case 82: //vertex.color
          return vertex_color.set(device, type, mem);
-      case 76: //vertex.attribute0
+      case 77: //vertex.attribute0
          return vertex_attribute0.set(device, type, mem);
-      case 77: //vertex.attribute1
+      case 78: //vertex.attribute1
          return vertex_attribute1.set(device, type, mem);
-      case 78: //vertex.attribute2
+      case 79: //vertex.attribute2
          return vertex_attribute2.set(device, type, mem);
-      case 79: //vertex.attribute3
+      case 80: //vertex.attribute3
          return vertex_attribute3.set(device, type, mem);
-      case 56: //primitive.index
+      case 57: //primitive.index
          return primitive_index.set(device, type, mem);
-      case 59: //radius
+      case 60: //radius
          return radius.set(device, type, mem);
       default: // unknown param
          //unknown parameter
@@ -2331,49 +2331,49 @@ void GeometrySphere::unset(const char *paramname) {
       case 41: //name
          name.unset();
          return;
-      case 54: //primitive.color
+      case 55: //primitive.color
          primitive_color.unset();
          return;
-      case 50: //primitive.attribute0
+      case 51: //primitive.attribute0
          primitive_attribute0.unset();
          return;
-      case 51: //primitive.attribute1
+      case 52: //primitive.attribute1
          primitive_attribute1.unset();
          return;
-      case 52: //primitive.attribute2
+      case 53: //primitive.attribute2
          primitive_attribute2.unset();
          return;
-      case 53: //primitive.attribute3
+      case 54: //primitive.attribute3
          primitive_attribute3.unset();
          return;
-      case 55: //primitive.id
+      case 56: //primitive.id
          primitive_id.unset();
          return;
-      case 83: //vertex.position
+      case 84: //vertex.position
          vertex_position.unset();
          return;
-      case 84: //vertex.radius
+      case 85: //vertex.radius
          vertex_radius.unset();
          return;
-      case 81: //vertex.color
+      case 82: //vertex.color
          vertex_color.unset();
          return;
-      case 76: //vertex.attribute0
+      case 77: //vertex.attribute0
          vertex_attribute0.unset();
          return;
-      case 77: //vertex.attribute1
+      case 78: //vertex.attribute1
          vertex_attribute1.unset();
          return;
-      case 78: //vertex.attribute2
+      case 79: //vertex.attribute2
          vertex_attribute2.unset();
          return;
-      case 79: //vertex.attribute3
+      case 80: //vertex.attribute3
          vertex_attribute3.unset();
          return;
-      case 56: //primitive.index
+      case 57: //primitive.index
          primitive_index.unset();
          return;
-      case 59: //radius
+      case 60: //radius
          radius.unset();
          return;
       default: // unknown param
@@ -2408,21 +2408,21 @@ ParameterBase& GeometrySphere::operator[](const char *paramname) {
    int idx = param_hash(paramname);
    switch(idx) {
       case 41: return name;
-      case 54: return primitive_color;
-      case 50: return primitive_attribute0;
-      case 51: return primitive_attribute1;
-      case 52: return primitive_attribute2;
-      case 53: return primitive_attribute3;
-      case 55: return primitive_id;
-      case 83: return vertex_position;
-      case 84: return vertex_radius;
-      case 81: return vertex_color;
-      case 76: return vertex_attribute0;
-      case 77: return vertex_attribute1;
-      case 78: return vertex_attribute2;
-      case 79: return vertex_attribute3;
-      case 56: return primitive_index;
-      case 59: return radius;
+      case 55: return primitive_color;
+      case 51: return primitive_attribute0;
+      case 52: return primitive_attribute1;
+      case 53: return primitive_attribute2;
+      case 54: return primitive_attribute3;
+      case 56: return primitive_id;
+      case 84: return vertex_position;
+      case 85: return vertex_radius;
+      case 82: return vertex_color;
+      case 77: return vertex_attribute0;
+      case 78: return vertex_attribute1;
+      case 79: return vertex_attribute2;
+      case 80: return vertex_attribute3;
+      case 57: return primitive_index;
+      case 60: return radius;
       default: return empty;
    }
 }
@@ -2459,33 +2459,33 @@ bool GeometryTriangle::set(const char *paramname, ANARIDataType type, const void
    switch(idx) {
       case 41: //name
          return name.set(device, type, mem);
-      case 54: //primitive.color
+      case 55: //primitive.color
          return primitive_color.set(device, type, mem);
-      case 50: //primitive.attribute0
+      case 51: //primitive.attribute0
          return primitive_attribute0.set(device, type, mem);
-      case 51: //primitive.attribute1
+      case 52: //primitive.attribute1
          return primitive_attribute1.set(device, type, mem);
-      case 52: //primitive.attribute2
+      case 53: //primitive.attribute2
          return primitive_attribute2.set(device, type, mem);
-      case 53: //primitive.attribute3
+      case 54: //primitive.attribute3
          return primitive_attribute3.set(device, type, mem);
-      case 55: //primitive.id
+      case 56: //primitive.id
          return primitive_id.set(device, type, mem);
-      case 83: //vertex.position
+      case 84: //vertex.position
          return vertex_position.set(device, type, mem);
-      case 82: //vertex.normal
+      case 83: //vertex.normal
          return vertex_normal.set(device, type, mem);
-      case 81: //vertex.color
+      case 82: //vertex.color
          return vertex_color.set(device, type, mem);
-      case 76: //vertex.attribute0
+      case 77: //vertex.attribute0
          return vertex_attribute0.set(device, type, mem);
-      case 77: //vertex.attribute1
+      case 78: //vertex.attribute1
          return vertex_attribute1.set(device, type, mem);
-      case 78: //vertex.attribute2
+      case 79: //vertex.attribute2
          return vertex_attribute2.set(device, type, mem);
-      case 79: //vertex.attribute3
+      case 80: //vertex.attribute3
          return vertex_attribute3.set(device, type, mem);
-      case 56: //primitive.index
+      case 57: //primitive.index
          return primitive_index.set(device, type, mem);
       default: // unknown param
          //unknown parameter
@@ -2498,46 +2498,46 @@ void GeometryTriangle::unset(const char *paramname) {
       case 41: //name
          name.unset();
          return;
-      case 54: //primitive.color
+      case 55: //primitive.color
          primitive_color.unset();
          return;
-      case 50: //primitive.attribute0
+      case 51: //primitive.attribute0
          primitive_attribute0.unset();
          return;
-      case 51: //primitive.attribute1
+      case 52: //primitive.attribute1
          primitive_attribute1.unset();
          return;
-      case 52: //primitive.attribute2
+      case 53: //primitive.attribute2
          primitive_attribute2.unset();
          return;
-      case 53: //primitive.attribute3
+      case 54: //primitive.attribute3
          primitive_attribute3.unset();
          return;
-      case 55: //primitive.id
+      case 56: //primitive.id
          primitive_id.unset();
          return;
-      case 83: //vertex.position
+      case 84: //vertex.position
          vertex_position.unset();
          return;
-      case 82: //vertex.normal
+      case 83: //vertex.normal
          vertex_normal.unset();
          return;
-      case 81: //vertex.color
+      case 82: //vertex.color
          vertex_color.unset();
          return;
-      case 76: //vertex.attribute0
+      case 77: //vertex.attribute0
          vertex_attribute0.unset();
          return;
-      case 77: //vertex.attribute1
+      case 78: //vertex.attribute1
          vertex_attribute1.unset();
          return;
-      case 78: //vertex.attribute2
+      case 79: //vertex.attribute2
          vertex_attribute2.unset();
          return;
-      case 79: //vertex.attribute3
+      case 80: //vertex.attribute3
          vertex_attribute3.unset();
          return;
-      case 56: //primitive.index
+      case 57: //primitive.index
          primitive_index.unset();
          return;
       default: // unknown param
@@ -2571,20 +2571,20 @@ ParameterBase& GeometryTriangle::operator[](const char *paramname) {
    int idx = param_hash(paramname);
    switch(idx) {
       case 41: return name;
-      case 54: return primitive_color;
-      case 50: return primitive_attribute0;
-      case 51: return primitive_attribute1;
-      case 52: return primitive_attribute2;
-      case 53: return primitive_attribute3;
-      case 55: return primitive_id;
-      case 83: return vertex_position;
-      case 82: return vertex_normal;
-      case 81: return vertex_color;
-      case 76: return vertex_attribute0;
-      case 77: return vertex_attribute1;
-      case 78: return vertex_attribute2;
-      case 79: return vertex_attribute3;
-      case 56: return primitive_index;
+      case 55: return primitive_color;
+      case 51: return primitive_attribute0;
+      case 52: return primitive_attribute1;
+      case 53: return primitive_attribute2;
+      case 54: return primitive_attribute3;
+      case 56: return primitive_id;
+      case 84: return vertex_position;
+      case 83: return vertex_normal;
+      case 82: return vertex_color;
+      case 77: return vertex_attribute0;
+      case 78: return vertex_attribute1;
+      case 79: return vertex_attribute2;
+      case 80: return vertex_attribute3;
+      case 57: return primitive_index;
       default: return empty;
    }
 }
@@ -2652,9 +2652,9 @@ bool LightDirectional::set(const char *paramname, ANARIDataType type, const void
          return direction.set(device, type, mem);
       case 2: //angularDiameter
          return angularDiameter.set(device, type, mem);
-      case 58: //radiance
+      case 59: //radiance
          return radiance.set(device, type, mem);
-      case 85: //visible
+      case 86: //visible
          return visible.set(device, type, mem);
       default: // unknown param
          //unknown parameter
@@ -2691,13 +2691,13 @@ void LightDirectional::unset(const char *paramname) {
             angularDiameter.set(device, ANARI_FLOAT32, value);
          }
          return;
-      case 58: //radiance
+      case 59: //radiance
          {
             float value[] = {1.0};
             radiance.set(device, ANARI_FLOAT32, value);
          }
          return;
-      case 85: //visible
+      case 86: //visible
          {
             int32_t value[] = {1};
             visible.set(device, ANARI_BOOL, value);
@@ -2730,8 +2730,8 @@ ParameterBase& LightDirectional::operator[](const char *paramname) {
       case 33: return irridance;
       case 14: return direction;
       case 2: return angularDiameter;
-      case 58: return radiance;
-      case 85: return visible;
+      case 59: return radiance;
+      case 86: return visible;
       default: return empty;
    }
 }
@@ -2789,17 +2789,17 @@ bool LightPoint::set(const char *paramname, ANARIDataType type, const void *mem)
          return name.set(device, type, mem);
       case 9: //color
          return color.set(device, type, mem);
-      case 48: //position
+      case 49: //position
          return position.set(device, type, mem);
       case 30: //intensity
          return intensity.set(device, type, mem);
-      case 49: //power
+      case 50: //power
          return power.set(device, type, mem);
-      case 59: //radius
+      case 60: //radius
          return radius.set(device, type, mem);
-      case 58: //radiance
+      case 59: //radiance
          return radiance.set(device, type, mem);
-      case 85: //visible
+      case 86: //visible
          return visible.set(device, type, mem);
       default: // unknown param
          //unknown parameter
@@ -2818,7 +2818,7 @@ void LightPoint::unset(const char *paramname) {
             color.set(device, ANARI_FLOAT32_VEC3, value);
          }
          return;
-      case 48: //position
+      case 49: //position
          {
             float value[] = {0.0, 0.0, 0.0};
             position.set(device, ANARI_FLOAT32_VEC3, value);
@@ -2830,25 +2830,25 @@ void LightPoint::unset(const char *paramname) {
             intensity.set(device, ANARI_FLOAT32, value);
          }
          return;
-      case 49: //power
+      case 50: //power
          {
             float value[] = {1.0};
             power.set(device, ANARI_FLOAT32, value);
          }
          return;
-      case 59: //radius
+      case 60: //radius
          {
             float value[] = {0.0};
             radius.set(device, ANARI_FLOAT32, value);
          }
          return;
-      case 58: //radiance
+      case 59: //radiance
          {
             float value[] = {1.0};
             radiance.set(device, ANARI_FLOAT32, value);
          }
          return;
-      case 85: //visible
+      case 86: //visible
          {
             int32_t value[] = {1};
             visible.set(device, ANARI_BOOL, value);
@@ -2879,12 +2879,12 @@ ParameterBase& LightPoint::operator[](const char *paramname) {
    switch(idx) {
       case 41: return name;
       case 9: return color;
-      case 48: return position;
+      case 49: return position;
       case 30: return intensity;
-      case 49: return power;
-      case 59: return radius;
-      case 58: return radiance;
-      case 85: return visible;
+      case 50: return power;
+      case 60: return radius;
+      case 59: return radiance;
+      case 86: return visible;
       default: return empty;
    }
 }
@@ -2943,17 +2943,17 @@ bool LightSpot::set(const char *paramname, ANARIDataType type, const void *mem) 
          return name.set(device, type, mem);
       case 9: //color
          return color.set(device, type, mem);
-      case 48: //position
+      case 49: //position
          return position.set(device, type, mem);
       case 14: //direction
          return direction.set(device, type, mem);
-      case 45: //openingAngle
+      case 46: //openingAngle
          return openingAngle.set(device, type, mem);
       case 17: //falloffAngle
          return falloffAngle.set(device, type, mem);
       case 30: //intensity
          return intensity.set(device, type, mem);
-      case 49: //power
+      case 50: //power
          return power.set(device, type, mem);
       default: // unknown param
          //unknown parameter
@@ -2972,7 +2972,7 @@ void LightSpot::unset(const char *paramname) {
             color.set(device, ANARI_FLOAT32_VEC3, value);
          }
          return;
-      case 48: //position
+      case 49: //position
          {
             float value[] = {0.0, 0.0, 0.0};
             position.set(device, ANARI_FLOAT32_VEC3, value);
@@ -2984,7 +2984,7 @@ void LightSpot::unset(const char *paramname) {
             direction.set(device, ANARI_FLOAT32_VEC3, value);
          }
          return;
-      case 45: //openingAngle
+      case 46: //openingAngle
          {
             float value[] = {3.14159265359};
             openingAngle.set(device, ANARI_FLOAT32, value);
@@ -3002,7 +3002,7 @@ void LightSpot::unset(const char *paramname) {
             intensity.set(device, ANARI_FLOAT32, value);
          }
          return;
-      case 49: //power
+      case 50: //power
          {
             float value[] = {1.0};
             power.set(device, ANARI_FLOAT32, value);
@@ -3033,12 +3033,12 @@ ParameterBase& LightSpot::operator[](const char *paramname) {
    switch(idx) {
       case 41: return name;
       case 9: return color;
-      case 48: return position;
+      case 49: return position;
       case 14: return direction;
-      case 45: return openingAngle;
+      case 46: return openingAngle;
       case 17: return falloffAngle;
       case 30: return intensity;
-      case 49: return power;
+      case 50: return power;
       default: return empty;
    }
 }
@@ -3141,7 +3141,7 @@ bool MaterialTransparentMatte::set(const char *paramname, ANARIDataType type, co
          return name.set(device, type, mem);
       case 9: //color
          return color.set(device, type, mem);
-      case 43: //opacity
+      case 44: //opacity
          return opacity.set(device, type, mem);
       default: // unknown param
          //unknown parameter
@@ -3160,7 +3160,7 @@ void MaterialTransparentMatte::unset(const char *paramname) {
             color.set(device, ANARI_FLOAT32_VEC3, value);
          }
          return;
-      case 43: //opacity
+      case 44: //opacity
          {
             float value[] = {1.0};
             opacity.set(device, ANARI_FLOAT32, value);
@@ -3186,7 +3186,7 @@ ParameterBase& MaterialTransparentMatte::operator[](const char *paramname) {
    switch(idx) {
       case 41: return name;
       case 9: return color;
-      case 43: return opacity;
+      case 44: return opacity;
       default: return empty;
    }
 }
@@ -3236,11 +3236,11 @@ bool SamplerImage1D::set(const char *paramname, ANARIDataType type, const void *
          return inAttribute.set(device, type, mem);
       case 19: //filter
          return filter.set(device, type, mem);
-      case 88: //wrapMode1
+      case 89: //wrapMode1
          return wrapMode1.set(device, type, mem);
       case 27: //inTransform
          return inTransform.set(device, type, mem);
-      case 47: //outTransform
+      case 48: //outTransform
          return outTransform.set(device, type, mem);
       default: // unknown param
          //unknown parameter
@@ -3268,7 +3268,7 @@ void SamplerImage1D::unset(const char *paramname) {
             filter.set(device, ANARI_STRING, value);
          }
          return;
-      case 88: //wrapMode1
+      case 89: //wrapMode1
          {
             const char *value = "clampToEdge";
             wrapMode1.set(device, ANARI_STRING, value);
@@ -3280,7 +3280,7 @@ void SamplerImage1D::unset(const char *paramname) {
             inTransform.set(device, ANARI_FLOAT32_MAT4, value);
          }
          return;
-      case 47: //outTransform
+      case 48: //outTransform
          {
             float value[] = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
             outTransform.set(device, ANARI_FLOAT32_MAT4, value);
@@ -3312,9 +3312,9 @@ ParameterBase& SamplerImage1D::operator[](const char *paramname) {
       case 24: return image;
       case 26: return inAttribute;
       case 19: return filter;
-      case 88: return wrapMode1;
+      case 89: return wrapMode1;
       case 27: return inTransform;
-      case 47: return outTransform;
+      case 48: return outTransform;
       default: return empty;
    }
 }
@@ -3372,13 +3372,13 @@ bool SamplerImage2D::set(const char *paramname, ANARIDataType type, const void *
          return inAttribute.set(device, type, mem);
       case 19: //filter
          return filter.set(device, type, mem);
-      case 88: //wrapMode1
+      case 89: //wrapMode1
          return wrapMode1.set(device, type, mem);
-      case 89: //wrapMode2
+      case 90: //wrapMode2
          return wrapMode2.set(device, type, mem);
       case 27: //inTransform
          return inTransform.set(device, type, mem);
-      case 47: //outTransform
+      case 48: //outTransform
          return outTransform.set(device, type, mem);
       default: // unknown param
          //unknown parameter
@@ -3406,13 +3406,13 @@ void SamplerImage2D::unset(const char *paramname) {
             filter.set(device, ANARI_STRING, value);
          }
          return;
-      case 88: //wrapMode1
+      case 89: //wrapMode1
          {
             const char *value = "clampToEdge";
             wrapMode1.set(device, ANARI_STRING, value);
          }
          return;
-      case 89: //wrapMode2
+      case 90: //wrapMode2
          {
             const char *value = "clampToEdge";
             wrapMode2.set(device, ANARI_STRING, value);
@@ -3424,7 +3424,7 @@ void SamplerImage2D::unset(const char *paramname) {
             inTransform.set(device, ANARI_FLOAT32_MAT4, value);
          }
          return;
-      case 47: //outTransform
+      case 48: //outTransform
          {
             float value[] = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
             outTransform.set(device, ANARI_FLOAT32_MAT4, value);
@@ -3457,10 +3457,10 @@ ParameterBase& SamplerImage2D::operator[](const char *paramname) {
       case 24: return image;
       case 26: return inAttribute;
       case 19: return filter;
-      case 88: return wrapMode1;
-      case 89: return wrapMode2;
+      case 89: return wrapMode1;
+      case 90: return wrapMode2;
       case 27: return inTransform;
-      case 47: return outTransform;
+      case 48: return outTransform;
       default: return empty;
    }
 }
@@ -3523,15 +3523,15 @@ bool SamplerImage3D::set(const char *paramname, ANARIDataType type, const void *
          return inAttribute.set(device, type, mem);
       case 19: //filter
          return filter.set(device, type, mem);
-      case 88: //wrapMode1
+      case 89: //wrapMode1
          return wrapMode1.set(device, type, mem);
-      case 89: //wrapMode2
+      case 90: //wrapMode2
          return wrapMode2.set(device, type, mem);
-      case 90: //wrapMode3
+      case 91: //wrapMode3
          return wrapMode3.set(device, type, mem);
       case 27: //inTransform
          return inTransform.set(device, type, mem);
-      case 47: //outTransform
+      case 48: //outTransform
          return outTransform.set(device, type, mem);
       default: // unknown param
          //unknown parameter
@@ -3559,19 +3559,19 @@ void SamplerImage3D::unset(const char *paramname) {
             filter.set(device, ANARI_STRING, value);
          }
          return;
-      case 88: //wrapMode1
+      case 89: //wrapMode1
          {
             const char *value = "clampToEdge";
             wrapMode1.set(device, ANARI_STRING, value);
          }
          return;
-      case 89: //wrapMode2
+      case 90: //wrapMode2
          {
             const char *value = "clampToEdge";
             wrapMode2.set(device, ANARI_STRING, value);
          }
          return;
-      case 90: //wrapMode3
+      case 91: //wrapMode3
          {
             const char *value = "clampToEdge";
             wrapMode3.set(device, ANARI_STRING, value);
@@ -3583,7 +3583,7 @@ void SamplerImage3D::unset(const char *paramname) {
             inTransform.set(device, ANARI_FLOAT32_MAT4, value);
          }
          return;
-      case 47: //outTransform
+      case 48: //outTransform
          {
             float value[] = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
             outTransform.set(device, ANARI_FLOAT32_MAT4, value);
@@ -3617,11 +3617,11 @@ ParameterBase& SamplerImage3D::operator[](const char *paramname) {
       case 24: return image;
       case 26: return inAttribute;
       case 19: return filter;
-      case 88: return wrapMode1;
-      case 89: return wrapMode2;
-      case 90: return wrapMode3;
+      case 89: return wrapMode1;
+      case 90: return wrapMode2;
+      case 91: return wrapMode3;
       case 27: return inTransform;
-      case 47: return outTransform;
+      case 48: return outTransform;
       default: return empty;
    }
 }
@@ -3645,6 +3645,10 @@ size_t SamplerImage3D::paramCount() const {
 }
 
 SamplerPrimitive::SamplerPrimitive(ANARIDevice device) : device(device) {
+   {
+      uint64_t value[] = {0};
+      offset.set(device, ANARI_UINT64, value);
+   }
 }
 bool SamplerPrimitive::set(const char *paramname, ANARIDataType type, const void *mem) {
    int idx = param_hash(paramname);
@@ -3653,6 +3657,8 @@ bool SamplerPrimitive::set(const char *paramname, ANARIDataType type, const void
          return name.set(device, type, mem);
       case 4: //array
          return array.set(device, type, mem);
+      case 43: //offset
+         return offset.set(device, type, mem);
       default: // unknown param
          //unknown parameter
          return false;
@@ -3667,6 +3673,12 @@ void SamplerPrimitive::unset(const char *paramname) {
       case 4: //array
          array.unset();
          return;
+      case 43: //offset
+         {
+            uint64_t value[] = {0};
+            offset.set(device, ANARI_UINT64, value);
+         }
+         return;
       default: // unknown param
          //unknown parameter
          return;
@@ -3677,6 +3689,7 @@ ParameterBase& SamplerPrimitive::operator[](size_t idx) {
    switch(idx) {
       case 0: return name;
       case 1: return array;
+      case 2: return offset;
       default: return empty;
    }
 }
@@ -3686,6 +3699,7 @@ ParameterBase& SamplerPrimitive::operator[](const char *paramname) {
    switch(idx) {
       case 41: return name;
       case 4: return array;
+      case 43: return offset;
       default: return empty;
    }
 }
@@ -3693,12 +3707,13 @@ const char ** SamplerPrimitive::paramNames() const {
    static const char *paramnames[] = {
       "name",
       "array",
+      "offset",
       nullptr
    };
    return paramnames;
 }
 size_t SamplerPrimitive::paramCount() const {
-   return 2;
+   return 3;
 }
 
 SamplerTransform::SamplerTransform(ANARIDevice device) : device(device) {
@@ -3718,7 +3733,7 @@ bool SamplerTransform::set(const char *paramname, ANARIDataType type, const void
          return name.set(device, type, mem);
       case 26: //inAttribute
          return inAttribute.set(device, type, mem);
-      case 72: //transform
+      case 73: //transform
          return transform.set(device, type, mem);
       default: // unknown param
          //unknown parameter
@@ -3737,7 +3752,7 @@ void SamplerTransform::unset(const char *paramname) {
             inAttribute.set(device, ANARI_STRING, value);
          }
          return;
-      case 72: //transform
+      case 73: //transform
          {
             float value[] = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
             transform.set(device, ANARI_FLOAT32_MAT4, value);
@@ -3763,7 +3778,7 @@ ParameterBase& SamplerTransform::operator[](const char *paramname) {
    switch(idx) {
       case 41: return name;
       case 26: return inAttribute;
-      case 72: return transform;
+      case 73: return transform;
       default: return empty;
    }
 }
@@ -3801,9 +3816,9 @@ bool Spatial_FieldStructuredRegular::set(const char *paramname, ANARIDataType ty
          return name.set(device, type, mem);
       case 11: //data
          return data.set(device, type, mem);
-      case 46: //origin
+      case 47: //origin
          return origin.set(device, type, mem);
-      case 66: //spacing
+      case 67: //spacing
          return spacing.set(device, type, mem);
       case 19: //filter
          return filter.set(device, type, mem);
@@ -3821,13 +3836,13 @@ void Spatial_FieldStructuredRegular::unset(const char *paramname) {
       case 11: //data
          data.unset();
          return;
-      case 46: //origin
+      case 47: //origin
          {
             float value[] = {0.0, 0.0, 0.0};
             origin.set(device, ANARI_FLOAT32_VEC3, value);
          }
          return;
-      case 66: //spacing
+      case 67: //spacing
          {
             float value[] = {1.0, 1.0, 1.0};
             spacing.set(device, ANARI_FLOAT32_VEC3, value);
@@ -3861,8 +3876,8 @@ ParameterBase& Spatial_FieldStructuredRegular::operator[](const char *paramname)
    switch(idx) {
       case 41: return name;
       case 11: return data;
-      case 46: return origin;
-      case 66: return spacing;
+      case 47: return origin;
+      case 67: return spacing;
       case 19: return filter;
       default: return empty;
    }
@@ -3899,15 +3914,15 @@ bool VolumeScivis::set(const char *paramname, ANARIDataType type, const void *me
          return name.set(device, type, mem);
       case 18: //field
          return field.set(device, type, mem);
-      case 74: //valueRange
+      case 75: //valueRange
          return valueRange.set(device, type, mem);
       case 9: //color
          return color.set(device, type, mem);
       case 10: //color.position
          return color_position.set(device, type, mem);
-      case 43: //opacity
+      case 44: //opacity
          return opacity.set(device, type, mem);
-      case 44: //opacity.position
+      case 45: //opacity.position
          return opacity_position.set(device, type, mem);
       case 12: //densityScale
          return densityScale.set(device, type, mem);
@@ -3925,7 +3940,7 @@ void VolumeScivis::unset(const char *paramname) {
       case 18: //field
          field.unset();
          return;
-      case 74: //valueRange
+      case 75: //valueRange
          {
             float value[] = {0.0, 1.0};
             valueRange.set(device, ANARI_FLOAT32_BOX1, value);
@@ -3937,10 +3952,10 @@ void VolumeScivis::unset(const char *paramname) {
       case 10: //color.position
          color_position.unset();
          return;
-      case 43: //opacity
+      case 44: //opacity
          opacity.unset();
          return;
-      case 44: //opacity.position
+      case 45: //opacity.position
          opacity_position.unset();
          return;
       case 12: //densityScale
@@ -3974,11 +3989,11 @@ ParameterBase& VolumeScivis::operator[](const char *paramname) {
    switch(idx) {
       case 41: return name;
       case 18: return field;
-      case 74: return valueRange;
+      case 75: return valueRange;
       case 9: return color;
       case 10: return color_position;
-      case 43: return opacity;
-      case 44: return opacity_position;
+      case 44: return opacity;
+      case 45: return opacity_position;
       case 12: return densityScale;
       default: return empty;
    }
@@ -4058,29 +4073,29 @@ bool LightRing::set(const char *paramname, ANARIDataType type, const void *mem) 
          return name.set(device, type, mem);
       case 9: //color
          return color.set(device, type, mem);
-      case 48: //position
+      case 49: //position
          return position.set(device, type, mem);
       case 14: //direction
          return direction.set(device, type, mem);
-      case 45: //openingAngle
+      case 46: //openingAngle
          return openingAngle.set(device, type, mem);
       case 17: //falloffAngle
          return falloffAngle.set(device, type, mem);
       case 30: //intensity
          return intensity.set(device, type, mem);
-      case 49: //power
+      case 50: //power
          return power.set(device, type, mem);
-      case 59: //radius
+      case 60: //radius
          return radius.set(device, type, mem);
       case 28: //innerRadius
          return innerRadius.set(device, type, mem);
-      case 58: //radiance
+      case 59: //radiance
          return radiance.set(device, type, mem);
       case 31: //intensityDistribution
          return intensityDistribution.set(device, type, mem);
       case 6: //c0
          return c0.set(device, type, mem);
-      case 85: //visible
+      case 86: //visible
          return visible.set(device, type, mem);
       default: // unknown param
          //unknown parameter
@@ -4099,7 +4114,7 @@ void LightRing::unset(const char *paramname) {
             color.set(device, ANARI_FLOAT32_VEC3, value);
          }
          return;
-      case 48: //position
+      case 49: //position
          {
             float value[] = {0.0, 0.0, 0.0};
             position.set(device, ANARI_FLOAT32_VEC3, value);
@@ -4111,7 +4126,7 @@ void LightRing::unset(const char *paramname) {
             direction.set(device, ANARI_FLOAT32_VEC3, value);
          }
          return;
-      case 45: //openingAngle
+      case 46: //openingAngle
          {
             float value[] = {3.14159265359};
             openingAngle.set(device, ANARI_FLOAT32, value);
@@ -4129,13 +4144,13 @@ void LightRing::unset(const char *paramname) {
             intensity.set(device, ANARI_FLOAT32, value);
          }
          return;
-      case 49: //power
+      case 50: //power
          {
             float value[] = {1.0};
             power.set(device, ANARI_FLOAT32, value);
          }
          return;
-      case 59: //radius
+      case 60: //radius
          {
             float value[] = {0.0};
             radius.set(device, ANARI_FLOAT32, value);
@@ -4147,7 +4162,7 @@ void LightRing::unset(const char *paramname) {
             innerRadius.set(device, ANARI_FLOAT32, value);
          }
          return;
-      case 58: //radiance
+      case 59: //radiance
          {
             float value[] = {1.0};
             radiance.set(device, ANARI_FLOAT32, value);
@@ -4162,7 +4177,7 @@ void LightRing::unset(const char *paramname) {
             c0.set(device, ANARI_FLOAT32_VEC3, value);
          }
          return;
-      case 85: //visible
+      case 86: //visible
          {
             int32_t value[] = {1};
             visible.set(device, ANARI_BOOL, value);
@@ -4199,18 +4214,18 @@ ParameterBase& LightRing::operator[](const char *paramname) {
    switch(idx) {
       case 41: return name;
       case 9: return color;
-      case 48: return position;
+      case 49: return position;
       case 14: return direction;
-      case 45: return openingAngle;
+      case 46: return openingAngle;
       case 17: return falloffAngle;
       case 30: return intensity;
-      case 49: return power;
-      case 59: return radius;
+      case 50: return power;
+      case 60: return radius;
       case 28: return innerRadius;
-      case 58: return radiance;
+      case 59: return radiance;
       case 31: return intensityDistribution;
       case 6: return c0;
-      case 85: return visible;
+      case 86: return visible;
       default: return empty;
    }
 }
@@ -4283,7 +4298,7 @@ bool LightQuad::set(const char *paramname, ANARIDataType type, const void *mem) 
          return name.set(device, type, mem);
       case 9: //color
          return color.set(device, type, mem);
-      case 48: //position
+      case 49: //position
          return position.set(device, type, mem);
       case 15: //edge1
          return edge1.set(device, type, mem);
@@ -4291,15 +4306,15 @@ bool LightQuad::set(const char *paramname, ANARIDataType type, const void *mem) 
          return edge2.set(device, type, mem);
       case 30: //intensity
          return intensity.set(device, type, mem);
-      case 49: //power
+      case 50: //power
          return power.set(device, type, mem);
-      case 58: //radiance
+      case 59: //radiance
          return radiance.set(device, type, mem);
-      case 64: //side
+      case 65: //side
          return side.set(device, type, mem);
       case 31: //intensityDistribution
          return intensityDistribution.set(device, type, mem);
-      case 85: //visible
+      case 86: //visible
          return visible.set(device, type, mem);
       default: // unknown param
          //unknown parameter
@@ -4318,7 +4333,7 @@ void LightQuad::unset(const char *paramname) {
             color.set(device, ANARI_FLOAT32_VEC3, value);
          }
          return;
-      case 48: //position
+      case 49: //position
          {
             float value[] = {0.0, 0.0, 0.0};
             position.set(device, ANARI_FLOAT32_VEC3, value);
@@ -4342,19 +4357,19 @@ void LightQuad::unset(const char *paramname) {
             intensity.set(device, ANARI_FLOAT32, value);
          }
          return;
-      case 49: //power
+      case 50: //power
          {
             float value[] = {1.0};
             power.set(device, ANARI_FLOAT32, value);
          }
          return;
-      case 58: //radiance
+      case 59: //radiance
          {
             float value[] = {1.0};
             radiance.set(device, ANARI_FLOAT32, value);
          }
          return;
-      case 64: //side
+      case 65: //side
          {
             const char *value = "front";
             side.set(device, ANARI_STRING, value);
@@ -4363,7 +4378,7 @@ void LightQuad::unset(const char *paramname) {
       case 31: //intensityDistribution
          intensityDistribution.unset();
          return;
-      case 85: //visible
+      case 86: //visible
          {
             int32_t value[] = {1};
             visible.set(device, ANARI_BOOL, value);
@@ -4397,15 +4412,15 @@ ParameterBase& LightQuad::operator[](const char *paramname) {
    switch(idx) {
       case 41: return name;
       case 9: return color;
-      case 48: return position;
+      case 49: return position;
       case 15: return edge1;
       case 16: return edge2;
       case 30: return intensity;
-      case 49: return power;
-      case 58: return radiance;
-      case 64: return side;
+      case 50: return power;
+      case 59: return radiance;
+      case 65: return side;
       case 31: return intensityDistribution;
-      case 85: return visible;
+      case 86: return visible;
       default: return empty;
    }
 }
@@ -4459,15 +4474,15 @@ bool LightHdri::set(const char *paramname, ANARIDataType type, const void *mem) 
          return name.set(device, type, mem);
       case 9: //color
          return color.set(device, type, mem);
-      case 73: //up
+      case 74: //up
          return up.set(device, type, mem);
-      case 58: //radiance
+      case 59: //radiance
          return radiance.set(device, type, mem);
       case 34: //layout
          return layout.set(device, type, mem);
-      case 62: //scale
+      case 63: //scale
          return scale.set(device, type, mem);
-      case 85: //visible
+      case 86: //visible
          return visible.set(device, type, mem);
       default: // unknown param
          //unknown parameter
@@ -4486,13 +4501,13 @@ void LightHdri::unset(const char *paramname) {
             color.set(device, ANARI_FLOAT32_VEC3, value);
          }
          return;
-      case 73: //up
+      case 74: //up
          {
             float value[] = {0.0, 0.0, 1.0};
             up.set(device, ANARI_FLOAT32_VEC3, value);
          }
          return;
-      case 58: //radiance
+      case 59: //radiance
          radiance.unset();
          return;
       case 34: //layout
@@ -4501,13 +4516,13 @@ void LightHdri::unset(const char *paramname) {
             layout.set(device, ANARI_STRING, value);
          }
          return;
-      case 62: //scale
+      case 63: //scale
          {
             float value[] = {1};
             scale.set(device, ANARI_FLOAT32, value);
          }
          return;
-      case 85: //visible
+      case 86: //visible
          {
             int32_t value[] = {1};
             visible.set(device, ANARI_BOOL, value);
@@ -4537,11 +4552,11 @@ ParameterBase& LightHdri::operator[](const char *paramname) {
    switch(idx) {
       case 41: return name;
       case 9: return color;
-      case 73: return up;
-      case 58: return radiance;
+      case 74: return up;
+      case 59: return radiance;
       case 34: return layout;
-      case 62: return scale;
-      case 85: return visible;
+      case 63: return scale;
+      case 86: return visible;
       default: return empty;
    }
 }

@@ -129,7 +129,7 @@ public:
    static const int type = ANARI_INSTANCE;
    static constexpr const char *subtype = nullptr;
    Parameter<ANARI_STRING> name;
-   Parameter<ANARI_FLOAT32_MAT3x4> transform;
+   Parameter<ANARI_FLOAT32_MAT4> transform;
    Parameter<ANARI_GROUP> group;
    Parameter<ANARI_ARRAY1D> motion_transform;
    Parameter<ANARI_ARRAY1D> motion_scale;
@@ -642,6 +642,7 @@ public:
    static constexpr const char *subtype = "primitive";
    Parameter<ANARI_STRING> name;
    Parameter<ANARI_ARRAY1D> array;
+   Parameter<ANARI_UINT64> offset;
 
    SamplerPrimitive(ANARIDevice d);
    bool set(const char *paramname, ANARIDataType type, const void *mem) override;
