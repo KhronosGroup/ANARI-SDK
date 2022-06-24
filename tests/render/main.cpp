@@ -23,7 +23,7 @@ std::vector<std::string> g_scenes = {
 
 std::string g_scene;
 
-glm::uvec2 g_frameSize(1024, 768);
+glm::ivec2 g_frameSize(1024, 768);
 int g_numPixelSamples = 16;
 std::string g_libraryType = "environment";
 std::string g_deviceType = "default";
@@ -46,6 +46,10 @@ static void statusFunc(void *userData,
     const char *message)
 {
   (void)userData;
+  (void)device;
+  (void)source;
+  (void)sourceType;
+  (void)code;
   if (severity == ANARI_SEVERITY_FATAL_ERROR) {
     fprintf(stderr, "[FATAL] %s\n", message);
   } else if (severity == ANARI_SEVERITY_ERROR) {
@@ -91,7 +95,7 @@ static void renderScene(ANARIDevice d, const std::string &scene)
 
   auto camera = anari::newObject<anari::Camera>(d, "perspective");
   anari::setParameter(
-      d, camera, "aspect", g_frameSize.x / (float)g_frameSize.y);
+      d, camera, "aspect", (float)g_frameSize.x / (float)g_frameSize.y);
 
   auto renderer = anari::newObject<anari::Renderer>(d, g_rendererType.c_str());
   anari::setParameter(d, renderer, "pixelSamples", g_numPixelSamples);

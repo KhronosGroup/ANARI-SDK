@@ -10,6 +10,9 @@ namespace anari {
 namespace debug_device {
 
 void GenericDebugObject::unknown_parameter(ANARIDataType type, const char *subtype, const char *paramname, ANARIDataType paramtype) {
+  (void)type;
+  (void)subtype;
+  (void)paramtype;
   debugDevice->reportStatus(
           getHandle(),
           getType(),
@@ -18,6 +21,8 @@ void GenericDebugObject::unknown_parameter(ANARIDataType type, const char *subty
           "anariSetParameter: Unknown parameter \"%s\".", paramname);
 }
 void GenericDebugObject::check_type(ANARIDataType type, const char *subtype, const char *paramname, ANARIDataType paramtype, ANARIDataType *valid_types) {
+  (void)type;
+  (void)subtype;
   for(int i = 0;valid_types[i] != ANARI_UNKNOWN;++i) {
     if(valid_types[i] == paramtype) {
       return; // it's in the list, nothing to report

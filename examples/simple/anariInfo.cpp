@@ -44,6 +44,10 @@ void statusFunc(void *userData,
     const char *message)
 {
   (void)userData;
+  (void)device;
+  (void)source;
+  (void)sourceType;
+  (void)code;
   if (severity == ANARI_SEVERITY_FATAL_ERROR) {
     fprintf(stderr, "[FATAL] %s\n", message);
   } else if (severity == ANARI_SEVERITY_ERROR) {
@@ -84,7 +88,7 @@ const ANARIDataType namedTypes[] = {
 
 template<int T, class Enable = void>
 struct param_printer {
-  void operator()(const void *mem) {
+  void operator()(const void*) {
   }
 };
 
@@ -139,7 +143,7 @@ struct param_printer<T,
   >::type> {
   using base_type = typename anari::ANARITypeProperties<T>::base_type;
   static const int components = anari::ANARITypeProperties<T>::components;
-  void operator()(const void *mem) {
+  void operator()(const void*) {
     printf("%s", anari::toString(T));
   }
 };
@@ -207,7 +211,6 @@ void print_info(ANARILibrary lib, const char *device, const char *objname, ANARI
 int main(int argc, const char **argv)
 {
   const char *libraryName = NULL;
-  const char *deviceName = NULL;
   const char *typeFilter = NULL;
   const char *subtypeFilter = NULL;
   bool skipParameters = false;
@@ -267,7 +270,7 @@ int main(int argc, const char **argv)
   for(int i = 0;devices[i];++i) {
     printf("Device \"%s\":\n", devices[i]);
     printf("   Subtypes:\n");
-    for(int j = 0;j<sizeof(namedTypes)/sizeof(ANARIDataType);++j) {
+    for(size_t j = 0;j<sizeof(namedTypes)/sizeof(ANARIDataType);++j) {
       const char **types = anariGetObjectSubtypes(lib, devices[i], namedTypes[j]);
       // print subtypes of named types
       printf("      %s: ", anari::toString(namedTypes[j]));
@@ -281,7 +284,7 @@ int main(int argc, const char **argv)
 
     if(!skipParameters) {
       printf("   Parameters:\n");
-      for(int j = 0;j<sizeof(namedTypes)/sizeof(ANARIDataType);++j) {
+      for(size_t j = 0;j<sizeof(namedTypes)/sizeof(ANARIDataType);++j) {
         if(typeFilter && strstr(anari::toString(namedTypes[j]), typeFilter) == nullptr) {
           continue;
         }
@@ -308,7 +311,7 @@ int main(int argc, const char **argv)
       }
 
       if(subtypeFilter == nullptr) {
-        for(int j = 0;j<sizeof(anonymousTypes)/sizeof(ANARIDataType);++j) {
+        for(size_t j = 0;j<sizeof(anonymousTypes)/sizeof(ANARIDataType);++j) {
           if(typeFilter && strstr(anari::toString(anonymousTypes[j]), typeFilter) == nullptr) {
             continue;
           }

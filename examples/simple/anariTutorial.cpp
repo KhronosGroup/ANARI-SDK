@@ -28,6 +28,10 @@ void statusFunc(void *userData,
     const char *message)
 {
   (void)userData;
+  (void)device;
+  (void)source;
+  (void)sourceType;
+  (void)code;
   if (severity == ANARI_SEVERITY_FATAL_ERROR) {
     fprintf(stderr, "[FATAL] %s\n", message);
   } else if (severity == ANARI_SEVERITY_ERROR) {
@@ -45,6 +49,8 @@ void statusFunc(void *userData,
 
 int main(int argc, const char **argv)
 {
+  (void)argc;
+  (void)argv;
   stbi_flip_vertically_on_write(1);
 
   // image size
@@ -87,7 +93,7 @@ int main(int argc, const char **argv)
 
   // create and setup camera
   auto camera = anari::newObject<anari::Camera>(d, "perspective");
-  anari::setParameter(d, camera, "aspect", imgSize[0] / (float)imgSize[1]);
+  anari::setParameter(d, camera, "aspect", (float)imgSize[0] / (float)imgSize[1]);
   anari::setParameter(d, camera, "position", cam_pos);
   anari::setParameter(d, camera, "direction", cam_view);
   anari::setParameter(d, camera, "up", cam_up);
@@ -184,7 +190,7 @@ int main(int argc, const char **argv)
   // access frame and write its content as PNG file
   const uint32_t *fb = (uint32_t *)anari::map(d, frame, "color");
   stbi_write_png(
-      "firstFrame.png", imgSize[0], imgSize[1], 4, fb, 4 * imgSize[0]);
+      "firstFrame.png", (int)imgSize[0], (int)imgSize[1], 4, fb, 4 * (int)imgSize[0]);
   anari::unmap(d, frame, "color");
 
   printf("done!\n");
@@ -199,7 +205,7 @@ int main(int argc, const char **argv)
 
   fb = (uint32_t *)anari::map(d, frame, "color");
   stbi_write_png(
-      "accumulatedFrame.png", imgSize[0], imgSize[1], 4, fb, 4 * imgSize[0]);
+      "accumulatedFrame.png", (int)imgSize[0], (int)imgSize[1], 4, fb, 4 * (int)imgSize[0]);
   anari::unmap(d, frame, "color");
 
   printf("done!\n");

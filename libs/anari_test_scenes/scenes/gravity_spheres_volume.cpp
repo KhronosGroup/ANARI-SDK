@@ -14,7 +14,7 @@ struct Point
   float weight;
 };
 
-static std::vector<Point> generatePoints(int numPoints)
+static std::vector<Point> generatePoints(size_t numPoints)
 {
   // create random number distributions for point center and weight
   std::mt19937 gen(0);
@@ -55,7 +55,7 @@ static std::vector<float> generateVoxels(
       for (int i = 0; i < dims.x; i++) {
         // index in array
         size_t index =
-            size_t(k) * dims.z * dims.y + size_t(j) * dims.x + size_t(i);
+            size_t(k) * size_t(dims.z) * size_t(dims.y) + size_t(j) * size_t(dims.x) + size_t(i);
 
         // compute volume value
         float value = 0.f;
@@ -106,7 +106,7 @@ void GravityVolume::commit()
 
   const bool withGeometry = getParam<bool>("withGeometry", false);
   const int volumeDims = 128;
-  const int numPoints = 10;
+  const size_t numPoints = 10;
   const auto voxelRange = glm::vec2(0.f, 10.f);
 
   auto points = generatePoints(numPoints);

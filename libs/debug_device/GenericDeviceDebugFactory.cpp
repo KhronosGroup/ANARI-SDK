@@ -28,7 +28,8 @@ public:
    anari::debug_device::DebugObjectBase* new_world(anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;
    anari::debug_device::DebugObjectBase* new_surface(anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;
    void print_summary(anari::debug_device::DebugDevice *td) override;
-   void use_feature(int feature);};
+   void use_feature(int feature);
+};
 namespace {
 class device : public DebugObject<ANARI_DEVICE> {
    static int param_hash(const char *str) {
@@ -38,7 +39,7 @@ class device : public DebugObject<ANARI_DEVICE> {
          uint32_t idx = cur&0xFFFFu;
          uint32_t low = (cur>>16u)&0xFFu;
          uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
+         uint32_t c = (uint32_t)str[i];
          if(c>=low && c<high) {
             cur = table[idx+c-low];
          } else {
@@ -54,7 +55,7 @@ class device : public DebugObject<ANARI_DEVICE> {
       return -1;
    }
    public:
-   device(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   device(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { (void)factory; }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -91,7 +92,7 @@ class array1d : public ArrayDebugObject<ANARI_ARRAY1D> {
          uint32_t idx = cur&0xFFFFu;
          uint32_t low = (cur>>16u)&0xFFu;
          uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
+         uint32_t c = (uint32_t)str[i];
          if(c>=low && c<high) {
             cur = table[idx+c-low];
          } else {
@@ -107,7 +108,7 @@ class array1d : public ArrayDebugObject<ANARI_ARRAY1D> {
       return -1;
    }
    public:
-   array1d(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): ArrayDebugObject(td, wh, h) { }
+   array1d(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): ArrayDebugObject(td, wh, h) { (void)factory; }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       ArrayDebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -134,7 +135,7 @@ class array2d : public ArrayDebugObject<ANARI_ARRAY2D> {
          uint32_t idx = cur&0xFFFFu;
          uint32_t low = (cur>>16u)&0xFFu;
          uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
+         uint32_t c = (uint32_t)str[i];
          if(c>=low && c<high) {
             cur = table[idx+c-low];
          } else {
@@ -150,7 +151,7 @@ class array2d : public ArrayDebugObject<ANARI_ARRAY2D> {
       return -1;
    }
    public:
-   array2d(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): ArrayDebugObject(td, wh, h) { }
+   array2d(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): ArrayDebugObject(td, wh, h) { (void)factory; }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       ArrayDebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -177,7 +178,7 @@ class array3d : public ArrayDebugObject<ANARI_ARRAY3D> {
          uint32_t idx = cur&0xFFFFu;
          uint32_t low = (cur>>16u)&0xFFu;
          uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
+         uint32_t c = (uint32_t)str[i];
          if(c>=low && c<high) {
             cur = table[idx+c-low];
          } else {
@@ -193,7 +194,7 @@ class array3d : public ArrayDebugObject<ANARI_ARRAY3D> {
       return -1;
    }
    public:
-   array3d(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): ArrayDebugObject(td, wh, h) { }
+   array3d(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): ArrayDebugObject(td, wh, h) { (void)factory; }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       ArrayDebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -220,7 +221,7 @@ class frame : public DebugObject<ANARI_FRAME> {
          uint32_t idx = cur&0xFFFFu;
          uint32_t low = (cur>>16u)&0xFFu;
          uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
+         uint32_t c = (uint32_t)str[i];
          if(c>=low && c<high) {
             cur = table[idx+c-low];
          } else {
@@ -236,7 +237,7 @@ class frame : public DebugObject<ANARI_FRAME> {
       return -1;
    }
    public:
-   frame(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   frame(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { (void)factory; }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -293,7 +294,7 @@ class group : public DebugObject<ANARI_GROUP> {
          uint32_t idx = cur&0xFFFFu;
          uint32_t low = (cur>>16u)&0xFFu;
          uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
+         uint32_t c = (uint32_t)str[i];
          if(c>=low && c<high) {
             cur = table[idx+c-low];
          } else {
@@ -309,7 +310,7 @@ class group : public DebugObject<ANARI_GROUP> {
       return -1;
    }
    public:
-   group(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   group(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { (void)factory; }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -351,7 +352,7 @@ class instance : public DebugObject<ANARI_INSTANCE> {
          uint32_t idx = cur&0xFFFFu;
          uint32_t low = (cur>>16u)&0xFFu;
          uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
+         uint32_t c = (uint32_t)str[i];
          if(c>=low && c<high) {
             cur = table[idx+c-low];
          } else {
@@ -367,7 +368,7 @@ class instance : public DebugObject<ANARI_INSTANCE> {
       return -1;
    }
    public:
-   instance(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   instance(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { (void)factory; }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -404,7 +405,7 @@ class world : public DebugObject<ANARI_WORLD> {
          uint32_t idx = cur&0xFFFFu;
          uint32_t low = (cur>>16u)&0xFFu;
          uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
+         uint32_t c = (uint32_t)str[i];
          if(c>=low && c<high) {
             cur = table[idx+c-low];
          } else {
@@ -420,7 +421,7 @@ class world : public DebugObject<ANARI_WORLD> {
       return -1;
    }
    public:
-   world(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   world(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { (void)factory; }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -467,7 +468,7 @@ class renderer_default : public DebugObject<ANARI_RENDERER> {
          uint32_t idx = cur&0xFFFFu;
          uint32_t low = (cur>>16u)&0xFFu;
          uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
+         uint32_t c = (uint32_t)str[i];
          if(c>=low && c<high) {
             cur = table[idx+c-low];
          } else {
@@ -483,7 +484,7 @@ class renderer_default : public DebugObject<ANARI_RENDERER> {
       return -1;
    }
    public:
-   renderer_default(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   renderer_default(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { (void)factory; }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -510,7 +511,7 @@ class surface : public DebugObject<ANARI_SURFACE> {
          uint32_t idx = cur&0xFFFFu;
          uint32_t low = (cur>>16u)&0xFFu;
          uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
+         uint32_t c = (uint32_t)str[i];
          if(c>=low && c<high) {
             cur = table[idx+c-low];
          } else {
@@ -526,7 +527,7 @@ class surface : public DebugObject<ANARI_SURFACE> {
       return -1;
    }
    public:
-   surface(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   surface(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { (void)factory; }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -563,7 +564,7 @@ class camera_omnidirectional : public DebugObject<ANARI_CAMERA> {
          uint32_t idx = cur&0xFFFFu;
          uint32_t low = (cur>>16u)&0xFFu;
          uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
+         uint32_t c = (uint32_t)str[i];
          if(c>=low && c<high) {
             cur = table[idx+c-low];
          } else {
@@ -579,7 +580,7 @@ class camera_omnidirectional : public DebugObject<ANARI_CAMERA> {
       return -1;
    }
    public:
-   camera_omnidirectional(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   camera_omnidirectional(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { (void)factory; }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -656,7 +657,7 @@ class camera_orthographic : public DebugObject<ANARI_CAMERA> {
          uint32_t idx = cur&0xFFFFu;
          uint32_t low = (cur>>16u)&0xFFu;
          uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
+         uint32_t c = (uint32_t)str[i];
          if(c>=low && c<high) {
             cur = table[idx+c-low];
          } else {
@@ -672,7 +673,7 @@ class camera_orthographic : public DebugObject<ANARI_CAMERA> {
       return -1;
    }
    public:
-   camera_orthographic(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   camera_orthographic(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { (void)factory; }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -749,7 +750,7 @@ class camera_perspective : public DebugObject<ANARI_CAMERA> {
          uint32_t idx = cur&0xFFFFu;
          uint32_t low = (cur>>16u)&0xFFu;
          uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
+         uint32_t c = (uint32_t)str[i];
          if(c>=low && c<high) {
             cur = table[idx+c-low];
          } else {
@@ -765,7 +766,7 @@ class camera_perspective : public DebugObject<ANARI_CAMERA> {
       return -1;
    }
    public:
-   camera_perspective(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   camera_perspective(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { (void)factory; }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -847,7 +848,7 @@ class geometry_cone : public DebugObject<ANARI_GEOMETRY> {
          uint32_t idx = cur&0xFFFFu;
          uint32_t low = (cur>>16u)&0xFFu;
          uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
+         uint32_t c = (uint32_t)str[i];
          if(c>=low && c<high) {
             cur = table[idx+c-low];
          } else {
@@ -863,7 +864,7 @@ class geometry_cone : public DebugObject<ANARI_GEOMETRY> {
       return -1;
    }
    public:
-   geometry_cone(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   geometry_cone(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { (void)factory; }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -970,7 +971,7 @@ class geometry_curve : public DebugObject<ANARI_GEOMETRY> {
          uint32_t idx = cur&0xFFFFu;
          uint32_t low = (cur>>16u)&0xFFu;
          uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
+         uint32_t c = (uint32_t)str[i];
          if(c>=low && c<high) {
             cur = table[idx+c-low];
          } else {
@@ -986,7 +987,7 @@ class geometry_curve : public DebugObject<ANARI_GEOMETRY> {
       return -1;
    }
    public:
-   geometry_curve(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   geometry_curve(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { (void)factory; }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -1088,7 +1089,7 @@ class geometry_cylinder : public DebugObject<ANARI_GEOMETRY> {
          uint32_t idx = cur&0xFFFFu;
          uint32_t low = (cur>>16u)&0xFFu;
          uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
+         uint32_t c = (uint32_t)str[i];
          if(c>=low && c<high) {
             cur = table[idx+c-low];
          } else {
@@ -1104,7 +1105,7 @@ class geometry_cylinder : public DebugObject<ANARI_GEOMETRY> {
       return -1;
    }
    public:
-   geometry_cylinder(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   geometry_cylinder(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { (void)factory; }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -1216,7 +1217,7 @@ class geometry_quad : public DebugObject<ANARI_GEOMETRY> {
          uint32_t idx = cur&0xFFFFu;
          uint32_t low = (cur>>16u)&0xFFu;
          uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
+         uint32_t c = (uint32_t)str[i];
          if(c>=low && c<high) {
             cur = table[idx+c-low];
          } else {
@@ -1232,7 +1233,7 @@ class geometry_quad : public DebugObject<ANARI_GEOMETRY> {
       return -1;
    }
    public:
-   geometry_quad(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   geometry_quad(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { (void)factory; }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -1329,7 +1330,7 @@ class geometry_sphere : public DebugObject<ANARI_GEOMETRY> {
          uint32_t idx = cur&0xFFFFu;
          uint32_t low = (cur>>16u)&0xFFu;
          uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
+         uint32_t c = (uint32_t)str[i];
          if(c>=low && c<high) {
             cur = table[idx+c-low];
          } else {
@@ -1345,7 +1346,7 @@ class geometry_sphere : public DebugObject<ANARI_GEOMETRY> {
       return -1;
    }
    public:
-   geometry_sphere(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   geometry_sphere(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { (void)factory; }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -1447,7 +1448,7 @@ class geometry_triangle : public DebugObject<ANARI_GEOMETRY> {
          uint32_t idx = cur&0xFFFFu;
          uint32_t low = (cur>>16u)&0xFFu;
          uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
+         uint32_t c = (uint32_t)str[i];
          if(c>=low && c<high) {
             cur = table[idx+c-low];
          } else {
@@ -1463,7 +1464,7 @@ class geometry_triangle : public DebugObject<ANARI_GEOMETRY> {
       return -1;
    }
    public:
-   geometry_triangle(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   geometry_triangle(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { (void)factory; }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -1560,7 +1561,7 @@ class light_directional : public DebugObject<ANARI_LIGHT> {
          uint32_t idx = cur&0xFFFFu;
          uint32_t low = (cur>>16u)&0xFFu;
          uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
+         uint32_t c = (uint32_t)str[i];
          if(c>=low && c<high) {
             cur = table[idx+c-low];
          } else {
@@ -1576,7 +1577,7 @@ class light_directional : public DebugObject<ANARI_LIGHT> {
       return -1;
    }
    public:
-   light_directional(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   light_directional(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { (void)factory; }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -1618,7 +1619,7 @@ class light_point : public DebugObject<ANARI_LIGHT> {
          uint32_t idx = cur&0xFFFFu;
          uint32_t low = (cur>>16u)&0xFFu;
          uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
+         uint32_t c = (uint32_t)str[i];
          if(c>=low && c<high) {
             cur = table[idx+c-low];
          } else {
@@ -1634,7 +1635,7 @@ class light_point : public DebugObject<ANARI_LIGHT> {
       return -1;
    }
    public:
-   light_point(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   light_point(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { (void)factory; }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -1681,7 +1682,7 @@ class light_spot : public DebugObject<ANARI_LIGHT> {
          uint32_t idx = cur&0xFFFFu;
          uint32_t low = (cur>>16u)&0xFFu;
          uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
+         uint32_t c = (uint32_t)str[i];
          if(c>=low && c<high) {
             cur = table[idx+c-low];
          } else {
@@ -1697,7 +1698,7 @@ class light_spot : public DebugObject<ANARI_LIGHT> {
       return -1;
    }
    public:
-   light_spot(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   light_spot(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { (void)factory; }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -1759,7 +1760,7 @@ class material_matte : public DebugObject<ANARI_MATERIAL> {
          uint32_t idx = cur&0xFFFFu;
          uint32_t low = (cur>>16u)&0xFFu;
          uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
+         uint32_t c = (uint32_t)str[i];
          if(c>=low && c<high) {
             cur = table[idx+c-low];
          } else {
@@ -1775,7 +1776,7 @@ class material_matte : public DebugObject<ANARI_MATERIAL> {
       return -1;
    }
    public:
-   material_matte(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   material_matte(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { (void)factory; }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -1807,7 +1808,7 @@ class material_transparentMatte : public DebugObject<ANARI_MATERIAL> {
          uint32_t idx = cur&0xFFFFu;
          uint32_t low = (cur>>16u)&0xFFu;
          uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
+         uint32_t c = (uint32_t)str[i];
          if(c>=low && c<high) {
             cur = table[idx+c-low];
          } else {
@@ -1823,7 +1824,7 @@ class material_transparentMatte : public DebugObject<ANARI_MATERIAL> {
       return -1;
    }
    public:
-   material_transparentMatte(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   material_transparentMatte(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { (void)factory; }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -1860,7 +1861,7 @@ class sampler_image1D : public DebugObject<ANARI_SAMPLER> {
          uint32_t idx = cur&0xFFFFu;
          uint32_t low = (cur>>16u)&0xFFu;
          uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
+         uint32_t c = (uint32_t)str[i];
          if(c>=low && c<high) {
             cur = table[idx+c-low];
          } else {
@@ -1876,7 +1877,7 @@ class sampler_image1D : public DebugObject<ANARI_SAMPLER> {
       return -1;
    }
    public:
-   sampler_image1D(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   sampler_image1D(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { (void)factory; }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -1933,7 +1934,7 @@ class sampler_image2D : public DebugObject<ANARI_SAMPLER> {
          uint32_t idx = cur&0xFFFFu;
          uint32_t low = (cur>>16u)&0xFFu;
          uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
+         uint32_t c = (uint32_t)str[i];
          if(c>=low && c<high) {
             cur = table[idx+c-low];
          } else {
@@ -1949,7 +1950,7 @@ class sampler_image2D : public DebugObject<ANARI_SAMPLER> {
       return -1;
    }
    public:
-   sampler_image2D(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   sampler_image2D(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { (void)factory; }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -2011,7 +2012,7 @@ class sampler_image3D : public DebugObject<ANARI_SAMPLER> {
          uint32_t idx = cur&0xFFFFu;
          uint32_t low = (cur>>16u)&0xFFu;
          uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
+         uint32_t c = (uint32_t)str[i];
          if(c>=low && c<high) {
             cur = table[idx+c-low];
          } else {
@@ -2027,7 +2028,7 @@ class sampler_image3D : public DebugObject<ANARI_SAMPLER> {
       return -1;
    }
    public:
-   sampler_image3D(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   sampler_image3D(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { (void)factory; }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -2094,7 +2095,7 @@ class sampler_primitive : public DebugObject<ANARI_SAMPLER> {
          uint32_t idx = cur&0xFFFFu;
          uint32_t low = (cur>>16u)&0xFFu;
          uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
+         uint32_t c = (uint32_t)str[i];
          if(c>=low && c<high) {
             cur = table[idx+c-low];
          } else {
@@ -2110,7 +2111,7 @@ class sampler_primitive : public DebugObject<ANARI_SAMPLER> {
       return -1;
    }
    public:
-   sampler_primitive(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   sampler_primitive(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { (void)factory; }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -2147,7 +2148,7 @@ class sampler_transform : public DebugObject<ANARI_SAMPLER> {
          uint32_t idx = cur&0xFFFFu;
          uint32_t low = (cur>>16u)&0xFFu;
          uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
+         uint32_t c = (uint32_t)str[i];
          if(c>=low && c<high) {
             cur = table[idx+c-low];
          } else {
@@ -2163,7 +2164,7 @@ class sampler_transform : public DebugObject<ANARI_SAMPLER> {
       return -1;
    }
    public:
-   sampler_transform(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   sampler_transform(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { (void)factory; }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -2200,7 +2201,7 @@ class spatial_field_structuredRegular : public DebugObject<ANARI_SPATIAL_FIELD> 
          uint32_t idx = cur&0xFFFFu;
          uint32_t low = (cur>>16u)&0xFFu;
          uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
+         uint32_t c = (uint32_t)str[i];
          if(c>=low && c<high) {
             cur = table[idx+c-low];
          } else {
@@ -2216,7 +2217,7 @@ class spatial_field_structuredRegular : public DebugObject<ANARI_SPATIAL_FIELD> 
       return -1;
    }
    public:
-   spatial_field_structuredRegular(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   spatial_field_structuredRegular(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { (void)factory; }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -2263,7 +2264,7 @@ class volume_scivis : public DebugObject<ANARI_VOLUME> {
          uint32_t idx = cur&0xFFFFu;
          uint32_t low = (cur>>16u)&0xFFu;
          uint32_t high = (cur>>24u)&0xFFu;
-         uint32_t c = str[i];
+         uint32_t c = (uint32_t)str[i];
          if(c>=low && c<high) {
             cur = table[idx+c-low];
          } else {
@@ -2279,7 +2280,7 @@ class volume_scivis : public DebugObject<ANARI_VOLUME> {
       return -1;
    }
    public:
-   volume_scivis(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { }
+   volume_scivis(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { (void)factory; }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
@@ -2341,7 +2342,7 @@ static int camera_object_hash(const char *str) {
       uint32_t idx = cur&0xFFFFu;
       uint32_t low = (cur>>16u)&0xFFu;
       uint32_t high = (cur>>24u)&0xFFu;
-      uint32_t c = str[i];
+      uint32_t c = (uint32_t)str[i];
       if(c>=low && c<high) {
          cur = table[idx+c-low];
       } else {
@@ -2377,7 +2378,7 @@ static int geometry_object_hash(const char *str) {
       uint32_t idx = cur&0xFFFFu;
       uint32_t low = (cur>>16u)&0xFFu;
       uint32_t high = (cur>>24u)&0xFFu;
-      uint32_t c = str[i];
+      uint32_t c = (uint32_t)str[i];
       if(c>=low && c<high) {
          cur = table[idx+c-low];
       } else {
@@ -2419,7 +2420,7 @@ static int light_object_hash(const char *str) {
       uint32_t idx = cur&0xFFFFu;
       uint32_t low = (cur>>16u)&0xFFu;
       uint32_t high = (cur>>24u)&0xFFu;
-      uint32_t c = str[i];
+      uint32_t c = (uint32_t)str[i];
       if(c>=low && c<high) {
          cur = table[idx+c-low];
       } else {
@@ -2455,7 +2456,7 @@ static int material_object_hash(const char *str) {
       uint32_t idx = cur&0xFFFFu;
       uint32_t low = (cur>>16u)&0xFFu;
       uint32_t high = (cur>>24u)&0xFFu;
-      uint32_t c = str[i];
+      uint32_t c = (uint32_t)str[i];
       if(c>=low && c<high) {
          cur = table[idx+c-low];
       } else {
@@ -2489,7 +2490,7 @@ static int renderer_object_hash(const char *str) {
       uint32_t idx = cur&0xFFFFu;
       uint32_t low = (cur>>16u)&0xFFu;
       uint32_t high = (cur>>24u)&0xFFu;
-      uint32_t c = str[i];
+      uint32_t c = (uint32_t)str[i];
       if(c>=low && c<high) {
          cur = table[idx+c-low];
       } else {
@@ -2521,7 +2522,7 @@ static int sampler_object_hash(const char *str) {
       uint32_t idx = cur&0xFFFFu;
       uint32_t low = (cur>>16u)&0xFFu;
       uint32_t high = (cur>>24u)&0xFFu;
-      uint32_t c = str[i];
+      uint32_t c = (uint32_t)str[i];
       if(c>=low && c<high) {
          cur = table[idx+c-low];
       } else {
@@ -2561,7 +2562,7 @@ static int spatial_field_object_hash(const char *str) {
       uint32_t idx = cur&0xFFFFu;
       uint32_t low = (cur>>16u)&0xFFu;
       uint32_t high = (cur>>24u)&0xFFu;
-      uint32_t c = str[i];
+      uint32_t c = (uint32_t)str[i];
       if(c>=low && c<high) {
          cur = table[idx+c-low];
       } else {
@@ -2593,7 +2594,7 @@ static int volume_object_hash(const char *str) {
       uint32_t idx = cur&0xFFFFu;
       uint32_t low = (cur>>16u)&0xFFu;
       uint32_t high = (cur>>24u)&0xFFu;
-      uint32_t c = str[i];
+      uint32_t c = (uint32_t)str[i];
       if(c>=low && c<high) {
          cur = table[idx+c-low];
       } else {
@@ -2646,6 +2647,7 @@ DebugObjectBase* GenericDeviceDebugFactory::new_world(DebugDevice *td, ANARIObje
    return new world(td, this, wh, h);
 }
 void GenericDeviceDebugFactory::print_summary(DebugDevice *td) {
+   (void)td;
 }
 anari::debug_device::ObjectFactory* getDebugFactory() {
    static GenericDeviceDebugFactory f;

@@ -83,7 +83,7 @@ class DebugGenerator:
         code += "   anari::debug_device::DebugObjectBase* new_world(anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
         code += "   anari::debug_device::DebugObjectBase* new_surface(anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
         code += "   void print_summary(anari::debug_device::DebugDevice *td) override;\n"
-        code += "   void use_feature(int feature);"
+        code += "   void use_feature(int feature);\n"
         code += "};\n"
         return code
 
@@ -105,7 +105,7 @@ class DebugGenerator:
                 code += "   static " + hash_gen.gen_hash_function("param_hash", [p["name"] for p in params], indent = "   ")
                 code += "   public:\n"
                 code += "   " + objname + "(DebugDevice *td, " + factoryname + " *factory, ANARIObject wh, ANARIObject h)"
-                code += ": " + b + "(td, wh, h) { }\n"
+                code += ": " + b + "(td, wh, h) { (void)factory; }\n"
                 code += "   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {\n"
                 code += "      " + b + "::setParameter(paramname, paramtype, mem);\n"
                 code += "      int idx = param_hash(paramname);\n"
@@ -156,6 +156,7 @@ class DebugGenerator:
             code += "}\n"
 
         code += "void " + factoryname + "::print_summary(DebugDevice *td) {\n"
+        code += "   (void)td;\n"
         code += "}\n"
         return code
 

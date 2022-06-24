@@ -143,7 +143,7 @@ inline Optional<T>::Optional(Optional<U> &&other)
 
   if (other.has_value()) {
     reset();
-    value() = std::move(other.value());
+    value() = std::move(static_cast<T>(other.value()));
     hasValue = true;
   }
 }
@@ -187,7 +187,7 @@ inline Optional<T> &Optional<T>::operator=(U &&rhs)
       " being assigned from be convertible to the type parameter"
       " of the destination Optional<>.");
   default_construct_storage_if_needed();
-  this->value() = rhs;
+  this->value() = static_cast<T>(rhs);
   hasValue = true;
   return *this;
 }
@@ -202,7 +202,7 @@ inline Optional<T> &Optional<T>::operator=(const Optional<U> &other)
       " convertible to the type parameter of the destination"
       " Optional<>.");
   default_construct_storage_if_needed();
-  value() = other.value();
+  value() = static_cast<T>(other.value());
   hasValue = true;
   return *this;
 }
@@ -217,7 +217,7 @@ inline Optional<T> &Optional<T>::operator=(Optional<U> &&other)
       " convertible to the type parameter of the destination"
       " Optional<>.");
   default_construct_storage_if_needed();
-  value() = other.value();
+  value() = static_cast<T>(other.value());
   hasValue = true;
   return *this;
 }

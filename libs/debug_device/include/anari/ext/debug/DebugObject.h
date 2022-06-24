@@ -48,8 +48,8 @@ public:
   }
 private:
   DebugDevice *debugDevice = nullptr;
-  ANARIObject handle = 0;
   ANARIObject wrappedHandle = 0;
+  ANARIObject handle = 0;
   int64_t publicRefCount = 0;
   int uncommittedParameters = 0;
   int references = 0;
@@ -74,8 +74,8 @@ public:
       setName((const char*)mem);
     }
   }
-  void unsetParameter(const char *name) { uncommittedParameters += 1; }
-  void referencedBy(ANARIObject parent) { references += 1; }
+  void unsetParameter(const char *name) { (void)name; uncommittedParameters += 1; }
+  void referencedBy(ANARIObject parent) { (void)parent; references += 1; }
   void used() { references += 1; }
   ANARIObject getHandle() { return handle; }
   ANARIObject getWrappedHandle() { return wrappedHandle; }
@@ -158,27 +158,35 @@ struct DEBUG_DEVICE_INTERFACE ArrayDebugObject : public GenericArrayDebugObject 
 class DEBUG_DEVICE_INTERFACE ObjectFactory {
 public:
   virtual DebugObjectBase* new_volume(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) {
+    (void)name;
     return new DebugObject<ANARI_VOLUME>(td, wh, h);
   }
   virtual DebugObjectBase* new_geometry(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) {
+    (void)name;
     return new DebugObject<ANARI_GEOMETRY>(td, wh, h);
   }
   virtual DebugObjectBase* new_spatial_field(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) {
+    (void)name;
     return new DebugObject<ANARI_SPATIAL_FIELD>(td, wh, h);
   }
   virtual DebugObjectBase* new_light(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) {
+    (void)name;
     return new DebugObject<ANARI_LIGHT>(td, wh, h);
   }
   virtual DebugObjectBase* new_camera(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) {
+    (void)name;
     return new DebugObject<ANARI_CAMERA>(td, wh, h);
   }
   virtual DebugObjectBase* new_material(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) {
+    (void)name;
     return new DebugObject<ANARI_MATERIAL>(td, wh, h);
   }
   virtual DebugObjectBase* new_sampler(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) {
+    (void)name;
     return new DebugObject<ANARI_SAMPLER>(td, wh, h);
   }
   virtual DebugObjectBase* new_renderer(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) {
+    (void)name;
     return new DebugObject<ANARI_RENDERER>(td, wh, h);
   }
   virtual DebugObjectBase* new_device(DebugDevice *td, ANARIObject wh, ANARIObject h) {
@@ -208,7 +216,7 @@ public:
   virtual DebugObjectBase* new_surface(DebugDevice *td, ANARIObject wh, ANARIObject h) {
     return new DebugObject<ANARI_SURFACE>(td, wh, h);
   }
-  virtual void print_summary(DebugDevice *td) { }
+  virtual void print_summary(DebugDevice *td) { (void)td; }
   DebugObjectBase* new_by_type(ANARIDataType t, DebugDevice *td, ANARIObject wh, ANARIObject h);
   DebugObjectBase* new_by_subtype(ANARIDataType t, const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h);
   void unknown_subtype(DebugDevice *td, ANARIDataType t, const char *name);

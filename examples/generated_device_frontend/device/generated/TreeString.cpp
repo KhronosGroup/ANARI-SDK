@@ -15,7 +15,7 @@ int parameter_string_hash(const char *str) {
       uint32_t idx = cur&0xFFFFu;
       uint32_t low = (cur>>16u)&0xFFu;
       uint32_t high = (cur>>24u)&0xFFu;
-      uint32_t c = str[i];
+      uint32_t c = (uint32_t)str[i];
       if(c>=low && c<high) {
          cur = table[idx+c-low];
       } else {

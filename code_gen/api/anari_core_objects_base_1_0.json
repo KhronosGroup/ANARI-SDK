@@ -144,7 +144,7 @@
                     "name" : "camera",
                     "types" : ["ANARI_CAMERA"],
                     "tags" : ["required"],
-                    "description" : "camera used to render the worlde"
+                    "description" : "camera used to render the world"
                 }, {
                     "name" : "size",
                     "types" : ["ANARI_UINT32_VEC2"],

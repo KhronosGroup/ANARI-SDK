@@ -34,7 +34,7 @@ void writePPM(
     return;
   }
   fprintf(file, "P6\n%i %i\n255\n", size_x, size_y);
-  unsigned char *out = (unsigned char *)malloc(3 * size_x);
+  unsigned char *out = (unsigned char *)malloc((size_t)(3 * size_x));
   for (int y = 0; y < size_y; y++) {
     const unsigned char *in =
         (const unsigned char *)&pixel[(size_y - 1 - y) * size_x];
@@ -43,7 +43,7 @@ void writePPM(
       out[3 * x + 1] = in[4 * x + 1];
       out[3 * x + 2] = in[4 * x + 2];
     }
-    fwrite(out, 3 * size_x, sizeof(char), file);
+    fwrite(out, (size_t)(3 * size_x), sizeof(char), file);
   }
   fprintf(file, "\n");
   fclose(file);
@@ -61,6 +61,10 @@ void statusFunc(void *userData,
     const char *message)
 {
   (void)userData;
+  (void)device;
+  (void)source;
+  (void)sourceType;
+  (void)code;
   if (severity == ANARI_SEVERITY_FATAL_ERROR) {
     fprintf(stderr, "[FATAL] %s\n", message);
   } else if (severity == ANARI_SEVERITY_ERROR) {
@@ -79,8 +83,10 @@ void statusFunc(void *userData,
 /******************************************************************/
 int main(int argc, const char **argv)
 {
+  (void)argc;
+  (void)argv;
   // image size
-  int imgSize[2] = {1024 /*width*/, 768 /*height*/};
+  unsigned int imgSize[2] = {1024 /*width*/, 768 /*height*/};
 
   // clang-format off
   // camera
@@ -134,7 +140,6 @@ int main(int argc, const char **argv)
   }
 
   puts("Available renderers:");
-  int havePt = 0;
   for (const char **r = renderers; *r != NULL; r++) {
     printf("  - %s\n", *r);
   }
@@ -155,7 +160,7 @@ int main(int argc, const char **argv)
   // create and setup camera
   ANARICamera camera = anariNewCamera(dev, "perspective");
   anariSetParameter(dev, camera, "name", ANARI_STRING, "perspectiveCamera");
-  float aspect = imgSize[0] / (float)imgSize[1];
+  float aspect = (float)imgSize[0] / (float)imgSize[1];
   anariSetParameter(dev, camera, "aspect", ANARI_FLOAT32, &aspect);
   anariSetParameter(dev, camera, "position", ANARI_FLOAT32_VEC3, cam_pos);
   anariSetParameter(dev, camera, "direction", ANARI_FLOAT32_VEC4, cam_view);
@@ -249,9 +254,9 @@ int main(int argc, const char **argv)
   anariRenderFrame(dev, frame);
   anariFrameReady(dev, frame, ANARI_WAIT);
 
-  // access frame and write its content as PNG file
+  // access frame
   const uint32_t *fb = (uint32_t *)anariMapFrame(dev, frame, "color");
-
+  (void)fb; // ignore it because we expect the code to fail anyway
   anariUnmapFrame(dev, frame, "color");
 
   // final cleanups

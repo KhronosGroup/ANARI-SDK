@@ -76,6 +76,7 @@ inline T newObject(Device)
 template <typename T>
 inline T newObject(Device, const char *subtype)
 {
+  (void)subtype;
   static_assert(isObject(ANARITypeFor<T>::value),
       "anari::newObject<>() can only be instantiated with ANARI handle types");
   return nullptr;
