@@ -23,7 +23,7 @@ std::vector<std::string> g_scenes = {
 
 std::string g_scene;
 
-glm::ivec2 g_frameSize(1024, 768);
+glm::uvec2 g_frameSize(1024, 768);
 int g_numPixelSamples = 16;
 std::string g_libraryType = "environment";
 std::string g_deviceType = "default";
@@ -132,11 +132,11 @@ static void renderScene(ANARIDevice d, const std::string &scene)
     auto *pixels = (uint32_t *)anari::map(d, frame, "color");
 
     stbi_write_png(fileName.c_str(),
-        g_frameSize.x,
-        g_frameSize.y,
+        (int)g_frameSize.x,
+        (int)g_frameSize.y,
         4,
         pixels,
-        4 * g_frameSize.x);
+        4 * (int)g_frameSize.x);
 
     anari::unmap(d, frame, "color");
   }
@@ -206,8 +206,8 @@ void parseCommandLine(int argc, const char *argv[])
     } else if (arg == "--scene" || arg == "-s") {
       g_scene = argv[++i];
     } else if (arg == "--image_size") {
-      g_frameSize.x = std::atoi(argv[++i]);
-      g_frameSize.y = std::atoi(argv[++i]);
+      g_frameSize.x = (unsigned)std::strtoul(argv[++i], nullptr, 10);
+      g_frameSize.y = (unsigned)std::strtoul(argv[++i], nullptr, 10);
     } else if (arg == "--debug" || arg == "-d") {
       g_enableDebug = true;
     }
