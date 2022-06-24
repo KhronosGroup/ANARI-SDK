@@ -51,10 +51,16 @@ namespace debug_device {
         STATUS, __VA_ARGS__);
 
 DebugBasics::DebugBasics(DebugDevice *td) : td(td) { }
-void DebugBasics::anariDeviceImplements(ANARIDevice device, const char* profile) { }
+void DebugBasics::anariDeviceImplements(ANARIDevice device, const char* profile) {
+    (void)device;
+    (void)profile;
+}
 void DebugBasics::anariNewArray1D(ANARIDevice device, void *appMemory, ANARIMemoryDeleter deleter,
     void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t byteStride1) {
     DEBUG_FUNCTION(anariNewArray1D)
+    (void)device;
+    (void)numItems1;
+    (void)byteStride1;
 
     if(appMemory == nullptr && deleter != nullptr) {
         DEBUG_REPORT(ANARI_SEVERITY_ERROR, ANARI_STATUS_INVALID_ARGUMENT,
@@ -62,9 +68,15 @@ void DebugBasics::anariNewArray1D(ANARIDevice device, void *appMemory, ANARIMemo
             DEBUG_FUNCTION_NAME);
     }
 
+    if(deleter == nullptr && userData != nullptr) {
+        DEBUG_REPORT(ANARI_SEVERITY_ERROR, ANARI_STATUS_INVALID_ARGUMENT,
+            "%s: deleter is NULL but userData != NULL",
+            DEBUG_FUNCTION_NAME);
+    }
+
     if(isObject(dataType)) {
         ANARIObject *objects = (ANARIObject*)appMemory;
-        for(int i = 0;i<numItems1;++i) {
+        for(uint64_t i = 0;i<numItems1;++i) {
             if(objects[i] == 0) {
                 DEBUG_REPORT(ANARI_SEVERITY_ERROR, ANARI_STATUS_INVALID_ARGUMENT,
                     "%s: Null handle in object array at index %d",
@@ -94,10 +106,22 @@ void DebugBasics::anariNewArray2D(ANARIDevice device, void* appMemory, ANARIMemo
     void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t numItems2,
     uint64_t byteStride1, uint64_t byteStride2) {
     DEBUG_FUNCTION(anariNewArray2D)
+    (void)device;
+    (void)dataType;
+    (void)numItems1;
+    (void)numItems2;
+    (void)byteStride1;
+    (void)byteStride2;
 
     if(appMemory == nullptr && deleter != nullptr) {
         DEBUG_REPORT(ANARI_SEVERITY_ERROR, ANARI_STATUS_INVALID_ARGUMENT,
             "%s: Managed array created with a non-null deleter",
+            DEBUG_FUNCTION_NAME);
+    }
+
+    if(deleter == nullptr && userData != nullptr) {
+        DEBUG_REPORT(ANARI_SEVERITY_ERROR, ANARI_STATUS_INVALID_ARGUMENT,
+            "%s: deleter is NULL but userData != NULL",
             DEBUG_FUNCTION_NAME);
     }
 }
@@ -105,35 +129,86 @@ void DebugBasics::anariNewArray3D(ANARIDevice device, void* appMemory, ANARIMemo
     void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t numItems2, uint64_t numItems3,
     uint64_t byteStride1, uint64_t byteStride2, uint64_t byteStride3) {
     DEBUG_FUNCTION(anariNewArray3D)
+    (void)device;
+    (void)dataType;
+    (void)numItems1;
+    (void)numItems2;
+    (void)numItems3;
+    (void)byteStride1;
+    (void)byteStride2;
+    (void)byteStride3;
 
     if(appMemory == nullptr && deleter != nullptr) {
         DEBUG_REPORT(ANARI_SEVERITY_ERROR, ANARI_STATUS_INVALID_ARGUMENT,
             "%s: Managed array created with a non-null deleter",
             DEBUG_FUNCTION_NAME);
     }
+
+    if(deleter == nullptr && userData != nullptr) {
+        DEBUG_REPORT(ANARI_SEVERITY_ERROR, ANARI_STATUS_INVALID_ARGUMENT,
+            "%s: deleter is NULL but userData != NULL",
+            DEBUG_FUNCTION_NAME);
+    }
 }
 void DebugBasics::anariMapArray(ANARIDevice device, ANARIArray array) {
     DEBUG_FUNCTION_SOURCE(anariMapArray, array)
+    (void)device;
 }
 void DebugBasics::anariUnmapArray(ANARIDevice device, ANARIArray array) {
     DEBUG_FUNCTION_SOURCE(anariMapArray, array)
+    (void)device;
 }
-void DebugBasics::anariNewLight(ANARIDevice device, const char* type) { }
-void DebugBasics::anariNewCamera(ANARIDevice device, const char* type) { }
-void DebugBasics::anariNewGeometry(ANARIDevice device, const char* type) { }
-void DebugBasics::anariNewSpatialField(ANARIDevice device, const char* type) { }
-void DebugBasics::anariNewVolume(ANARIDevice device, const char* type) { }
-void DebugBasics::anariNewSurface(ANARIDevice device) { }
-void DebugBasics::anariNewMaterial(ANARIDevice device, const char* type) { }
-void DebugBasics::anariNewSampler(ANARIDevice device, const char* type) { }
-void DebugBasics::anariNewGroup(ANARIDevice device) { }
-void DebugBasics::anariNewInstance(ANARIDevice device) { }
-void DebugBasics::anariNewWorld(ANARIDevice device) { }
-void DebugBasics::anariNewObject(ANARIDevice device, const char* objectType, const char* type) { }
+void DebugBasics::anariNewLight(ANARIDevice device, const char* type) {
+    (void)device;
+    (void)type;
+}
+void DebugBasics::anariNewCamera(ANARIDevice device, const char* type) {
+    (void)device;
+    (void)type;
+}
+void DebugBasics::anariNewGeometry(ANARIDevice device, const char* type) {
+    (void)device;
+    (void)type;
+}
+void DebugBasics::anariNewSpatialField(ANARIDevice device, const char* type) {
+    (void)device;
+    (void)type;
+}
+void DebugBasics::anariNewVolume(ANARIDevice device, const char* type) {
+    (void)device;
+    (void)type;
+}
+void DebugBasics::anariNewSurface(ANARIDevice device) {
+    (void)device;
+}
+void DebugBasics::anariNewMaterial(ANARIDevice device, const char* type) {
+    (void)device;
+    (void)type;
+}
+void DebugBasics::anariNewSampler(ANARIDevice device, const char* type) {
+    (void)device;
+    (void)type;
+}
+void DebugBasics::anariNewGroup(ANARIDevice device) {
+    (void)device;
+}
+void DebugBasics::anariNewInstance(ANARIDevice device) {
+    (void)device;
+}
+void DebugBasics::anariNewWorld(ANARIDevice device) {
+    (void)device;
+}
+void DebugBasics::anariNewObject(ANARIDevice device, const char* objectType, const char* type) {
+    (void)device;
+    (void)objectType;
+    (void)type;
+}
 void DebugBasics::anariSetParameter(ANARIDevice device, ANARIObject object, const char* name,
     ANARIDataType dataType, const void *mem) {
 
     DEBUG_FUNCTION_SOURCE(anariSetParameter, object)
+    (void)device;
+    (void)name;
 
     if(isObject(dataType)) {
         ANARIObject wrappedParam = *(ANARIObject*)mem;
@@ -163,9 +238,12 @@ void DebugBasics::anariSetParameter(ANARIDevice device, ANARIObject object, cons
 }
 void DebugBasics::anariUnsetParameter(ANARIDevice device, ANARIObject object, const char* name) {
     DEBUG_FUNCTION_SOURCE(anariUnsetParameter, object)
+    (void)device;
+    (void)name;
 }
 void DebugBasics::anariCommit(ANARIDevice device, ANARIObject object) {
     DEBUG_FUNCTION_SOURCE(anariCommit, object)
+    (void)device;
     if(DEBUG_SOURCE_INFO->getUncommittedParameters() == 0) {
         DEBUG_REPORT(ANARI_SEVERITY_WARNING, ANARI_STATUS_NO_ERROR,
             "%s: No parameters to be committed on object (%s).", DEBUG_FUNCTION_NAME, DEBUG_SOURCE_INFO->getName());
@@ -173,6 +251,7 @@ void DebugBasics::anariCommit(ANARIDevice device, ANARIObject object) {
 }
 void DebugBasics::anariRelease(ANARIDevice device, ANARIObject object) {
     DEBUG_FUNCTION_SOURCE(anariRelease, object)
+    (void)device;
     if(DEBUG_SOURCE_INFO->getRefCount()==1 && DEBUG_SOURCE_INFO->getReferences() == 0) {
         DEBUG_REPORT(ANARI_SEVERITY_WARNING, ANARI_STATUS_NO_ERROR,
             "%s: Releasing unused object (%s).", DEBUG_FUNCTION_NAME, DEBUG_SOURCE_INFO->getName());
@@ -180,26 +259,41 @@ void DebugBasics::anariRelease(ANARIDevice device, ANARIObject object) {
 }
 void DebugBasics::anariRetain(ANARIDevice device, ANARIObject object) {
     DEBUG_FUNCTION_SOURCE(anariRetain, object)
+    (void)device;
 }
 void DebugBasics::anariGetProperty(ANARIDevice device, ANARIObject object, const char* name,
     ANARIDataType type, void* mem, uint64_t size, ANARIWaitMask mask) {
     DEBUG_FUNCTION_SOURCE(anariGetProperty, object)
+    (void)device;
+    (void)name;
+    (void)mem;
+    (void)mask;
 
     if(size < sizeOf(type)) {
         DEBUG_REPORT(ANARI_SEVERITY_ERROR, ANARI_STATUS_INVALID_ARGUMENT,
             "%s: buffer of size %" PRIu64 " is to small for property of type %s.", DEBUG_FUNCTION_NAME, size, toString(type));
     }
 }
-void DebugBasics::anariNewFrame(ANARIDevice device) { }
+void DebugBasics::anariNewFrame(ANARIDevice device) {
+    (void)device;
+}
 void DebugBasics::anariMapFrame(ANARIDevice device, ANARIFrame frame, const char* channel) {
     DEBUG_FUNCTION_SOURCE(anariMapFrame, frame)
+    (void)device;
+    (void)channel;
 }
 void DebugBasics::anariUnmapFrame(ANARIDevice device, ANARIFrame frame, const char* channel) {
     DEBUG_FUNCTION_SOURCE(anariUnmapFrame, frame)
+    (void)device;
+    (void)channel;
 }
-void DebugBasics::anariNewRenderer(ANARIDevice device, const char* type) { }
+void DebugBasics::anariNewRenderer(ANARIDevice device, const char* type) {
+    (void)device;
+    (void)type;
+}
 void DebugBasics::anariRenderFrame(ANARIDevice device, ANARIFrame frame) {
     DEBUG_FUNCTION_SOURCE(anariRenderFrame, frame)
+    (void)device;
     if(DEBUG_SOURCE_INFO->getUncommittedParameters() > 0) {
         DEBUG_REPORT(ANARI_SEVERITY_WARNING, ANARI_STATUS_NO_ERROR,
             "%s: object (%s) has uncommitted parameters.", DEBUG_FUNCTION_NAME, DEBUG_SOURCE_INFO->getName());
@@ -207,25 +301,29 @@ void DebugBasics::anariRenderFrame(ANARIDevice device, ANARIFrame frame) {
 }
 void DebugBasics::anariFrameReady(ANARIDevice device, ANARIFrame frame, ANARIWaitMask mask) {
     DEBUG_FUNCTION_SOURCE(anariFrameReady, frame)
+    (void)device;
+    (void)mask;
 }
 void DebugBasics::anariDiscardFrame(ANARIDevice device, ANARIFrame frame) {
     DEBUG_FUNCTION_SOURCE(anariDiscardFrame, frame)
+    (void)device;
 }
 void DebugBasics::anariReleaseDevice(ANARIDevice device) {
     DEBUG_FUNCTION(anariReleaseDevice)
+    (void)device;
 
     for(size_t i = 1;i<td->objects.size();++i) {
         auto &info = td->objects[i];
         if(info->getRefCount() > 0) {
             DEBUG_REPORT(ANARI_SEVERITY_WARNING, ANARI_STATUS_NO_ERROR,
-                "Leaked object (%s).", info->getName());
+                "%s: Leaked object (%s).", DEBUG_FUNCTION_NAME, info->getName());
         }
     }
     for(size_t i = 1;i<td->objects.size();++i) {
         auto &info = td->objects[i];
         if(info->getReferences() == 0) {
             DEBUG_REPORT(ANARI_SEVERITY_WARNING, ANARI_STATUS_NO_ERROR,
-                "Unused object (%s).", info->getName());
+                "%s: Unused object (%s).", DEBUG_FUNCTION_NAME, info->getName());
         }
     }
 }

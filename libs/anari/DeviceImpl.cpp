@@ -12,11 +12,14 @@ namespace anari {
 
 ANARIObject DeviceImpl::newObject(const char *objectType, const char *type)
 {
+  (void)objectType;
+  (void)type;
   return nullptr;
 }
 
 void (*DeviceImpl::getProcAddress(const char *name))(void)
 {
+  (void)name;
   return nullptr;
 }
 

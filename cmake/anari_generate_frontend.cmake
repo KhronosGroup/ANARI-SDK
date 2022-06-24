@@ -60,4 +60,9 @@ function(anari_generate_frontend)
     COMMAND ${GENERATE_COMMAND}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   )
+
+  add_custom_target(${FRONTEND_TARGET}_force
+    COMMAND ${GENERATE_COMMAND} --force
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  )
 endfunction()

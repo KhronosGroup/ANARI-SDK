@@ -23,7 +23,11 @@ void statusFunc(void *userData,
     ANARIStatusCode code,
     const char *message)
 {
-  (void)userData; // unused
+  (void)userData;
+  (void)device;
+  (void)source;
+  (void)sourceType;
+  (void)code;
   if (severity == ANARI_SEVERITY_FATAL_ERROR) {
     fprintf(stderr, "[FATAL] %s\n", message);
   } else if (severity == ANARI_SEVERITY_ERROR) {
@@ -39,6 +43,8 @@ void statusFunc(void *userData,
 
 int main(int argc, const char **argv)
 {
+  (void)argc;
+  (void)argv;
   stbi_flip_vertically_on_write(1);
 
   // image size
@@ -98,7 +104,7 @@ int main(int argc, const char **argv)
 
   // create and setup camera
   ANARICamera camera = anariNewCamera(dev, "perspective");
-  float aspect = imgSize[0] / (float)imgSize[1];
+  float aspect = (float)imgSize[0] / (float)imgSize[1];
   anariSetParameter(dev, camera, "aspect", ANARI_FLOAT32, &aspect);
   anariSetParameter(dev, camera, "position", ANARI_FLOAT32_VEC3, cam_pos);
   anariSetParameter(dev, camera, "direction", ANARI_FLOAT32_VEC3, cam_view);
@@ -149,8 +155,7 @@ int main(int argc, const char **argv)
   anariRelease(dev, mesh);
   anariRelease(dev, mat);
 
-  // put the geometry into an instance (give the geometry a world transform)
-  ANARIInstance instance = anariNewInstance(dev);
+  // put the surface into an array and attach it to the world
   array = anariNewArray1D(dev, &surface, 0, 0, ANARI_SURFACE, 1, 0);
   anariCommit(dev, array);
   anariSetParameter(dev, world, "surface", ANARI_ARRAY1D, &array);

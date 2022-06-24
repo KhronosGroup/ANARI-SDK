@@ -16,14 +16,14 @@ namespace sink_device {
 // SinkDevice definitions //////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-int SinkDevice::deviceImplements(const char *_extension)
+int SinkDevice::deviceImplements(const char*)
 {
   return 0;
 }
 
 // Data Arrays ////////////////////////////////////////////////////////////////
 
-void managed_deleter(void *userdata, void *memory)
+void managed_deleter(void*, void *memory)
 {
   delete[] static_cast<char *>(memory);
 }
@@ -35,6 +35,7 @@ ANARIArray1D SinkDevice::newArray1D(void *appMemory,
     uint64_t numItems,
     uint64_t byteStride)
 {
+  (void)byteStride;
   ANARIArray1D handle = nextHandle<ANARIArray1D>();
   if (auto obj = getObject(handle)) {
     if (appMemory == nullptr) {
@@ -59,6 +60,8 @@ ANARIArray2D SinkDevice::newArray2D(void *appMemory,
     uint64_t byteStride1,
     uint64_t byteStride2)
 {
+  (void)byteStride1;
+  (void)byteStride2;
   ANARIArray2D handle = nextHandle<ANARIArray2D>();
   if (auto obj = getObject(handle)) {
     if (appMemory == nullptr) {
@@ -85,6 +88,9 @@ ANARIArray3D SinkDevice::newArray3D(void *appMemory,
     uint64_t byteStride2,
     uint64_t byteStride3)
 {
+  (void)byteStride1;
+  (void)byteStride2;
+  (void)byteStride3;
   ANARIArray3D handle = nextHandle<ANARIArray3D>();
   if (auto obj = getObject(handle)) {
     if (appMemory == nullptr) {
@@ -109,26 +115,26 @@ void *SinkDevice::mapArray(ANARIArray a)
   }
 }
 
-void SinkDevice::unmapArray(ANARIArray a) {}
+void SinkDevice::unmapArray(ANARIArray) {}
 
 // Renderable Objects /////////////////////////////////////////////////////////
 
-ANARILight SinkDevice::newLight(const char *type)
+ANARILight SinkDevice::newLight(const char*)
 {
   return nextHandle<ANARILight>();
 }
 
-ANARICamera SinkDevice::newCamera(const char *type)
+ANARICamera SinkDevice::newCamera(const char*)
 {
   return nextHandle<ANARICamera>();
 }
 
-ANARIGeometry SinkDevice::newGeometry(const char *type)
+ANARIGeometry SinkDevice::newGeometry(const char*)
 {
   return nextHandle<ANARIGeometry>();
 }
 
-ANARISpatialField SinkDevice::newSpatialField(const char *type)
+ANARISpatialField SinkDevice::newSpatialField(const char*)
 {
   return nextHandle<ANARISpatialField>();
 }
@@ -138,19 +144,19 @@ ANARISurface SinkDevice::newSurface()
   return nextHandle<ANARISurface>();
 }
 
-ANARIVolume SinkDevice::newVolume(const char *type)
+ANARIVolume SinkDevice::newVolume(const char*)
 {
   return nextHandle<ANARIVolume>();
 }
 
 // Model Meta-Data ////////////////////////////////////////////////////////////
 
-ANARIMaterial SinkDevice::newMaterial(const char *type)
+ANARIMaterial SinkDevice::newMaterial(const char*)
 {
   return nextHandle<ANARIMaterial>();
 }
 
-ANARISampler SinkDevice::newSampler(const char *type)
+ANARISampler SinkDevice::newSampler(const char*)
 {
   return nextHandle<ANARISampler>();
 }
@@ -174,12 +180,12 @@ ANARIWorld SinkDevice::newWorld()
   return nextHandle<ANARIWorld>();
 }
 
-int SinkDevice::getProperty(ANARIObject object,
-    const char *name,
-    ANARIDataType type,
-    void *mem,
-    uint64_t size,
-    ANARIWaitMask mask)
+int SinkDevice::getProperty(ANARIObject,
+    const char*,
+    ANARIDataType,
+    void*,
+    uint64_t,
+    ANARIWaitMask)
 {
   return 0;
 }
@@ -215,9 +221,9 @@ void SinkDevice::setParameter(
   }
 }
 
-void SinkDevice::unsetParameter(ANARIObject object, const char *name) {}
+void SinkDevice::unsetParameter(ANARIObject, const char*) {}
 
-void SinkDevice::commit(ANARIObject object) {}
+void SinkDevice::commit(ANARIObject) {}
 
 void SinkDevice::release(ANARIObject object)
 {
@@ -245,7 +251,7 @@ ANARIFrame SinkDevice::newFrame()
   return frame;
 }
 
-const void *SinkDevice::frameBufferMap(ANARIFrame fb, const char *channel)
+const void *SinkDevice::frameBufferMap(ANARIFrame fb, const char*)
 {
   if (auto obj = getObject(fb)) {
     if (obj->type == ANARI_FRAME) {
@@ -259,23 +265,23 @@ const void *SinkDevice::frameBufferMap(ANARIFrame fb, const char *channel)
   return nullptr;
 }
 
-void SinkDevice::frameBufferUnmap(ANARIFrame fb, const char *channel) {}
+void SinkDevice::frameBufferUnmap(ANARIFrame, const char*) {}
 
 // Frame Rendering ////////////////////////////////////////////////////////////
 
-ANARIRenderer SinkDevice::newRenderer(const char *type)
+ANARIRenderer SinkDevice::newRenderer(const char*)
 {
   return nextHandle<ANARIRenderer>();
 }
 
-void SinkDevice::renderFrame(ANARIFrame frame) {}
+void SinkDevice::renderFrame(ANARIFrame) {}
 
-int SinkDevice::frameReady(ANARIFrame frame, ANARIWaitMask m)
+int SinkDevice::frameReady(ANARIFrame, ANARIWaitMask)
 {
   return 1;
 }
 
-void SinkDevice::discardFrame(ANARIFrame frame) {}
+void SinkDevice::discardFrame(ANARIFrame) {}
 
 // Other SinkDevice definitions ////////////////////////////////////////////
 
@@ -304,12 +310,12 @@ extern "C" SINK_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_NEW_DEVICE(sink, subtype)
 
 extern "C" SINK_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_INIT(sink)
 {
-  printf("...loaded sink library!\n");
 }
 
 extern "C" SINK_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_DEVICE_SUBTYPES(
     sink, libdata)
 {
+  (void)libdata;
   static const char *devices[] = {deviceName, nullptr};
   return devices;
 }
@@ -317,12 +323,16 @@ extern "C" SINK_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_DEVICE_SUBTYPES(
 extern "C" SINK_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_SUBTYPES(
     sink, libdata, deviceSubtype, objectType)
 {
+  (void)libdata;
+  (void)deviceSubtype;
   return anari::sink_device::query_object_types(objectType);
 }
 
 extern "C" SINK_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_PARAMETERS(
     sink, libdata, deviceSubtype, objectSubtype, objectType)
 {
+  (void)libdata;
+  (void)deviceSubtype;
   return anari::sink_device::query_params(objectType, objectSubtype);
 }
 
@@ -337,6 +347,8 @@ extern "C" SINK_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_PARAMETER_PROPERTY(
     propertyName,
     propertyType)
 {
+  (void)libdata;
+  (void)deviceSubtype;
   return anari::sink_device::query_param_info(
     objectType,
     objectSubtype,

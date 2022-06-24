@@ -8,11 +8,6 @@
 // stb_image
 #include "stb_image.h"
 
-static void anari_free(void *ptr, void *)
-{
-  std::free(ptr);
-}
-
 namespace anari {
 namespace scenes {
 
@@ -41,8 +36,6 @@ static void loadObj(
     anari::Device d, const std::string &fileName, anari::World *_world)
 {
   auto &world = *_world;
-
-  auto inf = std::numeric_limits<float>::infinity();
 
   /////////////////////////////////////////////////////////////////////////////
 
@@ -89,8 +82,6 @@ static void loadObj(
   std::vector<glm::vec2> vt;
 
   for (auto &shape : objdata.shapes) {
-    auto numSrcIndices = shape.mesh.indices.size();
-
     v.clear();
     vt.clear();
 
@@ -145,7 +136,7 @@ static void loadObj(
     auto surface = anari::newObject<anari::Surface>(d);
 
     int matID = shape.mesh.material_ids[0];
-    auto mat = matID < 0 ? defaultMaterial : materials[matID];
+    auto mat = matID < 0 ? defaultMaterial : materials[size_t(matID)];
     anari::setParameter(d, surface, "material", mat);
     anari::setParameter(d, surface, "geometry", geom);
 

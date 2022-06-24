@@ -32,9 +32,9 @@ void DebugDevice::reportStatus(ANARIObject source,
   int count = std::vsnprintf(nullptr, 0, format, arglist);
   va_end(arglist);
 
-  last_status_message.resize(count + 1);
+  last_status_message.resize(size_t(count + 1));
 
-  std::vsnprintf(last_status_message.data(), count + 1, format, arglist_copy);
+  std::vsnprintf(last_status_message.data(), size_t(count + 1), format, arglist_copy);
   va_end(arglist_copy);
 
   if (ANARIStatusCallback statusCallback = defaultStatusCallback()) {
@@ -59,9 +59,9 @@ void DebugDevice::vreportStatus(ANARIObject source,
   va_copy(arglist_copy, arglist);
   int count = std::vsnprintf(nullptr, 0, format, arglist);
 
-  last_status_message.resize(count + 1);
+  last_status_message.resize(size_t(count + 1));
 
-  std::vsnprintf(last_status_message.data(), count + 1, format, arglist_copy);
+  std::vsnprintf(last_status_message.data(), size_t(count + 1), format, arglist_copy);
   va_end(arglist_copy);
 
   if (ANARIStatusCallback statusCallback = defaultStatusCallback()) {
@@ -78,9 +78,9 @@ void DebugDevice::vreportStatus(ANARIObject source,
 // DebugDevice definitions //////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-int DebugDevice::deviceImplements(const char *_extension)
+int DebugDevice::deviceImplements(const char *extension)
 {
-  return 0;
+  return anariDeviceImplements(wrapped, extension);
 }
 
 // Data Arrays ////////////////////////////////////////////////////////////////
@@ -128,7 +128,7 @@ ANARIArray1D DebugDevice::newArray1D(void *appMemory,
 
     void *forward = nullptr;
     if (appMemory != nullptr) {
-      for (int i = 0; i < numItems; i++) {
+      for (uint64_t i = 0; i < numItems; i++) {
         handles[i] = unwrapHandle(in[i]);
       }
       forward = handles;
@@ -157,7 +157,7 @@ ANARIArray1D DebugDevice::newArray1D(void *appMemory,
             getDynamicObjectInfo<ArrayDebugObject<ANARI_ARRAY1D>>(handle)) {
       info->handles = handles;
       if (appMemory != nullptr) {
-        for (int i = 0; i < numItems; i++) {
+        for (uint64_t i = 0; i < numItems; i++) {
           if (auto info2 = getObjectInfo(in[i])) {
             info2->referencedBy(handle);
           }
@@ -294,7 +294,7 @@ void DebugDevice::unmapArray(ANARIArray a)
     if (isObject(info->arrayType)) {
       ANARIObject *objMapping = (ANARIObject *)info->mapping;
       // translate handles before unmapping
-      for (int i = 0; i < info->numItems1; i++) {
+      for (uint64_t i = 0; i < info->numItems1; i++) {
         objMapping[i] = unwrapHandle(info->handles[i]);
         if (auto info2 = getObjectInfo(info->handles[i])) {
           info->referencedBy(a);
@@ -608,8 +608,8 @@ void DebugDevice::deviceCommit()
 DebugDevice::DebugDevice()
     : wrapped(nullptr),
       staged(nullptr),
-      debugObjectFactory(nullptr),
-      deviceInfo{this, this_device(), this_device()}
+      deviceInfo{this, this_device(), this_device()},
+      debugObjectFactory(nullptr)
 {
   // insert the null handle explicitly as that always translates to null
   objectMap[nullptr] = nullptr;
@@ -649,6 +649,7 @@ ANARIObject DebugDevice::newObjectHandle(ANARIObject h, ANARIDataType type)
 }
 ANARIObject DebugDevice::wrapObjectHandle(ANARIObject h, ANARIDataType type)
 {
+  (void)type;
   if (h == wrapped) {
     return this_device();
   } else {
@@ -662,6 +663,7 @@ ANARIObject DebugDevice::wrapObjectHandle(ANARIObject h, ANARIDataType type)
 }
 ANARIObject DebugDevice::unwrapObjectHandle(ANARIObject h, ANARIDataType type)
 {
+  (void)type;
   if (h == this_device()) {
     return wrapped;
   } else if ((uintptr_t)h < objects.size()) {
@@ -696,12 +698,12 @@ extern "C" DEBUG_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_NEW_DEVICE(
 
 extern "C" DEBUG_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_INIT(debug)
 {
-  printf("...loaded debug library!\n");
 }
 
 extern "C" DEBUG_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_DEVICE_SUBTYPES(
     debug, libdata)
 {
+  (void)libdata;
   static const char *devices[] = {deviceName, nullptr};
   return devices;
 }
@@ -709,12 +711,19 @@ extern "C" DEBUG_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_DEVICE_SUBTYPES(
 extern "C" DEBUG_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_SUBTYPES(
     debug, libdata, deviceSubtype, objectType)
 {
+  (void)libdata;
+  (void)deviceSubtype;
+  (void)objectType;
   return nullptr;
 }
 
 extern "C" DEBUG_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_PARAMETERS(
     debug, libdata, deviceSubtype, objectSubtype, objectType)
 {
+  (void)libdata;
+  (void)deviceSubtype;
+  (void)objectSubtype;
+  (void)objectType;
   return nullptr;
 }
 
@@ -729,5 +738,13 @@ extern "C" DEBUG_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_PARAMETER_PROPERTY(
     propertyName,
     propertyType)
 {
+  (void)libdata;
+  (void)deviceSubtype;
+  (void)objectSubtype;
+  (void)objectType;
+  (void)parameterName;
+  (void)parameterType;
+  (void)propertyName;
+  (void)propertyType;
   return nullptr;
 }

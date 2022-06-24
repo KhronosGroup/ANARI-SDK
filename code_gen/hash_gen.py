@@ -46,7 +46,7 @@ def gen_hash_function(name, keywords, values=None, indent=""):
    code += indent + "      uint32_t idx = cur&0xFFFFu;\n"
    code += indent + "      uint32_t low = (cur>>16u)&0xFFu;\n"
    code += indent + "      uint32_t high = (cur>>24u)&0xFFu;\n"
-   code += indent + "      uint32_t c = str[i];\n"
+   code += indent + "      uint32_t c = (uint32_t)str[i];\n"
    code += indent + "      if(c>=low && c<high) {\n"
    code += indent + "         cur = table[idx+c-low];\n"
    code += indent + "      } else {\n"

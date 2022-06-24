@@ -193,6 +193,9 @@ struct DEBUG_DEVICE_INTERFACE DebugDevice : public DeviceImpl, public RefCounted
   std::vector<std::unique_ptr<DebugObjectBase>> objects;
 
  private:
+  ANARIDevice wrapped;
+  ANARIDevice staged;
+
   DebugObject<ANARI_DEVICE> deviceInfo;
 
   std::unordered_map<ANARIObject, ANARIObject> objectMap;
@@ -201,8 +204,6 @@ struct DEBUG_DEVICE_INTERFACE DebugDevice : public DeviceImpl, public RefCounted
   std::unique_ptr<DebugInterface> debug;
   ObjectFactory *debugObjectFactory;
 
-  ANARIDevice wrapped;
-  ANARIDevice staged;
 };
 
 } // namespace debug_device

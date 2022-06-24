@@ -68,8 +68,8 @@ void RandomSpheres::commit()
   rng.seed(0);
   std::normal_distribution<float> vert_dist(0.5f, 0.5f);
 
-  std::vector<glm::vec3> spherePositions(numSpheres);
-  std::vector<glm::vec4> sphereColors(numSpheres);
+  std::vector<glm::vec3> spherePositions((size_t(numSpheres)));
+  std::vector<glm::vec4> sphereColors((size_t(numSpheres)));
 
   for (auto &s : spherePositions) {
     s.x = vert_dist(rng);
@@ -98,7 +98,7 @@ void RandomSpheres::commit()
   if (randomizeRadii) {
     std::normal_distribution<float> radii_dist(radius / 10.f, radius);
 
-    std::vector<float> sphereRadii(numSpheres);
+    std::vector<float> sphereRadii((size_t(numSpheres)));
     for (auto &r : sphereRadii)
       r = radii_dist(rng);
 

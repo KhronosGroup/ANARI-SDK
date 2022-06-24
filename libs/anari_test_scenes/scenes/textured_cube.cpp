@@ -54,7 +54,7 @@ static anari::Array2D makeTextureData(anari::Device d, int dim)
   }
 
   return anariNewArray2D(
-      d, data, &anari_free, nullptr, ANARI_FLOAT32_VEC3, dim, dim);
+      d, data, &anari_free, nullptr, ANARI_FLOAT32_VEC3, uint64_t(dim), uint64_t(dim));
 }
 
 // CornelBox definitions //////////////////////////////////////////////////////
