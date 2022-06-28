@@ -25,7 +25,7 @@
                     "maximum" : [1.0, 1.0, 1.0],
                     "description" : "color of the light"
                 }, {
-                    "name" : "irridance",
+                    "name" : "irradiance",
                     "types" : ["ANARI_FLOAT32"],
                     "tags" : [],
                     "default" : 1.0,
