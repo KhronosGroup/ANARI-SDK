@@ -25,7 +25,7 @@ struct TestScene : public ParameterizedObject
   virtual bool animated() const;
   virtual void computeNextFrame();
 
-  ~TestScene();
+  virtual ~TestScene();
 
  protected:
   TestScene(anari::Device device);
