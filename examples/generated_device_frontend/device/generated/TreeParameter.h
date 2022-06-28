@@ -16,8 +16,8 @@ namespace anari_sdk{
 namespace tree{
 
 
-void anariRetainInternal(ANARIDevice, ANARIObject);
-void anariReleaseInternal(ANARIDevice, ANARIObject);
+void anariRetainInternal(ANARIDevice, ANARIObject, ANARIObject);
+void anariReleaseInternal(ANARIDevice, ANARIObject, ANARIObject);
 
 template<size_t T0, size_t... T>
 struct max_reduce {
@@ -56,12 +56,13 @@ template<int T, typename Enable = void>
 class ParameterStorage : public ParameterStorageBase {
    typename anari::ANARITypeProperties<T>::array_type data;
 public:
-   ParameterStorage(ANARIDevice device, const void *mem) {
+   ParameterStorage(ANARIDevice device, ANARIObject object, const void *mem) {
       (void)device;
+      (void)object;
       std::memcpy(data, mem, sizeof(data));
    }
    ParameterStorageBase* clone(char *mem) override {
-      return new(mem) ParameterStorage(nullptr, data);
+      return new(mem) ParameterStorage(nullptr, nullptr, data);
    }
    bool get(ANARIDataType requested, void *mem) const override {
       if(requested == T) {
@@ -78,16 +79,17 @@ template<int T>
 class ParameterStorage<T, typename std::enable_if<anari::isObject(T)>::type> : public ParameterStorageBase {
    typename anari::ANARITypeProperties<T>::array_type data;
    ANARIDevice device;
+   ANARIObject object;
 public:
-   ParameterStorage(ANARIDevice device, const void *mem) : device(device) {
+   ParameterStorage(ANARIDevice device, ANARIObject object, const void *mem) : device(device), object(object) {
       std::memcpy(data, mem, sizeof(ANARIObject));
-      anariRetainInternal(device, data[0]);
+      anariRetainInternal(device, data[0], object);
    }
    ~ParameterStorage() {
-      anariReleaseInternal(device, data[0]);
+      anariReleaseInternal(device, data[0], object);
    }
    ParameterStorageBase* clone(char *mem) override {
-      return new(mem) ParameterStorage(device, data);
+      return new(mem) ParameterStorage(device, object, data);
    }
    bool get(ANARIDataType requested, void *mem) const override {
       if(requested == T) {
@@ -108,8 +110,9 @@ class ParameterStorage<ANARI_STRING> : public ParameterStorageBase {
    ParameterStorage(int e) : str(param_strings[e]), enum_value(e) {
    }
 public:
-   ParameterStorage(ANARIDevice device, const void *mem) {
+   ParameterStorage(ANARIDevice device, ANARIObject object, const void *mem) {
       (void)device;
+      (void)object;
       enum_value = parameter_string_hash((const char*)mem);
       if(enum_value >= 0) {
          str = param_strings[enum_value];
@@ -130,7 +133,7 @@ public:
       if(enum_value>=0) {
          return new(mem) ParameterStorage(enum_value);
       } else {
-         return new(mem) ParameterStorage(nullptr, str);
+         return new(mem) ParameterStorage(nullptr, nullptr, str);
       }
    }
    bool get(ANARIDataType requested, void *mem) const override {
@@ -150,11 +153,12 @@ template<>
 class ParameterStorage<ANARI_VOID_POINTER> : public ParameterStorageBase {
    const void *value;
 public:
-   ParameterStorage(ANARIDevice device, const void *mem) : value(mem) {
+   ParameterStorage(ANARIDevice device, ANARIObject object, const void *mem) : value(mem) {
       (void)device;
+      (void)object;
    }
    ParameterStorageBase* clone(char *mem) override {
-      return new(mem) ParameterStorage(nullptr, value);
+      return new(mem) ParameterStorage(nullptr, nullptr, value);
    }
    bool get(ANARIDataType requested, void *mem) const override {
       if(requested == ANARI_VOID_POINTER) {
@@ -169,15 +173,15 @@ public:
 
 template<int T>
 struct ParameterConstructor {
-   ParameterStorageBase* operator()(char *target, ANARIDevice device, const void *mem) {
-      return new(target) ParameterStorage<T>(device, mem);
+   ParameterStorageBase* operator()(char *target, ANARIDevice device, ANARIObject obj, const void *mem) {
+      return new(target) ParameterStorage<T>(device, obj, mem);
    }
 };
 
 class ParameterBase {
 public:
-   virtual bool set(ANARIDevice device, ANARIDataType type, const void *mem) = 0;
-   virtual void unset() = 0;
+   virtual bool set(ANARIDevice device, ANARIObject obj, ANARIDataType type, const void *mem) = 0;
+   virtual void unset(ANARIDevice, ANARIObject) = 0;
    virtual bool get(ANARIDataType type, void *mem) = 0;
    virtual int getStringEnum() = 0;
    virtual const char* getString() = 0;
@@ -188,14 +192,14 @@ public:
 
 class EmptyParameter : public ParameterBase {
 public:
-   virtual bool set(ANARIDevice, ANARIDataType, const void*) { return 0; }
-   virtual void unset() { }
-   virtual bool get(ANARIDataType, void*) { return 0; }
-   virtual int getStringEnum() { return -1; }
-   virtual const char* getString() { return nullptr; }
-   virtual ANARIObject getHandle() { return nullptr; }
-   virtual ANARIDataType type() { return ANARI_UNKNOWN; }
-   virtual operator bool() { return false; }
+   bool set(ANARIDevice, ANARIObject, ANARIDataType, const void*) override { return 0; }
+   void unset(ANARIDevice, ANARIObject) override { }
+   bool get(ANARIDataType, void*) override { return 0; }
+   int getStringEnum() override { return -1; }
+   const char* getString() override { return nullptr; }
+   ANARIObject getHandle() override { return nullptr; }
+   ANARIDataType type() override { return ANARI_UNKNOWN; }
+   operator bool() override { return false; }
 };
 
 template<int... T>
@@ -216,16 +220,16 @@ public:
    ~Parameter() {
       ptr->~ParameterStorageBase();
    }
-   bool set(ANARIDevice device, ANARIDataType type, const void *mem) override {
+   bool set(ANARIDevice device, ANARIObject obj, ANARIDataType type, const void *mem) override {
       if(contains<T...>(type)) {
          ptr->~ParameterStorageBase();
-         ptr = anari::anariTypeInvoke<ParameterStorageBase*, ParameterConstructor>(type, data, device, mem);
+         ptr = anari::anariTypeInvoke<ParameterStorageBase*, ParameterConstructor>(type, data, device, obj, mem);
          return true;
       } else {
          return false;
       }
    }
-   void unset() override {
+   void unset(ANARIDevice, ANARIObject) override {
       ptr->~ParameterStorageBase();
       ptr = new(data) ParameterStorageBase;
    }

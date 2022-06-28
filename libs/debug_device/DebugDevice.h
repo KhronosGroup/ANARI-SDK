@@ -22,6 +22,8 @@
 
 #include <cstdarg>
 
+#include "ExtendedQueries.h"
+
 namespace anari {
 namespace debug_device {
 
@@ -189,6 +191,11 @@ struct DEBUG_DEVICE_INTERFACE DebugDevice : public DeviceImpl, public RefCounted
   {
     return dynamic_cast<T *>(getObjectInfo(o));
   }
+
+  int used_features[anari::debug_queries::extension_count] = {};
+  int unknown_feature_uses = 0;
+  void reportParameterUse(ANARIDataType objtype, const char *objSubtype, const char *paramname, ANARIDataType paramtype);
+  void reportObjectUse(ANARIDataType objtype, const char *objSubtype);
 
   std::vector<std::unique_ptr<DebugObjectBase>> objects;
 

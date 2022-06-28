@@ -6,6 +6,7 @@
 #pragma once
 
 #include "TreeObject.h"
+#include "TreeObjects.h"
 
 #include <vector>
 

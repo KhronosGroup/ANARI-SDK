@@ -83,8 +83,11 @@ class device : public DebugObject<ANARI_DEVICE> {
    void commit() {
       DebugObject::commit();
    }
+   const char* getSubtype() {
+      return "";
+   }
 };
-class array1d : public ArrayDebugObject<ANARI_ARRAY1D> {
+class array1d : public DebugObject<ANARI_ARRAY1D> {
    static int param_hash(const char *str) {
       static const uint32_t table[] = {0x62610001u,0x6e6d0002u,0x66650003u,0x1000004u,0x80000000u};
       uint32_t cur = 0x6f6e0000u;
@@ -108,9 +111,9 @@ class array1d : public ArrayDebugObject<ANARI_ARRAY1D> {
       return -1;
    }
    public:
-   array1d(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): ArrayDebugObject(td, wh, h) { (void)factory; }
+   array1d(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { (void)factory; }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
-      ArrayDebugObject::setParameter(paramname, paramtype, mem);
+      DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
       switch(idx) {
          case 0: { //name
@@ -124,10 +127,13 @@ class array1d : public ArrayDebugObject<ANARI_ARRAY1D> {
       }
    }
    void commit() {
-      ArrayDebugObject::commit();
+      DebugObject::commit();
+   }
+   const char* getSubtype() {
+      return "";
    }
 };
-class array2d : public ArrayDebugObject<ANARI_ARRAY2D> {
+class array2d : public DebugObject<ANARI_ARRAY2D> {
    static int param_hash(const char *str) {
       static const uint32_t table[] = {0x62610001u,0x6e6d0002u,0x66650003u,0x1000004u,0x80000000u};
       uint32_t cur = 0x6f6e0000u;
@@ -151,9 +157,9 @@ class array2d : public ArrayDebugObject<ANARI_ARRAY2D> {
       return -1;
    }
    public:
-   array2d(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): ArrayDebugObject(td, wh, h) { (void)factory; }
+   array2d(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { (void)factory; }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
-      ArrayDebugObject::setParameter(paramname, paramtype, mem);
+      DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
       switch(idx) {
          case 0: { //name
@@ -167,10 +173,13 @@ class array2d : public ArrayDebugObject<ANARI_ARRAY2D> {
       }
    }
    void commit() {
-      ArrayDebugObject::commit();
+      DebugObject::commit();
+   }
+   const char* getSubtype() {
+      return "";
    }
 };
-class array3d : public ArrayDebugObject<ANARI_ARRAY3D> {
+class array3d : public DebugObject<ANARI_ARRAY3D> {
    static int param_hash(const char *str) {
       static const uint32_t table[] = {0x62610001u,0x6e6d0002u,0x66650003u,0x1000004u,0x80000000u};
       uint32_t cur = 0x6f6e0000u;
@@ -194,9 +203,9 @@ class array3d : public ArrayDebugObject<ANARI_ARRAY3D> {
       return -1;
    }
    public:
-   array3d(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): ArrayDebugObject(td, wh, h) { (void)factory; }
+   array3d(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { (void)factory; }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
-      ArrayDebugObject::setParameter(paramname, paramtype, mem);
+      DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
       switch(idx) {
          case 0: { //name
@@ -210,7 +219,10 @@ class array3d : public ArrayDebugObject<ANARI_ARRAY3D> {
       }
    }
    void commit() {
-      ArrayDebugObject::commit();
+      DebugObject::commit();
+   }
+   const char* getSubtype() {
+      return "";
    }
 };
 class frame : public DebugObject<ANARI_FRAME> {
@@ -285,6 +297,9 @@ class frame : public DebugObject<ANARI_FRAME> {
    void commit() {
       DebugObject::commit();
    }
+   const char* getSubtype() {
+      return "";
+   }
 };
 class group : public DebugObject<ANARI_GROUP> {
    static int param_hash(const char *str) {
@@ -343,6 +358,9 @@ class group : public DebugObject<ANARI_GROUP> {
    void commit() {
       DebugObject::commit();
    }
+   const char* getSubtype() {
+      return "";
+   }
 };
 class instance : public DebugObject<ANARI_INSTANCE> {
    static int param_hash(const char *str) {
@@ -395,6 +413,9 @@ class instance : public DebugObject<ANARI_INSTANCE> {
    }
    void commit() {
       DebugObject::commit();
+   }
+   const char* getSubtype() {
+      return "";
    }
 };
 class world : public DebugObject<ANARI_WORLD> {
@@ -459,6 +480,9 @@ class world : public DebugObject<ANARI_WORLD> {
    void commit() {
       DebugObject::commit();
    }
+   const char* getSubtype() {
+      return "";
+   }
 };
 class renderer_default : public DebugObject<ANARI_RENDERER> {
    static int param_hash(const char *str) {
@@ -501,6 +525,9 @@ class renderer_default : public DebugObject<ANARI_RENDERER> {
    }
    void commit() {
       DebugObject::commit();
+   }
+   const char* getSubtype() {
+      return "default";
    }
 };
 class surface : public DebugObject<ANARI_SURFACE> {
@@ -554,6 +581,9 @@ class surface : public DebugObject<ANARI_SURFACE> {
    }
    void commit() {
       DebugObject::commit();
+   }
+   const char* getSubtype() {
+      return "";
    }
 };
 class camera_omnidirectional : public DebugObject<ANARI_CAMERA> {
@@ -648,6 +678,9 @@ class camera_omnidirectional : public DebugObject<ANARI_CAMERA> {
    void commit() {
       DebugObject::commit();
    }
+   const char* getSubtype() {
+      return "omnidirectional";
+   }
 };
 class camera_orthographic : public DebugObject<ANARI_CAMERA> {
    static int param_hash(const char *str) {
@@ -740,6 +773,9 @@ class camera_orthographic : public DebugObject<ANARI_CAMERA> {
    }
    void commit() {
       DebugObject::commit();
+   }
+   const char* getSubtype() {
+      return "orthographic";
    }
 };
 class camera_perspective : public DebugObject<ANARI_CAMERA> {
@@ -838,6 +874,9 @@ class camera_perspective : public DebugObject<ANARI_CAMERA> {
    }
    void commit() {
       DebugObject::commit();
+   }
+   const char* getSubtype() {
+      return "perspective";
    }
 };
 class geometry_cone : public DebugObject<ANARI_GEOMETRY> {
@@ -962,6 +1001,9 @@ class geometry_cone : public DebugObject<ANARI_GEOMETRY> {
    void commit() {
       DebugObject::commit();
    }
+   const char* getSubtype() {
+      return "cone";
+   }
 };
 class geometry_curve : public DebugObject<ANARI_GEOMETRY> {
    static int param_hash(const char *str) {
@@ -1079,6 +1121,9 @@ class geometry_curve : public DebugObject<ANARI_GEOMETRY> {
    }
    void commit() {
       DebugObject::commit();
+   }
+   const char* getSubtype() {
+      return "curve";
    }
 };
 class geometry_cylinder : public DebugObject<ANARI_GEOMETRY> {
@@ -1208,6 +1253,9 @@ class geometry_cylinder : public DebugObject<ANARI_GEOMETRY> {
    void commit() {
       DebugObject::commit();
    }
+   const char* getSubtype() {
+      return "cylinder";
+   }
 };
 class geometry_quad : public DebugObject<ANARI_GEOMETRY> {
    static int param_hash(const char *str) {
@@ -1320,6 +1368,9 @@ class geometry_quad : public DebugObject<ANARI_GEOMETRY> {
    }
    void commit() {
       DebugObject::commit();
+   }
+   const char* getSubtype() {
+      return "quad";
    }
 };
 class geometry_sphere : public DebugObject<ANARI_GEOMETRY> {
@@ -1439,6 +1490,9 @@ class geometry_sphere : public DebugObject<ANARI_GEOMETRY> {
    void commit() {
       DebugObject::commit();
    }
+   const char* getSubtype() {
+      return "sphere";
+   }
 };
 class geometry_triangle : public DebugObject<ANARI_GEOMETRY> {
    static int param_hash(const char *str) {
@@ -1552,6 +1606,9 @@ class geometry_triangle : public DebugObject<ANARI_GEOMETRY> {
    void commit() {
       DebugObject::commit();
    }
+   const char* getSubtype() {
+      return "triangle";
+   }
 };
 class light_directional : public DebugObject<ANARI_LIGHT> {
    static int param_hash(const char *str) {
@@ -1609,6 +1666,9 @@ class light_directional : public DebugObject<ANARI_LIGHT> {
    }
    void commit() {
       DebugObject::commit();
+   }
+   const char* getSubtype() {
+      return "directional";
    }
 };
 class light_point : public DebugObject<ANARI_LIGHT> {
@@ -1672,6 +1732,9 @@ class light_point : public DebugObject<ANARI_LIGHT> {
    }
    void commit() {
       DebugObject::commit();
+   }
+   const char* getSubtype() {
+      return "point";
    }
 };
 class light_spot : public DebugObject<ANARI_LIGHT> {
@@ -1751,6 +1814,9 @@ class light_spot : public DebugObject<ANARI_LIGHT> {
    void commit() {
       DebugObject::commit();
    }
+   const char* getSubtype() {
+      return "spot";
+   }
 };
 class material_matte : public DebugObject<ANARI_MATERIAL> {
    static int param_hash(const char *str) {
@@ -1798,6 +1864,9 @@ class material_matte : public DebugObject<ANARI_MATERIAL> {
    }
    void commit() {
       DebugObject::commit();
+   }
+   const char* getSubtype() {
+      return "matte";
    }
 };
 class material_transparentMatte : public DebugObject<ANARI_MATERIAL> {
@@ -1851,6 +1920,9 @@ class material_transparentMatte : public DebugObject<ANARI_MATERIAL> {
    }
    void commit() {
       DebugObject::commit();
+   }
+   const char* getSubtype() {
+      return "transparentMatte";
    }
 };
 class sampler_image1D : public DebugObject<ANARI_SAMPLER> {
@@ -1924,6 +1996,9 @@ class sampler_image1D : public DebugObject<ANARI_SAMPLER> {
    }
    void commit() {
       DebugObject::commit();
+   }
+   const char* getSubtype() {
+      return "image1D";
    }
 };
 class sampler_image2D : public DebugObject<ANARI_SAMPLER> {
@@ -2002,6 +2077,9 @@ class sampler_image2D : public DebugObject<ANARI_SAMPLER> {
    }
    void commit() {
       DebugObject::commit();
+   }
+   const char* getSubtype() {
+      return "image2D";
    }
 };
 class sampler_image3D : public DebugObject<ANARI_SAMPLER> {
@@ -2086,6 +2164,9 @@ class sampler_image3D : public DebugObject<ANARI_SAMPLER> {
    void commit() {
       DebugObject::commit();
    }
+   const char* getSubtype() {
+      return "image3D";
+   }
 };
 class sampler_primitive : public DebugObject<ANARI_SAMPLER> {
    static int param_hash(const char *str) {
@@ -2139,6 +2220,9 @@ class sampler_primitive : public DebugObject<ANARI_SAMPLER> {
    void commit() {
       DebugObject::commit();
    }
+   const char* getSubtype() {
+      return "primitive";
+   }
 };
 class sampler_transform : public DebugObject<ANARI_SAMPLER> {
    static int param_hash(const char *str) {
@@ -2191,6 +2275,9 @@ class sampler_transform : public DebugObject<ANARI_SAMPLER> {
    }
    void commit() {
       DebugObject::commit();
+   }
+   const char* getSubtype() {
+      return "transform";
    }
 };
 class spatial_field_structuredRegular : public DebugObject<ANARI_SPATIAL_FIELD> {
@@ -2254,6 +2341,9 @@ class spatial_field_structuredRegular : public DebugObject<ANARI_SPATIAL_FIELD> 
    }
    void commit() {
       DebugObject::commit();
+   }
+   const char* getSubtype() {
+      return "structuredRegular";
    }
 };
 class volume_scivis : public DebugObject<ANARI_VOLUME> {
@@ -2333,6 +2423,9 @@ class volume_scivis : public DebugObject<ANARI_VOLUME> {
    void commit() {
       DebugObject::commit();
    }
+   const char* getSubtype() {
+      return "scivis";
+   }
 };
 }
 static int camera_object_hash(const char *str) {
@@ -2368,7 +2461,7 @@ DebugObjectBase* GenericDeviceDebugFactory::new_camera(const char *name, DebugDe
          return new camera_perspective(td, this, wh, h);
       default:
          unknown_subtype(td, ANARI_CAMERA, name);
-         return new DebugObject<ANARI_CAMERA>(td, wh, h);
+         return new SubtypedDebugObject<ANARI_CAMERA>(td, wh, h, name);
    }
 }
 static int geometry_object_hash(const char *str) {
@@ -2410,7 +2503,7 @@ DebugObjectBase* GenericDeviceDebugFactory::new_geometry(const char *name, Debug
          return new geometry_triangle(td, this, wh, h);
       default:
          unknown_subtype(td, ANARI_GEOMETRY, name);
-         return new DebugObject<ANARI_GEOMETRY>(td, wh, h);
+         return new SubtypedDebugObject<ANARI_GEOMETRY>(td, wh, h, name);
    }
 }
 static int light_object_hash(const char *str) {
@@ -2446,7 +2539,7 @@ DebugObjectBase* GenericDeviceDebugFactory::new_light(const char *name, DebugDev
          return new light_spot(td, this, wh, h);
       default:
          unknown_subtype(td, ANARI_LIGHT, name);
-         return new DebugObject<ANARI_LIGHT>(td, wh, h);
+         return new SubtypedDebugObject<ANARI_LIGHT>(td, wh, h, name);
    }
 }
 static int material_object_hash(const char *str) {
@@ -2480,7 +2573,7 @@ DebugObjectBase* GenericDeviceDebugFactory::new_material(const char *name, Debug
          return new material_transparentMatte(td, this, wh, h);
       default:
          unknown_subtype(td, ANARI_MATERIAL, name);
-         return new DebugObject<ANARI_MATERIAL>(td, wh, h);
+         return new SubtypedDebugObject<ANARI_MATERIAL>(td, wh, h, name);
    }
 }
 static int renderer_object_hash(const char *str) {
@@ -2512,7 +2605,7 @@ DebugObjectBase* GenericDeviceDebugFactory::new_renderer(const char *name, Debug
          return new renderer_default(td, this, wh, h);
       default:
          unknown_subtype(td, ANARI_RENDERER, name);
-         return new DebugObject<ANARI_RENDERER>(td, wh, h);
+         return new SubtypedDebugObject<ANARI_RENDERER>(td, wh, h, name);
    }
 }
 static int sampler_object_hash(const char *str) {
@@ -2552,7 +2645,7 @@ DebugObjectBase* GenericDeviceDebugFactory::new_sampler(const char *name, DebugD
          return new sampler_transform(td, this, wh, h);
       default:
          unknown_subtype(td, ANARI_SAMPLER, name);
-         return new DebugObject<ANARI_SAMPLER>(td, wh, h);
+         return new SubtypedDebugObject<ANARI_SAMPLER>(td, wh, h, name);
    }
 }
 static int spatial_field_object_hash(const char *str) {
@@ -2584,7 +2677,7 @@ DebugObjectBase* GenericDeviceDebugFactory::new_spatial_field(const char *name, 
          return new spatial_field_structuredRegular(td, this, wh, h);
       default:
          unknown_subtype(td, ANARI_SPATIAL_FIELD, name);
-         return new DebugObject<ANARI_SPATIAL_FIELD>(td, wh, h);
+         return new SubtypedDebugObject<ANARI_SPATIAL_FIELD>(td, wh, h, name);
    }
 }
 static int volume_object_hash(const char *str) {
@@ -2616,7 +2709,7 @@ DebugObjectBase* GenericDeviceDebugFactory::new_volume(const char *name, DebugDe
          return new volume_scivis(td, this, wh, h);
       default:
          unknown_subtype(td, ANARI_VOLUME, name);
-         return new DebugObject<ANARI_VOLUME>(td, wh, h);
+         return new SubtypedDebugObject<ANARI_VOLUME>(td, wh, h, name);
    }
 }
 DebugObjectBase* GenericDeviceDebugFactory::new_array1d(DebugDevice *td, ANARIObject wh, ANARIObject h) {

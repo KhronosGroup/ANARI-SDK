@@ -89,7 +89,6 @@ class DebugGenerator:
 
     def generate_validation_objects_impl(self, factoryname):
         base = "DebugObject"
-        arrayBase = "ArrayDebugObject"
         code = ""
         code += "namespace {\n"
         for obj in self.anari["objects"]:
@@ -99,15 +98,14 @@ class DebugGenerator:
             if "name" in obj:
                 objname += "_" + obj["name"]
                 subtype = obj["name"]
-            b = arrayBase if obj["type"] in ["ANARI_ARRAY1D", "ANARI_ARRAY2D", "ANARI_ARRAY3D"] else base
-            code += "class " + objname + " : public " + b + "<" + obj["type"] + "> {\n"
+            code += "class " + objname + " : public " + base + "<" + obj["type"] + "> {\n"
             if params:
                 code += "   static " + hash_gen.gen_hash_function("param_hash", [p["name"] for p in params], indent = "   ")
                 code += "   public:\n"
                 code += "   " + objname + "(DebugDevice *td, " + factoryname + " *factory, ANARIObject wh, ANARIObject h)"
-                code += ": " + b + "(td, wh, h) { (void)factory; }\n"
+                code += ": " + base + "(td, wh, h) { (void)factory; }\n"
                 code += "   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {\n"
-                code += "      " + b + "::setParameter(paramname, paramtype, mem);\n"
+                code += "      " + base + "::setParameter(paramname, paramtype, mem);\n"
                 code += "      int idx = param_hash(paramname);\n"
                 code += "      switch(idx) {\n"
                 for i in range(0, len(params)):
@@ -126,7 +124,10 @@ class DebugGenerator:
                 code += "   }\n"
 
             code += "   void commit() {\n"
-            code += "      " + b + "::commit();\n"
+            code += "      " + base + "::commit();\n"
+            code += "   }\n"
+            code += "   const char* getSubtype() {\n"
+            code += "      return \"%s\";\n"%subtype
             code += "   }\n"
             code += "};\n"
         code += "}\n"
@@ -145,7 +146,7 @@ class DebugGenerator:
                 code += "         return new " + t[6:].lower() + "_" + subtypes[i] + "(td, this, wh, h);\n"
             code += "      default:\n"
             code += "         unknown_subtype(td, " + t + ", name);\n"
-            code += "         return new DebugObject<"+t+">(td, wh, h);\n"
+            code += "         return new SubtypedDebugObject<"+t+">(td, wh, h, name);\n"
             code += "   }\n"
             code += "}\n"
 

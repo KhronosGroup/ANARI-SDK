@@ -11,8 +11,6 @@
 // debug interface
 #include "anari/ext/debug/DebugObject.h"
 
-#include "RecursivePrint.h"
-
 namespace anari_sdk{
 namespace tree{
 
@@ -120,14 +118,14 @@ void TreeDevice::retain(ANARIObject handle) {
       obj->retain();
    }
 }
-void TreeDevice::releaseInternal(ANARIObject handle) {
+void TreeDevice::releaseInternal(ANARIObject handle, ANARIObject owner) {
    if(auto obj = fromHandle<ObjectBase*>(handle)) {
-      obj->releaseInternal();
+      obj->releaseInternal(owner);
    }
 }
-void TreeDevice::retainInternal(ANARIObject handle) {
+void TreeDevice::retainInternal(ANARIObject handle, ANARIObject owner) {
    if(auto obj = fromHandle<ObjectBase*>(handle)) {
-      obj->retainInternal();
+      obj->retainInternal(owner);
    }
 }
 
@@ -148,7 +146,6 @@ if(auto obj = fromHandle<FrameObjectBase*>(handle)) {
 void TreeDevice::renderFrame(ANARIFrame handle) {
    if(auto obj = fromHandle<FrameObjectBase*>(handle)) {
       obj->renderFrame();
-      recursivePrint(this, handle);
    }
 }
 int TreeDevice::frameReady(ANARIFrame handle, ANARIWaitMask mask) {
@@ -168,7 +165,11 @@ void TreeDevice::discardFrame(ANARIFrame handle) {
 // Helper/other functions and data members
 /////////////////////////////////////////////////////////////////////////////
 
-TreeDevice::TreeDevice() : refcount(1), staging(this_device()), current(this_device()) {
+TreeDevice::TreeDevice()
+   : refcount(1),
+   staging(this_device(), this_device()),
+   current(this_device(), this_device())
+{
    objects.emplace_back(nullptr); // reserve the null index for the null handle
 }
 TreeDevice::~TreeDevice() {
@@ -183,11 +184,11 @@ const void * query_param_info(ANARIDataType type, const char *subtype,
    const char *infoName, ANARIDataType infoType);
 
 // internal "api" functions
-void anariRetainInternal(ANARIDevice d, ANARIObject handle) {
-   reinterpret_cast<TreeDevice*>(d)->retainInternal(handle);
+void anariRetainInternal(ANARIDevice d, ANARIObject handle, ANARIObject owner) {
+   reinterpret_cast<TreeDevice*>(d)->retainInternal(handle, owner);
 }
-void anariReleaseInternal(ANARIDevice d, ANARIObject handle) {
-   reinterpret_cast<TreeDevice*>(d)->releaseInternal(handle);
+void anariReleaseInternal(ANARIDevice d, ANARIObject handle, ANARIObject owner) {
+   reinterpret_cast<TreeDevice*>(d)->releaseInternal(handle, owner);
 }
 void anariDeleteInternal(ANARIDevice d, ANARIObject handle) {
    reinterpret_cast<TreeDevice*>(d)->deallocate(handle);

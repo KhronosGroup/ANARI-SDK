@@ -6,6 +6,8 @@
 #pragma once
 
 #include "TreeObject.h"
+#include "TreeObjects.h"
+
 #include <vector>
 
 namespace anari_sdk{

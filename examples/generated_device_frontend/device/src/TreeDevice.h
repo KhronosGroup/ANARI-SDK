@@ -8,8 +8,7 @@
 // anari
 #include "anari/backend/DeviceImpl.h"
 #include "TreeObject.h"
-#include "TreeArrayObjects.h"
-#include "TreeFrameObject.h"
+#include "TreeSpecializations.h"
 
 #include <vector>
 #include <memory>
@@ -36,8 +35,8 @@ namespace anari_sdk{
 namespace tree{
 
 
-void anariRetainInternal(ANARIDevice, ANARIObject);
-void anariReleaseInternal(ANARIDevice, ANARIObject);
+void anariRetainInternal(ANARIDevice, ANARIObject, ANARIObject);
+void anariReleaseInternal(ANARIDevice, ANARIObject, ANARIObject);
 void anariDeleteInternal(ANARIDevice, ANARIObject);
 void anariReportStatus(ANARIDevice,
       ANARIObject source,
@@ -138,8 +137,8 @@ struct DEVICE_INTERFACE TreeDevice : public anari::DeviceImpl
 
    void release(ANARIObject) override;
    void retain(ANARIObject) override;
-   void retainInternal(ANARIObject);
-   void releaseInternal(ANARIObject);
+   void retainInternal(ANARIObject, ANARIObject);
+   void releaseInternal(ANARIObject, ANARIObject);
 
    // FrameBuffer Manipulation /////////////////////////////////////////////////
 

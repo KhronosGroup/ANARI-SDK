@@ -68,6 +68,9 @@ class QueryGenerator:
     def preamble(self):
         code = "static " + hash_gen.gen_hash_function("subtype_hash", self.subtype_list)
         code += "static " + hash_gen.gen_hash_function("param_hash", self.param_strings)
+        code += "static " + hash_gen.gen_hash_function("info_hash", self.info_strings)
+        code += "static const int32_t anari_true = 1;"
+        code += "static const int32_t anari_false = 0;"
         return code;
 
     def generate_extension_query(self):
@@ -170,9 +173,6 @@ class QueryGenerator:
         code = ""
         # generate the per parameter query functions
 
-        code += "static " + hash_gen.gen_hash_function("info_hash", self.info_strings)
-        code += "static const int32_t anari_true = 1;"
-        code += "static const int32_t anari_false = 0;"
         for obj in self.anari["objects"]:
             objname = obj["type"]
             if "name" in obj:
@@ -254,7 +254,7 @@ class QueryGenerator:
                     code += "            return &value;\n"
                     code += "         }\n"
 
-                code += "       default: return nullptr;\n"
+                code += "      default: return nullptr;\n"
                 code += "   }\n"
                 code += "}\n"
 
@@ -307,15 +307,87 @@ class QueryGenerator:
 
         return code
 
+
+
+    def generate_object_info_query(self):
+        code = ""
+        for obj in self.anari["objects"]:
+            objname = obj["type"]
+            if "name" in obj:
+                objname += "_" + obj["name"]
+
+            code += "static const void * " + objname + "_info(int infoName, ANARIDataType infoType) {\n"
+            code += "   switch(infoName) {\n"
+            if "description" in obj:
+                code += "      case "+str(self.info_strings.index("description"))+": // description\n"
+                code += "         {\n"
+                code += "            static const char *description = \"%s\";\n"%obj["description"]
+                code += "            return description;\n"
+                code += "         }\n"
+
+
+            if "feature" in obj:
+                code += "      case "+str(self.info_strings.index("feature"))+": // feature\n"
+                code += "         if(infoType == ANARI_STRING) {\n"
+                code += "            static const char *feature = \"%s\";\n"%obj["feature"]
+                code += "            return feature;\n"
+                code += "         } else if(infoType == ANARI_INT32) {\n"
+                code += "            static const int value = %d;\n"%self.anari["features"].index(obj["feature"])
+                code += "            return &value;\n"
+                code += "         }\n"
+
+            code += "      default: return nullptr;\n"
+            code += "   }\n"
+            code += "}\n"
+
+
+
+        for type_enum in self.named_types:
+            subtypes = [key[1] for key,params in self.named_objects.items() if key[0] == type_enum]
+            code += "static const void * "+type_enum+"_info(const char *subtype, int infoName, ANARIDataType infoType) {\n"
+            code += "   switch(subtype_hash(subtype)) {\n"
+            for subtype in subtypes:
+                code += "      case %d:\n"%(self.subtype_list.index(subtype))
+                code += "         return %s_%s_info(infoName, infoType);\n"%(type_enum, subtype)
+            code += "      default:\n"
+            code += "         return nullptr;\n"
+            code += "   }\n"
+            code += "}\n"
+
+        code += "const void * query_object_info_enum(ANARIDataType type, const char *subtype, int infoName, ANARIDataType infoType) {\n"
+        code += "   switch(type) {\n"
+        for type_enum in self.named_types:
+            code += "      case %s:\n"%(type_enum)
+            code += "         return %s_info(subtype, infoName, infoType);\n"%type_enum
+
+        for type_enum in self.anon_objects.keys():
+            code += "      case %s:\n"%(type_enum)
+            code += "         return %s_info(infoName, infoType);\n"%type_enum
+
+        code += "      default:\n"
+        code += "         return nullptr;\n"
+        code += "   }\n"
+        code += "}\n"
+
+        code += "const void * query_object_info(ANARIDataType type, const char *subtype, const char *infoNameString, ANARIDataType infoType) {\n"
+        code += "   int infoName = info_hash(infoNameString);"
+        code += "   return query_object_info_enum(type, subtype, infoName, infoType);"
+        code += "}"
+
+        return code
+
     def generate_query_declarations(self):
         code = ""
         for idx, info in enumerate(self.info_strings):
             code += "#define ANARI_INFO_%s %d\n"%(info, idx)
+        code += "const int extension_count = %d;\n"%len(self.anari["features"])
         code += "const char ** query_extensions();\n"
         code += "const char ** query_object_types(ANARIDataType type);\n"
         code += "const ANARIParameter * query_params(ANARIDataType type, const char *subtype);\n"
         code += "const void * query_param_info_enum(ANARIDataType type, const char *subtype, const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType);\n"
         code += "const void * query_param_info(ANARIDataType type, const char *subtype, const char *paramName, ANARIDataType paramType, const char *infoNameString, ANARIDataType infoType);\n"
+        code += "const void * query_object_info_enum(ANARIDataType type, const char *subtype, int infoName, ANARIDataType infoType);\n"
+        code += "const void * query_object_info(ANARIDataType type, const char *subtype, const char *infoNameString, ANARIDataType infoType);\n"
         return code
 
 parser = argparse.ArgumentParser(description="Generate query functions for an ANARI device.")
@@ -377,6 +449,7 @@ with open(args.outdir/(args.prefix + "Queries.cpp"), mode='w') as f:
     f.write(gen.generate_subtype_query())
     f.write(gen.generate_parameter_query())
     f.write(gen.generate_parameter_info_query())
+    f.write(gen.generate_object_info_query())
     f.write(end_namespaces(args))
 
 if args.include:

@@ -113,14 +113,14 @@ void $prefixDevice::retain(ANARIObject handle) {
       obj->retain();
    }
 }
-void $prefixDevice::releaseInternal(ANARIObject handle) {
+void $prefixDevice::releaseInternal(ANARIObject handle, ANARIObject owner) {
    if(auto obj = fromHandle<ObjectBase*>(handle)) {
-      obj->releaseInternal();
+      obj->releaseInternal(owner);
    }
 }
-void $prefixDevice::retainInternal(ANARIObject handle) {
+void $prefixDevice::retainInternal(ANARIObject handle, ANARIObject owner) {
    if(auto obj = fromHandle<ObjectBase*>(handle)) {
-      obj->retainInternal();
+      obj->retainInternal(owner);
    }
 }
 
@@ -160,7 +160,11 @@ void $prefixDevice::discardFrame(ANARIFrame handle) {
 // Helper/other functions and data members
 /////////////////////////////////////////////////////////////////////////////
 
-$prefixDevice::$prefixDevice() : refcount(1), staging(this_device()), current(this_device()) {
+$prefixDevice::$prefixDevice()
+   : refcount(1),
+   staging(this_device(), this_device()),
+   current(this_device(), this_device())
+{
    objects.emplace_back(nullptr); // reserve the null index for the null handle
 }
 $prefixDevice::~$prefixDevice() {
@@ -175,11 +179,11 @@ const void * query_param_info(ANARIDataType type, const char *subtype,
    const char *infoName, ANARIDataType infoType);
 
 // internal "api" functions
-void anariRetainInternal(ANARIDevice d, ANARIObject handle) {
-   reinterpret_cast<$prefixDevice*>(d)->retainInternal(handle);
+void anariRetainInternal(ANARIDevice d, ANARIObject handle, ANARIObject owner) {
+   reinterpret_cast<$prefixDevice*>(d)->retainInternal(handle, owner);
 }
-void anariReleaseInternal(ANARIDevice d, ANARIObject handle) {
-   reinterpret_cast<$prefixDevice*>(d)->releaseInternal(handle);
+void anariReleaseInternal(ANARIDevice d, ANARIObject handle, ANARIObject owner) {
+   reinterpret_cast<$prefixDevice*>(d)->releaseInternal(handle, owner);
 }
 void anariDeleteInternal(ANARIDevice d, ANARIObject handle) {
    reinterpret_cast<$prefixDevice*>(d)->deallocate(handle);

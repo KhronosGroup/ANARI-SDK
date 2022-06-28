@@ -37,6 +37,7 @@ add_library(${PROJECT_NAME} SHARED
   DebugObject.cpp
   DebugBasics.cpp
   GenericDeviceDebugFactory.cpp
+  ExtendedQueries.cpp
 )
 
 target_include_directories(${PROJECT_NAME}
