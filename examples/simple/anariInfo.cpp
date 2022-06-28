@@ -182,10 +182,10 @@ void print_info(ANARILibrary lib, const char *device, const char *objname, ANARI
     printf("\n");
   }
 
-  mem = anariGetParameterInfo(lib, device, objname, objtype, paramname, paramtype, "values", ANARI_STRING_LIST);
+  mem = anariGetParameterInfo(lib, device, objname, objtype, paramname, paramtype, "value", ANARI_STRING_LIST);
   if(mem) {
     const char **list = (const char **)mem;
-    printf("%svalues =\n", indent);
+    printf("%svalue =\n", indent);
     for(;*list != nullptr;++list) {
       printf("%s   \"%s\"\n", indent, *list);
     }

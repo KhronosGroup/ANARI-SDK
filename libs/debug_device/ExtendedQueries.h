@@ -13,7 +13,7 @@ namespace debug_queries {
 #define ANARI_INFO_maximum 3
 #define ANARI_INFO_description 4
 #define ANARI_INFO_elementType 5
-#define ANARI_INFO_values 6
+#define ANARI_INFO_value 6
 #define ANARI_INFO_feature 7
 const int extension_count = 34;
 const char ** query_extensions();

@@ -51,7 +51,7 @@ class QueryGenerator:
         self.named_types = sorted(list(set([k[0] for k in self.named_objects])))
         self.subtype_list = sorted(list(set([k[1] for k in self.named_objects])))
         self.attribute_list = [x["name"] for x in anari["attributes"]]
-        self.info_strings = ["required", "default", "minimum", "maximum", "description", "elementType", "values", "feature"]
+        self.info_strings = ["required", "default", "minimum", "maximum", "description", "elementType", "value", "feature"]
 
     def format_as(self, value, anari_type):
         basetype = self.type_enum_dict[anari_type]["baseType"]
@@ -225,7 +225,7 @@ class QueryGenerator:
                     code += "         }\n"
 
                 if "values" in param:
-                    code += "      case "+str(self.info_strings.index("values"))+": // values\n"
+                    code += "      case "+str(self.info_strings.index("value"))+": // value\n"
                     code += "         if(paramType == ANARI_STRING && infoType == ANARI_STRING_LIST) {\n"
                     code += "            static const char *values[] = {"
                     code += ", ".join(["\"%s\""%v for v in param["values"]]) + ", nullptr};\n"
@@ -235,7 +235,7 @@ class QueryGenerator:
                     code += "         }\n"
 
                 if "attribute" in param["tags"]:
-                    code += "      case "+str(self.info_strings.index("values"))+": // values\n"
+                    code += "      case "+str(self.info_strings.index("value"))+": // value\n"
                     code += "         if(paramType == ANARI_STRING && infoType == ANARI_STRING_LIST) {\n"
                     code += "            static const char *values[] = {"
                     code += ", ".join(["\"%s\""%v for v in self.attribute_list]) + ", nullptr};\n"
@@ -250,7 +250,7 @@ class QueryGenerator:
                     code += "            static const char *feature = \"%s\";\n"%param["feature"]
                     code += "            return feature;\n"
                     code += "         } else if(infoType == ANARI_INT32) {\n"
-                    code += "            static const int value = %d;\n"%self.anari["features"].index(param["feature"])
+                    code += "            static const int32_t value = %d;\n"%self.anari["features"].index(param["feature"])
                     code += "            return &value;\n"
                     code += "         }\n"
 
@@ -325,6 +325,12 @@ class QueryGenerator:
                 code += "            return description;\n"
                 code += "         }\n"
 
+            if "parameter" in obj:
+                code += "      case "+str(self.info_strings.index("parameter"))+": // parameter\n"
+                code += "         if(infoType == ANARI_PARAMETER_LIST) {\n"
+                code += "            static const ANARIParameter *parameters = { };\n"
+                code += "            return parameters;\n"
+                code += "         }\n"
 
             if "feature" in obj:
                 code += "      case "+str(self.info_strings.index("feature"))+": // feature\n"

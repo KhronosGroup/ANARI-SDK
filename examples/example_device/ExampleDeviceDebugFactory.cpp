@@ -1958,7 +1958,7 @@ class geometry_triangle : public DebugObject<ANARI_GEOMETRY> {
 };
 class light_directional : public DebugObject<ANARI_LIGHT> {
    static int param_hash(const char *str) {
-      static const uint32_t table[] = {0x706f000cu,0x6a690011u,0x0u,0x0u,0x0u,0x0u,0x7372001au,0x0u,0x0u,0x0u,0x0u,0x62610023u,0x6d6c000du,0x706f000eu,0x7372000fu,0x1000010u,0x80000001u,0x73720012u,0x66650013u,0x64630014u,0x75740015u,0x6a690016u,0x706f0017u,0x6f6e0018u,0x1000019u,0x80000003u,0x7372001bu,0x6a69001cu,0x6564001du,0x6261001eu,0x6f6e001fu,0x64630020u,0x66650021u,0x1000022u,0x80000002u,0x6e6d0024u,0x66650025u,0x1000026u,0x80000000u};
+      static const uint32_t table[] = {0x706f000cu,0x6a690011u,0x0u,0x0u,0x0u,0x0u,0x7372001au,0x0u,0x0u,0x0u,0x0u,0x62610024u,0x6d6c000du,0x706f000eu,0x7372000fu,0x1000010u,0x80000001u,0x73720012u,0x66650013u,0x64630014u,0x75740015u,0x6a690016u,0x706f0017u,0x6f6e0018u,0x1000019u,0x80000003u,0x7372001bu,0x6261001cu,0x6564001du,0x6a69001eu,0x6261001fu,0x6f6e0020u,0x64630021u,0x66650022u,0x1000023u,0x80000002u,0x6e6d0025u,0x66650026u,0x1000027u,0x80000000u};
       uint32_t cur = 0x6f630000u;
       for(int i = 0;cur!=0;++i) {
          uint32_t idx = cur&0xFFFFu;
@@ -1995,9 +1995,9 @@ class light_directional : public DebugObject<ANARI_LIGHT> {
             check_type(ANARI_LIGHT, "directional", paramname, paramtype, color_types);
             return;
          }
-         case 2: { //irridance
-            ANARIDataType irridance_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
-            check_type(ANARI_LIGHT, "directional", paramname, paramtype, irridance_types);
+         case 2: { //irradiance
+            ANARIDataType irradiance_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
+            check_type(ANARI_LIGHT, "directional", paramname, paramtype, irradiance_types);
             return;
          }
          case 3: { //direction
