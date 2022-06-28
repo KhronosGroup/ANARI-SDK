@@ -64,6 +64,7 @@ void statusFunc(void *userData,
 }
 
 const ANARIDataType anonymousTypes[] = {
+  ANARI_DEVICE,
   ANARI_ARRAY1D,
   ANARI_ARRAY2D,
   ANARI_ARRAY3D,
@@ -200,9 +201,14 @@ void print_info(ANARILibrary lib, const char *device, const char *objname, ANARI
     }
   }
 
-  mem = anariGetParameterInfo(lib, device, objname, objtype, paramname, paramtype, "description", ANARI_STRING_LIST);
+  mem = anariGetParameterInfo(lib, device, objname, objtype, paramname, paramtype, "description", ANARI_STRING);
   if(mem) {
     printf("%sdescription = \"%s\"\n", indent, (const char*)mem);
+  }
+
+  mem = anariGetParameterInfo(lib, device, objname, objtype, paramname, paramtype, "feature", ANARI_STRING);
+  if(mem) {
+    printf("%sfeature = %s\n", indent, (const char*)mem);
   }
 }
 

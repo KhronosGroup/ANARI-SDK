@@ -24,5 +24,24 @@
                 {"name" : "frame", "type" : "ANARIFrame"}
             ]
         }
+    ],
+
+    "objects" : [
+        {
+            "type" : "ANARI_FRAME",
+            "parameters" : [
+                {
+                    "name" : "frameCompletionCallback",
+                    "types" : ["ANARI_FRAME_COMPLETION_CALLBACK"],
+                    "tags" : [],
+                    "description" : "function called on frame render completion"
+                },                {
+                    "name" : "frameCompletionCallbackUserData",
+                    "types" : ["ANARI_VOID_POINTER"],
+                    "tags" : [],
+                    "description" : "optional pointer passed as the first argument of the frame continuation callback"
+                }
+            ]
+        }
     ]
 }

@@ -49,12 +49,12 @@
                     "types" : ["ANARI_STRING"],
                     "tags" : [],
                     "description" : "optional object name"
-                },                {
+                }, {
                     "name" : "statusCallback",
                     "types" : ["ANARI_STATUS_CALLBACK"],
                     "tags" : [],
                     "description" : "callback used to report information to the application"
-                },                {
+                }, {
                     "name" : "statusCallbackUserData",
                     "types" : ["ANARI_VOID_POINTER"],
                     "tags" : [],
