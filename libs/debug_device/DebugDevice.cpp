@@ -80,7 +80,11 @@ void DebugDevice::vreportStatus(ANARIObject source,
 
 int DebugDevice::deviceImplements(const char *extension)
 {
-  return anariDeviceImplements(wrapped, extension);
+  if(std::strncmp("ANARI_KHR_FRAME_COMPLETION_CALLBACK", extension, 35) == 0) {
+    return 0;
+  } else {
+    return anariDeviceImplements(wrapped, extension);
+  }
 }
 
 // Data Arrays ////////////////////////////////////////////////////////////////
@@ -465,11 +469,11 @@ void DebugDevice::commit(ANARIObject object)
 
 void DebugDevice::release(ANARIObject object)
 {
-  if (!object)
+  if (!object) {
     return;
-  else if (handleIsDevice(object))
+  } else if (handleIsDevice(object)) {
     this->refDec();
-  else {
+  } else {
     debug->anariRelease(this_device(), object);
     anariRelease(wrapped, unwrapHandle(object));
 
@@ -480,9 +484,11 @@ void DebugDevice::release(ANARIObject object)
 
 void DebugDevice::retain(ANARIObject object)
 {
-  if (handleIsDevice(object))
+  if (!object) {
+    return;
+  } else if (handleIsDevice(object)) {
     this->refInc();
-  else {
+  } else {
     debug->anariRetain(this_device(), object);
     anariRetain(wrapped, unwrapHandle(object));
 
