@@ -152,6 +152,7 @@ int main(int argc, const char *argv[])
   delete window;
 
   anariRelease(g_device, g_device);
+
   if (g_enableDebug)
     anariUnloadLibrary(g_debug);
 

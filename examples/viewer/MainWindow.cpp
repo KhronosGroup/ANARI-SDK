@@ -286,6 +286,7 @@ void MainWindow::setDevice(ANARIDevice dev)
 /* MainWindow() Destructor */
 MainWindow::~MainWindow()
 {
+  anari::scenes::release(scene);
   activeWindow = nullptr;
 }
 
@@ -320,6 +321,7 @@ void MainWindow::setScene(
     commitScene = true;
 
     sceneParams = params;
+    anari::scenes::release(scene);
     scene = s;
 
     anari::setParameter(device, frame, "world", anari::scenes::getWorld(s));
@@ -327,6 +329,7 @@ void MainWindow::setScene(
 
     resetCameraPosition = true;
   } catch (const std::runtime_error &e) {
+    anari::scenes::release(s);
     printf("failed to create '%s' scene: %s\n", sceneName.c_str(), e.what());
   }
 }
