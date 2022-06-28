@@ -169,7 +169,7 @@ void freeLibrary(void *lib)
 }
 
 Library::Library(
-    const char *name, ANARIStatusCallback defaultStatusCB, void *statusCBPtr)
+    const char *name, ANARIStatusCallback defaultStatusCB, const void *statusCBPtr)
     : m_defaultDeviceName(name),
       m_defaultStatusCB(defaultStatusCB),
       m_defaultStatusCBUserPtr(statusCBPtr)
@@ -285,7 +285,7 @@ ANARIStatusCallback Library::defaultStatusCB() const
   return m_defaultStatusCB;
 }
 
-void *Library::defaultStatusCBUserPtr() const
+const void *Library::defaultStatusCBUserPtr() const
 {
   return m_defaultStatusCBUserPtr;
 }

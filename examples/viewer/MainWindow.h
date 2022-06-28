@@ -47,7 +47,7 @@ class MainWindow
 
   void cleanup();
 
-  friend void frame_continuation_callback(void *, ANARIDevice, ANARIFrame);
+  friend void frame_continuation_callback(const void *, ANARIDevice, ANARIFrame);
   friend void frame_show(ANARIDevice, ANARIFrame, MainWindow*);
 
   static MainWindow *activeWindow;

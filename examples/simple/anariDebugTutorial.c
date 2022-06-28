@@ -52,7 +52,7 @@ void writePPM(
 
 /******************************************************************/
 /* errorFunc(): the callback to use when an error is encountered */
-void statusFunc(void *userData,
+void statusFunc(const void *userData,
     ANARIDevice device,
     ANARIObject source,
     ANARIDataType sourceType,

@@ -36,6 +36,17 @@ void GenericDebugObject::check_type(ANARIDataType type, const char *subtype, con
         "anariSetParameter: Invalid type (%s) for parameter \"%s\" on object \"%s\" (%s).", toString(paramtype), paramname, getName(), anari::toString(getType()));
 }
 
+void DebugObject<ANARI_FRAME>::setParameter(const char *name, ANARIDataType type, const void *mem) {
+  GenericDebugObject::setParameter(name, type, mem);
+
+  // frame completion callbacks require special treatment
+  if(type == ANARI_FRAME_COMPLETION_CALLBACK && std::strncmp(name, "frameCompletionCallback", 23)==0) {
+    frameContinuationFun = *(ANARIFrameCompletionCallback*)mem;
+  } else if(type == ANARI_VOID_POINTER && std::strncmp(name, "frameCompletionCallbackUserData", 31)==0) {
+    userdata = mem;
+  }
+}
+
 DebugObjectBase* ObjectFactory::new_by_type(ANARIDataType t, DebugDevice *td, ANARIObject wh, ANARIObject h) {
   switch(t) {
     case ANARI_DEVICE: return new_device(td, wh, h);

@@ -18,6 +18,16 @@ namespace tree{
 
 
 /******************************************************************************
+   The following code serves illustration purposes and should be replaced
+   Further specializations are provided in TreeFrameObject.h and
+   TreeArrayObjects.h since frame and array objects have extended
+   interfaces.
+   Most likely you want to specialize other objects in their own
+   headers/implementiation files and just include them here.
+******************************************************************************/
+
+
+/******************************************************************************
    Implement custom behavior by specializing the Object template.
    Either fully specify an object inheriting from ObjectBase.
 ******************************************************************************/
@@ -87,16 +97,16 @@ public:
       }
    }
 
-   ANARIObject owner = nullptr;
+   ANARIObject firstOwner = nullptr;
    bool uniqueOwnership = true;
 
    // the Object interface can be overriden to track additional data
-   // such as who increase the refcount.
+   // such as who increased the refcount.
    void retainInternal(ANARIObject obj) override {
       base::retainInternal(obj);
-      if(owner == nullptr) {
-         owner = obj;
-      } else if(obj != owner) {
+      if(firstOwner == nullptr) {
+         firstOwner = obj;
+      } else if(obj != firstOwner) {
          uniqueOwnership = false;
       }
    }

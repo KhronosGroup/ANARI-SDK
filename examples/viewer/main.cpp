@@ -34,7 +34,7 @@ static std::string pathOf(const std::string &filename)
 
 /******************************************************************/
 /* statusFunc(): the callback to use when a status report is made */
-void statusFunc(void *userData,
+void statusFunc(const void *userData,
     ANARIDevice device,
     ANARIObject source,
     ANARIDataType sourceType,

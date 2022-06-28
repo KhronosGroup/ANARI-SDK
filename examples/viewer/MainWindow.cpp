@@ -127,8 +127,9 @@ void frame_show(ANARIDevice dev, ANARIFrame frame, MainWindow *window)
   }
 }
 
-void frame_continuation_callback(void *w, ANARIDevice dev, ANARIFrame frame)
+void frame_continuation_callback(const void *cw, ANARIDevice dev, ANARIFrame frame)
 {
+  void *w = const_cast<void*>(cw);
   if (g_quitNextFrame)
     return;
 

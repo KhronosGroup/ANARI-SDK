@@ -18,7 +18,7 @@ void freeLibrary(void *lib);
 struct ANARI_INTERFACE Library
 {
   Library(
-      const char *name, ANARIStatusCallback defaultStatusCB, void *statusCBPtr);
+      const char *name, ANARIStatusCallback defaultStatusCB, const void *statusCBPtr);
   ~Library();
 
   void *libraryData() const;
@@ -27,7 +27,7 @@ struct ANARI_INTERFACE Library
 
   const char *defaultDeviceName() const;
   ANARIStatusCallback defaultStatusCB() const;
-  void *defaultStatusCBUserPtr() const;
+  const void *defaultStatusCBUserPtr() const;
 
   void loadModule(const char *name) const;
   void unloadModule(const char *name) const;
@@ -52,7 +52,7 @@ struct ANARI_INTERFACE Library
 
   std::string m_defaultDeviceName;
   ANARIStatusCallback m_defaultStatusCB{nullptr};
-  void *m_defaultStatusCBUserPtr{nullptr};
+  const void *m_defaultStatusCBUserPtr{nullptr};
 
   using NewDeviceFcn = ANARIDevice (*)(const char *);
   NewDeviceFcn m_newDeviceFcn{nullptr};

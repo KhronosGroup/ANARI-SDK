@@ -157,7 +157,7 @@ struct ANARI_INTERFACE DeviceImpl
 
  protected:
   ANARIStatusCallback defaultStatusCallback() const;
-  void *defaultStatusCallbackUserPtr() const;
+  const void *defaultStatusCallbackUserPtr() const;
 
   bool handleIsDevice(ANARIObject obj) const;
 
@@ -165,7 +165,7 @@ struct ANARI_INTERFACE DeviceImpl
   // NOTE: Unsuccessful to get the declaration of anariNewDevice() declared
   // correctly as a friend function to keep these private.
   ANARIStatusCallback m_defaultStatusCB{nullptr};
-  void *m_defaultStatusCBUserPtr{nullptr};
+  const void *m_defaultStatusCBUserPtr{nullptr};
 };
 
 ANARI_TYPEFOR_SPECIALIZATION(DeviceImpl *, ANARI_DEVICE);

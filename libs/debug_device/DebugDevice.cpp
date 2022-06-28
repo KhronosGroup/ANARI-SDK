@@ -80,11 +80,13 @@ void DebugDevice::vreportStatus(ANARIObject source,
 
 int DebugDevice::deviceImplements(const char *extension)
 {
+  return anariDeviceImplements(wrapped, extension);
+  /*
   if(std::strncmp("ANARI_KHR_FRAME_COMPLETION_CALLBACK", extension, 35) == 0) {
     return 0;
   } else {
     return anariDeviceImplements(wrapped, extension);
-  }
+  }*/
 }
 
 // Data Arrays ////////////////////////////////////////////////////////////////
@@ -413,6 +415,14 @@ int DebugDevice::getProperty(ANARIObject object,
 
 // Object + Parameter Lifetime Management /////////////////////////////////////
 
+void frameContinuationWrapper(const void *userdata, ANARIDevice, ANARIFrame frame) {
+
+  DebugDevice *dd = reinterpret_cast<DebugDevice*>(const_cast<void*>(userdata));
+  ANARIFrame debugFrame = dd->wrapHandle(frame);
+  DebugObject<ANARI_FRAME> *info = dd->getDynamicObjectInfo<DebugObject<ANARI_FRAME>>(debugFrame);
+  info->frameContinuationFun(info->userdata, dd->this_device(), debugFrame);
+}
+
 void DebugDevice::setParameter(
     ANARIObject object, const char *name, ANARIDataType type, const void *mem)
 {
@@ -432,7 +442,20 @@ void DebugDevice::setParameter(
     }
 
     debug->anariSetParameter(this_device(), object, name, type, mem);
-    anariSetParameter(wrapped, unwrapHandle(object), name, type, unwrapped);
+
+    // frame completion callbacks require special treatment
+    if(type == ANARI_FRAME_COMPLETION_CALLBACK
+      && std::strncmp(name, "frameCompletionCallback", 23)==0) {
+      ANARIFrameCompletionCallback callbackWrapper = frameContinuationWrapper;
+      anariSetParameter(wrapped, unwrapHandle(object), "frameCompletionCallback", ANARI_FRAME_COMPLETION_CALLBACK, &callbackWrapper);
+      anariSetParameter(wrapped, unwrapHandle(object), "frameCompletionCallbackUserData", ANARI_VOID_POINTER, this);
+    } else if(type == ANARI_VOID_POINTER
+      && std::strncmp(name, "frameCompletionCallbackUserData", 31)==0) {
+      // do not forward or this will overwrite the this pointer
+    } else {
+      anariSetParameter(wrapped, unwrapHandle(object), name, type, unwrapped);
+    }
+
 
     if (auto info = getObjectInfo(object)) {
       info->setParameter(name, type, mem);
@@ -682,7 +705,7 @@ ANARIObject DebugDevice::wrapObjectHandle(ANARIObject h, ANARIDataType type)
   } else {
     auto iter = objectMap.find(h);
     if (iter != objectMap.end()) {
-      return objectMap[h];
+      return iter->second;
     } else {
       return 0;
     }

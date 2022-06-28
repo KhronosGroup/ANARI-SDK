@@ -97,6 +97,8 @@ public:
    Parameter<ANARI_UINT32_VEC2> size;
    Parameter<ANARI_DATA_TYPE> color;
    Parameter<ANARI_DATA_TYPE> depth;
+   Parameter<ANARI_FRAME_COMPLETION_CALLBACK> frameCompletionCallback;
+   Parameter<ANARI_VOID_POINTER> frameCompletionCallbackUserData;
    Parameter<ANARI_DATA_TYPE> normal;
    Parameter<ANARI_DATA_TYPE> albedo;
    Parameter<ANARI_BOOL> accumulation;
@@ -498,7 +500,7 @@ public:
    static constexpr const char *subtype = "directional";
    Parameter<ANARI_STRING> name;
    Parameter<ANARI_FLOAT32_VEC3> color;
-   Parameter<ANARI_FLOAT32> irridance;
+   Parameter<ANARI_FLOAT32> irradiance;
    Parameter<ANARI_FLOAT32_VEC3> direction;
    Parameter<ANARI_FLOAT32> angularDiameter;
    Parameter<ANARI_FLOAT32> radiance;

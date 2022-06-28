@@ -333,13 +333,10 @@ int ExampleDevice::getProperty(ANARIObject object,
     uint64_t size,
     ANARIWaitMask mask)
 {
-  if (handleIsDevice(object))
-    return 0;
-
   if (mask == ANARI_WAIT)
     flushCommitBuffer();
 
-  if ((void *)object == (void *)this) {
+  if (handleIsDevice(object)) {
     std::string_view prop = name;
     if (prop == "version" && type == ANARI_INT32) {
       writeToVoidP(mem, DEVICE_VERSION);
