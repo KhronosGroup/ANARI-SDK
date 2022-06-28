@@ -35,7 +35,7 @@ ANARIStatusCallback DeviceImpl::defaultStatusCallback() const
   return m_defaultStatusCB;
 }
 
-void *DeviceImpl::defaultStatusCallbackUserPtr() const
+const void *DeviceImpl::defaultStatusCallbackUserPtr() const
 {
   return m_defaultStatusCBUserPtr;
 }

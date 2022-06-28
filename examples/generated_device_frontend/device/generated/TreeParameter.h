@@ -188,6 +188,7 @@ public:
    virtual ANARIObject getHandle() = 0;
    virtual ANARIDataType type() = 0;
    virtual operator bool() = 0;
+   virtual uint32_t getVersion() const = 0;
 };
 
 class EmptyParameter : public ParameterBase {
@@ -200,6 +201,8 @@ public:
    ANARIObject getHandle() override { return nullptr; }
    ANARIDataType type() override { return ANARI_UNKNOWN; }
    operator bool() override { return false; }
+   uint32_t getVersion() const { return 0; }
+
 };
 
 template<int... T>
@@ -207,14 +210,16 @@ class Parameter : public ParameterBase {
    static const size_t byte_size = max_reduce<sizeof(ParameterStorageBase), sizeof(ParameterStorage<T>)...>::value;
    char data[byte_size];
    ParameterStorageBase *ptr;
+   uint32_t version;
 public:
-   Parameter() : ptr(new(data) ParameterStorageBase) {
+   Parameter() : ptr(new(data) ParameterStorageBase), version(0) {
    }
-   Parameter(const Parameter &that) : ptr(that.clone(data)) {
+   Parameter(const Parameter &that) : ptr(that.clone(data)), version(that.version) {
    }
    Parameter& operator=(const Parameter &that) {
       ptr->~ParameterStorageBase();
       ptr = that.ptr->clone(data);
+      version = that.version;
       return *this;
    }
    ~Parameter() {
@@ -224,6 +229,7 @@ public:
       if(contains<T...>(type)) {
          ptr->~ParameterStorageBase();
          ptr = anari::anariTypeInvoke<ParameterStorageBase*, ParameterConstructor>(type, data, device, obj, mem);
+         version += 1;
          return true;
       } else {
          return false;
@@ -232,6 +238,7 @@ public:
    void unset(ANARIDevice, ANARIObject) override {
       ptr->~ParameterStorageBase();
       ptr = new(data) ParameterStorageBase;
+      version += 1;
    }
    bool get(ANARIDataType type, void *mem) override {
       return ptr->get(type, mem);
@@ -250,6 +257,9 @@ public:
    }
    operator bool() override {
       return ptr->type() != ANARI_UNKNOWN;
+   }
+   uint32_t getVersion() const {
+      return version;
    }
 };
 

@@ -15,7 +15,7 @@
 // stb_image
 #include "stb_image_write.h"
 
-void statusFunc(void *userData,
+void statusFunc(const void *userData,
     ANARIDevice device,
     ANARIObject source,
     ANARIDataType sourceType,

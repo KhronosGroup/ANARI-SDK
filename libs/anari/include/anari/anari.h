@@ -135,10 +135,10 @@ typedef struct {
 } ANARIParameter;
 
 typedef void (*ANARIMemoryDeleter)(void* userPtr, void* appMemory);
-typedef void (*ANARIStatusCallback)(void* userPtr, ANARIDevice device, ANARIObject source, ANARIDataType sourceType, ANARIStatusSeverity severity, ANARIStatusCode code, const char* message);
-typedef void (*ANARIFrameCompletionCallback)(void* userPtr, ANARIDevice device, ANARIFrame frame);
+typedef void (*ANARIStatusCallback)(const void* userPtr, ANARIDevice device, ANARIObject source, ANARIDataType sourceType, ANARIStatusSeverity severity, ANARIStatusCode code, const char* message);
+typedef void (*ANARIFrameCompletionCallback)(const void* userPtr, ANARIDevice device, ANARIFrame frame);
 
-ANARI_INTERFACE ANARILibrary anariLoadLibrary(const char* name, ANARIStatusCallback statusCallback ANARI_DEFAULT_VAL(0), void* statusCallbackUserData ANARI_DEFAULT_VAL(0));
+ANARI_INTERFACE ANARILibrary anariLoadLibrary(const char* name, ANARIStatusCallback statusCallback ANARI_DEFAULT_VAL(0), const void* statusCallbackUserData ANARI_DEFAULT_VAL(0));
 ANARI_INTERFACE void anariUnloadLibrary(ANARILibrary module);
 ANARI_INTERFACE void anariLoadModule(ANARILibrary library, const char* name);
 ANARI_INTERFACE void anariUnloadModule(ANARILibrary library, const char* name);

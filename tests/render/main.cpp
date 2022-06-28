@@ -37,7 +37,7 @@ anari::Library g_debugLibrary = nullptr;
 
 // Helper functions ///////////////////////////////////////////////////////////
 
-static void statusFunc(void *userData,
+static void statusFunc(const void *userData,
     anari::Device device,
     anari::Object source,
     anari::DataType sourceType,

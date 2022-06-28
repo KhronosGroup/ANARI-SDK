@@ -64,7 +64,7 @@ static inline DeviceImpl &deviceRef(ANARIDevice d)
 
 extern "C" ANARILibrary anariLoadLibrary(const char *libraryName,
     ANARIStatusCallback statusCB,
-    void *statusCBUserPtr) ANARI_CATCH_BEGIN
+    const void *statusCBUserPtr) ANARI_CATCH_BEGIN
 {
   if (std::string(libraryName) == "environment") {
     char *libraryFromEnv = getenv("ANARI_LIBRARY");

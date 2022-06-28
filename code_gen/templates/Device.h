@@ -201,7 +201,7 @@ private:
    std::vector<std::unique_ptr<ObjectBase>> objects;
 
    ANARIStatusCallback statusCallback;
-   void* statusCallbackUserData;
+   const void* statusCallbackUserData;
 
    $namespace::Device staging;
    $namespace::Device current;

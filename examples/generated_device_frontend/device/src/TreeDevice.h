@@ -206,7 +206,7 @@ private:
    std::vector<std::unique_ptr<ObjectBase>> objects;
 
    ANARIStatusCallback statusCallback;
-   void* statusCallbackUserData;
+   const void* statusCallbackUserData;
 
    anari_sdk::tree::Device staging;
    anari_sdk::tree::Device current;

@@ -229,7 +229,7 @@
             "name" : "ANARIStatusCallback",
             "returnType" : "void",
             "arguments" : [
-                {"name" : "userPtr", "type" : "void*"},
+                {"name" : "userPtr", "type" : "const void*"},
                 {"name" : "device", "type" : "ANARIDevice"},
                 {"name" : "source", "type" : "ANARIObject"},
                 {"name" : "sourceType", "type" : "ANARIDataType"},
@@ -257,7 +257,7 @@
             "arguments" : [
                 {"name" : "name", "type" : "const char*"},
                 {"name" : "statusCallback", "type" : "ANARIStatusCallback", "default" : "0"},
-                {"name" : "statusCallbackUserData", "type" : "void*", "default" : "0"}
+                {"name" : "statusCallbackUserData", "type" : "const void*", "default" : "0"}
             ]
         }, {
             "name" : "anariUnloadLibrary",

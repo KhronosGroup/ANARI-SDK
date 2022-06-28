@@ -19,6 +19,7 @@ struct DebugDevice;
 
 struct DEBUG_DEVICE_INTERFACE DebugObjectBase {
 public:
+  virtual DebugDevice* getDebugDevice() = 0;
   virtual ANARIDataType getType() = 0;
   virtual const char *getSubtype() = 0;
   virtual const char *getName() = 0;
@@ -56,6 +57,7 @@ private:
   int references = 0;
   std::string objectName;
 public:
+  DebugDevice* getDebugDevice() { return debugDevice; }
   ANARIDataType getType() { return ANARI_OBJECT; }
   const char *getSubtype() { return ""; }
   const char *getName() {
@@ -145,10 +147,23 @@ struct DEBUG_DEVICE_INTERFACE DebugObject : public GenericDebugObject {
   ANARIDataType getType() { return T; }
 };
 
+
+template<>
+struct DEBUG_DEVICE_INTERFACE DebugObject<ANARI_FRAME> : public GenericDebugObject {
+  DebugObject(DebugDevice *debugDevice, ANARIObject wrappedHandle, ANARIObject handle)
+  : GenericDebugObject(debugDevice, wrappedHandle, handle)
+  {
+
+  }
+  void setParameter(const char *name, ANARIDataType type, const void *mem);
+  ANARIDataType getType() { return ANARI_FRAME; }
+
+  const void *userdata = nullptr;
+  ANARIFrameCompletionCallback frameContinuationFun = nullptr;
+};
+
 template<int T>
 struct DEBUG_DEVICE_INTERFACE SubtypedDebugObject : public DebugObject<T> {
-private:
-  std::string subtype;
 public:
   SubtypedDebugObject(DebugDevice *debugDevice, ANARIObject wrappedHandle, ANARIObject handle, const char *subtype)
   : DebugObject<T>(debugDevice, wrappedHandle, handle), subtype(subtype)
@@ -157,6 +172,8 @@ public:
   }
   ANARIDataType getType() { return T; }
   const char* getSubtype() { return subtype.c_str(); }
+private:
+  std::string subtype;
 };
 
 
