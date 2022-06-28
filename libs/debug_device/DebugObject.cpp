@@ -18,7 +18,7 @@ void GenericDebugObject::unknown_parameter(ANARIDataType type, const char *subty
           getType(),
           ANARI_SEVERITY_WARNING,
           ANARI_STATUS_INVALID_ARGUMENT,
-          "anariSetParameter: Unknown parameter \"%s\".", paramname);
+          "anariSetParameter: Unknown parameter \"%s\" on object \"%s\" (%s).", paramname, getName(), anari::toString(getType()));
 }
 void GenericDebugObject::check_type(ANARIDataType type, const char *subtype, const char *paramname, ANARIDataType paramtype, ANARIDataType *valid_types) {
   (void)type;
@@ -33,7 +33,7 @@ void GenericDebugObject::check_type(ANARIDataType type, const char *subtype, con
         getType(),
         ANARI_SEVERITY_WARNING,
         ANARI_STATUS_INVALID_ARGUMENT,
-        "anariSetParameter: Invalid type (%s) for parameter \"%s\".", toString(paramtype), paramname);
+        "anariSetParameter: Invalid type (%s) for parameter \"%s\" on object \"%s\" (%s).", toString(paramtype), paramname, getName(), anari::toString(getType()));
 }
 
 DebugObjectBase* ObjectFactory::new_by_type(ANARIDataType t, DebugDevice *td, ANARIObject wh, ANARIObject h) {

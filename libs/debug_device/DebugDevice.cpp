@@ -154,7 +154,7 @@ ANARIArray1D DebugDevice::newArray1D(void *appMemory,
     handle = newHandle(handle);
 
     if (auto info =
-            getDynamicObjectInfo<ArrayDebugObject<ANARI_ARRAY1D>>(handle)) {
+            getDynamicObjectInfo<DebugObject<ANARI_ARRAY1D>>(handle)) {
       info->handles = handles;
       if (appMemory != nullptr) {
         for (uint64_t i = 0; i < numItems; i++) {
@@ -178,7 +178,7 @@ ANARIArray1D DebugDevice::newArray1D(void *appMemory,
   }
 
   if (auto info =
-          getDynamicObjectInfo<ArrayDebugObject<ANARI_ARRAY1D>>(handle)) {
+          getDynamicObjectInfo<DebugObject<ANARI_ARRAY1D>>(handle)) {
     info->attachArray(appMemory, type, numItems, 1, 1, byteStride, 0, 0);
   }
 
@@ -215,7 +215,7 @@ ANARIArray2D DebugDevice::newArray2D(void *appMemory,
   handle = newHandle(handle);
 
   if (auto info =
-          getDynamicObjectInfo<ArrayDebugObject<ANARI_ARRAY2D>>(handle)) {
+          getDynamicObjectInfo<DebugObject<ANARI_ARRAY2D>>(handle)) {
     info->attachArray(
         appMemory, type, numItems1, numItems2, 1, byteStride1, byteStride2, 0);
   }
@@ -258,7 +258,7 @@ ANARIArray3D DebugDevice::newArray3D(void *appMemory,
   handle = newHandle(handle);
 
   if (auto info =
-          getDynamicObjectInfo<ArrayDebugObject<ANARI_ARRAY3D>>(handle)) {
+          getDynamicObjectInfo<DebugObject<ANARI_ARRAY3D>>(handle)) {
     info->attachArray(appMemory,
         type,
         numItems1,
@@ -430,8 +430,10 @@ void DebugDevice::setParameter(
     debug->anariSetParameter(this_device(), object, name, type, mem);
     anariSetParameter(wrapped, unwrapHandle(object), name, type, unwrapped);
 
-    if (auto info = getObjectInfo(object))
+    if (auto info = getObjectInfo(object)) {
       info->setParameter(name, type, mem);
+      reportParameterUse(info->getType(), info->getSubtype(), name, type);
+    }
   }
 }
 
@@ -622,6 +624,23 @@ DebugDevice::DebugDevice()
 
 DebugDevice::~DebugDevice()
 {
+  const char **features = anari::debug_queries::query_extensions();
+  reportStatus(this_device(),
+      ANARI_DEVICE,
+      ANARI_SEVERITY_INFO,
+      ANARI_STATUS_UNKNOWN_ERROR,
+      "used features:");
+
+  for(int i = 0;i<anari::debug_queries::extension_count;++i) {
+    if(used_features[i]>0) {
+      reportStatus(this_device(),
+          ANARI_DEVICE,
+          ANARI_SEVERITY_INFO,
+          ANARI_STATUS_UNKNOWN_ERROR,
+          "   %s", features[i]);
+    }
+  }
+
   debugObjectFactory->print_summary(this);
   if (debug) {
     debug->anariReleaseDevice(this_device());
@@ -634,6 +653,7 @@ DebugDevice::~DebugDevice()
 ANARIObject DebugDevice::newObjectHandle(
     ANARIObject h, ANARIDataType type, const char *name)
 {
+  reportObjectUse(type, name);
   ANARIObject idx = (ANARIObject)objects.size();
   objects.emplace_back(
       debugObjectFactory->new_by_subtype(type, name, this, idx, h));
@@ -642,6 +662,7 @@ ANARIObject DebugDevice::newObjectHandle(
 }
 ANARIObject DebugDevice::newObjectHandle(ANARIObject h, ANARIDataType type)
 {
+  reportObjectUse(type, "");
   ANARIObject idx = (ANARIObject)objects.size();
   objects.emplace_back(debugObjectFactory->new_by_type(type, this, idx, h));
   objectMap[h] = idx;
@@ -680,6 +701,26 @@ DebugObjectBase *DebugDevice::getObjectInfo(ANARIObject h)
     return objects[(uintptr_t)h].get();
   } else {
     return nullptr;
+  }
+}
+
+void DebugDevice::reportParameterUse(
+  ANARIDataType objtype, const char *objsubtype,
+  const char *paramname, ANARIDataType paramtype)
+{
+  if(const int32_t *feature = (const int32_t*)debug_queries::query_param_info_enum(objtype, objsubtype, paramname, paramtype, ANARI_INFO_feature, ANARI_INT32)) {
+    used_features[*feature] += 1;
+  } else {
+    unknown_feature_uses += 1;
+  }
+}
+
+void DebugDevice::reportObjectUse(ANARIDataType objtype, const char *objsubtype)
+{
+  if(const int32_t *feature = (const int32_t*)debug_queries::query_object_info_enum(objtype, objsubtype, ANARI_INFO_feature, ANARI_INT32)) {
+    used_features[*feature] += 1;
+  } else {
+    unknown_feature_uses += 1;
   }
 }
 

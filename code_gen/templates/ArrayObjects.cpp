@@ -16,7 +16,7 @@ $begin_namespaces
 Object<Array1D>::Object(ANARIDevice d, ANARIObject handle, void* appMemory,
    ANARIMemoryDeleter deleter, void* userdata, ANARIDataType elementType,
    uint64_t numItems1, uint64_t byteStride1)
-: ArrayObjectBase(d, handle), staging(d), current(d), appMemory(appMemory), deleter(deleter), userdata(userdata),
+: ArrayObjectBase(d, handle), staging(d, handle), current(d, handle), appMemory(appMemory), deleter(deleter), userdata(userdata),
 elementType(elementType), numItems1(numItems1), byteStride1(byteStride1)
 {
    if(this->byteStride1 == 0) {
@@ -32,7 +32,7 @@ elementType(elementType), numItems1(numItems1), byteStride1(byteStride1)
       for(uint64_t i = 0;i<numItems1;++i) {
          ANARIObject op = *reinterpret_cast<ANARIObject*>(basePtr+i*this->byteStride1);
          objectArray[i] = op;
-         anariRetainInternal(device, objectArray[i]);
+         anariRetainInternal(device, objectArray[i], handle);
       }
    }
 }
@@ -65,9 +65,9 @@ void Object<Array1D>::unmap() {
       char *basePtr = static_cast<char*>(appMemory);
       for(uint64_t i = 0;i<numItems1;++i) {
          ANARIObject op = *reinterpret_cast<ANARIObject*>(basePtr+i*byteStride1);
-         anariReleaseInternal(device, objectArray[i]);
+         anariReleaseInternal(device, objectArray[i], handle);
          objectArray[i] = op;
-         anariRetainInternal(device, objectArray[i]);
+         anariRetainInternal(device, objectArray[i], handle);
       }
    }
 }
@@ -76,7 +76,7 @@ void Object<Array1D>::releasePublic() {
 }
 Object<Array1D>::~Object() {
    for(auto handle : objectArray) {
-      anariReleaseInternal(device, handle);
+      anariReleaseInternal(device, handle, handle);
    }
    if(deleter) {
       deleter(userdata, appMemory);
@@ -88,7 +88,7 @@ Object<Array2D>::Object(ANARIDevice d, ANARIObject handle, void* appMemory,
    ANARIMemoryDeleter deleter, void* userdata, ANARIDataType elementType,
    uint64_t numItems1, uint64_t numItems2,
    uint64_t byteStride1, uint64_t byteStride2)
-: ArrayObjectBase(d, handle), staging(d), current(d), appMemory(appMemory), deleter(deleter), userdata(userdata),
+: ArrayObjectBase(d, handle), staging(d, handle), current(d, handle), appMemory(appMemory), deleter(deleter), userdata(userdata),
 elementType(elementType), numItems1(numItems1), numItems2(numItems2),
 byteStride1(byteStride1), byteStride2(byteStride2)
 {
@@ -146,7 +146,7 @@ Object<Array3D>::Object(ANARIDevice d, ANARIObject handle, void* appMemory,
    ANARIMemoryDeleter deleter, void* userdata, ANARIDataType elementType,
    uint64_t numItems1, uint64_t numItems2, uint64_t numItems3,
    uint64_t byteStride1, uint64_t byteStride2, uint64_t byteStride3)
-: ArrayObjectBase(d, handle), staging(d), current(d), appMemory(appMemory), deleter(deleter), userdata(userdata),
+: ArrayObjectBase(d, handle), staging(d, handle), current(d, handle), appMemory(appMemory), deleter(deleter), userdata(userdata),
 elementType(elementType), numItems1(numItems1), numItems2(numItems2), numItems3(numItems3),
 byteStride1(byteStride1), byteStride2(byteStride2), byteStride3(byteStride3)
 {

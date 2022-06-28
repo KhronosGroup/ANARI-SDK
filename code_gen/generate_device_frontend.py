@@ -67,20 +67,6 @@ class FrontendGenerator:
         else:
             return str(x)
 
-    def set_default(self, param, indentation):
-        code = ""
-        paramname = param["name"].replace('.', '_')
-        basetype = self.type_enum_dict[param["types"][0]]["baseType"]
-        anari_type = param["types"][0]
-        if isinstance(param["default"], list):
-            code += indentation + basetype + " value[] = {" + ", ".join([self.format_as(x, anari_type) for x in param["default"]]) + "};\n"
-        elif isinstance(param["default"], str):
-            code += indentation + "const char *value = \"" + param["default"] + "\";\n"
-        else:
-            code += indentation + basetype + " value[] = {" + self.format_as(param["default"], anari_type) + "};\n"
-        code += indentation + "%s.set(device, %s, value);\n"%(paramname, param["types"][0])
-        return code
-
     def declare_objects(self):
         code = ""
         code += "class ParameterPack {\n"
@@ -101,6 +87,7 @@ class FrontendGenerator:
             code += "public:\n"
 
             code += "   ANARIDevice device;\n"
+            code += "   ANARIObject object;\n"
 
             code += "   static const int type = " + obj["type"] + ";\n"
 
@@ -113,7 +100,7 @@ class FrontendGenerator:
                 code += "   Parameter<" + ", ".join(param["types"]) + "> " + param["name"].replace(".", "_") + ";\n"
             code += "\n"
 
-            code += "   " + classname + "(ANARIDevice d);\n"
+            code += "   " + classname + "(ANARIDevice d, ANARIObject o);\n"
 
             code += "   bool set(const char *paramname, ANARIDataType type, const void *mem) override;\n"
             code += "   void unset(const char *paramname) override;\n"
@@ -125,6 +112,21 @@ class FrontendGenerator:
             code += "};\n"
         return code
 
+
+    def set_default(self, param, indentation):
+        code = ""
+        paramname = param["name"].replace('.', '_')
+        basetype = self.type_enum_dict[param["types"][0]]["baseType"]
+        anari_type = param["types"][0]
+        if isinstance(param["default"], list):
+            code += indentation + basetype + " value[] = {" + ", ".join([self.format_as(x, anari_type) for x in param["default"]]) + "};\n"
+        elif isinstance(param["default"], str):
+            code += indentation + "const char *value = \"" + param["default"] + "\";\n"
+        else:
+            code += indentation + basetype + " value[] = {" + self.format_as(param["default"], anari_type) + "};\n"
+        code += indentation + "%s.set(device, object, %s, value);\n"%(paramname, param["types"][0])
+        return code
+
     def implement_objects(self):
         code = ""
         code += "static " + hash_gen.gen_hash_function("param_hash", self.param_strings, indent = "")
@@ -133,7 +135,7 @@ class FrontendGenerator:
             if "name" in obj:
                 classname += obj["name"][0].upper() + obj["name"][1:]
 
-            code += classname + "::" + classname + "(ANARIDevice device) : device(device)"
+            code += classname + "::" + classname + "(ANARIDevice device, ANARIObject o) : device(device), object(o)"
             code += " {\n"
 
             for param in obj["parameters"]:
@@ -150,7 +152,7 @@ class FrontendGenerator:
                 i = self.param_strings.index(param["name"])
                 paramname = param["name"].replace('.', '_')
                 code += "      case %d: //%s\n"%(i,param["name"])
-                code += "         return %s.set(device, type, mem);\n"%paramname
+                code += "         return %s.set(device, object, type, mem);\n"%paramname
             code += "      default: // unknown param\n"
             code += "         //unknown parameter\n"
             code += "         return false;\n"
@@ -168,7 +170,7 @@ class FrontendGenerator:
                     code += self.set_default(param, indentation="            ")
                     code += "         }\n"
                 else:
-                    code += "         %s.unset();\n"%paramname
+                    code += "         %s.unset(device, object);\n"%paramname
                 code += "         return;\n"
             code += "      default: // unknown param\n"
             code += "         //unknown parameter\n"
@@ -407,6 +409,7 @@ generate_if_not_present(srcdir, "FrameObject.h", header)
 generate_if_not_present(srcdir, "FrameObject.cpp", header)
 generate_if_not_present(srcdir, "Device.h", header)
 generate_if_not_present(srcdir, "Device.cpp", header)
+generate_if_not_present(srcdir, "Specializations.h", header)
 generate_if_not_present(rootdir, "CMakeLists.txt", header.replace("//","#"), noprefix = True)
 
 

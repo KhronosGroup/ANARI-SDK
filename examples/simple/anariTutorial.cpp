@@ -162,6 +162,8 @@ int main(int argc, const char **argv)
 
   // create renderer
   auto renderer = anari::newObject<anari::Renderer>(d, "default");
+  // objects can be named for easier identification in debug output etc.
+  anari::setParameter(d, renderer, "name", "Steve");
 
   printf("done!\n");
 

@@ -15,10 +15,13 @@ namespace debug_queries {
 #define ANARI_INFO_elementType 5
 #define ANARI_INFO_values 6
 #define ANARI_INFO_feature 7
+const int extension_count = 34;
 const char ** query_extensions();
 const char ** query_object_types(ANARIDataType type);
 const ANARIParameter * query_params(ANARIDataType type, const char *subtype);
 const void * query_param_info_enum(ANARIDataType type, const char *subtype, const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType);
 const void * query_param_info(ANARIDataType type, const char *subtype, const char *paramName, ANARIDataType paramType, const char *infoNameString, ANARIDataType infoType);
+const void * query_object_info_enum(ANARIDataType type, const char *subtype, int infoName, ANARIDataType infoType);
+const void * query_object_info(ANARIDataType type, const char *subtype, const char *infoNameString, ANARIDataType infoType);
 }
 }

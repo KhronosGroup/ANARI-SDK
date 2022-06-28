@@ -9,7 +9,7 @@
 $begin_namespaces
 
 Object<Frame>::Object(ANARIDevice d, ANARIObject handle)
- : FrameObjectBase(d, handle), staging(d), current(d)
+ : FrameObjectBase(d, handle), staging(d, handle), current(d, handle)
 {
 
 }

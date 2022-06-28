@@ -20,6 +20,7 @@ struct DebugDevice;
 struct DEBUG_DEVICE_INTERFACE DebugObjectBase {
 public:
   virtual ANARIDataType getType() = 0;
+  virtual const char *getSubtype() = 0;
   virtual const char *getName() = 0;
   virtual void setName(const char *name) = 0;
   virtual void retain() = 0;
@@ -56,6 +57,7 @@ private:
   std::string objectName;
 public:
   ANARIDataType getType() { return ANARI_OBJECT; }
+  const char *getSubtype() { return ""; }
   const char *getName() {
     if(objectName.empty()) {
       objectName = varnameOf(getType()) + std::to_string(uintptr_t(wrappedHandle));
@@ -85,17 +87,6 @@ public:
 
   void unknown_parameter(ANARIDataType type, const char *subtype, const char *paramname, ANARIDataType paramtype);
   void check_type(ANARIDataType type, const char *subtype, const char *paramname, ANARIDataType paramtype, ANARIDataType *valid_types);
-};
-
-template<int T>
-struct DEBUG_DEVICE_INTERFACE DebugObject : public GenericDebugObject {
-  DebugObject() = default;
-  DebugObject(DebugDevice *debugDevice, ANARIObject wrappedHandle, ANARIObject handle)
-  : GenericDebugObject(debugDevice, wrappedHandle, handle)
-  {
-
-  }
-  virtual ANARIDataType getType() { return T; }
 };
 
 struct DEBUG_DEVICE_INTERFACE GenericArrayDebugObject : public GenericDebugObject {
@@ -145,61 +136,97 @@ public:
 };
 
 template<int T>
-struct DEBUG_DEVICE_INTERFACE ArrayDebugObject : public GenericArrayDebugObject {
-  ArrayDebugObject() = default;
-  ArrayDebugObject(DebugDevice *debugDevice, ANARIObject wrappedHandle, ANARIObject handle)
-  : GenericArrayDebugObject(debugDevice, wrappedHandle, handle)
+struct DEBUG_DEVICE_INTERFACE DebugObject : public GenericDebugObject {
+  DebugObject(DebugDevice *debugDevice, ANARIObject wrappedHandle, ANARIObject handle)
+  : GenericDebugObject(debugDevice, wrappedHandle, handle)
   {
 
   }
   ANARIDataType getType() { return T; }
 };
 
+template<int T>
+struct DEBUG_DEVICE_INTERFACE SubtypedDebugObject : public DebugObject<T> {
+private:
+  std::string subtype;
+public:
+  SubtypedDebugObject(DebugDevice *debugDevice, ANARIObject wrappedHandle, ANARIObject handle, const char *subtype)
+  : DebugObject<T>(debugDevice, wrappedHandle, handle), subtype(subtype)
+  {
+
+  }
+  ANARIDataType getType() { return T; }
+  const char* getSubtype() { return subtype.c_str(); }
+};
+
+
+template<>
+struct DEBUG_DEVICE_INTERFACE DebugObject<ANARI_ARRAY1D> : public GenericArrayDebugObject {
+  DebugObject(DebugDevice *debugDevice, ANARIObject wrappedHandle, ANARIObject handle)
+  : GenericArrayDebugObject(debugDevice, wrappedHandle, handle)
+  {
+
+  }
+  ANARIDataType getType() { return ANARI_ARRAY1D; }
+};
+
+template<>
+struct DEBUG_DEVICE_INTERFACE DebugObject<ANARI_ARRAY2D> : public GenericArrayDebugObject {
+  DebugObject(DebugDevice *debugDevice, ANARIObject wrappedHandle, ANARIObject handle)
+  : GenericArrayDebugObject(debugDevice, wrappedHandle, handle)
+  {
+
+  }
+  ANARIDataType getType() { return ANARI_ARRAY2D; }
+};
+
+template<>
+struct DEBUG_DEVICE_INTERFACE DebugObject<ANARI_ARRAY3D> : public GenericArrayDebugObject {
+  DebugObject(DebugDevice *debugDevice, ANARIObject wrappedHandle, ANARIObject handle)
+  : GenericArrayDebugObject(debugDevice, wrappedHandle, handle)
+  {
+
+  }
+  ANARIDataType getType() { return ANARI_ARRAY3D; }
+};
+
 class DEBUG_DEVICE_INTERFACE ObjectFactory {
 public:
   virtual DebugObjectBase* new_volume(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) {
-    (void)name;
-    return new DebugObject<ANARI_VOLUME>(td, wh, h);
+    return new SubtypedDebugObject<ANARI_VOLUME>(td, wh, h, name);
   }
   virtual DebugObjectBase* new_geometry(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) {
-    (void)name;
-    return new DebugObject<ANARI_GEOMETRY>(td, wh, h);
+    return new SubtypedDebugObject<ANARI_GEOMETRY>(td, wh, h, name);
   }
   virtual DebugObjectBase* new_spatial_field(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) {
-    (void)name;
-    return new DebugObject<ANARI_SPATIAL_FIELD>(td, wh, h);
+    return new SubtypedDebugObject<ANARI_SPATIAL_FIELD>(td, wh, h, name);
   }
   virtual DebugObjectBase* new_light(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) {
-    (void)name;
-    return new DebugObject<ANARI_LIGHT>(td, wh, h);
+    return new SubtypedDebugObject<ANARI_LIGHT>(td, wh, h, name);
   }
   virtual DebugObjectBase* new_camera(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) {
-    (void)name;
-    return new DebugObject<ANARI_CAMERA>(td, wh, h);
+    return new SubtypedDebugObject<ANARI_CAMERA>(td, wh, h, name);
   }
   virtual DebugObjectBase* new_material(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) {
-    (void)name;
-    return new DebugObject<ANARI_MATERIAL>(td, wh, h);
+    return new SubtypedDebugObject<ANARI_MATERIAL>(td, wh, h, name);
   }
   virtual DebugObjectBase* new_sampler(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) {
-    (void)name;
-    return new DebugObject<ANARI_SAMPLER>(td, wh, h);
+    return new SubtypedDebugObject<ANARI_SAMPLER>(td, wh, h, name);
   }
   virtual DebugObjectBase* new_renderer(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) {
-    (void)name;
-    return new DebugObject<ANARI_RENDERER>(td, wh, h);
+    return new SubtypedDebugObject<ANARI_RENDERER>(td, wh, h, name);
   }
   virtual DebugObjectBase* new_device(DebugDevice *td, ANARIObject wh, ANARIObject h) {
     return new DebugObject<ANARI_DEVICE>(td, wh, h);
   }
   virtual DebugObjectBase* new_array1d(DebugDevice *td, ANARIObject wh, ANARIObject h) {
-    return new ArrayDebugObject<ANARI_ARRAY1D>(td, wh, h);
+    return new DebugObject<ANARI_ARRAY1D>(td, wh, h);
   }
   virtual DebugObjectBase* new_array2d(DebugDevice *td, ANARIObject wh, ANARIObject h) {
-    return new ArrayDebugObject<ANARI_ARRAY2D>(td, wh, h);
+    return new DebugObject<ANARI_ARRAY2D>(td, wh, h);
   }
   virtual DebugObjectBase* new_array3d(DebugDevice *td, ANARIObject wh, ANARIObject h) {
-    return new ArrayDebugObject<ANARI_ARRAY3D>(td, wh, h);
+    return new DebugObject<ANARI_ARRAY3D>(td, wh, h);
   }
   virtual DebugObjectBase* new_frame(DebugDevice *td, ANARIObject wh, ANARIObject h) {
     return new DebugObject<ANARI_FRAME>(td, wh, h);

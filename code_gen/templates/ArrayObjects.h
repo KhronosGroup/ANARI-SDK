@@ -3,6 +3,7 @@
 #pragma once
 
 #include "$prefixObject.h"
+#include "$prefixObjects.h"
 
 #include <vector>
 

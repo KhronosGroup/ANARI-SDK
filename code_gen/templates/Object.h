@@ -5,10 +5,12 @@
 #include <cstring>
 #include <atomic>
 #include <cstdint>
+#include "anari/anari.h"
 
-#include "$prefixObjects.h"
 
 $begin_namespaces
+
+class ParameterPack;
 
 void anariDeleteInternal(ANARIDevice, ANARIObject);
 
@@ -29,8 +31,10 @@ public:
          releasePublic();
       }
    }
-   virtual void retainInternal() { refcount += UINT64_C(0x100000000); }
-   virtual void releaseInternal() {
+   virtual void retainInternal(ANARIObject) {
+      refcount += UINT64_C(0x100000000);
+   }
+   virtual void releaseInternal(ANARIObject) {
       uint64_t c = refcount.fetch_sub(UINT64_C(0x100000000));
       if(c == UINT64_C(0x100000000)) {
          anariDeleteInternal(device, handle);
@@ -68,11 +72,12 @@ public:
 };
 
 template<class T>
-class Object : public ObjectBase {
+class DefaultObject : public ObjectBase {
+protected:
    T staging;
    T current;
 public:
-   Object(ANARIDevice d, ANARIObject handle) : ObjectBase(d, handle), staging(d), current(d) {
+   DefaultObject(ANARIDevice d, ANARIObject handle) : ObjectBase(d, handle), staging(d, handle), current(d, handle) {
 
    }
    bool set(const char *paramname, ANARIDataType type, const void *mem) override {
@@ -98,6 +103,14 @@ public:
    ANARIDataType type() const override { return T::type; }
    const char* subtype() const override { return T::subtype; }
    ParameterPack& parameters() override { return current; }
+};
+
+template<class T>
+class Object : public DefaultObject<T> {
+public:
+   Object(ANARIDevice d, ANARIObject handle) : DefaultObject<T>(d, handle) {
+
+   }
 };
 
 $end_namespaces

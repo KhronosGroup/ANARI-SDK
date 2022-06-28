@@ -5,8 +5,7 @@
 // anari
 #include "anari/backend/DeviceImpl.h"
 #include "$prefixObject.h"
-#include "$prefixArrayObjects.h"
-#include "$prefixFrameObject.h"
+#include "$prefixSpecializations.h"
 
 #include <vector>
 #include <memory>
@@ -31,8 +30,8 @@
 
 $begin_namespaces
 
-void anariRetainInternal(ANARIDevice, ANARIObject);
-void anariReleaseInternal(ANARIDevice, ANARIObject);
+void anariRetainInternal(ANARIDevice, ANARIObject, ANARIObject);
+void anariReleaseInternal(ANARIDevice, ANARIObject, ANARIObject);
 void anariDeleteInternal(ANARIDevice, ANARIObject);
 void anariReportStatus(ANARIDevice,
       ANARIObject source,
@@ -133,8 +132,8 @@ struct DEVICE_INTERFACE $prefixDevice : public anari::DeviceImpl
 
    void release(ANARIObject) override;
    void retain(ANARIObject) override;
-   void retainInternal(ANARIObject);
-   void releaseInternal(ANARIObject);
+   void retainInternal(ANARIObject, ANARIObject);
+   void releaseInternal(ANARIObject, ANARIObject);
 
    // FrameBuffer Manipulation /////////////////////////////////////////////////
 
