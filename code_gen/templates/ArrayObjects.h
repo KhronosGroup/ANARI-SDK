@@ -14,17 +14,17 @@ class Object<Array1D> : public ArrayObjectBase {
    Array1D staging;
    Array1D current;
 public:
-   void* appMemory;
+   const void* appMemory;
    ANARIMemoryDeleter deleter;
-   void* userdata;
+   const void* userdata;
    ANARIDataType elementType;
    uint64_t numItems1;
    uint64_t byteStride1;
 
    std::vector<ANARIObject> objectArray;
 
-   Object(ANARIDevice d, ANARIObject handle, void* appMemory,
-      ANARIMemoryDeleter deleter, void* userdata, ANARIDataType type,
+   Object(ANARIDevice d, ANARIObject handle, const void* appMemory,
+      ANARIMemoryDeleter deleter, const void* userdata, ANARIDataType type,
       uint64_t numItems1, uint64_t byteStride1);
 
    bool set(const char *paramname, ANARIDataType type, const void *mem) override;
@@ -48,17 +48,17 @@ class Object<Array2D> : public ArrayObjectBase {
    Array2D staging;
    Array2D current;
 public:
-   void* appMemory;
+   const void* appMemory;
    ANARIMemoryDeleter deleter;
-   void* userdata;
+   const void* userdata;
    ANARIDataType elementType;
    uint64_t numItems1;
    uint64_t numItems2;
    uint64_t byteStride1;
    uint64_t byteStride2;
 
-   Object(ANARIDevice d, ANARIObject handle, void* appMemory,
-      ANARIMemoryDeleter deleter, void* userdata, ANARIDataType type,
+   Object(ANARIDevice d, ANARIObject handle, const void* appMemory,
+      ANARIMemoryDeleter deleter, const void* userdata, ANARIDataType type,
       uint64_t numItems1, uint64_t numItems2,
       uint64_t byteStride1, uint64_t byteStride2);
 
@@ -82,9 +82,9 @@ class Object<Array3D> : public ArrayObjectBase {
    Array3D staging;
    Array3D current;
 public:
-   void* appMemory;
+   const void* appMemory;
    ANARIMemoryDeleter deleter;
-   void* userdata;
+   const void* userdata;
    ANARIDataType elementType;
    uint64_t numItems1;
    uint64_t numItems2;
@@ -93,8 +93,8 @@ public:
    uint64_t byteStride2;
    uint64_t byteStride3;
 
-   Object(ANARIDevice d, ANARIObject handle, void* appMemory,
-      ANARIMemoryDeleter deleter, void* userdata, ANARIDataType type,
+   Object(ANARIDevice d, ANARIObject handle, const void* appMemory,
+      ANARIMemoryDeleter deleter, const void* userdata, ANARIDataType type,
       uint64_t numItems1, uint64_t numItems2, uint64_t numItems3,
       uint64_t byteStride1, uint64_t byteStride2, uint64_t byteStride3);
 

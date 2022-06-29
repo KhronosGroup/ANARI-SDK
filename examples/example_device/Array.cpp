@@ -8,9 +8,9 @@ namespace example_device {
 
 // Array //
 
-Array::Array(void *appMem,
+Array::Array(const void *appMem,
     ANARIMemoryDeleter deleter,
-    void *deleterPtr,
+    const void *deleterPtr,
     ANARIDataType elementType)
     : m_mem(appMem), m_deleter(deleter), m_elementType(elementType)
 {}
@@ -27,7 +27,7 @@ ANARIDataType Array::elementType() const
 
 void *Array::map()
 {
-  return m_mem;
+  return const_cast<void*>(m_mem);
 }
 
 void Array::unmap()
@@ -42,11 +42,12 @@ bool Array::wasPrivatized() const
 
 void Array::makePrivatizedCopy(size_t numElements)
 {
-  void *appMem = m_mem;
+  const void *appMem = m_mem;
 
   size_t numBytes = numElements * sizeOf(elementType());
-  m_mem = malloc(numBytes);
-  std::memcpy(m_mem, appMem, numBytes);
+  void *tmp_mem = malloc(numBytes);
+  std::memcpy(tmp_mem, appMem, numBytes);
+  m_mem = tmp_mem;
 
   if (m_deleter) {
     m_deleter(m_deleterPtr, appMem);
@@ -63,16 +64,16 @@ void Array::freeAppMemory()
     m_mem = nullptr;
     m_deleter = nullptr;
   } else if (wasPrivatized() && m_mem) {
-    free(m_mem);
+    free(const_cast<void*>(m_mem));
     m_mem = nullptr;
   }
 }
 
 // Array1D //
 
-Array1D::Array1D(void *appMemory,
+Array1D::Array1D(const void *appMemory,
     ANARIMemoryDeleter deleter,
-    void *deleterPtr,
+    const void *deleterPtr,
     ANARIDataType type,
     uint64_t numItems,
     uint64_t byteStride)
@@ -99,9 +100,9 @@ void Array1D::privatize()
 
 // Array2D //
 
-Array2D::Array2D(void *appMemory,
+Array2D::Array2D(const void *appMemory,
     ANARIMemoryDeleter deleter,
-    void *deleterPtr,
+    const void *deleterPtr,
     ANARIDataType type,
     uint64_t numItems1,
     uint64_t numItems2,
@@ -138,9 +139,9 @@ void Array2D::privatize()
 
 // Array3D //
 
-Array3D::Array3D(void *appMemory,
+Array3D::Array3D(const void *appMemory,
     ANARIMemoryDeleter deleter,
-    void *deleterPtr,
+    const void *deleterPtr,
     ANARIDataType type,
     uint64_t numItems1,
     uint64_t numItems2,
@@ -180,9 +181,9 @@ void Array3D::privatize()
 
 // ObjectArray //
 
-ObjectArray::ObjectArray(void *appMemory,
+ObjectArray::ObjectArray(const void *appMemory,
     ANARIMemoryDeleter deleter,
-    void *deleterPtr,
+    const void *deleterPtr,
     ANARIDataType type,
     uint64_t numItems,
     uint64_t byteStride)

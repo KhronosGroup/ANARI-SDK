@@ -31,25 +31,25 @@ struct EXAMPLE_DEVICE_INTERFACE ExampleDevice : public DeviceImpl,
 
   // Data Arrays //////////////////////////////////////////////////////////////
 
-  ANARIArray1D newArray1D(void *appMemory,
+  ANARIArray1D newArray1D(const void *appMemory,
       ANARIMemoryDeleter deleter,
-      void *userdata,
+      const void *userdata,
       ANARIDataType,
       uint64_t numItems1,
       uint64_t byteStride1) override;
 
-  ANARIArray2D newArray2D(void *appMemory,
+  ANARIArray2D newArray2D(const void *appMemory,
       ANARIMemoryDeleter deleter,
-      void *userdata,
+      const void *userdata,
       ANARIDataType,
       uint64_t numItems1,
       uint64_t numItems2,
       uint64_t byteStride1,
       uint64_t byteStride2) override;
 
-  ANARIArray3D newArray3D(void *appMemory,
+  ANARIArray3D newArray3D(const void *appMemory,
       ANARIMemoryDeleter deleter,
-      void *userdata,
+      const void *userdata,
       ANARIDataType,
       uint64_t numItems1,
       uint64_t numItems2,

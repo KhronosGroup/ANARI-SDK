@@ -189,9 +189,9 @@ int ExampleDevice::deviceImplements(const char *_extension)
 
 // Data Arrays ////////////////////////////////////////////////////////////////
 
-ANARIArray1D ExampleDevice::newArray1D(void *appMemory,
+ANARIArray1D ExampleDevice::newArray1D(const void *appMemory,
     ANARIMemoryDeleter deleter,
-    void *userData,
+    const void *userData,
     ANARIDataType type,
     uint64_t numItems,
     uint64_t byteStride)
@@ -205,9 +205,9 @@ ANARIArray1D ExampleDevice::newArray1D(void *appMemory,
   }
 }
 
-ANARIArray2D ExampleDevice::newArray2D(void *appMemory,
+ANARIArray2D ExampleDevice::newArray2D(const void *appMemory,
     ANARIMemoryDeleter deleter,
-    void *userData,
+    const void *userData,
     ANARIDataType type,
     uint64_t numItems1,
     uint64_t numItems2,
@@ -224,9 +224,9 @@ ANARIArray2D ExampleDevice::newArray2D(void *appMemory,
       byteStride2);
 }
 
-ANARIArray3D ExampleDevice::newArray3D(void *appMemory,
+ANARIArray3D ExampleDevice::newArray3D(const void *appMemory,
     ANARIMemoryDeleter deleter,
-    void *userData,
+    const void *userData,
     ANARIDataType type,
     uint64_t numItems1,
     uint64_t numItems2,

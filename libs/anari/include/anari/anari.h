@@ -134,7 +134,7 @@ typedef struct {
   ANARIDataType type;
 } ANARIParameter;
 
-typedef void (*ANARIMemoryDeleter)(void* userPtr, void* appMemory);
+typedef void (*ANARIMemoryDeleter)(const void* userPtr, const void* appMemory);
 typedef void (*ANARIStatusCallback)(const void* userPtr, ANARIDevice device, ANARIObject source, ANARIDataType sourceType, ANARIStatusSeverity severity, ANARIStatusCode code, const char* message);
 typedef void (*ANARIFrameCompletionCallback)(const void* userPtr, ANARIDevice device, ANARIFrame frame);
 
@@ -144,9 +144,9 @@ ANARI_INTERFACE void anariLoadModule(ANARILibrary library, const char* name);
 ANARI_INTERFACE void anariUnloadModule(ANARILibrary library, const char* name);
 ANARI_INTERFACE ANARIDevice anariNewDevice(ANARILibrary library, const char* type ANARI_DEFAULT_VAL("default"));
 ANARI_INTERFACE int anariDeviceImplements(ANARIDevice device, const char* profile);
-ANARI_INTERFACE ANARIArray1D anariNewArray1D(ANARIDevice device, void* appMemory, ANARIMemoryDeleter deleter, void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t byteStride1 ANARI_DEFAULT_VAL(0));
-ANARI_INTERFACE ANARIArray2D anariNewArray2D(ANARIDevice device, void* appMemory, ANARIMemoryDeleter deleter, void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t numItems2, uint64_t byteStride1 ANARI_DEFAULT_VAL(0), uint64_t byteStride2 ANARI_DEFAULT_VAL(0));
-ANARI_INTERFACE ANARIArray3D anariNewArray3D(ANARIDevice device, void* appMemory, ANARIMemoryDeleter deleter, void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t numItems2, uint64_t numItems3, uint64_t byteStride1 ANARI_DEFAULT_VAL(0), uint64_t byteStride2 ANARI_DEFAULT_VAL(0), uint64_t byteStride3 ANARI_DEFAULT_VAL(0));
+ANARI_INTERFACE ANARIArray1D anariNewArray1D(ANARIDevice device, const void* appMemory, ANARIMemoryDeleter deleter, const void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t byteStride1 ANARI_DEFAULT_VAL(0));
+ANARI_INTERFACE ANARIArray2D anariNewArray2D(ANARIDevice device, const void* appMemory, ANARIMemoryDeleter deleter, const void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t numItems2, uint64_t byteStride1 ANARI_DEFAULT_VAL(0), uint64_t byteStride2 ANARI_DEFAULT_VAL(0));
+ANARI_INTERFACE ANARIArray3D anariNewArray3D(ANARIDevice device, const void* appMemory, ANARIMemoryDeleter deleter, const void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t numItems2, uint64_t numItems3, uint64_t byteStride1 ANARI_DEFAULT_VAL(0), uint64_t byteStride2 ANARI_DEFAULT_VAL(0), uint64_t byteStride3 ANARI_DEFAULT_VAL(0));
 ANARI_INTERFACE void* anariMapArray(ANARIDevice device, ANARIArray array);
 ANARI_INTERFACE void anariUnmapArray(ANARIDevice device, ANARIArray array);
 ANARI_INTERFACE ANARILight anariNewLight(ANARIDevice device, const char* type);

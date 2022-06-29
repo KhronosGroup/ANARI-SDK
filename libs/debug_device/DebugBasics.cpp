@@ -55,8 +55,8 @@ void DebugBasics::anariDeviceImplements(ANARIDevice device, const char* profile)
     (void)device;
     (void)profile;
 }
-void DebugBasics::anariNewArray1D(ANARIDevice device, void *appMemory, ANARIMemoryDeleter deleter,
-    void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t byteStride1) {
+void DebugBasics::anariNewArray1D(ANARIDevice device, const void *appMemory, ANARIMemoryDeleter deleter,
+    const void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t byteStride1) {
     DEBUG_FUNCTION(anariNewArray1D)
     (void)device;
     (void)numItems1;
@@ -102,8 +102,8 @@ void DebugBasics::anariNewArray1D(ANARIDevice device, void *appMemory, ANARIMemo
         }
     }
 }
-void DebugBasics::anariNewArray2D(ANARIDevice device, void* appMemory, ANARIMemoryDeleter deleter,
-    void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t numItems2,
+void DebugBasics::anariNewArray2D(ANARIDevice device, const void* appMemory, ANARIMemoryDeleter deleter,
+    const void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t numItems2,
     uint64_t byteStride1, uint64_t byteStride2) {
     DEBUG_FUNCTION(anariNewArray2D)
     (void)device;
@@ -125,8 +125,8 @@ void DebugBasics::anariNewArray2D(ANARIDevice device, void* appMemory, ANARIMemo
             DEBUG_FUNCTION_NAME);
     }
 }
-void DebugBasics::anariNewArray3D(ANARIDevice device, void* appMemory, ANARIMemoryDeleter deleter,
-    void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t numItems2, uint64_t numItems3,
+void DebugBasics::anariNewArray3D(ANARIDevice device, const void* appMemory, ANARIMemoryDeleter deleter,
+    const void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t numItems2, uint64_t numItems3,
     uint64_t byteStride1, uint64_t byteStride2, uint64_t byteStride3) {
     DEBUG_FUNCTION(anariNewArray3D)
     (void)device;

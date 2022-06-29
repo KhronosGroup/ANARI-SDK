@@ -6,9 +6,9 @@
 #include "anari/anari_cpp/ext/glm.h"
 #include "glm/ext/matrix_transform.hpp"
 
-static void anari_free(void *ptr, void *)
+static void anari_free(const void *ptr, const void *)
 {
-  std::free(ptr);
+  std::free(const_cast<void*>(ptr));
 }
 
 namespace anari {

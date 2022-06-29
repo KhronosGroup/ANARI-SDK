@@ -10,16 +10,16 @@
 #include <cstring>
 #include <algorithm>
 
-static void managed_deleter(void*, void *appMemory) {
-   std::free(appMemory);
+static void managed_deleter(const void*, const void *appMemory) {
+   std::free(const_cast<void*>(appMemory));
 }
 
 namespace anari_sdk{
 namespace tree{
 
 
-Object<Array1D>::Object(ANARIDevice d, ANARIObject handle, void* appMemory,
-   ANARIMemoryDeleter deleter, void* userdata, ANARIDataType elementType,
+Object<Array1D>::Object(ANARIDevice d, ANARIObject handle, const void* appMemory,
+   ANARIMemoryDeleter deleter, const void* userdata, ANARIDataType elementType,
    uint64_t numItems1, uint64_t byteStride1)
 : ArrayObjectBase(d, handle), staging(d, handle), current(d, handle), appMemory(appMemory), deleter(deleter), userdata(userdata),
 elementType(elementType), numItems1(numItems1), byteStride1(byteStride1)
@@ -33,9 +33,9 @@ elementType(elementType), numItems1(numItems1), byteStride1(byteStride1)
    }
    if(anari::isObject(elementType)) {
       objectArray.resize(numItems1);
-      char *basePtr = static_cast<char*>(this->appMemory);
+      const char *basePtr = static_cast<const char*>(this->appMemory);
       for(uint64_t i = 0;i<numItems1;++i) {
-         ANARIObject op = *reinterpret_cast<ANARIObject*>(basePtr+i*this->byteStride1);
+         const ANARIObject op = *reinterpret_cast<const ANARIObject*>(basePtr+i*this->byteStride1);
          objectArray[i] = op;
          anariRetainInternal(device, objectArray[i], handle);
       }
@@ -63,13 +63,13 @@ int Object<Array1D>::getProperty(
    return 0;
 }
 void* Object<Array1D>::map() {
-   return appMemory;
+   return const_cast<void*>(appMemory);
 }
 void Object<Array1D>::unmap() {
    if(anari::isObject(elementType)) {
-      char *basePtr = static_cast<char*>(appMemory);
+      const char *basePtr = static_cast<const char*>(appMemory);
       for(uint64_t i = 0;i<numItems1;++i) {
-         ANARIObject op = *reinterpret_cast<ANARIObject*>(basePtr+i*byteStride1);
+         const ANARIObject op = *reinterpret_cast<const ANARIObject*>(basePtr+i*byteStride1);
          anariReleaseInternal(device, objectArray[i], handle);
          objectArray[i] = op;
          anariRetainInternal(device, objectArray[i], handle);
@@ -89,8 +89,8 @@ Object<Array1D>::~Object() {
 }
 
 
-Object<Array2D>::Object(ANARIDevice d, ANARIObject handle, void* appMemory,
-   ANARIMemoryDeleter deleter, void* userdata, ANARIDataType elementType,
+Object<Array2D>::Object(ANARIDevice d, ANARIObject handle, const void* appMemory,
+   ANARIMemoryDeleter deleter, const void* userdata, ANARIDataType elementType,
    uint64_t numItems1, uint64_t numItems2,
    uint64_t byteStride1, uint64_t byteStride2)
 : ArrayObjectBase(d, handle), staging(d, handle), current(d, handle), appMemory(appMemory), deleter(deleter), userdata(userdata),
@@ -132,7 +132,7 @@ int Object<Array2D>::getProperty(
    return 0;
 }
 void* Object<Array2D>::map() {
-   return appMemory;
+   return const_cast<void*>(appMemory);
 }
 void Object<Array2D>::unmap() {
 
@@ -147,8 +147,8 @@ Object<Array2D>::~Object() {
 }
 
 
-Object<Array3D>::Object(ANARIDevice d, ANARIObject handle, void* appMemory,
-   ANARIMemoryDeleter deleter, void* userdata, ANARIDataType elementType,
+Object<Array3D>::Object(ANARIDevice d, ANARIObject handle, const void* appMemory,
+   ANARIMemoryDeleter deleter, const void* userdata, ANARIDataType elementType,
    uint64_t numItems1, uint64_t numItems2, uint64_t numItems3,
    uint64_t byteStride1, uint64_t byteStride2, uint64_t byteStride3)
 : ArrayObjectBase(d, handle), staging(d, handle), current(d, handle), appMemory(appMemory), deleter(deleter), userdata(userdata),
@@ -193,7 +193,7 @@ int Object<Array3D>::getProperty(
    return 0;
 }
 void* Object<Array3D>::map() {
-   return appMemory;
+   return const_cast<void*>(appMemory);
 }
 void Object<Array3D>::unmap() {
 

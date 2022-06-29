@@ -12,9 +12,9 @@ class DebugInterface {
 public:
     virtual ~DebugInterface() = default;
     virtual void anariDeviceImplements(ANARIDevice device, const char* profile) = 0;
-    virtual void anariNewArray1D(ANARIDevice device, void* appMemory, ANARIMemoryDeleter deleter, void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t byteStride1) = 0;
-    virtual void anariNewArray2D(ANARIDevice device, void* appMemory, ANARIMemoryDeleter deleter, void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t numItems2, uint64_t byteStride1, uint64_t byteStride2) = 0;
-    virtual void anariNewArray3D(ANARIDevice device, void* appMemory, ANARIMemoryDeleter deleter, void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t numItems2, uint64_t numItems3, uint64_t byteStride1, uint64_t byteStride2, uint64_t byteStride3) = 0;
+    virtual void anariNewArray1D(ANARIDevice device, const void* appMemory, ANARIMemoryDeleter deleter, const void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t byteStride1) = 0;
+    virtual void anariNewArray2D(ANARIDevice device, const void* appMemory, ANARIMemoryDeleter deleter, const void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t numItems2, uint64_t byteStride1, uint64_t byteStride2) = 0;
+    virtual void anariNewArray3D(ANARIDevice device, const void* appMemory, ANARIMemoryDeleter deleter, const void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t numItems2, uint64_t numItems3, uint64_t byteStride1, uint64_t byteStride2, uint64_t byteStride3) = 0;
     virtual void anariMapArray(ANARIDevice device, ANARIArray array) = 0;
     virtual void anariUnmapArray(ANARIDevice device, ANARIArray array) = 0;
     virtual void anariNewLight(ANARIDevice device, const char* type) = 0;

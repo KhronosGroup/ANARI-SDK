@@ -37,25 +37,25 @@ struct SINK_DEVICE_INTERFACE SinkDevice : public DeviceImpl, public RefCounted
 
   // Data Arrays //////////////////////////////////////////////////////////////
 
-  ANARIArray1D newArray1D(void *appMemory,
+  ANARIArray1D newArray1D(const void *appMemory,
       ANARIMemoryDeleter deleter,
-      void *userdata,
+      const void *userdata,
       ANARIDataType,
       uint64_t numItems1,
       uint64_t byteStride1) override;
 
-  ANARIArray2D newArray2D(void *appMemory,
+  ANARIArray2D newArray2D(const void *appMemory,
       ANARIMemoryDeleter deleter,
-      void *userdata,
+      const void *userdata,
       ANARIDataType,
       uint64_t numItems1,
       uint64_t numItems2,
       uint64_t byteStride1,
       uint64_t byteStride2) override;
 
-  ANARIArray3D newArray3D(void *appMemory,
+  ANARIArray3D newArray3D(const void *appMemory,
       ANARIMemoryDeleter deleter,
-      void *userdata,
+      const void *userdata,
       ANARIDataType,
       uint64_t numItems1,
       uint64_t numItems2,
@@ -144,13 +144,13 @@ struct SINK_DEVICE_INTERFACE SinkDevice : public DeviceImpl, public RefCounted
   {
     int64_t refcount = 1;
     ANARIMemoryDeleter deleter = nullptr;
-    void *userdata = nullptr;
-    void *memory = nullptr;
+    const void *userdata = nullptr;
+    const void *memory = nullptr;
     ANARIDataType type;
 
     void *map()
     {
-      return memory;
+      return const_cast<void*>(memory);
     }
     void retain()
     {

@@ -23,14 +23,14 @@ int SinkDevice::deviceImplements(const char*)
 
 // Data Arrays ////////////////////////////////////////////////////////////////
 
-void managed_deleter(void*, void *memory)
+void managed_deleter(const void*, const void *memory)
 {
-  delete[] static_cast<char *>(memory);
+  delete[] static_cast<char *>(const_cast<void*>(memory));
 }
 
-ANARIArray1D SinkDevice::newArray1D(void *appMemory,
+ANARIArray1D SinkDevice::newArray1D(const void *appMemory,
     ANARIMemoryDeleter deleter,
-    void *userData,
+    const void *userData,
     ANARIDataType type,
     uint64_t numItems,
     uint64_t byteStride)
@@ -51,9 +51,9 @@ ANARIArray1D SinkDevice::newArray1D(void *appMemory,
   return handle;
 }
 
-ANARIArray2D SinkDevice::newArray2D(void *appMemory,
+ANARIArray2D SinkDevice::newArray2D(const void *appMemory,
     ANARIMemoryDeleter deleter,
-    void *userData,
+    const void *userData,
     ANARIDataType type,
     uint64_t numItems1,
     uint64_t numItems2,
@@ -77,9 +77,9 @@ ANARIArray2D SinkDevice::newArray2D(void *appMemory,
   return handle;
 }
 
-ANARIArray3D SinkDevice::newArray3D(void *appMemory,
+ANARIArray3D SinkDevice::newArray3D(const void *appMemory,
     ANARIMemoryDeleter deleter,
-    void *userData,
+    const void *userData,
     ANARIDataType type,
     uint64_t numItems1,
     uint64_t numItems2,
@@ -109,7 +109,7 @@ ANARIArray3D SinkDevice::newArray3D(void *appMemory,
 void *SinkDevice::mapArray(ANARIArray a)
 {
   if (auto obj = getObject(a)) {
-    return obj->memory;
+    return const_cast<void*>(obj->memory);
   } else {
     return nullptr;
   }
@@ -198,10 +198,10 @@ struct FrameData
   uint32_t height = 1;
 };
 
-void frame_deleter(void *userdata, void *memory)
+void frame_deleter(const void *userdata, const void *memory)
 {
-  delete[] static_cast<char *>(memory);
-  delete static_cast<FrameData *>(userdata);
+  delete[] static_cast<char *>(const_cast<void*>(memory));
+  delete static_cast<FrameData *>(const_cast<void*>(userdata));
 }
 
 void SinkDevice::setParameter(
@@ -209,12 +209,12 @@ void SinkDevice::setParameter(
 {
   if (auto obj = getObject(object)) {
     if (obj->type == ANARI_FRAME) {
-      FrameData *data = static_cast<FrameData *>(obj->userdata);
+      FrameData *data = static_cast<FrameData *>(const_cast<void*>(obj->userdata));
       if (type == ANARI_UINT32_VEC2 && std::strncmp("size", name, 4) == 0) {
         const uint32_t *size = static_cast<const uint32_t *>(mem);
         data->width = size[0];
         data->height = size[1];
-        delete[] static_cast<char *>(obj->memory);
+        delete[] static_cast<char *>(const_cast<void*>(obj->memory));
         obj->memory = nullptr;
       }
     }
@@ -255,7 +255,7 @@ const void *SinkDevice::frameBufferMap(ANARIFrame fb, const char*)
 {
   if (auto obj = getObject(fb)) {
     if (obj->type == ANARI_FRAME) {
-      FrameData *data = static_cast<FrameData *>(obj->userdata);
+      const FrameData *data = static_cast<const FrameData *>(obj->userdata);
       if (obj->memory == nullptr) {
         obj->memory = new char[data->width * data->height * 4 * sizeof(float)];
       }
