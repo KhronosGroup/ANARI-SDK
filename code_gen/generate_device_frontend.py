@@ -373,6 +373,7 @@ with open(gendir/(args.prefix + "DeviceFactories.cpp"), mode='w') as f:
 
     f.write("#include \""+args.prefix+"Device.h\"\n")
     f.write("#include \""+args.prefix+"Objects.h\"\n")
+    f.write("#include \""+args.prefix+"Specializations.h\"\n")
     f.write(begin_namespaces)
     f.write(gen.implement_device())
     f.write(end_namespaces)
