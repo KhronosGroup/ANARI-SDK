@@ -416,7 +416,6 @@ int DebugDevice::getProperty(ANARIObject object,
 // Object + Parameter Lifetime Management /////////////////////////////////////
 
 void frameContinuationWrapper(const void *userdata, ANARIDevice, ANARIFrame frame) {
-
   DebugDevice *dd = reinterpret_cast<DebugDevice*>(const_cast<void*>(userdata));
   ANARIFrame debugFrame = dd->wrapHandle(frame);
   DebugObject<ANARI_FRAME> *info = dd->getDynamicObjectInfo<DebugObject<ANARI_FRAME>>(debugFrame);
