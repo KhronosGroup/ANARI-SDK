@@ -21,9 +21,9 @@ enum class ArrayShape
 
 struct Array : public Object
 {
-  Array(void *appMemory,
+  Array(const void *appMemory,
       ANARIMemoryDeleter deleter,
-      void *deleterPtr,
+      const void *deleterPtr,
       ANARIDataType elementType);
   virtual ~Array();
 
@@ -44,9 +44,9 @@ struct Array : public Object
   void makePrivatizedCopy(size_t numElements);
   void freeAppMemory();
 
-  void *m_mem{nullptr};
+  const void *m_mem{nullptr};
   ANARIMemoryDeleter m_deleter{nullptr};
-  void *m_deleterPtr{nullptr};
+  const void *m_deleterPtr{nullptr};
 
  private:
   ANARIDataType m_elementType{ANARI_UNKNOWN};
@@ -55,9 +55,9 @@ struct Array : public Object
 
 struct Array1D : public Array
 {
-  Array1D(void *appMemory,
+  Array1D(const void *appMemory,
       ANARIMemoryDeleter deleter,
-      void *deleterPtr,
+      const void *deleterPtr,
       ANARIDataType type,
       uint64_t numItems,
       uint64_t byteStride);
@@ -74,9 +74,9 @@ struct Array1D : public Array
 
 struct Array2D : public Array
 {
-  Array2D(void *appMemory,
+  Array2D(const void *appMemory,
       ANARIMemoryDeleter deleter,
-      void *deleterPtr,
+      const void *deleterPtr,
       ANARIDataType type,
       uint64_t numItems1,
       uint64_t numItems2,
@@ -96,9 +96,9 @@ struct Array2D : public Array
 
 struct Array3D : public Array
 {
-  Array3D(void *appMemory,
+  Array3D(const void *appMemory,
       ANARIMemoryDeleter deleter,
-      void *deleterPtr,
+      const void *deleterPtr,
       ANARIDataType type,
       uint64_t numItems1,
       uint64_t numItems2,
@@ -120,9 +120,9 @@ struct Array3D : public Array
 
 struct ObjectArray : public Array
 {
-  ObjectArray(void *appMemory,
+  ObjectArray(const void *appMemory,
       ANARIMemoryDeleter deleter,
-      void *deleterPtr,
+      const void *deleterPtr,
       ANARIDataType type,
       uint64_t numItems,
       uint64_t byteStride);

@@ -93,35 +93,35 @@ int DebugDevice::deviceImplements(const char *extension)
 
 struct DeleterWrapperData
 {
-  DeleterWrapperData(void *u, void *m, ANARIMemoryDeleter d)
+  DeleterWrapperData(const void *u, const void *m, ANARIMemoryDeleter d)
       : userData(u), memory(m), deleter(d)
   {}
-  void *userData;
-  void *memory;
+  const void *userData;
+  const void *memory;
   ANARIMemoryDeleter deleter;
 };
-void deleterWrapper(void *userData, void *memory)
+void deleterWrapper(const void *userData, const void *memory)
 {
   if (userData) {
-    DeleterWrapperData *nested = static_cast<DeleterWrapperData *>(userData);
+    const DeleterWrapperData *nested = static_cast<const DeleterWrapperData *>(userData);
     if (nested->deleter) {
       nested->deleter(nested->userData, nested->memory);
     }
     delete nested;
   }
-  delete[] static_cast<ANARIObject *>(memory);
+  delete[] static_cast<const ANARIObject *>(const_cast<void*>(memory));
 }
 
-ANARIArray1D DebugDevice::newArray1D(void *appMemory,
+ANARIArray1D DebugDevice::newArray1D(const void *appMemory,
     ANARIMemoryDeleter deleter,
-    void *userData,
+    const void *userData,
     ANARIDataType type,
     uint64_t numItems,
     uint64_t byteStride)
 {
   ANARIArray1D handle;
   if (isObject(type)) { // object arrays need special treatment
-    ANARIObject *in = static_cast<ANARIObject *>(appMemory);
+    const ANARIObject *in = static_cast<const ANARIObject *>(appMemory);
     ANARIObject *handles = new ANARIObject[numItems];
     if (byteStride != 0 && byteStride != sizeof(ANARIObject)) {
       reportStatus(this_device(),
@@ -153,7 +153,7 @@ ANARIArray1D DebugDevice::newArray1D(void *appMemory,
     handle = anariNewArray1D(wrapped,
         forward,
         deleterWrapper,
-        (void *)deleterData,
+        (const void *)deleterData,
         type,
         numItems,
         uint64_t(0));
@@ -191,9 +191,9 @@ ANARIArray1D DebugDevice::newArray1D(void *appMemory,
   return handle;
 }
 
-ANARIArray2D DebugDevice::newArray2D(void *appMemory,
+ANARIArray2D DebugDevice::newArray2D(const void *appMemory,
     ANARIMemoryDeleter deleter,
-    void *userData,
+    const void *userData,
     ANARIDataType type,
     uint64_t numItems1,
     uint64_t numItems2,
@@ -228,9 +228,9 @@ ANARIArray2D DebugDevice::newArray2D(void *appMemory,
   return handle;
 }
 
-ANARIArray3D DebugDevice::newArray3D(void *appMemory,
+ANARIArray3D DebugDevice::newArray3D(const void *appMemory,
     ANARIMemoryDeleter deleter,
-    void *userData,
+    const void *userData,
     ANARIDataType type,
     uint64_t numItems1,
     uint64_t numItems2,

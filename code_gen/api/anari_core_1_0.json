@@ -222,8 +222,8 @@
             "name" : "ANARIMemoryDeleter",
             "returnType" : "void",
             "arguments" : [
-                {"name" : "userPtr", "type" : "void*"},
-                {"name" : "appMemory", "type" : "void*"}
+                {"name" : "userPtr", "type" : "const void*"},
+                {"name" : "appMemory", "type" : "const void*"}
             ]
         }, {
             "name" : "ANARIStatusCallback",
@@ -298,9 +298,9 @@
             "returnType" : "ANARIArray1D",
             "arguments" : [
                 {"name" : "device", "type" : "ANARIDevice"},
-                {"name" : "appMemory", "type" : "void*"},
+                {"name" : "appMemory", "type" : "const void*"},
                 {"name" : "deleter", "type" : "ANARIMemoryDeleter"},
-                {"name" : "userData", "type" : "void*"},
+                {"name" : "userData", "type" : "const void*"},
                 {"name" : "dataType", "type" : "ANARIDataType"},
                 {"name" : "numItems1", "type" : "uint64_t"},
                 {"name" : "byteStride1", "type" : "uint64_t", "default" : "0"}
@@ -310,9 +310,9 @@
             "returnType" : "ANARIArray2D",
             "arguments" : [
                 {"name" : "device", "type" : "ANARIDevice"},
-                {"name" : "appMemory", "type" : "void*"},
+                {"name" : "appMemory", "type" : "const void*"},
                 {"name" : "deleter", "type" : "ANARIMemoryDeleter"},
-                {"name" : "userData", "type" : "void*"},
+                {"name" : "userData", "type" : "const void*"},
                 {"name" : "dataType", "type" : "ANARIDataType"},
                 {"name" : "numItems1", "type" : "uint64_t"},
                 {"name" : "numItems2", "type" : "uint64_t"},
@@ -324,9 +324,9 @@
             "returnType" : "ANARIArray3D",
             "arguments" : [
                 {"name" : "device", "type" : "ANARIDevice"},
-                {"name" : "appMemory", "type" : "void*"},
+                {"name" : "appMemory", "type" : "const void*"},
                 {"name" : "deleter", "type" : "ANARIMemoryDeleter"},
-                {"name" : "userData", "type" : "void*"},
+                {"name" : "userData", "type" : "const void*"},
                 {"name" : "dataType", "type" : "ANARIDataType"},
                 {"name" : "numItems1", "type" : "uint64_t"},
                 {"name" : "numItems2", "type" : "uint64_t"},

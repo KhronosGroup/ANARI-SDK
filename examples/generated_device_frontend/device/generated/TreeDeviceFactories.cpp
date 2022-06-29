@@ -30,13 +30,13 @@ static int obj_hash(const char *str) {
    }
    return -1;
 }
-ANARIArray1D TreeDevice::newArray1D(void* appMemory, ANARIMemoryDeleter deleter, void* userdata, ANARIDataType type, uint64_t numItems1, uint64_t byteStride1) {
+ANARIArray1D TreeDevice::newArray1D(const void* appMemory, ANARIMemoryDeleter deleter, const void* userdata, ANARIDataType type, uint64_t numItems1, uint64_t byteStride1) {
    return allocate<ANARIArray1D, Array1D>(appMemory, deleter, userdata, type, numItems1, byteStride1);
 }
-ANARIArray2D TreeDevice::newArray2D(void* appMemory, ANARIMemoryDeleter deleter, void* userdata, ANARIDataType type, uint64_t numItems1, uint64_t numItems2, uint64_t byteStride1, uint64_t byteStride2) {
+ANARIArray2D TreeDevice::newArray2D(const void* appMemory, ANARIMemoryDeleter deleter, const void* userdata, ANARIDataType type, uint64_t numItems1, uint64_t numItems2, uint64_t byteStride1, uint64_t byteStride2) {
    return allocate<ANARIArray2D, Array2D>(appMemory, deleter, userdata, type, numItems1, numItems2, byteStride1, byteStride2);
 }
-ANARIArray3D TreeDevice::newArray3D(void* appMemory, ANARIMemoryDeleter deleter, void* userdata, ANARIDataType type, uint64_t numItems1, uint64_t numItems2, uint64_t numItems3, uint64_t byteStride1, uint64_t byteStride2, uint64_t byteStride3) {
+ANARIArray3D TreeDevice::newArray3D(const void* appMemory, ANARIMemoryDeleter deleter, const void* userdata, ANARIDataType type, uint64_t numItems1, uint64_t numItems2, uint64_t numItems3, uint64_t byteStride1, uint64_t byteStride2, uint64_t byteStride3) {
    return allocate<ANARIArray3D, Array3D>(appMemory, deleter, userdata, type, numItems1, numItems2, numItems3, byteStride1, byteStride2, byteStride3);
 }
 ANARIFrame TreeDevice::newFrame() {

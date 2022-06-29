@@ -99,7 +99,7 @@ public:
   {
 
   }
-  void *arrayData = nullptr;
+  const void *arrayData = nullptr;
   void *mapping = nullptr;
   ANARIObject *handles = nullptr;
   ANARIDataType arrayType = ANARI_UNKNOWN;
@@ -111,7 +111,7 @@ public:
   uint64_t byteStride3;
 
   void attachArray(
-    void *array,
+    const void *array,
     ANARIDataType type,
     uint64_t numItems1,
     uint64_t numItems2,

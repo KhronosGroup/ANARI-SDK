@@ -11,9 +11,9 @@ import pathlib
 import subprocess
 
 extra_params = {
-    "ANARI_ARRAY1D" : [("void*","appMemory"), ("ANARIMemoryDeleter","deleter"), ("void*","userdata"), ("ANARIDataType","type"), ("uint64_t", "numItems1"), ("uint64_t", "byteStride1")],
-    "ANARI_ARRAY2D" : [("void*","appMemory"), ("ANARIMemoryDeleter","deleter"), ("void*","userdata"), ("ANARIDataType","type"), ("uint64_t", "numItems1"), ("uint64_t", "numItems2"), ("uint64_t", "byteStride1"), ("uint64_t", "byteStride2")],
-    "ANARI_ARRAY3D" : [("void*","appMemory"), ("ANARIMemoryDeleter","deleter"), ("void*","userdata"), ("ANARIDataType","type"), ("uint64_t", "numItems1"), ("uint64_t", "numItems2"), ("uint64_t", "numItems3"), ("uint64_t", "byteStride1"), ("uint64_t", "byteStride2"), ("uint64_t", "byteStride3")]
+    "ANARI_ARRAY1D" : [("const void*","appMemory"), ("ANARIMemoryDeleter","deleter"), ("const void*","userdata"), ("ANARIDataType","type"), ("uint64_t", "numItems1"), ("uint64_t", "byteStride1")],
+    "ANARI_ARRAY2D" : [("const void*","appMemory"), ("ANARIMemoryDeleter","deleter"), ("const void*","userdata"), ("ANARIDataType","type"), ("uint64_t", "numItems1"), ("uint64_t", "numItems2"), ("uint64_t", "byteStride1"), ("uint64_t", "byteStride2")],
+    "ANARI_ARRAY3D" : [("const void*","appMemory"), ("ANARIMemoryDeleter","deleter"), ("const void*","userdata"), ("ANARIDataType","type"), ("uint64_t", "numItems1"), ("uint64_t", "numItems2"), ("uint64_t", "numItems3"), ("uint64_t", "byteStride1"), ("uint64_t", "byteStride2"), ("uint64_t", "byteStride3")]
 }
 
 class FrontendGenerator:

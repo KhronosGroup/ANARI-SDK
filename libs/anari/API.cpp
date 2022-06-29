@@ -202,9 +202,9 @@ ANARI_CATCH_END(nullptr)
 ///////////////////////////////////////////////////////////////////////////////
 
 extern "C" ANARIArray1D anariNewArray1D(ANARIDevice d,
-    void *appMemory,
+    const void *appMemory,
     ANARIMemoryDeleter deleter,
-    void *userdata,
+    const void *userdata,
     ANARIDataType type,
     uint64_t numItems1,
     uint64_t byteStride1) ANARI_CATCH_BEGIN
@@ -215,9 +215,9 @@ extern "C" ANARIArray1D anariNewArray1D(ANARIDevice d,
 ANARI_CATCH_END(nullptr)
 
 extern "C" ANARIArray2D anariNewArray2D(ANARIDevice d,
-    void *appMemory,
+    const void *appMemory,
     ANARIMemoryDeleter deleter,
-    void *userdata,
+    const void *userdata,
     ANARIDataType type,
     uint64_t numItems1,
     uint64_t numItems2,
@@ -236,9 +236,9 @@ extern "C" ANARIArray2D anariNewArray2D(ANARIDevice d,
 ANARI_CATCH_END(nullptr)
 
 extern "C" ANARIArray3D anariNewArray3D(ANARIDevice d,
-    void *appMemory,
+    const void *appMemory,
     ANARIMemoryDeleter deleter,
-    void *userdata,
+    const void *userdata,
     ANARIDataType type,
     uint64_t numItems1,
     uint64_t numItems2,

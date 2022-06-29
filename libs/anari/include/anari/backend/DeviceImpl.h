@@ -41,25 +41,25 @@ struct ANARI_INTERFACE DeviceImpl
 
   // Data Arrays //////////////////////////////////////////////////////////////
 
-  virtual ANARIArray1D newArray1D(void *appMemory,
+  virtual ANARIArray1D newArray1D(const void *appMemory,
       ANARIMemoryDeleter deleter,
-      void *userdata,
+      const void *userdata,
       ANARIDataType,
       uint64_t numItems1,
       uint64_t byteStride1) = 0;
 
-  virtual ANARIArray2D newArray2D(void *appMemory,
+  virtual ANARIArray2D newArray2D(const void *appMemory,
       ANARIMemoryDeleter deleter,
-      void *userdata,
+      const void *userdata,
       ANARIDataType,
       uint64_t numItems1,
       uint64_t numItems2,
       uint64_t byteStride1,
       uint64_t byteStride2) = 0;
 
-  virtual ANARIArray3D newArray3D(void *appMemory,
+  virtual ANARIArray3D newArray3D(const void *appMemory,
       ANARIMemoryDeleter deleter,
-      void *userdata,
+      const void *userdata,
       ANARIDataType,
       uint64_t numItems1,
       uint64_t numItems2,

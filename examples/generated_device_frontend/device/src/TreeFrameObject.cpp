@@ -9,8 +9,6 @@
 #include <cstdlib>
 #include <cstring>
 
-#include "RecursivePrint.h"
-
 namespace anari_sdk{
 namespace tree{
 
@@ -66,8 +64,7 @@ void Object<Frame>::unmapFrame(const char*channel) {
    (void)channel;
 }
 void Object<Frame>::renderFrame() {
-   // added after generation
-   recursivePrint(device, handle);
+
 }
 void Object<Frame>::discardFrame() {
 
