@@ -1,3 +1,5 @@
+#pragma once
+
 #include "TreeDevice.h"
 #include "anari/type_utility.h"
 
@@ -34,7 +36,8 @@ static void printParam(ParameterBase &param) {
     }
 }
 
-static void recursivePrint(TreeDevice *d, ANARIObject obj, int depth = 0) {
+static void recursivePrint(ANARIDevice device, ANARIObject obj, int depth = 0) {
+    TreeDevice *d = deviceHandle<TreeDevice*>(device);
     ObjectBase *o = d->fromHandle<ObjectBase*>(obj);
 
     // get some parameter info
@@ -61,7 +64,7 @@ static void recursivePrint(TreeDevice *d, ANARIObject obj, int depth = 0) {
         }
         // the parameter holds a h andle descend into that object
         if(anari::isObject(param.type())) {
-            recursivePrint(d, param.getHandle(), depth + 1);
+            recursivePrint(device, param.getHandle(), depth + 1);
         }
     }
 
@@ -69,7 +72,7 @@ static void recursivePrint(TreeDevice *d, ANARIObject obj, int depth = 0) {
     if(Object<Array1D> *array = dynamic_cast<Object<Array1D>*>(o)) {
         auto &objects = array->objects();
         for(auto handle : objects) {
-            recursivePrint(d, handle, depth + 1);
+            recursivePrint(device, handle, depth + 1);
         }
     }
 }
