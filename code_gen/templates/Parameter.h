@@ -196,7 +196,7 @@ public:
    ANARIObject getHandle() override { return nullptr; }
    ANARIDataType type() override { return ANARI_UNKNOWN; }
    operator bool() override { return false; }
-   uint32_t getVersion() const { return 0; }
+   uint32_t getVersion() const override { return 0; }
 
 };
 
@@ -253,7 +253,7 @@ public:
    operator bool() override {
       return ptr->type() != ANARI_UNKNOWN;
    }
-   uint32_t getVersion() const {
+   uint32_t getVersion() const override{
       return version;
    }
 };

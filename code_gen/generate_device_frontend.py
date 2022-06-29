@@ -398,6 +398,7 @@ def generate_if_not_present(targetdir, name, header, noprefix=False):
             infile = infile.replace("$generated_path", str(gendir.relative_to(rootdir)))
             infile = infile.replace("$source_path", str(srcdir.relative_to(rootdir)))
             infile = infile.replace("$target_prefix", targetprefix)
+            infile = infile.replace("$template", name)
             f.write(header)
             f.write(infile)
 
