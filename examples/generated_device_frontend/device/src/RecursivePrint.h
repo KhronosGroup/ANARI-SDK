@@ -28,7 +28,7 @@ struct param_printer {
     }
 };
 
-static void printParam(ParameterBase &param) {
+inline static void printParam(ParameterBase &param) {
     if(param) {
         anari::anariTypeInvoke<void, param_printer>(param.type(), param);
     } else {
@@ -36,7 +36,7 @@ static void printParam(ParameterBase &param) {
     }
 }
 
-static void recursivePrint(ANARIDevice device, ANARIObject obj, int depth = 0) {
+inline static void recursivePrint(ANARIDevice device, ANARIObject obj, int depth = 0) {
     TreeDevice *d = deviceHandle<TreeDevice*>(device);
     ObjectBase *o = d->fromHandle<ObjectBase*>(obj);
 
@@ -62,7 +62,7 @@ static void recursivePrint(ANARIDevice device, ANARIObject obj, int depth = 0) {
             printParam(param);
             std::cout << '\n';
         }
-        // the parameter holds a h andle descend into that object
+        // if the parameter holds a handle descend into that object
         if(anari::isObject(param.type())) {
             recursivePrint(device, param.getHandle(), depth + 1);
         }

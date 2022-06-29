@@ -8,7 +8,7 @@
 // anari
 #include "anari/backend/DeviceImpl.h"
 #include "TreeObject.h"
-#include "TreeSpecializations.h"
+#include "TreeObjects.h"
 
 #include <vector>
 #include <memory>

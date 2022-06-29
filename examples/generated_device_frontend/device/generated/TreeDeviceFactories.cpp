@@ -6,6 +6,7 @@
 
 #include "TreeDevice.h"
 #include "TreeObjects.h"
+#include "TreeSpecializations.h"
 namespace anari_sdk{
 namespace tree{
 static int obj_hash(const char *str) {
