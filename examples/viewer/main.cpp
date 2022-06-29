@@ -16,6 +16,7 @@ ANARIDevice g_device = nullptr;
 ANARILibrary g_debug = nullptr;
 bool g_enableDebug = false;
 bool g_verbose = false;
+const bool g_true = true;
 
 /******************************************************************/
 static std::string pathOf(const std::string &filename)
@@ -42,7 +43,7 @@ void statusFunc(const void *userData,
     ANARIStatusCode code,
     const char *message)
 {
-  (void)userData;
+  bool verbose = *(const bool*)userData;
   if (severity == ANARI_SEVERITY_FATAL_ERROR) {
     fprintf(stderr, "[FATAL] %s\n", message);
   } else if (severity == ANARI_SEVERITY_ERROR) {
@@ -51,7 +52,7 @@ void statusFunc(const void *userData,
     fprintf(stderr, "[WARN ] %s\n", message);
   }
 
-  if (!g_verbose)
+  if (!verbose)
     return;
 
   if (severity == ANARI_SEVERITY_PERFORMANCE_WARNING) {
@@ -63,13 +64,14 @@ void statusFunc(const void *userData,
   }
 }
 
+
 /******************************************************************/
 static void initializeANARI()
 {
-  g_library = anariLoadLibrary(g_libraryType.c_str(), statusFunc);
+  g_library = anariLoadLibrary(g_libraryType.c_str(), statusFunc, &g_verbose);
 
   if (g_enableDebug)
-    g_debug = anariLoadLibrary("debug", statusFunc);
+    g_debug = anariLoadLibrary("debug", statusFunc, &g_true);
 
   if (!g_library)
     throw std::runtime_error("Failed to load ANARI library");
