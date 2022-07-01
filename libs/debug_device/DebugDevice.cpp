@@ -760,8 +760,13 @@ void DebugDevice::deviceSetParameter(
     if (staged) {
       anariRetain(staged, staged);
     }
-  } else if (staged) {
-    anariSetParameter(staged, staged, _id, type, mem);
+  } else if(id == "traceMode" && type == ANARI_STRING) {
+    std::string mode((const char*)mem);
+    if(mode == "code") {
+      createSerializer = CodeSerializer::create;
+    }
+  } else if(id == "traceDir" && type == ANARI_STRING) {
+    traceDir = (const char*)mem;
   }
 }
 
@@ -808,6 +813,10 @@ void DebugDevice::deviceCommit()
       }
     }
   }
+  if(createSerializer) {
+    serializer.reset(createSerializer(this));
+    createSerializer = nullptr;
+  }
 }
 
 DebugDevice::DebugDevice()
@@ -822,7 +831,6 @@ DebugDevice::DebugDevice()
   objects[0]->setName("Null Object");
 
   debug.reset(new DebugBasics(this));
-  serializer.reset(new CodeSerializer(this));
   debugObjectFactory = getDebugFactory();
 }
 
