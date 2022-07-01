@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "DebugInterface.h"
+#include "DebugSerializerInterface.h"
 
 #include "anari/ext/debug/DebugObject.h"
 
@@ -209,6 +210,7 @@ struct DEBUG_DEVICE_INTERFACE DebugDevice : public DeviceImpl, public RefCounted
   std::vector<char> last_status_message;
 
   std::unique_ptr<DebugInterface> debug;
+  std::unique_ptr<SerializerInterface> serializer;
   ObjectFactory *debugObjectFactory;
 
 };

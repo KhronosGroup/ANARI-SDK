@@ -7,6 +7,8 @@
 #include "anari/backend/Library.h"
 
 #include "DebugBasics.h"
+#include "EmptySerializer.h"
+#include "CodeSerializer.h"
 
 // std
 #include <cstdarg>
@@ -46,6 +48,14 @@ void DebugDevice::reportStatus(ANARIObject source,
         code,
         last_status_message.data());
   }
+  if(serializer) {
+    serializer->insertStatus(
+        source,
+        sourceType,
+        severity,
+        code,
+        last_status_message.data());
+  }
 }
 
 void DebugDevice::vreportStatus(ANARIObject source,
@@ -73,6 +83,14 @@ void DebugDevice::vreportStatus(ANARIObject source,
         code,
         last_status_message.data());
   }
+  if(serializer) {
+    serializer->insertStatus(
+        source,
+        sourceType,
+        severity,
+        code,
+        last_status_message.data());
+  }
 }
 ///////////////////////////////////////////////////////////////////////////////
 // DebugDevice definitions //////////////////////////////////////////////////
@@ -81,12 +99,6 @@ void DebugDevice::vreportStatus(ANARIObject source,
 int DebugDevice::deviceImplements(const char *extension)
 {
   return anariDeviceImplements(wrapped, extension);
-  /*
-  if(std::strncmp("ANARI_KHR_FRAME_COMPLETION_CALLBACK", extension, 35) == 0) {
-    return 0;
-  } else {
-    return anariDeviceImplements(wrapped, extension);
-  }*/
 }
 
 // Data Arrays ////////////////////////////////////////////////////////////////
@@ -120,6 +132,9 @@ ANARIArray1D DebugDevice::newArray1D(const void *appMemory,
     uint64_t byteStride)
 {
   ANARIArray1D handle;
+  const void *forward = appMemory;
+  uint64_t forwardStride = byteStride;
+
   if (isObject(type)) { // object arrays need special treatment
     const ANARIObject *in = static_cast<const ANARIObject *>(appMemory);
     ANARIObject *handles = new ANARIObject[numItems];
@@ -132,12 +147,12 @@ ANARIArray1D DebugDevice::newArray1D(const void *appMemory,
       return 0; // strided handles not supported yet
     }
 
-    void *forward = nullptr;
     if (appMemory != nullptr) {
       for (uint64_t i = 0; i < numItems; i++) {
         handles[i] = unwrapHandle(in[i]);
       }
       forward = handles;
+      forwardStride = 0;
     }
 
     debug->anariNewArray1D(this_device(),
@@ -188,6 +203,10 @@ ANARIArray1D DebugDevice::newArray1D(const void *appMemory,
     info->attachArray(appMemory, type, numItems, 1, 1, byteStride, 0, 0);
   }
 
+  if(serializer) {
+    serializer->anariNewArray1D(this_device(), appMemory, deleter, userData, type, numItems, forwardStride, handle);
+  }
+
   return handle;
 }
 
@@ -225,6 +244,11 @@ ANARIArray2D DebugDevice::newArray2D(const void *appMemory,
     info->attachArray(
         appMemory, type, numItems1, numItems2, 1, byteStride1, byteStride2, 0);
   }
+
+  if(serializer) {
+    serializer->anariNewArray2D(this_device(), appMemory, deleter, userData, type, numItems1, numItems2, byteStride1, byteStride2, handle);
+  }
+
   return handle;
 }
 
@@ -274,29 +298,40 @@ ANARIArray3D DebugDevice::newArray3D(const void *appMemory,
         byteStride2,
         byteStride3);
   }
+
+  if(serializer) {
+    serializer->anariNewArray3D(this_device(), appMemory, deleter, userData, type, numItems1, numItems2, numItems3, byteStride1, byteStride2, byteStride3, handle);
+  }
+
   return handle;
 }
 
 void *DebugDevice::mapArray(ANARIArray a)
 {
   debug->anariMapArray(this_device(), a);
-  void *result = anariMapArray(wrapped, unwrapHandle(a));
+  void *ptr = anariMapArray(wrapped, unwrapHandle(a));
 
+  void *result = nullptr;
   if (auto info = getDynamicObjectInfo<GenericArrayDebugObject>(a)) {
-    info->mapArray(result);
+    info->mapArray(ptr);
     if (isObject(info->arrayType)) {
-      return info->handles;
+      result = info->handles;
     } else {
-      return result;
+      result = ptr;
     }
-  } else {
-    return nullptr;
   }
+
+  if(serializer) {
+    serializer->anariMapArray(this_device(), a, result);
+  }
+
+  return result;
 }
 
 void DebugDevice::unmapArray(ANARIArray a)
 {
-  if (auto info = getDynamicObjectInfo<GenericArrayDebugObject>(a)) {
+  auto info = getDynamicObjectInfo<GenericArrayDebugObject>(a);
+  if (info) {
     if (isObject(info->arrayType)) {
       ANARIObject *objMapping = (ANARIObject *)info->mapping;
       // translate handles before unmapping
@@ -307,11 +342,18 @@ void DebugDevice::unmapArray(ANARIArray a)
         }
       }
     }
-    info->unmapArray();
   }
 
   debug->anariUnmapArray(this_device(), a);
   anariUnmapArray(wrapped, unwrapHandle(a));
+
+  if(serializer) {
+    serializer->anariUnmapArray(this_device(), a);
+  }
+  // the serializer may also need to inspect the array
+  if(info) {
+    info->unmapArray();
+  }
 }
 
 // Renderable Objects /////////////////////////////////////////////////////////
@@ -320,42 +362,78 @@ ANARILight DebugDevice::newLight(const char *type)
 {
   debug->anariNewLight(this_device(), type);
   ANARILight handle = anariNewLight(wrapped, type);
-  return newHandle(handle, type);
+  ANARILight result = newHandle(handle, type);
+
+  if(serializer) {
+    serializer->anariNewLight(this_device(), type, result);
+  }
+
+  return result;
 }
 
 ANARICamera DebugDevice::newCamera(const char *type)
 {
   debug->anariNewCamera(this_device(), type);
   ANARICamera handle = anariNewCamera(wrapped, type);
-  return newHandle(handle, type);
+  ANARICamera result = newHandle(handle, type);
+
+  if(serializer) {
+    serializer->anariNewCamera(this_device(), type, result);
+  }
+
+  return result;
 }
 
 ANARIGeometry DebugDevice::newGeometry(const char *type)
 {
   debug->anariNewGeometry(this_device(), type);
   ANARIGeometry handle = anariNewGeometry(wrapped, type);
-  return newHandle(handle, type);
+  ANARIGeometry result = newHandle(handle, type);
+
+  if(serializer) {
+    serializer->anariNewGeometry(this_device(), type, result);
+  }
+
+  return result;
 }
 
 ANARISpatialField DebugDevice::newSpatialField(const char *type)
 {
   debug->anariNewSpatialField(this_device(), type);
   ANARISpatialField handle = anariNewSpatialField(wrapped, type);
-  return newHandle(handle, type);
+  ANARISpatialField result = newHandle(handle, type);
+
+  if(serializer) {
+    serializer->anariNewSpatialField(this_device(), type, result);
+  }
+
+  return result;
 }
 
 ANARISurface DebugDevice::newSurface()
 {
   debug->anariNewSurface(this_device());
   ANARISurface handle = anariNewSurface(wrapped);
-  return newHandle(handle);
+  ANARISurface result = newHandle(handle);
+
+  if(serializer) {
+    serializer->anariNewSurface(this_device(), result);
+  }
+
+  return result;
 }
 
 ANARIVolume DebugDevice::newVolume(const char *type)
 {
   debug->anariNewVolume(this_device(), type);
   ANARIVolume handle = anariNewVolume(wrapped, type);
-  return newHandle(handle, type);
+  ANARIVolume result = newHandle(handle, type);
+
+  if(serializer) {
+    serializer->anariNewVolume(this_device(), type, result);
+  }
+
+  return result;
 }
 
 // Model Meta-Data ////////////////////////////////////////////////////////////
@@ -364,14 +442,26 @@ ANARIMaterial DebugDevice::newMaterial(const char *type)
 {
   debug->anariNewMaterial(this_device(), type);
   ANARIMaterial handle = anariNewMaterial(wrapped, type);
-  return newHandle(handle, type);
+  ANARIMaterial result = newHandle(handle, type);
+
+  if(serializer) {
+    serializer->anariNewMaterial(this_device(), type, result);
+  }
+
+  return result;
 }
 
 ANARISampler DebugDevice::newSampler(const char *type)
 {
   debug->anariNewSampler(this_device(), type);
   ANARISampler handle = anariNewSampler(wrapped, type);
-  return newHandle(handle, type);
+  ANARISampler result = newHandle(handle, type);
+
+  if(serializer) {
+    serializer->anariNewSampler(this_device(), type, result);
+  }
+
+  return result;
 }
 
 // Instancing /////////////////////////////////////////////////////////////////
@@ -380,14 +470,26 @@ ANARIGroup DebugDevice::newGroup()
 {
   debug->anariNewGroup(this_device());
   ANARIGroup handle = anariNewGroup(wrapped);
-  return newHandle(handle);
+  ANARIGroup result = newHandle(handle);
+
+  if(serializer) {
+    serializer->anariNewGroup(this_device(), result);
+  }
+
+  return result;
 }
 
 ANARIInstance DebugDevice::newInstance()
 {
   debug->anariNewInstance(this_device());
   ANARIInstance handle = anariNewInstance(wrapped);
-  return newHandle(handle);
+  ANARIInstance result = newHandle(handle);
+
+  if(serializer) {
+    serializer->anariNewInstance(this_device(), result);
+  }
+
+  return result;
 }
 
 // Top-level Worlds ///////////////////////////////////////////////////////////
@@ -396,7 +498,13 @@ ANARIWorld DebugDevice::newWorld()
 {
   debug->anariNewWorld(this_device());
   ANARIWorld handle = anariNewWorld(wrapped);
-  return newHandle(handle);
+  ANARIWorld result = newHandle(handle);
+
+  if(serializer) {
+    serializer->anariNewWorld(this_device(), result);
+  }
+
+  return result;
 }
 
 int DebugDevice::getProperty(ANARIObject object,
@@ -406,11 +514,20 @@ int DebugDevice::getProperty(ANARIObject object,
     uint64_t size,
     ANARIWaitMask mask)
 {
-  if (handleIsDevice(object))
+  if (handleIsDevice(object)) {
     return 0;
+  }
+
   debug->anariGetProperty(this_device(), object, name, type, mem, size, mask);
-  return anariGetProperty(
+
+  int result = anariGetProperty(
       wrapped, unwrapHandle(object), name, type, mem, size, mask);
+
+  if(serializer) {
+    serializer->anariGetProperty(this_device(), object, name, type, mem, size, mask, result);
+  }
+
+  return result;
 }
 
 // Object + Parameter Lifetime Management /////////////////////////////////////
@@ -425,41 +542,47 @@ void frameContinuationWrapper(const void *userdata, ANARIDevice, ANARIFrame fram
 void DebugDevice::setParameter(
     ANARIObject object, const char *name, ANARIDataType type, const void *mem)
 {
-  if (handleIsDevice(object))
+  if (handleIsDevice(object)) {
     deviceSetParameter(name, type, mem);
-  else {
-    const void *unwrapped = mem;
-    // translate object as parameter
-    ANARIObject obj = nullptr;
-    if (isObject(type)) {
-      ANARIObject handle = *static_cast<const ANARIObject *>(mem);
-      if (auto info = getObjectInfo(handle)) {
-        info->referencedBy(object);
-      }
-      obj = unwrapHandle(handle);
-      unwrapped = &obj;
+    if(!wrapped) {
+      return;
     }
+  }
 
-    debug->anariSetParameter(this_device(), object, name, type, mem);
-
-    // frame completion callbacks require special treatment
-    if(type == ANARI_FRAME_COMPLETION_CALLBACK
-      && std::strncmp(name, "frameCompletionCallback", 23)==0) {
-      ANARIFrameCompletionCallback callbackWrapper = frameContinuationWrapper;
-      anariSetParameter(wrapped, unwrapHandle(object), "frameCompletionCallback", ANARI_FRAME_COMPLETION_CALLBACK, &callbackWrapper);
-      anariSetParameter(wrapped, unwrapHandle(object), "frameCompletionCallbackUserData", ANARI_VOID_POINTER, this);
-    } else if(type == ANARI_VOID_POINTER
-      && std::strncmp(name, "frameCompletionCallbackUserData", 31)==0) {
-      // do not forward or this will overwrite the this pointer
-    } else {
-      anariSetParameter(wrapped, unwrapHandle(object), name, type, unwrapped);
+  const void *unwrapped = mem;
+  // translate object as parameter
+  ANARIObject obj = nullptr;
+  if (isObject(type)) {
+    ANARIObject handle = *static_cast<const ANARIObject *>(mem);
+    if (auto info = getObjectInfo(handle)) {
+      info->referencedBy(object);
     }
+    obj = unwrapHandle(handle);
+    unwrapped = &obj;
+  }
 
+  debug->anariSetParameter(this_device(), object, name, type, mem);
 
-    if (auto info = getObjectInfo(object)) {
-      info->setParameter(name, type, mem);
-      reportParameterUse(info->getType(), info->getSubtype(), name, type);
-    }
+  // frame completion callbacks require special treatment
+  if(type == ANARI_FRAME_COMPLETION_CALLBACK
+    && std::strncmp(name, "frameCompletionCallback", 23)==0) {
+    ANARIFrameCompletionCallback callbackWrapper = frameContinuationWrapper;
+    anariSetParameter(wrapped, unwrapHandle(object), "frameCompletionCallback", ANARI_FRAME_COMPLETION_CALLBACK, &callbackWrapper);
+    anariSetParameter(wrapped, unwrapHandle(object), "frameCompletionCallbackUserData", ANARI_VOID_POINTER, this);
+  } else if(type == ANARI_VOID_POINTER
+    && std::strncmp(name, "frameCompletionCallbackUserData", 31)==0) {
+    // do not forward or this will overwrite the this pointer
+  } else {
+    anariSetParameter(wrapped, unwrapHandle(object), name, type, unwrapped);
+  }
+
+  if(serializer) {
+    serializer->anariSetParameter(this_device(), object, name, type, mem);
+  }
+
+  if (auto info = getObjectInfo(object)) {
+    info->setParameter(name, type, mem);
+    reportParameterUse(info->getType(), info->getSubtype(), name, type);
   }
 }
 
@@ -470,6 +593,10 @@ void DebugDevice::unsetParameter(ANARIObject object, const char *name)
   else {
     debug->anariUnsetParameter(this_device(), object, name);
     anariUnsetParameter(wrapped, unwrapHandle(object), name);
+
+    if(serializer) {
+      serializer->anariUnsetParameter(this_device(), object, name);
+    }
 
     if (auto info = getObjectInfo(object))
       info->unsetParameter(name);
@@ -487,6 +614,10 @@ void DebugDevice::commit(ANARIObject object)
     if (auto info = getObjectInfo(object))
       info->commit();
   }
+
+  if(serializer) {
+    serializer->anariCommit(this_device(), object);
+  }
 }
 
 void DebugDevice::release(ANARIObject object)
@@ -498,6 +629,10 @@ void DebugDevice::release(ANARIObject object)
   } else {
     debug->anariRelease(this_device(), object);
     anariRelease(wrapped, unwrapHandle(object));
+
+    if(serializer) {
+      serializer->anariRelease(this_device(), object);
+    }
 
     if (auto info = getObjectInfo(object))
       info->release();
@@ -514,6 +649,10 @@ void DebugDevice::retain(ANARIObject object)
     debug->anariRetain(this_device(), object);
     anariRetain(wrapped, unwrapHandle(object));
 
+    if(serializer) {
+      serializer->anariRetain(this_device(), object);
+    }
+
     if (auto info = getObjectInfo(object))
       info->retain();
   }
@@ -525,19 +664,34 @@ ANARIFrame DebugDevice::newFrame()
 {
   debug->anariNewFrame(this_device());
   ANARIFrame handle = anariNewFrame(wrapped);
-  return newHandle(handle);
+  ANARIFrame result = newHandle(handle);
+
+  if(serializer) {
+    serializer->anariNewFrame(this_device(), result);
+  }
+
+  return result;
 }
 
 const void *DebugDevice::frameBufferMap(ANARIFrame fb, const char *channel)
 {
   debug->anariMapFrame(this_device(), fb, channel);
-  return anariMapFrame(wrapped, unwrapHandle(fb), channel);
+  const void *mapped = anariMapFrame(wrapped, unwrapHandle(fb), channel);
+
+  if(serializer) {
+    serializer->anariMapFrame(this_device(), fb, channel, mapped);
+  }
+
+  return mapped;
 }
 
 void DebugDevice::frameBufferUnmap(ANARIFrame fb, const char *channel)
 {
   debug->anariUnmapFrame(this_device(), fb, channel);
   anariUnmapFrame(wrapped, unwrapHandle(fb), channel);
+  if(serializer) {
+    serializer->anariUnmapFrame(this_device(), fb, channel);
+  }
 }
 
 // Frame Rendering ////////////////////////////////////////////////////////////
@@ -546,13 +700,23 @@ ANARIRenderer DebugDevice::newRenderer(const char *type)
 {
   debug->anariNewRenderer(this_device(), type);
   ANARIRenderer handle = anariNewRenderer(wrapped, type);
-  return newHandle(handle, type);
+  ANARIRenderer result = newHandle(handle, type);
+
+  if(serializer) {
+    serializer->anariNewRenderer(this_device(), type, result);
+  }
+
+  return result;
 }
 
 void DebugDevice::renderFrame(ANARIFrame frame)
 {
   debug->anariRenderFrame(this_device(), frame);
   anariRenderFrame(wrapped, unwrapHandle(frame));
+
+  if(serializer) {
+    serializer->anariRenderFrame(this_device(), frame);
+  }
 
   if (auto info = getObjectInfo(frame)) {
     info->used();
@@ -562,13 +726,24 @@ void DebugDevice::renderFrame(ANARIFrame frame)
 int DebugDevice::frameReady(ANARIFrame frame, ANARIWaitMask m)
 {
   debug->anariFrameReady(this_device(), frame, m);
-  return anariFrameReady(wrapped, unwrapHandle(frame), m);
+  int result = anariFrameReady(wrapped, unwrapHandle(frame), m);
+
+  if(serializer) {
+    serializer->anariFrameReady(this_device(), frame, m, result);
+  }
+
+  return result;
 }
 
 void DebugDevice::discardFrame(ANARIFrame frame)
 {
   debug->anariDiscardFrame(this_device(), frame);
   anariDiscardFrame(wrapped, unwrapHandle(frame));
+
+  if(serializer) {
+    serializer->anariDiscardFrame(this_device(), frame);
+  }
+
 }
 
 // Other DebugDevice definitions ////////////////////////////////////////////
@@ -601,7 +776,7 @@ ObjectFactory *getDebugFactory();
 
 void DebugDevice::deviceCommit()
 {
-  // skip this for now since thd debug device doesn't understand
+  // skip this for now since the debug device doesn't understand
   // device parameters and commits very well
   // debug->anariCommit(this_device(), this_device());
 
@@ -647,6 +822,7 @@ DebugDevice::DebugDevice()
   objects[0]->setName("Null Object");
 
   debug.reset(new DebugBasics(this));
+  serializer.reset(new CodeSerializer(this));
   debugObjectFactory = getDebugFactory();
 }
 

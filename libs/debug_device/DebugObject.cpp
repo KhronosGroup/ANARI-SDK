@@ -5,6 +5,7 @@
 #include "DebugDevice.h"
 
 #include <cstdarg>
+#include <cstring>
 
 namespace anari {
 namespace debug_device {
@@ -40,7 +41,13 @@ void DebugObject<ANARI_FRAME>::setParameter(const char *name, ANARIDataType type
   GenericDebugObject::setParameter(name, type, mem);
 
   // frame completion callbacks require special treatment
-  if(type == ANARI_FRAME_COMPLETION_CALLBACK && std::strncmp(name, "frameCompletionCallback", 23)==0) {
+  if(type == ANARI_UINT32_VEC2 && std::strncmp(name, "size", 4)==0) {
+    std::memcpy(size, mem, sizeof(size));
+  } else if(type == ANARI_DATA_TYPE && std::strncmp(name, "color", 5)==0) {
+    colorType = *(const ANARIDataType*)mem;
+  } else if(type == ANARI_DATA_TYPE && std::strncmp(name, "depth", 5)==0) {
+    depthType = *(const ANARIDataType*)mem;
+  } else if(type == ANARI_FRAME_COMPLETION_CALLBACK && std::strncmp(name, "frameCompletionCallback", 23)==0) {
     frameContinuationFun = *(ANARIFrameCompletionCallback*)mem;
   } else if(type == ANARI_VOID_POINTER && std::strncmp(name, "frameCompletionCallbackUserData", 31)==0) {
     userdata = mem;
