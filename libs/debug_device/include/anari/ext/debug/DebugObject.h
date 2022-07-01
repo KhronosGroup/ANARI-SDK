@@ -160,6 +160,9 @@ struct DEBUG_DEVICE_INTERFACE DebugObject<ANARI_FRAME> : public GenericDebugObje
 
   const void *userdata = nullptr;
   ANARIFrameCompletionCallback frameContinuationFun = nullptr;
+  uint32_t size[2];
+  ANARIDataType colorType;
+  ANARIDataType depthType;
 };
 
 template<int T>

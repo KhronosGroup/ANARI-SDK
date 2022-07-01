@@ -38,6 +38,7 @@ add_library(${PROJECT_NAME} SHARED
   DebugBasics.cpp
   GenericDeviceDebugFactory.cpp
   ExtendedQueries.cpp
+  CodeSerializer.cpp
 )
 
 target_include_directories(${PROJECT_NAME}
