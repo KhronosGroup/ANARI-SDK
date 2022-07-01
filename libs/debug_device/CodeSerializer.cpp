@@ -202,7 +202,7 @@ void CodeSerializer::anariNewArray3D(ANARIDevice device, const void* appMemory, 
       }
    }
 
-   out << "ANARIArray3D " << anari::varnameOf(ANARI_ARRAY2D) << reinterpret_cast<uintptr_t>(result) << " = anariNewArray3D(device, ";
+   out << "ANARIArray3D " << anari::varnameOf(ANARI_ARRAY3D) << reinterpret_cast<uintptr_t>(result) << " = anariNewArray3D(device, ";
    out << "data(" << byte_offset << ", " << byte_size << "), ";
    if(deleter) {
       out << "deleter, deleterData, ";
