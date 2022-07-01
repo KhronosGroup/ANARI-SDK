@@ -52,9 +52,40 @@ static void printFromMemory(std::ostream &out, ANARIDataType t, const void *mem)
 }
 
 CodeSerializer::CodeSerializer(DebugDevice *dd) : dd(dd), locals(0) {
-   out.open("out.c");
-   data.open("data.bin", std::ios::binary);
+   std::string dir = dd->traceDir;
+   if(!dir.empty()) {
+      dir+='/';
+   }
+
+   dd->reportStatus(dd->this_device(),
+      ANARI_DEVICE,
+      ANARI_SEVERITY_INFO,
+      ANARI_STATUS_UNKNOWN_ERROR,
+      "tracing enabled");
+   out.open(dir+"out.c");
+   if(!out) {
+      dd->reportStatus(dd->this_device(),
+         ANARI_DEVICE,
+         ANARI_SEVERITY_INFO,
+         ANARI_STATUS_UNKNOWN_ERROR,
+         "could not open %sout.c", dir.c_str());
+   }
+   data.open(dir+"data.bin", std::ios::binary);
+   if(!data) {
+      dd->reportStatus(dd->this_device(),
+         ANARI_DEVICE,
+         ANARI_SEVERITY_INFO,
+         ANARI_STATUS_UNKNOWN_ERROR,
+         "could not open %sdata.bin", dir.c_str());
+   }
+
+
 }
+
+SerializerInterface* CodeSerializer::create(DebugDevice *dd) {
+   return new CodeSerializer(dd);
+}
+
 
 void CodeSerializer::printObjectName(ANARIObject object) {
    if(object == dd->this_device()) {

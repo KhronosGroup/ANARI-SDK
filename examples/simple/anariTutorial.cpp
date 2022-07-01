@@ -80,6 +80,8 @@ int main(int argc, const char **argv)
 
   ANARIDevice d = anariNewDevice(m_debug, "debug");
   anari::setParameter(d, d, "wrappedDevice", w);
+  anari::setParameter(d, d, "traceMode", "code");
+  anari::setParameter(d, d, "traceDir", "trace");
   anariCommit(d, d);
 
   if (!d) {

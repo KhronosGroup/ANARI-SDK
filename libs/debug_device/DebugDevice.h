@@ -210,9 +210,12 @@ struct DEBUG_DEVICE_INTERFACE DebugDevice : public DeviceImpl, public RefCounted
   std::vector<char> last_status_message;
 
   std::unique_ptr<DebugInterface> debug;
-  std::unique_ptr<SerializerInterface> serializer;
   ObjectFactory *debugObjectFactory;
 
+  std::unique_ptr<SerializerInterface> serializer;
+  SerializerInterface* (*createSerializer)(DebugDevice*) = nullptr;
+public:
+  std::string traceDir;
 };
 
 } // namespace debug_device

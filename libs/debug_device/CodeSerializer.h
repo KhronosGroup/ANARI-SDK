@@ -51,7 +51,10 @@ public:
    void anariDiscardFrame(ANARIDevice device, ANARIFrame frame) override;
    void anariReleaseDevice(ANARIDevice device) override;
    void insertStatus(ANARIObject source, ANARIDataType sourceType, ANARIStatusSeverity severity, ANARIStatusCode code, const char *status) override;
+
+   static SerializerInterface* create(DebugDevice*);
 };
+
 
 }
 }
