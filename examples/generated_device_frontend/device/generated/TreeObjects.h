@@ -23,6 +23,7 @@ public:
    ANARIObject object;
    static const int type = ANARI_DEVICE;
    static constexpr const char *subtype = nullptr;
+   static const uint32_t id = 0;
    Parameter<ANARI_STRING> name;
    Parameter<ANARI_STATUS_CALLBACK> statusCallback;
    Parameter<ANARI_VOID_POINTER> statusCallbackUserData;
@@ -41,6 +42,7 @@ public:
    ANARIObject object;
    static const int type = ANARI_ARRAY1D;
    static constexpr const char *subtype = nullptr;
+   static const uint32_t id = 1;
    Parameter<ANARI_STRING> name;
    Parameter<ANARI_UINT64_BOX1> region;
 
@@ -58,6 +60,7 @@ public:
    ANARIObject object;
    static const int type = ANARI_ARRAY2D;
    static constexpr const char *subtype = nullptr;
+   static const uint32_t id = 2;
    Parameter<ANARI_STRING> name;
 
    Array2D(ANARIDevice d, ANARIObject o);
@@ -74,6 +77,7 @@ public:
    ANARIObject object;
    static const int type = ANARI_ARRAY3D;
    static constexpr const char *subtype = nullptr;
+   static const uint32_t id = 3;
    Parameter<ANARI_STRING> name;
 
    Array3D(ANARIDevice d, ANARIObject o);
@@ -90,6 +94,7 @@ public:
    ANARIObject object;
    static const int type = ANARI_FRAME;
    static constexpr const char *subtype = nullptr;
+   static const uint32_t id = 4;
    Parameter<ANARI_STRING> name;
    Parameter<ANARI_WORLD> world;
    Parameter<ANARI_RENDERER> renderer;
@@ -118,6 +123,7 @@ public:
    ANARIObject object;
    static const int type = ANARI_GROUP;
    static constexpr const char *subtype = nullptr;
+   static const uint32_t id = 5;
    Parameter<ANARI_STRING> name;
    Parameter<ANARI_ARRAY1D> surface;
    Parameter<ANARI_ARRAY1D> volume;
@@ -137,6 +143,7 @@ public:
    ANARIObject object;
    static const int type = ANARI_INSTANCE;
    static constexpr const char *subtype = nullptr;
+   static const uint32_t id = 6;
    Parameter<ANARI_STRING> name;
    Parameter<ANARI_FLOAT32_MAT4> transform;
    Parameter<ANARI_GROUP> group;
@@ -160,6 +167,7 @@ public:
    ANARIObject object;
    static const int type = ANARI_WORLD;
    static constexpr const char *subtype = nullptr;
+   static const uint32_t id = 7;
    Parameter<ANARI_STRING> name;
    Parameter<ANARI_ARRAY1D> instance;
    Parameter<ANARI_ARRAY1D> surface;
@@ -180,6 +188,7 @@ public:
    ANARIObject object;
    static const int type = ANARI_RENDERER;
    static constexpr const char *subtype = "default";
+   static const uint32_t id = 8;
    Parameter<ANARI_STRING> name;
 
    RendererDefault(ANARIDevice d, ANARIObject o);
@@ -196,6 +205,7 @@ public:
    ANARIObject object;
    static const int type = ANARI_SURFACE;
    static constexpr const char *subtype = nullptr;
+   static const uint32_t id = 9;
    Parameter<ANARI_STRING> name;
    Parameter<ANARI_GEOMETRY> geometry;
    Parameter<ANARI_MATERIAL> material;
@@ -214,6 +224,7 @@ public:
    ANARIObject object;
    static const int type = ANARI_CAMERA;
    static constexpr const char *subtype = "omnidirectional";
+   static const uint32_t id = 10;
    Parameter<ANARI_STRING> name;
    Parameter<ANARI_FLOAT32_VEC3> position;
    Parameter<ANARI_FLOAT32_VEC3> direction;
@@ -246,6 +257,7 @@ public:
    ANARIObject object;
    static const int type = ANARI_CAMERA;
    static constexpr const char *subtype = "orthographic";
+   static const uint32_t id = 11;
    Parameter<ANARI_STRING> name;
    Parameter<ANARI_FLOAT32_VEC3> position;
    Parameter<ANARI_FLOAT32_VEC3> direction;
@@ -278,6 +290,7 @@ public:
    ANARIObject object;
    static const int type = ANARI_CAMERA;
    static constexpr const char *subtype = "perspective";
+   static const uint32_t id = 12;
    Parameter<ANARI_STRING> name;
    Parameter<ANARI_FLOAT32_VEC3> position;
    Parameter<ANARI_FLOAT32_VEC3> direction;
@@ -311,6 +324,7 @@ public:
    ANARIObject object;
    static const int type = ANARI_GEOMETRY;
    static constexpr const char *subtype = "cone";
+   static const uint32_t id = 13;
    Parameter<ANARI_STRING> name;
    Parameter<ANARI_ARRAY1D> primitive_color;
    Parameter<ANARI_ARRAY1D> primitive_attribute0;
@@ -343,6 +357,7 @@ public:
    ANARIObject object;
    static const int type = ANARI_GEOMETRY;
    static constexpr const char *subtype = "curve";
+   static const uint32_t id = 14;
    Parameter<ANARI_STRING> name;
    Parameter<ANARI_ARRAY1D> primitive_color;
    Parameter<ANARI_ARRAY1D> primitive_attribute0;
@@ -374,6 +389,7 @@ public:
    ANARIObject object;
    static const int type = ANARI_GEOMETRY;
    static constexpr const char *subtype = "cylinder";
+   static const uint32_t id = 15;
    Parameter<ANARI_STRING> name;
    Parameter<ANARI_ARRAY1D> primitive_color;
    Parameter<ANARI_ARRAY1D> primitive_attribute0;
@@ -407,6 +423,7 @@ public:
    ANARIObject object;
    static const int type = ANARI_GEOMETRY;
    static constexpr const char *subtype = "quad";
+   static const uint32_t id = 16;
    Parameter<ANARI_STRING> name;
    Parameter<ANARI_ARRAY1D> primitive_color;
    Parameter<ANARI_ARRAY1D> primitive_attribute0;
@@ -437,6 +454,7 @@ public:
    ANARIObject object;
    static const int type = ANARI_GEOMETRY;
    static constexpr const char *subtype = "sphere";
+   static const uint32_t id = 17;
    Parameter<ANARI_STRING> name;
    Parameter<ANARI_ARRAY1D> primitive_color;
    Parameter<ANARI_ARRAY1D> primitive_attribute0;
@@ -468,6 +486,7 @@ public:
    ANARIObject object;
    static const int type = ANARI_GEOMETRY;
    static constexpr const char *subtype = "triangle";
+   static const uint32_t id = 18;
    Parameter<ANARI_STRING> name;
    Parameter<ANARI_ARRAY1D> primitive_color;
    Parameter<ANARI_ARRAY1D> primitive_attribute0;
@@ -498,6 +517,7 @@ public:
    ANARIObject object;
    static const int type = ANARI_LIGHT;
    static constexpr const char *subtype = "directional";
+   static const uint32_t id = 19;
    Parameter<ANARI_STRING> name;
    Parameter<ANARI_FLOAT32_VEC3> color;
    Parameter<ANARI_FLOAT32> irradiance;
@@ -520,6 +540,7 @@ public:
    ANARIObject object;
    static const int type = ANARI_LIGHT;
    static constexpr const char *subtype = "point";
+   static const uint32_t id = 20;
    Parameter<ANARI_STRING> name;
    Parameter<ANARI_FLOAT32_VEC3> color;
    Parameter<ANARI_FLOAT32_VEC3> position;
@@ -543,6 +564,7 @@ public:
    ANARIObject object;
    static const int type = ANARI_LIGHT;
    static constexpr const char *subtype = "spot";
+   static const uint32_t id = 21;
    Parameter<ANARI_STRING> name;
    Parameter<ANARI_FLOAT32_VEC3> color;
    Parameter<ANARI_FLOAT32_VEC3> position;
@@ -566,6 +588,7 @@ public:
    ANARIObject object;
    static const int type = ANARI_MATERIAL;
    static constexpr const char *subtype = "matte";
+   static const uint32_t id = 22;
    Parameter<ANARI_STRING> name;
    Parameter<ANARI_FLOAT32_VEC3, ANARI_SAMPLER, ANARI_STRING> color;
 
@@ -583,6 +606,7 @@ public:
    ANARIObject object;
    static const int type = ANARI_MATERIAL;
    static constexpr const char *subtype = "transparentMatte";
+   static const uint32_t id = 23;
    Parameter<ANARI_STRING> name;
    Parameter<ANARI_FLOAT32_VEC3, ANARI_SAMPLER, ANARI_STRING> color;
    Parameter<ANARI_FLOAT32, ANARI_SAMPLER, ANARI_STRING> opacity;
@@ -601,6 +625,7 @@ public:
    ANARIObject object;
    static const int type = ANARI_SAMPLER;
    static constexpr const char *subtype = "image1D";
+   static const uint32_t id = 24;
    Parameter<ANARI_STRING> name;
    Parameter<ANARI_ARRAY1D> image;
    Parameter<ANARI_STRING> inAttribute;
@@ -623,6 +648,7 @@ public:
    ANARIObject object;
    static const int type = ANARI_SAMPLER;
    static constexpr const char *subtype = "image2D";
+   static const uint32_t id = 25;
    Parameter<ANARI_STRING> name;
    Parameter<ANARI_ARRAY2D> image;
    Parameter<ANARI_STRING> inAttribute;
@@ -646,6 +672,7 @@ public:
    ANARIObject object;
    static const int type = ANARI_SAMPLER;
    static constexpr const char *subtype = "image3D";
+   static const uint32_t id = 26;
    Parameter<ANARI_STRING> name;
    Parameter<ANARI_ARRAY3D> image;
    Parameter<ANARI_STRING> inAttribute;
@@ -670,6 +697,7 @@ public:
    ANARIObject object;
    static const int type = ANARI_SAMPLER;
    static constexpr const char *subtype = "primitive";
+   static const uint32_t id = 27;
    Parameter<ANARI_STRING> name;
    Parameter<ANARI_ARRAY1D> array;
    Parameter<ANARI_UINT64> offset;
@@ -688,6 +716,7 @@ public:
    ANARIObject object;
    static const int type = ANARI_SAMPLER;
    static constexpr const char *subtype = "transform";
+   static const uint32_t id = 28;
    Parameter<ANARI_STRING> name;
    Parameter<ANARI_STRING> inAttribute;
    Parameter<ANARI_FLOAT32_MAT4> transform;
@@ -706,6 +735,7 @@ public:
    ANARIObject object;
    static const int type = ANARI_SPATIAL_FIELD;
    static constexpr const char *subtype = "structuredRegular";
+   static const uint32_t id = 29;
    Parameter<ANARI_STRING> name;
    Parameter<ANARI_ARRAY3D> data;
    Parameter<ANARI_FLOAT32_VEC3> origin;
@@ -726,6 +756,7 @@ public:
    ANARIObject object;
    static const int type = ANARI_VOLUME;
    static constexpr const char *subtype = "scivis";
+   static const uint32_t id = 30;
    Parameter<ANARI_STRING> name;
    Parameter<ANARI_SPATIAL_FIELD> field;
    Parameter<ANARI_FLOAT32_BOX1> valueRange;
@@ -749,6 +780,7 @@ public:
    ANARIObject object;
    static const int type = ANARI_LIGHT;
    static constexpr const char *subtype = "ring";
+   static const uint32_t id = 31;
    Parameter<ANARI_STRING> name;
    Parameter<ANARI_FLOAT32_VEC3> color;
    Parameter<ANARI_FLOAT32_VEC3> position;
@@ -778,6 +810,7 @@ public:
    ANARIObject object;
    static const int type = ANARI_LIGHT;
    static constexpr const char *subtype = "quad";
+   static const uint32_t id = 32;
    Parameter<ANARI_STRING> name;
    Parameter<ANARI_FLOAT32_VEC3> color;
    Parameter<ANARI_FLOAT32_VEC3> position;
@@ -804,6 +837,7 @@ public:
    ANARIObject object;
    static const int type = ANARI_LIGHT;
    static constexpr const char *subtype = "hdri";
+   static const uint32_t id = 33;
    Parameter<ANARI_STRING> name;
    Parameter<ANARI_FLOAT32_VEC3> color;
    Parameter<ANARI_FLOAT32_VEC3> up;

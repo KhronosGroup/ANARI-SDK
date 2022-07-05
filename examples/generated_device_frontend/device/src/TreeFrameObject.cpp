@@ -16,19 +16,14 @@ namespace tree{
 
 
 Object<Frame>::Object(ANARIDevice d, ANARIObject handle)
- : FrameObjectBase(d, handle), staging(d, handle), current(d, handle)
+ : DefaultObject(d, handle)
 {
 
 }
 
-bool Object<Frame>::set(const char *paramname, ANARIDataType type, const void *mem) {
-   return staging.set(paramname, type, mem);
-}
-void Object<Frame>::unset(const char *paramname) {
-   staging.unset(paramname);
-}
 void Object<Frame>::commit() {
-   current = staging;
+   DefaultObject::commit();
+
    uint32_t size[2] = {16, 16}; // some non null placeholder value
    current.size.get(ANARI_UINT32_VEC2, size);
 
@@ -43,16 +38,7 @@ void Object<Frame>::commit() {
       depth.resize(elements); // only FLOAT32 is valid
    }
 }
-int Object<Frame>::getProperty(
-   const char *propname, ANARIDataType type,
-   void *mem, uint64_t size, ANARIWaitMask mask) {
-   (void)propname;
-   (void)type;
-   (void)mem;
-   (void)size;
-   (void)mask;
-   return 0;
-}
+
 void* Object<Frame>::mapFrame(const char *channel) {
    if(std::strncmp(channel, "color", 5) == 0) {
       return color.data();

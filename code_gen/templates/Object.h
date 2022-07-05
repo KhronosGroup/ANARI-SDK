@@ -14,6 +14,11 @@ class ParameterPack;
 
 void anariDeleteInternal(ANARIDevice, ANARIObject);
 
+template<class T>
+struct base_flags {
+   static const uint32_t value = 0;
+};
+
 class ObjectBase {
    std::atomic<uint64_t> refcount;
 protected:
@@ -51,35 +56,52 @@ public:
    virtual ~ObjectBase() { }
    virtual ANARIDataType type() const = 0;
    virtual const char* subtype() const = 0;
+   virtual uint32_t id() const = 0;
    virtual ParameterPack& parameters() = 0;
+   template<class T, class H>
+   T handle_cast(H h) {
+      return handle_cast<T>(device, h);
+   }
 };
 
 class ArrayObjectBase : public ObjectBase {
 public:
    ArrayObjectBase(ANARIDevice d, ANARIObject handle) : ObjectBase(d, handle) { }
-   virtual void* map() { return nullptr; }
-   virtual void unmap() { }
+   virtual void* map() = 0;
+   virtual void unmap() = 0;
 };
+
+template<>
+struct base_flags<ArrayObjectBase> {
+   static const uint32_t value = 0x10000000u;
+};
+
 
 class FrameObjectBase : public ObjectBase {
 public:
    FrameObjectBase(ANARIDevice d, ANARIObject handle) : ObjectBase(d, handle) { }
-   virtual void* mapFrame(const char*) { return nullptr; }
-   virtual void unmapFrame(const char*) { }
-   virtual void renderFrame() { }
-   virtual void discardFrame() { }
-   virtual int frameReady(ANARIWaitMask) { return 1; }
+   virtual void* mapFrame(const char*) = 0;
+   virtual void unmapFrame(const char*) = 0;
+   virtual void renderFrame() = 0;
+   virtual void discardFrame() = 0;
+   virtual int frameReady(ANARIWaitMask) = 0;
 };
 
-template<class T>
-class DefaultObject : public ObjectBase {
+template<>
+struct base_flags<FrameObjectBase> {
+   static const uint32_t value = 0x20000000u;
+};
+
+template<class T, class B=ObjectBase>
+class DefaultObject : public B {
 protected:
    T staging;
-   T current;
-public:
-   DefaultObject(ANARIDevice d, ANARIObject handle) : ObjectBase(d, handle), staging(d, handle), current(d, handle) {
+   DefaultObject(ANARIDevice d, ANARIObject handle) : B(d, handle), staging(d, handle), current(d, handle) {
 
    }
+public:
+   T current;
+
    bool set(const char *paramname, ANARIDataType type, const void *mem) override {
       return staging.set(paramname, type, mem);
    }
@@ -100,8 +122,9 @@ public:
       return 0;
    }
 
-   ANARIDataType type() const override { return T::type; }
-   const char* subtype() const override { return T::subtype; }
+   ANARIDataType type() const final { return T::type; }
+   const char* subtype() const final { return T::subtype; }
+   uint32_t id() const final { return T::id | base_flags<B>::value; }
    ParameterPack& parameters() override { return current; }
 };
 
@@ -110,6 +133,21 @@ class Object : public DefaultObject<T> {
 public:
    Object(ANARIDevice d, ANARIObject handle) : DefaultObject<T>(d, handle) {
 
+   }
+};
+
+template<class T>
+struct is_convertible {
+   static bool check(ObjectBase *base) {
+      uint32_t mask = base_flags<T>::value;
+      return (base->id()&mask) == mask;
+   }
+};
+
+template<class T>
+struct is_convertible<Object<T>> {
+   static bool check(ObjectBase *base) {
+      return (base->id()&0x00FFFFFFu) == T::id;
    }
 };
 
