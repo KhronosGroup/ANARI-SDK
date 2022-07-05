@@ -23,14 +23,14 @@ int $prefixDevice::deviceImplements(const char *extension) {
 }
 
 void * $prefixDevice::mapArray(ANARIArray handle) {
-   if(auto obj = fromHandle<ArrayObjectBase*>(handle)) {
+   if(auto obj = handle_cast<ArrayObjectBase*>(handle)) {
       return obj->map();
    } else {
       return nullptr;
    }
 }
 void $prefixDevice::unmapArray(ANARIArray handle) {
-   if(auto obj = fromHandle<ArrayObjectBase*>(handle)) {
+   if(auto obj = handle_cast<ArrayObjectBase*>(handle)) {
       obj->unmap();
    }
 }
@@ -56,7 +56,7 @@ int $prefixDevice::getProperty(ANARIObject handle,
       } else {
          return 0;
       }
-   } else if(auto obj = fromHandle<ObjectBase*>(handle)) {
+   } else if(auto obj = handle_cast<ObjectBase*>(handle)) {
       return obj->getProperty(name, type, mem, size, mask);
    } else {
       return 0;
@@ -67,33 +67,29 @@ void $prefixDevice::setParameter(ANARIObject handle,
       const char *name,
       ANARIDataType type,
       const void *mem) {
-   if(handle == this_device()) {
-      staging.set(name, type, mem);
-   } else if(auto obj = fromHandle<ObjectBase*>(handle)) {
+   if(auto obj = handle_cast<ObjectBase*>(handle)) {
       obj->set(name, type, mem);
    }
 }
 
 void $prefixDevice::unsetParameter(ANARIObject handle, const char *name) {
-   if(handle == this_device()) {
-      staging.unset(name);
-   } else if(auto obj = fromHandle<ObjectBase*>(handle)) {
+   if(auto obj = handle_cast<ObjectBase*>(handle)) {
       obj->unset(name);
    }
 }
 
 void $prefixDevice::commit(ANARIObject handle) {
+   if(auto obj = handle_cast<ObjectBase*>(handle)) {
+      obj->commit();
+   }
    if(handle == this_device()) {
-      current = staging;
-      if(current.statusCallback.get(ANARI_STATUS_CALLBACK, &statusCallback)) {
+      if(deviceObject.current.statusCallback.get(ANARI_STATUS_CALLBACK, &statusCallback)) {
          statusCallbackUserData = nullptr;
-         current.statusCallbackUserData.get(ANARI_VOID_POINTER, &statusCallbackUserData);
+         deviceObject.current.statusCallbackUserData.get(ANARI_VOID_POINTER, &statusCallbackUserData);
       } else {
          statusCallback = defaultStatusCallback();
          statusCallbackUserData = defaultStatusCallbackUserPtr();
       }
-   } else if(auto obj = fromHandle<ObjectBase*>(handle)) {
-      obj->commit();
    }
 }
 
@@ -102,30 +98,30 @@ void $prefixDevice::release(ANARIObject handle) {
       if(refcount.fetch_sub(1) == 1) {
          delete this;
       }
-   } else if(auto obj = fromHandle<ObjectBase*>(handle)) {
+   } else if(auto obj = handle_cast<ObjectBase*>(handle)) {
       obj->release();
    }
 }
 void $prefixDevice::retain(ANARIObject handle) {
    if(handle == this_device()) {
       refcount++;
-   } else if(auto obj = fromHandle<ObjectBase*>(handle)) {
+   } else if(auto obj = handle_cast<ObjectBase*>(handle)) {
       obj->retain();
    }
 }
 void $prefixDevice::releaseInternal(ANARIObject handle, ANARIObject owner) {
-   if(auto obj = fromHandle<ObjectBase*>(handle)) {
+   if(auto obj = handle_cast<ObjectBase*>(handle)) {
       obj->releaseInternal(owner);
    }
 }
 void $prefixDevice::retainInternal(ANARIObject handle, ANARIObject owner) {
-   if(auto obj = fromHandle<ObjectBase*>(handle)) {
+   if(auto obj = handle_cast<ObjectBase*>(handle)) {
       obj->retainInternal(owner);
    }
 }
 
 const void* $prefixDevice::frameBufferMap(ANARIFrame handle, const char *channel) {
-   if(auto obj = fromHandle<FrameObjectBase*>(handle)) {
+   if(auto obj = handle_cast<FrameObjectBase*>(handle)) {
       return obj->mapFrame(channel);
    } else {
       return 0;
@@ -133,25 +129,25 @@ const void* $prefixDevice::frameBufferMap(ANARIFrame handle, const char *channel
 }
 
 void $prefixDevice::frameBufferUnmap(ANARIFrame handle, const char *channel) {
-if(auto obj = fromHandle<FrameObjectBase*>(handle)) {
+if(auto obj = handle_cast<FrameObjectBase*>(handle)) {
       obj->unmapFrame(channel);
    }
 }
 
 void $prefixDevice::renderFrame(ANARIFrame handle) {
-   if(auto obj = fromHandle<FrameObjectBase*>(handle)) {
+   if(auto obj = handle_cast<FrameObjectBase*>(handle)) {
       obj->renderFrame();
    }
 }
 int $prefixDevice::frameReady(ANARIFrame handle, ANARIWaitMask mask) {
-   if(auto obj = fromHandle<FrameObjectBase*>(handle)) {
+   if(auto obj = handle_cast<FrameObjectBase*>(handle)) {
       return obj->frameReady(mask);
    } else {
       return 0;
    }
 }
 void $prefixDevice::discardFrame(ANARIFrame handle) {
-   if(auto obj = fromHandle<FrameObjectBase*>(handle)) {
+   if(auto obj = handle_cast<FrameObjectBase*>(handle)) {
       obj->discardFrame();
    }
 }
@@ -161,7 +157,7 @@ void $prefixDevice::discardFrame(ANARIFrame handle) {
 /////////////////////////////////////////////////////////////////////////////
 
 $prefixDevice::$prefixDevice()
-   : refcount(1),
+   : refcount(1), deviceObject(this_device(), this_device()),
    staging(this_device(), this_device()),
    current(this_device(), this_device())
 {
@@ -169,6 +165,21 @@ $prefixDevice::$prefixDevice()
 }
 $prefixDevice::~$prefixDevice() {
 
+}
+
+ObjectBase* $prefixDevice::fromHandle(ANARIObject handle) {
+   if(handle == static_cast<ANARIObject>(this_device())) {
+      return &deviceObject;
+   }
+
+   uintptr_t idx = reinterpret_cast<uintptr_t>(handle);
+
+   std::lock_guard<std::recursive_mutex> guard(mutex);
+   if(idx<objects.size()) {
+         return objects[idx].get();
+   } else {
+         return nullptr;
+   }
 }
 
 // query functions
@@ -206,9 +217,8 @@ void anariReportStatus(ANARIDevice handle,
 
          std::vector<char> formattedMessage(size_t(count+1));
 
-         va_start(arglist_copy, format);
          std::vsnprintf(formattedMessage.data(), size_t(count+1), format, arglist_copy);
-         va_end( arglist_copy );
+         va_end(arglist_copy);
 
          d->statusCallback(d->statusCallbackUserData, d->this_device(),
             source, sourceType, severity, code, formattedMessage.data());

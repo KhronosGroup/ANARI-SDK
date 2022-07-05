@@ -78,7 +78,7 @@ class FrontendGenerator:
         code += "   virtual const char** paramNames() const = 0;\n"
         code += "   virtual size_t paramCount() const = 0;\n"
         code += "};\n"
-        for obj in self.anari["objects"]:
+        for idx, obj in enumerate(self.anari["objects"]):
             classname = obj["type"][6:].title()
             if "name" in obj:
                 classname += obj["name"][0].upper() + obj["name"][1:]
@@ -95,6 +95,8 @@ class FrontendGenerator:
                 code += "   static constexpr const char *subtype = \"" + obj["name"] + "\";\n"
             else:
                 code += "   static constexpr const char *subtype = nullptr;\n"
+
+            code += "   static const uint32_t id = %d;\n"%idx
 
             for param in obj["parameters"]:
                 code += "   Parameter<" + ", ".join(param["types"]) + "> " + param["name"].replace(".", "_") + ";\n"
@@ -384,7 +386,7 @@ def generate_if_not_present(targetdir, name, header, noprefix=False):
         filename = name
     filename = targetdir/filename
     if args.force and filename.is_file():
-        os.rename(filename, filename.parent/(filename.name + ".backup"))
+        os.rename(filename, filename.parent/(filename.name + ".old"))
     if not filename.is_file():
         with open(filename, mode='w') as f:
             infile = (templatepath/name).open().read()

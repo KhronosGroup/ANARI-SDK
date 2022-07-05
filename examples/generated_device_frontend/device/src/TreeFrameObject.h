@@ -15,29 +15,19 @@ namespace tree{
 
 
 template<>
-class Object<Frame> : public FrameObjectBase {
-   Frame staging;
-   Frame current;
+class Object<Frame> : public DefaultObject<Frame, FrameObjectBase> {
    std::vector<char> color;
    std::vector<float> depth;
 public:
    Object(ANARIDevice d, ANARIObject handle);
 
-   bool set(const char *paramname, ANARIDataType type, const void *mem) override;
-   void unset(const char *paramname) override;
    void commit() override;
-   int getProperty(
-      const char *propname, ANARIDataType type,
-      void *mem, uint64_t size, ANARIWaitMask mask) override;
+
    void* mapFrame(const char*) override;
    void unmapFrame(const char*) override;
    void renderFrame() override;
    void discardFrame() override;
    int frameReady(ANARIWaitMask mask) override;
-
-   ANARIDataType type() const override { return Frame::type; }
-   const char* subtype() const override { return Frame::subtype; }
-   ParameterPack& parameters() override { return current; }
 };
 
 } //namespace anari_sdk

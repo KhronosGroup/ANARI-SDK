@@ -14,60 +14,18 @@
 $begin_namespaces
 
 /******************************************************************************
-   The following code serves illustration purposes and should be replaced
+   The following code serves illustration purposes and should be replaced.
    Further specializations are provided in $prefixFrameObject.h and
    $prefixArrayObjects.h since frame and array objects have extended
    interfaces.
+
    Most likely you want to specialize other objects in their own
    headers/implementiation files and just include them here.
-******************************************************************************/
 
-
-/******************************************************************************
-   Implement custom behavior by specializing the Object template.
-   Either fully specify an object inheriting from ObjectBase.
-******************************************************************************/
-
-template<>
-class Object<World> : public ObjectBase {
-protected:
-   World staging;
-   World current;
-public:
-   Object(ANARIDevice d, ANARIObject handle) : ObjectBase(d, handle), staging(d, handle), current(d, handle) {
-
-   }
-   bool set(const char *paramname, ANARIDataType type, const void *mem) override {
-      return staging.set(paramname, type, mem);
-   }
-   void unset(const char *paramname) override {
-      staging.unset(paramname);
-   }
-   void commit() override {
-      current = staging;
-      std::printf("Hi, I'm a world object.\n");
-   }
-   int getProperty(
-      const char *propname, ANARIDataType type,
-      void *mem, uint64_t size, ANARIWaitMask mask) override {
-      (void)propname;
-      (void)type;
-      (void)mem;
-      (void)size;
-      (void)mask;
-      return 0;
-   }
-
-   ANARIDataType type() const override { return World::type; }
-   const char* subtype() const override { return World::subtype; }
-   ParameterPack& parameters() override { return current; }
-};
-
-
-/******************************************************************************
-   Or inherit from DefaultObject<T> to get common behavior and override only
-   what you need. Don't forget to call the DefaultObject:: versions of the
-   functions you override where required (commit, set, unset)
+   Spezialize objects by inheriting from DefaultObject<T> to get common behavior and
+   override only what you need. Don't forget to call the DefaultObject::
+   versions of the functions you override where required (commit, set, unset,
+   retain, release).
 ******************************************************************************/
 
 
@@ -86,18 +44,24 @@ public:
       base::commit();
       std::printf("Hi, I'm a %s renderer.\n", subtype());
 
-      // read a parameter
+      // read a parameter from current parameter state
       const char *name = nullptr;
       if(current.name.get(ANARI_STRING, &name)) {
          std::printf("My name is %s.\n", name);
       }
+
+      // strings can also be accessed via getString()
+      if(const char *name2 = current.name.getString()) {
+         std::printf("My name is %s again.\n", name);
+      }
+
    }
 
    ANARIObject firstOwner = nullptr;
    bool uniqueOwnership = true;
 
-   // the Object interface can be overriden to track additional data
-   // such as who increased the refcount.
+   // override retainInternal/releaseInternal to keep track
+   // of who holds references to this object
    void retainInternal(ANARIObject obj) override {
       base::retainInternal(obj);
       if(firstOwner == nullptr) {

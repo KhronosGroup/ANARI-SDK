@@ -10,6 +10,7 @@
 #include "TreeObject.h"
 #include "TreeObjects.h"
 
+#include <type_traits>
 #include <vector>
 #include <memory>
 #include <atomic>
@@ -47,9 +48,10 @@ void anariReportStatus(ANARIDevice,
 
 template<class T>
 T deviceHandle(ANARIDevice d){
-      anari::DeviceImpl *ad = reinterpret_cast<anari::DeviceImpl*>(d);
-      return dynamic_cast<T>(ad);
+   anari::DeviceImpl *ad = reinterpret_cast<anari::DeviceImpl*>(d);
+   return static_cast<T>(ad);
 }
+
 
 struct DEVICE_INTERFACE TreeDevice : public anari::DeviceImpl
 {
@@ -163,14 +165,14 @@ struct DEVICE_INTERFACE TreeDevice : public anari::DeviceImpl
    TreeDevice();
    ~TreeDevice();
 
-   template<typename R, typename T>
-   R fromHandle(T handle) {
-      std::lock_guard<std::recursive_mutex> guard(mutex);
-      uintptr_t id = reinterpret_cast<uintptr_t>(handle);
-      if(id<objects.size()) {
-            return dynamic_cast<R>(objects[id].get());
+   ObjectBase* fromHandle(ANARIObject handle);
+   template<class T, class H>
+   T handle_cast(H handle) {
+      ObjectBase *base = fromHandle(handle);
+      if(base && is_convertible<T>::check(base)) {
+         return static_cast<T>(base);
       } else {
-            return nullptr;
+         return nullptr;
       }
    }
 private:
@@ -187,15 +189,21 @@ private:
    template<typename R, typename T, typename... ARGS>
    R allocate(ARGS... args) {
       std::lock_guard<std::recursive_mutex> guard(mutex);
-      uintptr_t id = objects.size();
-      R handle = reinterpret_cast<R>(id);
+      uintptr_t idx = objects.size();
+      ANARIObject handle = reinterpret_cast<ANARIObject>(idx);
+      // avoid the device handle which is just an arbitrary pointer
+      if(handle == this_device()) {
+         objects.emplace_back(nullptr);
+         idx = objects.size();
+         handle = reinterpret_cast<R>(idx);
+      }
       objects.emplace_back(new Object<T>(this_device(), handle, args...));
-      return handle;
+      return static_cast<R>(handle);
    }
 
    void deallocate(ANARIObject handle) {
-      std::lock_guard<std::recursive_mutex> guard(mutex);
       uintptr_t id = reinterpret_cast<uintptr_t>(handle);
+      std::lock_guard<std::recursive_mutex> guard(mutex);
       if(id<objects.size()) {
             return objects[id].reset(nullptr);
       }
@@ -208,9 +216,16 @@ private:
    ANARIStatusCallback statusCallback;
    const void* statusCallbackUserData;
 
+   Object<anari_sdk::tree::Device> deviceObject;
+
    anari_sdk::tree::Device staging;
    anari_sdk::tree::Device current;
 };
+
+template<class T, class H>
+T handle_cast(ANARIDevice d, H handle) {
+   return deviceHandle<TreeDevice*>(d)->handle_cast<T>(handle);
+}
 
 } //namespace anari_sdk
 } //namespace tree

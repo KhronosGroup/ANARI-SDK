@@ -1,0 +1,10 @@
+{
+    "info" : {
+        "name" : "template_device",
+        "type" : "device",
+        "dependencies" : [
+            "anari_core_1_0",
+            "anari_core_objects_all_1_0"
+        ]
+    }
+}

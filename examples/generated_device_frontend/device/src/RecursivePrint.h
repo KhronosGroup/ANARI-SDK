@@ -37,8 +37,7 @@ inline static void printParam(ParameterBase &param) {
 }
 
 inline static void recursivePrint(ANARIDevice device, ANARIObject obj, int depth = 0) {
-    TreeDevice *d = deviceHandle<TreeDevice*>(device);
-    ObjectBase *o = d->fromHandle<ObjectBase*>(obj);
+    ObjectBase *o = handle_cast<ObjectBase*>(device, obj);
 
     // get some parameter info
     auto &params = o->parameters();
