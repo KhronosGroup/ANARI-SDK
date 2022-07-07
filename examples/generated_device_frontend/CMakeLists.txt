@@ -16,7 +16,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 project(generate_device_frontend_example)
 
-# Normally would do a find_package(anari) here when outside the ANARI-SDK tree
+find_package(anari REQUIRED)
 
 anari_generate_frontend(
   TARGET generate_tree_device
