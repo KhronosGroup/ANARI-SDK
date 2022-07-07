@@ -1,6 +1,13 @@
 ## Copyright 2021 The Khronos Group
 ## SPDX-License-Identifier: Apache-2.0
 
+if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
+  message(FATAL_ERROR
+    "The ANARI example viewer currently cannot be built stand alone from the"
+    " SDK source tree."
+  )
+endif()
+
 project(anariViewer LANGUAGES CXX)
 
 ## Build viewer ##
