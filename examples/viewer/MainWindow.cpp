@@ -127,20 +127,6 @@ void frame_show(ANARIDevice dev, ANARIFrame frame, MainWindow *window)
   }
 }
 
-void frame_continuation_callback(const void *cw, ANARIDevice dev, ANARIFrame frame)
-{
-  void *w = const_cast<void*>(cw);
-  if (g_quitNextFrame)
-    return;
-
-  auto *window = (MainWindow *)w;
-
-  frame_show(dev, frame, window);
-
-  window->currentFrameSize = window->nextFrameSize;
-  anariRenderFrame(dev, window->frame);
-}
-
 // MainWindow definitions /////////////////////////////////////////////////////
 
 /* MainWindow constructor(): takes a 2D vector for the window size, and */
@@ -255,29 +241,18 @@ MainWindow::MainWindow(const glm::uvec2 &windowSize)
   glfwSwapInterval(0);
 }
 
-void MainWindow::setDevice(ANARIDevice dev)
+void MainWindow::setDevice(ANARIDevice dev, const std::string &rendererType)
 {
   device = dev;
-
-  // Enable the "continuation rendering" feature profile
-  useContinuation =
-      anariDeviceImplements(device, "ANARI_KHR_FRAME_COMPLETION_CALLBACK");
 
   camera = anariNewCamera(dev, "perspective");
   anariCommit(dev, camera);
 
-  renderer = anariNewRenderer(dev, "default");
+  renderer = anariNewRenderer(dev, rendererType.c_str());
   anari::setParameter(dev, renderer, "backgroundColor", bgColor);
   anariCommit(dev, renderer);
 
   frame = anariNewFrame(device);
-
-  if (useContinuation) {
-    anari::setParameter<ANARIFrameCompletionCallback>(
-        dev, frame, "frameCompletionCallback", &frame_continuation_callback);
-    anari::setParameter<void *>(
-        dev, frame, "frameCompletionCallbackUserData", this);
-  }
 
   glm::uvec2 windowSize;
   glfwGetWindowSize(g_window, (int *)&windowSize.x, (int *)&windowSize.y);
@@ -351,45 +326,26 @@ void MainWindow::mainLoop()
 {
   updateScene();
 
-  if (useContinuation) {
-    // Continuation rendering profile
-    frame_continuation_callback(this, device, nullptr);
+  anariRenderFrame(device, frame);
 
-    while (!glfwWindowShouldClose(g_window) && !g_quitNextFrame) {
-      // Update the User-Interface
-      glfwPollEvents();
-      ImGui_ImplOpenGL3_NewFrame();
-      ImGui_ImplGlfw_NewFrame();
-      ImGui::NewFrame();
-      buildUI();
+  while (!glfwWindowShouldClose(g_window) && !g_quitNextFrame) {
+    // Update the User-Interface
+    glfwPollEvents();
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+    buildUI();
 
-      // output the rendering
+    // output the rendering
+    if (anariFrameReady(device, frame, ANARI_NO_WAIT)) {
+      // update frame if a new one is available
+      frame_show(device, frame, this);
+      currentFrameSize = nextFrameSize;
       display();
-    }
-
-  } else {
-    // Non-continuation rendering profile
-    anariRenderFrame(device, frame);
-
-    while (!glfwWindowShouldClose(g_window) && !g_quitNextFrame) {
-      // Update the User-Interface
-      glfwPollEvents();
-      ImGui_ImplOpenGL3_NewFrame();
-      ImGui_ImplGlfw_NewFrame();
-      ImGui::NewFrame();
-      buildUI();
-
-      // output the rendering
-      if (anariFrameReady(device, frame, ANARI_NO_WAIT)) {
-        // update frame if a new one is available
-        frame_show(device, frame, this);
-        currentFrameSize = nextFrameSize;
-        display();
-        anariRenderFrame(device, frame);
-      } else {
-        // otherwise just present with updated UI
-        display();
-      }
+      anariRenderFrame(device, frame);
+    } else {
+      // otherwise just present with updated UI
+      display();
     }
   }
 
