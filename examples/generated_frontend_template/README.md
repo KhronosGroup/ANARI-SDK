@@ -4,13 +4,13 @@ ANARI Device Template
 This repository contains a template to use with the code generator
 in the ANARI-SDK.
 
-## Steps
+## Getting Started
 
 1. Copy the contents of this directory to a location outside the ANARI SDK.
 2. Rename and edit `device/template_device.json` to your needs.
-3. Add a license in and/or rename `license.txt` to contain a header which will be inserted at the top of every generated
+3. Add a license in `license.txt` to contain a header which will be inserted at the top of every generated
 source file.
-4. Edit `CMakeLists.txt` to reflect these name changes and also change the names and arguments to
+4. Edit `CMakeLists.txt` to reflect file name changes and also change the names and arguments to
 `anari_generate_frontend` to your liking (everything called "template" or "tplt")
 5. Initialize with `cd build && cmake ../`. this will populate the device directory with source files. The ones in
 `device/generated` should not be edited manually since they will be overwritten on every regeneration. The ones in
@@ -30,6 +30,7 @@ Generated Files in `device/src` can be regenerated to their initial state indivi
 generator target.
 
 Everything can be forcibly regenerated with by appending `_force` to the generator target name. This will overwrite
-edits to any generated files. It will however preserve the old versions of files by appending `.old`. To integrate
-improvements to the generated into edited versions forcibly regenerate them and then use a diff tool to merge changes
+edits to any generated files. It will however preserve the old versions of files by appending `.old`.  In case the SDK
+updates the code generator with changes to the `device/src` files you may want to manually reintegrate your changes with
+those. A possible workflow is to forcibly regenerate them and then use a diff tool to merge changes from the backups
 into the newly generated files (for example `meld foo.cpp foo.cpp.old`).
