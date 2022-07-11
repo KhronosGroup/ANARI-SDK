@@ -25,7 +25,7 @@ class MainWindow
   MainWindow(const glm::uvec2 &windowSize);
   ~MainWindow();
 
-  void setDevice(ANARIDevice device);
+  void setDevice(ANARIDevice device, const std::string &rendererType);
   void setScene(
       std::string sceneName, std::string paramName = "", anari::Any param = {});
 
@@ -47,7 +47,6 @@ class MainWindow
 
   void cleanup();
 
-  friend void frame_continuation_callback(const void *, ANARIDevice, ANARIFrame);
   friend void frame_show(ANARIDevice, ANARIFrame, MainWindow*);
 
   static MainWindow *activeWindow;
