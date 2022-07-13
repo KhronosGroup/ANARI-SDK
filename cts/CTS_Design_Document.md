@@ -29,57 +29,81 @@
   - [Aggregated test results](#aggregated-test-results)
 - [References](#references)
 
+## Q&A <!-- omit in toc -->
 
 
 ## Introduction
-
+- Goal and Motivation of this project
 ## Architecture
-
+- Describes the architecture and dependencies of the individual components
 ### C++ CTS library
-For calling the ANARI API, setting up the test scenes, rendering the images, query extensions/metadata/properties.
+- Calls the ANARI API
+- Sets up the test scenes
+- Renders the conformance test images
+- Queries extensions/metadata/properties
 
 ### Python CTS API
-Communication with C++ CTS library, parsing of parameters, performing image diffs, creating report, presenting results to the user
+- Communicates with C++ CTS library
+- Parses input parameters
+- Compares test images to ground truth
+- Creates PDF report or presents results to the user via CLI
 
 ## Features
 ### Render a set of known test scenes
 #### Define test scene format
-Scenes should be easy to generate
+- Scenes should be easy to generate
+- Scenes should cover edge cases
+- Scenes should be usable for objective structural testing
 #### Python API
-How to define parameters for the rendering
+- Lets user define parameters for the rendering
 #### C++
-Setup ANARI and render scene to image
+- Setup ANARI and render scene to image
 #### Example output
+- Renderer images
 
 ### Image comparison “smoke tests”
 #### Python API
-How to call the comparison tool
+- Lets user define parameters for the comparison tool
 #### Comparison methods
-Which metrics are used for comparison and how to configure them (e.g. SSIM or depth test)
+Proposed methods:
+- SSIM [^1]
+- Depth test
+<figure>
+  <img src="./images/instanced_cubes_0.png" width="400"/>
+  <figcaption>instanced_cubes_0 created with anariRenderTests</figcaption>
+</figure>
+
 #### Example output
+- Conformance test report as PDF showing the differences between test images and ground truth
 
 ### Verification of object/parameter info metadata
 #### Python API
-How to execute the verification, presenting results to the user
+- Executes the verification
+- Presents the results to the user
 #### C++
-Query all items via Object introspection
+- Queries all items via Object introspection
 #### Example output
-
+- List of all available objects/parameter info metadata
 ### Verification of known object properties
 #### Python API
-How to execute the verification, presenting results to the user
+- Executes the verification
+- Presents the results to the user
 #### C++
-Check if queried property values match test scene **inputT
+- Checks if queried property values match test scene input
 #### Example output
+- List of invalid property values
 
 ### List core extensions implemented by a device
 #### Python API
-How to execute the query, presenting results to the user
+- Executes the query
+- Presents the results to the user
 #### C++
-Check for each core extension if it is enabled
+- Checks availability of each core extension
 #### Example output
+- List of all available core extensions
 
 ### Aggregated test results
-Run all tests and create one report containing all use cases in a single PDF file.
+- Runs all tests and creates one report containing all test cases in a single PDF file
 
 ## References
+[^1]:https://en.wikipedia.org/wiki/Structural_similarity
