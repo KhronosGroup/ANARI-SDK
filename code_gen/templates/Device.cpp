@@ -156,12 +156,13 @@ void $prefixDevice::discardFrame(ANARIFrame handle) {
 // Helper/other functions and data members
 /////////////////////////////////////////////////////////////////////////////
 
-$prefixDevice::$prefixDevice()
-   : refcount(1), deviceObject(this_device(), this_device()),
-   staging(this_device(), this_device()),
-   current(this_device(), this_device())
+$prefixDevice::$prefixDevice(ANARILibrary library)
+   : DeviceImpl(library),
+   refcount(1), deviceObject(this_device(), this_device())
 {
    objects.emplace_back(nullptr); // reserve the null index for the null handle
+   statusCallback = defaultStatusCallback();
+   statusCallbackUserData = defaultStatusCallbackUserPtr();
 }
 $prefixDevice::~$prefixDevice() {
 
@@ -232,10 +233,10 @@ $end_namespaces
 static char deviceName[] = "$libraryname";
 
 extern "C" DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_NEW_DEVICE(
-      $libraryname, subtype)
+      $libraryname, libdata, subtype)
 {
    if (subtype == std::string("default") || subtype == std::string("$libraryname"))
-      return (ANARIDevice) new $namespace::$prefixDevice();
+      return (ANARIDevice) new $namespace::$prefixDevice(libdata);
    return nullptr;
 }
 

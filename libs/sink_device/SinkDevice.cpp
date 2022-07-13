@@ -285,7 +285,7 @@ void SinkDevice::discardFrame(ANARIFrame) {}
 
 // Other SinkDevice definitions ////////////////////////////////////////////
 
-SinkDevice::SinkDevice()
+SinkDevice::SinkDevice(ANARILibrary library) : DeviceImpl(library)
 {
   nextHandle<ANARIObject>(); // insert a handle at 0
 }
@@ -301,10 +301,10 @@ const void * query_param_info(ANARIDataType type, const char *subtype,
 
 static char deviceName[] = "sink";
 
-extern "C" SINK_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_NEW_DEVICE(sink, subtype)
+extern "C" SINK_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_NEW_DEVICE(sink, libdata, subtype)
 {
   if (subtype == std::string("default") || subtype == std::string("sink"))
-    return (ANARIDevice) new anari::sink_device::SinkDevice();
+    return (ANARIDevice) new anari::sink_device::SinkDevice(libdata);
   return nullptr;
 }
 

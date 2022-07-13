@@ -508,6 +508,11 @@ ExampleDevice::ExampleDevice()
   deviceCommit();
 }
 
+ExampleDevice::ExampleDevice(ANARILibrary library) : DeviceImpl(library)
+{
+  deviceCommit();
+}
+
 void ExampleDevice::flushCommitBuffer()
 {
   if (m_needToSortCommits) {
@@ -560,10 +565,10 @@ const void * query_param_info(ANARIDataType type, const char *subtype,
 static char deviceName[] = "example";
 
 extern "C" EXAMPLE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_NEW_DEVICE(
-    example, subtype)
+    example, libdata, subtype)
 {
   if (subtype == std::string("default") || subtype == std::string("example"))
-    return (ANARIDevice) new anari::example_device::ExampleDevice();
+    return (ANARIDevice) new anari::example_device::ExampleDevice(libdata);
   return nullptr;
 }
 

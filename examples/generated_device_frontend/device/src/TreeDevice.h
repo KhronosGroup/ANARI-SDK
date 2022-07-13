@@ -162,7 +162,7 @@ struct DEVICE_INTERFACE TreeDevice : public anari::DeviceImpl
    // Helper/other functions and data members
    /////////////////////////////////////////////////////////////////////////////
 
-   TreeDevice();
+   TreeDevice(ANARILibrary);
    ~TreeDevice();
 
    ObjectBase* fromHandle(ANARIObject handle);
