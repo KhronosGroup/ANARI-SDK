@@ -73,10 +73,12 @@ void unloadModule(Library, const char *name);
 
 anari::Device newDevice(Library, const char *name = "default");
 
-template <typename T, typename... Args>
-T newObject(Device, Args...);
-
 Object newObject(Device d, const char *type, const char *subtype);
+
+template <typename T>
+T newObject(Device);
+template <typename T>
+T newObject(Device, const char *subtype);
 
 // Arrays //
 
