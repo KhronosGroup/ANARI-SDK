@@ -1,5 +1,6 @@
 # ANARI 1.0 CTS Design Document <!-- omit in toc -->
 
+- [Introduction](#introduction)
 - [Architecture](#architecture)
   - [C++ CTS library](#c-cts-library)
   - [Python CTS API](#python-cts-api)
@@ -26,8 +27,11 @@
     - [C++](#c-3)
     - [Example output](#example-output-4)
   - [Aggregated test results](#aggregated-test-results)
+- [References](#references)
 
 
+
+## Introduction
 
 ## Architecture
 
@@ -77,3 +81,5 @@ Check for each core extension if it is enabled
 
 ### Aggregated test results
 Run all tests and create one report containing all use cases in a single PDF file.
+
+## References
