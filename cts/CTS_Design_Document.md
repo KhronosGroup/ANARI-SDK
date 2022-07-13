@@ -30,7 +30,8 @@
 - [References](#references)
 
 ## Q&A <!-- omit in toc -->
-
+- Starting the example viewer crashes on some Windows machines (read access violation on scene deletion)
+- Depth test is defined as Euclidean distance (not normalized). If we want to use it as metric, a suitable range needs to be defined for all or each test scene.
 
 ## Introduction
 - Goal and Motivation of this project
