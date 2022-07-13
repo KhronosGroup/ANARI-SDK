@@ -54,31 +54,31 @@ struct ANARI_INTERFACE Library
   ANARIStatusCallback m_defaultStatusCB{nullptr};
   const void *m_defaultStatusCBUserPtr{nullptr};
 
-  using NewDeviceFcn = ANARIDevice (*)(const char *);
+  using NewDeviceFcn = ANARIDevice (*)(ANARILibrary, const char *);
   NewDeviceFcn m_newDeviceFcn{nullptr};
 
   using FreeFcn = void (*)(void *);
   FreeFcn m_freeFcn{nullptr};
 
-  using ModuleFcn = void (*)(void *, const char *);
+  using ModuleFcn = void (*)(ANARILibrary, const char *);
   ModuleFcn m_loadModuleFcn{nullptr};
   ModuleFcn m_unloadModuleFcn{nullptr};
 
-  using GetDeviceSubtypesFcn = const char **(*)(void *);
+  using GetDeviceSubtypesFcn = const char **(*)(ANARILibrary);
   GetDeviceSubtypesFcn m_getDeviceSubtypesFcn{nullptr};
 
-  using GetObjectSubtypesFcn = const char **(*)(void *,
+  using GetObjectSubtypesFcn = const char **(*)(ANARILibrary,
       const char *,
       ANARIDataType);
   GetObjectSubtypesFcn m_getObjectSubtypesFcn{nullptr};
 
-  using GetObjectParametersFcn = const ANARIParameter *(*)(void *,
+  using GetObjectParametersFcn = const ANARIParameter *(*)(ANARILibrary,
       const char *,
       const char *,
       ANARIDataType);
   GetObjectParametersFcn m_getObjectParametersFcn{nullptr};
 
-  using GetObjectParameterPropertyFcn = const char **(*)(void *,
+  using GetObjectParameterPropertyFcn = const char **(*)(ANARILibrary,
       const char *,
       const char *,
       ANARIDataType,
@@ -90,8 +90,9 @@ struct ANARI_INTERFACE Library
 };
 
 // [REQUIRED] Define the function which allocates Device objects by subtype
-#define ANARI_DEFINE_LIBRARY_NEW_DEVICE(libname, type)                         \
-  ANARIDevice anari_library_##libname##_new_device(const char *type)
+#define ANARI_DEFINE_LIBRARY_NEW_DEVICE(libname, libdata, type)                \
+  ANARIDevice anari_library_##libname##_new_device(ANARILibrary libdata,       \
+    const char *type)
 
 // [OPTIONAL] Define the initialization function when library is loaded.
 #define ANARI_DEFINE_LIBRARY_INIT(libname) void anari_library_##libname##_init()
@@ -104,28 +105,30 @@ struct ANARI_INTERFACE Library
 // [OPTIONAL] Define the function which frees library-specific storage on
 //            destruction.
 #define ANARI_DEFINE_LIBRARY_FREE(libname, libdata)                            \
-  void anari_library_##libname##_free(void *libdata)
+  void anari_library_##libname##_free(ANARILibrary libdata)
 
 // [OPTIONAL] Define the function which loads a library-specific module.
 #define ANARI_DEFINE_LIBRARY_LOAD_MODULE(libname, libdata, modname)            \
-  void anari_library_##libname##_load_module(void *libdata, const char *modname)
+  void anari_library_##libname##_load_module(ANARILibrary libdata,             \
+    const char *modname)
 
 // [OPTIONAL] Define the function which unloads a library-specific module.
 #define ANARI_DEFINE_LIBRARY_UNLOAD_MODULE(libname, libdata, modname)          \
   void anari_library_##libname##_unload_module(                                \
-      void *libdata, const char *modname)
+      ANARILibrary libdata, const char *modname)
 
 // [OPTIONAL] Define introspection functions.
 #define ANARI_DEFINE_LIBRARY_GET_DEVICE_SUBTYPES(libname, libdata)             \
-  const char **anari_library_##libname##_get_device_subtypes(void *libdata)
+  const char **anari_library_##libname##_get_device_subtypes(                  \
+    ANARILibrary libdata)
 #define ANARI_DEFINE_LIBRARY_GET_OBJECT_SUBTYPES(                              \
     libname, libdata, deviceSubtype, objectType)                               \
   const char **anari_library_##libname##_get_object_subtypes(                  \
-      void *libdata, const char *deviceSubtype, ANARIDataType objectType)
+      ANARILibrary libdata, const char *deviceSubtype, ANARIDataType objectType)
 #define ANARI_DEFINE_LIBRARY_GET_OBJECT_PARAMETERS(                            \
     libname, libdata, deviceSubtype, objectSubtype, objectType)                \
   const ANARIParameter *anari_library_##libname##_get_object_parameters(       \
-      void *libdata,                                                           \
+      ANARILibrary libdata,                                                    \
       const char *deviceSubtype,                                               \
       const char *objectSubtype,                                               \
       ANARIDataType objectType)
@@ -138,7 +141,8 @@ struct ANARI_INTERFACE Library
     parameterType,                                                             \
     propertyName,                                                              \
     propertyType)                                                              \
-  const void *anari_library_##libname##_get_parameter_property(void *libdata,  \
+  const void *anari_library_##libname##_get_parameter_property(                \
+      ANARILibrary libdata,                                                    \
       const char *deviceSubtype,                                               \
       const char *objectSubtype,                                               \
       ANARIDataType objectType,                                                \

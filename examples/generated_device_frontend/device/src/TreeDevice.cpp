@@ -161,12 +161,15 @@ void TreeDevice::discardFrame(ANARIFrame handle) {
 // Helper/other functions and data members
 /////////////////////////////////////////////////////////////////////////////
 
-TreeDevice::TreeDevice()
-   : refcount(1), deviceObject(this_device(), this_device()),
+TreeDevice::TreeDevice(ANARILibrary library)
+   : DeviceImpl(library),
+   refcount(1), deviceObject(this_device(), this_device()),
    staging(this_device(), this_device()),
    current(this_device(), this_device())
 {
    objects.emplace_back(nullptr); // reserve the null index for the null handle
+   statusCallback = defaultStatusCallback();
+   statusCallbackUserData = defaultStatusCallbackUserPtr();
 }
 TreeDevice::~TreeDevice() {
 
@@ -239,10 +242,10 @@ void anariReportStatus(ANARIDevice handle,
 static char deviceName[] = "tree";
 
 extern "C" DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_NEW_DEVICE(
-      tree, subtype)
+      tree, libdata, subtype)
 {
    if (subtype == std::string("default") || subtype == std::string("tree"))
-      return (ANARIDevice) new anari_sdk::tree::TreeDevice();
+      return (ANARIDevice) new anari_sdk::tree::TreeDevice(libdata);
    return nullptr;
 }
 

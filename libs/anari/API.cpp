@@ -128,9 +128,6 @@ extern "C" ANARIDevice anariNewDevice(
   auto _d = lib.newDevice(deviceType);
   if (!_d)
     return nullptr;
-  auto &d = deviceRef(_d);
-  d.m_defaultStatusCB = lib.defaultStatusCB();
-  d.m_defaultStatusCBUserPtr = lib.defaultStatusCBUserPtr();
   return _d;
 }
 ANARI_CATCH_END(nullptr)

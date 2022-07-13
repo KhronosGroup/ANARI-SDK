@@ -819,8 +819,9 @@ void DebugDevice::deviceCommit()
   }
 }
 
-DebugDevice::DebugDevice()
-    : wrapped(nullptr),
+DebugDevice::DebugDevice(ANARILibrary library)
+    : DeviceImpl(library),
+      wrapped(nullptr),
       staged(nullptr),
       deviceInfo{this, this_device(), this_device()},
       debugObjectFactory(nullptr)
@@ -942,10 +943,10 @@ void DebugDevice::reportObjectUse(ANARIDataType objtype, const char *objsubtype)
 static char deviceName[] = "debug";
 
 extern "C" DEBUG_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_NEW_DEVICE(
-    debug, subtype)
+    debug, libdata, subtype)
 {
   if (subtype == std::string("default") || subtype == std::string("debug"))
-    return (ANARIDevice) new anari::debug_device::DebugDevice();
+    return (ANARIDevice) new anari::debug_device::DebugDevice(libdata);
   return nullptr;
 }
 

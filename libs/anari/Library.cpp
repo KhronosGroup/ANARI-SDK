@@ -272,7 +272,7 @@ void *Library::libraryData() const
 
 ANARIDevice Library::newDevice(const char *subtype) const
 {
-  return m_newDeviceFcn ? m_newDeviceFcn(subtype) : nullptr;
+  return m_newDeviceFcn ? m_newDeviceFcn((ANARILibrary)this, subtype) : nullptr;
 }
 
 const char *Library::defaultDeviceName() const
@@ -293,19 +293,19 @@ const void *Library::defaultStatusCBUserPtr() const
 void Library::loadModule(const char *name) const
 {
   if (m_loadModuleFcn)
-    m_loadModuleFcn(libraryData(), name);
+    m_loadModuleFcn((ANARILibrary)this, name);
 }
 
 void Library::unloadModule(const char *name) const
 {
   if (m_unloadModuleFcn)
-    m_unloadModuleFcn(libraryData(), name);
+    m_unloadModuleFcn((ANARILibrary)this, name);
 }
 
 const char **Library::getDeviceSubtypes()
 {
   if (m_getDeviceSubtypesFcn)
-    return m_getDeviceSubtypesFcn(libraryData());
+    return m_getDeviceSubtypesFcn((ANARILibrary)this);
   return nullptr;
 }
 
@@ -313,7 +313,7 @@ const char **Library::getObjectSubtypes(
     const char *deviceSubtype, ANARIDataType objectType)
 {
   if (m_getObjectSubtypesFcn)
-    return m_getObjectSubtypesFcn(libraryData(), deviceSubtype, objectType);
+    return m_getObjectSubtypesFcn((ANARILibrary)this, deviceSubtype, objectType);
   return nullptr;
 }
 
@@ -323,7 +323,7 @@ const ANARIParameter *Library::getObjectParameters(const char *deviceSubtype,
 {
   if (m_getObjectParametersFcn)
     return m_getObjectParametersFcn(
-        libraryData(), deviceSubtype, objectSubtype, objectType);
+        (ANARILibrary)this, deviceSubtype, objectSubtype, objectType);
   return nullptr;
 }
 
@@ -336,7 +336,7 @@ const void *Library::getParameterProperty(const char *deviceSubtype,
     ANARIDataType propertyType)
 {
   if (m_getObjectParameterPropertyFcn)
-    return m_getObjectParameterPropertyFcn(libraryData(),
+    return m_getObjectParameterPropertyFcn((ANARILibrary)this,
         deviceSubtype,
         objectSubtype,
         objectType,

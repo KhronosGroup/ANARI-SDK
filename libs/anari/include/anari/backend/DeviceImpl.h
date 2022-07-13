@@ -6,6 +6,9 @@
 // anari
 #include "anari/anari.h"
 #include "anari/anari_cpp/Traits.h"
+
+#include "anari/backend/Library.h"
+
 // std
 #include <map>
 #include <string>
@@ -150,22 +153,20 @@ struct ANARI_INTERFACE DeviceImpl
   // Helper/other functions and data members
   /////////////////////////////////////////////////////////////////////////////
 
+  DeviceImpl(ANARILibrary);
   DeviceImpl() = default;
   virtual ~DeviceImpl() = default;
 
   ANARIDevice this_device() const;
+
+  ANARIStatusCallback m_defaultStatusCB{nullptr};
+  const void *m_defaultStatusCBUserPtr{nullptr};
 
  protected:
   ANARIStatusCallback defaultStatusCallback() const;
   const void *defaultStatusCallbackUserPtr() const;
 
   bool handleIsDevice(ANARIObject obj) const;
-
- public:
-  // NOTE: Unsuccessful to get the declaration of anariNewDevice() declared
-  // correctly as a friend function to keep these private.
-  ANARIStatusCallback m_defaultStatusCB{nullptr};
-  const void *m_defaultStatusCBUserPtr{nullptr};
 };
 
 ANARI_TYPEFOR_SPECIALIZATION(DeviceImpl *, ANARI_DEVICE);
