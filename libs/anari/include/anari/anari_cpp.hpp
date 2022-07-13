@@ -186,7 +186,8 @@ bool getProperty(
 
 // Frame Operations //
 
-const void *map(Device, Frame, const char *channel);
+template <typename T>
+const T *map(Device, Frame, const char *channel);
 void unmap(Device, Frame, const char *channel);
 
 void render(Device, Frame);

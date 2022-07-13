@@ -411,9 +411,10 @@ inline bool getProperty(
 // Frame Operations ///////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-inline const void *map(Device d, Frame f, const char *channel)
+template <typename T>
+inline const T *map(Device d, Frame f, const char *channel)
 {
-  return anariMapFrame(d, f, channel);
+  return static_cast<const T*>(anariMapFrame(d, f, channel));
 }
 
 inline void unmap(Device d, Frame f, const char *channel)

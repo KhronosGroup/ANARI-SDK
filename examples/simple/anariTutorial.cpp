@@ -192,7 +192,7 @@ int main(int argc, const char **argv)
   anari::wait(d, frame);
 
   // access frame and write its content as PNG file
-  const uint32_t *fb = (uint32_t *)anari::map(d, frame, "color");
+  const uint32_t *fb = anari::map<uint32_t>(d, frame, "color");
   stbi_write_png(
       "firstFrame.png", (int)imgSize[0], (int)imgSize[1], 4, fb, 4 * (int)imgSize[0]);
   anari::unmap(d, frame, "color");
@@ -207,7 +207,7 @@ int main(int argc, const char **argv)
     anari::wait(d, frame);
   }
 
-  fb = (uint32_t *)anari::map(d, frame, "color");
+  fb = anari::map<uint32_t>(d, frame, "color");
   stbi_write_png(
       "accumulatedFrame.png", (int)imgSize[0], (int)imgSize[1], 4, fb, 4 * (int)imgSize[0]);
   anari::unmap(d, frame, "color");
