@@ -30,8 +30,9 @@ inline ANARIDataType getType()
 // Initialization + Introspection /////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-inline Library loadLibrary(
-    const char *name, StatusCallback defaultStatus, void *defaultStatusPtr)
+inline Library loadLibrary(const char *name,
+    StatusCallback defaultStatus,
+    const void *defaultStatusPtr)
 {
   return anariLoadLibrary(name, defaultStatus, defaultStatusPtr);
 }
@@ -172,9 +173,9 @@ inline Renderer newObject<Renderer>(Device d, const char *subtype)
 
 template <typename T>
 inline Array1D newArray1D(Device d,
-    T *appMemory,
+    const T *appMemory,
     MemoryDeleter deleter,
-    void *userPtr,
+    const void *userPtr,
     uint64_t numItems1,
     uint64_t byteStride1)
 {
@@ -189,7 +190,7 @@ inline Array1D newArray1D(Device d,
 
 template <typename T>
 inline Array1D newArray1D(
-    Device d, T *appMemory, uint64_t numItems1, uint64_t byteStride1)
+    Device d, const T *appMemory, uint64_t numItems1, uint64_t byteStride1)
 {
   return anariNewArray1D(d,
       appMemory,
@@ -209,9 +210,9 @@ inline Array1D newArray1D(Device d, ANARIDataType type, uint64_t numItems1)
 
 template <typename T>
 inline Array2D newArray2D(Device d,
-    T *appMemory,
+    const T *appMemory,
     MemoryDeleter deleter,
-    void *userPtr,
+    const void *userPtr,
     uint64_t numItems1,
     uint64_t numItems2,
     uint64_t byteStride1,
@@ -230,7 +231,7 @@ inline Array2D newArray2D(Device d,
 
 template <typename T>
 inline Array2D newArray2D(Device d,
-    T *appMemory,
+    const T *appMemory,
     uint64_t numItems1,
     uint64_t numItems2,
     uint64_t byteStride1,
@@ -258,9 +259,9 @@ inline Array2D newArray2D(
 
 template <typename T>
 inline Array3D newArray3D(Device d,
-    T *appMemory,
+    const T *appMemory,
     MemoryDeleter deleter,
-    void *userPtr,
+    const void *userPtr,
     uint64_t numItems1,
     uint64_t numItems2,
     uint64_t numItems3,
@@ -283,7 +284,7 @@ inline Array3D newArray3D(Device d,
 
 template <typename T>
 inline Array3D newArray3D(Device d,
-    T *appMemory,
+    const T *appMemory,
     uint64_t numItems1,
     uint64_t numItems2,
     uint64_t numItems3,
