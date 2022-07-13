@@ -317,9 +317,10 @@ inline Array3D newArray3D(Device d,
 
 // Data Updates //
 
-inline void *map(Device d, Array a)
+template <typename T>
+inline T *map(Device d, Array a)
 {
-  return anariMapArray(d, a);
+  return static_cast<T *>(anariMapArray(d, a));
 }
 
 inline void unmap(Device d, Array a)
