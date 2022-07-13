@@ -129,7 +129,7 @@ static void renderScene(ANARIDevice d, const std::string &scene)
 
     printf("done!\n");
 
-    auto *pixels = (uint32_t *)anari::map(d, frame, "color");
+    auto *pixels = anari::map<uint32_t>(d, frame, "color");
 
     stbi_write_png(fileName.c_str(),
         (int)g_frameSize.x,
