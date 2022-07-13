@@ -85,22 +85,16 @@ static size_t fbBytes(int width, int height)
 }
 
 /* frame_show(): */
-void frame_show(ANARIDevice dev, ANARIFrame frame, MainWindow *window)
+void frame_show(anari::Device dev, anari::Frame frame, MainWindow *window)
 {
   if (frame != nullptr) {
     float duration = 0.f;
-    anariGetProperty(dev,
-        frame,
-        "duration",
-        ANARI_FLOAT32,
-        &duration,
-        sizeof(duration),
-        ANARI_NO_WAIT);
+    anari::getProperty(dev, frame, "duration", duration, ANARI_NO_WAIT);
 
     // Assume frames-per-second is reciprical of frame render duration
     window->latestFPS = 1.f / duration;
 
-    auto *fb = anariMapFrame(dev, frame, "color");
+    auto *fb = anari::map<void>(dev, frame, "color");
 
     size_t numBytes =
         fbBytes(window->currentFrameSize.x, window->currentFrameSize.y);
@@ -121,7 +115,7 @@ void frame_show(ANARIDevice dev, ANARIFrame frame, MainWindow *window)
       g_saveNextFrame = false;
     }
 
-    anariUnmapFrame(dev, frame, "color");
+    anari::unmap(dev, frame, "color");
 
     window->updateScene();
   }
@@ -155,10 +149,10 @@ MainWindow::MainWindow(const glm::uvec2 &windowSize)
 
 #ifdef __APPLE__
   // On macOS, make sure we get a 3.2 core context
-  glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 2);
-  glfwWindowHint (GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-  glfwWindowHint (GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   // On retina display, render with low resolution and scale up
   glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_FALSE);
 #endif
@@ -241,18 +235,18 @@ MainWindow::MainWindow(const glm::uvec2 &windowSize)
   glfwSwapInterval(0);
 }
 
-void MainWindow::setDevice(ANARIDevice dev, const std::string &rendererType)
+void MainWindow::setDevice(anari::Device dev, const std::string &rendererType)
 {
   device = dev;
 
-  camera = anariNewCamera(dev, "perspective");
-  anariCommit(dev, camera);
+  camera = anari::newObject<anari::Camera>(dev, "perspective");
+  anari::commit(dev, camera);
 
-  renderer = anariNewRenderer(dev, rendererType.c_str());
+  renderer = anari::newObject<anari::Renderer>(dev, rendererType.c_str());
   anari::setParameter(dev, renderer, "backgroundColor", bgColor);
-  anariCommit(dev, renderer);
+  anari::commit(dev, renderer);
 
-  frame = anariNewFrame(device);
+  frame = anari::newObject<anari::Frame>(device);
 
   glm::uvec2 windowSize;
   glfwGetWindowSize(g_window, (int *)&windowSize.x, (int *)&windowSize.y);
@@ -326,7 +320,7 @@ void MainWindow::mainLoop()
 {
   updateScene();
 
-  anariRenderFrame(device, frame);
+  anari::render(device, frame);
 
   while (!glfwWindowShouldClose(g_window) && !g_quitNextFrame) {
     // Update the User-Interface
@@ -337,12 +331,12 @@ void MainWindow::mainLoop()
     buildUI();
 
     // output the rendering
-    if (anariFrameReady(device, frame, ANARI_NO_WAIT)) {
+    if (anari::isReady(device, frame)) {
       // update frame if a new one is available
       frame_show(device, frame, this);
       currentFrameSize = nextFrameSize;
       display();
-      anariRenderFrame(device, frame);
+      anari::render(device, frame);
     } else {
       // otherwise just present with updated UI
       display();
@@ -350,7 +344,7 @@ void MainWindow::mainLoop()
   }
 
   g_quitNextFrame = true;
-  anariFrameReady(device, frame, ANARI_WAIT);
+  anari::wait(device, frame);
   cleanup();
 }
 
@@ -379,7 +373,8 @@ void MainWindow::reshape(const glm::uvec2 &windowSize)
       GL_UNSIGNED_BYTE,
       0);
 
-  anari::setParameter(device, camera, "aspect", windowSize.x / float(windowSize.y));
+  anari::setParameter(
+      device, camera, "aspect", windowSize.x / float(windowSize.y));
   addObjectToCommit(camera);
 }
 
@@ -538,9 +533,9 @@ void MainWindow::buildUI()
   ImGui::End();
 }
 
-void MainWindow::addObjectToCommit(ANARIObject obj)
+void MainWindow::addObjectToCommit(anari::Object obj)
 {
-  anariCommit(device, obj);
+  anari::commit(device, obj);
 }
 
 void MainWindow::updateScene()
@@ -562,9 +557,9 @@ void MainWindow::updateScene()
 
 void MainWindow::cleanup()
 {
-  anariRelease(device, renderer);
-  anariRelease(device, camera);
-  anariRelease(device, frame);
+  anari::release(device, renderer);
+  anari::release(device, camera);
+  anari::release(device, frame);
 
   ImGui_ImplOpenGL3_Shutdown();
   ImGui_ImplGlfw_Shutdown();
