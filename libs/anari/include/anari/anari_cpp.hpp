@@ -63,7 +63,7 @@ using DataType       = ANARIDataType;
 
 Library loadLibrary(const char *name,
     StatusCallback defaultStatus = nullptr,
-    void *defaultStatusPtr = nullptr);
+    const void *defaultStatusPtr = nullptr);
 void unloadLibrary(Library);
 
 void loadModule(Library, const char *name);
@@ -84,15 +84,17 @@ Object newObject(Device d, const char *type, const char *subtype);
 
 template <typename T>
 Array1D newArray1D(Device,
-    T *appMemory,
+    const T *appMemory,
     MemoryDeleter,
-    void *userPtr,
+    const void *userPtr,
     uint64_t numItems1,
     uint64_t byteStride1 = 0);
 
 template <typename T>
-Array1D newArray1D(
-    Device, T *appMemory, uint64_t numItems1 = 1, uint64_t byteStride1 = 0);
+Array1D newArray1D(Device,
+    const T *appMemory,
+    uint64_t numItems1 = 1,
+    uint64_t byteStride1 = 0);
 
 Array1D newArray1D(Device d, ANARIDataType type, uint64_t numItems1);
 
@@ -100,9 +102,9 @@ Array1D newArray1D(Device d, ANARIDataType type, uint64_t numItems1);
 
 template <typename T>
 Array2D newArray2D(Device,
-    T *appMemory,
+    const T *appMemory,
     MemoryDeleter,
-    void *userPtr,
+    const void *userPtr,
     uint64_t numItems1,
     uint64_t numItems2,
     uint64_t byteStride1 = 0,
@@ -110,7 +112,7 @@ Array2D newArray2D(Device,
 
 template <typename T>
 Array2D newArray2D(Device,
-    T *appMemory,
+    const T *appMemory,
     uint64_t numItems1,
     uint64_t numItems2,
     uint64_t byteStride1 = 0,
@@ -123,9 +125,9 @@ Array2D newArray2D(
 
 template <typename T>
 Array3D newArray3D(Device,
-    T *appMemory,
+    const T *appMemory,
     MemoryDeleter,
-    void *userPtr,
+    const void *userPtr,
     uint64_t numItems1,
     uint64_t numItems2,
     uint64_t numItems3,
@@ -135,7 +137,7 @@ Array3D newArray3D(Device,
 
 template <typename T>
 Array3D newArray3D(Device,
-    T *appMemory,
+    const T *appMemory,
     uint64_t numItems1,
     uint64_t numItems2,
     uint64_t numItems3,
