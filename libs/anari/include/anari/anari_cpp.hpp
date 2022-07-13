@@ -153,7 +153,8 @@ Array3D newArray3D(Device d,
 
 // Data Updates
 
-void *map(Device, Array);
+template <typename T>
+T *map(Device, Array);
 void unmap(Device, Array);
 
 // Object + Parameter Lifetime Management //
