@@ -157,7 +157,7 @@ struct DEVICE_INTERFACE $prefixDevice : public anari::DeviceImpl
    // Helper/other functions and data members
    /////////////////////////////////////////////////////////////////////////////
 
-   $prefixDevice();
+   $prefixDevice(ANARILibrary);
    ~$prefixDevice();
 
    ObjectBase* fromHandle(ANARIObject handle);
@@ -212,9 +212,6 @@ private:
    const void* statusCallbackUserData;
 
    Object<$namespace::Device> deviceObject;
-
-   $namespace::Device staging;
-   $namespace::Device current;
 };
 
 template<class T, class H>

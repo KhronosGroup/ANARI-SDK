@@ -136,7 +136,7 @@ struct SINK_DEVICE_INTERFACE SinkDevice : public DeviceImpl, public RefCounted
   // Helper/other functions and data members
   /////////////////////////////////////////////////////////////////////////////
 
-  SinkDevice();
+  SinkDevice(ANARILibrary);
   ~SinkDevice() = default;
 
  private:

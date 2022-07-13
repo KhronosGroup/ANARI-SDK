@@ -131,6 +131,7 @@ struct EXAMPLE_DEVICE_INTERFACE ExampleDevice : public DeviceImpl,
   /////////////////////////////////////////////////////////////////////////////
 
   ExampleDevice();
+  ExampleDevice(ANARILibrary);
   ~ExampleDevice() override = default;
 
   void flushCommitBuffer();

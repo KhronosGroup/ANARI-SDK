@@ -157,7 +157,7 @@ struct DEBUG_DEVICE_INTERFACE DebugDevice : public DeviceImpl, public RefCounted
   void deviceUnsetParameter(const char *id);
   void deviceCommit();
 
-  DebugDevice();
+  DebugDevice(ANARILibrary);
   ~DebugDevice();
 
   ANARIObject newObjectHandle(ANARIObject, ANARIDataType);
