@@ -916,7 +916,7 @@ void DebugDevice::reportParameterUse(
   ANARIDataType objtype, const char *objsubtype,
   const char *paramname, ANARIDataType paramtype)
 {
-  if(const int32_t *feature = (const int32_t*)debug_queries::query_param_info_enum(objtype, objsubtype, paramname, paramtype, ANARI_INFO_feature, ANARI_INT32)) {
+  if(const int32_t *feature = (const int32_t*)debug_queries::query_param_info_enum(objtype, objsubtype, paramname, paramtype, ANARI_INFO_sourceFeature, ANARI_INT32)) {
     used_features[*feature] += 1;
   } else {
     unknown_feature_uses += 1;
@@ -925,7 +925,7 @@ void DebugDevice::reportParameterUse(
 
 void DebugDevice::reportObjectUse(ANARIDataType objtype, const char *objsubtype)
 {
-  if(const int32_t *feature = (const int32_t*)debug_queries::query_object_info_enum(objtype, objsubtype, ANARI_INFO_feature, ANARI_INT32)) {
+  if(const int32_t *feature = (const int32_t*)debug_queries::query_object_info_enum(objtype, objsubtype, ANARI_INFO_sourceFeature, ANARI_INT32)) {
     used_features[*feature] += 1;
   } else {
     unknown_feature_uses += 1;

@@ -206,9 +206,9 @@ void print_info(ANARILibrary lib, const char *device, const char *objname, ANARI
     printf("%sdescription = \"%s\"\n", indent, (const char*)mem);
   }
 
-  mem = anariGetParameterInfo(lib, device, objname, objtype, paramname, paramtype, "feature", ANARI_STRING);
+  mem = anariGetParameterInfo(lib, device, objname, objtype, paramname, paramtype, "sourceFeature", ANARI_STRING);
   if(mem) {
-    printf("%sfeature = %s\n", indent, (const char*)mem);
+    printf("%ssourceFeature = %s\n", indent, (const char*)mem);
   }
 }
 

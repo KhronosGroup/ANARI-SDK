@@ -22,6 +22,8 @@
 #include <string.h>
 // anari
 #include "anari/anari.h"
+#define ANARI_FEATURE_UTILITY_IMPL
+#include "anari/anari_feature_utility.h"
 
 /******************************************************************/
 /* helper function to write out pixel values to a .ppm file */
@@ -179,6 +181,22 @@ int main(int argc, const char **argv)
           required && *required ? "required" : "optional",
           desc);
     }
+  }
+
+  // populate a set of feature variables (this is a utility and not part of the core api)
+  ANARIFeatures features;
+  anariGetObjectFeatures(&features, lib, "default", "default", ANARI_DEVICE);
+  if(!features.ANARI_KHR_GEOMETRY_TRIANGLE) {
+    printf("WARNING: device doesn't support ANARI_KHR_GEOMETRY_TRIANGLE\n");
+  }
+  if(!features.ANARI_KHR_CAMERA_PERSPECTIVE) {
+    printf("WARNING: device doesn't support ANARI_KHR_CAMERA_PERSPECTIVE\n");
+  }
+  if(!features.ANARI_KHR_LIGHT_DIRECTIONAL) {
+    printf("WARNING: device doesn't support ANARI_KHR_LIGHT_DIRECTIONAL\n");
+  }
+  if(!features.ANARI_KHR_MATERIAL_MATTE) {
+    printf("WARNING: device doesn't support ANARI_KHR_MATERIAL_MATTE\n");
   }
 
   ANARIDevice dev = anariNewDevice(lib, "default");
