@@ -179,14 +179,6 @@ static std::map<int, SetParamFcn *> setParamFcns = {
 // ExampleDevice definitions //////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-int ExampleDevice::deviceImplements(const char *_extension)
-{
-  std::string extension = _extension;
-  if (extension == "ANARI_KHR_FRAME_COMPLETION_CALLBACK")
-    return 1;
-  return 0;
-}
-
 // Data Arrays ////////////////////////////////////////////////////////////////
 
 ANARIArray1D ExampleDevice::newArray1D(const void *appMemory,

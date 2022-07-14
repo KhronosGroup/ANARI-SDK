@@ -243,6 +243,15 @@ Library::Library(
   if (getObjectParametersFcn)
     m_getObjectParametersFcn = getObjectParametersFcn;
 
+  std::string getObjectPropertyFcnName =
+      prefix + "_get_objrvz_property";
+  auto getObjectPropertyFcn =
+      (GetObjectPropertyFcn)getSymbolAddress(
+          m_lib, getObjectPropertyFcnName);
+
+  if (getObjectPropertyFcn)
+    m_getObjectPropertyFcn = getObjectPropertyFcn;
+
   std::string getObjectParameterPropertyFcnName =
       prefix + "_get_parameter_property";
   auto getObjectParameterPropertyFcn =
@@ -324,6 +333,22 @@ const ANARIParameter *Library::getObjectParameters(const char *deviceSubtype,
   if (m_getObjectParametersFcn)
     return m_getObjectParametersFcn(
         (ANARILibrary)this, deviceSubtype, objectSubtype, objectType);
+  return nullptr;
+}
+
+const void *Library::getObjectProperty(const char *deviceSubtype,
+    const char *objectSubtype,
+    ANARIDataType objectType,
+    const char *propertyName,
+    ANARIDataType propertyType)
+{
+  if (m_getObjectPropertyFcn)
+    return m_getObjectPropertyFcn((ANARILibrary)this,
+        deviceSubtype,
+        objectSubtype,
+        objectType,
+        propertyName,
+        propertyType);
   return nullptr;
 }
 

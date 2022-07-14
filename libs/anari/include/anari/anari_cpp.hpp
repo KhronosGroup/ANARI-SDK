@@ -195,10 +195,6 @@ bool isReady(Device, Frame);
 void wait(Device, Frame);
 void discard(Device, Frame);
 
-// Extensions //
-
-bool deviceImplements(Device, const char *extension);
-
 } // namespace anari
 
 #include "anari_cpp/anari_cpp_impl.h"

@@ -17,11 +17,6 @@ void writeToVoidP(void *_p, T v)
    *p = v;
 }
 
-int $prefixDevice::deviceImplements(const char *extension) {
-   (void)extension;
-   return 0;
-}
-
 void * $prefixDevice::mapArray(ANARIArray handle) {
    if(auto obj = handle_cast<ArrayObjectBase*>(handle)) {
       return obj->map();
@@ -280,7 +275,7 @@ extern "C" DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_PARAMETER_PROPERTY(
       propertyName,
       propertyType)
 {
-   (void)libdata;
+   (void)library;
    (void)deviceSubtype;
    return $namespace::query_param_info(
       objectType,

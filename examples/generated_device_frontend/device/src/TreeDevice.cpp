@@ -22,11 +22,6 @@ void writeToVoidP(void *_p, T v)
    *p = v;
 }
 
-int TreeDevice::deviceImplements(const char *extension) {
-   (void)extension;
-   return 0;
-}
-
 void * TreeDevice::mapArray(ANARIArray handle) {
    if(auto obj = handle_cast<ArrayObjectBase*>(handle)) {
       return obj->map();
@@ -163,9 +158,7 @@ void TreeDevice::discardFrame(ANARIFrame handle) {
 
 TreeDevice::TreeDevice(ANARILibrary library)
    : DeviceImpl(library),
-   refcount(1), deviceObject(this_device(), this_device()),
-   staging(this_device(), this_device()),
-   current(this_device(), this_device())
+   refcount(1), deviceObject(this_device(), this_device())
 {
    objects.emplace_back(nullptr); // reserve the null index for the null handle
    statusCallback = defaultStatusCallback();

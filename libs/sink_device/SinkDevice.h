@@ -31,10 +31,6 @@ namespace sink_device {
 
 struct SINK_DEVICE_INTERFACE SinkDevice : public DeviceImpl, public RefCounted
 {
-  // Device API ///////////////////////////////////////////////////////////////
-
-  int deviceImplements(const char *extension) override;
-
   // Data Arrays //////////////////////////////////////////////////////////////
 
   ANARIArray1D newArray1D(const void *appMemory,

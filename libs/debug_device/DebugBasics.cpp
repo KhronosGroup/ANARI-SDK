@@ -51,10 +51,6 @@ namespace debug_device {
         STATUS, __VA_ARGS__);
 
 DebugBasics::DebugBasics(DebugDevice *td) : td(td) { }
-void DebugBasics::anariDeviceImplements(ANARIDevice device, const char* profile) {
-    (void)device;
-    (void)profile;
-}
 void DebugBasics::anariNewArray1D(ANARIDevice device, const void *appMemory, ANARIMemoryDeleter deleter,
     const void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t byteStride1) {
     DEBUG_FUNCTION(anariNewArray1D)
