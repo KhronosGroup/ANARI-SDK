@@ -51,7 +51,7 @@ class QueryGenerator:
         self.named_types = sorted(list(set([k[0] for k in self.named_objects])))
         self.subtype_list = sorted(list(set([k[1] for k in self.named_objects])))
         self.attribute_list = [x["name"] for x in anari["attributes"]]
-        self.info_strings = ["required", "default", "minimum", "maximum", "description", "elementType", "value", "feature", "parameter"]
+        self.info_strings = ["required", "default", "minimum", "maximum", "description", "elementType", "value", "sourceFeature", "feature", "parameter"]
 
     def format_as(self, value, anari_type):
         basetype = self.type_enum_dict[anari_type]["baseType"]
@@ -199,13 +199,13 @@ class QueryGenerator:
                     code += "            return nullptr;\n"
                     code += "         }\n"
 
-                if "feature" in param:
-                    code += "      case "+str(self.info_strings.index("feature"))+": // feature\n"
+                if "sourceFeature" in param:
+                    code += "      case "+str(self.info_strings.index("sourceFeature"))+": // sourceFeature\n"
                     code += "         if(infoType == ANARI_STRING) {\n"
-                    code += "            static const char *feature = \"%s\";\n"%param["feature"]
+                    code += "            static const char *feature = \"%s\";\n"%param["sourceFeature"]
                     code += "            return feature;\n"
                     code += "         } else if(infoType == ANARI_INT32) {\n"
-                    code += "            static const int32_t value = %d;\n"%self.anari["features"].index(param["feature"])
+                    code += "            static const int32_t value = %d;\n"%self.anari["features"].index(param["sourceFeature"])
                     code += "            return &value;\n"
                     code += "         }\n"
 
@@ -288,18 +288,45 @@ class QueryGenerator:
                 code += "               {0, ANARI_UNKNOWN}\n"
                 code += "            };\n"
                 code += "            return parameters;\n"
+                code += "         } else {\n"
+                code += "            return nullptr;\n"
                 code += "         }\n"
-                code += "         return nullptr;\n"
+
+            if "sourceFeature" in obj:
+                code += "      case "+str(self.info_strings.index("sourceFeature"))+": // sourceFeature\n"
+                code += "         if(infoType == ANARI_STRING) {\n"
+                code += "            static const char *feature = \"%s\";\n"%obj["sourceFeature"]
+                code += "            return feature;\n"
+                code += "         } else if(infoType == ANARI_INT32) {\n"
+                code += "            static const int value = %d;\n"%self.anari["features"].index(obj["sourceFeature"])
+                code += "            return &value;\n"
+                code += "         } else {\n"
+                code += "            return nullptr;\n"
+                code += "         }\n"
 
             if "feature" in obj:
                 code += "      case "+str(self.info_strings.index("feature"))+": // feature\n"
-                code += "         if(infoType == ANARI_STRING) {\n"
-                code += "            static const char *feature = \"%s\";\n"%obj["feature"]
-                code += "            return feature;\n"
-                code += "         } else if(infoType == ANARI_INT32) {\n"
-                code += "            static const int value = %d;\n"%self.anari["features"].index(obj["feature"])
-                code += "            return &value;\n"
+                code += "         if(infoType == ANARI_STRING_LIST) {\n"
+                code += "            static const char *features[] = {\n"
+                code += "               " + ",\n               ".join(["\"ANARI_%s\""%f for f in obj["feature"]])+",\n"
+                code += "               0\n"
+                code += "            };\n"
+                code += "            return features;\n"
+                code += "         } else {\n"
+                code += "            return nullptr;\n"
                 code += "         }\n"
+            elif obj["type"] == "ANARI_DEVICE" or obj["type"] == "ANARI_RENDERER":
+                code += "      case "+str(self.info_strings.index("feature"))+": // feature\n"
+                code += "         if(infoType == ANARI_STRING_LIST) {\n"
+                code += "            static const char *features[] = {\n"
+                code += "               " + ",\n               ".join(["\"ANARI_%s\""%f for f in self.anari["features"]])+",\n"
+                code += "               0\n"
+                code += "            };\n"
+                code += "            return features;\n"
+                code += "         } else {\n"
+                code += "            return nullptr;\n"
+                code += "         }\n"
+
 
             code += "      default: return nullptr;\n"
             code += "   }\n"
