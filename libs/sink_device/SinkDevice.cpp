@@ -286,7 +286,8 @@ SinkDevice::SinkDevice(ANARILibrary library) : DeviceImpl(library)
 }
 
 const char **query_object_types(ANARIDataType type);
-const ANARIParameter *query_params(ANARIDataType type, const char *subtype);
+const void * query_object_info(ANARIDataType type, const char *subtype,
+  const char *infoName, ANARIDataType infoType);
 const void * query_param_info(ANARIDataType type, const char *subtype,
   const char *paramName, ANARIDataType paramType,
   const char *infoName, ANARIDataType infoType);
@@ -323,12 +324,22 @@ extern "C" SINK_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_SUBTYPES(
   return anari::sink_device::query_object_types(objectType);
 }
 
-extern "C" SINK_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_PARAMETERS(
-    sink, library, deviceSubtype, objectSubtype, objectType)
+extern "C" SINK_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_PROPERTY(
+    sink,
+    library,
+    deviceSubtype,
+    objectSubtype,
+    objectType,
+    propertyName,
+    propertyType)
 {
   (void)library;
   (void)deviceSubtype;
-  return anari::sink_device::query_params(objectType, objectSubtype);
+  return anari::sink_device::query_object_info(
+    objectType,
+    objectSubtype,
+    propertyName,
+    propertyType);
 }
 
 extern "C" SINK_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_PARAMETER_PROPERTY(

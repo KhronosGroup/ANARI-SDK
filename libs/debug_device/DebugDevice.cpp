@@ -966,16 +966,6 @@ extern "C" DEBUG_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_SUBTYPES(
   return nullptr;
 }
 
-extern "C" DEBUG_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_PARAMETERS(
-    debug, library, deviceSubtype, objectSubtype, objectType)
-{
-  (void)library;
-  (void)deviceSubtype;
-  (void)objectSubtype;
-  (void)objectType;
-  return nullptr;
-}
-
 extern "C" DEBUG_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_PARAMETER_PROPERTY(
     debug,
     library,

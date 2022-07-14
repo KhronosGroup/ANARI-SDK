@@ -15,6 +15,7 @@ namespace debug_queries {
 #define ANARI_INFO_elementType 5
 #define ANARI_INFO_value 6
 #define ANARI_INFO_feature 7
+#define ANARI_INFO_parameter 8
 const int extension_count = 34;
 const char ** query_extensions();
 const char ** query_object_types(ANARIDataType type);

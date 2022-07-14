@@ -152,19 +152,6 @@ extern "C" const char **anariGetObjectSubtypes(ANARILibrary l,
 }
 ANARI_CATCH_END(nullptr)
 
-extern "C" const ANARIParameter *anariGetObjectParameters(ANARILibrary l,
-    const char *deviceSubtype,
-    const char *objectSubtype,
-    ANARIDataType objectType) ANARI_CATCH_BEGIN
-{
-  if (std::string(deviceSubtype) == "default")
-    deviceSubtype = libraryRef(l).defaultDeviceName();
-
-  return libraryRef(l).getObjectParameters(
-      deviceSubtype, objectSubtype, objectType);
-}
-ANARI_CATCH_END(nullptr)
-
 extern "C" const void *anariGetObjectInfo(ANARILibrary l,
     const char *deviceSubtype,
     const char *objectSubtype,

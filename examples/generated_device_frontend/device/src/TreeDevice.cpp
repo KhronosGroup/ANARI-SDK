@@ -185,7 +185,8 @@ ObjectBase* TreeDevice::fromHandle(ANARIObject handle) {
 
 // query functions
 const char ** query_object_types(ANARIDataType type);
-const ANARIParameter * query_params(ANARIDataType type, const char *subtype);
+const void * query_object_info(ANARIDataType type, const char *subtype,
+   const char *infoName, ANARIDataType infoType);
 const void * query_param_info(ANARIDataType type, const char *subtype,
    const char *paramName, ANARIDataType paramType,
    const char *infoName, ANARIDataType infoType);
@@ -263,12 +264,22 @@ extern "C" DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_SUBTYPES(
    return anari_sdk::tree::query_object_types(objectType);
 }
 
-extern "C" DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_PARAMETERS(
-      tree, library, deviceSubtype, objectSubtype, objectType)
+extern "C" DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_PROPERTY(
+      tree,
+      library,
+      deviceSubtype,
+      objectSubtype,
+      objectType,
+      propertyName,
+      propertyType)
 {
    (void)library;
    (void)deviceSubtype;
-   return anari_sdk::tree::query_params(objectType, objectSubtype);
+   return anari_sdk::tree::query_object_info(
+      objectType,
+      objectSubtype,
+      propertyName,
+      propertyType);
 }
 
 extern "C" DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_PARAMETER_PROPERTY(
