@@ -50,10 +50,6 @@ T deviceHandle(ANARIDevice d){
 
 struct DEVICE_INTERFACE $prefixDevice : public anari::DeviceImpl
 {
-   // Device API ///////////////////////////////////////////////////////////////
-
-   int deviceImplements(const char *extension) override;
-
    // Data Arrays //////////////////////////////////////////////////////////////
 
    ANARIArray1D newArray1D(const void *appMemory,

@@ -55,10 +55,6 @@ T deviceHandle(ANARIDevice d){
 
 struct DEVICE_INTERFACE TreeDevice : public anari::DeviceImpl
 {
-   // Device API ///////////////////////////////////////////////////////////////
-
-   int deviceImplements(const char *extension) override;
-
    // Data Arrays //////////////////////////////////////////////////////////////
 
    ANARIArray1D newArray1D(const void *appMemory,
@@ -217,9 +213,6 @@ private:
    const void* statusCallbackUserData;
 
    Object<anari_sdk::tree::Device> deviceObject;
-
-   anari_sdk::tree::Device staging;
-   anari_sdk::tree::Device current;
 };
 
 template<class T, class H>

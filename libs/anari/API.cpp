@@ -132,13 +132,6 @@ extern "C" ANARIDevice anariNewDevice(
 }
 ANARI_CATCH_END(nullptr)
 
-extern "C" int anariDeviceImplements(
-    ANARIDevice d, const char *ext) ANARI_CATCH_BEGIN
-{
-  return deviceRef(d).deviceImplements(ext);
-}
-ANARI_CATCH_END(0)
-
 ///////////////////////////////////////////////////////////////////////////////
 // Object Introspection ///////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -169,6 +162,24 @@ extern "C" const ANARIParameter *anariGetObjectParameters(ANARILibrary l,
 
   return libraryRef(l).getObjectParameters(
       deviceSubtype, objectSubtype, objectType);
+}
+ANARI_CATCH_END(nullptr)
+
+extern "C" const void *anariGetObjectInfo(ANARILibrary l,
+    const char *deviceSubtype,
+    const char *objectSubtype,
+    ANARIDataType objectType,
+    const char *infoName,
+    ANARIDataType infoType) ANARI_CATCH_BEGIN
+{
+  if (std::string(deviceSubtype) == "default")
+    deviceSubtype = libraryRef(l).defaultDeviceName();
+
+  return libraryRef(l).getObjectProperty(deviceSubtype,
+      objectSubtype,
+      objectType,
+      infoName,
+      infoType);
 }
 ANARI_CATCH_END(nullptr)
 

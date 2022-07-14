@@ -38,6 +38,11 @@ struct ANARI_INTERFACE Library
   const ANARIParameter *getObjectParameters(const char *deviceSubtype,
       const char *objectSubtype,
       ANARIDataType objectType);
+  const void *getObjectProperty(const char *deviceSubtype,
+      const char *objectSubtype,
+      ANARIDataType objectType,
+      const char *propertyName,
+      ANARIDataType propertyType);
   const void *getParameterProperty(const char *deviceSubtype,
       const char *objectSubtype,
       ANARIDataType objectType,
@@ -77,6 +82,14 @@ struct ANARI_INTERFACE Library
       const char *,
       ANARIDataType);
   GetObjectParametersFcn m_getObjectParametersFcn{nullptr};
+
+  using GetObjectPropertyFcn = const char **(*)(ANARILibrary,
+      const char *,
+      const char *,
+      ANARIDataType,
+      const char *,
+      ANARIDataType);
+  GetObjectPropertyFcn m_getObjectPropertyFcn{nullptr};
 
   using GetObjectParameterPropertyFcn = const char **(*)(ANARILibrary,
       const char *,
@@ -132,6 +145,20 @@ struct ANARI_INTERFACE Library
       const char *deviceSubtype,                                               \
       const char *objectSubtype,                                               \
       ANARIDataType objectType)
+#define ANARI_DEFINE_LIBRARY_GET_OBJECT_PROPERTY(libname,                      \
+    library,                                                                   \
+    deviceSubtype,                                                             \
+    objectSubtype,                                                             \
+    objectType,                                                                \
+    propertyName,                                                              \
+    propertyType)                                                              \
+  const void *anari_library_##libname##_get_object_property(                   \
+      ANARILibrary library,                                                    \
+      const char *deviceSubtype,                                               \
+      const char *objectSubtype,                                               \
+      ANARIDataType objectType,                                                \
+      const char *propertyName,                                                \
+      ANARIDataType propertyType)
 #define ANARI_DEFINE_LIBRARY_GET_PARAMETER_PROPERTY(libname,                   \
     library,                                                                   \
     deviceSubtype,                                                             \

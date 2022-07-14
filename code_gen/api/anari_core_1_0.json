@@ -287,13 +287,6 @@
                 {"name" : "type", "type" : "const char*", "default" : "\"default\""}
             ]
         }, {
-            "name" : "anariDeviceImplements",
-            "returnType" : "int",
-            "arguments" : [
-                {"name" : "device", "type" : "ANARIDevice"},
-                {"name" : "profile", "type" : "const char*"}
-            ]
-        }, {
             "name" : "anariNewArray1D",
             "returnType" : "ANARIArray1D",
             "arguments" : [
@@ -491,6 +484,17 @@
                 {"name" : "deviceSubtype", "type" : "const char*"},
                 {"name" : "objectSubtype", "type" : "const char*"},
                 {"name" : "objectType", "type" : "ANARIDataType"}
+            ]
+        }, {
+            "name" : "anariGetObjectInfo",
+            "returnType" : "const void*",
+            "arguments" : [
+                {"name" : "library", "type" : "ANARILibrary"},
+                {"name" : "deviceSubtype", "type" : "const char*"},
+                {"name" : "objectSubtype", "type" : "const char*"},
+                {"name" : "objectType", "type" : "ANARIDataType"},
+                {"name" : "infoName", "type" : "const char*"},
+                {"name" : "infoType", "type" : "ANARIDataType"}
             ]
         }, {
             "name" : "anariGetParameterInfo",
