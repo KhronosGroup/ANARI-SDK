@@ -477,15 +477,6 @@
                 {"name" : "objectType", "type" : "ANARIDataType"}
             ]
         }, {
-            "name" : "anariGetObjectParameters",
-            "returnType" : "const ANARIParameter*",
-            "arguments" : [
-                {"name" : "library", "type" : "ANARILibrary"},
-                {"name" : "deviceSubtype", "type" : "const char*"},
-                {"name" : "objectSubtype", "type" : "const char*"},
-                {"name" : "objectType", "type" : "ANARIDataType"}
-            ]
-        }, {
             "name" : "anariGetObjectInfo",
             "returnType" : "const void*",
             "arguments" : [

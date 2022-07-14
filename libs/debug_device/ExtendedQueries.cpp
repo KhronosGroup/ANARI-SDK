@@ -53,7 +53,7 @@ static int param_hash(const char *str) {
    return -1;
 }
 static int info_hash(const char *str) {
-   static const uint32_t table[] = {0x66650013u,0x6d6c0030u,0x6665003bu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6a610042u,0x0u,0x0u,0x0u,0x0u,0x66650057u,0x0u,0x0u,0x0u,0x6261005fu,0x74660014u,0x62610022u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x64630027u,0x76750023u,0x6d6c0024u,0x75740025u,0x1000026u,0x80000001u,0x73720028u,0x6a690029u,0x7170002au,0x7574002bu,0x6a69002cu,0x706f002du,0x6f6e002eu,0x100002fu,0x80000004u,0x66650031u,0x6e6d0032u,0x66650033u,0x6f6e0034u,0x75740035u,0x55540036u,0x7a790037u,0x71700038u,0x66650039u,0x100003au,0x80000005u,0x6261003cu,0x7574003du,0x7675003eu,0x7372003fu,0x66650040u,0x1000041u,0x80000007u,0x7978004bu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6f6e0051u,0x6a69004cu,0x6e6d004du,0x7675004eu,0x6e6d004fu,0x1000050u,0x80000003u,0x6a690052u,0x6e6d0053u,0x76750054u,0x6e6d0055u,0x1000056u,0x80000002u,0x72710058u,0x76750059u,0x6a69005au,0x7372005bu,0x6665005cu,0x6564005du,0x100005eu,0x80000000u,0x6d6c0060u,0x76750061u,0x66650062u,0x1000063u,0x80000006u};
+   static const uint32_t table[] = {0x66650013u,0x6d6c0030u,0x6665003bu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6a610042u,0x0u,0x0u,0x62610057u,0x0u,0x66650060u,0x0u,0x0u,0x0u,0x62610068u,0x74660014u,0x62610022u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x64630027u,0x76750023u,0x6d6c0024u,0x75740025u,0x1000026u,0x80000001u,0x73720028u,0x6a690029u,0x7170002au,0x7574002bu,0x6a69002cu,0x706f002du,0x6f6e002eu,0x100002fu,0x80000004u,0x66650031u,0x6e6d0032u,0x66650033u,0x6f6e0034u,0x75740035u,0x55540036u,0x7a790037u,0x71700038u,0x66650039u,0x100003au,0x80000005u,0x6261003cu,0x7574003du,0x7675003eu,0x7372003fu,0x66650040u,0x1000041u,0x80000007u,0x7978004bu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6f6e0051u,0x6a69004cu,0x6e6d004du,0x7675004eu,0x6e6d004fu,0x1000050u,0x80000003u,0x6a690052u,0x6e6d0053u,0x76750054u,0x6e6d0055u,0x1000056u,0x80000002u,0x73720058u,0x62610059u,0x6e6d005au,0x6665005bu,0x7574005cu,0x6665005du,0x7372005eu,0x100005fu,0x80000008u,0x72710061u,0x76750062u,0x6a690063u,0x73720064u,0x66650065u,0x65640066u,0x1000067u,0x80000000u,0x6d6c0069u,0x7675006au,0x6665006bu,0x100006cu,0x80000006u};
    uint32_t cur = 0x77640000u;
    for(int i = 0;cur!=0;++i) {
       uint32_t idx = cur&0xFFFFu;
@@ -160,273 +160,6 @@ const char ** query_object_types(ANARIDataType type) {
       {
          static const char *none_subtypes[] = {0};
          return none_subtypes;
-      }
-   }
-}
-static const ANARIParameter * ANARI_CAMERA_params(const char *subtype) {
-   switch(subtype_hash(subtype)) {
-      case 10:
-      {
-         static const ANARIParameter omnidirectional_params[] = {{"name", ANARI_STRING}, {"position", ANARI_FLOAT32_VEC3}, {"direction", ANARI_FLOAT32_VEC3}, {"up", ANARI_FLOAT32_VEC3}, {"transform", ANARI_FLOAT32_MAT3x4}, {"imageRegion", ANARI_FLOAT32_BOX2}, {"apertureRadius", ANARI_FLOAT32}, {"focusDistance", ANARI_FLOAT32}, {"stereoMode", ANARI_STRING}, {"interpupillaryDistance", ANARI_FLOAT32}, {"layout", ANARI_STRING}, {"motion.transform", ANARI_ARRAY1D}, {"motion.scale", ANARI_ARRAY1D}, {"motion.rotation", ANARI_ARRAY1D}, {"motion.translation", ANARI_ARRAY1D}, {"time", ANARI_FLOAT32_BOX1}, {"shutter", ANARI_FLOAT32_BOX1}, {0, ANARI_UNKNOWN}};
-         return omnidirectional_params;
-      }
-      case 11:
-      {
-         static const ANARIParameter orthographic_params[] = {{"name", ANARI_STRING}, {"position", ANARI_FLOAT32_VEC3}, {"direction", ANARI_FLOAT32_VEC3}, {"up", ANARI_FLOAT32_VEC3}, {"transform", ANARI_FLOAT32_MAT3x4}, {"imageRegion", ANARI_FLOAT32_BOX2}, {"apertureRadius", ANARI_FLOAT32}, {"focusDistance", ANARI_FLOAT32}, {"stereoMode", ANARI_STRING}, {"interpupillaryDistance", ANARI_FLOAT32}, {"aspect", ANARI_FLOAT32}, {"motion.transform", ANARI_ARRAY1D}, {"motion.scale", ANARI_ARRAY1D}, {"motion.rotation", ANARI_ARRAY1D}, {"motion.translation", ANARI_ARRAY1D}, {"time", ANARI_FLOAT32_BOX1}, {"shutter", ANARI_FLOAT32_BOX1}, {0, ANARI_UNKNOWN}};
-         return orthographic_params;
-      }
-      case 12:
-      {
-         static const ANARIParameter perspective_params[] = {{"name", ANARI_STRING}, {"position", ANARI_FLOAT32_VEC3}, {"direction", ANARI_FLOAT32_VEC3}, {"up", ANARI_FLOAT32_VEC3}, {"transform", ANARI_FLOAT32_MAT3x4}, {"imageRegion", ANARI_FLOAT32_BOX2}, {"apertureRadius", ANARI_FLOAT32}, {"focusDistance", ANARI_FLOAT32}, {"stereoMode", ANARI_STRING}, {"interpupillaryDistance", ANARI_FLOAT32}, {"fovy", ANARI_FLOAT32}, {"aspect", ANARI_FLOAT32}, {"motion.transform", ANARI_ARRAY1D}, {"motion.scale", ANARI_ARRAY1D}, {"motion.rotation", ANARI_ARRAY1D}, {"motion.translation", ANARI_ARRAY1D}, {"time", ANARI_FLOAT32_BOX1}, {"shutter", ANARI_FLOAT32_BOX1}, {0, ANARI_UNKNOWN}};
-         return perspective_params;
-      }
-      default:
-      {
-         static const ANARIParameter none[] = {{0, ANARI_UNKNOWN}};
-         return none;
-      }
-   }
-}
-static const ANARIParameter * ANARI_GEOMETRY_params(const char *subtype) {
-   switch(subtype_hash(subtype)) {
-      case 0:
-      {
-         static const ANARIParameter cone_params[] = {{"name", ANARI_STRING}, {"primitive.color", ANARI_ARRAY1D}, {"primitive.attribute0", ANARI_ARRAY1D}, {"primitive.attribute1", ANARI_ARRAY1D}, {"primitive.attribute2", ANARI_ARRAY1D}, {"primitive.attribute3", ANARI_ARRAY1D}, {"primitive.id", ANARI_ARRAY1D}, {"vertex.position", ANARI_ARRAY1D}, {"vertex.radius", ANARI_ARRAY1D}, {"vertex.cap", ANARI_ARRAY1D}, {"vertex.color", ANARI_ARRAY1D}, {"vertex.attribute0", ANARI_ARRAY1D}, {"vertex.attribute1", ANARI_ARRAY1D}, {"vertex.attribute2", ANARI_ARRAY1D}, {"vertex.attribute3", ANARI_ARRAY1D}, {"primitive.index", ANARI_ARRAY1D}, {"caps", ANARI_STRING}, {0, ANARI_UNKNOWN}};
-         return cone_params;
-      }
-      case 1:
-      {
-         static const ANARIParameter curve_params[] = {{"name", ANARI_STRING}, {"primitive.color", ANARI_ARRAY1D}, {"primitive.attribute0", ANARI_ARRAY1D}, {"primitive.attribute1", ANARI_ARRAY1D}, {"primitive.attribute2", ANARI_ARRAY1D}, {"primitive.attribute3", ANARI_ARRAY1D}, {"primitive.id", ANARI_ARRAY1D}, {"vertex.position", ANARI_ARRAY1D}, {"vertex.radius", ANARI_ARRAY1D}, {"vertex.color", ANARI_ARRAY1D}, {"vertex.attribute0", ANARI_ARRAY1D}, {"vertex.attribute1", ANARI_ARRAY1D}, {"vertex.attribute2", ANARI_ARRAY1D}, {"vertex.attribute3", ANARI_ARRAY1D}, {"primitive.index", ANARI_ARRAY1D}, {"radius", ANARI_FLOAT32}, {0, ANARI_UNKNOWN}};
-         return curve_params;
-      }
-      case 2:
-      {
-         static const ANARIParameter cylinder_params[] = {{"name", ANARI_STRING}, {"primitive.color", ANARI_ARRAY1D}, {"primitive.attribute0", ANARI_ARRAY1D}, {"primitive.attribute1", ANARI_ARRAY1D}, {"primitive.attribute2", ANARI_ARRAY1D}, {"primitive.attribute3", ANARI_ARRAY1D}, {"primitive.id", ANARI_ARRAY1D}, {"vertex.position", ANARI_ARRAY1D}, {"vertex.cap", ANARI_ARRAY1D}, {"vertex.color", ANARI_ARRAY1D}, {"vertex.attribute0", ANARI_ARRAY1D}, {"vertex.attribute1", ANARI_ARRAY1D}, {"vertex.attribute2", ANARI_ARRAY1D}, {"vertex.attribute3", ANARI_ARRAY1D}, {"primitive.index", ANARI_ARRAY1D}, {"primitive.radius", ANARI_ARRAY1D}, {"radius", ANARI_FLOAT32}, {"caps", ANARI_STRING}, {0, ANARI_UNKNOWN}};
-         return cylinder_params;
-      }
-      case 15:
-      {
-         static const ANARIParameter quad_params[] = {{"name", ANARI_STRING}, {"primitive.color", ANARI_ARRAY1D}, {"primitive.attribute0", ANARI_ARRAY1D}, {"primitive.attribute1", ANARI_ARRAY1D}, {"primitive.attribute2", ANARI_ARRAY1D}, {"primitive.attribute3", ANARI_ARRAY1D}, {"primitive.id", ANARI_ARRAY1D}, {"vertex.position", ANARI_ARRAY1D}, {"vertex.normal", ANARI_ARRAY1D}, {"vertex.color", ANARI_ARRAY1D}, {"vertex.attribute0", ANARI_ARRAY1D}, {"vertex.attribute1", ANARI_ARRAY1D}, {"vertex.attribute2", ANARI_ARRAY1D}, {"vertex.attribute3", ANARI_ARRAY1D}, {"primitive.index", ANARI_ARRAY1D}, {0, ANARI_UNKNOWN}};
-         return quad_params;
-      }
-      case 18:
-      {
-         static const ANARIParameter sphere_params[] = {{"name", ANARI_STRING}, {"primitive.color", ANARI_ARRAY1D}, {"primitive.attribute0", ANARI_ARRAY1D}, {"primitive.attribute1", ANARI_ARRAY1D}, {"primitive.attribute2", ANARI_ARRAY1D}, {"primitive.attribute3", ANARI_ARRAY1D}, {"primitive.id", ANARI_ARRAY1D}, {"vertex.position", ANARI_ARRAY1D}, {"vertex.radius", ANARI_ARRAY1D}, {"vertex.color", ANARI_ARRAY1D}, {"vertex.attribute0", ANARI_ARRAY1D}, {"vertex.attribute1", ANARI_ARRAY1D}, {"vertex.attribute2", ANARI_ARRAY1D}, {"vertex.attribute3", ANARI_ARRAY1D}, {"primitive.index", ANARI_ARRAY1D}, {"radius", ANARI_FLOAT32}, {0, ANARI_UNKNOWN}};
-         return sphere_params;
-      }
-      case 23:
-      {
-         static const ANARIParameter triangle_params[] = {{"name", ANARI_STRING}, {"primitive.color", ANARI_ARRAY1D}, {"primitive.attribute0", ANARI_ARRAY1D}, {"primitive.attribute1", ANARI_ARRAY1D}, {"primitive.attribute2", ANARI_ARRAY1D}, {"primitive.attribute3", ANARI_ARRAY1D}, {"primitive.id", ANARI_ARRAY1D}, {"vertex.position", ANARI_ARRAY1D}, {"vertex.normal", ANARI_ARRAY1D}, {"vertex.color", ANARI_ARRAY1D}, {"vertex.attribute0", ANARI_ARRAY1D}, {"vertex.attribute1", ANARI_ARRAY1D}, {"vertex.attribute2", ANARI_ARRAY1D}, {"vertex.attribute3", ANARI_ARRAY1D}, {"primitive.index", ANARI_ARRAY1D}, {0, ANARI_UNKNOWN}};
-         return triangle_params;
-      }
-      default:
-      {
-         static const ANARIParameter none[] = {{0, ANARI_UNKNOWN}};
-         return none;
-      }
-   }
-}
-static const ANARIParameter * ANARI_LIGHT_params(const char *subtype) {
-   switch(subtype_hash(subtype)) {
-      case 4:
-      {
-         static const ANARIParameter directional_params[] = {{"name", ANARI_STRING}, {"color", ANARI_FLOAT32_VEC3}, {"irradiance", ANARI_FLOAT32}, {"direction", ANARI_FLOAT32_VEC3}, {"angularDiameter", ANARI_FLOAT32}, {"radiance", ANARI_FLOAT32}, {"visible", ANARI_BOOL}, {0, ANARI_UNKNOWN}};
-         return directional_params;
-      }
-      case 13:
-      {
-         static const ANARIParameter point_params[] = {{"name", ANARI_STRING}, {"color", ANARI_FLOAT32_VEC3}, {"position", ANARI_FLOAT32_VEC3}, {"intensity", ANARI_FLOAT32}, {"power", ANARI_FLOAT32}, {"radius", ANARI_FLOAT32}, {"radiance", ANARI_FLOAT32}, {"visible", ANARI_BOOL}, {0, ANARI_UNKNOWN}};
-         return point_params;
-      }
-      case 19:
-      {
-         static const ANARIParameter spot_params[] = {{"name", ANARI_STRING}, {"color", ANARI_FLOAT32_VEC3}, {"position", ANARI_FLOAT32_VEC3}, {"direction", ANARI_FLOAT32_VEC3}, {"openingAngle", ANARI_FLOAT32}, {"falloffAngle", ANARI_FLOAT32}, {"intensity", ANARI_FLOAT32}, {"power", ANARI_FLOAT32}, {0, ANARI_UNKNOWN}};
-         return spot_params;
-      }
-      case 16:
-      {
-         static const ANARIParameter ring_params[] = {{"name", ANARI_STRING}, {"color", ANARI_FLOAT32_VEC3}, {"position", ANARI_FLOAT32_VEC3}, {"direction", ANARI_FLOAT32_VEC3}, {"openingAngle", ANARI_FLOAT32}, {"falloffAngle", ANARI_FLOAT32}, {"intensity", ANARI_FLOAT32}, {"power", ANARI_FLOAT32}, {"radius", ANARI_FLOAT32}, {"innerRadius", ANARI_FLOAT32}, {"radiance", ANARI_FLOAT32}, {"intensityDistribution", ANARI_ARRAY1D}, {"intensityDistribution", ANARI_ARRAY2D}, {"c0", ANARI_FLOAT32_VEC3}, {"visible", ANARI_BOOL}, {0, ANARI_UNKNOWN}};
-         return ring_params;
-      }
-      case 15:
-      {
-         static const ANARIParameter quad_params[] = {{"name", ANARI_STRING}, {"color", ANARI_FLOAT32_VEC3}, {"position", ANARI_FLOAT32_VEC3}, {"edge1", ANARI_FLOAT32_VEC3}, {"edge2", ANARI_FLOAT32_VEC3}, {"intensity", ANARI_FLOAT32}, {"power", ANARI_FLOAT32}, {"radiance", ANARI_FLOAT32}, {"side", ANARI_STRING}, {"intensityDistribution", ANARI_ARRAY1D}, {"intensityDistribution", ANARI_ARRAY2D}, {"visible", ANARI_BOOL}, {0, ANARI_UNKNOWN}};
-         return quad_params;
-      }
-      case 5:
-      {
-         static const ANARIParameter hdri_params[] = {{"name", ANARI_STRING}, {"color", ANARI_FLOAT32_VEC3}, {"up", ANARI_FLOAT32_VEC3}, {"radiance", ANARI_ARRAY2D}, {"layout", ANARI_STRING}, {"scale", ANARI_FLOAT32}, {"visible", ANARI_BOOL}, {0, ANARI_UNKNOWN}};
-         return hdri_params;
-      }
-      default:
-      {
-         static const ANARIParameter none[] = {{0, ANARI_UNKNOWN}};
-         return none;
-      }
-   }
-}
-static const ANARIParameter * ANARI_MATERIAL_params(const char *subtype) {
-   switch(subtype_hash(subtype)) {
-      case 9:
-      {
-         static const ANARIParameter matte_params[] = {{"name", ANARI_STRING}, {"color", ANARI_FLOAT32_VEC3}, {"color", ANARI_SAMPLER}, {"color", ANARI_STRING}, {0, ANARI_UNKNOWN}};
-         return matte_params;
-      }
-      case 22:
-      {
-         static const ANARIParameter transparentMatte_params[] = {{"name", ANARI_STRING}, {"color", ANARI_FLOAT32_VEC3}, {"color", ANARI_SAMPLER}, {"color", ANARI_STRING}, {"opacity", ANARI_FLOAT32}, {"opacity", ANARI_SAMPLER}, {"opacity", ANARI_STRING}, {0, ANARI_UNKNOWN}};
-         return transparentMatte_params;
-      }
-      default:
-      {
-         static const ANARIParameter none[] = {{0, ANARI_UNKNOWN}};
-         return none;
-      }
-   }
-}
-static const ANARIParameter * ANARI_RENDERER_params(const char *subtype) {
-   switch(subtype_hash(subtype)) {
-      case 3:
-      {
-         static const ANARIParameter default_params[] = {{"name", ANARI_STRING}, {0, ANARI_UNKNOWN}};
-         return default_params;
-      }
-      default:
-      {
-         static const ANARIParameter none[] = {{0, ANARI_UNKNOWN}};
-         return none;
-      }
-   }
-}
-static const ANARIParameter * ANARI_SAMPLER_params(const char *subtype) {
-   switch(subtype_hash(subtype)) {
-      case 6:
-      {
-         static const ANARIParameter image1D_params[] = {{"name", ANARI_STRING}, {"image", ANARI_ARRAY1D}, {"inAttribute", ANARI_STRING}, {"filter", ANARI_STRING}, {"wrapMode1", ANARI_STRING}, {"inTransform", ANARI_FLOAT32_MAT4}, {"outTransform", ANARI_FLOAT32_MAT4}, {0, ANARI_UNKNOWN}};
-         return image1D_params;
-      }
-      case 7:
-      {
-         static const ANARIParameter image2D_params[] = {{"name", ANARI_STRING}, {"image", ANARI_ARRAY2D}, {"inAttribute", ANARI_STRING}, {"filter", ANARI_STRING}, {"wrapMode1", ANARI_STRING}, {"wrapMode2", ANARI_STRING}, {"inTransform", ANARI_FLOAT32_MAT4}, {"outTransform", ANARI_FLOAT32_MAT4}, {0, ANARI_UNKNOWN}};
-         return image2D_params;
-      }
-      case 8:
-      {
-         static const ANARIParameter image3D_params[] = {{"name", ANARI_STRING}, {"image", ANARI_ARRAY3D}, {"inAttribute", ANARI_STRING}, {"filter", ANARI_STRING}, {"wrapMode1", ANARI_STRING}, {"wrapMode2", ANARI_STRING}, {"wrapMode3", ANARI_STRING}, {"inTransform", ANARI_FLOAT32_MAT4}, {"outTransform", ANARI_FLOAT32_MAT4}, {0, ANARI_UNKNOWN}};
-         return image3D_params;
-      }
-      case 14:
-      {
-         static const ANARIParameter primitive_params[] = {{"name", ANARI_STRING}, {"array", ANARI_ARRAY1D}, {"offset", ANARI_UINT64}, {0, ANARI_UNKNOWN}};
-         return primitive_params;
-      }
-      case 21:
-      {
-         static const ANARIParameter transform_params[] = {{"name", ANARI_STRING}, {"inAttribute", ANARI_STRING}, {"transform", ANARI_FLOAT32_MAT4}, {0, ANARI_UNKNOWN}};
-         return transform_params;
-      }
-      default:
-      {
-         static const ANARIParameter none[] = {{0, ANARI_UNKNOWN}};
-         return none;
-      }
-   }
-}
-static const ANARIParameter * ANARI_SPATIAL_FIELD_params(const char *subtype) {
-   switch(subtype_hash(subtype)) {
-      case 20:
-      {
-         static const ANARIParameter structuredRegular_params[] = {{"name", ANARI_STRING}, {"data", ANARI_ARRAY3D}, {"origin", ANARI_FLOAT32_VEC3}, {"spacing", ANARI_FLOAT32_VEC3}, {"filter", ANARI_STRING}, {0, ANARI_UNKNOWN}};
-         return structuredRegular_params;
-      }
-      default:
-      {
-         static const ANARIParameter none[] = {{0, ANARI_UNKNOWN}};
-         return none;
-      }
-   }
-}
-static const ANARIParameter * ANARI_VOLUME_params(const char *subtype) {
-   switch(subtype_hash(subtype)) {
-      case 17:
-      {
-         static const ANARIParameter scivis_params[] = {{"name", ANARI_STRING}, {"field", ANARI_SPATIAL_FIELD}, {"valueRange", ANARI_FLOAT32_BOX1}, {"color", ANARI_ARRAY1D}, {"color.position", ANARI_ARRAY1D}, {"opacity", ANARI_ARRAY1D}, {"opacity.position", ANARI_ARRAY1D}, {"densityScale", ANARI_FLOAT32}, {0, ANARI_UNKNOWN}};
-         return scivis_params;
-      }
-      default:
-      {
-         static const ANARIParameter none[] = {{0, ANARI_UNKNOWN}};
-         return none;
-      }
-   }
-}
-const ANARIParameter * query_params(ANARIDataType type, const char *subtype) {
-   switch(type) {
-      case ANARI_CAMERA:
-         return ANARI_CAMERA_params(subtype);
-      case ANARI_GEOMETRY:
-         return ANARI_GEOMETRY_params(subtype);
-      case ANARI_LIGHT:
-         return ANARI_LIGHT_params(subtype);
-      case ANARI_MATERIAL:
-         return ANARI_MATERIAL_params(subtype);
-      case ANARI_RENDERER:
-         return ANARI_RENDERER_params(subtype);
-      case ANARI_SAMPLER:
-         return ANARI_SAMPLER_params(subtype);
-      case ANARI_SPATIAL_FIELD:
-         return ANARI_SPATIAL_FIELD_params(subtype);
-      case ANARI_VOLUME:
-         return ANARI_VOLUME_params(subtype);
-      case ANARI_DEVICE:
-      {
-         static const ANARIParameter ANARI_DEVICE_params[] = {{"name", ANARI_STRING}, {"statusCallback", ANARI_STATUS_CALLBACK}, {"statusCallbackUserData", ANARI_VOID_POINTER}, {0, ANARI_UNKNOWN}};
-         return ANARI_DEVICE_params;
-      }
-      case ANARI_ARRAY1D:
-      {
-         static const ANARIParameter ANARI_ARRAY1D_params[] = {{"name", ANARI_STRING}, {"region", ANARI_UINT64_BOX1}, {0, ANARI_UNKNOWN}};
-         return ANARI_ARRAY1D_params;
-      }
-      case ANARI_ARRAY2D:
-      {
-         static const ANARIParameter ANARI_ARRAY2D_params[] = {{"name", ANARI_STRING}, {0, ANARI_UNKNOWN}};
-         return ANARI_ARRAY2D_params;
-      }
-      case ANARI_ARRAY3D:
-      {
-         static const ANARIParameter ANARI_ARRAY3D_params[] = {{"name", ANARI_STRING}, {0, ANARI_UNKNOWN}};
-         return ANARI_ARRAY3D_params;
-      }
-      case ANARI_FRAME:
-      {
-         static const ANARIParameter ANARI_FRAME_params[] = {{"name", ANARI_STRING}, {"world", ANARI_WORLD}, {"renderer", ANARI_RENDERER}, {"camera", ANARI_CAMERA}, {"size", ANARI_UINT32_VEC2}, {"color", ANARI_DATA_TYPE}, {"depth", ANARI_DATA_TYPE}, {"frameCompletionCallback", ANARI_FRAME_COMPLETION_CALLBACK}, {"frameCompletionCallbackUserData", ANARI_VOID_POINTER}, {"normal", ANARI_DATA_TYPE}, {"albedo", ANARI_DATA_TYPE}, {"accumulation", ANARI_BOOL}, {"variance", ANARI_BOOL}, {0, ANARI_UNKNOWN}};
-         return ANARI_FRAME_params;
-      }
-      case ANARI_GROUP:
-      {
-         static const ANARIParameter ANARI_GROUP_params[] = {{"name", ANARI_STRING}, {"surface", ANARI_ARRAY1D}, {"volume", ANARI_ARRAY1D}, {"light", ANARI_ARRAY1D}, {0, ANARI_UNKNOWN}};
-         return ANARI_GROUP_params;
-      }
-      case ANARI_INSTANCE:
-      {
-         static const ANARIParameter ANARI_INSTANCE_params[] = {{"name", ANARI_STRING}, {"transform", ANARI_FLOAT32_MAT4}, {"group", ANARI_GROUP}, {"motion.transform", ANARI_ARRAY1D}, {"motion.scale", ANARI_ARRAY1D}, {"motion.rotation", ANARI_ARRAY1D}, {"motion.translation", ANARI_ARRAY1D}, {"time", ANARI_FLOAT32_BOX1}, {0, ANARI_UNKNOWN}};
-         return ANARI_INSTANCE_params;
-      }
-      case ANARI_WORLD:
-      {
-         static const ANARIParameter ANARI_WORLD_params[] = {{"name", ANARI_STRING}, {"instance", ANARI_ARRAY1D}, {"surface", ANARI_ARRAY1D}, {"volume", ANARI_ARRAY1D}, {"light", ANARI_ARRAY1D}, {0, ANARI_UNKNOWN}};
-         return ANARI_WORLD_params;
-      }
-      case ANARI_SURFACE:
-      {
-         static const ANARIParameter ANARI_SURFACE_params[] = {{"name", ANARI_STRING}, {"geometry", ANARI_GEOMETRY}, {"material", ANARI_MATERIAL}, {0, ANARI_UNKNOWN}};
-         return ANARI_SURFACE_params;
-      }
-      default:
-      {
-         static const ANARIParameter none[] = {{0, ANARI_UNKNOWN}};
-         return none;
       }
    }
 }
@@ -10651,6 +10384,17 @@ const void * query_param_info(ANARIDataType type, const char *subtype, const cha
             static const char *description = "device object";
             return description;
          }
+      case 8: // parameter
+         if(infoType == ANARI_PARAMETER_LIST) {
+            static const ANARIParameter parameters[] = {
+               {"name", ANARI_STRING},
+               {"statusCallback", ANARI_STATUS_CALLBACK},
+               {"statusCallbackUserData", ANARI_VOID_POINTER},
+               {0, ANARI_UNKNOWN}
+            };
+            return parameters;
+         }
+         return nullptr;
       case 7: // feature
          if(infoType == ANARI_STRING) {
             static const char *feature = "CORE_OBJECTS";
@@ -10669,6 +10413,16 @@ static const void * ANARI_ARRAY1D_info(int infoName, ANARIDataType infoType) {
             static const char *description = "one dimensional array object";
             return description;
          }
+      case 8: // parameter
+         if(infoType == ANARI_PARAMETER_LIST) {
+            static const ANARIParameter parameters[] = {
+               {"name", ANARI_STRING},
+               {"region", ANARI_UINT64_BOX1},
+               {0, ANARI_UNKNOWN}
+            };
+            return parameters;
+         }
+         return nullptr;
       case 7: // feature
          if(infoType == ANARI_STRING) {
             static const char *feature = "CORE_OBJECTS";
@@ -10687,6 +10441,15 @@ static const void * ANARI_ARRAY2D_info(int infoName, ANARIDataType infoType) {
             static const char *description = "two dimensional array object";
             return description;
          }
+      case 8: // parameter
+         if(infoType == ANARI_PARAMETER_LIST) {
+            static const ANARIParameter parameters[] = {
+               {"name", ANARI_STRING},
+               {0, ANARI_UNKNOWN}
+            };
+            return parameters;
+         }
+         return nullptr;
       case 7: // feature
          if(infoType == ANARI_STRING) {
             static const char *feature = "CORE_OBJECTS";
@@ -10705,6 +10468,15 @@ static const void * ANARI_ARRAY3D_info(int infoName, ANARIDataType infoType) {
             static const char *description = "three dimensional array object";
             return description;
          }
+      case 8: // parameter
+         if(infoType == ANARI_PARAMETER_LIST) {
+            static const ANARIParameter parameters[] = {
+               {"name", ANARI_STRING},
+               {0, ANARI_UNKNOWN}
+            };
+            return parameters;
+         }
+         return nullptr;
       case 7: // feature
          if(infoType == ANARI_STRING) {
             static const char *feature = "CORE_OBJECTS";
@@ -10723,6 +10495,27 @@ static const void * ANARI_FRAME_info(int infoName, ANARIDataType infoType) {
             static const char *description = "frame object";
             return description;
          }
+      case 8: // parameter
+         if(infoType == ANARI_PARAMETER_LIST) {
+            static const ANARIParameter parameters[] = {
+               {"name", ANARI_STRING},
+               {"world", ANARI_WORLD},
+               {"renderer", ANARI_RENDERER},
+               {"camera", ANARI_CAMERA},
+               {"size", ANARI_UINT32_VEC2},
+               {"color", ANARI_DATA_TYPE},
+               {"depth", ANARI_DATA_TYPE},
+               {"frameCompletionCallback", ANARI_FRAME_COMPLETION_CALLBACK},
+               {"frameCompletionCallbackUserData", ANARI_VOID_POINTER},
+               {"normal", ANARI_DATA_TYPE},
+               {"albedo", ANARI_DATA_TYPE},
+               {"accumulation", ANARI_BOOL},
+               {"variance", ANARI_BOOL},
+               {0, ANARI_UNKNOWN}
+            };
+            return parameters;
+         }
+         return nullptr;
       case 7: // feature
          if(infoType == ANARI_STRING) {
             static const char *feature = "CORE_OBJECTS";
@@ -10741,6 +10534,18 @@ static const void * ANARI_GROUP_info(int infoName, ANARIDataType infoType) {
             static const char *description = "group object";
             return description;
          }
+      case 8: // parameter
+         if(infoType == ANARI_PARAMETER_LIST) {
+            static const ANARIParameter parameters[] = {
+               {"name", ANARI_STRING},
+               {"surface", ANARI_ARRAY1D},
+               {"volume", ANARI_ARRAY1D},
+               {"light", ANARI_ARRAY1D},
+               {0, ANARI_UNKNOWN}
+            };
+            return parameters;
+         }
+         return nullptr;
       case 7: // feature
          if(infoType == ANARI_STRING) {
             static const char *feature = "CORE_OBJECTS";
@@ -10759,6 +10564,22 @@ static const void * ANARI_INSTANCE_info(int infoName, ANARIDataType infoType) {
             static const char *description = "instance object";
             return description;
          }
+      case 8: // parameter
+         if(infoType == ANARI_PARAMETER_LIST) {
+            static const ANARIParameter parameters[] = {
+               {"name", ANARI_STRING},
+               {"transform", ANARI_FLOAT32_MAT4},
+               {"group", ANARI_GROUP},
+               {"motion.transform", ANARI_ARRAY1D},
+               {"motion.scale", ANARI_ARRAY1D},
+               {"motion.rotation", ANARI_ARRAY1D},
+               {"motion.translation", ANARI_ARRAY1D},
+               {"time", ANARI_FLOAT32_BOX1},
+               {0, ANARI_UNKNOWN}
+            };
+            return parameters;
+         }
+         return nullptr;
       case 7: // feature
          if(infoType == ANARI_STRING) {
             static const char *feature = "CORE_OBJECTS";
@@ -10777,6 +10598,19 @@ static const void * ANARI_WORLD_info(int infoName, ANARIDataType infoType) {
             static const char *description = "world object";
             return description;
          }
+      case 8: // parameter
+         if(infoType == ANARI_PARAMETER_LIST) {
+            static const ANARIParameter parameters[] = {
+               {"name", ANARI_STRING},
+               {"instance", ANARI_ARRAY1D},
+               {"surface", ANARI_ARRAY1D},
+               {"volume", ANARI_ARRAY1D},
+               {"light", ANARI_ARRAY1D},
+               {0, ANARI_UNKNOWN}
+            };
+            return parameters;
+         }
+         return nullptr;
       case 7: // feature
          if(infoType == ANARI_STRING) {
             static const char *feature = "CORE_OBJECTS";
@@ -10795,6 +10629,15 @@ static const void * ANARI_RENDERER_default_info(int infoName, ANARIDataType info
             static const char *description = "default renderer";
             return description;
          }
+      case 8: // parameter
+         if(infoType == ANARI_PARAMETER_LIST) {
+            static const ANARIParameter parameters[] = {
+               {"name", ANARI_STRING},
+               {0, ANARI_UNKNOWN}
+            };
+            return parameters;
+         }
+         return nullptr;
       case 7: // feature
          if(infoType == ANARI_STRING) {
             static const char *feature = "CORE_OBJECTS";
@@ -10813,6 +10656,17 @@ static const void * ANARI_SURFACE_info(int infoName, ANARIDataType infoType) {
             static const char *description = "surface object";
             return description;
          }
+      case 8: // parameter
+         if(infoType == ANARI_PARAMETER_LIST) {
+            static const ANARIParameter parameters[] = {
+               {"name", ANARI_STRING},
+               {"geometry", ANARI_GEOMETRY},
+               {"material", ANARI_MATERIAL},
+               {0, ANARI_UNKNOWN}
+            };
+            return parameters;
+         }
+         return nullptr;
       case 7: // feature
          if(infoType == ANARI_STRING) {
             static const char *feature = "CORE_OBJECTS";
@@ -10831,6 +10685,31 @@ static const void * ANARI_CAMERA_omnidirectional_info(int infoName, ANARIDataTyp
             static const char *description = "omnidirectional camera object";
             return description;
          }
+      case 8: // parameter
+         if(infoType == ANARI_PARAMETER_LIST) {
+            static const ANARIParameter parameters[] = {
+               {"name", ANARI_STRING},
+               {"position", ANARI_FLOAT32_VEC3},
+               {"direction", ANARI_FLOAT32_VEC3},
+               {"up", ANARI_FLOAT32_VEC3},
+               {"transform", ANARI_FLOAT32_MAT3x4},
+               {"imageRegion", ANARI_FLOAT32_BOX2},
+               {"apertureRadius", ANARI_FLOAT32},
+               {"focusDistance", ANARI_FLOAT32},
+               {"stereoMode", ANARI_STRING},
+               {"interpupillaryDistance", ANARI_FLOAT32},
+               {"layout", ANARI_STRING},
+               {"motion.transform", ANARI_ARRAY1D},
+               {"motion.scale", ANARI_ARRAY1D},
+               {"motion.rotation", ANARI_ARRAY1D},
+               {"motion.translation", ANARI_ARRAY1D},
+               {"time", ANARI_FLOAT32_BOX1},
+               {"shutter", ANARI_FLOAT32_BOX1},
+               {0, ANARI_UNKNOWN}
+            };
+            return parameters;
+         }
+         return nullptr;
       case 7: // feature
          if(infoType == ANARI_STRING) {
             static const char *feature = "KHR_CAMERA_OMNIDIRECTIONAL";
@@ -10849,6 +10728,31 @@ static const void * ANARI_CAMERA_orthographic_info(int infoName, ANARIDataType i
             static const char *description = "orthographic camera object";
             return description;
          }
+      case 8: // parameter
+         if(infoType == ANARI_PARAMETER_LIST) {
+            static const ANARIParameter parameters[] = {
+               {"name", ANARI_STRING},
+               {"position", ANARI_FLOAT32_VEC3},
+               {"direction", ANARI_FLOAT32_VEC3},
+               {"up", ANARI_FLOAT32_VEC3},
+               {"transform", ANARI_FLOAT32_MAT3x4},
+               {"imageRegion", ANARI_FLOAT32_BOX2},
+               {"apertureRadius", ANARI_FLOAT32},
+               {"focusDistance", ANARI_FLOAT32},
+               {"stereoMode", ANARI_STRING},
+               {"interpupillaryDistance", ANARI_FLOAT32},
+               {"aspect", ANARI_FLOAT32},
+               {"motion.transform", ANARI_ARRAY1D},
+               {"motion.scale", ANARI_ARRAY1D},
+               {"motion.rotation", ANARI_ARRAY1D},
+               {"motion.translation", ANARI_ARRAY1D},
+               {"time", ANARI_FLOAT32_BOX1},
+               {"shutter", ANARI_FLOAT32_BOX1},
+               {0, ANARI_UNKNOWN}
+            };
+            return parameters;
+         }
+         return nullptr;
       case 7: // feature
          if(infoType == ANARI_STRING) {
             static const char *feature = "KHR_CAMERA_ORTHOGRAPHIC";
@@ -10867,6 +10771,32 @@ static const void * ANARI_CAMERA_perspective_info(int infoName, ANARIDataType in
             static const char *description = "perspective camera object";
             return description;
          }
+      case 8: // parameter
+         if(infoType == ANARI_PARAMETER_LIST) {
+            static const ANARIParameter parameters[] = {
+               {"name", ANARI_STRING},
+               {"position", ANARI_FLOAT32_VEC3},
+               {"direction", ANARI_FLOAT32_VEC3},
+               {"up", ANARI_FLOAT32_VEC3},
+               {"transform", ANARI_FLOAT32_MAT3x4},
+               {"imageRegion", ANARI_FLOAT32_BOX2},
+               {"apertureRadius", ANARI_FLOAT32},
+               {"focusDistance", ANARI_FLOAT32},
+               {"stereoMode", ANARI_STRING},
+               {"interpupillaryDistance", ANARI_FLOAT32},
+               {"fovy", ANARI_FLOAT32},
+               {"aspect", ANARI_FLOAT32},
+               {"motion.transform", ANARI_ARRAY1D},
+               {"motion.scale", ANARI_ARRAY1D},
+               {"motion.rotation", ANARI_ARRAY1D},
+               {"motion.translation", ANARI_ARRAY1D},
+               {"time", ANARI_FLOAT32_BOX1},
+               {"shutter", ANARI_FLOAT32_BOX1},
+               {0, ANARI_UNKNOWN}
+            };
+            return parameters;
+         }
+         return nullptr;
       case 7: // feature
          if(infoType == ANARI_STRING) {
             static const char *feature = "KHR_CAMERA_PERSPECTIVE";
@@ -10885,6 +10815,31 @@ static const void * ANARI_GEOMETRY_cone_info(int infoName, ANARIDataType infoTyp
             static const char *description = "cone geometry object";
             return description;
          }
+      case 8: // parameter
+         if(infoType == ANARI_PARAMETER_LIST) {
+            static const ANARIParameter parameters[] = {
+               {"name", ANARI_STRING},
+               {"primitive.color", ANARI_ARRAY1D},
+               {"primitive.attribute0", ANARI_ARRAY1D},
+               {"primitive.attribute1", ANARI_ARRAY1D},
+               {"primitive.attribute2", ANARI_ARRAY1D},
+               {"primitive.attribute3", ANARI_ARRAY1D},
+               {"primitive.id", ANARI_ARRAY1D},
+               {"vertex.position", ANARI_ARRAY1D},
+               {"vertex.radius", ANARI_ARRAY1D},
+               {"vertex.cap", ANARI_ARRAY1D},
+               {"vertex.color", ANARI_ARRAY1D},
+               {"vertex.attribute0", ANARI_ARRAY1D},
+               {"vertex.attribute1", ANARI_ARRAY1D},
+               {"vertex.attribute2", ANARI_ARRAY1D},
+               {"vertex.attribute3", ANARI_ARRAY1D},
+               {"primitive.index", ANARI_ARRAY1D},
+               {"caps", ANARI_STRING},
+               {0, ANARI_UNKNOWN}
+            };
+            return parameters;
+         }
+         return nullptr;
       case 7: // feature
          if(infoType == ANARI_STRING) {
             static const char *feature = "KHR_GEOMETRY_CONE";
@@ -10903,6 +10858,30 @@ static const void * ANARI_GEOMETRY_curve_info(int infoName, ANARIDataType infoTy
             static const char *description = "curve geometry object";
             return description;
          }
+      case 8: // parameter
+         if(infoType == ANARI_PARAMETER_LIST) {
+            static const ANARIParameter parameters[] = {
+               {"name", ANARI_STRING},
+               {"primitive.color", ANARI_ARRAY1D},
+               {"primitive.attribute0", ANARI_ARRAY1D},
+               {"primitive.attribute1", ANARI_ARRAY1D},
+               {"primitive.attribute2", ANARI_ARRAY1D},
+               {"primitive.attribute3", ANARI_ARRAY1D},
+               {"primitive.id", ANARI_ARRAY1D},
+               {"vertex.position", ANARI_ARRAY1D},
+               {"vertex.radius", ANARI_ARRAY1D},
+               {"vertex.color", ANARI_ARRAY1D},
+               {"vertex.attribute0", ANARI_ARRAY1D},
+               {"vertex.attribute1", ANARI_ARRAY1D},
+               {"vertex.attribute2", ANARI_ARRAY1D},
+               {"vertex.attribute3", ANARI_ARRAY1D},
+               {"primitive.index", ANARI_ARRAY1D},
+               {"radius", ANARI_FLOAT32},
+               {0, ANARI_UNKNOWN}
+            };
+            return parameters;
+         }
+         return nullptr;
       case 7: // feature
          if(infoType == ANARI_STRING) {
             static const char *feature = "KHR_GEOMETRY_CURVE";
@@ -10921,6 +10900,32 @@ static const void * ANARI_GEOMETRY_cylinder_info(int infoName, ANARIDataType inf
             static const char *description = "cylinder geometry object";
             return description;
          }
+      case 8: // parameter
+         if(infoType == ANARI_PARAMETER_LIST) {
+            static const ANARIParameter parameters[] = {
+               {"name", ANARI_STRING},
+               {"primitive.color", ANARI_ARRAY1D},
+               {"primitive.attribute0", ANARI_ARRAY1D},
+               {"primitive.attribute1", ANARI_ARRAY1D},
+               {"primitive.attribute2", ANARI_ARRAY1D},
+               {"primitive.attribute3", ANARI_ARRAY1D},
+               {"primitive.id", ANARI_ARRAY1D},
+               {"vertex.position", ANARI_ARRAY1D},
+               {"vertex.cap", ANARI_ARRAY1D},
+               {"vertex.color", ANARI_ARRAY1D},
+               {"vertex.attribute0", ANARI_ARRAY1D},
+               {"vertex.attribute1", ANARI_ARRAY1D},
+               {"vertex.attribute2", ANARI_ARRAY1D},
+               {"vertex.attribute3", ANARI_ARRAY1D},
+               {"primitive.index", ANARI_ARRAY1D},
+               {"primitive.radius", ANARI_ARRAY1D},
+               {"radius", ANARI_FLOAT32},
+               {"caps", ANARI_STRING},
+               {0, ANARI_UNKNOWN}
+            };
+            return parameters;
+         }
+         return nullptr;
       case 7: // feature
          if(infoType == ANARI_STRING) {
             static const char *feature = "KHR_GEOMETRY_CYLINDER";
@@ -10939,6 +10944,29 @@ static const void * ANARI_GEOMETRY_quad_info(int infoName, ANARIDataType infoTyp
             static const char *description = "quad geometry object";
             return description;
          }
+      case 8: // parameter
+         if(infoType == ANARI_PARAMETER_LIST) {
+            static const ANARIParameter parameters[] = {
+               {"name", ANARI_STRING},
+               {"primitive.color", ANARI_ARRAY1D},
+               {"primitive.attribute0", ANARI_ARRAY1D},
+               {"primitive.attribute1", ANARI_ARRAY1D},
+               {"primitive.attribute2", ANARI_ARRAY1D},
+               {"primitive.attribute3", ANARI_ARRAY1D},
+               {"primitive.id", ANARI_ARRAY1D},
+               {"vertex.position", ANARI_ARRAY1D},
+               {"vertex.normal", ANARI_ARRAY1D},
+               {"vertex.color", ANARI_ARRAY1D},
+               {"vertex.attribute0", ANARI_ARRAY1D},
+               {"vertex.attribute1", ANARI_ARRAY1D},
+               {"vertex.attribute2", ANARI_ARRAY1D},
+               {"vertex.attribute3", ANARI_ARRAY1D},
+               {"primitive.index", ANARI_ARRAY1D},
+               {0, ANARI_UNKNOWN}
+            };
+            return parameters;
+         }
+         return nullptr;
       case 7: // feature
          if(infoType == ANARI_STRING) {
             static const char *feature = "KHR_GEOMETRY_QUAD";
@@ -10957,6 +10985,30 @@ static const void * ANARI_GEOMETRY_sphere_info(int infoName, ANARIDataType infoT
             static const char *description = "sphere geometry object";
             return description;
          }
+      case 8: // parameter
+         if(infoType == ANARI_PARAMETER_LIST) {
+            static const ANARIParameter parameters[] = {
+               {"name", ANARI_STRING},
+               {"primitive.color", ANARI_ARRAY1D},
+               {"primitive.attribute0", ANARI_ARRAY1D},
+               {"primitive.attribute1", ANARI_ARRAY1D},
+               {"primitive.attribute2", ANARI_ARRAY1D},
+               {"primitive.attribute3", ANARI_ARRAY1D},
+               {"primitive.id", ANARI_ARRAY1D},
+               {"vertex.position", ANARI_ARRAY1D},
+               {"vertex.radius", ANARI_ARRAY1D},
+               {"vertex.color", ANARI_ARRAY1D},
+               {"vertex.attribute0", ANARI_ARRAY1D},
+               {"vertex.attribute1", ANARI_ARRAY1D},
+               {"vertex.attribute2", ANARI_ARRAY1D},
+               {"vertex.attribute3", ANARI_ARRAY1D},
+               {"primitive.index", ANARI_ARRAY1D},
+               {"radius", ANARI_FLOAT32},
+               {0, ANARI_UNKNOWN}
+            };
+            return parameters;
+         }
+         return nullptr;
       case 7: // feature
          if(infoType == ANARI_STRING) {
             static const char *feature = "KHR_GEOMETRY_SPHERE";
@@ -10975,6 +11027,29 @@ static const void * ANARI_GEOMETRY_triangle_info(int infoName, ANARIDataType inf
             static const char *description = "triangle geometry object";
             return description;
          }
+      case 8: // parameter
+         if(infoType == ANARI_PARAMETER_LIST) {
+            static const ANARIParameter parameters[] = {
+               {"name", ANARI_STRING},
+               {"primitive.color", ANARI_ARRAY1D},
+               {"primitive.attribute0", ANARI_ARRAY1D},
+               {"primitive.attribute1", ANARI_ARRAY1D},
+               {"primitive.attribute2", ANARI_ARRAY1D},
+               {"primitive.attribute3", ANARI_ARRAY1D},
+               {"primitive.id", ANARI_ARRAY1D},
+               {"vertex.position", ANARI_ARRAY1D},
+               {"vertex.normal", ANARI_ARRAY1D},
+               {"vertex.color", ANARI_ARRAY1D},
+               {"vertex.attribute0", ANARI_ARRAY1D},
+               {"vertex.attribute1", ANARI_ARRAY1D},
+               {"vertex.attribute2", ANARI_ARRAY1D},
+               {"vertex.attribute3", ANARI_ARRAY1D},
+               {"primitive.index", ANARI_ARRAY1D},
+               {0, ANARI_UNKNOWN}
+            };
+            return parameters;
+         }
+         return nullptr;
       case 7: // feature
          if(infoType == ANARI_STRING) {
             static const char *feature = "KHR_GEOMETRY_TRIANGLE";
@@ -10993,6 +11068,21 @@ static const void * ANARI_LIGHT_directional_info(int infoName, ANARIDataType inf
             static const char *description = "directional light object";
             return description;
          }
+      case 8: // parameter
+         if(infoType == ANARI_PARAMETER_LIST) {
+            static const ANARIParameter parameters[] = {
+               {"name", ANARI_STRING},
+               {"color", ANARI_FLOAT32_VEC3},
+               {"irradiance", ANARI_FLOAT32},
+               {"direction", ANARI_FLOAT32_VEC3},
+               {"angularDiameter", ANARI_FLOAT32},
+               {"radiance", ANARI_FLOAT32},
+               {"visible", ANARI_BOOL},
+               {0, ANARI_UNKNOWN}
+            };
+            return parameters;
+         }
+         return nullptr;
       case 7: // feature
          if(infoType == ANARI_STRING) {
             static const char *feature = "KHR_LIGHT_DIRECTIONAL";
@@ -11011,6 +11101,22 @@ static const void * ANARI_LIGHT_point_info(int infoName, ANARIDataType infoType)
             static const char *description = "point light object";
             return description;
          }
+      case 8: // parameter
+         if(infoType == ANARI_PARAMETER_LIST) {
+            static const ANARIParameter parameters[] = {
+               {"name", ANARI_STRING},
+               {"color", ANARI_FLOAT32_VEC3},
+               {"position", ANARI_FLOAT32_VEC3},
+               {"intensity", ANARI_FLOAT32},
+               {"power", ANARI_FLOAT32},
+               {"radius", ANARI_FLOAT32},
+               {"radiance", ANARI_FLOAT32},
+               {"visible", ANARI_BOOL},
+               {0, ANARI_UNKNOWN}
+            };
+            return parameters;
+         }
+         return nullptr;
       case 7: // feature
          if(infoType == ANARI_STRING) {
             static const char *feature = "KHR_LIGHT_POINT";
@@ -11029,6 +11135,22 @@ static const void * ANARI_LIGHT_spot_info(int infoName, ANARIDataType infoType) 
             static const char *description = "spot light object";
             return description;
          }
+      case 8: // parameter
+         if(infoType == ANARI_PARAMETER_LIST) {
+            static const ANARIParameter parameters[] = {
+               {"name", ANARI_STRING},
+               {"color", ANARI_FLOAT32_VEC3},
+               {"position", ANARI_FLOAT32_VEC3},
+               {"direction", ANARI_FLOAT32_VEC3},
+               {"openingAngle", ANARI_FLOAT32},
+               {"falloffAngle", ANARI_FLOAT32},
+               {"intensity", ANARI_FLOAT32},
+               {"power", ANARI_FLOAT32},
+               {0, ANARI_UNKNOWN}
+            };
+            return parameters;
+         }
+         return nullptr;
       case 7: // feature
          if(infoType == ANARI_STRING) {
             static const char *feature = "KHR_LIGHT_SPOT";
@@ -11047,6 +11169,18 @@ static const void * ANARI_MATERIAL_matte_info(int infoName, ANARIDataType infoTy
             static const char *description = "matte material object";
             return description;
          }
+      case 8: // parameter
+         if(infoType == ANARI_PARAMETER_LIST) {
+            static const ANARIParameter parameters[] = {
+               {"name", ANARI_STRING},
+               {"color", ANARI_FLOAT32_VEC3},
+               {"color", ANARI_SAMPLER},
+               {"color", ANARI_STRING},
+               {0, ANARI_UNKNOWN}
+            };
+            return parameters;
+         }
+         return nullptr;
       case 7: // feature
          if(infoType == ANARI_STRING) {
             static const char *feature = "KHR_MATERIAL_MATTE";
@@ -11065,6 +11199,21 @@ static const void * ANARI_MATERIAL_transparentMatte_info(int infoName, ANARIData
             static const char *description = "transparent matte material object";
             return description;
          }
+      case 8: // parameter
+         if(infoType == ANARI_PARAMETER_LIST) {
+            static const ANARIParameter parameters[] = {
+               {"name", ANARI_STRING},
+               {"color", ANARI_FLOAT32_VEC3},
+               {"color", ANARI_SAMPLER},
+               {"color", ANARI_STRING},
+               {"opacity", ANARI_FLOAT32},
+               {"opacity", ANARI_SAMPLER},
+               {"opacity", ANARI_STRING},
+               {0, ANARI_UNKNOWN}
+            };
+            return parameters;
+         }
+         return nullptr;
       case 7: // feature
          if(infoType == ANARI_STRING) {
             static const char *feature = "KHR_MATERIAL_TRANSPARENT_MATTE";
@@ -11083,6 +11232,21 @@ static const void * ANARI_SAMPLER_image1D_info(int infoName, ANARIDataType infoT
             static const char *description = "image1D object";
             return description;
          }
+      case 8: // parameter
+         if(infoType == ANARI_PARAMETER_LIST) {
+            static const ANARIParameter parameters[] = {
+               {"name", ANARI_STRING},
+               {"image", ANARI_ARRAY1D},
+               {"inAttribute", ANARI_STRING},
+               {"filter", ANARI_STRING},
+               {"wrapMode1", ANARI_STRING},
+               {"inTransform", ANARI_FLOAT32_MAT4},
+               {"outTransform", ANARI_FLOAT32_MAT4},
+               {0, ANARI_UNKNOWN}
+            };
+            return parameters;
+         }
+         return nullptr;
       case 7: // feature
          if(infoType == ANARI_STRING) {
             static const char *feature = "KHR_SAMPLER_IMAGE1D";
@@ -11101,6 +11265,22 @@ static const void * ANARI_SAMPLER_image2D_info(int infoName, ANARIDataType infoT
             static const char *description = "image2D object";
             return description;
          }
+      case 8: // parameter
+         if(infoType == ANARI_PARAMETER_LIST) {
+            static const ANARIParameter parameters[] = {
+               {"name", ANARI_STRING},
+               {"image", ANARI_ARRAY2D},
+               {"inAttribute", ANARI_STRING},
+               {"filter", ANARI_STRING},
+               {"wrapMode1", ANARI_STRING},
+               {"wrapMode2", ANARI_STRING},
+               {"inTransform", ANARI_FLOAT32_MAT4},
+               {"outTransform", ANARI_FLOAT32_MAT4},
+               {0, ANARI_UNKNOWN}
+            };
+            return parameters;
+         }
+         return nullptr;
       case 7: // feature
          if(infoType == ANARI_STRING) {
             static const char *feature = "KHR_SAMPLER_IMAGE2D";
@@ -11119,6 +11299,23 @@ static const void * ANARI_SAMPLER_image3D_info(int infoName, ANARIDataType infoT
             static const char *description = "image3D object";
             return description;
          }
+      case 8: // parameter
+         if(infoType == ANARI_PARAMETER_LIST) {
+            static const ANARIParameter parameters[] = {
+               {"name", ANARI_STRING},
+               {"image", ANARI_ARRAY3D},
+               {"inAttribute", ANARI_STRING},
+               {"filter", ANARI_STRING},
+               {"wrapMode1", ANARI_STRING},
+               {"wrapMode2", ANARI_STRING},
+               {"wrapMode3", ANARI_STRING},
+               {"inTransform", ANARI_FLOAT32_MAT4},
+               {"outTransform", ANARI_FLOAT32_MAT4},
+               {0, ANARI_UNKNOWN}
+            };
+            return parameters;
+         }
+         return nullptr;
       case 7: // feature
          if(infoType == ANARI_STRING) {
             static const char *feature = "KHR_SAMPLER_IMAGE3D";
@@ -11137,6 +11334,17 @@ static const void * ANARI_SAMPLER_primitive_info(int infoName, ANARIDataType inf
             static const char *description = "primitive sampler object";
             return description;
          }
+      case 8: // parameter
+         if(infoType == ANARI_PARAMETER_LIST) {
+            static const ANARIParameter parameters[] = {
+               {"name", ANARI_STRING},
+               {"array", ANARI_ARRAY1D},
+               {"offset", ANARI_UINT64},
+               {0, ANARI_UNKNOWN}
+            };
+            return parameters;
+         }
+         return nullptr;
       case 7: // feature
          if(infoType == ANARI_STRING) {
             static const char *feature = "KHR_SAMPLER_PRIMITIVE";
@@ -11155,6 +11363,17 @@ static const void * ANARI_SAMPLER_transform_info(int infoName, ANARIDataType inf
             static const char *description = "transform sampler object";
             return description;
          }
+      case 8: // parameter
+         if(infoType == ANARI_PARAMETER_LIST) {
+            static const ANARIParameter parameters[] = {
+               {"name", ANARI_STRING},
+               {"inAttribute", ANARI_STRING},
+               {"transform", ANARI_FLOAT32_MAT4},
+               {0, ANARI_UNKNOWN}
+            };
+            return parameters;
+         }
+         return nullptr;
       case 7: // feature
          if(infoType == ANARI_STRING) {
             static const char *feature = "KHR_SAMPLER_TRANSFORM";
@@ -11173,6 +11392,19 @@ static const void * ANARI_SPATIAL_FIELD_structuredRegular_info(int infoName, ANA
             static const char *description = "structured regular spatial field object";
             return description;
          }
+      case 8: // parameter
+         if(infoType == ANARI_PARAMETER_LIST) {
+            static const ANARIParameter parameters[] = {
+               {"name", ANARI_STRING},
+               {"data", ANARI_ARRAY3D},
+               {"origin", ANARI_FLOAT32_VEC3},
+               {"spacing", ANARI_FLOAT32_VEC3},
+               {"filter", ANARI_STRING},
+               {0, ANARI_UNKNOWN}
+            };
+            return parameters;
+         }
+         return nullptr;
       case 7: // feature
          if(infoType == ANARI_STRING) {
             static const char *feature = "KHR_SPATIAL_FIELD_STRUCTURED_REGULAR";
@@ -11191,6 +11423,22 @@ static const void * ANARI_VOLUME_scivis_info(int infoName, ANARIDataType infoTyp
             static const char *description = "scivis volume object";
             return description;
          }
+      case 8: // parameter
+         if(infoType == ANARI_PARAMETER_LIST) {
+            static const ANARIParameter parameters[] = {
+               {"name", ANARI_STRING},
+               {"field", ANARI_SPATIAL_FIELD},
+               {"valueRange", ANARI_FLOAT32_BOX1},
+               {"color", ANARI_ARRAY1D},
+               {"color.position", ANARI_ARRAY1D},
+               {"opacity", ANARI_ARRAY1D},
+               {"opacity.position", ANARI_ARRAY1D},
+               {"densityScale", ANARI_FLOAT32},
+               {0, ANARI_UNKNOWN}
+            };
+            return parameters;
+         }
+         return nullptr;
       case 7: // feature
          if(infoType == ANARI_STRING) {
             static const char *feature = "KHR_VOLUME_SCIVIS";
@@ -11209,6 +11457,29 @@ static const void * ANARI_LIGHT_ring_info(int infoName, ANARIDataType infoType) 
             static const char *description = "ring light object";
             return description;
          }
+      case 8: // parameter
+         if(infoType == ANARI_PARAMETER_LIST) {
+            static const ANARIParameter parameters[] = {
+               {"name", ANARI_STRING},
+               {"color", ANARI_FLOAT32_VEC3},
+               {"position", ANARI_FLOAT32_VEC3},
+               {"direction", ANARI_FLOAT32_VEC3},
+               {"openingAngle", ANARI_FLOAT32},
+               {"falloffAngle", ANARI_FLOAT32},
+               {"intensity", ANARI_FLOAT32},
+               {"power", ANARI_FLOAT32},
+               {"radius", ANARI_FLOAT32},
+               {"innerRadius", ANARI_FLOAT32},
+               {"radiance", ANARI_FLOAT32},
+               {"intensityDistribution", ANARI_ARRAY1D},
+               {"intensityDistribution", ANARI_ARRAY2D},
+               {"c0", ANARI_FLOAT32_VEC3},
+               {"visible", ANARI_BOOL},
+               {0, ANARI_UNKNOWN}
+            };
+            return parameters;
+         }
+         return nullptr;
       case 7: // feature
          if(infoType == ANARI_STRING) {
             static const char *feature = "KHR_LIGHT_RING";
@@ -11227,6 +11498,26 @@ static const void * ANARI_LIGHT_quad_info(int infoName, ANARIDataType infoType) 
             static const char *description = "quad light object";
             return description;
          }
+      case 8: // parameter
+         if(infoType == ANARI_PARAMETER_LIST) {
+            static const ANARIParameter parameters[] = {
+               {"name", ANARI_STRING},
+               {"color", ANARI_FLOAT32_VEC3},
+               {"position", ANARI_FLOAT32_VEC3},
+               {"edge1", ANARI_FLOAT32_VEC3},
+               {"edge2", ANARI_FLOAT32_VEC3},
+               {"intensity", ANARI_FLOAT32},
+               {"power", ANARI_FLOAT32},
+               {"radiance", ANARI_FLOAT32},
+               {"side", ANARI_STRING},
+               {"intensityDistribution", ANARI_ARRAY1D},
+               {"intensityDistribution", ANARI_ARRAY2D},
+               {"visible", ANARI_BOOL},
+               {0, ANARI_UNKNOWN}
+            };
+            return parameters;
+         }
+         return nullptr;
       case 7: // feature
          if(infoType == ANARI_STRING) {
             static const char *feature = "KHR_LIGHT_QUAD";
@@ -11245,6 +11536,21 @@ static const void * ANARI_LIGHT_hdri_info(int infoName, ANARIDataType infoType) 
             static const char *description = "hdri light object";
             return description;
          }
+      case 8: // parameter
+         if(infoType == ANARI_PARAMETER_LIST) {
+            static const ANARIParameter parameters[] = {
+               {"name", ANARI_STRING},
+               {"color", ANARI_FLOAT32_VEC3},
+               {"up", ANARI_FLOAT32_VEC3},
+               {"radiance", ANARI_ARRAY2D},
+               {"layout", ANARI_STRING},
+               {"scale", ANARI_FLOAT32},
+               {"visible", ANARI_BOOL},
+               {0, ANARI_UNKNOWN}
+            };
+            return parameters;
+         }
+         return nullptr;
       case 7: // feature
          if(infoType == ANARI_STRING) {
             static const char *feature = "KHR_LIGHT_HDRI";
@@ -11395,5 +11701,6 @@ const void * query_object_info_enum(ANARIDataType type, const char *subtype, int
    }
 }
 const void * query_object_info(ANARIDataType type, const char *subtype, const char *infoNameString, ANARIDataType infoType) {
-   int infoName = info_hash(infoNameString);   return query_object_info_enum(type, subtype, infoName, infoType);}}
+   int infoName = info_hash(infoNameString);   return query_object_info_enum(type, subtype, infoName, infoType);}
+}
 }

@@ -35,9 +35,6 @@ struct ANARI_INTERFACE Library
   const char **getDeviceSubtypes();
   const char **getObjectSubtypes(
       const char *deviceSubtype, ANARIDataType objectType);
-  const ANARIParameter *getObjectParameters(const char *deviceSubtype,
-      const char *objectSubtype,
-      ANARIDataType objectType);
   const void *getObjectProperty(const char *deviceSubtype,
       const char *objectSubtype,
       ANARIDataType objectType,
@@ -76,12 +73,6 @@ struct ANARI_INTERFACE Library
       const char *,
       ANARIDataType);
   GetObjectSubtypesFcn m_getObjectSubtypesFcn{nullptr};
-
-  using GetObjectParametersFcn = const ANARIParameter *(*)(ANARILibrary,
-      const char *,
-      const char *,
-      ANARIDataType);
-  GetObjectParametersFcn m_getObjectParametersFcn{nullptr};
 
   using GetObjectPropertyFcn = const char **(*)(ANARILibrary,
       const char *,
@@ -138,13 +129,6 @@ struct ANARI_INTERFACE Library
     libname, library, deviceSubtype, objectType)                               \
   const char **anari_library_##libname##_get_object_subtypes(                  \
       ANARILibrary library, const char *deviceSubtype, ANARIDataType objectType)
-#define ANARI_DEFINE_LIBRARY_GET_OBJECT_PARAMETERS(                            \
-    libname, library, deviceSubtype, objectSubtype, objectType)                \
-  const ANARIParameter *anari_library_##libname##_get_object_parameters(       \
-      ANARILibrary library,                                                    \
-      const char *deviceSubtype,                                               \
-      const char *objectSubtype,                                               \
-      ANARIDataType objectType)
 #define ANARI_DEFINE_LIBRARY_GET_OBJECT_PROPERTY(libname,                      \
     library,                                                                   \
     deviceSubtype,                                                             \

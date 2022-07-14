@@ -150,7 +150,7 @@ int main(int argc, const char **argv)
 
   // inspect default renderer parameters
   const ANARIParameter *ptParams =
-      anariGetObjectParameters(lib, "default", "default", ANARI_RENDERER);
+      anariGetObjectInfo(lib, "default", "default", ANARI_RENDERER, "parameter", ANARI_PARAMETER_LIST);
 
   if (!ptParams) {
     puts("Default renderer has no parameters.");
