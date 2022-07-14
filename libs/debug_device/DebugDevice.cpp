@@ -943,10 +943,10 @@ void DebugDevice::reportObjectUse(ANARIDataType objtype, const char *objsubtype)
 static char deviceName[] = "debug";
 
 extern "C" DEBUG_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_NEW_DEVICE(
-    debug, libdata, subtype)
+    debug, library, subtype)
 {
   if (subtype == std::string("default") || subtype == std::string("debug"))
-    return (ANARIDevice) new anari::debug_device::DebugDevice(libdata);
+    return (ANARIDevice) new anari::debug_device::DebugDevice(library);
   return nullptr;
 }
 
@@ -955,26 +955,26 @@ extern "C" DEBUG_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_INIT(debug)
 }
 
 extern "C" DEBUG_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_DEVICE_SUBTYPES(
-    debug, libdata)
+    debug, library)
 {
-  (void)libdata;
+  (void)library;
   static const char *devices[] = {deviceName, nullptr};
   return devices;
 }
 
 extern "C" DEBUG_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_SUBTYPES(
-    debug, libdata, deviceSubtype, objectType)
+    debug, library, deviceSubtype, objectType)
 {
-  (void)libdata;
+  (void)library;
   (void)deviceSubtype;
   (void)objectType;
   return nullptr;
 }
 
 extern "C" DEBUG_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_PARAMETERS(
-    debug, libdata, deviceSubtype, objectSubtype, objectType)
+    debug, library, deviceSubtype, objectSubtype, objectType)
 {
-  (void)libdata;
+  (void)library;
   (void)deviceSubtype;
   (void)objectSubtype;
   (void)objectType;
@@ -983,7 +983,7 @@ extern "C" DEBUG_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_PARAMETERS(
 
 extern "C" DEBUG_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_PARAMETER_PROPERTY(
     debug,
-    libdata,
+    library,
     deviceSubtype,
     objectSubtype,
     objectType,
@@ -992,7 +992,7 @@ extern "C" DEBUG_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_PARAMETER_PROPERTY(
     propertyName,
     propertyType)
 {
-  (void)libdata;
+  (void)library;
   (void)deviceSubtype;
   (void)objectSubtype;
   (void)objectType;

@@ -565,10 +565,10 @@ const void * query_param_info(ANARIDataType type, const char *subtype,
 static char deviceName[] = "example";
 
 extern "C" EXAMPLE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_NEW_DEVICE(
-    example, libdata, subtype)
+    example, library, subtype)
 {
   if (subtype == std::string("default") || subtype == std::string("example"))
-    return (ANARIDevice) new anari::example_device::ExampleDevice(libdata);
+    return (ANARIDevice) new anari::example_device::ExampleDevice(library);
   return nullptr;
 }
 
@@ -578,27 +578,27 @@ extern "C" EXAMPLE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_INIT(example)
 }
 
 extern "C" EXAMPLE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_DEVICE_SUBTYPES(
-    example, libdata)
+    example, library)
 {
   static const char *devices[] = {deviceName, nullptr};
   return devices;
 }
 
 extern "C" EXAMPLE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_SUBTYPES(
-    example, libdata, deviceSubtype, objectType)
+    example, library, deviceSubtype, objectType)
 {
   return anari::example_device::query_object_types(objectType);
 }
 
 extern "C" EXAMPLE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_PARAMETERS(
-    example, libdata, deviceSubtype, objectSubtype, objectType)
+    example, library, deviceSubtype, objectSubtype, objectType)
 {
   return anari::example_device::query_params(objectType, objectSubtype);
 }
 
 extern "C" EXAMPLE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_PARAMETER_PROPERTY(
     example,
-    libdata,
+    library,
     deviceSubtype,
     objectSubtype,
     objectType,
