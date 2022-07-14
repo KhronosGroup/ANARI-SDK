@@ -242,10 +242,10 @@ void anariReportStatus(ANARIDevice handle,
 static char deviceName[] = "tree";
 
 extern "C" DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_NEW_DEVICE(
-      tree, libdata, subtype)
+      tree, library, subtype)
 {
    if (subtype == std::string("default") || subtype == std::string("tree"))
-      return (ANARIDevice) new anari_sdk::tree::TreeDevice(libdata);
+      return (ANARIDevice) new anari_sdk::tree::TreeDevice(library);
    return nullptr;
 }
 
@@ -255,32 +255,32 @@ extern "C" DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_INIT(tree)
 }
 
 extern "C" DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_DEVICE_SUBTYPES(
-      tree, libdata)
+      tree, library)
 {
-   (void)libdata;
+   (void)library;
    static const char *devices[] = {deviceName, nullptr};
    return devices;
 }
 
 extern "C" DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_SUBTYPES(
-      tree, libdata, deviceSubtype, objectType)
+      tree, library, deviceSubtype, objectType)
 {
-   (void)libdata;
+   (void)library;
    (void)deviceSubtype;
    return anari_sdk::tree::query_object_types(objectType);
 }
 
 extern "C" DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_PARAMETERS(
-      tree, libdata, deviceSubtype, objectSubtype, objectType)
+      tree, library, deviceSubtype, objectSubtype, objectType)
 {
-   (void)libdata;
+   (void)library;
    (void)deviceSubtype;
    return anari_sdk::tree::query_params(objectType, objectSubtype);
 }
 
 extern "C" DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_PARAMETER_PROPERTY(
       tree,
-      libdata,
+      library,
       deviceSubtype,
       objectSubtype,
       objectType,
@@ -289,7 +289,7 @@ extern "C" DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_PARAMETER_PROPERTY(
       propertyName,
       propertyType)
 {
-   (void)libdata;
+   (void)library;
    (void)deviceSubtype;
    return anari_sdk::tree::query_param_info(
       objectType,

@@ -233,10 +233,10 @@ $end_namespaces
 static char deviceName[] = "$libraryname";
 
 extern "C" DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_NEW_DEVICE(
-      $libraryname, libdata, subtype)
+      $libraryname, library, subtype)
 {
    if (subtype == std::string("default") || subtype == std::string("$libraryname"))
-      return (ANARIDevice) new $namespace::$prefixDevice(libdata);
+      return (ANARIDevice) new $namespace::$prefixDevice(library);
    return nullptr;
 }
 
@@ -246,32 +246,32 @@ extern "C" DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_INIT($libraryname)
 }
 
 extern "C" DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_DEVICE_SUBTYPES(
-      $libraryname, libdata)
+      $libraryname, library)
 {
-   (void)libdata;
+   (void)library;
    static const char *devices[] = {deviceName, nullptr};
    return devices;
 }
 
 extern "C" DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_SUBTYPES(
-      $libraryname, libdata, deviceSubtype, objectType)
+      $libraryname, library, deviceSubtype, objectType)
 {
-   (void)libdata;
+   (void)library;
    (void)deviceSubtype;
    return $namespace::query_object_types(objectType);
 }
 
 extern "C" DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_PARAMETERS(
-      $libraryname, libdata, deviceSubtype, objectSubtype, objectType)
+      $libraryname, library, deviceSubtype, objectSubtype, objectType)
 {
-   (void)libdata;
+   (void)library;
    (void)deviceSubtype;
    return $namespace::query_params(objectType, objectSubtype);
 }
 
 extern "C" DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_PARAMETER_PROPERTY(
       $libraryname,
-      libdata,
+      library,
       deviceSubtype,
       objectSubtype,
       objectType,
