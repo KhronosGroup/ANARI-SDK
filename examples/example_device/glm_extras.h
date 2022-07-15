@@ -269,4 +269,8 @@ inline vec3 makeRandomColor(uint32_t i)
 }
 
 } // namespace example_device
+
+ANARI_TYPEFOR_SPECIALIZATION(example_device::box1, ANARI_FLOAT32_BOX1);
+ANARI_TYPEFOR_SPECIALIZATION(example_device::box3, ANARI_FLOAT32_BOX3);
+
 } // namespace anari
