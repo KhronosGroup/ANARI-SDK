@@ -10463,7 +10463,7 @@ static const void * ANARI_ARRAY1D_info(int infoName, ANARIDataType infoType) {
          if(infoType == ANARI_PARAMETER_LIST) {
             static const ANARIParameter parameters[] = {
                {"name", ANARI_STRING},
-               {"region", ANARI_UINT64_REGION},
+               {"region", ANARI_UINT64_REGION1},
                {0, ANARI_UNKNOWN}
             };
             return parameters;
