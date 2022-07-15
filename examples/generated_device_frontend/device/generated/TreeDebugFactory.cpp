@@ -122,7 +122,7 @@ class array1d : public DebugObject<ANARI_ARRAY1D> {
             return;
          }
          case 1: { //region
-            ANARIDataType region_types[] = {ANARI_UINT64_BOX1, ANARI_UNKNOWN};
+            ANARIDataType region_types[] = {ANARI_UINT64_REGION, ANARI_UNKNOWN};
             check_type(ANARI_ARRAY1D, "", paramname, paramtype, region_types);
             return;
          }
