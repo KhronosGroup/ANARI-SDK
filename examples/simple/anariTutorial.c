@@ -185,7 +185,9 @@ int main(int argc, const char **argv)
 
   // populate a set of feature variables (this is a utility and not part of the core api)
   ANARIFeatures features;
-  anariGetObjectFeatures(&features, lib, "default", "default", ANARI_DEVICE);
+  if(anariGetObjectFeatures(&features, lib, "default", "default", ANARI_DEVICE)) {
+    printf("WARNING: library didn't return feature list\n");
+  }
   if(!features.ANARI_KHR_GEOMETRY_TRIANGLE) {
     printf("WARNING: device doesn't support ANARI_KHR_GEOMETRY_TRIANGLE\n");
   }
