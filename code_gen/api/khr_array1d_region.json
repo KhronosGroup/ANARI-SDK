@@ -11,7 +11,7 @@
             "parameters" : [
                 {
                     "name" : "region",
-                    "types" : ["ANARI_UINT64_REGION"],
+                    "types" : ["ANARI_UINT64_REGION1"],
                     "tags" : [],
                     "description" : "active region of the array"
                 }

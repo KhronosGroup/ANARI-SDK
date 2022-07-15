@@ -44,7 +44,7 @@ public:
    static constexpr const char *subtype = nullptr;
    static const uint32_t id = 1;
    Parameter<ANARI_STRING> name;
-   Parameter<ANARI_UINT64_REGION> region;
+   Parameter<ANARI_UINT64_REGION1> region;
 
    Array1D(ANARIDevice d, ANARIObject o);
    bool set(const char *paramname, ANARIDataType type, const void *mem) override;
