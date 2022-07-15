@@ -47,7 +47,7 @@ class FeatureUtilityGenerator:
         code += "    }\n"
         code += "}\n"
         code += "int anariGetObjectFeatures(ANARIFeatures *features, ANARILibrary library, const char *deviceName, const char *objectName, ANARIDataType objectType) {\n"
-        code += "    const char *const *list = anariGetObjectInfo(library, deviceName, objectName, objectType, \"feature\", ANARI_STRING_LIST);\n"
+        code += "    const char *const *list = (const char *const *)anariGetObjectInfo(library, deviceName, objectName, objectType, \"feature\", ANARI_STRING_LIST);\n"
         code += "    if(list) {\n"
         code += "        fillFeatureStruct(features, list);\n"
         code += "        return 0;\n"

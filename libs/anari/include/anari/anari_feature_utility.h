@@ -111,7 +111,7 @@ static void fillFeatureStruct(ANARIFeatures *features, const char *const *list) 
     }
 }
 int anariGetObjectFeatures(ANARIFeatures *features, ANARILibrary library, const char *deviceName, const char *objectName, ANARIDataType objectType) {
-    const char *const *list = anariGetObjectInfo(library, deviceName, objectName, objectType, "feature", ANARI_STRING_LIST);
+    const char *const *list = (const char *const *)anariGetObjectInfo(library, deviceName, objectName, objectType, "feature", ANARI_STRING_LIST);
     if(list) {
         fillFeatureStruct(features, list);
         return 0;

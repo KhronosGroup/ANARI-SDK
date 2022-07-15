@@ -5,6 +5,7 @@
 
 // anari
 #include "anari/anari.h"
+#include "anari/anari_feature_utility.h"
 // std
 #include <string>
 
@@ -194,6 +195,23 @@ void render(Device, Frame);
 bool isReady(Device, Frame);
 void wait(Device, Frame);
 void discard(Device, Frame);
+
+///////////////////////////////////////////////////////////////////////////////
+// C++ Feature Utilities //////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+using Features = ANARIFeatures;
+
+namespace feature {
+
+Features getObjectFeatures(Library library,
+    const char *device,
+    const char *objectSubtype,
+    DataType objectType);
+
+Features getInstanceFeatures(Device, Object);
+
+} // namespace feature
 
 } // namespace anari
 

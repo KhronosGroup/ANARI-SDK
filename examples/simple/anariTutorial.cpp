@@ -6,12 +6,13 @@
 #include <stdio.h>
 #include <array>
 // anari
+#define ANARI_FEATURE_UTILITY_IMPL
 #include "anari/anari_cpp.hpp"
 #include "anari/anari_cpp/ext/std.h"
 // stb_image
 #include "stb_image_write.h"
 
-const char *g_moduleType = "environment";
+const char *g_libraryName = "environment";
 
 using uvec2 = std::array<unsigned int, 2>;
 using uvec3 = std::array<unsigned int, 3>;
@@ -75,8 +76,21 @@ int main(int argc, const char **argv)
   printf("initialize ANARI...");
   anari::Library m_debug = anari::loadLibrary("debug", statusFunc);
 
-  anari::Library m = anari::loadLibrary(g_moduleType, statusFunc);
-  ANARIDevice w = anariNewDevice(m, "default");
+  anari::Library lib = anari::loadLibrary(g_libraryName, statusFunc);
+
+  anari::Features features = anari::feature::getObjectFeatures(
+      lib, "default", "default", ANARI_DEVICE);
+
+  if (!features.ANARI_KHR_GEOMETRY_TRIANGLE)
+    printf("WARNING: device doesn't support ANARI_KHR_GEOMETRY_TRIANGLE\n");
+  if (!features.ANARI_KHR_CAMERA_PERSPECTIVE)
+    printf("WARNING: device doesn't support ANARI_KHR_CAMERA_PERSPECTIVE\n");
+  if (!features.ANARI_KHR_LIGHT_DIRECTIONAL)
+    printf("WARNING: device doesn't support ANARI_KHR_LIGHT_DIRECTIONAL\n");
+  if (!features.ANARI_KHR_MATERIAL_MATTE)
+    printf("WARNING: device doesn't support ANARI_KHR_MATERIAL_MATTE\n");
+
+  ANARIDevice w = anariNewDevice(lib, "default");
 
   ANARIDevice d = anariNewDevice(m_debug, "debug");
   anari::setParameter(d, d, "wrappedDevice", w);
@@ -85,8 +99,8 @@ int main(int argc, const char **argv)
   anariCommit(d, d);
 
   if (!d) {
-    printf("\n\nERROR: could not load default device in module %s\n",
-        g_moduleType);
+    printf("\n\nERROR: could not load default device in library %s\n",
+        g_libraryName);
     return 1;
   }
 
@@ -95,7 +109,8 @@ int main(int argc, const char **argv)
 
   // create and setup camera
   auto camera = anari::newObject<anari::Camera>(d, "perspective");
-  anari::setParameter(d, camera, "aspect", (float)imgSize[0] / (float)imgSize[1]);
+  anari::setParameter(
+      d, camera, "aspect", (float)imgSize[0] / (float)imgSize[1]);
   anari::setParameter(d, camera, "position", cam_pos);
   anari::setParameter(d, camera, "direction", cam_view);
   anari::setParameter(d, camera, "up", cam_up);
@@ -193,8 +208,12 @@ int main(int argc, const char **argv)
 
   // access frame and write its content as PNG file
   const uint32_t *fb = anari::map<uint32_t>(d, frame, "color");
-  stbi_write_png(
-      "firstFrame.png", (int)imgSize[0], (int)imgSize[1], 4, fb, 4 * (int)imgSize[0]);
+  stbi_write_png("firstFrame.png",
+      (int)imgSize[0],
+      (int)imgSize[1],
+      4,
+      fb,
+      4 * (int)imgSize[0]);
   anari::unmap(d, frame, "color");
 
   printf("done!\n");
@@ -208,8 +227,12 @@ int main(int argc, const char **argv)
   }
 
   fb = anari::map<uint32_t>(d, frame, "color");
-  stbi_write_png(
-      "accumulatedFrame.png", (int)imgSize[0], (int)imgSize[1], 4, fb, 4 * (int)imgSize[0]);
+  stbi_write_png("accumulatedFrame.png",
+      (int)imgSize[0],
+      (int)imgSize[1],
+      4,
+      fb,
+      4 * (int)imgSize[0]);
   anari::unmap(d, frame, "color");
 
   printf("done!\n");
@@ -218,7 +241,7 @@ int main(int argc, const char **argv)
   // final cleanups
   anari::release(d, frame);
   anari::release(d, d);
-  anari::unloadLibrary(m);
+  anari::unloadLibrary(lib);
 
   printf("done!\n");
 
