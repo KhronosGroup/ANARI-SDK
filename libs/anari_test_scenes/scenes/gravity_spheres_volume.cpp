@@ -107,7 +107,7 @@ void GravityVolume::commit()
   const bool withGeometry = getParam<bool>("withGeometry", false);
   const int volumeDims = 128;
   const size_t numPoints = 10;
-  const auto voxelRange = glm::vec2(0.f, 10.f);
+  const float voxelRange[2] = {0.f, 10.f};
 
   auto points = generatePoints(numPoints);
   auto voxels = generateVoxels(points, glm::ivec3(volumeDims));
@@ -141,7 +141,7 @@ void GravityVolume::commit()
         volume,
         "opacity",
         anari::newArray1D(d, opacities.data(), opacities.size()));
-    anari::setParameter(d, volume, "valueRange", voxelRange);
+    anariSetParameter(d, volume, "valueRange", ANARI_FLOAT32_BOX1, voxelRange);
   }
 
   anari::commit(d, volume);

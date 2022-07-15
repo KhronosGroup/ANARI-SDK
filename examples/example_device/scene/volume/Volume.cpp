@@ -16,9 +16,7 @@ void Volume::commit()
   m_volume = getParamObject<SpatialField>("field");
   SceneObject::setBounds(m_volume ? m_volume->bounds() : box3());
 
-  auto range = getParam<vec2>("valueRange", vec2(0.f, 1.f));
-  m_minmax.lower = range.x;
-  m_minmax.upper = range.y;
+  m_minmax = getParam<box1>("valueRange", box1(0.f, 1.f));
   m_invSize = 1.f / size(m_minmax);
 
   m_colorData = getParamObject<Array1D>("color");

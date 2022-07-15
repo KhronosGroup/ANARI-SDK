@@ -168,7 +168,9 @@ static std::map<int, SetParamFcn *> setParamFcns = {
     declare_param_setter(mat3),
     declare_param_setter(mat3x2),
     declare_param_setter(mat4x3),
-    declare_param_setter(mat4)};
+    declare_param_setter(mat4),
+    declare_param_setter(box1),
+    declare_param_setter(box3)};
 
 #undef declare_param_setter
 #undef declare_param_setter_object
