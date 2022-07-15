@@ -414,7 +414,7 @@ inline bool getProperty(
 template <typename T>
 inline const T *map(Device d, Frame f, const char *channel)
 {
-  return static_cast<const T*>(anariMapFrame(d, f, channel));
+  return static_cast<const T *>(anariMapFrame(d, f, channel));
 }
 
 inline void unmap(Device d, Frame f, const char *channel)
@@ -441,5 +441,30 @@ inline void discard(Device d, Frame f)
 {
   anariDiscardFrame(d, f);
 }
+
+///////////////////////////////////////////////////////////////////////////////
+// C++ Feature Utilities //////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+namespace feature {
+
+inline Features getObjectFeatures(Library l,
+    const char *device,
+    const char *objectSubtype,
+    DataType objectType)
+{
+  Features f;
+  anariGetObjectFeatures(&f, l, device, objectSubtype, objectType);
+  return f;
+}
+
+inline Features getInstanceFeatures(Device d, Object o)
+{
+  Features f;
+  anariGetInstanceFeatures(&f, d, o);
+  return f;
+}
+
+} // namespace feature
 
 } // namespace anari
