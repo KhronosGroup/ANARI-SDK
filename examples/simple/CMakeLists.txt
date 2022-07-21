@@ -28,7 +28,6 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 set(CMAKE_BUILD_TYPE_INIT Release)
 
-set(CMAKE_INSTALL_RPATH "$ORIGIN")
 set(CMAKE_INSTALL_MESSAGE LAZY)
 
 ## Establish project
@@ -64,6 +63,7 @@ add_executable(anariInfo anariInfo.cpp)
 target_link_libraries(anariInfo PRIVATE anari::anari)
 
 if (IN_SDK_SOURCE_TREE)
+  install(TARGETS anariInfo RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
   # This app links to the example device library directly to use its direct
   # device creation function. Vendors can choose to ship a header with such a
   # direct function in it.
