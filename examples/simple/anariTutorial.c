@@ -27,29 +27,40 @@
 
 /******************************************************************/
 /* helper function to write out pixel values to a .ppm file */
-void writePPM(
-    const char *fileName, int size_x, int size_y, const uint32_t *pixel)
+void writePPM(const char *fileName, ANARIDevice d, ANARIFrame frame)
 {
+  uint32_t size[2] = {0, 0};
+  ANARIDataType type = ANARI_UNKNOWN;
+  uint32_t *pixel =
+      (uint32_t *)anariMapFrame(d, frame, "color", &size[0], &size[1], &type);
+
+  if (type != ANARI_UFIXED8_RGBA_SRGB) {
+    printf("Incorrectly returned color buffer pixel type, image not saved.\n");
+    return;
+  }
+
   FILE *file = fopen(fileName, "wb");
   if (!file) {
     fprintf(stderr, "fopen('%s', 'wb') failed: %d", fileName, errno);
     return;
   }
-  fprintf(file, "P6\n%i %i\n255\n", size_x, size_y);
-  unsigned char *out = (unsigned char *)malloc((size_t)(3 * size_x));
-  for (int y = 0; y < size_y; y++) {
+  fprintf(file, "P6\n%i %i\n255\n", size[0], size[1]);
+  unsigned char *out = (unsigned char *)malloc((size_t)(3 * size[0]));
+  for (int y = 0; y < size[1]; y++) {
     const unsigned char *in =
-        (const unsigned char *)&pixel[(size_y - 1 - y) * size_x];
-    for (int x = 0; x < size_x; x++) {
+        (const unsigned char *)&pixel[(size[1] - 1 - y) * size[0]];
+    for (int x = 0; x < size[0]; x++) {
       out[3 * x + 0] = in[4 * x + 0];
       out[3 * x + 1] = in[4 * x + 1];
       out[3 * x + 2] = in[4 * x + 2];
     }
-    fwrite(out, (size_t)(3 * size_x), sizeof(char), file);
+    fwrite(out, (size_t)(3 * size[0]), sizeof(char), file);
   }
   fprintf(file, "\n");
   fclose(file);
   free(out);
+
+  anariUnmapFrame(d, frame, "color");
 }
 
 /******************************************************************/
@@ -151,8 +162,12 @@ int main(int argc, const char **argv)
   }
 
   // inspect default renderer parameters
-  const ANARIParameter *ptParams =
-      anariGetObjectInfo(lib, "default", "default", ANARI_RENDERER, "parameter", ANARI_PARAMETER_LIST);
+  const ANARIParameter *ptParams = anariGetObjectInfo(lib,
+      "default",
+      "default",
+      ANARI_RENDERER,
+      "parameter",
+      ANARI_PARAMETER_LIST);
 
   if (!ptParams) {
     puts("Default renderer has no parameters.");
@@ -183,23 +198,22 @@ int main(int argc, const char **argv)
     }
   }
 
-  // populate a set of feature variables (this is a utility and not part of the core api)
+  // populate a set of feature variables (this is a utility and not part of the
+  // core api)
   ANARIFeatures features;
-  if(anariGetObjectFeatures(&features, lib, "default", "default", ANARI_DEVICE)) {
+  if (anariGetObjectFeatures(
+          &features, lib, "default", "default", ANARI_DEVICE)) {
     printf("WARNING: library didn't return feature list\n");
   }
-  if(!features.ANARI_KHR_GEOMETRY_TRIANGLE) {
+
+  if (!features.ANARI_KHR_GEOMETRY_TRIANGLE)
     printf("WARNING: device doesn't support ANARI_KHR_GEOMETRY_TRIANGLE\n");
-  }
-  if(!features.ANARI_KHR_CAMERA_PERSPECTIVE) {
+  if (!features.ANARI_KHR_CAMERA_PERSPECTIVE)
     printf("WARNING: device doesn't support ANARI_KHR_CAMERA_PERSPECTIVE\n");
-  }
-  if(!features.ANARI_KHR_LIGHT_DIRECTIONAL) {
+  if (!features.ANARI_KHR_LIGHT_DIRECTIONAL)
     printf("WARNING: device doesn't support ANARI_KHR_LIGHT_DIRECTIONAL\n");
-  }
-  if(!features.ANARI_KHR_MATERIAL_MATTE) {
+  if (!features.ANARI_KHR_MATERIAL_MATTE)
     printf("WARNING: device doesn't support ANARI_KHR_MATERIAL_MATTE\n");
-  }
 
   ANARIDevice dev = anariNewDevice(lib, "default");
 
@@ -337,9 +351,7 @@ int main(int argc, const char **argv)
   anariFrameReady(dev, frame, ANARI_WAIT);
 
   // access frame and write its content as PNG file
-  const uint32_t *fb = (uint32_t *)anariMapFrame(dev, frame, "color");
-  writePPM("firstFrame.ppm", (int)imgSize[0], (int)imgSize[1], fb);
-  anariUnmapFrame(dev, frame, "color");
+  writePPM("firstFrame.ppm", dev, frame);
 
   printf("done!\n");
   printf("rendering 10 accumulated frames to accumulatedFrame.ppm...");
@@ -351,9 +363,7 @@ int main(int argc, const char **argv)
     anariFrameReady(dev, frame, ANARI_WAIT);
   }
 
-  fb = (uint32_t *)anariMapFrame(dev, frame, "color");
-  writePPM("accumulatedFrame.ppm", (int)imgSize[0], (int)imgSize[1], fb);
-  anariUnmapFrame(dev, frame, "color");
+  writePPM("accumulatedFrame.ppm", dev, frame);
 
   printf("done!\n");
   printf("\ncleaning up objects...");

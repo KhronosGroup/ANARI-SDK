@@ -41,6 +41,23 @@ void statusFunc(const void *userData,
   }
 }
 
+void writePNG(const char *fileName, ANARIDevice d, ANARIFrame frame)
+{
+  uint32_t size[2] = {0, 0};
+  ANARIDataType type = ANARI_UNKNOWN;
+  uint32_t *pixel =
+      (uint32_t *)anariMapFrame(d, frame, "color", &size[0], &size[1], &type);
+
+  if (type != ANARI_UFIXED8_RGBA_SRGB) {
+    printf("Incorrectly returned color buffer pixel type, image not saved.\n");
+    return;
+  }
+
+  stbi_write_png(fileName, size[0], size[1], 4, pixel, 4 * size[0]);
+
+  anariUnmapFrame(d, frame, "color");
+}
+
 int main(int argc, const char **argv)
 {
   (void)argc;
@@ -225,10 +242,7 @@ int main(int argc, const char **argv)
   anariFrameReady(dev, frame, ANARI_WAIT);
 
   // access frame and write its content as PNG file
-  const uint32_t *fb = (uint32_t *)anariMapFrame(dev, frame, "color");
-  stbi_write_png(
-      "firstFrame.png", imgSize[0], imgSize[1], 4, fb, 4 * imgSize[0]);
-  anariUnmapFrame(dev, frame, "color");
+  writePNG("firstFrame.png", dev, frame);
 
   printf("done!\n");
   printf("rendering 10 accumulated frames to accumulatedFrame.png...");
@@ -240,10 +254,7 @@ int main(int argc, const char **argv)
     anariFrameReady(dev, frame, ANARI_WAIT);
   }
 
-  fb = (uint32_t *)anariMapFrame(dev, frame, "color");
-  stbi_write_png(
-      "accumulatedFrame.png", imgSize[0], imgSize[1], 4, fb, 4 * imgSize[0]);
-  anariUnmapFrame(dev, frame, "color");
+  writePNG("accumulatedFrame.png", dev, frame);
 
   printf("done!\n");
   printf("\ncleaning up objects...");

@@ -116,7 +116,11 @@ struct SINK_DEVICE_INTERFACE SinkDevice : public DeviceImpl, public RefCounted
 
   ANARIFrame newFrame() override;
 
-  const void *frameBufferMap(ANARIFrame fb, const char *channel) override;
+  const void *frameBufferMap(ANARIFrame fb,
+      const char *channel,
+      uint32_t *width,
+      uint32_t *height,
+      ANARIDataType *pixelType) override;
 
   void frameBufferUnmap(ANARIFrame fb, const char *channel) override;
 
@@ -146,7 +150,7 @@ struct SINK_DEVICE_INTERFACE SinkDevice : public DeviceImpl, public RefCounted
 
     void *map()
     {
-      return const_cast<void*>(memory);
+      return const_cast<void *>(memory);
     }
     void retain()
     {

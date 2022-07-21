@@ -6,9 +6,9 @@
 #include "anari/anari.h"
 #include "anari/backend/Library.h"
 
+#include "CodeSerializer.h"
 #include "DebugBasics.h"
 #include "EmptySerializer.h"
-#include "CodeSerializer.h"
 
 // std
 #include <cstdarg>
@@ -36,7 +36,8 @@ void DebugDevice::reportStatus(ANARIObject source,
 
   last_status_message.resize(size_t(count + 1));
 
-  std::vsnprintf(last_status_message.data(), size_t(count + 1), format, arglist_copy);
+  std::vsnprintf(
+      last_status_message.data(), size_t(count + 1), format, arglist_copy);
   va_end(arglist_copy);
 
   if (ANARIStatusCallback statusCallback = defaultStatusCallback()) {
@@ -48,13 +49,9 @@ void DebugDevice::reportStatus(ANARIObject source,
         code,
         last_status_message.data());
   }
-  if(serializer) {
+  if (serializer) {
     serializer->insertStatus(
-        source,
-        sourceType,
-        severity,
-        code,
-        last_status_message.data());
+        source, sourceType, severity, code, last_status_message.data());
   }
 }
 
@@ -71,7 +68,8 @@ void DebugDevice::vreportStatus(ANARIObject source,
 
   last_status_message.resize(size_t(count + 1));
 
-  std::vsnprintf(last_status_message.data(), size_t(count + 1), format, arglist_copy);
+  std::vsnprintf(
+      last_status_message.data(), size_t(count + 1), format, arglist_copy);
   va_end(arglist_copy);
 
   if (ANARIStatusCallback statusCallback = defaultStatusCallback()) {
@@ -83,13 +81,9 @@ void DebugDevice::vreportStatus(ANARIObject source,
         code,
         last_status_message.data());
   }
-  if(serializer) {
+  if (serializer) {
     serializer->insertStatus(
-        source,
-        sourceType,
-        severity,
-        code,
-        last_status_message.data());
+        source, sourceType, severity, code, last_status_message.data());
   }
 }
 ///////////////////////////////////////////////////////////////////////////////
@@ -110,13 +104,14 @@ struct DeleterWrapperData
 void deleterWrapper(const void *userData, const void *memory)
 {
   if (userData) {
-    const DeleterWrapperData *nested = static_cast<const DeleterWrapperData *>(userData);
+    const DeleterWrapperData *nested =
+        static_cast<const DeleterWrapperData *>(userData);
     if (nested->deleter) {
       nested->deleter(nested->userData, nested->memory);
     }
     delete nested;
   }
-  delete[] static_cast<const ANARIObject *>(const_cast<void*>(memory));
+  delete[] static_cast<const ANARIObject *>(const_cast<void *>(memory));
 }
 
 ANARIArray1D DebugDevice::newArray1D(const void *appMemory,
@@ -169,8 +164,7 @@ ANARIArray1D DebugDevice::newArray1D(const void *appMemory,
         uint64_t(0));
     handle = newHandle(handle);
 
-    if (auto info =
-            getDynamicObjectInfo<DebugObject<ANARI_ARRAY1D>>(handle)) {
+    if (auto info = getDynamicObjectInfo<DebugObject<ANARI_ARRAY1D>>(handle)) {
       info->handles = handles;
       if (appMemory != nullptr) {
         for (uint64_t i = 0; i < numItems; i++) {
@@ -193,13 +187,19 @@ ANARIArray1D DebugDevice::newArray1D(const void *appMemory,
     handle = newHandle(handle);
   }
 
-  if (auto info =
-          getDynamicObjectInfo<DebugObject<ANARI_ARRAY1D>>(handle)) {
+  if (auto info = getDynamicObjectInfo<DebugObject<ANARI_ARRAY1D>>(handle)) {
     info->attachArray(appMemory, type, numItems, 1, 1, byteStride, 0, 0);
   }
 
-  if(serializer) {
-    serializer->anariNewArray1D(this_device(), appMemory, deleter, userData, type, numItems, forwardStride, handle);
+  if (serializer) {
+    serializer->anariNewArray1D(this_device(),
+        appMemory,
+        deleter,
+        userData,
+        type,
+        numItems,
+        forwardStride,
+        handle);
   }
 
   return handle;
@@ -234,14 +234,22 @@ ANARIArray2D DebugDevice::newArray2D(const void *appMemory,
       byteStride2);
   handle = newHandle(handle);
 
-  if (auto info =
-          getDynamicObjectInfo<DebugObject<ANARI_ARRAY2D>>(handle)) {
+  if (auto info = getDynamicObjectInfo<DebugObject<ANARI_ARRAY2D>>(handle)) {
     info->attachArray(
         appMemory, type, numItems1, numItems2, 1, byteStride1, byteStride2, 0);
   }
 
-  if(serializer) {
-    serializer->anariNewArray2D(this_device(), appMemory, deleter, userData, type, numItems1, numItems2, byteStride1, byteStride2, handle);
+  if (serializer) {
+    serializer->anariNewArray2D(this_device(),
+        appMemory,
+        deleter,
+        userData,
+        type,
+        numItems1,
+        numItems2,
+        byteStride1,
+        byteStride2,
+        handle);
   }
 
   return handle;
@@ -282,8 +290,7 @@ ANARIArray3D DebugDevice::newArray3D(const void *appMemory,
       byteStride3);
   handle = newHandle(handle);
 
-  if (auto info =
-          getDynamicObjectInfo<DebugObject<ANARI_ARRAY3D>>(handle)) {
+  if (auto info = getDynamicObjectInfo<DebugObject<ANARI_ARRAY3D>>(handle)) {
     info->attachArray(appMemory,
         type,
         numItems1,
@@ -294,8 +301,19 @@ ANARIArray3D DebugDevice::newArray3D(const void *appMemory,
         byteStride3);
   }
 
-  if(serializer) {
-    serializer->anariNewArray3D(this_device(), appMemory, deleter, userData, type, numItems1, numItems2, numItems3, byteStride1, byteStride2, byteStride3, handle);
+  if (serializer) {
+    serializer->anariNewArray3D(this_device(),
+        appMemory,
+        deleter,
+        userData,
+        type,
+        numItems1,
+        numItems2,
+        numItems3,
+        byteStride1,
+        byteStride2,
+        byteStride3,
+        handle);
   }
 
   return handle;
@@ -316,7 +334,7 @@ void *DebugDevice::mapArray(ANARIArray a)
     }
   }
 
-  if(serializer) {
+  if (serializer) {
     serializer->anariMapArray(this_device(), a, result);
   }
 
@@ -342,11 +360,11 @@ void DebugDevice::unmapArray(ANARIArray a)
   debug->anariUnmapArray(this_device(), a);
   anariUnmapArray(wrapped, unwrapHandle(a));
 
-  if(serializer) {
+  if (serializer) {
     serializer->anariUnmapArray(this_device(), a);
   }
   // the serializer may also need to inspect the array
-  if(info) {
+  if (info) {
     info->unmapArray();
   }
 }
@@ -359,7 +377,7 @@ ANARILight DebugDevice::newLight(const char *type)
   ANARILight handle = anariNewLight(wrapped, type);
   ANARILight result = newHandle(handle, type);
 
-  if(serializer) {
+  if (serializer) {
     serializer->anariNewLight(this_device(), type, result);
   }
 
@@ -372,7 +390,7 @@ ANARICamera DebugDevice::newCamera(const char *type)
   ANARICamera handle = anariNewCamera(wrapped, type);
   ANARICamera result = newHandle(handle, type);
 
-  if(serializer) {
+  if (serializer) {
     serializer->anariNewCamera(this_device(), type, result);
   }
 
@@ -385,7 +403,7 @@ ANARIGeometry DebugDevice::newGeometry(const char *type)
   ANARIGeometry handle = anariNewGeometry(wrapped, type);
   ANARIGeometry result = newHandle(handle, type);
 
-  if(serializer) {
+  if (serializer) {
     serializer->anariNewGeometry(this_device(), type, result);
   }
 
@@ -398,7 +416,7 @@ ANARISpatialField DebugDevice::newSpatialField(const char *type)
   ANARISpatialField handle = anariNewSpatialField(wrapped, type);
   ANARISpatialField result = newHandle(handle, type);
 
-  if(serializer) {
+  if (serializer) {
     serializer->anariNewSpatialField(this_device(), type, result);
   }
 
@@ -411,7 +429,7 @@ ANARISurface DebugDevice::newSurface()
   ANARISurface handle = anariNewSurface(wrapped);
   ANARISurface result = newHandle(handle);
 
-  if(serializer) {
+  if (serializer) {
     serializer->anariNewSurface(this_device(), result);
   }
 
@@ -424,7 +442,7 @@ ANARIVolume DebugDevice::newVolume(const char *type)
   ANARIVolume handle = anariNewVolume(wrapped, type);
   ANARIVolume result = newHandle(handle, type);
 
-  if(serializer) {
+  if (serializer) {
     serializer->anariNewVolume(this_device(), type, result);
   }
 
@@ -439,7 +457,7 @@ ANARIMaterial DebugDevice::newMaterial(const char *type)
   ANARIMaterial handle = anariNewMaterial(wrapped, type);
   ANARIMaterial result = newHandle(handle, type);
 
-  if(serializer) {
+  if (serializer) {
     serializer->anariNewMaterial(this_device(), type, result);
   }
 
@@ -452,7 +470,7 @@ ANARISampler DebugDevice::newSampler(const char *type)
   ANARISampler handle = anariNewSampler(wrapped, type);
   ANARISampler result = newHandle(handle, type);
 
-  if(serializer) {
+  if (serializer) {
     serializer->anariNewSampler(this_device(), type, result);
   }
 
@@ -467,7 +485,7 @@ ANARIGroup DebugDevice::newGroup()
   ANARIGroup handle = anariNewGroup(wrapped);
   ANARIGroup result = newHandle(handle);
 
-  if(serializer) {
+  if (serializer) {
     serializer->anariNewGroup(this_device(), result);
   }
 
@@ -480,7 +498,7 @@ ANARIInstance DebugDevice::newInstance()
   ANARIInstance handle = anariNewInstance(wrapped);
   ANARIInstance result = newHandle(handle);
 
-  if(serializer) {
+  if (serializer) {
     serializer->anariNewInstance(this_device(), result);
   }
 
@@ -495,7 +513,7 @@ ANARIWorld DebugDevice::newWorld()
   ANARIWorld handle = anariNewWorld(wrapped);
   ANARIWorld result = newHandle(handle);
 
-  if(serializer) {
+  if (serializer) {
     serializer->anariNewWorld(this_device(), result);
   }
 
@@ -518,8 +536,9 @@ int DebugDevice::getProperty(ANARIObject object,
   int result = anariGetProperty(
       wrapped, unwrapHandle(object), name, type, mem, size, mask);
 
-  if(serializer) {
-    serializer->anariGetProperty(this_device(), object, name, type, mem, size, mask, result);
+  if (serializer) {
+    serializer->anariGetProperty(
+        this_device(), object, name, type, mem, size, mask, result);
   }
 
   return result;
@@ -527,10 +546,14 @@ int DebugDevice::getProperty(ANARIObject object,
 
 // Object + Parameter Lifetime Management /////////////////////////////////////
 
-void frameContinuationWrapper(const void *userdata, ANARIDevice, ANARIFrame frame) {
-  DebugDevice *dd = reinterpret_cast<DebugDevice*>(const_cast<void*>(userdata));
+void frameContinuationWrapper(
+    const void *userdata, ANARIDevice, ANARIFrame frame)
+{
+  DebugDevice *dd =
+      reinterpret_cast<DebugDevice *>(const_cast<void *>(userdata));
   ANARIFrame debugFrame = dd->wrapHandle(frame);
-  DebugObject<ANARI_FRAME> *info = dd->getDynamicObjectInfo<DebugObject<ANARI_FRAME>>(debugFrame);
+  DebugObject<ANARI_FRAME> *info =
+      dd->getDynamicObjectInfo<DebugObject<ANARI_FRAME>>(debugFrame);
   info->frameContinuationFun(info->userdata, dd->this_device(), debugFrame);
 }
 
@@ -539,7 +562,7 @@ void DebugDevice::setParameter(
 {
   if (handleIsDevice(object)) {
     deviceSetParameter(name, type, mem);
-    if(!wrapped) {
+    if (!wrapped) {
       return;
     }
   }
@@ -559,19 +582,27 @@ void DebugDevice::setParameter(
   debug->anariSetParameter(this_device(), object, name, type, mem);
 
   // frame completion callbacks require special treatment
-  if(type == ANARI_FRAME_COMPLETION_CALLBACK
-    && std::strncmp(name, "frameCompletionCallback", 23)==0) {
+  if (type == ANARI_FRAME_COMPLETION_CALLBACK
+      && std::strncmp(name, "frameCompletionCallback", 23) == 0) {
     ANARIFrameCompletionCallback callbackWrapper = frameContinuationWrapper;
-    anariSetParameter(wrapped, unwrapHandle(object), "frameCompletionCallback", ANARI_FRAME_COMPLETION_CALLBACK, &callbackWrapper);
-    anariSetParameter(wrapped, unwrapHandle(object), "frameCompletionCallbackUserData", ANARI_VOID_POINTER, this);
-  } else if(type == ANARI_VOID_POINTER
-    && std::strncmp(name, "frameCompletionCallbackUserData", 31)==0) {
+    anariSetParameter(wrapped,
+        unwrapHandle(object),
+        "frameCompletionCallback",
+        ANARI_FRAME_COMPLETION_CALLBACK,
+        &callbackWrapper);
+    anariSetParameter(wrapped,
+        unwrapHandle(object),
+        "frameCompletionCallbackUserData",
+        ANARI_VOID_POINTER,
+        this);
+  } else if (type == ANARI_VOID_POINTER
+      && std::strncmp(name, "frameCompletionCallbackUserData", 31) == 0) {
     // do not forward or this will overwrite the this pointer
   } else {
     anariSetParameter(wrapped, unwrapHandle(object), name, type, unwrapped);
   }
 
-  if(serializer) {
+  if (serializer) {
     serializer->anariSetParameter(this_device(), object, name, type, mem);
   }
 
@@ -589,7 +620,7 @@ void DebugDevice::unsetParameter(ANARIObject object, const char *name)
     debug->anariUnsetParameter(this_device(), object, name);
     anariUnsetParameter(wrapped, unwrapHandle(object), name);
 
-    if(serializer) {
+    if (serializer) {
       serializer->anariUnsetParameter(this_device(), object, name);
     }
 
@@ -610,7 +641,7 @@ void DebugDevice::commit(ANARIObject object)
       info->commit();
   }
 
-  if(serializer) {
+  if (serializer) {
     serializer->anariCommit(this_device(), object);
   }
 }
@@ -625,7 +656,7 @@ void DebugDevice::release(ANARIObject object)
     debug->anariRelease(this_device(), object);
     anariRelease(wrapped, unwrapHandle(object));
 
-    if(serializer) {
+    if (serializer) {
       serializer->anariRelease(this_device(), object);
     }
 
@@ -644,7 +675,7 @@ void DebugDevice::retain(ANARIObject object)
     debug->anariRetain(this_device(), object);
     anariRetain(wrapped, unwrapHandle(object));
 
-    if(serializer) {
+    if (serializer) {
       serializer->anariRetain(this_device(), object);
     }
 
@@ -661,19 +692,24 @@ ANARIFrame DebugDevice::newFrame()
   ANARIFrame handle = anariNewFrame(wrapped);
   ANARIFrame result = newHandle(handle);
 
-  if(serializer) {
+  if (serializer) {
     serializer->anariNewFrame(this_device(), result);
   }
 
   return result;
 }
 
-const void *DebugDevice::frameBufferMap(ANARIFrame fb, const char *channel)
+const void *DebugDevice::frameBufferMap(ANARIFrame fb,
+    const char *channel,
+    uint32_t *width,
+    uint32_t *height,
+    ANARIDataType *pixelType)
 {
   debug->anariMapFrame(this_device(), fb, channel);
-  const void *mapped = anariMapFrame(wrapped, unwrapHandle(fb), channel);
+  const void *mapped = anariMapFrame(
+      wrapped, unwrapHandle(fb), channel, width, height, pixelType);
 
-  if(serializer) {
+  if (serializer) {
     serializer->anariMapFrame(this_device(), fb, channel, mapped);
   }
 
@@ -684,7 +720,7 @@ void DebugDevice::frameBufferUnmap(ANARIFrame fb, const char *channel)
 {
   debug->anariUnmapFrame(this_device(), fb, channel);
   anariUnmapFrame(wrapped, unwrapHandle(fb), channel);
-  if(serializer) {
+  if (serializer) {
     serializer->anariUnmapFrame(this_device(), fb, channel);
   }
 }
@@ -697,7 +733,7 @@ ANARIRenderer DebugDevice::newRenderer(const char *type)
   ANARIRenderer handle = anariNewRenderer(wrapped, type);
   ANARIRenderer result = newHandle(handle, type);
 
-  if(serializer) {
+  if (serializer) {
     serializer->anariNewRenderer(this_device(), type, result);
   }
 
@@ -709,7 +745,7 @@ void DebugDevice::renderFrame(ANARIFrame frame)
   debug->anariRenderFrame(this_device(), frame);
   anariRenderFrame(wrapped, unwrapHandle(frame));
 
-  if(serializer) {
+  if (serializer) {
     serializer->anariRenderFrame(this_device(), frame);
   }
 
@@ -723,7 +759,7 @@ int DebugDevice::frameReady(ANARIFrame frame, ANARIWaitMask m)
   debug->anariFrameReady(this_device(), frame, m);
   int result = anariFrameReady(wrapped, unwrapHandle(frame), m);
 
-  if(serializer) {
+  if (serializer) {
     serializer->anariFrameReady(this_device(), frame, m, result);
   }
 
@@ -735,10 +771,9 @@ void DebugDevice::discardFrame(ANARIFrame frame)
   debug->anariDiscardFrame(this_device(), frame);
   anariDiscardFrame(wrapped, unwrapHandle(frame));
 
-  if(serializer) {
+  if (serializer) {
     serializer->anariDiscardFrame(this_device(), frame);
   }
-
 }
 
 // Other DebugDevice definitions ////////////////////////////////////////////
@@ -755,13 +790,13 @@ void DebugDevice::deviceSetParameter(
     if (staged) {
       anariRetain(staged, staged);
     }
-  } else if(id == "traceMode" && type == ANARI_STRING) {
-    std::string mode((const char*)mem);
-    if(mode == "code") {
+  } else if (id == "traceMode" && type == ANARI_STRING) {
+    std::string mode((const char *)mem);
+    if (mode == "code") {
       createSerializer = CodeSerializer::create;
     }
-  } else if(id == "traceDir" && type == ANARI_STRING) {
-    traceDir = (const char*)mem;
+  } else if (id == "traceDir" && type == ANARI_STRING) {
+    traceDir = (const char *)mem;
   }
 }
 
@@ -808,7 +843,7 @@ void DebugDevice::deviceCommit()
       }
     }
   }
-  if(createSerializer) {
+  if (createSerializer) {
     serializer.reset(createSerializer(this));
     createSerializer = nullptr;
   }
@@ -839,13 +874,14 @@ DebugDevice::~DebugDevice()
       ANARI_STATUS_UNKNOWN_ERROR,
       "used features:");
 
-  for(int i = 0;i<anari::debug_queries::extension_count;++i) {
-    if(used_features[i]>0) {
+  for (int i = 0; i < anari::debug_queries::extension_count; ++i) {
+    if (used_features[i] > 0) {
       reportStatus(this_device(),
           ANARI_DEVICE,
           ANARI_SEVERITY_INFO,
           ANARI_STATUS_UNKNOWN_ERROR,
-          "   %s", features[i]);
+          "   %s",
+          features[i]);
     }
   }
 
@@ -912,11 +948,18 @@ DebugObjectBase *DebugDevice::getObjectInfo(ANARIObject h)
   }
 }
 
-void DebugDevice::reportParameterUse(
-  ANARIDataType objtype, const char *objsubtype,
-  const char *paramname, ANARIDataType paramtype)
+void DebugDevice::reportParameterUse(ANARIDataType objtype,
+    const char *objsubtype,
+    const char *paramname,
+    ANARIDataType paramtype)
 {
-  if(const int32_t *feature = (const int32_t*)debug_queries::query_param_info_enum(objtype, objsubtype, paramname, paramtype, ANARI_INFO_sourceFeature, ANARI_INT32)) {
+  if (const int32_t *feature =
+          (const int32_t *)debug_queries::query_param_info_enum(objtype,
+              objsubtype,
+              paramname,
+              paramtype,
+              ANARI_INFO_sourceFeature,
+              ANARI_INT32)) {
     used_features[*feature] += 1;
   } else {
     unknown_feature_uses += 1;
@@ -925,7 +968,9 @@ void DebugDevice::reportParameterUse(
 
 void DebugDevice::reportObjectUse(ANARIDataType objtype, const char *objsubtype)
 {
-  if(const int32_t *feature = (const int32_t*)debug_queries::query_object_info_enum(objtype, objsubtype, ANARI_INFO_sourceFeature, ANARI_INT32)) {
+  if (const int32_t *feature =
+          (const int32_t *)debug_queries::query_object_info_enum(
+              objtype, objsubtype, ANARI_INFO_sourceFeature, ANARI_INT32)) {
     used_features[*feature] += 1;
   } else {
     unknown_feature_uses += 1;
@@ -945,9 +990,7 @@ extern "C" DEBUG_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_NEW_DEVICE(
   return nullptr;
 }
 
-extern "C" DEBUG_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_INIT(debug)
-{
-}
+extern "C" DEBUG_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_INIT(debug) {}
 
 extern "C" DEBUG_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_DEVICE_SUBTYPES(
     debug, library)

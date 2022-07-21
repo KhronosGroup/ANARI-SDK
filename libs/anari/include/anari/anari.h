@@ -171,7 +171,7 @@ ANARI_INTERFACE const void* anariGetObjectInfo(ANARILibrary library, const char*
 ANARI_INTERFACE const void* anariGetParameterInfo(ANARILibrary library, const char* deviceSubtype, const char* objectSubtype, ANARIDataType objectType, const char* parameterName, ANARIDataType parameterType, const char* infoName, ANARIDataType infoType);
 ANARI_INTERFACE int anariGetProperty(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType type, void* mem, uint64_t size, ANARIWaitMask mask);
 ANARI_INTERFACE ANARIFrame anariNewFrame(ANARIDevice device);
-ANARI_INTERFACE const void* anariMapFrame(ANARIDevice device, ANARIFrame frame, const char* channel);
+ANARI_INTERFACE const void* anariMapFrame(ANARIDevice device, ANARIFrame frame, const char* channel, uint32_t* width, uint32_t* height, ANARIDataType* pixelType);
 ANARI_INTERFACE void anariUnmapFrame(ANARIDevice device, ANARIFrame frame, const char* channel);
 ANARI_INTERFACE ANARIRenderer anariNewRenderer(ANARIDevice device, const char* type);
 ANARI_INTERFACE void anariRenderFrame(ANARIDevice device, ANARIFrame frame);

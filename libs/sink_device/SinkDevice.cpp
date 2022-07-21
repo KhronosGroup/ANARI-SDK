@@ -18,9 +18,9 @@ namespace sink_device {
 
 // Data Arrays ////////////////////////////////////////////////////////////////
 
-void managed_deleter(const void*, const void *memory)
+void managed_deleter(const void *, const void *memory)
 {
-  delete[] static_cast<char *>(const_cast<void*>(memory));
+  delete[] static_cast<char *>(const_cast<void *>(memory));
 }
 
 ANARIArray1D SinkDevice::newArray1D(const void *appMemory,
@@ -104,7 +104,7 @@ ANARIArray3D SinkDevice::newArray3D(const void *appMemory,
 void *SinkDevice::mapArray(ANARIArray a)
 {
   if (auto obj = getObject(a)) {
-    return const_cast<void*>(obj->memory);
+    return const_cast<void *>(obj->memory);
   } else {
     return nullptr;
   }
@@ -114,22 +114,22 @@ void SinkDevice::unmapArray(ANARIArray) {}
 
 // Renderable Objects /////////////////////////////////////////////////////////
 
-ANARILight SinkDevice::newLight(const char*)
+ANARILight SinkDevice::newLight(const char *)
 {
   return nextHandle<ANARILight>();
 }
 
-ANARICamera SinkDevice::newCamera(const char*)
+ANARICamera SinkDevice::newCamera(const char *)
 {
   return nextHandle<ANARICamera>();
 }
 
-ANARIGeometry SinkDevice::newGeometry(const char*)
+ANARIGeometry SinkDevice::newGeometry(const char *)
 {
   return nextHandle<ANARIGeometry>();
 }
 
-ANARISpatialField SinkDevice::newSpatialField(const char*)
+ANARISpatialField SinkDevice::newSpatialField(const char *)
 {
   return nextHandle<ANARISpatialField>();
 }
@@ -139,19 +139,19 @@ ANARISurface SinkDevice::newSurface()
   return nextHandle<ANARISurface>();
 }
 
-ANARIVolume SinkDevice::newVolume(const char*)
+ANARIVolume SinkDevice::newVolume(const char *)
 {
   return nextHandle<ANARIVolume>();
 }
 
 // Model Meta-Data ////////////////////////////////////////////////////////////
 
-ANARIMaterial SinkDevice::newMaterial(const char*)
+ANARIMaterial SinkDevice::newMaterial(const char *)
 {
   return nextHandle<ANARIMaterial>();
 }
 
-ANARISampler SinkDevice::newSampler(const char*)
+ANARISampler SinkDevice::newSampler(const char *)
 {
   return nextHandle<ANARISampler>();
 }
@@ -175,12 +175,8 @@ ANARIWorld SinkDevice::newWorld()
   return nextHandle<ANARIWorld>();
 }
 
-int SinkDevice::getProperty(ANARIObject,
-    const char*,
-    ANARIDataType,
-    void*,
-    uint64_t,
-    ANARIWaitMask)
+int SinkDevice::getProperty(
+    ANARIObject, const char *, ANARIDataType, void *, uint64_t, ANARIWaitMask)
 {
   return 0;
 }
@@ -195,8 +191,8 @@ struct FrameData
 
 void frame_deleter(const void *userdata, const void *memory)
 {
-  delete[] static_cast<char *>(const_cast<void*>(memory));
-  delete static_cast<FrameData *>(const_cast<void*>(userdata));
+  delete[] static_cast<char *>(const_cast<void *>(memory));
+  delete static_cast<FrameData *>(const_cast<void *>(userdata));
 }
 
 void SinkDevice::setParameter(
@@ -204,19 +200,20 @@ void SinkDevice::setParameter(
 {
   if (auto obj = getObject(object)) {
     if (obj->type == ANARI_FRAME) {
-      FrameData *data = static_cast<FrameData *>(const_cast<void*>(obj->userdata));
+      FrameData *data =
+          static_cast<FrameData *>(const_cast<void *>(obj->userdata));
       if (type == ANARI_UINT32_VEC2 && std::strncmp("size", name, 4) == 0) {
         const uint32_t *size = static_cast<const uint32_t *>(mem);
         data->width = size[0];
         data->height = size[1];
-        delete[] static_cast<char *>(const_cast<void*>(obj->memory));
+        delete[] static_cast<char *>(const_cast<void *>(obj->memory));
         obj->memory = nullptr;
       }
     }
   }
 }
 
-void SinkDevice::unsetParameter(ANARIObject, const char*) {}
+void SinkDevice::unsetParameter(ANARIObject, const char *) {}
 
 void SinkDevice::commit(ANARIObject) {}
 
@@ -246,7 +243,11 @@ ANARIFrame SinkDevice::newFrame()
   return frame;
 }
 
-const void *SinkDevice::frameBufferMap(ANARIFrame fb, const char*)
+const void *SinkDevice::frameBufferMap(ANARIFrame fb,
+    const char *,
+    uint32_t *width,
+    uint32_t *height,
+    ANARIDataType *pixelType)
 {
   if (auto obj = getObject(fb)) {
     if (obj->type == ANARI_FRAME) {
@@ -254,17 +255,20 @@ const void *SinkDevice::frameBufferMap(ANARIFrame fb, const char*)
       if (obj->memory == nullptr) {
         obj->memory = new char[data->width * data->height * 4 * sizeof(float)];
       }
+      *width = data->width;
+      *height = data->height;
+      *pixelType = ANARI_FLOAT32;
       return obj->memory;
     }
   }
   return nullptr;
 }
 
-void SinkDevice::frameBufferUnmap(ANARIFrame, const char*) {}
+void SinkDevice::frameBufferUnmap(ANARIFrame, const char *) {}
 
 // Frame Rendering ////////////////////////////////////////////////////////////
 
-ANARIRenderer SinkDevice::newRenderer(const char*)
+ANARIRenderer SinkDevice::newRenderer(const char *)
 {
   return nextHandle<ANARIRenderer>();
 }
@@ -286,27 +290,31 @@ SinkDevice::SinkDevice(ANARILibrary library) : DeviceImpl(library)
 }
 
 const char **query_object_types(ANARIDataType type);
-const void * query_object_info(ANARIDataType type, const char *subtype,
-  const char *infoName, ANARIDataType infoType);
-const void * query_param_info(ANARIDataType type, const char *subtype,
-  const char *paramName, ANARIDataType paramType,
-  const char *infoName, ANARIDataType infoType);
+const void *query_object_info(ANARIDataType type,
+    const char *subtype,
+    const char *infoName,
+    ANARIDataType infoType);
+const void *query_param_info(ANARIDataType type,
+    const char *subtype,
+    const char *paramName,
+    ANARIDataType paramType,
+    const char *infoName,
+    ANARIDataType infoType);
 
 } // namespace sink_device
 } // namespace anari
 
 static char deviceName[] = "sink";
 
-extern "C" SINK_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_NEW_DEVICE(sink, library, subtype)
+extern "C" SINK_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_NEW_DEVICE(
+    sink, library, subtype)
 {
   if (subtype == std::string("default") || subtype == std::string("sink"))
     return (ANARIDevice) new anari::sink_device::SinkDevice(library);
   return nullptr;
 }
 
-extern "C" SINK_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_INIT(sink)
-{
-}
+extern "C" SINK_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_INIT(sink) {}
 
 extern "C" SINK_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_DEVICE_SUBTYPES(
     sink, library)
@@ -324,8 +332,7 @@ extern "C" SINK_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_SUBTYPES(
   return anari::sink_device::query_object_types(objectType);
 }
 
-extern "C" SINK_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_PROPERTY(
-    sink,
+extern "C" SINK_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_PROPERTY(sink,
     library,
     deviceSubtype,
     objectSubtype,
@@ -336,10 +343,7 @@ extern "C" SINK_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_PROPERTY(
   (void)library;
   (void)deviceSubtype;
   return anari::sink_device::query_object_info(
-    objectType,
-    objectSubtype,
-    propertyName,
-    propertyType);
+      objectType, objectSubtype, propertyName, propertyType);
 }
 
 extern "C" SINK_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_PARAMETER_PROPERTY(
@@ -355,11 +359,10 @@ extern "C" SINK_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_PARAMETER_PROPERTY(
 {
   (void)library;
   (void)deviceSubtype;
-  return anari::sink_device::query_param_info(
-    objectType,
-    objectSubtype,
-    parameterName,
-    parameterType,
-    propertyName,
-    propertyType);
+  return anari::sink_device::query_param_info(objectType,
+      objectSubtype,
+      parameterName,
+      parameterType,
+      propertyName,
+      propertyType);
 }

@@ -318,7 +318,7 @@ ANARIWorld ExampleDevice::newWorld()
 }
 
 anari::debug_device::ObjectFactory *getDebugFactory();
-const char ** query_extensions();
+const char **query_extensions();
 
 int ExampleDevice::getProperty(ANARIObject object,
     const char *name,
@@ -430,16 +430,13 @@ ANARIFrame ExampleDevice::newFrame()
   return createObjectForAPI<Frame, ANARIFrame>();
 }
 
-const void *ExampleDevice::frameBufferMap(ANARIFrame _fb, const char *channel)
+const void *ExampleDevice::frameBufferMap(ANARIFrame fb,
+    const char *channel,
+    uint32_t *width,
+    uint32_t *height,
+    ANARIDataType *pixelType)
 {
-  auto &fb = referenceFromHandle<Frame>(_fb);
-
-  if (channel == std::string("color"))
-    return fb.mapColorBuffer();
-  else if (channel == std::string("depth"))
-    return fb.mapDepthBuffer();
-  else
-    return nullptr;
+  return referenceFromHandle<Frame>(fb).map(channel, width, height, pixelType);
 }
 
 void ExampleDevice::frameBufferUnmap(ANARIFrame, const char *)
@@ -549,11 +546,16 @@ void ExampleDevice::deviceCommit()
 }
 
 const char **query_object_types(ANARIDataType type);
-const void * query_object_info(ANARIDataType type, const char *subtype,
-  const char *infoName, ANARIDataType infoType);
-const void * query_param_info(ANARIDataType type, const char *subtype,
-  const char *paramName, ANARIDataType paramType,
-  const char *infoName, ANARIDataType infoType);
+const void *query_object_info(ANARIDataType type,
+    const char *subtype,
+    const char *infoName,
+    ANARIDataType infoType);
+const void *query_param_info(ANARIDataType type,
+    const char *subtype,
+    const char *paramName,
+    ANARIDataType paramType,
+    const char *infoName,
+    ANARIDataType infoType);
 } // namespace example_device
 } // namespace anari
 
@@ -595,10 +597,7 @@ extern "C" EXAMPLE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_PROPERTY(
     propertyType)
 {
   return anari::example_device::query_object_info(
-    objectType,
-    objectSubtype,
-    propertyName,
-    propertyType);
+      objectType, objectSubtype, propertyName, propertyType);
 }
 
 extern "C" EXAMPLE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_PARAMETER_PROPERTY(
@@ -612,14 +611,12 @@ extern "C" EXAMPLE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_PARAMETER_PROPERTY(
     propertyName,
     propertyType)
 {
-
-  return anari::example_device::query_param_info(
-    objectType,
-    objectSubtype,
-    parameterName,
-    parameterType,
-    propertyName,
-    propertyType);
+  return anari::example_device::query_param_info(objectType,
+      objectSubtype,
+      parameterName,
+      parameterType,
+      propertyName,
+      propertyType);
 }
 
 extern "C" EXAMPLE_DEVICE_INTERFACE ANARIDevice anariNewExampleDevice()

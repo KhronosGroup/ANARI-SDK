@@ -9,20 +9,26 @@
 
 $begin_namespaces
 
-template<>
-class Object<Frame> : public DefaultObject<Frame, FrameObjectBase> {
-   std::vector<char> color;
-   std::vector<float> depth;
-public:
-   Object(ANARIDevice d, ANARIObject handle);
+template <>
+class Object<Frame> : public DefaultObject<Frame, FrameObjectBase>
+{
+  std::vector<char> color;
+  std::vector<float> depth;
+  uint32_t size[2];
+  ANARIDataType colorType;
+  ANARIDataType depthType;
 
-   void commit() override;
+ public:
+  Object(ANARIDevice d, ANARIObject handle);
 
-   void* mapFrame(const char*) override;
-   void unmapFrame(const char*) override;
-   void renderFrame() override;
-   void discardFrame() override;
-   int frameReady(ANARIWaitMask mask) override;
+  void commit() override;
+
+  void *mapFrame(
+      const char *, uint32_t *, uint32_t *, ANARIDataType *) override;
+  void unmapFrame(const char *) override;
+  void renderFrame() override;
+  void discardFrame() override;
+  int frameReady(ANARIWaitMask mask) override;
 };
 
 $end_namespaces

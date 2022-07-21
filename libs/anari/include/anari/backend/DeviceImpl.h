@@ -125,7 +125,11 @@ struct ANARI_INTERFACE DeviceImpl
 
   virtual ANARIFrame newFrame() = 0;
 
-  virtual const void *frameBufferMap(ANARIFrame fb, const char *channel) = 0;
+  virtual const void *frameBufferMap(ANARIFrame fb,
+      const char *channel,
+      uint32_t *width,
+      uint32_t *height,
+      ANARIDataType *pixelType) = 0;
 
   virtual void frameBufferUnmap(ANARIFrame fb, const char *channel) = 0;
 

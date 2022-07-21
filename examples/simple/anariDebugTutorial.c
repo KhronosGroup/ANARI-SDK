@@ -25,29 +25,40 @@
 
 /******************************************************************/
 /* helper function to write out pixel values to a .ppm file */
-void writePPM(
-    const char *fileName, int size_x, int size_y, const uint32_t *pixel)
+void writePPM(const char *fileName, ANARIDevice d, ANARIFrame frame)
 {
+  uint32_t size[2] = {0, 0};
+  ANARIDataType type = ANARI_UNKNOWN;
+  uint32_t *pixel =
+      (uint32_t *)anariMapFrame(d, frame, "color", &size[0], &size[1], &type);
+
+  if (type != ANARI_UFIXED8_RGBA_SRGB) {
+    printf("Incorrectly returned color buffer pixel type, image not saved.\n");
+    return;
+  }
+
   FILE *file = fopen(fileName, "wb");
   if (!file) {
     fprintf(stderr, "fopen('%s', 'wb') failed: %d", fileName, errno);
     return;
   }
-  fprintf(file, "P6\n%i %i\n255\n", size_x, size_y);
-  unsigned char *out = (unsigned char *)malloc((size_t)(3 * size_x));
-  for (int y = 0; y < size_y; y++) {
+  fprintf(file, "P6\n%i %i\n255\n", size[0], size[1]);
+  unsigned char *out = (unsigned char *)malloc((size_t)(3 * size[0]));
+  for (int y = 0; y < size[1]; y++) {
     const unsigned char *in =
-        (const unsigned char *)&pixel[(size_y - 1 - y) * size_x];
-    for (int x = 0; x < size_x; x++) {
+        (const unsigned char *)&pixel[(size[1] - 1 - y) * size[0]];
+    for (int x = 0; x < size[0]; x++) {
       out[3 * x + 0] = in[4 * x + 0];
       out[3 * x + 1] = in[4 * x + 1];
       out[3 * x + 2] = in[4 * x + 2];
     }
-    fwrite(out, (size_t)(3 * size_x), sizeof(char), file);
+    fwrite(out, (size_t)(3 * size[0]), sizeof(char), file);
   }
   fprintf(file, "\n");
   fclose(file);
   free(out);
+
+  anariUnmapFrame(d, frame, "color");
 }
 
 /******************************************************************/
@@ -255,7 +266,8 @@ int main(int argc, const char **argv)
   anariFrameReady(dev, frame, ANARI_WAIT);
 
   // access frame
-  const uint32_t *fb = (uint32_t *)anariMapFrame(dev, frame, "color");
+  const uint32_t *fb = (uint32_t *)anariMapFrame(
+      dev, frame, "color", &imgSize[0], &imgSize[1], &fbFormat);
   (void)fb; // ignore it because we expect the code to fail anyway
   anariUnmapFrame(dev, frame, "color");
 
