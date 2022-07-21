@@ -96,6 +96,29 @@ bool Frame::getProperty(
   return Object::getProperty(name, type, ptr, mask);
 }
 
+void *Frame::map(const char *_channel,
+    uint32_t *width,
+    uint32_t *height,
+    ANARIDataType *pixelType)
+{
+  std::string_view channel = _channel;
+
+  *width = m_size.x;
+  *height = m_size.y;
+
+  if (channel == "color") {
+    *pixelType = format();
+    return mapColorBuffer();
+  } else if (channel == "depth") {
+    *pixelType = ANARI_FLOAT32;
+    return mapDepthBuffer();
+  } else {
+    *width = 0;
+    *height = 0;
+    return nullptr;
+  }
+}
+
 void *Frame::mapColorBuffer()
 {
   switch (format()) {

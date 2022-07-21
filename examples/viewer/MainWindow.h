@@ -80,9 +80,7 @@ class MainWindow
   bool resetCameraPosition{true};
 
   std::vector<unsigned char> pixelBuffer;
-  glm::ivec2 prevFrameSize{0};
   glm::ivec2 currentFrameSize{0};
-  glm::ivec2 nextFrameSize{0};
 
   // OpenGL framebuffer texture
   GLuint framebufferTexture = 0;

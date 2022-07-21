@@ -188,7 +188,16 @@ bool getProperty(
 // Frame Operations //
 
 template <typename T>
-const T *map(Device, Frame, const char *channel);
+struct MappedFrameData
+{
+  uint32_t width{0};
+  uint32_t height{0};
+  DataType pixelType{ANARI_UNKNOWN};
+  const T *data{nullptr};
+};
+
+template <typename T>
+MappedFrameData<T> map(Device, Frame, const char *channel);
 void unmap(Device, Frame, const char *channel);
 
 void render(Device, Frame);

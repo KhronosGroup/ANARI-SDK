@@ -412,9 +412,12 @@ inline bool getProperty(
 ///////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-inline const T *map(Device d, Frame f, const char *channel)
+inline MappedFrameData<T> map(Device d, Frame f, const char *channel)
 {
-  return static_cast<const T *>(anariMapFrame(d, f, channel));
+  MappedFrameData<T> retval;
+  retval.data = static_cast<const T *>(anariMapFrame(
+      d, f, channel, &retval.width, &retval.height, &retval.pixelType));
+  return retval;
 }
 
 inline void unmap(Device d, Frame f, const char *channel)

@@ -133,7 +133,11 @@ struct DEBUG_DEVICE_INTERFACE DebugDevice : public DeviceImpl, public RefCounted
 
   ANARIFrame newFrame() override;
 
-  const void *frameBufferMap(ANARIFrame fb, const char *channel) override;
+  const void *frameBufferMap(ANARIFrame fb,
+      const char *channel,
+      uint32_t *width,
+      uint32_t *height,
+      ANARIDataType *pixelType) override;
 
   void frameBufferUnmap(ANARIFrame fb, const char *channel) override;
 
@@ -191,7 +195,10 @@ struct DEBUG_DEVICE_INTERFACE DebugDevice : public DeviceImpl, public RefCounted
 
   int used_features[anari::debug_queries::extension_count] = {};
   int unknown_feature_uses = 0;
-  void reportParameterUse(ANARIDataType objtype, const char *objSubtype, const char *paramname, ANARIDataType paramtype);
+  void reportParameterUse(ANARIDataType objtype,
+      const char *objSubtype,
+      const char *paramname,
+      ANARIDataType paramtype);
   void reportObjectUse(ANARIDataType objtype, const char *objSubtype);
 
   std::vector<std::unique_ptr<DebugObjectBase>> objects;
@@ -209,8 +216,9 @@ struct DEBUG_DEVICE_INTERFACE DebugDevice : public DeviceImpl, public RefCounted
   ObjectFactory *debugObjectFactory;
 
   std::unique_ptr<SerializerInterface> serializer;
-  SerializerInterface* (*createSerializer)(DebugDevice*) = nullptr;
-public:
+  SerializerInterface *(*createSerializer)(DebugDevice *) = nullptr;
+
+ public:
   std::string traceDir;
 };
 

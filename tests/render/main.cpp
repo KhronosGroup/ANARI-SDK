@@ -129,14 +129,14 @@ static void renderScene(ANARIDevice d, const std::string &scene)
 
     printf("done!\n");
 
-    auto *pixels = anari::map<uint32_t>(d, frame, "color");
+    auto fb = anari::map<uint32_t>(d, frame, "color");
 
     stbi_write_png(fileName.c_str(),
-        (int)g_frameSize.x,
-        (int)g_frameSize.y,
+        int(fb.width),
+        int(fb.height),
         4,
-        pixels,
-        4 * (int)g_frameSize.x);
+        fb.data,
+        4 * int(fb.width));
 
     anari::unmap(d, frame, "color");
   }

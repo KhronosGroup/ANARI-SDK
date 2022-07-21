@@ -524,7 +524,10 @@
             "arguments" : [
                 {"name" : "device", "type" : "ANARIDevice"},
                 {"name" : "frame", "type" : "ANARIFrame"},
-                {"name" : "channel", "type" : "const char*"}
+                {"name" : "channel", "type" : "const char*"},
+                {"name" : "width", "type" : "uint32_t*"},
+                {"name" : "height", "type" : "uint32_t*"},
+                {"name" : "pixelType", "type" : "ANARIDataType*"}
             ]
         }, {
             "name" : "anariUnmapFrame",

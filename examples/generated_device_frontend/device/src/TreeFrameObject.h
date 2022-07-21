@@ -10,26 +10,30 @@
 
 #include <vector>
 
-namespace anari_sdk{
-namespace tree{
+namespace anari_sdk {
+namespace tree {
 
+template <>
+class Object<Frame> : public DefaultObject<Frame, FrameObjectBase>
+{
+  std::vector<char> color;
+  std::vector<float> depth;
+  uint32_t size[2];
+  ANARIDataType colorType;
+  ANARIDataType depthType;
 
-template<>
-class Object<Frame> : public DefaultObject<Frame, FrameObjectBase> {
-   std::vector<char> color;
-   std::vector<float> depth;
-public:
-   Object(ANARIDevice d, ANARIObject handle);
+ public:
+  Object(ANARIDevice d, ANARIObject handle);
 
-   void commit() override;
+  void commit() override;
 
-   void* mapFrame(const char*) override;
-   void unmapFrame(const char*) override;
-   void renderFrame() override;
-   void discardFrame() override;
-   int frameReady(ANARIWaitMask mask) override;
+  void *mapFrame(
+      const char *, uint32_t *, uint32_t *, ANARIDataType *) override;
+  void unmapFrame(const char *) override;
+  void renderFrame() override;
+  void discardFrame() override;
+  int frameReady(ANARIWaitMask mask) override;
 };
 
-} //namespace anari_sdk
-} //namespace tree
-
+} // namespace tree
+} // namespace anari_sdk

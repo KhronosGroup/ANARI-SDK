@@ -162,11 +162,8 @@ extern "C" const void *anariGetObjectInfo(ANARILibrary l,
   if (std::string(deviceSubtype) == "default")
     deviceSubtype = libraryRef(l).defaultDeviceName();
 
-  return libraryRef(l).getObjectProperty(deviceSubtype,
-      objectSubtype,
-      objectType,
-      infoName,
-      infoType);
+  return libraryRef(l).getObjectProperty(
+      deviceSubtype, objectSubtype, objectType, infoName, infoType);
 }
 ANARI_CATCH_END(nullptr)
 
@@ -422,10 +419,14 @@ extern "C" ANARIFrame anariNewFrame(ANARIDevice d) ANARI_CATCH_BEGIN
 }
 ANARI_CATCH_END(nullptr)
 
-extern "C" const void *anariMapFrame(
-    ANARIDevice d, ANARIFrame fb, const char *channel) ANARI_CATCH_BEGIN
+extern "C" const void *anariMapFrame(ANARIDevice d,
+    ANARIFrame fb,
+    const char *channel,
+    uint32_t *width,
+    uint32_t *height,
+    ANARIDataType *pixelType) ANARI_CATCH_BEGIN
 {
-  return deviceRef(d).frameBufferMap(fb, channel);
+  return deviceRef(d).frameBufferMap(fb, channel, width, height, pixelType);
 }
 ANARI_CATCH_END(nullptr)
 

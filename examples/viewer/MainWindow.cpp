@@ -94,23 +94,23 @@ void frame_show(anari::Device dev, anari::Frame frame, MainWindow *window)
     // Assume frames-per-second is reciprical of frame render duration
     window->latestFPS = 1.f / duration;
 
-    auto *fb = anari::map<void>(dev, frame, "color");
+    auto fb = anari::map<void>(dev, frame, "color");
 
-    size_t numBytes =
-        fbBytes(window->currentFrameSize.x, window->currentFrameSize.y);
+    size_t numBytes = fbBytes(fb.width, fb.height);
     window->pixelBuffer.resize(numBytes);
-    std::memcpy(window->pixelBuffer.data(), fb, numBytes);
+    std::memcpy(window->pixelBuffer.data(), fb.data, numBytes);
 
-    window->prevFrameSize = window->currentFrameSize;
+    window->currentFrameSize.x = fb.width;
+    window->currentFrameSize.y = fb.height;
 
     // When flagged: save the current frame to a file
     if (g_saveNextFrame) {
       stbi_write_png("viewer_screenshot.png",
-          window->currentFrameSize.x,
-          window->currentFrameSize.y,
+          fb.width,
+          fb.height,
           4,
-          fb,
-          4 * window->currentFrameSize.x);
+          fb.data,
+          4 * fb.width);
       std::cout << "finished writing 'viewer_screenshot.png'" << std::endl;
       g_saveNextFrame = false;
     }
@@ -334,7 +334,6 @@ void MainWindow::mainLoop()
     if (anari::isReady(device, frame)) {
       // update frame if a new one is available
       frame_show(device, frame, this);
-      currentFrameSize = nextFrameSize;
       display();
       anari::render(device, frame);
     } else {
@@ -356,8 +355,6 @@ void MainWindow::reshape(const glm::uvec2 &windowSize)
   anari::setParameter(device, frame, "camera", camera);
 
   addObjectToCommit(frame);
-
-  nextFrameSize = windowSize;
 
   // reset OpenGL viewport and orthographic projection
   glViewport(0, 0, windowSize.x, windowSize.y);
@@ -438,8 +435,8 @@ void MainWindow::display()
         0,
         0,
         0,
-        prevFrameSize.x,
-        prevFrameSize.y,
+        currentFrameSize.x,
+        currentFrameSize.y,
         GL_RGBA,
         GL_UNSIGNED_BYTE,
         pixelBuffer.data());
