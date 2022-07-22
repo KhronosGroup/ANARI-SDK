@@ -4,7 +4,7 @@
 #include "SinkDevice.h"
 
 #include "anari/anari.h"
-#include "anari/backend/Library.h"
+#include "anari/backend/LibraryImpl.h"
 #include "anari/type_utility.h"
 
 #include <cstring>

@@ -25,13 +25,11 @@ void (*DeviceImpl::getProcAddress(const char *name))(void)
 
 // Device definitions /////////////////////////////////////////////////////////
 
-DeviceImpl::DeviceImpl(ANARILibrary library) :
-  m_defaultStatusCB(((Library *)library)->defaultStatusCB()),
-  m_defaultStatusCBUserPtr(((Library *)library)->defaultStatusCBUserPtr())
-{
-
-}
-
+DeviceImpl::DeviceImpl(ANARILibrary library)
+    : m_defaultStatusCB(((LibraryImpl *)library)->defaultStatusCB()),
+      m_defaultStatusCBUserPtr(
+          ((LibraryImpl *)library)->defaultStatusCBUserPtr())
+{}
 
 ANARIDevice DeviceImpl::this_device() const
 {

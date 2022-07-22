@@ -5,7 +5,7 @@
 #include "anari/anari.h"
 #include "anari/anari_cpp/Traits.h"
 #include "anari/backend/DeviceImpl.h"
-#include "anari/backend/Library.h"
+#include "anari/backend/LibraryImpl.h"
 #include "anari/ext/anari_ext_interface.h"
 // std
 #include <cstdlib>
@@ -36,18 +36,18 @@ static std::unique_ptr<T> make_unique(Args &&...args)
 } // namespace
 
 using anari::DeviceImpl;
-using anari::Library;
+using anari::LibraryImpl;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Helper functions ///////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-static inline Library &libraryRef(ANARILibrary l)
+static inline LibraryImpl &libraryRef(ANARILibrary l)
 {
   if (l == nullptr) {
     throw std::runtime_error("null library provided");
   }
-  return *((Library *)l);
+  return *((LibraryImpl *)l);
 }
 
 static inline DeviceImpl &deviceRef(ANARIDevice d)
@@ -80,7 +80,7 @@ extern "C" ANARILibrary anariLoadLibrary(const char *libraryName,
 
   // Use a unique_ptr to cleanup if the Library constructor throws an exception
   try {
-    auto l = make_unique<Library>(libraryName, statusCB, statusCBUserPtr);
+    auto l = make_unique<LibraryImpl>(libraryName, statusCB, statusCBUserPtr);
     retval = (ANARILibrary)l.get();
     l.release();
   } catch (const std::exception &e) {

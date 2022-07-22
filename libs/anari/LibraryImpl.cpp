@@ -1,7 +1,7 @@
 // Copyright 2021 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-#include "anari/backend/Library.h"
+#include "anari/backend/LibraryImpl.h"
 
 // std
 #ifdef _WIN32
@@ -87,19 +87,20 @@ static void *loadLibrary(
   std::string libLocation = withAnchor ? library_location() : std::string();
   void *lib = nullptr;
 #ifdef _WIN32
-  // Set cwd to library location, to make sure dependent libraries are found as well
+  // Set cwd to library location, to make sure dependent libraries are found as
+  // well
   constexpr int MAX_DIRSIZE = 4096;
   TCHAR currentWd[MAX_DIRSIZE];
   DWORD dwRet = 0;
-  if(withAnchor)
+  if (withAnchor)
     dwRet = GetCurrentDirectory(MAX_DIRSIZE, currentWd);
 
-  if(dwRet > MAX_DIRSIZE)
-    errorMsg = "library path larger than " + std::to_string(MAX_DIRSIZE) + " characters";
-  else if(withAnchor && dwRet == 0)
+  if (dwRet > MAX_DIRSIZE)
+    errorMsg = "library path larger than " + std::to_string(MAX_DIRSIZE)
+        + " characters";
+  else if (withAnchor && dwRet == 0)
     errorMsg = "GetCurrentDirectory() failed for unknown reason";
-  else
-  {
+  else {
     SetCurrentDirectory(libLocation.c_str());
 
     // Load the library
@@ -122,7 +123,7 @@ static void *loadLibrary(
       LocalFree(lpMsgBuf);
     }
 
-    //Change cwd back to its original value
+    // Change cwd back to its original value
     SetCurrentDirectory(currentWd);
   }
 
@@ -168,8 +169,13 @@ void freeLibrary(void *lib)
     FREE_LIB(lib);
 }
 
-Library::Library(
-    const char *name, ANARIStatusCallback defaultStatusCB, const void *statusCBPtr)
+///////////////////////////////////////////////////////////////////////////////
+// LibraryImpl definitions ////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+LibraryImpl::LibraryImpl(const char *name,
+    ANARIStatusCallback defaultStatusCB,
+    const void *statusCBPtr)
     : m_defaultDeviceName(name),
       m_defaultStatusCB(defaultStatusCB),
       m_defaultStatusCBUserPtr(statusCBPtr)
@@ -236,11 +242,9 @@ Library::Library(
   if (getObjectSubtypesFcn)
     m_getObjectSubtypesFcn = getObjectSubtypesFcn;
 
-  std::string getObjectPropertyFcnName =
-      prefix + "_get_object_property";
+  std::string getObjectPropertyFcnName = prefix + "_get_object_property";
   auto getObjectPropertyFcn =
-      (GetObjectPropertyFcn)getSymbolAddress(
-          m_lib, getObjectPropertyFcnName);
+      (GetObjectPropertyFcn)getSymbolAddress(m_lib, getObjectPropertyFcnName);
 
   if (getObjectPropertyFcn)
     m_getObjectPropertyFcn = getObjectPropertyFcn;
@@ -259,7 +263,7 @@ Library::Library(
     m_defaultDeviceName = devices[0];
 }
 
-Library::~Library()
+LibraryImpl::~LibraryImpl()
 {
   if (m_freeFcn)
     m_freeFcn(m_libraryData);
@@ -267,59 +271,60 @@ Library::~Library()
   freeLibrary(m_lib);
 }
 
-void *Library::libraryData() const
+void *LibraryImpl::libraryData() const
 {
   return m_libraryData;
 }
 
-ANARIDevice Library::newDevice(const char *subtype) const
+ANARIDevice LibraryImpl::newDevice(const char *subtype) const
 {
   return m_newDeviceFcn ? m_newDeviceFcn((ANARILibrary)this, subtype) : nullptr;
 }
 
-const char *Library::defaultDeviceName() const
+const char *LibraryImpl::defaultDeviceName() const
 {
   return m_defaultDeviceName.c_str();
 }
 
-ANARIStatusCallback Library::defaultStatusCB() const
+ANARIStatusCallback LibraryImpl::defaultStatusCB() const
 {
   return m_defaultStatusCB;
 }
 
-const void *Library::defaultStatusCBUserPtr() const
+const void *LibraryImpl::defaultStatusCBUserPtr() const
 {
   return m_defaultStatusCBUserPtr;
 }
 
-void Library::loadModule(const char *name) const
+void LibraryImpl::loadModule(const char *name) const
 {
   if (m_loadModuleFcn)
     m_loadModuleFcn((ANARILibrary)this, name);
 }
 
-void Library::unloadModule(const char *name) const
+void LibraryImpl::unloadModule(const char *name) const
 {
   if (m_unloadModuleFcn)
     m_unloadModuleFcn((ANARILibrary)this, name);
 }
 
-const char **Library::getDeviceSubtypes()
+const char **LibraryImpl::getDeviceSubtypes()
 {
   if (m_getDeviceSubtypesFcn)
     return m_getDeviceSubtypesFcn((ANARILibrary)this);
   return nullptr;
 }
 
-const char **Library::getObjectSubtypes(
+const char **LibraryImpl::getObjectSubtypes(
     const char *deviceSubtype, ANARIDataType objectType)
 {
   if (m_getObjectSubtypesFcn)
-    return m_getObjectSubtypesFcn((ANARILibrary)this, deviceSubtype, objectType);
+    return m_getObjectSubtypesFcn(
+        (ANARILibrary)this, deviceSubtype, objectType);
   return nullptr;
 }
 
-const void *Library::getObjectProperty(const char *deviceSubtype,
+const void *LibraryImpl::getObjectProperty(const char *deviceSubtype,
     const char *objectSubtype,
     ANARIDataType objectType,
     const char *propertyName,
@@ -335,7 +340,7 @@ const void *Library::getObjectProperty(const char *deviceSubtype,
   return nullptr;
 }
 
-const void *Library::getParameterProperty(const char *deviceSubtype,
+const void *LibraryImpl::getParameterProperty(const char *deviceSubtype,
     const char *objectSubtype,
     ANARIDataType objectType,
     const char *parameterName,
@@ -354,5 +359,7 @@ const void *Library::getParameterProperty(const char *deviceSubtype,
         propertyType);
   return nullptr;
 }
+
+ANARI_TYPEFOR_DEFINITION(LibraryImpl *);
 
 } // namespace anari

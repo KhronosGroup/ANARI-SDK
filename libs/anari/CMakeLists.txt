@@ -9,7 +9,7 @@ add_library(${PROJECT_NAME}
   anari_cpp_std_defs.cpp
   API.cpp
   DeviceImpl.cpp
-  Library.cpp
+  LibraryImpl.cpp
   anari_cpp_glm_defs.cpp
 )
 
