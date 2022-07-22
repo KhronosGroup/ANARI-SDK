@@ -20,6 +20,7 @@
 
 #define ANARI_INVALID_HANDLE NULL
 
+#include "anari_version.h"
 #include "anari_enums.h"
 
 #ifdef _WIN32

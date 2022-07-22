@@ -263,6 +263,12 @@ int main(int argc, const char **argv)
     return 0;
   }
 
+  printf("SDK version: %i.%i.%i\n",
+    ANARI_SDK_VERSION_MAJOR,
+    ANARI_SDK_VERSION_MINOR,
+    ANARI_SDK_VERSION_PATCH
+  );
+
   ANARILibrary lib = anariLoadLibrary(libraryName, statusFunc, NULL);
 
   const char **devices = anariGetDeviceSubtypes(lib);

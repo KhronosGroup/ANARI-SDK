@@ -1,0 +1,6 @@
+// Copyright 2022 The Khronos Group
+// SPDX-License-Identifier: Apache-2.0
+
+#define ANARI_SDK_VERSION_MAJOR @anari_VERSION_MAJOR@
+#define ANARI_SDK_VERSION_MINOR @anari_VERSION_MINOR@
+#define ANARI_SDK_VERSION_PATCH @anari_VERSION_PATCH@
