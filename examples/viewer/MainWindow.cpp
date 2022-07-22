@@ -240,11 +240,11 @@ void MainWindow::setDevice(anari::Device dev, const std::string &rendererType)
   device = dev;
 
   camera = anari::newObject<anari::Camera>(dev, "perspective");
-  anari::commit(dev, camera);
+  anari::commitParameters(dev, camera);
 
   renderer = anari::newObject<anari::Renderer>(dev, rendererType.c_str());
   anari::setParameter(dev, renderer, "backgroundColor", bgColor);
-  anari::commit(dev, renderer);
+  anari::commitParameters(dev, renderer);
 
   frame = anari::newObject<anari::Frame>(device);
 
@@ -532,7 +532,7 @@ void MainWindow::buildUI()
 
 void MainWindow::addObjectToCommit(anari::Object obj)
 {
-  anari::commit(device, obj);
+  anari::commitParameters(device, obj);
 }
 
 void MainWindow::updateScene()

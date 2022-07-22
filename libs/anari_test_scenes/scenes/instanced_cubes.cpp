@@ -90,21 +90,21 @@ void InstancedCubes::commit()
       geom,
       "primitive.index",
       anari::newArray1D(d, indices.data(), indices.size()));
-  anari::commit(d, geom);
+  anari::commitParameters(d, geom);
 
   auto surface = anari::newObject<anari::Surface>(d);
   anari::setAndReleaseParameter(d, surface, "geometry", geom);
 
   auto mat = anari::newObject<anari::Material>(d, "matte");
   anari::setParameter(d, mat, "color", "color");
-  anari::commit(d, mat);
+  anari::commitParameters(d, mat);
   anari::setAndReleaseParameter(d, surface, "material", mat);
-  anari::commit(d, surface);
+  anari::commitParameters(d, surface);
 
   auto group = anari::newObject<anari::Group>(d);
   anari::setAndReleaseParameter(
       d, group, "surface", anari::newArray1D(d, &surface));
-  anari::commit(d, group);
+  anari::commitParameters(d, group);
 
   anari::release(d, surface);
 
@@ -127,7 +127,7 @@ void InstancedCubes::commit()
         }
 
         anari::setParameter(d, inst, "group", group);
-        anari::commit(d, inst);
+        anari::commitParameters(d, inst);
         instances.push_back(inst);
       }
     }
@@ -145,7 +145,7 @@ void InstancedCubes::commit()
 
   setDefaultLight(m_world);
 
-  anari::commit(d, m_world);
+  anari::commitParameters(d, m_world);
 }
 
 TestScene *sceneInstancedCubes(anari::Device d)

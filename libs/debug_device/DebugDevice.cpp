@@ -629,20 +629,20 @@ void DebugDevice::unsetParameter(ANARIObject object, const char *name)
   }
 }
 
-void DebugDevice::commit(ANARIObject object)
+void DebugDevice::commitParameters(ANARIObject object)
 {
   if (handleIsDevice(object))
     deviceCommit();
   else {
-    debug->anariCommit(this_device(), object);
-    anariCommit(wrapped, unwrapHandle(object));
+    debug->anariCommitParameters(this_device(), object);
+    anariCommitParameters(wrapped, unwrapHandle(object));
 
     if (auto info = getObjectInfo(object))
       info->commit();
   }
 
   if (serializer) {
-    serializer->anariCommit(this_device(), object);
+    serializer->anariCommitParameters(this_device(), object);
   }
 }
 
@@ -824,7 +824,7 @@ void DebugDevice::deviceCommit()
     debugObjectFactory = getDebugFactory();
     if (wrapped) {
       anariRetain(wrapped, wrapped);
-      anariCommit(wrapped, wrapped);
+      anariCommitParameters(wrapped, wrapped);
       ObjectFactory *(*factory_fun)();
       if (anariGetProperty(wrapped,
               wrapped,

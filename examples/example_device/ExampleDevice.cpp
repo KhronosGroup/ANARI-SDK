@@ -380,7 +380,7 @@ void ExampleDevice::unsetParameter(ANARIObject o, const char *name)
     referenceFromHandle(o).removeParam(name);
 }
 
-void ExampleDevice::commit(ANARIObject h)
+void ExampleDevice::commitParameters(ANARIObject h)
 {
   if (handleIsDevice(h)) {
     deviceCommit();

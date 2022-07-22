@@ -77,7 +77,7 @@ static void initializeANARI()
   if (!d)
     std::exit(1);
 
-  anari::commit(d, d);
+  anari::commitParameters(d, d);
 
   int version = -1;
 
@@ -101,7 +101,7 @@ static void renderScene(ANARIDevice d, const std::string &scene)
   anari::setParameter(d, renderer, "pixelSamples", g_numPixelSamples);
   anari::setParameter(
       d, renderer, "backgroundColor", glm::vec4(glm::vec3(0.1f), 1));
-  anari::commit(d, renderer);
+  anari::commitParameters(d, renderer);
 
   auto frame = anari::newObject<anari::Frame>(d);
   anari::setParameter(d, frame, "size", g_frameSize);
@@ -111,7 +111,7 @@ static void renderScene(ANARIDevice d, const std::string &scene)
   anari::setParameter(d, frame, "camera", camera);
   anari::setParameter(d, frame, "world", anari::scenes::getWorld(s));
 
-  anari::commit(d, frame);
+  anari::commitParameters(d, frame);
 
   int imgNum = 0;
   auto cameras = anari::scenes::getCameras(s);
@@ -119,7 +119,7 @@ static void renderScene(ANARIDevice d, const std::string &scene)
     anari::setParameter(d, camera, "position", cam.position);
     anari::setParameter(d, camera, "direction", cam.direction);
     anari::setParameter(d, camera, "up", cam.up);
-    anari::commit(d, camera);
+    anari::commitParameters(d, camera);
 
     std::string fileName = scene + '_' + std::to_string(imgNum++) + ".png";
     printf("rendering '%s'...", fileName.c_str());

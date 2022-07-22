@@ -37,7 +37,7 @@ public:
    void anariNewObject(ANARIDevice device, const char* objectType, const char* type, ANARIObject result) override;
    void anariSetParameter(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType dataType, const void *mem) override;
    void anariUnsetParameter(ANARIDevice device, ANARIObject object, const char* name) override;
-   void anariCommit(ANARIDevice device, ANARIObject object) override;
+   void anariCommitParameters(ANARIDevice device, ANARIObject object) override;
    void anariRelease(ANARIDevice device, ANARIObject object) override;
    void anariRetain(ANARIDevice device, ANARIObject object) override;
    void anariGetProperty(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType type, void* mem, uint64_t size, ANARIWaitMask mask, int result) override;

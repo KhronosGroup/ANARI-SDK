@@ -79,7 +79,7 @@ void $prefixDevice::unsetParameter(ANARIObject handle, const char *name)
   }
 }
 
-void $prefixDevice::commit(ANARIObject handle)
+void $prefixDevice::commitParameters(ANARIObject handle)
 {
   if (auto obj = handle_cast<ObjectBase *>(handle)) {
     obj->commit();

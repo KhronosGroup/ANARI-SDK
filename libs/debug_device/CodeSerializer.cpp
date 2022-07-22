@@ -410,8 +410,8 @@ void CodeSerializer::anariUnsetParameter(ANARIDevice device, ANARIObject object,
    out << ", \"" << name << "\");\n";
 }
 
-void CodeSerializer::anariCommit(ANARIDevice device, ANARIObject object) {
-   out << "anariCommit(device, ";
+void CodeSerializer::anariCommitParameters(ANARIDevice device, ANARIObject object) {
+   out << "anariCommitParameters(device, ";
    printObjectName(object);
    out << ");\n";
 }

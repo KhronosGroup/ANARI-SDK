@@ -80,16 +80,16 @@ static void initializeANARI()
   ANARIDevice dev = anariNewDevice(g_library, g_deviceType.c_str());
   if (g_enableDebug) {
     ANARIDevice dbg = anariNewDevice(g_debug, "debug");
-    anariSetParameter(dbg, dbg, "wrappedDevice", ANARI_DEVICE, &dev);
-    anariCommit(dbg, dbg);
-    anariRelease(dev, dev);
+    anari::setParameter(dbg, dbg, "wrappedDevice", ANARI_DEVICE, &dev);
+    anari::commitParameters(dbg, dbg);
+    anari::release(dev, dev);
     dev = dbg;
   }
   if (!dev)
     std::exit(1);
 
   // Affect the callback settings and OGL parameter
-  anariCommit(dev, dev);
+  anari::commitParameters(dev, dev);
 
   // Save in the global variable
   g_device = dev;

@@ -30,7 +30,7 @@ public:
     virtual void anariNewObject(ANARIDevice device, const char* objectType, const char* type, ANARIObject result) = 0;
     virtual void anariSetParameter(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType dataType, const void *mem) = 0;
     virtual void anariUnsetParameter(ANARIDevice device, ANARIObject object, const char* name) = 0;
-    virtual void anariCommit(ANARIDevice device, ANARIObject object) = 0;
+    virtual void anariCommitParameters(ANARIDevice device, ANARIObject object) = 0;
     virtual void anariRelease(ANARIDevice device, ANARIObject object) = 0;
     virtual void anariRetain(ANARIDevice device, ANARIObject object) = 0;
     virtual void anariGetProperty(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType type, void* mem, uint64_t size, ANARIWaitMask mask, int result) = 0;
