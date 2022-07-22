@@ -254,17 +254,17 @@ void CornellBox::commit()
       "primitive.index",
       anari::newArray1D(d, indices.data(), indices.size()));
 
-  anari::commit(d, geom);
+  anari::commitParameters(d, geom);
 
   auto surface = anari::newObject<anari::Surface>(d);
   anari::setAndReleaseParameter(d, surface, "geometry", geom);
 
   auto mat = anari::newObject<anari::Material>(d, "matte");
   anari::setParameter(d, mat, "color", "color");
-  anari::commit(d, mat);
+  anari::commitParameters(d, mat);
   anari::setAndReleaseParameter(d, surface, "material", mat);
 
-  anari::commit(d, surface);
+  anari::commitParameters(d, surface);
 
   anari::setAndReleaseParameter(
       d, m_world, "surface", anari::newArray1D(d, &surface));
@@ -285,14 +285,14 @@ void CornellBox::commit()
     anari::setParameter(d, light, "direction", glm::vec3(0.f, -0.5f, 1.f));
   }
 
-  anari::commit(d, light);
+  anari::commitParameters(d, light);
 
   anari::setAndReleaseParameter(
       d, m_world, "light", anari::newArray1D(d, &light));
 
   anari::release(d, light);
 
-  anari::commit(d, m_world);
+  anari::commitParameters(d, m_world);
 }
 
 TestScene *sceneCornellBox(anari::Device d)

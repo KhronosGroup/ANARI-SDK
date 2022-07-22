@@ -107,7 +107,7 @@ struct ANARI_INTERFACE DeviceImpl
 
   virtual void unsetParameter(ANARIObject object, const char *name) = 0;
 
-  virtual void commit(ANARIObject object) = 0;
+  virtual void commitParameters(ANARIObject object) = 0;
 
   virtual void release(ANARIObject _obj) = 0;
   virtual void retain(ANARIObject _obj) = 0;

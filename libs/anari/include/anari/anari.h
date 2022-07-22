@@ -162,7 +162,7 @@ ANARI_INTERFACE ANARIWorld anariNewWorld(ANARIDevice device);
 ANARI_INTERFACE ANARIObject anariNewObject(ANARIDevice device, const char* objectType, const char* type);
 ANARI_INTERFACE void anariSetParameter(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType dataType, const void* mem);
 ANARI_INTERFACE void anariUnsetParameter(ANARIDevice device, ANARIObject object, const char* name);
-ANARI_INTERFACE void anariCommit(ANARIDevice device, ANARIObject object);
+ANARI_INTERFACE void anariCommitParameters(ANARIDevice device, ANARIObject object);
 ANARI_INTERFACE void anariRelease(ANARIDevice device, ANARIObject object);
 ANARI_INTERFACE void anariRetain(ANARIDevice device, ANARIObject object);
 ANARI_INTERFACE const char ** anariGetDeviceSubtypes(ANARILibrary library);

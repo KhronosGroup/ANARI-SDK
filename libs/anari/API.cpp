@@ -374,9 +374,10 @@ extern "C" void anariUnsetParameter(
 }
 ANARI_CATCH_END_NORETURN()
 
-extern "C" void anariCommit(ANARIDevice d, ANARIObject object) ANARI_CATCH_BEGIN
+extern "C" void anariCommitParameters(
+    ANARIDevice d, ANARIObject object) ANARI_CATCH_BEGIN
 {
-  deviceRef(d).commit(object);
+  deviceRef(d).commitParameters(object);
 }
 ANARI_CATCH_END_NORETURN()
 

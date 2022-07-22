@@ -44,12 +44,12 @@ void RandomSpheres::commit()
   auto geom = anari::newObject<anari::Geometry>(d, "sphere");
   auto mat = anari::newObject<anari::Material>(d, "matte");
   anari::setParameter(d, mat, "color", "color");
-  anari::commit(d, mat);
+  anari::commitParameters(d, mat);
 
   anari::setAndReleaseParameter(
       d, m_world, "surface", anari::newArray1D(d, &surface));
 
-  anari::commit(d, m_world);
+  anari::commitParameters(d, m_world);
 
   anari::setParameter(d, surface, "geometry", geom);
   anari::setParameter(d, surface, "material", mat);
@@ -108,9 +108,9 @@ void RandomSpheres::commit()
         anari::newArray1D(d, sphereRadii.data(), sphereRadii.size()));
   }
 
-  anari::commit(d, geom);
-  anari::commit(d, mat);
-  anari::commit(d, surface);
+  anari::commitParameters(d, geom);
+  anari::commitParameters(d, mat);
+  anari::commitParameters(d, surface);
 
   // cleanup
 

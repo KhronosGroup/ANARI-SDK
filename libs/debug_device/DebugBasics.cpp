@@ -237,8 +237,8 @@ void DebugBasics::anariUnsetParameter(ANARIDevice device, ANARIObject object, co
     (void)device;
     (void)name;
 }
-void DebugBasics::anariCommit(ANARIDevice device, ANARIObject object) {
-    DEBUG_FUNCTION_SOURCE(anariCommit, object)
+void DebugBasics::anariCommitParameters(ANARIDevice device, ANARIObject object) {
+    DEBUG_FUNCTION_SOURCE(anariCommitParameters, object)
     (void)device;
     if(DEBUG_SOURCE_INFO->getUncommittedParameters() == 0) {
         DEBUG_REPORT(ANARI_SEVERITY_WARNING, ANARI_STATUS_NO_ERROR,

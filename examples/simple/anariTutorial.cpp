@@ -96,7 +96,7 @@ int main(int argc, const char **argv)
   anari::setParameter(d, d, "wrappedDevice", w);
   anari::setParameter(d, d, "traceMode", "code");
   anari::setParameter(d, d, "traceDir", "trace");
-  anariCommit(d, d);
+  anari::commitParameters(d, d);
 
   if (!d) {
     printf("\n\nERROR: could not load default device in library %s\n",
@@ -114,7 +114,7 @@ int main(int argc, const char **argv)
   anari::setParameter(d, camera, "position", cam_pos);
   anari::setParameter(d, camera, "direction", cam_view);
   anari::setParameter(d, camera, "up", cam_up);
-  anari::commit(
+  anari::commitParameters(
       d, camera); // commit objects to indicate setting parameters is done
 
   printf("done!\n");
@@ -135,7 +135,7 @@ int main(int argc, const char **argv)
   anari::setAndReleaseParameter(
       d, mesh, "primitive.index", anari::newArray1D(d, index, 2));
 
-  anari::commit(d, mesh);
+  anari::commitParameters(d, mesh);
 
   auto mat = anari::newObject<anari::Material>(d, "matte");
 
@@ -143,7 +143,7 @@ int main(int argc, const char **argv)
   auto surface = anari::newObject<anari::Surface>(d);
   anari::setAndReleaseParameter(d, surface, "geometry", mesh);
   anari::setAndReleaseParameter(d, surface, "material", mat);
-  anari::commit(d, surface);
+  anari::commitParameters(d, surface);
 
   // put the surface directly onto the world
   anari::setAndReleaseParameter(
@@ -152,12 +152,12 @@ int main(int argc, const char **argv)
 
   // create and setup light for Ambient Occlusion
   auto light = anari::newObject<anari::Light>(d, "directional");
-  anari::commit(d, light);
+  anari::commitParameters(d, light);
   anari::setAndReleaseParameter(
       d, world, "light", anari::newArray1D(d, &light));
   anari::release(d, light);
 
-  anari::commit(d, world);
+  anari::commitParameters(d, world);
 
   printf("done!\n");
 
@@ -187,7 +187,7 @@ int main(int argc, const char **argv)
   // complete setup of renderer
   vec4 bgColor = {1.f, 1.f, 1.f, 1.f};
   anari::setParameter(d, renderer, "backgroundColor", bgColor); // white
-  anari::commit(d, renderer);
+  anari::commitParameters(d, renderer);
 
   // create and setup frame
   auto frame = anari::newObject<anari::Frame>(d);
@@ -198,7 +198,7 @@ int main(int argc, const char **argv)
   anari::setAndReleaseParameter(d, frame, "camera", camera);
   anari::setAndReleaseParameter(d, frame, "world", world);
 
-  anari::commit(d, frame);
+  anari::commitParameters(d, frame);
 
   printf("rendering initial frame to firstFrame.png...");
 

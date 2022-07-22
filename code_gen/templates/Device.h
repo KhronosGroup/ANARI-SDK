@@ -129,7 +129,7 @@ struct DEVICE_INTERFACE $prefixDevice : public anari::DeviceImpl
 
   void unsetParameter(ANARIObject object, const char *name) override;
 
-  void commit(ANARIObject object) override;
+  void commitParameters(ANARIObject object) override;
 
   void release(ANARIObject) override;
   void retain(ANARIObject) override;

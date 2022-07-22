@@ -442,7 +442,7 @@
                 {"name" : "name", "type" : "const char*"}
             ]
         }, {
-            "name" : "anariCommit",
+            "name" : "anariCommitParameters",
             "returnType" : "void",
             "arguments" : [
                 {"name" : "device", "type" : "ANARIDevice"},

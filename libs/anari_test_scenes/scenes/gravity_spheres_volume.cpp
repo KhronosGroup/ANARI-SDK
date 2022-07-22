@@ -119,7 +119,7 @@ void GravityVolume::commit()
       field,
       "data",
       anari::newArray3D(d, voxels.data(), volumeDims, volumeDims, volumeDims));
-  anari::commit(d, field);
+  anari::commitParameters(d, field);
 
   auto volume = anari::newObject<anari::Volume>(d, "scivis");
   anari::setAndReleaseParameter(d, volume, "field", field);
@@ -144,7 +144,7 @@ void GravityVolume::commit()
     anariSetParameter(d, volume, "valueRange", ANARI_FLOAT32_BOX1, voxelRange);
   }
 
-  anari::commit(d, volume);
+  anari::commitParameters(d, volume);
 
   if (withGeometry) {
     std::vector<glm::vec3> positions(numPoints);
@@ -159,15 +159,15 @@ void GravityVolume::commit()
         "vertex.position",
         anari::newArray1D(d, positions.data(), positions.size()));
     anari::setParameter(d, geom, "radius", 0.05f);
-    anari::commit(d, geom);
+    anari::commitParameters(d, geom);
 
     auto mat = anari::newObject<anari::Material>(d, "matte");
-    anari::commit(d, mat);
+    anari::commitParameters(d, mat);
 
     auto surface = anari::newObject<anari::Surface>(d);
     anari::setAndReleaseParameter(d, surface, "geometry", geom);
     anari::setAndReleaseParameter(d, surface, "material", mat);
-    anari::commit(d, surface);
+    anari::commitParameters(d, surface);
 
     anari::setAndReleaseParameter(
         d, m_world, "surface", anari::newArray1D(d, &surface));
@@ -182,7 +182,7 @@ void GravityVolume::commit()
 
   setDefaultLight(m_world);
 
-  anari::commit(d, m_world);
+  anari::commitParameters(d, m_world);
 }
 
 TestScene *sceneGravitySphereVolume(anari::Device d)

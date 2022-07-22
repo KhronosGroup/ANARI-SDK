@@ -380,9 +380,9 @@ inline void unsetParameter(Device d, Object o, const char *id)
   anariUnsetParameter(d, o, id);
 }
 
-inline void commit(Device d, Object o)
+inline void commitParameters(Device d, Object o)
 {
-  anariCommit(d, o);
+  anariCommitParameters(d, o);
 }
 
 inline void release(Device d, Object o)

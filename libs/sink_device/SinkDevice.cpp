@@ -215,7 +215,7 @@ void SinkDevice::setParameter(
 
 void SinkDevice::unsetParameter(ANARIObject, const char *) {}
 
-void SinkDevice::commit(ANARIObject) {}
+void SinkDevice::commitParameters(ANARIObject) {}
 
 void SinkDevice::release(ANARIObject object)
 {

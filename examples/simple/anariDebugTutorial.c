@@ -165,7 +165,7 @@ int main(int argc, const char **argv)
   }
 
   // commit device
-  anariCommit(dev, dev);
+  anariCommitParameters(dev, dev);
   anariRelease(nested, nested);
 
   // create and setup camera
@@ -177,7 +177,8 @@ int main(int argc, const char **argv)
   anariSetParameter(dev, camera, "direction", ANARI_FLOAT32_VEC4, cam_view);
   anariSetParameter(dev, camera, "up", ANARI_FLOAT32_VEC3, cam_up);
   // intentionally forget this commit
-  // anariCommit(dev, camera); // commit each object to indicate mods are done
+  // anariCommitParameters(dev, camera); // commit each object to indicate mods
+  // are done
 
   // The world to be populated with renderable objects
   ANARIWorld world = anariNewWorld(dev);
@@ -203,7 +204,7 @@ int main(int argc, const char **argv)
   anariRelease(dev, array);
 
   // Affect all the mesh values
-  anariCommit(dev, mesh);
+  anariCommitParameters(dev, mesh);
 
   // Set the material rendering parameters
   ANARIMaterial mat = anariNewMaterial(dev, "Matte");
@@ -212,7 +213,7 @@ int main(int argc, const char **argv)
   ANARISurface surface = anariNewSurface(dev);
   anariSetParameter(dev, surface, "geometry", ANARI_GEOMETRY, &mesh);
   anariSetParameter(dev, surface, "material", ANARI_MATERIAL, &mat);
-  anariCommit(dev, surface);
+  anariCommitParameters(dev, surface);
   anariRelease(dev, mesh);
   anariRelease(dev, mat);
 
@@ -233,7 +234,7 @@ int main(int argc, const char **argv)
   // intentionally leak one object
   // anariRelease(dev, array);
 
-  anariCommit(dev, world);
+  anariCommitParameters(dev, world);
 
   // create renderer
   ANARIRenderer renderer = anariNewRenderer(dev, "default");
@@ -247,7 +248,7 @@ int main(int argc, const char **argv)
   anariSetParameter(
       dev, &renderer, "backgroundColor", ANARI_FLOAT32_VEC4, bgColor);
 
-  anariCommit(dev, renderer);
+  anariCommitParameters(dev, renderer);
 
   // create and setup frame
   ANARIFrame frame = anariNewFrame(dev);
@@ -259,7 +260,7 @@ int main(int argc, const char **argv)
   anariSetParameter(dev, frame, "camera", ANARI_CAMERA, &camera);
   anariSetParameter(dev, frame, "world", ANARI_WORLD, &world);
 
-  anariCommit(dev, frame);
+  anariCommitParameters(dev, frame);
 
   // render one frame
   anariRenderFrame(dev, frame);

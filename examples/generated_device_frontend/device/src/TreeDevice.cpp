@@ -83,7 +83,7 @@ void TreeDevice::unsetParameter(ANARIObject handle, const char *name)
   }
 }
 
-void TreeDevice::commit(ANARIObject handle)
+void TreeDevice::commitParameters(ANARIObject handle)
 {
   if (auto obj = handle_cast<ObjectBase *>(handle)) {
     obj->commit();

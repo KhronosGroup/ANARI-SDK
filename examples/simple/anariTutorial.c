@@ -223,7 +223,7 @@ int main(int argc, const char **argv)
   }
 
   // commit device
-  anariCommit(dev, dev);
+  anariCommitParameters(dev, dev);
 
   printf("done!\n");
   printf("setting up camera...");
@@ -235,7 +235,8 @@ int main(int argc, const char **argv)
   anariSetParameter(dev, camera, "position", ANARI_FLOAT32_VEC3, cam_pos);
   anariSetParameter(dev, camera, "direction", ANARI_FLOAT32_VEC3, cam_view);
   anariSetParameter(dev, camera, "up", ANARI_FLOAT32_VEC3, cam_up);
-  anariCommit(dev, camera); // commit each object to indicate mods are done
+  anariCommitParameters(
+      dev, camera); // commit each object to indicate mods are done
 
   printf("done!\n");
   printf("setting up scene...");
@@ -250,54 +251,54 @@ int main(int argc, const char **argv)
   // Set the vertex locations
   ANARIArray1D array =
       anariNewArray1D(dev, vertex, 0, 0, ANARI_FLOAT32_VEC3, 4, 0);
-  anariCommit(dev, array);
+  anariCommitParameters(dev, array);
   anariSetParameter(dev, mesh, "vertex.position", ANARI_ARRAY1D, &array);
   anariRelease(dev, array); // we are done using this handle
 
   // Set the vertex colors
   array = anariNewArray1D(dev, color, 0, 0, ANARI_FLOAT32_VEC4, 4, 0);
-  anariCommit(dev, array);
+  anariCommitParameters(dev, array);
   anariSetParameter(dev, mesh, "vertex.color", ANARI_ARRAY1D, &array);
   anariRelease(dev, array);
 
   // Set the index
   array = anariNewArray1D(dev, index, 0, 0, ANARI_UINT32_VEC3, 2, 0);
-  anariCommit(dev, array);
+  anariCommitParameters(dev, array);
   anariSetParameter(dev, mesh, "primitive.index", ANARI_ARRAY1D, &array);
   anariRelease(dev, array);
 
   // Affect all the mesh values
-  anariCommit(dev, mesh);
+  anariCommitParameters(dev, mesh);
 
   // Set the material rendering parameters
   ANARIMaterial mat = anariNewMaterial(dev, "matte");
-  anariCommit(dev, mat);
+  anariCommitParameters(dev, mat);
 
   // put the mesh into a surface
   ANARISurface surface = anariNewSurface(dev);
   anariSetParameter(dev, surface, "geometry", ANARI_GEOMETRY, &mesh);
   anariSetParameter(dev, surface, "material", ANARI_MATERIAL, &mat);
-  anariCommit(dev, surface);
+  anariCommitParameters(dev, surface);
   anariRelease(dev, mesh);
   anariRelease(dev, mat);
 
   // put the surface directly onto the world
   array = anariNewArray1D(dev, &surface, 0, 0, ANARI_SURFACE, 1, 0);
-  anariCommit(dev, array);
+  anariCommitParameters(dev, array);
   anariSetParameter(dev, world, "surface", ANARI_ARRAY1D, &array);
   anariRelease(dev, surface);
   anariRelease(dev, array);
 
   // create and setup light for Ambient Occlusion
   ANARILight light = anariNewLight(dev, "directional");
-  anariCommit(dev, light);
+  anariCommitParameters(dev, light);
   array = anariNewArray1D(dev, &light, 0, 0, ANARI_LIGHT, 1, 0);
-  anariCommit(dev, array);
+  anariCommitParameters(dev, array);
   anariSetParameter(dev, world, "light", ANARI_ARRAY1D, &array);
   anariRelease(dev, light);
   anariRelease(dev, array);
 
-  anariCommit(dev, world);
+  anariCommitParameters(dev, world);
 
   printf("done!\n");
 
@@ -330,7 +331,7 @@ int main(int argc, const char **argv)
   float bgColor[4] = {1.f, 1.f, 1.f, 1.f}; // white
   anariSetParameter(
       dev, renderer, "backgroundColor", ANARI_FLOAT32_VEC4, bgColor);
-  anariCommit(dev, renderer);
+  anariCommitParameters(dev, renderer);
 
   // create and setup frame
   ANARIFrame frame = anariNewFrame(dev);
@@ -342,7 +343,7 @@ int main(int argc, const char **argv)
   anariSetParameter(dev, frame, "camera", ANARI_CAMERA, &camera);
   anariSetParameter(dev, frame, "world", ANARI_WORLD, &world);
 
-  anariCommit(dev, frame);
+  anariCommitParameters(dev, frame);
 
   printf("rendering initial frame to firstFrame.ppm...");
 
