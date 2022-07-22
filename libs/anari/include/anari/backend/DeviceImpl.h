@@ -7,7 +7,7 @@
 #include "anari/anari.h"
 #include "anari/anari_cpp/Traits.h"
 
-#include "anari/backend/Library.h"
+#include "anari/backend/LibraryImpl.h"
 
 // std
 #include <map>

@@ -6,7 +6,7 @@
 #include "TreeDevice.h"
 #include <cstdarg>
 #include <cstdint>
-#include "anari/backend/Library.h"
+#include "anari/backend/LibraryImpl.h"
 
 // debug interface
 #include "anari/ext/debug/DebugObject.h"

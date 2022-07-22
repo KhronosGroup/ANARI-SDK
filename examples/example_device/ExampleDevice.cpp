@@ -3,7 +3,7 @@
 
 #include "ExampleDevice.h"
 
-#include "anari/backend/Library.h"
+#include "anari/backend/LibraryImpl.h"
 #include "anari/ext/example_device/anariNewExampleDevice.h"
 
 #include "Array.h"
