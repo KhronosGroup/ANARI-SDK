@@ -321,7 +321,7 @@ if args.omitprefix:
 
 namespaces = args.namespace.split("::")
 begin_namespaces = "".join(["namespace %s{\n"%n for n in namespaces])
-end_namespaces = "".join(["} //namespace %s\n"%n for n in namespaces])
+end_namespaces = "".join(["} //namespace %s\n"%n for n in reversed(namespaces)])
 
 
 

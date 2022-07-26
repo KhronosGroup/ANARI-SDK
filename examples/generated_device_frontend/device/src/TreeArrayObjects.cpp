@@ -147,6 +147,6 @@ Object<Array3D>::~Object() {
    }
 }
 
-} //namespace anari_sdk
 } //namespace tree
+} //namespace anari_sdk
 

@@ -58,5 +58,5 @@ const char *param_strings[] = {
    "worldNormal",
    "worldPosition"
 };
-} //namespace anari_sdk
 } //namespace tree
+} //namespace anari_sdk

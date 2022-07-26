@@ -32,8 +32,10 @@
 #define DEVICE_INTERFACE
 #endif
 
-namespace anari_sdk {
-namespace tree {
+// clang-format off
+namespace anari_sdk{
+namespace tree{
+
 
 void anariRetainInternal(ANARIDevice, ANARIObject, ANARIObject);
 void anariReleaseInternal(ANARIDevice, ANARIObject, ANARIObject);
@@ -45,6 +47,7 @@ void anariReportStatus(ANARIDevice,
     ANARIStatusCode code,
     const char *format,
     ...);
+// clang-format on
 
 template <class T>
 T deviceHandle(ANARIDevice d)
@@ -163,7 +166,7 @@ struct DEVICE_INTERFACE TreeDevice : public anari::DeviceImpl
   /////////////////////////////////////////////////////////////////////////////
 
   TreeDevice(ANARILibrary);
-  ~TreeDevice();
+  ~TreeDevice() = default;
 
   ObjectBase *fromHandle(ANARIObject handle);
   template <class T, class H>
@@ -230,5 +233,13 @@ T handle_cast(ANARIDevice d, H handle)
   return deviceHandle<TreeDevice *>(d)->handle_cast<T>(handle);
 }
 
-} // namespace tree
-} // namespace anari_sdk
+template <class T, class H>
+T ObjectBase::handle_cast(H h)
+{
+  return anari_sdk::tree::handle_cast<T>(device, h);
+}
+
+
+} //namespace tree
+} //namespace anari_sdk
+

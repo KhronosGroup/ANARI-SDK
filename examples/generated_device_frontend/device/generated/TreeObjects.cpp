@@ -4594,5 +4594,5 @@ size_t LightHdri::paramCount() const {
    return 7;
 }
 
-} //namespace anari_sdk
 } //namespace tree
+} //namespace anari_sdk
