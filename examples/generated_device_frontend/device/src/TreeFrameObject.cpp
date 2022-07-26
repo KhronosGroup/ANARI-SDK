@@ -11,8 +11,9 @@
 
 #include "RecursivePrint.h"
 
-namespace anari_sdk {
-namespace tree {
+namespace anari_sdk{
+namespace tree{
+
 
 Object<Frame>::Object(ANARIDevice d, ANARIObject handle)
     : DefaultObject(d, handle)
@@ -27,8 +28,8 @@ void Object<Frame>::commit()
 
   uint32_t elements = size[0] * size[1];
 
-  ANARIDataType colorType = ANARI_UNKNOWN;
-  ANARIDataType depthType = ANARI_UNKNOWN;
+  colorType = ANARI_UNKNOWN;
+  depthType = ANARI_UNKNOWN;
   if (current.color.get(ANARI_DATA_TYPE, &colorType)) {
     color.resize(elements * anari::sizeOf(colorType));
   }
@@ -61,9 +62,8 @@ void Object<Frame>::unmapFrame(const char *channel)
   (void)channel;
 }
 
-void Object<Frame>::renderFrame()
-{
-  recursivePrint(device, handle);
+void Object<Frame>::renderFrame() {
+   recursivePrint(device, handle);
 }
 
 void Object<Frame>::discardFrame() {}
@@ -74,5 +74,6 @@ int Object<Frame>::frameReady(ANARIWaitMask mask)
   return 1;
 }
 
-} // namespace tree
-} // namespace anari_sdk
+} //namespace tree
+} //namespace anari_sdk
+

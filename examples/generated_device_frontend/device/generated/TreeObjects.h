@@ -854,5 +854,5 @@ public:
    const char** paramNames() const override;
    size_t paramCount() const override;
 };
-} //namespace anari_sdk
 } //namespace tree
+} //namespace anari_sdk

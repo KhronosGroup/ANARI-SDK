@@ -5,13 +5,13 @@
 
 #pragma once
 
-#include "TreeObject.h"
-#include "TreeObjects.h"
+#include "TreeDevice.h"
 
 #include <vector>
 
-namespace anari_sdk {
-namespace tree {
+namespace anari_sdk{
+namespace tree{
+
 
 template <>
 class Object<Frame> : public DefaultObject<Frame, FrameObjectBase>
@@ -35,5 +35,6 @@ class Object<Frame> : public DefaultObject<Frame, FrameObjectBase>
   int frameReady(ANARIWaitMask mask) override;
 };
 
-} // namespace tree
-} // namespace anari_sdk
+} //namespace tree
+} //namespace anari_sdk
+

@@ -169,5 +169,5 @@ ANARIVolume TreeDevice::newVolume(const char *type) {
    }
    return 0;
 }
-} //namespace anari_sdk
 } //namespace tree
+} //namespace anari_sdk

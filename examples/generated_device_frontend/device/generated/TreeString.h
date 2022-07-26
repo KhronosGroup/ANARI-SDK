@@ -36,5 +36,5 @@ namespace tree{
 #define STRING_ENUM_worldPosition 25
 extern const char *param_strings[];
 int parameter_string_hash(const char *str);
-} //namespace anari_sdk
 } //namespace tree
+} //namespace anari_sdk

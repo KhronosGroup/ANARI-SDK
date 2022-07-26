@@ -5,8 +5,7 @@
 
 #pragma once
 
-#include "TreeObject.h"
-#include "TreeObjects.h"
+#include "TreeDevice.h"
 
 #include <vector>
 
@@ -85,6 +84,6 @@ public:
    ~Object();
 };
 
-} //namespace anari_sdk
 } //namespace tree
+} //namespace anari_sdk
 

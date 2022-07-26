@@ -58,9 +58,9 @@ PUBLIC
 
 target_link_libraries(${PROJECT_NAME}
 PUBLIC
-  anari::anari
-  anari::anari_utilities
-  anari::anari_library_debug
+  anari
+  anari_utilities
+  anari_library_debug
 )
 
 target_compile_definitions(${PROJECT_NAME}

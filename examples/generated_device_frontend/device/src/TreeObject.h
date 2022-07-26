@@ -10,8 +10,9 @@
 #include <cstring>
 #include "anari/anari.h"
 
-namespace anari_sdk {
-namespace tree {
+namespace anari_sdk{
+namespace tree{
+
 
 class ParameterPack;
 
@@ -77,10 +78,7 @@ class ObjectBase
   virtual uint32_t id() const = 0;
   virtual ParameterPack &parameters() = 0;
   template <class T, class H>
-  T handle_cast(H h)
-  {
-    return handle_cast<T>(device, h);
-  }
+  T handle_cast(H h);
 };
 
 class ArrayObjectBase : public ObjectBase
@@ -197,5 +195,6 @@ struct is_convertible<Object<T>>
   }
 };
 
-} // namespace tree
-} // namespace anari_sdk
+} //namespace tree
+} //namespace anari_sdk
+
