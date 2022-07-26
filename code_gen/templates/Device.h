@@ -228,4 +228,11 @@ T handle_cast(ANARIDevice d, H handle)
   return deviceHandle<$prefixDevice *>(d)->handle_cast<T>(handle);
 }
 
+template <class T, class H>
+T ObjectBase::handle_cast(H h)
+{
+  return $namespace::handle_cast<T>(device, h);
+}
+
+
 $end_namespaces
