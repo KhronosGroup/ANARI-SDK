@@ -9,7 +9,7 @@
 
 $begin_namespaces
 
-    class ParameterPack;
+class ParameterPack;
 
 void anariDeleteInternal(ANARIDevice, ANARIObject);
 
@@ -73,10 +73,7 @@ class ObjectBase
   virtual uint32_t id() const = 0;
   virtual ParameterPack &parameters() = 0;
   template <class T, class H>
-  T handle_cast(H h)
-  {
-    return handle_cast<T>(device, h);
-  }
+  T handle_cast(H h);
 };
 
 class ArrayObjectBase : public ObjectBase
