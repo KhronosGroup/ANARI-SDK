@@ -6,14 +6,15 @@
 #pragma once
 
 // anari
-#include "anari/backend/DeviceImpl.h"
 #include "TreeObject.h"
 #include "TreeObjects.h"
+#include "anari/backend/DeviceImpl.h"
 
-#include <vector>
-#include <memory>
 #include <atomic>
+#include <memory>
 #include <mutex>
+#include <type_traits>
+#include <vector>
 
 #ifdef _WIN32
 #ifdef DEVICE_STATIC_DEFINE
@@ -31,188 +32,203 @@
 #define DEVICE_INTERFACE
 #endif
 
-namespace anari_sdk{
-namespace tree{
-
+namespace anari_sdk {
+namespace tree {
 
 void anariRetainInternal(ANARIDevice, ANARIObject, ANARIObject);
 void anariReleaseInternal(ANARIDevice, ANARIObject, ANARIObject);
 void anariDeleteInternal(ANARIDevice, ANARIObject);
 void anariReportStatus(ANARIDevice,
-      ANARIObject source,
-      ANARIDataType sourceType,
-      ANARIStatusSeverity severity,
-      ANARIStatusCode code,
-      const char *format, ...);
+    ANARIObject source,
+    ANARIDataType sourceType,
+    ANARIStatusSeverity severity,
+    ANARIStatusCode code,
+    const char *format,
+    ...);
 
-template<class T>
-T deviceHandle(ANARIDevice d){
-      anari::DeviceImpl *ad = reinterpret_cast<anari::DeviceImpl*>(d);
-      return dynamic_cast<T>(ad);
+template <class T>
+T deviceHandle(ANARIDevice d)
+{
+  anari::DeviceImpl *ad = reinterpret_cast<anari::DeviceImpl *>(d);
+  return static_cast<T>(ad);
 }
 
 struct DEVICE_INTERFACE TreeDevice : public anari::DeviceImpl
 {
-   // Device API ///////////////////////////////////////////////////////////////
+  // Data Arrays //////////////////////////////////////////////////////////////
 
-   int deviceImplements(const char *extension) override;
+  ANARIArray1D newArray1D(const void *appMemory,
+      ANARIMemoryDeleter deleter,
+      const void *userdata,
+      ANARIDataType,
+      uint64_t numItems1,
+      uint64_t byteStride1) override;
 
-   // Data Arrays //////////////////////////////////////////////////////////////
+  ANARIArray2D newArray2D(const void *appMemory,
+      ANARIMemoryDeleter deleter,
+      const void *userdata,
+      ANARIDataType,
+      uint64_t numItems1,
+      uint64_t numItems2,
+      uint64_t byteStride1,
+      uint64_t byteStride2) override;
 
-   ANARIArray1D newArray1D(const void *appMemory,
-         ANARIMemoryDeleter deleter,
-         const void *userdata,
-         ANARIDataType,
-         uint64_t numItems1,
-         uint64_t byteStride1) override;
+  ANARIArray3D newArray3D(const void *appMemory,
+      ANARIMemoryDeleter deleter,
+      const void *userdata,
+      ANARIDataType,
+      uint64_t numItems1,
+      uint64_t numItems2,
+      uint64_t numItems3,
+      uint64_t byteStride1,
+      uint64_t byteStride2,
+      uint64_t byteStride3) override;
 
-   ANARIArray2D newArray2D(const void *appMemory,
-         ANARIMemoryDeleter deleter,
-         const void *userdata,
-         ANARIDataType,
-         uint64_t numItems1,
-         uint64_t numItems2,
-         uint64_t byteStride1,
-         uint64_t byteStride2) override;
+  void *mapArray(ANARIArray) override;
+  void unmapArray(ANARIArray) override;
 
-   ANARIArray3D newArray3D(const void *appMemory,
-         ANARIMemoryDeleter deleter,
-         const void *userdata,
-         ANARIDataType,
-         uint64_t numItems1,
-         uint64_t numItems2,
-         uint64_t numItems3,
-         uint64_t byteStride1,
-         uint64_t byteStride2,
-         uint64_t byteStride3) override;
+  // Renderable Objects ///////////////////////////////////////////////////////
 
-   void *mapArray(ANARIArray) override;
-   void unmapArray(ANARIArray) override;
+  ANARILight newLight(const char *type) override;
 
-   // Renderable Objects ///////////////////////////////////////////////////////
+  ANARICamera newCamera(const char *type) override;
 
-   ANARILight newLight(const char *type) override;
+  ANARIGeometry newGeometry(const char *type) override;
+  ANARISpatialField newSpatialField(const char *type) override;
 
-   ANARICamera newCamera(const char *type) override;
+  ANARISurface newSurface() override;
+  ANARIVolume newVolume(const char *type) override;
 
-   ANARIGeometry newGeometry(const char *type) override;
-   ANARISpatialField newSpatialField(const char *type) override;
+  // Surface Meta-Data ////////////////////////////////////////////////////////
 
-   ANARISurface newSurface() override;
-   ANARIVolume newVolume(const char *type) override;
+  ANARIMaterial newMaterial(const char *material_type) override;
 
-   // Surface Meta-Data ////////////////////////////////////////////////////////
+  ANARISampler newSampler(const char *type) override;
 
-   ANARIMaterial newMaterial(const char *material_type) override;
+  // Instancing ///////////////////////////////////////////////////////////////
 
-   ANARISampler newSampler(const char *type) override;
+  ANARIGroup newGroup() override;
 
-   // Instancing ///////////////////////////////////////////////////////////////
+  ANARIInstance newInstance() override;
 
-   ANARIGroup newGroup() override;
+  // Top-level Worlds /////////////////////////////////////////////////////////
 
-   ANARIInstance newInstance() override;
+  ANARIWorld newWorld() override;
 
-   // Top-level Worlds /////////////////////////////////////////////////////////
+  // Object + Parameter Lifetime Management ///////////////////////////////////
 
-   ANARIWorld newWorld() override;
+  int getProperty(ANARIObject object,
+      const char *name,
+      ANARIDataType type,
+      void *mem,
+      uint64_t size,
+      ANARIWaitMask mask) override;
 
-   // Object + Parameter Lifetime Management ///////////////////////////////////
+  void setParameter(ANARIObject object,
+      const char *name,
+      ANARIDataType type,
+      const void *mem) override;
 
-   int getProperty(ANARIObject object,
-         const char *name,
-         ANARIDataType type,
-         void *mem,
-         uint64_t size,
-         ANARIWaitMask mask) override;
+  void unsetParameter(ANARIObject object, const char *name) override;
 
-   void setParameter(ANARIObject object,
-         const char *name,
-         ANARIDataType type,
-         const void *mem) override;
+  void commitParameters(ANARIObject object) override;
 
-   void unsetParameter(ANARIObject object, const char *name) override;
+  void release(ANARIObject) override;
+  void retain(ANARIObject) override;
+  void retainInternal(ANARIObject, ANARIObject);
+  void releaseInternal(ANARIObject, ANARIObject);
 
-   void commit(ANARIObject object) override;
+  // FrameBuffer Manipulation /////////////////////////////////////////////////
 
-   void release(ANARIObject) override;
-   void retain(ANARIObject) override;
-   void retainInternal(ANARIObject, ANARIObject);
-   void releaseInternal(ANARIObject, ANARIObject);
+  ANARIFrame newFrame() override;
 
-   // FrameBuffer Manipulation /////////////////////////////////////////////////
+  const void *frameBufferMap(ANARIFrame fb,
+      const char *channel,
+      uint32_t *width,
+      uint32_t *height,
+      ANARIDataType *pixelType) override;
 
-   ANARIFrame newFrame() override;
+  void frameBufferUnmap(ANARIFrame fb, const char *channel) override;
 
-   const void *frameBufferMap(ANARIFrame fb, const char *channel) override;
+  // Frame Rendering //////////////////////////////////////////////////////////
 
-   void frameBufferUnmap(ANARIFrame fb, const char *channel) override;
+  ANARIRenderer newRenderer(const char *type) override;
 
-   // Frame Rendering //////////////////////////////////////////////////////////
+  void renderFrame(ANARIFrame) override;
+  int frameReady(ANARIFrame, ANARIWaitMask) override;
+  void discardFrame(ANARIFrame) override;
 
-   ANARIRenderer newRenderer(const char *type) override;
+  /////////////////////////////////////////////////////////////////////////////
+  // Helper/other functions and data members
+  /////////////////////////////////////////////////////////////////////////////
 
-   void renderFrame(ANARIFrame) override;
-   int frameReady(ANARIFrame, ANARIWaitMask) override;
-   void discardFrame(ANARIFrame) override;
+  TreeDevice(ANARILibrary);
+  ~TreeDevice();
 
-   /////////////////////////////////////////////////////////////////////////////
-   // Helper/other functions and data members
-   /////////////////////////////////////////////////////////////////////////////
+  ObjectBase *fromHandle(ANARIObject handle);
+  template <class T, class H>
+  T handle_cast(H handle)
+  {
+    ObjectBase *base = fromHandle(handle);
+    if (base && is_convertible<T>::check(base)) {
+      return static_cast<T>(base);
+    } else {
+      return nullptr;
+    }
+  }
 
-   TreeDevice();
-   ~TreeDevice();
+ private:
+  // object allocation and translation
 
-   template<typename R, typename T>
-   R fromHandle(T handle) {
-      std::lock_guard<std::recursive_mutex> guard(mutex);
-      uintptr_t id = reinterpret_cast<uintptr_t>(handle);
-      if(id<objects.size()) {
-            return dynamic_cast<R>(objects[id].get());
-      } else {
-            return nullptr;
-      }
-   }
-private:
-   // object allocation and translation
-
-   friend void anariDeleteInternal(ANARIDevice, ANARIObject);
-   friend void anariReportStatus(ANARIDevice,
+  friend void anariDeleteInternal(ANARIDevice, ANARIObject);
+  friend void anariReportStatus(ANARIDevice,
       ANARIObject source,
       ANARIDataType sourceType,
       ANARIStatusSeverity severity,
       ANARIStatusCode code,
-      const char *format, ...);
+      const char *format,
+      ...);
 
-   template<typename R, typename T, typename... ARGS>
-   R allocate(ARGS... args) {
-      std::lock_guard<std::recursive_mutex> guard(mutex);
-      uintptr_t id = objects.size();
-      R handle = reinterpret_cast<R>(id);
-      objects.emplace_back(new Object<T>(this_device(), handle, args...));
-      return handle;
-   }
+  template <typename R, typename T, typename... ARGS>
+  R allocate(ARGS... args)
+  {
+    std::lock_guard<std::recursive_mutex> guard(mutex);
+    uintptr_t idx = objects.size();
+    ANARIObject handle = reinterpret_cast<ANARIObject>(idx);
+    // avoid the device handle which is just an arbitrary pointer
+    if (handle == this_device()) {
+      objects.emplace_back(nullptr);
+      idx = objects.size();
+      handle = reinterpret_cast<R>(idx);
+    }
+    objects.emplace_back(new Object<T>(this_device(), handle, args...));
+    return static_cast<R>(handle);
+  }
 
-   void deallocate(ANARIObject handle) {
-      std::lock_guard<std::recursive_mutex> guard(mutex);
-      uintptr_t id = reinterpret_cast<uintptr_t>(handle);
-      if(id<objects.size()) {
-            return objects[id].reset(nullptr);
-      }
-   }
+  void deallocate(ANARIObject handle)
+  {
+    uintptr_t id = reinterpret_cast<uintptr_t>(handle);
+    std::lock_guard<std::recursive_mutex> guard(mutex);
+    if (id < objects.size()) {
+      return objects[id].reset(nullptr);
+    }
+  }
 
-   std::atomic<int64_t> refcount;
-   std::recursive_mutex mutex;
-   std::vector<std::unique_ptr<ObjectBase>> objects;
+  std::atomic<int64_t> refcount;
+  std::recursive_mutex mutex;
+  std::vector<std::unique_ptr<ObjectBase>> objects;
 
-   ANARIStatusCallback statusCallback;
-   const void* statusCallbackUserData;
+  ANARIStatusCallback statusCallback;
+  const void *statusCallbackUserData;
 
-   anari_sdk::tree::Device staging;
-   anari_sdk::tree::Device current;
+  Object<anari_sdk::tree::Device> deviceObject;
 };
 
-} //namespace anari_sdk
-} //namespace tree
+template <class T, class H>
+T handle_cast(ANARIDevice d, H handle)
+{
+  return deviceHandle<TreeDevice *>(d)->handle_cast<T>(handle);
+}
 
-
+} // namespace tree
+} // namespace anari_sdk

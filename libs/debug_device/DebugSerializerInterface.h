@@ -11,7 +11,6 @@ namespace debug_device {
 class SerializerInterface {
 public:
     virtual ~SerializerInterface() = default;
-    virtual void anariDeviceImplements(ANARIDevice device, const char* profile) = 0;
     virtual void anariNewArray1D(ANARIDevice device, const void* appMemory, ANARIMemoryDeleter deleter, const void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t byteStride1, ANARIArray1D result) = 0;
     virtual void anariNewArray2D(ANARIDevice device, const void* appMemory, ANARIMemoryDeleter deleter, const void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t numItems2, uint64_t byteStride1, uint64_t byteStride2, ANARIArray2D result) = 0;
     virtual void anariNewArray3D(ANARIDevice device, const void* appMemory, ANARIMemoryDeleter deleter, const void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t numItems2, uint64_t numItems3, uint64_t byteStride1, uint64_t byteStride2, uint64_t byteStride3, ANARIArray3D result) = 0;
@@ -31,7 +30,7 @@ public:
     virtual void anariNewObject(ANARIDevice device, const char* objectType, const char* type, ANARIObject result) = 0;
     virtual void anariSetParameter(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType dataType, const void *mem) = 0;
     virtual void anariUnsetParameter(ANARIDevice device, ANARIObject object, const char* name) = 0;
-    virtual void anariCommit(ANARIDevice device, ANARIObject object) = 0;
+    virtual void anariCommitParameters(ANARIDevice device, ANARIObject object) = 0;
     virtual void anariRelease(ANARIDevice device, ANARIObject object) = 0;
     virtual void anariRetain(ANARIDevice device, ANARIObject object) = 0;
     virtual void anariGetProperty(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType type, void* mem, uint64_t size, ANARIWaitMask mask, int result) = 0;

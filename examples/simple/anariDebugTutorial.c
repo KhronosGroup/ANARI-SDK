@@ -25,29 +25,40 @@
 
 /******************************************************************/
 /* helper function to write out pixel values to a .ppm file */
-void writePPM(
-    const char *fileName, int size_x, int size_y, const uint32_t *pixel)
+void writePPM(const char *fileName, ANARIDevice d, ANARIFrame frame)
 {
+  uint32_t size[2] = {0, 0};
+  ANARIDataType type = ANARI_UNKNOWN;
+  uint32_t *pixel =
+      (uint32_t *)anariMapFrame(d, frame, "color", &size[0], &size[1], &type);
+
+  if (type != ANARI_UFIXED8_RGBA_SRGB) {
+    printf("Incorrectly returned color buffer pixel type, image not saved.\n");
+    return;
+  }
+
   FILE *file = fopen(fileName, "wb");
   if (!file) {
     fprintf(stderr, "fopen('%s', 'wb') failed: %d", fileName, errno);
     return;
   }
-  fprintf(file, "P6\n%i %i\n255\n", size_x, size_y);
-  unsigned char *out = (unsigned char *)malloc((size_t)(3 * size_x));
-  for (int y = 0; y < size_y; y++) {
+  fprintf(file, "P6\n%i %i\n255\n", size[0], size[1]);
+  unsigned char *out = (unsigned char *)malloc((size_t)(3 * size[0]));
+  for (int y = 0; y < size[1]; y++) {
     const unsigned char *in =
-        (const unsigned char *)&pixel[(size_y - 1 - y) * size_x];
-    for (int x = 0; x < size_x; x++) {
+        (const unsigned char *)&pixel[(size[1] - 1 - y) * size[0]];
+    for (int x = 0; x < size[0]; x++) {
       out[3 * x + 0] = in[4 * x + 0];
       out[3 * x + 1] = in[4 * x + 1];
       out[3 * x + 2] = in[4 * x + 2];
     }
-    fwrite(out, (size_t)(3 * size_x), sizeof(char), file);
+    fwrite(out, (size_t)(3 * size[0]), sizeof(char), file);
   }
   fprintf(file, "\n");
   fclose(file);
   free(out);
+
+  anariUnmapFrame(d, frame, "color");
 }
 
 /******************************************************************/
@@ -154,7 +165,7 @@ int main(int argc, const char **argv)
   }
 
   // commit device
-  anariCommit(dev, dev);
+  anariCommitParameters(dev, dev);
   anariRelease(nested, nested);
 
   // create and setup camera
@@ -166,7 +177,8 @@ int main(int argc, const char **argv)
   anariSetParameter(dev, camera, "direction", ANARI_FLOAT32_VEC4, cam_view);
   anariSetParameter(dev, camera, "up", ANARI_FLOAT32_VEC3, cam_up);
   // intentionally forget this commit
-  // anariCommit(dev, camera); // commit each object to indicate mods are done
+  // anariCommitParameters(dev, camera); // commit each object to indicate mods
+  // are done
 
   // The world to be populated with renderable objects
   ANARIWorld world = anariNewWorld(dev);
@@ -192,7 +204,7 @@ int main(int argc, const char **argv)
   anariRelease(dev, array);
 
   // Affect all the mesh values
-  anariCommit(dev, mesh);
+  anariCommitParameters(dev, mesh);
 
   // Set the material rendering parameters
   ANARIMaterial mat = anariNewMaterial(dev, "Matte");
@@ -201,7 +213,7 @@ int main(int argc, const char **argv)
   ANARISurface surface = anariNewSurface(dev);
   anariSetParameter(dev, surface, "geometry", ANARI_GEOMETRY, &mesh);
   anariSetParameter(dev, surface, "material", ANARI_MATERIAL, &mat);
-  anariCommit(dev, surface);
+  anariCommitParameters(dev, surface);
   anariRelease(dev, mesh);
   anariRelease(dev, mat);
 
@@ -222,7 +234,7 @@ int main(int argc, const char **argv)
   // intentionally leak one object
   // anariRelease(dev, array);
 
-  anariCommit(dev, world);
+  anariCommitParameters(dev, world);
 
   // create renderer
   ANARIRenderer renderer = anariNewRenderer(dev, "default");
@@ -236,7 +248,7 @@ int main(int argc, const char **argv)
   anariSetParameter(
       dev, &renderer, "backgroundColor", ANARI_FLOAT32_VEC4, bgColor);
 
-  anariCommit(dev, renderer);
+  anariCommitParameters(dev, renderer);
 
   // create and setup frame
   ANARIFrame frame = anariNewFrame(dev);
@@ -248,14 +260,15 @@ int main(int argc, const char **argv)
   anariSetParameter(dev, frame, "camera", ANARI_CAMERA, &camera);
   anariSetParameter(dev, frame, "world", ANARI_WORLD, &world);
 
-  anariCommit(dev, frame);
+  anariCommitParameters(dev, frame);
 
   // render one frame
   anariRenderFrame(dev, frame);
   anariFrameReady(dev, frame, ANARI_WAIT);
 
   // access frame
-  const uint32_t *fb = (uint32_t *)anariMapFrame(dev, frame, "color");
+  const uint32_t *fb = (uint32_t *)anariMapFrame(
+      dev, frame, "color", &imgSize[0], &imgSize[1], &fbFormat);
   (void)fb; // ignore it because we expect the code to fail anyway
   anariUnmapFrame(dev, frame, "color");
 

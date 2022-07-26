@@ -14,21 +14,21 @@ set(CMAKE_BUILD_TYPE_INIT "RelWithDebInfo")
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
-project(generate_device_frontend_example)
+project(template_device)
 
-find_package(anari REQUIRED)
+find_package(anari 0.1.0 REQUIRED)
+
+# generator scripts will add dependencies to this target
+add_custom_target(generate_all)
 
 anari_generate_frontend(
-  TARGET generate_tree_device
-  DEFINITIONS ${CMAKE_CURRENT_SOURCE_DIR}/device/tree_device.json
-  NAME tree
-  PREFIX Tree
-  NAMESPACE anari_sdk::tree
+  TARGET generate_template_frontend
+  DEFINITIONS ${CMAKE_CURRENT_SOURCE_DIR}/device/template_device.json
+  NAME tplt
+  PREFIX Tplt
+  NAMESPACE tplt
   DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/device
   CODE_HEADER_FILE ${CMAKE_CURRENT_LIST_DIR}/license.txt
-
-# this is only needed when building inside the SDK
-  EXTRA_OPTIONS "--omit_target_prefix;"
 )
 
 add_subdirectory(device)

@@ -20,6 +20,7 @@
 
 #define ANARI_INVALID_HANDLE NULL
 
+#include "anari_version.h"
 #include "anari_enums.h"
 
 #ifdef _WIN32
@@ -143,7 +144,6 @@ ANARI_INTERFACE void anariUnloadLibrary(ANARILibrary module);
 ANARI_INTERFACE void anariLoadModule(ANARILibrary library, const char* name);
 ANARI_INTERFACE void anariUnloadModule(ANARILibrary library, const char* name);
 ANARI_INTERFACE ANARIDevice anariNewDevice(ANARILibrary library, const char* type ANARI_DEFAULT_VAL("default"));
-ANARI_INTERFACE int anariDeviceImplements(ANARIDevice device, const char* profile);
 ANARI_INTERFACE ANARIArray1D anariNewArray1D(ANARIDevice device, const void* appMemory, ANARIMemoryDeleter deleter, const void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t byteStride1 ANARI_DEFAULT_VAL(0));
 ANARI_INTERFACE ANARIArray2D anariNewArray2D(ANARIDevice device, const void* appMemory, ANARIMemoryDeleter deleter, const void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t numItems2, uint64_t byteStride1 ANARI_DEFAULT_VAL(0), uint64_t byteStride2 ANARI_DEFAULT_VAL(0));
 ANARI_INTERFACE ANARIArray3D anariNewArray3D(ANARIDevice device, const void* appMemory, ANARIMemoryDeleter deleter, const void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t numItems2, uint64_t numItems3, uint64_t byteStride1 ANARI_DEFAULT_VAL(0), uint64_t byteStride2 ANARI_DEFAULT_VAL(0), uint64_t byteStride3 ANARI_DEFAULT_VAL(0));
@@ -163,16 +163,16 @@ ANARI_INTERFACE ANARIWorld anariNewWorld(ANARIDevice device);
 ANARI_INTERFACE ANARIObject anariNewObject(ANARIDevice device, const char* objectType, const char* type);
 ANARI_INTERFACE void anariSetParameter(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType dataType, const void* mem);
 ANARI_INTERFACE void anariUnsetParameter(ANARIDevice device, ANARIObject object, const char* name);
-ANARI_INTERFACE void anariCommit(ANARIDevice device, ANARIObject object);
+ANARI_INTERFACE void anariCommitParameters(ANARIDevice device, ANARIObject object);
 ANARI_INTERFACE void anariRelease(ANARIDevice device, ANARIObject object);
 ANARI_INTERFACE void anariRetain(ANARIDevice device, ANARIObject object);
 ANARI_INTERFACE const char ** anariGetDeviceSubtypes(ANARILibrary library);
 ANARI_INTERFACE const char ** anariGetObjectSubtypes(ANARILibrary library, const char* deviceSubtype, ANARIDataType objectType);
-ANARI_INTERFACE const ANARIParameter* anariGetObjectParameters(ANARILibrary library, const char* deviceSubtype, const char* objectSubtype, ANARIDataType objectType);
+ANARI_INTERFACE const void* anariGetObjectInfo(ANARILibrary library, const char* deviceSubtype, const char* objectSubtype, ANARIDataType objectType, const char* infoName, ANARIDataType infoType);
 ANARI_INTERFACE const void* anariGetParameterInfo(ANARILibrary library, const char* deviceSubtype, const char* objectSubtype, ANARIDataType objectType, const char* parameterName, ANARIDataType parameterType, const char* infoName, ANARIDataType infoType);
 ANARI_INTERFACE int anariGetProperty(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType type, void* mem, uint64_t size, ANARIWaitMask mask);
 ANARI_INTERFACE ANARIFrame anariNewFrame(ANARIDevice device);
-ANARI_INTERFACE const void* anariMapFrame(ANARIDevice device, ANARIFrame frame, const char* channel);
+ANARI_INTERFACE const void* anariMapFrame(ANARIDevice device, ANARIFrame frame, const char* channel, uint32_t* width, uint32_t* height, ANARIDataType* pixelType);
 ANARI_INTERFACE void anariUnmapFrame(ANARIDevice device, ANARIFrame frame, const char* channel);
 ANARI_INTERFACE ANARIRenderer anariNewRenderer(ANARIDevice device, const char* type);
 ANARI_INTERFACE void anariRenderFrame(ANARIDevice device, ANARIFrame frame);

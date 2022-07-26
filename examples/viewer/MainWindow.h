@@ -25,14 +25,14 @@ class MainWindow
   MainWindow(const glm::uvec2 &windowSize);
   ~MainWindow();
 
-  void setDevice(ANARIDevice device);
+  void setDevice(anari::Device device, const std::string &rendererType);
   void setScene(
       std::string sceneName, std::string paramName = "", anari::Any param = {});
 
   void mainLoop();
 
  private:
-  void addObjectToCommit(ANARIObject obj);
+  void addObjectToCommit(anari::Object obj);
 
   void updateCamera();
   void resetCamera();
@@ -47,8 +47,7 @@ class MainWindow
 
   void cleanup();
 
-  friend void frame_continuation_callback(const void *, ANARIDevice, ANARIFrame);
-  friend void frame_show(ANARIDevice, ANARIFrame, MainWindow*);
+  friend void frame_show(anari::Device, anari::Frame, MainWindow*);
 
   static MainWindow *activeWindow;
 
@@ -65,13 +64,13 @@ class MainWindow
   manipulators::Orbit arcball;
 
   // ANARI objects not managed by this class
-  ANARIDevice device{nullptr};
+  anari::Device device{nullptr};
   bool useContinuation = false;
 
   // ANARI objects managed by this class
-  ANARIRenderer renderer{nullptr};
-  ANARICamera camera{nullptr};
-  ANARIFrame frame{nullptr};
+  anari::Renderer renderer{nullptr};
+  anari::Camera camera{nullptr};
+  anari::Frame frame{nullptr};
 
   anari::scenes::SceneHandle scene;
   std::vector<anari::scenes::ParameterInfo> sceneParams;
@@ -81,9 +80,7 @@ class MainWindow
   bool resetCameraPosition{true};
 
   std::vector<unsigned char> pixelBuffer;
-  glm::ivec2 prevFrameSize{0};
   glm::ivec2 currentFrameSize{0};
-  glm::ivec2 nextFrameSize{0};
 
   // OpenGL framebuffer texture
   GLuint framebufferTexture = 0;

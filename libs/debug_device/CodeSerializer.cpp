@@ -115,11 +115,6 @@ void CodeSerializer::insertStatus(ANARIObject source, ANARIDataType sourceType, 
    out << status << '\n';
 }
 
-
-void CodeSerializer::anariDeviceImplements(ANARIDevice device, const char* profile) {
-   out << "anariDeviceImplements(device, \"" << profile << "\");\n";
-}
-
 void CodeSerializer::anariNewArray1D(ANARIDevice device, const void* appMemory, ANARIMemoryDeleter deleter, const void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t byteStride1, ANARIArray1D result) {
    uint64_t local;
    uint64_t byte_offset = 0;
@@ -415,8 +410,8 @@ void CodeSerializer::anariUnsetParameter(ANARIDevice device, ANARIObject object,
    out << ", \"" << name << "\");\n";
 }
 
-void CodeSerializer::anariCommit(ANARIDevice device, ANARIObject object) {
-   out << "anariCommit(device, ";
+void CodeSerializer::anariCommitParameters(ANARIDevice device, ANARIObject object) {
+   out << "anariCommitParameters(device, ";
    printObjectName(object);
    out << ");\n";
 }

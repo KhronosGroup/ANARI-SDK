@@ -30,8 +30,9 @@ inline ANARIDataType getType()
 // Initialization + Introspection /////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-inline Library loadLibrary(
-    const char *name, StatusCallback defaultStatus, void *defaultStatusPtr)
+inline Library loadLibrary(const char *name,
+    StatusCallback defaultStatus,
+    const void *defaultStatusPtr)
 {
   return anariLoadLibrary(name, defaultStatus, defaultStatusPtr);
 }
@@ -172,9 +173,9 @@ inline Renderer newObject<Renderer>(Device d, const char *subtype)
 
 template <typename T>
 inline Array1D newArray1D(Device d,
-    T *appMemory,
+    const T *appMemory,
     MemoryDeleter deleter,
-    void *userPtr,
+    const void *userPtr,
     uint64_t numItems1,
     uint64_t byteStride1)
 {
@@ -189,7 +190,7 @@ inline Array1D newArray1D(Device d,
 
 template <typename T>
 inline Array1D newArray1D(
-    Device d, T *appMemory, uint64_t numItems1, uint64_t byteStride1)
+    Device d, const T *appMemory, uint64_t numItems1, uint64_t byteStride1)
 {
   return anariNewArray1D(d,
       appMemory,
@@ -209,9 +210,9 @@ inline Array1D newArray1D(Device d, ANARIDataType type, uint64_t numItems1)
 
 template <typename T>
 inline Array2D newArray2D(Device d,
-    T *appMemory,
+    const T *appMemory,
     MemoryDeleter deleter,
-    void *userPtr,
+    const void *userPtr,
     uint64_t numItems1,
     uint64_t numItems2,
     uint64_t byteStride1,
@@ -230,7 +231,7 @@ inline Array2D newArray2D(Device d,
 
 template <typename T>
 inline Array2D newArray2D(Device d,
-    T *appMemory,
+    const T *appMemory,
     uint64_t numItems1,
     uint64_t numItems2,
     uint64_t byteStride1,
@@ -258,9 +259,9 @@ inline Array2D newArray2D(
 
 template <typename T>
 inline Array3D newArray3D(Device d,
-    T *appMemory,
+    const T *appMemory,
     MemoryDeleter deleter,
-    void *userPtr,
+    const void *userPtr,
     uint64_t numItems1,
     uint64_t numItems2,
     uint64_t numItems3,
@@ -283,7 +284,7 @@ inline Array3D newArray3D(Device d,
 
 template <typename T>
 inline Array3D newArray3D(Device d,
-    T *appMemory,
+    const T *appMemory,
     uint64_t numItems1,
     uint64_t numItems2,
     uint64_t numItems3,
@@ -316,9 +317,10 @@ inline Array3D newArray3D(Device d,
 
 // Data Updates //
 
-inline void *map(Device d, Array a)
+template <typename T>
+inline T *map(Device d, Array a)
 {
-  return anariMapArray(d, a);
+  return static_cast<T *>(anariMapArray(d, a));
 }
 
 inline void unmap(Device d, Array a)
@@ -378,9 +380,9 @@ inline void unsetParameter(Device d, Object o, const char *id)
   anariUnsetParameter(d, o, id);
 }
 
-inline void commit(Device d, Object o)
+inline void commitParameters(Device d, Object o)
 {
-  anariCommit(d, o);
+  anariCommitParameters(d, o);
 }
 
 inline void release(Device d, Object o)
@@ -409,9 +411,13 @@ inline bool getProperty(
 // Frame Operations ///////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-inline const void *map(Device d, Frame f, const char *channel)
+template <typename T>
+inline MappedFrameData<T> map(Device d, Frame f, const char *channel)
 {
-  return anariMapFrame(d, f, channel);
+  MappedFrameData<T> retval;
+  retval.data = static_cast<const T *>(anariMapFrame(
+      d, f, channel, &retval.width, &retval.height, &retval.pixelType));
+  return retval;
 }
 
 inline void unmap(Device d, Frame f, const char *channel)
@@ -440,12 +446,28 @@ inline void discard(Device d, Frame f)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Extensions /////////////////////////////////////////////////////////////////
+// C++ Feature Utilities //////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-inline bool deviceImplements(Device d, const char *extension)
+namespace feature {
+
+inline Features getObjectFeatures(Library l,
+    const char *device,
+    const char *objectSubtype,
+    DataType objectType)
 {
-  return anariDeviceImplements(d, extension);
+  Features f;
+  anariGetObjectFeatures(&f, l, device, objectSubtype, objectType);
+  return f;
 }
+
+inline Features getInstanceFeatures(Device d, Object o)
+{
+  Features f;
+  anariGetInstanceFeatures(&f, d, o);
+  return f;
+}
+
+} // namespace feature
 
 } // namespace anari

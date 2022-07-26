@@ -28,8 +28,11 @@ struct Frame : public Object
       ANARIWaitMask mask) override;
 
   void commit() override;
-  void *mapColorBuffer();
-  float *mapDepthBuffer();
+
+  void *map(const char *channel,
+      uint32_t *width,
+      uint32_t *height,
+      ANARIDataType *pixelType);
 
   void renderFrame(int numThreads);
   void invokeContinuation(ANARIDevice device) const;
@@ -42,6 +45,9 @@ struct Frame : public Object
   float duration() const;
 
  private:
+  void *mapColorBuffer();
+  float *mapDepthBuffer();
+
   int frameID() const;
   void newFrame();
 

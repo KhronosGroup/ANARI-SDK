@@ -5,6 +5,7 @@
 
 // anari
 #include "anari/anari.h"
+#include "anari/anari_feature_utility.h"
 // std
 #include <string>
 
@@ -63,7 +64,7 @@ using DataType       = ANARIDataType;
 
 Library loadLibrary(const char *name,
     StatusCallback defaultStatus = nullptr,
-    void *defaultStatusPtr = nullptr);
+    const void *defaultStatusPtr = nullptr);
 void unloadLibrary(Library);
 
 void loadModule(Library, const char *name);
@@ -73,10 +74,12 @@ void unloadModule(Library, const char *name);
 
 anari::Device newDevice(Library, const char *name = "default");
 
-template <typename T, typename... Args>
-T newObject(Device, Args...);
-
 Object newObject(Device d, const char *type, const char *subtype);
+
+template <typename T>
+T newObject(Device);
+template <typename T>
+T newObject(Device, const char *subtype);
 
 // Arrays //
 
@@ -84,15 +87,17 @@ Object newObject(Device d, const char *type, const char *subtype);
 
 template <typename T>
 Array1D newArray1D(Device,
-    T *appMemory,
+    const T *appMemory,
     MemoryDeleter,
-    void *userPtr,
+    const void *userPtr,
     uint64_t numItems1,
     uint64_t byteStride1 = 0);
 
 template <typename T>
-Array1D newArray1D(
-    Device, T *appMemory, uint64_t numItems1 = 1, uint64_t byteStride1 = 0);
+Array1D newArray1D(Device,
+    const T *appMemory,
+    uint64_t numItems1 = 1,
+    uint64_t byteStride1 = 0);
 
 Array1D newArray1D(Device d, ANARIDataType type, uint64_t numItems1);
 
@@ -100,9 +105,9 @@ Array1D newArray1D(Device d, ANARIDataType type, uint64_t numItems1);
 
 template <typename T>
 Array2D newArray2D(Device,
-    T *appMemory,
+    const T *appMemory,
     MemoryDeleter,
-    void *userPtr,
+    const void *userPtr,
     uint64_t numItems1,
     uint64_t numItems2,
     uint64_t byteStride1 = 0,
@@ -110,7 +115,7 @@ Array2D newArray2D(Device,
 
 template <typename T>
 Array2D newArray2D(Device,
-    T *appMemory,
+    const T *appMemory,
     uint64_t numItems1,
     uint64_t numItems2,
     uint64_t byteStride1 = 0,
@@ -123,9 +128,9 @@ Array2D newArray2D(
 
 template <typename T>
 Array3D newArray3D(Device,
-    T *appMemory,
+    const T *appMemory,
     MemoryDeleter,
-    void *userPtr,
+    const void *userPtr,
     uint64_t numItems1,
     uint64_t numItems2,
     uint64_t numItems3,
@@ -135,7 +140,7 @@ Array3D newArray3D(Device,
 
 template <typename T>
 Array3D newArray3D(Device,
-    T *appMemory,
+    const T *appMemory,
     uint64_t numItems1,
     uint64_t numItems2,
     uint64_t numItems3,
@@ -151,7 +156,8 @@ Array3D newArray3D(Device d,
 
 // Data Updates
 
-void *map(Device, Array);
+template <typename T>
+T *map(Device, Array);
 void unmap(Device, Array);
 
 // Object + Parameter Lifetime Management //
@@ -168,7 +174,7 @@ template <typename T>
 void setAndReleaseParameter(Device d, Object o, const char *name, const T &v);
 
 void unsetParameter(Device, Object, const char *id);
-void commit(Device, Object);
+void commitParameters(Device, Object);
 
 void release(Device, Object);
 void retain(Device, Object);
@@ -181,7 +187,17 @@ bool getProperty(
 
 // Frame Operations //
 
-const void *map(Device, Frame, const char *channel);
+template <typename T>
+struct MappedFrameData
+{
+  uint32_t width{0};
+  uint32_t height{0};
+  DataType pixelType{ANARI_UNKNOWN};
+  const T *data{nullptr};
+};
+
+template <typename T>
+MappedFrameData<T> map(Device, Frame, const char *channel);
 void unmap(Device, Frame, const char *channel);
 
 void render(Device, Frame);
@@ -189,9 +205,22 @@ bool isReady(Device, Frame);
 void wait(Device, Frame);
 void discard(Device, Frame);
 
-// Extensions //
+///////////////////////////////////////////////////////////////////////////////
+// C++ Feature Utilities //////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
-bool deviceImplements(Device, const char *extension);
+using Features = ANARIFeatures;
+
+namespace feature {
+
+Features getObjectFeatures(Library library,
+    const char *device,
+    const char *objectSubtype,
+    DataType objectType);
+
+Features getInstanceFeatures(Device, Object);
+
+} // namespace feature
 
 } // namespace anari
 

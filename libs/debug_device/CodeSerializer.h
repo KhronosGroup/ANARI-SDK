@@ -18,7 +18,6 @@ class CodeSerializer : public SerializerInterface {
 public:
    CodeSerializer(DebugDevice *dd);
    void printObjectName(ANARIObject);
-   void anariDeviceImplements(ANARIDevice device, const char* profile) override;
    void anariNewArray1D(ANARIDevice device, const void* appMemory, ANARIMemoryDeleter deleter, const void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t byteStride1, ANARIArray1D result) override;
    void anariNewArray2D(ANARIDevice device, const void* appMemory, ANARIMemoryDeleter deleter, const void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t numItems2, uint64_t byteStride1, uint64_t byteStride2, ANARIArray2D result) override;
    void anariNewArray3D(ANARIDevice device, const void* appMemory, ANARIMemoryDeleter deleter, const void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t numItems2, uint64_t numItems3, uint64_t byteStride1, uint64_t byteStride2, uint64_t byteStride3, ANARIArray3D result) override;
@@ -38,7 +37,7 @@ public:
    void anariNewObject(ANARIDevice device, const char* objectType, const char* type, ANARIObject result) override;
    void anariSetParameter(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType dataType, const void *mem) override;
    void anariUnsetParameter(ANARIDevice device, ANARIObject object, const char* name) override;
-   void anariCommit(ANARIDevice device, ANARIObject object) override;
+   void anariCommitParameters(ANARIDevice device, ANARIObject object) override;
    void anariRelease(ANARIDevice device, ANARIObject object) override;
    void anariRetain(ANARIDevice device, ANARIObject object) override;
    void anariGetProperty(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType type, void* mem, uint64_t size, ANARIWaitMask mask, int result) override;

@@ -91,10 +91,10 @@ def tag_feature(tree):
         feature = tree["info"]["name"]
         if "objects" in tree:
             for obj in tree["objects"]:
-                obj["feature"] = feature
+                obj["sourceFeature"] = feature
                 if "parameters" in obj:
                     for param in obj["parameters"]:
-                        param["feature"] = feature
+                        param["sourceFeature"] = feature
 
 def crawl_dependencies(root, jsons):
     deps = []

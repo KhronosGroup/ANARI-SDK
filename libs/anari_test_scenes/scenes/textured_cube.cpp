@@ -8,7 +8,7 @@
 
 static void anari_free(const void *ptr, const void *)
 {
-  std::free(const_cast<void*>(ptr));
+  std::free(const_cast<void *>(ptr));
 }
 
 namespace anari {
@@ -53,8 +53,13 @@ static anari::Array2D makeTextureData(anari::Device d, int dim)
     }
   }
 
-  return anariNewArray2D(
-      d, data, &anari_free, nullptr, ANARI_FLOAT32_VEC3, uint64_t(dim), uint64_t(dim));
+  return anariNewArray2D(d,
+      data,
+      &anari_free,
+      nullptr,
+      ANARI_FLOAT32_VEC3,
+      uint64_t(dim),
+      uint64_t(dim));
 }
 
 // CornelBox definitions //////////////////////////////////////////////////////
@@ -91,7 +96,7 @@ void TexturedCube::commit()
       geom,
       "primitive.index",
       anari::newArray1D(d, indices.data(), indices.size()));
-  anari::commit(d, geom);
+  anari::commitParameters(d, geom);
 
   auto surface = anari::newObject<anari::Surface>(d);
   anari::setAndReleaseParameter(d, surface, "geometry", geom);
@@ -100,18 +105,18 @@ void TexturedCube::commit()
   anari::setAndReleaseParameter(d, tex, "image", makeTextureData(d, 8));
   anari::setParameter(d, tex, "inAttribute", "attribute0");
   anari::setParameter(d, tex, "filter", "nearest");
-  anari::commit(d, tex);
+  anari::commitParameters(d, tex);
 
   auto mat = anari::newObject<anari::Material>(d, "matte");
   anari::setAndReleaseParameter(d, mat, "color", tex);
-  anari::commit(d, mat);
+  anari::commitParameters(d, mat);
   anari::setAndReleaseParameter(d, surface, "material", mat);
-  anari::commit(d, surface);
+  anari::commitParameters(d, surface);
 
   auto group = anari::newObject<anari::Group>(d);
   anari::setAndReleaseParameter(
       d, group, "surface", anari::newArray1D(d, &surface));
-  anari::commit(d, group);
+  anari::commitParameters(d, group);
 
   anari::release(d, surface);
 
@@ -122,10 +127,9 @@ void TexturedCube::commit()
 
     auto tl = glm::translate(glm::mat4(1.f), glm::vec3(0, 0, .5f));
     auto rot = glm::rotate(glm::mat4(1.f), rotation, axis);
-    glm::mat4x3 xfm = rot * tl;
-    anari::setParameter(d, inst, "transform", xfm);
+    anari::setParameter(d, inst, "transform", rot * tl);
     anari::setParameter(d, inst, "group", group);
-    anari::commit(d, inst);
+    anari::commitParameters(d, inst);
     return inst;
   };
 
@@ -147,7 +151,7 @@ void TexturedCube::commit()
 
   setDefaultLight(m_world);
 
-  anari::commit(d, m_world);
+  anari::commitParameters(d, m_world);
 }
 
 std::vector<Camera> TexturedCube::cameras()

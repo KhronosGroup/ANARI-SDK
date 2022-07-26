@@ -1,9 +1,49 @@
 ## Copyright 2021 The Khronos Group
 ## SPDX-License-Identifier: Apache-2.0
 
+cmake_minimum_required(VERSION 3.11)
+
+message(STATUS "CMake version: ${CMAKE_VERSION}")
+
+if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
+  set(IN_SDK_SOURCE_TREE FALSE)
+else()
+  set(IN_SDK_SOURCE_TREE TRUE)
+endif()
+
+## Language setup
+
+set(CMAKE_DISABLE_SOURCE_CHANGES ON)
+set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
+
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+set(CMAKE_BUILD_TYPE_INIT Release)
+
+set(CMAKE_INSTALL_RPATH "$ORIGIN")
+set(CMAKE_INSTALL_MESSAGE LAZY)
+
+## Establish project
 
 project(anari_library_example LANGUAGES CXX)
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+
+include(GNUInstallDirs)
+
+## Dependencies
+
+set(glm_DIR ${CMAKE_CURRENT_LIST_DIR}/../../external/glm/lib/cmake/glm)
+find_package(glm REQUIRED)
+find_package(anari REQUIRED)
+
+mark_as_advanced(glm_DIR)
 
 if(APPLE)
   if(CMAKE_C_COMPILER_ID MATCHES "Clang")
@@ -33,6 +73,8 @@ else()
   set(REFERENCE_DEVICE_VERSION -1)
 endif()
 
+## Code generation
+
 if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
   find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
@@ -46,8 +88,6 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
     DEPENDS example_device.json
   )
 
-  add_dependencies(generate_all generate_example_device)
-
   add_custom_target(generate_example_debug_objects
     COMMAND ${Python3_EXECUTABLE} ${ANARI_CODE_GEN_ROOT}/generate_debug_objects.py
       --json ${ANARI_CODE_GEN_ROOT}
@@ -58,9 +98,13 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
     DEPENDS example_device.json
   )
 
-  add_dependencies(generate_all generate_example_debug_objects)
-
+  if (IN_SDK_SOURCE_TREE)
+    add_dependencies(generate_all generate_example_device)
+    add_dependencies(generate_all generate_example_debug_objects)
+  endif()
 endif()
+
+## Core device target
 
 add_library(${PROJECT_NAME} SHARED
   glm_extras.cpp
@@ -109,9 +153,9 @@ PUBLIC
 
 target_link_libraries(${PROJECT_NAME}
 PUBLIC
-  anari
-  anari_utilities
-  anari_library_debug
+  anari::anari
+  anari::anari_utilities
+  anari::anari_library_debug
 PRIVATE
   glm::glm
 )

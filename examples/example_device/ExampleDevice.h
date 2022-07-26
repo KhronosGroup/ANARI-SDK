@@ -25,10 +25,6 @@ struct EXAMPLE_DEVICE_INTERFACE ExampleDevice : public DeviceImpl,
   // Main interface to accepting API calls
   /////////////////////////////////////////////////////////////////////////////
 
-  // Device API ///////////////////////////////////////////////////////////////
-
-  int deviceImplements(const char *extension) override;
-
   // Data Arrays //////////////////////////////////////////////////////////////
 
   ANARIArray1D newArray1D(const void *appMemory,
@@ -105,7 +101,7 @@ struct EXAMPLE_DEVICE_INTERFACE ExampleDevice : public DeviceImpl,
 
   void unsetParameter(ANARIObject object, const char *name) override;
 
-  void commit(ANARIObject object) override;
+  void commitParameters(ANARIObject object) override;
 
   void release(ANARIObject _obj) override;
   void retain(ANARIObject _obj) override;
@@ -114,7 +110,11 @@ struct EXAMPLE_DEVICE_INTERFACE ExampleDevice : public DeviceImpl,
 
   ANARIFrame newFrame() override;
 
-  const void *frameBufferMap(ANARIFrame fb, const char *channel) override;
+  const void *frameBufferMap(ANARIFrame fb,
+      const char *channel,
+      uint32_t *width,
+      uint32_t *height,
+      ANARIDataType *pixelType) override;
 
   void frameBufferUnmap(ANARIFrame fb, const char *channel) override;
 
@@ -131,6 +131,7 @@ struct EXAMPLE_DEVICE_INTERFACE ExampleDevice : public DeviceImpl,
   /////////////////////////////////////////////////////////////////////////////
 
   ExampleDevice();
+  ExampleDevice(ANARILibrary);
   ~ExampleDevice() override = default;
 
   void flushCommitBuffer();

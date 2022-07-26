@@ -6,6 +6,9 @@
 // anari
 #include "anari/anari.h"
 #include "anari/anari_cpp/Traits.h"
+
+#include "anari/backend/LibraryImpl.h"
+
 // std
 #include <map>
 #include <string>
@@ -34,10 +37,6 @@ struct ANARI_INTERFACE DeviceImpl
   /////////////////////////////////////////////////////////////////////////////
   // Main virtual interface to accepting API calls
   /////////////////////////////////////////////////////////////////////////////
-
-  // Device API ///////////////////////////////////////////////////////////////
-
-  virtual int deviceImplements(const char *extension) = 0;
 
   // Data Arrays //////////////////////////////////////////////////////////////
 
@@ -108,7 +107,7 @@ struct ANARI_INTERFACE DeviceImpl
 
   virtual void unsetParameter(ANARIObject object, const char *name) = 0;
 
-  virtual void commit(ANARIObject object) = 0;
+  virtual void commitParameters(ANARIObject object) = 0;
 
   virtual void release(ANARIObject _obj) = 0;
   virtual void retain(ANARIObject _obj) = 0;
@@ -126,7 +125,11 @@ struct ANARI_INTERFACE DeviceImpl
 
   virtual ANARIFrame newFrame() = 0;
 
-  virtual const void *frameBufferMap(ANARIFrame fb, const char *channel) = 0;
+  virtual const void *frameBufferMap(ANARIFrame fb,
+      const char *channel,
+      uint32_t *width,
+      uint32_t *height,
+      ANARIDataType *pixelType) = 0;
 
   virtual void frameBufferUnmap(ANARIFrame fb, const char *channel) = 0;
 
@@ -150,22 +153,20 @@ struct ANARI_INTERFACE DeviceImpl
   // Helper/other functions and data members
   /////////////////////////////////////////////////////////////////////////////
 
+  DeviceImpl(ANARILibrary);
   DeviceImpl() = default;
   virtual ~DeviceImpl() = default;
 
   ANARIDevice this_device() const;
+
+  ANARIStatusCallback m_defaultStatusCB{nullptr};
+  const void *m_defaultStatusCBUserPtr{nullptr};
 
  protected:
   ANARIStatusCallback defaultStatusCallback() const;
   const void *defaultStatusCallbackUserPtr() const;
 
   bool handleIsDevice(ANARIObject obj) const;
-
- public:
-  // NOTE: Unsuccessful to get the declaration of anariNewDevice() declared
-  // correctly as a friend function to keep these private.
-  ANARIStatusCallback m_defaultStatusCB{nullptr};
-  const void *m_defaultStatusCBUserPtr{nullptr};
 };
 
 ANARI_TYPEFOR_SPECIALIZATION(DeviceImpl *, ANARI_DEVICE);

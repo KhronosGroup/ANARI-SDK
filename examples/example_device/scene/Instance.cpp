@@ -22,7 +22,7 @@ void Instance::commit()
   m_normXfm.reset();
 
   if (hasParam("transform")) {
-    mat4 xfm = getParam<mat4x3>("transform", mat4x3(1));
+    mat4 xfm = getParam<mat4>("transform", mat4(1));
     b = xfmBox(xfm, b);
     m_xfm = xfm;
     m_invXfm = glm::inverse(xfm);

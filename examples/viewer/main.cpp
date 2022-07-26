@@ -9,6 +9,7 @@
 // Global variables
 std::string g_libraryType = "environment";
 std::string g_deviceType = "default";
+std::string g_rendererType = "default";
 std::string g_objFile;
 
 ANARILibrary g_library = nullptr;
@@ -79,21 +80,16 @@ static void initializeANARI()
   ANARIDevice dev = anariNewDevice(g_library, g_deviceType.c_str());
   if (g_enableDebug) {
     ANARIDevice dbg = anariNewDevice(g_debug, "debug");
-    anariSetParameter(dbg, dbg, "wrappedDevice", ANARI_DEVICE, &dev);
-    anariCommit(dbg, dbg);
-    anariRelease(dev, dev);
+    anari::setParameter(dbg, dbg, "wrappedDevice", ANARI_DEVICE, &dev);
+    anari::commitParameters(dbg, dbg);
+    anari::release(dev, dev);
     dev = dbg;
   }
   if (!dev)
     std::exit(1);
 
-  // For the NVGL device: pass the function that gets the OpenGL context
-  void *ogl_func_ptr = (void *)glfwGetProcAddress;
-  anariSetParameter(
-      dev, dev, "oglGetProcAddress", ANARI_VOID_POINTER, &ogl_func_ptr);
-
   // Affect the callback settings and OGL parameter
-  anariCommit(dev, dev);
+  anari::commitParameters(dev, dev);
 
   // Save in the global variable
   g_device = dev;
@@ -103,7 +99,12 @@ static void initializeANARI()
 void printUsage()
 {
   std::cout
-      << "./anariViewer [{--help|-h}] [{--verbose|-v}] [{--debug|-d}] [{--library|-l} <ANARI library>] [.obj intput file]"
+      << "./anariViewer [{--help|-h}]\n"
+      << "   [{--verbose|-v}] [{--debug|-g}]\n"
+      << "   [{--library|-l} <ANARI library>]\n"
+      << "   [{--device|-d} <ANARI device>]\n"
+      << "   [{--renderer|-r} <ANARI renderer>]\n"
+      << "   [.obj intput file]"
       << std::endl;
 }
 
@@ -117,7 +118,11 @@ void parseCommandLine(int argc, const char *argv[])
       std::exit(0);
     } else if (arg == "--library" || arg == "-l") {
       g_libraryType = argv[++i];
-    } else if (arg == "--debug" || arg == "-d") {
+    } else if (arg == "--device" || arg == "-d") {
+      g_deviceType = argv[++i];
+    } else if (arg == "--renderer" || arg == "-r") {
+      g_rendererType = argv[++i];
+    } else if (arg == "--debug" || arg == "-g") {
       g_enableDebug = true;
     } else if (arg == "--verbose" || arg == "-v") {
       g_verbose = true;
@@ -141,7 +146,7 @@ int main(int argc, const char *argv[])
 
   // Set the opening scene.  When no filename argument is provided, default
   //   to the "random_sphere" scene
-  window->setDevice(g_device);
+  window->setDevice(g_device, g_rendererType);
   if (!g_objFile.empty())
     window->setScene("file_obj", "fileName", g_objFile);
   else

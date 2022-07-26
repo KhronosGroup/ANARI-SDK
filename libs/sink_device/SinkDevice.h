@@ -31,10 +31,6 @@ namespace sink_device {
 
 struct SINK_DEVICE_INTERFACE SinkDevice : public DeviceImpl, public RefCounted
 {
-  // Device API ///////////////////////////////////////////////////////////////
-
-  int deviceImplements(const char *extension) override;
-
   // Data Arrays //////////////////////////////////////////////////////////////
 
   ANARIArray1D newArray1D(const void *appMemory,
@@ -111,7 +107,7 @@ struct SINK_DEVICE_INTERFACE SinkDevice : public DeviceImpl, public RefCounted
 
   void unsetParameter(ANARIObject object, const char *name) override;
 
-  void commit(ANARIObject object) override;
+  void commitParameters(ANARIObject object) override;
 
   void release(ANARIObject _obj) override;
   void retain(ANARIObject _obj) override;
@@ -120,7 +116,11 @@ struct SINK_DEVICE_INTERFACE SinkDevice : public DeviceImpl, public RefCounted
 
   ANARIFrame newFrame() override;
 
-  const void *frameBufferMap(ANARIFrame fb, const char *channel) override;
+  const void *frameBufferMap(ANARIFrame fb,
+      const char *channel,
+      uint32_t *width,
+      uint32_t *height,
+      ANARIDataType *pixelType) override;
 
   void frameBufferUnmap(ANARIFrame fb, const char *channel) override;
 
@@ -136,7 +136,7 @@ struct SINK_DEVICE_INTERFACE SinkDevice : public DeviceImpl, public RefCounted
   // Helper/other functions and data members
   /////////////////////////////////////////////////////////////////////////////
 
-  SinkDevice();
+  SinkDevice(ANARILibrary);
   ~SinkDevice() = default;
 
  private:
@@ -150,7 +150,7 @@ struct SINK_DEVICE_INTERFACE SinkDevice : public DeviceImpl, public RefCounted
 
     void *map()
     {
-      return const_cast<void*>(memory);
+      return const_cast<void *>(memory);
     }
     void retain()
     {

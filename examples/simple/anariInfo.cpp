@@ -206,9 +206,9 @@ void print_info(ANARILibrary lib, const char *device, const char *objname, ANARI
     printf("%sdescription = \"%s\"\n", indent, (const char*)mem);
   }
 
-  mem = anariGetParameterInfo(lib, device, objname, objtype, paramname, paramtype, "feature", ANARI_STRING);
+  mem = anariGetParameterInfo(lib, device, objname, objtype, paramname, paramtype, "sourceFeature", ANARI_STRING);
   if(mem) {
-    printf("%sfeature = %s\n", indent, (const char*)mem);
+    printf("%ssourceFeature = %s\n", indent, (const char*)mem);
   }
 }
 
@@ -263,6 +263,12 @@ int main(int argc, const char **argv)
     return 0;
   }
 
+  printf("SDK version: %i.%i.%i\n",
+    ANARI_SDK_VERSION_MAJOR,
+    ANARI_SDK_VERSION_MINOR,
+    ANARI_SDK_VERSION_PATCH
+  );
+
   ANARILibrary lib = anariLoadLibrary(libraryName, statusFunc, NULL);
 
   const char **devices = anariGetDeviceSubtypes(lib);
@@ -303,7 +309,7 @@ int main(int argc, const char **argv)
               continue;
             }
             printf("      %s %s:\n", anari::toString(namedTypes[j]), types[k]);
-            const ANARIParameter *params = anariGetObjectParameters(lib, devices[i], types[k], namedTypes[j]);
+            const ANARIParameter *params = (const ANARIParameter*)anariGetObjectInfo(lib, devices[i], types[k], namedTypes[j], "parameter", ANARI_PARAMETER_LIST);
             if(params) {
               for(int l = 0;params[l].name;++l){
                 printf("         * %-25s %-25s\n", params[l].name, anari::toString(params[l].type));
@@ -323,7 +329,7 @@ int main(int argc, const char **argv)
           }
 
           printf("      %s:\n", anari::toString(anonymousTypes[j]));
-          const ANARIParameter *params = anariGetObjectParameters(lib, devices[i], 0, anonymousTypes[j]);
+          const ANARIParameter *params = (const ANARIParameter*)anariGetObjectInfo(lib, devices[i], 0, anonymousTypes[j], "parameter", ANARI_PARAMETER_LIST);
           if(params) {
             for(int l = 0;params[l].name;++l){
               printf("         * %-25s %-25s\n", params[l].name, anari::toString(params[l].type));

@@ -137,10 +137,10 @@
                 {"name" : "ANARI_FLOAT32_BOX3", "value" : 2010, "baseType" : "float", "elements" : 6, "normalized" : false},
                 {"name" : "ANARI_FLOAT32_BOX4", "value" : 2011, "baseType" : "float", "elements" : 8, "normalized" : false},
 
-                {"name" : "ANARI_UINT64_BOX1", "value" : 2104, "baseType" : "uint64_t", "elements" : 2, "normalized" : false},
-                {"name" : "ANARI_UINT64_BOX2", "value" : 2105, "baseType" : "uint64_t", "elements" : 4, "normalized" : false},
-                {"name" : "ANARI_UINT64_BOX3", "value" : 2106, "baseType" : "uint64_t", "elements" : 6, "normalized" : false},
-                {"name" : "ANARI_UINT64_BOX4", "value" : 2107, "baseType" : "uint64_t", "elements" : 8, "normalized" : false},
+                {"name" : "ANARI_UINT64_REGION1", "value" : 2104, "baseType" : "uint64_t", "elements" : 2, "normalized" : false},
+                {"name" : "ANARI_UINT64_REGION2", "value" : 2105, "baseType" : "uint64_t", "elements" : 4, "normalized" : false},
+                {"name" : "ANARI_UINT64_REGION3", "value" : 2106, "baseType" : "uint64_t", "elements" : 6, "normalized" : false},
+                {"name" : "ANARI_UINT64_REGION4", "value" : 2107, "baseType" : "uint64_t", "elements" : 8, "normalized" : false},
 
                 {"name" : "ANARI_FLOAT32_MAT2", "value" : 2012, "baseType" : "float", "elements" : 4, "normalized" : false},
                 {"name" : "ANARI_FLOAT32_MAT3", "value" : 2013, "baseType" : "float", "elements" : 9, "normalized" : false},
@@ -285,13 +285,6 @@
             "arguments" : [
                 {"name" : "library", "type" : "ANARILibrary"},
                 {"name" : "type", "type" : "const char*", "default" : "\"default\""}
-            ]
-        }, {
-            "name" : "anariDeviceImplements",
-            "returnType" : "int",
-            "arguments" : [
-                {"name" : "device", "type" : "ANARIDevice"},
-                {"name" : "profile", "type" : "const char*"}
             ]
         }, {
             "name" : "anariNewArray1D",
@@ -449,7 +442,7 @@
                 {"name" : "name", "type" : "const char*"}
             ]
         }, {
-            "name" : "anariCommit",
+            "name" : "anariCommitParameters",
             "returnType" : "void",
             "arguments" : [
                 {"name" : "device", "type" : "ANARIDevice"},
@@ -484,13 +477,15 @@
                 {"name" : "objectType", "type" : "ANARIDataType"}
             ]
         }, {
-            "name" : "anariGetObjectParameters",
-            "returnType" : "const ANARIParameter*",
+            "name" : "anariGetObjectInfo",
+            "returnType" : "const void*",
             "arguments" : [
                 {"name" : "library", "type" : "ANARILibrary"},
                 {"name" : "deviceSubtype", "type" : "const char*"},
                 {"name" : "objectSubtype", "type" : "const char*"},
-                {"name" : "objectType", "type" : "ANARIDataType"}
+                {"name" : "objectType", "type" : "ANARIDataType"},
+                {"name" : "infoName", "type" : "const char*"},
+                {"name" : "infoType", "type" : "ANARIDataType"}
             ]
         }, {
             "name" : "anariGetParameterInfo",
@@ -529,7 +524,10 @@
             "arguments" : [
                 {"name" : "device", "type" : "ANARIDevice"},
                 {"name" : "frame", "type" : "ANARIFrame"},
-                {"name" : "channel", "type" : "const char*"}
+                {"name" : "channel", "type" : "const char*"},
+                {"name" : "width", "type" : "uint32_t*"},
+                {"name" : "height", "type" : "uint32_t*"},
+                {"name" : "pixelType", "type" : "ANARIDataType*"}
             ]
         }, {
             "name" : "anariUnmapFrame",

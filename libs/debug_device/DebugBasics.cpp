@@ -51,10 +51,6 @@ namespace debug_device {
         STATUS, __VA_ARGS__);
 
 DebugBasics::DebugBasics(DebugDevice *td) : td(td) { }
-void DebugBasics::anariDeviceImplements(ANARIDevice device, const char* profile) {
-    (void)device;
-    (void)profile;
-}
 void DebugBasics::anariNewArray1D(ANARIDevice device, const void *appMemory, ANARIMemoryDeleter deleter,
     const void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t byteStride1) {
     DEBUG_FUNCTION(anariNewArray1D)
@@ -241,8 +237,8 @@ void DebugBasics::anariUnsetParameter(ANARIDevice device, ANARIObject object, co
     (void)device;
     (void)name;
 }
-void DebugBasics::anariCommit(ANARIDevice device, ANARIObject object) {
-    DEBUG_FUNCTION_SOURCE(anariCommit, object)
+void DebugBasics::anariCommitParameters(ANARIDevice device, ANARIObject object) {
+    DEBUG_FUNCTION_SOURCE(anariCommitParameters, object)
     (void)device;
     if(DEBUG_SOURCE_INFO->getUncommittedParameters() == 0) {
         DEBUG_REPORT(ANARI_SEVERITY_WARNING, ANARI_STATUS_NO_ERROR,

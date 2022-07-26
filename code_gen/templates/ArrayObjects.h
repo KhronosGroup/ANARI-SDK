@@ -10,9 +10,7 @@
 $begin_namespaces
 
 template<>
-class Object<Array1D> : public ArrayObjectBase {
-   Array1D staging;
-   Array1D current;
+class Object<Array1D> : public DefaultObject<Array1D, ArrayObjectBase> {
 public:
    const void* appMemory;
    ANARIMemoryDeleter deleter;
@@ -27,26 +25,15 @@ public:
       ANARIMemoryDeleter deleter, const void* userdata, ANARIDataType type,
       uint64_t numItems1, uint64_t byteStride1);
 
-   bool set(const char *paramname, ANARIDataType type, const void *mem) override;
-   void unset(const char *paramname) override;
-   void commit() override;
-   int getProperty(
-      const char *propname, ANARIDataType type,
-      void *mem, uint64_t size, ANARIWaitMask mask) override;
    void* map() override;
    void unmap() override;
    void releasePublic() override;
-   ANARIDataType type() const override { return Array1D::type; }
-   const char* subtype() const override { return Array1D::subtype; }
-   ParameterPack& parameters() override { return current; }
    const std::vector<ANARIObject>& objects() { return objectArray; }
    ~Object();
 };
 
 template<>
-class Object<Array2D> : public ArrayObjectBase {
-   Array2D staging;
-   Array2D current;
+class Object<Array2D> : public DefaultObject<Array2D, ArrayObjectBase> {
 public:
    const void* appMemory;
    ANARIMemoryDeleter deleter;
@@ -62,25 +49,14 @@ public:
       uint64_t numItems1, uint64_t numItems2,
       uint64_t byteStride1, uint64_t byteStride2);
 
-   bool set(const char *paramname, ANARIDataType type, const void *mem) override;
-   void unset(const char *paramname) override;
-   void commit() override;
-   int getProperty(
-      const char *propname, ANARIDataType type,
-      void *mem, uint64_t size, ANARIWaitMask mask) override;
    void* map() override;
    void unmap() override;
    void releasePublic() override;
-   ANARIDataType type() const override { return Array2D::type; }
-   const char* subtype() const override { return Array2D::subtype; }
-   ParameterPack& parameters() override { return current; }
    ~Object();
 };
 
 template<>
-class Object<Array3D> : public ArrayObjectBase {
-   Array3D staging;
-   Array3D current;
+class Object<Array3D> : public DefaultObject<Array3D, ArrayObjectBase> {
 public:
    const void* appMemory;
    ANARIMemoryDeleter deleter;
@@ -98,18 +74,9 @@ public:
       uint64_t numItems1, uint64_t numItems2, uint64_t numItems3,
       uint64_t byteStride1, uint64_t byteStride2, uint64_t byteStride3);
 
-   bool set(const char *paramname, ANARIDataType type, const void *mem) override;
-   void unset(const char *paramname) override;
-   void commit() override;
-   int getProperty(
-      const char *propname, ANARIDataType type,
-      void *mem, uint64_t size, ANARIWaitMask mask) override;
    void* map() override;
    void unmap() override;
    void releasePublic() override;
-   ANARIDataType type() const override { return Array3D::type; }
-   const char* subtype() const override { return Array3D::subtype; }
-   ParameterPack& parameters() override { return current; }
    ~Object();
 };
 
