@@ -126,26 +126,29 @@ If only the actual vertices should be compared, the depth test can be render to 
 - Conformance test report as PDF showing the differences between test images and ground truth
 
 ### Verification of object/parameter info metadata
-
+The CTS should be able to query all static object/parameter info metadata of a device. This can be used to check which types and features are implemented by a ANARI device.
 #### Python API
-
-- Executes the verification
-- Presents the results to the user
+The Python API is used by the user to invoke the query. The function could look similar to this:
+```python
+def queryMetadata(anari_device)
+```
+This will invoke the required ANARI calls for the specified device in the C++ backend via pybind11. The queried information will be displayed via python standard output.
 
 #### C++
-
-- Queries all items via Object introspection
+The C++ backend will first call `anariGetDeviceSubtypes` to get a list of device subtypes implemented. Then `anariGetObjectSubtypes` is called on each previously queried device subtype to get all object subtypes if available. Now `anariGetObjectInfo` is called on all types and subtypes. This can extract the description (if it exists) and the parameter list of a type/subtype. Finally, all parameters are queried for their properties via `anariGetParameterInfo`. This includes the following information (if defined): description, minimum, maximum, default, elementType, required, value.
 
 #### Example output
 
 - List of all available objects/parameter info metadata
 
 ### Verification of known object properties
-
+The CTS should be able to check if object properties are applied correctly. This can be done by loading a test scene and verifying if the values of the predefined scene are set correctly.
 #### Python API
 
-- Executes the verification
-- Presents the results to the user
+The Python API is used by the user to invoke the check. The function could look similar to this:
+```python
+def checkProperties(anari_device, test_scene)
+```
 
 #### C++
 
@@ -156,7 +159,7 @@ If only the actual vertices should be compared, the depth test can be render to 
 - List of invalid property values
 
 ### List core extensions implemented by a device
-
+The CTS should be able to list all core extensions and show which one is implemented by the ANARI device.
 #### Python API
 
 - Executes the query
