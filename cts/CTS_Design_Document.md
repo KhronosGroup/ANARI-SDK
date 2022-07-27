@@ -135,7 +135,7 @@ def query_metadata(anari_library)
 This will invoke the required ANARI calls for the specified device of `anari_library` in the C++ backend via pybind11. The queried information will be displayed via python standard output.
 
 #### C++
-The C++ backend will first setup the ANARI device and call `anariGetDeviceSubtypes` to get a list of device subtypes implemented. Then `anariGetObjectSubtypes` is called on each previously queried device subtype to get all object subtypes if available. Now `anariGetObjectInfo` is called on all types and subtypes. This can extract the description (if it exists) and the parameter list of a type/subtype. Finally, all parameters are queried for their properties via `anariGetParameterInfo`. This includes the following information (if defined): description, minimum, maximum, default, elementType, required, value. The anariInfo tool has this functionality already and could be used for this task.
+The C++ backend will first setup the ANARI device and call `anariGetDeviceSubtypes` to get a list of device subtypes implemented. Then `anariGetObjectSubtypes` is called on each previously queried device subtype to get all object subtypes if available. Now `anariGetObjectInfo` is called on all types and subtypes. This can extract the description (if it exists) and the parameter list of a type/subtype. Finally, all parameters are queried for their properties via `anariGetParameterInfo`. This includes the following information (if defined): description, minimum, maximum, default, elementType, required, value. The anariInfo tool has this functionality already and could be used for this ta.
 
 #### Example output
 
@@ -164,7 +164,9 @@ The python API can be invoked by a function similar to this:
 ```python
 def check_core_extensions(anari_library, anari_device = None)
 ```
-This setups the specified ANARI device (if `None` is set, the default device is used) and call `anariGetObjectFeatures` on it. Afterwards, it is checked if each core extensions is included in the supported features and the result is returned. An example implementation can be found in anariTutorial.c:
+If no anari_device is specified, the default device is used.
+#### C++
+The C++ backend setups the ANARI device and calls `anariGetObjectFeatures` on it. Afterwards, it is checked if each core extensions is included in the supported features and the result is returned. An example implementation can be found in anariTutorial.c:
 ```C
 ANARIFeatures features;
 if (anariGetObjectFeatures(
@@ -181,10 +183,6 @@ if (!features.ANARI_KHR_LIGHT_DIRECTIONAL)
 if (!features.ANARI_KHR_MATERIAL_MATTE)
   printf("WARNING: device doesn't support ANARI_KHR_MATERIAL_MATTE\n");
 ```
-
-#### C++
-
-- Checks availability of each core extension
 
 #### Example output
 
