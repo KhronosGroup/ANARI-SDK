@@ -32,6 +32,7 @@
 ## Q&A <!-- omit in toc -->
 
 - Depth test is defined as Euclidean distance (not normalized). If we want to use it as metric, a suitable range needs to be defined for all or each test scene.
+- How should waitMask be defined? Should it be settable by the user?
 
 ## Introduction
 
@@ -189,8 +190,11 @@ if (!features.ANARI_KHR_MATERIAL_MATTE)
 - List of all available core extensions
 
 ### Aggregated test results
-
-- Runs all tests and creates one report containing all test cases in a single PDF file
+The python API should be able to call all previously defined features and accumulate their results in a PDF file. The API function can be define as:
+```python
+def create_report(test_scenes, ground_truth_images, anari_library, anari_device = None, anari_renderer = "default", test_images = None, output_folder = ".", comparison_methods = ["SSIM"], thresholds = None, custom_compare_function = None)
+```
+This function runs all tests with their respective parameters. If `test_images` is set to `None`, they will be created by the specified device and renderer. Otherwise the generation of the renderings is skipped. After all tests are run their results are accumulated into a PDF. This can be achieved with the `reportlab` library.
 
 ## References
 
