@@ -50,7 +50,7 @@ The C++ library is written in C++11. A newer C++ version can also be used if the
 
 ### Python CTS API
 
-The Python CTS API is written in Python 3.6 or higher (requirement of pybind11). It is used to parse all user input from the CLI via argparse[^argparse] and calls the needed ANARI functionality via pybind11. All I/O is handled by Python, therefore the C++ backend should only return e.g. the pixel data and the Python API writes the rendering to disk. All logging information of ANARI calls should also be saved to a file. The API should also be callable as a Python module, so more sophisticated users can call the function from another python script instead of invoking it via CLI. The most important role of the Python API is the actual image comparison between renderings from ANARI devices and the ground truth. Multiple comparison methods should be provided. The results of all API calls can be aggregated into a single PDF or shown via Python standard output.
+The CTS API is written in Python 3.6 or higher (requirement of pybind11). It is used to parse all user input from the CLI via argparse[^argparse] and calls the needed ANARI functionality via pybind11. All I/O is handled by Python, therefore the C++ backend should only return e.g. the pixel data and the Python API writes the rendering to disk. All logging information of ANARI calls should also be saved to a file. The API should also be callable as a Python module, so more sophisticated users can call the function from another Python script instead of invoking it via CLI. The most important role of the Python API is the actual image comparison between renderings from ANARI devices and the ground truth. Multiple comparison methods should be provided. The results of all API calls can be aggregated into a single PDF or shown via Python standard output.
 
 ## Features
 
@@ -128,16 +128,16 @@ If only the actual vertices should be compared, the depth test can be render to 
 - Conformance test report as PDF showing the differences between test images and ground truth
 
 ### Verification of object/parameter info metadata
-The CTS should be able to query all static object/parameter info metadata of a library. This can be used to check which types and features are implemented by a ANARI library.
+The CTS should be able to query all static object/parameter info metadata of a library. This can be used to check which types and features are implemented by an ANARI library.
 #### Python API
 The Python API is used by the user to invoke the query. The function could look similar to this:
 ```python
 def query_metadata(anari_library)
 ```
-This will invoke the required ANARI calls for the specified device of `anari_library` in the C++ backend via pybind11. The queried information will be displayed via python standard output.
+This will invoke the required ANARI calls for the specified device of `anari_library` in the C++ backend via pybind11. The queried information will be displayed via Python standard output.
 
 #### C++
-The C++ backend will first setup the ANARI device and call `anariGetDeviceSubtypes` to get a list of device subtypes implemented. Then `anariGetObjectSubtypes` is called on each previously queried device subtype to get all object subtypes if available. Now `anariGetObjectInfo` is called on all types and subtypes. This can extract the description (if it exists) and the parameter list of a type/subtype. Finally, all parameters are queried for their properties via `anariGetParameterInfo`. This includes the following information (if defined): description, minimum, maximum, default, elementType, required, value. The anariInfo tool has this functionality already and could be used for this ta.
+The C++ backend will first set up the ANARI device and call `anariGetDeviceSubtypes` to get a list of device subtypes implemented. Then `anariGetObjectSubtypes` is called on each previously queried device subtype to get all object subtypes if available. Now `anariGetObjectInfo` is called on all types and subtypes. This extracts the description (if it exists) and the parameter list of a type/subtype. Finally, all parameters are queried for their properties via `anariGetParameterInfo`. This includes the following information (if defined): description, minimum, maximum, default, elementType, required, value. The anariInfo tool has this functionality already and could be used for this task.
 
 #### Example output
 
@@ -151,24 +151,24 @@ The Python API is used by the user to invoke the check. The function could look 
 ```python
 def check_properties(test_scene, anari_library, anari_device = None, anari_renderer = "default")
 ```
-This invokes the required ANARI calls for the specified device and test scene in the C++ backend via pybind11. If `anari_device` is set to `None`, the default device is used (first device of `anariGetDeviceSubtypes`). The default renderer is used if no other renderer is specified. A list of invalid properties will be displayed via python standard output.
+This invokes the required ANARI calls for the specified device and test scene in the C++ backend via pybind11. If `anari_device` is set to `None`, the default device is used (first device of `anariGetDeviceSubtypes`). The default renderer is used if no other renderer is specified. A list of invalid properties will be displayed via Python standard output.
 #### C++
-The C++ backend will first setup the ANARI device and load the test scene. It will check the properties `bounds` of `Group`, `Instance`, `World` via `anariGetProperty`. These correct value needs to be defined in the test scene (or computed with the test scene parameters).
-Non matching results will be returned to the python API.
+The C++ backend will first setup the ANARI device and load the test scene. It will check the properties `bounds` of `Group`, `Instance` and `World` via `anariGetProperty`. The correct values need to be defined in the test scene (or be computed with the test scene parameters).
+Non matching results will be returned to the Python API.
 
 #### Example output
 - List of invalid property values
 
 ### List core extensions implemented by a device
-The CTS should be able to list all core extensions and show which one is implemented by the ANARI device.
+The CTS should be able to list all core extensions and show which ones are implemented by the ANARI device.
 #### Python API
-The python API can be invoked by a function similar to this:
+The Python API can be invoked by a function similar to this:
 ```python
 def check_core_extensions(anari_library, anari_device = None)
 ```
-If no anari_device is specified, the default device is used.
+If no `anari_device` is specified, the default device is used.
 #### C++
-The C++ backend setups the ANARI device and calls `anariGetObjectFeatures` on it. Afterwards, it is checked if each core extensions is included in the supported features and the result is returned. An example implementation can be found in anariTutorial.c:
+The C++ backend sets up the ANARI device and calls `anariGetObjectFeatures` on it. Afterwards, it is checked if each core extensions is included in the supported features and the result is returned. An example implementation can be found in anariTutorial.c:
 ```C
 ANARIFeatures features;
 if (anariGetObjectFeatures(
@@ -191,7 +191,7 @@ if (!features.ANARI_KHR_MATERIAL_MATTE)
 - List of all available core extensions
 
 ### Aggregated test results
-The python API should be able to call all previously defined features and accumulate their results in a PDF file. The API function can be define as:
+The Python API should be able to call all previously defined features and accumulate their results in a PDF file. The API function can be defined as:
 ```python
 def create_report(test_scenes, ground_truth_images, anari_library, anari_device = None, anari_renderer = "default", test_images = None, output_folder = ".", comparison_methods = ["SSIM"], thresholds = None, custom_compare_function = None)
 ```
