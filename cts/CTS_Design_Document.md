@@ -36,6 +36,8 @@
 - Depth test is defined as Euclidean distance (not normalized). If we want to use it as metric, a suitable range needs to be defined for all or each test scene.
 - How should waitMask be defined? Should it be settable by the user?
 - Should we output the ANARI log for every feature (it is only stated for creating the renderings)? Should the output be put into a file or also be shown via python standard output?
+- Should the user define the test scene for `check_properties` or should it iterate over all scenes?
+- Should the test scenes contain complex polygon models created with triangles? Should these models be generated somehow or loaded via files?
 
 ## Status
 Draft
@@ -63,20 +65,55 @@ The CTS API is written in Python 3.6 or higher (requirement of pybind11). It is 
 ## Features
 
 ### Render a set of known test scenes
-TODO: explain more
 #### Define test scene format
 
-- Scenes should be easy to generate
-- Scenes should cover edge cases
-- Scenes should be usable for objective structural testing
-
+Internally, use a dictionary for all the parameter settings. This could be achieved e.g. via JSON. To generate scenes, some parameters need to be specified, others should be consistent for all scenes for structural testing. Some parameters which should not change could entail: camera position, frame resolution, light settings (e.g. uniform white HDR) and used material.
+If possible, scenes should favor automatic generation to reduce the loading of assets files. The bounds properties need to be generated as well to create a ground truth to test against. Vertices could either be derived by specifying e.g. ten cylinders with a certain distance between each other, or for triangles and quads thirdparty tools could be used to generate vertex data. Another possibility would be the generation via a random distribution function, similar to [random_spheres.cpp](../libs/anari_test_scenes/scenes/random_spheres.cpp) with a fixed seed. Additionally, the test scenes should be able to cover edge cases.
 #### Python API
 
-- Lets user define parameters for the rendering
+The Python API is used by the user to invoke the rendering. The function could look similar to this:
+```python
+def render_scenes(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "all", output = ".")
+```
+This invokes the required ANARI calls for the specified device and library in the C++ backend via pybind11. If `anari_device` is set to `None`, the default device is used (first device of anariGetDeviceSubtypes). Now, all specified test scenes are rendered with the specified renderer. If no renderer is given, the default renderer is used. `test_scenes` can either be a category denoted by a string or be a number of scenes denoted by a list of strings. If no scene is given, all test scenes are used by default. `output` specifies the folder in which the renderings are saved. It defaults to the folder where the script is executed from. The python API receives the pixel data from the C++ backend and writes the renderings to disk. The log output from ANARI is also passed to the API and saved as a log file.
 
 #### C++
+The C++ backend first sets up the ANARI device. Afterwards, all passed test scenes are initialized and rendered. The pixel data for RGBA and depth channel as well as the ANARI log messages are passed to Python via pybind11.
 
-- Setup ANARI and render scene to image
+Example code on how to render scenes can be found in [tests/render/main.cpp](../tests/render/main.cpp):
+```C++
+  auto s = getSceneParameters(scene.c_str());
+
+  auto camera = anari::newObject<anari::Camera>(d, "perspective");
+  anari::setParameter(
+      d, camera, "aspect", (float)g_frameSize.x / (float)g_frameSize.y);
+
+  auto renderer = anari::newObject<anari::Renderer>(d, g_rendererType.c_str());
+  anari::setParameter(d, renderer, "pixelSamples", g_numPixelSamples);
+  anari::setParameter(
+      d, renderer, "backgroundColor", s.getBackgroundColor());
+  anari::commitParameters(d, renderer);
+
+  auto frame = anari::newObject<anari::Frame>(d);
+  anari::setParameter(d, frame, "size", g_frameSize);
+  anari::setParameter(d, frame, "color", ANARI_UFIXED8_RGBA_SRGB);
+
+  anari::setParameter(d, frame, "renderer", renderer);
+  anari::setParameter(d, frame, "camera", camera);
+  anari::setParameter(d, frame, "world", s.getWorld());
+
+  anari::commitParameters(d, frame);
+
+  ...
+
+  anari::render(d, frame);
+  anari::wait(d, frame);
+
+  auto fb = anari::map<uint32_t>(d, frame, "color");
+  auto fb_depth = anari::map<uint32_t>(d, frame, "depth");
+
+  ...
+```
 
 #### Example output
 
@@ -176,7 +213,7 @@ def check_core_extensions(anari_library, anari_device = None)
 ```
 If no `anari_device` is specified, the default device is used.
 #### C++
-The C++ backend sets up the ANARI device and calls `anariGetObjectFeatures` on it. Afterwards, it is checked if each core extensions is included in the supported features and the result is returned. An example implementation can be found in anariTutorial.c:
+The C++ backend sets up the ANARI device and calls `anariGetObjectFeatures` on it. Afterwards, it is checked if each core extensions is included in the supported features and the result is returned. An example implementation can be found in [anariTutorial.c](../examples/simple/anariTutorial.c):
 ```C
 ANARIFeatures features;
 if (anariGetObjectFeatures(
