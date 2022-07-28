@@ -33,6 +33,7 @@
 
 - Depth test is defined as Euclidean distance (not normalized). If we want to use it as metric, a suitable range needs to be defined for all or each test scene.
 - How should waitMask be defined? Should it be settable by the user?
+- Should we output the ANARI log for every feature (it is only stated for creating the renderings)? Should the output be put into a file or also be shown via python standard output?
 
 ## Introduction
 
@@ -194,7 +195,33 @@ The python API should be able to call all previously defined features and accumu
 ```python
 def create_report(test_scenes, ground_truth_images, anari_library, anari_device = None, anari_renderer = "default", test_images = None, output_folder = ".", comparison_methods = ["SSIM"], thresholds = None, custom_compare_function = None)
 ```
-This function runs all tests with their respective parameters. If `test_images` is set to `None`, they will be created by the specified device and renderer. Otherwise the generation of the renderings is skipped. After all tests are run their results are accumulated into a PDF. This can be achieved with the `reportlab` library.
+This function runs all tests with their respective parameters. If `test_images` is set to `None` or the path is invalid, they will be created by the specified device and renderer. Otherwise the generation of the renderings is skipped. After all tests are run their results are accumulated into a PDF. This can be achieved with the `reportlab` library. An example how to use `reportlab` can be seen in the 3DC-Certification repository [^reportexample], e.g. to create a table the following code can be used:
+```python
+# Evaluated metrics
+cell_size = (doc.width / 3)
+metrics_data = [
+    [
+        Paragraph("Metric", stylesheet["Heading4"]),
+        Paragraph("Value", stylesheet["Heading4"]),
+        Paragraph("Result", stylesheet["Heading4"])
+    ],
+    [
+        Paragraph("SSIM"), 
+        Paragraph(f'<code>{result["metrics"]["ssim"]:10.5f}</code>'), 
+        Paragraph("Above Threshold" if result["passed"]["ssim"] else '<font color="orange">Below Threshold</font>')
+    ],
+    [
+        Paragraph("PSNR"), 
+        Paragraph(f'<code>{result["metrics"]["psnr"]:10.5f}</code>'), 
+        Paragraph("Above Threshold" if result["passed"]["psnr"] else '<font color="orange">Below Threshold</font>')
+    ],
+]
+t = Table(metrics_data, 3 * [cell_size])
+t.setStyle(TableStyle([
+    ('GRID', (0,0), (-1,-1), 0.25, colors.black),
+]))
+story.append(t)
+```
 
 ## References
 
@@ -206,3 +233,4 @@ This function runs all tests with their respective parameters. If `test_images` 
 [^scikit-image]: https://scikit-image.org/
 [^psnr]: https://en.wikipedia.org/wiki/Peak_signal-to-noise_ratio
 [^mse]: https://en.wikipedia.org/wiki/Mean_squared_error
+[^reportexample]:https://github.com/KhronosGroup/3DC-Certification/blob/main/evaluation/report.py
