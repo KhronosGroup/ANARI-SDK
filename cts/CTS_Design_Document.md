@@ -37,7 +37,7 @@
 - How should waitMask be defined? Should it be settable by the user?
 - Should we output the ANARI log for every feature (it is only stated for creating the renderings)? Should the output be put into a file or also be shown via python standard output?
 - Should the user define the test scene for `check_properties` or should it iterate over all scenes?
-- Should the test scenes contain complex polygon models created with triangles? Should these models be generated somehow or loaded via files?
+- Should the test scenes contain complex polygon models created with triangles? Should these models be generated somehow or loaded via files? If yes, which shapes?
 
 ## Status
 Draft
