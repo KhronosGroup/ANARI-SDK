@@ -1,5 +1,7 @@
 # ANARI 1.0 CTS Design Document <!-- omit in toc -->
 
+- [Status](#status)
+- [Dependencies](#dependencies)
 - [Introduction](#introduction)
 - [Architecture](#architecture)
   - [C++ CTS library](#c-cts-library)
@@ -26,7 +28,7 @@
     - [Python API](#python-api-4)
     - [C++](#c-3)
     - [Example output](#example-output-4)
-  - [Aggregated test results](#aggregated-test-results)
+  - [Aggregate test results](#aggregate-test-results)
 - [References](#references)
 
 ## Q&A <!-- omit in toc -->
@@ -34,6 +36,12 @@
 - Depth test is defined as Euclidean distance (not normalized). If we want to use it as metric, a suitable range needs to be defined for all or each test scene.
 - How should waitMask be defined? Should it be settable by the user?
 - Should we output the ANARI log for every feature (it is only stated for creating the renderings)? Should the output be put into a file or also be shown via python standard output?
+
+## Status
+Draft
+
+## Dependencies
+This document is written against ANARI SDK version 0.2.0.
 
 ## Introduction
 
@@ -55,7 +63,7 @@ The CTS API is written in Python 3.6 or higher (requirement of pybind11). It is 
 ## Features
 
 ### Render a set of known test scenes
-
+TODO: explain more
 #### Define test scene format
 
 - Scenes should be easy to generate
@@ -190,7 +198,7 @@ if (!features.ANARI_KHR_MATERIAL_MATTE)
 
 - List of all available core extensions
 
-### Aggregated test results
+### Aggregate test results
 The Python API should be able to call all previously defined features and accumulate their results in a PDF file. The API function can be defined as:
 ```python
 def create_report(test_scenes, ground_truth_images, anari_library, anari_device = None, anari_renderer = "default", test_images = None, output_folder = ".", comparison_methods = ["SSIM"], thresholds = None, custom_compare_function = None)
