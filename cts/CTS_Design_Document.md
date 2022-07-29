@@ -33,12 +33,6 @@
 
 ## Q&A <!-- omit in toc -->
 
-- Depth test is defined as Euclidean distance (not normalized). If we want to use it as metric, a suitable range needs to be defined for all or each test scene.
-- How should waitMask be defined? Should it be settable by the user?
-- Should we output the ANARI log for every feature (it is only stated for creating the renderings)? Should the output be put into a file or also be shown via python standard output?
-- Should the user define the test scene for `check_properties` or should it iterate over all scenes?
-- Should the test scenes contain complex polygon models created with triangles? Should these models be generated somehow or loaded via files? If yes, which shapes?
-
 ## Status
 Draft
 
@@ -60,7 +54,10 @@ The C++ library is written in C++11. A newer C++ version can also be used if the
 
 ### Python CTS API
 
-The CTS API is written in Python 3.6 or higher (requirement of pybind11). It is used to parse all user input from the CLI via argparse[^argparse] and calls the needed ANARI functionality via pybind11. All I/O is handled by Python, therefore the C++ backend should only return e.g. the pixel data and the Python API writes the rendering to disk. All logging information of ANARI calls should also be saved to a file. The API should also be callable as a Python module, so more sophisticated users can call the function from another Python script instead of invoking it via CLI. The most important role of the Python API is the actual image comparison between renderings from ANARI devices and the ground truth. Multiple comparison methods should be provided. The results of all API calls can be aggregated into a single PDF or shown via Python standard output.
+The CTS API is written in Python 3.6 or higher (requirement of pybind11). It is used to parse all user input from the CLI via argparse[^argparse] and calls the needed ANARI functionality via pybind11. All I/O is handled by Python, therefore the C++ backend should only return e.g. the pixel data and the Python API writes the rendering to disk. All logging information of ANARI calls should also be saved to a file. The API should also be callable as a Python module, so more sophisticated users can call the function from another Python script instead of invoking it via CLI. The most important role of the Python API is the actual image comparison between renderings from ANARI devices and the ground truth. Multiple comparison methods should be provided. The results of all API calls can be aggregated into a single PDF or shown via Python standard output. The log output from ANARI is also passed to the API and saved as a log file. The severity level of the ANARI output can be set via a function such as 
+```python
+def set_anari_severity(severity)
+```
 
 ## Features
 
@@ -68,14 +65,14 @@ The CTS API is written in Python 3.6 or higher (requirement of pybind11). It is 
 #### Define test scene format
 
 Internally, use a dictionary for all the parameter settings. This could be achieved e.g. via JSON. To generate scenes, some parameters need to be specified, others should be consistent for all scenes for structural testing. Some parameters which should not change could entail: camera position, frame resolution, light settings (e.g. uniform white HDR) and used material.
-If possible, scenes should favor automatic generation to reduce the loading of assets files. The bounds properties need to be generated as well to create a ground truth to test against. Vertices could either be derived by specifying e.g. ten cylinders with a certain distance between each other, or for triangles and quads thirdparty tools could be used to generate vertex data. Another possibility would be the generation via a random distribution function, similar to [random_spheres.cpp](../libs/anari_test_scenes/scenes/random_spheres.cpp) with a fixed seed. Additionally, the test scenes should be able to cover edge cases.
+The test scene are generated from code without needing to load external files. The bounds properties and maximum Euclidean distance need to be generated as well to create a ground truth to test against. The test scenes should be generated with defined parameter permutations e.g. a triangle should be rendered using a triangle soup and using an index buffer. All ANARI geometries should be tested. For triangles and quads simple composite geometries are tested as well (Plane, Cube). The test scenes should include a list of ANARI features which are necessary to run the test. This can be used to check if required features are implemented on the ANARI device and automatically skip these tests if necessary. Additionally, the test scenes should be able to cover edge cases.
 #### Python API
 
 The Python API is used by the user to invoke the rendering. The function could look similar to this:
 ```python
 def render_scenes(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "all", output = ".")
 ```
-This invokes the required ANARI calls for the specified device and library in the C++ backend via pybind11. If `anari_device` is set to `None`, the default device is used (first device of anariGetDeviceSubtypes). Now, all specified test scenes are rendered with the specified renderer. If no renderer is given, the default renderer is used. `test_scenes` can either be a category denoted by a string or be a number of scenes denoted by a list of strings. If no scene is given, all test scenes are used by default. `output` specifies the folder in which the renderings are saved. It defaults to the folder where the script is executed from. The python API receives the pixel data from the C++ backend and writes the renderings to disk. The log output from ANARI is also passed to the API and saved as a log file.
+This invokes the required ANARI calls for the specified device and library in the C++ backend via pybind11. If `anari_device` is set to `None`, the default device is used (first device of anariGetDeviceSubtypes). Now, all specified test scenes are rendered with the specified renderer. If no renderer is given, the default renderer is used. `test_scenes` can either be a category denoted by a string or be a number of scenes denoted by a list of strings. If no scene is given, all test scenes are used by default. `output` specifies the folder in which the renderings are saved. It defaults to the folder where the script is executed from. The python API receives the pixel data from the C++ backend and writes the renderings to disk.
 
 #### C++
 The C++ backend first sets up the ANARI device. Afterwards, all passed test scenes are initialized and rendered. The pixel data for RGBA and depth channel as well as the ANARI log messages are passed to Python via pybind11.
@@ -194,11 +191,11 @@ The CTS should be able to check if output object properties are correct. This ca
 
 The Python API is used by the user to invoke the check. The function could look similar to this:
 ```python
-def check_properties(test_scene, anari_library, anari_device = None, anari_renderer = "default")
+def check_properties(test_scenes, anari_library, anari_device = None, anari_renderer = "default")
 ```
-This invokes the required ANARI calls for the specified device and test scene in the C++ backend via pybind11. If `anari_device` is set to `None`, the default device is used (first device of `anariGetDeviceSubtypes`). The default renderer is used if no other renderer is specified. A list of invalid properties will be displayed via Python standard output.
+This invokes the required ANARI calls for the specified device and test scenes (either category or list of scenes (see [Render a set of known test scenes](#python-api))) in the C++ backend via pybind11. If `anari_device` is set to `None`, the default device is used (first device of `anariGetDeviceSubtypes`). The default renderer is used if no other renderer is specified. A list of invalid properties will be displayed via Python standard output.
 #### C++
-The C++ backend will first setup the ANARI device and load the test scene. It will check the properties `bounds` of `Group`, `Instance` and `World` via `anariGetProperty`. The correct values need to be defined in the test scene (or be computed with the test scene parameters).
+The C++ backend will first setup the ANARI device and load the test scene. It will check the properties `bounds` of `Group`, `Instance` and `World` via `anariGetProperty`. The `waitMask` parameter is set to `ANARI_WAIT`. The correct values need to be defined in the test scene (or be computed with the test scene parameters).
 Non matching results will be returned to the Python API.
 
 #### Example output
