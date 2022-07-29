@@ -195,7 +195,7 @@ def check_properties(test_scenes, anari_library, anari_device = None, anari_rend
 ```
 This invokes the required ANARI calls for the specified device and test scenes (either category or list of scenes (see [Render a set of known test scenes](#python-api))) in the C++ backend via pybind11. If `anari_device` is set to `None`, the default device is used (first device of `anariGetDeviceSubtypes`). The default renderer is used if no other renderer is specified. A list of invalid properties will be displayed via Python standard output.
 #### C++
-The C++ backend will first setup the ANARI device and load the test scene. It will check the properties `bounds` of `Group`, `Instance` and `World` via `anariGetProperty`. The `waitMask` parameter is set to `ANARI_WAIT`. The correct values need to be defined in the test scene (or be computed with the test scene parameters).
+The C++ backend will first setup the ANARI device and load the test scene. It will check the properties `bounds` of `Group`, `Instance` and `World` and  check if `duration` of `Frame` returns a value via `anariGetProperty`. The `waitMask` parameter is set to `ANARI_WAIT`. The correct values need to be defined in the test scene (or be computed with the test scene parameters).
 Non matching results will be returned to the Python API.
 
 #### Example output
