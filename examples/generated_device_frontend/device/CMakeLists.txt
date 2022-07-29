@@ -38,6 +38,8 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
 
 endif()
 
+set(CMAKE_INSTALL_RPATH "$ORIGIN")
+
 add_library(${PROJECT_NAME} SHARED
   src/TreeDevice.cpp
   src/TreeArrayObjects.cpp

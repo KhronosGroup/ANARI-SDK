@@ -35,6 +35,8 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
 
 endif()
 
+set(CMAKE_INSTALL_RPATH "$ORIGIN")
+
 add_library(${PROJECT_NAME} SHARED
   $source_path/$prefixDevice.cpp
   $source_path/$prefixArrayObjects.cpp
