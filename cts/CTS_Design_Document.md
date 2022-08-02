@@ -65,7 +65,7 @@ def set_anari_severity(severity)
 #### Define test scene format
 
 Internally, use a dictionary for all the parameter settings. This could be achieved e.g. via JSON. To generate scenes, some parameters need to be specified, others should be consistent for all scenes for structural testing. Some parameters which should not change could entail: camera position, frame resolution, light settings (e.g. uniform white HDR) and used material.
-The test scene are generated from code without needing to load external files. The bounds properties and maximum Euclidean distance need to be generated as well to create a ground truth to test against. The test scenes should be generated with defined parameter permutations e.g. a triangle should be rendered using a triangle soup and using an index buffer. All ANARI geometries should be tested. For triangles and quads simple composite geometries are tested as well (Plane, Cube). The test scenes should include a list of ANARI features which are necessary to run the test. This can be used to check if required features are implemented on the ANARI device and automatically skip these tests if necessary. Additionally, the test scenes should be able to cover edge cases.
+The test scene are generated from code without needing to load external files. The bounds properties and maximum Euclidean distance need to be generated as well to create a ground truth to test against. The test scenes should be generated with defined parameter permutations e.g. a triangle should be rendered using a triangle soup and using an index buffer. All ANARI geometries should be tested. For triangles and quads simple composite geometries are tested as well (Plane, Cube). The test scenes should include a list of ANARI features which are necessary to run the test. This can be used to check if required features are implemented on the ANARI device and automatically skip these tests if necessary. Additionally, the test scenes should be able to cover edge cases. The ANARI SDK already implements a scene framework in [libs/anari_test_scenes](../libs/anari_test_scenes/). This could be extended to allow the generation of scenes.
 #### Python API
 
 The Python API is used by the user to invoke the rendering. The function could look similar to this:
@@ -113,8 +113,12 @@ Example code on how to render scenes can be found in [tests/render/main.cpp](../
 ```
 
 #### Example output
-
-- Renderer images
+<p float="left">
+  <img src="./images/random_spheres_0.png" width="300"/>
+  <img src="./images/instanced_cubes_0.png" width="300"/>
+  <img src="./images/instanced_cubes_0_depth.png" width="300"/>
+</p>
+<figcaption>Renderings created with anariRenderTests: random_spheres_0, instanced_cubes_0, instanced_cubes_0 depth channel </figcaption>
 
 ### Image comparison “smoke tests”
 
@@ -161,13 +165,19 @@ Since the CTS should only compare structural difference between images and disre
 If only the actual vertices should be compared, the depth test can be render to an image. This is a grayscale image as seen below which encodes the distance from each pixel to the camera as euclidean distance as defined in the ANARI specification. Since this is an ANARI core feature, every ANARI device should be able to render the depth channel. These renderings are independent from any shading or light source and only take the actual primitives into account. Therefore, these images can be compared with MSE or PSNR with a strict threshold.
 
 <figure>
-  <img src="./images/instanced_cubes_0.png" width="400"/>
+  <img src="./images/instanced_cubes_0_depth.png" width="400"/>
   <figcaption>Depth channel of instanced_cubes_0 created with anariRenderTests</figcaption>
 </figure>
 
 #### Example output
 
-- Conformance test report as PDF showing the differences between test images and ground truth
+<figure>
+  <img src="./images/example_report.png" width="500"/>
+
+</figure>
+
+Example PDF output for the comparison. Created by the 
+3DC-Certification evaluation tool. [^3dc-github]
 
 ### Verification of object/parameter info metadata
 The CTS should be able to query all static object/parameter info metadata of a library. This can be used to check which types and features are implemented by an ANARI library.
@@ -179,11 +189,39 @@ def query_metadata(anari_library)
 This will invoke the required ANARI calls for the specified device of `anari_library` in the C++ backend via pybind11. The queried information will be displayed via Python standard output.
 
 #### C++
-The C++ backend will first set up the ANARI device and call `anariGetDeviceSubtypes` to get a list of device subtypes implemented. Then `anariGetObjectSubtypes` is called on each previously queried device subtype to get all object subtypes if available. Now `anariGetObjectInfo` is called on all types and subtypes. This extracts the description (if it exists) and the parameter list of a type/subtype. Finally, all parameters are queried for their properties via `anariGetParameterInfo`. This includes the following information (if defined): description, minimum, maximum, default, elementType, required, value. The anariInfo tool has this functionality already and could be used for this task.
+The C++ backend will first set up the ANARI device and call `anariGetDeviceSubtypes` to get a list of device subtypes implemented. Then `anariGetObjectSubtypes` is called on each previously queried device subtype to get all object subtypes if available. Now `anariGetObjectInfo` is called on all types and subtypes. This extracts the description (if it exists) and the parameter list of a type/subtype. Finally, all parameters are queried for their properties via `anariGetParameterInfo`. This includes the following information (if defined): description, minimum, maximum, default, elementType, required, value. The `anariInfo` tool has this functionality already and could be used for this task.
 
 #### Example output
+Example output from `anariInfo` for the example library:
+```
+Devices:
+   example
+Device "example":
+   Subtypes:
+      ANARI_CAMERA: omnidirectional orthographic perspective
+      ANARI_GEOMETRY: cone curve cylinder quad sphere triangle
+      ANARI_LIGHT: directional point spot
+      ANARI_MATERIAL: matte transparentMatte
+      ANARI_RENDERER: default scivis ao pathtracer debug raycast rayDir
+      ANARI_SAMPLER: image1D image2D image3D primitive transform
+      ANARI_SPATIAL_FIELD: structuredRegular
+      ANARI_VOLUME: scivis
+   Parameters:
+      ANARI_CAMERA omnidirectional:
+         * name                      ANARI_STRING
+         * position                  ANARI_FLOAT32_VEC3
+         * direction                 ANARI_FLOAT32_VEC3
+         * up                        ANARI_FLOAT32_VEC3
+         * transform                 ANARI_FLOAT32_MAT3x4
+         * imageRegion               ANARI_FLOAT32_BOX2
+         * apertureRadius            ANARI_FLOAT32
+         * focusDistance             ANARI_FLOAT32
+         * stereoMode                ANARI_STRING
+         * interpupillaryDistance    ANARI_FLOAT32
+         * layout                    ANARI_STRING
 
-- List of all available objects/parameter info metadata
+...
+```
 
 ### Verification of known object properties
 The CTS should be able to check if output object properties are correct. This can be done by loading a test scene and verifying if the properties match the excepted values of the predefined scene.
@@ -199,7 +237,20 @@ The C++ backend will first setup the ANARI device and load the test scene. It wi
 Non matching results will be returned to the Python API.
 
 #### Example output
-- List of invalid property values
+
+```
+Scene: triangle
+Library: example
+Device: example
+Renderer: default
+
+'bounds' of ANARIObject of type 'Group' with index 2 invalid.
+Expected (0.0, 0.0, 0.0, 1.0, 1.0, 1.0) got (0.0, 0.0, 0.0, 1.1, 1.0, 0.9)
+
+1 of 4 bounds checks failed.
+All duration checks successful.
+
+```
 
 ### List core extensions implemented by a device
 The CTS should be able to list all core extensions and show which ones are implemented by the ANARI device.
@@ -229,8 +280,20 @@ if (!features.ANARI_KHR_MATERIAL_MATTE)
 ```
 
 #### Example output
+```
+Library: example
+Device: example
 
-- List of all available core extensions
+Supported core extensions:
+ANARI_KHR_FRAME_COMPLETION_CALLBACK
+ANARI_KHR_TRANSFORMATION_MOTION_BLUR
+
+Unsupported core extensions:
+ANARI_KHR_AREA_LIGHTS
+ANARI_KHR_DEVICE_SYNCHRONIZATION
+ANARI_KHR_AUXILIARY_BUFFERS
+ANARI_KHR_STOCHASTIC_RENDERING
+```
 
 ### Aggregate test results
 The Python API should be able to call all previously defined features and accumulate their results in a PDF file. The API function can be defined as:
