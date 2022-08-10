@@ -229,7 +229,7 @@ public:
    Parameter<ANARI_FLOAT32_VEC3> position;
    Parameter<ANARI_FLOAT32_VEC3> direction;
    Parameter<ANARI_FLOAT32_VEC3> up;
-   Parameter<ANARI_FLOAT32_MAT3x4> transform;
+   Parameter<ANARI_FLOAT32_MAT4> transform;
    Parameter<ANARI_FLOAT32_BOX2> imageRegion;
    Parameter<ANARI_FLOAT32> apertureRadius;
    Parameter<ANARI_FLOAT32> focusDistance;
@@ -262,7 +262,7 @@ public:
    Parameter<ANARI_FLOAT32_VEC3> position;
    Parameter<ANARI_FLOAT32_VEC3> direction;
    Parameter<ANARI_FLOAT32_VEC3> up;
-   Parameter<ANARI_FLOAT32_MAT3x4> transform;
+   Parameter<ANARI_FLOAT32_MAT4> transform;
    Parameter<ANARI_FLOAT32_BOX2> imageRegion;
    Parameter<ANARI_FLOAT32> apertureRadius;
    Parameter<ANARI_FLOAT32> focusDistance;
@@ -295,7 +295,7 @@ public:
    Parameter<ANARI_FLOAT32_VEC3> position;
    Parameter<ANARI_FLOAT32_VEC3> direction;
    Parameter<ANARI_FLOAT32_VEC3> up;
-   Parameter<ANARI_FLOAT32_MAT3x4> transform;
+   Parameter<ANARI_FLOAT32_MAT4> transform;
    Parameter<ANARI_FLOAT32_BOX2> imageRegion;
    Parameter<ANARI_FLOAT32> apertureRadius;
    Parameter<ANARI_FLOAT32> focusDistance;

@@ -810,8 +810,8 @@ CameraOmnidirectional::CameraOmnidirectional(ANARIDevice device, ANARIObject o) 
       up.set(device, object, ANARI_FLOAT32_VEC3, value);
    }
    {
-      float value[] = {1.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f, 0.000000f, 0.000000f};
-      transform.set(device, object, ANARI_FLOAT32_MAT3x4, value);
+      float value[] = {1.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f};
+      transform.set(device, object, ANARI_FLOAT32_MAT4, value);
    }
    {
       float value[] = {0.000000f, 0.000000f, 1.000000f, 1.000000f};
@@ -914,8 +914,8 @@ void CameraOmnidirectional::unset(const char *paramname) {
          return;
       case 75: //transform
          {
-            float value[] = {1.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f, 0.000000f, 0.000000f};
-            transform.set(device, object, ANARI_FLOAT32_MAT3x4, value);
+            float value[] = {1.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f};
+            transform.set(device, object, ANARI_FLOAT32_MAT4, value);
          }
          return;
       case 27: //imageRegion
@@ -1071,8 +1071,8 @@ CameraOrthographic::CameraOrthographic(ANARIDevice device, ANARIObject o) : devi
       up.set(device, object, ANARI_FLOAT32_VEC3, value);
    }
    {
-      float value[] = {1.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f, 0.000000f, 0.000000f};
-      transform.set(device, object, ANARI_FLOAT32_MAT3x4, value);
+      float value[] = {1.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f};
+      transform.set(device, object, ANARI_FLOAT32_MAT4, value);
    }
    {
       float value[] = {0.000000f, 0.000000f, 1.000000f, 1.000000f};
@@ -1175,8 +1175,8 @@ void CameraOrthographic::unset(const char *paramname) {
          return;
       case 75: //transform
          {
-            float value[] = {1.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f, 0.000000f, 0.000000f};
-            transform.set(device, object, ANARI_FLOAT32_MAT3x4, value);
+            float value[] = {1.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f};
+            transform.set(device, object, ANARI_FLOAT32_MAT4, value);
          }
          return;
       case 27: //imageRegion
@@ -1332,8 +1332,8 @@ CameraPerspective::CameraPerspective(ANARIDevice device, ANARIObject o) : device
       up.set(device, object, ANARI_FLOAT32_VEC3, value);
    }
    {
-      float value[] = {1.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f, 0.000000f, 0.000000f};
-      transform.set(device, object, ANARI_FLOAT32_MAT3x4, value);
+      float value[] = {1.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f};
+      transform.set(device, object, ANARI_FLOAT32_MAT4, value);
    }
    {
       float value[] = {0.000000f, 0.000000f, 1.000000f, 1.000000f};
@@ -1442,8 +1442,8 @@ void CameraPerspective::unset(const char *paramname) {
          return;
       case 75: //transform
          {
-            float value[] = {1.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f, 0.000000f, 0.000000f};
-            transform.set(device, object, ANARI_FLOAT32_MAT3x4, value);
+            float value[] = {1.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f};
+            transform.set(device, object, ANARI_FLOAT32_MAT4, value);
          }
          return;
       case 27: //imageRegion
