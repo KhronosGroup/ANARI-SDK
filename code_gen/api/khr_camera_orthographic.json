@@ -36,13 +36,13 @@
                     "description" : "camera up direction"
                 }, {
                     "name" : "transform",
-                    "types" : ["ANARI_FLOAT32_MAT3x4"],
+                    "types" : ["ANARI_FLOAT32_MAT4"],
                     "tags" : [],
                     "default" : [
-                        1.0, 0.0, 0.0,
-                        0.0, 1.0, 0.0,
-                        0.0, 0.0, 1.0,
-                        0.0, 0.0, 0.0
+                        1.0, 0.0, 0.0, 0.0,
+                        0.0, 1.0, 0.0, 0.0,
+                        0.0, 0.0, 1.0, 0.0,
+                        0.0, 0.0, 0.0, 1.0
                     ],
                     "description" : "camera transform"
                 }, {

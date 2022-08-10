@@ -1927,8 +1927,8 @@ static const void * ANARI_CAMERA_omnidirectional_transform_info(ANARIDataType pa
             return nullptr;
          }
       case 1: // default
-         if(paramType == ANARI_FLOAT32_MAT3x4 && infoType == ANARI_FLOAT32_MAT3x4) {
-            static const float default_value[12] = {1.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f, 0.000000f, 0.000000f};
+         if(paramType == ANARI_FLOAT32_MAT4 && infoType == ANARI_FLOAT32_MAT4) {
+            static const float default_value[16] = {1.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f};
             return default_value;
          } else {
             return nullptr;
@@ -2314,8 +2314,8 @@ static const void * ANARI_CAMERA_orthographic_transform_info(ANARIDataType param
             return nullptr;
          }
       case 1: // default
-         if(paramType == ANARI_FLOAT32_MAT3x4 && infoType == ANARI_FLOAT32_MAT3x4) {
-            static const float default_value[12] = {1.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f, 0.000000f, 0.000000f};
+         if(paramType == ANARI_FLOAT32_MAT4 && infoType == ANARI_FLOAT32_MAT4) {
+            static const float default_value[16] = {1.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f};
             return default_value;
          } else {
             return nullptr;
@@ -2694,8 +2694,8 @@ static const void * ANARI_CAMERA_perspective_transform_info(ANARIDataType paramT
             return nullptr;
          }
       case 1: // default
-         if(paramType == ANARI_FLOAT32_MAT3x4 && infoType == ANARI_FLOAT32_MAT3x4) {
-            static const float default_value[12] = {1.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f, 0.000000f, 0.000000f};
+         if(paramType == ANARI_FLOAT32_MAT4 && infoType == ANARI_FLOAT32_MAT4) {
+            static const float default_value[16] = {1.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f};
             return default_value;
          } else {
             return nullptr;
@@ -9533,7 +9533,7 @@ static const void * ANARI_CAMERA_omnidirectional_info(int infoName, ANARIDataTyp
                {"position", ANARI_FLOAT32_VEC3},
                {"direction", ANARI_FLOAT32_VEC3},
                {"up", ANARI_FLOAT32_VEC3},
-               {"transform", ANARI_FLOAT32_MAT3x4},
+               {"transform", ANARI_FLOAT32_MAT4},
                {"imageRegion", ANARI_FLOAT32_BOX2},
                {"apertureRadius", ANARI_FLOAT32},
                {"focusDistance", ANARI_FLOAT32},
@@ -9573,7 +9573,7 @@ static const void * ANARI_CAMERA_orthographic_info(int infoName, ANARIDataType i
                {"position", ANARI_FLOAT32_VEC3},
                {"direction", ANARI_FLOAT32_VEC3},
                {"up", ANARI_FLOAT32_VEC3},
-               {"transform", ANARI_FLOAT32_MAT3x4},
+               {"transform", ANARI_FLOAT32_MAT4},
                {"imageRegion", ANARI_FLOAT32_BOX2},
                {"apertureRadius", ANARI_FLOAT32},
                {"focusDistance", ANARI_FLOAT32},
@@ -9613,7 +9613,7 @@ static const void * ANARI_CAMERA_perspective_info(int infoName, ANARIDataType in
                {"position", ANARI_FLOAT32_VEC3},
                {"direction", ANARI_FLOAT32_VEC3},
                {"up", ANARI_FLOAT32_VEC3},
-               {"transform", ANARI_FLOAT32_MAT3x4},
+               {"transform", ANARI_FLOAT32_MAT4},
                {"imageRegion", ANARI_FLOAT32_BOX2},
                {"apertureRadius", ANARI_FLOAT32},
                {"focusDistance", ANARI_FLOAT32},

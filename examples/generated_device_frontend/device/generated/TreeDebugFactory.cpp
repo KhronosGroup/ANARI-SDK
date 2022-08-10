@@ -696,7 +696,7 @@ class camera_omnidirectional : public DebugObject<ANARI_CAMERA> {
             return;
          }
          case 4: { //transform
-            ANARIDataType transform_types[] = {ANARI_FLOAT32_MAT3x4, ANARI_UNKNOWN};
+            ANARIDataType transform_types[] = {ANARI_FLOAT32_MAT4, ANARI_UNKNOWN};
             check_type(ANARI_CAMERA, "omnidirectional", paramname, paramtype, transform_types);
             return;
          }
@@ -822,7 +822,7 @@ class camera_orthographic : public DebugObject<ANARI_CAMERA> {
             return;
          }
          case 4: { //transform
-            ANARIDataType transform_types[] = {ANARI_FLOAT32_MAT3x4, ANARI_UNKNOWN};
+            ANARIDataType transform_types[] = {ANARI_FLOAT32_MAT4, ANARI_UNKNOWN};
             check_type(ANARI_CAMERA, "orthographic", paramname, paramtype, transform_types);
             return;
          }
@@ -948,7 +948,7 @@ class camera_perspective : public DebugObject<ANARI_CAMERA> {
             return;
          }
          case 4: { //transform
-            ANARIDataType transform_types[] = {ANARI_FLOAT32_MAT3x4, ANARI_UNKNOWN};
+            ANARIDataType transform_types[] = {ANARI_FLOAT32_MAT4, ANARI_UNKNOWN};
             check_type(ANARI_CAMERA, "perspective", paramname, paramtype, transform_types);
             return;
          }
