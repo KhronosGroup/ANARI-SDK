@@ -54,10 +54,7 @@ The C++ library is written in C++11. A newer C++ version can also be used if the
 
 ### Python CTS API
 
-The CTS API is written in Python 3.6 or higher (requirement of pybind11). It is used to parse all user input from the CLI via argparse[^argparse] and calls the needed ANARI functionality via pybind11. All I/O is handled by Python, therefore the C++ backend should only return e.g. the pixel data and the Python API writes the rendering to disk. All logging information of ANARI calls should also be saved to a file. The API should also be callable as a Python module, so more sophisticated users can call the function from another Python script instead of invoking it via CLI. The most important role of the Python API is the actual image comparison between renderings from ANARI devices and the ground truth. Multiple comparison methods should be provided. The results of all API calls can be aggregated into a single PDF or shown via Python standard output. The log output from ANARI is also passed to the API and saved as a log file. The severity level of the ANARI output can be set via a function such as 
-```python
-def set_anari_severity(severity)
-```
+The CTS API is written in Python 3.6 or higher (requirement of pybind11). It is used to parse all user input from the CLI via argparse[^argparse] and calls the needed ANARI functionality via pybind11. All I/O is handled by Python, therefore the C++ backend should only return e.g. the pixel data and the Python API writes the rendering to disk. All logging information of ANARI calls should also be saved to a file. The API should also be callable as a Python module, so more sophisticated users can call the function from another Python script instead of invoking it via CLI. The most important role of the Python API is the actual image comparison between renderings from ANARI devices and the ground truth. Multiple comparison methods should be provided. The results of all API calls can be aggregated into a single PDF or shown via Python standard output. The verbose log output from ANARI is also passed to the API and saved as a log file.
 
 ## Features
 
