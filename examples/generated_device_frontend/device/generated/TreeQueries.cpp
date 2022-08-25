@@ -516,8 +516,8 @@ static const void * ANARI_FRAME_color_info(ANARIDataType paramType, int infoName
             return description;
          }
       case 6: // value
-         if(paramType == ANARI_STRING && infoType == ANARI_STRING_LIST) {
-            static const char *values[] = {"ANARI_UFIXED8_VEC4", "ANARI_UFIXED8_RGBA_SRGB", "ANARI_FLOAT32_VEC4", nullptr};
+         if(paramType == ANARI_DATA_TYPE && infoType == ANARI_TYPE_LIST) {
+            static const ANARIDataType values[] = {ANARI_UFIXED8_VEC4, ANARI_UFIXED8_RGBA_SRGB, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
             return nullptr;
@@ -548,8 +548,8 @@ static const void * ANARI_FRAME_depth_info(ANARIDataType paramType, int infoName
             return description;
          }
       case 6: // value
-         if(paramType == ANARI_STRING && infoType == ANARI_STRING_LIST) {
-            static const char *values[] = {"ANARI_FLOAT32", nullptr};
+         if(paramType == ANARI_DATA_TYPE && infoType == ANARI_TYPE_LIST) {
+            static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
             return values;
          } else {
             return nullptr;
@@ -630,8 +630,8 @@ static const void * ANARI_FRAME_normal_info(ANARIDataType paramType, int infoNam
             return description;
          }
       case 6: // value
-         if(paramType == ANARI_STRING && infoType == ANARI_STRING_LIST) {
-            static const char *values[] = {"ANARI_FIXED16_VEC3", "ANARI_FLOAT32_VEC3", nullptr};
+         if(paramType == ANARI_DATA_TYPE && infoType == ANARI_TYPE_LIST) {
+            static const ANARIDataType values[] = {ANARI_FIXED16_VEC3, ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
             return values;
          } else {
             return nullptr;
@@ -662,8 +662,8 @@ static const void * ANARI_FRAME_albedo_info(ANARIDataType paramType, int infoNam
             return description;
          }
       case 6: // value
-         if(paramType == ANARI_STRING && infoType == ANARI_STRING_LIST) {
-            static const char *values[] = {"ANARI_UFIXED8_VEC3", "ANARI_UFIXED8_RGB_SRGB", "ANARI_FLOAT32_VEC3", nullptr};
+         if(paramType == ANARI_DATA_TYPE && infoType == ANARI_TYPE_LIST) {
+            static const ANARIDataType values[] = {ANARI_UFIXED8_VEC3, ANARI_UFIXED8_RGB_SRGB, ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
             return values;
          } else {
             return nullptr;

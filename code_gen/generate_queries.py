@@ -181,10 +181,16 @@ class QueryGenerator:
 
                 if "values" in param:
                     code += "      case "+str(self.info_strings.index("value"))+": // value\n"
-                    code += "         if(paramType == ANARI_STRING && infoType == ANARI_STRING_LIST) {\n"
-                    code += "            static const char *values[] = {"
-                    code += ", ".join(["\"%s\""%v for v in param["values"]]) + ", nullptr};\n"
-                    code += "            return values;\n"
+                    if param["types"][0] == "ANARI_STRING":
+                        code += "         if(paramType == ANARI_STRING && infoType == ANARI_STRING_LIST) {\n"
+                        code += "            static const char *values[] = {"
+                        code += ", ".join(["\"%s\""%v for v in param["values"]]) + ", nullptr};\n"
+                        code += "            return values;\n"
+                    elif param["types"][0] == "ANARI_DATA_TYPE":
+                        code += "         if(paramType == ANARI_DATA_TYPE && infoType == ANARI_TYPE_LIST) {\n"
+                        code += "            static const ANARIDataType values[] = {"
+                        code += ", ".join(param["values"]) + ", ANARI_UNKNOWN};\n"
+                        code += "            return values;\n"
                     code += "         } else {\n"
                     code += "            return nullptr;\n"
                     code += "         }\n"

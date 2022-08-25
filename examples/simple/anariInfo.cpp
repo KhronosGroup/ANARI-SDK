@@ -192,6 +192,15 @@ void print_info(ANARILibrary lib, const char *device, const char *objname, ANARI
     }
   }
 
+  mem = anariGetParameterInfo(lib, device, objname, objtype, paramname, paramtype, "value", ANARI_TYPE_LIST);
+  if(mem) {
+    const ANARIDataType *list = (const ANARIDataType*)mem;
+    printf("%svalue =\n", indent);
+    for(;*list != ANARI_UNKNOWN;++list) {
+      printf("%s   %s\n", indent, anari::toString(*list));
+    }
+  }
+
   mem = anariGetParameterInfo(lib, device, objname, objtype, paramname, paramtype, "elementType", ANARI_TYPE_LIST);
   if(mem) {
     const ANARIDataType *list = (const ANARIDataType*)mem;
