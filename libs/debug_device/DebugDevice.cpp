@@ -527,10 +527,6 @@ int DebugDevice::getProperty(ANARIObject object,
     uint64_t size,
     ANARIWaitMask mask)
 {
-  if (handleIsDevice(object)) {
-    return 0;
-  }
-
   debug->anariGetProperty(this_device(), object, name, type, mem, size, mask);
 
   int result = anariGetProperty(
