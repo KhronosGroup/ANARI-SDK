@@ -44,6 +44,7 @@ add_library(${PROJECT_NAME} SHARED
   src/TreeDevice.cpp
   src/TreeArrayObjects.cpp
   src/TreeFrameObject.cpp
+  src/TreeDeviceObject.cpp
   generated/TreeObjects.cpp
   generated/TreeDeviceFactories.cpp
   generated/TreeString.cpp
