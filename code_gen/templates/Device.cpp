@@ -41,22 +41,9 @@ int $prefixDevice::getProperty(ANARIObject handle,
     uint64_t size,
     ANARIWaitMask mask)
 {
-  if (handle == this_device()) {
-    if (std::strncmp(name, "debugObjects", 12) == 0
-        && type == ANARI_FUNCTION_POINTER) {
-      writeToVoidP(mem, getDebugFactory);
-      return 1;
-    } else if (std::strncmp(name, "version", 7) == 0 && type == ANARI_INT32) {
-      writeToVoidP<std::int32_t>(mem, 1); // TODO: set this to actual value
-      return 1;
-    } else if (std::strncmp(name, "geometryMaxIndex", 16) == 0
-        && type == ANARI_UINT64) {
-      writeToVoidP<std::uint64_t>(
-          mem, UINT32_MAX); // TODO: set this to actual value
-      return 1;
-    } else {
-      return 0;
-    }
+  if (handle == this_device() && type == ANARI_FUNCTION_POINTER && std::strncmp(name, "debugObjects", 12) == 0) {
+    writeToVoidP(mem, getDebugFactory);
+    return 1;
   } else if (auto obj = handle_cast<ObjectBase *>(handle)) {
     return obj->getProperty(name, type, mem, size, mask);
   } else {
