@@ -8,6 +8,7 @@
 // anari
 #include "TreeObject.h"
 #include "TreeObjects.h"
+#include "TreeDeviceObject.h"
 #include "anari/backend/DeviceImpl.h"
 
 #include <atomic>

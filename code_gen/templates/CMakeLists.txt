@@ -41,6 +41,7 @@ add_library(${PROJECT_NAME} SHARED
   $source_path/$prefixDevice.cpp
   $source_path/$prefixArrayObjects.cpp
   $source_path/$prefixFrameObject.cpp
+  $source_path/$prefixDeviceObject.cpp
   $generated_path/$prefixObjects.cpp
   $generated_path/$prefixDeviceFactories.cpp
   $generated_path/$prefixString.cpp

@@ -3,6 +3,7 @@
 #pragma once
 #include "$prefixDevice.h"
 
+#include "$prefixDeviceObject.h"
 #include "$prefixArrayObjects.h"
 #include "$prefixFrameObject.h"
 

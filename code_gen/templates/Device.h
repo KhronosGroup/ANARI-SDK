@@ -5,6 +5,7 @@
 // anari
 #include "$prefixObject.h"
 #include "$prefixObjects.h"
+#include "$prefixDeviceObject.h"
 #include "anari/backend/DeviceImpl.h"
 
 #include <atomic>
