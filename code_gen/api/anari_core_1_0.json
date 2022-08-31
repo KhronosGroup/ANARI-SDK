@@ -16,7 +16,7 @@
                 {"name" : "ANARI_BOOL", "value" : 103, "baseType" : "int32_t", "elements" : 1, "normalized" : false},
 
                 {"name" : "ANARI_STRING_LIST", "value" : 150, "baseType" : "const char**", "elements" : 1, "normalized" : false},
-                {"name" : "ANARI_TYPE_LIST", "value" : 151, "baseType" : "ANARIDataType*", "elements" : 1, "normalized" : false},
+                {"name" : "ANARI_DATA_TYPE_LIST", "value" : 151, "baseType" : "ANARIDataType*", "elements" : 1, "normalized" : false},
                 {"name" : "ANARI_PARAMETER_LIST", "value" : 152, "baseType" : "ANARIParameter*", "elements" : 1, "normalized" : false},
 
                 {"name" : "ANARI_FUNCTION_POINTER", "value" : 200, "baseType" : "void(*)(void)", "elements" : 1, "normalized" : false},

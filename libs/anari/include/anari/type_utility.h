@@ -78,14 +78,14 @@ struct ANARITypeProperties<ANARI_STRING_LIST> {
     static constexpr const char* var_name = "varstring_list";
 };
 template<>
-struct ANARITypeProperties<ANARI_TYPE_LIST> {
+struct ANARITypeProperties<ANARI_DATA_TYPE_LIST> {
     using base_type = ANARIDataType*;
     static const int components = 1;
     using array_type = base_type[1];
-    static constexpr const char* enum_name = "ANARI_TYPE_LIST";
+    static constexpr const char* enum_name = "ANARI_DATA_TYPE_LIST";
     static constexpr const char* type_name = "ANARIDataType*";
     static constexpr const char* array_name = "ANARIDataType*[1]";
-    static constexpr const char* var_name = "vartype_list";
+    static constexpr const char* var_name = "vardata_type_list";
 };
 template<>
 struct ANARITypeProperties<ANARI_PARAMETER_LIST> {
@@ -1327,7 +1327,7 @@ R anariTypeInvoke(ANARIDataType type, Args&&... args) {
         case ANARI_VOID_POINTER: return F<ANARI_VOID_POINTER>()(std::forward<Args>(args)...);
         case ANARI_BOOL: return F<ANARI_BOOL>()(std::forward<Args>(args)...);
         case ANARI_STRING_LIST: return F<ANARI_STRING_LIST>()(std::forward<Args>(args)...);
-        case ANARI_TYPE_LIST: return F<ANARI_TYPE_LIST>()(std::forward<Args>(args)...);
+        case ANARI_DATA_TYPE_LIST: return F<ANARI_DATA_TYPE_LIST>()(std::forward<Args>(args)...);
         case ANARI_PARAMETER_LIST: return F<ANARI_PARAMETER_LIST>()(std::forward<Args>(args)...);
         case ANARI_FUNCTION_POINTER: return F<ANARI_FUNCTION_POINTER>()(std::forward<Args>(args)...);
         case ANARI_MEMORY_DELETER: return F<ANARI_MEMORY_DELETER>()(std::forward<Args>(args)...);
@@ -1464,7 +1464,7 @@ inline size_t sizeOf(ANARIDataType type) {
         case ANARI_VOID_POINTER: return sizeof(void*)*1;
         case ANARI_BOOL: return sizeof(int32_t)*1;
         case ANARI_STRING_LIST: return sizeof(const char**)*1;
-        case ANARI_TYPE_LIST: return sizeof(ANARIDataType*)*1;
+        case ANARI_DATA_TYPE_LIST: return sizeof(ANARIDataType*)*1;
         case ANARI_PARAMETER_LIST: return sizeof(ANARIParameter*)*1;
         case ANARI_FUNCTION_POINTER: return sizeof(void(*)(void))*1;
         case ANARI_MEMORY_DELETER: return sizeof(ANARIMemoryDeleter)*1;
@@ -1600,7 +1600,7 @@ inline size_t componentsOf(ANARIDataType type) {
         case ANARI_VOID_POINTER: return 1;
         case ANARI_BOOL: return 1;
         case ANARI_STRING_LIST: return 1;
-        case ANARI_TYPE_LIST: return 1;
+        case ANARI_DATA_TYPE_LIST: return 1;
         case ANARI_PARAMETER_LIST: return 1;
         case ANARI_FUNCTION_POINTER: return 1;
         case ANARI_MEMORY_DELETER: return 1;
@@ -1736,7 +1736,7 @@ inline const char* toString(ANARIDataType type) {
         case ANARI_VOID_POINTER: return "ANARI_VOID_POINTER";
         case ANARI_BOOL: return "ANARI_BOOL";
         case ANARI_STRING_LIST: return "ANARI_STRING_LIST";
-        case ANARI_TYPE_LIST: return "ANARI_TYPE_LIST";
+        case ANARI_DATA_TYPE_LIST: return "ANARI_DATA_TYPE_LIST";
         case ANARI_PARAMETER_LIST: return "ANARI_PARAMETER_LIST";
         case ANARI_FUNCTION_POINTER: return "ANARI_FUNCTION_POINTER";
         case ANARI_MEMORY_DELETER: return "ANARI_MEMORY_DELETER";
@@ -1872,7 +1872,7 @@ inline const char* typenameOf(ANARIDataType type) {
         case ANARI_VOID_POINTER: return "void*";
         case ANARI_BOOL: return "int32_t";
         case ANARI_STRING_LIST: return "const char**";
-        case ANARI_TYPE_LIST: return "ANARIDataType*";
+        case ANARI_DATA_TYPE_LIST: return "ANARIDataType*";
         case ANARI_PARAMETER_LIST: return "ANARIParameter*";
         case ANARI_FUNCTION_POINTER: return "void(*)(void)";
         case ANARI_MEMORY_DELETER: return "ANARIMemoryDeleter";
@@ -2008,7 +2008,7 @@ inline const char* varnameOf(ANARIDataType type) {
         case ANARI_VOID_POINTER: return "varvoid_pointer";
         case ANARI_BOOL: return "varbool";
         case ANARI_STRING_LIST: return "varstring_list";
-        case ANARI_TYPE_LIST: return "vartype_list";
+        case ANARI_DATA_TYPE_LIST: return "vardata_type_list";
         case ANARI_PARAMETER_LIST: return "varparameter_list";
         case ANARI_FUNCTION_POINTER: return "varfunction_pointer";
         case ANARI_MEMORY_DELETER: return "varmemory_deleter";
@@ -2144,7 +2144,7 @@ inline int isNormalized(ANARIDataType type) {
         case ANARI_VOID_POINTER: return 0;
         case ANARI_BOOL: return 0;
         case ANARI_STRING_LIST: return 0;
-        case ANARI_TYPE_LIST: return 0;
+        case ANARI_DATA_TYPE_LIST: return 0;
         case ANARI_PARAMETER_LIST: return 0;
         case ANARI_FUNCTION_POINTER: return 0;
         case ANARI_MEMORY_DELETER: return 0;

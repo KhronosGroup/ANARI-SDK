@@ -1188,7 +1188,7 @@ static const void * ANARI_FRAME_color_info(ANARIDataType paramType, int infoName
             return description;
          }
       case 6: // value
-         if(paramType == ANARI_DATA_TYPE && infoType == ANARI_TYPE_LIST) {
+         if(paramType == ANARI_DATA_TYPE && infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_UFIXED8_VEC4, ANARI_UFIXED8_RGBA_SRGB, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -1220,7 +1220,7 @@ static const void * ANARI_FRAME_depth_info(ANARIDataType paramType, int infoName
             return description;
          }
       case 6: // value
-         if(paramType == ANARI_DATA_TYPE && infoType == ANARI_TYPE_LIST) {
+         if(paramType == ANARI_DATA_TYPE && infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
             return values;
          } else {
@@ -1351,7 +1351,7 @@ static const void * ANARI_GROUP_surface_info(ANARIDataType paramType, int infoNa
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_SURFACE, ANARI_UNKNOWN};
             return values;
          } else {
@@ -1383,7 +1383,7 @@ static const void * ANARI_GROUP_volume_info(ANARIDataType paramType, int infoNam
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_VOLUME, ANARI_UNKNOWN};
             return values;
          } else {
@@ -1415,7 +1415,7 @@ static const void * ANARI_GROUP_light_info(ANARIDataType paramType, int infoName
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_LIGHT, ANARI_UNKNOWN};
             return values;
          } else {
@@ -1580,7 +1580,7 @@ static const void * ANARI_WORLD_instance_info(ANARIDataType paramType, int infoN
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_INSTANCE, ANARI_UNKNOWN};
             return values;
          } else {
@@ -1612,7 +1612,7 @@ static const void * ANARI_WORLD_surface_info(ANARIDataType paramType, int infoNa
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_SURFACE, ANARI_UNKNOWN};
             return values;
          } else {
@@ -1644,7 +1644,7 @@ static const void * ANARI_WORLD_volume_info(ANARIDataType paramType, int infoNam
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_LIGHT, ANARI_UNKNOWN};
             return values;
          } else {
@@ -1676,7 +1676,7 @@ static const void * ANARI_WORLD_light_info(ANARIDataType paramType, int infoName
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_LIGHT, ANARI_UNKNOWN};
             return values;
          } else {
@@ -3017,7 +3017,7 @@ static const void * ANARI_GEOMETRY_cone_primitive_color_info(ANARIDataType param
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_UFIXED8, ANARI_UFIXED8_VEC2, ANARI_UFIXED8_VEC3, ANARI_UFIXED8_VEC4, ANARI_UFIXED8_R_SRGB, ANARI_UFIXED8_RA_SRGB, ANARI_UFIXED8_RGB_SRGB, ANARI_UFIXED8_RGBA_SRGB, ANARI_UFIXED16, ANARI_UFIXED16_VEC2, ANARI_UFIXED16_VEC3, ANARI_UFIXED16_VEC4, ANARI_UFIXED32, ANARI_UFIXED32_VEC2, ANARI_UFIXED32_VEC3, ANARI_UFIXED32_VEC4, ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -3049,7 +3049,7 @@ static const void * ANARI_GEOMETRY_cone_primitive_attribute0_info(ANARIDataType 
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -3081,7 +3081,7 @@ static const void * ANARI_GEOMETRY_cone_primitive_attribute1_info(ANARIDataType 
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -3113,7 +3113,7 @@ static const void * ANARI_GEOMETRY_cone_primitive_attribute2_info(ANARIDataType 
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -3145,7 +3145,7 @@ static const void * ANARI_GEOMETRY_cone_primitive_attribute3_info(ANARIDataType 
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -3177,7 +3177,7 @@ static const void * ANARI_GEOMETRY_cone_primitive_id_info(ANARIDataType paramTyp
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_UINT32, ANARI_UINT64, ANARI_UNKNOWN};
             return values;
          } else {
@@ -3209,7 +3209,7 @@ static const void * ANARI_GEOMETRY_cone_vertex_position_info(ANARIDataType param
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
             return values;
          } else {
@@ -3241,7 +3241,7 @@ static const void * ANARI_GEOMETRY_cone_vertex_radius_info(ANARIDataType paramTy
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
             return values;
          } else {
@@ -3273,7 +3273,7 @@ static const void * ANARI_GEOMETRY_cone_vertex_cap_info(ANARIDataType paramType,
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_UINT8, ANARI_UNKNOWN};
             return values;
          } else {
@@ -3305,7 +3305,7 @@ static const void * ANARI_GEOMETRY_cone_vertex_color_info(ANARIDataType paramTyp
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_UFIXED8, ANARI_UFIXED8_VEC2, ANARI_UFIXED8_VEC3, ANARI_UFIXED8_VEC4, ANARI_UFIXED8_R_SRGB, ANARI_UFIXED8_RA_SRGB, ANARI_UFIXED8_RGB_SRGB, ANARI_UFIXED8_RGBA_SRGB, ANARI_UFIXED16, ANARI_UFIXED16_VEC2, ANARI_UFIXED16_VEC3, ANARI_UFIXED16_VEC4, ANARI_UFIXED32, ANARI_UFIXED32_VEC2, ANARI_UFIXED32_VEC3, ANARI_UFIXED32_VEC4, ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -3337,7 +3337,7 @@ static const void * ANARI_GEOMETRY_cone_vertex_attribute0_info(ANARIDataType par
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -3369,7 +3369,7 @@ static const void * ANARI_GEOMETRY_cone_vertex_attribute1_info(ANARIDataType par
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -3401,7 +3401,7 @@ static const void * ANARI_GEOMETRY_cone_vertex_attribute2_info(ANARIDataType par
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -3433,7 +3433,7 @@ static const void * ANARI_GEOMETRY_cone_vertex_attribute3_info(ANARIDataType par
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -3465,7 +3465,7 @@ static const void * ANARI_GEOMETRY_cone_primitive_index_info(ANARIDataType param
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_UINT32_VEC2, ANARI_UINT64_VEC2, ANARI_UNKNOWN};
             return values;
          } else {
@@ -3601,7 +3601,7 @@ static const void * ANARI_GEOMETRY_curve_primitive_color_info(ANARIDataType para
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_UFIXED8, ANARI_UFIXED8_VEC2, ANARI_UFIXED8_VEC3, ANARI_UFIXED8_VEC4, ANARI_UFIXED8_R_SRGB, ANARI_UFIXED8_RA_SRGB, ANARI_UFIXED8_RGB_SRGB, ANARI_UFIXED8_RGBA_SRGB, ANARI_UFIXED16, ANARI_UFIXED16_VEC2, ANARI_UFIXED16_VEC3, ANARI_UFIXED16_VEC4, ANARI_UFIXED32, ANARI_UFIXED32_VEC2, ANARI_UFIXED32_VEC3, ANARI_UFIXED32_VEC4, ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -3633,7 +3633,7 @@ static const void * ANARI_GEOMETRY_curve_primitive_attribute0_info(ANARIDataType
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -3665,7 +3665,7 @@ static const void * ANARI_GEOMETRY_curve_primitive_attribute1_info(ANARIDataType
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -3697,7 +3697,7 @@ static const void * ANARI_GEOMETRY_curve_primitive_attribute2_info(ANARIDataType
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -3729,7 +3729,7 @@ static const void * ANARI_GEOMETRY_curve_primitive_attribute3_info(ANARIDataType
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -3761,7 +3761,7 @@ static const void * ANARI_GEOMETRY_curve_primitive_id_info(ANARIDataType paramTy
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_UINT32, ANARI_UINT64, ANARI_UNKNOWN};
             return values;
          } else {
@@ -3793,7 +3793,7 @@ static const void * ANARI_GEOMETRY_curve_vertex_position_info(ANARIDataType para
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
             return values;
          } else {
@@ -3825,7 +3825,7 @@ static const void * ANARI_GEOMETRY_curve_vertex_radius_info(ANARIDataType paramT
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
             return values;
          } else {
@@ -3857,7 +3857,7 @@ static const void * ANARI_GEOMETRY_curve_vertex_color_info(ANARIDataType paramTy
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_UFIXED8, ANARI_UFIXED8_VEC2, ANARI_UFIXED8_VEC3, ANARI_UFIXED8_VEC4, ANARI_UFIXED8_R_SRGB, ANARI_UFIXED8_RA_SRGB, ANARI_UFIXED8_RGB_SRGB, ANARI_UFIXED8_RGBA_SRGB, ANARI_UFIXED16, ANARI_UFIXED16_VEC2, ANARI_UFIXED16_VEC3, ANARI_UFIXED16_VEC4, ANARI_UFIXED32, ANARI_UFIXED32_VEC2, ANARI_UFIXED32_VEC3, ANARI_UFIXED32_VEC4, ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -3889,7 +3889,7 @@ static const void * ANARI_GEOMETRY_curve_vertex_attribute0_info(ANARIDataType pa
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -3921,7 +3921,7 @@ static const void * ANARI_GEOMETRY_curve_vertex_attribute1_info(ANARIDataType pa
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -3953,7 +3953,7 @@ static const void * ANARI_GEOMETRY_curve_vertex_attribute2_info(ANARIDataType pa
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -3985,7 +3985,7 @@ static const void * ANARI_GEOMETRY_curve_vertex_attribute3_info(ANARIDataType pa
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -4017,7 +4017,7 @@ static const void * ANARI_GEOMETRY_curve_primitive_index_info(ANARIDataType para
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_UINT32, ANARI_UINT64, ANARI_UNKNOWN};
             return values;
          } else {
@@ -4137,7 +4137,7 @@ static const void * ANARI_GEOMETRY_cylinder_primitive_color_info(ANARIDataType p
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_UFIXED8, ANARI_UFIXED8_VEC2, ANARI_UFIXED8_VEC3, ANARI_UFIXED8_VEC4, ANARI_UFIXED8_R_SRGB, ANARI_UFIXED8_RA_SRGB, ANARI_UFIXED8_RGB_SRGB, ANARI_UFIXED8_RGBA_SRGB, ANARI_UFIXED16, ANARI_UFIXED16_VEC2, ANARI_UFIXED16_VEC3, ANARI_UFIXED16_VEC4, ANARI_UFIXED32, ANARI_UFIXED32_VEC2, ANARI_UFIXED32_VEC3, ANARI_UFIXED32_VEC4, ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -4169,7 +4169,7 @@ static const void * ANARI_GEOMETRY_cylinder_primitive_attribute0_info(ANARIDataT
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -4201,7 +4201,7 @@ static const void * ANARI_GEOMETRY_cylinder_primitive_attribute1_info(ANARIDataT
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -4233,7 +4233,7 @@ static const void * ANARI_GEOMETRY_cylinder_primitive_attribute2_info(ANARIDataT
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -4265,7 +4265,7 @@ static const void * ANARI_GEOMETRY_cylinder_primitive_attribute3_info(ANARIDataT
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -4297,7 +4297,7 @@ static const void * ANARI_GEOMETRY_cylinder_primitive_id_info(ANARIDataType para
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_UINT32, ANARI_UINT64, ANARI_UNKNOWN};
             return values;
          } else {
@@ -4329,7 +4329,7 @@ static const void * ANARI_GEOMETRY_cylinder_vertex_position_info(ANARIDataType p
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
             return values;
          } else {
@@ -4361,7 +4361,7 @@ static const void * ANARI_GEOMETRY_cylinder_vertex_cap_info(ANARIDataType paramT
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_UINT8, ANARI_UNKNOWN};
             return values;
          } else {
@@ -4393,7 +4393,7 @@ static const void * ANARI_GEOMETRY_cylinder_vertex_color_info(ANARIDataType para
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_UFIXED8, ANARI_UFIXED8_VEC2, ANARI_UFIXED8_VEC3, ANARI_UFIXED8_VEC4, ANARI_UFIXED8_R_SRGB, ANARI_UFIXED8_RA_SRGB, ANARI_UFIXED8_RGB_SRGB, ANARI_UFIXED8_RGBA_SRGB, ANARI_UFIXED16, ANARI_UFIXED16_VEC2, ANARI_UFIXED16_VEC3, ANARI_UFIXED16_VEC4, ANARI_UFIXED32, ANARI_UFIXED32_VEC2, ANARI_UFIXED32_VEC3, ANARI_UFIXED32_VEC4, ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -4425,7 +4425,7 @@ static const void * ANARI_GEOMETRY_cylinder_vertex_attribute0_info(ANARIDataType
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -4457,7 +4457,7 @@ static const void * ANARI_GEOMETRY_cylinder_vertex_attribute1_info(ANARIDataType
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -4489,7 +4489,7 @@ static const void * ANARI_GEOMETRY_cylinder_vertex_attribute2_info(ANARIDataType
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -4521,7 +4521,7 @@ static const void * ANARI_GEOMETRY_cylinder_vertex_attribute3_info(ANARIDataType
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -4553,7 +4553,7 @@ static const void * ANARI_GEOMETRY_cylinder_primitive_index_info(ANARIDataType p
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_UINT32_VEC2, ANARI_UINT64_VEC2, ANARI_UNKNOWN};
             return values;
          } else {
@@ -4585,7 +4585,7 @@ static const void * ANARI_GEOMETRY_cylinder_primitive_radius_info(ANARIDataType 
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
             return values;
          } else {
@@ -4748,7 +4748,7 @@ static const void * ANARI_GEOMETRY_quad_primitive_color_info(ANARIDataType param
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_UFIXED8, ANARI_UFIXED8_VEC2, ANARI_UFIXED8_VEC3, ANARI_UFIXED8_VEC4, ANARI_UFIXED8_R_SRGB, ANARI_UFIXED8_RA_SRGB, ANARI_UFIXED8_RGB_SRGB, ANARI_UFIXED8_RGBA_SRGB, ANARI_UFIXED16, ANARI_UFIXED16_VEC2, ANARI_UFIXED16_VEC3, ANARI_UFIXED16_VEC4, ANARI_UFIXED32, ANARI_UFIXED32_VEC2, ANARI_UFIXED32_VEC3, ANARI_UFIXED32_VEC4, ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -4780,7 +4780,7 @@ static const void * ANARI_GEOMETRY_quad_primitive_attribute0_info(ANARIDataType 
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -4812,7 +4812,7 @@ static const void * ANARI_GEOMETRY_quad_primitive_attribute1_info(ANARIDataType 
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -4844,7 +4844,7 @@ static const void * ANARI_GEOMETRY_quad_primitive_attribute2_info(ANARIDataType 
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -4876,7 +4876,7 @@ static const void * ANARI_GEOMETRY_quad_primitive_attribute3_info(ANARIDataType 
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -4908,7 +4908,7 @@ static const void * ANARI_GEOMETRY_quad_primitive_id_info(ANARIDataType paramTyp
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_UINT32, ANARI_UINT64, ANARI_UNKNOWN};
             return values;
          } else {
@@ -4940,7 +4940,7 @@ static const void * ANARI_GEOMETRY_quad_vertex_position_info(ANARIDataType param
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
             return values;
          } else {
@@ -4972,7 +4972,7 @@ static const void * ANARI_GEOMETRY_quad_vertex_normal_info(ANARIDataType paramTy
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
             return values;
          } else {
@@ -5004,7 +5004,7 @@ static const void * ANARI_GEOMETRY_quad_vertex_color_info(ANARIDataType paramTyp
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_UFIXED8, ANARI_UFIXED8_VEC2, ANARI_UFIXED8_VEC3, ANARI_UFIXED8_VEC4, ANARI_UFIXED8_R_SRGB, ANARI_UFIXED8_RA_SRGB, ANARI_UFIXED8_RGB_SRGB, ANARI_UFIXED8_RGBA_SRGB, ANARI_UFIXED16, ANARI_UFIXED16_VEC2, ANARI_UFIXED16_VEC3, ANARI_UFIXED16_VEC4, ANARI_UFIXED32, ANARI_UFIXED32_VEC2, ANARI_UFIXED32_VEC3, ANARI_UFIXED32_VEC4, ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -5036,7 +5036,7 @@ static const void * ANARI_GEOMETRY_quad_vertex_attribute0_info(ANARIDataType par
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -5068,7 +5068,7 @@ static const void * ANARI_GEOMETRY_quad_vertex_attribute1_info(ANARIDataType par
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -5100,7 +5100,7 @@ static const void * ANARI_GEOMETRY_quad_vertex_attribute2_info(ANARIDataType par
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -5132,7 +5132,7 @@ static const void * ANARI_GEOMETRY_quad_vertex_attribute3_info(ANARIDataType par
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -5164,7 +5164,7 @@ static const void * ANARI_GEOMETRY_quad_primitive_index_info(ANARIDataType param
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_UINT32_VEC4, ANARI_UINT64_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -5257,7 +5257,7 @@ static const void * ANARI_GEOMETRY_sphere_primitive_color_info(ANARIDataType par
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_UFIXED8, ANARI_UFIXED8_VEC2, ANARI_UFIXED8_VEC3, ANARI_UFIXED8_VEC4, ANARI_UFIXED8_R_SRGB, ANARI_UFIXED8_RA_SRGB, ANARI_UFIXED8_RGB_SRGB, ANARI_UFIXED8_RGBA_SRGB, ANARI_UFIXED16, ANARI_UFIXED16_VEC2, ANARI_UFIXED16_VEC3, ANARI_UFIXED16_VEC4, ANARI_UFIXED32, ANARI_UFIXED32_VEC2, ANARI_UFIXED32_VEC3, ANARI_UFIXED32_VEC4, ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -5289,7 +5289,7 @@ static const void * ANARI_GEOMETRY_sphere_primitive_attribute0_info(ANARIDataTyp
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -5321,7 +5321,7 @@ static const void * ANARI_GEOMETRY_sphere_primitive_attribute1_info(ANARIDataTyp
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -5353,7 +5353,7 @@ static const void * ANARI_GEOMETRY_sphere_primitive_attribute2_info(ANARIDataTyp
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -5385,7 +5385,7 @@ static const void * ANARI_GEOMETRY_sphere_primitive_attribute3_info(ANARIDataTyp
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -5417,7 +5417,7 @@ static const void * ANARI_GEOMETRY_sphere_primitive_id_info(ANARIDataType paramT
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_UINT32, ANARI_UINT64, ANARI_UNKNOWN};
             return values;
          } else {
@@ -5449,7 +5449,7 @@ static const void * ANARI_GEOMETRY_sphere_vertex_position_info(ANARIDataType par
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
             return values;
          } else {
@@ -5481,7 +5481,7 @@ static const void * ANARI_GEOMETRY_sphere_vertex_radius_info(ANARIDataType param
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
             return values;
          } else {
@@ -5513,7 +5513,7 @@ static const void * ANARI_GEOMETRY_sphere_vertex_color_info(ANARIDataType paramT
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_UFIXED8, ANARI_UFIXED8_VEC2, ANARI_UFIXED8_VEC3, ANARI_UFIXED8_VEC4, ANARI_UFIXED8_R_SRGB, ANARI_UFIXED8_RA_SRGB, ANARI_UFIXED8_RGB_SRGB, ANARI_UFIXED8_RGBA_SRGB, ANARI_UFIXED16, ANARI_UFIXED16_VEC2, ANARI_UFIXED16_VEC3, ANARI_UFIXED16_VEC4, ANARI_UFIXED32, ANARI_UFIXED32_VEC2, ANARI_UFIXED32_VEC3, ANARI_UFIXED32_VEC4, ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -5545,7 +5545,7 @@ static const void * ANARI_GEOMETRY_sphere_vertex_attribute0_info(ANARIDataType p
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -5577,7 +5577,7 @@ static const void * ANARI_GEOMETRY_sphere_vertex_attribute1_info(ANARIDataType p
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -5609,7 +5609,7 @@ static const void * ANARI_GEOMETRY_sphere_vertex_attribute2_info(ANARIDataType p
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -5641,7 +5641,7 @@ static const void * ANARI_GEOMETRY_sphere_vertex_attribute3_info(ANARIDataType p
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -5673,7 +5673,7 @@ static const void * ANARI_GEOMETRY_sphere_primitive_index_info(ANARIDataType par
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_UINT32, ANARI_UINT64, ANARI_UNKNOWN};
             return values;
          } else {
@@ -5793,7 +5793,7 @@ static const void * ANARI_GEOMETRY_triangle_primitive_color_info(ANARIDataType p
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_UFIXED8, ANARI_UFIXED8_VEC2, ANARI_UFIXED8_VEC3, ANARI_UFIXED8_VEC4, ANARI_UFIXED8_R_SRGB, ANARI_UFIXED8_RA_SRGB, ANARI_UFIXED8_RGB_SRGB, ANARI_UFIXED8_RGBA_SRGB, ANARI_UFIXED16, ANARI_UFIXED16_VEC2, ANARI_UFIXED16_VEC3, ANARI_UFIXED16_VEC4, ANARI_UFIXED32, ANARI_UFIXED32_VEC2, ANARI_UFIXED32_VEC3, ANARI_UFIXED32_VEC4, ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -5825,7 +5825,7 @@ static const void * ANARI_GEOMETRY_triangle_primitive_attribute0_info(ANARIDataT
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -5857,7 +5857,7 @@ static const void * ANARI_GEOMETRY_triangle_primitive_attribute1_info(ANARIDataT
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -5889,7 +5889,7 @@ static const void * ANARI_GEOMETRY_triangle_primitive_attribute2_info(ANARIDataT
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -5921,7 +5921,7 @@ static const void * ANARI_GEOMETRY_triangle_primitive_attribute3_info(ANARIDataT
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -5953,7 +5953,7 @@ static const void * ANARI_GEOMETRY_triangle_primitive_id_info(ANARIDataType para
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_UINT32, ANARI_UINT64, ANARI_UNKNOWN};
             return values;
          } else {
@@ -5985,7 +5985,7 @@ static const void * ANARI_GEOMETRY_triangle_vertex_position_info(ANARIDataType p
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
             return values;
          } else {
@@ -6017,7 +6017,7 @@ static const void * ANARI_GEOMETRY_triangle_vertex_normal_info(ANARIDataType par
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32_VEC3, ANARI_UNKNOWN};
             return values;
          } else {
@@ -6049,7 +6049,7 @@ static const void * ANARI_GEOMETRY_triangle_vertex_color_info(ANARIDataType para
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_UFIXED8, ANARI_UFIXED8_VEC2, ANARI_UFIXED8_VEC3, ANARI_UFIXED8_VEC4, ANARI_UFIXED8_R_SRGB, ANARI_UFIXED8_RA_SRGB, ANARI_UFIXED8_RGB_SRGB, ANARI_UFIXED8_RGBA_SRGB, ANARI_UFIXED16, ANARI_UFIXED16_VEC2, ANARI_UFIXED16_VEC3, ANARI_UFIXED16_VEC4, ANARI_UFIXED32, ANARI_UFIXED32_VEC2, ANARI_UFIXED32_VEC3, ANARI_UFIXED32_VEC4, ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -6081,7 +6081,7 @@ static const void * ANARI_GEOMETRY_triangle_vertex_attribute0_info(ANARIDataType
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -6113,7 +6113,7 @@ static const void * ANARI_GEOMETRY_triangle_vertex_attribute1_info(ANARIDataType
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -6145,7 +6145,7 @@ static const void * ANARI_GEOMETRY_triangle_vertex_attribute2_info(ANARIDataType
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -6177,7 +6177,7 @@ static const void * ANARI_GEOMETRY_triangle_vertex_attribute3_info(ANARIDataType
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -6209,7 +6209,7 @@ static const void * ANARI_GEOMETRY_triangle_primitive_index_info(ANARIDataType p
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_UINT32_VEC3, ANARI_UINT64_VEC3, ANARI_UNKNOWN};
             return values;
          } else {
@@ -7108,7 +7108,7 @@ static const void * ANARI_SAMPLER_image1D_image_info(ANARIDataType paramType, in
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_UFIXED8, ANARI_UFIXED8_VEC2, ANARI_UFIXED8_VEC3, ANARI_UFIXED8_VEC4, ANARI_UFIXED8_R_SRGB, ANARI_UFIXED8_RA_SRGB, ANARI_UFIXED8_RGB_SRGB, ANARI_UFIXED8_RGBA_SRGB, ANARI_UFIXED16, ANARI_UFIXED16_VEC2, ANARI_UFIXED16_VEC3, ANARI_UFIXED16_VEC4, ANARI_UFIXED32, ANARI_UFIXED32_VEC2, ANARI_UFIXED32_VEC3, ANARI_UFIXED32_VEC4, ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -7366,7 +7366,7 @@ static const void * ANARI_SAMPLER_image2D_image_info(ANARIDataType paramType, in
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_UFIXED8, ANARI_UFIXED8_VEC2, ANARI_UFIXED8_VEC3, ANARI_UFIXED8_VEC4, ANARI_UFIXED8_R_SRGB, ANARI_UFIXED8_RA_SRGB, ANARI_UFIXED8_RGB_SRGB, ANARI_UFIXED8_RGBA_SRGB, ANARI_UFIXED16, ANARI_UFIXED16_VEC2, ANARI_UFIXED16_VEC3, ANARI_UFIXED16_VEC4, ANARI_UFIXED32, ANARI_UFIXED32_VEC2, ANARI_UFIXED32_VEC3, ANARI_UFIXED32_VEC4, ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -7665,7 +7665,7 @@ static const void * ANARI_SAMPLER_image3D_image_info(ANARIDataType paramType, in
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_UFIXED8, ANARI_UFIXED8_VEC2, ANARI_UFIXED8_VEC3, ANARI_UFIXED8_VEC4, ANARI_UFIXED8_R_SRGB, ANARI_UFIXED8_RA_SRGB, ANARI_UFIXED8_RGB_SRGB, ANARI_UFIXED8_RGBA_SRGB, ANARI_UFIXED16, ANARI_UFIXED16_VEC2, ANARI_UFIXED16_VEC3, ANARI_UFIXED16_VEC4, ANARI_UFIXED32, ANARI_UFIXED32_VEC2, ANARI_UFIXED32_VEC3, ANARI_UFIXED32_VEC4, ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -8005,7 +8005,7 @@ static const void * ANARI_SAMPLER_primitive_array_info(ANARIDataType paramType, 
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_UFIXED8, ANARI_UFIXED8_VEC2, ANARI_UFIXED8_VEC3, ANARI_UFIXED8_VEC4, ANARI_UFIXED8_R_SRGB, ANARI_UFIXED8_RA_SRGB, ANARI_UFIXED8_RGB_SRGB, ANARI_UFIXED8_RGBA_SRGB, ANARI_UFIXED16, ANARI_UFIXED16_VEC2, ANARI_UFIXED16_VEC3, ANARI_UFIXED16_VEC4, ANARI_UFIXED32, ANARI_UFIXED32_VEC2, ANARI_UFIXED32_VEC3, ANARI_UFIXED32_VEC4, ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -8214,7 +8214,7 @@ static const void * ANARI_SPATIAL_FIELD_structuredRegular_data_info(ANARIDataTyp
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_UINT8, ANARI_INT16, ANARI_UINT16, ANARI_FLOAT32, ANARI_FLOAT64, ANARI_UNKNOWN};
             return values;
          } else {
@@ -8447,7 +8447,7 @@ static const void * ANARI_VOLUME_scivis_color_info(ANARIDataType paramType, int 
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_UFIXED8, ANARI_UFIXED8_VEC2, ANARI_UFIXED8_VEC3, ANARI_UFIXED8_VEC4, ANARI_UFIXED8_R_SRGB, ANARI_UFIXED8_RA_SRGB, ANARI_UFIXED8_RGB_SRGB, ANARI_UFIXED8_RGBA_SRGB, ANARI_UFIXED16, ANARI_UFIXED16_VEC2, ANARI_UFIXED16_VEC3, ANARI_UFIXED16_VEC4, ANARI_UFIXED32, ANARI_UFIXED32_VEC2, ANARI_UFIXED32_VEC3, ANARI_UFIXED32_VEC4, ANARI_FLOAT32, ANARI_FLOAT32_VEC2, ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
             return values;
          } else {
@@ -8479,7 +8479,7 @@ static const void * ANARI_VOLUME_scivis_color_position_info(ANARIDataType paramT
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
             return values;
          } else {
@@ -8511,7 +8511,7 @@ static const void * ANARI_VOLUME_scivis_opacity_info(ANARIDataType paramType, in
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
             return values;
          } else {
@@ -8543,7 +8543,7 @@ static const void * ANARI_VOLUME_scivis_opacity_position_info(ANARIDataType para
             return description;
          }
       case 5: // elementType
-         if(infoType == ANARI_TYPE_LIST) {
+         if(infoType == ANARI_DATA_TYPE_LIST) {
             static const ANARIDataType values[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
             return values;
          } else {
