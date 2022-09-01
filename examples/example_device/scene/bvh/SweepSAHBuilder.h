@@ -304,10 +304,8 @@ SweepSAHBuildTask::build(const SAHTaskWorkItem &item)
 
   left.setBounds(left_bbox);
   right.setBounds(right_bbox);
-  SAHTaskWorkItem firstItem(
-      {first_child + 0, item.begin, split_index, item.depth + 1});
-  SAHTaskWorkItem second_item(
-      {first_child + 1, split_index, item.end, item.depth + 1});
+  SAHTaskWorkItem firstItem = {first_child + 0, item.begin, split_index, item.depth + 1};
+  SAHTaskWorkItem second_item = {first_child + 1, split_index, item.end, item.depth + 1};
   return std::make_optional(std::make_pair(firstItem, second_item));
 }
 
