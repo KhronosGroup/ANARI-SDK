@@ -94,7 +94,7 @@ void frame_show(anari::Device dev, anari::Frame frame, MainWindow *window)
     // Assume frames-per-second is reciprical of frame render duration
     window->latestFPS = 1.f / duration;
 
-    auto fb = anari::map<void>(dev, frame, "color");
+    auto fb = anari::map<void>(dev, frame, "channel.color");
 
     size_t numBytes = fbBytes(fb.width, fb.height);
     window->pixelBuffer.resize(numBytes);
@@ -115,7 +115,7 @@ void frame_show(anari::Device dev, anari::Frame frame, MainWindow *window)
       g_saveNextFrame = false;
     }
 
-    anari::unmap(dev, frame, "color");
+    anari::unmap(dev, frame, "channel.color");
 
     window->updateScene();
   }
@@ -350,7 +350,7 @@ void MainWindow::mainLoop()
 void MainWindow::reshape(const glm::uvec2 &windowSize)
 {
   anari::setParameter(device, frame, "size", windowSize);
-  anari::setParameter(device, frame, "color", ANARI_UFIXED8_RGBA_SRGB);
+  anari::setParameter(device, frame, "channel.color", ANARI_UFIXED8_RGBA_SRGB);
   anari::setParameter(device, frame, "renderer", renderer);
   anari::setParameter(device, frame, "camera", camera);
 

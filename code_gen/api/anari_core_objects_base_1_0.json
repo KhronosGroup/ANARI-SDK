@@ -151,13 +151,13 @@
                     "tags" : ["required"],
                     "description" : "size of the frame in pixels (width, height)"
                 }, {
-                    "name" : "color",
+                    "name" : "channel.color",
                     "types" : ["ANARI_DATA_TYPE"],
                     "tags" : [],
                     "values" : ["ANARI_UFIXED8_VEC4", "ANARI_UFIXED8_RGBA_SRGB", "ANARI_FLOAT32_VEC4"],
                     "description" : "enables mapping the color channel as the type specified"
                 }, {
-                    "name" : "depth",
+                    "name" : "channel.depth",
                     "types" : ["ANARI_DATA_TYPE"],
                     "tags" : [],
                     "values" : ["ANARI_FLOAT32"],
@@ -170,6 +170,9 @@
                     "type" : "ANARI_FLOAT32",
                     "tags" : ["required"]
                 }
+            ],
+            "channel" : [
+                "channel.color", "channel.depth"
             ]
         }, {
             "type" : "ANARI_GROUP",

@@ -30,7 +30,7 @@ void writePPM(const char *fileName, ANARIDevice d, ANARIFrame frame)
   uint32_t size[2] = {0, 0};
   ANARIDataType type = ANARI_UNKNOWN;
   uint32_t *pixel =
-      (uint32_t *)anariMapFrame(d, frame, "color", &size[0], &size[1], &type);
+      (uint32_t *)anariMapFrame(d, frame, "channel.color", &size[0], &size[1], &type);
 
   if (type != ANARI_UFIXED8_RGBA_SRGB) {
     printf("Incorrectly returned color buffer pixel type, image not saved.\n");
@@ -58,7 +58,7 @@ void writePPM(const char *fileName, ANARIDevice d, ANARIFrame frame)
   fclose(file);
   free(out);
 
-  anariUnmapFrame(d, frame, "color");
+  anariUnmapFrame(d, frame, "channel.color");
 }
 
 /******************************************************************/
@@ -254,7 +254,7 @@ int main(int argc, const char **argv)
   ANARIFrame frame = anariNewFrame(dev);
   anariSetParameter(dev, frame, "size", ANARI_UINT32_VEC2, imgSize);
   ANARIDataType fbFormat = ANARI_UFIXED8_RGBA_SRGB;
-  anariSetParameter(dev, frame, "color", ANARI_DATA_TYPE, &fbFormat);
+  anariSetParameter(dev, frame, "channel.color", ANARI_DATA_TYPE, &fbFormat);
 
   anariSetParameter(dev, frame, "renderer", ANARI_RENDERER, &renderer);
   anariSetParameter(dev, frame, "camera", ANARI_CAMERA, &camera);
@@ -268,9 +268,9 @@ int main(int argc, const char **argv)
 
   // access frame
   const uint32_t *fb = (uint32_t *)anariMapFrame(
-      dev, frame, "color", &imgSize[0], &imgSize[1], &fbFormat);
+      dev, frame, "channel.color", &imgSize[0], &imgSize[1], &fbFormat);
   (void)fb; // ignore it because we expect the code to fail anyway
-  anariUnmapFrame(dev, frame, "color");
+  anariUnmapFrame(dev, frame, "channel.color");
 
   // final cleanups
   anariRelease(dev, renderer);
