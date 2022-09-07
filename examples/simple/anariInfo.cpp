@@ -303,6 +303,15 @@ int main(int argc, const char **argv)
       printf("\n");
     }
 
+    const char **channels = (const char**)anariGetObjectInfo(lib, devices[i], NULL, ANARI_FRAME, "channel", ANARI_STRING_LIST);
+    if(channels) {
+      printf("   Frame Channels:\n");
+      for(int k = 0;channels[k];++k){
+        printf("      %s\n", channels[k]);
+      }
+    }
+
+
     if(!skipParameters) {
       printf("   Parameters:\n");
       for(size_t j = 0;j<sizeof(namedTypes)/sizeof(ANARIDataType);++j) {

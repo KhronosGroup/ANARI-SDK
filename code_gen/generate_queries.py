@@ -51,7 +51,7 @@ class QueryGenerator:
         self.named_types = sorted(list(set([k[0] for k in self.named_objects])))
         self.subtype_list = sorted(list(set([k[1] for k in self.named_objects])))
         self.attribute_list = [x["name"] for x in anari["attributes"]]
-        self.info_strings = ["required", "default", "minimum", "maximum", "description", "elementType", "value", "sourceFeature", "feature", "parameter"]
+        self.info_strings = ["required", "default", "minimum", "maximum", "description", "elementType", "value", "sourceFeature", "feature", "parameter", "channel"]
 
     def format_as(self, value, anari_type):
         basetype = self.type_enum_dict[anari_type]["baseType"]
@@ -306,6 +306,17 @@ class QueryGenerator:
                 code += "         } else if(infoType == ANARI_INT32) {\n"
                 code += "            static const int value = %d;\n"%self.anari["features"].index(obj["sourceFeature"])
                 code += "            return &value;\n"
+                code += "         } else {\n"
+                code += "            return nullptr;\n"
+                code += "         }\n"
+            if "channel" in obj:
+                code += "      case "+str(self.info_strings.index("channel"))+": // channel\n"
+                code += "         if(infoType == ANARI_STRING_LIST) {\n"
+                code += "            static const char *channel[] = {\n"
+                code += "               " + ",\n               ".join(["\"%s\""%f for f in obj["channel"]])+",\n"
+                code += "               0\n"
+                code += "            };\n"
+                code += "            return channel;\n"
                 code += "         } else {\n"
                 code += "            return nullptr;\n"
                 code += "         }\n"

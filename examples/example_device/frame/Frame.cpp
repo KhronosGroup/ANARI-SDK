@@ -54,7 +54,7 @@ void Frame::commit()
   if (!m_world)
     throw std::runtime_error("missing 'world' on frame");
 
-  m_format = getParam<ANARIDataType>("color", ANARI_UFIXED8_RGBA_SRGB);
+  m_format = getParam<ANARIDataType>("channel.color", ANARI_UFIXED8_RGBA_SRGB);
   m_size = getParam<uvec2>("size", ivec2(10));
   m_invSize = 1.f / vec2(m_size);
 
@@ -106,10 +106,10 @@ void *Frame::map(const char *_channel,
   *width = m_size.x;
   *height = m_size.y;
 
-  if (channel == "color") {
+  if (channel == "channel.color") {
     *pixelType = format();
     return mapColorBuffer();
-  } else if (channel == "depth") {
+  } else if (channel == "channel.depth") {
     *pixelType = ANARI_FLOAT32;
     return mapDepthBuffer();
   } else {
