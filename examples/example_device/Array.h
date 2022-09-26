@@ -24,13 +24,14 @@ struct Array : public Object
   Array(const void *appMemory,
       ANARIMemoryDeleter deleter,
       const void *deleterPtr,
-      ANARIDataType elementType);
+      ANARIDataType elementType,
+      uint64_t numElements);
   virtual ~Array();
 
   ANARIDataType elementType() const;
 
-  void *map();
-  void unmap();
+  virtual void *map();
+  virtual void unmap();
 
   template <typename T>
   T *dataAs();
@@ -50,6 +51,7 @@ struct Array : public Object
 
  private:
   ANARIDataType m_elementType{ANARI_UNKNOWN};
+  uint64_t m_numElements;
   bool m_privatized{false};
 };
 
@@ -133,6 +135,8 @@ struct ObjectArray : public Array
   size_t size() const;
 
   void privatize() override;
+
+  void unmap() override;
 
   Object **handles();
 

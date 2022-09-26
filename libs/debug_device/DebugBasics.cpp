@@ -72,28 +72,30 @@ void DebugBasics::anariNewArray1D(ANARIDevice device, const void *appMemory, ANA
 
     if(isObject(dataType)) {
         ANARIObject *objects = (ANARIObject*)appMemory;
-        for(uint64_t i = 0;i<numItems1;++i) {
-            if(objects[i] == 0) {
-                DEBUG_REPORT(ANARI_SEVERITY_ERROR, ANARI_STATUS_INVALID_ARGUMENT,
-                    "%s: Null handle in object array at index %d",
-                    DEBUG_FUNCTION_NAME, i);
+        if(objects != nullptr) {
+            for(uint64_t i = 0;i<numItems1;++i) {
+                if(objects[i] == 0) {
+                    DEBUG_REPORT(ANARI_SEVERITY_ERROR, ANARI_STATUS_INVALID_ARGUMENT,
+                        "%s: Null handle in object array at index %d",
+                        DEBUG_FUNCTION_NAME, i);
 
-            } else if(auto elementinfo = td->getObjectInfo(objects[i])) {
-                if(elementinfo->getType() != dataType) {
+                } else if(auto elementinfo = td->getObjectInfo(objects[i])) {
+                    if(elementinfo->getType() != dataType) {
+                        DEBUG_REPORT(ANARI_SEVERITY_ERROR, ANARI_STATUS_INVALID_ARGUMENT,
+                            "%s: Type mismatch in object array at index %d. Array is of type %s but object is %s",
+                            DEBUG_FUNCTION_NAME, i, toString(dataType),
+                            toString(elementinfo->getType()));
+                    }
+                    if(elementinfo->getRefCount() <= 0) {
+                        DEBUG_REPORT(ANARI_SEVERITY_ERROR, ANARI_STATUS_INVALID_ARGUMENT,
+                            "%s: Released handle in object array at index %d.",
+                            DEBUG_FUNCTION_NAME, i);
+                    }
+                } else {
                     DEBUG_REPORT(ANARI_SEVERITY_ERROR, ANARI_STATUS_INVALID_ARGUMENT,
-                        "%s: Type mismatch in object array at index %d. Array is of type %s but object is %s",
-                        DEBUG_FUNCTION_NAME, i, toString(dataType),
-                        toString(elementinfo->getType()));
-                }
-                if(elementinfo->getRefCount() <= 0) {
-                    DEBUG_REPORT(ANARI_SEVERITY_ERROR, ANARI_STATUS_INVALID_ARGUMENT,
-                        "%s: Released handle in object array at index %d.",
+                        "%s: Unknown handle in object array at index %d.",
                         DEBUG_FUNCTION_NAME, i);
                 }
-            } else {
-                DEBUG_REPORT(ANARI_SEVERITY_ERROR, ANARI_STATUS_INVALID_ARGUMENT,
-                    "%s: Unknown handle in object array at index %d.",
-                    DEBUG_FUNCTION_NAME, i);
             }
         }
     }

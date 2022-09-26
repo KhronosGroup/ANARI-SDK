@@ -11,9 +11,18 @@ namespace example_device {
 Array::Array(const void *appMem,
     ANARIMemoryDeleter deleter,
     const void *deleterPtr,
-    ANARIDataType elementType)
-    : m_mem(appMem), m_deleter(deleter), m_elementType(elementType)
-{}
+    ANARIDataType elementType,
+    uint64_t numElements)
+    : m_mem(appMem), m_deleter(deleter), m_elementType(elementType), m_numElements(numElements)
+{
+  if(m_mem == nullptr) {
+    size_t numBytes = m_numElements * sizeOf(m_elementType);
+    void *mem = malloc(numBytes);
+    memset(mem, 0, numBytes);
+    m_mem = mem;
+    m_privatized = true;
+  }
+}
 
 Array::~Array()
 {
@@ -77,7 +86,7 @@ Array1D::Array1D(const void *appMemory,
     ANARIDataType type,
     uint64_t numItems,
     uint64_t byteStride)
-    : Array(appMemory, deleter, deleterPtr, type), m_size(numItems)
+    : Array(appMemory, deleter, deleterPtr, type, numItems), m_size(numItems)
 {
   if (byteStride != 0)
     throw std::runtime_error("strided arrays not yet supported!");
@@ -108,7 +117,7 @@ Array2D::Array2D(const void *appMemory,
     uint64_t numItems2,
     uint64_t byteStride1,
     uint64_t byteStride2)
-    : Array(appMemory, deleter, deleterPtr, type)
+    : Array(appMemory, deleter, deleterPtr, type, numItems1*numItems2)
 {
   if (byteStride1 != 0 || byteStride2 != 0)
     throw std::runtime_error("strided arrays not yet supported!");
@@ -149,7 +158,7 @@ Array3D::Array3D(const void *appMemory,
     uint64_t byteStride1,
     uint64_t byteStride2,
     uint64_t byteStride3)
-    : Array(appMemory, deleter, deleterPtr, type)
+    : Array(appMemory, deleter, deleterPtr, type, numItems1*numItems2*numItems3)
 {
   if (byteStride1 != 0 || byteStride2 != 0 || byteStride3 != 0)
     throw std::runtime_error("strided arrays not yet supported!");
@@ -187,7 +196,7 @@ ObjectArray::ObjectArray(const void *appMemory,
     ANARIDataType type,
     uint64_t numItems,
     uint64_t byteStride)
-    : Array(appMemory, deleter, deleterPtr, type)
+    : Array(appMemory, deleter, deleterPtr, type, numItems)
 {
   if (byteStride != 0)
     throw std::runtime_error("strided arrays not yet supported!");
@@ -197,10 +206,12 @@ ObjectArray::ObjectArray(const void *appMemory,
   auto **srcBegin = (Object **)appMemory;
   auto **srcEnd = srcBegin + numItems;
 
-  std::transform(srcBegin, srcEnd, m_handleArray.begin(), [](Object *obj) {
-    obj->refInc();
-    return obj;
-  });
+  if(appMemory) {
+    std::transform(srcBegin, srcEnd, m_handleArray.begin(), [](Object *obj) {
+      obj->refInc();
+      return obj;
+    });
+  }
 }
 
 ObjectArray::~ObjectArray()
@@ -223,6 +234,28 @@ size_t ObjectArray::size() const
 void ObjectArray::privatize()
 {
   freeAppMemory();
+}
+
+void ObjectArray::unmap()
+{
+  void *mem = const_cast<void*>(m_mem);
+
+  for(auto obj : m_handleArray) {
+    if(obj) {
+      obj->refDec();
+    }
+  }
+
+  auto **srcBegin = (Object **)mem;
+  auto **srcEnd = srcBegin + m_handleArray.size();
+  std::transform(srcBegin, srcEnd, m_handleArray.begin(), [](Object *obj) {
+    if(obj) {
+      obj->refInc();
+    }
+    return obj;
+  });
+
+  Array::unmap();
 }
 
 Object **ObjectArray::handles()
