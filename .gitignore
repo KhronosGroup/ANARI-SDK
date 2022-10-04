@@ -4,3 +4,6 @@ build/
 cmake-build-*
 docs/gen/*
 docs/out/*
+.vs
+out
+CMakeSettings.json
