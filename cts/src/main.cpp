@@ -1,41 +1,12 @@
 #include <pybind11/pybind11.h>
-
-#define STRINGIFY(x) #x
-#define MACRO_STRINGIFY(x) STRINGIFY(x)
-
-int add(int i, int j)
-{
-  return i + j;
-}
+#include <pybind11/stl.h>
+#include <anariWrapper.h>
 
 namespace py = pybind11;
 
 PYBIND11_MODULE(cts, m)
 {
-  m.doc() = R"pbdoc(
-        Pybind11 example plugin
-        -----------------------
-        .. currentmodule:: cmake_example
-        .. autosummary::
-           :toctree: _generate
-           add
-           subtract
-    )pbdoc";
-
-  m.def("add", &add, R"pbdoc(
-        Add two numbers
-        Some other explanation about the add function.
+  m.def("render_scenes", &cts::renderScenes, R"pbdoc(
+        Creates renderings of specified scenes.
     )pbdoc");
-
-  m.def(
-      "subtract", [](int i, int j) { return i - j; }, R"pbdoc(
-        Subtract two numbers
-        Some other explanation about the subtract function.
-    )pbdoc");
-
-#ifdef VERSION_INFO
-  m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
-#else
-  m.attr("__version__") = "dev";
-#endif
 }

@@ -11,8 +11,10 @@ project("cts")
 
 include(pybind11.cmake)
 
+file (GLOB src "src/*.cpp")
+
 pybind11_add_module(${lib_name} 
-	src/main.cpp
+	${src}
 )
 
 target_include_directories(${lib_name} PUBLIC "header")
