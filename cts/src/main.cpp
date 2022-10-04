@@ -4,7 +4,7 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(cts, m)
+PYBIND11_MODULE(ctsBackend, m)
 {
   m.def("render_scenes", &cts::renderScenes, R"pbdoc(
         Creates renderings of specified scenes.
