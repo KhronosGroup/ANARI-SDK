@@ -25,10 +25,14 @@ target_link_libraries(${lib_name}
   anari::anari
   anari::anari_utilities)
 
-  add_custom_command(TARGET ${lib_name}
-	COMMAND ${CMAKE_COMMAND}
-			-DBUILD_CONFIG_DIR=${CMAKE_CFG_INTDIR}
-			-DCMAKE_RUNTIME_OUTPUT_DIRECTORY=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
-			-P "${CMAKE_CURRENT_LIST_DIR}/copy_post_build.cmake"
-	VERBATIM
-	)
+
+option(CTS_DEV "Copy compiled python module next to python script to make developing easier" ON)
+if (CTS_DEV AND NOT BUILD_SHARED_LIBS)
+	  add_custom_command(TARGET ${lib_name}
+		COMMAND ${CMAKE_COMMAND}
+				-DBUILD_CONFIG_DIR=${CMAKE_CFG_INTDIR}
+				-DCMAKE_RUNTIME_OUTPUT_DIRECTORY=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+				-P "${CMAKE_CURRENT_LIST_DIR}/copy_post_build.cmake"
+		VERBATIM
+		)
+endif()
