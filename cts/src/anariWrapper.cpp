@@ -73,4 +73,11 @@ namespace cts {
       return {};
     }
 
+    std::vector<std::tuple<std::string, bool>> checkCoreExtensions(
+        const std::string &libraryName,
+        const std::optional<std::string> &device)
+    {
+      return {{"TEST EXTENSION", true}};
+    }
+
 } // namespace cts
