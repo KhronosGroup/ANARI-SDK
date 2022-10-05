@@ -65,8 +65,8 @@ namespace cts {
     }
 
     std::vector<std::vector<std::byte>> renderScenes(const std::string &libraryName,
-        std::optional<std::string> device,
-        std::vector<std::string> scenes)
+        const std::optional<std::string>& device, const std::string& renderer,
+        const std::vector<std::string>& scenes)
     {
       cts::initANARI(libraryName);
 

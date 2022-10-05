@@ -7,7 +7,10 @@ from pathlib import Path
 
 
 def render_scenes(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "all", output = "."):
-    ctsBackend.render_scenes(anari_library, anari_device, anari_renderer, test_scenes, output)
+    collected_scenes = []
+    # TODO: collect scenes
+    image_data = ctsBackend.render_scenes(anari_library, anari_device, anari_renderer, collected_scenes)
+    # TODO: write to file
 
 
 if __name__ == "__main__":
@@ -15,7 +18,7 @@ if __name__ == "__main__":
     subparsers = parser.add_subparsers(dest="command")
 
     renderScenesParser = subparsers.add_parser('render_scenes')
-    renderScenesParser.add_argument('library', required=True)
+    renderScenesParser.add_argument('library')
     renderScenesParser.add_argument('--device', default=None)
     renderScenesParser.add_argument('--renderer', default="default")
     renderScenesParser.add_argument('--test_scenes', default="all")
