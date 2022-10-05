@@ -3,8 +3,9 @@ import ctsBackend
 import argparse
 from pathlib import Path
 
-
-
+def check_core_extensions(anari_library, anari_device = None):
+    extensionsList = ctsBackend.check_core_extensions(anari_library, anari_device)
+    # TODO write list
 
 def render_scenes(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "all", output = "."):
     collected_scenes = []
@@ -24,7 +25,13 @@ if __name__ == "__main__":
     renderScenesParser.add_argument('--test_scenes', default="all")
     renderScenesParser.add_argument('--output', default=".")
 
+    checkExtensionsParser = subparsers.add_parser('check_core_extensions')
+    checkExtensionsParser.add_argument('library')
+    checkExtensionsParser.add_argument('--device', default=None)
+
     args = parser.parse_args()
 
     if args.command == "render_scenes":
         render_scenes(args.library, args.device, args.renderer, args.test_scenes, args.output)
+    elif args.command == "check_core_extensions":
+        render_scenes(args.library, args.device)
