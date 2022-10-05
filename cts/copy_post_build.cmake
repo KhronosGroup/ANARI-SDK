@@ -1,0 +1,3 @@
+file (GLOB python_files "${CMAKE_CURRENT_LIST_DIR}/*.py")
+
+file(COPY ${python_files} DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${BUILD_CONFIG_DIR}")
