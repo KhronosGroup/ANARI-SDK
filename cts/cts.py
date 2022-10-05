@@ -5,6 +5,7 @@ from pathlib import Path
 
 def check_core_extensions(anari_library, anari_device = None):
     extensionsList = ctsBackend.check_core_extensions(anari_library, anari_device)
+    print(extensionsList)
     # TODO write list
 
 def render_scenes(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "all", output = "."):
