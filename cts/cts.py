@@ -35,4 +35,4 @@ if __name__ == "__main__":
     if args.command == "render_scenes":
         render_scenes(args.library, args.device, args.renderer, args.test_scenes, args.output)
     elif args.command == "check_core_extensions":
-        render_scenes(args.library, args.device)
+        check_core_extensions(args.library, args.device)
