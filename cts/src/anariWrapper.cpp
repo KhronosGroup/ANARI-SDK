@@ -62,14 +62,15 @@ namespace cts {
 
     std::vector<std::tuple<std::string, bool>> checkCoreExtensions(
         const std::string &libraryName,
-        const std::optional<std::string> &device)
+        const std::optional<std::string> &device,
+        const std::function<void(const std::string message)> &callback)
     {
       std::string deviceName = "default";
       if (device.has_value()) {
         deviceName = device.value();
       }
 
-      anari::Library lib = anari::loadLibrary(libraryName.c_str(), statusFunc);
+      anari::Library lib = anari::loadLibrary(libraryName.c_str(), statusFunc, &callback);
 
       std::vector<std::tuple<std::string, bool>> result;
 
@@ -164,6 +165,8 @@ namespace cts {
           features.ANARI_KHR_TRANSFORMATION_MOTION_BLUR});
 
       result.push_back({"ANARI_KHR_ARRAY1D_REGION", features.ANARI_KHR_ARRAY1D_REGION});
+
+      anari::unloadLibrary(lib);
 
       return result;
     }
