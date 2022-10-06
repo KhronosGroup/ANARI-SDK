@@ -1,7 +1,8 @@
 #include "anariWrapper.h"
+
 #define ANARI_FEATURE_UTILITY_IMPL
 #include <anari/anari_cpp.hpp>
-#include "anari/anari_cpp/ext/std.h"
+#include <anari/anari_cpp/ext/std.h>
 
 namespace cts {
 
@@ -13,62 +14,48 @@ namespace cts {
     ANARIStatusCode code,
     const char *message)
     {
-      (void)userData;
+      auto& logger = *reinterpret_cast<const std::function<void(const std::string message)>*>(userData);
       (void)device;
       (void)source;
       (void)sourceType;
       (void)code;
       if (severity == ANARI_SEVERITY_FATAL_ERROR) {
-        fprintf(stderr, "[FATAL] %s\n", message);
+        logger("[FATAL] " + std::string(message) + "\n");
       } else if (severity == ANARI_SEVERITY_ERROR) {
-        fprintf(stderr, "[ERROR] %s\n", message);
+        logger("[ERROR] " + std::string(message) + "\n");
       } else if (severity == ANARI_SEVERITY_WARNING) {
-        fprintf(stderr, "[WARN ] %s\n", message);
+        logger("[WARN ] " + std::string(message) + "\n");
       } else if (severity == ANARI_SEVERITY_PERFORMANCE_WARNING) {
-        fprintf(stderr, "[PERF ] %s\n", message);
+        logger("[PERF ] " + std::string(message) + "\n");
       } else if (severity == ANARI_SEVERITY_INFO) {
-        fprintf(stderr, "[INFO ] %s\n", message);
+        logger("[INFO ] " + std::string(message) + "\n");
       } else if (severity == ANARI_SEVERITY_DEBUG) {
-        fprintf(stderr, "[DEBUG] %s\n", message);
+        logger("[DEBUG] " + std::string(message) + "\n");
       }
     }
 
-    void initANARI(const std::string &libraryName)
+    void initANARI(const std::string &libraryName, const std::function<void(const std::string message)>& callback)
     {
-      printf("initialize ANARI...");
+      callback("Initialize ANARI...");
       // anari::Library m_debug = anari::loadLibrary("debug", statusFunc);
       try {
         anari::Library lib =
-            anari::loadLibrary(libraryName.c_str(), statusFunc);
-
-        anari::Features features = anari::feature::getObjectFeatures(
-            lib, "default", "default", ANARI_DEVICE);
-
-        if (!features.ANARI_KHR_GEOMETRY_TRIANGLE)
-          printf(
-              "WARNING: device doesn't support ANARI_KHR_GEOMETRY_TRIANGLE\n");
-        if (!features.ANARI_KHR_CAMERA_PERSPECTIVE)
-          printf(
-              "WARNING: device doesn't support ANARI_KHR_CAMERA_PERSPECTIVE\n");
-        if (!features.ANARI_KHR_LIGHT_DIRECTIONAL)
-          printf(
-              "WARNING: device doesn't support ANARI_KHR_LIGHT_DIRECTIONAL\n");
-        if (!features.ANARI_KHR_MATERIAL_MATTE)
-          printf("WARNING: device doesn't support ANARI_KHR_MATERIAL_MATTE\n");
+            anari::loadLibrary(libraryName.c_str(), statusFunc, &callback);
 
         ANARIDevice w = anariNewDevice(lib, "default");
 
         // ANARIDevice d = anariNewDevice(m_debug, "debug");
       } catch (...) {
-        printf("ERROR2");
+        callback("ERROR2");
       }
     }
 
     std::vector<std::vector<std::byte>> renderScenes(const std::string &libraryName,
         const std::optional<std::string>& device, const std::string& renderer,
-        const std::vector<std::string>& scenes)
+        const std::vector<std::string> &scenes,
+        const std::function<void(const std::string message)> &callback)
     {
-      cts::initANARI(libraryName);
+      cts::initANARI(libraryName, callback);
 
       return {};
     }

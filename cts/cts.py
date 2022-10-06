@@ -1,7 +1,16 @@
 #!python3
 import ctsBackend
 import argparse
+import threading
 from pathlib import Path
+
+logger_mutex = threading.Lock()
+
+def anari_logger(message):
+    with logger_mutex:
+        with open("ANARI.log", 'a') as file:
+            file.write(message)
+    #print(message)
 
 def check_core_extensions(anari_library, anari_device = None):
     extensionsList = ctsBackend.check_core_extensions(anari_library, anari_device)
@@ -11,7 +20,7 @@ def check_core_extensions(anari_library, anari_device = None):
 def render_scenes(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "all", output = "."):
     collected_scenes = []
     # TODO: collect scenes
-    image_data = ctsBackend.render_scenes(anari_library, anari_device, anari_renderer, collected_scenes)
+    image_data = ctsBackend.render_scenes(anari_library, anari_device, anari_renderer, collected_scenes, anari_logger)
     # TODO: write to file
 
 

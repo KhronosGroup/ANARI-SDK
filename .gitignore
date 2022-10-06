@@ -12,3 +12,4 @@ CMakeSettings.json
 cts/anari_library_debug*
 cts/anari_library_example*
 cts/*pyd
+*.log
