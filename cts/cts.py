@@ -2,6 +2,7 @@
 import ctsBackend
 import argparse
 import threading
+import datetime
 from pathlib import Path
 from tabulate import tabulate
 
@@ -10,7 +11,7 @@ logger_mutex = threading.Lock()
 def anari_logger(message):
     with logger_mutex:
         with open("ANARI.log", 'a') as file:
-            file.write(message)
+            file.write(f'{str(datetime.datetime.now())}: {message}\n')
     #print(message)
 
 def check_core_extensions(anari_library, anari_device = None):
@@ -22,21 +23,27 @@ def render_scenes(anari_library, anari_device = None, anari_renderer = "default"
     image_data = ctsBackend.render_scenes(anari_library, anari_device, anari_renderer, collected_scenes, anari_logger)
     # TODO: write to file
 
+def query_metadata(anari_library):
+    ctsBackend.query_metadata(anari_library, anari_logger)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='ANARI CTS toolkit')
     subparsers = parser.add_subparsers(dest="command", title='Commands', metavar=None)
 
-    parentParser = argparse.ArgumentParser(add_help=False)
-    parentParser.add_argument('library', help='ANARI library to load')
-    parentParser.add_argument('--device', default=None, help='ANARI device on which to perform the test')
+    libraryParser = argparse.ArgumentParser(add_help=False)
+    libraryParser.add_argument('library', help='ANARI library to load')
+    deviceParser = argparse.ArgumentParser(add_help=False, parents=[libraryParser])
+    deviceParser.add_argument('--device', default=None, help='ANARI device on which to perform the test')
 
-    renderScenesParser = subparsers.add_parser('render_scenes', description='Renders an image to disk for each test scene', parents=[parentParser])
+    renderScenesParser = subparsers.add_parser('render_scenes', description='Renders an image to disk for each test scene', parents=[deviceParser])
     renderScenesParser.add_argument('--renderer', default="default")
     renderScenesParser.add_argument('--test_scenes', default="all")
     renderScenesParser.add_argument('--output', default=".")
 
-    checkExtensionsParser = subparsers.add_parser('check_core_extensions', parents=[parentParser])
+    checkExtensionsParser = subparsers.add_parser('check_core_extensions', parents=[deviceParser])
+
+    queryMetadataParser = subparsers.add_parser('query_metadata', parents=[libraryParser])
 
     command_text = ""
     for subparser in subparsers.choices :
@@ -50,3 +57,5 @@ if __name__ == "__main__":
     elif args.command == "check_core_extensions":
         result = check_core_extensions(args.library, args.device)
         print(tabulate(result))
+    elif args.command == "query_metadata":
+        query_metadata(args.library)

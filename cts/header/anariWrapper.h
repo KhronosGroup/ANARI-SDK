@@ -5,7 +5,17 @@
 #include <vector>
 #include <functional>
 
+#include <anari/anari.h>
+
 namespace cts {
+    void statusFunc(const void *userData,
+        ANARIDevice device,
+        ANARIObject source,
+        ANARIDataType sourceType,
+        ANARIStatusSeverity severity,
+        ANARIStatusCode code,
+        const char *message);
+
     void initANARI(const std::string &libraryName, const std::function<void(const std::string message)> &callback);
 
     std::vector<std::vector<std::byte>> renderScenes(const std::string &libraryName,
