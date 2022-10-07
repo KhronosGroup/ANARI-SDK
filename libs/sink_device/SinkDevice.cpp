@@ -309,9 +309,7 @@ static char deviceName[] = "sink";
 extern "C" SINK_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_NEW_DEVICE(
     sink, library, subtype)
 {
-  if (subtype == std::string("default") || subtype == std::string("sink"))
-    return (ANARIDevice) new anari::sink_device::SinkDevice(library);
-  return nullptr;
+  return (ANARIDevice) new anari::sink_device::SinkDevice(library);
 }
 
 extern "C" SINK_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_INIT(sink) {}
