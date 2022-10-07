@@ -5,6 +5,10 @@
 #include <vector>
 #include <functional>
 
+#include "anari/anari_feature_utility.h"
+
+
+
 namespace cts {
     void initANARI(const std::string &libraryName, const std::function<void(const std::string message)> &callback);
 
