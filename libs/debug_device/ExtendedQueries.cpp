@@ -74,7 +74,9 @@ static int info_hash(const char *str) {
    }
    return -1;
 }
-static const int32_t anari_true = 1;static const int32_t anari_false = 0;const char ** query_extensions() {
+static const int32_t anari_true = 1;
+static const int32_t anari_false = 0;
+const char ** query_extensions() {
    static const char *features[] = {
       "ANARI_extended_device",
       "ANARI_CORE_OBJECTS",
@@ -10377,7 +10379,10 @@ const void * query_param_info_enum(ANARIDataType type, const char *subtype, cons
    }
 }
 const void * query_param_info(ANARIDataType type, const char *subtype, const char *paramName, ANARIDataType paramType, const char *infoNameString, ANARIDataType infoType) {
-   int infoName = info_hash(infoNameString);   return query_param_info_enum(type, subtype, paramName, paramType, infoName, infoType);}static const void * ANARI_DEVICE_info(int infoName, ANARIDataType infoType) {
+   int infoName = info_hash(infoNameString);
+   return query_param_info_enum(type, subtype, paramName, paramType, infoName, infoType);
+}
+static const void * ANARI_DEVICE_info(int infoName, ANARIDataType infoType) {
    switch(infoName) {
       case 4: // description
          {
