@@ -1,12 +1,13 @@
 #include "anariWrapper.h"
 #include <anari/anari_cpp.hpp>
 #include <anari/anari_cpp/ext/std.h>
+#include "ctsQueries.h"
 
 typedef union ANARIFeatures_u
 {
   ANARIFeatures features;
   int vec[sizeof(ANARIFeatures) / sizeof(int)];
-};
+} ANARIFeatures_u;
 
 namespace cts {
 
@@ -88,8 +89,15 @@ namespace cts {
       ANARIFeatures_u test;
       test.features = features;
 
-      for (int i = 0; i < sizeof(ANARIFeatures) / sizeof(int); ++i) {
-        result.push_back({"Test", test.vec[i]});
+      const size_t featureCount = sizeof(ANARIFeatures) / sizeof(int);
+      
+      const char** featureNamesPointer = query_extensions();
+      std::vector<std::string> featureNames(
+          featureNamesPointer, featureNamesPointer + featureCount);
+      
+
+      for (int i = 0; i < featureCount; ++i) {
+        result.push_back({featureNames[i], test.vec[i]});
       }
       anari::unloadLibrary(lib);
       return result;
