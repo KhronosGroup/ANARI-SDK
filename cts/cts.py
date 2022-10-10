@@ -23,8 +23,8 @@ def render_scenes(anari_library, anari_device = None, anari_renderer = "default"
     image_data = ctsBackend.render_scenes(anari_library, anari_device, anari_renderer, collected_scenes, anari_logger)
     # TODO: write to file
 
-def query_metadata(anari_library):
-    ctsBackend.query_metadata(anari_library, anari_logger)
+def query_metadata(anari_library, type = None, subtype = None, skipParameters = False, info = False):
+    ctsBackend.query_metadata(anari_library, type, subtype, skipParameters, info, anari_logger)
 
 
 if __name__ == "__main__":
@@ -44,6 +44,10 @@ if __name__ == "__main__":
     checkExtensionsParser = subparsers.add_parser('check_core_extensions', parents=[deviceParser])
 
     queryMetadataParser = subparsers.add_parser('query_metadata', parents=[libraryParser])
+    queryMetadataParser.add_argument('--type', default=None, help='Only show parameters for objects of a type')
+    queryMetadataParser.add_argument('--subtype', default=None, help='Only show parameters for objects of a subtype')
+    queryMetadataParser.add_argument('--skipParameters', action='store_true', help='Skip parameter listing')
+    queryMetadataParser.add_argument('--info', action='store_true', help='Show detailed information for each parameter')
 
     command_text = ""
     for subparser in subparsers.choices :
@@ -58,4 +62,4 @@ if __name__ == "__main__":
         result = check_core_extensions(args.library, args.device)
         print(tabulate(result))
     elif args.command == "query_metadata":
-        query_metadata(args.library)
+        query_metadata(args.library, args.type, args.subtype, args.skipParameters, args.info)

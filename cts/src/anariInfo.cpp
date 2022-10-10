@@ -259,9 +259,12 @@ void print_info(ANARILibrary lib,
 
 /******************************************************************/
 void queryInfo(const std::string &library,
+    std::optional<std::string> typeFilter,
+    std::optional<std::string> subtypeFilter,
+    bool skipParameters,
+    bool info,
     const std::function<void(const std::string message)> &callback)
 {
-
   printf("SDK version: %i.%i.%i\n",
       ANARI_SDK_VERSION_MAJOR,
       ANARI_SDK_VERSION_MINOR,
@@ -293,14 +296,24 @@ void queryInfo(const std::string &library,
       printf("\n");
     }
 
+    if (!skipParameters) {
       printf("   Parameters:\n");
       for (size_t j = 0; j < sizeof(namedTypes) / sizeof(ANARIDataType); ++j) {
+        if (typeFilter
+            && strstr(anari::toString(namedTypes[j]), typeFilter->c_str())
+                == nullptr) {
+          continue;
+        }
 
         const char **types =
             anariGetObjectSubtypes(lib, devices[i], namedTypes[j]);
         // print subtypes of named types
         if (types) {
           for (int k = 0; types[k]; ++k) {
+            if (subtypeFilter
+                && strstr(types[k], subtypeFilter->c_str()) == nullptr) {
+              continue;
+            }
             printf("      %s %s:\n", anari::toString(namedTypes[j]), types[k]);
             const ANARIParameter *params =
                 (const ANARIParameter *)anariGetObjectInfo(lib,
@@ -314,6 +327,7 @@ void queryInfo(const std::string &library,
                 printf("         * %-25s %-25s\n",
                     params[l].name,
                     anari::toString(params[l].type));
+                if (info) {
                   print_info(lib,
                       devices[i],
                       types[k],
@@ -321,15 +335,21 @@ void queryInfo(const std::string &library,
                       params[l].name,
                       params[l].type,
                       "            ");
-                
+                }
               }
             }
           }
         }
       }
 
+      if (!subtypeFilter.has_value()) {
         for (size_t j = 0; j < sizeof(anonymousTypes) / sizeof(ANARIDataType);
              ++j) {
+          if (typeFilter
+              && strstr(anari::toString(anonymousTypes[j]), typeFilter->c_str())
+                  == nullptr) {
+            continue;
+          }
 
           printf("      %s:\n", anari::toString(anonymousTypes[j]));
           const ANARIParameter *params =
@@ -344,7 +364,7 @@ void queryInfo(const std::string &library,
               printf("         * %-25s %-25s\n",
                   params[l].name,
                   anari::toString(params[l].type));
-
+              if (info) {
                 print_info(lib,
                     devices[i],
                     nullptr,
@@ -352,11 +372,11 @@ void queryInfo(const std::string &library,
                     params[l].name,
                     params[l].type,
                     "            ");
-              
+              }
             }
           }
-        
-      
+        }
+      }
     }
   }
   anariUnloadLibrary(lib);
