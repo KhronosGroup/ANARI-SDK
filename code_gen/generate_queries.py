@@ -69,8 +69,8 @@ class QueryGenerator:
         code = "static " + hash_gen.gen_hash_function("subtype_hash", self.subtype_list)
         code += "static " + hash_gen.gen_hash_function("param_hash", self.param_strings)
         code += "static " + hash_gen.gen_hash_function("info_hash", self.info_strings)
-        code += "static const int32_t anari_true = 1;"
-        code += "static const int32_t anari_false = 0;"
+        code += "static const int32_t anari_true = 1;\n"
+        code += "static const int32_t anari_false = 0;\n"
         return code;
 
     def generate_extension_query(self):
@@ -262,9 +262,9 @@ class QueryGenerator:
         code += "}\n"
 
         code += "const void * query_param_info(ANARIDataType type, const char *subtype, const char *paramName, ANARIDataType paramType, const char *infoNameString, ANARIDataType infoType) {\n"
-        code += "   int infoName = info_hash(infoNameString);"
-        code += "   return query_param_info_enum(type, subtype, paramName, paramType, infoName, infoType);"
-        code += "}"
+        code += "   int infoName = info_hash(infoNameString);\n"
+        code += "   return query_param_info_enum(type, subtype, paramName, paramType, infoName, infoType);\n"
+        code += "}\n"
 
         return code
 
