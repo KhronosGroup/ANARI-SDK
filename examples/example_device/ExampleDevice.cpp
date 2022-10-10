@@ -363,13 +363,6 @@ void ExampleDevice::setParameter(
 
   if (fcn)
     fcn(object, name, mem);
-  else {
-    fprintf(stderr,
-        "warning - no parameter setter for type '%s'"
-        ", '%s' parameter will be ignored\n",
-        toString(type),
-        name);
-  }
 }
 
 void ExampleDevice::unsetParameter(ANARIObject o, const char *name)
@@ -567,11 +560,6 @@ extern "C" EXAMPLE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_NEW_DEVICE(
   if (subtype == std::string("default") || subtype == std::string("example"))
     return (ANARIDevice) new anari::example_device::ExampleDevice(library);
   return nullptr;
-}
-
-extern "C" EXAMPLE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_INIT(example)
-{
-  printf("...loaded example library!\n");
 }
 
 extern "C" EXAMPLE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_DEVICE_SUBTYPES(

@@ -42,20 +42,27 @@ using anari::LibraryImpl;
 // Helper functions ///////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-static inline LibraryImpl &libraryRef(ANARILibrary l)
+static LibraryImpl &libraryRef(ANARILibrary l)
 {
-  if (l == nullptr) {
-    throw std::runtime_error("null library provided");
-  }
   return *((LibraryImpl *)l);
 }
 
-static inline DeviceImpl &deviceRef(ANARIDevice d)
+static DeviceImpl &deviceRef(ANARIDevice d)
 {
-  if (d == nullptr) {
-    throw std::runtime_error("null device provided");
-  }
   return *((DeviceImpl *)d);
+}
+
+static void invokeStatusCallback(ANARIStatusCallback cb,
+    const void *userPtr,
+    const char *message,
+    ANARIDevice device = nullptr,
+    ANARIObject source = nullptr,
+    ANARIDataType sourceType = ANARI_UNKNOWN,
+    ANARIStatusSeverity severity = ANARI_SEVERITY_FATAL_ERROR,
+    ANARIStatusCode code = ANARI_STATUS_UNKNOWN_ERROR)
+{
+  if (cb)
+    cb(userPtr, device, source, sourceType, severity, code, message);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -69,7 +76,8 @@ extern "C" ANARILibrary anariLoadLibrary(const char *libraryName,
   if (std::string(libraryName) == "environment") {
     char *libraryFromEnv = getenv("ANARI_LIBRARY");
     if (!libraryFromEnv) {
-      throw std::runtime_error(
+      invokeStatusCallback(statusCB,
+          statusCBUserPtr,
           "'environment' library selected but ANARI_LIBRARY is not set");
     }
 
@@ -88,13 +96,14 @@ extern "C" ANARILibrary anariLoadLibrary(const char *libraryName,
     msg += libraryName;
     msg += "'\nreason: ";
     msg += e.what();
-    statusCB(statusCBUserPtr,
+    invokeStatusCallback(statusCB,
+        statusCBUserPtr,
+        msg.c_str(),
         nullptr,
         nullptr,
         ANARI_LIBRARY,
         ANARI_SEVERITY_ERROR,
-        ANARI_STATUS_INVALID_OPERATION,
-        msg.c_str());
+        ANARI_STATUS_INVALID_OPERATION);
   }
 
   return retval;
@@ -124,11 +133,7 @@ ANARI_CATCH_END_NORETURN()
 extern "C" ANARIDevice anariNewDevice(
     ANARILibrary l, const char *deviceType) ANARI_CATCH_BEGIN
 {
-  auto &lib = libraryRef(l);
-  auto _d = lib.newDevice(deviceType);
-  if (!_d)
-    return nullptr;
-  return _d;
+  return libraryRef(l).newDevice(deviceType);
 }
 ANARI_CATCH_END(nullptr)
 
