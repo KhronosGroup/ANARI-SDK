@@ -49,7 +49,7 @@ def ANARIStatusCallback_python(usrPtr, device, source, sourceType, severity, cod
 
 
 debug = lib.anariLoadLibrary(b'debug', lib.ANARIStatusCallback_python, ffi.NULL)
-library = lib.anariLoadLibrary(b'visrtx', lib.ANARIStatusCallback_python, ffi.NULL)
+library = lib.anariLoadLibrary(b'example', lib.ANARIStatusCallback_python, ffi.NULL)
 
 nested = lib.anariNewDevice(library, b'default')
 lib.anariCommitParameters(nested, nested)
@@ -119,7 +119,7 @@ lib.anariCommitParameters(device, renderer)
 
 frame = lib.anariNewFrame(device)
 lib.anariSetParameter(device, frame, b'size', lib.ANARI_UINT32_VEC2, ffi.new('uint32_t[2]', [width, height]))
-lib.anariSetParameter(device, frame, b'color', lib.ANARI_DATA_TYPE, ffi.new('ANARIDataType*', lib.ANARI_UFIXED8_RGBA_SRGB))
+lib.anariSetParameter(device, frame, b'channel.color', lib.ANARI_DATA_TYPE, ffi.new('ANARIDataType*', lib.ANARI_UFIXED8_RGBA_SRGB))
 lib.anariSetParameter(device, frame, b'renderer', lib.ANARI_RENDERER, ffi.new('ANARIRenderer*', renderer))
 lib.anariSetParameter(device, frame, b'camera', lib.ANARI_CAMERA, ffi.new('ANARICamera*', camera))
 lib.anariSetParameter(device, frame, b'world', lib.ANARI_WORLD, ffi.new('ANARIWorld*', world))
@@ -130,7 +130,7 @@ lib.anariFrameReady(device, frame, lib.ANARI_WAIT)
 frame_width = ffi.new('uint32_t*', 0)
 frame_height = ffi.new('uint32_t*', 0)
 frame_type = ffi.new('ANARIDataType*', 0)
-void_pixels = lib.anariMapFrame(device, frame, b'color', frame_width, frame_height, frame_type)
+void_pixels = lib.anariMapFrame(device, frame, b'channel.color', frame_width, frame_height, frame_type)
 
 unpacked_pixels = ffi.buffer(void_pixels, width*height*4)
 pixels = np.array(unpacked_pixels).reshape([height, width, 4])
