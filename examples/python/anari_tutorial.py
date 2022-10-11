@@ -48,7 +48,7 @@ def anari_status(device, source, sourceType, severity, code, message):
 status_handle = ffi.new_handle(anari_status) #something needs to keep this handle alive
 
 debug = anariLoadLibrary('debug', status_handle)
-library = anariLoadLibrary('visrtx', status_handle)
+library = anariLoadLibrary('example', status_handle)
 
 nested = anariNewDevice(library, 'default')
 anariCommitParameters(nested, nested)
@@ -107,7 +107,7 @@ anariCommitParameters(device, renderer)
 
 frame = anariNewFrame(device)
 anariSetParameter(device, frame, 'size', ANARI_UINT32_VEC2, [width, height])
-anariSetParameter(device, frame, 'color', ANARI_DATA_TYPE, ANARI_UFIXED8_RGBA_SRGB)
+anariSetParameter(device, frame, 'channel.color', ANARI_DATA_TYPE, ANARI_UFIXED8_RGBA_SRGB)
 anariSetParameter(device, frame, 'renderer', ANARI_RENDERER, renderer)
 anariSetParameter(device, frame, 'camera', ANARI_CAMERA, camera)
 anariSetParameter(device, frame, 'world', ANARI_WORLD, world)
@@ -115,10 +115,10 @@ anariCommitParameters(device, frame)
 
 anariRenderFrame(device, frame)
 anariFrameReady(device, frame, ANARI_WAIT)
-void_pixels, frame_width, frame_height, frame_type = anariMapFrame(device, frame, 'color')
+void_pixels, frame_width, frame_height, frame_type = anariMapFrame(device, frame, 'channel.color')
 
 unpacked_pixels = ffi.buffer(void_pixels, frame_width*frame_height*4)
 pixels = np.array(unpacked_pixels).reshape([height, width, 4])
 plt.imshow(pixels)
 plt.show()
-anariUnmapFrame(device, frame, 'color')
+anariUnmapFrame(device, frame, 'channel.color')
