@@ -1,0 +1,7 @@
+{
+  "geometrySubtype": "triangle",
+  "primitiveCount": 5,
+  "permutations": {
+    "primitiveMode": ["soup", "indexed"]
+  }
+}
