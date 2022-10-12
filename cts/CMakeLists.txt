@@ -23,7 +23,8 @@ find_package(anari REQUIRED)
 target_link_libraries(${lib_name} 
   PUBLIC
   anari::anari
-  anari::anari_utilities)
+  anari::anari_utilities
+  anari_test_scenes)
 
 add_custom_target(generate_cts
     COMMAND ${Python3_EXECUTABLE} ${ANARI_CODE_GEN_ROOT}/generate_queries.py
