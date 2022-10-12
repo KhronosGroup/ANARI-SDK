@@ -25,12 +25,9 @@ PYBIND11_MODULE(ctsBackend, m)
     )pbdoc");
 
   py::class_<cts::SceneGenerator>(m, "SceneGenerator")
-      .def(py::init<
-          const std::string &,
-          const std::string &,
-          const std::function<void(const std::string message)>&
-      >())
-      .def("setParameter", &cts::SceneGenerator::setParamDirect)
+      .def(py::init(&cts::SceneGenerator::createSceneGenerator))
+      .def("setParameter", &cts::SceneGenerator::setParam<std::string>)
+      .def("setParameter", &cts::SceneGenerator::setParam<int>)
       .def("commit", &cts::SceneGenerator::commit)
       .def("renderScene", &cts::SceneGenerator::renderScene);
 }

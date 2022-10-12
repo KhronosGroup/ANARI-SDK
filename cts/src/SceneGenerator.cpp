@@ -9,11 +9,9 @@
 
 namespace cts {
 
-SceneGenerator::SceneGenerator(const std::string& library, const std::string& device, const std::function<void(const std::string message)>& callback) : 
-    m_library(anari::loadLibrary(library.c_str(), statusFunc, &callback)),
-      m_device(anari::newDevice(m_library, device.c_str())),
-        TestScene(m_device)
+anari::Library SceneGenerator::m_library = nullptr;
 
+SceneGenerator::SceneGenerator(anari::Device device) :  TestScene(device)
 {
   //anari::commitParameters(m_device, m_device);
   m_world = anari::newObject<anari::World>(m_device);
@@ -80,8 +78,6 @@ void SceneGenerator::commit()
     verticies = generateTriangles(primitveMode, primitiveCount);
   }
 
-  
-
   anari::setAndReleaseParameter(d,
       geom,
       "vertex.position",
@@ -107,7 +103,7 @@ std::vector<glm::vec3> SceneGenerator::generateTriangles(
     return verticies;
 }
 
-std::vector<uint8_t> SceneGenerator::renderScene(const std::string &rendererType)
+std::vector<uint32_t> SceneGenerator::renderScene(const std::string &rendererType)
 {
   size_t image_height = getParam<size_t>("image_height", 1024);
   size_t image_width = getParam<size_t>("image_width", 1024);
@@ -118,12 +114,11 @@ std::vector<uint8_t> SceneGenerator::renderScene(const std::string &rendererType
   auto renderer =
       anari::newObject<anari::Renderer>(m_device, rendererType.c_str());
   //anari::setParameter(d, renderer, "pixelSamples", g_numPixelSamples);
-  //anari::setParameter(
-  //    m_device, renderer, "backgroundColor", glm::vec4(glm::vec3(0.1f), 1));
+  //anari::setParameter(m_device, renderer, "backgroundColor", glm::vec4(glm::vec3(0.1), 1));
   anari::commitParameters(m_device, renderer);
 
   auto frame = anari::newObject<anari::Frame>(m_device);
-  anari::setParameter(m_device, frame, "size", image_height * image_width);
+  anari::setParameter(m_device, frame, "size", glm::uvec2(image_height, image_width));
   anari::setParameter(m_device, frame, "color", ANARI_UFIXED8_RGBA_SRGB);
 
   anari::setParameter(m_device, frame, "renderer", renderer);
@@ -132,27 +127,54 @@ std::vector<uint8_t> SceneGenerator::renderScene(const std::string &rendererType
 
   anari::commitParameters(m_device, frame);
 
-    auto cam = createDefaultCameraFromWorld(m_world);
+  auto cam = createDefaultCameraFromWorld(m_world);
   anari::setParameter(m_device, camera, "position", cam.position);
-anari::setParameter(m_device, camera, "direction", cam.direction);
-anari::setParameter(m_device, camera, "up", cam.up);
-anari::commitParameters(m_device, camera);
+  anari::setParameter(m_device, camera, "direction", cam.direction);
+  anari::setParameter(m_device, camera, "up", cam.up);
+  anari::commitParameters(m_device, camera);
 
 
-anari::render(m_device, frame);
-anari::wait(m_device, frame);
+  anari::render(m_device, frame);
+  anari::wait(m_device, frame);
 
-auto fb = anari::map<uint8_t>(m_device, frame, "color");
+  auto fb = anari::map<uint32_t>(m_device, frame, "color");
 
-std::vector<uint8_t> result(fb.data, fb.data + image_height * image_width);
+  std::vector<uint32_t> result(fb.data, fb.data + image_height * image_width);
 
-anari::unmap(m_device, frame, "color");
+  anari::unmap(m_device, frame, "color");
 
   anari::release(m_device, camera);
-anari::release(m_device, frame);
+  anari::release(m_device, frame);
   anari::release(m_device, renderer);
 
+  resetAllParameters();
+
   return result;
+}
+
+void SceneGenerator::resetAllParameters() {
+  for (auto param : parameters()) {
+    removeParam(param.name);
+  }
+}
+
+SceneGenerator *SceneGenerator::createSceneGenerator(const std::string &library,
+  const std::string& device,
+  const std::function<void(const std::string message)>& callback)
+{
+  m_library = anari::loadLibrary(library.c_str(), statusFunc, &callback);
+  if (m_library == nullptr) {
+    callback("library could not be loaded: " + library);
+    return nullptr;
+  }
+
+  ANARIDevice dev = anariNewDevice(m_library, device.c_str());
+  if(dev == nullptr) {
+    callback("device could not be created: " + device);
+    return nullptr;
+  }
+
+  return new SceneGenerator(dev);
 }
 
 } // namespace cts

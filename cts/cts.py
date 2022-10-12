@@ -29,7 +29,7 @@ def resolve_scenes(test_scenes):
             else:
                 print(f'Path does not exist: {str(path)}')
     else:
-        path = Path(test_scenes)
+        path = Path(Path(__file__).parent / test_scenes)
         if not path.is_dir():
             print("No valid category")
             return []
@@ -55,7 +55,7 @@ def render_scenes(anari_library, anari_device = None, anari_renderer = "default"
         with open(json_file, 'r') as f:
             parsed_json = json.load(f)
             print(f'Rendering: {str(json_file)}')
-            for [key, value] in parsed_json:
+            for [key, value] in parsed_json.items():
                 if isinstance(value, dict):
                     if key == "permutations":
                         #TODO
@@ -71,10 +71,6 @@ def render_scenes(anari_library, anari_device = None, anari_renderer = "default"
             image_out.putdata(image_data)
             image_out.save(json_file.with_suffix('.png'))
 
-
-    # TODO: collect scenes
-    image_data = ctsBackend.render_scenes(anari_library, anari_device, anari_renderer, collected_scenes, anari_logger)
-    # TODO: write to file
 
 def query_metadata(anari_library, type = None, subtype = None, skipParameters = False, info = False):
     ctsBackend.query_metadata(anari_library, type, subtype, skipParameters, info, anari_logger)
