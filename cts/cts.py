@@ -66,10 +66,17 @@ def render_scenes(anari_library, anari_device = None, anari_renderer = "default"
 
             sceneGenerator.setParameter("primitiveMode", "soup")
             sceneGenerator.commit()
-            image_data = sceneGenerator.renderScene(anari_renderer)
+            image_data_list = sceneGenerator.renderScene(anari_renderer)
+            stem = json_file.stem
+            channels = ["color", "depth"]
             image_out = Image.new("RGBA", (HEIGHT, WIDTH))
-            image_out.putdata(image_data)
-            image_out.save(json_file.with_suffix('.png'))
+            image_out.putdata(image_data_list[0])
+            image_out.save(json_file.with_suffix('.png').with_stem(f'{stem}_{channels[0]}'))
+
+            image_out = Image.new("RGBA", (HEIGHT, WIDTH))
+            image_out.putdata(image_data_list[1])
+            image_out.save(json_file.with_suffix('.png').with_stem(f'{stem}_{channels[1]}'))
+
 
 
 def query_metadata(anari_library, type = None, subtype = None, skipParameters = False, info = False):

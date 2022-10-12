@@ -26,7 +26,8 @@ class SceneGenerator : public anari::scenes::TestScene
 
   void commit() override;
 
-  std::vector<uint32_t> renderScene(const std::string &rendererType);
+  std::vector<std::vector<uint32_t>> renderScene(
+      const std::string &rendererType);
 
  private:
   static anari::Library m_library;

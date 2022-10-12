@@ -103,7 +103,7 @@ std::vector<glm::vec3> SceneGenerator::generateTriangles(
     return verticies;
 }
 
-std::vector<uint32_t> SceneGenerator::renderScene(const std::string &rendererType)
+std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(const std::string &rendererType)
 {
   size_t image_height = getParam<size_t>("image_height", 1024);
   size_t image_width = getParam<size_t>("image_width", 1024);
@@ -120,6 +120,7 @@ std::vector<uint32_t> SceneGenerator::renderScene(const std::string &rendererTyp
   auto frame = anari::newObject<anari::Frame>(m_device);
   anari::setParameter(m_device, frame, "size", glm::uvec2(image_height, image_width));
   anari::setParameter(m_device, frame, "color", ANARI_UFIXED8_RGBA_SRGB);
+  anari::setParameter(m_device, frame, "depth", ANARI_FLOAT32);
 
   anari::setParameter(m_device, frame, "renderer", renderer);
   anari::setParameter(m_device, frame, "camera", camera);
@@ -137,11 +138,26 @@ std::vector<uint32_t> SceneGenerator::renderScene(const std::string &rendererTyp
   anari::render(m_device, frame);
   anari::wait(m_device, frame);
 
-  auto fb = anari::map<uint32_t>(m_device, frame, "color");
+  std::vector<std::vector<uint32_t>> result;
 
-  std::vector<uint32_t> result(fb.data, fb.data + image_height * image_width);
+  auto fb = anari::map<uint32_t>(m_device, frame, "color");
+  result.emplace_back(fb.data, fb.data + image_height * image_width);
 
   anari::unmap(m_device, frame, "color");
+
+  auto pixels = anari::map<float>(m_device, frame, "depth").data;
+
+  std::vector<uint32_t> converted;
+  for (int i = 0; i < image_height * image_width; ++i) {
+    uint8_t colorValue = pixels[i] * 255;
+    uint32_t rgba =
+        (255 << 24) + (colorValue << 16) + (colorValue << 8) + colorValue;
+    converted.push_back(rgba);
+  }
+
+  result.emplace_back(converted);
+
+  anari::unmap(m_device, frame, "depth");
 
   anari::release(m_device, camera);
   anari::release(m_device, frame);
