@@ -51,7 +51,7 @@ void SceneGenerator::commit()
 
   std::string geometrySubtype = getParam<std::string>("geometrySubtype", "triangle");
   std::string primitveMode = getParam<std::string>("primitveMode", "soup");
-  size_t primitiveCount = getParam<size_t>("primitiveCount", 5);
+  size_t primitiveCount = getParam<size_t>("primitiveCount", 20);
 
   // Build this scene top-down to stress commit ordering guarantees
 
@@ -72,7 +72,7 @@ void SceneGenerator::commit()
   anari::setParameter(d, surface, "material", mat);
 
   // TODO use seed from scene description json
-  m_rng.seed(0);
+  m_rng.seed(12345);
 
   std::vector<glm::vec3> vertices;
   if (geometrySubtype == "triangle") {
@@ -107,8 +107,18 @@ std::vector<glm::vec3> SceneGenerator::generateTriangles(
   for (auto& vertex : vertices) {
     vertex.x = getRandom(0.0f, 1.0f);
     vertex.y = getRandom(0.0f, 1.0f);
-    vertex.z = getRandom(0.0f, 1.0f);
+    vertex.y = getRandom(0.0f, 1.0f);
   }
+
+  // add offset per triangle
+  for (size_t i = 0; i < vertices.size() - 2; i += 3) {
+    glm::vec3 offset(getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f));
+    vertices[i] = (vertices[i] * 0.4f) + offset;
+    vertices[i + 1] = (vertices[i + 1] * 0.4f) + offset;
+    vertices[i + 2] = (vertices[i + 2] * 0.4f) + offset;
+  }
+
+  // TODO handle primitive mode
 
   return vertices;
 }
@@ -116,17 +126,21 @@ std::vector<glm::vec3> SceneGenerator::generateTriangles(
 std::vector<glm::vec3> SceneGenerator::generateTriangulatedQuads(
     const std::string &primitiveMode, size_t primitiveCount)
 {
-    std::vector<glm::vec3> vertices{{0.0, 0.0, 0.0}, {1.0, 1.0, 0.0}, {1.0, 0.0, 0.0}};
-
-    return vertices;
+  std::vector<glm::vec3> vertices{
+      {0.0, 0.0, 0.0}, {1.0, 1.0, 0.0}, {1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}};
+  // TODO create random quads
+  // TODO handle primitive mode
+  return vertices;
 }
 
 std::vector<glm::vec3> SceneGenerator::generateTriangulatedCubes(
     const std::string &primitiveMode, size_t primitiveCount)
 {
-    std::vector<glm::vec3> vertices{{0.0, 0.0, 0.0}, {1.0, 1.0, 0.0}, {1.0, 0.0, 0.0}};
+  std::vector<glm::vec3> vertices{{0.0, 0.0, 0.0}, {1.0, 1.0, 0.0}, {1.0, 0.0, 0.0}};
 
-    return vertices;
+  // TODO create random cubes
+  // TODO handle primitive mode
+  return vertices;
 }
 
 std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(const std::string &rendererType)
