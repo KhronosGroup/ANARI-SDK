@@ -6,7 +6,6 @@
 #include "SceneGenerator.h"
 #include "anariWrapper.h"
 
-
 namespace cts {
 
 anari::Library SceneGenerator::m_library = nullptr;
@@ -52,7 +51,7 @@ void SceneGenerator::commit()
 
   std::string geometrySubtype = getParam<std::string>("geometrySubtype", "triangle");
   std::string primitveMode = getParam<std::string>("primitveMode", "soup");
-  size_t primitiveCount = getParam<size_t>("primitiveCount", 1);
+  size_t primitiveCount = getParam<size_t>("primitiveCount", 5);
 
   // Build this scene top-down to stress commit ordering guarantees
 
@@ -72,16 +71,22 @@ void SceneGenerator::commit()
   anari::setParameter(d, surface, "geometry", geom);
   anari::setParameter(d, surface, "material", mat);
 
+  // TODO use seed from scene description json
+  m_rng.seed(0);
 
-  std::vector<glm::vec3> verticies;
+  std::vector<glm::vec3> vertices;
   if (geometrySubtype == "triangle") {
-    verticies = generateTriangles(primitveMode, primitiveCount);
+    vertices = generateTriangles(primitveMode, primitiveCount);
+  } else if (geometrySubtype == "quad") {
+    vertices = generateTriangulatedQuads(primitveMode, primitiveCount);
+  } else if (geometrySubtype == "cube") {
+    vertices = generateTriangulatedCubes(primitveMode, primitiveCount);
   }
 
   anari::setAndReleaseParameter(d,
       geom,
       "vertex.position",
-      anari::newArray1D(d, verticies.data(), verticies.size()));
+      anari::newArray1D(d, vertices.data(), vertices.size()));
 
 
   anari::commitParameters(d, geom);
@@ -98,9 +103,30 @@ void SceneGenerator::commit()
 std::vector<glm::vec3> SceneGenerator::generateTriangles(
     const std::string& primitiveMode, size_t primitiveCount)
 {
-    std::vector<glm::vec3> verticies{{0.0, 0.0, 0.0}, {1.0, 1.0, 0.0}, {1.0, 0.0, 0.0}};
+  std::vector<glm::vec3> vertices((primitiveCount * 3));
+  for (auto& vertex : vertices) {
+    vertex.x = getRandom(0.0f, 1.0f);
+    vertex.y = getRandom(0.0f, 1.0f);
+    vertex.z = getRandom(0.0f, 1.0f);
+  }
 
-    return verticies;
+  return vertices;
+}
+
+std::vector<glm::vec3> SceneGenerator::generateTriangulatedQuads(
+    const std::string &primitiveMode, size_t primitiveCount)
+{
+    std::vector<glm::vec3> vertices{{0.0, 0.0, 0.0}, {1.0, 1.0, 0.0}, {1.0, 0.0, 0.0}};
+
+    return vertices;
+}
+
+std::vector<glm::vec3> SceneGenerator::generateTriangulatedCubes(
+    const std::string &primitiveMode, size_t primitiveCount)
+{
+    std::vector<glm::vec3> vertices{{0.0, 0.0, 0.0}, {1.0, 1.0, 0.0}, {1.0, 0.0, 0.0}};
+
+    return vertices;
 }
 
 std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(const std::string &rendererType)
@@ -172,6 +198,13 @@ void SceneGenerator::resetAllParameters() {
   for (auto param : parameters()) {
     removeParam(param.name);
   }
+}
+
+float SceneGenerator::getRandom(float min, float max)
+{
+  std::uniform_real_distribution<float> uniformDist(min, max);
+
+  return uniformDist(m_rng);
 }
 
 SceneGenerator *SceneGenerator::createSceneGenerator(const std::string &library,

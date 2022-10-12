@@ -6,9 +6,10 @@
 #include "scenes/scene.h"
 
 #include <functional>
+#include <random>
 
 namespace cts {
- 
+
 class SceneGenerator : public anari::scenes::TestScene
 {
  public:
@@ -29,12 +30,22 @@ class SceneGenerator : public anari::scenes::TestScene
   std::vector<std::vector<uint32_t>> renderScene(
       const std::string &rendererType);
 
+  float getRandom(float min, float max);
+
  private:
   static anari::Library m_library;
 
   anari::World m_world{nullptr};
-  std::vector<glm::vec3> generateTriangles(
-      const std::string &primitiveMode, size_t primitiveCount);
+  std::mt19937 m_rng;
+
+  std::vector<glm::vec3> generateTriangles(const std::string &primitiveMode,
+      size_t primitiveCount);
+  std::vector<glm::vec3> generateTriangulatedQuads(
+      const std::string &primitiveMode,
+      size_t primitiveCount);
+  std::vector<glm::vec3> generateTriangulatedCubes(
+      const std::string &primitiveMode,
+      size_t primitiveCount);
 };
 
 } // namespace cts
