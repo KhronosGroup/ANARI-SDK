@@ -6,6 +6,7 @@
 #include <functional>
 
 #include <anari/anari.h>
+#include "anari/anari_feature_utility.h"
 
 namespace cts {
     void statusFunc(const void *userData,
