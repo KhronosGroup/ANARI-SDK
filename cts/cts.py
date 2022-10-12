@@ -37,7 +37,6 @@ def resolve_scenes(test_scenes):
     return collected_scenes
 
 def render_scenes(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", output = "."):
-    
     collected_scenes = resolve_scenes(test_scenes)
     if collected_scenes == []:
         print("No scenes selected")
@@ -46,22 +45,31 @@ def render_scenes(anari_library, anari_device = None, anari_renderer = "default"
     HEIGHT = 1024
     WIDTH = 1024
 
+    print(collected_scenes)
+
+    sceneGenerator = ctsBackend.SceneGenerator(anari_library, "default", anari_logger)
+
+    print('Initialized generator')
+
     for json_file in collected_scenes:
         with open(json_file, 'r') as f:
             parsed_json = json.load(f)
-            ctsBackend.initScene()
+            print(f'Rendering: {str(json_file)}')
             for [key, value] in parsed_json:
                 if isinstance(value, dict):
                     if key == "permutations":
                         #TODO
-                        ctsBackend.setPermutations(value)
+                        print("Test")
+                        #ctsBackend.setPermutations(value)
                 else:
-                    ctsBackend.setParameter(key, value);
+                    sceneGenerator.setParameter(key, value)
 
-            ctsBackend.commitScene()
-            image_data = ctsBackend.renderScene(HEIGHT, WIDTH)
+            sceneGenerator.setParameter("primitiveMode", "soup")
+            sceneGenerator.commit()
+            image_data = sceneGenerator.renderScene(anari_renderer)
             image_out = Image.new("RGBA", (HEIGHT, WIDTH))
             image_out.putdata(image_data)
+            image_out.save(json_file.with_suffix('.png'))
 
 
     # TODO: collect scenes
@@ -84,7 +92,7 @@ if __name__ == "__main__":
 
     renderScenesParser = subparsers.add_parser('render_scenes', description='Renders an image to disk for each test scene', parents=[deviceParser])
     renderScenesParser.add_argument('--renderer', default="default")
-    renderScenesParser.add_argument('--test_scenes', default="all")
+    renderScenesParser.add_argument('--test_scenes', default="test_scenes")
     renderScenesParser.add_argument('--output', default=".")
 
     checkExtensionsParser = subparsers.add_parser('check_core_extensions', parents=[deviceParser])

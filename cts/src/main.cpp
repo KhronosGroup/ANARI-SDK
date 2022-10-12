@@ -5,6 +5,10 @@
 #include <pybind11/functional.h>
 #include "anariWrapper.h"
 #include "anariInfo.h"
+#include "SceneGenerator.h"
+
+#include <functional>
+#include <string>
 
 namespace py = pybind11;
 
@@ -19,4 +23,14 @@ PYBIND11_MODULE(ctsBackend, m)
   m.def("query_metadata", &cts::queryInfo, R"pbdoc(
         Queries object/parameter info metadata of a library.
     )pbdoc");
+
+  py::class_<cts::SceneGenerator>(m, "SceneGenerator")
+      .def(py::init<
+          const std::string &,
+          const std::string &,
+          const std::function<void(const std::string message)>&
+      >())
+      .def("setParameter", &cts::SceneGenerator::setParamDirect)
+      .def("commit", &cts::SceneGenerator::commit)
+      .def("renderScene", &cts::SceneGenerator::renderScene);
 }
