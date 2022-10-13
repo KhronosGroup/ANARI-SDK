@@ -55,33 +55,40 @@ namespace cts {
       }
     }
 
-    std::vector<std::vector<std::byte>> renderScenes(const std::string &libraryName,
-        const std::optional<std::string>& device, const std::string& renderer,
-        const std::vector<std::string> &scenes,
-        const std::function<void(const std::string message)> &callback)
-    {
-      cts::initANARI(libraryName, callback);
-
-      return {};
-    }
-
     std::vector<std::tuple<std::string, bool>>
     checkCoreExtensions(
         const std::string &libraryName,
         const std::optional<std::string> &device,
         const std::function<void(const std::string message)> &callback)
     {
-      std::string deviceName = "default";
-      if (device.has_value()) {
-        deviceName = device.value();
+      anari::Library lib =
+          anari::loadLibrary(libraryName.c_str(), statusFunc, &callback);
+
+      if (lib == nullptr) {
+        throw std::runtime_error("Library could not be loaded");
       }
 
-      anari::Library lib = anari::loadLibrary(libraryName.c_str(), statusFunc, &callback);
+      std::string deviceName;
+      if (device.has_value()) {
+        deviceName = device.value();
+      } else {
+        const char **devices = anariGetDeviceSubtypes(lib);
+        if (!devices) {
+          throw std::runtime_error("No device available");
+        }
+        deviceName = *device; 
+      }
+
+
 
       std::vector<std::tuple<std::string, bool>> result;
 
       ANARIFeatures features;
-      if (anariGetObjectFeatures(&features, lib, deviceName.c_str(), "default", ANARI_DEVICE)) {
+      if (anariGetObjectFeatures(&features,
+              lib,
+              deviceName.c_str(),
+              deviceName.c_str(),
+              ANARI_DEVICE)) {
         printf("WARNING: library didn't return feature list\n");
         return result;
       }

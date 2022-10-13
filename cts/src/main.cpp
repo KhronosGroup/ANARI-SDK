@@ -14,9 +14,6 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(ctsBackend, m)
 {
-  m.def("render_scenes", &cts::renderScenes, R"pbdoc(
-        Creates renderings of specified scenes.
-    )pbdoc");
   m.def("check_core_extensions", &cts::checkCoreExtensions, R"pbdoc(
         Check which core extensions are supported by a device.
     )pbdoc");

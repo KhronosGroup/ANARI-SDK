@@ -18,7 +18,11 @@ def anari_logger(message):
     #print(message)
 
 def check_core_extensions(anari_library, anari_device = None):
-    return ctsBackend.check_core_extensions(anari_library, anari_device, anari_logger)
+    try: 
+        return ctsBackend.check_core_extensions(anari_library, anari_device, anari_logger)
+    except Exception as e:
+        print(e)
+        return []
 
 def resolve_scenes(test_scenes):
     print(test_scenes)
@@ -58,16 +62,19 @@ def render_scene(parsed_json, sceneGenerator, anari_renderer, file_name):
     print(f'Rendering to {outName}')
     image_out.save(outName)
 
-def render_scenes(anari_library, anari_device = "default", anari_renderer = "default", test_scenes = "test_scenes", output = "."):
+def render_scenes(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", output = "."):
     collected_scenes = resolve_scenes(test_scenes)
     if collected_scenes == []:
         print("No scenes selected")
         return
 
     print(collected_scenes)
-
-    sceneGenerator = ctsBackend.SceneGenerator(anari_library, anari_device, anari_logger)
-
+    sceneGenerator = None
+    try:
+        sceneGenerator = ctsBackend.SceneGenerator(anari_library, anari_device, anari_logger)
+    except Exception as e:
+        print(e)
+        return
     print('Initialized generator')
 
     for json_file in collected_scenes:
@@ -102,7 +109,7 @@ if __name__ == "__main__":
     libraryParser = argparse.ArgumentParser(add_help=False)
     libraryParser.add_argument('library', help='ANARI library to load')
     deviceParser = argparse.ArgumentParser(add_help=False, parents=[libraryParser])
-    deviceParser.add_argument('--device', default="default", help='ANARI device on which to perform the test')
+    deviceParser.add_argument('--device', default=None, help='ANARI device on which to perform the test')
 
     renderScenesParser = subparsers.add_parser('render_scenes', description='Renders an image to disk for each test scene', parents=[deviceParser])
     renderScenesParser.add_argument('--renderer', default="default")

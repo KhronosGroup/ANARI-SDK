@@ -6,6 +6,7 @@
 #include "scenes/scene.h"
 
 #include <functional>
+#include <optional>
 #include <random>
 
 namespace cts {
@@ -14,7 +15,7 @@ class SceneGenerator : public anari::scenes::TestScene
 {
  public:
   static SceneGenerator *createSceneGenerator(const std::string &library,
-      const std::string &device,
+      const std::optional<std::string> &device,
       const std::function<void(const std::string message)> &callback);
 
   SceneGenerator(anari::Device device);

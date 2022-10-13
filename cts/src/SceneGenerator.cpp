@@ -225,7 +225,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(const std::string
 
   anari::unmap(m_device, frame, "color");
 
-  auto pixels = anari::map<float>(m_device, frame, "depth").data;
+  const float* pixels = anari::map<float>(m_device, frame, "depth").data;
 
   std::vector<uint32_t> converted;
   for (int i = 0; i < image_height * image_width; ++i) {
@@ -262,19 +262,29 @@ float SceneGenerator::getRandom(float min, float max)
 }
 
 SceneGenerator *SceneGenerator::createSceneGenerator(const std::string &library,
-  const std::string& device,
+  const std::optional<std::string>& device,
   const std::function<void(const std::string message)>& callback)
 {
   m_library = anari::loadLibrary(library.c_str(), statusFunc, &callback);
   if (m_library == nullptr) {
-    callback("library could not be loaded: " + library);
-    return nullptr;
+    throw std::runtime_error("Library could not be loaded: " + library);
   }
 
-  ANARIDevice dev = anariNewDevice(m_library, device.c_str());
+  std::string deviceName;
+  if (device.has_value()) {
+    deviceName = device.value();
+  } else {
+    const char **devices = anariGetDeviceSubtypes(m_library);
+    if (!devices) {
+      throw std::runtime_error("No device available");
+    }
+    deviceName = *device;
+  }
+
+  ANARIDevice dev = anariNewDevice(m_library, deviceName.c_str());
   if(dev == nullptr) {
-    callback("device could not be created: " + device);
-    return nullptr;
+    anari::unloadLibrary(m_library);
+    throw std::runtime_error("Device could not be created: " + deviceName);
   }
 
   return new SceneGenerator(dev);
