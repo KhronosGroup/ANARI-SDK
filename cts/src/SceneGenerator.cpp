@@ -52,7 +52,7 @@ void SceneGenerator::commit()
   std::string geometrySubtype = getParam<std::string>("geometrySubtype", "triangle");
   std::string primitveMode = getParam<std::string>("primitveMode", "soup");
   size_t primitiveCount = getParam<size_t>("primitiveCount", 20);
-  std::string shape = getParam<std::string>("shape", "random");
+  std::string shape = getParam<std::string>("shape", "triangle");
   unsigned int seed = getParam<unsigned int>("seed", 0);
 
   // Build this scene top-down to stress commit ordering guarantees
@@ -77,7 +77,7 @@ void SceneGenerator::commit()
 
   std::vector<glm::vec3> vertices;
   if (geometrySubtype == "triangle") {
-    if (shape == "random") {
+    if (shape == "triangle") {
       vertices = generateTriangles(primitiveCount);
     } else if (shape == "quad") {
       vertices = generateTriangulatedQuads(primitiveCount);
@@ -131,21 +131,40 @@ std::vector<glm::vec3> SceneGenerator::generateTriangles(size_t primitiveCount)
 
 std::vector<glm::vec3> SceneGenerator::generateTriangulatedQuads(size_t primitiveCount)
 {
-  std::vector<glm::vec3> vertices((primitiveCount * 4));
+  // TODO also create indexed quads
+  std::vector<glm::vec3> vertices((primitiveCount * 6));
+  size_t i = 0;
+  glm::vec3 vertex1(0), vertex2(0);
   for (auto &vertex : vertices) {
-    vertex.x = getRandom(0.0f, 1.0f);
-    vertex.y = getRandom(0.0f, 1.0f);
-    vertex.y = getRandom(0.0f, 1.0f);
+    if (i == 3) {
+      vertex = vertex2;
+    } else if (i == 4) {
+      vertex = vertex1;
+    } else {
+      vertex.x = getRandom(0.0f, 1.0f);
+      vertex.y = getRandom(0.0f, 1.0f);
+      vertex.y = getRandom(0.0f, 1.0f);
+    }
+
+    if (i == 1) {
+      vertex1 = vertex;
+    } else if (i == 2) {
+      vertex2 = vertex;
+    }
+
+    i = (i + 1) % 6;
   }
 
   // add offset per quad
-  for (size_t i = 0; i < vertices.size() - 3; i += 4) {
+  for (size_t k = 0; k < vertices.size() - 5; k += 6) {
     glm::vec3 offset(
         getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f));
-    vertices[i] = (vertices[i] * 0.4f) + offset;
-    vertices[i + 1] = (vertices[i + 1] * 0.4f) + offset;
-    vertices[i + 2] = (vertices[i + 2] * 0.4f) + offset;
-    vertices[i + 3] = (vertices[i + 3] * 0.4f) + offset;
+    vertices[k] = (vertices[k] * 0.4f) + offset;
+    vertices[k + 1] = (vertices[k + 1] * 0.4f) + offset;
+    vertices[k + 2] = (vertices[k + 2] * 0.4f) + offset;
+    vertices[k + 3] = (vertices[k + 3] * 0.4f) + offset;
+    vertices[k + 4] = (vertices[k + 4] * 0.4f) + offset;
+    vertices[k + 5] = (vertices[k + 5] * 0.4f) + offset;
   }
 
   return vertices;
