@@ -78,7 +78,7 @@ void SceneGenerator::commit()
   std::vector<glm::vec3> vertices;
   if (geometrySubtype == "triangle") {
     if (shape == "random") {
-      vertices = generateRandomTriangles(primitiveCount);
+      vertices = generateTriangles(primitiveCount);
     } else if (shape == "quad") {
       vertices = generateTriangulatedQuads(primitiveCount);
     } else if (shape == "cube") {
@@ -109,7 +109,7 @@ void SceneGenerator::commit()
   anari::release(d, mat);
 }
 
-std::vector<glm::vec3> SceneGenerator::generateRandomTriangles(size_t primitiveCount)
+std::vector<glm::vec3> SceneGenerator::generateTriangles(size_t primitiveCount)
 {
   std::vector<glm::vec3> vertices((primitiveCount * 3));
   for (auto& vertex : vertices) {
@@ -126,17 +126,28 @@ std::vector<glm::vec3> SceneGenerator::generateRandomTriangles(size_t primitiveC
     vertices[i + 2] = (vertices[i + 2] * 0.4f) + offset;
   }
 
-  // TODO handle primitive mode
-
   return vertices;
 }
 
 std::vector<glm::vec3> SceneGenerator::generateTriangulatedQuads(size_t primitiveCount)
 {
-  std::vector<glm::vec3> vertices{
-      {0.0, 0.0, 0.0}, {1.0, 1.0, 0.0}, {1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}};
-  // TODO create random quads
-  // TODO handle primitive mode
+  std::vector<glm::vec3> vertices((primitiveCount * 4));
+  for (auto &vertex : vertices) {
+    vertex.x = getRandom(0.0f, 1.0f);
+    vertex.y = getRandom(0.0f, 1.0f);
+    vertex.y = getRandom(0.0f, 1.0f);
+  }
+
+  // add offset per quad
+  for (size_t i = 0; i < vertices.size() - 3; i += 4) {
+    glm::vec3 offset(
+        getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f));
+    vertices[i] = (vertices[i] * 0.4f) + offset;
+    vertices[i + 1] = (vertices[i + 1] * 0.4f) + offset;
+    vertices[i + 2] = (vertices[i + 2] * 0.4f) + offset;
+    vertices[i + 3] = (vertices[i + 3] * 0.4f) + offset;
+  }
+
   return vertices;
 }
 
@@ -145,7 +156,6 @@ std::vector<glm::vec3> SceneGenerator::generateTriangulatedCubes(size_t primitiv
   std::vector<glm::vec3> vertices{{0.0, 0.0, 0.0}, {1.0, 1.0, 0.0}, {1.0, 0.0, 0.0}};
 
   // TODO create random cubes
-  // TODO handle primitive mode
   return vertices;
 }
 
