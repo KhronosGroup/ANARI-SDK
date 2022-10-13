@@ -50,24 +50,29 @@ def render_scene(parsed_json, sceneGenerator, anari_renderer, file_name):
     image_data_list = sceneGenerator.renderScene(anari_renderer)
     stem = file_name.stem
     channels = ["color", "depth"]
+
+    file_name.parent.mkdir(exist_ok=True, parents=True)
+
     image_out = Image.new("RGBA", (parsed_json["image_height"], parsed_json["image_width"]))
     image_out.putdata(image_data_list[0])
     outName = file_name.with_suffix('.png').with_stem(f'{stem}_{channels[0]}')
-    print(f'Rendering to {outName}')
+    print(f'Rendering to {outName.resolve()}')
     image_out.save(outName)
 
     image_out = Image.new("RGBA", (parsed_json["image_height"], parsed_json["image_width"]))
     image_out.putdata(image_data_list[1])
     outName = file_name.with_suffix('.png').with_stem(f'{stem}_{channels[1]}')
-    print(f'Rendering to {outName}')
+    print(f'Rendering to {outName.resolve()}')
     image_out.save(outName)
 
-def render_scenes(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", output = "."):
+def render_scenes(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", output = ".", prefix = ""):
     collected_scenes = resolve_scenes(test_scenes)
     if collected_scenes == []:
         print("No scenes selected")
         return
 
+    output_path = Path(output)
+    current_dir = Path(__file__).parent
     print(collected_scenes)
     sceneGenerator = None
     try:
@@ -89,10 +94,13 @@ def render_scenes(anari_library, anari_device = None, anari_renderer = "default"
                 for permutation in permutations:
                     for i in range(len(permutation)) :
                         sceneGenerator.setParameter(keys[i], permutation[i])
-                    file_name = json_file.with_stem(f'{json_file.stem}{len(permutation)*"_{}".format(*permutation)}')
+                    file_name = json_file.with_stem(f'{prefix}{json_file.stem}{len(permutation)*"_{}".format(*permutation)}')
+                    file_name = output_path.resolve() / file_name.relative_to(current_dir)
                     render_scene(parsed_json, sceneGenerator, anari_renderer, file_name)
             else:
-                render_scene(parsed_json, sceneGenerator, anari_renderer, json_file)
+                file_name = output_path.resolve() / json_file.relative_to(current_dir)
+                file_name = file_name.with_stem(f'{prefix}{file_name.stem}')
+                render_scene(parsed_json, sceneGenerator, anari_renderer, file_name)
 
 
 
