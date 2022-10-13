@@ -6,6 +6,8 @@
 #include "SceneGenerator.h"
 #include "anariWrapper.h"
 
+#include <glm/gtc/matrix_transform.hpp>
+
 namespace cts {
 
 anari::Library SceneGenerator::m_library = nullptr;
@@ -80,9 +82,9 @@ void SceneGenerator::commit()
     if (shape == "triangle") {
       vertices = generateTriangles(primitiveCount);
     } else if (shape == "quad") {
-      vertices = generateTriangulatedQuads(primitiveCount);
+      vertices = generateTriangulatedQuadSoups(primitiveCount);
     } else if (shape == "cube") {
-      vertices = generateTriangulatedCubes(primitiveCount);
+      vertices = generateTriangulatedCubeSoups(primitiveCount);
     }
   } else if (geometrySubtype == "quad") {
     if (shape == "quad") {
@@ -129,9 +131,8 @@ std::vector<glm::vec3> SceneGenerator::generateTriangles(size_t primitiveCount)
   return vertices;
 }
 
-std::vector<glm::vec3> SceneGenerator::generateTriangulatedQuads(size_t primitiveCount)
+std::vector<glm::vec3> SceneGenerator::generateTriangulatedQuadSoups(size_t primitiveCount)
 {
-  // TODO also create indexed quads
   std::vector<glm::vec3> vertices((primitiveCount * 6));
   size_t i = 0;
   glm::vec3 vertex0(0), vertex1(0), vertex2(0);
@@ -175,11 +176,39 @@ std::vector<glm::vec3> SceneGenerator::generateTriangulatedQuads(size_t primitiv
   return vertices;
 }
 
-std::vector<glm::vec3> SceneGenerator::generateTriangulatedCubes(size_t primitiveCount)
+std::vector<glm::vec3> SceneGenerator::generateTriangulatedCubeSoups(size_t primitiveCount)
 {
-  std::vector<glm::vec3> vertices{{0.0, 0.0, 0.0}, {1.0, 1.0, 0.0}, {1.0, 0.0, 0.0}};
+  std::vector<glm::vec3> vertices;
+  std::vector<glm::vec3> cubeVertices{
+    {0.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {1.0, 0.0, 0.0}, // front
+    {1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {1.0, 1.0, 0.0},
+    {1.0, 0.0, 0.0}, {1.0, 1.0, 0.0}, {1.0, 0.0, 1.0}, // right
+    {1.0, 0.0, 1.0}, {1.0, 1.0, 0.0}, {1.0, 1.0, 1.0},
+    {1.0, 0.0, 1.0}, {1.0, 1.0, 1.0}, {0.0, 0.0, 1.0}, // back
+    {0.0, 1.0, 1.0}, {1.0, 1.0, 1.0}, {0.0, 0.0, 1.0},
+    {0.0, 0.0, 0.0}, {0.0, 0.0, 1.0}, {0.0, 1.0, 1.0}, // left
+    {0.0, 0.0, 0.0}, {0.0, 1.0, 1.0}, {0.0, 1.0, 0.0},
+    {0.0, 1.0, 0.0}, {1.0, 1.0, 1.0}, {1.0, 1.0, 0.0}, // top
+    {0.0, 1.0, 0.0}, {0.0, 1.0, 1.0}, {1.0, 1.0, 1.0},
+    {0.0, 0.0, 0.0}, {1.0, 0.0, 1.0}, {1.0, 0.0, 0.0}, // bottom
+    {0.0, 0.0, 0.0}, {0.0, 0.0, 1.0}, {1.0, 0.0, 1.0}};
 
-  // TODO create random cubes
+  for (size_t i = 0; i < primitiveCount; ++i) {
+    std::copy(cubeVertices.begin(),
+        cubeVertices.end(),
+        std::back_insert_iterator(vertices));
+  }
+
+  // add rotation per cube
+  for (size_t k = 0; k < primitiveCount; ++k) {
+    glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), 45.0f, glm::vec3(1.0, 1.0, 1.0));
+
+    for (size_t i = 0; i < 36; ++i) {
+      const size_t index = i + 36 * k;
+      vertices[index] = rotationMatrix * glm::vec4(vertices[index], 0.0);
+    }
+  }
+
   return vertices;
 }
 

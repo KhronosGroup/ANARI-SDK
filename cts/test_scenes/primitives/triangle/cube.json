@@ -1,3 +1,9 @@
 {
-	
+  "geometrySubtype": "triangle",
+  "primitiveCount": 1,
+  "seed": 12345,
+  "shape": "cube",
+  "permutations": {
+    "primitiveMode": ["soup", "indexed"]
+  }
 }
