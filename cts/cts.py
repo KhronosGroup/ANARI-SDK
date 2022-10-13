@@ -7,6 +7,7 @@ from pathlib import Path
 from tabulate import tabulate
 from PIL import Image
 import json
+import itertools
 
 logger_mutex = threading.Lock()
 
@@ -36,14 +37,31 @@ def resolve_scenes(test_scenes):
         collected_scenes = list(path.rglob("*.json"))
     return collected_scenes
 
+def render_scene(parsed_json, sceneGenerator, anari_renderer, file_name):
+    for [key, value] in parsed_json.items():
+        if not isinstance(value, dict):
+            sceneGenerator.setParameter(key, value)
+    sceneGenerator.commit()
+    image_data_list = sceneGenerator.renderScene(anari_renderer)
+    stem = file_name.stem
+    channels = ["color", "depth"]
+    image_out = Image.new("RGBA", (parsed_json["image_height"], parsed_json["image_width"]))
+    image_out.putdata(image_data_list[0])
+    outName = file_name.with_suffix('.png').with_stem(f'{stem}_{channels[0]}')
+    print(f'Rendering to {outName}')
+    image_out.save(outName)
+
+    image_out = Image.new("RGBA", (parsed_json["image_height"], parsed_json["image_width"]))
+    image_out.putdata(image_data_list[1])
+    outName = file_name.with_suffix('.png').with_stem(f'{stem}_{channels[1]}')
+    print(f'Rendering to {outName}')
+    image_out.save(outName)
+
 def render_scenes(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", output = "."):
     collected_scenes = resolve_scenes(test_scenes)
     if collected_scenes == []:
         print("No scenes selected")
         return
-
-    HEIGHT = 1024
-    WIDTH = 1024
 
     print(collected_scenes)
 
@@ -52,30 +70,22 @@ def render_scenes(anari_library, anari_device = None, anari_renderer = "default"
     print('Initialized generator')
 
     for json_file in collected_scenes:
-        with open(json_file, 'r') as f:
-            parsed_json = json.load(f)
-            print(f'Rendering: {str(json_file)}')
-            for [key, value] in parsed_json.items():
-                if isinstance(value, dict):
-                    if key == "permutations":
-                        #TODO
-                        print("Test")
-                        #ctsBackend.setPermutations(value)
-                else:
-                    sceneGenerator.setParameter(key, value)
+        with open(json_file, 'r') as f, open('default_test_scene.json', 'r') as defaultTestScene:
+            parsed_json = json.load(defaultTestScene)
+            parsed_json.update(json.load(f))
 
-            sceneGenerator.setParameter("primitiveMode", "soup")
-            sceneGenerator.commit()
-            image_data_list = sceneGenerator.renderScene(anari_renderer)
-            stem = json_file.stem
-            channels = ["color", "depth"]
-            image_out = Image.new("RGBA", (HEIGHT, WIDTH))
-            image_out.putdata(image_data_list[0])
-            image_out.save(json_file.with_suffix('.png').with_stem(f'{stem}_{channels[0]}'))
+            if "permutations" in parsed_json:
+                keys = list(parsed_json["permutations"].keys())
+                lists = list(parsed_json["permutations"].values())
+                permutations = itertools.product(*lists)
+                for permutation in permutations:
+                    for i in range(len(permutation)) :
+                        sceneGenerator.setParameter(keys[i], permutation[i])
+                    file_name = json_file.with_stem(f'{json_file.stem}{len(permutation)*"_{}".format(*permutation)}')
+                    render_scene(parsed_json, sceneGenerator, anari_renderer, file_name)
+            else:
+                render_scene(parsed_json, sceneGenerator, anari_renderer, json_file)
 
-            image_out = Image.new("RGBA", (HEIGHT, WIDTH))
-            image_out.putdata(image_data_list[1])
-            image_out.save(json_file.with_suffix('.png').with_stem(f'{stem}_{channels[1]}'))
 
 
 
