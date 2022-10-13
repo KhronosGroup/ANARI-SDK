@@ -99,8 +99,10 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                     for i in range(len(permutation)) :
                         sceneGenerator.setParameter(keys[i], permutation[i])
                     file_name = json_file_path.with_stem(f'{json_file_path.stem}{len(permutation)*"_{}".format(*permutation)}')
+                    sceneGenerator.commit()
                     func(parsed_json, sceneGenerator, anari_renderer, file_name, *args)
             else:
+                sceneGenerator.commit()
                 func(parsed_json, sceneGenerator, anari_renderer, json_file_path, *args)
 
 def render_scenes(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", output = ".", prefix = ""):
