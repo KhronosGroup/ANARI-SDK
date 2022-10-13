@@ -199,26 +199,27 @@ std::vector<glm::vec3> SceneGenerator::generateTriangulatedCubeSoups(size_t prim
         std::back_insert_iterator(vertices));
   }
 
-  // add rotation per cube
+  // add random transform per cube
   for (size_t k = 0; k < primitiveCount; ++k) {
-    glm::mat4 rotationMatrix = glm::rotate(
+    float cubeScale = getRandom(0.0f, 0.4f);
+
+    glm::mat4 scale = glm::scale(glm::mat4(1.0f),
+        glm::vec3(cubeScale, cubeScale, cubeScale));
+
+    glm::mat4 rotation = glm::rotate(
         glm::mat4(1.0f), getRandom(0.0f, 360.0f), 
         glm::vec3(getRandom(0.0f, 1.0f), getRandom(0.0f, 1.0f), getRandom(0.0f, 1.0f)));
 
-    for (size_t i = 0; i < 36; ++i) {
-      const size_t index = i + 36 * k;
-      vertices[index] = rotationMatrix * glm::vec4(vertices[index], 0.0);
-    }
-  }
+    glm::mat4 translation = glm::translate(glm::mat4(1.0f),
+        glm::vec3(getRandom(0.0f, 0.6f),
+            getRandom(0.0f, 0.6f),
+            getRandom(0.0f, 0.6f)));
 
-  // add translation offset per cube
-  for (size_t k = 0; k < primitiveCount; ++k) {
-    glm::mat4 translationMatrix =
-        glm::translate(glm::mat4(1.0f), glm::vec3(getRandom(0.0f, 4.0f), getRandom(0.0f, 4.0f), getRandom(0.0f, 4.0f)));
+    glm::mat4 transform = translation * rotation * scale;
 
     for (size_t i = 0; i < 36; ++i) {
       const size_t index = i + 36 * k;
-      vertices[index] = translationMatrix * glm::vec4(vertices[index], 1.0);
+      vertices[index] = transform * glm::vec4(vertices[index], 1.0);
     }
   }
 
