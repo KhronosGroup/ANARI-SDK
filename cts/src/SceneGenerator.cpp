@@ -229,7 +229,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(const std::string
 
   std::vector<uint32_t> converted;
   for (int i = 0; i < image_height * image_width; ++i) {
-    uint8_t colorValue = pixels[i] * 255;
+    uint8_t colorValue = static_cast<uint8_t>(pixels[i] * 255.0f);
     uint32_t rgba =
         (255 << 24) + (colorValue << 16) + (colorValue << 8) + colorValue;
     converted.push_back(rgba);
