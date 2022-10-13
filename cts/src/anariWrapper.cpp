@@ -76,7 +76,7 @@ namespace cts {
         if (!devices) {
           throw std::runtime_error("No device available");
         }
-        deviceName = *device; 
+        deviceName = *devices; 
       }
 
 

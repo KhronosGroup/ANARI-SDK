@@ -278,7 +278,7 @@ SceneGenerator *SceneGenerator::createSceneGenerator(const std::string &library,
     if (!devices) {
       throw std::runtime_error("No device available");
     }
-    deviceName = *device;
+    deviceName = *devices;
   }
 
   ANARIDevice dev = anariNewDevice(m_library, deviceName.c_str());
