@@ -6,7 +6,6 @@
 #include "SceneGenerator.h"
 #include "anariWrapper.h"
 
-
 namespace cts {
 
 anari::Library SceneGenerator::m_library = nullptr;
@@ -52,7 +51,9 @@ void SceneGenerator::commit()
 
   std::string geometrySubtype = getParam<std::string>("geometrySubtype", "triangle");
   std::string primitveMode = getParam<std::string>("primitveMode", "soup");
-  size_t primitiveCount = getParam<size_t>("primitiveCount", 1);
+  size_t primitiveCount = getParam<size_t>("primitiveCount", 20);
+  std::string shape = getParam<std::string>("shape", "triangle");
+  unsigned int seed = getParam<unsigned int>("seed", 0);
 
   // Build this scene top-down to stress commit ordering guarantees
 
@@ -72,16 +73,29 @@ void SceneGenerator::commit()
   anari::setParameter(d, surface, "geometry", geom);
   anari::setParameter(d, surface, "material", mat);
 
+  m_rng.seed(seed);
 
-  std::vector<glm::vec3> verticies;
+  std::vector<glm::vec3> vertices;
   if (geometrySubtype == "triangle") {
-    verticies = generateTriangles(primitveMode, primitiveCount);
+    if (shape == "triangle") {
+      vertices = generateTriangles(primitiveCount);
+    } else if (shape == "quad") {
+      vertices = generateTriangulatedQuads(primitiveCount);
+    } else if (shape == "cube") {
+      vertices = generateTriangulatedCubes(primitiveCount);
+    }
+  } else if (geometrySubtype == "quad") {
+    if (shape == "quad") {
+      //TODO
+    } else if (shape == "cube") {
+      // TODO
+    }
   }
 
   anari::setAndReleaseParameter(d,
       geom,
       "vertex.position",
-      anari::newArray1D(d, verticies.data(), verticies.size()));
+      anari::newArray1D(d, vertices.data(), vertices.size()));
 
 
   anari::commitParameters(d, geom);
@@ -95,12 +109,83 @@ void SceneGenerator::commit()
   anari::release(d, mat);
 }
 
-std::vector<glm::vec3> SceneGenerator::generateTriangles(
-    const std::string& primitiveMode, size_t primitiveCount)
+std::vector<glm::vec3> SceneGenerator::generateTriangles(size_t primitiveCount)
 {
-    std::vector<glm::vec3> verticies{{0.0, 0.0, 0.0}, {1.0, 1.0, 0.0}, {1.0, 0.0, 0.0}};
+  std::vector<glm::vec3> vertices((primitiveCount * 3));
+  for (auto& vertex : vertices) {
+    vertex.x = getRandom(0.0f, 1.0f);
+    vertex.y = getRandom(0.0f, 1.0f);
+    vertex.z = getRandom(0.0f, 1.0f);
+  }
 
-    return verticies;
+  // add offset per triangle
+  for (size_t i = 0; i < vertices.size() - 2; i += 3) {
+    glm::vec3 offset(getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f));
+    vertices[i] = (vertices[i] * 0.4f) + offset;
+    vertices[i + 1] = (vertices[i + 1] * 0.4f) + offset;
+    vertices[i + 2] = (vertices[i + 2] * 0.4f) + offset;
+  }
+
+  return vertices;
+}
+
+std::vector<glm::vec3> SceneGenerator::generateTriangulatedQuads(size_t primitiveCount)
+{
+  // TODO also create indexed quads
+  std::vector<glm::vec3> vertices((primitiveCount * 6));
+  size_t i = 0;
+  glm::vec3 vertex0(0), vertex1(0), vertex2(0);
+  for (auto &vertex : vertices) {
+    if (i == 3) {
+      vertex = vertex2;
+    } else if (i == 4) {
+      vertex = vertex1;
+    } else {
+      vertex.x = getRandom(0.0f, 1.0f);
+      vertex.y = getRandom(0.0f, 1.0f);
+      vertex.z = getRandom(0.0f, 1.0f);
+    }
+
+    if (i == 0) {
+      vertex0 = vertex;
+    } else if (i == 1) {
+      vertex1 = vertex;
+    } else if (i == 2) {
+      vertex2 = vertex;
+    } else if (i == 5) {
+      const glm::vec3 side0 = vertex1 - vertex0;
+      const glm::vec3 side1 = vertex2 - vertex0;
+      const glm::vec3 normal = glm::normalize(glm::cross(side0, side1));
+
+      const glm::vec3 normalProjection =
+          (glm::dot(vertex - vertex0, normal) / glm::dot(normal, normal)) * normal;
+      vertex = vertex - normalProjection;
+    }
+
+    i = (i + 1) % 6;
+  }
+
+  // add offset per quad
+  for (size_t k = 0; k < vertices.size() - 5; k += 6) {
+    glm::vec3 offset(
+        getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f));
+    vertices[k] = (vertices[k] * 0.4f) + offset;
+    vertices[k + 1] = (vertices[k + 1] * 0.4f) + offset;
+    vertices[k + 2] = (vertices[k + 2] * 0.4f) + offset;
+    vertices[k + 3] = (vertices[k + 3] * 0.4f) + offset;
+    vertices[k + 4] = (vertices[k + 4] * 0.4f) + offset;
+    vertices[k + 5] = (vertices[k + 5] * 0.4f) + offset;
+  }
+
+  return vertices;
+}
+
+std::vector<glm::vec3> SceneGenerator::generateTriangulatedCubes(size_t primitiveCount)
+{
+  std::vector<glm::vec3> vertices{{0.0, 0.0, 0.0}, {1.0, 1.0, 0.0}, {1.0, 0.0, 0.0}};
+
+  // TODO create random cubes
+  return vertices;
 }
 
 std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(const std::string &rendererType)
@@ -172,6 +257,13 @@ void SceneGenerator::resetAllParameters() {
   for (auto param : parameters()) {
     removeParam(param.name);
   }
+}
+
+float SceneGenerator::getRandom(float min, float max)
+{
+  std::uniform_real_distribution<float> uniformDist(min, max);
+
+  return uniformDist(m_rng);
 }
 
 SceneGenerator *SceneGenerator::createSceneGenerator(const std::string &library,

@@ -1,6 +1,8 @@
 {
   "geometrySubtype": "triangle",
   "primitiveCount": 5,
+  "seed": 12345,
+  "shape": "triangle",
   "permutations": {
     "primitiveMode": ["soup", "indexed"]
   }
