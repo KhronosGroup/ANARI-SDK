@@ -28,7 +28,7 @@ std::vector<anari::scenes::ParameterInfo> SceneGenerator::parameters()
 {
   return {
       {"geometrySubtype", ANARI_STRING, "triangle", "Which type of geometry to generate"},
-      {"primitveMode", ANARI_STRING, "soup", "How the data is arranged (soup or indexed)"},
+      {"primitiveMode", ANARI_STRING, "soup", "How the data is arranged (soup or indexed)"},
       {"primitiveCount", ANARI_UINT32, 1, "How many primtives should be generated"},
       {"image_height",
           ANARI_UINT32,
@@ -52,10 +52,10 @@ void SceneGenerator::commit()
   auto d = m_device;
 
   std::string geometrySubtype = getParam<std::string>("geometrySubtype", "triangle");
-  std::string primitveMode = getParam<std::string>("primitveMode", "soup");
-  size_t primitiveCount = getParam<size_t>("primitiveCount", 20);
+  std::string primitiveMode = getParam<std::string>("primitiveMode", "soup");
+  int primitiveCount = getParam<int>("primitiveCount", 20);
   std::string shape = getParam<std::string>("shape", "triangle");
-  unsigned int seed = getParam<unsigned int>("seed", 0);
+  int seed = getParam<int>("seed", 0);
 
   // Build this scene top-down to stress commit ordering guarantees
 

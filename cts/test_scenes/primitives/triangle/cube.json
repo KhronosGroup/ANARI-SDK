@@ -1,6 +1,6 @@
 {
   "geometrySubtype": "triangle",
-  "primitiveCount": 1,
+  "primitiveCount": 16,
   "seed": 12345,
   "shape": "cube",
   "permutations": {
