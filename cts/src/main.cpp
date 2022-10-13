@@ -26,5 +26,6 @@ PYBIND11_MODULE(ctsBackend, m)
       .def("setParameter", &cts::SceneGenerator::setParam<std::string>)
       .def("setParameter", &cts::SceneGenerator::setParam<int>)
       .def("commit", &cts::SceneGenerator::commit)
-      .def("renderScene", &cts::SceneGenerator::renderScene);
+      .def("renderScene", &cts::SceneGenerator::renderScene)
+      .def("resetAllParameters", &cts::SceneGenerator::resetAllParameters);
 }

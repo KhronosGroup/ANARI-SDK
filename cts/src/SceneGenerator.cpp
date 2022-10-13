@@ -286,8 +286,6 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(const std::string
   anari::release(m_device, frame);
   anari::release(m_device, renderer);
 
-  resetAllParameters();
-
   return result;
 }
 

@@ -42,37 +42,36 @@ def resolve_scenes(test_scenes):
         collected_scenes = list(path.rglob("*.json"))
     return collected_scenes
 
-def render_scene(parsed_json, sceneGenerator, anari_renderer, file_name):
-    for [key, value] in parsed_json.items():
-        if not isinstance(value, dict):
-            sceneGenerator.setParameter(key, value)
-    sceneGenerator.commit()
+def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, output = ".", prefix = ""):
     image_data_list = sceneGenerator.renderScene(anari_renderer)
-    stem = file_name.stem
+
+    output_path = Path(output)
+    current_dir = Path(__file__).parent
+    file_name = output_path.resolve() / scene_location.relative_to(current_dir)
+
+    stem = scene_location.stem
     channels = ["color", "depth"]
 
     file_name.parent.mkdir(exist_ok=True, parents=True)
 
     image_out = Image.new("RGBA", (parsed_json["image_height"], parsed_json["image_width"]))
     image_out.putdata(image_data_list[0])
-    outName = file_name.with_suffix('.png').with_stem(f'{stem}_{channels[0]}')
+    outName = file_name.with_suffix('.png').with_stem(f'{prefix}{stem}_{channels[0]}')
     print(f'Rendering to {outName.resolve()}')
     image_out.save(outName)
 
     image_out = Image.new("RGBA", (parsed_json["image_height"], parsed_json["image_width"]))
     image_out.putdata(image_data_list[1])
-    outName = file_name.with_suffix('.png').with_stem(f'{stem}_{channels[1]}')
+    outName = file_name.with_suffix('.png').with_stem(f'{prefix}{stem}_{channels[1]}')
     print(f'Rendering to {outName.resolve()}')
     image_out.save(outName)
 
-def render_scenes(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", output = ".", prefix = ""):
+def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", *args):
     collected_scenes = resolve_scenes(test_scenes)
     if collected_scenes == []:
         print("No scenes selected")
         return
 
-    output_path = Path(output)
-    current_dir = Path(__file__).parent
     print(collected_scenes)
     sceneGenerator = None
     try:
@@ -80,12 +79,17 @@ def render_scenes(anari_library, anari_device = None, anari_renderer = "default"
     except Exception as e:
         print(e)
         return
-    print('Initialized generator')
+    print('Initialized scene generator')
 
-    for json_file in collected_scenes:
-        with open(json_file, 'r') as f, open('default_test_scene.json', 'r') as defaultTestScene:
+    for json_file_path in collected_scenes:
+        with open(json_file_path, 'r') as f, open('default_test_scene.json', 'r') as defaultTestScene:
             parsed_json = json.load(defaultTestScene)
             parsed_json.update(json.load(f))
+
+            sceneGenerator.resetAllParameters()
+            for [key, value] in parsed_json.items():
+                if not isinstance(value, dict):
+                    sceneGenerator.setParameter(key, value)
 
             if "permutations" in parsed_json:
                 keys = list(parsed_json["permutations"].keys())
@@ -94,16 +98,13 @@ def render_scenes(anari_library, anari_device = None, anari_renderer = "default"
                 for permutation in permutations:
                     for i in range(len(permutation)) :
                         sceneGenerator.setParameter(keys[i], permutation[i])
-                    file_name = json_file.with_stem(f'{prefix}{json_file.stem}{len(permutation)*"_{}".format(*permutation)}')
-                    file_name = output_path.resolve() / file_name.relative_to(current_dir)
-                    render_scene(parsed_json, sceneGenerator, anari_renderer, file_name)
+                    file_name = json_file_path.with_stem(f'{json_file_path.stem}{len(permutation)*"_{}".format(*permutation)}')
+                    func(parsed_json, sceneGenerator, anari_renderer, file_name, *args)
             else:
-                file_name = output_path.resolve() / json_file.relative_to(current_dir)
-                file_name = file_name.with_stem(f'{prefix}{file_name.stem}')
-                render_scene(parsed_json, sceneGenerator, anari_renderer, file_name)
+                func(parsed_json, sceneGenerator, anari_renderer, json_file_path, *args)
 
-
-
+def render_scenes(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", output = ".", prefix = ""):
+    apply_to_scenes(render_scene, anari_library, anari_device, anari_renderer, test_scenes, output, prefix)
 
 def query_metadata(anari_library, type = None, subtype = None, skipParameters = False, info = False):
     ctsBackend.query_metadata(anari_library, type, subtype, skipParameters, info, anari_logger)
