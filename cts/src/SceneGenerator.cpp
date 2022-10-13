@@ -159,7 +159,20 @@ std::vector<glm::vec3> SceneGenerator::generateTriangulatedQuads(size_t primitiv
 
       const glm::vec3 normalProjection =
           (glm::dot(vertex - vertex0, normal) / glm::dot(normal, normal)) * normal;
-      vertex = vertex - normalProjection;
+      const glm::vec3 vertexOnPlane = vertex - normalProjection;
+
+      const glm::vec3 axis = glm::normalize(vertex1 - vertex2);
+      const glm::vec3 v = vertexOnPlane - vertex2;
+      float t = glm::dot(v, axis);
+      const glm::vec3 p = vertex2 + t * axis;
+      const glm::vec3 mirroredVertexOnPlane =
+          vertexOnPlane + (p - vertexOnPlane) + (p - vertexOnPlane);
+
+      if (glm::distance(vertex0, vertexOnPlane) > glm::distance(vertex0, mirroredVertexOnPlane)) {
+        vertex = vertexOnPlane;
+      } else {
+        vertex = mirroredVertexOnPlane;
+      }
     }
 
     i = (i + 1) % 6;
