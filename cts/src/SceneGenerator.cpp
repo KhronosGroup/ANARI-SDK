@@ -120,7 +120,7 @@ std::vector<glm::vec3> SceneGenerator::generateTriangles(size_t primitiveCount)
     vertex.z = getRandom(0.0f, 1.0f);
   }
 
-  // add offset per triangle
+  // add translation offset per triangle
   for (size_t i = 0; i < vertices.size() - 2; i += 3) {
     glm::vec3 offset(getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f));
     vertices[i] = (vertices[i] * 0.4f) + offset;
@@ -161,7 +161,7 @@ std::vector<glm::vec3> SceneGenerator::generateTriangulatedQuadSoups(size_t prim
     i = (i + 1) % 6;
   }
 
-  // add offset per quad
+  // add translation offset per quad
   for (size_t k = 0; k < vertices.size() - 5; k += 6) {
     glm::vec3 offset(
         getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f));
@@ -201,11 +201,24 @@ std::vector<glm::vec3> SceneGenerator::generateTriangulatedCubeSoups(size_t prim
 
   // add rotation per cube
   for (size_t k = 0; k < primitiveCount; ++k) {
-    glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), 45.0f, glm::vec3(1.0, 1.0, 1.0));
+    glm::mat4 rotationMatrix = glm::rotate(
+        glm::mat4(1.0f), getRandom(0.0f, 360.0f), 
+        glm::vec3(getRandom(0.0f, 1.0f), getRandom(0.0f, 1.0f), getRandom(0.0f, 1.0f)));
 
     for (size_t i = 0; i < 36; ++i) {
       const size_t index = i + 36 * k;
       vertices[index] = rotationMatrix * glm::vec4(vertices[index], 0.0);
+    }
+  }
+
+  // add translation offset per cube
+  for (size_t k = 0; k < primitiveCount; ++k) {
+    glm::mat4 translationMatrix =
+        glm::translate(glm::mat4(1.0f), glm::vec3(getRandom(0.0f, 4.0f), getRandom(0.0f, 4.0f), getRandom(0.0f, 4.0f)));
+
+    for (size_t i = 0; i < 36; ++i) {
+      const size_t index = i + 36 * k;
+      vertices[index] = translationMatrix * glm::vec4(vertices[index], 1.0);
     }
   }
 
