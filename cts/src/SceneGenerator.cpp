@@ -52,6 +52,8 @@ void SceneGenerator::commit()
   std::string geometrySubtype = getParam<std::string>("geometrySubtype", "triangle");
   std::string primitveMode = getParam<std::string>("primitveMode", "soup");
   size_t primitiveCount = getParam<size_t>("primitiveCount", 20);
+  std::string shape = getParam<std::string>("shape", "random");
+  unsigned int seed = getParam<unsigned int>("seed", 0);
 
   // Build this scene top-down to stress commit ordering guarantees
 
@@ -71,16 +73,23 @@ void SceneGenerator::commit()
   anari::setParameter(d, surface, "geometry", geom);
   anari::setParameter(d, surface, "material", mat);
 
-  // TODO use seed from scene description json
-  m_rng.seed(12345);
+  m_rng.seed(seed);
 
   std::vector<glm::vec3> vertices;
   if (geometrySubtype == "triangle") {
-    vertices = generateTriangles(primitveMode, primitiveCount);
+    if (shape == "random") {
+      vertices = generateRandomTriangles(primitiveCount);
+    } else if (shape == "quad") {
+      vertices = generateTriangulatedQuads(primitiveCount);
+    } else if (shape == "cube") {
+      vertices = generateTriangulatedCubes(primitiveCount);
+    }
   } else if (geometrySubtype == "quad") {
-    vertices = generateTriangulatedQuads(primitveMode, primitiveCount);
-  } else if (geometrySubtype == "cube") {
-    vertices = generateTriangulatedCubes(primitveMode, primitiveCount);
+    if (shape == "quad") {
+      //TODO
+    } else if (shape == "cube") {
+      // TODO
+    }
   }
 
   anari::setAndReleaseParameter(d,
@@ -100,8 +109,7 @@ void SceneGenerator::commit()
   anari::release(d, mat);
 }
 
-std::vector<glm::vec3> SceneGenerator::generateTriangles(
-    const std::string& primitiveMode, size_t primitiveCount)
+std::vector<glm::vec3> SceneGenerator::generateRandomTriangles(size_t primitiveCount)
 {
   std::vector<glm::vec3> vertices((primitiveCount * 3));
   for (auto& vertex : vertices) {
@@ -123,8 +131,7 @@ std::vector<glm::vec3> SceneGenerator::generateTriangles(
   return vertices;
 }
 
-std::vector<glm::vec3> SceneGenerator::generateTriangulatedQuads(
-    const std::string &primitiveMode, size_t primitiveCount)
+std::vector<glm::vec3> SceneGenerator::generateTriangulatedQuads(size_t primitiveCount)
 {
   std::vector<glm::vec3> vertices{
       {0.0, 0.0, 0.0}, {1.0, 1.0, 0.0}, {1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}};
@@ -133,8 +140,7 @@ std::vector<glm::vec3> SceneGenerator::generateTriangulatedQuads(
   return vertices;
 }
 
-std::vector<glm::vec3> SceneGenerator::generateTriangulatedCubes(
-    const std::string &primitiveMode, size_t primitiveCount)
+std::vector<glm::vec3> SceneGenerator::generateTriangulatedCubes(size_t primitiveCount)
 {
   std::vector<glm::vec3> vertices{{0.0, 0.0, 0.0}, {1.0, 1.0, 0.0}, {1.0, 0.0, 0.0}};
 

@@ -38,14 +38,9 @@ class SceneGenerator : public anari::scenes::TestScene
   anari::World m_world{nullptr};
   std::mt19937 m_rng;
 
-  std::vector<glm::vec3> generateTriangles(const std::string &primitiveMode,
-      size_t primitiveCount);
-  std::vector<glm::vec3> generateTriangulatedQuads(
-      const std::string &primitiveMode,
-      size_t primitiveCount);
-  std::vector<glm::vec3> generateTriangulatedCubes(
-      const std::string &primitiveMode,
-      size_t primitiveCount);
+  std::vector<glm::vec3> generateRandomTriangles(size_t primitiveCount);
+  std::vector<glm::vec3> generateTriangulatedQuads(size_t primitiveCount);
+  std::vector<glm::vec3> generateTriangulatedCubes(size_t primitiveCount);
 };
 
 } // namespace cts
