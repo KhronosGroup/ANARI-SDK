@@ -115,7 +115,7 @@ std::vector<glm::vec3> SceneGenerator::generateTriangles(size_t primitiveCount)
   for (auto& vertex : vertices) {
     vertex.x = getRandom(0.0f, 1.0f);
     vertex.y = getRandom(0.0f, 1.0f);
-    vertex.y = getRandom(0.0f, 1.0f);
+    vertex.z = getRandom(0.0f, 1.0f);
   }
 
   // add offset per triangle
@@ -134,7 +134,7 @@ std::vector<glm::vec3> SceneGenerator::generateTriangulatedQuads(size_t primitiv
   // TODO also create indexed quads
   std::vector<glm::vec3> vertices((primitiveCount * 6));
   size_t i = 0;
-  glm::vec3 vertex1(0), vertex2(0);
+  glm::vec3 vertex0(0), vertex1(0), vertex2(0);
   for (auto &vertex : vertices) {
     if (i == 3) {
       vertex = vertex2;
@@ -143,13 +143,23 @@ std::vector<glm::vec3> SceneGenerator::generateTriangulatedQuads(size_t primitiv
     } else {
       vertex.x = getRandom(0.0f, 1.0f);
       vertex.y = getRandom(0.0f, 1.0f);
-      vertex.y = getRandom(0.0f, 1.0f);
+      vertex.z = getRandom(0.0f, 1.0f);
     }
 
-    if (i == 1) {
+    if (i == 0) {
+      vertex0 = vertex;
+    } else if (i == 1) {
       vertex1 = vertex;
     } else if (i == 2) {
       vertex2 = vertex;
+    } else if (i == 5) {
+      const glm::vec3 side0 = vertex1 - vertex0;
+      const glm::vec3 side1 = vertex2 - vertex0;
+      const glm::vec3 normal = glm::normalize(glm::cross(side0, side1));
+
+      const glm::vec3 normalProjection =
+          (glm::dot(vertex - vertex0, normal) / glm::dot(normal, normal)) * normal;
+      vertex = vertex - normalProjection;
     }
 
     i = (i + 1) % 6;
