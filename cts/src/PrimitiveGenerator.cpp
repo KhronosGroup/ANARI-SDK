@@ -213,10 +213,13 @@ std::tuple<std::vector<glm::vec3>, std::vector<glm::uvec3>> PrimitiveGenerator::
 
     std::vector<glm::uvec3> newIndices = cubeIndices;
 
-    // TODO fix indices
     for (auto &indexVector : newIndices) {
       indexVector += glm::uvec3(static_cast<int>(i) * 8);
     }
+
+    std::copy(newIndices.begin(),
+        newIndices.end(),
+        std::back_insert_iterator(indices));
   }
 
   // add random transform per cube
