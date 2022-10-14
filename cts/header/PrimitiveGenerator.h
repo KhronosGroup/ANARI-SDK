@@ -23,6 +23,7 @@ class PrimitiveGenerator
   std::tuple<std::vector<glm::vec3>, std::vector<glm::uvec3>>
   generateTriangulatedCubesIndexed(size_t primitiveCount);
 
+  std::vector<glm::vec3> generateQuads(size_t primitiveCount);
  private:
   std::mt19937 m_rng;
 

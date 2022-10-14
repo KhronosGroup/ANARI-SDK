@@ -1,0 +1,9 @@
+{
+  "geometrySubtype": "quad",
+  "primitiveCount": 16,
+  "seed": 12345,
+  "shape": "quad",
+  "permutations": {
+    "primitiveMode": ["soup", "indexed"]
+  }
+}

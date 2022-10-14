@@ -24,7 +24,7 @@ float PrimitiveGenerator::getRandom(float min, float max)
 std::vector<glm::vec3> PrimitiveGenerator::generateTriangles(
     size_t primitiveCount)
 {
-  std::vector<glm::vec3> vertices((primitiveCount * 3));
+  std::vector<glm::vec3> vertices(primitiveCount * 3);
   for (auto& vertex : vertices) {
     vertex.x = getRandom(0.0f, 1.0f);
     vertex.y = getRandom(0.0f, 1.0f);
@@ -251,4 +251,26 @@ std::tuple<std::vector<glm::vec3>, std::vector<glm::uvec3>> PrimitiveGenerator::
   return std::make_tuple(vertices, indices);
 }
 
+std::vector<glm::vec3> PrimitiveGenerator::generateQuads(size_t primitiveCount) 
+  {
+    std::vector<glm::vec3> vertices(primitiveCount * 4);
+    for (auto &vertex : vertices) {
+      vertex.x = getRandom(0.0f, 1.0f);
+      vertex.y = getRandom(0.0f, 1.0f);
+      vertex.z = getRandom(0.0f, 1.0f);
+    }
+
+    // add translation offset per quad
+    for (size_t i = 0; i < primitiveCount; ++i) {
+      const size_t index = i * 4;
+      glm::vec3 offset(
+          getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f));
+      vertices[index] = (vertices[index] * 0.4f) + offset;
+      vertices[index + 1] = (vertices[index + 1] * 0.4f) + offset;
+      vertices[index + 2] = (vertices[index + 2] * 0.4f) + offset;
+      vertices[index + 3] = (vertices[index + 3] * 0.4f) + offset;
+    }
+
+    return vertices;
+  }
 } // namespace cts

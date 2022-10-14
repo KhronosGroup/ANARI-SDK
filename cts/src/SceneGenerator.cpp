@@ -119,7 +119,7 @@ void SceneGenerator::commit()
     }
   } else if (geometrySubtype == "quad") {
     if (shape == "quad") {
-      //TODO
+      vertices = generator.generateQuads(primitiveCount);
     } else if (shape == "cube") {
       // TODO
     }
