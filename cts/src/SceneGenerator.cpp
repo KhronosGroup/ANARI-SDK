@@ -198,6 +198,16 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(const std::string
 
   anari::unmap(m_device, frame, "depth");
 
+  if (!anariGetProperty(m_device,
+      frame,
+      "duration",
+      ANARI_FLOAT32,
+          &frameDuration,
+          sizeof(frameDuration),
+          ANARI_WAIT)) {
+    frameDuration = -1.0f;
+  }
+
   anari::release(m_device, camera);
   anari::release(m_device, frame);
   anari::release(m_device, renderer);
@@ -209,6 +219,20 @@ void SceneGenerator::resetAllParameters() {
   for (auto param : parameters()) {
     removeParam(param.name);
   }
+}
+
+std::vector<std::vector<float>> SceneGenerator::getBounds()
+{
+  std::vector<std::vector<float>> result;
+  auto b = bounds();
+  for (const auto& bound : b) {
+    std::vector<float> vector;
+    for (int i = 0; i < bound.length(); ++i) {
+      vector.push_back(bound[i]);
+    }
+    result.push_back(vector);
+  }
+  return result;
 }
 
 SceneGenerator *SceneGenerator::createSceneGenerator(const std::string &library,

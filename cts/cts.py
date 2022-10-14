@@ -42,7 +42,7 @@ def resolve_scenes(test_scenes):
         collected_scenes = list(path.rglob("*.json"))
     return collected_scenes
 
-def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, output = ".", prefix = ""):
+def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, permutationString, output = ".", prefix = ""):
     image_data_list = sceneGenerator.renderScene(anari_renderer)
 
     output_path = Path(output)
@@ -56,13 +56,13 @@ def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, ou
 
     image_out = Image.new("RGBA", (parsed_json["image_height"], parsed_json["image_width"]))
     image_out.putdata(image_data_list[0])
-    outName = file_name.with_suffix('.png').with_stem(f'{prefix}{stem}_{channels[0]}')
+    outName = file_name.with_suffix('.png').with_stem(f'{prefix}{stem}{permutationString}_{channels[0]}')
     print(f'Rendering to {outName.resolve()}')
     image_out.save(outName)
 
     image_out = Image.new("RGBA", (parsed_json["image_height"], parsed_json["image_width"]))
     image_out.putdata(image_data_list[1])
-    outName = file_name.with_suffix('.png').with_stem(f'{prefix}{stem}_{channels[1]}')
+    outName = file_name.with_suffix('.png').with_stem(f'{prefix}{stem}{permutationString}_{channels[1]}')
     print(f'Rendering to {outName.resolve()}')
     image_out.save(outName)
 
@@ -82,28 +82,29 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
     print('Initialized scene generator')
 
     for json_file_path in collected_scenes:
+        parsed_json = {}
         with open(json_file_path, 'r') as f, open('default_test_scene.json', 'r') as defaultTestScene:
             parsed_json = json.load(defaultTestScene)
             parsed_json.update(json.load(f))
 
-            sceneGenerator.resetAllParameters()
-            for [key, value] in parsed_json.items():
-                if not isinstance(value, dict):
-                    sceneGenerator.setParameter(key, value)
+        sceneGenerator.resetAllParameters()
+        for [key, value] in parsed_json.items():
+            if not isinstance(value, dict):
+                sceneGenerator.setParameter(key, value)
 
-            if "permutations" in parsed_json:
-                keys = list(parsed_json["permutations"].keys())
-                lists = list(parsed_json["permutations"].values())
-                permutations = itertools.product(*lists)
-                for permutation in permutations:
-                    for i in range(len(permutation)) :
-                        sceneGenerator.setParameter(keys[i], permutation[i])
-                    file_name = json_file_path.with_stem(f'{json_file_path.stem}{len(permutation)*"_{}".format(*permutation)}')
-                    sceneGenerator.commit()
-                    func(parsed_json, sceneGenerator, anari_renderer, file_name, *args)
-            else:
+        if "permutations" in parsed_json:
+            keys = list(parsed_json["permutations"].keys())
+            lists = list(parsed_json["permutations"].values())
+            permutations = itertools.product(*lists)
+            for permutation in permutations:
+                for i in range(len(permutation)) :
+                    sceneGenerator.setParameter(keys[i], permutation[i])
+                permutationString = f'{len(permutation)*"_{}".format(*permutation)}'
                 sceneGenerator.commit()
-                func(parsed_json, sceneGenerator, anari_renderer, json_file_path, *args)
+                func(parsed_json, sceneGenerator, anari_renderer, json_file_path, permutationString, *args)
+        else:
+            sceneGenerator.commit()
+            func(parsed_json, sceneGenerator, anari_renderer, json_file_path, "", *args)
 
 def render_scenes(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", output = ".", prefix = ""):
     apply_to_scenes(render_scene, anari_library, anari_device, anari_renderer, test_scenes, output, prefix)

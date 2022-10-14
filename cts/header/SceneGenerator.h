@@ -30,9 +30,17 @@ class SceneGenerator : public anari::scenes::TestScene
 
   std::vector<std::vector<uint32_t>> renderScene(
       const std::string &rendererType);
+  std::vector<std::vector<float>> getBounds();
+
+  float getFrameDuration() const
+  {
+    return frameDuration;
+  }
 
  private:
   static anari::Library m_library;
+
+  float frameDuration = -1.0f;
 
   anari::World m_world{nullptr};
 };

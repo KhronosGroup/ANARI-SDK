@@ -27,5 +27,7 @@ PYBIND11_MODULE(ctsBackend, m)
       .def("setParameter", &cts::SceneGenerator::setParam<int>)
       .def("commit", &cts::SceneGenerator::commit)
       .def("renderScene", &cts::SceneGenerator::renderScene)
-      .def("resetAllParameters", &cts::SceneGenerator::resetAllParameters);
+      .def("resetAllParameters", &cts::SceneGenerator::resetAllParameters)
+      .def("getBounds", &cts::SceneGenerator::getBounds)
+      .def("getFrameDuration", &cts::SceneGenerator::getFrameDuration);
 }
