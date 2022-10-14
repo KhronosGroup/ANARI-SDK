@@ -45,7 +45,7 @@ std::vector<glm::vec3> PrimitiveGenerator::generateTriangles(
 std::vector<glm::vec3> PrimitiveGenerator::generateTriangulatedQuadSoups(
     size_t primitiveCount)
 {
-  std::vector<glm::vec3> vertices((primitiveCount * 6));
+  std::vector<glm::vec3> vertices(primitiveCount * 6);
   size_t i = 0;
   glm::vec3 vertex0(0), vertex1(0), vertex2(0);
   for (auto &vertex : vertices) {
@@ -66,7 +66,7 @@ std::vector<glm::vec3> PrimitiveGenerator::generateTriangulatedQuadSoups(
     } else if (i == 2) {
       vertex2 = vertex;
     } else if (i == 5) {
-      glm::vec3 vec01 = vertex1 - vertex0;
+      const glm::vec3 vec01 = vertex1 - vertex0;
       vertex = vertex2 + vec01;
     }
 
@@ -74,18 +74,66 @@ std::vector<glm::vec3> PrimitiveGenerator::generateTriangulatedQuadSoups(
   }
 
   // add translation offset per quad
-  for (size_t k = 0; k < vertices.size() - 5; k += 6) {
+  for (size_t k = 0; k < primitiveCount; ++k) {
+    const size_t index = k * 6;
     glm::vec3 offset(
         getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f));
-    vertices[k] = (vertices[k] * 0.4f) + offset;
-    vertices[k + 1] = (vertices[k + 1] * 0.4f) + offset;
-    vertices[k + 2] = (vertices[k + 2] * 0.4f) + offset;
-    vertices[k + 3] = (vertices[k + 3] * 0.4f) + offset;
-    vertices[k + 4] = (vertices[k + 4] * 0.4f) + offset;
-    vertices[k + 5] = (vertices[k + 5] * 0.4f) + offset;
+    vertices[index] = (vertices[index] * 0.4f) + offset;
+    vertices[index + 1] = (vertices[index + 1] * 0.4f) + offset;
+    vertices[index + 2] = (vertices[index + 2] * 0.4f) + offset;
+    vertices[index + 3] = (vertices[index + 3] * 0.4f) + offset;
+    vertices[index + 4] = (vertices[index + 4] * 0.4f) + offset;
+    vertices[index + 5] = (vertices[index + 5] * 0.4f) + offset;
   }
 
   return vertices;
+}
+
+std::tuple<std::vector<glm::vec3>, std::vector<glm::ivec3>> PrimitiveGenerator::generateTriangulatedQuadsIndexed(
+    size_t primitiveCount)
+{
+  std::vector<glm::vec3> vertices(primitiveCount * 4);
+  std::vector<glm::ivec3> indices(primitiveCount * 2);
+  size_t i = 0;
+  glm::vec3 vertex0(0), vertex1(0), vertex2(0);
+  for (auto &vertex : vertices) {
+    if (i == 3) {
+      const glm::vec3 vec01 = vertex1 - vertex0;
+      vertex = vertex2 + vec01;
+    } else {
+      vertex.x = getRandom(0.0f, 1.0f);
+      vertex.y = getRandom(0.0f, 1.0f);
+      vertex.z = getRandom(0.0f, 1.0f);
+    }
+
+    if (i == 0) {
+      vertex0 = vertex;
+    } else if (i == 1) {
+      vertex1 = vertex;
+    } else if (i == 2) {
+      vertex2 = vertex;
+    } 
+
+    i = (i + 1) % 4;
+  }
+
+  // add translation offset per quad
+  for (size_t k = 0; k < primitiveCount; ++k) {
+    const size_t index = k * 4;
+    glm::vec3 offset(
+        getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f));
+    vertices[index] = (vertices[index] * 0.4f) + offset;
+    vertices[index + 1] = (vertices[index + 1] * 0.4f) + offset;
+    vertices[index + 2] = (vertices[index + 2] * 0.4f) + offset;
+    vertices[index + 3] = (vertices[index + 3] * 0.4f) + offset;
+
+    const size_t indicesIndex = k * 2;
+    // fill indices
+    indices[indicesIndex] = glm::ivec3(index, index + 1, index + 2);
+    indices[indicesIndex + 1] = glm::ivec3(index + 2, index + 1, index + 3);
+  }
+
+  return std::make_tuple(vertices, indices);
 }
 
 std::vector<glm::vec3> PrimitiveGenerator::generateTriangulatedCubeSoups(
@@ -165,6 +213,7 @@ std::tuple<std::vector<glm::vec3>, std::vector<glm::ivec3>> PrimitiveGenerator::
 
     std::vector<glm::ivec3> newIndices = cubeIndices;
 
+    // TODO fix indices
     for (auto &indexVector : newIndices) {
       indexVector += glm::ivec3(static_cast<int>(i) * 8);
     }

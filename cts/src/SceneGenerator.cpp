@@ -91,6 +91,15 @@ void SceneGenerator::commit()
       }
     } else if (shape == "quad") {
       vertices = generator.generateTriangulatedQuadSoups(primitiveCount);
+      // TODO fix indexed rendering
+      // if (primitiveMode == "indexed") {
+      //  auto [quadVertices, quadIndices] =
+      //      generator.generateTriangulatedQuadsIndexed(primitiveCount);
+      //  vertices = quadVertices;
+      //  indices = quadIndices;
+      //} else {
+      //  vertices = generator.generateTriangulatedQuadSoups(primitiveCount);
+      //}
     } else if (shape == "cube") {
       vertices = generator.generateTriangulatedCubeSoups(primitiveCount);
       //TODO fix indexed rendering
