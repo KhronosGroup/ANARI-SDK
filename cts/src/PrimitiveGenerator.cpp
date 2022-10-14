@@ -89,11 +89,11 @@ std::vector<glm::vec3> PrimitiveGenerator::generateTriangulatedQuadSoups(
   return vertices;
 }
 
-std::tuple<std::vector<glm::vec3>, std::vector<glm::ivec3>> PrimitiveGenerator::generateTriangulatedQuadsIndexed(
+std::tuple<std::vector<glm::vec3>, std::vector<glm::uvec3>> PrimitiveGenerator::generateTriangulatedQuadsIndexed(
     size_t primitiveCount)
 {
   std::vector<glm::vec3> vertices(primitiveCount * 4);
-  std::vector<glm::ivec3> indices(primitiveCount * 2);
+  std::vector<glm::uvec3> indices(primitiveCount * 2);
   size_t i = 0;
   glm::vec3 vertex0(0), vertex1(0), vertex2(0);
   for (auto &vertex : vertices) {
@@ -129,8 +129,8 @@ std::tuple<std::vector<glm::vec3>, std::vector<glm::ivec3>> PrimitiveGenerator::
 
     const size_t indicesIndex = k * 2;
     // fill indices
-    indices[indicesIndex] = glm::ivec3(index, index + 1, index + 2);
-    indices[indicesIndex + 1] = glm::ivec3(index + 2, index + 1, index + 3);
+    indices[indicesIndex] = glm::uvec3(index, index + 1, index + 2);
+    indices[indicesIndex + 1] = glm::uvec3(index + 2, index + 1, index + 3);
   }
 
   return std::make_tuple(vertices, indices);
@@ -187,17 +187,17 @@ std::vector<glm::vec3> PrimitiveGenerator::generateTriangulatedCubeSoups(
   return vertices;
 }
 
-std::tuple<std::vector<glm::vec3>, std::vector<glm::ivec3>> PrimitiveGenerator::generateTriangulatedCubesIndexed(
+std::tuple<std::vector<glm::vec3>, std::vector<glm::uvec3>> PrimitiveGenerator::generateTriangulatedCubesIndexed(
     size_t primitiveCount)
 {
   std::vector<glm::vec3> vertices;
-  std::vector<glm::ivec3> indices;
+  std::vector<glm::uvec3> indices;
   std::vector<glm::vec3> cubeVertices {
     {0.0, 0.0, 0.0}, 
     {1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0}, 
     {1.0, 1.0, 0.0}, {1.0, 0.0, 1.0}, {0.0, 1.0, 1.0}, 
     {1.0, 1.0, 1.0}};
-  std::vector<glm::ivec3> cubeIndices {
+  std::vector<glm::uvec3> cubeIndices {
     {0, 2, 1}, {1, 2, 4}, // front
     {1, 4, 5}, {5, 4, 7}, // right
     {5, 7, 3}, {6, 7, 3}, // back
@@ -211,11 +211,11 @@ std::tuple<std::vector<glm::vec3>, std::vector<glm::ivec3>> PrimitiveGenerator::
         cubeVertices.end(),
         std::back_insert_iterator(vertices));
 
-    std::vector<glm::ivec3> newIndices = cubeIndices;
+    std::vector<glm::uvec3> newIndices = cubeIndices;
 
     // TODO fix indices
     for (auto &indexVector : newIndices) {
-      indexVector += glm::ivec3(static_cast<int>(i) * 8);
+      indexVector += glm::uvec3(static_cast<int>(i) * 8);
     }
   }
 

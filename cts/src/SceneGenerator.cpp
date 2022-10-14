@@ -80,46 +80,43 @@ void SceneGenerator::commit()
 
   std::vector<glm::vec3> vertices;
   if (geometrySubtype == "triangle") {
-    std::vector<glm::ivec3> indices;
+    std::vector<glm::uvec3> indices;
     if (shape == "triangle") {
       vertices = generator.generateTriangles(primitiveCount);
 
       if (primitiveMode == "indexed") {
         for(size_t i = 0; i < vertices.size(); i +=3) {
-          indices.push_back(glm::ivec3(i, i + 1, i + 2));
+          indices.push_back(glm::uvec3(i, i + 1, i + 2));
         }
       }
     } else if (shape == "quad") {
-      vertices = generator.generateTriangulatedQuadSoups(primitiveCount);
-      // TODO fix indexed rendering
-      // if (primitiveMode == "indexed") {
-      //  auto [quadVertices, quadIndices] =
-      //      generator.generateTriangulatedQuadsIndexed(primitiveCount);
-      //  vertices = quadVertices;
-      //  indices = quadIndices;
-      //} else {
-      //  vertices = generator.generateTriangulatedQuadSoups(primitiveCount);
-      //}
+      if (primitiveMode == "indexed") {
+       auto [quadVertices, quadIndices] =
+           generator.generateTriangulatedQuadsIndexed(primitiveCount);
+       vertices = quadVertices;
+       indices = quadIndices;
+      } else {
+       vertices = generator.generateTriangulatedQuadSoups(primitiveCount);
+      }
     } else if (shape == "cube") {
-      vertices = generator.generateTriangulatedCubeSoups(primitiveCount);
-      //TODO fix indexed rendering
-      //if (primitiveMode == "indexed") {
-      //  auto [cubeVertices, cubeIndices] =
-      //      generator.generateTriangulatedCubesIndexed(primitiveCount);
-      //  vertices = cubeVertices;
-      //  indices = cubeIndices;
-      //} else {
-      //  vertices = generator.generateTriangulatedCubeSoups(primitiveCount);
-      //}
+      if (primitiveMode == "indexed") {
+       auto [cubeVertices, cubeIndices] =
+           generator.generateTriangulatedCubesIndexed(primitiveCount);
+       vertices = cubeVertices;
+       indices = cubeIndices;
+      } else {
+       vertices = generator.generateTriangulatedCubeSoups(primitiveCount);
+      }
     }
 
-    // TODO fix indexed rendering
-    //if (primitiveMode == "indexed") {
-    //  anari::setAndReleaseParameter(d,
-    //      geom,
-    //      "primitive.index",
-    //      anari::newArray1D(d, indices.data(), indices.size()));
-    //}
+    if (primitiveMode == "indexed") {
+    // reverse indices vector to make a more useful test case
+      std::reverse(indices.begin(), indices.end());
+      anari::setAndReleaseParameter(d,
+          geom,
+          "primitive.index",
+          anari::newArray1D(d, indices.data(), indices.size()));
+    }
   } else if (geometrySubtype == "quad") {
     if (shape == "quad") {
       //TODO
