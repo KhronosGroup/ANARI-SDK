@@ -129,7 +129,10 @@ void SceneGenerator::commit()
       }
     } else if (shape == "cube") {
       if (primitiveMode == "indexed") {
-        // TODO
+        auto [cubeVertices, cubeIndices] =
+            generator.generateQuadCubesIndexed(primitiveCount);
+        vertices = cubeVertices;
+        indices = cubeIndices;
       } else {
         generator.generateQuadCubeSoups(primitiveCount);
       }

@@ -18,13 +18,15 @@ class PrimitiveGenerator
   std::vector<glm::vec3> generateTriangles(size_t primitiveCount);
   std::vector<glm::vec3> generateTriangulatedQuadSoups(size_t primitiveCount);
   std::tuple<std::vector<glm::vec3>, std::vector<glm::uvec3>>
-  generateTriangulatedQuadsIndexed(size_t primitiveCount);
+    generateTriangulatedQuadsIndexed(size_t primitiveCount);
   std::vector<glm::vec3> generateTriangulatedCubeSoups(size_t primitiveCount);
   std::tuple<std::vector<glm::vec3>, std::vector<glm::uvec3>>
-  generateTriangulatedCubesIndexed(size_t primitiveCount);
+    generateTriangulatedCubesIndexed(size_t primitiveCount);
 
   std::vector<glm::vec3> generateQuads(size_t primitiveCount);
   std::vector<glm::vec3> generateQuadCubeSoups(size_t primitiveCount);
+  std::tuple<std::vector<glm::vec3>, std::vector<glm::uvec4>>
+  generateQuadCubesIndexed(size_t primitiveCount);
  private:
   std::mt19937 m_rng;
 

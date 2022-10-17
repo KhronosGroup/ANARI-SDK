@@ -214,7 +214,7 @@ std::tuple<std::vector<glm::vec3>, std::vector<glm::uvec3>> PrimitiveGenerator::
     std::vector<glm::uvec3> newIndices = cubeIndices;
 
     for (auto &indexVector : newIndices) {
-      indexVector += glm::uvec3(static_cast<int>(i) * 8);
+      indexVector += glm::uvec3(static_cast<int>(i * cubeVertices.size()));
     }
 
     std::copy(newIndices.begin(),
@@ -242,8 +242,8 @@ std::tuple<std::vector<glm::vec3>, std::vector<glm::uvec3>> PrimitiveGenerator::
 
     const glm::mat4 transform = translation * rotation * scale;
 
-    for (size_t i = 0; i < 8; ++i) {
-      const size_t index = i + 8 * k;
+    for (size_t i = 0; i < cubeVertices.size(); ++i) {
+      const size_t index = i + cubeVertices.size() * k;
       vertices[index] = transform * glm::vec4(vertices[index], 1.0);
     }
   }
@@ -320,4 +320,72 @@ std::vector<glm::vec3> PrimitiveGenerator::generateQuadCubeSoups(
 
   return vertices;
   }
-} // namespace cts
+
+std::tuple<std::vector<glm::vec3>, std::vector<glm::uvec4>>
+  PrimitiveGenerator::generateQuadCubesIndexed(size_t primitiveCount)
+  {
+    std::vector<glm::vec3> vertices;
+    std::vector<glm::uvec4> indices;
+    const std::vector<glm::vec3> cubeVertices{{0.0, 0.0, 0.0},
+        {1.0, 0.0, 0.0},
+        {0.0, 1.0, 0.0},
+        {0.0, 0.0, 1.0},
+        {1.0, 1.0, 0.0},
+        {1.0, 0.0, 1.0},
+        {0.0, 1.0, 1.0},
+        {1.0, 1.0, 1.0}};
+    const std::vector<glm::uvec4> cubeIndices{
+        {0, 2, 4, 1}, // front
+        {1, 4, 7, 5}, // right
+        {5, 7, 6, 3}, // back
+        {0, 3, 6, 2}, // left
+        {2, 6, 7, 4}, // top
+        {0, 1, 5, 3}  // bottom
+    };
+
+    for (size_t i = 0; i < primitiveCount; ++i) {
+      std::copy(cubeVertices.begin(),
+          cubeVertices.end(),
+          std::back_insert_iterator(vertices));
+
+      std::vector<glm::uvec4> newIndices = cubeIndices;
+
+      for (auto &indexVector : newIndices) {
+        indexVector += glm::uvec4(static_cast<int>(i * cubeVertices.size()));
+      }
+
+      std::copy(newIndices.begin(),
+          newIndices.end(),
+          std::back_insert_iterator(indices));
+    }
+
+    // add random transform per cube
+    for (size_t k = 0; k < primitiveCount; ++k) {
+      float cubeScale = getRandom(0.0f, 0.4f);
+
+      const glm::mat4 scale = glm::scale(
+          glm::mat4(1.0f), glm::vec3(cubeScale, cubeScale, cubeScale));
+
+      const glm::mat4 rotation = glm::rotate(glm::mat4(1.0f),
+          getRandom(0.0f, 360.0f),
+          glm::vec3(getRandom(0.0f, 1.0f),
+              getRandom(0.0f, 1.0f),
+              getRandom(0.0f, 1.0f)));
+
+      const glm::mat4 translation = glm::translate(glm::mat4(1.0f),
+          glm::vec3(getRandom(0.0f, 0.6f),
+              getRandom(0.0f, 0.6f),
+              getRandom(0.0f, 0.6f)));
+
+      const glm::mat4 transform = translation * rotation * scale;
+
+      for (size_t i = 0; i < cubeVertices.size(); ++i) {
+        const size_t index = i + cubeVertices.size() * k;
+        vertices[index] = transform * glm::vec4(vertices[index], 1.0);
+      }
+    }
+
+    return std::make_tuple(vertices, indices);
+  }
+
+  } // namespace cts
