@@ -128,7 +128,11 @@ void SceneGenerator::commit()
         }
       }
     } else if (shape == "cube") {
-      // TODO
+      if (primitiveMode == "indexed") {
+        // TODO
+      } else {
+        generator.generateQuadCubeSoups(primitiveCount);
+      }
     }
 
     if (primitiveMode == "indexed") {

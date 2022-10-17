@@ -24,6 +24,7 @@ class PrimitiveGenerator
   generateTriangulatedCubesIndexed(size_t primitiveCount);
 
   std::vector<glm::vec3> generateQuads(size_t primitiveCount);
+  std::vector<glm::vec3> generateQuadCubeSoups(size_t primitiveCount);
  private:
   std::mt19937 m_rng;
 
