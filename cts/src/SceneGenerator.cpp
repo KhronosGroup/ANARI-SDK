@@ -169,6 +169,29 @@ void SceneGenerator::commit()
           "primitive.index",
           anari::newArray1D(d, indices.data(), indices.size()));
     }
+  } else if (geometrySubtype == "curve") {
+    auto [curveVertices, curveRadii] = generator.generateCurves(primitiveCount);
+    vertices = curveVertices;
+
+    anari::setAndReleaseParameter(d,
+        geom,
+        "vertex.radius",
+        anari::newArray1D(d, curveRadii.data(), curveRadii.size()));
+
+    if ("indexed") {
+      std::vector<glm::uvec2> indices;
+      for (size_t i = 0; i < vertices.size(); i += 2) {
+        indices.push_back(
+            glm::vec2(static_cast<uint32_t>(i), static_cast<uint32_t>(i + 1)));
+      }
+
+      // reverse indices vector to create a more useful test case
+      std::reverse(indices.begin(), indices.end());
+      anari::setAndReleaseParameter(d,
+          geom,
+          "primitive.index",
+          anari::newArray1D(d, indices.data(), indices.size()));
+    }
   } else if (geometrySubtype == "cone") {
     auto [coneVertices, coneRadii] =
         generator.generateCones(primitiveCount);

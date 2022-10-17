@@ -31,6 +31,9 @@ class PrimitiveGenerator
   std::tuple<std::vector<glm::vec3>, std::vector<float>>
     generateSpheres(size_t primitiveCount);
 
+  std::tuple<std::vector<glm::vec3>, std::vector<float>> generateCurves(
+      size_t primitiveCount);
+
   std::tuple<std::vector<glm::vec3>, std::vector<float>> generateCones(
     size_t primitiveCount);
   std::tuple<std::vector<glm::vec3>, std::vector<float>>
