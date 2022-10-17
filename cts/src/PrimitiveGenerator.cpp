@@ -388,4 +388,20 @@ std::tuple<std::vector<glm::vec3>, std::vector<glm::uvec4>>
     return std::make_tuple(vertices, indices);
   }
 
-  } // namespace cts
+
+std::tuple<std::vector<glm::vec3>, std::vector<float>> PrimitiveGenerator::generateSphereSoup(
+  size_t primitiveCount)
+  {
+    std::vector<glm::vec3> vertices;
+    std::vector<float> radii;
+
+    for (size_t i = 0; i < primitiveCount; ++i) {
+      vertices.push_back(glm::vec3(
+          getRandom(0.0f, 1.0f), getRandom(0.0f, 1.0f), getRandom(0.0f, 1.0f)));
+      radii.push_back(getRandom(0.0f, 0.4f));
+    }
+
+    return std::make_tuple(vertices, radii);
+  }
+
+} // namespace cts

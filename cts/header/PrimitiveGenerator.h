@@ -27,6 +27,9 @@ class PrimitiveGenerator
   std::vector<glm::vec3> generateQuadCubeSoups(size_t primitiveCount);
   std::tuple<std::vector<glm::vec3>, std::vector<glm::uvec4>>
   generateQuadCubesIndexed(size_t primitiveCount);
+
+  std::tuple<std::vector<glm::vec3>, std::vector<float>>
+  generateSphereSoup(size_t primitiveCount);
  private:
   std::mt19937 m_rng;
 

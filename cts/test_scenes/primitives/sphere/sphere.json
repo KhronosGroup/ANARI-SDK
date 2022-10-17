@@ -1,0 +1,8 @@
+{
+  "geometrySubtype": "sphere",
+  "primitiveCount": 16,
+  "seed": 54321,
+  "permutations": {
+    "primitiveMode": ["soup", "indexed"]
+  }
+}

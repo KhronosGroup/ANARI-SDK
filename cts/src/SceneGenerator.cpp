@@ -146,6 +146,15 @@ void SceneGenerator::commit()
           "primitive.index",
           anari::newArray1D(d, indices.data(), indices.size()));
     }
+  } else if (geometrySubtype == "sphere") {
+    auto [sphereVertices, sphereRadii] =
+        generator.generateSphereSoup(primitiveCount);
+    vertices = sphereVertices;
+
+    anari::setAndReleaseParameter(d,
+        geom,
+        "vertex.radius",
+        anari::newArray1D(d, sphereRadii.data(), sphereRadii.size()));
   }
 
   anari::setAndReleaseParameter(d,
