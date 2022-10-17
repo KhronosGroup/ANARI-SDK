@@ -118,10 +118,26 @@ void SceneGenerator::commit()
           anari::newArray1D(d, indices.data(), indices.size()));
     }
   } else if (geometrySubtype == "quad") {
+    std::vector<glm::uvec4> indices;
     if (shape == "quad") {
       vertices = generator.generateQuads(primitiveCount);
+
+      if (primitiveMode == "indexed") {
+        for (size_t i = 0; i < vertices.size(); i += 4) {
+          indices.push_back(glm::uvec4(i, i + 1, i + 2, i + 3));
+        }
+      }
     } else if (shape == "cube") {
       // TODO
+    }
+
+    if (primitiveMode == "indexed") {
+      // reverse indices vector to make a more useful test case
+      std::reverse(indices.begin(), indices.end());
+      anari::setAndReleaseParameter(d,
+          geom,
+          "primitive.index",
+          anari::newArray1D(d, indices.data(), indices.size()));
     }
   }
 
