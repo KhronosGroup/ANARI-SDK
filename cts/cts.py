@@ -118,6 +118,25 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
 def render_scenes(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", output = ".", prefix = ""):
     apply_to_scenes(render_scene, anari_library, anari_device, anari_renderer, test_scenes, output, prefix)
 
+def check_object_properties_helper(parsed_json, sceneGenerator, anari_renderer, scene_location, permutationString):
+    sceneGenerator.renderScene(anari_renderer)
+    bounds = sceneGenerator.getBounds()
+    frame_duration = sceneGenerator.getFrameDuration()
+    if frame_duration <= 0 :
+        print(f'Frame duration invalid: {frame_duration}')
+    if "metaData" in parsed_json:
+        metaData = parsed_json["metaData"]
+        if permutationString in metaData:
+            if metaData[permutationString] != bounds:
+                print()
+        else:
+            print(f'Reference meta data missing: {permutationString}')
+    else:
+        print(f'Frame duration invalid: {frame_duration}')
+
+def check_object_properties(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes"):
+    apply_to_scenes(check_object_properties_helper, anari_library, anari_device, anari_renderer, test_scenes)
+
 def query_metadata(anari_library, type = None, subtype = None, skipParameters = False, info = False):
     ctsBackend.query_metadata(anari_library, type, subtype, skipParameters, info, anari_logger)
 
@@ -129,12 +148,15 @@ if __name__ == "__main__":
 
     libraryParser = argparse.ArgumentParser(add_help=False)
     libraryParser.add_argument('library', help='ANARI library to load')
+
     deviceParser = argparse.ArgumentParser(add_help=False, parents=[libraryParser])
     deviceParser.add_argument('--device', default=None, help='ANARI device on which to perform the test')
 
-    renderScenesParser = subparsers.add_parser('render_scenes', description='Renders an image to disk for each test scene', parents=[deviceParser])
-    renderScenesParser.add_argument('--renderer', default="default")
-    renderScenesParser.add_argument('--test_scenes', default="test_scenes")
+    sceneParser = argparse.ArgumentParser(add_help=False, parents=[deviceParser])
+    sceneParser.add_argument('--renderer', default="default")
+    sceneParser.add_argument('--test_scenes', default="test_scenes")
+
+    renderScenesParser = subparsers.add_parser('render_scenes', description='Renders an image to disk for each test scene', parents=[sceneParser])
     renderScenesParser.add_argument('--output', default=".")
 
     checkExtensionsParser = subparsers.add_parser('check_core_extensions', parents=[deviceParser])
@@ -144,6 +166,8 @@ if __name__ == "__main__":
     queryMetadataParser.add_argument('--subtype', default=None, help='Only show parameters for objects of a subtype')
     queryMetadataParser.add_argument('--skipParameters', action='store_true', help='Skip parameter listing')
     queryMetadataParser.add_argument('--info', action='store_true', help='Show detailed information for each parameter')
+
+    checkObjectPropertiesParser = subparsers.add_parser('check_object_properties', parents=[sceneParser])
 
     command_text = ""
     for subparser in subparsers.choices :
@@ -159,3 +183,5 @@ if __name__ == "__main__":
         print(tabulate(result))
     elif args.command == "query_metadata":
         query_metadata(args.library, args.type, args.subtype, args.skipParameters, args.info)
+    elif args.command == "check_object_properties":
+        check_object_properties()
