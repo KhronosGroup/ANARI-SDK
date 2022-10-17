@@ -46,8 +46,18 @@ def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, pe
     image_data_list = sceneGenerator.renderScene(anari_renderer)
 
     output_path = Path(output)
-    current_dir = Path(__file__).parent
-    file_name = output_path.resolve() / scene_location.relative_to(current_dir)
+    
+    if permutationString != "":
+        permutationString = f'_{permutationString}'
+
+    file_name = "."
+    scene_location_parts = scene_location.parts
+    if "test_scenes" in scene_location_parts:
+        test_scenes_index = scene_location_parts[::-1].index("test_scenes")
+        file_name = output_path / Path(*(scene_location_parts[len(scene_location_parts) - test_scenes_index - 1:]))
+        print(f'Does this work? {str(file_name)}')
+    else:   
+        file_name = output_path.resolve()
 
     stem = scene_location.stem
     channels = ["color", "depth"]
@@ -101,7 +111,7 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                     sceneGenerator.setParameter(keys[i], permutation[i])
                 permutationString = f'{len(permutation)*"_{}".format(*permutation)}'
                 sceneGenerator.commit()
-                func(parsed_json, sceneGenerator, anari_renderer, json_file_path, permutationString, *args)
+                func(parsed_json, sceneGenerator, anari_renderer, json_file_path, permutationString[1:], *args)
         else:
             sceneGenerator.commit()
             func(parsed_json, sceneGenerator, anari_renderer, json_file_path, "", *args)
