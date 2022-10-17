@@ -199,7 +199,7 @@ void SceneGenerator::commit()
 
     anari::setAndReleaseParameter(d,
         geom,
-        "vertex.radius",
+        "primitive.radius",
         anari::newArray1D(d, cylinderRadii.data(), cylinderRadii.size()));
 
     if ("indexed") {
