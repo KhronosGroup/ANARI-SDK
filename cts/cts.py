@@ -55,9 +55,8 @@ def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, pe
     if "test_scenes" in scene_location_parts:
         test_scenes_index = scene_location_parts[::-1].index("test_scenes")
         file_name = output_path / Path(*(scene_location_parts[len(scene_location_parts) - test_scenes_index - 1:]))
-        print(f'Does this work? {str(file_name)}')
     else:   
-        file_name = output_path.resolve()
+        file_name = output_path.resolve() / scene_location.name
 
     stem = scene_location.stem
     channels = ["color", "depth"]
