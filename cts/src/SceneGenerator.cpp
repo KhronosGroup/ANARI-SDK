@@ -168,31 +168,54 @@ void SceneGenerator::commit()
           geom,
           "primitive.index",
           anari::newArray1D(d, indices.data(), indices.size()));
-      }
-    } else if (geometrySubtype == "cone") {
-      auto [coneVertices, coneRadii] =
-          generator.generateCones(primitiveCount);
-      vertices = coneVertices;
+    }
+  } else if (geometrySubtype == "cone") {
+    auto [coneVertices, coneRadii] =
+        generator.generateCones(primitiveCount);
+    vertices = coneVertices;
 
+    anari::setAndReleaseParameter(d,
+        geom,
+        "vertex.radius",
+        anari::newArray1D(d, coneRadii.data(), coneRadii.size()));
+
+    if ("indexed") {
+      std::vector<glm::uvec2> indices;
+      for (size_t i = 0; i < vertices.size(); i += 2) {
+        indices.push_back(
+            glm::vec2(static_cast<uint32_t>(i), static_cast<uint32_t>(i + 1)));
+      }
+
+      // reverse indices vector to create a more useful test case
+      std::reverse(indices.begin(), indices.end());
       anari::setAndReleaseParameter(d,
           geom,
-          "vertex.radius",
-          anari::newArray1D(d, coneRadii.data(), coneRadii.size()));
+          "primitive.index",
+          anari::newArray1D(d, indices.data(), indices.size()));
+    }
+  } else if (geometrySubtype == "cylinder") {
+    auto [cylinderVertices, cylinderRadii] = generator.generateCylinders(primitiveCount);
+    vertices = cylinderVertices;
 
-      if ("indexed") {
-        std::vector<glm::uvec2> indices;
-        for (size_t i = 0; i < vertices.size(); i += 2) {
-          indices.push_back(
-              glm::vec2(static_cast<uint32_t>(i), static_cast<uint32_t>(i + 1)));
-        }
+    anari::setAndReleaseParameter(d,
+        geom,
+        "vertex.radius",
+        anari::newArray1D(d, cylinderRadii.data(), cylinderRadii.size()));
 
-        // reverse indices vector to create a more useful test case
-        std::reverse(indices.begin(), indices.end());
-        anari::setAndReleaseParameter(d,
-            geom,
-            "primitive.index",
-            anari::newArray1D(d, indices.data(), indices.size()));
+    if ("indexed") {
+      std::vector<glm::uvec2> indices;
+      for (size_t i = 0; i < vertices.size(); i += 2) {
+        indices.push_back(glm::vec2(
+            static_cast<uint32_t>(i), static_cast<uint32_t>(i + 1)));
       }
+
+      // reverse indices vector to create a more useful test case
+      std::reverse(indices.begin(), indices.end());
+      anari::setAndReleaseParameter(d,
+          geom,
+          "primitive.index",
+          anari::newArray1D(d, indices.data(), indices.size()));
+    }
   }
 
   anari::setAndReleaseParameter(d,

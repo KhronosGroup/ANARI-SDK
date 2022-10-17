@@ -415,7 +415,7 @@ std::tuple<std::vector<glm::vec3>, std::vector<float>>
       radii.push_back(getRandom(0.0f, 0.4f));
     }
 
-    // add translation offset per triangle
+    // add translation offset per cone
     for (size_t i = 0; i < primitiveCount; ++i) {
       const size_t index = i * 2;
       const glm::vec3 offset(
@@ -427,5 +427,29 @@ std::tuple<std::vector<glm::vec3>, std::vector<float>>
     return std::make_tuple(vertices, radii);
   }
 
+std::tuple<std::vector<glm::vec3>, std::vector<float>>
+  PrimitiveGenerator::generateCylinders(size_t primitiveCount)
+  {
+    std::vector<glm::vec3> vertices;
+    std::vector<float> radii;
 
+    for (size_t i = 0; i < primitiveCount; ++i) {
+      vertices.push_back(glm::vec3(
+          getRandom(0.0f, 1.0f), getRandom(0.0f, 1.0f), getRandom(0.0f, 1.0f)));
+      vertices.push_back(glm::vec3(
+          getRandom(0.0f, 1.0f), getRandom(0.0f, 1.0f), getRandom(0.0f, 1.0f)));
+      radii.push_back(getRandom(0.0f, 0.4f));
+    }
+
+    // add translation offset per cylinder
+    for (size_t i = 0; i < primitiveCount; ++i) {
+      const size_t index = i * 2;
+      const glm::vec3 offset(
+          getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f));
+      vertices[index] = (vertices[index] * 0.4f) + offset;
+      vertices[index + 1] = (vertices[index + 1] * 0.4f) + offset;
+    }
+
+    return std::make_tuple(vertices, radii);
+  }
 } // namespace cts
