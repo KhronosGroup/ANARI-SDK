@@ -409,7 +409,7 @@ std::tuple<std::vector<glm::vec3>, std::vector<float>>
     std::vector<glm::vec3> vertices;
     std::vector<float> radii;
 
-    for (size_t i = 0; i < primitiveCount; ++i) {
+    for (size_t i = 0; i < primitiveCount * 2; ++i) {
       vertices.push_back(glm::vec3(
           getRandom(0.0f, 1.0f), getRandom(0.0f, 1.0f), getRandom(0.0f, 1.0f)));
       radii.push_back(getRandom(0.0f, 0.4f));
