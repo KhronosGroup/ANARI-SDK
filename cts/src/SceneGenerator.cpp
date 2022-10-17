@@ -110,7 +110,7 @@ void SceneGenerator::commit()
     }
 
     if (primitiveMode == "indexed") {
-    // reverse indices vector to make a more useful test case
+    // reverse indices vector to create a more useful test case
       std::reverse(indices.begin(), indices.end());
       anari::setAndReleaseParameter(d,
           geom,
@@ -139,7 +139,7 @@ void SceneGenerator::commit()
     }
 
     if (primitiveMode == "indexed") {
-      // reverse indices vector to make a more useful test case
+      // reverse indices vector to create a more useful test case
       std::reverse(indices.begin(), indices.end());
       anari::setAndReleaseParameter(d,
           geom,
@@ -148,13 +148,27 @@ void SceneGenerator::commit()
     }
   } else if (geometrySubtype == "sphere") {
     auto [sphereVertices, sphereRadii] =
-        generator.generateSphereSoup(primitiveCount);
+        generator.generateSpheres(primitiveCount);
     vertices = sphereVertices;
 
     anari::setAndReleaseParameter(d,
         geom,
         "vertex.radius",
         anari::newArray1D(d, sphereRadii.data(), sphereRadii.size()));
+
+    if ("indexed") {
+      std::vector<uint32_t> indices;
+      for (size_t i = 0; i < vertices.size(); i += 3) {
+        indices.push_back(static_cast<uint32_t>(i));
+
+        // reverse indices vector to create a more useful test case
+        std::reverse(indices.begin(), indices.end());
+        anari::setAndReleaseParameter(d,
+            geom,
+            "primitive.index",
+            anari::newArray1D(d, indices.data(), indices.size()));
+      }
+    }
   }
 
   anari::setAndReleaseParameter(d,

@@ -389,7 +389,7 @@ std::tuple<std::vector<glm::vec3>, std::vector<glm::uvec4>>
   }
 
 
-std::tuple<std::vector<glm::vec3>, std::vector<float>> PrimitiveGenerator::generateSphereSoup(
+std::tuple<std::vector<glm::vec3>, std::vector<float>> PrimitiveGenerator::generateSpheres(
   size_t primitiveCount)
   {
     std::vector<glm::vec3> vertices;
