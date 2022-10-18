@@ -135,10 +135,6 @@ public:
   void unmapArray() {
     mapping = nullptr;
   }
-
-  ~GenericArrayDebugObject() {
-    delete[] handles;
-  }
 };
 
 template<int T>
