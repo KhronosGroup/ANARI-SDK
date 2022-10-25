@@ -230,6 +230,7 @@ int main(int argc, const char **argv)
   const char *subtypeFilter = NULL;
   bool skipParameters = false;
   bool info = false;
+  bool features_only = false;
   for(int i = 1;i<argc;++i) {
     if(strncmp(argv[i], "-l", 2) == 0) {
       if(i+1<argc) {
@@ -261,6 +262,9 @@ int main(int argc, const char **argv)
     if(strncmp(argv[i], "-i", 2) == 0) {
       info = true;
     }
+    if(strncmp(argv[i], "-f", 2) == 0) {
+      features_only = true;
+    }
     if(strncmp(argv[i], "-h", 2) == 0) {
       puts(helptext);
       return 0;
@@ -290,6 +294,18 @@ int main(int argc, const char **argv)
 
   for(int i = 0;devices[i];++i) {
     printf("Device \"%s\":\n", devices[i]);
+
+    const char **features = (const char**)anariGetObjectInfo(lib, devices[i], NULL, ANARI_DEVICE, "feature", ANARI_STRING_LIST);
+    if(features) {
+      printf("   Features:\n");
+      for(int k = 0;features[k];++k){
+        printf("      %s\n", features[k]);
+      }
+    }
+    if(features_only) {
+      continue;
+    }
+
     printf("   Subtypes:\n");
     for(size_t j = 0;j<sizeof(namedTypes)/sizeof(ANARIDataType);++j) {
       const char **types = anariGetObjectSubtypes(lib, devices[i], namedTypes[j]);
