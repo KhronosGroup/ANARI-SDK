@@ -77,14 +77,16 @@ def merge_object_table(core, extension):
 
 def merge(core, extension, verbose=False):
     if not "features" in core:
-        core["features"] = [core["info"]["name"]]
+        core["features"] = []
+        if core["info"]["type"] == "feature":
+                core["features"].append(core["info"]["name"])
     for k,v in extension.items():
         if not k in core:
             core[k] = v
         elif k == "info":
             if verbose:
                 print('merging '+extension[k]['type']+' '+extension[k]["name"])
-            if "name" in v:
+            if "name" in v and v["type"] == "feature":
                 core["features"].append(v["name"])
         elif k == "enums" :
             merge_enums(core[k], extension[k])
@@ -97,7 +99,7 @@ def merge(core, extension, verbose=False):
             core[k].extend(extension[k])
 
 def tag_feature(tree):
-    if "info" in tree and "name" in tree["info"]:
+    if "info" in tree and "name" in tree["info"] and tree['info']['type'] == 'feature':
         feature = tree["info"]["name"]
         if "objects" in tree:
             for obj in tree["objects"]:
