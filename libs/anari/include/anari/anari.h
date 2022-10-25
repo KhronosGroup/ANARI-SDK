@@ -58,8 +58,8 @@
 #ifdef __cplusplus
 namespace anari {
 namespace api {
+struct Library {};
 struct Object {};
-struct Library : public Object {};
 struct Device : public Object {};
 struct Camera : public Object {};
 struct Array : public Object {};
@@ -81,8 +81,8 @@ struct Volume : public Object {};
 struct World : public Object {};
 } // namespace api
 } // namespace anari
-typedef anari::api::Object *ANARIObject;
 typedef anari::api::Library *ANARILibrary;
+typedef anari::api::Object *ANARIObject;
 typedef anari::api::Device *ANARIDevice;
 typedef anari::api::Camera *ANARICamera;
 typedef anari::api::Array *ANARIArray;
@@ -103,8 +103,8 @@ typedef anari::api::SpatialField *ANARISpatialField;
 typedef anari::api::Volume *ANARIVolume;
 typedef anari::api::World *ANARIWorld;
 #else
-typedef void* ANARIObject;
 typedef void* ANARILibrary;
+typedef void* ANARIObject;
 typedef void* ANARIDevice;
 typedef void* ANARICamera;
 typedef void* ANARIArray;
