@@ -126,13 +126,27 @@ def check_object_properties_helper(parsed_json, sceneGenerator, anari_renderer, 
     bounds = sceneGenerator.getBounds()
     if "metaData" in parsed_json:
         metaData = parsed_json["metaData"]
-        if permutationString in metaData:
-            if metaData[permutationString] != bounds:
-                print()
-        else:
-            print(f'Reference meta data missing: {permutationString}')
+        if permutationString != "" and permutationString in metaData:
+            metaData = metaData[permutationString]
+        if "bounds" not in metaData:
+            print("Bounds missing in reference!")
+            return
+        ref_bounds = metaData["bounds"]
+        if "world" not in ref_bounds:
+            print("Bounds missing in reference!")
+            return
+        if ref_bounds["world"] != bounds[0][0]:
+            print("Worlds bounds do not match!")
+        if "instances" in ref_bounds:
+            for i in range(len(ref_bounds["instances"])):
+                if ref_bounds["instances"][i] != bounds[1][i]:
+                    print(f'Instance {i} bounds do not match!')
+        if "groups" in ref_bounds:
+            for i in range(len(ref_bounds["groups"])):
+                if ref_bounds["groups"][i] != bounds[2][i]:
+                    print(f'Group {i} bounds do not match!')
     else:
-        print(f'Frame duration invalid: {frame_duration}')
+         print(f'MetaData missing in reference')
 
 def check_object_properties(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes"):
     apply_to_scenes(check_object_properties_helper, anari_library, anari_device, anari_renderer, test_scenes)
