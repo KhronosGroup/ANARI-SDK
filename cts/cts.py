@@ -11,15 +11,24 @@ import itertools
 
 logger_mutex = threading.Lock()
 
+def check_feature(featureList, feature):
+    for [a, b] in featureList:
+        if a == feature:
+            return b
+    return False
+
+def parseGeoSubtype(subtype):
+    return "ANARI_KHR_GEOMETRY_" + subtype.upper()
+
 def anari_logger(message):
     with logger_mutex:
         with open("ANARI.log", 'a') as file:
             file.write(f'{str(datetime.datetime.now())}: {message}\n')
     #print(message)
 
-def check_core_extensions(anari_library, anari_device = None):
+def check_core_extensions(anari_library, anari_device = None, logger = anari_logger):
     try: 
-        return ctsBackend.check_core_extensions(anari_library, anari_device, anari_logger)
+        return ctsBackend.check_core_extensions(anari_library, anari_device, logger)
     except Exception as e:
         print(e)
         return []
@@ -90,11 +99,19 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
         return
     print('Initialized scene generator')
 
+    featureList = check_core_extensions(anari_library, anari_device, None)
+
     for json_file_path in collected_scenes:
         parsed_json = {}
         with open(json_file_path, 'r') as f, open('default_test_scene.json', 'r') as defaultTestScene:
             parsed_json = json.load(defaultTestScene)
             parsed_json.update(json.load(f))
+
+        if "geometrySubtype" in parsed_json:
+            subtype = parsed_json["geometrySubtype"]
+            if not check_feature(featureList, parseGeoSubtype(subtype)):
+                print("Geometry subtype %s is not supported"%parseGeoSubtype(subtype))
+                continue
 
         sceneGenerator.resetAllParameters()
         for [key, value] in parsed_json.items():

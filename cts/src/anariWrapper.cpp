@@ -59,11 +59,16 @@ namespace cts {
     checkCoreExtensions(
         const std::string &libraryName,
         const std::optional<std::string> &device,
-        const std::function<void(const std::string message)> &callback)
+        const std::optional<std::function<void(const std::string message)>>
+                &callback)
     {
-      anari::Library lib =
-          anari::loadLibrary(libraryName.c_str(), statusFunc, &callback);
-
+      anari::Library lib;
+      if (callback.has_value()) {
+        lib = anari::loadLibrary(libraryName.c_str(), statusFunc, &callback);
+      } else {
+        lib = anari::loadLibrary(libraryName.c_str(), statusFunc, nullptr);
+      }
+      
       if (lib == nullptr) {
         throw std::runtime_error("Library could not be loaded");
       }
