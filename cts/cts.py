@@ -45,6 +45,9 @@ def resolve_scenes(test_scenes):
 def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, permutationString, output = ".", prefix = ""):
     image_data_list = sceneGenerator.renderScene(anari_renderer)
 
+    frame_duration = sceneGenerator.getFrameDuration()
+    print(f'Frame duration: {frame_duration}')
+
     output_path = Path(output)
     
     if permutationString != "":
@@ -121,9 +124,6 @@ def render_scenes(anari_library, anari_device = None, anari_renderer = "default"
 def check_object_properties_helper(parsed_json, sceneGenerator, anari_renderer, scene_location, permutationString):
     sceneGenerator.renderScene(anari_renderer)
     bounds = sceneGenerator.getBounds()
-    frame_duration = sceneGenerator.getFrameDuration()
-    if frame_duration <= 0 :
-        print(f'Frame duration invalid: {frame_duration}')
     if "metaData" in parsed_json:
         metaData = parsed_json["metaData"]
         if permutationString in metaData:

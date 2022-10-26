@@ -13,9 +13,6 @@ def writeMetaData(sceneGenerator, scene_location, permutationString):
         metaData["bounds"]["instances"] = bounds[1]
     if len(bounds[2]) > 0:
         metaData["bounds"]["groups"] = bounds[2]
-    frame_duration = sceneGenerator.getFrameDuration()
-    if frame_duration <= 0 :
-        print(f'Frame duration invalid: {frame_duration}')
     if "metaData" not in original_json:
         original_json["metaData"] = {}
     original_json["metaData"][permutationString] = metaData
