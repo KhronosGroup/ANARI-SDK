@@ -77,8 +77,10 @@ def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, pe
     outName = file_name.with_suffix('.png').with_stem(f'{prefix}{stem}{permutationString}_{channels[1]}')
     print(f'Rendering to {outName.resolve()}')
     image_out.save(outName)
+    return frame_duration
 
 def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", *args):
+    result = []
     collected_scenes = resolve_scenes(test_scenes)
     if collected_scenes == []:
         print("No scenes selected")
@@ -113,42 +115,57 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                     sceneGenerator.setParameter(keys[i], permutation[i])
                 permutationString = f'{len(permutation)*"_{}".format(*permutation)}'
                 sceneGenerator.commit()
-                func(parsed_json, sceneGenerator, anari_renderer, json_file_path, permutationString[1:], *args)
+                result.append(func(parsed_json, sceneGenerator, anari_renderer, json_file_path, permutationString[1:], *args))
         else:
             sceneGenerator.commit()
-            func(parsed_json, sceneGenerator, anari_renderer, json_file_path, "", *args)
+            result.append(func(parsed_json, sceneGenerator, anari_renderer, json_file_path, "", *args))
+    return result
 
 def render_scenes(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", output = ".", prefix = ""):
-    apply_to_scenes(render_scene, anari_library, anari_device, anari_renderer, test_scenes, output, prefix)
+    return apply_to_scenes(render_scene, anari_library, anari_device, anari_renderer, test_scenes, output, prefix)
 
 def check_object_properties_helper(parsed_json, sceneGenerator, anari_renderer, scene_location, permutationString):
+    output = ""
     bounds = sceneGenerator.getBounds()
     if "metaData" in parsed_json:
         metaData = parsed_json["metaData"]
         if permutationString != "" and permutationString in metaData:
             metaData = metaData[permutationString]
         if "bounds" not in metaData:
-            print("Bounds missing in reference!")
-            return
+            message = f'{scene_location} {permutationString}: Bounds missing in reference'
+            print(message)
+            output += message
+            return output
         ref_bounds = metaData["bounds"]
         if "world" not in ref_bounds:
-            print("Bounds missing in reference!")
-            return
+            message = f'{scene_location} {permutationString}: Bounds missing in reference'
+            print(message)
+            output += message
+            return output
         if ref_bounds["world"] != bounds[0][0]:
-            print("Worlds bounds do not match!")
+            message = f'{scene_location} {permutationString}: Worlds bounds do not match!\n'
+            print(message)
+            output += message
         if "instances" in ref_bounds:
             for i in range(len(ref_bounds["instances"])):
                 if ref_bounds["instances"][i] != bounds[1][i]:
-                    print(f'Instance {i} bounds do not match!')
+                    message = f'{scene_location} {permutationString}: Instance {i} bounds do not match!\n'
+                    print(message)
+                    output += message
         if "groups" in ref_bounds:
             for i in range(len(ref_bounds["groups"])):
                 if ref_bounds["groups"][i] != bounds[2][i]:
-                    print(f'Group {i} bounds do not match!')
+                    message = f'{scene_location} {permutationString}: Group {i} bounds do not match!\n'
+                    print(message)
+                    output += message
     else:
-         print(f'MetaData missing in reference')
+        message = f'{scene_location} {permutationString}: MetaData missing in reference'
+        print(message)
+        output += message
+    return output
 
 def check_object_properties(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes"):
-    apply_to_scenes(check_object_properties_helper, anari_library, anari_device, anari_renderer, test_scenes)
+    return apply_to_scenes(check_object_properties_helper, anari_library, anari_device, anari_renderer, test_scenes)
 
 def query_metadata(anari_library, type = None, subtype = None, skipParameters = False, info = False):
     ctsBackend.query_metadata(anari_library, type, subtype, skipParameters, info, anari_logger)
