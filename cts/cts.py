@@ -122,7 +122,6 @@ def render_scenes(anari_library, anari_device = None, anari_renderer = "default"
     apply_to_scenes(render_scene, anari_library, anari_device, anari_renderer, test_scenes, output, prefix)
 
 def check_object_properties_helper(parsed_json, sceneGenerator, anari_renderer, scene_location, permutationString):
-    sceneGenerator.renderScene(anari_renderer)
     bounds = sceneGenerator.getBounds()
     if "metaData" in parsed_json:
         metaData = parsed_json["metaData"]
