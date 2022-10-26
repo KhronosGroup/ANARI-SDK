@@ -8,6 +8,7 @@
 #include <functional>
 #include <optional>
 #include <random>
+#include <unordered_map>
 
 namespace cts {
 
@@ -30,7 +31,7 @@ class SceneGenerator : public anari::scenes::TestScene
 
   std::vector<std::vector<uint32_t>> renderScene(
       const std::string &rendererType);
-  std::vector<std::vector<float>> getBounds();
+  std::vector<std::vector<std::vector<std::vector<float>>>> getBounds();
 
   float getFrameDuration() const
   {
@@ -43,6 +44,7 @@ class SceneGenerator : public anari::scenes::TestScene
   float frameDuration = -1.0f;
 
   anari::World m_world{nullptr};
+  std::unordered_map<int, std::vector<anari::Object>> m_anariObjects;
 };
 
 } // namespace cts
