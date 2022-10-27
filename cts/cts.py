@@ -11,14 +11,11 @@ import itertools
 
 logger_mutex = threading.Lock()
 
-def check_feature(featureList, feature):
-    for [a, b] in featureList:
-        if a == feature:
-            return b
+def check_feature(featureList, checkFeature):
+    for [feature, isAvailable] in featureList:
+        if feature == checkFeature:
+            return isAvailable
     return False
-
-def parseGeoSubtype(subtype):
-    return "ANARI_KHR_GEOMETRY_" + subtype.upper()
 
 def anari_logger(message):
     with logger_mutex:
@@ -107,11 +104,16 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
             parsed_json = json.load(defaultTestScene)
             parsed_json.update(json.load(f))
 
-        if "geometrySubtype" in parsed_json:
-            subtype = parsed_json["geometrySubtype"]
-            if not check_feature(featureList, parseGeoSubtype(subtype)):
-                print("Geometry subtype %s is not supported"%parseGeoSubtype(subtype))
-                continue
+        allFeaturesAvailable = True
+        if "requiredFeatures" in parsed_json:
+            for feature in parsed_json["requiredFeatures"]:
+                if not check_feature(featureList, feature):
+                    allFeaturesAvailable = False
+                    print("Feature %s is not supported"%feature)
+        
+        if not allFeaturesAvailable:
+            print("Scene %s is not supported"%json_file_path)
+            continue
 
         sceneGenerator.resetAllParameters()
         for [key, value] in parsed_json.items():
