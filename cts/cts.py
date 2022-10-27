@@ -9,6 +9,7 @@ from PIL import Image
 import json
 import itertools
 import math
+import ctsUtility
 
 logger_mutex = threading.Lock()
 
@@ -30,6 +31,23 @@ def query_features(anari_library, anari_device = None, logger = anari_logger):
     except Exception as e:
         print(e)
         return []
+
+# TODO rename
+def evaluate_scene(reference_path, candidate_path):
+    return ctsUtility.evaluate_scene(reference_path, candidate_path)
+
+def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, permutationString, output = ".", prefix = ""):
+    results = {}
+    stem = scene_location.stem
+    channels = ["color", "depth"]
+    referencePrefix = "ref_"
+    for channel in channels:
+        # Extract the test case name from the reference file
+        name = f'{prefix}{stem}{permutationString}_{channel}'
+        reference_file = f'{referencePrefix}{prefix}{stem}{permutationString}_{channel}'
+        candidate_file = f'{prefix}{stem}{permutationString}_{channel}'
+        results[name] = evaluate_scene(reference_file, candidate_file)
+    print(results)
 
 def resolve_scenes(test_scenes):
     print(test_scenes)
@@ -86,7 +104,7 @@ def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, pe
     image_out.save(outName)
     return frame_duration
 
-def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", *args):
+def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", use_generator = True, *args):
     result = []
     collected_scenes = resolve_scenes(test_scenes)
     if collected_scenes == []:
@@ -142,7 +160,8 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
     return result
 
 def render_scenes(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", output = ".", prefix = ""):
-    return apply_to_scenes(render_scene, anari_library, anari_device, anari_renderer, test_scenes, output, prefix)
+    apply_to_scenes(render_scene, anari_library, anari_device, anari_renderer, test_scenes, output, prefix)
+    apply_to_scenes(evaluate_scene, anari_library, anari_device, anari_renderer, test_scenes, output, prefix)
 
 def check_bounding_boxes(ref, candidate, tolerance):
     axis = 'x'
@@ -244,6 +263,9 @@ if __name__ == "__main__":
     subparsers.metavar = command_text
 
     args = parser.parse_args()
+
+    # test evaluation
+    render_scenes("example")
 
     if args.command == "render_scenes":
         render_scenes(args.library, args.device, args.renderer, args.test_scenes, args.output)

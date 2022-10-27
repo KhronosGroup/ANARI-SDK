@@ -100,3 +100,11 @@ def normalize_images(reference, candidate):
         candidate = skimage.util.img_as_ubyte(candidate)
         print()
     return reference, candidate
+
+def evaluate_scene(reference_path, candidate_path):
+    reference_image = skimage.io.imread(reference_path)
+    candidate_image = skimage.util.img_as_ubyte(skimage.io.imread(candidate_path))
+    reference_image, candidate_image = normalize_images(reference_image, candidate_image)
+    
+    # Compute metrics and compare images
+    return evaluate(reference_image, candidate_image)
