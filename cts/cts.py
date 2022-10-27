@@ -58,13 +58,13 @@ def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, 
         permutationString = f'_{permutationString}'
         
     if variantString != "":
-        permutationString += f'_{variantString}'
+        variantString = f'_{variantString}'
 
     for channel in channels:
         # Extract the test case name from the reference file
-        name = f'{prefix}{stem}{permutationString}_{channel}'
+        name = f'{prefix}{stem}{permutationString}{variantString}_{channel}'
         reference_file = f'{referencePrefix}{prefix}{stem}{permutationString}_{channel}'
-        candidate_file = f'{prefix}{stem}{permutationString}_{channel}'
+        candidate_file = f'{prefix}{stem}{permutationString}{variantString}_{channel}'
 
         ref_path = getFileFromList(ref_files, reference_file)
         candidate_path = getFileFromList(candidate_files, candidate_file)
