@@ -56,7 +56,7 @@ namespace cts {
     }
 
     std::vector<std::tuple<std::string, bool>>
-    checkCoreExtensions(
+    queryFeatures(
         const std::string &libraryName,
         const std::optional<std::string> &device,
         const std::optional<std::function<void(const std::string message)>>

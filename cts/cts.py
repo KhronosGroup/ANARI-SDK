@@ -23,9 +23,9 @@ def anari_logger(message):
             file.write(f'{str(datetime.datetime.now())}: {message}\n')
     #print(message)
 
-def check_core_extensions(anari_library, anari_device = None, logger = anari_logger):
+def query_features(anari_library, anari_device = None, logger = anari_logger):
     try: 
-        return ctsBackend.check_core_extensions(anari_library, anari_device, logger)
+        return ctsBackend.query_features(anari_library, anari_device, logger)
     except Exception as e:
         print(e)
         return []
@@ -96,7 +96,7 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
         return
     print('Initialized scene generator')
 
-    featureList = check_core_extensions(anari_library, anari_device, None)
+    featureList = query_features(anari_library, anari_device, None)
 
     for json_file_path in collected_scenes:
         parsed_json = {}
@@ -156,7 +156,7 @@ if __name__ == "__main__":
     renderScenesParser.add_argument('--test_scenes', default="test_scenes")
     renderScenesParser.add_argument('--output', default=".")
 
-    checkExtensionsParser = subparsers.add_parser('check_core_extensions', parents=[deviceParser])
+    checkExtensionsParser = subparsers.add_parser('query_features', parents=[deviceParser])
 
     queryMetadataParser = subparsers.add_parser('query_metadata', parents=[libraryParser])
     queryMetadataParser.add_argument('--type', default=None, help='Only show parameters for objects of a type')
@@ -173,8 +173,8 @@ if __name__ == "__main__":
 
     if args.command == "render_scenes":
         render_scenes(args.library, args.device, args.renderer, args.test_scenes, args.output)
-    elif args.command == "check_core_extensions":
-        result = check_core_extensions(args.library, args.device)
+    elif args.command == "query_features":
+        result = query_features(args.library, args.device)
         print(tabulate(result))
     elif args.command == "query_metadata":
         query_metadata(args.library, args.type, args.subtype, args.skipParameters, args.info)

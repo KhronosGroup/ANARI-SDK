@@ -20,7 +20,7 @@ void statusFunc(const void *userData,
 void initANARI(const std::string &libraryName,
     const std::function<void(const std::string message)> &callback);
 
-std::vector<std::tuple<std::string, bool>> checkCoreExtensions(
+std::vector<std::tuple<std::string, bool>> queryFeatures(
     const std::string &libraryName,
     const std::optional<std::string> &device,
     const std::optional<std::function<void(const std::string message)>>
