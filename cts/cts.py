@@ -8,6 +8,7 @@ from tabulate import tabulate
 from PIL import Image
 import json
 import itertools
+import math
 
 logger_mutex = threading.Lock()
 
@@ -124,8 +125,24 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
 def render_scenes(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", output = ".", prefix = ""):
     return apply_to_scenes(render_scene, anari_library, anari_device, anari_renderer, test_scenes, output, prefix)
 
+def check_bounding_boxes(ref, candidate, tolerance):
+    axis = 'x'
+    output = ""
+    for i in range(3):
+        ref_values = [ref[0][i], ref[1][i]].sort()
+        ref_distance = math.dist(ref_values[0], ref_values[1])
+        candidate_values = [candidate[0][i], candidate[1][i]].sort()
+        for j in range(2):
+            diff = math.dist(ref_values[j], candidate_values[j])
+            if diff > ref_distance * tolerance:
+                id = "min" if j == 0 else "max"
+                output += f'{id} {chr(ord(axis + i))} mismatch: Is {candidate_values[j]}. Should be {ref_values[j]}±{ref_distance*tolerance}\n'
+    return output
+
+
 def check_object_properties_helper(parsed_json, sceneGenerator, anari_renderer, scene_location, permutationString):
     output = ""
+    tolerance = parsed_json["bounds_tolerance"]
     bounds = sceneGenerator.getBounds()
     if "metaData" in parsed_json:
         metaData = parsed_json["metaData"]
@@ -142,20 +159,23 @@ def check_object_properties_helper(parsed_json, sceneGenerator, anari_renderer, 
             print(message)
             output += message
             return output
-        if ref_bounds["world"] != bounds[0][0]:
-            message = f'{scene_location} {permutationString}: Worlds bounds do not match!\n'
+        check_output = check_bounding_boxes(ref_bounds["world"], bounds[0][0], tolerance)
+        if check_output != "":
+            message = f'{scene_location} {permutationString}: Worlds bounds do not match!\n' + check_output
             print(message)
             output += message
         if "instances" in ref_bounds:
             for i in range(len(ref_bounds["instances"])):
-                if ref_bounds["instances"][i] != bounds[1][i]:
-                    message = f'{scene_location} {permutationString}: Instance {i} bounds do not match!\n'
+                check_output = check_bounding_boxes(ref_bounds["instances"][i], bounds[1][i], tolerance)
+                if check_output != "":
+                    message = f'{scene_location} {permutationString}: Instance {i} bounds do not match!\n' + check_output
                     print(message)
                     output += message
         if "groups" in ref_bounds:
             for i in range(len(ref_bounds["groups"])):
-                if ref_bounds["groups"][i] != bounds[2][i]:
-                    message = f'{scene_location} {permutationString}: Group {i} bounds do not match!\n'
+                check_output = check_bounding_boxes(ref_bounds["groups"][i], bounds[2][i], tolerance)
+                if check_output != "":
+                    message = f'{scene_location} {permutationString}: Group {i} bounds do not match!\n'+ check_output
                     print(message)
                     output += message
     else:
@@ -214,4 +234,4 @@ if __name__ == "__main__":
     elif args.command == "query_metadata":
         query_metadata(args.library, args.type, args.subtype, args.skipParameters, args.info)
     elif args.command == "check_object_properties":
-        check_object_properties()
+        check_object_properties(args.library, args.device, args.renderer, args.test_scenes)
