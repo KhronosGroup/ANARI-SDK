@@ -28,17 +28,20 @@ SceneGenerator::~SceneGenerator()
 std::vector<anari::scenes::ParameterInfo> SceneGenerator::parameters()
 {
   return {
-      {"geometrySubtype", ANARI_STRING, "triangle", "Which type of geometry to generate"},
-      {"primitiveMode", ANARI_STRING, "soup", "How the data is arranged (soup or indexed)"},
-      {"primitiveCount", ANARI_UINT32, 1, "How many primtives should be generated"},
-      {"image_height",
+      {"geometrySubtype",
+          ANARI_STRING,
+          "triangle",
+          "Which type of geometry to generate"},
+      {"primitiveMode",
+          ANARI_STRING,
+          "soup",
+          "How the data is arranged (soup or indexed)"},
+      {"primitiveCount",
           ANARI_UINT32,
-          1024,
-          "Height of the image"},
-      {"image_width",
-          ANARI_UINT32,
-          1024,
-          "Width of the image"},
+          1,
+          "How many primtives should be generated"},
+      {"image_height", ANARI_UINT32, 1024, "Height of the image"},
+      {"image_width", ANARI_UINT32, 1024, "Width of the image"},
       //
   };
 }

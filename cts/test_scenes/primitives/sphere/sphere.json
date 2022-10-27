@@ -4,5 +4,6 @@
   "seed": 54321,
   "permutations": {
     "primitiveMode": ["soup", "indexed"]
-  }
+  },
+  "requiredFeatures": ["ANARI_KHR_GEOMETRY_SPHERE"]
 }
