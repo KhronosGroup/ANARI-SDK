@@ -8,7 +8,6 @@ from tabulate import tabulate
 from PIL import Image
 import json
 import itertools
-import math
 
 logger_mutex = threading.Lock()
 
@@ -154,11 +153,13 @@ def check_bounding_boxes(ref, candidate, tolerance):
     axis = 'x'
     output = ""
     for i in range(3):
-        ref_values = [ref[0][i], ref[1][i]].sort()
-        ref_distance = math.dist(ref_values[0], ref_values[1])
-        candidate_values = [candidate[0][i], candidate[1][i]].sort()
+        ref_values = [ref[0][i], ref[1][i]]
+        ref_values.sort()
+        ref_distance = ref_values[1] - ref_values[0]
+        candidate_values = [candidate[0][i], candidate[1][i]]
+        candidate_values.sort()
         for j in range(2):
-            diff = math.dist(ref_values[j], candidate_values[j])
+            diff = abs(ref_values[j] - candidate_values[j])
             if diff > ref_distance * tolerance:
                 id = "min" if j == 0 else "max"
                 output += f'{id} {chr(ord(axis + i))} mismatch: Is {candidate_values[j]}. Should be {ref_values[j]}±{ref_distance*tolerance}\n'
