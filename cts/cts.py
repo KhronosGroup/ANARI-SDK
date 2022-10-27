@@ -117,7 +117,7 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
 
         sceneGenerator.resetAllParameters()
         for [key, value] in parsed_json.items():
-            if not isinstance(value, dict):
+            if not isinstance(value, dict) and not key == "requiredFeatures":
                 sceneGenerator.setParameter(key, value)
 
         if "permutations" in parsed_json:
