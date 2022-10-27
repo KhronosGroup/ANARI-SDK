@@ -9,6 +9,7 @@ from PIL import Image
 import json
 import itertools
 import ctsUtility
+import glob
 
 logger_mutex = threading.Lock()
 
@@ -38,7 +39,16 @@ def recursive_update(d, merge_dict):
     d.update(merge_dict)        
     return d
 
-def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, permutationString, variantString, output = ".", prefix = ""):
+def globImages(directory, prefix = ""):
+    return glob.glob(f'{directory}/**/{prefix}*.png', recursive = True)
+
+def getFileFromList(list, file):
+    for path in list:
+        if Path(path).stem == file:
+            return path
+    return ""
+
+def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, permutationString, variantString, output = ".", prefix = "", ref_files = [], candidate_files = []):
     results = {}
     stem = scene_location.stem
     channels = ["color", "depth"]
@@ -49,14 +59,21 @@ def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, 
         
     if variantString != "":
         permutationString += f'_{variantString}'
-        
+
     for channel in channels:
         # Extract the test case name from the reference file
         name = f'{prefix}{stem}{permutationString}_{channel}'
         reference_file = f'{referencePrefix}{prefix}{stem}{permutationString}_{channel}'
         candidate_file = f'{prefix}{stem}{permutationString}_{channel}'
-        results[name] = ctsUtility.evaluate_scene(reference_file, candidate_file)
-    print(results)
+
+        ref_path = getFileFromList(ref_files, reference_file)
+        candidate_path = getFileFromList(candidate_files, candidate_file)
+        if ref_path == "" or candidate_path == "":
+            print('No reference or candidate images for filepaths {} and {} could be found.'.format(reference_file, candidate_file))
+            continue
+
+        results[name] = ctsUtility.evaluate_scene(ref_path, candidate_path)
+    return results
 
 def resolve_scenes(test_scenes):
     print(test_scenes)
@@ -196,8 +213,11 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
     return result
 
 def render_scenes(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", output = ".", prefix = ""):
+    ref_files = globImages(".", 'ref_')
+    candidate_files = globImages(output, '[!ref_]')
+    # TODO change order back after testing
+    apply_to_scenes(evaluate_scene, anari_library, anari_device, anari_renderer, test_scenes, False, False, output, prefix, ref_files, candidate_files)
     apply_to_scenes(render_scene, anari_library, anari_device, anari_renderer, test_scenes, False, True, output, prefix)
-    apply_to_scenes(evaluate_scene, anari_library, anari_device, anari_renderer, test_scenes, False, False, output, prefix)
 
 def check_bounding_boxes(ref, candidate, tolerance):
     axis = 'X'
