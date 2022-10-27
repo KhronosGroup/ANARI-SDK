@@ -31,6 +31,13 @@ def query_features(anari_library, anari_device = None, logger = anari_logger):
         print(e)
         return []
 
+def recursive_update(d, merge_dict):
+    for key, value in d.items():
+        if isinstance(value, dict) and key in merge_dict:
+            merge_dict[key] = recursive_update(value, merge_dict[key])
+    d.update(merge_dict)        
+    return d
+
 def resolve_scenes(test_scenes):
     print(test_scenes)
     collected_scenes = []
@@ -73,13 +80,13 @@ def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, pe
 
     file_name.parent.mkdir(exist_ok=True, parents=True)
 
-    image_out = Image.new("RGBA", (parsed_json["image_height"], parsed_json["image_width"]))
+    image_out = Image.new("RGBA", (parsed_json["sceneParameters"]["image_height"], parsed_json["sceneParameters"]["image_width"]))
     image_out.putdata(image_data_list[0])
     outName = file_name.with_suffix('.png').with_stem(f'{prefix}{stem}{permutationString}_{channels[0]}')
     print(f'Rendering to {outName.resolve()}')
     image_out.save(outName)
 
-    image_out = Image.new("RGBA", (parsed_json["image_height"], parsed_json["image_width"]))
+    image_out = Image.new("RGBA", (parsed_json["sceneParameters"]["image_height"], parsed_json["sceneParameters"]["image_width"]))
     image_out.putdata(image_data_list[1])
     outName = file_name.with_suffix('.png').with_stem(f'{prefix}{stem}{permutationString}_{channels[1]}')
     print(f'Rendering to {outName.resolve()}')
@@ -108,7 +115,7 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
         parsed_json = {}
         with open(json_file_path, 'r') as f, open('default_test_scene.json', 'r') as defaultTestScene:
             parsed_json = json.load(defaultTestScene)
-            parsed_json.update(json.load(f))
+            parsed_json = recursive_update(parsed_json, json.load(f))
 
         all_features_available = True
         if "requiredFeatures" in parsed_json:
@@ -122,9 +129,8 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
             continue
 
         sceneGenerator.resetAllParameters()
-        for [key, value] in parsed_json.items():
-            if not isinstance(value, dict) and not key == "requiredFeatures":
-                sceneGenerator.setParameter(key, value)
+        for [key, value] in parsed_json["sceneParameters"].items():
+            sceneGenerator.setParameter(key, value)
 
         if "permutations" in parsed_json:
             keys = list(parsed_json["permutations"].keys())
