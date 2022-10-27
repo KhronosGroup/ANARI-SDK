@@ -150,7 +150,7 @@ def render_scenes(anari_library, anari_device = None, anari_renderer = "default"
     return apply_to_scenes(render_scene, anari_library, anari_device, anari_renderer, test_scenes, output, prefix)
 
 def check_bounding_boxes(ref, candidate, tolerance):
-    axis = 'x'
+    axis = 'X'
     output = ""
     for i in range(3):
         ref_values = [ref[0][i], ref[1][i]]
@@ -161,8 +161,8 @@ def check_bounding_boxes(ref, candidate, tolerance):
         for j in range(2):
             diff = abs(ref_values[j] - candidate_values[j])
             if diff > ref_distance * tolerance:
-                id = "min" if j == 0 else "max"
-                output += f'{id} {chr(ord(axis + i))} mismatch: Is {candidate_values[j]}. Should be {ref_values[j]}±{ref_distance*tolerance}\n'
+                id = "MIN" if j == 0 else "MAX"
+                output += f'{id} {chr(ord(axis) + i)} mismatch: Is {candidate_values[j]}. Should be {ref_values[j]} ± {ref_distance*tolerance}\n'
     return output
 
 
@@ -175,39 +175,35 @@ def check_object_properties_helper(parsed_json, sceneGenerator, anari_renderer, 
         if permutationString != "" and permutationString in metaData:
             metaData = metaData[permutationString]
         if "bounds" not in metaData:
-            message = f'{scene_location} {permutationString}: Bounds missing in reference'
-            print(message)
+            message = f'{scene_location.stem}_{permutationString}: Bounds missing in reference'
             output += message
             return output
         ref_bounds = metaData["bounds"]
         if "world" not in ref_bounds:
-            message = f'{scene_location} {permutationString}: Bounds missing in reference'
-            print(message)
+            message = f'{scene_location.stem}_{permutationString}: Bounds missing in reference'
             output += message
             return output
         check_output = check_bounding_boxes(ref_bounds["world"], bounds[0][0], tolerance)
         if check_output != "":
-            message = f'{scene_location} {permutationString}: Worlds bounds do not match!\n' + check_output
-            print(message)
+            message = f'{scene_location.stem}_{permutationString}: Worlds bounds do not match!\n' + check_output
             output += message
         if "instances" in ref_bounds:
             for i in range(len(ref_bounds["instances"])):
                 check_output = check_bounding_boxes(ref_bounds["instances"][i], bounds[1][i], tolerance)
                 if check_output != "":
-                    message = f'{scene_location} {permutationString}: Instance {i} bounds do not match!\n' + check_output
-                    print(message)
+                    message = f'{scene_location.stem}_{permutationString}: Instance {i} bounds do not match!\n' + check_output
                     output += message
         if "groups" in ref_bounds:
             for i in range(len(ref_bounds["groups"])):
                 check_output = check_bounding_boxes(ref_bounds["groups"][i], bounds[2][i], tolerance)
                 if check_output != "":
-                    message = f'{scene_location} {permutationString}: Group {i} bounds do not match!\n'+ check_output
-                    print(message)
+                    message = f'{scene_location.stem}_{permutationString}: Group {i} bounds do not match!\n'+ check_output
                     output += message
     else:
-        message = f'{scene_location} {permutationString}: MetaData missing in reference'
-        print(message)
+        message = f'{scene_location.stem}_{permutationString}: MetaData missing in reference'
         output += message
+    if output == "":
+        output = f'{scene_location.stem}_{permutationString}: All bounds correct'
     return output
 
 def check_object_properties(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes"):
@@ -260,4 +256,6 @@ if __name__ == "__main__":
     elif args.command == "query_metadata":
         query_metadata(args.library, args.type, args.subtype, args.skipParameters, args.info)
     elif args.command == "check_object_properties":
-        check_object_properties(args.library, args.device, args.renderer, args.test_scenes)
+        result = check_object_properties(args.library, args.device, args.renderer, args.test_scenes)
+        for message in result:
+            print(message)
