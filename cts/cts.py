@@ -8,7 +8,6 @@ from tabulate import tabulate
 from PIL import Image
 import json
 import itertools
-import math
 import ctsUtility
 
 logger_mutex = threading.Lock()
@@ -31,6 +30,13 @@ def query_features(anari_library, anari_device = None, logger = anari_logger):
     except Exception as e:
         print(e)
         return []
+
+def recursive_update(d, merge_dict):
+    for key, value in d.items():
+        if isinstance(value, dict) and key in merge_dict:
+            merge_dict[key] = recursive_update(value, merge_dict[key])
+    d.update(merge_dict)        
+    return d
 
 # TODO rename
 def evaluate_scene(reference_path, candidate_path):
@@ -67,7 +73,7 @@ def resolve_scenes(test_scenes):
         collected_scenes = list(path.rglob("*.json"))
     return collected_scenes
 
-def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, permutationString, output = ".", prefix = ""):
+def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, permutationString, variantString, output = ".", prefix = ""):
     image_data_list = sceneGenerator.renderScene(anari_renderer)
 
     frame_duration = sceneGenerator.getFrameDuration()
@@ -77,6 +83,9 @@ def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, pe
     
     if permutationString != "":
         permutationString = f'_{permutationString}'
+    
+    if variantString != "":
+        permutationString += f'_{variantString}'
 
     file_name = "."
     scene_location_parts = scene_location.parts
@@ -91,20 +100,20 @@ def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, pe
 
     file_name.parent.mkdir(exist_ok=True, parents=True)
 
-    image_out = Image.new("RGBA", (parsed_json["image_height"], parsed_json["image_width"]))
+    image_out = Image.new("RGBA", (parsed_json["sceneParameters"]["image_height"], parsed_json["sceneParameters"]["image_width"]))
     image_out.putdata(image_data_list[0])
     outName = file_name.with_suffix('.png').with_stem(f'{prefix}{stem}{permutationString}_{channels[0]}')
     print(f'Rendering to {outName.resolve()}')
     image_out.save(outName)
 
-    image_out = Image.new("RGBA", (parsed_json["image_height"], parsed_json["image_width"]))
+    image_out = Image.new("RGBA", (parsed_json["sceneParameters"]["image_height"], parsed_json["sceneParameters"]["image_width"]))
     image_out.putdata(image_data_list[1])
     outName = file_name.with_suffix('.png').with_stem(f'{prefix}{stem}{permutationString}_{channels[1]}')
     print(f'Rendering to {outName.resolve()}')
     image_out.save(outName)
     return frame_duration
 
-def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", use_generator = True, *args):
+def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", only_permutations = False, use_generator = True,  *args):
     result = []
     collected_scenes = resolve_scenes(test_scenes)
     if collected_scenes == []:
@@ -126,7 +135,7 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
         parsed_json = {}
         with open(json_file_path, 'r') as f, open('default_test_scene.json', 'r') as defaultTestScene:
             parsed_json = json.load(defaultTestScene)
-            parsed_json.update(json.load(f))
+            parsed_json = recursive_update(parsed_json, json.load(f))
 
         all_features_available = True
         if "requiredFeatures" in parsed_json:
@@ -140,45 +149,63 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
             continue
 
         sceneGenerator.resetAllParameters()
-        for [key, value] in parsed_json.items():
-            if not isinstance(value, dict) and not key == "requiredFeatures":
-                sceneGenerator.setParameter(key, value)
+        for [key, value] in parsed_json["sceneParameters"].items():
+            sceneGenerator.setParameter(key, value)
 
-        if "permutations" in parsed_json:
-            keys = list(parsed_json["permutations"].keys())
-            lists = list(parsed_json["permutations"].values())
+        if "permutations" in parsed_json or "variants" in parsed_json:
+            variant_keys = []
+            keys = []
+            lists = []
+            if "permutations" in parsed_json:
+                keys.extend(list(parsed_json["permutations"].keys()))
+                lists.extend(list(parsed_json["permutations"].values()))
+            if "variants" in parsed_json and not only_permutations:
+                variant_keys = list(parsed_json["variants"].keys())
+                variant_keys = ["var_" + item for item in variant_keys]
+                keys.extend(variant_keys)
+                lists.extend(list(parsed_json["variants"].values()))
             permutations = itertools.product(*lists)
             for permutation in permutations:
+                permutationString = ""
+                variantString = ""
                 for i in range(len(permutation)) :
-                    sceneGenerator.setParameter(keys[i], permutation[i])
-                permutationString = f'{len(permutation)*"_{}".format(*permutation)}'
+                    key = None
+                    if keys[i] in variant_keys:
+                        key = (keys[i])[4:]
+                        variantString += f'{"_{}".format(permutation[i])}'
+                    else:
+                        key = keys[i]
+                        permutationString += f'{"_{}".format(permutation[i])}'
+                    sceneGenerator.setParameter(key, permutation[i])
                 sceneGenerator.commit()
-                result.append(func(parsed_json, sceneGenerator, anari_renderer, json_file_path, permutationString[1:], *args))
+                result.append(func(parsed_json, sceneGenerator, anari_renderer, json_file_path, permutationString[1:], variantString[1:], *args))
         else:
             sceneGenerator.commit()
-            result.append(func(parsed_json, sceneGenerator, anari_renderer, json_file_path, "", *args))
+            result.append(func(parsed_json, sceneGenerator, anari_renderer, json_file_path, "", "", *args))
     return result
 
 def render_scenes(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", output = ".", prefix = ""):
-    apply_to_scenes(render_scene, anari_library, anari_device, anari_renderer, test_scenes, output, prefix)
+    apply_to_scenes(render_scene, anari_library, anari_device, anari_renderer, test_scenes, False, output, prefix)
     apply_to_scenes(evaluate_scene, anari_library, anari_device, anari_renderer, test_scenes, output, prefix)
 
 def check_bounding_boxes(ref, candidate, tolerance):
-    axis = 'x'
+    axis = 'X'
     output = ""
     for i in range(3):
-        ref_values = [ref[0][i], ref[1][i]].sort()
-        ref_distance = math.dist(ref_values[0], ref_values[1])
-        candidate_values = [candidate[0][i], candidate[1][i]].sort()
+        ref_values = [ref[0][i], ref[1][i]]
+        ref_values.sort()
+        ref_distance = ref_values[1] - ref_values[0]
+        candidate_values = [candidate[0][i], candidate[1][i]]
+        candidate_values.sort()
         for j in range(2):
-            diff = math.dist(ref_values[j], candidate_values[j])
+            diff = abs(ref_values[j] - candidate_values[j])
             if diff > ref_distance * tolerance:
-                id = "min" if j == 0 else "max"
-                output += f'{id} {chr(ord(axis + i))} mismatch: Is {candidate_values[j]}. Should be {ref_values[j]}±{ref_distance*tolerance}\n'
+                id = "MIN" if j == 0 else "MAX"
+                output += f'{id} {chr(ord(axis) + i)} mismatch: Is {candidate_values[j]}. Should be {ref_values[j]} ± {ref_distance*tolerance}\n'
     return output
 
 
-def check_object_properties_helper(parsed_json, sceneGenerator, anari_renderer, scene_location, permutationString):
+def check_object_properties_helper(parsed_json, sceneGenerator, anari_renderer, scene_location, permutationString, variantString):
     output = ""
     tolerance = parsed_json["bounds_tolerance"]
     bounds = sceneGenerator.getBounds()
@@ -186,40 +213,38 @@ def check_object_properties_helper(parsed_json, sceneGenerator, anari_renderer, 
         metaData = parsed_json["metaData"]
         if permutationString != "" and permutationString in metaData:
             metaData = metaData[permutationString]
+        if variantString != "":
+            permutationString += f'_{variantString}'
         if "bounds" not in metaData:
-            message = f'{scene_location} {permutationString}: Bounds missing in reference'
-            print(message)
+            message = f'{scene_location.stem}_{permutationString}: Bounds missing in reference'
             output += message
             return output
         ref_bounds = metaData["bounds"]
         if "world" not in ref_bounds:
-            message = f'{scene_location} {permutationString}: Bounds missing in reference'
-            print(message)
+            message = f'{scene_location.stem}_{permutationString}: Bounds missing in reference'
             output += message
             return output
         check_output = check_bounding_boxes(ref_bounds["world"], bounds[0][0], tolerance)
         if check_output != "":
-            message = f'{scene_location} {permutationString}: Worlds bounds do not match!\n' + check_output
-            print(message)
+            message = f'{scene_location.stem}_{permutationString}: Worlds bounds do not match!\n' + check_output
             output += message
         if "instances" in ref_bounds:
             for i in range(len(ref_bounds["instances"])):
                 check_output = check_bounding_boxes(ref_bounds["instances"][i], bounds[1][i], tolerance)
                 if check_output != "":
-                    message = f'{scene_location} {permutationString}: Instance {i} bounds do not match!\n' + check_output
-                    print(message)
+                    message = f'{scene_location.stem}_{permutationString}: Instance {i} bounds do not match!\n' + check_output
                     output += message
         if "groups" in ref_bounds:
             for i in range(len(ref_bounds["groups"])):
                 check_output = check_bounding_boxes(ref_bounds["groups"][i], bounds[2][i], tolerance)
                 if check_output != "":
-                    message = f'{scene_location} {permutationString}: Group {i} bounds do not match!\n'+ check_output
-                    print(message)
+                    message = f'{scene_location.stem}_{permutationString}: Group {i} bounds do not match!\n'+ check_output
                     output += message
     else:
-        message = f'{scene_location} {permutationString}: MetaData missing in reference'
-        print(message)
+        message = f'{scene_location.stem}_{permutationString}: MetaData missing in reference'
         output += message
+    if output == "":
+        output = f'{scene_location.stem}_{permutationString}: All bounds correct'
     return output
 
 def check_object_properties(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes"):
@@ -275,4 +300,6 @@ if __name__ == "__main__":
     elif args.command == "query_metadata":
         query_metadata(args.library, args.type, args.subtype, args.skipParameters, args.info)
     elif args.command == "check_object_properties":
-        check_object_properties(args.library, args.device, args.renderer, args.test_scenes)
+        result = check_object_properties(args.library, args.device, args.renderer, args.test_scenes)
+        for message in result:
+            print(message)

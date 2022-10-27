@@ -1,8 +1,10 @@
 {
-  "geometrySubtype": "triangle",
-  "primitiveCount": 16,
-  "seed": 12345,
-  "shape": "triangle",
+  "sceneParameters": {
+    "geometrySubtype": "triangle",
+    "primitiveCount": 16,
+    "seed": 12345,
+    "shape": "triangle"
+  },
   "permutations": {
     "primitiveMode": ["soup", "indexed"]
   },

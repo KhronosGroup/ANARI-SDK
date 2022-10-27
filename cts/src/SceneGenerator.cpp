@@ -372,7 +372,7 @@ std::vector<std::vector<std::vector<std::vector<float>>>> SceneGenerator::getBou
       vector.push_back(bound[i]);
     }
   }
-  if (m_anariObjects.contains(int(ANARI_INSTANCE))) {
+  if (m_anariObjects.find(int(ANARI_INSTANCE)) != m_anariObjects.end()) {
     for (auto &instance : m_anariObjects[int(ANARI_INSTANCE)]) {
       singleBound = instancesBounds.emplace_back();
       anari::scenes::box3 anariInstanceBounds;
@@ -386,7 +386,7 @@ std::vector<std::vector<std::vector<std::vector<float>>>> SceneGenerator::getBou
     }
   }
 
-  if (m_anariObjects.contains(int(ANARI_GROUP))) {
+  if (m_anariObjects.find(int(ANARI_GROUP)) != m_anariObjects.end()) {
     for (auto &group : m_anariObjects[int(ANARI_GROUP)]) {
       singleBound = groupBounds.emplace_back();
       anari::scenes::box3 anariGroupBounds;
