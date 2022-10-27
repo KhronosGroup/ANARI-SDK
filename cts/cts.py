@@ -11,10 +11,10 @@ import itertools
 
 logger_mutex = threading.Lock()
 
-def check_feature(featureList, checkFeature):
-    for [feature, isAvailable] in featureList:
-        if feature == checkFeature:
-            return isAvailable
+def check_feature(feature_list, check_feature):
+    for [feature, is_available] in feature_list:
+        if feature == check_feature:
+            return is_available
     return False
 
 def anari_logger(message):
@@ -96,7 +96,7 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
         return
     print('Initialized scene generator')
 
-    featureList = query_features(anari_library, anari_device, None)
+    feature_list = query_features(anari_library, anari_device, None)
 
     for json_file_path in collected_scenes:
         parsed_json = {}
@@ -104,14 +104,14 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
             parsed_json = json.load(defaultTestScene)
             parsed_json.update(json.load(f))
 
-        allFeaturesAvailable = True
+        all_features_available = True
         if "requiredFeatures" in parsed_json:
             for feature in parsed_json["requiredFeatures"]:
-                if not check_feature(featureList, feature):
-                    allFeaturesAvailable = False
+                if not check_feature(feature_list, feature):
+                    all_features_available = False
                     print("Feature %s is not supported"%feature)
         
-        if not allFeaturesAvailable:
+        if not all_features_available:
             print("Scene %s is not supported"%json_file_path)
             continue
 
