@@ -14,8 +14,8 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(ctsBackend, m)
 {
-  m.def("check_core_extensions", &cts::checkCoreExtensions, R"pbdoc(
-        Check which core extensions are supported by a device.
+  m.def("query_features", &cts::queryFeatures, R"pbdoc(
+        Query which features are supported by this device.
     )pbdoc");
   m.def("query_metadata", &cts::queryInfo, R"pbdoc(
         Queries object/parameter info metadata of a library.

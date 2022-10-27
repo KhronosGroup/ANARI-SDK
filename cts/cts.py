@@ -12,15 +12,21 @@ import math
 
 logger_mutex = threading.Lock()
 
+def check_feature(feature_list, check_feature):
+    for [feature, is_available] in feature_list:
+        if feature == check_feature:
+            return is_available
+    return False
+
 def anari_logger(message):
     with logger_mutex:
         with open("ANARI.log", 'a') as file:
             file.write(f'{str(datetime.datetime.now())}: {message}\n')
     #print(message)
 
-def check_core_extensions(anari_library, anari_device = None):
+def query_features(anari_library, anari_device = None, logger = anari_logger):
     try: 
-        return ctsBackend.check_core_extensions(anari_library, anari_device, anari_logger)
+        return ctsBackend.query_features(anari_library, anari_device, logger)
     except Exception as e:
         print(e)
         return []
@@ -96,15 +102,28 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
         return
     print('Initialized scene generator')
 
+    feature_list = query_features(anari_library, anari_device, None)
+
     for json_file_path in collected_scenes:
         parsed_json = {}
         with open(json_file_path, 'r') as f, open('default_test_scene.json', 'r') as defaultTestScene:
             parsed_json = json.load(defaultTestScene)
             parsed_json.update(json.load(f))
 
+        all_features_available = True
+        if "requiredFeatures" in parsed_json:
+            for feature in parsed_json["requiredFeatures"]:
+                if not check_feature(feature_list, feature):
+                    all_features_available = False
+                    print("Feature %s is not supported"%feature)
+        
+        if not all_features_available:
+            print("Scene %s is not supported"%json_file_path)
+            continue
+
         sceneGenerator.resetAllParameters()
         for [key, value] in parsed_json.items():
-            if not isinstance(value, dict):
+            if not isinstance(value, dict) and not key == "requiredFeatures":
                 sceneGenerator.setParameter(key, value)
 
         if "permutations" in parsed_json:
@@ -209,7 +228,7 @@ if __name__ == "__main__":
     renderScenesParser = subparsers.add_parser('render_scenes', description='Renders an image to disk for each test scene', parents=[sceneParser])
     renderScenesParser.add_argument('--output', default=".")
 
-    checkExtensionsParser = subparsers.add_parser('check_core_extensions', parents=[deviceParser])
+    checkExtensionsParser = subparsers.add_parser('query_features', parents=[deviceParser])
 
     queryMetadataParser = subparsers.add_parser('query_metadata', parents=[libraryParser])
     queryMetadataParser.add_argument('--type', default=None, help='Only show parameters for objects of a type')
@@ -228,8 +247,8 @@ if __name__ == "__main__":
 
     if args.command == "render_scenes":
         render_scenes(args.library, args.device, args.renderer, args.test_scenes, args.output)
-    elif args.command == "check_core_extensions":
-        result = check_core_extensions(args.library, args.device)
+    elif args.command == "query_features":
+        result = query_features(args.library, args.device)
         print(tabulate(result))
     elif args.command == "query_metadata":
         query_metadata(args.library, args.type, args.subtype, args.skipParameters, args.info)

@@ -33,7 +33,7 @@ std::vector<glm::vec3> PrimitiveGenerator::generateTriangles(
 
   // add translation offset per triangle
   for (size_t i = 0; i < vertices.size() - 2; i += 3) {
-    glm::vec3 offset(getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f));
+    const glm::vec3 offset(getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f));
     vertices[i] = (vertices[i] * 0.4f) + offset;
     vertices[i + 1] = (vertices[i + 1] * 0.4f) + offset;
     vertices[i + 2] = (vertices[i + 2] * 0.4f) + offset;
@@ -76,7 +76,7 @@ std::vector<glm::vec3> PrimitiveGenerator::generateTriangulatedQuadSoups(
   // add translation offset per quad
   for (size_t k = 0; k < primitiveCount; ++k) {
     const size_t index = k * 6;
-    glm::vec3 offset(
+    const glm::vec3 offset(
         getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f));
     vertices[index] = (vertices[index] * 0.4f) + offset;
     vertices[index + 1] = (vertices[index + 1] * 0.4f) + offset;
@@ -120,7 +120,7 @@ std::tuple<std::vector<glm::vec3>, std::vector<glm::uvec3>> PrimitiveGenerator::
   // add translation offset per quad
   for (size_t k = 0; k < primitiveCount; ++k) {
     const size_t index = k * 4;
-    glm::vec3 offset(
+    const glm::vec3 offset(
         getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f));
     vertices[index] = (vertices[index] * 0.4f) + offset;
     vertices[index + 1] = (vertices[index + 1] * 0.4f) + offset;
@@ -140,15 +140,15 @@ std::vector<glm::vec3> PrimitiveGenerator::generateTriangulatedCubeSoups(
     size_t primitiveCount)
 {
   std::vector<glm::vec3> vertices;
-  std::vector<glm::vec3> cubeVertices{
+  const std::vector<glm::vec3> cubeVertices{
     {0.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {1.0, 0.0, 0.0}, // front
     {1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {1.0, 1.0, 0.0},
     {1.0, 0.0, 0.0}, {1.0, 1.0, 0.0}, {1.0, 0.0, 1.0}, // right
     {1.0, 0.0, 1.0}, {1.0, 1.0, 0.0}, {1.0, 1.0, 1.0},
     {1.0, 0.0, 1.0}, {1.0, 1.0, 1.0}, {0.0, 0.0, 1.0}, // back
     {0.0, 1.0, 1.0}, {1.0, 1.0, 1.0}, {0.0, 0.0, 1.0},
-    {0.0, 0.0, 0.0}, {0.0, 0.0, 1.0}, {0.0, 1.0, 1.0}, // left
-    {0.0, 0.0, 0.0}, {0.0, 1.0, 1.0}, {0.0, 1.0, 0.0},
+    {0.0, 0.0, 0.0}, {0.0, 1.0, 1.0}, {0.0, 0.0, 1.0}, // left
+    {0.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 1.0, 1.0},
     {0.0, 1.0, 0.0}, {1.0, 1.0, 1.0}, {1.0, 1.0, 0.0}, // top
     {0.0, 1.0, 0.0}, {0.0, 1.0, 1.0}, {1.0, 1.0, 1.0},
     {0.0, 0.0, 0.0}, {1.0, 0.0, 1.0}, {1.0, 0.0, 0.0}, // bottom
@@ -164,22 +164,22 @@ std::vector<glm::vec3> PrimitiveGenerator::generateTriangulatedCubeSoups(
   for (size_t k = 0; k < primitiveCount; ++k) {
     float cubeScale = getRandom(0.0f, 0.4f);
 
-    glm::mat4 scale = glm::scale(glm::mat4(1.0f),
+    const glm::mat4 scale = glm::scale(glm::mat4(1.0f),
         glm::vec3(cubeScale, cubeScale, cubeScale));
 
-    glm::mat4 rotation = glm::rotate(
+    const glm::mat4 rotation = glm::rotate(
         glm::mat4(1.0f), getRandom(0.0f, 360.0f), 
         glm::vec3(getRandom(0.0f, 1.0f), getRandom(0.0f, 1.0f), getRandom(0.0f, 1.0f)));
 
-    glm::mat4 translation = glm::translate(glm::mat4(1.0f),
+    const glm::mat4 translation = glm::translate(glm::mat4(1.0f),
         glm::vec3(getRandom(0.0f, 0.6f),
             getRandom(0.0f, 0.6f),
             getRandom(0.0f, 0.6f)));
 
-    glm::mat4 transform = translation * rotation * scale;
+    const glm::mat4 transform = translation * rotation * scale;
 
-    for (size_t i = 0; i < 36; ++i) {
-      const size_t index = i + 36 * k;
+    for (size_t i = 0; i < cubeVertices.size(); ++i) {
+      const size_t index = i + cubeVertices.size() * k;
       vertices[index] = transform * glm::vec4(vertices[index], 1.0);
     }
   }
@@ -192,12 +192,12 @@ std::tuple<std::vector<glm::vec3>, std::vector<glm::uvec3>> PrimitiveGenerator::
 {
   std::vector<glm::vec3> vertices;
   std::vector<glm::uvec3> indices;
-  std::vector<glm::vec3> cubeVertices {
+  const std::vector<glm::vec3> cubeVertices {
     {0.0, 0.0, 0.0}, 
     {1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0}, 
     {1.0, 1.0, 0.0}, {1.0, 0.0, 1.0}, {0.0, 1.0, 1.0}, 
     {1.0, 1.0, 1.0}};
-  std::vector<glm::uvec3> cubeIndices {
+  const std::vector<glm::uvec3> cubeIndices {
     {0, 2, 1}, {1, 2, 4}, // front
     {1, 4, 5}, {5, 4, 7}, // right
     {5, 7, 3}, {6, 7, 3}, // back
@@ -214,7 +214,7 @@ std::tuple<std::vector<glm::vec3>, std::vector<glm::uvec3>> PrimitiveGenerator::
     std::vector<glm::uvec3> newIndices = cubeIndices;
 
     for (auto &indexVector : newIndices) {
-      indexVector += glm::uvec3(static_cast<int>(i) * 8);
+      indexVector += glm::uvec3(static_cast<int>(i * cubeVertices.size()));
     }
 
     std::copy(newIndices.begin(),
@@ -226,24 +226,24 @@ std::tuple<std::vector<glm::vec3>, std::vector<glm::uvec3>> PrimitiveGenerator::
   for (size_t k = 0; k < primitiveCount; ++k) {
     float cubeScale = getRandom(0.0f, 0.4f);
 
-    glm::mat4 scale =
+    const glm::mat4 scale =
         glm::scale(glm::mat4(1.0f), glm::vec3(cubeScale, cubeScale, cubeScale));
 
-    glm::mat4 rotation = glm::rotate(glm::mat4(1.0f),
+    const glm::mat4 rotation = glm::rotate(glm::mat4(1.0f),
         getRandom(0.0f, 360.0f),
         glm::vec3(getRandom(0.0f, 1.0f),
             getRandom(0.0f, 1.0f),
             getRandom(0.0f, 1.0f)));
 
-    glm::mat4 translation = glm::translate(glm::mat4(1.0f),
+    const glm::mat4 translation = glm::translate(glm::mat4(1.0f),
         glm::vec3(getRandom(0.0f, 0.6f),
             getRandom(0.0f, 0.6f),
             getRandom(0.0f, 0.6f)));
 
-    glm::mat4 transform = translation * rotation * scale;
+    const glm::mat4 transform = translation * rotation * scale;
 
-    for (size_t i = 0; i < 8; ++i) {
-      const size_t index = i + 8 * k;
+    for (size_t i = 0; i < cubeVertices.size(); ++i) {
+      const size_t index = i + cubeVertices.size() * k;
       vertices[index] = transform * glm::vec4(vertices[index], 1.0);
     }
   }
@@ -263,7 +263,7 @@ std::vector<glm::vec3> PrimitiveGenerator::generateQuads(size_t primitiveCount)
     // add translation offset per quad
     for (size_t i = 0; i < primitiveCount; ++i) {
       const size_t index = i * 4;
-      glm::vec3 offset(
+      const glm::vec3 offset(
           getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f));
       vertices[index] = (vertices[index] * 0.4f) + offset;
       vertices[index + 1] = (vertices[index + 1] * 0.4f) + offset;
@@ -272,5 +272,208 @@ std::vector<glm::vec3> PrimitiveGenerator::generateQuads(size_t primitiveCount)
     }
 
     return vertices;
+  }
+
+std::vector<glm::vec3> PrimitiveGenerator::generateQuadCubeSoups(
+      size_t primitiveCount) 
+  {
+  std::vector<glm::vec3> vertices;
+  const std::vector<glm::vec3> cubeVertices{
+    {0.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {1.0, 0.0, 0.0}, {1.0, 1.0, 0.0}, // front
+    {1.0, 0.0, 0.0}, {1.0, 1.0, 0.0}, {1.0, 1.0, 1.0}, {1.0, 0.0, 1.0}, // right
+    {1.0, 0.0, 1.0}, {1.0, 1.0, 1.0}, {0.0, 1.0, 1.0}, {0.0, 0.0, 1.0}, // back
+    {0.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 1.0, 1.0}, {0.0, 0.0, 1.0}, // left
+    {0.0, 1.0, 0.0}, {0.0, 1.0, 1.0}, {1.0, 1.0, 1.0}, {1.0, 1.0, 0.0}, // top
+    {0.0, 0.0, 0.0}, {1.0, 0.0, 0.0}, {1.0, 0.0, 1.0}, {0.0, 0.0, 1.0}};// bottom
+
+  for (size_t i = 0; i < primitiveCount; ++i) {
+    std::copy(cubeVertices.begin(),
+        cubeVertices.end(),
+        std::back_insert_iterator(vertices));
+  }
+
+  // add random transform per cube
+  for (size_t k = 0; k < primitiveCount; ++k) {
+    float cubeScale = getRandom(0.0f, 0.4f);
+
+    const glm::mat4 scale =
+        glm::scale(glm::mat4(1.0f), glm::vec3(cubeScale, cubeScale, cubeScale));
+
+    const glm::mat4 rotation = glm::rotate(glm::mat4(1.0f),
+        getRandom(0.0f, 360.0f),
+        glm::vec3(getRandom(0.0f, 1.0f),
+            getRandom(0.0f, 1.0f),
+            getRandom(0.0f, 1.0f)));
+
+    const glm::mat4 translation = glm::translate(glm::mat4(1.0f),
+        glm::vec3(getRandom(0.0f, 0.6f),
+            getRandom(0.0f, 0.6f),
+            getRandom(0.0f, 0.6f)));
+
+    const glm::mat4 transform = translation * rotation * scale;
+
+    for (size_t i = 0; i < cubeVertices.size(); ++i) {
+      const size_t index = i + cubeVertices.size() * k;
+      vertices[index] = transform * glm::vec4(vertices[index], 1.0);
+    }
+  }
+
+  return vertices;
+  }
+
+std::tuple<std::vector<glm::vec3>, std::vector<glm::uvec4>>
+  PrimitiveGenerator::generateQuadCubesIndexed(size_t primitiveCount)
+  {
+    std::vector<glm::vec3> vertices;
+    std::vector<glm::uvec4> indices;
+    const std::vector<glm::vec3> cubeVertices{{0.0, 0.0, 0.0},
+        {1.0, 0.0, 0.0},
+        {0.0, 1.0, 0.0},
+        {0.0, 0.0, 1.0},
+        {1.0, 1.0, 0.0},
+        {1.0, 0.0, 1.0},
+        {0.0, 1.0, 1.0},
+        {1.0, 1.0, 1.0}};
+    const std::vector<glm::uvec4> cubeIndices{
+        {0, 2, 4, 1}, // front
+        {1, 4, 7, 5}, // right
+        {5, 7, 6, 3}, // back
+        {0, 3, 6, 2}, // left
+        {2, 6, 7, 4}, // top
+        {0, 1, 5, 3}  // bottom
+    };
+
+    for (size_t i = 0; i < primitiveCount; ++i) {
+      std::copy(cubeVertices.begin(),
+          cubeVertices.end(),
+          std::back_insert_iterator(vertices));
+
+      std::vector<glm::uvec4> newIndices = cubeIndices;
+
+      for (auto &indexVector : newIndices) {
+        indexVector += glm::uvec4(static_cast<int>(i * cubeVertices.size()));
+      }
+
+      std::copy(newIndices.begin(),
+          newIndices.end(),
+          std::back_insert_iterator(indices));
+    }
+
+    // add random transform per cube
+    for (size_t k = 0; k < primitiveCount; ++k) {
+      float cubeScale = getRandom(0.0f, 0.4f);
+
+      const glm::mat4 scale = glm::scale(
+          glm::mat4(1.0f), glm::vec3(cubeScale, cubeScale, cubeScale));
+
+      const glm::mat4 rotation = glm::rotate(glm::mat4(1.0f),
+          getRandom(0.0f, 360.0f),
+          glm::vec3(getRandom(0.0f, 1.0f),
+              getRandom(0.0f, 1.0f),
+              getRandom(0.0f, 1.0f)));
+
+      const glm::mat4 translation = glm::translate(glm::mat4(1.0f),
+          glm::vec3(getRandom(0.0f, 0.6f),
+              getRandom(0.0f, 0.6f),
+              getRandom(0.0f, 0.6f)));
+
+      const glm::mat4 transform = translation * rotation * scale;
+
+      for (size_t i = 0; i < cubeVertices.size(); ++i) {
+        const size_t index = i + cubeVertices.size() * k;
+        vertices[index] = transform * glm::vec4(vertices[index], 1.0);
+      }
+    }
+
+    return std::make_tuple(vertices, indices);
+  }
+
+std::tuple<std::vector<glm::vec3>, std::vector<float>> PrimitiveGenerator::generateSpheres(
+  size_t primitiveCount)
+  {
+    std::vector<glm::vec3> vertices;
+    std::vector<float> radii;
+
+    for (size_t i = 0; i < primitiveCount; ++i) {
+      vertices.push_back(glm::vec3(
+          getRandom(0.0f, 1.0f), getRandom(0.0f, 1.0f), getRandom(0.0f, 1.0f)));
+      radii.push_back(getRandom(0.0f, 0.4f));
+    }
+
+    return std::make_tuple(vertices, radii);
+  }
+
+std::tuple<std::vector<glm::vec3>, std::vector<float>>
+  PrimitiveGenerator::generateCurves(size_t primitiveCount)
+  {
+    std::vector<glm::vec3> vertices;
+    std::vector<float> radii;
+
+    for (size_t i = 0; i < primitiveCount * 2; ++i) {
+      vertices.push_back(glm::vec3(
+          getRandom(0.0f, 1.0f), getRandom(0.0f, 1.0f), getRandom(0.0f, 1.0f)));
+      radii.push_back(getRandom(0.0f, 0.4f));
+    }
+
+    // add translation offset per cone
+    for (size_t i = 0; i < primitiveCount; ++i) {
+      const size_t index = i * 2;
+      const glm::vec3 offset(
+          getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f));
+      vertices[index] = (vertices[index] * 0.4f) + offset;
+      vertices[index + 1] = (vertices[index + 1] * 0.4f) + offset;
+    }
+
+    return std::make_tuple(vertices, radii);
+  }
+
+std::tuple<std::vector<glm::vec3>, std::vector<float>>
+  PrimitiveGenerator::generateCones(size_t primitiveCount)
+  {
+    std::vector<glm::vec3> vertices;
+    std::vector<float> radii;
+
+    for (size_t i = 0; i < primitiveCount * 2; ++i) {
+      vertices.push_back(glm::vec3(
+          getRandom(0.0f, 1.0f), getRandom(0.0f, 1.0f), getRandom(0.0f, 1.0f)));
+      radii.push_back(getRandom(0.0f, 0.4f));
+    }
+
+    // add translation offset per cone
+    for (size_t i = 0; i < primitiveCount; ++i) {
+      const size_t index = i * 2;
+      const glm::vec3 offset(
+          getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f));
+      vertices[index] = (vertices[index] * 0.4f) + offset;
+      vertices[index + 1] = (vertices[index + 1] * 0.4f) + offset;
+    }
+
+    return std::make_tuple(vertices, radii);
+  }
+
+std::tuple<std::vector<glm::vec3>, std::vector<float>>
+  PrimitiveGenerator::generateCylinders(size_t primitiveCount)
+  {
+    std::vector<glm::vec3> vertices;
+    std::vector<float> radii;
+
+    for (size_t i = 0; i < primitiveCount; ++i) {
+      vertices.push_back(glm::vec3(
+          getRandom(0.0f, 1.0f), getRandom(0.0f, 1.0f), getRandom(0.0f, 1.0f)));
+      vertices.push_back(glm::vec3(
+          getRandom(0.0f, 1.0f), getRandom(0.0f, 1.0f), getRandom(0.0f, 1.0f)));
+      radii.push_back(getRandom(0.0f, 0.4f));
+    }
+
+    // add translation offset per cylinder
+    for (size_t i = 0; i < primitiveCount; ++i) {
+      const size_t index = i * 2;
+      const glm::vec3 offset(
+          getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f));
+      vertices[index] = (vertices[index] * 0.4f) + offset;
+      vertices[index + 1] = (vertices[index + 1] * 0.4f) + offset;
+    }
+
+    return std::make_tuple(vertices, radii);
   }
 } // namespace cts

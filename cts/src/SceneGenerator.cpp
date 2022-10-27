@@ -33,17 +33,20 @@ SceneGenerator::~SceneGenerator()
 std::vector<anari::scenes::ParameterInfo> SceneGenerator::parameters()
 {
   return {
-      {"geometrySubtype", ANARI_STRING, "triangle", "Which type of geometry to generate"},
-      {"primitiveMode", ANARI_STRING, "soup", "How the data is arranged (soup or indexed)"},
-      {"primitiveCount", ANARI_UINT32, 1, "How many primtives should be generated"},
-      {"image_height",
+      {"geometrySubtype",
+          ANARI_STRING,
+          "triangle",
+          "Which type of geometry to generate"},
+      {"primitiveMode",
+          ANARI_STRING,
+          "soup",
+          "How the data is arranged (soup or indexed)"},
+      {"primitiveCount",
           ANARI_UINT32,
-          1024,
-          "Height of the image"},
-      {"image_width",
-          ANARI_UINT32,
-          1024,
-          "Width of the image"},
+          1,
+          "How many primtives should be generated"},
+      {"image_height", ANARI_UINT32, 1024, "Height of the image"},
+      {"image_width", ANARI_UINT32, 1024, "Width of the image"},
       //
   };
 }
@@ -115,7 +118,7 @@ void SceneGenerator::commit()
     }
 
     if (primitiveMode == "indexed") {
-    // reverse indices vector to make a more useful test case
+    // reverse indices vector to create a more useful test case
       std::reverse(indices.begin(), indices.end());
       anari::setAndReleaseParameter(d,
           geom,
@@ -123,10 +126,126 @@ void SceneGenerator::commit()
           anari::newArray1D(d, indices.data(), indices.size()));
     }
   } else if (geometrySubtype == "quad") {
+    std::vector<glm::uvec4> indices;
     if (shape == "quad") {
       vertices = generator.generateQuads(primitiveCount);
+
+      if (primitiveMode == "indexed") {
+        for (size_t i = 0; i < vertices.size(); i += 4) {
+          indices.push_back(glm::uvec4(i, i + 1, i + 2, i + 3));
+        }
+      }
     } else if (shape == "cube") {
-      // TODO
+      if (primitiveMode == "indexed") {
+        auto [cubeVertices, cubeIndices] =
+            generator.generateQuadCubesIndexed(primitiveCount);
+        vertices = cubeVertices;
+        indices = cubeIndices;
+      } else {
+        generator.generateQuadCubeSoups(primitiveCount);
+      }
+    }
+
+    if (primitiveMode == "indexed") {
+      // reverse indices vector to create a more useful test case
+      std::reverse(indices.begin(), indices.end());
+      anari::setAndReleaseParameter(d,
+          geom,
+          "primitive.index",
+          anari::newArray1D(d, indices.data(), indices.size()));
+    }
+  } else if (geometrySubtype == "sphere") {
+    auto [sphereVertices, sphereRadii] =
+        generator.generateSpheres(primitiveCount);
+    vertices = sphereVertices;
+
+    anari::setAndReleaseParameter(d,
+        geom,
+        "vertex.radius",
+        anari::newArray1D(d, sphereRadii.data(), sphereRadii.size()));
+
+    if ("indexed") {
+      std::vector<uint32_t> indices;
+      for (size_t i = 0; i < vertices.size(); ++i) {
+        indices.push_back(static_cast<uint32_t>(i));
+      }
+
+      // reverse indices vector to create a more useful test case
+      std::reverse(indices.begin(), indices.end());
+      anari::setAndReleaseParameter(d,
+          geom,
+          "primitive.index",
+          anari::newArray1D(d, indices.data(), indices.size()));
+    }
+  } else if (geometrySubtype == "curve") {
+    auto [curveVertices, curveRadii] = generator.generateCurves(primitiveCount);
+    vertices = curveVertices;
+
+    anari::setAndReleaseParameter(d,
+        geom,
+        "vertex.radius",
+        anari::newArray1D(d, curveRadii.data(), curveRadii.size()));
+
+    if ("indexed") {
+      std::vector<glm::uvec2> indices;
+      for (size_t i = 0; i < vertices.size(); i += 2) {
+        indices.push_back(
+            glm::vec2(static_cast<uint32_t>(i), static_cast<uint32_t>(i + 1)));
+      }
+
+      // reverse indices vector to create a more useful test case
+      std::reverse(indices.begin(), indices.end());
+      anari::setAndReleaseParameter(d,
+          geom,
+          "primitive.index",
+          anari::newArray1D(d, indices.data(), indices.size()));
+    }
+  } else if (geometrySubtype == "cone") {
+    auto [coneVertices, coneRadii] =
+        generator.generateCones(primitiveCount);
+    vertices = coneVertices;
+
+    anari::setAndReleaseParameter(d,
+        geom,
+        "vertex.radius",
+        anari::newArray1D(d, coneRadii.data(), coneRadii.size()));
+
+    if ("indexed") {
+      std::vector<glm::uvec2> indices;
+      for (size_t i = 0; i < vertices.size(); i += 2) {
+        indices.push_back(
+            glm::vec2(static_cast<uint32_t>(i), static_cast<uint32_t>(i + 1)));
+      }
+
+      // reverse indices vector to create a more useful test case
+      std::reverse(indices.begin(), indices.end());
+      anari::setAndReleaseParameter(d,
+          geom,
+          "primitive.index",
+          anari::newArray1D(d, indices.data(), indices.size()));
+    }
+  } else if (geometrySubtype == "cylinder") {
+    auto [cylinderVertices, cylinderRadii] = generator.generateCylinders(primitiveCount);
+    vertices = cylinderVertices;
+
+    anari::setAndReleaseParameter(d,
+        geom,
+        "primitive.radius",
+        anari::newArray1D(d, cylinderRadii.data(), cylinderRadii.size()));
+
+    if ("indexed") {
+      std::vector<glm::uvec2> indices;
+      for (size_t i = 0; i < vertices.size(); i += 2) {
+        indices.push_back(glm::vec2(
+            static_cast<uint32_t>(i), static_cast<uint32_t>(i + 1)));
+      }
+
+      // reverse indices vector to create a more useful test case
+      std::reverse(indices.begin(), indices.end());
+      anari::setAndReleaseParameter(d,
+          geom,
+          "primitive.index",
+          anari::newArray1D(d, indices.data(), indices.size()));
     }
   }
 
@@ -193,7 +312,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(const std::string
 
   std::vector<uint32_t> converted;
   for (int i = 0; i < image_height * image_width; ++i) {
-    uint8_t colorValue = static_cast<uint8_t>(pixels[i] * 255.0f);
+    uint8_t colorValue = static_cast<uint8_t>(pixels[i] / 2.5f * 255.0f);
     uint32_t rgba =
         (255 << 24) + (colorValue << 16) + (colorValue << 8) + colorValue;
     converted.push_back(rgba);
