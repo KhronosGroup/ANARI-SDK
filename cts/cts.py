@@ -38,21 +38,24 @@ def recursive_update(d, merge_dict):
     d.update(merge_dict)        
     return d
 
-# TODO rename
-def evaluate_scene(reference_path, candidate_path):
-    return ctsUtility.evaluate_scene(reference_path, candidate_path)
-
-def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, permutationString, output = ".", prefix = ""):
+def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, permutationString, variantString, output = ".", prefix = ""):
     results = {}
     stem = scene_location.stem
     channels = ["color", "depth"]
     referencePrefix = "ref_"
+    
+    if permutationString != "":
+        permutationString = f'_{permutationString}'
+        
+    if variantString != "":
+        permutationString += f'_{variantString}'
+        
     for channel in channels:
         # Extract the test case name from the reference file
         name = f'{prefix}{stem}{permutationString}_{channel}'
         reference_file = f'{referencePrefix}{prefix}{stem}{permutationString}_{channel}'
         candidate_file = f'{prefix}{stem}{permutationString}_{channel}'
-        results[name] = evaluate_scene(reference_file, candidate_file)
+        results[name] = ctsUtility.evaluate_scene(reference_file, candidate_file)
     print(results)
 
 def resolve_scenes(test_scenes):
@@ -122,12 +125,13 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
 
     print(collected_scenes)
     sceneGenerator = None
-    try:
-        sceneGenerator = ctsBackend.SceneGenerator(anari_library, anari_device, anari_logger)
-    except Exception as e:
-        print(e)
-        return
-    print('Initialized scene generator')
+    if use_generator:
+        try:
+            sceneGenerator = ctsBackend.SceneGenerator(anari_library, anari_device, anari_logger)
+        except Exception as e:
+            print(e)
+            return
+        print('Initialized scene generator')
 
     feature_list = query_features(anari_library, anari_device, None)
 
@@ -147,10 +151,12 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
         if not all_features_available:
             print("Scene %s is not supported"%json_file_path)
             continue
-
-        sceneGenerator.resetAllParameters()
-        for [key, value] in parsed_json["sceneParameters"].items():
-            sceneGenerator.setParameter(key, value)
+        
+        
+        if use_generator:
+            sceneGenerator.resetAllParameters()
+            for [key, value] in parsed_json["sceneParameters"].items():
+                sceneGenerator.setParameter(key, value)
 
         if "permutations" in parsed_json or "variants" in parsed_json:
             variant_keys = []
@@ -176,17 +182,22 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                     else:
                         key = keys[i]
                         permutationString += f'{"_{}".format(permutation[i])}'
-                    sceneGenerator.setParameter(key, permutation[i])
-                sceneGenerator.commit()
+                    
+                    if use_generator:
+                        sceneGenerator.setParameter(key, permutation[i])
+                
+                if use_generator:
+                    sceneGenerator.commit()
                 result.append(func(parsed_json, sceneGenerator, anari_renderer, json_file_path, permutationString[1:], variantString[1:], *args))
         else:
-            sceneGenerator.commit()
+            if use_generator:
+                sceneGenerator.commit()
             result.append(func(parsed_json, sceneGenerator, anari_renderer, json_file_path, "", "", *args))
     return result
 
 def render_scenes(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", output = ".", prefix = ""):
-    apply_to_scenes(render_scene, anari_library, anari_device, anari_renderer, test_scenes, False, output, prefix)
-    apply_to_scenes(evaluate_scene, anari_library, anari_device, anari_renderer, test_scenes, output, prefix)
+    apply_to_scenes(render_scene, anari_library, anari_device, anari_renderer, test_scenes, False, True, output, prefix)
+    apply_to_scenes(evaluate_scene, anari_library, anari_device, anari_renderer, test_scenes, False, False, output, prefix)
 
 def check_bounding_boxes(ref, candidate, tolerance):
     axis = 'X'
