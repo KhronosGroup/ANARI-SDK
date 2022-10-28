@@ -8,8 +8,24 @@ from sewar.full_ref import vifp, uqi
 import os
 
 
-def evaluate_metrics(reference, candidate, methods):
+def ssim(reference, candidate, threshold):
+    result = skimage.metrics.structural_similarity(reference, candidate, multichannel=True)
+    return result > threshold, result
+
+def psnr(reference, candidate, threshold):
+    result = skimage.metrics.peak_signal_noise_ratio(reference, candidate)
+    return result > threshold, result
+
+def getThreshold(methods, thresholds, method, default):
+    if thresholds != None:
+        index = methods.index(method)
+        if index < len(thresholds):
+            return thresholds[index]
+    return default
+
+def evaluate_metrics(reference, candidate, methods, thresholds, custom_comparison_function):
     results = {}
+    passed = {}
 
     if "ssim" in methods:
         # Structural similarity index between two images
@@ -20,7 +36,8 @@ def evaluate_metrics(reference, candidate, methods):
         # ssim provides high scores one of the images is blured or the color space is shifted
         # further reading:
         # https://en.wikipedia.org/wiki/Structural_similarity
-        results["ssim"] = skimage.metrics.structural_similarity(reference, candidate, multichannel=True)
+        threshold =  getThreshold(methods, thresholds, "ssim", 0.70)
+        passed["ssim"], results["ssim"] = ssim(reference, candidate, threshold)
         
     if "psnr" in methods:
         # Mean Squared Error (MSE) is one of the most commonly used image quality measures, but receives strong criticism as
@@ -28,7 +45,11 @@ def evaluate_metrics(reference, candidate, methods):
         # high MSE might still look very similar to a human.
         # "mse": skimage.metrics.mean_squared_error(reference, candidate),
         # Peak Signal to Noise Ratio (PSNR) is based on MSE and brought to a logarithmic scale in the decibel unit
-        results["psnr"] = skimage.metrics.peak_signal_noise_ratio(reference, candidate)
+        threshold =  getThreshold(methods, thresholds, "psnr", 0.70)
+        passed["psnr"], results["psnr"] = psnr(reference, candidate, threshold)
+
+    if custom_comparison_function != None:
+        passed["custom"], results["custom"] = custom_comparison_function(reference, candidate)
 
     # Normalized Root MSE (NRMSE)
     # "nrmse": skimage.metrics.normalized_root_mse(reference, candidate),
@@ -44,21 +65,8 @@ def evaluate_metrics(reference, candidate, methods):
     
     # Universal Quality Index (UQI)
     # "uqi": uqi(reference, candidate),
-    return results 
-    
-def evaluate_passed(metrics):
-	# Through survey and analysis new threshold values were determined for ssim and psnr.
-	# These are the values in the code. The original source for these values is in thresholds.csv.
-	# The initial values were 0.85 and 20.0.
-	# Leonard Daly, 2021-10-07
-    results = {}
-    if "ssim" in metrics:
-        results["ssim"] = metrics["ssim"] > 0.70
-        
-    if "psnr" in metrics:
-        results["psnr"] = metrics["psnr"] > 20.0
+    return passed, results 
 
-    return results
 
 def print_report(name, metrics_report):
     print(name)
@@ -82,12 +90,12 @@ def compare_images(reference, candidate):
         "threshold": skimage.util.img_as_ubyte(threshold)
     }
 
-def evaluate(reference, candidate, methods):
-    metrics = evaluate_metrics(reference, candidate, methods)
+def evaluate(reference, candidate, methods, thresholds, custom_compare_function):
+    passed, metrics = evaluate_metrics(reference, candidate, methods, thresholds, custom_compare_function)
 
     return {
         "metrics": metrics,
-        "passed": evaluate_passed(metrics),
+        "passed": passed,
         "images": compare_images(reference, candidate),
     }
 
@@ -107,13 +115,13 @@ def normalize_images(reference, candidate):
         print()
     return reference, candidate
 
-def evaluate_scene(reference_path, candidate_path, methods):
+def evaluate_scene(reference_path, candidate_path, methods, thresholds, custom_compare_function):
     reference_image = skimage.io.imread(reference_path)
     candidate_image = skimage.util.img_as_ubyte(skimage.io.imread(candidate_path))
     reference_image, candidate_image = normalize_images(reference_image, candidate_image)
     
     # Compute metrics and compare images
-    return evaluate(reference_image, candidate_image, methods)
+    return evaluate(reference_image, candidate_image, methods, thresholds, custom_compare_function)
 
 def write_image(path, image, check_contrast = True):
     filepath, filename = os.path.split(path)

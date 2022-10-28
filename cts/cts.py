@@ -83,7 +83,7 @@ def write_report(results, output):
     output_path = Path(output) / "evaluation"
     ctsReport.generate_report_document(results, output_path, "CTS - Report")
 
-def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, permutationString, variantString, output = ".", ref_files = [], candidate_files = [], methods = ["ssim"]):
+def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, permutationString, variantString, output = ".", ref_files = [], candidate_files = [], methods = ["ssim"], thresholds = None, custom_compare_function = None):
     results = {}
     stem = scene_location.stem
     channels = ["color", "depth"]
@@ -107,8 +107,9 @@ def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, 
         
         if channel == "depth":
             methods = ["psnr"]
+            custom_compare_function = None
 
-        results[name] = ctsUtility.evaluate_scene(ref_path, candidate_path, methods)
+        results[name] = ctsUtility.evaluate_scene(ref_path, candidate_path, methods, thresholds, custom_compare_function)
     return results
 
 def resolve_scenes(test_scenes):
@@ -261,10 +262,10 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
 def render_scenes(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", output = "."):
     apply_to_scenes(render_scene, anari_library, anari_device, anari_renderer, test_scenes, False, True, output)
     
-def compare_images(test_scenes = "test_scenes", candidates_path = "test_scenes", output = ".", comparison_methods = ["ssim"]):
+def compare_images(test_scenes = "test_scenes", candidates_path = "test_scenes", output = ".", comparison_methods = ["ssim"], thresholds = None, custom_compare_function = None):
     ref_images = globImages(test_scenes, reference_prefix)
     candidate_images = globImages(candidates_path, '[!{}]'.format(reference_prefix))
-    evaluations = apply_to_scenes(evaluate_scene, "", None, "default", test_scenes, False, False, output, ref_images, candidate_images, comparison_methods)
+    evaluations = apply_to_scenes(evaluate_scene, "", None, "default", test_scenes, False, False, output, ref_images, candidate_images, comparison_methods, thresholds, custom_compare_function)
     evaluations = write_images(evaluations, output)
     write_report(evaluations, output)
 
@@ -356,6 +357,7 @@ if __name__ == "__main__":
     evaluateScenesParser.add_argument('--candidates', default="test_scenes")
     evaluateScenesParser.add_argument('--output', default=".")
     evaluateScenesParser.add_argument('--comparison_methods', default=["blorg"], nargs='+', choices=["ssim", "psnr"])
+    evaluateScenesParser.add_argument('--thresholds', default=None, nargs='+')
 
     checkExtensionsParser = subparsers.add_parser('query_features', parents=[deviceParser])
 
@@ -377,7 +379,7 @@ if __name__ == "__main__":
     if args.command == "render_scenes":
         render_scenes(args.library, args.device, args.renderer, args.test_scenes, args.output)
     elif args.command == "compare_images":
-        compare_images(args.test_scenes, args.candidates, args.output, args.comparison_methods)
+        compare_images(args.test_scenes, args.candidates, args.output, args.comparison_methods, args.thresholds)
     elif args.command == "query_features":
         result = query_features(args.library, args.device)
         print(tabulate(result))
