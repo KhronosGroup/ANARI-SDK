@@ -21,6 +21,11 @@ SceneGenerator::SceneGenerator(anari::Device device) :  TestScene(device)
 
 SceneGenerator::~SceneGenerator()
 {
+  for (auto& [key, value] : m_anariObjects) {
+    for (auto &object : value) {
+      anari::release(m_device, object);
+    }
+  }
   anari::release(m_device, m_world);
   anari::unloadLibrary(m_library);
 }
@@ -261,7 +266,8 @@ void SceneGenerator::commit()
   anari::release(d, mat);
 }
 
-std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(const std::string &rendererType)
+std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
+    const std::string &rendererType, float renderDistance)
 {
   size_t image_height = getParam<size_t>("image_height", 1024);
   size_t image_width = getParam<size_t>("image_width", 1024);
@@ -307,7 +313,8 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(const std::string
 
   std::vector<uint32_t> converted;
   for (int i = 0; i < image_height * image_width; ++i) {
-    uint8_t colorValue = static_cast<uint8_t>(pixels[i] / 2.5f * 255.0f);
+    uint8_t colorValue =
+        static_cast<uint8_t>(pixels[i] / renderDistance * 255.0f);
     uint32_t rgba =
         (255 << 24) + (colorValue << 16) + (colorValue << 8) + colorValue;
     converted.push_back(rgba);
@@ -335,22 +342,68 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(const std::string
 }
 
 void SceneGenerator::resetAllParameters() {
+  for (auto &[key, value] : m_anariObjects) {
+    for (auto &object : value) {
+      anari::release(m_device, object);
+    }
+  }
+  m_anariObjects.clear();
+
+  anari::unsetParameter(m_device, m_world, "instance");
+  anari::unsetParameter(m_device, m_world, "surface");
+  anari::unsetParameter(m_device, m_world, "volume");
+  anari::unsetParameter(m_device, m_world, "light");
+
   for (auto param : parameters()) {
     removeParam(param.name);
   }
 }
 
-std::vector<std::vector<float>> SceneGenerator::getBounds()
+std::vector<std::vector<std::vector<std::vector<float>>>> SceneGenerator::getBounds()
 {
-  std::vector<std::vector<float>> result;
-  auto b = bounds();
-  for (const auto& bound : b) {
-    std::vector<float> vector;
+  std::vector<std::vector<std::vector<std::vector<float>>>> result;
+  std::vector<std::vector<std::vector<float>>> worldBounds;
+  std::vector<std::vector<std::vector<float>>> instancesBounds;
+  std::vector<std::vector<std::vector<float>>> groupBounds;
+  std::vector<std::vector<float>> &singleBound =
+      worldBounds.emplace_back();
+  auto anariWorldBounds = bounds();
+  for (const auto &bound : anariWorldBounds) {
+    std::vector<float>& vector = singleBound.emplace_back();
     for (int i = 0; i < bound.length(); ++i) {
       vector.push_back(bound[i]);
     }
-    result.push_back(vector);
   }
+  if (m_anariObjects.find(int(ANARI_INSTANCE)) != m_anariObjects.end()) {
+    for (auto &instance : m_anariObjects[int(ANARI_INSTANCE)]) {
+      singleBound = instancesBounds.emplace_back();
+      anari::scenes::box3 anariInstanceBounds;
+      anari::getProperty(m_device, instance, "bounds", anariInstanceBounds);
+      for (const auto &bound : anariInstanceBounds) {
+        std::vector<float> &vector = singleBound.emplace_back();
+        for (int i = 0; i < bound.length(); ++i) {
+          vector.push_back(bound[i]);
+        }
+      }
+    }
+  }
+
+  if (m_anariObjects.find(int(ANARI_GROUP)) != m_anariObjects.end()) {
+    for (auto &group : m_anariObjects[int(ANARI_GROUP)]) {
+      singleBound = groupBounds.emplace_back();
+      anari::scenes::box3 anariGroupBounds;
+      anari::getProperty(m_device, group, "bounds", anariGroupBounds);
+      for (const auto &bound : anariGroupBounds) {
+        std::vector<float> &vector = singleBound.emplace_back();
+        for (int i = 0; i < bound.length(); ++i) {
+          vector.push_back(bound[i]);
+        }
+      }
+    }
+  }
+  result.emplace_back(worldBounds);
+  result.emplace_back(instancesBounds);
+  result.emplace_back(groupBounds);
   return result;
 }
 

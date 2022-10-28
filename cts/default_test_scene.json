@@ -1,4 +1,7 @@
 {
-	"image_height": 1024,
-	"image_width": 1024
+	"sceneParameters": {
+		"image_height": 1024,
+		"image_width": 1024
+	},
+	"bounds_tolerance": 0.05
 }
