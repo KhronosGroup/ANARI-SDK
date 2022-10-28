@@ -21,7 +21,7 @@ def generate_report_document(report_data, path, title):
 
     # List each test case with results
     for report_channels in report_data:
-        for name, result in report_channels.items():
+        for name, results in report_channels.items():
             story.append(Paragraph(name, stylesheet["Heading2"]))
 
             # Evaluated metrics
@@ -31,18 +31,17 @@ def generate_report_document(report_data, path, title):
                     Paragraph("Metric", stylesheet["Heading4"]),
                     Paragraph("Value", stylesheet["Heading4"]),
                     Paragraph("Result", stylesheet["Heading4"])
-                ],
-                [
-                    Paragraph("SSIM", stylesheet["Normal"]), 
-                    Paragraph(f'<code>{result["metrics"]["ssim"]:10.5f}</code>', stylesheet["Normal"]), 
-                    Paragraph("Above Threshold" if result["passed"]["ssim"] else '<font color="orange">Below Threshold</font>', stylesheet["Normal"])
-                ],
-                [
-                    Paragraph("PSNR", stylesheet["Normal"]), 
-                    Paragraph(f'<code>{result["metrics"]["psnr"]:10.5f}</code>', stylesheet["Normal"]), 
-                    Paragraph("Above Threshold" if result["passed"]["psnr"] else '<font color="orange">Below Threshold</font>', stylesheet["Normal"])
-                ],
+                ]
             ]
+
+            for name, result in results["metrics"].items():
+                metrics_data.append([
+                    Paragraph(name.upper(), stylesheet["Normal"]), 
+                    Paragraph(f'<code>{result:10.5f}</code>', stylesheet["Normal"]), 
+                    Paragraph("Above Threshold" if result else '<font color="orange">Below Threshold</font>', stylesheet["Normal"])
+                ])
+
+
             t = Table(metrics_data, 3 * [cell_size])
             t.setStyle(TableStyle([
                 ('GRID', (0,0), (-1,-1), 0.25, colors.black),
@@ -60,12 +59,12 @@ def generate_report_document(report_data, path, title):
                 ],
                 [
                     Image(
-                        path / result["image_paths"]["reference"], 
+                        path / results["image_paths"]["reference"], 
                         width=image_size - (margin["left"] + margin["right"]), 
                         height=image_size - (margin["top"] + margin["bottom"])
                     ),
                     Image(
-                        path / result["image_paths"]["candidate"], 
+                        path / results["image_paths"]["candidate"], 
                         width=image_size - (margin["left"] + margin["right"]), 
                         height=image_size - (margin["top"] + margin["bottom"])
                     ),
@@ -91,12 +90,12 @@ def generate_report_document(report_data, path, title):
                 ],
                 [
                     Image(
-                        path / result["image_paths"]["diff"], 
+                        path / results["image_paths"]["diff"], 
                         width=image_size - (margin["left"] + margin["right"]), 
                         height=image_size - (margin["top"] + margin["bottom"])
                     ),
                     Image(
-                        path / result["image_paths"]["threshold"], 
+                        path / results["image_paths"]["threshold"], 
                         width=image_size - (margin["left"] + margin["right"]), 
                         height=image_size - (margin["top"] + margin["bottom"])
                     ),

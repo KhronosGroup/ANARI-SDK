@@ -51,12 +51,14 @@ def evaluate_passed(metrics):
 	# These are the values in the code. The original source for these values is in thresholds.csv.
 	# The initial values were 0.85 and 20.0.
 	# Leonard Daly, 2021-10-07
-    return {
-        # Choose a relaxed value for SSIM
-        "ssim": metrics["ssim"] > 0.70,
-        # PSNR for image compression in 8bit is typically in the range [30, 50]
-        "psnr": metrics["psnr"] > 20.0, 
-    }
+    results = {}
+    if "ssim" in metrics:
+        results["ssim"] = metrics["ssim"] > 0.70
+        
+    if "psnr" in metrics:
+        results["ssim"] = metrics["psnr"] > 20.0
+
+    return results
 
 def print_report(name, metrics_report):
     print(name)
