@@ -26,6 +26,7 @@ target_link_libraries(${lib_name}
   anari::anari_utilities
   anari_test_scenes)
 
+file(GLOB python_files ${CMAKE_CURRENT_LIST_DIR}/*.py)
 
 add_custom_target(generate_cts
     COMMAND ${Python3_EXECUTABLE} ${ANARI_CODE_GEN_ROOT}/generate_queries.py
@@ -35,8 +36,7 @@ add_custom_target(generate_cts
       --namespace cts
       --includefile
 	  --out src
-	COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_LIST_DIR}/createReferenceData.py ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}
-	COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_LIST_DIR}/cts.py ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}
+	COMMAND ${CMAKE_COMMAND} -E copy ${python_files} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}
 	COMMAND ${Python3_EXECUTABLE} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/createReferenceData.py
 	  --test_scenes ${CMAKE_CURRENT_LIST_DIR}/test_scenes
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}

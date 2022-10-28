@@ -1,6 +1,9 @@
 #!python3
 import ctsBackend
-import ctsReport
+try:
+    import ctsReport
+except ImportError:
+    print("Unable to import pdf tool. Only printing to console is supported")
 import argparse
 import threading
 import datetime
