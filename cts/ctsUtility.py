@@ -56,7 +56,7 @@ def evaluate_passed(metrics):
         results["ssim"] = metrics["ssim"] > 0.70
         
     if "psnr" in metrics:
-        results["ssim"] = metrics["psnr"] > 20.0
+        results["psnr"] = metrics["psnr"] > 20.0
 
     return results
 

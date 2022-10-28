@@ -38,9 +38,8 @@ def generate_report_document(report_data, path, title):
                 metrics_data.append([
                     Paragraph(name.upper(), stylesheet["Normal"]), 
                     Paragraph(f'<code>{result:10.5f}</code>', stylesheet["Normal"]), 
-                    Paragraph("Above Threshold" if result else '<font color="orange">Below Threshold</font>', stylesheet["Normal"])
+                    Paragraph("Above Threshold" if results["passed"][name] else '<font color="orange">Below Threshold</font>', stylesheet["Normal"])
                 ])
-
 
             t = Table(metrics_data, 3 * [cell_size])
             t.setStyle(TableStyle([
