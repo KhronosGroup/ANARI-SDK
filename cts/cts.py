@@ -82,7 +82,7 @@ def write_report(results, output):
     output_path = Path(output) / "evaluation"
     ctsReport.generate_report_document(results, output_path, "CTS - Report")
 
-def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, permutationString, variantString, output = ".", prefix = "", ref_files = [], candidate_files = []):
+def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, permutationString, variantString, output = ".", ref_files = [], candidate_files = []):
     results = {}
     stem = scene_location.stem
     channels = ["color", "depth"]
@@ -94,9 +94,9 @@ def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, 
         variantString = f'_{variantString}'
 
     for channel in channels:
-        name = f'{prefix}{stem}{permutationString}{variantString}_{channel}'
-        reference_file = f'{reference_prefix}{prefix}{stem}{permutationString}_{channel}'
-        candidate_file = f'{prefix}{stem}{permutationString}{variantString}_{channel}'
+        name = f'{stem}{permutationString}{variantString}_{channel}'
+        reference_file = f'{reference_prefix}{stem}{permutationString}_{channel}'
+        candidate_file = f'{stem}{permutationString}{variantString}_{channel}'
 
         ref_path = getFileFromList(ref_files, reference_file)
         candidate_path = getFileFromList(candidate_files, candidate_file)
@@ -181,8 +181,7 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
             print(e)
             return
         print('Initialized scene generator')
-
-    feature_list = query_features(anari_library, anari_device, None)
+        feature_list = query_features(anari_library, anari_device, None)
 
     for json_file_path in collected_scenes:
         parsed_json = {}
@@ -190,19 +189,18 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
             parsed_json = json.load(defaultTestScene)
             parsed_json = recursive_update(parsed_json, json.load(f))
 
-        all_features_available = True
-        if "requiredFeatures" in parsed_json:
-            for feature in parsed_json["requiredFeatures"]:
-                if not check_feature(feature_list, feature):
-                    all_features_available = False
-                    print("Feature %s is not supported"%feature)
-        
-        if not all_features_available:
-            print("Scene %s is not supported"%json_file_path)
-            continue
-        
-        
         if use_generator:
+            all_features_available = True
+            if "requiredFeatures" in parsed_json:
+                for feature in parsed_json["requiredFeatures"]:
+                    if not check_feature(feature_list, feature):
+                        all_features_available = False
+                        print("Feature %s is not supported"%feature)
+            
+            if not all_features_available:
+                print("Scene %s is not supported"%json_file_path)
+                continue
+        
             sceneGenerator.resetAllParameters()
             for [key, value] in parsed_json["sceneParameters"].items():
                 sceneGenerator.setParameter(key, value)
@@ -244,11 +242,13 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
             result.append(func(parsed_json, sceneGenerator, anari_renderer, json_file_path, "", "", *args))
     return result
 
-def render_scenes(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", output = ".", prefix = ""):
-    apply_to_scenes(render_scene, anari_library, anari_device, anari_renderer, test_scenes, False, True, output, prefix)
-    ref_images = globImages(".", reference_prefix)
-    candidate_images = globImages(output, '[!{reference_prefix}]')
-    evaluations = apply_to_scenes(evaluate_scene, anari_library, anari_device, anari_renderer, test_scenes, False, False, output, prefix, ref_images, candidate_images)
+def render_scenes(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", output = "."):
+    apply_to_scenes(render_scene, anari_library, anari_device, anari_renderer, test_scenes, False, True, output)
+    
+def compare_images(test_scenes = "test_scenes", candidates_path = "test_scenes", output = "."):
+    ref_images = globImages(test_scenes, reference_prefix)
+    candidate_images = globImages(candidates_path, '[!{}]'.format(reference_prefix))
+    evaluations = apply_to_scenes(evaluate_scene, "", None, "default", test_scenes, False, False, output, ref_images, candidate_images)
     evaluations = write_images(evaluations, output)
     write_report(evaluations, output)
 
@@ -335,6 +335,11 @@ if __name__ == "__main__":
     renderScenesParser = subparsers.add_parser('render_scenes', description='Renders an image to disk for each test scene', parents=[sceneParser])
     renderScenesParser.add_argument('--output', default=".")
 
+    evaluateScenesParser = subparsers.add_parser('compare_images', description='Evaluates candidate renderings against reference renderings')
+    evaluateScenesParser.add_argument('--test_scenes', default="test_scenes")
+    evaluateScenesParser.add_argument('--candidates', default="test_scenes")
+    evaluateScenesParser.add_argument('--output', default=".")
+
     checkExtensionsParser = subparsers.add_parser('query_features', parents=[deviceParser])
 
     queryMetadataParser = subparsers.add_parser('query_metadata', parents=[libraryParser])
@@ -354,6 +359,8 @@ if __name__ == "__main__":
 
     if args.command == "render_scenes":
         render_scenes(args.library, args.device, args.renderer, args.test_scenes, args.output)
+    elif args.command == "compare_images":
+        compare_images(args.test_scenes, args.candidates, args.output)
     elif args.command == "query_features":
         result = query_features(args.library, args.device)
         print(tabulate(result))
