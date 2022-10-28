@@ -351,9 +351,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # test evaluation
-    render_scenes("example")
-
     if args.command == "render_scenes":
         render_scenes(args.library, args.device, args.renderer, args.test_scenes, args.output)
     elif args.command == "query_features":
