@@ -14,6 +14,8 @@ import glob
 
 logger_mutex = threading.Lock()
 
+reference_prefix = "ref_"
+
 def check_feature(feature_list, check_feature):
     for [feature, is_available] in feature_list:
         if feature == check_feature:
@@ -43,12 +45,13 @@ def recursive_update(d, merge_dict):
 def globImages(directory, prefix = ""):
     return glob.glob(f'{directory}/**/{prefix}*.png', recursive = True)
 
-def getFileFromList(list, file):
+def getFileFromList(list, filename):
     for path in list:
-        if Path(path).stem == file:
+        if Path(path).stem == filename:
             return path
     return ""
 
+# writes all reference, candidate, diff and threshold images to disk and returns
 def write_images(evaluations, output):
     output_path = Path(output) / "evaluation"
     for evaluation in evaluations:
@@ -83,7 +86,6 @@ def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, 
     results = {}
     stem = scene_location.stem
     channels = ["color", "depth"]
-    referencePrefix = "ref_"
     
     if permutationString != "":
         permutationString = f'_{permutationString}'
@@ -92,9 +94,8 @@ def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, 
         variantString = f'_{variantString}'
 
     for channel in channels:
-        # Extract the test case name from the reference file
         name = f'{prefix}{stem}{permutationString}{variantString}_{channel}'
-        reference_file = f'{referencePrefix}{prefix}{stem}{permutationString}_{channel}'
+        reference_file = f'{reference_prefix}{prefix}{stem}{permutationString}_{channel}'
         candidate_file = f'{prefix}{stem}{permutationString}{variantString}_{channel}'
 
         ref_path = getFileFromList(ref_files, reference_file)
@@ -245,10 +246,10 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
 
 def render_scenes(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", output = ".", prefix = ""):
     apply_to_scenes(render_scene, anari_library, anari_device, anari_renderer, test_scenes, False, True, output, prefix)
-    ref_images = globImages(".", 'ref_')
-    candidate_images = globImages(output, '[!ref_]')
-    results = apply_to_scenes(evaluate_scene, anari_library, anari_device, anari_renderer, test_scenes, False, False, output, prefix, ref_images, candidate_images)
-    evaluations = write_images(results, output)
+    ref_images = globImages(".", reference_prefix)
+    candidate_images = globImages(output, '[!{reference_prefix}]')
+    evaluations = apply_to_scenes(evaluate_scene, anari_library, anari_device, anari_renderer, test_scenes, False, False, output, prefix, ref_images, candidate_images)
+    evaluations = write_images(evaluations, output)
     write_report(evaluations, output)
 
 def check_bounding_boxes(ref, candidate, tolerance):

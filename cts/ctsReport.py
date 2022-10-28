@@ -1,8 +1,6 @@
 import time
-from reportlab.lib.enums import TA_JUSTIFY
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle, PageBreak
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import inch
+from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors, pagesizes
 
 def generate_report_document(report_data, path, title):
@@ -58,7 +56,7 @@ def generate_report_document(report_data, path, title):
             images_data = [
                 [ 
                     Paragraph("Reference", stylesheet["Heading4"]), 
-                    Paragraph("Submission", stylesheet["Heading4"]), 
+                    Paragraph("Candidate", stylesheet["Heading4"]), 
                 ],
                 [
                     Image(
