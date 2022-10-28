@@ -5,6 +5,7 @@ import skimage.transform
 import skimage.filters
 import numpy as np
 from sewar.full_ref import vifp, uqi
+import os
 
 
 def evaluate_metrics(reference, candidate):
@@ -108,3 +109,9 @@ def evaluate_scene(reference_path, candidate_path):
     
     # Compute metrics and compare images
     return evaluate(reference_image, candidate_image)
+
+def write_image(path, image, check_contrast = True):
+    filepath, filename = os.path.split(path)
+    if not os.path.exists(filepath):
+        os.makedirs(filepath)
+    skimage.io.imsave(path, image, check_contrast=check_contrast)

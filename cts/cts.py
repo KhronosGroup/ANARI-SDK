@@ -48,6 +48,32 @@ def getFileFromList(list, file):
             return path
     return ""
 
+def write_images(evaluations, output):
+    output_path = Path(output) / "evaluation"
+    for evaluation in evaluations:
+        for name, value in evaluation.items():
+            evaluation[name]["image_paths"] = {}
+            
+            # save the input images to the output directory
+            reference_image_path = Path("reference") / f"{name}.png"
+            ctsUtility.write_image(output_path / reference_image_path, evaluation[name]["images"]["reference"])
+            evaluation[name]["image_paths"]["reference"] = reference_image_path
+            
+            candidate_image_path = Path("candidate") / f"{name}.png"
+            ctsUtility.write_image(output_path / candidate_image_path, evaluation[name]["images"]["candidate"])
+            evaluation[name]["image_paths"]["candidate"] = candidate_image_path
+
+            # save the diff image
+            diff_image_path = Path("diffs") / f"{name}.png"
+            ctsUtility.write_image(output_path / diff_image_path, evaluation[name]["images"]["diff"], check_contrast=False)
+            evaluation[name]["image_paths"]["diff"] = diff_image_path
+
+            # save the threshold image
+            thresholds_image_path = Path("thresholds") / f"{name}.png"
+            ctsUtility.write_image(output_path / thresholds_image_path, evaluation[name]["images"]["threshold"], check_contrast=False)
+            evaluation[name]["image_paths"]["threshold"] = thresholds_image_path
+
+
 def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, permutationString, variantString, output = ".", prefix = "", ref_files = [], candidate_files = []):
     results = {}
     stem = scene_location.stem
@@ -213,11 +239,11 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
     return result
 
 def render_scenes(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", output = ".", prefix = ""):
-    ref_files = globImages(".", 'ref_')
-    candidate_files = globImages(output, '[!ref_]')
-    # TODO change order back after testing
-    apply_to_scenes(evaluate_scene, anari_library, anari_device, anari_renderer, test_scenes, False, False, output, prefix, ref_files, candidate_files)
-    apply_to_scenes(render_scene, anari_library, anari_device, anari_renderer, test_scenes, False, True, output, prefix)
+    ref_images = globImages(".", 'ref_')
+    candidate_images = globImages(output, '[!ref_]')
+    #apply_to_scenes(render_scene, anari_library, anari_device, anari_renderer, test_scenes, False, True, output, prefix)
+    results = apply_to_scenes(evaluate_scene, anari_library, anari_device, anari_renderer, test_scenes, False, False, output, prefix, ref_images, candidate_images)
+    write_images(results, output)
 
 def check_bounding_boxes(ref, candidate, tolerance):
     axis = 'X'
