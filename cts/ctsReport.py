@@ -40,6 +40,13 @@ def generate_report_document(report_data, path, title):
                     Paragraph(f'<code>{result:10.5f}</code>', stylesheet["Normal"]), 
                     Paragraph("Above Threshold" if results["passed"][name] else '<font color="orange">Below Threshold</font>', stylesheet["Normal"])
                 ])
+                
+            if "frametime" in results:
+                metrics_data.append([
+                    Paragraph("Frame duration", stylesheet["Normal"]), 
+                    Paragraph(f'<code>{results["frametime"]:10.5f}</code>', stylesheet["Normal"]),
+                    Paragraph("-", stylesheet["Normal"])
+                ])
 
             t = Table(metrics_data, 3 * [cell_size])
             t.setStyle(TableStyle([
