@@ -266,7 +266,8 @@ void SceneGenerator::commit()
   anari::release(d, mat);
 }
 
-std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(const std::string &rendererType)
+std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
+    const std::string &rendererType, float renderDistance)
 {
   size_t image_height = getParam<size_t>("image_height", 1024);
   size_t image_width = getParam<size_t>("image_width", 1024);
@@ -312,7 +313,8 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(const std::string
 
   std::vector<uint32_t> converted;
   for (int i = 0; i < image_height * image_width; ++i) {
-    uint8_t colorValue = static_cast<uint8_t>(pixels[i] / 2.5f * 255.0f);
+    uint8_t colorValue =
+        static_cast<uint8_t>(pixels[i] / renderDistance * 255.0f);
     uint32_t rgba =
         (255 << 24) + (colorValue << 16) + (colorValue << 8) + colorValue;
     converted.push_back(rgba);

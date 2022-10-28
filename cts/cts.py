@@ -11,6 +11,7 @@ import json
 import itertools
 import ctsUtility
 import glob
+import math
 
 logger_mutex = threading.Lock()
 
@@ -129,7 +130,19 @@ def resolve_scenes(test_scenes):
     return collected_scenes
 
 def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, permutationString, variantString, output = ".", prefix = ""):
-    image_data_list = sceneGenerator.renderScene(anari_renderer)
+    world_bounds = []
+    if "metaData" in [parsed_json]:
+        metaData = parsed_json["metaData"]
+        if permutationString != "":
+            metaData = metaData[permutationString]
+        if "bounds" in metaData and "world" in metaData["bounds"]:
+            world_bounds = metaData["bounds"]["world"]
+
+    if world_bounds == []:
+        world_bounds = sceneGenerator.getBounds()[0][0]
+
+    bounds_distance = math.dist(world_bounds[0], world_bounds[1])
+    image_data_list = sceneGenerator.renderScene(anari_renderer, bounds_distance)
 
     frame_duration = sceneGenerator.getFrameDuration()
     print(f'Frame duration: {frame_duration}')
