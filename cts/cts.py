@@ -1,5 +1,6 @@
 #!python3
 import ctsBackend
+import ctsReport
 import argparse
 import threading
 import datetime
@@ -53,7 +54,7 @@ def write_images(evaluations, output):
     for evaluation in evaluations:
         for name, value in evaluation.items():
             evaluation[name]["image_paths"] = {}
-            
+
             # save the input images to the output directory
             reference_image_path = Path("reference") / f"{name}.png"
             ctsUtility.write_image(output_path / reference_image_path, evaluation[name]["images"]["reference"])
@@ -72,7 +73,11 @@ def write_images(evaluations, output):
             thresholds_image_path = Path("thresholds") / f"{name}.png"
             ctsUtility.write_image(output_path / thresholds_image_path, evaluation[name]["images"]["threshold"], check_contrast=False)
             evaluation[name]["image_paths"]["threshold"] = thresholds_image_path
+    return evaluations
 
+def write_report(results, output):
+    output_path = Path(output) / "evaluation"
+    ctsReport.generate_report_document(results, output_path, "CTS - Report")
 
 def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, permutationString, variantString, output = ".", prefix = "", ref_files = [], candidate_files = []):
     results = {}
@@ -239,11 +244,12 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
     return result
 
 def render_scenes(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", output = ".", prefix = ""):
+    apply_to_scenes(render_scene, anari_library, anari_device, anari_renderer, test_scenes, False, True, output, prefix)
     ref_images = globImages(".", 'ref_')
     candidate_images = globImages(output, '[!ref_]')
-    #apply_to_scenes(render_scene, anari_library, anari_device, anari_renderer, test_scenes, False, True, output, prefix)
     results = apply_to_scenes(evaluate_scene, anari_library, anari_device, anari_renderer, test_scenes, False, False, output, prefix, ref_images, candidate_images)
-    write_images(results, output)
+    evaluations = write_images(results, output)
+    write_report(evaluations, output)
 
 def check_bounding_boxes(ref, candidate, tolerance):
     axis = 'X'
@@ -260,7 +266,6 @@ def check_bounding_boxes(ref, candidate, tolerance):
                 id = "MIN" if j == 0 else "MAX"
                 output += f'{id} {chr(ord(axis) + i)} mismatch: Is {candidate_values[j]}. Should be {ref_values[j]} ± {ref_distance*tolerance}\n'
     return output
-
 
 def check_object_properties_helper(parsed_json, sceneGenerator, anari_renderer, scene_location, permutationString, variantString):
     output = ""
