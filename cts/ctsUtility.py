@@ -43,10 +43,6 @@ def evaluate_metrics(reference, candidate):
     }
     
 def evaluate_passed(metrics):
-	# Through survey and analysis new threshold values were determined for ssim and psnr.
-	# These are the values in the code. The original source for these values is in thresholds.csv.
-	# The initial values were 0.85 and 20.0.
-	# Leonard Daly, 2021-10-07
     return {
         # Choose a relaxed value for SSIM
         "ssim": metrics["ssim"] > 0.70,
