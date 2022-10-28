@@ -30,7 +30,7 @@ class SceneGenerator : public anari::scenes::TestScene
   void commit() override;
 
   std::vector<std::vector<uint32_t>> renderScene(
-      const std::string &rendererType);
+      const std::string &rendererType, float renderDistance);
   std::vector<std::vector<std::vector<std::vector<float>>>> getBounds();
 
   float getFrameDuration() const
