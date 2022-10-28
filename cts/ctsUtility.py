@@ -45,7 +45,7 @@ def evaluate_metrics(reference, candidate, methods, thresholds, custom_compariso
         # high MSE might still look very similar to a human.
         # "mse": skimage.metrics.mean_squared_error(reference, candidate),
         # Peak Signal to Noise Ratio (PSNR) is based on MSE and brought to a logarithmic scale in the decibel unit
-        threshold =  getThreshold(methods, thresholds, "psnr", 0.70)
+        threshold =  getThreshold(methods, thresholds, "psnr", 20.0)
         passed["psnr"], results["psnr"] = psnr(reference, candidate, threshold)
 
     if custom_comparison_function != None:
