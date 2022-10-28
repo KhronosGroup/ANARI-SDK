@@ -8,8 +8,10 @@ from sewar.full_ref import vifp, uqi
 import os
 
 
-def evaluate_metrics(reference, candidate):
-    return {
+def evaluate_metrics(reference, candidate, methods):
+    results = {}
+
+    if "ssim" in methods:
         # Structural similarity index between two images
         # (humans are better at perceiving structural differences than subtle pixel changes).
         # it compares the images based on luminance Contast and structure.
@@ -18,30 +20,31 @@ def evaluate_metrics(reference, candidate):
         # ssim provides high scores one of the images is blured or the color space is shifted
         # further reading:
         # https://en.wikipedia.org/wiki/Structural_similarity
-        "ssim": skimage.metrics.structural_similarity(reference, candidate, multichannel=True),
+        results["ssim"] = skimage.metrics.structural_similarity(reference, candidate, multichannel=True)
         
+    if "psnr" in methods:
         # Mean Squared Error (MSE) is one of the most commonly used image quality measures, but receives strong criticism as
         # it doesn't reflect the way the human visual systems perceive images very well. An image pair with
         # high MSE might still look very similar to a human.
         # "mse": skimage.metrics.mean_squared_error(reference, candidate),
         # Peak Signal to Noise Ratio (PSNR) is based on MSE and brought to a logarithmic scale in the decibel unit
-        "psnr": skimage.metrics.peak_signal_noise_ratio(reference, candidate),
-        
-        # Normalized Root MSE (NRMSE)
-        # "nrmse": skimage.metrics.normalized_root_mse(reference, candidate),
-        
-        # Mean Absolute Error (MAE)
-        # "mae": np.absolute(np.subtract(reference, candidate)).mean(),
-        
-        # Visual Information Fidelity Measure (VIF)
-        # https://ieeexplore.ieee.org/abstract/document/1576816/
-        # The higher the better. The reference image would yield a value of 1.0, values above 1.0
-        # typically stem from higher contrast images, which are considerered better quality in this metric
-        # "vif": vifp(reference, candidate),
-        
-        # Universal Quality Index (UQI)
-        # "uqi": uqi(reference, candidate),
-    }
+        results["psnr"] = skimage.metrics.peak_signal_noise_ratio(reference, candidate)
+
+    # Normalized Root MSE (NRMSE)
+    # "nrmse": skimage.metrics.normalized_root_mse(reference, candidate),
+    
+    # Mean Absolute Error (MAE)
+    # "mae": np.absolute(np.subtract(reference, candidate)).mean(),
+    
+    # Visual Information Fidelity Measure (VIF)
+    # https://ieeexplore.ieee.org/abstract/document/1576816/
+    # The higher the better. The reference image would yield a value of 1.0, values above 1.0
+    # typically stem from higher contrast images, which are considerered better quality in this metric
+    # "vif": vifp(reference, candidate),
+    
+    # Universal Quality Index (UQI)
+    # "uqi": uqi(reference, candidate),
+    return results 
     
 def evaluate_passed(metrics):
 	# Through survey and analysis new threshold values were determined for ssim and psnr.
@@ -77,8 +80,8 @@ def compare_images(reference, candidate):
         "threshold": skimage.util.img_as_ubyte(threshold)
     }
 
-def evaluate(reference, candidate):
-    metrics = evaluate_metrics(reference, candidate)
+def evaluate(reference, candidate, methods):
+    metrics = evaluate_metrics(reference, candidate, methods)
 
     return {
         "metrics": metrics,
@@ -102,13 +105,13 @@ def normalize_images(reference, candidate):
         print()
     return reference, candidate
 
-def evaluate_scene(reference_path, candidate_path):
+def evaluate_scene(reference_path, candidate_path, methods):
     reference_image = skimage.io.imread(reference_path)
     candidate_image = skimage.util.img_as_ubyte(skimage.io.imread(candidate_path))
     reference_image, candidate_image = normalize_images(reference_image, candidate_image)
     
     # Compute metrics and compare images
-    return evaluate(reference_image, candidate_image)
+    return evaluate(reference_image, candidate_image, methods)
 
 def write_image(path, image, check_contrast = True):
     filepath, filename = os.path.split(path)
