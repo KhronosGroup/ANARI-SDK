@@ -81,6 +81,7 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
   add_custom_target(generate_example_device
     COMMAND ${Python3_EXECUTABLE} ${ANARI_CODE_GEN_ROOT}/generate_queries.py
       --json ${ANARI_CODE_GEN_ROOT}
+      --json ${CMAKE_CURRENT_SOURCE_DIR}
       --prefix ExampleDevice
       --device ${CMAKE_CURRENT_SOURCE_DIR}/example_device.json
       --namespace anari::example_device
@@ -91,6 +92,7 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
   add_custom_target(generate_example_debug_objects
     COMMAND ${Python3_EXECUTABLE} ${ANARI_CODE_GEN_ROOT}/generate_debug_objects.py
       --json ${ANARI_CODE_GEN_ROOT}
+      --json ${CMAKE_CURRENT_SOURCE_DIR}
       --device ${CMAKE_CURRENT_SOURCE_DIR}/example_device.json
       --prefix ExampleDevice
       --namespace anari::example_device
