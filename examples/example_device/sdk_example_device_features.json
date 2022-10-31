@@ -1,0 +1,177 @@
+{
+    "info" : {
+        "name" : "SDK_EXAMPLE_DEVICE",
+        "type" : "feature",
+        "dependencies" : []
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_DEVICE",
+            "parameters" : [
+                {
+                    "name" : "numThreads",
+                    "types" : ["ANARI_INT32"],
+                    "tags" : [],
+                    "description" : "Number of threads used. Defaults to hardware concurrency."
+                }
+            ]
+        }, {
+            "type" : "ANARI_RENDERER",
+            "name" : "default",
+            "parameters" : [
+                {
+                    "name" : "backgroundColor",
+                    "types" : ["ANARI_FLOAT32_VEC4"],
+                    "tags" : [],
+                    "default" : [1.0, 1.0, 1.0, 1.0],
+                    "description" : "background color and alpha (RGBA)"
+                }, {
+                    "name" : "pixelSamples",
+                    "types" : ["ANARI_INT32"],
+                    "tags" : [],
+                    "default" : 1,
+                    "description" : "samples per pixel"
+                }
+            ]
+        }, {
+            "type" : "ANARI_RENDERER",
+            "name" : "scivis",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "description" : "optional object name"
+                }, {
+                    "name" : "backgroundColor",
+                    "types" : ["ANARI_FLOAT32_VEC4"],
+                    "tags" : [],
+                    "default" : [1.0, 1.0, 1.0, 1.0],
+                    "description" : "background color and alpha (RGBA)"
+                }, {
+                    "name" : "pixelSamples",
+                    "types" : ["ANARI_INT32"],
+                    "tags" : [],
+                    "default" : 1,
+                    "description" : "samples per pixel"
+                }
+            ]
+        }, {
+            "type" : "ANARI_RENDERER",
+            "name" : "ao",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "description" : "optional object name"
+                }, {
+                    "name" : "backgroundColor",
+                    "types" : ["ANARI_FLOAT32_VEC4"],
+                    "tags" : [],
+                    "default" : [1.0, 1.0, 1.0, 1.0],
+                    "description" : "background color and alpha (RGBA)"
+                }, {
+                    "name" : "pixelSamples",
+                    "types" : ["ANARI_INT32"],
+                    "tags" : [],
+                    "default" : 1,
+                    "description" : "samples per pixel"
+                }
+            ]
+        }, {
+            "type" : "ANARI_RENDERER",
+            "name" : "pathtracer",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "description" : "optional object name"
+                }, {
+                    "name" : "backgroundColor",
+                    "types" : ["ANARI_FLOAT32_VEC4"],
+                    "tags" : [],
+                    "default" : [1.0, 1.0, 1.0, 1.0],
+                    "description" : "background color and alpha (RGBA)"
+                }, {
+                    "name" : "pixelSamples",
+                    "types" : ["ANARI_INT32"],
+                    "tags" : [],
+                    "default" : 1,
+                    "description" : "samples per pixel"
+                }
+            ]
+        }, {
+            "type" : "ANARI_RENDERER",
+            "name" : "debug",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "description" : "optional object name"
+                }, {
+                    "name" : "backgroundColor",
+                    "types" : ["ANARI_FLOAT32_VEC4"],
+                    "tags" : [],
+                    "default" : [1.0, 1.0, 1.0, 1.0],
+                    "description" : "background color and alpha (RGBA)"
+                }, {
+                    "name" : "pixelSamples",
+                    "types" : ["ANARI_INT32"],
+                    "tags" : [],
+                    "default" : 1,
+                    "description" : "samples per pixel"
+                }
+            ]
+        }, {
+            "type" : "ANARI_RENDERER",
+            "name" : "raycast",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "description" : "optional object name"
+                }, {
+                    "name" : "backgroundColor",
+                    "types" : ["ANARI_FLOAT32_VEC4"],
+                    "tags" : [],
+                    "default" : [1.0, 1.0, 1.0, 1.0],
+                    "description" : "background color and alpha (RGBA)"
+                }, {
+                    "name" : "pixelSamples",
+                    "types" : ["ANARI_INT32"],
+                    "tags" : [],
+                    "default" : 1,
+                    "description" : "samples per pixel"
+                }
+            ]
+        }, {
+            "type" : "ANARI_RENDERER",
+            "name" : "rayDir",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "description" : "optional object name"
+                }, {
+                    "name" : "backgroundColor",
+                    "types" : ["ANARI_FLOAT32_VEC4"],
+                    "tags" : [],
+                    "default" : [1.0, 1.0, 1.0, 1.0],
+                    "description" : "background color and alpha (RGBA)"
+                }, {
+                    "name" : "pixelSamples",
+                    "types" : ["ANARI_INT32"],
+                    "tags" : [],
+                    "default" : 1,
+                    "description" : "samples per pixel"
+                }
+            ]
+        }
+    ]
+}
