@@ -134,7 +134,7 @@ class QueryGenerator:
                 objname += "_" + obj["name"]
 
             for param in obj["parameters"]:
-                paramname = param["name"].replace(".", "_")
+                paramname = param["name"].replace(".", "_").replace(":", "_")
                 code += "static const void * " + objname + "_" + paramname + "_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {\n"
                 code += "   (void)paramType;\n"
                 code += "   switch(infoName) {\n"
@@ -223,7 +223,7 @@ class QueryGenerator:
             code += "static const void * " + objname + "_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {\n"
             code += "   switch(param_hash(paramName)) {\n"
             for param in obj["parameters"]:
-                paramname = param["name"].replace(".", "_")
+                paramname = param["name"].replace(".", "_").replace(":", "_")
                 code += "      case %i:\n"%self.param_strings.index(param["name"])
                 code += "         return " + objname + "_" + paramname + "_info(paramType, infoName, infoType);\n"
             code += "      default:\n"
