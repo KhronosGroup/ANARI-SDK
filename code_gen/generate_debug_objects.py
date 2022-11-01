@@ -109,7 +109,7 @@ class DebugGenerator:
                 code += "      int idx = param_hash(paramname);\n"
                 code += "      switch(idx) {\n"
                 for i in range(0, len(params)):
-                    paramname = params[i]["name"].replace('.', '_')
+                    paramname = params[i]["name"].replace('.', '_').replace(':', '_')
                     code += "         case %d: { //%s\n"%(i,params[i]["name"])
                     code += "            ANARIDataType %s_types[] = {"%paramname
                     code += ",".join(params[i]["types"])
