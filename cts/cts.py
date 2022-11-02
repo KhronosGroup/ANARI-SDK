@@ -59,27 +59,30 @@ def getFileFromList(list, filename):
 def write_images(evaluations, output):
     output_path = Path(output) / "evaluation"
     for evaluation in evaluations:
-        for name, value in evaluation.items():
-            evaluation[name]["image_paths"] = {}
+        for stem, test in evaluation.items():
+            for name, value in test.items():
+                if isinstance(value, dict):
+                    for channel, channelValue in value.items():
+                        evaluation[stem][name][channel]["image_paths"] = {}
 
-            # save the input images to the output directory
-            reference_image_path = Path("reference") / f"{name}.png"
-            ctsUtility.write_image(output_path / reference_image_path, evaluation[name]["images"]["reference"])
-            evaluation[name]["image_paths"]["reference"] = reference_image_path
-            
-            candidate_image_path = Path("candidate") / f"{name}.png"
-            ctsUtility.write_image(output_path / candidate_image_path, evaluation[name]["images"]["candidate"])
-            evaluation[name]["image_paths"]["candidate"] = candidate_image_path
+                        # save the input images to the output directory
+                        reference_image_path = Path("reference") / f"{name}.png"
+                        ctsUtility.write_image(output_path / reference_image_path, evaluation[stem][name][channel]["images"]["reference"])
+                        evaluation[stem][name][channel]["image_paths"]["reference"] = reference_image_path
+                        
+                        candidate_image_path = Path("candidate") / f"{name}.png"
+                        ctsUtility.write_image(output_path / candidate_image_path, evaluation[stem][name][channel]["images"]["candidate"])
+                        evaluation[stem][name][channel]["image_paths"]["candidate"] = candidate_image_path
 
-            # save the diff image
-            diff_image_path = Path("diffs") / f"{name}.png"
-            ctsUtility.write_image(output_path / diff_image_path, evaluation[name]["images"]["diff"], check_contrast=False)
-            evaluation[name]["image_paths"]["diff"] = diff_image_path
+                        # save the diff image
+                        diff_image_path = Path("diffs") / f"{name}.png"
+                        ctsUtility.write_image(output_path / diff_image_path, evaluation[stem][name][channel]["images"]["diff"], check_contrast=False)
+                        evaluation[stem][name][channel]["image_paths"]["diff"] = diff_image_path
 
-            # save the threshold image
-            thresholds_image_path = Path("thresholds") / f"{name}.png"
-            ctsUtility.write_image(output_path / thresholds_image_path, evaluation[name]["images"]["threshold"], check_contrast=False)
-            evaluation[name]["image_paths"]["threshold"] = thresholds_image_path
+                        # save the threshold image
+                        thresholds_image_path = Path("thresholds") / f"{name}.png"
+                        ctsUtility.write_image(output_path / thresholds_image_path, evaluation[stem][name][channel]["images"]["threshold"], check_contrast=False)
+                        evaluation[stem][name][channel]["image_paths"]["threshold"] = thresholds_image_path
     return evaluations
 
 def write_report(results, output):
@@ -89,6 +92,9 @@ def write_report(results, output):
 def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, permutationString, variantString, output = ".", ref_files = [], candidate_files = [], methods = ["ssim"], thresholds = None, custom_compare_function = None):
     results = {}
     stem = scene_location.stem
+    results[stem] = {}
+    if "requiredFeatures" in parsed_json:
+        results[stem]["requiredFeatures"] = parsed_json["requiredFeatures"]
     channels = ["color", "depth"]
     
     if permutationString != "":
@@ -97,8 +103,10 @@ def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, 
     if variantString != "":
         variantString = f'_{variantString}'
 
+    name = f'{stem}{permutationString}{variantString}'
+    results[stem][name] = {}
+
     for channel in channels:
-        name = f'{stem}{permutationString}{variantString}_{channel}'
         reference_file = f'{reference_prefix}{stem}{permutationString}_{channel}'
         candidate_file = f'{stem}{permutationString}{variantString}_{channel}'
 
@@ -112,7 +120,7 @@ def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, 
             methods = ["psnr"]
             custom_compare_function = None
 
-        results[name] = ctsUtility.evaluate_scene(ref_path, candidate_path, methods, thresholds, custom_compare_function)
+        results[stem][name][channel] = ctsUtility.evaluate_scene(ref_path, candidate_path, methods, thresholds, custom_compare_function)
     return results
 
 def resolve_scenes(test_scenes):
@@ -270,7 +278,10 @@ def compare_images(test_scenes = "test_scenes", candidates_path = "test_scenes",
     candidate_images = globImages(candidates_path, '[!{}]'.format(reference_prefix))
     evaluations = apply_to_scenes(evaluate_scene, "", None, "default", test_scenes, False, False, output, ref_images, candidate_images, comparison_methods, thresholds, custom_compare_function)
     evaluations = write_images(evaluations, output)
-    write_report(evaluations, output)
+    merged_evaluations = {}
+    for evaluation in evaluations:
+        merged_evaluations = recursive_update(merged_evaluations, evaluation)
+    write_report(merged_evaluations, output)
 
 def check_bounding_boxes(ref, candidate, tolerance):
     axis = 'X'
@@ -359,7 +370,7 @@ if __name__ == "__main__":
     evaluateScenesParser.add_argument('--test_scenes', default="test_scenes")
     evaluateScenesParser.add_argument('--candidates', default="test_scenes")
     evaluateScenesParser.add_argument('--output', default=".")
-    evaluateScenesParser.add_argument('--comparison_methods', default=["blorg"], nargs='+', choices=["ssim", "psnr"])
+    evaluateScenesParser.add_argument('--comparison_methods', default=["ssim"], nargs='+', choices=["ssim", "psnr"])
     evaluateScenesParser.add_argument('--thresholds', default=None, nargs='+')
 
     checkExtensionsParser = subparsers.add_parser('query_features', parents=[deviceParser])
