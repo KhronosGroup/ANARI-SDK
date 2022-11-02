@@ -347,7 +347,18 @@ def check_object_properties(anari_library, anari_device = None, anari_renderer =
 def query_metadata(anari_library, type = None, subtype = None, skipParameters = False, info = False):
     ctsBackend.query_metadata(anari_library, type, subtype, skipParameters, info, anari_logger)
 
+def create_report_for_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, permutationString, variantString, output, methods, thresholds):
+    frame_duration = render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, permutationString, variantString, output)
+    property_check = check_object_properties_helper(parsed_json, sceneGenerator, anari_renderer, scene_location, permutationString, variantString)
+    ref_files = None # TODO
+    candidate_files = None #TODO
+    report = evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, permutationString, variantString, output, ref_files, candidate_files, methods, thresholds)
 
+def create_report(library, device = None, renderer = "default", test_scenes = "test_scenes", output = ".", comparison_methods = ["ssim"], thresholds = None):
+    result = {}
+    result["anariInfo"] = query_metadata(library, device)
+    result["features"] = query_features(library, device)
+    result["frameDurations"] = apply_to_scenes(create_report_for_scene, library, device, renderer, test_scenes, False, True, output, comparison_methods, thresholds)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='ANARI CTS toolkit')
@@ -383,6 +394,11 @@ if __name__ == "__main__":
 
     checkObjectPropertiesParser = subparsers.add_parser('check_object_properties', parents=[sceneParser])
 
+    create_reportParser = subparsers.add_parser('create_report', parents=[sceneParser])
+    create_reportParser.add_argument('--output', default=".")
+    create_reportParser.add_argument('--comparison_methods', default=["ssim"], nargs='+', choices=["ssim", "psnr"])
+    create_reportParser.add_argument('--thresholds', default=None, nargs='+')
+
     command_text = ""
     for subparser in subparsers.choices :
         command_text += subparser + "\n  "
@@ -403,3 +419,5 @@ if __name__ == "__main__":
         result = check_object_properties(args.library, args.device, args.renderer, args.test_scenes)
         for message in result:
             print(message)
+    elif args.command == "create_report":
+        create_report(args.library, args.device, args.renderer, args.test_scenes, args.output, args.comparison_methods, args.thresholds)
