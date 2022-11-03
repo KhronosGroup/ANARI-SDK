@@ -10,14 +10,14 @@ namespace anari {
 namespace example_device {
 class ExampleDeviceDebugFactory : public anari::debug_device::ObjectFactory {
 public:
-   anari::debug_device::DebugObjectBase* new_volume(const char *name, anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;
-   anari::debug_device::DebugObjectBase* new_geometry(const char *name, anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;
-   anari::debug_device::DebugObjectBase* new_spatial_field(const char *name, anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;
-   anari::debug_device::DebugObjectBase* new_light(const char *name, anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;
-   anari::debug_device::DebugObjectBase* new_camera(const char *name, anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;
-   anari::debug_device::DebugObjectBase* new_material(const char *name, anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;
-   anari::debug_device::DebugObjectBase* new_sampler(const char *name, anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;
-   anari::debug_device::DebugObjectBase* new_renderer(const char *name, anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;
+anari::debug_device::DebugObjectBase* new_camera(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) override;
+anari::debug_device::DebugObjectBase* new_geometry(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) override;
+anari::debug_device::DebugObjectBase* new_light(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) override;
+anari::debug_device::DebugObjectBase* new_material(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) override;
+anari::debug_device::DebugObjectBase* new_renderer(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) override;
+anari::debug_device::DebugObjectBase* new_sampler(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) override;
+anari::debug_device::DebugObjectBase* new_spatial_field(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) override;
+anari::debug_device::DebugObjectBase* new_volume(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) override;
    anari::debug_device::DebugObjectBase* new_device(anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;
    anari::debug_device::DebugObjectBase* new_array1d(anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;
    anari::debug_device::DebugObjectBase* new_array2d(anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;
@@ -33,7 +33,7 @@ public:
 namespace {
 class device : public DebugObject<ANARI_DEVICE> {
    static int param_hash(const char *str) {
-      static const uint32_t table[] = {0x62610006u,0x0u,0x0u,0x0u,0x0u,0x7574000au,0x6e6d0007u,0x66650008u,0x1000009u,0x80000000u,0x6261000bu,0x7574000cu,0x7675000du,0x7473000eu,0x4443000fu,0x62610010u,0x6d6c0011u,0x6d6c0012u,0x63620013u,0x62610014u,0x64630015u,0x6c6b0016u,0x56000017u,0x80000001u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x7473006du,0x6665006eu,0x7372006fu,0x45440070u,0x62610071u,0x75740072u,0x62610073u,0x1000074u,0x80000002u};
+      static const uint32_t table[] = {0x76610006u,0x0u,0x0u,0x0u,0x0u,0x75740027u,0x6e6d001bu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6e6d001eu,0x6665001cu,0x100001du,0x80000000u,0x5554001fu,0x69680020u,0x73720021u,0x66650022u,0x62610023u,0x65640024u,0x74730025u,0x1000026u,0x80000003u,0x62610028u,0x75740029u,0x7675002au,0x7473002bu,0x4443002cu,0x6261002du,0x6d6c002eu,0x6d6c002fu,0x63620030u,0x62610031u,0x64630032u,0x6c6b0033u,0x56000034u,0x80000001u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x7473008au,0x6665008bu,0x7372008cu,0x4544008du,0x6261008eu,0x7574008fu,0x62610090u,0x1000091u,0x80000002u};
       uint32_t cur = 0x746e0000u;
       for(int i = 0;cur!=0;++i) {
          uint32_t idx = cur&0xFFFFu;
@@ -73,6 +73,11 @@ class device : public DebugObject<ANARI_DEVICE> {
          case 2: { //statusCallbackUserData
             ANARIDataType statusCallbackUserData_types[] = {ANARI_VOID_POINTER, ANARI_UNKNOWN};
             check_type(ANARI_DEVICE, "", paramname, paramtype, statusCallbackUserData_types);
+            return;
+         }
+         case 3: { //numThreads
+            ANARIDataType numThreads_types[] = {ANARI_INT32, ANARI_UNKNOWN};
+            check_type(ANARI_DEVICE, "", paramname, paramtype, numThreads_types);
             return;
          }
          default: // unknown param

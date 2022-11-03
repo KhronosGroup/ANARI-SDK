@@ -338,7 +338,7 @@ int ExampleDevice::getProperty(ANARIObject object,
     } else if (prop == "debugObjects" && type == ANARI_FUNCTION_POINTER) {
       writeToVoidP(mem, getDebugFactory);
       return 1;
-    } else if (prop == "features" && type == ANARI_VOID_POINTER) {
+    } else if (prop == "features" && type == ANARI_STRING_LIST) {
       writeToVoidP(mem, query_extensions());
       return 1;
     }
