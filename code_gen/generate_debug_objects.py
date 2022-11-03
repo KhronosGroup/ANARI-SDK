@@ -65,14 +65,12 @@ class DebugGenerator:
         code = ""
         code += "class " + factoryname + " : public anari::debug_device::ObjectFactory {\n"
         code += "public:\n"
-        code += "   anari::debug_device::DebugObjectBase* new_volume(const char *name, anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
-        code += "   anari::debug_device::DebugObjectBase* new_geometry(const char *name, anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
-        code += "   anari::debug_device::DebugObjectBase* new_spatial_field(const char *name, anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
-        code += "   anari::debug_device::DebugObjectBase* new_light(const char *name, anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
-        code += "   anari::debug_device::DebugObjectBase* new_camera(const char *name, anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
-        code += "   anari::debug_device::DebugObjectBase* new_material(const char *name, anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
-        code += "   anari::debug_device::DebugObjectBase* new_sampler(const char *name, anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
-        code += "   anari::debug_device::DebugObjectBase* new_renderer(const char *name, anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
+
+        named_type_set = sorted(list({x[0] for x in self.named_objects.keys()}))
+        for t in named_type_set:
+            type_name = t[6:].lower()
+            code += "anari::debug_device::DebugObjectBase* new_" + type_name + "(const char *name, DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
+
         code += "   anari::debug_device::DebugObjectBase* new_device(anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
         code += "   anari::debug_device::DebugObjectBase* new_array1d(anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
         code += "   anari::debug_device::DebugObjectBase* new_array2d(anari::debug_device::DebugDevice *td, ANARIObject wh, ANARIObject h) override;\n"
