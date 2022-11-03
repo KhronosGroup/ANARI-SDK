@@ -63,38 +63,39 @@ def write_images(evaluations, output):
             for name, value in test.items():
                 if isinstance(value, dict):
                     for channel, channelValue in value.items():
-                        evaluation[stem][name][channel]["image_paths"] = {}
+                        if isinstance(channelValue, dict):
+                            evaluation[stem][name][channel]["image_paths"] = {}
 
-                        # save the input images to the output directory
-                        reference_image_path = Path("reference") / f"{name}.png"
-                        ctsUtility.write_image(output_path / reference_image_path, evaluation[stem][name][channel]["images"]["reference"])
-                        evaluation[stem][name][channel]["image_paths"]["reference"] = reference_image_path
-                        
-                        candidate_image_path = Path("candidate") / f"{name}.png"
-                        ctsUtility.write_image(output_path / candidate_image_path, evaluation[stem][name][channel]["images"]["candidate"])
-                        evaluation[stem][name][channel]["image_paths"]["candidate"] = candidate_image_path
+                            # save the input images to the output directory
+                            reference_image_path = Path("reference") / f"{name}.png"
+                            ctsUtility.write_image(output_path / reference_image_path, evaluation[stem][name][channel]["images"]["reference"])
+                            evaluation[stem][name][channel]["image_paths"]["reference"] = reference_image_path
+                            
+                            candidate_image_path = Path("candidate") / f"{name}.png"
+                            ctsUtility.write_image(output_path / candidate_image_path, evaluation[stem][name][channel]["images"]["candidate"])
+                            evaluation[stem][name][channel]["image_paths"]["candidate"] = candidate_image_path
 
-                        # save the diff image
-                        diff_image_path = Path("diffs") / f"{name}.png"
-                        ctsUtility.write_image(output_path / diff_image_path, evaluation[stem][name][channel]["images"]["diff"], check_contrast=False)
-                        evaluation[stem][name][channel]["image_paths"]["diff"] = diff_image_path
+                            # save the diff image
+                            diff_image_path = Path("diffs") / f"{name}.png"
+                            ctsUtility.write_image(output_path / diff_image_path, evaluation[stem][name][channel]["images"]["diff"], check_contrast=False)
+                            evaluation[stem][name][channel]["image_paths"]["diff"] = diff_image_path
 
-                        # save the threshold image
-                        thresholds_image_path = Path("thresholds") / f"{name}.png"
-                        ctsUtility.write_image(output_path / thresholds_image_path, evaluation[stem][name][channel]["images"]["threshold"], check_contrast=False)
-                        evaluation[stem][name][channel]["image_paths"]["threshold"] = thresholds_image_path
+                            # save the threshold image
+                            thresholds_image_path = Path("thresholds") / f"{name}.png"
+                            ctsUtility.write_image(output_path / thresholds_image_path, evaluation[stem][name][channel]["images"]["threshold"], check_contrast=False)
+                            evaluation[stem][name][channel]["image_paths"]["threshold"] = thresholds_image_path
     return evaluations
 
 def write_report(results, output):
     output_path = Path(output) / "evaluation"
     ctsReport.generate_report_document(results, output_path, "CTS - Report")
 
-def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, permutationString, variantString, output = ".", ref_files = [], candidate_files = [], methods = ["ssim"], thresholds = None, custom_compare_function = None):
+def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, test_name, permutationString, variantString, output = ".", ref_files = [], candidate_files = [], methods = ["ssim"], thresholds = None, custom_compare_function = None):
     results = {}
     stem = scene_location.stem
-    results[stem] = {}
+    results[test_name] = {}
     if "requiredFeatures" in parsed_json:
-        results[stem]["requiredFeatures"] = parsed_json["requiredFeatures"]
+        results[test_name]["requiredFeatures"] = parsed_json["requiredFeatures"]
     channels = ["color", "depth"]
     
     if permutationString != "":
@@ -104,7 +105,7 @@ def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, 
         variantString = f'_{variantString}'
 
     name = f'{stem}{permutationString}{variantString}'
-    results[stem][name] = {}
+    results[test_name][name] = {}
 
     for channel in channels:
         reference_file = f'{reference_prefix}{stem}{permutationString}_{channel}'
@@ -120,7 +121,7 @@ def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, 
             methods = ["psnr"]
             custom_compare_function = None
 
-        results[stem][name][channel] = ctsUtility.evaluate_scene(ref_path, candidate_path, methods, thresholds, custom_compare_function)
+        results[str(test_name)][name][channel] = ctsUtility.evaluate_scene(ref_path, candidate_path, methods, thresholds, custom_compare_function)
     return results
 
 def resolve_scenes(test_scenes):
@@ -141,7 +142,7 @@ def resolve_scenes(test_scenes):
         collected_scenes = list(path.rglob("*.json"))
     return collected_scenes
 
-def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, permutationString, variantString, output = ".", prefix = ""):
+def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, test_name, permutationString, variantString, output = ".", prefix = ""):
     world_bounds = []
     if "metaData" in [parsed_json]:
         metaData = parsed_json["metaData"]
@@ -167,13 +168,8 @@ def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, pe
     if variantString != "":
         permutationString += f'_{variantString}'
 
-    file_name = "."
-    scene_location_parts = scene_location.parts
-    if "test_scenes" in scene_location_parts:
-        test_scenes_index = scene_location_parts[::-1].index("test_scenes")
-        file_name = output_path / Path(*(scene_location_parts[len(scene_location_parts) - test_scenes_index - 1:]))
-    else:   
-        file_name = output_path.resolve() / scene_location.name
+
+    file_name = output_path / Path(test_name)
 
     stem = scene_location.stem
     channels = ["color", "depth"]
@@ -212,6 +208,13 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
         feature_list = query_features(anari_library, anari_device, None)
 
     for json_file_path in collected_scenes:
+
+        test_name = json_file_path.name
+        scene_location_parts = json_file_path.parts
+        if "test_scenes" in scene_location_parts:
+            test_scenes_index = scene_location_parts[::-1].index("test_scenes")
+            test_name = str(Path(*(scene_location_parts[len(scene_location_parts) - test_scenes_index - 1:])).with_suffix(""))
+
         parsed_json = {}
         with open(json_file_path, 'r') as f, open('default_test_scene.json', 'r') as defaultTestScene:
             parsed_json = json.load(defaultTestScene)
@@ -263,11 +266,11 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                 
                 if use_generator:
                     sceneGenerator.commit()
-                result.append(func(parsed_json, sceneGenerator, anari_renderer, json_file_path, permutationString[1:], variantString[1:], *args))
+                result.append(func(parsed_json, sceneGenerator, anari_renderer, json_file_path, test_name, permutationString[1:], variantString[1:], *args))
         else:
             if use_generator:
                 sceneGenerator.commit()
-            result.append(func(parsed_json, sceneGenerator, anari_renderer, json_file_path, "", "", *args))
+            result.append(func(parsed_json, sceneGenerator, anari_renderer, json_file_path, test_name,"", "", *args))
     return result
 
 def render_scenes(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", output = "."):
@@ -299,7 +302,7 @@ def check_bounding_boxes(ref, candidate, tolerance):
                 output += f'{id} {chr(ord(axis) + i)} mismatch: Is {candidate_values[j]}. Should be {ref_values[j]} ± {ref_distance*tolerance}\n'
     return output
 
-def check_object_properties_helper(parsed_json, sceneGenerator, anari_renderer, scene_location, permutationString, variantString):
+def check_object_properties_helper(parsed_json, sceneGenerator, anari_renderer, scene_location, test_name, permutationString, variantString):
     output = ""
     tolerance = parsed_json["bounds_tolerance"]
     bounds = sceneGenerator.getBounds()
@@ -347,18 +350,30 @@ def check_object_properties(anari_library, anari_device = None, anari_renderer =
 def query_metadata(anari_library, type = None, subtype = None, skipParameters = False, info = False):
     ctsBackend.query_metadata(anari_library, type, subtype, skipParameters, info, anari_logger)
 
-def create_report_for_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, permutationString, variantString, output, methods, thresholds):
-    frame_duration = render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, permutationString, variantString, output)
-    property_check = check_object_properties_helper(parsed_json, sceneGenerator, anari_renderer, scene_location, permutationString, variantString)
-    ref_files = None # TODO
-    candidate_files = None #TODO
-    report = evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, permutationString, variantString, output, ref_files, candidate_files, methods, thresholds)
+def create_report_for_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, test_name, permutationString, variantString, output, methods, thresholds):
+    frame_duration = render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, test_name, permutationString, variantString, output)
+    property_check = check_object_properties_helper(parsed_json, sceneGenerator, anari_renderer, scene_location, test_name, permutationString, variantString)
+    ref_images = globImages(scene_location.parent, reference_prefix)
+    candidate_images = globImages(output / Path(test_name).parent, '[!{}]'.format(reference_prefix))
+    report = evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, test_name, permutationString, variantString, output, ref_images, candidate_images, methods, thresholds)
+    name = f'{scene_location.stem}'
+    if permutationString != "":
+        name += f'_{permutationString}'
+    if variantString != "":
+        name += f'_{variantString}'
+    report[test_name][name]["frameDuration"] = frame_duration
+    report[test_name][name]["property_check"] = property_check
+    return report
 
 def create_report(library, device = None, renderer = "default", test_scenes = "test_scenes", output = ".", comparison_methods = ["ssim"], thresholds = None):
-    result = {}
-    result["anariInfo"] = query_metadata(library, device)
-    result["features"] = query_features(library, device)
-    result["frameDurations"] = apply_to_scenes(create_report_for_scene, library, device, renderer, test_scenes, False, True, output, comparison_methods, thresholds)
+    result = apply_to_scenes(create_report_for_scene, library, device, renderer, test_scenes, False, True, output, comparison_methods, thresholds)
+    result = write_images(result, output)
+    merged_evaluations = {}
+    merged_evaluations["anariInfo"] = query_metadata(library, device)
+    merged_evaluations["features"] = query_features(library, device)
+    for evaluation in result:
+        merged_evaluations = recursive_update(merged_evaluations, evaluation)
+    write_report(merged_evaluations, output)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='ANARI CTS toolkit')
@@ -377,12 +392,14 @@ if __name__ == "__main__":
     renderScenesParser = subparsers.add_parser('render_scenes', description='Renders an image to disk for each test scene', parents=[sceneParser])
     renderScenesParser.add_argument('--output', default=".")
 
-    evaluateScenesParser = subparsers.add_parser('compare_images', description='Evaluates candidate renderings against reference renderings')
+    evaluationMethodParser = argparse.ArgumentParser(add_help=False)
+    evaluationMethodParser.add_argument('--comparison_methods', default=["ssim"], nargs='+', choices=["ssim", "psnr"])
+    evaluationMethodParser.add_argument('--thresholds', default=None, nargs='+')
+
+    evaluateScenesParser = subparsers.add_parser('compare_images', description='Evaluates candidate renderings against reference renderings', parents=[evaluationMethodParser])
     evaluateScenesParser.add_argument('--test_scenes', default="test_scenes")
     evaluateScenesParser.add_argument('--candidates', default="test_scenes")
     evaluateScenesParser.add_argument('--output', default=".")
-    evaluateScenesParser.add_argument('--comparison_methods', default=["ssim"], nargs='+', choices=["ssim", "psnr"])
-    evaluateScenesParser.add_argument('--thresholds', default=None, nargs='+')
 
     checkExtensionsParser = subparsers.add_parser('query_features', parents=[deviceParser])
 
@@ -394,10 +411,8 @@ if __name__ == "__main__":
 
     checkObjectPropertiesParser = subparsers.add_parser('check_object_properties', parents=[sceneParser])
 
-    create_reportParser = subparsers.add_parser('create_report', parents=[sceneParser])
+    create_reportParser = subparsers.add_parser('create_report', parents=[sceneParser, evaluationMethodParser])
     create_reportParser.add_argument('--output', default=".")
-    create_reportParser.add_argument('--comparison_methods', default=["ssim"], nargs='+', choices=["ssim", "psnr"])
-    create_reportParser.add_argument('--thresholds', default=None, nargs='+')
 
     command_text = ""
     for subparser in subparsers.choices :
