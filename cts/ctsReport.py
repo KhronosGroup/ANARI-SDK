@@ -66,7 +66,7 @@ def generate_report_document(report_data, path, title):
                         )
                     if "property_check" in nameValue:
                         story.append(
-                            Paragraph(f'Property check: {nameValue["property_check"]}', stylesheet["Normal"])
+                            Paragraph(f'Property check: {nameValue["property_check"][0]}', stylesheet["Normal"])
                         )
                     for channel, results in nameValue.items():
                         if isinstance(results, dict):

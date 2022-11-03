@@ -57,7 +57,7 @@ def getFileFromList(list, filename):
 # writes all reference, candidate, diff and threshold images to disk and returns
 def write_images(evaluations, output):
     output_path = Path(output) / "evaluation"
-    for evaluation in evaluations:
+    for evaluationKey, evaluation in evaluations.items():
         for stem, test in evaluation.items():
             for name, value in test.items():
                 if isinstance(value, dict):
@@ -189,7 +189,7 @@ def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, te
     return frame_duration
 
 def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", only_permutations = False, use_generator = True,  *args):
-    result = []
+    result = {}
     collected_scenes = resolve_scenes(test_scenes)
     if collected_scenes == []:
         print("No scenes selected")
@@ -228,6 +228,7 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
             
             if not all_features_available:
                 print("Scene %s is not supported"%json_file_path)
+                result[test_name] = "Features not supported"
                 continue
         
             sceneGenerator.resetAllParameters()
@@ -264,11 +265,11 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                 
                 if use_generator:
                     sceneGenerator.commit()
-                result.append(func(parsed_json, sceneGenerator, anari_renderer, json_file_path, test_name, permutationString[1:], variantString[1:], *args))
+                result[test_name + permutationString + variantString] = (func(parsed_json, sceneGenerator, anari_renderer, json_file_path, test_name, permutationString[1:], variantString[1:], *args))
         else:
             if use_generator:
                 sceneGenerator.commit()
-            result.append(func(parsed_json, sceneGenerator, anari_renderer, json_file_path, test_name,"", "", *args))
+            result[test_name] = (func(parsed_json, sceneGenerator, anari_renderer, json_file_path, test_name,"", "", *args))
     return result
 
 def render_scenes(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", output = "."):
@@ -311,36 +312,38 @@ def check_object_properties_helper(parsed_json, sceneGenerator, anari_renderer, 
         if variantString != "":
             permutationString += f'_{variantString}'
         if "bounds" not in metaData:
-            message = f'{scene_location.stem}_{permutationString}: Bounds missing in reference'
+            message = f'Bounds missing in reference'
             output += message
             return output
         ref_bounds = metaData["bounds"]
         if "world" not in ref_bounds:
-            message = f'{scene_location.stem}_{permutationString}: Bounds missing in reference'
+            message = f'Bounds missing in reference'
             output += message
             return output
         check_output = check_bounding_boxes(ref_bounds["world"], bounds[0][0], tolerance)
         if check_output != "":
-            message = f'{scene_location.stem}_{permutationString}: Worlds bounds do not match!\n' + check_output
+            message = f'Worlds bounds do not match!\n' + check_output
             output += message
         if "instances" in ref_bounds:
             for i in range(len(ref_bounds["instances"])):
                 check_output = check_bounding_boxes(ref_bounds["instances"][i], bounds[1][i], tolerance)
                 if check_output != "":
-                    message = f'{scene_location.stem}_{permutationString}: Instance {i} bounds do not match!\n' + check_output
+                    message = f'Instance {i} bounds do not match!\n' + check_output
                     output += message
         if "groups" in ref_bounds:
             for i in range(len(ref_bounds["groups"])):
                 check_output = check_bounding_boxes(ref_bounds["groups"][i], bounds[2][i], tolerance)
                 if check_output != "":
-                    message = f'{scene_location.stem}_{permutationString}: Group {i} bounds do not match!\n'+ check_output
+                    message = f'Group {i} bounds do not match!\n'+ check_output
                     output += message
     else:
-        message = f'{scene_location.stem}_{permutationString}: MetaData missing in reference'
+        message = f'MetaData missing in reference'
         output += message
+    success = False
     if output == "":
-        output = f'{scene_location.stem}_{permutationString}: All bounds correct'
-    return output
+        success = True
+        output = f'All bounds correct'
+    return output, success
 
 def check_object_properties(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes"):
     return apply_to_scenes(check_object_properties_helper, anari_library, anari_device, anari_renderer, test_scenes)
@@ -372,7 +375,7 @@ def create_report(library, device = None, renderer = "default", test_scenes = "t
     merged_evaluations["renderer"] = renderer
     merged_evaluations["library"] = library
     merged_evaluations["device"] = device if device != None else ctsBackend.getDefaultDeviceName(library, anari_logger)
-    for evaluation in result:
+    for evaluation in result.values():
         merged_evaluations = recursive_update(merged_evaluations, evaluation)
     write_report(merged_evaluations, output)
 
@@ -433,7 +436,7 @@ if __name__ == "__main__":
         print(query_metadata(args.library, args.type, args.subtype, args.skipParameters, args.info))
     elif args.command == "check_object_properties":
         result = check_object_properties(args.library, args.device, args.renderer, args.test_scenes)
-        for message in result:
-            print(message)
+        for key, value in result.items():
+            print(f'{key}: {value[0]}')
     elif args.command == "create_report":
         create_report(args.library, args.device, args.renderer, args.test_scenes, args.output, args.comparison_methods, args.thresholds)
