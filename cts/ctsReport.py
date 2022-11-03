@@ -2,7 +2,6 @@ import time
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle, PageBreak
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors, pagesizes
-from reportlab.pdfbase import pdfmetrics
 
 def generate_report_document(report_data, path, title):
     doc = SimpleDocTemplate(str(path.absolute() / "report.pdf"), 

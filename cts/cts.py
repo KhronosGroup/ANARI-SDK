@@ -30,7 +30,6 @@ def anari_logger(message):
     with logger_mutex:
         with open("ANARI.log", 'a') as file:
             file.write(f'{str(datetime.datetime.now())}: {message}\n')
-    #print(message)
 
 def query_features(anari_library, anari_device = None, logger = anari_logger):
     try: 
@@ -67,28 +66,29 @@ def write_images(evaluations, output):
                             evaluation[stem][name][channel]["image_paths"] = {}
 
                             # save the input images to the output directory
-                            reference_image_path = Path("reference") / f"{name}.png"
+                            reference_image_path = Path("reference") / f"{name}_{channel}.png"
                             ctsUtility.write_image(output_path / reference_image_path, evaluation[stem][name][channel]["images"]["reference"])
                             evaluation[stem][name][channel]["image_paths"]["reference"] = reference_image_path
                             
-                            candidate_image_path = Path("candidate") / f"{name}.png"
+                            candidate_image_path = Path("candidate") / f"{name}_{channel}.png"
                             ctsUtility.write_image(output_path / candidate_image_path, evaluation[stem][name][channel]["images"]["candidate"])
                             evaluation[stem][name][channel]["image_paths"]["candidate"] = candidate_image_path
 
                             # save the diff image
-                            diff_image_path = Path("diffs") / f"{name}.png"
+                            diff_image_path = Path("diffs") / f"{name}_{channel}.png"
                             ctsUtility.write_image(output_path / diff_image_path, evaluation[stem][name][channel]["images"]["diff"], check_contrast=False)
                             evaluation[stem][name][channel]["image_paths"]["diff"] = diff_image_path
 
                             # save the threshold image
-                            thresholds_image_path = Path("thresholds") / f"{name}.png"
+                            thresholds_image_path = Path("thresholds") / f"{name}_{channel}.png"
                             ctsUtility.write_image(output_path / thresholds_image_path, evaluation[stem][name][channel]["images"]["threshold"], check_contrast=False)
                             evaluation[stem][name][channel]["image_paths"]["threshold"] = thresholds_image_path
     return evaluations
 
 def write_report(results, output):
     output_path = Path(output) / "evaluation"
-    ctsReport.generate_report_document(results, output_path, "CTS - Report")
+    title = f'CTS - Report' if "renderer" not in results else f'CTS - Library: {results["library"]} Device: {results["device"]} Renderer: {results["renderer"]}'
+    ctsReport.generate_report_document(results, output_path, title)
 
 def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, test_name, permutationString, variantString, output = ".", ref_files = [], candidate_files = [], methods = ["ssim"], thresholds = None, custom_compare_function = None):
     results = {}
@@ -125,7 +125,6 @@ def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, 
     return results
 
 def resolve_scenes(test_scenes):
-    print(test_scenes)
     collected_scenes = []
     if isinstance(test_scenes, list):
         for test_scene in test_scenes:            
@@ -196,7 +195,6 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
         print("No scenes selected")
         return
 
-    print(collected_scenes)
     sceneGenerator = None
     if use_generator:
         try:
@@ -371,6 +369,9 @@ def create_report(library, device = None, renderer = "default", test_scenes = "t
     merged_evaluations = {}
     merged_evaluations["anariInfo"] = query_metadata(library, device)
     merged_evaluations["features"] = query_features(library, device)
+    merged_evaluations["renderer"] = renderer
+    merged_evaluations["library"] = library
+    merged_evaluations["device"] = device if device != None else ctsBackend.getDefaultDeviceName(library, anari_logger)
     for evaluation in result:
         merged_evaluations = recursive_update(merged_evaluations, evaluation)
     write_report(merged_evaluations, output)
