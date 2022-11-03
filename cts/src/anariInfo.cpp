@@ -317,7 +317,7 @@ std::string queryInfo(const std::string &library,
               continue;
             }
             s << "      " << anari::toString(namedTypes[j]) << " " << types[k]
-              << ":\n ";
+              << ":\n";
             const ANARIParameter *params =
                 (const ANARIParameter *)anariGetObjectInfo(lib,
                     devices[i],
@@ -327,9 +327,9 @@ std::string queryInfo(const std::string &library,
                     ANARI_PARAMETER_LIST);
             if (params) {
               for (int l = 0; params[l].name; ++l) {
-                s << "         * " << std::left << std::setw(25)
-                  << params[l].name << std::left << std::setw(25)
-                  << anari::toString(params[l].type) << "\n ";
+                s << "         * " << std::left << std::setw(32)
+                  << params[l].name << " " << std::left << std::setw(32)
+                  << anari::toString(params[l].type) << "\n";
                 if (info) {
                   print_info(lib,
                       devices[i],
@@ -364,8 +364,9 @@ std::string queryInfo(const std::string &library,
                   ANARI_PARAMETER_LIST);
           if (params) {
             for (int l = 0; params[l].name; ++l) {       
-              s << "         * " << std::left << std::setw(25) << params[l].name
-                << std::left << std::setw(25) << anari::toString(params[l].type)
+              s << "         * " << std::left << std::setw(32) << params[l].name
+                << " "
+                << std::left << std::setw(32) << anari::toString(params[l].type)
                 << "\n";
               if (info) {
                 print_info(lib,
