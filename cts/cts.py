@@ -348,7 +348,7 @@ def check_object_properties(anari_library, anari_device = None, anari_renderer =
     return apply_to_scenes(check_object_properties_helper, anari_library, anari_device, anari_renderer, test_scenes)
 
 def query_metadata(anari_library, type = None, subtype = None, skipParameters = False, info = False):
-    ctsBackend.query_metadata(anari_library, type, subtype, skipParameters, info, anari_logger)
+    return ctsBackend.query_metadata(anari_library, type, subtype, skipParameters, info, anari_logger)
 
 def create_report_for_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, test_name, permutationString, variantString, output, methods, thresholds):
     frame_duration = render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, test_name, permutationString, variantString, output)
@@ -429,7 +429,7 @@ if __name__ == "__main__":
         result = query_features(args.library, args.device)
         print(tabulate(result))
     elif args.command == "query_metadata":
-        query_metadata(args.library, args.type, args.subtype, args.skipParameters, args.info)
+        print(query_metadata(args.library, args.type, args.subtype, args.skipParameters, args.info))
     elif args.command == "check_object_properties":
         result = check_object_properties(args.library, args.device, args.renderer, args.test_scenes)
         for message in result:
