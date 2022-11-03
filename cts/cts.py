@@ -281,7 +281,7 @@ def compare_images(test_scenes = "test_scenes", candidates_path = "test_scenes",
     evaluations = apply_to_scenes(evaluate_scene, "", None, "default", test_scenes, False, False, output, ref_images, candidate_images, comparison_methods, thresholds, custom_compare_function)
     evaluations = write_images(evaluations, output)
     merged_evaluations = {}
-    for evaluation in evaluations:
+    for evaluation in evaluations.values():
         merged_evaluations = recursive_update(merged_evaluations, evaluation)
     write_report(merged_evaluations, output)
 
