@@ -39,6 +39,8 @@ def query_features(anari_library, anari_device = None, logger = anari_logger):
         return []
 
 def recursive_update(d, merge_dict):
+    if not isinstance(d, dict) or not isinstance(merge_dict, dict):
+        return d
     for key, value in d.items():
         if isinstance(value, dict) and key in merge_dict:
             merge_dict[key] = recursive_update(value, merge_dict[key])
@@ -351,31 +353,51 @@ def check_object_properties(anari_library, anari_device = None, anari_renderer =
 def query_metadata(anari_library, type = None, subtype = None, skipParameters = False, info = False):
     return ctsBackend.query_metadata(anari_library, type, subtype, skipParameters, info, anari_logger)
 
-def create_report_for_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, test_name, permutationString, variantString, output, methods, thresholds):
-    frame_duration = render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, test_name, permutationString, variantString, output)
-    property_check = check_object_properties_helper(parsed_json, sceneGenerator, anari_renderer, scene_location, test_name, permutationString, variantString)
-    ref_images = globImages(scene_location.parent, reference_prefix)
-    candidate_images = globImages(output / Path(test_name).parent, '[!{}]'.format(reference_prefix))
-    report = evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, test_name, permutationString, variantString, output, ref_images, candidate_images, methods, thresholds)
+def create_report_for_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, test_name, permutationString, variantString, output, methods, thresholds, feature_list):
     name = f'{scene_location.stem}'
     if permutationString != "":
         name += f'_{permutationString}'
     if variantString != "":
         name += f'_{variantString}'
-    report[test_name][name]["frameDuration"] = frame_duration
-    report[test_name][name]["property_check"] = property_check
+    report = {}
+    report[test_name] = {}
+    report[test_name][name] = {}
+    if sceneGenerator != None:
+        #frame_duration = render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, test_name, permutationString, variantString, output)
+        property_check = check_object_properties_helper(parsed_json, sceneGenerator, anari_renderer, scene_location, test_name, permutationString, variantString)
+        #report[test_name][name]["frameDuration"] = frame_duration
+        report[test_name][name]["property_check"] = property_check
+    else:
+        all_features_available = True
+        if "requiredFeatures" in parsed_json:
+            for feature in parsed_json["requiredFeatures"]:
+                if not check_feature(feature_list, feature):
+                    all_features_available = False
+
+        if all_features_available:
+            ref_images = globImages(scene_location.parent, reference_prefix)
+            candidate_images = globImages(output / Path(test_name).parent, '[!{}]'.format(reference_prefix))
+            report = evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, test_name, permutationString, variantString, output, ref_images, candidate_images, methods, thresholds)
+        else:
+            report[test_name]["not_supported"] = True
+            report[test_name]["requiredFeatures"] = parsed_json["requiredFeatures"]
+
+
     return report
 
 def create_report(library, device = None, renderer = "default", test_scenes = "test_scenes", output = ".", comparison_methods = ["ssim"], thresholds = None):
-    result = apply_to_scenes(create_report_for_scene, library, device, renderer, test_scenes, False, True, output, comparison_methods, thresholds)
-    result = write_images(result, output)
     merged_evaluations = {}
     merged_evaluations["anariInfo"] = query_metadata(library, device)
     merged_evaluations["features"] = query_features(library, device)
     merged_evaluations["renderer"] = renderer
     merged_evaluations["library"] = library
     merged_evaluations["device"] = device if device != None else ctsBackend.getDefaultDeviceName(library, anari_logger)
-    for evaluation in result.values():
+    result1 = apply_to_scenes(create_report_for_scene, library, device, renderer, test_scenes, False, True, output, comparison_methods, thresholds, merged_evaluations["features"])
+    result2 = apply_to_scenes(create_report_for_scene, library, device, renderer, test_scenes, False, False, output, comparison_methods, thresholds, merged_evaluations["features"])
+    result2 = write_images(result2, output)
+    for evaluation in result1.values():
+        merged_evaluations = recursive_update(merged_evaluations, evaluation)
+    for evaluation in result2.values():
         merged_evaluations = recursive_update(merged_evaluations, evaluation)
     write_report(merged_evaluations, output)
 
