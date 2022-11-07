@@ -363,9 +363,9 @@ def create_report_for_scene(parsed_json, sceneGenerator, anari_renderer, scene_l
     report[test_name] = {}
     report[test_name][name] = {}
     if sceneGenerator != None:
-        #frame_duration = render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, test_name, permutationString, variantString, output)
+        frame_duration = render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, test_name, permutationString, variantString, output)
         property_check = check_object_properties_helper(parsed_json, sceneGenerator, anari_renderer, scene_location, test_name, permutationString, variantString)
-        #report[test_name][name]["frameDuration"] = frame_duration
+        report[test_name][name]["frameDuration"] = frame_duration
         report[test_name][name]["property_check"] = property_check
     else:
         all_features_available = True
