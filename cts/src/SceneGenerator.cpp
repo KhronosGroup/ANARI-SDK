@@ -30,27 +30,6 @@ SceneGenerator::~SceneGenerator()
   anari::unloadLibrary(m_library);
 }
 
-std::vector<anari::scenes::ParameterInfo> SceneGenerator::parameters()
-{
-  return {
-      {"geometrySubtype",
-          ANARI_STRING,
-          "triangle",
-          "Which type of geometry to generate"},
-      {"primitiveMode",
-          ANARI_STRING,
-          "soup",
-          "How the data is arranged (soup or indexed)"},
-      {"primitiveCount",
-          ANARI_UINT32,
-          1,
-          "How many primtives should be generated"},
-      {"image_height", ANARI_UINT32, 1024, "Height of the image"},
-      {"image_width", ANARI_UINT32, 1024, "Width of the image"},
-      //
-  };
-}
-
 anari::World SceneGenerator::world()
 {
   return m_world;
@@ -271,6 +250,14 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
 {
   size_t image_height = getParam<size_t>("image_height", 1024);
   size_t image_width = getParam<size_t>("image_width", 1024);
+  std::string color_type_param = getParam<std::string>("frame_color_type", "ANARI_UFIXED8_RGBA_SRGB");
+  ANARIDataType color_type = ANARI_UFIXED8_RGBA_SRGB;
+  if (color_type_param == "ANARI_UFIXED8_VEC4") {
+    color_type = ANARI_UFIXED8_VEC4;
+  } else if (color_type_param == "ANARI_FLOAT32_VEC4") {
+    color_type = ANARI_FLOAT32_VEC4;
+  }
+
   auto camera = anari::newObject<anari::Camera>(m_device, "perspective");
   anari::setParameter(
       m_device, camera, "aspect", (float)image_height / (float)image_width);
@@ -283,7 +270,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
 
   auto frame = anari::newObject<anari::Frame>(m_device);
   anari::setParameter(m_device, frame, "size", glm::uvec2(image_height, image_width));
-  anari::setParameter(m_device, frame, "color", ANARI_UFIXED8_RGBA_SRGB);
+  anari::setParameter(m_device, frame, "color", color_type);
   anari::setParameter(m_device, frame, "depth", ANARI_FLOAT32);
 
   anari::setParameter(m_device, frame, "renderer", renderer);
@@ -354,8 +341,12 @@ void SceneGenerator::resetAllParameters() {
   anari::unsetParameter(m_device, m_world, "volume");
   anari::unsetParameter(m_device, m_world, "light");
 
-  for (auto param : parameters()) {
-    removeParam(param.name);
+  std::vector<std::string> paramNames;
+  for (auto it = params_begin(); it != params_end(); ++it) {
+    paramNames.push_back(it->get()->name);
+  }
+  for (auto &name : paramNames) {
+    removeParam(name);
   }
 }
 
