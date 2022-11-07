@@ -4,7 +4,7 @@
 
 
 namespace cts {
-void queryInfo(const std::string &library,
+std::string queryInfo(const std::string &library,
                std::optional<std::string> typeFilter,
                std::optional<std::string> subtypeFilter,
                bool skipParameters,

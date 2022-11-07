@@ -5,10 +5,29 @@ import skimage.transform
 import skimage.filters
 import numpy as np
 from sewar.full_ref import vifp, uqi
+import os
 
 
-def evaluate_metrics(reference, candidate):
-    return {
+def ssim(reference, candidate, threshold):
+    result = skimage.metrics.structural_similarity(reference, candidate, multichannel=True)
+    return result > threshold, result
+
+def psnr(reference, candidate, threshold):
+    result = skimage.metrics.peak_signal_noise_ratio(reference, candidate)
+    return result > threshold, result
+
+def getThreshold(methods, thresholds, method, default):
+    if thresholds != None:
+        index = methods.index(method)
+        if index < len(thresholds):
+            return thresholds[index]
+    return default
+
+def evaluate_metrics(reference, candidate, methods, thresholds, custom_comparison_function):
+    results = {}
+    passed = {}
+
+    if "ssim" in methods:
         # Structural similarity index between two images
         # (humans are better at perceiving structural differences than subtle pixel changes).
         # it compares the images based on luminance Contast and structure.
@@ -17,38 +36,37 @@ def evaluate_metrics(reference, candidate):
         # ssim provides high scores one of the images is blured or the color space is shifted
         # further reading:
         # https://en.wikipedia.org/wiki/Structural_similarity
-        "ssim": skimage.metrics.structural_similarity(reference, candidate, multichannel=True),
+        threshold =  getThreshold(methods, thresholds, "ssim", 0.70)
+        passed["ssim"], results["ssim"] = ssim(reference, candidate, threshold)
         
+    if "psnr" in methods:
         # Mean Squared Error (MSE) is one of the most commonly used image quality measures, but receives strong criticism as
         # it doesn't reflect the way the human visual systems perceive images very well. An image pair with
         # high MSE might still look very similar to a human.
         # "mse": skimage.metrics.mean_squared_error(reference, candidate),
         # Peak Signal to Noise Ratio (PSNR) is based on MSE and brought to a logarithmic scale in the decibel unit
-        "psnr": skimage.metrics.peak_signal_noise_ratio(reference, candidate),
-        
-        # Normalized Root MSE (NRMSE)
-        # "nrmse": skimage.metrics.normalized_root_mse(reference, candidate),
-        
-        # Mean Absolute Error (MAE)
-        # "mae": np.absolute(np.subtract(reference, candidate)).mean(),
-        
-        # Visual Information Fidelity Measure (VIF)
-        # https://ieeexplore.ieee.org/abstract/document/1576816/
-        # The higher the better. The reference image would yield a value of 1.0, values above 1.0
-        # typically stem from higher contrast images, which are considerered better quality in this metric
-        # "vif": vifp(reference, candidate),
-        
-        # Universal Quality Index (UQI)
-        # "uqi": uqi(reference, candidate),
-    }
+        threshold =  getThreshold(methods, thresholds, "psnr", 20.0)
+        passed["psnr"], results["psnr"] = psnr(reference, candidate, threshold)
+
+    if custom_comparison_function != None:
+        passed["custom"], results["custom"] = custom_comparison_function(reference, candidate)
+
+    # Normalized Root MSE (NRMSE)
+    # "nrmse": skimage.metrics.normalized_root_mse(reference, candidate),
     
-def evaluate_passed(metrics):
-    return {
-        # Choose a relaxed value for SSIM
-        "ssim": metrics["ssim"] > 0.70,
-        # PSNR for image compression in 8bit is typically in the range [30, 50]
-        "psnr": metrics["psnr"] > 20.0, 
-    }
+    # Mean Absolute Error (MAE)
+    # "mae": np.absolute(np.subtract(reference, candidate)).mean(),
+    
+    # Visual Information Fidelity Measure (VIF)
+    # https://ieeexplore.ieee.org/abstract/document/1576816/
+    # The higher the better. The reference image would yield a value of 1.0, values above 1.0
+    # typically stem from higher contrast images, which are considerered better quality in this metric
+    # "vif": vifp(reference, candidate),
+    
+    # Universal Quality Index (UQI)
+    # "uqi": uqi(reference, candidate),
+    return passed, results 
+
 
 def print_report(name, metrics_report):
     print(name)
@@ -72,12 +90,12 @@ def compare_images(reference, candidate):
         "threshold": skimage.util.img_as_ubyte(threshold)
     }
 
-def evaluate(reference, candidate):
-    metrics = evaluate_metrics(reference, candidate)
+def evaluate(reference, candidate, methods, thresholds, custom_compare_function):
+    passed, metrics = evaluate_metrics(reference, candidate, methods, thresholds, custom_compare_function)
 
     return {
         "metrics": metrics,
-        "passed": evaluate_passed(metrics),
+        "passed": passed,
         "images": compare_images(reference, candidate),
     }
 
@@ -96,3 +114,17 @@ def normalize_images(reference, candidate):
         candidate = skimage.util.img_as_ubyte(candidate)
         print()
     return reference, candidate
+
+def evaluate_scene(reference_path, candidate_path, methods, thresholds, custom_compare_function):
+    reference_image = skimage.io.imread(reference_path)
+    candidate_image = skimage.util.img_as_ubyte(skimage.io.imread(candidate_path))
+    reference_image, candidate_image = normalize_images(reference_image, candidate_image)
+    
+    # Compute metrics and compare images
+    return evaluate(reference_image, candidate_image, methods, thresholds, custom_compare_function)
+
+def write_image(path, image, check_contrast = True):
+    filepath, filename = os.path.split(path)
+    if not os.path.exists(filepath):
+        os.makedirs(filepath)
+    skimage.io.imsave(path, image, check_contrast=check_contrast)

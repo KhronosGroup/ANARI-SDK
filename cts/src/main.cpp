@@ -21,6 +21,8 @@ PYBIND11_MODULE(ctsBackend, m)
         Queries object/parameter info metadata of a library.
     )pbdoc");
 
+  m.def("getDefaultDeviceName", &cts::getDefaultDeviceName);
+
   py::class_<cts::SceneGenerator>(m, "SceneGenerator")
       .def(py::init(&cts::SceneGenerator::createSceneGenerator))
       .def("setParameter", &cts::SceneGenerator::setParam<std::string>)
