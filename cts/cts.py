@@ -26,6 +26,16 @@ def check_feature(feature_list, check_feature):
             return is_available
     return False
 
+def get_channels(parsed_json):
+    channels = []
+    if "sceneParameters" in parsed_json:
+        scene_parameters = parsed_json["sceneParameters"]
+        if "frame_color_type" in scene_parameters and scene_parameters["frame_color_type"] != "":
+            channels.append("color")
+        if "frame_depth_type" in scene_parameters and scene_parameters["frame_depth_type"] != "":
+            channels.append("depth")
+    return channels
+
 def anari_logger(message):
     with logger_mutex:
         with open("ANARI.log", 'a') as file:
@@ -98,7 +108,7 @@ def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, 
     results[test_name] = {}
     if "requiredFeatures" in parsed_json:
         results[test_name]["requiredFeatures"] = parsed_json["requiredFeatures"]
-    channels = ["color", "depth"]
+    channels = get_channels(parsed_json)
     
     if permutationString != "":
         permutationString = f'_{permutationString}'
@@ -173,21 +183,23 @@ def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, te
     file_name = output_path / Path(test_name)
 
     stem = scene_location.stem
-    channels = ["color", "depth"]
+    channels = get_channels(parsed_json)
 
     file_name.parent.mkdir(exist_ok=True, parents=True)
 
-    image_out = Image.new("RGBA", (parsed_json["sceneParameters"]["image_height"], parsed_json["sceneParameters"]["image_width"]))
-    image_out.putdata(image_data_list[0])
-    outName = file_name.with_suffix('.png').with_stem(f'{prefix}{stem}{permutationString}_{channels[0]}')
-    print(f'Rendering to {outName.resolve()}')
-    image_out.save(outName)
+    if "color" in channels:
+        image_out = Image.new("RGBA", (parsed_json["sceneParameters"]["image_height"], parsed_json["sceneParameters"]["image_width"]))
+        image_out.putdata(image_data_list[0])
+        outName = file_name.with_suffix('.png').with_stem(f'{prefix}{stem}{permutationString}_color')
+        print(f'Rendering to {outName.resolve()}')
+        image_out.save(outName)
 
-    image_out = Image.new("RGBA", (parsed_json["sceneParameters"]["image_height"], parsed_json["sceneParameters"]["image_width"]))
-    image_out.putdata(image_data_list[1])
-    outName = file_name.with_suffix('.png').with_stem(f'{prefix}{stem}{permutationString}_{channels[1]}')
-    print(f'Rendering to {outName.resolve()}')
-    image_out.save(outName)
+    if "depth" in channels:
+        image_out = Image.new("RGBA", (parsed_json["sceneParameters"]["image_height"], parsed_json["sceneParameters"]["image_width"]))
+        image_out.putdata(image_data_list[1])
+        outName = file_name.with_suffix('.png').with_stem(f'{prefix}{stem}{permutationString}_depth')
+        print(f'Rendering to {outName.resolve()}')
+        image_out.save(outName)
     return frame_duration
 
 def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", only_permutations = False, use_generator = True,  *args):

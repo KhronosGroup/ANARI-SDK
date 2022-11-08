@@ -2,20 +2,21 @@
   "sceneParameters": {
     "geometrySubtype": "sphere",
     "seed": 54321,
-    "primitiveCount": 16
+    "primitiveCount": 16,
+    "frame_depth_type": ""
   },
   "permutations": {
     "frame_color_type": [
-      "ANARI_UFIXED8_VEC4",
-      "ANARI_UFIXED8_RGBA_SRGB",
-      "ANARI_FLOAT32_VEC4"
+      "UFIXED8_VEC4",
+      "UFIXED8_RGBA_SRGB",
+      "FLOAT32_VEC4"
     ]
   },
   "requiredFeatures": [
     "ANARI_KHR_GEOMETRY_SPHERE"
   ],
   "metaData": {
-    "ANARI_UFIXED8_VEC4": {
+    "UFIXED8_VEC4": {
       "bounds": {
         "world": [
           [
@@ -31,7 +32,7 @@
         ]
       }
     },
-    "ANARI_UFIXED8_RGBA_SRGB": {
+    "UFIXED8_RGBA_SRGB": {
       "bounds": {
         "world": [
           [
@@ -47,7 +48,7 @@
         ]
       }
     },
-    "ANARI_FLOAT32_VEC4": {
+    "FLOAT32_VEC4": {
       "bounds": {
         "world": [
           [
