@@ -1,7 +1,9 @@
 {
 	"sceneParameters": {
 		"image_height": 1024,
-		"image_width": 1024
+		"image_width": 1024,
+		"frame_depth_type": "FLOAT32",
+		"frame_color_type": "UFIXED8_RGBA_SRGB"
 	},
 	"bounds_tolerance": 0.05
 }

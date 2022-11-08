@@ -30,27 +30,6 @@ SceneGenerator::~SceneGenerator()
   anari::unloadLibrary(m_library);
 }
 
-std::vector<anari::scenes::ParameterInfo> SceneGenerator::parameters()
-{
-  return {
-      {"geometrySubtype",
-          ANARI_STRING,
-          "triangle",
-          "Which type of geometry to generate"},
-      {"primitiveMode",
-          ANARI_STRING,
-          "soup",
-          "How the data is arranged (soup or indexed)"},
-      {"primitiveCount",
-          ANARI_UINT32,
-          1,
-          "How many primtives should be generated"},
-      {"image_height", ANARI_UINT32, 1024, "Height of the image"},
-      {"image_width", ANARI_UINT32, 1024, "Width of the image"},
-      //
-  };
-}
-
 anari::World SceneGenerator::world()
 {
   return m_world;
@@ -271,6 +250,20 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
 {
   size_t image_height = getParam<size_t>("image_height", 1024);
   size_t image_width = getParam<size_t>("image_width", 1024);
+  std::string color_type_param = getParam<std::string>("frame_color_type", "");
+  int componentBytes = 1;
+  ANARIDataType color_type = ANARI_UNKNOWN;
+  if (color_type_param == "UFIXED8_RGBA_SRGB") {
+    color_type = ANARI_UFIXED8_RGBA_SRGB;
+  } else if (color_type_param == "FLOAT32_VEC4") {
+    color_type = ANARI_FLOAT32_VEC4;
+    componentBytes = 4;
+  } else if (color_type_param == "UFIXED8_VEC4") {
+    color_type = ANARI_UFIXED8_VEC4;
+  }
+
+  std::string depth_type_param = getParam<std::string>("frame_depth_type", "");
+
   auto camera = anari::newObject<anari::Camera>(m_device, "perspective");
   anari::setParameter(
       m_device, camera, "aspect", (float)image_height / (float)image_width);
@@ -283,8 +276,12 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
 
   auto frame = anari::newObject<anari::Frame>(m_device);
   anari::setParameter(m_device, frame, "size", glm::uvec2(image_height, image_width));
-  anari::setParameter(m_device, frame, "color", ANARI_UFIXED8_RGBA_SRGB);
-  anari::setParameter(m_device, frame, "depth", ANARI_FLOAT32);
+  if (color_type != ANARI_UNKNOWN) {
+    anari::setParameter(m_device, frame, "color", color_type);
+  }
+  if (depth_type_param == "FLOAT32") {
+    anari::setParameter(m_device, frame, "depth", ANARI_FLOAT32);
+  }
 
   anari::setParameter(m_device, frame, "renderer", renderer);
   anari::setParameter(m_device, frame, "camera", camera);
@@ -304,25 +301,50 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
 
   std::vector<std::vector<uint32_t>> result;
 
-  auto fb = anari::map<uint32_t>(m_device, frame, "color");
-  result.emplace_back(fb.data, fb.data + image_height * image_width);
+  if (color_type != ANARI_UNKNOWN) {
+    if (color_type == ANARI_FLOAT32_VEC4) {
+      const float *pixels = anari::map<float>(m_device, frame, "color").data;
+      std::vector<uint32_t> converted;
+      for (int i = 0; i < image_height * image_width; ++i) {
+        uint32_t rgba = 0;
+        for (int j = 0; j < componentBytes; ++j) {
+          uint8_t colorValue =
+              static_cast<uint8_t>(pixels[i * componentBytes + j] * 255.0f);
+          rgba += colorValue << (8 * j);
+        }
+        converted.push_back(rgba);
+      }
 
-  anari::unmap(m_device, frame, "color");
-
-  const float* pixels = anari::map<float>(m_device, frame, "depth").data;
-
-  std::vector<uint32_t> converted;
-  for (int i = 0; i < image_height * image_width; ++i) {
-    uint8_t colorValue =
-        static_cast<uint8_t>(pixels[i] / renderDistance * 255.0f);
-    uint32_t rgba =
-        (255 << 24) + (colorValue << 16) + (colorValue << 8) + colorValue;
-    converted.push_back(rgba);
+      result.emplace_back(converted);
+      anari::unmap(m_device, frame, "color");
+    } else {
+      auto fb = anari::map<uint32_t>(m_device, frame, "color");
+      result.emplace_back(
+          fb.data, fb.data + image_height * image_width);
+      anari::unmap(m_device, frame, "color");
+    }
+  } else {
+    result.emplace_back();
   }
 
-  result.emplace_back(converted);
+  if (depth_type_param == "FLOAT32") {
+    const float *pixels = anari::map<float>(m_device, frame, "depth").data;
 
-  anari::unmap(m_device, frame, "depth");
+    std::vector<uint32_t> converted;
+    for (int i = 0; i < image_height * image_width; ++i) {
+      uint8_t colorValue =
+          static_cast<uint8_t>(pixels[i] / renderDistance * 255.0f);
+      uint32_t rgba =
+          (255 << 24) + (colorValue << 16) + (colorValue << 8) + colorValue;
+      converted.push_back(rgba);
+    }
+
+    result.emplace_back(converted);
+
+    anari::unmap(m_device, frame, "depth");
+  } else {
+    result.emplace_back();
+  }
 
   if (!anariGetProperty(m_device,
       frame,
@@ -354,8 +376,12 @@ void SceneGenerator::resetAllParameters() {
   anari::unsetParameter(m_device, m_world, "volume");
   anari::unsetParameter(m_device, m_world, "light");
 
-  for (auto param : parameters()) {
-    removeParam(param.name);
+  std::vector<std::string> paramNames;
+  for (auto it = params_begin(); it != params_end(); ++it) {
+    paramNames.push_back(it->get()->name);
+  }
+  for (auto &name : paramNames) {
+    removeParam(name);
   }
 }
 

@@ -22,7 +22,6 @@ class SceneGenerator : public anari::scenes::TestScene
   SceneGenerator(anari::Device device);
   ~SceneGenerator();
 
-  std::vector<anari::scenes::ParameterInfo> parameters() override;
   void resetAllParameters();
 
   anari::World world() override;
