@@ -57,8 +57,12 @@ def recursive_update(d, merge_dict):
     d.update(merge_dict)        
     return d
 
-def globImages(directory, prefix = ""):
-    return glob.glob(f'{directory}/**/{prefix}*.png', recursive = True)
+def globImages(directory, prefix = "", exclude_prefix = ""):
+    path_list = glob.glob(f'{str(directory)}/**/{prefix}*.png', recursive = True)
+    if exclude_prefix != "":
+        path_list = [path for path in path_list if not Path(path).name.startswith(exclude_prefix)]
+    return path_list
+
 
 def getFileFromList(list, filename):
     for path in list:
@@ -291,7 +295,7 @@ def render_scenes(anari_library, anari_device = None, anari_renderer = "default"
     
 def compare_images(test_scenes = "test_scenes", candidates_path = "test_scenes", output = ".", comparison_methods = ["ssim"], thresholds = None, custom_compare_function = None):
     ref_images = globImages(test_scenes, reference_prefix)
-    candidate_images = globImages(candidates_path, '[!{}]'.format(reference_prefix))
+    candidate_images = globImages(candidates_path, exclude_prefix=reference_prefix)
     evaluations = apply_to_scenes(evaluate_scene, "", None, "default", test_scenes, False, False, output, ref_images, candidate_images, comparison_methods, thresholds, custom_compare_function)
     evaluations = write_images(evaluations, output)
     merged_evaluations = {}
@@ -388,7 +392,7 @@ def create_report_for_scene(parsed_json, sceneGenerator, anari_renderer, scene_l
 
         if all_features_available:
             ref_images = globImages(scene_location.parent, reference_prefix)
-            candidate_images = globImages(output / Path(test_name).parent, '[!{}]'.format(reference_prefix))
+            candidate_images = globImages(output / Path(test_name).parent, exclude_prefix=reference_prefix)
             report = evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, test_name, permutationString, variantString, output, ref_images, candidate_images, methods, thresholds)
         else:
             report[test_name]["not_supported"] = True
