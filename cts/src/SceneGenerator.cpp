@@ -251,11 +251,13 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
   size_t image_height = getParam<size_t>("image_height", 1024);
   size_t image_width = getParam<size_t>("image_width", 1024);
   std::string color_type_param = getParam<std::string>("frame_color_type", "");
+  int componentBytes = 1;
   ANARIDataType color_type = ANARI_UNKNOWN;
   if (color_type_param == "UFIXED8_RGBA_SRGB") {
     color_type = ANARI_UFIXED8_RGBA_SRGB;
   } else if (color_type_param == "FLOAT32_VEC4") {
     color_type = ANARI_FLOAT32_VEC4;
+    componentBytes = 4;
   } else if (color_type_param == "UFIXED8_VEC4") {
     color_type = ANARI_UFIXED8_VEC4;
   }
@@ -300,9 +302,27 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
   std::vector<std::vector<uint32_t>> result;
 
   if (color_type != ANARI_UNKNOWN) {
-    auto fb = anari::map<uint32_t>(m_device, frame, "color");
-    result.emplace_back(fb.data, fb.data + image_height * image_width);
-    anari::unmap(m_device, frame, "color");
+    if (color_type == ANARI_FLOAT32_VEC4) {
+      const float *pixels = anari::map<float>(m_device, frame, "color").data;
+      std::vector<uint32_t> converted;
+      for (int i = 0; i < image_height * image_width; ++i) {
+        uint32_t rgba = 0;
+        for (int j = 0; j < componentBytes; ++j) {
+          uint8_t colorValue =
+              static_cast<uint8_t>(pixels[i * componentBytes + j] * 255.0f);
+          rgba += colorValue << (8 * j);
+        }
+        converted.push_back(rgba);
+      }
+
+      result.emplace_back(converted);
+      anari::unmap(m_device, frame, "color");
+    } else {
+      auto fb = anari::map<uint32_t>(m_device, frame, "color");
+      result.emplace_back(
+          fb.data, fb.data + image_height * image_width);
+      anari::unmap(m_device, frame, "color");
+    }
   } else {
     result.emplace_back();
   }
