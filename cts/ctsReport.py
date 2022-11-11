@@ -3,7 +3,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Tabl
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors, pagesizes
 
-def generate_report_document(report_data, path, title):
+def generate_report_document(report_data, path, title, skipPassed = False):
     doc = SimpleDocTemplate(str(path.absolute() / "report.pdf"), 
                         pagesize=pagesizes.A4,
                         rightMargin=18,leftMargin=18,
@@ -120,71 +120,73 @@ def generate_report_document(report_data, path, title):
                                 ('GRID', (0,0), (-1,-1), 0.25, colors.black),
                             ]))
                             story.append(t)
-                            story.append(Spacer(1, 12))
 
-                            # Candidate and reference image
-                            image_size = (doc.width / 2)
-                            images_data = [
-                                [ 
-                                    Paragraph("Reference", stylesheet["Heading4"]), 
-                                    Paragraph("Candidate", stylesheet["Heading4"]), 
-                                ],
-                                [
-                                    Image(
-                                        path / results["image_paths"]["reference"], 
-                                        width=image_size - (margin["left"] + margin["right"]), 
-                                        height=image_size - (margin["top"] + margin["bottom"])
-                                    ),
-                                    Image(
-                                        path / results["image_paths"]["candidate"], 
-                                        width=image_size - (margin["left"] + margin["right"]), 
-                                        height=image_size - (margin["top"] + margin["bottom"])
-                                    ),
+                            if not skipPassed or (skipPassed and status != passed):
+                                story.append(Spacer(1, 12))
+                                # Candidate and reference image
+                                image_size = (doc.width / 2)
+                                images_data = [
+                                    [ 
+                                        Paragraph("Reference", stylesheet["Heading4"]), 
+                                        Paragraph("Candidate", stylesheet["Heading4"]), 
+                                    ],
+                                    [
+                                        Image(
+                                            path / results["image_paths"]["reference"], 
+                                            width=image_size - (margin["left"] + margin["right"]), 
+                                            height=image_size - (margin["top"] + margin["bottom"])
+                                        ),
+                                        Image(
+                                            path / results["image_paths"]["candidate"], 
+                                            width=image_size - (margin["left"] + margin["right"]), 
+                                            height=image_size - (margin["top"] + margin["bottom"])
+                                        ),
+                                    ]
                                 ]
-                            ]
-                            t = Table(images_data, 2 * [image_size])
-                            t.setStyle(TableStyle([
-                                ('GRID', (0,0), (-1,-1), 0.25, colors.black),
-                                ('LEFTPADDING', (0, 1), (-1, -1), margin["left"]),
-                                ('RIGHTPADDING', (0, 1), (-1, -1), margin["right"]),
-                                ('TOPPADDING', (0, 1), (-1, -1), margin["top"]),
-                                ('BOTTOMPADDING', (0, 1), (-1, -1), margin["bottom"])
-                            ]))
-                            story.append(t)
-                            story.append(Spacer(1, 12))
+                                t = Table(images_data, 2 * [image_size])
+                                t.setStyle(TableStyle([
+                                    ('GRID', (0,0), (-1,-1), 0.25, colors.black),
+                                    ('LEFTPADDING', (0, 1), (-1, -1), margin["left"]),
+                                    ('RIGHTPADDING', (0, 1), (-1, -1), margin["right"]),
+                                    ('TOPPADDING', (0, 1), (-1, -1), margin["top"]),
+                                    ('BOTTOMPADDING', (0, 1), (-1, -1), margin["bottom"])
+                                ]))
+                                story.append(t)
+                                story.append(Spacer(1, 12))
 
-                            # computed images
-                            image_size = (doc.width / 2)
-                            images_data = [
-                                [ 
-                                    Paragraph("Difference", stylesheet["Heading4"]),
-                                    Paragraph("5% Threshold", stylesheet["Heading4"]),
-                                ],
-                                [
-                                    Image(
-                                        path / results["image_paths"]["diff"], 
-                                        width=image_size - (margin["left"] + margin["right"]), 
-                                        height=image_size - (margin["top"] + margin["bottom"])
-                                    ),
-                                    Image(
-                                        path / results["image_paths"]["threshold"], 
-                                        width=image_size - (margin["left"] + margin["right"]), 
-                                        height=image_size - (margin["top"] + margin["bottom"])
-                                    ),
+                                # computed images
+                                image_size = (doc.width / 2)
+                                images_data = [
+                                    [ 
+                                        Paragraph("Difference", stylesheet["Heading4"]),
+                                        Paragraph("5% Threshold", stylesheet["Heading4"]),
+                                    ],
+                                    [
+                                        Image(
+                                            path / results["image_paths"]["diff"], 
+                                            width=image_size - (margin["left"] + margin["right"]), 
+                                            height=image_size - (margin["top"] + margin["bottom"])
+                                        ),
+                                        Image(
+                                            path / results["image_paths"]["threshold"], 
+                                            width=image_size - (margin["left"] + margin["right"]), 
+                                            height=image_size - (margin["top"] + margin["bottom"])
+                                        ),
+                                    ]
                                 ]
-                            ]
-                            t = Table(images_data, 2 * [image_size])
-                            t.setStyle(TableStyle([
-                                ('GRID', (0,0), (-1,-1), 0.25, colors.black),
-                                ('LEFTPADDING', (0, 1), (-1, -1), margin["left"]),
-                                ('RIGHTPADDING', (0, 1), (-1, -1), margin["right"]),
-                                ('TOPPADDING', (0, 1), (-1, -1), margin["top"]),
-                                ('BOTTOMPADDING', (0, 1), (-1, -1), margin["bottom"])
-                            ]))
-                            story.append(t)
+                                t = Table(images_data, 2 * [image_size])
+                                t.setStyle(TableStyle([
+                                    ('GRID', (0,0), (-1,-1), 0.25, colors.black),
+                                    ('LEFTPADDING', (0, 1), (-1, -1), margin["left"]),
+                                    ('RIGHTPADDING', (0, 1), (-1, -1), margin["right"]),
+                                    ('TOPPADDING', (0, 1), (-1, -1), margin["top"]),
+                                    ('BOTTOMPADDING', (0, 1), (-1, -1), margin["bottom"])
+                                ]))
+                                story.append(t)
 
-                            story.append(PageBreak())
-                        
+                                story.append(PageBreak())
+                    if not isinstance(story[-1], PageBreak):
+                        story.append(PageBreak())
                     summary.append([Paragraph(f'<a href="#{name}" color=blue>&nbsp;&nbsp;&nbsp;&nbsp;{name}</a>'), status])
 
 
