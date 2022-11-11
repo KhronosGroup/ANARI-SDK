@@ -415,7 +415,7 @@ std::tuple<std::vector<glm::vec3>, std::vector<float>>
       radii.push_back(getRandom(0.0f, 0.4f));
     }
 
-    // add translation offset per cone
+    // add translation offset per curve
     for (size_t i = 0; i < primitiveCount; ++i) {
       const size_t index = i * 2;
       const glm::vec3 offset(
