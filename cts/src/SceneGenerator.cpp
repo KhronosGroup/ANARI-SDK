@@ -8,6 +8,7 @@
 #include "anariWrapper.h"
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <stdexcept>
 
 namespace cts {
 
