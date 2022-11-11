@@ -121,7 +121,7 @@ void SceneGenerator::commit()
         vertices = cubeVertices;
         indices = cubeIndices;
       } else {
-        generator.generateQuadCubeSoups(primitiveCount);
+        vertices = generator.generateQuadCubeSoups(primitiveCount);
       }
     }
 
