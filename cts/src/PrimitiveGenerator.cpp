@@ -29,15 +29,17 @@ glm::vec3 PrimitiveGenerator::getRandomVector(float min, float max)
     getRandomFloat(min, max)};
 }
 
+// add random translation to individual objects
 std::vector<glm::vec3> PrimitiveGenerator::randomTranslate(
-    std::vector<glm::vec3> vertices, int groupSize, float translationMax)
+    std::vector<glm::vec3> vertices, int verticesPerObject)
 {
-  const float scale = 1.0f - translationMax;
+  const float maxTranslation = 0.6f;
+  const float scale = 0.4f;
 
   for (size_t i = 0; i < vertices.size();) {
-    const glm::vec3 offset(getRandomVector(0.0f, translationMax));
-    for (size_t k = 0; k < groupSize; ++k, ++i) {
-      vertices[i] = (vertices[i] * scale) + offset;
+    const glm::vec3 translation(getRandomVector(0.0f, maxTranslation));
+    for (size_t k = 0; k < verticesPerObject; ++k, ++i) {
+      vertices[i] = (vertices[i] * scale) + translation;
     }
   }
 
@@ -52,7 +54,7 @@ std::vector<glm::vec3> PrimitiveGenerator::generateTriangles(
     vertex = getRandomVector(0.0f, 1.0f);
   }
 
-  vertices = randomTranslate(vertices, 3, 0.6f);
+  vertices = randomTranslate(vertices, 3);
 
   return vertices;
 }
@@ -85,7 +87,7 @@ std::vector<glm::vec3> PrimitiveGenerator::generateTriangulatedQuadsSoup(
     i = (i + 1) % 6;
   }
 
-  vertices = randomTranslate(vertices, 6, 0.6f);
+  vertices = randomTranslate(vertices, 6);
 
   return vertices;
 }
@@ -115,7 +117,7 @@ PrimitiveGenerator::generateTriangulatedQuadsIndexed(size_t primitiveCount)
     i = (i + 1) % 4;
   }
 
-  vertices = randomTranslate(vertices, 4, 0.6f);
+  vertices = randomTranslate(vertices, 4);
 
   for (size_t k = 0; k < primitiveCount; ++k) {
     const size_t index = k * 4;
