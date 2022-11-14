@@ -97,8 +97,8 @@ void SceneGenerator::commit()
     }
 
     if (primitiveMode == "indexed") {
-    // reverse indices vector to create a more useful test case
-      std::reverse(indices.begin(), indices.end());
+    // shuffle indices vector to create a more useful test case
+      indices = generator.shuffleVector(indices);
       anari::setAndReleaseParameter(d,
           geom,
           "primitive.index",
@@ -126,8 +126,8 @@ void SceneGenerator::commit()
     }
 
     if (primitiveMode == "indexed") {
-      // reverse indices vector to create a more useful test case
-      std::reverse(indices.begin(), indices.end());
+    // shuffle indices vector to create a more useful test case
+      indices = generator.shuffleVector(indices);
       anari::setAndReleaseParameter(d,
           geom,
           "primitive.index",
@@ -149,8 +149,8 @@ void SceneGenerator::commit()
         indices.push_back(static_cast<uint32_t>(i));
       }
 
-      // reverse indices vector to create a more useful test case
-      std::reverse(indices.begin(), indices.end());
+      // shuffle indices vector to create a more useful test case
+      indices = generator.shuffleVector(indices);
       anari::setAndReleaseParameter(d,
           geom,
           "primitive.index",
@@ -172,8 +172,8 @@ void SceneGenerator::commit()
             glm::vec2(static_cast<uint32_t>(i), static_cast<uint32_t>(i + 1)));
       }
 
-      // reverse indices vector to create a more useful test case
-      std::reverse(indices.begin(), indices.end());
+      // shuffle indices vector to create a more useful test case
+      indices = generator.shuffleVector(indices);
       anari::setAndReleaseParameter(d,
           geom,
           "primitive.index",
@@ -196,8 +196,8 @@ void SceneGenerator::commit()
             glm::vec2(static_cast<uint32_t>(i), static_cast<uint32_t>(i + 1)));
       }
 
-      // reverse indices vector to create a more useful test case
-      std::reverse(indices.begin(), indices.end());
+      // shuffle indices vector to create a more useful test case
+      indices = generator.shuffleVector(indices);
       anari::setAndReleaseParameter(d,
           geom,
           "primitive.index",
@@ -219,8 +219,8 @@ void SceneGenerator::commit()
             static_cast<uint32_t>(i), static_cast<uint32_t>(i + 1)));
       }
 
-      // reverse indices vector to create a more useful test case
-      std::reverse(indices.begin(), indices.end());
+      // shuffle indices vector to create a more useful test case
+      indices = generator.shuffleVector(indices);
       anari::setAndReleaseParameter(d,
           geom,
           "primitive.index",
