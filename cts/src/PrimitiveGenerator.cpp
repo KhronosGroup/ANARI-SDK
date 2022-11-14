@@ -336,13 +336,7 @@ PrimitiveGenerator::generateCurves(size_t primitiveCount)
     radii.push_back(getRandomFloat(0.0f, 0.4f));
   }
 
-  // add translation offset per curve
-  for (size_t i = 0; i < primitiveCount; ++i) {
-    const size_t index = i * 2;
-    const glm::vec3 offset(getRandomVector(0.0f, 0.6f));
-    vertices[index] = (vertices[index] * 0.4f) + offset;
-    vertices[index + 1] = (vertices[index + 1] * 0.4f) + offset;
-  }
+  vertices = randomTranslate(vertices, 2);
 
   return std::make_tuple(vertices, radii);
 }
@@ -358,13 +352,7 @@ PrimitiveGenerator::generateCones(size_t primitiveCount)
     radii.push_back(getRandomFloat(0.0f, 0.4f));
   }
 
-  // add translation offset per cone
-  for (size_t i = 0; i < primitiveCount; ++i) {
-    const size_t index = i * 2;
-    const glm::vec3 offset(getRandomVector(0.0f, 0.6f));
-    vertices[index] = (vertices[index] * 0.4f) + offset;
-    vertices[index + 1] = (vertices[index + 1] * 0.4f) + offset;
-  }
+  vertices = randomTranslate(vertices, 2);
 
   return std::make_tuple(vertices, radii);
 }
@@ -381,13 +369,7 @@ PrimitiveGenerator::generateCylinders(size_t primitiveCount)
     radii.push_back(getRandomFloat(0.0f, 0.4f));
   }
 
-  // add translation offset per cylinder
-  for (size_t i = 0; i < primitiveCount; ++i) {
-    const size_t index = i * 2;
-    const glm::vec3 offset(getRandomVector(0.0f, 0.6f));
-    vertices[index] = (vertices[index] * 0.4f) + offset;
-    vertices[index + 1] = (vertices[index + 1] * 0.4f) + offset;
-  }
+  vertices = randomTranslate(vertices, 2);
 
   return std::make_tuple(vertices, radii);
 }
