@@ -254,10 +254,29 @@ std::tuple<std::vector<glm::vec3>, std::vector<glm::uvec3>> PrimitiveGenerator::
 std::vector<glm::vec3> PrimitiveGenerator::generateQuads(size_t primitiveCount) 
   {
     std::vector<glm::vec3> vertices(primitiveCount * 4);
-    for (auto &vertex : vertices) {
-      vertex.x = getRandom(0.0f, 1.0f);
-      vertex.y = getRandom(0.0f, 1.0f);
-      vertex.z = getRandom(0.0f, 1.0f);
+
+    glm::vec3 vertex0(0), vertex1(0), vertex2(0);
+    for (size_t i = 0; i < vertices.size(); ++i) {
+      glm::vec3 newVertex;
+      if (3 == i % 4) {
+        // fourth vertex is set so that the quad lies in a plane
+        const glm::vec3 vec01 = vertex1 - vertex0;
+        newVertex = vertex2 + vec01;
+      } else {
+        newVertex.x = getRandom(0.0f, 1.0f);
+        newVertex.y = getRandom(0.0f, 1.0f);
+        newVertex.z = getRandom(0.0f, 1.0f);
+
+        if (0 == i % 4) {
+          vertex0 = newVertex;
+        } else if (1 == i % 4) {
+          vertex1 = newVertex;
+        } else if (2 == i % 4) {
+          vertex2 = newVertex;
+        }
+      }
+      
+      vertices[i] = newVertex;
     }
 
     // add translation offset per quad
