@@ -23,23 +23,48 @@ float PrimitiveGenerator::getRandomFloat(float min, float max)
 
 glm::vec3 PrimitiveGenerator::getRandomVector(float min, float max)
 {
-  return {
-    getRandomFloat(min, max),
-    getRandomFloat(min, max),
-    getRandomFloat(min, max)};
+  return {getRandomFloat(min, max),
+      getRandomFloat(min, max),
+      getRandomFloat(min, max)};
 }
 
-// add random translation to individual objects
 std::vector<glm::vec3> PrimitiveGenerator::randomTranslate(
-    std::vector<glm::vec3> vertices, int verticesPerObject)
+    std::vector<glm::vec3> vertices, int verticesPerPrimitive)
 {
   const float maxTranslation = 0.6f;
   const float scale = 0.4f;
 
   for (size_t i = 0; i < vertices.size();) {
     const glm::vec3 translation(getRandomVector(0.0f, maxTranslation));
-    for (size_t k = 0; k < verticesPerObject; ++k, ++i) {
+    for (size_t k = 0; k < verticesPerPrimitive; ++k, ++i) {
       vertices[i] = (vertices[i] * scale) + translation;
+    }
+  }
+
+  return vertices;
+}
+
+std::vector<glm::vec3> PrimitiveGenerator::randomTransform(
+    std::vector<glm::vec3> vertices, int verticesPerPrimitive)
+{
+  const int primitiveCount = vertices.size() / verticesPerPrimitive;
+
+  for (size_t k = 0; k < primitiveCount; ++k) {
+    const glm::mat4 scale =
+        glm::scale(glm::mat4(1.0f), glm::vec3(getRandomFloat(0.0f, 0.4f)));
+
+    const glm::mat4 rotation = glm::rotate(glm::mat4(1.0f),
+        getRandomFloat(0.0f, 360.0f),
+        getRandomVector(0.0f, 1.0f));
+
+    const glm::mat4 translation =
+        glm::translate(glm::mat4(1.0f), getRandomVector(0.0f, 0.6f));
+
+    const glm::mat4 transform = translation * rotation * scale;
+
+    for (size_t i = 0; i < verticesPerPrimitive; ++i) {
+      const size_t index = i + verticesPerPrimitive * k;
+      vertices[index] = transform * glm::vec4(vertices[index], 1.0);
     }
   }
 
@@ -70,18 +95,18 @@ std::vector<glm::vec3> PrimitiveGenerator::generateTriangulatedQuadsSoup(
       vertex = vertex2;
     } else if (i == 4) {
       vertex = vertex1;
-    } else {
-      vertex = getRandomVector(0.0f, 1.0f);
-    }
-
-    if (i == 0) {
-      vertex0 = vertex;
-    } else if (i == 1) {
-      vertex1 = vertex;
-    } else if (i == 2) {
-      vertex2 = vertex;
     } else if (i == 5) {
       vertex = vertex2 + (vertex1 - vertex0);
+    } else {
+      vertex = getRandomVector(0.0f, 1.0f);
+
+      if (i == 0) {
+        vertex0 = vertex;
+      } else if (i == 1) {
+        vertex1 = vertex;
+      } else if (i == 2) {
+        vertex2 = vertex;
+      }
     }
 
     i = (i + 1) % 6;
@@ -104,14 +129,14 @@ PrimitiveGenerator::generateTriangulatedQuadsIndexed(size_t primitiveCount)
       vertex = vertex2 + (vertex1 - vertex0);
     } else {
       vertex = getRandomVector(0.0f, 1.0f);
-    }
 
-    if (i == 0) {
-      vertex0 = vertex;
-    } else if (i == 1) {
-      vertex1 = vertex;
-    } else if (i == 2) {
-      vertex2 = vertex;
+      if (i == 0) {
+        vertex0 = vertex;
+      } else if (i == 1) {
+        vertex1 = vertex;
+      } else if (i == 2) {
+        vertex2 = vertex;
+      }
     }
 
     i = (i + 1) % 4;
@@ -153,25 +178,7 @@ std::vector<glm::vec3> PrimitiveGenerator::generateTriangulatedCubesSoup(
         std::back_insert_iterator(vertices));
   }
 
-  // add random transform per cube
-  for (size_t k = 0; k < primitiveCount; ++k) {
-    const glm::mat4 scale =
-        glm::scale(glm::mat4(1.0f), glm::vec3(getRandomFloat(0.0f, 0.4f)));
-
-    const glm::mat4 rotation = glm::rotate(glm::mat4(1.0f),
-        getRandomFloat(0.0f, 360.0f),
-        getRandomVector(0.0f, 1.0f));
-
-    const glm::mat4 translation =
-        glm::translate(glm::mat4(1.0f), getRandomVector(0.0f, 0.6f));
-
-    const glm::mat4 transform = translation * rotation * scale;
-
-    for (size_t i = 0; i < cubeVertices.size(); ++i) {
-      const size_t index = i + cubeVertices.size() * k;
-      vertices[index] = transform * glm::vec4(vertices[index], 1.0);
-    }
-  }
+  vertices = randomTransform(vertices, cubeVertices.size());
 
   return vertices;
 }
@@ -211,64 +218,29 @@ std::tuple<std::vector<glm::vec3>, std::vector<glm::uvec3>> PrimitiveGenerator::
         std::back_insert_iterator(indices));
   }
 
-  // add random transform per cube
-  for (size_t k = 0; k < primitiveCount; ++k) {
-
-    const glm::mat4 scale =
-        glm::scale(glm::mat4(1.0f), glm::vec3(getRandomFloat(0.0f, 0.4f)));
-
-    const glm::mat4 rotation = glm::rotate(glm::mat4(1.0f),
-        getRandomFloat(0.0f, 360.0f),
-        getRandomVector(0.0f, 1.0f));
-
-    const glm::mat4 translation = glm::translate(glm::mat4(1.0f),
-        getRandomVector(0.0f, 0.6f));
-
-    const glm::mat4 transform = translation * rotation * scale;
-
-    for (size_t i = 0; i < cubeVertices.size(); ++i) {
-      const size_t index = i + cubeVertices.size() * k;
-      vertices[index] = transform * glm::vec4(vertices[index], 1.0);
-    }
-  }
+  vertices = randomTransform(vertices, cubeVertices.size());
 
   return std::make_tuple(vertices, indices);
 }
 
 std::vector<glm::vec3> PrimitiveGenerator::generateQuads(size_t primitiveCount)
 {
-  std::vector<glm::vec3> vertices(primitiveCount * 4);
+  std::vector<glm::vec3> vertices;
 
-  auto generateQuad = [this]() -> std::vector<glm::vec3> {
+  for (size_t i = 0; i < primitiveCount; ++i) {
     glm::vec3 vertex0(0), vertex1(0), vertex2(0), vertex3(0);
 
     vertex0 = getRandomVector(0.0f, 1.0f);
     vertex1 = getRandomVector(0.0f, 1.0f);
     vertex2 = getRandomVector(0.0f, 1.0f);
+    vertex3 = vertex2 + (vertex1 - vertex0);
 
-    const glm::vec3 vec01 = vertex1 - vertex0;
-    vertex3 = vertex2 + vec01;
+    std::vector<glm::vec3> quad = {vertex0, vertex1, vertex3, vertex2};
 
-    return {vertex0, vertex1, vertex3, vertex2};
-  };
-
-  for (size_t i = 0; i < vertices.size(); i += 4) {
-    std::vector<glm::vec3> quad = generateQuad();
-    vertices[i + 0] = quad[0];
-    vertices[i + 1] = quad[1];
-    vertices[i + 2] = quad[2];
-    vertices[i + 3] = quad[3];
+    std::copy(quad.begin(), quad.end(), std::back_insert_iterator(vertices));
   }
 
-  // add translation offset per quad
-  for (size_t i = 0; i < primitiveCount; ++i) {
-    const size_t index = i * 4;
-    const glm::vec3 offset(getRandomVector(0.0f, 0.6f));
-    vertices[index] = (vertices[index] * 0.4f) + offset;
-    vertices[index + 1] = (vertices[index + 1] * 0.4f) + offset;
-    vertices[index + 2] = (vertices[index + 2] * 0.4f) + offset;
-    vertices[index + 3] = (vertices[index + 3] * 0.4f) + offset;
-  }
+  vertices = randomTranslate(vertices, 4);
 
   return vertices;
 }
@@ -291,27 +263,7 @@ std::vector<glm::vec3> PrimitiveGenerator::generateQuadCubesSoup(
         std::back_insert_iterator(vertices));
   }
 
-  // add random transform per cube
-  for (size_t k = 0; k < primitiveCount; ++k) {
-    float cubeScale = getRandomFloat(0.0f, 0.4f);
-
-    const glm::mat4 scale =
-        glm::scale(glm::mat4(1.0f), glm::vec3(cubeScale, cubeScale, cubeScale));
-
-    const glm::mat4 rotation = glm::rotate(glm::mat4(1.0f),
-        getRandomFloat(0.0f, 360.0f),
-        getRandomVector(0.0f, 1.0f));
-
-    const glm::mat4 translation =
-        glm::translate(glm::mat4(1.0f), getRandomVector(0.0f, 0.6f));
-
-    const glm::mat4 transform = translation * rotation * scale;
-
-    for (size_t i = 0; i < cubeVertices.size(); ++i) {
-      const size_t index = i + cubeVertices.size() * k;
-      vertices[index] = transform * glm::vec4(vertices[index], 1.0);
-    }
-  }
+  vertices = randomTransform(vertices, cubeVertices.size());
 
   return vertices;
 }
@@ -354,27 +306,7 @@ PrimitiveGenerator::generateQuadCubesIndexed(size_t primitiveCount)
         std::back_insert_iterator(indices));
   }
 
-  // add random transform per cube
-  for (size_t k = 0; k < primitiveCount; ++k) {
-    float cubeScale = getRandomFloat(0.0f, 0.4f);
-
-    const glm::mat4 scale =
-        glm::scale(glm::mat4(1.0f), glm::vec3(cubeScale, cubeScale, cubeScale));
-
-    const glm::mat4 rotation = glm::rotate(glm::mat4(1.0f),
-        getRandomFloat(0.0f, 360.0f),
-        getRandomVector(0.0f, 1.0f));
-
-    const glm::mat4 translation =
-        glm::translate(glm::mat4(1.0f), getRandomVector(0.0f, 0.6f));
-
-    const glm::mat4 transform = translation * rotation * scale;
-
-    for (size_t i = 0; i < cubeVertices.size(); ++i) {
-      const size_t index = i + cubeVertices.size() * k;
-      vertices[index] = transform * glm::vec4(vertices[index], 1.0);
-    }
-  }
+  vertices = randomTransform(vertices, cubeVertices.size());
 
   return std::make_tuple(vertices, indices);
 }
