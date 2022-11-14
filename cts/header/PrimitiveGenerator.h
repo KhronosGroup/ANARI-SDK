@@ -15,25 +15,26 @@ class PrimitiveGenerator
  public:
   PrimitiveGenerator(int seed);
 
+  // triangles
   std::vector<glm::vec3> generateTriangles(size_t primitiveCount);
-  std::vector<glm::vec3> generateTriangulatedQuadSoups(size_t primitiveCount);
+  std::vector<glm::vec3> generateTriangulatedQuadsSoup(size_t primitiveCount);
   std::tuple<std::vector<glm::vec3>, std::vector<glm::uvec3>>
   generateTriangulatedQuadsIndexed(size_t primitiveCount);
-  std::vector<glm::vec3> generateTriangulatedCubeSoups(size_t primitiveCount);
+  std::vector<glm::vec3> generateTriangulatedCubesSoup(size_t primitiveCount);
   std::tuple<std::vector<glm::vec3>, std::vector<glm::uvec3>>
   generateTriangulatedCubesIndexed(size_t primitiveCount);
 
+  // quads
   std::vector<glm::vec3> generateQuads(size_t primitiveCount);
-  std::vector<glm::vec3> generateQuadCubeSoups(size_t primitiveCount);
+  std::vector<glm::vec3> generateQuadCubesSoup(size_t primitiveCount);
   std::tuple<std::vector<glm::vec3>, std::vector<glm::uvec4>>
   generateQuadCubesIndexed(size_t primitiveCount);
 
+  // others
   std::tuple<std::vector<glm::vec3>, std::vector<float>> generateSpheres(
       size_t primitiveCount);
-
   std::tuple<std::vector<glm::vec3>, std::vector<float>> generateCurves(
       size_t primitiveCount);
-
   std::tuple<std::vector<glm::vec3>, std::vector<float>> generateCones(
       size_t primitiveCount);
   std::tuple<std::vector<glm::vec3>, std::vector<float>> generateCylinders(
@@ -49,8 +50,8 @@ class PrimitiveGenerator
  private:
   std::mt19937 m_rng;
 
-  float getRandom(float min, float max);
-  glm::vec3 getRandomVertex(float min, float max);
+  float getRandomFloat(float min, float max);
+  glm::vec3 getRandomVector(float min, float max);
 };
 
 } // namespace cts

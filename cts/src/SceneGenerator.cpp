@@ -83,7 +83,7 @@ void SceneGenerator::commit()
        vertices = quadVertices;
        indices = quadIndices;
       } else {
-       vertices = generator.generateTriangulatedQuadSoups(primitiveCount);
+       vertices = generator.generateTriangulatedQuadsSoup(primitiveCount);
       }
     } else if (shape == "cube") {
       if (primitiveMode == "indexed") {
@@ -92,7 +92,7 @@ void SceneGenerator::commit()
        vertices = cubeVertices;
        indices = cubeIndices;
       } else {
-       vertices = generator.generateTriangulatedCubeSoups(primitiveCount);
+       vertices = generator.generateTriangulatedCubesSoup(primitiveCount);
       }
     }
 
@@ -121,7 +121,7 @@ void SceneGenerator::commit()
         vertices = cubeVertices;
         indices = cubeIndices;
       } else {
-        vertices = generator.generateQuadCubeSoups(primitiveCount);
+        vertices = generator.generateQuadCubesSoup(primitiveCount);
       }
     }
 
