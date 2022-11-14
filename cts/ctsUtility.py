@@ -9,7 +9,7 @@ import os
 
 
 def ssim(reference, candidate, threshold):
-    result = skimage.metrics.structural_similarity(reference, candidate, multichannel=True)
+    result = skimage.metrics.structural_similarity(reference, candidate, channel_axis=2)
     return result > threshold, result
 
 def psnr(reference, candidate, threshold):
