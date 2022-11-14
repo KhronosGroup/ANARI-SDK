@@ -1,6 +1,7 @@
 #include "anariWrapper.h"
 #include <anari/anari_cpp.hpp>
 #include <anari/anari_cpp/ext/std.h>
+#include <pybind11/pybind11.h>
 #include "ctsQueries.h"
 
 typedef union ANARIFeatures_u
@@ -19,7 +20,7 @@ namespace cts {
     ANARIStatusCode code,
     const char *message)
     {
-      auto& logger = *reinterpret_cast<const std::function<void(const std::string message)>*>(userData);
+      auto& logger = *reinterpret_cast<const pybind11::function*>(userData);
       (void)device;
       (void)source;
       (void)sourceType;
@@ -138,4 +139,48 @@ namespace cts {
       }
       return *devices; 
     }
-    } // namespace cts
+
+    SceneGeneratorWrapper::SceneGeneratorWrapper(
+        const std::string &library,
+        const std::optional<std::string> &device,
+        const pybind11::function &callback)
+    {
+      m_callback = callback;
+      m_library = anari::loadLibrary(
+          library.c_str(), statusFunc, &m_callback);
+
+      if (m_library == nullptr) {
+        throw std::runtime_error("Library could not be loaded: " + library);
+      }
+
+      std::string deviceName;
+      if (device.has_value()) {
+        deviceName = device.value();
+      } else {
+        const char **devices =
+            anariGetDeviceSubtypes(m_library);
+        if (!devices) {
+          throw std::runtime_error("No device available");
+        }
+        deviceName = *devices;
+      }
+
+      ANARIDevice dev =
+          anariNewDevice(m_library, deviceName.c_str());
+      if (dev == nullptr) {
+        throw std::runtime_error("Device could not be created: " + deviceName);
+      }
+      m_sceneGenerator = std::make_unique<SceneGenerator>(dev);
+
+    }
+
+    SceneGeneratorWrapper::~SceneGeneratorWrapper() {
+      if (m_library != nullptr) {
+        anari::unloadLibrary(m_library);
+      }
+    }
+
+} // namespace cts
+
+
+    

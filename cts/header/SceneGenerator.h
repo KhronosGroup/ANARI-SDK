@@ -15,13 +15,8 @@ namespace cts {
 class SceneGenerator : public anari::scenes::TestScene
 {
  public:
-  static SceneGenerator *createSceneGenerator(const std::string &library,
-      const std::optional<std::string> &device,
-      const std::function<void(const std::string message)> &callback);
-
   SceneGenerator(anari::Device device);
   ~SceneGenerator();
-
   void resetAllParameters();
 
   anari::World world() override;
@@ -38,7 +33,6 @@ class SceneGenerator : public anari::scenes::TestScene
   }
 
  private:
-  static anari::Library m_library;
 
   float frameDuration = -1.0f;
 

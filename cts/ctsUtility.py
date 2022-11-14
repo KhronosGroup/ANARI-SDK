@@ -6,14 +6,18 @@ import skimage.filters
 import numpy as np
 from sewar.full_ref import vifp, uqi
 import os
+import warnings
 
 
 def ssim(reference, candidate, threshold):
-    result = skimage.metrics.structural_similarity(reference, candidate, multichannel=True)
+    result = skimage.metrics.structural_similarity(reference, candidate, channel_axis=2)
     return result > threshold, result
 
 def psnr(reference, candidate, threshold):
-    result = skimage.metrics.peak_signal_noise_ratio(reference, candidate)
+    # Catch warning which is thrown if images are equal
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="divide by zero encountered in double_scalars")
+        result = skimage.metrics.peak_signal_noise_ratio(reference, candidate)
     return result > threshold, result
 
 def getThreshold(methods, thresholds, method, default):

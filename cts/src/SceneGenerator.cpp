@@ -8,12 +8,15 @@
 #include "anariWrapper.h"
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <stdexcept>
+
 
 namespace cts {
 
-anari::Library SceneGenerator::m_library = nullptr;
 
-SceneGenerator::SceneGenerator(anari::Device device) :  TestScene(device)
+SceneGenerator::SceneGenerator(
+    anari::Device device)
+    : TestScene(device)
 {
   //anari::commitParameters(m_device, m_device);
   m_world = anari::newObject<anari::World>(m_device);
@@ -27,7 +30,6 @@ SceneGenerator::~SceneGenerator()
     }
   }
   anari::release(m_device, m_world);
-  anari::unloadLibrary(m_library);
 }
 
 anari::World SceneGenerator::world()
@@ -431,35 +433,6 @@ std::vector<std::vector<std::vector<std::vector<float>>>> SceneGenerator::getBou
   result.emplace_back(instancesBounds);
   result.emplace_back(groupBounds);
   return result;
-}
-
-SceneGenerator *SceneGenerator::createSceneGenerator(const std::string &library,
-  const std::optional<std::string>& device,
-  const std::function<void(const std::string message)>& callback)
-{
-  m_library = anari::loadLibrary(library.c_str(), statusFunc, &callback);
-  if (m_library == nullptr) {
-    throw std::runtime_error("Library could not be loaded: " + library);
-  }
-
-  std::string deviceName;
-  if (device.has_value()) {
-    deviceName = device.value();
-  } else {
-    const char **devices = anariGetDeviceSubtypes(m_library);
-    if (!devices) {
-      throw std::runtime_error("No device available");
-    }
-    deviceName = *devices;
-  }
-
-  ANARIDevice dev = anariNewDevice(m_library, deviceName.c_str());
-  if(dev == nullptr) {
-    anari::unloadLibrary(m_library);
-    throw std::runtime_error("Device could not be created: " + deviceName);
-  }
-
-  return new SceneGenerator(dev);
 }
 
 } // namespace cts
