@@ -4,8 +4,8 @@
 #include "PrimitiveGenerator.h"
 
 #include <glm/gtc/matrix_transform.hpp>
-#include <vector>
 #include <iterator>
+#include <vector>
 
 namespace cts {
 
@@ -19,6 +19,16 @@ float PrimitiveGenerator::getRandom(float min, float max)
   std::uniform_real_distribution<float> uniformDist(min, max);
 
   return uniformDist(m_rng);
+}
+
+glm::vec3 PrimitiveGenerator::getRandomVertex(float min, float max)
+{
+  glm::vec3 vertex;
+  vertex.x = getRandom(0.0f, 1.0f);
+  vertex.y = getRandom(0.0f, 1.0f);
+  vertex.z = getRandom(0.0f, 1.0f);
+
+  return vertex;
 }
 
 std::vector<glm::vec3> PrimitiveGenerator::generateTriangles(
@@ -112,7 +122,7 @@ std::tuple<std::vector<glm::vec3>, std::vector<glm::uvec3>> PrimitiveGenerator::
       vertex1 = vertex;
     } else if (i == 2) {
       vertex2 = vertex;
-    } 
+    }
 
     i = (i + 1) % 4;
   }
@@ -251,47 +261,45 @@ std::tuple<std::vector<glm::vec3>, std::vector<glm::uvec3>> PrimitiveGenerator::
   return std::make_tuple(vertices, indices);
 }
 
-std::vector<glm::vec3> PrimitiveGenerator::generateQuads(size_t primitiveCount) 
+std::vector<glm::vec3> PrimitiveGenerator::generateQuads(size_t primitiveCount)
+{
+  std::vector<glm::vec3> vertices(primitiveCount * 4);
+
+  auto generateQuad = [this]() -> std::vector<glm::vec3> {
+    glm::vec3 vertex0(0), vertex1(0), vertex2(0), vertex3(0);
+
+    vertex0 = getRandomVertex(0.0f, 1.0f);
+    vertex1 = getRandomVertex(0.0f, 1.0f);
+    vertex2 = getRandomVertex(0.0f, 1.0f);
+
+    const glm::vec3 vec01 = vertex1 - vertex0;
+    vertex3 = vertex2 + vec01;
+
+    return {vertex0, vertex1, vertex3, vertex2};
+  };
+
+  for (size_t i = 0; i < vertices.size(); i += 4)
   {
-    std::vector<glm::vec3> vertices(primitiveCount * 4);
-
-    glm::vec3 vertex0(0), vertex1(0), vertex2(0);
-    for (size_t i = 0; i < vertices.size(); ++i) {
-      glm::vec3 newVertex;
-      if (3 == i % 4) {
-        // fourth vertex is set so that the quad lies in a plane
-        const glm::vec3 vec01 = vertex1 - vertex0;
-        newVertex = vertex2 + vec01;
-      } else {
-        newVertex.x = getRandom(0.0f, 1.0f);
-        newVertex.y = getRandom(0.0f, 1.0f);
-        newVertex.z = getRandom(0.0f, 1.0f);
-
-        if (0 == i % 4) {
-          vertex0 = newVertex;
-        } else if (1 == i % 4) {
-          vertex1 = newVertex;
-        } else if (2 == i % 4) {
-          vertex2 = newVertex;
-        }
-      }
-      
-      vertices[i] = newVertex;
-    }
-
-    // add translation offset per quad
-    for (size_t i = 0; i < primitiveCount; ++i) {
-      const size_t index = i * 4;
-      const glm::vec3 offset(
-          getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f));
-      vertices[index] = (vertices[index] * 0.4f) + offset;
-      vertices[index + 1] = (vertices[index + 1] * 0.4f) + offset;
-      vertices[index + 2] = (vertices[index + 2] * 0.4f) + offset;
-      vertices[index + 3] = (vertices[index + 3] * 0.4f) + offset;
-    }
-
-    return vertices;
+    std::vector<glm::vec3> quad = generateQuad();
+    vertices[i + 0] = quad[0];
+    vertices[i + 1] = quad[1];
+    vertices[i + 2] = quad[2];
+    vertices[i + 3] = quad[3];
   }
+
+  // add translation offset per quad
+  for (size_t i = 0; i < primitiveCount; ++i) {
+    const size_t index = i * 4;
+    const glm::vec3 offset(
+        getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f), getRandom(0.0f, 0.6f));
+    vertices[index] = (vertices[index] * 0.4f) + offset;
+    vertices[index + 1] = (vertices[index + 1] * 0.4f) + offset;
+    vertices[index + 2] = (vertices[index + 2] * 0.4f) + offset;
+    vertices[index + 3] = (vertices[index + 3] * 0.4f) + offset;
+  }
+
+  return vertices;
+}
 
 std::vector<glm::vec3> PrimitiveGenerator::generateQuadCubeSoups(
       size_t primitiveCount) 
@@ -338,7 +346,7 @@ std::vector<glm::vec3> PrimitiveGenerator::generateQuadCubeSoups(
   }
 
   return vertices;
-  }
+}
 
 std::tuple<std::vector<glm::vec3>, std::vector<glm::uvec4>>
   PrimitiveGenerator::generateQuadCubesIndexed(size_t primitiveCount)

@@ -42,6 +42,7 @@ class PrimitiveGenerator
   std::mt19937 m_rng;
 
   float getRandom(float min, float max);
+  glm::vec3 getRandomVertex(float min, float max);
 };
 
 } // namespace cts
