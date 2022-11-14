@@ -5,7 +5,6 @@
 #include <pybind11/functional.h>
 #include "anariWrapper.h"
 #include "anariInfo.h"
-#include "SceneGenerator.h"
 
 #include <functional>
 #include <string>
@@ -23,13 +22,14 @@ PYBIND11_MODULE(ctsBackend, m)
 
   m.def("getDefaultDeviceName", &cts::getDefaultDeviceName);
 
-  py::class_<cts::SceneGenerator>(m, "SceneGenerator")
-      .def(py::init(&cts::SceneGenerator::createSceneGenerator))
-      .def("setParameter", &cts::SceneGenerator::setParam<std::string>)
-      .def("setParameter", &cts::SceneGenerator::setParam<int>)
-      .def("commit", &cts::SceneGenerator::commit)
-      .def("renderScene", &cts::SceneGenerator::renderScene)
-      .def("resetAllParameters", &cts::SceneGenerator::resetAllParameters)
-      .def("getBounds", &cts::SceneGenerator::getBounds)
-      .def("getFrameDuration", &cts::SceneGenerator::getFrameDuration);
+  py::class_<cts::SceneGeneratorWrapper>(m, "SceneGenerator")
+      .def(py::init<const std::string&, const std::optional<std::string>, const py::function&>())
+      .def("setParameter", &cts::SceneGeneratorWrapper::setParam<std::string>)
+      .def("setParameter", &cts::SceneGeneratorWrapper::setParam<int>)
+      .def("commit", &cts::SceneGeneratorWrapper::commit)
+      .def("renderScene", &cts::SceneGeneratorWrapper::renderScene)
+      .def(
+          "resetAllParameters", &cts::SceneGeneratorWrapper::resetAllParameters)
+      .def("getBounds", &cts::SceneGeneratorWrapper::getBounds)
+      .def("getFrameDuration", &cts::SceneGeneratorWrapper::getFrameDuration);
 }
