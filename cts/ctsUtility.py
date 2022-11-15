@@ -11,14 +11,14 @@ import warnings
 
 def ssim(reference, candidate, threshold):
     result = skimage.metrics.structural_similarity(reference, candidate, channel_axis=2)
-    return result > threshold, result
+    return result > threshold, threshold, result
 
 def psnr(reference, candidate, threshold):
     # Catch warning which is thrown if images are equal
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="divide by zero encountered in double_scalars")
         result = skimage.metrics.peak_signal_noise_ratio(reference, candidate)
-    return result > threshold, result
+    return result > threshold, threshold, result
 
 def getThreshold(methods, thresholds, method, default):
     if thresholds != None:
@@ -29,6 +29,7 @@ def getThreshold(methods, thresholds, method, default):
 
 def evaluate_metrics(reference, candidate, methods, thresholds, custom_comparison_function):
     results = {}
+    usedThresholds = {}
     passed = {}
 
     if "ssim" in methods:
@@ -41,7 +42,7 @@ def evaluate_metrics(reference, candidate, methods, thresholds, custom_compariso
         # further reading:
         # https://en.wikipedia.org/wiki/Structural_similarity
         threshold =  getThreshold(methods, thresholds, "ssim", 0.70)
-        passed["ssim"], results["ssim"] = ssim(reference, candidate, threshold)
+        passed["ssim"], usedThresholds["ssim"], results["ssim"] = ssim(reference, candidate, threshold)
         
     if "psnr" in methods:
         # Mean Squared Error (MSE) is one of the most commonly used image quality measures, but receives strong criticism as
@@ -50,10 +51,10 @@ def evaluate_metrics(reference, candidate, methods, thresholds, custom_compariso
         # "mse": skimage.metrics.mean_squared_error(reference, candidate),
         # Peak Signal to Noise Ratio (PSNR) is based on MSE and brought to a logarithmic scale in the decibel unit
         threshold =  getThreshold(methods, thresholds, "psnr", 20.0)
-        passed["psnr"], results["psnr"] = psnr(reference, candidate, threshold)
+        passed["psnr"], usedThresholds["psnr"], results["psnr"] = psnr(reference, candidate, threshold)
 
     if custom_comparison_function != None:
-        passed["custom"], results["custom"] = custom_comparison_function(reference, candidate)
+        passed["custom"], usedThresholds["custom"], results["custom"] = custom_comparison_function(reference, candidate)
 
     # Normalized Root MSE (NRMSE)
     # "nrmse": skimage.metrics.normalized_root_mse(reference, candidate),
@@ -69,7 +70,7 @@ def evaluate_metrics(reference, candidate, methods, thresholds, custom_compariso
     
     # Universal Quality Index (UQI)
     # "uqi": uqi(reference, candidate),
-    return passed, results 
+    return passed, usedThresholds, results 
 
 
 def print_report(name, metrics_report):
@@ -95,10 +96,11 @@ def compare_images(reference, candidate):
     }
 
 def evaluate(reference, candidate, methods, thresholds, custom_compare_function):
-    passed, metrics = evaluate_metrics(reference, candidate, methods, thresholds, custom_compare_function)
+    passed, usedThresholds, metrics = evaluate_metrics(reference, candidate, methods, thresholds, custom_compare_function)
 
     return {
         "metrics": metrics,
+        "thresholds": usedThresholds,
         "passed": passed,
         "images": compare_images(reference, candidate),
     }

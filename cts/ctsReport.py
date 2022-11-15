@@ -95,11 +95,12 @@ def generate_report_document(report_data, path, title, skipPassed = False):
                         if isinstance(results, dict):
                             story.append(Paragraph(channel, stylesheet["Heading3"]))
                             # Evaluated metrics
-                            cell_size = (doc.width / 3)
+                            cell_size = (doc.width / 4)
                             metrics_data = [
                                 [
                                     Paragraph("Metric", stylesheet["Heading4"]),
                                     Paragraph("Value", stylesheet["Heading4"]),
+                                    Paragraph("Threshold", stylesheet["Heading4"]),
                                     Paragraph("Result", stylesheet["Heading4"])
                                 ]
                             ]
@@ -108,6 +109,7 @@ def generate_report_document(report_data, path, title, skipPassed = False):
                                 metrics_data.append([
                                     Paragraph(metricName.upper(), stylesheet["Normal"]), 
                                     Paragraph(f'<code>{result:10.5f}</code>', stylesheet["Normal"]), 
+                                    Paragraph(f'<code>{results["thresholds"][metricName]:10.5f}</code>', stylesheet["Normal"]), 
                                     Paragraph("Above Threshold" if results["passed"][metricName] else '<font color="orange">Below Threshold</font>', stylesheet["Normal"])
                                 ])
                                 if not results["passed"][metricName]:
@@ -115,7 +117,7 @@ def generate_report_document(report_data, path, title, skipPassed = False):
                                     summaryItem[1] = failed
                             
 
-                            t = Table(metrics_data, 3 * [cell_size])
+                            t = Table(metrics_data, 4 * [cell_size])
                             t.setStyle(TableStyle([
                                 ('GRID', (0,0), (-1,-1), 0.25, colors.black),
                             ]))
