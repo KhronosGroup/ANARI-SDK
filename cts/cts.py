@@ -139,9 +139,12 @@ def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, 
         
         if channel == "depth":
             methods = ["psnr"]
+            channelThresholds = [20.0]
             custom_compare_function = None
+        else:
+            channelThresholds = thresholds.copy()
 
-        results[str(test_name)][name][channel] = ctsUtility.evaluate_scene(ref_path, candidate_path, methods, thresholds, custom_compare_function)
+        results[str(test_name)][name][channel] = ctsUtility.evaluate_scene(ref_path, candidate_path, methods, channelThresholds, custom_compare_function)
     return results
 
 def resolve_scenes(test_scenes):
