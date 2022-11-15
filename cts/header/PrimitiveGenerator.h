@@ -52,8 +52,8 @@ class PrimitiveGenerator
 
   float getRandomFloat(float min, float max);
   glm::vec3 getRandomVector(float min, float max);
-  std::vector<glm::vec3> randomTranslate(std::vector<glm::vec3> vertices, int verticesPerObject);
-  std::vector<glm::vec3> randomTransform(std::vector<glm::vec3> vertices, int verticesPerObject);
+  std::vector<glm::vec3> randomTranslate(std::vector<glm::vec3> vertices, size_t verticesPerObject);
+  std::vector<glm::vec3> randomTransform(std::vector<glm::vec3> vertices, size_t verticesPerObject);
 };
 
 } // namespace cts

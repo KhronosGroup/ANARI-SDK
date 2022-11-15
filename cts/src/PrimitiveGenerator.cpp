@@ -29,7 +29,7 @@ glm::vec3 PrimitiveGenerator::getRandomVector(float min, float max)
 }
 
 std::vector<glm::vec3> PrimitiveGenerator::randomTranslate(
-    std::vector<glm::vec3> vertices, int verticesPerPrimitive)
+    std::vector<glm::vec3> vertices, size_t verticesPerPrimitive)
 {
   const float maxTranslation = 0.6f;
   const float scale = 0.4f;
@@ -45,9 +45,9 @@ std::vector<glm::vec3> PrimitiveGenerator::randomTranslate(
 }
 
 std::vector<glm::vec3> PrimitiveGenerator::randomTransform(
-    std::vector<glm::vec3> vertices, int verticesPerPrimitive)
+    std::vector<glm::vec3> vertices, size_t verticesPerPrimitive)
 {
-  const int primitiveCount = vertices.size() / verticesPerPrimitive;
+  const size_t primitiveCount = vertices.size() / verticesPerPrimitive;
 
   for (size_t k = 0; k < primitiveCount; ++k) {
     const glm::mat4 scale =
