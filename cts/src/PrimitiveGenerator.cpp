@@ -16,9 +16,9 @@ PrimitiveGenerator::PrimitiveGenerator(int seed)
 
 float PrimitiveGenerator::getRandomFloat(float min, float max)
 {
-  std::uniform_real_distribution<float> uniformDist(min, max);
-
-  return uniformDist(m_rng);
+  auto randomNumber = m_rng();
+  float scaledNumber = randomNumber / (m_rng.max() / (max - min)) + min;
+  return scaledNumber;
 }
 
 glm::vec3 PrimitiveGenerator::getRandomVector(float min, float max)

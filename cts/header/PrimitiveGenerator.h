@@ -6,6 +6,7 @@
 #include "anari/anari_cpp/ext/glm.h"
 
 #include <algorithm>
+#include <cmath>
 #include <random>
 #include <tuple>
 
@@ -44,7 +45,13 @@ class PrimitiveGenerator
   template <typename T>
   std::vector<T> shuffleVector(std::vector<T> vector)
   {
-    std::shuffle(vector.begin(), vector.end(), m_rng);
+    size_t size = vector.size();
+    size_t counter = 0;
+    for (auto it = vector.begin(); it != vector.end(); ++it) {
+      size_t randomIndex = static_cast<size_t>(std::round(getRandomFloat(0, static_cast<float>(size - 1))));
+      std::iter_swap(it, it + (randomIndex - counter)); 
+      ++counter;
+    }
     return vector;
   }
 
