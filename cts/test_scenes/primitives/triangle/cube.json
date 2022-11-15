@@ -6,7 +6,46 @@
     "shape": "cube"
   },
   "permutations": {
-    "primitiveMode": ["soup", "indexed"]
+    "primitiveMode": [
+      "soup",
+      "indexed"
+    ]
   },
-  "requiredFeatures": ["ANARI_KHR_GEOMETRY_TRIANGLE"]
+  "requiredFeatures": [
+    "ANARI_KHR_GEOMETRY_TRIANGLE"
+  ],
+  "metaData": {
+    "soup": {
+      "bounds": {
+        "world": [
+          [
+            -0.12151492387056351,
+            -0.15799298882484436,
+            -0.12756460905075073
+          ],
+          [
+            1.0033206939697266,
+            0.9904636740684509,
+            1.1295428276062012
+          ]
+        ]
+      }
+    },
+    "indexed": {
+      "bounds": {
+        "world": [
+          [
+            -0.12151492387056351,
+            -0.15799298882484436,
+            -0.12756460905075073
+          ],
+          [
+            1.0033206939697266,
+            0.9904636740684509,
+            1.1295428276062012
+          ]
+        ]
+      }
+    }
+  }
 }
