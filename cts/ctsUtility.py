@@ -24,7 +24,7 @@ def getThreshold(methods, thresholds, method, default):
     if thresholds != None:
         index = methods.index(method)
         if index < len(thresholds):
-            return thresholds[index]
+            return float(thresholds[index])
     return default
 
 def evaluate_metrics(reference, candidate, methods, thresholds, custom_comparison_function):
