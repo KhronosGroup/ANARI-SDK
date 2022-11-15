@@ -5,6 +5,7 @@
 
 #include "anari/anari_cpp/ext/glm.h"
 
+#include <algorithm>
 #include <random>
 #include <tuple>
 
