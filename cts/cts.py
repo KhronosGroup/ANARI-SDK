@@ -367,8 +367,8 @@ def check_object_properties_helper(parsed_json, sceneGenerator, anari_renderer, 
         output = f'All bounds correct'
     return output, success
 
-def check_object_properties(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes"):
-    return apply_to_scenes(check_object_properties_helper, anari_library, anari_device, anari_renderer, test_scenes)
+def check_object_properties(anari_library, anari_device = None, test_scenes = "test_scenes"):
+    return apply_to_scenes(check_object_properties_helper, anari_library, anari_device, None, test_scenes)
 
 def query_metadata(anari_library, type = None, subtype = None, skipParameters = False, info = False):
     try:
@@ -466,7 +466,8 @@ if __name__ == "__main__":
     queryMetadataParser.add_argument('--skipParameters', action='store_true', help='Skip parameter listing')
     queryMetadataParser.add_argument('--info', action='store_true', help='Show detailed information for each parameter')
 
-    checkObjectPropertiesParser = subparsers.add_parser('check_object_properties', parents=[sceneParser])
+    checkObjectPropertiesParser = subparsers.add_parser('check_object_properties', parents=[deviceParser])
+    checkObjectPropertiesParser.add_argument('--test_scenes', default="test_scenes")
 
     create_reportParser = subparsers.add_parser('create_report', parents=[sceneParser, evaluationMethodParser])
     create_reportParser.add_argument('--output', default=".")
@@ -488,7 +489,7 @@ if __name__ == "__main__":
     elif args.command == "query_metadata":
         print(query_metadata(args.library, args.type, args.subtype, args.skipParameters, args.info))
     elif args.command == "check_object_properties":
-        result = check_object_properties(args.library, args.device, args.renderer, args.test_scenes)
+        result = check_object_properties(args.library, args.device, args.test_scenes)
         for key, value in result.items():
             print(f'{key}: {value[0]}')
     elif args.command == "create_report":
