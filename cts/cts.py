@@ -379,7 +379,7 @@ def query_metadata(anari_library, type = None, subtype = None, skipParameters = 
     except Exception as e:
         return str(e)
 
-def create_report_for_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, test_name, permutationString, variantString, output, methods, thresholds, feature_list):
+def create_report_for_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, test_name, permutationString, variantString, output, methods, thresholds, custom_compare_function, feature_list):
     name = f'{scene_location.stem}'
     if permutationString != "":
         name += f'_{permutationString}'
@@ -403,7 +403,7 @@ def create_report_for_scene(parsed_json, sceneGenerator, anari_renderer, scene_l
         if all_features_available:
             ref_images = globImages(scene_location.parent, reference_prefix)
             candidate_images = globImages(output / Path(test_name).parent, exclude_prefix=reference_prefix)
-            report = evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, test_name, permutationString, variantString, output, ref_images, candidate_images, methods, thresholds)
+            report = evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, test_name, permutationString, variantString, output, ref_images, candidate_images, methods, thresholds, custom_compare_function)
         else:
             report[test_name]["not_supported"] = True
             report[test_name]["requiredFeatures"] = parsed_json["requiredFeatures"]
@@ -411,7 +411,7 @@ def create_report_for_scene(parsed_json, sceneGenerator, anari_renderer, scene_l
 
     return report
 
-def create_report(library, device = None, renderer = "default", test_scenes = "test_scenes", output = ".", skip_passed = False, comparison_methods = ["ssim"], thresholds = None):
+def create_report(library, device = None, renderer = "default", test_scenes = "test_scenes", output = ".", skip_passed = False, comparison_methods = ["ssim"], thresholds = None, custom_compare_function = None):
     merged_evaluations = {}
     merged_evaluations["anariInfo"] = query_metadata(library, device)
     merged_evaluations["features"] = query_features(library, device)
@@ -422,11 +422,11 @@ def create_report(library, device = None, renderer = "default", test_scenes = "t
     except Exception as e:
         print(e)
         return
-    result1 = apply_to_scenes(create_report_for_scene, library, device, renderer, test_scenes, False, True, output, comparison_methods, thresholds, merged_evaluations["features"])
+    result1 = apply_to_scenes(create_report_for_scene, library, device, renderer, test_scenes, False, True, output, comparison_methods, thresholds, custom_compare_function, merged_evaluations["features"])
     if not result1:
         print("Report could not be created")
         return
-    result2 = apply_to_scenes(create_report_for_scene, library, device, renderer, test_scenes, False, False, output, comparison_methods, thresholds, merged_evaluations["features"])
+    result2 = apply_to_scenes(create_report_for_scene, library, device, renderer, test_scenes, False, False, output, comparison_methods, thresholds, custom_compare_function, merged_evaluations["features"])
     result2 = write_images(result2, output)
     for evaluation in result1.values():
         merged_evaluations = recursive_update(merged_evaluations, evaluation)
