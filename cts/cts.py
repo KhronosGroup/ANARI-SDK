@@ -142,7 +142,7 @@ def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, 
             channelThresholds = [20.0]
             custom_compare_function = None
         else:
-            channelThresholds = thresholds.copy()
+            channelThresholds = thresholds
 
         results[str(test_name)][name][channel] = ctsUtility.evaluate_scene(ref_path, candidate_path, methods, channelThresholds, custom_compare_function)
     return results
