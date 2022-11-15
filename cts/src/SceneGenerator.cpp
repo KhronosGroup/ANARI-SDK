@@ -250,8 +250,8 @@ void SceneGenerator::commit()
 std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
     const std::string &rendererType, float renderDistance)
 {
-  size_t image_height = getParam<size_t>("image_height", 1024);
-  size_t image_width = getParam<size_t>("image_width", 1024);
+  size_t image_height = getParam<int32_t>("image_height", 1024);
+  size_t image_width = getParam<int32_t>("image_width", 1024);
   std::string color_type_param = getParam<std::string>("frame_color_type", "");
   int componentBytes = 1;
   ANARIDataType color_type = ANARI_UNKNOWN;
