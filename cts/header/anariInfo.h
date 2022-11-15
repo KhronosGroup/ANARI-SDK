@@ -9,5 +9,5 @@ std::string queryInfo(const std::string &library,
                std::optional<std::string> subtypeFilter,
                bool skipParameters,
                bool info,
-               const std::function<void(const std::string message)> &callback);
+               const std::optional<pybind11::function> &callback);
 }

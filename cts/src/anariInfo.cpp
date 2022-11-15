@@ -266,13 +266,22 @@ std::string queryInfo(const std::string &library,
     std::optional<std::string> subtypeFilter,
     bool skipParameters,
     bool info,
-    const std::function<void(const std::string message)> &callback)
+    const std::optional<pybind11::function> &callback)
 {
   std::stringstream s;
   s << "SDK version: " << ANARI_SDK_VERSION_MAJOR << "."
     << ANARI_SDK_VERSION_MINOR << "." << ANARI_SDK_VERSION_PATCH << "\n";
 
-  ANARILibrary lib = anariLoadLibrary(library.c_str(), statusFunc, &callback);
+  anari::Library lib;
+  if (callback.has_value()) {
+    lib = anari::loadLibrary(library.c_str(), statusFunc, &(callback.value()));
+  } else {
+    lib = anari::loadLibrary(library.c_str(), statusFunc, nullptr);
+  }
+
+  if (lib == nullptr) {
+    throw std::runtime_error("Library could not be loaded: " + library);
+  }
 
   const char **devices = anariGetDeviceSubtypes(lib);
   if (devices) {

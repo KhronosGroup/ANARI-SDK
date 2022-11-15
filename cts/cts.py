@@ -41,9 +41,9 @@ def anari_logger(message):
         with open("ANARI.log", 'a') as file:
             file.write(f'{str(datetime.datetime.now())}: {message}\n')
 
-def query_features(anari_library, anari_device = None, logger = anari_logger):
+def query_features(anari_library, anari_device = None):
     try: 
-        return ctsBackend.query_features(anari_library, anari_device, logger)
+        return ctsBackend.query_features(anari_library, anari_device, anari_logger)
     except Exception as e:
         print(e)
         return []
@@ -129,8 +129,12 @@ def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, 
 
         ref_path = getFileFromList(ref_files, reference_file)
         candidate_path = getFileFromList(candidate_files, candidate_file)
-        if ref_path == "" or candidate_path == "":
-            print('No reference or candidate images for filepaths {} and {} could be found.'.format(reference_file, candidate_file))
+        if ref_path == "":
+            print('No reference image for filepath {} could be found.'.format(reference_file))
+            continue
+        
+        if candidate_path == "":
+            print('No candidate images for filepath {} could be found.'.format(candidate_file))
             continue
         
         if channel == "depth":
@@ -211,7 +215,7 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
     collected_scenes = resolve_scenes(test_scenes)
     if collected_scenes == []:
         print("No scenes selected")
-        return
+        return result
 
     sceneGenerator = None
     if use_generator:
@@ -219,9 +223,9 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
             sceneGenerator = ctsBackend.SceneGenerator(anari_library, anari_device, anari_logger)
         except Exception as e:
             print(e)
-            return
+            return result
         print('Initialized scene generator')
-        feature_list = query_features(anari_library, anari_device, None)
+        feature_list = query_features(anari_library, anari_device)
 
     for json_file_path in collected_scenes:
 
@@ -367,7 +371,10 @@ def check_object_properties(anari_library, anari_device = None, anari_renderer =
     return apply_to_scenes(check_object_properties_helper, anari_library, anari_device, anari_renderer, test_scenes)
 
 def query_metadata(anari_library, type = None, subtype = None, skipParameters = False, info = False):
-    return ctsBackend.query_metadata(anari_library, type, subtype, skipParameters, info, anari_logger)
+    try:
+        return ctsBackend.query_metadata(anari_library, type, subtype, skipParameters, info, anari_logger)
+    except Exception as e:
+        return str(e)
 
 def create_report_for_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, test_name, permutationString, variantString, output, methods, thresholds, feature_list):
     name = f'{scene_location.stem}'
@@ -407,8 +414,15 @@ def create_report(library, device = None, renderer = "default", test_scenes = "t
     merged_evaluations["features"] = query_features(library, device)
     merged_evaluations["renderer"] = renderer
     merged_evaluations["library"] = library
-    merged_evaluations["device"] = device if device != None else ctsBackend.getDefaultDeviceName(library, anari_logger)
+    try:
+        merged_evaluations["device"] = device if device != None else ctsBackend.getDefaultDeviceName(library, anari_logger)
+    except Exception as e:
+        print(e)
+        return
     result1 = apply_to_scenes(create_report_for_scene, library, device, renderer, test_scenes, False, True, output, comparison_methods, thresholds, merged_evaluations["features"])
+    if not result1:
+        print("Report could not be created")
+        return
     result2 = apply_to_scenes(create_report_for_scene, library, device, renderer, test_scenes, False, False, output, comparison_methods, thresholds, merged_evaluations["features"])
     result2 = write_images(result2, output)
     for evaluation in result1.values():

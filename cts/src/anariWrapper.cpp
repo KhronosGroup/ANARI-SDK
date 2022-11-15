@@ -40,38 +40,23 @@ namespace cts {
       }
     }
 
-    void initANARI(const std::string &libraryName, const std::function<void(const std::string message)>& callback)
-    {
-      callback("Initialize ANARI...");
-      // anari::Library m_debug = anari::loadLibrary("debug", statusFunc);
-      try {
-        anari::Library lib =
-            anari::loadLibrary(libraryName.c_str(), statusFunc, &callback);
-
-        ANARIDevice w = anariNewDevice(lib, "default");
-
-        // ANARIDevice d = anariNewDevice(m_debug, "debug");
-      } catch (...) {
-        callback("ERROR2");
-      }
-    }
-
     std::vector<std::tuple<std::string, bool>>
     queryFeatures(
         const std::string &libraryName,
         const std::optional<std::string> &device,
-        const std::optional<std::function<void(const std::string message)>>
+        const std::optional<pybind11::function>
                 &callback)
     {
       anari::Library lib;
       if (callback.has_value()) {
-        lib = anari::loadLibrary(libraryName.c_str(), statusFunc, &callback);
+        lib = anari::loadLibrary(
+            libraryName.c_str(), statusFunc, &(callback.value()));
       } else {
         lib = anari::loadLibrary(libraryName.c_str(), statusFunc, nullptr);
       }
       
       if (lib == nullptr) {
-        throw std::runtime_error("Library could not be loaded");
+        throw std::runtime_error("Library could not be loaded: " + libraryName);
       }
 
       std::string deviceName;
@@ -119,18 +104,18 @@ namespace cts {
     }
 
     std::string getDefaultDeviceName(const std::string &libraryName,
-        const std::optional<std::function<void(const std::string message)>>
+        const std::optional<pybind11::function>
             &callback)
     {
       anari::Library lib;
       if (callback.has_value()) {
-        lib = anari::loadLibrary(libraryName.c_str(), statusFunc, &callback);
+        lib = anari::loadLibrary(libraryName.c_str(), statusFunc, &(callback.value()));
       } else {
         lib = anari::loadLibrary(libraryName.c_str(), statusFunc, nullptr);
       }
 
       if (lib == nullptr) {
-        throw std::runtime_error("Library could not be loaded");
+        throw std::runtime_error("Library could not be loaded: " + libraryName);
       }
 
       const char **devices = anariGetDeviceSubtypes(lib);
@@ -143,11 +128,16 @@ namespace cts {
     SceneGeneratorWrapper::SceneGeneratorWrapper(
         const std::string &library,
         const std::optional<std::string> &device,
-        const pybind11::function &callback)
+        const std::optional<pybind11::function> &callback)
     {
+        
       m_callback = callback;
-      m_library = anari::loadLibrary(
-          library.c_str(), statusFunc, &m_callback);
+      if (m_callback.has_value()) {
+        m_library = anari::loadLibrary(
+            library.c_str(), statusFunc, &(m_callback.value()));
+      } else {
+        m_library = anari::loadLibrary(library.c_str(), statusFunc, nullptr);
+      }
 
       if (m_library == nullptr) {
         throw std::runtime_error("Library could not be loaded: " + library);

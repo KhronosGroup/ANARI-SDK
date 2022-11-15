@@ -23,7 +23,7 @@ PYBIND11_MODULE(ctsBackend, m)
   m.def("getDefaultDeviceName", &cts::getDefaultDeviceName);
 
   py::class_<cts::SceneGeneratorWrapper>(m, "SceneGenerator")
-      .def(py::init<const std::string&, const std::optional<std::string>, const py::function&>())
+      .def(py::init<const std::string&, const std::optional<std::string>, const std::optional<py::function>&>())
       .def("setParameter", &cts::SceneGeneratorWrapper::setParam<std::string>)
       .def("setParameter", &cts::SceneGeneratorWrapper::setParam<int>)
       .def("commit", &cts::SceneGeneratorWrapper::commit)

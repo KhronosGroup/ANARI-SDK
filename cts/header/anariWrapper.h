@@ -21,17 +21,14 @@ void statusFunc(const void *userData,
     ANARIStatusCode code,
     const char *message);
 
-void initANARI(const std::string &libraryName,
-    const std::function<void(const std::string message)> &callback);
-
 std::string getDefaultDeviceName(const std::string &libraryName,
-    const std::optional<std::function<void(const std::string message)>>
+    const std::optional<pybind11::function>
         &callback);
 
 std::vector<std::tuple<std::string, bool>> queryFeatures(
     const std::string &libraryName,
     const std::optional<std::string> &device,
-    const std::optional<std::function<void(const std::string message)>>
+    const std::optional<pybind11::function>
         &callback);
 
 class SceneGeneratorWrapper
@@ -39,7 +36,7 @@ class SceneGeneratorWrapper
  public:
   SceneGeneratorWrapper(const std::string &library,
       const std::optional<std::string> &device,
-      const pybind11::function &callback);
+      const std::optional<pybind11::function> &callback);
   ~SceneGeneratorWrapper();
 
   void commit()
@@ -90,6 +87,6 @@ class SceneGeneratorWrapper
  private:
   std::unique_ptr<SceneGenerator> m_sceneGenerator;
   anari::Library m_library;
-  pybind11::function m_callback;
+  std::optional<pybind11::function> m_callback;
 };
 } // namespace cts
