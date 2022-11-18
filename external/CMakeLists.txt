@@ -19,13 +19,14 @@ function(fetch_project)
 endfunction()
 
 add_subdirectory(stb_image)
-add_subdirectory(glad)
-
-## imgui ##
 
 if (NOT BUILD_VIEWER)
   return()
 endif()
+
+add_subdirectory(glad)
+
+## imgui ##
 
 fetch_project(
   NAME imgui_src

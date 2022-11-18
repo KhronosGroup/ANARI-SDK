@@ -11,7 +11,7 @@
 #include <stdint.h>
 #include <stdio.h>
 // anari
-#include "anari/ext/example_device/anariNewExampleDevice.h"
+#include "anari/ext/helide/anariNewHelideDevice.h"
 // stb_image
 #include "stb_image_write.h"
 
@@ -107,7 +107,7 @@ int main(int argc, const char **argv)
 
   // Here we use the direct function which creates the reference device instead
   // of loading it as a module at runtime.
-  ANARIDevice dev = anariNewExampleDevice();
+  ANARIDevice dev = anariNewHelideDevice(NULL, NULL);
 
   ANARIStatusCallback statusFuncPtr = &statusFunc;
   anariSetParameter(
