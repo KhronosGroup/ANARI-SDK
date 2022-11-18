@@ -1,0 +1,46 @@
+{
+  "info": {
+    "name": "HELIDE_DEVICE",
+    "type": "device",
+    "dependencies": [
+      "anari_core_1_0",
+      "anari_core_objects_base_1_0",
+      "khr_camera_orthographic",
+      "khr_camera_perspective",
+      "khr_geometry_cone",
+      "khr_geometry_curve",
+      "khr_geometry_cylinder",
+      "khr_geometry_quad",
+      "khr_geometry_sphere",
+      "khr_geometry_triangle",
+      "khr_material_matte",
+      "khr_material_transparent_matte",
+      "khr_light_point",
+      "khr_sampler_image1d",
+      "khr_spatial_field_structured_regular",
+      "khr_volume_scivis"
+    ]
+  },
+  "objects": [
+    {
+      "type": "ANARI_RENDERER",
+      "name": "default",
+      "parameters": [
+        {
+          "name": "backgroundColor",
+          "types": [
+            "ANARI_FLOAT32_VEC4"
+          ],
+          "tags": [],
+          "default": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "description": "background color and alpha (RGBA)"
+        }
+      ]
+    }
+  ]
+}
