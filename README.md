@@ -6,8 +6,8 @@ ANARI-SDK
 This repository contains the source for the ANARI API SDK. This includes:
 
 - [Front-end library](libs/anari)
-- [API utilties and helpers](libs/anari_utilities) (mostly for implementations)
-- [Example device implementation](examples/example_device) (not for production use)
+- [Device implementation utilties for implementations](libs/helium)
+- [Example device implementation](libs/helide) (not intended for production use)
 - [Example applications](examples/)
 - [Interactive sample viewer](examples/viewer)
 - [Unit tests](tests/unit)
@@ -62,8 +62,9 @@ The ANARI SDK exports CMake targets for the main front-end library and utilities
 helper library. The targets which are exported are as follows:
 
 - `anari::anari` : main library target to link with `libanari`
-- `anari::anari_utilities` : library target which adds implementation helpers
+- `anari::anari_utilities` : (DEPRECATED) library target which adds implementation helpers
 - `anari::anari_library_debug` : library target for the debug device
+- `anari::helium` : (static) library target containing base device implementation abstractions
 
 These targets can be found with CMake via `find_package(anari)`. The examples
 are written such that they can be built stand alone from the SDK source tree.
@@ -83,7 +84,7 @@ The viewer application (enabled with `BUILD_VIEWER=ON`) by default uses the
 get the library to load. For example it can be run with:
 
 ```bash
-% export ANARI_LIBRARY=example
+% export ANARI_LIBRARY=helide
 % ./anariViewer /path/to/some/file.obj
 ```
 
@@ -98,11 +99,11 @@ select/override which library is loaded at runtime.
 
 ### SDK provided ExampleDevice implementation
 
-The [example device implementation](examples/example_device) is provided as a
+An example device implementation [helide](libs/helide) is provided as a
 starting point for users exploring the SDK and for implementors to see how the
-API might be implemented. It uses OpenMP multi-threading for simplicity and is
-not built to be a robust nor fast rendering engine. Users should look to use
-vendor provided, hardware-optimized ANARI implementations which are shipped
+API might be implemented. It implements a very simple, geometry-only ray tracing
+implementation using Embree for intersection. Users should look to use vendor
+provided, hardware-optimized ANARI implementations which are shipped
 independently from the SDK. (see below)
 
 ### List of publically available implementaions

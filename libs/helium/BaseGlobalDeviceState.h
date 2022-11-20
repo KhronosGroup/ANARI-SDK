@@ -20,6 +20,7 @@ struct BaseGlobalDeviceState
   std::function<void(int, const std::string &, const void *)> messageFunction;
 
   BaseGlobalDeviceState(ANARIDevice d);
+  virtual ~BaseGlobalDeviceState() = default;
 };
 
 } // namespace helium
