@@ -160,6 +160,12 @@ MainWindow::MainWindow(const glm::uvec2 &windowSize)
   // Request a window that is IEC standard RGB color space capable
   glfwWindowHint(GLFW_SRGB_CAPABLE, GLFW_TRUE);
 
+#ifdef USE_GLES2
+  glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
+  glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+#endif
+
   // create GLFW window
   g_window = glfwCreateWindow(windowSize.x,
       windowSize.y,
@@ -176,10 +182,17 @@ MainWindow::MainWindow(const glm::uvec2 &windowSize)
   glfwMakeContextCurrent(g_window);
 
   // Setup for OpenGL graphics library rendering
-  if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+#ifdef USE_GLES2
+  if (!gladLoadGLES2((GLADloadfunc)glfwGetProcAddress)) {
+    glfwTerminate();
+    throw std::runtime_error("Failed to load GLES!");
+  }
+#else
+  if (!gladLoadGL((GLADloadfunc)glfwGetProcAddress)) {
     glfwTerminate();
     throw std::runtime_error("Failed to load GL!");
   }
+#endif
 
   // Create a texture
   glGenTextures(1, &framebufferTexture);

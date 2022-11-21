@@ -38,7 +38,7 @@ set(OpenGL_GL_PREFERENCE "LEGACY")
 find_package(OpenGL 4 REQUIRED)
 find_package(glfw3 REQUIRED)
 
-add_library(imgui_glfw OBJECT
+set(IMGUI_SOURCES
   ${imgui_src_LOCATION}/imgui.cpp
   ${imgui_src_LOCATION}/imgui_draw.cpp
   ${imgui_src_LOCATION}/imgui_demo.cpp
@@ -51,10 +51,28 @@ add_library(imgui_glfw OBJECT
   ${imgui_src_LOCATION}/misc/cpp/imgui_stdlib.cpp
 )
 
-target_link_libraries(imgui_glfw PUBLIC glfw OpenGL::GL glad)
-target_compile_definitions(imgui_glfw PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLAD)
+add_library(imgui_glfw OBJECT
+  ${IMGUI_SOURCES}
+)
+
+target_link_libraries(imgui_glfw PUBLIC glfw OpenGL::GL glad_gl)
+target_compile_definitions(imgui_glfw PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLAD2)
 
 target_include_directories(imgui_glfw
+PUBLIC
+  ${imgui_src_LOCATION}
+  ${imgui_src_LOCATION}/backends
+  ${imgui_src_LOCATION}/misc/cpp
+)
+
+add_library(imgui_glfw_gles2 OBJECT
+  ${IMGUI_SOURCES}
+)
+
+target_link_libraries(imgui_glfw_gles2 PUBLIC glfw OpenGL::GL glad_gles2)
+target_compile_definitions(imgui_glfw_gles2 PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLAD2 IMGUI_IMPL_OPENGL_ES3)
+
+target_include_directories(imgui_glfw_gles2
 PUBLIC
   ${imgui_src_LOCATION}
   ${imgui_src_LOCATION}/backends
