@@ -6,8 +6,13 @@
 #include "OrbitManipulator.h"
 #include "glm_box3.h"
 // glad header
-#include "glad/glad.h"
+#ifdef USE_GLES2
+#include "glad/gles2.h"
+#else
+#include "glad/gl.h"
+#endif
 // glfw header
+#define GLFW_INCLUDE_NONE
 #include "GLFW/glfw3.h"
 // ANARI headers
 #include "anari/anari_cpp.hpp"
