@@ -21,9 +21,17 @@ float PrimitiveGenerator::getRandomFloat(float min, float max)
   return scaledNumber;
 }
 
-glm::vec3 PrimitiveGenerator::getRandomVector(float min, float max)
+glm::vec3 PrimitiveGenerator::getRandomVector3(float min, float max)
 {
   return {getRandomFloat(min, max),
+      getRandomFloat(min, max),
+      getRandomFloat(min, max)};
+}
+
+glm::vec4 PrimitiveGenerator::getRandomVector4(float min, float max)
+{
+  return {getRandomFloat(min, max),
+      getRandomFloat(min, max),
       getRandomFloat(min, max),
       getRandomFloat(min, max)};
 }
@@ -35,7 +43,7 @@ std::vector<glm::vec3> PrimitiveGenerator::randomTranslate(
   const float scale = 0.4f;
 
   for (size_t i = 0; i < vertices.size();) {
-    const glm::vec3 translation(getRandomVector(0.0f, maxTranslation));
+    const glm::vec3 translation(getRandomVector3(0.0f, maxTranslation));
     for (size_t k = 0; k < verticesPerPrimitive; ++k, ++i) {
       vertices[i] = (vertices[i] * scale) + translation;
     }
@@ -55,10 +63,10 @@ std::vector<glm::vec3> PrimitiveGenerator::randomTransform(
 
     const glm::mat4 rotation = glm::rotate(glm::mat4(1.0f),
         getRandomFloat(0.0f, 360.0f),
-        getRandomVector(0.0f, 1.0f));
+        getRandomVector3(0.0f, 1.0f));
 
     const glm::mat4 translation =
-        glm::translate(glm::mat4(1.0f), getRandomVector(0.0f, 0.6f));
+        glm::translate(glm::mat4(1.0f), getRandomVector3(0.0f, 0.6f));
 
     const glm::mat4 transform = translation * rotation * scale;
 
@@ -71,12 +79,20 @@ std::vector<glm::vec3> PrimitiveGenerator::randomTransform(
   return vertices;
 }
 
+std::vector<glm::vec4> PrimitiveGenerator::generateAttribute(size_t elementCount, float min, float max) {
+  std::vector<glm::vec4> attributes(elementCount);
+  for (auto &attribute : attributes) {
+    attribute = getRandomVector4(min, max);
+  }
+  return attributes;
+}
+
 std::vector<glm::vec3> PrimitiveGenerator::generateTriangles(
     size_t primitiveCount)
 {
   std::vector<glm::vec3> vertices(primitiveCount * 3);
   for (auto& vertex : vertices) {
-    vertex = getRandomVector(0.0f, 1.0f);
+    vertex = getRandomVector3(0.0f, 1.0f);
   }
 
   vertices = randomTranslate(vertices, 3);
@@ -98,7 +114,7 @@ std::vector<glm::vec3> PrimitiveGenerator::generateTriangulatedQuadsSoup(
     } else if (i == 5) {
       vertex = vertex2 + (vertex1 - vertex0);
     } else {
-      vertex = getRandomVector(0.0f, 1.0f);
+      vertex = getRandomVector3(0.0f, 1.0f);
 
       if (i == 0) {
         vertex0 = vertex;
@@ -128,7 +144,7 @@ PrimitiveGenerator::generateTriangulatedQuadsIndexed(size_t primitiveCount)
     if (i == 3) {
       vertex = vertex2 + (vertex1 - vertex0);
     } else {
-      vertex = getRandomVector(0.0f, 1.0f);
+      vertex = getRandomVector3(0.0f, 1.0f);
 
       if (i == 0) {
         vertex0 = vertex;
@@ -230,9 +246,9 @@ std::vector<glm::vec3> PrimitiveGenerator::generateQuads(size_t primitiveCount)
   for (size_t i = 0; i < primitiveCount; ++i) {
     glm::vec3 vertex0(0), vertex1(0), vertex2(0), vertex3(0);
 
-    vertex0 = getRandomVector(0.0f, 1.0f);
-    vertex1 = getRandomVector(0.0f, 1.0f);
-    vertex2 = getRandomVector(0.0f, 1.0f);
+    vertex0 = getRandomVector3(0.0f, 1.0f);
+    vertex1 = getRandomVector3(0.0f, 1.0f);
+    vertex2 = getRandomVector3(0.0f, 1.0f);
     vertex3 = vertex2 + (vertex1 - vertex0);
 
     std::vector<glm::vec3> quad = {vertex0, vertex1, vertex3, vertex2};
@@ -318,7 +334,7 @@ PrimitiveGenerator::generateSpheres(size_t primitiveCount)
   std::vector<float> radii;
 
   for (size_t i = 0; i < primitiveCount; ++i) {
-    vertices.push_back(getRandomVector(0.0f, 1.0f));
+    vertices.push_back(getRandomVector3(0.0f, 1.0f));
     radii.push_back(getRandomFloat(0.0f, 0.4f));
   }
 
@@ -332,7 +348,7 @@ PrimitiveGenerator::generateCurves(size_t primitiveCount)
   std::vector<float> radii;
 
   for (size_t i = 0; i < primitiveCount * 2; ++i) {
-    vertices.push_back(getRandomVector(0.0f, 1.0f));
+    vertices.push_back(getRandomVector3(0.0f, 1.0f));
     radii.push_back(getRandomFloat(0.0f, 0.4f));
   }
 
@@ -348,7 +364,7 @@ PrimitiveGenerator::generateCones(size_t primitiveCount)
   std::vector<float> radii;
 
   for (size_t i = 0; i < primitiveCount * 2; ++i) {
-    vertices.push_back(getRandomVector(0.0f, 1.0f));
+    vertices.push_back(getRandomVector3(0.0f, 1.0f));
     radii.push_back(getRandomFloat(0.0f, 0.4f));
   }
 
@@ -364,8 +380,8 @@ PrimitiveGenerator::generateCylinders(size_t primitiveCount)
   std::vector<float> radii;
 
   for (size_t i = 0; i < primitiveCount; ++i) {
-    vertices.push_back(getRandomVector(0.0f, 1.0f));
-    vertices.push_back(getRandomVector(0.0f, 1.0f));
+    vertices.push_back(getRandomVector3(0.0f, 1.0f));
+    vertices.push_back(getRandomVector3(0.0f, 1.0f));
     radii.push_back(getRandomFloat(0.0f, 0.4f));
   }
 
