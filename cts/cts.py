@@ -143,8 +143,12 @@ def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, 
             custom_compare_function = None
         else:
             channelThresholds = thresholds
-
-        results[str(test_name)][name][channel] = ctsUtility.evaluate_scene(ref_path, candidate_path, methods, channelThresholds, custom_compare_function)
+        eval_result = ctsUtility.evaluate_scene(ref_path, candidate_path, methods, channelThresholds, custom_compare_function)
+        print(f'\n{test_name} {name} {channel}:')
+        for key in eval_result["metrics"]:
+            hasPassed = "\033[92mPassed\033[0m" if eval_result["passed"][key] else "\033[91mFailed\033[0m"
+            print(f'{key}: {hasPassed} {eval_result["metrics"][key]} Threshold: {eval_result["thresholds"][key]}')
+        results[str(test_name)][name][channel] = eval_result
     return results
 
 def resolve_scenes(test_scenes):
@@ -211,6 +215,7 @@ def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, te
         outName = file_name.with_suffix('.png').with_stem(f'{prefix}{stem}{permutationString}_depth')
         print(f'Rendering to {outName.resolve()}')
         image_out.save(outName)
+    print("")
     return frame_duration
 
 def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", only_permutations = False, use_generator = True,  *args):
@@ -227,7 +232,7 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
         except Exception as e:
             print(e)
             return result
-        print('Initialized scene generator')
+        print('Initialized scene generator\n')
         feature_list = query_features(anari_library, anari_device)
 
     for json_file_path in collected_scenes:
@@ -422,17 +427,21 @@ def create_report(library, device = None, renderer = "default", test_scenes = "t
     except Exception as e:
         print(e)
         return
+    print("***Create renderings***\n")
     result1 = apply_to_scenes(create_report_for_scene, library, device, renderer, test_scenes, False, True, output, comparison_methods, thresholds, custom_compare_function, merged_evaluations["features"])
     if not result1:
         print("Report could not be created")
         return
+    print("\n***Compare renderings***\n")
     result2 = apply_to_scenes(create_report_for_scene, library, device, renderer, test_scenes, False, False, output, comparison_methods, thresholds, custom_compare_function, merged_evaluations["features"])
     result2 = write_images(result2, output)
     for evaluation in result1.values():
         merged_evaluations = recursive_update(merged_evaluations, evaluation)
     for evaluation in result2.values():
         merged_evaluations = recursive_update(merged_evaluations, evaluation)
+    print("\n***Create Report***\n")
     write_report(merged_evaluations, output, verbosity)
+    print("***Done***")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='ANARI CTS toolkit')
