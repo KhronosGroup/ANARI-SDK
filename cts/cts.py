@@ -444,8 +444,8 @@ def create_report(library, device = None, renderer = "default", test_scenes = "t
     print("***Done***")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='ANARI CTS toolkit')
-    subparsers = parser.add_subparsers(dest="command", title='Commands', metavar=None)
+    parser = argparse.ArgumentParser(description='ANARI CTS toolkit', formatter_class=argparse.RawTextHelpFormatter)
+    subparsers = parser.add_subparsers(dest="command", title='Commands', metavar="")
 
     libraryParser = argparse.ArgumentParser(add_help=False)
     libraryParser.add_argument('library', help='ANARI library to load')
@@ -454,45 +454,49 @@ if __name__ == "__main__":
     deviceParser.add_argument('--device', default=None, help='ANARI device on which to perform the test')
 
     sceneParser = argparse.ArgumentParser(add_help=False, parents=[deviceParser])
-    sceneParser.add_argument('--renderer', default="default")
-    sceneParser.add_argument('--test_scenes', default="test_scenes")
+    sceneParser.add_argument('--renderer', default="default", help="Renderer used to render the images")
+    sceneParser.add_argument('--test_scenes', default="test_scenes", help="Folder with test scenes to test. Specify subfolder to test subsets")
 
     renderScenesParser = subparsers.add_parser('render_scenes', description='Renders an image to disk for each test scene', parents=[sceneParser])
-    renderScenesParser.add_argument('--output', default=".")
+    renderScenesParser.add_argument('--output', default=".", help="Output path")
 
     evaluationMethodParser = argparse.ArgumentParser(add_help=False)
-    evaluationMethodParser.add_argument('--comparison_methods', default=["ssim"], nargs='+', choices=["ssim", "psnr"])
-    evaluationMethodParser.add_argument('--thresholds', default=None, nargs='+')
-    evaluationMethodParser.add_argument('--verbose_error', action='store_true')
-    evaluationMethodParser.add_argument('--verbose_all', action='store_true')
+    evaluationMethodParser.add_argument('--comparison_methods', default=["ssim"], nargs='+', choices=["ssim", "psnr"], help="Specify all comparison methods to test against")
+    evaluationMethodParser.add_argument('--thresholds', default=None, nargs='+', help="Specify custom thresholds for each comparison method")
+    evaluationMethodParser.add_argument('--verbose_error', action='store_true', help="Include verbose infos of failed tests in report")
+    evaluationMethodParser.add_argument('--verbose_all', action='store_true', help="Include verbose infos of all tests in report")
 
     evaluateScenesParser = subparsers.add_parser('compare_images', description='Evaluates candidate renderings against reference renderings', parents=[evaluationMethodParser])
-    evaluateScenesParser.add_argument('--test_scenes', default="test_scenes")
-    evaluateScenesParser.add_argument('--candidates', default="test_scenes")
-    evaluateScenesParser.add_argument('--output', default=".")
+    evaluateScenesParser.add_argument('--test_scenes', default="test_scenes", help="Folder with test scenes which include the reference images")
+    evaluateScenesParser.add_argument('--candidates', default="test_scenes", help="Path to folder containing the candidate images")
+    evaluateScenesParser.add_argument('--output', default=".", help="Output path")
 
-    checkExtensionsParser = subparsers.add_parser('query_features', parents=[deviceParser])
+    checkExtensionsParser = subparsers.add_parser('query_features', parents=[deviceParser], description="Check which features are supported by the ")
 
-    queryMetadataParser = subparsers.add_parser('query_metadata', parents=[libraryParser])
+    queryMetadataParser = subparsers.add_parser('query_metadata', parents=[libraryParser], description="Show metadata related to the specified library")
     queryMetadataParser.add_argument('--type', default=None, help='Only show parameters for objects of a type')
     queryMetadataParser.add_argument('--subtype', default=None, help='Only show parameters for objects of a subtype')
     queryMetadataParser.add_argument('--skipParameters', action='store_true', help='Skip parameter listing')
     queryMetadataParser.add_argument('--info', action='store_true', help='Show detailed information for each parameter')
 
-    checkObjectPropertiesParser = subparsers.add_parser('check_object_properties', parents=[deviceParser])
-    checkObjectPropertiesParser.add_argument('--test_scenes', default="test_scenes")
+    checkObjectPropertiesParser = subparsers.add_parser('check_object_properties', parents=[deviceParser], description="Check if all properties are similar to the reference properties")
+    checkObjectPropertiesParser.add_argument('--test_scenes', default="test_scenes", help="Folder with test scenes to test. Specify subfolder to test subsets")
 
-    create_reportParser = subparsers.add_parser('create_report', parents=[sceneParser, evaluationMethodParser])
-    create_reportParser.add_argument('--output', default=".")
+    create_reportParser = subparsers.add_parser('create_report', parents=[sceneParser, evaluationMethodParser], description="Runs all tests and creates a pdf report")
+    create_reportParser.add_argument('--output', default=".", help="Output path")
 
     command_text = ""
     for subparser in subparsers.choices :
-        command_text += subparser + "\n  "
-    subparsers.metavar = command_text
+        subparsertext = subparser
+        if subparsers.choices[subparser].description:
+            subparsertext = subparsertext.ljust(30) + subparsers.choices[subparser].description
+        subparsertext += "\n"
+        command_text += subparsertext
+    subparsers.help = command_text
 
     args = parser.parse_args()
 
-    verboseLevel = 2 if args.verbose_all else 1 if args.verbose_error else 0
+    verboseLevel = 2 if "verbose_all" in args else 1 if "verbose_error" in args else 0
 
     if args.command == "render_scenes":
         render_scenes(args.library, args.device, args.renderer, args.test_scenes, args.output)
