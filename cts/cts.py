@@ -101,10 +101,10 @@ def write_images(evaluations, output):
                             evaluation[stem][name][channel]["image_paths"]["threshold"] = thresholds_image_path
     return evaluations
 
-def write_report(results, output, skipPassed = False):
+def write_report(results, output, verbosity = 0):
     output_path = Path(output) / "evaluation"
     title = f'CTS - Report' if "renderer" not in results else f'CTS - Library: {results["library"]} Device: {results["device"]} Renderer: {results["renderer"]}'
-    ctsReport.generate_report_document(results, output_path, title, skipPassed)
+    ctsReport.generate_report_document(results, output_path, title, verbosity)
 
 def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, test_name, permutationString, variantString, output = ".", ref_files = [], candidate_files = [], methods = ["ssim"], thresholds = None, custom_compare_function = None):
     results = {}
@@ -300,7 +300,7 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
 def render_scenes(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", output = "."):
     apply_to_scenes(render_scene, anari_library, anari_device, anari_renderer, test_scenes, False, True, output)
     
-def compare_images(test_scenes = "test_scenes", candidates_path = "test_scenes", output = ".", skipPassed=False, comparison_methods = ["ssim"], thresholds = None, custom_compare_function = None):
+def compare_images(test_scenes = "test_scenes", candidates_path = "test_scenes", output = ".", verbosity=0, comparison_methods = ["ssim"], thresholds = None, custom_compare_function = None):
     ref_images = globImages(test_scenes, reference_prefix)
     candidate_images = globImages(candidates_path, exclude_prefix=reference_prefix)
     evaluations = apply_to_scenes(evaluate_scene, "", None, "default", test_scenes, False, False, output, ref_images, candidate_images, comparison_methods, thresholds, custom_compare_function)
@@ -308,7 +308,7 @@ def compare_images(test_scenes = "test_scenes", candidates_path = "test_scenes",
     merged_evaluations = {}
     for evaluation in evaluations.values():
         merged_evaluations = recursive_update(merged_evaluations, evaluation)
-    write_report(merged_evaluations, output, skipPassed)
+    write_report(merged_evaluations, output, verbosity)
 
 def check_bounding_boxes(ref, candidate, tolerance):
     axis = 'X'
@@ -411,7 +411,7 @@ def create_report_for_scene(parsed_json, sceneGenerator, anari_renderer, scene_l
 
     return report
 
-def create_report(library, device = None, renderer = "default", test_scenes = "test_scenes", output = ".", skip_passed = False, comparison_methods = ["ssim"], thresholds = None, custom_compare_function = None):
+def create_report(library, device = None, renderer = "default", test_scenes = "test_scenes", output = ".", verbosity = 0, comparison_methods = ["ssim"], thresholds = None, custom_compare_function = None):
     merged_evaluations = {}
     merged_evaluations["anariInfo"] = query_metadata(library, device)
     merged_evaluations["features"] = query_features(library, device)
@@ -432,7 +432,7 @@ def create_report(library, device = None, renderer = "default", test_scenes = "t
         merged_evaluations = recursive_update(merged_evaluations, evaluation)
     for evaluation in result2.values():
         merged_evaluations = recursive_update(merged_evaluations, evaluation)
-    write_report(merged_evaluations, output, skip_passed)
+    write_report(merged_evaluations, output, verbosity)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='ANARI CTS toolkit')
@@ -454,7 +454,8 @@ if __name__ == "__main__":
     evaluationMethodParser = argparse.ArgumentParser(add_help=False)
     evaluationMethodParser.add_argument('--comparison_methods', default=["ssim"], nargs='+', choices=["ssim", "psnr"])
     evaluationMethodParser.add_argument('--thresholds', default=None, nargs='+')
-    evaluationMethodParser.add_argument('--skip_passed', action='store_true')
+    evaluationMethodParser.add_argument('--verbose_error', action='store_true')
+    evaluationMethodParser.add_argument('--verbose_all', action='store_true')
 
     evaluateScenesParser = subparsers.add_parser('compare_images', description='Evaluates candidate renderings against reference renderings', parents=[evaluationMethodParser])
     evaluateScenesParser.add_argument('--test_scenes', default="test_scenes")
@@ -482,10 +483,12 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    verboseLevel = 2 if args.verbose_all else 1 if args.verbose_error else 0
+
     if args.command == "render_scenes":
         render_scenes(args.library, args.device, args.renderer, args.test_scenes, args.output)
     elif args.command == "compare_images":
-        compare_images(args.test_scenes, args.candidates, args.output, args.skip_passed, args.comparison_methods, args.thresholds)
+        compare_images(args.test_scenes, args.candidates, args.output, verboseLevel, args.comparison_methods, args.thresholds)
     elif args.command == "query_features":
         result = query_features(args.library, args.device)
         print(tabulate(result))
@@ -496,4 +499,4 @@ if __name__ == "__main__":
         for key, value in result.items():
             print(f'{key}: {value[0]}')
     elif args.command == "create_report":
-        create_report(args.library, args.device, args.renderer, args.test_scenes, args.output, args.skip_passed, args.comparison_methods, args.thresholds)
+        create_report(args.library, args.device, args.renderer, args.test_scenes, args.output, verboseLevel, args.comparison_methods, args.thresholds)
