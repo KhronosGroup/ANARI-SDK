@@ -451,25 +451,25 @@ if __name__ == "__main__":
     libraryParser.add_argument('library', help='ANARI library to load')
 
     deviceParser = argparse.ArgumentParser(add_help=False, parents=[libraryParser])
-    deviceParser.add_argument('--device', default=None, help='ANARI device on which to perform the test')
+    deviceParser.add_argument('-d', '--device', default=None, help='ANARI device on which to perform the test')
 
     sceneParser = argparse.ArgumentParser(add_help=False, parents=[deviceParser])
-    sceneParser.add_argument('--renderer', default="default", help="Renderer used to render the images")
-    sceneParser.add_argument('--test_scenes', default="test_scenes", help="Folder with test scenes to test. Specify subfolder to test subsets")
+    sceneParser.add_argument('-r', '--renderer', default="default", help="Renderer used to render the images")
+    sceneParser.add_argument('-t', '--test_scenes', default="test_scenes", help="Folder with test scenes to test. Specify subfolder to test subsets")
 
     renderScenesParser = subparsers.add_parser('render_scenes', description='Renders an image to disk for each test scene', parents=[sceneParser])
-    renderScenesParser.add_argument('--output', default=".", help="Output path")
+    renderScenesParser.add_argument('-o', '--output', default=".", help="Output path")
 
     evaluationMethodParser = argparse.ArgumentParser(add_help=False)
     evaluationMethodParser.add_argument('--comparison_methods', default=["ssim"], nargs='+', choices=["ssim", "psnr"], help="Specify all comparison methods to test against")
     evaluationMethodParser.add_argument('--thresholds', default=None, nargs='+', help="Specify custom thresholds for each comparison method")
     evaluationMethodParser.add_argument('--verbose_error', action='store_true', help="Include verbose infos of failed tests in report")
-    evaluationMethodParser.add_argument('--verbose_all', action='store_true', help="Include verbose infos of all tests in report")
+    evaluationMethodParser.add_argument('-v', '--verbose_all', action='store_true', help="Include verbose infos of all tests in report")
 
     evaluateScenesParser = subparsers.add_parser('compare_images', description='Evaluates candidate renderings against reference renderings', parents=[evaluationMethodParser])
-    evaluateScenesParser.add_argument('--test_scenes', default="test_scenes", help="Folder with test scenes which include the reference images")
+    evaluateScenesParser.add_argument('-t', '--test_scenes', default="test_scenes", help="Folder with test scenes which include the reference images")
     evaluateScenesParser.add_argument('--candidates', default="test_scenes", help="Path to folder containing the candidate images")
-    evaluateScenesParser.add_argument('--output', default=".", help="Output path")
+    evaluateScenesParser.add_argument('-o', '--output', default=".", help="Output path")
 
     checkExtensionsParser = subparsers.add_parser('query_features', parents=[deviceParser], description="Check which features are supported by the ")
 
@@ -480,10 +480,10 @@ if __name__ == "__main__":
     queryMetadataParser.add_argument('--info', action='store_true', help='Show detailed information for each parameter')
 
     checkObjectPropertiesParser = subparsers.add_parser('check_object_properties', parents=[deviceParser], description="Check if all properties are similar to the reference properties")
-    checkObjectPropertiesParser.add_argument('--test_scenes', default="test_scenes", help="Folder with test scenes to test. Specify subfolder to test subsets")
+    checkObjectPropertiesParser.add_argument('-t', '--test_scenes', default="test_scenes", help="Folder with test scenes to test. Specify subfolder to test subsets")
 
     create_reportParser = subparsers.add_parser('create_report', parents=[sceneParser, evaluationMethodParser], description="Runs all tests and creates a pdf report")
-    create_reportParser.add_argument('--output', default=".", help="Output path")
+    create_reportParser.add_argument('-o', '--output', default=".", help="Output path")
 
     command_text = ""
     for subparser in subparsers.choices :
