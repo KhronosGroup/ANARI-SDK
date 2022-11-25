@@ -105,7 +105,7 @@ static void renderScene(ANARIDevice d, const std::string &scene)
 
   auto frame = anari::newObject<anari::Frame>(d);
   anari::setParameter(d, frame, "size", g_frameSize);
-  anari::setParameter(d, frame, "color", ANARI_UFIXED8_RGBA_SRGB);
+  anari::setParameter(d, frame, "channel.color", ANARI_UFIXED8_RGBA_SRGB);
 
   anari::setParameter(d, frame, "renderer", renderer);
   anari::setParameter(d, frame, "camera", camera);
@@ -129,7 +129,7 @@ static void renderScene(ANARIDevice d, const std::string &scene)
 
     printf("done!\n");
 
-    auto fb = anari::map<uint32_t>(d, frame, "color");
+    auto fb = anari::map<uint32_t>(d, frame, "channel.color");
 
     stbi_write_png(fileName.c_str(),
         int(fb.width),
@@ -138,7 +138,7 @@ static void renderScene(ANARIDevice d, const std::string &scene)
         fb.data,
         4 * int(fb.width));
 
-    anari::unmap(d, frame, "color");
+    anari::unmap(d, frame, "channel.color");
   }
 
   anari::release(d, camera);

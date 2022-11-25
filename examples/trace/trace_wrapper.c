@@ -61,7 +61,7 @@ void image(const char *channel, const void *pixels, int width, int height, ANARI
     count += 1;
     char filename[100];
     snprintf(filename, sizeof(filename), "%s%d.png", channel, count);
-    if(strncmp(channel, "color",5) == 0) {
+    if(strncmp(channel, "channel.color", 13) == 0) {
         stbi_flip_vertically_on_write(1);
         stbi_write_png(filename, width, height, 4, pixels, 4*width);
     }

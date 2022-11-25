@@ -51,7 +51,7 @@ class QueryGenerator:
         self.named_types = sorted(list(set([k[0] for k in self.named_objects])))
         self.subtype_list = sorted(list(set([k[1] for k in self.named_objects])))
         self.attribute_list = [x["name"] for x in anari["attributes"]]
-        self.info_strings = ["required", "default", "minimum", "maximum", "description", "elementType", "value", "sourceFeature", "feature", "parameter"]
+        self.info_strings = ["required", "default", "minimum", "maximum", "description", "elementType", "value", "sourceFeature", "feature", "parameter", "channel"]
 
     def format_as(self, value, anari_type):
         basetype = self.type_enum_dict[anari_type]["baseType"]
@@ -69,8 +69,8 @@ class QueryGenerator:
         code = "static " + hash_gen.gen_hash_function("subtype_hash", self.subtype_list)
         code += "static " + hash_gen.gen_hash_function("param_hash", self.param_strings)
         code += "static " + hash_gen.gen_hash_function("info_hash", self.info_strings)
-        code += "static const int32_t anari_true = 1;"
-        code += "static const int32_t anari_false = 0;"
+        code += "static const int32_t anari_true = 1;\n"
+        code += "static const int32_t anari_false = 0;\n"
         return code;
 
     def generate_extension_query(self):
@@ -134,7 +134,7 @@ class QueryGenerator:
                 objname += "_" + obj["name"]
 
             for param in obj["parameters"]:
-                paramname = param["name"].replace(".", "_")
+                paramname = param["name"].replace(".", "_").replace(":", "_")
                 code += "static const void * " + objname + "_" + paramname + "_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {\n"
                 code += "   (void)paramType;\n"
                 code += "   switch(infoName) {\n"
@@ -223,7 +223,7 @@ class QueryGenerator:
             code += "static const void * " + objname + "_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {\n"
             code += "   switch(param_hash(paramName)) {\n"
             for param in obj["parameters"]:
-                paramname = param["name"].replace(".", "_")
+                paramname = param["name"].replace(".", "_").replace(":", "_")
                 code += "      case %i:\n"%self.param_strings.index(param["name"])
                 code += "         return " + objname + "_" + paramname + "_info(paramType, infoName, infoType);\n"
             code += "      default:\n"
@@ -262,9 +262,9 @@ class QueryGenerator:
         code += "}\n"
 
         code += "const void * query_param_info(ANARIDataType type, const char *subtype, const char *paramName, ANARIDataType paramType, const char *infoNameString, ANARIDataType infoType) {\n"
-        code += "   int infoName = info_hash(infoNameString);"
-        code += "   return query_param_info_enum(type, subtype, paramName, paramType, infoName, infoType);"
-        code += "}"
+        code += "   int infoName = info_hash(infoNameString);\n"
+        code += "   return query_param_info_enum(type, subtype, paramName, paramType, infoName, infoType);\n"
+        code += "}\n"
 
         return code
 
@@ -306,6 +306,17 @@ class QueryGenerator:
                 code += "         } else if(infoType == ANARI_INT32) {\n"
                 code += "            static const int value = %d;\n"%self.anari["features"].index(obj["sourceFeature"])
                 code += "            return &value;\n"
+                code += "         } else {\n"
+                code += "            return nullptr;\n"
+                code += "         }\n"
+            if "channel" in obj:
+                code += "      case "+str(self.info_strings.index("channel"))+": // channel\n"
+                code += "         if(infoType == ANARI_STRING_LIST) {\n"
+                code += "            static const char *channel[] = {\n"
+                code += "               " + ",\n               ".join(["\"%s\""%f for f in obj["channel"]])+",\n"
+                code += "               0\n"
+                code += "            };\n"
+                code += "            return channel;\n"
                 code += "         } else {\n"
                 code += "            return nullptr;\n"
                 code += "         }\n"

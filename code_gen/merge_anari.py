@@ -47,6 +47,16 @@ def merge_parameters(core, extension):
         else:
             core.append(param)
 
+def merge_objects(core, extension):
+    for field in extension:
+        if field == "parameters":
+            merge_parameters(core["parameters"], extension["parameters"])
+        elif field in core:
+            if isinstance(core[field], list):
+                core[field].extend(extension[field])
+        else:
+            core[field] = extension[field]
+
 def merge_object_table(core, extension):
     for obj in extension:
         if "name" in obj:
@@ -54,27 +64,29 @@ def merge_object_table(core, extension):
             kind = obj["type"]
             c = next((x for x in core if x["type"] == kind and "name" in x and x["name"] == name), None)
             if c:
-                merge_parameters(c["parameters"], obj["parameters"])
+                merge_objects(c, obj)
             else:
                 core.append(obj)
         else:
             kind = obj["type"]
             c = next((x for x in core if x["type"] == kind), None)
             if c:
-                merge_parameters(c["parameters"], obj["parameters"])
+                merge_objects(c, obj)
             else:
                 core.append(obj)
 
 def merge(core, extension, verbose=False):
     if not "features" in core:
-        core["features"] = [core["info"]["name"]]
+        core["features"] = []
+        if core["info"]["type"] == "feature":
+                core["features"].append(core["info"]["name"])
     for k,v in extension.items():
         if not k in core:
             core[k] = v
         elif k == "info":
             if verbose:
                 print('merging '+extension[k]['type']+' '+extension[k]["name"])
-            if "name" in v:
+            if "name" in v and v["type"] == "feature":
                 core["features"].append(v["name"])
         elif k == "enums" :
             merge_enums(core[k], extension[k])
@@ -87,7 +99,7 @@ def merge(core, extension, verbose=False):
             core[k].extend(extension[k])
 
 def tag_feature(tree):
-    if "info" in tree and "name" in tree["info"]:
+    if "info" in tree and "name" in tree["info"] and tree['info']['type'] == 'feature':
         feature = tree["info"]["name"]
         if "objects" in tree:
             for obj in tree["objects"]:

@@ -127,7 +127,7 @@ ANARIArray1D DebugDevice::newArray1D(const void *appMemory,
 
   if (isObject(type)) { // object arrays need special treatment
     const ANARIObject *in = static_cast<const ANARIObject *>(appMemory);
-    ANARIObject *handles = new ANARIObject[numItems];
+    ANARIObject *handles = new ANARIObject[numItems]();
     if (byteStride != 0 && byteStride != sizeof(ANARIObject)) {
       reportStatus(this_device(),
           ANARI_DEVICE,
@@ -351,7 +351,7 @@ void DebugDevice::unmapArray(ANARIArray a)
       for (uint64_t i = 0; i < info->numItems1; i++) {
         objMapping[i] = unwrapHandle(info->handles[i]);
         if (auto info2 = getObjectInfo(info->handles[i])) {
-          info->referencedBy(a);
+          info2->referencedBy(a);
         }
       }
     }

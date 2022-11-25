@@ -192,7 +192,7 @@ int main(int argc, const char **argv)
   // create and setup frame
   auto frame = anari::newObject<anari::Frame>(d);
   anari::setParameter(d, frame, "size", imgSize);
-  anari::setParameter(d, frame, "color", ANARI_UFIXED8_RGBA_SRGB);
+  anari::setParameter(d, frame, "channel.color", ANARI_UFIXED8_RGBA_SRGB);
 
   anari::setAndReleaseParameter(d, frame, "renderer", renderer);
   anari::setAndReleaseParameter(d, frame, "camera", camera);
@@ -207,14 +207,14 @@ int main(int argc, const char **argv)
   anari::wait(d, frame);
 
   // access frame and write its content as PNG file
-  auto fb = anari::map<uint32_t>(d, frame, "color");
+  auto fb = anari::map<uint32_t>(d, frame, "channel.color");
   stbi_write_png("firstFrame.png",
       int(fb.width),
       int(fb.height),
       4,
       fb.data,
       4 * int (fb.width));
-  anari::unmap(d, frame, "color");
+  anari::unmap(d, frame, "channel.color");
 
   printf("done!\n");
   printf("rendering 10 accumulated frames to accumulatedFrame.png...");
@@ -226,14 +226,14 @@ int main(int argc, const char **argv)
     anari::wait(d, frame);
   }
 
-  fb = anari::map<uint32_t>(d, frame, "color");
+  fb = anari::map<uint32_t>(d, frame, "channel.color");
   stbi_write_png("accumulatedFrame.png",
       int(fb.width),
       int(fb.height),
       4,
       fb.data,
       4 * int (fb.width));
-  anari::unmap(d, frame, "color");
+  anari::unmap(d, frame, "channel.color");
 
   printf("done!\n");
   printf("\ncleaning up objects...");

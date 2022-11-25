@@ -32,7 +32,6 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     DEPENDS ${API_JSON} generate_headers.py
   )
-
   add_custom_target(generate_headers DEPENDS
       generate_type_utility
       generate_feature_utility
@@ -41,6 +40,17 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
   )
 
   add_dependencies(generate_all generate_headers)
+
+  add_custom_target(python_bindings
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/pyanari_build.py
+    -d ${CMAKE_CURRENT_SOURCE_DIR}/devices/generic_device.json
+    -j ${CMAKE_CURRENT_SOURCE_DIR}/api/
+    -I ${CMAKE_SOURCE_DIR}/libs/anari/include/
+    -I ${CMAKE_BINARY_DIR}/libs/anari/include/anari/
+    -L ${CMAKE_BINARY_DIR}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS pyanari_build.py anari ${API_JSON} devices/generic_device.json
+  )
 
   if (INSTALL_CODE_GEN_SCRIPTS)
     install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}

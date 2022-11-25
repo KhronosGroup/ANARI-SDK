@@ -194,8 +194,8 @@
     ],
 
     "opaqueTypes" : [
+        {"name" : "ANARILibrary"},
         {"name" : "ANARIObject"},
-        {"name" : "ANARILibrary", "parent" : "ANARIObject"},
         {"name" : "ANARIDevice", "parent" : "ANARIObject"},
         {"name" : "ANARICamera", "parent" : "ANARIObject"},
         {"name" : "ANARIArray", "parent" : "ANARIObject"},

@@ -45,10 +45,10 @@ void *Object<Frame>::mapFrame(const char *channel,
 {
   *width = size[0];
   *height = size[1];
-  if (std::strncmp(channel, "color", 5) == 0) {
+  if (std::strncmp(channel, "channel.color", 13) == 0) {
     *pixelType = colorType;
     return color.data();
-  } else if (std::strncmp(channel, "depth", 5) == 0) {
+  } else if (std::strncmp(channel, "channel.depth", 13) == 0) {
     *pixelType = depthType;
     return depth.data();
   } else {
