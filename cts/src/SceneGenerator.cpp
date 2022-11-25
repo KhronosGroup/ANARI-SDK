@@ -358,17 +358,17 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
 
   auto renderer =
       anari::newObject<anari::Renderer>(m_device, rendererType.c_str());
-  //anari::setParameter(d, renderer, "pixelSamples", g_numPixelSamples);
-  //anari::setParameter(m_device, renderer, "backgroundColor", glm::vec4(glm::vec3(0.1), 1));
+ // anari::setParameter(m_device, renderer, "pixelSamples", 10);
+ // anari::setParameter(m_device, renderer, "backgroundColor", glm::vec4(glm::vec3(0.1), 1));
   anari::commitParameters(m_device, renderer);
 
   auto frame = anari::newObject<anari::Frame>(m_device);
   anari::setParameter(m_device, frame, "size", glm::uvec2(image_height, image_width));
   if (color_type != ANARI_UNKNOWN) {
-    anari::setParameter(m_device, frame, "color", color_type);
+    anari::setParameter(m_device, frame, "channel.color", color_type);
   }
   if (depth_type_param == "FLOAT32") {
-    anari::setParameter(m_device, frame, "depth", ANARI_FLOAT32);
+    anari::setParameter(m_device, frame, "channel.depth", ANARI_FLOAT32);
   }
 
   anari::setParameter(m_device, frame, "renderer", renderer);
@@ -393,22 +393,29 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
     if (color_type == ANARI_FLOAT32_VEC4) {
       const float *pixels = anari::map<float>(m_device, frame, "color").data;
       std::vector<uint32_t> converted;
-      for (int i = 0; i < image_height * image_width; ++i) {
-        uint32_t rgba = 0;
-        for (int j = 0; j < componentBytes; ++j) {
-          uint8_t colorValue =
-              static_cast<uint8_t>(pixels[i * componentBytes + j] * 255.0f);
-          rgba += colorValue << (8 * j);
+      if (pixels != nullptr) {
+        for (int i = 0; i < image_height * image_width; ++i) {
+          uint32_t rgba = 0;
+          for (int j = 0; j < componentBytes; ++j) {
+            uint8_t colorValue =
+                static_cast<uint8_t>(pixels[i * componentBytes + j] * 255.0f);
+            rgba += colorValue << (8 * j);
+          }
+          converted.push_back(rgba);
         }
-        converted.push_back(rgba);
+      } else {
+        printf("%s not supported\n", color_type_param.c_str());
       }
 
       result.emplace_back(converted);
       anari::unmap(m_device, frame, "color");
     } else {
-      auto fb = anari::map<uint32_t>(m_device, frame, "color");
-      result.emplace_back(
-          fb.data, fb.data + image_height * image_width);
+      auto fb = anari::map<uint32_t>(m_device, frame, "channel.color");
+      if (fb.data != nullptr) {
+        result.emplace_back(fb.data, fb.data + image_height * image_width);
+      } else {
+        printf("%s not supported\n", color_type_param.c_str());
+      }
       anari::unmap(m_device, frame, "color");
     }
   } else {
@@ -416,15 +423,19 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
   }
 
   if (depth_type_param == "FLOAT32") {
-    const float *pixels = anari::map<float>(m_device, frame, "depth").data;
+    const float *pixels = anari::map<float>(m_device, frame, "channel.depth").data;
 
     std::vector<uint32_t> converted;
-    for (int i = 0; i < image_height * image_width; ++i) {
-      uint8_t colorValue =
-          static_cast<uint8_t>(pixels[i] / renderDistance * 255.0f);
-      uint32_t rgba =
-          (255 << 24) + (colorValue << 16) + (colorValue << 8) + colorValue;
-      converted.push_back(rgba);
+    if (pixels != nullptr) {
+      for (int i = 0; i < image_height * image_width; ++i) {
+        uint8_t colorValue =
+            static_cast<uint8_t>(pixels[i] / renderDistance * 255.0f);
+        uint32_t rgba =
+            (255 << 24) + (colorValue << 16) + (colorValue << 8) + colorValue;
+        converted.push_back(rgba);
+      }
+    } else {
+      printf("Depth channel not supported\n");
     }
 
     result.emplace_back(converted);

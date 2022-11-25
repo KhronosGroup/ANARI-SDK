@@ -202,14 +202,14 @@ def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, te
 
     file_name.parent.mkdir(exist_ok=True, parents=True)
 
-    if "color" in channels:
+    if "color" in channels and image_data_list[0]:
         image_out = Image.new("RGBA", (parsed_json["sceneParameters"]["image_height"], parsed_json["sceneParameters"]["image_width"]))
         image_out.putdata(image_data_list[0])
         outName = file_name.with_suffix('.png').with_stem(f'{prefix}{stem}{permutationString}_color')
         print(f'Rendering to {outName.resolve()}')
         image_out.save(outName)
 
-    if "depth" in channels:
+    if "depth" in channels and image_data_list[1]:
         image_out = Image.new("RGBA", (parsed_json["sceneParameters"]["image_height"], parsed_json["sceneParameters"]["image_width"]))
         image_out.putdata(image_data_list[1])
         outName = file_name.with_suffix('.png').with_stem(f'{prefix}{stem}{permutationString}_depth')
