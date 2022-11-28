@@ -7,6 +7,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(lib_name "ctsBackend")
 
+set(REFERENCE_LIB "helide")
+
 project("ctsBackend")
 
 include(pybind11.cmake)
@@ -38,7 +40,7 @@ add_custom_target(generate_cts
 	  --out src
 	COMMAND ${CMAKE_COMMAND} -E copy ${python_files} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}
 	COMMAND ${Python3_EXECUTABLE} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/createReferenceData.py
-	  --test_scenes ${CMAKE_CURRENT_LIST_DIR}/test_scenes
+	  --test_scenes ${CMAKE_CURRENT_LIST_DIR}/test_scenes -l ${REFERENCE_LIB}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     DEPENDS ${ANARI_CODE_GEN_ROOT}/devices/extended_device.json
   )
@@ -52,6 +54,7 @@ if (CTS_DEV AND NOT BUILD_SHARED_LIBS)
 		COMMAND ${CMAKE_COMMAND}
 				-DBUILD_CONFIG_DIR=${CMAKE_CFG_INTDIR}
 				-DCMAKE_RUNTIME_OUTPUT_DIRECTORY=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+        -DREFERENCE_LIB={REFERENCE_LIB}
 				-P "${CMAKE_CURRENT_LIST_DIR}/copy_post_build.cmake"
 		VERBATIM
 		)

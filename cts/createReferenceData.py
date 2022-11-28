@@ -35,8 +35,11 @@ def createReferenceData(parsed_json, sceneGenerator, anariRenderer, sceneLocatio
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='ANARI CTS toolkit generation')
+    parser.add_argument("-l", "--library", default="helide")
+    parser.add_argument("-d", "--device", default=None)
+    parser.add_argument("-r", "--renderer", default="default")
     parser.add_argument("--test_scenes", default="test_scenes")
 
     args = parser.parse_args()
-    cts.apply_to_scenes(cleanMetaData, "example", "example", "default", args.test_scenes, True)
-    cts.apply_to_scenes(createReferenceData, "example", "example", "default", args.test_scenes, True)
+    cts.apply_to_scenes(cleanMetaData, args.library, args.device, args.renderer, args.test_scenes, True)
+    cts.apply_to_scenes(createReferenceData, args.library, args.device, args.renderer, args.test_scenes, True)
