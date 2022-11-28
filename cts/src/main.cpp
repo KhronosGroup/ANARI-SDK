@@ -30,6 +30,7 @@ PYBIND11_MODULE(ctsBackend, m)
       .def("renderScene", &cts::SceneGeneratorWrapper::renderScene)
       .def(
           "resetAllParameters", &cts::SceneGeneratorWrapper::resetAllParameters)
+      .def("resetSceneObjects", &cts::SceneGeneratorWrapper::resetSceneObjects)
       .def("getBounds", &cts::SceneGeneratorWrapper::getBounds)
       .def("getFrameDuration", &cts::SceneGeneratorWrapper::getFrameDuration);
 }

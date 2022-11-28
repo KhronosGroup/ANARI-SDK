@@ -46,6 +46,13 @@ class SceneGeneratorWrapper
     }
   }
 
+  void resetSceneObjects()
+  {
+    if (m_sceneGenerator) {
+      m_sceneGenerator->resetSceneObjects();
+    }
+  }
+
   void resetAllParameters()
   {
     if (m_sceneGenerator) {

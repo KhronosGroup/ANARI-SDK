@@ -294,6 +294,7 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                         sceneGenerator.setParameter(key, permutation[i])
                 
                 if use_generator:
+                    sceneGenerator.resetSceneObjects()
                     sceneGenerator.commit()
                 result[test_name + permutationString + variantString] = (func(parsed_json, sceneGenerator, anari_renderer, json_file_path, test_name, permutationString[1:], variantString[1:], *args))
         else:

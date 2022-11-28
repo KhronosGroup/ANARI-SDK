@@ -349,7 +349,7 @@ PrimitiveGenerator::generateCurves(size_t primitiveCount)
 
   for (size_t i = 0; i < primitiveCount * 2; ++i) {
     vertices.push_back(getRandomVector3(0.0f, 1.0f));
-    radii.push_back(getRandomFloat(0.0f, 0.4f));
+    radii.push_back(getRandomFloat(0.001f, 0.05f));
   }
 
   vertices = randomTranslate(vertices, 2);

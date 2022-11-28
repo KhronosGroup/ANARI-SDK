@@ -199,7 +199,7 @@ void SceneGenerator::commit()
         "vertex.radius",
         anari::newArray1D(d, sphereRadii.data(), sphereRadii.size()));
 
-    if ("indexed") {
+    if (primitiveMode == "indexed") {
       std::vector<uint32_t> indices;
       for (size_t i = 0; i < vertices.size(); ++i) {
         indices.push_back(static_cast<uint32_t>(i));
@@ -221,11 +221,10 @@ void SceneGenerator::commit()
         "vertex.radius",
         anari::newArray1D(d, curveRadii.data(), curveRadii.size()));
 
-    if ("indexed") {
-      std::vector<glm::uvec2> indices;
-      for (size_t i = 0; i < vertices.size(); i += 2) {
-        indices.push_back(
-            glm::vec2(static_cast<uint32_t>(i), static_cast<uint32_t>(i + 1)));
+    if (primitiveMode == "indexed") {
+      std::vector<uint32_t> indices;
+      for (size_t i = 0; i < vertices.size() / 2; i += 1) {
+        indices.push_back(i * 2);
       }
 
       // shuffle indices vector to create a more useful test case
@@ -246,7 +245,7 @@ void SceneGenerator::commit()
         "vertex.radius",
         anari::newArray1D(d, coneRadii.data(), coneRadii.size()));
 
-    if ("indexed") {
+    if (primitiveMode == "indexed") {
       std::vector<glm::uvec2> indices;
       for (size_t i = 0; i < vertices.size(); i += 2) {
         indices.push_back(
@@ -270,7 +269,7 @@ void SceneGenerator::commit()
         "primitive.radius",
         anari::newArray1D(d, cylinderRadii.data(), cylinderRadii.size()));
 
-    if ("indexed") {
+    if (primitiveMode == "indexed") {
       std::vector<glm::uvec2> indices;
       for (size_t i = 0; i < vertices.size(); i += 2) {
         indices.push_back(glm::vec2(
@@ -462,7 +461,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
   return result;
 }
 
-void SceneGenerator::resetAllParameters() {
+void SceneGenerator::resetSceneObjects() {
   for (auto &[key, value] : m_anariObjects) {
     for (auto &object : value) {
       anari::release(m_device, object);
@@ -474,7 +473,10 @@ void SceneGenerator::resetAllParameters() {
   anari::unsetParameter(m_device, m_world, "surface");
   anari::unsetParameter(m_device, m_world, "volume");
   anari::unsetParameter(m_device, m_world, "light");
+}
 
+void SceneGenerator::resetAllParameters() {
+  resetSceneObjects();
   std::vector<std::string> paramNames;
   for (auto it = params_begin(); it != params_end(); ++it) {
     paramNames.push_back(it->get()->name);
