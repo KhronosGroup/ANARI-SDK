@@ -178,12 +178,21 @@ def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, te
             world_bounds = metaData["bounds"]["world"]
 
     if world_bounds == []:
-        world_bounds = sceneGenerator.getBounds()[0][0]
+        try:
+            world_bounds = sceneGenerator.getBounds()[0][0]
+        except Exception as e:
+            print(e)
+            return -1
 
     bounds_distance = math.dist(world_bounds[0], world_bounds[1])
-    image_data_list = sceneGenerator.renderScene(anari_renderer, bounds_distance)
+    try:
+        image_data_list = sceneGenerator.renderScene(anari_renderer, bounds_distance)
+        frame_duration = sceneGenerator.getFrameDuration()
+    except Exception as e:
+        print(e)
+        return -1
 
-    frame_duration = sceneGenerator.getFrameDuration()
+
     print(f'Frame duration: {frame_duration}')
 
     output_path = Path(output)
@@ -260,10 +269,13 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                 print("Scene %s is not supported"%json_file_path)
                 result[test_name] = "Features not supported"
                 continue
-        
-            sceneGenerator.resetAllParameters()
-            for [key, value] in parsed_json["sceneParameters"].items():
-                sceneGenerator.setParameter(key, value)
+            try:
+                sceneGenerator.resetAllParameters()
+                for [key, value] in parsed_json["sceneParameters"].items():
+                    sceneGenerator.setParameter(key, value)
+            except Exception as e:
+                print(e)
+                continue
 
         if "permutations" in parsed_json or "variants" in parsed_json:
             variant_keys = []
@@ -281,6 +293,7 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
             for permutation in permutations:
                 permutationString = ""
                 variantString = ""
+                hasError = False
                 for i in range(len(permutation)) :
                     key = None
                     if keys[i] in variant_keys:
@@ -291,15 +304,29 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                         permutationString += f'{"_{}".format(permutation[i])}'
                     
                     if use_generator:
-                        sceneGenerator.setParameter(key, permutation[i])
-                
+                        try:
+                            sceneGenerator.setParameter(key, permutation[i])
+                        except Exception as e:
+                            print(e)
+                            hasError = True
+                            continue
+                if hasError:
+                    continue
                 if use_generator:
-                    sceneGenerator.resetSceneObjects()
-                    sceneGenerator.commit()
+                    try:
+                        sceneGenerator.resetSceneObjects()
+                        sceneGenerator.commit()
+                    except Exception as e:
+                        print(e)
+                        continue
                 result[test_name + permutationString + variantString] = (func(parsed_json, sceneGenerator, anari_renderer, json_file_path, test_name, permutationString[1:], variantString[1:], *args))
         else:
             if use_generator:
-                sceneGenerator.commit()
+                try:
+                    sceneGenerator.commit()
+                except Exception as e:
+                    print(e)
+                    continue
             result[test_name] = (func(parsed_json, sceneGenerator, anari_renderer, json_file_path, test_name,"", "", *args))
     return result
 
@@ -335,7 +362,11 @@ def check_bounding_boxes(ref, candidate, tolerance):
 def check_object_properties_helper(parsed_json, sceneGenerator, anari_renderer, scene_location, test_name, permutationString, variantString):
     output = ""
     tolerance = parsed_json["bounds_tolerance"]
-    bounds = sceneGenerator.getBounds()
+    try:
+        bounds = sceneGenerator.getBounds()
+    except Exception as e:
+        print(e)
+        return "Error while retrieving bounds", False
     if "metaData" in parsed_json:
         metaData = parsed_json["metaData"]
         if permutationString != "" and permutationString in metaData:
@@ -345,12 +376,12 @@ def check_object_properties_helper(parsed_json, sceneGenerator, anari_renderer, 
         if "bounds" not in metaData:
             message = f'Bounds missing in reference'
             output += message
-            return output
+            return output, False
         ref_bounds = metaData["bounds"]
         if "world" not in ref_bounds:
             message = f'Bounds missing in reference'
             output += message
-            return output
+            return output, False
         check_output = check_bounding_boxes(ref_bounds["world"], bounds[0][0], tolerance)
         if check_output != "":
             message = f'Worlds bounds do not match!\n' + check_output
