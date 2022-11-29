@@ -31,14 +31,95 @@ This will show all available commands. To get more information about the individ
 
 A detailed explanation of each feature can be found in [features.md]().
 
+To create the pdf report for the helide library call:
+```
+.\cts.py create_report helide
+```
+
 
 ## Building
 To build the CTS, CMake and a C++17 compiler is required. The project was tested with the MSVC compiler.\
 On Windows the `ctsBackend` target does not show up in the CMake Tools for Visual Studio Code. It can either be seen in Visual Studio in the CMake Targets View or by using e.g. CMake GUI to create a Visual Studio solution. Nevertheless, the ctsBackend target it always build if build all is selected.
 
 ## Test scene format
+A test is written as a JSON file with a specific structure. [`default_test_scene.json`](default_test_scene.json) contains the default values for each test. These can be overwritten by the specific tests. Tests should be place in the [test_scenes folder](test_scenes/). By using subfolders, one can create categories to allow running the CTS on selected tests only.
 
+ Here is the [sphere test file](test_scenes/primitives/sphere/sphere.json) as an example:
 
+```json
+{
+  "sceneParameters": {
+    "geometrySubtype": "sphere",
+    "seed": 54321
+  },
+  "permutations": {
+    "primitiveCount": [
+      1,
+      16
+    ]
+  },
+  "variants": {
+    "primitiveMode": [
+      "soup",
+      "indexed"
+    ]
+  },
+  "requiredFeatures": [
+    "ANARI_KHR_GEOMETRY_SPHERE"
+  ],
+  "metaData": {
+    "1": {
+      "bounds": {
+        "world": [
+          [
+            0.8382989764213562,
+            0.43637922406196594,
+            0.5504830479621887
+          ],
+          [
+            0.9849825501441956,
+            0.5830627679824829,
+            0.6971666216850281
+          ]
+        ]
+      }
+    },
+    "16": {
+      "bounds": {
+        "world": [
+          [
+            -0.08789964765310287,
+            -0.28438711166381836,
+            -0.20388446748256683
+          ],
+          [
+            1.1669179201126099,
+            1.1838836669921875,
+            1.3429962396621704
+          ]
+        ]
+      }
+    }
+  }
+}
+```
+- `sceneParameters`: This json objects contains all key value pairs which are passed to the C++ scene generator. The following parameters are supported. They are also documented in the [parameters() function in SceneGenerator.cpp](src/SceneGenerator.cpp/#L38):
+  -  `geometrySubtype`: Which type of geometry to generate. Possible values: `triangle`, `quad`, `sphere`, `curve`, `cone`, `cylinder`. Default: `triangle`
+  -  `shape`: Which shape should be generated. Currently only relevant for triangles and quads. Possible values: `triangle`, `quad`, `cube`. Default: `triangle`
+  -  `primitiveMode`: How the data is arranged (`soup` or `indexed`). Default: `soup`
+  -  `primitiveCount`: How many primitives should be generated. Default: `1`
+  -  `frame_color_type`: Type of the color framebuffer. If empty, color buffer will not be used. Possible values: `UFIXED8_RGBA_SRGB`, `FLOAT32_VEC4`, `UFIXED8_VEC4`
+  -  `frame_depth_type`: Type of the depth framebuffer. If empty, depth buffer will not be used. Possible values: `FLOAT32`
+  -  `image_height`: Height of the image. Default: `1024`
+  -  `image_width`: Width of the image. Default: `1024`
+  -  `attribute_min`: Minimum random value for attributes. Default: `0.0`
+  -  `attribute_max`: Maximum random value for attributes. Default: `1.0`
+  -  `primitive_attributes`: If primitive attributes should be filled randomly. Default: `true`
+  -  `vertex_attribtues`: If vertex attributes should be filled randomly. Default: `true`
+  -  `seed`: Seed for random number generator to ensure that tests are consistent across platforms. Default `0`
+-  `permutations` and `variants`: These specify scene parameters where different values should be tested. Therefore, these JSON objects contain the name of a scene parameter and a list of values for each of them. The permutations specify changes which result in a different outcome (1 or 16 primitives). The variants should not change the outcome and therefore only one reference rendering is needed for these (here the soup and indexed variant should look the same). The cartesian product is performed for all parameters. In the current example this results in four tests: 1 primitive + soup, 1 primitive + indexed, 16 primitives + soup, 16 primitives + indexed
+-  `requiredFeatures`: Is a list of features which needs to be supported by the device to perform the test. Some features (e.g. perspective camera) which are needed for every test are implicitly required. This list should only contain the features which are explicitly tested. If the device does not support the feature, the test is skipped.
+-  `metaData`: This JSON object is automatically created while generating the reference images and contains ANARI object properties for each permutation which should be checked (currently only bounds).
 ## Extending the Scene Generator
 
 ## Creating the reference renderings/metadata

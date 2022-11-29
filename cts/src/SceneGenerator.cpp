@@ -53,7 +53,7 @@ std::vector<anari::scenes::ParameterInfo> SceneGenerator::parameters()
       {"primitiveCount",
           ANARI_UINT32,
           1,
-          "How many primtives should be generated"},
+          "How many primitives should be generated"},
       {"frame_color_type",
           ANARI_STRING,
           "",
@@ -68,6 +68,7 @@ std::vector<anari::scenes::ParameterInfo> SceneGenerator::parameters()
       {"attribute_max", ANARI_FLOAT32, 1.0f, "Maximum random value for attributes"},
       {"primitive_attributes", ANARI_BOOL, true, "If primitive attributes should be filled randomly"},
       {"vertex_attribtues", ANARI_BOOL, true, "If vertex attributes should be filled randomly"},
+      {"seed", ANARI_UINT32, 0, "Seed for random number generator to ensure that tests are consistent across platforms"}
 
       //
   };
