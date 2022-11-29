@@ -42,6 +42,9 @@ Not all C++ exception from ANARI devices can be caught. If possible the exceptio
 To build the CTS, CMake and a C++17 compiler is required. The project was tested with the MSVC compiler.\
 On Windows the `ctsBackend` target does not show up in the CMake Tools for Visual Studio Code. It can either be seen in Visual Studio in the CMake Targets View or by using e.g. CMake GUI to create a Visual Studio solution. Nevertheless, the ctsBackend target is always build when `build all` is selected.
 
+For easier development, build ANARI statically (by setting `BUILD_SHARED_LIBS=OFF`). The `CTS_DEV` option is enabled by default. This will copy the build binaries into the `cts` folder since they are needed for executing the python files. The helide and debug libraries are copied as well so they can be used as example devices.
+`ctsBackend*.pyd` is the python module which is imported in the `cts.py` file.
+
 ## Test scene format
 A test is written as a JSON file with a specific structure. [`default_test_scene.json`](default_test_scene.json) contains the default values for each test. These can be overwritten by the specific tests. Tests should be placed in the [test_scenes folder](test_scenes/). By using subfolders, categories can be created that allow running the CTS on selected tests only.
 
@@ -174,9 +177,6 @@ The `only_permutations` parameter of `apply_to_scenes` can be used to ignore var
 The PDF report is created in [ctsReport.py](ctsReport.py) with the reportlab library. It takes a JSON lie structured item, which represents the different sections and subsection of the PDF. Therefore, the required features can be found in `data[test_name]`, while the actual result can be found in `data[test_name][permutation][channel]`. Test case independent information such as the supported features and anariInfo output is stored in the top level JSON data. Additionally, a summary is compiled at the top of the report, showing each test case and if it failed and a link to the detailed page. By default the detailed pages are not created. `--verbose_failed` (verbosity level 1) shows these pages for failed tests and `--verbose_all` (verbosity level 2) shows it for every test.
 
 ## Debugging
-For easier development, build ANARI statically (by setting `BUILD_SHARED_LIBS=OFF`). The `CTS_DEV` option is enabled by default. This will copy the build binaries into the `cts` folder since they are needed for executing the python files. The helide and debug libraries are copied as well so they can be used as example devices.
-`ctsBackend*.pyd` is the python module which is imported in the `cts.py` file.
-
 To debug the python and C++ code simultaneously, the Visual Studio Code extension [Python C++ Debugger](https://marketplace.visualstudio.com/items?itemName=benjamin-simmonds.pythoncpp-debug) can be used. This automatically attaches the C++ debugger the correct process.
 
 Here is a sample `launch.json` for Windows to get the debugger running:
