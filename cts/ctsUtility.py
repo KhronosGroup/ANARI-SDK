@@ -3,8 +3,6 @@ import skimage.color
 import skimage.util
 import skimage.transform
 import skimage.filters
-import numpy as np
-from sewar.full_ref import vifp, uqi
 import os
 import warnings
 

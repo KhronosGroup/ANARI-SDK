@@ -12,13 +12,11 @@ It contains the following features:
 ## Requirements
 
 The project was developed with the following python packages/versions. Other versions might work as well.
-- Your ANARI library
+- Your ANARI library files copied into this folder
 - Python 3.10+
-- numpy 1.23.0
 - Pillow 9.3.0
 - reportlab 3.6.10
 - scikit_image 0.19.3
-- sewar 0.4.5
 - tabulate 0.8.10
   
 If the cts binary (.pyd) file for the desired SDK version is not provided, have a look at the [Build section](#building).
@@ -33,7 +31,7 @@ This will show all available commands. To get more information about the individ
 
 A detailed explanation of each feature can be found in [features.md]().
 
-Example: To create the pdf report for the helide library run
+Example: To create the pdf report for the helide library, make sure the `anari_library_helide.dll` is placed into this folder and call:
 ```
 .\cts.py create_report helide
 ```
@@ -125,9 +123,52 @@ Here is the [sphere test file](test_scenes/primitives/sphere/sphere.json) as an 
 ## Extending the Scene Generator
 
 ## Creating the reference renderings/metadata
-The `generateCTS` target can be build to generate all reference images, add the meta data to the test JSON files and generate the C++ ANARI query code. Currently the `helide` library is used to generate the references. To change this modify `REFERENCE_LIB` in [CMakeLists.txt](CMakeLists.txt/#L10)
+The `generateCTS` target can be build to generate all reference images, add the meta data to the test JSON files and generate the C++ ANARI query code. Currently the `helide` library is used to generate the references. To change this, modify `REFERENCE_LIB` in [CMakeLists.txt](CMakeLists.txt/#L10).One can also manually call the [`createReferenceData.py`](createReferenceData.py) script.\
+This will clear and set the metaData objects of all tests in [`test_scenes`](test_scenes/) and place the reference renderings next to the json file with a `ref_` prefix.
 
-## Image compare functions
+## Extending the python files
+The python code is divided into 4 files:
+- [cts.py](cts.py): The main python file which parses all arguments and contains functions for each feature
+- [ctsUtility.py](ctsUtility.py): This file contains utility functions e.g. image comparison functions
+- [ctsReport.py](ctsReport.py): This file contains the functions to create the PDF report from JSON style input data
+- [createReferenceData.py](createReferenceData.py): This script can be used to create the reference data
+### Image compare functions
+The comparison functions are defined at the top of [ctsUtility.py](ctsUtility.py). Currently, `PSMR` and `SSIM` from `scikit_image` are used as metrics. To permanently add a new metric, define a function like this:
+```python
+def newMetric(reference, candidate, threshold):
+    result = newMetric(reference, candidate)
+    return result > threshold, threshold, result
+```
+The function takes the reference and candidate pixel data and a threshold. It returns a bool if the candidate passed the test, the threshold and the actual result.
+
+Now this function needs to be called in `evalute_metrics`:
+```python
+if "newMetric" in methods:
+    threshold =  getThreshold(methods, thresholds, "newMetric", 0.7) # 0.7 is the default threshold value
+    passed["newMetric"], usedThresholds["newMetric"], results["newMetric"] = newMetric(reference, candidate, threshold)
+```
+Now the new metric can be used and is automatically added to the report.
+
+Another way to add a new metric temporarily is by using the `custom_compare_function` parameter of `compare_images` or `create_report`. This parameter can be set to a function with the following  signature:
+```python
+def custom_compare_function(reference, candidate):
+    # ...    
+    return result > threshold, threshold, result
+```
+Note that no threshold is passed to the custom function. The threshold needs to be defined in the custom function and returned as second value.
+### Apply to scene
+If new functionality should be added to the CTS the `apply_to_scene` function can be used.
+```python
+def function_per_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, test_name, permutationString, variantString)
+
+def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", only_permutations = False, use_generator = True,  *args)
+```
+It takes a function e.g. `function_per_scene` and calls it for each scene (permutation). The function gets the parsed json test file, the C++ sceneGenerator object, the name of the ANARI renderer, the file location of the test, the name of the test, the current permutation and variant or empty string if none exists.
+The return value is stored in a dict as value with the test name + permutation/variant string as key.
+
+The `only_permutations` parameter of `apply_to_scenes` can be used to ignore variants. This is relevant for the reference creation. `use_generator` specifies if the C++ Scene Generator should be initialized or not. In the later case, `sceneGenerator` is set to `None`. Additional parameters can added (denoted as `*args`) and will be passed directly to the apply function. 
+
+### PDF report
 
 ## Debugging
 For easier development, build ANARI statically (by setting `BUILD_SHARED_LIBS=OFF`). The `CTS_DEV` option is enabled by default. This will copy the build binaries into the `cts` folder since they are needed for executing the python files. The helide and debug libraries are copied as well so they can be used as example devices.
