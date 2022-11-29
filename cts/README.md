@@ -31,10 +31,12 @@ This will show all available commands. To get more information about the individ
 
 A detailed explanation of each feature can be found in [features.md]().
 
-Example: To create the pdf report for the helide library, make sure the `anari_library_helide.dll` is placed into this folder and call:
+Example: To create the pdf report for the helide library, make sure the `anari_library_helide.dll` (or *.so / *.dylib) is placed into this folder and call:
 ```
 .\cts.py create_report helide
 ```
+
+Not all C++ exception from ANARI devices can be caught. If possible the exception will be printed on the console and the task resumes (e.g. with the next test) if possible. If the CTS crashes, have a look at the `ANARI.log` file. It contains all ANARI logger information and might reveal the reason of a crash or unexpected behavior.
 
 ## Building
 To build the CTS, CMake and a C++17 compiler is required. The project was tested with the MSVC compiler.\
@@ -169,6 +171,7 @@ The return value is stored in a dict as value with the test name + permutation/v
 The `only_permutations` parameter of `apply_to_scenes` can be used to ignore variants. This is relevant for the reference creation. `use_generator` specifies if the C++ Scene Generator should be initialized or not. In the later case, `sceneGenerator` is set to `None`. Additional parameters can added (denoted as `*args`) and will be passed directly to the apply function. 
 
 ### PDF report
+The PDF report is created in [ctsReport.py](ctsReport.py) with the reportlab library. It takes a JSON lie structured item, which represents the different sections and subsection of the PDF. Therefore, the required features can be found in `data[test_name]`, while the actual result can be found in `data[test_name][permutation][channel]`. Test case independent information such as the supported features and anariInfo output is stored in the top level JSON data. Additionally, a summary is compiled at the top of the report, showing each test case and if it failed and a link to the detailed page. By default the detailed pages are not created. `--verbose_failed` (verbosity level 1) shows these pages for failed tests and `--verbose_all` (verbosity level 2) shows it for every test.
 
 ## Debugging
 For easier development, build ANARI statically (by setting `BUILD_SHARED_LIBS=OFF`). The `CTS_DEV` option is enabled by default. This will copy the build binaries into the `cts` folder since they are needed for executing the python files. The helide and debug libraries are copied as well so they can be used as example devices.
