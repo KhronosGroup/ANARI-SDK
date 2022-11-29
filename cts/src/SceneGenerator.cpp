@@ -8,9 +8,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <stdexcept>
 
-
 namespace cts {
-
 
 SceneGenerator::SceneGenerator(
     anari::Device device)
@@ -31,7 +29,7 @@ SceneGenerator::~SceneGenerator()
 }
 
 /***
-* This function is not used currently. It documents all available parameters
+* This function is not used currently. It documents all available parameters of a test scene
 ***/
 std::vector<anari::scenes::ParameterInfo> SceneGenerator::parameters()
 {
@@ -77,19 +75,21 @@ anari::World SceneGenerator::world()
   return m_world;
 }
 
+// generate the to be rendered scene
 void SceneGenerator::commit()
 {
   auto d = m_device;
 
+  // gather the data on what geometry will be present in the scene
   std::string geometrySubtype = getParam<std::string>("geometrySubtype", "triangle");
   std::string primitiveMode = getParam<std::string>("primitiveMode", "soup");
   int primitiveCount = getParam<int>("primitiveCount", 20);
   std::string shape = getParam<std::string>("shape", "triangle");
   int seed = getParam<int>("seed", 0);
 
-  // Build this scene top-down to stress commit ordering guarantees
-
-  setDefaultLight(m_world);
+  // build this scene top-down to stress commit ordering guarantees
+  // setup lighting, material and empty geometry
+  setDefaultLight(m_world);   
 
   auto surface = anari::newObject<anari::Surface>(d);
   auto geom = anari::newObject<anari::Geometry>(d, geometrySubtype.c_str());
@@ -105,8 +105,12 @@ void SceneGenerator::commit()
   anari::setParameter(d, surface, "geometry", geom);
   anari::setParameter(d, surface, "material", mat);
 
+  // initialize PrimitiveGenerator with seed for random number generation
   PrimitiveGenerator generator(seed);
 
+
+  // create all geometry depending on subtypes and shapes, indexed or soup
+  // parameters vertex.position, vertex.radius, primitive.radius and primitive.index are set
   size_t componentCount = 3;
   if (geometrySubtype == "quad") {
     componentCount = 4;
@@ -117,9 +121,8 @@ void SceneGenerator::commit()
   }
 
   size_t indiciCount = 0;
-
   std::vector<glm::vec3> vertices;
-  if (geometrySubtype == "triangle") {
+  if (geometrySubtype == "triangle") { // handle all triangle geometry
     std::vector<glm::uvec3> indices;
     if (shape == "triangle") {
       vertices = generator.generateTriangles(primitiveCount);
@@ -150,7 +153,7 @@ void SceneGenerator::commit()
     }
 
     if (primitiveMode == "indexed") {
-    // shuffle indices vector to create a more useful test case
+      // shuffle indices vector to create a more useful test case
       indices = generator.shuffleVector(indices);
       indiciCount = indices.size();
       anari::setAndReleaseParameter(d,
@@ -158,7 +161,7 @@ void SceneGenerator::commit()
           "primitive.index",
           anari::newArray1D(d, indices.data(), indices.size()));
     }
-  } else if (geometrySubtype == "quad") {
+  } else if (geometrySubtype == "quad") { // handle all quad geometry
     std::vector<glm::uvec4> indices;
     if (shape == "quad") {
       vertices = generator.generateQuads(primitiveCount);
@@ -180,7 +183,7 @@ void SceneGenerator::commit()
     }
 
     if (primitiveMode == "indexed") {
-    // shuffle indices vector to create a more useful test case
+      // shuffle indices vector to create a more useful test case
       indices = generator.shuffleVector(indices);
       indiciCount = indices.size();
       anari::setAndReleaseParameter(d,
@@ -290,6 +293,7 @@ void SceneGenerator::commit()
       "vertex.position",
       anari::newArray1D(d, vertices.data(), vertices.size()));
 
+  // generate vertex attributes and primitive attributes
   if (indiciCount == 0) {
     indiciCount = vertices.size() / componentCount;
   }
@@ -316,26 +320,27 @@ void SceneGenerator::commit()
     }
   }
 
-
-
-
-
+  // commit everything to the device
   anari::commitParameters(d, geom);
   anari::commitParameters(d, mat);
   anari::commitParameters(d, surface);
 
   // cleanup
-
   anari::release(d, surface);
   anari::release(d, geom);
   anari::release(d, mat);
 }
 
+// render the scene with the given rendererType and renderDistance
+// commit() needs to be called before this
+// returns color and/or depth image data
 std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
     const std::string &rendererType, float renderDistance)
 {
+  // gather previously set parameters for rendering this scene
   size_t image_height = getParam<int32_t>("image_height", 1024);
   size_t image_width = getParam<int32_t>("image_width", 1024);
+
   std::string color_type_param = getParam<std::string>("frame_color_type", "");
   int componentBytes = 1;
   ANARIDataType color_type = ANARI_UNKNOWN;
@@ -350,16 +355,19 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
 
   std::string depth_type_param = getParam<std::string>("frame_depth_type", "");
 
+  // create render camera
   auto camera = anari::newObject<anari::Camera>(m_device, "perspective");
   anari::setParameter(
       m_device, camera, "aspect", (float)image_height / (float)image_width);
 
+  // create renderer
   auto renderer =
       anari::newObject<anari::Renderer>(m_device, rendererType.c_str());
  // anari::setParameter(m_device, renderer, "pixelSamples", 10);
  // anari::setParameter(m_device, renderer, "backgroundColor", glm::vec4(glm::vec3(0.1), 1));
   anari::commitParameters(m_device, renderer);
 
+  // setup frame
   auto frame = anari::newObject<anari::Frame>(m_device);
   anari::setParameter(m_device, frame, "size", glm::uvec2(image_height, image_width));
   if (color_type != ANARI_UNKNOWN) {
@@ -375,20 +383,23 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
 
   anari::commitParameters(m_device, frame);
 
+  // setup camera transform
   auto cam = createDefaultCameraFromWorld(m_world);
   anari::setParameter(m_device, camera, "position", cam.position);
   anari::setParameter(m_device, camera, "direction", cam.direction);
   anari::setParameter(m_device, camera, "up", cam.up);
   anari::commitParameters(m_device, camera);
 
-
+  // render scene
   anari::render(m_device, frame);
   anari::wait(m_device, frame);
 
   std::vector<std::vector<uint32_t>> result;
 
+  // handle color output
   if (color_type != ANARI_UNKNOWN) {
     if (color_type == ANARI_FLOAT32_VEC4) {
+      // handling of float data type
       const float *pixels = anari::map<float>(m_device, frame, "color").data;
       std::vector<uint32_t> converted;
       if (pixels != nullptr) {
@@ -408,6 +419,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
       result.emplace_back(converted);
       anari::unmap(m_device, frame, "color");
     } else {
+      // handling of other types
       auto fb = anari::map<uint32_t>(m_device, frame, "channel.color");
       if (fb.data != nullptr) {
         result.emplace_back(fb.data, fb.data + image_height * image_width);
@@ -417,9 +429,11 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
       anari::unmap(m_device, frame, "color");
     }
   } else {
+    // no color rendered
     result.emplace_back();
   }
 
+  // handle depth output
   if (depth_type_param == "FLOAT32") {
     const float *pixels = anari::map<float>(m_device, frame, "channel.depth").data;
 
@@ -440,9 +454,11 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
 
     anari::unmap(m_device, frame, "depth");
   } else {
+    // no depth rendered
     result.emplace_back();
   }
 
+  // set frame duration member of this with last renderering's frame time
   if (!anariGetProperty(m_device,
       frame,
       "duration",
@@ -453,6 +469,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
     frameDuration = -1.0f;
   }
 
+  // cleanup
   anari::release(m_device, camera);
   anari::release(m_device, frame);
   anari::release(m_device, renderer);
@@ -460,6 +477,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
   return result;
 }
 
+// clear any existing objects in the scene
 void SceneGenerator::resetSceneObjects() {
   for (auto &[key, value] : m_anariObjects) {
     for (auto &object : value) {
@@ -474,6 +492,7 @@ void SceneGenerator::resetSceneObjects() {
   anari::unsetParameter(m_device, m_world, "light");
 }
 
+// reset all parameters and objects in the scene
 void SceneGenerator::resetAllParameters() {
   resetSceneObjects();
   std::vector<std::string> paramNames;
@@ -485,6 +504,10 @@ void SceneGenerator::resetAllParameters() {
   }
 }
 
+// returns vector of bounds containing (in order)
+// world bounds, instances bounds, group bounds
+// each containing a set of min and max bounds
+// one set for the world, one per instance and one per group
 std::vector<std::vector<std::vector<std::vector<float>>>> SceneGenerator::getBounds()
 {
   std::vector<std::vector<std::vector<std::vector<float>>>> result;
@@ -493,6 +516,7 @@ std::vector<std::vector<std::vector<std::vector<float>>>> SceneGenerator::getBou
   std::vector<std::vector<std::vector<float>>> groupBounds;
   std::vector<std::vector<float>> &singleBound =
       worldBounds.emplace_back();
+  // gather world bounds
   auto anariWorldBounds = bounds();
   for (const auto &bound : anariWorldBounds) {
     std::vector<float>& vector = singleBound.emplace_back();
@@ -500,6 +524,8 @@ std::vector<std::vector<std::vector<std::vector<float>>>> SceneGenerator::getBou
       vector.push_back(bound[i]);
     }
   }
+
+  // gather bounds per instance
   if (m_anariObjects.find(int(ANARI_INSTANCE)) != m_anariObjects.end()) {
     for (auto &instance : m_anariObjects[int(ANARI_INSTANCE)]) {
       singleBound = instancesBounds.emplace_back();
@@ -514,6 +540,7 @@ std::vector<std::vector<std::vector<std::vector<float>>>> SceneGenerator::getBou
     }
   }
 
+  // gather bounds per group
   if (m_anariObjects.find(int(ANARI_GROUP)) != m_anariObjects.end()) {
     for (auto &group : m_anariObjects[int(ANARI_GROUP)]) {
       singleBound = groupBounds.emplace_back();
@@ -527,6 +554,7 @@ std::vector<std::vector<std::vector<std::vector<float>>>> SceneGenerator::getBou
       }
     }
   }
+
   result.emplace_back(worldBounds);
   result.emplace_back(instancesBounds);
   result.emplace_back(groupBounds);

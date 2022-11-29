@@ -29,6 +29,7 @@ class SceneGenerator : public anari::scenes::TestScene
       const std::string &rendererType, float renderDistance);
   std::vector<std::vector<std::vector<std::vector<float>>>> getBounds();
 
+  // after renderScene was called, use this to get the duration of the rendering
   float getFrameDuration() const
   {
     return frameDuration;
