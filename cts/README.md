@@ -123,7 +123,7 @@ A test is written as a JSON file with a specific structure. [`default_test_scene
 ## Extending the Scene Generator
 
 ## Creating the reference renderings/metadata
-
+The `generateCTS` target can be build to generate all reference images, add the meta data to the test JSON files and generate the C++ ANARI query code. Currently the `helide` library is used to generate the references. To change this modify `REFERENCE_LIB` in [CMakeLists.txt](CMakeLists.txt/#L10)
 ## Image compare functions
 
 ## Debugging

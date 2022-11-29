@@ -46,6 +46,7 @@ add_custom_target(generate_cts
   )
 
 add_dependencies(generate_cts ${lib_name})
+add_dependencies(generate_all generate_cts)
 
 
 option(CTS_DEV "Copy compiled python module next to python script to make developing easier" ON)
