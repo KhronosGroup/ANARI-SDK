@@ -29,7 +29,7 @@ Run the toolkit in the command line via
 ```
 This will show all available commands. To get more information about the individual commands call them with the help flag.
 
-A detailed explanation of each feature can be found in [features.md]().
+A detailed explanation of each feature can be found in [features.md](features.md).
 
 Example: To create the pdf report for the helide library, make sure the `anari_library_helide.dll` (or *.so / *.dylib) is placed into this folder and call:
 ```
