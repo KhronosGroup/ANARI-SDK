@@ -387,12 +387,12 @@ def compare_images(test_scenes = "test_scenes", candidates_path = "test_scenes",
     evaluations = apply_to_scenes(evaluate_scene, "", None, "default", test_scenes, False, False, output, ref_images, candidate_images, comparison_methods, thresholds, custom_compare_function)
     if output != None:
         # write all images to filesystem to later incorporate in report
-	    evaluations = write_images(evaluations, output)
-	    merged_evaluations = {}
-	    for evaluation in evaluations.values():
-	        merged_evaluations = recursive_update(merged_evaluations, evaluation)
-	    # write out pdf report containing images and evaluation data
-	    write_report(merged_evaluations, output, verbosity)
+        evaluations = write_images(evaluations, output)
+        merged_evaluations = {}
+        for evaluation in evaluations.values():
+            merged_evaluations = recursive_update(merged_evaluations, evaluation)
+        # write out pdf report containing images and evaluation data
+        write_report(merged_evaluations, output, verbosity)
 
 # compare candidate bounding box against reference bounding box using a tolerance value
 # return error message to list in a report if unsuccessful
