@@ -31,6 +31,8 @@ std::vector<std::tuple<std::string, bool>> queryFeatures(
     const std::optional<pybind11::function>
         &callback);
 
+// SceneGeneratorWrapper wraps the SceneGenerator functionality
+// to provide safe access via pybind
 class SceneGeneratorWrapper
 {
  public:
