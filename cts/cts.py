@@ -490,20 +490,20 @@ def create_report_for_scene(parsed_json, sceneGenerator, anari_renderer, scene_l
         report[test_name][name]["property_check"] = property_check
     else:
         # check wether all features required for this test scene are available on the device
-        all_features_available = True
+        not_available_features = []
         if "requiredFeatures" in parsed_json:
             for feature in parsed_json["requiredFeatures"]:
                 if not check_feature(feature_list, feature):
-                    all_features_available = False
+                    not_available_features.append(feature)
 
-        if all_features_available:
+        if len(not_available_features) == 0:
             # gather candidate and reference images rendered previously and add their evaulation to the report
             ref_images = globImages(scene_location.parent, reference_prefix)
             candidate_images = globImages(output / Path(test_name).parent, exclude_prefix=reference_prefix)
             report = evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, test_name, permutationString, variantString, output, ref_images, candidate_images, methods, thresholds, custom_compare_function)
         else:
             # list unsupported features that were required for this test scene in the report, no image evaluation possible
-            report[test_name]["not_supported"] = True
+            report[test_name]["not_supported"] = not_available_features
             report[test_name]["requiredFeatures"] = parsed_json["requiredFeatures"]
     return report
 

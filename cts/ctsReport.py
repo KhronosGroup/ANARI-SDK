@@ -44,11 +44,7 @@ def generate_report_document(report_data, path, title, verbosity = 0):
         story.append(Paragraph("Features", stylesheet["Heading2"]))
         table = Table(features, hAlign='LEFT')
         table.setStyle(TableStyle([
-            ('GRID', (0,0), (-1,-1), 0.25, colors.black),
-            ('LEFTPADDING', (0, 1), (-1, -1), 2),
-            ('RIGHTPADDING', (0, 1), (-1, -1), 2),
-            ('TOPPADDING', (0, 1), (-1, -1), 2),
-            ('BOTTOMPADDING', (0, 1), (-1, -1), 2)
+            ('GRID', (0,0), (-1,-1), 0.25, colors.black)
         ]))
         story.append(table)
         story.append(PageBreak())
@@ -74,6 +70,9 @@ def generate_report_document(report_data, path, title, verbosity = 0):
             # Check if test is supported by this device, otherwise skip
             if "not_supported" in test_cases_value:
                 summaryItem = [test_cases_name, Paragraph("Skipped")]
+                for i, item in enumerate(test_cases_value["requiredFeatures"]):
+                    if item in test_cases_value["not_supported"]:
+                        test_cases_value["requiredFeatures"][i] = f'<font color="red">{item}</font>'
                 summaryItem.append(Paragraph(str(test_cases_value["requiredFeatures"])))
                 summary.append(summaryItem)
                 continue
@@ -246,11 +245,7 @@ def generate_report_document(report_data, path, title, verbosity = 0):
     # Create Summary table
     table = Table(summary, colWidths=[doc.width / 2.5, doc.width / 8, doc.width / 2.5])
     table.setStyle(TableStyle([
-        ('GRID', (0,0), (-1,-1), 0.25, colors.black),
-        ('LEFTPADDING', (0, 1), (-1, -1), 2),
-        ('RIGHTPADDING', (0, 1), (-1, -1), 2),
-        ('TOPPADDING', (0, 1), (-1, -1), 2),
-        ('BOTTOMPADDING', (0, 1), (-1, -1), 2)
+        ('GRID', (0,0), (-1,-1), 0.25, colors.black)
     ]))
     story.insert(3, table)
 
