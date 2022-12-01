@@ -226,7 +226,7 @@ void SceneGenerator::commit()
     if (primitiveMode == "indexed") {
       std::vector<uint32_t> indices;
       for (size_t i = 0; i < vertices.size() / 2; i += 1) {
-        indices.push_back(i * 2);
+        indices.push_back(static_cast<uint32_t>(i) * 2);
       }
 
       // shuffle indices vector to create a more useful test case
