@@ -36,7 +36,7 @@ Example: To create the pdf report for the helide library, make sure the `anari_l
 .\cts.py create_report helide
 ```
 
-Not all C++ exceptions from ANARI devices can be caught. If possible the exception will be printed on the console and the task resumes (e.g. with the next test) if possible. If the CTS crashes, have a look at the `ANARI.log` file. It contains all ANARI logger information and might reveal the reason of a crash or unexpected behavior.
+Not all C++ exceptions from ANARI devices can be caught. If possible, the exception will be printed to the console and the task will resume (e.g. continuing with the next test). If the CTS crashes, have a look at the `ANARI.log` file. It contains all ANARI logger information and might reveal the reason of a crash or unexpected behavior.
 
 ## Building
 To build the CTS, CMake and a C++17 compiler is required. The project was tested with the MSVC compiler.\
@@ -123,7 +123,7 @@ Here is the [sphere test file](test_scenes/primitives/sphere/sphere.json) as an 
   -  `seed`: Seed for random number generator to ensure that tests are consistent across platforms. Default `0`
 -  `permutations` and `variants`: These specify scene parameters where different values should be tested. Therefore, these JSON objects contain the name of a scene parameter and a list of values for each of them. The permutations specify changes which result in a different outcome (e.g. 1 or 16 primitives). The variants should not change the outcome, therefore only one reference rendering is needed for these (e.g. the soup and indexed variants should look the same). The cartesian product is performed for all parameters. In the current example this results in four test images: 1 primitive + soup, 1 primitive + indexed, 16 primitives + soup, 16 primitives + indexed; As well as two reference images: 1 primitive (soup or indexed), 16 primitives (soup or indexed).
 -  `requiredFeatures`: A list of features which need to be supported by the device to perform the test. Some features (e.g. perspective camera) which are needed for every test are implicitly required. This list should only contain the features which are explicitly tested. If the device does not support the feature, the test is skipped.
--  `bounds_tolerance`: Specifies the percentage the bounds can vary in each dimensions and still be considered correct.
+-  `bounds_tolerance`: Specifies the percentage the bounds can vary in each dimension and still be considered correct.
 -  `metaData`: This JSON object is automatically created while generating the reference images. It contains ANARI object properties for each permutation (currently only bounds information).
 
 ## Extending the Scene Generator
@@ -196,7 +196,7 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
 It takes a function e.g. `function_per_scene` and calls it for each scene or each scene permutation, if present. The function receives the parsed json test file, the C++ sceneGenerator object, the name of the ANARI renderer, the file location of the test, the name of the test, the current permutation and variant or empty strings if none exist.
 The return value is stored in a dictionary as a value with the key being the test's name + the permutation/variant string.
 
-The `only_permutations` parameter of `apply_to_scenes` can be used to ignore variants. This is relevant for the reference creation. `use_generator` specifies if the C++ SceneGenerator should be initialized or not. In the latter case, `sceneGenerator` is set to `None`. Additional parameters can added (denoted as `*args`) and will be passed directly to the apply function. 
+The `only_permutations` parameter of `apply_to_scenes` can be used to ignore variants. This is relevant for the reference creation. `use_generator` specifies if the C++ SceneGenerator should be initialized or not. In the latter case, `sceneGenerator` is set to `None`. Additional parameters can be added (denoted as `*args`) and will be passed directly to the apply function. 
 
 ### PDF report
 The PDF report is created in [ctsReport.py](ctsReport.py) with the reportlab library. It takes a JSON-like structured item, which represents the different sections and subsection of the PDF. Therefore, the required features for each test can be found in `data[test_name]`, while the actual result can be found in `data[test_name][permutation][channel]`. Test case independent information such as the supported features and anariInfo output is stored in the top level JSON data. Additionally, a summary is compiled at the top of the report, showing each test case and whether it failed or passed, as well as a link to the corresponding detailed page. By default the detailed pages are not created. `--verbose_error` (verbosity level 1) shows these pages for failed tests and `--verbose_all` (verbosity level 2) shows it for every test regardless of its outcome.
