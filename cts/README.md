@@ -1,6 +1,6 @@
 # CTS
 
-The Conformance Test Suite (CTS) is a python toolkit to test the ANARI implementation of different libraries/devices against a reference device.
+The Conformance Test Suite (CTS) is a python toolkit using [pybind11](https://github.com/pybind/pybind11) to test the ANARI implementation of different libraries/devices against a reference device.
 It contains the following features:
 -  Render set of known test scenes
 -  Image comparison “smoke tests”
@@ -13,11 +13,11 @@ It contains the following features:
 
 The project was developed with the following python packages/versions. Other versions might work as well.
 - Your ANARI library files copied into this folder
-- Python 3.10+
-- Pillow 9.3.0
-- reportlab 3.6.10
-- scikit_image 0.19.3
-- tabulate 0.8.10
+- [Python 3.10+](https://www.python.org/downloads/)
+- [Pillow 9.3.0](https://pypi.org/project/Pillow/)
+- [reportlab 3.6.10](https://pypi.org/project/reportlab/)
+- [scikit_image 0.19.3](https://pypi.org/project/scikit-image/)
+- [tabulate 0.8.10](https://pypi.org/project/tabulate/)
   
 If the cts binary (.pyd) file for the desired SDK version is not provided, have a look at the [Build section](#building).
 
