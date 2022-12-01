@@ -37,7 +37,7 @@ def render_scenes(anari_library, anari_device = None, anari_renderer = "default"
 .\cts.py render_scenes helide -d default -r default -t test_scenes -o .
 ```
 
-This invokes the required ANARI calls for the specified device and library in the C++ backend via pybind11. If `anari_device` is set to `None`, the default device is used (first device of anariGetDeviceSubtypes). Now, all specified test scenes are rendered with the specified renderer. If no renderer is given, the default renderer is used. `test_scenes` can either be a category denoted by a path into the `test_scenes` folder or be a number of scenes denoted by a list of strings. If no scene is given, all test scenes are used by default. `output` specifies the folder in which the renderings are saved. It defaults to the folder where the script is executed from. The renderings will be arranged in the same folder structure as the test cases. Therefore, by default the images are placed next to the JSON files. The python API receives the pixel data from the C++ backend and writes the renderings to disk.
+This invokes the required ANARI calls for the specified device and library in the C++ backend via pybind11. If `anari_device` is set to `None`, the default device is used (first device of anariGetDeviceSubtypes). Now, all specified test scenes are rendered with the specified renderer. If no renderer is given, the default renderer is used. `test_scenes` can either be a category denoted by a path into the `test_scenes` folder or be a number of scenes denoted by a list of strings. If no scene is given, all test scenes are used by default. `output` specifies the folder in which the renderings are saved. It defaults to the folder where the script is executed from. The renderings will be arranged in the same folder structure as the test cases. Therefore, by default the images are placed next to the JSON files. The Python API receives the pixel data from the C++ backend and writes the renderings to disk.
 
 ### C++
 The C++ backend first sets up the ANARI device. Afterwards, all passed test scenes are initialized and rendered. The pixel data for RGBA and depth channel as well as the ANARI log messages are passed to Python via pybind11.
@@ -57,7 +57,7 @@ The C++ backend first sets up the ANARI device. Afterwards, all passed test scen
 The Python API performs the image comparison between the previously rendered scenes from an ANARI device and the ground truth. The user can customize various parameters in regards to the comparison. The Python function could look similar to this:
 
 ```python
-def compare_images(test_scenes = "test_scenes",  candidates_path = "test_scenes", output = ".", verbosity=0,comparison_methods = ["SSIM"], thresholds = None, custom_compare_function = None)
+def compare_images(test_scenes = "test_scenes",  candidates_path = "test_scenes", output = ".", verbosity = 0, comparison_methods = ["SSIM"], thresholds = None, custom_compare_function = None)
 ```
 
 ```bash
@@ -68,9 +68,9 @@ def compare_images(test_scenes = "test_scenes",  candidates_path = "test_scenes"
 - `test_scenes` is the path to the folder containing the test files + reference images.
 - `candidates_path` is the path to folder containing the candidate renderings.
 - `output` is the path to the folder where the PDF file with the results is stored. A subfolder called evaluation is created. If `output` is `None` the results will only be shown via Python standard output.
-- `verbosity` specifies which detailed information should be shown in the report. 0 - None, 1 - Only failed tests, 2 - All tests
+- `verbosity` specifies how much detailed information should be shown in the report. 0 - None, 1 - Only for failed tests, 2 - For all tests
 - `comparison_methods` is a list of strings containing all algorithms which should be used to compare the sets of images. The list of proposed algorithms is listed in section [Comparison methods](#comparison-methods).
-- `thresholds` is a list of numbers containing values which determine for each comparison method whether the tested image fails or passes the test. If `None` is given,  predefined thresholds are used.
+- `thresholds` is a list of numbers containing values which determine for each comparison method whether the tested image fails or passes the test. If `None` is given, predefined thresholds are used.
 - `custom_compare_function` can be used by the user to define a custom function to compare the images with. The signature should look like this:
 
 ```python
@@ -79,13 +79,13 @@ def custom_compare_function(reference, candidate):
     return result > threshold, threshold, result
 ```
 
-If a custom compare function is provided, it will be used additionally to the defined comparison methods (if any are defined) and included in the final result.
+If a custom compare function is provided it will be used additionally to the defined comparison methods (if any are defined) and included in the final result.
 
 ### Comparison methods
 
 For comparing the images, the metrics module of the scikit-image[^scikit-image] library is used. It implements the most commonly used comparison algorithms, such as mean squared error (MSE)[^mse], peak signal noise ratio (PSNR)[^psnr] or structural similarity (SSIM)[^ssim].
 
-Since the CTS should only compare structural difference between images and disregard changes in lighting or shading, the following methods are used. In contrast to MSE or PSNR, which compare the pixel values of images directly, SSIM tries to mimic human perception and compares the structure of images. Therefore, the relationship between pixels is taken into account and SSIM can be used for pattern recognition between two images. However, SSIM does not totally disregard lighting and shading. If the differences are too big, SSIM will not be able to recognize structurally similar patterns.\
+Since the CTS should only compare structural differences between images and disregard changes in lighting or shading, the following methods are used. In contrast to MSE or PSNR, which compare the pixel values of images directly, SSIM tries to mimic human perception and compares the structure of images. Therefore, the relationship between pixels is taken into account and SSIM can be used for pattern recognition between two images. However, SSIM does not totally disregard lighting and shading. If the differences are too big, SSIM will not be able to recognize structurally similar patterns.\
 For comparing only the actual vertices, the depth channel is rendered to an image. This is a grayscale image as seen below which encodes the distance from each pixel to the camera as euclidean distance as defined in the ANARI specification. These renderings are independent from any shading or light source and only take the actual primitives into account. Therefore, these images are compared with PSNR with a strict threshold.
 
 ### Example output
@@ -109,7 +109,7 @@ def query_metadata(anari_library, type = None, subtype = None, skipParameters = 
 .\cts.py query_metadata helide --type ANARI_GEOMETRY --subtype cone --info
 ```
 
-This invokes the required ANARI calls for `anari_library` in the C++ backend via pybind11. The queried information will be displayed via Python standard output. `type`, `subtype`and `skipParameters` can be used to limit the output to the specified types. `info` can be enabled to show more detailed information.  
+This invokes the required ANARI calls for `anari_library` in the C++ backend via pybind11. The queried information will be displayed via Python standard output. `type`, `subtype` and `skipParameters` can be used to limit the output to the specified types. `info` can be enabled to show more detailed information.  
 
 ### C++
 The code of the `anariInfo` tool was refactored for this task to return a string instead of writing directly to the output via `printf`.
@@ -147,7 +147,9 @@ Device "example":
 ```
 
 ## Verification of known object properties
-The CTS is able to check if output object properties are correct. This is done by loading the test scenes and verifying if the properties match the excepted values from the JSON file.
+
+The CTS is able to check if output object properties are correct. This is done by loading the test scenes and verifying whether the properties match the excepted values from the JSON files.
+
 ### Python API
 
 The Python API is used by the user to invoke the check. The function signature looks like this:
@@ -158,8 +160,10 @@ def check_object_properties(anari_library, anari_device = None, test_scenes = "t
 # Example call
 .\cts.py check_object_properties helide -d default -t test_scenes
 ```
-This invokes the required ANARI calls for the specified device and test scenes (see [Render a set of known test scenes](#python-api))) in the C++ backend via pybind11. If `anari_device` is set to `None`, the default device is used (first device of `anariGetDeviceSubtypes`). A list of all properties will be displayed via Python standard output showing the result.
+This invokes the required ANARI calls for the specified device and test scenes (see [Render a set of known test scenes](#python-api)) in the C++ backend via pybind11. If `anari_device` is set to `None`, the default device is used (first device of `anariGetDeviceSubtypes`). A list of all properties will be displayed via Python standard output showing the result.
+
 ### C++
+
 The C++ backend will first setup the ANARI device and load the test scene. It will check the properties `bounds` of `Group`, `Instance` and `World`. The `waitMask` parameter is set to `ANARI_WAIT`. The correct values are generated and written in the test scene.
 The results will be returned to the Python API.
 
@@ -189,7 +193,7 @@ def query_features(anari_library, anari_device = None)
 ```
 If no `anari_device` is specified, the default device is used.
 ### C++
-The C++ backend sets up the ANARI device and calls `anariGetObjectFeatures` on it. Afterwards, it is checked if each feature is included in the supported features and the result is returned.
+The C++ backend sets up the ANARI device and calls `anariGetObjectFeatures` on it. Then, it is checked whether each feature is included in the supported features list and the result is returned.
 
 ### Example output
 ```
@@ -236,7 +240,7 @@ def create_report(library, device = None, renderer = "default", test_scenes = "t
 # Example call
 .\cts.py create_report helide -d default -r default -t test_scenes -o . --verbose_all --comparison_methods ssim --thresholds 0.7 
 ```
-This function runs all tests with their respective parameters. After all tests are run their results are accumulated into a PDF and stored inside the subfolder evaluation in the output path. This is done with the `reportlab` library. The first page contains a summary of all tests. Afterwards, the results from `query_features` and `query_metadata` are shown. Depending on the verbosity level, the detailed results of each test are shown. These contain the image comparison, the frame duration and the result from `check_object_properties`.
+This function runs all tests with their respective parameters. After all tests are run their results are accumulated in a PDF and stored inside the subfolder `evaluation` in the output path. This is done with the `reportlab` library. The first page contains a summary of all tests. Afterwards, the results from `query_features` and `query_metadata` are shown. Depending on the verbosity level, the detailed results of each test are displayed as well. These contain the image comparison, the frame duration and the result from `check_object_properties`.
 
 ### Example output
 
