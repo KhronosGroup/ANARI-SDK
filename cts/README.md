@@ -135,6 +135,19 @@ The C++ code is divided into the following source files:
 - `SceneGenerator.cpp` inherits the `TestScene` class from `anari_test_scenes` and translates the test cases into ANARI objects.
 - `PrimitiveGenerator.cpp` is used by the `SceneGenerator` to create the data needed for the ANARI geometries (e.g. vertex data, radii).
 
+To add a new scene parameter, it just needs to be added to the JSON file of a test. To access it in C++ call 
+```cpp
+auto newParameter = getParam<Type>("newParameterName", valueIfNotExists);
+```
+The `parameters()` function in `SceneGenerator.cpp` documents all available parameters. It should be extended while adding new parameters. The scene generator has two important functions: `commit()` sets up the scene by creating the ANARI objects after all parameters are set. `renderScene()` is only called by the `render_scenes()` python function and creates the default camera based on the image resolution, the renderer based on the specified subtype, the frame with the provided data types for each channel and finally renders the scene and returns the pixel data for each channel. The logic for new parameters should generally be added in one of the two functions.
+
+
+`resetSceneObjects()` resets all ANARI objects but does not reset the parameters. It is used after a permutation/variant.
+`resetAllParameters()` additionally resets all parameters and is used before a new scene is initialized.
+
+To keep track of ANARI objects for e.g. property checks such as bounds, `m_anariObjects` can be used. It is a map which holds a vector of ANARI objects for each ANARI_TYPE. Do not release objects you added to this map, it will be done by the reset functions or the destructor.
+
+If new functions need to be added to the scene generator and accessible from python, keep in mind that they also need to be added in `anariWrapper` and `main.cpp`.
 
 ## Creating the reference renderings/metadata
 The `generateCTS` target can be build to generate all reference images, add the meta data to the test JSON files and generate the C++ ANARI query code. Currently the `helide` library is used to generate the references. To change this, modify `REFERENCE_LIB` in [CMakeLists.txt](CMakeLists.txt/#L10). One can also manually call the [`createReferenceData.py`](createReferenceData.py) script.\
