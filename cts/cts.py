@@ -561,8 +561,8 @@ if __name__ == "__main__":
     evaluationMethodParser = argparse.ArgumentParser(add_help=False)
     evaluationMethodParser.add_argument('--comparison_methods', default=["ssim"], nargs='+', choices=["ssim", "psnr"], help="Specify all comparison methods to test against")
     evaluationMethodParser.add_argument('--thresholds', default=None, nargs='+', help="Specify custom thresholds for each comparison method")
-    evaluationMethodParser.add_argument('--verbose_error', action='store_true', help="Include verbose infos of failed tests in report")
-    evaluationMethodParser.add_argument('-v', '--verbose_all', action='store_true', help="Include verbose infos of all tests in report")
+    evaluationMethodParser.add_argument('-v', '--verbose_error', action='store_true', help="Include verbose infos of failed tests in report")
+    evaluationMethodParser.add_argument('-vv', '--verbose_all', action='store_true', help="Include verbose infos of all tests in report")
 
     # command: render_scenes
     renderScenesParser = subparsers.add_parser('render_scenes', description='Renders an image to disk for each test scene', parents=[sceneParser])
@@ -604,7 +604,7 @@ if __name__ == "__main__":
     # parse command and call corresponding functionality 
     args = parser.parse_args()
 
-    verboseLevel = 2 if "verbose_all" in args else 1 if "verbose_error" in args else 0
+    verboseLevel = 2 if "verbose_all" in args and args.verbose_all else 1 if "verbose_error" in args and args.verbose_error else 0
 
     if args.command == "render_scenes":
         render_scenes(args.library, args.device, args.renderer, args.test_scenes, args.output)
