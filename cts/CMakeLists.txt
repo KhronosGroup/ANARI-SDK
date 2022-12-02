@@ -49,7 +49,7 @@ add_dependencies(generate_cts ${lib_name})
 add_dependencies(generate_all generate_cts)
 
 
-option(CTS_DEV "Copy compiled python module next to python script to make developing easier" ON)
+option(CTS_DEV "Copy compiled python module next to python script to make developing easier" OFF)
 if (CTS_DEV AND NOT BUILD_SHARED_LIBS)
 	  add_custom_command(TARGET ${lib_name}
 		COMMAND ${CMAKE_COMMAND}
@@ -60,3 +60,13 @@ if (CTS_DEV AND NOT BUILD_SHARED_LIBS)
 		VERBATIM
 		)
 endif()
+
+## Installation ##
+
+# .pyd files are considered library files
+install(TARGETS ${lib_name}
+  LIBRARY DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+install(FILES ${python_files} ${CMAKE_CURRENT_LIST_DIR}/default_test_scene.json TYPE BIN)
+install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/test_scenes TYPE BIN)

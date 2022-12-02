@@ -42,8 +42,16 @@ Not all C++ exceptions from ANARI devices can be caught. If possible, the except
 To build the CTS, CMake and a C++17 compiler is required. The project was tested with the MSVC compiler.\
 On Windows the `ctsBackend` target does not show up in the CMake Tools for Visual Studio Code. It can either be seen in Visual Studio in the CMake Targets View or by using e.g. CMake GUI to create a Visual Studio solution. Nevertheless, the ctsBackend target is always build when `build all` is selected.
 
-For easier development, build ANARI statically (by setting `BUILD_SHARED_LIBS=OFF`). The `CTS_DEV` option is enabled by default. This will copy the build binaries into the `cts` folder since they are needed for executing the python files. The helide and debug libraries are copied as well so they can be used as example devices.
+For easier development, build ANARI statically (by setting `BUILD_SHARED_LIBS=OFF`). The `CTS_DEV` option will copy the build binaries into the `cts` folder since they are needed for executing the python files. The helide and debug libraries are copied as well so they can be used as example devices.
 `ctsBackend*.pyd` is the python module which is imported in the `cts.py` file.
+
+Once built, the library can be installed via the `install` target created by
+CMake. This is invoked for the whole ANARI project from your build directory with (on any platform):
+
+```bash
+% cmake --build . -t install
+```
+This will place all necessary files to run the CTS in the `install/bin` folder. In this folder `cts.py` can be run from the terminal after your ANARI library was added.
 
 ## Test scene format
 A test is written as a JSON file with a specific structure. [`default_test_scene.json`](default_test_scene.json) contains the default values for each test. These can be overwritten by the specific tests. Tests should be placed in the [test_scenes folder](test_scenes/). By using subfolders, categories can be created that allow running the CTS on selected tests only.

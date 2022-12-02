@@ -11,10 +11,11 @@ FetchContent_Declare(pybind11
 
 FetchContent_GetProperties(pybind11)
 
+SET(BUILD_TESTING  OFF)
+SET(PYBIND11_TEST OFF)
+SET(DOWNLOAD_GTEST  OFF)
+
 if(NOT pybind11_POPULATED)
     FetchContent_Populate(pybind11)
     add_subdirectory(${pybind11_SOURCE_DIR} ${pybind11_BINARY_DIR})
 endif()
-
-SET(BUILD_TESTS  OFF)
-SET(DOWNLOAD_GTEST  OFF)
