@@ -42,7 +42,7 @@ Camera TestScene::createDefaultCameraFromWorld(anari::World w)
 
 box3 TestScene::bounds()
 {
-  box3 retval;
+  box3 retval = {glm::vec3(-5), glm::vec3(5)};
   anari::getProperty(m_device, world(), "bounds", retval);
   return retval;
 }
