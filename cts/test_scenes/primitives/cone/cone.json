@@ -1,0 +1,11 @@
+{
+  "sceneParameters": {
+    "geometrySubtype": "cone",
+    "primitiveCount": 16,
+    "seed": 12345
+  },
+  "permutations": {
+    "primitiveMode": ["soup", "indexed"]
+  },
+  "requiredFeatures": ["ANARI_KHR_GEOMETRY_CONE"]
+}

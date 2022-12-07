@@ -1,0 +1,12 @@
+{
+  "sceneParameters": {
+    "geometrySubtype": "quad",
+    "primitiveCount": 16,
+    "seed": 12345,
+    "shape": "cube"
+  },
+  "permutations": {
+    "primitiveMode": ["soup", "indexed"]
+  },
+  "requiredFeatures": ["ANARI_KHR_GEOMETRY_QUAD"]
+}

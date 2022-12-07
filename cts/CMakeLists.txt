@@ -1,0 +1,72 @@
+cmake_minimum_required(VERSION 3.1)
+
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/../cmake)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(lib_name "ctsBackend")
+
+set(REFERENCE_LIB "helide")
+
+project("ctsBackend")
+
+include(pybind11.cmake)
+
+file (GLOB src "src/*.cpp")
+
+pybind11_add_module(${lib_name} 
+	${src}
+)
+
+target_include_directories(${lib_name} PUBLIC "header")
+find_package(anari REQUIRED)
+
+target_link_libraries(${lib_name} 
+  PUBLIC
+  anari::anari
+  anari::anari_utilities
+  anari_test_scenes)
+
+file(GLOB python_files ${CMAKE_CURRENT_LIST_DIR}/*.py)
+
+add_custom_target(generate_cts
+    COMMAND ${Python3_EXECUTABLE} ${ANARI_CODE_GEN_ROOT}/generate_queries.py
+      --json ${ANARI_CODE_GEN_ROOT}
+      --prefix cts
+      --device ${ANARI_CODE_GEN_ROOT}/devices/extended_device.json
+      --namespace cts
+      --includefile
+	  --out src
+	COMMAND ${CMAKE_COMMAND} -E copy ${python_files} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}
+	COMMAND ${Python3_EXECUTABLE} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/createReferenceData.py
+	  --test_scenes ${CMAKE_CURRENT_LIST_DIR}/test_scenes -l ${REFERENCE_LIB}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DEPENDS ${ANARI_CODE_GEN_ROOT}/devices/extended_device.json
+  )
+
+add_dependencies(generate_cts ${lib_name})
+add_dependencies(generate_all generate_cts)
+
+
+option(CTS_DEV "Copy compiled python module next to python script to make developing easier" OFF)
+if (CTS_DEV AND NOT BUILD_SHARED_LIBS)
+	  add_custom_command(TARGET ${lib_name}
+		COMMAND ${CMAKE_COMMAND}
+				-DBUILD_CONFIG_DIR=${CMAKE_CFG_INTDIR}
+				-DCMAKE_RUNTIME_OUTPUT_DIRECTORY=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+        -DREFERENCE_LIB=${REFERENCE_LIB}
+				-P "${CMAKE_CURRENT_LIST_DIR}/copy_post_build.cmake"
+		VERBATIM
+		)
+endif()
+
+## Installation ##
+
+# .pyd files are considered library files
+install(TARGETS ${lib_name}
+  LIBRARY DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+install(FILES ${python_files} ${CMAKE_CURRENT_LIST_DIR}/default_test_scene.json TYPE BIN)
+install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/test_scenes TYPE BIN)

@@ -1,0 +1,21 @@
+{
+  "sceneParameters": {
+    "geometrySubtype": "sphere",
+    "seed": 54321
+  },
+  "permutations": {
+    "primitiveCount": [
+      1,
+      16
+    ]
+  },
+  "variants": {
+    "primitiveMode": [
+      "soup",
+      "indexed"
+    ]
+  },
+  "requiredFeatures": [
+    "ANARI_KHR_GEOMETRY_SPHERE"
+  ]
+}

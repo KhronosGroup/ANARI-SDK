@@ -4,3 +4,13 @@ build/
 cmake-build-*
 docs/gen/*
 docs/out/*
+.vs
+out
+CMakeSettings.json
+
+# cts
+cts/anari_library_debug*
+cts/anari_library_example*
+cts/*pyd
+*.log
+cts/evaluation

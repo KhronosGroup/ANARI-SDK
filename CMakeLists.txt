@@ -44,6 +44,8 @@ option(BUILD_TESTING "Build tests for CTest" ON)
 # ANARI specific options
 option(BUILD_EXAMPLES "Build example applications and example device" ON)
 
+option(BUILD_CTS "Build cts toolkit" ON)
+
 ## The generate_all targets collects all offline code generation targets
 
 set(ANARI_CODE_GEN_ROOT ${CMAKE_SOURCE_DIR}/code_gen)
@@ -66,6 +68,10 @@ endif()
 if (BUILD_TESTING)
   include(CTest)
   add_subdirectory(tests)
+endif()
+
+if (BUILD_CTS)
+  add_subdirectory(cts)
 endif()
 
 ## Configure CMake find_package() config files ##
