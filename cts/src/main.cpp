@@ -11,7 +11,7 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(ctsBackend, m)
+PYBIND11_MODULE(anariCTSBackend, m)
 {
   m.def("query_features", &cts::queryFeatures, R"pbdoc(
         Query which features are supported by this device.

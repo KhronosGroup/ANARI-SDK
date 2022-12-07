@@ -7,7 +7,7 @@ It contains the following features:
 -  Verification of object/parameter info metadata
 -  Verification of known object properties
 -  List core extensions implemented by a device
--  Create pdf report 
+-  Create pdf report
 
 ## Requirements
 
@@ -18,7 +18,7 @@ The project was developed with the following python packages/versions. Other ver
 - [reportlab 3.6.10](https://pypi.org/project/reportlab/)
 - [scikit_image 0.19.3](https://pypi.org/project/scikit-image/)
 - [tabulate 0.8.10](https://pypi.org/project/tabulate/)
-  
+
 If the cts binary (.pyd) file for the desired SDK version is not provided, have a look at the [Build section](#building).
 
 ## Usage
@@ -40,10 +40,10 @@ Not all C++ exceptions from ANARI devices can be caught. If possible, the except
 
 ## Building
 To build the CTS, CMake and a C++17 compiler is required. The project was tested with the MSVC compiler.\
-On Windows the `ctsBackend` target does not show up in the CMake Tools for Visual Studio Code. It can either be seen in Visual Studio in the CMake Targets View or by using e.g. CMake GUI to create a Visual Studio solution. Nevertheless, the ctsBackend target is always build when `build all` is selected.
+On Windows the `anariCTSBackend` target does not show up in the CMake Tools for Visual Studio Code. It can either be seen in Visual Studio in the CMake Targets View or by using e.g. CMake GUI to create a Visual Studio solution. Nevertheless, the anariCTSBackend target is always build when `build all` is selected.
 
 For easier development, build ANARI statically (by setting `BUILD_SHARED_LIBS=OFF`). The `CTS_DEV` option will copy the build binaries into the `cts` folder since they are needed for executing the python files. The helide and debug libraries are copied as well so they can be used as example devices.
-`ctsBackend*.pyd` is the python module which is imported in the `cts.py` file.
+`anariCTSBackend*.pyd` is the python module which is imported in the `cts.py` file.
 
 Once built, the library can be installed via the `install` target created by
 CMake. This is invoked for the whole ANARI project from your build directory with (on any platform):
@@ -144,7 +144,7 @@ The C++ code is divided into the following source files:
 - `SceneGenerator.cpp` inherits the `TestScene` class from `anari_test_scenes` and translates the test cases into ANARI objects.
 - `PrimitiveGenerator.cpp` is used by the `SceneGenerator` to create the data needed for the ANARI geometries (e.g. vertex data, radii).
 
-To add a new scene parameter, it just needs to be added to the JSON file of a test. To access it in C++ call 
+To add a new scene parameter, it just needs to be added to the JSON file of a test. To access it in C++ call
 ```cpp
 auto newParameter = getParam<Type>("newParameterName", valueIfNotExists);
 ```
@@ -189,7 +189,7 @@ Now the new metric can be used and is automatically added to the report.
 Another way to add a new metric temporarily is by using the `custom_compare_function` parameter of `compare_images` or `create_report`. This parameter can be set to a function with the following  signature:
 ```python
 def custom_compare_function(reference, candidate):
-    # ...    
+    # ...
     return result > threshold, threshold, result
 ```
 Note that no threshold is passed to the custom function. The threshold needs to be defined in the custom function and be returned as the second value.
@@ -204,7 +204,7 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
 It takes a function e.g. `function_per_scene` and calls it for each scene or each scene permutation, if present. The function receives the parsed json test file, the C++ sceneGenerator object, the name of the ANARI renderer, the file location of the test, the name of the test, the current permutation and variant or empty strings if none exist.
 The return value is stored in a dictionary as a value with the key being the test's name + the permutation/variant string.
 
-The `only_permutations` parameter of `apply_to_scenes` can be used to ignore variants. This is relevant for the reference creation. `use_generator` specifies if the C++ SceneGenerator should be initialized or not. In the latter case, `sceneGenerator` is set to `None`. Additional parameters can be added (denoted as `*args`) and will be passed directly to the apply function. 
+The `only_permutations` parameter of `apply_to_scenes` can be used to ignore variants. This is relevant for the reference creation. `use_generator` specifies if the C++ SceneGenerator should be initialized or not. In the latter case, `sceneGenerator` is set to `None`. Additional parameters can be added (denoted as `*args`) and will be passed directly to the apply function.
 
 ### PDF report
 The PDF report is created in [ctsReport.py](ctsReport.py) with the reportlab library. It takes a JSON-like structured item, which represents the different sections and subsection of the PDF. Therefore, the required features for each test can be found in `data[test_name]`, while the actual result can be found in `data[test_name][permutation][channel]`. Test case independent information such as the supported features and anariInfo output is stored in the top level JSON data. Additionally, a summary is compiled at the top of the report, showing each test case and whether it failed or passed, as well as a link to the corresponding detailed page. By default the detailed pages are not created. `--verbose_error` (verbosity level 1) shows these pages for failed tests and `--verbose_all` (verbosity level 2) shows it for every test regardless of its outcome.
