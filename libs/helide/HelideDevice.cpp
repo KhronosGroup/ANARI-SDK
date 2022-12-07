@@ -273,16 +273,21 @@ HelideDevice::HelideDevice(ANARIStatusCallback cb, const void *ptr)
     : helium::BaseDevice(cb, ptr)
 {
   m_state = std::make_unique<HelideGlobalState>(this_device());
+  deviceCommitParameters();
 }
 
 HelideDevice::HelideDevice(ANARILibrary l) : helium::BaseDevice(l)
 {
   m_state = std::make_unique<HelideGlobalState>(this_device());
+  deviceCommitParameters();
 }
 
 HelideDevice::~HelideDevice()
 {
   auto &state = *deviceState();
+
+  reportMessage(ANARI_SEVERITY_DEBUG, "destroying helide device (%p)", this);
+
   rtcReleaseDevice(state.embreeDevice);
 
   // NOTE: These object leak warnings are not required to be done by
@@ -342,6 +347,8 @@ void HelideDevice::initDevice()
 {
   if (m_initialized)
     return;
+
+  reportMessage(ANARI_SEVERITY_DEBUG, "initializing helide device (%p)", this);
 
   auto &state = *deviceState();
 
