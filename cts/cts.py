@@ -1,5 +1,5 @@
 #!python3
-import ctsBackend
+import anariCTSBackend
 try:
     import ctsReport
 except ImportError:
@@ -46,8 +46,8 @@ def anari_logger(message):
 
 # queries and returns feature support list of a device
 def query_features(anari_library, anari_device = None):
-    try: 
-        return ctsBackend.query_features(anari_library, anari_device, anari_logger)
+    try:
+        return anariCTSBackend.query_features(anari_library, anari_device, anari_logger)
     except Exception as e:
         print(e)
         return []
@@ -59,7 +59,7 @@ def recursive_update(d, merge_dict):
     for key, value in d.items():
         if isinstance(value, dict) and key in merge_dict:
             merge_dict[key] = recursive_update(value, merge_dict[key])
-    d.update(merge_dict)        
+    d.update(merge_dict)
     return d
 
 # gather image paths from a filesystem directory with or without certain prefixes
@@ -91,7 +91,7 @@ def write_images(evaluations, output):
                             reference_image_path = Path("reference") / f"{name}_{channel}.png"
                             ctsUtility.write_image(output_path / reference_image_path, evaluation[stem][name][channel]["images"]["reference"])
                             evaluation[stem][name][channel]["image_paths"]["reference"] = reference_image_path
-                            
+
                             candidate_image_path = Path("candidate") / f"{name}_{channel}.png"
                             ctsUtility.write_image(output_path / candidate_image_path, evaluation[stem][name][channel]["images"]["candidate"])
                             evaluation[stem][name][channel]["image_paths"]["candidate"] = candidate_image_path
@@ -107,7 +107,7 @@ def write_images(evaluations, output):
                             evaluation[stem][name][channel]["image_paths"]["threshold"] = thresholds_image_path
     return evaluations
 
-# set title and call function to write out pdf report 
+# set title and call function to write out pdf report
 def write_report(results, output, verbosity = 0):
     output_path = Path(output) / "evaluation"
     title = f'CTS - Report' if "renderer" not in results else f'CTS - Library: {results["library"]} Device: {results["device"]} Renderer: {results["renderer"]}'
@@ -124,11 +124,11 @@ def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, 
         results[test_name]["requiredFeatures"] = parsed_json["requiredFeatures"]
     # find which channel(s) to evaluate
     channels = get_channels(parsed_json)
-    
+
     # construct permutation/variant depenendend name for result dictionary
     if permutationString != "":
         permutationString = f'_{permutationString}'
-        
+
     if variantString != "":
         variantString = f'_{variantString}'
 
@@ -145,11 +145,11 @@ def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, 
         if ref_path == "":
             print('No reference image for filepath {} could be found.'.format(reference_file))
             continue
-        
+
         if candidate_path == "":
             print('No candidate images for filepath {} could be found.'.format(candidate_file))
             continue
-        
+
         if channel == "depth":
             # only use psnr as comparison method for depth tests
             methods = ["psnr"]
@@ -174,7 +174,7 @@ def resolve_scenes(test_scenes):
     collected_scenes = []
     if isinstance(test_scenes, list):
         # test_scenes is a list of paths
-        for test_scene in test_scenes:            
+        for test_scene in test_scenes:
             path = Path(test_scene)
             if path.exists():
                 collected_scenes.append(path)
@@ -201,7 +201,7 @@ def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, te
         if "bounds" in metaData and "world" in metaData["bounds"]:
             world_bounds = metaData["bounds"]["world"]
 
-    # alternatively get world bounds from currently set up scene in sceneGenerator 
+    # alternatively get world bounds from currently set up scene in sceneGenerator
     if world_bounds == []:
         try:
             world_bounds = sceneGenerator.getBounds()[0][0]
@@ -217,15 +217,15 @@ def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, te
     except Exception as e:
         print(e)
         return -1
-    
+
     print(f'Frame duration: {frame_duration}')
 
     # construct file names for rendered channels
     output_path = Path(output)
-    
+
     if permutationString != "":
         permutationString = f'_{permutationString}'
-    
+
     if variantString != "":
         permutationString += f'_{variantString}'
 
@@ -250,7 +250,7 @@ def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, te
         outName = file_name.with_suffix('.png').with_stem(f'{prefix}{stem}{permutationString}_depth')
         print(f'Rendering to {outName.resolve()}')
         image_out.save(outName)
-    
+
     print("")
     return frame_duration
 
@@ -268,7 +268,7 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
     sceneGenerator = None
     if use_generator:
         try:
-            sceneGenerator = ctsBackend.SceneGenerator(anari_library, anari_device, anari_logger)
+            sceneGenerator = anariCTSBackend.SceneGenerator(anari_library, anari_device, anari_logger)
         except Exception as e:
             print(e)
             return result
@@ -297,7 +297,7 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                     if not check_feature(feature_list, feature):
                         all_features_available = False
                         print("Feature %s is not supported"%feature)
-            
+
             if not all_features_available:
                 # skip this test scene if a required feature is missing
                 print("Scene %s is not supported"%json_file_path)
@@ -340,7 +340,7 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                     else:
                         key = keys[i]
                         permutationString += f'{"_{}".format(permutation[i])}'
-                    
+
                     if use_generator:
                         # set up scene generator with the permutated data for this rendering
                         try:
@@ -468,7 +468,7 @@ def check_object_properties(anari_library, anari_device = None, test_scenes = "t
 
 def query_metadata(anari_library, type = None, subtype = None, skipParameters = False, info = False):
     try:
-        return ctsBackend.query_metadata(anari_library, type, subtype, skipParameters, info, anari_logger)
+        return anariCTSBackend.query_metadata(anari_library, type, subtype, skipParameters, info, anari_logger)
     except Exception as e:
         return str(e)
 
@@ -518,7 +518,7 @@ def create_report(library, device = None, renderer = "default", test_scenes = "t
     merged_evaluations["renderer"] = renderer
     merged_evaluations["library"] = library
     try:
-        merged_evaluations["device"] = device if device != None else ctsBackend.getDefaultDeviceName(library, anari_logger)
+        merged_evaluations["device"] = device if device != None else anariCTSBackend.getDefaultDeviceName(library, anari_logger)
     except Exception as e:
         print(e)
         return
@@ -601,7 +601,7 @@ if __name__ == "__main__":
         command_text += subparsertext
     subparsers.help = command_text
 
-    # parse command and call corresponding functionality 
+    # parse command and call corresponding functionality
     args = parser.parse_args()
 
     verboseLevel = 2 if "verbose_all" in args and args.verbose_all else 1 if "verbose_error" in args and args.verbose_error else 0
