@@ -77,7 +77,7 @@ class MainWindow
   anari::Camera camera{nullptr};
   anari::Frame frame{nullptr};
 
-  anari::scenes::SceneHandle scene;
+  anari::scenes::SceneHandle scene{nullptr};
   std::vector<anari::scenes::ParameterInfo> sceneParams;
 
   // Collection of ANARI handles to commit before the next frame
