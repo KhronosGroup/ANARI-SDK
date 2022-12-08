@@ -33,9 +33,8 @@ void Cone::commit()
     m_index->addCommitObserver(this);
   m_vertexPosition->addCommitObserver(this);
 
-  const float *radius = nullptr;
-  if (m_vertexRadius)
-    radius = m_vertexRadius->beginAs<float>();
+  const float *radius =
+      m_vertexRadius ? m_vertexRadius->beginAs<float>() : nullptr;
   m_globalRadius = getParam<float>("radius", 1.f);
 
   const auto numCones =

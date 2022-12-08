@@ -44,16 +44,9 @@ class PrimitiveGenerator
       size_t primitiveCount);
 
   template <typename T>
-  std::vector<T> shuffleVector(std::vector<T> vector)
+  void shuffleVector(std::vector<T> &vector)
   {
-    size_t size = vector.size();
-    size_t counter = 0;
-    for (auto it = vector.begin(); it != vector.end(); ++it) {
-      size_t randomIndex = static_cast<size_t>(std::round(getRandomFloat(0, static_cast<float>(size - 1))));
-      std::iter_swap(it, it + (randomIndex - counter)); 
-      ++counter;
-    }
-    return vector;
+    std::shuffle(vector.begin(), vector.end(), m_rng);
   }
 
  private:

@@ -33,9 +33,7 @@ void Cylinder::commit()
     m_index->addCommitObserver(this);
   m_vertexPosition->addCommitObserver(this);
 
-  const float *radius = nullptr;
-  if (m_radius)
-    radius = m_radius->beginAs<float>();
+  const float *radius = m_radius ? m_radius->beginAs<float>() : nullptr;
   m_globalRadius = getParam<float>("radius", 1.f);
 
   const auto numCylinders =
@@ -55,8 +53,10 @@ void Cylinder::commit()
       const auto *v = m_vertexPosition->beginAs<float3>();
       uint32_t cID = 0;
       std::for_each(begin, end, [&](const uint2 &idx) {
-        vr[cID + 0] = float4(v[idx.x], radius ? radius[cID] : m_globalRadius);
-        vr[cID + 1] = float4(v[idx.y], radius ? radius[cID] : m_globalRadius);
+        vr[cID + 0] =
+            float4(v[idx.x], radius ? radius[cID / 2] : m_globalRadius);
+        vr[cID + 1] =
+            float4(v[idx.y], radius ? radius[cID / 2] : m_globalRadius);
         cID += 2;
       });
     } else {

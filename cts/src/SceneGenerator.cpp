@@ -89,7 +89,7 @@ void SceneGenerator::commit()
 
   // build this scene top-down to stress commit ordering guarantees
   // setup lighting, material and empty geometry
-  setDefaultLight(m_world);   
+  setDefaultLight(m_world);
 
   auto surface = anari::newObject<anari::Surface>(d);
   auto geom = anari::newObject<anari::Geometry>(d, geometrySubtype.c_str());
@@ -154,7 +154,7 @@ void SceneGenerator::commit()
 
     if (primitiveMode == "indexed") {
       // shuffle indices vector to create a more useful test case
-      indices = generator.shuffleVector(indices);
+      generator.shuffleVector(indices);
       indiciCount = indices.size();
       anari::setAndReleaseParameter(d,
           geom,
@@ -184,7 +184,7 @@ void SceneGenerator::commit()
 
     if (primitiveMode == "indexed") {
       // shuffle indices vector to create a more useful test case
-      indices = generator.shuffleVector(indices);
+      generator.shuffleVector(indices);
       indiciCount = indices.size();
       anari::setAndReleaseParameter(d,
           geom,
@@ -208,7 +208,7 @@ void SceneGenerator::commit()
       }
 
       // shuffle indices vector to create a more useful test case
-      indices = generator.shuffleVector(indices);
+      generator.shuffleVector(indices);
       anari::setAndReleaseParameter(d,
           geom,
           "primitive.index",
@@ -225,12 +225,11 @@ void SceneGenerator::commit()
 
     if (primitiveMode == "indexed") {
       std::vector<uint32_t> indices;
-      for (size_t i = 0; i < vertices.size() / 2; i += 1) {
-        indices.push_back(static_cast<uint32_t>(i) * 2);
-      }
+      for (uint32_t i = 0; i < vertices.size() / 2; i++)
+        indices.push_back(i * 2);
 
       // shuffle indices vector to create a more useful test case
-      indices = generator.shuffleVector(indices);
+      generator.shuffleVector(indices);
       indiciCount = indices.size();
       anari::setAndReleaseParameter(d,
           geom,
@@ -249,13 +248,11 @@ void SceneGenerator::commit()
 
     if (primitiveMode == "indexed") {
       std::vector<glm::uvec2> indices;
-      for (size_t i = 0; i < vertices.size(); i += 2) {
-        indices.push_back(
-            glm::vec2(static_cast<uint32_t>(i), static_cast<uint32_t>(i + 1)));
-      }
+      for (uint32_t i = 0; i < vertices.size(); i += 2)
+        indices.emplace_back(i, i + 1);
 
       // shuffle indices vector to create a more useful test case
-      indices = generator.shuffleVector(indices);
+      generator.shuffleVector(indices);
       indiciCount = indices.size();
       anari::setAndReleaseParameter(d,
           geom,
@@ -273,13 +270,11 @@ void SceneGenerator::commit()
 
     if (primitiveMode == "indexed") {
       std::vector<glm::uvec2> indices;
-      for (size_t i = 0; i < vertices.size(); i += 2) {
-        indices.push_back(glm::vec2(
-            static_cast<uint32_t>(i), static_cast<uint32_t>(i + 1)));
-      }
+      for (uint32_t i = 0; i < vertices.size(); i += 2)
+        indices.emplace_back(i, i + 1);
 
       // shuffle indices vector to create a more useful test case
-      indices = generator.shuffleVector(indices);
+      generator.shuffleVector(indices);
       indiciCount = indices.size();
       anari::setAndReleaseParameter(d,
           geom,
