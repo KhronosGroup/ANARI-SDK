@@ -6,6 +6,12 @@
 #include <iostream>
 #include <limits>
 
+#ifdef USE_GLES2
+#define GLFW_EXPOSE_NATIVE_EGL
+#define GLFW_NATIVE_INCLUDE_NONE
+#include <GLFW/glfw3native.h>
+#endif
+
 // Global variables
 std::string g_libraryType = "environment";
 std::string g_deviceType = "default";
@@ -67,7 +73,7 @@ void statusFunc(const void *userData,
 
 
 /******************************************************************/
-static void initializeANARI()
+static void initializeANARI(MainWindow *window)
 {
   g_library = anariLoadLibrary(g_libraryType.c_str(), statusFunc, &g_verbose);
 
@@ -78,6 +84,11 @@ static void initializeANARI()
     throw std::runtime_error("Failed to load ANARI library");
 
   ANARIDevice dev = anariNewDevice(g_library, g_deviceType.c_str());
+
+#ifdef USE_GLES2
+  anari::setParameter(dev, dev, "EGLDisplay", ANARI_VOID_POINTER, glfwGetEGLDisplay());
+#endif
+
   if (g_enableDebug) {
     ANARIDevice dbg = anariNewDevice(g_debug, "debug");
     anari::setParameter(dbg, dbg, "wrappedDevice", ANARI_DEVICE, &dev);
@@ -142,7 +153,7 @@ int main(int argc, const char *argv[])
   auto *window = new MainWindow(glm::ivec2(1024, 768));
 
   // Setup ANARI library and device
-  initializeANARI();
+  initializeANARI(window);
 
   // Set the opening scene.  When no filename argument is provided, default
   //   to the "random_sphere" scene
