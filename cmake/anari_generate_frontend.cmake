@@ -18,7 +18,7 @@ function(anari_generate_frontend)
   # options
     ""
   # single-arg options
-    "TARGET;NAME;PREFIX;NAMESPACE;DESTINATION;DEFINITIONS;CODE_HEADER_FILE;EXTRA_OPTIONS;"
+    "TARGET;NAME;PREFIX;NAMESPACE;DESTINATION;DEFINITIONS;CODE_HEADER_FILE;EXTRA_OPTIONS;JSON;"
   # multi-arg options
     ""
   # string to parse
@@ -51,6 +51,12 @@ function(anari_generate_frontend)
     --output ${FRONTEND_DESTINATION}
     ${FRONTEND_EXTRA_OPTIONS}
   )
+
+  if (DEFINED FRONTEND_JSON)
+    list(APPEND GENERATE_COMMAND
+      --json ${FRONTEND_JSON}
+    )
+  endif()
 
   if (NOT EXISTS ${FRONTEND_DESTINATION}/CMakeLists.txt)
     execute_process(COMMAND ${GENERATE_COMMAND})
