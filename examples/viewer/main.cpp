@@ -6,11 +6,9 @@
 #include <iostream>
 #include <limits>
 
-#ifdef USE_GLES2
 #define GLFW_EXPOSE_NATIVE_EGL
 #define GLFW_NATIVE_INCLUDE_NONE
 #include <GLFW/glfw3native.h>
-#endif
 
 // Global variables
 std::string g_libraryType = "environment";
@@ -85,8 +83,11 @@ static void initializeANARI(MainWindow *window)
 
   ANARIDevice dev = anariNewDevice(g_library, g_deviceType.c_str());
 
-#ifdef USE_GLES2
   anari::setParameter(dev, dev, "EGLDisplay", ANARI_VOID_POINTER, glfwGetEGLDisplay());
+#ifdef USE_GLES2
+  anari::setParameter(dev, dev, "glAPI", ANARI_STRING, "OpenGL_ES");  
+#else
+  anari::setParameter(dev, dev, "glAPI", ANARI_STRING, "OpenGL");  
 #endif
 
   if (g_enableDebug) {
