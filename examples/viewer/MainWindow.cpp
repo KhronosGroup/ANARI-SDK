@@ -159,9 +159,9 @@ MainWindow::MainWindow(const glm::uvec2 &windowSize)
 
   // Request a window that is IEC standard RGB color space capable
   glfwWindowHint(GLFW_SRGB_CAPABLE, GLFW_TRUE);
+  glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
 
 #ifdef USE_GLES2
-  glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
   glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 #endif
