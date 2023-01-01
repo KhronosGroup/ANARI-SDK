@@ -10225,16 +10225,6 @@ static const void * ANARI_ARRAY1D_info(int infoName, ANARIDataType infoType) {
          } else {
             return nullptr;
          }
-      case 7: // sourceFeature
-         if(infoType == ANARI_STRING) {
-            static const char *feature = "KHR_ARRAY1D_REGION";
-            return feature;
-         } else if(infoType == ANARI_INT32) {
-            static const int value = 29;
-            return &value;
-         } else {
-            return nullptr;
-         }
       default: return nullptr;
    }
 }
@@ -10307,16 +10297,6 @@ static const void * ANARI_FRAME_info(int infoName, ANARIDataType infoType) {
          } else {
             return nullptr;
          }
-      case 7: // sourceFeature
-         if(infoType == ANARI_STRING) {
-            static const char *feature = "KHR_FRAME_CONTINUATION";
-            return feature;
-         } else if(infoType == ANARI_INT32) {
-            static const int value = 24;
-            return &value;
-         } else {
-            return nullptr;
-         }
       case 10: // channel
          if(infoType == ANARI_STRING_LIST) {
             static const char *channel[] = {
@@ -10377,16 +10357,6 @@ static const void * ANARI_INSTANCE_info(int infoName, ANARIDataType infoType) {
                {0, ANARI_UNKNOWN}
             };
             return parameters;
-         } else {
-            return nullptr;
-         }
-      case 7: // sourceFeature
-         if(infoType == ANARI_STRING) {
-            static const char *feature = "KHR_TRANSFORMATION_MOTION_BLUR";
-            return feature;
-         } else if(infoType == ANARI_INT32) {
-            static const int value = 28;
-            return &value;
          } else {
             return nullptr;
          }
