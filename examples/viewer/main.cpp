@@ -83,6 +83,9 @@ static void initializeANARI(MainWindow *window)
 
   ANARIDevice dev = anariNewDevice(g_library, g_deviceType.c_str());
 
+  if(g_enableDebug)
+    anari::setParameter(dev, dev, "glDebug", ANARI_BOOL, &g_true);
+
   anari::setParameter(dev, dev, "EGLDisplay", ANARI_VOID_POINTER, glfwGetEGLDisplay());
 #ifdef USE_GLES2
   anari::setParameter(dev, dev, "glAPI", ANARI_STRING, "OpenGL_ES");  
