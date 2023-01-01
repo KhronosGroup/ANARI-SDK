@@ -54,7 +54,7 @@ def merge_objects(core, extension):
         elif field in core:
             if isinstance(core[field], list):
                 core[field].extend(extension[field])
-        else:
+        elif field != "sourceFeature":
             core[field] = extension[field]
 
 def merge_object_table(core, extension):
