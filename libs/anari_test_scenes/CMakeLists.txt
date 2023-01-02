@@ -13,6 +13,7 @@ add_library(${PROJECT_NAME} STATIC
   scenes/random_spheres.cpp
   scenes/scene.cpp
   scenes/textured_cube.cpp
+  scenes/attributes.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_LIST_DIR})

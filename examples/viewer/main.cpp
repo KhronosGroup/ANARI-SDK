@@ -14,6 +14,7 @@
 std::string g_libraryType = "environment";
 std::string g_deviceType = "default";
 std::string g_rendererType = "default";
+std::string g_startupScene = "random_spheres";
 std::string g_objFile;
 
 ANARILibrary g_library = nullptr;
@@ -141,6 +142,8 @@ void parseCommandLine(int argc, const char *argv[])
       g_enableDebug = true;
     } else if (arg == "--verbose" || arg == "-v") {
       g_verbose = true;
+    } else if (arg == "--scene" || arg == "-s") {
+      g_startupScene = argv[++i];
     } else {
       g_objFile = arg;
     }
@@ -165,7 +168,7 @@ int main(int argc, const char *argv[])
   if (!g_objFile.empty())
     window->setScene("file_obj", "fileName", g_objFile);
   else
-    window->setScene("random_spheres");
+    window->setScene(g_startupScene);
 
   // Repeatedly render the scene
   window->mainLoop();
