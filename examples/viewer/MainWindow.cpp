@@ -28,6 +28,7 @@ static const std::vector<std::string> g_scenes = {
     "instanced_cubes",
     "textured_cube",
     "gravity_spheres_volume",
+    "attributes",
     "file_obj"
     //
 };

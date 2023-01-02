@@ -13,6 +13,7 @@
 #include "scenes/instanced_cubes.h"
 #include "scenes/random_spheres.h"
 #include "scenes/textured_cube.h"
+#include "scenes/attributes.h"
 
 namespace anari {
 namespace scenes {
@@ -34,6 +35,7 @@ static void init()
     scenes["instanced_cubes"] = &sceneInstancedCubes;
     scenes["textured_cube"] = &sceneTexturedCube;
     scenes["random_spheres"] = &sceneRandomSpheres;
+    scenes["attributes"] = &sceneAttributes;
     scenes["file_obj"] = &sceneFileObj;
   }
 }
