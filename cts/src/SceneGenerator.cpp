@@ -14,7 +14,6 @@ SceneGenerator::SceneGenerator(
     anari::Device device)
     : TestScene(device)
 {
-  //anari::commitParameters(m_device, m_device);
   m_world = anari::newObject<anari::World>(m_device);
 }
 
