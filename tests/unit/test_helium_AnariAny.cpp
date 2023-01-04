@@ -124,24 +124,43 @@ TEST_CASE("helium::AnariAny 'bool' type behavior", "[helium_AnariAny]")
 
 // Object Tests ///////////////////////////////////////////////////////////////
 
-TEST_CASE("helium::AnariAny object behavior", "[helium_AnariAny]")
+SCENARIO("helium::AnariAny object behavior", "[helium_AnariAny]")
 {
-  auto *obj = new helium::RefCounted();
-
-  SECTION("Object use count starts at 1")
+  GIVEN("A ref counted object")
   {
+    auto *obj = new helium::RefCounted();
+
+    THEN("Object use count starts at 1")
+    {
+      REQUIRE(obj->useCount() == 1);
+    }
+
+    WHEN("Placing the object in AnariAny")
+    {
+      AnariAny v = obj;
+
+      THEN("The ref count increments")
+      {
+        REQUIRE(obj->useCount() == 2);
+      }
+
+      THEN("Copying AnariAny also increments the object ref count")
+      {
+        AnariAny v2 = v;
+        REQUIRE(obj->useCount() == 3);
+      }
+
+      THEN("Moving AnariAny keeps the object ref count the same")
+      {
+        AnariAny v2 = std::move(v);
+        REQUIRE(obj->useCount() == 2);
+      }
+    }
+
     REQUIRE(obj->useCount() == 1);
+
+    obj->refDec();
   }
-
-  SECTION("Placing the object in AnariAny increments the ref count")
-  {
-    AnariAny v = obj;
-    REQUIRE(obj->useCount() == 2);
-  }
-
-  REQUIRE(obj->useCount() == 1);
-
-  obj->refDec();
 }
 
 } // namespace

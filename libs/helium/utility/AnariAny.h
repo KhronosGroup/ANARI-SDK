@@ -19,6 +19,7 @@ struct AnariAny
 {
   AnariAny();
   AnariAny(const AnariAny &copy);
+  AnariAny(AnariAny &&tmp);
 
   template <typename T>
   AnariAny(T value);
@@ -28,6 +29,7 @@ struct AnariAny
   ~AnariAny();
 
   AnariAny &operator=(const AnariAny &rhs);
+  AnariAny &operator=(AnariAny &&rhs);
 
   template <typename T>
   AnariAny &operator=(T rhs);
@@ -83,6 +85,15 @@ inline AnariAny::AnariAny(const AnariAny &copy)
   refIncObject();
 }
 
+inline AnariAny::AnariAny(AnariAny &&tmp)
+{
+  reset();
+  std::memcpy(m_storage.data(), tmp.m_storage.data(), m_storage.size());
+  m_string = std::move(tmp.m_string);
+  m_type = tmp.m_type;
+  tmp.m_type = ANARI_UNKNOWN;
+}
+
 template <typename T>
 inline AnariAny::AnariAny(T value)
 {
@@ -121,6 +132,16 @@ inline AnariAny &AnariAny::operator=(const AnariAny &rhs)
   m_string = rhs.m_string;
   m_type = rhs.m_type;
   refIncObject();
+  return *this;
+}
+
+inline AnariAny &AnariAny::operator=(AnariAny &&rhs)
+{
+  reset();
+  std::memcpy(m_storage.data(), rhs.m_storage.data(), m_storage.size());
+  m_string = std::move(rhs.m_string);
+  m_type = rhs.m_type;
+  rhs.m_type = ANARI_UNKNOWN;
   return *this;
 }
 
