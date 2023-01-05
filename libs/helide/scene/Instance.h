@@ -9,8 +9,6 @@ namespace helide {
 
 struct Instance : public Object
 {
-  static size_t objectCount();
-
   Instance(HelideGlobalState *s);
   ~Instance() override;
 

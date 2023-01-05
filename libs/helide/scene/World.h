@@ -9,8 +9,6 @@ namespace helide {
 
 struct World : public Object
 {
-  static size_t objectCount();
-
   World(HelideGlobalState *s);
   ~World() override;
 

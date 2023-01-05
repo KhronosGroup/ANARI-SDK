@@ -5,22 +5,15 @@
 
 namespace helide {
 
-static size_t s_numGroups = 0;
-
-size_t Group::objectCount()
-{
-  return s_numGroups;
-}
-
 Group::Group(HelideGlobalState *s) : Object(ANARI_GROUP, s)
 {
-  s_numGroups++;
+  s->objectCounts.groups++;
 }
 
 Group::~Group()
 {
   cleanup();
-  s_numGroups--;
+  deviceState()->objectCounts.groups--;
 }
 
 bool Group::getProperty(

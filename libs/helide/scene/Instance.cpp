@@ -5,24 +5,17 @@
 
 namespace helide {
 
-static size_t s_numInstances = 0;
-
-size_t Instance::objectCount()
-{
-  return s_numInstances;
-}
-
 Instance::Instance(HelideGlobalState *s) : Object(ANARI_INSTANCE, s)
 {
-  s_numInstances++;
+  s->objectCounts.instances++;
   m_embreeGeometry =
       rtcNewGeometry(s->embreeDevice, RTC_GEOMETRY_TYPE_INSTANCE);
 }
 
 Instance::~Instance()
 {
-  s_numInstances--;
   rtcReleaseGeometry(m_embreeGeometry);
+  deviceState()->objectCounts.instances--;
 }
 
 void Instance::commit()

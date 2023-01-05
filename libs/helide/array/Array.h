@@ -29,8 +29,6 @@ struct ArrayMemoryDescriptor
 
 struct Array : public helium::BaseArray
 {
-  static size_t objectCount();
-
   Array(ANARIDataType type,
       HelideGlobalState *state,
       const ArrayMemoryDescriptor &d);

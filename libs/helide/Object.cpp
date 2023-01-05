@@ -42,22 +42,15 @@ HelideGlobalState *Object::deviceState() const
 
 // UnknownObject definitions //////////////////////////////////////////////////
 
-static size_t s_numUnknownObjects = 0;
-
-size_t UnknownObject::objectCount()
-{
-  return s_numUnknownObjects;
-}
-
 UnknownObject::UnknownObject(ANARIDataType type, HelideGlobalState *s)
     : Object(type, s)
 {
-  s_numUnknownObjects++;
+  s->objectCounts.unknown++;
 }
 
 UnknownObject::~UnknownObject()
 {
-  s_numUnknownObjects--;
+  deviceState()->objectCounts.unknown--;
 }
 
 bool UnknownObject::isValid() const

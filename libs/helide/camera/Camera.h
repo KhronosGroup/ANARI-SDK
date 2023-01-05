@@ -9,8 +9,6 @@ namespace helide {
 
 struct Camera : public Object
 {
-  static size_t objectCount();
-
   Camera(HelideGlobalState *s);
   ~Camera() override;
 

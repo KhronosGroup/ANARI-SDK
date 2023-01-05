@@ -11,6 +11,7 @@ namespace helide {
 struct Surface : public Object
 {
   Surface(HelideGlobalState *s);
+  ~Surface() override;
 
   void commit() override;
 

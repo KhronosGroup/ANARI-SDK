@@ -16,8 +16,6 @@ struct PixelSample
 
 struct Renderer : public Object
 {
-  static size_t objectCount();
-
   Renderer(HelideGlobalState *s);
   ~Renderer() override;
 

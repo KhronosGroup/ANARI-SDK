@@ -17,19 +17,12 @@ static void zeroOutStruct(T &v)
 
 // Array //
 
-static size_t s_numArrays = 0;
-
-size_t Array::objectCount()
-{
-  return s_numArrays;
-}
-
 Array::Array(ANARIDataType type,
     HelideGlobalState *state,
     const ArrayMemoryDescriptor &d)
     : helium::BaseArray(type, state), m_elementType(d.elementType)
 {
-  s_numArrays++;
+  state->objectCounts.arrays++;
 
   if (d.appMemory) {
     m_ownership =
@@ -54,7 +47,7 @@ Array::Array(ANARIDataType type,
 Array::~Array()
 {
   freeAppMemory();
-  s_numArrays--;
+  deviceState()->objectCounts.arrays--;
 }
 
 ANARIDataType Array::elementType() const

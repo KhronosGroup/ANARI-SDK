@@ -8,21 +8,14 @@
 
 namespace helide {
 
-static size_t s_numCameras = 0;
-
-size_t Camera::objectCount()
-{
-  return s_numCameras;
-}
-
 Camera::Camera(HelideGlobalState *s) : Object(ANARI_CAMERA, s)
 {
-  s_numCameras++;
+  s->objectCounts.cameras++;
 }
 
 Camera::~Camera()
 {
-  s_numCameras--;
+  deviceState()->objectCounts.cameras--;
 }
 
 Camera *Camera::createInstance(std::string_view type, HelideGlobalState *s)

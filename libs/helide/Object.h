@@ -31,7 +31,6 @@ struct Object : public helium::BaseObject
 
 struct UnknownObject : public Object
 {
-  static size_t objectCount();
   UnknownObject(ANARIDataType type, HelideGlobalState *s);
   ~UnknownObject() override;
   bool isValid() const override;
