@@ -10,8 +10,6 @@ namespace helide {
 
 struct Material : public Object
 {
-  static size_t objectCount();
-
   Material(HelideGlobalState *s);
   ~Material() override;
 

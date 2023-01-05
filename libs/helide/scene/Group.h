@@ -12,8 +12,6 @@ namespace helide {
 
 struct Group : public Object
 {
-  static size_t objectCount();
-
   Group(HelideGlobalState *s);
   ~Group() override;
 

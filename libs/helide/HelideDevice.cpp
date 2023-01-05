@@ -296,50 +296,30 @@ HelideDevice::~HelideDevice()
   //       these simple checks are very straightforward to implement and do not
   //       really add substantial code complexity, so they are provided out of
   //       convenience.
-  if (Frame::objectCount() != 0) {
-    reportMessage(ANARI_SEVERITY_WARNING,
-        "detected %zu leaked ANARIFrame objects",
-        Frame::objectCount());
-  }
-  if (Camera::objectCount() != 0) {
-    reportMessage(ANARI_SEVERITY_WARNING,
-        "detected %zu leaked ANARICamera objects",
-        Camera::objectCount());
-  }
-  if (Renderer::objectCount() != 0) {
-    reportMessage(ANARI_SEVERITY_WARNING,
-        "detected %zu leaked ANARIRenderer objects",
-        Renderer::objectCount());
-  }
-  if (World::objectCount() != 0) {
-    reportMessage(ANARI_SEVERITY_WARNING,
-        "detected %zu leaked ANARIWorld objects",
-        World::objectCount());
-  }
-  if (Instance::objectCount() != 0) {
-    reportMessage(ANARI_SEVERITY_WARNING,
-        "detected %zu leaked ANARIInstance objects",
-        Instance::objectCount());
-  }
-  if (Group::objectCount() != 0) {
-    reportMessage(ANARI_SEVERITY_WARNING,
-        "detected %zu leaked ANARIGroup objects",
-        Group::objectCount());
-  }
-  if (Geometry::objectCount() != 0) {
-    reportMessage(ANARI_SEVERITY_WARNING,
-        "detected %zu leaked ANARIGeometry objects",
-        Geometry::objectCount());
-  }
-  if (Material::objectCount() != 0) {
-    reportMessage(ANARI_SEVERITY_WARNING,
-        "detected %zu leaked ANARIMaterial objects",
-        Material::objectCount());
-  }
-  if (UnknownObject::objectCount() != 0) {
+
+  auto reportLeaks = [&](size_t &count, const char *handleType) {
+    if (count != 0) {
+      reportMessage(ANARI_SEVERITY_WARNING,
+          "detected %zu leaked %s objects",
+          count,
+          handleType);
+    }
+  };
+
+  reportLeaks(state.objectCounts.frames, "ANARIFrame");
+  reportLeaks(state.objectCounts.cameras, "ANARICamera");
+  reportLeaks(state.objectCounts.renderers, "ANARIRenderer");
+  reportLeaks(state.objectCounts.worlds, "ANARIWorld");
+  reportLeaks(state.objectCounts.instances, "ANARIInstance");
+  reportLeaks(state.objectCounts.groups, "ANARIGroup");
+  reportLeaks(state.objectCounts.surfaces, "ANARISurface");
+  reportLeaks(state.objectCounts.geometries, "ANARIGeometry");
+  reportLeaks(state.objectCounts.materials, "ANARIMaterial");
+
+  if (state.objectCounts.unknown != 0) {
     reportMessage(ANARI_SEVERITY_WARNING,
         "detected %zu leaked ANARIObject objects created by unknown subtypes",
-        UnknownObject::objectCount());
+        state.objectCounts.unknown);
   }
 }
 

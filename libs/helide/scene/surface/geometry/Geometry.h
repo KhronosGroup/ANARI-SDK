@@ -9,7 +9,6 @@ namespace helide {
 
 struct Geometry : public Object
 {
-  static size_t objectCount();
   Geometry(HelideGlobalState *s);
   ~Geometry() override;
 

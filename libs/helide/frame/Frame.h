@@ -16,8 +16,6 @@ namespace helide {
 
 struct Frame : public helium::BaseFrame
 {
-  static size_t objectCount();
-
   Frame(HelideGlobalState *s);
   ~Frame();
 

@@ -8,21 +8,14 @@
 
 namespace helide {
 
-static size_t s_numMaterials = 0;
-
-size_t Material::objectCount()
-{
-  return s_numMaterials;
-}
-
 Material::Material(HelideGlobalState *s) : Object(ANARI_MATERIAL, s)
 {
-  s_numMaterials++;
+  s->objectCounts.materials++;
 }
 
 Material::~Material()
 {
-  s_numMaterials--;
+  deviceState()->objectCounts.materials--;
 }
 
 Material *Material::createInstance(

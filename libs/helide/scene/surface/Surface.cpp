@@ -5,7 +5,15 @@
 
 namespace helide {
 
-Surface::Surface(HelideGlobalState *s) : Object(ANARI_SURFACE, s) {}
+Surface::Surface(HelideGlobalState *s) : Object(ANARI_SURFACE, s)
+{
+  s->objectCounts.surfaces++;
+}
+
+Surface::~Surface()
+{
+  deviceState()->objectCounts.surfaces--;
+}
 
 void Surface::commit()
 {

@@ -5,16 +5,9 @@
 
 namespace helide {
 
-static size_t s_numWorlds = 0;
-
-size_t World::objectCount()
-{
-  return s_numWorlds;
-}
-
 World::World(HelideGlobalState *s) : Object(ANARI_WORLD, s)
 {
-  s_numWorlds++;
+  s->objectCounts.worlds++;
 
   m_zeroGroup = new Group(s);
   m_zeroInstance = new Instance(s);
@@ -28,7 +21,7 @@ World::World(HelideGlobalState *s) : Object(ANARI_WORLD, s)
 World::~World()
 {
   cleanup();
-  s_numWorlds--;
+  deviceState()->objectCounts.worlds--;
 }
 
 bool World::getProperty(

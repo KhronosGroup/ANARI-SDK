@@ -5,21 +5,14 @@
 
 namespace helide {
 
-static size_t s_numRenderers = 0;
-
-size_t Renderer::objectCount()
-{
-  return s_numRenderers;
-}
-
 Renderer::Renderer(HelideGlobalState *s) : Object(ANARI_RENDERER, s)
 {
-  s_numRenderers++;
+  s->objectCounts.renderers++;
 }
 
 Renderer::~Renderer()
 {
-  s_numRenderers--;
+  deviceState()->objectCounts.renderers--;
 }
 
 void Renderer::commit()
