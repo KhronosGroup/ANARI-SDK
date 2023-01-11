@@ -246,7 +246,7 @@ void Attributes::commit()
   auto d = m_device;
 
   auto vertexArray = anariNewArray1D(d, vertices, 0, 0, ANARI_FLOAT32_VEC3, 4);
-  auto indexArray = anariNewArray1D(d, indices, 0, 0, ANARI_UINT32_VEC3, 6);
+  auto indexArray = anariNewArray1D(d, indices, 0, 0, ANARI_UINT32_VEC3, 2);
 
   ANARIGeometry geometries[64] = { };
   for(int i = 0;i<16;++i) {
