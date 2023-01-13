@@ -156,16 +156,14 @@ MainWindow::MainWindow(const glm::uvec2 &windowSize)
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   // On retina display, render with low resolution and scale up
   glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_FALSE);
+#else 
+  glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
 #endif
 
-  // Request a window that is IEC standard RGB color space capable
-  glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
 
 #ifdef USE_GLES2
   glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-#else
-  glfwWindowHint(GLFW_SRGB_CAPABLE, GLFW_TRUE);
 #endif
 
   // create GLFW window
@@ -365,11 +363,7 @@ void MainWindow::mainLoop()
 void MainWindow::reshape(const glm::uvec2 &windowSize)
 {
   anari::setParameter(device, frame, "size", windowSize);
-#if USE_GLES2
-  anari::setParameter(device, frame, "channel.color", ANARI_UFIXED8_VEC4);
-#else
   anari::setParameter(device, frame, "channel.color", ANARI_UFIXED8_RGBA_SRGB);
-#endif
   anari::setParameter(device, frame, "renderer", renderer);
   anari::setParameter(device, frame, "camera", camera);
 
