@@ -85,7 +85,11 @@ float4 Sphere::getAttributeValueAt(
     return Geometry::getAttributeValueAt(attr, ray);
 
   auto attrIdx = static_cast<int>(attr);
-  return readAttributeArrayAt(m_vertexAttributes[attrIdx].ptr, ray.primID);
+  auto *attributeArray = m_vertexAttributes[attrIdx].ptr;
+  if (!attributeArray)
+    return Geometry::getAttributeValueAt(attr, ray);
+
+  return readAttributeArrayAt(attributeArray, ray.primID);
 }
 
 void Sphere::cleanup()
