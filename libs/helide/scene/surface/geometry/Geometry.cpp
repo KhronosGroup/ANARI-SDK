@@ -9,6 +9,9 @@
 #include "Quad.h"
 #include "Sphere.h"
 #include "Triangle.h"
+// std
+#include <cstring>
+#include <limits>
 
 namespace helide {
 
@@ -49,7 +52,11 @@ RTCGeometry Geometry::embreeGeometry() const
 
 void Geometry::commit()
 {
-  // no-op
+  m_attributes[0] = getParamObject<Array1D>("primitive.attribute0");
+  m_attributes[1] = getParamObject<Array1D>("primitive.attribute1");
+  m_attributes[2] = getParamObject<Array1D>("primitive.attribute2");
+  m_attributes[3] = getParamObject<Array1D>("primitive.attribute3");
+  m_attributes[4] = getParamObject<Array1D>("primitive.color");
 }
 
 void Geometry::markCommitted()
@@ -57,6 +64,46 @@ void Geometry::markCommitted()
   Object::markCommitted();
   deviceState()->objectUpdates.lastBLSCommitSceneRequest =
       helium::newTimeStamp();
+}
+
+float4 Geometry::getAttributeValueAt(
+    const Attribute &attr, const Ray &ray) const
+{
+  if (attr == Attribute::NONE)
+    return DEFAULT_ATTRIBUTE_VALUE;
+
+  auto attrIdx = static_cast<int>(attr);
+  return readAttributeArrayAt(m_attributes[attrIdx].ptr, ray.primID);
+}
+
+float4 Geometry::readAttributeArrayAt(Array1D *arr, uint32_t i) const
+{
+  auto retval = DEFAULT_ATTRIBUTE_VALUE;
+
+  if (!arr)
+    return retval;
+
+  switch (arr->elementType()) {
+  case ANARI_FLOAT32:
+    std::memcpy(&retval, arr->beginAs<float>() + i, sizeof(float));
+    break;
+  case ANARI_FLOAT32_VEC2:
+    std::memcpy(&retval, arr->beginAs<float2>() + i, sizeof(float2));
+    break;
+  case ANARI_FLOAT32_VEC3:
+    std::memcpy(&retval, arr->beginAs<float3>() + i, sizeof(float3));
+    break;
+  case ANARI_FLOAT32_VEC4:
+    std::memcpy(&retval, arr->beginAs<float4>() + i, sizeof(float4));
+    break;
+  /////////////////////////////////////////////////////////////////////////////
+  // TODO: add cases for other color types (fixed8/16/32, SRGB)
+  /////////////////////////////////////////////////////////////////////////////
+  default:
+    break;
+  }
+
+  return retval;
 }
 
 } // namespace helide

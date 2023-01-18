@@ -11,6 +11,9 @@ void Matte::commit()
 {
   m_color = getParam<float3>("color", float3(1.f));
   m_opacity = 1.f;
+
+  m_colorAttribute = attributeFromString(getParamString("color", "none"));
+  m_opacityAttribute = Attribute::NONE;
 }
 
 } // namespace helide

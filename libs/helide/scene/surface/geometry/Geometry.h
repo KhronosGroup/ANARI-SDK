@@ -4,6 +4,8 @@
 #pragma once
 
 #include "array/Array1D.h"
+// std
+#include <array>
 
 namespace helide {
 
@@ -20,8 +22,15 @@ struct Geometry : public Object
   void commit() override;
   void markCommitted() override;
 
+  virtual float4 getAttributeValueAt(
+      const Attribute &attr, const Ray &ray) const;
+
  protected:
+  float4 readAttributeArrayAt(Array1D *arr, uint32_t i) const;
+
   RTCGeometry m_embreeGeometry{nullptr};
+
+  std::array<helium::IntrusivePtr<Array1D>, 5> m_attributes;
 };
 
 } // namespace helide

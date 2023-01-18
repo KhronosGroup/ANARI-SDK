@@ -39,7 +39,7 @@ PixelSample Renderer::renderSample(Ray ray, const World &w) const
 
   const auto n = linalg::mul(inst->xfmInvRot(), ray.Ng);
   const auto falloff = std::abs(linalg::dot(-ray.dir, linalg::normalize(n)));
-  const float3 c = surface->material()->color();
+  const float3 c = surface->getSurfaceColor(ray);
   const float3 sc = c * falloff;
 
   return {float4(0.8f * sc + 0.2f * c, 1.f), ray.tfar};
