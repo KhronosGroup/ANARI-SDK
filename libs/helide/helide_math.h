@@ -98,6 +98,15 @@ inline mat3 extractRotation(const mat4 &m)
       float3(m[2].x, m[2].y, m[2].z));
 }
 
+template <bool SRGB = true>
+inline float toneMap(float v)
+{
+  if constexpr (SRGB)
+    return std::pow(v, 1.f / 2.2f);
+  else
+    return v;
+}
+
 } // namespace helide
 
 namespace anari {
