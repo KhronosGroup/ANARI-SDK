@@ -20,6 +20,11 @@ void Sphere::commit()
   m_index = getParamObject<Array1D>("primitive.index");
   m_vertexPosition = getParamObject<Array1D>("vertex.position");
   m_vertexRadius = getParamObject<Array1D>("vertex.radius");
+  m_vertexAttributes[0] = getParamObject<Array1D>("vertex.attribute0");
+  m_vertexAttributes[1] = getParamObject<Array1D>("vertex.attribute1");
+  m_vertexAttributes[2] = getParamObject<Array1D>("vertex.attribute2");
+  m_vertexAttributes[3] = getParamObject<Array1D>("vertex.attribute3");
+  m_vertexAttributes[4] = getParamObject<Array1D>("vertex.color");
 
   if (!m_vertexPosition) {
     reportMessage(ANARI_SEVERITY_WARNING,
@@ -71,6 +76,16 @@ void Sphere::commit()
   }
 
   rtcCommitGeometry(embreeGeometry());
+}
+
+float4 Sphere::getAttributeValueAt(
+    const Attribute &attr, const Ray &ray) const
+{
+  if (attr == Attribute::NONE)
+    return Geometry::getAttributeValueAt(attr, ray);
+
+  auto attrIdx = static_cast<int>(attr);
+  return readAttributeArrayAt(m_vertexAttributes[attrIdx].ptr, ray.primID);
 }
 
 void Sphere::cleanup()

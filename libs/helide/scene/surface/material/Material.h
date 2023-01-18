@@ -19,9 +19,17 @@ struct Material : public Object
   float3 color() const;
   float opacity() const;
 
+  Attribute colorAttribute() const;
+  Attribute opacityAttribute() const;
+
  protected:
+  Attribute attributeFromString(const std::string &str) const;
+
   float3 m_color{1.f, 1.f, 1.f};
   float m_opacity{1.f};
+
+  Attribute m_colorAttribute{Attribute::NONE};
+  Attribute m_opacityAttribute{Attribute::NONE};
 };
 
 // Inlined definitions ////////////////////////////////////////////////////////
@@ -34,6 +42,16 @@ inline float3 Material::color() const
 inline float Material::opacity() const
 {
   return m_opacity;
+}
+
+inline Attribute Material::colorAttribute() const
+{
+  return m_colorAttribute;
+}
+
+inline Attribute Material::opacityAttribute() const
+{
+  return m_opacityAttribute;
 }
 
 } // namespace helide

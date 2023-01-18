@@ -29,6 +29,22 @@ Material *Material::createInstance(
     return (Material *)new UnknownObject(ANARI_MATERIAL, s);
 }
 
+Attribute Material::attributeFromString(const std::string &str) const
+{
+  if (str == "color")
+    return Attribute::COLOR;
+  else if (str == "attribute0")
+    return Attribute::ATTRIBUTE_0;
+  else if (str == "attribute1")
+    return Attribute::ATTRIBUTE_1;
+  else if (str == "attribute2")
+    return Attribute::ATTRIBUTE_2;
+  else if (str == "attribute3")
+    return Attribute::ATTRIBUTE_3;
+  else
+    return Attribute::NONE;
+}
+
 } // namespace helide
 
 HELIDE_ANARI_TYPEFOR_DEFINITION(helide::Material *);

@@ -65,10 +65,23 @@ struct Ray
   // Hit //
 
   float3 Ng;
-  float2 uv;
+  float u;
+  float v;
   unsigned int primID{RTC_INVALID_GEOMETRY_ID}; // primitive ID
   unsigned int geomID{RTC_INVALID_GEOMETRY_ID}; // geometry ID
   unsigned int instID{RTC_INVALID_GEOMETRY_ID}; // instance ID
+};
+
+constexpr float4 DEFAULT_ATTRIBUTE_VALUE(0.f, 0.f, 0.f, 1.f);
+
+enum class Attribute
+{
+  ATTRIBUTE_0 = 0,
+  ATTRIBUTE_1,
+  ATTRIBUTE_2,
+  ATTRIBUTE_3,
+  COLOR,
+  NONE
 };
 
 // Functions //////////////////////////////////////////////////////////////////

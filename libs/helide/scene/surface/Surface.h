@@ -18,6 +18,9 @@ struct Surface : public Object
   const Geometry *geometry() const;
   const Material *material() const;
 
+  float3 getSurfaceColor(const Ray &ray) const;
+  float getSurfaceOpacity(const Ray &ray) const;
+
   void markCommitted() override;
   bool isValid() const override;
 
