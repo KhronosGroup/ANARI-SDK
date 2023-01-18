@@ -27,10 +27,7 @@ static uint32_t cvt_uint32(const float4 &v)
 
 static uint32_t cvt_uint32_srgb(const float4 &v)
 {
-  return cvt_uint32(float4(std::pow(v.x, 1.f / 2.2f),
-      std::pow(v.y, 1.f / 2.2f),
-      std::pow(v.z, 1.f / 2.2f),
-      v.w));
+  return cvt_uint32(float4(toneMap(v.x), toneMap(v.y), toneMap(v.z), v.w));
 }
 
 template <typename I, typename FUNC>
