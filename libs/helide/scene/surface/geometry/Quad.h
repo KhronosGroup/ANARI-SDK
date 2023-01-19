@@ -15,11 +15,15 @@ struct Quad : public Geometry
 
   void commit() override;
 
+  float4 getAttributeValueAt(
+      const Attribute &attr, const Ray &ray) const override;
+
  private:
   void cleanup();
 
   helium::IntrusivePtr<Array1D> m_index;
   helium::IntrusivePtr<Array1D> m_vertexPosition;
+  std::array<helium::IntrusivePtr<Array1D>, 5> m_vertexAttributes;
 };
 
 } // namespace helide

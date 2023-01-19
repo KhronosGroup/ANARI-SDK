@@ -107,6 +107,12 @@ inline float toneMap(float v)
     return v;
 }
 
+template <typename T, typename U>
+inline T lerp(const T &x, const T &y, const U &a)
+{
+  return static_cast<T>(x * (U(1) - a) + y * a);
+}
+
 } // namespace helide
 
 namespace anari {
