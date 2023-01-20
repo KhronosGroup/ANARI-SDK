@@ -22,6 +22,11 @@ void Curve::commit()
   m_index = getParamObject<Array1D>("primitive.index");
   m_vertexPosition = getParamObject<Array1D>("vertex.position");
   m_vertexRadius = getParamObject<Array1D>("vertex.radius");
+  m_vertexAttributes[0] = getParamObject<Array1D>("vertex.attribute0");
+  m_vertexAttributes[1] = getParamObject<Array1D>("vertex.attribute1");
+  m_vertexAttributes[2] = getParamObject<Array1D>("vertex.attribute2");
+  m_vertexAttributes[3] = getParamObject<Array1D>("vertex.attribute3");
+  m_vertexAttributes[4] = getParamObject<Array1D>("vertex.color");
 
   if (!m_vertexPosition) {
     reportMessage(ANARI_SEVERITY_WARNING,
@@ -76,6 +81,25 @@ void Curve::commit()
   }
 
   rtcCommitGeometry(embreeGeometry());
+}
+
+float4 Curve::getAttributeValueAt(
+    const Attribute &attr, const Ray &ray) const
+{
+  if (attr == Attribute::NONE)
+    return DEFAULT_ATTRIBUTE_VALUE;
+
+  auto attrIdx = static_cast<int>(attr);
+  auto *attributeArray = m_vertexAttributes[attrIdx].ptr;
+  if (!attributeArray)
+    return Geometry::getAttributeValueAt(attr, ray);
+
+  auto idx = m_index ? *(m_index->dataAs<uint32_t>() + ray.primID) : ray.primID;
+
+  auto a = readAttributeArrayAt(attributeArray, idx + 0);
+  auto b = readAttributeArrayAt(attributeArray, idx + 1);
+
+  return a + (b - a) * ray.u;
 }
 
 void Curve::cleanup()
