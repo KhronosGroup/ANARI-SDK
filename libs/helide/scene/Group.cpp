@@ -75,22 +75,25 @@ void Group::embreeSceneConstruct()
   rtcReleaseScene(m_embreeScene);
   m_embreeScene = rtcNewScene(deviceState()->embreeDevice);
 
-  uint32_t id = 0;
-  std::for_each(m_surfaceData->handlesBegin(),
-      m_surfaceData->handlesEnd(),
-      [&](Object *o) {
-        auto *s = (Surface *)o;
-        if (s && s->isValid()) {
-          m_surfaces.push_back(s);
-          rtcAttachGeometryByID(
-              m_embreeScene, s->geometry()->embreeGeometry(), id);
-        } else {
-          reportMessage(ANARI_SEVERITY_DEBUG,
-              "helide::Group rejecting invalid surface(%p) in building BLS",
-              s);
-        }
-        id++;
-      });
+  if (m_surfaceData) {
+    uint32_t id = 0;
+    std::for_each(m_surfaceData->handlesBegin(),
+        m_surfaceData->handlesEnd(),
+        [&](Object *o) {
+          auto *s = (Surface *)o;
+          if (s && s->isValid()) {
+            m_surfaces.push_back(s);
+            rtcAttachGeometryByID(
+                m_embreeScene, s->geometry()->embreeGeometry(), id);
+          } else {
+            reportMessage(ANARI_SEVERITY_DEBUG,
+                "helide::Group rejecting invalid surface(%p) in building BLS",
+                s);
+          }
+          id++;
+        });
+  }
+
   m_objectUpdates.lastSceneConstruction = helium::newTimeStamp();
   m_objectUpdates.lastSceneCommit = 0;
   embreeSceneCommit();
