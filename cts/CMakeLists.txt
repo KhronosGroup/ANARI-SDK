@@ -41,6 +41,8 @@ target_link_libraries(${PROJECT_NAME}
   anari_test_scenes
 )
 
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+
 file(GLOB python_files ${CMAKE_CURRENT_LIST_DIR}/*.py)
 
 add_custom_target(generate_cts
