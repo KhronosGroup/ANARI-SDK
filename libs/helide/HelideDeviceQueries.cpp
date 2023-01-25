@@ -30,7 +30,7 @@ static int subtype_hash(const char *str) {
    return -1;
 }
 static int param_hash(const char *str) {
-   static const uint32_t table[] = {0x74700017u,0x6261002du,0x7061003cu,0x6a6100a2u,0x0u,0x706900c1u,0x736500f8u,0x0u,0x6f6d0111u,0x0u,0x0u,0x6a6901d8u,0x626101ddu,0x626101e5u,0x767001e9u,0x736f023cu,0x0u,0x66610293u,0x766902a4u,0x73720336u,0x7170033fu,0x70610341u,0x736f03aeu,0x6665001bu,0x0u,0x0u,0x71700028u,0x7372001cu,0x7574001du,0x7675001eu,0x7372001fu,0x66650020u,0x53520021u,0x62610022u,0x65640023u,0x6a690024u,0x76750025u,0x74730026u,0x1000027u,0x80000000u,0x66650029u,0x6463002au,0x7574002bu,0x100002cu,0x80000001u,0x6463002eu,0x6c6b002fu,0x68670030u,0x73720031u,0x706f0032u,0x76750033u,0x6f6e0034u,0x65640035u,0x44430036u,0x706f0037u,0x6d6c0038u,0x706f0039u,0x7372003au,0x100003bu,0x80000002u,0x716d004bu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x62610055u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6d6c0067u,0x6665004fu,0x0u,0x0u,0x74730053u,0x73720050u,0x62610051u,0x1000052u,0x80000003u,0x1000054u,0x80000004u,0x6f6e0056u,0x6f6e0057u,0x66650058u,0x6d6c0059u,0x2f2e005au,0x6563005bu,0x706f005du,0x66650062u,0x6d6c005eu,0x706f005fu,0x73720060u,0x1000061u,0x80000005u,0x71700063u,0x75740064u,0x69680065u,0x1000066u,0x80000006u,0x706f0068u,0x73720069u,0x2f00006au,0x80000007u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x71700099u,0x706f009au,0x7473009bu,0x6a69009cu,0x7574009du,0x6a69009eu,0x706f009fu,0x6f6e00a0u,0x10000a1u,0x80000008u,0x757400abu,0x0u,0x0u,0x0u,0x6f6e00aeu,0x0u,0x0u,0x0u,0x737200b9u,0x626100acu,0x10000adu,0x80000009u,0x747300afu,0x6a6900b0u,0x757400b1u,0x7a7900b2u,0x545300b3u,0x646300b4u,0x626100b5u,0x6d6c00b6u,0x666500b7u,0x10000b8u,0x8000000au,0x666500bau,0x646300bbu,0x757400bcu,0x6a6900bdu,0x706f00beu,0x6f6e00bfu,0x10000c0u,0x8000000bu,0x6d6500c8u,0x0u,0x0u,0x0u,0x0u,0x0u,0x776300d7u,0x6d6c00d0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x757400d3u,0x656400d1u,0x10000d2u,0x8000000cu,0x666500d4u,0x737200d5u,0x10000d6u,0x8000000du,0x767500ebu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x7a7900f6u,0x747300ecu,0x454400edu,0x6a6900eeu,0x747300efu,0x757400f0u,0x626100f1u,0x6f6e00f2u,0x646300f3u,0x666500f4u,0x10000f5u,0x8000000eu,0x10000f7u,0x8000000fu,0x706f0106u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x706f010du,0x6e6d0107u,0x66650108u,0x75740109u,0x7372010au,0x7a79010bu,0x100010cu,0x80000010u,0x7675010eu,0x7170010fu,0x1000110u,0x80000011u,0x62610113u,0x7541016fu,0x68670114u,0x66650115u,0x53000116u,0x80000012u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x66650169u,0x6867016au,0x6a69016bu,0x706f016cu,0x6f6e016du,0x100016eu,0x80000013u,0x757401a3u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x737201acu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x757401b5u,0x666501bbu,0x757401a4u,0x737201a5u,0x6a6901a6u,0x636201a7u,0x767501a8u,0x757401a9u,0x666501aau,0x10001abu,0x80000014u,0x626101adu,0x6f6e01aeu,0x747301afu,0x676601b0u,0x706f01b1u,0x737201b2u,0x6e6d01b3u,0x10001b4u,0x80000015u,0x626101b6u,0x6f6e01b7u,0x646301b8u,0x666501b9u,0x10001bau,0x80000016u,0x736e01bcu,0x747301c1u,0x0u,0x0u,0x0u,0x717001c6u,0x6a6901c2u,0x757401c3u,0x7a7901c4u,0x10001c5u,0x80000017u,0x767501c7u,0x717001c8u,0x6a6901c9u,0x6d6c01cau,0x6d6c01cbu,0x626101ccu,0x737201cdu,0x7a7901ceu,0x454401cfu,0x6a6901d0u,0x747301d1u,0x757401d2u,0x626101d3u,0x6f6e01d4u,0x646301d5u,0x666501d6u,0x10001d7u,0x80000018u,0x686701d9u,0x696801dau,0x757401dbu,0x10001dcu,0x80000019u,0x757401deu,0x666501dfu,0x737201e0u,0x6a6901e1u,0x626101e2u,0x6d6c01e3u,0x10001e4u,0x8000001au,0x6e6d01e6u,0x666501e7u,0x10001e8u,0x8000001bu,0x626101efu,0x0u,0x6a69022cu,0x0u,0x0u,0x75740231u,0x646301f0u,0x6a6901f1u,0x757401f2u,0x7a7901f3u,0x2f0001f4u,0x8000001cu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x71700223u,0x706f0224u,0x74730225u,0x6a690226u,0x75740227u,0x6a690228u,0x706f0229u,0x6f6e022au,0x100022bu,0x8000001du,0x6867022du,0x6a69022eu,0x6f6e022fu,0x1000230u,0x8000001eu,0x55540232u,0x73720233u,0x62610234u,0x6f6e0235u,0x74730236u,0x67660237u,0x706f0238u,0x73720239u,0x6e6d023au,0x100023bu,0x8000001fu,0x78730240u,0x0u,0x0u,0x6a69024eu,0x6a690245u,0x0u,0x0u,0x0u,0x6665024bu,0x75740246u,0x6a690247u,0x706f0248u,0x6f6e0249u,0x100024au,0x80000020u,0x7372024cu,0x100024du,0x80000021u,0x6e6d024fu,0x6a690250u,0x75740251u,0x6a690252u,0x77760253u,0x66650254u,0x2f2e0255u,0x73610256u,0x75740268u,0x0u,0x706f0278u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6f64027du,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6261028du,0x75740269u,0x7372026au,0x6a69026bu,0x6362026cu,0x7675026du,0x7574026eu,0x6665026fu,0x34300270u,0x1000274u,0x1000275u,0x1000276u,0x1000277u,0x80000022u,0x80000023u,0x80000024u,0x80000025u,0x6d6c0279u,0x706f027au,0x7372027bu,0x100027cu,0x80000026u,0x1000288u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x65640289u,0x80000027u,0x6665028au,0x7978028bu,0x100028cu,0x80000028u,0x6564028eu,0x6a69028fu,0x76750290u,0x74730291u,0x1000292u,0x80000029u,0x65640298u,0x0u,0x0u,0x0u,0x6f6e029du,0x6a690299u,0x7675029au,0x7473029bu,0x100029cu,0x8000002au,0x6564029eu,0x6665029fu,0x737202a0u,0x666502a1u,0x737202a2u,0x10002a3u,0x8000002bu,0x7b7a02b1u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x626102b4u,0x0u,0x0u,0x0u,0x666102bau,0x73720330u,0x666502b2u,0x10002b3u,0x8000002cu,0x646302b5u,0x6a6902b6u,0x6f6e02b7u,0x686702b8u,0x10002b9u,0x8000002du,0x757402bfu,0x0u,0x0u,0x0u,0x73720328u,0x767502c0u,0x747302c1u,0x444302c2u,0x626102c3u,0x6d6c02c4u,0x6d6c02c5u,0x636202c6u,0x626102c7u,0x646302c8u,0x6c6b02c9u,0x560002cau,0x8000002eu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x74730320u,0x66650321u,0x73720322u,0x45440323u,0x62610324u,0x75740325u,0x62610326u,0x1000327u,0x8000002fu,0x66650329u,0x706f032au,0x4e4d032bu,0x706f032cu,0x6564032du,0x6665032eu,0x100032fu,0x80000030u,0x67660331u,0x62610332u,0x64630333u,0x66650334u,0x1000335u,0x80000031u,0x62610337u,0x6f6e0338u,0x74730339u,0x6766033au,0x706f033bu,0x7372033cu,0x6e6d033du,0x100033eu,0x80000032u,0x1000340u,0x80000033u,0x6d6c0350u,0x0u,0x0u,0x0u,0x73720359u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6d6c03a9u,0x76750351u,0x66650352u,0x53520353u,0x62610354u,0x6f6e0355u,0x68670356u,0x66650357u,0x1000358u,0x80000034u,0x7574035au,0x6665035bu,0x7978035cu,0x2f2e035du,0x7361035eu,0x75740370u,0x0u,0x70610380u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x706f0395u,0x0u,0x706f039bu,0x0u,0x626103a3u,0x75740371u,0x73720372u,0x6a690373u,0x63620374u,0x76750375u,0x75740376u,0x66650377u,0x34300378u,0x100037cu,0x100037du,0x100037eu,0x100037fu,0x80000035u,0x80000036u,0x80000037u,0x80000038u,0x7170038fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6d6c0391u,0x1000390u,0x80000039u,0x706f0392u,0x73720393u,0x1000394u,0x8000003au,0x73720396u,0x6e6d0397u,0x62610398u,0x6d6c0399u,0x100039au,0x8000003bu,0x7473039cu,0x6a69039du,0x7574039eu,0x6a69039fu,0x706f03a0u,0x6f6e03a1u,0x10003a2u,0x8000003cu,0x656403a4u,0x6a6903a5u,0x767503a6u,0x747303a7u,0x10003a8u,0x8000003du,0x767503aau,0x6e6d03abu,0x666503acu,0x10003adu,0x8000003eu,0x737203b2u,0x0u,0x0u,0x626103b6u,0x6d6c03b3u,0x656403b4u,0x10003b5u,0x8000003fu,0x717003b7u,0x4e4d03b8u,0x706f03b9u,0x656403bau,0x666503bbu,0x323103bcu,0x10003bdu,0x80000040u};
+   static const uint32_t table[] = {0x74700017u,0x6261002du,0x7061003cu,0x6a6100a2u,0x0u,0x706900c1u,0x736500f8u,0x66650111u,0x6f6d0117u,0x0u,0x0u,0x6a6901deu,0x626101e3u,0x626101ebu,0x767001efu,0x736f0242u,0x0u,0x66610299u,0x766902aau,0x7372033cu,0x71700345u,0x70610347u,0x736f03b4u,0x6665001bu,0x0u,0x0u,0x71700028u,0x7372001cu,0x7574001du,0x7675001eu,0x7372001fu,0x66650020u,0x53520021u,0x62610022u,0x65640023u,0x6a690024u,0x76750025u,0x74730026u,0x1000027u,0x80000000u,0x66650029u,0x6463002au,0x7574002bu,0x100002cu,0x80000001u,0x6463002eu,0x6c6b002fu,0x68670030u,0x73720031u,0x706f0032u,0x76750033u,0x6f6e0034u,0x65640035u,0x44430036u,0x706f0037u,0x6d6c0038u,0x706f0039u,0x7372003au,0x100003bu,0x80000002u,0x716d004bu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x62610055u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6d6c0067u,0x6665004fu,0x0u,0x0u,0x74730053u,0x73720050u,0x62610051u,0x1000052u,0x80000003u,0x1000054u,0x80000004u,0x6f6e0056u,0x6f6e0057u,0x66650058u,0x6d6c0059u,0x2f2e005au,0x6563005bu,0x706f005du,0x66650062u,0x6d6c005eu,0x706f005fu,0x73720060u,0x1000061u,0x80000005u,0x71700063u,0x75740064u,0x69680065u,0x1000066u,0x80000006u,0x706f0068u,0x73720069u,0x2f00006au,0x80000007u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x71700099u,0x706f009au,0x7473009bu,0x6a69009cu,0x7574009du,0x6a69009eu,0x706f009fu,0x6f6e00a0u,0x10000a1u,0x80000008u,0x757400abu,0x0u,0x0u,0x0u,0x6f6e00aeu,0x0u,0x0u,0x0u,0x737200b9u,0x626100acu,0x10000adu,0x80000009u,0x747300afu,0x6a6900b0u,0x757400b1u,0x7a7900b2u,0x545300b3u,0x646300b4u,0x626100b5u,0x6d6c00b6u,0x666500b7u,0x10000b8u,0x8000000au,0x666500bau,0x646300bbu,0x757400bcu,0x6a6900bdu,0x706f00beu,0x6f6e00bfu,0x10000c0u,0x8000000bu,0x6d6500c8u,0x0u,0x0u,0x0u,0x0u,0x0u,0x776300d7u,0x6d6c00d0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x757400d3u,0x656400d1u,0x10000d2u,0x8000000cu,0x666500d4u,0x737200d5u,0x10000d6u,0x8000000du,0x767500ebu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x7a7900f6u,0x747300ecu,0x454400edu,0x6a6900eeu,0x747300efu,0x757400f0u,0x626100f1u,0x6f6e00f2u,0x646300f3u,0x666500f4u,0x10000f5u,0x8000000eu,0x10000f7u,0x8000000fu,0x706f0106u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x706f010du,0x6e6d0107u,0x66650108u,0x75740109u,0x7372010au,0x7a79010bu,0x100010cu,0x80000010u,0x7675010eu,0x7170010fu,0x1000110u,0x80000011u,0x6a690112u,0x68670113u,0x69680114u,0x75740115u,0x1000116u,0x80000012u,0x62610119u,0x75410175u,0x6867011au,0x6665011bu,0x5300011cu,0x80000013u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6665016fu,0x68670170u,0x6a690171u,0x706f0172u,0x6f6e0173u,0x1000174u,0x80000014u,0x757401a9u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x737201b2u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x757401bbu,0x666501c1u,0x757401aau,0x737201abu,0x6a6901acu,0x636201adu,0x767501aeu,0x757401afu,0x666501b0u,0x10001b1u,0x80000015u,0x626101b3u,0x6f6e01b4u,0x747301b5u,0x676601b6u,0x706f01b7u,0x737201b8u,0x6e6d01b9u,0x10001bau,0x80000016u,0x626101bcu,0x6f6e01bdu,0x646301beu,0x666501bfu,0x10001c0u,0x80000017u,0x736e01c2u,0x747301c7u,0x0u,0x0u,0x0u,0x717001ccu,0x6a6901c8u,0x757401c9u,0x7a7901cau,0x10001cbu,0x80000018u,0x767501cdu,0x717001ceu,0x6a6901cfu,0x6d6c01d0u,0x6d6c01d1u,0x626101d2u,0x737201d3u,0x7a7901d4u,0x454401d5u,0x6a6901d6u,0x747301d7u,0x757401d8u,0x626101d9u,0x6f6e01dau,0x646301dbu,0x666501dcu,0x10001ddu,0x80000019u,0x686701dfu,0x696801e0u,0x757401e1u,0x10001e2u,0x8000001au,0x757401e4u,0x666501e5u,0x737201e6u,0x6a6901e7u,0x626101e8u,0x6d6c01e9u,0x10001eau,0x8000001bu,0x6e6d01ecu,0x666501edu,0x10001eeu,0x8000001cu,0x626101f5u,0x0u,0x6a690232u,0x0u,0x0u,0x75740237u,0x646301f6u,0x6a6901f7u,0x757401f8u,0x7a7901f9u,0x2f0001fau,0x8000001du,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x71700229u,0x706f022au,0x7473022bu,0x6a69022cu,0x7574022du,0x6a69022eu,0x706f022fu,0x6f6e0230u,0x1000231u,0x8000001eu,0x68670233u,0x6a690234u,0x6f6e0235u,0x1000236u,0x8000001fu,0x55540238u,0x73720239u,0x6261023au,0x6f6e023bu,0x7473023cu,0x6766023du,0x706f023eu,0x7372023fu,0x6e6d0240u,0x1000241u,0x80000020u,0x78730246u,0x0u,0x0u,0x6a690254u,0x6a69024bu,0x0u,0x0u,0x0u,0x66650251u,0x7574024cu,0x6a69024du,0x706f024eu,0x6f6e024fu,0x1000250u,0x80000021u,0x73720252u,0x1000253u,0x80000022u,0x6e6d0255u,0x6a690256u,0x75740257u,0x6a690258u,0x77760259u,0x6665025au,0x2f2e025bu,0x7361025cu,0x7574026eu,0x0u,0x706f027eu,0x0u,0x0u,0x0u,0x0u,0x0u,0x6f640283u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x62610293u,0x7574026fu,0x73720270u,0x6a690271u,0x63620272u,0x76750273u,0x75740274u,0x66650275u,0x34300276u,0x100027au,0x100027bu,0x100027cu,0x100027du,0x80000023u,0x80000024u,0x80000025u,0x80000026u,0x6d6c027fu,0x706f0280u,0x73720281u,0x1000282u,0x80000027u,0x100028eu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6564028fu,0x80000028u,0x66650290u,0x79780291u,0x1000292u,0x80000029u,0x65640294u,0x6a690295u,0x76750296u,0x74730297u,0x1000298u,0x8000002au,0x6564029eu,0x0u,0x0u,0x0u,0x6f6e02a3u,0x6a69029fu,0x767502a0u,0x747302a1u,0x10002a2u,0x8000002bu,0x656402a4u,0x666502a5u,0x737202a6u,0x666502a7u,0x737202a8u,0x10002a9u,0x8000002cu,0x7b7a02b7u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x626102bau,0x0u,0x0u,0x0u,0x666102c0u,0x73720336u,0x666502b8u,0x10002b9u,0x8000002du,0x646302bbu,0x6a6902bcu,0x6f6e02bdu,0x686702beu,0x10002bfu,0x8000002eu,0x757402c5u,0x0u,0x0u,0x0u,0x7372032eu,0x767502c6u,0x747302c7u,0x444302c8u,0x626102c9u,0x6d6c02cau,0x6d6c02cbu,0x636202ccu,0x626102cdu,0x646302ceu,0x6c6b02cfu,0x560002d0u,0x8000002fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x74730326u,0x66650327u,0x73720328u,0x45440329u,0x6261032au,0x7574032bu,0x6261032cu,0x100032du,0x80000030u,0x6665032fu,0x706f0330u,0x4e4d0331u,0x706f0332u,0x65640333u,0x66650334u,0x1000335u,0x80000031u,0x67660337u,0x62610338u,0x64630339u,0x6665033au,0x100033bu,0x80000032u,0x6261033du,0x6f6e033eu,0x7473033fu,0x67660340u,0x706f0341u,0x73720342u,0x6e6d0343u,0x1000344u,0x80000033u,0x1000346u,0x80000034u,0x6d6c0356u,0x0u,0x0u,0x0u,0x7372035fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6d6c03afu,0x76750357u,0x66650358u,0x53520359u,0x6261035au,0x6f6e035bu,0x6867035cu,0x6665035du,0x100035eu,0x80000035u,0x75740360u,0x66650361u,0x79780362u,0x2f2e0363u,0x73610364u,0x75740376u,0x0u,0x70610386u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x706f039bu,0x0u,0x706f03a1u,0x0u,0x626103a9u,0x75740377u,0x73720378u,0x6a690379u,0x6362037au,0x7675037bu,0x7574037cu,0x6665037du,0x3430037eu,0x1000382u,0x1000383u,0x1000384u,0x1000385u,0x80000036u,0x80000037u,0x80000038u,0x80000039u,0x71700395u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6d6c0397u,0x1000396u,0x8000003au,0x706f0398u,0x73720399u,0x100039au,0x8000003bu,0x7372039cu,0x6e6d039du,0x6261039eu,0x6d6c039fu,0x10003a0u,0x8000003cu,0x747303a2u,0x6a6903a3u,0x757403a4u,0x6a6903a5u,0x706f03a6u,0x6f6e03a7u,0x10003a8u,0x8000003du,0x656403aau,0x6a6903abu,0x767503acu,0x747303adu,0x10003aeu,0x8000003eu,0x767503b0u,0x6e6d03b1u,0x666503b2u,0x10003b3u,0x8000003fu,0x737203b8u,0x0u,0x0u,0x626103bcu,0x6d6c03b9u,0x656403bau,0x10003bbu,0x80000040u,0x717003bdu,0x4e4d03beu,0x706f03bfu,0x656403c0u,0x666503c1u,0x323103c2u,0x10003c3u,0x80000041u};
    uint32_t cur = 0x78610000u;
    for(int i = 0;cur!=0;++i) {
       uint32_t idx = cur&0xFFFFu;
@@ -189,7 +189,7 @@ static const void * ANARI_RENDERER_default_param_info(const char *paramName, ANA
    switch(param_hash(paramName)) {
       case 2:
          return ANARI_RENDERER_default_backgroundColor_info(paramType, infoName, infoType);
-      case 27:
+      case 28:
          return ANARI_RENDERER_default_name_info(paramType, infoName, infoType);
       default:
          return nullptr;
@@ -248,11 +248,11 @@ static const void * ANARI_DEVICE_statusCallbackUserData_info(ANARIDataType param
 }
 static const void * ANARI_DEVICE_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
-      case 27:
+      case 28:
          return ANARI_DEVICE_name_info(paramType, infoName, infoType);
-      case 46:
-         return ANARI_DEVICE_statusCallback_info(paramType, infoName, infoType);
       case 47:
+         return ANARI_DEVICE_statusCallback_info(paramType, infoName, infoType);
+      case 48:
          return ANARI_DEVICE_statusCallbackUserData_info(paramType, infoName, infoType);
       default:
          return nullptr;
@@ -277,7 +277,7 @@ static const void * ANARI_ARRAY1D_name_info(ANARIDataType paramType, int infoNam
 }
 static const void * ANARI_ARRAY1D_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
-      case 27:
+      case 28:
          return ANARI_ARRAY1D_name_info(paramType, infoName, infoType);
       default:
          return nullptr;
@@ -302,7 +302,7 @@ static const void * ANARI_ARRAY2D_name_info(ANARIDataType paramType, int infoNam
 }
 static const void * ANARI_ARRAY2D_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
-      case 27:
+      case 28:
          return ANARI_ARRAY2D_name_info(paramType, infoName, infoType);
       default:
          return nullptr;
@@ -327,7 +327,7 @@ static const void * ANARI_ARRAY3D_name_info(ANARIDataType paramType, int infoNam
 }
 static const void * ANARI_ARRAY3D_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
-      case 27:
+      case 28:
          return ANARI_ARRAY3D_name_info(paramType, infoName, infoType);
       default:
          return nullptr;
@@ -468,15 +468,15 @@ static const void * ANARI_FRAME_channel_depth_info(ANARIDataType paramType, int 
 }
 static const void * ANARI_FRAME_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
-      case 27:
+      case 28:
          return ANARI_FRAME_name_info(paramType, infoName, infoType);
-      case 63:
+      case 64:
          return ANARI_FRAME_world_info(paramType, infoName, infoType);
-      case 43:
+      case 44:
          return ANARI_FRAME_renderer_info(paramType, infoName, infoType);
       case 3:
          return ANARI_FRAME_camera_info(paramType, infoName, infoType);
-      case 44:
+      case 45:
          return ANARI_FRAME_size_info(paramType, infoName, infoType);
       case 5:
          return ANARI_FRAME_channel_color_info(paramType, infoName, infoType);
@@ -577,13 +577,13 @@ static const void * ANARI_GROUP_light_info(ANARIDataType paramType, int infoName
 }
 static const void * ANARI_GROUP_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
-      case 27:
+      case 28:
          return ANARI_GROUP_name_info(paramType, infoName, infoType);
-      case 49:
+      case 50:
          return ANARI_GROUP_surface_info(paramType, infoName, infoType);
-      case 62:
+      case 63:
          return ANARI_GROUP_volume_info(paramType, infoName, infoType);
-      case 25:
+      case 26:
          return ANARI_GROUP_light_info(paramType, infoName, infoType);
       default:
          return nullptr;
@@ -649,9 +649,9 @@ static const void * ANARI_INSTANCE_group_info(ANARIDataType paramType, int infoN
 }
 static const void * ANARI_INSTANCE_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
-      case 27:
+      case 28:
          return ANARI_INSTANCE_name_info(paramType, infoName, infoType);
-      case 50:
+      case 51:
          return ANARI_INSTANCE_transform_info(paramType, infoName, infoType);
       case 17:
          return ANARI_INSTANCE_group_info(paramType, infoName, infoType);
@@ -774,15 +774,15 @@ static const void * ANARI_WORLD_light_info(ANARIDataType paramType, int infoName
 }
 static const void * ANARI_WORLD_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
-      case 27:
+      case 28:
          return ANARI_WORLD_name_info(paramType, infoName, infoType);
-      case 22:
+      case 23:
          return ANARI_WORLD_instance_info(paramType, infoName, infoType);
-      case 49:
+      case 50:
          return ANARI_WORLD_surface_info(paramType, infoName, infoType);
-      case 62:
+      case 63:
          return ANARI_WORLD_volume_info(paramType, infoName, infoType);
-      case 25:
+      case 26:
          return ANARI_WORLD_light_info(paramType, infoName, infoType);
       default:
          return nullptr;
@@ -841,11 +841,11 @@ static const void * ANARI_SURFACE_material_info(ANARIDataType paramType, int inf
 }
 static const void * ANARI_SURFACE_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
-      case 27:
+      case 28:
          return ANARI_SURFACE_name_info(paramType, infoName, infoType);
       case 16:
          return ANARI_SURFACE_geometry_info(paramType, infoName, infoType);
-      case 26:
+      case 27:
          return ANARI_SURFACE_material_info(paramType, infoName, infoType);
       default:
          return nullptr;
@@ -1171,6 +1171,38 @@ static const void * ANARI_CAMERA_orthographic_interpupillaryDistance_info(ANARID
       default: return nullptr;
    }
 }
+static const void * ANARI_CAMERA_orthographic_height_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   (void)paramType;
+   switch(infoName) {
+      case 0: // required
+         if(infoType == ANARI_BOOL) {
+            return &anari_false;
+         } else {
+            return nullptr;
+         }
+      case 1: // default
+         if(paramType == ANARI_FLOAT32 && infoType == ANARI_FLOAT32) {
+            static const float default_value[1] = {1.000000f};
+            return default_value;
+         } else {
+            return nullptr;
+         }
+      case 4: // description
+         {
+            static const char *description = "height of image plane";
+            return description;
+         }
+      case 7: // sourceFeature
+         if(infoType == ANARI_STRING) {
+            static const char *feature = "KHR_CAMERA_ORTHOGRAPHIC";
+            return feature;
+         } else if(infoType == ANARI_INT32) {
+            static const int32_t value = 0;
+            return &value;
+         }
+      default: return nullptr;
+   }
+}
 static const void * ANARI_CAMERA_orthographic_aspect_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    (void)paramType;
    switch(infoName) {
@@ -1205,26 +1237,28 @@ static const void * ANARI_CAMERA_orthographic_aspect_info(ANARIDataType paramTyp
 }
 static const void * ANARI_CAMERA_orthographic_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
-      case 27:
+      case 28:
          return ANARI_CAMERA_orthographic_name_info(paramType, infoName, infoType);
-      case 32:
+      case 33:
          return ANARI_CAMERA_orthographic_position_info(paramType, infoName, infoType);
       case 11:
          return ANARI_CAMERA_orthographic_direction_info(paramType, infoName, infoType);
-      case 51:
+      case 52:
          return ANARI_CAMERA_orthographic_up_info(paramType, infoName, infoType);
-      case 50:
+      case 51:
          return ANARI_CAMERA_orthographic_transform_info(paramType, infoName, infoType);
-      case 19:
+      case 20:
          return ANARI_CAMERA_orthographic_imageRegion_info(paramType, infoName, infoType);
       case 0:
          return ANARI_CAMERA_orthographic_apertureRadius_info(paramType, infoName, infoType);
       case 14:
          return ANARI_CAMERA_orthographic_focusDistance_info(paramType, infoName, infoType);
-      case 48:
+      case 49:
          return ANARI_CAMERA_orthographic_stereoMode_info(paramType, infoName, infoType);
-      case 24:
+      case 25:
          return ANARI_CAMERA_orthographic_interpupillaryDistance_info(paramType, infoName, infoType);
+      case 18:
+         return ANARI_CAMERA_orthographic_height_info(paramType, infoName, infoType);
       case 1:
          return ANARI_CAMERA_orthographic_aspect_info(paramType, infoName, infoType);
       default:
@@ -1617,25 +1651,25 @@ static const void * ANARI_CAMERA_perspective_aspect_info(ANARIDataType paramType
 }
 static const void * ANARI_CAMERA_perspective_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
-      case 27:
+      case 28:
          return ANARI_CAMERA_perspective_name_info(paramType, infoName, infoType);
-      case 32:
+      case 33:
          return ANARI_CAMERA_perspective_position_info(paramType, infoName, infoType);
       case 11:
          return ANARI_CAMERA_perspective_direction_info(paramType, infoName, infoType);
-      case 51:
+      case 52:
          return ANARI_CAMERA_perspective_up_info(paramType, infoName, infoType);
-      case 50:
+      case 51:
          return ANARI_CAMERA_perspective_transform_info(paramType, infoName, infoType);
-      case 19:
+      case 20:
          return ANARI_CAMERA_perspective_imageRegion_info(paramType, infoName, infoType);
       case 0:
          return ANARI_CAMERA_perspective_apertureRadius_info(paramType, infoName, infoType);
       case 14:
          return ANARI_CAMERA_perspective_focusDistance_info(paramType, infoName, infoType);
-      case 48:
+      case 49:
          return ANARI_CAMERA_perspective_stereoMode_info(paramType, infoName, infoType);
-      case 24:
+      case 25:
          return ANARI_CAMERA_perspective_interpupillaryDistance_info(paramType, infoName, infoType);
       case 15:
          return ANARI_CAMERA_perspective_fovy_info(paramType, infoName, infoType);
@@ -2191,37 +2225,37 @@ static const void * ANARI_GEOMETRY_cone_caps_info(ANARIDataType paramType, int i
 }
 static const void * ANARI_GEOMETRY_cone_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
-      case 27:
+      case 28:
          return ANARI_GEOMETRY_cone_name_info(paramType, infoName, infoType);
-      case 38:
-         return ANARI_GEOMETRY_cone_primitive_color_info(paramType, infoName, infoType);
-      case 34:
-         return ANARI_GEOMETRY_cone_primitive_attribute0_info(paramType, infoName, infoType);
-      case 35:
-         return ANARI_GEOMETRY_cone_primitive_attribute1_info(paramType, infoName, infoType);
-      case 36:
-         return ANARI_GEOMETRY_cone_primitive_attribute2_info(paramType, infoName, infoType);
-      case 37:
-         return ANARI_GEOMETRY_cone_primitive_attribute3_info(paramType, infoName, infoType);
       case 39:
-         return ANARI_GEOMETRY_cone_primitive_id_info(paramType, infoName, infoType);
-      case 60:
-         return ANARI_GEOMETRY_cone_vertex_position_info(paramType, infoName, infoType);
-      case 61:
-         return ANARI_GEOMETRY_cone_vertex_radius_info(paramType, infoName, infoType);
-      case 57:
-         return ANARI_GEOMETRY_cone_vertex_cap_info(paramType, infoName, infoType);
-      case 58:
-         return ANARI_GEOMETRY_cone_vertex_color_info(paramType, infoName, infoType);
-      case 53:
-         return ANARI_GEOMETRY_cone_vertex_attribute0_info(paramType, infoName, infoType);
-      case 54:
-         return ANARI_GEOMETRY_cone_vertex_attribute1_info(paramType, infoName, infoType);
-      case 55:
-         return ANARI_GEOMETRY_cone_vertex_attribute2_info(paramType, infoName, infoType);
-      case 56:
-         return ANARI_GEOMETRY_cone_vertex_attribute3_info(paramType, infoName, infoType);
+         return ANARI_GEOMETRY_cone_primitive_color_info(paramType, infoName, infoType);
+      case 35:
+         return ANARI_GEOMETRY_cone_primitive_attribute0_info(paramType, infoName, infoType);
+      case 36:
+         return ANARI_GEOMETRY_cone_primitive_attribute1_info(paramType, infoName, infoType);
+      case 37:
+         return ANARI_GEOMETRY_cone_primitive_attribute2_info(paramType, infoName, infoType);
+      case 38:
+         return ANARI_GEOMETRY_cone_primitive_attribute3_info(paramType, infoName, infoType);
       case 40:
+         return ANARI_GEOMETRY_cone_primitive_id_info(paramType, infoName, infoType);
+      case 61:
+         return ANARI_GEOMETRY_cone_vertex_position_info(paramType, infoName, infoType);
+      case 62:
+         return ANARI_GEOMETRY_cone_vertex_radius_info(paramType, infoName, infoType);
+      case 58:
+         return ANARI_GEOMETRY_cone_vertex_cap_info(paramType, infoName, infoType);
+      case 59:
+         return ANARI_GEOMETRY_cone_vertex_color_info(paramType, infoName, infoType);
+      case 54:
+         return ANARI_GEOMETRY_cone_vertex_attribute0_info(paramType, infoName, infoType);
+      case 55:
+         return ANARI_GEOMETRY_cone_vertex_attribute1_info(paramType, infoName, infoType);
+      case 56:
+         return ANARI_GEOMETRY_cone_vertex_attribute2_info(paramType, infoName, infoType);
+      case 57:
+         return ANARI_GEOMETRY_cone_vertex_attribute3_info(paramType, infoName, infoType);
+      case 41:
          return ANARI_GEOMETRY_cone_primitive_index_info(paramType, infoName, infoType);
       case 4:
          return ANARI_GEOMETRY_cone_caps_info(paramType, infoName, infoType);
@@ -2729,37 +2763,37 @@ static const void * ANARI_GEOMETRY_curve_radius_info(ANARIDataType paramType, in
 }
 static const void * ANARI_GEOMETRY_curve_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
-      case 27:
+      case 28:
          return ANARI_GEOMETRY_curve_name_info(paramType, infoName, infoType);
-      case 38:
-         return ANARI_GEOMETRY_curve_primitive_color_info(paramType, infoName, infoType);
-      case 34:
-         return ANARI_GEOMETRY_curve_primitive_attribute0_info(paramType, infoName, infoType);
-      case 35:
-         return ANARI_GEOMETRY_curve_primitive_attribute1_info(paramType, infoName, infoType);
-      case 36:
-         return ANARI_GEOMETRY_curve_primitive_attribute2_info(paramType, infoName, infoType);
-      case 37:
-         return ANARI_GEOMETRY_curve_primitive_attribute3_info(paramType, infoName, infoType);
       case 39:
-         return ANARI_GEOMETRY_curve_primitive_id_info(paramType, infoName, infoType);
-      case 60:
-         return ANARI_GEOMETRY_curve_vertex_position_info(paramType, infoName, infoType);
-      case 61:
-         return ANARI_GEOMETRY_curve_vertex_radius_info(paramType, infoName, infoType);
-      case 58:
-         return ANARI_GEOMETRY_curve_vertex_color_info(paramType, infoName, infoType);
-      case 53:
-         return ANARI_GEOMETRY_curve_vertex_attribute0_info(paramType, infoName, infoType);
-      case 54:
-         return ANARI_GEOMETRY_curve_vertex_attribute1_info(paramType, infoName, infoType);
-      case 55:
-         return ANARI_GEOMETRY_curve_vertex_attribute2_info(paramType, infoName, infoType);
-      case 56:
-         return ANARI_GEOMETRY_curve_vertex_attribute3_info(paramType, infoName, infoType);
+         return ANARI_GEOMETRY_curve_primitive_color_info(paramType, infoName, infoType);
+      case 35:
+         return ANARI_GEOMETRY_curve_primitive_attribute0_info(paramType, infoName, infoType);
+      case 36:
+         return ANARI_GEOMETRY_curve_primitive_attribute1_info(paramType, infoName, infoType);
+      case 37:
+         return ANARI_GEOMETRY_curve_primitive_attribute2_info(paramType, infoName, infoType);
+      case 38:
+         return ANARI_GEOMETRY_curve_primitive_attribute3_info(paramType, infoName, infoType);
       case 40:
+         return ANARI_GEOMETRY_curve_primitive_id_info(paramType, infoName, infoType);
+      case 61:
+         return ANARI_GEOMETRY_curve_vertex_position_info(paramType, infoName, infoType);
+      case 62:
+         return ANARI_GEOMETRY_curve_vertex_radius_info(paramType, infoName, infoType);
+      case 59:
+         return ANARI_GEOMETRY_curve_vertex_color_info(paramType, infoName, infoType);
+      case 54:
+         return ANARI_GEOMETRY_curve_vertex_attribute0_info(paramType, infoName, infoType);
+      case 55:
+         return ANARI_GEOMETRY_curve_vertex_attribute1_info(paramType, infoName, infoType);
+      case 56:
+         return ANARI_GEOMETRY_curve_vertex_attribute2_info(paramType, infoName, infoType);
+      case 57:
+         return ANARI_GEOMETRY_curve_vertex_attribute3_info(paramType, infoName, infoType);
+      case 41:
          return ANARI_GEOMETRY_curve_primitive_index_info(paramType, infoName, infoType);
-      case 42:
+      case 43:
          return ANARI_GEOMETRY_curve_radius_info(paramType, infoName, infoType);
       default:
          return nullptr;
@@ -3336,39 +3370,39 @@ static const void * ANARI_GEOMETRY_cylinder_caps_info(ANARIDataType paramType, i
 }
 static const void * ANARI_GEOMETRY_cylinder_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
-      case 27:
+      case 28:
          return ANARI_GEOMETRY_cylinder_name_info(paramType, infoName, infoType);
-      case 38:
-         return ANARI_GEOMETRY_cylinder_primitive_color_info(paramType, infoName, infoType);
-      case 34:
-         return ANARI_GEOMETRY_cylinder_primitive_attribute0_info(paramType, infoName, infoType);
-      case 35:
-         return ANARI_GEOMETRY_cylinder_primitive_attribute1_info(paramType, infoName, infoType);
-      case 36:
-         return ANARI_GEOMETRY_cylinder_primitive_attribute2_info(paramType, infoName, infoType);
-      case 37:
-         return ANARI_GEOMETRY_cylinder_primitive_attribute3_info(paramType, infoName, infoType);
       case 39:
-         return ANARI_GEOMETRY_cylinder_primitive_id_info(paramType, infoName, infoType);
-      case 60:
-         return ANARI_GEOMETRY_cylinder_vertex_position_info(paramType, infoName, infoType);
-      case 57:
-         return ANARI_GEOMETRY_cylinder_vertex_cap_info(paramType, infoName, infoType);
-      case 58:
-         return ANARI_GEOMETRY_cylinder_vertex_color_info(paramType, infoName, infoType);
-      case 53:
-         return ANARI_GEOMETRY_cylinder_vertex_attribute0_info(paramType, infoName, infoType);
-      case 54:
-         return ANARI_GEOMETRY_cylinder_vertex_attribute1_info(paramType, infoName, infoType);
-      case 55:
-         return ANARI_GEOMETRY_cylinder_vertex_attribute2_info(paramType, infoName, infoType);
-      case 56:
-         return ANARI_GEOMETRY_cylinder_vertex_attribute3_info(paramType, infoName, infoType);
+         return ANARI_GEOMETRY_cylinder_primitive_color_info(paramType, infoName, infoType);
+      case 35:
+         return ANARI_GEOMETRY_cylinder_primitive_attribute0_info(paramType, infoName, infoType);
+      case 36:
+         return ANARI_GEOMETRY_cylinder_primitive_attribute1_info(paramType, infoName, infoType);
+      case 37:
+         return ANARI_GEOMETRY_cylinder_primitive_attribute2_info(paramType, infoName, infoType);
+      case 38:
+         return ANARI_GEOMETRY_cylinder_primitive_attribute3_info(paramType, infoName, infoType);
       case 40:
-         return ANARI_GEOMETRY_cylinder_primitive_index_info(paramType, infoName, infoType);
+         return ANARI_GEOMETRY_cylinder_primitive_id_info(paramType, infoName, infoType);
+      case 61:
+         return ANARI_GEOMETRY_cylinder_vertex_position_info(paramType, infoName, infoType);
+      case 58:
+         return ANARI_GEOMETRY_cylinder_vertex_cap_info(paramType, infoName, infoType);
+      case 59:
+         return ANARI_GEOMETRY_cylinder_vertex_color_info(paramType, infoName, infoType);
+      case 54:
+         return ANARI_GEOMETRY_cylinder_vertex_attribute0_info(paramType, infoName, infoType);
+      case 55:
+         return ANARI_GEOMETRY_cylinder_vertex_attribute1_info(paramType, infoName, infoType);
+      case 56:
+         return ANARI_GEOMETRY_cylinder_vertex_attribute2_info(paramType, infoName, infoType);
+      case 57:
+         return ANARI_GEOMETRY_cylinder_vertex_attribute3_info(paramType, infoName, infoType);
       case 41:
-         return ANARI_GEOMETRY_cylinder_primitive_radius_info(paramType, infoName, infoType);
+         return ANARI_GEOMETRY_cylinder_primitive_index_info(paramType, infoName, infoType);
       case 42:
+         return ANARI_GEOMETRY_cylinder_primitive_radius_info(paramType, infoName, infoType);
+      case 43:
          return ANARI_GEOMETRY_cylinder_radius_info(paramType, infoName, infoType);
       case 4:
          return ANARI_GEOMETRY_cylinder_caps_info(paramType, infoName, infoType);
@@ -3851,35 +3885,35 @@ static const void * ANARI_GEOMETRY_quad_primitive_index_info(ANARIDataType param
 }
 static const void * ANARI_GEOMETRY_quad_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
-      case 27:
+      case 28:
          return ANARI_GEOMETRY_quad_name_info(paramType, infoName, infoType);
-      case 38:
-         return ANARI_GEOMETRY_quad_primitive_color_info(paramType, infoName, infoType);
-      case 34:
-         return ANARI_GEOMETRY_quad_primitive_attribute0_info(paramType, infoName, infoType);
-      case 35:
-         return ANARI_GEOMETRY_quad_primitive_attribute1_info(paramType, infoName, infoType);
-      case 36:
-         return ANARI_GEOMETRY_quad_primitive_attribute2_info(paramType, infoName, infoType);
-      case 37:
-         return ANARI_GEOMETRY_quad_primitive_attribute3_info(paramType, infoName, infoType);
       case 39:
-         return ANARI_GEOMETRY_quad_primitive_id_info(paramType, infoName, infoType);
-      case 60:
-         return ANARI_GEOMETRY_quad_vertex_position_info(paramType, infoName, infoType);
-      case 59:
-         return ANARI_GEOMETRY_quad_vertex_normal_info(paramType, infoName, infoType);
-      case 58:
-         return ANARI_GEOMETRY_quad_vertex_color_info(paramType, infoName, infoType);
-      case 53:
-         return ANARI_GEOMETRY_quad_vertex_attribute0_info(paramType, infoName, infoType);
-      case 54:
-         return ANARI_GEOMETRY_quad_vertex_attribute1_info(paramType, infoName, infoType);
-      case 55:
-         return ANARI_GEOMETRY_quad_vertex_attribute2_info(paramType, infoName, infoType);
-      case 56:
-         return ANARI_GEOMETRY_quad_vertex_attribute3_info(paramType, infoName, infoType);
+         return ANARI_GEOMETRY_quad_primitive_color_info(paramType, infoName, infoType);
+      case 35:
+         return ANARI_GEOMETRY_quad_primitive_attribute0_info(paramType, infoName, infoType);
+      case 36:
+         return ANARI_GEOMETRY_quad_primitive_attribute1_info(paramType, infoName, infoType);
+      case 37:
+         return ANARI_GEOMETRY_quad_primitive_attribute2_info(paramType, infoName, infoType);
+      case 38:
+         return ANARI_GEOMETRY_quad_primitive_attribute3_info(paramType, infoName, infoType);
       case 40:
+         return ANARI_GEOMETRY_quad_primitive_id_info(paramType, infoName, infoType);
+      case 61:
+         return ANARI_GEOMETRY_quad_vertex_position_info(paramType, infoName, infoType);
+      case 60:
+         return ANARI_GEOMETRY_quad_vertex_normal_info(paramType, infoName, infoType);
+      case 59:
+         return ANARI_GEOMETRY_quad_vertex_color_info(paramType, infoName, infoType);
+      case 54:
+         return ANARI_GEOMETRY_quad_vertex_attribute0_info(paramType, infoName, infoType);
+      case 55:
+         return ANARI_GEOMETRY_quad_vertex_attribute1_info(paramType, infoName, infoType);
+      case 56:
+         return ANARI_GEOMETRY_quad_vertex_attribute2_info(paramType, infoName, infoType);
+      case 57:
+         return ANARI_GEOMETRY_quad_vertex_attribute3_info(paramType, infoName, infoType);
+      case 41:
          return ANARI_GEOMETRY_quad_primitive_index_info(paramType, infoName, infoType);
       default:
          return nullptr;
@@ -4385,37 +4419,37 @@ static const void * ANARI_GEOMETRY_sphere_radius_info(ANARIDataType paramType, i
 }
 static const void * ANARI_GEOMETRY_sphere_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
-      case 27:
+      case 28:
          return ANARI_GEOMETRY_sphere_name_info(paramType, infoName, infoType);
-      case 38:
-         return ANARI_GEOMETRY_sphere_primitive_color_info(paramType, infoName, infoType);
-      case 34:
-         return ANARI_GEOMETRY_sphere_primitive_attribute0_info(paramType, infoName, infoType);
-      case 35:
-         return ANARI_GEOMETRY_sphere_primitive_attribute1_info(paramType, infoName, infoType);
-      case 36:
-         return ANARI_GEOMETRY_sphere_primitive_attribute2_info(paramType, infoName, infoType);
-      case 37:
-         return ANARI_GEOMETRY_sphere_primitive_attribute3_info(paramType, infoName, infoType);
       case 39:
-         return ANARI_GEOMETRY_sphere_primitive_id_info(paramType, infoName, infoType);
-      case 60:
-         return ANARI_GEOMETRY_sphere_vertex_position_info(paramType, infoName, infoType);
-      case 61:
-         return ANARI_GEOMETRY_sphere_vertex_radius_info(paramType, infoName, infoType);
-      case 58:
-         return ANARI_GEOMETRY_sphere_vertex_color_info(paramType, infoName, infoType);
-      case 53:
-         return ANARI_GEOMETRY_sphere_vertex_attribute0_info(paramType, infoName, infoType);
-      case 54:
-         return ANARI_GEOMETRY_sphere_vertex_attribute1_info(paramType, infoName, infoType);
-      case 55:
-         return ANARI_GEOMETRY_sphere_vertex_attribute2_info(paramType, infoName, infoType);
-      case 56:
-         return ANARI_GEOMETRY_sphere_vertex_attribute3_info(paramType, infoName, infoType);
+         return ANARI_GEOMETRY_sphere_primitive_color_info(paramType, infoName, infoType);
+      case 35:
+         return ANARI_GEOMETRY_sphere_primitive_attribute0_info(paramType, infoName, infoType);
+      case 36:
+         return ANARI_GEOMETRY_sphere_primitive_attribute1_info(paramType, infoName, infoType);
+      case 37:
+         return ANARI_GEOMETRY_sphere_primitive_attribute2_info(paramType, infoName, infoType);
+      case 38:
+         return ANARI_GEOMETRY_sphere_primitive_attribute3_info(paramType, infoName, infoType);
       case 40:
+         return ANARI_GEOMETRY_sphere_primitive_id_info(paramType, infoName, infoType);
+      case 61:
+         return ANARI_GEOMETRY_sphere_vertex_position_info(paramType, infoName, infoType);
+      case 62:
+         return ANARI_GEOMETRY_sphere_vertex_radius_info(paramType, infoName, infoType);
+      case 59:
+         return ANARI_GEOMETRY_sphere_vertex_color_info(paramType, infoName, infoType);
+      case 54:
+         return ANARI_GEOMETRY_sphere_vertex_attribute0_info(paramType, infoName, infoType);
+      case 55:
+         return ANARI_GEOMETRY_sphere_vertex_attribute1_info(paramType, infoName, infoType);
+      case 56:
+         return ANARI_GEOMETRY_sphere_vertex_attribute2_info(paramType, infoName, infoType);
+      case 57:
+         return ANARI_GEOMETRY_sphere_vertex_attribute3_info(paramType, infoName, infoType);
+      case 41:
          return ANARI_GEOMETRY_sphere_primitive_index_info(paramType, infoName, infoType);
-      case 42:
+      case 43:
          return ANARI_GEOMETRY_sphere_radius_info(paramType, infoName, infoType);
       default:
          return nullptr;
@@ -4896,35 +4930,35 @@ static const void * ANARI_GEOMETRY_triangle_primitive_index_info(ANARIDataType p
 }
 static const void * ANARI_GEOMETRY_triangle_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
-      case 27:
+      case 28:
          return ANARI_GEOMETRY_triangle_name_info(paramType, infoName, infoType);
-      case 38:
-         return ANARI_GEOMETRY_triangle_primitive_color_info(paramType, infoName, infoType);
-      case 34:
-         return ANARI_GEOMETRY_triangle_primitive_attribute0_info(paramType, infoName, infoType);
-      case 35:
-         return ANARI_GEOMETRY_triangle_primitive_attribute1_info(paramType, infoName, infoType);
-      case 36:
-         return ANARI_GEOMETRY_triangle_primitive_attribute2_info(paramType, infoName, infoType);
-      case 37:
-         return ANARI_GEOMETRY_triangle_primitive_attribute3_info(paramType, infoName, infoType);
       case 39:
-         return ANARI_GEOMETRY_triangle_primitive_id_info(paramType, infoName, infoType);
-      case 60:
-         return ANARI_GEOMETRY_triangle_vertex_position_info(paramType, infoName, infoType);
-      case 59:
-         return ANARI_GEOMETRY_triangle_vertex_normal_info(paramType, infoName, infoType);
-      case 58:
-         return ANARI_GEOMETRY_triangle_vertex_color_info(paramType, infoName, infoType);
-      case 53:
-         return ANARI_GEOMETRY_triangle_vertex_attribute0_info(paramType, infoName, infoType);
-      case 54:
-         return ANARI_GEOMETRY_triangle_vertex_attribute1_info(paramType, infoName, infoType);
-      case 55:
-         return ANARI_GEOMETRY_triangle_vertex_attribute2_info(paramType, infoName, infoType);
-      case 56:
-         return ANARI_GEOMETRY_triangle_vertex_attribute3_info(paramType, infoName, infoType);
+         return ANARI_GEOMETRY_triangle_primitive_color_info(paramType, infoName, infoType);
+      case 35:
+         return ANARI_GEOMETRY_triangle_primitive_attribute0_info(paramType, infoName, infoType);
+      case 36:
+         return ANARI_GEOMETRY_triangle_primitive_attribute1_info(paramType, infoName, infoType);
+      case 37:
+         return ANARI_GEOMETRY_triangle_primitive_attribute2_info(paramType, infoName, infoType);
+      case 38:
+         return ANARI_GEOMETRY_triangle_primitive_attribute3_info(paramType, infoName, infoType);
       case 40:
+         return ANARI_GEOMETRY_triangle_primitive_id_info(paramType, infoName, infoType);
+      case 61:
+         return ANARI_GEOMETRY_triangle_vertex_position_info(paramType, infoName, infoType);
+      case 60:
+         return ANARI_GEOMETRY_triangle_vertex_normal_info(paramType, infoName, infoType);
+      case 59:
+         return ANARI_GEOMETRY_triangle_vertex_color_info(paramType, infoName, infoType);
+      case 54:
+         return ANARI_GEOMETRY_triangle_vertex_attribute0_info(paramType, infoName, infoType);
+      case 55:
+         return ANARI_GEOMETRY_triangle_vertex_attribute1_info(paramType, infoName, infoType);
+      case 56:
+         return ANARI_GEOMETRY_triangle_vertex_attribute2_info(paramType, infoName, infoType);
+      case 57:
+         return ANARI_GEOMETRY_triangle_vertex_attribute3_info(paramType, infoName, infoType);
+      case 41:
          return ANARI_GEOMETRY_triangle_primitive_index_info(paramType, infoName, infoType);
       default:
          return nullptr;
@@ -4996,7 +5030,7 @@ static const void * ANARI_MATERIAL_matte_color_info(ANARIDataType paramType, int
 }
 static const void * ANARI_MATERIAL_matte_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
-      case 27:
+      case 28:
          return ANARI_MATERIAL_matte_name_info(paramType, infoName, infoType);
       case 7:
          return ANARI_MATERIAL_matte_color_info(paramType, infoName, infoType);
@@ -5109,11 +5143,11 @@ static const void * ANARI_MATERIAL_transparentMatte_opacity_info(ANARIDataType p
 }
 static const void * ANARI_MATERIAL_transparentMatte_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
-      case 27:
+      case 28:
          return ANARI_MATERIAL_transparentMatte_name_info(paramType, infoName, infoType);
       case 7:
          return ANARI_MATERIAL_transparentMatte_color_info(paramType, infoName, infoType);
-      case 28:
+      case 29:
          return ANARI_MATERIAL_transparentMatte_opacity_info(paramType, infoName, infoType);
       default:
          return nullptr;
@@ -5288,15 +5322,15 @@ static const void * ANARI_LIGHT_point_power_info(ANARIDataType paramType, int in
 }
 static const void * ANARI_LIGHT_point_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
-      case 27:
+      case 28:
          return ANARI_LIGHT_point_name_info(paramType, infoName, infoType);
       case 7:
          return ANARI_LIGHT_point_color_info(paramType, infoName, infoType);
-      case 32:
-         return ANARI_LIGHT_point_position_info(paramType, infoName, infoType);
-      case 23:
-         return ANARI_LIGHT_point_intensity_info(paramType, infoName, infoType);
       case 33:
+         return ANARI_LIGHT_point_position_info(paramType, infoName, infoType);
+      case 24:
+         return ANARI_LIGHT_point_intensity_info(paramType, infoName, infoType);
+      case 34:
          return ANARI_LIGHT_point_power_info(paramType, infoName, infoType);
       default:
          return nullptr;
@@ -5542,19 +5576,19 @@ static const void * ANARI_SAMPLER_image1D_outTransform_info(ANARIDataType paramT
 }
 static const void * ANARI_SAMPLER_image1D_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
-      case 27:
+      case 28:
          return ANARI_SAMPLER_image1D_name_info(paramType, infoName, infoType);
-      case 18:
+      case 19:
          return ANARI_SAMPLER_image1D_image_info(paramType, infoName, infoType);
-      case 20:
+      case 21:
          return ANARI_SAMPLER_image1D_inAttribute_info(paramType, infoName, infoType);
       case 13:
          return ANARI_SAMPLER_image1D_filter_info(paramType, infoName, infoType);
-      case 64:
+      case 65:
          return ANARI_SAMPLER_image1D_wrapMode1_info(paramType, infoName, infoType);
-      case 21:
+      case 22:
          return ANARI_SAMPLER_image1D_inTransform_info(paramType, infoName, infoType);
-      case 31:
+      case 32:
          return ANARI_SAMPLER_image1D_outTransform_info(paramType, infoName, infoType);
       default:
          return nullptr;
@@ -5722,13 +5756,13 @@ static const void * ANARI_SPATIAL_FIELD_structuredRegular_filter_info(ANARIDataT
 }
 static const void * ANARI_SPATIAL_FIELD_structuredRegular_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
-      case 27:
+      case 28:
          return ANARI_SPATIAL_FIELD_structuredRegular_name_info(paramType, infoName, infoType);
       case 9:
          return ANARI_SPATIAL_FIELD_structuredRegular_data_info(paramType, infoName, infoType);
-      case 30:
+      case 31:
          return ANARI_SPATIAL_FIELD_structuredRegular_origin_info(paramType, infoName, infoType);
-      case 45:
+      case 46:
          return ANARI_SPATIAL_FIELD_structuredRegular_spacing_info(paramType, infoName, infoType);
       case 13:
          return ANARI_SPATIAL_FIELD_structuredRegular_filter_info(paramType, infoName, infoType);
@@ -5980,19 +6014,19 @@ static const void * ANARI_VOLUME_scivis_densityScale_info(ANARIDataType paramTyp
 }
 static const void * ANARI_VOLUME_scivis_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
-      case 27:
+      case 28:
          return ANARI_VOLUME_scivis_name_info(paramType, infoName, infoType);
       case 12:
          return ANARI_VOLUME_scivis_field_info(paramType, infoName, infoType);
-      case 52:
+      case 53:
          return ANARI_VOLUME_scivis_valueRange_info(paramType, infoName, infoType);
       case 7:
          return ANARI_VOLUME_scivis_color_info(paramType, infoName, infoType);
       case 8:
          return ANARI_VOLUME_scivis_color_position_info(paramType, infoName, infoType);
-      case 28:
-         return ANARI_VOLUME_scivis_opacity_info(paramType, infoName, infoType);
       case 29:
+         return ANARI_VOLUME_scivis_opacity_info(paramType, infoName, infoType);
+      case 30:
          return ANARI_VOLUME_scivis_opacity_position_info(paramType, infoName, infoType);
       case 10:
          return ANARI_VOLUME_scivis_densityScale_info(paramType, infoName, infoType);
@@ -6419,6 +6453,7 @@ static const void * ANARI_CAMERA_orthographic_info(int infoName, ANARIDataType i
                {"focusDistance", ANARI_FLOAT32},
                {"stereoMode", ANARI_STRING},
                {"interpupillaryDistance", ANARI_FLOAT32},
+               {"height", ANARI_FLOAT32},
                {"aspect", ANARI_FLOAT32},
                {0, ANARI_UNKNOWN}
             };
