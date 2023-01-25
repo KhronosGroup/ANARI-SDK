@@ -77,6 +77,12 @@
                     "default" : 0.0635,
                     "description" : "interpupillary distance for stereo rendering"
                 }, {
+                    "name" : "height",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 1.0,
+                    "description" : "height of image plane"
+                }, {
                     "name" : "aspect",
                     "types" : ["ANARI_FLOAT32"],
                     "tags" : [],
