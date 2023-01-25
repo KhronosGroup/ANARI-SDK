@@ -46,7 +46,7 @@ bool DeferredCommitBuffer::flush()
   while (i != end) {
     for (;i < end; i++) {
       auto obj = m_commitBuffer[i];
-      if (obj->lastUpdated() > obj->lastCommitted()) {
+      if (obj->useCount() > 1 && obj->lastUpdated() > obj->lastCommitted()) {
         obj->commit();
         obj->markCommitted();
       }
