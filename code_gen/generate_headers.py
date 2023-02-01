@@ -237,7 +237,7 @@ R anariTypeInvoke(ANARIDataType type, Args&&... args) {
     switch (type) {
 """)
         for enum in enums['values']:
-            f.write('        case '+enum['name']+': return F<'+enum['name']+'>()(std::forward<Args>(args)...);\n')
+            f.write('        case '+str(enum['value'])+': return F<'+str(enum['value'])+'>()(std::forward<Args>(args)...);\n')
         f.write('        default: return F<ANARI_UNKNOWN>()(std::forward<Args>(args)...);\n')
         f.write('    }\n')
         f.write('}\n')
