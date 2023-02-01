@@ -5,7 +5,46 @@
     "seed": 12345
   },
   "permutations": {
-    "primitiveMode": ["soup", "indexed"]
+    "primitiveMode": [
+      "soup",
+      "indexed"
+    ]
   },
-  "requiredFeatures": ["ANARI_KHR_GEOMETRY_CURVE"]
+  "requiredFeatures": [
+    "ANARI_KHR_GEOMETRY_CURVE"
+  ],
+  "metaData": {
+    "soup": {
+      "bounds": {
+        "world": [
+          [
+            0.015277881175279617,
+            0.0283578522503376,
+            0.44047707319259644
+          ],
+          [
+            0.965522050857544,
+            0.8462262749671936,
+            0.9889991283416748
+          ]
+        ]
+      }
+    },
+    "indexed": {
+      "bounds": {
+        "world": [
+          [
+            0.0251261368393898,
+            0.03472167253494263,
+            0.07101517915725708
+          ],
+          [
+            0.9471755027770996,
+            0.8507485389709473,
+            0.9770543575286865
+          ]
+        ]
+      }
+    }
+  }
 }

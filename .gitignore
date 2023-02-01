@@ -14,3 +14,4 @@ cts/anari_library_example*
 cts/*pyd
 *.log
 cts/evaluation
+*.png
