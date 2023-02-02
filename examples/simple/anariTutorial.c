@@ -128,8 +128,8 @@ int main(int argc, const char **argv)
 
   printf("initialize ANARI...");
 
-  // Use the 'example' library here, this is where the impl(s) come from
-  ANARILibrary lib = anariLoadLibrary("example", statusFunc, NULL);
+  // Use the 'helide' library here, this is where the impl(s) come from
+  ANARILibrary lib = anariLoadLibrary("helide", statusFunc, NULL);
 
   // query available devices
   const char **devices = anariGetDeviceSubtypes(lib);
@@ -150,30 +150,22 @@ int main(int argc, const char **argv)
   }
 
   puts("Available renderers:");
-  int havePt = 0;
-  for (const char **r = renderers; *r != NULL; r++) {
+  for (const char **r = renderers; *r != NULL; r++)
     printf("  - %s\n", *r);
-    if (strcmp(*r, "pathtracer") == 0)
-      havePt = 1;
-  }
-  if (!havePt) {
-    puts("No pathtracer available!");
-    return 1;
-  }
 
   // inspect default renderer parameters
-  const ANARIParameter *ptParams = anariGetObjectInfo(lib,
+  const ANARIParameter *rendererParams = anariGetObjectInfo(lib,
       "default",
       "default",
       ANARI_RENDERER,
       "parameter",
       ANARI_PARAMETER_LIST);
 
-  if (!ptParams) {
+  if (!rendererParams) {
     puts("Default renderer has no parameters.");
   } else {
     puts("Parameters of default renderer:");
-    for (const ANARIParameter *p = ptParams; p->name != NULL; p++) {
+    for (const ANARIParameter *p = rendererParams; p->name != NULL; p++) {
       const char *desc = anariGetParameterInfo(lib,
           "default",
           "default",
