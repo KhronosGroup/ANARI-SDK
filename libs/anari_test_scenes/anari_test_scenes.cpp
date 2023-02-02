@@ -12,6 +12,7 @@
 #include "scenes/gravity_spheres_volume.h"
 #include "scenes/instanced_cubes.h"
 #include "scenes/random_spheres.h"
+#include "scenes/random_cylinders.h"
 #include "scenes/textured_cube.h"
 #include "scenes/attributes.h"
 
@@ -35,6 +36,7 @@ static void init()
     scenes["instanced_cubes"] = &sceneInstancedCubes;
     scenes["textured_cube"] = &sceneTexturedCube;
     scenes["random_spheres"] = &sceneRandomSpheres;
+    scenes["random_cylinders"] = &sceneRandomCylinders;
     scenes["attributes"] = &sceneAttributes;
     scenes["file_obj"] = &sceneFileObj;
   }

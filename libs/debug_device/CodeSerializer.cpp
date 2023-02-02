@@ -486,26 +486,27 @@ void CodeSerializer::anariNewFrame(ANARIDevice device, ANARIFrame result) {
    out << " = anariNewFrame(device);\n";
 }
 
-void CodeSerializer::anariMapFrame(ANARIDevice device, ANARIFrame object, const char* channel, const void *mapped) {
+void CodeSerializer::anariMapFrame(ANARIDevice device, ANARIFrame object, const char* channel, uint32_t *width, uint32_t *height, ANARIDataType *pixelType, const void *mapped) {
    uint64_t local = locals++;
+   sanitized_name schannel{channel};
    out << "uint32_t width_local" << local << ";\n";
    out << "uint32_t height_local" << local << ";\n";
    out << "ANARIDataType type_local" << local << ";\n";
-   out << "const void *mapped_" << channel << local << " = anariMapFrame(device, ";
+   out << "const void *mapped_" << schannel << local << " = anariMapFrame(device, ";
    printObjectName(object);
    out << ", \"" << channel << "\", &width_local" << local;
    out << ", &height_local" << local;
    out << ", &type_local" << local;
    out << ");\n";
 
+   out
+      << "// returned width = " << (width ? std::to_string(*width) : "(null)")
+      << " height = " << (height ? std::to_string(*height) : "(null)")
+      << " format = " << (pixelType ? anari::toString(*pixelType) : "(null)")
+      << "\n";
+
    if(auto info = dd->getDynamicObjectInfo<DebugObject<ANARI_FRAME>>(object)) {
-      ANARIDataType mappingType = ANARI_UNKNOWN;
-      if(std::strncmp(channel, "color", 5)==0) {
-         mappingType = info->colorType;
-      } else if(std::strncmp(channel, "depth", 5)==0) {
-         mappingType = info->depthType;
-      }
-      out << "image(\"" << channel << "\", mapped_" << channel << local << ", ";
+      out << "image(\"" << channel << "\", mapped_" << schannel << local << ", ";
       out << "width_local" << local << ", " << "height_local" << local << ", " << "type_local" << local << ");\n";
    }
 }

@@ -29,6 +29,7 @@ static const std::vector<std::string> g_scenes = {
     "textured_cube",
     "gravity_spheres_volume",
     "attributes",
+    "random_cylinders",
     "file_obj"
     //
 };
@@ -226,7 +227,7 @@ MainWindow::MainWindow(const glm::uvec2 &windowSize)
   ImGui_ImplOpenGL3_Init();
 
   ImGuiIO &io = ImGui::GetIO();
-  io.FontGlobalScale = 1.25f;
+  io.FontGlobalScale = 1.0f;
 
   // set GLFW callbacks
   glfwSetFramebufferSizeCallback(g_window,
@@ -484,7 +485,7 @@ void MainWindow::buildUI()
   ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDecoration
       | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings
       | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav
-      | ImGuiWindowFlags_NoMove;
+      | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBackground;
 
   ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always);
 

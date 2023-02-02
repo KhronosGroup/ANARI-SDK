@@ -701,12 +701,12 @@ const void *DebugDevice::frameBufferMap(ANARIFrame fb,
     uint32_t *height,
     ANARIDataType *pixelType)
 {
-  debug->anariMapFrame(this_device(), fb, channel);
+  debug->anariMapFrame(this_device(), fb, channel, width, height, pixelType);
   const void *mapped = anariMapFrame(
       wrapped, unwrapHandle(fb), channel, width, height, pixelType);
 
   if (serializer) {
-    serializer->anariMapFrame(this_device(), fb, channel, mapped);
+    serializer->anariMapFrame(this_device(), fb, channel, width, height, pixelType, mapped);
   }
 
   return mapped;

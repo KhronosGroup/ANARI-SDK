@@ -35,7 +35,7 @@ public:
     virtual void anariRetain(ANARIDevice device, ANARIObject object) = 0;
     virtual void anariGetProperty(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType type, void* mem, uint64_t size, ANARIWaitMask mask) = 0;
     virtual void anariNewFrame(ANARIDevice device) = 0;
-    virtual void anariMapFrame(ANARIDevice device, ANARIFrame frame, const char* channel) = 0;
+    virtual void anariMapFrame(ANARIDevice device, ANARIFrame frame, const char* channel, uint32_t *width, uint32_t *height, ANARIDataType *pixelType) = 0;
     virtual void anariUnmapFrame(ANARIDevice device, ANARIFrame frame, const char* channel) = 0;
     virtual void anariNewRenderer(ANARIDevice device, const char* type) = 0;
     virtual void anariRenderFrame(ANARIDevice device, ANARIFrame frame) = 0;

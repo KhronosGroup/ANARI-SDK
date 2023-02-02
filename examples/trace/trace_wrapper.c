@@ -57,6 +57,7 @@ void* data(uint64_t offset, uint64_t size) {
 }
 
 void image(const char *channel, const void *pixels, int width, int height, ANARIDataType type) {
+    printf("%d %d\n", width, height);
     static int count = 0;
     count += 1;
     char filename[100];
@@ -78,13 +79,16 @@ void trace(ANARIDevice device) {
 
 int main(int argc, char *argv[]) {
 
+    const char *lib = argc>1 ? argv[1] : "helide";
+    const char *dev = argc>2 ? argv[2] : "default";
+
     if(load_whole_file("data.bin")) {
         fprintf(stderr, "ERROR: could not open data file.\n");
         return 1;
     }
 
-    ANARILibrary library = anariLoadLibrary("example", statusFunc, NULL);
-    ANARIDevice device = anariNewDevice(library, "default");
+    ANARILibrary library = anariLoadLibrary(lib, statusFunc, NULL);
+    ANARIDevice device = anariNewDevice(library, dev);
 
     if (!device) {
         fprintf(stderr, "ERROR: could not create device\n");

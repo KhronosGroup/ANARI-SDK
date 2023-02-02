@@ -275,7 +275,7 @@ void DebugBasics::anariGetProperty(ANARIDevice device, ANARIObject object, const
 void DebugBasics::anariNewFrame(ANARIDevice device) {
     (void)device;
 }
-void DebugBasics::anariMapFrame(ANARIDevice device, ANARIFrame frame, const char* channel) {
+void DebugBasics::anariMapFrame(ANARIDevice device, ANARIFrame frame, const char* channel, uint32_t *width, uint32_t *height, ANARIDataType *pixelType) {
     DEBUG_FUNCTION_SOURCE(anariMapFrame, frame)
     (void)device;
     (void)channel;
