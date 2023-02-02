@@ -23,6 +23,7 @@ ANARILibrary g_debug = nullptr;
 bool g_enableDebug = false;
 bool g_verbose = false;
 const bool g_true = true;
+const char *g_traceDir = nullptr;
 
 /******************************************************************/
 static std::string pathOf(const std::string &filename)
@@ -97,6 +98,10 @@ static void initializeANARI(MainWindow *window)
   if (g_enableDebug) {
     ANARIDevice dbg = anariNewDevice(g_debug, "debug");
     anari::setParameter(dbg, dbg, "wrappedDevice", ANARI_DEVICE, &dev);
+    if(g_traceDir) {
+      anari::setParameter(dbg, dbg, "traceDir", ANARI_STRING, g_traceDir);
+      anari::setParameter(dbg, dbg, "traceMode", ANARI_STRING, "code");
+    }
     anari::commitParameters(dbg, dbg);
     anari::release(dev, dev);
     dev = dbg;
@@ -120,6 +125,8 @@ void printUsage()
       << "   [{--library|-l} <ANARI library>]\n"
       << "   [{--device|-d} <ANARI device>]\n"
       << "   [{--renderer|-r} <ANARI renderer>]\n"
+      << "   [{--trace|-t} <directory>]\n"
+      << "   [{--scene|-s} <scene>]\n"
       << "   [.obj intput file]"
       << std::endl;
 }
@@ -144,6 +151,8 @@ void parseCommandLine(int argc, const char *argv[])
       g_verbose = true;
     } else if (arg == "--scene" || arg == "-s") {
       g_startupScene = argv[++i];
+    } else if (arg == "--trace" || arg == "-t") {
+      g_traceDir = argv[++i];
     } else {
       g_objFile = arg;
     }

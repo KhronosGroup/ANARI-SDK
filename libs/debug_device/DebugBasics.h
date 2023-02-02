@@ -40,7 +40,7 @@ public:
     void anariRetain(ANARIDevice device, ANARIObject object) override;
     void anariGetProperty(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType type, void* mem, uint64_t size, ANARIWaitMask mask) override;
     void anariNewFrame(ANARIDevice device) override;
-    void anariMapFrame(ANARIDevice device, ANARIFrame frame, const char* channel) override;
+    void anariMapFrame(ANARIDevice device, ANARIFrame frame, const char* channel, uint32_t *width, uint32_t *height, ANARIDataType *pixelType) override;
     void anariUnmapFrame(ANARIDevice device, ANARIFrame frame, const char* channel) override;
     void anariNewRenderer(ANARIDevice device, const char* type) override;
     void anariRenderFrame(ANARIDevice device, ANARIFrame frame) override;

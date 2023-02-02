@@ -11,6 +11,7 @@ add_library(${PROJECT_NAME} STATIC
   scenes/gravity_spheres_volume.cpp
   scenes/instanced_cubes.cpp
   scenes/random_spheres.cpp
+  scenes/random_cylinders.cpp
   scenes/scene.cpp
   scenes/textured_cube.cpp
   scenes/attributes.cpp
