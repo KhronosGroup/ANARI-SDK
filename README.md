@@ -44,10 +44,11 @@ from the source directory), you can do:
 Using a tool like `ccmake` or `cmake-gui` will let you see which options are
 available to enable. The following CMake options are offered:
 
-- `BUILD_SHARED_LIBS` : build everything as shared libraries or static libraries
-- `BUILD_TESTING`     : build unit and regression test binaries
-- `BUILD_EXAMPLES`    : build example device and example applications
-- `BUILD_VIEWER`      : build viewer too (needs glfw3) if building examples
+- `BUILD_SHARED_LIBS`   : build everything as shared libraries or static libraries
+- `BUILD_TESTING`       : build unit and regression test binaries
+- `BUILD_HELIDE_DEVICE` : build the provided example `helide` device implementation
+- `BUILD_EXAMPLES`      : build example device and example applications
+- `BUILD_VIEWER`        : build viewer too (needs glfw3) if building examples
 
 Once built, the library can be installed via the `install` target created by
 CMake. This can be invoked from your build directory with (on any platform):
@@ -72,12 +73,15 @@ The simplest usage can be found [here](examples/simple).
 
 ## Running the examples
 
-The basic tutorial app (built by default) uses the `example` device as an
+The basic tutorial app (built by default) uses the `helide` device as an
 example, which can be run with:
 
 ```bash
 % ./anariTutorial
 ```
+
+Note that running the tutorial will require that the `helide` device is enabled
+in your build with the CMake option `BUILD_HELIDE_DEVICE=ON`.
 
 The viewer application (enabled with `BUILD_VIEWER=ON`) by default uses the
 `environment` library, which reads `ANARI_LIBRARY` as an environment variable to
@@ -88,12 +92,12 @@ get the library to load. For example it can be run with:
 % ./anariViewer /path/to/some/file.obj
 ```
 
-Alternatively, either `--library` or `-l` can be used to override the library to
-be loaded on the command line directly.
+Alternatively, either `--library` or `-l` can be used on the viewer's command
+line to override the ANARI library to be loaded.
 
-The regression test binary used to render the test scenes without a window
-(results saved out as PNG images) uses the same mechanisms as the viewer to
-select/override which library is loaded at runtime.
+The regression test binary (`anariRenderTests`) used to render the test scenes
+without a window (results saved out as PNG images) uses the same mechanisms as
+the viewer to select/override which library is loaded at runtime.
 
 ## Available Implementations
 
