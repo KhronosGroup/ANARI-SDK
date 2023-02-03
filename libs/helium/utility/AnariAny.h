@@ -37,6 +37,10 @@ struct AnariAny
   bool operator==(const AnariAny &rhs) const;
   bool operator!=(const AnariAny &rhs) const;
 
+  // Raw data access, note that string values will be limited in storage size
+  const void *data() const;
+  void *data();
+
   template <typename T>
   T get() const;
 
@@ -190,6 +194,18 @@ inline T AnariAny::get() const
   }
 
   return storageAs<T>();
+}
+
+inline const void *AnariAny::data() const
+{
+  return type() == ANARI_STRING ? (const void *)m_string.data()
+                                : (const void *)m_storage.data();
+}
+
+inline void *AnariAny::data()
+{
+  return type() == ANARI_STRING ? (void *)m_string.data()
+                                : (void *)m_storage.data();
 }
 
 template <typename T>
