@@ -7,7 +7,7 @@ add_subdirectory(helium)
 add_subdirectory(debug_device)
 add_subdirectory(sink_device)
 
-option(BUILD_HELIDE_DEVICE "Build example 'helide' device" OFF)
+option(BUILD_HELIDE_DEVICE "Build example 'helide' device" ON)
 if (BUILD_HELIDE_DEVICE)
   add_subdirectory(helide)
 endif()

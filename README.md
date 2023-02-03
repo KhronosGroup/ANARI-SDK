@@ -47,7 +47,7 @@ available to enable. The following CMake options are offered:
 - `BUILD_SHARED_LIBS`   : build everything as shared libraries or static libraries
 - `BUILD_TESTING`       : build unit and regression test binaries
 - `BUILD_HELIDE_DEVICE` : build the provided example `helide` device implementation
-- `BUILD_EXAMPLES`      : build example device and example applications
+- `BUILD_EXAMPLES`      : build example applications
 - `BUILD_VIEWER`        : build viewer too (needs glfw3) if building examples
 
 Once built, the library can be installed via the `install` target created by
