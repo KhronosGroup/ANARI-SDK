@@ -52,7 +52,7 @@ struct Array : public helium::BaseArray
   void commit() override;
   void *map() override;
   virtual void unmap() override;
-  virtual void privatize() = 0;
+  virtual void privatize() override = 0;
 
   bool wasPrivatized() const;
 
