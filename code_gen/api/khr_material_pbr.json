@@ -1,0 +1,139 @@
+{
+    "info" : {
+        "name" : "KHR_MATERIAL_PBR",
+        "type" : "feature",
+        "dependencies" : []
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_MATERIAL",
+            "name" : "pbr",
+            "description" : "pbr material object",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "description" : "optional object name"
+                }, {
+                    "name" : "baseColor",
+                    "types" : ["ANARI_FLOAT32_VEC3", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags" : ["attribute"],
+                    "default" : [0.8, 0.8, 0.8],
+                    "description" : "base color"
+                }, {
+                    "name" : "opacity",
+                    "types" : ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags" : ["attribute"],
+                    "default" : 1.0,
+                    "description" : "opacity"
+                }, {
+                    "name" : "metallic",
+                    "types" : ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags" : ["attribute"],
+                    "default" : 1.0,
+                    "description" : "metallic factor"
+                }, {
+                    "name" : "roughness",
+                    "types" : ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags" : ["attribute"],
+                    "default" : 0.0,
+                    "description" : "roughness factor"
+                }, {
+                    "name" : "normal",
+                    "types" : ["ANARI_SAMPLER"],
+                    "tags" : [],
+                    "description" : "normal map"
+                }, {
+                    "name" : "emissive",
+                    "types" : ["ANARI_FLOAT32_VEC3", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags" : ["attribute"],
+                    "default" : [0.0, 0.0, 0.0],
+                    "description" : "emissive factor"
+                }, {
+                    "name" : "occlusion",
+                    "types" : ["ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags" : ["attribute"],
+                    "description" : "precomputed occlusion"
+                }, {
+                    "name" : "alphaMode",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "values" : ["opaque", "blend", "mask"],
+                    "default" : "opaque",
+                    "description" : "alpha mode"
+                }, {
+                    "name" : "alphaCutoff",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 0.0,
+                    "description" : "cutoff for alpha mask mode"
+                }, {
+                    "name" : "specular",
+                    "types" : ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags" : ["attribute"],
+                    "default" : 0.0,
+                    "description" : "specular factor"
+                }, {
+                    "name" : "specularColor",
+                    "types" : ["ANARI_FLOAT32_VEC3", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags" : ["attribute"],
+                    "default" : [1.0, 1.0, 1.0],
+                    "description" : "specular color"
+                }, {
+                    "name" : "clearcoat",
+                    "types" : ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags" : ["attribute"],
+                    "default" : 0.0,
+                    "description" : "clearcoat factor"
+                }, {
+                    "name" : "clearcoatRoughness",
+                    "types" : ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags" : ["attribute"],
+                    "default" : 0.0,
+                    "description" : "clearcoat roughness"
+                }, {
+                    "name" : "clearcoatNormal",
+                    "types" : ["ANARI_SAMPLER"],
+                    "tags" : [],
+                    "description" : "clearcoat normal map"
+                }, {
+                    "name" : "transmission",
+                    "types" : ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags" : ["attribute"],
+                    "default" : 0.0,
+                    "description" : "transmission factor"
+                }, {
+                    "name" : "ior",
+                    "types" : ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags" : ["attribute"],
+                    "default" : 1.5,
+                    "description" : "index of refraction"
+                }, {
+                    "name" : "thickness",
+                    "types" : ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags" : ["attribute"],
+                    "default" : 0.0,
+                    "description" : "wall thickness"
+                }, {
+                    "name" : "attenuationDistance",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "description" : "attenuation distance"
+                }, {
+                    "name" : "attenuationColor",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "default" : [1.0, 1.0, 1.0],
+                    "description" : "attenuation color"
+                }, {
+                    "name" : "tangent",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : ["attribute"],
+                    "description" : "tangent attribute"
+                }
+            ]
+        }
+    ]
+}
