@@ -211,9 +211,9 @@ inline void *AnariAny::data()
 template <typename T>
 inline T *AnariAny::getObject() const
 {
-  constexpr ANARIDataType type = anari::ANARITypeFor<T>::value;
+  constexpr ANARIDataType type = anari::ANARITypeFor<T *>::value;
   static_assert(
-      !anari::isObject(type), "use AnariAny::get() for getting non-objects");
+      anari::isObject(type), "use AnariAny::get() for getting non-objects");
   return anari::isObject(this->type()) ? storageAs<T *>() : nullptr;
 }
 
