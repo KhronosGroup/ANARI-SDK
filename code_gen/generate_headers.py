@@ -207,15 +207,105 @@ def write_anari_type_query_helper(filename, anari):
 #pragma once
 
 #include <anari/anari.h>
+#include <math.h>
+#include <stdint.h>
+
+inline float anari_unit_clamp(float x) {
+    if(x < -1.0f) {
+        return -1.0f;
+    } else if(x > 1.0f) {
+        return 1.0f;
+    } else {
+        return x;
+    }
+}
+
+inline int64_t anari_fixed_clamp(float x, int64_t max) {
+    if(x <= -1.0f) {
+        return -max;
+    } else if(x >= 1.0f) {
+        return max;
+    } else {
+        return x*max;
+    }
+}
+
+inline uint64_t anari_ufixed_clamp(float x, uint64_t max) {
+    if(x <= 0.0f) {
+        return 0;
+    } else if(x >= 1.0f) {
+        return max;
+    } else {
+        return x*max;
+    }
+}
+
+inline float anari_from_srgb(uint8_t x0) {
+    float x = x0/UINT8_MAX;
+    if(x<=0.04045f) {
+        return x*0.0773993808f;
+    } else {
+        return powf((x+0.055f)*0.94786729857f, 2.4f);
+    }
+}
+
+inline uint8_t anari_to_srgb(float x) {
+    if(x >= 1.0f) {
+        return UINT8_MAX;
+    } else if(x<=0.0f) {
+        return 0;
+    } else if(x<=0.0031308f) {
+        return x*12.92f*UINT8_MAX;
+    } else {
+        return (powf(x*1.055f, 1.0f/2.4f)-0.055f)*UINT8_MAX;
+    }
+}
+
 
 #ifdef __cplusplus
 
 #include <utility>
+
 namespace anari {
 
 template<int type>
 struct ANARITypeProperties { };
 
+""")
+
+        special_conversions = {}
+        special_conversions['ANARI_UFIXED8_RGBA_SRGB'] = ("""        dst[0] = anari_from_srgb(src[0]);
+        dst[1] = anari_from_srgb(src[1]);
+        dst[2] = anari_from_srgb(src[2]);
+        dst[3] = anari_unit_clamp(src[3]);
+""", """        dst[0] = anari_to_srgb(src[0]);
+        dst[1] = anari_to_srgb(src[1]);
+        dst[2] = anari_to_srgb(src[2]);
+        dst[3] = anari_ufixed_clamp(src[3], UINT8_MAX);
+""")
+
+        special_conversions['ANARI_UFIXED8_RGB_SRGB'] = ("""        dst[0] = anari_from_srgb(src[0]);
+        dst[1] = anari_from_srgb(src[1]);
+        dst[2] = anari_from_srgb(src[2]);
+        dst[3] = 1.0f;
+""", """        dst[0] = anari_to_srgb(src[0]);
+        dst[1] = anari_to_srgb(src[1]);
+        dst[2] = anari_to_srgb(src[2]);
+""")
+
+        special_conversions['ANARI_UFIXED8_RA_SRGB'] = ("""        dst[0] = anari_from_srgb(src[0]);
+        dst[1] = 0;
+        dst[2] = 0;
+        dst[3] = anari_unit_clamp(src[1]);
+""", """        dst[0] = anari_to_srgb(src[0]);
+        dst[1] = anari_ufixed_clamp(src[3], UINT8_MAX);
+""")
+
+        special_conversions['ANARI_UFIXED8_R_SRGB'] = ("""        dst[0] = anari_from_srgb(src[0]);
+        dst[1] = 0.0f;
+        dst[2] = 0.0f;
+        dst[3] = 1.0f;
+""", """        dst[0] = anari_to_srgb(src[0]);
 """)
 
         enums = next(x for x in anari['enums'] if x['name']=='ANARIDataType')
@@ -224,11 +314,42 @@ struct ANARITypeProperties { };
             f.write('struct ANARITypeProperties<'+enum['name']+'> {\n')
             f.write('    using base_type = '+enum['baseType']+';\n')
             f.write('    static const int components = '+str(enum['elements'])+';\n')
+            f.write('    static const bool normalized = '+('true' if enum['normalized'] else 'false')+';\n')
             f.write('    using array_type = base_type['+str(enum['elements'])+'];\n')
             f.write('    static constexpr const char* enum_name = "'+enum['name']+'";\n')
             f.write('    static constexpr const char* type_name = "'+enum['baseType']+'";\n')
             f.write('    static constexpr const char* array_name = "'+enum['baseType']+'['+str(enum['elements'])+']";\n')
             f.write('    static constexpr const char* var_name = "var'+enum['name'][6:].lower()+'";\n')
+
+            if enum['value'] >= 1000: # conversions for numerical types
+                f.write('    static void toFloat4(float *dst, const base_type *src) {\n')
+                if enum['name'] in special_conversions:
+                    f.write(special_conversions[enum['name']][0])
+                else:
+                    for i in range(0, 4):
+                        if i < enum['elements']:
+                            if 'FIXED' in enum['name']:
+                                f.write('        dst['+str(i)+'] = anari_unit_clamp(src['+str(i)+']/(float)'+enum['baseType'].upper()[0:-2]+'_MAX);\n')
+                            else:
+                                f.write('        dst['+str(i)+'] = src['+str(i)+'];\n')
+                        else:
+                            f.write('        dst['+str(i)+'] = '+('1.0f' if i==3 else '0.0f')+';\n')
+                f.write('    }\n')
+
+                f.write('    static void fromFloat4(base_type *dst, const float *src) {\n')
+                if enum['name'] in special_conversions:
+                    f.write(special_conversions[enum['name']][1])
+                else:
+                    for i in range(0, min(4, enum['elements'])):
+                        if 'UFIXED' in enum['name']:
+                            f.write('        dst['+str(i)+'] = anari_ufixed_clamp(src['+str(i)+'], '+enum['baseType'].upper()[0:-2]+'_MAX);\n')
+                        elif 'FIXED' in enum['name']:
+                            f.write('        dst['+str(i)+'] = anari_fixed_clamp(src['+str(i)+'], '+enum['baseType'].upper()[0:-2]+'_MAX);\n')
+                        else:
+                            f.write('        dst['+str(i)+'] = src['+str(i)+'];\n')
+                f.write('    }\n')
+
+
             f.write('};\n')
 
         f.write("""
