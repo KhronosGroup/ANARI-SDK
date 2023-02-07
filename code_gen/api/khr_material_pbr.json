@@ -67,7 +67,7 @@
                     "name" : "alphaCutoff",
                     "types" : ["ANARI_FLOAT32"],
                     "tags" : [],
-                    "default" : 0.0,
+                    "default" : 0.5,
                     "description" : "cutoff for alpha mask mode"
                 }, {
                     "name" : "specular",
@@ -128,10 +128,35 @@
                     "default" : [1.0, 1.0, 1.0],
                     "description" : "attenuation color"
                 }, {
-                    "name" : "tangent",
-                    "types" : ["ANARI_STRING"],
+                    "name" : "sheenColor",
+                    "types" : ["ANARI_FLOAT32_VEC3", "ANARI_SAMPLER", "ANARI_STRING"],
                     "tags" : ["attribute"],
-                    "description" : "tangent attribute"
+                    "default" : [0.0, 0.0, 0.0],
+                    "description" : "sheen color"
+                }, {
+                    "name" : "sheenRoughness",
+                    "types" : ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags" : ["attribute"],
+                    "default" : 0.0,
+                    "description" : "sheen roughness"
+                }, {
+                    "name" : "iridescence",
+                    "types" : ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags" : ["attribute"],
+                    "default" : 0.0,
+                    "description" : "iridescence factor"
+                }, {
+                    "name" : "iridescenceIor",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 1.3,
+                    "description" : "iridescence index of refraction"
+                }, {
+                    "name" : "iridescenceThickness",
+                    "types" : ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags" : ["attribute"],
+                    "default" : 0.0,
+                    "description" : "iridescence thicknness"
                 }
             ]
         }
