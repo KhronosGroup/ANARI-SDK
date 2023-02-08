@@ -30,6 +30,7 @@ static const std::vector<std::string> g_scenes = {
     "gravity_spheres_volume",
     "attributes",
     "random_cylinders",
+    "pbr_spheres",
     "file_obj"
     //
 };
