@@ -15,6 +15,7 @@
 #include "scenes/random_cylinders.h"
 #include "scenes/textured_cube.h"
 #include "scenes/attributes.h"
+#include "scenes/pbr_spheres.h"
 
 namespace anari {
 namespace scenes {
@@ -38,6 +39,7 @@ static void init()
     scenes["random_spheres"] = &sceneRandomSpheres;
     scenes["random_cylinders"] = &sceneRandomCylinders;
     scenes["attributes"] = &sceneAttributes;
+    scenes["pbr_spheres"] = &scenePbrSpheres;
     scenes["file_obj"] = &sceneFileObj;
   }
 }
