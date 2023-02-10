@@ -20,7 +20,7 @@
                     "name" : "baseColor",
                     "types" : ["ANARI_FLOAT32_VEC3", "ANARI_SAMPLER", "ANARI_STRING"],
                     "tags" : ["attribute"],
-                    "default" : [0.8, 0.8, 0.8],
+                    "default" : [1.0, 1.0, 1.0],
                     "description" : "base color"
                 }, {
                     "name" : "opacity",
@@ -38,7 +38,7 @@
                     "name" : "roughness",
                     "types" : ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
                     "tags" : ["attribute"],
-                    "default" : 0.0,
+                    "default" : 1.0,
                     "description" : "roughness factor"
                 }, {
                     "name" : "normal",

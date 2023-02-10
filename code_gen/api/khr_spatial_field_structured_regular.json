@@ -38,7 +38,7 @@
                     "name" : "filter",
                     "types" : ["ANARI_STRING"],
                     "tags" : [],
-                    "default" : "nearest",
+                    "default" : "linear",
                     "values" : ["nearest", "linear"],
                     "description" : "filter mode used to interpolate the grid"
                 }
