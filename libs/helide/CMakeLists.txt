@@ -81,10 +81,11 @@ endif()
 add_library(${PROJECT_NAME} SHARED)
 
 target_sources(${PROJECT_NAME} PRIVATE
-  Object.cpp
   HelideDevice.cpp
   HelideDeviceQueries.cpp
   HelideDeviceDebugFactory.cpp
+  HelideGlobalState.cpp
+  Object.cpp
   array/Array.cpp
   array/Array1D.cpp
   array/Array2D.cpp

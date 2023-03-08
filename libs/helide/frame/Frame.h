@@ -43,10 +43,10 @@ struct Frame : public helium::BaseFrame
   void *mapColorBuffer();
   void *mapDepthBuffer();
 
- private:
   bool ready() const;
   void wait() const;
 
+ private:
   float2 screenFromPixel(const float2 &p) const;
   void writeSample(int x, int y, const PixelSample &s);
 

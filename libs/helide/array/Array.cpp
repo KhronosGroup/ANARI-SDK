@@ -103,6 +103,7 @@ void *Array::map()
         "array mapped again without being previously unmapped");
   }
   m_mapped = true;
+  deviceState()->waitOnCurrentFrame();
   return data();
 }
 
