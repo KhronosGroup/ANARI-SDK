@@ -10,6 +10,8 @@
 
 namespace helide {
 
+struct Frame;
+
 struct HelideGlobalState : public helium::BaseGlobalDeviceState
 {
   int numThreads{1};
@@ -36,11 +38,14 @@ struct HelideGlobalState : public helium::BaseGlobalDeviceState
     helium::TimeStamp lastTLSReconstructSceneRequest{0};
   } objectUpdates;
 
+  Frame *currentFrame{nullptr};
+
   RTCDevice embreeDevice{nullptr};
 
   // Helper methods //
 
-  HelideGlobalState(ANARIDevice d) : helium::BaseGlobalDeviceState(d) {}
+  HelideGlobalState(ANARIDevice d);
+  void waitOnCurrentFrame() const;
 };
 
 } // namespace helide

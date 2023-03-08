@@ -131,11 +131,12 @@ bool Frame::getProperty(
 
 void Frame::renderFrame()
 {
-  wait();
+  auto *state = deviceState();
+  state->waitOnCurrentFrame();
 
   auto start = std::chrono::steady_clock::now();
 
-  deviceState()->commitBuffer.flush();
+  state->commitBuffer.flush();
 
   if (!isValid()) {
     reportMessage(
@@ -144,6 +145,8 @@ void Frame::renderFrame()
     return;
   }
 
+  state->currentFrame = this;
+
   auto *c = m_camera.ptr;
   auto *w = m_world.ptr;
   auto *r = m_renderer.ptr;
@@ -151,7 +154,7 @@ void Frame::renderFrame()
   w->refInc(helium::RefType::INTERNAL);
   r->refInc(helium::RefType::INTERNAL);
 
-  m_future = async<void>([&, start, c, w, r]() {
+  m_future = async<void>([&, state, start, c, w, r]() {
     w->embreeSceneUpdate();
 
     const auto &size = m_frameData.size;
