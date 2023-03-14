@@ -53,8 +53,8 @@
                     "description" : "emissive factor"
                 }, {
                     "name" : "occlusion",
-                    "types" : ["ANARI_SAMPLER", "ANARI_STRING"],
-                    "tags" : ["attribute"],
+                    "types" : ["ANARI_SAMPLER"],
+                    "tags" : [],
                     "description" : "precomputed occlusion"
                 }, {
                     "name" : "alphaMode",
