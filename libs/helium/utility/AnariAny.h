@@ -119,6 +119,8 @@ inline AnariAny::AnariAny(ANARIDataType type, const void *v)
   m_type = type;
   if (type == ANARI_STRING)
     m_string = (const char *)v;
+  else if (type == ANARI_VOID_POINTER)
+    std::memcpy(m_storage.data(), &v, anari::sizeOf(type));
   else
     std::memcpy(m_storage.data(), v, anari::sizeOf(type));
   refIncObject();
