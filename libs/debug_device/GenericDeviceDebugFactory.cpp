@@ -1264,7 +1264,7 @@ class geometry_cylinder : public DebugObject<ANARI_GEOMETRY> {
 };
 class geometry_quad : public DebugObject<ANARI_GEOMETRY> {
    static int param_hash(const char *str) {
-      static const uint32_t table[] = {0x62610009u,0x0u,0x7372000du,0x0u,0x0u,0x0u,0x0u,0x0u,0x66650044u,0x6e6d000au,0x6665000bu,0x100000cu,0x80000000u,0x6a69000eu,0x6e6d000fu,0x6a690010u,0x75740011u,0x6a690012u,0x77760013u,0x66650014u,0x2f2e0015u,0x6a610016u,0x7574001fu,0x0u,0x706f002fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x6f640034u,0x75740020u,0x73720021u,0x6a690022u,0x63620023u,0x76750024u,0x75740025u,0x66650026u,0x34300027u,0x100002bu,0x100002cu,0x100002du,0x100002eu,0x80000002u,0x80000003u,0x80000004u,0x80000005u,0x6d6c0030u,0x706f0031u,0x73720032u,0x1000033u,0x80000001u,0x100003fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x65640040u,0x80000006u,0x66650041u,0x79780042u,0x1000043u,0x8000000eu,0x73720045u,0x75740046u,0x66650047u,0x79780048u,0x2f2e0049u,0x7161004au,0x7574005au,0x0u,0x706f006au,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x706f006fu,0x0u,0x706f0075u,0x7574005bu,0x7372005cu,0x6a69005du,0x6362005eu,0x7675005fu,0x75740060u,0x66650061u,0x34300062u,0x1000066u,0x1000067u,0x1000068u,0x1000069u,0x8000000au,0x8000000bu,0x8000000cu,0x8000000du,0x6d6c006bu,0x706f006cu,0x7372006du,0x100006eu,0x80000009u,0x73720070u,0x6e6d0071u,0x62610072u,0x6d6c0073u,0x1000074u,0x80000008u,0x74730076u,0x6a690077u,0x75740078u,0x6a690079u,0x706f007au,0x6f6e007bu,0x100007cu,0x80000007u};
+      static const uint32_t table[] = {0x62610009u,0x0u,0x7372000du,0x0u,0x0u,0x0u,0x0u,0x0u,0x66650044u,0x6e6d000au,0x6665000bu,0x100000cu,0x80000000u,0x6a69000eu,0x6e6d000fu,0x6a690010u,0x75740011u,0x6a690012u,0x77760013u,0x66650014u,0x2f2e0015u,0x6a610016u,0x7574001fu,0x0u,0x706f002fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x6f640034u,0x75740020u,0x73720021u,0x6a690022u,0x63620023u,0x76750024u,0x75740025u,0x66650026u,0x34300027u,0x100002bu,0x100002cu,0x100002du,0x100002eu,0x80000002u,0x80000003u,0x80000004u,0x80000005u,0x6d6c0030u,0x706f0031u,0x73720032u,0x1000033u,0x80000001u,0x100003fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x65640040u,0x80000006u,0x66650041u,0x79780042u,0x1000043u,0x8000000fu,0x73720045u,0x75740046u,0x66650047u,0x79780048u,0x2f2e0049u,0x7561004au,0x7574005eu,0x0u,0x706f006eu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x706f0073u,0x0u,0x706f0079u,0x0u,0x0u,0x0u,0x62610081u,0x7574005fu,0x73720060u,0x6a690061u,0x63620062u,0x76750063u,0x75740064u,0x66650065u,0x34300066u,0x100006au,0x100006bu,0x100006cu,0x100006du,0x8000000bu,0x8000000cu,0x8000000du,0x8000000eu,0x6d6c006fu,0x706f0070u,0x73720071u,0x1000072u,0x8000000au,0x73720074u,0x6e6d0075u,0x62610076u,0x6d6c0077u,0x1000078u,0x80000008u,0x7473007au,0x6a69007bu,0x7574007cu,0x6a69007du,0x706f007eu,0x6f6e007fu,0x1000080u,0x80000007u,0x6f6e0082u,0x68670083u,0x66650084u,0x6f6e0085u,0x75740086u,0x1000087u,0x80000009u};
       uint32_t cur = 0x776e0000u;
       for(int i = 0;cur!=0;++i) {
          uint32_t idx = cur&0xFFFFu;
@@ -1336,32 +1336,37 @@ class geometry_quad : public DebugObject<ANARI_GEOMETRY> {
             check_type(ANARI_GEOMETRY, "quad", paramname, paramtype, vertex_normal_types);
             return;
          }
-         case 9: { //vertex.color
+         case 9: { //vertex.tangent
+            ANARIDataType vertex_tangent_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "quad", paramname, paramtype, vertex_tangent_types);
+            return;
+         }
+         case 10: { //vertex.color
             ANARIDataType vertex_color_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
             check_type(ANARI_GEOMETRY, "quad", paramname, paramtype, vertex_color_types);
             return;
          }
-         case 10: { //vertex.attribute0
+         case 11: { //vertex.attribute0
             ANARIDataType vertex_attribute0_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
             check_type(ANARI_GEOMETRY, "quad", paramname, paramtype, vertex_attribute0_types);
             return;
          }
-         case 11: { //vertex.attribute1
+         case 12: { //vertex.attribute1
             ANARIDataType vertex_attribute1_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
             check_type(ANARI_GEOMETRY, "quad", paramname, paramtype, vertex_attribute1_types);
             return;
          }
-         case 12: { //vertex.attribute2
+         case 13: { //vertex.attribute2
             ANARIDataType vertex_attribute2_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
             check_type(ANARI_GEOMETRY, "quad", paramname, paramtype, vertex_attribute2_types);
             return;
          }
-         case 13: { //vertex.attribute3
+         case 14: { //vertex.attribute3
             ANARIDataType vertex_attribute3_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
             check_type(ANARI_GEOMETRY, "quad", paramname, paramtype, vertex_attribute3_types);
             return;
          }
-         case 14: { //primitive.index
+         case 15: { //primitive.index
             ANARIDataType primitive_index_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
             check_type(ANARI_GEOMETRY, "quad", paramname, paramtype, primitive_index_types);
             return;
@@ -1501,7 +1506,7 @@ class geometry_sphere : public DebugObject<ANARI_GEOMETRY> {
 };
 class geometry_triangle : public DebugObject<ANARI_GEOMETRY> {
    static int param_hash(const char *str) {
-      static const uint32_t table[] = {0x62610009u,0x0u,0x7372000du,0x0u,0x0u,0x0u,0x0u,0x0u,0x66650044u,0x6e6d000au,0x6665000bu,0x100000cu,0x80000000u,0x6a69000eu,0x6e6d000fu,0x6a690010u,0x75740011u,0x6a690012u,0x77760013u,0x66650014u,0x2f2e0015u,0x6a610016u,0x7574001fu,0x0u,0x706f002fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x6f640034u,0x75740020u,0x73720021u,0x6a690022u,0x63620023u,0x76750024u,0x75740025u,0x66650026u,0x34300027u,0x100002bu,0x100002cu,0x100002du,0x100002eu,0x80000002u,0x80000003u,0x80000004u,0x80000005u,0x6d6c0030u,0x706f0031u,0x73720032u,0x1000033u,0x80000001u,0x100003fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x65640040u,0x80000006u,0x66650041u,0x79780042u,0x1000043u,0x8000000eu,0x73720045u,0x75740046u,0x66650047u,0x79780048u,0x2f2e0049u,0x7161004au,0x7574005au,0x0u,0x706f006au,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x706f006fu,0x0u,0x706f0075u,0x7574005bu,0x7372005cu,0x6a69005du,0x6362005eu,0x7675005fu,0x75740060u,0x66650061u,0x34300062u,0x1000066u,0x1000067u,0x1000068u,0x1000069u,0x8000000au,0x8000000bu,0x8000000cu,0x8000000du,0x6d6c006bu,0x706f006cu,0x7372006du,0x100006eu,0x80000009u,0x73720070u,0x6e6d0071u,0x62610072u,0x6d6c0073u,0x1000074u,0x80000008u,0x74730076u,0x6a690077u,0x75740078u,0x6a690079u,0x706f007au,0x6f6e007bu,0x100007cu,0x80000007u};
+      static const uint32_t table[] = {0x62610009u,0x0u,0x7372000du,0x0u,0x0u,0x0u,0x0u,0x0u,0x66650044u,0x6e6d000au,0x6665000bu,0x100000cu,0x80000000u,0x6a69000eu,0x6e6d000fu,0x6a690010u,0x75740011u,0x6a690012u,0x77760013u,0x66650014u,0x2f2e0015u,0x6a610016u,0x7574001fu,0x0u,0x706f002fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x6f640034u,0x75740020u,0x73720021u,0x6a690022u,0x63620023u,0x76750024u,0x75740025u,0x66650026u,0x34300027u,0x100002bu,0x100002cu,0x100002du,0x100002eu,0x80000002u,0x80000003u,0x80000004u,0x80000005u,0x6d6c0030u,0x706f0031u,0x73720032u,0x1000033u,0x80000001u,0x100003fu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x65640040u,0x80000006u,0x66650041u,0x79780042u,0x1000043u,0x8000000fu,0x73720045u,0x75740046u,0x66650047u,0x79780048u,0x2f2e0049u,0x7561004au,0x7574005eu,0x0u,0x706f006eu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x706f0073u,0x0u,0x706f0079u,0x0u,0x0u,0x0u,0x62610081u,0x7574005fu,0x73720060u,0x6a690061u,0x63620062u,0x76750063u,0x75740064u,0x66650065u,0x34300066u,0x100006au,0x100006bu,0x100006cu,0x100006du,0x8000000bu,0x8000000cu,0x8000000du,0x8000000eu,0x6d6c006fu,0x706f0070u,0x73720071u,0x1000072u,0x8000000au,0x73720074u,0x6e6d0075u,0x62610076u,0x6d6c0077u,0x1000078u,0x80000008u,0x7473007au,0x6a69007bu,0x7574007cu,0x6a69007du,0x706f007eu,0x6f6e007fu,0x1000080u,0x80000007u,0x6f6e0082u,0x68670083u,0x66650084u,0x6f6e0085u,0x75740086u,0x1000087u,0x80000009u};
       uint32_t cur = 0x776e0000u;
       for(int i = 0;cur!=0;++i) {
          uint32_t idx = cur&0xFFFFu;
@@ -1573,32 +1578,37 @@ class geometry_triangle : public DebugObject<ANARI_GEOMETRY> {
             check_type(ANARI_GEOMETRY, "triangle", paramname, paramtype, vertex_normal_types);
             return;
          }
-         case 9: { //vertex.color
+         case 9: { //vertex.tangent
+            ANARIDataType vertex_tangent_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
+            check_type(ANARI_GEOMETRY, "triangle", paramname, paramtype, vertex_tangent_types);
+            return;
+         }
+         case 10: { //vertex.color
             ANARIDataType vertex_color_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
             check_type(ANARI_GEOMETRY, "triangle", paramname, paramtype, vertex_color_types);
             return;
          }
-         case 10: { //vertex.attribute0
+         case 11: { //vertex.attribute0
             ANARIDataType vertex_attribute0_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
             check_type(ANARI_GEOMETRY, "triangle", paramname, paramtype, vertex_attribute0_types);
             return;
          }
-         case 11: { //vertex.attribute1
+         case 12: { //vertex.attribute1
             ANARIDataType vertex_attribute1_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
             check_type(ANARI_GEOMETRY, "triangle", paramname, paramtype, vertex_attribute1_types);
             return;
          }
-         case 12: { //vertex.attribute2
+         case 13: { //vertex.attribute2
             ANARIDataType vertex_attribute2_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
             check_type(ANARI_GEOMETRY, "triangle", paramname, paramtype, vertex_attribute2_types);
             return;
          }
-         case 13: { //vertex.attribute3
+         case 14: { //vertex.attribute3
             ANARIDataType vertex_attribute3_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
             check_type(ANARI_GEOMETRY, "triangle", paramname, paramtype, vertex_attribute3_types);
             return;
          }
-         case 14: { //primitive.index
+         case 15: { //primitive.index
             ANARIDataType primitive_index_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
             check_type(ANARI_GEOMETRY, "triangle", paramname, paramtype, primitive_index_types);
             return;
@@ -1825,8 +1835,8 @@ class light_spot : public DebugObject<ANARI_LIGHT> {
 };
 class material_matte : public DebugObject<ANARI_MATERIAL> {
    static int param_hash(const char *str) {
-      static const uint32_t table[] = {0x706f000cu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x62610011u,0x6d6c000du,0x706f000eu,0x7372000fu,0x1000010u,0x80000001u,0x6e6d0012u,0x66650013u,0x1000014u,0x80000000u};
-      uint32_t cur = 0x6f630000u;
+      static const uint32_t table[] = {0x6d6c000fu,0x0u,0x706f0028u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6261002du,0x71700031u,0x71700010u,0x69680011u,0x62610012u,0x4e430013u,0x7675001eu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x706f0024u,0x7574001fu,0x706f0020u,0x67660021u,0x67660022u,0x1000023u,0x80000004u,0x65640025u,0x66650026u,0x1000027u,0x80000003u,0x6d6c0029u,0x706f002au,0x7372002bu,0x100002cu,0x80000001u,0x6e6d002eu,0x6665002fu,0x1000030u,0x80000000u,0x62610032u,0x64630033u,0x6a690034u,0x75740035u,0x7a790036u,0x1000037u,0x80000002u};
+      uint32_t cur = 0x70610000u;
       for(int i = 0;cur!=0;++i) {
          uint32_t idx = cur&0xFFFFu;
          uint32_t low = (cur>>16u)&0xFFu;
@@ -1862,6 +1872,21 @@ class material_matte : public DebugObject<ANARI_MATERIAL> {
             check_type(ANARI_MATERIAL, "matte", paramname, paramtype, color_types);
             return;
          }
+         case 2: { //opacity
+            ANARIDataType opacity_types[] = {ANARI_FLOAT32,ANARI_SAMPLER,ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_MATERIAL, "matte", paramname, paramtype, opacity_types);
+            return;
+         }
+         case 3: { //alphaMode
+            ANARIDataType alphaMode_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_MATERIAL, "matte", paramname, paramtype, alphaMode_types);
+            return;
+         }
+         case 4: { //alphaCutoff
+            ANARIDataType alphaCutoff_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
+            check_type(ANARI_MATERIAL, "matte", paramname, paramtype, alphaCutoff_types);
+            return;
+         }
          default: // unknown param
             unknown_parameter(ANARI_MATERIAL, "matte", paramname, paramtype);
             return;
@@ -1876,8 +1901,8 @@ class material_matte : public DebugObject<ANARI_MATERIAL> {
 };
 class material_transparentMatte : public DebugObject<ANARI_MATERIAL> {
    static int param_hash(const char *str) {
-      static const uint32_t table[] = {0x706f000du,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x62610012u,0x71700016u,0x6d6c000eu,0x706f000fu,0x73720010u,0x1000011u,0x80000001u,0x6e6d0013u,0x66650014u,0x1000015u,0x80000000u,0x62610017u,0x64630018u,0x6a690019u,0x7574001au,0x7a79001bu,0x100001cu,0x80000002u};
-      uint32_t cur = 0x70630000u;
+      static const uint32_t table[] = {0x6d6c000fu,0x0u,0x706f0028u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6261002du,0x71700031u,0x71700010u,0x69680011u,0x62610012u,0x4e430013u,0x7675001eu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x706f0024u,0x7574001fu,0x706f0020u,0x67660021u,0x67660022u,0x1000023u,0x80000004u,0x65640025u,0x66650026u,0x1000027u,0x80000003u,0x6d6c0029u,0x706f002au,0x7372002bu,0x100002cu,0x80000001u,0x6e6d002eu,0x6665002fu,0x1000030u,0x80000000u,0x62610032u,0x64630033u,0x6a690034u,0x75740035u,0x7a790036u,0x1000037u,0x80000002u};
+      uint32_t cur = 0x70610000u;
       for(int i = 0;cur!=0;++i) {
          uint32_t idx = cur&0xFFFFu;
          uint32_t low = (cur>>16u)&0xFFu;
@@ -1916,6 +1941,16 @@ class material_transparentMatte : public DebugObject<ANARI_MATERIAL> {
          case 2: { //opacity
             ANARIDataType opacity_types[] = {ANARI_FLOAT32,ANARI_SAMPLER,ANARI_STRING, ANARI_UNKNOWN};
             check_type(ANARI_MATERIAL, "transparentMatte", paramname, paramtype, opacity_types);
+            return;
+         }
+         case 3: { //alphaMode
+            ANARIDataType alphaMode_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_MATERIAL, "transparentMatte", paramname, paramtype, alphaMode_types);
+            return;
+         }
+         case 4: { //alphaCutoff
+            ANARIDataType alphaCutoff_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
+            check_type(ANARI_MATERIAL, "transparentMatte", paramname, paramtype, alphaCutoff_types);
             return;
          }
          default: // unknown param
