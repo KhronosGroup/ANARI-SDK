@@ -55,7 +55,9 @@ class QueryGenerator:
 
     def format_as(self, value, anari_type):
         basetype = self.type_enum_dict[anari_type]["baseType"]
-        if basetype == "float":
+        if isinstance(value, str):
+            return value
+        elif basetype == "float":
             return "%ff"%value
         elif basetype == "double":
             return "%f"%value
@@ -63,7 +65,7 @@ class QueryGenerator:
             macro = basetype.upper()[:-1]+'C'
             return "%s(%d)"%(macro,value)
         else:
-            return str(x)
+            return str(value)
 
     def preamble(self):
         code = "static " + hash_gen.gen_hash_function("subtype_hash", self.subtype_list)
@@ -451,6 +453,7 @@ with open(args.outdir/(args.prefix + "Queries.cpp"), mode='w') as f:
     f.write("// Don't make changes to this directly\n\n")
 
     f.write("#include <stdint.h>\n")
+    f.write("#include <math.h>\n")
     f.write("#include <anari/anari.h>\n")
     f.write(begin_namespaces(args))
     f.write(gen.preamble())
