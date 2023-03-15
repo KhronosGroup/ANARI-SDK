@@ -5,6 +5,7 @@
         "dependencies" : [
             "anari_core_1_0",
             "anari_core_objects_all_1_0",
+            "khr_material_physically_based",
             "khr_frame_continuation",
             "khr_auxiliary_buffers",
             "khr_area_lights",
