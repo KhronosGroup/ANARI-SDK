@@ -1,6 +1,6 @@
 {
     "info" : {
-        "name" : "KHR_MATERIAL_PBR",
+        "name" : "KHR_MATERIAL_PHYSICALLY_BASED",
         "type" : "feature",
         "dependencies" : []
     },
@@ -8,8 +8,8 @@
     "objects" : [
         {
             "type" : "ANARI_MATERIAL",
-            "name" : "pbr",
-            "description" : "pbr material object",
+            "name" : "physicallyBased",
+            "description" : "physically based material object",
             "parameters" : [
                 {
                     "name" : "name",
@@ -120,6 +120,7 @@
                     "name" : "attenuationDistance",
                     "types" : ["ANARI_FLOAT32"],
                     "tags" : [],
+                    "default" : "INFINITY",
                     "description" : "attenuation distance"
                 }, {
                     "name" : "attenuationColor",

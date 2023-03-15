@@ -29,7 +29,7 @@ void PbrSpheres::commit()
 
   auto surface = anari::newObject<anari::Surface>(d);
   auto geom = anari::newObject<anari::Geometry>(d, "sphere");
-  auto mat = anari::newObject<anari::Material>(d, "pbr");
+  auto mat = anari::newObject<anari::Material>(d, "physicallyBased");
   anari::setParameter(d, mat, "baseColor", glm::vec3(1,0,0));
   anari::setParameter(d, mat, "metallic", "attribute0");
   anari::setParameter(d, mat, "roughness", "attribute1");
