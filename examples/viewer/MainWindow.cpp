@@ -93,6 +93,11 @@ void frame_show(anari::Device dev, anari::Frame frame, MainWindow *window)
   if (frame != nullptr) {
     float duration = 0.f;
     anari::getProperty(dev, frame, "duration", duration, ANARI_NO_WAIT);
+  
+    for(int i = 0;i<window->durations.size()-1;++i) {
+      window->durations[i] = window->durations[i+1];
+    }
+    window->durations[window->durations.size()-1] = duration;
 
     // Assume frames-per-second is reciprical of frame render duration
     window->latestFPS = 1.f / duration;
@@ -131,6 +136,8 @@ void frame_show(anari::Device dev, anari::Frame frame, MainWindow *window)
 /*  self-referentially point to this window.                            */
 MainWindow::MainWindow(const glm::uvec2 &windowSize)
 {
+  std::fill(std::begin(durations), std::end(durations), 0.0f);
+
   if (activeWindow != nullptr) {
     throw std::runtime_error("Cannot create more than one MainWindow!");
   }
@@ -441,10 +448,6 @@ void MainWindow::display()
   glm::ivec2 windowSize;
   glfwGetFramebufferSize(g_window, &windowSize.x, &windowSize.y);
 
-  std::stringstream windowTitle;
-  windowTitle << "ANARI: " << std::setprecision(3) << latestFPS << " fps";
-  glfwSetWindowTitle(g_window, windowTitle.str().c_str());
-
   if (!pixelBuffer.empty()) {
     glBindTexture(GL_TEXTURE_2D, framebufferTexture);
     glTexSubImage2D(GL_TEXTURE_2D,
@@ -510,12 +513,22 @@ void MainWindow::buildUI()
 
   ImGui::Separator();
 
-  ImGui::Text("Renderer:");
+  ImGui::Text("Stats:");
 
-  if (ImGui::ColorEdit4("background", &bgColor.x)) {
-    anari::setParameter(device, renderer, "backgroundColor", bgColor);
-    addObjectToCommit(renderer);
+  float maximum = 0.0f;
+  float minimum = FLT_MAX;
+  float average = 0.0f;
+  for(float x : durations) {
+    maximum = std::max(maximum, x);
+    minimum = std::min(minimum, x);
+    average += x;
   }
+  average /= durations.size();
+  float top = std::max(maximum, 2.0f*average);
+
+  ImGui::PlotHistogram("", durations.data(), durations.size(), 0, NULL, 0, top, ImVec2(208, 50));
+  ImGui::Text("min/avg/max %.2f / %.2f / %.2f ms ", minimum*1000.0f, average*1000.0f, maximum*1000.0f);
+  ImGui::Text("FPS: %.1f", 1.0f/average);
 
   ImGui::Separator();
 

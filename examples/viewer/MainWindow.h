@@ -23,6 +23,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <array>
 
 class MainWindow
 {
@@ -93,4 +94,5 @@ class MainWindow
 
   // FPS measurement of last frame
   float latestFPS{0.f};
+  std::array<float, 50> durations;
 };
