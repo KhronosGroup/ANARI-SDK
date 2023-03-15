@@ -5,6 +5,7 @@
 // Don't make changes to this directly
 
 #include <stdint.h>
+#include <math.h>
 #include <anari/anari.h>
 namespace anari {
 namespace sink_device {
