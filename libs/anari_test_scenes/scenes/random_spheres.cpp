@@ -100,7 +100,7 @@ void RandomSpheres::commit()
 
     std::vector<float> sphereRadii((size_t(numSpheres)));
     for (auto &r : sphereRadii)
-      r = radii_dist(rng);
+      r = std::fabs(radii_dist(rng));
 
     anari::setAndReleaseParameter(d,
         geom,
