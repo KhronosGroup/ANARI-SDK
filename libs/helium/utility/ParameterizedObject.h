@@ -35,6 +35,12 @@ struct ParameterizedObject
   template <typename T>
   T getParam(const std::string &name, T valIfNotFound);
 
+  // Get the value of the parameter associated with 'name' and write it to
+  // location 'v', returning whether the was actually read. Just like the
+  // templated version above, this requires that 'type' exactly match what the
+  // application set. This function also cannot get objects or strings.
+  bool getParam(const std::string &name, ANARIDataType type, void *v);
+
   // Get the pointer to an object parameter (returns null if not present). While
   // ParameterizedObject will track object lifetime appropriately, accessing
   // an object parameter does _not_ influence lifetime considerations -- devices

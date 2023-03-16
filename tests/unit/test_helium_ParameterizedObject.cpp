@@ -57,6 +57,11 @@ SCENARIO(
       REQUIRE(obj.hasParam(name));
       REQUIRE(obj.getParam<int>(name, 4) == v);
       REQUIRE(obj.getParam<short>(name, 4) == 4);
+
+      int v2 = 0;
+      bool success = obj.getParam(name, ANARI_INT32, &v2);
+      REQUIRE(success == true);
+      REQUIRE(v2 == v);
     }
 
     WHEN("The parameter is removed")
@@ -68,6 +73,11 @@ SCENARIO(
         REQUIRE(!obj.hasParam(name));
         REQUIRE(obj.getParam<int>(name, 4) == 4);
         REQUIRE(obj.getParam<short>(name, 4) == 4);
+
+        int v2 = 0;
+        bool success = obj.getParam(name, ANARI_INT32, &v2);
+        REQUIRE(success == false);
+        REQUIRE(v2 == 0);
       }
     }
   }
