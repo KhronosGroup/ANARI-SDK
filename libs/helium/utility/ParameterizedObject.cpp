@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "ParameterizedObject.h"
+// std
+#include <cstring>
 
 namespace helium {
 
@@ -14,6 +16,20 @@ void ParameterizedObject::setParam(
     const std::string &name, ANARIDataType type, const void *v)
 {
   findParam(name, true)->second = AnariAny(type, v);
+}
+
+bool ParameterizedObject::getParam(
+    const std::string &name, ANARIDataType type, void *v)
+{
+  if (type == ANARI_STRING || anari::isObject(type))
+    return false;
+
+  auto *p = findParam(name, false);
+  if (!p || !p->second.is(type))
+    return false;
+
+  std::memcpy(v, p->second.data(), anari::sizeOf(type));
+  return true;
 }
 
 std::string ParameterizedObject::getParamString(
