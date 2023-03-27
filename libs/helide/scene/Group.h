@@ -23,6 +23,9 @@ struct Group : public Object
   void commit() override;
 
   const std::vector<Surface *> &surfaces() const;
+  const std::vector<Volume *> &volumes() const;
+
+  void intersectVolumes(VolumeRay &ray) const;
 
   void markCommitted() override;
 
@@ -37,6 +40,11 @@ struct Group : public Object
 
   helium::IntrusivePtr<ObjectArray> m_surfaceData;
   std::vector<Surface *> m_surfaces;
+
+  // Volume //
+
+  helium::IntrusivePtr<ObjectArray> m_volumeData;
+  std::vector<Volume *> m_volumes;
 
   // BVH //
 
