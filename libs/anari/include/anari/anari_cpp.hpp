@@ -91,14 +91,12 @@ Array1D newArray1D(Device,
     const T *appMemory,
     MemoryDeleter,
     const void *userPtr,
-    uint64_t numItems1,
-    uint64_t byteStride1 = 0);
+    uint64_t numItems1);
 
 template <typename T>
 Array1D newArray1D(Device,
     const T *appMemory,
-    uint64_t numItems1 = 1,
-    uint64_t byteStride1 = 0);
+    uint64_t numItems1 = 1);
 
 Array1D newArray1D(Device d, ANARIDataType type, uint64_t numItems1);
 
@@ -110,17 +108,13 @@ Array2D newArray2D(Device,
     MemoryDeleter,
     const void *userPtr,
     uint64_t numItems1,
-    uint64_t numItems2,
-    uint64_t byteStride1 = 0,
-    uint64_t byteStride2 = 0);
+    uint64_t numItems2);
 
 template <typename T>
 Array2D newArray2D(Device,
     const T *appMemory,
     uint64_t numItems1,
-    uint64_t numItems2,
-    uint64_t byteStride1 = 0,
-    uint64_t byteStride2 = 0);
+    uint64_t numItems2);
 
 Array2D newArray2D(
     Device d, ANARIDataType type, uint64_t numItems1, uint64_t numItems2);
@@ -134,20 +128,14 @@ Array3D newArray3D(Device,
     const void *userPtr,
     uint64_t numItems1,
     uint64_t numItems2,
-    uint64_t numItems3,
-    uint64_t byteStride1 = 0,
-    uint64_t byteStride2 = 0,
-    uint64_t byteStride3 = 0);
+    uint64_t numItems3);
 
 template <typename T>
 Array3D newArray3D(Device,
     const T *appMemory,
     uint64_t numItems1,
     uint64_t numItems2,
-    uint64_t numItems3,
-    uint64_t byteStride1 = 0,
-    uint64_t byteStride2 = 0,
-    uint64_t byteStride3 = 0);
+    uint64_t numItems3);
 
 Array3D newArray3D(Device d,
     ANARIDataType type,

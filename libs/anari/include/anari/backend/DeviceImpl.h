@@ -44,17 +44,14 @@ struct ANARI_INTERFACE DeviceImpl
       ANARIMemoryDeleter deleter,
       const void *userdata,
       ANARIDataType,
-      uint64_t numItems1,
-      uint64_t byteStride1) = 0;
+      uint64_t numItems1) = 0;
 
   virtual ANARIArray2D newArray2D(const void *appMemory,
       ANARIMemoryDeleter deleter,
       const void *userdata,
       ANARIDataType,
       uint64_t numItems1,
-      uint64_t numItems2,
-      uint64_t byteStride1,
-      uint64_t byteStride2) = 0;
+      uint64_t numItems2) = 0;
 
   virtual ANARIArray3D newArray3D(const void *appMemory,
       ANARIMemoryDeleter deleter,
@@ -62,10 +59,7 @@ struct ANARI_INTERFACE DeviceImpl
       ANARIDataType,
       uint64_t numItems1,
       uint64_t numItems2,
-      uint64_t numItems3,
-      uint64_t byteStride1,
-      uint64_t byteStride2,
-      uint64_t byteStride3) = 0;
+      uint64_t numItems3) = 0;
 
   virtual void *mapArray(ANARIArray) = 0;
   virtual void unmapArray(ANARIArray) = 0;
@@ -106,6 +100,27 @@ struct ANARI_INTERFACE DeviceImpl
       const void *mem) = 0;
 
   virtual void unsetParameter(ANARIObject object, const char *name) = 0;
+
+  virtual void* mapParameterArray1D(ANARIObject object,
+      const char* name,
+      ANARIDataType dataType,
+      uint64_t numElements1,
+      uint64_t *elementStride) = 0;
+  virtual void* mapParameterArray2D(ANARIObject object,
+      const char* name,
+      ANARIDataType dataType,
+      uint64_t numElements1,
+      uint64_t numElements2,
+      uint64_t *elementStride) = 0;
+  virtual void* mapParameterArray3D(ANARIObject object,
+      const char* name,
+      ANARIDataType dataType,
+      uint64_t numElements1,
+      uint64_t numElements2,
+      uint64_t numElements3,
+      uint64_t *elementStride) = 0;
+  virtual void unmapParameterArray(ANARIObject object,
+      const char* name) = 0;
 
   virtual void commitParameters(ANARIObject object) = 0;
 

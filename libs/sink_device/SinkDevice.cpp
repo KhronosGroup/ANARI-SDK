@@ -26,10 +26,8 @@ ANARIArray1D SinkDevice::newArray1D(const void *appMemory,
     ANARIMemoryDeleter deleter,
     const void *userData,
     ANARIDataType type,
-    uint64_t numItems,
-    uint64_t byteStride)
+    uint64_t numItems)
 {
-  (void)byteStride;
   ANARIArray1D handle = nextHandle<ANARIArray1D>();
   if (auto obj = getObject(handle)) {
     if (appMemory == nullptr) {
@@ -50,12 +48,8 @@ ANARIArray2D SinkDevice::newArray2D(const void *appMemory,
     const void *userData,
     ANARIDataType type,
     uint64_t numItems1,
-    uint64_t numItems2,
-    uint64_t byteStride1,
-    uint64_t byteStride2)
+    uint64_t numItems2)
 {
-  (void)byteStride1;
-  (void)byteStride2;
   ANARIArray2D handle = nextHandle<ANARIArray2D>();
   if (auto obj = getObject(handle)) {
     if (appMemory == nullptr) {
@@ -77,14 +71,8 @@ ANARIArray3D SinkDevice::newArray3D(const void *appMemory,
     ANARIDataType type,
     uint64_t numItems1,
     uint64_t numItems2,
-    uint64_t numItems3,
-    uint64_t byteStride1,
-    uint64_t byteStride2,
-    uint64_t byteStride3)
+    uint64_t numItems3)
 {
-  (void)byteStride1;
-  (void)byteStride2;
-  (void)byteStride3;
   ANARIArray3D handle = nextHandle<ANARIArray3D>();
   if (auto obj = getObject(handle)) {
     if (appMemory == nullptr) {
@@ -213,6 +201,63 @@ void SinkDevice::setParameter(
 }
 
 void SinkDevice::unsetParameter(ANARIObject, const char *) {}
+
+void* SinkDevice::mapParameterArray1D(ANARIObject object,
+    const char* name,
+    ANARIDataType dataType,
+    uint64_t numElements1,
+    uint64_t* elementStride)
+{
+  if (auto obj = getObject(object)) {
+    if(elementStride) {
+      *elementStride = 0;
+    }
+    return obj->mapArray(name, anari::sizeOf(dataType)*numElements1);
+  } else {
+    return nullptr;
+  }
+}
+
+void* SinkDevice::mapParameterArray2D(ANARIObject object,
+    const char* name,
+    ANARIDataType dataType,
+    uint64_t numElements1,
+    uint64_t numElements2,
+    uint64_t* elementStride)
+{
+  if (auto obj = getObject(object)) {
+    if(elementStride) {
+      *elementStride = 0;
+    }
+    return obj->mapArray(name, anari::sizeOf(dataType)*numElements1*numElements2);
+  } else {
+    return nullptr;
+  }
+}
+
+void* SinkDevice::mapParameterArray3D(ANARIObject object,
+    const char* name,
+    ANARIDataType dataType,
+    uint64_t numElements1,
+    uint64_t numElements2,
+    uint64_t numElements3,
+    uint64_t* elementStride)
+{
+  if (auto obj = getObject(object)) {
+    if(elementStride) {
+      *elementStride = 0;
+    }
+    return obj->mapArray(name, anari::sizeOf(dataType)*numElements1*numElements2*numElements3);
+  } else {
+    return nullptr;
+  }
+}
+
+void SinkDevice::unmapParameterArray(ANARIObject object,
+    const char* name)
+{
+
+}
 
 void SinkDevice::commitParameters(ANARIObject) {}
 

@@ -4,10 +4,12 @@
 #pragma once
 
 #include "Traits.h"
+#include "anari/frontend/type_utility.h"
 // std
 #include <algorithm>
 #include <stdexcept>
 #include <utility>
+#include <cstring>
 
 namespace anari {
 
@@ -176,29 +178,26 @@ inline Array1D newArray1D(Device d,
     const T *appMemory,
     MemoryDeleter deleter,
     const void *userPtr,
-    uint64_t numItems1,
-    uint64_t byteStride1)
+    uint64_t numItems1)
 {
   return anariNewArray1D(d,
       appMemory,
       deleter,
       userPtr,
       detail::getType<T>(),
-      numItems1,
-      byteStride1);
+      numItems1);
 }
 
 template <typename T>
 inline Array1D newArray1D(
-    Device d, const T *appMemory, uint64_t numItems1, uint64_t byteStride1)
+    Device d, const T *appMemory, uint64_t numItems1)
 {
   return anariNewArray1D(d,
       appMemory,
       nullptr,
       nullptr,
       detail::getType<T>(),
-      numItems1,
-      byteStride1);
+      numItems1);
 }
 
 inline Array1D newArray1D(Device d, ANARIDataType type, uint64_t numItems1)
@@ -214,9 +213,7 @@ inline Array2D newArray2D(Device d,
     MemoryDeleter deleter,
     const void *userPtr,
     uint64_t numItems1,
-    uint64_t numItems2,
-    uint64_t byteStride1,
-    uint64_t byteStride2)
+    uint64_t numItems2)
 {
   return anariNewArray2D(d,
       appMemory,
@@ -224,18 +221,14 @@ inline Array2D newArray2D(Device d,
       userPtr,
       detail::getType<T>(),
       numItems1,
-      numItems2,
-      byteStride1,
-      byteStride2);
+      numItems2);
 }
 
 template <typename T>
 inline Array2D newArray2D(Device d,
     const T *appMemory,
     uint64_t numItems1,
-    uint64_t numItems2,
-    uint64_t byteStride1,
-    uint64_t byteStride2)
+    uint64_t numItems2)
 {
   return anariNewArray2D(d,
       appMemory,
@@ -243,9 +236,7 @@ inline Array2D newArray2D(Device d,
       nullptr,
       detail::getType<T>(),
       numItems1,
-      numItems2,
-      byteStride1,
-      byteStride2);
+      numItems2);
 }
 
 inline Array2D newArray2D(
@@ -264,10 +255,7 @@ inline Array3D newArray3D(Device d,
     const void *userPtr,
     uint64_t numItems1,
     uint64_t numItems2,
-    uint64_t numItems3,
-    uint64_t byteStride1,
-    uint64_t byteStride2,
-    uint64_t byteStride3)
+    uint64_t numItems3)
 {
   return anariNewArray3D(d,
       appMemory,
@@ -276,10 +264,7 @@ inline Array3D newArray3D(Device d,
       detail::getType<T>(),
       numItems1,
       numItems2,
-      numItems3,
-      byteStride1,
-      byteStride2,
-      byteStride3);
+      numItems3);
 }
 
 template <typename T>
@@ -287,10 +272,7 @@ inline Array3D newArray3D(Device d,
     const T *appMemory,
     uint64_t numItems1,
     uint64_t numItems2,
-    uint64_t numItems3,
-    uint64_t byteStride1,
-    uint64_t byteStride2,
-    uint64_t byteStride3)
+    uint64_t numItems3)
 {
   return anariNewArray3D(d,
       appMemory,
@@ -299,10 +281,7 @@ inline Array3D newArray3D(Device d,
       detail::getType<T>(),
       numItems1,
       numItems2,
-      numItems3,
-      byteStride1,
-      byteStride2,
-      byteStride3);
+      numItems3);
 }
 
 inline Array3D newArray3D(Device d,
@@ -363,6 +342,27 @@ inline void setParameter(
     Device d, Object o, const char *name, ANARIDataType type, const void *v)
 {
   anariSetParameter(d, o, name, type, v);
+}
+
+inline void setParameterArray1D(
+    Device d, Object o, const char *name, ANARIDataType type, const void *v, uint64_t numElements1)
+{
+  uint64_t elementStride;
+  if(void *mem = anariMapParameterArray1D(d, o, name, type, numElements1, &elementStride)) {
+    std::memcpy(mem, v, anari::sizeOf(type)*numElements1);
+    anariUnmapParameterArray(d, o, name);
+  }
+}
+
+template <typename T>
+inline void setParameterArray1D(
+    Device d, Object o, const char *name, const T *v, uint64_t numElements1)
+{
+  uint64_t elementStride;
+  if(void *mem = anariMapParameterArray1D(d, o, name, ANARITypeFor<T>::value, numElements1, &elementStride)) {
+    std::memcpy(mem, v, sizeof(T)*numElements1);
+    anariUnmapParameterArray(d, o, name);
+  }
 }
 
 template <typename T>

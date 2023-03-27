@@ -242,19 +242,19 @@ int main(int argc, const char **argv)
 
   // Set the vertex locations
   ANARIArray1D array =
-      anariNewArray1D(dev, vertex, 0, 0, ANARI_FLOAT32_VEC3, 4, 0);
+      anariNewArray1D(dev, vertex, 0, 0, ANARI_FLOAT32_VEC3, 4);
   anariCommitParameters(dev, array);
   anariSetParameter(dev, mesh, "vertex.position", ANARI_ARRAY1D, &array);
   anariRelease(dev, array); // we are done using this handle
 
   // Set the vertex colors
-  array = anariNewArray1D(dev, color, 0, 0, ANARI_FLOAT32_VEC4, 4, 0);
+  array = anariNewArray1D(dev, color, 0, 0, ANARI_FLOAT32_VEC4, 4);
   anariCommitParameters(dev, array);
   anariSetParameter(dev, mesh, "vertex.color", ANARI_ARRAY1D, &array);
   anariRelease(dev, array);
 
   // Set the index
-  array = anariNewArray1D(dev, index, 0, 0, ANARI_UINT32_VEC3, 2, 0);
+  array = anariNewArray1D(dev, index, 0, 0, ANARI_UINT32_VEC3, 2);
   anariCommitParameters(dev, array);
   anariSetParameter(dev, mesh, "primitive.index", ANARI_ARRAY1D, &array);
   anariRelease(dev, array);
@@ -275,7 +275,7 @@ int main(int argc, const char **argv)
   anariRelease(dev, mat);
 
   // put the surface directly onto the world
-  array = anariNewArray1D(dev, &surface, 0, 0, ANARI_SURFACE, 1, 0);
+  array = anariNewArray1D(dev, &surface, 0, 0, ANARI_SURFACE, 1);
   anariCommitParameters(dev, array);
   anariSetParameter(dev, world, "surface", ANARI_ARRAY1D, &array);
   anariRelease(dev, surface);
@@ -284,7 +284,7 @@ int main(int argc, const char **argv)
   // create and setup light for Ambient Occlusion
   ANARILight light = anariNewLight(dev, "directional");
   anariCommitParameters(dev, light);
-  array = anariNewArray1D(dev, &light, 0, 0, ANARI_LIGHT, 1, 0);
+  array = anariNewArray1D(dev, &light, 0, 0, ANARI_LIGHT, 1);
   anariCommitParameters(dev, array);
   anariSetParameter(dev, world, "light", ANARI_ARRAY1D, &array);
   anariRelease(dev, light);
