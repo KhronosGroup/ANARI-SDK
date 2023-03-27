@@ -9,6 +9,8 @@
 #include <anari/anari_cpp.hpp>
 // std
 #include <limits>
+// embree
+#include <embree3/rtcore_common.h>
 
 namespace helide {
 
@@ -49,6 +51,25 @@ using box1 = range_t<float>;
 using box2 = range_t<float2>;
 using box3 = range_t<float3>;
 
+template <typename T>
+inline typename range_t<T>::element_t size(const range_t<T> &r)
+{
+  return r.upper - r.lower;
+}
+
+template <typename T>
+inline typename range_t<T>::element_t clamp(
+    const typename range_t<T>::element_t &t, const range_t<T> &r)
+{
+  return linalg::max(r.lower, linalg::min(t, r.upper));
+}
+
+inline float position(float v, const box1 &r)
+{
+  v = clamp(v, r);
+  return (v - r.lower) * (1.f / size(r));
+}
+
 struct Ray
 {
   // Ray //
@@ -70,6 +91,15 @@ struct Ray
   unsigned int primID{RTC_INVALID_GEOMETRY_ID}; // primitive ID
   unsigned int geomID{RTC_INVALID_GEOMETRY_ID}; // geometry ID
   unsigned int instID{RTC_INVALID_GEOMETRY_ID}; // instance ID
+};
+
+struct Volume;
+struct VolumeRay
+{
+  float3 org;
+  float3 dir;
+  box1 t{0.f, std::numeric_limits<float>::max()};
+  Volume *volume{nullptr};
 };
 
 constexpr float4 DEFAULT_ATTRIBUTE_VALUE(0.f, 0.f, 0.f, 1.f);
@@ -113,6 +143,12 @@ inline T lerp(const T &x, const T &y, const U &a)
   return static_cast<T>(x * (U(1) - a) + y * a);
 }
 
+template <typename T>
+inline void accumulateValue(T &a, const T &b, float interp)
+{
+  a += b * (1.f - interp);
+}
+
 } // namespace helide
 
 namespace anari {
@@ -127,6 +163,7 @@ ANARI_TYPEFOR_SPECIALIZATION(helide::uint2, ANARI_UINT32_VEC2);
 ANARI_TYPEFOR_SPECIALIZATION(helide::uint3, ANARI_UINT32_VEC3);
 ANARI_TYPEFOR_SPECIALIZATION(helide::uint4, ANARI_UINT32_VEC4);
 ANARI_TYPEFOR_SPECIALIZATION(helide::mat4, ANARI_FLOAT32_MAT4);
+ANARI_TYPEFOR_SPECIALIZATION(helide::box1, ANARI_FLOAT32_BOX1);
 
 #ifdef HELIDE_ANARI_DEFINITIONS
 ANARI_TYPEFOR_DEFINITION(helide::float2);
@@ -139,6 +176,7 @@ ANARI_TYPEFOR_DEFINITION(helide::uint2);
 ANARI_TYPEFOR_DEFINITION(helide::uint3);
 ANARI_TYPEFOR_DEFINITION(helide::uint4);
 ANARI_TYPEFOR_DEFINITION(helide::mat4);
+ANARI_TYPEFOR_DEFINITION(helide::box1);
 #endif
 
 } // namespace anari

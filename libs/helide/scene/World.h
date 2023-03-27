@@ -21,6 +21,8 @@ struct World : public Object
 
   const std::vector<Instance *> &instances() const;
 
+  void intersectVolumes(VolumeRay &ray) const;
+
   RTCScene embreeScene() const;
   void embreeSceneUpdate();
 
@@ -31,6 +33,7 @@ struct World : public Object
   void cleanup();
 
   helium::IntrusivePtr<ObjectArray> m_zeroSurfaceData;
+  helium::IntrusivePtr<ObjectArray> m_zeroVolumeData;
 
   helium::IntrusivePtr<ObjectArray> m_instanceData;
   std::vector<Instance *> m_instances;
