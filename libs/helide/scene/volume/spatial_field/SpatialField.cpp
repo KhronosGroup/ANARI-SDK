@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "SpatialField.h"
+// subtypes
+#include "StructuredRegularField.h"
 
 namespace helide {
 
@@ -12,7 +14,15 @@ SpatialField::SpatialField(HelideGlobalState *s)
 SpatialField *SpatialField::createInstance(
     std::string_view subtype, HelideGlobalState *s)
 {
-  return (SpatialField *)new UnknownObject(ANARI_SPATIAL_FIELD, s);
+  if (subtype == "structuredRegular")
+    return new StructuredRegularField(s);
+  else
+    return (SpatialField *)new UnknownObject(ANARI_SPATIAL_FIELD, s);
+}
+
+void SpatialField::setStepSize(float size)
+{
+  m_stepSize = size;
 }
 
 } // namespace helide

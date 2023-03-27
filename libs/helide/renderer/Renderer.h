@@ -21,7 +21,6 @@ struct Renderer : public Object
 
   virtual void commit() override;
 
-  float4 bgColor() const;
   PixelSample renderSample(Ray ray, const World &w) const;
 
   static Renderer *createInstance(

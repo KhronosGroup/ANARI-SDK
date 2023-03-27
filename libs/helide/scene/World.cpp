@@ -33,6 +33,12 @@ bool World::getProperty(
       embreeSceneUpdate();
     }
     auto bounds = getEmbreeSceneBounds(m_embreeScene);
+    for (auto *i : instances()) {
+      for (auto *v : i->group()->volumes()) {
+        if (v->isValid())
+          bounds.extend(v->bounds());
+      }
+    }
     std::memcpy(ptr, &bounds, sizeof(bounds));
     return true;
   }
@@ -45,17 +51,27 @@ void World::commit()
   cleanup();
 
   m_zeroSurfaceData = getParamObject<ObjectArray>("surface");
+  m_zeroVolumeData = getParamObject<ObjectArray>("volume");
 
-  m_addZeroInstance = m_zeroSurfaceData;
+  m_addZeroInstance = m_zeroSurfaceData || m_zeroVolumeData;
   if (m_addZeroInstance)
     reportMessage(ANARI_SEVERITY_DEBUG, "helide::World will add zero instance");
 
   if (m_zeroSurfaceData) {
-    reportMessage(
-        ANARI_SEVERITY_DEBUG, "helide::World found surfaces in zero instance");
+    reportMessage(ANARI_SEVERITY_DEBUG,
+        "helide::World found %zu surfaces in zero instance",
+        m_zeroSurfaceData->size());
     m_zeroGroup->setParamDirect("surface", getParamDirect("surface"));
   } else
     m_zeroGroup->removeParam("surface");
+
+  if (m_zeroVolumeData) {
+    reportMessage(ANARI_SEVERITY_DEBUG,
+        "helide::World found %zu volumes in zero instance",
+        m_zeroVolumeData->size());
+    m_zeroGroup->setParamDirect("volume", getParamDirect("volume"));
+  } else
+    m_zeroGroup->removeParam("volume");
 
   m_zeroGroup->commit();
   m_zeroInstance->commit();
@@ -90,6 +106,12 @@ void World::commit()
 const std::vector<Instance *> &World::instances() const
 {
   return m_instances;
+}
+
+void World::intersectVolumes(VolumeRay &ray) const
+{
+  for (auto *i : instances())
+    i->group()->intersectVolumes(ray);
 }
 
 RTCScene World::embreeScene() const

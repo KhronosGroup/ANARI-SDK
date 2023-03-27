@@ -90,6 +90,7 @@ target_sources(${PROJECT_NAME} PRIVATE
   array/Array1D.cpp
   array/Array2D.cpp
   array/Array3D.cpp
+  array/ArraySampler1D.cpp
   array/ObjectArray.cpp
   camera/Camera.cpp
   camera/Orthographic.cpp
@@ -113,7 +114,9 @@ target_sources(${PROJECT_NAME} PRIVATE
   scene/surface/material/TransparentMatte.cpp
   scene/surface/material/sampler/Sampler.cpp
   scene/volume/Volume.cpp
+  scene/volume/SciVisVolume.cpp
   scene/volume/spatial_field/SpatialField.cpp
+  scene/volume/spatial_field/StructuredRegularField.cpp
 )
 
 include(GenerateExportHeader)
