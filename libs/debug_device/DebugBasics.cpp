@@ -52,11 +52,10 @@ namespace debug_device {
 
 DebugBasics::DebugBasics(DebugDevice *td) : td(td) { }
 void DebugBasics::anariNewArray1D(ANARIDevice device, const void *appMemory, ANARIMemoryDeleter deleter,
-    const void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t byteStride1) {
+    const void* userData, ANARIDataType dataType, uint64_t numItems1) {
     DEBUG_FUNCTION(anariNewArray1D)
     (void)device;
     (void)numItems1;
-    (void)byteStride1;
 
     if(appMemory == nullptr && deleter != nullptr) {
         DEBUG_REPORT(ANARI_SEVERITY_ERROR, ANARI_STATUS_INVALID_ARGUMENT,
@@ -101,15 +100,12 @@ void DebugBasics::anariNewArray1D(ANARIDevice device, const void *appMemory, ANA
     }
 }
 void DebugBasics::anariNewArray2D(ANARIDevice device, const void* appMemory, ANARIMemoryDeleter deleter,
-    const void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t numItems2,
-    uint64_t byteStride1, uint64_t byteStride2) {
+    const void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t numItems2) {
     DEBUG_FUNCTION(anariNewArray2D)
     (void)device;
     (void)dataType;
     (void)numItems1;
     (void)numItems2;
-    (void)byteStride1;
-    (void)byteStride2;
 
     if(appMemory == nullptr && deleter != nullptr) {
         DEBUG_REPORT(ANARI_SEVERITY_ERROR, ANARI_STATUS_INVALID_ARGUMENT,
@@ -124,17 +120,13 @@ void DebugBasics::anariNewArray2D(ANARIDevice device, const void* appMemory, ANA
     }
 }
 void DebugBasics::anariNewArray3D(ANARIDevice device, const void* appMemory, ANARIMemoryDeleter deleter,
-    const void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t numItems2, uint64_t numItems3,
-    uint64_t byteStride1, uint64_t byteStride2, uint64_t byteStride3) {
+    const void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t numItems2, uint64_t numItems3) {
     DEBUG_FUNCTION(anariNewArray3D)
     (void)device;
     (void)dataType;
     (void)numItems1;
     (void)numItems2;
     (void)numItems3;
-    (void)byteStride1;
-    (void)byteStride2;
-    (void)byteStride3;
 
     if(appMemory == nullptr && deleter != nullptr) {
         DEBUG_REPORT(ANARI_SEVERITY_ERROR, ANARI_STATUS_INVALID_ARGUMENT,
@@ -238,6 +230,32 @@ void DebugBasics::anariUnsetParameter(ANARIDevice device, ANARIObject object, co
     DEBUG_FUNCTION_SOURCE(anariUnsetParameter, object)
     (void)device;
     (void)name;
+}
+void DebugBasics::anariMapParameterArray1D(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType dataType, uint64_t numElements1, uint64_t *elementStride) {
+    DEBUG_FUNCTION_SOURCE(anariMapParameterArray1D, object)
+    if(elementStride == nullptr) {
+        DEBUG_REPORT(ANARI_SEVERITY_ERROR, ANARI_STATUS_INVALID_ARGUMENT,
+            "%s: elementStride is NULL", DEBUG_FUNCTION_NAME);
+    }
+}
+void DebugBasics::anariMapParameterArray2D(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType dataType, uint64_t numElements1, uint64_t numElements2, uint64_t *elementStride) {
+    DEBUG_FUNCTION_SOURCE(anariMapParameterArray2D, object)
+    if(elementStride == nullptr) {
+        DEBUG_REPORT(ANARI_SEVERITY_ERROR, ANARI_STATUS_INVALID_ARGUMENT,
+            "%s: elementStride is NULL", DEBUG_FUNCTION_NAME);
+    }
+
+}
+void DebugBasics::anariMapParameterArray3D(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType dataType, uint64_t numElements1, uint64_t numElements2, uint64_t numElements3, uint64_t *elementStride) {
+    DEBUG_FUNCTION_SOURCE(anariMapParameterArray3D, object)
+    if(elementStride == nullptr) {
+        DEBUG_REPORT(ANARI_SEVERITY_ERROR, ANARI_STATUS_INVALID_ARGUMENT,
+            "%s: elementStride is NULL", DEBUG_FUNCTION_NAME);
+    }
+}
+void DebugBasics::anariUnmapParameterArray(ANARIDevice device, ANARIObject object, const char* name) {
+    DEBUG_FUNCTION_SOURCE(anariUnmapParameterArray, object)
+
 }
 void DebugBasics::anariCommitParameters(ANARIDevice device, ANARIObject object) {
     DEBUG_FUNCTION_SOURCE(anariCommitParameters, object)

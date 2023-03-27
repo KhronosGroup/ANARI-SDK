@@ -23,17 +23,14 @@ struct HelideDevice : public helium::BaseDevice
       ANARIMemoryDeleter deleter,
       const void *userdata,
       ANARIDataType,
-      uint64_t numItems1,
-      uint64_t byteStride1) override;
+      uint64_t numItems1) override;
 
   ANARIArray2D newArray2D(const void *appMemory,
       ANARIMemoryDeleter deleter,
       const void *userdata,
       ANARIDataType,
       uint64_t numItems1,
-      uint64_t numItems2,
-      uint64_t byteStride1,
-      uint64_t byteStride2) override;
+      uint64_t numItems2) override;
 
   ANARIArray3D newArray3D(const void *appMemory,
       ANARIMemoryDeleter deleter,
@@ -41,10 +38,7 @@ struct HelideDevice : public helium::BaseDevice
       ANARIDataType,
       uint64_t numItems1,
       uint64_t numItems2,
-      uint64_t numItems3,
-      uint64_t byteStride1,
-      uint64_t byteStride2,
-      uint64_t byteStride3) override;
+      uint64_t numItems3) override;
 
   // Renderable Objects ///////////////////////////////////////////////////////
 

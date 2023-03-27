@@ -212,11 +212,10 @@ extern "C" ANARIArray1D anariNewArray1D(ANARIDevice d,
     ANARIMemoryDeleter deleter,
     const void *userdata,
     ANARIDataType type,
-    uint64_t numItems1,
-    uint64_t byteStride1) ANARI_CATCH_BEGIN
+    uint64_t numItems1) ANARI_CATCH_BEGIN
 {
   return deviceRef(d).newArray1D(
-      appMemory, deleter, userdata, type, numItems1, byteStride1);
+      appMemory, deleter, userdata, type, numItems1);
 }
 ANARI_CATCH_END(nullptr)
 
@@ -226,18 +225,14 @@ extern "C" ANARIArray2D anariNewArray2D(ANARIDevice d,
     const void *userdata,
     ANARIDataType type,
     uint64_t numItems1,
-    uint64_t numItems2,
-    uint64_t byteStride1,
-    uint64_t byteStride2) ANARI_CATCH_BEGIN
+    uint64_t numItems2) ANARI_CATCH_BEGIN
 {
   return deviceRef(d).newArray2D(appMemory,
       deleter,
       userdata,
       type,
       numItems1,
-      numItems2,
-      byteStride1,
-      byteStride2);
+      numItems2);
 }
 ANARI_CATCH_END(nullptr)
 
@@ -248,10 +243,7 @@ extern "C" ANARIArray3D anariNewArray3D(ANARIDevice d,
     ANARIDataType type,
     uint64_t numItems1,
     uint64_t numItems2,
-    uint64_t numItems3,
-    uint64_t byteStride1,
-    uint64_t byteStride2,
-    uint64_t byteStride3) ANARI_CATCH_BEGIN
+    uint64_t numItems3) ANARI_CATCH_BEGIN
 {
   return deviceRef(d).newArray3D(appMemory,
       deleter,
@@ -259,10 +251,7 @@ extern "C" ANARIArray3D anariNewArray3D(ANARIDevice d,
       type,
       numItems1,
       numItems2,
-      numItems3,
-      byteStride1,
-      byteStride2,
-      byteStride3);
+      numItems3);
 }
 ANARI_CATCH_END(nullptr)
 
@@ -385,6 +374,65 @@ extern "C" void anariUnsetParameter(
     ANARIDevice d, ANARIObject object, const char *id) ANARI_CATCH_BEGIN
 {
   deviceRef(d).unsetParameter(object, id);
+}
+ANARI_CATCH_END_NORETURN()
+
+extern "C" void* anariMapParameterArray1D(ANARIDevice d,
+    ANARIObject object,
+    const char* name,
+    ANARIDataType dataType,
+    uint64_t numElements1,
+  uint64_t *elementStride) ANARI_CATCH_BEGIN
+{
+  return deviceRef(d).mapParameterArray1D(object,
+    name,
+    dataType,
+    numElements1,
+    elementStride);
+}
+ANARI_CATCH_END(nullptr)
+
+extern "C" void* anariMapParameterArray2D(ANARIDevice d,
+  ANARIObject object,
+  const char* name,
+  ANARIDataType dataType,
+  uint64_t numElements1,
+  uint64_t numElements2,
+  uint64_t *elementStride) ANARI_CATCH_BEGIN
+{
+  return deviceRef(d).mapParameterArray2D(object,
+      name,
+      dataType,
+      numElements1,
+      numElements2,
+      elementStride);
+}
+ANARI_CATCH_END(nullptr)
+
+extern "C" void* anariMapParameterArray3D(ANARIDevice d,
+  ANARIObject object,
+  const char* name,
+  ANARIDataType dataType,
+  uint64_t numElements1,
+  uint64_t numElements2,
+  uint64_t numElements3,
+  uint64_t *elementStride) ANARI_CATCH_BEGIN
+{
+  return deviceRef(d).mapParameterArray3D(object,
+      name,
+      dataType,
+      numElements1,
+      numElements2,
+      numElements3,
+      elementStride);
+}
+ANARI_CATCH_END(nullptr)
+
+extern "C" void anariUnmapParameterArray(ANARIDevice d,
+  ANARIObject object,
+  const char* name) ANARI_CATCH_BEGIN
+{
+  deviceRef(d).unmapParameterArray(object, name);  
 }
 ANARI_CATCH_END_NORETURN()
 

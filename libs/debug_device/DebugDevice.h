@@ -55,17 +55,14 @@ struct DEBUG_DEVICE_INTERFACE DebugDevice : public DeviceImpl, public helium::Re
       ANARIMemoryDeleter deleter,
       const void *userdata,
       ANARIDataType,
-      uint64_t numItems1,
-      uint64_t byteStride1) override;
+      uint64_t numItems1) override;
 
   ANARIArray2D newArray2D(const void *appMemory,
       ANARIMemoryDeleter deleter,
       const void *userdata,
       ANARIDataType,
       uint64_t numItems1,
-      uint64_t numItems2,
-      uint64_t byteStride1,
-      uint64_t byteStride2) override;
+      uint64_t numItems2) override;
 
   ANARIArray3D newArray3D(const void *appMemory,
       ANARIMemoryDeleter deleter,
@@ -73,10 +70,7 @@ struct DEBUG_DEVICE_INTERFACE DebugDevice : public DeviceImpl, public helium::Re
       ANARIDataType,
       uint64_t numItems1,
       uint64_t numItems2,
-      uint64_t numItems3,
-      uint64_t byteStride1,
-      uint64_t byteStride2,
-      uint64_t byteStride3) override;
+      uint64_t numItems3) override;
 
   void *mapArray(ANARIArray) override;
   void unmapArray(ANARIArray) override;
@@ -124,6 +118,27 @@ struct DEBUG_DEVICE_INTERFACE DebugDevice : public DeviceImpl, public helium::Re
       const void *mem) override;
 
   void unsetParameter(ANARIObject object, const char *name) override;
+
+  void* mapParameterArray1D(ANARIObject object,
+      const char* name,
+      ANARIDataType dataType,
+      uint64_t numElements1,
+      uint64_t* elementStride) override;
+  void* mapParameterArray2D(ANARIObject object,
+      const char* name,
+      ANARIDataType dataType,
+      uint64_t numElements1,
+      uint64_t numElements2,
+      uint64_t* elementStride) override;
+  void* mapParameterArray3D(ANARIObject object,
+      const char* name,
+      ANARIDataType dataType,
+      uint64_t numElements1,
+      uint64_t numElements2,
+      uint64_t numElements3,
+      uint64_t* elementStride) override;
+  void unmapParameterArray(ANARIObject object,
+      const char* name) override;
 
   void commitParameters(ANARIObject object) override;
 

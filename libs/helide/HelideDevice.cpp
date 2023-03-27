@@ -66,8 +66,7 @@ ANARIArray1D HelideDevice::newArray1D(const void *appMemory,
     ANARIMemoryDeleter deleter,
     const void *userData,
     ANARIDataType type,
-    uint64_t numItems,
-    uint64_t byteStride)
+    uint64_t numItems)
 {
   initDevice();
 
@@ -77,7 +76,7 @@ ANARIArray1D HelideDevice::newArray1D(const void *appMemory,
   md.deleterPtr = userData;
   md.elementType = type;
   md.numItems = numItems;
-  md.byteStride = byteStride;
+  md.byteStride = 0;
 
   if (anari::isObject(type))
     return createObjectForAPI<ObjectArray, ANARIArray1D>(deviceState(), md);
@@ -90,9 +89,7 @@ ANARIArray2D HelideDevice::newArray2D(const void *appMemory,
     const void *userData,
     ANARIDataType type,
     uint64_t numItems1,
-    uint64_t numItems2,
-    uint64_t byteStride1,
-    uint64_t byteStride2)
+    uint64_t numItems2)
 {
   initDevice();
 
@@ -103,8 +100,8 @@ ANARIArray2D HelideDevice::newArray2D(const void *appMemory,
   md.elementType = type;
   md.numItems1 = numItems1;
   md.numItems2 = numItems2;
-  md.byteStride1 = byteStride1;
-  md.byteStride2 = byteStride2;
+  md.byteStride1 = 0;
+  md.byteStride2 = 0;
 
   return createObjectForAPI<Array2D, ANARIArray2D>(deviceState(), md);
 }
@@ -115,10 +112,7 @@ ANARIArray3D HelideDevice::newArray3D(const void *appMemory,
     ANARIDataType type,
     uint64_t numItems1,
     uint64_t numItems2,
-    uint64_t numItems3,
-    uint64_t byteStride1,
-    uint64_t byteStride2,
-    uint64_t byteStride3)
+    uint64_t numItems3)
 {
   initDevice();
 
@@ -130,9 +124,9 @@ ANARIArray3D HelideDevice::newArray3D(const void *appMemory,
   md.numItems1 = numItems1;
   md.numItems2 = numItems2;
   md.numItems3 = numItems3;
-  md.byteStride1 = byteStride1;
-  md.byteStride2 = byteStride2;
-  md.byteStride3 = byteStride3;
+  md.byteStride1 = 0;
+  md.byteStride2 = 0;
+  md.byteStride3 = 0;
 
   return createObjectForAPI<Array3D, ANARIArray3D>(deviceState(), md);
 }
