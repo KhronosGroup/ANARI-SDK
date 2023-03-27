@@ -4,10 +4,12 @@
 #pragma once
 
 #include "Traits.h"
+#include "anari/type_utility.h"
 // std
 #include <algorithm>
 #include <stdexcept>
 #include <utility>
+#include <cstring>
 
 namespace anari {
 
@@ -363,6 +365,25 @@ inline void setParameter(
     Device d, Object o, const char *name, ANARIDataType type, const void *v)
 {
   anariSetParameter(d, o, name, type, v);
+}
+
+inline void setParameterArray1D(
+    Device d, Object o, const char *name, ANARIDataType type, const void *v, uint64_t numElements1)
+{
+  if(void *mem = anariMapParameterArray1D(d, o, name, type, numElements1)) {
+    std::memcpy(mem, v, anari::sizeOf(type)*numElements1);
+    anariUnmapParameterArray(d, o, name);
+  }
+}
+
+template <typename T>
+inline void setParameterArray1D(
+    Device d, Object o, const char *name, const T *v, uint64_t numElements1)
+{
+  if(void *mem = anariMapParameterArray1D(d, o, name, ANARITypeFor<T>::value, numElements1)) {
+    std::memcpy(mem, v, sizeof(T)*numElements1);
+    anariUnmapParameterArray(d, o, name);
+  }
 }
 
 template <typename T>

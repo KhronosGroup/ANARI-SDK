@@ -625,6 +625,104 @@ void DebugDevice::unsetParameter(ANARIObject object, const char *name)
   }
 }
 
+void* DebugDevice::mapParameterArray1D(ANARIObject object,
+    const char* name,
+    ANARIDataType dataType,
+    uint64_t numElements1)
+{
+  /*
+  if (handleIsDevice(object)) {
+    //??
+  }
+
+  debug->anariMapParameterArray1D(this_device(), object, name, type, numElements1);
+*/
+  void *result = anariMapParameterArray1D(wrapped, unwrapHandle(object), name, dataType, numElements1);
+
+  if (auto info = getDynamicObjectInfo<GenericDebugObject>(object)) {
+    info->mapParameter(name, dataType, numElements1, result);
+    reportParameterUse(info->getType(), info->getSubtype(), name, ANARI_ARRAY1D);
+
+    if (serializer) {
+      serializer->anariMapParameterArray1D(this_device(), object, name, dataType, numElements1, result);
+    }
+  }
+
+  return result;
+}
+
+void* DebugDevice::mapParameterArray2D(ANARIObject object,
+    const char* name,
+    ANARIDataType dataType,
+    uint64_t numElements1,
+    uint64_t numElements2)
+{
+  void *result = anariMapParameterArray2D(wrapped, unwrapHandle(object), name, dataType, numElements1, numElements2);
+
+  if (auto info = getDynamicObjectInfo<GenericDebugObject>(object)) {
+    info->mapParameter(name, dataType, numElements1*numElements2, result);
+    reportParameterUse(info->getType(), info->getSubtype(), name, ANARI_ARRAY2D);
+
+    if (serializer) {
+      serializer->anariMapParameterArray2D(this_device(), object, name, dataType, numElements1, numElements1, result);
+    }
+
+  }
+
+  return result;
+}
+
+void* DebugDevice::mapParameterArray3D(ANARIObject object,
+    const char* name,
+    ANARIDataType dataType,
+    uint64_t numElements1,
+    uint64_t numElements2,
+    uint64_t numElements3)
+{
+  void *result = anariMapParameterArray3D(wrapped, unwrapHandle(object), name, dataType, numElements1, numElements2, numElements3);
+
+  if (auto info = getDynamicObjectInfo<GenericDebugObject>(object)) {
+    info->mapParameter(name, dataType, numElements1*numElements2*numElements3, result);
+    reportParameterUse(info->getType(), info->getSubtype(), name, ANARI_ARRAY3D);
+    
+    if (serializer) {
+      serializer->anariMapParameterArray3D(this_device(), object, name, dataType, numElements1, numElements2, numElements3, result);
+    }
+  }
+
+  return result;
+}
+
+void DebugDevice::unmapParameterArray(ANARIObject object,
+    const char* name)
+{
+
+  if (serializer) {
+    serializer->anariUnmapParameterArray(this_device(), object, name);
+  }
+
+  // this needs to retrieve the pointer and translate the handles
+  if (auto info = getDynamicObjectInfo<GenericDebugObject>(object)) {
+    ANARIDataType dataType;
+    uint64_t elements;
+    if(void *mem = info->getParameterMapping(name, dataType, elements)) {
+      if(anari::isObject(dataType)) {
+        ANARIObject *objects = static_cast<ANARIObject*>(mem);
+        for(uint64_t i = 0;i<elements;++i) {
+          if (auto info2 = getObjectInfo(objects[i])) {
+            info2->referencedBy(object);
+          }
+
+          objects[i] = unwrapHandle(objects[i]);
+        }
+      }
+      info->unmapParameter(name);
+    }
+  }
+
+  anariUnmapParameterArray(wrapped, unwrapHandle(object), name);
+}
+
 void DebugDevice::commitParameters(ANARIObject object)
 {
   if (handleIsDevice(object))

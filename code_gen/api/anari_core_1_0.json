@@ -295,7 +295,7 @@
                 {"name" : "deleter", "type" : "ANARIMemoryDeleter"},
                 {"name" : "userData", "type" : "const void*"},
                 {"name" : "dataType", "type" : "ANARIDataType"},
-                {"name" : "numItems1", "type" : "uint64_t"},
+                {"name" : "numElements1", "type" : "uint64_t"},
                 {"name" : "byteStride1", "type" : "uint64_t", "default" : "0"}
             ]
         }, {
@@ -307,8 +307,8 @@
                 {"name" : "deleter", "type" : "ANARIMemoryDeleter"},
                 {"name" : "userData", "type" : "const void*"},
                 {"name" : "dataType", "type" : "ANARIDataType"},
-                {"name" : "numItems1", "type" : "uint64_t"},
-                {"name" : "numItems2", "type" : "uint64_t"},
+                {"name" : "numElements1", "type" : "uint64_t"},
+                {"name" : "numElements2", "type" : "uint64_t"},
                 {"name" : "byteStride1", "type" : "uint64_t", "default" : "0"},
                 {"name" : "byteStride2", "type" : "uint64_t", "default" : "0"}
             ]
@@ -321,9 +321,9 @@
                 {"name" : "deleter", "type" : "ANARIMemoryDeleter"},
                 {"name" : "userData", "type" : "const void*"},
                 {"name" : "dataType", "type" : "ANARIDataType"},
-                {"name" : "numItems1", "type" : "uint64_t"},
-                {"name" : "numItems2", "type" : "uint64_t"},
-                {"name" : "numItems3", "type" : "uint64_t"},
+                {"name" : "numElements1", "type" : "uint64_t"},
+                {"name" : "numElements2", "type" : "uint64_t"},
+                {"name" : "numElements3", "type" : "uint64_t"},
                 {"name" : "byteStride1", "type" : "uint64_t", "default" : "0"},
                 {"name" : "byteStride2", "type" : "uint64_t", "default" : "0"},
                 {"name" : "byteStride3", "type" : "uint64_t", "default" : "0"}
@@ -435,6 +435,47 @@
             ]
         }, {
             "name" : "anariUnsetParameter",
+            "returnType" : "void",
+            "arguments" : [
+                {"name" : "device", "type" : "ANARIDevice"},
+                {"name" : "object", "type" : "ANARIObject"},
+                {"name" : "name", "type" : "const char*"}
+            ]
+        }, {
+            "name" : "anariMapParameterArray1D",
+            "returnType" : "void*",
+            "arguments" : [
+                {"name" : "device", "type" : "ANARIDevice"},
+                {"name" : "object", "type" : "ANARIObject"},
+                {"name" : "name", "type" : "const char*"},
+                {"name" : "dataType", "type" : "ANARIDataType"},
+                {"name" : "numElements1", "type" : "uint64_t"}
+            ]
+        }, {
+            "name" : "anariMapParameterArray2D",
+            "returnType" : "void*",
+            "arguments" : [
+                {"name" : "device", "type" : "ANARIDevice"},
+                {"name" : "object", "type" : "ANARIObject"},
+                {"name" : "name", "type" : "const char*"},
+                {"name" : "dataType", "type" : "ANARIDataType"},
+                {"name" : "numElements1", "type" : "uint64_t"},
+                {"name" : "numElements2", "type" : "uint64_t"}
+            ]
+        }, {
+            "name" : "anariMapParameterArray3D",
+            "returnType" : "void*",
+            "arguments" : [
+                {"name" : "device", "type" : "ANARIDevice"},
+                {"name" : "object", "type" : "ANARIObject"},
+                {"name" : "name", "type" : "const char*"},
+                {"name" : "dataType", "type" : "ANARIDataType"},
+                {"name" : "numElements1", "type" : "uint64_t"},
+                {"name" : "numElements2", "type" : "uint64_t"},
+                {"name" : "numElements3", "type" : "uint64_t"}
+            ]
+        }, {
+            "name" : "anariUnmapParameterArray",
             "returnType" : "void",
             "arguments" : [
                 {"name" : "device", "type" : "ANARIDevice"},

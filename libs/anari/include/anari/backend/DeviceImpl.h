@@ -107,6 +107,24 @@ struct ANARI_INTERFACE DeviceImpl
 
   virtual void unsetParameter(ANARIObject object, const char *name) = 0;
 
+  virtual void* mapParameterArray1D(ANARIObject object,
+      const char* name,
+      ANARIDataType dataType,
+      uint64_t numElements1) = 0;
+  virtual void* mapParameterArray2D(ANARIObject object,
+      const char* name,
+      ANARIDataType dataType,
+      uint64_t numElements1,
+      uint64_t numElements2) = 0;
+  virtual void* mapParameterArray3D(ANARIObject object,
+      const char* name,
+      ANARIDataType dataType,
+      uint64_t numElements1,
+      uint64_t numElements2,
+      uint64_t numElements3) = 0;
+  virtual void unmapParameterArray(ANARIObject object,
+      const char* name) = 0;
+
   virtual void commitParameters(ANARIObject object) = 0;
 
   virtual void release(ANARIObject _obj) = 0;

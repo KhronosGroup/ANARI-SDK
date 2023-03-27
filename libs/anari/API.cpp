@@ -379,6 +379,56 @@ extern "C" void anariUnsetParameter(
 }
 ANARI_CATCH_END_NORETURN()
 
+extern "C" void* anariMapParameterArray1D(ANARIDevice d,
+    ANARIObject object,
+    const char* name,
+    ANARIDataType dataType,
+    uint64_t numElements1) ANARI_CATCH_BEGIN
+{
+  return deviceRef(d).mapParameterArray1D(object, name, dataType, numElements1);  
+}
+ANARI_CATCH_END(nullptr)
+
+extern "C" void* anariMapParameterArray2D(ANARIDevice d,
+  ANARIObject object,
+  const char* name,
+  ANARIDataType dataType,
+  uint64_t numElements1,
+  uint64_t numElements2) ANARI_CATCH_BEGIN
+{
+  return deviceRef(d).mapParameterArray2D(object,
+      name,
+      dataType,
+      numElements1,
+      numElements2);  
+}
+ANARI_CATCH_END(nullptr)
+
+extern "C" void* anariMapParameterArray3D(ANARIDevice d,
+  ANARIObject object,
+  const char* name,
+  ANARIDataType dataType,
+  uint64_t numElements1,
+  uint64_t numElements2,
+  uint64_t numElements3) ANARI_CATCH_BEGIN
+{
+  return deviceRef(d).mapParameterArray3D(object,
+      name,
+      dataType,
+      numElements1,
+      numElements2,
+      numElements3);  
+}
+ANARI_CATCH_END(nullptr)
+
+extern "C" void anariUnmapParameterArray(ANARIDevice d,
+  ANARIObject object,
+  const char* name) ANARI_CATCH_BEGIN
+{
+  deviceRef(d).unmapParameterArray(object, name);  
+}
+ANARI_CATCH_END_NORETURN()
+
 extern "C" void anariCommitParameters(
     ANARIDevice d, ANARIObject object) ANARI_CATCH_BEGIN
 {

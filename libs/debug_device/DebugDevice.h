@@ -124,6 +124,24 @@ struct DEBUG_DEVICE_INTERFACE DebugDevice : public DeviceImpl, public RefCounted
 
   void unsetParameter(ANARIObject object, const char *name) override;
 
+  void* mapParameterArray1D(ANARIObject object,
+      const char* name,
+      ANARIDataType dataType,
+      uint64_t numElements1) override;
+  void* mapParameterArray2D(ANARIObject object,
+      const char* name,
+      ANARIDataType dataType,
+      uint64_t numElements1,
+      uint64_t numElements2) override;
+  void* mapParameterArray3D(ANARIObject object,
+      const char* name,
+      ANARIDataType dataType,
+      uint64_t numElements1,
+      uint64_t numElements2,
+      uint64_t numElements3) override;
+  void unmapParameterArray(ANARIObject object,
+      const char* name) override;
+
   void commitParameters(ANARIObject object) override;
 
   void release(ANARIObject _obj) override;
