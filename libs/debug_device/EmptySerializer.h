@@ -32,6 +32,12 @@ public:
    void anariNewObject(ANARIDevice device, const char* objectType, const char* type, ANARIObject result) override { }
    void anariSetParameter(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType dataType, const void *mem) override { }
    void anariUnsetParameter(ANARIDevice device, ANARIObject object, const char* name) override { }
+
+   void anariMapParameterArray1D(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType dataType, uint64_t numElements1, void *result) override { }
+   void anariMapParameterArray2D(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType dataType, uint64_t numElements1, uint64_t numElements2, void *result) override { }
+   void anariMapParameterArray3D(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType dataType, uint64_t numElements1, uint64_t numElements2, uint64_t numElements3, void *result) override { }
+   void anariUnmapParameterArray(ANARIDevice device, ANARIObject object, const char* name) override { }
+
    void anariCommitParameters(ANARIDevice device, ANARIObject object) override { }
    void anariRelease(ANARIDevice device, ANARIObject object) override { }
    void anariRetain(ANARIDevice device, ANARIObject object) override { }

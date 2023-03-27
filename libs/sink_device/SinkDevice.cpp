@@ -215,6 +215,51 @@ void SinkDevice::setParameter(
 
 void SinkDevice::unsetParameter(ANARIObject, const char *) {}
 
+void* SinkDevice::mapParameterArray1D(ANARIObject object,
+    const char* name,
+    ANARIDataType dataType,
+    uint64_t numElements1)
+{
+  if (auto obj = getObject(object)) {
+    return obj->mapArray(name, anari::sizeOf(dataType)*numElements1);
+  } else {
+    return nullptr;
+  }
+}
+
+void* SinkDevice::mapParameterArray2D(ANARIObject object,
+    const char* name,
+    ANARIDataType dataType,
+    uint64_t numElements1,
+    uint64_t numElements2)
+{
+  if (auto obj = getObject(object)) {
+    return obj->mapArray(name, anari::sizeOf(dataType)*numElements1*numElements2);
+  } else {
+    return nullptr;
+  }
+}
+
+void* SinkDevice::mapParameterArray3D(ANARIObject object,
+    const char* name,
+    ANARIDataType dataType,
+    uint64_t numElements1,
+    uint64_t numElements2,
+    uint64_t numElements3)
+{
+  if (auto obj = getObject(object)) {
+    return obj->mapArray(name, anari::sizeOf(dataType)*numElements1*numElements2*numElements3);
+  } else {
+    return nullptr;
+  }
+}
+
+void SinkDevice::unmapParameterArray(ANARIObject object,
+    const char* name)
+{
+
+}
+
 void SinkDevice::commitParameters(ANARIObject) {}
 
 void SinkDevice::release(ANARIObject object)

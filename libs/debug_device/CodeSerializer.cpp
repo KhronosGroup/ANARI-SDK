@@ -445,6 +445,60 @@ void CodeSerializer::anariUnsetParameter(ANARIDevice device, ANARIObject object,
    out << ", \"" << name << "\");\n";
 }
 
+void CodeSerializer::anariMapParameterArray1D(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType dataType, uint64_t numElements1, void *result) {
+   out << "void *ptr" << result << " = anariMapParameterArray1D(device, ";
+   printObjectName(object);
+   out << ", \"" << name << "\", " << anari::toString(dataType) << ", " << numElements1 << ");\n";
+}
+void CodeSerializer::anariMapParameterArray2D(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType dataType, uint64_t numElements1, uint64_t numElements2, void *result) {
+   out << "void *ptr" << result << " = anariMapParameterArray2D(device, ";
+   printObjectName(object);
+   out << ", \"" << name << "\", " << anari::toString(dataType) << ", " << numElements1 << ", " << numElements2 << ");\n";
+}
+void CodeSerializer::anariMapParameterArray3D(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType dataType, uint64_t numElements1, uint64_t numElements2, uint64_t numElements3, void *result) {
+   out << "void *ptr" << result << " = anariMapParameterArray3D(device, ";
+   printObjectName(object);
+   out << ", \"" << name << "\", " << anari::toString(dataType) << ", " << numElements1 << ", " << numElements2 << ", " << numElements3 << ");\n";
+
+}
+void CodeSerializer::anariUnmapParameterArray(ANARIDevice device, ANARIObject object, const char* name) {
+
+   if(auto info = dd->getDynamicObjectInfo<GenericDebugObject>(object)) {
+      ANARIDataType dataType;
+      uint64_t elements;
+      if(void *mem = info->getParameterMapping(name, dataType, elements)) {
+         uint64_t element_size = anari::sizeOf(dataType);
+         uint64_t byte_size = elements*element_size;
+         if(isObject(dataType)) {
+            const ANARIObject *handles = (const ANARIObject*)mem;
+            uint64_t local = locals++;
+
+            out << "const " << anari::typenameOf(dataType) << " " << anari::varnameOf(dataType) << "_local" << local << "[] = {";
+            for(uint64_t i = 0;i<elements;++i) {
+               out << anari::varnameOf(dataType) << reinterpret_cast<uintptr_t>(handles[i]);
+               if(i+1<elements) {
+                  out << ", ";
+               }
+            }
+            out << "};\n";
+            out << "memcpy(ptr" << handles << ", " << anari::varnameOf(dataType) << "_local" << local << ", " << byte_size << ");\n";
+         } else {
+            uint64_t byte_offset = data.tellp();
+            const char *charAppMemory = (const char*)mem;
+            data.write(charAppMemory, byte_size);
+            out << "memcpy(ptr" << mem << ", data(" << byte_offset << ", " << byte_size << "), " << byte_size << ");\n";
+         }
+      }
+   }
+
+
+   out << "anariUnmapParameterArray(device, ";
+   printObjectName(object);
+   out << ", \"" << name << "\");\n";
+}
+
+
+
 void CodeSerializer::anariCommitParameters(ANARIDevice device, ANARIObject object) {
    out << "anariCommitParameters(device, ";
    printObjectName(object);
