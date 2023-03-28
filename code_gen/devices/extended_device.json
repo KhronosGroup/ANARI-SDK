@@ -11,7 +11,10 @@
             "khr_area_lights",
             "khr_stochastic_rendering",
             "khr_transformation_motion_blur",
-            "khr_array1d_region"
+            "khr_array1d_region",
+            "khr_renderer_ambient_light",
+            "khr_renderer_background_color",
+            "khr_renderer_background_image"
         ]
     }
 }

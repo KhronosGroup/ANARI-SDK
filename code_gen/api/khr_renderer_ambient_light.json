@@ -1,0 +1,29 @@
+{
+    "info" : {
+        "name" : "KHR_RENDERER_AMBIENT_LIGHT",
+        "type" : "feature",
+        "dependencies" : []
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_RENDERER",
+            "name" : "default",
+            "parameters" : [
+                {
+                    "name" : "ambientColor",
+                    "types" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "default" : [1, 1, 1],
+                    "description" : "ambient light color"
+                }, {
+                    "name" : "ambientRadiance",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 0,
+                    "description" : "the amount of light emitted by a point on the ambient light source in a direction, in W/sr/m^2"
+                }
+            ]
+        }
+    ]
+}
