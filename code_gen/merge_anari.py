@@ -57,9 +57,9 @@ def merge_objects(core, extension):
         elif field != "sourceFeature":
             core[field] = extension[field]
 
-def merge_object_table(core, extension):
+def merge_object_table(core, extension, wildcard = ""):
     for obj in extension:
-        if "name" in obj:
+        if "name" in obj and obj["name"] != wildcard:
             name = obj["name"]
             kind = obj["type"]
             c = next((x for x in core if x["type"] == kind and "name" in x and x["name"] == name), None)
@@ -107,6 +107,14 @@ def tag_feature(tree):
                 if "parameters" in obj:
                     for param in obj["parameters"]:
                         param["sourceFeature"] = feature
+
+def assemble(tree, jsons):
+    if "implements" in tree["info"]:
+        for feature in tree["info"]["implements"]:
+            matches = [p for p in jsons if p.stem == feature]
+            for m in matches:
+                ext = json.load(open(m))
+                merge_object_table(tree["objects"], ext["objects"], "default")
 
 def crawl_dependencies(root, jsons):
     deps = []

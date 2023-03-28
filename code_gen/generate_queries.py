@@ -425,6 +425,7 @@ for x in dependencies:
     matches = [p for p in jsons if p.stem == x]
     for m in matches:
         feature = json.load(open(m))
+        merge_anari.assemble(feature, jsons)
         merge_anari.tag_feature(feature)
         merge_anari.merge(device, feature)
 
