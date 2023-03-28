@@ -88,6 +88,16 @@
                     "tags" : [],
                     "default" : 1.0,
                     "description" : "aspect ratio"
+                }, {
+                    "name" : "near",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "description" : "near plane clip distance"
+                }, {
+                    "name" : "far",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "description" : "far plane clip distance"
                 }
             ]
         }

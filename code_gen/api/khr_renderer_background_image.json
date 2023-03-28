@@ -1,0 +1,28 @@
+{
+    "info" : {
+        "name" : "KHR_RENDERER_BACKGROUND_IMAGE",
+        "type" : "feature",
+        "dependencies" : []
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_RENDERER",
+            "name" : "default",
+            "parameters" : [
+                {
+                    "name" : "background",
+                    "types" : ["ANARI_ARRAY2D"],
+                    "elementType" : [
+                        "ANARI_UFIXED8", "ANARI_UFIXED8_VEC2", "ANARI_UFIXED8_VEC3", "ANARI_UFIXED8_VEC4",
+                        "ANARI_UFIXED8_R_SRGB", "ANARI_UFIXED8_RA_SRGB", "ANARI_UFIXED8_RGB_SRGB", "ANARI_UFIXED8_RGBA_SRGB",
+                        "ANARI_UFIXED16", "ANARI_UFIXED16_VEC2", "ANARI_UFIXED16_VEC3", "ANARI_UFIXED16_VEC4",
+                        "ANARI_UFIXED32", "ANARI_UFIXED32_VEC2", "ANARI_UFIXED32_VEC3", "ANARI_UFIXED32_VEC4",
+                        "ANARI_FLOAT32", "ANARI_FLOAT32_VEC2", "ANARI_FLOAT32_VEC3", "ANARI_FLOAT32_VEC4"],
+                    "tags" : [],
+                    "description" : "the background image"
+                }
+            ]
+        }
+    ]
+}

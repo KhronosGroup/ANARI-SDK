@@ -265,7 +265,7 @@ void MainWindow::setDevice(anari::Device dev, const std::string &rendererType)
   anari::commitParameters(dev, camera);
 
   renderer = anari::newObject<anari::Renderer>(dev, rendererType.c_str());
-  anari::setParameter(dev, renderer, "backgroundColor", bgColor);
+  anari::setParameter(dev, renderer, "background", bgColor);
   anari::setParameter(device, renderer, "ambientRadiance", 0.2f);
   anari::commitParameters(dev, renderer);
 

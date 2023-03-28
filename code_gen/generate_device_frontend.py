@@ -301,7 +301,9 @@ dependencies = merge_anari.crawl_dependencies(device, jsons)
 for x in dependencies:
     matches = [p for p in jsons if p.stem == x]
     for m in matches:
-        merge_anari.merge(device, json.load(open(m)))
+        feature = json.load(open(m))
+        merge_anari.assemble(feature, jsons)
+        merge_anari.merge(device, feature)
 
 #generate files
 gen = FrontendGenerator(device, args)
