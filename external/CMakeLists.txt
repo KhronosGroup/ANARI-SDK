@@ -65,16 +65,18 @@ PUBLIC
   ${imgui_src_LOCATION}/misc/cpp
 )
 
-add_library(imgui_glfw_gles2 OBJECT
-  ${IMGUI_SOURCES}
-)
+if (BUILD_GLES_VIEWER)
+  add_library(imgui_glfw_gles2 OBJECT
+    ${IMGUI_SOURCES}
+  )
 
-target_link_libraries(imgui_glfw_gles2 PUBLIC glfw OpenGL::GL glad_gles2)
-target_compile_definitions(imgui_glfw_gles2 PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLAD2 IMGUI_IMPL_OPENGL_ES3)
+  target_link_libraries(imgui_glfw_gles2 PUBLIC glfw OpenGL::GL glad_gles2)
+  target_compile_definitions(imgui_glfw_gles2 PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLAD2 IMGUI_IMPL_OPENGL_ES3)
 
-target_include_directories(imgui_glfw_gles2
-PUBLIC
-  ${imgui_src_LOCATION}
-  ${imgui_src_LOCATION}/backends
-  ${imgui_src_LOCATION}/misc/cpp
-)
+  target_include_directories(imgui_glfw_gles2
+  PUBLIC
+    ${imgui_src_LOCATION}
+    ${imgui_src_LOCATION}/backends
+    ${imgui_src_LOCATION}/misc/cpp
+  )
+endif()
