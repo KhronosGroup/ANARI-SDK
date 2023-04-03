@@ -226,22 +226,22 @@ inline int64_t anari_fixed_clamp(float x, int64_t max) {
     } else if(x >= 1.0f) {
         return max;
     } else {
-        return x*max;
+        return (int64_t)(x*max);
     }
 }
 
 inline uint64_t anari_ufixed_clamp(float x, uint64_t max) {
     if(x <= 0.0f) {
-        return 0;
+        return 0u;
     } else if(x >= 1.0f) {
         return max;
     } else {
-        return x*max;
+        return (uint64_t)(x*max);
     }
 }
 
 inline float anari_from_srgb(uint8_t x0) {
-    float x = x0/UINT8_MAX;
+    float x = x0/(float)UINT8_MAX;
     if(x<=0.04045f) {
         return x*0.0773993808f;
     } else {
@@ -253,11 +253,11 @@ inline uint8_t anari_to_srgb(float x) {
     if(x >= 1.0f) {
         return UINT8_MAX;
     } else if(x<=0.0f) {
-        return 0;
+        return 0u;
     } else if(x<=0.0031308f) {
-        return x*12.92f*UINT8_MAX;
+        return (uint8_t)(x*12.92f*UINT8_MAX);
     } else {
-        return (powf(x*1.055f, 1.0f/2.4f)-0.055f)*UINT8_MAX;
+        return (uint8_t)((powf(x*1.055f, 1.0f/2.4f)-0.055f)*UINT8_MAX);
     }
 }
 
@@ -281,7 +281,7 @@ struct ANARITypeProperties { };
 """, """        dst[0] = anari_to_srgb(src[0]);
         dst[1] = anari_to_srgb(src[1]);
         dst[2] = anari_to_srgb(src[2]);
-        dst[3] = anari_ufixed_clamp(src[3], UINT8_MAX);
+        dst[3] = (base_type)anari_ufixed_clamp(float(src[3]), UINT8_MAX);
 """)
 
         special_conversions['ANARI_UFIXED8_RGB_SRGB'] = ("""        dst[0] = anari_from_srgb(src[0]);
@@ -296,9 +296,9 @@ struct ANARITypeProperties { };
         special_conversions['ANARI_UFIXED8_RA_SRGB'] = ("""        dst[0] = anari_from_srgb(src[0]);
         dst[1] = 0;
         dst[2] = 0;
-        dst[3] = anari_unit_clamp(src[1]);
+        dst[3] = anari_unit_clamp(src[1]/(float)UINT8_MAX);
 """, """        dst[0] = anari_to_srgb(src[0]);
-        dst[1] = anari_ufixed_clamp(src[3], UINT8_MAX);
+        dst[1] = (base_type)anari_ufixed_clamp(src[3], UINT8_MAX);
 """)
 
         special_conversions['ANARI_UFIXED8_R_SRGB'] = ("""        dst[0] = anari_from_srgb(src[0]);
@@ -329,9 +329,9 @@ struct ANARITypeProperties { };
                     for i in range(0, 4):
                         if i < enum['elements']:
                             if 'FIXED' in enum['name']:
-                                f.write('        dst['+str(i)+'] = anari_unit_clamp(src['+str(i)+']/(float)'+enum['baseType'].upper()[0:-2]+'_MAX);\n')
+                                f.write('        dst['+str(i)+'] = anari_unit_clamp((float)src['+str(i)+']/(float)'+enum['baseType'].upper()[0:-2]+'_MAX);\n')
                             else:
-                                f.write('        dst['+str(i)+'] = src['+str(i)+'];\n')
+                                f.write('        dst['+str(i)+'] = (float)src['+str(i)+'];\n')
                         else:
                             f.write('        dst['+str(i)+'] = '+('1.0f' if i==3 else '0.0f')+';\n')
                 f.write('    }\n')
@@ -342,11 +342,11 @@ struct ANARITypeProperties { };
                 else:
                     for i in range(0, min(4, enum['elements'])):
                         if 'UFIXED' in enum['name']:
-                            f.write('        dst['+str(i)+'] = anari_ufixed_clamp(src['+str(i)+'], '+enum['baseType'].upper()[0:-2]+'_MAX);\n')
+                            f.write('        dst['+str(i)+'] = (base_type)anari_ufixed_clamp(src['+str(i)+'], '+enum['baseType'].upper()[0:-2]+'_MAX);\n')
                         elif 'FIXED' in enum['name']:
-                            f.write('        dst['+str(i)+'] = anari_fixed_clamp(src['+str(i)+'], '+enum['baseType'].upper()[0:-2]+'_MAX);\n')
+                            f.write('        dst['+str(i)+'] = (base_type)anari_fixed_clamp(src['+str(i)+'], '+enum['baseType'].upper()[0:-2]+'_MAX);\n')
                         else:
-                            f.write('        dst['+str(i)+'] = src['+str(i)+'];\n')
+                            f.write('        dst['+str(i)+'] = (base_type)src['+str(i)+'];\n')
                 f.write('    }\n')
 
 

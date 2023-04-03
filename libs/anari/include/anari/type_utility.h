@@ -27,22 +27,22 @@ inline int64_t anari_fixed_clamp(float x, int64_t max) {
     } else if(x >= 1.0f) {
         return max;
     } else {
-        return x*max;
+        return (int64_t)(x*max);
     }
 }
 
 inline uint64_t anari_ufixed_clamp(float x, uint64_t max) {
     if(x <= 0.0f) {
-        return 0;
+        return 0u;
     } else if(x >= 1.0f) {
         return max;
     } else {
-        return x*max;
+        return (uint64_t)(x*max);
     }
 }
 
 inline float anari_from_srgb(uint8_t x0) {
-    float x = x0/UINT8_MAX;
+    float x = x0/(float)UINT8_MAX;
     if(x<=0.04045f) {
         return x*0.0773993808f;
     } else {
@@ -54,11 +54,11 @@ inline uint8_t anari_to_srgb(float x) {
     if(x >= 1.0f) {
         return UINT8_MAX;
     } else if(x<=0.0f) {
-        return 0;
+        return 0u;
     } else if(x<=0.0031308f) {
-        return x*12.92f*UINT8_MAX;
+        return (uint8_t)(x*12.92f*UINT8_MAX);
     } else {
-        return (powf(x*1.055f, 1.0f/2.4f)-0.055f)*UINT8_MAX;
+        return (uint8_t)((powf(x*1.055f, 1.0f/2.4f)-0.055f)*UINT8_MAX);
     }
 }
 
@@ -424,13 +424,13 @@ struct ANARITypeProperties<ANARI_INT8> {
     static constexpr const char* array_name = "int8_t[1]";
     static constexpr const char* var_name = "varint8";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
+        dst[0] = (float)src[0];
         dst[1] = 0.0f;
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
+        dst[0] = (base_type)src[0];
     }
 };
 template<>
@@ -444,14 +444,14 @@ struct ANARITypeProperties<ANARI_INT8_VEC2> {
     static constexpr const char* array_name = "int8_t[2]";
     static constexpr const char* var_name = "varint8_vec2";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
     }
 };
 template<>
@@ -465,15 +465,15 @@ struct ANARITypeProperties<ANARI_INT8_VEC3> {
     static constexpr const char* array_name = "int8_t[3]";
     static constexpr const char* var_name = "varint8_vec3";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
+        dst[2] = (float)src[2];
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
+        dst[2] = (base_type)src[2];
     }
 };
 template<>
@@ -487,16 +487,16 @@ struct ANARITypeProperties<ANARI_INT8_VEC4> {
     static constexpr const char* array_name = "int8_t[4]";
     static constexpr const char* var_name = "varint8_vec4";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
+        dst[2] = (float)src[2];
+        dst[3] = (float)src[3];
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
+        dst[2] = (base_type)src[2];
+        dst[3] = (base_type)src[3];
     }
 };
 template<>
@@ -510,13 +510,13 @@ struct ANARITypeProperties<ANARI_UINT8> {
     static constexpr const char* array_name = "uint8_t[1]";
     static constexpr const char* var_name = "varuint8";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
+        dst[0] = (float)src[0];
         dst[1] = 0.0f;
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
+        dst[0] = (base_type)src[0];
     }
 };
 template<>
@@ -530,14 +530,14 @@ struct ANARITypeProperties<ANARI_UINT8_VEC2> {
     static constexpr const char* array_name = "uint8_t[2]";
     static constexpr const char* var_name = "varuint8_vec2";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
     }
 };
 template<>
@@ -551,15 +551,15 @@ struct ANARITypeProperties<ANARI_UINT8_VEC3> {
     static constexpr const char* array_name = "uint8_t[3]";
     static constexpr const char* var_name = "varuint8_vec3";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
+        dst[2] = (float)src[2];
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
+        dst[2] = (base_type)src[2];
     }
 };
 template<>
@@ -573,16 +573,16 @@ struct ANARITypeProperties<ANARI_UINT8_VEC4> {
     static constexpr const char* array_name = "uint8_t[4]";
     static constexpr const char* var_name = "varuint8_vec4";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
+        dst[2] = (float)src[2];
+        dst[3] = (float)src[3];
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
+        dst[2] = (base_type)src[2];
+        dst[3] = (base_type)src[3];
     }
 };
 template<>
@@ -596,13 +596,13 @@ struct ANARITypeProperties<ANARI_INT16> {
     static constexpr const char* array_name = "int16_t[1]";
     static constexpr const char* var_name = "varint16";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
+        dst[0] = (float)src[0];
         dst[1] = 0.0f;
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
+        dst[0] = (base_type)src[0];
     }
 };
 template<>
@@ -616,14 +616,14 @@ struct ANARITypeProperties<ANARI_INT16_VEC2> {
     static constexpr const char* array_name = "int16_t[2]";
     static constexpr const char* var_name = "varint16_vec2";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
     }
 };
 template<>
@@ -637,15 +637,15 @@ struct ANARITypeProperties<ANARI_INT16_VEC3> {
     static constexpr const char* array_name = "int16_t[3]";
     static constexpr const char* var_name = "varint16_vec3";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
+        dst[2] = (float)src[2];
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
+        dst[2] = (base_type)src[2];
     }
 };
 template<>
@@ -659,16 +659,16 @@ struct ANARITypeProperties<ANARI_INT16_VEC4> {
     static constexpr const char* array_name = "int16_t[4]";
     static constexpr const char* var_name = "varint16_vec4";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
+        dst[2] = (float)src[2];
+        dst[3] = (float)src[3];
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
+        dst[2] = (base_type)src[2];
+        dst[3] = (base_type)src[3];
     }
 };
 template<>
@@ -682,13 +682,13 @@ struct ANARITypeProperties<ANARI_UINT16> {
     static constexpr const char* array_name = "uint16_t[1]";
     static constexpr const char* var_name = "varuint16";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
+        dst[0] = (float)src[0];
         dst[1] = 0.0f;
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
+        dst[0] = (base_type)src[0];
     }
 };
 template<>
@@ -702,14 +702,14 @@ struct ANARITypeProperties<ANARI_UINT16_VEC2> {
     static constexpr const char* array_name = "uint16_t[2]";
     static constexpr const char* var_name = "varuint16_vec2";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
     }
 };
 template<>
@@ -723,15 +723,15 @@ struct ANARITypeProperties<ANARI_UINT16_VEC3> {
     static constexpr const char* array_name = "uint16_t[3]";
     static constexpr const char* var_name = "varuint16_vec3";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
+        dst[2] = (float)src[2];
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
+        dst[2] = (base_type)src[2];
     }
 };
 template<>
@@ -745,16 +745,16 @@ struct ANARITypeProperties<ANARI_UINT16_VEC4> {
     static constexpr const char* array_name = "uint16_t[4]";
     static constexpr const char* var_name = "varuint16_vec4";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
+        dst[2] = (float)src[2];
+        dst[3] = (float)src[3];
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
+        dst[2] = (base_type)src[2];
+        dst[3] = (base_type)src[3];
     }
 };
 template<>
@@ -768,13 +768,13 @@ struct ANARITypeProperties<ANARI_INT32> {
     static constexpr const char* array_name = "int32_t[1]";
     static constexpr const char* var_name = "varint32";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
+        dst[0] = (float)src[0];
         dst[1] = 0.0f;
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
+        dst[0] = (base_type)src[0];
     }
 };
 template<>
@@ -788,14 +788,14 @@ struct ANARITypeProperties<ANARI_INT32_VEC2> {
     static constexpr const char* array_name = "int32_t[2]";
     static constexpr const char* var_name = "varint32_vec2";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
     }
 };
 template<>
@@ -809,15 +809,15 @@ struct ANARITypeProperties<ANARI_INT32_VEC3> {
     static constexpr const char* array_name = "int32_t[3]";
     static constexpr const char* var_name = "varint32_vec3";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
+        dst[2] = (float)src[2];
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
+        dst[2] = (base_type)src[2];
     }
 };
 template<>
@@ -831,16 +831,16 @@ struct ANARITypeProperties<ANARI_INT32_VEC4> {
     static constexpr const char* array_name = "int32_t[4]";
     static constexpr const char* var_name = "varint32_vec4";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
+        dst[2] = (float)src[2];
+        dst[3] = (float)src[3];
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
+        dst[2] = (base_type)src[2];
+        dst[3] = (base_type)src[3];
     }
 };
 template<>
@@ -854,13 +854,13 @@ struct ANARITypeProperties<ANARI_UINT32> {
     static constexpr const char* array_name = "uint32_t[1]";
     static constexpr const char* var_name = "varuint32";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
+        dst[0] = (float)src[0];
         dst[1] = 0.0f;
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
+        dst[0] = (base_type)src[0];
     }
 };
 template<>
@@ -874,14 +874,14 @@ struct ANARITypeProperties<ANARI_UINT32_VEC2> {
     static constexpr const char* array_name = "uint32_t[2]";
     static constexpr const char* var_name = "varuint32_vec2";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
     }
 };
 template<>
@@ -895,15 +895,15 @@ struct ANARITypeProperties<ANARI_UINT32_VEC3> {
     static constexpr const char* array_name = "uint32_t[3]";
     static constexpr const char* var_name = "varuint32_vec3";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
+        dst[2] = (float)src[2];
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
+        dst[2] = (base_type)src[2];
     }
 };
 template<>
@@ -917,16 +917,16 @@ struct ANARITypeProperties<ANARI_UINT32_VEC4> {
     static constexpr const char* array_name = "uint32_t[4]";
     static constexpr const char* var_name = "varuint32_vec4";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
+        dst[2] = (float)src[2];
+        dst[3] = (float)src[3];
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
+        dst[2] = (base_type)src[2];
+        dst[3] = (base_type)src[3];
     }
 };
 template<>
@@ -940,13 +940,13 @@ struct ANARITypeProperties<ANARI_INT64> {
     static constexpr const char* array_name = "int64_t[1]";
     static constexpr const char* var_name = "varint64";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
+        dst[0] = (float)src[0];
         dst[1] = 0.0f;
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
+        dst[0] = (base_type)src[0];
     }
 };
 template<>
@@ -960,14 +960,14 @@ struct ANARITypeProperties<ANARI_INT64_VEC2> {
     static constexpr const char* array_name = "int64_t[2]";
     static constexpr const char* var_name = "varint64_vec2";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
     }
 };
 template<>
@@ -981,15 +981,15 @@ struct ANARITypeProperties<ANARI_INT64_VEC3> {
     static constexpr const char* array_name = "int64_t[3]";
     static constexpr const char* var_name = "varint64_vec3";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
+        dst[2] = (float)src[2];
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
+        dst[2] = (base_type)src[2];
     }
 };
 template<>
@@ -1003,16 +1003,16 @@ struct ANARITypeProperties<ANARI_INT64_VEC4> {
     static constexpr const char* array_name = "int64_t[4]";
     static constexpr const char* var_name = "varint64_vec4";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
+        dst[2] = (float)src[2];
+        dst[3] = (float)src[3];
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
+        dst[2] = (base_type)src[2];
+        dst[3] = (base_type)src[3];
     }
 };
 template<>
@@ -1026,13 +1026,13 @@ struct ANARITypeProperties<ANARI_UINT64> {
     static constexpr const char* array_name = "uint64_t[1]";
     static constexpr const char* var_name = "varuint64";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
+        dst[0] = (float)src[0];
         dst[1] = 0.0f;
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
+        dst[0] = (base_type)src[0];
     }
 };
 template<>
@@ -1046,14 +1046,14 @@ struct ANARITypeProperties<ANARI_UINT64_VEC2> {
     static constexpr const char* array_name = "uint64_t[2]";
     static constexpr const char* var_name = "varuint64_vec2";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
     }
 };
 template<>
@@ -1067,15 +1067,15 @@ struct ANARITypeProperties<ANARI_UINT64_VEC3> {
     static constexpr const char* array_name = "uint64_t[3]";
     static constexpr const char* var_name = "varuint64_vec3";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
+        dst[2] = (float)src[2];
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
+        dst[2] = (base_type)src[2];
     }
 };
 template<>
@@ -1089,16 +1089,16 @@ struct ANARITypeProperties<ANARI_UINT64_VEC4> {
     static constexpr const char* array_name = "uint64_t[4]";
     static constexpr const char* var_name = "varuint64_vec4";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
+        dst[2] = (float)src[2];
+        dst[3] = (float)src[3];
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
+        dst[2] = (base_type)src[2];
+        dst[3] = (base_type)src[3];
     }
 };
 template<>
@@ -1112,13 +1112,13 @@ struct ANARITypeProperties<ANARI_FIXED8> {
     static constexpr const char* array_name = "int8_t[1]";
     static constexpr const char* var_name = "varfixed8";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = anari_unit_clamp(src[0]/(float)INT8_MAX);
+        dst[0] = anari_unit_clamp((float)src[0]/(float)INT8_MAX);
         dst[1] = 0.0f;
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = anari_fixed_clamp(src[0], INT8_MAX);
+        dst[0] = (base_type)anari_fixed_clamp(src[0], INT8_MAX);
     }
 };
 template<>
@@ -1132,14 +1132,14 @@ struct ANARITypeProperties<ANARI_FIXED8_VEC2> {
     static constexpr const char* array_name = "int8_t[2]";
     static constexpr const char* var_name = "varfixed8_vec2";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = anari_unit_clamp(src[0]/(float)INT8_MAX);
-        dst[1] = anari_unit_clamp(src[1]/(float)INT8_MAX);
+        dst[0] = anari_unit_clamp((float)src[0]/(float)INT8_MAX);
+        dst[1] = anari_unit_clamp((float)src[1]/(float)INT8_MAX);
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = anari_fixed_clamp(src[0], INT8_MAX);
-        dst[1] = anari_fixed_clamp(src[1], INT8_MAX);
+        dst[0] = (base_type)anari_fixed_clamp(src[0], INT8_MAX);
+        dst[1] = (base_type)anari_fixed_clamp(src[1], INT8_MAX);
     }
 };
 template<>
@@ -1153,15 +1153,15 @@ struct ANARITypeProperties<ANARI_FIXED8_VEC3> {
     static constexpr const char* array_name = "int8_t[3]";
     static constexpr const char* var_name = "varfixed8_vec3";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = anari_unit_clamp(src[0]/(float)INT8_MAX);
-        dst[1] = anari_unit_clamp(src[1]/(float)INT8_MAX);
-        dst[2] = anari_unit_clamp(src[2]/(float)INT8_MAX);
+        dst[0] = anari_unit_clamp((float)src[0]/(float)INT8_MAX);
+        dst[1] = anari_unit_clamp((float)src[1]/(float)INT8_MAX);
+        dst[2] = anari_unit_clamp((float)src[2]/(float)INT8_MAX);
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = anari_fixed_clamp(src[0], INT8_MAX);
-        dst[1] = anari_fixed_clamp(src[1], INT8_MAX);
-        dst[2] = anari_fixed_clamp(src[2], INT8_MAX);
+        dst[0] = (base_type)anari_fixed_clamp(src[0], INT8_MAX);
+        dst[1] = (base_type)anari_fixed_clamp(src[1], INT8_MAX);
+        dst[2] = (base_type)anari_fixed_clamp(src[2], INT8_MAX);
     }
 };
 template<>
@@ -1175,16 +1175,16 @@ struct ANARITypeProperties<ANARI_FIXED8_VEC4> {
     static constexpr const char* array_name = "int8_t[4]";
     static constexpr const char* var_name = "varfixed8_vec4";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = anari_unit_clamp(src[0]/(float)INT8_MAX);
-        dst[1] = anari_unit_clamp(src[1]/(float)INT8_MAX);
-        dst[2] = anari_unit_clamp(src[2]/(float)INT8_MAX);
-        dst[3] = anari_unit_clamp(src[3]/(float)INT8_MAX);
+        dst[0] = anari_unit_clamp((float)src[0]/(float)INT8_MAX);
+        dst[1] = anari_unit_clamp((float)src[1]/(float)INT8_MAX);
+        dst[2] = anari_unit_clamp((float)src[2]/(float)INT8_MAX);
+        dst[3] = anari_unit_clamp((float)src[3]/(float)INT8_MAX);
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = anari_fixed_clamp(src[0], INT8_MAX);
-        dst[1] = anari_fixed_clamp(src[1], INT8_MAX);
-        dst[2] = anari_fixed_clamp(src[2], INT8_MAX);
-        dst[3] = anari_fixed_clamp(src[3], INT8_MAX);
+        dst[0] = (base_type)anari_fixed_clamp(src[0], INT8_MAX);
+        dst[1] = (base_type)anari_fixed_clamp(src[1], INT8_MAX);
+        dst[2] = (base_type)anari_fixed_clamp(src[2], INT8_MAX);
+        dst[3] = (base_type)anari_fixed_clamp(src[3], INT8_MAX);
     }
 };
 template<>
@@ -1198,13 +1198,13 @@ struct ANARITypeProperties<ANARI_UFIXED8> {
     static constexpr const char* array_name = "uint8_t[1]";
     static constexpr const char* var_name = "varufixed8";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = anari_unit_clamp(src[0]/(float)UINT8_MAX);
+        dst[0] = anari_unit_clamp((float)src[0]/(float)UINT8_MAX);
         dst[1] = 0.0f;
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = anari_ufixed_clamp(src[0], UINT8_MAX);
+        dst[0] = (base_type)anari_ufixed_clamp(src[0], UINT8_MAX);
     }
 };
 template<>
@@ -1218,14 +1218,14 @@ struct ANARITypeProperties<ANARI_UFIXED8_VEC2> {
     static constexpr const char* array_name = "uint8_t[2]";
     static constexpr const char* var_name = "varufixed8_vec2";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = anari_unit_clamp(src[0]/(float)UINT8_MAX);
-        dst[1] = anari_unit_clamp(src[1]/(float)UINT8_MAX);
+        dst[0] = anari_unit_clamp((float)src[0]/(float)UINT8_MAX);
+        dst[1] = anari_unit_clamp((float)src[1]/(float)UINT8_MAX);
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = anari_ufixed_clamp(src[0], UINT8_MAX);
-        dst[1] = anari_ufixed_clamp(src[1], UINT8_MAX);
+        dst[0] = (base_type)anari_ufixed_clamp(src[0], UINT8_MAX);
+        dst[1] = (base_type)anari_ufixed_clamp(src[1], UINT8_MAX);
     }
 };
 template<>
@@ -1239,15 +1239,15 @@ struct ANARITypeProperties<ANARI_UFIXED8_VEC3> {
     static constexpr const char* array_name = "uint8_t[3]";
     static constexpr const char* var_name = "varufixed8_vec3";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = anari_unit_clamp(src[0]/(float)UINT8_MAX);
-        dst[1] = anari_unit_clamp(src[1]/(float)UINT8_MAX);
-        dst[2] = anari_unit_clamp(src[2]/(float)UINT8_MAX);
+        dst[0] = anari_unit_clamp((float)src[0]/(float)UINT8_MAX);
+        dst[1] = anari_unit_clamp((float)src[1]/(float)UINT8_MAX);
+        dst[2] = anari_unit_clamp((float)src[2]/(float)UINT8_MAX);
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = anari_ufixed_clamp(src[0], UINT8_MAX);
-        dst[1] = anari_ufixed_clamp(src[1], UINT8_MAX);
-        dst[2] = anari_ufixed_clamp(src[2], UINT8_MAX);
+        dst[0] = (base_type)anari_ufixed_clamp(src[0], UINT8_MAX);
+        dst[1] = (base_type)anari_ufixed_clamp(src[1], UINT8_MAX);
+        dst[2] = (base_type)anari_ufixed_clamp(src[2], UINT8_MAX);
     }
 };
 template<>
@@ -1261,16 +1261,16 @@ struct ANARITypeProperties<ANARI_UFIXED8_VEC4> {
     static constexpr const char* array_name = "uint8_t[4]";
     static constexpr const char* var_name = "varufixed8_vec4";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = anari_unit_clamp(src[0]/(float)UINT8_MAX);
-        dst[1] = anari_unit_clamp(src[1]/(float)UINT8_MAX);
-        dst[2] = anari_unit_clamp(src[2]/(float)UINT8_MAX);
-        dst[3] = anari_unit_clamp(src[3]/(float)UINT8_MAX);
+        dst[0] = anari_unit_clamp((float)src[0]/(float)UINT8_MAX);
+        dst[1] = anari_unit_clamp((float)src[1]/(float)UINT8_MAX);
+        dst[2] = anari_unit_clamp((float)src[2]/(float)UINT8_MAX);
+        dst[3] = anari_unit_clamp((float)src[3]/(float)UINT8_MAX);
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = anari_ufixed_clamp(src[0], UINT8_MAX);
-        dst[1] = anari_ufixed_clamp(src[1], UINT8_MAX);
-        dst[2] = anari_ufixed_clamp(src[2], UINT8_MAX);
-        dst[3] = anari_ufixed_clamp(src[3], UINT8_MAX);
+        dst[0] = (base_type)anari_ufixed_clamp(src[0], UINT8_MAX);
+        dst[1] = (base_type)anari_ufixed_clamp(src[1], UINT8_MAX);
+        dst[2] = (base_type)anari_ufixed_clamp(src[2], UINT8_MAX);
+        dst[3] = (base_type)anari_ufixed_clamp(src[3], UINT8_MAX);
     }
 };
 template<>
@@ -1284,13 +1284,13 @@ struct ANARITypeProperties<ANARI_FIXED16> {
     static constexpr const char* array_name = "int16_t[1]";
     static constexpr const char* var_name = "varfixed16";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = anari_unit_clamp(src[0]/(float)INT16_MAX);
+        dst[0] = anari_unit_clamp((float)src[0]/(float)INT16_MAX);
         dst[1] = 0.0f;
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = anari_fixed_clamp(src[0], INT16_MAX);
+        dst[0] = (base_type)anari_fixed_clamp(src[0], INT16_MAX);
     }
 };
 template<>
@@ -1304,14 +1304,14 @@ struct ANARITypeProperties<ANARI_FIXED16_VEC2> {
     static constexpr const char* array_name = "int16_t[2]";
     static constexpr const char* var_name = "varfixed16_vec2";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = anari_unit_clamp(src[0]/(float)INT16_MAX);
-        dst[1] = anari_unit_clamp(src[1]/(float)INT16_MAX);
+        dst[0] = anari_unit_clamp((float)src[0]/(float)INT16_MAX);
+        dst[1] = anari_unit_clamp((float)src[1]/(float)INT16_MAX);
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = anari_fixed_clamp(src[0], INT16_MAX);
-        dst[1] = anari_fixed_clamp(src[1], INT16_MAX);
+        dst[0] = (base_type)anari_fixed_clamp(src[0], INT16_MAX);
+        dst[1] = (base_type)anari_fixed_clamp(src[1], INT16_MAX);
     }
 };
 template<>
@@ -1325,15 +1325,15 @@ struct ANARITypeProperties<ANARI_FIXED16_VEC3> {
     static constexpr const char* array_name = "int16_t[3]";
     static constexpr const char* var_name = "varfixed16_vec3";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = anari_unit_clamp(src[0]/(float)INT16_MAX);
-        dst[1] = anari_unit_clamp(src[1]/(float)INT16_MAX);
-        dst[2] = anari_unit_clamp(src[2]/(float)INT16_MAX);
+        dst[0] = anari_unit_clamp((float)src[0]/(float)INT16_MAX);
+        dst[1] = anari_unit_clamp((float)src[1]/(float)INT16_MAX);
+        dst[2] = anari_unit_clamp((float)src[2]/(float)INT16_MAX);
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = anari_fixed_clamp(src[0], INT16_MAX);
-        dst[1] = anari_fixed_clamp(src[1], INT16_MAX);
-        dst[2] = anari_fixed_clamp(src[2], INT16_MAX);
+        dst[0] = (base_type)anari_fixed_clamp(src[0], INT16_MAX);
+        dst[1] = (base_type)anari_fixed_clamp(src[1], INT16_MAX);
+        dst[2] = (base_type)anari_fixed_clamp(src[2], INT16_MAX);
     }
 };
 template<>
@@ -1347,16 +1347,16 @@ struct ANARITypeProperties<ANARI_FIXED16_VEC4> {
     static constexpr const char* array_name = "int16_t[4]";
     static constexpr const char* var_name = "varfixed16_vec4";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = anari_unit_clamp(src[0]/(float)INT16_MAX);
-        dst[1] = anari_unit_clamp(src[1]/(float)INT16_MAX);
-        dst[2] = anari_unit_clamp(src[2]/(float)INT16_MAX);
-        dst[3] = anari_unit_clamp(src[3]/(float)INT16_MAX);
+        dst[0] = anari_unit_clamp((float)src[0]/(float)INT16_MAX);
+        dst[1] = anari_unit_clamp((float)src[1]/(float)INT16_MAX);
+        dst[2] = anari_unit_clamp((float)src[2]/(float)INT16_MAX);
+        dst[3] = anari_unit_clamp((float)src[3]/(float)INT16_MAX);
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = anari_fixed_clamp(src[0], INT16_MAX);
-        dst[1] = anari_fixed_clamp(src[1], INT16_MAX);
-        dst[2] = anari_fixed_clamp(src[2], INT16_MAX);
-        dst[3] = anari_fixed_clamp(src[3], INT16_MAX);
+        dst[0] = (base_type)anari_fixed_clamp(src[0], INT16_MAX);
+        dst[1] = (base_type)anari_fixed_clamp(src[1], INT16_MAX);
+        dst[2] = (base_type)anari_fixed_clamp(src[2], INT16_MAX);
+        dst[3] = (base_type)anari_fixed_clamp(src[3], INT16_MAX);
     }
 };
 template<>
@@ -1370,13 +1370,13 @@ struct ANARITypeProperties<ANARI_UFIXED16> {
     static constexpr const char* array_name = "uint16_t[1]";
     static constexpr const char* var_name = "varufixed16";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = anari_unit_clamp(src[0]/(float)UINT16_MAX);
+        dst[0] = anari_unit_clamp((float)src[0]/(float)UINT16_MAX);
         dst[1] = 0.0f;
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = anari_ufixed_clamp(src[0], UINT16_MAX);
+        dst[0] = (base_type)anari_ufixed_clamp(src[0], UINT16_MAX);
     }
 };
 template<>
@@ -1390,14 +1390,14 @@ struct ANARITypeProperties<ANARI_UFIXED16_VEC2> {
     static constexpr const char* array_name = "uint16_t[2]";
     static constexpr const char* var_name = "varufixed16_vec2";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = anari_unit_clamp(src[0]/(float)UINT16_MAX);
-        dst[1] = anari_unit_clamp(src[1]/(float)UINT16_MAX);
+        dst[0] = anari_unit_clamp((float)src[0]/(float)UINT16_MAX);
+        dst[1] = anari_unit_clamp((float)src[1]/(float)UINT16_MAX);
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = anari_ufixed_clamp(src[0], UINT16_MAX);
-        dst[1] = anari_ufixed_clamp(src[1], UINT16_MAX);
+        dst[0] = (base_type)anari_ufixed_clamp(src[0], UINT16_MAX);
+        dst[1] = (base_type)anari_ufixed_clamp(src[1], UINT16_MAX);
     }
 };
 template<>
@@ -1411,15 +1411,15 @@ struct ANARITypeProperties<ANARI_UFIXED16_VEC3> {
     static constexpr const char* array_name = "uint16_t[3]";
     static constexpr const char* var_name = "varufixed16_vec3";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = anari_unit_clamp(src[0]/(float)UINT16_MAX);
-        dst[1] = anari_unit_clamp(src[1]/(float)UINT16_MAX);
-        dst[2] = anari_unit_clamp(src[2]/(float)UINT16_MAX);
+        dst[0] = anari_unit_clamp((float)src[0]/(float)UINT16_MAX);
+        dst[1] = anari_unit_clamp((float)src[1]/(float)UINT16_MAX);
+        dst[2] = anari_unit_clamp((float)src[2]/(float)UINT16_MAX);
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = anari_ufixed_clamp(src[0], UINT16_MAX);
-        dst[1] = anari_ufixed_clamp(src[1], UINT16_MAX);
-        dst[2] = anari_ufixed_clamp(src[2], UINT16_MAX);
+        dst[0] = (base_type)anari_ufixed_clamp(src[0], UINT16_MAX);
+        dst[1] = (base_type)anari_ufixed_clamp(src[1], UINT16_MAX);
+        dst[2] = (base_type)anari_ufixed_clamp(src[2], UINT16_MAX);
     }
 };
 template<>
@@ -1433,16 +1433,16 @@ struct ANARITypeProperties<ANARI_UFIXED16_VEC4> {
     static constexpr const char* array_name = "uint16_t[4]";
     static constexpr const char* var_name = "varufixed16_vec4";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = anari_unit_clamp(src[0]/(float)UINT16_MAX);
-        dst[1] = anari_unit_clamp(src[1]/(float)UINT16_MAX);
-        dst[2] = anari_unit_clamp(src[2]/(float)UINT16_MAX);
-        dst[3] = anari_unit_clamp(src[3]/(float)UINT16_MAX);
+        dst[0] = anari_unit_clamp((float)src[0]/(float)UINT16_MAX);
+        dst[1] = anari_unit_clamp((float)src[1]/(float)UINT16_MAX);
+        dst[2] = anari_unit_clamp((float)src[2]/(float)UINT16_MAX);
+        dst[3] = anari_unit_clamp((float)src[3]/(float)UINT16_MAX);
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = anari_ufixed_clamp(src[0], UINT16_MAX);
-        dst[1] = anari_ufixed_clamp(src[1], UINT16_MAX);
-        dst[2] = anari_ufixed_clamp(src[2], UINT16_MAX);
-        dst[3] = anari_ufixed_clamp(src[3], UINT16_MAX);
+        dst[0] = (base_type)anari_ufixed_clamp(src[0], UINT16_MAX);
+        dst[1] = (base_type)anari_ufixed_clamp(src[1], UINT16_MAX);
+        dst[2] = (base_type)anari_ufixed_clamp(src[2], UINT16_MAX);
+        dst[3] = (base_type)anari_ufixed_clamp(src[3], UINT16_MAX);
     }
 };
 template<>
@@ -1456,13 +1456,13 @@ struct ANARITypeProperties<ANARI_FIXED32> {
     static constexpr const char* array_name = "int32_t[1]";
     static constexpr const char* var_name = "varfixed32";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = anari_unit_clamp(src[0]/(float)INT32_MAX);
+        dst[0] = anari_unit_clamp((float)src[0]/(float)INT32_MAX);
         dst[1] = 0.0f;
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = anari_fixed_clamp(src[0], INT32_MAX);
+        dst[0] = (base_type)anari_fixed_clamp(src[0], INT32_MAX);
     }
 };
 template<>
@@ -1476,14 +1476,14 @@ struct ANARITypeProperties<ANARI_FIXED32_VEC2> {
     static constexpr const char* array_name = "int32_t[2]";
     static constexpr const char* var_name = "varfixed32_vec2";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = anari_unit_clamp(src[0]/(float)INT32_MAX);
-        dst[1] = anari_unit_clamp(src[1]/(float)INT32_MAX);
+        dst[0] = anari_unit_clamp((float)src[0]/(float)INT32_MAX);
+        dst[1] = anari_unit_clamp((float)src[1]/(float)INT32_MAX);
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = anari_fixed_clamp(src[0], INT32_MAX);
-        dst[1] = anari_fixed_clamp(src[1], INT32_MAX);
+        dst[0] = (base_type)anari_fixed_clamp(src[0], INT32_MAX);
+        dst[1] = (base_type)anari_fixed_clamp(src[1], INT32_MAX);
     }
 };
 template<>
@@ -1497,15 +1497,15 @@ struct ANARITypeProperties<ANARI_FIXED32_VEC3> {
     static constexpr const char* array_name = "int32_t[3]";
     static constexpr const char* var_name = "varfixed32_vec3";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = anari_unit_clamp(src[0]/(float)INT32_MAX);
-        dst[1] = anari_unit_clamp(src[1]/(float)INT32_MAX);
-        dst[2] = anari_unit_clamp(src[2]/(float)INT32_MAX);
+        dst[0] = anari_unit_clamp((float)src[0]/(float)INT32_MAX);
+        dst[1] = anari_unit_clamp((float)src[1]/(float)INT32_MAX);
+        dst[2] = anari_unit_clamp((float)src[2]/(float)INT32_MAX);
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = anari_fixed_clamp(src[0], INT32_MAX);
-        dst[1] = anari_fixed_clamp(src[1], INT32_MAX);
-        dst[2] = anari_fixed_clamp(src[2], INT32_MAX);
+        dst[0] = (base_type)anari_fixed_clamp(src[0], INT32_MAX);
+        dst[1] = (base_type)anari_fixed_clamp(src[1], INT32_MAX);
+        dst[2] = (base_type)anari_fixed_clamp(src[2], INT32_MAX);
     }
 };
 template<>
@@ -1519,16 +1519,16 @@ struct ANARITypeProperties<ANARI_FIXED32_VEC4> {
     static constexpr const char* array_name = "int32_t[4]";
     static constexpr const char* var_name = "varfixed32_vec4";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = anari_unit_clamp(src[0]/(float)INT32_MAX);
-        dst[1] = anari_unit_clamp(src[1]/(float)INT32_MAX);
-        dst[2] = anari_unit_clamp(src[2]/(float)INT32_MAX);
-        dst[3] = anari_unit_clamp(src[3]/(float)INT32_MAX);
+        dst[0] = anari_unit_clamp((float)src[0]/(float)INT32_MAX);
+        dst[1] = anari_unit_clamp((float)src[1]/(float)INT32_MAX);
+        dst[2] = anari_unit_clamp((float)src[2]/(float)INT32_MAX);
+        dst[3] = anari_unit_clamp((float)src[3]/(float)INT32_MAX);
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = anari_fixed_clamp(src[0], INT32_MAX);
-        dst[1] = anari_fixed_clamp(src[1], INT32_MAX);
-        dst[2] = anari_fixed_clamp(src[2], INT32_MAX);
-        dst[3] = anari_fixed_clamp(src[3], INT32_MAX);
+        dst[0] = (base_type)anari_fixed_clamp(src[0], INT32_MAX);
+        dst[1] = (base_type)anari_fixed_clamp(src[1], INT32_MAX);
+        dst[2] = (base_type)anari_fixed_clamp(src[2], INT32_MAX);
+        dst[3] = (base_type)anari_fixed_clamp(src[3], INT32_MAX);
     }
 };
 template<>
@@ -1542,13 +1542,13 @@ struct ANARITypeProperties<ANARI_UFIXED32> {
     static constexpr const char* array_name = "uint32_t[1]";
     static constexpr const char* var_name = "varufixed32";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = anari_unit_clamp(src[0]/(float)UINT32_MAX);
+        dst[0] = anari_unit_clamp((float)src[0]/(float)UINT32_MAX);
         dst[1] = 0.0f;
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = anari_ufixed_clamp(src[0], UINT32_MAX);
+        dst[0] = (base_type)anari_ufixed_clamp(src[0], UINT32_MAX);
     }
 };
 template<>
@@ -1562,14 +1562,14 @@ struct ANARITypeProperties<ANARI_UFIXED32_VEC2> {
     static constexpr const char* array_name = "uint32_t[2]";
     static constexpr const char* var_name = "varufixed32_vec2";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = anari_unit_clamp(src[0]/(float)UINT32_MAX);
-        dst[1] = anari_unit_clamp(src[1]/(float)UINT32_MAX);
+        dst[0] = anari_unit_clamp((float)src[0]/(float)UINT32_MAX);
+        dst[1] = anari_unit_clamp((float)src[1]/(float)UINT32_MAX);
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = anari_ufixed_clamp(src[0], UINT32_MAX);
-        dst[1] = anari_ufixed_clamp(src[1], UINT32_MAX);
+        dst[0] = (base_type)anari_ufixed_clamp(src[0], UINT32_MAX);
+        dst[1] = (base_type)anari_ufixed_clamp(src[1], UINT32_MAX);
     }
 };
 template<>
@@ -1583,15 +1583,15 @@ struct ANARITypeProperties<ANARI_UFIXED32_VEC3> {
     static constexpr const char* array_name = "uint32_t[3]";
     static constexpr const char* var_name = "varufixed32_vec3";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = anari_unit_clamp(src[0]/(float)UINT32_MAX);
-        dst[1] = anari_unit_clamp(src[1]/(float)UINT32_MAX);
-        dst[2] = anari_unit_clamp(src[2]/(float)UINT32_MAX);
+        dst[0] = anari_unit_clamp((float)src[0]/(float)UINT32_MAX);
+        dst[1] = anari_unit_clamp((float)src[1]/(float)UINT32_MAX);
+        dst[2] = anari_unit_clamp((float)src[2]/(float)UINT32_MAX);
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = anari_ufixed_clamp(src[0], UINT32_MAX);
-        dst[1] = anari_ufixed_clamp(src[1], UINT32_MAX);
-        dst[2] = anari_ufixed_clamp(src[2], UINT32_MAX);
+        dst[0] = (base_type)anari_ufixed_clamp(src[0], UINT32_MAX);
+        dst[1] = (base_type)anari_ufixed_clamp(src[1], UINT32_MAX);
+        dst[2] = (base_type)anari_ufixed_clamp(src[2], UINT32_MAX);
     }
 };
 template<>
@@ -1605,16 +1605,16 @@ struct ANARITypeProperties<ANARI_UFIXED32_VEC4> {
     static constexpr const char* array_name = "uint32_t[4]";
     static constexpr const char* var_name = "varufixed32_vec4";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = anari_unit_clamp(src[0]/(float)UINT32_MAX);
-        dst[1] = anari_unit_clamp(src[1]/(float)UINT32_MAX);
-        dst[2] = anari_unit_clamp(src[2]/(float)UINT32_MAX);
-        dst[3] = anari_unit_clamp(src[3]/(float)UINT32_MAX);
+        dst[0] = anari_unit_clamp((float)src[0]/(float)UINT32_MAX);
+        dst[1] = anari_unit_clamp((float)src[1]/(float)UINT32_MAX);
+        dst[2] = anari_unit_clamp((float)src[2]/(float)UINT32_MAX);
+        dst[3] = anari_unit_clamp((float)src[3]/(float)UINT32_MAX);
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = anari_ufixed_clamp(src[0], UINT32_MAX);
-        dst[1] = anari_ufixed_clamp(src[1], UINT32_MAX);
-        dst[2] = anari_ufixed_clamp(src[2], UINT32_MAX);
-        dst[3] = anari_ufixed_clamp(src[3], UINT32_MAX);
+        dst[0] = (base_type)anari_ufixed_clamp(src[0], UINT32_MAX);
+        dst[1] = (base_type)anari_ufixed_clamp(src[1], UINT32_MAX);
+        dst[2] = (base_type)anari_ufixed_clamp(src[2], UINT32_MAX);
+        dst[3] = (base_type)anari_ufixed_clamp(src[3], UINT32_MAX);
     }
 };
 template<>
@@ -1628,13 +1628,13 @@ struct ANARITypeProperties<ANARI_FIXED64> {
     static constexpr const char* array_name = "int64_t[1]";
     static constexpr const char* var_name = "varfixed64";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = anari_unit_clamp(src[0]/(float)INT64_MAX);
+        dst[0] = anari_unit_clamp((float)src[0]/(float)INT64_MAX);
         dst[1] = 0.0f;
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = anari_fixed_clamp(src[0], INT64_MAX);
+        dst[0] = (base_type)anari_fixed_clamp(src[0], INT64_MAX);
     }
 };
 template<>
@@ -1648,14 +1648,14 @@ struct ANARITypeProperties<ANARI_FIXED64_VEC2> {
     static constexpr const char* array_name = "int64_t[2]";
     static constexpr const char* var_name = "varfixed64_vec2";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = anari_unit_clamp(src[0]/(float)INT64_MAX);
-        dst[1] = anari_unit_clamp(src[1]/(float)INT64_MAX);
+        dst[0] = anari_unit_clamp((float)src[0]/(float)INT64_MAX);
+        dst[1] = anari_unit_clamp((float)src[1]/(float)INT64_MAX);
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = anari_fixed_clamp(src[0], INT64_MAX);
-        dst[1] = anari_fixed_clamp(src[1], INT64_MAX);
+        dst[0] = (base_type)anari_fixed_clamp(src[0], INT64_MAX);
+        dst[1] = (base_type)anari_fixed_clamp(src[1], INT64_MAX);
     }
 };
 template<>
@@ -1669,15 +1669,15 @@ struct ANARITypeProperties<ANARI_FIXED64_VEC3> {
     static constexpr const char* array_name = "int64_t[3]";
     static constexpr const char* var_name = "varfixed64_vec3";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = anari_unit_clamp(src[0]/(float)INT64_MAX);
-        dst[1] = anari_unit_clamp(src[1]/(float)INT64_MAX);
-        dst[2] = anari_unit_clamp(src[2]/(float)INT64_MAX);
+        dst[0] = anari_unit_clamp((float)src[0]/(float)INT64_MAX);
+        dst[1] = anari_unit_clamp((float)src[1]/(float)INT64_MAX);
+        dst[2] = anari_unit_clamp((float)src[2]/(float)INT64_MAX);
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = anari_fixed_clamp(src[0], INT64_MAX);
-        dst[1] = anari_fixed_clamp(src[1], INT64_MAX);
-        dst[2] = anari_fixed_clamp(src[2], INT64_MAX);
+        dst[0] = (base_type)anari_fixed_clamp(src[0], INT64_MAX);
+        dst[1] = (base_type)anari_fixed_clamp(src[1], INT64_MAX);
+        dst[2] = (base_type)anari_fixed_clamp(src[2], INT64_MAX);
     }
 };
 template<>
@@ -1691,16 +1691,16 @@ struct ANARITypeProperties<ANARI_FIXED64_VEC4> {
     static constexpr const char* array_name = "int64_t[4]";
     static constexpr const char* var_name = "varfixed64_vec4";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = anari_unit_clamp(src[0]/(float)INT64_MAX);
-        dst[1] = anari_unit_clamp(src[1]/(float)INT64_MAX);
-        dst[2] = anari_unit_clamp(src[2]/(float)INT64_MAX);
-        dst[3] = anari_unit_clamp(src[3]/(float)INT64_MAX);
+        dst[0] = anari_unit_clamp((float)src[0]/(float)INT64_MAX);
+        dst[1] = anari_unit_clamp((float)src[1]/(float)INT64_MAX);
+        dst[2] = anari_unit_clamp((float)src[2]/(float)INT64_MAX);
+        dst[3] = anari_unit_clamp((float)src[3]/(float)INT64_MAX);
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = anari_fixed_clamp(src[0], INT64_MAX);
-        dst[1] = anari_fixed_clamp(src[1], INT64_MAX);
-        dst[2] = anari_fixed_clamp(src[2], INT64_MAX);
-        dst[3] = anari_fixed_clamp(src[3], INT64_MAX);
+        dst[0] = (base_type)anari_fixed_clamp(src[0], INT64_MAX);
+        dst[1] = (base_type)anari_fixed_clamp(src[1], INT64_MAX);
+        dst[2] = (base_type)anari_fixed_clamp(src[2], INT64_MAX);
+        dst[3] = (base_type)anari_fixed_clamp(src[3], INT64_MAX);
     }
 };
 template<>
@@ -1714,13 +1714,13 @@ struct ANARITypeProperties<ANARI_UFIXED64> {
     static constexpr const char* array_name = "uint64_t[1]";
     static constexpr const char* var_name = "varufixed64";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = anari_unit_clamp(src[0]/(float)UINT64_MAX);
+        dst[0] = anari_unit_clamp((float)src[0]/(float)UINT64_MAX);
         dst[1] = 0.0f;
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = anari_ufixed_clamp(src[0], UINT64_MAX);
+        dst[0] = (base_type)anari_ufixed_clamp(src[0], UINT64_MAX);
     }
 };
 template<>
@@ -1734,14 +1734,14 @@ struct ANARITypeProperties<ANARI_UFIXED64_VEC2> {
     static constexpr const char* array_name = "uint64_t[2]";
     static constexpr const char* var_name = "varufixed64_vec2";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = anari_unit_clamp(src[0]/(float)UINT64_MAX);
-        dst[1] = anari_unit_clamp(src[1]/(float)UINT64_MAX);
+        dst[0] = anari_unit_clamp((float)src[0]/(float)UINT64_MAX);
+        dst[1] = anari_unit_clamp((float)src[1]/(float)UINT64_MAX);
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = anari_ufixed_clamp(src[0], UINT64_MAX);
-        dst[1] = anari_ufixed_clamp(src[1], UINT64_MAX);
+        dst[0] = (base_type)anari_ufixed_clamp(src[0], UINT64_MAX);
+        dst[1] = (base_type)anari_ufixed_clamp(src[1], UINT64_MAX);
     }
 };
 template<>
@@ -1755,15 +1755,15 @@ struct ANARITypeProperties<ANARI_UFIXED64_VEC3> {
     static constexpr const char* array_name = "uint64_t[3]";
     static constexpr const char* var_name = "varufixed64_vec3";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = anari_unit_clamp(src[0]/(float)UINT64_MAX);
-        dst[1] = anari_unit_clamp(src[1]/(float)UINT64_MAX);
-        dst[2] = anari_unit_clamp(src[2]/(float)UINT64_MAX);
+        dst[0] = anari_unit_clamp((float)src[0]/(float)UINT64_MAX);
+        dst[1] = anari_unit_clamp((float)src[1]/(float)UINT64_MAX);
+        dst[2] = anari_unit_clamp((float)src[2]/(float)UINT64_MAX);
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = anari_ufixed_clamp(src[0], UINT64_MAX);
-        dst[1] = anari_ufixed_clamp(src[1], UINT64_MAX);
-        dst[2] = anari_ufixed_clamp(src[2], UINT64_MAX);
+        dst[0] = (base_type)anari_ufixed_clamp(src[0], UINT64_MAX);
+        dst[1] = (base_type)anari_ufixed_clamp(src[1], UINT64_MAX);
+        dst[2] = (base_type)anari_ufixed_clamp(src[2], UINT64_MAX);
     }
 };
 template<>
@@ -1777,16 +1777,16 @@ struct ANARITypeProperties<ANARI_UFIXED64_VEC4> {
     static constexpr const char* array_name = "uint64_t[4]";
     static constexpr const char* var_name = "varufixed64_vec4";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = anari_unit_clamp(src[0]/(float)UINT64_MAX);
-        dst[1] = anari_unit_clamp(src[1]/(float)UINT64_MAX);
-        dst[2] = anari_unit_clamp(src[2]/(float)UINT64_MAX);
-        dst[3] = anari_unit_clamp(src[3]/(float)UINT64_MAX);
+        dst[0] = anari_unit_clamp((float)src[0]/(float)UINT64_MAX);
+        dst[1] = anari_unit_clamp((float)src[1]/(float)UINT64_MAX);
+        dst[2] = anari_unit_clamp((float)src[2]/(float)UINT64_MAX);
+        dst[3] = anari_unit_clamp((float)src[3]/(float)UINT64_MAX);
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = anari_ufixed_clamp(src[0], UINT64_MAX);
-        dst[1] = anari_ufixed_clamp(src[1], UINT64_MAX);
-        dst[2] = anari_ufixed_clamp(src[2], UINT64_MAX);
-        dst[3] = anari_ufixed_clamp(src[3], UINT64_MAX);
+        dst[0] = (base_type)anari_ufixed_clamp(src[0], UINT64_MAX);
+        dst[1] = (base_type)anari_ufixed_clamp(src[1], UINT64_MAX);
+        dst[2] = (base_type)anari_ufixed_clamp(src[2], UINT64_MAX);
+        dst[3] = (base_type)anari_ufixed_clamp(src[3], UINT64_MAX);
     }
 };
 template<>
@@ -1800,13 +1800,13 @@ struct ANARITypeProperties<ANARI_FLOAT16> {
     static constexpr const char* array_name = "uint16_t[1]";
     static constexpr const char* var_name = "varfloat16";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
+        dst[0] = (float)src[0];
         dst[1] = 0.0f;
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
+        dst[0] = (base_type)src[0];
     }
 };
 template<>
@@ -1820,14 +1820,14 @@ struct ANARITypeProperties<ANARI_FLOAT16_VEC2> {
     static constexpr const char* array_name = "uint16_t[2]";
     static constexpr const char* var_name = "varfloat16_vec2";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
     }
 };
 template<>
@@ -1841,15 +1841,15 @@ struct ANARITypeProperties<ANARI_FLOAT16_VEC3> {
     static constexpr const char* array_name = "uint16_t[3]";
     static constexpr const char* var_name = "varfloat16_vec3";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
+        dst[2] = (float)src[2];
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
+        dst[2] = (base_type)src[2];
     }
 };
 template<>
@@ -1863,16 +1863,16 @@ struct ANARITypeProperties<ANARI_FLOAT16_VEC4> {
     static constexpr const char* array_name = "uint16_t[4]";
     static constexpr const char* var_name = "varfloat16_vec4";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
+        dst[2] = (float)src[2];
+        dst[3] = (float)src[3];
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
+        dst[2] = (base_type)src[2];
+        dst[3] = (base_type)src[3];
     }
 };
 template<>
@@ -1886,13 +1886,13 @@ struct ANARITypeProperties<ANARI_FLOAT32> {
     static constexpr const char* array_name = "float[1]";
     static constexpr const char* var_name = "varfloat32";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
+        dst[0] = (float)src[0];
         dst[1] = 0.0f;
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
+        dst[0] = (base_type)src[0];
     }
 };
 template<>
@@ -1906,14 +1906,14 @@ struct ANARITypeProperties<ANARI_FLOAT32_VEC2> {
     static constexpr const char* array_name = "float[2]";
     static constexpr const char* var_name = "varfloat32_vec2";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
     }
 };
 template<>
@@ -1927,15 +1927,15 @@ struct ANARITypeProperties<ANARI_FLOAT32_VEC3> {
     static constexpr const char* array_name = "float[3]";
     static constexpr const char* var_name = "varfloat32_vec3";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
+        dst[2] = (float)src[2];
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
+        dst[2] = (base_type)src[2];
     }
 };
 template<>
@@ -1949,16 +1949,16 @@ struct ANARITypeProperties<ANARI_FLOAT32_VEC4> {
     static constexpr const char* array_name = "float[4]";
     static constexpr const char* var_name = "varfloat32_vec4";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
+        dst[2] = (float)src[2];
+        dst[3] = (float)src[3];
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
+        dst[2] = (base_type)src[2];
+        dst[3] = (base_type)src[3];
     }
 };
 template<>
@@ -1972,13 +1972,13 @@ struct ANARITypeProperties<ANARI_FLOAT64> {
     static constexpr const char* array_name = "double[1]";
     static constexpr const char* var_name = "varfloat64";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
+        dst[0] = (float)src[0];
         dst[1] = 0.0f;
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
+        dst[0] = (base_type)src[0];
     }
 };
 template<>
@@ -1992,14 +1992,14 @@ struct ANARITypeProperties<ANARI_FLOAT64_VEC2> {
     static constexpr const char* array_name = "double[2]";
     static constexpr const char* var_name = "varfloat64_vec2";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
     }
 };
 template<>
@@ -2013,15 +2013,15 @@ struct ANARITypeProperties<ANARI_FLOAT64_VEC3> {
     static constexpr const char* array_name = "double[3]";
     static constexpr const char* var_name = "varfloat64_vec3";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
+        dst[2] = (float)src[2];
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
+        dst[2] = (base_type)src[2];
     }
 };
 template<>
@@ -2035,16 +2035,16 @@ struct ANARITypeProperties<ANARI_FLOAT64_VEC4> {
     static constexpr const char* array_name = "double[4]";
     static constexpr const char* var_name = "varfloat64_vec4";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
+        dst[2] = (float)src[2];
+        dst[3] = (float)src[3];
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
+        dst[2] = (base_type)src[2];
+        dst[3] = (base_type)src[3];
     }
 };
 template<>
@@ -2067,7 +2067,7 @@ struct ANARITypeProperties<ANARI_UFIXED8_RGBA_SRGB> {
         dst[0] = anari_to_srgb(src[0]);
         dst[1] = anari_to_srgb(src[1]);
         dst[2] = anari_to_srgb(src[2]);
-        dst[3] = anari_ufixed_clamp(src[3], UINT8_MAX);
+        dst[3] = (base_type)anari_ufixed_clamp(float(src[3]), UINT8_MAX);
     }
 };
 template<>
@@ -2106,11 +2106,11 @@ struct ANARITypeProperties<ANARI_UFIXED8_RA_SRGB> {
         dst[0] = anari_from_srgb(src[0]);
         dst[1] = 0;
         dst[2] = 0;
-        dst[3] = anari_unit_clamp(src[1]);
+        dst[3] = anari_unit_clamp(src[1]/(float)UINT8_MAX);
     }
     static void fromFloat4(base_type *dst, const float *src) {
         dst[0] = anari_to_srgb(src[0]);
-        dst[1] = anari_ufixed_clamp(src[3], UINT8_MAX);
+        dst[1] = (base_type)anari_ufixed_clamp(src[3], UINT8_MAX);
     }
 };
 template<>
@@ -2144,14 +2144,14 @@ struct ANARITypeProperties<ANARI_INT32_BOX1> {
     static constexpr const char* array_name = "int32_t[2]";
     static constexpr const char* var_name = "varint32_box1";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
     }
 };
 template<>
@@ -2165,16 +2165,16 @@ struct ANARITypeProperties<ANARI_INT32_BOX2> {
     static constexpr const char* array_name = "int32_t[4]";
     static constexpr const char* var_name = "varint32_box2";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
+        dst[2] = (float)src[2];
+        dst[3] = (float)src[3];
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
+        dst[2] = (base_type)src[2];
+        dst[3] = (base_type)src[3];
     }
 };
 template<>
@@ -2188,16 +2188,16 @@ struct ANARITypeProperties<ANARI_INT32_BOX3> {
     static constexpr const char* array_name = "int32_t[6]";
     static constexpr const char* var_name = "varint32_box3";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
+        dst[2] = (float)src[2];
+        dst[3] = (float)src[3];
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
+        dst[2] = (base_type)src[2];
+        dst[3] = (base_type)src[3];
     }
 };
 template<>
@@ -2211,16 +2211,16 @@ struct ANARITypeProperties<ANARI_INT32_BOX4> {
     static constexpr const char* array_name = "int32_t[8]";
     static constexpr const char* var_name = "varint32_box4";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
+        dst[2] = (float)src[2];
+        dst[3] = (float)src[3];
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
+        dst[2] = (base_type)src[2];
+        dst[3] = (base_type)src[3];
     }
 };
 template<>
@@ -2234,14 +2234,14 @@ struct ANARITypeProperties<ANARI_FLOAT32_BOX1> {
     static constexpr const char* array_name = "float[2]";
     static constexpr const char* var_name = "varfloat32_box1";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
     }
 };
 template<>
@@ -2255,16 +2255,16 @@ struct ANARITypeProperties<ANARI_FLOAT32_BOX2> {
     static constexpr const char* array_name = "float[4]";
     static constexpr const char* var_name = "varfloat32_box2";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
+        dst[2] = (float)src[2];
+        dst[3] = (float)src[3];
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
+        dst[2] = (base_type)src[2];
+        dst[3] = (base_type)src[3];
     }
 };
 template<>
@@ -2278,16 +2278,16 @@ struct ANARITypeProperties<ANARI_FLOAT32_BOX3> {
     static constexpr const char* array_name = "float[6]";
     static constexpr const char* var_name = "varfloat32_box3";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
+        dst[2] = (float)src[2];
+        dst[3] = (float)src[3];
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
+        dst[2] = (base_type)src[2];
+        dst[3] = (base_type)src[3];
     }
 };
 template<>
@@ -2301,16 +2301,16 @@ struct ANARITypeProperties<ANARI_FLOAT32_BOX4> {
     static constexpr const char* array_name = "float[8]";
     static constexpr const char* var_name = "varfloat32_box4";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
+        dst[2] = (float)src[2];
+        dst[3] = (float)src[3];
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
+        dst[2] = (base_type)src[2];
+        dst[3] = (base_type)src[3];
     }
 };
 template<>
@@ -2324,14 +2324,14 @@ struct ANARITypeProperties<ANARI_UINT64_REGION1> {
     static constexpr const char* array_name = "uint64_t[2]";
     static constexpr const char* var_name = "varuint64_region1";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
         dst[2] = 0.0f;
         dst[3] = 1.0f;
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
     }
 };
 template<>
@@ -2345,16 +2345,16 @@ struct ANARITypeProperties<ANARI_UINT64_REGION2> {
     static constexpr const char* array_name = "uint64_t[4]";
     static constexpr const char* var_name = "varuint64_region2";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
+        dst[2] = (float)src[2];
+        dst[3] = (float)src[3];
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
+        dst[2] = (base_type)src[2];
+        dst[3] = (base_type)src[3];
     }
 };
 template<>
@@ -2368,16 +2368,16 @@ struct ANARITypeProperties<ANARI_UINT64_REGION3> {
     static constexpr const char* array_name = "uint64_t[6]";
     static constexpr const char* var_name = "varuint64_region3";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
+        dst[2] = (float)src[2];
+        dst[3] = (float)src[3];
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
+        dst[2] = (base_type)src[2];
+        dst[3] = (base_type)src[3];
     }
 };
 template<>
@@ -2391,16 +2391,16 @@ struct ANARITypeProperties<ANARI_UINT64_REGION4> {
     static constexpr const char* array_name = "uint64_t[8]";
     static constexpr const char* var_name = "varuint64_region4";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
+        dst[2] = (float)src[2];
+        dst[3] = (float)src[3];
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
+        dst[2] = (base_type)src[2];
+        dst[3] = (base_type)src[3];
     }
 };
 template<>
@@ -2414,16 +2414,16 @@ struct ANARITypeProperties<ANARI_FLOAT32_MAT2> {
     static constexpr const char* array_name = "float[4]";
     static constexpr const char* var_name = "varfloat32_mat2";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
+        dst[2] = (float)src[2];
+        dst[3] = (float)src[3];
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
+        dst[2] = (base_type)src[2];
+        dst[3] = (base_type)src[3];
     }
 };
 template<>
@@ -2437,16 +2437,16 @@ struct ANARITypeProperties<ANARI_FLOAT32_MAT3> {
     static constexpr const char* array_name = "float[9]";
     static constexpr const char* var_name = "varfloat32_mat3";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
+        dst[2] = (float)src[2];
+        dst[3] = (float)src[3];
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
+        dst[2] = (base_type)src[2];
+        dst[3] = (base_type)src[3];
     }
 };
 template<>
@@ -2460,16 +2460,16 @@ struct ANARITypeProperties<ANARI_FLOAT32_MAT4> {
     static constexpr const char* array_name = "float[16]";
     static constexpr const char* var_name = "varfloat32_mat4";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
+        dst[2] = (float)src[2];
+        dst[3] = (float)src[3];
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
+        dst[2] = (base_type)src[2];
+        dst[3] = (base_type)src[3];
     }
 };
 template<>
@@ -2483,16 +2483,16 @@ struct ANARITypeProperties<ANARI_FLOAT32_MAT2x3> {
     static constexpr const char* array_name = "float[6]";
     static constexpr const char* var_name = "varfloat32_mat2x3";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
+        dst[2] = (float)src[2];
+        dst[3] = (float)src[3];
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
+        dst[2] = (base_type)src[2];
+        dst[3] = (base_type)src[3];
     }
 };
 template<>
@@ -2506,16 +2506,16 @@ struct ANARITypeProperties<ANARI_FLOAT32_MAT3x4> {
     static constexpr const char* array_name = "float[12]";
     static constexpr const char* var_name = "varfloat32_mat3x4";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
+        dst[2] = (float)src[2];
+        dst[3] = (float)src[3];
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
+        dst[2] = (base_type)src[2];
+        dst[3] = (base_type)src[3];
     }
 };
 template<>
@@ -2529,16 +2529,16 @@ struct ANARITypeProperties<ANARI_FLOAT32_QUAT_IJKW> {
     static constexpr const char* array_name = "float[4]";
     static constexpr const char* var_name = "varfloat32_quat_ijkw";
     static void toFloat4(float *dst, const base_type *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (float)src[0];
+        dst[1] = (float)src[1];
+        dst[2] = (float)src[2];
+        dst[3] = (float)src[3];
     }
     static void fromFloat4(base_type *dst, const float *src) {
-        dst[0] = src[0];
-        dst[1] = src[1];
-        dst[2] = src[2];
-        dst[3] = src[3];
+        dst[0] = (base_type)src[0];
+        dst[1] = (base_type)src[1];
+        dst[2] = (base_type)src[2];
+        dst[3] = (base_type)src[3];
     }
 };
 template<>
