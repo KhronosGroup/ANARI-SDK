@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "StructuredRegularField.h"
+// std
+#include <limits>
 
 namespace helide {
 
@@ -19,15 +21,8 @@ void StructuredRegularField::commit()
     return;
   }
 
-  if (m_dataArray->elementType() != ANARI_FLOAT32) {
-    reportMessage(ANARI_SEVERITY_WARNING,
-        "only ANARI_FLOAT32 is implemented for "
-        "structuredRegular spatial fields");
-    m_dataArray = nullptr;
-    return;
-  }
-
-  m_data = m_dataArray->dataAs<float>();
+  m_data = m_dataArray->data();
+  m_type = m_dataArray->elementType();
   m_dims = m_dataArray->size();
 
   m_origin = getParam<float3>("origin", float3(0.f));
@@ -97,7 +92,24 @@ float StructuredRegularField::valueAtVoxel(const uint3 &index) const
 {
   const size_t i = size_t(index.x)
       + m_dims.x * (size_t(index.y) + m_dims.y * size_t(index.z));
-  return m_data[i];
+
+  switch (m_type) {
+  case ANARI_FLOAT32:
+    return ((float *)m_data)[i];
+  case ANARI_FLOAT64:
+    return ((double *)m_data)[i];
+  case ANARI_UFIXED8:
+    return ((uint8_t *)m_data)[i] / float(std::numeric_limits<uint8_t>::max());
+  case ANARI_UFIXED16:
+    return ((uint16_t *)m_data)[i]
+        / float(std::numeric_limits<uint16_t>::max());
+  case ANARI_FIXED16:
+    return ((int16_t *)m_data)[i] / float(std::numeric_limits<int16_t>::max());
+  default:
+    break;
+  }
+
+  return NAN;
 }
 
 } // namespace helide

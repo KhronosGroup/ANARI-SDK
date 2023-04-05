@@ -34,7 +34,8 @@ struct StructuredRegularField : public SpatialField
 
   helium::IntrusivePtr<Array3D> m_dataArray;
 
-  float *m_data{nullptr};
+  void *m_data{nullptr};
+  anari::DataType m_type{ANARI_UNKNOWN};
 };
 
 } // namespace helide
