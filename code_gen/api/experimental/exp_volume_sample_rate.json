@@ -1,0 +1,23 @@
+{
+    "info" : {
+        "name" : "EXP_VOLUME_SAMPLE_RATE",
+        "type" : "feature",
+        "dependencies" : []
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_RENDERER",
+            "name" : "default",
+            "parameters" : [
+                {
+                    "name" : "volumeSampleRateFactor",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 1,
+                    "description" : "Factor applied to volume sample rate"
+                }
+            ]
+        }
+    ]
+}
