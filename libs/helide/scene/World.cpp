@@ -182,12 +182,13 @@ void World::rebuildTLS()
 
   uint32_t id = 0;
   std::for_each(m_instances.begin(), m_instances.end(), [&](auto *i) {
-    if (i && i->isValid()) {
+    if (i && i->isValid() && !i->group()->surfaces().empty()) {
       i->embreeGeometryUpdate();
       rtcAttachGeometryByID(m_embreeScene, i->embreeGeometry(), id);
     } else {
       reportMessage(ANARI_SEVERITY_DEBUG,
-          "helide::World rejecting invalid instance(%p) in building TLS",
+          "helide::World rejecting invalid surfaces in instance(%p) "
+          "when building TLS",
           i);
     }
     id++;
