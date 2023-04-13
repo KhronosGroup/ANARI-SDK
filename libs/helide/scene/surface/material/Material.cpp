@@ -4,7 +4,6 @@
 #include "Material.h"
 // subtypes
 #include "Matte.h"
-#include "TransparentMatte.h"
 
 namespace helide {
 
@@ -21,10 +20,8 @@ Material::~Material()
 Material *Material::createInstance(
     std::string_view subtype, HelideGlobalState *s)
 {
-  if (subtype == "matte")
+  if (subtype == "matte" || subtype == "physicallyBased")
     return new Matte(s);
-  else if (subtype == "transparentMatte")
-    return new TransparentMatte(s);
   else
     return (Material *)new UnknownObject(ANARI_MATERIAL, s);
 }
