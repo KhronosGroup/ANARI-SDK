@@ -111,7 +111,6 @@ target_sources(${PROJECT_NAME} PRIVATE
   scene/surface/geometry/Triangle.cpp
   scene/surface/material/Material.cpp
   scene/surface/material/Matte.cpp
-  scene/surface/material/TransparentMatte.cpp
   scene/surface/material/sampler/Sampler.cpp
   scene/volume/Volume.cpp
   scene/volume/SciVisVolume.cpp

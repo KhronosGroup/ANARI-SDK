@@ -14,7 +14,7 @@
       "khr_geometry_sphere",
       "khr_geometry_triangle",
       "khr_material_matte",
-      "khr_material_transparent_matte",
+      "khr_material_physicallyBased",
       "khr_light_point",
       "khr_sampler_image1d",
       "khr_spatial_field_structured_regular",
