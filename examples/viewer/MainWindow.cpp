@@ -3,6 +3,7 @@
 
 #include "MainWindow.h"
 // std headers
+#include <algorithm>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -21,12 +22,25 @@ static bool g_saveNextFrame = false;
 MainWindow *MainWindow::activeWindow = nullptr;
 
 /* list of scene options for menu */
-static const std::vector<std::string> g_scenes =
-    anari::scenes::getAvailableSceneNames("demo");
+static const std::vector<std::string> g_categories = []() {
+  auto retval = anari::scenes::getAvailableSceneCategories();
+  std::sort(retval.begin(), retval.end());
+  return retval;
+}();
+
+static const std::vector<std::vector<std::string>> g_scenes = []() {
+  std::vector<std::vector<std::string>> retval;
+  for (auto &c : g_categories) {
+    auto names = anari::scenes::getAvailableSceneNames(c.c_str());
+    std::sort(names.begin(), names.end());
+    retval.push_back(names);
+  }
+  return retval;
+}();
 
 static bool sceneUI_callback(void *, int index, const char **out_text)
 {
-  *out_text = g_scenes[index].c_str();
+  *out_text = g_scenes[0][index].c_str();
   return true;
 }
 
@@ -300,7 +314,7 @@ void MainWindow::setScene(std::string category,
           p.value = param;
     }
 
-    printf("Setting the scene to %s\n", sceneName.c_str());
+    printf("Setting the scene to %s/%s\n", category.c_str(), sceneName.c_str());
 
     commitScene = true;
 
@@ -527,28 +541,22 @@ void MainWindow::buildUI()
 
   ImGui::Separator();
 
-  ImGui::Text("Scene:");
+  if (ImGui::Button("change scene"))
+    ImGui::OpenPopup("sceneSelectionUI");
 
-  static int whichScene = 0;
-  if (ImGui::Combo("scene##whichScene",
-          &whichScene,
-          sceneUI_callback,
-          nullptr,
-          g_scenes.size())) {
-    setScene("demo", g_scenes[whichScene]);
-  }
-
-  for (auto &p : sceneParams) {
-    auto fcn = g_uiFcns[p.type];
-    if (fcn)
-      fcn(p, scene);
-    else
-      ImGui::Text("UI FOR TYPE NOT IMPLEMENTED -> %s", p.name.c_str());
-  }
-
-  if (!sceneParams.empty() && ImGui::Button("Apply")) {
-    commitScene = true;
-    resetCameraPosition = true;
+  if (ImGui::BeginPopup("sceneSelectionUI")) {
+    int i = 0;
+    for (auto &c : g_categories) {
+      if (ImGui::BeginMenu(c.c_str())) {
+        for (auto &n : g_scenes[i]) {
+          if (ImGui::MenuItem(n.c_str()))
+            setScene(c, n);
+        }
+        ImGui::EndMenu();
+      }
+      i++;
+    }
+    ImGui::EndPopup();
   }
 
   ImGui::End();
