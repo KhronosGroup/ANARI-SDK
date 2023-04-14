@@ -11,16 +11,25 @@
 
 // Globals ////////////////////////////////////////////////////////////////////
 
-std::vector<std::string> g_scenes = {
-    //
-    "cornell_box",
-    "gravity_spheres_volume",
-    "instanced_cubes",
-    "textured_cube",
-    "random_spheres"
-    //
-};
+static const std::vector<std::string> g_categories = []() {
+  auto v = anari::scenes::getAvailableSceneCategories();
+  auto fileBased = [](const std::string &c) { return c == "file"; };
+  v.erase(std::remove_if(v.begin(), v.end(), fileBased), v.end());
+  std::sort(v.begin(), v.end());
+  return v;
+}();
 
+static const std::vector<std::vector<std::string>> g_scenes = []() {
+  std::vector<std::vector<std::string>> v;
+  for (auto &c : g_categories) {
+    auto names = anari::scenes::getAvailableSceneNames(c.c_str());
+    std::sort(names.begin(), names.end());
+    v.push_back(names);
+  }
+  return v;
+}();
+
+std::string g_category;
 std::string g_scene;
 
 glm::uvec2 g_frameSize(1024, 768);
@@ -88,9 +97,10 @@ static void initializeANARI()
   g_device = d;
 }
 
-static void renderScene(ANARIDevice d, const std::string &scene)
+static void renderScene(
+    ANARIDevice d, const std::string &category, const std::string &scene)
 {
-  auto s = anari::scenes::createScene(d, "default", scene.c_str());
+  auto s = anari::scenes::createScene(d, category.c_str(), scene.c_str());
   anari::scenes::commit(s);
 
   auto camera = anari::newObject<anari::Camera>(d, "perspective");
@@ -121,8 +131,9 @@ static void renderScene(ANARIDevice d, const std::string &scene)
     anari::setParameter(d, camera, "up", cam.up);
     anari::commitParameters(d, camera);
 
-    std::string fileName = scene + '_' + std::to_string(imgNum++) + ".png";
-    printf("rendering '%s'...", fileName.c_str());
+    std::string fileName =
+        category + '_' + scene + '_' + std::to_string(imgNum++) + ".png";
+    printf("rendering '%s/%s'...", category.c_str(), fileName.c_str());
 
     anari::render(d, frame);
     anari::wait(d, frame);
@@ -204,6 +215,7 @@ void parseCommandLine(int argc, const char *argv[])
     } else if (arg == "--renderer") {
       g_rendererType = argv[++i];
     } else if (arg == "--scene" || arg == "-s") {
+      g_category = argv[++i];
       g_scene = argv[++i];
     } else if (arg == "--image_size") {
       g_frameSize.x = (unsigned)std::strtoul(argv[++i], nullptr, 10);
@@ -238,10 +250,13 @@ int main(int argc, const char *argv[])
   initializeANARI();
 
   if (g_scene.empty()) {
-    for (auto &scene : g_scenes)
-      renderScene(g_device, scene);
+    int i = 0;
+    for (auto &category : g_categories) {
+      for (auto &scene : g_scenes[i++])
+        renderScene(g_device, category, scene);
+    }
   } else {
-    renderScene(g_device, g_scene);
+    renderScene(g_device, g_category, g_scene);
   }
 
   anari::release(g_device, g_device);
