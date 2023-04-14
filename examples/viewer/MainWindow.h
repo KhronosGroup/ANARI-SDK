@@ -40,8 +40,6 @@ class MainWindow
   void mainLoop();
 
  private:
-  void addObjectToCommit(anari::Object obj);
-
   void updateCamera();
   void resetCamera();
 

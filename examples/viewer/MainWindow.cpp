@@ -38,52 +38,6 @@ static const std::vector<std::vector<std::string>> g_scenes = []() {
   return retval;
 }();
 
-static bool sceneUI_callback(void *, int index, const char **out_text)
-{
-  *out_text = g_scenes[0][index].c_str();
-  return true;
-}
-
-using UIParameter = anari::scenes::ParameterInfo;
-using UiFcn = void (*)(UIParameter &, anari::scenes::SceneHandle);
-
-static void ui_bool(UIParameter &p, anari::scenes::SceneHandle s)
-{
-  bool &value = p.value.get<bool>();
-  if (ImGui::Checkbox(p.name.c_str(), &value))
-    anari::scenes::setParameter(s, p.name, value);
-}
-
-static void ui_int(UIParameter &p, anari::scenes::SceneHandle s)
-{
-  int &value = p.value.get<int>();
-  if (ImGui::InputInt(p.name.c_str(), &value))
-    anari::scenes::setParameter(s, p.name, value);
-}
-
-static void ui_float(UIParameter &p, anari::scenes::SceneHandle s)
-{
-  float &value = p.value.get<float>();
-  if (ImGui::InputFloat(p.name.c_str(), &value))
-    anari::scenes::setParameter(s, p.name, value);
-}
-
-static void ui_str(UIParameter &p, anari::scenes::SceneHandle s)
-{
-  std::string &value = p.value.get<std::string>();
-  if (ImGui::InputText(p.name.c_str(), &value))
-    anari::scenes::setParameter(s, p.name, value);
-}
-
-static std::unordered_map<int, UiFcn> g_uiFcns = {
-    //
-    {ANARI_BOOL, ui_bool},
-    {ANARI_INT32, ui_int},
-    {ANARI_FLOAT32, ui_float},
-    {ANARI_STRING, ui_str}
-    //
-};
-
 /* fbBytes(): return the memory needed for a FrameBuffer of widthxheight */
 static size_t fbBytes(int width, int height)
 {
@@ -264,11 +218,10 @@ void MainWindow::setDevice(anari::Device dev, const std::string &rendererType)
   device = dev;
 
   camera = anari::newObject<anari::Camera>(dev, "perspective");
-  anari::commitParameters(dev, camera);
 
   renderer = anari::newObject<anari::Renderer>(dev, rendererType.c_str());
   anari::setParameter(dev, renderer, "background", bgColor);
-  anari::setParameter(device, renderer, "ambientRadiance", 0.2f);
+  anari::setParameter(dev, renderer, "ambientRadiance", 0.2f);
   anari::commitParameters(dev, renderer);
 
   frame = anari::newObject<anari::Frame>(device);
@@ -323,7 +276,7 @@ void MainWindow::setScene(std::string category,
     scene = s;
 
     anari::setParameter(device, frame, "world", anari::scenes::getWorld(s));
-    addObjectToCommit(frame);
+    anari::commitParameters(device, frame);
 
     resetCameraPosition = true;
   } catch (const std::runtime_error &e) {
@@ -337,7 +290,7 @@ void MainWindow::updateCamera()
   anari::setParameter(device, camera, "position", arcball.eye());
   anari::setParameter(device, camera, "direction", arcball.dir());
   anari::setParameter(device, camera, "up", arcball.up());
-  addObjectToCommit(camera);
+  anari::commitParameters(device, camera);
 }
 
 /* mainLoop(): continually loop until a window-close event is recieved */
@@ -381,8 +334,7 @@ void MainWindow::reshape(const glm::uvec2 &windowSize)
   anari::setParameter(device, frame, "channel.color", ANARI_UFIXED8_RGBA_SRGB);
   anari::setParameter(device, frame, "renderer", renderer);
   anari::setParameter(device, frame, "camera", camera);
-
-  addObjectToCommit(frame);
+  anari::commitParameters(device, frame);
 
   // reset OpenGL viewport and orthographic projection
   glViewport(0, 0, windowSize.x, windowSize.y);
@@ -400,7 +352,7 @@ void MainWindow::reshape(const glm::uvec2 &windowSize)
 
   anari::setParameter(
       device, camera, "aspect", windowSize.x / float(windowSize.y));
-  addObjectToCommit(camera);
+  anari::commitParameters(device, camera);
 }
 
 void MainWindow::motion(const glm::vec2 &position)
@@ -560,11 +512,6 @@ void MainWindow::buildUI()
   }
 
   ImGui::End();
-}
-
-void MainWindow::addObjectToCommit(anari::Object obj)
-{
-  anari::commitParameters(device, obj);
 }
 
 void MainWindow::updateScene()
