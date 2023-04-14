@@ -10,6 +10,7 @@
 #include "anari/anari_cpp/ext/glm.h"
 // std
 #include <array>
+#include <functional>
 #include <vector>
 
 namespace anari {
@@ -36,8 +37,12 @@ using Bounds = std::array<glm::vec3, 2>;
 struct TestScene;
 using SceneHandle = TestScene *;
 
+std::vector<std::string> getAvailableSceneCategories();
+std::vector<std::string> getAvailableSceneNames(const char *category);
+
 // Create an instance of a scene
-SceneHandle createScene(anari::Device d, const char *name);
+SceneHandle createScene(
+    anari::Device d, const char *category, const char *name);
 
 // Set a scene parameter to be applied on the next 'commit()'
 void setParameter(SceneHandle s, const std::string &name, Any val);
@@ -65,6 +70,14 @@ void computeNextFrame(SceneHandle s);
 
 // Free the underlying scene (and all ANARI objects created by it)
 void release(SceneHandle s);
+
+// Scene registration /////////////////////////////////////////////////////////
+
+using SceneConstructorFcn = std::function<TestScene *(anari::Device)>;
+
+void registerScene(const std::string &category,
+    const std::string &name,
+    SceneConstructorFcn ctor);
 
 } // namespace scenes
 } // namespace anari

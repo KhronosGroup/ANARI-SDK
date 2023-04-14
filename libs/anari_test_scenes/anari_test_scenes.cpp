@@ -7,50 +7,70 @@
 #include <memory>
 #include <string>
 // scenes
+#include "scenes/attributes.h"
 #include "scenes/cornell_box.h"
 #include "scenes/file_obj.h"
 #include "scenes/gravity_spheres_volume.h"
 #include "scenes/instanced_cubes.h"
-#include "scenes/random_spheres.h"
-#include "scenes/random_cylinders.h"
-#include "scenes/textured_cube.h"
-#include "scenes/attributes.h"
 #include "scenes/pbr_spheres.h"
+#include "scenes/random_cylinders.h"
+#include "scenes/random_spheres.h"
+#include "scenes/textured_cube.h"
 
 namespace anari {
 namespace scenes {
 
-using FactoryMap = std::map<std::string, TestScene *(*)(anari::Device)>;
-using FactoryPtr = std::unique_ptr<FactoryMap>;
+using FactoryMap = std::map<std::string, SceneConstructorFcn>;
+using CategoryMap = std::map<std::string, FactoryMap>;
+using CategoryMapPtr = std::unique_ptr<CategoryMap>;
 
-static FactoryPtr g_scenes;
+static CategoryMapPtr g_scenes;
 
 static void init()
 {
-  g_scenes.reset(new FactoryMap());
+  if (g_scenes.get() != nullptr)
+    return;
+
+  g_scenes.reset(new CategoryMap());
 
   {
     auto &scenes = *g_scenes;
 
-    scenes["cornell_box"] = &sceneCornellBox;
-    scenes["gravity_spheres_volume"] = &sceneGravitySphereVolume;
-    scenes["instanced_cubes"] = &sceneInstancedCubes;
-    scenes["textured_cube"] = &sceneTexturedCube;
-    scenes["random_spheres"] = &sceneRandomSpheres;
-    scenes["random_cylinders"] = &sceneRandomCylinders;
-    scenes["attributes"] = &sceneAttributes;
-    scenes["pbr_spheres"] = &scenePbrSpheres;
-    scenes["file_obj"] = &sceneFileObj;
+    registerScene("default", "random_spheres", sceneRandomSpheres);
+    registerScene("default", "cornell_box", sceneCornellBox);
+    registerScene(
+        "default", "gravity_spheres_volume", sceneGravitySphereVolume);
+    registerScene("default", "instanced_cubes", sceneInstancedCubes);
+    registerScene("default", "textured_cube", sceneTexturedCube);
+    registerScene("default", "random_cylinders", sceneRandomCylinders);
+    registerScene("default", "triangle_attributes", sceneAttributes);
+    registerScene("default", "pbr_spheres", scenePbrSpheres);
+    registerScene("default", "file_obj", sceneFileObj);
   }
 }
 
-SceneHandle createScene(anari::Device d, const char *name)
+std::vector<std::string> getAvailableSceneCategories()
 {
-  if (g_scenes.get() == nullptr)
-    init();
+  init();
+  std::vector<std::string> categories;
+  for (auto &v : *g_scenes)
+    categories.push_back(v.first);
+  return categories;
+}
 
-  auto *fcn = (*g_scenes)[name];
+std::vector<std::string> getAvailableSceneNames(const char *category)
+{
+  init();
+  std::vector<std::string> names;
+  for (auto &v : (*g_scenes)[category])
+    names.push_back(v.first);
+  return names;
+}
 
+SceneHandle createScene(anari::Device d, const char *category, const char *name)
+{
+  init();
+  auto &fcn = (*g_scenes)[category][name];
   return fcn ? fcn(d) : nullptr;
 }
 
@@ -97,6 +117,14 @@ void computeNextFrame(SceneHandle s)
 void release(SceneHandle s)
 {
   delete s;
+}
+
+void registerScene(const std::string &category,
+    const std::string &name,
+    SceneConstructorFcn ctor)
+{
+  init();
+  (*g_scenes)[category][name] = ctor;
 }
 
 } // namespace scenes

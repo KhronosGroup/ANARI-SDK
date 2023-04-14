@@ -21,19 +21,8 @@ static bool g_saveNextFrame = false;
 MainWindow *MainWindow::activeWindow = nullptr;
 
 /* list of scene options for menu */
-static const std::vector<std::string> g_scenes = {
-    //
-    "random_spheres",
-    "cornell_box",
-    "instanced_cubes",
-    "textured_cube",
-    "gravity_spheres_volume",
-    "attributes",
-    "random_cylinders",
-    "pbr_spheres",
-    "file_obj"
-    //
-};
+static const std::vector<std::string> g_scenes =
+    anari::scenes::getAvailableSceneNames("default");
 
 static bool sceneUI_callback(void *, int index, const char **out_text)
 {
@@ -93,11 +82,11 @@ void frame_show(anari::Device dev, anari::Frame frame, MainWindow *window)
   if (frame != nullptr) {
     float duration = 0.f;
     anari::getProperty(dev, frame, "duration", duration, ANARI_NO_WAIT);
-  
-    for(int i = 0;i<window->durations.size()-1;++i) {
-      window->durations[i] = window->durations[i+1];
+
+    for (int i = 0; i < window->durations.size() - 1; ++i) {
+      window->durations[i] = window->durations[i + 1];
     }
-    window->durations[window->durations.size()-1] = duration;
+    window->durations[window->durations.size() - 1] = duration;
 
     // Assume frames-per-second is reciprical of frame render duration
     window->latestFPS = 1.f / duration;
@@ -165,10 +154,9 @@ MainWindow::MainWindow(const glm::uvec2 &windowSize)
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   // On retina display, render with low resolution and scale up
   glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_FALSE);
-#else 
+#else
   glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
 #endif
-
 
 #ifdef USE_GLES2
   glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
@@ -298,7 +286,7 @@ void MainWindow::resetCamera()
 void MainWindow::setScene(
     std::string sceneName, std::string paramName, anari::Any param)
 {
-  auto s = anari::scenes::createScene(device, sceneName.c_str());
+  auto s = anari::scenes::createScene(device, "default", sceneName.c_str());
   try {
     auto params = anari::scenes::getParameters(s);
 
@@ -518,17 +506,21 @@ void MainWindow::buildUI()
   float maximum = 0.0f;
   float minimum = FLT_MAX;
   float average = 0.0f;
-  for(float x : durations) {
+  for (float x : durations) {
     maximum = std::max(maximum, x);
     minimum = std::min(minimum, x);
     average += x;
   }
   average /= durations.size();
-  float top = std::max(maximum, 2.0f*average);
+  float top = std::max(maximum, 2.0f * average);
 
-  ImGui::PlotHistogram("", durations.data(), durations.size(), 0, NULL, 0, top, ImVec2(208, 50));
-  ImGui::Text("min/avg/max %.2f / %.2f / %.2f ms ", minimum*1000.0f, average*1000.0f, maximum*1000.0f);
-  ImGui::Text("FPS: %.1f", 1.0f/average);
+  ImGui::PlotHistogram(
+      "", durations.data(), durations.size(), 0, NULL, 0, top, ImVec2(208, 50));
+  ImGui::Text("min/avg/max %.2f / %.2f / %.2f ms ",
+      minimum * 1000.0f,
+      average * 1000.0f,
+      maximum * 1000.0f);
+  ImGui::Text("FPS: %.1f", 1.0f / average);
 
   ImGui::Separator();
 
