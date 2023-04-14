@@ -20,10 +20,10 @@
 // ANARI sample scenes
 #include "anari_test_scenes.h"
 // C++ std
+#include <array>
 #include <memory>
 #include <string>
 #include <vector>
-#include <array>
 
 class MainWindow
 {
@@ -32,8 +32,10 @@ class MainWindow
   ~MainWindow();
 
   void setDevice(anari::Device device, const std::string &rendererType);
-  void setScene(
-      std::string sceneName, std::string paramName = "", anari::Any param = {});
+  void setScene(std::string category,
+      std::string sceneName,
+      std::string paramName = "",
+      anari::Any param = {});
 
   void mainLoop();
 
@@ -53,7 +55,7 @@ class MainWindow
 
   void cleanup();
 
-  friend void frame_show(anari::Device, anari::Frame, MainWindow*);
+  friend void frame_show(anari::Device, anari::Frame, MainWindow *);
 
   static MainWindow *activeWindow;
 

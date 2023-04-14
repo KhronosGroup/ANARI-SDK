@@ -3,17 +3,17 @@
 
 #pragma once
 
-#include "scene.h"
+#include "../scene.h"
 
 namespace anari {
 namespace scenes {
 
-TestScene *scenePbrSpheres(anari::Device d);
+TestScene *sceneCornellBox(anari::Device d);
 
-struct PbrSpheres : public TestScene
+struct CornellBox : public TestScene
 {
-  PbrSpheres(anari::Device d);
-  ~PbrSpheres();
+  CornellBox(anari::Device d);
+  ~CornellBox();
 
   anari::World world() override;
 

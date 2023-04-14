@@ -7,15 +7,15 @@
 #include <memory>
 #include <string>
 // scenes
-#include "scenes/attributes.h"
-#include "scenes/cornell_box.h"
-#include "scenes/file_obj.h"
-#include "scenes/gravity_spheres_volume.h"
-#include "scenes/instanced_cubes.h"
-#include "scenes/pbr_spheres.h"
-#include "scenes/random_cylinders.h"
-#include "scenes/random_spheres.h"
-#include "scenes/textured_cube.h"
+#include "scenes/demo/cornell_box.h"
+#include "scenes/demo/gravity_spheres_volume.h"
+#include "scenes/file/obj.h"
+#include "scenes/test/attributes.h"
+#include "scenes/test/instanced_cubes.h"
+#include "scenes/test/pbr_spheres.h"
+#include "scenes/test/random_cylinders.h"
+#include "scenes/test/random_spheres.h"
+#include "scenes/test/textured_cube.h"
 
 namespace anari {
 namespace scenes {
@@ -36,16 +36,20 @@ static void init()
   {
     auto &scenes = *g_scenes;
 
-    registerScene("default", "random_spheres", sceneRandomSpheres);
-    registerScene("default", "cornell_box", sceneCornellBox);
-    registerScene(
-        "default", "gravity_spheres_volume", sceneGravitySphereVolume);
-    registerScene("default", "instanced_cubes", sceneInstancedCubes);
-    registerScene("default", "textured_cube", sceneTexturedCube);
-    registerScene("default", "random_cylinders", sceneRandomCylinders);
-    registerScene("default", "triangle_attributes", sceneAttributes);
-    registerScene("default", "pbr_spheres", scenePbrSpheres);
-    registerScene("default", "file_obj", sceneFileObj);
+    // demo scenes
+    registerScene("demo", "cornell_box", sceneCornellBox);
+    registerScene("demo", "gravity_spheres_volume", sceneGravitySphereVolume);
+
+    // file loaders
+    registerScene("file", "obj", sceneFileObj);
+
+    // tests
+    registerScene("test", "random_spheres", sceneRandomSpheres);
+    registerScene("test", "instanced_cubes", sceneInstancedCubes);
+    registerScene("test", "textured_cube", sceneTexturedCube);
+    registerScene("test", "random_cylinders", sceneRandomCylinders);
+    registerScene("test", "triangle_attributes", sceneAttributes);
+    registerScene("test", "pbr_spheres", scenePbrSpheres);
   }
 }
 

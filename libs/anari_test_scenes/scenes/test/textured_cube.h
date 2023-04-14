@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "scene.h"
+#include "../scene.h"
 
 namespace anari {
 namespace scenes {
