@@ -13,14 +13,10 @@ install(TARGETS ${PROJECT_NAME}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
-set(TEST_SCENES
-  "cornell_box"
-  "gravity_spheres_volume"
-  "instanced_cubes"
-  "textured_cube"
-  "random_spheres"
-)
+foreach(SCENE cornell_box;gravity_spheres_volume)
+  add_test(NAME render_test::${SCENE} COMMAND ${PROJECT_NAME} --scene demo ${SCENE})
+endforeach()
 
-foreach(SCENE ${TEST_SCENES})
-  add_test(NAME render_test::${SCENE} COMMAND ${PROJECT_NAME} --scene ${SCENE})
+foreach(SCENE instanced_cubes;textured_cube;random_spheres)
+  add_test(NAME render_test::${SCENE} COMMAND ${PROJECT_NAME} --scene test ${SCENE})
 endforeach()
