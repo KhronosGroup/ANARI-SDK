@@ -1,7 +1,7 @@
 // Copyright 2021 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-#include "file_obj.h"
+#include "obj.h"
 // tiny_obj_loader
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.h"

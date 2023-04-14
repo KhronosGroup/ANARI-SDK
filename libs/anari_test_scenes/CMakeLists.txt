@@ -6,16 +6,19 @@ project(anari_test_scenes LANGUAGES CXX)
 add_library(${PROJECT_NAME} STATIC
   anari_test_scenes.cpp
 
-  scenes/cornell_box.cpp
-  scenes/file_obj.cpp
-  scenes/gravity_spheres_volume.cpp
-  scenes/instanced_cubes.cpp
-  scenes/random_spheres.cpp
-  scenes/random_cylinders.cpp
   scenes/scene.cpp
-  scenes/textured_cube.cpp
-  scenes/attributes.cpp
-  scenes/pbr_spheres.cpp
+
+  scenes/demo/cornell_box.cpp
+  scenes/demo/gravity_spheres_volume.cpp
+
+  scenes/file/obj.cpp
+
+  scenes/test/attributes.cpp
+  scenes/test/instanced_cubes.cpp
+  scenes/test/pbr_spheres.cpp
+  scenes/test/random_cylinders.cpp
+  scenes/test/random_spheres.cpp
+  scenes/test/textured_cube.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_LIST_DIR})

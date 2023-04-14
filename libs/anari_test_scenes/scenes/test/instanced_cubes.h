@@ -3,19 +3,17 @@
 
 #pragma once
 
-#include "scene.h"
+#include "../scene.h"
 
 namespace anari {
 namespace scenes {
 
-TestScene *sceneGravitySphereVolume(anari::Device d);
+TestScene *sceneInstancedCubes(anari::Device d);
 
-struct GravityVolume : public TestScene
+struct InstancedCubes : public TestScene
 {
-  GravityVolume(anari::Device d);
-  ~GravityVolume();
-
-  std::vector<ParameterInfo> parameters() override;
+  InstancedCubes(anari::Device d);
+  ~InstancedCubes();
 
   anari::World world() override;
 

@@ -10,6 +10,7 @@
 std::string g_libraryType = "environment";
 std::string g_deviceType = "default";
 std::string g_rendererType = "default";
+std::string g_startupCategory = "demo";
 std::string g_startupScene = "cornell_box";
 std::string g_objFile;
 
@@ -121,7 +122,7 @@ void printUsage()
       << "   [{--device|-d} <ANARI device>]\n"
       << "   [{--renderer|-r} <ANARI renderer>]\n"
       << "   [{--trace|-t} <directory>]\n"
-      << "   [{--scene|-s} <scene>]\n"
+      << "   [{--scene|-s} <category> <name>]\n"
       << "   [.obj intput file]"
       << std::endl;
 }
@@ -145,6 +146,7 @@ void parseCommandLine(int argc, const char *argv[])
     } else if (arg == "--verbose" || arg == "-v") {
       g_verbose = true;
     } else if (arg == "--scene" || arg == "-s") {
+      g_startupCategory = argv[++i];
       g_startupScene = argv[++i];
     } else if (arg == "--trace" || arg == "-t") {
       g_traceDir = argv[++i];
@@ -170,9 +172,9 @@ int main(int argc, const char *argv[])
   //   to the "random_sphere" scene
   window->setDevice(g_device, g_rendererType);
   if (!g_objFile.empty())
-    window->setScene("file_obj", "fileName", g_objFile);
+    window->setScene("file", "obj", "fileName", g_objFile);
   else
-    window->setScene(g_startupScene);
+    window->setScene(g_startupCategory, g_startupScene);
 
   // Repeatedly render the scene
   window->mainLoop();

@@ -22,7 +22,7 @@ MainWindow *MainWindow::activeWindow = nullptr;
 
 /* list of scene options for menu */
 static const std::vector<std::string> g_scenes =
-    anari::scenes::getAvailableSceneNames("default");
+    anari::scenes::getAvailableSceneNames("demo");
 
 static bool sceneUI_callback(void *, int index, const char **out_text)
 {
@@ -283,10 +283,13 @@ void MainWindow::resetCamera()
   updateCamera();
 }
 
-void MainWindow::setScene(
-    std::string sceneName, std::string paramName, anari::Any param)
+void MainWindow::setScene(std::string category,
+    std::string sceneName,
+    std::string paramName,
+    anari::Any param)
 {
-  auto s = anari::scenes::createScene(device, "default", sceneName.c_str());
+  auto s =
+      anari::scenes::createScene(device, category.c_str(), sceneName.c_str());
   try {
     auto params = anari::scenes::getParameters(s);
 
@@ -532,7 +535,7 @@ void MainWindow::buildUI()
           sceneUI_callback,
           nullptr,
           g_scenes.size())) {
-    setScene(g_scenes[whichScene]);
+    setScene("demo", g_scenes[whichScene]);
   }
 
   for (auto &p : sceneParams) {
