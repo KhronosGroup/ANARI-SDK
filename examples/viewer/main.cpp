@@ -10,7 +10,7 @@
 std::string g_libraryType = "environment";
 std::string g_deviceType = "default";
 std::string g_rendererType = "default";
-std::string g_startupScene = "random_spheres";
+std::string g_startupScene = "cornell_box";
 std::string g_objFile;
 
 ANARILibrary g_library = nullptr;
@@ -85,9 +85,9 @@ static void initializeANARI(MainWindow *window)
     anari::setParameter(dev, dev, "glDebug", ANARI_BOOL, &g_true);
 
 #ifdef USE_GLES2
-  anari::setParameter(dev, dev, "glAPI", ANARI_STRING, "OpenGL_ES");  
+  anari::setParameter(dev, dev, "glAPI", ANARI_STRING, "OpenGL_ES");
 #else
-  anari::setParameter(dev, dev, "glAPI", ANARI_STRING, "OpenGL");  
+  anari::setParameter(dev, dev, "glAPI", ANARI_STRING, "OpenGL");
 #endif
 
   if (g_enableDebug) {

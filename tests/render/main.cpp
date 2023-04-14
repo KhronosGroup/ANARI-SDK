@@ -90,7 +90,7 @@ static void initializeANARI()
 
 static void renderScene(ANARIDevice d, const std::string &scene)
 {
-  auto s = anari::scenes::createScene(d, scene.c_str());
+  auto s = anari::scenes::createScene(d, "default", scene.c_str());
   anari::scenes::commit(s);
 
   auto camera = anari::newObject<anari::Camera>(d, "perspective");
