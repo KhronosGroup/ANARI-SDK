@@ -265,9 +265,17 @@ void CodeSerializer::anariNewArray3D(ANARIDevice device, const void* appMemory, 
 }
 
 void CodeSerializer::anariMapArray(ANARIDevice device, ANARIArray array, void *result) {
-   out << "void *ptr" << result << " = anariMapArray(device, ";
-   printObjectName(array);
-   out << ");\n";
+   if(auto info = dd->getDynamicObjectInfo<GenericArrayDebugObject>(array)) {
+      if(info->mapping_index == 0) {
+         out << "void *";
+      }
+      info->mapping_index += 1;
+      out << "mapping_";
+      printObjectName(array);
+      out << " = anariMapArray(device, ";
+      printObjectName(array);
+      out << ");\n";
+   }
 }
 
 void CodeSerializer::anariUnmapArray(ANARIDevice device, ANARIArray array) {
@@ -288,7 +296,9 @@ void CodeSerializer::anariUnmapArray(ANARIDevice device, ANARIArray array) {
             }
          }
          out << "};\n";
-         out << "memcpy(ptr" << handles << ", " << anari::varnameOf(dataType) << "_local" << local << ", " << byte_size << ");\n";
+         out << "memcpy(mapping_";
+         printObjectName(array);
+         out << ", " << anari::varnameOf(dataType) << "_local" << local << ", " << byte_size << ");\n";
       } else {
          uint64_t byte_offset = data.tellp();
          const char *charAppMemory = (const char*)info->mapping;
@@ -311,7 +321,9 @@ void CodeSerializer::anariUnmapArray(ANARIDevice device, ANARIArray array) {
             }
          }
 
-         out << "memcpy(ptr" << charAppMemory << ", data(" << byte_offset << ", " << byte_size << "), " << byte_size << ");\n";
+         out << "memcpy(mapping_";
+         printObjectName(array);
+         out << ", data(" << byte_offset << ", " << byte_size << "), " << byte_size << ");\n";
       }
    }
 
