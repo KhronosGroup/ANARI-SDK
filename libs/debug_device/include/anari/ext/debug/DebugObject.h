@@ -101,7 +101,7 @@ public:
   }
   const void *arrayData = nullptr;
   void *mapping = nullptr;
-  uint mapping_index = 0;
+  int mapping_index = 0;
   ANARIObject *handles = nullptr;
   ANARIDataType arrayType = ANARI_UNKNOWN;
   uint64_t numItems1;
