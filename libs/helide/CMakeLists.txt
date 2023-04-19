@@ -47,34 +47,19 @@ add_subdirectory(external/embree EXCLUDE_FROM_ALL)
 
 ## Code generation ##
 
-if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
-  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+anari_generate_queries(
+  NAME helide
+  PREFIX HelideDevice
+  CPP_NAMESPACE helide
+  JSON_DEFINITIONS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/helide_device.json
+)
 
-  add_custom_target(generate_helide_device
-    COMMAND ${Python3_EXECUTABLE} ${ANARI_CODE_GEN_ROOT}/generate_queries.py
-      --json ${ANARI_CODE_GEN_ROOT}
-      --prefix HelideDevice
-      --device ${CMAKE_CURRENT_SOURCE_DIR}/helide_device.json
-      --namespace helide
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    DEPENDS helide_device.json
-  )
-
-  add_custom_target(generate_helide_debug_objects
-    COMMAND ${Python3_EXECUTABLE} ${ANARI_CODE_GEN_ROOT}/generate_debug_objects.py
-      --json ${ANARI_CODE_GEN_ROOT}
-      --device ${CMAKE_CURRENT_SOURCE_DIR}/helide_device.json
-      --prefix HelideDevice
-      --namespace helide
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    DEPENDS helide_device.json
-  )
-
-  if (TARGET generate_all)
-    add_dependencies(generate_all generate_helide_device)
-    add_dependencies(generate_all generate_helide_debug_objects)
-  endif()
-endif()
+anari_generate_debug_objects(
+  NAME helide
+  PREFIX HelideDevice
+  CPP_NAMESPACE helide
+  JSON_DEFINITIONS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/helide_device.json
+)
 
 ## Core device target ##
 

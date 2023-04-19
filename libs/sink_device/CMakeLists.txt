@@ -5,21 +5,12 @@ set(CMAKE_CXX_STANDARD 11)
 
 project(anari_library_sink LANGUAGES CXX)
 
-if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
-  find_package(Python3 REQUIRED COMPONENTS Interpreter)
-
-  add_custom_target(generate_sink_device
-    COMMAND ${Python3_EXECUTABLE} ${ANARI_CODE_GEN_ROOT}/generate_queries.py
-      --json ${ANARI_CODE_GEN_ROOT}
-      --device ${ANARI_CODE_GEN_ROOT}/devices/generic_device.json
-      --prefix SinkDevice
-      --namespace anari::sink_device
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    DEPENDS ${ANARI_CODE_GEN_ROOT}/devices/generic_device.json
-  )
-
-  add_dependencies(generate_all generate_sink_device)
-endif()
+anari_generate_queries(
+  NAME sink
+  PREFIX SinkDevice
+  CPP_NAMESPACE anari::sink_device
+  JSON_DEFINITIONS_FILE ${ANARI_CODE_GEN_ROOT}/devices/generic_device.json
+)
 
 add_library(${PROJECT_NAME} SHARED
   SinkDevice.cpp

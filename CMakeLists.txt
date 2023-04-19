@@ -51,6 +51,7 @@ option(BUILD_CTS "Build cts toolkit" ON)
 set(ANARI_CODE_GEN_ROOT ${CMAKE_SOURCE_DIR}/code_gen)
 add_custom_target(generate_all)
 include(cmake/anari_generate_frontend.cmake)
+include(cmake/anari_generate_codegen.cmake)
 
 ## Add library and executable targets
 
