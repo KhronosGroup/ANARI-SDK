@@ -49,6 +49,9 @@
 #ifndef LINALG_H
 #define LINALG_H
 
+// anari_cpp
+#include "../Traits.h"
+
 #include <cmath>        // For various unary math functions, such as std::sqrt
 #include <cstdlib>      // To resolve std::abs ambiguity on clang
 #include <cstdint>      // For implementing namespace linalg::aliases
@@ -101,7 +104,7 @@ namespace linalg
         template<class T, int M> struct any_compare<mat<T,M,1>,mat<T,M,1>> { using type=ord<T>; constexpr ord<T> operator() (const mat<T,M,1> & a, const mat<T,M,1> & b) const { return compare(a.x,b.x); } };
         template<class T, int M> struct any_compare<mat<T,M,2>,mat<T,M,2>> { using type=ord<T>; constexpr ord<T> operator() (const mat<T,M,2> & a, const mat<T,M,2> & b) const { return a.x!=b.x ? compare(a.x,b.x) : compare(a.y,b.y); } };
         template<class T, int M> struct any_compare<mat<T,M,3>,mat<T,M,3>> { using type=ord<T>; constexpr ord<T> operator() (const mat<T,M,3> & a, const mat<T,M,3> & b) const { return a.x!=b.x ? compare(a.x,b.x) : a.y!=b.y ? compare(a.y,b.y) : compare(a.z,b.z); } };
-        template<class T, int M> struct any_compare<mat<T,M,4>,mat<T,M,4>> { using type=ord<T>; constexpr ord<T> operator() (const mat<T,M,4> & a, const mat<T,M,4> & b) const { return a.x!=b.x ? compare(a.x,b.x) : a.y!=b.y ? compare(a.y,b.y) : a.z!=b.z ? compare(a.z,b.z) : compare(a.w,b.w); } }; 
+        template<class T, int M> struct any_compare<mat<T,M,4>,mat<T,M,4>> { using type=ord<T>; constexpr ord<T> operator() (const mat<T,M,4> & a, const mat<T,M,4> & b) const { return a.x!=b.x ? compare(a.x,b.x) : a.y!=b.y ? compare(a.y,b.y) : a.z!=b.z ? compare(a.z,b.z) : compare(a.w,b.w); } };
 
         // Helper for compile-time index-based access to members of vector and matrix types
         template<int I> struct getter;
@@ -240,7 +243,7 @@ namespace linalg
     {
         T                           x,y,z;
         constexpr                   vec()                               : x(), y(), z() {}
-        constexpr                   vec(const T & x_, const T & y_, 
+        constexpr                   vec(const T & x_, const T & y_,
                                         const T & z_)                   : x(x_), y(y_), z(z_) {}
         constexpr                   vec(const vec<T,2> & xy,
                                         const T & z_)                   : vec(xy.x, xy.y, z_) {}
@@ -262,19 +265,19 @@ namespace linalg
         constexpr                   vec()                               : x(), y(), z(), w() {}
         constexpr                   vec(const T & x_, const T & y_,
                                         const T & z_, const T & w_)     : x(x_), y(y_), z(z_), w(w_) {}
-        constexpr                   vec(const vec<T,2> & xy, 
+        constexpr                   vec(const vec<T,2> & xy,
                                         const T & z_, const T & w_)     : vec(xy.x, xy.y, z_, w_) {}
         constexpr                   vec(const vec<T,3> & xyz,
                                         const T & w_)                   : vec(xyz.x, xyz.y, xyz.z, w_) {}
         constexpr explicit          vec(const T & s)                    : vec(s, s, s, s) {}
         constexpr explicit          vec(const T * p)                    : vec(p[0], p[1], p[2], p[3]) {}
-        template<class U> 
+        template<class U>
         constexpr explicit          vec(const vec<U,4> & v)             : vec(static_cast<T>(v.x), static_cast<T>(v.y), static_cast<T>(v.z), static_cast<T>(v.w)) {}
         constexpr const T &         operator[] (int i) const            { return i==0?x:i==1?y:i==2?z:w; }
         LINALG_CONSTEXPR14 T &      operator[] (int i)                  { return i==0?x:i==1?y:i==2?z:w; }
         constexpr const vec<T,2> &  xy() const                          { return *reinterpret_cast<const vec<T,2> *>(this); }
         constexpr const vec<T,3> &  xyz() const                         { return *reinterpret_cast<const vec<T,3> *>(this); }
-        vec<T,2> &                  xy()                                { return *reinterpret_cast<vec<T,2> *>(this); }                
+        vec<T,2> &                  xy()                                { return *reinterpret_cast<vec<T,2> *>(this); }
         vec<T,3> &                  xyz()                               { return *reinterpret_cast<vec<T,3> *>(this); }
 
         template<class U, class=detail::conv_t<vec,U>> constexpr vec(const U & u) : vec(converter<vec,U>{}(u)) {}
@@ -290,7 +293,7 @@ namespace linalg
         constexpr                   mat(const V & x_)                   : x(x_) {}
         constexpr explicit          mat(const T & s)                    : x(s) {}
         constexpr explicit          mat(const T * p)                    : x(p+M*0) {}
-        template<class U> 
+        template<class U>
         constexpr explicit          mat(const mat<U,M,1> & m)           : mat(V(m.x)) {}
         constexpr vec<T,1>          row(int i) const                    { return {x[i]}; }
         constexpr const V &         operator[] (int j) const            { return x; }
@@ -307,7 +310,7 @@ namespace linalg
         constexpr                   mat(const V & x_, const V & y_)     : x(x_), y(y_) {}
         constexpr explicit          mat(const T & s)                    : x(s), y(s) {}
         constexpr explicit          mat(const T * p)                    : x(p+M*0), y(p+M*1) {}
-        template<class U> 
+        template<class U>
         constexpr explicit          mat(const mat<U,M,2> & m)           : mat(V(m.x), V(m.y)) {}
         constexpr vec<T,2>          row(int i) const                    { return {x[i], y[i]}; }
         constexpr const V &         operator[] (int j) const            { return j==0?x:y; }
@@ -321,11 +324,11 @@ namespace linalg
         typedef vec<T,M>            V;
         V                           x,y,z;
         constexpr                   mat()                               : x(), y(), z() {}
-        constexpr                   mat(const V & x_, const V & y_, 
+        constexpr                   mat(const V & x_, const V & y_,
                                         const V & z_)                   : x(x_), y(y_), z(z_) {}
         constexpr explicit          mat(const T & s)                    : x(s), y(s), z(s) {}
         constexpr explicit          mat(const T * p)                    : x(p+M*0), y(p+M*1), z(p+M*2) {}
-        template<class U> 
+        template<class U>
         constexpr explicit          mat(const mat<U,M,3> & m)           : mat(V(m.x), V(m.y), V(m.z)) {}
         constexpr vec<T,3>          row(int i) const                    { return {x[i], y[i], z[i]}; }
         constexpr const V &         operator[] (int j) const            { return j==0?x:j==1?y:z; }
@@ -343,7 +346,7 @@ namespace linalg
                                         const V & z_, const V & w_)     : x(x_), y(y_), z(z_), w(w_) {}
         constexpr explicit          mat(const T & s)                    : x(s), y(s), z(s), w(s) {}
         constexpr explicit          mat(const T * p)                    : x(p+M*0), y(p+M*1), z(p+M*2), w(p+M*3) {}
-        template<class U> 
+        template<class U>
         constexpr explicit          mat(const mat<U,M,4> & m)           : mat(V(m.x), V(m.y), V(m.z), V(m.w)) {}
         constexpr vec<T,4>          row(int i) const                    { return {x[i], y[i], z[i], w[i]}; }
         constexpr const V &         operator[] (int j) const            { return j==0?x:j==1?y:j==2?z:w; }
@@ -606,8 +609,8 @@ namespace linalg
     namespace aliases
     {
         typedef vec<bool,1> bool1; typedef vec<uint8_t,1> byte1; typedef vec<int16_t,1> short1; typedef vec<uint16_t,1> ushort1;
-        typedef vec<bool,2> bool2; typedef vec<uint8_t,2> byte2; typedef vec<int16_t,2> short2; typedef vec<uint16_t,2> ushort2; 
-        typedef vec<bool,3> bool3; typedef vec<uint8_t,3> byte3; typedef vec<int16_t,3> short3; typedef vec<uint16_t,3> ushort3; 
+        typedef vec<bool,2> bool2; typedef vec<uint8_t,2> byte2; typedef vec<int16_t,2> short2; typedef vec<uint16_t,2> ushort2;
+        typedef vec<bool,3> bool3; typedef vec<uint8_t,3> byte3; typedef vec<int16_t,3> short3; typedef vec<uint16_t,3> ushort3;
         typedef vec<bool,4> bool4; typedef vec<uint8_t,4> byte4; typedef vec<int16_t,4> short4; typedef vec<uint16_t,4> ushort4;
         typedef vec<int,1> int1; typedef vec<unsigned,1> uint1; typedef vec<float,1> float1; typedef vec<double,1> double1;
         typedef vec<int,2> int2; typedef vec<unsigned,2> uint2; typedef vec<float,2> float2; typedef vec<double,2> double2;
@@ -646,7 +649,7 @@ namespace linalg
     }
 }
 
-namespace std 
+namespace std
 {
     // Provide specializations for std::hash<...> with linalg types
     template<class T> struct hash<linalg::vec<T,1>> { std::size_t operator()(const linalg::vec<T,1> & v) const { std::hash<T> h; return h(v.x); } };
@@ -661,14 +664,14 @@ namespace std
 }
 
 // Definitions of functions too long to be defined inline
-template<class T> constexpr linalg::mat<T,3,3> linalg::adjugate(const mat<T,3,3> & a) 
+template<class T> constexpr linalg::mat<T,3,3> linalg::adjugate(const mat<T,3,3> & a)
 {
     return {{a.y.y*a.z.z - a.z.y*a.y.z, a.z.y*a.x.z - a.x.y*a.z.z, a.x.y*a.y.z - a.y.y*a.x.z},
             {a.y.z*a.z.x - a.z.z*a.y.x, a.z.z*a.x.x - a.x.z*a.z.x, a.x.z*a.y.x - a.y.z*a.x.x},
-            {a.y.x*a.z.y - a.z.x*a.y.y, a.z.x*a.x.y - a.x.x*a.z.y, a.x.x*a.y.y - a.y.x*a.x.y}}; 
+            {a.y.x*a.z.y - a.z.x*a.y.y, a.z.x*a.x.y - a.x.x*a.z.y, a.x.x*a.y.y - a.y.x*a.x.y}};
 }
 
-template<class T> constexpr linalg::mat<T,4,4> linalg::adjugate(const mat<T,4,4> & a) 
+template<class T> constexpr linalg::mat<T,4,4> linalg::adjugate(const mat<T,4,4> & a)
 {
     return {{a.y.y*a.z.z*a.w.w + a.w.y*a.y.z*a.z.w + a.z.y*a.w.z*a.y.w - a.y.y*a.w.z*a.z.w - a.z.y*a.y.z*a.w.w - a.w.y*a.z.z*a.y.w,
              a.x.y*a.w.z*a.z.w + a.z.y*a.x.z*a.w.w + a.w.y*a.z.z*a.x.w - a.w.y*a.x.z*a.z.w - a.z.y*a.w.z*a.x.w - a.x.y*a.z.z*a.w.w,
@@ -685,21 +688,21 @@ template<class T> constexpr linalg::mat<T,4,4> linalg::adjugate(const mat<T,4,4>
             {a.y.x*a.w.y*a.z.z + a.z.x*a.y.y*a.w.z + a.w.x*a.z.y*a.y.z - a.y.x*a.z.y*a.w.z - a.w.x*a.y.y*a.z.z - a.z.x*a.w.y*a.y.z,
              a.x.x*a.z.y*a.w.z + a.w.x*a.x.y*a.z.z + a.z.x*a.w.y*a.x.z - a.x.x*a.w.y*a.z.z - a.z.x*a.x.y*a.w.z - a.w.x*a.z.y*a.x.z,
              a.x.x*a.w.y*a.y.z + a.y.x*a.x.y*a.w.z + a.w.x*a.y.y*a.x.z - a.x.x*a.y.y*a.w.z - a.w.x*a.x.y*a.y.z - a.y.x*a.w.y*a.x.z,
-             a.x.x*a.y.y*a.z.z + a.z.x*a.x.y*a.y.z + a.y.x*a.z.y*a.x.z - a.x.x*a.z.y*a.y.z - a.y.x*a.x.y*a.z.z - a.z.x*a.y.y*a.x.z}}; 
+             a.x.x*a.y.y*a.z.z + a.z.x*a.x.y*a.y.z + a.y.x*a.z.y*a.x.z - a.x.x*a.z.y*a.y.z - a.y.x*a.x.y*a.z.z - a.z.x*a.y.y*a.x.z}};
 }
 
-template<class T> constexpr T linalg::determinant(const mat<T,4,4> & a) 
+template<class T> constexpr T linalg::determinant(const mat<T,4,4> & a)
 {
     return a.x.x*(a.y.y*a.z.z*a.w.w + a.w.y*a.y.z*a.z.w + a.z.y*a.w.z*a.y.w - a.y.y*a.w.z*a.z.w - a.z.y*a.y.z*a.w.w - a.w.y*a.z.z*a.y.w)
          + a.x.y*(a.y.z*a.w.w*a.z.x + a.z.z*a.y.w*a.w.x + a.w.z*a.z.w*a.y.x - a.y.z*a.z.w*a.w.x - a.w.z*a.y.w*a.z.x - a.z.z*a.w.w*a.y.x)
          + a.x.z*(a.y.w*a.z.x*a.w.y + a.w.w*a.y.x*a.z.y + a.z.w*a.w.x*a.y.y - a.y.w*a.w.x*a.z.y - a.z.w*a.y.x*a.w.y - a.w.w*a.z.x*a.y.y)
-         + a.x.w*(a.y.x*a.w.y*a.z.z + a.z.x*a.y.y*a.w.z + a.w.x*a.z.y*a.y.z - a.y.x*a.z.y*a.w.z - a.w.x*a.y.y*a.z.z - a.z.x*a.w.y*a.y.z); 
+         + a.x.w*(a.y.x*a.w.y*a.z.z + a.z.x*a.y.y*a.w.z + a.w.x*a.z.y*a.y.z - a.y.x*a.z.y*a.w.z - a.w.x*a.y.y*a.z.z - a.z.x*a.w.y*a.y.z);
 }
 
 template<class T> linalg::vec<T,4> linalg::rotation_quat(const mat<T,3,3> & m)
 {
     const vec<T,4> q {m.x.x-m.y.y-m.z.z, m.y.y-m.x.x-m.z.z, m.z.z-m.x.x-m.y.y, m.x.x+m.y.y+m.z.z}, s[] {
-        {1, m.x.y + m.y.x, m.z.x + m.x.z, m.y.z - m.z.y}, 
+        {1, m.x.y + m.y.x, m.z.x + m.x.z, m.y.z - m.z.y},
         {m.x.y + m.y.x, 1, m.y.z + m.z.y, m.z.x - m.x.z},
         {m.x.z + m.z.x, m.y.z + m.z.y, 1, m.x.y - m.y.x},
         {m.y.z - m.z.y, m.z.x - m.x.z, m.x.y - m.y.x, 1}};
@@ -712,10 +715,44 @@ template<class T> linalg::mat<T,4,4> linalg::lookat_matrix(const vec<T,3> & eye,
     return inverse(mat<T,4,4>{{x,0},{y,0},{z,0},{eye,1}});
 }
 
-template<class T> linalg::mat<T,4,4> linalg::frustum_matrix(T x0, T x1, T y0, T y1, T n, T f, fwd_axis a, z_range z) 
+template<class T> linalg::mat<T,4,4> linalg::frustum_matrix(T x0, T x1, T y0, T y1, T n, T f, fwd_axis a, z_range z)
 {
     const T s = a == pos_z ? T(1) : T(-1), o = z == neg_one_to_one ? n : 0;
     return {{2*n/(x1-x0),0,0,0}, {0,2*n/(y1-y0),0,0}, {-s*(x0+x1)/(x1-x0),-s*(y0+y1)/(y1-y0),s*(f+o)/(f-n),s}, {0,0,-(n+o)*f/(f-n),0}};
 }
+
+namespace anari {
+
+using namespace linalg::aliases;
+using mat4 = float4x4;
+
+ANARI_TYPEFOR_SPECIALIZATION(float2, ANARI_FLOAT32_VEC2);
+ANARI_TYPEFOR_SPECIALIZATION(float3, ANARI_FLOAT32_VEC3);
+ANARI_TYPEFOR_SPECIALIZATION(float4, ANARI_FLOAT32_VEC4);
+ANARI_TYPEFOR_SPECIALIZATION(byte2, ANARI_UINT8_VEC2);
+ANARI_TYPEFOR_SPECIALIZATION(byte3, ANARI_UINT8_VEC3);
+ANARI_TYPEFOR_SPECIALIZATION(byte4, ANARI_UINT8_VEC4);
+ANARI_TYPEFOR_SPECIALIZATION(int2, ANARI_INT32_VEC2);
+ANARI_TYPEFOR_SPECIALIZATION(int3, ANARI_INT32_VEC3);
+ANARI_TYPEFOR_SPECIALIZATION(int4, ANARI_INT32_VEC4);
+ANARI_TYPEFOR_SPECIALIZATION(uint2, ANARI_UINT32_VEC2);
+ANARI_TYPEFOR_SPECIALIZATION(uint3, ANARI_UINT32_VEC3);
+ANARI_TYPEFOR_SPECIALIZATION(uint4, ANARI_UINT32_VEC4);
+ANARI_TYPEFOR_SPECIALIZATION(mat4, ANARI_FLOAT32_MAT4);
+
+#ifdef ANARI_LINALG_DEFINITIONS
+ANARI_TYPEFOR_DEFINITION(float2);
+ANARI_TYPEFOR_DEFINITION(float3);
+ANARI_TYPEFOR_DEFINITION(float4);
+ANARI_TYPEFOR_DEFINITION(int2);
+ANARI_TYPEFOR_DEFINITION(int3);
+ANARI_TYPEFOR_DEFINITION(int4);
+ANARI_TYPEFOR_DEFINITION(uint2);
+ANARI_TYPEFOR_DEFINITION(uint3);
+ANARI_TYPEFOR_DEFINITION(uint4);
+ANARI_TYPEFOR_DEFINITION(mat4);
+#endif
+
+} // namespace anari
 
 #endif

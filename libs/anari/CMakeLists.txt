@@ -7,10 +7,11 @@ find_package(Threads REQUIRED)
 
 add_library(${PROJECT_NAME}
   anari_cpp_std_defs.cpp
+  anari_cpp_linalg_defs.cpp
+  anari_cpp_glm_defs.cpp
   API.cpp
   DeviceImpl.cpp
   LibraryImpl.cpp
-  anari_cpp_glm_defs.cpp
 )
 
 if (NOT BUILD_SHARED_LIBS)

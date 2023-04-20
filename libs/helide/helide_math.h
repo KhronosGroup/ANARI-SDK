@@ -3,10 +3,9 @@
 
 #pragma once
 
-// linalg
-#include "external/linalg.h"
 // anari
 #include <anari/anari_cpp.hpp>
+#include <anari/anari_cpp/ext/linalg.h>
 // std
 #include <limits>
 // embree
@@ -153,29 +152,9 @@ inline void accumulateValue(T &a, const T &b, float interp)
 
 namespace anari {
 
-ANARI_TYPEFOR_SPECIALIZATION(helide::float2, ANARI_FLOAT32_VEC2);
-ANARI_TYPEFOR_SPECIALIZATION(helide::float3, ANARI_FLOAT32_VEC3);
-ANARI_TYPEFOR_SPECIALIZATION(helide::float4, ANARI_FLOAT32_VEC4);
-ANARI_TYPEFOR_SPECIALIZATION(helide::int2, ANARI_INT32_VEC2);
-ANARI_TYPEFOR_SPECIALIZATION(helide::int3, ANARI_INT32_VEC3);
-ANARI_TYPEFOR_SPECIALIZATION(helide::int4, ANARI_INT32_VEC4);
-ANARI_TYPEFOR_SPECIALIZATION(helide::uint2, ANARI_UINT32_VEC2);
-ANARI_TYPEFOR_SPECIALIZATION(helide::uint3, ANARI_UINT32_VEC3);
-ANARI_TYPEFOR_SPECIALIZATION(helide::uint4, ANARI_UINT32_VEC4);
-ANARI_TYPEFOR_SPECIALIZATION(helide::mat4, ANARI_FLOAT32_MAT4);
 ANARI_TYPEFOR_SPECIALIZATION(helide::box1, ANARI_FLOAT32_BOX1);
 
 #ifdef HELIDE_ANARI_DEFINITIONS
-ANARI_TYPEFOR_DEFINITION(helide::float2);
-ANARI_TYPEFOR_DEFINITION(helide::float3);
-ANARI_TYPEFOR_DEFINITION(helide::float4);
-ANARI_TYPEFOR_DEFINITION(helide::int2);
-ANARI_TYPEFOR_DEFINITION(helide::int3);
-ANARI_TYPEFOR_DEFINITION(helide::int4);
-ANARI_TYPEFOR_DEFINITION(helide::uint2);
-ANARI_TYPEFOR_DEFINITION(helide::uint3);
-ANARI_TYPEFOR_DEFINITION(helide::uint4);
-ANARI_TYPEFOR_DEFINITION(helide::mat4);
 ANARI_TYPEFOR_DEFINITION(helide::box1);
 #endif
 
