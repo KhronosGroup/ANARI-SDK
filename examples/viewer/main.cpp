@@ -1,45 +1,31 @@
-// Copyright 2021 The Khronos Group
+// Copyright 2023 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-#include "MainWindow.h"
-// C++ std
-#include <iostream>
-#include <limits>
+#include "windows/LightsEditor.h"
+#include "windows/Viewport.h"
 
-// Global variables
-std::string g_libraryType = "environment";
-std::string g_deviceType = "default";
-std::string g_rendererType = "default";
-std::string g_startupCategory = "demo";
-std::string g_startupScene = "cornell_box";
-std::string g_objFile;
+static bool g_verbose = false;
+static bool g_useDefaultLayout = true;
+static std::string g_libraryName = "environment";
 
-ANARILibrary g_library = nullptr;
-ANARIDevice g_device = nullptr;
-ANARILibrary g_debug = nullptr;
-bool g_enableDebug = false;
-bool g_verbose = false;
-const bool g_true = true;
-const char *g_traceDir = nullptr;
+extern const char *getDefaultUILayout();
 
-/******************************************************************/
-static std::string pathOf(const std::string &filename)
+namespace viewer {
+
+struct AppState
 {
-#ifdef _WIN32
-  const char path_sep = '\\';
-#else
-  const char path_sep = '/';
-#endif
+  struct Windows
+  {
+    windows::Viewport *viewport{nullptr};
+  } windows;
 
-  size_t pos = filename.find_last_of(path_sep);
-  if (pos == std::string::npos)
-    return "";
-  return filename.substr(0, pos + 1);
-}
+  manipulators::Orbit manipulator;
 
-/******************************************************************/
-/* statusFunc(): the callback to use when a status report is made */
-void statusFunc(const void *userData,
+  anari::Library library{nullptr};
+  anari::Device device{nullptr};
+};
+
+static void statusFunc(const void *userData,
     ANARIDevice device,
     ANARIObject source,
     ANARIDataType sourceType,
@@ -47,147 +33,122 @@ void statusFunc(const void *userData,
     ANARIStatusCode code,
     const char *message)
 {
-  bool verbose = *(const bool*)userData;
+  const bool verbose = userData ? *(const bool *)userData : false;
   if (severity == ANARI_SEVERITY_FATAL_ERROR) {
-    fprintf(stderr, "[FATAL] %s\n", message);
-  } else if (severity == ANARI_SEVERITY_ERROR) {
-    fprintf(stderr, "[ERROR] %s\n", message);
-  } else if (severity == ANARI_SEVERITY_WARNING) {
-    fprintf(stderr, "[WARN ] %s\n", message);
-  }
-
-  if (!verbose)
-    return;
-
-  if (severity == ANARI_SEVERITY_PERFORMANCE_WARNING) {
-    fprintf(stderr, "[PERF ] %s\n", message);
-  } else if (severity == ANARI_SEVERITY_INFO) {
-    fprintf(stderr, "[INFO ] %s\n", message);
-  } else if (severity == ANARI_SEVERITY_DEBUG) {
-    fprintf(stderr, "[DEBUG] %s\n", message);
-  }
-}
-
-
-/******************************************************************/
-static void initializeANARI(MainWindow *window)
-{
-  g_library = anariLoadLibrary(g_libraryType.c_str(), statusFunc, &g_verbose);
-
-  if (g_enableDebug)
-    g_debug = anariLoadLibrary("debug", statusFunc, &g_true);
-
-  if (!g_library)
-    throw std::runtime_error("Failed to load ANARI library");
-
-  ANARIDevice dev = anariNewDevice(g_library, g_deviceType.c_str());
-
-  if(g_enableDebug)
-    anari::setParameter(dev, dev, "glDebug", ANARI_BOOL, &g_true);
-
-#ifdef USE_GLES2
-  anari::setParameter(dev, dev, "glAPI", ANARI_STRING, "OpenGL_ES");
-#else
-  anari::setParameter(dev, dev, "glAPI", ANARI_STRING, "OpenGL");
-#endif
-
-  if (g_enableDebug) {
-    ANARIDevice dbg = anariNewDevice(g_debug, "debug");
-    anari::setParameter(dbg, dbg, "wrappedDevice", ANARI_DEVICE, &dev);
-    if(g_traceDir) {
-      anari::setParameter(dbg, dbg, "traceDir", ANARI_STRING, g_traceDir);
-      anari::setParameter(dbg, dbg, "traceMode", ANARI_STRING, "code");
-    }
-    anari::commitParameters(dbg, dbg);
-    anari::release(dev, dev);
-    dev = dbg;
-  }
-  if (!dev)
+    fprintf(stderr, "[FATAL][%p] %s\n", source, message);
     std::exit(1);
-
-  // Affect the callback settings and OGL parameter
-  anari::commitParameters(dev, dev);
-
-  // Save in the global variable
-  g_device = dev;
-}
-
-/******************************************************************/
-void printUsage()
-{
-  std::cout
-      << "./anariViewer [{--help|-h}]\n"
-      << "   [{--verbose|-v}] [{--debug|-g}]\n"
-      << "   [{--library|-l} <ANARI library>]\n"
-      << "   [{--device|-d} <ANARI device>]\n"
-      << "   [{--renderer|-r} <ANARI renderer>]\n"
-      << "   [{--trace|-t} <directory>]\n"
-      << "   [{--scene|-s} <category> <name>]\n"
-      << "   [.obj intput file]"
-      << std::endl;
-}
-
-/******************************************************************/
-void parseCommandLine(int argc, const char *argv[])
-{
-  for (int i = 1; i < argc; ++i) {
-    std::string arg = argv[i];
-    if (arg == "--help" || arg == "-h") {
-      printUsage();
-      std::exit(0);
-    } else if (arg == "--library" || arg == "-l") {
-      g_libraryType = argv[++i];
-    } else if (arg == "--device" || arg == "-d") {
-      g_deviceType = argv[++i];
-    } else if (arg == "--renderer" || arg == "-r") {
-      g_rendererType = argv[++i];
-    } else if (arg == "--debug" || arg == "-g") {
-      g_enableDebug = true;
-    } else if (arg == "--verbose" || arg == "-v") {
-      g_verbose = true;
-    } else if (arg == "--scene" || arg == "-s") {
-      g_startupCategory = argv[++i];
-      g_startupScene = argv[++i];
-    } else if (arg == "--trace" || arg == "-t") {
-      g_traceDir = argv[++i];
-    } else {
-      g_objFile = arg;
-    }
+  } else if (severity == ANARI_SEVERITY_ERROR) {
+    fprintf(stderr, "[ERROR][%p] %s\n", source, message);
+  } else if (severity == ANARI_SEVERITY_WARNING) {
+    fprintf(stderr, "[WARN ][%p] %s\n", source, message);
+  } else if (verbose && severity == ANARI_SEVERITY_PERFORMANCE_WARNING) {
+    fprintf(stderr, "[PERF ][%p] %s\n", source, message);
+  } else if (verbose && severity == ANARI_SEVERITY_INFO) {
+    fprintf(stderr, "[INFO ][%p] %s\n", source, message);
+  } else if (verbose && severity == ANARI_SEVERITY_DEBUG) {
+    fprintf(stderr, "[DEBUG][%p] %s\n", source, message);
   }
 }
 
-/******************************************************************/
-int main(int argc, const char *argv[])
+// Application definition /////////////////////////////////////////////////////
+
+class Application : public match3D::DockingApplication
 {
-  // Check for and parse command line options
+ public:
+  Application() = default;
+  ~Application() override = default;
+
+  match3D::WindowArray setup() override
+  {
+    // ANARI //
+
+    m_state.library =
+        anari::loadLibrary(g_libraryName.c_str(), statusFunc, &g_verbose);
+    m_state.device = anari::newDevice(m_state.library, "default");
+
+    anari::unloadLibrary(m_state.library);
+
+    if (!m_state.device)
+      std::exit(1);
+
+    // Scene //
+
+    // auto world = makeWorld(m_state.device, *m_state.scene);
+    auto world = anari::newObject<anari::World>(m_state.device);
+
+    // ImGui //
+
+    ImGuiIO &io = ImGui::GetIO();
+    io.FontGlobalScale = 1.5f;
+    io.IniFilename = nullptr;
+
+    if (g_useDefaultLayout)
+      ImGui::LoadIniSettingsFromMemory(getDefaultUILayout());
+
+    m_state.windows.viewport =
+        new windows::Viewport(m_state.library, m_state.device, "Viewport");
+
+    m_state.windows.viewport->setManipulator(&m_state.manipulator);
+
+    m_state.windows.viewport->setWorld(world, true);
+
+    anari::release(m_state.device, world);
+
+    auto *leditor = new windows::LightsEditor({m_state.device});
+    leditor->setWorlds({world});
+
+    match3D::WindowArray windows;
+    windows.emplace_back(m_state.windows.viewport);
+    windows.emplace_back(leditor);
+
+    return windows;
+  }
+
+  void buildMainMenuUI() override
+  {
+    if (ImGui::BeginMainMenuBar()) {
+      if (ImGui::BeginMenu("File")) {
+        if (ImGui::MenuItem("print ImGui ini")) {
+          const char *info = ImGui::SaveIniSettingsToMemory();
+          printf("%s\n", info);
+        }
+
+        ImGui::EndMenu();
+      }
+
+      ImGui::EndMainMenuBar();
+    }
+  }
+
+  void teardown() override
+  {
+    anari::release(m_state.device, m_state.device);
+  }
+
+ private:
+  AppState m_state;
+};
+
+} // namespace viewer
+
+///////////////////////////////////////////////////////////////////////////////
+
+static void parseCommandLine(int argc, char *argv[])
+{
+  for (int i = 1; i < argc; i++) {
+    std::string arg = argv[i];
+    if (arg == "-v" || arg == "--verbose")
+      g_verbose = true;
+    else if (arg == "--noDefaultLayout")
+      g_useDefaultLayout = false;
+    else if (arg == "-l" || arg == "--library")
+      g_libraryName = argv[++i];
+  }
+}
+
+int main(int argc, char *argv[])
+{
   parseCommandLine(argc, argv);
-
-  // Create a display window using GLFW
-  auto *window = new MainWindow(glm::ivec2(1024, 768));
-
-  // Setup ANARI library and device
-  initializeANARI(window);
-
-  // Set the opening scene.  When no filename argument is provided, default
-  //   to the "random_sphere" scene
-  window->setDevice(g_device, g_rendererType);
-  if (!g_objFile.empty())
-    window->setScene("file", "obj", "fileName", g_objFile);
-  else
-    window->setScene(g_startupCategory, g_startupScene);
-
-  // Repeatedly render the scene
-  window->mainLoop();
-
-  // Cleanup when loop exits
-  delete window;
-
-  anariRelease(g_device, g_device);
-
-  if (g_enableDebug)
-    anariUnloadLibrary(g_debug);
-
-  anariUnloadLibrary(g_library);
-
-  return 0;
+  viewer::Application app;
+  app.run(1920, 1200, "ANARI Multi-Device Demo");
 }
