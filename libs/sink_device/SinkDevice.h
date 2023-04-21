@@ -3,9 +3,10 @@
 
 #pragma once
 
-#include "anari/backend/utilities/IntrusivePtr.h"
 // anari
 #include "anari/backend/DeviceImpl.h"
+// helium
+#include "helium/utility/IntrusivePtr.h"
 
 #include <memory>
 #include <vector>
@@ -29,7 +30,7 @@
 namespace anari {
 namespace sink_device {
 
-struct SINK_DEVICE_INTERFACE SinkDevice : public DeviceImpl, public RefCounted
+struct SINK_DEVICE_INTERFACE SinkDevice : public DeviceImpl, public helium::RefCounted
 {
   // Data Arrays //////////////////////////////////////////////////////////////
 

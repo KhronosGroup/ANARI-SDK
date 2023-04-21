@@ -32,6 +32,8 @@
 #include "catch.hpp"
 // helium
 #include "helium/utility/AnariAny.h"
+// std
+#include <string>
 
 namespace anari {
 ANARI_TYPEFOR_SPECIALIZATION(helium::RefCounted *, ANARI_OBJECT);
@@ -43,11 +45,19 @@ namespace {
 using helium::AnariAny;
 
 template <typename T>
-inline void verify_value(const AnariAny &v, const T &correctValue)
+inline void verify_value(const AnariAny &v, T correctValue)
 {
   REQUIRE(v.valid());
   REQUIRE(v.is<T>());
   REQUIRE(v.get<T>() == correctValue);
+}
+
+template <>
+inline void verify_value(const AnariAny &v, const char *correctValue)
+{
+  REQUIRE(v.valid());
+  REQUIRE(v.type() == ANARI_STRING);
+  REQUIRE(v.getString() == correctValue);
 }
 
 template <typename T>
@@ -105,6 +115,61 @@ inline void test_interface(T testValue, T testValue2)
   }
 }
 
+template <>
+inline void test_interface(const char *testValue, const char *testValue2)
+{
+  AnariAny v;
+  REQUIRE(!v.valid());
+
+  SECTION("Can make valid by C++ construction")
+  {
+    AnariAny v2(testValue);
+    verify_value(v2, testValue);
+  }
+
+  SECTION("Can make valid by C construction")
+  {
+    AnariAny v2(ANARI_STRING, testValue);
+    verify_value(v2, testValue);
+  }
+
+  SECTION("Can make valid by calling operator=()")
+  {
+    v = testValue;
+    verify_value(v, testValue);
+  }
+
+  SECTION("Can make valid by copy construction")
+  {
+    v = testValue;
+    AnariAny v2(v);
+    verify_value(v2, testValue);
+  }
+
+  SECTION("Two objects with same value are equal if constructed the same")
+  {
+    v = testValue;
+    AnariAny v2 = testValue;
+    REQUIRE(v.type() == v2.type());
+    REQUIRE(v == v2);
+  }
+
+  SECTION("Two objects with same value are equal if assigned from another")
+  {
+    v = testValue;
+    AnariAny v2 = testValue2;
+    v = v2;
+    REQUIRE(v == v2);
+  }
+
+  SECTION("Two objects with different values are not equal")
+  {
+    v = testValue;
+    AnariAny v2 = testValue2;
+    REQUIRE(v != v2);
+  }
+}
+
 // Value Tests ////////////////////////////////////////////////////////////////
 
 TEST_CASE("helium::AnariAny 'int' type behavior", "[helium_AnariAny]")
@@ -120,6 +185,11 @@ TEST_CASE("helium::AnariAny 'float' type behavior", "[helium_AnariAny]")
 TEST_CASE("helium::AnariAny 'bool' type behavior", "[helium_AnariAny]")
 {
   test_interface<bool>(true, false);
+}
+
+TEST_CASE("helium::AnariAny 'string' type behavior", "[helium_AnariAny]")
+{
+  test_interface<const char *>("test1", "test2");
 }
 
 // Object Tests ///////////////////////////////////////////////////////////////

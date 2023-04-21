@@ -62,7 +62,6 @@ PUBLIC
 target_link_libraries(${PROJECT_NAME}
 PUBLIC
   anari
-  anari_utilities
   anari_library_debug
 )
 

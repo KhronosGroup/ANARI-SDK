@@ -2,7 +2,6 @@
 ## SPDX-License-Identifier: Apache-2.0
 
 add_subdirectory(anari)
-add_subdirectory(anari_utilities)
 add_subdirectory(helium)
 add_subdirectory(debug_device)
 add_subdirectory(sink_device)

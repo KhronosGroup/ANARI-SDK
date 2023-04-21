@@ -118,7 +118,6 @@ PUBLIC
 target_link_libraries(${PROJECT_NAME}
 PUBLIC
   anari::anari
-  anari::anari_utilities
   anari::anari_library_debug
   helium
 PRIVATE

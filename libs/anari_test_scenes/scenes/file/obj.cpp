@@ -198,7 +198,7 @@ FileObj::~FileObj()
 std::vector<ParameterInfo> FileObj::parameters()
 {
   return {
-      {"fileName", ANARI_STRING, std::string(), ".obj file to open."}
+      {"fileName", "", ".obj file to open."}
       //
   };
 }
@@ -213,8 +213,7 @@ void FileObj::commit()
   if (!hasParam("fileName"))
     return;
 
-  std::string filename =
-      getParam<std::string>("fileName", getParam<const char *>("fileName", ""));
+  std::string filename = getParamString("fileName", "");
   loadObj(m_device, filename, &m_world);
 }
 

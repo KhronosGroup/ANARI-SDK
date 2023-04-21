@@ -5,7 +5,8 @@
 
 // anari
 #include "anari/anari_cpp.hpp"
-#include "anari/backend/utilities/Any.h"
+// helium
+#include "helium/utility/AnariAny.h"
 // anari-glm
 #include "anari/anari_cpp/ext/glm.h"
 // std
@@ -15,6 +16,8 @@
 
 namespace anari {
 namespace scenes {
+
+using Any = helium::AnariAny;
 
 struct Camera
 {
@@ -27,7 +30,6 @@ struct Camera
 struct ParameterInfo
 {
   std::string name;
-  ANARIDataType type;
   Any value;
   std::string description;
 };
