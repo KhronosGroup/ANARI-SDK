@@ -3,7 +3,8 @@
 
 #pragma once
 
-#include "anari/backend/utilities/IntrusivePtr.h"
+// helium
+#include "helium/utility/IntrusivePtr.h"
 // anari
 #include "anari/backend/DeviceImpl.h"
 
@@ -28,7 +29,7 @@
 namespace anari {
 namespace debug_device {
 
-struct DEBUG_DEVICE_INTERFACE DebugDevice : public DeviceImpl, public RefCounted
+struct DEBUG_DEVICE_INTERFACE DebugDevice : public DeviceImpl, public helium::RefCounted
 {
   void reportStatus(ANARIObject source,
       ANARIDataType sourceType,

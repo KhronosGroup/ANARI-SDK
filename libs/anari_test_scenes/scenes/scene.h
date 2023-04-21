@@ -6,14 +6,15 @@
 #include "../anari_test_scenes.h"
 // anari
 #include "anari/anari_cpp/ext/std.h"
-#include "anari/backend/utilities/ParameterizedObject.h"
+// helium
+#include "helium/utility/ParameterizedObject.h"
 
 namespace anari {
 namespace scenes {
 
 using box3 = std::array<glm::vec3, 2>; // bounds_lower, bounds_upper;
 
-struct TestScene : public ParameterizedObject
+struct TestScene : public helium::ParameterizedObject
 {
   virtual anari::World world() = 0;
   virtual box3 bounds();

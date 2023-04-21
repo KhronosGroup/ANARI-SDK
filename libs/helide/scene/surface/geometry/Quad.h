@@ -4,8 +4,6 @@
 #pragma once
 
 #include "Geometry.h"
-// anari
-#include "anari/backend/utilities/Optional.h"
 
 namespace helide {
 

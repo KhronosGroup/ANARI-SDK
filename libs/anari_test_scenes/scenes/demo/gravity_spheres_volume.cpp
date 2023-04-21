@@ -54,8 +54,8 @@ static std::vector<float> generateVoxels(
     for (int j = 0; j < dims.y; j++) {
       for (int i = 0; i < dims.x; i++) {
         // index in array
-        size_t index =
-            size_t(k) * size_t(dims.z) * size_t(dims.y) + size_t(j) * size_t(dims.x) + size_t(i);
+        size_t index = size_t(k) * size_t(dims.z) * size_t(dims.y)
+            + size_t(j) * size_t(dims.x) + size_t(i);
 
         // compute volume value
         float value = 0.f;
@@ -90,7 +90,7 @@ GravityVolume::~GravityVolume()
 std::vector<ParameterInfo> GravityVolume::parameters()
 {
   return {
-      {"withGeometry", ANARI_BOOL, false, "Include geometry inside the volume?"}
+      {"withGeometry", false, "Include geometry inside the volume?"}
       //
   };
 }

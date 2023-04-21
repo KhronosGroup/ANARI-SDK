@@ -21,8 +21,8 @@ RandomCylinders::~RandomCylinders()
 std::vector<ParameterInfo> RandomCylinders::parameters()
 {
   return {
-      {"numCylinders", ANARI_INT32, int(1e3), "Number of cylinders to generate."},
-      {"radius", ANARI_FLOAT32, 1.5e-2f, "Radius of all cylinders."}
+      {"numCylinders", int(1e3), "Number of cylinders to generate."},
+      {"radius", 1.5e-2f, "Radius of all cylinders."}
       //
   };
 }
@@ -68,19 +68,19 @@ void RandomCylinders::commit()
   rng.seed(0);
   std::normal_distribution<float> vert_dist(0.5f, 0.5f);
 
-  std::vector<glm::vec3> cylinderPositions(2*(size_t(numCylinders)));
-  std::vector<glm::vec4> cylinderColors(2*(size_t(numCylinders)));
+  std::vector<glm::vec3> cylinderPositions(2 * (size_t(numCylinders)));
+  std::vector<glm::vec4> cylinderColors(2 * (size_t(numCylinders)));
 
-  for (int i = 0;i<numCylinders;++i) {
-    auto &a = cylinderPositions[2*i];
+  for (int i = 0; i < numCylinders; ++i) {
+    auto &a = cylinderPositions[2 * i];
     a.x = vert_dist(rng);
     a.y = vert_dist(rng);
     a.z = vert_dist(rng);
 
-    auto &b = cylinderPositions[2*i+1];
-    b.x = a.x + 0.1*vert_dist(rng);
-    b.y = a.y + 0.1*vert_dist(rng);
-    b.z = a.z + 0.1*vert_dist(rng);
+    auto &b = cylinderPositions[2 * i + 1];
+    b.x = a.x + 0.1 * vert_dist(rng);
+    b.y = a.y + 0.1 * vert_dist(rng);
+    b.z = a.z + 0.1 * vert_dist(rng);
   }
 
   for (auto &s : cylinderColors) {

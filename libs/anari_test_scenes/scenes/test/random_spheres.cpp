@@ -21,8 +21,8 @@ RandomSpheres::~RandomSpheres()
 std::vector<ParameterInfo> RandomSpheres::parameters()
 {
   return {
-      {"numSpheres", ANARI_INT32, int(1e4), "Number of spheres to generate."},
-      {"radius", ANARI_FLOAT32, 1.5e-2f, "Radius of all spheres."}
+      {"numSpheres", int(1e4), "Number of spheres to generate."},
+      {"radius", 1.5e-2f, "Radius of all spheres."}
       //
   };
 }

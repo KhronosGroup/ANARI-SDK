@@ -47,11 +47,7 @@ PUBLIC
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-target_link_libraries(${PROJECT_NAME}
-PUBLIC
-  anari
-  anari_utilities
-)
+target_link_libraries(${PROJECT_NAME} PUBLIC anari helium)
 
 install(TARGETS ${PROJECT_NAME}
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}

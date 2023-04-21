@@ -17,11 +17,7 @@ add_library(${PROJECT_NAME} SHARED
   SinkDeviceQueries.cpp
 )
 
-target_link_libraries(${PROJECT_NAME}
-PUBLIC
-  anari
-  anari_utilities
-)
+target_link_libraries(${PROJECT_NAME} PUBLIC anari helium)
 
 target_compile_definitions(${PROJECT_NAME}
 PRIVATE
