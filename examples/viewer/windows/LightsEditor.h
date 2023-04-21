@@ -18,7 +18,7 @@ struct Light
   bool isDirectional{false}; // otherwise point
   float intensity{1.f};
   anari::float3 color{1.f};
-  anari::float2 directionalAZEL{270.f, 300.f};
+  anari::float2 directionalAZEL{0.f, 345.f};
   anari::float3 pointPosition{0.f};
   std::vector<anari::Light> handles;
 };
