@@ -4,6 +4,7 @@
 #pragma once
 
 #include "../Orbit.h"
+#include "../ui_anari.h"
 // anari
 #include <anari/anari_cpp/ext/linalg.h>
 #include <anari/anari_cpp.hpp>
@@ -60,17 +61,12 @@ struct Viewport : public match3D::Window
   bool m_useFrameLimit{true};
   int m_frameLimit{64};
   int m_frameSamples{0};
-  int m_samplesPerFrame{1};
   bool m_checkerboard{false};
   bool m_useOrthoCamera{false};
+
   bool m_denoise{false};
 
   float m_fov{40.f};
-
-  anari::float4 m_background{anari::float3(0.2f), 1.f};
-  anari::float3 m_ambientColor{1.f};
-  float m_ambientIntensity{0.25f};
-  float m_ambientOcclusionDistance{1e5f};
 
   // ANARI objects //
 
@@ -85,8 +81,9 @@ struct Viewport : public match3D::Window
   anari::Camera m_orthoCamera{nullptr};
 
   std::vector<std::string> m_rendererNames;
+  std::vector<ui::ParameterList> m_rendererParameters;
   std::vector<anari::Renderer> m_renderers;
-  anari::Renderer m_currentRenderer{nullptr};
+  int m_currentRenderer{0};
 
   // camera manipulator
 
