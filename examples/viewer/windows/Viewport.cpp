@@ -161,7 +161,7 @@ void Viewport::resetView(bool resetAzEl)
   auto center = 0.5f * (bounds[0] + bounds[1]);
   auto diag = bounds[1] - bounds[0];
 
-  auto azel = resetAzEl ? anari::float2(0.f, 200.f) : m_arcball->azel();
+  auto azel = resetAzEl ? anari::float2(180.f, 200.f) : m_arcball->azel();
   m_arcball->setConfig(center, 1.25f * linalg::length(diag), azel);
   m_cameraToken = 0;
 }

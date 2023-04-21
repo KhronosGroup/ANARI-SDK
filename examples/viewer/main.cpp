@@ -2,7 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "windows/LightsEditor.h"
+#include "windows/SceneSelector.h"
 #include "windows/Viewport.h"
+// anari
+#include <anari_test_scenes.h>
 
 static bool g_verbose = false;
 static bool g_useDefaultLayout = true;
@@ -14,15 +17,9 @@ namespace viewer {
 
 struct AppState
 {
-  struct Windows
-  {
-    windows::Viewport *viewport{nullptr};
-  } windows;
-
   manipulators::Orbit manipulator;
-
-  anari::Library library{nullptr};
   anari::Device device{nullptr};
+  anari::Library library{nullptr};
 };
 
 static void statusFunc(const void *userData,
@@ -62,19 +59,15 @@ class Application : public match3D::DockingApplication
   {
     // ANARI //
 
-    m_state.library =
+    auto library =
         anari::loadLibrary(g_libraryName.c_str(), statusFunc, &g_verbose);
-    m_state.device = anari::newDevice(m_state.library, "default");
+    auto device = anari::newDevice(library, "default");
 
-    anari::unloadLibrary(m_state.library);
-
-    if (!m_state.device)
+    if (!device)
       std::exit(1);
 
-    // Scene //
-
-    // auto world = makeWorld(m_state.device, *m_state.scene);
-    auto world = anari::newObject<anari::World>(m_state.device);
+    m_state.library = library;
+    m_state.device = device;
 
     // ImGui //
 
@@ -85,21 +78,24 @@ class Application : public match3D::DockingApplication
     if (g_useDefaultLayout)
       ImGui::LoadIniSettingsFromMemory(getDefaultUILayout());
 
-    m_state.windows.viewport =
-        new windows::Viewport(m_state.library, m_state.device, "Viewport");
+    auto *viewport = new windows::Viewport(library, device, "Viewport");
+    viewport->setManipulator(&m_state.manipulator);
 
-    m_state.windows.viewport->setManipulator(&m_state.manipulator);
+    auto *leditor = new windows::LightsEditor({device});
 
-    m_state.windows.viewport->setWorld(world, true);
-
-    anari::release(m_state.device, world);
-
-    auto *leditor = new windows::LightsEditor({m_state.device});
-    leditor->setWorlds({world});
+    auto *sselector = new windows::SceneSelector();
+    sselector->setCallback([=](const char *category, const char *scene) {
+      auto s = anari::scenes::createScene(device, category, scene);
+      anari::scenes::commit(s);
+      auto w = anari::scenes::getWorld(s);
+      viewport->setWorld(w, true);
+      leditor->setWorlds({w});
+    });
 
     match3D::WindowArray windows;
-    windows.emplace_back(m_state.windows.viewport);
+    windows.emplace_back(viewport);
     windows.emplace_back(leditor);
+    windows.emplace_back(sselector);
 
     return windows;
   }
@@ -123,6 +119,7 @@ class Application : public match3D::DockingApplication
   void teardown() override
   {
     anari::release(m_state.device, m_state.device);
+    anari::unloadLibrary(m_state.library);
   }
 
  private:
