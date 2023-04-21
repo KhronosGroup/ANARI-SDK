@@ -49,8 +49,13 @@ Viewport::Viewport(
       anariGetObjectSubtypes(m_library, "default", ANARI_RENDERER);
 
   if (r_subtypes != nullptr) {
-    for (int i = 0; r_subtypes[i] != nullptr; i++)
-      m_rendererNames.push_back(r_subtypes[i]);
+    for (int i = 0; r_subtypes[i] != nullptr; i++) {
+      std::string subtype = r_subtypes[i];
+      auto parameters =
+          ui::parseParameters(library, ANARI_RENDERER, subtype.c_str());
+      m_rendererNames.push_back(subtype);
+      m_rendererParameters.push_back(parameters);
+    }
   } else
     m_rendererNames.emplace_back("default");
 
@@ -64,8 +69,6 @@ Viewport::Viewport(
     m_renderers.push_back(
         anari::newObject<anari::Renderer>(m_device, name.c_str()));
   }
-
-  m_currentRenderer = m_renderers[0];
 
   reshape(m_viewportSize);
   setWorld();
@@ -220,29 +223,15 @@ void Viewport::updateFrame()
   anari::setParameter(
       m_device, m_frame, "channel.color", ANARI_UFIXED8_RGBA_SRGB);
   anari::setParameter(m_device, m_frame, "accumulation", true);
-
   anari::setParameter(m_device, m_frame, "world", m_world);
   if (m_useOrthoCamera)
     anari::setParameter(m_device, m_frame, "camera", m_orthoCamera);
   else
     anari::setParameter(m_device, m_frame, "camera", m_perspCamera);
-  anari::setParameter(m_device, m_frame, "renderer", m_currentRenderer);
-
+  anari::setParameter(
+      m_device, m_frame, "renderer", m_renderers[m_currentRenderer]);
   anari::setParameter(m_device, m_frame, "checkerboard", m_checkerboard);
 
-  anari::setParameter(m_device, m_currentRenderer, "background", m_background);
-  anari::setParameter(
-      m_device, m_currentRenderer, "ambientColor", m_ambientColor);
-  anari::setParameter(
-      m_device, m_currentRenderer, "ambientIntensity", m_ambientIntensity);
-  anari::setParameter(m_device,
-      m_currentRenderer,
-      "ambientOcclusionDistance",
-      m_ambientOcclusionDistance);
-  anari::setParameter(
-      m_device, m_currentRenderer, "pixelSamples", m_samplesPerFrame);
-
-  anari::commitParameters(m_device, m_currentRenderer);
   anari::commitParameters(m_device, m_frame);
 }
 
@@ -402,23 +391,29 @@ void Viewport::ui_contextMenu()
       anari::commitParameters(m_device, m_frame);
     }
 
-    if (ImGui::BeginMenu("samplesPerFrame")) {
-      if (ImGui::SliderInt("##samplesPerFrame", &m_samplesPerFrame, 1, 64))
-        updateFrame();
-      ImGui::EndMenu();
-    }
-
     ImGui::Separator();
 
     if (ImGui::BeginMenu("renderer type")) {
       for (int i = 0; i < m_rendererNames.size(); i++) {
         if (ImGui::MenuItem(m_rendererNames[i].c_str())) {
-          m_currentRenderer = m_renderers[i];
+          m_currentRenderer = i;
           updateFrame();
         }
       }
       ImGui::EndMenu();
     }
+
+    if (ImGui::BeginMenu("renderer parameters")) {
+      ImGui::Text("PARAMETERS");
+      ImGui::Separator();
+      auto &parameters = m_rendererParameters[m_currentRenderer];
+      auto renderer = m_renderers[m_currentRenderer];
+      for (auto &p : parameters)
+        ui::buildUI(m_device, renderer, p);
+      ImGui::EndMenu();
+    }
+
+    ImGui::Separator();
 
     if (ImGui::BeginMenu("frame limit")) {
       ImGui::Checkbox("enabled", &m_useFrameLimit);
@@ -426,35 +421,6 @@ void Viewport::ui_contextMenu()
         ImGui::SetNextItemWidth(40);
         ImGui::DragInt("# frames", &m_frameLimit, 1.f, 1, 1024);
       }
-
-      ImGui::EndMenu();
-    }
-
-    if (ImGui::BeginMenu("ambient light")) {
-      ImGuiColorEditFlags misc_flags =
-          ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_NoOptions;
-      bool update = ImGui::DragFloat(
-          "intensity##ambient", &m_ambientIntensity, 0.001f, 0.f, 1000.f);
-
-      update |= ImGui::ColorEdit3("color##ambient", &m_ambientColor.x);
-
-      update |= ImGui::DragFloat("occlusion distance##ambient",
-          &m_ambientOcclusionDistance,
-          0.001f,
-          0.f,
-          100000.f);
-
-      if (update)
-        updateFrame();
-
-      ImGui::EndMenu();
-    }
-
-    if (ImGui::BeginMenu("background")) {
-      ImGuiColorEditFlags misc_flags =
-          ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_NoOptions;
-      if (ImGui::ColorEdit4("##bgColor", &m_background.x, misc_flags))
-        updateFrame();
 
       ImGui::EndMenu();
     }
