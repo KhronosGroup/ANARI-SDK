@@ -147,5 +147,5 @@ int main(int argc, char *argv[])
 {
   parseCommandLine(argc, argv);
   viewer::Application app;
-  app.run(1920, 1200, "ANARI Multi-Device Demo");
+  app.run(1920, 1200, "ANARI Demo Viewer");
 }
