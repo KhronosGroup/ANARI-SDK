@@ -20,18 +20,6 @@ struct BaseArray : public BaseObject
   // This is invoked when this object's public ref count is 0, but still has a
   // non-zero internal ref count. See README for additional explanation.
   virtual void privatize() = 0;
-
-  void addCommitObserver(BaseObject *obj);
-  void removeCommitObserver(BaseObject *obj);
-  void notifyCommitObservers() const;
-
- protected:
-  // Handle what happens when the observing object 'obj' is being notified of
-  // that this array has changed.
-  virtual void notifyObserver(BaseObject *obj) const = 0;
-
- private:
-  std::vector<BaseObject *> m_observers;
 };
 
 } // namespace helium

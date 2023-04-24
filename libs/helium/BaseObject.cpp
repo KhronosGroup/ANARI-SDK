@@ -81,6 +81,30 @@ void BaseObject::markCommitted()
   m_lastCommitted = newTimeStamp();
 }
 
+void BaseObject::addCommitObserver(BaseObject *obj)
+{
+  m_observers.push_back(obj);
+}
+
+void BaseObject::removeCommitObserver(BaseObject *obj)
+{
+  m_observers.erase(std::remove_if(m_observers.begin(),
+                        m_observers.end(),
+                        [&](BaseObject *o) -> bool { return o == obj; }),
+      m_observers.end());
+}
+
+void BaseObject::notifyCommitObservers() const
+{
+  for (auto o : m_observers)
+    notifyObserver(o);
+}
+
+void BaseObject::notifyObserver(BaseObject *obj) const
+{
+  // no-op
+}
+
 } // namespace helium
 
 HELIUM_ANARI_TYPEFOR_DEFINITION(helium::BaseObject *);

@@ -56,10 +56,19 @@ struct BaseObject : public RefCounted, ParameterizedObject
   void reportMessage(
       ANARIStatusSeverity, const char *fmt, Args &&...args) const;
 
+  void addCommitObserver(BaseObject *obj);
+  void removeCommitObserver(BaseObject *obj);
+  void notifyCommitObservers() const;
+
  protected:
+  // Handle what happens when the observing object 'obj' is being notified of
+  // that this object has changed.
+  virtual void notifyObserver(BaseObject *obj) const;
+
   BaseGlobalDeviceState *m_state{nullptr};
 
  private:
+  std::vector<BaseObject *> m_observers;
   TimeStamp m_lastUpdated{0};
   TimeStamp m_lastCommitted{0};
   ANARIDataType m_type{ANARI_OBJECT};
