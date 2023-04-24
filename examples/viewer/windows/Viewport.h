@@ -58,13 +58,8 @@ struct Viewport : public match3D::Window
   int m_screenshotIndex{0};
 
   bool m_showOverlay{true};
-  bool m_useFrameLimit{true};
-  int m_frameLimit{64};
   int m_frameSamples{0};
-  bool m_checkerboard{false};
   bool m_useOrthoCamera{false};
-
-  bool m_denoise{false};
 
   float m_fov{40.f};
 

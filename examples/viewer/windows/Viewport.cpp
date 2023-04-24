@@ -202,15 +202,6 @@ void Viewport::startNewFrame()
 {
   anari::getProperty(
       m_device, m_frame, "numSamples", m_frameSamples, ANARI_NO_WAIT);
-
-  if (m_useFrameLimit && m_frameSamples >= m_frameLimit) {
-    bool restartRendering = false;
-    anari::getProperty(
-        m_device, m_frame, "nextFrameReset", restartRendering, ANARI_NO_WAIT);
-    if (!restartRendering)
-      return;
-  }
-
   anari::render(m_device, m_frame);
   m_renderSize = m_viewportSize;
   m_currentlyRendering = true;
@@ -230,7 +221,6 @@ void Viewport::updateFrame()
     anari::setParameter(m_device, m_frame, "camera", m_perspCamera);
   anari::setParameter(
       m_device, m_frame, "renderer", m_renderers[m_currentRenderer]);
-  anari::setParameter(m_device, m_frame, "checkerboard", m_checkerboard);
 
   anari::commitParameters(m_device, m_frame);
 }
@@ -383,16 +373,6 @@ void Viewport::ui_contextMenu()
   }
 
   if (ImGui::BeginPopup(m_contextMenuName.c_str())) {
-    if (ImGui::Checkbox("checkerboard", &m_checkerboard))
-      updateFrame();
-
-    if (ImGui::Checkbox("denoise", &m_denoise)) {
-      anari::setParameter(m_device, m_frame, "denoise", m_denoise);
-      anari::commitParameters(m_device, m_frame);
-    }
-
-    ImGui::Separator();
-
     if (ImGui::BeginMenu("renderer type")) {
       for (int i = 0; i < m_rendererNames.size(); i++) {
         if (ImGui::MenuItem(m_rendererNames[i].c_str())) {
@@ -412,21 +392,6 @@ void Viewport::ui_contextMenu()
         ui::buildUI(m_device, renderer, p);
       ImGui::EndMenu();
     }
-
-    ImGui::Separator();
-
-    if (ImGui::BeginMenu("frame limit")) {
-      ImGui::Checkbox("enabled", &m_useFrameLimit);
-      if (m_useFrameLimit) {
-        ImGui::SetNextItemWidth(40);
-        ImGui::DragInt("# frames", &m_frameLimit, 1.f, 1, 1024);
-      }
-
-      ImGui::EndMenu();
-    }
-
-    if (ImGui::MenuItem("restart rendering"))
-      updateFrame();
 
     ImGui::Separator();
 
