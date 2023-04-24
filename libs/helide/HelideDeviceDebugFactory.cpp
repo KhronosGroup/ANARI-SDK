@@ -32,7 +32,7 @@ anari::debug_device::DebugObjectBase* new_volume(const char *name, DebugDevice *
 namespace {
 class renderer_default : public DebugObject<ANARI_RENDERER> {
    static int param_hash(const char *str) {
-      static const uint32_t table[] = {0x6261000du,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6261001cu,0x6463000eu,0x6c6b000fu,0x68670010u,0x73720011u,0x706f0012u,0x76750013u,0x6f6e0014u,0x65640015u,0x44430016u,0x706f0017u,0x6d6c0018u,0x706f0019u,0x7372001au,0x100001bu,0x80000000u,0x6e6d001du,0x6665001eu,0x100001fu,0x80000001u};
+      static const uint32_t table[] = {0x6261000du,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x62610017u,0x6463000eu,0x6c6b000fu,0x68670010u,0x73720011u,0x706f0012u,0x76750013u,0x6f6e0014u,0x65640015u,0x1000016u,0x80000000u,0x6e6d0018u,0x66650019u,0x100001au,0x80000001u};
       uint32_t cur = 0x6f620000u;
       for(int i = 0;cur!=0;++i) {
          uint32_t idx = cur&0xFFFFu;
@@ -59,9 +59,9 @@ class renderer_default : public DebugObject<ANARI_RENDERER> {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
       switch(idx) {
-         case 0: { //backgroundColor
-            ANARIDataType backgroundColor_types[] = {ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
-            check_type(ANARI_RENDERER, "default", paramname, paramtype, backgroundColor_types);
+         case 0: { //background
+            ANARIDataType background_types[] = {ANARI_FLOAT32_VEC4, ANARI_UNKNOWN};
+            check_type(ANARI_RENDERER, "default", paramname, paramtype, background_types);
             return;
          }
          case 1: { //name
