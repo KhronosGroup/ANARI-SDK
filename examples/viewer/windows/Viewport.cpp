@@ -468,13 +468,11 @@ void Viewport::ui_overlay()
   ImGui::Checkbox("camera info", &showCameraInfo);
 
   if (showCameraInfo) {
-    const auto eye = m_arcball->eye();
-    const auto dir = m_arcball->dir();
-    const auto up = m_arcball->up();
-
-    ImGui::Text("eye: %.2f, %.2f, %.2f", eye.x, eye.y, eye.z);
-    ImGui::Text("dir: %.2f, %.2f, %.2f", dir.x, dir.y, dir.z);
-    ImGui::Text(" up: %.2f, %.2f, %.2f", up.x, up.y, up.z);
+    const auto azel = m_arcball->azel();
+    const auto dist = m_arcball->distance();
+    ImGui::Text("  az: %f", azel.x);
+    ImGui::Text("  el: %f", azel.y);
+    ImGui::Text("dist: %f", dist);
   }
 
   ImGui::End();
