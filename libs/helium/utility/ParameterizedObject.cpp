@@ -61,6 +61,16 @@ void ParameterizedObject::removeParam(const std::string &name)
     m_params.erase(foundParam);
 }
 
+ParameterizedObject::ParameterList::iterator ParameterizedObject::params_begin()
+{
+  return m_params.begin();
+}
+
+ParameterizedObject::ParameterList::iterator ParameterizedObject::params_end()
+{
+  return m_params.end();
+}
+
 ParameterizedObject::Param *ParameterizedObject::findParam(
     const std::string &name, bool addIfNotExist)
 {

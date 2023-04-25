@@ -34,36 +34,30 @@ std::vector<anari::scenes::ParameterInfo> SceneGenerator::parameters()
 {
   return {
       {"geometrySubtype",
-          ANARI_STRING,
           "triangle",
           "Which type of geometry to generate. Possible values: triangle, quad, sphere, curve, cone, cylinder"},
       {"shape",
-          ANARI_STRING,
           "triangle",
           "Which shape should be generated. Currently only relevant for triangles and quads. Possible values: triangle, quad, cube"},
       {"primitiveMode",
-          ANARI_STRING,
           "soup",
           "How the data is arranged (soup or indexed)"},
       {"primitiveCount",
-          ANARI_UINT32,
           1,
           "How many primitives should be generated"},
       {"frame_color_type",
-          ANARI_STRING,
           "",
           "Type of the color framebuffer. If empty, color buffer will not be used. Possible values: UFIXED8_RGBA_SRGB, FLOAT32_VEC4, UFIXED8_VEC4"},
       {"frame_depth_type",
-          ANARI_STRING,
           "",
           "Type of the depth framebuffer. If empty, depth buffer will not be used. Possible values: FLOAT32"},
-      {"image_height", ANARI_UINT32, 1024, "Height of the image"},
-      {"image_width", ANARI_UINT32, 1024, "Width of the image"},
-      {"attribute_min", ANARI_FLOAT32, 0.0f, "Minimum random value for attributes"},
-      {"attribute_max", ANARI_FLOAT32, 1.0f, "Maximum random value for attributes"},
-      {"primitive_attributes", ANARI_BOOL, true, "If primitive attributes should be filled randomly"},
-      {"vertex_attribtues", ANARI_BOOL, true, "If vertex attributes should be filled randomly"},
-      {"seed", ANARI_UINT32, 0, "Seed for random number generator to ensure that tests are consistent across platforms"}
+      {"image_height", 1024, "Height of the image"},
+      {"image_width", 1024, "Width of the image"},
+      {"attribute_min", 0.0f, "Minimum random value for attributes"},
+      {"attribute_max", 1.0f, "Maximum random value for attributes"},
+      {"primitive_attributes", true, "If primitive attributes should be filled randomly"},
+      {"vertex_attribtues", true, "If vertex attributes should be filled randomly"},
+      {"seed", 0u, "Seed for random number generator to ensure that tests are consistent across platforms"}
 
       //
   };
@@ -80,10 +74,10 @@ void SceneGenerator::commit()
   auto d = m_device;
 
   // gather the data on what geometry will be present in the scene
-  std::string geometrySubtype = getParam<std::string>("geometrySubtype", "triangle");
-  std::string primitiveMode = getParam<std::string>("primitiveMode", "soup");
+  std::string geometrySubtype = getParamString("geometrySubtype", "triangle");
+  std::string primitiveMode = getParamString("primitiveMode", "soup");
   int primitiveCount = getParam<int>("primitiveCount", 20);
-  std::string shape = getParam<std::string>("shape", "triangle");
+  std::string shape = getParamString("shape", "triangle");
   int seed = getParam<int>("seed", 0);
 
   // build this scene top-down to stress commit ordering guarantees
@@ -335,7 +329,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
   size_t image_height = getParam<int32_t>("image_height", 1024);
   size_t image_width = getParam<int32_t>("image_width", 1024);
 
-  std::string color_type_param = getParam<std::string>("frame_color_type", "");
+  std::string color_type_param = getParamString("frame_color_type", "");
   int componentBytes = 1;
   ANARIDataType color_type = ANARI_UNKNOWN;
   if (color_type_param == "UFIXED8_RGBA_SRGB") {
@@ -347,7 +341,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
     color_type = ANARI_UFIXED8_VEC4;
   }
 
-  std::string depth_type_param = getParam<std::string>("frame_depth_type", "");
+  std::string depth_type_param = getParamString("frame_depth_type", "");
 
   // create render camera
   auto camera = anari::newObject<anari::Camera>(m_device, "perspective");
@@ -491,7 +485,7 @@ void SceneGenerator::resetAllParameters() {
   resetSceneObjects();
   std::vector<std::string> paramNames;
   for (auto it = params_begin(); it != params_end(); ++it) {
-    paramNames.push_back(it->get()->name);
+    paramNames.push_back(it->first);
   }
   for (auto &name : paramNames) {
     removeParam(name);

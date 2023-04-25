@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "SceneSelector.h"
-// anari
-#include <anari_test_scenes.h>
 
 namespace windows {
 
@@ -26,6 +24,11 @@ SceneSelector::SceneSelector(const char *name) : Window(name, true)
     m_scenes[i] =
         anari::scenes::getAvailableSceneNames(m_categories[i].c_str());
   }
+}
+
+SceneSelector::~SceneSelector()
+{
+  anari::scenes::release(m_scene);
 }
 
 void SceneSelector::buildUI()
@@ -55,6 +58,13 @@ void SceneSelector::setCallback(SceneSelectionCallback cb)
 {
   m_callback = cb;
   notify();
+}
+
+void SceneSelector::setScene(anari::scenes::SceneHandle scene)
+{
+  anari::scenes::release(m_scene);
+  m_scene = scene;
+  // TODO: UI
 }
 
 void SceneSelector::notify()
