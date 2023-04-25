@@ -373,23 +373,25 @@ void Viewport::ui_contextMenu()
   }
 
   if (ImGui::BeginPopup(m_contextMenuName.c_str())) {
-    if (ImGui::BeginMenu("renderer type")) {
-      for (int i = 0; i < m_rendererNames.size(); i++) {
-        if (ImGui::MenuItem(m_rendererNames[i].c_str())) {
-          m_currentRenderer = i;
-          updateFrame();
+    if (ImGui::BeginMenu("renderer")) {
+      if (ImGui::BeginMenu("subtype")) {
+        for (int i = 0; i < m_rendererNames.size(); i++) {
+          if (ImGui::MenuItem(m_rendererNames[i].c_str())) {
+            m_currentRenderer = i;
+            updateFrame();
+          }
         }
+        ImGui::EndMenu();
       }
-      ImGui::EndMenu();
-    }
 
-    if (ImGui::BeginMenu("renderer parameters")) {
-      ImGui::Text("PARAMETERS");
-      ImGui::Separator();
-      auto &parameters = m_rendererParameters[m_currentRenderer];
-      auto renderer = m_renderers[m_currentRenderer];
-      for (auto &p : parameters)
-        ui::buildUI(m_device, renderer, p);
+      if (!m_rendererParameters.empty()
+          && ImGui::BeginMenu("parameters")) {
+        auto &parameters = m_rendererParameters[m_currentRenderer];
+        auto renderer = m_renderers[m_currentRenderer];
+        for (auto &p : parameters)
+          ui::buildUI(m_device, renderer, p);
+        ImGui::EndMenu();
+      }
       ImGui::EndMenu();
     }
 
