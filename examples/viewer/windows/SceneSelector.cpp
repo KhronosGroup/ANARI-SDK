@@ -52,6 +52,24 @@ void SceneSelector::buildUI()
 
   if (newCategory || newScene)
     notify();
+
+  ImGui::Separator();
+
+  if (m_parameters.empty())
+    return;
+
+  for (auto &p : m_parameters)
+    ui::buildUI(m_scene, p);
+
+  ImGui::NewLine();
+
+  if (ImGui::Button("update")) {
+    try {
+      anari::scenes::commit(m_scene);
+    } catch (const std::runtime_error &e) {
+      printf("%s\n", e.what());
+    }
+  }
 }
 
 void SceneSelector::setCallback(SceneSelectionCallback cb)
@@ -64,7 +82,7 @@ void SceneSelector::setScene(anari::scenes::SceneHandle scene)
 {
   anari::scenes::release(m_scene);
   m_scene = scene;
-  // TODO: UI
+  m_parameters = getParameters(scene);
 }
 
 void SceneSelector::notify()

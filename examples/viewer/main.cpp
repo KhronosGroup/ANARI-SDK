@@ -131,11 +131,16 @@ class Application : public match3D::DockingApplication
 
     auto *sselector = new windows::SceneSelector();
     sselector->setCallback([=](const char *category, const char *scene) {
-      auto s = anari::scenes::createScene(device, category, scene);
-      anari::scenes::commit(s);
-      auto w = anari::scenes::getWorld(s);
-      viewport->setWorld(w, true);
-      leditor->setWorlds({w});
+      try {
+        auto s = anari::scenes::createScene(device, category, scene);
+        anari::scenes::commit(s);
+        auto w = anari::scenes::getWorld(s);
+        viewport->setWorld(w, true);
+        leditor->setWorlds({w});
+        sselector->setScene(s);
+      } catch (const std::runtime_error &e) {
+        printf("%s\n", e.what());
+      }
     });
 
     match3D::WindowArray windows;

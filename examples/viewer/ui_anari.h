@@ -7,6 +7,8 @@
 #include <match3D/match3D.h>
 // helium
 #include "helium/utility/AnariAny.h"
+// anari
+#include "anari_test_scenes.h"
 // std
 #include <string>
 #include <vector>
@@ -14,19 +16,14 @@
 namespace ui {
 
 using Any = helium::AnariAny;
-
-struct Parameter
-{
-  std::string name;
-  Any value;
-  std::string description;
-};
-
+using Parameter = anari::scenes::ParameterInfo;
 using ParameterList = std::vector<Parameter>;
 
 ParameterList parseParameters(
     anari::Library l, ANARIDataType objectType, const char *subtype);
 
+bool buildUI(Parameter &p);
+void buildUI(anari::scenes::SceneHandle s, Parameter &p);
 void buildUI(anari::Device d, anari::Object o, Parameter &p);
 
 } // namespace ui

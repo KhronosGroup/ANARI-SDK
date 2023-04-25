@@ -3,8 +3,7 @@
 
 #pragma once
 
-// anari
-#include <anari_test_scenes.h>
+#include "../ui_anari.h"
 // match3D
 #include <match3D/match3D.h>
 // std
@@ -36,6 +35,7 @@ struct SceneSelector : public match3D::Window
   SceneSelectionCallback m_callback;
 
   anari::scenes::SceneHandle m_scene{nullptr};
+  ui::ParameterList m_parameters;
 
   int m_currentCategory{0};
   int m_currentScene{0};
