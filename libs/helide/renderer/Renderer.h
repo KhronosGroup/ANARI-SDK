@@ -27,7 +27,7 @@ struct Renderer : public Object
       std::string_view subtype, HelideGlobalState *d);
 
  protected:
-  float4 m_bgColor{1.f};
+  float4 m_bgColor{float3(0.f), 1.f};
 };
 
 } // namespace helide

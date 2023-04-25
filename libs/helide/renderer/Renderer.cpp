@@ -17,7 +17,7 @@ Renderer::~Renderer()
 
 void Renderer::commit()
 {
-  m_bgColor = getParam<float4>("background", float4(1.f));
+  m_bgColor = getParam<float4>("background", float4(float3(0.f), 1.f));
 }
 
 PixelSample Renderer::renderSample(Ray ray, const World &w) const
