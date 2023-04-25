@@ -249,7 +249,7 @@ void Viewport::updateCamera(bool force)
       "aspect",
       m_viewportSize.x / float(m_viewportSize.y));
 
-  auto radians = [](float degrees) { return degrees * M_PI / 180.f; };
+  auto radians = [](float degrees) -> float { return degrees * M_PI / 180.f; };
   anari::setParameter(m_device, m_perspCamera, "fovy", radians(m_fov));
 
   anari::commitParameters(m_device, m_perspCamera);
@@ -384,8 +384,7 @@ void Viewport::ui_contextMenu()
         ImGui::EndMenu();
       }
 
-      if (!m_rendererParameters.empty()
-          && ImGui::BeginMenu("parameters")) {
+      if (!m_rendererParameters.empty() && ImGui::BeginMenu("parameters")) {
         auto &parameters = m_rendererParameters[m_currentRenderer];
         auto renderer = m_renderers[m_currentRenderer];
         for (auto &p : parameters)
