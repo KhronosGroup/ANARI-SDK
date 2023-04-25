@@ -48,6 +48,8 @@ struct AnariAny
   T *getObject() const;
 
   std::string getString() const;
+  void reserveString(size_t size);
+  void resizeString(size_t size);
 
   template <typename T>
   bool is() const;
@@ -260,6 +262,16 @@ inline T AnariAny::storageAs() const
 inline std::string AnariAny::getString() const
 {
   return type() == ANARI_STRING ? m_string : "";
+}
+
+inline void AnariAny::reserveString(size_t size)
+{
+  m_string.reserve(size);
+}
+
+inline void AnariAny::resizeString(size_t size)
+{
+  m_string.resize(size);
 }
 
 inline void AnariAny::refIncObject() const

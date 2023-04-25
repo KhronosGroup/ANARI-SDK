@@ -62,7 +62,7 @@ ParameterList parseParameters(
   return retval;
 }
 
-void buildUI(anari::Device d, anari::Object o, Parameter &p)
+bool buildUI(Parameter &p)
 {
   bool update = false;
 
@@ -89,12 +89,50 @@ void buildUI(anari::Device d, anari::Object o, Parameter &p)
   case ANARI_FLOAT32_VEC4:
     update = ImGui::InputFloat4(name, (float *)value);
     break;
+  case ANARI_STRING: {
+#if 0
+    if (ImGui::Button("...")) {
+      // TODO: pick file
+    }
+
+    ImGui::SameLine();
+#endif
+
+    constexpr int MAX_LENGTH = 2000;
+    p.value.reserveString(MAX_LENGTH);
+    auto text_cb = [](ImGuiInputTextCallbackData *cbd) {
+      auto &p = *(ui::Parameter *)cbd->UserData;
+      p.value.resizeString(cbd->BufTextLen);
+      return 0;
+    };
+    update = ImGui::InputText(name,
+        (char *)value,
+        MAX_LENGTH,
+        ImGuiInputTextFlags_CallbackEdit,
+        text_cb,
+        &p);
+  } break;
   default:
     ImGui::Text("* %s | %s", name, anari::toString(type));
     break;
   }
 
-  if (update) {
+  return update;
+}
+
+void buildUI(anari::scenes::SceneHandle s, Parameter &p)
+{
+  if (buildUI(p))
+    anari::scenes::setParameter(s, p.name, p.value);
+}
+
+void buildUI(anari::Device d, anari::Object o, Parameter &p)
+{
+  ANARIDataType type = p.value.type();
+  const char *name = p.name.c_str();
+  void *value = p.value.data();
+
+  if (buildUI(p)) {
     if (p.value.type() == ANARI_STRING)
       anari::setParameter(d, o, name, p.value.getString());
     else

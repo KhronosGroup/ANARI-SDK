@@ -7,6 +7,8 @@
 #include "tiny_obj_loader.h"
 // stb_image
 #include "stb_image.h"
+// std
+#include <sstream>
 
 namespace anari {
 namespace scenes {
@@ -53,8 +55,11 @@ static void loadObj(
       basePath.c_str(),
       true);
 
-  if (!retval)
-    throw std::runtime_error("failed to open/parse obj file!");
+  if (!retval) {
+    std::stringstream ss;
+    ss << "failed to open/parse obj file '" << fileName << "'";
+    throw std::runtime_error(ss.str());
+  }
 
   /////////////////////////////////////////////////////////////////////////////
 
