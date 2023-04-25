@@ -25,6 +25,10 @@ struct ParameterizedObject
   // Set the value of the parameter 'name', or add it if it doesn't exist yet
   void setParam(const std::string &name, ANARIDataType type, const void *v);
 
+  // Set the value of the parameter 'name', or add it if it doesn't exist yet
+  template <typename T>
+  void setParam(const std::string &name, const T &v);
+
   // Get the value of the parameter associated with 'name', or return
   // 'valueIfNotFound' if the parameter isn't set. This is strongly typed by
   // using the anari::ANARITypeFor<T> to get the ANARIDataType of the provided
@@ -63,17 +67,36 @@ struct ParameterizedObject
   // Remove the value of the parameter associated with 'name'.
   void removeParam(const std::string &name);
 
+ protected:
+  using Param = std::pair<std::string, AnariAny>;
+  using ParameterList = std::vector<Param>;
+
+  ParameterList::iterator params_begin();
+  ParameterList::iterator params_end();
+
  private:
   // Data members //
 
-  using Param = std::pair<std::string, AnariAny>;
-
   Param *findParam(const std::string &name, bool addIfNotExist = false);
 
-  std::vector<Param> m_params;
+  ParameterList m_params;
 };
 
 // Inlined ParameterizedObject definitions ////////////////////////////////////
+
+template <typename T>
+inline void ParameterizedObject::setParam(const std::string &name, const T &v)
+{
+  constexpr ANARIDataType type = anari::ANARITypeFor<T>::value;
+  setParam(name, type, &v);
+}
+
+template <>
+inline void ParameterizedObject::setParam(
+    const std::string &name, const std::string &v)
+{
+  setParam(name, ANARI_STRING, v.c_str());
+}
 
 template <typename T>
 inline T ParameterizedObject::getParam(const std::string &name, T valIfNotFound)

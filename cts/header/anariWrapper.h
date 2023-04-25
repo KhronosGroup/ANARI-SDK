@@ -98,4 +98,5 @@ class SceneGeneratorWrapper
   anari::Library m_library;
   std::optional<pybind11::function> m_callback;
 };
+
 } // namespace cts
