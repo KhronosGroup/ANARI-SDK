@@ -6,10 +6,18 @@
 #include "windows/Viewport.h"
 // anari
 #include <anari_test_scenes.h>
+// std
+#include <iostream>
 
+static const bool g_true = true;
 static bool g_verbose = false;
 static bool g_useDefaultLayout = true;
+static bool g_enableDebug = false;
 static std::string g_libraryName = "environment";
+static anari::Library g_library = nullptr;
+static anari::Library g_debug = nullptr;
+static anari::Device g_device = nullptr;
+static const char *g_traceDir = nullptr;
 
 extern const char *getDefaultUILayout();
 
@@ -47,6 +55,43 @@ static void statusFunc(const void *userData,
   }
 }
 
+static void initializeANARI()
+{
+  g_library = anariLoadLibrary(g_libraryName.c_str(), statusFunc, &g_verbose);
+  if (!g_library)
+    throw std::runtime_error("Failed to load ANARI library");
+
+  if (g_enableDebug)
+    g_debug = anariLoadLibrary("debug", statusFunc, &g_true);
+
+  anari::Device dev = anariNewDevice(g_library, "default");
+
+  if (g_enableDebug)
+    anari::setParameter(dev, dev, "glDebug", true);
+
+#ifdef USE_GLES2
+  anari::setParameter(dev, dev, "glAPI", "OpenGL_ES");
+#else
+  anari::setParameter(dev, dev, "glAPI", "OpenGL");
+#endif
+
+  if (g_enableDebug) {
+    anari::Device dbg = anariNewDevice(g_debug, "debug");
+    anari::setParameter(dbg, dbg, "wrappedDevice", dev);
+    if (g_traceDir) {
+      anari::setParameter(dbg, dbg, "traceDir", g_traceDir);
+      anari::setParameter(dbg, dbg, "traceMode", "code");
+    }
+    anari::commitParameters(dbg, dbg);
+    anari::release(dev, dev);
+    dev = dbg;
+  }
+
+  anari::commitParameters(dev, dev);
+
+  g_device = dev;
+}
+
 // Application definition /////////////////////////////////////////////////////
 
 class Application : public match3D::DockingApplication
@@ -59,9 +104,10 @@ class Application : public match3D::DockingApplication
   {
     // ANARI //
 
-    auto library =
-        anari::loadLibrary(g_libraryName.c_str(), statusFunc, &g_verbose);
-    auto device = anari::newDevice(library, "default");
+    initializeANARI();
+
+    auto library = g_library;
+    auto device = g_device;
 
     if (!device)
       std::exit(1);
@@ -130,16 +176,31 @@ class Application : public match3D::DockingApplication
 
 ///////////////////////////////////////////////////////////////////////////////
 
+static void printUsage()
+{
+  std::cout << "./anariViewer [{--help|-h}]\n"
+            << "   [{--verbose|-v}] [{--debug|-g}]\n"
+            << "   [{--library|-l} <ANARI library>]\n"
+            << "   [{--trace|-t} <directory>]\n";
+}
+
 static void parseCommandLine(int argc, char *argv[])
 {
   for (int i = 1; i < argc; i++) {
     std::string arg = argv[i];
     if (arg == "-v" || arg == "--verbose")
       g_verbose = true;
-    else if (arg == "--noDefaultLayout")
+    if (arg == "--help" || arg == "-h") {
+      printUsage();
+      std::exit(0);
+    } else if (arg == "--noDefaultLayout")
       g_useDefaultLayout = false;
     else if (arg == "-l" || arg == "--library")
       g_libraryName = argv[++i];
+    else if (arg == "--debug" || arg == "-g")
+      g_enableDebug = true;
+    else if (arg == "--trace" || arg == "-t")
+      g_traceDir = argv[++i];
   }
 }
 
@@ -148,4 +209,5 @@ int main(int argc, char *argv[])
   parseCommandLine(argc, argv);
   viewer::Application app;
   app.run(1920, 1200, "ANARI Demo Viewer");
+  return 0;
 }

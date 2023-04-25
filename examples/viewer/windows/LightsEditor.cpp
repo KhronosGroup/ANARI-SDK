@@ -151,7 +151,9 @@ void LightsEditor::updateLight(const Light &l)
     anari::setParameter(device, light, "irradiance", l.intensity);
     anari::setParameter(device, light, "color", l.color);
 
-    auto radians = [](float degrees) { return degrees * M_PI / 180.f; };
+    auto radians = [](float degrees) -> float {
+      return degrees * M_PI / 180.f;
+    };
 
     if (l.isDirectional) {
       const float az = radians(l.directionalAZEL.x);
