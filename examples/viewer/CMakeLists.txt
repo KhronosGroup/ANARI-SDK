@@ -3,7 +3,7 @@
 
 include(cmake/get_match3D.cmake)
 set(match3D_CACHE_IN_SOURCE_TREE ON)
-find_package(match3D REQUIRED stb_image)
+find_package(match3D REQUIRED stb_image nativefiledialog)
 
 project(anariViewer)
 

@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "ui_anari.h"
+// match3D
+#include "nfd.h"
 
 namespace ui {
 
@@ -23,6 +25,16 @@ static ui::Any parseValue(ANARIDataType type, const void *mem)
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
+
+void init()
+{
+  NFD_Init();
+}
+
+void shutdown()
+{
+  NFD_Quit();
+}
 
 ParameterList parseParameters(
     anari::Library l, ANARIDataType objectType, const char *subtype)
@@ -90,22 +102,30 @@ bool buildUI(Parameter &p)
     update = ImGui::InputFloat4(name, (float *)value);
     break;
   case ANARI_STRING: {
-#if 0
+    constexpr int MAX_LENGTH = 2000;
+    p.value.reserveString(MAX_LENGTH);
+
     if (ImGui::Button("...")) {
-      // TODO: pick file
+      nfdchar_t *outPath = nullptr;
+      nfdfilteritem_t filterItem[1] = {{"OBJ Files", "obj"}};
+      nfdresult_t result = NFD_OpenDialog(&outPath, filterItem, 1, nullptr);
+      if (result == NFD_OKAY) {
+        p.value = std::string(outPath).c_str();
+        update = true;
+        NFD_FreePath(outPath);
+      } else {
+        printf("NFD Error: %s\n", NFD_GetError());
+      }
     }
 
     ImGui::SameLine();
-#endif
 
-    constexpr int MAX_LENGTH = 2000;
-    p.value.reserveString(MAX_LENGTH);
     auto text_cb = [](ImGuiInputTextCallbackData *cbd) {
       auto &p = *(ui::Parameter *)cbd->UserData;
       p.value.resizeString(cbd->BufTextLen);
       return 0;
     };
-    update = ImGui::InputText(name,
+    update |= ImGui::InputText(name,
         (char *)value,
         MAX_LENGTH,
         ImGuiInputTextFlags_CallbackEdit,
