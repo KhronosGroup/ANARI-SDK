@@ -15,6 +15,9 @@
 
 namespace ui {
 
+void init();
+void shutdown();
+
 using Any = helium::AnariAny;
 using Parameter = anari::scenes::ParameterInfo;
 using ParameterList = std::vector<Parameter>;

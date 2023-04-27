@@ -102,6 +102,8 @@ class Application : public match3D::DockingApplication
 
   match3D::WindowArray setup() override
   {
+    ui::init();
+
     // ANARI //
 
     initializeANARI();
@@ -171,6 +173,7 @@ class Application : public match3D::DockingApplication
   {
     anari::release(m_state.device, m_state.device);
     anari::unloadLibrary(m_state.library);
+    ui::shutdown();
   }
 
  private:
