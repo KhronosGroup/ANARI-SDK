@@ -72,7 +72,7 @@ if (BUILD_TESTING)
   add_subdirectory(tests)
 endif()
 
-if (BUILD_CTS)
+if (BUILD_CTS AND (BUILD_TESTING OR BUILD_EXAMPLES))
   add_subdirectory(cts)
 endif()
 
