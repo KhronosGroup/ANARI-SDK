@@ -22,6 +22,14 @@ static ui::Any parseValue(ANARIDataType type, const void *mem)
     return {};
 }
 
+static bool UI_stringList_callback(
+    void *_stringList, int index, const char **out_text)
+{
+  auto &stringList = *(std::vector<std::string> *)_stringList;
+  *out_text = stringList[index].c_str();
+  return true;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -65,9 +73,22 @@ ParameterList parseParameters(
         "default",
         parameter->type);
 
+    const auto **stringValues = (const char **)anariGetParameterInfo(l,
+        "default",
+        subtype,
+        objectType,
+        parameter->name,
+        parameter->type,
+        "value",
+        ANARI_STRING_LIST);
+
     p.name = parameter->name;
     p.description = description ? description : "";
     p.value = parseValue(parameter->type, defaultValue);
+
+    for (; stringValues && *stringValues; stringValues++)
+      p.stringValues.push_back(*stringValues);
+
     retval.push_back(p);
   }
 
@@ -102,35 +123,46 @@ bool buildUI(Parameter &p)
     update = ImGui::InputFloat4(name, (float *)value);
     break;
   case ANARI_STRING: {
-    constexpr int MAX_LENGTH = 2000;
-    p.value.reserveString(MAX_LENGTH);
+    if (!p.stringValues.empty()) {
+      update |= ImGui::Combo(name,
+          &p.currentSelection,
+          UI_stringList_callback,
+          &p.stringValues,
+          p.stringValues.size());
 
-    if (ImGui::Button("...")) {
-      nfdchar_t *outPath = nullptr;
-      nfdfilteritem_t filterItem[1] = {{"OBJ Files", "obj"}};
-      nfdresult_t result = NFD_OpenDialog(&outPath, filterItem, 1, nullptr);
-      if (result == NFD_OKAY) {
-        p.value = std::string(outPath).c_str();
-        update = true;
-        NFD_FreePath(outPath);
-      } else {
-        printf("NFD Error: %s\n", NFD_GetError());
+      if (update)
+        p.value = p.stringValues[p.currentSelection].c_str();
+    } else {
+      constexpr int MAX_LENGTH = 2000;
+      p.value.reserveString(MAX_LENGTH);
+
+      if (ImGui::Button("...")) {
+        nfdchar_t *outPath = nullptr;
+        nfdfilteritem_t filterItem[1] = {{"OBJ Files", "obj"}};
+        nfdresult_t result = NFD_OpenDialog(&outPath, filterItem, 1, nullptr);
+        if (result == NFD_OKAY) {
+          p.value = std::string(outPath).c_str();
+          update = true;
+          NFD_FreePath(outPath);
+        } else {
+          printf("NFD Error: %s\n", NFD_GetError());
+        }
       }
+
+      ImGui::SameLine();
+
+      auto text_cb = [](ImGuiInputTextCallbackData *cbd) {
+        auto &p = *(ui::Parameter *)cbd->UserData;
+        p.value.resizeString(cbd->BufTextLen);
+        return 0;
+      };
+      update |= ImGui::InputText(name,
+          (char *)value,
+          MAX_LENGTH,
+          ImGuiInputTextFlags_CallbackEdit,
+          text_cb,
+          &p);
     }
-
-    ImGui::SameLine();
-
-    auto text_cb = [](ImGuiInputTextCallbackData *cbd) {
-      auto &p = *(ui::Parameter *)cbd->UserData;
-      p.value.resizeString(cbd->BufTextLen);
-      return 0;
-    };
-    update |= ImGui::InputText(name,
-        (char *)value,
-        MAX_LENGTH,
-        ImGuiInputTextFlags_CallbackEdit,
-        text_cb,
-        &p);
   } break;
   default:
     ImGui::Text("* %s | %s", name, anari::toString(type));
