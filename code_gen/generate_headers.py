@@ -348,6 +348,10 @@ struct ANARITypeProperties { };
                         else:
                             f.write('        dst['+str(i)+'] = (base_type)src['+str(i)+'];\n')
                 f.write('    }\n')
+            else: # no op for non numeric types
+                f.write('    static void fromFloat4(base_type *dst, const float *src) { }\n')
+                f.write('    static void toFloat4(float *dst, const base_type *src) { }\n')
+
 
 
             f.write('};\n')

@@ -82,6 +82,8 @@ struct ANARITypeProperties<ANARI_UNKNOWN> {
     static constexpr const char* type_name = "int";
     static constexpr const char* array_name = "int[1]";
     static constexpr const char* var_name = "varunknown";
+    static void fromFloat4(base_type *dst, const float *src) { }
+    static void toFloat4(float *dst, const base_type *src) { }
 };
 template<>
 struct ANARITypeProperties<ANARI_DATA_TYPE> {
@@ -93,6 +95,8 @@ struct ANARITypeProperties<ANARI_DATA_TYPE> {
     static constexpr const char* type_name = "int32_t";
     static constexpr const char* array_name = "int32_t[1]";
     static constexpr const char* var_name = "vardata_type";
+    static void fromFloat4(base_type *dst, const float *src) { }
+    static void toFloat4(float *dst, const base_type *src) { }
 };
 template<>
 struct ANARITypeProperties<ANARI_STRING> {
@@ -104,6 +108,8 @@ struct ANARITypeProperties<ANARI_STRING> {
     static constexpr const char* type_name = "const char*";
     static constexpr const char* array_name = "const char*[1]";
     static constexpr const char* var_name = "varstring";
+    static void fromFloat4(base_type *dst, const float *src) { }
+    static void toFloat4(float *dst, const base_type *src) { }
 };
 template<>
 struct ANARITypeProperties<ANARI_VOID_POINTER> {
@@ -115,6 +121,8 @@ struct ANARITypeProperties<ANARI_VOID_POINTER> {
     static constexpr const char* type_name = "void*";
     static constexpr const char* array_name = "void*[1]";
     static constexpr const char* var_name = "varvoid_pointer";
+    static void fromFloat4(base_type *dst, const float *src) { }
+    static void toFloat4(float *dst, const base_type *src) { }
 };
 template<>
 struct ANARITypeProperties<ANARI_BOOL> {
@@ -126,6 +134,8 @@ struct ANARITypeProperties<ANARI_BOOL> {
     static constexpr const char* type_name = "int32_t";
     static constexpr const char* array_name = "int32_t[1]";
     static constexpr const char* var_name = "varbool";
+    static void fromFloat4(base_type *dst, const float *src) { }
+    static void toFloat4(float *dst, const base_type *src) { }
 };
 template<>
 struct ANARITypeProperties<ANARI_STRING_LIST> {
@@ -137,6 +147,8 @@ struct ANARITypeProperties<ANARI_STRING_LIST> {
     static constexpr const char* type_name = "const char**";
     static constexpr const char* array_name = "const char**[1]";
     static constexpr const char* var_name = "varstring_list";
+    static void fromFloat4(base_type *dst, const float *src) { }
+    static void toFloat4(float *dst, const base_type *src) { }
 };
 template<>
 struct ANARITypeProperties<ANARI_DATA_TYPE_LIST> {
@@ -148,6 +160,8 @@ struct ANARITypeProperties<ANARI_DATA_TYPE_LIST> {
     static constexpr const char* type_name = "ANARIDataType*";
     static constexpr const char* array_name = "ANARIDataType*[1]";
     static constexpr const char* var_name = "vardata_type_list";
+    static void fromFloat4(base_type *dst, const float *src) { }
+    static void toFloat4(float *dst, const base_type *src) { }
 };
 template<>
 struct ANARITypeProperties<ANARI_PARAMETER_LIST> {
@@ -159,6 +173,8 @@ struct ANARITypeProperties<ANARI_PARAMETER_LIST> {
     static constexpr const char* type_name = "ANARIParameter*";
     static constexpr const char* array_name = "ANARIParameter*[1]";
     static constexpr const char* var_name = "varparameter_list";
+    static void fromFloat4(base_type *dst, const float *src) { }
+    static void toFloat4(float *dst, const base_type *src) { }
 };
 template<>
 struct ANARITypeProperties<ANARI_FUNCTION_POINTER> {
@@ -170,6 +186,8 @@ struct ANARITypeProperties<ANARI_FUNCTION_POINTER> {
     static constexpr const char* type_name = "void(*)(void)";
     static constexpr const char* array_name = "void(*)(void)[1]";
     static constexpr const char* var_name = "varfunction_pointer";
+    static void fromFloat4(base_type *dst, const float *src) { }
+    static void toFloat4(float *dst, const base_type *src) { }
 };
 template<>
 struct ANARITypeProperties<ANARI_MEMORY_DELETER> {
@@ -181,6 +199,8 @@ struct ANARITypeProperties<ANARI_MEMORY_DELETER> {
     static constexpr const char* type_name = "ANARIMemoryDeleter";
     static constexpr const char* array_name = "ANARIMemoryDeleter[1]";
     static constexpr const char* var_name = "varmemory_deleter";
+    static void fromFloat4(base_type *dst, const float *src) { }
+    static void toFloat4(float *dst, const base_type *src) { }
 };
 template<>
 struct ANARITypeProperties<ANARI_STATUS_CALLBACK> {
@@ -192,6 +212,8 @@ struct ANARITypeProperties<ANARI_STATUS_CALLBACK> {
     static constexpr const char* type_name = "ANARIStatusCallback";
     static constexpr const char* array_name = "ANARIStatusCallback[1]";
     static constexpr const char* var_name = "varstatus_callback";
+    static void fromFloat4(base_type *dst, const float *src) { }
+    static void toFloat4(float *dst, const base_type *src) { }
 };
 template<>
 struct ANARITypeProperties<ANARI_LIBRARY> {
@@ -203,6 +225,8 @@ struct ANARITypeProperties<ANARI_LIBRARY> {
     static constexpr const char* type_name = "ANARILibrary";
     static constexpr const char* array_name = "ANARILibrary[1]";
     static constexpr const char* var_name = "varlibrary";
+    static void fromFloat4(base_type *dst, const float *src) { }
+    static void toFloat4(float *dst, const base_type *src) { }
 };
 template<>
 struct ANARITypeProperties<ANARI_DEVICE> {
@@ -214,6 +238,8 @@ struct ANARITypeProperties<ANARI_DEVICE> {
     static constexpr const char* type_name = "ANARIDevice";
     static constexpr const char* array_name = "ANARIDevice[1]";
     static constexpr const char* var_name = "vardevice";
+    static void fromFloat4(base_type *dst, const float *src) { }
+    static void toFloat4(float *dst, const base_type *src) { }
 };
 template<>
 struct ANARITypeProperties<ANARI_OBJECT> {
@@ -225,6 +251,8 @@ struct ANARITypeProperties<ANARI_OBJECT> {
     static constexpr const char* type_name = "ANARIObject";
     static constexpr const char* array_name = "ANARIObject[1]";
     static constexpr const char* var_name = "varobject";
+    static void fromFloat4(base_type *dst, const float *src) { }
+    static void toFloat4(float *dst, const base_type *src) { }
 };
 template<>
 struct ANARITypeProperties<ANARI_ARRAY> {
@@ -236,6 +264,8 @@ struct ANARITypeProperties<ANARI_ARRAY> {
     static constexpr const char* type_name = "ANARIArray";
     static constexpr const char* array_name = "ANARIArray[1]";
     static constexpr const char* var_name = "vararray";
+    static void fromFloat4(base_type *dst, const float *src) { }
+    static void toFloat4(float *dst, const base_type *src) { }
 };
 template<>
 struct ANARITypeProperties<ANARI_ARRAY1D> {
@@ -247,6 +277,8 @@ struct ANARITypeProperties<ANARI_ARRAY1D> {
     static constexpr const char* type_name = "ANARIArray1D";
     static constexpr const char* array_name = "ANARIArray1D[1]";
     static constexpr const char* var_name = "vararray1d";
+    static void fromFloat4(base_type *dst, const float *src) { }
+    static void toFloat4(float *dst, const base_type *src) { }
 };
 template<>
 struct ANARITypeProperties<ANARI_ARRAY2D> {
@@ -258,6 +290,8 @@ struct ANARITypeProperties<ANARI_ARRAY2D> {
     static constexpr const char* type_name = "ANARIArray2D";
     static constexpr const char* array_name = "ANARIArray2D[1]";
     static constexpr const char* var_name = "vararray2d";
+    static void fromFloat4(base_type *dst, const float *src) { }
+    static void toFloat4(float *dst, const base_type *src) { }
 };
 template<>
 struct ANARITypeProperties<ANARI_ARRAY3D> {
@@ -269,6 +303,8 @@ struct ANARITypeProperties<ANARI_ARRAY3D> {
     static constexpr const char* type_name = "ANARIArray3D";
     static constexpr const char* array_name = "ANARIArray3D[1]";
     static constexpr const char* var_name = "vararray3d";
+    static void fromFloat4(base_type *dst, const float *src) { }
+    static void toFloat4(float *dst, const base_type *src) { }
 };
 template<>
 struct ANARITypeProperties<ANARI_CAMERA> {
@@ -280,6 +316,8 @@ struct ANARITypeProperties<ANARI_CAMERA> {
     static constexpr const char* type_name = "ANARICamera";
     static constexpr const char* array_name = "ANARICamera[1]";
     static constexpr const char* var_name = "varcamera";
+    static void fromFloat4(base_type *dst, const float *src) { }
+    static void toFloat4(float *dst, const base_type *src) { }
 };
 template<>
 struct ANARITypeProperties<ANARI_FRAME> {
@@ -291,6 +329,8 @@ struct ANARITypeProperties<ANARI_FRAME> {
     static constexpr const char* type_name = "ANARIFrame";
     static constexpr const char* array_name = "ANARIFrame[1]";
     static constexpr const char* var_name = "varframe";
+    static void fromFloat4(base_type *dst, const float *src) { }
+    static void toFloat4(float *dst, const base_type *src) { }
 };
 template<>
 struct ANARITypeProperties<ANARI_GEOMETRY> {
@@ -302,6 +342,8 @@ struct ANARITypeProperties<ANARI_GEOMETRY> {
     static constexpr const char* type_name = "ANARIGeometry";
     static constexpr const char* array_name = "ANARIGeometry[1]";
     static constexpr const char* var_name = "vargeometry";
+    static void fromFloat4(base_type *dst, const float *src) { }
+    static void toFloat4(float *dst, const base_type *src) { }
 };
 template<>
 struct ANARITypeProperties<ANARI_GROUP> {
@@ -313,6 +355,8 @@ struct ANARITypeProperties<ANARI_GROUP> {
     static constexpr const char* type_name = "ANARIGroup";
     static constexpr const char* array_name = "ANARIGroup[1]";
     static constexpr const char* var_name = "vargroup";
+    static void fromFloat4(base_type *dst, const float *src) { }
+    static void toFloat4(float *dst, const base_type *src) { }
 };
 template<>
 struct ANARITypeProperties<ANARI_INSTANCE> {
@@ -324,6 +368,8 @@ struct ANARITypeProperties<ANARI_INSTANCE> {
     static constexpr const char* type_name = "ANARIInstance";
     static constexpr const char* array_name = "ANARIInstance[1]";
     static constexpr const char* var_name = "varinstance";
+    static void fromFloat4(base_type *dst, const float *src) { }
+    static void toFloat4(float *dst, const base_type *src) { }
 };
 template<>
 struct ANARITypeProperties<ANARI_LIGHT> {
@@ -335,6 +381,8 @@ struct ANARITypeProperties<ANARI_LIGHT> {
     static constexpr const char* type_name = "ANARILight";
     static constexpr const char* array_name = "ANARILight[1]";
     static constexpr const char* var_name = "varlight";
+    static void fromFloat4(base_type *dst, const float *src) { }
+    static void toFloat4(float *dst, const base_type *src) { }
 };
 template<>
 struct ANARITypeProperties<ANARI_MATERIAL> {
@@ -346,6 +394,8 @@ struct ANARITypeProperties<ANARI_MATERIAL> {
     static constexpr const char* type_name = "ANARIMaterial";
     static constexpr const char* array_name = "ANARIMaterial[1]";
     static constexpr const char* var_name = "varmaterial";
+    static void fromFloat4(base_type *dst, const float *src) { }
+    static void toFloat4(float *dst, const base_type *src) { }
 };
 template<>
 struct ANARITypeProperties<ANARI_RENDERER> {
@@ -357,6 +407,8 @@ struct ANARITypeProperties<ANARI_RENDERER> {
     static constexpr const char* type_name = "ANARIRenderer";
     static constexpr const char* array_name = "ANARIRenderer[1]";
     static constexpr const char* var_name = "varrenderer";
+    static void fromFloat4(base_type *dst, const float *src) { }
+    static void toFloat4(float *dst, const base_type *src) { }
 };
 template<>
 struct ANARITypeProperties<ANARI_SURFACE> {
@@ -368,6 +420,8 @@ struct ANARITypeProperties<ANARI_SURFACE> {
     static constexpr const char* type_name = "ANARISurface";
     static constexpr const char* array_name = "ANARISurface[1]";
     static constexpr const char* var_name = "varsurface";
+    static void fromFloat4(base_type *dst, const float *src) { }
+    static void toFloat4(float *dst, const base_type *src) { }
 };
 template<>
 struct ANARITypeProperties<ANARI_SAMPLER> {
@@ -379,6 +433,8 @@ struct ANARITypeProperties<ANARI_SAMPLER> {
     static constexpr const char* type_name = "ANARISampler";
     static constexpr const char* array_name = "ANARISampler[1]";
     static constexpr const char* var_name = "varsampler";
+    static void fromFloat4(base_type *dst, const float *src) { }
+    static void toFloat4(float *dst, const base_type *src) { }
 };
 template<>
 struct ANARITypeProperties<ANARI_SPATIAL_FIELD> {
@@ -390,6 +446,8 @@ struct ANARITypeProperties<ANARI_SPATIAL_FIELD> {
     static constexpr const char* type_name = "ANARISpatialField";
     static constexpr const char* array_name = "ANARISpatialField[1]";
     static constexpr const char* var_name = "varspatial_field";
+    static void fromFloat4(base_type *dst, const float *src) { }
+    static void toFloat4(float *dst, const base_type *src) { }
 };
 template<>
 struct ANARITypeProperties<ANARI_VOLUME> {
@@ -401,6 +459,8 @@ struct ANARITypeProperties<ANARI_VOLUME> {
     static constexpr const char* type_name = "ANARIVolume";
     static constexpr const char* array_name = "ANARIVolume[1]";
     static constexpr const char* var_name = "varvolume";
+    static void fromFloat4(base_type *dst, const float *src) { }
+    static void toFloat4(float *dst, const base_type *src) { }
 };
 template<>
 struct ANARITypeProperties<ANARI_WORLD> {
@@ -412,6 +472,8 @@ struct ANARITypeProperties<ANARI_WORLD> {
     static constexpr const char* type_name = "ANARIWorld";
     static constexpr const char* array_name = "ANARIWorld[1]";
     static constexpr const char* var_name = "varworld";
+    static void fromFloat4(base_type *dst, const float *src) { }
+    static void toFloat4(float *dst, const base_type *src) { }
 };
 template<>
 struct ANARITypeProperties<ANARI_INT8> {
@@ -2551,6 +2613,8 @@ struct ANARITypeProperties<ANARI_FRAME_COMPLETION_CALLBACK> {
     static constexpr const char* type_name = "ANARIFrameCompletionCallback";
     static constexpr const char* array_name = "ANARIFrameCompletionCallback[1]";
     static constexpr const char* var_name = "varframe_completion_callback";
+    static void fromFloat4(base_type *dst, const float *src) { }
+    static void toFloat4(float *dst, const base_type *src) { }
 };
 
 template <typename R, template<int> class F, typename... Args>
