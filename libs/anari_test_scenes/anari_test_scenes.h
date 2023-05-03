@@ -32,6 +32,11 @@ struct ParameterInfo
   std::string name;
   Any value;
   std::string description;
+
+  // valid values if this parameter is ANARI_STRING_LIST
+  std::vector<std::string> stringValues;
+  // which string is selected in 'stringValues', if applicable
+  int currentSelection{0};
 };
 
 using Bounds = std::array<glm::vec3, 2>;
