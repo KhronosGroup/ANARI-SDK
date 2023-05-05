@@ -59,6 +59,7 @@ struct AnariAny
   ANARIDataType type() const;
 
   bool valid() const;
+  operator bool() const;
   void reset();
 
  private:
@@ -240,6 +241,11 @@ inline ANARIDataType AnariAny::type() const
 inline bool AnariAny::valid() const
 {
   return type() != ANARI_UNKNOWN;
+}
+
+inline AnariAny::operator bool() const
+{
+  return valid();
 }
 
 inline void AnariAny::reset()

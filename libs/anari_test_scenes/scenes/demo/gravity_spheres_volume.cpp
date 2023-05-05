@@ -90,8 +90,9 @@ GravityVolume::~GravityVolume()
 std::vector<ParameterInfo> GravityVolume::parameters()
 {
   return {
-      {"withGeometry", false, "Include geometry inside the volume?"}
-      //
+      // clang-format off
+      {makeParameterInfo("withGeometry", "Include geometry inside the volume?", false)}
+      // clang-format on
   };
 }
 
