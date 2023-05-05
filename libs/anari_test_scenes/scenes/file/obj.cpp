@@ -304,8 +304,9 @@ FileObj::~FileObj()
 std::vector<ParameterInfo> FileObj::parameters()
 {
   return {
-      {"fileName", "", ".obj file to open."}
-      //
+      // clang-format off
+      {makeParameterInfo("fileName", ".obj file to open", "")}
+      // clang-format on
   };
 }
 

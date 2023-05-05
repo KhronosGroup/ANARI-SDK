@@ -73,6 +73,24 @@ ParameterList parseParameters(
         "default",
         parameter->type);
 
+    const void *minValue = anariGetParameterInfo(l,
+        "default",
+        subtype,
+        objectType,
+        parameter->name,
+        parameter->type,
+        "minimum",
+        parameter->type);
+
+    const void *maxValue = anariGetParameterInfo(l,
+        "default",
+        subtype,
+        objectType,
+        parameter->name,
+        parameter->type,
+        "maximum",
+        parameter->type);
+
     const auto **stringValues = (const char **)anariGetParameterInfo(l,
         "default",
         subtype,
@@ -85,6 +103,11 @@ ParameterList parseParameters(
     p.name = parameter->name;
     p.description = description ? description : "";
     p.value = parseValue(parameter->type, defaultValue);
+
+    if (minValue)
+      p.min = parseValue(parameter->type, minValue);
+    if (maxValue)
+      p.max = parseValue(parameter->type, maxValue);
 
     for (; stringValues && *stringValues; stringValues++)
       p.stringValues.push_back(*stringValues);
@@ -103,24 +126,49 @@ bool buildUI(Parameter &p)
   const char *name = p.name.c_str();
   void *value = p.value.data();
 
+  const bool bounded = p.min || p.max;
+  const bool showTooltip = !p.description.empty();
+
   switch (type) {
   case ANARI_BOOL:
-    update = ImGui::Checkbox(name, (bool *)value);
+    update |= ImGui::Checkbox(name, (bool *)value);
     break;
   case ANARI_INT32:
-    update = ImGui::DragInt(name, (int *)value);
+    if (bounded) {
+      if (p.min && p.max) {
+        update |= ImGui::SliderInt(
+            name, (int *)value, p.min.get<int>(), p.max.get<int>());
+      } else {
+        int min = p.min ? p.min.get<int>() : std::numeric_limits<int>::lowest();
+        int max = p.max ? p.max.get<int>() : std::numeric_limits<int>::max();
+        update |= ImGui::DragInt(name, (int *)value, 1.f, min, max);
+      }
+    } else
+      update |= ImGui::InputInt(name, (int *)value);
     break;
   case ANARI_FLOAT32:
-    update = ImGui::InputFloat(name, (float *)value);
+    if (bounded) {
+      if (p.min && p.max) {
+        update |= ImGui::SliderFloat(
+            name, (float *)value, p.min.get<float>(), p.max.get<float>());
+      } else {
+        float min =
+            p.min ? p.min.get<float>() : std::numeric_limits<float>::lowest();
+        float max =
+            p.max ? p.max.get<float>() : std::numeric_limits<float>::max();
+        update |= ImGui::DragFloat(name, (float *)value, 1.f, min, max);
+      }
+    } else
+      update |= ImGui::InputFloat(name, (float *)value);
     break;
   case ANARI_FLOAT32_VEC2:
-    update = ImGui::InputFloat2(name, (float *)value);
+    update |= ImGui::InputFloat2(name, (float *)value);
     break;
   case ANARI_FLOAT32_VEC3:
-    update = ImGui::InputFloat3(name, (float *)value);
+    update |= ImGui::InputFloat3(name, (float *)value);
     break;
   case ANARI_FLOAT32_VEC4:
-    update = ImGui::InputFloat4(name, (float *)value);
+    update |= ImGui::ColorEdit4(name, (float *)value); // TODO handle non-colors
     break;
   case ANARI_STRING: {
     if (!p.stringValues.empty()) {
@@ -167,6 +215,12 @@ bool buildUI(Parameter &p)
   default:
     ImGui::Text("* %s | %s", name, anari::toString(type));
     break;
+  }
+
+  if (!p.description.empty() && ImGui::IsItemHovered()) {
+    ImGui::BeginTooltip();
+    ImGui::Text("%s", p.description.c_str());
+    ImGui::EndTooltip();
   }
 
   return update;

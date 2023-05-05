@@ -21,9 +21,11 @@ RandomSpheres::~RandomSpheres()
 std::vector<ParameterInfo> RandomSpheres::parameters()
 {
   return {
-      {"numSpheres", int(1e4), "Number of spheres to generate."},
-      {"radius", 1.5e-2f, "Radius of all spheres."}
-      //
+      // clang-format off
+      {makeParameterInfo("numSpheres", "Number of spheres to generate", int(1e3), int(1), int(1e6))},
+      {makeParameterInfo("radius", "Radius of all spheres", 1.5e-2f)},
+      {makeParameterInfo("randomizeRadii", "Randomize per-sphere radius", true)}
+      // clang-format on
   };
 }
 

@@ -21,9 +21,10 @@ RandomCylinders::~RandomCylinders()
 std::vector<ParameterInfo> RandomCylinders::parameters()
 {
   return {
-      {"numCylinders", int(1e3), "Number of cylinders to generate."},
-      {"radius", 1.5e-2f, "Radius of all cylinders."}
-      //
+      // clang-format off
+      {makeParameterInfo("numCylinders", "Number of cylinders to generate", int(1e3))},
+      {makeParameterInfo("radius", "Radius of all cylinders", 1.5e-2f)}
+      // clang-format on
   };
 }
 
