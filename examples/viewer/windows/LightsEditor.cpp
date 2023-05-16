@@ -7,12 +7,26 @@
 
 namespace windows {
 
+static const char *lightToType(Light::LightType type)
+{
+  switch (type) {
+  case Light::DIRECTIONAL:
+    return "directional";
+  case Light::POINT:
+    return "point";
+  case Light::SPOT:
+    return "spot";
+  default:
+    return nullptr;
+  }
+}
+
 LightsEditor::LightsEditor(std::vector<anari::Device> devices, const char *name)
     : Window(name, true), m_devices(devices)
 {
   for (auto d : m_devices)
     anari::retain(d, d);
-  addNewLight(true);
+  addNewLight(Light::DIRECTIONAL);
   m_worlds.resize(m_devices.size(), nullptr);
 }
 
@@ -38,10 +52,13 @@ void LightsEditor::buildUI()
   ImGui::Text("add:");
   ImGui::SameLine();
   if (ImGui::Button("directional"))
-    addNewLight(true);
+    addNewLight(Light::DIRECTIONAL);
   ImGui::SameLine();
   if (ImGui::Button("point"))
-    addNewLight(false);
+    addNewLight(Light::POINT);
+  ImGui::SameLine();
+  if (ImGui::Button("spot"))
+    addNewLight(Light::SPOT);
 
   Light *lightToRemove = nullptr;
 
@@ -49,7 +66,7 @@ void LightsEditor::buildUI()
     ImGui::PushID(&l);
     ImGui::Separator();
 
-    ImGui::Text("type: %s", l.isDirectional ? "directional" : "point");
+    ImGui::Text("type: %s", lightToType(l.type));
 
     bool update = false;
 
@@ -57,7 +74,7 @@ void LightsEditor::buildUI()
 
     update |= ImGui::ColorEdit3("color", &l.color.x);
 
-    if (l.isDirectional) {
+    if (l.type == Light::DIRECTIONAL || l.type == Light::SPOT) {
       auto maintainUnitCircle = [](float inDegrees) -> float {
         while (inDegrees > 360.f)
           inDegrees -= 360.f;
@@ -75,8 +92,15 @@ void LightsEditor::buildUI()
         update = true;
         l.directionalAZEL.y = maintainUnitCircle(l.directionalAZEL.y);
       }
-    } else { // point
+    }
+    if (l.type == Light::POINT || l.type == Light::SPOT) {
       if (ImGui::DragFloat3("position", &l.pointPosition.x, 0.1f))
+        update = true;
+    }
+
+    if (l.type == Light::SPOT) {
+      if (ImGui::DragFloat(
+              "openingAngle", &l.openingAngle, 0.01f, 0.0f, 6.2832f))
         update = true;
     }
 
@@ -116,13 +140,13 @@ void LightsEditor::releaseWorlds()
     anari::release(m_devices[i], m_worlds[i]);
 }
 
-void LightsEditor::addNewLight(bool directional)
+void LightsEditor::addNewLight(Light::LightType type)
 {
   Light l;
-  l.isDirectional = directional;
+  l.type = type;
   for (int i = 0; i < int(m_devices.size()); i++) {
-    l.handles.push_back(anari::newObject<anari::Light>(
-        m_devices[i], directional ? "directional" : "point"));
+    l.handles.push_back(
+        anari::newObject<anari::Light>(m_devices[i], lightToType(type)));
   }
   updateLight(l);
   m_lights.push_back(l);
@@ -155,15 +179,19 @@ void LightsEditor::updateLight(const Light &l)
       return degrees * M_PI / 180.f;
     };
 
-    if (l.isDirectional) {
+    if (l.type == Light::DIRECTIONAL || l.type == Light::SPOT) {
       const float az = radians(l.directionalAZEL.x);
       const float el = radians(l.directionalAZEL.y);
       anari::float3 dir(std::sin(az) * std::cos(el),
           std::sin(el),
           std::cos(az) * std::cos(el));
       anari::setParameter(device, light, "direction", dir);
-    } else {
+    }
+    if (l.type == Light::POINT || l.type == Light::SPOT) {
       anari::setParameter(device, light, "position", l.pointPosition);
+    }
+    if (l.type == Light::SPOT) {
+      anari::setParameter(device, light, "openingAngle", l.openingAngle);
     }
 
     anari::commitParameters(device, light);

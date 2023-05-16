@@ -4,8 +4,8 @@
 #pragma once
 
 // anari
-#include <anari/anari_cpp.hpp>
 #include <anari/anari_cpp/ext/linalg.h>
+#include <anari/anari_cpp.hpp>
 // match3D
 #include <match3D/match3D.h>
 // std
@@ -15,8 +15,15 @@ namespace windows {
 
 struct Light
 {
-  bool isDirectional{false}; // otherwise point
+  enum LightType
+  {
+    DIRECTIONAL,
+    POINT,
+    SPOT
+  };
+  LightType type{DIRECTIONAL};
   float intensity{1.f};
+  float openingAngle{3.14159f};
   anari::float3 color{1.f};
   anari::float2 directionalAZEL{0.f, 345.f};
   anari::float3 pointPosition{0.f};
@@ -37,7 +44,7 @@ struct LightsEditor : public match3D::Window
 
  private:
   void releaseWorlds();
-  void addNewLight(bool directional);
+  void addNewLight(Light::LightType type);
   void removeLight(Light *toRemove);
   void updateLight(const Light &l);
   void updateLightsArray();
