@@ -23,7 +23,7 @@
 // anari
 #include "anari/anari.h"
 #define ANARI_FEATURE_UTILITY_IMPL
-#include "anari/anari_feature_utility.h"
+#include "anari/frontend/anari_feature_utility.h"
 
 /******************************************************************/
 /* helper function to write out pixel values to a .ppm file */

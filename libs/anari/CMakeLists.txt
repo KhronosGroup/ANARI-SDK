@@ -37,7 +37,7 @@ PRIVATE
 
 ## Create version header
 
-configure_file(anari_version.h.in include/anari/anari_version.h)
+configure_file(anari_sdk_version.h.in include/anari/frontend/anari_sdk_version.h)
 
 ## Install library + targets
 

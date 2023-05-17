@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "array/Array.h"
-// anari
-#include "anari/type_utility.h"
 
 namespace helide {
 

@@ -6,8 +6,7 @@
 #include <string>
 #include <cstring>
 
-#include "anari/anari.h"
-#include "anari/type_utility.h"
+#include "anari/anari_cpp.hpp"
 
 #include "debug_device_exports.h"
 

@@ -20,10 +20,7 @@
 #include <type_traits>
 
 // anari
-#include "anari/anari.h"
 #include "anari/anari_cpp.hpp"
-#include "anari/type_utility.h"
-
 
 const char *helptext =
 "anariInfo -l <library> [-p -t <type> -s <subtype>]\n"

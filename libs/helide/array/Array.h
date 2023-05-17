@@ -7,7 +7,7 @@
 // helium
 #include "helium/BaseArray.h"
 // anari
-#include "anari/anari_cpp/Traits.h"
+#include "anari/anari_cpp.hpp"
 
 namespace helide {
 

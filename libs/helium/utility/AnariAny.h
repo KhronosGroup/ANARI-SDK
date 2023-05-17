@@ -5,7 +5,6 @@
 
 #include "IntrusivePtr.h"
 // anari
-#include <anari/type_utility.h>
 #include <anari/anari_cpp.hpp>
 // std
 #include <algorithm>

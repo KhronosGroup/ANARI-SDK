@@ -5,7 +5,8 @@
 
 // anari
 #include "anari/anari.h"
-#include "anari/anari_feature_utility.h"
+#include "anari/frontend/anari_feature_utility.h"
+#include "anari/frontend/type_utility.h"
 // std
 #include <string>
 
