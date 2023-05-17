@@ -19,7 +19,7 @@
                 }, {
                     "name" : "baseColor",
                     "types" : ["ANARI_FLOAT32_VEC3", "ANARI_SAMPLER", "ANARI_STRING"],
-                    "tags" : ["attribute"],
+                    "tags" : ["attribute", "color"],
                     "default" : [1.0, 1.0, 1.0],
                     "description" : "base color"
                 }, {
@@ -48,7 +48,7 @@
                 }, {
                     "name" : "emissive",
                     "types" : ["ANARI_FLOAT32_VEC3", "ANARI_SAMPLER", "ANARI_STRING"],
-                    "tags" : ["attribute"],
+                    "tags" : ["attribute", "color"],
                     "default" : [0.0, 0.0, 0.0],
                     "description" : "emissive factor"
                 }, {
@@ -78,7 +78,7 @@
                 }, {
                     "name" : "specularColor",
                     "types" : ["ANARI_FLOAT32_VEC3", "ANARI_SAMPLER", "ANARI_STRING"],
-                    "tags" : ["attribute"],
+                    "tags" : ["attribute", "color"],
                     "default" : [1.0, 1.0, 1.0],
                     "description" : "specular color"
                 }, {
@@ -125,13 +125,13 @@
                 }, {
                     "name" : "attenuationColor",
                     "types" : ["ANARI_FLOAT32_VEC3"],
-                    "tags" : [],
+                    "tags" : ["color"],
                     "default" : [1.0, 1.0, 1.0],
                     "description" : "attenuation color"
                 }, {
                     "name" : "sheenColor",
                     "types" : ["ANARI_FLOAT32_VEC3", "ANARI_SAMPLER", "ANARI_STRING"],
-                    "tags" : ["attribute"],
+                    "tags" : ["attribute", "color"],
                     "default" : [0.0, 0.0, 0.0],
                     "description" : "sheen color"
                 }, {

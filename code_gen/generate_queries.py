@@ -51,7 +51,8 @@ class QueryGenerator:
         self.named_types = sorted(list(set([k[0] for k in self.named_objects])))
         self.subtype_list = sorted(list(set([k[1] for k in self.named_objects])))
         self.attribute_list = [x["name"] for x in anari["attributes"]]
-        self.info_strings = ["required", "default", "minimum", "maximum", "description", "elementType", "value", "sourceFeature", "feature", "parameter", "channel"]
+        self.info_strings = ["required", "default", "minimum", "maximum", "description", "elementType", "value", "sourceFeature", "feature", "parameter", "channel", "use"]
+        self.uses = {"color", "direction", "point", "vector"}
 
     def format_as(self, value, anari_type):
         basetype = self.type_enum_dict[anari_type]["baseType"]
@@ -155,6 +156,15 @@ class QueryGenerator:
                 if "default" in param:
                     code += "      case "+str(self.info_strings.index("default"))+": // default\n"
                     code += self.check_and_return(param["types"][0], param["default"])
+
+                use = self.uses.intersection(param["tags"])
+                if use:
+                    code += "      case "+str(self.info_strings.index("use"))+": // use\n"
+                    code += "         if(infoType == ANARI_STRING) {\n"
+                    code += "            return \""+use.pop()+"\";\n"
+                    code += "         } else {\n"
+                    code += "            return nullptr;\n"
+                    code += "         }\n"
 
                 if "minimum" in param:
                     code += "      case "+str(self.info_strings.index("minimum"))+": // minimum\n"

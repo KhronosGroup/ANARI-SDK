@@ -19,19 +19,19 @@
                 }, {
                     "name" : "position",
                     "types" : ["ANARI_FLOAT32_VEC3"],
-                    "tags" : [],
+                    "tags" : ["point"],
                     "default" : [0.0, 0.0, 0.0],
                     "description" : "camera position"
                 }, {
                     "name" : "direction",
                     "types" : ["ANARI_FLOAT32_VEC3"],
-                    "tags" : [],
+                    "tags" : ["direction"],
                     "default" : [0.0, 0.0, -1.0],
                     "description" : "main viewing direction"
                 }, {
                     "name" : "up",
                     "types" : ["ANARI_FLOAT32_VEC3"],
-                    "tags" : [],
+                    "tags" : ["direction"],
                     "default" : [0.0, 1.0, 0.0],
                     "description" : "camera up direction"
                 }, {

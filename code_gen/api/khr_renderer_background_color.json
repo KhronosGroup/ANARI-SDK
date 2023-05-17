@@ -13,7 +13,7 @@
                 {
                     "name" : "background",
                     "types" : ["ANARI_FLOAT32_VEC4"],
-                    "tags" : [],
+                    "tags" : ["color"],
                     "default" : [0, 0, 0, 1],
                     "description" : "the background color"
                 }
