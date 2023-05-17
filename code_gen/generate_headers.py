@@ -74,8 +74,8 @@ def write_anari_header(filename, anari):
 
 #define ANARI_INVALID_HANDLE NULL
 
-#include "anari_version.h"
-#include "anari_enums.h"
+#include "frontend/anari_sdk_version.h"
+#include "frontend/anari_enums.h"
 
 #ifdef _WIN32
 #ifdef ANARI_STATIC_DEFINE

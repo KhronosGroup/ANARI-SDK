@@ -24,9 +24,7 @@
 #include <type_traits>
 
 // anari
-#include "anari/anari.h"
 #include "anari/anari_cpp.hpp"
-#include "anari/type_utility.h"
 
 #include "anariWrapper.h"
 
@@ -372,7 +370,7 @@ std::string queryInfo(const std::string &library,
                   "parameter",
                   ANARI_PARAMETER_LIST);
           if (params) {
-            for (int l = 0; params[l].name; ++l) {       
+            for (int l = 0; params[l].name; ++l) {
               s << "         * " << std::left << std::setw(32) << params[l].name
                 << " "
                 << std::left << std::setw(32) << anari::toString(params[l].type)

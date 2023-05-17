@@ -3,9 +3,8 @@
 
 #include "SinkDevice.h"
 
-#include "anari/anari.h"
+#include "anari/anari_cpp.hpp"
 #include "anari/backend/LibraryImpl.h"
-#include "anari/type_utility.h"
 
 #include <cstring>
 

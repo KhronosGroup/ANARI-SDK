@@ -5,8 +5,7 @@
 
 #pragma once
 
-#include <anari/type_utility.h>
-#include <anari/anari_cpp/Traits.h>
+#include <anari/anari_cpp.hpp>
 #include <cstring>
 #include <new>
 

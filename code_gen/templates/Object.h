@@ -5,7 +5,7 @@
 #include <atomic>
 #include <cstdint>
 #include <cstring>
-#include "anari/anari.h"
+#include "anari/anari_cpp.hpp"
 
 $begin_namespaces
 

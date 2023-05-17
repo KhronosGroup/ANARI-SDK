@@ -8,7 +8,7 @@
 // anari
 #include "anari/backend/DeviceImpl.h"
 
-#include "anari/type_utility.h"
+#include "anari/anari_cpp.hpp"
 
 // std
 #include <cstring>

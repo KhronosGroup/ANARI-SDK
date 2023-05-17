@@ -1,11 +1,9 @@
 // Copyright 2021 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-#include "anari/anari.h"
+#include "anari/anari_cpp.hpp"
 #include "DebugDevice.h"
 #include "CodeSerializer.h"
-
-#include "anari/type_utility.h"
 
 namespace anari {
 namespace debug_device {

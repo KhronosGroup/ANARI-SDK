@@ -6,7 +6,6 @@
 #include "BaseFrame.h"
 // anari
 #include "anari/backend/LibraryImpl.h"
-#include "anari/type_utility.h"
 
 namespace helium {
 

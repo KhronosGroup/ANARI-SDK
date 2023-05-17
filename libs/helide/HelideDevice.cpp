@@ -7,7 +7,6 @@
 
 #include "anari/backend/LibraryImpl.h"
 #include "anari/ext/debug/DebugObject.h"
-#include "anari/type_utility.h"
 
 #include "array/Array1D.h"
 #include "array/Array2D.h"

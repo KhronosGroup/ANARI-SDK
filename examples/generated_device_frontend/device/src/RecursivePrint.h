@@ -1,7 +1,7 @@
 #pragma once
 
 #include "TreeDevice.h"
-#include "anari/type_utility.h"
+#include "anari/anari_cpp.hpp"
 
 #include <iostream>
 

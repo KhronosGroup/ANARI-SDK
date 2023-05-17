@@ -8,8 +8,7 @@
 
 #include <pybind11/pybind11.h>
 
-#include <anari/anari.h>
-#include "anari/anari_feature_utility.h"
+#include <anari/anari_cpp.hpp>
 #include "SceneGenerator.h"
 
 namespace cts {
