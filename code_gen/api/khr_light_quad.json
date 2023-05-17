@@ -27,19 +27,19 @@
                 }, {
                     "name" : "position",
                     "types" : ["ANARI_FLOAT32_VEC3"],
-                    "tags" : [],
+                    "tags" : ["point"],
                     "default" : [0.0, 0.0, 0.0],
                     "description" : "position of the light source"
                 }, {
                     "name" : "edge1",
                     "types" : ["ANARI_FLOAT32_VEC3"],
-                    "tags" : [],
+                    "tags" : ["vector"],
                     "default" : [1.0, 0.0, 0.0],
                     "description" : "vector of the first edge"
                 }, {
                     "name" : "edge2",
                     "types" : ["ANARI_FLOAT32_VEC3"],
-                    "tags" : [],
+                    "tags" : ["vector"],
                     "default" : [0.0, 1.0, 0.0],
                     "description" : "vector of the second edge"
                 }, {

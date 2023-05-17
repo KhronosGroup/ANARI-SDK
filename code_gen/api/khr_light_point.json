@@ -19,7 +19,7 @@
                 }, {
                     "name" : "color",
                     "types" : ["ANARI_FLOAT32_VEC3"],
-                    "tags" : [],
+                    "tags" : ["color"],
                     "default" : [1.0, 1.0, 1.0],
                     "minimum" : [0.0, 0.0, 0.0],
                     "maximum" : [1.0, 1.0, 1.0],
@@ -27,7 +27,7 @@
                 }, {
                     "name" : "position",
                     "types" : ["ANARI_FLOAT32_VEC3"],
-                    "tags" : [],
+                    "tags" : ["point"],
                     "default" : [0.0, 0.0, 0.0],
                     "description" : "position of the light source"
                 }, {

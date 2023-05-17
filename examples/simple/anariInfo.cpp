@@ -183,6 +183,13 @@ void print_info(ANARILibrary lib, const char *device, const char *objname, ANARI
     printf("\n");
   }
 
+  mem = anariGetParameterInfo(lib, device, objname, objtype, paramname, paramtype, "use", ANARI_STRING);
+  if(mem) {
+    printf("%suse = " , indent);
+    printAnariFromMemory(ANARI_STRING, mem);
+    printf("\n");
+  }
+
   mem = anariGetParameterInfo(lib, device, objname, objtype, paramname, paramtype, "value", ANARI_STRING_LIST);
   if(mem) {
     const char **list = (const char **)mem;
