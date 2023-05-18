@@ -12,7 +12,7 @@
 namespace anari {
 namespace scenes {
 
-using box3 = std::array<glm::vec3, 2>; // bounds_lower, bounds_upper;
+using box3 = std::array<anari::float3, 2>; // bounds_lower, bounds_upper;
 
 struct TestScene : public helium::ParameterizedObject
 {

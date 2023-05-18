@@ -3,7 +3,6 @@
 
 #include "attributes.h"
 
-#include "glm/ext/matrix_transform.hpp"
 #include <limits>
 #include <type_traits>
 #include <cmath>
@@ -213,7 +212,7 @@ struct Picture {
     uint64_t i = N*(x + y*width);
     for(uint64_t j = 0;j<N;++j) {
       data[i+j] = convert(v[j]);
-    }    
+    }
   }
 
   T convert(float x) {
@@ -236,8 +235,8 @@ void fill_texture(T &p) {
       float c = (1.0f-wx)*wy;
       float d = (1.0f-wx)*(1.0f-wy);
       float m = (x/4 + y/4)%2 ? 1.0f : 0.5f;
-      p.set(x, y, m*(a+d), m*(b+d), m*(c+d), 1.0f);    
-    }    
+      p.set(x, y, m*(a+d), m*(b+d), m*(c+d), 1.0f);
+    }
   }
 }
 
@@ -498,7 +497,7 @@ void Attributes::commit()
     data1d[4*i+3] = 255u;
   }
   ANARIArray1D array1d = anariNewArray1D(d, data1d.data(), 0, 0, ANARI_UFIXED8_VEC4, N);
-  
+
 
   float scale2[16] = {
     2.0f, 0.0f, 0.0f, 0.0f,
@@ -578,10 +577,10 @@ void Attributes::commit()
     int y = i/4;
 
     auto inst = anari::newObject<anari::Instance>(d);
-    auto tl = glm::translate(glm::mat4(1.f), 2.0f*glm::vec3(x-3.5f, y-3.5f, 0.f));
+    auto tl = anari::translation_matrix(2.0f*anari::float3(x-3.5f, y-3.5f, 0.f));
 
     { // NOTE: exercise anari::setParameter with C-array type
-      glm::mat4 _xfm = tl;
+      anari::mat4 _xfm = tl;
       float xfm[16];
       std::memcpy(xfm, &_xfm, sizeof(_xfm));
       anari::setParameter(d, inst, "transform", xfm);
@@ -614,10 +613,10 @@ void Attributes::commit()
     int y = i/4;
 
     auto inst = anari::newObject<anari::Instance>(d);
-    auto tl = glm::translate(glm::mat4(1.f), 2.0f*glm::vec3(x+0.5f, y-3.5f, 0.f));
+    auto tl = anari::translation_matrix(2.0f*anari::float3(x+0.5f, y-3.5f, 0.f));
 
     { // NOTE: exercise anari::setParameter with C-array type
-      glm::mat4 _xfm = tl;
+      anari::mat4 _xfm = tl;
       float xfm[16];
       std::memcpy(xfm, &_xfm, sizeof(_xfm));
       anari::setParameter(d, inst, "transform", xfm);
@@ -664,7 +663,7 @@ void Attributes::commit()
     anari::release(d, i);
 
   auto light = anari::newObject<anari::Light>(d, "directional");
-  anari::setParameter(d, light, "direction", glm::vec3(0, 0, 1));
+  anari::setParameter(d, light, "direction", anari::float3(0, 0, 1));
   anari::setParameter(d, light, "irradiance", 1.f);
   anari::commitParameters(d, light);
   anari::setAndReleaseParameter(

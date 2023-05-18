@@ -724,6 +724,7 @@ template<class T> linalg::mat<T,4,4> linalg::frustum_matrix(T x0, T x1, T y0, T 
 namespace anari {
 
 using namespace linalg::aliases;
+using namespace linalg;
 using mat4 = float4x4;
 
 ANARI_TYPEFOR_SPECIALIZATION(float2, ANARI_FLOAT32_VEC2);
@@ -752,6 +753,11 @@ ANARI_TYPEFOR_DEFINITION(uint3);
 ANARI_TYPEFOR_DEFINITION(uint4);
 ANARI_TYPEFOR_DEFINITION(mat4);
 #endif
+
+inline float radians(float degrees)
+{
+  return degrees * float(M_PI) / 180.f;
+}
 
 } // namespace anari
 

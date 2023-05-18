@@ -78,12 +78,12 @@ static void loadTexture(anari::Device d,
       auto colorArray = anari::newArray2D(d, ANARI_FLOAT32_VEC3, width, height);
       auto opacityArray = anari::newArray2D(d, ANARI_FLOAT32, width, height);
 
-      auto *colors = anari::map<glm::vec3>(d, colorArray);
+      auto *colors = anari::map<anari::float3>(d, colorArray);
       auto *opacities = anari::map<float>(d, opacityArray);
 
       for (size_t i = 0; i < size_t(width) * size_t(height); i++) {
         auto *texel = data + (i * 4);
-        colors[i] = glm::vec3(texel[0], texel[1], texel[2]);
+        colors[i] = anari::float3(texel[0], texel[1], texel[2]);
         opacities[i] = texel[3];
       }
 
@@ -160,7 +160,7 @@ static void loadObj(
   std::vector<ANARIMaterial> materials;
 
   auto defaultMaterial = anari::newObject<anari::Material>(d, "matte");
-  anari::setParameter(d, defaultMaterial, "color", glm::vec3(0.f, 1.f, 0.f));
+  anari::setParameter(d, defaultMaterial, "color", anari::float3(0.f, 1.f, 0.f));
   anari::commitParameters(d, defaultMaterial);
 
   TextureCache cache;
@@ -196,8 +196,8 @@ static void loadObj(
   auto *vertices = objdata.attrib.vertices.data();
   auto *texcoords = objdata.attrib.texcoords.data();
 
-  std::vector<glm::vec3> v;
-  std::vector<glm::vec2> vt;
+  std::vector<anari::float3> v;
+  std::vector<anari::float2> vt;
 
   for (auto &shape : objdata.shapes) {
     v.clear();
