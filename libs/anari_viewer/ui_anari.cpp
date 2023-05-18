@@ -4,6 +4,8 @@
 #include "ui_anari.h"
 // match3D
 #include "nfd.h"
+// std
+#include <limits>
 
 namespace ui {
 

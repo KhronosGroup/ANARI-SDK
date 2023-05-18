@@ -21,13 +21,20 @@ if (NOT TARGET anari::anari)
   Consuming ANARI-SDK from a build directory is not supported.")
 endif()
 
-if (@INSTALL_CODE_GEN_SCRIPTS@)
-  set(ANARI_CODE_GEN_ROOT
-    ${CMAKE_CURRENT_LIST_DIR}/../../../@CMAKE_INSTALL_DATAROOTDIR@/anari/code_gen
-  )
+set(ANARI_DATAROOTDIR
+  ${CMAKE_CURRENT_LIST_DIR}/../../../@CMAKE_INSTALL_DATAROOTDIR@/anari
+)
 
+if (@INSTALL_CODE_GEN_SCRIPTS@)
+  set(ANARI_CODE_GEN_ROOT ${ANARI_DATAROOTDIR}/code_gen)
   include(${CMAKE_CURRENT_LIST_DIR}/cmake/anari_generate_frontend.cmake)
   include(${CMAKE_CURRENT_LIST_DIR}/cmake/anari_generate_codegen.cmake)
+endif()
+
+if (TARGET anari::anari_viewer)
+  set(match3D_DIR ${ANARI_DATAROOTDIR}/anari_viewer/match3D_src/cmake)
+  find_package(match3D REQUIRED stb_image nativefiledialog imnodes)
+  target_link_libraries(anari::anari_viewer INTERFACE match3D::match3D)
 endif()
 
 set(ANARI_FOUND TRUE)

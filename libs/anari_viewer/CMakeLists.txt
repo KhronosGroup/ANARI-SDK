@@ -20,24 +20,50 @@ mark_as_advanced(
 )
 
 set(match3D_CACHE_IN_SOURCE_TREE ON)
-find_package(match3D REQUIRED stb_image nativefiledialog)
+find_package(match3D REQUIRED stb_image nativefiledialog imnodes)
 
 ## Create viewer library target ##
 
 project(anari_viewer)
 
 project_add_library(INTERFACE)
+
+set(SRC_INSTALL_ROOT ${CMAKE_INSTALL_DATAROOTDIR}/anari/anari_viewer)
 project_sources(
 INTERFACE
-  ${CMAKE_CURRENT_LIST_DIR}/windows/LightsEditor.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/windows/SceneSelector.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/windows/Viewport.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Orbit.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/ui_anari.cpp
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/windows/LightsEditor.cpp>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/windows/SceneSelector.cpp>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/windows/Viewport.cpp>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/Orbit.cpp>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/ui_anari.cpp>
+  $<INSTALL_INTERFACE:${SRC_INSTALL_ROOT}/windows/LightsEditor.cpp>
+  $<INSTALL_INTERFACE:${SRC_INSTALL_ROOT}/windows/SceneSelector.cpp>
+  $<INSTALL_INTERFACE:${SRC_INSTALL_ROOT}/windows/Viewport.cpp>
+  $<INSTALL_INTERFACE:${SRC_INSTALL_ROOT}/Orbit.cpp>
+  $<INSTALL_INTERFACE:${SRC_INSTALL_ROOT}/ui_anari.cpp>
 )
-project_include_directories(INTERFACE ${CMAKE_CURRENT_LIST_DIR})
+project_include_directories(
+INTERFACE
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/..>
+  $<INSTALL_INTERFACE:${SRC_INSTALL_ROOT}/..>
+)
 project_link_libraries(INTERFACE
-  anari
-  anari_test_scenes
-  match3D::match3D
+  $<BUILD_INTERFACE:anari>
+  $<BUILD_INTERFACE:anari_test_scenes>
+  $<BUILD_INTERFACE:match3D::match3D>
+  $<INSTALL_INTERFACE:anari::anari>
+  $<INSTALL_INTERFACE:anari::anari_test_scenes>
 )
+
+## Installation ##
+
+install(TARGETS ${PROJECT_NAME} EXPORT anari_Exports)
+
+install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+  DESTINATION ${SRC_INSTALL_ROOT}/..
+  FILES_MATCHING
+    PATTERN *.h
+    PATTERN *.cpp
+)
+
+install(DIRECTORY ${match3D_LOC} DESTINATION ${SRC_INSTALL_ROOT})
