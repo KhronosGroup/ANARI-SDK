@@ -14,3 +14,7 @@ endif()
 if(BUILD_TESTING OR BUILD_EXAMPLES)
   add_subdirectory(anari_test_scenes)
 endif()
+
+if(BUILD_EXAMPLES AND BUILD_VIEWER)
+  add_subdirectory(anari_viewer)
+endif()
