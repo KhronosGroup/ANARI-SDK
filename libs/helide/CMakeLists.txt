@@ -63,9 +63,9 @@ anari_generate_debug_objects(
 
 ## Core device target ##
 
-add_library(${PROJECT_NAME} SHARED)
+project_add_library(SHARED)
 
-target_sources(${PROJECT_NAME} PRIVATE
+project_sources(PRIVATE
   HelideDevice.cpp
   HelideDeviceQueries.cpp
   HelideDeviceDebugFactory.cpp
@@ -108,14 +108,14 @@ generate_export_header(${PROJECT_NAME}
   EXPORT_MACRO_NAME "HELIDE_DEVICE_INTERFACE"
 )
 
-target_include_directories(${PROJECT_NAME}
+project_include_directories(
 PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
 )
 
-target_link_libraries(${PROJECT_NAME}
+project_link_libraries(
 PUBLIC
   anari::anari
   anari::anari_library_debug
@@ -125,7 +125,7 @@ PRIVATE
 )
 
 if(WIN32)
-  target_compile_definitions(${PROJECT_NAME} PRIVATE _USE_MATH_DEFINES)
+  project_compile_definitions(PRIVATE _USE_MATH_DEFINES)
 endif()
 
 ## Installation ##
