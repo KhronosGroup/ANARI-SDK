@@ -67,7 +67,8 @@ install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/include/anari
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/anari/anari_version.h
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/anari
+install(
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/include/anari/frontend/anari_sdk_version.h
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/anari/frontend
 )
 

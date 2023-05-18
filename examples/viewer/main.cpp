@@ -1,9 +1,9 @@
 // Copyright 2023 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-#include "windows/LightsEditor.h"
-#include "windows/SceneSelector.h"
-#include "windows/Viewport.h"
+#include "anari_viewer/windows/LightsEditor.h"
+#include "anari_viewer/windows/SceneSelector.h"
+#include "anari_viewer/windows/Viewport.h"
 // anari
 #include <anari_test_scenes.h>
 // std
