@@ -35,6 +35,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 
 include(GNUInstallDirs)
+include(CMakeDependentOption)
 
 set(CMAKE_INSTALL_RPATH "$ORIGIN:$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
 
@@ -42,9 +43,14 @@ set(CMAKE_INSTALL_RPATH "$ORIGIN:$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
 option(BUILD_SHARED_LIBS "Build shared libraries instead of static" ON)
 option(BUILD_TESTING "Build tests for CTest" ON)
 # ANARI specific options
-option(BUILD_EXAMPLES "Build example applications and example device" ON)
-
 option(BUILD_CTS "Build cts toolkit" ON)
+option(BUILD_EXAMPLES "Build example applications and example device" ON)
+cmake_dependent_option(BUILD_VIEWER
+  "Build interactive viewer app (requires GLFW)"
+  ON
+  "BUILD_EXAMPLES"
+  OFF
+)
 
 ## The generate_all targets collects all offline code generation targets
 
