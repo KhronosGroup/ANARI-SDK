@@ -3,7 +3,7 @@
 
 project(anari_test_scenes LANGUAGES CXX)
 
-project_add_library(STATIC
+project_add_library(
   anari_test_scenes.cpp
 
   scenes/scene.cpp
@@ -21,5 +21,32 @@ project_add_library(STATIC
   scenes/test/textured_cube.cpp
 )
 
-project_include_directories(PUBLIC ${CMAKE_CURRENT_LIST_DIR})
+project_include_directories(
+PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
+  $<INSTALL_INTERFACE: ${CMAKE_INSTALL_INCLUDEDIR}/anari/anari_test_scenes>
+)
 project_link_libraries(PUBLIC anari helium stb_image)
+
+include(GenerateExportHeader)
+generate_export_header(${PROJECT_NAME}
+  EXPORT_MACRO_NAME "ANARI_TEST_SCENES_INTERFACE"
+)
+
+## Installation ##
+
+install(TARGETS ${PROJECT_NAME}
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+
+install(
+FILES
+  ${PROJECT_BINARY_DIR}/${PROJECT_NAME}_export.h
+  ${CMAKE_CURRENT_LIST_DIR}/anari_test_scenes.h
+  ${CMAKE_CURRENT_LIST_DIR}/scenes/scene.h
+DESTINATION
+  ${CMAKE_INSTALL_INCLUDEDIR}/anari/anari_test_scenes
+)
