@@ -22,4 +22,4 @@ project_add_library(STATIC
 )
 
 project_include_directories(PUBLIC ${CMAKE_CURRENT_LIST_DIR})
-project_link_libraries(PUBLIC anari helium glm::glm stb_image)
+project_link_libraries(PUBLIC anari helium stb_image)

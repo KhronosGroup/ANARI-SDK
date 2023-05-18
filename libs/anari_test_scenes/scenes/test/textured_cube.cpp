@@ -3,9 +3,6 @@
 
 #include "textured_cube.h"
 
-#include "anari/anari_cpp/ext/glm.h"
-#include "glm/ext/matrix_transform.hpp"
-
 static void anari_free(const void *ptr, const void *)
 {
   std::free(const_cast<void *>(ptr));
@@ -14,7 +11,7 @@ static void anari_free(const void *ptr, const void *)
 namespace anari {
 namespace scenes {
 
-static std::vector<glm::vec3> vertices = {
+static std::vector<anari::float3> vertices = {
     //
     {-.5f, .5f, 0.f},
     {.5f, .5f, 0.f},
@@ -23,14 +20,14 @@ static std::vector<glm::vec3> vertices = {
     //
 };
 
-static std::vector<glm::uvec3> indices = {
+static std::vector<anari::uint3> indices = {
     //
     {0, 2, 3},
     {3, 1, 0},
     //
 };
 
-static std::vector<glm::vec2> texcoords = {
+static std::vector<anari::float2> texcoords = {
     //
     {0.f, 1.f},
     {1.f, 1.f},
@@ -41,15 +38,15 @@ static std::vector<glm::vec2> texcoords = {
 
 static anari::Array2D makeTextureData(anari::Device d, int dim)
 {
-  auto *data = new glm::vec3[dim * dim];
+  auto *data = new anari::float3[dim * dim];
 
   for (int h = 0; h < dim; h++) {
     for (int w = 0; w < dim; w++) {
       bool even = h & 1;
       if (even)
-        data[h * dim + w] = w & 1 ? glm::vec3(.8f) : glm::vec3(.2f);
+        data[h * dim + w] = w & 1 ? anari::float3(.8f) : anari::float3(.2f);
       else
-        data[h * dim + w] = w & 1 ? glm::vec3(.2f) : glm::vec3(.8f);
+        data[h * dim + w] = w & 1 ? anari::float3(.2f) : anari::float3(.8f);
     }
   }
 
@@ -122,23 +119,29 @@ void TexturedCube::commit()
 
   std::vector<anari::Instance> instances;
 
-  auto createInstance = [&](float rotation, glm::vec3 axis) {
+  auto createInstance = [&](float rotation, anari::float3 axis) {
     auto inst = anari::newObject<anari::Instance>(d);
 
-    auto tl = glm::translate(glm::mat4(1.f), glm::vec3(0, 0, .5f));
-    auto rot = glm::rotate(glm::mat4(1.f), rotation, axis);
-    anari::setParameter(d, inst, "transform", rot * tl);
+    auto tl = anari::translation_matrix(anari::float3(0, 0, .5f));
+    auto rot = anari::rotation_matrix(anari::rotation_quat(axis, rotation));
+    anari::setParameter(d, inst, "transform", anari::mul(rot, tl));
     anari::setParameter(d, inst, "group", group);
     anari::commitParameters(d, inst);
     return inst;
   };
 
-  instances.push_back(createInstance(glm::radians(0.f), glm::vec3(0, 1, 0)));
-  instances.push_back(createInstance(glm::radians(180.f), glm::vec3(0, 1, 0)));
-  instances.push_back(createInstance(glm::radians(90.f), glm::vec3(0, 1, 0)));
-  instances.push_back(createInstance(glm::radians(270.f), glm::vec3(0, 1, 0)));
-  instances.push_back(createInstance(glm::radians(90.f), glm::vec3(1, 0, 0)));
-  instances.push_back(createInstance(glm::radians(270.f), glm::vec3(1, 0, 0)));
+  instances.push_back(
+      createInstance(anari::radians(0.f), anari::float3(0, 1, 0)));
+  instances.push_back(
+      createInstance(anari::radians(180.f), anari::float3(0, 1, 0)));
+  instances.push_back(
+      createInstance(anari::radians(90.f), anari::float3(0, 1, 0)));
+  instances.push_back(
+      createInstance(anari::radians(270.f), anari::float3(0, 1, 0)));
+  instances.push_back(
+      createInstance(anari::radians(90.f), anari::float3(1, 0, 0)));
+  instances.push_back(
+      createInstance(anari::radians(270.f), anari::float3(1, 0, 0)));
 
   anari::setAndReleaseParameter(d,
       m_world,
@@ -157,10 +160,10 @@ void TexturedCube::commit()
 std::vector<Camera> TexturedCube::cameras()
 {
   Camera cam;
-  cam.position = glm::vec3(1.25f);
-  cam.at = glm::vec3(0.f);
-  cam.direction = glm::normalize(cam.at - cam.position);
-  cam.up = glm::vec3(0, 1, 0);
+  cam.position = anari::float3(1.25f);
+  cam.at = anari::float3(0.f);
+  cam.direction = anari::normalize(cam.at - cam.position);
+  cam.up = anari::float3(0, 1, 0);
   return {cam};
 }
 

@@ -7,8 +7,8 @@
 #include "anari/anari_cpp.hpp"
 // helium
 #include "helium/utility/AnariAny.h"
-// anari-glm
-#include "anari/anari_cpp/ext/glm.h"
+// anari-linalg
+#include "anari/anari_cpp/ext/linalg.h"
 // std
 #include <array>
 #include <functional>
@@ -18,13 +18,14 @@ namespace anari {
 namespace scenes {
 
 using Any = helium::AnariAny;
+using mat4 = anari::mat4;
 
 struct Camera
 {
-  glm::vec3 position;
-  glm::vec3 direction;
-  glm::vec3 at;
-  glm::vec3 up;
+  anari::float3 position;
+  anari::float3 direction;
+  anari::float3 at;
+  anari::float3 up;
 };
 
 struct ParameterInfo
@@ -55,7 +56,7 @@ ParameterInfo makeParameterInfo(const char *name,
     const char *value,
     std::vector<std::string> stringValues);
 
-using Bounds = std::array<glm::vec3, 2>;
+using Bounds = std::array<anari::float3, 2>;
 
 struct TestScene;
 using SceneHandle = TestScene *;
