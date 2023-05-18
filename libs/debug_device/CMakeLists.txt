@@ -5,34 +5,21 @@ set(CMAKE_CXX_STANDARD 11)
 
 project(anari_library_debug LANGUAGES CXX)
 
-if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
-  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+anari_generate_queries(
+  NAME debug
+  PREFIX GenericDevice
+  CPP_NAMESPACE anari::debug_queries
+  JSON_DEFINITIONS_FILE ${ANARI_CODE_GEN_ROOT}/devices/generic_device.json
+)
 
-  add_custom_target(generate_generic_debug_objects
-    COMMAND ${Python3_EXECUTABLE} ${ANARI_CODE_GEN_ROOT}/generate_debug_objects.py
-      --json ${ANARI_CODE_GEN_ROOT}
-      --device ${ANARI_CODE_GEN_ROOT}/devices/generic_device.json
-      --prefix GenericDevice
-      --namespace anari::debug_device
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    DEPENDS ${ANARI_CODE_GEN_ROOT}/devices/generic_device.json
-  )
+anari_generate_debug_objects(
+  NAME debug
+  PREFIX Extended
+  CPP_NAMESPACE anari::debug_queries
+  JSON_DEFINITIONS_FILE ${ANARI_CODE_GEN_ROOT}/devices/experimental_device.json
+)
 
-  add_custom_target(generate_debug_queries
-    COMMAND ${Python3_EXECUTABLE} ${ANARI_CODE_GEN_ROOT}/generate_queries.py
-      --json ${ANARI_CODE_GEN_ROOT}
-      --prefix Extended
-      --device ${ANARI_CODE_GEN_ROOT}/devices/experimental_device.json
-      --namespace anari::debug_queries
-      --includefile
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    DEPENDS ${ANARI_CODE_GEN_ROOT}/devices/experimental_device.json
-  )
-
-  add_dependencies(generate_all generate_generic_debug_objects generate_debug_queries)
-endif()
-
-add_library(${PROJECT_NAME} SHARED
+project_add_library(SHARED
   DebugDevice.cpp
   DebugObject.cpp
   DebugBasics.cpp
@@ -41,23 +28,20 @@ add_library(${PROJECT_NAME} SHARED
   CodeSerializer.cpp
 )
 
-target_include_directories(${PROJECT_NAME}
+project_include_directories(
 PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC anari helium)
+project_link_libraries(PUBLIC anari helium)
+
+project_compile_definitions( PRIVATE "anari_library_debug_EXPORTS")
 
 install(TARGETS ${PROJECT_NAME}
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
-
-target_compile_definitions(${PROJECT_NAME}
-PRIVATE
-  "anari_library_debug_EXPORTS"
 )
 
 install(TARGETS ${PROJECT_NAME}

@@ -3,7 +3,7 @@
 
 project(anari_test_scenes LANGUAGES CXX)
 
-add_library(${PROJECT_NAME} STATIC
+project_add_library(STATIC
   anari_test_scenes.cpp
 
   scenes/scene.cpp
@@ -21,11 +21,5 @@ add_library(${PROJECT_NAME} STATIC
   scenes/test/textured_cube.cpp
 )
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_LIST_DIR})
-target_link_libraries(${PROJECT_NAME}
-PUBLIC
-  anari
-  helium
-  glm::glm
-  stb_image
-)
+project_include_directories(PUBLIC ${CMAKE_CURRENT_LIST_DIR})
+project_link_libraries(PUBLIC anari helium glm::glm stb_image)

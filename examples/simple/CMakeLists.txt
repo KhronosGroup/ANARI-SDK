@@ -32,7 +32,7 @@ set(CMAKE_INSTALL_MESSAGE LAZY)
 
 ## Establish project
 
-project(anari_library_example LANGUAGES C CXX)
+project(anari_examples LANGUAGES C CXX)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})

@@ -12,17 +12,9 @@ anari_generate_queries(
   JSON_DEFINITIONS_FILE ${ANARI_CODE_GEN_ROOT}/devices/generic_device.json
 )
 
-add_library(${PROJECT_NAME} SHARED
-  SinkDevice.cpp
-  SinkDeviceQueries.cpp
-)
-
-target_link_libraries(${PROJECT_NAME} PUBLIC anari helium)
-
-target_compile_definitions(${PROJECT_NAME}
-PRIVATE
-  "anari_library_sink_EXPORTS"
-)
+project_add_library(SHARED SinkDevice.cpp SinkDeviceQueries.cpp)
+project_link_libraries(PUBLIC anari helium)
+project_compile_definitions(PRIVATE "anari_library_sink_EXPORTS")
 
 install(TARGETS ${PROJECT_NAME}
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}

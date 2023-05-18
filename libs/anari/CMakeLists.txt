@@ -5,7 +5,7 @@ set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 find_package(Threads REQUIRED)
 
-add_library(${PROJECT_NAME}
+project_add_library(
   anari_cpp_std_defs.cpp
   anari_cpp_linalg_defs.cpp
   anari_cpp_glm_defs.cpp
@@ -18,7 +18,7 @@ if (NOT BUILD_SHARED_LIBS)
   target_compile_definitions(${PROJECT_NAME} PUBLIC -DANARI_STATIC_DEFINE)
 endif()
 
-target_include_directories(${PROJECT_NAME}
+project_include_directories(
 PUBLIC
   $<BUILD_INTERFACE:${GENERATED_HEADER_DIR}>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include/anari>
@@ -27,7 +27,7 @@ PUBLIC
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-target_link_libraries(${PROJECT_NAME}
+project_link_libraries(
 PUBLIC
   ${CMAKE_DL_LIBS}
 PRIVATE

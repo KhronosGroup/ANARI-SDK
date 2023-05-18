@@ -7,9 +7,9 @@ project(helium LANGUAGES CXX)
 
 ## Build library target ##
 
-add_library(${PROJECT_NAME} STATIC)
+project_add_library(STATIC)
 
-target_sources(${PROJECT_NAME} PRIVATE
+project_sources(PRIVATE
   BaseArray.cpp
   BaseDevice.cpp
   BaseFrame.cpp
@@ -21,7 +21,7 @@ target_sources(${PROJECT_NAME} PRIVATE
   utility/TimeStamp.cpp
 )
 
-target_include_directories(${PROJECT_NAME}
+project_include_directories(
 PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/..>
@@ -29,7 +29,7 @@ PUBLIC
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/anari/backend>
 )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC anari)
+project_link_libraries(PUBLIC anari)
 
 ## Install library + targets ##
 
