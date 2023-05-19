@@ -14,7 +14,8 @@ namespace scenes {
 
 using box3 = std::array<anari::float3, 2>; // bounds_lower, bounds_upper;
 
-struct TestScene : public helium::ParameterizedObject
+struct ANARI_TEST_SCENES_INTERFACE TestScene
+    : public helium::ParameterizedObject
 {
   virtual anari::World world() = 0;
   virtual box3 bounds();

@@ -34,7 +34,7 @@ PUBLIC
   ${CMAKE_CURRENT_LIST_DIR}/header
 )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC anari helium anari_test_scenes)
+target_link_libraries(${PROJECT_NAME} PUBLIC glm::glm helium anari_test_scenes)
 
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 

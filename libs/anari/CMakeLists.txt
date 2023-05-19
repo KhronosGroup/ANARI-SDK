@@ -15,7 +15,11 @@ project_add_library(
 )
 
 if (NOT BUILD_SHARED_LIBS)
-  target_compile_definitions(${PROJECT_NAME} PUBLIC -DANARI_STATIC_DEFINE)
+  project_compile_definitions(PUBLIC -DANARI_STATIC_DEFINE)
+endif()
+
+if (WIN32)
+  project_compile_definitions(PUBLIC -D_USE_MATH_DEFINES)
 endif()
 
 project_include_directories(
