@@ -57,13 +57,13 @@ project_link_libraries(INTERFACE
 
 ## Installation ##
 
-install(TARGETS ${PROJECT_NAME} EXPORT anari_Exports)
-
-install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-  DESTINATION ${SRC_INSTALL_ROOT}/..
-  FILES_MATCHING
-    PATTERN *.h
-    PATTERN *.cpp
-)
-
-install(DIRECTORY ${match3D_LOC} DESTINATION ${SRC_INSTALL_ROOT})
+if (INSTALL_VIEWER_LIBRARY)
+  install(TARGETS ${PROJECT_NAME} EXPORT anari_Exports)
+  install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+    DESTINATION ${SRC_INSTALL_ROOT}/..
+    FILES_MATCHING
+      PATTERN *.h
+      PATTERN *.cpp
+  )
+  install(DIRECTORY ${match3D_LOC} DESTINATION ${SRC_INSTALL_ROOT})
+endif()
