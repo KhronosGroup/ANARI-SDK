@@ -24,6 +24,7 @@ jobs:
       run: >
         cmake -LA -B ${{github.workspace}}/build
         -DCMAKE_BUILD_TYPE=${{ matrix.config }}
+        -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/build/install
         -DBUILD_SHARED_LIBS=ON
         -DBUILD_EXAMPLES=ON
         -DBUILD_HELIDE_DEVICE=ON
@@ -31,7 +32,7 @@ jobs:
         -DBUILD_VIEWER=OFF
 
     - name: Build
-      run: cmake --build ${{github.workspace}}/build --config ${{ matrix.config }}
+      run: cmake --build ${{github.workspace}}/build --config ${{ matrix.config }} --target install
 
     - name: Unit Tests
       working-directory: ${{github.workspace}}/build
