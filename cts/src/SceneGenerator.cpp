@@ -508,7 +508,7 @@ std::vector<std::vector<std::vector<std::vector<float>>>> SceneGenerator::getBou
   auto anariWorldBounds = bounds();
   for (const auto &bound : anariWorldBounds) {
     std::vector<float>& vector = singleBound.emplace_back();
-    for (int i = 0; i < anari::length(bound); ++i) {
+    for (int i = 0; i < 3; ++i) {
       vector.push_back(bound[i]);
     }
   }

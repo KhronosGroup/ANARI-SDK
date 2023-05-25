@@ -89,7 +89,7 @@ std::vector<std::tuple<std::string, bool>> queryFeatures(
   test.features = features;
 
   // compile features and their availability into a vector of tuples
-  const size_t featureCount = sizeof(ANARIFeatures) / sizeof(int);
+  const size_t featureCount = sizeof(ANARIFeatures) / sizeof(int) - 1;
 
   const char **featureNamesPointer = query_extensions();
   std::vector<std::string> featureNames(
