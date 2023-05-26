@@ -44,7 +44,7 @@ add_custom_target(generate_cts
   COMMAND ${Python3_EXECUTABLE} ${ANARI_CODE_GEN_ROOT}/generate_queries.py
     --json ${ANARI_CODE_GEN_ROOT}
     --prefix cts
-    --device ${ANARI_CODE_GEN_ROOT}/devices/extended_device.json
+    --device ${ANARI_CODE_GEN_ROOT}/devices/experimental_device.json
     --namespace cts
     --includefile
     --out src
@@ -52,7 +52,7 @@ add_custom_target(generate_cts
   COMMAND ${Python3_EXECUTABLE} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/createReferenceData.py
 	  --test_scenes ${CMAKE_CURRENT_LIST_DIR}/test_scenes -l ${REFERENCE_LIB}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    DEPENDS ${ANARI_CODE_GEN_ROOT}/devices/extended_device.json
+    DEPENDS ${ANARI_CODE_GEN_ROOT}/devices/experimental_device.json
 )
 
 add_dependencies(generate_cts ${PROJECT_NAME})
