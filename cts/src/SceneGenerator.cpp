@@ -87,7 +87,8 @@ void SceneGenerator::commit()
   auto surface = anari::newObject<anari::Surface>(d);
   auto geom = anari::newObject<anari::Geometry>(d, geometrySubtype.c_str());
   auto mat = anari::newObject<anari::Material>(d, "matte");
-  anari::setParameter(d, mat, "color", "color");
+  std::array<float, 3> color = {1.f, 1.f, 1.f};
+  anari::setParameter(d, mat, "color", color);
   anari::commitParameters(d, mat);
 
   anari::setAndReleaseParameter(
@@ -352,7 +353,12 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
   auto renderer =
       anari::newObject<anari::Renderer>(m_device, rendererType.c_str());
  // anari::setParameter(m_device, renderer, "pixelSamples", 10);
- // anari::setParameter(m_device, renderer, "backgroundColor", glm::vec4(glm::vec3(0.1), 1));
+
+  std::array<float, 4> bgColor = {1.f, 1.f, 1.f, 1.f};
+  std::array<float, 3> ambientColor = {1.f, 1.f, 1.f};
+  anari::setParameter(m_device, renderer, "background", bgColor); // white
+  anari::setParameter(m_device, renderer, "ambientRadiance", 1.0f);
+  anari::setParameter(m_device, renderer, "ambientColor", ambientColor);
   anari::commitParameters(m_device, renderer);
 
   // setup frame
@@ -388,7 +394,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
   if (color_type != ANARI_UNKNOWN) {
     if (color_type == ANARI_FLOAT32_VEC4) {
       // handling of float data type
-      const float *pixels = anari::map<float>(m_device, frame, "color").data;
+      const float *pixels = anari::map<float>(m_device, frame, "channel.color").data;
       std::vector<uint32_t> converted;
       if (pixels != nullptr) {
         for (int i = 0; i < image_height * image_width; ++i) {
@@ -405,7 +411,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
       }
 
       result.emplace_back(converted);
-      anari::unmap(m_device, frame, "color");
+      anari::unmap(m_device, frame, "channel.color");
     } else {
       // handling of other types
       auto fb = anari::map<uint32_t>(m_device, frame, "channel.color");
@@ -414,7 +420,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
       } else {
         printf("%s not supported\n", color_type_param.c_str());
       }
-      anari::unmap(m_device, frame, "color");
+      anari::unmap(m_device, frame, "channel.color");
     }
   } else {
     // no color rendered
@@ -440,7 +446,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
 
     result.emplace_back(converted);
 
-    anari::unmap(m_device, frame, "depth");
+    anari::unmap(m_device, frame, "channel.depth");
   } else {
     // no depth rendered
     result.emplace_back();
