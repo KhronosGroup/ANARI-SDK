@@ -3,7 +3,15 @@
 		"image_height": 1024,
 		"image_width": 1024,
 		"frame_depth_type": "FLOAT32",
-		"frame_color_type": "UFIXED8_RGBA_SRGB"
+		"frame_color_type": "UFIXED8_RGBA_SRGB",
+		"anari_objects": {
+			"material": [
+				{
+					"subtype": "matte",
+					"color": [1.0, 0, 0]
+				}
+			]
+		}
 	},
 	"bounds_tolerance": 0.05
 }

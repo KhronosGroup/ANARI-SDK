@@ -63,6 +63,37 @@ std::vector<anari::scenes::ParameterInfo> SceneGenerator::parameters()
   };
 }
 
+void SceneGenerator::createAnariObject(
+    const std::string &type, const std::string &subtype)
+{
+  ANARIObject object = nullptr;
+
+  if (type == "material") {
+    object = anari::newObject<anari::Material>(m_device, subtype.c_str());
+    auto it = m_anariObjects.try_emplace(
+        int(ANARI_MATERIAL), std::vector<ANARIObject>());
+    if (it.first->second.size() == 0) {
+        it.first->second.emplace_back(object);
+    }  
+  } else if (type == "camera") {
+      object = anari::newObject<anari::Camera>(m_device, subtype.c_str());
+      auto it = m_anariObjects.try_emplace(int(ANARI_CAMERA), std::vector<ANARIObject>());
+      if (it.first->second.size() == 0) {
+        it.first->second.emplace_back(object);
+      }   
+  } else if (type == "light") {
+    object = anari::newObject<anari::Light>(m_device, subtype.c_str());
+    auto it = m_anariObjects.try_emplace(int(ANARI_LIGHT), std::vector<ANARIObject>());
+    it.first->second.emplace_back(object);
+  } else if (type == "sampler") {
+    object = anari::newObject<anari::Sampler>(m_device, subtype.c_str());
+    auto it = m_anariObjects.try_emplace(
+        int(ANARI_SAMPLER), std::vector<ANARIObject>());
+    it.first->second.emplace_back(object);
+  }
+  m_currentObject = object;
+}
+
 anari::World SceneGenerator::world()
 {
   return m_world;
@@ -72,6 +103,12 @@ anari::World SceneGenerator::world()
 void SceneGenerator::commit()
 {
   auto d = m_device;
+
+  for (auto &items : m_anariObjects) {
+    for (auto &object : items.second) {
+      anari::commitParameters(d, object);
+    }
+  }
 
   // gather the data on what geometry will be present in the scene
   std::string geometrySubtype = getParamString("geometrySubtype", "triangle");
@@ -86,10 +123,13 @@ void SceneGenerator::commit()
 
   auto surface = anari::newObject<anari::Surface>(d);
   auto geom = anari::newObject<anari::Geometry>(d, geometrySubtype.c_str());
-  auto mat = anari::newObject<anari::Material>(d, "matte");
-  std::array<float, 3> color = {1.f, 1.f, 1.f};
-  anari::setParameter(d, mat, "color", color);
-  anari::commitParameters(d, mat);
+  if (auto it = m_anariObjects.find(int(ANARI_MATERIAL));
+      it != m_anariObjects.end()) {
+    if (!it->second.empty()) {
+      auto mat = it->second.front();
+      anari::setParameter(d, surface, "material", mat);
+    }
+  }
 
   anari::setAndReleaseParameter(
       d, m_world, "surface", anari::newArray1D(d, &surface));
@@ -97,7 +137,6 @@ void SceneGenerator::commit()
   anari::commitParameters(d, m_world);
 
   anari::setParameter(d, surface, "geometry", geom);
-  anari::setParameter(d, surface, "material", mat);
 
   // initialize PrimitiveGenerator with seed for random number generation
   PrimitiveGenerator generator(seed);
@@ -311,13 +350,11 @@ void SceneGenerator::commit()
 
   // commit everything to the device
   anari::commitParameters(d, geom);
-  anari::commitParameters(d, mat);
   anari::commitParameters(d, surface);
 
   // cleanup
   anari::release(d, surface);
   anari::release(d, geom);
-  anari::release(d, mat);
 }
 
 // render the scene with the given rendererType and renderDistance
@@ -473,13 +510,6 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
 
 // clear any existing objects in the scene
 void SceneGenerator::resetSceneObjects() {
-  for (auto &[key, value] : m_anariObjects) {
-    for (auto &object : value) {
-      anari::release(m_device, object);
-    }
-  }
-  m_anariObjects.clear();
-
   anari::unsetParameter(m_device, m_world, "instance");
   anari::unsetParameter(m_device, m_world, "surface");
   anari::unsetParameter(m_device, m_world, "volume");
@@ -489,6 +519,12 @@ void SceneGenerator::resetSceneObjects() {
 // reset all parameters and objects in the scene
 void SceneGenerator::resetAllParameters() {
   resetSceneObjects();
+  for (auto &[key, value] : m_anariObjects) {
+    for (auto &object : value) {
+      anari::release(m_device, object);
+    }
+  }
+  m_anariObjects.clear();
   std::vector<std::string> paramNames;
   for (auto it = params_begin(); it != params_end(); ++it) {
     paramNames.push_back(it->first);

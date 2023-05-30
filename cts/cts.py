@@ -307,7 +307,20 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                 # setup sceneGenerator with scene parameters for rendering
                 sceneGenerator.resetAllParameters()
                 for [key, value] in parsed_json["sceneParameters"].items():
-                    sceneGenerator.setParameter(key, value)
+                    if key == "anari_objects":
+                        for [anariObjectName, array] in value.items():
+                            for item in array:
+                                if "subtype" not in item:
+                                    # If no subtype is present no object is generated. This can be used prevent the initialization of default scene objects
+                                    continue
+                                sceneGenerator.createAnariObject(anariObjectName, item["subtype"])
+                                for [paramName, paramValue] in item.items():
+                                    if paramName == "subtype":
+                                        continue
+                                    sceneGenerator.setGenericParameter(paramName, paramValue)
+                                sceneGenerator.releaseAnariObject()
+                    else:
+                        sceneGenerator.setParameter(key, value)
             except Exception as e:
                 print(e)
                 continue

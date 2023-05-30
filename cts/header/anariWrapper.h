@@ -47,6 +47,20 @@ class SceneGeneratorWrapper
     }
   }
 
+  void createAnariObject(const std::string &type, const std::string &subtype)
+  {
+    if (m_sceneGenerator) {
+      m_sceneGenerator->createAnariObject(type, subtype);
+    }
+  }
+
+  void releaseAnariObject()
+  {
+    if (m_sceneGenerator) {
+      m_sceneGenerator->releaseAnariObject();
+    }
+  }
+
   void resetSceneObjects()
   {
     if (m_sceneGenerator) {
@@ -89,6 +103,14 @@ class SceneGeneratorWrapper
   {
     if (m_sceneGenerator) {
       m_sceneGenerator->setParam(name, t);
+    }
+  }
+
+  template <typename T>
+  void setGenericParameter(const std::string &name, T &&t)
+  {
+    if (m_sceneGenerator) {
+      m_sceneGenerator->setGenericParameter(name, t);
     }
   }
 
