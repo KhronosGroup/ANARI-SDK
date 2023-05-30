@@ -79,6 +79,10 @@ void SceneGenerator::commit()
   int primitiveCount = getParam<int>("primitiveCount", 20);
   std::string shape = getParamString("shape", "triangle");
   int seed = getParam<int>("seed", 0);
+  std::optional<bool> vertexCap = std::nullopt;
+  if (hasParam("vertexCap")) {
+    vertexCap = getParam<bool>("vertexCap", false);
+  }
 
   // build this scene top-down to stress commit ordering guarantees
   // setup lighting, material and empty geometry
@@ -231,14 +235,21 @@ void SceneGenerator::commit()
           anari::newArray1D(d, indices.data(), indices.size()));
     }
   } else if (geometrySubtype == "cone") {
-    auto [coneVertices, coneRadii] =
-        generator.generateCones(primitiveCount);
+    auto [coneVertices, coneRadii, coneCaps] =
+        generator.generateCones(primitiveCount, vertexCap);
     vertices = coneVertices;
 
     anari::setAndReleaseParameter(d,
         geom,
         "vertex.radius",
         anari::newArray1D(d, coneRadii.data(), coneRadii.size()));
+
+    if (!coneCaps.empty()) {
+      anari::setAndReleaseParameter(d,
+          geom,
+          "vertex.cap",
+          anari::newArray1D(d, coneCaps.data(), coneCaps.size()));
+    }
 
     if (primitiveMode == "indexed") {
       std::vector<glm::uvec2> indices;
@@ -254,13 +265,21 @@ void SceneGenerator::commit()
           anari::newArray1D(d, indices.data(), indices.size()));
     }
   } else if (geometrySubtype == "cylinder") {
-    auto [cylinderVertices, cylinderRadii] = generator.generateCylinders(primitiveCount);
+    auto [cylinderVertices, cylinderRadii, coneCaps] =
+        generator.generateCylinders(primitiveCount, vertexCap);
     vertices = cylinderVertices;
 
     anari::setAndReleaseParameter(d,
         geom,
         "primitive.radius",
         anari::newArray1D(d, cylinderRadii.data(), cylinderRadii.size()));
+
+    if (!coneCaps.empty()) {
+      anari::setAndReleaseParameter(d,
+          geom,
+          "vertex.cap",
+          anari::newArray1D(d, coneCaps.data(), coneCaps.size()));
+    }
 
     if (primitiveMode == "indexed") {
       std::vector<glm::uvec2> indices;

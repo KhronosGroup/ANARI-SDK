@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <optional>
 #include <random>
 #include <tuple>
 
@@ -25,7 +26,8 @@ class PrimitiveGenerator
   std::vector<glm::vec3> generateTriangulatedCubesSoup(size_t primitiveCount);
   std::tuple<std::vector<glm::vec3>, std::vector<glm::uvec3>>
   generateTriangulatedCubesIndexed(size_t primitiveCount);
-  std::vector<glm::vec4> generateAttribute(size_t elementCount, float min = 0.0f, float max = 1.0f);
+  std::vector<glm::vec4> generateAttribute(
+      size_t elementCount, float min = 0.0f, float max = 1.0f);
 
   // quads
   std::vector<glm::vec3> generateQuads(size_t primitiveCount);
@@ -38,10 +40,10 @@ class PrimitiveGenerator
       size_t primitiveCount);
   std::tuple<std::vector<glm::vec3>, std::vector<float>> generateCurves(
       size_t primitiveCount);
-  std::tuple<std::vector<glm::vec3>, std::vector<float>> generateCones(
-      size_t primitiveCount);
-  std::tuple<std::vector<glm::vec3>, std::vector<float>> generateCylinders(
-      size_t primitiveCount);
+  std::tuple<std::vector<glm::vec3>, std::vector<float>, std::vector<uint8_t>>
+  generateCones(size_t primitiveCount, std::optional<bool> hasVertexCap);
+  std::tuple<std::vector<glm::vec3>, std::vector<float>, std::vector<uint8_t>>
+  generateCylinders(size_t primitiveCount, std::optional<bool> hasVertexCap);
 
   template <typename T>
   void shuffleVector(std::vector<T> &vector)
@@ -55,8 +57,10 @@ class PrimitiveGenerator
   float getRandomFloat(float min, float max);
   glm::vec3 getRandomVector3(float min, float max);
   glm::vec4 getRandomVector4(float min, float max);
-  std::vector<glm::vec3> randomTranslate(std::vector<glm::vec3> vertices, size_t verticesPerObject);
-  std::vector<glm::vec3> randomTransform(std::vector<glm::vec3> vertices, size_t verticesPerObject);
+  std::vector<glm::vec3> randomTranslate(
+      std::vector<glm::vec3> vertices, size_t verticesPerObject);
+  std::vector<glm::vec3> randomTransform(
+      std::vector<glm::vec3> vertices, size_t verticesPerObject);
 };
 
 } // namespace cts

@@ -405,43 +405,52 @@ PrimitiveGenerator::generateCurves(size_t primitiveCount)
   return std::make_tuple(vertices, radii);
 }
 
-
 // returns vectors of vertices and radii
 // each set of 2 vertices and 2 radii defines a randomly transformed cone
 // roughly in range 0..1
-std::tuple<std::vector<glm::vec3>, std::vector<float>>
-PrimitiveGenerator::generateCones(size_t primitiveCount)
+std::tuple<std::vector<glm::vec3>, std::vector<float>, std::vector<uint8_t>>
+PrimitiveGenerator::generateCones(
+    size_t primitiveCount, std::optional<bool> vertexCaps)
 {
   std::vector<glm::vec3> vertices;
   std::vector<float> radii;
+  std::vector<uint8_t> caps;
 
   for (size_t i = 0; i < primitiveCount * 2; ++i) {
     vertices.push_back(getRandomVector3(0.0f, 1.0f));
     radii.push_back(getRandomFloat(0.0f, 0.4f));
+    if (vertexCaps.has_value()) {
+      caps.push_back(vertexCaps.value() ? 1u : 0u);
+    }
   }
 
   vertices = randomTranslate(vertices, 2);
 
-  return std::make_tuple(vertices, radii);
+  return std::make_tuple(vertices, radii, caps);
 }
 
 // returns vectors of vertices and radii
 // each set of 2 vertices and 1 radius defines a randomly transformed cylinder
 // roughly in range 0..1
-std::tuple<std::vector<glm::vec3>, std::vector<float>>
-PrimitiveGenerator::generateCylinders(size_t primitiveCount)
+std::tuple<std::vector<glm::vec3>, std::vector<float>, std::vector<uint8_t>>
+PrimitiveGenerator::generateCylinders(
+    size_t primitiveCount, std::optional<bool> vertexCaps)
 {
   std::vector<glm::vec3> vertices;
   std::vector<float> radii;
+  std::vector<uint8_t> caps;
 
   for (size_t i = 0; i < primitiveCount; ++i) {
     vertices.push_back(getRandomVector3(0.0f, 1.0f));
     vertices.push_back(getRandomVector3(0.0f, 1.0f));
     radii.push_back(getRandomFloat(0.0f, 0.4f));
+    if (vertexCaps.has_value()) {
+      caps.push_back(vertexCaps.value() ? 1u : 0u);
+    }
   }
 
   vertices = randomTranslate(vertices, 2);
 
-  return std::make_tuple(vertices, radii);
+  return std::make_tuple(vertices, radii, caps);
 }
 } // namespace cts
