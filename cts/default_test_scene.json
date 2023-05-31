@@ -4,11 +4,12 @@
 		"image_width": 1024,
 		"frame_depth_type": "FLOAT32",
 		"frame_color_type": "UFIXED8_RGBA_SRGB",
+		"camera_generate_transform": true,
 		"anari_objects": {
 			"material": [
 				{
 					"subtype": "matte",
-					"color": [1.0, 0, 0]
+					"color": [1.0, 1.0, 1.0]
 				}
 			]
 		}
