@@ -268,7 +268,7 @@ void SceneGenerator::commit()
           anari::newArray1D(d, indices.data(), indices.size()));
     }
   } else if (geometrySubtype == "cylinder") {
-    auto [cylinderVertices, cylinderRadii, coneCaps] =
+    auto [cylinderVertices, cylinderRadii, cylinderCaps] =
         generator.generateCylinders(primitiveCount, vertexCap);
     vertices = cylinderVertices;
 
@@ -277,14 +277,14 @@ void SceneGenerator::commit()
         "primitive.radius",
         anari::newArray1D(d, cylinderRadii.data(), cylinderRadii.size()));
 
-    if (!coneCaps.empty()) {
+    if (!cylinderCaps.empty()) {
       anari::setAndReleaseParameter(d,
           geom,
           "vertex.cap",
-          anari::newArray1D(d, coneCaps.data(), coneCaps.size()));
+          anari::newArray1D(d, cylinderCaps.data(), cylinderCaps.size()));
     }
 
-    anari::setAndReleaseParameter(d, geom, "caps", globalCaps);
+    anari::setParameter(d, geom, "caps", globalCaps);
 
     if (primitiveMode == "indexed") {
       std::vector<glm::uvec2> indices;
