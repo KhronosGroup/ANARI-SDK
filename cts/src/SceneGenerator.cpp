@@ -81,16 +81,28 @@ int SceneGenerator::anariTypeFromString(const std::string& type)
   return ANARI_UNKNOWN;
 }
 
-void SceneGenerator::setReferenceParameter(
-    const std::string &name, int type, size_t index)
+void SceneGenerator::setReferenceParameter(int objectType, size_t objectIndex,
+    const std::string &name, int refType, size_t refIndex)
 {
-  if (m_device != nullptr && m_currentObject != nullptr) {
+  if (auto itObj = m_anariObjects.find(objectType);
+      itObj != m_anariObjects.end() && objectIndex < itObj->second.size()) {
+    auto object = itObj->second[objectIndex];
+    if (m_device != nullptr) {
+      if (auto itRef = m_anariObjects.find(refType);
+          itRef != m_anariObjects.end() && refIndex < itRef->second.size()) {
+        auto ref = itRef->second[refIndex];
+        anari::setParameter(m_device, object, name.c_str(), ref);
+      }
+    }
+  }
+}
+
+void SceneGenerator::setCurrentObject(int type, size_t index)
+{
     if (auto it = m_anariObjects.find(type);
         it != m_anariObjects.end() && index < it->second.size()) {
-      auto obj = it->second[index];
-      anari::setParameter(m_device, m_currentObject, name.c_str(), obj);
-    }   
-  }
+        m_currentObject = it->second[index];
+    }
 }
 
 void SceneGenerator::createAnariObject(

@@ -113,10 +113,16 @@ class SceneGeneratorWrapper
       m_sceneGenerator->setGenericParameter(name, t);
     }
   }
+  
+  void setReferenceParameter(const std::string& objectType, size_t objectIndex, const std::string& paramName, std::string& refType, size_t refIndex) {
+    m_sceneGenerator->setReferenceParameter(
+        m_sceneGenerator->anariTypeFromString(objectType), objectIndex, paramName,
+        m_sceneGenerator->anariTypeFromString(refType), refIndex);
+  }
 
-  void setReferenceParameter(const std::string& name, std::string& type, size_t index) {
-    m_sceneGenerator->setReferenceParameter(name,
-        m_sceneGenerator->anariTypeFromString(type), index);
+  void setCurrentObject(std::string &type, size_t index)
+  {
+    m_sceneGenerator->setCurrentObject(m_sceneGenerator->anariTypeFromString(type), index);
   }
 
  private:
