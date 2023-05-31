@@ -50,6 +50,7 @@ class SceneGenerator : public anari::scenes::TestScene
 
  private:
 
+  int anariTypeFromString(const std::string &input);
   float frameDuration = -1.0f;
 
   anari::World m_world{nullptr};

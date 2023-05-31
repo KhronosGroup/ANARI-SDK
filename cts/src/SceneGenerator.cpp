@@ -57,39 +57,68 @@ std::vector<anari::scenes::ParameterInfo> SceneGenerator::parameters()
       {"attribute_max", 1.0f, "Maximum random value for attributes"},
       {"primitive_attributes", true, "If primitive attributes should be filled randomly"},
       {"vertex_attribtues", true, "If vertex attributes should be filled randomly"},
-      {"seed", 0u, "Seed for random number generator to ensure that tests are consistent across platforms"}
+      {"seed", 0u, "Seed for random number generator to ensure that tests are consistent across platforms"},
+      {"camera_generate_transform", true, "If the camera position should be computed via world bounds"}
 
       //
   };
+}
+
+int SceneGenerator::anariTypeFromString(const std::string& type) 
+{
+  if (type == "material") {
+    return ANARI_MATERIAL;
+  } 
+  if (type == "camera") {
+    return ANARI_CAMERA;
+  } 
+  if (type == "light") {
+    return ANARI_LIGHT;
+  }
+  if (type == "sampler") {
+    return ANARI_SAMPLER;
+  }
+  return ANARI_UNKNOWN;
 }
 
 void SceneGenerator::createAnariObject(
     const std::string &type, const std::string &subtype)
 {
   ANARIObject object = nullptr;
-
-  if (type == "material") {
+  int anariType = anariTypeFromString(type);
+  switch (anariType) {
+  case ANARI_MATERIAL: {
     object = anari::newObject<anari::Material>(m_device, subtype.c_str());
     auto it = m_anariObjects.try_emplace(
         int(ANARI_MATERIAL), std::vector<ANARIObject>());
     if (it.first->second.size() == 0) {
-        it.first->second.emplace_back(object);
-    }  
-  } else if (type == "camera") {
-      object = anari::newObject<anari::Camera>(m_device, subtype.c_str());
-      auto it = m_anariObjects.try_emplace(int(ANARI_CAMERA), std::vector<ANARIObject>());
-      if (it.first->second.size() == 0) {
-        it.first->second.emplace_back(object);
-      }   
-  } else if (type == "light") {
+      it.first->second.emplace_back(object);
+    }
+    break;
+  }
+  case ANARI_CAMERA: {
+    object = anari::newObject<anari::Camera>(m_device, subtype.c_str());
+    auto it = m_anariObjects.try_emplace(
+        int(ANARI_CAMERA), std::vector<ANARIObject>());
+    if (it.first->second.size() == 0) {
+      it.first->second.emplace_back(object);
+    }
+    break;
+  }
+  case ANARI_LIGHT: {
     object = anari::newObject<anari::Light>(m_device, subtype.c_str());
-    auto it = m_anariObjects.try_emplace(int(ANARI_LIGHT), std::vector<ANARIObject>());
+    auto it = m_anariObjects.try_emplace(
+        int(ANARI_LIGHT), std::vector<ANARIObject>());
     it.first->second.emplace_back(object);
-  } else if (type == "sampler") {
+    break;
+  }
+  case ANARI_SAMPLER: {
     object = anari::newObject<anari::Sampler>(m_device, subtype.c_str());
     auto it = m_anariObjects.try_emplace(
         int(ANARI_SAMPLER), std::vector<ANARIObject>());
     it.first->second.emplace_back(object);
+    break;
+  }
   }
   m_currentObject = object;
 }
@@ -382,9 +411,14 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
   std::string depth_type_param = getParamString("frame_depth_type", "");
 
   // create render camera
-  auto camera = anari::newObject<anari::Camera>(m_device, "perspective");
-  anari::setParameter(
-      m_device, camera, "aspect", (float)image_height / (float)image_width);
+  ANARIObject camera;
+  if (auto it = m_anariObjects.find(ANARI_CAMERA);
+      it != m_anariObjects.end() && !it->second.empty()) {
+    camera = it->second.front();
+  } else {
+    createAnariObject("camera", "perspective");
+    camera = m_currentObject;
+  }
 
   // create renderer
   auto renderer =
@@ -408,18 +442,21 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
     anari::setParameter(m_device, frame, "channel.depth", ANARI_FLOAT32);
   }
 
+
   anari::setParameter(m_device, frame, "renderer", renderer);
   anari::setParameter(m_device, frame, "camera", camera);
   anari::setParameter(m_device, frame, "world", m_world);
 
   anari::commitParameters(m_device, frame);
 
-  // setup camera transform
-  auto cam = createDefaultCameraFromWorld(m_world);
-  anari::setParameter(m_device, camera, "position", cam.position);
-  anari::setParameter(m_device, camera, "direction", cam.direction);
-  anari::setParameter(m_device, camera, "up", cam.up);
-  anari::commitParameters(m_device, camera);
+  if (getParam<bool>("camera_generate_transform", true)) {
+    // setup camera transform
+    auto cam = createDefaultCameraFromWorld(m_world);
+    anari::setParameter(m_device, camera, "position", cam.position);
+    anari::setParameter(m_device, camera, "direction", cam.direction);
+    anari::setParameter(m_device, camera, "up", cam.up);
+    anari::commitParameters(m_device, camera);
+  }
 
   // render scene
   anari::render(m_device, frame);
@@ -501,7 +538,6 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
   }
 
   // cleanup
-  anari::release(m_device, camera);
   anari::release(m_device, frame);
   anari::release(m_device, renderer);
 
