@@ -81,12 +81,23 @@ int SceneGenerator::anariTypeFromString(const std::string& type)
   return ANARI_UNKNOWN;
 }
 
+void SceneGenerator::setReferenceParameter(
+    const std::string &name, int type, size_t index)
+{
+  if (m_device != nullptr && m_currentObject != nullptr) {
+    if (auto it = m_anariObjects.find(type);
+        it != m_anariObjects.end() && index < it->second.size()) {
+      auto obj = it->second[index];
+      anari::setParameter(m_device, m_currentObject, name.c_str(), obj);
+    }   
+  }
+}
+
 void SceneGenerator::createAnariObject(
-    const std::string &type, const std::string &subtype)
+    int type, const std::string &subtype)
 {
   ANARIObject object = nullptr;
-  int anariType = anariTypeFromString(type);
-  switch (anariType) {
+  switch (type) {
   case ANARI_MATERIAL: {
     object = anari::newObject<anari::Material>(m_device, subtype.c_str());
     auto it = m_anariObjects.try_emplace(
@@ -416,7 +427,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
       it != m_anariObjects.end() && !it->second.empty()) {
     camera = it->second.front();
   } else {
-    createAnariObject("camera", "perspective");
+    createAnariObject(ANARI_CAMERA, "perspective");
     camera = m_currentObject;
   }
 

@@ -21,7 +21,7 @@ class SceneGenerator : public anari::scenes::TestScene
   void resetAllParameters();
   void resetSceneObjects();
   
-  void createAnariObject(const std::string& type, const std::string& subtype);
+  void createAnariObject(int type, const std::string& subtype);
   template <typename T>
   void setGenericParameter(const std::string& name, T&& value)
   {
@@ -29,6 +29,9 @@ class SceneGenerator : public anari::scenes::TestScene
       anari::setParameter(m_device, m_currentObject, name.c_str(), value);
     }
   }
+
+  void setReferenceParameter(const std::string& name, int type, size_t index);
+
   void releaseAnariObject()
   {
     m_currentObject = nullptr;
@@ -48,9 +51,10 @@ class SceneGenerator : public anari::scenes::TestScene
     return frameDuration;
   }
 
+  int anariTypeFromString(const std::string &input);
+
  private:
 
-  int anariTypeFromString(const std::string &input);
   float frameDuration = -1.0f;
 
   anari::World m_world{nullptr};

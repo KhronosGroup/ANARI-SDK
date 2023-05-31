@@ -50,7 +50,7 @@ class SceneGeneratorWrapper
   void createAnariObject(const std::string &type, const std::string &subtype)
   {
     if (m_sceneGenerator) {
-      m_sceneGenerator->createAnariObject(type, subtype);
+      m_sceneGenerator->createAnariObject(m_sceneGenerator->anariTypeFromString(type), subtype);
     }
   }
 
@@ -112,6 +112,11 @@ class SceneGeneratorWrapper
     if (m_sceneGenerator) {
       m_sceneGenerator->setGenericParameter(name, t);
     }
+  }
+
+  void setReferenceParameter(const std::string& name, std::string& type, size_t index) {
+    m_sceneGenerator->setReferenceParameter(name,
+        m_sceneGenerator->anariTypeFromString(type), index);
   }
 
  private:
