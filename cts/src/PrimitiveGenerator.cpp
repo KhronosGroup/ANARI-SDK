@@ -410,7 +410,7 @@ PrimitiveGenerator::generateCurves(size_t primitiveCount)
 // roughly in range 0..1
 std::tuple<std::vector<glm::vec3>, std::vector<float>, std::vector<uint8_t>>
 PrimitiveGenerator::generateCones(
-    size_t primitiveCount, std::optional<bool> vertexCaps)
+    size_t primitiveCount, std::optional<int32_t> vertexCaps)
 {
   std::vector<glm::vec3> vertices;
   std::vector<float> radii;
@@ -420,7 +420,7 @@ PrimitiveGenerator::generateCones(
     vertices.push_back(getRandomVector3(0.0f, 1.0f));
     radii.push_back(getRandomFloat(0.0f, 0.4f));
     if (vertexCaps.has_value()) {
-      caps.push_back(vertexCaps.value() ? 1u : 0u);
+      caps.push_back(vertexCaps.value() == 0 ? 0u : 1u);
     }
   }
 
@@ -434,7 +434,7 @@ PrimitiveGenerator::generateCones(
 // roughly in range 0..1
 std::tuple<std::vector<glm::vec3>, std::vector<float>, std::vector<uint8_t>>
 PrimitiveGenerator::generateCylinders(
-    size_t primitiveCount, std::optional<bool> vertexCaps)
+    size_t primitiveCount, std::optional<int32_t> vertexCaps)
 {
   std::vector<glm::vec3> vertices;
   std::vector<float> radii;
@@ -445,7 +445,7 @@ PrimitiveGenerator::generateCylinders(
     vertices.push_back(getRandomVector3(0.0f, 1.0f));
     radii.push_back(getRandomFloat(0.0f, 0.4f));
     if (vertexCaps.has_value()) {
-      caps.push_back(vertexCaps.value() ? 1u : 0u);
+      caps.push_back(vertexCaps.value() == 0 ? 0u : 1u);
     }
   }
 

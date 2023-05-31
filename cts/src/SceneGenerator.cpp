@@ -79,9 +79,9 @@ void SceneGenerator::commit()
   int primitiveCount = getParam<int>("primitiveCount", 20);
   std::string shape = getParamString("shape", "triangle");
   int seed = getParam<int>("seed", 0);
-  std::optional<bool> vertexCap = std::nullopt;
-  if (hasParam("vertexCap")) {
-    vertexCap = getParam<bool>("vertexCap", false);
+  std::optional<int32_t> vertexCaps = std::nullopt;
+  if (hasParam("vertexCaps")) {
+    vertexCaps = getParam<int32_t>("vertexCaps", false);
   }
   std::string globalCaps = getParamString("globalCaps", "none");
 
@@ -237,7 +237,7 @@ void SceneGenerator::commit()
     }
   } else if (geometrySubtype == "cone") {
     auto [coneVertices, coneRadii, coneCaps] =
-        generator.generateCones(primitiveCount, vertexCap);
+        generator.generateCones(primitiveCount, vertexCaps);
     vertices = coneVertices;
 
     anari::setAndReleaseParameter(d,
@@ -269,7 +269,7 @@ void SceneGenerator::commit()
     }
   } else if (geometrySubtype == "cylinder") {
     auto [cylinderVertices, cylinderRadii, cylinderCaps] =
-        generator.generateCylinders(primitiveCount, vertexCap);
+        generator.generateCylinders(primitiveCount, vertexCaps);
     vertices = cylinderVertices;
 
     anari::setAndReleaseParameter(d,

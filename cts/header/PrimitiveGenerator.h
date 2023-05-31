@@ -41,9 +41,9 @@ class PrimitiveGenerator
   std::tuple<std::vector<glm::vec3>, std::vector<float>> generateCurves(
       size_t primitiveCount);
   std::tuple<std::vector<glm::vec3>, std::vector<float>, std::vector<uint8_t>>
-  generateCones(size_t primitiveCount, std::optional<bool> hasVertexCap);
+  generateCones(size_t primitiveCount, std::optional<int32_t> hasVertexCap);
   std::tuple<std::vector<glm::vec3>, std::vector<float>, std::vector<uint8_t>>
-  generateCylinders(size_t primitiveCount, std::optional<bool> hasVertexCap);
+  generateCylinders(size_t primitiveCount, std::optional<int32_t> hasVertexCap);
 
   template <typename T>
   void shuffleVector(std::vector<T> &vector)
