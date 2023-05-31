@@ -83,7 +83,7 @@ void SceneGenerator::commit()
   if (hasParam("vertexCap")) {
     vertexCap = getParam<bool>("vertexCap", false);
   }
-  std::string globalCaps = getParam<std::string>("globalCaps", "none");
+  std::string globalCaps = getParamString("globalCaps", "none");
 
   // build this scene top-down to stress commit ordering guarantees
   // setup lighting, material and empty geometry
@@ -252,7 +252,7 @@ void SceneGenerator::commit()
           anari::newArray1D(d, coneCaps.data(), coneCaps.size()));
     }
 
-    anari::setAndReleaseParameter(d, geom, "caps", globalCaps);
+    anari::setParameter(d, geom, "caps", globalCaps);
 
     if (primitiveMode == "indexed") {
       std::vector<glm::uvec2> indices;
