@@ -317,7 +317,11 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                                 for [paramName, paramValue] in item.items():
                                     if paramName == "subtype":
                                         continue
-                                    sceneGenerator.setGenericParameter(paramName, paramValue)
+                                    if isinstance(paramValue, str) and paramValue.startswith("ref_"):
+                                        stringArray = paramValue.split('_')
+                                        sceneGenerator.setReferenceParameter(paramName, stringArray[1], int(stringArray[2]))
+                                    else:
+                                        sceneGenerator.setGenericParameter(paramName, paramValue)
                                 sceneGenerator.releaseAnariObject()
                     else:
                         sceneGenerator.setParameter(key, value)
