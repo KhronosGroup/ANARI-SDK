@@ -160,9 +160,9 @@ void SceneGenerator::commit()
     if (primitiveMode == "indexed") {
       // shuffle indices vector to create a more useful test case
       generator.shuffleVector(indices);
-      if (unusedVertices && indices.size() >= 3) {
+      if (unusedVertices && !indices.empty()) {
         // remove last indices to test not using all vertices/primitives
-        indices.resize(indices.size() - 3);
+        indices.resize(indices.size() - 1);
       }
       indiciCount = indices.size();
       anari::setAndReleaseParameter(d,
@@ -194,9 +194,9 @@ void SceneGenerator::commit()
     if (primitiveMode == "indexed") {
       // shuffle indices vector to create a more useful test case
       generator.shuffleVector(indices);
-      if (unusedVertices && indices.size() >= 4) {
+      if (unusedVertices && !indices.empty()) {
         // remove last indices to test not using all vertices/primitives
-        indices.resize(indices.size() - 4);
+        indices.resize(indices.size() - 1);
       }
       indiciCount = indices.size();
       anari::setAndReleaseParameter(d,
@@ -227,7 +227,7 @@ void SceneGenerator::commit()
 
       // shuffle indices vector to create a more useful test case
       generator.shuffleVector(indices);
-      if (unusedVertices && indices.size() >= 1) {
+      if (unusedVertices && !indices.empty()) {
         // remove last indices to test not using all vertices/primitives
         indices.resize(indices.size() - 1);
       }
@@ -294,9 +294,9 @@ void SceneGenerator::commit()
 
       // shuffle indices vector to create a more useful test case
       generator.shuffleVector(indices);
-      if (unusedVertices && indices.size() >= 2) {
+      if (unusedVertices && !indices.empty()) {
         // remove last indices to test not using all vertices/primitives
-        indices.resize(indices.size() - 2);
+        indices.resize(indices.size() - 1);
       }
       indiciCount = indices.size();
       anari::setAndReleaseParameter(d,
@@ -334,9 +334,9 @@ void SceneGenerator::commit()
 
       // shuffle indices vector to create a more useful test case
       generator.shuffleVector(indices);
-      if (unusedVertices && indices.size() >= 2) {
+      if (unusedVertices && !indices.empty()) {
         // remove last indices to test not using all vertices/primitives
-        indices.resize(indices.size() - 2);
+        indices.resize(indices.size() - 1);
       }
       indiciCount = indices.size();
       anari::setAndReleaseParameter(d,
