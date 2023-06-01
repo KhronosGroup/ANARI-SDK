@@ -81,7 +81,7 @@ void SceneGenerator::commit()
   int seed = getParam<int>("seed", 0);
   std::optional<int32_t> vertexCaps = std::nullopt;
   if (hasParam("vertexCaps")) {
-    vertexCaps = getParam<int32_t>("vertexCaps", false);
+    vertexCaps = getParam<int32_t>("vertexCaps", 0);
   }
   std::string globalCaps = getParamString("globalCaps", "none");
 
