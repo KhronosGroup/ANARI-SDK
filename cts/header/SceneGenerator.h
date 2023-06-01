@@ -30,6 +30,12 @@ class SceneGenerator : public anari::scenes::TestScene
     }
   }
 
+  void unsetGenericParameter(const std::string& name) {
+    if (m_device != nullptr && m_currentObject != nullptr) {
+      anari::unsetParameter(m_device, m_currentObject, name.c_str());
+    }
+  }
+
   void setReferenceParameter(int objType, size_t objIndex, const std::string& name, int refType, size_t refIndex);
 
   void setCurrentObject(int type, size_t index);

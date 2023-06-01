@@ -321,6 +321,8 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                                     if isinstance(paramValue, str) and paramValue.startswith("ref_"):
                                         stringArray = paramValue.split('_')
                                         references.append([anariObjectName, idx, paramName, stringArray[1], int(stringArray[2])])
+                                    elif paramValue is None:
+                                        sceneGenerator.unsetGenericParameter(paramName)
                                     else:
                                         sceneGenerator.setGenericParameter(paramName, paramValue)
                                 sceneGenerator.releaseAnariObject()
@@ -372,7 +374,10 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                                     sceneGenerator.setReferenceParameter(pointer[2], int(pointer[3]), pointer[4], ref[1], int(ref[2]))
                                 else:
                                     sceneGenerator.setCurrentObject(pointer[2], int(pointer[3]))
-                                    sceneGenerator.setGenericParameter(pointer[4], permutation[i])
+                                    if permutation[i] is None:
+                                        sceneGenerator.unsetGenericParameter(pointer[4])
+                                    else:
+                                        sceneGenerator.setGenericParameter(pointer[4], permutation[i])
                             else:
                                 sceneGenerator.setParameter(key, permutation[i])
                         except Exception as e:

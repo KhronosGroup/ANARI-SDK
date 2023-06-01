@@ -113,6 +113,13 @@ class SceneGeneratorWrapper
       m_sceneGenerator->setGenericParameter(name, t);
     }
   }
+
+  void unsetGenericParameter(const std::string &name)
+  {
+    if (m_sceneGenerator) {
+      m_sceneGenerator->unsetGenericParameter(name);
+    }
+  }
   
   void setReferenceParameter(const std::string& objectType, size_t objectIndex, const std::string& paramName, std::string& refType, size_t refIndex) {
     m_sceneGenerator->setReferenceParameter(
