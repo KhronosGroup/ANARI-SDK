@@ -1,0 +1,18 @@
+{
+  "sceneParameters": {
+    "geometrySubtype": "cylinder",
+    "primitiveCount": 16,
+    "seed": 12345
+  },
+  "permutations": {
+    "globalCaps": [
+      "none",
+      "first",
+      "second",
+      "both"
+    ]
+  },
+  "requiredFeatures": [
+    "ANARI_KHR_GEOMETRY_CYLINDER"
+  ]
+}
