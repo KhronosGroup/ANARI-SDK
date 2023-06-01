@@ -88,6 +88,8 @@ void SceneGenerator::commit()
   if (hasParam("globalRadius")) {
     globalRadius = getParam<float>("globalRadius", 1);
   }
+  // TODO bools do not work with getParam currently, default value is always used
+  bool unusedVertices = getParam<bool>("unsusedVertices", false);
 
   // build this scene top-down to stress commit ordering guarantees
   // setup lighting, material and empty geometry
@@ -158,6 +160,10 @@ void SceneGenerator::commit()
     if (primitiveMode == "indexed") {
       // shuffle indices vector to create a more useful test case
       generator.shuffleVector(indices);
+      if (unusedVertices && indices.size() >= 3) {
+        // remove last indices to test not using all vertices/primitives
+        indices.resize(indices.size() - 3);
+      }
       indiciCount = indices.size();
       anari::setAndReleaseParameter(d,
           geom,
@@ -188,6 +194,10 @@ void SceneGenerator::commit()
     if (primitiveMode == "indexed") {
       // shuffle indices vector to create a more useful test case
       generator.shuffleVector(indices);
+      if (unusedVertices && indices.size() >= 4) {
+        // remove last indices to test not using all vertices/primitives
+        indices.resize(indices.size() - 4);
+      }
       indiciCount = indices.size();
       anari::setAndReleaseParameter(d,
           geom,
@@ -217,6 +227,10 @@ void SceneGenerator::commit()
 
       // shuffle indices vector to create a more useful test case
       generator.shuffleVector(indices);
+      if (unusedVertices && indices.size() >= 1) {
+        // remove last indices to test not using all vertices/primitives
+        indices.resize(indices.size() - 1);
+      }
       anari::setAndReleaseParameter(d,
           geom,
           "primitive.index",
@@ -244,6 +258,10 @@ void SceneGenerator::commit()
 
       // shuffle indices vector to create a more useful test case
       generator.shuffleVector(indices);
+      if (unusedVertices && indices.size() >= 2) {
+        // remove last indices to test not using all vertices/primitives
+        indices.resize(indices.size() - 2);
+      }
       indiciCount = indices.size();
       anari::setAndReleaseParameter(d,
           geom,
@@ -276,6 +294,10 @@ void SceneGenerator::commit()
 
       // shuffle indices vector to create a more useful test case
       generator.shuffleVector(indices);
+      if (unusedVertices && indices.size() >= 2) {
+        // remove last indices to test not using all vertices/primitives
+        indices.resize(indices.size() - 2);
+      }
       indiciCount = indices.size();
       anari::setAndReleaseParameter(d,
           geom,
@@ -312,6 +334,10 @@ void SceneGenerator::commit()
 
       // shuffle indices vector to create a more useful test case
       generator.shuffleVector(indices);
+      if (unusedVertices && indices.size() >= 2) {
+        // remove last indices to test not using all vertices/primitives
+        indices.resize(indices.size() - 2);
+      }
       indiciCount = indices.size();
       anari::setAndReleaseParameter(d,
           geom,

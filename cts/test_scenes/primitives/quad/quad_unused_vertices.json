@@ -1,0 +1,18 @@
+{
+  "sceneParameters": {
+    "geometrySubtype": "quad",
+    "primitiveCount": 4,
+    "seed": 54321,
+    "shape": "quad",
+    "unusedVertices": true
+  },
+  "permutations": {
+    "unusedVertices": [
+      true,
+      false
+    ]
+  },
+  "requiredFeatures": [
+    "ANARI_KHR_GEOMETRY_QUAD"
+  ]
+}
