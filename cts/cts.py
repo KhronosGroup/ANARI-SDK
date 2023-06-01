@@ -306,8 +306,31 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
             try:
                 # setup sceneGenerator with scene parameters for rendering
                 sceneGenerator.resetAllParameters()
+                references = []
                 for [key, value] in parsed_json["sceneParameters"].items():
-                    sceneGenerator.setParameter(key, value)
+                    if key == "anari_objects":
+                        for [anariObjectName, array] in value.items():
+                            for idx, item in enumerate(array):
+                                if "subtype" not in item:
+                                    # If no subtype is present no object is generated. This can be used prevent the initialization of default scene objects
+                                    continue
+                                sceneGenerator.createAnariObject(anariObjectName, item["subtype"])
+                                for [paramName, paramValue] in item.items():
+                                    if paramName == "subtype":
+                                        continue
+                                    if isinstance(paramValue, str) and paramValue.startswith("ref_"):
+                                        stringArray = paramValue.split('_')
+                                        references.append([anariObjectName, idx, paramName, stringArray[1], int(stringArray[2])])
+                                    elif paramValue is None:
+                                        sceneGenerator.unsetGenericParameter(paramName)
+                                    else:
+                                        sceneGenerator.setGenericParameter(paramName, paramValue)
+                                sceneGenerator.releaseAnariObject()
+                    else:
+                        sceneGenerator.setParameter(key, value)
+                
+                for reference in references:
+                    sceneGenerator.setReferenceParameter(*reference)
             except Exception as e:
                 print(e)
                 continue
@@ -344,7 +367,19 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                     if use_generator:
                         # set up scene generator with the permutated data for this rendering
                         try:
-                            sceneGenerator.setParameter(key, permutation[i])
+                            if key.startswith("/anari_objects"):
+                                pointer = key.split('/')
+                                if (isinstance(permutation[i], str) and permutation[i].startswith("ref_")):
+                                    ref = permutation[i].split('_')
+                                    sceneGenerator.setReferenceParameter(pointer[2], int(pointer[3]), pointer[4], ref[1], int(ref[2]))
+                                else:
+                                    sceneGenerator.setCurrentObject(pointer[2], int(pointer[3]))
+                                    if permutation[i] is None:
+                                        sceneGenerator.unsetGenericParameter(pointer[4])
+                                    else:
+                                        sceneGenerator.setGenericParameter(pointer[4], permutation[i])
+                            else:
+                                sceneGenerator.setParameter(key, permutation[i])
                         except Exception as e:
                             print(e)
                             hasError = True

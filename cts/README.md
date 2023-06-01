@@ -62,13 +62,27 @@ Here is the [sphere test file](test_scenes/primitives/sphere/sphere.json) as an 
 {
   "sceneParameters": {
     "geometrySubtype": "sphere",
-    "seed": 54321
+    "seed": 54321,
+    "anariObjects":{
+      "material":[
+        {
+          "subtype": "transparentMatte",
+          "opacity": 0.5
+        }
+      ],
+      "sampler":[
+        {
+          "subtype": "Image2D"
+        }
+      ]
+    }
   },
   "permutations": {
     "primitiveCount": [
       1,
       16
-    ]
+    ],
+    "/anariObjects/material/0/color": [null, [1.0, 1.0, 1.0], "ref_sampler_0"]
   },
   "variants": {
     "primitiveMode": [
@@ -129,7 +143,8 @@ Here is the [sphere test file](test_scenes/primitives/sphere/sphere.json) as an 
   -  `primitive_attributes`: If primitive attributes should be filled randomly. Default: `true`
   -  `vertex_attribtues`: If vertex attributes should be filled randomly. Default: `true`
   -  `seed`: Seed for random number generator to ensure that tests are consistent across platforms. Default `0`
--  `permutations` and `variants`: These specify scene parameters where different values should be tested. Therefore, these JSON objects contain the name of a scene parameter and a list of values for each of them. The permutations specify changes which result in a different outcome (e.g. 1 or 16 primitives). The variants should not change the outcome, therefore only one reference rendering is needed for these (e.g. the soup and indexed variants should look the same). The cartesian product is performed for all parameters. In the current example this results in four test images: 1 primitive + soup, 1 primitive + indexed, 16 primitives + soup, 16 primitives + indexed; As well as two reference images: 1 primitive (soup or indexed), 16 primitives (soup or indexed).
+  -  `anariObjects`: This can be used to set generic parameters in material, camera, samplers and lights. The structure consists of the an array with the type name as key. Even though only one camera and one material are currently supported. An array with one element should be used. The array contains JSON objects with parameters for each ANARI object. `subtype` is mandatory. `null` can be used to reset/use the default of a parameter (useful for permutations). To set a parameter to a reference to another object, use the `ref_` prefix, then add the type and index, e.g. `ref_sampler_0`
+-  `permutations` and `variants`: These specify scene parameters where different values should be tested. Therefore, these JSON objects contain the name of a scene parameter and a list of values for each of them. The permutations specify changes which result in a different outcome (e.g. 1 or 16 primitives). The variants should not change the outcome, therefore only one reference rendering is needed for these (e.g. the soup and indexed variants should look the same). The cartesian product is performed for all parameters. In the current example this results in four test images: 1 primitive + soup, 1 primitive + indexed, 16 primitives + soup, 16 primitives + indexed; As well as two reference images: 1 primitive (soup or indexed), 16 primitives (soup or indexed). To permutate a parameter in an ANARI object, the object needs to be defined in `anariObjects` without the parameter. In the permutation or variant object a JSON pointer e.g. `"/anariObjects/material/0/color"` should be used as key as seen in the example.
 -  `requiredFeatures`: A list of features which need to be supported by the device to perform the test. Some features (e.g. perspective camera) which are needed for every test are implicitly required. This list should only contain the features which are explicitly tested. If the device does not support the feature, the test is skipped.
 -  `bounds_tolerance`: Specifies the percentage the bounds can vary in each dimension and still be considered correct.
 -  `metaData`: This JSON object is automatically created while generating the reference images. It contains ANARI object properties for each permutation (currently only bounds information).

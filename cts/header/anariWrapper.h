@@ -47,6 +47,20 @@ class SceneGeneratorWrapper
     }
   }
 
+  void createAnariObject(const std::string &type, const std::string &subtype)
+  {
+    if (m_sceneGenerator) {
+      m_sceneGenerator->createAnariObject(m_sceneGenerator->anariTypeFromString(type), subtype);
+    }
+  }
+
+  void releaseAnariObject()
+  {
+    if (m_sceneGenerator) {
+      m_sceneGenerator->releaseAnariObject();
+    }
+  }
+
   void resetSceneObjects()
   {
     if (m_sceneGenerator) {
@@ -90,6 +104,32 @@ class SceneGeneratorWrapper
     if (m_sceneGenerator) {
       m_sceneGenerator->setParam(name, t);
     }
+  }
+
+  template <typename T>
+  void setGenericParameter(const std::string &name, T &&t)
+  {
+    if (m_sceneGenerator) {
+      m_sceneGenerator->setGenericParameter(name, t);
+    }
+  }
+
+  void unsetGenericParameter(const std::string &name)
+  {
+    if (m_sceneGenerator) {
+      m_sceneGenerator->unsetGenericParameter(name);
+    }
+  }
+  
+  void setReferenceParameter(const std::string& objectType, size_t objectIndex, const std::string& paramName, std::string& refType, size_t refIndex) {
+    m_sceneGenerator->setReferenceParameter(
+        m_sceneGenerator->anariTypeFromString(objectType), objectIndex, paramName,
+        m_sceneGenerator->anariTypeFromString(refType), refIndex);
+  }
+
+  void setCurrentObject(std::string &type, size_t index)
+  {
+    m_sceneGenerator->setCurrentObject(m_sceneGenerator->anariTypeFromString(type), index);
   }
 
  private:

@@ -3,7 +3,20 @@
 		"image_height": 1024,
 		"image_width": 1024,
 		"frame_depth_type": "FLOAT32",
-		"frame_color_type": "UFIXED8_RGBA_SRGB"
+		"frame_color_type": "UFIXED8_RGBA_SRGB",
+		"camera_generate_transform": true,
+		"primitiveCount": 1,
+		"shape": "quad",
+		"geometrySubtype": "triangle",
+		"primitiveMode": "indexed",
+		"anari_objects": {
+			"material": [
+				{
+					"subtype": "matte",
+					"color": [1.0, 1.0, 1.0]
+				}
+			]
+		}
 	},
 	"bounds_tolerance": 0.05
 }
