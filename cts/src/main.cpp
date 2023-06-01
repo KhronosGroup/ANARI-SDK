@@ -26,6 +26,7 @@ PYBIND11_MODULE(anariCTSBackend, m)
       .def(py::init<const std::string&, const std::optional<std::string>, const std::optional<py::function>&>())
       .def("setParameter", &cts::SceneGeneratorWrapper::setParam<std::string>)
       .def("setParameter", &cts::SceneGeneratorWrapper::setParam<int>)
+      .def("setParameter", &cts::SceneGeneratorWrapper::setParam<float>)
       .def("commit", &cts::SceneGeneratorWrapper::commit)
       .def("renderScene", &cts::SceneGeneratorWrapper::renderScene)
       .def(

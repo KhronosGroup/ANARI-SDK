@@ -84,6 +84,10 @@ void SceneGenerator::commit()
     vertexCaps = getParam<int32_t>("vertexCaps", 0);
   }
   std::string globalCaps = getParamString("globalCaps", "none");
+  std::optional<float> globalRadius = std::nullopt;
+  if (hasParam("globalRadius")) {
+    globalRadius = getParam<float>("globalRadius", 1);
+  }
 
   // build this scene top-down to stress commit ordering guarantees
   // setup lighting, material and empty geometry
@@ -195,10 +199,15 @@ void SceneGenerator::commit()
         generator.generateSpheres(primitiveCount);
     vertices = sphereVertices;
 
-    anari::setAndReleaseParameter(d,
-        geom,
-        "vertex.radius",
-        anari::newArray1D(d, sphereRadii.data(), sphereRadii.size()));
+    if (globalRadius.has_value()) {
+      anari::setParameter(
+          d, geom, "radius", globalRadius.value());
+    } else {
+      anari::setAndReleaseParameter(d,
+          geom,
+          "vertex.radius",
+          anari::newArray1D(d, sphereRadii.data(), sphereRadii.size()));
+    }
 
     if (primitiveMode == "indexed") {
       std::vector<uint32_t> indices;
@@ -214,13 +223,19 @@ void SceneGenerator::commit()
           anari::newArray1D(d, indices.data(), indices.size()));
     }
   } else if (geometrySubtype == "curve") {
-    auto [curveVertices, curveRadii] = generator.generateCurves(primitiveCount);
+    auto [curveVertices, curveRadii] =
+        generator.generateCurves(primitiveCount);
     vertices = curveVertices;
 
-    anari::setAndReleaseParameter(d,
-        geom,
-        "vertex.radius",
-        anari::newArray1D(d, curveRadii.data(), curveRadii.size()));
+    if (globalRadius.has_value()) {
+      anari::setParameter(
+          d, geom, "radius", globalRadius.value());
+    } else {
+      anari::setAndReleaseParameter(d,
+          geom,
+          "vertex.radius",
+          anari::newArray1D(d, curveRadii.data(), curveRadii.size()));
+    }
 
     if (primitiveMode == "indexed") {
       std::vector<uint32_t> indices;
@@ -272,10 +287,14 @@ void SceneGenerator::commit()
         generator.generateCylinders(primitiveCount, vertexCaps);
     vertices = cylinderVertices;
 
-    anari::setAndReleaseParameter(d,
-        geom,
-        "primitive.radius",
-        anari::newArray1D(d, cylinderRadii.data(), cylinderRadii.size()));
+    if (globalRadius.has_value()) {
+      anari::setParameter(d, geom, "radius", globalRadius.value());
+    } else {
+      anari::setAndReleaseParameter(d,
+          geom,
+          "primitive.radius",
+          anari::newArray1D(d, cylinderRadii.data(), cylinderRadii.size()));
+    }
 
     if (!cylinderCaps.empty()) {
       anari::setAndReleaseParameter(d,
