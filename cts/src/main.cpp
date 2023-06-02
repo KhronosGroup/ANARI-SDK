@@ -27,6 +27,7 @@ PYBIND11_MODULE(anariCTSBackend, m)
       .def("setParameter", &cts::SceneGeneratorWrapper::setParam<std::string>)
       .def("setParameter", &cts::SceneGeneratorWrapper::setParam<int>)
       .def("setParameter", &cts::SceneGeneratorWrapper::setParam<float>)
+      .def("setParameter", &cts::SceneGeneratorWrapper::setParam<bool>)
       .def("commit", &cts::SceneGeneratorWrapper::commit)
       .def("renderScene", &cts::SceneGeneratorWrapper::renderScene)
       .def(
