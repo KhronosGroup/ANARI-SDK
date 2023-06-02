@@ -3,6 +3,7 @@
 
 #include "SceneGenerator.h"
 #include "PrimitiveGenerator.h"
+#include "TextureGenerator.h"
 #include "anariWrapper.h"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -140,6 +141,39 @@ void SceneGenerator::createAnariObject(
     auto it = m_anariObjects.try_emplace(
         int(ANARI_SAMPLER), std::vector<ANARIObject>());
     it.first->second.emplace_back(object);
+
+    if (subtype == "image1D") {
+      size_t resolution = 32;
+      std::vector<glm::vec4> greyscale =
+          TextureGenerator::generateGreyScale(resolution);
+      anari::setAndReleaseParameter(m_device,
+          object,
+          "image",
+          anari::newArray1D(m_device, greyscale.data(), resolution));
+      break;
+    }
+    if (subtype == "image2D") {
+      size_t resolution = 64;
+      auto checkerboard = TextureGenerator::generateCheckerBoard(resolution);
+      anari::setAndReleaseParameter(m_device,
+          object,
+          "image",
+          anari::newArray2D(m_device,
+              checkerboard.data(), resolution, resolution));
+      break;
+    }
+    if (subtype == "image3D") {
+      size_t resolution = 32;
+      auto rgbRamp = TextureGenerator::generateRGBRamp(resolution);
+      anari::setAndReleaseParameter(m_device,
+          object,
+          "image",
+          anari::newArray3D(m_device,
+              rgbRamp.data(),
+              resolution,
+              resolution, resolution));
+      break;
+    }
     break;
   }
   }
@@ -223,6 +257,18 @@ void SceneGenerator::commit()
            generator.generateTriangulatedQuadsIndexed(primitiveCount);
        vertices = quadVertices;
        indices = quadIndices;
+       std::vector<glm::vec3> textureCoordinates;
+       for (int i = 0; i < primitiveCount; ++i) {
+         textureCoordinates.push_back({0.0f, 0.0f, 0.0f});
+         textureCoordinates.push_back({1.0f, 0.0f, 0.0f});
+         textureCoordinates.push_back({0.0f, 1.0f, 0.0f});
+         textureCoordinates.push_back({1.0f, 1.0f, 1.0f});
+       }
+       anari::setAndReleaseParameter(m_device,
+           geom,
+           "vertex.attribute1",
+           anari::newArray1D(
+               m_device, textureCoordinates.data(), textureCoordinates.size()));
       } else {
        vertices = generator.generateTriangulatedQuadsSoup(primitiveCount);
       }
@@ -379,8 +425,8 @@ void SceneGenerator::commit()
   }
   float attributeMin = getParam<float>("attribute_min", 0.0f);
   float attributeMax = getParam<float>("attribute_max", 1.0f);
-  bool generateVertexAttribtues = getParam<bool>("vertex_attributes", true);
-  bool generatePrimitiveAttribtues = getParam<bool>("primitive_attributes", true);
+  bool generateVertexAttribtues = getParam<bool>("vertex_attributes", false);
+  bool generatePrimitiveAttribtues = getParam<bool>("primitive_attributes", false);
   for (int i = 0; i < 4; ++i) {
     if (generateVertexAttribtues) {
       auto attribute = generator.generateAttribute(
