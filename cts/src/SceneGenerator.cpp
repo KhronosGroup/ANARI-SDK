@@ -3,6 +3,7 @@
 
 #include "SceneGenerator.h"
 #include "PrimitiveGenerator.h"
+#include "ColorPalette.h"
 #include "anariWrapper.h"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -89,6 +90,8 @@ void SceneGenerator::commit()
     globalRadius = getParam<float>("globalRadius", 1);
   }
   bool unusedVertices = getParam<bool>("unusedVertices", false);
+  // TODO default should be false, getting the bool from json does not work currently
+  bool useVertexColors = getParam<bool>("vertexColors", true);
 
   // build this scene top-down to stress commit ordering guarantees
   // setup lighting, material and empty geometry
@@ -97,8 +100,12 @@ void SceneGenerator::commit()
   auto surface = anari::newObject<anari::Surface>(d);
   auto geom = anari::newObject<anari::Geometry>(d, geometrySubtype.c_str());
   auto mat = anari::newObject<anari::Material>(d, "matte");
-  std::array<float, 3> color = {1.f, 1.f, 1.f};
-  anari::setParameter(d, mat, "color", color);
+  if (useVertexColors) {
+    anari::setParameter(d, mat, "color", "color");
+  } else {
+    std::array<float, 3> color = {1.0f, 1.0f, 1.0f};
+    anari::setParameter(d, mat, "color", color);
+  }
   anari::commitParameters(d, mat);
 
   anari::setAndReleaseParameter(
@@ -285,6 +292,19 @@ void SceneGenerator::commit()
     }
 
     anari::setParameter(d, geom, "caps", globalCaps);
+
+    if (useVertexColors) {
+      std::vector<glm::vec3> vertexColors;
+      for (int i = 0; i < coneVertices.size(); ++i) {
+        glm::vec3 color = colorPalette::getColorFromPalette(i);
+        vertexColors.push_back(color);
+      }
+
+      anari::setAndReleaseParameter(d,
+          geom,
+          "vertex.color",
+          anari::newArray1D(d, vertexColors.data(), vertexColors.size()));
+    }
 
     if (primitiveMode == "indexed") {
       std::vector<glm::uvec2> indices;
