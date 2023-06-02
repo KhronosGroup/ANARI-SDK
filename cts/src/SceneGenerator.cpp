@@ -56,7 +56,7 @@ std::vector<anari::scenes::ParameterInfo> SceneGenerator::parameters()
       {"attribute_min", 0.0f, "Minimum random value for attributes"},
       {"attribute_max", 1.0f, "Maximum random value for attributes"},
       {"primitive_attributes", true, "If primitive attributes should be filled randomly"},
-      {"vertex_attribtues", true, "If vertex attributes should be filled randomly"},
+      {"vertex_attributes", true, "If vertex attributes should be filled randomly"},
       {"seed", 0u, "Seed for random number generator to ensure that tests are consistent across platforms"}
 
       //
