@@ -89,7 +89,7 @@ void SceneGenerator::commit()
     globalRadius = getParam<float>("globalRadius", 1);
   }
   // TODO bools do not work with getParam currently, default value is always used
-  bool unusedVertices = getParam<bool>("unusedVertices", true);
+  bool unusedVertices = getParam<bool>("unusedVertices", false);
 
   // build this scene top-down to stress commit ordering guarantees
   // setup lighting, material and empty geometry

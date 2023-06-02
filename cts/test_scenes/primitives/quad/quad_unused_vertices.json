@@ -4,7 +4,7 @@
     "primitiveCount": 4,
     "seed": 54321,
     "shape": "quad",
-    "unusedVertices": true
+    "primitiveMode": "indexed"
   },
   "permutations": {
     "unusedVertices": [
