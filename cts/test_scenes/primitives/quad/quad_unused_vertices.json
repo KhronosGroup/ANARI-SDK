@@ -4,13 +4,8 @@
     "primitiveCount": 4,
     "seed": 54321,
     "shape": "quad",
-    "primitiveMode": "indexed"
-  },
-  "permutations": {
-    "unusedVertices": [
-      true,
-      false
-    ]
+    "primitiveMode": "indexed",
+    "unusedVertices": true
   },
   "requiredFeatures": [
     "ANARI_KHR_GEOMETRY_QUAD"
