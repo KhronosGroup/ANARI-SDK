@@ -20,6 +20,30 @@ class SceneGenerator : public anari::scenes::TestScene
   std::vector<anari::scenes::ParameterInfo> parameters() override;
   void resetAllParameters();
   void resetSceneObjects();
+  
+  void createAnariObject(int type, const std::string& subtype);
+  template <typename T>
+  void setGenericParameter(const std::string& name, T&& value)
+  {
+    if (m_device != nullptr && m_currentObject != nullptr) {
+      anari::setParameter(m_device, m_currentObject, name.c_str(), value);
+    }
+  }
+
+  void unsetGenericParameter(const std::string& name) {
+    if (m_device != nullptr && m_currentObject != nullptr) {
+      anari::unsetParameter(m_device, m_currentObject, name.c_str());
+    }
+  }
+
+  void setReferenceParameter(int objType, size_t objIndex, const std::string& name, int refType, size_t refIndex);
+
+  void setCurrentObject(int type, size_t index);
+
+  void releaseAnariObject()
+  {
+    m_currentObject = nullptr;
+  }
 
   anari::World world() override;
 
@@ -35,12 +59,15 @@ class SceneGenerator : public anari::scenes::TestScene
     return frameDuration;
   }
 
+  int anariTypeFromString(const std::string &input);
+
  private:
 
   float frameDuration = -1.0f;
 
   anari::World m_world{nullptr};
   std::unordered_map<int, std::vector<anari::Object>> m_anariObjects;
+  anari::Object m_currentObject;
 };
 
 } // namespace cts

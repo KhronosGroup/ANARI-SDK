@@ -59,6 +59,7 @@ std::vector<anari::scenes::ParameterInfo> SceneGenerator::parameters()
       {"primitive_attributes", false, "If primitive attributes should be filled randomly"},
       {"vertex_attributes", false, "If vertex attributes should be filled randomly"},
       {"seed", 0u, "Seed for random number generator to ensure that tests are consistent across platforms"},
+      {"camera_generate_transform", true, "If the camera position should be computed via world bounds"},
       {"vertexCaps", false, "Should cones and cylinders have caps (per vertex setting)"},
       {"globalCaps", "none", "Should cones and cylinders have caps (global setting). Possible values: \"none\", \"first\", \"second\", \"both\""},
       {"globalRadius", 1.0f, "Use the global radius property instead of a per vertex one"},
@@ -67,6 +68,88 @@ std::vector<anari::scenes::ParameterInfo> SceneGenerator::parameters()
 
       //
   };
+}
+
+int SceneGenerator::anariTypeFromString(const std::string& type) 
+{
+  if (type == "material") {
+    return ANARI_MATERIAL;
+  } 
+  if (type == "camera") {
+    return ANARI_CAMERA;
+  } 
+  if (type == "light") {
+    return ANARI_LIGHT;
+  }
+  if (type == "sampler") {
+    return ANARI_SAMPLER;
+  }
+  return ANARI_UNKNOWN;
+}
+
+void SceneGenerator::setReferenceParameter(int objectType, size_t objectIndex,
+    const std::string &name, int refType, size_t refIndex)
+{
+  if (auto itObj = m_anariObjects.find(objectType);
+      itObj != m_anariObjects.end() && objectIndex < itObj->second.size()) {
+    auto object = itObj->second[objectIndex];
+    if (m_device != nullptr) {
+      if (auto itRef = m_anariObjects.find(refType);
+          itRef != m_anariObjects.end() && refIndex < itRef->second.size()) {
+        auto ref = itRef->second[refIndex];
+        anari::setParameter(m_device, object, name.c_str(), ref);
+      }
+    }
+  }
+}
+
+void SceneGenerator::setCurrentObject(int type, size_t index)
+{
+    if (auto it = m_anariObjects.find(type);
+        it != m_anariObjects.end() && index < it->second.size()) {
+        m_currentObject = it->second[index];
+    }
+}
+
+void SceneGenerator::createAnariObject(
+    int type, const std::string &subtype)
+{
+  ANARIObject object = nullptr;
+  switch (type) {
+  case ANARI_MATERIAL: {
+    object = anari::newObject<anari::Material>(m_device, subtype.c_str());
+    auto it = m_anariObjects.try_emplace(
+        int(ANARI_MATERIAL), std::vector<ANARIObject>());
+    if (it.first->second.size() == 0) {
+      it.first->second.emplace_back(object);
+    }
+    break;
+  }
+  case ANARI_CAMERA: {
+    object = anari::newObject<anari::Camera>(m_device, subtype.c_str());
+    auto it = m_anariObjects.try_emplace(
+        int(ANARI_CAMERA), std::vector<ANARIObject>());
+    if (it.first->second.size() == 0) {
+      it.first->second.emplace_back(object);
+    }
+    break;
+  }
+  case ANARI_LIGHT: {
+    object = anari::newObject<anari::Light>(m_device, subtype.c_str());
+    auto it = m_anariObjects.try_emplace(
+        int(ANARI_LIGHT), std::vector<ANARIObject>());
+    it.first->second.emplace_back(object);
+    break;
+  }
+  case ANARI_SAMPLER: {
+    object = anari::newObject<anari::Sampler>(m_device, subtype.c_str());
+    auto it = m_anariObjects.try_emplace(
+        int(ANARI_SAMPLER), std::vector<ANARIObject>());
+    it.first->second.emplace_back(object);
+    break;
+  }
+  }
+  m_currentObject = object;
 }
 
 anari::World SceneGenerator::world()
@@ -78,6 +161,12 @@ anari::World SceneGenerator::world()
 void SceneGenerator::commit()
 {
   auto d = m_device;
+
+  for (auto &items : m_anariObjects) {
+    for (auto &object : items.second) {
+      anari::commitParameters(d, object);
+    }
+  }
 
   // gather the data on what geometry will be present in the scene
   std::string geometrySubtype = getParamString("geometrySubtype", "triangle");
@@ -104,14 +193,13 @@ void SceneGenerator::commit()
 
   auto surface = anari::newObject<anari::Surface>(d);
   auto geom = anari::newObject<anari::Geometry>(d, geometrySubtype.c_str());
-  auto mat = anari::newObject<anari::Material>(d, "matte");
-  if (useVertexColors) {
-    anari::setParameter(d, mat, "color", "color");
-  } else {
-    std::array<float, 3> color = {1.0f, 1.0f, 1.0f};
-    anari::setParameter(d, mat, "color", color);
+  if (auto it = m_anariObjects.find(int(ANARI_MATERIAL));
+      it != m_anariObjects.end()) {
+    if (!it->second.empty()) {
+      auto mat = it->second.front();
+      anari::setParameter(d, surface, "material", mat);
+    }
   }
-  anari::commitParameters(d, mat);
 
   anari::setAndReleaseParameter(
       d, m_world, "surface", anari::newArray1D(d, &surface));
@@ -119,7 +207,6 @@ void SceneGenerator::commit()
   anari::commitParameters(d, m_world);
 
   anari::setParameter(d, surface, "geometry", geom);
-  anari::setParameter(d, surface, "material", mat);
 
   // initialize PrimitiveGenerator with seed for random number generation
   PrimitiveGenerator generator(seed);
@@ -438,13 +525,11 @@ void SceneGenerator::commit()
 
   // commit everything to the device
   anari::commitParameters(d, geom);
-  anari::commitParameters(d, mat);
   anari::commitParameters(d, surface);
 
   // cleanup
   anari::release(d, surface);
   anari::release(d, geom);
-  anari::release(d, mat);
 }
 
 // render the scene with the given rendererType and renderDistance
@@ -472,9 +557,14 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
   std::string depth_type_param = getParamString("frame_depth_type", "");
 
   // create render camera
-  auto camera = anari::newObject<anari::Camera>(m_device, "perspective");
-  anari::setParameter(
-      m_device, camera, "aspect", (float)image_height / (float)image_width);
+  ANARIObject camera;
+  if (auto it = m_anariObjects.find(ANARI_CAMERA);
+      it != m_anariObjects.end() && !it->second.empty()) {
+    camera = it->second.front();
+  } else {
+    createAnariObject(ANARI_CAMERA, "perspective");
+    camera = m_currentObject;
+  }
 
   // create renderer
   auto renderer =
@@ -498,18 +588,21 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
     anari::setParameter(m_device, frame, "channel.depth", ANARI_FLOAT32);
   }
 
+
   anari::setParameter(m_device, frame, "renderer", renderer);
   anari::setParameter(m_device, frame, "camera", camera);
   anari::setParameter(m_device, frame, "world", m_world);
 
   anari::commitParameters(m_device, frame);
 
-  // setup camera transform
-  auto cam = createDefaultCameraFromWorld(m_world);
-  anari::setParameter(m_device, camera, "position", cam.position);
-  anari::setParameter(m_device, camera, "direction", cam.direction);
-  anari::setParameter(m_device, camera, "up", cam.up);
-  anari::commitParameters(m_device, camera);
+  if (getParam<bool>("camera_generate_transform", true)) {
+    // setup camera transform
+    auto cam = createDefaultCameraFromWorld(m_world);
+    anari::setParameter(m_device, camera, "position", cam.position);
+    anari::setParameter(m_device, camera, "direction", cam.direction);
+    anari::setParameter(m_device, camera, "up", cam.up);
+    anari::commitParameters(m_device, camera);
+  }
 
   // render scene
   anari::render(m_device, frame);
@@ -591,7 +684,6 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
   }
 
   // cleanup
-  anari::release(m_device, camera);
   anari::release(m_device, frame);
   anari::release(m_device, renderer);
 
@@ -600,13 +692,6 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
 
 // clear any existing objects in the scene
 void SceneGenerator::resetSceneObjects() {
-  for (auto &[key, value] : m_anariObjects) {
-    for (auto &object : value) {
-      anari::release(m_device, object);
-    }
-  }
-  m_anariObjects.clear();
-
   anari::unsetParameter(m_device, m_world, "instance");
   anari::unsetParameter(m_device, m_world, "surface");
   anari::unsetParameter(m_device, m_world, "volume");
@@ -616,6 +701,12 @@ void SceneGenerator::resetSceneObjects() {
 // reset all parameters and objects in the scene
 void SceneGenerator::resetAllParameters() {
   resetSceneObjects();
+  for (auto &[key, value] : m_anariObjects) {
+    for (auto &object : value) {
+      anari::release(m_device, object);
+    }
+  }
+  m_anariObjects.clear();
   std::vector<std::string> paramNames;
   for (auto it = params_begin(); it != params_end(); ++it) {
     paramNames.push_back(it->first);
