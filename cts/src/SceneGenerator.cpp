@@ -440,11 +440,7 @@ void SceneGenerator::commit()
     anari::setParameter(d, geom, "caps", globalCaps);
 
     if (useVertexColors) {
-      std::vector<glm::vec3> vertexColors;
-      for (int i = 0; i < coneVertices.size(); ++i) {
-        glm::vec3 color = colors::getColorFromPalette(i);
-        vertexColors.push_back(color);
-      }
+      std::vector<glm::vec3> vertexColors = colors::getColorVectorFromPalette(coneVertices.size());
 
       anari::setAndReleaseParameter(d,
           geom,
