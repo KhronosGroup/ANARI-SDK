@@ -3,7 +3,15 @@
     "geometrySubtype": "sphere",
     "primitiveCount": 4,
     "seed": 54321,
-    "vertexColors": true
+    "vertexColors": true,
+    "anari_objects": {
+      "material": [
+        {
+          "subtype": "matte",
+          "color": "color"
+        }
+      ]
+    }
   },
   "requiredFeatures": [
     "ANARI_KHR_GEOMETRY_SPHERE"

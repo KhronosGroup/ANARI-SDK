@@ -4,7 +4,15 @@
     "primitiveCount": 4,
     "seed": 12345,
     "shape": "triangle",
-    "vertexColors": true
+    "vertexColors": true,
+    "anari_objects": {
+      "material": [
+        {
+          "subtype": "matte",
+          "color": "color"
+        }
+      ]
+    }
   },
   "requiredFeatures": [
     "ANARI_KHR_GEOMETRY_TRIANGLE"
