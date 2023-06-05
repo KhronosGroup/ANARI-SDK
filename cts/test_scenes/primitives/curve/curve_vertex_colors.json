@@ -1,26 +1,26 @@
 {
   "sceneParameters": {
-    "geometrySubtype": "cone",
+    "geometrySubtype": "curve",
     "primitiveCount": 4,
     "seed": 12345,
     "vertexColors": true
   },
   "requiredFeatures": [
-    "ANARI_KHR_GEOMETRY_CONE"
+    "ANARI_KHR_GEOMETRY_CURVE"
   ],
   "metaData": {
     "": {
       "bounds": {
         "world": [
           [
-            0.05034279823303223,
-            -0.03602668642997742,
-            -0.22464142739772797
+            0.5130686163902283,
+            0.17126691341400146,
+            0.5636337399482727
           ],
           [
-            1.007825493812561,
-            1.0608841180801392,
-            1.1261554956436157
+            0.8651392459869385,
+            0.9082220792770386,
+            0.8114861845970154
           ]
         ]
       }

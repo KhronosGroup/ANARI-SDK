@@ -1,0 +1,30 @@
+{
+  "sceneParameters": {
+    "geometrySubtype": "triangle",
+    "primitiveCount": 4,
+    "seed": 12345,
+    "shape": "triangle",
+    "vertexColors": true
+  },
+  "requiredFeatures": [
+    "ANARI_KHR_GEOMETRY_TRIANGLE"
+  ],
+  "metaData": {
+    "": {
+      "bounds": {
+        "world": [
+          [
+            0.24312326312065125,
+            0.3148316442966461,
+            0.29127466678619385
+          ],
+          [
+            0.9506357312202454,
+            0.9430128335952759,
+            0.8662656545639038
+          ]
+        ]
+      }
+    }
+  }
+}

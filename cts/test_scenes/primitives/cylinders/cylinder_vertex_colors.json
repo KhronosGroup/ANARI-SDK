@@ -1,26 +1,26 @@
 {
   "sceneParameters": {
-    "geometrySubtype": "cone",
+    "geometrySubtype": "cylinder",
     "primitiveCount": 4,
     "seed": 12345,
     "vertexColors": true
   },
   "requiredFeatures": [
-    "ANARI_KHR_GEOMETRY_CONE"
+    "ANARI_KHR_GEOMETRY_CYLINDER"
   ],
   "metaData": {
     "": {
       "bounds": {
         "world": [
           [
-            0.05034279823303223,
-            -0.03602668642997742,
-            -0.22464142739772797
+            0.14968019723892212,
+            0.29617956280708313,
+            -0.11848979443311691
           ],
           [
-            1.007825493812561,
-            1.0608841180801392,
-            1.1261554956436157
+            1.0836632251739502,
+            1.0531830787658691,
+            1.1774380207061768
           ]
         ]
       }

@@ -1,0 +1,30 @@
+{
+  "sceneParameters": {
+    "geometrySubtype": "quad",
+    "primitiveCount": 4,
+    "seed": 54321,
+    "shape": "quad",
+    "vertexColors": true
+  },
+  "requiredFeatures": [
+    "ANARI_KHR_GEOMETRY_QUAD"
+  ],
+  "metaData": {
+    "": {
+      "bounds": {
+        "world": [
+          [
+            -0.05071770399808884,
+            0.21228507161140442,
+            0.24453215301036835
+          ],
+          [
+            0.9700222015380859,
+            0.826878011226654,
+            0.9431244134902954
+          ]
+        ]
+      }
+    }
+  }
+}

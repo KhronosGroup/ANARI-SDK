@@ -1,0 +1,29 @@
+{
+  "sceneParameters": {
+    "geometrySubtype": "sphere",
+    "primitiveCount": 4,
+    "seed": 54321,
+    "vertexColors": true
+  },
+  "requiredFeatures": [
+    "ANARI_KHR_GEOMETRY_SPHERE"
+  ],
+  "metaData": {
+    "": {
+      "bounds": {
+        "world": [
+          [
+            -0.08790050446987152,
+            -0.2843879461288452,
+            0.05466984212398529
+          ],
+          [
+            1.1669188737869263,
+            1.183884620666504,
+            0.9511542320251465
+          ]
+        ]
+      }
+    }
+  }
+}
