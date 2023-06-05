@@ -22,11 +22,10 @@ struct Geometry : public Object
   void commit() override;
   void markCommitted() override;
 
-  virtual float4 getAttributeValueAt(
+  virtual float4 getAttributeValue(
       const Attribute &attr, const Ray &ray) const;
 
  protected:
-  float4 readAttributeArrayAt(Array1D *arr, uint32_t i) const;
 
   RTCGeometry m_embreeGeometry{nullptr};
 
