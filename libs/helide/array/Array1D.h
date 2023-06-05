@@ -34,6 +34,8 @@ struct Array1D : public Array
 
   size_t size() const;
 
+  float4 readAsAttributeValue(uint32_t i) const;
+
   void privatize() override;
 
  private:
@@ -41,6 +43,8 @@ struct Array1D : public Array
   size_t m_begin{0};
   size_t m_end{0};
 };
+
+float4 readAttributeValue(const Array1D *arr, uint32_t i);
 
 // Inlined definitions ////////////////////////////////////////////////////////
 

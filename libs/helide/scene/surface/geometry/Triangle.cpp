@@ -69,8 +69,7 @@ void Triangle::commit()
   rtcCommitGeometry(embreeGeometry());
 }
 
-float4 Triangle::getAttributeValueAt(
-    const Attribute &attr, const Ray &ray) const
+float4 Triangle::getAttributeValue(const Attribute &attr, const Ray &ray) const
 {
   if (attr == Attribute::NONE)
     return DEFAULT_ATTRIBUTE_VALUE;
@@ -78,16 +77,16 @@ float4 Triangle::getAttributeValueAt(
   auto attrIdx = static_cast<int>(attr);
   auto *attributeArray = m_vertexAttributes[attrIdx].ptr;
   if (!attributeArray)
-    return Geometry::getAttributeValueAt(attr, ray);
+    return Geometry::getAttributeValue(attr, ray);
 
   const float3 uvw(1.0f - ray.u - ray.v, ray.u, ray.v);
 
   auto idx = m_index ? *(m_index->dataAs<uint3>() + ray.primID)
                      : uint3(ray.primID + 0, ray.primID + 1, ray.primID + 2);
 
-  auto a = readAttributeArrayAt(attributeArray, idx.x);
-  auto b = readAttributeArrayAt(attributeArray, idx.y);
-  auto c = readAttributeArrayAt(attributeArray, idx.z);
+  auto a = readAttributeValue(attributeArray, idx.x);
+  auto b = readAttributeValue(attributeArray, idx.y);
+  auto c = readAttributeValue(attributeArray, idx.z);
 
   return uvw.x * a + uvw.y * b + uvw.z * c;
 }

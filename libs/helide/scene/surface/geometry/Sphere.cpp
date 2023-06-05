@@ -78,18 +78,17 @@ void Sphere::commit()
   rtcCommitGeometry(embreeGeometry());
 }
 
-float4 Sphere::getAttributeValueAt(
-    const Attribute &attr, const Ray &ray) const
+float4 Sphere::getAttributeValue(const Attribute &attr, const Ray &ray) const
 {
   if (attr == Attribute::NONE)
-    return Geometry::getAttributeValueAt(attr, ray);
+    return Geometry::getAttributeValue(attr, ray);
 
   auto attrIdx = static_cast<int>(attr);
   auto *attributeArray = m_vertexAttributes[attrIdx].ptr;
   if (!attributeArray)
-    return Geometry::getAttributeValueAt(attr, ray);
+    return Geometry::getAttributeValue(attr, ray);
 
-  return readAttributeArrayAt(attributeArray, ray.primID);
+  return readAttributeValue(attributeArray, ray.primID);
 }
 
 void Sphere::cleanup()
