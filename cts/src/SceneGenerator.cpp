@@ -58,7 +58,12 @@ std::vector<anari::scenes::ParameterInfo> SceneGenerator::parameters()
       {"attribute_max", 1.0f, "Maximum random value for attributes"},
       {"primitive_attributes", true, "If primitive attributes should be filled randomly"},
       {"vertex_attributes", true, "If vertex attributes should be filled randomly"},
-      {"seed", 0u, "Seed for random number generator to ensure that tests are consistent across platforms"}
+      {"seed", 0u, "Seed for random number generator to ensure that tests are consistent across platforms"},
+      {"vertexCaps", false, "Should cones and cylinders have caps (per vertex setting)"},
+      {"globalCaps", "none", "Should cones and cylinders have caps (global setting). Possible values: \"none\", \"first\", \"second\", \"both\""},
+      {"globalRadius", 1.0f, "Use the global radius property instead of a per vertex one"},
+      {"unusedVertices", false, "The last primitive's indices in the index buffer will be removed to test handling of unused/skipped vertices in the vertex buffer"},
+      {"vertexColors", false, "The vertex color attribute will be used with a selection of different colors"}
 
       //
   };
@@ -87,7 +92,7 @@ void SceneGenerator::commit()
   std::string globalCaps = getParamString("globalCaps", "none");
   std::optional<float> globalRadius = std::nullopt;
   if (hasParam("globalRadius")) {
-    globalRadius = getParam<float>("globalRadius", 1);
+    globalRadius = getParam<float>("globalRadius", 1.0f);
   }
   bool unusedVertices = getParam<bool>("unusedVertices", false);
   // TODO default should be false, getting the bool from json does not work currently
