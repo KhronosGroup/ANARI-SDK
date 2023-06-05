@@ -381,9 +381,8 @@ void SceneGenerator::commit()
   }
   float attributeMin = getParam<float>("attribute_min", 0.0f);
   float attributeMax = getParam<float>("attribute_max", 1.0f);
-  // TODO set default value to false
-  bool generateVertexAttributes = getParam<bool>("vertex_attributes", true);
-  bool generatePrimitiveAttributes = getParam<bool>("primitive_attributes", true);
+  bool generateVertexAttributes = getParam<bool>("vertex_attributes", false);
+  bool generatePrimitiveAttributes = getParam<bool>("primitive_attributes", false);
   if (generateVertexAttributes) {
     auto attributeFloat = generator.generateAttributeFloat(
         vertices.size(), attributeMin, attributeMax);
