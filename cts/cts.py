@@ -340,6 +340,7 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
             variant_keys = []
             keys = []
             lists = []
+            permutations = []
             if "permutations" in parsed_json:
                 keys.extend(list(parsed_json["permutations"].keys()))
                 lists.extend(list(parsed_json["permutations"].values()))
@@ -348,7 +349,19 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                 variant_keys = ["var_" + item for item in variant_keys]
                 keys.extend(variant_keys)
                 lists.extend(list(parsed_json["variants"].values()))
-            permutations = itertools.product(*lists)
+            if "simplified_permutations" in parsed_json and parsed_json["simplified_permutations"]:
+                for permutationList in lists:
+                    for item in permutationList:
+                        permutation = []
+                        for permutationList2 in lists:
+                            if permutationList2 is not permutationList:                                                      
+                                permutation.append(permutationList2[0])
+                            else:
+                                permutation.append(item)
+                        if permutation not in permutations:
+                            permutations.append(permutation)
+            else:
+                permutations = itertools.product(*lists)
             # loop over all permutations based on permutations and variants in the test scene
             for permutation in permutations:
                 # prepare naming scheme for saving the results
