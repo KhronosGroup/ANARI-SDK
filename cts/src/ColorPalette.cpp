@@ -1,6 +1,6 @@
 #include "ColorPalette.h"
 
-const std::vector<glm::vec3> colorPalette::palette = {
+const std::vector<glm::vec3> colors::palette = {
     {0.55, 0.82, 0.78},
     {1.00, 1.00, 0.70},
     {0.74, 0.73, 0.85},

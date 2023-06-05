@@ -296,7 +296,7 @@ void SceneGenerator::commit()
     if (useVertexColors) {
       std::vector<glm::vec3> vertexColors;
       for (int i = 0; i < coneVertices.size(); ++i) {
-        glm::vec3 color = colorPalette::getColorFromPalette(i);
+        glm::vec3 color = colors::getColorFromPalette(i);
         vertexColors.push_back(color);
       }
 
