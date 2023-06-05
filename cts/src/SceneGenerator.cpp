@@ -95,8 +95,8 @@ void SceneGenerator::commit()
     globalRadius = getParam<float>("globalRadius", 1.0f);
   }
   bool unusedVertices = getParam<bool>("unusedVertices", false);
-  // TODO default should be false, getting the bool from json does not work currently
-  bool useVertexColors = getParam<bool>("vertexColors", true);
+  // TODO getting the bool from json does not work currently
+  bool useVertexColors = getParam<bool>("vertexColors", false);
 
   // build this scene top-down to stress commit ordering guarantees
   // setup lighting, material and empty geometry
