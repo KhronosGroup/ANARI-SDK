@@ -22,6 +22,13 @@ float PrimitiveGenerator::getRandomFloat(float min, float max)
   return scaledNumber;
 }
 
+// helper function to get random vec2 with each component in range min..max
+glm::vec2 PrimitiveGenerator::getRandomVector2(float min, float max)
+{
+  return {getRandomFloat(min, max),
+      getRandomFloat(min, max)};
+}
+
 // helper function to get random vec3 with each component in range min..max
 glm::vec3 PrimitiveGenerator::getRandomVector3(float min, float max)
 {
@@ -90,7 +97,43 @@ std::vector<glm::vec3> PrimitiveGenerator::randomTransform(
 }
 
 // returns vector of randomized attribute data, each attribute being in range min..max
-std::vector<glm::vec4> PrimitiveGenerator::generateAttribute(size_t elementCount, float min, float max) {
+std::vector<float> PrimitiveGenerator::generateAttributeFloat(size_t elementCount, float min, float max) {
+  std::vector<float> attributes(elementCount);
+  for (auto &attribute : attributes) {
+    attribute = getRandomFloat(min, max);
+  }
+  return attributes;
+}
+
+// returns vector of randomized attribute data, each attribute being in range
+// min..max
+std::vector<glm::vec2> PrimitiveGenerator::generateAttributeVec2(
+    size_t elementCount, float min, float max)
+{
+  std::vector<glm::vec2> attributes(elementCount);
+  for (auto &attribute : attributes) {
+    attribute = getRandomVector2(min, max);
+  }
+  return attributes;
+}
+
+// returns vector of randomized attribute data, each attribute being in range
+// min..max
+std::vector<glm::vec3> PrimitiveGenerator::generateAttributeVec3(
+    size_t elementCount, float min, float max)
+{
+  std::vector<glm::vec3> attributes(elementCount);
+  for (auto &attribute : attributes) {
+    attribute = getRandomVector3(min, max);
+  }
+  return attributes;
+}
+
+// returns vector of randomized attribute data, each attribute being in range
+// min..max
+std::vector<glm::vec4> PrimitiveGenerator::generateAttributeVec4(
+    size_t elementCount, float min, float max)
+{
   std::vector<glm::vec4> attributes(elementCount);
   for (auto &attribute : attributes) {
     attribute = getRandomVector4(min, max);

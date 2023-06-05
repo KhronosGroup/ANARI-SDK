@@ -26,7 +26,13 @@ class PrimitiveGenerator
   std::vector<glm::vec3> generateTriangulatedCubesSoup(size_t primitiveCount);
   std::tuple<std::vector<glm::vec3>, std::vector<glm::uvec3>>
   generateTriangulatedCubesIndexed(size_t primitiveCount);
-  std::vector<glm::vec4> generateAttribute(
+  std::vector<float> generateAttributeFloat(
+      size_t elementCount, float min = 0.0f, float max = 1.0f);
+  std::vector<glm::vec2> generateAttributeVec2(
+      size_t elementCount, float min = 0.0f, float max = 1.0f);
+  std::vector<glm::vec3> generateAttributeVec3(
+      size_t elementCount, float min = 0.0f, float max = 1.0f);
+  std::vector<glm::vec4> generateAttributeVec4(
       size_t elementCount, float min = 0.0f, float max = 1.0f);
 
   // quads
@@ -55,6 +61,7 @@ class PrimitiveGenerator
   std::mt19937 m_rng;
 
   float getRandomFloat(float min, float max);
+  glm::vec2 getRandomVector2(float min, float max);
   glm::vec3 getRandomVector3(float min, float max);
   glm::vec4 getRandomVector4(float min, float max);
   std::vector<glm::vec3> randomTranslate(
