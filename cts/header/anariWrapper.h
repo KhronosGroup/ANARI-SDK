@@ -114,6 +114,14 @@ class SceneGeneratorWrapper
     }
   }
 
+  template <typename T>
+  void setGenericArray1DParameter(const std::string &name, T &t)
+  {
+    if (m_sceneGenerator) {
+      m_sceneGenerator->setGenericArray1DParameter(name, t);
+    }
+  }
+
   void unsetGenericParameter(const std::string &name)
   {
     if (m_sceneGenerator) {
