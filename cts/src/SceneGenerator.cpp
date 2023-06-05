@@ -477,23 +477,26 @@ void SceneGenerator::commit()
         geom,
         "vertex.attribute0",
         anari::newArray1D(d, attributeFloat.data(), attributeFloat.size()));
+
     auto attributeVec2 = generator.generateAttributeVec2(
         vertices.size(), attributeMin, attributeMax);
     anari::setAndReleaseParameter(d,
         geom,
-        "vertex.attribute0",
+        "vertex.attribute1",
         anari::newArray1D(d, attributeVec2.data(), attributeVec2.size()));
+
     auto attributeVec3 = generator.generateAttributeVec3(
         vertices.size(), attributeMin, attributeMax);
     anari::setAndReleaseParameter(d,
         geom,
-        "vertex.attribute0",
+        "vertex.attribute2",
         anari::newArray1D(d, attributeVec3.data(), attributeVec3.size()));
+
     auto attributeVec4 = generator.generateAttributeVec4(
         vertices.size(), attributeMin, attributeMax);
     anari::setAndReleaseParameter(d,
         geom,
-        "vertex.attribute0",
+        "vertex.attribute3",
         anari::newArray1D(d, attributeVec4.data(), attributeVec4.size()));
   }
   if (generatePrimitiveAttributes) {
@@ -503,23 +506,26 @@ void SceneGenerator::commit()
         geom,
         "primitive.attribute0",
         anari::newArray1D(d, attributeFloat.data(), attributeFloat.size()));
+
     auto attributeVec2 = generator.generateAttributeVec2(
         indiciCount, attributeMin, attributeMax);
     anari::setAndReleaseParameter(d,
         geom,
-        "primitive.attribute0",
+        "primitive.attribute1",
         anari::newArray1D(d, attributeVec2.data(), attributeVec2.size()));
+
     auto attributeVec3 = generator.generateAttributeVec3(
         indiciCount, attributeMin, attributeMax);
     anari::setAndReleaseParameter(d,
         geom,
-        "primitive.attribute0",
+        "primitive.attribute2",
         anari::newArray1D(d, attributeVec3.data(), attributeVec3.size()));
+
     auto attributeVec4 = generator.generateAttributeVec4(
           indiciCount, attributeMin, attributeMax);
     anari::setAndReleaseParameter(d,
         geom,
-        "primitive.attribute0",
+        "primitive.attribute3",
         anari::newArray1D(d, attributeVec4.data(), attributeVec4.size()));
   }
 
