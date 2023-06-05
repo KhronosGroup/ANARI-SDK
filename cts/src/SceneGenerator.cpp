@@ -174,6 +174,14 @@ void SceneGenerator::createAnariObject(
               resolution, resolution));
       break;
     }
+    if (subtype == "primitive") {
+      std::vector<glm::vec4> data = {{1.0f, 0.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 0.0f, 1.0f}};
+      anari::setAndReleaseParameter(m_device,
+          object,
+          "array",
+          anari::newArray1D(m_device, data.data(), data.size()));
+      break;
+    }
     break;
   }
   }
