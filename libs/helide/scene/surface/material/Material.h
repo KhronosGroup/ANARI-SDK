@@ -21,8 +21,6 @@ struct Material : public Object
   const Sampler *colorSampler() const;
 
  protected:
-  Attribute attributeFromString(const std::string &str) const;
-
   float3 m_color{1.f, 1.f, 1.f};
   Attribute m_colorAttribute{Attribute::NONE};
   helium::IntrusivePtr<Sampler> m_colorSampler;

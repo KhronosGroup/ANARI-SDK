@@ -148,6 +148,22 @@ inline void accumulateValue(T &a, const T &b, float interp)
   a += b * (1.f - interp);
 }
 
+inline Attribute attributeFromString(const std::string &str)
+{
+  if (str == "color")
+    return Attribute::COLOR;
+  else if (str == "attribute0")
+    return Attribute::ATTRIBUTE_0;
+  else if (str == "attribute1")
+    return Attribute::ATTRIBUTE_1;
+  else if (str == "attribute2")
+    return Attribute::ATTRIBUTE_2;
+  else if (str == "attribute3")
+    return Attribute::ATTRIBUTE_3;
+  else
+    return Attribute::NONE;
+}
+
 } // namespace helide
 
 namespace anari {

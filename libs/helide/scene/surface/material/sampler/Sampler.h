@@ -7,9 +7,14 @@
 
 namespace helide {
 
+struct Geometry;
+
 struct Sampler : public Object
 {
   Sampler(HelideGlobalState *d);
+
+  virtual float4 getSample(const Geometry &g, const Ray &r) const = 0;
+
   static Sampler *createInstance(
       std::string_view subtype, HelideGlobalState *d);
 };
