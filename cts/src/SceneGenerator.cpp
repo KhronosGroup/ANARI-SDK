@@ -3,6 +3,7 @@
 
 #include "SceneGenerator.h"
 #include "PrimitiveGenerator.h"
+#include "ColorPalette.h"
 #include "TextureGenerator.h"
 #include "anariWrapper.h"
 
@@ -56,10 +57,15 @@ std::vector<anari::scenes::ParameterInfo> SceneGenerator::parameters()
       {"image_width", 1024, "Width of the image"},
       {"attribute_min", 0.0f, "Minimum random value for attributes"},
       {"attribute_max", 1.0f, "Maximum random value for attributes"},
-      {"primitive_attributes", true, "If primitive attributes should be filled randomly"},
-      {"vertex_attribtues", true, "If vertex attributes should be filled randomly"},
+      {"primitive_attributes", false, "If primitive attributes should be filled randomly"},
+      {"vertex_attributes", false, "If vertex attributes should be filled randomly"},
       {"seed", 0u, "Seed for random number generator to ensure that tests are consistent across platforms"},
-      {"camera_generate_transform", true, "If the camera position should be computed via world bounds"}
+      {"camera_generate_transform", true, "If the camera position should be computed via world bounds"},
+      {"vertexCaps", false, "Should cones and cylinders have caps (per vertex setting)"},
+      {"globalCaps", "none", "Should cones and cylinders have caps (global setting). Possible values: \"none\", \"first\", \"second\", \"both\""},
+      {"globalRadius", 1.0f, "Use the global radius property instead of a per vertex one"},
+      {"unusedVertices", false, "The last primitive's indices in the index buffer will be removed to test handling of unused/skipped vertices in the vertex buffer"},
+      {"vertexColors", false, "The vertex color attribute will be used with a selection of different colors"}
 
       //
   };
@@ -210,6 +216,18 @@ void SceneGenerator::commit()
   int primitiveCount = getParam<int>("primitiveCount", 20);
   std::string shape = getParamString("shape", "triangle");
   int seed = getParam<int>("seed", 0);
+  std::optional<int32_t> vertexCaps = std::nullopt;
+  if (hasParam("vertexCaps")) {
+    vertexCaps = getParam<int32_t>("vertexCaps", 0);
+  }
+  std::string globalCaps = getParamString("globalCaps", "none");
+  std::optional<float> globalRadius = std::nullopt;
+  if (hasParam("globalRadius")) {
+    globalRadius = getParam<float>("globalRadius", 1.0f);
+  }
+  bool unusedVertices = getParam<bool>("unusedVertices", false);
+  // TODO getting the bool from json does not work currently
+  bool useVertexColors = getParam<bool>("vertexColors", false);
 
   // build this scene top-down to stress commit ordering guarantees
   // setup lighting, material and empty geometry
@@ -294,6 +312,10 @@ void SceneGenerator::commit()
     if (primitiveMode == "indexed") {
       // shuffle indices vector to create a more useful test case
       generator.shuffleVector(indices);
+      if (unusedVertices && !indices.empty()) {
+        // remove last indices to test not using all vertices/primitives
+        indices.resize(indices.size() - 1);
+      }
       indiciCount = indices.size();
       anari::setAndReleaseParameter(d,
           geom,
@@ -324,6 +346,10 @@ void SceneGenerator::commit()
     if (primitiveMode == "indexed") {
       // shuffle indices vector to create a more useful test case
       generator.shuffleVector(indices);
+      if (unusedVertices && !indices.empty()) {
+        // remove last indices to test not using all vertices/primitives
+        indices.resize(indices.size() - 1);
+      }
       indiciCount = indices.size();
       anari::setAndReleaseParameter(d,
           geom,
@@ -335,10 +361,15 @@ void SceneGenerator::commit()
         generator.generateSpheres(primitiveCount);
     vertices = sphereVertices;
 
-    anari::setAndReleaseParameter(d,
-        geom,
-        "vertex.radius",
-        anari::newArray1D(d, sphereRadii.data(), sphereRadii.size()));
+    if (globalRadius.has_value()) {
+      anari::setParameter(
+          d, geom, "radius", globalRadius.value());
+    } else {
+      anari::setAndReleaseParameter(d,
+          geom,
+          "vertex.radius",
+          anari::newArray1D(d, sphereRadii.data(), sphereRadii.size()));
+    }
 
     if (primitiveMode == "indexed") {
       std::vector<uint32_t> indices;
@@ -348,19 +379,29 @@ void SceneGenerator::commit()
 
       // shuffle indices vector to create a more useful test case
       generator.shuffleVector(indices);
+      if (unusedVertices && !indices.empty()) {
+        // remove last indices to test not using all vertices/primitives
+        indices.resize(indices.size() - 1);
+      }
       anari::setAndReleaseParameter(d,
           geom,
           "primitive.index",
           anari::newArray1D(d, indices.data(), indices.size()));
     }
   } else if (geometrySubtype == "curve") {
-    auto [curveVertices, curveRadii] = generator.generateCurves(primitiveCount);
+    auto [curveVertices, curveRadii] =
+        generator.generateCurves(primitiveCount);
     vertices = curveVertices;
 
-    anari::setAndReleaseParameter(d,
-        geom,
-        "vertex.radius",
-        anari::newArray1D(d, curveRadii.data(), curveRadii.size()));
+    if (globalRadius.has_value()) {
+      anari::setParameter(
+          d, geom, "radius", globalRadius.value());
+    } else {
+      anari::setAndReleaseParameter(d,
+          geom,
+          "vertex.radius",
+          anari::newArray1D(d, curveRadii.data(), curveRadii.size()));
+    }
 
     if (primitiveMode == "indexed") {
       std::vector<uint32_t> indices;
@@ -369,6 +410,10 @@ void SceneGenerator::commit()
 
       // shuffle indices vector to create a more useful test case
       generator.shuffleVector(indices);
+      if (unusedVertices && indices.size() >= 2) {
+        // remove last indices to test not using all vertices/primitives
+        indices.resize(indices.size() - 2);
+      }
       indiciCount = indices.size();
       anari::setAndReleaseParameter(d,
           geom,
@@ -376,8 +421,8 @@ void SceneGenerator::commit()
           anari::newArray1D(d, indices.data(), indices.size()));
     }
   } else if (geometrySubtype == "cone") {
-    auto [coneVertices, coneRadii] =
-        generator.generateCones(primitiveCount);
+    auto [coneVertices, coneRadii, coneCaps] =
+        generator.generateCones(primitiveCount, vertexCaps);
     vertices = coneVertices;
 
     anari::setAndReleaseParameter(d,
@@ -385,6 +430,28 @@ void SceneGenerator::commit()
         "vertex.radius",
         anari::newArray1D(d, coneRadii.data(), coneRadii.size()));
 
+    if (!coneCaps.empty()) {
+      anari::setAndReleaseParameter(d,
+          geom,
+          "vertex.cap",
+          anari::newArray1D(d, coneCaps.data(), coneCaps.size()));
+    }
+
+    anari::setParameter(d, geom, "caps", globalCaps);
+
+    if (useVertexColors) {
+      std::vector<glm::vec3> vertexColors;
+      for (int i = 0; i < coneVertices.size(); ++i) {
+        glm::vec3 color = colors::getColorFromPalette(i);
+        vertexColors.push_back(color);
+      }
+
+      anari::setAndReleaseParameter(d,
+          geom,
+          "vertex.color",
+          anari::newArray1D(d, vertexColors.data(), vertexColors.size()));
+    }
+
     if (primitiveMode == "indexed") {
       std::vector<glm::uvec2> indices;
       for (uint32_t i = 0; i < vertices.size(); i += 2)
@@ -392,6 +459,10 @@ void SceneGenerator::commit()
 
       // shuffle indices vector to create a more useful test case
       generator.shuffleVector(indices);
+      if (unusedVertices && !indices.empty()) {
+        // remove last indices to test not using all vertices/primitives
+        indices.resize(indices.size() - 1);
+      }
       indiciCount = indices.size();
       anari::setAndReleaseParameter(d,
           geom,
@@ -399,13 +470,27 @@ void SceneGenerator::commit()
           anari::newArray1D(d, indices.data(), indices.size()));
     }
   } else if (geometrySubtype == "cylinder") {
-    auto [cylinderVertices, cylinderRadii] = generator.generateCylinders(primitiveCount);
+    auto [cylinderVertices, cylinderRadii, cylinderCaps] =
+        generator.generateCylinders(primitiveCount, vertexCaps);
     vertices = cylinderVertices;
 
-    anari::setAndReleaseParameter(d,
-        geom,
-        "primitive.radius",
-        anari::newArray1D(d, cylinderRadii.data(), cylinderRadii.size()));
+    if (globalRadius.has_value()) {
+      anari::setParameter(d, geom, "radius", globalRadius.value());
+    } else {
+      anari::setAndReleaseParameter(d,
+          geom,
+          "primitive.radius",
+          anari::newArray1D(d, cylinderRadii.data(), cylinderRadii.size()));
+    }
+
+    if (!cylinderCaps.empty()) {
+      anari::setAndReleaseParameter(d,
+          geom,
+          "vertex.cap",
+          anari::newArray1D(d, cylinderCaps.data(), cylinderCaps.size()));
+    }
+
+    anari::setParameter(d, geom, "caps", globalCaps);
 
     if (primitiveMode == "indexed") {
       std::vector<glm::uvec2> indices;
@@ -414,6 +499,10 @@ void SceneGenerator::commit()
 
       // shuffle indices vector to create a more useful test case
       generator.shuffleVector(indices);
+      if (unusedVertices && !indices.empty()) {
+        // remove last indices to test not using all vertices/primitives
+        indices.resize(indices.size() - 1);
+      }
       indiciCount = indices.size();
       anari::setAndReleaseParameter(d,
           geom,
@@ -433,25 +522,65 @@ void SceneGenerator::commit()
   }
   float attributeMin = getParam<float>("attribute_min", 0.0f);
   float attributeMax = getParam<float>("attribute_max", 1.0f);
-  bool generateVertexAttribtues = getParam<bool>("vertex_attributes", false);
-  bool generatePrimitiveAttribtues = getParam<bool>("primitive_attributes", false);
-  for (int i = 0; i < 4; ++i) {
-    if (generateVertexAttribtues) {
-      auto attribute = generator.generateAttribute(
-          vertices.size(), attributeMin, attributeMax);
-      anari::setAndReleaseParameter(d,
-          geom,
-          ("vertex.attribute" + std::to_string(i)).c_str(),
-          anari::newArray1D(d, attribute.data(), attribute.size()));
-    }
-    if (generatePrimitiveAttribtues) {
-      auto attribute =
-          generator.generateAttribute(indiciCount, attributeMin, attributeMax);
-      anari::setAndReleaseParameter(d,
-          geom,
-          ("primitive.attribute" + std::to_string(i)).c_str(),
-          anari::newArray1D(d, attribute.data(), attribute.size()));
-    }
+  bool generateVertexAttributes = getParam<bool>("vertex_attributes", false);
+  bool generatePrimitiveAttributes = getParam<bool>("primitive_attributes", false);
+  if (generateVertexAttributes) {
+    auto attributeFloat = generator.generateAttributeFloat(
+        vertices.size(), attributeMin, attributeMax);
+    anari::setAndReleaseParameter(d,
+        geom,
+        "vertex.attribute0",
+        anari::newArray1D(d, attributeFloat.data(), attributeFloat.size()));
+
+    auto attributeVec2 = generator.generateAttributeVec2(
+        vertices.size(), attributeMin, attributeMax);
+    anari::setAndReleaseParameter(d,
+        geom,
+        "vertex.attribute1",
+        anari::newArray1D(d, attributeVec2.data(), attributeVec2.size()));
+
+    auto attributeVec3 = generator.generateAttributeVec3(
+        vertices.size(), attributeMin, attributeMax);
+    anari::setAndReleaseParameter(d,
+        geom,
+        "vertex.attribute2",
+        anari::newArray1D(d, attributeVec3.data(), attributeVec3.size()));
+
+    auto attributeVec4 = generator.generateAttributeVec4(
+        vertices.size(), attributeMin, attributeMax);
+    anari::setAndReleaseParameter(d,
+        geom,
+        "vertex.attribute3",
+        anari::newArray1D(d, attributeVec4.data(), attributeVec4.size()));
+  }
+  if (generatePrimitiveAttributes) {
+    auto attributeFloat = generator.generateAttributeFloat(
+        indiciCount, attributeMin, attributeMax);
+    anari::setAndReleaseParameter(d,
+        geom,
+        "primitive.attribute0",
+        anari::newArray1D(d, attributeFloat.data(), attributeFloat.size()));
+
+    auto attributeVec2 = generator.generateAttributeVec2(
+        indiciCount, attributeMin, attributeMax);
+    anari::setAndReleaseParameter(d,
+        geom,
+        "primitive.attribute1",
+        anari::newArray1D(d, attributeVec2.data(), attributeVec2.size()));
+
+    auto attributeVec3 = generator.generateAttributeVec3(
+        indiciCount, attributeMin, attributeMax);
+    anari::setAndReleaseParameter(d,
+        geom,
+        "primitive.attribute2",
+        anari::newArray1D(d, attributeVec3.data(), attributeVec3.size()));
+
+    auto attributeVec4 = generator.generateAttributeVec4(
+          indiciCount, attributeMin, attributeMax);
+    anari::setAndReleaseParameter(d,
+        geom,
+        "primitive.attribute3",
+        anari::newArray1D(d, attributeVec4.data(), attributeVec4.size()));
   }
 
   // commit everything to the device

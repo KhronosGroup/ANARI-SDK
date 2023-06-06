@@ -1,0 +1,29 @@
+{
+  "sceneParameters": {
+    "geometrySubtype": "curve",
+    "primitiveCount": 16,
+    "seed": 12345,
+    "globalRadius": 0.05
+  },
+  "requiredFeatures": [
+    "ANARI_KHR_GEOMETRY_CURVE"
+  ],
+  "metaData": {
+    "": {
+      "bounds": {
+        "world": [
+          [
+            0.010350959375500679,
+            0.026216313242912292,
+            0.43555015325546265
+          ],
+          [
+            0.9689127802848816,
+            0.8511531949043274,
+            1.0184613466262817
+          ]
+        ]
+      }
+    }
+  }
+}

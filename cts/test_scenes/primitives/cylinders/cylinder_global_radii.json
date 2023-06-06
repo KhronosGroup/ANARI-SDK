@@ -1,0 +1,29 @@
+{
+  "sceneParameters": {
+    "geometrySubtype": "cylinder",
+    "primitiveCount": 16,
+    "seed": 12345,
+    "globalRadius": 0.05
+  },
+  "requiredFeatures": [
+    "ANARI_KHR_GEOMETRY_CYLINDER"
+  ],
+  "metaData": {
+    "": {
+      "bounds": {
+        "world": [
+          [
+            0.10301664471626282,
+            0.045699380338191986,
+            0.12376924604177475
+          ],
+          [
+            1.0334688425064087,
+            0.9703251719474792,
+            0.8261176347732544
+          ]
+        ]
+      }
+    }
+  }
+}

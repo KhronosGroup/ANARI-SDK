@@ -1,0 +1,37 @@
+{
+  "sceneParameters": {
+    "geometrySubtype": "cylinder",
+    "primitiveCount": 4,
+    "seed": 12345,
+    "vertexColors": true,
+    "anari_objects": {
+      "material": [
+        {
+          "subtype": "matte",
+          "color": "color"
+        }
+      ]
+    }
+  },
+  "requiredFeatures": [
+    "ANARI_KHR_GEOMETRY_CYLINDER"
+  ],
+  "metaData": {
+    "": {
+      "bounds": {
+        "world": [
+          [
+            0.14968019723892212,
+            0.29617956280708313,
+            -0.11848979443311691
+          ],
+          [
+            1.0836632251739502,
+            1.0531830787658691,
+            1.1774380207061768
+          ]
+        ]
+      }
+    }
+  }
+}

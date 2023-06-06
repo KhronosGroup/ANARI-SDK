@@ -25,6 +25,7 @@ set(src
   src/main.cpp
   src/PrimitiveGenerator.cpp
   src/SceneGenerator.cpp
+  src/ColorPalette.cpp
   src/TextureGenerator.cpp
 )
 
