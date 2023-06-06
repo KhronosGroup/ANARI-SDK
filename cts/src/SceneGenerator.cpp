@@ -221,6 +221,7 @@ void SceneGenerator::commit()
   bool unusedVertices = getParam<bool>("unusedVertices", false);
   bool useVertexColors = getParam<bool>("vertexColors", false);
   bool useAttribute0Colors = getParam<bool>("attribute0Colors", false);
+  std::string opacityAttribute = getParamString("opacity", "");
 
   // build this scene top-down to stress commit ordering guarantees
   // setup lighting, material and empty geometry
@@ -510,6 +511,15 @@ void SceneGenerator::commit()
         geom,
         "vertex.attribute0",
         anari::newArray1D(d, attributeColors.data(), attributeColors.size()));
+  }
+
+  if (!opacityAttribute.empty()) {
+    std::vector<float> attributeOpacity = generator.generateAttributeFloat(vertices.size(), 0.0, 1.0);
+
+    anari::setAndReleaseParameter(d,
+        geom,
+        opacityAttribute.c_str(),
+        anari::newArray1D(d, attributeOpacity.data(), attributeOpacity.size()));
   }
 
   anari::setAndReleaseParameter(d,
