@@ -65,7 +65,8 @@ std::vector<anari::scenes::ParameterInfo> SceneGenerator::parameters()
       {"globalCaps", "none", "Should cones and cylinders have caps (global setting). Possible values: \"none\", \"first\", \"second\", \"both\""},
       {"globalRadius", 1.0f, "Use the global radius property instead of a per vertex one"},
       {"unusedVertices", false, "The last primitive's indices in the index buffer will be removed to test handling of unused/skipped vertices in the vertex buffer"},
-      {"vertexColors", false, "The vertex color attribute will be used with a selection of different colors"}
+      {"vertexColors", false, "The vertex color attribute will be used with a selection of different colors"},
+      {"attribute0Colors", false, "Primitive attribute0 will used with a selection of different colors"}
 
       //
   };
@@ -226,8 +227,8 @@ void SceneGenerator::commit()
     globalRadius = getParam<float>("globalRadius", 1.0f);
   }
   bool unusedVertices = getParam<bool>("unusedVertices", false);
-  // TODO getting the bool from json does not work currently
   bool useVertexColors = getParam<bool>("vertexColors", false);
+  bool useAttribute0Colors = getParam<bool>("attribute0Colors", false);
 
   // build this scene top-down to stress commit ordering guarantees
   // setup lighting, material and empty geometry
@@ -295,6 +296,18 @@ void SceneGenerator::commit()
            "vertex.attribute1",
            anari::newArray1D(
                m_device, textureCoordinates.data(), textureCoordinates.size()));
+
+       
+      if (useAttribute0Colors) {
+         std::vector<glm::vec3> attributeColors =
+             colors::getColorVectorFromPalette(vertices.size());
+
+         anari::setAndReleaseParameter(d,
+             geom,
+             "vertex.attribute0",
+             anari::newArray1D(
+                 d, attributeColors.data(), attributeColors.size()));
+      }
       } else {
        vertices = generator.generateTriangulatedQuadsSoup(primitiveCount);
       }

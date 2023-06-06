@@ -1,5 +1,6 @@
 {
   "sceneParameters": {
+    "attribute0Colors": true,
     "anari_objects": {
       "material": [
         {
