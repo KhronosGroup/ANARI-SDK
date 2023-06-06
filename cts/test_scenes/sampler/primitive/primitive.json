@@ -15,7 +15,8 @@
       }
     },
     "permutations" :{
-      "/anari_objects/sampler/0/offset": [null, 1]
+      "/anari_objects/sampler/0/offset": [null, 1],
+      "/anari_objects/sampler/0/array/Array1D": [[0.5 , 1.0], [[0.5, 0.5], [1.0, 1.0]], [[0.5, 0.5, 0.5], [1.0, 1.0, 1.0]], [[0.5, 0.5, 0.5, 0.5], [1.0, 1.0, 1.0, 1.0]]]
     },
     "requiredFeatures": [
       "ANARI_KHR_SAMPLER_TRANSFORM"

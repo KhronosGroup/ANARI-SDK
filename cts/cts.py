@@ -254,6 +254,10 @@ def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, te
     print("")
     return frame_duration
 
+def passByType(paramName, type, paramValue, sceneGenerator):
+    if type == "Array1D":
+        sceneGenerator.setGenericArray1DParameter(paramName, paramValue)
+
 # applies a function to each test scene (or test permutation), passing additional args to that function
 # returns a dictonary of return values of the passed function with the test scene names as keys
 def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", only_permutations = False, use_generator = True,  *args):
@@ -323,6 +327,10 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                                         references.append([anariObjectName, idx, paramName, stringArray[1], int(stringArray[2])])
                                     elif paramValue is None:
                                         sceneGenerator.unsetGenericParameter(paramName)
+                                    elif isinstance(paramValue, dict):
+                                        for [type, typedValue] in paramValue.items():
+                                            passByType(paramName, type, typedValue, sceneGenerator)
+                                            break
                                     else:
                                         sceneGenerator.setGenericParameter(paramName, paramValue)
                                 sceneGenerator.releaseAnariObject()
@@ -389,6 +397,8 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                                     sceneGenerator.setCurrentObject(pointer[2], int(pointer[3]))
                                     if permutation[i] is None:
                                         sceneGenerator.unsetGenericParameter(pointer[4])
+                                    elif len(pointer) > 5:
+                                        passByType(pointer[4], pointer[5], permutation[i], sceneGenerator)
                                     else:
                                         sceneGenerator.setGenericParameter(pointer[4], permutation[i])
                             else:
