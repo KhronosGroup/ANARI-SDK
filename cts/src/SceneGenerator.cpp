@@ -297,17 +297,6 @@ void SceneGenerator::commit()
            anari::newArray1D(
                m_device, textureCoordinates.data(), textureCoordinates.size()));
 
-       
-      if (useAttribute0Colors) {
-         std::vector<glm::vec3> attributeColors =
-             colors::getColorVectorFromPalette(vertices.size());
-
-         anari::setAndReleaseParameter(d,
-             geom,
-             "vertex.attribute0",
-             anari::newArray1D(
-                 d, attributeColors.data(), attributeColors.size()));
-      }
       } else {
        vertices = generator.generateTriangulatedQuadsSoup(primitiveCount);
       }
@@ -452,15 +441,6 @@ void SceneGenerator::commit()
 
     anari::setParameter(d, geom, "caps", globalCaps);
 
-    if (useVertexColors) {
-      std::vector<glm::vec3> vertexColors = colors::getColorVectorFromPalette(coneVertices.size());
-
-      anari::setAndReleaseParameter(d,
-          geom,
-          "vertex.color",
-          anari::newArray1D(d, vertexColors.data(), vertexColors.size()));
-    }
-
     if (primitiveMode == "indexed") {
       std::vector<glm::uvec2> indices;
       for (uint32_t i = 0; i < vertices.size(); i += 2)
@@ -518,6 +498,26 @@ void SceneGenerator::commit()
           "primitive.index",
           anari::newArray1D(d, indices.data(), indices.size()));
     }
+  }
+
+  if (useVertexColors) {
+    std::vector<glm::vec3> vertexColors =
+        colors::getColorVectorFromPalette(vertices.size());
+
+    anari::setAndReleaseParameter(d,
+        geom,
+        "vertex.color",
+        anari::newArray1D(d, vertexColors.data(), vertexColors.size()));
+  }
+
+  if (useAttribute0Colors) {
+    std::vector<glm::vec3> attributeColors =
+        colors::getColorVectorFromPalette(vertices.size());
+
+    anari::setAndReleaseParameter(d,
+        geom,
+        "vertex.attribute0",
+        anari::newArray1D(d, attributeColors.data(), attributeColors.size()));
   }
 
   anari::setAndReleaseParameter(d,
