@@ -17,19 +17,15 @@ struct Material : public Object
       std::string_view subtype, HelideGlobalState *s);
 
   float3 color() const;
-  float opacity() const;
-
   Attribute colorAttribute() const;
-  Attribute opacityAttribute() const;
+  const Sampler *colorSampler() const;
 
  protected:
   Attribute attributeFromString(const std::string &str) const;
 
   float3 m_color{1.f, 1.f, 1.f};
-  float m_opacity{1.f};
-
   Attribute m_colorAttribute{Attribute::NONE};
-  Attribute m_opacityAttribute{Attribute::NONE};
+  helium::IntrusivePtr<Sampler> m_colorSampler;
 };
 
 // Inlined definitions ////////////////////////////////////////////////////////
@@ -39,19 +35,14 @@ inline float3 Material::color() const
   return m_color;
 }
 
-inline float Material::opacity() const
-{
-  return m_opacity;
-}
-
 inline Attribute Material::colorAttribute() const
 {
   return m_colorAttribute;
 }
 
-inline Attribute Material::opacityAttribute() const
+inline const Sampler *Material::colorSampler() const
 {
-  return m_opacityAttribute;
+  return m_colorSampler.ptr;
 }
 
 } // namespace helide
