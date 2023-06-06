@@ -52,14 +52,6 @@ float3 Surface::getSurfaceColor(const Ray &ray) const
   }
 }
 
-float Surface::getSurfaceOpacity(const Ray &ray) const
-{
-  auto opacityAttribute = material()->opacityAttribute();
-  return opacityAttribute == Attribute::NONE
-      ? material()->opacity()
-      : geometry()->getAttributeValue(opacityAttribute, ray).x;
-}
-
 void Surface::markCommitted()
 {
   Object::markCommitted();
