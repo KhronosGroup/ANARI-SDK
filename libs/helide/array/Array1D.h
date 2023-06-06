@@ -35,6 +35,8 @@ struct Array1D : public Array
   size_t size() const;
 
   float4 readAsAttributeValue(uint32_t i) const;
+  template <typename T>
+  T valueAtLinear(float in) const; // 'in' must be clamped to [0, 1]
 
   void privatize() override;
 
@@ -64,6 +66,19 @@ inline T *Array1D::endAs() const
     throw std::runtime_error("incorrect element type queried for array");
 
   return (T *)data() + m_end;
+}
+
+template <typename T>
+inline T Array1D::valueAtLinear(float in) const
+{
+  const T *data = dataAs<T>();
+
+  const uint32_t maxIdx = uint32_t(size() - 1);
+  const float idxf = in * maxIdx;
+  const float frac = idxf - std::floor(idxf);
+  const uint32_t idx = idxf;
+
+  return linalg::lerp(data[idx], data[std::min(maxIdx, idx + 1)], frac);
 }
 
 } // namespace helide

@@ -75,7 +75,6 @@ project_sources(PRIVATE
   array/Array1D.cpp
   array/Array2D.cpp
   array/Array3D.cpp
-  array/ArraySampler1D.cpp
   array/ObjectArray.cpp
   camera/Camera.cpp
   camera/Orthographic.cpp

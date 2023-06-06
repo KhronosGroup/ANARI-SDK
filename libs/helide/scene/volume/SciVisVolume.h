@@ -4,7 +4,7 @@
 #pragma once
 
 #include "Volume.h"
-#include "array/ArraySampler1D.h"
+#include "array/Array1D.h"
 #include "spatial_field/SpatialField.h"
 
 namespace helide {
@@ -41,9 +41,6 @@ struct SciVisVolume : public Volume
   float m_invSize{0.f};
   float m_densityScale{1.f};
 
-  ArraySampler1D<float> m_opacitySampler;
-  ArraySampler1D<float3> m_colorSampler;
-
   helium::IntrusivePtr<Array1D> m_colorData;
   helium::IntrusivePtr<Array1D> m_opacityData;
 };
@@ -57,18 +54,18 @@ inline const SpatialField *SciVisVolume::field() const
 
 inline float3 SciVisVolume::colorOf(float sample) const
 {
-  return m_colorSampler.valueAt(normalized(sample));
+  return m_colorData->valueAtLinear<float3>(normalized(sample));
 }
 
 inline float SciVisVolume::opacityOf(float sample) const
 {
-  return m_opacitySampler.valueAt(normalized(sample));
+  return m_opacityData->valueAtLinear<float>(normalized(sample));
 }
 
 inline float SciVisVolume::normalized(float sample) const
 {
   sample = linalg::clamp(sample, m_valueRange.lower, m_valueRange.upper);
-  return (sample - m_valueRange.lower) * m_invSize;
+  return position(sample, m_valueRange);
 }
 
 } // namespace helide
