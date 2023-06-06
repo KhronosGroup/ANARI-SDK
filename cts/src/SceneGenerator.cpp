@@ -65,8 +65,8 @@ std::vector<anari::scenes::ParameterInfo> SceneGenerator::parameters()
       {"globalCaps", "none", "Should cones and cylinders have caps (global setting). Possible values: \"none\", \"first\", \"second\", \"both\""},
       {"globalRadius", 1.0f, "Use the global radius property instead of a per vertex one"},
       {"unusedVertices", false, "The last primitive's indices in the index buffer will be removed to test handling of unused/skipped vertices in the vertex buffer"},
-      {"vertexColors", false, "The vertex color attribute will be used with a selection of different colors"},
-      {"attribute0Colors", false, "Primitive attribute0 will used with a selection of different colors"}
+      {"color", "", "Fill an attribute with colors. Possible values: \"vertex.color\", \"vertex.attribute0\", \"primitive.attribute3\" and similar"},
+      {"opacity", "", "Fill an attribute with opacity values. Possible values: \"vertex.attribute0\", \"primitive.attribute3\" and similar"}
 
       //
   };
@@ -219,8 +219,7 @@ void SceneGenerator::commit()
     globalRadius = getParam<float>("globalRadius", 1.0f);
   }
   bool unusedVertices = getParam<bool>("unusedVertices", false);
-  bool useVertexColors = getParam<bool>("vertexColors", false);
-  bool useAttribute0Colors = getParam<bool>("attribute0Colors", false);
+  std::string colorAttribute = getParamString("color", "");
   std::string opacityAttribute = getParamString("opacity", "");
 
   // build this scene top-down to stress commit ordering guarantees
@@ -493,24 +492,14 @@ void SceneGenerator::commit()
     }
   }
 
-  if (useVertexColors) {
-    std::vector<glm::vec3> vertexColors =
+  if (!colorAttribute.empty()) {
+    std::vector<glm::vec3> attributeColor =
         colors::getColorVectorFromPalette(vertices.size());
 
     anari::setAndReleaseParameter(d,
         geom,
-        "vertex.color",
-        anari::newArray1D(d, vertexColors.data(), vertexColors.size()));
-  }
-
-  if (useAttribute0Colors) {
-    std::vector<glm::vec3> attributeColors =
-        colors::getColorVectorFromPalette(vertices.size());
-
-    anari::setAndReleaseParameter(d,
-        geom,
-        "vertex.attribute0",
-        anari::newArray1D(d, attributeColors.data(), attributeColors.size()));
+        colorAttribute.c_str(),
+        anari::newArray1D(d, attributeColor.data(), attributeColor.size()));
   }
 
   if (!opacityAttribute.empty()) {

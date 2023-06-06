@@ -1,6 +1,6 @@
 {
   "sceneParameters": {
-    "attribute0Colors": true,
+    "color": "vertex.attribute0",
     "opacity": "vertex.attribute2",
     "anari_objects": {
       "material": [

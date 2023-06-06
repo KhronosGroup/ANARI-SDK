@@ -4,7 +4,7 @@
     "primitiveCount": 4,
     "seed": 12345,
     "shape": "triangle",
-    "vertexColors": true,
+    "color": "vertex.color",
     "anari_objects": {
       "material": [
         {

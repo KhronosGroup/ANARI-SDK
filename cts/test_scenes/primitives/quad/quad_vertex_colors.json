@@ -4,7 +4,7 @@
     "primitiveCount": 4,
     "seed": 54321,
     "shape": "quad",
-    "vertexColors": true,
+    "color": "vertex.color",
     "anari_objects": {
       "material": [
         {
