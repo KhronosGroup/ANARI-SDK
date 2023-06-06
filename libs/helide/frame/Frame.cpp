@@ -145,6 +145,10 @@ void Frame::renderFrame()
     return;
   }
 
+  if (state->commitBuffer.lastFlush() <= m_frameLastRendered)
+    return;
+
+  m_frameLastRendered = helium::newTimeStamp();
   state->currentFrame = this;
 
   auto *c = m_camera.ptr;

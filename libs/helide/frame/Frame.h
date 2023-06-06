@@ -79,6 +79,7 @@ struct Frame : public helium::BaseFrame
   helium::TimeStamp m_rendererLastChanged{0};
   helium::TimeStamp m_worldLastChanged{0};
   helium::TimeStamp m_lastCommitOccured{0};
+  helium::TimeStamp m_frameLastRendered{0};
 
   mutable std::future<void> m_future;
 };
