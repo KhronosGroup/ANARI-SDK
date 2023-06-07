@@ -3,7 +3,7 @@
     "geometrySubtype": "sphere",
     "primitiveCount": 4,
     "seed": 54321,
-    "vertexColors": true,
+    "color": "vertex.color",
     "anari_objects": {
       "material": [
         {

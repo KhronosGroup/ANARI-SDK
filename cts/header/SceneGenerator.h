@@ -30,6 +30,15 @@ class SceneGenerator : public anari::scenes::TestScene
     }
   }
 
+  template <typename T>
+  void setGenericArray1DParameter(
+      const std::string& name, const std::vector<T>& vector)
+  {
+    if (m_device != nullptr && m_currentObject != nullptr) {
+      anari::setAndReleaseParameter(m_device, m_currentObject, name.c_str(), anari::newArray1D(m_device, vector.data(), vector.size()));
+    }
+  }
+
   void unsetGenericParameter(const std::string& name) {
     if (m_device != nullptr && m_currentObject != nullptr) {
       anari::unsetParameter(m_device, m_currentObject, name.c_str());

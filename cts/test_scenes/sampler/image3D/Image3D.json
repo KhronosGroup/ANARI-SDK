@@ -1,0 +1,82 @@
+{
+    "sceneParameters": {
+      "frame_depth_type": "",
+      "anari_objects": {
+        "material": [
+          {
+            "subtype": "matte",
+            "color": "ref_sampler_0"
+          }
+        ],
+        "sampler": [
+            {
+                "subtype": "image3D",
+                "inAttribute": "attribute1",
+                "filter": "linear"
+            }
+        ]
+      }
+    },
+    "simplified_permutations": true,
+    "permutations" :{
+      "/anari_objects/sampler/0/filter": [null, "nearest", "linear"],
+      "/anari_objects/sampler/0/wrapMode1": [null, "clampToEdge", "repeat", "mirrorRepeat"],
+      "/anari_objects/sampler/0/wrapMode2": [null, "clampToEdge", "repeat", "mirrorRepeat"],
+      "/anari_objects/sampler/0/wrapMode3": [null, "clampToEdge", "repeat", "mirrorRepeat"],
+      "/anari_objects/sampler/0/inTransform": [null, [[-1, 0, 0, 0],[0, -1, 0, 0],[0, 0, -1, 0],[ 0, 0, 0, 1]]],
+      "/anari_objects/sampler/0/outTransform": [null, [[0.5, 0, 0, 0],[0, 0.5, 0, 0],[0, 0, 0.5, 0],[ 0, 0, 0, 1]]]
+    },
+    "requiredFeatures": [
+      "ANARI_KHR_SAMPLER_IMAGE3D"
+    ],
+    "metaData": {
+      "None": {
+        "bounds": {
+          "world": [
+            [
+              0.5930089354515076,
+              0.338645875453949,
+              0.3352261483669281
+            ],
+            [
+              1.0810736417770386,
+              0.47210031747817993,
+              0.4023733139038086
+            ]
+          ]
+        }
+      },
+      "[1.0, 0.0, 0.0]": {
+        "bounds": {
+          "world": [
+            [
+              0.5930089354515076,
+              0.338645875453949,
+              0.3352261483669281
+            ],
+            [
+              1.0810736417770386,
+              0.47210031747817993,
+              0.4023733139038086
+            ]
+          ]
+        }
+      },
+      "attribute0": {
+        "bounds": {
+          "world": [
+            [
+              0.5930089354515076,
+              0.338645875453949,
+              0.3352261483669281
+            ],
+            [
+              1.0810736417770386,
+              0.47210031747817993,
+              0.4023733139038086
+            ]
+          ]
+        }
+      }
+    }
+  }

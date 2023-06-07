@@ -4,6 +4,7 @@
 #include "SceneGenerator.h"
 #include "PrimitiveGenerator.h"
 #include "ColorPalette.h"
+#include "TextureGenerator.h"
 #include "anariWrapper.h"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -64,7 +65,8 @@ std::vector<anari::scenes::ParameterInfo> SceneGenerator::parameters()
       {"globalCaps", "none", "Should cones and cylinders have caps (global setting). Possible values: \"none\", \"first\", \"second\", \"both\""},
       {"globalRadius", 1.0f, "Use the global radius property instead of a per vertex one"},
       {"unusedVertices", false, "The last primitive's indices in the index buffer will be removed to test handling of unused/skipped vertices in the vertex buffer"},
-      {"vertexColors", false, "The vertex color attribute will be used with a selection of different colors"}
+      {"color", "", "Fill an attribute with colors. Possible values: \"vertex.color\", \"vertex.attribute0\", \"primitive.attribute3\" and similar"},
+      {"opacity", "", "Fill an attribute with opacity values. Possible values: \"vertex.attribute0\", \"primitive.attribute3\" and similar"}
 
       //
   };
@@ -146,6 +148,39 @@ void SceneGenerator::createAnariObject(
     auto it = m_anariObjects.try_emplace(
         int(ANARI_SAMPLER), std::vector<ANARIObject>());
     it.first->second.emplace_back(object);
+
+    if (subtype == "image1D") {
+      size_t resolution = 32;
+      std::vector<glm::vec4> greyscale =
+          TextureGenerator::generateGreyScale(resolution);
+      anari::setAndReleaseParameter(m_device,
+          object,
+          "image",
+          anari::newArray1D(m_device, greyscale.data(), resolution));
+      break;
+    }
+    if (subtype == "image2D") {
+      size_t resolution = 64;
+      auto checkerboard = TextureGenerator::generateCheckerBoard(resolution);
+      anari::setAndReleaseParameter(m_device,
+          object,
+          "image",
+          anari::newArray2D(m_device,
+              checkerboard.data(), resolution, resolution));
+      break;
+    }
+    if (subtype == "image3D") {
+      size_t resolution = 32;
+      auto rgbRamp = TextureGenerator::generateRGBRamp(resolution);
+      anari::setAndReleaseParameter(m_device,
+          object,
+          "image",
+          anari::newArray3D(m_device,
+              rgbRamp.data(),
+              resolution,
+              resolution, resolution));
+      break;
+    }
     break;
   }
   }
@@ -184,8 +219,8 @@ void SceneGenerator::commit()
     globalRadius = getParam<float>("globalRadius", 1.0f);
   }
   bool unusedVertices = getParam<bool>("unusedVertices", false);
-  // TODO getting the bool from json does not work currently
-  bool useVertexColors = getParam<bool>("vertexColors", false);
+  std::string colorAttribute = getParamString("color", "");
+  std::string opacityAttribute = getParamString("opacity", "");
 
   // build this scene top-down to stress commit ordering guarantees
   // setup lighting, material and empty geometry
@@ -241,6 +276,19 @@ void SceneGenerator::commit()
            generator.generateTriangulatedQuadsIndexed(primitiveCount);
        vertices = quadVertices;
        indices = quadIndices;
+       std::vector<glm::vec3> textureCoordinates;
+       for (int i = 0; i < primitiveCount; ++i) {
+         textureCoordinates.push_back({0.0f, 0.0f, 0.0f});
+         textureCoordinates.push_back({1.0f, 0.0f, 0.0f});
+         textureCoordinates.push_back({0.0f, 1.0f, 0.0f});
+         textureCoordinates.push_back({1.0f, 1.0f, 1.0f});
+       }
+       anari::setAndReleaseParameter(m_device,
+           geom,
+           "vertex.attribute1",
+           anari::newArray1D(
+               m_device, textureCoordinates.data(), textureCoordinates.size()));
+
       } else {
        vertices = generator.generateTriangulatedQuadsSoup(primitiveCount);
       }
@@ -385,19 +433,6 @@ void SceneGenerator::commit()
 
     anari::setParameter(d, geom, "caps", globalCaps);
 
-    if (useVertexColors) {
-      std::vector<glm::vec3> vertexColors;
-      for (int i = 0; i < coneVertices.size(); ++i) {
-        glm::vec3 color = colors::getColorFromPalette(i);
-        vertexColors.push_back(color);
-      }
-
-      anari::setAndReleaseParameter(d,
-          geom,
-          "vertex.color",
-          anari::newArray1D(d, vertexColors.data(), vertexColors.size()));
-    }
-
     if (primitiveMode == "indexed") {
       std::vector<glm::uvec2> indices;
       for (uint32_t i = 0; i < vertices.size(); i += 2)
@@ -455,6 +490,25 @@ void SceneGenerator::commit()
           "primitive.index",
           anari::newArray1D(d, indices.data(), indices.size()));
     }
+  }
+
+  if (!colorAttribute.empty()) {
+    std::vector<glm::vec3> attributeColor =
+        colors::getColorVectorFromPalette(vertices.size());
+
+    anari::setAndReleaseParameter(d,
+        geom,
+        colorAttribute.c_str(),
+        anari::newArray1D(d, attributeColor.data(), attributeColor.size()));
+  }
+
+  if (!opacityAttribute.empty()) {
+    std::vector<float> attributeOpacity = generator.generateAttributeFloat(vertices.size(), 0.0, 1.0);
+
+    anari::setAndReleaseParameter(d,
+        geom,
+        opacityAttribute.c_str(),
+        anari::newArray1D(d, attributeOpacity.data(), attributeOpacity.size()));
   }
 
   anari::setAndReleaseParameter(d,

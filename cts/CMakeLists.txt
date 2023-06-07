@@ -26,6 +26,7 @@ set(src
   src/PrimitiveGenerator.cpp
   src/SceneGenerator.cpp
   src/ColorPalette.cpp
+  src/TextureGenerator.cpp
 )
 
 pybind11_add_module(${PROJECT_NAME} ${src})

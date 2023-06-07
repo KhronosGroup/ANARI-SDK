@@ -9,6 +9,7 @@
 		"shape": "quad",
 		"geometrySubtype": "triangle",
 		"primitiveMode": "indexed",
+		"seed": 12345,
 		"anari_objects": {
 			"material": [
 				{
