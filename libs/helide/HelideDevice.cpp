@@ -240,8 +240,10 @@ int HelideDevice::getProperty(ANARIObject object,
       return 1;
     }
   } else {
-    if (mask == ANARI_WAIT)
+    if (mask == ANARI_WAIT) {
+      deviceState()->waitOnCurrentFrame();
       flushCommitBuffer();
+    }
     return helium::referenceFromHandle(object).getProperty(
         name, type, mem, mask);
   }
