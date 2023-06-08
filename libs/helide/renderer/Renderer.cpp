@@ -18,6 +18,7 @@ Renderer::~Renderer()
 void Renderer::commit()
 {
   m_bgColor = getParam<float4>("background", float4(float3(0.f), 1.f));
+  m_ambientRadiance = getParam<float>("ambientRadiance", 1.f);
 }
 
 PixelSample Renderer::renderSample(Ray ray, const World &w) const
@@ -60,12 +61,15 @@ PixelSample Renderer::renderSample(Ray ray, const World &w) const
     const auto falloff = std::abs(linalg::dot(-ray.dir, linalg::normalize(n)));
     const float3 c = surface->getSurfaceColor(ray);
     const float3 sc = c * falloff;
-    geometryColor = 0.8f * sc + 0.2f * c;
+    geometryColor =
+        linalg::min((0.8f * sc + 0.2f * c) * m_ambientRadiance, float3(1.f));
     geometryOpacity = 1.f;
   }
 
   if (hitVolume)
     vray.volume->render(vray, color, opacity);
+
+  color = linalg::min(color, float3(1.f));
 
   accumulateValue(color, geometryColor, opacity);
   accumulateValue(opacity, geometryOpacity, opacity);

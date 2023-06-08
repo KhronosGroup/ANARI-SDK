@@ -31,8 +31,8 @@ anari::debug_device::DebugObjectBase* new_volume(const char *name, DebugDevice *
 namespace {
 class renderer_default : public DebugObject<ANARI_RENDERER> {
    static int param_hash(const char *str) {
-      static const uint32_t table[] = {0x6261000du,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x62610017u,0x6463000eu,0x6c6b000fu,0x68670010u,0x73720011u,0x706f0012u,0x76750013u,0x6f6e0014u,0x65640015u,0x1000016u,0x80000000u,0x6e6d0018u,0x66650019u,0x100001au,0x80000001u};
-      uint32_t cur = 0x6f620000u;
+      static const uint32_t table[] = {0x6e6d000eu,0x6261001du,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x62610027u,0x6362000fu,0x6a690010u,0x66650011u,0x6f6e0012u,0x75740013u,0x53520014u,0x62610015u,0x65640016u,0x6a690017u,0x62610018u,0x6f6e0019u,0x6463001au,0x6665001bu,0x100001cu,0x80000001u,0x6463001eu,0x6c6b001fu,0x68670020u,0x73720021u,0x706f0022u,0x76750023u,0x6f6e0024u,0x65640025u,0x1000026u,0x80000000u,0x6e6d0028u,0x66650029u,0x100002au,0x80000002u};
+      uint32_t cur = 0x6f610000u;
       for(int i = 0;cur!=0;++i) {
          uint32_t idx = cur&0xFFFFu;
          uint32_t low = (cur>>16u)&0xFFu;
@@ -63,7 +63,12 @@ class renderer_default : public DebugObject<ANARI_RENDERER> {
             check_type(ANARI_RENDERER, "default", paramname, paramtype, background_types);
             return;
          }
-         case 1: { //name
+         case 1: { //ambientRadiance
+            ANARIDataType ambientRadiance_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
+            check_type(ANARI_RENDERER, "default", paramname, paramtype, ambientRadiance_types);
+            return;
+         }
+         case 2: { //name
             ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
             check_type(ANARI_RENDERER, "default", paramname, paramtype, name_types);
             return;
