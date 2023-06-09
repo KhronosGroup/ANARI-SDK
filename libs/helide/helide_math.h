@@ -185,7 +185,7 @@ inline uint32_t calculateWrapIndex(uint32_t i, size_t size, WrapMode wrap)
   case WrapMode::CLAMP_TO_EDGE:
   case WrapMode::DEFAULT:
   default:
-    return linalg::clamp(i, 0u, uint32_t(size - 1));
+    return linalg::clamp(i, 0u, uint32_t(size));
     break;
   case WrapMode::REPEAT:
     return i % size;
@@ -225,13 +225,13 @@ inline WrapMode wrapModeFromString(const std::string &str)
 }
 
 template <typename T>
-static const T *typedOffset(const void *mem, uint32_t offset)
+static const T *typedOffset(const void *mem, uint64_t offset)
 {
   return ((const T *)mem) + offset;
 }
 
 template <typename ELEMENT_T, int NUM_COMPONENTS, bool SRGB = false>
-static float4 getAttributeArrayAt_ufixed(void *data, uint32_t offset)
+static float4 getAttributeArrayAt_ufixed(void *data, uint64_t offset)
 {
   constexpr float m = std::numeric_limits<ELEMENT_T>::max();
   float4 retval(0.f, 0.f, 0.f, 1.f);
@@ -256,7 +256,7 @@ static float4 getAttributeArrayAt_ufixed(void *data, uint32_t offset)
 }
 
 inline float4 readAsAttributeValueFlat(
-    void *data, ANARIDataType type, uint32_t i, size_t size)
+    void *data, ANARIDataType type, uint64_t i, size_t size)
 {
   auto retval = DEFAULT_ATTRIBUTE_VALUE;
 
