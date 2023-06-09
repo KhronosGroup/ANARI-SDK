@@ -96,7 +96,7 @@ static void loadTexture(anari::Device d,
       anari::setParameter(d, opacityTex, "inAttribute", "attribute0");
       anari::setParameter(d, opacityTex, "wrapMode1", "repeat");
       anari::setParameter(d, opacityTex, "wrapMode2", "repeat");
-      anari::setParameter(d, opacityTex, "filter", "bilinear");
+      anari::setParameter(d, opacityTex, "filter", "linear");
       anari::commitParameters(d, opacityTex);
 
       free(data);
@@ -109,7 +109,7 @@ static void loadTexture(anari::Device d,
     anari::setParameter(d, colorTex, "inAttribute", "attribute0");
     anari::setParameter(d, colorTex, "wrapMode1", "repeat");
     anari::setParameter(d, colorTex, "wrapMode2", "repeat");
-    anari::setParameter(d, colorTex, "filter", "bilinear");
+    anari::setParameter(d, colorTex, "filter", "linear");
     anari::commitParameters(d, colorTex);
   }
 
@@ -166,7 +166,7 @@ static void loadObj(
   TextureCache cache;
 
   for (auto &mat : objdata.materials) {
-    auto m = anari::newObject<anari::Material>(d, "transparentMatte");
+    auto m = anari::newObject<anari::Material>(d, "matte");
 
     anari::setParameter(d, m, "color", ANARI_FLOAT32_VEC3, &mat.diffuse[0]);
     anari::setParameter(d, m, "opacity", ANARI_FLOAT32, &mat.dissolve);
