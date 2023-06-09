@@ -51,6 +51,32 @@
           "tags": [],
           "default": 1.0,
           "description": "ambient light intensity"
+        },
+        {
+          "name": "mode",
+          "types": [
+            "ANARI_STRING"
+          ],
+          "tags": [],
+          "default": "default",
+          "values": [
+            "default",
+            "primID",
+            "geomID",
+            "instID",
+            "Ng",
+            "Ng.abs",
+            "uvw",
+            "backface",
+            "hitSurface",
+            "hitVolume",
+            "geometry.attribute0",
+            "geometry.attribute1",
+            "geometry.attribute2",
+            "geometry.attribute3",
+            "geometry.color"
+          ],
+          "description": "visualization modes (most for debugging)"
         }
       ]
     }
