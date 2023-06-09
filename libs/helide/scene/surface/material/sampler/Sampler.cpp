@@ -5,6 +5,7 @@
 // subtypes
 #include "Image1D.h"
 #include "Image2D.h"
+#include "PrimitiveSampler.h"
 #include "TransformSampler.h"
 
 namespace helide {
@@ -19,6 +20,8 @@ Sampler *Sampler::createInstance(std::string_view subtype, HelideGlobalState *s)
     return new Image2D(s);
   else if (subtype == "transform")
     return new TransformSampler(s);
+  else if (subtype == "primitive")
+    return new PrimitiveSampler(s);
   else
     return (Sampler *)new UnknownObject(ANARI_SAMPLER, s);
 }
