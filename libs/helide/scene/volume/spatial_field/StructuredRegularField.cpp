@@ -68,14 +68,14 @@ float StructuredRegularField::sampleAt(const float3 &coord) const
   const float voxel_110 = valueAtVoxel(uint3(vi0.x, vi1.y, vi1.z));
   const float voxel_111 = valueAtVoxel(uint3(vi1.x, vi1.y, vi1.z));
 
-  const float voxel_00 = voxel_000 + fracLocal.x * (voxel_001 - voxel_000);
-  const float voxel_01 = voxel_010 + fracLocal.x * (voxel_011 - voxel_010);
-  const float voxel_10 = voxel_100 + fracLocal.x * (voxel_101 - voxel_100);
-  const float voxel_11 = voxel_110 + fracLocal.x * (voxel_111 - voxel_110);
-  const float voxel_0 = voxel_00 + fracLocal.y * (voxel_01 - voxel_00);
-  const float voxel_1 = voxel_10 + fracLocal.y * (voxel_11 - voxel_10);
+  const float voxel_00 = linalg::lerp(voxel_000, voxel_001, fracLocal.x);
+  const float voxel_01 = linalg::lerp(voxel_010, voxel_011, fracLocal.x);
+  const float voxel_10 = linalg::lerp(voxel_100, voxel_101, fracLocal.x);
+  const float voxel_11 = linalg::lerp(voxel_110, voxel_111, fracLocal.x);
+  const float voxel_0 = linalg::lerp(voxel_00, voxel_01, fracLocal.y);
+  const float voxel_1 = linalg::lerp(voxel_10, voxel_11, fracLocal.y);
 
-  return voxel_0 + fracLocal.z * (voxel_1 - voxel_0);
+  return linalg::lerp(voxel_0, voxel_1, fracLocal.z);
 }
 
 box3 StructuredRegularField::bounds() const
