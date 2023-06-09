@@ -256,7 +256,7 @@ static float4 getAttributeArrayAt_ufixed(void *data, uint64_t offset)
 }
 
 inline float4 readAsAttributeValueFlat(
-    void *data, ANARIDataType type, uint64_t i, size_t size)
+    void *data, ANARIDataType type, uint64_t i)
 {
   auto retval = DEFAULT_ATTRIBUTE_VALUE;
 

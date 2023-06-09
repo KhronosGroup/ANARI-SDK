@@ -48,8 +48,7 @@ float4 Array3D::readAsAttributeValue(
   const auto i_z = calculateWrapIndex(i.z, size().z, wrap3);
   const size_t idx =
       size_t(i_x) + size().x * (size_t(i_y) + size().y * size_t(i_z));
-  return readAsAttributeValueFlat(
-      data(), elementType(), idx, totalSize());
+  return readAsAttributeValueFlat(data(), elementType(), idx);
 }
 
 void Array3D::privatize()
