@@ -82,7 +82,7 @@ float4 Triangle::getAttributeValue(const Attribute &attr, const Ray &ray) const
   const float3 uvw(1.0f - ray.u - ray.v, ray.u, ray.v);
 
   auto idx = m_index ? *(m_index->dataAs<uint3>() + ray.primID)
-                     : uint3(ray.primID + 0, ray.primID + 1, ray.primID + 2);
+                     : 3 * ray.primID + uint3(0, 1, 2);
 
   auto a = readAttributeValue(attributeArray, idx.x);
   auto b = readAttributeValue(attributeArray, idx.y);

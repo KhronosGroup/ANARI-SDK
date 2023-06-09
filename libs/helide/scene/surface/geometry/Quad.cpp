@@ -80,9 +80,8 @@ float4 Quad::getAttributeValue(const Attribute &attr, const Ray &ray) const
 
   const float3 uvw(1.0f - ray.u - ray.v, ray.u, ray.v);
 
-  auto idx = m_index
-      ? *(m_index->dataAs<uint4>() + ray.primID)
-      : uint4(ray.primID + 0, ray.primID + 1, ray.primID + 2, ray.primID + 3);
+  auto idx = m_index ? *(m_index->dataAs<uint4>() + ray.primID)
+                     : 4 * ray.primID + uint4(0, 1, 2, 3);
 
   float4 uv((1 - ray.v) * (1 - ray.u),
       (1 - ray.v) * ray.u,
