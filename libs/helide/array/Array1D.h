@@ -35,7 +35,7 @@ struct Array1D : public Array
   size_t size() const;
 
   float4 readAsAttributeValue(
-      uint32_t i, WrapMode wrap = WrapMode::DEFAULT) const;
+      int32_t i, WrapMode wrap = WrapMode::DEFAULT) const;
   template <typename T>
   T valueAtLinear(float in) const; // 'in' must be clamped to [0, 1]
   template <typename T>

@@ -79,22 +79,22 @@ float4 Image3D::getSample(const Geometry &g, const Ray &r) const
       m_wrapMode2,
       m_wrapMode3);
 
-  const auto v00 = m_linearFilter ? linalg::lerp(v000, v001, interp_x.frac)
-                                  : (interp_x.frac <= 0.5f ? v000 : v001);
-  const auto v01 = m_linearFilter ? linalg::lerp(v010, v011, interp_x.frac)
-                                  : (interp_x.frac <= 0.5f ? v010 : v011);
-  const auto v10 = m_linearFilter ? linalg::lerp(v100, v101, interp_x.frac)
-                                  : (interp_x.frac <= 0.5f ? v100 : v101);
-  const auto v11 = m_linearFilter ? linalg::lerp(v110, v111, interp_x.frac)
-                                  : (interp_x.frac <= 0.5f ? v110 : v111);
+  const auto v00 = m_linearFilter ? linalg::lerp(v000, v001, interp_z.frac)
+                                  : (interp_z.frac < 0.5f ? v000 : v001);
+  const auto v01 = m_linearFilter ? linalg::lerp(v010, v011, interp_z.frac)
+                                  : (interp_z.frac < 0.5f ? v010 : v011);
+  const auto v10 = m_linearFilter ? linalg::lerp(v100, v101, interp_z.frac)
+                                  : (interp_z.frac < 0.5f ? v100 : v101);
+  const auto v11 = m_linearFilter ? linalg::lerp(v110, v111, interp_z.frac)
+                                  : (interp_z.frac < 0.5f ? v110 : v111);
 
   const auto v0 = m_linearFilter ? linalg::lerp(v00, v01, interp_y.frac)
-                                 : (interp_y.frac <= 0.5f ? v00 : v01);
+                                 : (interp_y.frac < 0.5f ? v00 : v01);
   const auto v1 = m_linearFilter ? linalg::lerp(v10, v11, interp_y.frac)
-                                 : (interp_y.frac <= 0.5f ? v10 : v11);
+                                 : (interp_y.frac < 0.5f ? v10 : v11);
 
-  const auto retval = m_linearFilter ? linalg::lerp(v0, v1, interp_z.frac)
-                                     : (interp_z.frac <= 0.5f ? v0 : v1);
+  const auto retval = m_linearFilter ? linalg::lerp(v0, v1, interp_x.frac)
+                                     : (interp_x.frac < 0.5f ? v0 : v1);
 
   return linalg::mul(m_outTransform, retval);
 }

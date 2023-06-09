@@ -41,7 +41,7 @@ uint3 Array3D::size() const
 }
 
 float4 Array3D::readAsAttributeValue(
-    uint3 i, WrapMode wrap1, WrapMode wrap2, WrapMode wrap3) const
+    int3 i, WrapMode wrap1, WrapMode wrap2, WrapMode wrap3) const
 {
   const auto i_x = calculateWrapIndex(i.x, size().x, wrap1);
   const auto i_y = calculateWrapIndex(i.y, size().y, wrap2);

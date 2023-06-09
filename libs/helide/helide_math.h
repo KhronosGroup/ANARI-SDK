@@ -147,18 +147,19 @@ inline float toneMap(float v)
 
 struct Interpolant
 {
-  uint32_t lower;
-  uint32_t upper;
+  int32_t lower;
+  int32_t upper;
   float frac;
 };
 
 inline Interpolant getInterpolant(float in, size_t size)
 {
-  const uint32_t maxIdx = uint32_t(size - 1);
-  const float idxf = in * maxIdx;
-  const float frac = idxf - std::floor(idxf);
-  const uint32_t idx = idxf;
-  return {idx, std::min(maxIdx, idx + 1), frac};
+  const float scale = float(size - 1);
+  const float lowf = in * scale;
+  const int32_t low = std::floor(lowf);
+  const int32_t high = low + 1;
+  const float frac = lowf - low;
+  return {low, high, frac};
 }
 
 template <typename T, typename U>
@@ -179,19 +180,19 @@ inline int32_t computeMirroredRepeatIndex(int32_t x, int32_t size)
   return x >= size ? 2 * size - x - 1 : x;
 };
 
-inline uint32_t calculateWrapIndex(uint32_t i, size_t size, WrapMode wrap)
+inline int32_t calculateWrapIndex(int32_t i, size_t size, WrapMode wrap)
 {
   switch (wrap) {
   case WrapMode::CLAMP_TO_EDGE:
   case WrapMode::DEFAULT:
   default:
-    return linalg::clamp(i, 0u, uint32_t(size));
+    return linalg::clamp(i, 0, int32_t(size - 1));
     break;
   case WrapMode::REPEAT:
     return i % size;
     break;
   case WrapMode::MIRROR_REPEAT:
-    return uint32_t(computeMirroredRepeatIndex(int32_t(i), size));
+    return computeMirroredRepeatIndex(i, int32_t(size));
     break;
   }
 }

@@ -28,7 +28,7 @@ struct Array3D : public Array
   size_t size(int dim) const;
   uint3 size() const;
 
-  float4 readAsAttributeValue(uint3 i,
+  float4 readAsAttributeValue(int3 i,
       WrapMode wrap1 = WrapMode::DEFAULT,
       WrapMode wrap2 = WrapMode::DEFAULT,
       WrapMode wrap3 = WrapMode::DEFAULT) const;

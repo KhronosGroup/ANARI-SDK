@@ -39,7 +39,7 @@ uint2 Array2D::size() const
 }
 
 float4 Array2D::readAsAttributeValue(
-    uint2 i, WrapMode wrap1, WrapMode wrap2) const
+    int2 i, WrapMode wrap1, WrapMode wrap2) const
 {
   const auto i_x = calculateWrapIndex(i.x, size().x, wrap1);
   const auto i_y = calculateWrapIndex(i.y, size().y, wrap2);
