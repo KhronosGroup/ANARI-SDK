@@ -4,6 +4,7 @@
 #include "Sampler.h"
 // subtypes
 #include "Image1D.h"
+#include "Image2D.h"
 
 namespace helide {
 
@@ -13,6 +14,8 @@ Sampler *Sampler::createInstance(std::string_view subtype, HelideGlobalState *s)
 {
   if (subtype == "image1D")
     return new Image1D(s);
+  else if (subtype == "image2D")
+    return new Image2D(s);
   else
     return (Sampler *)new UnknownObject(ANARI_SAMPLER, s);
 }
