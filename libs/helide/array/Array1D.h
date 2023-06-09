@@ -43,15 +43,6 @@ struct Array1D : public Array
 
   void privatize() override;
 
-  struct Interpolant
-  {
-    uint32_t lower;
-    uint32_t upper;
-    float frac;
-  };
-
-  Interpolant getInterpolant(float in) const; // 'in' must be clamped to [0, 1]
-
  private:
   size_t m_capacity{0};
   size_t m_begin{0};
@@ -84,7 +75,7 @@ template <typename T>
 inline T Array1D::valueAtLinear(float in) const
 {
   const T *data = dataAs<T>();
-  const auto i = getInterpolant(in);
+  const auto i = getInterpolant(in, size());
   return linalg::lerp(data[i.lower], data[i.upper], i.frac);
 }
 
@@ -92,17 +83,8 @@ template <typename T>
 inline T Array1D::valueAtClosest(float in) const
 {
   const T *data = dataAs<T>();
-  const auto i = getInterpolant(in);
+  const auto i = getInterpolant(in, size());
   return i.frac <= 0.5f ? data[i.lower] : data[i.upper];
-}
-
-inline Array1D::Interpolant Array1D::getInterpolant(float in) const
-{
-  const uint32_t maxIdx = uint32_t(size() - 1);
-  const float idxf = in * maxIdx;
-  const float frac = idxf - std::floor(idxf);
-  const uint32_t idx = idxf;
-  return {idx, std::min(maxIdx, idx + 1), frac};
 }
 
 } // namespace helide

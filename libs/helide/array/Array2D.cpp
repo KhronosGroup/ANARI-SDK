@@ -38,6 +38,15 @@ uint2 Array2D::size() const
   return uint2(uint32_t(size(0)), uint32_t(size(1)));
 }
 
+float4 Array2D::readAsAttributeValue(
+    uint2 i, WrapMode wrap1, WrapMode wrap2) const
+{
+  auto i_x = calculateWrapIndex(i.x, size().x, wrap1);
+  auto i_y = calculateWrapIndex(i.y, size().y, wrap2);
+  return readAsAttributeValueFlat(
+      data(), elementType(), i_y * size().x + i_x, totalSize());
+}
+
 void Array2D::privatize()
 {
   makePrivatizedCopy(size(0) * size(1));

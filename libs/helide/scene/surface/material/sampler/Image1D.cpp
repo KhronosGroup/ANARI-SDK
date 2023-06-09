@@ -30,10 +30,9 @@ float4 Image1D::getSample(const Geometry &g, const Ray &r) const
   if (m_inAttribute == Attribute::NONE)
     return DEFAULT_ATTRIBUTE_VALUE;
 
-  float av =
-      linalg::mul(m_inTransform, g.getAttributeValue(m_inAttribute, r)).x;
+  auto av = linalg::mul(m_inTransform, g.getAttributeValue(m_inAttribute, r));
 
-  const auto interp = m_image->getInterpolant(av);
+  const auto interp = getInterpolant(av.x, m_image->size());
   const auto v0 = m_image->readAsAttributeValue(interp.lower, m_wrapMode);
   const auto v1 = m_image->readAsAttributeValue(interp.upper, m_wrapMode);
   const auto retval = m_linearFilter ? linalg::lerp(v0, v1, interp.frac)
