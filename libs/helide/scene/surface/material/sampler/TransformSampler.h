@@ -18,8 +18,7 @@ struct TransformSampler : public Sampler
 
  private:
   Attribute m_inAttribute{Attribute::NONE};
-  mat4 m_inTransform{mat4(linalg::identity)};
-  mat4 m_outTransform{mat4(linalg::identity)};
+  mat4 m_transform{mat4(linalg::identity)};
 };
 
 } // namespace helide
