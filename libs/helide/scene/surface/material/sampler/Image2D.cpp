@@ -45,12 +45,12 @@ float4 Image2D::getSample(const Geometry &g, const Ray &r) const
       {interp_x.upper, interp_y.upper}, m_wrapMode1, m_wrapMode2);
 
   const auto v0 = m_linearFilter ? linalg::lerp(v00, v01, interp_y.frac)
-                                 : (interp_y.frac <= 0.5f ? v00 : v01);
+                                 : (interp_y.frac < 0.5f ? v00 : v01);
   const auto v1 = m_linearFilter ? linalg::lerp(v10, v11, interp_y.frac)
-                                 : (interp_y.frac <= 0.5f ? v10 : v11);
+                                 : (interp_y.frac < 0.5f ? v10 : v11);
 
   const auto retval = m_linearFilter ? linalg::lerp(v0, v1, interp_x.frac)
-                                     : (interp_x.frac <= 0.5f ? v0 : v1);
+                                     : (interp_x.frac < 0.5f ? v0 : v1);
 
   return linalg::mul(m_outTransform, retval);
 }

@@ -76,10 +76,10 @@ size_t Array1D::size() const
   return m_end - m_begin;
 }
 
-float4 Array1D::readAsAttributeValue(uint32_t i, WrapMode wrap) const
+float4 Array1D::readAsAttributeValue(int32_t i, WrapMode wrap) const
 {
-  return readAsAttributeValueFlat(
-      begin(), elementType(), calculateWrapIndex(i, size(), wrap));
+  const auto idx = calculateWrapIndex(i, size(), wrap);
+  return readAsAttributeValueFlat(begin(), elementType(), idx);
 }
 
 void Array1D::privatize()

@@ -26,7 +26,7 @@ struct Array2D : public Array
   size_t size(int dim) const;
   uint2 size() const;
 
-  float4 readAsAttributeValue(uint2 i,
+  float4 readAsAttributeValue(int2 i,
       WrapMode wrap1 = WrapMode::DEFAULT,
       WrapMode wrap2 = WrapMode::DEFAULT) const;
 
