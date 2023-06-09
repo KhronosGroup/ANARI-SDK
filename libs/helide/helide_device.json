@@ -17,6 +17,7 @@
       "khr_material_physicallyBased",
       "khr_sampler_image1d",
       "khr_sampler_image2d",
+      "khr_sampler_primitive",
       "khr_sampler_transform",
       "khr_spatial_field_structured_regular",
       "khr_volume_scivis"
