@@ -1699,6 +1699,143 @@ class sampler_image1D : public DebugObject<ANARI_SAMPLER> {
       return "image1D";
    }
 };
+class sampler_image2D : public DebugObject<ANARI_SAMPLER> {
+   static int param_hash(const char *str) {
+      static const uint32_t table[] = {0x6a690012u,0x0u,0x0u,0x6f6d0018u,0x0u,0x0u,0x0u,0x0u,0x62610044u,0x76750048u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x73720054u,0x6d6c0013u,0x75740014u,0x66650015u,0x73720016u,0x1000017u,0x80000003u,0x6261001au,0x5541001eu,0x6867001bu,0x6665001cu,0x100001du,0x80000001u,0x75740032u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x7372003bu,0x75740033u,0x73720034u,0x6a690035u,0x63620036u,0x76750037u,0x75740038u,0x66650039u,0x100003au,0x80000002u,0x6261003cu,0x6f6e003du,0x7473003eu,0x6766003fu,0x706f0040u,0x73720041u,0x6e6d0042u,0x1000043u,0x80000006u,0x6e6d0045u,0x66650046u,0x1000047u,0x80000000u,0x75740049u,0x5554004au,0x7372004bu,0x6261004cu,0x6f6e004du,0x7473004eu,0x6766004fu,0x706f0050u,0x73720051u,0x6e6d0052u,0x1000053u,0x80000007u,0x62610055u,0x71700056u,0x4e4d0057u,0x706f0058u,0x65640059u,0x6665005au,0x3331005bu,0x100005du,0x100005eu,0x80000004u,0x80000005u};
+      uint32_t cur = 0x78660000u;
+      for(int i = 0;cur!=0;++i) {
+         uint32_t idx = cur&0xFFFFu;
+         uint32_t low = (cur>>16u)&0xFFu;
+         uint32_t high = (cur>>24u)&0xFFu;
+         uint32_t c = (uint32_t)str[i];
+         if(c>=low && c<high) {
+            cur = table[idx+c-low];
+         } else {
+            break;
+         }
+         if(cur&0x80000000u) {
+            return cur&0xFFFFu;
+         }
+         if(str[i]==0) {
+            break;
+         }
+      }
+      return -1;
+   }
+   public:
+   sampler_image2D(DebugDevice *td, HelideDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { (void)factory; }
+   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
+      DebugObject::setParameter(paramname, paramtype, mem);
+      int idx = param_hash(paramname);
+      switch(idx) {
+         case 0: { //name
+            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_SAMPLER, "image2D", paramname, paramtype, name_types);
+            return;
+         }
+         case 1: { //image
+            ANARIDataType image_types[] = {ANARI_ARRAY2D, ANARI_UNKNOWN};
+            check_type(ANARI_SAMPLER, "image2D", paramname, paramtype, image_types);
+            return;
+         }
+         case 2: { //inAttribute
+            ANARIDataType inAttribute_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_SAMPLER, "image2D", paramname, paramtype, inAttribute_types);
+            return;
+         }
+         case 3: { //filter
+            ANARIDataType filter_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_SAMPLER, "image2D", paramname, paramtype, filter_types);
+            return;
+         }
+         case 4: { //wrapMode1
+            ANARIDataType wrapMode1_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_SAMPLER, "image2D", paramname, paramtype, wrapMode1_types);
+            return;
+         }
+         case 5: { //wrapMode2
+            ANARIDataType wrapMode2_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_SAMPLER, "image2D", paramname, paramtype, wrapMode2_types);
+            return;
+         }
+         case 6: { //inTransform
+            ANARIDataType inTransform_types[] = {ANARI_FLOAT32_MAT4, ANARI_UNKNOWN};
+            check_type(ANARI_SAMPLER, "image2D", paramname, paramtype, inTransform_types);
+            return;
+         }
+         case 7: { //outTransform
+            ANARIDataType outTransform_types[] = {ANARI_FLOAT32_MAT4, ANARI_UNKNOWN};
+            check_type(ANARI_SAMPLER, "image2D", paramname, paramtype, outTransform_types);
+            return;
+         }
+         default: // unknown param
+            unknown_parameter(ANARI_SAMPLER, "image2D", paramname, paramtype);
+            return;
+      }
+   }
+   void commit() {
+      DebugObject::commit();
+   }
+   const char* getSubtype() {
+      return "image2D";
+   }
+};
+class sampler_transform : public DebugObject<ANARI_SAMPLER> {
+   static int param_hash(const char *str) {
+      static const uint32_t table[] = {0x6f6e000cu,0x0u,0x0u,0x0u,0x0u,0x62610017u,0x0u,0x0u,0x0u,0x0u,0x0u,0x7372001bu,0x4241000du,0x7574000eu,0x7574000fu,0x73720010u,0x6a690011u,0x63620012u,0x76750013u,0x75740014u,0x66650015u,0x1000016u,0x80000001u,0x6e6d0018u,0x66650019u,0x100001au,0x80000000u,0x6261001cu,0x6f6e001du,0x7473001eu,0x6766001fu,0x706f0020u,0x73720021u,0x6e6d0022u,0x1000023u,0x80000002u};
+      uint32_t cur = 0x75690000u;
+      for(int i = 0;cur!=0;++i) {
+         uint32_t idx = cur&0xFFFFu;
+         uint32_t low = (cur>>16u)&0xFFu;
+         uint32_t high = (cur>>24u)&0xFFu;
+         uint32_t c = (uint32_t)str[i];
+         if(c>=low && c<high) {
+            cur = table[idx+c-low];
+         } else {
+            break;
+         }
+         if(cur&0x80000000u) {
+            return cur&0xFFFFu;
+         }
+         if(str[i]==0) {
+            break;
+         }
+      }
+      return -1;
+   }
+   public:
+   sampler_transform(DebugDevice *td, HelideDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { (void)factory; }
+   void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
+      DebugObject::setParameter(paramname, paramtype, mem);
+      int idx = param_hash(paramname);
+      switch(idx) {
+         case 0: { //name
+            ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_SAMPLER, "transform", paramname, paramtype, name_types);
+            return;
+         }
+         case 1: { //inAttribute
+            ANARIDataType inAttribute_types[] = {ANARI_STRING, ANARI_UNKNOWN};
+            check_type(ANARI_SAMPLER, "transform", paramname, paramtype, inAttribute_types);
+            return;
+         }
+         case 2: { //transform
+            ANARIDataType transform_types[] = {ANARI_FLOAT32_MAT4, ANARI_UNKNOWN};
+            check_type(ANARI_SAMPLER, "transform", paramname, paramtype, transform_types);
+            return;
+         }
+         default: // unknown param
+            unknown_parameter(ANARI_SAMPLER, "transform", paramname, paramtype);
+            return;
+      }
+   }
+   void commit() {
+      DebugObject::commit();
+   }
+   const char* getSubtype() {
+      return "transform";
+   }
+};
 class spatial_field_structuredRegular : public DebugObject<ANARI_SPATIAL_FIELD> {
    static int param_hash(const char *str) {
       static const uint32_t table[] = {0x62610010u,0x0u,0x6a690014u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6261001au,0x7372001eu,0x0u,0x0u,0x0u,0x71700024u,0x75740011u,0x62610012u,0x1000013u,0x80000001u,0x6d6c0015u,0x75740016u,0x66650017u,0x73720018u,0x1000019u,0x80000004u,0x6e6d001bu,0x6665001cu,0x100001du,0x80000000u,0x6a69001fu,0x68670020u,0x6a690021u,0x6f6e0022u,0x1000023u,0x80000002u,0x62610025u,0x64630026u,0x6a690027u,0x6f6e0028u,0x68670029u,0x100002au,0x80000003u};
@@ -1988,8 +2125,8 @@ DebugObjectBase* HelideDeviceDebugFactory::new_renderer(const char *name, DebugD
    }
 }
 static int sampler_object_hash(const char *str) {
-   static const uint32_t table[] = {0x6e6d0001u,0x62610002u,0x68670003u,0x66650004u,0x32310005u,0x45440006u,0x1000007u,0x80000000u};
-   uint32_t cur = 0x6a690000u;
+   static const uint32_t table[] = {0x6e6d000cu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x73720016u,0x6261000du,0x6867000eu,0x6665000fu,0x33310010u,0x45440012u,0x45440014u,0x1000013u,0x80000000u,0x1000015u,0x80000001u,0x62610017u,0x6f6e0018u,0x74730019u,0x6766001au,0x706f001bu,0x7372001cu,0x6e6d001du,0x100001eu,0x80000002u};
+   uint32_t cur = 0x75690000u;
    for(int i = 0;cur!=0;++i) {
       uint32_t idx = cur&0xFFFFu;
       uint32_t low = (cur>>16u)&0xFFu;
@@ -2014,6 +2151,10 @@ DebugObjectBase* HelideDeviceDebugFactory::new_sampler(const char *name, DebugDe
    switch(idx) {
       case 0:
          return new sampler_image1D(td, this, wh, h);
+      case 1:
+         return new sampler_image2D(td, this, wh, h);
+      case 2:
+         return new sampler_transform(td, this, wh, h);
       default:
          unknown_subtype(td, ANARI_SAMPLER, name);
          return new SubtypedDebugObject<ANARI_SAMPLER>(td, wh, h, name);

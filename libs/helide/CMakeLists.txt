@@ -99,6 +99,7 @@ project_sources(PRIVATE
   scene/surface/material/sampler/Image1D.cpp
   scene/surface/material/sampler/Image2D.cpp
   scene/surface/material/sampler/Sampler.cpp
+  scene/surface/material/sampler/TransformSampler.cpp
   scene/volume/Volume.cpp
   scene/volume/SciVisVolume.cpp
   scene/volume/spatial_field/SpatialField.cpp
