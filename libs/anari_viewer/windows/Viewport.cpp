@@ -365,6 +365,8 @@ void Viewport::ui_handleInput()
 
 void Viewport::ui_contextMenu()
 {
+  constexpr float INDENT_AMOUNT = 25.f;
+
   const bool rightClicked = ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Right);
 
   if (rightClicked && ImGui::IsWindowHovered()) {
@@ -373,49 +375,51 @@ void Viewport::ui_contextMenu()
   }
 
   if (ImGui::BeginPopup(m_contextMenuName.c_str())) {
-    if (ImGui::BeginMenu("renderer")) {
-      if (ImGui::BeginMenu("subtype")) {
-        for (int i = 0; i < m_rendererNames.size(); i++) {
-          if (ImGui::MenuItem(m_rendererNames[i].c_str())) {
-            m_currentRenderer = i;
-            updateFrame();
-          }
+    ImGui::Text("Renderer:");
+    ImGui::Indent(INDENT_AMOUNT);
+
+    if (m_renderers.size() > 1 && ImGui::BeginMenu("subtype")) {
+      for (int i = 0; i < m_rendererNames.size(); i++) {
+        if (ImGui::MenuItem(m_rendererNames[i].c_str())) {
+          m_currentRenderer = i;
+          updateFrame();
         }
-        ImGui::EndMenu();
-      }
-
-      if (!m_rendererParameters.empty() && ImGui::BeginMenu("parameters")) {
-        auto &parameters = m_rendererParameters[m_currentRenderer];
-        auto renderer = m_renderers[m_currentRenderer];
-        for (auto &p : parameters)
-          ui::buildUI(m_device, renderer, p);
-        ImGui::EndMenu();
       }
       ImGui::EndMenu();
     }
 
-    ImGui::Separator();
-
-    if (ImGui::BeginMenu("camera")) {
-      if (ImGui::Checkbox("orthographic", &m_useOrthoCamera))
-        updateFrame();
-
-      ImGui::BeginDisabled(m_useOrthoCamera);
-
-      if (ImGui::SliderFloat("fov", &m_fov, 0.1f, 180.f))
-        updateCamera(true);
-
-      ImGui::EndDisabled();
-
-      ImGui::Separator();
-
-      if (ImGui::MenuItem("reset view"))
-        resetView();
-
+    if (!m_rendererParameters.empty() && ImGui::BeginMenu("parameters")) {
+      auto &parameters = m_rendererParameters[m_currentRenderer];
+      auto renderer = m_renderers[m_currentRenderer];
+      for (auto &p : parameters)
+        ui::buildUI(m_device, renderer, p);
       ImGui::EndMenu();
     }
 
+    ImGui::Unindent(INDENT_AMOUNT);
     ImGui::Separator();
+
+    ImGui::Text("Camera:");
+    ImGui::Indent(INDENT_AMOUNT);
+
+    if (ImGui::Checkbox("orthographic", &m_useOrthoCamera))
+      updateFrame();
+
+    ImGui::BeginDisabled(m_useOrthoCamera);
+
+    if (ImGui::SliderFloat("fov", &m_fov, 0.1f, 180.f))
+      updateCamera(true);
+
+    ImGui::EndDisabled();
+
+    if (ImGui::MenuItem("reset view"))
+      resetView();
+
+    ImGui::Unindent(INDENT_AMOUNT);
+    ImGui::Separator();
+
+    ImGui::Text("Viewport:");
+    ImGui::Indent(INDENT_AMOUNT);
 
     ImGui::Checkbox("show stats", &m_showOverlay);
     if (ImGui::MenuItem("reset stats")) {
@@ -423,10 +427,10 @@ void Viewport::ui_contextMenu()
       m_maxFL = m_latestFL;
     }
 
-    ImGui::Separator();
-
     if (ImGui::MenuItem("take screenshot"))
       m_saveNextFrame = true;
+
+    ImGui::Unindent(INDENT_AMOUNT);
 
     if (!ImGui::IsPopupOpen(m_contextMenuName.c_str()))
       m_contextMenuVisible = false;
