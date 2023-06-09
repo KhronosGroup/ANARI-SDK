@@ -107,9 +107,23 @@ size_t Array1D::size() const
   return m_end - m_begin;
 }
 
-float4 Array1D::readAsAttributeValue(uint32_t i) const
+float4 Array1D::readAsAttributeValue(uint32_t i, WrapMode wrap) const
 {
   auto retval = DEFAULT_ATTRIBUTE_VALUE;
+
+  switch (wrap) {
+  case WrapMode::CLAMP_TO_EDGE:
+  case WrapMode::DEFAULT:
+  default:
+    i = linalg::clamp(i, 0u, uint32_t(size() - 1));
+    break;
+  case WrapMode::REPEAT:
+    i = i % size();
+    break;
+  case WrapMode::MIRROR_REPEAT:
+    i = uint32_t(computeMirroredRepeatIndex(int32_t(i), size()));
+    break;
+  }
 
   switch (elementType()) {
   case ANARI_FLOAT32:

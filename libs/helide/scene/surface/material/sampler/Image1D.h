@@ -20,8 +20,8 @@ struct Image1D : public Sampler
  private:
   helium::IntrusivePtr<Array1D> m_image;
   Attribute m_inAttribute{Attribute::NONE};
+  WrapMode m_wrapMode{WrapMode::DEFAULT};
   bool m_linearFilter{true};
-  std::string m_wrapMode{"clampToEdge"};
   mat4 m_inTransform{mat4(linalg::identity)};
   mat4 m_outTransform{mat4(linalg::identity)};
 };

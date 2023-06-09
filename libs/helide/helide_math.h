@@ -4,8 +4,8 @@
 #pragma once
 
 // anari
-#include <anari/anari_cpp.hpp>
 #include <anari/anari_cpp/ext/linalg.h>
+#include <anari/anari_cpp.hpp>
 // std
 #include <limits>
 // embree
@@ -113,6 +113,14 @@ enum class Attribute
   NONE
 };
 
+enum WrapMode
+{
+  CLAMP_TO_EDGE = 0,
+  REPEAT,
+  MIRROR_REPEAT,
+  DEFAULT
+};
+
 // Functions //////////////////////////////////////////////////////////////////
 
 inline float radians(float degrees)
@@ -148,6 +156,12 @@ inline void accumulateValue(T &a, const T &b, float interp)
   a += b * (1.f - interp);
 }
 
+inline int32_t computeMirroredRepeatIndex(int32_t x, int32_t size)
+{
+  x = std::abs(x + (x < 0)) % (2 * size);
+  return x >= size ? 2 * size - x - 1 : x;
+};
+
 inline Attribute attributeFromString(const std::string &str)
 {
   if (str == "color")
@@ -162,6 +176,18 @@ inline Attribute attributeFromString(const std::string &str)
     return Attribute::ATTRIBUTE_3;
   else
     return Attribute::NONE;
+}
+
+inline WrapMode wrapModeFromString(const std::string &str)
+{
+  if (str == "clampToEdge")
+    return WrapMode::CLAMP_TO_EDGE;
+  else if (str == "repeat")
+    return WrapMode::REPEAT;
+  else if (str == "mirrorRepeat")
+    return WrapMode::MIRROR_REPEAT;
+  else
+    return WrapMode::DEFAULT;
 }
 
 } // namespace helide
