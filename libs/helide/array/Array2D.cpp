@@ -41,10 +41,10 @@ uint2 Array2D::size() const
 float4 Array2D::readAsAttributeValue(
     uint2 i, WrapMode wrap1, WrapMode wrap2) const
 {
-  auto i_x = calculateWrapIndex(i.x, size().x, wrap1);
-  auto i_y = calculateWrapIndex(i.y, size().y, wrap2);
-  return readAsAttributeValueFlat(
-      data(), elementType(), i_y * size().x + i_x, totalSize());
+  const auto i_x = calculateWrapIndex(i.x, size().x, wrap1);
+  const auto i_y = calculateWrapIndex(i.y, size().y, wrap2);
+  const size_t idx = i_y * size().x + i_x;
+  return readAsAttributeValueFlat(data(), elementType(), idx, totalSize());
 }
 
 void Array2D::privatize()

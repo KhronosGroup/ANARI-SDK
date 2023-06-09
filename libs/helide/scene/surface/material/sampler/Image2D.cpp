@@ -36,13 +36,13 @@ float4 Image2D::getSample(const Geometry &g, const Ray &r) const
   const auto interp_x = getInterpolant(av.x, m_image->size().x);
   const auto interp_y = getInterpolant(av.y, m_image->size().y);
   const auto v00 = m_image->readAsAttributeValue(
-      {interp_x.lower, interp_y.lower}, m_wrapMode1);
+      {interp_x.lower, interp_y.lower}, m_wrapMode1, m_wrapMode2);
   const auto v01 = m_image->readAsAttributeValue(
-      {interp_x.lower, interp_y.upper}, m_wrapMode1);
+      {interp_x.lower, interp_y.upper}, m_wrapMode1, m_wrapMode2);
   const auto v10 = m_image->readAsAttributeValue(
-      {interp_x.upper, interp_y.lower}, m_wrapMode2);
+      {interp_x.upper, interp_y.lower}, m_wrapMode1, m_wrapMode2);
   const auto v11 = m_image->readAsAttributeValue(
-      {interp_x.upper, interp_y.upper}, m_wrapMode2);
+      {interp_x.upper, interp_y.upper}, m_wrapMode1, m_wrapMode2);
 
   const auto v0 = m_linearFilter ? linalg::lerp(v00, v01, interp_y.frac)
                                  : (interp_y.frac <= 0.5f ? v00 : v01);
