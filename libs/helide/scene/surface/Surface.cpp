@@ -45,7 +45,7 @@ float3 Surface::getSurfaceColor(const Ray &ray) const
 {
   const auto colorAttribute = material()->colorAttribute();
   const auto *colorSampler = material()->colorSampler();
-  if (colorSampler) {
+  if (colorSampler && colorSampler->isValid()) {
     auto v = colorSampler->getSample(*geometry(), ray);
     return float3(v.x, v.y, v.z);
   } else if (colorAttribute == Attribute::NONE)

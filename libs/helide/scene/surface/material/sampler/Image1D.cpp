@@ -20,9 +20,9 @@ void Image1D::commit()
   m_inAttribute =
       attributeFromString(getParamString("inAttribute", "attribute0"));
   m_linearFilter = getParamString("filter", "linear") != "nearest";
-  m_wrapMode = getParamString("wrapMode", "clampToEdge");
+  m_wrapMode = wrapModeFromString(getParamString("wrapMode", "clampToEdge"));
   m_inTransform = getParam<mat4>("inTransform", mat4(linalg::identity));
-  m_outTransform = getParam<mat4>("inTransform", mat4(linalg::identity));
+  m_outTransform = getParam<mat4>("outTransform", mat4(linalg::identity));
 }
 
 float4 Image1D::getSample(const Geometry &g, const Ray &r) const
@@ -30,13 +30,12 @@ float4 Image1D::getSample(const Geometry &g, const Ray &r) const
   if (m_inAttribute == Attribute::NONE)
     return DEFAULT_ATTRIBUTE_VALUE;
 
-  const auto av =
-      linalg::mul(m_inTransform, g.getAttributeValue(m_inAttribute, r));
+  float av =
+      linalg::mul(m_inTransform, g.getAttributeValue(m_inAttribute, r)).x;
 
-  const auto interp = m_image->getInterpolant(av.x);
-  const auto v0 = m_image->readAsAttributeValue(interp.lower);
-  const auto v1 = m_image->readAsAttributeValue(interp.upper);
-
+  const auto interp = m_image->getInterpolant(av);
+  const auto v0 = m_image->readAsAttributeValue(interp.lower, m_wrapMode);
+  const auto v1 = m_image->readAsAttributeValue(interp.upper, m_wrapMode);
   const auto retval = m_linearFilter ? linalg::lerp(v0, v1, interp.frac)
                                      : (interp.frac <= 0.5f ? v0 : v1);
   return linalg::mul(m_outTransform, retval);
