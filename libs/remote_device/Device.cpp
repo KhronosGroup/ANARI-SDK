@@ -747,10 +747,10 @@ void Device::handleMessage(async::connection::reason reason,
           : "channel.depth";
       LOG(logging::Level::Stats) << t << " sec. until " << chan << " received";
 
-#ifdef HAVE_TURBOJPEG
       if (message->type() == MessageType::ChannelColor) {
         frm.resizeColor(width, height, type);
 
+#ifdef HAVE_TURBOJPEG
         if (type == ANARI_UFIXED8_RGBA_SRGB) { // TODO: more formats..
           uint32_t jpegSize = *(uint32_t *)(message->data() + off);
           off += sizeof(jpegSize);
