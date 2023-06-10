@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(anari REQUIRED)
+find_package(Threads REQUIRED)
 # TODO: libjpeg-turbo (with vectorization) should be a strict requirement as
 # encoding, decoding, and sending color buffers takes significantly longer without
 find_package(libjpeg-turbo)
