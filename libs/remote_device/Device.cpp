@@ -747,6 +747,7 @@ void Device::handleMessage(async::connection::reason reason,
           : "channel.depth";
       LOG(logging::Level::Stats) << t << " sec. until " << chan << " received";
 
+#ifdef HAVE_TURBOJPEG
       if (message->type() == MessageType::ChannelColor) {
         frm.resizeColor(width, height, type);
 
@@ -768,13 +769,16 @@ void Device::handleMessage(async::connection::reason reason,
                 << ", compressed: " << prettyBytes(jpegSize)
                 << ", rate: " << double(frm.color.size()) / jpegSize;
           }
-        } else {
+        } else
+#endif
+        {
           size_t numBytes = width * height * anari::sizeOf(type);
           memcpy(frm.color.data(), message->data() + off, numBytes);
         }
       } else {
         frm.resizeDepth(width, height, type);
 
+#ifdef HAVE_SNAPPY
         if (type == ANARI_FLOAT32) {
           uint32_t snappySize = *(uint32_t *)(message->data() + off);
           off += sizeof(snappySize);
@@ -790,7 +794,9 @@ void Device::handleMessage(async::connection::reason reason,
           } else {
             LOG(logging::Level::Warning) << "snappy::RawUncompress failed";
           }
-        } else {
+        } else
+#endif
+        {
           size_t numBytes = width * height * anari::sizeOf(type);
           memcpy(frm.depth.data(), message->data() + off, numBytes);
         }

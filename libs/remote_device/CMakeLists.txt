@@ -9,10 +9,22 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(anari REQUIRED)
-find_package(libjpeg-turbo REQUIRED)
-find_package(Snappy REQUIRED) # TODO: not really required, shoudl become a cmake option
+# TODO: libjpeg-turbo (with vectorization) should be a strict requirement as
+# encoding, decoding, and sending color buffers takes significantly longer without
+find_package(libjpeg-turbo)
+find_package(Snappy)
 set(Boost_INCLUDE_DIRS "3rdparty/boost")
 #find_package(Boost COMPONENTS filesystem iostreams system REQUIRED)
+
+if (Snappy_FOUND)
+    set(__remote_extra_libs ${__remote_extra_libs} Snappy::snappy)
+    set(__remote_definitions ${__remote_definitions} HAVE_SNAPPY=1)
+endif()
+
+if (libjpeg-turbo_FOUND)
+    set(__remote_extra_libs ${__remote_extra_libs} libjpeg-turbo::turbojpeg)
+    set(__remote_definitions ${__remote_definitions} HAVE_TURBOJPEG=1)
+endif()
 
 # =========================================================
 # Client device
@@ -31,14 +43,16 @@ target_sources(${PROJECT_NAME} PRIVATE
     Logging.cpp
 )
 
+if (__remote_definitions)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC ${__remote_definitions})
+endif()
 target_include_directories(${PROJECT_NAME} PUBLIC ${Boost_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
         anari::anari
         anari::anari_library_debug
         helium
-        libjpeg-turbo::turbojpeg
-        Snappy::snappy
+        ${__remote_extra_libs}
         #Boost::filesystem
         #Boost::iostreams
         #Boost::system
@@ -60,14 +74,16 @@ target_sources(anari-remote-server PRIVATE
     Server.cpp
 )
 
+if (__remote_definitions)
+    target_compile_definitions(anari-remote-server PUBLIC ${__remote_definitions})
+endif()
 target_include_directories(anari-remote-server PUBLIC ${Boost_INCLUDE_DIRS})
 target_link_libraries(anari-remote-server
     PUBLIC
         anari::anari
         anari::anari_library_debug
         helium
-        libjpeg-turbo::turbojpeg
-        Snappy::snappy
+        ${__remote_extra_libs}
         #Boost::filesystem
         #Boost::iostreams
         #Boost::system

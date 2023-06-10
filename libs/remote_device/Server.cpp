@@ -635,6 +635,8 @@ struct Server
           outbuf->write((const char *)&width, sizeof(width));
           outbuf->write((const char *)&height, sizeof(height));
           outbuf->write((const char *)&type, sizeof(type));
+
+#ifdef HAVE_TURBOJPEG
           if (type == ANARI_UFIXED8_RGBA_SRGB) { // TODO: more formats..
             TurboJPEGOptions options;
             options.width = width;
@@ -660,7 +662,9 @@ struct Server
                                           << prettyBytes(compressedSize);
               }
             }
-          } else {
+          } else
+#endif
+          {
             outbuf->write(color, colorSize);
           }
           write(MessageType::ChannelColor, outbuf);
@@ -676,6 +680,8 @@ struct Server
           outbuf->write((const char *)&width, sizeof(width));
           outbuf->write((const char *)&height, sizeof(height));
           outbuf->write((const char *)&type, sizeof(type));
+
+#ifdef HAVE_SNAPPY
           if (type == ANARI_FLOAT32) {
             SNAPPYOptions options;
             options.inputSize = depthSize;
@@ -694,7 +700,9 @@ struct Server
             outbuf->write(
                 (const char *)&compressedSize32, sizeof(compressedSize32));
             outbuf->write((const char *)compressed.data(), compressedSize);
-          } else {
+          } else
+#endif
+          {
             outbuf->write(depth, depthSize);
           }
           write(MessageType::ChannelDepth, outbuf);

@@ -2,8 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Compression.h"
+#ifdef HAVE_SNAPPY
 #include <snappy.h>
+#endif
+#ifdef HAVE_TURBOJPEG
 #include <turbojpeg.h>
+#endif
 #include <map>
 #include "Logging.h"
 
@@ -12,6 +16,8 @@ namespace remote {
 // ==================================================================
 // TurboJPEG
 // ==================================================================
+
+#ifdef HAVE_TURBOJPEG
 
 static std::map<TurboJPEGOptions::PixelFormat, TJPF> MapPixelFormatTurboJPEG = {
     {TurboJPEGOptions::PixelFormat::RGB, TJPF_RGB},
@@ -127,9 +133,13 @@ bool uncompressTurboJPEG(const uint8_t *dataIN,
   return true;
 }
 
+#endif
+
 // ==================================================================
 // Snappy
 // ==================================================================
+
+#ifdef HAVE_SNAPPY
 
 size_t getMaxCompressedBufferSizeSNAPPY(SNAPPYOptions options)
 {
@@ -158,5 +168,7 @@ bool uncompressSNAPPY(const uint8_t *dataIN,
   return snappy::RawUncompress(
       (const char *)dataIN, compressedSizeInBytesIN, (char *)dataOUT);
 }
+
+#endif
 
 } // namespace remote
