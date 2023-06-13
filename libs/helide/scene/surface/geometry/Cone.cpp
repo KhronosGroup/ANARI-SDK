@@ -87,8 +87,7 @@ void Cone::commit()
   rtcCommitGeometry(embreeGeometry());
 }
 
-float4 Cone::getAttributeValueAt(
-    const Attribute &attr, const Ray &ray) const
+float4 Cone::getAttributeValue(const Attribute &attr, const Ray &ray) const
 {
   if (attr == Attribute::NONE)
     return DEFAULT_ATTRIBUTE_VALUE;
@@ -96,12 +95,12 @@ float4 Cone::getAttributeValueAt(
   auto attrIdx = static_cast<int>(attr);
   auto *attributeArray = m_vertexAttributes[attrIdx].ptr;
   if (!attributeArray)
-    return Geometry::getAttributeValueAt(attr, ray);
+    return Geometry::getAttributeValue(attr, ray);
 
   auto idx = m_index ? *(m_index->dataAs<uint32_t>() + ray.primID) : ray.primID;
 
-  auto a = readAttributeArrayAt(attributeArray, idx + 0);
-  auto b = readAttributeArrayAt(attributeArray, idx + 1);
+  auto a = readAttributeValue(attributeArray, idx + 0);
+  auto b = readAttributeValue(attributeArray, idx + 1);
 
   return a + (b - a) * ray.u;
 }

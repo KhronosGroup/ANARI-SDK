@@ -9,12 +9,9 @@ Matte::Matte(HelideGlobalState *s) : Material(s) {}
 
 void Matte::commit()
 {
-  m_color =
-      getParam<float3>("color", getParam<float3>("baseColor", float3(1.f)));
-  m_opacity = 1.f;
-
+  m_color = getParam<float3>("color", float3(1.f));
   m_colorAttribute = attributeFromString(getParamString("color", "none"));
-  m_opacityAttribute = Attribute::NONE;
+  m_colorSampler = getParamObject<Sampler>("color");
 }
 
 } // namespace helide

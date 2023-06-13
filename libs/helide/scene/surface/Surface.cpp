@@ -44,20 +44,16 @@ const Material *Surface::material() const
 float3 Surface::getSurfaceColor(const Ray &ray) const
 {
   const auto colorAttribute = material()->colorAttribute();
-  if (colorAttribute == Attribute::NONE)
+  const auto *colorSampler = material()->colorSampler();
+  if (colorSampler && colorSampler->isValid()) {
+    auto v = colorSampler->getSample(*geometry(), ray);
+    return float3(v.x, v.y, v.z);
+  } else if (colorAttribute == Attribute::NONE)
     return material()->color();
   else {
-    auto v = geometry()->getAttributeValueAt(colorAttribute, ray);
+    auto v = geometry()->getAttributeValue(colorAttribute, ray);
     return float3(v.x, v.y, v.z);
   }
-}
-
-float Surface::getSurfaceOpacity(const Ray &ray) const
-{
-  auto opacityAttribute = material()->opacityAttribute();
-  return opacityAttribute == Attribute::NONE
-      ? material()->opacity()
-      : geometry()->getAttributeValueAt(opacityAttribute, ray).x;
 }
 
 void Surface::markCommitted()

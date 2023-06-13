@@ -13,7 +13,7 @@ struct Cone : public Geometry
 
   void commit() override;
 
-  float4 getAttributeValueAt(
+  float4 getAttributeValue(
       const Attribute &attr, const Ray &ray) const override;
 
  private:

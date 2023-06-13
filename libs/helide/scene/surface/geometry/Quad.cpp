@@ -68,7 +68,7 @@ void Quad::commit()
   rtcCommitGeometry(embreeGeometry());
 }
 
-float4 Quad::getAttributeValueAt(const Attribute &attr, const Ray &ray) const
+float4 Quad::getAttributeValue(const Attribute &attr, const Ray &ray) const
 {
   if (attr == Attribute::NONE)
     return DEFAULT_ATTRIBUTE_VALUE;
@@ -76,23 +76,22 @@ float4 Quad::getAttributeValueAt(const Attribute &attr, const Ray &ray) const
   auto attrIdx = static_cast<int>(attr);
   auto *attributeArray = m_vertexAttributes[attrIdx].ptr;
   if (!attributeArray)
-    return Geometry::getAttributeValueAt(attr, ray);
+    return Geometry::getAttributeValue(attr, ray);
 
   const float3 uvw(1.0f - ray.u - ray.v, ray.u, ray.v);
 
-  auto idx = m_index
-      ? *(m_index->dataAs<uint4>() + ray.primID)
-      : uint4(ray.primID + 0, ray.primID + 1, ray.primID + 2, ray.primID + 3);
+  auto idx = m_index ? *(m_index->dataAs<uint4>() + ray.primID)
+                     : 4 * ray.primID + uint4(0, 1, 2, 3);
 
   float4 uv((1 - ray.v) * (1 - ray.u),
       (1 - ray.v) * ray.u,
       ray.v * ray.u,
       ray.v * (1 - ray.u));
 
-  auto a = readAttributeArrayAt(attributeArray, idx.x);
-  auto b = readAttributeArrayAt(attributeArray, idx.y);
-  auto c = readAttributeArrayAt(attributeArray, idx.z);
-  auto d = readAttributeArrayAt(attributeArray, idx.w);
+  auto a = readAttributeValue(attributeArray, idx.x);
+  auto b = readAttributeValue(attributeArray, idx.y);
+  auto c = readAttributeValue(attributeArray, idx.z);
+  auto d = readAttributeValue(attributeArray, idx.w);
 
   return uv.x * a + uv.y * b + uv.z * c + uv.w * d;
 }

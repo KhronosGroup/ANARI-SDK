@@ -4,9 +4,10 @@
 #pragma once
 
 // anari
-#include <anari/anari_cpp.hpp>
 #include <anari/anari_cpp/ext/linalg.h>
+#include <anari/anari_cpp.hpp>
 // std
+#include <cstring>
 #include <limits>
 // embree
 #include <embree3/rtcore_common.h>
@@ -113,6 +114,14 @@ enum class Attribute
   NONE
 };
 
+enum WrapMode
+{
+  CLAMP_TO_EDGE = 0,
+  REPEAT,
+  MIRROR_REPEAT,
+  DEFAULT
+};
+
 // Functions //////////////////////////////////////////////////////////////////
 
 inline float radians(float degrees)
@@ -136,6 +145,23 @@ inline float toneMap(float v)
     return v;
 }
 
+struct Interpolant
+{
+  int32_t lower;
+  int32_t upper;
+  float frac;
+};
+
+inline Interpolant getInterpolant(float in, size_t size)
+{
+  const float scale = float(size - 1);
+  const float lowf = in * scale;
+  const int32_t low = std::floor(lowf);
+  const int32_t high = low + 1;
+  const float frac = lowf - low;
+  return {low, high, frac};
+}
+
 template <typename T, typename U>
 inline T lerp(const T &x, const T &y, const U &a)
 {
@@ -146,6 +172,161 @@ template <typename T>
 inline void accumulateValue(T &a, const T &b, float interp)
 {
   a += b * (1.f - interp);
+}
+
+inline int32_t computeMirroredRepeatIndex(int32_t x, int32_t size)
+{
+  x = std::abs(x + (x < 0)) % (2 * size);
+  return x >= size ? 2 * size - x - 1 : x;
+};
+
+inline int32_t calculateWrapIndex(int32_t i, size_t size, WrapMode wrap)
+{
+  switch (wrap) {
+  case WrapMode::CLAMP_TO_EDGE:
+  case WrapMode::DEFAULT:
+  default:
+    return linalg::clamp(i, 0, int32_t(size - 1));
+    break;
+  case WrapMode::REPEAT:
+    return i % size;
+    break;
+  case WrapMode::MIRROR_REPEAT:
+    return computeMirroredRepeatIndex(i, int32_t(size));
+    break;
+  }
+}
+
+inline Attribute attributeFromString(const std::string &str)
+{
+  if (str == "color")
+    return Attribute::COLOR;
+  else if (str == "attribute0")
+    return Attribute::ATTRIBUTE_0;
+  else if (str == "attribute1")
+    return Attribute::ATTRIBUTE_1;
+  else if (str == "attribute2")
+    return Attribute::ATTRIBUTE_2;
+  else if (str == "attribute3")
+    return Attribute::ATTRIBUTE_3;
+  else
+    return Attribute::NONE;
+}
+
+inline WrapMode wrapModeFromString(const std::string &str)
+{
+  if (str == "clampToEdge")
+    return WrapMode::CLAMP_TO_EDGE;
+  else if (str == "repeat")
+    return WrapMode::REPEAT;
+  else if (str == "mirrorRepeat")
+    return WrapMode::MIRROR_REPEAT;
+  else
+    return WrapMode::DEFAULT;
+}
+
+template <typename T>
+static const T *typedOffset(const void *mem, uint64_t offset)
+{
+  return ((const T *)mem) + offset;
+}
+
+template <typename ELEMENT_T, int NUM_COMPONENTS, bool SRGB = false>
+static float4 getAttributeArrayAt_ufixed(void *data, uint64_t offset)
+{
+  constexpr float m = std::numeric_limits<ELEMENT_T>::max();
+  float4 retval(0.f, 0.f, 0.f, 1.f);
+  switch (NUM_COMPONENTS) {
+  case 4:
+    retval.w = toneMap<SRGB>(
+        *typedOffset<ELEMENT_T>(data, NUM_COMPONENTS * offset + 3) / m);
+  case 3:
+    retval.z = toneMap<SRGB>(
+        *typedOffset<ELEMENT_T>(data, NUM_COMPONENTS * offset + 2) / m);
+  case 2:
+    retval.y = toneMap<SRGB>(
+        *typedOffset<ELEMENT_T>(data, NUM_COMPONENTS * offset + 1) / m);
+  case 1:
+    retval.x = toneMap<SRGB>(
+        *typedOffset<ELEMENT_T>(data, NUM_COMPONENTS * offset + 0) / m);
+  default:
+    break;
+  }
+
+  return retval;
+}
+
+inline float4 readAsAttributeValueFlat(
+    void *data, ANARIDataType type, uint64_t i)
+{
+  auto retval = DEFAULT_ATTRIBUTE_VALUE;
+
+  switch (type) {
+  case ANARI_FLOAT32:
+    std::memcpy(&retval, typedOffset<float>(data, i), sizeof(float));
+    break;
+  case ANARI_FLOAT32_VEC2:
+    std::memcpy(&retval, typedOffset<float2>(data, i), sizeof(float2));
+    break;
+  case ANARI_FLOAT32_VEC3:
+    std::memcpy(&retval, typedOffset<float3>(data, i), sizeof(float3));
+    break;
+  case ANARI_FLOAT32_VEC4:
+    std::memcpy(&retval, typedOffset<float4>(data, i), sizeof(float4));
+    break;
+  case ANARI_UFIXED8_R_SRGB:
+    retval = getAttributeArrayAt_ufixed<uint8_t, 1, true>(data, i);
+    break;
+  case ANARI_UFIXED8_RA_SRGB:
+    retval = getAttributeArrayAt_ufixed<uint8_t, 2, true>(data, i);
+    break;
+  case ANARI_UFIXED8_RGB_SRGB:
+    retval = getAttributeArrayAt_ufixed<uint8_t, 3, true>(data, i);
+    break;
+  case ANARI_UFIXED8_RGBA_SRGB:
+    retval = getAttributeArrayAt_ufixed<uint8_t, 4, true>(data, i);
+    break;
+  case ANARI_UFIXED8:
+    retval = getAttributeArrayAt_ufixed<uint8_t, 1>(data, i);
+    break;
+  case ANARI_UFIXED8_VEC2:
+    retval = getAttributeArrayAt_ufixed<uint8_t, 2>(data, i);
+    break;
+  case ANARI_UFIXED8_VEC3:
+    retval = getAttributeArrayAt_ufixed<uint8_t, 3>(data, i);
+    break;
+  case ANARI_UFIXED8_VEC4:
+    retval = getAttributeArrayAt_ufixed<uint8_t, 4>(data, i);
+    break;
+  case ANARI_UFIXED16:
+    retval = getAttributeArrayAt_ufixed<uint16_t, 1>(data, i);
+    break;
+  case ANARI_UFIXED16_VEC2:
+    retval = getAttributeArrayAt_ufixed<uint16_t, 2>(data, i);
+    break;
+  case ANARI_UFIXED16_VEC3:
+    retval = getAttributeArrayAt_ufixed<uint16_t, 3>(data, i);
+    break;
+  case ANARI_UFIXED16_VEC4:
+    retval = getAttributeArrayAt_ufixed<uint16_t, 4>(data, i);
+    break;
+  case ANARI_UFIXED32:
+    retval = getAttributeArrayAt_ufixed<uint32_t, 1>(data, i);
+    break;
+  case ANARI_UFIXED32_VEC2:
+    retval = getAttributeArrayAt_ufixed<uint32_t, 2>(data, i);
+    break;
+  case ANARI_UFIXED32_VEC3:
+    retval = getAttributeArrayAt_ufixed<uint32_t, 3>(data, i);
+    break;
+  case ANARI_UFIXED32_VEC4:
+    retval = getAttributeArrayAt_ufixed<uint32_t, 4>(data, i);
+    break;
+  default:
+    break;
+  }
+
+  return retval;
 }
 
 } // namespace helide

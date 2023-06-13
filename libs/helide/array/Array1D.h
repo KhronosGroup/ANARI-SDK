@@ -34,6 +34,13 @@ struct Array1D : public Array
 
   size_t size() const;
 
+  float4 readAsAttributeValue(
+      int32_t i, WrapMode wrap = WrapMode::DEFAULT) const;
+  template <typename T>
+  T valueAtLinear(float in) const; // 'in' must be clamped to [0, 1]
+  template <typename T>
+  T valueAtClosest(float in) const; // 'in' must be clamped to [0, 1]
+
   void privatize() override;
 
  private:
@@ -41,6 +48,8 @@ struct Array1D : public Array
   size_t m_begin{0};
   size_t m_end{0};
 };
+
+float4 readAttributeValue(const Array1D *arr, uint32_t i);
 
 // Inlined definitions ////////////////////////////////////////////////////////
 
@@ -60,6 +69,22 @@ inline T *Array1D::endAs() const
     throw std::runtime_error("incorrect element type queried for array");
 
   return (T *)data() + m_end;
+}
+
+template <typename T>
+inline T Array1D::valueAtLinear(float in) const
+{
+  const T *data = dataAs<T>();
+  const auto i = getInterpolant(in, size());
+  return linalg::lerp(data[i.lower], data[i.upper], i.frac);
+}
+
+template <typename T>
+inline T Array1D::valueAtClosest(float in) const
+{
+  const T *data = dataAs<T>();
+  const auto i = getInterpolant(in, size());
+  return i.frac <= 0.5f ? data[i.lower] : data[i.upper];
 }
 
 } // namespace helide

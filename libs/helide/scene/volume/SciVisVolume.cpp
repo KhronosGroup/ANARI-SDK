@@ -36,9 +36,6 @@ void SciVisVolume::commit()
         "no opacity data provided to transfer function");
     return;
   }
-
-  m_colorSampler = ArraySampler1D<float3>(m_colorData.ptr);
-  m_opacitySampler = ArraySampler1D<float>(m_opacityData.ptr);
 }
 
 bool SciVisVolume::isValid() const
@@ -60,11 +57,11 @@ void SciVisVolume::render(const VolumeRay &vray, float3 &color, float &opacity)
 
   while (opacity < 0.99f && size(currentInterval) >= 0.f) {
     const float3 p = vray.org + vray.dir * currentInterval.lower;
-    const float s = position(field()->sampleAt(p), m_valueRange);
+    const float s = field()->sampleAt(p);
 
     if (!std::isnan(s)) {
-      const float3 c = m_colorSampler.valueAt(s);
-      const float o = m_opacitySampler.valueAt(s) * m_densityScale;
+      const float3 c = colorOf(s);
+      const float o = opacityOf(s) * m_densityScale;
       accumulateValue(color, c * o, opacity);
       accumulateValue(opacity, o, opacity);
     }

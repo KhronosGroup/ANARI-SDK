@@ -14,6 +14,28 @@ struct PixelSample
   float depth;
 };
 
+enum class RenderMode
+{
+  DEFAULT,
+  PRIM_ID,
+  GEOM_ID,
+  INST_ID,
+  NG,
+  NG_ABS,
+  NS,
+  NS_ABS,
+  RAY_UVW,
+  HIT_SURFACE,
+  HIT_VOLUME,
+  BACKFACE,
+  HAS_MATERIAL,
+  GEOMETRY_ATTRIBUTE_0,
+  GEOMETRY_ATTRIBUTE_1,
+  GEOMETRY_ATTRIBUTE_2,
+  GEOMETRY_ATTRIBUTE_3,
+  GEOMETRY_ATTRIBUTE_COLOR
+};
+
 struct Renderer : public Object
 {
   Renderer(HelideGlobalState *s);
@@ -26,8 +48,12 @@ struct Renderer : public Object
   static Renderer *createInstance(
       std::string_view subtype, HelideGlobalState *d);
 
- protected:
+ private:
+  float3 shadeRay(const Ray &ray, const VolumeRay &vray, const World &w) const;
+
   float4 m_bgColor{float3(0.f), 1.f};
+  float m_ambientRadiance{1.f};
+  RenderMode m_mode{RenderMode::DEFAULT};
 };
 
 } // namespace helide
