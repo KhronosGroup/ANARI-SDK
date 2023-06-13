@@ -3,7 +3,6 @@
     "geometrySubtype": "curve",
     "primitiveCount": 4,
     "seed": 12345,
-    "vertexColors": true,
     "anari_objects": {
       "material": [
         {
@@ -13,22 +12,44 @@
       ]
     }
   },
+  "permutations": {
+    "color": [
+      "vertex.color",
+      "primitive.color"
+    ]
+  },
   "requiredFeatures": [
     "ANARI_KHR_GEOMETRY_CURVE"
   ],
   "metaData": {
-    "": {
+    "vertex.color": {
       "bounds": {
         "world": [
           [
-            0.5130686163902283,
-            0.17126691341400146,
+            0.466557115316391,
+            0.17126692831516266,
             0.5636337399482727
           ],
           [
             0.8651392459869385,
             0.9082220792770386,
-            0.8114861845970154
+            0.852782130241394
+          ]
+        ]
+      }
+    },
+    "primitive.color": {
+      "bounds": {
+        "world": [
+          [
+            0.466557115316391,
+            0.17126692831516266,
+            0.5636337399482727
+          ],
+          [
+            0.8651392459869385,
+            0.9082220792770386,
+            0.852782130241394
           ]
         ]
       }
