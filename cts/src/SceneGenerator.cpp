@@ -279,9 +279,9 @@ void SceneGenerator::commit()
        std::vector<glm::vec3> textureCoordinates;
        for (int i = 0; i < primitiveCount; ++i) {
          textureCoordinates.push_back({0.0f, 0.0f, 0.0f});
-         textureCoordinates.push_back({1.0f, 0.0f, 0.0f});
-         textureCoordinates.push_back({0.0f, 1.0f, 0.0f});
-         textureCoordinates.push_back({1.0f, 1.0f, 1.0f});
+         textureCoordinates.push_back({2.0f, 0.0f, 0.0f});
+         textureCoordinates.push_back({0.0f, 2.0f, 0.0f});
+         textureCoordinates.push_back({2.0f, 2.0f, 2.0f});
        }
        anari::setAndReleaseParameter(m_device,
            geom,

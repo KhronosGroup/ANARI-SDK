@@ -1,10 +1,11 @@
 {
     "sceneParameters": {
+      "color": "vertex.attribute0",
       "anari_objects": {
         "material": [
           {
             "subtype": "matte",
-            "color": "ref_sampler_0"
+            "color": "attribute0"
           }
         ],
         "sampler": [
@@ -16,7 +17,7 @@
       }
     },
     "permutations" :{
-      "/anari_objects/sampler/0/transform": [null, [[1, 0, 0, 0],[0, 0, 0, 0],[0, 0, 0, 0],[0, 0, 0, 1]]]
+      "/anari_objects/sampler/0/transform": [null, [[1, 0, 0, 0],[0, 1, 0, 0],[0, 0, 1, 0],[0, 0, 0, 1]]]
     },
     "requiredFeatures": [
       "ANARI_KHR_SAMPLER_TRANSFORM"
