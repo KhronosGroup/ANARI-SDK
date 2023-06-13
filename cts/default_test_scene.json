@@ -11,6 +11,14 @@
 		"primitiveMode": "indexed",
 		"seed": 12345,
 		"anari_objects": {
+			"geometry": [
+				{
+				  "subtype": "triangle",
+				  "vertex.attribute1": {
+					"Array1D": [[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]
+				  } 
+				}
+			  ],
 			"material": [
 				{
 					"subtype": "matte",

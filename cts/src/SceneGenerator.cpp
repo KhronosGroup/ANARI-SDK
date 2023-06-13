@@ -86,6 +86,9 @@ int SceneGenerator::anariTypeFromString(const std::string& type)
   if (type == "sampler") {
     return ANARI_SAMPLER;
   }
+  if (type == "geometry") {
+    return ANARI_GEOMETRY;
+  }
   return ANARI_UNKNOWN;
 }
 
@@ -118,6 +121,15 @@ void SceneGenerator::createAnariObject(
 {
   ANARIObject object = nullptr;
   switch (type) {
+  case ANARI_GEOMETRY: {
+    object = anari::newObject<anari::Geometry>(m_device, subtype.c_str());
+    auto it = m_anariObjects.try_emplace(
+        int(ANARI_GEOMETRY), std::vector<ANARIObject>());
+    if (it.first->second.size() == 0) {
+      it.first->second.emplace_back(object);
+    }
+    break;
+  }
   case ANARI_MATERIAL: {
     object = anari::newObject<anari::Material>(m_device, subtype.c_str());
     auto it = m_anariObjects.try_emplace(
@@ -227,7 +239,16 @@ void SceneGenerator::commit()
   setDefaultLight(m_world);
 
   auto surface = anari::newObject<anari::Surface>(d);
-  auto geom = anari::newObject<anari::Geometry>(d, geometrySubtype.c_str());
+  // create geometry
+  ANARIObject geom;
+  if (auto it = m_anariObjects.find(ANARI_GEOMETRY);
+      it != m_anariObjects.end() && !it->second.empty()) {
+    geom = it->second.front();
+  } else {
+    createAnariObject(ANARI_GEOMETRY, geometrySubtype);
+    geom = m_currentObject;
+  }
+
   if (auto it = m_anariObjects.find(int(ANARI_MATERIAL));
       it != m_anariObjects.end()) {
     if (!it->second.empty()) {
@@ -276,19 +297,6 @@ void SceneGenerator::commit()
            generator.generateTriangulatedQuadsIndexed(primitiveCount);
        vertices = quadVertices;
        indices = quadIndices;
-       std::vector<glm::vec3> textureCoordinates;
-       for (int i = 0; i < primitiveCount; ++i) {
-         textureCoordinates.push_back({0.0f, 0.0f, 0.0f});
-         textureCoordinates.push_back({2.0f, 0.0f, 0.0f});
-         textureCoordinates.push_back({0.0f, 2.0f, 0.0f});
-         textureCoordinates.push_back({2.0f, 2.0f, 2.0f});
-       }
-       anari::setAndReleaseParameter(m_device,
-           geom,
-           "vertex.attribute1",
-           anari::newArray1D(
-               m_device, textureCoordinates.data(), textureCoordinates.size()));
-
       } else {
        vertices = generator.generateTriangulatedQuadsSoup(primitiveCount);
       }

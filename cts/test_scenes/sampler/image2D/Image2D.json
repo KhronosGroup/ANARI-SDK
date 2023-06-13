@@ -2,6 +2,14 @@
     "sceneParameters": {
       "frame_depth_type": "",
       "anari_objects": {
+        "geometry": [
+          {
+            "subtype": "triangle",
+            "vertex.attribute1": {
+              "Array1D": [[0.0, 0.0], [2.0, 0.0], [0.0, 2.0], [2.0, 2.0]]
+            } 
+          }
+        ],
         "material": [
           {
             "subtype": "matte",

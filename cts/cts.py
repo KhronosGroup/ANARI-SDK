@@ -318,6 +318,9 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                                 if "subtype" not in item:
                                     # If no subtype is present no object is generated. This can be used prevent the initialization of default scene objects
                                     continue
+                                if anariObjectName == "geometry" and parsed_json["sceneParameters"]["geometrySubtype"] != None and item["subtype"] != parsed_json["sceneParameters"]["geometrySubtype"]:
+                                    # If geometrySubtype is not the same as subtype ignore the generic anari object
+                                    continue
                                 sceneGenerator.createAnariObject(anariObjectName, item["subtype"])
                                 for [paramName, paramValue] in item.items():
                                     if paramName == "subtype":
