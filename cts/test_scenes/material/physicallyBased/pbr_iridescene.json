@@ -18,8 +18,8 @@
   "simplified_permutations": true,
   "permutations": {
     "/anari_objects/material/0/iridescence": [
-      null,
       0.5,
+      null,
       "attribute0",
       "ref_sampler_0"
     ],
@@ -28,8 +28,8 @@
       2
     ],
     "/anari_objects/material/0/iridescenceThickness": [
-      null,
       0.5,
+      null,
       "attribute0",
       "ref_sampler_0"
     ]
