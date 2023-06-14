@@ -75,7 +75,7 @@ template <typename T>
 inline T Array1D::valueAtLinear(float in) const
 {
   const T *data = dataAs<T>();
-  const auto i = getInterpolant(in, size());
+  const auto i = getInterpolant(in, size(), false);
   return linalg::lerp(data[i.lower], data[i.upper], i.frac);
 }
 
@@ -83,7 +83,7 @@ template <typename T>
 inline T Array1D::valueAtClosest(float in) const
 {
   const T *data = dataAs<T>();
-  const auto i = getInterpolant(in, size());
+  const auto i = getInterpolant(in, size(), false);
   return i.frac <= 0.5f ? data[i.lower] : data[i.upper];
 }
 

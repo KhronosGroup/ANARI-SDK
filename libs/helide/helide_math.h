@@ -66,7 +66,6 @@ inline typename range_t<T>::element_t clamp(
 
 inline float position(float v, const box1 &r)
 {
-  v = clamp(v, r);
   return (v - r.lower) * (1.f / size(r));
 }
 
@@ -152,10 +151,11 @@ struct Interpolant
   float frac;
 };
 
-inline Interpolant getInterpolant(float in, size_t size)
+inline Interpolant getInterpolant(float in, size_t size, bool texOffset = false)
 {
-  const float scale = float(size - 1);
-  const float lowf = in * scale;
+  const float scale = float(size);
+  const float lowf =
+      texOffset ? (in - (0.5f / scale)) * scale : (in * (scale - 1.f));
   const int32_t low = std::floor(lowf);
   const int32_t high = low + 1;
   const float frac = lowf - low;
