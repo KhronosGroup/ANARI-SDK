@@ -1,0 +1,40 @@
+{
+  "sceneParameters": {
+    "color": "vertex.attribute0",
+    "anari_objects": {
+      "material": [
+        {
+          "subtype": "physicallyBased"
+        }
+      ],
+      "sampler": [
+        {
+          "subtype": "image1D",
+          "inAttribute": "attribute1"
+        }
+      ]
+    }
+  },
+  "simplified_permutations": true,
+  "permutations": {
+    "/anari_objects/material/0/iridescence": [
+      null,
+      0.5,
+      "attribute0",
+      "ref_sampler_0"
+    ],
+    "/anari_objects/material/0/iridescenceIor": [
+      null,
+      2
+    ],
+    "/anari_objects/material/0/iridescenceThickness": [
+      null,
+      0.5,
+      "attribute0",
+      "ref_sampler_0"
+    ]
+  },
+  "requiredFeatures": [
+    "KHR_MATERIAL_PHYSICALLY_BASED"
+  ]
+}
