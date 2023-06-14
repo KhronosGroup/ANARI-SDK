@@ -16,3 +16,8 @@ cts/*pyd
 *.log
 cts/evaluation
 *.png
+cts/*.dll
+cts/*.exp
+cts/*.lib
+cts/*.ilk
+cts/*.pdb
