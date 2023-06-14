@@ -148,8 +148,10 @@ void Frame::renderFrame()
     return;
   }
 
-  if (state->commitBuffer.lastFlush() <= m_frameLastRendered)
+  if (state->commitBuffer.lastFlush() <= m_frameLastRendered) {
+    this->refDec(helium::RefType::INTERNAL);
     return;
+  }
 
   m_frameLastRendered = helium::newTimeStamp();
   state->currentFrame = this;
@@ -234,7 +236,8 @@ void Frame::wait() const
   if (m_future.valid()) {
     m_future.get();
     this->refDec(helium::RefType::INTERNAL);
-    deviceState()->currentFrame = nullptr;
+    if (deviceState()->currentFrame == this)
+      deviceState()->currentFrame = nullptr;
   }
 }
 

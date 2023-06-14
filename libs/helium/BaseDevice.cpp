@@ -1,8 +1,8 @@
 ﻿// Copyright 2022 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-#include "BaseArray.h"
 #include "BaseDevice.h"
+#include "BaseArray.h"
 #include "BaseFrame.h"
 // anari
 #include "anari/backend/LibraryImpl.h"
@@ -94,14 +94,17 @@ void BaseDevice::release(ANARIObject o)
     return;
   }
 
-  bool privatizeArray = anari::isArray(obj.type())
-      && obj.useCount(RefType::INTERNAL) > 0
-      && obj.useCount(RefType::PUBLIC) == 1;
+  if (obj.useCount(RefType::PUBLIC) == 1) {
+    if (anari::isArray(obj.type()) && obj.useCount(RefType::INTERNAL) > 0)
+      ((BaseArray *)o)->privatize();
+    else if (obj.type() == ANARI_FRAME) {
+      auto *f = (BaseFrame *)o;
+      f->discard();
+      f->frameReady(ANARI_WAIT);
+    }
+  }
 
   obj.refDec(RefType::PUBLIC);
-
-  if (privatizeArray)
-    ((BaseArray *)o)->privatize();
 }
 
 void BaseDevice::retain(ANARIObject o)
