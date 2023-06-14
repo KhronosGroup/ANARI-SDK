@@ -1,0 +1,22 @@
+{
+  "sceneParameters": {
+    "anari_objects": {
+      "material": [
+        {
+          "subtype": "physicallyBased",
+          "transmission": 0.5,
+          "thickness": 0.5
+        }
+      ]
+    }
+  },
+  "permutations": {
+    "/anari_objects/material/0/ior": [
+      null,
+      2.42
+    ]
+  },
+  "requiredFeatures": [
+    "KHR_MATERIAL_PHYSICALLY_BASED"
+  ]
+}
