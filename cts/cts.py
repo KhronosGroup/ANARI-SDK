@@ -212,7 +212,7 @@ def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, te
     # render test scene and get frame duration of that rendering
     bounds_distance = math.dist(world_bounds[0], world_bounds[1])
     try:
-        image_data_list = sceneGenerator.renderScene(anari_renderer, bounds_distance)
+        image_data_list = sceneGenerator.renderScene(bounds_distance)
         frame_duration = sceneGenerator.getFrameDuration()
     except Exception as e:
         print(e)
@@ -315,13 +315,20 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                     if key == "anari_objects":
                         for [anariObjectName, array] in value.items():
                             for idx, item in enumerate(array):
+                                subtype = None
                                 if "subtype" not in item:
-                                    # If no subtype is present no object is generated. This can be used prevent the initialization of default scene objects
-                                    continue
-                                if anariObjectName == "geometry" and parsed_json["sceneParameters"]["geometrySubtype"] != None and item["subtype"] != parsed_json["sceneParameters"]["geometrySubtype"]:
+                                    # Renderer subtype is user-defined
+                                    if anariObjectName == "renderer":
+                                        subtype = anari_renderer
+                                    else:
+                                        # If no subtype is present no object is generated. This can be used prevent the initialization of default scene objects
+                                        continue
+                                else:
+                                    subtype = item["subtype"]
+                                if anariObjectName == "geometry" and parsed_json["sceneParameters"]["geometrySubtype"] != None and subtype != parsed_json["sceneParameters"]["geometrySubtype"]:
                                     # If geometrySubtype is not the same as subtype ignore the generic anari object
                                     continue
-                                sceneGenerator.createAnariObject(anariObjectName, item["subtype"])
+                                sceneGenerator.createAnariObject(anariObjectName, subtype)
                                 for [paramName, paramValue] in item.items():
                                     if paramName == "subtype":
                                         continue

@@ -58,8 +58,7 @@ class SceneGenerator : public anari::scenes::TestScene
 
   void commit() override;
 
-  std::vector<std::vector<uint32_t>> renderScene(
-      const std::string &rendererType, float renderDistance);
+  std::vector<std::vector<uint32_t>> renderScene(float renderDistance);
   std::vector<std::vector<std::vector<std::vector<float>>>> getBounds();
 
   // after renderScene was called, use this to get the duration of the rendering

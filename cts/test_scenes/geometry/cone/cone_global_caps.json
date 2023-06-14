@@ -2,7 +2,8 @@
   "sceneParameters": {
     "geometrySubtype": "cone",
     "primitiveCount": 16,
-    "seed": 12345
+    "seed": 12345,
+    "frame_depth_type": "FLOAT32"
   },
   "permutations": {
     "globalCaps": [

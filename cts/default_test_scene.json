@@ -2,7 +2,7 @@
 	"sceneParameters": {
 		"image_height": 1024,
 		"image_width": 1024,
-		"frame_depth_type": "FLOAT32",
+		"frame_depth_type": "",
 		"frame_color_type": "UFIXED8_RGBA_SRGB",
 		"camera_generate_transform": true,
 		"primitiveCount": 1,
@@ -11,6 +11,13 @@
 		"primitiveMode": "indexed",
 		"seed": 12345,
 		"anari_objects": {
+			"renderer": [
+				{
+					"background": [0, 0, 0, 1],
+					"ambientRadiance": 0.75,
+					"ambientColor": [1.0, 1.0, 1.0]
+				}
+			],
 			"geometry": [
 				{
 				  "subtype": "triangle",

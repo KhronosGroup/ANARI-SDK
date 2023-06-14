@@ -89,6 +89,9 @@ int SceneGenerator::anariTypeFromString(const std::string& type)
   if (type == "geometry") {
     return ANARI_GEOMETRY;
   }
+  if (type == "renderer") {
+    return ANARI_RENDERER;
+  }
   return ANARI_UNKNOWN;
 }
 
@@ -121,6 +124,15 @@ void SceneGenerator::createAnariObject(
 {
   ANARIObject object = nullptr;
   switch (type) {
+  case ANARI_RENDERER: {
+    object = anari::newObject<anari::Renderer>(m_device, subtype.c_str());
+    auto it = m_anariObjects.try_emplace(
+        int(ANARI_RENDERER), std::vector<ANARIObject>());
+    if (it.first->second.size() == 0) {
+      it.first->second.emplace_back(object);
+    }
+    break;
+  }
   case ANARI_GEOMETRY: {
     object = anari::newObject<anari::Geometry>(m_device, subtype.c_str());
     auto it = m_anariObjects.try_emplace(
@@ -236,7 +248,6 @@ void SceneGenerator::commit()
 
   // build this scene top-down to stress commit ordering guarantees
   // setup lighting, material and empty geometry
-  setDefaultLight(m_world);
 
   auto surface = anari::newObject<anari::Surface>(d);
   // create geometry
@@ -614,8 +625,7 @@ void SceneGenerator::commit()
 // render the scene with the given rendererType and renderDistance
 // commit() needs to be called before this
 // returns color and/or depth image data
-std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
-    const std::string &rendererType, float renderDistance)
+std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDistance)
 {
   // gather previously set parameters for rendering this scene
   size_t image_height = getParam<int32_t>("image_height", 1024);
@@ -646,16 +656,21 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
   }
 
   // create renderer
-  auto renderer =
-      anari::newObject<anari::Renderer>(m_device, rendererType.c_str());
+  ANARIObject renderer;
+  if (auto it = m_anariObjects.find(ANARI_RENDERER);
+      it != m_anariObjects.end() && !it->second.empty()) {
+    renderer = it->second.front();
+  } else {
+    createAnariObject(ANARI_RENDERER, "default");
+    renderer = m_currentObject;
+    std::array<float, 4> bgColor = {0.f, 0.f, 0.f, 1.f};
+    std::array<float, 3> ambientColor = {1.f, 1.f, 1.f};
+    anari::setParameter(m_device, renderer, "background", bgColor); // white
+    anari::setParameter(m_device, renderer, "ambientRadiance", 0.0f);
+    anari::setParameter(m_device, renderer, "ambientColor", ambientColor);
+    anari::commitParameters(m_device, renderer);
+  }
  // anari::setParameter(m_device, renderer, "pixelSamples", 10);
-
-  std::array<float, 4> bgColor = {1.f, 1.f, 1.f, 1.f};
-  std::array<float, 3> ambientColor = {1.f, 1.f, 1.f};
-  anari::setParameter(m_device, renderer, "background", bgColor); // white
-  anari::setParameter(m_device, renderer, "ambientRadiance", 1.0f);
-  anari::setParameter(m_device, renderer, "ambientColor", ambientColor);
-  anari::commitParameters(m_device, renderer);
 
   // setup frame
   auto frame = anari::newObject<anari::Frame>(m_device);
@@ -764,7 +779,6 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(
 
   // cleanup
   anari::release(m_device, frame);
-  anari::release(m_device, renderer);
 
   return result;
 }

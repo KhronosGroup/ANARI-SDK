@@ -3,6 +3,7 @@
     "geometrySubtype": "quad",
     "primitiveCount": 16,
     "seed": 54321,
+    "frame_depth_type": "FLOAT32",
     "shape": "quad"
   },
   "permutations": {

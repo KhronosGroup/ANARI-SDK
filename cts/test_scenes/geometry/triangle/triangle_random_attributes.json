@@ -4,6 +4,7 @@
     "primitiveCount": 16,
     "seed": 12345,
     "shape": "triangle",
+    "frame_depth_type": "FLOAT32",
     "vertex_attributes": true,
     "primitive_attributes": true
   },

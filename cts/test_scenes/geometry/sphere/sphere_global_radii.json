@@ -3,6 +3,7 @@
     "geometrySubtype": "sphere",
     "primitiveCount": 16,
     "seed": 54321,
+    "frame_depth_type": "FLOAT32",
     "globalRadius": 0.05
   },
   "requiredFeatures": [

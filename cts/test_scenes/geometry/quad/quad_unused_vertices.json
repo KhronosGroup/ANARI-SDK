@@ -5,6 +5,7 @@
     "seed": 54321,
     "shape": "quad",
     "primitiveMode": "indexed",
+    "frame_depth_type": "FLOAT32",
     "unusedVertices": true
   },
   "requiredFeatures": [

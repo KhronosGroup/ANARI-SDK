@@ -2,8 +2,7 @@
   "sceneParameters": {
     "geometrySubtype": "sphere",
     "seed": 54321,
-    "primitiveCount": 16,
-    "frame_depth_type": ""
+    "primitiveCount": 16
   },
   "permutations": {
     "frame_color_type": [

@@ -1,6 +1,7 @@
 {
   "sceneParameters": {
     "geometrySubtype": "sphere",
+    "frame_depth_type": "FLOAT32",
     "seed": 54321
   },
   "permutations": {

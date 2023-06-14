@@ -3,6 +3,7 @@
     "geometrySubtype": "cylinder",
     "primitiveCount": 16,
     "seed": 12345,
+    "frame_depth_type": "FLOAT32",
     "globalRadius": 0.05
   },
   "requiredFeatures": [

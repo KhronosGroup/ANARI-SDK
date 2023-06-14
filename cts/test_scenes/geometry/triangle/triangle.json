@@ -3,6 +3,7 @@
     "geometrySubtype": "triangle",
     "primitiveCount": 16,
     "seed": 12345,
+    "frame_depth_type": "FLOAT32",
     "shape": "triangle"
   },
   "permutations": {

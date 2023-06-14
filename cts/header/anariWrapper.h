@@ -75,11 +75,10 @@ class SceneGeneratorWrapper
     }
   }
 
-  std::vector<std::vector<uint32_t>> renderScene(
-      const std::string& rendererType, float renderDistance)
+  std::vector<std::vector<uint32_t>> renderScene(float renderDistance)
   {
     if (m_sceneGenerator) {
-      return m_sceneGenerator->renderScene(rendererType, renderDistance);
+      return m_sceneGenerator->renderScene(renderDistance);
     }
     return {};
   }
