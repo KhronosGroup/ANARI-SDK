@@ -34,9 +34,9 @@ float4 Image3D::getSample(const Geometry &g, const Ray &r) const
 
   auto av = linalg::mul(m_inTransform, g.getAttributeValue(m_inAttribute, r));
 
-  const auto interp_x = getInterpolant(av.x, m_image->size().x);
-  const auto interp_y = getInterpolant(av.y, m_image->size().y);
-  const auto interp_z = getInterpolant(av.z, m_image->size().z);
+  const auto interp_x = getInterpolant(av.x, m_image->size().x, true);
+  const auto interp_y = getInterpolant(av.y, m_image->size().y, true);
+  const auto interp_z = getInterpolant(av.z, m_image->size().z, true);
 
   const auto v000 = m_image->readAsAttributeValue(
       {interp_x.lower, interp_y.lower, interp_z.lower},

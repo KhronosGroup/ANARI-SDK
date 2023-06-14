@@ -33,8 +33,8 @@ float4 Image2D::getSample(const Geometry &g, const Ray &r) const
 
   auto av = linalg::mul(m_inTransform, g.getAttributeValue(m_inAttribute, r));
 
-  const auto interp_x = getInterpolant(av.x, m_image->size().x);
-  const auto interp_y = getInterpolant(av.y, m_image->size().y);
+  const auto interp_x = getInterpolant(av.x, m_image->size().x, true);
+  const auto interp_y = getInterpolant(av.y, m_image->size().y, true);
   const auto v00 = m_image->readAsAttributeValue(
       {interp_x.lower, interp_y.lower}, m_wrapMode1, m_wrapMode2);
   const auto v01 = m_image->readAsAttributeValue(
