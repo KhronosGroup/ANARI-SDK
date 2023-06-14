@@ -5,7 +5,7 @@
         "material": [
           {
             "subtype": "matte",
-            "color": "attribute0"
+            "color": "ref_sampler_0"
           }
         ],
         "sampler": [
@@ -17,7 +17,7 @@
       }
     },
     "permutations" :{
-      "/anari_objects/sampler/0/transform": [null, [[1, 0, 0, 0],[0, 1, 0, 0],[0, 0, 1, 0],[0, 0, 0, 1]]]
+      "/anari_objects/sampler/0/transform": [null, [[1, 0, 0, 0],[0, 0.5, 0, 0],[0, 0, 0, 0],[0, 0, 0, 1]]]
     },
     "requiredFeatures": [
       "ANARI_KHR_SAMPLER_TRANSFORM"
