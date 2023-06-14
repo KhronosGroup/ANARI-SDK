@@ -5,29 +5,31 @@
       "material": [
         {
           "subtype": "matte",
-          "baseColor": [1.0, 0.0, 0.0],
-          "opacity": "attribute2"
+          "color": [1.0, 0.0, 0.0],
+          "alphaMode": "blend"
+        }
+      ],
+      "sampler": [
+        {
+          "subtype": "image1D",
+          "inAttribute": "attribute1"
         }
       ]
     }
   },
   "permutations": {
-    "/anari_objects/material/0/alphaMode": [
-      "mask",
+    "/anari_objects/material/0/opacity": [
       null,
-      "opaque",
-      "blend"
-    ],
-    "/anari_objects/material/0/alphaCutoff": [
-      null,
-      0.1
+      0.5,
+      "attribute2",
+      "ref_sampler_0"
     ]
   },
   "requiredFeatures": [
     "ANARI_KHR_MATERIAL_MATTE"
   ],
   "metaData": {
-    "[1.0, 0.0, 0.0]_None_None": {
+    "None_None": {
       "bounds": {
         "world": [
           [
@@ -43,7 +45,7 @@
         ]
       }
     },
-    "[1.0, 0.0, 0.0]_None_0.1": {
+    "None_0.5": {
       "bounds": {
         "world": [
           [
@@ -59,7 +61,7 @@
         ]
       }
     },
-    "[1.0, 0.0, 0.0]_opaque_None": {
+    "None_attribute2": {
       "bounds": {
         "world": [
           [
@@ -75,7 +77,7 @@
         ]
       }
     },
-    "[1.0, 0.0, 0.0]_opaque_0.1": {
+    "[1.0, 0.0, 0.0]_None": {
       "bounds": {
         "world": [
           [
@@ -91,7 +93,7 @@
         ]
       }
     },
-    "[1.0, 0.0, 0.0]_blend_None": {
+    "[1.0, 0.0, 0.0]_0.5": {
       "bounds": {
         "world": [
           [
@@ -107,7 +109,7 @@
         ]
       }
     },
-    "[1.0, 0.0, 0.0]_blend_0.1": {
+    "[1.0, 0.0, 0.0]_attribute2": {
       "bounds": {
         "world": [
           [
@@ -123,7 +125,7 @@
         ]
       }
     },
-    "[1.0, 0.0, 0.0]_mask_None": {
+    "attribute0_None": {
       "bounds": {
         "world": [
           [
@@ -139,7 +141,23 @@
         ]
       }
     },
-    "[1.0, 0.0, 0.0]_mask_0.1": {
+    "attribute0_0.5": {
+      "bounds": {
+        "world": [
+          [
+            0.08150674402713776,
+            0.40540632605552673,
+            0.5896891951560974
+          ],
+          [
+            0.6910938024520874,
+            0.7133893370628357,
+            0.8008766174316406
+          ]
+        ]
+      }
+    },
+    "attribute0_attribute2": {
       "bounds": {
         "world": [
           [

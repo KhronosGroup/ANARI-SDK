@@ -1,11 +1,16 @@
 {
   "sceneParameters": {
     "color": "vertex.attribute0",
-    "opacity": "vertex.attribute2",
     "anari_objects": {
       "material": [
         {
           "subtype": "matte"
+        }
+      ],
+      "sampler": [
+        {
+          "subtype": "image2D",
+          "inAttribute": "attribute1"
         }
       ]
     }
@@ -18,12 +23,8 @@
         0.0,
         0.0
       ],
-      "attribute0"
-    ],
-    "/anari_objects/material/0/opacity": [
-      null,
-      0.5,
-      "attribute2"
+      "attribute0",
+      "ref_sampler_0"
     ]
   },
   "requiredFeatures": [
