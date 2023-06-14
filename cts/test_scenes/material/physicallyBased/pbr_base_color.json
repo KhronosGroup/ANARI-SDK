@@ -6,6 +6,11 @@
         {
           "subtype": "physicallyBased"
         }
+      ],
+      "sampler": [
+        {
+          "subtype": "image2D"
+        }
       ]
     }
   },
@@ -17,7 +22,8 @@
         0.0,
         0.0
       ],
-      "attribute0"
+      "attribute0",
+      "ref_sampler_0"
     ]
   },
   "requiredFeatures": [

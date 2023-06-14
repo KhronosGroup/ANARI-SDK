@@ -8,6 +8,11 @@
           "baseColor": [1.0, 0.0, 0.0],
           "alphaMode": "blend"
         }
+      ],
+      "sampler": [
+        {
+          "subtype": "image2D"
+        }
       ]
     }
   },
@@ -15,7 +20,8 @@
     "/anari_objects/material/0/opacity": [
       null,
       0.5,
-      "attribute2"
+      "attribute2",
+      "ref_sampler_0"
     ]
   },
   "requiredFeatures": [
