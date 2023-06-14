@@ -1,5 +1,7 @@
 {
   "sceneParameters": {
+    "primitiveCount": 2,
+    "seed": 4321,
     "anari_objects": {
       "material": [
         {
