@@ -1,0 +1,29 @@
+{
+  "sceneParameters": {
+    "opacity": "vertex.attribute2",
+    "anari_objects": {
+      "material": [
+        {
+          "subtype": "physicallyBased",
+          "baseColor": [1.0, 0.0, 0.0],
+          "opacity": "attribute2"
+        }
+      ]
+    }
+  },
+  "permutations": {
+    "/anari_objects/material/0/alphaMode": [
+      null,
+      "opaque",
+      "blend",
+      "mask"
+    ],
+    "/anari_objects/material/0/alphaCutoff": [
+      null,
+      0.1
+    ]
+  },
+  "requiredFeatures": [
+    "KHR_MATERIAL_PHYSICALLY_BASED"
+  ]
+}
