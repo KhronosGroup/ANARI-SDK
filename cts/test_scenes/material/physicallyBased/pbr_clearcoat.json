@@ -9,7 +9,8 @@
       ],
       "sampler": [
         {
-          "subtype": "image2D"
+          "subtype": "image2D",
+          "inAttribute": "attribute1"
         }
       ]
     }
