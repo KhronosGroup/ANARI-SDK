@@ -28,8 +28,7 @@
 			  ],
 			"material": [
 				{
-					"subtype": "matte",
-					"color": [1.0, 1.0, 1.0]
+					"subtype": "matte"
 				}
 			]
 		}
