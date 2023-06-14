@@ -1,0 +1,58 @@
+{
+  "sceneParameters": {
+    "geometrySubtype": "cone",
+    "primitiveCount": 4,
+    "seed": 12345,
+    "anari_objects": {
+      "material": [
+        {
+          "subtype": "matte",
+          "color": "color"
+        }
+      ]
+    }
+  },
+  "permutations": {
+    "color": [
+      "vertex.color",
+      "primitive.color"
+    ]
+  },
+  "requiredFeatures": [
+    "ANARI_KHR_GEOMETRY_CONE"
+  ],
+  "metaData": {
+    "vertex.color": {
+      "bounds": {
+        "world": [
+          [
+            0.31210947036743164,
+            0.15259723365306854,
+            0.2838585674762726
+          ],
+          [
+            0.8968542814254761,
+            1.168391227722168,
+            1.1309677362442017
+          ]
+        ]
+      }
+    },
+    "primitive.color": {
+      "bounds": {
+        "world": [
+          [
+            0.31210947036743164,
+            0.15259723365306854,
+            0.2838585674762726
+          ],
+          [
+            0.8968542814254761,
+            1.168391227722168,
+            1.1309677362442017
+          ]
+        ]
+      }
+    }
+  }
+}

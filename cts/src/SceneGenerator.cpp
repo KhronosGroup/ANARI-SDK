@@ -501,8 +501,13 @@ void SceneGenerator::commit()
   }
 
   if (!colorAttribute.empty()) {
+    size_t colorCount = vertices.size();
+    if (colorAttribute.rfind("primitive", 0) != std::string::npos) {
+        colorCount = primitiveCount;
+    }
+
     std::vector<glm::vec3> attributeColor =
-        colors::getColorVectorFromPalette(vertices.size());
+        colors::getColorVectorFromPalette(colorCount);
 
     anari::setAndReleaseParameter(d,
         geom,
@@ -511,7 +516,13 @@ void SceneGenerator::commit()
   }
 
   if (!opacityAttribute.empty()) {
-    std::vector<float> attributeOpacity = generator.generateAttributeFloat(vertices.size(), 0.0, 1.0);
+    size_t opacityCount = vertices.size();
+    if (colorAttribute.rfind("primitive", 0) != std::string::npos) {
+      opacityCount = primitiveCount;
+    }
+
+    std::vector<float> attributeOpacity =
+        generator.generateAttributeFloat(opacityCount, 0.0, 1.0);
 
     anari::setAndReleaseParameter(d,
         geom,
