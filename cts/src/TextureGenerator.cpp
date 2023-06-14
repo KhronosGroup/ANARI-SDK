@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "TextureGenerator.h"
+#include "ColorPalette.h"
 
 namespace cts {
 std::vector<glm::vec4> TextureGenerator::generateGreyScale(size_t resolution) {
@@ -19,6 +20,7 @@ std::vector<glm::vec4> TextureGenerator::generateGreyScale(size_t resolution) {
 std::vector<glm::vec4> TextureGenerator::generateCheckerBoard(
     size_t resolution)
 {
+  size_t counter = 0;
   std::vector<glm::vec4> checkerBoard(resolution * resolution);
   for (size_t i = 0; i < 8; ++i) {
     size_t offset = resolution * i * resolution / 8;
@@ -28,9 +30,10 @@ std::vector<glm::vec4> TextureGenerator::generateCheckerBoard(
     for (size_t j = 0; j < 8; j += 2) {
       for (size_t x = 0; x < resolution / 8; ++x) {
         for (size_t y = 0; y < resolution / 8; ++y) {
-          checkerBoard[y + j * resolution / 8 + x * resolution + offset] = {1.0f, 1.0f, 1.0f, 1.0f};
+          checkerBoard[y + j * resolution / 8 + x * resolution + offset] = glm::vec4(colors::getColorFromPalette(counter), 1.0f);
         }
       }
+      ++counter;
     }  
   }
   return checkerBoard;
