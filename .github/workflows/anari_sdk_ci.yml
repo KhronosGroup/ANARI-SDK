@@ -2,7 +2,7 @@ name: ANARI-SDK CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ jda/remote-device ]
   pull_request:
     branches: [ main ]
 
@@ -20,6 +20,10 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    - name: Install Packages
+      if: ${{ matrix.os == 'ubuntu-latest' }}
+      run: sudo apt install -y libboost-filesystem-dev libboost-system-dev libboost-iostreams-dev
+
     - name: Configure CMake
       run: >
         cmake -LA -B ${{github.workspace}}/build
@@ -28,6 +32,7 @@ jobs:
         -DBUILD_SHARED_LIBS=ON
         -DBUILD_EXAMPLES=ON
         -DBUILD_HELIDE_DEVICE=ON
+        -DBUILD_REMOTE_DEVICE=${{ matrix.os == 'ubuntu-latest' }}
         -DBUILD_TESTING=ON
         -DBUILD_VIEWER=OFF
 

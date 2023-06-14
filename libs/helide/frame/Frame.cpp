@@ -131,6 +131,8 @@ bool Frame::getProperty(
 
 void Frame::renderFrame()
 {
+  this->refInc(helium::RefType::INTERNAL);
+
   auto *state = deviceState();
   state->waitOnCurrentFrame();
 
@@ -142,36 +144,28 @@ void Frame::renderFrame()
     reportMessage(
         ANARI_SEVERITY_ERROR, "skipping render of incomplete frame object");
     std::fill(m_pixelBuffer.begin(), m_pixelBuffer.end(), 0);
+    this->refDec(helium::RefType::INTERNAL);
     return;
   }
 
-  if (state->commitBuffer.lastFlush() <= m_frameLastRendered)
+  if (state->commitBuffer.lastFlush() <= m_frameLastRendered) {
+    this->refDec(helium::RefType::INTERNAL);
     return;
+  }
 
   m_frameLastRendered = helium::newTimeStamp();
   state->currentFrame = this;
 
-  auto *c = m_camera.ptr;
-  auto *w = m_world.ptr;
-  auto *r = m_renderer.ptr;
-  c->refInc(helium::RefType::INTERNAL);
-  w->refInc(helium::RefType::INTERNAL);
-  r->refInc(helium::RefType::INTERNAL);
-
-  m_future = async<void>([&, state, start, c, w, r]() {
-    w->embreeSceneUpdate();
+  m_future = async<void>([&, state, start]() {
+    m_world->embreeSceneUpdate();
 
     const auto &size = m_frameData.size;
     embree::parallel_for(size.y, [&](int y) {
       serial_for(size.x, [&](int x) {
-        Ray ray = c->createRay(screenFromPixel(float2(x, y)));
-        writeSample(x, y, r->renderSample(ray, *w));
+        Ray ray = m_camera->createRay(screenFromPixel(float2(x, y)));
+        writeSample(x, y, m_renderer->renderSample(ray, *m_world));
       });
     });
-
-    c->refDec(helium::RefType::INTERNAL);
-    w->refDec(helium::RefType::INTERNAL);
-    r->refDec(helium::RefType::INTERNAL);
 
     auto end = std::chrono::steady_clock::now();
     m_duration = std::chrono::duration<float>(end - start).count();
@@ -239,8 +233,12 @@ bool Frame::ready() const
 
 void Frame::wait() const
 {
-  if (m_future.valid())
+  if (m_future.valid()) {
     m_future.get();
+    this->refDec(helium::RefType::INTERNAL);
+    if (deviceState()->currentFrame == this)
+      deviceState()->currentFrame = nullptr;
+  }
 }
 
 float2 Frame::screenFromPixel(const float2 &p) const

@@ -18,9 +18,18 @@
 #define ANARI_CATCH_BEGIN try {
 #define ANARI_CATCH_END(a)                                                     \
   }                                                                            \
+  catch (const std::exception &e)                                              \
+  {                                                                            \
+    fprintf(stderr,                                                            \
+        "TERMINATING DUE TO UNCAUGHT ANARI EXCEPTION (std::exception): %s\n",  \
+        e.what());                                                             \
+    std::terminate();                                                          \
+    return a;                                                                  \
+  }                                                                            \
   catch (...)                                                                  \
   {                                                                            \
-    fprintf(stderr, "TERMINATING DUE TO UNCAUGHT ANARI EXCEPTION\n");          \
+    fprintf(stderr,                                                            \
+        "TERMINATING DUE TO UNCAUGHT ANARI EXCEPTION (unknown type)\n");       \
     std::terminate();                                                          \
     return a;                                                                  \
   }

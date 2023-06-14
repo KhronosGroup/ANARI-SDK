@@ -18,3 +18,8 @@ endif()
 if(BUILD_EXAMPLES AND BUILD_VIEWER)
   add_subdirectory(anari_viewer)
 endif()
+
+option(BUILD_REMOTE_DEVICE "Build 'remote' TCP passthrough device" OFF)
+if (BUILD_REMOTE_DEVICE)
+  add_subdirectory(remote_device)
+endif()
