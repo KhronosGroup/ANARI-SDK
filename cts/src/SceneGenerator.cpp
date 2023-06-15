@@ -120,7 +120,7 @@ void SceneGenerator::setCurrentObject(int type, size_t index)
 }
 
 void SceneGenerator::createAnariObject(
-    int type, const std::string &subtype)
+    int type, const std::string &subtype, std::string ctsType)
 {
   ANARIObject object = nullptr;
   switch (type) {
@@ -185,7 +185,9 @@ void SceneGenerator::createAnariObject(
     }
     if (subtype == "image2D") {
       size_t resolution = 64;
-      auto checkerboard = TextureGenerator::generateCheckerBoard(resolution);
+      auto checkerboard = ctsType == "normal"
+          ? TextureGenerator::generateCheckerBoardNormalMap(resolution)
+          : TextureGenerator::generateCheckerBoard(resolution);
       anari::setAndReleaseParameter(m_device,
           object,
           "image",
