@@ -184,6 +184,8 @@ def resolve_scenes(test_scenes):
         # test_scenes is a directory
         path = Path(Path(__file__).parent / test_scenes)
         if not path.is_dir():
+            if path.suffix == '.json':
+                return [path]
             print("No valid category")
             return []
         collected_scenes = list(path.rglob("*.json"))
