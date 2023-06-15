@@ -174,7 +174,7 @@ void SceneGenerator::createAnariObject(
     it.first->second.emplace_back(object);
 
     if (subtype == "image1D") {
-      size_t resolution = 32;
+      size_t resolution = 16;
       std::vector<glm::vec4> greyscale =
           TextureGenerator::generateGreyScale(resolution);
       anari::setAndReleaseParameter(m_device,
