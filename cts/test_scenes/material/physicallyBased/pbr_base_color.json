@@ -19,9 +19,7 @@
     "/anari_objects/material/0/baseColor": [
       null,
       [
-        1.0,
-        0.0,
-        0.0
+        0.98, 0.50, 0.44
       ],
       "attribute0",
       "ref_sampler_0"

@@ -5,7 +5,7 @@
       "material": [
         {
           "subtype": "physicallyBased",
-          "baseColor": [1.0, 0.0, 0.0],
+          "baseColor": [0.98, 0.50, 0.44],
           "opacity": "attribute2"
         }
       ]

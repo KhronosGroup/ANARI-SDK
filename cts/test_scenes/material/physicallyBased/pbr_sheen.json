@@ -24,9 +24,7 @@
   "permutations": {
     "/anari_objects/material/0/sheenColor": [
       [
-        1.0,
-        0.0,
-        0.0
+        0.98, 0.50, 0.44
       ],
       null,
       "attribute0",
