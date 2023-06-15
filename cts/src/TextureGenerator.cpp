@@ -57,4 +57,49 @@ TextureGenerator::generateRGBRamp(size_t resolution)
   return RGBRamp;
 }
 
+glm::vec3 TextureGenerator::convertColorToNormal(glm::vec3 color) {
+  glm::vec3 result;
+  result.x = color.x * 2.0f - 1.0f;
+  result.y = color.y * 2.0f - 1.0f;
+  result.z = color.z * -1.0f;
+  result = glm::normalize(result);
+  result.x = result.x / 2.0f + 0.5f;
+  result.y = result.y / 2.0f + 0.5f;
+  result.z = result.z / -2.0f + 0.5f;
+  return result;
+}
+
+std::vector<glm::vec4> TextureGenerator::generateCheckerBoardNormalMap(
+    size_t resolution)
+{
+  size_t counter = 0;
+  glm::vec4 defaultNormal = {0.5f, 0.5f, 1.0f, 1.0f};
+  std::vector<glm::vec4> checkerBoard(resolution * resolution);
+  for (size_t i = 0; i < 8; ++i) {
+    size_t offset = resolution * i * resolution / 8;
+    if (i % 2 == 0) {
+      offset += resolution / 8;
+    }
+    for (size_t j = 0; j < 8; ++j) {
+      for (size_t x = 0; x < resolution / 8; ++x) {
+        for (size_t y = 0; y < resolution / 8; ++y) {
+          if (j % 2 == 0) {
+            glm::vec3 color =
+                convertColorToNormal(colors::getColorFromPalette(counter));
+            checkerBoard[y + j * resolution / 8 + x * resolution + offset] =
+                glm::vec4(color, 1.0f);
+          } else {
+            checkerBoard[y + j * resolution / 8 + x * resolution + offset] =
+                defaultNormal;
+          }
+        }
+      }
+      if (j % 2 == 0) {
+        ++counter;
+      }
+    }
+  }
+  return checkerBoard;
+}
+
 } // namespace cts
