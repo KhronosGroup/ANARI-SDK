@@ -11,6 +11,11 @@
         {
           "subtype": "image2D",
           "inAttribute": "attribute1"
+        },
+        {
+          "subtype": "image1D",
+          "filter": "nearest",
+          "inAttribute": "attribute1"
         }
       ]
     }
@@ -31,7 +36,7 @@
       0.5,
       null,
       "attribute0",
-      "ref_sampler_0"
+      "ref_sampler_1"
     ]
   },
   "requiredFeatures": [

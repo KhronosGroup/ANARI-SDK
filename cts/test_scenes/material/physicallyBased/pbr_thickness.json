@@ -11,6 +11,7 @@
       "sampler": [
         {
           "subtype": "image1D",
+          "filter": "nearest",
           "inAttribute": "attribute1"
         }
       ]
