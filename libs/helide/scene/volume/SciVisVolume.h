@@ -64,8 +64,7 @@ inline float SciVisVolume::opacityOf(float sample) const
 
 inline float SciVisVolume::normalized(float sample) const
 {
-  sample = linalg::clamp(sample, m_valueRange.lower, m_valueRange.upper);
-  return position(sample, m_valueRange);
+  return std::clamp(position(sample, m_valueRange), 0.f, 1.f);
 }
 
 } // namespace helide
