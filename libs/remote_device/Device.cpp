@@ -469,8 +469,6 @@ Device::Device(std::string subtype) : manager(async::make_connection_manager())
   logging::Initialize();
 
   remoteSubtype = subtype;
-  // should eventually be called on first devcie commit!
-  initClient();
 }
 
 Device::~Device()
@@ -568,7 +566,9 @@ void Device::initClient()
   // request remote device to be created
   auto buf = std::make_shared<Buffer>();
   buf->write(remoteSubtype.c_str(), remoteSubtype.length());
-  write(MessageType::NewDevice, buf);
+  //write(MessageType::NewDevice, buf);
+  // post to queue directly: write() would call initClient() recursively!
+  queue.post(std::bind(&Device::writeImpl, this, MessageType::NewDevice, buf));
 
   // block till device ID was returned by remote
   std::unique_lock l2(syncDeviceHandleRemote.mtx);
@@ -594,11 +594,17 @@ void Device::run()
 
 void Device::write(unsigned type, std::shared_ptr<Buffer> buf)
 {
+  if (!remoteDevice)
+    initClient();
+
   queue.post(std::bind(&Device::writeImpl, this, type, buf));
 }
 
 void Device::write(unsigned type, const void *begin, const void *end)
 {
+  if (!remoteDevice)
+    initClient();
+
   queue.post(std::bind(&Device::writeImpl2, this, type, begin, end));
 }
 
