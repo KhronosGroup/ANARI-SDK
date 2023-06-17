@@ -185,6 +185,27 @@ void Device::setParameter(
     return;
   }
 
+  // Device parameteters
+  if (object == (ANARIObject)this) {
+    if (strncmp(name, "server.hostname", 15) == 0) {
+      if (remoteDevice != nullptr) {
+        LOG(logging::Level::Error) << "server.hostname must be set after device creation";
+        return;
+      }
+      server.hostname = std::string((const char *)mem);
+    } else if (strncmp(name, "server.port", 11) == 0) {
+
+      if (remoteDevice != nullptr) {
+        LOG(logging::Level::Error) << "server.port must be set after device creation";
+        return;
+      }
+      server.port = *(unsigned short *)mem;
+    }
+    // device parameter, don't write to socket!
+    return;
+  }
+
+  // Object parameters passed to the server
   std::vector<char> value;
   if (anari::isObject(type)) {
     value.resize(sizeof(uint64_t));
@@ -555,7 +576,7 @@ ANARIArray Device::registerNewArray(ANARIDataType type,
 
 void Device::initClient()
 {
-  connect("localhost", 31050);
+  connect(server.hostname, server.port);
   run();
 
   // wait till server accepted connection

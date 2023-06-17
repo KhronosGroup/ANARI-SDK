@@ -137,6 +137,11 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
   void initClient();
   uint64_t nextObjectID = 1;
 
+  struct {
+    std::string hostname = "localhost";
+    unsigned short port{31050};
+  } server;
+
   async::connection_manager_pointer manager;
   async::connection_pointer conn;
   async::work_queue queue;
