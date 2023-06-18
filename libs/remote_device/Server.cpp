@@ -15,13 +15,13 @@
 
 using namespace std::placeholders;
 
-namespace remote {
-
 // Global variables
-std::string g_libraryType = "environment";
+static std::string g_libraryType = "environment";
+static ANARILibrary g_library = nullptr;
+static bool g_verbose = false;
+static unsigned short g_port = 31050;
 
-ANARILibrary g_library = nullptr;
-bool g_verbose = false;
+namespace remote {
 
 void statusFunc(const void *userData,
     ANARIDevice device,
@@ -853,9 +853,33 @@ struct Server
 
 } // namespace remote
 
-int main(int argc, char **argv)
+///////////////////////////////////////////////////////////////////////////////
+
+static void printUsage()
 {
-  remote::Server srv;
+  std::cout << "./anari-remote-server [{--help|-h}]\n"
+            << "   [{--verbose|-v}]\n"
+            << "   [{--port|-p} <N>]\n";
+}
+
+static void parseCommandLine(int argc, char *argv[])
+{
+  for (int i = 1; i < argc; i++) {
+    std::string arg = argv[i];
+    if (arg == "-v" || arg == "--verbose")
+      g_verbose = true;
+    if (arg == "--help" || arg == "-h") {
+      printUsage();
+      std::exit(0);
+    } else if (arg == "-p" || arg == "--port")
+      g_port = std::stoi(argv[++i]);
+  }
+}
+
+int main(int argc, char *argv[])
+{
+  parseCommandLine(argc, argv);
+  remote::Server srv(g_port);
   srv.accept();
   srv.run();
   srv.wait();

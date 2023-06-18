@@ -14,7 +14,7 @@ On the server, run the `anari-remote-server` application with a ANARI library
 configured; the server will listen for incoming connections, e.g.:
 
 ```
-ANARI_LIBRARY=helide anari-remote-server [-port N]
+ANARI_LIBRARY=helide anari-remote-server
 ```
 
 the server will wait for any incoming TCP connections.
