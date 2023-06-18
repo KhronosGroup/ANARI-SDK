@@ -162,6 +162,18 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
   {
     std::mutex mtx;
     std::condition_variable cv;
+  } syncMapArray;
+
+  struct
+  {
+    std::mutex mtx;
+    std::condition_variable cv;
+  } syncUnmapArray;
+
+  struct
+  {
+    std::mutex mtx;
+    std::condition_variable cv;
   } syncFrameIsReady;
 
   struct
@@ -197,6 +209,7 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
   std::vector<StringListProperty> stringListProperties;
 
   std::map<ANARIObject, Frame> frames;
+  std::map<ANARIArray, std::vector<char>> arrays;
 
   ANARIObject registerNewObject(ANARIDataType type, std::string subtype = "");
   ANARIArray registerNewArray(ANARIDataType type,

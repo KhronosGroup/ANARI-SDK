@@ -122,7 +122,7 @@ static ANARIArray newArray(
         info.byteStride3);
   }
 
-  if (array) {
+  if (array && data) {
     void *ptr = anariMapArray(dev, array);
     memcpy(ptr, data, info.getSizeInBytes());
     anariUnmapArray(dev, array);
@@ -147,6 +147,7 @@ struct ResourceManager
     size_t newNumHandles = std::max(anariDevices.size(), (size_t)handle + 1);
     anariDevices.resize(newNumHandles);
     serverObjects.resize(newNumHandles);
+    serverArrays.resize(newNumHandles);
     anariDevices[handle] = dev;
     return handle;
   }
@@ -163,6 +164,22 @@ struct ResourceManager
     serverObjects[deviceID].resize(newNumHandles);
     serverObjects[deviceID][objectID] = {
         anariDevices[deviceID], anariObj, type};
+  }
+
+  // Like registerObject, but stores array size; so we can later
+  // send the whole array data back to the client on mapArray()
+  void registerArray(uint64_t deviceID,
+      uint64_t objectID,
+      ANARIObject anariObj,
+      const ArrayInfo &info)
+  {
+    registerObject(deviceID, objectID, anariObj, info.type);
+
+    size_t newNumHandles =
+        std::max(serverArrays[deviceID].size(), (size_t)objectID + 1);
+
+    serverArrays[deviceID].resize(newNumHandles);
+    serverArrays[deviceID][objectID] = info;
   }
 
   ANARIDevice getDevice(uint64_t deviceID)
@@ -182,12 +199,24 @@ struct ResourceManager
     return serverObjects[deviceHandle][objectHandle];
   }
 
+  ArrayInfo getArrayInfo(Handle deviceHandle, Handle objectHandle)
+  {
+    if (deviceHandle >= serverArrays.size()
+        || objectHandle >= serverArrays[deviceHandle].size())
+      return {};
+
+    return serverArrays[deviceHandle][objectHandle];
+  }
+
   Handle nextDeviceHandle = 1;
 
   std::vector<ANARIDevice> anariDevices;
 
   // vector of anari objects per device
   std::vector<std::vector<ServerObject>> serverObjects;
+
+  // vector of array infos per device
+  std::vector<std::vector<ArrayInfo>> serverArrays;
 };
 
 struct Server
@@ -389,8 +418,8 @@ struct Server
         }
 
         ANARIArray anariArr = newArray(dev, info, arrayData.data());
-        resourceManager.registerObject(
-            (uint64_t)deviceHandle, objectID, anariArr, info.type);
+        resourceManager.registerArray(
+            (uint64_t)deviceHandle, objectID, anariArr, info);
 
         LOG(logging::Level::Info)
             << "Creating new array, objectID: " << objectID
@@ -594,6 +623,86 @@ struct Server
 
         LOG(logging::Level::Info)
             << "Retained object. Handle: " << objectHandle;
+      } else if (message->type() == MessageType::MapArray) {
+        LOG(logging::Level::Info) << "Message: MapArray, message size: "
+                                  << prettyBytes(message->size());
+
+        Buffer buf;
+        buf.write(message->data(), message->size());
+        buf.seek(0);
+
+        Handle deviceHandle, objectHandle;
+        buf.read((char *)&deviceHandle, sizeof(deviceHandle));
+        buf.read((char *)&objectHandle, sizeof(objectHandle));
+
+        ANARIDevice dev = resourceManager.getDevice(deviceHandle);
+
+        ServerObject serverObj =
+            resourceManager.getServerObject(deviceHandle, objectHandle);
+
+        if (!dev || !serverObj.handle) {
+          LOG(logging::Level::Error)
+              << "Error retaining object. Handle: " << objectHandle;
+          // manager->stop(); // legal?
+          return;
+        }
+
+        void *ptr = anariMapArray(dev, (ANARIArray)serverObj.handle);
+
+        const ArrayInfo &info = resourceManager.getArrayInfo(deviceHandle, objectHandle);
+
+        uint64_t numBytes = info.getSizeInBytes();
+
+        auto outbuf = std::make_shared<Buffer>();
+        outbuf->write((const char *)&objectHandle, sizeof(objectHandle));
+        outbuf->write((const char *)&numBytes, sizeof(numBytes));
+        outbuf->write((const char *)ptr, numBytes);
+        write(MessageType::ArrayMapped, outbuf);
+
+        LOG(logging::Level::Info)
+            << "Mapped array. Handle: " << objectHandle;
+      } else if (message->type() == MessageType::UnmapArray) {
+        LOG(logging::Level::Info) << "Message: UnmapArray, message size: "
+                                  << prettyBytes(message->size());
+
+        Buffer buf;
+        buf.write(message->data(), message->size());
+        buf.seek(0);
+
+        Handle deviceHandle, objectHandle;
+        buf.read((char *)&deviceHandle, sizeof(deviceHandle));
+        buf.read((char *)&objectHandle, sizeof(objectHandle));
+
+        ANARIDevice dev = resourceManager.getDevice(deviceHandle);
+
+        ServerObject serverObj =
+            resourceManager.getServerObject(deviceHandle, objectHandle);
+
+        if (!dev || !serverObj.handle) {
+          LOG(logging::Level::Error)
+              << "Error retaining object. Handle: " << objectHandle;
+          // manager->stop(); // legal?
+          return;
+        }
+
+        // Array is currently mapped - unmap
+        anariUnmapArray(dev, (ANARIArray)serverObj.handle);
+
+        // Now map so we can write to it
+        void *ptr = anariMapArray(dev, (ANARIArray)serverObj.handle);
+        uint64_t numBytes = 0;
+        buf.read((char *)&numBytes, sizeof(numBytes));
+        buf.read((char *)ptr, numBytes);
+
+        // Unmap again..
+        anariUnmapArray(dev, (ANARIArray)serverObj.handle);
+
+        auto outbuf = std::make_shared<Buffer>();
+        outbuf->write((const char *)&objectHandle, sizeof(objectHandle));
+        write(MessageType::ArrayUnmapped, outbuf);
+
+        LOG(logging::Level::Info)
+            << "Unmapped array. Handle: " << objectHandle;
       } else if (message->type() == MessageType::RenderFrame) {
         LOG(logging::Level::Info) << "Message: RenderFrame, message size: "
                                   << prettyBytes(message->size());
