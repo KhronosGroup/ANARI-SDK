@@ -16,5 +16,10 @@ class TextureGenerator
   static std::vector<glm::vec4> generateCheckerBoard(size_t resolution);
   static std::vector<glm::vec4> generateRGBRamp(
       size_t resolution);
+
+  static std::vector<glm::vec4> generateCheckerBoardNormalMap(
+      size_t resolution);
+
+  static glm::vec3 convertColorToNormal(glm::vec3 color);
 };
 } // namespace cts

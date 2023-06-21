@@ -47,10 +47,13 @@ class SceneGeneratorWrapper
     }
   }
 
-  void createAnariObject(const std::string &type, const std::string &subtype)
+  void createAnariObject(const std::string &type,
+      const std::string &subtype,
+      std::string ctsType = "")
   {
     if (m_sceneGenerator) {
-      m_sceneGenerator->createAnariObject(m_sceneGenerator->anariTypeFromString(type), subtype);
+      m_sceneGenerator->createAnariObject(
+          m_sceneGenerator->anariTypeFromString(type), subtype, ctsType);
     }
   }
 

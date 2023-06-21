@@ -330,9 +330,12 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                                 if anariObjectName == "geometry" and parsed_json["sceneParameters"]["geometrySubtype"] != None and subtype != parsed_json["sceneParameters"]["geometrySubtype"]:
                                     # If geometrySubtype is not the same as subtype ignore the generic anari object
                                     continue
-                                sceneGenerator.createAnariObject(anariObjectName, subtype)
+                                ctsType = ""
+                                if "ctsType" in item:
+                                    ctsType = item["ctsType"]
+                                sceneGenerator.createAnariObject(anariObjectName, subtype, ctsType)
                                 for [paramName, paramValue] in item.items():
-                                    if paramName == "subtype":
+                                    if paramName == "subtype" or paramName == "ctsType":
                                         continue
                                     if isinstance(paramValue, str) and paramValue.startswith("ref_"):
                                         stringArray = paramValue.split('_')

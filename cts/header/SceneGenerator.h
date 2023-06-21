@@ -21,7 +21,8 @@ class SceneGenerator : public anari::scenes::TestScene
   void resetAllParameters();
   void resetSceneObjects();
   
-  void createAnariObject(int type, const std::string& subtype);
+  void createAnariObject(
+      int type, const std::string &subtype, std::string ctsType = "");
   template <typename T>
   void setGenericParameter(const std::string& name, T&& value)
   {

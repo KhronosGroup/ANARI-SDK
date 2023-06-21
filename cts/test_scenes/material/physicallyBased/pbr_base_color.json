@@ -1,0 +1,31 @@
+{
+  "sceneParameters": {
+    "color": "vertex.attribute0",
+    "anari_objects": {
+      "material": [
+        {
+          "subtype": "physicallyBased"
+        }
+      ],
+      "sampler": [
+        {
+          "subtype": "image2D",
+          "inAttribute": "attribute1"
+        }
+      ]
+    }
+  },
+  "permutations": {
+    "/anari_objects/material/0/baseColor": [
+      null,
+      [
+        0.98, 0.50, 0.44
+      ],
+      "attribute0",
+      "ref_sampler_0"
+    ]
+  },
+  "requiredFeatures": [
+    "KHR_MATERIAL_PHYSICALLY_BASED"
+  ]
+}
