@@ -105,12 +105,42 @@ ANARIArray3D Device::newArray3D(const void *appMemory,
       byteStride3);
 }
 
-void *Device::mapArray(ANARIArray)
+void *Device::mapArray(ANARIArray array)
 {
-  return nullptr;
+  auto buf = std::make_shared<Buffer>();
+  buf->write((const char *)&remoteDevice, sizeof(remoteDevice));
+  buf->write((const char *)&array, sizeof(array));
+  write(MessageType::MapArray, buf);
+
+  std::unique_lock l(syncMapArray.mtx);
+  std::vector<char> &data = arrays[array];
+  syncMapArray.cv.wait(l, [&]() { return !data.empty(); });
+  l.unlock();
+
+  LOG(logging::Level::Info) << "Array mapped: " << array;
+
+  return data.data();
 }
 
-void Device::unmapArray(ANARIArray) {}
+void Device::unmapArray(ANARIArray array)
+{
+  auto buf = std::make_shared<Buffer>();
+  buf->write((const char *)&remoteDevice, sizeof(remoteDevice));
+  buf->write((const char *)&array, sizeof(array));
+  uint64_t numBytes = arrays[array].size();
+  buf->write((const char *)&numBytes, sizeof(numBytes));
+  buf->write(arrays[array].data(), numBytes);
+  write(MessageType::UnmapArray, buf);
+
+  std::unique_lock l(syncMapArray.mtx);
+  std::vector<char> &data = arrays[array];
+  syncMapArray.cv.wait(l, [&]() { return data.empty(); });
+  l.unlock();
+
+  arrays.erase(array);
+
+  LOG(logging::Level::Info) << "Array unmapped: " << array;
+}
 
 //--- Renderable Objects ------------------------------
 
@@ -185,6 +215,27 @@ void Device::setParameter(
     return;
   }
 
+  // Device parameteters
+  if (object == (ANARIObject)this) {
+    if (strncmp(name, "server.hostname", 15) == 0) {
+      if (remoteDevice != nullptr) {
+        LOG(logging::Level::Error) << "server.hostname must be set after device creation";
+        return;
+      }
+      server.hostname = std::string((const char *)mem);
+    } else if (strncmp(name, "server.port", 11) == 0) {
+
+      if (remoteDevice != nullptr) {
+        LOG(logging::Level::Error) << "server.port must be set after device creation";
+        return;
+      }
+      server.port = *(unsigned short *)mem;
+    }
+    // device parameter, don't write to socket!
+    return;
+  }
+
+  // Object parameters passed to the server
   std::vector<char> value;
   if (anari::isObject(type)) {
     value.resize(sizeof(uint64_t));
@@ -469,8 +520,6 @@ Device::Device(std::string subtype) : manager(async::make_connection_manager())
   logging::Initialize();
 
   remoteSubtype = subtype;
-  // should eventually be called on first devcie commit!
-  initClient();
 }
 
 Device::~Device()
@@ -557,7 +606,7 @@ ANARIArray Device::registerNewArray(ANARIDataType type,
 
 void Device::initClient()
 {
-  connect("localhost", 31050);
+  connect(server.hostname, server.port);
   run();
 
   // wait till server accepted connection
@@ -568,7 +617,9 @@ void Device::initClient()
   // request remote device to be created
   auto buf = std::make_shared<Buffer>();
   buf->write(remoteSubtype.c_str(), remoteSubtype.length());
-  write(MessageType::NewDevice, buf);
+  //write(MessageType::NewDevice, buf);
+  // post to queue directly: write() would call initClient() recursively!
+  queue.post(std::bind(&Device::writeImpl, this, MessageType::NewDevice, buf));
 
   // block till device ID was returned by remote
   std::unique_lock l2(syncDeviceHandleRemote.mtx);
@@ -594,11 +645,17 @@ void Device::run()
 
 void Device::write(unsigned type, std::shared_ptr<Buffer> buf)
 {
+  if (!remoteDevice)
+    initClient();
+
   queue.post(std::bind(&Device::writeImpl, this, type, buf));
 }
 
 void Device::write(unsigned type, const void *begin, const void *end)
 {
+  if (!remoteDevice)
+    initClient();
+
   queue.post(std::bind(&Device::writeImpl2, this, type, begin, end));
 }
 
@@ -644,6 +701,28 @@ void Device::handleMessage(async::connection::reason reason,
       l.unlock();
       syncDeviceHandleRemote.cv.notify_all();
       LOG(logging::Level::Info) << "Got remote device handle: " << remoteDevice;
+    } else if (message->type() == MessageType::ArrayMapped) {
+      std::unique_lock l(syncMapArray.mtx);
+
+      char *msg = message->data();
+
+      ANARIArray arr = *(ANARIArray *)message->data();
+      msg += sizeof(ANARIArray);
+      uint64_t numBytes = 0;
+      memcpy(&numBytes, msg, sizeof(numBytes));
+      msg += sizeof(numBytes);
+
+      arrays[arr].resize(numBytes);
+      memcpy(arrays[arr].data(), msg, numBytes);
+      l.unlock();
+      syncMapArray.cv.notify_all();
+    } else if (message->type() == MessageType::ArrayUnmapped) {
+      std::unique_lock l(syncUnmapArray.mtx);
+      char *msg = message->data();
+      ANARIArray arr = *(ANARIArray *)message->data();
+      arrays[arr].resize(0);
+      l.unlock();
+      syncMapArray.cv.notify_all();
     } else if (message->type() == MessageType::FrameIsReady) {
       assert(message->size() == sizeof(Handle));
       ANARIObject hnd = *(ANARIObject *)message->data();

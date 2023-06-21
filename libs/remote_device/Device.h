@@ -137,6 +137,11 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
   void initClient();
   uint64_t nextObjectID = 1;
 
+  struct {
+    std::string hostname = "localhost";
+    unsigned short port{31050};
+  } server;
+
   async::connection_manager_pointer manager;
   async::connection_pointer conn;
   async::work_queue queue;
@@ -152,6 +157,18 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
     std::mutex mtx;
     std::condition_variable cv;
   } syncDeviceHandleRemote;
+
+  struct
+  {
+    std::mutex mtx;
+    std::condition_variable cv;
+  } syncMapArray;
+
+  struct
+  {
+    std::mutex mtx;
+    std::condition_variable cv;
+  } syncUnmapArray;
 
   struct
   {
@@ -192,6 +209,7 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
   std::vector<StringListProperty> stringListProperties;
 
   std::map<ANARIObject, Frame> frames;
+  std::map<ANARIArray, std::vector<char>> arrays;
 
   ANARIObject registerNewObject(ANARIDataType type, std::string subtype = "");
   ANARIArray registerNewArray(ANARIDataType type,
