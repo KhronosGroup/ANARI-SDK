@@ -12,6 +12,11 @@
           "subtype": "image1D",
           "filter": "nearest",
           "inAttribute": "attribute1"
+        },
+        {
+          "subtype": "image2D",
+          "inAttribute": "attribute1",
+          "ctsType": "normal"
         }
       ]
     }
@@ -29,7 +34,8 @@
       null,
       "attribute0",
       "ref_sampler_0"
-    ]
+    ],
+    "/anari_objects/material/0/normal" : [null, "ref_sampler_1"]
   },
   "requiredFeatures": [
     "KHR_MATERIAL_PHYSICALLY_BASED"
