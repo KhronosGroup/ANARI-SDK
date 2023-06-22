@@ -26,6 +26,34 @@
   },
   "objects": [
     {
+      "type": "ANARI_DEVICE",
+      "parameters": [
+        {
+          "name": "allowInvalidMaterials",
+          "types": [
+            "ANARI_BOOL"
+          ],
+          "tags": [],
+          "default": true,
+          "description": "show surfaces with invalid materials"
+        },
+        {
+          "name": "invalidMaterialColor",
+          "types": [
+            "ANARI_FLOAT32_VEC4"
+          ],
+          "tags": [],
+          "default": [
+            1.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "description": "color to identify surfaces with invalid materials"
+        }
+      ]
+    },
+    {
       "type": "ANARI_RENDERER",
       "name": "default",
       "parameters": [

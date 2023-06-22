@@ -355,6 +355,23 @@ void HelideDevice::initDevice()
   m_initialized = true;
 }
 
+void HelideDevice::deviceCommitParameters()
+{
+  auto &state = *deviceState();
+
+  bool allowInvalidSurfaceMaterials = state.allowInvalidSurfaceMaterials;
+
+  state.allowInvalidSurfaceMaterials =
+      getParam<bool>("allowInvalidMaterials", true);
+  state.invalidMaterialColor =
+      getParam<float4>("invalidMaterialColor", float4(1.f, 0.f, 1.f, 1.f));
+
+  if (allowInvalidSurfaceMaterials != state.allowInvalidSurfaceMaterials)
+    state.objectUpdates.lastBLSReconstructSceneRequest = helium::newTimeStamp();
+
+  helium::BaseDevice::deviceCommitParameters();
+}
+
 HelideGlobalState *HelideDevice::deviceState() const
 {
   return (HelideGlobalState *)helium::BaseDevice::m_state.get();

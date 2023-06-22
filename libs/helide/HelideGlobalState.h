@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "helide_math.h"
 // helium
 #include "helium/BaseGlobalDeviceState.h"
 // embree
@@ -41,6 +42,9 @@ struct HelideGlobalState : public helium::BaseGlobalDeviceState
   Frame *currentFrame{nullptr};
 
   RTCDevice embreeDevice{nullptr};
+
+  bool allowInvalidSurfaceMaterials{true};
+  float4 invalidMaterialColor{1.f, 0.f, 1.f, 1.f};
 
   // Helper methods //
 

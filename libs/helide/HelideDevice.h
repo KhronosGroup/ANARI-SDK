@@ -101,6 +101,8 @@ struct HelideDevice : public helium::BaseDevice
 
   void initDevice();
 
+  void deviceCommitParameters() override;
+
  private:
   HelideGlobalState *deviceState() const;
 
