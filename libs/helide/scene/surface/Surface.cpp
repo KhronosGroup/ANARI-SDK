@@ -43,8 +43,16 @@ const Material *Surface::material() const
 
 float3 Surface::getSurfaceColor(const Ray &ray) const
 {
-  const auto colorAttribute = material()->colorAttribute();
-  const auto *colorSampler = material()->colorSampler();
+  auto &state = *deviceState();
+  auto &imc = state.invalidMaterialColor;
+
+  auto *mat = material();
+
+  if (!mat)
+    return float3(imc.x, imc.y, imc.z);
+
+  const auto colorAttribute = mat->colorAttribute();
+  const auto *colorSampler = mat->colorSampler();
   if (colorSampler && colorSampler->isValid()) {
     auto v = colorSampler->getSample(*geometry(), ray);
     return float3(v.x, v.y, v.z);
@@ -65,8 +73,14 @@ void Surface::markCommitted()
 
 bool Surface::isValid() const
 {
-  return m_geometry && m_material && m_geometry->isValid()
-      && m_material->isValid();
+  bool allowInvalidMaterial = deviceState()->allowInvalidSurfaceMaterials;
+
+  if (allowInvalidMaterial) {
+    return m_geometry && m_geometry->isValid();
+  } else {
+    return m_geometry && m_material && m_geometry->isValid()
+        && m_material->isValid();
+  }
 }
 
 } // namespace helide
