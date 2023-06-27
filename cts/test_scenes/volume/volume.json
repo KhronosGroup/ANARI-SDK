@@ -1,0 +1,81 @@
+{
+    "sceneParameters": {
+      "spatial_field_dimensions": [3,3,3],
+      "geometrySubtype": "",
+      "anari_objects": {
+        "volume": [
+          {
+            "subtype": "transferFunction1D",
+            "field": "ref_spatialField_0"
+          }
+        ],
+        "spatialField": [
+          {
+            "subtype": "structuredRegular"
+          }
+        ]
+      }
+    },
+    "simplified_permutations": true,
+    "permutations" :{
+      "/anari_objects/spatialField/0/filter": [null, "nearest", "linear"],
+      "/anari_objects/spatialField/0/origin": [null, [1.0, 1.0, 1.0]],
+      "/anari_objects/spatialField/0/spacing": [null, [0.5, 2.0, 0.5]],
+      "/anari_objects/volume/0/valueRange": [null, [0.25, 0.75]],
+      "/anari_objects/volume/0/color": [[1.0, 0.75, 0.0], [1.0, 0.75, 0.0, 0.5], {"Array1D": [[0.25, 0.3, 0.2], [0.9, 0.8, 0.95]]}],
+      "/anari_objects/volume/0/opacity": [1.0, {"Array1D" : [0.25, 0.7, 1.0]}]
+    },
+    "requiredFeatures": [
+      "ANARI_KHR_SAMPLER_IMAGE1D"
+    ],
+    "metaData": {
+      "None": {
+        "bounds": {
+          "world": [
+            [
+              0.5930089354515076,
+              0.338645875453949,
+              0.3352261483669281
+            ],
+            [
+              1.0810736417770386,
+              0.47210031747817993,
+              0.4023733139038086
+            ]
+          ]
+        }
+      },
+      "[1.0, 0.0, 0.0]": {
+        "bounds": {
+          "world": [
+            [
+              0.5930089354515076,
+              0.338645875453949,
+              0.3352261483669281
+            ],
+            [
+              1.0810736417770386,
+              0.47210031747817993,
+              0.4023733139038086
+            ]
+          ]
+        }
+      },
+      "attribute0": {
+        "bounds": {
+          "world": [
+            [
+              0.5930089354515076,
+              0.338645875453949,
+              0.3352261483669281
+            ],
+            [
+              1.0810736417770386,
+              0.47210031747817993,
+              0.4023733139038086
+            ]
+          ]
+        }
+      }
+    }
+  }
