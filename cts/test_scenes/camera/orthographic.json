@@ -1,0 +1,39 @@
+{
+  "sceneParameters": {
+    "geometrySubtype": "triangle",
+    "primitiveCount": 16,
+    "seed": 12345,
+    "frame_depth_type": "FLOAT32",
+    "shape": "triangle",
+    "anari_objects": {
+      "camera": [
+        {
+          "subtype": "orthographic"
+        }
+      ]
+    }
+  },
+  "simplified_permutations": true,
+  "permutations": {
+    "/anari_objects/camera/0/aspect": [
+     null,
+     1.77 
+    ],
+    "/anari_objects/camera/0/height": [
+      null,
+      0.5
+    ],
+    "/anari_objects/camera/0/near": [
+      0.01,
+      1.0
+    ],
+    "/anari_objects/camera/0/far": [
+      100.0,
+      1.0
+    ]
+  },
+  "requiredFeatures": [
+    "KHR_CAMERA_ORTHOGRAPHIC",
+    "ANARI_KHR_GEOMETRY_TRIANGLE"
+  ]
+}
