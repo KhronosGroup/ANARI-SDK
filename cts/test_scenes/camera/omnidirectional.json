@@ -1,0 +1,26 @@
+{
+  "sceneParameters": {
+    "geometrySubtype": "triangle",
+    "primitiveCount": 16,
+    "seed": 12345,
+    "frame_depth_type": "FLOAT32",
+    "shape": "triangle",
+    "anari_objects": {
+      "camera": [
+        {
+          "subtype": "omnidirectional"
+        }
+      ]
+    }
+  },
+  "permutations": {
+    "/anari_objects/camera/0/layout": [
+     null,
+     "equirectangular"
+    ]
+  },
+  "requiredFeatures": [
+    "KHR_CAMERA_OMNIDIRECTIONAL",
+    "ANARI_KHR_GEOMETRY_TRIANGLE"
+  ]
+}
