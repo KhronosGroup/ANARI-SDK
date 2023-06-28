@@ -1,0 +1,63 @@
+{
+  "sceneParameters": {
+    "geometrySubtype": "triangle",
+    "primitiveCount": 16,
+    "seed": 12345,
+    "shape": "triangle",
+    "anari_objects": {
+      "renderer": [
+        {
+          "background": [0, 0, 0, 1],
+          "ambientColor": [0.0, 0.0, 0.0]
+        }
+      ],
+      "light": [
+        {
+          "subtype": "point",
+          "color": [0.7, 0.87, 0.41]
+        }
+      ]
+    }
+  },
+  "simplified_permutations": true,
+  "permutations": {
+    "/anari_objects/light/0/position": [null, [0.5, 0.5, -0.5]],
+    "/anari_objects/light/0/intensity": [null, 0.5],
+    "/anari_objects/light/0/power": [null, 0.5]
+  },
+  "requiredFeatures": ["ANARI_KHR_LIGHT_POINT", "ANARI_KHR_GEOMETRY_TRIANGLE"],
+  "metaData": {
+    "None_None_None": {
+      "bounds": {
+        "world": [
+          [0.10628068447113037, 0.07447899878025055, 0.08119050413370132],
+          [0.8897868990898132, 0.9648296236991882, 0.8715509176254272]
+        ]
+      }
+    },
+    "[0.5, 0.5, -0.5]_None_None": {
+      "bounds": {
+        "world": [
+          [0.10628068447113037, 0.07447899878025055, 0.08119050413370132],
+          [0.8897868990898132, 0.9648296236991882, 0.8715509176254272]
+        ]
+      }
+    },
+    "None_100.0_None": {
+      "bounds": {
+        "world": [
+          [0.10628068447113037, 0.07447899878025055, 0.08119050413370132],
+          [0.8897868990898132, 0.9648296236991882, 0.8715509176254272]
+        ]
+      }
+    },
+    "None_None_5.0": {
+      "bounds": {
+        "world": [
+          [0.10628068447113037, 0.07447899878025055, 0.08119050413370132],
+          [0.8897868990898132, 0.9648296236991882, 0.8715509176254272]
+        ]
+      }
+    }
+  }
+}
