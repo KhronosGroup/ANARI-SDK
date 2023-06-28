@@ -700,11 +700,41 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
     anari::commitParameters(m_device, camera);
   }
 
-  // render scene
-  anari::render(m_device, frame);
-  anari::wait(m_device, frame);
-
   std::vector<std::vector<uint32_t>> result;
+
+  // render scene
+  if (getParam<bool>("frameCompletionCallback", false)) {
+    bool wasCalled = false;
+    auto func = [](const void* userData, ANARIDevice, ANARIFrame)
+    {       
+        *(static_cast<bool *>(const_cast<void *>(userData))) = true;
+    };
+    anari::setParameter(m_device, frame, "frameCompletionCallback", static_cast<ANARIFrameCompletionCallback>(func));
+    anari::setParameter(m_device, frame, "frameCompletionCallbackUserData", static_cast<void*>(&wasCalled));
+    anari::commitParameters(m_device, frame);
+    anari::render(m_device, frame);
+    anari::wait(m_device, frame);
+    if (!wasCalled) {
+      uint32_t rgba = (255 << 24) + 255;
+      std::vector<uint32_t> errorImage(image_height * image_width, rgba);
+      result.emplace_back(errorImage);
+      result.emplace_back(errorImage);
+      // set frame duration member of this with last renderering's frame time
+      if (!anariGetProperty(m_device,
+              frame,
+              "duration",
+              ANARI_FLOAT32,
+              &frameDuration,
+              sizeof(frameDuration),
+              ANARI_WAIT)) {
+        frameDuration = -1.0f;
+      }
+      return result;
+    }
+  } else {
+    anari::render(m_device, frame);
+    anari::wait(m_device, frame);
+  }
 
   // handle color output
   if (color_type != ANARI_UNKNOWN) {

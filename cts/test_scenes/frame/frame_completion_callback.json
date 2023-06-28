@@ -1,0 +1,8 @@
+{
+	"sceneParameters": {
+		"frameCompletionCallback" : true
+	},
+	"requiredFeatures": [
+		"ANARI_KHR_FRAME_COMPLETION_CALLBACK"
+	  ]
+}
