@@ -641,7 +641,6 @@ void SceneGenerator::commit()
 
     // cleanup
     anari::release(d, surface);
-    anari::release(d, geom);
   }
 
   if (spatialFieldDim[0] != 0 && spatialFieldDim[1] != 0
@@ -676,6 +675,9 @@ void SceneGenerator::commit()
             spatialFieldDim[0],
             spatialFieldDim[1],
             spatialFieldDim[2]));
+
+    anari::commitParameters(d, spatialField);
+    anari::commitParameters(d, volume);
   }
 
 
