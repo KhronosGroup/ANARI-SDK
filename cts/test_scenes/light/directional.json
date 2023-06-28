@@ -8,6 +8,7 @@
       "renderer": [
         {
           "background": [0, 0, 0, 1],
+          "ambientRadiance": 0.0,
           "ambientColor": [0.0, 0.0, 0.0]
         }
       ],
