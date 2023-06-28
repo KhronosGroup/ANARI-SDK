@@ -76,6 +76,14 @@ def getFileFromList(list, filename):
             return path
     return ""
 
+def simplifyFileName(name):
+    name = name.replace('{', '')
+    name = name.replace('}', '')
+    name = name.replace(':', '')
+    name = name.replace("'", '')
+    name = name.replace('"', '')
+    return name
+
 # writes all reference, candidate, diff and threshold images to filesystem and returns
 def write_images(evaluations, output):
     output_path = Path(output) / "evaluation"
@@ -440,6 +448,8 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                     except Exception as e:
                         print(e)
                         continue
+                permutationString = simplifyFileName(permutationString)
+                variantString = simplifyFileName(variantString)
                 # call function for each permutated/variant test scene and collect return values per test scene permutation/variant
                 result[test_name + permutationString + variantString] = (func(parsed_json, sceneGenerator, anari_renderer, json_file_path, test_name, permutationString[1:], variantString[1:], *args))
         else:
