@@ -1,11 +1,12 @@
 {
     "sceneParameters": {
       "spatial_field_dimensions": [3,3,3],
+      "frame_depth_type": "FLOAT32",
       "geometrySubtype": "",
       "anari_objects": {
         "volume": [
           {
-            "subtype": "transferFunction1D",
+            "subtype": "scivis",
             "field": "ref_spatialField_0"
           }
         ],
@@ -19,8 +20,8 @@
     "simplified_permutations": true,
     "permutations" :{
       "/anari_objects/spatialField/0/filter": [null, "nearest", "linear"],
-      "/anari_objects/spatialField/0/origin": [null, [1.0, 1.0, 1.0]],
-      "/anari_objects/spatialField/0/spacing": [null, [0.5, 2.0, 0.5]],
+      "/anari_objects/spatialField/0/origin": [[-1.0, -1.0, -1.0], null],
+      "/anari_objects/spatialField/0/spacing": [null, [0.01, 0.02, 0.5]],
       "/anari_objects/volume/0/valueRange": [null, [0.25, 0.75]],
       "/anari_objects/volume/0/color": [[1.0, 0.75, 0.0], [1.0, 0.75, 0.0, 0.5], {"Array1D": [[0.25, 0.3, 0.2], [0.9, 0.8, 0.95]]}],
       "/anari_objects/volume/0/opacity": [1.0, {"Array1D" : [0.25, 0.7, 1.0]}]
