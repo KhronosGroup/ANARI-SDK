@@ -251,6 +251,14 @@ void SceneGenerator::commit()
   // build this scene top-down to stress commit ordering guarantees
   // setup lighting, material and empty geometry
 
+  
+  if (auto it = m_anariObjects.find(ANARI_LIGHT);
+      it != m_anariObjects.end() && !it->second.empty()) {
+    auto light = it->second.front();
+    anari::setAndReleaseParameter(
+        d, m_world, "light", anari::newArray1D(d, &light));
+  }
+
   auto surface = anari::newObject<anari::Surface>(d);
   // create geometry
   ANARIObject geom;
