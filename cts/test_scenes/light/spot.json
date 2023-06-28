@@ -1,0 +1,32 @@
+{
+  "sceneParameters": {
+    "geometrySubtype": "triangle",
+    "primitiveCount": 16,
+    "seed": 12345,
+    "shape": "triangle",
+    "anari_objects": {
+      "renderer": [
+        {
+          "background": [0, 0, 0, 1],
+          "ambientColor": [0.0, 0.0, 0.0]
+        }
+      ],
+      "light": [
+        {
+          "subtype": "spot",
+          "color": [0.7, 0.87, 0.41]
+        }
+      ]
+    }
+  },
+  "simplified_permutations": true,
+  "permutations": {
+    "/anari_objects/light/0/position": [[0.5, 0.5, -0.5], null],
+    "/anari_objects/light/0/direction": [null, [0.7071, 0.7071, 0.0]],
+    "/anari_objects/light/0/openingAngle": [null, 0.5],
+    "/anari_objects/light/0/fallofAngle": [null, 1.1],
+    "/anari_objects/light/0/intensity": [null, 0.5],
+    "/anari_objects/light/0/power": [null, 0.5]
+  },
+  "requiredFeatures": ["ANARI_KHR_LIGHT_SPOT", "ANARI_KHR_GEOMETRY_TRIANGLE"]
+}
