@@ -26,8 +26,8 @@
     "/anari_objects/light/0/direction": [null, [0.7071, 0.7071, 0.0]],
     "/anari_objects/light/0/openingAngle": [null, 0.5],
     "/anari_objects/light/0/fallofAngle": [null, 1.1],
-    "/anari_objects/light/0/intensity": [null, 0.5],
-    "/anari_objects/light/0/power": [null, 0.5]
+    "/anari_objects/light/0/intensity": [null, 0.6],
+    "/anari_objects/light/0/power": [null, 0.4]
   },
   "requiredFeatures": ["ANARI_KHR_LIGHT_SPOT", "ANARI_KHR_GEOMETRY_TRIANGLE"]
 }

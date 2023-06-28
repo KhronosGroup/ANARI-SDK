@@ -23,8 +23,8 @@
   "simplified_permutations": true,
   "permutations": {
     "/anari_objects/light/0/position": [null, [0.5, 0.5, -0.5]],
-    "/anari_objects/light/0/intensity": [null, 0.5],
-    "/anari_objects/light/0/power": [null, 0.5]
+    "/anari_objects/light/0/intensity": [null, 0.6],
+    "/anari_objects/light/0/power": [null, 0.4]
   },
   "requiredFeatures": ["ANARI_KHR_LIGHT_POINT", "ANARI_KHR_GEOMETRY_TRIANGLE"],
   "metaData": {
