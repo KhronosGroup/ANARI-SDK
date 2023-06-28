@@ -5,6 +5,7 @@
     "seed": 12345,
     "frame_depth_type": "FLOAT32",
     "shape": "triangle",
+    "camera_generate_transform": false,
     "anari_objects": {
       "camera": [
         {
