@@ -3,7 +3,6 @@
     "geometrySubtype": "triangle",
     "primitiveCount": 16,
     "seed": 12345,
-    "frame_depth_type": "FLOAT32",
     "shape": "triangle",
     "camera_generate_transform": false,
     "anari_objects": {
@@ -15,13 +14,10 @@
     }
   },
   "permutations": {
-    "/anari_objects/camera/0/layout": [
-     null,
-     "equirectangular"
-    ]
+    "/anari_objects/camera/0/layout": [null, "equirectangular"]
   },
   "requiredFeatures": [
-    "KHR_CAMERA_OMNIDIRECTIONAL",
+    "ANARI_KHR_CAMERA_OMNIDIRECTIONAL",
     "ANARI_KHR_GEOMETRY_TRIANGLE"
   ]
 }
