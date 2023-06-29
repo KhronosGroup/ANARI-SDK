@@ -66,7 +66,8 @@ std::vector<anari::scenes::ParameterInfo> SceneGenerator::parameters()
       {"globalRadius", 1.0f, "Use the global radius property instead of a per vertex one"},
       {"unusedVertices", false, "The last primitive's indices in the index buffer will be removed to test handling of unused/skipped vertices in the vertex buffer"},
       {"color", "", "Fill an attribute with colors. Possible values: \"vertex.color\", \"vertex.attribute0\", \"primitive.attribute3\" and similar"},
-      {"opacity", "", "Fill an attribute with opacity values. Possible values: \"vertex.attribute0\", \"primitive.attribute3\" and similar"}
+      {"opacity", "", "Fill an attribute with opacity values. Possible values: \"vertex.attribute0\", \"primitive.attribute3\" and similar"},
+      {"frameCompletionCallback", false, "Enables test for ANARI_KHR_FRAME_COMPLETION_CALLBACK. A red image is rendered on error."}
 
       //
   };
