@@ -22,13 +22,24 @@
   },
   "simplified_permutations": true,
   "permutations": {
-    "/anari_objects/light/0/position": [[0.5, 0.5, -0.5], null],
-    "/anari_objects/light/0/edge1": [null, [1.0, 1.0, 0.0]],
-    "/anari_objects/light/0/edge2": [null, [1.0, 0.0, -1.0]],
-    "/anari_objects/light/0/fallofAngle": [null, 1.1],
+    "/anari_objects/light/0/position": [[0.0, 0.0, -0.5], null],
+    "/anari_objects/light/0/edge1": [[0.2, 1.0, -0.5], null],
+    "/anari_objects/light/0/edge2": [[-0.1, -1.0, 0.0], null],
     "/anari_objects/light/0/intensity": [null, 0.6],
     "/anari_objects/light/0/power": [null, 0.4],
-    "/anari_objects/light/0/radiance": [null, 0.2]
+    "/anari_objects/light/0/radiance": [null, 0.2],
+    "/anari_objects/light/0/side": ["front", "back", "both"],
+    "/anari_objects/light/0/intensityDistribution": [
+      null,
+      { "Array1D": [0.2, 0.8, 0.4, 0.6] },
+      {
+        "Array2D": [
+          [0.2, 0.8, 0.4],
+          [0.3, 0.7, 0.5],
+          [0.1, 0.9, 0.6]
+        ]
+      }
+    ]
   },
   "requiredFeatures": ["ANARI_KHR_LIGHT_QUAD", "ANARI_KHR_GEOMETRY_TRIANGLE"]
 }
