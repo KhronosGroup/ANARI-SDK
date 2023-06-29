@@ -28,7 +28,7 @@
     "/anari_objects/light/0/intensity": [null, 0.6],
     "/anari_objects/light/0/power": [null, 0.4],
     "/anari_objects/light/0/radiance": [null, 0.2],
-    "/anari_objects/light/0/side": ["front", "back", "both"],
+    "/anari_objects/light/0/side": ["both", "front", "back", null],
     "/anari_objects/light/0/intensityDistribution": [
       null,
       { "Array1D": [0.2, 0.8, 0.4, 0.6] },
