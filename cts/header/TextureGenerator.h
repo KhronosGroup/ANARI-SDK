@@ -21,5 +21,7 @@ class TextureGenerator
       size_t resolution);
 
   static glm::vec3 convertColorToNormal(glm::vec3 color);
+  static float convertNormalToColor(float input, bool isZ);
+  static uint8_t convertShortNormalToColor(int16_t input, bool isZ);
 };
 } // namespace cts

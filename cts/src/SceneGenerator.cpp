@@ -6,6 +6,7 @@
 #include "ColorPalette.h"
 #include "TextureGenerator.h"
 #include "anariWrapper.h"
+#include "anari/frontend/type_utility.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <stdexcept>
@@ -93,6 +94,30 @@ int SceneGenerator::anariTypeFromString(const std::string& type)
   }
   if (type == "renderer") {
     return ANARI_RENDERER;
+  }
+  if (type == "UFIXED8_VEC4") {
+    return ANARI_UFIXED8_VEC4;
+  }
+  if (type == "UFIXED8_RGBA_SRGB") {
+    return ANARI_UFIXED8_RGBA_SRGB;
+  }
+  if (type == "FLOAT32_VEC4") {
+    return ANARI_FLOAT32_VEC4;
+  }
+  if (type == "FLOAT32") {
+    return ANARI_FLOAT32;
+  }
+  if (type == "FIXED16_VEC3") {
+    return ANARI_FIXED16_VEC3;
+  }
+  if (type == "FLOAT32_VEC3") {
+    return ANARI_FLOAT32_VEC3;
+  }
+  if (type == "UFIXED8_VEC3") {
+    return ANARI_UFIXED8_VEC3;
+  }
+  if (type == "UINT32") {
+    return ANARI_UINT32;
   }
   return ANARI_UNKNOWN;
 }
@@ -634,18 +659,30 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
   // gather previously set parameters for rendering this scene
   size_t image_height = getParam<int32_t>("image_height", 1024);
   size_t image_width = getParam<int32_t>("image_width", 1024);
-
-  std::string color_type_param = getParamString("frame_color_type", "");
-  int componentBytes = 1;
-  ANARIDataType color_type = ANARI_UNKNOWN;
-  if (color_type_param == "UFIXED8_RGBA_SRGB") {
-    color_type = ANARI_UFIXED8_RGBA_SRGB;
-  } else if (color_type_param == "FLOAT32_VEC4") {
-    color_type = ANARI_FLOAT32_VEC4;
-    componentBytes = 4;
-  } else if (color_type_param == "UFIXED8_VEC4") {
-    color_type = ANARI_UFIXED8_VEC4;
+  std::string channelName = "";
+  ANARIDataType color_type;
+  bool normalChannel = false;
+  std::string channel_type_param = getParamString("frame_color_type", "");
+  if (channel_type_param != "") {
+    channelName = "channel.color";
+  } else if (channel_type_param = getParamString("frame_normal_type", "");
+             channel_type_param != "") {
+    channelName = "channel.normal";
+    normalChannel = true;
+  } else if (channel_type_param = getParamString("frame_albedo_type", "");
+             channel_type_param != "") {
+    channelName = "channel.albedo";
+  } else if (channel_type_param = getParamString("frame_primitiveId_type", "");
+             channel_type_param != "") {
+    channelName = "channel.primitiveId";
+  } else if (channel_type_param = getParamString("frame_objectId_type", "");
+             channel_type_param != "") {
+    channelName = "channel.objectId";
+  } else if (channel_type_param = getParamString("frame_instanceId_type", "");
+             channel_type_param != "") {
+    channelName = "channel.instanceId";
   }
+  color_type = anariTypeFromString(channel_type_param);
 
   std::string depth_type_param = getParamString("frame_depth_type", "");
 
@@ -680,7 +717,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
   auto frame = anari::newObject<anari::Frame>(m_device);
   anari::setParameter(m_device, frame, "size", glm::uvec2(image_height, image_width));
   if (color_type != ANARI_UNKNOWN) {
-    anari::setParameter(m_device, frame, "channel.color", color_type);
+    anari::setParameter(m_device, frame, channelName.c_str(), color_type);
   }
   if (depth_type_param == "FLOAT32") {
     anari::setParameter(m_device, frame, "channel.depth", ANARI_FLOAT32);
@@ -745,7 +782,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
     if (fb.data != nullptr) {
       firstImage.assign(fb.data, fb.data + image_height * image_width);
     } else {
-      printf("%s not supported\n", color_type_param.c_str());
+      printf("%s not supported\n", channel_type_param.c_str());
     }
     anari::unmap(m_device, frame, "channel.color");
 
@@ -757,7 +794,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
     if (fb.data != nullptr) {
       accumulatedImage.assign(fb.data, fb.data + image_height * image_width);
     } else {
-      printf("%s not supported\n", color_type_param.c_str());
+      printf("%s not supported\n", channel_type_param.c_str());
     }
     anari::unmap(m_device, frame, "channel.color");
 
@@ -800,37 +837,112 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
     anari::wait(m_device, frame);
   }
 
+  size_t componentCount = anari::componentsOf(color_type);
   // handle color output
   if (color_type != ANARI_UNKNOWN) {
-    if (color_type == ANARI_FLOAT32_VEC4) {
+    if (color_type == ANARI_FLOAT32_VEC4 || color_type == ANARI_FLOAT32_VEC3) {
       // handling of float data type
-      const float *pixels = anari::map<float>(m_device, frame, "channel.color").data;
+      const float *pixels = anari::map<float>(m_device, frame, channelName.c_str()).data;
       std::vector<uint32_t> converted;
       if (pixels != nullptr) {
         for (int i = 0; i < image_height * image_width; ++i) {
           uint32_t rgba = 0;
-          for (int j = 0; j < componentBytes; ++j) {
-            uint8_t colorValue =
-                static_cast<uint8_t>(pixels[i * componentBytes + j] * 255.0f);
+          for (int j = 0; j < 4; ++j) {
+            uint8_t colorValue = j == 4 ? 255 : 0;
+            if (j <= componentCount) {
+              if (normalChannel) {
+                colorValue = static_cast<uint8_t>(
+                    TextureGenerator::convertNormalToColor(pixels[i * componentCount + j], j == 3) * 255.0f);
+              } else {
+                colorValue = static_cast<uint8_t>(
+                    pixels[i * componentCount + j] * 255.0f);
+              }
+            }               
             rgba += colorValue << (8 * j);
           }
           converted.push_back(rgba);
         }
       } else {
-        printf("%s not supported\n", color_type_param.c_str());
+        printf("%s not supported\n", channel_type_param.c_str());
       }
 
       result.emplace_back(converted);
-      anari::unmap(m_device, frame, "channel.color");
+      anari::unmap(m_device, frame, channelName.c_str());
     } else {
-      // handling of other types
-      auto fb = anari::map<uint32_t>(m_device, frame, "channel.color");
-      if (fb.data != nullptr) {
-        result.emplace_back(fb.data, fb.data + image_height * image_width);
-      } else {
-        printf("%s not supported\n", color_type_param.c_str());
+      if (componentCount == 4
+          && anari::sizeOf(color_type) == sizeof(uint32_t)) {
+        // handling of other types
+        const uint32_t* pixels = anari::map<uint32_t>(m_device, frame, channelName.c_str()).data;
+        if (pixels != nullptr) {
+          result.emplace_back(pixels, pixels + image_height * image_width);
+        } else {
+          printf("%s not supported\n", channel_type_param.c_str());
+        }
+        anari::unmap(m_device, frame, channelName.c_str());
+      } else if (color_type == ANARI_UINT32) {
+        const uint32_t *pixels = anari::map<uint32_t>(m_device, frame, channelName.c_str()).data;
+        std::vector<uint32_t> converted;
+        if (pixels != nullptr) {
+          for (int i = 0; i < image_height * image_width; ++i) {
+            auto colorValue = colors::getColorFromPalette(pixels[i]);
+            uint32_t rgba = (255 << 24)
+                + (static_cast<uint8_t>(colorValue.b * 255.0f) << 16)
+                + (static_cast<uint8_t>(colorValue.g * 255.0f) << 8)
+                + static_cast<uint8_t>(colorValue.r * 255.0f);
+            converted.push_back(rgba);
+          }
+        } else {
+          printf("%s not supported\n", channel_type_param.c_str());
+        }
+        result.emplace_back(converted);
+        anari::unmap(m_device, frame, channelName.c_str());
+      } else if (anari::sizeOf(color_type) / componentCount == sizeof(char)) {
+        // 8bit component
+        const uint8_t *pixels =
+            anari::map<uint8_t>(m_device, frame, channelName.c_str()).data;
+        std::vector<uint32_t> converted;
+        if (pixels != nullptr) {
+          for (int i = 0; i < image_height * image_width; ++i) {
+            uint32_t rgba = 0;
+            for (int j = 0; j < 4; ++j) {
+              uint8_t colorValue = j == 4 ? 255 : 0;
+              if (j <= componentCount) {
+                colorValue = pixels[i * componentCount + j];
+              }
+              rgba += colorValue << (8 * j);
+            }
+            converted.push_back(rgba);
+          }
+        } else {
+          printf("%s not supported\n", channel_type_param.c_str());
+        }
+
+        result.emplace_back(converted);
+        anari::unmap(m_device, frame, channelName.c_str());
+      } else if (anari::sizeOf(color_type) / componentCount == sizeof(char) * 2) {
+        // 16bit component
+        const int16_t *pixels =
+            anari::map<int16_t>(m_device, frame, channelName.c_str()).data;
+        std::vector<uint32_t> converted;
+        if (pixels != nullptr) {
+          for (int i = 0; i < image_height * image_width; ++i) {
+            uint32_t rgba = 0;
+            for (int j = 0; j < 4; ++j) {
+              uint8_t colorValue = j == 4 ? 255 : 0;
+              if (j <= componentCount) {
+                colorValue = TextureGenerator::convertShortNormalToColor(pixels[i * componentCount + j], j == 3);
+              }
+              rgba += colorValue << (8 * j);
+            }
+            converted.push_back(rgba);
+          }
+        } else {
+          printf("%s not supported\n", channel_type_param.c_str());
+        }
+
+        result.emplace_back(converted);
+        anari::unmap(m_device, frame, channelName.c_str());
       }
-      anari::unmap(m_device, frame, "channel.color");
     }
   } else {
     // no color rendered
