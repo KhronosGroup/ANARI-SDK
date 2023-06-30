@@ -1,0 +1,55 @@
+{
+  "sceneParameters": {
+    "anari_objects": {
+      "renderer": [
+        {
+          "background": [0, 0, 0, 1],
+          "ambientRadiance": 0.0,
+          "ambientColor": [0.0, 0.0, 0.0]
+        }
+      ],
+      "light": [
+        {
+          "subtype": "hdri",
+          "radiance": [
+            {
+              "Array2D": [
+                [
+                  [0.55, 0.82, 0.78],
+                  [1.0, 1.0, 0.7],
+                  [0.74, 0.73, 0.85],
+                  [0.98, 0.5, 0.44]
+                ],
+                [
+                  [0.5, 0.69, 0.82],
+                  [0.99, 0.7, 0.38],
+                  [0.7, 0.87, 0.41],
+                  [0.99, 0.8, 0.9]
+                ],
+                [
+                  [0.85, 0.85, 0.85],
+                  [0.74, 0.5, 0.74],
+                  [0.8, 0.92, 0.77],
+                  [1.0, 0.93, 0.44]
+                ],
+                [
+                  [1.0, 1.0, 1.0],
+                  [0.0, 0.0, 0.0],
+                  [0.55, 0.82, 0.78],
+                  [1.0, 1.0, 0.7]
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "simplified_permutations": true,
+  "permutations": {
+    "/anari_objects/light/0/up": [null, [0.0, 1.0, 0.0]],
+    "/anari_objects/light/0/direction": [null, [0.0, 0.0, -1.0]],
+    "/anari_objects/light/0/scale": [null, 0.4]
+  },
+  "requiredFeatures": ["ANARI_KHR_LIGHT_HDRI", "ANARI_KHR_GEOMETRY_TRIANGLE"]
+}
