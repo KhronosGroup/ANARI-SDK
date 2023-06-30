@@ -67,7 +67,8 @@ std::vector<anari::scenes::ParameterInfo> SceneGenerator::parameters()
       {"unusedVertices", false, "The last primitive's indices in the index buffer will be removed to test handling of unused/skipped vertices in the vertex buffer"},
       {"color", "", "Fill an attribute with colors. Possible values: \"vertex.color\", \"vertex.attribute0\", \"primitive.attribute3\" and similar"},
       {"opacity", "", "Fill an attribute with opacity values. Possible values: \"vertex.attribute0\", \"primitive.attribute3\" and similar"},
-      {"frameCompletionCallback", false, "Enables test for ANARI_KHR_FRAME_COMPLETION_CALLBACK. A red image is rendered on error."}
+      {"frameCompletionCallback", false, "Enables test for ANARI_KHR_FRAME_COMPLETION_CALLBACK. A red image is rendered on error."},
+      {"progressiveRendering", false, "Enables test for ANARI_KHR_PROGRESSIVE_RENDERING. A green image is rendered if the render improved a red image otherwise."}
 
       //
   };
@@ -732,7 +733,69 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
       }
       return result;
     }
-  } else {
+  } else if (getParam<bool>("progressiveRendering", false)) {
+    if (color_type == ANARI_FLOAT32_VEC4) {
+      throw std::runtime_error("ANARI_FLOAT32_VEC4 not supported for frameProgressiveRendering test");
+    }
+    anari::render(m_device, frame);
+    anari::wait(m_device, frame);
+    std::vector<uint32_t> firstImage;
+    std::vector<uint32_t> accumulatedImage;
+    auto fb = anari::map<uint32_t>(m_device, frame, "channel.color");
+    if (fb.data != nullptr) {
+      firstImage.assign(fb.data, fb.data + image_height * image_width);
+    } else {
+      printf("%s not supported\n", color_type_param.c_str());
+    }
+    anari::unmap(m_device, frame, "channel.color");
+
+    for (int frames = 0; frames < 10; frames++) {
+      anari::render(m_device, frame);
+      anari::wait(m_device, frame);
+    }
+    fb = anari::map<uint32_t>(m_device, frame, "channel.color");
+    if (fb.data != nullptr) {
+      accumulatedImage.assign(fb.data, fb.data + image_height * image_width);
+    } else {
+      printf("%s not supported\n", color_type_param.c_str());
+    }
+    anari::unmap(m_device, frame, "channel.color");
+
+    if (firstImage.size() != accumulatedImage.size()) {
+      throw std::runtime_error(
+          "Images have different sizes");
+    }
+
+    size_t changedPixels = 0;
+    for (size_t i = 0; i < firstImage.size(); ++i) {
+      if (firstImage[i] != accumulatedImage[i]) {
+        ++changedPixels;
+      }
+    }
+
+    uint32_t rgba;
+    if (changedPixels > 10) {
+      rgba = (255 << 24) + (255 << 8);
+    } else {
+      rgba = (255 << 24) + 255;
+    }
+    std::vector<uint32_t> resultImage(image_height * image_width, rgba);
+    result.emplace_back(resultImage);
+
+   if (!anariGetProperty(m_device,
+            frame,
+            "duration",
+            ANARI_FLOAT32,
+            &frameDuration,
+            sizeof(frameDuration),
+            ANARI_WAIT)) {
+      frameDuration = -1.0f;
+    }
+
+    return result;
+
+  } else
+  {
     anari::render(m_device, frame);
     anari::wait(m_device, frame);
   }

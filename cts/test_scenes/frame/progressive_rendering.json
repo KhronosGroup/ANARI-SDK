@@ -1,0 +1,8 @@
+{
+	"sceneParameters": {
+		"progressiveRendering" : true
+	},
+	"_requiredFeatures": [
+		"ANARI_KHR_PROGRESSIVE_RENDERING"
+	  ]
+}
