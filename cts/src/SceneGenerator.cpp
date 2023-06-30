@@ -165,6 +165,15 @@ void SceneGenerator::createAnariObject(
     auto it = m_anariObjects.try_emplace(
         int(ANARI_LIGHT), std::vector<ANARIObject>());
     it.first->second.emplace_back(object);
+    if (subtype == "hrdi") {
+      size_t resolution = 64;
+      auto checkerboard = TextureGenerator::generateCheckerBoard(resolution);
+      anari::setAndReleaseParameter(m_device,
+          object,
+          "radiance",
+          anari::newArray2D(
+              m_device, checkerboard.data(), resolution, resolution));
+    }
     break;
   }
   case ANARI_SAMPLER: {
