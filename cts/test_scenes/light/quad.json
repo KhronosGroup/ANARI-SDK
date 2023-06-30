@@ -1,9 +1,5 @@
 {
   "sceneParameters": {
-    "geometrySubtype": "triangle",
-    "primitiveCount": 16,
-    "seed": 12345,
-    "shape": "triangle",
     "anari_objects": {
       "renderer": [
         {
@@ -22,9 +18,9 @@
   },
   "simplified_permutations": true,
   "permutations": {
-    "/anari_objects/light/0/position": [[0.0, 0.0, -0.5], null],
-    "/anari_objects/light/0/edge1": [[0.2, 1.0, -0.5], null],
-    "/anari_objects/light/0/edge2": [[-0.1, -1.0, 0.0], null],
+    "/anari_objects/light/0/position": [[0.0, 0.0, -0.1], null],
+    "/anari_objects/light/0/edge1": [[0.0, 0.1, -1.0], null],
+    "/anari_objects/light/0/edge2": [[-0.1, 1.0, 0.0], null],
     "/anari_objects/light/0/intensity": [null, 0.6],
     "/anari_objects/light/0/power": [null, 0.4],
     "/anari_objects/light/0/radiance": [null, 0.2],

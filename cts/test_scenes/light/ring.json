@@ -1,9 +1,5 @@
 {
   "sceneParameters": {
-    "geometrySubtype": "triangle",
-    "primitiveCount": 16,
-    "seed": 12345,
-    "shape": "triangle",
     "anari_objects": {
       "renderer": [
         {
