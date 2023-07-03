@@ -95,6 +95,15 @@ int SceneGenerator::anariTypeFromString(const std::string& type)
   if (type == "renderer") {
     return ANARI_RENDERER;
   }
+  if (type == "instance") {
+    return ANARI_INSTANCE;
+  }
+  if (type == "group") {
+    return ANARI_GROUP;
+  }
+  if (type == "surface") {
+    return ANARI_SURFACE;
+  }
   if (type == "UFIXED8_VEC4") {
     return ANARI_UFIXED8_VEC4;
   }
@@ -194,6 +203,27 @@ void SceneGenerator::createAnariObject(
     it.first->second.emplace_back(object);
     break;
   }
+  case ANARI_INSTANCE: {
+    object = anari::newObject<anari::Instance>(m_device, subtype.c_str());
+    auto it = m_anariObjects.try_emplace(
+        int(ANARI_INSTANCE), std::vector<ANARIObject>());
+    it.first->second.emplace_back(object);
+    break;
+  }
+  case ANARI_GROUP: {
+    object = anari::newObject<anari::Group>(m_device, subtype.c_str());
+    auto it = m_anariObjects.try_emplace(
+        int(ANARI_GROUP), std::vector<ANARIObject>());
+    it.first->second.emplace_back(object);
+    break;
+  }
+  case ANARI_SURFACE: {
+    object = anari::newObject<anari::Surface>(m_device, subtype.c_str());
+    auto it = m_anariObjects.try_emplace(
+        int(ANARI_SURFACE), std::vector<ANARIObject>());
+    it.first->second.emplace_back(object);
+    break;
+  }
   case ANARI_SAMPLER: {
     object = anari::newObject<anari::Sampler>(m_device, subtype.c_str());
     auto it = m_anariObjects.try_emplace(
@@ -278,7 +308,17 @@ void SceneGenerator::commit()
   // build this scene top-down to stress commit ordering guarantees
   // setup lighting, material and empty geometry
 
-  auto surface = anari::newObject<anari::Surface>(d);
+  ANARIObject surface;
+  bool autoCreatedSurface = false;
+  if (auto it = m_anariObjects.find(ANARI_SURFACE);
+      it != m_anariObjects.end() && !it->second.empty()) {
+    surface = it->second.front();
+  } else {
+    createAnariObject(ANARI_SURFACE, geometrySubtype);
+    surface = m_currentObject;
+    autoCreatedSurface = true;
+  }
+
   // create geometry
   ANARIObject geom;
   if (auto it = m_anariObjects.find(ANARI_GEOMETRY);
@@ -290,10 +330,10 @@ void SceneGenerator::commit()
   }
 
   if (auto it = m_anariObjects.find(int(ANARI_MATERIAL));
-      it != m_anariObjects.end()) {
+      autoCreatedSurface && it != m_anariObjects.end()) {
     if (!it->second.empty()) {
       auto mat = it->second.front();
-      anari::setParameter(d, surface, "material", mat);
+      anari::setParameter(d, surface, "material", mat);    
     }
   }
 
@@ -302,7 +342,10 @@ void SceneGenerator::commit()
 
   anari::commitParameters(d, m_world);
 
-  anari::setParameter(d, surface, "geometry", geom);
+  if (autoCreatedSurface) {
+    anari::setParameter(d, surface, "geometry", geom);
+  }
+
 
   // initialize PrimitiveGenerator with seed for random number generation
   PrimitiveGenerator generator(seed);
@@ -662,25 +705,25 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
   std::string channelName = "";
   ANARIDataType color_type;
   bool normalChannel = false;
-  std::string channel_type_param = getParamString("frame_color_type", "");
-  if (channel_type_param != "") {
-    channelName = "channel.color";
+  std::string channel_type_param = getParamString("frame_instanceId_type", "");
+  if (!channel_type_param.empty()) {
+    channelName = "channel.instanceId";
   } else if (channel_type_param = getParamString("frame_normal_type", "");
-             channel_type_param != "") {
+             !channel_type_param.empty()) {
     channelName = "channel.normal";
     normalChannel = true;
   } else if (channel_type_param = getParamString("frame_albedo_type", "");
-             channel_type_param != "") {
+             !channel_type_param.empty()) {
     channelName = "channel.albedo";
   } else if (channel_type_param = getParamString("frame_primitiveId_type", "");
-             channel_type_param != "") {
+             !channel_type_param.empty()) {
     channelName = "channel.primitiveId";
   } else if (channel_type_param = getParamString("frame_objectId_type", "");
-             channel_type_param != "") {
+             !channel_type_param.empty()) {
     channelName = "channel.objectId";
-  } else if (channel_type_param = getParamString("frame_instanceId_type", "");
-             channel_type_param != "") {
-    channelName = "channel.instanceId";
+  } else if (channel_type_param = getParamString("frame_color_type", "");
+             !channel_type_param.empty()) {
+    channelName = "channel.color";
   }
   color_type = anariTypeFromString(channel_type_param);
 
