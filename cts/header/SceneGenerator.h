@@ -47,6 +47,7 @@ class SceneGenerator : public anari::scenes::TestScene
   }
 
   void setReferenceParameter(int objType, size_t objIndex, const std::string& name, int refType, size_t refIndex);
+  void setReferenceArray(int objType, size_t objIndex, const std::string& name, int refType, const std::vector<size_t>& refIndices);
 
   void setCurrentObject(int type, size_t index);
 

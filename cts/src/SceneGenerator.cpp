@@ -154,6 +154,34 @@ void SceneGenerator::setReferenceParameter(int objectType, size_t objectIndex,
   }
 }
 
+void SceneGenerator::setReferenceArray(int objectType,
+    size_t objectIndex,
+    const std::string &name,
+    int refType,
+    const std::vector<size_t>& refIndices)
+{
+  if (auto itObj = m_anariObjects.find(objectType);
+      itObj != m_anariObjects.end() && objectIndex < itObj->second.size()) {
+    auto object = itObj->second[objectIndex];
+    if (m_device != nullptr) {
+      if (auto itRef = m_anariObjects.find(refType);
+          itRef != m_anariObjects.end()) {
+        std::vector<ANARIObject> references;
+        for (size_t ref : refIndices) {
+          if (ref >= itRef->second.size()) {
+            throw std::runtime_error("Reference index out of range");
+          }
+          references.push_back(itRef->second[ref]);
+        }
+        anari::setAndReleaseParameter(m_device,
+            object,
+            name.c_str(),
+            anari::newArray1D(m_device, references.data(), references.size()));
+      }
+    }
+  }
+}
+
 void SceneGenerator::setCurrentObject(int type, size_t index)
 {
     if (auto it = m_anariObjects.find(type);
@@ -334,6 +362,15 @@ void SceneGenerator::commit()
   // build this scene top-down to stress commit ordering guarantees
   // setup lighting, material and empty geometry
 
+  std::vector<ANARIObject> instances;
+  if (auto it = m_anariObjects.find(ANARI_INSTANCE);
+      it != m_anariObjects.end() && !it->second.empty()) {
+    instances = it->second;
+    anari::setAndReleaseParameter(d,
+        m_world,
+        "instance",
+        anari::newArray1D(d, instances.data(), instances.size()));
+  }
 
   // create geometry
   std::vector<ANARIObject> geoms;
@@ -709,7 +746,7 @@ void SceneGenerator::commit()
     anari::commitParameters(d, geom);
   }
 
-  if (!surfaces.empty()) {
+  if (!surfaces.empty() && instances.empty()) {
     anari::setAndReleaseParameter(
         d, m_world, "surface", anari::newArray1D(d, surfaces.data(), surfaces.size()));
   }
@@ -747,7 +784,7 @@ void SceneGenerator::commit()
       }
     }
 
-    if (!volumes.empty()) {
+    if (!volumes.empty() && instances.empty()) {
       anari::setAndReleaseParameter(d,
           m_world,
           "volume",
