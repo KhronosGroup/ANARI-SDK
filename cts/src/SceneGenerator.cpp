@@ -163,7 +163,7 @@ void SceneGenerator::setCurrentObject(int type, size_t index)
 }
 
 void SceneGenerator::createAnariObject(
-    int type, const std::string &subtype, std::string ctsType)
+    int type, const std::string &subtype, const std::string& ctsType)
 {
   ANARIObject object = nullptr;
   switch (type) {
@@ -225,21 +225,21 @@ void SceneGenerator::createAnariObject(
     break;
   }
   case ANARI_INSTANCE: {
-    object = anari::newObject<anari::Instance>(m_device, subtype.c_str());
+    object = anari::newObject<anari::Instance>(m_device);
     auto it = m_anariObjects.try_emplace(
         int(ANARI_INSTANCE), std::vector<ANARIObject>());
     it.first->second.emplace_back(object);
     break;
   }
   case ANARI_GROUP: {
-    object = anari::newObject<anari::Group>(m_device, subtype.c_str());
+    object = anari::newObject<anari::Group>(m_device);
     auto it = m_anariObjects.try_emplace(
         int(ANARI_GROUP), std::vector<ANARIObject>());
     it.first->second.emplace_back(object);
     break;
   }
   case ANARI_SURFACE: {
-    object = anari::newObject<anari::Surface>(m_device, subtype.c_str());
+    object = anari::newObject<anari::Surface>(m_device);
     auto it = m_anariObjects.try_emplace(
         int(ANARI_SURFACE), std::vector<ANARIObject>());
     it.first->second.emplace_back(object);
@@ -336,36 +336,40 @@ void SceneGenerator::commit()
 
 
   // create geometry
-  ANARIObject geom = nullptr;
+  std::vector<ANARIObject> geoms;
+  std::vector<ANARIObject> surfaces;
   if (auto it = m_anariObjects.find(ANARI_GEOMETRY);
       it != m_anariObjects.end() && !it->second.empty()) {
-    geom = it->second.front();
+    geoms = it->second;
   } else if (geometrySubtype != "") {
     createAnariObject(ANARI_GEOMETRY, geometrySubtype);
-    geom = m_currentObject;
+    geoms.push_back(m_currentObject);
   }
 
-  if (geom) {
-    ANARIObject surface;
-    bool autoCreatedSurface = false;
-    if (auto it = m_anariObjects.find(ANARI_SURFACE);
-        it != m_anariObjects.end() && !it->second.empty()) {
-      surface = it->second.front();
-    } else {
-      createAnariObject(ANARI_SURFACE, geometrySubtype);
-      surface = m_currentObject;
-      autoCreatedSurface = true;
-    }
-    if (auto it = m_anariObjects.find(int(ANARI_MATERIAL));
-        it != m_anariObjects.end()) {
-      if (!it->second.empty()) {
-        auto mat = it->second.front();
-        anari::setParameter(d, surface, "material", mat);
+  bool createSurfaces = false;
+  auto surfaceIt = m_anariObjects.find(ANARI_SURFACE);
+  if (surfaceIt != m_anariObjects.end() && !surfaceIt->second.empty()) {
+    surfaces = surfaceIt->second;
+  } else {
+    createSurfaces = true;
+  }
+
+  for (size_t i = 0; i < geoms.size(); ++i) {
+    auto geom = geoms[i];
+    if (createSurfaces){
+      createAnariObject(ANARI_SURFACE, "");
+      ANARIObject surface = m_currentObject;
+      anari::setParameter(d, surface, "geometry", geom);
+      surfaces.push_back(surface);
+      if (auto it = m_anariObjects.find(int(ANARI_MATERIAL));
+          it != m_anariObjects.end()) {
+        if (i < it->second.size()) {
+          auto mat = it->second[i];
+          anari::setParameter(d, surface, "material", mat);
+        }
       }
+      anari::commitParameters(d, surface);
     }
-    anari::setAndReleaseParameter(
-        d, m_world, "surface", anari::newArray1D(d, &surface));
-    anari::setParameter(d, surface, "geometry", geom);
 
     // create all geometry depending on subtypes and shapes, indexed or soup
     // parameters vertex.position, vertex.radius, primitive.radius and
@@ -700,47 +704,69 @@ void SceneGenerator::commit()
           geom,
           "primitive.attribute3",
           anari::newArray1D(d, attributeVec4.data(), attributeVec4.size()));
-      // commit everything to the device
-      anari::commitParameters(d, geom);
-      anari::commitParameters(d, surface);
     }
+    // commit everything to the device
+    anari::commitParameters(d, geom);
+  }
+
+  if (!surfaces.empty()) {
+    anari::setAndReleaseParameter(
+        d, m_world, "surface", anari::newArray1D(d, surfaces.data(), surfaces.size()));
   }
 
   if (spatialFieldDim[0] != 0 && spatialFieldDim[1] != 0
       && spatialFieldDim[2] != 0) {
     // create spatial field
-    ANARIObject volume = nullptr;
-    ANARIObject spatialField = nullptr;
-    if (auto it = m_anariObjects.find(ANARI_SPATIAL_FIELD);
-        it != m_anariObjects.end() && !it->second.empty()) {
-      spatialField = it->second.front();
-    } else {
-      createAnariObject(ANARI_SPATIAL_FIELD, "structuredRegular");
-      spatialField = m_currentObject;
-    }
+    std::vector<ANARIObject> volumes;
+    std::vector<ANARIObject> spatialFields;
+    bool createSpatialFields = false;
+
     if (auto it = m_anariObjects.find(ANARI_VOLUME);
         it != m_anariObjects.end() && !it->second.empty()) {
-      volume = it->second.front();
+      volumes = it->second;
     } else {
       createAnariObject(ANARI_VOLUME, "transferFunction1D");
-      volume = m_currentObject;
-      anari::setParameter(m_device, volume, "field", spatialField);
+      volumes.push_back(m_currentObject);
     }
-    anari::setAndReleaseParameter(
-        d, m_world, "volume", anari::newArray1D(d, &volume));
-    std::vector<float> data = generator.generateAttributeFloat(
-        spatialFieldDim[0] * spatialFieldDim[1] * spatialFieldDim[2]);
-    anari::setAndReleaseParameter(m_device,
-        spatialField,
-        "data",
-        anari::newArray3D(m_device,
-            data.data(),
-            spatialFieldDim[0],
-            spatialFieldDim[1],
-            spatialFieldDim[2]));
 
-    anari::commitParameters(d, spatialField);
-    anari::commitParameters(d, volume);
+    auto fieldIt = m_anariObjects.find(ANARI_SPATIAL_FIELD);
+    if (!volumes.empty()
+        && (fieldIt == m_anariObjects.end() || fieldIt->second.empty())) {
+      createSpatialFields = true;
+    } else {
+      spatialFields = fieldIt->second;
+    }
+
+    for (auto volume : volumes) {
+      if (createSpatialFields) {
+        createAnariObject(ANARI_SPATIAL_FIELD, "structuredRegular");
+        auto spatialField = m_currentObject;
+        anari::setParameter(m_device, volume, "field", spatialField);
+        spatialFields.push_back(spatialField);
+        anari::commitParameters(d, volume);
+      }
+    }
+
+    if (!volumes.empty()) {
+      anari::setAndReleaseParameter(d,
+          m_world,
+          "volume",
+          anari::newArray1D(d, volumes.data(), volumes.size()));
+    }
+
+    for (auto spatialField : spatialFields) {
+      std::vector<float> data = generator.generateAttributeFloat(
+          static_cast<size_t>(spatialFieldDim[0]) * spatialFieldDim[1] * spatialFieldDim[2]);
+      anari::setAndReleaseParameter(m_device,
+          spatialField,
+          "data",
+          anari::newArray3D(m_device,
+              data.data(),
+              spatialFieldDim[0],
+              spatialFieldDim[1],
+              spatialFieldDim[2]));
+      anari::commitParameters(d, spatialField);
+    }
   }
 
 

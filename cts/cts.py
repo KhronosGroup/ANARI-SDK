@@ -331,8 +331,8 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                             for idx, item in enumerate(array):
                                 subtype = None
                                 if "subtype" not in item:
-                                    # Renderer subtype is user-defined
-                                    if anariObjectName == "renderer":
+                                    # Renderer subtype is user-defined/instance, group and surface do not have a subtype
+                                    if anariObjectName == "renderer" or anariObjectName == "instance" or anariObjectName == "group" or anariObjectName == "surface":
                                         subtype = anari_renderer
                                     else:
                                         # If no subtype is present no object is generated. This can be used prevent the initialization of default scene objects
