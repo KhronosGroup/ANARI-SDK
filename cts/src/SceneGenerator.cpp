@@ -67,6 +67,7 @@ std::vector<anari::scenes::ParameterInfo> SceneGenerator::parameters()
       {"unusedVertices", false, "The last primitive's indices in the index buffer will be removed to test handling of unused/skipped vertices in the vertex buffer"},
       {"color", "", "Fill an attribute with colors. Possible values: \"vertex.color\", \"vertex.attribute0\", \"primitive.attribute3\" and similar"},
       {"opacity", "", "Fill an attribute with opacity values. Possible values: \"vertex.attribute0\", \"primitive.attribute3\" and similar"},
+      {"spatial_field_dimensions", std::array<uint32_t, 3>{0, 0, 0}, "Dimensions of the spatial field"},
       {"frameCompletionCallback", false, "Enables test for ANARI_KHR_FRAME_COMPLETION_CALLBACK. A red image is rendered on error."},
       {"progressiveRendering", false, "Enables test for ANARI_KHR_PROGRESSIVE_RENDERING. A green image is rendered if the render improved a red image otherwise."}
 
@@ -93,6 +94,12 @@ int SceneGenerator::anariTypeFromString(const std::string& type)
   }
   if (type == "renderer") {
     return ANARI_RENDERER;
+  }
+  if (type == "volume") {
+    return ANARI_VOLUME;
+  }
+  if (type == "spatialField") {
+    return ANARI_SPATIAL_FIELD;
   }
   return ANARI_UNKNOWN;
 }
@@ -169,6 +176,20 @@ void SceneGenerator::createAnariObject(
     it.first->second.emplace_back(object);
     break;
   }
+  case ANARI_VOLUME: {
+    object = anari::newObject<anari::Volume>(m_device, subtype.c_str());
+    auto it = m_anariObjects.try_emplace(
+        int(ANARI_VOLUME), std::vector<ANARIObject>());
+    it.first->second.emplace_back(object);
+    break;
+  }
+  case ANARI_SPATIAL_FIELD: {
+    object = anari::newObject<anari::SpatialField>(m_device, subtype.c_str());
+    auto it = m_anariObjects.try_emplace(
+        int(ANARI_SPATIAL_FIELD), std::vector<ANARIObject>());
+    it.first->second.emplace_back(object);
+    break;
+  }
   case ANARI_SAMPLER: {
     object = anari::newObject<anari::Sampler>(m_device, subtype.c_str());
     auto it = m_anariObjects.try_emplace(
@@ -232,8 +253,10 @@ void SceneGenerator::commit()
   }
 
   // gather the data on what geometry will be present in the scene
-  std::string geometrySubtype = getParamString("geometrySubtype", "triangle");
+  std::string geometrySubtype = getParamString("geometrySubtype", "");
   std::string primitiveMode = getParamString("primitiveMode", "soup");
+  std::array<uint32_t, 3> spatialFieldDim =
+      getParam<std::array<uint32_t, 3>>("spatial_field_dimensions", {0, 0, 0});
   int primitiveCount = getParam<int>("primitiveCount", 20);
   std::string shape = getParamString("shape", "triangle");
   int seed = getParam<int>("seed", 0);
@@ -250,380 +273,417 @@ void SceneGenerator::commit()
   std::string colorAttribute = getParamString("color", "");
   std::string opacityAttribute = getParamString("opacity", "");
 
+  // initialize PrimitiveGenerator with seed for random number generation
+  PrimitiveGenerator generator(seed);
+
   // build this scene top-down to stress commit ordering guarantees
   // setup lighting, material and empty geometry
 
-  auto surface = anari::newObject<anari::Surface>(d);
   // create geometry
-  ANARIObject geom;
+  ANARIObject geom = nullptr;
   if (auto it = m_anariObjects.find(ANARI_GEOMETRY);
       it != m_anariObjects.end() && !it->second.empty()) {
     geom = it->second.front();
-  } else {
+  } else if (geometrySubtype != "") {
     createAnariObject(ANARI_GEOMETRY, geometrySubtype);
     geom = m_currentObject;
   }
 
-  if (auto it = m_anariObjects.find(int(ANARI_MATERIAL));
-      it != m_anariObjects.end()) {
-    if (!it->second.empty()) {
-      auto mat = it->second.front();
-      anari::setParameter(d, surface, "material", mat);
+  if (geom) {
+    auto surface = anari::newObject<anari::Surface>(d);
+    if (auto it = m_anariObjects.find(int(ANARI_MATERIAL));
+        it != m_anariObjects.end()) {
+      if (!it->second.empty()) {
+        auto mat = it->second.front();
+        anari::setParameter(d, surface, "material", mat);
+      }
     }
+    anari::setAndReleaseParameter(
+        d, m_world, "surface", anari::newArray1D(d, &surface));
+    anari::setParameter(d, surface, "geometry", geom);
+
+    // create all geometry depending on subtypes and shapes, indexed or soup
+    // parameters vertex.position, vertex.radius, primitive.radius and
+    // primitive.index are set
+    size_t componentCount = 3;
+    if (geometrySubtype == "quad") {
+      componentCount = 4;
+    } else if (geometrySubtype == "sphere" || geometrySubtype == "curve") {
+      componentCount = 1;
+    } else if (geometrySubtype == "cone" || geometrySubtype == "cylinder") {
+      componentCount = 2;
+    }
+
+    size_t indiciCount = 0;
+    std::vector<glm::vec3> vertices;
+    if (geometrySubtype == "triangle") { // handle all triangle geometry
+      std::vector<glm::uvec3> indices;
+      if (shape == "triangle") {
+        vertices = generator.generateTriangles(primitiveCount);
+
+        if (primitiveMode == "indexed") {
+          for (size_t i = 0; i < vertices.size(); i += 3) {
+            indices.push_back(glm::uvec3(i, i + 1, i + 2));
+          }
+        }
+      } else if (shape == "quad") {
+        if (primitiveMode == "indexed") {
+          auto [quadVertices, quadIndices] =
+              generator.generateTriangulatedQuadsIndexed(primitiveCount);
+          vertices = quadVertices;
+          indices = quadIndices;
+        } else {
+          vertices = generator.generateTriangulatedQuadsSoup(primitiveCount);
+        }
+      } else if (shape == "cube") {
+        if (primitiveMode == "indexed") {
+          auto [cubeVertices, cubeIndices] =
+              generator.generateTriangulatedCubesIndexed(primitiveCount);
+          vertices = cubeVertices;
+          indices = cubeIndices;
+        } else {
+          vertices = generator.generateTriangulatedCubesSoup(primitiveCount);
+        }
+      }
+
+      if (primitiveMode == "indexed") {
+        // shuffle indices vector to create a more useful test case
+        generator.shuffleVector(indices);
+        if (unusedVertices && !indices.empty()) {
+          // remove last indices to test not using all vertices/primitives
+          indices.resize(indices.size() - 1);
+        }
+        indiciCount = indices.size();
+        anari::setAndReleaseParameter(d,
+            geom,
+            "primitive.index",
+            anari::newArray1D(d, indices.data(), indices.size()));
+      }
+    } else if (geometrySubtype == "quad") { // handle all quad geometry
+      std::vector<glm::uvec4> indices;
+      if (shape == "quad") {
+        vertices = generator.generateQuads(primitiveCount);
+
+        if (primitiveMode == "indexed") {
+          for (size_t i = 0; i < vertices.size(); i += 4) {
+            indices.push_back(glm::uvec4(i, i + 1, i + 2, i + 3));
+          }
+        }
+      } else if (shape == "cube") {
+        if (primitiveMode == "indexed") {
+          auto [cubeVertices, cubeIndices] =
+              generator.generateQuadCubesIndexed(primitiveCount);
+          vertices = cubeVertices;
+          indices = cubeIndices;
+        } else {
+          vertices = generator.generateQuadCubesSoup(primitiveCount);
+        }
+      }
+
+      if (primitiveMode == "indexed") {
+        // shuffle indices vector to create a more useful test case
+        generator.shuffleVector(indices);
+        if (unusedVertices && !indices.empty()) {
+          // remove last indices to test not using all vertices/primitives
+          indices.resize(indices.size() - 1);
+        }
+        indiciCount = indices.size();
+        anari::setAndReleaseParameter(d,
+            geom,
+            "primitive.index",
+            anari::newArray1D(d, indices.data(), indices.size()));
+      }
+    } else if (geometrySubtype == "sphere") {
+      auto [sphereVertices, sphereRadii] =
+          generator.generateSpheres(primitiveCount);
+      vertices = sphereVertices;
+
+      if (globalRadius.has_value()) {
+        anari::setParameter(d, geom, "radius", globalRadius.value());
+      } else {
+        anari::setAndReleaseParameter(d,
+            geom,
+            "vertex.radius",
+            anari::newArray1D(d, sphereRadii.data(), sphereRadii.size()));
+      }
+
+      if (primitiveMode == "indexed") {
+        std::vector<uint32_t> indices;
+        for (size_t i = 0; i < vertices.size(); ++i) {
+          indices.push_back(static_cast<uint32_t>(i));
+        }
+
+        // shuffle indices vector to create a more useful test case
+        generator.shuffleVector(indices);
+        if (unusedVertices && !indices.empty()) {
+          // remove last indices to test not using all vertices/primitives
+          indices.resize(indices.size() - 1);
+        }
+        anari::setAndReleaseParameter(d,
+            geom,
+            "primitive.index",
+            anari::newArray1D(d, indices.data(), indices.size()));
+      }
+    } else if (geometrySubtype == "curve") {
+      auto [curveVertices, curveRadii] =
+          generator.generateCurves(primitiveCount);
+      vertices = curveVertices;
+
+      if (globalRadius.has_value()) {
+        anari::setParameter(d, geom, "radius", globalRadius.value());
+      } else {
+        anari::setAndReleaseParameter(d,
+            geom,
+            "vertex.radius",
+            anari::newArray1D(d, curveRadii.data(), curveRadii.size()));
+      }
+
+      if (primitiveMode == "indexed") {
+        std::vector<uint32_t> indices;
+        for (uint32_t i = 0; i < vertices.size() / 2; i++)
+          indices.push_back(i * 2);
+
+        // shuffle indices vector to create a more useful test case
+        generator.shuffleVector(indices);
+        if (unusedVertices && indices.size() >= 2) {
+          // remove last indices to test not using all vertices/primitives
+          indices.resize(indices.size() - 2);
+        }
+        indiciCount = indices.size();
+        anari::setAndReleaseParameter(d,
+            geom,
+            "primitive.index",
+            anari::newArray1D(d, indices.data(), indices.size()));
+      }
+    } else if (geometrySubtype == "cone") {
+      auto [coneVertices, coneRadii, coneCaps] =
+          generator.generateCones(primitiveCount, vertexCaps);
+      vertices = coneVertices;
+
+      anari::setAndReleaseParameter(d,
+          geom,
+          "vertex.radius",
+          anari::newArray1D(d, coneRadii.data(), coneRadii.size()));
+
+      if (!coneCaps.empty()) {
+        anari::setAndReleaseParameter(d,
+            geom,
+            "vertex.cap",
+            anari::newArray1D(d, coneCaps.data(), coneCaps.size()));
+      }
+
+      anari::setParameter(d, geom, "caps", globalCaps);
+
+      if (primitiveMode == "indexed") {
+        std::vector<glm::uvec2> indices;
+        for (uint32_t i = 0; i < vertices.size(); i += 2)
+          indices.emplace_back(i, i + 1);
+
+        // shuffle indices vector to create a more useful test case
+        generator.shuffleVector(indices);
+        if (unusedVertices && !indices.empty()) {
+          // remove last indices to test not using all vertices/primitives
+          indices.resize(indices.size() - 1);
+        }
+        indiciCount = indices.size();
+        anari::setAndReleaseParameter(d,
+            geom,
+            "primitive.index",
+            anari::newArray1D(d, indices.data(), indices.size()));
+      }
+    } else if (geometrySubtype == "cylinder") {
+      auto [cylinderVertices, cylinderRadii, cylinderCaps] =
+          generator.generateCylinders(primitiveCount, vertexCaps);
+      vertices = cylinderVertices;
+
+      if (globalRadius.has_value()) {
+        anari::setParameter(d, geom, "radius", globalRadius.value());
+      } else {
+        anari::setAndReleaseParameter(d,
+            geom,
+            "primitive.radius",
+            anari::newArray1D(d, cylinderRadii.data(), cylinderRadii.size()));
+      }
+
+      if (!cylinderCaps.empty()) {
+        anari::setAndReleaseParameter(d,
+            geom,
+            "vertex.cap",
+            anari::newArray1D(d, cylinderCaps.data(), cylinderCaps.size()));
+      }
+
+      anari::setParameter(d, geom, "caps", globalCaps);
+
+      if (primitiveMode == "indexed") {
+        std::vector<glm::uvec2> indices;
+        for (uint32_t i = 0; i < vertices.size(); i += 2)
+          indices.emplace_back(i, i + 1);
+
+        // shuffle indices vector to create a more useful test case
+        generator.shuffleVector(indices);
+        if (unusedVertices && !indices.empty()) {
+          // remove last indices to test not using all vertices/primitives
+          indices.resize(indices.size() - 1);
+        }
+        indiciCount = indices.size();
+        anari::setAndReleaseParameter(d,
+            geom,
+            "primitive.index",
+            anari::newArray1D(d, indices.data(), indices.size()));
+      }
+    }
+
+    if (!colorAttribute.empty()) {
+      size_t colorCount = vertices.size();
+      if (colorAttribute.rfind("primitive", 0) != std::string::npos) {
+        colorCount = primitiveCount;
+      }
+
+      std::vector<glm::vec3> attributeColor =
+          colors::getColorVectorFromPalette(colorCount);
+
+      anari::setAndReleaseParameter(d,
+          geom,
+          colorAttribute.c_str(),
+          anari::newArray1D(d, attributeColor.data(), attributeColor.size()));
+    }
+
+    if (!opacityAttribute.empty()) {
+      size_t opacityCount = vertices.size();
+      if (colorAttribute.rfind("primitive", 0) != std::string::npos) {
+        opacityCount = primitiveCount;
+      }
+
+      std::vector<float> attributeOpacity =
+          generator.generateAttributeFloat(opacityCount, 0.0, 1.0);
+
+      anari::setAndReleaseParameter(d,
+          geom,
+          opacityAttribute.c_str(),
+          anari::newArray1D(
+              d, attributeOpacity.data(), attributeOpacity.size()));
+    }
+
+    anari::setAndReleaseParameter(d,
+        geom,
+        "vertex.position",
+        anari::newArray1D(d, vertices.data(), vertices.size()));
+
+    // generate vertex attributes and primitive attributes
+    if (indiciCount == 0) {
+      indiciCount = vertices.size() / componentCount;
+    }
+    float attributeMin = getParam<float>("attribute_min", 0.0f);
+    float attributeMax = getParam<float>("attribute_max", 1.0f);
+    bool generateVertexAttributes = getParam<bool>("vertex_attributes", false);
+    bool generatePrimitiveAttributes =
+        getParam<bool>("primitive_attributes", false);
+    if (generateVertexAttributes) {
+      auto attributeFloat = generator.generateAttributeFloat(
+          vertices.size(), attributeMin, attributeMax);
+      anari::setAndReleaseParameter(d,
+          geom,
+          "vertex.attribute0",
+          anari::newArray1D(d, attributeFloat.data(), attributeFloat.size()));
+
+      auto attributeVec2 = generator.generateAttributeVec2(
+          vertices.size(), attributeMin, attributeMax);
+      anari::setAndReleaseParameter(d,
+          geom,
+          "vertex.attribute1",
+          anari::newArray1D(d, attributeVec2.data(), attributeVec2.size()));
+
+      auto attributeVec3 = generator.generateAttributeVec3(
+          vertices.size(), attributeMin, attributeMax);
+      anari::setAndReleaseParameter(d,
+          geom,
+          "vertex.attribute2",
+          anari::newArray1D(d, attributeVec3.data(), attributeVec3.size()));
+
+      auto attributeVec4 = generator.generateAttributeVec4(
+          vertices.size(), attributeMin, attributeMax);
+      anari::setAndReleaseParameter(d,
+          geom,
+          "vertex.attribute3",
+          anari::newArray1D(d, attributeVec4.data(), attributeVec4.size()));
+    }
+    if (generatePrimitiveAttributes) {
+      auto attributeFloat = generator.generateAttributeFloat(
+          indiciCount, attributeMin, attributeMax);
+      anari::setAndReleaseParameter(d,
+          geom,
+          "primitive.attribute0",
+          anari::newArray1D(d, attributeFloat.data(), attributeFloat.size()));
+
+      auto attributeVec2 = generator.generateAttributeVec2(
+          indiciCount, attributeMin, attributeMax);
+      anari::setAndReleaseParameter(d,
+          geom,
+          "primitive.attribute1",
+          anari::newArray1D(d, attributeVec2.data(), attributeVec2.size()));
+
+      auto attributeVec3 = generator.generateAttributeVec3(
+          indiciCount, attributeMin, attributeMax);
+      anari::setAndReleaseParameter(d,
+          geom,
+          "primitive.attribute2",
+          anari::newArray1D(d, attributeVec3.data(), attributeVec3.size()));
+
+      auto attributeVec4 = generator.generateAttributeVec4(
+          indiciCount, attributeMin, attributeMax);
+      anari::setAndReleaseParameter(d,
+          geom,
+          "primitive.attribute3",
+          anari::newArray1D(d, attributeVec4.data(), attributeVec4.size()));
+    }
+
+    // commit everything to the device
+    anari::commitParameters(d, geom);
+    anari::commitParameters(d, surface);
+
+    // cleanup
+    anari::release(d, surface);
   }
 
-  anari::setAndReleaseParameter(
-      d, m_world, "surface", anari::newArray1D(d, &surface));
+  if (spatialFieldDim[0] != 0 && spatialFieldDim[1] != 0
+      && spatialFieldDim[2] != 0) {
+    // create spatial field
+    ANARIObject volume = nullptr;
+    ANARIObject spatialField = nullptr;
+    if (auto it = m_anariObjects.find(ANARI_SPATIAL_FIELD);
+        it != m_anariObjects.end() && !it->second.empty()) {
+      spatialField = it->second.front();
+    } else {
+      createAnariObject(ANARI_SPATIAL_FIELD, "structuredRegular");
+      spatialField = m_currentObject;
+    }
+    if (auto it = m_anariObjects.find(ANARI_VOLUME);
+        it != m_anariObjects.end() && !it->second.empty()) {
+      volume = it->second.front();
+    } else {
+      createAnariObject(ANARI_VOLUME, "transferFunction1D");
+      volume = m_currentObject;
+      anari::setParameter(m_device, volume, "field", spatialField);
+    }
+    anari::setAndReleaseParameter(
+        d, m_world, "volume", anari::newArray1D(d, &volume));
+    std::vector<float> data = generator.generateAttributeFloat(
+        spatialFieldDim[0] * spatialFieldDim[1] * spatialFieldDim[2]);
+    anari::setAndReleaseParameter(m_device,
+        spatialField,
+        "data",
+        anari::newArray3D(m_device,
+            data.data(),
+            spatialFieldDim[0],
+            spatialFieldDim[1],
+            spatialFieldDim[2]));
+
+    anari::commitParameters(d, spatialField);
+    anari::commitParameters(d, volume);
+  }
+
 
   anari::commitParameters(d, m_world);
-
-  anari::setParameter(d, surface, "geometry", geom);
-
-  // initialize PrimitiveGenerator with seed for random number generation
-  PrimitiveGenerator generator(seed);
-
-
-  // create all geometry depending on subtypes and shapes, indexed or soup
-  // parameters vertex.position, vertex.radius, primitive.radius and primitive.index are set
-  size_t componentCount = 3;
-  if (geometrySubtype == "quad") {
-    componentCount = 4;
-  } else if (geometrySubtype == "sphere" || geometrySubtype == "curve") {
-    componentCount = 1;
-  } else if (geometrySubtype == "cone" || geometrySubtype == "cylinder") {
-    componentCount = 2;
-  }
-
-  size_t indiciCount = 0;
-  std::vector<glm::vec3> vertices;
-  if (geometrySubtype == "triangle") { // handle all triangle geometry
-    std::vector<glm::uvec3> indices;
-    if (shape == "triangle") {
-      vertices = generator.generateTriangles(primitiveCount);
-
-      if (primitiveMode == "indexed") {
-        for(size_t i = 0; i < vertices.size(); i +=3) {
-          indices.push_back(glm::uvec3(i, i + 1, i + 2));
-        }
-      }
-    } else if (shape == "quad") {
-      if (primitiveMode == "indexed") {
-       auto [quadVertices, quadIndices] =
-           generator.generateTriangulatedQuadsIndexed(primitiveCount);
-       vertices = quadVertices;
-       indices = quadIndices;
-      } else {
-       vertices = generator.generateTriangulatedQuadsSoup(primitiveCount);
-      }
-    } else if (shape == "cube") {
-      if (primitiveMode == "indexed") {
-       auto [cubeVertices, cubeIndices] =
-           generator.generateTriangulatedCubesIndexed(primitiveCount);
-       vertices = cubeVertices;
-       indices = cubeIndices;
-      } else {
-       vertices = generator.generateTriangulatedCubesSoup(primitiveCount);
-      }
-    }
-
-    if (primitiveMode == "indexed") {
-      // shuffle indices vector to create a more useful test case
-      generator.shuffleVector(indices);
-      if (unusedVertices && !indices.empty()) {
-        // remove last indices to test not using all vertices/primitives
-        indices.resize(indices.size() - 1);
-      }
-      indiciCount = indices.size();
-      anari::setAndReleaseParameter(d,
-          geom,
-          "primitive.index",
-          anari::newArray1D(d, indices.data(), indices.size()));
-    }
-  } else if (geometrySubtype == "quad") { // handle all quad geometry
-    std::vector<glm::uvec4> indices;
-    if (shape == "quad") {
-      vertices = generator.generateQuads(primitiveCount);
-
-      if (primitiveMode == "indexed") {
-        for (size_t i = 0; i < vertices.size(); i += 4) {
-          indices.push_back(glm::uvec4(i, i + 1, i + 2, i + 3));
-        }
-      }
-    } else if (shape == "cube") {
-      if (primitiveMode == "indexed") {
-        auto [cubeVertices, cubeIndices] =
-            generator.generateQuadCubesIndexed(primitiveCount);
-        vertices = cubeVertices;
-        indices = cubeIndices;
-      } else {
-        vertices = generator.generateQuadCubesSoup(primitiveCount);
-      }
-    }
-
-    if (primitiveMode == "indexed") {
-      // shuffle indices vector to create a more useful test case
-      generator.shuffleVector(indices);
-      if (unusedVertices && !indices.empty()) {
-        // remove last indices to test not using all vertices/primitives
-        indices.resize(indices.size() - 1);
-      }
-      indiciCount = indices.size();
-      anari::setAndReleaseParameter(d,
-          geom,
-          "primitive.index",
-          anari::newArray1D(d, indices.data(), indices.size()));
-    }
-  } else if (geometrySubtype == "sphere") {
-    auto [sphereVertices, sphereRadii] =
-        generator.generateSpheres(primitiveCount);
-    vertices = sphereVertices;
-
-    if (globalRadius.has_value()) {
-      anari::setParameter(
-          d, geom, "radius", globalRadius.value());
-    } else {
-      anari::setAndReleaseParameter(d,
-          geom,
-          "vertex.radius",
-          anari::newArray1D(d, sphereRadii.data(), sphereRadii.size()));
-    }
-
-    if (primitiveMode == "indexed") {
-      std::vector<uint32_t> indices;
-      for (size_t i = 0; i < vertices.size(); ++i) {
-        indices.push_back(static_cast<uint32_t>(i));
-      }
-
-      // shuffle indices vector to create a more useful test case
-      generator.shuffleVector(indices);
-      if (unusedVertices && !indices.empty()) {
-        // remove last indices to test not using all vertices/primitives
-        indices.resize(indices.size() - 1);
-      }
-      anari::setAndReleaseParameter(d,
-          geom,
-          "primitive.index",
-          anari::newArray1D(d, indices.data(), indices.size()));
-    }
-  } else if (geometrySubtype == "curve") {
-    auto [curveVertices, curveRadii] =
-        generator.generateCurves(primitiveCount);
-    vertices = curveVertices;
-
-    if (globalRadius.has_value()) {
-      anari::setParameter(
-          d, geom, "radius", globalRadius.value());
-    } else {
-      anari::setAndReleaseParameter(d,
-          geom,
-          "vertex.radius",
-          anari::newArray1D(d, curveRadii.data(), curveRadii.size()));
-    }
-
-    if (primitiveMode == "indexed") {
-      std::vector<uint32_t> indices;
-      for (uint32_t i = 0; i < vertices.size() / 2; i++)
-        indices.push_back(i * 2);
-
-      // shuffle indices vector to create a more useful test case
-      generator.shuffleVector(indices);
-      if (unusedVertices && indices.size() >= 2) {
-        // remove last indices to test not using all vertices/primitives
-        indices.resize(indices.size() - 2);
-      }
-      indiciCount = indices.size();
-      anari::setAndReleaseParameter(d,
-          geom,
-          "primitive.index",
-          anari::newArray1D(d, indices.data(), indices.size()));
-    }
-  } else if (geometrySubtype == "cone") {
-    auto [coneVertices, coneRadii, coneCaps] =
-        generator.generateCones(primitiveCount, vertexCaps);
-    vertices = coneVertices;
-
-    anari::setAndReleaseParameter(d,
-        geom,
-        "vertex.radius",
-        anari::newArray1D(d, coneRadii.data(), coneRadii.size()));
-
-    if (!coneCaps.empty()) {
-      anari::setAndReleaseParameter(d,
-          geom,
-          "vertex.cap",
-          anari::newArray1D(d, coneCaps.data(), coneCaps.size()));
-    }
-
-    anari::setParameter(d, geom, "caps", globalCaps);
-
-    if (primitiveMode == "indexed") {
-      std::vector<glm::uvec2> indices;
-      for (uint32_t i = 0; i < vertices.size(); i += 2)
-        indices.emplace_back(i, i + 1);
-
-      // shuffle indices vector to create a more useful test case
-      generator.shuffleVector(indices);
-      if (unusedVertices && !indices.empty()) {
-        // remove last indices to test not using all vertices/primitives
-        indices.resize(indices.size() - 1);
-      }
-      indiciCount = indices.size();
-      anari::setAndReleaseParameter(d,
-          geom,
-          "primitive.index",
-          anari::newArray1D(d, indices.data(), indices.size()));
-    }
-  } else if (geometrySubtype == "cylinder") {
-    auto [cylinderVertices, cylinderRadii, cylinderCaps] =
-        generator.generateCylinders(primitiveCount, vertexCaps);
-    vertices = cylinderVertices;
-
-    if (globalRadius.has_value()) {
-      anari::setParameter(d, geom, "radius", globalRadius.value());
-    } else {
-      anari::setAndReleaseParameter(d,
-          geom,
-          "primitive.radius",
-          anari::newArray1D(d, cylinderRadii.data(), cylinderRadii.size()));
-    }
-
-    if (!cylinderCaps.empty()) {
-      anari::setAndReleaseParameter(d,
-          geom,
-          "vertex.cap",
-          anari::newArray1D(d, cylinderCaps.data(), cylinderCaps.size()));
-    }
-
-    anari::setParameter(d, geom, "caps", globalCaps);
-
-    if (primitiveMode == "indexed") {
-      std::vector<glm::uvec2> indices;
-      for (uint32_t i = 0; i < vertices.size(); i += 2)
-        indices.emplace_back(i, i + 1);
-
-      // shuffle indices vector to create a more useful test case
-      generator.shuffleVector(indices);
-      if (unusedVertices && !indices.empty()) {
-        // remove last indices to test not using all vertices/primitives
-        indices.resize(indices.size() - 1);
-      }
-      indiciCount = indices.size();
-      anari::setAndReleaseParameter(d,
-          geom,
-          "primitive.index",
-          anari::newArray1D(d, indices.data(), indices.size()));
-    }
-  }
-
-  if (!colorAttribute.empty()) {
-    size_t colorCount = vertices.size();
-    if (colorAttribute.rfind("primitive", 0) != std::string::npos) {
-        colorCount = primitiveCount;
-    }
-
-    std::vector<glm::vec3> attributeColor =
-        colors::getColorVectorFromPalette(colorCount);
-
-    anari::setAndReleaseParameter(d,
-        geom,
-        colorAttribute.c_str(),
-        anari::newArray1D(d, attributeColor.data(), attributeColor.size()));
-  }
-
-  if (!opacityAttribute.empty()) {
-    size_t opacityCount = vertices.size();
-    if (colorAttribute.rfind("primitive", 0) != std::string::npos) {
-      opacityCount = primitiveCount;
-    }
-
-    std::vector<float> attributeOpacity =
-        generator.generateAttributeFloat(opacityCount, 0.0, 1.0);
-
-    anari::setAndReleaseParameter(d,
-        geom,
-        opacityAttribute.c_str(),
-        anari::newArray1D(d, attributeOpacity.data(), attributeOpacity.size()));
-  }
-
-  anari::setAndReleaseParameter(d,
-      geom,
-      "vertex.position",
-      anari::newArray1D(d, vertices.data(), vertices.size()));
-
-  // generate vertex attributes and primitive attributes
-  if (indiciCount == 0) {
-    indiciCount = vertices.size() / componentCount;
-  }
-  float attributeMin = getParam<float>("attribute_min", 0.0f);
-  float attributeMax = getParam<float>("attribute_max", 1.0f);
-  bool generateVertexAttributes = getParam<bool>("vertex_attributes", false);
-  bool generatePrimitiveAttributes = getParam<bool>("primitive_attributes", false);
-  if (generateVertexAttributes) {
-    auto attributeFloat = generator.generateAttributeFloat(
-        vertices.size(), attributeMin, attributeMax);
-    anari::setAndReleaseParameter(d,
-        geom,
-        "vertex.attribute0",
-        anari::newArray1D(d, attributeFloat.data(), attributeFloat.size()));
-
-    auto attributeVec2 = generator.generateAttributeVec2(
-        vertices.size(), attributeMin, attributeMax);
-    anari::setAndReleaseParameter(d,
-        geom,
-        "vertex.attribute1",
-        anari::newArray1D(d, attributeVec2.data(), attributeVec2.size()));
-
-    auto attributeVec3 = generator.generateAttributeVec3(
-        vertices.size(), attributeMin, attributeMax);
-    anari::setAndReleaseParameter(d,
-        geom,
-        "vertex.attribute2",
-        anari::newArray1D(d, attributeVec3.data(), attributeVec3.size()));
-
-    auto attributeVec4 = generator.generateAttributeVec4(
-        vertices.size(), attributeMin, attributeMax);
-    anari::setAndReleaseParameter(d,
-        geom,
-        "vertex.attribute3",
-        anari::newArray1D(d, attributeVec4.data(), attributeVec4.size()));
-  }
-  if (generatePrimitiveAttributes) {
-    auto attributeFloat = generator.generateAttributeFloat(
-        indiciCount, attributeMin, attributeMax);
-    anari::setAndReleaseParameter(d,
-        geom,
-        "primitive.attribute0",
-        anari::newArray1D(d, attributeFloat.data(), attributeFloat.size()));
-
-    auto attributeVec2 = generator.generateAttributeVec2(
-        indiciCount, attributeMin, attributeMax);
-    anari::setAndReleaseParameter(d,
-        geom,
-        "primitive.attribute1",
-        anari::newArray1D(d, attributeVec2.data(), attributeVec2.size()));
-
-    auto attributeVec3 = generator.generateAttributeVec3(
-        indiciCount, attributeMin, attributeMax);
-    anari::setAndReleaseParameter(d,
-        geom,
-        "primitive.attribute2",
-        anari::newArray1D(d, attributeVec3.data(), attributeVec3.size()));
-
-    auto attributeVec4 = generator.generateAttributeVec4(
-          indiciCount, attributeMin, attributeMax);
-    anari::setAndReleaseParameter(d,
-        geom,
-        "primitive.attribute3",
-        anari::newArray1D(d, attributeVec4.data(), attributeVec4.size()));
-  }
-
-  // commit everything to the device
-  anari::commitParameters(d, geom);
-  anari::commitParameters(d, surface);
-
-  // cleanup
-  anari::release(d, surface);
-  anari::release(d, geom);
 }
 
 // render the scene with the given rendererType and renderDistance

@@ -76,6 +76,14 @@ def getFileFromList(list, filename):
             return path
     return ""
 
+def simplifyFileName(name):
+    name = name.replace('{', '')
+    name = name.replace('}', '')
+    name = name.replace(':', '')
+    name = name.replace("'", '')
+    name = name.replace('"', '')
+    return name
+
 # writes all reference, candidate, diff and threshold images to filesystem and returns
 def write_images(evaluations, output):
     output_path = Path(output) / "evaluation"
@@ -257,8 +265,12 @@ def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, te
     return frame_duration
 
 def passByType(paramName, type, paramValue, sceneGenerator):
-    if type == "Array1D":
+    if paramValue == None:
+        sceneGenerator.unsetGenericParameter(paramName)
+    elif type == "Array1D":
         sceneGenerator.setGenericArray1DParameter(paramName, paramValue)
+    else:
+        sceneGenerator.setGenericParameter(paramName, paramValue)
 
 # applies a function to each test scene (or test permutation), passing additional args to that function
 # returns a dictonary of return values of the passed function with the test scene names as keys
@@ -412,6 +424,10 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                                     sceneGenerator.setCurrentObject(pointer[2], int(pointer[3]))
                                     if permutation[i] is None:
                                         sceneGenerator.unsetGenericParameter(pointer[4])
+                                    elif isinstance(permutation[i], dict):
+                                        for [type, typedValue] in permutation[i].items():
+                                            passByType(pointer[4], type, typedValue, sceneGenerator)
+                                            break
                                     elif len(pointer) > 5:
                                         passByType(pointer[4], pointer[5], permutation[i], sceneGenerator)
                                     else:
@@ -432,6 +448,8 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                     except Exception as e:
                         print(e)
                         continue
+                permutationString = simplifyFileName(permutationString)
+                variantString = simplifyFileName(variantString)
                 # call function for each permutated/variant test scene and collect return values per test scene permutation/variant
                 result[test_name + permutationString + variantString] = (func(parsed_json, sceneGenerator, anari_renderer, json_file_path, test_name, permutationString[1:], variantString[1:], *args))
         else:
