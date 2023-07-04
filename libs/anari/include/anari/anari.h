@@ -171,9 +171,10 @@ ANARI_INTERFACE void anariCommitParameters(ANARIDevice device, ANARIObject objec
 ANARI_INTERFACE void anariRelease(ANARIDevice device, ANARIObject object);
 ANARI_INTERFACE void anariRetain(ANARIDevice device, ANARIObject object);
 ANARI_INTERFACE const char ** anariGetDeviceSubtypes(ANARILibrary library);
-ANARI_INTERFACE const char ** anariGetObjectSubtypes(ANARILibrary library, const char* deviceSubtype, ANARIDataType objectType);
-ANARI_INTERFACE const void* anariGetObjectInfo(ANARILibrary library, const char* deviceSubtype, const char* objectSubtype, ANARIDataType objectType, const char* infoName, ANARIDataType infoType);
-ANARI_INTERFACE const void* anariGetParameterInfo(ANARILibrary library, const char* deviceSubtype, const char* objectSubtype, ANARIDataType objectType, const char* parameterName, ANARIDataType parameterType, const char* infoName, ANARIDataType infoType);
+ANARI_INTERFACE const char ** anariGetDeviceFeatures(ANARILibrary library, const char* deviceSubtype);
+ANARI_INTERFACE const char ** anariGetObjectSubtypes(ANARIDevice device, ANARIDataType objectType);
+ANARI_INTERFACE const void* anariGetObjectInfo(ANARIDevice device, const char* objectSubtype, ANARIDataType objectType, const char* infoName, ANARIDataType infoType);
+ANARI_INTERFACE const void* anariGetParameterInfo(ANARIDevice device, const char* objectSubtype, ANARIDataType objectType, const char* parameterName, ANARIDataType parameterType, const char* infoName, ANARIDataType infoType);
 ANARI_INTERFACE int anariGetProperty(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType type, void* mem, uint64_t size, ANARIWaitMask mask);
 ANARI_INTERFACE ANARIFrame anariNewFrame(ANARIDevice device);
 ANARI_INTERFACE const void* anariMapFrame(ANARIDevice device, ANARIFrame frame, const char* channel, uint32_t* width, uint32_t* height, ANARIDataType* pixelType);

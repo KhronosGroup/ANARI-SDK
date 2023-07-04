@@ -202,12 +202,14 @@ using Features = ANARIFeatures;
 
 namespace feature {
 
-Features getObjectFeatures(Library library,
-    const char *device,
+Features getDeviceFeatureStruct(Library library,
+    const char *deviceSubtype);
+
+Features getObjectFeatureStruct(Device device,
     const char *objectSubtype,
     DataType objectType);
 
-Features getInstanceFeatures(Device, Object);
+Features getInstanceFeatureStruct(Device, Object);
 
 } // namespace feature
 

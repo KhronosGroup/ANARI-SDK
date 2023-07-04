@@ -43,8 +43,9 @@ typedef struct {
    int ANARI_KHR_RENDERER_BACKGROUND_IMAGE;
    int ANARI_EXP_VOLUME_SAMPLE_RATE;
 } ANARIFeatures;
-int anariGetObjectFeatures(ANARIFeatures *features, ANARILibrary, const char *deviceName, const char *objectName, ANARIDataType objectType);
-int anariGetInstanceFeatures(ANARIFeatures *features, ANARIDevice device, ANARIObject object);
+int anariGetDeviceFeatureStruct(ANARIFeatures *features, ANARILibrary library, const char *deviceName);
+int anariGetObjectFeatureStruct(ANARIFeatures *features, ANARIDevice device, const char *objectName, ANARIDataType objectType);
+int anariGetInstanceFeatureStruct(ANARIFeatures *features, ANARIDevice device, ANARIObject object);
 #ifdef ANARI_FEATURE_UTILITY_IMPL
 #include <string.h>
 static int feature_hash(const char *str) {
@@ -112,8 +113,8 @@ static void fillFeatureStruct(ANARIFeatures *features, const char *const *list) 
         }
     }
 }
-int anariGetObjectFeatures(ANARIFeatures *features, ANARILibrary library, const char *deviceName, const char *objectName, ANARIDataType objectType) {
-    const char *const *list = (const char *const *)anariGetObjectInfo(library, deviceName, objectName, objectType, "feature", ANARI_STRING_LIST);
+int anariGetDeviceFeatureStruct(ANARIFeatures *features, ANARILibrary library, const char *deviceName) {
+    const char *const *list = (const char *const *)anariGetDeviceFeatures(library, deviceName);
     if(list) {
         fillFeatureStruct(features, list);
         return 0;
@@ -121,7 +122,16 @@ int anariGetObjectFeatures(ANARIFeatures *features, ANARILibrary library, const 
         return 1;
     }
 }
-int anariGetInstanceFeatures(ANARIFeatures *features, ANARIDevice device, ANARIObject object) {
+int anariGetObjectFeatureStruct(ANARIFeatures *features, ANARIDevice device, const char *objectName, ANARIDataType objectType) {
+    const char *const *list = (const char *const *)anariGetObjectInfo(device, objectName, objectType, "feature", ANARI_STRING_LIST);
+    if(list) {
+        fillFeatureStruct(features, list);
+        return 0;
+    } else {
+        return 1;
+    }
+}
+int anariGetInstanceFeatureStruct(ANARIFeatures *features, ANARIDevice device, ANARIObject object) {
     const char *const *list = NULL;
     anariGetProperty(device, object, "feature", ANARI_STRING_LIST, &list, sizeof(list), ANARI_WAIT);
     if(list) {

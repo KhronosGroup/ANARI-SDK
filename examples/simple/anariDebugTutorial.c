@@ -142,9 +142,11 @@ int main(int argc, const char **argv)
       printf("  - %s\n", *d);
   }
 
+  ANARIDevice nested = anariNewDevice(lib, "default");
+
   // query available renderers
   const char **renderers =
-      anariGetObjectSubtypes(lib, "default", ANARI_RENDERER);
+      anariGetObjectSubtypes(nested, ANARI_RENDERER);
   if (!renderers) {
     puts("No renderers available!");
     return 1;
@@ -155,7 +157,6 @@ int main(int argc, const char **argv)
     printf("  - %s\n", *r);
   }
 
-  ANARIDevice nested = anariNewDevice(lib, "default");
   ANARIDevice dev = anariNewDevice(trace_lib, "debug");
   anariSetParameter(dev, dev, "wrappedDevice", ANARI_DEVICE, &nested);
 

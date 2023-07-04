@@ -507,19 +507,24 @@
                 {"name" : "library", "type" : "ANARILibrary"}
             ]
         }, {
-            "name" : "anariGetObjectSubtypes",
+            "name" : "anariGetDeviceFeatures",
             "returnType" : "const char **",
             "arguments" : [
                 {"name" : "library", "type" : "ANARILibrary"},
-                {"name" : "deviceSubtype", "type" : "const char*"},
+                {"name" : "deviceSubtype", "type" : "const char*"}
+            ]
+        }, {
+            "name" : "anariGetObjectSubtypes",
+            "returnType" : "const char **",
+            "arguments" : [
+                {"name" : "device", "type" : "ANARIDevice"},
                 {"name" : "objectType", "type" : "ANARIDataType"}
             ]
         }, {
             "name" : "anariGetObjectInfo",
             "returnType" : "const void*",
             "arguments" : [
-                {"name" : "library", "type" : "ANARILibrary"},
-                {"name" : "deviceSubtype", "type" : "const char*"},
+                {"name" : "device", "type" : "ANARIDevice"},
                 {"name" : "objectSubtype", "type" : "const char*"},
                 {"name" : "objectType", "type" : "ANARIDataType"},
                 {"name" : "infoName", "type" : "const char*"},
@@ -529,8 +534,7 @@
             "name" : "anariGetParameterInfo",
             "returnType" : "const void*",
             "arguments" : [
-                {"name" : "library", "type" : "ANARILibrary"},
-                {"name" : "deviceSubtype", "type" : "const char*"},
+                {"name" : "device", "type" : "ANARIDevice"},
                 {"name" : "objectSubtype", "type" : "const char*"},
                 {"name" : "objectType", "type" : "ANARIDataType"},
                 {"name" : "parameterName", "type" : "const char*"},

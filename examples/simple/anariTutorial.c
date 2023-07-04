@@ -141,9 +141,29 @@ int main(int argc, const char **argv)
       printf("  - %s\n", *d);
   }
 
+  // populate a set of feature variables (this is a utility and not part of the
+  // core api)
+  ANARIFeatures features;
+  if (anariGetDeviceFeatureStruct(
+          &features, lib, "default")) {
+    printf("WARNING: library didn't return feature list\n");
+  }
+
+  if (!features.ANARI_KHR_GEOMETRY_TRIANGLE)
+    printf("WARNING: device doesn't support ANARI_KHR_GEOMETRY_TRIANGLE\n");
+  if (!features.ANARI_KHR_CAMERA_PERSPECTIVE)
+    printf("WARNING: device doesn't support ANARI_KHR_CAMERA_PERSPECTIVE\n");
+  if (!features.ANARI_KHR_LIGHT_DIRECTIONAL)
+    printf("WARNING: device doesn't support ANARI_KHR_LIGHT_DIRECTIONAL\n");
+  if (!features.ANARI_KHR_MATERIAL_MATTE)
+    printf("WARNING: device doesn't support ANARI_KHR_MATERIAL_MATTE\n");
+
+  // the remaining queries have to use a device
+  ANARIDevice dev = anariNewDevice(lib, "default");
+
   // query available renderers
   const char **renderers =
-      anariGetObjectSubtypes(lib, "default", ANARI_RENDERER);
+      anariGetObjectSubtypes(dev, ANARI_RENDERER);
   if (!renderers) {
     puts("No renderers available!");
     return 1;
@@ -154,8 +174,7 @@ int main(int argc, const char **argv)
     printf("  - %s\n", *r);
 
   // inspect default renderer parameters
-  const ANARIParameter *rendererParams = anariGetObjectInfo(lib,
-      "default",
+  const ANARIParameter *rendererParams = anariGetObjectInfo(dev,
       "default",
       ANARI_RENDERER,
       "parameter",
@@ -166,16 +185,14 @@ int main(int argc, const char **argv)
   } else {
     puts("Parameters of default renderer:");
     for (const ANARIParameter *p = rendererParams; p->name != NULL; p++) {
-      const char *desc = anariGetParameterInfo(lib,
-          "default",
+      const char *desc = anariGetParameterInfo(dev,
           "default",
           ANARI_RENDERER,
           p->name,
           p->type,
           "description",
           ANARI_STRING);
-      const int *required = anariGetParameterInfo(lib,
-          "default",
+      const int *required = anariGetParameterInfo(dev,
           "default",
           ANARI_RENDERER,
           p->name,
@@ -189,25 +206,6 @@ int main(int argc, const char **argv)
           desc);
     }
   }
-
-  // populate a set of feature variables (this is a utility and not part of the
-  // core api)
-  ANARIFeatures features;
-  if (anariGetObjectFeatures(
-          &features, lib, "default", "default", ANARI_DEVICE)) {
-    printf("WARNING: library didn't return feature list\n");
-  }
-
-  if (!features.ANARI_KHR_GEOMETRY_TRIANGLE)
-    printf("WARNING: device doesn't support ANARI_KHR_GEOMETRY_TRIANGLE\n");
-  if (!features.ANARI_KHR_CAMERA_PERSPECTIVE)
-    printf("WARNING: device doesn't support ANARI_KHR_CAMERA_PERSPECTIVE\n");
-  if (!features.ANARI_KHR_LIGHT_DIRECTIONAL)
-    printf("WARNING: device doesn't support ANARI_KHR_LIGHT_DIRECTIONAL\n");
-  if (!features.ANARI_KHR_MATERIAL_MATTE)
-    printf("WARNING: device doesn't support ANARI_KHR_MATERIAL_MATTE\n");
-
-  ANARIDevice dev = anariNewDevice(lib, "default");
 
   if (!dev) {
     printf("\n\nERROR: could not load default device in example library\n");

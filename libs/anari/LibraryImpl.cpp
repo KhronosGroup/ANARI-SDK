@@ -235,28 +235,12 @@ LibraryImpl::LibraryImpl(const char *name,
   if (getDeviceSubtypesFcn)
     m_getDeviceSubtypesFcn = getDeviceSubtypesFcn;
 
-  std::string getObjectSubtypesFcnName = prefix + "_get_object_subtypes";
-  auto getObjectSubtypesFcn =
-      (GetObjectSubtypesFcn)getSymbolAddress(m_lib, getObjectSubtypesFcnName);
+  std::string getDeviceFeaturesFcnName = prefix + "_get_device_features";
+  auto getDeviceFeaturesFcn =
+      (GetDeviceFeaturesFcn)getSymbolAddress(m_lib, getDeviceFeaturesFcnName);
 
-  if (getObjectSubtypesFcn)
-    m_getObjectSubtypesFcn = getObjectSubtypesFcn;
-
-  std::string getObjectPropertyFcnName = prefix + "_get_object_property";
-  auto getObjectPropertyFcn =
-      (GetObjectPropertyFcn)getSymbolAddress(m_lib, getObjectPropertyFcnName);
-
-  if (getObjectPropertyFcn)
-    m_getObjectPropertyFcn = getObjectPropertyFcn;
-
-  std::string getObjectParameterPropertyFcnName =
-      prefix + "_get_parameter_property";
-  auto getObjectParameterPropertyFcn =
-      (GetObjectParameterPropertyFcn)getSymbolAddress(
-          m_lib, getObjectParameterPropertyFcnName);
-
-  if (getObjectParameterPropertyFcn)
-    m_getObjectParameterPropertyFcn = getObjectParameterPropertyFcn;
+  if (getDeviceFeaturesFcn)
+    m_getDeviceFeaturesFcn = getDeviceFeaturesFcn;
 
   auto devices = getDeviceSubtypes();
   if (devices && devices[0])
@@ -315,48 +299,10 @@ const char **LibraryImpl::getDeviceSubtypes()
   return nullptr;
 }
 
-const char **LibraryImpl::getObjectSubtypes(
-    const char *deviceSubtype, ANARIDataType objectType)
+const char **LibraryImpl::getDeviceFeatures(const char *deviceType)
 {
-  if (m_getObjectSubtypesFcn)
-    return m_getObjectSubtypesFcn(
-        (ANARILibrary)this, deviceSubtype, objectType);
-  return nullptr;
-}
-
-const void *LibraryImpl::getObjectProperty(const char *deviceSubtype,
-    const char *objectSubtype,
-    ANARIDataType objectType,
-    const char *propertyName,
-    ANARIDataType propertyType)
-{
-  if (m_getObjectPropertyFcn)
-    return m_getObjectPropertyFcn((ANARILibrary)this,
-        deviceSubtype,
-        objectSubtype,
-        objectType,
-        propertyName,
-        propertyType);
-  return nullptr;
-}
-
-const void *LibraryImpl::getParameterProperty(const char *deviceSubtype,
-    const char *objectSubtype,
-    ANARIDataType objectType,
-    const char *parameterName,
-    ANARIDataType parameterType,
-    const char *propertyName,
-    ANARIDataType propertyType)
-{
-  if (m_getObjectParameterPropertyFcn)
-    return m_getObjectParameterPropertyFcn((ANARILibrary)this,
-        deviceSubtype,
-        objectSubtype,
-        objectType,
-        parameterName,
-        parameterType,
-        propertyName,
-        propertyType);
+  if (m_getDeviceFeaturesFcn)
+    return m_getDeviceFeaturesFcn((ANARILibrary)this, deviceType);
   return nullptr;
 }
 
