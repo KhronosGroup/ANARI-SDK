@@ -451,20 +451,27 @@ inline void discard(Device d, Frame f)
 
 namespace feature {
 
-inline Features getObjectFeatures(Library l,
-    const char *device,
+inline Features getDeviceFeatureStruct(Library l,
+    const char *device)
+{
+  Features f;
+  anariGetDeviceFeatureStruct(&f, l, device);
+  return f;
+}
+
+inline Features getObjectFeatureStruct(Device d,
     const char *objectSubtype,
     DataType objectType)
 {
   Features f;
-  anariGetObjectFeatures(&f, l, device, objectSubtype, objectType);
+  anariGetObjectFeatureStruct(&f, d, objectSubtype, objectType);
   return f;
 }
 
-inline Features getInstanceFeatures(Device d, Object o)
+inline Features getInstanceFeatureStruct(Device d, Object o)
 {
   Features f;
-  anariGetInstanceFeatures(&f, d, o);
+  anariGetInstanceFeatureStruct(&f, d, o);
   return f;
 }
 

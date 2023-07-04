@@ -168,6 +168,47 @@ int SinkDevice::getProperty(
   return 0;
 }
 
+const char **query_object_types(ANARIDataType type);
+const void *query_object_info(ANARIDataType type,
+    const char *subtype,
+    const char *infoName,
+    ANARIDataType infoType);
+const void *query_param_info(ANARIDataType type,
+    const char *subtype,
+    const char *paramName,
+    ANARIDataType paramType,
+    const char *infoName,
+    ANARIDataType infoType);
+
+const char ** SinkDevice::getObjectSubtypes(ANARIDataType objectType)
+{
+  return anari::sink_device::query_object_types(objectType);
+}
+
+const void* SinkDevice::getObjectInfo(const char* objectSubtype,
+    ANARIDataType objectType,
+    const char* infoName,
+    ANARIDataType infoType)
+{
+  return anari::sink_device::query_object_info(
+      objectType, objectSubtype, infoName, infoType);
+}
+
+const void* SinkDevice::getParameterInfo(const char* objectSubtype,
+    ANARIDataType objectType,
+    const char* parameterName,
+    ANARIDataType parameterType,
+    const char* infoName,
+    ANARIDataType infoType)
+{
+  return anari::sink_device::query_param_info(objectType,
+      objectSubtype,
+      parameterName,
+      parameterType,
+      infoName,
+      infoType);
+}
+
 // Object + Parameter Lifetime Management /////////////////////////////////////
 
 struct FrameData
@@ -333,17 +374,7 @@ SinkDevice::SinkDevice(ANARILibrary library) : DeviceImpl(library)
   nextHandle<ANARIObject>(); // insert a handle at 0
 }
 
-const char **query_object_types(ANARIDataType type);
-const void *query_object_info(ANARIDataType type,
-    const char *subtype,
-    const char *infoName,
-    ANARIDataType infoType);
-const void *query_param_info(ANARIDataType type,
-    const char *subtype,
-    const char *paramName,
-    ANARIDataType paramType,
-    const char *infoName,
-    ANARIDataType infoType);
+const char ** query_extensions();
 
 } // namespace sink_device
 } // namespace anari
@@ -366,45 +397,10 @@ extern "C" SINK_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_DEVICE_SUBTYPES(
   return devices;
 }
 
-extern "C" SINK_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_SUBTYPES(
-    sink, library, deviceSubtype, objectType)
+extern "C" SINK_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_DEVICE_FEATURES(
+    sink, library, deviceSubtype)
 {
   (void)library;
   (void)deviceSubtype;
-  return anari::sink_device::query_object_types(objectType);
-}
-
-extern "C" SINK_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_PROPERTY(sink,
-    library,
-    deviceSubtype,
-    objectSubtype,
-    objectType,
-    propertyName,
-    propertyType)
-{
-  (void)library;
-  (void)deviceSubtype;
-  return anari::sink_device::query_object_info(
-      objectType, objectSubtype, propertyName, propertyType);
-}
-
-extern "C" SINK_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_PARAMETER_PROPERTY(
-    sink,
-    library,
-    deviceSubtype,
-    objectSubtype,
-    objectType,
-    parameterName,
-    parameterType,
-    propertyName,
-    propertyType)
-{
-  (void)library;
-  (void)deviceSubtype;
-  return anari::sink_device::query_param_info(objectType,
-      objectSubtype,
-      parameterName,
-      parameterType,
-      propertyName,
-      propertyType);
+  return (const char**)anari::sink_device::query_extensions();
 }

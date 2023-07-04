@@ -483,6 +483,38 @@ ANARIWorld DebugDevice::newWorld()
   return result;
 }
 
+
+// todo: maybe add serialization for these?
+const char ** DebugDevice::getObjectSubtypes(ANARIDataType objectType)
+{
+  return anariGetObjectSubtypes(wrapped, objectType);
+}
+
+const void* DebugDevice::getObjectInfo(const char* objectSubtype,
+    ANARIDataType objectType,
+    const char* infoName,
+    ANARIDataType infoType)
+{
+  return anariGetObjectInfo(wrapped, objectSubtype, objectType, infoName, infoType);
+}
+
+const void* DebugDevice::getParameterInfo(const char* objectSubtype,
+    ANARIDataType objectType,
+    const char* parameterName,
+    ANARIDataType parameterType,
+    const char* infoName,
+    ANARIDataType infoType)
+{
+  return anariGetParameterInfo(wrapped,
+      objectSubtype,
+      objectType,
+      parameterName,
+      parameterType,
+      infoName,
+      infoType);
+}
+
+
 int DebugDevice::getProperty(ANARIObject object,
     const char *name,
     ANARIDataType type,
@@ -1065,33 +1097,11 @@ extern "C" DEBUG_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_DEVICE_SUBTYPES(
   return devices;
 }
 
-extern "C" DEBUG_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_SUBTYPES(
-    debug, library, deviceSubtype, objectType)
+extern "C" DEBUG_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_DEVICE_FEATURES(
+    debug, library, deviceType)
 {
   (void)library;
-  (void)deviceSubtype;
-  (void)objectType;
-  return nullptr;
-}
-
-extern "C" DEBUG_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_PARAMETER_PROPERTY(
-    debug,
-    library,
-    deviceSubtype,
-    objectSubtype,
-    objectType,
-    parameterName,
-    parameterType,
-    propertyName,
-    propertyType)
-{
-  (void)library;
-  (void)deviceSubtype;
-  (void)objectSubtype;
-  (void)objectType;
-  (void)parameterName;
-  (void)parameterType;
-  (void)propertyName;
-  (void)propertyType;
-  return nullptr;
+  (void)deviceType;
+  static const char *features[] = {nullptr};
+  return features;
 }

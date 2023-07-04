@@ -156,33 +156,34 @@ extern "C" const char **anariGetDeviceSubtypes(ANARILibrary l) ANARI_CATCH_BEGIN
 }
 ANARI_CATCH_END(nullptr)
 
-extern "C" const char **anariGetObjectSubtypes(ANARILibrary l,
-    const char *deviceSubtype,
-    ANARIDataType objectType) ANARI_CATCH_BEGIN
+extern "C" const char **anariGetDeviceFeatures(ANARILibrary l,
+  const char* deviceSubtype) ANARI_CATCH_BEGIN
 {
-  if (std::string(deviceSubtype) == "default")
-    deviceSubtype = libraryRef(l).defaultDeviceName();
-  return libraryRef(l).getObjectSubtypes(deviceSubtype, objectType);
+  return libraryRef(l).getDeviceFeatures(deviceSubtype);
 }
 ANARI_CATCH_END(nullptr)
 
-extern "C" const void *anariGetObjectInfo(ANARILibrary l,
-    const char *deviceSubtype,
+extern "C" const char **anariGetObjectSubtypes(ANARIDevice d,
+    ANARIDataType objectType) ANARI_CATCH_BEGIN
+{
+  return deviceRef(d).getObjectSubtypes(objectType);
+}
+ANARI_CATCH_END(nullptr)
+
+extern "C" const void *anariGetObjectInfo(ANARIDevice d,
     const char *objectSubtype,
     ANARIDataType objectType,
     const char *infoName,
     ANARIDataType infoType) ANARI_CATCH_BEGIN
 {
-  if (std::string(deviceSubtype) == "default")
-    deviceSubtype = libraryRef(l).defaultDeviceName();
-
-  return libraryRef(l).getObjectProperty(
-      deviceSubtype, objectSubtype, objectType, infoName, infoType);
+  return deviceRef(d).getObjectInfo(objectSubtype,
+      objectType,
+      infoName,
+      infoType);
 }
 ANARI_CATCH_END(nullptr)
 
-extern "C" const void *anariGetParameterInfo(ANARILibrary l,
-    const char *deviceSubtype,
+extern "C" const void *anariGetParameterInfo(ANARIDevice d,
     const char *objectSubtype,
     ANARIDataType objectType,
     const char *parameterName,
@@ -190,11 +191,7 @@ extern "C" const void *anariGetParameterInfo(ANARILibrary l,
     const char *infoName,
     ANARIDataType infoType) ANARI_CATCH_BEGIN
 {
-  if (std::string(deviceSubtype) == "default")
-    deviceSubtype = libraryRef(l).defaultDeviceName();
-
-  return libraryRef(l).getParameterProperty(deviceSubtype,
-      objectSubtype,
+  return deviceRef(d).getParameterInfo(objectSubtype,
       objectType,
       parameterName,
       parameterType,

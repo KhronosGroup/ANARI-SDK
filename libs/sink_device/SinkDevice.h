@@ -88,6 +88,20 @@ struct SINK_DEVICE_INTERFACE SinkDevice : public DeviceImpl, public helium::RefC
 
   ANARIWorld newWorld() override;
 
+  // Query functions //////////////////////////////////////////////////////////
+
+  const char ** getObjectSubtypes(ANARIDataType objectType) override;
+  const void* getObjectInfo(const char* objectSubtype,
+      ANARIDataType objectType,
+      const char* infoName,
+      ANARIDataType infoType) override;
+  const void* getParameterInfo(const char* objectSubtype,
+      ANARIDataType objectType,
+      const char* parameterName,
+      ANARIDataType parameterType,
+      const char* infoName,
+      ANARIDataType infoType) override;
+
   // Object + Parameter Lifetime Management ///////////////////////////////////
 
   int getProperty(ANARIObject object,

@@ -136,6 +136,18 @@ struct ANARI_INTERFACE DeviceImpl
       uint64_t size,
       ANARIWaitMask mask) = 0;
 
+  virtual const char ** getObjectSubtypes(ANARIDataType objectType) = 0;
+  virtual const void* getObjectInfo(const char* objectSubtype,
+      ANARIDataType objectType,
+      const char* infoName,
+      ANARIDataType infoType) = 0;
+  virtual const void* getParameterInfo(const char* objectSubtype,
+      ANARIDataType objectType,
+      const char* parameterName,
+      ANARIDataType parameterType,
+      const char* infoName,
+      ANARIDataType infoType) = 0;
+
   // FrameBuffer Manipulation /////////////////////////////////////////////////
 
   virtual ANARIFrame newFrame() = 0;

@@ -245,6 +245,49 @@ int HelideDevice::getProperty(ANARIObject object,
   return 0;
 }
 
+// Queries
+
+const char **query_object_types(ANARIDataType type);
+const void *query_object_info(ANARIDataType type,
+    const char *subtype,
+    const char *infoName,
+    ANARIDataType infoType);
+const void *query_param_info(ANARIDataType type,
+    const char *subtype,
+    const char *paramName,
+    ANARIDataType paramType,
+    const char *infoName,
+    ANARIDataType infoType);
+
+const char ** HelideDevice::getObjectSubtypes(ANARIDataType objectType)
+{
+  return helide::query_object_types(objectType);
+}
+
+const void* HelideDevice::getObjectInfo(const char* objectSubtype,
+    ANARIDataType objectType,
+    const char* infoName,
+    ANARIDataType infoType)
+{
+  return helide::query_object_info(
+      objectType, objectSubtype, infoName, infoType);
+}
+
+const void* HelideDevice::getParameterInfo(const char* objectSubtype,
+    ANARIDataType objectType,
+    const char* parameterName,
+    ANARIDataType parameterType,
+    const char* infoName,
+    ANARIDataType infoType)
+{
+  return helide::query_param_info(objectType,
+      objectSubtype,
+      parameterName,
+      parameterType,
+      infoName,
+      infoType);
+}
+
 // Frame Manipulation /////////////////////////////////////////////////////////
 
 ANARIFrame HelideDevice::newFrame()
@@ -389,42 +432,12 @@ extern "C" HELIDE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_DEVICE_SUBTYPES(
   return devices;
 }
 
-extern "C" HELIDE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_SUBTYPES(
-    helide, library, deviceSubtype, objectType)
+extern "C" HELIDE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_DEVICE_FEATURES(
+    sink, library, deviceSubtype)
 {
-  return helide::query_object_types(objectType);
-}
-
-extern "C" HELIDE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_PROPERTY(
-    helide,
-    library,
-    deviceSubtype,
-    objectSubtype,
-    objectType,
-    propertyName,
-    propertyType)
-{
-  return helide::query_object_info(
-      objectType, objectSubtype, propertyName, propertyType);
-}
-
-extern "C" HELIDE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_PARAMETER_PROPERTY(
-    helide,
-    library,
-    deviceSubtype,
-    objectSubtype,
-    objectType,
-    parameterName,
-    parameterType,
-    propertyName,
-    propertyType)
-{
-  return helide::query_param_info(objectType,
-      objectSubtype,
-      parameterName,
-      parameterType,
-      propertyName,
-      propertyType);
+  (void)library;
+  (void)deviceSubtype;
+  return (const char**)helide::query_extensions();
 }
 
 extern "C" HELIDE_DEVICE_INTERFACE ANARIDevice anariNewHelideDevice(
