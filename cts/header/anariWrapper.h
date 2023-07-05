@@ -48,8 +48,8 @@ class SceneGeneratorWrapper
   }
 
   void createAnariObject(const std::string &type,
-      const std::string &subtype,
-      std::string ctsType = "")
+      const std::string &subtype = "",
+      const std::string& ctsType = "")
   {
     if (m_sceneGenerator) {
       m_sceneGenerator->createAnariObject(
@@ -131,10 +131,23 @@ class SceneGeneratorWrapper
     }
   }
   
-  void setReferenceParameter(const std::string& objectType, size_t objectIndex, const std::string& paramName, std::string& refType, size_t refIndex) {
+  void setReferenceParameter(const std::string& objectType, size_t objectIndex, const std::string& paramName, const std::string& refType, size_t refIndex) {
     m_sceneGenerator->setReferenceParameter(
         m_sceneGenerator->anariTypeFromString(objectType), objectIndex, paramName,
         m_sceneGenerator->anariTypeFromString(refType), refIndex);
+  }
+  void setReferenceArray(const std::string &objectType,
+      size_t objectIndex,
+      const std::string &paramName,
+      const std::string &refType,
+      const std::vector<size_t>& refIndices)
+  {
+    m_sceneGenerator->setReferenceArray(
+        m_sceneGenerator->anariTypeFromString(objectType),
+        objectIndex,
+        paramName,
+        m_sceneGenerator->anariTypeFromString(refType),
+        refIndices);
   }
 
   void setCurrentObject(std::string &type, size_t index)

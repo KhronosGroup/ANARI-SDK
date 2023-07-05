@@ -331,8 +331,8 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                             for idx, item in enumerate(array):
                                 subtype = None
                                 if "subtype" not in item:
-                                    # Renderer subtype is user-defined
-                                    if anariObjectName == "renderer":
+                                    # Renderer subtype is user-defined/instance, group and surface do not have a subtype
+                                    if anariObjectName == "renderer" or anariObjectName == "instance" or anariObjectName == "group" or anariObjectName == "surface":
                                         subtype = anari_renderer
                                     else:
                                         # If no subtype is present no object is generated. This can be used prevent the initialization of default scene objects
@@ -352,6 +352,13 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                                     if isinstance(paramValue, str) and paramValue.startswith("ref_"):
                                         stringArray = paramValue.split('_')
                                         references.append([anariObjectName, idx, paramName, stringArray[1], int(stringArray[2])])
+                                    elif isinstance(paramValue, list) and all(isinstance(elem, str) and elem.startswith("ref_") for elem in paramValue):
+                                        refList = []
+                                        stringArray = []
+                                        for elem in paramValue:
+                                            stringArray = elem.split('_')
+                                            refList.append(int(stringArray[2]))
+                                        references.append([anariObjectName, idx, paramName, stringArray[1], refList])
                                     elif paramValue is None:
                                         sceneGenerator.unsetGenericParameter(paramName)
                                     elif isinstance(paramValue, dict):
@@ -420,6 +427,13 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                                 if (isinstance(permutation[i], str) and permutation[i].startswith("ref_")):
                                     ref = permutation[i].split('_')
                                     sceneGenerator.setReferenceParameter(pointer[2], int(pointer[3]), pointer[4], ref[1], int(ref[2]))
+                                elif isinstance(permutation[i], list) and all(isinstance(elem, str) and elem.startswith("ref_") for elem in permutation[i]):
+                                        refList = []
+                                        stringArray = []
+                                        for elem in permutation[i]:
+                                            stringArray = elem.split('_')
+                                            refList.append(int(stringArray[2]))
+                                        sceneGenerator.setReferenceParameter(pointer[2], int(pointer[3]), pointer[4], stringArray[1], refList)
                                 else:
                                     sceneGenerator.setCurrentObject(pointer[2], int(pointer[3]))
                                     if permutation[i] is None:

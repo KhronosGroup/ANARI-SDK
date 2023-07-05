@@ -6,6 +6,7 @@
 #include "ColorPalette.h"
 #include "TextureGenerator.h"
 #include "anariWrapper.h"
+#include "anari/frontend/type_utility.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <stdexcept>
@@ -101,6 +102,39 @@ int SceneGenerator::anariTypeFromString(const std::string& type)
   if (type == "spatialField") {
     return ANARI_SPATIAL_FIELD;
   }
+  if (type == "instance") {
+    return ANARI_INSTANCE;
+  }
+  if (type == "group") {
+    return ANARI_GROUP;
+  }
+  if (type == "surface") {
+    return ANARI_SURFACE;
+  }
+  if (type == "UFIXED8_VEC4") {
+    return ANARI_UFIXED8_VEC4;
+  }
+  if (type == "UFIXED8_RGBA_SRGB") {
+    return ANARI_UFIXED8_RGBA_SRGB;
+  }
+  if (type == "FLOAT32_VEC4") {
+    return ANARI_FLOAT32_VEC4;
+  }
+  if (type == "FLOAT32") {
+    return ANARI_FLOAT32;
+  }
+  if (type == "FIXED16_VEC3") {
+    return ANARI_FIXED16_VEC3;
+  }
+  if (type == "FLOAT32_VEC3") {
+    return ANARI_FLOAT32_VEC3;
+  }
+  if (type == "UFIXED8_VEC3") {
+    return ANARI_UFIXED8_VEC3;
+  }
+  if (type == "UINT32") {
+    return ANARI_UINT32;
+  }
   return ANARI_UNKNOWN;
 }
 
@@ -120,6 +154,34 @@ void SceneGenerator::setReferenceParameter(int objectType, size_t objectIndex,
   }
 }
 
+void SceneGenerator::setReferenceArray(int objectType,
+    size_t objectIndex,
+    const std::string &name,
+    int refType,
+    const std::vector<size_t>& refIndices)
+{
+  if (auto itObj = m_anariObjects.find(objectType);
+      itObj != m_anariObjects.end() && objectIndex < itObj->second.size()) {
+    auto object = itObj->second[objectIndex];
+    if (m_device != nullptr) {
+      if (auto itRef = m_anariObjects.find(refType);
+          itRef != m_anariObjects.end()) {
+        std::vector<ANARIObject> references;
+        for (size_t ref : refIndices) {
+          if (ref >= itRef->second.size()) {
+            throw std::runtime_error("Reference index out of range");
+          }
+          references.push_back(itRef->second[ref]);
+        }
+        anari::setAndReleaseParameter(m_device,
+            object,
+            name.c_str(),
+            anari::newArray1D(m_device, references.data(), references.size()));
+      }
+    }
+  }
+}
+
 void SceneGenerator::setCurrentObject(int type, size_t index)
 {
     if (auto it = m_anariObjects.find(type);
@@ -129,7 +191,7 @@ void SceneGenerator::setCurrentObject(int type, size_t index)
 }
 
 void SceneGenerator::createAnariObject(
-    int type, const std::string &subtype, std::string ctsType)
+    int type, const std::string &subtype, const std::string& ctsType)
 {
   ANARIObject object = nullptr;
   switch (type) {
@@ -187,6 +249,27 @@ void SceneGenerator::createAnariObject(
     object = anari::newObject<anari::SpatialField>(m_device, subtype.c_str());
     auto it = m_anariObjects.try_emplace(
         int(ANARI_SPATIAL_FIELD), std::vector<ANARIObject>());
+        it.first->second.emplace_back(object);
+    break;
+  }
+  case ANARI_INSTANCE: {
+    object = anari::newObject<anari::Instance>(m_device);
+    auto it = m_anariObjects.try_emplace(
+        int(ANARI_INSTANCE), std::vector<ANARIObject>());
+    it.first->second.emplace_back(object);
+    break;
+  }
+  case ANARI_GROUP: {
+    object = anari::newObject<anari::Group>(m_device);
+    auto it = m_anariObjects.try_emplace(
+        int(ANARI_GROUP), std::vector<ANARIObject>());
+    it.first->second.emplace_back(object);
+    break;
+  }
+  case ANARI_SURFACE: {
+    object = anari::newObject<anari::Surface>(m_device);
+    auto it = m_anariObjects.try_emplace(
+        int(ANARI_SURFACE), std::vector<ANARIObject>());
     it.first->second.emplace_back(object);
     break;
   }
@@ -279,28 +362,51 @@ void SceneGenerator::commit()
   // build this scene top-down to stress commit ordering guarantees
   // setup lighting, material and empty geometry
 
-  // create geometry
-  ANARIObject geom = nullptr;
-  if (auto it = m_anariObjects.find(ANARI_GEOMETRY);
+  std::vector<ANARIObject> instances;
+  if (auto it = m_anariObjects.find(ANARI_INSTANCE);
       it != m_anariObjects.end() && !it->second.empty()) {
-    geom = it->second.front();
-  } else if (geometrySubtype != "") {
-    createAnariObject(ANARI_GEOMETRY, geometrySubtype);
-    geom = m_currentObject;
+    instances = it->second;
+    anari::setAndReleaseParameter(d,
+        m_world,
+        "instance",
+        anari::newArray1D(d, instances.data(), instances.size()));
   }
 
-  if (geom) {
-    auto surface = anari::newObject<anari::Surface>(d);
-    if (auto it = m_anariObjects.find(int(ANARI_MATERIAL));
-        it != m_anariObjects.end()) {
-      if (!it->second.empty()) {
-        auto mat = it->second.front();
-        anari::setParameter(d, surface, "material", mat);
+  // create geometry
+  std::vector<ANARIObject> geoms;
+  std::vector<ANARIObject> surfaces;
+  if (auto it = m_anariObjects.find(ANARI_GEOMETRY);
+      it != m_anariObjects.end() && !it->second.empty()) {
+    geoms = it->second;
+  } else if (geometrySubtype != "") {
+    createAnariObject(ANARI_GEOMETRY, geometrySubtype);
+    geoms.push_back(m_currentObject);
+  }
+
+  bool createSurfaces = false;
+  auto surfaceIt = m_anariObjects.find(ANARI_SURFACE);
+  if (surfaceIt != m_anariObjects.end() && !surfaceIt->second.empty()) {
+    surfaces = surfaceIt->second;
+  } else {
+    createSurfaces = true;
+  }
+
+  for (size_t i = 0; i < geoms.size(); ++i) {
+    auto geom = geoms[i];
+    if (createSurfaces){
+      createAnariObject(ANARI_SURFACE, "");
+      ANARIObject surface = m_currentObject;
+      anari::setParameter(d, surface, "geometry", geom);
+      surfaces.push_back(surface);
+      if (auto it = m_anariObjects.find(int(ANARI_MATERIAL));
+          it != m_anariObjects.end()) {
+        if (i < it->second.size()) {
+          auto mat = it->second[i];
+          anari::setParameter(d, surface, "material", mat);
+        }
       }
+      anari::commitParameters(d, surface);
     }
-    anari::setAndReleaseParameter(
-        d, m_world, "surface", anari::newArray1D(d, &surface));
-    anari::setParameter(d, surface, "geometry", geom);
 
     // create all geometry depending on subtypes and shapes, indexed or soup
     // parameters vertex.position, vertex.radius, primitive.radius and
@@ -636,50 +742,68 @@ void SceneGenerator::commit()
           "primitive.attribute3",
           anari::newArray1D(d, attributeVec4.data(), attributeVec4.size()));
     }
-
     // commit everything to the device
     anari::commitParameters(d, geom);
-    anari::commitParameters(d, surface);
+  }
 
-    // cleanup
-    anari::release(d, surface);
+  if (!surfaces.empty() && instances.empty()) {
+    anari::setAndReleaseParameter(
+        d, m_world, "surface", anari::newArray1D(d, surfaces.data(), surfaces.size()));
   }
 
   if (spatialFieldDim[0] != 0 && spatialFieldDim[1] != 0
       && spatialFieldDim[2] != 0) {
     // create spatial field
-    ANARIObject volume = nullptr;
-    ANARIObject spatialField = nullptr;
-    if (auto it = m_anariObjects.find(ANARI_SPATIAL_FIELD);
-        it != m_anariObjects.end() && !it->second.empty()) {
-      spatialField = it->second.front();
-    } else {
-      createAnariObject(ANARI_SPATIAL_FIELD, "structuredRegular");
-      spatialField = m_currentObject;
-    }
+    std::vector<ANARIObject> volumes;
+    std::vector<ANARIObject> spatialFields;
+    bool createSpatialFields = false;
+
     if (auto it = m_anariObjects.find(ANARI_VOLUME);
         it != m_anariObjects.end() && !it->second.empty()) {
-      volume = it->second.front();
+      volumes = it->second;
     } else {
       createAnariObject(ANARI_VOLUME, "transferFunction1D");
-      volume = m_currentObject;
-      anari::setParameter(m_device, volume, "field", spatialField);
+      volumes.push_back(m_currentObject);
     }
-    anari::setAndReleaseParameter(
-        d, m_world, "volume", anari::newArray1D(d, &volume));
-    std::vector<float> data = generator.generateAttributeFloat(
-        spatialFieldDim[0] * spatialFieldDim[1] * spatialFieldDim[2]);
-    anari::setAndReleaseParameter(m_device,
-        spatialField,
-        "data",
-        anari::newArray3D(m_device,
-            data.data(),
-            spatialFieldDim[0],
-            spatialFieldDim[1],
-            spatialFieldDim[2]));
 
-    anari::commitParameters(d, spatialField);
-    anari::commitParameters(d, volume);
+    auto fieldIt = m_anariObjects.find(ANARI_SPATIAL_FIELD);
+    if (!volumes.empty()
+        && (fieldIt == m_anariObjects.end() || fieldIt->second.empty())) {
+      createSpatialFields = true;
+    } else {
+      spatialFields = fieldIt->second;
+    }
+
+    for (auto volume : volumes) {
+      if (createSpatialFields) {
+        createAnariObject(ANARI_SPATIAL_FIELD, "structuredRegular");
+        auto spatialField = m_currentObject;
+        anari::setParameter(m_device, volume, "field", spatialField);
+        spatialFields.push_back(spatialField);
+        anari::commitParameters(d, volume);
+      }
+    }
+
+    if (!volumes.empty() && instances.empty()) {
+      anari::setAndReleaseParameter(d,
+          m_world,
+          "volume",
+          anari::newArray1D(d, volumes.data(), volumes.size()));
+    }
+
+    for (auto spatialField : spatialFields) {
+      std::vector<float> data = generator.generateAttributeFloat(
+          static_cast<size_t>(spatialFieldDim[0]) * spatialFieldDim[1] * spatialFieldDim[2]);
+      anari::setAndReleaseParameter(m_device,
+          spatialField,
+          "data",
+          anari::newArray3D(m_device,
+              data.data(),
+              spatialFieldDim[0],
+              spatialFieldDim[1],
+              spatialFieldDim[2]));
+      anari::commitParameters(d, spatialField);
+    }
   }
 
 
@@ -694,18 +818,30 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
   // gather previously set parameters for rendering this scene
   size_t image_height = getParam<int32_t>("image_height", 1024);
   size_t image_width = getParam<int32_t>("image_width", 1024);
-
-  std::string color_type_param = getParamString("frame_color_type", "");
-  int componentBytes = 1;
-  ANARIDataType color_type = ANARI_UNKNOWN;
-  if (color_type_param == "UFIXED8_RGBA_SRGB") {
-    color_type = ANARI_UFIXED8_RGBA_SRGB;
-  } else if (color_type_param == "FLOAT32_VEC4") {
-    color_type = ANARI_FLOAT32_VEC4;
-    componentBytes = 4;
-  } else if (color_type_param == "UFIXED8_VEC4") {
-    color_type = ANARI_UFIXED8_VEC4;
+  std::string channelName = "";
+  ANARIDataType color_type;
+  bool normalChannel = false;
+  std::string channel_type_param = getParamString("frame_instanceId_type", "");
+  if (!channel_type_param.empty()) {
+    channelName = "channel.instanceId";
+  } else if (channel_type_param = getParamString("frame_normal_type", "");
+             !channel_type_param.empty()) {
+    channelName = "channel.normal";
+    normalChannel = true;
+  } else if (channel_type_param = getParamString("frame_albedo_type", "");
+             !channel_type_param.empty()) {
+    channelName = "channel.albedo";
+  } else if (channel_type_param = getParamString("frame_primitiveId_type", "");
+             !channel_type_param.empty()) {
+    channelName = "channel.primitiveId";
+  } else if (channel_type_param = getParamString("frame_objectId_type", "");
+             !channel_type_param.empty()) {
+    channelName = "channel.objectId";
+  } else if (channel_type_param = getParamString("frame_color_type", "");
+             !channel_type_param.empty()) {
+    channelName = "channel.color";
   }
+  color_type = anariTypeFromString(channel_type_param);
 
   std::string depth_type_param = getParamString("frame_depth_type", "");
 
@@ -740,7 +876,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
   auto frame = anari::newObject<anari::Frame>(m_device);
   anari::setParameter(m_device, frame, "size", glm::uvec2(image_height, image_width));
   if (color_type != ANARI_UNKNOWN) {
-    anari::setParameter(m_device, frame, "channel.color", color_type);
+    anari::setParameter(m_device, frame, channelName.c_str(), color_type);
   }
   if (depth_type_param == "FLOAT32") {
     anari::setParameter(m_device, frame, "channel.depth", ANARI_FLOAT32);
@@ -805,7 +941,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
     if (fb.data != nullptr) {
       firstImage.assign(fb.data, fb.data + image_height * image_width);
     } else {
-      printf("%s not supported\n", color_type_param.c_str());
+      printf("%s not supported\n", channel_type_param.c_str());
     }
     anari::unmap(m_device, frame, "channel.color");
 
@@ -817,7 +953,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
     if (fb.data != nullptr) {
       accumulatedImage.assign(fb.data, fb.data + image_height * image_width);
     } else {
-      printf("%s not supported\n", color_type_param.c_str());
+      printf("%s not supported\n", channel_type_param.c_str());
     }
     anari::unmap(m_device, frame, "channel.color");
 
@@ -860,37 +996,112 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
     anari::wait(m_device, frame);
   }
 
+  size_t componentCount = anari::componentsOf(color_type);
   // handle color output
   if (color_type != ANARI_UNKNOWN) {
-    if (color_type == ANARI_FLOAT32_VEC4) {
+    if (color_type == ANARI_FLOAT32_VEC4 || color_type == ANARI_FLOAT32_VEC3) {
       // handling of float data type
-      const float *pixels = anari::map<float>(m_device, frame, "channel.color").data;
+      const float *pixels = anari::map<float>(m_device, frame, channelName.c_str()).data;
       std::vector<uint32_t> converted;
       if (pixels != nullptr) {
         for (int i = 0; i < image_height * image_width; ++i) {
           uint32_t rgba = 0;
-          for (int j = 0; j < componentBytes; ++j) {
-            uint8_t colorValue =
-                static_cast<uint8_t>(pixels[i * componentBytes + j] * 255.0f);
+          for (int j = 0; j < 4; ++j) {
+            uint8_t colorValue = j == 4 ? 255 : 0;
+            if (j <= componentCount) {
+              if (normalChannel) {
+                colorValue = static_cast<uint8_t>(
+                    TextureGenerator::convertNormalToColor(pixels[i * componentCount + j], j == 3) * 255.0f);
+              } else {
+                colorValue = static_cast<uint8_t>(
+                    pixels[i * componentCount + j] * 255.0f);
+              }
+            }               
             rgba += colorValue << (8 * j);
           }
           converted.push_back(rgba);
         }
       } else {
-        printf("%s not supported\n", color_type_param.c_str());
+        printf("%s not supported\n", channel_type_param.c_str());
       }
 
       result.emplace_back(converted);
-      anari::unmap(m_device, frame, "channel.color");
+      anari::unmap(m_device, frame, channelName.c_str());
     } else {
-      // handling of other types
-      auto fb = anari::map<uint32_t>(m_device, frame, "channel.color");
-      if (fb.data != nullptr) {
-        result.emplace_back(fb.data, fb.data + image_height * image_width);
-      } else {
-        printf("%s not supported\n", color_type_param.c_str());
+      if (componentCount == 4
+          && anari::sizeOf(color_type) == sizeof(uint32_t)) {
+        // handling of other types
+        const uint32_t* pixels = anari::map<uint32_t>(m_device, frame, channelName.c_str()).data;
+        if (pixels != nullptr) {
+          result.emplace_back(pixels, pixels + image_height * image_width);
+        } else {
+          printf("%s not supported\n", channel_type_param.c_str());
+        }
+        anari::unmap(m_device, frame, channelName.c_str());
+      } else if (color_type == ANARI_UINT32) {
+        const uint32_t *pixels = anari::map<uint32_t>(m_device, frame, channelName.c_str()).data;
+        std::vector<uint32_t> converted;
+        if (pixels != nullptr) {
+          for (int i = 0; i < image_height * image_width; ++i) {
+            auto colorValue = colors::getColorFromPalette(pixels[i]);
+            uint32_t rgba = (255 << 24)
+                + (static_cast<uint8_t>(colorValue.b * 255.0f) << 16)
+                + (static_cast<uint8_t>(colorValue.g * 255.0f) << 8)
+                + static_cast<uint8_t>(colorValue.r * 255.0f);
+            converted.push_back(rgba);
+          }
+        } else {
+          printf("%s not supported\n", channel_type_param.c_str());
+        }
+        result.emplace_back(converted);
+        anari::unmap(m_device, frame, channelName.c_str());
+      } else if (anari::sizeOf(color_type) / componentCount == sizeof(char)) {
+        // 8bit component
+        const uint8_t *pixels =
+            anari::map<uint8_t>(m_device, frame, channelName.c_str()).data;
+        std::vector<uint32_t> converted;
+        if (pixels != nullptr) {
+          for (int i = 0; i < image_height * image_width; ++i) {
+            uint32_t rgba = 0;
+            for (int j = 0; j < 4; ++j) {
+              uint8_t colorValue = j == 4 ? 255 : 0;
+              if (j <= componentCount) {
+                colorValue = pixels[i * componentCount + j];
+              }
+              rgba += colorValue << (8 * j);
+            }
+            converted.push_back(rgba);
+          }
+        } else {
+          printf("%s not supported\n", channel_type_param.c_str());
+        }
+
+        result.emplace_back(converted);
+        anari::unmap(m_device, frame, channelName.c_str());
+      } else if (anari::sizeOf(color_type) / componentCount == sizeof(char) * 2) {
+        // 16bit component
+        const int16_t *pixels =
+            anari::map<int16_t>(m_device, frame, channelName.c_str()).data;
+        std::vector<uint32_t> converted;
+        if (pixels != nullptr) {
+          for (int i = 0; i < image_height * image_width; ++i) {
+            uint32_t rgba = 0;
+            for (int j = 0; j < 4; ++j) {
+              uint8_t colorValue = j == 4 ? 255 : 0;
+              if (j <= componentCount) {
+                colorValue = TextureGenerator::convertShortNormalToColor(pixels[i * componentCount + j], j == 3);
+              }
+              rgba += colorValue << (8 * j);
+            }
+            converted.push_back(rgba);
+          }
+        } else {
+          printf("%s not supported\n", channel_type_param.c_str());
+        }
+
+        result.emplace_back(converted);
+        anari::unmap(m_device, frame, channelName.c_str());
       }
-      anari::unmap(m_device, frame, "channel.color");
     }
   } else {
     // no color rendered
@@ -994,7 +1205,7 @@ std::vector<std::vector<std::vector<std::vector<float>>>> SceneGenerator::getBou
       anari::getProperty(m_device, instance, "bounds", anariInstanceBounds);
       for (const auto &bound : anariInstanceBounds) {
         std::vector<float> &vector = singleBound.emplace_back();
-        for (int i = 0; i < anari::length(bound); ++i) {
+        for (int i = 0; i < 3; ++i) {
           vector.push_back(bound[i]);
         }
       }
@@ -1009,7 +1220,7 @@ std::vector<std::vector<std::vector<std::vector<float>>>> SceneGenerator::getBou
       anari::getProperty(m_device, group, "bounds", anariGroupBounds);
       for (const auto &bound : anariGroupBounds) {
         std::vector<float> &vector = singleBound.emplace_back();
-        for (int i = 0; i < anari::length(bound); ++i) {
+        for (int i = 0; i < 3; ++i) {
           vector.push_back(bound[i]);
         }
       }
