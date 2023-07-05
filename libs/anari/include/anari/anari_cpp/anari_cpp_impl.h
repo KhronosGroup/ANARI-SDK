@@ -349,7 +349,16 @@ inline void setParameterArray1D(
 {
   uint64_t elementStride;
   if(void *mem = anariMapParameterArray1D(d, o, name, type, numElements1, &elementStride)) {
-    std::memcpy(mem, v, anari::sizeOf(type)*numElements1);
+    uint64_t elementSize = anari::sizeOf(type);
+    if(elementStride == 0) {
+      std::memcpy(mem, v, elementSize*numElements1);
+    } else {
+      char *cmem = (char*)mem;
+      const char *cv = (const char*)v;
+      for(uint64_t i = 0;i<numElements1;++i) {
+        std::memcpy(cmem+elementStride*i, cv+elementSize*i, elementSize);
+      }
+    }
     anariUnmapParameterArray(d, o, name);
   }
 }
@@ -360,7 +369,15 @@ inline void setParameterArray1D(
 {
   uint64_t elementStride;
   if(void *mem = anariMapParameterArray1D(d, o, name, ANARITypeFor<T>::value, numElements1, &elementStride)) {
-    std::memcpy(mem, v, sizeof(T)*numElements1);
+    uint64_t elementSize = sizeof(T);
+    if(elementStride == 0) {
+      std::memcpy(mem, v, elementSize*numElements1);
+    } else {
+      char *cmem = (char*)mem;
+      for(uint64_t i = 0;i<numElements1;++i) {
+        std::memcpy(cmem+elementStride*i, v+i, elementSize);
+      }
+    }
     anariUnmapParameterArray(d, o, name);
   }
 }
