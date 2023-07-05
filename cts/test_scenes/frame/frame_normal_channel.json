@@ -1,0 +1,30 @@
+{
+  "sceneParameters": {
+    "primitiveCount": 1,
+    "seed": 12345,
+    "color": "vertex.color",
+    "anari_objects": {
+      "geometry": [
+        {
+          "subtype": "triangle",
+          "vertex.normal": {"Array1D": [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]}
+        }
+      ],
+      "material": [
+        {
+          "subtype": "matte",
+          "color": "color"
+        }
+      ]
+    }
+  },
+  "permutations": {
+    "frame_normal_type": [
+      "FIXED16_VEC3",
+      "FLOAT32_VEC3"
+    ]
+  },
+  "_requiredFeatures": [
+    "ANARI_KHR_FRAME_CHANNEL_NORMAL"
+  ]
+}
