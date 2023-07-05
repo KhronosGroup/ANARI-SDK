@@ -490,24 +490,24 @@ const char ** DebugDevice::getObjectSubtypes(ANARIDataType objectType)
   return anariGetObjectSubtypes(wrapped, objectType);
 }
 
-const void* DebugDevice::getObjectInfo(const char* objectSubtype,
-    ANARIDataType objectType,
+const void* DebugDevice::getObjectInfo(ANARIDataType objectType,
+    const char* objectSubtype,
     const char* infoName,
     ANARIDataType infoType)
 {
-  return anariGetObjectInfo(wrapped, objectSubtype, objectType, infoName, infoType);
+  return anariGetObjectInfo(wrapped, objectType, objectSubtype, infoName, infoType);
 }
 
-const void* DebugDevice::getParameterInfo(const char* objectSubtype,
-    ANARIDataType objectType,
+const void* DebugDevice::getParameterInfo(ANARIDataType objectType,
+    const char* objectSubtype,
     const char* parameterName,
     ANARIDataType parameterType,
     const char* infoName,
     ANARIDataType infoType)
 {
   return anariGetParameterInfo(wrapped,
-      objectSubtype,
       objectType,
+      objectSubtype,
       parameterName,
       parameterType,
       infoName,

@@ -137,12 +137,12 @@ struct ANARI_INTERFACE DeviceImpl
       ANARIWaitMask mask) = 0;
 
   virtual const char ** getObjectSubtypes(ANARIDataType objectType) = 0;
-  virtual const void* getObjectInfo(const char* objectSubtype,
-      ANARIDataType objectType,
+  virtual const void* getObjectInfo(ANARIDataType objectType,
+      const char* objectSubtype,
       const char* infoName,
       ANARIDataType infoType) = 0;
-  virtual const void* getParameterInfo(const char* objectSubtype,
-      ANARIDataType objectType,
+  virtual const void* getParameterInfo(ANARIDataType objectType,
+      const char* objectSubtype,
       const char* parameterName,
       ANARIDataType parameterType,
       const char* infoName,

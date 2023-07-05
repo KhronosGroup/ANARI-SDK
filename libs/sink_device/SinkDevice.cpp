@@ -185,8 +185,8 @@ const char ** SinkDevice::getObjectSubtypes(ANARIDataType objectType)
   return anari::sink_device::query_object_types(objectType);
 }
 
-const void* SinkDevice::getObjectInfo(const char* objectSubtype,
-    ANARIDataType objectType,
+const void* SinkDevice::getObjectInfo(ANARIDataType objectType,
+    const char* objectSubtype,
     const char* infoName,
     ANARIDataType infoType)
 {
@@ -194,8 +194,8 @@ const void* SinkDevice::getObjectInfo(const char* objectSubtype,
       objectType, objectSubtype, infoName, infoType);
 }
 
-const void* SinkDevice::getParameterInfo(const char* objectSubtype,
-    ANARIDataType objectType,
+const void* SinkDevice::getParameterInfo(ANARIDataType objectType,
+    const char* objectSubtype,
     const char* parameterName,
     ANARIDataType parameterType,
     const char* infoName,

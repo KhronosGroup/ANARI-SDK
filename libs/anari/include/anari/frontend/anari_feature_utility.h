@@ -44,7 +44,7 @@ typedef struct {
    int ANARI_EXP_VOLUME_SAMPLE_RATE;
 } ANARIFeatures;
 int anariGetDeviceFeatureStruct(ANARIFeatures *features, ANARILibrary library, const char *deviceName);
-int anariGetObjectFeatureStruct(ANARIFeatures *features, ANARIDevice device, const char *objectName, ANARIDataType objectType);
+int anariGetObjectFeatureStruct(ANARIFeatures *features, ANARIDevice device, ANARIDataType objectType, const char *objectName);
 int anariGetInstanceFeatureStruct(ANARIFeatures *features, ANARIDevice device, ANARIObject object);
 #ifdef ANARI_FEATURE_UTILITY_IMPL
 #include <string.h>
@@ -122,8 +122,8 @@ int anariGetDeviceFeatureStruct(ANARIFeatures *features, ANARILibrary library, c
         return 1;
     }
 }
-int anariGetObjectFeatureStruct(ANARIFeatures *features, ANARIDevice device, const char *objectName, ANARIDataType objectType) {
-    const char *const *list = (const char *const *)anariGetObjectInfo(device, objectName, objectType, "feature", ANARI_STRING_LIST);
+int anariGetObjectFeatureStruct(ANARIFeatures *features, ANARIDevice device, ANARIDataType objectType, const char *objectName) {
+    const char *const *list = (const char *const *)anariGetObjectInfo(device, objectType, objectName, "feature", ANARI_STRING_LIST);
     if(list) {
         fillFeatureStruct(features, list);
         return 0;

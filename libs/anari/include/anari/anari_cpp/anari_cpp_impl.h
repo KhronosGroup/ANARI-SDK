@@ -477,11 +477,11 @@ inline Features getDeviceFeatureStruct(Library l,
 }
 
 inline Features getObjectFeatureStruct(Device d,
-    const char *objectSubtype,
-    DataType objectType)
+    DataType objectType,
+    const char *objectSubtype)
 {
   Features f;
-  anariGetObjectFeatureStruct(&f, d, objectSubtype, objectType);
+  anariGetObjectFeatureStruct(&f, d, objectType, objectSubtype);
   return f;
 }
 
