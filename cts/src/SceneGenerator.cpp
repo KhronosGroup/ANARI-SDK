@@ -1205,7 +1205,7 @@ std::vector<std::vector<std::vector<std::vector<float>>>> SceneGenerator::getBou
       anari::getProperty(m_device, instance, "bounds", anariInstanceBounds);
       for (const auto &bound : anariInstanceBounds) {
         std::vector<float> &vector = singleBound.emplace_back();
-        for (int i = 0; i < anari::length(bound); ++i) {
+        for (int i = 0; i < 3; ++i) {
           vector.push_back(bound[i]);
         }
       }
@@ -1220,7 +1220,7 @@ std::vector<std::vector<std::vector<std::vector<float>>>> SceneGenerator::getBou
       anari::getProperty(m_device, group, "bounds", anariGroupBounds);
       for (const auto &bound : anariGroupBounds) {
         std::vector<float> &vector = singleBound.emplace_back();
-        for (int i = 0; i < anari::length(bound); ++i) {
+        for (int i = 0; i < 3; ++i) {
           vector.push_back(bound[i]);
         }
       }
