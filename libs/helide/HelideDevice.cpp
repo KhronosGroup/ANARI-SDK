@@ -264,8 +264,8 @@ const char ** HelideDevice::getObjectSubtypes(ANARIDataType objectType)
   return helide::query_object_types(objectType);
 }
 
-const void* HelideDevice::getObjectInfo(const char* objectSubtype,
-    ANARIDataType objectType,
+const void* HelideDevice::getObjectInfo(ANARIDataType objectType,
+    const char* objectSubtype,
     const char* infoName,
     ANARIDataType infoType)
 {
@@ -273,8 +273,8 @@ const void* HelideDevice::getObjectInfo(const char* objectSubtype,
       objectType, objectSubtype, infoName, infoType);
 }
 
-const void* HelideDevice::getParameterInfo(const char* objectSubtype,
-    ANARIDataType objectType,
+const void* HelideDevice::getParameterInfo(ANARIDataType objectType,
+    const char* objectSubtype,
     const char* parameterName,
     ANARIDataType parameterType,
     const char* infoName,

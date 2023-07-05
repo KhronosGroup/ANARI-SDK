@@ -171,28 +171,28 @@ extern "C" const char **anariGetObjectSubtypes(ANARIDevice d,
 ANARI_CATCH_END(nullptr)
 
 extern "C" const void *anariGetObjectInfo(ANARIDevice d,
-    const char *objectSubtype,
     ANARIDataType objectType,
+    const char *objectSubtype,
     const char *infoName,
     ANARIDataType infoType) ANARI_CATCH_BEGIN
 {
-  return deviceRef(d).getObjectInfo(objectSubtype,
-      objectType,
+  return deviceRef(d).getObjectInfo(objectType,
+      objectSubtype,
       infoName,
       infoType);
 }
 ANARI_CATCH_END(nullptr)
 
 extern "C" const void *anariGetParameterInfo(ANARIDevice d,
-    const char *objectSubtype,
     ANARIDataType objectType,
+    const char *objectSubtype,
     const char *parameterName,
     ANARIDataType parameterType,
     const char *infoName,
     ANARIDataType infoType) ANARI_CATCH_BEGIN
 {
-  return deviceRef(d).getParameterInfo(objectSubtype,
-      objectType,
+  return deviceRef(d).getParameterInfo(objectType,
+      objectSubtype,
       parameterName,
       parameterType,
       infoName,

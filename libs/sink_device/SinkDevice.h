@@ -91,12 +91,12 @@ struct SINK_DEVICE_INTERFACE SinkDevice : public DeviceImpl, public helium::RefC
   // Query functions //////////////////////////////////////////////////////////
 
   const char ** getObjectSubtypes(ANARIDataType objectType) override;
-  const void* getObjectInfo(const char* objectSubtype,
-      ANARIDataType objectType,
+  const void* getObjectInfo(ANARIDataType objectType,
+      const char* objectSubtype,
       const char* infoName,
       ANARIDataType infoType) override;
-  const void* getParameterInfo(const char* objectSubtype,
-      ANARIDataType objectType,
+  const void* getParameterInfo(ANARIDataType objectType,
+      const char* objectSubtype,
       const char* parameterName,
       ANARIDataType parameterType,
       const char* infoName,

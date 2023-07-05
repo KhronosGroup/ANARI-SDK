@@ -529,8 +529,8 @@
             "returnType" : "const void*",
             "arguments" : [
                 {"name" : "device", "type" : "ANARIDevice"},
-                {"name" : "objectSubtype", "type" : "const char*"},
                 {"name" : "objectType", "type" : "ANARIDataType"},
+                {"name" : "objectSubtype", "type" : "const char*"},
                 {"name" : "infoName", "type" : "const char*"},
                 {"name" : "infoType", "type" : "ANARIDataType"}
             ]
@@ -539,8 +539,8 @@
             "returnType" : "const void*",
             "arguments" : [
                 {"name" : "device", "type" : "ANARIDevice"},
-                {"name" : "objectSubtype", "type" : "const char*"},
                 {"name" : "objectType", "type" : "ANARIDataType"},
+                {"name" : "objectSubtype", "type" : "const char*"},
                 {"name" : "parameterName", "type" : "const char*"},
                 {"name" : "parameterType", "type" : "ANARIDataType"},
                 {"name" : "infoName", "type" : "const char*"},

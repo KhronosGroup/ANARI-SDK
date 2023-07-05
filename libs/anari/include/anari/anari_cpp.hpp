@@ -206,8 +206,8 @@ Features getDeviceFeatureStruct(Library library,
     const char *deviceSubtype);
 
 Features getObjectFeatureStruct(Device device,
-    const char *objectSubtype,
-    DataType objectType);
+    DataType objectType,
+    const char *objectSubtype);
 
 Features getInstanceFeatureStruct(Device, Object);
 

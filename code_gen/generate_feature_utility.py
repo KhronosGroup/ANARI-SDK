@@ -31,7 +31,7 @@ class FeatureUtilityGenerator:
             code += "   int %s;\n"%feature
         code += "} ANARIFeatures;\n"
         code += "int anariGetDeviceFeatureStruct(ANARIFeatures *features, ANARILibrary library, const char *deviceName);\n"
-        code += "int anariGetObjectFeatureStruct(ANARIFeatures *features, ANARIDevice device, const char *objectName, ANARIDataType objectType);\n"
+        code += "int anariGetObjectFeatureStruct(ANARIFeatures *features, ANARIDevice device, ANARIDataType objectType, const char *objectName);\n"
         code += "int anariGetInstanceFeatureStruct(ANARIFeatures *features, ANARIDevice device, ANARIObject object);\n"
 
         code += "#ifdef ANARI_FEATURE_UTILITY_IMPL\n"
@@ -56,8 +56,8 @@ class FeatureUtilityGenerator:
         code += "        return 1;\n"
         code += "    }\n"
         code += "}\n"
-        code += "int anariGetObjectFeatureStruct(ANARIFeatures *features, ANARIDevice device, const char *objectName, ANARIDataType objectType) {\n"
-        code += "    const char *const *list = (const char *const *)anariGetObjectInfo(device, objectName, objectType, \"feature\", ANARI_STRING_LIST);\n"
+        code += "int anariGetObjectFeatureStruct(ANARIFeatures *features, ANARIDevice device, ANARIDataType objectType, const char *objectName) {\n"
+        code += "    const char *const *list = (const char *const *)anariGetObjectInfo(device, objectType, objectName, \"feature\", ANARI_STRING_LIST);\n"
         code += "    if(list) {\n"
         code += "        fillFeatureStruct(features, list);\n"
         code += "        return 0;\n"
