@@ -2441,7 +2441,7 @@ class spatial_field_structuredRegular : public DebugObject<ANARI_SPATIAL_FIELD> 
       return "structuredRegular";
    }
 };
-class volume_scivis : public DebugObject<ANARI_VOLUME> {
+class volume_transferFunction1D : public DebugObject<ANARI_VOLUME> {
    static int param_hash(const char *str) {
       static const uint32_t table[] = {0x706f0014u,0x66650050u,0x0u,0x6a69005cu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x62610061u,0x71700065u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x626100a3u,0x6d6c0015u,0x706f0016u,0x73720017u,0x2f000018u,0x80000003u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x71700047u,0x706f0048u,0x74730049u,0x6a69004au,0x7574004bu,0x6a69004cu,0x706f004du,0x6f6e004eu,0x100004fu,0x80000004u,0x6f6e0051u,0x74730052u,0x6a690053u,0x75740054u,0x7a790055u,0x54530056u,0x64630057u,0x62610058u,0x6d6c0059u,0x6665005au,0x100005bu,0x80000007u,0x6665005du,0x6d6c005eu,0x6564005fu,0x1000060u,0x80000001u,0x6e6d0062u,0x66650063u,0x1000064u,0x80000000u,0x62610066u,0x64630067u,0x6a690068u,0x75740069u,0x7a79006au,0x2f00006bu,0x80000005u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x7170009au,0x706f009bu,0x7473009cu,0x6a69009du,0x7574009eu,0x6a69009fu,0x706f00a0u,0x6f6e00a1u,0x10000a2u,0x80000006u,0x6d6c00a4u,0x767500a5u,0x666500a6u,0x535200a7u,0x626100a8u,0x6f6e00a9u,0x686700aau,0x666500abu,0x10000acu,0x80000002u};
       uint32_t cur = 0x77630000u;
@@ -2465,53 +2465,53 @@ class volume_scivis : public DebugObject<ANARI_VOLUME> {
       return -1;
    }
    public:
-   volume_scivis(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { (void)factory; }
+   volume_transferFunction1D(DebugDevice *td, GenericDeviceDebugFactory *factory, ANARIObject wh, ANARIObject h): DebugObject(td, wh, h) { (void)factory; }
    void setParameter(const char *paramname, ANARIDataType paramtype, const void *mem) {
       DebugObject::setParameter(paramname, paramtype, mem);
       int idx = param_hash(paramname);
       switch(idx) {
          case 0: { //name
             ANARIDataType name_types[] = {ANARI_STRING, ANARI_UNKNOWN};
-            check_type(ANARI_VOLUME, "scivis", paramname, paramtype, name_types);
+            check_type(ANARI_VOLUME, "transferFunction1D", paramname, paramtype, name_types);
             return;
          }
          case 1: { //field
             ANARIDataType field_types[] = {ANARI_SPATIAL_FIELD, ANARI_UNKNOWN};
-            check_type(ANARI_VOLUME, "scivis", paramname, paramtype, field_types);
+            check_type(ANARI_VOLUME, "transferFunction1D", paramname, paramtype, field_types);
             return;
          }
          case 2: { //valueRange
-            ANARIDataType valueRange_types[] = {ANARI_FLOAT32_BOX1, ANARI_UNKNOWN};
-            check_type(ANARI_VOLUME, "scivis", paramname, paramtype, valueRange_types);
+            ANARIDataType valueRange_types[] = {ANARI_FLOAT32_BOX1,ANARI_FLOAT64_BOX1, ANARI_UNKNOWN};
+            check_type(ANARI_VOLUME, "transferFunction1D", paramname, paramtype, valueRange_types);
             return;
          }
          case 3: { //color
             ANARIDataType color_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_VOLUME, "scivis", paramname, paramtype, color_types);
+            check_type(ANARI_VOLUME, "transferFunction1D", paramname, paramtype, color_types);
             return;
          }
          case 4: { //color.position
             ANARIDataType color_position_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_VOLUME, "scivis", paramname, paramtype, color_position_types);
+            check_type(ANARI_VOLUME, "transferFunction1D", paramname, paramtype, color_position_types);
             return;
          }
          case 5: { //opacity
             ANARIDataType opacity_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_VOLUME, "scivis", paramname, paramtype, opacity_types);
+            check_type(ANARI_VOLUME, "transferFunction1D", paramname, paramtype, opacity_types);
             return;
          }
          case 6: { //opacity.position
             ANARIDataType opacity_position_types[] = {ANARI_ARRAY1D, ANARI_UNKNOWN};
-            check_type(ANARI_VOLUME, "scivis", paramname, paramtype, opacity_position_types);
+            check_type(ANARI_VOLUME, "transferFunction1D", paramname, paramtype, opacity_position_types);
             return;
          }
          case 7: { //densityScale
             ANARIDataType densityScale_types[] = {ANARI_FLOAT32, ANARI_UNKNOWN};
-            check_type(ANARI_VOLUME, "scivis", paramname, paramtype, densityScale_types);
+            check_type(ANARI_VOLUME, "transferFunction1D", paramname, paramtype, densityScale_types);
             return;
          }
          default: // unknown param
-            unknown_parameter(ANARI_VOLUME, "scivis", paramname, paramtype);
+            unknown_parameter(ANARI_VOLUME, "transferFunction1D", paramname, paramtype);
             return;
       }
    }
@@ -2519,7 +2519,7 @@ class volume_scivis : public DebugObject<ANARI_VOLUME> {
       DebugObject::commit();
    }
    const char* getSubtype() {
-      return "scivis";
+      return "transferFunction1D";
    }
 };
 }
@@ -2776,8 +2776,8 @@ DebugObjectBase* GenericDeviceDebugFactory::new_spatial_field(const char *name, 
    }
 }
 static int volume_object_hash(const char *str) {
-   static const uint32_t table[] = {0x64630001u,0x6a690002u,0x77760003u,0x6a690004u,0x74730005u,0x1000006u,0x80000000u};
-   uint32_t cur = 0x74730000u;
+   static const uint32_t table[] = {0x73720001u,0x62610002u,0x6f6e0003u,0x74730004u,0x67660005u,0x66650006u,0x73720007u,0x47460008u,0x76750009u,0x6f6e000au,0x6463000bu,0x7574000cu,0x6a69000du,0x706f000eu,0x6f6e000fu,0x32310010u,0x45440011u,0x1000012u,0x80000000u};
+   uint32_t cur = 0x75740000u;
    for(int i = 0;cur!=0;++i) {
       uint32_t idx = cur&0xFFFFu;
       uint32_t low = (cur>>16u)&0xFFu;
@@ -2801,7 +2801,7 @@ DebugObjectBase* GenericDeviceDebugFactory::new_volume(const char *name, DebugDe
    int idx = volume_object_hash(name);
    switch(idx) {
       case 0:
-         return new volume_scivis(td, this, wh, h);
+         return new volume_transferFunction1D(td, this, wh, h);
       default:
          unknown_subtype(td, ANARI_VOLUME, name);
          return new SubtypedDebugObject<ANARI_VOLUME>(td, wh, h, name);

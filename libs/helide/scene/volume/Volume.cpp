@@ -11,7 +11,7 @@ Volume::Volume(HelideGlobalState *s) : Object(ANARI_VOLUME, s) {}
 
 Volume *Volume::createInstance(std::string_view subtype, HelideGlobalState *s)
 {
-  if (subtype == "scivis")
+  if (subtype == "transferFunction1D")
     return new SciVisVolume(s);
   else
     return (Volume *)new UnknownObject(ANARI_VOLUME, s);

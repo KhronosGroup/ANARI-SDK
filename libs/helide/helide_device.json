@@ -21,7 +21,7 @@
       "khr_sampler_primitive",
       "khr_sampler_transform",
       "khr_spatial_field_structured_regular",
-      "khr_volume_scivis"
+      "khr_volume_transfer_function1d"
     ]
   },
   "objects": [
