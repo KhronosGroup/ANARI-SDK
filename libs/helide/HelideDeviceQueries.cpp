@@ -9,7 +9,7 @@
 #include <anari/anari.h>
 namespace helide {
 static int subtype_hash(const char *str) {
-   static const uint32_t table[] = {0x7a6f0012u,0x6665002bu,0x0u,0x0u,0x0u,0x0u,0x6e6d0032u,0x0u,0x0u,0x0u,0x6261003fu,0x0u,0x73720044u,0x73650050u,0x76750070u,0x0u,0x75630074u,0x737200a0u,0x6f6e001du,0x0u,0x0u,0x0u,0x0u,0x0u,0x73720020u,0x0u,0x0u,0x0u,0x6d6c0024u,0x6665001eu,0x100001fu,0x80000000u,0x77760021u,0x66650022u,0x1000023u,0x80000001u,0x6a690025u,0x6f6e0026u,0x65640027u,0x66650028u,0x73720029u,0x100002au,0x80000002u,0x6766002cu,0x6261002du,0x7675002eu,0x6d6c002fu,0x75740030u,0x1000031u,0x80000003u,0x62610033u,0x68670034u,0x66650035u,0x34310036u,0x45440039u,0x4544003bu,0x4544003du,0x100003au,0x80000004u,0x100003cu,0x80000005u,0x100003eu,0x80000006u,0x75740040u,0x75740041u,0x66650042u,0x1000043u,0x80000007u,0x75740045u,0x69680046u,0x706f0047u,0x68670048u,0x73720049u,0x6261004au,0x7170004bu,0x6968004cu,0x6a69004du,0x6463004eu,0x100004fu,0x80000008u,0x7372005eu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6a690068u,0x7473005fu,0x71700060u,0x66650061u,0x64630062u,0x75740063u,0x6a690064u,0x77760065u,0x66650066u,0x1000067u,0x80000009u,0x6e6d0069u,0x6a69006au,0x7574006bu,0x6a69006cu,0x7776006du,0x6665006eu,0x100006fu,0x8000000au,0x62610071u,0x65640072u,0x1000073u,0x8000000bu,0x6a690086u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6968008bu,0x0u,0x0u,0x0u,0x73720090u,0x77760087u,0x6a690088u,0x74730089u,0x100008au,0x8000000cu,0x6665008cu,0x7372008du,0x6665008eu,0x100008fu,0x8000000du,0x76750091u,0x64630092u,0x75740093u,0x76750094u,0x73720095u,0x66650096u,0x65640097u,0x53520098u,0x66650099u,0x6867009au,0x7675009bu,0x6d6c009cu,0x6261009du,0x7372009eu,0x100009fu,0x8000000eu,0x6a6100a1u,0x6f6e00aau,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x626100b1u,0x747300abu,0x676600acu,0x706f00adu,0x737200aeu,0x6e6d00afu,0x10000b0u,0x8000000fu,0x6f6e00b2u,0x686700b3u,0x6d6c00b4u,0x666500b5u,0x10000b6u,0x80000010u};
+   static const uint32_t table[] = {0x7a6f0012u,0x6665002bu,0x0u,0x0u,0x0u,0x0u,0x6e6d0032u,0x0u,0x0u,0x0u,0x6261003fu,0x0u,0x73720044u,0x73650050u,0x76750070u,0x0u,0x75700074u,0x7372008eu,0x6f6e001du,0x0u,0x0u,0x0u,0x0u,0x0u,0x73720020u,0x0u,0x0u,0x0u,0x6d6c0024u,0x6665001eu,0x100001fu,0x80000000u,0x77760021u,0x66650022u,0x1000023u,0x80000001u,0x6a690025u,0x6f6e0026u,0x65640027u,0x66650028u,0x73720029u,0x100002au,0x80000002u,0x6766002cu,0x6261002du,0x7675002eu,0x6d6c002fu,0x75740030u,0x1000031u,0x80000003u,0x62610033u,0x68670034u,0x66650035u,0x34310036u,0x45440039u,0x4544003bu,0x4544003du,0x100003au,0x80000004u,0x100003cu,0x80000005u,0x100003eu,0x80000006u,0x75740040u,0x75740041u,0x66650042u,0x1000043u,0x80000007u,0x75740045u,0x69680046u,0x706f0047u,0x68670048u,0x73720049u,0x6261004au,0x7170004bu,0x6968004cu,0x6a69004du,0x6463004eu,0x100004fu,0x80000008u,0x7372005eu,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x6a690068u,0x7473005fu,0x71700060u,0x66650061u,0x64630062u,0x75740063u,0x6a690064u,0x77760065u,0x66650066u,0x1000067u,0x80000009u,0x6e6d0069u,0x6a69006au,0x7574006bu,0x6a69006cu,0x7776006du,0x6665006eu,0x100006fu,0x8000000au,0x62610071u,0x65640072u,0x1000073u,0x8000000bu,0x69680079u,0x0u,0x0u,0x0u,0x7372007eu,0x6665007au,0x7372007bu,0x6665007cu,0x100007du,0x8000000cu,0x7675007fu,0x64630080u,0x75740081u,0x76750082u,0x73720083u,0x66650084u,0x65640085u,0x53520086u,0x66650087u,0x68670088u,0x76750089u,0x6d6c008au,0x6261008bu,0x7372008cu,0x100008du,0x8000000du,0x6a61008fu,0x6f6e0098u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x626100b5u,0x74730099u,0x6766009au,0x7065009bu,0x737200a6u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x0u,0x737200b2u,0x474600a7u,0x767500a8u,0x6f6e00a9u,0x646300aau,0x757400abu,0x6a6900acu,0x706f00adu,0x6f6e00aeu,0x323100afu,0x454400b0u,0x10000b1u,0x8000000eu,0x6e6d00b3u,0x10000b4u,0x8000000fu,0x6f6e00b6u,0x686700b7u,0x6d6c00b8u,0x666500b9u,0x10000bau,0x80000010u};
    uint32_t cur = 0x75630000u;
    for(int i = 0;cur!=0;++i) {
       uint32_t idx = cur&0xFFFFu;
@@ -93,7 +93,7 @@ const char ** query_extensions() {
       "ANARI_KHR_SAMPLER_PRIMITIVE",
       "ANARI_KHR_SAMPLER_TRANSFORM",
       "ANARI_KHR_SPATIAL_FIELD_STRUCTURED_REGULAR",
-      "ANARI_KHR_VOLUME_SCIVIS",
+      "ANARI_KHR_VOLUME_TRANSFER_FUNCTION1D",
       0
    };
    return features;
@@ -132,7 +132,7 @@ const char ** query_object_types(ANARIDataType type) {
       }
       case ANARI_VOLUME:
       {
-         static const char *ANARI_VOLUME_subtypes[] = {"scivis", 0};
+         static const char *ANARI_VOLUME_subtypes[] = {"transferFunction1D", 0};
          return ANARI_VOLUME_subtypes;
       }
       default:
@@ -7001,7 +7001,7 @@ static const void * ANARI_SPATIAL_FIELD_structuredRegular_param_info(const char 
          return nullptr;
    }
 }
-static const void * ANARI_VOLUME_scivis_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+static const void * ANARI_VOLUME_transferFunction1D_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    (void)paramType;
    switch(infoName) {
       case 0: // required
@@ -7017,7 +7017,7 @@ static const void * ANARI_VOLUME_scivis_name_info(ANARIDataType paramType, int i
          }
       case 7: // sourceFeature
          if(infoType == ANARI_STRING) {
-            static const char *feature = "KHR_VOLUME_SCIVIS";
+            static const char *feature = "KHR_VOLUME_TRANSFER_FUNCTION1D";
             return feature;
          } else if(infoType == ANARI_INT32) {
             static const int32_t value = 15;
@@ -7026,7 +7026,7 @@ static const void * ANARI_VOLUME_scivis_name_info(ANARIDataType paramType, int i
       default: return nullptr;
    }
 }
-static const void * ANARI_VOLUME_scivis_field_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+static const void * ANARI_VOLUME_transferFunction1D_field_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    (void)paramType;
    switch(infoName) {
       case 0: // required
@@ -7042,7 +7042,7 @@ static const void * ANARI_VOLUME_scivis_field_info(ANARIDataType paramType, int 
          }
       case 7: // sourceFeature
          if(infoType == ANARI_STRING) {
-            static const char *feature = "KHR_VOLUME_SCIVIS";
+            static const char *feature = "KHR_VOLUME_TRANSFER_FUNCTION1D";
             return feature;
          } else if(infoType == ANARI_INT32) {
             static const int32_t value = 15;
@@ -7051,7 +7051,7 @@ static const void * ANARI_VOLUME_scivis_field_info(ANARIDataType paramType, int 
       default: return nullptr;
    }
 }
-static const void * ANARI_VOLUME_scivis_valueRange_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+static const void * ANARI_VOLUME_transferFunction1D_valueRange_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    (void)paramType;
    switch(infoName) {
       case 0: // required
@@ -7074,7 +7074,7 @@ static const void * ANARI_VOLUME_scivis_valueRange_info(ANARIDataType paramType,
          }
       case 7: // sourceFeature
          if(infoType == ANARI_STRING) {
-            static const char *feature = "KHR_VOLUME_SCIVIS";
+            static const char *feature = "KHR_VOLUME_TRANSFER_FUNCTION1D";
             return feature;
          } else if(infoType == ANARI_INT32) {
             static const int32_t value = 15;
@@ -7083,7 +7083,7 @@ static const void * ANARI_VOLUME_scivis_valueRange_info(ANARIDataType paramType,
       default: return nullptr;
    }
 }
-static const void * ANARI_VOLUME_scivis_color_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+static const void * ANARI_VOLUME_transferFunction1D_color_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    (void)paramType;
    switch(infoName) {
       case 0: // required
@@ -7106,7 +7106,7 @@ static const void * ANARI_VOLUME_scivis_color_info(ANARIDataType paramType, int 
          }
       case 7: // sourceFeature
          if(infoType == ANARI_STRING) {
-            static const char *feature = "KHR_VOLUME_SCIVIS";
+            static const char *feature = "KHR_VOLUME_TRANSFER_FUNCTION1D";
             return feature;
          } else if(infoType == ANARI_INT32) {
             static const int32_t value = 15;
@@ -7115,7 +7115,7 @@ static const void * ANARI_VOLUME_scivis_color_info(ANARIDataType paramType, int 
       default: return nullptr;
    }
 }
-static const void * ANARI_VOLUME_scivis_color_position_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+static const void * ANARI_VOLUME_transferFunction1D_color_position_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    (void)paramType;
    switch(infoName) {
       case 0: // required
@@ -7138,7 +7138,7 @@ static const void * ANARI_VOLUME_scivis_color_position_info(ANARIDataType paramT
          }
       case 7: // sourceFeature
          if(infoType == ANARI_STRING) {
-            static const char *feature = "KHR_VOLUME_SCIVIS";
+            static const char *feature = "KHR_VOLUME_TRANSFER_FUNCTION1D";
             return feature;
          } else if(infoType == ANARI_INT32) {
             static const int32_t value = 15;
@@ -7147,7 +7147,7 @@ static const void * ANARI_VOLUME_scivis_color_position_info(ANARIDataType paramT
       default: return nullptr;
    }
 }
-static const void * ANARI_VOLUME_scivis_opacity_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+static const void * ANARI_VOLUME_transferFunction1D_opacity_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    (void)paramType;
    switch(infoName) {
       case 0: // required
@@ -7170,7 +7170,7 @@ static const void * ANARI_VOLUME_scivis_opacity_info(ANARIDataType paramType, in
          }
       case 7: // sourceFeature
          if(infoType == ANARI_STRING) {
-            static const char *feature = "KHR_VOLUME_SCIVIS";
+            static const char *feature = "KHR_VOLUME_TRANSFER_FUNCTION1D";
             return feature;
          } else if(infoType == ANARI_INT32) {
             static const int32_t value = 15;
@@ -7179,7 +7179,7 @@ static const void * ANARI_VOLUME_scivis_opacity_info(ANARIDataType paramType, in
       default: return nullptr;
    }
 }
-static const void * ANARI_VOLUME_scivis_opacity_position_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+static const void * ANARI_VOLUME_transferFunction1D_opacity_position_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    (void)paramType;
    switch(infoName) {
       case 0: // required
@@ -7202,7 +7202,7 @@ static const void * ANARI_VOLUME_scivis_opacity_position_info(ANARIDataType para
          }
       case 7: // sourceFeature
          if(infoType == ANARI_STRING) {
-            static const char *feature = "KHR_VOLUME_SCIVIS";
+            static const char *feature = "KHR_VOLUME_TRANSFER_FUNCTION1D";
             return feature;
          } else if(infoType == ANARI_INT32) {
             static const int32_t value = 15;
@@ -7211,7 +7211,7 @@ static const void * ANARI_VOLUME_scivis_opacity_position_info(ANARIDataType para
       default: return nullptr;
    }
 }
-static const void * ANARI_VOLUME_scivis_densityScale_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+static const void * ANARI_VOLUME_transferFunction1D_densityScale_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    (void)paramType;
    switch(infoName) {
       case 0: // required
@@ -7234,7 +7234,7 @@ static const void * ANARI_VOLUME_scivis_densityScale_info(ANARIDataType paramTyp
          }
       case 7: // sourceFeature
          if(infoType == ANARI_STRING) {
-            static const char *feature = "KHR_VOLUME_SCIVIS";
+            static const char *feature = "KHR_VOLUME_TRANSFER_FUNCTION1D";
             return feature;
          } else if(infoType == ANARI_INT32) {
             static const int32_t value = 15;
@@ -7243,24 +7243,24 @@ static const void * ANARI_VOLUME_scivis_densityScale_info(ANARIDataType paramTyp
       default: return nullptr;
    }
 }
-static const void * ANARI_VOLUME_scivis_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+static const void * ANARI_VOLUME_transferFunction1D_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
       case 36:
-         return ANARI_VOLUME_scivis_name_info(paramType, infoName, infoType);
+         return ANARI_VOLUME_transferFunction1D_name_info(paramType, infoName, infoType);
       case 18:
-         return ANARI_VOLUME_scivis_field_info(paramType, infoName, infoType);
+         return ANARI_VOLUME_transferFunction1D_field_info(paramType, infoName, infoType);
       case 62:
-         return ANARI_VOLUME_scivis_valueRange_info(paramType, infoName, infoType);
+         return ANARI_VOLUME_transferFunction1D_valueRange_info(paramType, infoName, infoType);
       case 12:
-         return ANARI_VOLUME_scivis_color_info(paramType, infoName, infoType);
+         return ANARI_VOLUME_transferFunction1D_color_info(paramType, infoName, infoType);
       case 13:
-         return ANARI_VOLUME_scivis_color_position_info(paramType, infoName, infoType);
+         return ANARI_VOLUME_transferFunction1D_color_position_info(paramType, infoName, infoType);
       case 38:
-         return ANARI_VOLUME_scivis_opacity_info(paramType, infoName, infoType);
+         return ANARI_VOLUME_transferFunction1D_opacity_info(paramType, infoName, infoType);
       case 39:
-         return ANARI_VOLUME_scivis_opacity_position_info(paramType, infoName, infoType);
+         return ANARI_VOLUME_transferFunction1D_opacity_position_info(paramType, infoName, infoType);
       case 15:
-         return ANARI_VOLUME_scivis_densityScale_info(paramType, infoName, infoType);
+         return ANARI_VOLUME_transferFunction1D_densityScale_info(paramType, infoName, infoType);
       default:
          return nullptr;
    }
@@ -7285,7 +7285,7 @@ static const void * ANARI_GEOMETRY_param_info(const char *subtype, const char *p
          return ANARI_GEOMETRY_cylinder_param_info(paramName, paramType, infoName, infoType);
       case 11:
          return ANARI_GEOMETRY_quad_param_info(paramName, paramType, infoName, infoType);
-      case 13:
+      case 12:
          return ANARI_GEOMETRY_sphere_param_info(paramName, paramType, infoName, infoType);
       case 16:
          return ANARI_GEOMETRY_triangle_param_info(paramName, paramType, infoName, infoType);
@@ -7327,7 +7327,7 @@ static const void * ANARI_SAMPLER_param_info(const char *subtype, const char *pa
 }
 static const void * ANARI_SPATIAL_FIELD_param_info(const char *subtype, const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(subtype_hash(subtype)) {
-      case 14:
+      case 13:
          return ANARI_SPATIAL_FIELD_structuredRegular_param_info(paramName, paramType, infoName, infoType);
       default:
          return nullptr;
@@ -7335,8 +7335,8 @@ static const void * ANARI_SPATIAL_FIELD_param_info(const char *subtype, const ch
 }
 static const void * ANARI_VOLUME_param_info(const char *subtype, const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(subtype_hash(subtype)) {
-      case 12:
-         return ANARI_VOLUME_scivis_param_info(paramName, paramType, infoName, infoType);
+      case 14:
+         return ANARI_VOLUME_transferFunction1D_param_info(paramName, paramType, infoName, infoType);
       default:
          return nullptr;
    }
@@ -7422,7 +7422,7 @@ static const void * ANARI_DEVICE_info(int infoName, ANARIDataType infoType) {
                "ANARI_KHR_SAMPLER_PRIMITIVE",
                "ANARI_KHR_SAMPLER_TRANSFORM",
                "ANARI_KHR_SPATIAL_FIELD_STRUCTURED_REGULAR",
-               "ANARI_KHR_VOLUME_SCIVIS",
+               "ANARI_KHR_VOLUME_TRANSFER_FUNCTION1D",
                0
             };
             return features;
@@ -7470,7 +7470,7 @@ static const void * ANARI_RENDERER_default_info(int infoName, ANARIDataType info
                "ANARI_KHR_SAMPLER_PRIMITIVE",
                "ANARI_KHR_SAMPLER_TRANSFORM",
                "ANARI_KHR_SPATIAL_FIELD_STRUCTURED_REGULAR",
-               "ANARI_KHR_VOLUME_SCIVIS",
+               "ANARI_KHR_VOLUME_TRANSFER_FUNCTION1D",
                0
             };
             return features;
@@ -8281,11 +8281,11 @@ static const void * ANARI_SPATIAL_FIELD_structuredRegular_info(int infoName, ANA
       default: return nullptr;
    }
 }
-static const void * ANARI_VOLUME_scivis_info(int infoName, ANARIDataType infoType) {
+static const void * ANARI_VOLUME_transferFunction1D_info(int infoName, ANARIDataType infoType) {
    switch(infoName) {
       case 4: // description
          {
-            static const char *description = "scivis volume object";
+            static const char *description = "transferFunction1D volume object";
             return description;
          }
       case 9: // parameter
@@ -8294,6 +8294,7 @@ static const void * ANARI_VOLUME_scivis_info(int infoName, ANARIDataType infoTyp
                {"name", ANARI_STRING},
                {"field", ANARI_SPATIAL_FIELD},
                {"valueRange", ANARI_FLOAT32_BOX1},
+               {"valueRange", ANARI_FLOAT64_BOX1},
                {"color", ANARI_ARRAY1D},
                {"color.position", ANARI_ARRAY1D},
                {"opacity", ANARI_ARRAY1D},
@@ -8307,7 +8308,7 @@ static const void * ANARI_VOLUME_scivis_info(int infoName, ANARIDataType infoTyp
          }
       case 7: // sourceFeature
          if(infoType == ANARI_STRING) {
-            static const char *feature = "KHR_VOLUME_SCIVIS";
+            static const char *feature = "KHR_VOLUME_TRANSFER_FUNCTION1D";
             return feature;
          } else if(infoType == ANARI_INT32) {
             static const int value = 15;
@@ -8338,7 +8339,7 @@ static const void * ANARI_GEOMETRY_info(const char *subtype, int infoName, ANARI
          return ANARI_GEOMETRY_cylinder_info(infoName, infoType);
       case 11:
          return ANARI_GEOMETRY_quad_info(infoName, infoType);
-      case 13:
+      case 12:
          return ANARI_GEOMETRY_sphere_info(infoName, infoType);
       case 16:
          return ANARI_GEOMETRY_triangle_info(infoName, infoType);
@@ -8380,7 +8381,7 @@ static const void * ANARI_SAMPLER_info(const char *subtype, int infoName, ANARID
 }
 static const void * ANARI_SPATIAL_FIELD_info(const char *subtype, int infoName, ANARIDataType infoType) {
    switch(subtype_hash(subtype)) {
-      case 14:
+      case 13:
          return ANARI_SPATIAL_FIELD_structuredRegular_info(infoName, infoType);
       default:
          return nullptr;
@@ -8388,8 +8389,8 @@ static const void * ANARI_SPATIAL_FIELD_info(const char *subtype, int infoName, 
 }
 static const void * ANARI_VOLUME_info(const char *subtype, int infoName, ANARIDataType infoType) {
    switch(subtype_hash(subtype)) {
-      case 12:
-         return ANARI_VOLUME_scivis_info(infoName, infoType);
+      case 14:
+         return ANARI_VOLUME_transferFunction1D_info(infoName, infoType);
       default:
          return nullptr;
    }
