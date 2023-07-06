@@ -143,6 +143,18 @@ def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, 
     name = f'{stem}{permutationString}{variantString}'
     results[test_name][name] = {}
 
+    color_thresholds = []
+    parsedThresholds = {}
+    if "thresholds" in parsed_json:
+        parsedThresholds = parsed_json["thresholds"]
+    for idx, method in enumerate(methods):
+        if method in parsedThresholds:
+            color_thresholds.append(parsedThresholds[method])
+        elif idx < len(thresholds):
+            color_thresholds.append(thresholds[idx])
+        else:
+            color_thresholds.append(None)
+
     # evaluate once per channel
     for channel in channels:
         reference_file = f'{reference_prefix}{stem}{permutationString}_{channel}'
@@ -165,7 +177,7 @@ def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, 
             custom_compare_function = None
         else:
             # color channels might have multiple thresholds for multiple comparison methods
-            channelThresholds = thresholds
+            channelThresholds = color_thresholds
         # evaluate rendered scene against reference data (possibly using a custom comparison function)
         eval_result = ctsUtility.evaluate_scene(ref_path, candidate_path, methods, channelThresholds, custom_compare_function)
         print(f'\n{test_name} {name} {channel}:')
