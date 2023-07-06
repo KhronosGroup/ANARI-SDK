@@ -760,6 +760,14 @@ void SceneGenerator::commit()
         d, m_world, "surface", anari::newArray1D(d, surfaces.data(), surfaces.size()));
   }
 
+  if (auto lightIt = m_anariObjects.find(ANARI_LIGHT);
+      instances.empty() && lightIt != m_anariObjects.end() && !lightIt->second.empty()) {
+    anari::setAndReleaseParameter(d,
+        m_world,
+        "light",
+        anari::newArray1D(d, lightIt->second.data(), lightIt->second.size()));
+  }
+
   if (spatialFieldDim[0] != 0 && spatialFieldDim[1] != 0
       && spatialFieldDim[2] != 0) {
     // create spatial field
