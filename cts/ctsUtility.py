@@ -127,7 +127,7 @@ def evaluate_scene(reference_path, candidate_path, methods, thresholds, custom_c
     # Compute metrics and compare images
     return evaluate(reference_image, candidate_image, methods, thresholds, custom_compare_function)
 
-def write_image(path, image, check_contrast = True):
+def write_image(path, image, check_contrast = False):
     filepath, filename = os.path.split(path)
     if not os.path.exists(filepath):
         os.makedirs(filepath)
