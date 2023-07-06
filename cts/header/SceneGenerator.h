@@ -40,6 +40,31 @@ class SceneGenerator : public anari::scenes::TestScene
     }
   }
 
+  template <typename T>
+  void setGenericArray2DParameter(
+      const std::string &name, const std::vector<std::vector<T>> &vector)
+  {
+    if (vector.empty() || vector.front().empty()) {
+      return;
+    }
+    if (m_device != nullptr && m_currentObject != nullptr) {
+      std::size_t total_size = 0;
+      for (const auto &subvector : vector) {
+        total_size += subvector.size();
+      }
+      std::vector<T> result;
+      result.reserve(total_size);
+      for (const auto &subvector : vector) {
+        result.insert(result.end(), subvector.begin(), subvector.end());      
+      }
+      
+      anari::setAndReleaseParameter(m_device,
+          m_currentObject,
+          name.c_str(),
+          anari::newArray2D(m_device, result.data(), vector.size(), vector.front().size()));
+    }
+  }
+
   void unsetGenericParameter(const std::string& name) {
     if (m_device != nullptr && m_currentObject != nullptr) {
       anari::unsetParameter(m_device, m_currentObject, name.c_str());

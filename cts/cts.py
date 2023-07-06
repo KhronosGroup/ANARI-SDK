@@ -82,6 +82,7 @@ def simplifyFileName(name):
     name = name.replace(':', '')
     name = name.replace("'", '')
     name = name.replace('"', '')
+    name = name.replace(' ', '')
     return name
 
 # writes all reference, candidate, diff and threshold images to filesystem and returns
@@ -150,7 +151,7 @@ def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, 
     for idx, method in enumerate(methods):
         if method in parsedThresholds:
             color_thresholds.append(parsedThresholds[method])
-        elif idx < len(thresholds):
+        elif thresholds is not None and idx < len(thresholds):
             color_thresholds.append(thresholds[idx])
         else:
             color_thresholds.append(None)
@@ -281,6 +282,8 @@ def passByType(paramName, type, paramValue, sceneGenerator):
         sceneGenerator.unsetGenericParameter(paramName)
     elif type == "Array1D":
         sceneGenerator.setGenericArray1DParameter(paramName, paramValue)
+    elif type == "Array2D":
+        sceneGenerator.setGenericArray2DParameter(paramName, paramValue)
     else:
         sceneGenerator.setGenericParameter(paramName, paramValue)
 

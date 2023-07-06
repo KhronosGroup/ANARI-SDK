@@ -1,0 +1,25 @@
+{
+  "sceneParameters": {
+    "anari_objects": {
+      "renderer": [
+        {
+          "background": [0, 0, 0, 1],
+          "ambientRadiance": 0.0,
+          "ambientColor": [0.0, 0.0, 0.0]
+        }
+      ],
+      "light": [
+        {
+          "subtype": "hdri"
+        }
+      ]
+    }
+  },
+  "simplified_permutations": true,
+  "permutations": {
+    "/anari_objects/light/0/up": [null, [0.0, 1.0, 0.0]],
+    "/anari_objects/light/0/direction": [null, [0.0, 0.0, -1.0]],
+    "/anari_objects/light/0/scale": [null, 0.4]
+  },
+  "requiredFeatures": ["ANARI_KHR_LIGHT_HDRI", "ANARI_KHR_GEOMETRY_TRIANGLE"]
+}

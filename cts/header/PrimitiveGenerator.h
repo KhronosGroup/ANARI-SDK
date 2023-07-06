@@ -58,9 +58,6 @@ class PrimitiveGenerator
     std::shuffle(vector.begin(), vector.end(), m_rng);
   }
 
- private:
-  std::mt19937 m_rng;
-
   float getRandomFloat(float min, float max);
   glm::vec2 getRandomVector2(float min, float max);
   glm::vec3 getRandomVector3(float min, float max);
@@ -69,6 +66,9 @@ class PrimitiveGenerator
       std::vector<glm::vec3> vertices, size_t verticesPerObject);
   std::vector<glm::vec3> randomTransform(
       std::vector<glm::vec3> vertices, size_t verticesPerObject);
+
+ private:
+  std::mt19937 m_rng;
 };
 
 } // namespace cts

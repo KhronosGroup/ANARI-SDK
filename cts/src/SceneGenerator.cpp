@@ -236,6 +236,15 @@ void SceneGenerator::createAnariObject(
     auto it = m_anariObjects.try_emplace(
         int(ANARI_LIGHT), std::vector<ANARIObject>());
     it.first->second.emplace_back(object);
+    if (subtype == "hdri") {
+      size_t resolution = 64;
+      auto checkerboard = TextureGenerator::generateCheckerBoardHDR(resolution);
+      anari::setAndReleaseParameter(m_device,
+          object,
+          "radiance",
+          anari::newArray2D(
+              m_device, checkerboard.data(), resolution, resolution));
+    }
     break;
   }
   case ANARI_VOLUME: {
@@ -749,6 +758,14 @@ void SceneGenerator::commit()
   if (!surfaces.empty() && instances.empty()) {
     anari::setAndReleaseParameter(
         d, m_world, "surface", anari::newArray1D(d, surfaces.data(), surfaces.size()));
+  }
+
+  if (auto lightIt = m_anariObjects.find(ANARI_LIGHT);
+      instances.empty() && lightIt != m_anariObjects.end() && !lightIt->second.empty()) {
+    anari::setAndReleaseParameter(d,
+        m_world,
+        "light",
+        anari::newArray1D(d, lightIt->second.data(), lightIt->second.size()));
   }
 
   if (spatialFieldDim[0] != 0 && spatialFieldDim[1] != 0
