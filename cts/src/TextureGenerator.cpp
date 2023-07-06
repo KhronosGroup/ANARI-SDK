@@ -3,6 +3,7 @@
 
 #include "TextureGenerator.h"
 #include "ColorPalette.h"
+#include "PrimitiveGenerator.h"
 
 namespace cts {
 std::vector<glm::vec4> TextureGenerator::generateGreyScale(size_t resolution) {
@@ -35,6 +36,32 @@ std::vector<glm::vec4> TextureGenerator::generateCheckerBoard(
       }
       ++counter;
     }  
+  }
+  return checkerBoard;
+}
+
+std::vector<glm::vec4> TextureGenerator::generateCheckerBoardHDR(size_t resolution)
+{
+  PrimitiveGenerator generator(0);
+  size_t counter = 0;
+  std::vector<glm::vec4> checkerBoard(resolution * resolution);
+  for (size_t i = 0; i < 8; ++i) {
+    size_t offset = resolution * i * resolution / 8;
+    if (i % 2 == 0) {
+      offset += resolution / 8;
+    }
+    for (size_t j = 0; j < 8; j += 2) {
+      glm::vec3 color = colors::getColorFromPalette(counter);
+      color += generator.getRandomFloat(-0.5f, 0.5f);
+      color = glm::clamp(color, 0.0f, 2.0f);
+      for (size_t x = 0; x < resolution / 8; ++x) {
+        for (size_t y = 0; y < resolution / 8; ++y) {
+          checkerBoard[y + j * resolution / 8 + x * resolution + offset] =
+              glm::vec4(color, 1.0f);
+        }
+      }
+      ++counter;
+    }
   }
   return checkerBoard;
 }
