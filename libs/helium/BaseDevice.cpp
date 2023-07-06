@@ -67,9 +67,8 @@ void BaseDevice::unsetParameter(ANARIObject o, const char *name)
   }
 }
 
-
-void* BaseDevice::mapParameterArray1D(ANARIObject o,
-    const char* name,
+void *BaseDevice::mapParameterArray1D(ANARIObject o,
+    const char *name,
     ANARIDataType dataType,
     uint64_t numElements1,
     uint64_t *elementStride)
@@ -77,8 +76,8 @@ void* BaseDevice::mapParameterArray1D(ANARIObject o,
   return nullptr;
 }
 
-void* BaseDevice::mapParameterArray2D(ANARIObject o,
-    const char* name,
+void *BaseDevice::mapParameterArray2D(ANARIObject o,
+    const char *name,
     ANARIDataType dataType,
     uint64_t numElements1,
     uint64_t numElements2,
@@ -87,8 +86,8 @@ void* BaseDevice::mapParameterArray2D(ANARIObject o,
   return nullptr;
 }
 
-void* BaseDevice::mapParameterArray3D(ANARIObject o,
-    const char* name,
+void *BaseDevice::mapParameterArray3D(ANARIObject o,
+    const char *name,
     ANARIDataType dataType,
     uint64_t numElements1,
     uint64_t numElements2,
@@ -98,10 +97,9 @@ void* BaseDevice::mapParameterArray3D(ANARIObject o,
   return nullptr;
 }
 
-void BaseDevice::unmapParameterArray(ANARIObject o,
-    const char* name)
+void BaseDevice::unmapParameterArray(ANARIObject o, const char *name)
 {
-
+  // no-op
 }
 
 void BaseDevice::commitParameters(ANARIObject o)
