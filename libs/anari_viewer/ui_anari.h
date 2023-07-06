@@ -23,7 +23,7 @@ using Parameter = anari::scenes::ParameterInfo;
 using ParameterList = std::vector<Parameter>;
 
 ParameterList parseParameters(
-    anari::Library l, ANARIDataType objectType, const char *subtype);
+    anari::Device d, ANARIDataType objectType, const char *subtype);
 
 bool buildUI(Parameter &p);
 void buildUI(anari::scenes::SceneHandle s, Parameter &p);

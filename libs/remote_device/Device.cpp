@@ -39,12 +39,49 @@ namespace remote {
 
 //--- Data Arrays -------------------------------------
 
+void *Device::mapParameterArray1D(ANARIObject o,
+    const char *name,
+    ANARIDataType dataType,
+    uint64_t numElements1,
+    uint64_t *elementStride)
+{
+  LOG(logging::Level::Warning) << "Array parameter mapping not implemented";
+  return nullptr;
+}
+
+void *Device::mapParameterArray2D(ANARIObject o,
+    const char *name,
+    ANARIDataType dataType,
+    uint64_t numElements1,
+    uint64_t numElements2,
+    uint64_t *elementStride)
+{
+  LOG(logging::Level::Warning) << "Array parameter mapping not implemented";
+  return nullptr;
+}
+
+void *Device::mapParameterArray3D(ANARIObject o,
+    const char *name,
+    ANARIDataType dataType,
+    uint64_t numElements1,
+    uint64_t numElements2,
+    uint64_t numElements3,
+    uint64_t *elementStride)
+{
+  LOG(logging::Level::Warning) << "Array parameter mapping not implemented";
+  return nullptr;
+}
+
+void Device::unmapParameterArray(ANARIObject o, const char *name)
+{
+  // no-op
+}
+
 ANARIArray1D Device::newArray1D(const void *appMemory,
     ANARIMemoryDeleter deleter,
     const void *userPtr,
     const ANARIDataType elementType,
-    uint64_t numItems1,
-    uint64_t byteStride1)
+    uint64_t numItems1)
 {
   return (ANARIArray1D)registerNewArray(ANARI_ARRAY1D,
       appMemory,
@@ -52,9 +89,6 @@ ANARIArray1D Device::newArray1D(const void *appMemory,
       userPtr,
       elementType,
       numItems1,
-      0,
-      0,
-      byteStride1,
       0,
       0);
 }
@@ -64,9 +98,7 @@ ANARIArray2D Device::newArray2D(const void *appMemory,
     const void *userPtr,
     ANARIDataType elementType,
     uint64_t numItems1,
-    uint64_t numItems2,
-    uint64_t byteStride1,
-    uint64_t byteStride2)
+    uint64_t numItems2)
 {
   return (ANARIArray2D)registerNewArray(ANARI_ARRAY2D,
       appMemory,
@@ -75,9 +107,6 @@ ANARIArray2D Device::newArray2D(const void *appMemory,
       elementType,
       numItems1,
       numItems2,
-      0,
-      byteStride1,
-      byteStride2,
       0);
 }
 
@@ -87,10 +116,7 @@ ANARIArray3D Device::newArray3D(const void *appMemory,
     ANARIDataType elementType,
     uint64_t numItems1,
     uint64_t numItems2,
-    uint64_t numItems3,
-    uint64_t byteStride1,
-    uint64_t byteStride2,
-    uint64_t byteStride3)
+    uint64_t numItems3)
 {
   return (ANARIArray3D)registerNewArray(ANARI_ARRAY3D,
       appMemory,
@@ -99,10 +125,7 @@ ANARIArray3D Device::newArray3D(const void *appMemory,
       elementType,
       numItems1,
       numItems2,
-      numItems3,
-      byteStride1,
-      byteStride2,
-      byteStride3);
+      numItems3);
 }
 
 void *Device::mapArray(ANARIArray array)
@@ -388,6 +411,29 @@ int Device::getProperty(ANARIObject object,
   return result;
 }
 
+const char ** Device::getObjectSubtypes(ANARIDataType objectType)
+{
+  return nullptr;
+}
+
+const void* Device::getObjectInfo(ANARIDataType objectType,
+    const char* objectSubtype,
+    const char* infoName,
+    ANARIDataType infoType)
+{
+  return nullptr;
+}
+
+const void* Device::getParameterInfo(ANARIDataType objectType,
+    const char* objectSubtype,
+    const char* parameterName,
+    ANARIDataType parameterType,
+    const char* infoName,
+    ANARIDataType infoType)
+{
+  return nullptr;
+}
+
 //--- FrameBuffer Manipulation ------------------------
 
 ANARIFrame Device::newFrame()
@@ -562,10 +608,7 @@ ANARIArray Device::registerNewArray(ANARIDataType type,
     const ANARIDataType elementType,
     uint64_t numItems1,
     uint64_t numItems2,
-    uint64_t numItems3,
-    uint64_t byteStride1,
-    uint64_t byteStride2,
-    uint64_t byteStride3)
+    uint64_t numItems3)
 {
   uint64_t objectID = nextObjectID++;
   ANARIArray array;
@@ -579,18 +622,12 @@ ANARIArray Device::registerNewArray(ANARIDataType type,
   buf->write((const char *)&numItems1, sizeof(numItems1));
   buf->write((const char *)&numItems2, sizeof(numItems2));
   buf->write((const char *)&numItems3, sizeof(numItems3));
-  buf->write((const char *)&byteStride1, sizeof(byteStride1));
-  buf->write((const char *)&byteStride2, sizeof(byteStride2));
-  buf->write((const char *)&byteStride3, sizeof(byteStride3));
 
   ArrayInfo info(type,
       elementType,
       numItems1,
       numItems2,
-      numItems3,
-      byteStride1,
-      byteStride2,
-      byteStride3);
+      numItems3);
 
   if (appMemory)
     buf->write((const char *)appMemory, info.getSizeInBytes());
@@ -924,39 +961,6 @@ extern "C" ANARI_DEFINE_LIBRARY_GET_DEVICE_SUBTYPES(remote, libdata)
 {
   static const char *devices[] = {deviceName, nullptr};
   return devices;
-}
-
-extern "C" ANARI_DEFINE_LIBRARY_GET_OBJECT_SUBTYPES(
-    remote, libdata, deviceSubtype, objectType)
-{
-  return nullptr;
-}
-
-extern "C" ANARI_DEFINE_LIBRARY_GET_OBJECT_PROPERTY(remote,
-    library,
-    deviceSubtype,
-    objectSubtype,
-    objectType,
-    propertyName,
-    propertyType)
-{
-  if (propertyType == ANARI_RENDERER) {
-    // return remote::Renderer::Parameters;
-  }
-  return nullptr;
-}
-
-extern "C" ANARI_DEFINE_LIBRARY_GET_PARAMETER_PROPERTY(remote,
-    libdata,
-    deviceSubtype,
-    objectSubtype,
-    objectType,
-    parameterName,
-    parameterType,
-    propertyName,
-    propertyType)
-{
-  return nullptr;
 }
 
 extern "C" ANARIDevice anariNewRemoteDevice()
