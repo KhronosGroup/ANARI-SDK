@@ -281,6 +281,8 @@ def passByType(paramName, type, paramValue, sceneGenerator):
         sceneGenerator.unsetGenericParameter(paramName)
     elif type == "Array1D":
         sceneGenerator.setGenericArray1DParameter(paramName, paramValue)
+    elif type == "Array2D":
+        sceneGenerator.setGenericArray2DParameter(paramName, paramValue)
     else:
         sceneGenerator.setGenericParameter(paramName, paramValue)
 
