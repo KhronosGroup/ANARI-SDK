@@ -76,6 +76,14 @@ def getFileFromList(list, filename):
             return path
     return ""
 
+def simplifyFileName(name):
+    name = name.replace('{', '')
+    name = name.replace('}', '')
+    name = name.replace(':', '')
+    name = name.replace("'", '')
+    name = name.replace('"', '')
+    return name
+
 # writes all reference, candidate, diff and threshold images to filesystem and returns
 def write_images(evaluations, output):
     output_path = Path(output) / "evaluation"
@@ -135,6 +143,18 @@ def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, 
     name = f'{stem}{permutationString}{variantString}'
     results[test_name][name] = {}
 
+    color_thresholds = []
+    parsedThresholds = {}
+    if "thresholds" in parsed_json:
+        parsedThresholds = parsed_json["thresholds"]
+    for idx, method in enumerate(methods):
+        if method in parsedThresholds:
+            color_thresholds.append(parsedThresholds[method])
+        elif idx < len(thresholds):
+            color_thresholds.append(thresholds[idx])
+        else:
+            color_thresholds.append(None)
+
     # evaluate once per channel
     for channel in channels:
         reference_file = f'{reference_prefix}{stem}{permutationString}_{channel}'
@@ -157,7 +177,7 @@ def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, 
             custom_compare_function = None
         else:
             # color channels might have multiple thresholds for multiple comparison methods
-            channelThresholds = thresholds
+            channelThresholds = color_thresholds
         # evaluate rendered scene against reference data (possibly using a custom comparison function)
         eval_result = ctsUtility.evaluate_scene(ref_path, candidate_path, methods, channelThresholds, custom_compare_function)
         print(f'\n{test_name} {name} {channel}:')
@@ -257,8 +277,12 @@ def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, te
     return frame_duration
 
 def passByType(paramName, type, paramValue, sceneGenerator):
-    if type == "Array1D":
+    if paramValue == None:
+        sceneGenerator.unsetGenericParameter(paramName)
+    elif type == "Array1D":
         sceneGenerator.setGenericArray1DParameter(paramName, paramValue)
+    else:
+        sceneGenerator.setGenericParameter(paramName, paramValue)
 
 # applies a function to each test scene (or test permutation), passing additional args to that function
 # returns a dictonary of return values of the passed function with the test scene names as keys
@@ -319,8 +343,8 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                             for idx, item in enumerate(array):
                                 subtype = None
                                 if "subtype" not in item:
-                                    # Renderer subtype is user-defined
-                                    if anariObjectName == "renderer":
+                                    # Renderer subtype is user-defined/instance, group and surface do not have a subtype
+                                    if anariObjectName == "renderer" or anariObjectName == "instance" or anariObjectName == "group" or anariObjectName == "surface":
                                         subtype = anari_renderer
                                     else:
                                         # If no subtype is present no object is generated. This can be used prevent the initialization of default scene objects
@@ -340,6 +364,13 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                                     if isinstance(paramValue, str) and paramValue.startswith("ref_"):
                                         stringArray = paramValue.split('_')
                                         references.append([anariObjectName, idx, paramName, stringArray[1], int(stringArray[2])])
+                                    elif isinstance(paramValue, list) and all(isinstance(elem, str) and elem.startswith("ref_") for elem in paramValue):
+                                        refList = []
+                                        stringArray = []
+                                        for elem in paramValue:
+                                            stringArray = elem.split('_')
+                                            refList.append(int(stringArray[2]))
+                                        references.append([anariObjectName, idx, paramName, stringArray[1], refList])
                                     elif paramValue is None:
                                         sceneGenerator.unsetGenericParameter(paramName)
                                     elif isinstance(paramValue, dict):
@@ -408,10 +439,21 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                                 if (isinstance(permutation[i], str) and permutation[i].startswith("ref_")):
                                     ref = permutation[i].split('_')
                                     sceneGenerator.setReferenceParameter(pointer[2], int(pointer[3]), pointer[4], ref[1], int(ref[2]))
+                                elif isinstance(permutation[i], list) and all(isinstance(elem, str) and elem.startswith("ref_") for elem in permutation[i]):
+                                        refList = []
+                                        stringArray = []
+                                        for elem in permutation[i]:
+                                            stringArray = elem.split('_')
+                                            refList.append(int(stringArray[2]))
+                                        sceneGenerator.setReferenceParameter(pointer[2], int(pointer[3]), pointer[4], stringArray[1], refList)
                                 else:
                                     sceneGenerator.setCurrentObject(pointer[2], int(pointer[3]))
                                     if permutation[i] is None:
                                         sceneGenerator.unsetGenericParameter(pointer[4])
+                                    elif isinstance(permutation[i], dict):
+                                        for [type, typedValue] in permutation[i].items():
+                                            passByType(pointer[4], type, typedValue, sceneGenerator)
+                                            break
                                     elif len(pointer) > 5:
                                         passByType(pointer[4], pointer[5], permutation[i], sceneGenerator)
                                     else:
@@ -432,6 +474,8 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                     except Exception as e:
                         print(e)
                         continue
+                permutationString = simplifyFileName(permutationString)
+                variantString = simplifyFileName(variantString)
                 # call function for each permutated/variant test scene and collect return values per test scene permutation/variant
                 result[test_name + permutationString + variantString] = (func(parsed_json, sceneGenerator, anari_renderer, json_file_path, test_name, permutationString[1:], variantString[1:], *args))
         else:

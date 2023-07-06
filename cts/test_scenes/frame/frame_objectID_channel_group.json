@@ -1,0 +1,52 @@
+{
+  "sceneParameters": {
+    "primitiveCount": 1,
+    "seed": 12345,
+    "frame_primitiveId_type": "UINT32",
+    "anari_objects": {
+      "instance": [
+        {
+          "group": "ref_group_0"
+        },
+        {
+          "group": "ref_group_1"
+        }
+      ],
+      "group": [
+        {
+          "surface": ["ref_surface_1"]
+        },
+        {
+          "surface": ["ref_surface_0"]
+        }
+      ],
+      "surface": [
+        {
+          "geometry": "ref_geometry_0",
+          "material": "ref_material_0"
+        },
+        {
+          "geometry": "ref_geometry_1",
+          "material": "ref_material_0"
+        }
+      ],
+      "geometry": [
+        {
+          "subtype": "triangle"
+        },
+        {
+          "subtype": "triangle"
+        }
+      ]
+      ,
+      "material": [
+        {
+          "subtype": "matte"
+        }
+      ]
+    }
+  },
+  "_requiredFeatures": [
+    "KHR_FRAME_CHANNEL_OBJECT_ID"
+  ]
+}

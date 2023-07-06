@@ -84,6 +84,24 @@ TextureGenerator::generateRGBRamp(size_t resolution)
   return RGBRamp;
 }
 
+uint8_t TextureGenerator::convertShortNormalToColor(int16_t input, bool isZ)
+{
+  if (isZ) {
+    return static_cast<uint8_t>(input / -2.0f + 128);
+  } else {
+    return static_cast<uint8_t>(input / 2.0f + 128);
+  }
+}
+
+float TextureGenerator::convertNormalToColor(float input, bool isZ)
+{
+  if (isZ) {
+    return input / -2.0f + 0.5f;
+  } else {
+    return input / 2.0f + 0.5f;
+  }
+}
+
 glm::vec3 TextureGenerator::convertColorToNormal(glm::vec3 color) {
   glm::vec3 result;
   result.x = color.x * 2.0f - 1.0f;

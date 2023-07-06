@@ -1,0 +1,19 @@
+{
+  "sceneParameters": {
+    "primitiveCount": 8,
+    "seed": 12345,
+    "shape": "triangle",
+    "frame_primitiveId_type": "UINT32",
+    "anari_objects": {
+      "geometry": [
+        {
+          "subtype": "triangle",
+          "primitiveID": { "Array1D": [5,3,4,2,7,6,0,1]}
+        }
+      ]
+    }
+  },
+  "_requiredFeatures": [
+    "KHR_FRAME_CHANNEL_PRIMITIVE_ID"
+  ]
+}

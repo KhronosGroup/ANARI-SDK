@@ -21,7 +21,7 @@ def psnr(reference, candidate, threshold):
 def getThreshold(methods, thresholds, method, default):
     if thresholds != None:
         index = methods.index(method)
-        if index < len(thresholds):
+        if index < len(thresholds) and thresholds[index] != None:
             return float(thresholds[index])
     return default
 
