@@ -10,7 +10,6 @@ namespace helide {
 struct Array1DMemoryDescriptor : public ArrayMemoryDescriptor
 {
   uint64_t numItems{0};
-  uint64_t byteStride{0};
 };
 
 bool isCompact(const Array1DMemoryDescriptor &d);
