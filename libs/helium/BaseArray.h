@@ -23,3 +23,5 @@ struct BaseArray : public BaseObject
 };
 
 } // namespace helium
+
+HELIUM_ANARI_TYPEFOR_SPECIALIZATION(helium::BaseArray *, ANARI_ARRAY);
