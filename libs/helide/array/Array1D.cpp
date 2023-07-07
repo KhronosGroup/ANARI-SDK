@@ -5,20 +5,9 @@
 
 namespace helide {
 
-// Helper functions ///////////////////////////////////////////////////////////
-
-bool isCompact(const Array1DMemoryDescriptor &d)
-{
-  return d.byteStride == 0 || d.byteStride == anari::sizeOf(d.elementType);
-}
-
-// Array1D definitions ////////////////////////////////////////////////////////
-
 Array1D::Array1D(HelideGlobalState *state, const Array1DMemoryDescriptor &d)
     : Array(ANARI_ARRAY1D, state, d), m_capacity(d.numItems), m_end(d.numItems)
 {
-  if (!isCompact(d))
-    throw std::runtime_error("1D strided arrays not yet supported");
   initManagedMemory();
 }
 

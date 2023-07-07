@@ -76,7 +76,6 @@ ANARIArray1D HelideDevice::newArray1D(const void *appMemory,
   md.deleterPtr = userData;
   md.elementType = type;
   md.numItems = numItems;
-  md.byteStride = 0;
 
   if (anari::isObject(type))
     return createObjectForAPI<ObjectArray, ANARIArray1D>(deviceState(), md);
@@ -100,8 +99,6 @@ ANARIArray2D HelideDevice::newArray2D(const void *appMemory,
   md.elementType = type;
   md.numItems1 = numItems1;
   md.numItems2 = numItems2;
-  md.byteStride1 = 0;
-  md.byteStride2 = 0;
 
   return createObjectForAPI<Array2D, ANARIArray2D>(deviceState(), md);
 }
@@ -124,9 +121,6 @@ ANARIArray3D HelideDevice::newArray3D(const void *appMemory,
   md.numItems1 = numItems1;
   md.numItems2 = numItems2;
   md.numItems3 = numItems3;
-  md.byteStride1 = 0;
-  md.byteStride2 = 0;
-  md.byteStride3 = 0;
 
   return createObjectForAPI<Array3D, ANARIArray3D>(deviceState(), md);
 }

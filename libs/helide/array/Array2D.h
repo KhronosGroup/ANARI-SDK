@@ -11,8 +11,6 @@ struct Array2DMemoryDescriptor : public ArrayMemoryDescriptor
 {
   uint64_t numItems1{0};
   uint64_t numItems2{0};
-  uint64_t byteStride1{0};
-  uint64_t byteStride2{0};
 };
 
 bool isCompact(const Array2DMemoryDescriptor &d);
