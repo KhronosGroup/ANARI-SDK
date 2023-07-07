@@ -117,10 +117,10 @@ def write_images(evaluations, output):
     return evaluations
 
 # set title and call function to write out pdf report
-def write_report(results, output, verbosity = 0):
+def write_report(results, output, check_features = True, verbosity = 0):
     output_path = Path(output) / "evaluation"
     title = f'CTS - Report' if "renderer" not in results else f'CTS - Library: {results["library"]} Device: {results["device"]} Renderer: {results["renderer"]}'
-    ctsReport.generate_report_document(results, output_path, title, verbosity)
+    ctsReport.generate_report_document(results, output_path, title, check_features, verbosity)
 
 # compare candidate and reference images using build in or custom compare functions
 # returns dictionary of evaluation results per channel per permutation per test scene
@@ -289,7 +289,7 @@ def passByType(paramName, type, paramValue, sceneGenerator):
 
 # applies a function to each test scene (or test permutation), passing additional args to that function
 # returns a dictonary of return values of the passed function with the test scene names as keys
-def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", only_permutations = False, use_generator = True,  *args):
+def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", only_permutations = False, check_features = True, use_generator = True,  *args):
     result = {}
     # gather available test scenes
     collected_scenes = resolve_scenes(test_scenes)
@@ -331,7 +331,7 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                         all_features_available = False
                         print("Feature %s is not supported"%feature)
 
-            if not all_features_available:
+            if not all_features_available and check_features:
                 # skip this test scene if a required feature is missing
                 print("Scene %s is not supported"%json_file_path)
                 result[test_name] = "Features not supported"
@@ -494,17 +494,17 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
     return result
 
 # apply the render_scene() function to all test scenes available
-def render_scenes(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", output = "."):
-    apply_to_scenes(render_scene, anari_library, anari_device, anari_renderer, test_scenes, False, True, output)
+def render_scenes(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", check_features = True, output = "."):
+    apply_to_scenes(render_scene, anari_library, anari_device, anari_renderer, test_scenes, False, check_features, True, output)
 
 # compare existing candidate and reference images and write the results into a pdf report
 # this report will only contain image comparisons and no further data like e.g. queried features
-def compare_images(test_scenes = "test_scenes", candidates_path = "test_scenes", output = ".", verbosity=0, comparison_methods = ["ssim"], thresholds = None, custom_compare_function = None):
+def compare_images(test_scenes = "test_scenes", candidates_path = "test_scenes", output = ".", verbosity=0, check_features = True, comparison_methods = ["ssim"], thresholds = None, custom_compare_function = None):
     # gather existing candidate and reference images
     ref_images = globImages(test_scenes, reference_prefix)
     candidate_images = globImages(candidates_path, exclude_prefix=reference_prefix)
     # evaluate images per test scene (also generates diff and threshold images)
-    evaluations = apply_to_scenes(evaluate_scene, "", None, "default", test_scenes, False, False, output, ref_images, candidate_images, comparison_methods, thresholds, custom_compare_function)
+    evaluations = apply_to_scenes(evaluate_scene, "", None, "default", test_scenes, False, check_features , False, output, ref_images, candidate_images, comparison_methods, thresholds, custom_compare_function)
     if output != None:
         # write all images to filesystem to later incorporate in report
         print("\n***Create Report***\n")
@@ -513,7 +513,7 @@ def compare_images(test_scenes = "test_scenes", candidates_path = "test_scenes",
         for evaluation in evaluations.values():
             merged_evaluations = recursive_update(merged_evaluations, evaluation)
         # write out pdf report containing images and evaluation data
-        write_report(merged_evaluations, output, verbosity)
+        write_report(merged_evaluations, output, check_features, verbosity)
         print("***Done***")
 
 # compare candidate bounding box against reference bounding box using a tolerance value
@@ -630,7 +630,7 @@ def create_report_for_scene(parsed_json, sceneGenerator, anari_renderer, scene_l
     return report
 
 # queries metadata and features, renders test scenes, compares reference and candidate images and writes all results into a pdf report
-def create_report(library, device = None, renderer = "default", test_scenes = "test_scenes", output = ".", verbosity = 0, comparison_methods = ["ssim"], thresholds = None, custom_compare_function = None):
+def create_report(library, device = None, renderer = "default", test_scenes = "test_scenes", output = ".", verbosity = 0, check_features = True, comparison_methods = ["ssim"], thresholds = None, custom_compare_function = None):
     # query metadata and features from the library / device
     merged_evaluations = {}
     merged_evaluations["anariInfo"] = query_metadata(library, device)
@@ -644,13 +644,13 @@ def create_report(library, device = None, renderer = "default", test_scenes = "t
         return
     print("***Create renderings***\n")
     # render test scenes
-    result1 = apply_to_scenes(create_report_for_scene, library, device, renderer, test_scenes, False, True, output, comparison_methods, thresholds, custom_compare_function, merged_evaluations["features"])
+    result1 = apply_to_scenes(create_report_for_scene, library, device, renderer, test_scenes, False, check_features, True, output, comparison_methods, thresholds, custom_compare_function, merged_evaluations["features"])
     if not result1:
         print("Report could not be created")
         return
     print("\n***Compare renderings***\n")
     # evaluate rendered images
-    result2 = apply_to_scenes(create_report_for_scene, library, device, renderer, test_scenes, False, False, output, comparison_methods, thresholds, custom_compare_function, merged_evaluations["features"])
+    result2 = apply_to_scenes(create_report_for_scene, library, device, renderer, test_scenes, False, check_features, False, output, comparison_methods, thresholds, custom_compare_function, merged_evaluations["features"])
     # write all images to filesystem to later incorporate in report
     result2 = write_images(result2, output)
     # combine rendering results and image evaluation results with previously queried data
@@ -660,7 +660,7 @@ def create_report(library, device = None, renderer = "default", test_scenes = "t
         merged_evaluations = recursive_update(merged_evaluations, evaluation)
     print("\n***Create Report***\n")
     # write out extensive pdf report (depending on verbosity level)
-    write_report(merged_evaluations, output, verbosity)
+    write_report(merged_evaluations, output, check_features, verbosity)
     print("***Done***")
 
 if __name__ == "__main__":
@@ -670,6 +670,9 @@ if __name__ == "__main__":
 
     libraryParser = argparse.ArgumentParser(add_help=False)
     libraryParser.add_argument('library', help='ANARI library to load')
+
+    ignoreFeatureParser = argparse.ArgumentParser(add_help=False)
+    ignoreFeatureParser.add_argument('--ignore_features', action='store_true', help='Run tests even if feature is not supported')
 
     deviceParser = argparse.ArgumentParser(add_help=False, parents=[libraryParser])
     deviceParser.add_argument('-d', '--device', default=None, help='ANARI device on which to perform the test')
@@ -685,11 +688,11 @@ if __name__ == "__main__":
     evaluationMethodParser.add_argument('-vv', '--verbose_all', action='store_true', help="Include verbose infos of all tests in report")
 
     # command: render_scenes
-    renderScenesParser = subparsers.add_parser('render_scenes', description='Renders an image to disk for each test scene', parents=[sceneParser])
+    renderScenesParser = subparsers.add_parser('render_scenes', description='Renders an image to disk for each test scene', parents=[sceneParser,ignoreFeatureParser])
     renderScenesParser.add_argument('-o', '--output', default=".", help="Output path")
 
     # command: compare_images
-    evaluateScenesParser = subparsers.add_parser('compare_images', description='Evaluates candidate renderings against reference renderings', parents=[evaluationMethodParser])
+    evaluateScenesParser = subparsers.add_parser('compare_images', description='Evaluates candidate renderings against reference renderings', parents=[evaluationMethodParser,ignoreFeatureParser])
     evaluateScenesParser.add_argument('-t', '--test_scenes', default="test_scenes", help="Folder with test scenes which include the reference images")
     evaluateScenesParser.add_argument('--candidates', default="test_scenes", help="Path to folder containing the candidate images")
     evaluateScenesParser.add_argument('-o', '--output', default=".", help="Output path")
@@ -709,7 +712,7 @@ if __name__ == "__main__":
     checkObjectPropertiesParser.add_argument('-t', '--test_scenes', default="test_scenes", help="Folder with test scenes to test. Specify subfolder to test subsets")
 
     # command: create_report
-    create_reportParser = subparsers.add_parser('create_report', parents=[sceneParser, evaluationMethodParser], description="Runs all tests and creates a pdf report")
+    create_reportParser = subparsers.add_parser('create_report', parents=[sceneParser, evaluationMethodParser, ignoreFeatureParser], description="Runs all tests and creates a pdf report")
     create_reportParser.add_argument('-o', '--output', default=".", help="Output path")
 
     command_text = ""
@@ -727,9 +730,9 @@ if __name__ == "__main__":
     verboseLevel = 2 if "verbose_all" in args and args.verbose_all else 1 if "verbose_error" in args and args.verbose_error else 0
 
     if args.command == "render_scenes":
-        render_scenes(args.library, args.device, args.renderer, args.test_scenes, args.output)
+        render_scenes(args.library, args.device, args.renderer, args.test_scenes, not args.ignore_features, args.output)
     elif args.command == "compare_images":
-        compare_images(args.test_scenes, args.candidates, args.output, verboseLevel, args.comparison_methods, args.thresholds)
+        compare_images(args.test_scenes, args.candidates, args.output, verboseLevel, not args.ignore_features, args.comparison_methods, args.thresholds)
     elif args.command == "query_features":
         result = query_features(args.library, args.device)
         print(tabulate(result))
@@ -740,4 +743,4 @@ if __name__ == "__main__":
         for key, value in result.items():
             print(f'{key}: {value[0]}')
     elif args.command == "create_report":
-        create_report(args.library, args.device, args.renderer, args.test_scenes, args.output, verboseLevel, args.comparison_methods, args.thresholds)
+        create_report(args.library, args.device, args.renderer, args.test_scenes, args.output, verboseLevel, not args.ignore_features, args.comparison_methods, args.thresholds)

@@ -4,7 +4,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors, pagesizes
 
 
-def generate_report_document(report_data, path, title, verbosity = 0):
+def generate_report_document(report_data, path, title, check_features = True, verbosity = 0):
     """ Create the pdf report
     Keyword arguments:
     report_data -- json structured data to display
@@ -73,9 +73,10 @@ def generate_report_document(report_data, path, title, verbosity = 0):
                 for i, item in enumerate(test_cases_value["requiredFeatures"]):
                     if item in test_cases_value["not_supported"]:
                         test_cases_value["requiredFeatures"][i] = f'<font color="red">{item}</font>'
-                summaryItem.append(Paragraph(str(test_cases_value["requiredFeatures"])))
-                summary.append(summaryItem)
-                continue
+                if check_features:
+                    summaryItem.append(Paragraph(str(test_cases_value["requiredFeatures"])))
+                    summary.append(summaryItem)
+                    continue
             # Add heading with ref
             test_case_story.append(Paragraph(f'<a name={test_cases_name}></a>{test_cases_name}', stylesheet["Heading2"]))
             # Create summery item for current test file (this will be changed later)
