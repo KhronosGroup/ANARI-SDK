@@ -31,3 +31,5 @@ struct BaseFrame : public BaseObject
 };
 
 } // namespace helium
+
+HELIUM_ANARI_TYPEFOR_SPECIALIZATION(helium::BaseFrame *, ANARI_FRAME);

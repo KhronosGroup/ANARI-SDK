@@ -73,7 +73,11 @@ void *BaseDevice::mapParameterArray1D(ANARIObject o,
     uint64_t numElements1,
     uint64_t *elementStride)
 {
-  return nullptr;
+  auto array = newArray1D(nullptr, nullptr, nullptr, dataType, numElements1);
+  setParameter(o, name, ANARI_ARRAY1D, &array);
+  *elementStride = anari::sizeOf(dataType);
+  referenceFromHandle(array).refDec(RefType::PUBLIC);
+  return mapArray(array);
 }
 
 void *BaseDevice::mapParameterArray2D(ANARIObject o,
@@ -83,7 +87,12 @@ void *BaseDevice::mapParameterArray2D(ANARIObject o,
     uint64_t numElements2,
     uint64_t *elementStride)
 {
-  return nullptr;
+  auto array = newArray2D(
+      nullptr, nullptr, nullptr, dataType, numElements1, numElements2);
+  setParameter(o, name, ANARI_ARRAY2D, &array);
+  *elementStride = anari::sizeOf(dataType);
+  referenceFromHandle(array).refDec(RefType::PUBLIC);
+  return mapArray(array);
 }
 
 void *BaseDevice::mapParameterArray3D(ANARIObject o,
@@ -94,12 +103,24 @@ void *BaseDevice::mapParameterArray3D(ANARIObject o,
     uint64_t numElements3,
     uint64_t *elementStride)
 {
-  return nullptr;
+  auto array = newArray3D(nullptr,
+      nullptr,
+      nullptr,
+      dataType,
+      numElements1,
+      numElements2,
+      numElements3);
+  setParameter(o, name, ANARI_ARRAY3D, &array);
+  *elementStride = anari::sizeOf(dataType);
+  referenceFromHandle(array).refDec(RefType::PUBLIC);
+  return mapArray(array);
 }
 
 void BaseDevice::unmapParameterArray(ANARIObject o, const char *name)
 {
-  // no-op
+  auto *obj = (BaseObject *)o;
+  auto *array = obj->getParamObject<BaseArray>(name);
+  array->unmap();
 }
 
 void BaseDevice::commitParameters(ANARIObject o)

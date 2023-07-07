@@ -253,25 +253,25 @@ const void *query_param_info(ANARIDataType type,
     const char *infoName,
     ANARIDataType infoType);
 
-const char ** HelideDevice::getObjectSubtypes(ANARIDataType objectType)
+const char **HelideDevice::getObjectSubtypes(ANARIDataType objectType)
 {
   return helide::query_object_types(objectType);
 }
 
-const void* HelideDevice::getObjectInfo(ANARIDataType objectType,
-    const char* objectSubtype,
-    const char* infoName,
+const void *HelideDevice::getObjectInfo(ANARIDataType objectType,
+    const char *objectSubtype,
+    const char *infoName,
     ANARIDataType infoType)
 {
   return helide::query_object_info(
       objectType, objectSubtype, infoName, infoType);
 }
 
-const void* HelideDevice::getParameterInfo(ANARIDataType objectType,
-    const char* objectSubtype,
-    const char* parameterName,
+const void *HelideDevice::getParameterInfo(ANARIDataType objectType,
+    const char *objectSubtype,
+    const char *parameterName,
     ANARIDataType parameterType,
-    const char* infoName,
+    const char *infoName,
     ANARIDataType infoType)
 {
   return helide::query_param_info(objectType,
@@ -431,7 +431,7 @@ extern "C" HELIDE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_DEVICE_FEATURES(
 {
   (void)library;
   (void)deviceSubtype;
-  return (const char**)helide::query_extensions();
+  return (const char **)helide::query_extensions();
 }
 
 extern "C" HELIDE_DEVICE_INTERFACE ANARIDevice anariNewHelideDevice(
