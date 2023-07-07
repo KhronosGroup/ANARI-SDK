@@ -61,7 +61,7 @@ using DataType       = ANARIDataType;
 // C++ API ////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-// Initialization + Introspection //
+// Initialization + Introspection /////////////////////////////////////////////
 
 Library loadLibrary(const char *name,
     StatusCallback defaultStatus = nullptr,
@@ -71,7 +71,7 @@ void unloadLibrary(Library);
 void loadModule(Library, const char *name);
 void unloadModule(Library, const char *name);
 
-// Object Creation //
+// Object Creation ////////////////////////////////////////////////////////////
 
 anari::Device newDevice(Library, const char *name = "default");
 
@@ -82,9 +82,9 @@ T newObject(Device);
 template <typename T>
 T newObject(Device, const char *subtype);
 
-// Arrays //
+// Arrays /////////////////////////////////////////////////////////////////////
 
-// 1D
+// 1D //
 
 template <typename T>
 Array1D newArray1D(Device,
@@ -94,13 +94,11 @@ Array1D newArray1D(Device,
     uint64_t numItems1);
 
 template <typename T>
-Array1D newArray1D(Device,
-    const T *appMemory,
-    uint64_t numItems1 = 1);
+Array1D newArray1D(Device, const T *appMemory, uint64_t numItems1 = 1);
 
 Array1D newArray1D(Device d, ANARIDataType type, uint64_t numItems1);
 
-// 2D
+// 2D //
 
 template <typename T>
 Array2D newArray2D(Device,
@@ -111,15 +109,13 @@ Array2D newArray2D(Device,
     uint64_t numItems2);
 
 template <typename T>
-Array2D newArray2D(Device,
-    const T *appMemory,
-    uint64_t numItems1,
-    uint64_t numItems2);
+Array2D newArray2D(
+    Device, const T *appMemory, uint64_t numItems1, uint64_t numItems2);
 
 Array2D newArray2D(
     Device d, ANARIDataType type, uint64_t numItems1, uint64_t numItems2);
 
-// 3D
+// 3D //
 
 template <typename T>
 Array3D newArray3D(Device,
@@ -143,13 +139,46 @@ Array3D newArray3D(Device d,
     uint64_t numItems2,
     uint64_t numItems3);
 
-// Data Updates
+// Data Updates //
 
 template <typename T>
 T *map(Device, Array);
 void unmap(Device, Array);
 
-// Object + Parameter Lifetime Management //
+// Directly Mapped Array Parameters //
+
+void setParameterArray1D(Device d,
+    Object object,
+    const char *name,
+    ANARIDataType type,
+    const void *v,
+    uint64_t numElements1);
+
+template <typename T>
+void setParameterArray1D(ANARIDevice device,
+    ANARIObject object,
+    const char *name,
+    const T *data,
+    uint64_t numElements1);
+
+template <typename T>
+void setParameterArray2D(ANARIDevice device,
+    ANARIObject object,
+    const char *name,
+    const T *data,
+    uint64_t numElements1,
+    uint64_t numElements2);
+
+template <typename T>
+void setParameterArray3D(ANARIDevice device,
+    ANARIObject object,
+    const char *name,
+    const T *data,
+    uint64_t numElements1,
+    uint64_t numElements2,
+    uint64_t numElements3);
+
+// Object + Parameter Lifetime Management /////////////////////////////////////
 
 template <typename T>
 void setParameter(Device d, Object o, const char *name, T &&v);
@@ -168,13 +197,13 @@ void commitParameters(Device, Object);
 void release(Device, Object);
 void retain(Device, Object);
 
-// Object Query Interface //
+// Object Query Interface /////////////////////////////////////////////////////
 
 template <typename T>
 bool getProperty(
     Device, Object, const char *propertyName, T &dst, WaitMask = ANARI_WAIT);
 
-// Frame Operations //
+// Frame Operations ///////////////////////////////////////////////////////////
 
 template <typename T>
 struct MappedFrameData
@@ -202,12 +231,10 @@ using Features = ANARIFeatures;
 
 namespace feature {
 
-Features getDeviceFeatureStruct(Library library,
-    const char *deviceSubtype);
+Features getDeviceFeatureStruct(Library library, const char *deviceSubtype);
 
-Features getObjectFeatureStruct(Device device,
-    DataType objectType,
-    const char *objectSubtype);
+Features getObjectFeatureStruct(
+    Device device, DataType objectType, const char *objectSubtype);
 
 Features getInstanceFeatureStruct(Device, Object);
 
