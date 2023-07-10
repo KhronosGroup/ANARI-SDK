@@ -19,12 +19,13 @@ def generate_report_document(report_data, path, title, verbosity = 0):
     stylesheet = getSampleStyleSheet()
     normalStyle = stylesheet["Normal"]
 
-
-    # Create passed and failed Paragraph for reusability
+    # Create passed, partial and failed Paragraph for reusability
     normalStyle.textColor = "green"
     passed = Paragraph("Passed", normalStyle)
     normalStyle.textColor = "red"
     failed = Paragraph("Failed", normalStyle)
+    normalStyle.textColor = "orange"
+    partialPass = Paragraph("Partial", normalStyle)
     normalStyle.textColor = "black"
 
     story=[]
@@ -93,6 +94,8 @@ def generate_report_document(report_data, path, title, verbosity = 0):
             oldCount = len(test_case_story)
             summary.append(summaryItem)
 
+            hasPassedIteration = False
+            hasFailedIteration = False
             # Iterate through all permutations/variants
             for name, nameValue in test_cases_value.items():
                 if isinstance(nameValue, dict):
@@ -234,6 +237,15 @@ def generate_report_document(report_data, path, title, verbosity = 0):
                     else:
                         # Add test to summary without reference
                         summary.append([Paragraph(f'&nbsp;&nbsp;&nbsp;&nbsp;{name}'), status])
+
+                    if status == passed:
+                        hasPassedIteration = True
+                    elif status == failed:
+                        hasFailedIteration = True
+
+            # Mark test as partial pass if both, failed and passed, permutation/variants were present
+            if hasPassedIteration and hasFailedIteration:
+                summaryItem[1] = partialPass
 
             # Only add the whole detailed test case if there is actual content to show
             if len(test_case_story) != oldCount:
