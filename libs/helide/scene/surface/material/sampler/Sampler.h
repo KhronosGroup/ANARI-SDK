@@ -12,6 +12,7 @@ struct Geometry;
 struct Sampler : public Object
 {
   Sampler(HelideGlobalState *d);
+  virtual ~Sampler();
 
   virtual float4 getSample(const Geometry &g, const Ray &r) const = 0;
 

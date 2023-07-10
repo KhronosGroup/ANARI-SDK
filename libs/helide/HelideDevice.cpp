@@ -206,6 +206,37 @@ ANARIWorld HelideDevice::newWorld()
   return createObjectForAPI<World, ANARIWorld>(deviceState());
 }
 
+// Query functions ////////////////////////////////////////////////////////////
+
+const char **HelideDevice::getObjectSubtypes(ANARIDataType objectType)
+{
+  return helide::query_object_types(objectType);
+}
+
+const void *HelideDevice::getObjectInfo(ANARIDataType objectType,
+    const char *objectSubtype,
+    const char *infoName,
+    ANARIDataType infoType)
+{
+  return helide::query_object_info(
+      objectType, objectSubtype, infoName, infoType);
+}
+
+const void *HelideDevice::getParameterInfo(ANARIDataType objectType,
+    const char *objectSubtype,
+    const char *parameterName,
+    ANARIDataType parameterType,
+    const char *infoName,
+    ANARIDataType infoType)
+{
+  return helide::query_param_info(objectType,
+      objectSubtype,
+      parameterName,
+      parameterType,
+      infoName,
+      infoType);
+}
+
 // Object + Parameter Lifetime Management /////////////////////////////////////
 
 int HelideDevice::getProperty(ANARIObject object,
@@ -237,49 +268,6 @@ int HelideDevice::getProperty(ANARIObject object,
   }
 
   return 0;
-}
-
-// Queries
-
-const char **query_object_types(ANARIDataType type);
-const void *query_object_info(ANARIDataType type,
-    const char *subtype,
-    const char *infoName,
-    ANARIDataType infoType);
-const void *query_param_info(ANARIDataType type,
-    const char *subtype,
-    const char *paramName,
-    ANARIDataType paramType,
-    const char *infoName,
-    ANARIDataType infoType);
-
-const char **HelideDevice::getObjectSubtypes(ANARIDataType objectType)
-{
-  return helide::query_object_types(objectType);
-}
-
-const void *HelideDevice::getObjectInfo(ANARIDataType objectType,
-    const char *objectSubtype,
-    const char *infoName,
-    ANARIDataType infoType)
-{
-  return helide::query_object_info(
-      objectType, objectSubtype, infoName, infoType);
-}
-
-const void *HelideDevice::getParameterInfo(ANARIDataType objectType,
-    const char *objectSubtype,
-    const char *parameterName,
-    ANARIDataType parameterType,
-    const char *infoName,
-    ANARIDataType infoType)
-{
-  return helide::query_param_info(objectType,
-      objectSubtype,
-      parameterName,
-      parameterType,
-      infoName,
-      infoType);
 }
 
 // Frame Manipulation /////////////////////////////////////////////////////////
@@ -349,6 +337,10 @@ HelideDevice::~HelideDevice()
   reportLeaks(state.objectCounts.surfaces, "ANARISurface");
   reportLeaks(state.objectCounts.geometries, "ANARIGeometry");
   reportLeaks(state.objectCounts.materials, "ANARIMaterial");
+  reportLeaks(state.objectCounts.samplers, "ANARISampler");
+  reportLeaks(state.objectCounts.volumes, "ANARIVolume");
+  reportLeaks(state.objectCounts.spatialFields, "ANARISpatialField");
+  reportLeaks(state.objectCounts.arrays, "ANARIArray");
 
   if (state.objectCounts.unknown != 0) {
     reportMessage(ANARI_SEVERITY_WARNING,
