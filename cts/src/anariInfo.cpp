@@ -6,8 +6,6 @@
 // anariInfo opens a library and displays queryable information without
 // creating any devices.
 
-
-
 //#ifdef _WIN32
 //#include <malloc.h>
 //#else
@@ -54,9 +52,7 @@ const ANARIDataType namedTypes[] = {ANARI_CAMERA,
 template <int T, class Enable = void>
 struct param_printer
 {
-  void operator()(const void *, std::stringstream& s)
-  {
-  }
+  void operator()(const void *, std::stringstream &s) {}
 };
 
 template <>
@@ -118,77 +114,53 @@ struct param_printer_wrapper : public param_printer<T>
 {
 };
 
-static void printAnariFromMemory(ANARIDataType t, const void *mem, std::stringstream &s)
+static void printAnariFromMemory(
+    ANARIDataType t, const void *mem, std::stringstream &s)
 {
   anari::anariTypeInvoke<void, param_printer_wrapper>(t, mem, s);
 }
 
-void print_info(ANARILibrary lib,
-    const char *device,
-    const char *objname,
+void print_info(anari::Device device,
     ANARIDataType objtype,
+    const char *objname,
     const char *paramname,
     ANARIDataType paramtype,
-    const char *indent, std::stringstream& s)
+    const char *indent,
+    std::stringstream &s)
 {
-  int32_t *required = (int32_t *)anariGetParameterInfo(lib,
-      device,
-      objname,
-      objtype,
-      paramname,
-      paramtype,
-      "required",
-      ANARI_BOOL);
+  int32_t *required = (int32_t *)anariGetParameterInfo(
+      device, objtype, objname, paramname, paramtype, "required", ANARI_BOOL);
   if (required && *required) {
     s << indent << "required\n";
   }
 
-  const void *mem = anariGetParameterInfo(lib,
-      device,
-      objname,
-      objtype,
-      paramname,
-      paramtype,
-      "default",
-      paramtype);
+  const void *mem = anariGetParameterInfo(
+      device, objtype, objname, paramname, paramtype, "default", paramtype);
   if (mem) {
     s << indent << "default = ";
     printAnariFromMemory(paramtype, mem, s);
     s << "\n";
   }
 
-  mem = anariGetParameterInfo(lib,
-      device,
-      objname,
-      objtype,
-      paramname,
-      paramtype,
-      "minimum",
-      paramtype);
+  mem = anariGetParameterInfo(
+      device, objtype, objname, paramname, paramtype, "minimum", paramtype);
   if (mem) {
     s << indent << "minimum = ";
     printAnariFromMemory(paramtype, mem, s);
     s << "\n";
   }
 
-  mem = anariGetParameterInfo(lib,
-      device,
-      objname,
-      objtype,
-      paramname,
-      paramtype,
-      "maximum",
-      paramtype);
+  mem = anariGetParameterInfo(
+      device, objtype, objname, paramname, paramtype, "maximum", paramtype);
   if (mem) {
     s << indent << "maximum = ";
     printAnariFromMemory(paramtype, mem, s);
     s << "\n";
   }
 
-  mem = anariGetParameterInfo(lib,
-      device,
-      objname,
+  mem = anariGetParameterInfo(device,
       objtype,
+      objname,
       paramname,
       paramtype,
       "value",
@@ -201,10 +173,9 @@ void print_info(ANARILibrary lib,
     }
   }
 
-  mem = anariGetParameterInfo(lib,
-      device,
-      objname,
+  mem = anariGetParameterInfo(device,
       objtype,
+      objname,
       paramname,
       paramtype,
       "value",
@@ -217,10 +188,9 @@ void print_info(ANARILibrary lib,
     }
   }
 
-  mem = anariGetParameterInfo(lib,
-      device,
-      objname,
+  mem = anariGetParameterInfo(device,
       objtype,
+      objname,
       paramname,
       paramtype,
       "elementType",
@@ -233,22 +203,20 @@ void print_info(ANARILibrary lib,
     }
   }
 
-  mem = anariGetParameterInfo(lib,
-      device,
-      objname,
+  mem = anariGetParameterInfo(device,
       objtype,
+      objname,
       paramname,
       paramtype,
       "description",
       ANARI_STRING);
   if (mem) {
-    s << indent << "description = \"" <<(const char *)mem << "\"\n";
+    s << indent << "description = \"" << (const char *)mem << "\"\n";
   }
 
-  mem = anariGetParameterInfo(lib,
-      device,
-      objname,
+  mem = anariGetParameterInfo(device,
       objtype,
+      objname,
       paramname,
       paramtype,
       "sourceFeature",
@@ -281,20 +249,21 @@ std::string queryInfo(const std::string &library,
     throw std::runtime_error("Library could not be loaded: " + library);
   }
 
-  const char **devices = anariGetDeviceSubtypes(lib);
-  if (devices) {
+  const char **deviceNames = anariGetDeviceSubtypes(lib);
+  std::vector<anari::Device> devices;
+  if (deviceNames) {
     s << "Devices:\n";
-    for (int i = 0; devices[i]; ++i) {
-      s << "   " << devices[i] << "\n";
+    for (int i = 0; deviceNames[i]; ++i) {
+      s << "   " << deviceNames[i] << "\n";
+      devices.push_back(anariNewDevice(lib, deviceNames[i]));
     }
   }
 
-  for (int i = 0; devices[i]; ++i) {
-    s << "Device \"" << devices[i] <<"\":\n";
+  for (int i = 0; devices.size(); ++i) {
+    s << "Device \"" << deviceNames[i] << "\":\n";
     s << "   Subtypes:\n";
     for (size_t j = 0; j < sizeof(namedTypes) / sizeof(ANARIDataType); ++j) {
-      const char **types =
-          anariGetObjectSubtypes(lib, devices[i], namedTypes[j]);
+      const char **types = anariGetObjectSubtypes(devices[i], namedTypes[j]);
       // print subtypes of named types
       s << "      " << anari::toString(namedTypes[j]) << ": ";
       if (types) {
@@ -314,8 +283,7 @@ std::string queryInfo(const std::string &library,
           continue;
         }
 
-        const char **types =
-            anariGetObjectSubtypes(lib, devices[i], namedTypes[j]);
+        const char **types = anariGetObjectSubtypes(devices[i], namedTypes[j]);
         // print subtypes of named types
         if (types) {
           for (int k = 0; types[k]; ++k) {
@@ -326,10 +294,9 @@ std::string queryInfo(const std::string &library,
             s << "      " << anari::toString(namedTypes[j]) << " " << types[k]
               << ":\n";
             const ANARIParameter *params =
-                (const ANARIParameter *)anariGetObjectInfo(lib,
-                    devices[i],
-                    types[k],
+                (const ANARIParameter *)anariGetObjectInfo(devices[i],
                     namedTypes[j],
+                    types[k],
                     "parameter",
                     ANARI_PARAMETER_LIST);
             if (params) {
@@ -338,13 +305,13 @@ std::string queryInfo(const std::string &library,
                   << params[l].name << " " << std::left << std::setw(32)
                   << anari::toString(params[l].type) << "\n";
                 if (info) {
-                  print_info(lib,
-                      devices[i],
-                      types[k],
+                  print_info(devices[i],
                       namedTypes[j],
+                      types[k],
                       params[l].name,
                       params[l].type,
-                      "            ", s);
+                      "            ",
+                      s);
                 }
               }
             }
@@ -363,26 +330,24 @@ std::string queryInfo(const std::string &library,
 
           s << "      " << anari::toString(anonymousTypes[j]) << ":\n";
           const ANARIParameter *params =
-              (const ANARIParameter *)anariGetObjectInfo(lib,
-                  devices[i],
-                  0,
+              (const ANARIParameter *)anariGetObjectInfo(devices[i],
                   anonymousTypes[j],
+                  nullptr,
                   "parameter",
                   ANARI_PARAMETER_LIST);
           if (params) {
             for (int l = 0; params[l].name; ++l) {
               s << "         * " << std::left << std::setw(32) << params[l].name
-                << " "
-                << std::left << std::setw(32) << anari::toString(params[l].type)
-                << "\n";
+                << " " << std::left << std::setw(32)
+                << anari::toString(params[l].type) << "\n";
               if (info) {
-                print_info(lib,
-                    devices[i],
-                    nullptr,
+                print_info(devices[i],
                     anonymousTypes[j],
+                    nullptr,
                     params[l].name,
                     params[l].type,
-                    "            ", s);
+                    "            ",
+                    s);
               }
             }
           }
