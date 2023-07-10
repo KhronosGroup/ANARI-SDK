@@ -134,19 +134,35 @@ Here is the [sphere test file](test_scenes/primitives/sphere/sphere.json) as an 
   -  `shape`: Which shape should be generated. Currently only relevant for triangles and quads. Possible values: `triangle`, `quad`, `cube`. Default: `triangle`
   -  `primitiveMode`: How the vertex data is arranged (`soup` or `indexed`). Default: `soup`
   -  `primitiveCount`: Number of primitives to generate. Default: `1`
-  -  `frame_color_type`: Type of the color framebuffer. If empty, color buffer will not be used. Possible values: `UFIXED8_RGBA_SRGB`, `FLOAT32_VEC4`, `UFIXED8_VEC4`
-  -  `frame_depth_type`: Type of the depth framebuffer. If empty, depth buffer will not be used. Possible values: `FLOAT32`
+  -  `vertexCaps`: If cones and cylinders should have caps (per vertex setting). Default: `false`
+  -  `globalCaps`: "If cones and cylinders should have caps (global setting). Possible values: `none`, `first`, `second`, `both`. Default: `none`
+  -  `globalRadius`: Set the global radius property instead of using a per vertex one
+  -  `unusedVertices`: The last primitive's indices in the index buffer will be removed to test handling of unused/skipped vertices in the vertex buffer
+  -  `color`: Fill an attribute with colors. Possible values: `vertex.color`, `vertex.attribute0`, `primitive.attribute3` and similar
+  -  `opacity`: Fill an attribute with opacity values. Possible values: `vertex.attribute0`, `primitive.attribute3` and similar
+  -  `frame_color_type`: Type of the color channel. If empty, color channel will not be used. Possible values: `UFIXED8_RGBA_SRGB`, `FLOAT32_VEC4`, `UFIXED8_VEC4`
+  -  `frame_albedo_type`: This setting will render the albedo channel instead of the color channel if `KHR_FRAME_CHANNEL_ALBEDO` is supported. Possible values: `UFIXED8_VEC3`, `UFIXED8_RGB_SRGB`, `FLOAT32_VEC3`
+  -  `frame_normal_type`: This setting will render the normal channel instead of the color channel if `KHR_FRAME_CHANNEL_NORMAL` is supported. Possible values: `FIXED16_VEC3`, `FLOAT32_VEC3`
+  -  `frame_primitiveId_type`: This setting will render the primitive ID channel as colors instead of the color channel if `KHR_FRAME_CHANNEL_PRIMITIVE_ID` is supported. Possible values: `UINT32`
+  -  `frame_objectId_type`: This setting will render the object ID channel as colors instead of the color channel if `KHR_FRAME_CHANNEL_OBJECT_ID` is supported. Possible values: `UINT32`
+  -  `frame_instanceId_type`: This setting will render the instance ID channel as colors instead of the color channel if `KHR_FRAME_CHANNEL_INSTANCE_ID` is supported. Possible values: `UINT32`
+  -  `frame_depth_type`: Type of the depth channel. If empty, depth channel will not be used. Possible values: `FLOAT32`
   -  `image_height`: Height of the image. Default: `1024`
   -  `image_width`: Width of the image. Default: `1024`
   -  `attribute_min`: Minimum random value for attributes. Default: `0.0`
   -  `attribute_max`: Maximum random value for attributes. Default: `1.0`
-  -  `primitive_attributes`: If primitive attributes should be filled randomly. Default: `true`
-  -  `vertex_attribtues`: If vertex attributes should be filled randomly. Default: `true`
+  -  `primitive_attributes`: If primitive attributes should be filled randomly. Default: `false`
+  -  `vertex_attribtues`: If vertex attributes should be filled randomly. Default: `false`
   -  `seed`: Seed for random number generator to ensure that tests are consistent across platforms. Default `0`
-  -  `anariObjects`: This can be used to set generic parameters in material, camera, samplers and lights. The structure consists of the an array with the type name as key. Even though only one camera and one material are currently supported. An array with one element should be used. The array contains JSON objects with parameters for each ANARI object. `subtype` is mandatory. `null` can be used to reset/use the default of a parameter (useful for permutations). To set a parameter to a reference to another object, use the `ref_` prefix, then add the type and index, e.g. `ref_sampler_0`
+  -  `spatial_field_dimensions`: An 3 sized integer array describing the dimensions of all spatial fields in this test. If no spatial field is defined in `anariObjects`, a default one will be used.
+  -  `frameCompletionCallback`: If set to `true`, checks if `ANARI_KHR_FRAME_COMPLETION_CALLBACK` works correctly. Renders a green image on success, a red image otherwise.
+  -  `progressiveRendering`: If set to `true`, checks if `ANARI_KHR_PROGRESSIVE_RENDERING` works correctly. Renders a green image if more then 10 pixels differ from the previous rendering, a red image otherwise.
+  -  `camera_generate_transform`: enables automatically adapting the camera position to the scene
+  -  `anariObjects`: This can be used to set generic parameters for all ANARI objects despise World. The structure consists of the an array with the type name as key. An array with one element should be used. The array contains JSON objects with parameters for each ANARI object. `subtype` is mandatory for object which define it. `null` can be used to reset/use the default of a parameter (useful for permutations). To set a parameter to a reference to another object, use the `ref_` prefix, then add the type and index, e.g. `ref_sampler_0`. All other `sceneParameters` take precedence over the generic `anariObjects`. This also implies that for geometries, subtypes can not be mixed and `subtype` in `anariObjects` need to match `geometrySubtype`. Additionally, if `instances` are used no objects are added to the world despise the instances. You do not need to create e.g. a default `surface` to display materials or geometry. If an object is missing, a default object is used instead. To set `Array1D` or `Array2D` parameter, the value needs to be a JSON object containing the type as key together with its value.
 -  `permutations` and `variants`: These specify scene parameters where different values should be tested. Therefore, these JSON objects contain the name of a scene parameter and a list of values for each of them. The permutations specify changes which result in a different outcome (e.g. 1 or 16 primitives). The variants should not change the outcome, therefore only one reference rendering is needed for these (e.g. the soup and indexed variants should look the same). The cartesian product is performed for all parameters. In the current example this results in four test images: 1 primitive + soup, 1 primitive + indexed, 16 primitives + soup, 16 primitives + indexed; As well as two reference images: 1 primitive (soup or indexed), 16 primitives (soup or indexed). To permutate a parameter in an ANARI object, the object needs to be defined in `anariObjects` without the parameter. In the permutation or variant object a JSON pointer e.g. `"/anari_objects/material/0/color"` should be used as key as seen in the example.
 -  `requiredFeatures`: A list of features which need to be supported by the device to perform the test. Some features (e.g. perspective camera) which are needed for every test are implicitly required. This list should only contain the features which are explicitly tested. If the device does not support the feature, the test is skipped.
 -  `bounds_tolerance`: Specifies the percentage the bounds can vary in each dimension and still be considered correct.
+-  `thresholds`: Specifies the threshold for each comparison method only for this specific test (can not be overwritten). The value consists of a JSON object with key value pairs consisting of the name of the metric and its threshold
 -  `metaData`: This JSON object is automatically created while generating the reference images. It contains ANARI object properties for each permutation (currently only bounds information).
 
 ## Extending the Scene Generator
