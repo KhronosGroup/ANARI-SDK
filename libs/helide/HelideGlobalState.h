@@ -28,6 +28,9 @@ struct HelideGlobalState : public helium::BaseGlobalDeviceState
     size_t surfaces{0};
     size_t geometries{0};
     size_t materials{0};
+    size_t samplers{0};
+    size_t volumes{0};
+    size_t spatialFields{0};
     size_t arrays{0};
     size_t unknown{0};
   } objectCounts;

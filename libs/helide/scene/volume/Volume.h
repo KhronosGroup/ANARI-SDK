@@ -10,6 +10,7 @@ namespace helide {
 struct Volume : public Object
 {
   Volume(HelideGlobalState *d);
+  virtual ~Volume();
   static Volume *createInstance(std::string_view subtype, HelideGlobalState *d);
   virtual box3 bounds() const = 0;
   virtual void render(
