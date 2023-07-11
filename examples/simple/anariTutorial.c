@@ -175,8 +175,8 @@ int main(int argc, const char **argv)
 
   // inspect default renderer parameters
   const ANARIParameter *rendererParams = anariGetObjectInfo(dev,
-      "default",
       ANARI_RENDERER,
+      "default",
       "parameter",
       ANARI_PARAMETER_LIST);
 
@@ -186,15 +186,15 @@ int main(int argc, const char **argv)
     puts("Parameters of default renderer:");
     for (const ANARIParameter *p = rendererParams; p->name != NULL; p++) {
       const char *desc = anariGetParameterInfo(dev,
-          "default",
           ANARI_RENDERER,
+          "default",
           p->name,
           p->type,
           "description",
           ANARI_STRING);
       const int *required = anariGetParameterInfo(dev,
-          "default",
           ANARI_RENDERER,
+          "default",
           p->name,
           p->type,
           "required",
