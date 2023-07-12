@@ -142,9 +142,11 @@ int main(int argc, const char **argv)
       printf("  - %s\n", *d);
   }
 
+  ANARIDevice nested = anariNewDevice(lib, "default");
+
   // query available renderers
   const char **renderers =
-      anariGetObjectSubtypes(lib, "default", ANARI_RENDERER);
+      anariGetObjectSubtypes(nested, ANARI_RENDERER);
   if (!renderers) {
     puts("No renderers available!");
     return 1;
@@ -155,7 +157,6 @@ int main(int argc, const char **argv)
     printf("  - %s\n", *r);
   }
 
-  ANARIDevice nested = anariNewDevice(lib, "default");
   ANARIDevice dev = anariNewDevice(trace_lib, "debug");
   anariSetParameter(dev, dev, "wrappedDevice", ANARI_DEVICE, &nested);
 
@@ -189,17 +190,17 @@ int main(int argc, const char **argv)
 
   // Set the vertex locations
   ANARIArray1D array =
-      anariNewArray1D(dev, vertex, 0, 0, ANARI_FLOAT32_VEC3, 4, 0);
+      anariNewArray1D(dev, vertex, 0, 0, ANARI_FLOAT32_VEC3, 4);
   anariSetParameter(dev, mesh, "vertex.position", ANARI_ARRAY1D, &array);
   anariRelease(dev, array); // we are done using this handle
 
   // Set the vertex colors
-  array = anariNewArray1D(dev, color, 0, 0, ANARI_FLOAT32_VEC4, 4, 0);
+  array = anariNewArray1D(dev, color, 0, 0, ANARI_FLOAT32_VEC4, 4);
   anariSetParameter(dev, mesh, "vertex.color", ANARI_ARRAY1D, &array);
   anariRelease(dev, array);
 
   // Set the index
-  array = anariNewArray1D(dev, index, 0, 0, ANARI_UINT32_VEC3, 2, 0);
+  array = anariNewArray1D(dev, index, 0, 0, ANARI_UINT32_VEC3, 2);
   anariSetParameter(dev, mesh, "primitive.index", ANARI_ARRAY1D, &array);
   anariRelease(dev, array);
 
@@ -218,7 +219,7 @@ int main(int argc, const char **argv)
   anariRelease(dev, mat);
 
   // put the surface directly onto the world
-  array = anariNewArray1D(dev, &surface, 0, 0, ANARI_SURFACE, 1, 0);
+  array = anariNewArray1D(dev, &surface, 0, 0, ANARI_SURFACE, 1);
   anariSetParameter(dev, world, "surface", ANARI_ARRAY1D, &array);
   anariRelease(dev, surface);
   anariRelease(dev, array);
@@ -228,7 +229,7 @@ int main(int argc, const char **argv)
 
   // throw in some extra objects that don't belong in lights
   ANARIObject lights[] = {light, surface, 0};
-  array = anariNewArray1D(dev, lights, 0, 0, ANARI_LIGHT, 3, 0);
+  array = anariNewArray1D(dev, lights, 0, 0, ANARI_LIGHT, 3);
   anariSetParameter(dev, world, "light", ANARI_ARRAY1D, &array);
   anariRelease(dev, light);
   // intentionally leak one object

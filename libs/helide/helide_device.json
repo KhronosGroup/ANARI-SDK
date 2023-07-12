@@ -21,10 +21,38 @@
       "khr_sampler_primitive",
       "khr_sampler_transform",
       "khr_spatial_field_structured_regular",
-      "khr_volume_scivis"
+      "khr_volume_transfer_function1d"
     ]
   },
   "objects": [
+    {
+      "type": "ANARI_DEVICE",
+      "parameters": [
+        {
+          "name": "allowInvalidMaterials",
+          "types": [
+            "ANARI_BOOL"
+          ],
+          "tags": [],
+          "default": true,
+          "description": "show surfaces with invalid materials"
+        },
+        {
+          "name": "invalidMaterialColor",
+          "types": [
+            "ANARI_FLOAT32_VEC4"
+          ],
+          "tags": [],
+          "default": [
+            1.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "description": "color to identify surfaces with invalid materials"
+        }
+      ]
+    },
     {
       "type": "ANARI_RENDERER",
       "name": "default",

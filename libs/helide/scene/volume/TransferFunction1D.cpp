@@ -1,18 +1,18 @@
 // Copyright 2022 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-#include "SciVisVolume.h"
+#include "TransferFunction1D.h"
 
 namespace helide {
 
-SciVisVolume::SciVisVolume(HelideGlobalState *d) : Volume(d) {}
+TransferFunction1D::TransferFunction1D(HelideGlobalState *d) : Volume(d) {}
 
-void SciVisVolume::commit()
+void TransferFunction1D::commit()
 {
   m_field = getParamObject<SpatialField>("field");
   if (!m_field) {
-    reportMessage(
-        ANARI_SEVERITY_WARNING, "no spatial field provided to scivis volume");
+    reportMessage(ANARI_SEVERITY_WARNING,
+        "no spatial field provided to transferFunction1D volume");
     return;
   }
 
@@ -26,8 +26,8 @@ void SciVisVolume::commit()
   m_densityScale = getParam<float>("densityScale", 1.f);
 
   if (!m_colorData) {
-    reportMessage(
-        ANARI_SEVERITY_WARNING, "no color data provided to scivis volume");
+    reportMessage(ANARI_SEVERITY_WARNING,
+        "no color data provided to transferFunction1D volume");
     return;
   }
 
@@ -38,17 +38,18 @@ void SciVisVolume::commit()
   }
 }
 
-bool SciVisVolume::isValid() const
+bool TransferFunction1D::isValid() const
 {
   return m_field && m_field->isValid() && m_colorData && m_opacityData;
 }
 
-box3 SciVisVolume::bounds() const
+box3 TransferFunction1D::bounds() const
 {
   return m_bounds;
 }
 
-void SciVisVolume::render(const VolumeRay &vray, float3 &color, float &opacity)
+void TransferFunction1D::render(
+    const VolumeRay &vray, float3 &color, float &opacity)
 {
   const float stepSize = field()->stepSize();
   const float jitter = 1.f; // NOTE: use uniform rng if/when lower sampling rate

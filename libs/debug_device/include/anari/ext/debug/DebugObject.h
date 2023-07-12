@@ -11,6 +11,7 @@
 #include "debug_device_exports.h"
 
 #include <iostream>
+#include <map>
 namespace anari {
 namespace debug_device {
 
@@ -28,6 +29,9 @@ public:
   virtual void commit() = 0;
   virtual void setParameter(const char *name, ANARIDataType type, const void *mem) = 0;
   virtual void unsetParameter(const char *name) = 0;
+  virtual void mapParameter(const char *name, ANARIDataType type, uint64_t elements, uint64_t *stride, void *mem) = 0;
+  virtual void* getParameterMapping(const char *name, ANARIDataType &type, uint64_t &elements) = 0;
+  virtual void unmapParameter(const char *name) = 0;
   virtual void referencedBy(ANARIObject parent) = 0;
   virtual void used() = 0;
   virtual ANARIObject getHandle() = 0;
@@ -55,6 +59,14 @@ private:
   int uncommittedParameters = 0;
   int references = 0;
   std::string objectName;
+  
+  struct Mapping {
+    void *ptr;
+    uint64_t elements;
+    ANARIDataType type;
+  };
+  std::map<std::string, Mapping> mappings;
+
 public:
   DebugDevice* getDebugDevice() { return debugDevice; }
   ANARIDataType getType() { return ANARI_OBJECT; }
@@ -78,6 +90,25 @@ public:
     }
   }
   void unsetParameter(const char *name) { (void)name; uncommittedParameters += 1; }
+
+  void mapParameter(const char *name, ANARIDataType type, uint64_t elements, uint64_t *stride, void *mem) {
+    uncommittedParameters += 1;
+    mappings[name] = Mapping{mem, elements, type};
+  }
+  void* getParameterMapping(const char *name, ANARIDataType &type, uint64_t &elements) {
+    auto value = mappings.find(name);
+    if(value != mappings.end()) {
+      type = value->second.type;
+      elements = value->second.elements;
+      return value->second.ptr;
+    }
+    return nullptr;
+  }
+  void unmapParameter(const char *name) {
+    mappings.erase(name);
+  }
+
+
   void referencedBy(ANARIObject parent) { (void)parent; references += 1; }
   void used() { references += 1; }
   ANARIObject getHandle() { return handle; }

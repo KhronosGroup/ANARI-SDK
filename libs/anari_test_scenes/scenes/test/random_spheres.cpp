@@ -48,9 +48,7 @@ void RandomSpheres::commit()
   anari::setParameter(d, mat, "color", "color");
   anari::commitParameters(d, mat);
 
-  anari::setAndReleaseParameter(
-      d, m_world, "surface", anari::newArray1D(d, &surface));
-
+  anari::setParameterArray1D(d, m_world, "surface", &surface, 1);
   anari::commitParameters(d, m_world);
 
   anari::setParameter(d, surface, "geometry", geom);
@@ -86,16 +84,13 @@ void RandomSpheres::commit()
     s.w = 1.f;
   }
 
-  anari::setAndReleaseParameter(d,
+  anari::setParameterArray1D(d,
       geom,
       "vertex.position",
-      anari::newArray1D(d, spherePositions.data(), spherePositions.size()));
-  anari::setParameter(d, geom, "radius", radius);
-
-  anari::setAndReleaseParameter(d,
-      geom,
-      "vertex.color",
-      anari::newArray1D(d, sphereColors.data(), sphereColors.size()));
+      spherePositions.data(),
+      spherePositions.size());
+  anari::setParameterArray1D(
+      d, geom, "vertex.color", sphereColors.data(), sphereColors.size());
 
   if (randomizeRadii) {
     std::normal_distribution<float> radii_dist(radius / 10.f, radius);
@@ -104,10 +99,8 @@ void RandomSpheres::commit()
     for (auto &r : sphereRadii)
       r = std::fabs(radii_dist(rng));
 
-    anari::setAndReleaseParameter(d,
-        geom,
-        "vertex.radius",
-        anari::newArray1D(d, sphereRadii.data(), sphereRadii.size()));
+    anari::setParameterArray1D(
+        d, geom, "vertex.radius", sphereRadii.data(), sphereRadii.size());
   }
 
   anari::commitParameters(d, geom);

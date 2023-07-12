@@ -18,9 +18,7 @@ namespace windows {
 
 struct Viewport : public match3D::Window
 {
-  Viewport(anari::Library library,
-      anari::Device device,
-      const char *name = "Viewport");
+  Viewport(anari::Device device, const char *name = "Viewport");
   ~Viewport();
 
   void buildUI() override;
@@ -67,7 +65,6 @@ struct Viewport : public match3D::Window
 
   anari::DataType m_format{ANARI_UFIXED8_RGBA_SRGB};
 
-  anari::Library m_library{nullptr};
   anari::Device m_device{nullptr};
   anari::Frame m_frame{nullptr};
   anari::World m_world{nullptr};

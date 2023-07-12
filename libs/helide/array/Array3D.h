@@ -12,9 +12,6 @@ struct Array3DMemoryDescriptor : public ArrayMemoryDescriptor
   uint64_t numItems1{0};
   uint64_t numItems2{0};
   uint64_t numItems3{0};
-  uint64_t byteStride1{0};
-  uint64_t byteStride2{0};
-  uint64_t byteStride3{0};
 };
 
 bool isCompact(const Array3DMemoryDescriptor &d);

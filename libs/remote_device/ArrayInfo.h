@@ -15,15 +15,11 @@ struct ArrayInfo
       const ANARIDataType elementType,
       uint64_t numItems1,
       uint64_t numItems2,
-      uint64_t numItems3,
-      uint64_t byteStride1,
-      uint64_t byteStride2,
-      uint64_t byteStride3);
+      uint64_t numItems3);
 
   ANARIDataType type;
   ANARIDataType elementType;
   uint64_t numItems1, numItems2, numItems3;
-  uint64_t byteStride1, byteStride2, byteStride3;
 
   size_t getSizeInBytes() const;
 };

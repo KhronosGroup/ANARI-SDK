@@ -141,60 +141,11 @@ int main(int argc, const char **argv)
       printf("  - %s\n", *d);
   }
 
-  // query available renderers
-  const char **renderers =
-      anariGetObjectSubtypes(lib, "default", ANARI_RENDERER);
-  if (!renderers) {
-    puts("No renderers available!");
-    return 1;
-  }
-
-  puts("Available renderers:");
-  for (const char **r = renderers; *r != NULL; r++)
-    printf("  - %s\n", *r);
-
-  // inspect default renderer parameters
-  const ANARIParameter *rendererParams = anariGetObjectInfo(lib,
-      "default",
-      "default",
-      ANARI_RENDERER,
-      "parameter",
-      ANARI_PARAMETER_LIST);
-
-  if (!rendererParams) {
-    puts("Default renderer has no parameters.");
-  } else {
-    puts("Parameters of default renderer:");
-    for (const ANARIParameter *p = rendererParams; p->name != NULL; p++) {
-      const char *desc = anariGetParameterInfo(lib,
-          "default",
-          "default",
-          ANARI_RENDERER,
-          p->name,
-          p->type,
-          "description",
-          ANARI_STRING);
-      const int *required = anariGetParameterInfo(lib,
-          "default",
-          "default",
-          ANARI_RENDERER,
-          p->name,
-          p->type,
-          "required",
-          ANARI_BOOL);
-      printf("  - [%d] %s, %s: %s\n",
-          p->type,
-          p->name,
-          required && *required ? "required" : "optional",
-          desc);
-    }
-  }
-
   // populate a set of feature variables (this is a utility and not part of the
   // core api)
   ANARIFeatures features;
-  if (anariGetObjectFeatures(
-          &features, lib, "default", "default", ANARI_DEVICE)) {
+  if (anariGetDeviceFeatureStruct(
+          &features, lib, "default")) {
     printf("WARNING: library didn't return feature list\n");
   }
 
@@ -207,7 +158,54 @@ int main(int argc, const char **argv)
   if (!features.ANARI_KHR_MATERIAL_MATTE)
     printf("WARNING: device doesn't support ANARI_KHR_MATERIAL_MATTE\n");
 
+  // the remaining queries have to use a device
   ANARIDevice dev = anariNewDevice(lib, "default");
+
+  // query available renderers
+  const char **renderers =
+      anariGetObjectSubtypes(dev, ANARI_RENDERER);
+  if (!renderers) {
+    puts("No renderers available!");
+    return 1;
+  }
+
+  puts("Available renderers:");
+  for (const char **r = renderers; *r != NULL; r++)
+    printf("  - %s\n", *r);
+
+  // inspect default renderer parameters
+  const ANARIParameter *rendererParams = anariGetObjectInfo(dev,
+      ANARI_RENDERER,
+      "default",
+      "parameter",
+      ANARI_PARAMETER_LIST);
+
+  if (!rendererParams) {
+    puts("Default renderer has no parameters.");
+  } else {
+    puts("Parameters of default renderer:");
+    for (const ANARIParameter *p = rendererParams; p->name != NULL; p++) {
+      const char *desc = anariGetParameterInfo(dev,
+          ANARI_RENDERER,
+          "default",
+          p->name,
+          p->type,
+          "description",
+          ANARI_STRING);
+      const int *required = anariGetParameterInfo(dev,
+          ANARI_RENDERER,
+          "default",
+          p->name,
+          p->type,
+          "required",
+          ANARI_BOOL);
+      printf("  - [%d] %s, %s: %s\n",
+          p->type,
+          p->name,
+          required && *required ? "required" : "optional",
+          desc);
+    }
+  }
 
   if (!dev) {
     printf("\n\nERROR: could not load default device in example library\n");
@@ -242,19 +240,19 @@ int main(int argc, const char **argv)
 
   // Set the vertex locations
   ANARIArray1D array =
-      anariNewArray1D(dev, vertex, 0, 0, ANARI_FLOAT32_VEC3, 4, 0);
+      anariNewArray1D(dev, vertex, 0, 0, ANARI_FLOAT32_VEC3, 4);
   anariCommitParameters(dev, array);
   anariSetParameter(dev, mesh, "vertex.position", ANARI_ARRAY1D, &array);
   anariRelease(dev, array); // we are done using this handle
 
   // Set the vertex colors
-  array = anariNewArray1D(dev, color, 0, 0, ANARI_FLOAT32_VEC4, 4, 0);
+  array = anariNewArray1D(dev, color, 0, 0, ANARI_FLOAT32_VEC4, 4);
   anariCommitParameters(dev, array);
   anariSetParameter(dev, mesh, "vertex.color", ANARI_ARRAY1D, &array);
   anariRelease(dev, array);
 
   // Set the index
-  array = anariNewArray1D(dev, index, 0, 0, ANARI_UINT32_VEC3, 2, 0);
+  array = anariNewArray1D(dev, index, 0, 0, ANARI_UINT32_VEC3, 2);
   anariCommitParameters(dev, array);
   anariSetParameter(dev, mesh, "primitive.index", ANARI_ARRAY1D, &array);
   anariRelease(dev, array);
@@ -275,7 +273,7 @@ int main(int argc, const char **argv)
   anariRelease(dev, mat);
 
   // put the surface directly onto the world
-  array = anariNewArray1D(dev, &surface, 0, 0, ANARI_SURFACE, 1, 0);
+  array = anariNewArray1D(dev, &surface, 0, 0, ANARI_SURFACE, 1);
   anariCommitParameters(dev, array);
   anariSetParameter(dev, world, "surface", ANARI_ARRAY1D, &array);
   anariRelease(dev, surface);
@@ -284,7 +282,7 @@ int main(int argc, const char **argv)
   // create and setup light for Ambient Occlusion
   ANARILight light = anariNewLight(dev, "directional");
   anariCommitParameters(dev, light);
-  array = anariNewArray1D(dev, &light, 0, 0, ANARI_LIGHT, 1, 0);
+  array = anariNewArray1D(dev, &light, 0, 0, ANARI_LIGHT, 1);
   anariCommitParameters(dev, array);
   anariSetParameter(dev, world, "light", ANARI_ARRAY1D, &array);
   anariRelease(dev, light);

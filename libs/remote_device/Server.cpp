@@ -96,8 +96,7 @@ static ANARIArray newArray(
         nullptr,
         nullptr,
         info.elementType,
-        info.numItems1,
-        info.byteStride1);
+        info.numItems1);
   } else if (info.type == ANARI_ARRAY2D) {
     array = anariNewArray2D(dev,
         nullptr,
@@ -105,9 +104,7 @@ static ANARIArray newArray(
         nullptr,
         info.elementType,
         info.numItems1,
-        info.numItems2,
-        info.byteStride1,
-        info.byteStride2);
+        info.numItems2);
   } else if (info.type == ANARI_ARRAY3D) {
     array = anariNewArray3D(dev,
         nullptr,
@@ -116,10 +113,7 @@ static ANARIArray newArray(
         info.elementType,
         info.numItems1,
         info.numItems2,
-        info.numItems3,
-        info.byteStride1,
-        info.byteStride3,
-        info.byteStride3);
+        info.numItems3);
   }
 
   if (array && data) {
@@ -377,9 +371,6 @@ struct Server
         buf.read((char *)&info.numItems1, sizeof(info.numItems1));
         buf.read((char *)&info.numItems2, sizeof(info.numItems2));
         buf.read((char *)&info.numItems3, sizeof(info.numItems3));
-        buf.read((char *)&info.byteStride1, sizeof(info.byteStride1));
-        buf.read((char *)&info.byteStride2, sizeof(info.byteStride2));
-        buf.read((char *)&info.byteStride3, sizeof(info.byteStride3));
 
         ANARIDevice dev = resourceManager.getDevice((uint64_t)deviceHandle);
         if (!dev) {
@@ -398,9 +389,6 @@ struct Server
           if (anari::isObject(info.elementType)) {
             const auto &serverObjects =
                 resourceManager.serverObjects[(uint64_t)deviceHandle];
-
-            assert(info.byteStride1 <= 1 && info.byteStride2 <= 1
-                && info.byteStride3 <= 1);
 
             size_t numObjects = info.numItems1
                 * std::max(uint64_t(1), info.numItems2)

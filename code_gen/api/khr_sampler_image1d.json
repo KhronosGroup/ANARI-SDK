@@ -54,11 +54,23 @@
                     "default" : [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
                     "description" : "transform applied to the input attribute before sampling"
                 }, {
+                    "name" : "inOffset",
+                    "types" : ["ANARI_FLOAT32_VEC4"],
+                    "tags" : [],
+                    "default" : [0,0,0,0],
+                    "description" : "offset added to output inTransform result"
+                }, {
                     "name" : "outTransform",
                     "types" : ["ANARI_FLOAT32_MAT4"],
                     "tags" : [],
                     "default" : [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
                     "description" : "transform applied to the sampled values"
+                }, {
+                    "name" : "outOffset",
+                    "types" : ["ANARI_FLOAT32_VEC4"],
+                    "tags" : [],
+                    "default" : [0,0,0,0],
+                    "description" : "offset added to output outTransform result"
                 }
             ]
         }

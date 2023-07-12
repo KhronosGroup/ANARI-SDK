@@ -47,56 +47,51 @@ void shutdown()
 }
 
 ParameterList parseParameters(
-    anari::Library l, ANARIDataType objectType, const char *subtype)
+    anari::Device d, ANARIDataType objectType, const char *subtype)
 {
   ParameterList retval;
 
   auto *parameter = (const ANARIParameter *)anariGetObjectInfo(
-      l, "default", subtype, objectType, "parameter", ANARI_PARAMETER_LIST);
+      d, objectType, subtype, "parameter", ANARI_PARAMETER_LIST);
 
   for (; parameter && parameter->name != nullptr; parameter++) {
     Parameter p;
 
-    auto *description = (const char *)anariGetParameterInfo(l,
-        "default",
-        subtype,
+    auto *description = (const char *)anariGetParameterInfo(d,
         objectType,
+        subtype,
         parameter->name,
         parameter->type,
         "description",
         ANARI_STRING);
 
-    const void *defaultValue = anariGetParameterInfo(l,
-        "default",
-        subtype,
+    const void *defaultValue = anariGetParameterInfo(d,
         objectType,
+        subtype,
         parameter->name,
         parameter->type,
         "default",
         parameter->type);
 
-    const void *minValue = anariGetParameterInfo(l,
-        "default",
-        subtype,
+    const void *minValue = anariGetParameterInfo(d,
         objectType,
+        subtype,
         parameter->name,
         parameter->type,
         "minimum",
         parameter->type);
 
-    const void *maxValue = anariGetParameterInfo(l,
-        "default",
-        subtype,
+    const void *maxValue = anariGetParameterInfo(d,
         objectType,
+        subtype,
         parameter->name,
         parameter->type,
         "maximum",
         parameter->type);
 
-    const auto **stringValues = (const char **)anariGetParameterInfo(l,
-        "default",
-        subtype,
+    const auto **stringValues = (const char **)anariGetParameterInfo(d,
         objectType,
+        subtype,
         parameter->name,
         parameter->type,
         "value",

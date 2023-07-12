@@ -44,17 +44,14 @@ struct ANARI_INTERFACE DeviceImpl
       ANARIMemoryDeleter deleter,
       const void *userdata,
       ANARIDataType,
-      uint64_t numItems1,
-      uint64_t byteStride1) = 0;
+      uint64_t numItems1) = 0;
 
   virtual ANARIArray2D newArray2D(const void *appMemory,
       ANARIMemoryDeleter deleter,
       const void *userdata,
       ANARIDataType,
       uint64_t numItems1,
-      uint64_t numItems2,
-      uint64_t byteStride1,
-      uint64_t byteStride2) = 0;
+      uint64_t numItems2) = 0;
 
   virtual ANARIArray3D newArray3D(const void *appMemory,
       ANARIMemoryDeleter deleter,
@@ -62,10 +59,7 @@ struct ANARI_INTERFACE DeviceImpl
       ANARIDataType,
       uint64_t numItems1,
       uint64_t numItems2,
-      uint64_t numItems3,
-      uint64_t byteStride1,
-      uint64_t byteStride2,
-      uint64_t byteStride3) = 0;
+      uint64_t numItems3) = 0;
 
   virtual void *mapArray(ANARIArray) = 0;
   virtual void unmapArray(ANARIArray) = 0;
@@ -107,6 +101,27 @@ struct ANARI_INTERFACE DeviceImpl
 
   virtual void unsetParameter(ANARIObject object, const char *name) = 0;
 
+  virtual void* mapParameterArray1D(ANARIObject object,
+      const char* name,
+      ANARIDataType dataType,
+      uint64_t numElements1,
+      uint64_t *elementStride) = 0;
+  virtual void* mapParameterArray2D(ANARIObject object,
+      const char* name,
+      ANARIDataType dataType,
+      uint64_t numElements1,
+      uint64_t numElements2,
+      uint64_t *elementStride) = 0;
+  virtual void* mapParameterArray3D(ANARIObject object,
+      const char* name,
+      ANARIDataType dataType,
+      uint64_t numElements1,
+      uint64_t numElements2,
+      uint64_t numElements3,
+      uint64_t *elementStride) = 0;
+  virtual void unmapParameterArray(ANARIObject object,
+      const char* name) = 0;
+
   virtual void commitParameters(ANARIObject object) = 0;
 
   virtual void release(ANARIObject _obj) = 0;
@@ -120,6 +135,18 @@ struct ANARI_INTERFACE DeviceImpl
       void *mem,
       uint64_t size,
       ANARIWaitMask mask) = 0;
+
+  virtual const char ** getObjectSubtypes(ANARIDataType objectType) = 0;
+  virtual const void* getObjectInfo(ANARIDataType objectType,
+      const char* objectSubtype,
+      const char* infoName,
+      ANARIDataType infoType) = 0;
+  virtual const void* getParameterInfo(ANARIDataType objectType,
+      const char* objectSubtype,
+      const char* parameterName,
+      ANARIDataType parameterType,
+      const char* infoName,
+      ANARIDataType infoType) = 0;
 
   // FrameBuffer Manipulation /////////////////////////////////////////////////
 

@@ -14,7 +14,6 @@ static bool g_verbose = false;
 static bool g_useDefaultLayout = true;
 static bool g_enableDebug = false;
 static std::string g_libraryName = "environment";
-static anari::Library g_library = nullptr;
 static anari::Library g_debug = nullptr;
 static anari::Device g_device = nullptr;
 static const char *g_traceDir = nullptr;
@@ -27,7 +26,6 @@ struct AppState
 {
   manipulators::Orbit manipulator;
   anari::Device device{nullptr};
-  anari::Library library{nullptr};
 };
 
 static void statusFunc(const void *userData,
@@ -57,14 +55,16 @@ static void statusFunc(const void *userData,
 
 static void initializeANARI()
 {
-  g_library = anariLoadLibrary(g_libraryName.c_str(), statusFunc, &g_verbose);
-  if (!g_library)
+  auto library = anariLoadLibrary(g_libraryName.c_str(), statusFunc, &g_verbose);
+  if (!library)
     throw std::runtime_error("Failed to load ANARI library");
 
   if (g_enableDebug)
     g_debug = anariLoadLibrary("debug", statusFunc, &g_true);
 
-  anari::Device dev = anariNewDevice(g_library, "default");
+  anari::Device dev = anariNewDevice(library, "default");
+
+  anari::unloadLibrary(library);
 
   if (g_enableDebug)
     anari::setParameter(dev, dev, "glDebug", true);
@@ -108,13 +108,11 @@ class Application : public match3D::DockingApplication
 
     initializeANARI();
 
-    auto library = g_library;
     auto device = g_device;
 
     if (!device)
       std::exit(1);
 
-    m_state.library = library;
     m_state.device = device;
 
     // ImGui //
@@ -126,7 +124,7 @@ class Application : public match3D::DockingApplication
     if (g_useDefaultLayout)
       ImGui::LoadIniSettingsFromMemory(getDefaultUILayout());
 
-    auto *viewport = new windows::Viewport(library, device, "Viewport");
+    auto *viewport = new windows::Viewport(device, "Viewport");
     viewport->setManipulator(&m_state.manipulator);
 
     auto *leditor = new windows::LightsEditor({device});
@@ -172,7 +170,6 @@ class Application : public match3D::DockingApplication
   void teardown() override
   {
     anari::release(m_state.device, m_state.device);
-    anari::unloadLibrary(m_state.library);
     ui::shutdown();
   }
 

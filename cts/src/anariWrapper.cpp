@@ -72,15 +72,14 @@ std::vector<std::tuple<std::string, bool>> queryFeatures(
     deviceName = *devices;
   }
 
+  anari::Device d = anariNewDevice(lib, deviceName.c_str());
+
   // query features
   std::vector<std::tuple<std::string, bool>> result;
 
   ANARIFeatures features;
-  if (anariGetObjectFeatures(&features,
-          lib,
-          deviceName.c_str(),
-          deviceName.c_str(),
-          ANARI_DEVICE)) {
+  if (anariGetObjectFeatureStruct(
+          &features, d, ANARI_DEVICE, deviceName.c_str())) {
     printf("WARNING: library didn't return feature list\n");
     return result;
   }
@@ -99,6 +98,7 @@ std::vector<std::tuple<std::string, bool>> queryFeatures(
     result.push_back({featureNames[i], test.vec[i]});
   }
 
+  anari::release(d, d);
   anari::unloadLibrary(lib);
 
   return result;

@@ -118,31 +118,20 @@ ANARIArray1D DebugDevice::newArray1D(const void *appMemory,
     ANARIMemoryDeleter deleter,
     const void *userData,
     ANARIDataType type,
-    uint64_t numItems,
-    uint64_t byteStride)
+    uint64_t numItems)
 {
   ANARIArray1D handle;
   const void *forward = appMemory;
-  uint64_t forwardStride = byteStride;
 
   if (isObject(type)) { // object arrays need special treatment
     const ANARIObject *in = static_cast<const ANARIObject *>(appMemory);
     ANARIObject *handles = new ANARIObject[numItems]();
-    if (byteStride != 0 && byteStride != sizeof(ANARIObject)) {
-      reportStatus(this_device(),
-          ANARI_DEVICE,
-          ANARI_SEVERITY_ERROR,
-          ANARI_STATUS_UNKNOWN_ERROR,
-          "Strided Object arrays not supported in debug device");
-      return 0; // strided handles not supported yet
-    }
 
     if (appMemory != nullptr) {
       for (uint64_t i = 0; i < numItems; i++) {
         handles[i] = unwrapHandle(in[i]);
       }
       forward = handles;
-      forwardStride = 0;
     }
 
     debug->anariNewArray1D(this_device(),
@@ -150,8 +139,7 @@ ANARIArray1D DebugDevice::newArray1D(const void *appMemory,
         deleter,
         userData,
         type,
-        numItems,
-        uint64_t(0));
+        numItems);
 
     DeleterWrapperData *deleterData =
         new DeleterWrapperData(userData, appMemory, deleter);
@@ -160,8 +148,7 @@ ANARIArray1D DebugDevice::newArray1D(const void *appMemory,
         deleterWrapper,
         (const void *)deleterData,
         type,
-        numItems,
-        uint64_t(0));
+        numItems);
     handle = newHandle(handle);
 
     if (auto info = getDynamicObjectInfo<DebugObject<ANARI_ARRAY1D>>(handle)) {
@@ -180,15 +167,14 @@ ANARIArray1D DebugDevice::newArray1D(const void *appMemory,
         deleter,
         userData,
         type,
-        numItems,
-        byteStride);
+        numItems);
     handle = anariNewArray1D(
-        wrapped, appMemory, deleter, userData, type, numItems, byteStride);
+        wrapped, appMemory, deleter, userData, type, numItems);
     handle = newHandle(handle);
   }
 
   if (auto info = getDynamicObjectInfo<DebugObject<ANARI_ARRAY1D>>(handle)) {
-    info->attachArray(appMemory, type, numItems, 1, 1, byteStride, 0, 0);
+    info->attachArray(appMemory, type, numItems, 1, 1, 0, 0, 0);
   }
 
   if (serializer) {
@@ -198,7 +184,6 @@ ANARIArray1D DebugDevice::newArray1D(const void *appMemory,
         userData,
         type,
         numItems,
-        forwardStride,
         handle);
   }
 
@@ -210,9 +195,7 @@ ANARIArray2D DebugDevice::newArray2D(const void *appMemory,
     const void *userData,
     ANARIDataType type,
     uint64_t numItems1,
-    uint64_t numItems2,
-    uint64_t byteStride1,
-    uint64_t byteStride2)
+    uint64_t numItems2)
 {
   debug->anariNewArray2D(this_device(),
       appMemory,
@@ -220,23 +203,19 @@ ANARIArray2D DebugDevice::newArray2D(const void *appMemory,
       userData,
       type,
       numItems1,
-      numItems2,
-      byteStride1,
-      byteStride2);
+      numItems2);
   ANARIArray2D handle = anariNewArray2D(wrapped,
       appMemory,
       deleter,
       userData,
       type,
       numItems1,
-      numItems2,
-      byteStride1,
-      byteStride2);
+      numItems2);
   handle = newHandle(handle);
 
   if (auto info = getDynamicObjectInfo<DebugObject<ANARI_ARRAY2D>>(handle)) {
     info->attachArray(
-        appMemory, type, numItems1, numItems2, 1, byteStride1, byteStride2, 0);
+        appMemory, type, numItems1, numItems2, 1, 0, 0, 0);
   }
 
   if (serializer) {
@@ -247,8 +226,6 @@ ANARIArray2D DebugDevice::newArray2D(const void *appMemory,
         type,
         numItems1,
         numItems2,
-        byteStride1,
-        byteStride2,
         handle);
   }
 
@@ -261,10 +238,7 @@ ANARIArray3D DebugDevice::newArray3D(const void *appMemory,
     ANARIDataType type,
     uint64_t numItems1,
     uint64_t numItems2,
-    uint64_t numItems3,
-    uint64_t byteStride1,
-    uint64_t byteStride2,
-    uint64_t byteStride3)
+    uint64_t numItems3)
 {
   debug->anariNewArray3D(this_device(),
       appMemory,
@@ -273,10 +247,7 @@ ANARIArray3D DebugDevice::newArray3D(const void *appMemory,
       type,
       numItems1,
       numItems2,
-      numItems3,
-      byteStride1,
-      byteStride2,
-      byteStride3);
+      numItems3);
   ANARIArray3D handle = anariNewArray3D(wrapped,
       appMemory,
       deleter,
@@ -284,10 +255,7 @@ ANARIArray3D DebugDevice::newArray3D(const void *appMemory,
       type,
       numItems1,
       numItems2,
-      numItems3,
-      byteStride1,
-      byteStride2,
-      byteStride3);
+      numItems3);
   handle = newHandle(handle);
 
   if (auto info = getDynamicObjectInfo<DebugObject<ANARI_ARRAY3D>>(handle)) {
@@ -296,9 +264,7 @@ ANARIArray3D DebugDevice::newArray3D(const void *appMemory,
         numItems1,
         numItems2,
         numItems3,
-        byteStride1,
-        byteStride2,
-        byteStride3);
+        0, 0, 0);
   }
 
   if (serializer) {
@@ -310,9 +276,6 @@ ANARIArray3D DebugDevice::newArray3D(const void *appMemory,
         numItems1,
         numItems2,
         numItems3,
-        byteStride1,
-        byteStride2,
-        byteStride3,
         handle);
   }
 
@@ -520,6 +483,38 @@ ANARIWorld DebugDevice::newWorld()
   return result;
 }
 
+
+// todo: maybe add serialization for these?
+const char ** DebugDevice::getObjectSubtypes(ANARIDataType objectType)
+{
+  return anariGetObjectSubtypes(wrapped, objectType);
+}
+
+const void* DebugDevice::getObjectInfo(ANARIDataType objectType,
+    const char* objectSubtype,
+    const char* infoName,
+    ANARIDataType infoType)
+{
+  return anariGetObjectInfo(wrapped, objectType, objectSubtype, infoName, infoType);
+}
+
+const void* DebugDevice::getParameterInfo(ANARIDataType objectType,
+    const char* objectSubtype,
+    const char* parameterName,
+    ANARIDataType parameterType,
+    const char* infoName,
+    ANARIDataType infoType)
+{
+  return anariGetParameterInfo(wrapped,
+      objectType,
+      objectSubtype,
+      parameterName,
+      parameterType,
+      infoName,
+      infoType);
+}
+
+
 int DebugDevice::getProperty(ANARIObject object,
     const char *name,
     ANARIDataType type,
@@ -623,6 +618,112 @@ void DebugDevice::unsetParameter(ANARIObject object, const char *name)
     if (auto info = getObjectInfo(object))
       info->unsetParameter(name);
   }
+}
+
+void* DebugDevice::mapParameterArray1D(ANARIObject object,
+    const char* name,
+    ANARIDataType dataType,
+    uint64_t numElements1,
+    uint64_t* elementStride)
+{
+  /*
+  if (handleIsDevice(object)) {
+    //??
+  }
+  */
+  debug->anariMapParameterArray1D(this_device(), object, name, dataType, numElements1, elementStride);
+
+  void *result = anariMapParameterArray1D(wrapped, unwrapHandle(object), name, dataType, numElements1, elementStride);
+
+  if (auto info = getDynamicObjectInfo<GenericDebugObject>(object)) {
+    info->mapParameter(name, dataType, numElements1, elementStride, result);
+    reportParameterUse(info->getType(), info->getSubtype(), name, ANARI_ARRAY1D);
+
+    if (serializer) {
+      serializer->anariMapParameterArray1D(this_device(), object, name, dataType, numElements1, elementStride, result);
+    }
+  }
+
+  return result;
+}
+
+void* DebugDevice::mapParameterArray2D(ANARIObject object,
+    const char* name,
+    ANARIDataType dataType,
+    uint64_t numElements1,
+    uint64_t numElements2,
+    uint64_t* elementStride)
+{
+  debug->anariMapParameterArray2D(this_device(), object, name, dataType, numElements1, numElements2, elementStride);
+
+  void *result = anariMapParameterArray2D(wrapped, unwrapHandle(object), name, dataType, numElements1, numElements2, elementStride);
+
+  if (auto info = getDynamicObjectInfo<GenericDebugObject>(object)) {
+    info->mapParameter(name, dataType, numElements1*numElements2, elementStride, result);
+    reportParameterUse(info->getType(), info->getSubtype(), name, ANARI_ARRAY2D);
+
+    if (serializer) {
+      serializer->anariMapParameterArray2D(this_device(), object, name, dataType, numElements1, numElements1, elementStride, result);
+    }
+
+  }
+
+  return result;
+}
+
+void* DebugDevice::mapParameterArray3D(ANARIObject object,
+    const char* name,
+    ANARIDataType dataType,
+    uint64_t numElements1,
+    uint64_t numElements2,
+    uint64_t numElements3,
+    uint64_t* elementStride)
+{
+  debug->anariMapParameterArray3D(this_device(), object, name, dataType, numElements1, numElements2, numElements3, elementStride);
+
+  void *result = anariMapParameterArray3D(wrapped, unwrapHandle(object), name, dataType, numElements1, numElements2, numElements3, elementStride);
+
+  if (auto info = getDynamicObjectInfo<GenericDebugObject>(object)) {
+    info->mapParameter(name, dataType, numElements1*numElements2*numElements3, elementStride, result);
+    reportParameterUse(info->getType(), info->getSubtype(), name, ANARI_ARRAY3D);
+    
+    if (serializer) {
+      serializer->anariMapParameterArray3D(this_device(), object, name, dataType, numElements1, numElements2, numElements3, elementStride, result);
+    }
+  }
+
+  return result;
+}
+
+void DebugDevice::unmapParameterArray(ANARIObject object,
+    const char* name)
+{
+  debug->anariUnmapParameterArray(this_device(), object, name);
+
+  if (serializer) {
+    serializer->anariUnmapParameterArray(this_device(), object, name);
+  }
+
+  // this needs to retrieve the pointer and translate the handles
+  if (auto info = getDynamicObjectInfo<GenericDebugObject>(object)) {
+    ANARIDataType dataType;
+    uint64_t elements;
+    if(void *mem = info->getParameterMapping(name, dataType, elements)) {
+      if(anari::isObject(dataType)) {
+        ANARIObject *objects = static_cast<ANARIObject*>(mem);
+        for(uint64_t i = 0;i<elements;++i) {
+          if (auto info2 = getObjectInfo(objects[i])) {
+            info2->referencedBy(object);
+          }
+
+          objects[i] = unwrapHandle(objects[i]);
+        }
+      }
+      info->unmapParameter(name);
+    }
+  }
+
+  anariUnmapParameterArray(wrapped, unwrapHandle(object), name);
 }
 
 void DebugDevice::commitParameters(ANARIObject object)
@@ -996,33 +1097,11 @@ extern "C" DEBUG_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_DEVICE_SUBTYPES(
   return devices;
 }
 
-extern "C" DEBUG_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_SUBTYPES(
-    debug, library, deviceSubtype, objectType)
+extern "C" DEBUG_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_DEVICE_FEATURES(
+    debug, library, deviceType)
 {
   (void)library;
-  (void)deviceSubtype;
-  (void)objectType;
-  return nullptr;
-}
-
-extern "C" DEBUG_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_PARAMETER_PROPERTY(
-    debug,
-    library,
-    deviceSubtype,
-    objectSubtype,
-    objectType,
-    parameterName,
-    parameterType,
-    propertyName,
-    propertyType)
-{
-  (void)library;
-  (void)deviceSubtype;
-  (void)objectSubtype;
-  (void)objectType;
-  (void)parameterName;
-  (void)parameterType;
-  (void)propertyName;
-  (void)propertyType;
-  return nullptr;
+  (void)deviceType;
+  static const char *features[] = {nullptr};
+  return features;
 }

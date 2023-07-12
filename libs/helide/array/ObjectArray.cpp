@@ -25,8 +25,6 @@ ObjectArray::ObjectArray(
     HelideGlobalState *state, const Array1DMemoryDescriptor &d)
     : Array(ANARI_ARRAY1D, state, d), m_capacity(d.numItems), m_end(d.numItems)
 {
-  if (d.byteStride != 0)
-    throw std::runtime_error("strided arrays not yet supported!");
   m_appHandles.resize(d.numItems, nullptr);
   initManagedMemory();
   updateInternalHandleArrays();

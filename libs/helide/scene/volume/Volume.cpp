@@ -3,16 +3,24 @@
 
 #include "Volume.h"
 // subtypes
-#include "SciVisVolume.h"
+#include "TransferFunction1D.h"
 
 namespace helide {
 
-Volume::Volume(HelideGlobalState *s) : Object(ANARI_VOLUME, s) {}
+Volume::Volume(HelideGlobalState *s) : Object(ANARI_VOLUME, s)
+{
+  s->objectCounts.volumes++;
+}
+
+Volume::~Volume()
+{
+  deviceState()->objectCounts.volumes--;
+}
 
 Volume *Volume::createInstance(std::string_view subtype, HelideGlobalState *s)
 {
-  if (subtype == "scivis")
-    return new SciVisVolume(s);
+  if (subtype == "transferFunction1D")
+    return new TransferFunction1D(s);
   else
     return (Volume *)new UnknownObject(ANARI_VOLUME, s);
 }

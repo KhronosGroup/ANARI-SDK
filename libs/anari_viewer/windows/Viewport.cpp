@@ -13,9 +13,8 @@ namespace windows {
 // Viewport definitions ///////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-Viewport::Viewport(
-    anari::Library library, anari::Device device, const char *name)
-    : Window(name, true), m_library(library), m_device(device)
+Viewport::Viewport(anari::Device device, const char *name)
+    : Window(name, true), m_device(device)
 {
   setManipulator(nullptr);
 
@@ -45,14 +44,13 @@ Viewport::Viewport(
 
   anari::retain(m_device, m_device);
 
-  const char **r_subtypes =
-      anariGetObjectSubtypes(m_library, "default", ANARI_RENDERER);
+  const char **r_subtypes = anariGetObjectSubtypes(m_device, ANARI_RENDERER);
 
   if (r_subtypes != nullptr) {
     for (int i = 0; r_subtypes[i] != nullptr; i++) {
       std::string subtype = r_subtypes[i];
       auto parameters =
-          ui::parseParameters(library, ANARI_RENDERER, subtype.c_str());
+          ui::parseParameters(m_device, ANARI_RENDERER, subtype.c_str());
       m_rendererNames.push_back(subtype);
       m_rendererParameters.push_back(parameters);
     }

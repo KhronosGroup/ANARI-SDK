@@ -66,8 +66,7 @@ ANARIArray1D HelideDevice::newArray1D(const void *appMemory,
     ANARIMemoryDeleter deleter,
     const void *userData,
     ANARIDataType type,
-    uint64_t numItems,
-    uint64_t byteStride)
+    uint64_t numItems)
 {
   initDevice();
 
@@ -77,7 +76,6 @@ ANARIArray1D HelideDevice::newArray1D(const void *appMemory,
   md.deleterPtr = userData;
   md.elementType = type;
   md.numItems = numItems;
-  md.byteStride = byteStride;
 
   if (anari::isObject(type))
     return createObjectForAPI<ObjectArray, ANARIArray1D>(deviceState(), md);
@@ -90,9 +88,7 @@ ANARIArray2D HelideDevice::newArray2D(const void *appMemory,
     const void *userData,
     ANARIDataType type,
     uint64_t numItems1,
-    uint64_t numItems2,
-    uint64_t byteStride1,
-    uint64_t byteStride2)
+    uint64_t numItems2)
 {
   initDevice();
 
@@ -103,8 +99,6 @@ ANARIArray2D HelideDevice::newArray2D(const void *appMemory,
   md.elementType = type;
   md.numItems1 = numItems1;
   md.numItems2 = numItems2;
-  md.byteStride1 = byteStride1;
-  md.byteStride2 = byteStride2;
 
   return createObjectForAPI<Array2D, ANARIArray2D>(deviceState(), md);
 }
@@ -115,10 +109,7 @@ ANARIArray3D HelideDevice::newArray3D(const void *appMemory,
     ANARIDataType type,
     uint64_t numItems1,
     uint64_t numItems2,
-    uint64_t numItems3,
-    uint64_t byteStride1,
-    uint64_t byteStride2,
-    uint64_t byteStride3)
+    uint64_t numItems3)
 {
   initDevice();
 
@@ -130,9 +121,6 @@ ANARIArray3D HelideDevice::newArray3D(const void *appMemory,
   md.numItems1 = numItems1;
   md.numItems2 = numItems2;
   md.numItems3 = numItems3;
-  md.byteStride1 = byteStride1;
-  md.byteStride2 = byteStride2;
-  md.byteStride3 = byteStride3;
 
   return createObjectForAPI<Array3D, ANARIArray3D>(deviceState(), md);
 }
@@ -216,6 +204,37 @@ ANARIWorld HelideDevice::newWorld()
 {
   initDevice();
   return createObjectForAPI<World, ANARIWorld>(deviceState());
+}
+
+// Query functions ////////////////////////////////////////////////////////////
+
+const char **HelideDevice::getObjectSubtypes(ANARIDataType objectType)
+{
+  return helide::query_object_types(objectType);
+}
+
+const void *HelideDevice::getObjectInfo(ANARIDataType objectType,
+    const char *objectSubtype,
+    const char *infoName,
+    ANARIDataType infoType)
+{
+  return helide::query_object_info(
+      objectType, objectSubtype, infoName, infoType);
+}
+
+const void *HelideDevice::getParameterInfo(ANARIDataType objectType,
+    const char *objectSubtype,
+    const char *parameterName,
+    ANARIDataType parameterType,
+    const char *infoName,
+    ANARIDataType infoType)
+{
+  return helide::query_param_info(objectType,
+      objectSubtype,
+      parameterName,
+      parameterType,
+      infoName,
+      infoType);
 }
 
 // Object + Parameter Lifetime Management /////////////////////////////////////
@@ -318,6 +337,10 @@ HelideDevice::~HelideDevice()
   reportLeaks(state.objectCounts.surfaces, "ANARISurface");
   reportLeaks(state.objectCounts.geometries, "ANARIGeometry");
   reportLeaks(state.objectCounts.materials, "ANARIMaterial");
+  reportLeaks(state.objectCounts.samplers, "ANARISampler");
+  reportLeaks(state.objectCounts.volumes, "ANARIVolume");
+  reportLeaks(state.objectCounts.spatialFields, "ANARISpatialField");
+  reportLeaks(state.objectCounts.arrays, "ANARIArray");
 
   if (state.objectCounts.unknown != 0) {
     reportMessage(ANARI_SEVERITY_WARNING,
@@ -355,6 +378,23 @@ void HelideDevice::initDevice()
   m_initialized = true;
 }
 
+void HelideDevice::deviceCommitParameters()
+{
+  auto &state = *deviceState();
+
+  bool allowInvalidSurfaceMaterials = state.allowInvalidSurfaceMaterials;
+
+  state.allowInvalidSurfaceMaterials =
+      getParam<bool>("allowInvalidMaterials", true);
+  state.invalidMaterialColor =
+      getParam<float4>("invalidMaterialColor", float4(1.f, 0.f, 1.f, 1.f));
+
+  if (allowInvalidSurfaceMaterials != state.allowInvalidSurfaceMaterials)
+    state.objectUpdates.lastBLSReconstructSceneRequest = helium::newTimeStamp();
+
+  helium::BaseDevice::deviceCommitParameters();
+}
+
 HelideGlobalState *HelideDevice::deviceState() const
 {
   return (HelideGlobalState *)helium::BaseDevice::m_state.get();
@@ -378,42 +418,12 @@ extern "C" HELIDE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_DEVICE_SUBTYPES(
   return devices;
 }
 
-extern "C" HELIDE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_SUBTYPES(
-    helide, library, deviceSubtype, objectType)
+extern "C" HELIDE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_DEVICE_FEATURES(
+    sink, library, deviceSubtype)
 {
-  return helide::query_object_types(objectType);
-}
-
-extern "C" HELIDE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_PROPERTY(
-    helide,
-    library,
-    deviceSubtype,
-    objectSubtype,
-    objectType,
-    propertyName,
-    propertyType)
-{
-  return helide::query_object_info(
-      objectType, objectSubtype, propertyName, propertyType);
-}
-
-extern "C" HELIDE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_PARAMETER_PROPERTY(
-    helide,
-    library,
-    deviceSubtype,
-    objectSubtype,
-    objectType,
-    parameterName,
-    parameterType,
-    propertyName,
-    propertyType)
-{
-  return helide::query_param_info(objectType,
-      objectSubtype,
-      parameterName,
-      parameterType,
-      propertyName,
-      propertyType);
+  (void)library;
+  (void)deviceSubtype;
+  return (const char **)helide::query_extensions();
 }
 
 extern "C" HELIDE_DEVICE_INTERFACE ANARIDevice anariNewHelideDevice(
