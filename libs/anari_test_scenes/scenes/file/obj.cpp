@@ -267,15 +267,6 @@ static void loadObj(
 
   anari::setParameterArray1D(d, group, "surface", ANARI_SURFACE, meshes.data(), meshes.size());
 
-  auto light = anari::newObject<anari::Light>(d, "directional");
-  anari::setParameter(d, light, "direction", anari::float3(-1, -2, -1));
-  anari::setParameter(d, light, "irradiance", 4.f);
-  anari::commitParameters(d, light);
-
-  anari::setParameterArray1D(d, group, "light", &light, 1);
-
-  anari::release(d, light);
-
   anari::commitParameters(d, group);
 
   anari::setAndReleaseParameter(d, instance, "group", group);
