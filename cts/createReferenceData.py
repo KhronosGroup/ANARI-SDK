@@ -65,7 +65,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     cts.apply_to_scenes(
-        cleanMetaData, args.library, args.device, args.renderer, args.test_scenes, True, not args.ignore_feature
+        cleanMetaData, args.library, args.device, args.renderer, args.test_scenes, True, not args.ignore_features
     )
     cts.apply_to_scenes(
         createReferenceData,
@@ -74,5 +74,5 @@ if __name__ == "__main__":
         args.renderer,
         args.test_scenes,
         True,
-        not args.ignore_feature
+        not args.ignore_features
     )
