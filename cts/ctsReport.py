@@ -36,6 +36,7 @@ def generate_report_document(report_data, path, title, verbosity=0):
     passed = Paragraph("Passed", normalStyle)
     normalStyle.textColor = "red"
     failed = Paragraph("Failed", normalStyle)
+    failedMissingImage = Paragraph("Failed (missing image)", normalStyle)
     normalStyle.textColor = "orange"
     partialPass = Paragraph("Partial", normalStyle)
     normalStyle.textColor = "black"
@@ -161,6 +162,11 @@ def generate_report_document(report_data, path, title, verbosity=0):
                     # Iterate through all channels (color, depth)
                     for channel, results in nameValue.items():
                         if isinstance(results, dict):
+                            if "missingImage" in results and results["missingImage"]:
+                                status = failedMissingImage
+                                summaryItem[1] = failed
+                                continue
+
                             # Add all items to sub stories to be able to not add them depending on verbosity
                             channel_story = []
                             channel_story.append(
@@ -350,7 +356,7 @@ def generate_report_document(report_data, path, title, verbosity=0):
 
                     if status == passed:
                         hasPassedIteration = True
-                    elif status == failed:
+                    elif status == failed or status == failedMissingImage:
                         hasFailedIteration = True
 
             # Mark test as partial pass if both, failed and passed, permutation/variants were present
