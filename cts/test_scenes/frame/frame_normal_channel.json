@@ -24,7 +24,7 @@
       "FLOAT32_VEC3"
     ]
   },
-  "_requiredFeatures": [
+  "requiredFeatures": [
     "ANARI_KHR_FRAME_CHANNEL_NORMAL"
   ]
 }

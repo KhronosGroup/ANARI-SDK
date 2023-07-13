@@ -31,7 +31,7 @@
       ]
     }
   },
-  "_requiredFeatures": [
+  "requiredFeatures": [
     "KHR_FRAME_CHANNEL_OBJECT_ID", "ANARI_KHR_SPATIAL_FIELD_STRUCTURED_REGULAR", "ANARI_KHR_VOLUME_SCIVIS"
   ]
 }
