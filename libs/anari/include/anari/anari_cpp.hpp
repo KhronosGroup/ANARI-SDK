@@ -161,6 +161,14 @@ void setParameterArray1D(ANARIDevice device,
     const T *data,
     uint64_t numElements1);
 
+void setParameterArray2D(Device d,
+    Object o,
+    const char *name,
+    ANARIDataType type,
+    const void *v,
+    uint64_t numElements1,
+    uint64_t numElements2);
+
 template <typename T>
 void setParameterArray2D(ANARIDevice device,
     ANARIObject object,
@@ -168,6 +176,15 @@ void setParameterArray2D(ANARIDevice device,
     const T *data,
     uint64_t numElements1,
     uint64_t numElements2);
+
+void setParameterArray3D(Device d,
+    Object o,
+    const char *name,
+    ANARIDataType type,
+    const void *v,
+    uint64_t numElements1,
+    uint64_t numElements2,
+    uint64_t numElements3);
 
 template <typename T>
 void setParameterArray3D(ANARIDevice device,
