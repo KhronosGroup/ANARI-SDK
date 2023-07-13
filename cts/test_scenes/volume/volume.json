@@ -6,7 +6,7 @@
       "anari_objects": {
         "volume": [
           {
-            "subtype": "scivis",
+            "subtype": "transferFunction1D",
             "field": "ref_spatialField_0"
           }
         ],
