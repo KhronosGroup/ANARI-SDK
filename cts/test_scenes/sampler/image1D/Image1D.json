@@ -29,7 +29,9 @@
       "/anari_objects/sampler/0/filter": [null, "nearest", "linear"],
       "/anari_objects/sampler/0/wrapMode": [null, "clampToEdge", "repeat", "mirrorRepeat"],
       "/anari_objects/sampler/0/inTransform": [null, [[-0.5, -1, 0, 0],[1, -0.5, 0, 0],[0, 0, -0.5, 0],[ 1, 1, 1, 1]]],
-      "/anari_objects/sampler/0/outTransform": [null, [[-1.0, -1.0, 0, 0],[1.0, -1.0, 0, 0],[0, 0, -1.0, 0],[1, 1, 1, 1]]]
+      "/anari_objects/sampler/0/outTransform": [null, [[-1.0, -1.0, 0, 0],[1.0, -1.0, 0, 0],[0, 0, -1.0, 0],[1, 1, 1, 1]]],
+      "/anari_objects/sampler/0/inOffset":[null, [0.7, -0.4, 0.6, -0.2]],
+      "/anari_objects/sampler/0/outOffset":[null, [0.7, -0.4, 0.6, -0.2]]
     },
     "requiredFeatures": [
       "ANARI_KHR_SAMPLER_IMAGE1D"

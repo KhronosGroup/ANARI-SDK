@@ -17,7 +17,8 @@
       }
     },
     "permutations" :{
-      "/anari_objects/sampler/0/transform": [null, [[-1.0, -1.0, 0, 0],[1.0, -1.0, 0, 0],[0, 0, -1.0, 0],[1, 1, 1, 1]]]
+      "/anari_objects/sampler/0/transform": [null, [[-1.0, -1.0, 0, 0],[1.0, -1.0, 0, 0],[0, 0, -1.0, 0],[1, 1, 1, 1]]],
+      "/anari_objects/sampler/0/outOffset":[null, [0.7, -0.4, 0.6, -0.2]]
     },
     "requiredFeatures": [
       "ANARI_KHR_SAMPLER_TRANSFORM"
