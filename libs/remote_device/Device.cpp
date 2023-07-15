@@ -4,6 +4,8 @@
 #include "Device.h"
 #include <anari/backend/LibraryImpl.h>
 #include <anari/anari_cpp.hpp>
+#include <climits>
+#include <cstdlib>
 #include <cstring>
 #include <functional>
 #include <iostream>
@@ -564,6 +566,26 @@ void Device::discardFrame(ANARIFrame) {}
 Device::Device(std::string subtype) : manager(async::make_connection_manager())
 {
   logging::Initialize();
+
+  char *serverHostName = getenv("ANARI_REMOTE_SERVER_HOSTNAME");
+  if (serverHostName) {
+    server.hostname = std::string(serverHostName);
+    LOG(logging::Level::Info) << "Server hostname specified via environment: "
+      << server.hostname;
+  }
+
+  char *serverPort = getenv("ANARI_REMOTE_SERVER_PORT");
+  if (serverPort) {
+    int p = std::stoi(serverPort);
+    if (p >= 0 && p <= USHRT_MAX) {
+      server.port = (unsigned short)p;
+      LOG(logging::Level::Info) << "Server port specified via environment: "
+        << server.port;
+    } else {
+      LOG(logging::Level::Warning)
+        << "Server port specified via environment but ill-formed: " << p;
+    }
+  }
 
   remoteSubtype = subtype;
 }
