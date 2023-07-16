@@ -215,6 +215,11 @@ struct ResourceManager
 
 struct Server
 {
+  // For now only one client:
+  struct {
+    CompressionFeatures compression;
+  } client;
+
   ResourceManager resourceManager;
   async::connection_manager_pointer manager;
   async::connection_pointer conn;
@@ -302,18 +307,34 @@ struct Server
         LOG(logging::Level::Info) << "Message: NewDevice, message size: "
                                   << prettyBytes(message->size());
 
-        std::string deviceType(message->data(), message->size());
+        const char *msg = message->data();
+
+        int32_t len = *(int32_t *)msg;
+        msg += sizeof(len);
+
+        std::string deviceType(msg, len);
+        msg += len;
+
+        client.compression = *(CompressionFeatures *)msg;
+        msg += sizeof(CompressionFeatures);
+
         ANARIDevice dev = anariNewDevice(g_library, deviceType.c_str());
         Handle deviceHandle = resourceManager.registerDevice(dev);
+        CompressionFeatures cf = getCompressionFeatures();
 
-        // return device handle to client
+        // return device handle and other info to client
         auto buf = std::make_shared<Buffer>();
         buf->write((char *)&deviceHandle, sizeof(deviceHandle));
+        buf->write((char *)&cf, sizeof(cf));
         write(MessageType::DeviceHandle, buf);
 
         LOG(logging::Level::Info)
             << "Creating new device, type: " << deviceType
             << ", device ID: " << deviceHandle << ", ANARI handle: " << dev;
+        LOG(logging::Level::Info) << "Client has TurboJPEG: "
+            << client.compression.hasTurboJPEG;
+        LOG(logging::Level::Info) << "Client has SNAPPY: "
+            << client.compression.hasSNAPPY;
       } else if (message->type() == MessageType::NewObject) {
         LOG(logging::Level::Info) << "Message: NewObject, message size: "
                                   << prettyBytes(message->size());
@@ -720,6 +741,8 @@ struct Server
         // Block and send image over the wire
         anariFrameReady(dev, frame, ANARI_WAIT);
 
+        CompressionFeatures cf = getCompressionFeatures();
+
         uint32_t width, height;
         ANARIDataType type;
         const char *color = (const char *)anariMapFrame(
@@ -733,8 +756,9 @@ struct Server
           outbuf->write((const char *)&height, sizeof(height));
           outbuf->write((const char *)&type, sizeof(type));
 
-#ifdef HAVE_TURBOJPEG
-          if (type == ANARI_UFIXED8_RGBA_SRGB) { // TODO: more formats..
+          bool compressionTurboJPEG = cf.hasTurboJPEG && client.compression.hasTurboJPEG;
+
+          if (compressionTurboJPEG && type == ANARI_UFIXED8_RGBA_SRGB) { // TODO: more formats..
             TurboJPEGOptions options;
             options.width = width;
             options.height = height;
@@ -759,9 +783,7 @@ struct Server
                                           << prettyBytes(compressedSize);
               }
             }
-          } else
-#endif
-          {
+          } else {
             outbuf->write(color, colorSize);
           }
           write(MessageType::ChannelColor, outbuf);
@@ -778,8 +800,9 @@ struct Server
           outbuf->write((const char *)&height, sizeof(height));
           outbuf->write((const char *)&type, sizeof(type));
 
-#ifdef HAVE_SNAPPY
-          if (type == ANARI_FLOAT32) {
+          bool compressionSNAPPY = cf.hasSNAPPY && client.compression.hasSNAPPY;
+
+          if (compressionSNAPPY && type == ANARI_FLOAT32) {
             SNAPPYOptions options;
             options.inputSize = depthSize;
 
@@ -797,9 +820,7 @@ struct Server
             outbuf->write(
                 (const char *)&compressedSize32, sizeof(compressedSize32));
             outbuf->write((const char *)compressed.data(), compressedSize);
-          } else
-#endif
-          {
+          } else {
             outbuf->write(depth, depthSize);
           }
           write(MessageType::ChannelDepth, outbuf);

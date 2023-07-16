@@ -651,9 +651,14 @@ void Device::initClient()
   syncConnectionEstablished.cv.wait(l1, [this]() { return conn; });
   l1.unlock();
 
-  // request remote device to be created
+  int32_t remoteSubtypeLength = remoteSubtype.length();
+  CompressionFeatures cf = getCompressionFeatures();
+
+  // request remote device to be created, send other client info along
   auto buf = std::make_shared<Buffer>();
+  buf->write((const char *)&remoteSubtypeLength, sizeof(remoteSubtypeLength));
   buf->write(remoteSubtype.c_str(), remoteSubtype.length());
+  buf->write((const char *)&cf, sizeof(cf));
   //write(MessageType::NewDevice, buf);
   // post to queue directly: write() would call initClient() recursively!
   queue.post(std::bind(&Device::writeImpl, this, MessageType::NewDevice, buf));
@@ -732,12 +737,22 @@ void Device::handleMessage(async::connection::reason reason,
 
   if (reason == async::connection::Read) {
     if (message->type() == MessageType::DeviceHandle) {
-      assert(message->size() == sizeof(Handle));
       std::unique_lock l(syncDeviceHandleRemote.mtx);
-      remoteDevice = *(ANARIDevice *)message->data();
+
+      char *msg = message->data();
+
+      remoteDevice = *(ANARIDevice *)msg;
+      msg += sizeof(ANARIDevice);
+
+      server.compression = *(CompressionFeatures *)msg;
+      msg += sizeof(CompressionFeatures);
+
       l.unlock();
       syncDeviceHandleRemote.cv.notify_all();
       LOG(logging::Level::Info) << "Got remote device handle: " << remoteDevice;
+      LOG(logging::Level::Info) << "Server has TurboJPEG: "
+        << server.compression.hasTurboJPEG;
+      LOG(logging::Level::Info) << "Server has SNAPPY: " << server.compression.hasSNAPPY;
     } else if (message->type() == MessageType::ArrayMapped) {
       std::unique_lock l(syncMapArray.mtx);
 
@@ -863,11 +878,14 @@ void Device::handleMessage(async::connection::reason reason,
           : "channel.depth";
       LOG(logging::Level::Stats) << t << " sec. until " << chan << " received";
 
+      CompressionFeatures cf = getCompressionFeatures();
+
       if (message->type() == MessageType::ChannelColor) {
         frm.resizeColor(width, height, type);
 
-#ifdef HAVE_TURBOJPEG
-        if (type == ANARI_UFIXED8_RGBA_SRGB) { // TODO: more formats..
+        bool compressionTurboJPEG = cf.hasTurboJPEG && server.compression.hasTurboJPEG;
+
+        if (compressionTurboJPEG && type == ANARI_UFIXED8_RGBA_SRGB) { // TODO: more formats..
           uint32_t jpegSize = *(uint32_t *)(message->data() + off);
           off += sizeof(jpegSize);
 
@@ -885,17 +903,16 @@ void Device::handleMessage(async::connection::reason reason,
                 << ", compressed: " << prettyBytes(jpegSize)
                 << ", rate: " << double(frm.color.size()) / jpegSize;
           }
-        } else
-#endif
-        {
+        } else {
           size_t numBytes = width * height * anari::sizeOf(type);
           memcpy(frm.color.data(), message->data() + off, numBytes);
         }
       } else {
         frm.resizeDepth(width, height, type);
 
-#ifdef HAVE_SNAPPY
-        if (type == ANARI_FLOAT32) {
+        bool compressionSNAPPY = cf.hasSNAPPY && server.compression.hasSNAPPY;
+
+        if (compressionSNAPPY && type == ANARI_FLOAT32) {
           uint32_t snappySize = *(uint32_t *)(message->data() + off);
           off += sizeof(snappySize);
 
@@ -910,9 +927,7 @@ void Device::handleMessage(async::connection::reason reason,
           } else {
             LOG(logging::Level::Warning) << "snappy::RawUncompress failed";
           }
-        } else
-#endif
-        {
+        } else {
           size_t numBytes = width * height * anari::sizeOf(type);
           memcpy(frm.depth.data(), message->data() + off, numBytes);
         }

@@ -15,6 +15,7 @@
 #include <mutex>
 #include <vector>
 #include "Frame.h"
+#include "Compression.h"
 
 namespace remote {
 
@@ -167,6 +168,7 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
   struct {
     std::string hostname = "localhost";
     unsigned short port{31050};
+    CompressionFeatures compression;
   } server;
 
   async::connection_manager_pointer manager;
