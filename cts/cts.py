@@ -94,6 +94,9 @@ def write_images(evaluations, output):
                 if isinstance(value, dict):
                     for channel, channelValue in value.items():
                         if isinstance(channelValue, dict):
+                            if "missingImage" in evaluation[stem][name][channel] and evaluation[stem][name][channel]["missingImage"]:
+                                continue
+
                             evaluation[stem][name][channel]["image_paths"] = {}
 
                             # save the input images to the output directory
@@ -134,7 +137,7 @@ def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, 
     # find which channel(s) to evaluate
     channels = get_channels(parsed_json)
 
-    # construct permutation/variant depenendend name for result dictionary
+    # construct permutation/variant dependent name for result dictionary
     if permutationString != "":
         permutationString = f'_{permutationString}'
 
@@ -169,6 +172,9 @@ def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, 
 
         if candidate_path == "":
             print('No candidate images for filepath {} could be found.'.format(candidate_file))
+            results[str(test_name)][name][channel] = {
+                "missingImage": True
+            }
             continue
 
         if channel == "depth":
