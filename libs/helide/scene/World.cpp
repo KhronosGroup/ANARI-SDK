@@ -187,10 +187,17 @@ void World::rebuildTLS()
       i->embreeGeometryUpdate();
       rtcAttachGeometryByID(m_embreeScene, i->embreeGeometry(), id);
     } else {
-      reportMessage(ANARI_SEVERITY_DEBUG,
-          "helide::World rejecting invalid surfaces in instance(%p) "
-          "when building TLS",
-          i);
+      if (i->group()->surfaces().empty()) {
+        reportMessage(ANARI_SEVERITY_DEBUG,
+            "helide::World rejecting empty surfaces in instance(%p) "
+            "when building TLS",
+            i);
+      } else {
+        reportMessage(ANARI_SEVERITY_DEBUG,
+            "helide::World rejecting invalid surfaces in instance(%p) "
+            "when building TLS",
+            i);
+      }
     }
     id++;
   });
