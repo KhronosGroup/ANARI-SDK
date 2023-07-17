@@ -240,6 +240,20 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
   std::map<ANARIObject, Frame> frames;
   std::map<ANARIArray, std::vector<char>> arrays;
 
+  // Need to keep track of these to implement
+  // (un)mapParameterArray correctly
+  struct ParameterArray
+  {
+    ANARIObject object{nullptr};
+    const char *name = "";
+    bool operator<(const ParameterArray &other) const {
+      return object && object == other.object
+        && strlen(name) > 0
+        && std::string(name) < std::string(other.name);
+      }
+  };
+  std::map<ParameterArray, ANARIArray> parameterArrays;
+
   ANARIObject registerNewObject(ANARIDataType type, std::string subtype = "");
   ANARIArray registerNewArray(ANARIDataType type,
       const void *appMemory,

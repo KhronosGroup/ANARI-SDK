@@ -47,8 +47,12 @@ void *Device::mapParameterArray1D(ANARIObject o,
     uint64_t numElements1,
     uint64_t *elementStride)
 {
-  LOG(logging::Level::Warning) << "Array parameter mapping not implemented";
-  return nullptr;
+  auto array = newArray1D(nullptr, nullptr, nullptr, dataType, numElements1);
+  ParameterArray pa{o, name};
+  parameterArrays[pa] = array;
+  setParameter(o, name, ANARI_ARRAY1D, &array);
+  *elementStride = anari::sizeOf(dataType);
+  return mapArray(array);
 }
 
 void *Device::mapParameterArray2D(ANARIObject o,
@@ -58,8 +62,13 @@ void *Device::mapParameterArray2D(ANARIObject o,
     uint64_t numElements2,
     uint64_t *elementStride)
 {
-  LOG(logging::Level::Warning) << "Array parameter mapping not implemented";
-  return nullptr;
+  auto array = newArray2D(
+      nullptr, nullptr, nullptr, dataType, numElements1, numElements2);
+  ParameterArray pa{o, name};
+  parameterArrays[pa] = array;
+  setParameter(o, name, ANARI_ARRAY2D, &array);
+  *elementStride = anari::sizeOf(dataType);
+  return mapArray(array);
 }
 
 void *Device::mapParameterArray3D(ANARIObject o,
@@ -70,13 +79,29 @@ void *Device::mapParameterArray3D(ANARIObject o,
     uint64_t numElements3,
     uint64_t *elementStride)
 {
-  LOG(logging::Level::Warning) << "Array parameter mapping not implemented";
-  return nullptr;
+  auto array = newArray3D(nullptr,
+      nullptr,
+      nullptr,
+      dataType,
+      numElements1,
+      numElements2,
+      numElements3);
+  ParameterArray pa{o, name};
+  parameterArrays[pa] = array;
+  setParameter(o, name, ANARI_ARRAY3D, &array);
+  *elementStride = anari::sizeOf(dataType);
+  return mapArray(array);
 }
 
 void Device::unmapParameterArray(ANARIObject o, const char *name)
 {
-  // no-op
+  ParameterArray pa{o, name};
+  auto it = parameterArrays.find(pa);
+  if (it != parameterArrays.end()) {
+    ANARIArray array = it->second;
+    unmapArray(array);
+    parameterArrays.erase(pa);
+  }
 }
 
 ANARIArray1D Device::newArray1D(const void *appMemory,
