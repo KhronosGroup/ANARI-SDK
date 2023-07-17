@@ -19,7 +19,7 @@
   "simplified_permutations": true,
   "permutations": {
     "/anari_objects/light/0/position": [[0.2, 0.2, -0.1], null],
-    "/anari_objects/light/0/direction": [[0.0, 0.20601, -0.97855], null],
+    "/anari_objects/light/0/direction": [[0.0, 0.20601, 0.97855], null],
     "/anari_objects/light/0/radius": [0.3, null],
     "/anari_objects/light/0/innerRadius": [0.15, null],
     "/anari_objects/light/0/openingAngle": [null, 0.5],
