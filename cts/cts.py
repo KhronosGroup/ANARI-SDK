@@ -94,6 +94,9 @@ def write_images(evaluations, output):
                 if isinstance(value, dict):
                     for channel, channelValue in value.items():
                         if isinstance(channelValue, dict):
+                            if "missingImage" in evaluation[stem][name][channel] and evaluation[stem][name][channel]["missingImage"]:
+                                continue
+
                             evaluation[stem][name][channel]["image_paths"] = {}
 
                             # save the input images to the output directory
@@ -134,7 +137,7 @@ def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, 
     # find which channel(s) to evaluate
     channels = get_channels(parsed_json)
 
-    # construct permutation/variant depenendend name for result dictionary
+    # construct permutation/variant dependent name for result dictionary
     if permutationString != "":
         permutationString = f'_{permutationString}'
 
@@ -169,6 +172,9 @@ def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, 
 
         if candidate_path == "":
             print('No candidate images for filepath {} could be found.'.format(candidate_file))
+            results[str(test_name)][name][channel] = {
+                "missingImage": True
+            }
             continue
 
         if channel == "depth":
@@ -499,12 +505,12 @@ def render_scenes(anari_library, anari_device = None, anari_renderer = "default"
 
 # compare existing candidate and reference images and write the results into a pdf report
 # this report will only contain image comparisons and no further data like e.g. queried features
-def compare_images(test_scenes = "test_scenes", candidates_path = "test_scenes", output = ".", verbosity=0, check_features = True, comparison_methods = ["ssim"], thresholds = None, custom_compare_function = None):
+def compare_images(test_scenes = "test_scenes", candidates_path = "test_scenes", output = ".", verbosity=0, comparison_methods = ["ssim"], thresholds = None, custom_compare_function = None):
     # gather existing candidate and reference images
     ref_images = globImages(test_scenes, reference_prefix)
     candidate_images = globImages(candidates_path, exclude_prefix=reference_prefix)
     # evaluate images per test scene (also generates diff and threshold images)
-    evaluations = apply_to_scenes(evaluate_scene, "", None, "default", test_scenes, False, check_features , False, output, ref_images, candidate_images, comparison_methods, thresholds, custom_compare_function)
+    evaluations = apply_to_scenes(evaluate_scene, "", None, "default", test_scenes, False, True , False, output, ref_images, candidate_images, comparison_methods, thresholds, custom_compare_function)
     if output != None:
         # write all images to filesystem to later incorporate in report
         print("\n***Create Report***\n")
@@ -513,7 +519,7 @@ def compare_images(test_scenes = "test_scenes", candidates_path = "test_scenes",
         for evaluation in evaluations.values():
             merged_evaluations = recursive_update(merged_evaluations, evaluation)
         # write out pdf report containing images and evaluation data
-        write_report(merged_evaluations, output, check_features, verbosity)
+        write_report(merged_evaluations, output, True, verbosity)
         print("***Done***")
 
 # compare candidate bounding box against reference bounding box using a tolerance value
@@ -692,7 +698,7 @@ if __name__ == "__main__":
     renderScenesParser.add_argument('-o', '--output', default=".", help="Output path")
 
     # command: compare_images
-    evaluateScenesParser = subparsers.add_parser('compare_images', description='Evaluates candidate renderings against reference renderings', parents=[evaluationMethodParser,ignoreFeatureParser])
+    evaluateScenesParser = subparsers.add_parser('compare_images', description='Evaluates candidate renderings against reference renderings', parents=[evaluationMethodParser])
     evaluateScenesParser.add_argument('-t', '--test_scenes', default="test_scenes", help="Folder with test scenes which include the reference images")
     evaluateScenesParser.add_argument('--candidates', default="test_scenes", help="Path to folder containing the candidate images")
     evaluateScenesParser.add_argument('-o', '--output', default=".", help="Output path")
@@ -732,7 +738,7 @@ if __name__ == "__main__":
     if args.command == "render_scenes":
         render_scenes(args.library, args.device, args.renderer, args.test_scenes, not args.ignore_features, args.output)
     elif args.command == "compare_images":
-        compare_images(args.test_scenes, args.candidates, args.output, verboseLevel, not args.ignore_features, args.comparison_methods, args.thresholds)
+        compare_images(args.test_scenes, args.candidates, args.output, verboseLevel, args.comparison_methods, args.thresholds)
     elif args.command == "query_features":
         result = query_features(args.library, args.device)
         print(tabulate(result))
