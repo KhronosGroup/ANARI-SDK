@@ -149,18 +149,14 @@ def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, 
 
     color_thresholds = []
     parsedThresholds = {}
-    if "thresholds" in parsed_json:
+    if "thresholds" in parsed_json and isinstance(parsed_json["thresholds"], dict) and parsed_json["thresholds"]:
         parsedThresholds = parsed_json["thresholds"]
-    for idx, method in enumerate(methods):
-        if method in parsedThresholds:
-            color_thresholds.append(parsedThresholds[method])
-        elif thresholds is not None and idx < len(thresholds):
-            color_thresholds.append(thresholds[idx])
-        else:
-            color_thresholds.append(None)
+        methods = parsedThresholds.keys()
+        color_thresholds = parsedThresholds.values()
 
     # evaluate once per channel
     for channel in channels:
+        methodsCopy = methods.copy()
         reference_file = f'{reference_prefix}{stem}{permutationString}_{channel}'
         candidate_file = f'{stem}{permutationString}{variantString}_{channel}'
 
@@ -179,14 +175,14 @@ def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, 
 
         if channel == "depth":
             # only use psnr as comparison method for depth tests
-            methods = ["psnr"]
+            methodsCopy = ["psnr"]
             channelThresholds = [20.0]
             custom_compare_function = None
         else:
             # color channels might have multiple thresholds for multiple comparison methods
             channelThresholds = color_thresholds
         # evaluate rendered scene against reference data (possibly using a custom comparison function)
-        eval_result = ctsUtility.evaluate_scene(ref_path, candidate_path, methods, channelThresholds, custom_compare_function)
+        eval_result = ctsUtility.evaluate_scene(ref_path, candidate_path, methodsCopy, channelThresholds, custom_compare_function)
         print(f'\n{test_name} {name} {channel}:')
         for key in eval_result["metrics"]:
             # construct report text for passed or failed tests
