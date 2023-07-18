@@ -77,6 +77,9 @@ def generate_report_document(report_data, path, title, check_features = True, ve
 
     story.append(PageBreak())
 
+    summaryCategories = {}
+    constSpacing = "&nbsp;&nbsp;&nbsp;&nbsp;"
+
     # Iterate through each test file
     for test_cases_name, test_cases_value in report_data.items():
         if isinstance(test_cases_value, dict):
@@ -99,13 +102,29 @@ def generate_report_document(report_data, path, title, check_features = True, ve
                     stylesheet["Heading2"],
                 )
             )
+
+            categories = test_cases_name.split('\\')
+            categories.pop()
+            accumulatedCategory = ""
+            spacing = ""
+            for category in categories:
+                accumulatedCategory += category + '\\'
+                if accumulatedCategory not in summaryCategories:
+                    item = [Paragraph(
+                        f'{spacing}{accumulatedCategory}'
+                        ),
+                        None]
+                    summaryCategories[accumulatedCategory] = item
+                    summary.append(item)
+                spacing += constSpacing
             # Create summery item for current test file (this will be changed later)
             summaryItem = [
                 Paragraph(
-                    f'<a href="#{test_cases_name}" color=blue>{test_cases_name}</a>'
+                    f'<a href="#{test_cases_name}" color=blue>{spacing}{test_cases_name}</a>'
                 ),
                 passed,
             ]
+            spacing += constSpacing
 
             # Show all required features in summary and detailed page
             if "requiredFeatures" in test_cases_value:
@@ -345,7 +364,7 @@ def generate_report_document(report_data, path, title, check_features = True, ve
                         summary.append(
                             [
                                 Paragraph(
-                                    f'<a href="#{name}" color=blue>&nbsp;&nbsp;&nbsp;&nbsp;{name}</a>'
+                                    f'<a href="#{name}" color=blue>{spacing}{name}</a>'
                                 ),
                                 status,
                             ]
@@ -353,7 +372,7 @@ def generate_report_document(report_data, path, title, check_features = True, ve
                     else:
                         # Add test to summary without reference
                         summary.append(
-                            [Paragraph(f"&nbsp;&nbsp;&nbsp;&nbsp;{name}"), status]
+                            [Paragraph(f"{spacing}{name}"), status]
                         )
 
                     if status == passed:
@@ -364,6 +383,15 @@ def generate_report_document(report_data, path, title, check_features = True, ve
             # Mark test as partial pass if both, failed and passed, permutation/variants were present
             if hasPassedIteration and hasFailedIteration:
                 summaryItem[1] = partialPass
+
+            accumulatedCategory = ""
+            for category in categories:
+                accumulatedCategory += category + '\\'
+                if summaryCategories[accumulatedCategory][1] != partialPass:
+                    if summaryCategories[accumulatedCategory][1] == None:
+                        summaryCategories[accumulatedCategory][1] = summaryItem[1]
+                    elif summaryItem[1] != summaryCategories[accumulatedCategory][1]:
+                        summaryCategories[accumulatedCategory][1] = partialPass
 
             # Only add the whole detailed test case if there is actual content to show
             if len(test_case_story) != oldCount:
