@@ -25,11 +25,14 @@ def generate_report_document(report_data, path, title, check_features = True, ve
         pagesize=pagesizes.A4,
         rightMargin=18,
         leftMargin=18,
-        topMargin=18,
-        bottomMargin=18,
+        topMargin=10,
+        bottomMargin=10,
     )
     stylesheet = getSampleStyleSheet()
+    stylesheet["Heading2"].wordWrap = 'CJK'
+    stylesheet["Heading3"].wordWrap = 'CJK'
     normalStyle = stylesheet["Normal"]
+    normalStyle.wordWrap = 'CJK'
 
     # Create passed, partial and failed Paragraph for reusability
     normalStyle.textColor = "green"
@@ -81,7 +84,7 @@ def generate_report_document(report_data, path, title, check_features = True, ve
             test_case_story = []
             # Check if test is supported by this device, otherwise skip
             if "not_supported" in test_cases_value:
-                summaryItem = [test_cases_name, Paragraph("Skipped")]
+                summaryItem = [Paragraph(test_cases_name), Paragraph("Skipped")]
                 for i, item in enumerate(test_cases_value["requiredFeatures"]):
                     if item in test_cases_value["not_supported"]:
                         test_cases_value["requiredFeatures"][i] = f'<font color="red">{item}</font>'
