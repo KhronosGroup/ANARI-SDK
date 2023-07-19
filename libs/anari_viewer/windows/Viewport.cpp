@@ -100,8 +100,10 @@ void Viewport::buildUI()
   updateImage();
   updateCamera();
 
-  ImGui::Image(
-      (void *)(intptr_t)m_framebufferTexture, ImGui::GetContentRegionAvail());
+  ImGui::Image((void *)(intptr_t)m_framebufferTexture,
+      ImGui::GetContentRegionAvail(),
+      ImVec2(1, 0),
+      ImVec2(0, 1));
 
   if (m_showOverlay)
     ui_overlay();
@@ -331,7 +333,7 @@ void Viewport::ui_handleInput()
           prev * 2.f / anari::float2(m_viewportSize);
       const anari::float2 mouseTo = mouse * 2.f / anari::float2(m_viewportSize);
 
-      const anari::float2 mouseDelta = mouseFrom - mouseTo;
+      const anari::float2 mouseDelta = mouseTo - mouseFrom;
 
       if (mouseDelta != anari::float2(0.f)) {
         if (leftDown) {

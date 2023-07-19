@@ -160,7 +160,8 @@ static void loadObj(
   std::vector<ANARIMaterial> materials;
 
   auto defaultMaterial = anari::newObject<anari::Material>(d, "matte");
-  anari::setParameter(d, defaultMaterial, "color", anari::float3(0.f, 1.f, 0.f));
+  anari::setParameter(
+      d, defaultMaterial, "color", anari::float3(0.f, 1.f, 0.f));
   anari::commitParameters(d, defaultMaterial);
 
   TextureCache cache;
@@ -242,7 +243,8 @@ static void loadObj(
 
     bool allTexCoordsValid = vt.size() == v.size();
     if (allTexCoordsValid) {
-      anari::setParameterArray1D(d, geom, "vertex.attribute0", vt.data(), vt.size());
+      anari::setParameterArray1D(
+          d, geom, "vertex.attribute0", vt.data(), vt.size());
     }
 
     anari::commitParameters(d, geom);
@@ -265,7 +267,8 @@ static void loadObj(
   auto instance = anari::newObject<anari::Instance>(d);
   auto group = anari::newObject<anari::Group>(d);
 
-  anari::setParameterArray1D(d, group, "surface", ANARI_SURFACE, meshes.data(), meshes.size());
+  anari::setParameterArray1D(
+      d, group, "surface", ANARI_SURFACE, meshes.data(), meshes.size());
 
   anari::commitParameters(d, group);
 
