@@ -439,7 +439,31 @@ int Device::getProperty(ANARIObject object,
 
 const char ** Device::getObjectSubtypes(ANARIDataType objectType)
 {
-  return nullptr;
+  auto it = std::find_if(objectSubtypes.begin(),
+      objectSubtypes.end(),
+      [objectType](const ObjectSubtypes &os) {
+        return os.objectType == objectType;
+      });
+  if (it != objectSubtypes.end()) {
+    return (const char **)it->value.data();
+  }
+
+  auto buf = std::make_shared<Buffer>();
+  buf->write((const char *)&remoteDevice, sizeof(remoteDevice));
+  buf->write((const char *)&objectType, sizeof(objectType));
+  write(MessageType::GetObjectSubtypes, buf);
+
+  std::unique_lock l(syncObjectSubtypes.mtx);
+  syncObjectSubtypes.cv.wait(l, [this, &it, objectType]() {
+    it = std::find_if(objectSubtypes.begin(),
+      objectSubtypes.end(),
+      [&it, objectType](const ObjectSubtypes &os) {
+        return os.objectType == objectType;
+      });
+    return it != objectSubtypes.end();
+  });
+
+  return (const char **)it->value.data();
 }
 
 const void* Device::getObjectInfo(ANARIDataType objectType,
@@ -619,6 +643,12 @@ Device::~Device()
   for (size_t i = 0; i < stringListProperties.size(); ++i) {
     for (size_t j = 0; j < stringListProperties[i].value.size(); ++j) {
       delete[] stringListProperties[i].value[j];
+    }
+  }
+
+  for (size_t i = 0; i < objectSubtypes.size(); ++i) {
+    for (size_t j = 0; j < objectSubtypes[i].value.size(); ++j) {
+      delete[] objectSubtypes[i].value[j];
     }
   }
 }
@@ -896,6 +926,32 @@ void Device::handleMessage(async::connection::reason reason,
       syncProperties.cv.notify_all();
 
       // LOG(logging::Level::Info) << "Property: " << property.name;
+    } else if (message->type() == MessageType::ObjectSubtypes) {
+      std::unique_lock l(syncObjectSubtypes.mtx);
+
+      Buffer buf;
+      buf.write(message->data(), message->size());
+      buf.seek(0);
+
+      ObjectSubtypes os;
+
+      buf.read((char *)&os.objectType, sizeof(os.objectType));
+
+      while (!buf.eof()) {
+        uint64_t strLen;
+        buf.read((char *)&strLen, sizeof(strLen));
+
+        char *subtype = new char[strLen + 1];
+        buf.read(subtype, strLen);
+        subtype[strLen] = '\0';
+        os.value.push_back(subtype);
+      }
+      os.value.push_back(nullptr);
+
+      objectSubtypes.push_back(os);
+
+      l.unlock();
+      syncObjectSubtypes.cv.notify_all();
     } else if (message->type() == MessageType::ChannelColor
         || message->type() == MessageType::ChannelDepth) {
       size_t off = 0;

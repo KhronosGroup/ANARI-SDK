@@ -40,6 +40,8 @@ struct MessageType
     FrameIsReady,
     GetProperty,
     Property,
+    GetObjectSubtypes,
+    ObjectSubtypes,
     ChannelColor,
     ChannelDepth,
   };

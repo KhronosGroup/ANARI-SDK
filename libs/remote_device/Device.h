@@ -212,6 +212,12 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
     size_t which;
   } syncProperties;
 
+  struct
+  {
+    std::mutex mtx;
+    std::condition_variable cv;
+  } syncObjectSubtypes;
+
   ANARIDevice remoteDevice{nullptr};
   std::string remoteSubtype = "default";
 
@@ -236,6 +242,15 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
     std::vector<char *> value;
   };
   std::vector<StringListProperty> stringListProperties;
+
+  // Store subtypes; if the subtype was already queried,
+  // simply return the cached subtype list
+  struct ObjectSubtypes
+  {
+    ANARIDataType objectType;
+    std::vector<char *> value;
+  };
+  std::vector<ObjectSubtypes> objectSubtypes;
 
   std::map<ANARIObject, Frame> frames;
   std::map<ANARIArray, std::vector<char>> arrays;
