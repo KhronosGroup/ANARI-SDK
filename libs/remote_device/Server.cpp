@@ -988,6 +988,7 @@ static void printUsage()
 {
   std::cout << "./anari-remote-server [{--help|-h}]\n"
             << "   [{--verbose|-v}]\n"
+            << "   [{--library|-l} <ANARI library>]\n"
             << "   [{--port|-p} <N>]\n";
 }
 
@@ -1000,7 +1001,9 @@ static void parseCommandLine(int argc, char *argv[])
     if (arg == "--help" || arg == "-h") {
       printUsage();
       std::exit(0);
-    } else if (arg == "-p" || arg == "--port")
+    } else if (arg == "-l" || arg == "--library")
+      g_libraryType = argv[++i];
+    else if (arg == "-p" || arg == "--port")
       g_port = std::stoi(argv[++i]);
   }
 }
