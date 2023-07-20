@@ -93,7 +93,7 @@ target_link_libraries(anari-remote-server
 
 ## Installation ##
 
-install(TARGETS ${PROJECT_NAME}
+install(TARGETS ${PROJECT_NAME} anari-remote-server
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
