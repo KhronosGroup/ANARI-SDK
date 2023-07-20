@@ -266,6 +266,32 @@ struct Server
     conn->write(type, *buf);
   }
 
+  std::vector<uint8_t> translateArrayData(Buffer &buf, ANARIDevice dev, ArrayInfo info)
+  {
+    std::vector<uint8_t> arrayData(info.getSizeInBytes());
+    buf.read((char *)arrayData.data(), arrayData.size());
+
+    // Translate remote to device handles
+    if (anari::isObject(info.elementType)) {
+      const auto &serverObjects =
+          resourceManager.serverObjects[(uint64_t)dev];
+
+      size_t numObjects = info.numItems1
+          * std::max(uint64_t(1), info.numItems2)
+          * std::max(uint64_t(1), info.numItems3);
+
+      // This only works b/c sizeof(ANARIObject)==sizeof(uint64_t)!
+      // TODO: can this cause issues with alignment on some platforms?!
+      const uint64_t *handles = (const uint64_t *)arrayData.data();
+      ANARIObject *objects = (ANARIObject *)arrayData.data();
+
+      for (size_t i = 0; i < numObjects; ++i) {
+        objects[i] = serverObjects[handles[i]].handle;
+      }
+    }
+    return arrayData;
+  }
+
   bool handleNewConnection(
       async::connection_pointer new_conn, boost::system::error_code const &e)
   {
@@ -403,27 +429,7 @@ struct Server
 
         std::vector<uint8_t> arrayData;
         if (buf.pos < message->size()) {
-          arrayData.resize(info.getSizeInBytes());
-          buf.read((char *)arrayData.data(), arrayData.size());
-
-          // Translate remote to device handles
-          if (anari::isObject(info.elementType)) {
-            const auto &serverObjects =
-                resourceManager.serverObjects[(uint64_t)deviceHandle];
-
-            size_t numObjects = info.numItems1
-                * std::max(uint64_t(1), info.numItems2)
-                * std::max(uint64_t(1), info.numItems3);
-
-            // This only works b/c sizeof(ANARIObject)==sizeof(uint64_t)!
-            // TODO: can this cause issues with alignment on some platforms?!
-            const uint64_t *handles = (const uint64_t *)arrayData.data();
-            ANARIObject *objects = (ANARIObject *)arrayData.data();
-
-            for (size_t i = 0; i < numObjects; ++i) {
-              objects[i] = serverObjects[handles[i]].handle;
-            }
-          }
+          arrayData = translateArrayData(buf, deviceHandle, info);
         }
 
         ANARIArray anariArr = newArray(dev, info, arrayData.data());
@@ -699,9 +705,14 @@ struct Server
 
         // Now map so we can write to it
         void *ptr = anariMapArray(dev, (ANARIArray)serverObj.handle);
-        uint64_t numBytes = 0;
-        buf.read((char *)&numBytes, sizeof(numBytes));
-        buf.read((char *)ptr, numBytes);
+
+        // Fetch data into separate buffer and copy
+        std::vector<uint8_t> arrayData;
+        if (buf.pos < message->size()) {
+          ArrayInfo info = resourceManager.getArrayInfo(deviceHandle, objectHandle);
+          arrayData = translateArrayData(buf, (ANARIDevice)deviceHandle, info);
+          memcpy(ptr, arrayData.data(), arrayData.size());
+        }
 
         // Unmap again..
         anariUnmapArray(dev, (ANARIArray)serverObj.handle);

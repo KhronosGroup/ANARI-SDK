@@ -178,7 +178,6 @@ void Device::unmapArray(ANARIArray array)
   buf->write((const char *)&remoteDevice, sizeof(remoteDevice));
   buf->write((const char *)&array, sizeof(array));
   uint64_t numBytes = arrays[array].size();
-  buf->write((const char *)&numBytes, sizeof(numBytes));
   buf->write(arrays[array].data(), numBytes);
   write(MessageType::UnmapArray, buf);
 
