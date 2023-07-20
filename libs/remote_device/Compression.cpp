@@ -9,6 +9,7 @@
 #include <turbojpeg.h>
 #endif
 #include <map>
+#include <cstring>
 #include "Logging.h"
 
 namespace remote {
