@@ -970,6 +970,42 @@ struct Server
           outbuf->write((const char *)mem.data(), size);
         }
         write(MessageType::Property, outbuf);
+      } else if (message->type() == MessageType::GetObjectSubtypes) {
+        LOG(logging::Level::Info) << "Message: GetObjectSubtypes, message size: "
+                                  << prettyBytes(message->size());
+
+        Buffer buf;
+        buf.write(message->data(), message->size());
+        buf.seek(0);
+
+        Handle deviceHandle;
+        buf.read((char *)&deviceHandle, sizeof(deviceHandle));
+
+        ANARIDataType objectType;
+        buf.read((char *)&objectType, sizeof(objectType));
+
+        ANARIDevice dev = resourceManager.getDevice(deviceHandle);
+
+        if (!dev) {
+          LOG(logging::Level::Error)
+              << "Server: invalid device: " << deviceHandle;
+          // manager->stop(); // legal?
+          return;
+        }
+
+        auto outbuf = std::make_shared<Buffer>();
+        outbuf->write((const char *)&objectType, sizeof(objectType));
+
+        const char **subtypes = anariGetObjectSubtypes(dev, objectType);
+
+        if (subtypes != nullptr) {
+          while (const char *str = *subtypes++) {
+            uint64_t strLen = strlen(str);
+            outbuf->write((const char *)&strLen, sizeof(strLen));
+            outbuf->write(str, strLen);
+          }
+        }
+        write(MessageType::ObjectSubtypes, outbuf);
       } else {
         LOG(logging::Level::Warning)
             << "Unhandled message of size: " << message->size();
