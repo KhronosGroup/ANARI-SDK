@@ -22,21 +22,39 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
 {
   //--- Data Arrays ---------------------------------
 
+  void* mapParameterArray1D(ANARIObject o,
+      const char* name,
+      ANARIDataType dataType,
+      uint64_t numElements1,
+      uint64_t *elementStride) override;
+  void* mapParameterArray2D(ANARIObject o,
+      const char* name,
+      ANARIDataType dataType,
+      uint64_t numElements1,
+      uint64_t numElements2,
+      uint64_t *elementStride) override;
+  void* mapParameterArray3D(ANARIObject o,
+      const char* name,
+      ANARIDataType dataType,
+      uint64_t numElements1,
+      uint64_t numElements2,
+      uint64_t numElements3,
+      uint64_t *elementStride) override;
+  void unmapParameterArray(ANARIObject o,
+      const char* name) override;
+
   ANARIArray1D newArray1D(const void *appMemory,
       ANARIMemoryDeleter deleter,
       const void *userdata,
       ANARIDataType,
-      uint64_t numItems1,
-      uint64_t byteStride1) override;
+      uint64_t numItems1) override;
 
   ANARIArray2D newArray2D(const void *appMemory,
       ANARIMemoryDeleter deleter,
       const void *userdata,
       ANARIDataType,
       uint64_t numItems1,
-      uint64_t numItems2,
-      uint64_t byteStride1,
-      uint64_t byteStride2) override;
+      uint64_t numItems2) override;
 
   ANARIArray3D newArray3D(const void *appMemory,
       ANARIMemoryDeleter deleter,
@@ -44,10 +62,7 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
       ANARIDataType,
       uint64_t numItems1,
       uint64_t numItems2,
-      uint64_t numItems3,
-      uint64_t byteStride1,
-      uint64_t byteStride2,
-      uint64_t byteStride3) override;
+      uint64_t numItems3) override;
 
   void *mapArray(ANARIArray) override;
 
@@ -106,6 +121,18 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
       void *mem,
       uint64_t size,
       ANARIWaitMask mask) override;
+
+  const char ** getObjectSubtypes(ANARIDataType objectType) override;
+  const void* getObjectInfo(ANARIDataType objectType,
+      const char* objectSubtype,
+      const char* infoName,
+      ANARIDataType infoType) override;
+  const void* getParameterInfo(ANARIDataType objectType,
+      const char* objectSubtype,
+      const char* parameterName,
+      ANARIDataType parameterType,
+      const char* infoName,
+      ANARIDataType infoType) override;
 
   //--- FrameBuffer Manipulation --------------------
 
@@ -219,10 +246,7 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
       const ANARIDataType elementType,
       uint64_t numItems1,
       uint64_t numItems2,
-      uint64_t numItems3,
-      uint64_t byteStride1,
-      uint64_t byteStride2,
-      uint64_t byteStride3);
+      uint64_t numItems3);
 
   //--- Net ---------------------------------------------
   void connect(std::string host, unsigned short port);

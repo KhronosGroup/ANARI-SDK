@@ -11,7 +11,15 @@
 
 namespace helide {
 
-Sampler::Sampler(HelideGlobalState *s) : Object(ANARI_SAMPLER, s) {}
+Sampler::Sampler(HelideGlobalState *s) : Object(ANARI_SAMPLER, s)
+{
+  s->objectCounts.samplers++;
+}
+
+Sampler::~Sampler()
+{
+  deviceState()->objectCounts.samplers--;
+}
 
 Sampler *Sampler::createInstance(std::string_view subtype, HelideGlobalState *s)
 {

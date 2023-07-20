@@ -13,9 +13,9 @@ class EmptySerializer : public SerializerInterface {
    DebugDevice *dd;
 public:
    EmptySerializer(DebugDevice *dd) : dd(dd) { }
-   void anariNewArray1D(ANARIDevice device, const void* appMemory, ANARIMemoryDeleter deleter, const void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t byteStride1, ANARIArray1D result) override { }
-   void anariNewArray2D(ANARIDevice device, const void* appMemory, ANARIMemoryDeleter deleter, const void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t numItems2, uint64_t byteStride1, uint64_t byteStride2, ANARIArray2D result) override { }
-   void anariNewArray3D(ANARIDevice device, const void* appMemory, ANARIMemoryDeleter deleter, const void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t numItems2, uint64_t numItems3, uint64_t byteStride1, uint64_t byteStride2, uint64_t byteStride3, ANARIArray3D result) override { }
+   void anariNewArray1D(ANARIDevice device, const void* appMemory, ANARIMemoryDeleter deleter, const void* userData, ANARIDataType dataType, uint64_t numItems1, ANARIArray1D result) override { }
+   void anariNewArray2D(ANARIDevice device, const void* appMemory, ANARIMemoryDeleter deleter, const void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t numItems2, ANARIArray2D result) override { }
+   void anariNewArray3D(ANARIDevice device, const void* appMemory, ANARIMemoryDeleter deleter, const void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t numItems2, uint64_t numItems3, ANARIArray3D result) override { }
    void anariMapArray(ANARIDevice device, ANARIArray array, void *result) override { }
    void anariUnmapArray(ANARIDevice device, ANARIArray array) override { }
    void anariNewLight(ANARIDevice device, const char* type, ANARILight result) override { }
@@ -32,6 +32,12 @@ public:
    void anariNewObject(ANARIDevice device, const char* objectType, const char* type, ANARIObject result) override { }
    void anariSetParameter(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType dataType, const void *mem) override { }
    void anariUnsetParameter(ANARIDevice device, ANARIObject object, const char* name) override { }
+
+   void anariMapParameterArray1D(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType dataType, uint64_t numElements1, uint64_t *elementStride, void *result) override { }
+   void anariMapParameterArray2D(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType dataType, uint64_t numElements1, uint64_t numElements2, uint64_t *elementStride, void *result) override { }
+   void anariMapParameterArray3D(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType dataType, uint64_t numElements1, uint64_t numElements2, uint64_t numElements3, uint64_t *elementStride, void *result) override { }
+   void anariUnmapParameterArray(ANARIDevice device, ANARIObject object, const char* name) override { }
+
    void anariCommitParameters(ANARIDevice device, ANARIObject object) override { }
    void anariRelease(ANARIDevice device, ANARIObject object) override { }
    void anariRetain(ANARIDevice device, ANARIObject object) override { }

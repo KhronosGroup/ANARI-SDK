@@ -28,7 +28,7 @@
                     "tags" : ["required"],
                     "description" : "backing array of the sampler"
                 }, {
-                    "name" : "offset",
+                    "name" : "inOffset",
                     "types" : ["ANARI_UINT64"],
                     "tags" : [],
                     "default" : 0,

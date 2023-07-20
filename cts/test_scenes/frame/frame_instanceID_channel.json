@@ -48,7 +48,7 @@
       ]
     }
   },
-  "_requiredFeatures": [
+  "requiredFeatures": [
     "KHR_FRAME_CHANNEL_INSTANCE_ID"
   ]
 }

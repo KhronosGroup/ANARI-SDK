@@ -238,15 +238,11 @@ static void loadObj(
 
     auto geom = anari::newObject<anari::Geometry>(d, "triangle");
 
-    anari::setAndReleaseParameter(
-        d, geom, "vertex.position", anari::newArray1D(d, v.data(), v.size()));
+    anari::setParameterArray1D(d, geom, "vertex.position", v.data(), v.size());
 
     bool allTexCoordsValid = vt.size() == v.size();
     if (allTexCoordsValid) {
-      anari::setAndReleaseParameter(d,
-          geom,
-          "vertex.attribute0",
-          anari::newArray1D(d, vt.data(), vt.size()));
+      anari::setParameterArray1D(d, geom, "vertex.attribute0", vt.data(), vt.size());
     }
 
     anari::commitParameters(d, geom);
@@ -269,8 +265,8 @@ static void loadObj(
   auto instance = anari::newObject<anari::Instance>(d);
   auto group = anari::newObject<anari::Group>(d);
 
-  anari::setAndReleaseParameter(
-      d, group, "surface", anari::newArray1D(d, meshes.data(), meshes.size()));
+  anari::setParameterArray1D(d, group, "surface", ANARI_SURFACE, meshes.data(), meshes.size());
+
   anari::commitParameters(d, group);
 
   anari::setAndReleaseParameter(d, instance, "group", group);

@@ -1,6 +1,6 @@
 {
     "info" : {
-        "name" : "KHR_VOLUME_SCIVIS",
+        "name" : "KHR_VOLUME_TRANSFER_FUNCTION1D",
         "type" : "feature",
         "dependencies" : []
     },
@@ -8,8 +8,8 @@
     "objects" : [
         {
             "type" : "ANARI_VOLUME",
-            "name" : "scivis",
-            "description" : "scivis volume object",
+            "name" : "transferFunction1D",
+            "description" : "transferFunction1D volume object",
             "parameters" : [
                 {
                     "name" : "name",
@@ -23,7 +23,7 @@
                     "description" : "spatial field used for the field values of the volume"
                 }, {
                     "name" : "valueRange",
-                    "types" : ["ANARI_FLOAT32_BOX1"],
+                    "types" : ["ANARI_FLOAT32_BOX1", "ANARI_FLOAT64_BOX1"],
                     "tags" : [],
                     "default" : [0.0, 1.0],
                     "description" : "sampled values of field are clamped to this range"

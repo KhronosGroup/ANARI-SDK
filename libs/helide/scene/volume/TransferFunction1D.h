@@ -9,9 +9,9 @@
 
 namespace helide {
 
-struct SciVisVolume : public Volume
+struct TransferFunction1D : public Volume
 {
-  SciVisVolume(HelideGlobalState *d);
+  TransferFunction1D(HelideGlobalState *d);
 
   void commit() override;
 
@@ -47,22 +47,22 @@ struct SciVisVolume : public Volume
 
 // Inlined defintions /////////////////////////////////////////////////////////
 
-inline const SpatialField *SciVisVolume::field() const
+inline const SpatialField *TransferFunction1D::field() const
 {
   return m_field.ptr;
 }
 
-inline float3 SciVisVolume::colorOf(float sample) const
+inline float3 TransferFunction1D::colorOf(float sample) const
 {
   return m_colorData->valueAtLinear<float3>(normalized(sample));
 }
 
-inline float SciVisVolume::opacityOf(float sample) const
+inline float TransferFunction1D::opacityOf(float sample) const
 {
   return m_opacityData->valueAtLinear<float>(normalized(sample));
 }
 
-inline float SciVisVolume::normalized(float sample) const
+inline float TransferFunction1D::normalized(float sample) const
 {
   return std::clamp(position(sample, m_valueRange), 0.f, 1.f);
 }

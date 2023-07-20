@@ -6,7 +6,7 @@
       "anari_objects": {
         "volume": [
           {
-            "subtype": "scivis",
+            "subtype": "transferFunction1D",
             "field": "ref_spatialField_0"
           }
         ],
@@ -27,6 +27,6 @@
       "/anari_objects/volume/0/opacity": [{"Array1D" : [0.25, 0.7, 1.0]}, 1.0]
     },
     "requiredFeatures": [
-      "ANARI_KHR_SPATIAL_FIELD_STRUCTURED_REGULAR", "ANARI_KHR_VOLUME_SCIVIS"
+      "ANARI_KHR_SPATIAL_FIELD_STRUCTURED_REGULAR", "KHR_VOLUME_TRANSFER_FUNCTION1D"
     ]
   }

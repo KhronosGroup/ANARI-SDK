@@ -12,3 +12,5 @@ BaseArray::BaseArray(ANARIDataType type, BaseGlobalDeviceState *s)
 {}
 
 } // namespace helium
+
+HELIUM_ANARI_TYPEFOR_DEFINITION(helium::BaseArray *);

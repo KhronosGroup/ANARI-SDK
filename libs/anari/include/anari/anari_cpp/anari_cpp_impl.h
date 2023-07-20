@@ -4,8 +4,10 @@
 #pragma once
 
 #include "Traits.h"
+#include "anari/frontend/type_utility.h"
 // std
 #include <algorithm>
+#include <cstring>
 #include <stdexcept>
 #include <utility>
 
@@ -176,29 +178,17 @@ inline Array1D newArray1D(Device d,
     const T *appMemory,
     MemoryDeleter deleter,
     const void *userPtr,
-    uint64_t numItems1,
-    uint64_t byteStride1)
+    uint64_t numItems1)
 {
-  return anariNewArray1D(d,
-      appMemory,
-      deleter,
-      userPtr,
-      detail::getType<T>(),
-      numItems1,
-      byteStride1);
+  return anariNewArray1D(
+      d, appMemory, deleter, userPtr, detail::getType<T>(), numItems1);
 }
 
 template <typename T>
-inline Array1D newArray1D(
-    Device d, const T *appMemory, uint64_t numItems1, uint64_t byteStride1)
+inline Array1D newArray1D(Device d, const T *appMemory, uint64_t numItems1)
 {
-  return anariNewArray1D(d,
-      appMemory,
-      nullptr,
-      nullptr,
-      detail::getType<T>(),
-      numItems1,
-      byteStride1);
+  return anariNewArray1D(
+      d, appMemory, nullptr, nullptr, detail::getType<T>(), numItems1);
 }
 
 inline Array1D newArray1D(Device d, ANARIDataType type, uint64_t numItems1)
@@ -214,9 +204,7 @@ inline Array2D newArray2D(Device d,
     MemoryDeleter deleter,
     const void *userPtr,
     uint64_t numItems1,
-    uint64_t numItems2,
-    uint64_t byteStride1,
-    uint64_t byteStride2)
+    uint64_t numItems2)
 {
   return anariNewArray2D(d,
       appMemory,
@@ -224,18 +212,12 @@ inline Array2D newArray2D(Device d,
       userPtr,
       detail::getType<T>(),
       numItems1,
-      numItems2,
-      byteStride1,
-      byteStride2);
+      numItems2);
 }
 
 template <typename T>
-inline Array2D newArray2D(Device d,
-    const T *appMemory,
-    uint64_t numItems1,
-    uint64_t numItems2,
-    uint64_t byteStride1,
-    uint64_t byteStride2)
+inline Array2D newArray2D(
+    Device d, const T *appMemory, uint64_t numItems1, uint64_t numItems2)
 {
   return anariNewArray2D(d,
       appMemory,
@@ -243,9 +225,7 @@ inline Array2D newArray2D(Device d,
       nullptr,
       detail::getType<T>(),
       numItems1,
-      numItems2,
-      byteStride1,
-      byteStride2);
+      numItems2);
 }
 
 inline Array2D newArray2D(
@@ -264,10 +244,7 @@ inline Array3D newArray3D(Device d,
     const void *userPtr,
     uint64_t numItems1,
     uint64_t numItems2,
-    uint64_t numItems3,
-    uint64_t byteStride1,
-    uint64_t byteStride2,
-    uint64_t byteStride3)
+    uint64_t numItems3)
 {
   return anariNewArray3D(d,
       appMemory,
@@ -276,10 +253,7 @@ inline Array3D newArray3D(Device d,
       detail::getType<T>(),
       numItems1,
       numItems2,
-      numItems3,
-      byteStride1,
-      byteStride2,
-      byteStride3);
+      numItems3);
 }
 
 template <typename T>
@@ -287,10 +261,7 @@ inline Array3D newArray3D(Device d,
     const T *appMemory,
     uint64_t numItems1,
     uint64_t numItems2,
-    uint64_t numItems3,
-    uint64_t byteStride1,
-    uint64_t byteStride2,
-    uint64_t byteStride3)
+    uint64_t numItems3)
 {
   return anariNewArray3D(d,
       appMemory,
@@ -299,10 +270,7 @@ inline Array3D newArray3D(Device d,
       detail::getType<T>(),
       numItems1,
       numItems2,
-      numItems3,
-      byteStride1,
-      byteStride2,
-      byteStride3);
+      numItems3);
 }
 
 inline Array3D newArray3D(Device d,
@@ -326,6 +294,132 @@ inline T *map(Device d, Array a)
 inline void unmap(Device d, Array a)
 {
   anariUnmapArray(d, a);
+}
+
+// Directly Mapped Array Parameters //
+
+inline void setParameterArray1D(Device d,
+    Object o,
+    const char *name,
+    ANARIDataType type,
+    const void *v,
+    uint64_t numElements1)
+{
+  uint64_t elementStride = 0;
+  if (void *mem = anariMapParameterArray1D(
+          d, o, name, type, numElements1, &elementStride)) {
+    uint64_t elementSize = anari::sizeOf(type);
+    if (elementStride == 0 || elementSize == elementStride) {
+      std::memcpy(mem, v, elementSize * numElements1);
+    } else {
+      char *cmem = (char *)mem;
+      const char *cv = (const char *)v;
+      for (uint64_t i = 0; i < numElements1; ++i) {
+        std::memcpy(
+            cmem + elementStride * i, cv + elementSize * i, elementSize);
+      }
+    }
+    anariUnmapParameterArray(d, o, name);
+  }
+}
+
+template <typename T>
+inline void setParameterArray1D(
+    Device d, Object o, const char *name, const T *v, uint64_t numElements1)
+{
+  setParameterArray1D(d, o, name, ANARITypeFor<T>::value, v, numElements1);
+}
+
+inline void setParameterArray2D(Device d,
+    Object o,
+    const char *name,
+    ANARIDataType type,
+    const void *v,
+    uint64_t numElements1,
+    uint64_t numElements2)
+{
+  uint64_t elementStride = 0;
+  if (void *mem = anariMapParameterArray2D(
+          d, o, name, type, numElements1, numElements2, &elementStride)) {
+    uint64_t elementSize = anari::sizeOf(type);
+    uint64_t totalElements = numElements1 * numElements2;
+    if (elementStride == 0 || elementSize == elementStride) {
+      std::memcpy(mem, v, elementSize * totalElements);
+    } else {
+      char *cmem = (char *)mem;
+      const char *cv = (const char *)v;
+      for (uint64_t i = 0; i < totalElements; ++i) {
+        std::memcpy(
+            cmem + elementStride * i, cv + elementSize * i, elementSize);
+      }
+    }
+    anariUnmapParameterArray(d, o, name);
+  }
+}
+
+template <typename T>
+inline void setParameterArray2D(Device d,
+    Object o,
+    const char *name,
+    const T *v,
+    uint64_t numElements1,
+    uint64_t numElements2)
+{
+  setParameterArray2D(
+      d, o, name, ANARITypeFor<T>::value, v, numElements1, numElements2);
+}
+
+inline void setParameterArray3D(Device d,
+    Object o,
+    const char *name,
+    ANARIDataType type,
+    const void *v,
+    uint64_t numElements1,
+    uint64_t numElements2,
+    uint64_t numElements3)
+{
+  uint64_t elementStride = 0;
+  if (void *mem = anariMapParameterArray3D(d,
+          o,
+          name,
+          type,
+          numElements1,
+          numElements2,
+          numElements3,
+          &elementStride)) {
+    uint64_t elementSize = anari::sizeOf(type);
+    uint64_t totalElements = numElements1 * numElements2 * numElements3;
+    if (elementStride == 0 || elementSize == elementStride) {
+      std::memcpy(mem, v, elementSize * totalElements);
+    } else {
+      char *cmem = (char *)mem;
+      const char *cv = (const char *)v;
+      for (uint64_t i = 0; i < totalElements; ++i) {
+        std::memcpy(
+            cmem + elementStride * i, cv + elementSize * i, elementSize);
+      }
+    }
+    anariUnmapParameterArray(d, o, name);
+  }
+}
+
+template <typename T>
+inline void setParameterArray3D(Device d,
+    Object o,
+    const char *name,
+    const T *v,
+    uint64_t numElements1,
+    uint64_t numElements2,
+    uint64_t numElements3)
+{
+  setParameterArray3D(d,
+      o,
+      name,
+      ANARITypeFor<T>::value,
+      v,
+      numElements1,
+      numElements2,
+      numElements3);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -451,20 +545,25 @@ inline void discard(Device d, Frame f)
 
 namespace feature {
 
-inline Features getObjectFeatures(Library l,
-    const char *device,
-    const char *objectSubtype,
-    DataType objectType)
+inline Features getDeviceFeatureStruct(Library l, const char *device)
 {
   Features f;
-  anariGetObjectFeatures(&f, l, device, objectSubtype, objectType);
+  anariGetDeviceFeatureStruct(&f, l, device);
   return f;
 }
 
-inline Features getInstanceFeatures(Device d, Object o)
+inline Features getObjectFeatureStruct(
+    Device d, DataType objectType, const char *objectSubtype)
 {
   Features f;
-  anariGetInstanceFeatures(&f, d, o);
+  anariGetObjectFeatureStruct(&f, d, objectType, objectSubtype);
+  return f;
+}
+
+inline Features getInstanceFeatureStruct(Device d, Object o)
+{
+  Features f;
+  anariGetInstanceFeatureStruct(&f, d, o);
   return f;
 }
 

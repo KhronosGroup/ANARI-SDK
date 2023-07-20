@@ -11,9 +11,9 @@ namespace debug_device {
 class DebugInterface {
 public:
     virtual ~DebugInterface() = default;
-    virtual void anariNewArray1D(ANARIDevice device, const void* appMemory, ANARIMemoryDeleter deleter, const void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t byteStride1) = 0;
-    virtual void anariNewArray2D(ANARIDevice device, const void* appMemory, ANARIMemoryDeleter deleter, const void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t numItems2, uint64_t byteStride1, uint64_t byteStride2) = 0;
-    virtual void anariNewArray3D(ANARIDevice device, const void* appMemory, ANARIMemoryDeleter deleter, const void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t numItems2, uint64_t numItems3, uint64_t byteStride1, uint64_t byteStride2, uint64_t byteStride3) = 0;
+    virtual void anariNewArray1D(ANARIDevice device, const void* appMemory, ANARIMemoryDeleter deleter, const void* userData, ANARIDataType dataType, uint64_t numItems1) = 0;
+    virtual void anariNewArray2D(ANARIDevice device, const void* appMemory, ANARIMemoryDeleter deleter, const void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t numItems2) = 0;
+    virtual void anariNewArray3D(ANARIDevice device, const void* appMemory, ANARIMemoryDeleter deleter, const void* userData, ANARIDataType dataType, uint64_t numItems1, uint64_t numItems2, uint64_t numItems3) = 0;
     virtual void anariMapArray(ANARIDevice device, ANARIArray array) = 0;
     virtual void anariUnmapArray(ANARIDevice device, ANARIArray array) = 0;
     virtual void anariNewLight(ANARIDevice device, const char* type) = 0;
@@ -30,6 +30,12 @@ public:
     virtual void anariNewObject(ANARIDevice device, const char* objectType, const char* type) = 0;
     virtual void anariSetParameter(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType dataType, const void *mem) = 0;
     virtual void anariUnsetParameter(ANARIDevice device, ANARIObject object, const char* name) = 0;
+
+    virtual void anariMapParameterArray1D(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType dataType, uint64_t numElements1, uint64_t *elementStride) = 0;
+    virtual void anariMapParameterArray2D(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType dataType, uint64_t numElements1, uint64_t numElements2, uint64_t *elementStride) = 0;
+    virtual void anariMapParameterArray3D(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType dataType, uint64_t numElements1, uint64_t numElements2, uint64_t numElements3, uint64_t *elementStride) = 0;
+    virtual void anariUnmapParameterArray(ANARIDevice device, ANARIObject object, const char* name) = 0;
+
     virtual void anariCommitParameters(ANARIDevice device, ANARIObject object) = 0;
     virtual void anariRelease(ANARIDevice device, ANARIObject object) = 0;
     virtual void anariRetain(ANARIDevice device, ANARIObject object) = 0;

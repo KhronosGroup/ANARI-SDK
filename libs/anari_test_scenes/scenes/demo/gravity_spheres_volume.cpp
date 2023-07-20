@@ -116,13 +116,11 @@ void GravityVolume::commit()
   auto field = anari::newObject<anari::SpatialField>(d, "structuredRegular");
   anari::setParameter(d, field, "origin", anari::float3(-1.f));
   anari::setParameter(d, field, "spacing", anari::float3(2.f / volumeDims));
-  anari::setAndReleaseParameter(d,
-      field,
-      "data",
-      anari::newArray3D(d, voxels.data(), volumeDims, volumeDims, volumeDims));
+  anari::setParameterArray3D(
+      d, field, "data", voxels.data(), volumeDims, volumeDims, volumeDims);
   anari::commitParameters(d, field);
 
-  auto volume = anari::newObject<anari::Volume>(d, "scivis");
+  auto volume = anari::newObject<anari::Volume>(d, "transferFunction1D");
   anari::setAndReleaseParameter(d, volume, "field", field);
 
   {

@@ -133,6 +133,16 @@ void Group::embreeSceneConstruct()
             reportMessage(ANARI_SEVERITY_DEBUG,
                 "helide::Group rejecting invalid surface(%p) in building BLS",
                 s);
+            auto *g = s->geometry();
+            if (!g || !g->isValid()) {
+              reportMessage(
+                  ANARI_SEVERITY_DEBUG, "    helide::Geometry is invalid");
+            }
+            auto *m = s->material();
+            if (!m || !m->isValid()) {
+              reportMessage(
+                  ANARI_SEVERITY_DEBUG, "    helide::Material is invalid");
+            }
           }
         });
   }

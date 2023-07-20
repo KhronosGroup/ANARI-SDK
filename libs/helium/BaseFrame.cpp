@@ -10,3 +10,5 @@ BaseFrame::BaseFrame(BaseGlobalDeviceState *state)
 {}
 
 } // namespace helium
+
+HELIUM_ANARI_TYPEFOR_DEFINITION(helium::BaseFrame *);

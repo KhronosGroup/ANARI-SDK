@@ -31,7 +31,7 @@ if (@INSTALL_CODE_GEN_SCRIPTS@)
   include(${CMAKE_CURRENT_LIST_DIR}/cmake/anari_generate_codegen.cmake)
 endif()
 
-if (TARGET anari::anari_viewer)
+if (TARGET anari::anari_viewer AND NOT ANARI_FOUND)
   set(match3D_DIR ${ANARI_DATAROOTDIR}/anari_viewer/match3D_src/cmake)
   find_package(match3D REQUIRED stb_image nativefiledialog imnodes)
   target_link_libraries(anari::anari_viewer INTERFACE match3D::match3D)

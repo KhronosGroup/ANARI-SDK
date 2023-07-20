@@ -23,17 +23,14 @@ struct HelideDevice : public helium::BaseDevice
       ANARIMemoryDeleter deleter,
       const void *userdata,
       ANARIDataType,
-      uint64_t numItems1,
-      uint64_t byteStride1) override;
+      uint64_t numItems1) override;
 
   ANARIArray2D newArray2D(const void *appMemory,
       ANARIMemoryDeleter deleter,
       const void *userdata,
       ANARIDataType,
       uint64_t numItems1,
-      uint64_t numItems2,
-      uint64_t byteStride1,
-      uint64_t byteStride2) override;
+      uint64_t numItems2) override;
 
   ANARIArray3D newArray3D(const void *appMemory,
       ANARIMemoryDeleter deleter,
@@ -41,10 +38,7 @@ struct HelideDevice : public helium::BaseDevice
       ANARIDataType,
       uint64_t numItems1,
       uint64_t numItems2,
-      uint64_t numItems3,
-      uint64_t byteStride1,
-      uint64_t byteStride2,
-      uint64_t byteStride3) override;
+      uint64_t numItems3) override;
 
   // Renderable Objects ///////////////////////////////////////////////////////
 
@@ -74,6 +68,20 @@ struct HelideDevice : public helium::BaseDevice
 
   ANARIWorld newWorld() override;
 
+  // Query functions //////////////////////////////////////////////////////////
+
+  const char ** getObjectSubtypes(ANARIDataType objectType) override;
+  const void* getObjectInfo(ANARIDataType objectType,
+      const char* objectSubtype,
+      const char* infoName,
+      ANARIDataType infoType) override;
+  const void* getParameterInfo(ANARIDataType objectType,
+      const char* objectSubtype,
+      const char* parameterName,
+      ANARIDataType parameterType,
+      const char* infoName,
+      ANARIDataType infoType) override;
+
   // Object + Parameter Lifetime Management ///////////////////////////////////
 
   int getProperty(ANARIObject object,
@@ -100,6 +108,8 @@ struct HelideDevice : public helium::BaseDevice
   ~HelideDevice() override;
 
   void initDevice();
+
+  void deviceCommitParameters() override;
 
  private:
   HelideGlobalState *deviceState() const;

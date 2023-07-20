@@ -78,8 +78,8 @@ int main(int argc, const char **argv)
 
   anari::Library lib = anari::loadLibrary(g_libraryName, statusFunc);
 
-  anari::Features features = anari::feature::getObjectFeatures(
-      lib, "default", "default", ANARI_DEVICE);
+  anari::Features features = anari::feature::getDeviceFeatureStruct(
+      lib, "default");
 
   if (!features.ANARI_KHR_GEOMETRY_TRIANGLE)
     printf("WARNING: device doesn't support ANARI_KHR_GEOMETRY_TRIANGLE\n");
