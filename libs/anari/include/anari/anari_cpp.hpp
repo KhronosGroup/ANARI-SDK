@@ -209,6 +209,7 @@ template <typename T>
 void setAndReleaseParameter(Device d, Object o, const char *name, const T &v);
 
 void unsetParameter(Device, Object, const char *id);
+void unsetAllParameters(Device, Object);
 void commitParameters(Device, Object);
 
 void release(Device, Object);

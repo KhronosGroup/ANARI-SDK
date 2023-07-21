@@ -108,6 +108,8 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
 
   void unsetParameter(ANARIObject object, const char *name) override;
 
+  void unsetAllParameters(ANARIObject object) override;
+
   void commitParameters(ANARIObject object) override;
 
   void release(ANARIObject _obj) override;

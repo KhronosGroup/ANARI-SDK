@@ -61,6 +61,11 @@ void ParameterizedObject::removeParam(const std::string &name)
     m_params.erase(foundParam);
 }
 
+void ParameterizedObject::removeAllParams()
+{
+  m_params.clear();
+}
+
 ParameterizedObject::ParameterList::iterator ParameterizedObject::params_begin()
 {
   return m_params.begin();

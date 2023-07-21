@@ -67,6 +67,17 @@ void BaseDevice::unsetParameter(ANARIObject o, const char *name)
   }
 }
 
+void BaseDevice::unsetAllParameters(ANARIObject o)
+{
+  if (handleIsDevice(o))
+    deviceUnsetAllParameters();
+  else {
+    auto &obj = referenceFromHandle(o);
+    obj.removeAllParams();
+    obj.markUpdated();
+  }
+}
+
 void *BaseDevice::mapParameterArray1D(ANARIObject o,
     const char *name,
     ANARIDataType dataType,
@@ -241,6 +252,11 @@ void BaseDevice::deviceSetParameter(
 void BaseDevice::deviceUnsetParameter(const char *id)
 {
   removeParam(id);
+}
+
+void BaseDevice::deviceUnsetAllParameters()
+{
+  removeAllParams();
 }
 
 } // namespace helium

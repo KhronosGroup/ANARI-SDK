@@ -537,6 +537,31 @@ struct Server
         std::string name(nameBuf.data(), nameBuf.size());
 
         anariUnsetParameter(dev, serverObj.handle, name.c_str());
+      } else if (message->type() == MessageType::UnsetAllParams) {
+        LOG(logging::Level::Info) << "Message: UnsetAllParams";
+
+        Buffer buf;
+        buf.write(message->data(), message->size());
+        buf.seek(0);
+
+        Handle deviceHandle, objectHandle;
+        buf.read((char *)&deviceHandle, sizeof(deviceHandle));
+        buf.read((char *)&objectHandle, sizeof(objectHandle));
+
+        ANARIDevice dev = resourceManager.getDevice(deviceHandle);
+
+        ServerObject serverObj =
+            resourceManager.getServerObject(deviceHandle, objectHandle);
+
+        if (!dev || !serverObj.handle) {
+          LOG(logging::Level::Error)
+              << "Error unsetting all params on object. Handle: "
+              << objectHandle;
+          // manager->stop(); // legal?
+          return;
+        }
+
+        anariUnsetAllParameters(dev, serverObj.handle);
       } else if (message->type() == MessageType::CommitParams) {
         LOG(logging::Level::Info) << "Message: CommitParams, message size: "
                                   << prettyBytes(message->size());

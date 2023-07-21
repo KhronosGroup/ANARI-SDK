@@ -327,6 +327,22 @@ void Device::unsetParameter(ANARIObject object, const char *name)
       << "Parameter " << name << " unset on object " << object;
 }
 
+void Device::unsetAllParameters(ANARIObject object)
+{
+  if (!object) {
+    LOG(logging::Level::Warning) << "Invalid object: " << __PRETTY_FUNCTION__;
+    return;
+  }
+
+  auto buf = std::make_shared<Buffer>();
+  buf->write((const char *)&remoteDevice, sizeof(remoteDevice));
+  buf->write((const char *)&object, sizeof(object));
+  write(MessageType::UnsetParam, buf);
+
+  LOG(logging::Level::Info)
+      << "All parameters unset on object unset on object " << object;
+}
+
 void Device::commitParameters(ANARIObject object)
 {
   if (!object) {

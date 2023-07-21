@@ -27,6 +27,7 @@ struct MessageType
     DeviceHandle,
     SetParam,
     UnsetParam,
+    UnsetAllParams,
     CommitParams,
     Release,
     Retain,

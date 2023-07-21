@@ -33,6 +33,7 @@ struct BaseDevice : public anari::DeviceImpl, public ParameterizedObject
       const void *mem) override;
 
   void unsetParameter(ANARIObject o, const char *name) override;
+  void unsetAllParameters(ANARIObject o) override;
 
   void* mapParameterArray1D(ANARIObject o,
       const char* name,
@@ -99,6 +100,7 @@ struct BaseDevice : public anari::DeviceImpl, public ParameterizedObject
  private:
   void deviceSetParameter(const char *id, ANARIDataType type, const void *mem);
   void deviceUnsetParameter(const char *id);
+  void deviceUnsetAllParameters();
   uint32_t m_refCount{1};
 };
 
