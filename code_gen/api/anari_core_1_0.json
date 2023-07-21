@@ -440,6 +440,13 @@
                 {"name" : "name", "type" : "const char*"}
             ]
         }, {
+            "name" : "anariUnsetAllParameters",
+            "returnType" : "void",
+            "arguments" : [
+                {"name" : "device", "type" : "ANARIDevice"},
+                {"name" : "object", "type" : "ANARIObject"}
+            ]
+        }, {
             "name" : "anariMapParameterArray1D",
             "returnType" : "void*",
             "arguments" : [

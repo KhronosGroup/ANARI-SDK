@@ -30,6 +30,7 @@ public:
     virtual void anariNewObject(ANARIDevice device, const char* objectType, const char* type, ANARIObject result) = 0;
     virtual void anariSetParameter(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType dataType, const void *mem) = 0;
     virtual void anariUnsetParameter(ANARIDevice device, ANARIObject object, const char* name) = 0;
+    virtual void anariUnsetAllParameters(ANARIDevice device, ANARIObject object) = 0;
 
     virtual void anariMapParameterArray1D(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType dataType, uint64_t numElements1, uint64_t *elementStride, void *result) = 0;
     virtual void anariMapParameterArray2D(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType dataType, uint64_t numElements1, uint64_t numElements2, uint64_t *elementStride, void *result) = 0;

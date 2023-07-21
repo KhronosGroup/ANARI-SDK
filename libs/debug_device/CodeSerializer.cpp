@@ -410,6 +410,12 @@ void CodeSerializer::anariUnsetParameter(ANARIDevice device, ANARIObject object,
    out << ", \"" << name << "\");\n";
 }
 
+void CodeSerializer::anariUnsetAllParameters(ANARIDevice device, ANARIObject object) {
+   out << "anariUnsetAllParameters(device, ";
+   printObjectName(object);
+   out << ");\n";
+}
+
 void CodeSerializer::anariMapParameterArray1D(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType dataType, uint64_t numElements1, uint64_t *elementStride, void *result) {
    out << "void *ptr" << result << " = anariMapParameterArray1D(device, ";
    printObjectName(object);

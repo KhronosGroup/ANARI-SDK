@@ -229,7 +229,10 @@ void DebugBasics::anariSetParameter(ANARIDevice device, ANARIObject object, cons
 void DebugBasics::anariUnsetParameter(ANARIDevice device, ANARIObject object, const char* name) {
     DEBUG_FUNCTION_SOURCE(anariUnsetParameter, object)
     (void)device;
-    (void)name;
+}
+void DebugBasics::anariUnsetAllParameters(ANARIDevice device, ANARIObject object) {
+    DEBUG_FUNCTION_SOURCE(anariUnsetAllParameters, object)
+    (void)device;
 }
 void DebugBasics::anariMapParameterArray1D(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType dataType, uint64_t numElements1, uint64_t *elementStride) {
     DEBUG_FUNCTION_SOURCE(anariMapParameterArray1D, object)

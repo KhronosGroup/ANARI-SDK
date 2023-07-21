@@ -29,6 +29,7 @@ public:
   virtual void commit() = 0;
   virtual void setParameter(const char *name, ANARIDataType type, const void *mem) = 0;
   virtual void unsetParameter(const char *name) = 0;
+  virtual void unsetAllParameters() = 0;
   virtual void mapParameter(const char *name, ANARIDataType type, uint64_t elements, uint64_t *stride, void *mem) = 0;
   virtual void* getParameterMapping(const char *name, ANARIDataType &type, uint64_t &elements) = 0;
   virtual void unmapParameter(const char *name) = 0;
@@ -59,7 +60,7 @@ private:
   int uncommittedParameters = 0;
   int references = 0;
   std::string objectName;
-  
+
   struct Mapping {
     void *ptr;
     uint64_t elements;
@@ -90,6 +91,7 @@ public:
     }
   }
   void unsetParameter(const char *name) { (void)name; uncommittedParameters += 1; }
+  void unsetAllParameters() { uncommittedParameters += 1; }
 
   void mapParameter(const char *name, ANARIDataType type, uint64_t elements, uint64_t *stride, void *mem) {
     uncommittedParameters += 1;

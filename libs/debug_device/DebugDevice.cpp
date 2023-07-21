@@ -620,6 +620,23 @@ void DebugDevice::unsetParameter(ANARIObject object, const char *name)
   }
 }
 
+void DebugDevice::unsetAllParameters(ANARIObject object)
+{
+  if (handleIsDevice(object))
+    deviceCommit();
+  else {
+    debug->anariUnsetAllParameters(this_device(), object);
+    anariUnsetAllParameters(wrapped, unwrapHandle(object));
+
+    if (auto info = getObjectInfo(object))
+      info->unsetAllParameters();
+  }
+
+  if (serializer) {
+    serializer->anariUnsetAllParameters(this_device(), object);
+  }
+}
+
 void* DebugDevice::mapParameterArray1D(ANARIObject object,
     const char* name,
     ANARIDataType dataType,
@@ -686,7 +703,7 @@ void* DebugDevice::mapParameterArray3D(ANARIObject object,
   if (auto info = getDynamicObjectInfo<GenericDebugObject>(object)) {
     info->mapParameter(name, dataType, numElements1*numElements2*numElements3, elementStride, result);
     reportParameterUse(info->getType(), info->getSubtype(), name, ANARI_ARRAY3D);
-    
+
     if (serializer) {
       serializer->anariMapParameterArray3D(this_device(), object, name, dataType, numElements1, numElements2, numElements3, elementStride, result);
     }
