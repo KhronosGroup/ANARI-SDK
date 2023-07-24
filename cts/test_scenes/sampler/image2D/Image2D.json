@@ -1,90 +1,353 @@
 {
-    "sceneParameters": {
-      "frame_depth_type": "",
-      "anari_objects": {
-        "geometry": [
-          {
-            "subtype": "triangle",
-            "vertex.attribute1": {
-              "Array1D": [[0.0, 0.0], [2.0, 0.0], [0.0, 2.0], [2.0, 2.0]]
-            } 
+  "sceneParameters": {
+    "frame_depth_type": "",
+    "anari_objects": {
+      "geometry": [
+        {
+          "subtype": "triangle",
+          "vertex.attribute1": {
+            "Array1D": [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                2.0,
+                0.0
+              ],
+              [
+                0.0,
+                2.0
+              ],
+              [
+                2.0,
+                2.0
+              ]
+            ]
           }
+        }
+      ],
+      "material": [
+        {
+          "subtype": "matte",
+          "color": "ref_sampler_0"
+        }
+      ],
+      "sampler": [
+        {
+          "subtype": "image2D",
+          "inAttribute": "attribute1"
+        }
+      ]
+    }
+  },
+  "simplified_permutations": true,
+  "permutations": {
+    "/anari_objects/sampler/0/filter": [
+      null,
+      "nearest",
+      "linear"
+    ],
+    "/anari_objects/sampler/0/wrapMode1": [
+      null,
+      "clampToEdge",
+      "repeat",
+      "mirrorRepeat"
+    ],
+    "/anari_objects/sampler/0/wrapMode2": [
+      null,
+      "clampToEdge",
+      "repeat",
+      "mirrorRepeat"
+    ],
+    "/anari_objects/sampler/0/inTransform": [
+      null,
+      [
+        [
+          -0.5,
+          -1,
+          0,
+          0
         ],
-        "material": [
-          {
-            "subtype": "matte",
-            "color": "ref_sampler_0"
-          }
+        [
+          1,
+          -0.5,
+          0,
+          0
         ],
-        "sampler": [
-            {
-                "subtype": "image2D",
-                "inAttribute": "attribute1"
-            }
+        [
+          0,
+          0,
+          -0.5,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ]
+    ],
+    "/anari_objects/sampler/0/outTransform": [
+      null,
+      [
+        [
+          -1.0,
+          -1.0,
+          0,
+          0
+        ],
+        [
+          1.0,
+          -1.0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          -1.0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ]
+    ],
+    "/anari_objects/sampler/0/inOffset": [
+      null,
+      [
+        0.7,
+        -0.4,
+        0.6,
+        -0.2
+      ]
+    ],
+    "/anari_objects/sampler/0/outOffset": [
+      null,
+      [
+        0.7,
+        -0.4,
+        0.6,
+        -0.2
+      ]
+    ]
+  },
+  "requiredFeatures": [
+    "ANARI_KHR_SAMPLER_IMAGE2D"
+  ],
+  "metaData": {
+    "None_None_None_None_None_None_None": {
+      "bounds": {
+        "world": [
+          [
+            0.08150731027126312,
+            0.4054069221019745,
+            0.5896897912025452
+          ],
+          [
+            0.6910932064056396,
+            0.7133887410163879,
+            0.8008760213851929
+          ]
         ]
       }
     },
-    "simplified_permutations": true,
-    "permutations" :{
-      "/anari_objects/sampler/0/filter": [null, "nearest", "linear"],
-      "/anari_objects/sampler/0/wrapMode1": [null, "clampToEdge", "repeat", "mirrorRepeat"],
-      "/anari_objects/sampler/0/wrapMode2": [null, "clampToEdge", "repeat", "mirrorRepeat"],
-      "/anari_objects/sampler/0/inTransform": [null, [[-0.5, -1, 0, 0],[1, -0.5, 0, 0],[0, 0, -0.5, 0],[ 1, 1, 1, 1]]],
-      "/anari_objects/sampler/0/outTransform": [null, [[-1.0, -1.0, 0, 0],[1.0, -1.0, 0, 0],[0, 0, -1.0, 0],[1, 1, 1, 1]]],
-      "/anari_objects/sampler/0/inOffset":[null, [0.7, -0.4, 0.6, -0.2]],
-      "/anari_objects/sampler/0/outOffset":[null, [0.7, -0.4, 0.6, -0.2]]
+    "nearest_None_None_None_None_None_None": {
+      "bounds": {
+        "world": [
+          [
+            0.08150731027126312,
+            0.4054069221019745,
+            0.5896897912025452
+          ],
+          [
+            0.6910932064056396,
+            0.7133887410163879,
+            0.8008760213851929
+          ]
+        ]
+      }
     },
-    "requiredFeatures": [
-      "ANARI_KHR_SAMPLER_IMAGE2D"
-    ],
-    "metaData": {
-      "None": {
-        "bounds": {
-          "world": [
-            [
-              0.5930089354515076,
-              0.338645875453949,
-              0.3352261483669281
-            ],
-            [
-              1.0810736417770386,
-              0.47210031747817993,
-              0.4023733139038086
-            ]
+    "linear_None_None_None_None_None_None": {
+      "bounds": {
+        "world": [
+          [
+            0.08150731027126312,
+            0.4054069221019745,
+            0.5896897912025452
+          ],
+          [
+            0.6910932064056396,
+            0.7133887410163879,
+            0.8008760213851929
           ]
-        }
-      },
-      "[1.0, 0.0, 0.0]": {
-        "bounds": {
-          "world": [
-            [
-              0.5930089354515076,
-              0.338645875453949,
-              0.3352261483669281
-            ],
-            [
-              1.0810736417770386,
-              0.47210031747817993,
-              0.4023733139038086
-            ]
+        ]
+      }
+    },
+    "None_clampToEdge_None_None_None_None_None": {
+      "bounds": {
+        "world": [
+          [
+            0.08150731027126312,
+            0.4054069221019745,
+            0.5896897912025452
+          ],
+          [
+            0.6910932064056396,
+            0.7133887410163879,
+            0.8008760213851929
           ]
-        }
-      },
-      "attribute0": {
-        "bounds": {
-          "world": [
-            [
-              0.5930089354515076,
-              0.338645875453949,
-              0.3352261483669281
-            ],
-            [
-              1.0810736417770386,
-              0.47210031747817993,
-              0.4023733139038086
-            ]
+        ]
+      }
+    },
+    "None_repeat_None_None_None_None_None": {
+      "bounds": {
+        "world": [
+          [
+            0.08150731027126312,
+            0.4054069221019745,
+            0.5896897912025452
+          ],
+          [
+            0.6910932064056396,
+            0.7133887410163879,
+            0.8008760213851929
           ]
-        }
+        ]
+      }
+    },
+    "None_mirrorRepeat_None_None_None_None_None": {
+      "bounds": {
+        "world": [
+          [
+            0.08150731027126312,
+            0.4054069221019745,
+            0.5896897912025452
+          ],
+          [
+            0.6910932064056396,
+            0.7133887410163879,
+            0.8008760213851929
+          ]
+        ]
+      }
+    },
+    "None_None_clampToEdge_None_None_None_None": {
+      "bounds": {
+        "world": [
+          [
+            0.08150731027126312,
+            0.4054069221019745,
+            0.5896897912025452
+          ],
+          [
+            0.6910932064056396,
+            0.7133887410163879,
+            0.8008760213851929
+          ]
+        ]
+      }
+    },
+    "None_None_repeat_None_None_None_None": {
+      "bounds": {
+        "world": [
+          [
+            0.08150731027126312,
+            0.4054069221019745,
+            0.5896897912025452
+          ],
+          [
+            0.6910932064056396,
+            0.7133887410163879,
+            0.8008760213851929
+          ]
+        ]
+      }
+    },
+    "None_None_mirrorRepeat_None_None_None_None": {
+      "bounds": {
+        "world": [
+          [
+            0.08150731027126312,
+            0.4054069221019745,
+            0.5896897912025452
+          ],
+          [
+            0.6910932064056396,
+            0.7133887410163879,
+            0.8008760213851929
+          ]
+        ]
+      }
+    },
+    "None_None_None_[[-0.5,-1,0,0],[1,-0.5,0,0],[0,0,-0.5,0],[1,1,1,1]]_None_None_None": {
+      "bounds": {
+        "world": [
+          [
+            0.08150731027126312,
+            0.4054069221019745,
+            0.5896897912025452
+          ],
+          [
+            0.6910932064056396,
+            0.7133887410163879,
+            0.8008760213851929
+          ]
+        ]
+      }
+    },
+    "None_None_None_None_[[-1.0,-1.0,0,0],[1.0,-1.0,0,0],[0,0,-1.0,0],[1,1,1,1]]_None_None": {
+      "bounds": {
+        "world": [
+          [
+            0.08150731027126312,
+            0.4054069221019745,
+            0.5896897912025452
+          ],
+          [
+            0.6910932064056396,
+            0.7133887410163879,
+            0.8008760213851929
+          ]
+        ]
+      }
+    },
+    "None_None_None_None_None_[0.7,-0.4,0.6,-0.2]_None": {
+      "bounds": {
+        "world": [
+          [
+            0.08150731027126312,
+            0.4054069221019745,
+            0.5896897912025452
+          ],
+          [
+            0.6910932064056396,
+            0.7133887410163879,
+            0.8008760213851929
+          ]
+        ]
+      }
+    },
+    "None_None_None_None_None_None_[0.7,-0.4,0.6,-0.2]": {
+      "bounds": {
+        "world": [
+          [
+            0.08150731027126312,
+            0.4054069221019745,
+            0.5896897912025452
+          ],
+          [
+            0.6910932064056396,
+            0.7133887410163879,
+            0.8008760213851929
+          ]
+        ]
       }
     }
   }
+}

@@ -14,10 +14,14 @@
       ],
       "group": [
         {
-          "surface": ["ref_surface_1"]
+          "surface": [
+            "ref_surface_1"
+          ]
         },
         {
-          "surface": ["ref_surface_0"]
+          "surface": [
+            "ref_surface_0"
+          ]
         }
       ],
       "surface": [
@@ -37,8 +41,7 @@
         {
           "subtype": "triangle"
         }
-      ]
-      ,
+      ],
       "material": [
         {
           "subtype": "matte"
@@ -48,5 +51,31 @@
   },
   "requiredFeatures": [
     "KHR_FRAME_CHANNEL_OBJECT_ID"
-  ]
+  ],
+  "metaData": {
+    "": {
+      "bounds": {
+        "world": [
+          [
+            0.08150731027126312,
+            0.4054069221019745,
+            0.5896897912025452
+          ],
+          [
+            0.6910932064056396,
+            0.7133887410163879,
+            0.8008760213851929
+          ]
+        ],
+        "instances": [
+          [],
+          []
+        ],
+        "groups": [
+          [],
+          []
+        ]
+      }
+    }
+  }
 }

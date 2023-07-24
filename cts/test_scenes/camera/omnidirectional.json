@@ -9,16 +9,57 @@
       "camera": [
         {
           "subtype": "omnidirectional",
-          "positon": [0.5, 0.5, -1.0]
+          "positon": [
+            0.5,
+            0.5,
+            -1.0
+          ]
         }
       ]
     }
   },
   "permutations": {
-    "/anari_objects/camera/0/layout": [null, "equirectangular"]
+    "/anari_objects/camera/0/layout": [
+      null,
+      "equirectangular"
+    ]
   },
   "requiredFeatures": [
     "ANARI_KHR_CAMERA_OMNIDIRECTIONAL",
     "ANARI_KHR_GEOMETRY_TRIANGLE"
-  ]
+  ],
+  "metaData": {
+    "None": {
+      "bounds": {
+        "world": [
+          [
+            0.10628136992454529,
+            0.07447968423366547,
+            0.08119118958711624
+          ],
+          [
+            0.8897861838340759,
+            0.9648289084434509,
+            0.8715502023696899
+          ]
+        ]
+      }
+    },
+    "equirectangular": {
+      "bounds": {
+        "world": [
+          [
+            0.10628136992454529,
+            0.07447968423366547,
+            0.08119118958711624
+          ],
+          [
+            0.8897861838340759,
+            0.9648289084434509,
+            0.8715502023696899
+          ]
+        ]
+      }
+    }
+  }
 }
