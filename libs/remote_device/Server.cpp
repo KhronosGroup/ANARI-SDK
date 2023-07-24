@@ -215,6 +215,11 @@ struct ResourceManager
 
 struct Server
 {
+  // For now only one client:
+  struct {
+    CompressionFeatures compression;
+  } client;
+
   ResourceManager resourceManager;
   async::connection_manager_pointer manager;
   async::connection_pointer conn;
@@ -261,6 +266,32 @@ struct Server
     conn->write(type, *buf);
   }
 
+  std::vector<uint8_t> translateArrayData(Buffer &buf, ANARIDevice dev, ArrayInfo info)
+  {
+    std::vector<uint8_t> arrayData(info.getSizeInBytes());
+    buf.read((char *)arrayData.data(), arrayData.size());
+
+    // Translate remote to device handles
+    if (anari::isObject(info.elementType)) {
+      const auto &serverObjects =
+          resourceManager.serverObjects[(uint64_t)dev];
+
+      size_t numObjects = info.numItems1
+          * std::max(uint64_t(1), info.numItems2)
+          * std::max(uint64_t(1), info.numItems3);
+
+      // This only works b/c sizeof(ANARIObject)==sizeof(uint64_t)!
+      // TODO: can this cause issues with alignment on some platforms?!
+      const uint64_t *handles = (const uint64_t *)arrayData.data();
+      ANARIObject *objects = (ANARIObject *)arrayData.data();
+
+      for (size_t i = 0; i < numObjects; ++i) {
+        objects[i] = serverObjects[handles[i]].handle;
+      }
+    }
+    return arrayData;
+  }
+
   bool handleNewConnection(
       async::connection_pointer new_conn, boost::system::error_code const &e)
   {
@@ -302,18 +333,34 @@ struct Server
         LOG(logging::Level::Info) << "Message: NewDevice, message size: "
                                   << prettyBytes(message->size());
 
-        std::string deviceType(message->data(), message->size());
+        const char *msg = message->data();
+
+        int32_t len = *(int32_t *)msg;
+        msg += sizeof(len);
+
+        std::string deviceType(msg, len);
+        msg += len;
+
+        client.compression = *(CompressionFeatures *)msg;
+        msg += sizeof(CompressionFeatures);
+
         ANARIDevice dev = anariNewDevice(g_library, deviceType.c_str());
         Handle deviceHandle = resourceManager.registerDevice(dev);
+        CompressionFeatures cf = getCompressionFeatures();
 
-        // return device handle to client
+        // return device handle and other info to client
         auto buf = std::make_shared<Buffer>();
         buf->write((char *)&deviceHandle, sizeof(deviceHandle));
+        buf->write((char *)&cf, sizeof(cf));
         write(MessageType::DeviceHandle, buf);
 
         LOG(logging::Level::Info)
             << "Creating new device, type: " << deviceType
             << ", device ID: " << deviceHandle << ", ANARI handle: " << dev;
+        LOG(logging::Level::Info) << "Client has TurboJPEG: "
+            << client.compression.hasTurboJPEG;
+        LOG(logging::Level::Info) << "Client has SNAPPY: "
+            << client.compression.hasSNAPPY;
       } else if (message->type() == MessageType::NewObject) {
         LOG(logging::Level::Info) << "Message: NewObject, message size: "
                                   << prettyBytes(message->size());
@@ -382,27 +429,7 @@ struct Server
 
         std::vector<uint8_t> arrayData;
         if (buf.pos < message->size()) {
-          arrayData.resize(info.getSizeInBytes());
-          buf.read((char *)arrayData.data(), arrayData.size());
-
-          // Translate remote to device handles
-          if (anari::isObject(info.elementType)) {
-            const auto &serverObjects =
-                resourceManager.serverObjects[(uint64_t)deviceHandle];
-
-            size_t numObjects = info.numItems1
-                * std::max(uint64_t(1), info.numItems2)
-                * std::max(uint64_t(1), info.numItems3);
-
-            // This only works b/c sizeof(ANARIObject)==sizeof(uint64_t)!
-            // TODO: can this cause issues with alignment on some platforms?!
-            const uint64_t *handles = (const uint64_t *)arrayData.data();
-            ANARIObject *objects = (ANARIObject *)arrayData.data();
-
-            for (size_t i = 0; i < numObjects; ++i) {
-              objects[i] = serverObjects[handles[i]].handle;
-            }
-          }
+          arrayData = translateArrayData(buf, deviceHandle, info);
         }
 
         ANARIArray anariArr = newArray(dev, info, arrayData.data());
@@ -510,6 +537,31 @@ struct Server
         std::string name(nameBuf.data(), nameBuf.size());
 
         anariUnsetParameter(dev, serverObj.handle, name.c_str());
+      } else if (message->type() == MessageType::UnsetAllParams) {
+        LOG(logging::Level::Info) << "Message: UnsetAllParams";
+
+        Buffer buf;
+        buf.write(message->data(), message->size());
+        buf.seek(0);
+
+        Handle deviceHandle, objectHandle;
+        buf.read((char *)&deviceHandle, sizeof(deviceHandle));
+        buf.read((char *)&objectHandle, sizeof(objectHandle));
+
+        ANARIDevice dev = resourceManager.getDevice(deviceHandle);
+
+        ServerObject serverObj =
+            resourceManager.getServerObject(deviceHandle, objectHandle);
+
+        if (!dev || !serverObj.handle) {
+          LOG(logging::Level::Error)
+              << "Error unsetting all params on object. Handle: "
+              << objectHandle;
+          // manager->stop(); // legal?
+          return;
+        }
+
+        anariUnsetAllParameters(dev, serverObj.handle);
       } else if (message->type() == MessageType::CommitParams) {
         LOG(logging::Level::Info) << "Message: CommitParams, message size: "
                                   << prettyBytes(message->size());
@@ -678,9 +730,14 @@ struct Server
 
         // Now map so we can write to it
         void *ptr = anariMapArray(dev, (ANARIArray)serverObj.handle);
-        uint64_t numBytes = 0;
-        buf.read((char *)&numBytes, sizeof(numBytes));
-        buf.read((char *)ptr, numBytes);
+
+        // Fetch data into separate buffer and copy
+        std::vector<uint8_t> arrayData;
+        if (buf.pos < message->size()) {
+          ArrayInfo info = resourceManager.getArrayInfo(deviceHandle, objectHandle);
+          arrayData = translateArrayData(buf, (ANARIDevice)deviceHandle, info);
+          memcpy(ptr, arrayData.data(), arrayData.size());
+        }
 
         // Unmap again..
         anariUnmapArray(dev, (ANARIArray)serverObj.handle);
@@ -720,6 +777,8 @@ struct Server
         // Block and send image over the wire
         anariFrameReady(dev, frame, ANARI_WAIT);
 
+        CompressionFeatures cf = getCompressionFeatures();
+
         uint32_t width, height;
         ANARIDataType type;
         const char *color = (const char *)anariMapFrame(
@@ -733,8 +792,9 @@ struct Server
           outbuf->write((const char *)&height, sizeof(height));
           outbuf->write((const char *)&type, sizeof(type));
 
-#ifdef HAVE_TURBOJPEG
-          if (type == ANARI_UFIXED8_RGBA_SRGB) { // TODO: more formats..
+          bool compressionTurboJPEG = cf.hasTurboJPEG && client.compression.hasTurboJPEG;
+
+          if (compressionTurboJPEG && type == ANARI_UFIXED8_RGBA_SRGB) { // TODO: more formats..
             TurboJPEGOptions options;
             options.width = width;
             options.height = height;
@@ -759,9 +819,7 @@ struct Server
                                           << prettyBytes(compressedSize);
               }
             }
-          } else
-#endif
-          {
+          } else {
             outbuf->write(color, colorSize);
           }
           write(MessageType::ChannelColor, outbuf);
@@ -778,8 +836,9 @@ struct Server
           outbuf->write((const char *)&height, sizeof(height));
           outbuf->write((const char *)&type, sizeof(type));
 
-#ifdef HAVE_SNAPPY
-          if (type == ANARI_FLOAT32) {
+          bool compressionSNAPPY = cf.hasSNAPPY && client.compression.hasSNAPPY;
+
+          if (compressionSNAPPY && type == ANARI_FLOAT32) {
             SNAPPYOptions options;
             options.inputSize = depthSize;
 
@@ -797,9 +856,7 @@ struct Server
             outbuf->write(
                 (const char *)&compressedSize32, sizeof(compressedSize32));
             outbuf->write((const char *)compressed.data(), compressedSize);
-          } else
-#endif
-          {
+          } else {
             outbuf->write(depth, depthSize);
           }
           write(MessageType::ChannelDepth, outbuf);
@@ -938,6 +995,42 @@ struct Server
           outbuf->write((const char *)mem.data(), size);
         }
         write(MessageType::Property, outbuf);
+      } else if (message->type() == MessageType::GetObjectSubtypes) {
+        LOG(logging::Level::Info) << "Message: GetObjectSubtypes, message size: "
+                                  << prettyBytes(message->size());
+
+        Buffer buf;
+        buf.write(message->data(), message->size());
+        buf.seek(0);
+
+        Handle deviceHandle;
+        buf.read((char *)&deviceHandle, sizeof(deviceHandle));
+
+        ANARIDataType objectType;
+        buf.read((char *)&objectType, sizeof(objectType));
+
+        ANARIDevice dev = resourceManager.getDevice(deviceHandle);
+
+        if (!dev) {
+          LOG(logging::Level::Error)
+              << "Server: invalid device: " << deviceHandle;
+          // manager->stop(); // legal?
+          return;
+        }
+
+        auto outbuf = std::make_shared<Buffer>();
+        outbuf->write((const char *)&objectType, sizeof(objectType));
+
+        const char **subtypes = anariGetObjectSubtypes(dev, objectType);
+
+        if (subtypes != nullptr) {
+          while (const char *str = *subtypes++) {
+            uint64_t strLen = strlen(str);
+            outbuf->write((const char *)&strLen, sizeof(strLen));
+            outbuf->write(str, strLen);
+          }
+        }
+        write(MessageType::ObjectSubtypes, outbuf);
       } else {
         LOG(logging::Level::Warning)
             << "Unhandled message of size: " << message->size();
@@ -956,6 +1049,7 @@ static void printUsage()
 {
   std::cout << "./anari-remote-server [{--help|-h}]\n"
             << "   [{--verbose|-v}]\n"
+            << "   [{--library|-l} <ANARI library>]\n"
             << "   [{--port|-p} <N>]\n";
 }
 
@@ -968,7 +1062,9 @@ static void parseCommandLine(int argc, char *argv[])
     if (arg == "--help" || arg == "-h") {
       printUsage();
       std::exit(0);
-    } else if (arg == "-p" || arg == "--port")
+    } else if (arg == "-l" || arg == "--library")
+      g_libraryType = argv[++i];
+    else if (arg == "-p" || arg == "--port")
       g_port = std::stoi(argv[++i]);
   }
 }

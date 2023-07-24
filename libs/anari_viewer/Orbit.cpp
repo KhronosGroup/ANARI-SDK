@@ -99,7 +99,7 @@ void Orbit::rotate(anari::float2 delta)
 {
   delta *= 100;
   delta.x = m_invertRotation ? -delta.x : delta.x;
-  delta.y = m_distance < 0.f ? delta.y : -delta.y;
+  delta.y = m_distance < 0.f ? -delta.y : delta.y;
   m_azel += delta;
   m_azel.x = maintainUnitCircle(m_azel.x);
   m_azel.y = maintainUnitCircle(m_azel.y);
@@ -108,7 +108,7 @@ void Orbit::rotate(anari::float2 delta)
 
 void Orbit::zoom(float delta)
 {
-  m_distance += m_speed * delta;
+  m_distance -= m_speed * delta;
   update();
 }
 
@@ -116,7 +116,7 @@ void Orbit::pan(anari::float2 delta)
 {
   delta *= m_speed;
 
-  const anari::float3 amount = delta.x * m_right + delta.y * m_up;
+  const anari::float3 amount = delta.x * m_right + -delta.y * m_up;
 
   m_eye += amount;
   m_at += amount;

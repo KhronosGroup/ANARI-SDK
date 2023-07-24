@@ -43,6 +43,15 @@ i.e., before any other parameters are set, committed, before device properties
 are queried, etc. In order to reset the hostname and port over which to connect
 to the server, a new remote device instance must be created.
 
+Default values for the server's hostname and port can be set on the client via
+environment variables. The device parameters have precedence over these default
+values though:
+
+```
+ANARI_REMOTE_SERVER_HOSTNAME="localhost"
+ANARI_REMOTE_SERVER_PORT=31050
+```
+
 Currently, the server accepts a single connection at a time.
 
 ### Debugging

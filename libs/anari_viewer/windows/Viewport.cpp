@@ -100,8 +100,10 @@ void Viewport::buildUI()
   updateImage();
   updateCamera();
 
-  ImGui::Image(
-      (void *)(intptr_t)m_framebufferTexture, ImGui::GetContentRegionAvail());
+  ImGui::Image((void *)(intptr_t)m_framebufferTexture,
+      ImGui::GetContentRegionAvail(),
+      ImVec2(1, 0),
+      ImVec2(0, 1));
 
   if (m_showOverlay)
     ui_overlay();
@@ -148,16 +150,6 @@ void Viewport::resetView(bool resetAzEl)
       &bounds[0],
       sizeof(bounds),
       ANARI_WAIT);
-
-#if 0
-  printf("resetting view using bounds {%f, %f, %f} x {%f, %f, %f}\n",
-      bounds[0].x,
-      bounds[0].y,
-      bounds[0].z,
-      bounds[1].x,
-      bounds[1].y,
-      bounds[1].z);
-#endif
 
   auto center = 0.5f * (bounds[0] + bounds[1]);
   auto diag = bounds[1] - bounds[0];
@@ -236,7 +228,8 @@ void Viewport::updateCamera(bool force)
       m_device, m_orthoCamera, "position", m_arcball->eye_FixedDistance());
   anari::setParameter(m_device, m_orthoCamera, "direction", m_arcball->dir());
   anari::setParameter(m_device, m_orthoCamera, "up", m_arcball->up());
-  anari::setParameter(m_device, m_orthoCamera, "height", m_arcball->distance());
+  anari::setParameter(
+      m_device, m_orthoCamera, "height", m_arcball->distance() * 0.75f);
 
   anari::setParameter(m_device,
       m_perspCamera,
@@ -340,7 +333,7 @@ void Viewport::ui_handleInput()
           prev * 2.f / anari::float2(m_viewportSize);
       const anari::float2 mouseTo = mouse * 2.f / anari::float2(m_viewportSize);
 
-      const anari::float2 mouseDelta = mouseFrom - mouseTo;
+      const anari::float2 mouseDelta = mouseTo - mouseFrom;
 
       if (mouseDelta != anari::float2(0.f)) {
         if (leftDown) {
@@ -410,6 +403,11 @@ void Viewport::ui_contextMenu()
 
     ImGui::EndDisabled();
 
+    if (ImGui::Combo("up", &m_arcballUp, "+x\0+y\0+z\0-x\0-y\0-z\0\0")) {
+      m_arcball->setAxis(static_cast<manipulators::OrbitAxis>(m_arcballUp));
+      resetView();
+    }
+
     if (ImGui::MenuItem("reset view"))
       resetView();
 
@@ -427,6 +425,32 @@ void Viewport::ui_contextMenu()
 
     if (ImGui::MenuItem("take screenshot"))
       m_saveNextFrame = true;
+
+    ImGui::Unindent(INDENT_AMOUNT);
+    ImGui::Separator();
+
+    ImGui::Text("World:");
+    ImGui::Indent(INDENT_AMOUNT);
+
+    if (ImGui::MenuItem("print bounds")) {
+      anari::float3 bounds[2];
+
+      anariGetProperty(m_device,
+          m_world,
+          "bounds",
+          ANARI_FLOAT32_BOX3,
+          &bounds[0],
+          sizeof(bounds),
+          ANARI_WAIT);
+
+      printf("current world bounds {%f, %f, %f} x {%f, %f, %f}\n",
+          bounds[0].x,
+          bounds[0].y,
+          bounds[0].z,
+          bounds[1].x,
+          bounds[1].y,
+          bounds[1].z);
+    }
 
     ImGui::Unindent(INDENT_AMOUNT);
 

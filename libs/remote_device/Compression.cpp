@@ -9,9 +9,25 @@
 #include <turbojpeg.h>
 #endif
 #include <map>
+#include <cstring>
 #include "Logging.h"
 
 namespace remote {
+
+CompressionFeatures getCompressionFeatures()
+{
+  CompressionFeatures cf;
+
+#ifdef HAVE_TURBOJPEG
+  cf.hasTurboJPEG = true;
+#endif
+
+#ifdef HAVE_SNAPPY
+  cf.hasSNAPPY = true;
+#endif
+
+  return cf;
+}
 
 // ==================================================================
 // TurboJPEG
@@ -133,6 +149,23 @@ bool uncompressTurboJPEG(const uint8_t *dataIN,
   return true;
 }
 
+#else
+
+size_t getMaxCompressedBufferSizeTurboJPEG(TurboJPEGOptions)
+{
+  return 0;
+}
+
+bool compressTurboJPEG(const uint8_t *, uint8_t *, size_t &, TurboJPEGOptions)
+{
+  return false;
+}
+
+bool uncompressTurboJPEG(const uint8_t *, uint8_t *, size_t , TurboJPEGOptions)
+{
+  return false;
+}
+
 #endif
 
 // ==================================================================
@@ -167,6 +200,23 @@ bool uncompressSNAPPY(const uint8_t *dataIN,
   (void)options;
   return snappy::RawUncompress(
       (const char *)dataIN, compressedSizeInBytesIN, (char *)dataOUT);
+}
+
+#else
+
+size_t getMaxCompressedBufferSizeSNAPPY(SNAPPYOptions)
+{
+  return 0;
+}
+
+bool compressSNAPPY(const uint8_t *, uint8_t *, size_t &, SNAPPYOptions)
+{
+  return false;
+}
+
+bool uncompressSNAPPY(const uint8_t *, uint8_t *, size_t, SNAPPYOptions)
+{
+  return false;
 }
 
 #endif

@@ -4,6 +4,8 @@
 #include "Device.h"
 #include <anari/backend/LibraryImpl.h>
 #include <anari/anari_cpp.hpp>
+#include <climits>
+#include <cstdlib>
 #include <cstring>
 #include <functional>
 #include <iostream>
@@ -45,8 +47,12 @@ void *Device::mapParameterArray1D(ANARIObject o,
     uint64_t numElements1,
     uint64_t *elementStride)
 {
-  LOG(logging::Level::Warning) << "Array parameter mapping not implemented";
-  return nullptr;
+  auto array = newArray1D(nullptr, nullptr, nullptr, dataType, numElements1);
+  ParameterArray pa{o, name};
+  parameterArrays[pa] = array;
+  setParameter(o, name, ANARI_ARRAY1D, &array);
+  *elementStride = anari::sizeOf(dataType);
+  return mapArray(array);
 }
 
 void *Device::mapParameterArray2D(ANARIObject o,
@@ -56,8 +62,13 @@ void *Device::mapParameterArray2D(ANARIObject o,
     uint64_t numElements2,
     uint64_t *elementStride)
 {
-  LOG(logging::Level::Warning) << "Array parameter mapping not implemented";
-  return nullptr;
+  auto array = newArray2D(
+      nullptr, nullptr, nullptr, dataType, numElements1, numElements2);
+  ParameterArray pa{o, name};
+  parameterArrays[pa] = array;
+  setParameter(o, name, ANARI_ARRAY2D, &array);
+  *elementStride = anari::sizeOf(dataType);
+  return mapArray(array);
 }
 
 void *Device::mapParameterArray3D(ANARIObject o,
@@ -68,13 +79,29 @@ void *Device::mapParameterArray3D(ANARIObject o,
     uint64_t numElements3,
     uint64_t *elementStride)
 {
-  LOG(logging::Level::Warning) << "Array parameter mapping not implemented";
-  return nullptr;
+  auto array = newArray3D(nullptr,
+      nullptr,
+      nullptr,
+      dataType,
+      numElements1,
+      numElements2,
+      numElements3);
+  ParameterArray pa{o, name};
+  parameterArrays[pa] = array;
+  setParameter(o, name, ANARI_ARRAY3D, &array);
+  *elementStride = anari::sizeOf(dataType);
+  return mapArray(array);
 }
 
 void Device::unmapParameterArray(ANARIObject o, const char *name)
 {
-  // no-op
+  ParameterArray pa{o, name};
+  auto it = parameterArrays.find(pa);
+  if (it != parameterArrays.end()) {
+    ANARIArray array = it->second;
+    unmapArray(array);
+    parameterArrays.erase(pa);
+  }
 }
 
 ANARIArray1D Device::newArray1D(const void *appMemory,
@@ -151,7 +178,6 @@ void Device::unmapArray(ANARIArray array)
   buf->write((const char *)&remoteDevice, sizeof(remoteDevice));
   buf->write((const char *)&array, sizeof(array));
   uint64_t numBytes = arrays[array].size();
-  buf->write((const char *)&numBytes, sizeof(numBytes));
   buf->write(arrays[array].data(), numBytes);
   write(MessageType::UnmapArray, buf);
 
@@ -301,6 +327,22 @@ void Device::unsetParameter(ANARIObject object, const char *name)
       << "Parameter " << name << " unset on object " << object;
 }
 
+void Device::unsetAllParameters(ANARIObject object)
+{
+  if (!object) {
+    LOG(logging::Level::Warning) << "Invalid object: " << __PRETTY_FUNCTION__;
+    return;
+  }
+
+  auto buf = std::make_shared<Buffer>();
+  buf->write((const char *)&remoteDevice, sizeof(remoteDevice));
+  buf->write((const char *)&object, sizeof(object));
+  write(MessageType::UnsetParam, buf);
+
+  LOG(logging::Level::Info)
+      << "All parameters unset on object unset on object " << object;
+}
+
 void Device::commitParameters(ANARIObject object)
 {
   if (!object) {
@@ -413,7 +455,31 @@ int Device::getProperty(ANARIObject object,
 
 const char ** Device::getObjectSubtypes(ANARIDataType objectType)
 {
-  return nullptr;
+  auto it = std::find_if(objectSubtypes.begin(),
+      objectSubtypes.end(),
+      [objectType](const ObjectSubtypes &os) {
+        return os.objectType == objectType;
+      });
+  if (it != objectSubtypes.end()) {
+    return (const char **)it->value.data();
+  }
+
+  auto buf = std::make_shared<Buffer>();
+  buf->write((const char *)&remoteDevice, sizeof(remoteDevice));
+  buf->write((const char *)&objectType, sizeof(objectType));
+  write(MessageType::GetObjectSubtypes, buf);
+
+  std::unique_lock l(syncObjectSubtypes.mtx);
+  syncObjectSubtypes.cv.wait(l, [this, &it, objectType]() {
+    it = std::find_if(objectSubtypes.begin(),
+      objectSubtypes.end(),
+      [&it, objectType](const ObjectSubtypes &os) {
+        return os.objectType == objectType;
+      });
+    return it != objectSubtypes.end();
+  });
+
+  return (const char **)it->value.data();
 }
 
 const void* Device::getObjectInfo(ANARIDataType objectType,
@@ -565,6 +631,26 @@ Device::Device(std::string subtype) : manager(async::make_connection_manager())
 {
   logging::Initialize();
 
+  char *serverHostName = getenv("ANARI_REMOTE_SERVER_HOSTNAME");
+  if (serverHostName) {
+    server.hostname = std::string(serverHostName);
+    LOG(logging::Level::Info) << "Server hostname specified via environment: "
+      << server.hostname;
+  }
+
+  char *serverPort = getenv("ANARI_REMOTE_SERVER_PORT");
+  if (serverPort) {
+    int p = std::stoi(serverPort);
+    if (p >= 0 && p <= USHRT_MAX) {
+      server.port = (unsigned short)p;
+      LOG(logging::Level::Info) << "Server port specified via environment: "
+        << server.port;
+    } else {
+      LOG(logging::Level::Warning)
+        << "Server port specified via environment but ill-formed: " << p;
+    }
+  }
+
   remoteSubtype = subtype;
 }
 
@@ -573,6 +659,12 @@ Device::~Device()
   for (size_t i = 0; i < stringListProperties.size(); ++i) {
     for (size_t j = 0; j < stringListProperties[i].value.size(); ++j) {
       delete[] stringListProperties[i].value[j];
+    }
+  }
+
+  for (size_t i = 0; i < objectSubtypes.size(); ++i) {
+    for (size_t j = 0; j < objectSubtypes[i].value.size(); ++j) {
+      delete[] objectSubtypes[i].value[j];
     }
   }
 }
@@ -651,9 +743,14 @@ void Device::initClient()
   syncConnectionEstablished.cv.wait(l1, [this]() { return conn; });
   l1.unlock();
 
-  // request remote device to be created
+  int32_t remoteSubtypeLength = remoteSubtype.length();
+  CompressionFeatures cf = getCompressionFeatures();
+
+  // request remote device to be created, send other client info along
   auto buf = std::make_shared<Buffer>();
+  buf->write((const char *)&remoteSubtypeLength, sizeof(remoteSubtypeLength));
   buf->write(remoteSubtype.c_str(), remoteSubtype.length());
+  buf->write((const char *)&cf, sizeof(cf));
   //write(MessageType::NewDevice, buf);
   // post to queue directly: write() would call initClient() recursively!
   queue.post(std::bind(&Device::writeImpl, this, MessageType::NewDevice, buf));
@@ -732,12 +829,22 @@ void Device::handleMessage(async::connection::reason reason,
 
   if (reason == async::connection::Read) {
     if (message->type() == MessageType::DeviceHandle) {
-      assert(message->size() == sizeof(Handle));
       std::unique_lock l(syncDeviceHandleRemote.mtx);
-      remoteDevice = *(ANARIDevice *)message->data();
+
+      char *msg = message->data();
+
+      remoteDevice = *(ANARIDevice *)msg;
+      msg += sizeof(ANARIDevice);
+
+      server.compression = *(CompressionFeatures *)msg;
+      msg += sizeof(CompressionFeatures);
+
       l.unlock();
       syncDeviceHandleRemote.cv.notify_all();
       LOG(logging::Level::Info) << "Got remote device handle: " << remoteDevice;
+      LOG(logging::Level::Info) << "Server has TurboJPEG: "
+        << server.compression.hasTurboJPEG;
+      LOG(logging::Level::Info) << "Server has SNAPPY: " << server.compression.hasSNAPPY;
     } else if (message->type() == MessageType::ArrayMapped) {
       std::unique_lock l(syncMapArray.mtx);
 
@@ -835,6 +942,32 @@ void Device::handleMessage(async::connection::reason reason,
       syncProperties.cv.notify_all();
 
       // LOG(logging::Level::Info) << "Property: " << property.name;
+    } else if (message->type() == MessageType::ObjectSubtypes) {
+      std::unique_lock l(syncObjectSubtypes.mtx);
+
+      Buffer buf;
+      buf.write(message->data(), message->size());
+      buf.seek(0);
+
+      ObjectSubtypes os;
+
+      buf.read((char *)&os.objectType, sizeof(os.objectType));
+
+      while (!buf.eof()) {
+        uint64_t strLen;
+        buf.read((char *)&strLen, sizeof(strLen));
+
+        char *subtype = new char[strLen + 1];
+        buf.read(subtype, strLen);
+        subtype[strLen] = '\0';
+        os.value.push_back(subtype);
+      }
+      os.value.push_back(nullptr);
+
+      objectSubtypes.push_back(os);
+
+      l.unlock();
+      syncObjectSubtypes.cv.notify_all();
     } else if (message->type() == MessageType::ChannelColor
         || message->type() == MessageType::ChannelDepth) {
       size_t off = 0;
@@ -863,11 +996,14 @@ void Device::handleMessage(async::connection::reason reason,
           : "channel.depth";
       LOG(logging::Level::Stats) << t << " sec. until " << chan << " received";
 
+      CompressionFeatures cf = getCompressionFeatures();
+
       if (message->type() == MessageType::ChannelColor) {
         frm.resizeColor(width, height, type);
 
-#ifdef HAVE_TURBOJPEG
-        if (type == ANARI_UFIXED8_RGBA_SRGB) { // TODO: more formats..
+        bool compressionTurboJPEG = cf.hasTurboJPEG && server.compression.hasTurboJPEG;
+
+        if (compressionTurboJPEG && type == ANARI_UFIXED8_RGBA_SRGB) { // TODO: more formats..
           uint32_t jpegSize = *(uint32_t *)(message->data() + off);
           off += sizeof(jpegSize);
 
@@ -885,17 +1021,16 @@ void Device::handleMessage(async::connection::reason reason,
                 << ", compressed: " << prettyBytes(jpegSize)
                 << ", rate: " << double(frm.color.size()) / jpegSize;
           }
-        } else
-#endif
-        {
+        } else {
           size_t numBytes = width * height * anari::sizeOf(type);
           memcpy(frm.color.data(), message->data() + off, numBytes);
         }
       } else {
         frm.resizeDepth(width, height, type);
 
-#ifdef HAVE_SNAPPY
-        if (type == ANARI_FLOAT32) {
+        bool compressionSNAPPY = cf.hasSNAPPY && server.compression.hasSNAPPY;
+
+        if (compressionSNAPPY && type == ANARI_FLOAT32) {
           uint32_t snappySize = *(uint32_t *)(message->data() + off);
           off += sizeof(snappySize);
 
@@ -910,9 +1045,7 @@ void Device::handleMessage(async::connection::reason reason,
           } else {
             LOG(logging::Level::Warning) << "snappy::RawUncompress failed";
           }
-        } else
-#endif
-        {
+        } else {
           size_t numBytes = width * height * anari::sizeOf(type);
           memcpy(frm.depth.data(), message->data() + off, numBytes);
         }

@@ -100,27 +100,27 @@ struct ANARI_INTERFACE DeviceImpl
       const void *mem) = 0;
 
   virtual void unsetParameter(ANARIObject object, const char *name) = 0;
+  virtual void unsetAllParameters(ANARIObject object) = 0;
 
-  virtual void* mapParameterArray1D(ANARIObject object,
-      const char* name,
+  virtual void *mapParameterArray1D(ANARIObject object,
+      const char *name,
       ANARIDataType dataType,
       uint64_t numElements1,
       uint64_t *elementStride) = 0;
-  virtual void* mapParameterArray2D(ANARIObject object,
-      const char* name,
+  virtual void *mapParameterArray2D(ANARIObject object,
+      const char *name,
       ANARIDataType dataType,
       uint64_t numElements1,
       uint64_t numElements2,
       uint64_t *elementStride) = 0;
-  virtual void* mapParameterArray3D(ANARIObject object,
-      const char* name,
+  virtual void *mapParameterArray3D(ANARIObject object,
+      const char *name,
       ANARIDataType dataType,
       uint64_t numElements1,
       uint64_t numElements2,
       uint64_t numElements3,
       uint64_t *elementStride) = 0;
-  virtual void unmapParameterArray(ANARIObject object,
-      const char* name) = 0;
+  virtual void unmapParameterArray(ANARIObject object, const char *name) = 0;
 
   virtual void commitParameters(ANARIObject object) = 0;
 
@@ -136,16 +136,16 @@ struct ANARI_INTERFACE DeviceImpl
       uint64_t size,
       ANARIWaitMask mask) = 0;
 
-  virtual const char ** getObjectSubtypes(ANARIDataType objectType) = 0;
-  virtual const void* getObjectInfo(ANARIDataType objectType,
-      const char* objectSubtype,
-      const char* infoName,
+  virtual const char **getObjectSubtypes(ANARIDataType objectType) = 0;
+  virtual const void *getObjectInfo(ANARIDataType objectType,
+      const char *objectSubtype,
+      const char *infoName,
       ANARIDataType infoType) = 0;
-  virtual const void* getParameterInfo(ANARIDataType objectType,
-      const char* objectSubtype,
-      const char* parameterName,
+  virtual const void *getParameterInfo(ANARIDataType objectType,
+      const char *objectSubtype,
+      const char *parameterName,
       ANARIDataType parameterType,
-      const char* infoName,
+      const char *infoName,
       ANARIDataType infoType) = 0;
 
   // FrameBuffer Manipulation /////////////////////////////////////////////////

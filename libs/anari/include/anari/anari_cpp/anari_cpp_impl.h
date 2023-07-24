@@ -474,6 +474,11 @@ inline void unsetParameter(Device d, Object o, const char *id)
   anariUnsetParameter(d, o, id);
 }
 
+inline void unsetAllParameters(Device d, Object o)
+{
+  anariUnsetAllParameters(d, o);
+}
+
 inline void commitParameters(Device d, Object o)
 {
   anariCommitParameters(d, o);

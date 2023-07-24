@@ -15,6 +15,7 @@
 #include <mutex>
 #include <vector>
 #include "Frame.h"
+#include "Compression.h"
 
 namespace remote {
 
@@ -107,6 +108,8 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
 
   void unsetParameter(ANARIObject object, const char *name) override;
 
+  void unsetAllParameters(ANARIObject object) override;
+
   void commitParameters(ANARIObject object) override;
 
   void release(ANARIObject _obj) override;
@@ -167,6 +170,7 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
   struct {
     std::string hostname = "localhost";
     unsigned short port{31050};
+    CompressionFeatures compression;
   } server;
 
   async::connection_manager_pointer manager;
@@ -210,6 +214,12 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
     size_t which;
   } syncProperties;
 
+  struct
+  {
+    std::mutex mtx;
+    std::condition_variable cv;
+  } syncObjectSubtypes;
+
   ANARIDevice remoteDevice{nullptr};
   std::string remoteSubtype = "default";
 
@@ -235,8 +245,31 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
   };
   std::vector<StringListProperty> stringListProperties;
 
+  // Store subtypes; if the subtype was already queried,
+  // simply return the cached subtype list
+  struct ObjectSubtypes
+  {
+    ANARIDataType objectType;
+    std::vector<char *> value;
+  };
+  std::vector<ObjectSubtypes> objectSubtypes;
+
   std::map<ANARIObject, Frame> frames;
   std::map<ANARIArray, std::vector<char>> arrays;
+
+  // Need to keep track of these to implement
+  // (un)mapParameterArray correctly
+  struct ParameterArray
+  {
+    ANARIObject object{nullptr};
+    const char *name = "";
+    bool operator<(const ParameterArray &other) const {
+      return object && object == other.object
+        && strlen(name) > 0
+        && std::string(name) < std::string(other.name);
+      }
+  };
+  std::map<ParameterArray, ANARIArray> parameterArrays;
 
   ANARIObject registerNewObject(ANARIDataType type, std::string subtype = "");
   ANARIArray registerNewArray(ANARIDataType type,

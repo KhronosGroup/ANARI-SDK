@@ -27,6 +27,7 @@ struct MessageType
     DeviceHandle,
     SetParam,
     UnsetParam,
+    UnsetAllParams,
     CommitParams,
     Release,
     Retain,
@@ -40,6 +41,8 @@ struct MessageType
     FrameIsReady,
     GetProperty,
     Property,
+    GetObjectSubtypes,
+    ObjectSubtypes,
     ChannelColor,
     ChannelDepth,
   };

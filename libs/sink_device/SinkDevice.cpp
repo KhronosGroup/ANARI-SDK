@@ -243,6 +243,8 @@ void SinkDevice::setParameter(
 
 void SinkDevice::unsetParameter(ANARIObject, const char *) {}
 
+void SinkDevice::unsetAllParameters(ANARIObject) {}
+
 void* SinkDevice::mapParameterArray1D(ANARIObject object,
     const char* name,
     ANARIDataType dataType,

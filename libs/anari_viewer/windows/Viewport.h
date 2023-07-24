@@ -79,6 +79,7 @@ struct Viewport : public match3D::Window
 
   // camera manipulator
 
+  int m_arcballUp{1};
   manipulators::Orbit m_localArcball;
   manipulators::Orbit *m_arcball{nullptr};
   manipulators::UpdateToken m_cameraToken{0};

@@ -67,6 +67,9 @@ struct ParameterizedObject
   // Remove the value of the parameter associated with 'name'.
   void removeParam(const std::string &name);
 
+  // Remove all set parameters
+  void removeAllParams();
+
  protected:
   using Param = std::pair<std::string, AnariAny>;
   using ParameterList = std::vector<Param>;

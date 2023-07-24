@@ -8,6 +8,14 @@
 
 namespace remote {
 
+struct CompressionFeatures
+{
+  int32_t hasTurboJPEG{false};
+  int32_t hasSNAPPY{false};
+};
+
+CompressionFeatures getCompressionFeatures();
+
 // ==================================================================
 // TurboJPEG
 // ==================================================================
