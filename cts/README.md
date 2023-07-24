@@ -23,6 +23,15 @@ The project was developed with the following python packages/versions. Other ver
 
 If the cts binary (.pyd) file for the desired SDK version is not provided, have a look at the [Build section](#building).
 
+## Install
+CTS will be installed alongside ANARI via calling
+```bash
+% cmake --build . -t install
+```
+in the main ANARI build folder.
+To run the CTS, one has to set the `PYTHONPATH` environment variable to the location of the ANARI library files.
+On Linux this defaults to `/usr/local/lib`, on Windows to `<install location>/bin`.
+The `cts.py` file as well as all test scenes etc. are located in `<install location>/share/anari/cts`. 
 ## Usage
 
 Run the toolkit in the command line via
@@ -30,6 +39,7 @@ Run the toolkit in the command line via
 ```
 .\cts.py --help
 ```
+On linux one might need to make `cts.py` executable by running `chmod +x cts.py`.
 
 This will show all available commands. To get more information about the individual commands call them with the help flag.
 
@@ -41,7 +51,7 @@ Example: To create the pdf report for the helide library, make sure the `anari_l
 .\cts.py create_report helide
 ```
 
-Not all C++ exceptions from ANARI devices can be caught. If possible, the exception will be printed to the console and the task will resume (e.g. continuing with the next test). If the CTS crashes, have a look at the `ANARI.log` file. It contains all ANARI logger information and might reveal the reason of a crash or unexpected behavior.
+Not all C++ exceptions from ANARI devices can be caught. If possible, the exception will be printed to the console and the task will resume (e.g. continuing with the next test). If the CTS crashes, have a look at the `ANARI.log` file. It contains all ANARI logger information and might reveal the reason of a crash or unexpected behavior. It is found by default in the current working directory, but the location can also be specified using `--log_dir` or the environment variable `ANARI_CTS_LOG`.
 
 ## Building
 
@@ -57,8 +67,6 @@ CMake. This is invoked for the whole ANARI project from your build directory wit
 ```bash
 % cmake --build . -t install
 ```
-
-This will place all necessary files to run the CTS in the `install/bin` folder. In this folder `cts.py` can be run from the terminal after your ANARI library was added.
 
 ## Test scene format
 

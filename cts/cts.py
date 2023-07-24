@@ -1,4 +1,4 @@
-#!python3
+#!/usr/bin/env python3
 import anariCTSBackend
 try:
     import ctsReport
@@ -15,10 +15,14 @@ import itertools
 import ctsUtility
 import glob
 import math
+import os
 
 logger_mutex = threading.Lock()
 
 reference_prefix = "ref_"
+
+log_file_name = "ANARI.log"
+log_file_path = log_file_name
 
 # check whether a specific feature is listed as supported in a device's feature list
 def check_feature(feature_list, check_feature):
@@ -41,7 +45,7 @@ def get_channels(parsed_json):
 # appends a message to ANARI.log file
 def anari_logger(message):
     with logger_mutex:
-        with open("ANARI.log", 'a') as file:
+        with open(log_file_path, 'a') as file:
             file.write(f'{str(datetime.datetime.now())}: {message}\n')
 
 # queries and returns feature support list of a device
@@ -672,6 +676,7 @@ if __name__ == "__main__":
 
     libraryParser = argparse.ArgumentParser(add_help=False)
     libraryParser.add_argument('library', help='ANARI library to load')
+    libraryParser.add_argument('--log_dir', default=None, type=Path, help='Directory in which ANARI.log file is saved. Defaults to working directory')
 
     ignoreFeatureParser = argparse.ArgumentParser(add_help=False)
     ignoreFeatureParser.add_argument('--ignore_features', action='store_true', help='Run tests even if feature is not supported')
@@ -728,6 +733,15 @@ if __name__ == "__main__":
 
     # parse command and call corresponding functionality
     args = parser.parse_args()
+
+    if args.log_dir is not None:
+        log_file_path = args.log_dir / log_file_name
+        os.makedirs(args.log_dir, exist_ok=True)
+    else:
+        log_env = os.environ.get('ANARI_CTS_LOG')
+        if log_env is not None:
+            log_file_path = Path(log_env) / log_file_name
+            os.makedirs(Path(log_env), exist_ok=True)
 
     verboseLevel = 2 if "verbose_all" in args and args.verbose_all else 1 if "verbose_error" in args and args.verbose_error else 0
 
