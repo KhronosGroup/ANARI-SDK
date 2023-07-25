@@ -22,6 +22,13 @@ float PrimitiveGenerator::getRandomFloat(float min, float max)
   return scaledNumber;
 }
 
+// helper function to get random vec2 with each component in range min..max
+glm::vec2 PrimitiveGenerator::getRandomVector2(float min, float max)
+{
+  return {getRandomFloat(min, max),
+      getRandomFloat(min, max)};
+}
+
 // helper function to get random vec3 with each component in range min..max
 glm::vec3 PrimitiveGenerator::getRandomVector3(float min, float max)
 {
@@ -90,7 +97,43 @@ std::vector<glm::vec3> PrimitiveGenerator::randomTransform(
 }
 
 // returns vector of randomized attribute data, each attribute being in range min..max
-std::vector<glm::vec4> PrimitiveGenerator::generateAttribute(size_t elementCount, float min, float max) {
+std::vector<float> PrimitiveGenerator::generateAttributeFloat(size_t elementCount, float min, float max) {
+  std::vector<float> attributes(elementCount);
+  for (auto &attribute : attributes) {
+    attribute = getRandomFloat(min, max);
+  }
+  return attributes;
+}
+
+// returns vector of randomized attribute data, each attribute being in range
+// min..max
+std::vector<glm::vec2> PrimitiveGenerator::generateAttributeVec2(
+    size_t elementCount, float min, float max)
+{
+  std::vector<glm::vec2> attributes(elementCount);
+  for (auto &attribute : attributes) {
+    attribute = getRandomVector2(min, max);
+  }
+  return attributes;
+}
+
+// returns vector of randomized attribute data, each attribute being in range
+// min..max
+std::vector<glm::vec3> PrimitiveGenerator::generateAttributeVec3(
+    size_t elementCount, float min, float max)
+{
+  std::vector<glm::vec3> attributes(elementCount);
+  for (auto &attribute : attributes) {
+    attribute = getRandomVector3(min, max);
+  }
+  return attributes;
+}
+
+// returns vector of randomized attribute data, each attribute being in range
+// min..max
+std::vector<glm::vec4> PrimitiveGenerator::generateAttributeVec4(
+    size_t elementCount, float min, float max)
+{
   std::vector<glm::vec4> attributes(elementCount);
   for (auto &attribute : attributes) {
     attribute = getRandomVector4(min, max);
@@ -405,43 +448,52 @@ PrimitiveGenerator::generateCurves(size_t primitiveCount)
   return std::make_tuple(vertices, radii);
 }
 
-
 // returns vectors of vertices and radii
 // each set of 2 vertices and 2 radii defines a randomly transformed cone
 // roughly in range 0..1
-std::tuple<std::vector<glm::vec3>, std::vector<float>>
-PrimitiveGenerator::generateCones(size_t primitiveCount)
+std::tuple<std::vector<glm::vec3>, std::vector<float>, std::vector<uint8_t>>
+PrimitiveGenerator::generateCones(
+    size_t primitiveCount, std::optional<int32_t> vertexCaps)
 {
   std::vector<glm::vec3> vertices;
   std::vector<float> radii;
+  std::vector<uint8_t> caps;
 
   for (size_t i = 0; i < primitiveCount * 2; ++i) {
     vertices.push_back(getRandomVector3(0.0f, 1.0f));
     radii.push_back(getRandomFloat(0.0f, 0.4f));
+    if (vertexCaps.has_value()) {
+      caps.push_back(vertexCaps.value() == 0 ? 0u : 1u);
+    }
   }
 
   vertices = randomTranslate(vertices, 2);
 
-  return std::make_tuple(vertices, radii);
+  return std::make_tuple(vertices, radii, caps);
 }
 
 // returns vectors of vertices and radii
 // each set of 2 vertices and 1 radius defines a randomly transformed cylinder
 // roughly in range 0..1
-std::tuple<std::vector<glm::vec3>, std::vector<float>>
-PrimitiveGenerator::generateCylinders(size_t primitiveCount)
+std::tuple<std::vector<glm::vec3>, std::vector<float>, std::vector<uint8_t>>
+PrimitiveGenerator::generateCylinders(
+    size_t primitiveCount, std::optional<int32_t> vertexCaps)
 {
   std::vector<glm::vec3> vertices;
   std::vector<float> radii;
+  std::vector<uint8_t> caps;
 
   for (size_t i = 0; i < primitiveCount; ++i) {
     vertices.push_back(getRandomVector3(0.0f, 1.0f));
     vertices.push_back(getRandomVector3(0.0f, 1.0f));
     radii.push_back(getRandomFloat(0.0f, 0.4f));
+    if (vertexCaps.has_value()) {
+      caps.push_back(vertexCaps.value() == 0 ? 0u : 1u);
+    }
   }
 
   vertices = randomTranslate(vertices, 2);
 
-  return std::make_tuple(vertices, radii);
+  return std::make_tuple(vertices, radii, caps);
 }
 } // namespace cts

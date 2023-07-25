@@ -1,0 +1,91 @@
+{
+  "sceneParameters": {
+    "primitiveCount": 1,
+    "seed": 12345,
+    "frame_depth_type": "FLOAT32",
+    "anari_objects": {
+      "instance": [
+        {
+          "group": "ref_group_0"
+        },
+        {
+          "group": "ref_group_0",
+          "transform": [
+            [
+              -1.0,
+              -1.0,
+              0,
+              0
+            ],
+            [
+              1.0,
+              -1.0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              -1.0,
+              0
+            ],
+            [
+              1,
+              1,
+              1,
+              1
+            ]
+          ]
+        }
+      ],
+      "group": [
+        {
+          "surface": [
+            "ref_surface_0"
+          ]
+        }
+      ],
+      "surface": [
+        {
+          "geometry": "ref_geometry_0",
+          "material": "ref_material_0"
+        }
+      ],
+      "geometry": [
+        {
+          "subtype": "triangle"
+        }
+      ],
+      "material": [
+        {
+          "subtype": "matte"
+        }
+      ]
+    }
+  },
+  "metaData": {
+    "": {
+      "bounds": {
+        "world": [
+          [
+            0.08150731027126312,
+            0.4054069221019745,
+            0.5896897912025452
+          ],
+          [
+            0.6910932064056396,
+            0.7133887410163879,
+            0.8008760213851929
+          ]
+        ],
+        "instances": [
+          [],
+          []
+        ],
+        "groups": [
+          []
+        ]
+      }
+    }
+  }
+}

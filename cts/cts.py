@@ -1,4 +1,4 @@
-#!python3
+#!/usr/bin/env python3
 import anariCTSBackend
 try:
     import ctsReport
@@ -15,10 +15,14 @@ import itertools
 import ctsUtility
 import glob
 import math
+import os
 
 logger_mutex = threading.Lock()
 
 reference_prefix = "ref_"
+
+log_file_name = "ANARI.log"
+log_file_path = log_file_name
 
 # check whether a specific feature is listed as supported in a device's feature list
 def check_feature(feature_list, check_feature):
@@ -41,7 +45,7 @@ def get_channels(parsed_json):
 # appends a message to ANARI.log file
 def anari_logger(message):
     with logger_mutex:
-        with open("ANARI.log", 'a') as file:
+        with open(log_file_path, 'a') as file:
             file.write(f'{str(datetime.datetime.now())}: {message}\n')
 
 # queries and returns feature support list of a device
@@ -76,6 +80,15 @@ def getFileFromList(list, filename):
             return path
     return ""
 
+def simplifyFileName(name):
+    name = name.replace('{', '')
+    name = name.replace('}', '')
+    name = name.replace(':', '')
+    name = name.replace("'", '')
+    name = name.replace('"', '')
+    name = name.replace(' ', '')
+    return name
+
 # writes all reference, candidate, diff and threshold images to filesystem and returns
 def write_images(evaluations, output):
     output_path = Path(output) / "evaluation"
@@ -85,6 +98,9 @@ def write_images(evaluations, output):
                 if isinstance(value, dict):
                     for channel, channelValue in value.items():
                         if isinstance(channelValue, dict):
+                            if "missingImage" in evaluation[stem][name][channel] and evaluation[stem][name][channel]["missingImage"]:
+                                continue
+
                             evaluation[stem][name][channel]["image_paths"] = {}
 
                             # save the input images to the output directory
@@ -108,10 +124,10 @@ def write_images(evaluations, output):
     return evaluations
 
 # set title and call function to write out pdf report
-def write_report(results, output, verbosity = 0):
+def write_report(results, output, check_features = True, verbosity = 0):
     output_path = Path(output) / "evaluation"
     title = f'CTS - Report' if "renderer" not in results else f'CTS - Library: {results["library"]} Device: {results["device"]} Renderer: {results["renderer"]}'
-    ctsReport.generate_report_document(results, output_path, title, verbosity)
+    ctsReport.generate_report_document(results, output_path, title, check_features, verbosity)
 
 # compare candidate and reference images using build in or custom compare functions
 # returns dictionary of evaluation results per channel per permutation per test scene
@@ -125,7 +141,7 @@ def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, 
     # find which channel(s) to evaluate
     channels = get_channels(parsed_json)
 
-    # construct permutation/variant depenendend name for result dictionary
+    # construct permutation/variant dependent name for result dictionary
     if permutationString != "":
         permutationString = f'_{permutationString}'
 
@@ -135,8 +151,16 @@ def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, 
     name = f'{stem}{permutationString}{variantString}'
     results[test_name][name] = {}
 
+    color_thresholds = []
+    parsedThresholds = {}
+    if "thresholds" in parsed_json and isinstance(parsed_json["thresholds"], dict) and parsed_json["thresholds"]:
+        parsedThresholds = parsed_json["thresholds"]
+        methods = parsedThresholds.keys()
+        color_thresholds = parsedThresholds.values()
+
     # evaluate once per channel
     for channel in channels:
+        methodsCopy = methods.copy()
         reference_file = f'{reference_prefix}{stem}{permutationString}_{channel}'
         candidate_file = f'{stem}{permutationString}{variantString}_{channel}'
 
@@ -148,18 +172,21 @@ def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, 
 
         if candidate_path == "":
             print('No candidate images for filepath {} could be found.'.format(candidate_file))
+            results[str(test_name)][name][channel] = {
+                "missingImage": True
+            }
             continue
 
         if channel == "depth":
             # only use psnr as comparison method for depth tests
-            methods = ["psnr"]
+            methodsCopy = ["psnr"]
             channelThresholds = [20.0]
             custom_compare_function = None
         else:
             # color channels might have multiple thresholds for multiple comparison methods
-            channelThresholds = thresholds
+            channelThresholds = color_thresholds
         # evaluate rendered scene against reference data (possibly using a custom comparison function)
-        eval_result = ctsUtility.evaluate_scene(ref_path, candidate_path, methods, channelThresholds, custom_compare_function)
+        eval_result = ctsUtility.evaluate_scene(ref_path, candidate_path, methodsCopy, channelThresholds, custom_compare_function)
         print(f'\n{test_name} {name} {channel}:')
         for key in eval_result["metrics"]:
             # construct report text for passed or failed tests
@@ -184,6 +211,8 @@ def resolve_scenes(test_scenes):
         # test_scenes is a directory
         path = Path(Path(__file__).parent / test_scenes)
         if not path.is_dir():
+            if path.suffix == '.json':
+                return [path]
             print("No valid category")
             return []
         collected_scenes = list(path.rglob("*.json"))
@@ -212,7 +241,7 @@ def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, te
     # render test scene and get frame duration of that rendering
     bounds_distance = math.dist(world_bounds[0], world_bounds[1])
     try:
-        image_data_list = sceneGenerator.renderScene(anari_renderer, bounds_distance)
+        image_data_list = sceneGenerator.renderScene(bounds_distance)
         frame_duration = sceneGenerator.getFrameDuration()
     except Exception as e:
         print(e)
@@ -254,9 +283,19 @@ def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, te
     print("")
     return frame_duration
 
+def passByType(paramName, type, paramValue, sceneGenerator):
+    if paramValue == None:
+        sceneGenerator.unsetGenericParameter(paramName)
+    elif type == "Array1D":
+        sceneGenerator.setGenericArray1DParameter(paramName, paramValue)
+    elif type == "Array2D":
+        sceneGenerator.setGenericArray2DParameter(paramName, paramValue)
+    else:
+        sceneGenerator.setGenericParameter(paramName, paramValue)
+
 # applies a function to each test scene (or test permutation), passing additional args to that function
 # returns a dictonary of return values of the passed function with the test scene names as keys
-def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", only_permutations = False, use_generator = True,  *args):
+def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", only_permutations = False, check_features = True, use_generator = True,  *args):
     result = {}
     # gather available test scenes
     collected_scenes = resolve_scenes(test_scenes)
@@ -298,7 +337,7 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                         all_features_available = False
                         print("Feature %s is not supported"%feature)
 
-            if not all_features_available:
+            if not all_features_available and check_features:
                 # skip this test scene if a required feature is missing
                 print("Scene %s is not supported"%json_file_path)
                 result[test_name] = "Features not supported"
@@ -306,8 +345,55 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
             try:
                 # setup sceneGenerator with scene parameters for rendering
                 sceneGenerator.resetAllParameters()
+                references = []
                 for [key, value] in parsed_json["sceneParameters"].items():
-                    sceneGenerator.setParameter(key, value)
+                    if key == "anari_objects":
+                        for [anariObjectName, array] in value.items():
+                            for idx, item in enumerate(array):
+                                subtype = None
+                                if "subtype" not in item:
+                                    # Renderer subtype is user-defined/instance, group and surface do not have a subtype
+                                    if anariObjectName == "renderer" or anariObjectName == "instance" or anariObjectName == "group" or anariObjectName == "surface":
+                                        subtype = anari_renderer
+                                    else:
+                                        # If no subtype is present no object is generated. This can be used prevent the initialization of default scene objects
+                                        continue
+                                else:
+                                    subtype = item["subtype"]
+                                if anariObjectName == "geometry" and parsed_json["sceneParameters"]["geometrySubtype"] != None and subtype != parsed_json["sceneParameters"]["geometrySubtype"]:
+                                    # If geometrySubtype is not the same as subtype ignore the generic anari object
+                                    continue
+                                ctsType = ""
+                                if "ctsType" in item:
+                                    ctsType = item["ctsType"]
+                                sceneGenerator.createAnariObject(anariObjectName, subtype, ctsType)
+                                for [paramName, paramValue] in item.items():
+                                    if paramName == "subtype" or paramName == "ctsType":
+                                        continue
+                                    if isinstance(paramValue, str) and paramValue.startswith("ref_"):
+                                        stringArray = paramValue.split('_')
+                                        references.append([anariObjectName, idx, paramName, stringArray[1], int(stringArray[2])])
+                                    elif isinstance(paramValue, list) and all(isinstance(elem, str) and elem.startswith("ref_") for elem in paramValue):
+                                        refList = []
+                                        stringArray = []
+                                        for elem in paramValue:
+                                            stringArray = elem.split('_')
+                                            refList.append(int(stringArray[2]))
+                                        references.append([anariObjectName, idx, paramName, stringArray[1], refList])
+                                    elif paramValue is None:
+                                        sceneGenerator.unsetGenericParameter(paramName)
+                                    elif isinstance(paramValue, dict):
+                                        for [type, typedValue] in paramValue.items():
+                                            passByType(paramName, type, typedValue, sceneGenerator)
+                                            break
+                                    else:
+                                        sceneGenerator.setGenericParameter(paramName, paramValue)
+                                sceneGenerator.releaseAnariObject()
+                    else:
+                        sceneGenerator.setParameter(key, value)
+                
+                for reference in references:
+                    sceneGenerator.setReferenceParameter(*reference)
             except Exception as e:
                 print(e)
                 continue
@@ -317,6 +403,7 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
             variant_keys = []
             keys = []
             lists = []
+            permutations = []
             if "permutations" in parsed_json:
                 keys.extend(list(parsed_json["permutations"].keys()))
                 lists.extend(list(parsed_json["permutations"].values()))
@@ -325,7 +412,19 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                 variant_keys = ["var_" + item for item in variant_keys]
                 keys.extend(variant_keys)
                 lists.extend(list(parsed_json["variants"].values()))
-            permutations = itertools.product(*lists)
+            if "simplified_permutations" in parsed_json and parsed_json["simplified_permutations"]:
+                for permutationList in lists:
+                    for item in permutationList:
+                        permutation = []
+                        for permutationList2 in lists:
+                            if permutationList2 is not permutationList:                                                      
+                                permutation.append(permutationList2[0])
+                            else:
+                                permutation.append(item)
+                        if permutation not in permutations:
+                            permutations.append(permutation)
+            else:
+                permutations = itertools.product(*lists)
             # loop over all permutations based on permutations and variants in the test scene
             for permutation in permutations:
                 # prepare naming scheme for saving the results
@@ -344,7 +443,32 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                     if use_generator:
                         # set up scene generator with the permutated data for this rendering
                         try:
-                            sceneGenerator.setParameter(key, permutation[i])
+                            if key.startswith("/anari_objects"):
+                                pointer = key.split('/')
+                                if (isinstance(permutation[i], str) and permutation[i].startswith("ref_")):
+                                    ref = permutation[i].split('_')
+                                    sceneGenerator.setReferenceParameter(pointer[2], int(pointer[3]), pointer[4], ref[1], int(ref[2]))
+                                elif isinstance(permutation[i], list) and all(isinstance(elem, str) and elem.startswith("ref_") for elem in permutation[i]):
+                                        refList = []
+                                        stringArray = []
+                                        for elem in permutation[i]:
+                                            stringArray = elem.split('_')
+                                            refList.append(int(stringArray[2]))
+                                        sceneGenerator.setReferenceParameter(pointer[2], int(pointer[3]), pointer[4], stringArray[1], refList)
+                                else:
+                                    sceneGenerator.setCurrentObject(pointer[2], int(pointer[3]))
+                                    if permutation[i] is None:
+                                        sceneGenerator.unsetGenericParameter(pointer[4])
+                                    elif isinstance(permutation[i], dict):
+                                        for [type, typedValue] in permutation[i].items():
+                                            passByType(pointer[4], type, typedValue, sceneGenerator)
+                                            break
+                                    elif len(pointer) > 5:
+                                        passByType(pointer[4], pointer[5], permutation[i], sceneGenerator)
+                                    else:
+                                        sceneGenerator.setGenericParameter(pointer[4], permutation[i])
+                            else:
+                                sceneGenerator.setParameter(key, permutation[i])
                         except Exception as e:
                             print(e)
                             hasError = True
@@ -359,6 +483,8 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                     except Exception as e:
                         print(e)
                         continue
+                permutationString = simplifyFileName(permutationString)
+                variantString = simplifyFileName(variantString)
                 # call function for each permutated/variant test scene and collect return values per test scene permutation/variant
                 result[test_name + permutationString + variantString] = (func(parsed_json, sceneGenerator, anari_renderer, json_file_path, test_name, permutationString[1:], variantString[1:], *args))
         else:
@@ -374,8 +500,8 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
     return result
 
 # apply the render_scene() function to all test scenes available
-def render_scenes(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", output = "."):
-    apply_to_scenes(render_scene, anari_library, anari_device, anari_renderer, test_scenes, False, True, output)
+def render_scenes(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", check_features = True, output = "."):
+    apply_to_scenes(render_scene, anari_library, anari_device, anari_renderer, test_scenes, False, check_features, True, output)
 
 # compare existing candidate and reference images and write the results into a pdf report
 # this report will only contain image comparisons and no further data like e.g. queried features
@@ -384,7 +510,7 @@ def compare_images(test_scenes = "test_scenes", candidates_path = "test_scenes",
     ref_images = globImages(test_scenes, reference_prefix)
     candidate_images = globImages(candidates_path, exclude_prefix=reference_prefix)
     # evaluate images per test scene (also generates diff and threshold images)
-    evaluations = apply_to_scenes(evaluate_scene, "", None, "default", test_scenes, False, False, output, ref_images, candidate_images, comparison_methods, thresholds, custom_compare_function)
+    evaluations = apply_to_scenes(evaluate_scene, "", None, "default", test_scenes, False, True , False, output, ref_images, candidate_images, comparison_methods, thresholds, custom_compare_function)
     if output != None:
         # write all images to filesystem to later incorporate in report
         print("\n***Create Report***\n")
@@ -393,7 +519,7 @@ def compare_images(test_scenes = "test_scenes", candidates_path = "test_scenes",
         for evaluation in evaluations.values():
             merged_evaluations = recursive_update(merged_evaluations, evaluation)
         # write out pdf report containing images and evaluation data
-        write_report(merged_evaluations, output, verbosity)
+        write_report(merged_evaluations, output, True, verbosity)
         print("***Done***")
 
 # compare candidate bounding box against reference bounding box using a tolerance value
@@ -510,7 +636,7 @@ def create_report_for_scene(parsed_json, sceneGenerator, anari_renderer, scene_l
     return report
 
 # queries metadata and features, renders test scenes, compares reference and candidate images and writes all results into a pdf report
-def create_report(library, device = None, renderer = "default", test_scenes = "test_scenes", output = ".", verbosity = 0, comparison_methods = ["ssim"], thresholds = None, custom_compare_function = None):
+def create_report(library, device = None, renderer = "default", test_scenes = "test_scenes", output = ".", verbosity = 0, check_features = True, comparison_methods = ["ssim"], thresholds = None, custom_compare_function = None):
     # query metadata and features from the library / device
     merged_evaluations = {}
     merged_evaluations["anariInfo"] = query_metadata(library, device)
@@ -524,13 +650,13 @@ def create_report(library, device = None, renderer = "default", test_scenes = "t
         return
     print("***Create renderings***\n")
     # render test scenes
-    result1 = apply_to_scenes(create_report_for_scene, library, device, renderer, test_scenes, False, True, output, comparison_methods, thresholds, custom_compare_function, merged_evaluations["features"])
+    result1 = apply_to_scenes(create_report_for_scene, library, device, renderer, test_scenes, False, check_features, True, output, comparison_methods, thresholds, custom_compare_function, merged_evaluations["features"])
     if not result1:
         print("Report could not be created")
         return
     print("\n***Compare renderings***\n")
     # evaluate rendered images
-    result2 = apply_to_scenes(create_report_for_scene, library, device, renderer, test_scenes, False, False, output, comparison_methods, thresholds, custom_compare_function, merged_evaluations["features"])
+    result2 = apply_to_scenes(create_report_for_scene, library, device, renderer, test_scenes, False, check_features, False, output, comparison_methods, thresholds, custom_compare_function, merged_evaluations["features"])
     # write all images to filesystem to later incorporate in report
     result2 = write_images(result2, output)
     # combine rendering results and image evaluation results with previously queried data
@@ -540,7 +666,7 @@ def create_report(library, device = None, renderer = "default", test_scenes = "t
         merged_evaluations = recursive_update(merged_evaluations, evaluation)
     print("\n***Create Report***\n")
     # write out extensive pdf report (depending on verbosity level)
-    write_report(merged_evaluations, output, verbosity)
+    write_report(merged_evaluations, output, check_features, verbosity)
     print("***Done***")
 
 if __name__ == "__main__":
@@ -550,6 +676,10 @@ if __name__ == "__main__":
 
     libraryParser = argparse.ArgumentParser(add_help=False)
     libraryParser.add_argument('library', help='ANARI library to load')
+    libraryParser.add_argument('--log_dir', default=None, type=Path, help='Directory in which ANARI.log file is saved. Defaults to working directory')
+
+    ignoreFeatureParser = argparse.ArgumentParser(add_help=False)
+    ignoreFeatureParser.add_argument('--ignore_features', action='store_true', help='Run tests even if feature is not supported')
 
     deviceParser = argparse.ArgumentParser(add_help=False, parents=[libraryParser])
     deviceParser.add_argument('-d', '--device', default=None, help='ANARI device on which to perform the test')
@@ -565,7 +695,7 @@ if __name__ == "__main__":
     evaluationMethodParser.add_argument('-vv', '--verbose_all', action='store_true', help="Include verbose infos of all tests in report")
 
     # command: render_scenes
-    renderScenesParser = subparsers.add_parser('render_scenes', description='Renders an image to disk for each test scene', parents=[sceneParser])
+    renderScenesParser = subparsers.add_parser('render_scenes', description='Renders an image to disk for each test scene', parents=[sceneParser,ignoreFeatureParser])
     renderScenesParser.add_argument('-o', '--output', default=".", help="Output path")
 
     # command: compare_images
@@ -589,7 +719,7 @@ if __name__ == "__main__":
     checkObjectPropertiesParser.add_argument('-t', '--test_scenes', default="test_scenes", help="Folder with test scenes to test. Specify subfolder to test subsets")
 
     # command: create_report
-    create_reportParser = subparsers.add_parser('create_report', parents=[sceneParser, evaluationMethodParser], description="Runs all tests and creates a pdf report")
+    create_reportParser = subparsers.add_parser('create_report', parents=[sceneParser, evaluationMethodParser, ignoreFeatureParser], description="Runs all tests and creates a pdf report")
     create_reportParser.add_argument('-o', '--output', default=".", help="Output path")
 
     command_text = ""
@@ -604,10 +734,19 @@ if __name__ == "__main__":
     # parse command and call corresponding functionality
     args = parser.parse_args()
 
+    if args.log_dir is not None:
+        log_file_path = args.log_dir / log_file_name
+        os.makedirs(args.log_dir, exist_ok=True)
+    else:
+        log_env = os.environ.get('ANARI_CTS_LOG')
+        if log_env is not None:
+            log_file_path = Path(log_env) / log_file_name
+            os.makedirs(Path(log_env), exist_ok=True)
+
     verboseLevel = 2 if "verbose_all" in args and args.verbose_all else 1 if "verbose_error" in args and args.verbose_error else 0
 
     if args.command == "render_scenes":
-        render_scenes(args.library, args.device, args.renderer, args.test_scenes, args.output)
+        render_scenes(args.library, args.device, args.renderer, args.test_scenes, not args.ignore_features, args.output)
     elif args.command == "compare_images":
         compare_images(args.test_scenes, args.candidates, args.output, verboseLevel, args.comparison_methods, args.thresholds)
     elif args.command == "query_features":
@@ -620,4 +759,4 @@ if __name__ == "__main__":
         for key, value in result.items():
             print(f'{key}: {value[0]}')
     elif args.command == "create_report":
-        create_report(args.library, args.device, args.renderer, args.test_scenes, args.output, verboseLevel, args.comparison_methods, args.thresholds)
+        create_report(args.library, args.device, args.renderer, args.test_scenes, args.output, verboseLevel, not args.ignore_features, args.comparison_methods, args.thresholds)

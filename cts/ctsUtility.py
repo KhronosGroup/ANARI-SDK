@@ -21,7 +21,7 @@ def psnr(reference, candidate, threshold):
 def getThreshold(methods, thresholds, method, default):
     if thresholds != None:
         index = methods.index(method)
-        if index < len(thresholds):
+        if index < len(thresholds) and thresholds[index] != None:
             return float(thresholds[index])
     return default
 
@@ -127,7 +127,7 @@ def evaluate_scene(reference_path, candidate_path, methods, thresholds, custom_c
     # Compute metrics and compare images
     return evaluate(reference_image, candidate_image, methods, thresholds, custom_compare_function)
 
-def write_image(path, image, check_contrast = True):
+def write_image(path, image, check_contrast = False):
     filepath, filename = os.path.split(path)
     if not os.path.exists(filepath):
         os.makedirs(filepath)

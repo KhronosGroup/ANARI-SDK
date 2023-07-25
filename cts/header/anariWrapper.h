@@ -47,6 +47,23 @@ class SceneGeneratorWrapper
     }
   }
 
+  void createAnariObject(const std::string &type,
+      const std::string &subtype = "",
+      const std::string& ctsType = "")
+  {
+    if (m_sceneGenerator) {
+      m_sceneGenerator->createAnariObject(
+          m_sceneGenerator->anariTypeFromString(type), subtype, ctsType);
+    }
+  }
+
+  void releaseAnariObject()
+  {
+    if (m_sceneGenerator) {
+      m_sceneGenerator->releaseAnariObject();
+    }
+  }
+
   void resetSceneObjects()
   {
     if (m_sceneGenerator) {
@@ -61,11 +78,10 @@ class SceneGeneratorWrapper
     }
   }
 
-  std::vector<std::vector<uint32_t>> renderScene(
-      const std::string& rendererType, float renderDistance)
+  std::vector<std::vector<uint32_t>> renderScene(float renderDistance)
   {
     if (m_sceneGenerator) {
-      return m_sceneGenerator->renderScene(rendererType, renderDistance);
+      return m_sceneGenerator->renderScene(renderDistance);
     }
     return {};
   }
@@ -90,6 +106,61 @@ class SceneGeneratorWrapper
     if (m_sceneGenerator) {
       m_sceneGenerator->setParam(name, t);
     }
+  }
+
+  template <typename T>
+  void setGenericParameter(const std::string &name, T &&t)
+  {
+    if (m_sceneGenerator) {
+      m_sceneGenerator->setGenericParameter(name, t);
+    }
+  }
+
+  template <typename T>
+  void setGenericArray1DParameter(const std::string &name, T &t)
+  {
+    if (m_sceneGenerator) {
+      m_sceneGenerator->setGenericArray1DParameter(name, t);
+    }
+  }
+
+  template <typename T>
+  void setGenericArray2DParameter(const std::string &name, T &t)
+  {
+    if (m_sceneGenerator) {
+      m_sceneGenerator->setGenericArray2DParameter(name, t);
+    }
+  }
+
+  void unsetGenericParameter(const std::string &name)
+  {
+    if (m_sceneGenerator) {
+      m_sceneGenerator->unsetGenericParameter(name);
+    }
+  }
+  
+  void setReferenceParameter(const std::string& objectType, size_t objectIndex, const std::string& paramName, const std::string& refType, size_t refIndex) {
+    m_sceneGenerator->setReferenceParameter(
+        m_sceneGenerator->anariTypeFromString(objectType), objectIndex, paramName,
+        m_sceneGenerator->anariTypeFromString(refType), refIndex);
+  }
+  void setReferenceArray(const std::string &objectType,
+      size_t objectIndex,
+      const std::string &paramName,
+      const std::string &refType,
+      const std::vector<size_t>& refIndices)
+  {
+    m_sceneGenerator->setReferenceArray(
+        m_sceneGenerator->anariTypeFromString(objectType),
+        objectIndex,
+        paramName,
+        m_sceneGenerator->anariTypeFromString(refType),
+        refIndices);
+  }
+
+  void setCurrentObject(std::string &type, size_t index)
+  {
+    m_sceneGenerator->setCurrentObject(m_sceneGenerator->anariTypeFromString(type), index);
   }
 
  private:

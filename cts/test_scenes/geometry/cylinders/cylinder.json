@@ -1,0 +1,51 @@
+{
+  "sceneParameters": {
+    "geometrySubtype": "cylinder",
+    "primitiveCount": 16,
+    "frame_depth_type": "FLOAT32",
+    "seed": 12345
+  },
+  "permutations": {
+    "primitiveMode": [
+      "soup",
+      "indexed"
+    ]
+  },
+  "requiredFeatures": [
+    "ANARI_KHR_GEOMETRY_CYLINDER"
+  ],
+  "metaData": {
+    "soup": {
+      "bounds": {
+        "world": [
+          [
+            -0.006480216979980469,
+            -0.2267938256263733,
+            -0.006787329912185669
+          ],
+          [
+            1.2783490419387817,
+            1.227301836013794,
+            1.0534991025924683
+          ]
+        ]
+      }
+    },
+    "indexed": {
+      "bounds": {
+        "world": [
+          [
+            -0.16713067889213562,
+            -0.0988539308309555,
+            -0.10115103423595428
+          ],
+          [
+            1.282554030418396,
+            1.2497206926345825,
+            1.0836424827575684
+          ]
+        ]
+      }
+    }
+  }
+}

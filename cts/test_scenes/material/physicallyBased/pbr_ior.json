@@ -1,0 +1,58 @@
+{
+  "sceneParameters": {
+    "primitiveCount": 2,
+    "seed": 4321,
+    "anari_objects": {
+      "material": [
+        {
+          "subtype": "physicallyBased",
+          "transmission": 0.5,
+          "thickness": 0.5
+        }
+      ]
+    }
+  },
+  "permutations": {
+    "/anari_objects/material/0/ior": [
+      null,
+      2.42
+    ]
+  },
+  "requiredFeatures": [
+    "KHR_MATERIAL_PHYSICALLY_BASED"
+  ],
+  "metaData": {
+    "None": {
+      "bounds": {
+        "world": [
+          [
+            0.21425123512744904,
+            0.07611051946878433,
+            0.19554024934768677
+          ],
+          [
+            0.607675313949585,
+            0.6675112247467041,
+            0.6973822116851807
+          ]
+        ]
+      }
+    },
+    "2.42": {
+      "bounds": {
+        "world": [
+          [
+            0.21425123512744904,
+            0.07611051946878433,
+            0.19554024934768677
+          ],
+          [
+            0.607675313949585,
+            0.6675112247467041,
+            0.6973822116851807
+          ]
+        ]
+      }
+    }
+  }
+}

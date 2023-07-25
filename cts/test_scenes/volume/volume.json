@@ -1,0 +1,247 @@
+{
+  "sceneParameters": {
+    "spatial_field_dimensions": [
+      3,
+      3,
+      3
+    ],
+    "frame_depth_type": "FLOAT32",
+    "geometrySubtype": "",
+    "anari_objects": {
+      "volume": [
+        {
+          "subtype": "transferFunction1D",
+          "field": "ref_spatialField_0"
+        }
+      ],
+      "spatialField": [
+        {
+          "subtype": "structuredRegular"
+        }
+      ]
+    }
+  },
+  "simplified_permutations": true,
+  "permutations": {
+    "/anari_objects/spatialField/0/filter": [
+      null,
+      "nearest",
+      "linear"
+    ],
+    "/anari_objects/spatialField/0/origin": [
+      [
+        -1.0,
+        -1.0,
+        -1.0
+      ],
+      null
+    ],
+    "/anari_objects/spatialField/0/spacing": [
+      null,
+      [
+        0.01,
+        0.02,
+        0.5
+      ]
+    ],
+    "/anari_objects/volume/0/valueRange": [
+      null,
+      [
+        0.25,
+        0.75
+      ]
+    ],
+    "/anari_objects/volume/0/color": [
+      {
+        "Array1D": [
+          [
+            0.25,
+            0.9,
+            0.2
+          ],
+          [
+            0.9,
+            0.1,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.7
+          ]
+        ]
+      },
+      [
+        1.0,
+        0.75,
+        0.0
+      ],
+      [
+        1.0,
+        0.75,
+        0.0,
+        0.5
+      ]
+    ],
+    "/anari_objects/volume/0/opacity": [
+      {
+        "Array1D": [
+          0.25,
+          0.7,
+          1.0
+        ]
+      },
+      1.0
+    ]
+  },
+  "requiredFeatures": [
+    "ANARI_KHR_SPATIAL_FIELD_STRUCTURED_REGULAR",
+    "KHR_VOLUME_TRANSFER_FUNCTION1D"
+  ],
+  "metaData": {
+    "None_[-1.0,-1.0,-1.0]_None_None_Array1D[[0.25,0.9,0.2],[0.9,0.1,0.0],[0.0,0.0,0.7]]_Array1D[0.25,0.7,1.0]": {
+      "bounds": {
+        "world": [
+          [
+            -1.0,
+            -1.0,
+            -1.0
+          ],
+          [
+            1.0,
+            1.0,
+            1.0
+          ]
+        ]
+      }
+    },
+    "nearest_[-1.0,-1.0,-1.0]_None_None_Array1D[[0.25,0.9,0.2],[0.9,0.1,0.0],[0.0,0.0,0.7]]_Array1D[0.25,0.7,1.0]": {
+      "bounds": {
+        "world": [
+          [
+            -1.0,
+            -1.0,
+            -1.0
+          ],
+          [
+            1.0,
+            1.0,
+            1.0
+          ]
+        ]
+      }
+    },
+    "linear_[-1.0,-1.0,-1.0]_None_None_Array1D[[0.25,0.9,0.2],[0.9,0.1,0.0],[0.0,0.0,0.7]]_Array1D[0.25,0.7,1.0]": {
+      "bounds": {
+        "world": [
+          [
+            -1.0,
+            -1.0,
+            -1.0
+          ],
+          [
+            1.0,
+            1.0,
+            1.0
+          ]
+        ]
+      }
+    },
+    "None_None_None_None_Array1D[[0.25,0.9,0.2],[0.9,0.1,0.0],[0.0,0.0,0.7]]_Array1D[0.25,0.7,1.0]": {
+      "bounds": {
+        "world": [
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            2.0,
+            2.0,
+            2.0
+          ]
+        ]
+      }
+    },
+    "None_[-1.0,-1.0,-1.0]_[0.01,0.02,0.5]_None_Array1D[[0.25,0.9,0.2],[0.9,0.1,0.0],[0.0,0.0,0.7]]_Array1D[0.25,0.7,1.0]": {
+      "bounds": {
+        "world": [
+          [
+            -1.0,
+            -1.0,
+            -1.0
+          ],
+          [
+            -0.9800000190734863,
+            -0.9599999785423279,
+            0.0
+          ]
+        ]
+      }
+    },
+    "None_[-1.0,-1.0,-1.0]_None_[0.25,0.75]_Array1D[[0.25,0.9,0.2],[0.9,0.1,0.0],[0.0,0.0,0.7]]_Array1D[0.25,0.7,1.0]": {
+      "bounds": {
+        "world": [
+          [
+            -1.0,
+            -1.0,
+            -1.0
+          ],
+          [
+            1.0,
+            1.0,
+            1.0
+          ]
+        ]
+      }
+    },
+    "None_[-1.0,-1.0,-1.0]_None_None_[1.0,0.75,0.0]_Array1D[0.25,0.7,1.0]": {
+      "bounds": {
+        "world": [
+          [
+            Infinity,
+            Infinity,
+            Infinity
+          ],
+          [
+            -Infinity,
+            -Infinity,
+            -Infinity
+          ]
+        ]
+      }
+    },
+    "None_[-1.0,-1.0,-1.0]_None_None_[1.0,0.75,0.0,0.5]_Array1D[0.25,0.7,1.0]": {
+      "bounds": {
+        "world": [
+          [
+            Infinity,
+            Infinity,
+            Infinity
+          ],
+          [
+            -Infinity,
+            -Infinity,
+            -Infinity
+          ]
+        ]
+      }
+    },
+    "None_[-1.0,-1.0,-1.0]_None_None_Array1D[[0.25,0.9,0.2],[0.9,0.1,0.0],[0.0,0.0,0.7]]_1.0": {
+      "bounds": {
+        "world": [
+          [
+            Infinity,
+            Infinity,
+            Infinity
+          ],
+          [
+            -Infinity,
+            -Infinity,
+            -Infinity
+          ]
+        ]
+      }
+    }
+  }
+}

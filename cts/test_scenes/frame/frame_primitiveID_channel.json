@@ -1,0 +1,48 @@
+{
+  "sceneParameters": {
+    "primitiveCount": 8,
+    "seed": 12345,
+    "shape": "triangle",
+    "frame_primitiveId_type": "UINT32",
+    "anari_objects": {
+      "geometry": [
+        {
+          "subtype": "triangle",
+          "primitiveID": {
+            "Array1D": [
+              5,
+              3,
+              4,
+              2,
+              7,
+              6,
+              0,
+              1
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "requiredFeatures": [
+    "KHR_FRAME_CHANNEL_PRIMITIVE_ID"
+  ],
+  "metaData": {
+    "": {
+      "bounds": {
+        "world": [
+          [
+            0.16597114503383636,
+            0.12363573908805847,
+            0.04707832634449005
+          ],
+          [
+            0.8719726800918579,
+            0.9410101175308228,
+            0.8697177171707153
+          ]
+        ]
+      }
+    }
+  }
+}

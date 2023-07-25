@@ -1,0 +1,125 @@
+{
+  "sceneParameters": {
+    "geometrySubtype": "triangle",
+    "primitiveCount": 16,
+    "seed": 12345,
+    "shape": "triangle",
+    "camera_generate_transform": false,
+    "anari_objects": {
+      "camera": [
+        {
+          "subtype": "perspective",
+          "position": [
+            0.5,
+            0.5,
+            -1.0
+          ],
+          "near": 0.01,
+          "far": 100.0
+        }
+      ]
+    }
+  },
+  "simplified_permutations": true,
+  "permutations": {
+    "/anari_objects/camera/0/direction": [
+      null,
+      [
+        0.20601,
+        0.0,
+        0.97855
+      ]
+    ],
+    "/anari_objects/camera/0/up": [
+      null,
+      [
+        0.0,
+        -0.97855,
+        0.20601
+      ]
+    ],
+    "/anari_objects/camera/0/imageRegion": [
+      null,
+      [
+        [
+          0.25,
+          0.3
+        ],
+        [
+          0.75,
+          0.8
+        ]
+      ]
+    ]
+  },
+  "requiredFeatures": [
+    "ANARI_KHR_CAMERA_PERSPECTIVE",
+    "ANARI_KHR_GEOMETRY_TRIANGLE"
+  ],
+  "metaData": {
+    "None_None_None": {
+      "bounds": {
+        "world": [
+          [
+            0.10628136992454529,
+            0.07447968423366547,
+            0.08119118958711624
+          ],
+          [
+            0.8897861838340759,
+            0.9648289084434509,
+            0.8715502023696899
+          ]
+        ]
+      }
+    },
+    "[0.20601,0.0,0.97855]_None_None": {
+      "bounds": {
+        "world": [
+          [
+            0.10628136992454529,
+            0.07447968423366547,
+            0.08119118958711624
+          ],
+          [
+            0.8897861838340759,
+            0.9648289084434509,
+            0.8715502023696899
+          ]
+        ]
+      }
+    },
+    "None_[0.0,-0.97855,0.20601]_None": {
+      "bounds": {
+        "world": [
+          [
+            0.10628136992454529,
+            0.07447968423366547,
+            0.08119118958711624
+          ],
+          [
+            0.8897861838340759,
+            0.9648289084434509,
+            0.8715502023696899
+          ]
+        ]
+      }
+    },
+    "None_None_[[0.25,0.3],[0.75,0.8]]": {
+      "bounds": {
+        "world": [
+          [
+            0.10628136992454529,
+            0.07447968423366547,
+            0.08119118958711624
+          ],
+          [
+            0.8897861838340759,
+            0.9648289084434509,
+            0.8715502023696899
+          ]
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "sceneParameters": {
+    "primitiveCount": 8,
+    "spatial_field_dimensions": [
+      3,
+      3,
+      3
+    ],
+    "seed": 12345,
+    "frame_primitiveId_type": "UINT32",
+    "anari_objects": {
+      "volume": [
+        {
+          "subtype": "scivis",
+          "field": "ref_spatialField_0",
+          "id": 1
+        },
+        {
+          "subtype": "scivis",
+          "field": "ref_spatialField_1",
+          "id": 0
+        }
+      ],
+      "field": [
+        {
+          "subtype": "structuredRegular",
+          "spacing": [
+            0.01,
+            0.02,
+            0.5
+          ],
+          "orign": [
+            -0.25,
+            -0.25,
+            -1.0
+          ]
+        },
+        {
+          "subtype": "structuredRegular",
+          "spacing": [
+            0.5,
+            0.02,
+            0.01
+          ],
+          "orign": [
+            -0.75,
+            -0.75,
+            -1.0
+          ]
+        }
+      ]
+    }
+  },
+  "requiredFeatures": [
+    "KHR_FRAME_CHANNEL_OBJECT_ID",
+    "ANARI_KHR_SPATIAL_FIELD_STRUCTURED_REGULAR",
+    "ANARI_KHR_VOLUME_SCIVIS"
+  ],
+  "metaData": {
+    "": {
+      "bounds": {
+        "world": [
+          [
+            0.12008015811443329,
+            0.12363573908805847,
+            0.04707832634449005
+          ],
+          [
+            0.9361416697502136,
+            0.9410101175308228,
+            0.8697177171707153
+          ]
+        ]
+      }
+    }
+  }
+}

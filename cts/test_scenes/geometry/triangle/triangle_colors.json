@@ -1,0 +1,59 @@
+{
+  "sceneParameters": {
+    "geometrySubtype": "triangle",
+    "primitiveCount": 4,
+    "seed": 12345,
+    "shape": "triangle",
+    "anari_objects": {
+      "material": [
+        {
+          "subtype": "matte",
+          "color": "color"
+        }
+      ]
+    }
+  },
+  "permutations": {
+    "color": [
+      "vertex.color",
+      "primitive.color"
+    ]
+  },
+  "requiredFeatures": [
+    "ANARI_KHR_GEOMETRY_TRIANGLE"
+  ],
+  "metaData": {
+    "vertex.color": {
+      "bounds": {
+        "world": [
+          [
+            0.24312394857406616,
+            0.31483229994773865,
+            0.2912753224372864
+          ],
+          [
+            0.9506350159645081,
+            0.9430121183395386,
+            0.8662649393081665
+          ]
+        ]
+      }
+    },
+    "primitive.color": {
+      "bounds": {
+        "world": [
+          [
+            0.24312394857406616,
+            0.31483229994773865,
+            0.2912753224372864
+          ],
+          [
+            0.9506350159645081,
+            0.9430121183395386,
+            0.8662649393081665
+          ]
+        ]
+      }
+    }
+  }
+}

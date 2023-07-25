@@ -1,0 +1,30 @@
+{
+  "sceneParameters": {
+    "geometrySubtype": "curve",
+    "primitiveCount": 16,
+    "seed": 12345,
+    "frame_depth_type": "FLOAT32",
+    "globalRadius": 0.05
+  },
+  "requiredFeatures": [
+    "ANARI_KHR_GEOMETRY_CURVE"
+  ],
+  "metaData": {
+    "": {
+      "bounds": {
+        "world": [
+          [
+            0.010351710021495819,
+            0.026217039674520493,
+            0.043455492705106735
+          ],
+          [
+            0.9689120650291443,
+            0.855160653591156,
+            1.0184606313705444
+          ]
+        ]
+      }
+    }
+  }
+}

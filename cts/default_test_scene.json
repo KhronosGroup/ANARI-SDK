@@ -2,8 +2,36 @@
 	"sceneParameters": {
 		"image_height": 1024,
 		"image_width": 1024,
-		"frame_depth_type": "FLOAT32",
-		"frame_color_type": "UFIXED8_RGBA_SRGB"
+		"frame_depth_type": "",
+		"frame_color_type": "UFIXED8_RGBA_SRGB",
+		"camera_generate_transform": true,
+		"primitiveCount": 1,
+		"shape": "quad",
+		"geometrySubtype": "triangle",
+		"primitiveMode": "indexed",
+		"seed": 12345,
+		"anari_objects": {
+			"renderer": [
+				{
+					"background": [0, 0, 0, 1],
+					"ambientRadiance": 0.75,
+					"ambientColor": [1.0, 1.0, 1.0]
+				}
+			],
+			"geometry": [
+				{
+				  "subtype": "triangle",
+				  "vertex.attribute1": {
+					"Array1D": [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [1.0, 1.0, 1.0]]
+				  } 
+				}
+			  ],
+			"material": [
+				{
+					"subtype": "matte"
+				}
+			]
+		}
 	},
 	"bounds_tolerance": 0.05
 }
