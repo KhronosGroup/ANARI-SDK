@@ -163,13 +163,15 @@ void *Device::mapArray(ANARIArray array)
   write(MessageType::MapArray, buf);
 
   std::unique_lock l(syncMapArray.mtx);
-  std::vector<char> &data = arrays[array];
-  syncMapArray.cv.wait(l, [&]() { return !data.empty(); });
+  ArrayData &data = arrays[array];
+  syncMapArray.cv.wait(l, [&]() {
+    return (ssize_t)data.value.size() == data.bytesExpected;
+  });
   l.unlock();
 
   LOG(logging::Level::Info) << "Array mapped: " << array;
 
-  return data.data();
+  return data.value.data();
 }
 
 void Device::unmapArray(ANARIArray array)
@@ -177,13 +179,13 @@ void Device::unmapArray(ANARIArray array)
   auto buf = std::make_shared<Buffer>();
   buf->write((const char *)&remoteDevice, sizeof(remoteDevice));
   buf->write((const char *)&array, sizeof(array));
-  uint64_t numBytes = arrays[array].size();
-  buf->write(arrays[array].data(), numBytes);
+  uint64_t numBytes = arrays[array].value.size();
+  buf->write(arrays[array].value.data(), numBytes);
   write(MessageType::UnmapArray, buf);
 
   std::unique_lock l(syncMapArray.mtx);
-  std::vector<char> &data = arrays[array];
-  syncMapArray.cv.wait(l, [&]() { return data.empty(); });
+  ArrayData &data = arrays[array];
+  syncMapArray.cv.wait(l, [&]() { return data.value.empty(); });
   l.unlock();
 
   arrays.erase(array);
@@ -856,15 +858,17 @@ void Device::handleMessage(async::connection::reason reason,
       memcpy(&numBytes, msg, sizeof(numBytes));
       msg += sizeof(numBytes);
 
-      arrays[arr].resize(numBytes);
-      memcpy(arrays[arr].data(), msg, numBytes);
+      arrays[arr].bytesExpected = numBytes;
+      arrays[arr].value.resize(numBytes);
+      memcpy(arrays[arr].value.data(), msg, numBytes);
       l.unlock();
       syncMapArray.cv.notify_all();
     } else if (message->type() == MessageType::ArrayUnmapped) {
       std::unique_lock l(syncUnmapArray.mtx);
       char *msg = message->data();
       ANARIArray arr = *(ANARIArray *)message->data();
-      arrays[arr].resize(0);
+      arrays[arr].bytesExpected = -1;
+      arrays[arr].value.resize(0);
       l.unlock();
       syncMapArray.cv.notify_all();
     } else if (message->type() == MessageType::FrameIsReady) {

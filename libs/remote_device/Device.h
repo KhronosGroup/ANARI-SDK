@@ -255,7 +255,12 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
   std::vector<ObjectSubtypes> objectSubtypes;
 
   std::map<ANARIObject, Frame> frames;
-  std::map<ANARIArray, std::vector<char>> arrays;
+  struct ArrayData
+  {
+    ssize_t bytesExpected{-1};
+    std::vector<char> value;
+  };
+  std::map<ANARIArray, ArrayData> arrays;
 
   // Need to keep track of these to implement
   // (un)mapParameterArray correctly
