@@ -23,7 +23,9 @@ void Image2D::commit()
   m_wrapMode1 = wrapModeFromString(getParamString("wrapMode1", "clampToEdge"));
   m_wrapMode2 = wrapModeFromString(getParamString("wrapMode2", "clampToEdge"));
   m_inTransform = getParam<mat4>("inTransform", mat4(linalg::identity));
+  m_inOffset = getParam<float4>("inOffset", float4(0.f, 0.f, 0.f, 0.f));
   m_outTransform = getParam<mat4>("outTransform", mat4(linalg::identity));
+  m_outOffset = getParam<float4>("outOffset", float4(0.f, 0.f, 0.f, 0.f));
 }
 
 float4 Image2D::getSample(const Geometry &g, const Ray &r) const
@@ -31,7 +33,8 @@ float4 Image2D::getSample(const Geometry &g, const Ray &r) const
   if (m_inAttribute == Attribute::NONE)
     return DEFAULT_ATTRIBUTE_VALUE;
 
-  auto av = linalg::mul(m_inTransform, g.getAttributeValue(m_inAttribute, r));
+  auto av = linalg::mul(m_inTransform, g.getAttributeValue(m_inAttribute, r))
+      + m_inOffset;
 
   const auto interp_x = getInterpolant(av.x, m_image->size().x, true);
   const auto interp_y = getInterpolant(av.y, m_image->size().y, true);
@@ -52,7 +55,7 @@ float4 Image2D::getSample(const Geometry &g, const Ray &r) const
   const auto retval = m_linearFilter ? linalg::lerp(v0, v1, interp_x.frac)
                                      : (interp_x.frac < 0.5f ? v0 : v1);
 
-  return linalg::mul(m_outTransform, retval);
+  return linalg::mul(m_outTransform, retval) + m_outOffset;
 }
 
 } // namespace helide

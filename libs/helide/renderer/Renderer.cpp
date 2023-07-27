@@ -37,6 +37,8 @@ static RenderMode renderModeFromString(const std::string &name)
     return RenderMode::GEOMETRY_ATTRIBUTE_3;
   else if (name == "geometry.color")
     return RenderMode::GEOMETRY_ATTRIBUTE_COLOR;
+  else if (name == "opacityHeatmap")
+    return RenderMode::OPACITY_HEATMAP;
   else
     return RenderMode::DEFAULT;
 }
@@ -71,6 +73,18 @@ static float3 readAttributeValue(Attribute a, const Ray &r, const World &w)
 Renderer::Renderer(HelideGlobalState *s) : Object(ANARI_RENDERER, s)
 {
   s->objectCounts.renderers++;
+
+  Array1DMemoryDescriptor md;
+  md.elementType = ANARI_FLOAT32_VEC3;
+  md.numItems = 4;
+  m_heatmap = new Array1D(s, md);
+  m_heatmap->refDec(helium::RefType::PUBLIC);
+
+  auto *colors = m_heatmap->beginAs<float3>();
+  colors[0] = float3(0.f, 0.f, 1.f);
+  colors[1] = float3(1.f, 0.f, 0.f);
+  colors[2] = float3(1.f, 1.f, 0.f);
+  colors[3] = float3(1.f, 1.f, 1.f);
 }
 
 Renderer::~Renderer()
@@ -183,6 +197,23 @@ float3 Renderer::shadeRay(
     color =
         hitGeometry ? readAttributeValue(Attribute::COLOR, ray, w) : bgColor;
     break;
+  case RenderMode::OPACITY_HEATMAP: {
+    if (hitGeometry) {
+      const Instance *inst = w.instances()[ray.instID];
+      const Surface *surface = inst->group()->surfaces()[ray.geomID];
+
+      const auto n = linalg::mul(inst->xfmInvRot(), ray.Ng);
+      const auto falloff =
+          std::abs(linalg::dot(-ray.dir, linalg::normalize(n)));
+      const float4 sc = surface->getSurfaceColor(ray);
+      const float so = surface->getSurfaceOpacity(ray);
+      const float o = surface->adjustedAlpha(std::clamp(sc.w * so, 0.f, 1.f));
+      const float3 c = m_heatmap->valueAtLinear<float3>(o);
+      const float3 fc = c * falloff;
+      geometryColor =
+          linalg::min((0.8f * fc + 0.2f * c) * m_ambientRadiance, float3(1.f));
+    }
+  } break;
   case RenderMode::DEFAULT:
   default: {
     if (hitGeometry) {
@@ -192,10 +223,11 @@ float3 Renderer::shadeRay(
       const auto n = linalg::mul(inst->xfmInvRot(), ray.Ng);
       const auto falloff =
           std::abs(linalg::dot(-ray.dir, linalg::normalize(n)));
-      const float3 c = surface->getSurfaceColor(ray);
-      const float3 sc = c * falloff;
-      geometryColor =
-          linalg::min((0.8f * sc + 0.2f * c) * m_ambientRadiance, float3(1.f));
+      const float4 c = surface->getSurfaceColor(ray);
+      const float3 sc = float3(c.x, c.y, c.z) * falloff;
+      geometryColor = linalg::min(
+          (0.8f * sc + 0.2f * float3(c.x, c.y, c.z)) * m_ambientRadiance,
+          float3(1.f));
     }
 
     if (hitVolume)

@@ -18,7 +18,10 @@ struct Surface : public Object
   const Geometry *geometry() const;
   const Material *material() const;
 
-  float3 getSurfaceColor(const Ray &ray) const;
+  float4 getSurfaceColor(const Ray &ray) const;
+  float getSurfaceOpacity(const Ray &ray) const;
+
+  float adjustedAlpha(float a) const;
 
   void markCommitted() override;
   bool isValid() const override;
@@ -27,6 +30,17 @@ struct Surface : public Object
   helium::IntrusivePtr<Geometry> m_geometry;
   helium::IntrusivePtr<Material> m_material;
 };
+
+// Inlined definitions ////////////////////////////////////////////////////////
+
+inline float Surface::adjustedAlpha(float a) const
+{
+  if (!material())
+    return 0.f;
+
+  return adjustOpacityFromMode(
+      a, material()->alphaCutoff(), material()->alphaMode());
+}
 
 } // namespace helide
 
