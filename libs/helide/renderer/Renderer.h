@@ -4,6 +4,7 @@
 #pragma once
 
 #include "Object.h"
+#include "array/Array1D.h"
 #include "scene/World.h"
 
 namespace helide {
@@ -33,7 +34,8 @@ enum class RenderMode
   GEOMETRY_ATTRIBUTE_1,
   GEOMETRY_ATTRIBUTE_2,
   GEOMETRY_ATTRIBUTE_3,
-  GEOMETRY_ATTRIBUTE_COLOR
+  GEOMETRY_ATTRIBUTE_COLOR,
+  OPACITY_HEATMAP
 };
 
 struct Renderer : public Object
@@ -54,6 +56,8 @@ struct Renderer : public Object
   float4 m_bgColor{float3(0.f), 1.f};
   float m_ambientRadiance{1.f};
   RenderMode m_mode{RenderMode::DEFAULT};
+
+  helium::IntrusivePtr<Array1D> m_heatmap;
 };
 
 } // namespace helide

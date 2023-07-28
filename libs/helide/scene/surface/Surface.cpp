@@ -41,7 +41,7 @@ const Material *Surface::material() const
   return m_material.ptr;
 }
 
-float3 Surface::getSurfaceColor(const Ray &ray) const
+float4 Surface::getSurfaceColor(const Ray &ray) const
 {
   auto &state = *deviceState();
   auto &imc = state.invalidMaterialColor;
@@ -49,19 +49,36 @@ float3 Surface::getSurfaceColor(const Ray &ray) const
   auto *mat = material();
 
   if (!mat)
-    return float3(imc.x, imc.y, imc.z);
+    return float4(imc.x, imc.y, imc.z, 1.f);
 
   const auto colorAttribute = mat->colorAttribute();
   const auto *colorSampler = mat->colorSampler();
-  if (colorSampler && colorSampler->isValid()) {
-    auto v = colorSampler->getSample(*geometry(), ray);
-    return float3(v.x, v.y, v.z);
-  } else if (colorAttribute == Attribute::NONE)
+  if (colorSampler && colorSampler->isValid())
+    return colorSampler->getSample(*geometry(), ray);
+  else if (colorAttribute == Attribute::NONE)
     return material()->color();
-  else {
-    auto v = geometry()->getAttributeValue(colorAttribute, ray);
-    return float3(v.x, v.y, v.z);
-  }
+  else
+    return geometry()->getAttributeValue(colorAttribute, ray);
+}
+
+float Surface::getSurfaceOpacity(const Ray &ray) const
+{
+  auto &state = *deviceState();
+  auto &imc = state.invalidMaterialColor;
+
+  auto *mat = material();
+
+  if (!mat)
+    return 0.f;
+
+  const auto opacityAttribute = mat->opacityAttribute();
+  const auto *opacitySampler = mat->opacitySampler();
+  if (opacitySampler && opacitySampler->isValid())
+    return opacitySampler->getSample(*geometry(), ray).x;
+  else if (opacityAttribute == Attribute::NONE)
+    return material()->opacity();
+  else
+    return geometry()->getAttributeValue(opacityAttribute, ray).x;
 }
 
 void Surface::markCommitted()

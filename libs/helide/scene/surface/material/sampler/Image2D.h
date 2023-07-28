@@ -24,7 +24,9 @@ struct Image2D : public Sampler
   WrapMode m_wrapMode2{WrapMode::DEFAULT};
   bool m_linearFilter{true};
   mat4 m_inTransform{mat4(linalg::identity)};
+  float4 m_inOffset{0.f, 0.f, 0.f, 0.f};
   mat4 m_outTransform{mat4(linalg::identity)};
+  float4 m_outOffset{0.f, 0.f, 0.f, 0.f};
 };
 
 } // namespace helide

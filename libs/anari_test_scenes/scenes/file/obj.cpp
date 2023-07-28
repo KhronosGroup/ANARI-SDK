@@ -14,11 +14,6 @@
 namespace anari {
 namespace scenes {
 
-static void anari_free(const void * /*user_data*/, const void *ptr)
-{
-  std::free(const_cast<void *>(ptr));
-}
-
 static std::string pathOf(const std::string &filename)
 {
 #ifdef _WIN32
@@ -46,12 +41,11 @@ static void loadTexture(anari::Device d,
       });
 
   anari::Sampler colorTex = cache[filename];
-  anari::Sampler opacityTex = cache[filename + "_opacity"];
 
   if (!colorTex) {
     int width, height, n;
     stbi_set_flip_vertically_on_load(1);
-    float *data = stbi_loadf(filename.c_str(), &width, &height, &n, 0);
+    void *data = stbi_loadf(filename.c_str(), &width, &height, &n, 0);
 
     if (!data || n < 1) {
       if (!data)
@@ -72,39 +66,8 @@ static void loadTexture(anari::Device d,
     else if (n == 1)
       texelType = ANARI_FLOAT32;
 
-    if (texelType == ANARI_FLOAT32_VEC4) {
-      opacityTex = anari::newObject<anari::Sampler>(d, "image2D");
-
-      auto colorArray = anari::newArray2D(d, ANARI_FLOAT32_VEC3, width, height);
-      auto opacityArray = anari::newArray2D(d, ANARI_FLOAT32, width, height);
-
-      auto *colors = anari::map<anari::float3>(d, colorArray);
-      auto *opacities = anari::map<float>(d, opacityArray);
-
-      for (size_t i = 0; i < size_t(width) * size_t(height); i++) {
-        auto *texel = data + (i * 4);
-        colors[i] = anari::float3(texel[0], texel[1], texel[2]);
-        opacities[i] = texel[3];
-      }
-
-      anari::unmap(d, colorArray);
-      anari::unmap(d, opacityArray);
-
-      anari::setAndReleaseParameter(d, colorTex, "image", colorArray);
-
-      anari::setAndReleaseParameter(d, opacityTex, "image", opacityArray);
-      anari::setParameter(d, opacityTex, "inAttribute", "attribute0");
-      anari::setParameter(d, opacityTex, "wrapMode1", "repeat");
-      anari::setParameter(d, opacityTex, "wrapMode2", "repeat");
-      anari::setParameter(d, opacityTex, "filter", "linear");
-      anari::commitParameters(d, opacityTex);
-
-      free(data);
-    } else {
-      auto array = anariNewArray2D(
-          d, data, &anari_free, nullptr, texelType, width, height);
-      anari::setAndReleaseParameter(d, colorTex, "image", array);
-    }
+    anari::setParameterArray2D(
+        d, colorTex, "image", texelType, data, width, height);
 
     anari::setParameter(d, colorTex, "inAttribute", "attribute0");
     anari::setParameter(d, colorTex, "wrapMode1", "repeat");
@@ -115,10 +78,6 @@ static void loadTexture(anari::Device d,
 
   cache[filename] = colorTex;
   anari::setParameter(d, m, "color", colorTex);
-  if (opacityTex) {
-    cache[filename + "_opacity"] = opacityTex;
-    anari::setParameter(d, m, "opacity", opacityTex);
-  }
 }
 
 struct OBJData
@@ -171,16 +130,14 @@ static void loadObj(
 
     anari::setParameter(d, m, "color", ANARI_FLOAT32_VEC3, &mat.diffuse[0]);
     anari::setParameter(d, m, "opacity", ANARI_FLOAT32, &mat.dissolve);
+    anari::setParameter(d, m, "alphaMode", "blend");
 
     if (!mat.diffuse_texname.empty())
       loadTexture(d, m, basePath + mat.diffuse_texname, cache);
 
-#if 0
-    if (!mat.alpha_texname.empty()) {
-      auto opacityTexture = loadTexture(d, basePath + mat.alpha_texname, cache);
-      if (opacityTexture)
-        anari::setParameter(d, m, "opacity", opacityTexture);
-    }
+#if 1
+    if (!mat.alpha_texname.empty())
+      loadTexture(d, m, basePath + mat.alpha_texname, cache);
 #endif
 
     anari::commitParameters(d, m);

@@ -121,6 +121,13 @@ enum WrapMode
   DEFAULT
 };
 
+enum class AlphaMode
+{
+  OPAQUE,
+  MASK,
+  BLEND
+};
+
 // Functions //////////////////////////////////////////////////////////////////
 
 inline float radians(float degrees)
@@ -223,6 +230,30 @@ inline WrapMode wrapModeFromString(const std::string &str)
     return WrapMode::MIRROR_REPEAT;
   else
     return WrapMode::DEFAULT;
+}
+
+inline AlphaMode alphaModeFromString(const std::string &str)
+{
+  if (str == "blend")
+    return AlphaMode::BLEND;
+  else if (str == "mask")
+    return AlphaMode::MASK;
+  else
+    return AlphaMode::OPAQUE;
+}
+
+inline float adjustOpacityFromMode(
+    float opacity, float maskThreshold, AlphaMode mode)
+{
+  switch (mode) {
+  case AlphaMode::BLEND:
+    return opacity;
+  case AlphaMode::MASK:
+    return opacity >= maskThreshold ? 1.f : 0.f;
+  case AlphaMode::OPAQUE:
+  default:
+    return 1.f;
+  }
 }
 
 template <typename T>

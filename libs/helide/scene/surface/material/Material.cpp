@@ -29,6 +29,12 @@ Material *Material::createInstance(
     return (Material *)new UnknownObject(ANARI_MATERIAL, s);
 }
 
+void Material::commit()
+{
+  m_alphaMode = alphaModeFromString(getParamString("alphaMode", "opaque"));
+  m_alphaCutoff = getParam<float>("alphaCutoff", 0.5f);
+}
+
 } // namespace helide
 
 HELIDE_ANARI_TYPEFOR_DEFINITION(helide::Material *);

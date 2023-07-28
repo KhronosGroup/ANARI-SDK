@@ -32,7 +32,8 @@ float4 Image3D::getSample(const Geometry &g, const Ray &r) const
   if (m_inAttribute == Attribute::NONE)
     return DEFAULT_ATTRIBUTE_VALUE;
 
-  auto av = linalg::mul(m_inTransform, g.getAttributeValue(m_inAttribute, r));
+  auto av = linalg::mul(m_inTransform, g.getAttributeValue(m_inAttribute, r))
+      + m_inOffset;
 
   const auto interp_x = getInterpolant(av.x, m_image->size().x, true);
   const auto interp_y = getInterpolant(av.y, m_image->size().y, true);
@@ -96,7 +97,7 @@ float4 Image3D::getSample(const Geometry &g, const Ray &r) const
   const auto retval = m_linearFilter ? linalg::lerp(v0, v1, interp_x.frac)
                                      : (interp_x.frac < 0.5f ? v0 : v1);
 
-  return linalg::mul(m_outTransform, retval);
+  return linalg::mul(m_outTransform, retval) + m_outOffset;
 }
 
 } // namespace helide
