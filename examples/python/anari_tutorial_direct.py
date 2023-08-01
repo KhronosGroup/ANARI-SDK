@@ -114,7 +114,7 @@ lib.anariRelease(device, array)
 lib.anariCommitParameters(device, world)
 
 renderer = lib.anariNewRenderer(device, b'default')
-lib.anariSetParameter(device, renderer, b'backgroundColor', lib.ANARI_FLOAT32_VEC4, ffi.new('float[4]', bg_color))
+lib.anariSetParameter(device, renderer, b'background', lib.ANARI_FLOAT32_VEC4, ffi.new('float[4]', bg_color))
 lib.anariCommitParameters(device, renderer)
 
 frame = lib.anariNewFrame(device)

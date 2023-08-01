@@ -102,7 +102,7 @@ anariSetParameter(device, world, 'light', ANARI_ARRAY1D, array)
 anariCommitParameters(device, world)
 
 renderer = anariNewRenderer(device, 'default')
-anariSetParameter(device, renderer, 'backgroundColor', ANARI_FLOAT32_VEC4, bg_color)
+anariSetParameter(device, renderer, 'background', ANARI_FLOAT32_VEC4, bg_color)
 anariCommitParameters(device, renderer)
 
 frame = anariNewFrame(device)

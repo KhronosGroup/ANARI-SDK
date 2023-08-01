@@ -29,8 +29,8 @@ void writePPM(const char *fileName, ANARIDevice d, ANARIFrame frame)
 {
   uint32_t size[2] = {0, 0};
   ANARIDataType type = ANARI_UNKNOWN;
-  uint32_t *pixel =
-      (uint32_t *)anariMapFrame(d, frame, "channel.color", &size[0], &size[1], &type);
+  uint32_t *pixel = (uint32_t *)anariMapFrame(
+      d, frame, "channel.color", &size[0], &size[1], &type);
 
   if (type != ANARI_UFIXED8_RGBA_SRGB) {
     printf("Incorrectly returned color buffer pixel type, image not saved.\n");
@@ -145,8 +145,7 @@ int main(int argc, const char **argv)
   ANARIDevice nested = anariNewDevice(lib, "default");
 
   // query available renderers
-  const char **renderers =
-      anariGetObjectSubtypes(nested, ANARI_RENDERER);
+  const char **renderers = anariGetObjectSubtypes(nested, ANARI_RENDERER);
   if (!renderers) {
     puts("No renderers available!");
     return 1;
@@ -242,12 +241,10 @@ int main(int argc, const char **argv)
 
   // complete setup of renderer
   float bgColor[4] = {1.f, 1.f, 1.f, 1.f}; // white
-  anariSetParameter(
-      dev, renderer, "backgroundColor", ANARI_FLOAT32_VEC4, bgColor);
+  anariSetParameter(dev, renderer, "background", ANARI_FLOAT32_VEC4, bgColor);
 
   // set parameter on address of object instead of object
-  anariSetParameter(
-      dev, &renderer, "backgroundColor", ANARI_FLOAT32_VEC4, bgColor);
+  anariSetParameter(dev, &renderer, "background", ANARI_FLOAT32_VEC4, bgColor);
 
   anariCommitParameters(dev, renderer);
 
