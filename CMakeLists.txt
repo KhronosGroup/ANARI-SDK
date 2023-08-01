@@ -88,6 +88,8 @@ if (BUILD_CTS AND (BUILD_TESTING OR BUILD_EXAMPLES))
   add_subdirectory(cts)
 endif()
 
+include(cmake/mark_cache_variables_as_advanced.cmake)
+
 ## Configure CMake find_package() config files ##
 
 set(ANARI_CMAKE_INSTALL_DESTINATION
