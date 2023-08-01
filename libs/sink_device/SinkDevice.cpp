@@ -4,15 +4,13 @@
 #include "SinkDevice.h"
 
 #include "anari/anari_cpp.hpp"
-#include "anari/backend/LibraryImpl.h"
 
 #include <cstring>
 
-namespace anari {
 namespace sink_device {
 
 ///////////////////////////////////////////////////////////////////////////////
-// SinkDevice definitions //////////////////////////////////////////////////
+// SinkDevice definitions /////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
 // Data Arrays ////////////////////////////////////////////////////////////////
@@ -180,28 +178,28 @@ const void *query_param_info(ANARIDataType type,
     const char *infoName,
     ANARIDataType infoType);
 
-const char ** SinkDevice::getObjectSubtypes(ANARIDataType objectType)
+const char **SinkDevice::getObjectSubtypes(ANARIDataType objectType)
 {
-  return anari::sink_device::query_object_types(objectType);
+  return sink_device::query_object_types(objectType);
 }
 
-const void* SinkDevice::getObjectInfo(ANARIDataType objectType,
-    const char* objectSubtype,
-    const char* infoName,
+const void *SinkDevice::getObjectInfo(ANARIDataType objectType,
+    const char *objectSubtype,
+    const char *infoName,
     ANARIDataType infoType)
 {
-  return anari::sink_device::query_object_info(
+  return sink_device::query_object_info(
       objectType, objectSubtype, infoName, infoType);
 }
 
-const void* SinkDevice::getParameterInfo(ANARIDataType objectType,
-    const char* objectSubtype,
-    const char* parameterName,
+const void *SinkDevice::getParameterInfo(ANARIDataType objectType,
+    const char *objectSubtype,
+    const char *parameterName,
     ANARIDataType parameterType,
-    const char* infoName,
+    const char *infoName,
     ANARIDataType infoType)
 {
-  return anari::sink_device::query_param_info(objectType,
+  return sink_device::query_param_info(objectType,
       objectSubtype,
       parameterName,
       parameterType,
@@ -245,62 +243,59 @@ void SinkDevice::unsetParameter(ANARIObject, const char *) {}
 
 void SinkDevice::unsetAllParameters(ANARIObject) {}
 
-void* SinkDevice::mapParameterArray1D(ANARIObject object,
-    const char* name,
+void *SinkDevice::mapParameterArray1D(ANARIObject object,
+    const char *name,
     ANARIDataType dataType,
     uint64_t numElements1,
-    uint64_t* elementStride)
+    uint64_t *elementStride)
 {
   if (auto obj = getObject(object)) {
-    if(elementStride) {
+    if (elementStride) {
       *elementStride = 0;
     }
-    return obj->mapArray(name, anari::sizeOf(dataType)*numElements1);
+    return obj->mapArray(name, sizeOf(dataType) * numElements1);
   } else {
     return nullptr;
   }
 }
 
-void* SinkDevice::mapParameterArray2D(ANARIObject object,
-    const char* name,
+void *SinkDevice::mapParameterArray2D(ANARIObject object,
+    const char *name,
     ANARIDataType dataType,
     uint64_t numElements1,
     uint64_t numElements2,
-    uint64_t* elementStride)
+    uint64_t *elementStride)
 {
   if (auto obj = getObject(object)) {
-    if(elementStride) {
+    if (elementStride) {
       *elementStride = 0;
     }
-    return obj->mapArray(name, anari::sizeOf(dataType)*numElements1*numElements2);
+    return obj->mapArray(name, sizeOf(dataType) * numElements1 * numElements2);
   } else {
     return nullptr;
   }
 }
 
-void* SinkDevice::mapParameterArray3D(ANARIObject object,
-    const char* name,
+void *SinkDevice::mapParameterArray3D(ANARIObject object,
+    const char *name,
     ANARIDataType dataType,
     uint64_t numElements1,
     uint64_t numElements2,
     uint64_t numElements3,
-    uint64_t* elementStride)
+    uint64_t *elementStride)
 {
   if (auto obj = getObject(object)) {
-    if(elementStride) {
+    if (elementStride) {
       *elementStride = 0;
     }
-    return obj->mapArray(name, anari::sizeOf(dataType)*numElements1*numElements2*numElements3);
+    return obj->mapArray(
+        name, sizeOf(dataType) * numElements1 * numElements2 * numElements3);
   } else {
     return nullptr;
   }
 }
 
-void SinkDevice::unmapParameterArray(ANARIObject object,
-    const char* name)
-{
-
-}
+void SinkDevice::unmapParameterArray(ANARIObject object, const char *name) {}
 
 void SinkDevice::commitParameters(ANARIObject) {}
 
@@ -369,40 +364,13 @@ int SinkDevice::frameReady(ANARIFrame, ANARIWaitMask)
 
 void SinkDevice::discardFrame(ANARIFrame) {}
 
-// Other SinkDevice definitions ////////////////////////////////////////////
+// Other SinkDevice definitions ///////////////////////////////////////////////
 
 SinkDevice::SinkDevice(ANARILibrary library) : DeviceImpl(library)
 {
   nextHandle<ANARIObject>(); // insert a handle at 0
 }
 
-const char ** query_extensions();
+const char **query_extensions();
 
 } // namespace sink_device
-} // namespace anari
-
-static char deviceName[] = "sink";
-
-extern "C" SINK_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_NEW_DEVICE(
-    sink, library, subtype)
-{
-  return (ANARIDevice) new anari::sink_device::SinkDevice(library);
-}
-
-extern "C" SINK_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_INIT(sink) {}
-
-extern "C" SINK_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_DEVICE_SUBTYPES(
-    sink, library)
-{
-  (void)library;
-  static const char *devices[] = {deviceName, nullptr};
-  return devices;
-}
-
-extern "C" SINK_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_DEVICE_FEATURES(
-    sink, library, deviceSubtype)
-{
-  (void)library;
-  (void)deviceSubtype;
-  return (const char**)anari::sink_device::query_extensions();
-}

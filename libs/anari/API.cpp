@@ -92,18 +92,33 @@ extern "C" ANARILibrary anariLoadLibrary(const char *libraryName,
 
     libraryName = libraryFromEnv;
   }
+  using NewLibraryFcn = ANARILibrary (*)(void *libraryName,
+      ANARIStatusCallback statusCB,
+      const void *statusCBUserPtr);
 
-  ANARILibrary retval = nullptr;
+  NewLibraryFcn newLibraryFcn = nullptr;
+  void *lib = nullptr;
+  auto &name = libraryName;
 
-  // Use a unique_ptr to cleanup if the Library constructor throws an exception
   try {
-    auto l = make_unique<LibraryImpl>(libraryName, statusCB, statusCBUserPtr);
-    retval = (ANARILibrary)l.get();
-    l.release();
+    lib = anari::loadANARILibrary(std::string("anari_library_") + name);
+    if (!lib)
+      throw std::runtime_error("failed to load library " + std::string(name));
+
+    std::string prefix = "anari_library_" + std::string(name);
+    std::string newLibraryFcnName = prefix + "_new_library";
+
+    newLibraryFcn =
+        (NewLibraryFcn)anari::getSymbolAddress(lib, newLibraryFcnName);
+
+    if (!newLibraryFcn) {
+      throw std::runtime_error("failed to find entrypoint function for "
+          + std::string(name) + " library");
+    }
   } catch (const std::exception &e) {
     std::string msg = "failed to load ANARILibrary '";
     msg += libraryName;
-    msg += "'\nreason: ";
+    msg += "'\n\treason: ";
     msg += e.what();
     invokeStatusCallback(statusCB,
         statusCBUserPtr,
@@ -115,7 +130,7 @@ extern "C" ANARILibrary anariLoadLibrary(const char *libraryName,
         ANARI_STATUS_INVALID_OPERATION);
   }
 
-  return retval;
+  return newLibraryFcn(lib, statusCB, statusCBUserPtr);
 }
 ANARI_CATCH_END(nullptr)
 
@@ -159,7 +174,7 @@ ANARI_CATCH_END(nullptr)
 extern "C" const char **anariGetDeviceFeatures(
     ANARILibrary l, const char *deviceSubtype) ANARI_CATCH_BEGIN
 {
-  return libraryRef(l).getDeviceFeatures(deviceSubtype);
+  return libraryRef(l).getDeviceExtensions(deviceSubtype);
 }
 ANARI_CATCH_END(nullptr)
 

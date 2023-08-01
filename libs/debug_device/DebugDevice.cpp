@@ -4,7 +4,6 @@
 #include "DebugDevice.h"
 
 #include "anari/anari.h"
-#include "anari/backend/LibraryImpl.h"
 
 #include "CodeSerializer.h"
 #include "DebugBasics.h"
@@ -1093,32 +1092,3 @@ void DebugDevice::reportObjectUse(ANARIDataType objtype, const char *objsubtype)
 
 } // namespace debug_device
 } // namespace anari
-
-static char deviceName[] = "debug";
-
-extern "C" DEBUG_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_NEW_DEVICE(
-    debug, library, subtype)
-{
-  if (subtype == std::string("default") || subtype == std::string("debug"))
-    return (ANARIDevice) new anari::debug_device::DebugDevice(library);
-  return nullptr;
-}
-
-extern "C" DEBUG_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_INIT(debug) {}
-
-extern "C" DEBUG_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_DEVICE_SUBTYPES(
-    debug, library)
-{
-  (void)library;
-  static const char *devices[] = {deviceName, nullptr};
-  return devices;
-}
-
-extern "C" DEBUG_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_DEVICE_FEATURES(
-    debug, library, deviceType)
-{
-  (void)library;
-  (void)deviceType;
-  static const char *features[] = {nullptr};
-  return features;
-}

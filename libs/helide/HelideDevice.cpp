@@ -1,11 +1,8 @@
 ﻿// Copyright 2022 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-#include "anari_library_helide_export.h"
-
 #include "HelideDevice.h"
 
-#include "anari/backend/LibraryImpl.h"
 #include "anari/ext/debug/DebugObject.h"
 
 #include "array/Array1D.h"
@@ -401,33 +398,3 @@ HelideGlobalState *HelideDevice::deviceState() const
 }
 
 } // namespace helide
-
-extern "C" HELIDE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_NEW_DEVICE(
-    helide, library, _subtype)
-{
-  auto subtype = std::string_view(_subtype);
-  if (subtype == "default" || subtype == "helide")
-    return (ANARIDevice) new helide::HelideDevice(library);
-  return nullptr;
-}
-
-extern "C" HELIDE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_DEVICE_SUBTYPES(
-    helide, libdata)
-{
-  static const char *devices[] = {"helide", nullptr};
-  return devices;
-}
-
-extern "C" HELIDE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_DEVICE_FEATURES(
-    sink, library, deviceSubtype)
-{
-  (void)library;
-  (void)deviceSubtype;
-  return (const char **)helide::query_extensions();
-}
-
-extern "C" HELIDE_DEVICE_INTERFACE ANARIDevice anariNewHelideDevice(
-    ANARIStatusCallback defaultCallback, const void *userPtr)
-{
-  return (ANARIDevice) new helide::HelideDevice(defaultCallback, userPtr);
-}

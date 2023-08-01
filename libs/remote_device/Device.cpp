@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Device.h"
-#include <anari/backend/LibraryImpl.h>
 #include <anari/anari_cpp.hpp>
 #include <climits>
 #include <cstdlib>
@@ -1081,26 +1080,3 @@ void Device::writeImpl2(unsigned type, const void *begin, const void *end)
 }
 
 } // namespace remote
-
-static char deviceName[] = "remote";
-
-extern "C" ANARI_DEFINE_LIBRARY_NEW_DEVICE(remote, library, subtype)
-{
-  return (ANARIDevice) new remote::Device(subtype);
-}
-
-extern "C" ANARI_DEFINE_LIBRARY_INIT(remote)
-{
-  printf("...loaded remote library!\n");
-}
-
-extern "C" ANARI_DEFINE_LIBRARY_GET_DEVICE_SUBTYPES(remote, libdata)
-{
-  static const char *devices[] = {deviceName, nullptr};
-  return devices;
-}
-
-extern "C" ANARIDevice anariNewRemoteDevice()
-{
-  return (ANARIDevice) new remote::Device;
-}
