@@ -41,6 +41,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     Compression.cpp
     Device.cpp
     Frame.cpp
+    Library.cpp
     Logging.cpp
 )
 

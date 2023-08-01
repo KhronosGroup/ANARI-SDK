@@ -70,6 +70,7 @@ project_sources(PRIVATE
   HelideDeviceQueries.cpp
   HelideDeviceDebugFactory.cpp
   HelideGlobalState.cpp
+  HelideLibrary.cpp
   Object.cpp
   array/Array.cpp
   array/Array1D.cpp

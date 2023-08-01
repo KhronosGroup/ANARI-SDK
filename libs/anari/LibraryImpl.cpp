@@ -173,101 +173,32 @@ void freeLibrary(void *lib)
 // LibraryImpl definitions ////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-LibraryImpl::LibraryImpl(const char *name,
-    ANARIStatusCallback defaultStatusCB,
-    const void *statusCBPtr)
-    : m_defaultDeviceName(name),
+LibraryImpl::LibraryImpl(
+    void *lib, ANARIStatusCallback defaultStatusCB, const void *statusCBPtr)
+    : m_lib(lib),
       m_defaultStatusCB(defaultStatusCB),
       m_defaultStatusCBUserPtr(statusCBPtr)
-{
-  void *lib = loadANARILibrary(std::string("anari_library_") + name);
-
-  if (!lib)
-    throw std::runtime_error("failed to load library " + std::string(name));
-
-  m_lib = lib;
-
-  std::string prefix = "anari_library_" + std::string(name);
-
-  std::string newDeviceFcnName = prefix + "_new_device";
-  m_newDeviceFcn = (NewDeviceFcn)getSymbolAddress(m_lib, newDeviceFcnName);
-
-  if (!m_newDeviceFcn) {
-    throw std::runtime_error("failed to find newDevice() function for "
-        + std::string(name) + " library");
-  }
-
-  std::string initFcnName = prefix + "_init";
-  auto initFcn = (InitFcn)getSymbolAddress(m_lib, initFcnName);
-
-  if (initFcn)
-    initFcn();
-
-  std::string allocFcnName = prefix + "_allocate";
-  AllocFcn allocFcn = (AllocFcn)getSymbolAddress(m_lib, allocFcnName);
-
-  if (allocFcn)
-    m_libraryData = allocFcn();
-
-  std::string freeFcnName = prefix + "_free";
-  FreeFcn freeFcn = (FreeFcn)getSymbolAddress(m_lib, freeFcnName);
-
-  if (freeFcn)
-    m_freeFcn = freeFcn;
-
-  std::string loadModuleFcnName = prefix + "_load_module";
-  auto loadModuleFcn = (ModuleFcn)getSymbolAddress(m_lib, loadModuleFcnName);
-
-  if (loadModuleFcn)
-    m_loadModuleFcn = loadModuleFcn;
-
-  std::string unloadModuleFcnName = prefix + "_unload_module";
-  auto unloadModuleFcn =
-      (ModuleFcn)getSymbolAddress(m_lib, unloadModuleFcnName);
-
-  if (unloadModuleFcn)
-    m_unloadModuleFcn = unloadModuleFcn;
-
-  std::string getDeviceSubtypesFcnName = prefix + "_get_device_subtypes";
-  auto getDeviceSubtypesFcn =
-      (GetDeviceSubtypesFcn)getSymbolAddress(m_lib, getDeviceSubtypesFcnName);
-
-  if (getDeviceSubtypesFcn)
-    m_getDeviceSubtypesFcn = getDeviceSubtypesFcn;
-
-  std::string getDeviceFeaturesFcnName = prefix + "_get_device_features";
-  auto getDeviceFeaturesFcn =
-      (GetDeviceFeaturesFcn)getSymbolAddress(m_lib, getDeviceFeaturesFcnName);
-
-  if (getDeviceFeaturesFcn)
-    m_getDeviceFeaturesFcn = getDeviceFeaturesFcn;
-
-  auto devices = getDeviceSubtypes();
-  if (devices && devices[0])
-    m_defaultDeviceName = devices[0];
-}
+{}
 
 LibraryImpl::~LibraryImpl()
 {
-  if (m_freeFcn)
-    m_freeFcn(m_libraryData);
-
   freeLibrary(m_lib);
 }
 
-void *LibraryImpl::libraryData() const
+void LibraryImpl::loadModule(const char * /*name*/)
 {
-  return m_libraryData;
+  // no-op
 }
 
-ANARIDevice LibraryImpl::newDevice(const char *subtype) const
+void LibraryImpl::unloadModule(const char * /*name*/)
 {
-  return m_newDeviceFcn ? m_newDeviceFcn((ANARILibrary)this, subtype) : nullptr;
+  // no-op
 }
 
-const char *LibraryImpl::defaultDeviceName() const
+const char **LibraryImpl::getDeviceSubtypes()
 {
-  return m_defaultDeviceName.c_str();
+  static const char *subtypes[] = {"default"};
+  return subtypes;
 }
 
 ANARIStatusCallback LibraryImpl::defaultStatusCB() const
@@ -280,30 +211,9 @@ const void *LibraryImpl::defaultStatusCBUserPtr() const
   return m_defaultStatusCBUserPtr;
 }
 
-void LibraryImpl::loadModule(const char *name) const
+ANARILibrary LibraryImpl::this_library() const
 {
-  if (m_loadModuleFcn)
-    m_loadModuleFcn((ANARILibrary)this, name);
-}
-
-void LibraryImpl::unloadModule(const char *name) const
-{
-  if (m_unloadModuleFcn)
-    m_unloadModuleFcn((ANARILibrary)this, name);
-}
-
-const char **LibraryImpl::getDeviceSubtypes()
-{
-  if (m_getDeviceSubtypesFcn)
-    return m_getDeviceSubtypesFcn((ANARILibrary)this);
-  return nullptr;
-}
-
-const char **LibraryImpl::getDeviceFeatures(const char *deviceType)
-{
-  if (m_getDeviceFeaturesFcn)
-    return m_getDeviceFeaturesFcn((ANARILibrary)this, deviceType);
-  return nullptr;
+  return (ANARILibrary)this;
 }
 
 ANARI_TYPEFOR_DEFINITION(LibraryImpl *);

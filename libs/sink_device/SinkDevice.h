@@ -8,31 +8,16 @@
 // helium
 #include "helium/utility/IntrusivePtr.h"
 
-#include <memory>
-#include <vector>
 #include <map>
+#include <memory>
 #include <string>
+#include <vector>
 
-#ifdef _WIN32
-#ifdef SINK_DEVICE_STATIC_DEFINE
-#define SINK_DEVICE_INTERFACE
-#else
-#ifdef anari_library_sink_EXPORTS
-#define SINK_DEVICE_INTERFACE __declspec(dllexport)
-#else
-#define SINK_DEVICE_INTERFACE __declspec(dllimport)
-#endif
-#endif
-#elif defined __GNUC__
-#define SINK_DEVICE_INTERFACE __attribute__((__visibility__("default")))
-#else
-#define SINK_DEVICE_INTERFACE
-#endif
-
-namespace anari {
 namespace sink_device {
 
-struct SINK_DEVICE_INTERFACE SinkDevice : public DeviceImpl, public helium::RefCounted
+using namespace anari;
+
+struct SinkDevice : public anari::DeviceImpl, public helium::RefCounted
 {
   // Data Arrays //////////////////////////////////////////////////////////////
 
@@ -90,16 +75,16 @@ struct SINK_DEVICE_INTERFACE SinkDevice : public DeviceImpl, public helium::RefC
 
   // Query functions //////////////////////////////////////////////////////////
 
-  const char ** getObjectSubtypes(ANARIDataType objectType) override;
-  const void* getObjectInfo(ANARIDataType objectType,
-      const char* objectSubtype,
-      const char* infoName,
+  const char **getObjectSubtypes(ANARIDataType objectType) override;
+  const void *getObjectInfo(ANARIDataType objectType,
+      const char *objectSubtype,
+      const char *infoName,
       ANARIDataType infoType) override;
-  const void* getParameterInfo(ANARIDataType objectType,
-      const char* objectSubtype,
-      const char* parameterName,
+  const void *getParameterInfo(ANARIDataType objectType,
+      const char *objectSubtype,
+      const char *parameterName,
       ANARIDataType parameterType,
-      const char* infoName,
+      const char *infoName,
       ANARIDataType infoType) override;
 
   // Object + Parameter Lifetime Management ///////////////////////////////////
@@ -119,26 +104,25 @@ struct SINK_DEVICE_INTERFACE SinkDevice : public DeviceImpl, public helium::RefC
   void unsetParameter(ANARIObject object, const char *name) override;
   void unsetAllParameters(ANARIObject object) override;
 
-  void* mapParameterArray1D(ANARIObject object,
-      const char* name,
+  void *mapParameterArray1D(ANARIObject object,
+      const char *name,
       ANARIDataType dataType,
       uint64_t numElements1,
       uint64_t *elementStride) override;
-  void* mapParameterArray2D(ANARIObject object,
-      const char* name,
+  void *mapParameterArray2D(ANARIObject object,
+      const char *name,
       ANARIDataType dataType,
       uint64_t numElements1,
       uint64_t numElements2,
       uint64_t *elementStride) override;
-  void* mapParameterArray3D(ANARIObject object,
-      const char* name,
+  void *mapParameterArray3D(ANARIObject object,
+      const char *name,
       ANARIDataType dataType,
       uint64_t numElements1,
       uint64_t numElements2,
       uint64_t numElements3,
       uint64_t *elementStride) override;
-  void unmapParameterArray(ANARIObject object,
-      const char* name) override;
+  void unmapParameterArray(ANARIObject object, const char *name) override;
 
   void commitParameters(ANARIObject object) override;
 
@@ -190,7 +174,6 @@ struct SINK_DEVICE_INTERFACE SinkDevice : public DeviceImpl, public helium::RefC
       return vec.data();
     }
 
-
     void *map()
     {
       return const_cast<void *>(memory);
@@ -239,4 +222,3 @@ struct SINK_DEVICE_INTERFACE SinkDevice : public DeviceImpl, public helium::RefC
 };
 
 } // namespace sink_device
-} // namespace anari

@@ -23,6 +23,7 @@ project_add_library(SHARED
   DebugDevice.cpp
   DebugObject.cpp
   DebugBasics.cpp
+  DebugLibrary.cpp
   GenericDeviceDebugFactory.cpp
   ExtendedQueries.cpp
   CodeSerializer.cpp
