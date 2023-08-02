@@ -78,8 +78,8 @@ int main(int argc, const char **argv)
 
   anari::Library lib = anari::loadLibrary(g_libraryName, statusFunc);
 
-  anari::Features features = anari::feature::getDeviceFeatureStruct(
-      lib, "default");
+  anari::Features features =
+      anari::feature::getDeviceFeatureStruct(lib, "default");
 
   if (!features.ANARI_KHR_GEOMETRY_TRIANGLE)
     printf("WARNING: device doesn't support ANARI_KHR_GEOMETRY_TRIANGLE\n");
@@ -138,6 +138,8 @@ int main(int argc, const char **argv)
   anari::commitParameters(d, mesh);
 
   auto mat = anari::newObject<anari::Material>(d, "matte");
+  anari::setParameter(d, mat, "color", "color");
+  anari::commitParameters(d, mat);
 
   // put the mesh into a surface
   auto surface = anari::newObject<anari::Surface>(d);
@@ -186,7 +188,7 @@ int main(int argc, const char **argv)
 
   // complete setup of renderer
   vec4 bgColor = {1.f, 1.f, 1.f, 1.f};
-  anari::setParameter(d, renderer, "backgroundColor", bgColor); // white
+  anari::setParameter(d, renderer, "background", bgColor); // white
   anari::commitParameters(d, renderer);
 
   // create and setup frame
@@ -213,7 +215,7 @@ int main(int argc, const char **argv)
       int(fb.height),
       4,
       fb.data,
-      4 * int (fb.width));
+      4 * int(fb.width));
   anari::unmap(d, frame, "channel.color");
 
   printf("done!\n");
@@ -232,7 +234,7 @@ int main(int argc, const char **argv)
       int(fb.height),
       4,
       fb.data,
-      4 * int (fb.width));
+      4 * int(fb.width));
   anari::unmap(d, frame, "channel.color");
 
   printf("done!\n");

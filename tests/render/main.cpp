@@ -110,7 +110,7 @@ static void renderScene(
   auto renderer = anari::newObject<anari::Renderer>(d, g_rendererType.c_str());
   anari::setParameter(d, renderer, "pixelSamples", g_numPixelSamples);
   anari::setParameter(
-      d, renderer, "backgroundColor", anari::float4(anari::float3(0.1f), 1));
+      d, renderer, "background", anari::float4(anari::float3(0.1f), 1));
   anari::commitParameters(d, renderer);
 
   auto frame = anari::newObject<anari::Frame>(d);

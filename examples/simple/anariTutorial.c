@@ -31,8 +31,8 @@ void writePPM(const char *fileName, ANARIDevice d, ANARIFrame frame)
 {
   uint32_t size[2] = {0, 0};
   ANARIDataType type = ANARI_UNKNOWN;
-  uint32_t *pixel =
-      (uint32_t *)anariMapFrame(d, frame, "channel.color", &size[0], &size[1], &type);
+  uint32_t *pixel = (uint32_t *)anariMapFrame(
+      d, frame, "channel.color", &size[0], &size[1], &type);
 
   if (type != ANARI_UFIXED8_RGBA_SRGB) {
     printf("Incorrectly returned color buffer pixel type, image not saved.\n");
@@ -144,8 +144,7 @@ int main(int argc, const char **argv)
   // populate a set of feature variables (this is a utility and not part of the
   // core api)
   ANARIFeatures features;
-  if (anariGetDeviceFeatureStruct(
-          &features, lib, "default")) {
+  if (anariGetDeviceFeatureStruct(&features, lib, "default")) {
     printf("WARNING: library didn't return feature list\n");
   }
 
@@ -162,8 +161,7 @@ int main(int argc, const char **argv)
   ANARIDevice dev = anariNewDevice(lib, "default");
 
   // query available renderers
-  const char **renderers =
-      anariGetObjectSubtypes(dev, ANARI_RENDERER);
+  const char **renderers = anariGetObjectSubtypes(dev, ANARI_RENDERER);
   if (!renderers) {
     puts("No renderers available!");
     return 1;
@@ -174,11 +172,8 @@ int main(int argc, const char **argv)
     printf("  - %s\n", *r);
 
   // inspect default renderer parameters
-  const ANARIParameter *rendererParams = anariGetObjectInfo(dev,
-      ANARI_RENDERER,
-      "default",
-      "parameter",
-      ANARI_PARAMETER_LIST);
+  const ANARIParameter *rendererParams = anariGetObjectInfo(
+      dev, ANARI_RENDERER, "default", "parameter", ANARI_PARAMETER_LIST);
 
   if (!rendererParams) {
     puts("Default renderer has no parameters.");
@@ -262,6 +257,7 @@ int main(int argc, const char **argv)
 
   // Set the material rendering parameters
   ANARIMaterial mat = anariNewMaterial(dev, "matte");
+  anariSetParameter(dev, mat, "color", ANARI_STRING, "color");
   anariCommitParameters(dev, mat);
 
   // put the mesh into a surface
@@ -319,8 +315,7 @@ int main(int argc, const char **argv)
 
   // complete setup of renderer
   float bgColor[4] = {1.f, 1.f, 1.f, 1.f}; // white
-  anariSetParameter(
-      dev, renderer, "backgroundColor", ANARI_FLOAT32_VEC4, bgColor);
+  anariSetParameter(dev, renderer, "background", ANARI_FLOAT32_VEC4, bgColor);
   anariCommitParameters(dev, renderer);
 
   // create and setup frame
