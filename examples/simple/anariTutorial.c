@@ -257,6 +257,7 @@ int main(int argc, const char **argv)
 
   // Set the material rendering parameters
   ANARIMaterial mat = anariNewMaterial(dev, "matte");
+  anariSetParameter(dev, mat, "color", ANARI_STRING, "color");
   anariCommitParameters(dev, mat);
 
   // put the mesh into a surface

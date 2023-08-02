@@ -138,6 +138,8 @@ int main(int argc, const char **argv)
   anari::commitParameters(d, mesh);
 
   auto mat = anari::newObject<anari::Material>(d, "matte");
+  anari::setParameter(d, mat, "color", "color");
+  anari::commitParameters(d, mat);
 
   // put the mesh into a surface
   auto surface = anari::newObject<anari::Surface>(d);
