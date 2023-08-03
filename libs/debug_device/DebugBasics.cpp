@@ -16,6 +16,8 @@ namespace debug_device {
     const char *functionname = #NAME;\
     ANARIObject sourceObject = nullptr;\
     ANARIDataType sourceType = ANARI_OBJECT;\
+    const char *sourceSubType = nullptr;\
+    const char *sourceName = "";\
     auto info = td->getObjectInfo(OBJECT);\
     if(info == nullptr) {\
         td->reportStatus(\
@@ -33,14 +35,20 @@ namespace debug_device {
             "%s: Object (%s) has been released", functionname, info->getName());\
         sourceObject = OBJECT;\
         sourceType = info->getType();\
+        sourceSubType = info->getSubtype();\
+        sourceName = info->getName();\
     } else {\
         sourceObject = OBJECT;\
         sourceType = info->getType();\
+        sourceSubType = info->getSubtype();\
+        sourceName = info->getName();\
     }
 
 #define DEBUG_SOURCE_INFO info
 #define DEBUG_SOURCE_OBJECT sourceObject
 #define DEBUG_SOURCE_TYPE sourceType
+#define DEBUG_SOURCE_SUBTYPE sourceSubType
+#define DEBUG_SOURCE_NAME sourceName
 #define DEBUG_FUNCTION_NAME functionname
 
 #define DEBUG_REPORT(SEVERITY, STATUS, ...)\
@@ -200,6 +208,40 @@ void DebugBasics::anariSetParameter(ANARIDevice device, ANARIObject object, cons
     (void)device;
     (void)name;
 
+
+    ANARIDevice wrapped = td->getWrapped();
+    const ANARIParameter *params = (const ANARIParameter*)anariGetObjectInfo(wrapped, DEBUG_SOURCE_TYPE, DEBUG_SOURCE_SUBTYPE, "parameter", ANARI_PARAMETER_LIST);
+
+    if(params) {
+        bool found = false;
+        for(int i = 0;params[i].name != nullptr;++i) {
+            if(params[i].type == dataType && strcmp(params[i].name, name) == 0) {
+                found = true;
+            }
+        }
+        if(!found) {
+            float matched = false;
+            for(int i = 0;params[i].name != nullptr;++i) {
+                if(strcmp(params[i].name, name) == 0) {
+                    if(!matched) {
+                        DEBUG_REPORT(ANARI_SEVERITY_INFO, ANARI_STATUS_INVALID_ARGUMENT,
+                        "%s: Parameter \"%s\" can not be set to type %s on  on \"%s\". Known types are:", DEBUG_FUNCTION_NAME, name, anari::toString(dataType), DEBUG_SOURCE_NAME);
+                    }
+                    DEBUG_REPORT(ANARI_SEVERITY_INFO, ANARI_STATUS_INVALID_ARGUMENT,
+                        "%s:     %s", DEBUG_FUNCTION_NAME, anari::toString(params[i].type));
+
+                    matched = true;
+                }
+            }
+            if(!matched) {
+                DEBUG_REPORT(ANARI_SEVERITY_WARNING, ANARI_STATUS_INVALID_ARGUMENT,
+                    "%s: Unknown parameter \"%s\" on \"%s\"", DEBUG_FUNCTION_NAME, name, DEBUG_SOURCE_NAME);
+            }
+
+        }
+    }
+
+
     if(isObject(dataType)) {
         ANARIObject wrappedParam = *(ANARIObject*)mem;
         if(auto paraminfo = td->getObjectInfo(wrappedParam)) {
@@ -224,7 +266,6 @@ void DebugBasics::anariSetParameter(ANARIDevice device, ANARIObject object, cons
                 "%s: Unknown object in parameter value", DEBUG_FUNCTION_NAME);
         }
     }
-
 }
 void DebugBasics::anariUnsetParameter(ANARIDevice device, ANARIObject object, const char* name) {
     DEBUG_FUNCTION_SOURCE(anariUnsetParameter, object)
