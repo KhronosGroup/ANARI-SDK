@@ -234,6 +234,8 @@ struct DEBUG_DEVICE_INTERFACE DebugDevice : public DeviceImpl, public helium::Re
 
   std::vector<std::unique_ptr<DebugObjectBase>> objects;
 
+  ANARIDevice getWrapped() const { return wrapped; }
+
  private:
   ANARIDevice wrapped;
   ANARIDevice staged;

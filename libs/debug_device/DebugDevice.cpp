@@ -928,16 +928,20 @@ void DebugDevice::deviceCommit()
   // device parameters and commits very well
   // debug->anariCommit(this_device(), this_device());
 
+  static ObjectFactory factory;
+  debugObjectFactory = &factory;
+
   if (wrapped != staged) {
     if (wrapped) {
       anariRelease(wrapped, wrapped);
     }
     wrapped = staged;
     // reset to generic debug objects
-    debugObjectFactory = getDebugFactory();
+    //debugObjectFactory = getDebugFactory();
     if (wrapped) {
       anariRetain(wrapped, wrapped);
       anariCommitParameters(wrapped, wrapped);
+      /*
       ObjectFactory *(*factory_fun)();
       if (anariGetProperty(wrapped,
               wrapped,
@@ -954,6 +958,7 @@ void DebugDevice::deviceCommit()
             ANARI_STATUS_UNKNOWN_ERROR,
             "Device doesn't provide custom debug objects. Using core feature set.");
       }
+      */
     }
   }
   if (createSerializer) {
