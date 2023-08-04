@@ -518,7 +518,7 @@
                 {"name" : "library", "type" : "ANARILibrary"}
             ]
         }, {
-            "name" : "anariGetDeviceFeatures",
+            "name" : "anariGetDeviceExtensions",
             "returnType" : "const char **",
             "arguments" : [
                 {"name" : "library", "type" : "ANARILibrary"},

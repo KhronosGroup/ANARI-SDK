@@ -545,33 +545,33 @@ inline void discard(Device d, Frame f)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// C++ Feature Utilities //////////////////////////////////////////////////////
+// C++ Extension Utilities //////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-namespace feature {
+namespace extension {
 
-inline Features getDeviceFeatureStruct(Library l, const char *device)
+inline Extensions getDeviceExtensionStruct(Library l, const char *device)
 {
-  Features f;
-  anariGetDeviceFeatureStruct(&f, l, device);
+  Extensions f;
+  anariGetDeviceExtensionStruct(&f, l, device);
   return f;
 }
 
-inline Features getObjectFeatureStruct(
+inline Extensions getObjectExtensionStruct(
     Device d, DataType objectType, const char *objectSubtype)
 {
-  Features f;
-  anariGetObjectFeatureStruct(&f, d, objectType, objectSubtype);
+  Extensions f;
+  anariGetObjectExtensionStruct(&f, d, objectType, objectSubtype);
   return f;
 }
 
-inline Features getInstanceFeatureStruct(Device d, Object o)
+inline Extensions getInstanceExtensionStruct(Device d, Object o)
 {
-  Features f;
-  anariGetInstanceFeatureStruct(&f, d, o);
+  Extensions f;
+  anariGetInstanceExtensionStruct(&f, d, o);
   return f;
 }
 
-} // namespace feature
+} // namespace extension
 
 } // namespace anari

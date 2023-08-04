@@ -171,7 +171,7 @@ extern "C" const char **anariGetDeviceSubtypes(ANARILibrary l) ANARI_CATCH_BEGIN
 }
 ANARI_CATCH_END(nullptr)
 
-extern "C" const char **anariGetDeviceFeatures(
+extern "C" const char **anariGetDeviceExtensions(
     ANARILibrary l, const char *deviceSubtype) ANARI_CATCH_BEGIN
 {
   return libraryRef(l).getDeviceExtensions(deviceSubtype);
@@ -340,9 +340,9 @@ extern "C" ANARIGroup anariNewGroup(ANARIDevice d) ANARI_CATCH_BEGIN
 }
 ANARI_CATCH_END(nullptr)
 
-extern "C" ANARIInstance anariNewInstance(ANARIDevice d) ANARI_CATCH_BEGIN
+extern "C" ANARIInstance anariNewInstance(ANARIDevice d, const char *type) ANARI_CATCH_BEGIN
 {
-  return deviceRef(d).newInstance();
+  return deviceRef(d).newInstance(type);
 }
 ANARI_CATCH_END(nullptr)
 

@@ -172,7 +172,7 @@ ANARI_INTERFACE void anariCommitParameters(ANARIDevice device, ANARIObject objec
 ANARI_INTERFACE void anariRelease(ANARIDevice device, ANARIObject object);
 ANARI_INTERFACE void anariRetain(ANARIDevice device, ANARIObject object);
 ANARI_INTERFACE const char ** anariGetDeviceSubtypes(ANARILibrary library);
-ANARI_INTERFACE const char ** anariGetDeviceFeatures(ANARILibrary library, const char* deviceSubtype);
+ANARI_INTERFACE const char ** anariGetDeviceExtensions(ANARILibrary library, const char* deviceSubtype);
 ANARI_INTERFACE const char ** anariGetObjectSubtypes(ANARIDevice device, ANARIDataType objectType);
 ANARI_INTERFACE const void* anariGetObjectInfo(ANARIDevice device, ANARIDataType objectType, const char* objectSubtype, const char* infoName, ANARIDataType infoType);
 ANARI_INTERFACE const void* anariGetParameterInfo(ANARIDevice device, ANARIDataType objectType, const char* objectSubtype, const char* parameterName, ANARIDataType parameterType, const char* infoName, ANARIDataType infoType);

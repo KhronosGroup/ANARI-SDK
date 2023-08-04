@@ -5,7 +5,7 @@
 
 // anari
 #include "anari/anari.h"
-#include "anari/frontend/anari_feature_utility.h"
+#include "anari/frontend/anari_extension_utility.h"
 #include "anari/frontend/type_utility.h"
 // std
 #include <string>
@@ -242,21 +242,21 @@ void wait(Device, Frame);
 void discard(Device, Frame);
 
 ///////////////////////////////////////////////////////////////////////////////
-// C++ Feature Utilities //////////////////////////////////////////////////////
+// C++ Extension Utilities //////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-using Features = ANARIFeatures;
+using Extensions = ANARIExtensions;
 
-namespace feature {
+namespace extension {
 
-Features getDeviceFeatureStruct(Library library, const char *deviceSubtype);
+Extensions getDeviceExtensionStruct(Library library, const char *deviceSubtype);
 
-Features getObjectFeatureStruct(
+Extensions getObjectExtensionStruct(
     Device device, DataType objectType, const char *objectSubtype);
 
-Features getInstanceFeatureStruct(Device, Object);
+Extensions getInstanceExtensionStruct(Device, Object);
 
-} // namespace feature
+} // namespace extension
 
 } // namespace anari
 
