@@ -24,7 +24,7 @@ std::string getDefaultDeviceName(const std::string &libraryName,
     const std::optional<pybind11::function>
         &callback);
 
-std::vector<std::tuple<std::string, bool>> queryFeatures(
+std::vector<std::tuple<std::string, bool>> queryExtensions(
     const std::string &libraryName,
     const std::optional<std::string> &device,
     const std::optional<pybind11::function>

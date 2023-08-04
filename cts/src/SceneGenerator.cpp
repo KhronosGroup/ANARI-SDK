@@ -267,7 +267,7 @@ void SceneGenerator::createAnariObject(
     break;
   }
   case ANARI_INSTANCE: {
-    object = anari::newObject<anari::Instance>(m_device);
+    object = anari::newObject<anari::Instance>(m_device, subtype.c_str());
     auto it = m_anariObjects.try_emplace(
         int(ANARI_INSTANCE), std::vector<ANARIObject>());
     it.first->second.emplace_back(object);

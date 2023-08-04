@@ -5,6 +5,7 @@
     "dependencies": [
       "anari_core_1_0",
       "anari_core_objects_base_1_0",
+      "khr_instance_transform",
       "khr_camera_orthographic",
       "khr_camera_perspective",
       "khr_geometry_cone",

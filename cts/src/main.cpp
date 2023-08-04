@@ -13,8 +13,8 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(anariCTSBackend, m)
 {
-  m.def("query_features", &cts::queryFeatures, R"pbdoc(
-        Query which features are supported by this device.
+  m.def("query_features", &cts::queryExtensions, R"pbdoc(
+        Query which extensions are supported by this device.
     )pbdoc");
   m.def("query_metadata", &cts::queryInfo, R"pbdoc(
         Queries object/parameter info metadata of a library.

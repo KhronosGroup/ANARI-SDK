@@ -126,6 +126,11 @@ const char ** query_object_types(ANARIDataType type) {
          static const char *ANARI_RENDERER_subtypes[] = {"default", 0};
          return ANARI_RENDERER_subtypes;
       }
+      case ANARI_INSTANCE:
+      {
+         static const char *ANARI_INSTANCE_subtypes[] = {"transform", 0};
+         return ANARI_INSTANCE_subtypes;
+      }
       case ANARI_CAMERA:
       {
          static const char *ANARI_CAMERA_subtypes[] = {"omnidirectional", "orthographic", "perspective", 0};
@@ -1144,7 +1149,7 @@ static const void * ANARI_SURFACE_param_info(const char *paramName, ANARIDataTyp
          return nullptr;
    }
 }
-static const void * ANARI_INSTANCE_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+static const void * ANARI_INSTANCE_transform_name_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    (void)paramType;
    switch(infoName) {
       case 0: // required
@@ -1169,7 +1174,7 @@ static const void * ANARI_INSTANCE_name_info(ANARIDataType paramType, int infoNa
       default: return nullptr;
    }
 }
-static const void * ANARI_INSTANCE_transform_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+static const void * ANARI_INSTANCE_transform_transform_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    (void)paramType;
    switch(infoName) {
       case 0: // required
@@ -1201,7 +1206,7 @@ static const void * ANARI_INSTANCE_transform_info(ANARIDataType paramType, int i
       default: return nullptr;
    }
 }
-static const void * ANARI_INSTANCE_group_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+static const void * ANARI_INSTANCE_transform_group_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    (void)paramType;
    switch(infoName) {
       case 0: // required
@@ -1226,7 +1231,7 @@ static const void * ANARI_INSTANCE_group_info(ANARIDataType paramType, int infoN
       default: return nullptr;
    }
 }
-static const void * ANARI_INSTANCE_motion_transform_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+static const void * ANARI_INSTANCE_transform_motion_transform_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    (void)paramType;
    switch(infoName) {
       case 0: // required
@@ -1258,7 +1263,7 @@ static const void * ANARI_INSTANCE_motion_transform_info(ANARIDataType paramType
       default: return nullptr;
    }
 }
-static const void * ANARI_INSTANCE_motion_scale_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+static const void * ANARI_INSTANCE_transform_motion_scale_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    (void)paramType;
    switch(infoName) {
       case 0: // required
@@ -1290,7 +1295,7 @@ static const void * ANARI_INSTANCE_motion_scale_info(ANARIDataType paramType, in
       default: return nullptr;
    }
 }
-static const void * ANARI_INSTANCE_motion_rotation_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+static const void * ANARI_INSTANCE_transform_motion_rotation_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    (void)paramType;
    switch(infoName) {
       case 0: // required
@@ -1322,7 +1327,7 @@ static const void * ANARI_INSTANCE_motion_rotation_info(ANARIDataType paramType,
       default: return nullptr;
    }
 }
-static const void * ANARI_INSTANCE_motion_translation_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+static const void * ANARI_INSTANCE_transform_motion_translation_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    (void)paramType;
    switch(infoName) {
       case 0: // required
@@ -1354,7 +1359,7 @@ static const void * ANARI_INSTANCE_motion_translation_info(ANARIDataType paramTy
       default: return nullptr;
    }
 }
-static const void * ANARI_INSTANCE_time_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+static const void * ANARI_INSTANCE_transform_time_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    (void)paramType;
    switch(infoName) {
       case 0: // required
@@ -1386,24 +1391,24 @@ static const void * ANARI_INSTANCE_time_info(ANARIDataType paramType, int infoNa
       default: return nullptr;
    }
 }
-static const void * ANARI_INSTANCE_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+static const void * ANARI_INSTANCE_transform_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
       case 65:
-         return ANARI_INSTANCE_name_info(paramType, infoName, infoType);
+         return ANARI_INSTANCE_transform_name_info(paramType, infoName, infoType);
       case 105:
-         return ANARI_INSTANCE_transform_info(paramType, infoName, infoType);
+         return ANARI_INSTANCE_transform_transform_info(paramType, infoName, infoType);
       case 40:
-         return ANARI_INSTANCE_group_info(paramType, infoName, infoType);
+         return ANARI_INSTANCE_transform_group_info(paramType, infoName, infoType);
       case 63:
-         return ANARI_INSTANCE_motion_transform_info(paramType, infoName, infoType);
+         return ANARI_INSTANCE_transform_motion_transform_info(paramType, infoName, infoType);
       case 62:
-         return ANARI_INSTANCE_motion_scale_info(paramType, infoName, infoType);
+         return ANARI_INSTANCE_transform_motion_scale_info(paramType, infoName, infoType);
       case 61:
-         return ANARI_INSTANCE_motion_rotation_info(paramType, infoName, infoType);
+         return ANARI_INSTANCE_transform_motion_rotation_info(paramType, infoName, infoType);
       case 64:
-         return ANARI_INSTANCE_motion_translation_info(paramType, infoName, infoType);
+         return ANARI_INSTANCE_transform_motion_translation_info(paramType, infoName, infoType);
       case 104:
-         return ANARI_INSTANCE_time_info(paramType, infoName, infoType);
+         return ANARI_INSTANCE_transform_time_info(paramType, infoName, infoType);
       default:
          return nullptr;
    }
@@ -11985,6 +11990,14 @@ static const void * ANARI_GEOMETRY_param_info(const char *subtype, const char *p
          return nullptr;
    }
 }
+static const void * ANARI_INSTANCE_param_info(const char *subtype, const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   switch(subtype_hash(subtype)) {
+      case 22:
+         return ANARI_INSTANCE_transform_param_info(paramName, paramType, infoName, infoType);
+      default:
+         return nullptr;
+   }
+}
 static const void * ANARI_LIGHT_param_info(const char *subtype, const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(subtype_hash(subtype)) {
       case 4:
@@ -12061,6 +12074,8 @@ const void * query_param_info_enum(ANARIDataType type, const char *subtype, cons
          return ANARI_CAMERA_param_info(subtype, paramName, paramType, infoName, infoType);
       case ANARI_GEOMETRY:
          return ANARI_GEOMETRY_param_info(subtype, paramName, paramType, infoName, infoType);
+      case ANARI_INSTANCE:
+         return ANARI_INSTANCE_param_info(subtype, paramName, paramType, infoName, infoType);
       case ANARI_LIGHT:
          return ANARI_LIGHT_param_info(subtype, paramName, paramType, infoName, infoType);
       case ANARI_MATERIAL:
@@ -12089,8 +12104,6 @@ const void * query_param_info_enum(ANARIDataType type, const char *subtype, cons
          return ANARI_WORLD_param_info(paramName, paramType, infoName, infoType);
       case ANARI_SURFACE:
          return ANARI_SURFACE_param_info(paramName, paramType, infoName, infoType);
-      case ANARI_INSTANCE:
-         return ANARI_INSTANCE_param_info(paramName, paramType, infoName, infoType);
       default:
          return nullptr;
    }
@@ -12411,7 +12424,7 @@ static const void * ANARI_SURFACE_info(int infoName, ANARIDataType infoType) {
       default: return nullptr;
    }
 }
-static const void * ANARI_INSTANCE_info(int infoName, ANARIDataType infoType) {
+static const void * ANARI_INSTANCE_transform_info(int infoName, ANARIDataType infoType) {
    switch(infoName) {
       case 4: // description
          {
@@ -13542,6 +13555,14 @@ static const void * ANARI_GEOMETRY_info(const char *subtype, int infoName, ANARI
          return nullptr;
    }
 }
+static const void * ANARI_INSTANCE_info(const char *subtype, int infoName, ANARIDataType infoType) {
+   switch(subtype_hash(subtype)) {
+      case 22:
+         return ANARI_INSTANCE_transform_info(infoName, infoType);
+      default:
+         return nullptr;
+   }
+}
 static const void * ANARI_LIGHT_info(const char *subtype, int infoName, ANARIDataType infoType) {
    switch(subtype_hash(subtype)) {
       case 4:
@@ -13618,6 +13639,8 @@ const void * query_object_info_enum(ANARIDataType type, const char *subtype, int
          return ANARI_CAMERA_info(subtype, infoName, infoType);
       case ANARI_GEOMETRY:
          return ANARI_GEOMETRY_info(subtype, infoName, infoType);
+      case ANARI_INSTANCE:
+         return ANARI_INSTANCE_info(subtype, infoName, infoType);
       case ANARI_LIGHT:
          return ANARI_LIGHT_info(subtype, infoName, infoType);
       case ANARI_MATERIAL:
@@ -13646,8 +13669,6 @@ const void * query_object_info_enum(ANARIDataType type, const char *subtype, int
          return ANARI_WORLD_info(infoName, infoType);
       case ANARI_SURFACE:
          return ANARI_SURFACE_info(infoName, infoType);
-      case ANARI_INSTANCE:
-         return ANARI_INSTANCE_info(infoName, infoType);
       default:
          return nullptr;
    }

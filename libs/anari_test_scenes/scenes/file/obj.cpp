@@ -221,7 +221,7 @@ static void loadObj(
 
   /////////////////////////////////////////////////////////////////////////////
 
-  auto instance = anari::newObject<anari::Instance>(d);
+  auto instance = anari::newObject<anari::Instance>(d, "transform");
   auto group = anari::newObject<anari::Group>(d);
 
   anari::setParameterArray1D(

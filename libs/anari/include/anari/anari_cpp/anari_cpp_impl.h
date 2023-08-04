@@ -69,102 +69,125 @@ inline Object newObject(Device d, const char *type, const char *subtype)
 }
 
 template <typename T>
-inline T newObject(Device)
+struct NewObjectImpl {
+
+};
+
+template <>
+struct NewObjectImpl<Surface> {
+  static Surface newObject(Device d)
+  {
+    return anariNewSurface(d);
+  }
+};
+
+template <>
+struct NewObjectImpl<Group> {
+  static Group newObject(Device d)
+  {
+    return anariNewGroup(d);
+  }
+};
+
+template <>
+struct NewObjectImpl<World> {
+  static World newObject(Device d)
+  {
+    return anariNewWorld(d);
+  }
+};
+
+template <>
+struct NewObjectImpl<Frame> {
+  static Frame newObject(Device d)
+  {
+    return anariNewFrame(d);
+  }
+};
+
+template <>
+struct NewObjectImpl<Instance> {
+  static Instance newObject(Device d, const char *subtype)
+  {
+    return anariNewInstance(d, subtype);
+  }
+};
+
+template <>
+struct NewObjectImpl<Camera> {
+  static Camera newObject(Device d, const char *subtype)
+  {
+    return anariNewCamera(d, subtype);
+  }
+};
+
+template <>
+struct NewObjectImpl<Light> {
+  static Light newObject(Device d, const char *subtype)
+  {
+    return anariNewLight(d, subtype);
+  }
+};
+
+template <>
+struct NewObjectImpl<Geometry> {
+  static Geometry newObject(Device d, const char *subtype)
+  {
+    return anariNewGeometry(d, subtype);
+  }
+};
+
+template <>
+struct NewObjectImpl<SpatialField> {
+  static SpatialField newObject(Device d, const char *subtype)
+  {
+    return anariNewSpatialField(d, subtype);
+  }
+};
+
+template <>
+struct NewObjectImpl<Volume> {
+  static Volume newObject(Device d, const char *subtype)
+  {
+    return anariNewVolume(d, subtype);
+  }
+};
+
+template <>
+struct NewObjectImpl<Material> {
+  static Material newObject(Device d, const char *subtype)
+  {
+    return anariNewMaterial(d, subtype);
+  }
+};
+
+template <>
+struct NewObjectImpl<Sampler> {
+  static Sampler newObject(Device d, const char *subtype)
+  {
+    return anariNewSampler(d, subtype);
+  }
+};
+
+template <>
+struct NewObjectImpl<Renderer> {
+  static Renderer newObject(Device d, const char *subtype)
+  {
+    return anariNewRenderer(d, subtype);
+  }
+};
+
+
+template <typename T>
+inline T newObject(Device d)
 {
-  static_assert(isObject(ANARITypeFor<T>::value),
-      "anari::newObject<>() can only be instantiated with ANARI handle types");
-  return nullptr;
+  return NewObjectImpl<T>::newObject(d);
 }
 
 template <typename T>
-inline T newObject(Device, const char *subtype)
+inline T newObject(Device d, const char *subtype)
 {
-  (void)subtype;
-  static_assert(isObject(ANARITypeFor<T>::value),
-      "anari::newObject<>() can only be instantiated with ANARI handle types");
-  return nullptr;
-}
-
-// Non-subtyped Objects //
-
-template <>
-inline Surface newObject<Surface>(Device d)
-{
-  return anariNewSurface(d);
-}
-
-template <>
-inline Group newObject<Group>(Device d)
-{
-  return anariNewGroup(d);
-}
-
-template <>
-inline Instance newObject<Instance>(Device d, const char *subtype)
-{
-  return anariNewInstance(d, subtype);
-}
-
-template <>
-inline World newObject<World>(Device d)
-{
-  return anariNewWorld(d);
-}
-
-template <>
-inline Frame newObject<Frame>(Device d)
-{
-  return anariNewFrame(d);
-}
-
-// Subtyped Objects //
-
-template <>
-inline Camera newObject<Camera>(Device d, const char *subtype)
-{
-  return anariNewCamera(d, subtype);
-}
-
-template <>
-inline Light newObject<Light>(Device d, const char *subtype)
-{
-  return anariNewLight(d, subtype);
-}
-
-template <>
-inline Geometry newObject<Geometry>(Device d, const char *subtype)
-{
-  return anariNewGeometry(d, subtype);
-}
-
-template <>
-inline SpatialField newObject<SpatialField>(Device d, const char *subtype)
-{
-  return anariNewSpatialField(d, subtype);
-}
-
-template <>
-inline Volume newObject<Volume>(Device d, const char *subtype)
-{
-  return anariNewVolume(d, subtype);
-}
-
-template <>
-inline Material newObject<Material>(Device d, const char *subtype)
-{
-  return anariNewMaterial(d, subtype);
-}
-
-template <>
-inline Sampler newObject<Sampler>(Device d, const char *subtype)
-{
-  return anariNewSampler(d, subtype);
-}
-
-template <>
-inline Renderer newObject<Renderer>(Device d, const char *subtype)
-{
-  return anariNewRenderer(d, subtype);
+  return NewObjectImpl<T>::newObject(d, subtype);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
