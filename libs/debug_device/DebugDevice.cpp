@@ -920,45 +920,20 @@ void DebugDevice::deviceUnsetParameter(const char *id)
   }
 }
 
-ObjectFactory *getDebugFactory();
-
 void DebugDevice::deviceCommit()
 {
   // skip this for now since the debug device doesn't understand
   // device parameters and commits very well
   // debug->anariCommit(this_device(), this_device());
 
-  static ObjectFactory factory;
-  debugObjectFactory = &factory;
-
   if (wrapped != staged) {
     if (wrapped) {
       anariRelease(wrapped, wrapped);
     }
     wrapped = staged;
-    // reset to generic debug objects
-    //debugObjectFactory = getDebugFactory();
     if (wrapped) {
       anariRetain(wrapped, wrapped);
       anariCommitParameters(wrapped, wrapped);
-      /*
-      ObjectFactory *(*factory_fun)();
-      if (anariGetProperty(wrapped,
-              wrapped,
-              "debugObjects",
-              ANARI_FUNCTION_POINTER,
-              &factory_fun,
-              sizeof(factory_fun),
-              ANARI_NO_WAIT)) {
-        debugObjectFactory = factory_fun();
-      } else {
-        reportStatus(this_device(),
-            ANARI_DEVICE,
-            ANARI_SEVERITY_INFO,
-            ANARI_STATUS_UNKNOWN_ERROR,
-            "Device doesn't provide custom debug objects. Using core feature set.");
-      }
-      */
     }
   }
   if (createSerializer) {
@@ -980,7 +955,9 @@ DebugDevice::DebugDevice(ANARILibrary library)
   objects[0]->setName("Null Object");
 
   debug.reset(new DebugBasics(this));
-  debugObjectFactory = getDebugFactory();
+
+  static ObjectFactory factory;
+  debugObjectFactory = &factory;
 }
 
 DebugDevice::~DebugDevice()

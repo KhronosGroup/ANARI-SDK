@@ -32,8 +32,6 @@ const void *query_param_info(ANARIDataType type,
     const char *infoName,
     ANARIDataType infoType);
 
-anari::debug_device::ObjectFactory *getDebugFactory();
-
 const char **query_extensions();
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -245,10 +243,7 @@ int HelideDevice::getProperty(ANARIObject object,
 {
   if (handleIsDevice(object)) {
     std::string_view prop = name;
-    if (prop == "debugObjects" && type == ANARI_FUNCTION_POINTER) {
-      helium::writeToVoidP(mem, getDebugFactory);
-      return 1;
-    } else if (prop == "feature" && type == ANARI_STRING_LIST) {
+    if (prop == "feature" && type == ANARI_STRING_LIST) {
       helium::writeToVoidP(mem, query_extensions());
       return 1;
     } else if (prop == "helide" && type == ANARI_BOOL) {

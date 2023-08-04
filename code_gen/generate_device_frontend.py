@@ -263,7 +263,7 @@ class FrontendGenerator:
                 code += "}\n"
         return code
 
-parser = argparse.ArgumentParser(description="Generate debug objects for an ANARI device.")
+parser = argparse.ArgumentParser(description="Generate frontend for an ANARI device.")
 parser.add_argument("-d", "--device", dest="devicespec", type=pathlib.Path, required=True, help="The device json file.")
 parser.add_argument("-j", "--json", dest="json", required=True, type=pathlib.Path, action="append", help="Path to the core and extension json root.")
 parser.add_argument("-p", "--prefix", dest="prefix", required=True, help="Prefix for the classes and filenames.")
@@ -429,4 +429,3 @@ for x in args.json:
 
 scriptdir = pathlib.Path(__file__).parent
 subprocess.run([sys.executable, scriptdir/"generate_queries.py","--output", str(gendir)]+forwarded)
-subprocess.run([sys.executable, scriptdir/"generate_debug_objects.py","--output", str(gendir)]+forwarded)

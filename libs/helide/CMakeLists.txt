@@ -54,13 +54,6 @@ anari_generate_queries(
   JSON_DEFINITIONS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/helide_device.json
 )
 
-anari_generate_debug_objects(
-  NAME helide
-  PREFIX HelideDevice
-  CPP_NAMESPACE helide
-  JSON_DEFINITIONS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/helide_device.json
-)
-
 ## Core device target ##
 
 project_add_library(SHARED)
@@ -68,7 +61,6 @@ project_add_library(SHARED)
 project_sources(PRIVATE
   HelideDevice.cpp
   HelideDeviceQueries.cpp
-  HelideDeviceDebugFactory.cpp
   HelideGlobalState.cpp
   HelideLibrary.cpp
   Object.cpp
@@ -124,7 +116,6 @@ PUBLIC
 project_link_libraries(
 PUBLIC
   anari::anari
-  anari::anari_library_debug
   helium
 PRIVATE
   local_embree
