@@ -3,8 +3,6 @@
 
 #include "HelideDevice.h"
 
-#include "anari/ext/debug/DebugObject.h"
-
 #include "array/Array1D.h"
 #include "array/Array2D.h"
 #include "array/Array3D.h"
