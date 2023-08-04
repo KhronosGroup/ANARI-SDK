@@ -25,7 +25,7 @@ public:
     virtual void anariNewMaterial(ANARIDevice device, const char* type, ANARIMaterial result) = 0;
     virtual void anariNewSampler(ANARIDevice device, const char* type, ANARISampler result) = 0;
     virtual void anariNewGroup(ANARIDevice device, ANARIGroup result) = 0;
-    virtual void anariNewInstance(ANARIDevice device, ANARIInstance result) = 0;
+    virtual void anariNewInstance(ANARIDevice device, const char *type, ANARIInstance result) = 0;
     virtual void anariNewWorld(ANARIDevice device, ANARIWorld result) = 0;
     virtual void anariNewObject(ANARIDevice device, const char* objectType, const char* type, ANARIObject result) = 0;
     virtual void anariSetParameter(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType dataType, const void *mem) = 0;

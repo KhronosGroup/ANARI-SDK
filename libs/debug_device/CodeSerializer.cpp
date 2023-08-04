@@ -330,9 +330,9 @@ void CodeSerializer::anariNewGroup(ANARIDevice device, ANARIGroup result) {
    out << " = anariNewGroup(device);\n";
 }
 
-void CodeSerializer::anariNewInstance(ANARIDevice device, ANARIInstance result) {
+void CodeSerializer::anariNewInstance(ANARIDevice device, const char *type, ANARIInstance result) {
    out << "ANARIInstance " << anari::varnameOf(ANARI_INSTANCE) << reinterpret_cast<uintptr_t>(result);
-   out << " = anariNewInstance(device);\n";
+   out << " = anariNewInstance(device, \"" << type << "\");\n";
 }
 
 void CodeSerializer::anariNewWorld(ANARIDevice device, ANARIWorld result) {

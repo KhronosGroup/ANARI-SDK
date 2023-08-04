@@ -220,8 +220,10 @@ void DebugBasics::anariNewSampler(ANARIDevice device, const char* type) {
 void DebugBasics::anariNewGroup(ANARIDevice device) {
     (void)device;
 }
-void DebugBasics::anariNewInstance(ANARIDevice device) {
+void DebugBasics::anariNewInstance(ANARIDevice device, const char *type) {
     (void)device;
+    DEBUG_FUNCTION(anariNewSampler)
+    CHECK_SUBTYPE(ANARI_INSTANCE)
 }
 void DebugBasics::anariNewWorld(ANARIDevice device) {
     (void)device;

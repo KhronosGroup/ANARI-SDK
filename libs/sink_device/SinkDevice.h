@@ -67,7 +67,7 @@ struct SinkDevice : public anari::DeviceImpl, public helium::RefCounted
 
   ANARIGroup newGroup() override;
 
-  ANARIInstance newInstance() override;
+  ANARIInstance newInstance(const char *type) override;
 
   // Top-level Worlds /////////////////////////////////////////////////////////
 

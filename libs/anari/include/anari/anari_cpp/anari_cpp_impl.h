@@ -100,9 +100,9 @@ inline Group newObject<Group>(Device d)
 }
 
 template <>
-inline Instance newObject<Instance>(Device d)
+inline Instance newObject<Instance>(Device d, const char *subtype)
 {
-  return anariNewInstance(d);
+  return anariNewInstance(d, subtype);
 }
 
 template <>

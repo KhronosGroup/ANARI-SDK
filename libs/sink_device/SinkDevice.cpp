@@ -148,7 +148,7 @@ ANARIGroup SinkDevice::newGroup()
   return nextHandle<ANARIGroup>();
 }
 
-ANARIInstance SinkDevice::newInstance()
+ANARIInstance SinkDevice::newInstance(const char *type)
 {
   return nextHandle<ANARIInstance>();
 }

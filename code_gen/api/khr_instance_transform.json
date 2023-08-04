@@ -1,0 +1,45 @@
+{
+    "info" : {
+        "name" : "KHR_INSTANCE_TRANSFORM",
+        "type" : "extension",
+        "dependencies" : []
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_INSTANCE",
+            "description" : "instance object",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "description" : "optional object name"
+                }, {
+                    "name" : "transform",
+                    "types" : ["ANARI_FLOAT32_MAT4"],
+                    "tags" : [],
+                    "default" : [
+                        1.0, 0.0, 0.0, 0.0,
+                        0.0, 1.0, 0.0, 0.0,
+                        0.0, 0.0, 1.0, 0.0,
+                        0.0, 0.0, 0.0, 1.0
+                    ],
+                    "description" : "transform applied to objects in the instance"
+                }, {
+                    "name" : "group",
+                    "types" : ["ANARI_GROUP"],
+                    "tags" : ["required"],
+                    "description" : "group object being instanced"
+                }
+            ],
+            "properties" : [
+                {
+                    "name" : "bounds",
+                    "type" : "ANARI_FLOAT32_BOX3",
+                    "tags" : []
+                }
+            ]
+        }
+    ]
+}

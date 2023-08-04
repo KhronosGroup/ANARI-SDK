@@ -187,7 +187,7 @@ ANARIGroup HelideDevice::newGroup()
   return createObjectForAPI<Group, ANARIGroup>(deviceState());
 }
 
-ANARIInstance HelideDevice::newInstance()
+ANARIInstance HelideDevice::newInstance(const char *subtype)
 {
   initDevice();
   return createObjectForAPI<Instance, ANARIInstance>(deviceState());
