@@ -1,7 +1,7 @@
 {
     "info" : {
         "name" : "KHR_GEOMETRY_CURVE",
-        "type" : "feature",
+        "type" : "extension",
         "dependencies" : []
     },
 

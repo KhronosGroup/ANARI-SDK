@@ -219,9 +219,9 @@ void print_info(ANARIDevice device, ANARIDataType objtype, const char *objname, 
     printf("%sdescription = \"%s\"\n", indent, (const char*)mem);
   }
 
-  mem = anariGetParameterInfo(device, objtype, objname, paramname, paramtype, "sourceFeature", ANARI_STRING);
+  mem = anariGetParameterInfo(device, objtype, objname, paramname, paramtype, "sourceExtension", ANARI_STRING);
   if(mem) {
-    printf("%ssourceFeature = %s\n", indent, (const char*)mem);
+    printf("%ssourceExtension = %s\n", indent, (const char*)mem);
   }
 }
 

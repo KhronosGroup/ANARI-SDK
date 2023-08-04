@@ -1,7 +1,7 @@
 {
     "info" : {
         "name" : "KHR_TRANSFORMATION_MOTION_BLUR",
-        "type" : "feature",
+        "type" : "extension",
         "dependencies" : []
     },
 

@@ -1,7 +1,7 @@
 {
     "info" : {
         "name" : "KHR_RENDERER_BACKGROUND_IMAGE",
-        "type" : "feature",
+        "type" : "extension",
         "dependencies" : []
     },
 

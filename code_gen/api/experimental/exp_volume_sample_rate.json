@@ -1,7 +1,7 @@
 {
     "info" : {
         "name" : "EXP_VOLUME_SAMPLE_RATE",
-        "type" : "feature",
+        "type" : "extension",
         "dependencies" : []
     },
 

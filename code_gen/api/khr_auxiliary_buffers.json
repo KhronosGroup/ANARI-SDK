@@ -1,7 +1,7 @@
 {
     "info" : {
         "name" : "KHR_AUXILIARY_BUFFERS",
-        "type" : "feature",
+        "type" : "extension",
         "dependencies" : []
     },
 

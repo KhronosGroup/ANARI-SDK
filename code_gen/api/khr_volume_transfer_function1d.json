@@ -1,7 +1,7 @@
 {
     "info" : {
         "name" : "KHR_VOLUME_TRANSFER_FUNCTION1D",
-        "type" : "feature",
+        "type" : "extension",
         "dependencies" : []
     },
 

@@ -1,7 +1,7 @@
 {
     "info" : {
         "name" : "KHR_RENDERER_AMBIENT_LIGHT",
-        "type" : "feature",
+        "type" : "extension",
         "dependencies" : []
     },
 

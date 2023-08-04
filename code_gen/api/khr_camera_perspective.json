@@ -1,7 +1,7 @@
 {
     "info" : {
         "name" : "KHR_CAMERA_PERSPECTIVE",
-        "type" : "feature",
+        "type" : "extension",
         "dependencies" : []
     },
 

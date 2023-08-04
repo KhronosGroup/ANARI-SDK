@@ -51,7 +51,7 @@ class QueryGenerator:
         self.named_types = sorted(list(set([k[0] for k in self.named_objects])))
         self.subtype_list = sorted(list(set([k[1] for k in self.named_objects])))
         self.attribute_list = [x["name"] for x in anari["attributes"]]
-        self.info_strings = ["required", "default", "minimum", "maximum", "description", "elementType", "value", "sourceFeature", "feature", "parameter", "channel", "use"]
+        self.info_strings = ["required", "default", "minimum", "maximum", "description", "elementType", "value", "sourceExtension", "extension", "parameter", "channel", "use"]
         self.uses = {"color", "direction", "point", "vector"}
 
     def format_as(self, value, anari_type):
@@ -78,11 +78,11 @@ class QueryGenerator:
 
     def generate_extension_query(self):
         code = "const char ** query_extensions() {\n"
-        code += "   static const char *features[] = {\n      "
-        if self.anari["features"]:
-            code += ",\n      ".join(["\"ANARI_%s\""%x for x in self.anari["features"]]) + ",\n"
+        code += "   static const char *extensions[] = {\n      "
+        if self.anari["extensions"]:
+            code += ",\n      ".join(["\"ANARI_%s\""%x for x in self.anari["extensions"]]) + ",\n"
         code += "      0\n   };\n"
-        code += "   return features;\n"
+        code += "   return extensions;\n"
         code += "}\n"
         return code
 
@@ -217,13 +217,13 @@ class QueryGenerator:
                     code += "            return nullptr;\n"
                     code += "         }\n"
 
-                if "sourceFeature" in param:
-                    code += "      case "+str(self.info_strings.index("sourceFeature"))+": // sourceFeature\n"
+                if "sourceExtension" in param:
+                    code += "      case "+str(self.info_strings.index("sourceExtension"))+": // sourceExtension\n"
                     code += "         if(infoType == ANARI_STRING) {\n"
-                    code += "            static const char *feature = \"%s\";\n"%param["sourceFeature"]
-                    code += "            return feature;\n"
+                    code += "            static const char *extension = \"%s\";\n"%param["sourceExtension"]
+                    code += "            return extension;\n"
                     code += "         } else if(infoType == ANARI_INT32) {\n"
-                    code += "            static const int32_t value = %d;\n"%self.anari["features"].index(param["sourceFeature"])
+                    code += "            static const int32_t value = %d;\n"%self.anari["extensions"].index(param["sourceExtension"])
                     code += "            return &value;\n"
                     code += "         }\n"
 
@@ -310,13 +310,13 @@ class QueryGenerator:
                 code += "            return nullptr;\n"
                 code += "         }\n"
 
-            if "sourceFeature" in obj:
-                code += "      case "+str(self.info_strings.index("sourceFeature"))+": // sourceFeature\n"
+            if "sourceExtension" in obj:
+                code += "      case "+str(self.info_strings.index("sourceExtension"))+": // sourceExtension\n"
                 code += "         if(infoType == ANARI_STRING) {\n"
-                code += "            static const char *feature = \"%s\";\n"%obj["sourceFeature"]
-                code += "            return feature;\n"
+                code += "            static const char *extension = \"%s\";\n"%obj["sourceExtension"]
+                code += "            return extension;\n"
                 code += "         } else if(infoType == ANARI_INT32) {\n"
-                code += "            static const int value = %d;\n"%self.anari["features"].index(obj["sourceFeature"])
+                code += "            static const int value = %d;\n"%self.anari["extensions"].index(obj["sourceExtension"])
                 code += "            return &value;\n"
                 code += "         } else {\n"
                 code += "            return nullptr;\n"
@@ -333,25 +333,25 @@ class QueryGenerator:
                 code += "            return nullptr;\n"
                 code += "         }\n"
 
-            if "feature" in obj:
-                code += "      case "+str(self.info_strings.index("feature"))+": // feature\n"
+            if "extension" in obj:
+                code += "      case "+str(self.info_strings.index("extension"))+": // extension\n"
                 code += "         if(infoType == ANARI_STRING_LIST) {\n"
-                code += "            static const char *features[] = {\n"
-                code += "               " + ",\n               ".join(["\"ANARI_%s\""%f for f in obj["feature"]])+",\n"
+                code += "            static const char *extensions[] = {\n"
+                code += "               " + ",\n               ".join(["\"ANARI_%s\""%f for f in obj["extension"]])+",\n"
                 code += "               0\n"
                 code += "            };\n"
-                code += "            return features;\n"
+                code += "            return extensions;\n"
                 code += "         } else {\n"
                 code += "            return nullptr;\n"
                 code += "         }\n"
             elif obj["type"] == "ANARI_DEVICE" or obj["type"] == "ANARI_RENDERER":
-                code += "      case "+str(self.info_strings.index("feature"))+": // feature\n"
+                code += "      case "+str(self.info_strings.index("extension"))+": // extension\n"
                 code += "         if(infoType == ANARI_STRING_LIST) {\n"
-                code += "            static const char *features[] = {\n"
-                code += "               " + ",\n               ".join(["\"ANARI_%s\""%f for f in self.anari["features"]])+",\n"
+                code += "            static const char *extensions[] = {\n"
+                code += "               " + ",\n               ".join(["\"ANARI_%s\""%f for f in self.anari["extensions"]])+",\n"
                 code += "               0\n"
                 code += "            };\n"
-                code += "            return features;\n"
+                code += "            return extensions;\n"
                 code += "         } else {\n"
                 code += "            return nullptr;\n"
                 code += "         }\n"
@@ -401,7 +401,7 @@ class QueryGenerator:
         code = ""
         for idx, info in enumerate(self.info_strings):
             code += "#define ANARI_INFO_%s %d\n"%(info, idx)
-        code += "const int extension_count = %d;\n"%len(self.anari["features"])
+        code += "const int extension_count = %d;\n"%len(self.anari["extensions"])
         code += "const char ** query_extensions();\n"
         code += "const char ** query_object_types(ANARIDataType type);\n"
         code += "const ANARIParameter * query_params(ANARIDataType type, const char *subtype);\n"
@@ -426,7 +426,7 @@ jsons = [entry for j in args.json for entry in j.glob("**/*.json")]
 
 #load the device root
 device = json.load(args.devicespec)
-merge_anari.tag_feature(device)
+merge_anari.tag_extension(device)
 print("opened " + device["info"]["type"] + " " + device["info"]["name"])
 
 dependencies = merge_anari.crawl_dependencies(device, jsons)
@@ -434,10 +434,10 @@ dependencies = merge_anari.crawl_dependencies(device, jsons)
 for x in dependencies:
     matches = [p for p in jsons if p.stem == x]
     for m in matches:
-        feature = json.load(open(m))
-        merge_anari.assemble(feature, jsons)
-        merge_anari.tag_feature(feature)
-        merge_anari.merge(device, feature)
+        extension = json.load(open(m))
+        merge_anari.assemble(extension, jsons)
+        merge_anari.tag_extension(extension)
+        merge_anari.merge(device, extension)
 
 #generate files
 gen = QueryGenerator(device)

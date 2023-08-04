@@ -1,7 +1,7 @@
 {
     "info" : {
         "name" : "KHR_CAMERA_OMNIDIRECTIONAL",
-        "type" : "feature",
+        "type" : "extension",
         "dependencies" : []
     },
 

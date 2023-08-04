@@ -1,7 +1,7 @@
 {
     "info" : {
         "name" : "KHR_AREA_LIGHTS",
-        "type" : "feature",
+        "type" : "extension",
         "dependencies" : [
             "khr_light_directional",
             "khr_light_point",
