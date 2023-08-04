@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "DebugBasics.h"
-#include <inttypes.h>
+#include <cinttypes>
 
 namespace anari {
 namespace debug_device {
