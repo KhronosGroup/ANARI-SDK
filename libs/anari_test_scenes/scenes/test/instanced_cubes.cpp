@@ -111,7 +111,7 @@ void InstancedCubes::commit()
   for (int x = 1; x < 4; x++) {
     for (int y = 1; y < 4; y++) {
       for (int z = 1; z < 4; z++) {
-        auto inst = anari::newObject<anari::Instance>(d);
+        auto inst = anari::newObject<anari::Instance>(d, "transform");
         auto tl = anari::translation_matrix(4.f * anari::float3(x, y, z));
         auto rot_x = anari::rotation_matrix(
             anari::rotation_quat(anari::float3(1, 0, 0), float(x)));

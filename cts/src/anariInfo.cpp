@@ -35,12 +35,12 @@ const ANARIDataType anonymousTypes[] = {
     ANARI_ARRAY3D,
     ANARI_SURFACE,
     ANARI_GROUP,
-    ANARI_INSTANCE,
     ANARI_WORLD,
     ANARI_FRAME,
 };
 
 const ANARIDataType namedTypes[] = {ANARI_CAMERA,
+    ANARI_INSTANCE,
     ANARI_GEOMETRY,
     ANARI_LIGHT,
     ANARI_MATERIAL,

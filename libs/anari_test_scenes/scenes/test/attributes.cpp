@@ -576,7 +576,7 @@ void Attributes::commit()
     int x = i%4;
     int y = i/4;
 
-    auto inst = anari::newObject<anari::Instance>(d);
+    auto inst = anari::newObject<anari::Instance>(d, "transform");
     auto tl = anari::translation_matrix(2.0f*anari::float3(x-3.5f, y-3.5f, 0.f));
 
     { // NOTE: exercise anari::setParameter with C-array type
@@ -612,7 +612,7 @@ void Attributes::commit()
     int x = i%4;
     int y = i/4;
 
-    auto inst = anari::newObject<anari::Instance>(d);
+    auto inst = anari::newObject<anari::Instance>(d, "transform");
     auto tl = anari::translation_matrix(2.0f*anari::float3(x+0.5f, y-3.5f, 0.f));
 
     { // NOTE: exercise anari::setParameter with C-array type

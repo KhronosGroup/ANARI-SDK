@@ -120,7 +120,7 @@ void TexturedCube::commit()
   std::vector<anari::Instance> instances;
 
   auto createInstance = [&](float rotation, anari::float3 axis) {
-    auto inst = anari::newObject<anari::Instance>(d);
+    auto inst = anari::newObject<anari::Instance>(d, "transform");
 
     auto tl = anari::translation_matrix(anari::float3(0, 0, .5f));
     auto rot = anari::rotation_matrix(anari::rotation_quat(axis, rotation));

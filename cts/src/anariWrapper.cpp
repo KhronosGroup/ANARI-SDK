@@ -4,11 +4,11 @@
 #include <anari/anari_cpp.hpp>
 #include "ctsQueries.h"
 
-typedef union ANARIFeatures_u
+typedef union ANARIExtensions_u
 {
-  ANARIFeatures features;
-  int vec[sizeof(ANARIFeatures) / sizeof(int)];
-} ANARIFeatures_u;
+  ANARIExtensions extension;
+  int vec[sizeof(ANARIExtensions) / sizeof(int)];
+} ANARIExtensions_u;
 
 namespace cts {
 
@@ -42,7 +42,7 @@ void statusFunc(const void *userData,
 
 // returns vector of pairs consisting of the feature name and whether it is
 // supported by this libraries' device or default device
-std::vector<std::tuple<std::string, bool>> queryFeatures(
+std::vector<std::tuple<std::string, bool>> queryExtensions(
     const std::string &libraryName,
     const std::optional<std::string> &device,
     const std::optional<pybind11::function> &callback)
@@ -74,21 +74,21 @@ std::vector<std::tuple<std::string, bool>> queryFeatures(
 
   anari::Device d = anariNewDevice(lib, deviceName.c_str());
 
-  // query features
+  // query extension
   std::vector<std::tuple<std::string, bool>> result;
 
-  ANARIFeatures features;
-  if (anariGetObjectFeatureStruct(
-          &features, d, ANARI_DEVICE, deviceName.c_str())) {
+  ANARIExtensions extension;
+  if (anariGetObjectExtensionStruct(
+          &extension, d, ANARI_DEVICE, deviceName.c_str())) {
     printf("WARNING: library didn't return feature list\n");
     return result;
   }
 
-  ANARIFeatures_u test;
-  test.features = features;
+  ANARIExtensions_u test;
+  test.extension = extension;
 
-  // compile features and their availability into a vector of tuples
-  const size_t featureCount = sizeof(ANARIFeatures) / sizeof(int);
+  // compile extension and their availability into a vector of tuples
+  const size_t featureCount = sizeof(ANARIExtensions) / sizeof(int);
 
   const char **featureNamesPointer = query_extensions();
   std::vector<std::string> featureNames(
