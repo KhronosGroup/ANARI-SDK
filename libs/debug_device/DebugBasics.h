@@ -30,7 +30,7 @@ public:
     void anariNewMaterial(ANARIDevice device, const char* type) override;
     void anariNewSampler(ANARIDevice device, const char* type) override;
     void anariNewGroup(ANARIDevice device) override;
-    void anariNewInstance(ANARIDevice device) override;
+    void anariNewInstance(ANARIDevice device, const char *type) override;
     void anariNewWorld(ANARIDevice device) override;
     void anariNewObject(ANARIDevice device, const char* objectType, const char* type) override;
     void anariSetParameter(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType dataType, const void* mem) override;

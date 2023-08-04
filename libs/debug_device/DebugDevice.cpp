@@ -454,14 +454,14 @@ ANARIGroup DebugDevice::newGroup()
   return result;
 }
 
-ANARIInstance DebugDevice::newInstance()
+ANARIInstance DebugDevice::newInstance(const char *type)
 {
-  debug->anariNewInstance(this_device());
-  ANARIInstance handle = anariNewInstance(wrapped);
+  debug->anariNewInstance(this_device(), type);
+  ANARIInstance handle = anariNewInstance(wrapped, type);
   ANARIInstance result = newHandle(handle);
 
   if (serializer) {
-    serializer->anariNewInstance(this_device(), result);
+    serializer->anariNewInstance(this_device(), type, result);
   }
 
   return result;
@@ -1053,7 +1053,7 @@ void DebugDevice::reportParameterUse(ANARIDataType objtype,
               objsubtype,
               paramname,
               paramtype,
-              ANARI_INFO_sourceFeature,
+              ANARI_INFO_sourceExtension,
               ANARI_INT32)) {
     used_features[*feature] += 1;
   } else {
@@ -1065,7 +1065,7 @@ void DebugDevice::reportObjectUse(ANARIDataType objtype, const char *objsubtype)
 {
   if (const int32_t *feature =
           (const int32_t *)debug_queries::query_object_info_enum(
-              objtype, objsubtype, ANARI_INFO_sourceFeature, ANARI_INT32)) {
+              objtype, objsubtype, ANARI_INFO_sourceExtension, ANARI_INT32)) {
     used_features[*feature] += 1;
   } else {
     unknown_feature_uses += 1;

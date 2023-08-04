@@ -158,7 +158,7 @@ ANARI_INTERFACE ANARISurface anariNewSurface(ANARIDevice device);
 ANARI_INTERFACE ANARIMaterial anariNewMaterial(ANARIDevice device, const char* type);
 ANARI_INTERFACE ANARISampler anariNewSampler(ANARIDevice device, const char* type);
 ANARI_INTERFACE ANARIGroup anariNewGroup(ANARIDevice device);
-ANARI_INTERFACE ANARIInstance anariNewInstance(ANARIDevice device);
+ANARI_INTERFACE ANARIInstance anariNewInstance(ANARIDevice device, const char* type);
 ANARI_INTERFACE ANARIWorld anariNewWorld(ANARIDevice device);
 ANARI_INTERFACE ANARIObject anariNewObject(ANARIDevice device, const char* objectType, const char* type);
 ANARI_INTERFACE void anariSetParameter(ANARIDevice device, ANARIObject object, const char* name, ANARIDataType dataType, const void* mem);

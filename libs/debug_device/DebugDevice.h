@@ -97,7 +97,7 @@ struct DEBUG_DEVICE_INTERFACE DebugDevice : public DeviceImpl, public helium::Re
 
   ANARIGroup newGroup() override;
 
-  ANARIInstance newInstance() override;
+  ANARIInstance newInstance(const char *type) override;
 
   // Top-level Worlds /////////////////////////////////////////////////////////
 

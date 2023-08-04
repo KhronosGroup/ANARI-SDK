@@ -405,7 +405,8 @@
             "name" : "anariNewInstance",
             "returnType" : "ANARIInstance",
             "arguments" : [
-                {"name" : "device", "type" : "ANARIDevice"}
+                {"name" : "device", "type" : "ANARIDevice"},
+                {"name" : "type", "type" : "const char*"}
             ]
         }, {
             "name" : "anariNewWorld",

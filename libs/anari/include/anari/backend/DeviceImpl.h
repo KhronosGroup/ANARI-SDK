@@ -86,7 +86,7 @@ struct ANARI_INTERFACE DeviceImpl
 
   virtual ANARIGroup newGroup() = 0;
 
-  virtual ANARIInstance newInstance() = 0;
+  virtual ANARIInstance newInstance(const char *type) = 0;
 
   // Top-level Worlds /////////////////////////////////////////////////////////
 
