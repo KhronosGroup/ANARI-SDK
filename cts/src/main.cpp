@@ -1,4 +1,4 @@
-#define ANARI_FEATURE_UTILITY_IMPL
+#define ANARI_EXTENSION_UTILITY_IMPL
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>

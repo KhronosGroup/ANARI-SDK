@@ -22,8 +22,8 @@
 #include <string.h>
 // anari
 #include "anari/anari.h"
-#define ANARI_FEATURE_UTILITY_IMPL
-#include "anari/frontend/anari_feature_utility.h"
+#define ANARI_EXTENSION_UTILITY_IMPL
+#include "anari/frontend/anari_extension_utility.h"
 
 /******************************************************************/
 /* helper function to write out pixel values to a .ppm file */
@@ -141,20 +141,20 @@ int main(int argc, const char **argv)
       printf("  - %s\n", *d);
   }
 
-  // populate a set of feature variables (this is a utility and not part of the
+  // populate a set of extension variables (this is a utility and not part of the
   // core api)
-  ANARIFeatures features;
-  if (anariGetDeviceFeatureStruct(&features, lib, "default")) {
-    printf("WARNING: library didn't return feature list\n");
+  ANARIExtensions extensions;
+  if (anariGetDeviceExtensionStruct(&extensions, lib, "default")) {
+    printf("WARNING: library didn't return extension list\n");
   }
 
-  if (!features.ANARI_KHR_GEOMETRY_TRIANGLE)
+  if (!extensions.ANARI_KHR_GEOMETRY_TRIANGLE)
     printf("WARNING: device doesn't support ANARI_KHR_GEOMETRY_TRIANGLE\n");
-  if (!features.ANARI_KHR_CAMERA_PERSPECTIVE)
+  if (!extensions.ANARI_KHR_CAMERA_PERSPECTIVE)
     printf("WARNING: device doesn't support ANARI_KHR_CAMERA_PERSPECTIVE\n");
-  if (!features.ANARI_KHR_LIGHT_DIRECTIONAL)
+  if (!extensions.ANARI_KHR_LIGHT_DIRECTIONAL)
     printf("WARNING: device doesn't support ANARI_KHR_LIGHT_DIRECTIONAL\n");
-  if (!features.ANARI_KHR_MATERIAL_MATTE)
+  if (!extensions.ANARI_KHR_MATERIAL_MATTE)
     printf("WARNING: device doesn't support ANARI_KHR_MATERIAL_MATTE\n");
 
   // the remaining queries have to use a device
