@@ -19,20 +19,6 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
   )
 
   add_dependencies(generate_all generate_$libraryname_queries)
-
-  add_custom_target(generate_$libraryname_debug_objects
-    COMMAND ${Python3_EXECUTABLE} ${ANARI_CODE_GEN_ROOT}/generate_debug_objects.py
-      --json ${ANARI_CODE_GEN_ROOT}
-      --device ${CMAKE_CURRENT_SOURCE_DIR}/$device_json
-      --prefix $prefix
-      --namespace $namespace
-      --output ${CMAKE_CURRENT_SOURCE_DIR}/generated
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    DEPENDS $device_json
-  )
-
-  add_dependencies(generate_all generate_$libraryname_debug_objects)
-
 endif()
 
 set(CMAKE_INSTALL_RPATH "$ORIGIN")
@@ -46,7 +32,6 @@ add_library(${PROJECT_NAME} SHARED
   $generated_path/$prefixDeviceFactories.cpp
   $generated_path/$prefixString.cpp
   $generated_path/$prefixQueries.cpp
-  $generated_path/$prefixDebugFactory.cpp
 )
 
 target_include_directories(${PROJECT_NAME}
@@ -60,7 +45,6 @@ target_link_libraries(${PROJECT_NAME}
 PUBLIC
   $target_prefixanari
   $target_prefixanari_utilities
-  $target_prefixanari_library_debug
 )
 
 target_compile_definitions(${PROJECT_NAME}

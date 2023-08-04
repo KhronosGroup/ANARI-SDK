@@ -156,36 +156,66 @@ void DebugBasics::anariUnmapArray(ANARIDevice device, ANARIArray array) {
     DEBUG_FUNCTION_SOURCE(anariMapArray, array)
     (void)device;
 }
+
+#define CHECK_SUBTYPE(TYPE)\
+    ANARIDevice wrapped = td->getWrapped();\
+    if(const char **subtypes = (const char**)anariGetObjectSubtypes(wrapped, TYPE)) {\
+        bool found = false;\
+        for(int i = 0;subtypes[i] != nullptr;++i) {\
+            if(strcmp(subtypes[i], type) == 0) {\
+                found = true;\
+            }\
+        }\
+        if(!found) {\
+            DEBUG_REPORT(ANARI_SEVERITY_ERROR, ANARI_STATUS_INVALID_ARGUMENT,\
+                "%s: Unknown %s object subtype \"%s\"",\
+                DEBUG_FUNCTION_NAME, anari::toString(TYPE), type);\
+        }\
+    }
+
 void DebugBasics::anariNewLight(ANARIDevice device, const char* type) {
     (void)device;
-    (void)type;
+    DEBUG_FUNCTION(anariNewLight)
+    CHECK_SUBTYPE(ANARI_LIGHT)
 }
 void DebugBasics::anariNewCamera(ANARIDevice device, const char* type) {
     (void)device;
-    (void)type;
+    DEBUG_FUNCTION(anariNewCamera)
+    CHECK_SUBTYPE(ANARI_CAMERA)
+
 }
 void DebugBasics::anariNewGeometry(ANARIDevice device, const char* type) {
     (void)device;
-    (void)type;
+    DEBUG_FUNCTION(anariNewGeometry)
+    CHECK_SUBTYPE(ANARI_GEOMETRY)
+
 }
 void DebugBasics::anariNewSpatialField(ANARIDevice device, const char* type) {
     (void)device;
-    (void)type;
+    DEBUG_FUNCTION(anariNewSpatialField)
+    CHECK_SUBTYPE(ANARI_SPATIAL_FIELD)
+
 }
 void DebugBasics::anariNewVolume(ANARIDevice device, const char* type) {
     (void)device;
-    (void)type;
+    DEBUG_FUNCTION(anariNewVolume)
+    CHECK_SUBTYPE(ANARI_VOLUME)
+
 }
 void DebugBasics::anariNewSurface(ANARIDevice device) {
     (void)device;
 }
 void DebugBasics::anariNewMaterial(ANARIDevice device, const char* type) {
     (void)device;
-    (void)type;
+    DEBUG_FUNCTION(anariNewMaterial)
+    CHECK_SUBTYPE(ANARI_MATERIAL)
+
 }
 void DebugBasics::anariNewSampler(ANARIDevice device, const char* type) {
     (void)device;
-    (void)type;
+    DEBUG_FUNCTION(anariNewSampler)
+    CHECK_SUBTYPE(ANARI_SAMPLER)
+
 }
 void DebugBasics::anariNewGroup(ANARIDevice device) {
     (void)device;
@@ -201,6 +231,8 @@ void DebugBasics::anariNewObject(ANARIDevice device, const char* objectType, con
     (void)objectType;
     (void)type;
 }
+
+
 void DebugBasics::anariSetParameter(ANARIDevice device, ANARIObject object, const char* name,
     ANARIDataType dataType, const void *mem) {
 

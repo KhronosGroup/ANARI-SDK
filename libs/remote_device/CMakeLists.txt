@@ -52,7 +52,6 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${Boost_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
         anari::anari
-        anari::anari_library_debug
         helium
         ${__remote_extra_libs}
         Boost::filesystem
@@ -83,7 +82,6 @@ target_include_directories(anari-remote-server PUBLIC ${Boost_INCLUDE_DIRS})
 target_link_libraries(anari-remote-server
     PUBLIC
         anari::anari
-        anari::anari_library_debug
         helium
         ${__remote_extra_libs}
         #Boost::filesystem
