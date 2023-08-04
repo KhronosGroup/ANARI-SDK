@@ -1,7 +1,7 @@
 {
     "info" : {
         "name" : "KHR_MATERIAL_PHYSICALLY_BASED",
-        "type" : "feature",
+        "type" : "extension",
         "dependencies" : []
     },
 

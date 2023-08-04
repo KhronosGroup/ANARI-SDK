@@ -15,13 +15,13 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
     DEPENDS ${API_JSON} generate_headers.py
   )
 
-  add_custom_target(generate_feature_utility
-    COMMAND ${Python3_EXECUTABLE} generate_feature_utility.py
+  add_custom_target(generate_extension_utility
+    COMMAND ${Python3_EXECUTABLE} generate_extension_utility.py
     -j ${CMAKE_CURRENT_SOURCE_DIR}/api/
     -d devices/experimental_device.json
     -o ${CMAKE_SOURCE_DIR}/libs/anari/include/anari/frontend
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    DEPENDS devices/experimental_device.json generate_feature_utility.py
+    DEPENDS devices/experimental_device.json generate_extension_utility.py
   )
 
   add_custom_target(generate_anari_h
@@ -37,7 +37,7 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
   )
   add_custom_target(generate_headers DEPENDS
       generate_type_utility
-      generate_feature_utility
+      generate_extension_utility
       generate_anari_h
       generate_anari_enums_h
   )

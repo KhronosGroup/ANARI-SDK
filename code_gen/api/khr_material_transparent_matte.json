@@ -1,7 +1,7 @@
 {
     "info" : {
         "name" : "KHR_MATERIAL_TRANSPARENT_MATTE",
-        "type" : "feature",
+        "type" : "extension",
         "dependencies" : []
     },
 

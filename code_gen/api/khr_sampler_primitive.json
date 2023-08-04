@@ -1,7 +1,7 @@
 {
     "info" : {
         "name" : "KHR_SAMPLER_PRIMITIVE",
-        "type" : "feature",
+        "type" : "extension",
         "dependencies" : []
     },
 

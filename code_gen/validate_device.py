@@ -84,7 +84,7 @@ jsons = [entry for j in args.json for entry in j.glob("**/*.json")]
 
 #load the device root
 device = json.load(args.devicespec)
-merge_anari.tag_feature(device)
+merge_anari.tag_extension(device)
 print("opened " + device["info"]["type"] + " " + device["info"]["name"])
 
 dependencies = merge_anari.crawl_dependencies(device, jsons)
@@ -94,7 +94,7 @@ for x in dependencies:
     for m in matches:
         feature = json.load(open(m))
         check_feature_completeness(feature, m)
-        merge_anari.tag_feature(feature)
+        merge_anari.tag_extension(feature)
         merge_anari.merge(device, feature)
 
 check_object_completeness(device)

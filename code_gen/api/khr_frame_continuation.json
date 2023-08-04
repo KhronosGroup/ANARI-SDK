@@ -1,7 +1,7 @@
 {
     "info" : {
         "name" : "KHR_FRAME_CONTINUATION",
-        "type" : "feature",
+        "type" : "extension",
         "dependencies" : ["anari_core_1_0"]
     },
 

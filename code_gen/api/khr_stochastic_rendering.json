@@ -1,7 +1,7 @@
 {
     "info" : {
         "name" : "KHR_STOCHASTIC_RENDERING",
-        "type" : "feature",
+        "type" : "extension",
         "dependencies" : []
     },
 

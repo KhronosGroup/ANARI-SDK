@@ -1,7 +1,7 @@
 {
     "info" : {
         "name" : "KHR_ARRAY1D_REGION",
-        "type" : "feature",
+        "type" : "extension",
         "dependencies" : []
     },
 

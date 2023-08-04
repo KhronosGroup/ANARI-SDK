@@ -54,7 +54,7 @@ def merge_objects(core, extension):
         elif field in core:
             if isinstance(core[field], list):
                 core[field].extend(extension[field])
-        elif field != "sourceFeature":
+        elif field != "sourceExtension":
             core[field] = extension[field]
 
 def merge_object_table(core, extension, wildcard = ""):
@@ -76,18 +76,18 @@ def merge_object_table(core, extension, wildcard = ""):
                 core.append(obj)
 
 def merge(core, extension, verbose=False):
-    if not "features" in core:
-        core["features"] = []
-        if core["info"]["type"] == "feature":
-                core["features"].append(core["info"]["name"])
+    if not "extensions" in core:
+        core["extensions"] = []
+        if core["info"]["type"] == "extension":
+                core["extensions"].append(core["info"]["name"])
     for k,v in extension.items():
         if not k in core:
             core[k] = v
         elif k == "info":
             if verbose:
                 print('merging '+extension[k]['type']+' '+extension[k]["name"])
-            if "name" in v and v["type"] == "feature":
-                core["features"].append(v["name"])
+            if "name" in v and v["type"] == "extension":
+                core["extensions"].append(v["name"])
         elif k == "enums" :
             merge_enums(core[k], extension[k])
         elif k == "descriptions":
@@ -98,20 +98,20 @@ def merge(core, extension, verbose=False):
             check_conflicts(core[k], extension[k], 'name', k)
             core[k].extend(extension[k])
 
-def tag_feature(tree):
-    if "info" in tree and "name" in tree["info"] and tree['info']['type'] == 'feature':
-        feature = tree["info"]["name"]
+def tag_extension(tree):
+    if "info" in tree and "name" in tree["info"] and tree['info']['type'] == 'extension':
+        extension = tree["info"]["name"]
         if "objects" in tree:
             for obj in tree["objects"]:
-                obj["sourceFeature"] = feature
+                obj["sourceExtension"] = extension
                 if "parameters" in obj:
                     for param in obj["parameters"]:
-                        param["sourceFeature"] = feature
+                        param["sourceExtension"] = extension
 
 def assemble(tree, jsons):
     if "implements" in tree["info"]:
-        for feature in tree["info"]["implements"]:
-            matches = [p for p in jsons if p.stem == feature]
+        for extension in tree["info"]["implements"]:
+            matches = [p for p in jsons if p.stem == extension]
             for m in matches:
                 ext = json.load(open(m))
                 merge_object_table(tree["objects"], ext["objects"], "default")
