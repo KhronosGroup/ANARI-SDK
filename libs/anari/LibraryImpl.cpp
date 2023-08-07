@@ -24,7 +24,7 @@
 #endif
 
 #ifdef _WIN32
-#define LOOKUP_SYM(lib, symbol) GetProcAddress((HMODULE)lib, symbol.c_str());
+#define LOOKUP_SYM(lib, symbol) (void*)GetProcAddress((HMODULE)lib, symbol.c_str());
 #define FREE_LIB(lib) FreeLibrary((HMODULE)lib);
 #else
 #define LOOKUP_SYM(lib, symbol) dlsym(lib, symbol.c_str());
@@ -44,7 +44,7 @@ std::string library_location()
 {
 #if defined(_WIN32) && !defined(__CYGWIN__)
   MEMORY_BASIC_INFORMATION mbi;
-  VirtualQuery(&_anari_anchor, &mbi, sizeof(mbi));
+  VirtualQuery((LPCVOID)&_anari_anchor, &mbi, sizeof(mbi));
   char pathBuf[16384];
   if (!GetModuleFileNameA(
           static_cast<HMODULE>(mbi.AllocationBase), pathBuf, sizeof(pathBuf)))
