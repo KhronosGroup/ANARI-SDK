@@ -6,6 +6,8 @@ viewer in the SDK. While this library is intended to be useful, it is _not_
 intended to be stable and may require continuous adjustment by projects which
 consume it. This is ultimately for the purpose of demonstrating the primary
 component of the ANARI-SDK: the [ANARI API](../anari/include/anari/anari.h).
+UI components implemented by using [Dear ImGui](https://github.com/ocornut/imgui)
+library.
 
 ### Using libanari_viewer
 
