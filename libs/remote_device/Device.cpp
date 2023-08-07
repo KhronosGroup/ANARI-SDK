@@ -243,9 +243,9 @@ ANARIGroup Device::newGroup()
   return (ANARIGroup)registerNewObject(ANARI_GROUP);
 }
 
-ANARIInstance Device::newInstance()
+ANARIInstance Device::newInstance(const char *type)
 {
-  return (ANARIInstance)registerNewObject(ANARI_INSTANCE);
+  return (ANARIInstance)registerNewObject(ANARI_INSTANCE, type);
 }
 
 //--- Top-level Worlds --------------------------------
@@ -768,7 +768,7 @@ void Device::connect(std::string host, unsigned short port)
       << "ANARIDevice client connecting, host " << host << ", port " << port;
 
   manager->connect(
-      host, port, std::bind(&Device::handleNewConnection, this, _1, _2));
+      host, port, std::bind(&Device::handleNewConnection, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 void Device::run()
@@ -810,7 +810,7 @@ bool Device::handleNewConnection(
   // Accept and save this connection
   // and set the messange handler of the connection
   conn = new_conn;
-  conn->set_handler(std::bind(&Device::handleMessage, this, _1, _2, _3));
+  conn->set_handler(std::bind(&Device::handleMessage, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
   // Notify main thread about the connection established
   syncConnectionEstablished.cv.notify_all();

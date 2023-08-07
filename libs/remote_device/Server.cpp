@@ -74,7 +74,7 @@ static ANARIObject newObject(
   } else if (type == ANARI_GROUP) {
     return anariNewGroup(dev);
   } else if (type == ANARI_INSTANCE) {
-    return anariNewInstance(dev);
+    return anariNewInstance(dev, subtype.c_str());
   } else if (type == ANARI_WORLD) {
     return anariNewWorld(dev);
   } else if (type == ANARI_FRAME) {
@@ -242,7 +242,7 @@ struct Server
   {
     LOG(logging::Level::Info) << "Server: accepting...";
 
-    manager->accept(std::bind(&Server::handleNewConnection, this, _1, _2));
+    manager->accept(std::bind(&Server::handleNewConnection, this, std::placeholders::_1, std::placeholders::_2));
   }
 
   void run()
@@ -307,7 +307,7 @@ struct Server
     // Accept and save this connection
     // and set the message handler of the connection
     conn = new_conn;
-    conn->set_handler(std::bind(&Server::handleMessage, this, _1, _2, _3));
+    conn->set_handler(std::bind(&Server::handleMessage, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
     // Accept new connections (TODO: the new connection
     // will overwrite the current one, so, store these
