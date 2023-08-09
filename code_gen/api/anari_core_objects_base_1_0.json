@@ -169,6 +169,14 @@
                     "name" : "duration",
                     "type" : "ANARI_FLOAT32",
                     "tags" : ["required"]
+                }, {
+                    "name" : "renderProgress",
+                    "type" : "ANARI_FLOAT32",
+                    "tags" : []
+                }, {
+                    "name" : "refinementProgress",
+                    "type" : "ANARI_FLOAT32",
+                    "tags" : []
                 }
             ],
             "channel" : [

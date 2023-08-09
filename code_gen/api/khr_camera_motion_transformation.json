@@ -1,0 +1,47 @@
+{
+    "info" : {
+        "name" : "KHR_CAMERA_MOTION_TRANSFORMATION",
+        "type" : "extension",
+        "dependencies" : []
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_CAMERA",
+            "name" : "default",
+            "parameters" : [
+                {
+                    "name" : "motion.transform",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "elementType" : ["ANARI_FLOAT32_MAT4"],
+                    "tags" : [],
+                    "description" : "world space transforms uniformly distributed in time"
+                }, {
+                    "name" : "motion.scale",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "elementType" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "description" : "scaling uniformly distributed in time"
+                }, {
+                    "name" : "motion.rotation",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "elementType" : ["ANARI_FLOAT32_QUAT_IJKW"],
+                    "tags" : [],
+                    "description" : "rotations uniformly distributed in time"
+                }, {
+                    "name" : "motion.translation",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "elementType" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : [],
+                    "description" : "translations uniformly distributed in time"
+                }, {
+                    "name" : "time",
+                    "types" : ["ANARI_FLOAT32_BOX1"],
+                    "tags" : [],
+                    "default" : [0.0, 1.0],
+                    "description" : "time associated with the first and laste entry in the motion.transform array"
+                }
+            ]
+        }
+    ]
+}

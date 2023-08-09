@@ -1,0 +1,30 @@
+{
+    "info" : {
+        "name" : "KHR_CAMERA_SHUTTER",
+        "type" : "extension",
+        "dependencies" : ["khr_camera_shutter"]
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_CAMERA",
+            "name" : "default",
+            "parameters" : [
+                {
+                    "name" : "rollingShutterDirection",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "default" : "none",
+                    "values" : ["none", "left", "right", "down", "up"],
+                    "description" : "rolling direction of the shutter"
+                }, {
+                    "name" : "rollingShutterDuration",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 0,
+                    "description" : "open time per line"
+                }
+            ]
+        }
+    ]
+}

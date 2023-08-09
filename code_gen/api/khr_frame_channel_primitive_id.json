@@ -1,0 +1,25 @@
+{
+    "info" : {
+        "name" : "KHR_FRAME_CHANNEL_PRIMITIVE_ID",
+        "type" : "extension",
+        "dependencies" : []
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_FRAME",
+            "parameters" : [
+                {
+                    "name" : "channel.primitiveId",
+                    "types" : ["ANARI_DATA_TYPE"],
+                    "tags" : [],
+                    "values" : ["ANARI_UINT32"],
+                    "description" : "enables mapping the primitiveId channel as the type specified"
+                }
+            ],
+            "channel" : [
+                "channel.primitiveId"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,29 @@
+{
+    "info" : {
+        "name" : "KHR_CAMERA_DEPTH_OF_FIELD",
+        "type" : "extension",
+        "dependencies" : []
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_CAMERA",
+            "name" : "default",
+            "parameters" : [
+                {
+                    "name" : "apertureRadius",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 0,
+                    "description" : "aperture radius"
+                }, {
+                    "name" : "focusDistance",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 1,
+                    "description" : "focus distance"
+                }
+            ]
+        }
+    ]
+}

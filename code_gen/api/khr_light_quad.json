@@ -73,12 +73,6 @@
                     "elementType" : ["ANARI_FLOAT32_VEC3"],
                     "tags" : [],
                     "description" : "luminous intensity distribution for photometric lights"
-                }, {
-                    "name" : "visible",
-                    "types" : ["ANARI_BOOL"],
-                    "tags" : [],
-                    "default" : 1,
-                    "description" : "visibility of the light geometry"
                 }
             ]
         }

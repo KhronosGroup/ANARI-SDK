@@ -1,0 +1,7 @@
+{
+    "info" : {
+        "name" : "KHR_DEVICE_SYNCHRONIZATION",
+        "type" : "extension",
+        "dependencies" : []
+    }
+}

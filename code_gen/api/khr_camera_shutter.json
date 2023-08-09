@@ -1,0 +1,23 @@
+{
+    "info" : {
+        "name" : "KHR_CAMERA_SHUTTER",
+        "type" : "extension",
+        "dependencies" : []
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_CAMERA",
+            "name" : "default",
+            "parameters" : [
+                {
+                    "name" : "shutter",
+                    "types" : ["ANARI_FLOAT32_BOX1"],
+                    "tags" : [],
+                    "default" : [0.5, 0.5],
+                    "description" : "start and end of shutter time"
+                }
+            ]
+        }
+    ]
+}
