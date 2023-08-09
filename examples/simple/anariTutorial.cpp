@@ -12,8 +12,6 @@
 // stb_image
 #include "stb_image_write.h"
 
-const char *g_libraryName = "environment";
-
 using uvec2 = std::array<unsigned int, 2>;
 using uvec3 = std::array<unsigned int, 3>;
 using vec3 = std::array<float, 3>;
@@ -76,7 +74,7 @@ int main(int argc, const char **argv)
   printf("initialize ANARI...");
   anari::Library m_debug = anari::loadLibrary("debug", statusFunc);
 
-  anari::Library lib = anari::loadLibrary(g_libraryName, statusFunc);
+  anari::Library lib = anari::loadLibrary("helide", statusFunc);
 
   anari::Extensions extensions =
       anari::extension::getDeviceExtensionStruct(lib, "default");
@@ -97,12 +95,6 @@ int main(int argc, const char **argv)
   anari::setParameter(d, d, "traceMode", "code");
   anari::setParameter(d, d, "traceDir", "trace");
   anari::commitParameters(d, d);
-
-  if (!d) {
-    printf("\n\nERROR: could not load default device in library %s\n",
-        g_libraryName);
-    return 1;
-  }
 
   printf("done!\n");
   printf("setting up camera...");

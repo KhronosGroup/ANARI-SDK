@@ -11,7 +11,7 @@
 #include <stdint.h>
 #include <stdio.h>
 // anari
-#include "anari/ext/helide/anariNewHelideDevice.h"
+#include "anari/anari.h"
 
 void statusFunc(const void *userData,
     ANARIDevice device,
@@ -41,22 +41,21 @@ void statusFunc(const void *userData,
 
 int main(int /*argc*/, const char ** /*argv*/)
 {
-  // Here we use the direct function which creates the reference device instead
-  // of loading it as a runtime library.
+  // Using the 'environment' library name will trigger trying to load the
+  // name defined in the ANARI_LIBRARY environment variable.
+  ANARILibrary lib = anariLoadLibrary("environment", statusFunc, NULL);
 
-  ANARIDevice dev = anariNewHelideDevice(statusFunc, NULL);
-
-  if (dev)
-    printf("SUCCESS: created the 'helide' device without loading a library!\n");
+  if (lib)
+    printf("SUCCESS: was able to load the library from the environment!\n");
   else
-    printf("ERROR: failed to create the 'helide' device!\n");
+    printf("ERROR: the library in ANARI_LIBRARY failed to load!\n");
 
-  // Use the device like any other ANARI application...
+  // Use the library like any other ANARI application...
   // ...
   // ...
 
   // Cleanup + exit
 
-  anariRelease(dev, dev);
+  anariUnloadLibrary(lib);
   return 0;
 }

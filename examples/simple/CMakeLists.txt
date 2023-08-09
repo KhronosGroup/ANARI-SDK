@@ -59,6 +59,9 @@ target_link_libraries(anariTutorialCpp PRIVATE anari::anari stb_image)
 add_executable(anariDebugTutorial anariDebugTutorial.c)
 target_link_libraries(anariDebugTutorial PRIVATE anari::anari stb_image)
 
+add_executable(anariTutorialInitFromEnv anariTutorialInitFromEnv.c)
+target_link_libraries(anariTutorialInitFromEnv PRIVATE anari::anari)
+
 add_executable(anariInfo anariInfo.cpp)
 target_link_libraries(anariInfo PRIVATE anari::anari)
 
@@ -70,10 +73,6 @@ if (IN_SDK_SOURCE_TREE)
     # direct device creation function. Vendors can choose to ship a header with
     # such a direct function in it.
     add_executable(anariTutorialDirectLink anariTutorialDirectLink.c)
-    target_link_libraries(anariTutorialDirectLink
-    PRIVATE
-      anari_library_helide
-      stb_image
-    )
+    target_link_libraries(anariTutorialDirectLink PRIVATE anari_library_helide)
   endif()
 endif()
