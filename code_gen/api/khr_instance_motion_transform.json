@@ -1,0 +1,58 @@
+{
+    "info" : {
+        "name" : "KHR_INSTANCE_MOTION_TRANSFORM",
+        "type" : "extension",
+        "dependencies" : []
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_INSTANCE",
+            "name" : "motionTransform",
+            "description" : "motion transform instance object",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "description" : "optional object name"
+                }, {
+                    "name" : "transform",
+                    "types" : ["ANARI_FLOAT32_MAT4"],
+                    "tags" : [],
+                    "default" : [
+                        1.0, 0.0, 0.0, 0.0,
+                        0.0, 1.0, 0.0, 0.0,
+                        0.0, 0.0, 1.0, 0.0,
+                        0.0, 0.0, 0.0, 1.0
+                    ],
+                    "description" : "transform applied to objects in the instance"
+                }, {
+                    "name" : "group",
+                    "types" : ["ANARI_GROUP"],
+                    "tags" : ["required"],
+                    "description" : "group object being instanced"
+                }, {
+                    "name" : "motion.transform",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "elementType" : ["ANARI_FLOAT32_MAT4"],
+                    "tags" : [],
+                    "description" : "world space transforms uniformly distributed in time"
+                }, {
+                    "name" : "time",
+                    "types" : ["ANARI_FLOAT32_BOX1"],
+                    "tags" : [],
+                    "default" : [0.0, 1.0],
+                    "description" : "time associated with the first and laste entry in the motion.transform array"
+                }
+            ],
+            "properties" : [
+                {
+                    "name" : "bounds",
+                    "type" : "ANARI_FLOAT32_BOX3",
+                    "tags" : []
+                }
+            ]
+        }
+    ]
+}
