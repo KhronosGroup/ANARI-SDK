@@ -113,13 +113,7 @@ PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
 )
 
-project_link_libraries(
-PUBLIC
-  anari::anari
-  helium
-PRIVATE
-  local_embree
-)
+project_link_libraries(PUBLIC anari::helium PRIVATE local_embree)
 
 if(WIN32)
   project_compile_definitions(PRIVATE _USE_MATH_DEFINES)

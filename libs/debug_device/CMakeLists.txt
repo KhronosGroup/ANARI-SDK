@@ -22,31 +22,17 @@ project_add_library(SHARED
 )
 
 project_include_directories(
-PUBLIC
+PRIVATE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 project_link_libraries(PUBLIC anari helium)
 
-project_compile_definitions( PRIVATE "anari_library_debug_EXPORTS")
+project_compile_definitions(PRIVATE "anari_library_debug_EXPORTS")
 
 install(TARGETS ${PROJECT_NAME}
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
-
-install(TARGETS ${PROJECT_NAME}
-  EXPORT anari_Exports
-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    NAMELINK_SKIP
-  # on Windows put the dlls into bin
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-  # ... and the import lib into the devel package
-  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
-
-install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/include/anari
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )

@@ -17,14 +17,20 @@ set_target_properties(anari::anari PROPERTIES
     "anari"
 )
 
-add_library(anari::anari_utilities INTERFACE IMPORTED)
-set_target_properties(anari::anari_utilities PROPERTIES
+add_library(anari::anari_test_scenes INTERFACE IMPORTED)
+set_target_properties(anari::anari_test_scenes PROPERTIES
   INTERFACE_LINK_LIBRARIES
-    "anari_utilities"
+    "anari_test_scenes"
 )
 
-add_library(anari::anari_library_debug INTERFACE IMPORTED)
-set_target_properties(anari::anari_library_debug PROPERTIES
+add_library(anari::anari_viewer INTERFACE IMPORTED)
+set_target_properties(anari::anari_viewer PROPERTIES
   INTERFACE_LINK_LIBRARIES
-    "anari_library_debug"
+    "anari_viewer"
+)
+
+add_library(anari::helium INTERFACE IMPORTED)
+set_target_properties(anari::helium PROPERTIES
+  INTERFACE_LINK_LIBRARIES
+    "helium"
 )
