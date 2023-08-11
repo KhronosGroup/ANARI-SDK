@@ -7,7 +7,7 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
 
   find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
-  set(API_JSON api/anari_core_1_0.json api/khr_frame_continuation.json)
+  set(API_JSON api/anari_core_1_0.json api/khr_frame_completion_callback.json)
 
   add_custom_target(generate_type_utility
     COMMAND ${Python3_EXECUTABLE} generate_headers.py ${CMAKE_SOURCE_DIR}/libs/anari/include/anari/frontend/type_utility.h ${API_JSON}

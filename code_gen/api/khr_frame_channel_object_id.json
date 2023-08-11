@@ -22,7 +22,6 @@
             ]
         }, {
             "type" : "ANARI_SURFACE",
-            "name" : "default",
             "parameters" : [
                 {
                     "name" : "id",
@@ -33,7 +32,7 @@
             ]
         }, {
             "type" : "ANARI_VOLUME",
-            "name" : "default",
+            "name" : "",
             "parameters" : [
                 {
                     "name" : "id",

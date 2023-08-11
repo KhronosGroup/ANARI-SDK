@@ -78,7 +78,7 @@ def merge_object_table(core, extension, wildcard = ""):
 def merge(core, extension, verbose=False):
     if not "extensions" in core:
         core["extensions"] = []
-        if core["info"]["type"] == "extension":
+        if core["info"]["type"] == "extension" and not core["info"]["name"] in core["extensions"]:
                 core["extensions"].append(core["info"]["name"])
     for k,v in extension.items():
         if not k in core:
@@ -86,7 +86,7 @@ def merge(core, extension, verbose=False):
         elif k == "info":
             if verbose:
                 print('merging '+extension[k]['type']+' '+extension[k]["name"])
-            if "name" in v and v["type"] == "extension":
+            if "name" in v and v["type"] == "extension" and not v["name"] in core["extensions"]:
                 core["extensions"].append(v["name"])
         elif k == "enums" :
             merge_enums(core[k], extension[k])

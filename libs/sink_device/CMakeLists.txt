@@ -11,7 +11,7 @@ anari_generate_queries(
   NAME sink
   PREFIX SinkDevice
   CPP_NAMESPACE sink_device
-  JSON_DEFINITIONS_FILE ${ANARI_CODE_GEN_ROOT}/devices/generic_device.json
+  JSON_DEFINITIONS_FILE ${ANARI_CODE_GEN_ROOT}/devices/experimental_device.json
 )
 
 project_add_library(SHARED SinkDevice.cpp SinkDeviceQueries.cpp SinkLibrary.cpp)
