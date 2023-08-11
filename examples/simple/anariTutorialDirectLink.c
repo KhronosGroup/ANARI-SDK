@@ -39,7 +39,7 @@ void statusFunc(const void *userData,
   }
 }
 
-int main(int /*argc*/, const char ** /*argv*/)
+int main(int argc, const char **argv)
 {
   // Here we use the direct function which creates the reference device instead
   // of loading it as a runtime library.

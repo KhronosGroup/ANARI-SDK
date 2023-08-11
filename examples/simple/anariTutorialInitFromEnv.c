@@ -39,7 +39,7 @@ void statusFunc(const void *userData,
   }
 }
 
-int main(int /*argc*/, const char ** /*argv*/)
+int main(int argc, const char **argv)
 {
   // Using the 'environment' library name will trigger trying to load the
   // name defined in the ANARI_LIBRARY environment variable.
