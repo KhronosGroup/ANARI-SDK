@@ -5,8 +5,7 @@
 // Don't make changes to this directly
 
 #include <anari/anari.h>
-namespace anari {
-namespace debug_queries {
+namespace helide {
 #define ANARI_INFO_required 0
 #define ANARI_INFO_default 1
 #define ANARI_INFO_minimum 2
@@ -19,7 +18,7 @@ namespace debug_queries {
 #define ANARI_INFO_parameter 9
 #define ANARI_INFO_channel 10
 #define ANARI_INFO_use 11
-const int extension_count = 46;
+const int extension_count = 17;
 const char ** query_extensions();
 const char ** query_object_types(ANARIDataType type);
 const ANARIParameter * query_params(ANARIDataType type, const char *subtype);
@@ -27,5 +26,4 @@ const void * query_param_info_enum(ANARIDataType type, const char *subtype, cons
 const void * query_param_info(ANARIDataType type, const char *subtype, const char *paramName, ANARIDataType paramType, const char *infoNameString, ANARIDataType infoType);
 const void * query_object_info_enum(ANARIDataType type, const char *subtype, int infoName, ANARIDataType infoType);
 const void * query_object_info(ANARIDataType type, const char *subtype, const char *infoNameString, ANARIDataType infoType);
-}
 }

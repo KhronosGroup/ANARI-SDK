@@ -5,8 +5,7 @@
 // Don't make changes to this directly
 
 #include <anari/anari.h>
-namespace anari {
-namespace debug_queries {
+namespace sink_device {
 #define ANARI_INFO_required 0
 #define ANARI_INFO_default 1
 #define ANARI_INFO_minimum 2
@@ -27,5 +26,4 @@ const void * query_param_info_enum(ANARIDataType type, const char *subtype, cons
 const void * query_param_info(ANARIDataType type, const char *subtype, const char *paramName, ANARIDataType paramType, const char *infoNameString, ANARIDataType infoType);
 const void * query_object_info_enum(ANARIDataType type, const char *subtype, int infoName, ANARIDataType infoType);
 const void * query_object_info(ANARIDataType type, const char *subtype, const char *infoNameString, ANARIDataType infoType);
-}
 }
