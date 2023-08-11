@@ -162,8 +162,9 @@ void Frame::renderFrame()
     const auto &size = m_frameData.size;
     embree::parallel_for(size.y, [&](int y) {
       serial_for(size.x, [&](int x) {
-        Ray ray = m_camera->createRay(screenFromPixel(float2(x, y)));
-        writeSample(x, y, m_renderer->renderSample(ray, *m_world));
+        const auto screen = screenFromPixel(float2(x, y));
+        Ray ray = m_camera->createRay(screen);
+        writeSample(x, y, m_renderer->renderSample(screen, ray, *m_world));
       });
     });
 
