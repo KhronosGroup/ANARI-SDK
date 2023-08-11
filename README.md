@@ -13,13 +13,8 @@ This repository contains the source for the ANARI API SDK. This includes:
 - [Unit tests](tests/unit)
 - [Render tests](tests/render)
 
-The 1.0 provisional ANARI specification can be found on the Khronos website
+The 1.0 ANARI specification can be found on the Khronos website
 [here](https://www.khronos.org/registry/ANARI/).
-
-Please note that the example device, sample applications, and tests do not yet
-fully cover the entire specification and are still a work-in-progress. These
-are expected to be completed in full on or before the official 1.0 ANARI
-specification release.
 
 The SDK is tested on Linux, but is also intended to be usable on other operating
 systems such as macOS and Windows.
@@ -45,8 +40,10 @@ Using a tool like `ccmake` or `cmake-gui` will let you see which options are
 available to enable. The following CMake options are offered:
 
 - `BUILD_SHARED_LIBS`   : build everything as shared libraries or static libraries
+- `BUILD_CTS`           : build the conformance test suite
 - `BUILD_TESTING`       : build unit and regression test binaries
 - `BUILD_HELIDE_DEVICE` : build the provided example `helide` device implementation
+- `BUILD_REMOTE_DEVICE` : build the provided experimental `remote` device implementation
 - `BUILD_EXAMPLES`      : build example applications
 - `BUILD_VIEWER`        : build viewer too (needs glfw3) if building examples
 
@@ -63,8 +60,6 @@ The ANARI SDK exports CMake targets for the main front-end library and utilities
 helper library. The targets which are exported are as follows:
 
 - `anari::anari` : main library target to link with `libanari`
-- `anari::anari_utilities` : (DEPRECATED) library target which adds implementation helpers
-- `anari::anari_library_debug` : library target for the debug device
 - `anari::helium` : (static) library target containing base device implementation abstractions
 
 These targets can be found with CMake via `find_package(anari)`. The examples
