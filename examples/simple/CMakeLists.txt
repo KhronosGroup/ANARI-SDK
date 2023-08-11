@@ -56,8 +56,8 @@ target_link_libraries(anariTutorial PRIVATE anari::anari stb_image)
 add_executable(anariTutorialCpp anariTutorial.cpp)
 target_link_libraries(anariTutorialCpp PRIVATE anari::anari stb_image)
 
-add_executable(anariDebugTutorial anariDebugTutorial.c)
-target_link_libraries(anariDebugTutorial PRIVATE anari::anari stb_image)
+add_executable(anariTutorialDebug anariTutorialDebug.c)
+target_link_libraries(anariTutorialDebug PRIVATE anari::anari stb_image)
 
 add_executable(anariTutorialInitFromEnv anariTutorialInitFromEnv.c)
 target_link_libraries(anariTutorialInitFromEnv PRIVATE anari::anari)

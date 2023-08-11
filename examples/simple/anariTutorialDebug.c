@@ -1,14 +1,5 @@
 // Copyright 2021 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
-//
-// anariTutorial.c -- C99 version of a basic ANARI rendering
-//
-// This example create a scene with two triangles colored at the vertices.
-//   The ANARI scene is rendered once and saved into the file "firstFrame.ppm".
-//   The scene is then enhanced with 10 additional rendering passes and saved
-//   into the file "accumulatedFrame.ppm".  For renderers such at the NVGL
-//   raster renderer, there is no improvement to the initial rendering, so
-//   both images will appear the same.
 
 #ifdef _WIN32
 #include <malloc.h>
@@ -126,10 +117,11 @@ int main(int argc, const char **argv)
 
   printf("initialize ANARI...");
 
-  // Use the 'example' library here, this is where the impl(s) come from
+  // Use the 'sink' library here, this is where the impl(s) come from
+  // NOTE: the 'sink' device will no-op most API calls for testing purposes
   ANARILibrary lib = anariLoadLibrary("sink", statusFunc, NULL);
 
-  // Use the 'trace' library here, this is where the impl(s) come from
+  // Use the 'debug' library here, which is the debug layer being demonstrated
   ANARILibrary trace_lib = anariLoadLibrary("debug", statusFunc, NULL);
 
   // query available devices
@@ -223,7 +215,7 @@ int main(int argc, const char **argv)
   anariRelease(dev, surface);
   anariRelease(dev, array);
 
-  // create and setup light for Ambient Occlusion
+  // create and setup directional light
   ANARILight light = anariNewLight(dev, "directional");
 
   // throw in some extra objects that don't belong in lights

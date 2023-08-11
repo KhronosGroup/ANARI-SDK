@@ -72,8 +72,6 @@ int main(int argc, const char **argv)
   uvec3 index[] = {{0, 1, 2}, {1, 2, 3}};
 
   printf("initialize ANARI...");
-  anari::Library m_debug = anari::loadLibrary("debug", statusFunc);
-
   anari::Library lib = anari::loadLibrary("helide", statusFunc);
 
   anari::Extensions extensions =
@@ -83,18 +81,10 @@ int main(int argc, const char **argv)
     printf("WARNING: device doesn't support ANARI_KHR_GEOMETRY_TRIANGLE\n");
   if (!extensions.ANARI_KHR_CAMERA_PERSPECTIVE)
     printf("WARNING: device doesn't support ANARI_KHR_CAMERA_PERSPECTIVE\n");
-  if (!extensions.ANARI_KHR_LIGHT_DIRECTIONAL)
-    printf("WARNING: device doesn't support ANARI_KHR_LIGHT_DIRECTIONAL\n");
   if (!extensions.ANARI_KHR_MATERIAL_MATTE)
     printf("WARNING: device doesn't support ANARI_KHR_MATERIAL_MATTE\n");
 
-  ANARIDevice w = anariNewDevice(lib, "default");
-
-  ANARIDevice d = anariNewDevice(m_debug, "debug");
-  anari::setParameter(d, d, "wrappedDevice", w);
-  anari::setParameter(d, d, "traceMode", "code");
-  anari::setParameter(d, d, "traceDir", "trace");
-  anari::commitParameters(d, d);
+  anari::Device d = anari::newDevice(lib, "default");
 
   printf("done!\n");
   printf("setting up camera...");
@@ -117,16 +107,9 @@ int main(int argc, const char **argv)
 
   // create and setup surface and mesh
   auto mesh = anari::newObject<anari::Geometry>(d, "triangle");
-
-  anari::setAndReleaseParameter(
-      d, mesh, "vertex.position", anari::newArray1D(d, vertex, 4));
-
-  anari::setAndReleaseParameter(
-      d, mesh, "vertex.color", anari::newArray1D(d, color, 4));
-
-  anari::setAndReleaseParameter(
-      d, mesh, "primitive.index", anari::newArray1D(d, index, 2));
-
+  anari::setParameterArray1D(d, mesh, "vertex.position", vertex, 4);
+  anari::setParameterArray1D(d, mesh, "vertex.color", color, 4);
+  anari::setParameterArray1D(d, mesh, "primitive.index", index, 2);
   anari::commitParameters(d, mesh);
 
   auto mat = anari::newObject<anari::Material>(d, "matte");
@@ -140,16 +123,8 @@ int main(int argc, const char **argv)
   anari::commitParameters(d, surface);
 
   // put the surface directly onto the world
-  anari::setAndReleaseParameter(
-      d, world, "surface", anari::newArray1D(d, &surface));
+  anari::setParameterArray1D(d, world, "surface", &surface, 1);
   anari::release(d, surface);
-
-  // create and setup light for Ambient Occlusion
-  auto light = anari::newObject<anari::Light>(d, "directional");
-  anari::commitParameters(d, light);
-  anari::setAndReleaseParameter(
-      d, world, "light", anari::newArray1D(d, &light));
-  anari::release(d, light);
 
   anari::commitParameters(d, world);
 
@@ -175,13 +150,10 @@ int main(int argc, const char **argv)
   auto renderer = anari::newObject<anari::Renderer>(d, "default");
   // objects can be named for easier identification in debug output etc.
   anari::setParameter(d, renderer, "name", "MainRenderer");
+  anari::setParameter(d, renderer, "ambientRadiance", 1.f);
+  anari::commitParameters(d, renderer);
 
   printf("done!\n");
-
-  // complete setup of renderer
-  vec4 bgColor = {1.f, 1.f, 1.f, 1.f};
-  anari::setParameter(d, renderer, "background", bgColor); // white
-  anari::commitParameters(d, renderer);
 
   // create and setup frame
   auto frame = anari::newObject<anari::Frame>(d);
@@ -202,26 +174,7 @@ int main(int argc, const char **argv)
 
   // access frame and write its content as PNG file
   auto fb = anari::map<uint32_t>(d, frame, "channel.color");
-  stbi_write_png("firstFrame.png",
-      int(fb.width),
-      int(fb.height),
-      4,
-      fb.data,
-      4 * int(fb.width));
-  anari::unmap(d, frame, "channel.color");
-
-  printf("done!\n");
-  printf("rendering 10 accumulated frames to accumulatedFrame.png...");
-
-  // render 10 more frames, which are accumulated to result in a better
-  // converged image
-  for (int frames = 0; frames < 10; frames++) {
-    anari::render(d, frame);
-    anari::wait(d, frame);
-  }
-
-  fb = anari::map<uint32_t>(d, frame, "channel.color");
-  stbi_write_png("accumulatedFrame.png",
+  stbi_write_png("tutorial_cpp.png",
       int(fb.width),
       int(fb.height),
       4,
