@@ -1,21 +1,13 @@
-include(FetchContent)
+## Copyright 2023 The Khronos Group
+## SPDX-License-Identifier: Apache-2.0
 
-#set(FETCHCONTENT_QUIET FALSE)
+set(BUILD_TESTING  OFF)
+set(PYBIND11_TEST OFF)
+set(DOWNLOAD_GTEST  OFF)
 
-FetchContent_Declare(pybind11
-  GIT_REPOSITORY https://github.com/pybind/pybind11.git
-  GIT_TAG v2.10.0
-  CONFIGURE_COMMAND ""
-  BUILD_COMMAND ""
-  )
-
-FetchContent_GetProperties(pybind11)
-
-SET(BUILD_TESTING  OFF)
-SET(PYBIND11_TEST OFF)
-SET(DOWNLOAD_GTEST  OFF)
-
-if(NOT pybind11_POPULATED)
-    FetchContent_Populate(pybind11)
-    add_subdirectory(${pybind11_SOURCE_DIR} ${pybind11_BINARY_DIR})
-endif()
+anari_sdk_fetch_project(
+  NAME anari_cts_pybind11
+  URL https://github.com/pybind/pybind11/archive/refs/tags/v2.10.0.zip
+  MD5 9eeed92aa1d7f018bbec4bcc22d4593b
+  ADD_SUBDIR
+)

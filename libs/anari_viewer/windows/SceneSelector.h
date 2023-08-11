@@ -4,18 +4,18 @@
 #pragma once
 
 #include "../ui_anari.h"
-// match3D
-#include <match3D/match3D.h>
 // std
 #include <functional>
 #include <string>
 #include <vector>
 
+#include "Window.h"
+
 namespace windows {
 
 using SceneSelectionCallback = std::function<void(const char *, const char *)>;
 
-struct SceneSelector : public match3D::Window
+struct SceneSelector : public anari_viewer::Window
 {
   SceneSelector(const char *name = "Scene");
   ~SceneSelector();

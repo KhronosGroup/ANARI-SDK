@@ -6,10 +6,10 @@
 // anari
 #include <anari/anari_cpp/ext/linalg.h>
 #include <anari/anari_cpp.hpp>
-// match3D
-#include <match3D/match3D.h>
 // std
 #include <vector>
+
+#include "Window.h"
 
 namespace windows {
 
@@ -30,7 +30,7 @@ struct Light
   std::vector<anari::Light> handles;
 };
 
-struct LightsEditor : public match3D::Window
+struct LightsEditor : public anari_viewer::Window
 {
   LightsEditor(
       std::vector<anari::Device> devices, const char *name = "Lights Editor");

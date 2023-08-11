@@ -23,12 +23,6 @@ set_target_properties(anari::anari_test_scenes PROPERTIES
     "anari_test_scenes"
 )
 
-add_library(anari::anari_viewer INTERFACE IMPORTED)
-set_target_properties(anari::anari_viewer PROPERTIES
-  INTERFACE_LINK_LIBRARIES
-    "anari_viewer"
-)
-
 add_library(anari::helium INTERFACE IMPORTED)
 set_target_properties(anari::helium PROPERTIES
   INTERFACE_LINK_LIBRARIES

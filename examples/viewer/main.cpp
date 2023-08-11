@@ -1,6 +1,7 @@
 // Copyright 2023 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
+#include "anari_viewer/Application.h"
 #include "anari_viewer/windows/LightsEditor.h"
 #include "anari_viewer/windows/SceneSelector.h"
 #include "anari_viewer/windows/Viewport.h"
@@ -55,7 +56,8 @@ static void statusFunc(const void *userData,
 
 static void initializeANARI()
 {
-  auto library = anariLoadLibrary(g_libraryName.c_str(), statusFunc, &g_verbose);
+  auto library =
+      anariLoadLibrary(g_libraryName.c_str(), statusFunc, &g_verbose);
   if (!library)
     throw std::runtime_error("Failed to load ANARI library");
 
@@ -94,13 +96,13 @@ static void initializeANARI()
 
 // Application definition /////////////////////////////////////////////////////
 
-class Application : public match3D::DockingApplication
+class Application : public anari_viewer::Application
 {
  public:
   Application() = default;
   ~Application() override = default;
 
-  match3D::WindowArray setup() override
+  anari_viewer::WindowArray setup() override
   {
     ui::init();
 
@@ -143,7 +145,7 @@ class Application : public match3D::DockingApplication
       }
     });
 
-    match3D::WindowArray windows;
+    anari_viewer::WindowArray windows;
     windows.emplace_back(viewport);
     windows.emplace_back(leditor);
     windows.emplace_back(sselector);

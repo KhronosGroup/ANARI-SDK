@@ -3,8 +3,6 @@
 
 project(local_embree LANGUAGES CXX)
 
-include(cmake/CPM.cmake)
-
 option(EMBREE_GEOMETRY_CURVE       "" ON)
 option(EMBREE_GEOMETRY_GRID        "" OFF)
 option(EMBREE_GEOMETRY_INSTANCE    "" ON)
@@ -28,20 +26,20 @@ option(EMBREE_STATIC_LIB           "" ON)
 option(EMBREE_TUTORIALS            "" OFF)
 option(EMBREE_TUTORIALS_GLFW       "" OFF)
 set(EMBREE_TASKING_SYSTEM "INTERNAL" CACHE STRING "" FORCE)
-CPMAddPackage(
-  NAME embree
+
+anari_sdk_fetch_project(
+  NAME anari_helide_embree
   URL "https://github.com/embree/embree/archive/refs/tags/v3.13.5.zip"
+  MD5 d87ce56557a38e332cb3e0fa5cac8cfd
+  ADD_SUBDIR
 )
 
-add_library(${PROJECT_NAME} INTERFACE)
-target_link_libraries(${PROJECT_NAME} INTERFACE embree tasking)
-target_compile_definitions(${PROJECT_NAME} INTERFACE TASKING_INTERNAL)
-target_include_directories(${PROJECT_NAME}
-INTERFACE
-  ${embree_SOURCE_DIR}/common
-)
+project_add_library(INTERFACE)
+project_link_libraries(INTERFACE embree tasking)
+project_compile_definitions(INTERFACE TASKING_INTERNAL)
+project_include_directories(INTERFACE ${anari_helide_embree_LOCATION}/common)
 if (WIN32)
-  target_compile_options(${PROJECT_NAME}
+  project_compile_options(
   INTERFACE
     /D__SSE__ /D__SSE2__ /D__SSE3__ /D__SSSE3__ /D__SSE4_1__ /D__SSE4_2__
   )
