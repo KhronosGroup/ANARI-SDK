@@ -90,12 +90,6 @@
                     "tags" : [],
                     "default" : [1.0, 0.0, 0.0],
                     "description" : "direction of the C0-(half)plane"
-                }, {
-                    "name" : "visible",
-                    "types" : ["ANARI_BOOL"],
-                    "tags" : [],
-                    "default" : 1,
-                    "description" : "visibility of the light geometry"
                 }
             ]
         }

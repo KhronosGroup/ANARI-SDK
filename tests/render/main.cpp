@@ -33,11 +33,12 @@ std::string g_category;
 std::string g_scene;
 
 anari::uint2 g_frameSize(1024, 768);
-int g_numPixelSamples = 16;
+int g_numPixelSamples = 1;
 std::string g_libraryType = "environment";
 std::string g_deviceType = "default";
 std::string g_rendererType = "default";
 bool g_enableDebug = false;
+bool g_verbose = false;
 
 anari::Library g_library = nullptr;
 anari::Device g_device = nullptr;
@@ -54,29 +55,35 @@ static void statusFunc(const void *userData,
     anari::StatusCode code,
     const char *message)
 {
-  (void)userData;
-  (void)device;
-  (void)source;
-  (void)sourceType;
-  (void)code;
+  const bool verbose = userData ? *(const bool *)userData : false;
   if (severity == ANARI_SEVERITY_FATAL_ERROR) {
-    fprintf(stderr, "[FATAL] %s\n", message);
+    fprintf(stderr, "[FATAL][%p] %s\n", source, message);
   } else if (severity == ANARI_SEVERITY_ERROR) {
-    fprintf(stderr, "[ERROR] %s\n", message);
-  } else if (severity == ANARI_SEVERITY_WARNING) {
-    fprintf(stderr, "[WARN ] %s\n", message);
-  } else if (severity == ANARI_SEVERITY_PERFORMANCE_WARNING) {
-    fprintf(stderr, "[PERF ] %s\n", message);
-  } else if (severity == ANARI_SEVERITY_INFO) {
-    fprintf(stderr, "[INFO] %s\n", message);
+    fprintf(stderr, "[ERROR][%p] %s\n", source, message);
+  } else if (verbose && severity == ANARI_SEVERITY_WARNING) {
+    fprintf(stderr, "[WARN ][%p] %s\n", source, message);
+  } else if (verbose && severity == ANARI_SEVERITY_PERFORMANCE_WARNING) {
+    fprintf(stderr, "[PERF ][%p] %s\n", source, message);
+  } else if (verbose && severity == ANARI_SEVERITY_INFO) {
+    fprintf(stderr, "[INFO ][%p] %s\n", source, message);
+  } else if (verbose && severity == ANARI_SEVERITY_DEBUG) {
+    fprintf(stderr, "[DEBUG][%p] %s\n", source, message);
   }
 }
 
 static void initializeANARI()
 {
-  g_library = anari::loadLibrary(g_libraryType.c_str(), statusFunc);
+  g_library = anari::loadLibrary(g_libraryType.c_str(), statusFunc, &g_verbose);
   if (g_enableDebug)
-    g_debugLibrary = anari::loadLibrary("debug");
+    g_debugLibrary = anari::loadLibrary("debug", statusFunc, &g_verbose);
+
+  if (!g_library) {
+    printf("############ WARNING ############\n");
+    printf("'%s' library failed to load, falling back to 'helide'\n",
+        g_libraryType.c_str());
+    printf("#################################\n");
+    g_library = anari::loadLibrary("helide", statusFunc, &g_verbose);
+  }
 
   if (!g_library)
     throw std::runtime_error("Failed to load ANARI library");
@@ -177,24 +184,29 @@ void printHelp()
 
         default --> "environment"
 
+    --verbose | -v
+
+        Enable verbose output from the device, otherwise just errors
+
     --num_samples [N]
 
         Number of samples to be take for each pixel per-frame,
         relevant to ray tracers
 
-        default --> 16
+        default --> 1
 
     --renderer [name]
 
         Which renderer to use for each frame
 
-        default --> "pathtracer"
+        default --> "default"
 
     --image_size [width] [height]
 
         Set the size of the images to be rendered
 
         default --> 1024 768
+
     --debug | -d
 
         Enable the debug layer
@@ -222,6 +234,8 @@ void parseCommandLine(int argc, const char *argv[])
       g_frameSize.y = (unsigned)std::strtoul(argv[++i], nullptr, 10);
     } else if (arg == "--debug" || arg == "-d") {
       g_enableDebug = true;
+    } else if (arg == "--verbose" || arg == "-v") {
+      g_verbose = true;
     }
   }
 }

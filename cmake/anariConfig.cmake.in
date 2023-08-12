@@ -9,9 +9,9 @@ set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 find_dependency(Threads)
 
-include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@_Exports.cmake")
+include(${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@_Exports.cmake)
 
-check_required_components("@PROJECT_NAME@")
+check_required_components(@PROJECT_NAME@)
 
 if (NOT TARGET anari::anari)
   message(FATAL_ERROR "CMAKE_PREFIX_PATH or anari_DIR are pointing to an \
@@ -31,10 +31,13 @@ if (@INSTALL_CODE_GEN_SCRIPTS@)
   include(${CMAKE_CURRENT_LIST_DIR}/cmake/anari_generate_codegen.cmake)
 endif()
 
-if (TARGET anari::anari_viewer AND NOT ANARI_FOUND)
-  set(match3D_DIR ${ANARI_DATAROOTDIR}/anari_viewer/match3D_src/cmake)
-  find_package(match3D REQUIRED stb_image nativefiledialog imnodes)
-  target_link_libraries(anari::anari_viewer INTERFACE match3D::match3D)
+if (@INSTALL_VIEWER_LIBRARY@)
+  include(${CMAKE_CURRENT_LIST_DIR}/cmake/anari_sdk_fetch_project.cmake)
+  include(${CMAKE_CURRENT_LIST_DIR}/cmake/cmake_project_commands.cmake)
+  add_subdirectory(
+    ${ANARI_DATAROOTDIR}/anari_viewer
+    ${CMAKE_CURRENT_BINARY_DIR}/anari_viewer
+  )
 endif()
 
 set(ANARI_FOUND TRUE)

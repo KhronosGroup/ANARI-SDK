@@ -3,8 +3,6 @@
 
 project(anari_library_remote LANGUAGES CXX)
 
-cmake_minimum_required(VERSION 3.22)
-
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -18,81 +16,83 @@ set(Boost_INCLUDE_DIRS "3rdparty/boost")
 find_package(Boost COMPONENTS filesystem iostreams system REQUIRED)
 
 if (Snappy_FOUND)
-    set(__remote_extra_libs ${__remote_extra_libs} Snappy::snappy)
-    set(__remote_definitions ${__remote_definitions} HAVE_SNAPPY=1)
+  list(APPEND __remote_extra_libs Snappy::snappy)
+  list(APPEND __remote_definitions HAVE_SNAPPY=1)
 endif()
 
 if (libjpeg-turbo_FOUND)
-    set(__remote_extra_libs ${__remote_extra_libs} libjpeg-turbo::turbojpeg)
-    set(__remote_definitions ${__remote_definitions} HAVE_TURBOJPEG=1)
+  list(APPEND __remote_extra_libs libjpeg-turbo::turbojpeg)
+  list(APPEND __remote_definitions HAVE_TURBOJPEG=1)
 endif()
 
 # =========================================================
 # Client device
 # =========================================================
 
-add_library(${PROJECT_NAME} SHARED)
+project_add_library(SHARED)
 
-target_sources(${PROJECT_NAME} PRIVATE
-    async/connection.cpp
-    async/connection_manager.cpp
-    async/message.cpp
-    ArrayInfo.cpp
-    Compression.cpp
-    Device.cpp
-    Frame.cpp
-    Library.cpp
-    Logging.cpp
+project_sources(PRIVATE
+  async/connection.cpp
+  async/connection_manager.cpp
+  async/message.cpp
+  ArrayInfo.cpp
+  Compression.cpp
+  Device.cpp
+  Frame.cpp
+  Library.cpp
+  Logging.cpp
 )
 
-if (__remote_definitions)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC ${__remote_definitions})
-endif()
-target_include_directories(${PROJECT_NAME} PUBLIC ${Boost_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME}
-    PUBLIC
-        anari::anari
-        helium
-        ${__remote_extra_libs}
-        Boost::filesystem
-        Boost::iostreams
-        Boost::system
+project_compile_definitions(PUBLIC ${__remote_definitions})
+project_include_directories(PUBLIC ${Boost_INCLUDE_DIRS})
+project_link_libraries(
+PUBLIC
+  anari::helium
+  ${__remote_extra_libs}
+  Boost::filesystem
+  Boost::iostreams
+  Boost::system
+)
+
+## Installation ##
+
+install(TARGETS ${PROJECT_NAME}
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
 # =========================================================
 # Server app
 # =========================================================
 
-add_executable(anari-remote-server)
+project(anariRemoteServer LANGUAGES CXX)
 
-target_sources(anari-remote-server PRIVATE
-    async/connection.cpp
-    async/connection_manager.cpp
-    async/message.cpp
-    ArrayInfo.cpp
-    Compression.cpp
-    Logging.cpp
-    Server.cpp
+project_add_executable()
+
+project_sources(
+PRIVATE
+  async/connection.cpp
+  async/connection_manager.cpp
+  async/message.cpp
+  ArrayInfo.cpp
+  Compression.cpp
+  Logging.cpp
+  Server.cpp
 )
 
-if (__remote_definitions)
-    target_compile_definitions(anari-remote-server PUBLIC ${__remote_definitions})
-endif()
-target_include_directories(anari-remote-server PUBLIC ${Boost_INCLUDE_DIRS})
-target_link_libraries(anari-remote-server
-    PUBLIC
-        anari::anari
-        helium
-        ${__remote_extra_libs}
-        #Boost::filesystem
-        #Boost::iostreams
-        #Boost::system
-        ${CMAKE_THREAD_LIBS_INIT}
+project_compile_definitions(PRIVATE ${__remote_definitions})
+project_include_directories(PRIVATE ${Boost_INCLUDE_DIRS})
+project_link_libraries(
+PUBLIC
+  anari::helium
+  ${__remote_extra_libs}
+  ${CMAKE_THREAD_LIBS_INIT}
 )
 
 ## Installation ##
 
-install(TARGETS ${PROJECT_NAME} anari-remote-server
+install(TARGETS ${PROJECT_NAME}
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}

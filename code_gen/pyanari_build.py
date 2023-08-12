@@ -8,6 +8,7 @@ import json
 import merge_anari
 import argparse
 import pathlib
+import glob
 
 
 parser = argparse.ArgumentParser(description="Generate query functions for an ANARI device.")
@@ -123,6 +124,10 @@ ffibuilder.set_source('pyanari',
 if __name__ == "__main__":
     #ffibuilder.emit_c_code(str(args.outdir/"pyanari.c"))
     ffibuilder.compile(verbose=True, debug=False)
+    #this ends up with a funny python version specific name despite being version agnostic
+    pyanari_file = glob.glob('pyanari.*.so')
+    if pyanari_file:
+        os.rename(pyanari_file[0], 'pyanari.so')
 
 
 boilerplate = '''# Copyright 2021 The Khronos Group
@@ -140,6 +145,64 @@ def _releaseBoth(device, handle):
     lib.anariRelease(device, device)
 
 '''
+
+conversions = '''
+def _from_string_list(x):
+    result = []
+    if x != ffi.NULL:
+        i = 0
+        while x[i] != ffi.NULL:
+            result.append(str(ffi.string(x[i]), 'utf-8'))
+            i += 1
+    return result
+
+def _from_type_list(x):
+    result = []
+    if x != ffi.NULL:
+        i = 0
+        while x[i] != lib.ANARI_UNKNOWN:
+            result.append(x[i])
+            i += 1
+    return result
+
+def _from_parameter_list(x):
+    result = []
+    if x != ffi.NULL:
+        print(x)
+        print(x[0].name)
+        i = 0
+        while x[i].name != ffi.NULL:
+            result.append((str(ffi.string(x[i].name), 'utf-8'), x[i].type))
+            i += 1
+    return result
+
+def _convert_pointer(dataType, x):
+    if x == ffi.NULL:
+        return None
+
+    x = ffi.cast(_basepointer[dataType], x)
+
+    if dataType == lib.ANARI_STRING_LIST:
+        return _from_string_list(x)
+    elif dataType == lib.ANARI_DATA_TYPE_LIST:
+        return _from_type_list(x)
+    elif dataType == lib.ANARI_PARAMETER_LIST:
+        return _from_parameter_list(x)
+    elif dataType == lib.ANARI_STRING:
+        return str(ffi.string(x[i]), 'utf-8')
+    elif _elements[dataType]==1:
+        return x[0]
+    elif _elements[dataType]==2:
+        return (x[0], x[1])
+    elif _elements[dataType]==3:
+        return (x[0], x[1], x[2])
+    elif _elements[dataType]==4:
+        return (x[0], x[1], x[2], x[3])
+    else:
+        return ptr
+
+'''
+
 
 special = {
     'anariSetParameter' :
@@ -163,7 +226,7 @@ special = {
 ''',
     'anariNewArray1D' :
     '''def anariNewArray1D(device, appMemory, dataType, numItems1):
-    result = lib.anariNewArray1D(device, ffi.NULL, ffi.NULL, ffi.NULL, dataType, numItems1, 0)
+    result = lib.anariNewArray1D(device, ffi.NULL, ffi.NULL, ffi.NULL, dataType, numItems1)
     ptr = lib.anariMapArray(device, result)
     ffi.memmove(ptr, appMemory, ffi.sizeof(_typeof[dataType])*numItems1)
     lib.anariUnmapArray(device, result)
@@ -173,7 +236,7 @@ special = {
 ''',
     'anariNewArray2D' :
     '''def anariNewArray2D(device, appMemory, dataType, numItems1, numItems2):
-    result = lib.anariNewArray2D(device, ffi.NULL, ffi.NULL, ffi.NULL, dataType, numItems1, numItems2, 0, 0)
+    result = lib.anariNewArray2D(device, ffi.NULL, ffi.NULL, ffi.NULL, dataType, numItems1, numItems2)
     ptr = lib.anariMapArray(device, result)
     ffi.memmove(ptr, appMemory, ffi.sizeof(_typeof[dataType])*numItems1*numItems2)
     lib.anariUnmapArray(device, result)
@@ -200,6 +263,65 @@ special = {
     return (result, int(frame_width[0]), int(frame_height[0]), int(frame_type[0]))
 
 ''',
+    'anariMapParameterArray1D' :
+    '''def anariMapParameterArray1D(device, object, name, dataType, numElements1):
+    elementStride = ffi.new('uint64_t*', 0)
+    result = lib.anariMapParameterArray1D(device, object, name.encode('utf-8'), dataType, numElements1, elementStride)
+    result = ffi.cast(_basepointer[dataType], result)
+    return (result, int(elementStride[0]))
+
+''',
+    'anariMapParameterArray2D' :
+    '''def anariMapParameterArray2D(device, object, name, dataType, numElements1, numElements2):
+    elementStride = ffi.new('uint64_t*', 0)
+    result = lib.anariMapParameterArray1D(device, object, name.encode('utf-8'), dataType, numElements1, numElements2, elementStride)
+    result = ffi.cast(_basepointer[dataType], result)
+    return (result, int(elementStride[0]))
+
+''',
+    'anariMapParameterArray3D' :
+    '''def anariMapParameterArray3D(device, object, name, dataType, numElements1, numElements2, numElements3):
+    elementStride = ffi.new('uint64_t*', 0)
+    result = lib.anariMapParameterArray1D(device, object, name.encode('utf-8'), dataType, numElements1, numElements2, numElements3, elementStride)
+    result = ffi.cast(_basepointer[dataType], result)
+    return (result, int(elementStride[0]))
+
+''',
+    'anariGetDeviceSubtypes' :
+    '''def anariGetDeviceSubtypes(library):
+    result = lib.anariGetDeviceSubtypes(library)
+    return _from_string_list(result)
+
+''',
+    'anariGetDeviceExtensions' :
+    '''def anariGetDeviceExtensions(library, deviceSubtype):
+    result = lib.anariGetDeviceExtensions(library, deviceSubtype.encode('utf-8'))
+    return _from_string_list(result)
+
+''',
+    'anariGetObjectSubtypes' :
+    '''def anariGetObjectSubtypes(device, objectType):
+    result = lib.anariGetObjectSubtypes(device, objectType)
+    return _from_string_list(result)
+
+''', 'anariGetObjectInfo' :
+    '''def anariGetObjectInfo(device, objectType, objectSubtype, infoName, infoType):
+    result = lib.anariGetObjectInfo(device, objectType, objectSubtype.encode('utf-8'), infoName.encode('utf-8'), infoType)
+    return _convert_pointer(infoType, result)
+
+''', 'anariGetParameterInfo' :
+    '''def anariGetParameterInfo(device, objectType, objectSubtype, parameterName, parameterType, infoName, infoType):
+    result = lib.anariGetParameterInfo(device, objectType, objectSubtype.encode('utf-8'), parameterName.encode('utf-8'), parameterType, infoName.encode('utf-8'), infoType)
+    return _convert_pointer(infoType, result)
+
+''', 'anariGetProperty' :
+    '''def anariGetProperty(device, object, name, type, mem, size, mask):
+    result = lib.anariGetProperty(device, object, name.encode('utf-8'), type, mem, size, mask)
+    return _convert_pointer(infoType, result)
+
+''',
+    
+
     'anariRelease' : '', # remove these to avoid confusion
     'anariRetain' : '',
     'anariUnloadLibrary' : ''
@@ -260,6 +382,20 @@ def write_wrappers(anari):
             code += '    %s : \'%s[%d]\',\n'%(value['name'], value['baseType'], value['elements'])
     code += '}\n'
 
+    code += '_basepointer = {\n'
+    for value in types['values']:
+        if value['baseType'][-1] == '*':
+            code += '    %s : \'%s\',\n'%(value['name'], value['baseType'])
+        else:
+            code += '    %s : \'%s*\',\n'%(value['name'], value['baseType'])
+    code += '}\n'
+
+    code += '_elements = {\n'
+    for value in types['values']:
+        code += '    %s : %s,\n'%(value['name'], value['elements'])
+    code += '}\n'
+
+    code += conversions
 
     for fun in anari['functions']:
         if fun['name'] in special:

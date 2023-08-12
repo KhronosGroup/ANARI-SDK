@@ -5,18 +5,22 @@
 
 #include "../Orbit.h"
 #include "../ui_anari.h"
+// glad
+#include "glad/glad.h"
+// glfw
+#include <GLFW/glfw3.h>
 // anari
 #include <anari/anari_cpp/ext/linalg.h>
 #include <anari/anari_cpp.hpp>
-// match3D
-#include <match3D/match3D.h>
 // std
 #include <array>
 #include <limits>
 
+#include "Window.h"
+
 namespace windows {
 
-struct Viewport : public match3D::Window
+struct Viewport : public anari_viewer::Window
 {
   Viewport(anari::Device device, const char *name = "Viewport");
   ~Viewport();

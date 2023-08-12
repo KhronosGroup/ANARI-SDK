@@ -28,7 +28,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
 ## Establish project
 
-project(anari VERSION 0.4.0 LANGUAGES C CXX)
+project(anari VERSION 0.7.0 LANGUAGES C CXX)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
@@ -65,6 +65,7 @@ add_custom_target(generate_all)
 include(cmake/anari_generate_frontend.cmake)
 include(cmake/anari_generate_codegen.cmake)
 include(cmake/cmake_project_commands.cmake)
+include(cmake/anari_sdk_fetch_project.cmake)
 
 ## Add library and executable targets
 
@@ -128,4 +129,5 @@ install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/cmake
     ${ANARI_CMAKE_INSTALL_DESTINATION}
   FILES_MATCHING
     PATTERN *.cmake
+    PATTERN Findanari.cmake EXCLUDE
 )

@@ -1,0 +1,44 @@
+{
+    "info" : {
+        "name" : "KHR_GEOMETRY_QUAD_MOTION_DEFORMATION",
+        "type" : "extension",
+        "dependencies" : []
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_GEOMETRY",
+            "name" : "quad",
+            "parameters" : [
+               {
+                    "name" : "vertex.position",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "elementType" : ["ANARI_ARRAY1D"],
+                    "elementElementType" : ["ANARI_FLOAT32_VEC3"],
+                    "tags" : ["required"],
+                    "description" : "vertex position"
+                }, {
+                    "name" : "vertex.normal",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "elementType" : ["ANARI_ARRAY1D"],
+                    "elementElementType" : ["ANARI_FLOAT32_VEC3", "ANARI_FIXED16_VEC3"],
+                    "tags" : [],
+                    "description" : "vertex normal"
+                }, {
+                    "name" : "vertex.tangent",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "elementType" : ["ANARI_ARRAY1D"],
+                    "elementElementType" : ["ANARI_FLOAT32_VEC3", "ANARI_FIXED16_VEC3", "ANARI_FLOAT32_VEC4", "ANARI_FIXED16_VEC4"],
+                    "tags" : [],
+                    "description" : "vertex normal"
+                }, {
+                    "name" : "time",
+                    "types" : ["ANARI_FLOAT32_BOX1"],
+                    "tags" : [],
+                    "default" : [0.0, 1.0],
+                    "description" : "time associated with the first and laste entry in the motion.transform array"
+                }
+            ]
+        }
+    ]
+}

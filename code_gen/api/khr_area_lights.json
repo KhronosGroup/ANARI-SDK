@@ -61,6 +61,54 @@
                     "description" : "visibility of the light geometry"
                 }
             ]
+        }, {
+            "type" : "ANARI_LIGHT",
+            "name" : "hdri",
+            "parameters" : [
+                {
+                    "name" : "visible",
+                    "types" : ["ANARI_BOOL"],
+                    "tags" : [],
+                    "default" : 1,
+                    "description" : "visibility of the light geometry"
+                }
+            ]
+        }, {
+            "type" : "ANARI_LIGHT",
+            "name" : "ring",
+            "parameters" : [
+                {
+                    "name" : "visible",
+                    "types" : ["ANARI_BOOL"],
+                    "tags" : [],
+                    "default" : 1,
+                    "description" : "visibility of the light geometry"
+                }
+            ]
+        }, {
+            "type" : "ANARI_LIGHT",
+            "name" : "quad",
+            "parameters" : [
+                {
+                    "name" : "visible",
+                    "types" : ["ANARI_BOOL"],
+                    "tags" : [],
+                    "default" : 1,
+                    "description" : "visibility of the light geometry"
+                }
+            ]
+        }, {
+            "type" : "ANARI_LIGHT",
+            "name" : "spot",
+            "parameters" : [
+                {
+                    "name" : "visible",
+                    "types" : ["ANARI_BOOL"],
+                    "tags" : [],
+                    "default" : 1,
+                    "description" : "visibility of the light geometry"
+                }
+            ]
         }
     ]
 }

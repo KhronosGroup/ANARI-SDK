@@ -8,6 +8,7 @@ docs/out/*
 out
 CMakeSettings.json
 .match3D
+.anari_deps
 
 # cts
 cts/anari_library_debug*

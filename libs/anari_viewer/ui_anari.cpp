@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "ui_anari.h"
-// match3D
+// anari_viewer
 #include "nfd.h"
 // std
 #include <limits>

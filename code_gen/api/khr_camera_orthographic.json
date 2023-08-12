@@ -35,59 +35,23 @@
                     "default" : [0.0, 1.0, 0.0],
                     "description" : "camera up direction"
                 }, {
-                    "name" : "transform",
-                    "types" : ["ANARI_FLOAT32_MAT4"],
-                    "tags" : [],
-                    "default" : [
-                        1.0, 0.0, 0.0, 0.0,
-                        0.0, 1.0, 0.0, 0.0,
-                        0.0, 0.0, 1.0, 0.0,
-                        0.0, 0.0, 0.0, 1.0
-                    ],
-                    "description" : "camera transform"
-                }, {
                     "name" : "imageRegion",
                     "types" : ["ANARI_FLOAT32_BOX2"],
                     "tags" : [],
                     "default" : [0.0, 0.0, 1.0, 1.0],
                     "description" : "region mapped to the frame"
                 }, {
-                    "name" : "apertureRadius",
-                    "types" : ["ANARI_FLOAT32"],
-                    "tags" : ["canonical"],
-                    "default" : 0,
-                    "description" : "aperture radius"
-                }, {
-                    "name" : "focusDistance",
-                    "types" : ["ANARI_FLOAT32"],
-                    "tags" : ["canonical"],
-                    "default" : 1,
-                    "description" : "focus distance"
-                }, {
-                    "name" : "stereoMode",
-                    "types" : ["ANARI_STRING"],
-                    "tags" : [],
-                    "default" : "none",
-                    "values" : ["none", "left", "right", "sideBySide", "topBottom"],
-                    "description" : "stereo mode"
-                }, {
-                    "name" : "interpupillaryDistance",
+                    "name" : "aspect",
                     "types" : ["ANARI_FLOAT32"],
                     "tags" : [],
-                    "default" : 0.0635,
-                    "description" : "interpupillary distance for stereo rendering"
+                    "default" : 1.0,
+                    "description" : "aspect ratio"
                 }, {
                     "name" : "height",
                     "types" : ["ANARI_FLOAT32"],
                     "tags" : [],
                     "default" : 1.0,
                     "description" : "height of image plane"
-                }, {
-                    "name" : "aspect",
-                    "types" : ["ANARI_FLOAT32"],
-                    "tags" : [],
-                    "default" : 1.0,
-                    "description" : "aspect ratio"
                 }, {
                     "name" : "near",
                     "types" : ["ANARI_FLOAT32"],

@@ -1,6 +1,6 @@
 {
     "info" : {
-        "name" : "KHR_AUXILIARY_BUFFERS",
+        "name" : "KHR_FRAME_CHANNEL_ALBEDO",
         "type" : "extension",
         "dependencies" : []
     },
@@ -10,12 +10,6 @@
             "type" : "ANARI_FRAME",
             "parameters" : [
                 {
-                    "name" : "channel.normal",
-                    "types" : ["ANARI_DATA_TYPE"],
-                    "tags" : [],
-                    "values" : ["ANARI_FIXED16_VEC3", "ANARI_FLOAT32_VEC3"],
-                    "description" : "enables mapping the normal channel as the type specified"
-                }, {
                     "name" : "channel.albedo",
                     "types" : ["ANARI_DATA_TYPE"],
                     "tags" : [],
@@ -24,7 +18,7 @@
                 }
             ],
             "channel" : [
-                "channel.normal", "channel.albedo"
+                "channel.albedo"
             ]
         }
     ]

@@ -88,10 +88,11 @@ extern "C" ANARILibrary anariLoadLibrary(const char *libraryName,
       invokeStatusCallback(statusCB,
           statusCBUserPtr,
           "'environment' library selected but ANARI_LIBRARY is not set");
-    }
-
-    libraryName = libraryFromEnv;
+      return nullptr;
+    } else
+      libraryName = libraryFromEnv;
   }
+
   using NewLibraryFcn = ANARILibrary (*)(void *libraryName,
       ANARIStatusCallback statusCB,
       const void *statusCBUserPtr);
@@ -340,7 +341,8 @@ extern "C" ANARIGroup anariNewGroup(ANARIDevice d) ANARI_CATCH_BEGIN
 }
 ANARI_CATCH_END(nullptr)
 
-extern "C" ANARIInstance anariNewInstance(ANARIDevice d, const char *type) ANARI_CATCH_BEGIN
+extern "C" ANARIInstance anariNewInstance(
+    ANARIDevice d, const char *type) ANARI_CATCH_BEGIN
 {
   return deviceRef(d).newInstance(type);
 }

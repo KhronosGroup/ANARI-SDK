@@ -15,11 +15,11 @@ namespace debug_queries {
 #define ANARI_INFO_elementType 5
 #define ANARI_INFO_value 6
 #define ANARI_INFO_sourceExtension 7
-#define ANARI_INFO_feature 8
+#define ANARI_INFO_extension 8
 #define ANARI_INFO_parameter 9
 #define ANARI_INFO_channel 10
 #define ANARI_INFO_use 11
-const int extension_count = 35;
+const int extension_count = 46;
 const char ** query_extensions();
 const char ** query_object_types(ANARIDataType type);
 const ANARIParameter * query_params(ANARIDataType type, const char *subtype);

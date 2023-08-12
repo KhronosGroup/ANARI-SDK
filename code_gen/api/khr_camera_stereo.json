@@ -1,0 +1,30 @@
+{
+    "info" : {
+        "name" : "KHR_CAMERA_STEREO",
+        "type" : "extension",
+        "dependencies" : []
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_CAMERA",
+            "name" : "default",
+            "parameters" : [
+                {
+                    "name" : "stereoMode",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "default" : "none",
+                    "values" : ["none", "left", "right", "sideBySide", "topBottom"],
+                    "description" : "stereo mode"
+                }, {
+                    "name" : "interpupillaryDistance",
+                    "types" : ["ANARI_FLOAT32"],
+                    "tags" : [],
+                    "default" : 0.0635,
+                    "description" : "interpupillary distance for stereo rendering"
+                }
+            ]
+        }
+    ]
+}

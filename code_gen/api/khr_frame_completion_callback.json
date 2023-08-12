@@ -1,6 +1,6 @@
 {
     "info" : {
-        "name" : "KHR_FRAME_CONTINUATION",
+        "name" : "KHR_FRAME_COMPLETION_CALLBACK",
         "type" : "extension",
         "dependencies" : ["anari_core_1_0"]
     },

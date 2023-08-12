@@ -4,7 +4,23 @@
         "type" : "device",
         "dependencies" : [
             "anari_core_1_0",
-            "anari_core_objects_all_1_0"
+            "anari_core_objects_base_1_0",
+            "khr_camera_orthographic",
+            "khr_camera_perspective",
+            "khr_geometry_triangle",
+            "khr_instance_transform",
+            "khr_light_directional",
+            "khr_light_point",
+            "khr_material_matte",
+            "khr_renderer_ambient_light",
+            "khr_renderer_background_color",
+            "khr_sampler_image1d",
+            "khr_sampler_image2d",
+            "khr_sampler_image3d",
+            "khr_sampler_primitive",
+            "khr_sampler_transform",
+            "khr_spatial_field_structured_regular",
+            "khr_volume_transfer_function1d"
         ]
     }
 }

@@ -1,0 +1,46 @@
+{
+    "info" : {
+        "name" : "KHR_FRAME_CHANNEL_OBJECT_ID",
+        "type" : "extension",
+        "dependencies" : []
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_FRAME",
+            "parameters" : [
+                {
+                    "name" : "channel.objectId",
+                    "types" : ["ANARI_DATA_TYPE"],
+                    "tags" : [],
+                    "values" : ["ANARI_UINT32"],
+                    "description" : "enables mapping the objectId channel as the type specified"
+                }
+            ],
+            "channel" : [
+                "channel.objectId"
+            ]
+        }, {
+            "type" : "ANARI_SURFACE",
+            "parameters" : [
+                {
+                    "name" : "id",
+                    "types" : ["ANARI_UINT32"],
+                    "tags" : [],
+                    "description" : "user id for objectId channel"
+                }
+            ]
+        }, {
+            "type" : "ANARI_VOLUME",
+            "name" : "",
+            "parameters" : [
+                {
+                    "name" : "id",
+                    "types" : ["ANARI_UINT32"],
+                    "tags" : [],
+                    "description" : "user id for objectId channel"
+                }
+            ]
+        }
+    ]
+}

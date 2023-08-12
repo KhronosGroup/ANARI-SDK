@@ -49,12 +49,6 @@
                     "tags" : [],
                     "default" : 1,
                     "description" : "scale factor for radiance"
-                }, {
-                    "name" : "visible",
-                    "types" : ["ANARI_BOOL"],
-                    "tags" : [],
-                    "default" : 1,
-                    "description" : "visibility of the light geometry"
                 }
             ]
         }

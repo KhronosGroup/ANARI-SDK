@@ -68,6 +68,24 @@ static float3 readAttributeValue(Attribute a, const Ray &r, const World &w)
   return float3(v.x, v.y, v.z);
 }
 
+static float3 backgroundColorFromImage(
+    const Array2D &image, const float2 &screen)
+{
+  const auto interp_x = getInterpolant(screen.x, image.size().x, true);
+  const auto interp_y = getInterpolant(screen.y, image.size().y, true);
+  const auto v00 = image.readAsAttributeValue({interp_x.lower, interp_y.lower});
+  const auto v01 = image.readAsAttributeValue({interp_x.lower, interp_y.upper});
+  const auto v10 = image.readAsAttributeValue({interp_x.upper, interp_y.lower});
+  const auto v11 = image.readAsAttributeValue({interp_x.upper, interp_y.upper});
+
+  const auto v0 = linalg::lerp(v00, v01, interp_y.frac);
+  const auto v1 = linalg::lerp(v10, v11, interp_y.frac);
+
+  const auto v = linalg::lerp(v0, v1, interp_x.frac);
+
+  return float3(v.x, v.y, v.z);
+}
+
 // Renderer definitions ///////////////////////////////////////////////////////
 
 Renderer::Renderer(HelideGlobalState *s) : Object(ANARI_RENDERER, s)
@@ -95,11 +113,13 @@ Renderer::~Renderer()
 void Renderer::commit()
 {
   m_bgColor = getParam<float4>("background", float4(float3(0.f), 1.f));
+  m_bgImage = getParamObject<Array2D>("background");
   m_ambientRadiance = getParam<float>("ambientRadiance", 1.f);
   m_mode = renderModeFromString(getParamString("mode", "default"));
 }
 
-PixelSample Renderer::renderSample(Ray ray, const World &w) const
+PixelSample Renderer::renderSample(
+    const float2 &screen, Ray ray, const World &w) const
 {
   // Intersect Surfaces //
 
@@ -119,7 +139,7 @@ PixelSample Renderer::renderSample(Ray ray, const World &w) const
 
   // Shade //
 
-  const float3 color = shadeRay(ray, vray, w);
+  const float3 color = shadeRay(screen, ray, vray, w);
   const float depth = hitVolume ? std::min(ray.tfar, vray.t.lower) : ray.tfar;
   return {float4(color, 1.f), depth};
 }
@@ -130,16 +150,20 @@ Renderer *Renderer::createInstance(
   return new Renderer(s);
 }
 
-float3 Renderer::shadeRay(
-    const Ray &ray, const VolumeRay &vray, const World &w) const
+float3 Renderer::shadeRay(const float2 &screen,
+    const Ray &ray,
+    const VolumeRay &vray,
+    const World &w) const
 {
   const bool hitGeometry = ray.geomID != RTC_INVALID_GEOMETRY_ID;
   const bool hitVolume = vray.volume != nullptr;
 
-  if (!hitGeometry && !hitVolume)
-    return float3(m_bgColor.x, m_bgColor.y, m_bgColor.z);
+  const float3 bgColor = m_bgImage
+      ? backgroundColorFromImage(*m_bgImage, screen)
+      : float3(m_bgColor.x, m_bgColor.y, m_bgColor.z);
 
-  const float3 bgColor(m_bgColor.x, m_bgColor.y, m_bgColor.z);
+  if (!hitGeometry && !hitVolume)
+    return float3(bgColor.x, bgColor.y, bgColor.z);
 
   float3 color(0.f, 0.f, 0.f);
   float opacity = 0.f;

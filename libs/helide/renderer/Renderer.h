@@ -5,6 +5,7 @@
 
 #include "Object.h"
 #include "array/Array1D.h"
+#include "array/Array2D.h"
 #include "scene/World.h"
 
 namespace helide {
@@ -45,19 +46,23 @@ struct Renderer : public Object
 
   virtual void commit() override;
 
-  PixelSample renderSample(Ray ray, const World &w) const;
+  PixelSample renderSample(const float2 &screen, Ray ray, const World &w) const;
 
   static Renderer *createInstance(
       std::string_view subtype, HelideGlobalState *d);
 
  private:
-  float3 shadeRay(const Ray &ray, const VolumeRay &vray, const World &w) const;
+  float3 shadeRay(const float2 &screen,
+      const Ray &ray,
+      const VolumeRay &vray,
+      const World &w) const;
 
   float4 m_bgColor{float3(0.f), 1.f};
   float m_ambientRadiance{1.f};
   RenderMode m_mode{RenderMode::DEFAULT};
 
   helium::IntrusivePtr<Array1D> m_heatmap;
+  helium::IntrusivePtr<Array2D> m_bgImage;
 };
 
 } // namespace helide
