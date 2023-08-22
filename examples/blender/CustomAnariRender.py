@@ -156,8 +156,8 @@ class RENDER_PT_anari_renderer(RenderButtonsPanel, Panel):
 class ANARIRenderEngine(bpy.types.RenderEngine):
     # These three members are used by blender to set up the
     # RenderEngine; define its internal name, visible name and capabilities.
-    bl_idname = "ANARI"
-    bl_label = "Anari"
+#    bl_idname = "ANARI"
+#    bl_label = "Anari"
     bl_use_preview = True
     bl_use_shading_nodes_custom=False
 
@@ -177,12 +177,12 @@ class ANARIRenderEngine(bpy.types.RenderEngine):
         global anari_in_use
         anari_in_use = anari_in_use + 1
 
-        self.library = anariLoadLibrary(libraryname, status_handle)
+        self.library = anariLoadLibrary(self.anari_library_name, status_handle)
         if not self.library:
             #if loading the library fails substitute the sink device
             self.library = anariLoadLibrary('sink', status_handle)
 
-        self.device = anariNewDevice(self.library, devicename)
+        self.device = anariNewDevice(self.library, self.anari_device_name)
         anariCommitParameters(self.device, self.device)
 
         features = anariGetDeviceExtensions(self.library, "default")
@@ -840,13 +840,7 @@ class ANARIRenderEngine(bpy.types.RenderEngine):
             self.tag_redraw()
 
 
-classes = [
-    ANARISceneProperties,
-    ANARIRenderEngine,
-    RENDER_PT_anari,
-    RENDER_PT_anari_device,
-    RENDER_PT_anari_renderer,
-]
+
 
 # RenderEngines also need to tell UI Panels that they are compatible with.
 def get_panels():
@@ -883,13 +877,50 @@ def get_panels():
     return panels
 
 
+librarynames = ['helide', 'visrtx', 'visgl']
+
+classes = [
+    ANARISceneProperties,
+    RENDER_PT_anari,
+    RENDER_PT_anari_device,
+    RENDER_PT_anari_renderer,
+]
+
+panel_names = []
+
 def register():
     # Register the RenderEngine
     for c in classes:
         bpy.utils.register_class(c)
 
-    for panel in get_panels():
-        panel.COMPAT_ENGINES.add('ANARI')
+    for name in librarynames:
+        library = anariLoadLibrary(name, status_handle)
+        if library:
+            devices = anariGetDeviceSubtypes(library)
+            
+            for devicename in devices:
+                label = "%s %s (Anari)"%(name, devicename)
+                class ANARIDeviceRenderEngine(ANARIRenderEngine):
+                    # These three members are used by blender to set up the
+                    # RenderEngine; define its internal name, visible name and capabilities.
+                    bl_idname = "ANARI_%s_%s"%(name, devicename)
+                    bl_label = label
+                    anari_library_name = name
+                    anari_device_name = devicename
+
+                bpy.utils.register_class(ANARIDeviceRenderEngine)
+                classes.append(ANARIDeviceRenderEngine)
+                panel_names.append(label)
+
+                for panel in get_panels():
+                    panel.COMPAT_ENGINES.add(label)
+
+
+
+
+
+
+
 
 
 def unregister():
@@ -897,8 +928,9 @@ def unregister():
         bpy.utils.unregister_class(c)
 
     for panel in get_panels():
-        if 'ANARI' in panel.COMPAT_ENGINES:
-            panel.COMPAT_ENGINES.remove('ANARI')
+        for p in panel_names:
+            if p in panel.COMPAT_ENGINES:
+                panel.COMPAT_ENGINES.remove(p)
 
 
 if __name__ == "__main__":
