@@ -5,6 +5,7 @@ import bpy
 import array
 import gpu
 import math
+from dataclasses import dataclass
 from mathutils import Vector
 from gpu_extras.presets import draw_texture_2d
 from bl_ui.properties_render import RenderButtonsPanel
@@ -85,6 +86,38 @@ class ANARISceneProperties(bpy.types.PropertyGroup):
     @classmethod
     def unregister(cls):
         del bpy.types.Scene.anari
+
+
+def anari_type_to_property(device, objtype, subtype, paramname, atype):
+    value = anariGetParameterInfo(device, objtype, subtype, paramname, atype, "default", atype)
+    if atype == ANARI_BOOL:
+        if value:
+            return bpy.props.BoolProperty(name = paramname, default = value)
+        else:
+            return bpy.props.BoolProperty(name = paramname)
+    elif atype == ANARI_INT32:
+        if value:
+            return bpy.props.IntProperty(name = paramname, default = value)
+        else:
+            return bpy.props.IntProperty(name = paramname)
+    elif atype == ANARI_FLOAT32:
+        if value:
+            return bpy.props.FloatProperty(name = paramname, default = value)
+        else:
+            return bpy.props.FloatProperty(name = paramname)
+    else:
+        return none
+
+def anari_to_propertygroup(group_name, device, objtype, subtype):
+    parameters = anariGetObjectInfo(device, objtype, subtype, "parameter", ANARI_PARAMETER_LIST)
+    properties = []
+    for paramname, atype in parameters:
+        prop = anari_type_to_property(device, objtype, subtype, paramname, atype)
+        if prop:
+            properties.append((paramname, prop))
+
+    property_group = make_dataclass(group_name, properties, bases=(bpy.types.PropertyGroup))
+
 
 class RENDER_PT_anari(RenderButtonsPanel, Panel):
     bl_label = "ANARI Device"
@@ -187,10 +220,10 @@ class ANARIRenderEngine(bpy.types.RenderEngine):
 
         features = anariGetDeviceExtensions(self.library, "default")
 
-        rendererNames = anariGetObjectSubtypes(self.device, ANARI_RENDERER)
-
         rendererParameters = anariGetObjectInfo(self.device, ANARI_RENDERER, "default", "parameter", ANARI_PARAMETER_LIST)
         print(rendererParameters)
+
+        anari_to_propertygroup('DeviceProperties', self.device, ANARI_DEVICE, 'default')
 
         newRendererList = []
 
