@@ -4,7 +4,7 @@ on:
   push:
     branches: [ jda/remote-device ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, next_release ]
 
 env:
   ANARI_LIBRARY: helide

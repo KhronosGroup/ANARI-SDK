@@ -31,7 +31,7 @@ if (@INSTALL_CODE_GEN_SCRIPTS@)
   include(${CMAKE_CURRENT_LIST_DIR}/cmake/anari_generate_codegen.cmake)
 endif()
 
-if (@INSTALL_VIEWER_LIBRARY@)
+if (@INSTALL_VIEWER_LIBRARY@ AND NOT TARGET anari_viewer)
   include(${CMAKE_CURRENT_LIST_DIR}/cmake/anari_sdk_fetch_project.cmake)
   include(${CMAKE_CURRENT_LIST_DIR}/cmake/cmake_project_commands.cmake)
   add_subdirectory(

@@ -53,13 +53,18 @@ void Sphere::commit()
       sizeof(float4),
       numSpheres);
 
+  m_attributeIndex.clear();
+
   if (m_index) {
+    m_attributeIndex.reserve(m_index->size());
+
     const auto *begin = m_index->beginAs<uint32_t>();
     const auto *end = m_index->endAs<uint32_t>();
     const auto *vertices = m_vertexPosition->beginAs<float3>();
 
     size_t sphereID = 0;
     std::transform(begin, end, vr, [&](uint32_t i) {
+      m_attributeIndex.push_back(i);
       const auto &v = vertices[i];
       const float r = radius ? radius[i] : m_globalRadius;
       return float4(v.x, v.y, v.z, r);
@@ -88,7 +93,10 @@ float4 Sphere::getAttributeValue(const Attribute &attr, const Ray &ray) const
   if (!attributeArray)
     return Geometry::getAttributeValue(attr, ray);
 
-  return readAttributeValue(attributeArray, ray.primID);
+  const auto primID =
+      m_attributeIndex.empty() ? ray.primID : m_attributeIndex[ray.primID];
+
+  return readAttributeValue(attributeArray, primID);
 }
 
 void Sphere::cleanup()
