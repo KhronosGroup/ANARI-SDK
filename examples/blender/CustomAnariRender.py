@@ -5,7 +5,7 @@ import bpy
 import array
 import gpu
 import math
-from dataclasses import dataclass
+import dataclasses
 from mathutils import Vector
 from gpu_extras.presets import draw_texture_2d
 from bl_ui.properties_render import RenderButtonsPanel
@@ -56,24 +56,13 @@ def get_current_renderer_name():
 status_handle = ffi.new_handle(anari_status) #something needs to keep this handle alive
 
 class ANARISceneProperties(bpy.types.PropertyGroup):
-    library: bpy.props.StringProperty(name = "library", default = "helide")
-    device: bpy.props.StringProperty(name = "device", default = "default")
     debug: bpy.props.BoolProperty(name = "debug", default = False)
     trace: bpy.props.BoolProperty(name = "trace", default = False)
-    sync_meshes: bpy.props.BoolProperty(name = "sync meshes", default = True)
-    sync_lights: bpy.props.BoolProperty(name = "sync lights", default = True)
 
     accumulation: bpy.props.BoolProperty(name = "accumulation", default = False)
     iterations: bpy.props.IntProperty(name = "iterations", default = 8)
     ambient_radiance: bpy.props.FloatProperty(name = "ambient intensity", default = 1.0, min = 0.0)
     ambient_color: bpy.props.FloatVectorProperty(name = "ambient color", default = (1.0, 1.0, 1.0), subtype = 'COLOR')
-    renderer: bpy.props.EnumProperty(
-        items = get_renderer_enum_info,
-        name = "subtype",
-        default = None,
-        set = set_current_renderer,
-        get = get_current_renderer
-    )
 
     @classmethod
     def register(cls):
@@ -88,53 +77,11 @@ class ANARISceneProperties(bpy.types.PropertyGroup):
         del bpy.types.Scene.anari
 
 
-def anari_type_to_property(device, objtype, subtype, paramname, atype):
-    value = anariGetParameterInfo(device, objtype, subtype, paramname, atype, "default", atype)
-    if atype == ANARI_BOOL:
-        if value:
-            return bpy.props.BoolProperty(name = paramname, default = value)
-        else:
-            return bpy.props.BoolProperty(name = paramname)
-    elif atype == ANARI_INT32:
-        if value:
-            return bpy.props.IntProperty(name = paramname, default = value)
-        else:
-            return bpy.props.IntProperty(name = paramname)
-    elif atype == ANARI_FLOAT32:
-        if value:
-            return bpy.props.FloatProperty(name = paramname, default = value)
-        else:
-            return bpy.props.FloatProperty(name = paramname)
-    else:
-        return none
-
-def anari_to_propertygroup(group_name, device, objtype, subtype):
-    parameters = anariGetObjectInfo(device, objtype, subtype, "parameter", ANARI_PARAMETER_LIST)
-    properties = []
-    for paramname, atype in parameters:
-        prop = anari_type_to_property(device, objtype, subtype, paramname, atype)
-        if prop:
-            properties.append((paramname, prop))
-
-    property_group = make_dataclass(group_name, properties, bases=(bpy.types.PropertyGroup))
 
 
 class RENDER_PT_anari(RenderButtonsPanel, Panel):
-    bl_label = "ANARI Device"
-    COMPAT_ENGINES = {'ANARI'}
-
-    @classmethod
-    def poll(cls, context):
-        return (context.engine in cls.COMPAT_ENGINES)
-
-    def draw(self, context):
-        pass
-
-
-class RENDER_PT_anari_device(RenderButtonsPanel, Panel):
-    bl_label = "Device"
-    bl_parent_id = "RENDER_PT_anari"
-    COMPAT_ENGINES = {'ANARI'}
+    bl_label = "ANARI"
+    COMPAT_ENGINES = set()
 
     @classmethod
     def poll(cls, context):
@@ -148,33 +95,11 @@ class RENDER_PT_anari_device(RenderButtonsPanel, Panel):
         global anari_in_use
         col = layout.column()
         col.enabled = anari_in_use == 0
-        col.prop(context.scene.anari, 'library')
-        col.prop(context.scene.anari, 'device')
         col.prop(context.scene.anari, 'debug')
         if context.scene.anari.debug:
             col.prop(context.scene.anari, 'trace')
 
         col = layout.column()
-        col.prop(context.scene.anari, 'sync_meshes')
-        col.prop(context.scene.anari, 'sync_lights')
-
-
-class RENDER_PT_anari_renderer(RenderButtonsPanel, Panel):
-    bl_label = "Renderer"
-    bl_parent_id = "RENDER_PT_anari"
-    COMPAT_ENGINES = {'ANARI'}
-
-    @classmethod
-    def poll(cls, context):
-        return (context.engine in cls.COMPAT_ENGINES)
-
-    def draw(self, context):
-        layout = self.layout
-        layout.use_property_split = True
-        layout.use_property_decorate = False
-
-        col = layout.column()
-        col.prop(context.scene.anari, 'renderer')
         col.prop(context.scene.anari, 'accumulation')
 
         col = layout.column()
@@ -184,6 +109,7 @@ class RENDER_PT_anari_renderer(RenderButtonsPanel, Panel):
         col = layout.column()
         col.prop(context.scene.anari, 'ambient_radiance')
         col.prop(context.scene.anari, 'ambient_color')
+
 
 
 class ANARIRenderEngine(bpy.types.RenderEngine):
@@ -204,9 +130,6 @@ class ANARIRenderEngine(bpy.types.RenderEngine):
         self.scene_data = None
         self.draw_data = None
 
-        libraryname = bpy.context.scene.anari.library
-        devicename = bpy.context.scene.anari.device
-
         global anari_in_use
         anari_in_use = anari_in_use + 1
 
@@ -222,22 +145,6 @@ class ANARIRenderEngine(bpy.types.RenderEngine):
 
         rendererParameters = anariGetObjectInfo(self.device, ANARI_RENDERER, "default", "parameter", ANARI_PARAMETER_LIST)
         print(rendererParameters)
-
-        anari_to_propertygroup('DeviceProperties', self.device, ANARI_DEVICE, 'default')
-
-        newRendererList = []
-
-        for name in rendererNames:
-            newRendererList.append((name, name, name))
-
-        if len(newRendererList) > 1 and newRendererList[0][0] == "default":
-            newRendererList.pop(0)
-
-        if len(newRendererList) == 0:
-            newRendererList.append(("default", "default", "default"))
-
-        global renderer_enum_info
-        renderer_enum_info = newRendererList
 
         if bpy.context.scene.anari.debug:
             nested = self.device
@@ -292,7 +199,7 @@ class ANARIRenderEngine(bpy.types.RenderEngine):
     def render_converged(self):
         threshold = 1
         if bpy.context.scene.anari.accumulation:
-            threshold = bpy.context.scene.anari.iterations
+           threshold = bpy.context.scene.anari.iterations
 
         return self.iteration >= threshold
 
@@ -732,17 +639,17 @@ class ANARIRenderEngine(bpy.types.RenderEngine):
 
         bg_color = depsgraph.scene.world.color[:]+(1.0,)
         anariSetParameter(self.device, self.renderer, 'background', ANARI_FLOAT32_VEC4, bg_color)
+
         aRadiance = bpy.context.scene.anari.ambient_radiance
         anariSetParameter(self.device, self.renderer, 'ambientRadiance', ANARI_FLOAT32, aRadiance)
         aColor = bpy.context.scene.anari.ambient_color
         aColor = (aColor.r, aColor.g, aColor.b)
         anariSetParameter(self.device, self.renderer, 'ambientColor', ANARI_FLOAT32_VEC3, aColor)
+
         anariCommitParameters(self.device, self.renderer)
 
-        if bpy.context.scene.anari.sync_meshes:
-            self.read_meshes(depsgraph)
-        if bpy.context.scene.anari.sync_lights:
-            self.read_lights(depsgraph)
+        self.read_meshes(depsgraph)
+        self.read_lights(depsgraph)
 
 
     # This is the method called by Blender for both final renders (F12) and
@@ -914,12 +821,69 @@ librarynames = ['helide', 'visrtx', 'visgl']
 
 classes = [
     ANARISceneProperties,
-    RENDER_PT_anari,
-    RENDER_PT_anari_device,
-    RENDER_PT_anari_renderer,
+    RENDER_PT_anari
 ]
 
 panel_names = []
+
+
+def anari_type_to_property(device, objtype, subtype, paramname, atype):
+    value = anariGetParameterInfo(device, objtype, subtype, paramname, atype, "default", atype)
+    if atype == ANARI_BOOL:
+        if value:
+            return bpy.props.BoolProperty(name = paramname, default = value)
+        else:
+            return bpy.props.BoolProperty(name = paramname)
+    elif atype == ANARI_INT32:
+        if value:
+            return bpy.props.IntProperty(name = paramname, default = value)
+        else:
+            return bpy.props.IntProperty(name = paramname)
+    elif atype == ANARI_FLOAT32:
+        if value:
+            return bpy.props.FloatProperty(name = paramname, default = value)
+        else:
+            return bpy.props.FloatProperty(name = paramname)
+    else:
+        return None
+
+def anari_to_propertygroup(engine, idname, scenename, device, objtype, subtype):
+    parameters = anariGetObjectInfo(device, objtype, subtype, "parameter", ANARI_PARAMETER_LIST)
+    properties = []
+    for paramname, atype in parameters:
+        prop = anari_type_to_property(device, objtype, subtype, paramname, atype)
+        if prop:
+            properties.append((paramname, prop))
+
+    renderers = anariGetObjectSubtypes(device, ANARI_RENDERER)
+    properties.append(('renderer', bpy.props.StringProperty(name='renderer', options=set(renderers))))
+
+    property_group = dataclasses.make_dataclass(idname+'_properties', properties, bases=(bpy.types.PropertyGroup,))
+
+
+    @classmethod
+    def poll(cls, context):
+        return (context.engine in cls.COMPAT_ENGINES)
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        col = layout.column()
+        for paramname, prop in self.panel_props:
+            col.prop(getattr(context.scene.anari, scenename), paramname)
+
+    RENDER_PT_anari_device = type('RENDER_PT_%s_panel'%idname, (RenderButtonsPanel, Panel),{
+        'bl_label': "Device",
+        'bl_parent_id' : "RENDER_PT_anari",
+        'COMPAT_ENGINES' : {engine},
+        'panel_props' : properties,
+        'poll' : poll,
+        'draw' : draw,
+    })
+
+    return (property_group, RENDER_PT_anari_device)
 
 def register():
     # Register the RenderEngine
@@ -933,21 +897,39 @@ def register():
             
             for devicename in devices:
                 label = "%s %s (Anari)"%(name, devicename)
+                idname = "ANARI_%s_%s"%(name, devicename)
                 class ANARIDeviceRenderEngine(ANARIRenderEngine):
                     # These three members are used by blender to set up the
                     # RenderEngine; define its internal name, visible name and capabilities.
-                    bl_idname = "ANARI_%s_%s"%(name, devicename)
+                    bl_idname = idname
                     bl_label = label
                     anari_library_name = name
                     anari_device_name = devicename
+
+                    def __init__(self):
+                        super().__init__()
+
+                        if not hasattr(ANARISceneProperties, name):
+                            self.props = anari_to_propertygroup(self.bl_idname, idname, name, self.device, ANARI_DEVICE, 'default')
+
+                            bpy.utils.register_class(self.props[0])
+                            setattr(ANARISceneProperties, name, bpy.props.PointerProperty(
+                                name="ANARI Scene Settings",
+                                description="ANARI scene settings",
+                                type=self.props[0],
+                            ))
+                            bpy.utils.register_class(self.props[1])
+                            classes.append(self.props[0])
+                            classes.append(self.props[1])
 
                 bpy.utils.register_class(ANARIDeviceRenderEngine)
                 classes.append(ANARIDeviceRenderEngine)
                 panel_names.append(label)
 
                 for panel in get_panels():
-                    panel.COMPAT_ENGINES.add(label)
+                    panel.COMPAT_ENGINES.add(idname)
 
+                RENDER_PT_anari.COMPAT_ENGINES.add(idname)
 
 
 

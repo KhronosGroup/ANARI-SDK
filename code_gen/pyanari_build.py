@@ -168,8 +168,6 @@ def _from_type_list(x):
 def _from_parameter_list(x):
     result = []
     if x != ffi.NULL:
-        print(x)
-        print(x[0].name)
         i = 0
         while x[i].name != ffi.NULL:
             result.append((str(ffi.string(x[i].name), 'utf-8'), x[i].type))
@@ -189,7 +187,7 @@ def _convert_pointer(dataType, x):
     elif dataType == lib.ANARI_PARAMETER_LIST:
         return _from_parameter_list(x)
     elif dataType == lib.ANARI_STRING:
-        return str(ffi.string(x[i]), 'utf-8')
+        return str(ffi.string(x), 'utf-8')
     elif _elements[dataType]==1:
         return x[0]
     elif _elements[dataType]==2:
