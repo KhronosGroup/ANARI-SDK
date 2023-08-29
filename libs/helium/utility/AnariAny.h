@@ -84,7 +84,6 @@ inline AnariAny::AnariAny()
 
 inline AnariAny::AnariAny(const AnariAny &copy)
 {
-  reset();
   std::memcpy(m_storage.data(), copy.m_storage.data(), m_storage.size());
   m_string = copy.m_string;
   m_type = copy.m_type;
@@ -93,7 +92,6 @@ inline AnariAny::AnariAny(const AnariAny &copy)
 
 inline AnariAny::AnariAny(AnariAny &&tmp)
 {
-  reset();
   std::memcpy(m_storage.data(), tmp.m_storage.data(), m_storage.size());
   m_string = std::move(tmp.m_string);
   m_type = tmp.m_type;
@@ -101,7 +99,7 @@ inline AnariAny::AnariAny(AnariAny &&tmp)
 }
 
 template <typename T>
-inline AnariAny::AnariAny(T value)
+inline AnariAny::AnariAny(T value) : AnariAny()
 {
   constexpr auto type = anari::ANARITypeFor<T>::value;
   static_assert(
@@ -116,15 +114,17 @@ inline AnariAny::AnariAny(T value)
   refIncObject();
 }
 
-inline AnariAny::AnariAny(ANARIDataType type, const void *v)
+inline AnariAny::AnariAny(ANARIDataType type, const void *v) : AnariAny()
 {
   m_type = type;
-  if (type == ANARI_STRING)
-    m_string = (const char *)v;
-  else if (type == ANARI_VOID_POINTER)
-    std::memcpy(m_storage.data(), &v, anari::sizeOf(type));
-  else
-    std::memcpy(m_storage.data(), v, anari::sizeOf(type));
+  if (v != nullptr) {
+    if (type == ANARI_STRING)
+      m_string = (const char *)v;
+    else if (type == ANARI_VOID_POINTER)
+      std::memcpy(m_storage.data(), &v, anari::sizeOf(type));
+    else
+      std::memcpy(m_storage.data(), v, anari::sizeOf(type));
+  }
   refIncObject();
 }
 
