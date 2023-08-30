@@ -856,7 +856,11 @@ def anari_to_propertygroup(engine, idname, scenename, device, objtype, subtype):
             properties.append((paramname, prop))
 
     renderers = anariGetObjectSubtypes(device, ANARI_RENDERER)
-    properties.append(('renderer', bpy.props.StringProperty(name='renderer', options=set(renderers))))
+    properties.append(('renderer', bpy.props.EnumProperty(
+        name='renderer',
+        items = {(s, s, 'the %s renderer'%s) for s in renderers},
+        default = renderers[0])
+    ))
 
     property_group = dataclasses.make_dataclass(idname+'_properties', properties, bases=(bpy.types.PropertyGroup,))
 
@@ -891,7 +895,7 @@ def register():
         bpy.utils.register_class(c)
 
     for name in librarynames:
-        library = anariLoadLibrary(name, status_handle)
+        library = anariLoadLibrary(name)
         if library:
             devices = anariGetDeviceSubtypes(library)
             

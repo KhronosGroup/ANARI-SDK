@@ -217,9 +217,13 @@ special = {
 
 ''',
     'anariLoadLibrary' :
-    '''def anariLoadLibrary(name, callback):
-    device = lib.anariLoadLibrary(name.encode('utf-8'), lib.ANARIStatusCallback_python, callback)
-    return ffi.gc(device, lib.anariUnloadLibrary)
+    '''def anariLoadLibrary(name, callback = ffi.NULL):
+    cbwrapper = ffi.NULL if callback == ffi.NULL else lib.ANARIStatusCallback_python
+    device = lib.anariLoadLibrary(name.encode('utf-8'), cbwrapper, callback)
+    if device == ffi.NULL:
+        return None
+    else:
+        return ffi.gc(device, lib.anariUnloadLibrary)
 
 ''',
     'anariNewArray1D' :
