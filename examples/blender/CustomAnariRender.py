@@ -6,6 +6,7 @@ import array
 import gpu
 import math
 import dataclasses
+import copy
 from mathutils import Vector
 from gpu_extras.presets import draw_texture_2d
 from bl_ui.properties_render import RenderButtonsPanel
@@ -844,6 +845,19 @@ def anari_type_to_property(device, objtype, subtype, paramname, atype):
             return bpy.props.FloatProperty(name = paramname, default = value)
         else:
             return bpy.props.FloatProperty(name = paramname)
+    elif atype == ANARI_STRING:
+        selection = anariGetParameterInfo(device, objtype, subtype, paramname, atype, "value", ANARI_STRING_LIST)
+        if selection:
+            return bpy.props.EnumProperty(
+                name=paramname,
+                items = {(s, s, '') for s in selection},
+                default = value
+            )
+        else:
+            if value:
+                return bpy.props.StringProperty(name = paramname, default = value)
+            else:
+                return bpy.props.StringProperty(name = paramname)
     else:
         return None
 
@@ -907,17 +921,17 @@ def register():
                     # RenderEngine; define its internal name, visible name and capabilities.
                     bl_idname = idname
                     bl_label = label
-                    anari_library_name = name
-                    anari_device_name = devicename
+                    anari_library_name = copy.copy(name)
+                    anari_device_name = copy.copy(devicename)
 
                     def __init__(self):
                         super().__init__()
 
-                        if not hasattr(ANARISceneProperties, name):
-                            self.props = anari_to_propertygroup(self.bl_idname, idname, name, self.device, ANARI_DEVICE, 'default')
+                        if not hasattr(ANARISceneProperties, self.anari_library_name):
+                            self.props = anari_to_propertygroup(self.bl_idname, idname, self.anari_library_name, self.device, ANARI_DEVICE, 'default')
 
                             bpy.utils.register_class(self.props[0])
-                            setattr(ANARISceneProperties, name, bpy.props.PointerProperty(
+                            setattr(ANARISceneProperties, self.anari_library_name, bpy.props.PointerProperty(
                                 name="ANARI Scene Settings",
                                 description="ANARI scene settings",
                                 type=self.props[0],
