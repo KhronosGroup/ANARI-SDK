@@ -68,7 +68,7 @@ static float3 readAttributeValue(Attribute a, const Ray &r, const World &w)
   return float3(v.x, v.y, v.z);
 }
 
-static float3 backgroundColorFromImage(
+static float4 backgroundColorFromImage(
     const Array2D &image, const float2 &screen)
 {
   const auto interp_x = getInterpolant(screen.x, image.size().x, true);
@@ -81,9 +81,7 @@ static float3 backgroundColorFromImage(
   const auto v0 = linalg::lerp(v00, v01, interp_y.frac);
   const auto v1 = linalg::lerp(v10, v11, interp_y.frac);
 
-  const auto v = linalg::lerp(v0, v1, interp_x.frac);
-
-  return float3(v.x, v.y, v.z);
+  return linalg::lerp(v0, v1, interp_x.frac);
 }
 
 // Renderer definitions ///////////////////////////////////////////////////////
@@ -139,9 +137,9 @@ PixelSample Renderer::renderSample(
 
   // Shade //
 
-  const float3 color = shadeRay(screen, ray, vray, w);
+  const float4 color = shadeRay(screen, ray, vray, w);
   const float depth = hitVolume ? std::min(ray.tfar, vray.t.lower) : ray.tfar;
-  return {float4(color, 1.f), depth};
+  return {color, depth};
 }
 
 Renderer *Renderer::createInstance(
@@ -150,7 +148,7 @@ Renderer *Renderer::createInstance(
   return new Renderer(s);
 }
 
-float3 Renderer::shadeRay(const float2 &screen,
+float4 Renderer::shadeRay(const float2 &screen,
     const Ray &ray,
     const VolumeRay &vray,
     const World &w) const
@@ -158,12 +156,13 @@ float3 Renderer::shadeRay(const float2 &screen,
   const bool hitGeometry = ray.geomID != RTC_INVALID_GEOMETRY_ID;
   const bool hitVolume = vray.volume != nullptr;
 
-  const float3 bgColor = m_bgImage
-      ? backgroundColorFromImage(*m_bgImage, screen)
-      : float3(m_bgColor.x, m_bgColor.y, m_bgColor.z);
+  const float4 bgColorOpacity =
+      m_bgImage ? backgroundColorFromImage(*m_bgImage, screen) : m_bgColor;
 
   if (!hitGeometry && !hitVolume)
-    return float3(bgColor.x, bgColor.y, bgColor.z);
+    return bgColorOpacity;
+
+  const float3 bgColor(bgColorOpacity.x, bgColorOpacity.y, bgColorOpacity.z);
 
   float3 color(0.f, 0.f, 0.f);
   float opacity = 0.f;
@@ -267,7 +266,7 @@ float3 Renderer::shadeRay(const float2 &screen,
   color *= opacity;
   accumulateValue(color, bgColor, opacity);
 
-  return color;
+  return {color, opacity};
 }
 
 } // namespace helide
