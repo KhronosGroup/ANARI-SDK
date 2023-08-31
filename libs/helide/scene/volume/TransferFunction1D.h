@@ -12,6 +12,7 @@ namespace helide {
 struct TransferFunction1D : public Volume
 {
   TransferFunction1D(HelideGlobalState *d);
+  ~TransferFunction1D() override;
 
   void commit() override;
 
@@ -34,8 +35,6 @@ struct TransferFunction1D : public Volume
   // Data //
 
   helium::IntrusivePtr<SpatialField> m_field;
-
-  box3 m_bounds;
 
   box1 m_valueRange{0.f, 1.f};
   float m_invSize{0.f};

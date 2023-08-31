@@ -80,7 +80,9 @@ float StructuredRegularField::sampleAt(const float3 &coord) const
 
 box3 StructuredRegularField::bounds() const
 {
-  return box3(m_origin, m_origin + ((float3(m_dims) - 1.f) * m_spacing));
+  return isValid()
+      ? box3(m_origin, m_origin + ((float3(m_dims) - 1.f) * m_spacing))
+      : box3{};
 }
 
 float3 StructuredRegularField::objectToLocal(const float3 &object) const
