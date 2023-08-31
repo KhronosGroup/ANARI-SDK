@@ -170,7 +170,7 @@ void printHelp()
 {
   printf("%s",
       R"help(
-  usage: anari_regression_tests [options]
+  usage: anariRenderTests [options]
 
   options:
 
@@ -200,6 +200,12 @@ void printHelp()
         Which renderer to use for each frame
 
         default --> "default"
+
+    --scene [category] [name] | -s [category] [name]
+
+        Which scene to render
+
+        default --> all scenes in all categories will be rendered
 
     --image_size [width] [height]
 
