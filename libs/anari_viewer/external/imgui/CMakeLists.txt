@@ -13,8 +13,8 @@ anari_sdk_fetch_project(
 include(CMakeFindDependencyMacro)
 
 set(OpenGL_GL_PREFERENCE "LEGACY")
-find_dependency(OpenGL 4)
-find_dependency(glfw3)
+find_dependency(OpenGL 4 REQUIRED)
+find_dependency(glfw3 REQUIRED)
 
 project_add_library(INTERFACE)
 
