@@ -162,7 +162,10 @@ void Frame::renderFrame()
     const auto &size = m_frameData.size;
     embree::parallel_for(size.y, [&](int y) {
       serial_for(size.x, [&](int x) {
-        const auto screen = screenFromPixel(float2(x, y));
+        auto screen = screenFromPixel(float2(x, y));
+        auto imageRegion = m_camera->imageRegion();
+        screen.x = linalg::lerp(imageRegion.x, imageRegion.z, screen.x);
+        screen.y = linalg::lerp(imageRegion.y, imageRegion.w, screen.y);
         Ray ray = m_camera->createRay(screen);
         writeSample(x, y, m_renderer->renderSample(screen, ray, *m_world));
       });
