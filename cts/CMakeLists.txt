@@ -48,7 +48,6 @@ add_custom_target(generate_cts
     --prefix cts
     --device ${ANARI_CODE_GEN_ROOT}/devices/experimental_device.json
     --namespace cts
-    --includefile
     --out src
   COMMAND ${CMAKE_COMMAND} -E copy ${python_files} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}
   COMMAND ${Python3_EXECUTABLE} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/createReferenceData.py
