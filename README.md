@@ -23,7 +23,18 @@ If you find any problems with the SDK, please do not hesitate to
 [open an issue](https://github.com/KhronosGroup/ANARI-SDK/issues/new) on this
 project!
 
-## Building the SDK
+## Getting the SDK from vcpkg
+
+The ANARI-SDK is available as the `anari` package in
+[vcpkg](https://vcpkg.io/en/). Simply follow [these
+instructions](https://vcpkg.io/en/getting-started) for setting up your
+environment to use vcpkg, then run the following to get ANARI:
+
+```bash
+% vcpkg install anari
+```
+
+## Building the SDK from source
 
 The repository uses CMake 3.11+ to build the library, example implementation,
 sample apps, and tests. For example, to build (must be in a separate directory
