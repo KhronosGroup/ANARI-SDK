@@ -259,7 +259,7 @@ std::string queryInfo(const std::string &library,
     }
   }
 
-  for (int i = 0; devices.size(); ++i) {
+  for (int i = 0; i < devices.size(); ++i) {
     s << "Device \"" << deviceNames[i] << "\":\n";
     s << "   Subtypes:\n";
     for (size_t j = 0; j < sizeof(namedTypes) / sizeof(ANARIDataType); ++j) {

@@ -11217,8 +11217,8 @@ static const void * ANARI_SAMPLER_transform_outOffset_info(ANARIDataType paramTy
             return nullptr;
          }
       case 1: // default
-         if(paramType == ANARI_FLOAT32_MAT4 && infoType == ANARI_FLOAT32_MAT4) {
-            static const float default_value[16] = {0.000000f, 0.000000f, 0.000000f, 0.000000f};
+         if(paramType == ANARI_FLOAT32_VEC4 && infoType == ANARI_FLOAT32_VEC4) {
+            static const float default_value[4] = {0.000000f, 0.000000f, 0.000000f, 0.000000f};
             return default_value;
          } else {
             return nullptr;
@@ -13011,7 +13011,7 @@ static const void * ANARI_SAMPLER_transform_info(int infoName, ANARIDataType inf
                {"name", ANARI_STRING},
                {"inAttribute", ANARI_STRING},
                {"outTransform", ANARI_FLOAT32_MAT4},
-               {"outOffset", ANARI_FLOAT32_MAT4},
+               {"outOffset", ANARI_FLOAT32_VEC4},
                {0, ANARI_UNKNOWN}
             };
             return parameters;

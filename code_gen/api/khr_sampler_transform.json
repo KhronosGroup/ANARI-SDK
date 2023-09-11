@@ -30,7 +30,7 @@
                     "description" : "transform applied to the input attribute"
                 }, {
                     "name" : "outOffset",
-                    "types" : ["ANARI_FLOAT32_MAT4"],
+                    "types" : ["ANARI_FLOAT32_VEC4"],
                     "tags" : [],
                     "default" : [0,0,0,0],
                     "description" : "offset added to output outTransform result"

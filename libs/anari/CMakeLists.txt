@@ -36,7 +36,7 @@ PUBLIC
   ${CMAKE_DL_LIBS}
 PRIVATE
   Threads::Threads
-  glm::glm
+  $<BUILD_INTERFACE:glm::glm>
 )
 
 ## Create version header

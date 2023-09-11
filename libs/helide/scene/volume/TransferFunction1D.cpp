@@ -7,16 +7,23 @@ namespace helide {
 
 TransferFunction1D::TransferFunction1D(HelideGlobalState *d) : Volume(d) {}
 
+TransferFunction1D::~TransferFunction1D()
+{
+  if (m_field)
+    m_field->removeCommitObserver(this);
+}
+
 void TransferFunction1D::commit()
 {
+  if (m_field)
+    m_field->removeCommitObserver(this);
+
   m_field = getParamObject<SpatialField>("field");
   if (!m_field) {
     reportMessage(ANARI_SEVERITY_WARNING,
         "no spatial field provided to transferFunction1D volume");
     return;
   }
-
-  m_bounds = m_field ? m_field->bounds() : box3();
 
   m_valueRange = getParam<box1>("valueRange", box1(0.f, 1.f));
   m_invSize = 1.f / size(m_valueRange);
@@ -30,12 +37,13 @@ void TransferFunction1D::commit()
         "no color data provided to transferFunction1D volume");
     return;
   }
-
   if (!m_opacityData) {
     reportMessage(ANARI_SEVERITY_WARNING,
         "no opacity data provided to transfer function");
     return;
   }
+
+  m_field->addCommitObserver(this);
 }
 
 bool TransferFunction1D::isValid() const
@@ -45,7 +53,7 @@ bool TransferFunction1D::isValid() const
 
 box3 TransferFunction1D::bounds() const
 {
-  return m_bounds;
+  return m_field->bounds();
 }
 
 void TransferFunction1D::render(

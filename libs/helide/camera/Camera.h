@@ -19,11 +19,21 @@ struct Camera : public Object
 
   virtual Ray createRay(const float2 &screen) const = 0;
 
+  float4 imageRegion() const;
+
  protected:
   float3 m_pos;
   float3 m_dir;
   float3 m_up;
+  float4 m_imageRegion;
 };
+
+// Inlined definitions ////////////////////////////////////////////////////////
+
+inline float4 Camera::imageRegion() const
+{
+  return m_imageRegion;
+}
 
 } // namespace helide
 

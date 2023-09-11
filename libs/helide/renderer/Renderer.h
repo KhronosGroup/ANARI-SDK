@@ -52,7 +52,7 @@ struct Renderer : public Object
       std::string_view subtype, HelideGlobalState *d);
 
  private:
-  float3 shadeRay(const float2 &screen,
+  float4 shadeRay(const float2 &screen,
       const Ray &ray,
       const VolumeRay &vray,
       const World &w) const;
