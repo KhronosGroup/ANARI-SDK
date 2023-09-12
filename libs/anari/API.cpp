@@ -129,6 +129,7 @@ extern "C" ANARILibrary anariLoadLibrary(const char *libraryName,
         ANARI_LIBRARY,
         ANARI_SEVERITY_ERROR,
         ANARI_STATUS_INVALID_OPERATION);
+    return nullptr;
   }
 
   return newLibraryFcn(lib, statusCB, statusCBUserPtr);
