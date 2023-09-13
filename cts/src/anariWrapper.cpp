@@ -72,15 +72,12 @@ std::vector<std::tuple<std::string, bool>> queryExtensions(
     deviceName = *devices;
   }
 
-  anari::Device d = anariNewDevice(lib, deviceName.c_str());
-
   // query extension
   std::vector<std::tuple<std::string, bool>> result;
 
   ANARIExtensions extension;
-  if (anariGetObjectExtensionStruct(
-          &extension, d, ANARI_DEVICE, deviceName.c_str())) {
-    printf("WARNING: library didn't return feature list\n");
+  if (anariGetDeviceExtensionStruct(&extension, lib, deviceName.c_str())) {
+    printf("WARNING: library didn't return extension list for device\n");
     return result;
   }
 
@@ -98,7 +95,6 @@ std::vector<std::tuple<std::string, bool>> queryExtensions(
     result.push_back({featureNames[i], test.vec[i]});
   }
 
-  anari::release(d, d);
   anari::unloadLibrary(lib);
 
   return result;
