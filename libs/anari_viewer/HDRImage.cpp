@@ -23,10 +23,10 @@ bool HDRImage::load(std::string fileName)
       std::addressof(extension[0]),
       [](unsigned char c) { return std::tolower(c); });
 
-  if (extension.compare(".hdr") != 0 && extension.compare(".exr") != 0)
+  if (extension != ".hdr" && extension != ".exr")
     return false;
 
-  if (extension.compare(".hdr") == 0) {
+  if (extension == ".hdr") {
     int w, h, n;
     float *imgData = stbi_loadf(fileName.c_str(), &w, &h, &n, STBI_rgb);
     width = w;
