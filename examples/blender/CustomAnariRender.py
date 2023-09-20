@@ -864,7 +864,13 @@ def anari_type_to_property(device, objtype, subtype, paramname, atype):
 def anari_to_propertygroup(engine, idname, scenename, device, objtype, subtype):
     parameters = anariGetObjectInfo(device, objtype, subtype, "parameter", ANARI_PARAMETER_LIST)
     properties = []
+    names = set()
     for paramname, atype in parameters:
+        if paramname in names:
+            continue
+        else:
+            names.add(paramname)
+
         prop = anari_type_to_property(device, objtype, subtype, paramname, atype)
         if prop:
             properties.append((paramname, prop))
@@ -875,6 +881,17 @@ def anari_to_propertygroup(engine, idname, scenename, device, objtype, subtype):
         items = {(s, s, 'the %s renderer'%s) for s in renderers},
         default = renderers[0])
     ))
+
+    for renderer_name in renderers:
+        renderer_parameters = anariGetObjectInfo(device, ANARI_RENDERER, renderer_name, "parameter", ANARI_PARAMETER_LIST)
+        for paramname, atype in renderer_parameters:
+            if paramname in names:
+                continue
+            else:
+                names.add(paramname)
+            prop = anari_type_to_property(device, ANARI_RENDERER, renderer_name, paramname, atype)
+            if prop:
+                properties.append((paramname, prop))
 
     property_group = dataclasses.make_dataclass(idname+'_properties', properties, bases=(bpy.types.PropertyGroup,))
 
