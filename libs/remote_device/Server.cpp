@@ -1031,6 +1031,170 @@ struct Server
           }
         }
         write(MessageType::ObjectSubtypes, outbuf);
+      } else if (message->type() == MessageType::GetObjectInfo) {
+        LOG(logging::Level::Info) << "Message: GetObjectInfo, message size: "
+                                  << prettyBytes(message->size());
+
+        Buffer buf;
+        buf.write(message->data(), message->size());
+        buf.seek(0);
+
+        Handle deviceHandle;
+        buf.read((char *)&deviceHandle, sizeof(deviceHandle));
+
+        ANARIDataType objectType;
+        buf.read((char *)&objectType, sizeof(objectType));
+
+        uint64_t len;
+        buf.read((char *)&len, sizeof(len));
+        std::vector<char> objectSubtype(len + 1);
+        buf.read(objectSubtype.data(), len);
+        objectSubtype[len] = '\0';
+
+        buf.read((char *)&len, sizeof(len));
+        std::vector<char> infoName(len + 1);
+        buf.read(infoName.data(), len);
+        infoName[len] = '\0';
+
+        ANARIDataType infoType;
+        buf.read((char *)&infoType, sizeof(infoType));
+
+        ANARIDevice dev = resourceManager.getDevice(deviceHandle);
+
+        if (!dev) {
+          LOG(logging::Level::Error)
+              << "Server: invalid device: " << deviceHandle;
+          // manager->stop(); // legal?
+          return;
+        }
+
+        auto outbuf = std::make_shared<Buffer>();
+        outbuf->write((const char *)&objectType, sizeof(objectType));
+        len = objectSubtype.size()-1;
+        outbuf->write((const char *)&len, sizeof(len));
+        outbuf->write(objectSubtype.data(), len);
+        len = infoName.size()-1;
+        outbuf->write((const char *)&len, sizeof(len));
+        outbuf->write(infoName.data(), len);
+        outbuf->write((const char *)&infoType, sizeof(infoType));
+
+        const void *info = anariGetObjectInfo(dev, objectType, objectSubtype.data(),
+            infoName.data(), infoType);
+
+        if (info != nullptr) {
+          if (infoType == ANARI_STRING) {
+            auto *str = (const char *)info;
+            uint64_t strLen = strlen(str);
+            outbuf->write((const char *)&strLen, sizeof(strLen));
+            outbuf->write(str, strLen);
+          } else if (infoType == ANARI_STRING_LIST) {
+            const auto **strings = (const char **)info;
+            while (const char *str = *strings++) {
+              uint64_t strLen = strlen(str);
+              outbuf->write((const char *)&strLen, sizeof(strLen));
+              outbuf->write(str, strLen);
+            }
+          } else if (infoType == ANARI_PARAMETER_LIST) {
+            auto *parameter = (const ANARIParameter *)info;
+            for (; parameter && parameter->name != nullptr; parameter++) {
+              uint64_t len = strlen(parameter->name);
+              outbuf->write((const char *)&len, sizeof(len));
+              outbuf->write(parameter->name, len);
+              outbuf->write((const char *)&parameter->type, sizeof(parameter->type));
+            }
+          } else {
+            outbuf->write((const char *)info, anari::sizeOf(infoType));
+          }
+        }
+        write(MessageType::ObjectInfo, outbuf);
+      }  else if (message->type() == MessageType::GetParameterInfo) {
+        LOG(logging::Level::Info) << "Message: GetParameterInfo, message size: "
+                                  << prettyBytes(message->size());
+
+        Buffer buf;
+        buf.write(message->data(), message->size());
+        buf.seek(0);
+
+        Handle deviceHandle;
+        buf.read((char *)&deviceHandle, sizeof(deviceHandle));
+
+        ANARIDataType objectType;
+        buf.read((char *)&objectType, sizeof(objectType));
+
+        uint64_t len;
+        buf.read((char *)&len, sizeof(len));
+        std::vector<char> objectSubtype(len + 1);
+        buf.read(objectSubtype.data(), len);
+        objectSubtype[len] = '\0';
+
+        buf.read((char *)&len, sizeof(len));
+        std::vector<char> parameterName(len + 1);
+        buf.read(parameterName.data(), len);
+        parameterName[len] = '\0';
+
+        ANARIDataType parameterType;
+        buf.read((char *)&parameterType, sizeof(parameterType));
+
+        buf.read((char *)&len, sizeof(len));
+        std::vector<char> infoName(len + 1);
+        buf.read(infoName.data(), len);
+        infoName[len] = '\0';
+
+        ANARIDataType infoType;
+        buf.read((char *)&infoType, sizeof(infoType));
+
+        ANARIDevice dev = resourceManager.getDevice(deviceHandle);
+
+        if (!dev) {
+          LOG(logging::Level::Error)
+              << "Server: invalid device: " << deviceHandle;
+          // manager->stop(); // legal?
+          return;
+        }
+
+        auto outbuf = std::make_shared<Buffer>();
+        outbuf->write((const char *)&objectType, sizeof(objectType));
+        len = objectSubtype.size()-1;
+        outbuf->write((const char *)&len, sizeof(len));
+        outbuf->write(objectSubtype.data(), len);
+        len = parameterName.size()-1;
+        outbuf->write((const char *)&len, sizeof(len));
+        outbuf->write(parameterName.data(), len);
+        outbuf->write((const char *)&parameterType, sizeof(parameterType));
+        len = infoName.size()-1;
+        outbuf->write((const char *)&len, sizeof(len));
+        outbuf->write(infoName.data(), len);
+        outbuf->write((const char *)&infoType, sizeof(infoType));
+
+        const void *info = anariGetParameterInfo(dev, objectType, objectSubtype.data(),
+            parameterName.data(), parameterType, infoName.data(), infoType);
+
+        if (info != nullptr) {
+          if (infoType == ANARI_STRING) {
+            auto *str = (const char *)info;
+            uint64_t strLen = strlen(str);
+            outbuf->write((const char *)&strLen, sizeof(strLen));
+            outbuf->write(str, strLen);
+          } else if (infoType == ANARI_STRING_LIST) {
+            const auto **strings = (const char **)info;
+            while (const char *str = *strings++) {
+              uint64_t strLen = strlen(str);
+              outbuf->write((const char *)&strLen, sizeof(strLen));
+              outbuf->write(str, strLen);
+            }
+          } else if (infoType == ANARI_PARAMETER_LIST) {
+            auto *parameter = (const ANARIParameter *)info;
+            for (; parameter && parameter->name != nullptr; parameter++) {
+              uint64_t len = strlen(parameter->name);
+              outbuf->write((const char *)&len, sizeof(len));
+              outbuf->write(parameter->name, len);
+              outbuf->write((const char *)&parameter->type, sizeof(parameter->type));
+            }
+          } else {
+            outbuf->write((const char *)info, anari::sizeOf(infoType));
+          }
+        }
+        write(MessageType::ParameterInfo, outbuf);
       } else {
         LOG(logging::Level::Warning)
             << "Unhandled message of size: " << message->size();
