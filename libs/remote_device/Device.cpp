@@ -488,7 +488,44 @@ const void* Device::getObjectInfo(ANARIDataType objectType,
     const char* infoName,
     ANARIDataType infoType)
 {
-  return nullptr;
+  auto it = std::find_if(objectInfos.begin(),
+      objectInfos.end(),
+      [objectType, objectSubtype, infoName, infoType](const ObjectInfo &oi) {
+        return oi.objectType == objectType
+            && oi.objectSubtype == std::string(objectSubtype)
+            && oi.info.name == std::string(infoName)
+            && oi.info.type == infoType;
+      });
+  if (it != objectInfos.end()) {
+    return it->info.data();
+  }
+
+  auto buf = std::make_shared<Buffer>();
+  buf->write((const char *)&remoteDevice, sizeof(remoteDevice));
+  buf->write((const char *)&objectType, sizeof(objectType));
+  uint64_t len = strlen(objectSubtype);
+  buf->write((const char *)&len, sizeof(len));
+  buf->write(objectSubtype, len);
+  len = strlen(infoName);
+  buf->write((const char *)&len, sizeof(len));
+  buf->write(infoName, len);
+  buf->write((const char *)&infoType, sizeof(infoType));
+  write(MessageType::GetObjectInfo, buf);
+
+  std::unique_lock l(syncObjectInfo.mtx);
+  syncObjectInfo.cv.wait(l, [this, &it, objectType, objectSubtype, infoName, infoType]() {
+    it = std::find_if(objectInfos.begin(),
+      objectInfos.end(),
+      [&it, objectType, objectSubtype, infoName, infoType](const ObjectInfo &oi) {
+        return oi.objectType == objectType
+            && oi.objectSubtype == std::string(objectSubtype)
+            && oi.info.name == std::string(infoName)
+            && oi.info.type == infoType;
+      });
+    return it != objectInfos.end();
+  });
+
+  return it->info.data();
 }
 
 const void* Device::getParameterInfo(ANARIDataType objectType,
@@ -498,7 +535,52 @@ const void* Device::getParameterInfo(ANARIDataType objectType,
     const char* infoName,
     ANARIDataType infoType)
 {
-  return nullptr;
+  auto it = std::find_if(parameterInfos.begin(),
+      parameterInfos.end(),
+      [objectType, objectSubtype, parameterName, parameterType, infoName, infoType](const ParameterInfo &pi) {
+        return pi.objectType == objectType
+            && pi.objectSubtype == std::string(objectSubtype)
+            && pi.parameterName == std::string(parameterName)
+            && pi.parameterType == parameterType
+            && pi.info.name == std::string(infoName)
+            && pi.info.type == infoType;
+      });
+  if (it != parameterInfos.end()) {
+    return it->info.data();
+  }
+
+  auto buf = std::make_shared<Buffer>();
+  buf->write((const char *)&remoteDevice, sizeof(remoteDevice));
+  buf->write((const char *)&objectType, sizeof(objectType));
+  uint64_t len = strlen(objectSubtype);
+  buf->write((const char *)&len, sizeof(len));
+  buf->write(objectSubtype, len);
+  len = strlen(parameterName);
+  buf->write((const char *)&len, sizeof(len));
+  buf->write(parameterName, len);
+  buf->write((const char *)&parameterType, sizeof(parameterType));
+  len = strlen(infoName);
+  buf->write((const char *)&len, sizeof(len));
+  buf->write(infoName, len);
+  buf->write((const char *)&infoType, sizeof(infoType));
+  write(MessageType::GetParameterInfo, buf);
+
+  std::unique_lock l(syncParameterInfo.mtx);
+  syncParameterInfo.cv.wait(l, [this, &it, objectType, objectSubtype, parameterName, parameterType, infoName, infoType]() {
+    it = std::find_if(parameterInfos.begin(),
+      parameterInfos.end(),
+      [&it, objectType, objectSubtype, parameterName, parameterType, infoName, infoType](const ParameterInfo &pi) {
+        return pi.objectType == objectType
+            && pi.objectSubtype == std::string(objectSubtype)
+            && pi.parameterName == std::string(parameterName)
+            && pi.parameterType == parameterType
+            && pi.info.name == std::string(infoName)
+            && pi.info.type == infoType;
+      });
+    return it != parameterInfos.end();
+  });
+
+  return it->info.data();
 }
 
 //--- FrameBuffer Manipulation ------------------------
@@ -666,6 +748,18 @@ Device::~Device()
   for (size_t i = 0; i < objectSubtypes.size(); ++i) {
     for (size_t j = 0; j < objectSubtypes[i].value.size(); ++j) {
       delete[] objectSubtypes[i].value[j];
+    }
+  }
+
+  for (size_t i = 0; i < objectInfos.size(); ++i) {
+    for (size_t j = 0; j < objectInfos[i].info.asStringList.size(); ++j) {
+      delete[] objectInfos[i].info.asStringList[j];
+    }
+  }
+
+  for (size_t i = 0; i < parameterInfos.size(); ++i) {
+    for (size_t j = 0; j < parameterInfos[i].info.asStringList.size(); ++j) {
+      delete[] parameterInfos[i].info.asStringList[j];
     }
   }
 }
@@ -971,6 +1065,133 @@ void Device::handleMessage(async::connection::reason reason,
 
       l.unlock();
       syncObjectSubtypes.cv.notify_all();
+    } else if (message->type() == MessageType::ObjectInfo) {
+      std::unique_lock l(syncObjectInfo.mtx);
+
+      Buffer buf;
+      buf.write(message->data(), message->size());
+      buf.seek(0);
+
+      ObjectInfo oi;
+
+      buf.read((char *)&oi.objectType, sizeof(oi.objectType));
+      uint64_t len;
+      buf.read((char *)&len, sizeof(len));
+      std::vector<char> bytesToString(len);
+      buf.read(bytesToString.data(), len);
+      oi.objectSubtype = std::string(bytesToString.data(), len);
+      buf.read((char *)&len, sizeof(len));
+      bytesToString.resize(len);
+      buf.read(bytesToString.data(), len);
+      oi.info.name = std::string(bytesToString.data(), len);
+      buf.read((char *)&oi.info.type, sizeof(oi.info.type));
+      if (oi.info.type == ANARI_STRING) {
+        uint64_t strLen;
+        buf.read((char *)&strLen, sizeof(strLen));
+        oi.info.asString.resize(strLen + 1);
+        buf.read(oi.info.asString.data(), strLen);
+        oi.info.asString[strLen] = '\0';
+      } else if (oi.info.type == ANARI_STRING_LIST) {
+        while (!buf.eof()) {
+          uint64_t strLen;
+          buf.read((char *)&strLen, sizeof(strLen));
+
+          char *str = new char[strLen + 1];
+          buf.read(str, strLen);
+          str[strLen] = '\0';
+          oi.info.asStringList.push_back(str);
+        }
+        oi.info.asStringList.push_back(nullptr);
+      } else if (oi.info.type == ANARI_PARAMETER_LIST) {
+        while (!buf.eof()) {
+          uint64_t len;
+          buf.read((char *)&len, sizeof(len));
+          char *name = new char[len + 1];
+          buf.read(name, len);
+          name[len] = '\0';
+
+          ANARIDataType type;
+          buf.read((char *)&type, sizeof(type));
+          oi.info.asParameterList.push_back({name, type});
+        }
+        oi.info.asParameterList.push_back({nullptr, 0});
+      } else {
+        if (!buf.eof()) {
+          oi.info.asOther.resize(anari::sizeOf(oi.info.type));
+          buf.read(oi.info.asOther.data(), anari::sizeOf(oi.info.type));
+        }
+      }
+
+      objectInfos.push_back(oi);
+
+      l.unlock();
+      syncObjectInfo.cv.notify_all();
+    } else if (message->type() == MessageType::ParameterInfo) {
+      std::unique_lock l(syncParameterInfo.mtx);
+
+      Buffer buf;
+      buf.write(message->data(), message->size());
+      buf.seek(0);
+
+      ParameterInfo pi;
+
+      buf.read((char *)&pi.objectType, sizeof(pi.objectType));
+      uint64_t len;
+      buf.read((char *)&len, sizeof(len));
+      std::vector<char> bytesToString(len);
+      buf.read(bytesToString.data(), len);
+      pi.objectSubtype = std::string(bytesToString.data(), len);
+      buf.read((char *)&len, sizeof(len));
+      bytesToString.resize(len);
+      buf.read(bytesToString.data(), len);
+      pi.parameterName = std::string(bytesToString.data(), len);
+      buf.read((char *)&pi.parameterType, sizeof(pi.parameterType));
+      buf.read((char *)&len, sizeof(len));
+      bytesToString.resize(len);
+      buf.read(bytesToString.data(), len);
+      pi.info.name = std::string(bytesToString.data(), len);
+      buf.read((char *)&pi.info.type, sizeof(pi.info.type));
+      if (pi.info.type == ANARI_STRING) {
+        uint64_t strLen;
+        buf.read((char *)&strLen, sizeof(strLen));
+        pi.info.asString.resize(strLen + 1);
+        buf.read(pi.info.asString.data(), strLen);
+        pi.info.asString[strLen] = '\0';
+      } else if (pi.info.type == ANARI_STRING_LIST) {
+        while (!buf.eof()) {
+          uint64_t strLen;
+          buf.read((char *)&strLen, sizeof(strLen));
+
+          char *str = new char[strLen + 1];
+          buf.read(str, strLen);
+          str[strLen] = '\0';
+          pi.info.asStringList.push_back(str);
+        }
+        pi.info.asStringList.push_back(nullptr);
+      } else if (pi.info.type == ANARI_PARAMETER_LIST) {
+        while (!buf.eof()) {
+          uint64_t len;
+          buf.read((char *)&len, sizeof(len));
+          char *name = new char[len + 1];
+          buf.read(name, len);
+          name[len] = '\0';
+
+          ANARIDataType type;
+          buf.read((char *)&type, sizeof(type));
+          pi.info.asParameterList.push_back({name, type});
+        }
+        pi.info.asParameterList.push_back({nullptr, 0});
+      } else {
+        if (!buf.eof()) {
+          pi.info.asOther.resize(anari::sizeOf(pi.info.type));
+          buf.read(pi.info.asOther.data(), anari::sizeOf(pi.info.type));
+        }
+      }
+
+      parameterInfos.push_back(pi);
+
+      l.unlock();
+      syncParameterInfo.cv.notify_all();
     } else if (message->type() == MessageType::ChannelColor
         || message->type() == MessageType::ChannelDepth) {
       size_t off = 0;

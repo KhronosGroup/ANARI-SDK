@@ -220,6 +220,18 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
     std::condition_variable cv;
   } syncObjectSubtypes;
 
+  struct
+  {
+    std::mutex mtx;
+    std::condition_variable cv;
+  } syncObjectInfo;
+
+  struct
+  {
+    std::mutex mtx;
+    std::condition_variable cv;
+  } syncParameterInfo;
+
   ANARIDevice remoteDevice{nullptr};
   std::string remoteSubtype = "default";
 
@@ -253,6 +265,54 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
     std::vector<char *> value;
   };
   std::vector<ObjectSubtypes> objectSubtypes;
+
+  struct Parameter
+  {
+    char *name;
+    ANARIDataType type;
+  };
+
+  struct Info
+  {
+    std::string name;
+    ANARIDataType type;
+    std::string asString;
+    std::vector<char *> asStringList;
+    std::vector<Parameter> asParameterList;
+    std::vector<char> asOther;
+
+    const void *data() const {
+      if (type == ANARI_STRING)
+        return asString.data();
+      else if (type == ANARI_STRING_LIST)
+        return asStringList.data();
+      else if (type == ANARI_PARAMETER_LIST)
+        return asParameterList.data();
+      else
+        return asOther.data();
+    }
+  };
+
+  // Cache for "object infos"
+  struct ObjectInfo
+  {
+    ANARIDataType objectType;
+    std::string objectSubtype;
+    std::string infoName;
+    Info info;
+  };
+  std::vector<ObjectInfo> objectInfos;
+
+  // Cache for "parameter infos"
+  struct ParameterInfo
+  {
+    ANARIDataType objectType;
+    std::string objectSubtype;
+    std::string parameterName;
+    ANARIDataType parameterType;
+    Info info;
+  };
+  std::vector<ParameterInfo> parameterInfos;
 
   std::map<ANARIObject, Frame> frames;
   struct ArrayData

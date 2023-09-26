@@ -43,6 +43,10 @@ struct MessageType
     Property,
     GetObjectSubtypes,
     ObjectSubtypes,
+    GetObjectInfo,
+    ObjectInfo,
+    GetParameterInfo,
+    ParameterInfo,
     ChannelColor,
     ChannelDepth,
   };
