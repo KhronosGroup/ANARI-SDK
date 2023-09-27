@@ -14,6 +14,9 @@ struct PixelSample
 {
   float4 color;
   float depth;
+  uint32_t primId{~0u};
+  uint32_t objId{~0u};
+  uint32_t instId{~0u};
 };
 
 enum class RenderMode

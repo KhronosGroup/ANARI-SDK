@@ -23,6 +23,10 @@ struct World : public Object
 
   void intersectVolumes(VolumeRay &ray) const;
 
+  const Instance *instanceFromRay(const Ray &ray) const;
+  const Instance *instanceFromRay(const VolumeRay &ray) const;
+  const Surface *surfaceFromRay(const Ray &ray) const;
+
   RTCScene embreeScene() const;
   void embreeSceneUpdate();
 
@@ -55,6 +59,24 @@ struct World : public Object
 
   RTCScene m_embreeScene{nullptr};
 };
+
+// Inlined definitions ////////////////////////////////////////////////////////
+
+inline const Instance *World::instanceFromRay(const Ray &ray) const
+{
+  return instances()[ray.instID];
+}
+
+inline const Instance *World::instanceFromRay(const VolumeRay &ray) const
+{
+  return instances()[ray.instID];
+}
+
+inline const Surface *World::surfaceFromRay(const Ray &ray) const
+{
+  auto *inst = instanceFromRay(ray);
+  return inst->group()->surfaces()[ray.geomID];
+}
 
 } // namespace helide
 

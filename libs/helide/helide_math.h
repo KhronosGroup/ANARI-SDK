@@ -99,6 +99,7 @@ struct VolumeRay
   float3 dir;
   box1 t{0.f, std::numeric_limits<float>::max()};
   Volume *volume{nullptr};
+  uint32_t instID{RTC_INVALID_GEOMETRY_ID};
 };
 
 constexpr float4 DEFAULT_ATTRIBUTE_VALUE(0.f, 0.f, 0.f, 1.f);

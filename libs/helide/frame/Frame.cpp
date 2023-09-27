@@ -103,6 +103,10 @@ void Frame::commit()
 
   m_colorType = getParam<anari::DataType>("channel.color", ANARI_UNKNOWN);
   m_depthType = getParam<anari::DataType>("channel.depth", ANARI_UNKNOWN);
+  m_primIdType =
+      getParam<anari::DataType>("channel.primitiveId", ANARI_UNKNOWN);
+  m_objIdType = getParam<anari::DataType>("channel.objectId", ANARI_UNKNOWN);
+  m_instIdType = getParam<anari::DataType>("channel.instanceId", ANARI_UNKNOWN);
 
   m_frameData.size = getParam<uint2>("size", uint2(10));
   m_frameData.invSize = 1.f / float2(m_frameData.size);
@@ -114,6 +118,17 @@ void Frame::commit()
 
   m_depthBuffer.resize(m_depthType == ANARI_FLOAT32 ? numPixels : 0);
   m_frameChanged = true;
+
+  m_primIdBuffer.clear();
+  m_objIdBuffer.clear();
+  m_instIdBuffer.clear();
+
+  if (m_primIdType == ANARI_UINT32)
+    m_primIdBuffer.resize(numPixels);
+  if (m_objIdType == ANARI_UINT32)
+    m_objIdBuffer.resize(numPixels);
+  if (m_instIdType == ANARI_UINT32)
+    m_instIdBuffer.resize(numPixels);
 }
 
 bool Frame::getProperty(
@@ -186,12 +201,21 @@ void *Frame::map(std::string_view channel,
   *width = m_frameData.size.x;
   *height = m_frameData.size.y;
 
-  if (channel == "color" || channel == "channel.color") {
+  if (channel == "channel.color") {
     *pixelType = m_colorType;
-    return mapColorBuffer();
-  } else if (channel == "depth" || channel == "channel.depth") {
+    return m_pixelBuffer.data();
+  } else if (channel == "channel.depth" && !m_depthBuffer.empty()) {
     *pixelType = ANARI_FLOAT32;
-    return mapDepthBuffer();
+    return m_depthBuffer.data();
+  } else if (channel == "channel.primitiveId" && !m_primIdBuffer.empty()) {
+    *pixelType = ANARI_UINT32;
+    return m_primIdBuffer.data();
+  } else if (channel == "channel.objectId" && !m_objIdBuffer.empty()) {
+    *pixelType = ANARI_UINT32;
+    return m_objIdBuffer.data();
+  } else if (channel == "channel.instanceId" && !m_instIdBuffer.empty()) {
+    *pixelType = ANARI_UINT32;
+    return m_instIdBuffer.data();
   } else {
     *width = 0;
     *height = 0;
@@ -218,16 +242,6 @@ int Frame::frameReady(ANARIWaitMask m)
 void Frame::discard()
 {
   // no-op
-}
-
-void *Frame::mapColorBuffer()
-{
-  return m_pixelBuffer.data();
-}
-
-void *Frame::mapDepthBuffer()
-{
-  return m_depthBuffer.data();
 }
 
 bool Frame::ready() const
@@ -274,6 +288,12 @@ void Frame::writeSample(int x, int y, const PixelSample &s)
   }
   if (!m_depthBuffer.empty())
     m_depthBuffer[idx] = s.depth;
+  if (!m_primIdBuffer.empty())
+    m_primIdBuffer[idx] = s.primId;
+  if (!m_objIdBuffer.empty())
+    m_objIdBuffer[idx] = s.objId;
+  if (!m_instIdBuffer.empty())
+    m_instIdBuffer[idx] = s.instId;
 }
 
 } // namespace helide

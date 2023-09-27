@@ -25,6 +25,11 @@ Volume *Volume::createInstance(std::string_view subtype, HelideGlobalState *s)
     return (Volume *)new UnknownObject(ANARI_VOLUME, s);
 }
 
+void Volume::commit()
+{
+  m_id = getParam<uint32_t>("id", ~0u);
+}
+
 } // namespace helide
 
 HELIDE_ANARI_TYPEFOR_DEFINITION(helide::Volume *);

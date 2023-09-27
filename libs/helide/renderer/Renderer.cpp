@@ -119,6 +119,8 @@ void Renderer::commit()
 PixelSample Renderer::renderSample(
     const float2 &screen, Ray ray, const World &w) const
 {
+  PixelSample retval;
+
   // Intersect Surfaces //
 
   RTCIntersectContext context;
@@ -137,9 +139,16 @@ PixelSample Renderer::renderSample(
 
   // Shade //
 
-  const float4 color = shadeRay(screen, ray, vray, w);
-  const float depth = hitVolume ? std::min(ray.tfar, vray.t.lower) : ray.tfar;
-  return {color, depth};
+  retval.color = shadeRay(screen, ray, vray, w);
+  retval.depth = hitVolume ? std::min(ray.tfar, vray.t.lower) : ray.tfar;
+  if (hitGeometry || hitVolume) {
+    retval.primId = hitVolume ? 0 : ray.primID;
+    retval.objId = hitVolume ? vray.volume->id() : w.surfaceFromRay(ray)->id();
+    retval.instId = hitVolume ? w.instanceFromRay(vray)->id()
+                              : w.instanceFromRay(ray)->id();
+  }
+
+  return retval;
 }
 
 Renderer *Renderer::createInstance(
@@ -222,8 +231,8 @@ float4 Renderer::shadeRay(const float2 &screen,
     break;
   case RenderMode::OPACITY_HEATMAP: {
     if (hitGeometry) {
-      const Instance *inst = w.instances()[ray.instID];
-      const Surface *surface = inst->group()->surfaces()[ray.geomID];
+      const Instance *inst = w.instanceFromRay(ray);
+      const Surface *surface = w.surfaceFromRay(ray);
 
       const auto n = linalg::mul(inst->xfmInvRot(), ray.Ng);
       const auto falloff =
@@ -240,8 +249,8 @@ float4 Renderer::shadeRay(const float2 &screen,
   case RenderMode::DEFAULT:
   default: {
     if (hitGeometry) {
-      const Instance *inst = w.instances()[ray.instID];
-      const Surface *surface = inst->group()->surfaces()[ray.geomID];
+      const Instance *inst = w.instanceFromRay(ray);
+      const Surface *surface = w.surfaceFromRay(ray);
 
       const auto n = linalg::mul(inst->xfmInvRot(), ray.Ng);
       const auto falloff =
