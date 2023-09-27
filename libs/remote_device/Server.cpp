@@ -91,12 +91,8 @@ static ANARIArray newArray(
 {
   ANARIArray array = nullptr;
   if (info.type == ANARI_ARRAY1D) {
-    array = anariNewArray1D(dev,
-        nullptr,
-        nullptr,
-        nullptr,
-        info.elementType,
-        info.numItems1);
+    array = anariNewArray1D(
+        dev, nullptr, nullptr, nullptr, info.elementType, info.numItems1);
   } else if (info.type == ANARI_ARRAY2D) {
     array = anariNewArray2D(dev,
         nullptr,
@@ -216,7 +212,8 @@ struct ResourceManager
 struct Server
 {
   // For now only one client:
-  struct {
+  struct
+  {
     CompressionFeatures compression;
   } client;
 
@@ -242,7 +239,10 @@ struct Server
   {
     LOG(logging::Level::Info) << "Server: accepting...";
 
-    manager->accept(std::bind(&Server::handleNewConnection, this, std::placeholders::_1, std::placeholders::_2));
+    manager->accept(std::bind(&Server::handleNewConnection,
+        this,
+        std::placeholders::_1,
+        std::placeholders::_2));
   }
 
   void run()
@@ -266,18 +266,17 @@ struct Server
     conn->write(type, *buf);
   }
 
-  std::vector<uint8_t> translateArrayData(Buffer &buf, ANARIDevice dev, ArrayInfo info)
+  std::vector<uint8_t> translateArrayData(
+      Buffer &buf, ANARIDevice dev, ArrayInfo info)
   {
     std::vector<uint8_t> arrayData(info.getSizeInBytes());
     buf.read((char *)arrayData.data(), arrayData.size());
 
     // Translate remote to device handles
     if (anari::isObject(info.elementType)) {
-      const auto &serverObjects =
-          resourceManager.serverObjects[(uint64_t)dev];
+      const auto &serverObjects = resourceManager.serverObjects[(uint64_t)dev];
 
-      size_t numObjects = info.numItems1
-          * std::max(uint64_t(1), info.numItems2)
+      size_t numObjects = info.numItems1 * std::max(uint64_t(1), info.numItems2)
           * std::max(uint64_t(1), info.numItems3);
 
       // This only works b/c sizeof(ANARIObject)==sizeof(uint64_t)!
@@ -307,7 +306,11 @@ struct Server
     // Accept and save this connection
     // and set the message handler of the connection
     conn = new_conn;
-    conn->set_handler(std::bind(&Server::handleMessage, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+    conn->set_handler(std::bind(&Server::handleMessage,
+        this,
+        std::placeholders::_1,
+        std::placeholders::_2,
+        std::placeholders::_3));
 
     // Accept new connections (TODO: the new connection
     // will overwrite the current one, so, store these
@@ -357,10 +360,10 @@ struct Server
         LOG(logging::Level::Info)
             << "Creating new device, type: " << deviceType
             << ", device ID: " << deviceHandle << ", ANARI handle: " << dev;
-        LOG(logging::Level::Info) << "Client has TurboJPEG: "
-            << client.compression.hasTurboJPEG;
-        LOG(logging::Level::Info) << "Client has SNAPPY: "
-            << client.compression.hasSNAPPY;
+        LOG(logging::Level::Info)
+            << "Client has TurboJPEG: " << client.compression.hasTurboJPEG;
+        LOG(logging::Level::Info)
+            << "Client has SNAPPY: " << client.compression.hasSNAPPY;
       } else if (message->type() == MessageType::NewObject) {
         LOG(logging::Level::Info) << "Message: NewObject, message size: "
                                   << prettyBytes(message->size());
@@ -689,7 +692,8 @@ struct Server
 
         void *ptr = anariMapArray(dev, (ANARIArray)serverObj.handle);
 
-        const ArrayInfo &info = resourceManager.getArrayInfo(deviceHandle, objectHandle);
+        const ArrayInfo &info =
+            resourceManager.getArrayInfo(deviceHandle, objectHandle);
 
         uint64_t numBytes = info.getSizeInBytes();
 
@@ -699,8 +703,7 @@ struct Server
         outbuf->write((const char *)ptr, numBytes);
         write(MessageType::ArrayMapped, outbuf);
 
-        LOG(logging::Level::Info)
-            << "Mapped array. Handle: " << objectHandle;
+        LOG(logging::Level::Info) << "Mapped array. Handle: " << objectHandle;
       } else if (message->type() == MessageType::UnmapArray) {
         LOG(logging::Level::Info) << "Message: UnmapArray, message size: "
                                   << prettyBytes(message->size());
@@ -734,7 +737,8 @@ struct Server
         // Fetch data into separate buffer and copy
         std::vector<uint8_t> arrayData;
         if (buf.pos < message->size()) {
-          ArrayInfo info = resourceManager.getArrayInfo(deviceHandle, objectHandle);
+          ArrayInfo info =
+              resourceManager.getArrayInfo(deviceHandle, objectHandle);
           arrayData = translateArrayData(buf, (ANARIDevice)deviceHandle, info);
           memcpy(ptr, arrayData.data(), arrayData.size());
         }
@@ -746,8 +750,7 @@ struct Server
         outbuf->write((const char *)&objectHandle, sizeof(objectHandle));
         write(MessageType::ArrayUnmapped, outbuf);
 
-        LOG(logging::Level::Info)
-            << "Unmapped array. Handle: " << objectHandle;
+        LOG(logging::Level::Info) << "Unmapped array. Handle: " << objectHandle;
       } else if (message->type() == MessageType::RenderFrame) {
         LOG(logging::Level::Info) << "Message: RenderFrame, message size: "
                                   << prettyBytes(message->size());
@@ -792,9 +795,11 @@ struct Server
           outbuf->write((const char *)&height, sizeof(height));
           outbuf->write((const char *)&type, sizeof(type));
 
-          bool compressionTurboJPEG = cf.hasTurboJPEG && client.compression.hasTurboJPEG;
+          bool compressionTurboJPEG =
+              cf.hasTurboJPEG && client.compression.hasTurboJPEG;
 
-          if (compressionTurboJPEG && type == ANARI_UFIXED8_RGBA_SRGB) { // TODO: more formats..
+          if (compressionTurboJPEG
+              && type == ANARI_UFIXED8_RGBA_SRGB) { // TODO: more formats..
             TurboJPEGOptions options;
             options.width = width;
             options.height = height;
@@ -996,8 +1001,9 @@ struct Server
         }
         write(MessageType::Property, outbuf);
       } else if (message->type() == MessageType::GetObjectSubtypes) {
-        LOG(logging::Level::Info) << "Message: GetObjectSubtypes, message size: "
-                                  << prettyBytes(message->size());
+        LOG(logging::Level::Info)
+            << "Message: GetObjectSubtypes, message size: "
+            << prettyBytes(message->size());
 
         Buffer buf;
         buf.write(message->data(), message->size());
@@ -1070,16 +1076,16 @@ struct Server
 
         auto outbuf = std::make_shared<Buffer>();
         outbuf->write((const char *)&objectType, sizeof(objectType));
-        len = objectSubtype.size()-1;
+        len = objectSubtype.size() - 1;
         outbuf->write((const char *)&len, sizeof(len));
         outbuf->write(objectSubtype.data(), len);
-        len = infoName.size()-1;
+        len = infoName.size() - 1;
         outbuf->write((const char *)&len, sizeof(len));
         outbuf->write(infoName.data(), len);
         outbuf->write((const char *)&infoType, sizeof(infoType));
 
-        const void *info = anariGetObjectInfo(dev, objectType, objectSubtype.data(),
-            infoName.data(), infoType);
+        const void *info = anariGetObjectInfo(
+            dev, objectType, objectSubtype.data(), infoName.data(), infoType);
 
         if (info != nullptr) {
           if (infoType == ANARI_STRING) {
@@ -1100,14 +1106,15 @@ struct Server
               uint64_t len = strlen(parameter->name);
               outbuf->write((const char *)&len, sizeof(len));
               outbuf->write(parameter->name, len);
-              outbuf->write((const char *)&parameter->type, sizeof(parameter->type));
+              outbuf->write(
+                  (const char *)&parameter->type, sizeof(parameter->type));
             }
           } else {
             outbuf->write((const char *)info, anari::sizeOf(infoType));
           }
         }
         write(MessageType::ObjectInfo, outbuf);
-      }  else if (message->type() == MessageType::GetParameterInfo) {
+      } else if (message->type() == MessageType::GetParameterInfo) {
         LOG(logging::Level::Info) << "Message: GetParameterInfo, message size: "
                                   << prettyBytes(message->size());
 
@@ -1154,20 +1161,25 @@ struct Server
 
         auto outbuf = std::make_shared<Buffer>();
         outbuf->write((const char *)&objectType, sizeof(objectType));
-        len = objectSubtype.size()-1;
+        len = objectSubtype.size() - 1;
         outbuf->write((const char *)&len, sizeof(len));
         outbuf->write(objectSubtype.data(), len);
-        len = parameterName.size()-1;
+        len = parameterName.size() - 1;
         outbuf->write((const char *)&len, sizeof(len));
         outbuf->write(parameterName.data(), len);
         outbuf->write((const char *)&parameterType, sizeof(parameterType));
-        len = infoName.size()-1;
+        len = infoName.size() - 1;
         outbuf->write((const char *)&len, sizeof(len));
         outbuf->write(infoName.data(), len);
         outbuf->write((const char *)&infoType, sizeof(infoType));
 
-        const void *info = anariGetParameterInfo(dev, objectType, objectSubtype.data(),
-            parameterName.data(), parameterType, infoName.data(), infoType);
+        const void *info = anariGetParameterInfo(dev,
+            objectType,
+            objectSubtype.data(),
+            parameterName.data(),
+            parameterType,
+            infoName.data(),
+            infoType);
 
         if (info != nullptr) {
           if (infoType == ANARI_STRING) {
@@ -1188,7 +1200,8 @@ struct Server
               uint64_t len = strlen(parameter->name);
               outbuf->write((const char *)&len, sizeof(len));
               outbuf->write(parameter->name, len);
-              outbuf->write((const char *)&parameter->type, sizeof(parameter->type));
+              outbuf->write(
+                  (const char *)&parameter->type, sizeof(parameter->type));
             }
           } else {
             outbuf->write((const char *)info, anari::sizeOf(infoType));
