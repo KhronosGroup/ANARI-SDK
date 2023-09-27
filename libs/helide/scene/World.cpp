@@ -74,6 +74,8 @@ void World::commit()
   } else
     m_zeroGroup->removeParam("volume");
 
+  m_zeroInstance->setParam("id", getParam<uint32_t>("id", ~0u));
+
   m_zeroGroup->commit();
   m_zeroInstance->commit();
 
@@ -111,8 +113,13 @@ const std::vector<Instance *> &World::instances() const
 
 void World::intersectVolumes(VolumeRay &ray) const
 {
-  for (auto *i : instances())
-    i->group()->intersectVolumes(ray);
+  const auto &insts = instances();
+  for (uint32_t i = 0; i < insts.size(); i++) {
+    const auto *inst = insts[i];
+    inst->group()->intersectVolumes(ray);
+    if (ray.volume)
+      ray.instID = i;
+  }
 }
 
 RTCScene World::embreeScene() const
