@@ -373,19 +373,16 @@ struct Server
         buf.seek(0);
 
         ANARIDevice deviceHandle;
-        buf.read((char *)&deviceHandle, sizeof(deviceHandle));
+        buf.read(deviceHandle);
 
         ANARIDataType type;
-        buf.read((char *)&type, sizeof(type));
+        buf.read(type);
 
-        uint64_t len;
-        buf.read((char *)&len, sizeof(len));
-        std::vector<char> st(len);
-        buf.read(st.data(), st.size());
-        std::string subtype(st.data(), st.size());
+        std::string subtype;
+        buf.read(subtype);
 
         uint64_t objectID;
-        buf.read((char *)&objectID, sizeof(objectID));
+        buf.read(objectID);
 
         ANARIDevice dev = resourceManager.getDevice((uint64_t)deviceHandle);
         if (!dev) {
@@ -411,16 +408,16 @@ struct Server
         buf.seek(0);
 
         ANARIDevice deviceHandle;
-        buf.read((char *)&deviceHandle, sizeof(deviceHandle));
+        buf.read(deviceHandle);
 
-        buf.read((char *)&info.type, sizeof(info.type));
+        buf.read(info.type);
 
         uint64_t objectID;
-        buf.read((char *)&objectID, sizeof(objectID));
-        buf.read((char *)&info.elementType, sizeof(info.elementType));
-        buf.read((char *)&info.numItems1, sizeof(info.numItems1));
-        buf.read((char *)&info.numItems2, sizeof(info.numItems2));
-        buf.read((char *)&info.numItems3, sizeof(info.numItems3));
+        buf.read(objectID);
+        buf.read(info.elementType);
+        buf.read(info.numItems1);
+        buf.read(info.numItems2);
+        buf.read(info.numItems3);
 
         ANARIDevice dev = resourceManager.getDevice((uint64_t)deviceHandle);
         if (!dev) {
@@ -451,8 +448,8 @@ struct Server
         buf.seek(0);
 
         Handle deviceHandle, objectHandle;
-        buf.read((char *)&deviceHandle, sizeof(deviceHandle));
-        buf.read((char *)&objectHandle, sizeof(objectHandle));
+        buf.read(deviceHandle);
+        buf.read(objectHandle);
 
         ANARIDevice dev = resourceManager.getDevice(deviceHandle);
 
@@ -466,14 +463,11 @@ struct Server
           return;
         }
 
-        uint64_t nameLen;
-        buf.read((char *)&nameLen, sizeof(nameLen));
-
-        std::vector<char> nameBuf(nameLen);
-        buf.read(nameBuf.data(), nameBuf.size());
+        std::string name;
+        buf.read(name);
 
         ANARIDataType parmType;
-        buf.read((char *)&parmType, sizeof(parmType));
+        buf.read(parmType);
 
         std::vector<char> parmValue;
         if (anari::isObject(parmType)) {
@@ -483,8 +477,6 @@ struct Server
           parmValue.resize(anari::sizeOf(parmType));
           buf.read((char *)parmValue.data(), anari::sizeOf(parmType));
         }
-
-        std::string name(nameBuf.data(), nameBuf.size());
 
         if (anari::isObject(parmType)) {
           const auto &serverObjects =
@@ -516,8 +508,8 @@ struct Server
         buf.seek(0);
 
         Handle deviceHandle, objectHandle;
-        buf.read((char *)&deviceHandle, sizeof(deviceHandle));
-        buf.read((char *)&objectHandle, sizeof(objectHandle));
+        buf.read(deviceHandle);
+        buf.read(objectHandle);
 
         ANARIDevice dev = resourceManager.getDevice(deviceHandle);
 
@@ -531,13 +523,8 @@ struct Server
           return;
         }
 
-        uint64_t nameLen;
-        buf.read((char *)&nameLen, sizeof(nameLen));
-
-        std::vector<char> nameBuf(nameLen);
-        buf.read(nameBuf.data(), nameBuf.size());
-
-        std::string name(nameBuf.data(), nameBuf.size());
+        std::string name;
+        buf.read(name);
 
         anariUnsetParameter(dev, serverObj.handle, name.c_str());
       } else if (message->type() == MessageType::UnsetAllParams) {
@@ -548,8 +535,8 @@ struct Server
         buf.seek(0);
 
         Handle deviceHandle, objectHandle;
-        buf.read((char *)&deviceHandle, sizeof(deviceHandle));
-        buf.read((char *)&objectHandle, sizeof(objectHandle));
+        buf.read(deviceHandle);
+        buf.read(objectHandle);
 
         ANARIDevice dev = resourceManager.getDevice(deviceHandle);
 
@@ -590,8 +577,8 @@ struct Server
           anariCommitParameters(dev, dev);
         } else {
           Handle deviceHandle, objectHandle;
-          buf.read((char *)&deviceHandle, sizeof(deviceHandle));
-          buf.read((char *)&objectHandle, sizeof(objectHandle));
+          buf.read(deviceHandle);
+          buf.read(objectHandle);
 
           ANARIDevice dev = resourceManager.getDevice(deviceHandle);
 
@@ -619,8 +606,8 @@ struct Server
         buf.seek(0);
 
         Handle deviceHandle, objectHandle;
-        buf.read((char *)&deviceHandle, sizeof(deviceHandle));
-        buf.read((char *)&objectHandle, sizeof(objectHandle));
+        buf.read(deviceHandle);
+        buf.read(objectHandle);
 
         ANARIDevice dev = resourceManager.getDevice(deviceHandle);
 
@@ -647,8 +634,8 @@ struct Server
         buf.seek(0);
 
         Handle deviceHandle, objectHandle;
-        buf.read((char *)&deviceHandle, sizeof(deviceHandle));
-        buf.read((char *)&objectHandle, sizeof(objectHandle));
+        buf.read(deviceHandle);
+        buf.read(objectHandle);
 
         ANARIDevice dev = resourceManager.getDevice(deviceHandle);
 
@@ -675,8 +662,8 @@ struct Server
         buf.seek(0);
 
         Handle deviceHandle, objectHandle;
-        buf.read((char *)&deviceHandle, sizeof(deviceHandle));
-        buf.read((char *)&objectHandle, sizeof(objectHandle));
+        buf.read(deviceHandle);
+        buf.read(objectHandle);
 
         ANARIDevice dev = resourceManager.getDevice(deviceHandle);
 
@@ -698,8 +685,8 @@ struct Server
         uint64_t numBytes = info.getSizeInBytes();
 
         auto outbuf = std::make_shared<Buffer>();
-        outbuf->write((const char *)&objectHandle, sizeof(objectHandle));
-        outbuf->write((const char *)&numBytes, sizeof(numBytes));
+        outbuf->write(objectHandle);
+        outbuf->write(numBytes);
         outbuf->write((const char *)ptr, numBytes);
         write(MessageType::ArrayMapped, outbuf);
 
@@ -713,8 +700,8 @@ struct Server
         buf.seek(0);
 
         Handle deviceHandle, objectHandle;
-        buf.read((char *)&deviceHandle, sizeof(deviceHandle));
-        buf.read((char *)&objectHandle, sizeof(objectHandle));
+        buf.read(deviceHandle);
+        buf.read(objectHandle);
 
         ANARIDevice dev = resourceManager.getDevice(deviceHandle);
 
@@ -747,7 +734,7 @@ struct Server
         anariUnmapArray(dev, (ANARIArray)serverObj.handle);
 
         auto outbuf = std::make_shared<Buffer>();
-        outbuf->write((const char *)&objectHandle, sizeof(objectHandle));
+        outbuf->write(objectHandle);
         write(MessageType::ArrayUnmapped, outbuf);
 
         LOG(logging::Level::Info) << "Unmapped array. Handle: " << objectHandle;
@@ -760,8 +747,8 @@ struct Server
         buf.seek(0);
 
         Handle deviceHandle, objectHandle;
-        buf.read((char *)&deviceHandle, sizeof(deviceHandle));
-        buf.read((char *)&objectHandle, sizeof(objectHandle));
+        buf.read(deviceHandle);
+        buf.read(objectHandle);
 
         ANARIDevice dev = resourceManager.getDevice(deviceHandle);
 
@@ -790,10 +777,10 @@ struct Server
             type == ANARI_UNKNOWN ? 0 : width * height * anari::sizeOf(type);
         if (color != nullptr && colorSize != 0) {
           auto outbuf = std::make_shared<Buffer>();
-          outbuf->write((const char *)&objectHandle, sizeof(objectHandle));
-          outbuf->write((const char *)&width, sizeof(width));
-          outbuf->write((const char *)&height, sizeof(height));
-          outbuf->write((const char *)&type, sizeof(type));
+          outbuf->write(objectHandle);
+          outbuf->write(width);
+          outbuf->write(height);
+          outbuf->write(type);
 
           bool compressionTurboJPEG =
               cf.hasTurboJPEG && client.compression.hasTurboJPEG;
@@ -816,8 +803,7 @@ struct Server
                       compressedSize,
                       options)) {
                 uint32_t compressedSize32(compressedSize);
-                outbuf->write(
-                    (const char *)&compressedSize32, sizeof(compressedSize32));
+                outbuf->write(compressedSize32);
                 outbuf->write((const char *)compressed.data(), compressedSize);
 
                 LOG(logging::Level::Info) << "turbojpeg compression size: "
@@ -836,10 +822,10 @@ struct Server
             type == ANARI_UNKNOWN ? 0 : width * height * anari::sizeOf(type);
         if (depth != nullptr && depthSize != 0) {
           auto outbuf = std::make_shared<Buffer>();
-          outbuf->write((const char *)&objectHandle, sizeof(objectHandle));
-          outbuf->write((const char *)&width, sizeof(width));
-          outbuf->write((const char *)&height, sizeof(height));
-          outbuf->write((const char *)&type, sizeof(type));
+          outbuf->write(objectHandle);
+          outbuf->write(width);
+          outbuf->write(height);
+          outbuf->write(type);
 
           bool compressionSNAPPY = cf.hasSNAPPY && client.compression.hasSNAPPY;
 
@@ -858,8 +844,7 @@ struct Server
                 options);
 
             uint32_t compressedSize32(compressedSize);
-            outbuf->write(
-                (const char *)&compressedSize32, sizeof(compressedSize32));
+            outbuf->write(compressedSize32);
             outbuf->write((const char *)compressed.data(), compressedSize);
           } else {
             outbuf->write(depth, depthSize);
@@ -878,8 +863,8 @@ struct Server
         buf.seek(0);
 
         Handle deviceHandle, objectHandle;
-        buf.read((char *)&deviceHandle, sizeof(deviceHandle));
-        buf.read((char *)&objectHandle, sizeof(objectHandle));
+        buf.read(deviceHandle);
+        buf.read(objectHandle);
 
         ANARIDevice dev = resourceManager.getDevice(deviceHandle);
 
@@ -891,7 +876,7 @@ struct Server
         }
 
         ANARIWaitMask waitMask;
-        buf.read((char *)&waitMask, sizeof(waitMask));
+        buf.read(waitMask);
 
         ANARIFrame frame = (ANARIFrame)resourceManager
                                .getServerObject(deviceHandle, objectHandle)
@@ -899,7 +884,7 @@ struct Server
         anariFrameReady(dev, frame, waitMask);
 
         auto outbuf = std::make_shared<Buffer>();
-        outbuf->write((const char *)&objectHandle, sizeof(objectHandle));
+        outbuf->write(objectHandle);
         write(MessageType::FrameIsReady, outbuf);
 
         LOG(logging::Level::Info) << "Signal frame is ready to client";
@@ -912,8 +897,8 @@ struct Server
         buf.seek(0);
 
         Handle deviceHandle, objectHandle;
-        buf.read((char *)&deviceHandle, sizeof(deviceHandle));
-        buf.read((char *)&objectHandle, sizeof(objectHandle));
+        buf.read(deviceHandle);
+        buf.read(objectHandle);
 
         ANARIDevice dev = resourceManager.getDevice(deviceHandle);
 
@@ -934,20 +919,17 @@ struct Server
           serverObj.type = ANARI_DEVICE;
         }
 
-        uint64_t len;
-        buf.read((char *)&len, sizeof(len));
-        std::vector<char> name(len + 1);
-        buf.read(name.data(), len);
-        name[len] = '\0';
+        std::string name;
+        buf.read(name);
 
         ANARIDataType type;
-        buf.read((char *)&type, sizeof(type));
+        buf.read(type);
 
         uint64_t size;
-        buf.read((char *)&size, sizeof(size));
+        buf.read(size);
 
         ANARIWaitMask mask;
-        buf.read((char *)&mask, sizeof(mask));
+        buf.read(mask);
 
         auto outbuf = std::make_shared<Buffer>();
 
@@ -961,10 +943,9 @@ struct Server
               size,
               mask);
 
-          outbuf->write((const char *)&objectHandle, sizeof(objectHandle));
-          outbuf->write((const char *)&len, sizeof(len));
-          outbuf->write(name.data(), len);
-          outbuf->write((const char *)&result, sizeof(result));
+          outbuf->write(objectHandle);
+          outbuf->write(name);
+          outbuf->write(result);
 
           uint64_t listSize = 0;
           auto sl = stringList;
@@ -974,14 +955,12 @@ struct Server
             }
           }
 
-          outbuf->write((const char *)&listSize, sizeof(listSize));
+          outbuf->write(listSize);
 
           sl = stringList;
           if (sl != nullptr) {
             while (const char *str = *sl++) {
-              uint64_t strLen = strlen(str);
-              outbuf->write((const char *)&strLen, sizeof(strLen));
-              outbuf->write(str, strLen);
+              outbuf->write(std::string(str));
             }
           }
         } else if (type == ANARI_DATA_TYPE_LIST) {
@@ -993,10 +972,9 @@ struct Server
           int result = anariGetProperty(
               dev, serverObj.handle, name.data(), type, mem.data(), size, mask);
 
-          outbuf->write((const char *)&objectHandle, sizeof(objectHandle));
-          outbuf->write((const char *)&len, sizeof(len));
-          outbuf->write(name.data(), len);
-          outbuf->write((const char *)&result, sizeof(result));
+          outbuf->write(objectHandle);
+          outbuf->write(name);
+          outbuf->write(result);
           outbuf->write((const char *)mem.data(), size);
         }
         write(MessageType::Property, outbuf);
@@ -1010,10 +988,10 @@ struct Server
         buf.seek(0);
 
         Handle deviceHandle;
-        buf.read((char *)&deviceHandle, sizeof(deviceHandle));
+        buf.read(deviceHandle);
 
         ANARIDataType objectType;
-        buf.read((char *)&objectType, sizeof(objectType));
+        buf.read(objectType);
 
         ANARIDevice dev = resourceManager.getDevice(deviceHandle);
 
@@ -1025,15 +1003,13 @@ struct Server
         }
 
         auto outbuf = std::make_shared<Buffer>();
-        outbuf->write((const char *)&objectType, sizeof(objectType));
+        outbuf->write(objectType);
 
         const char **subtypes = anariGetObjectSubtypes(dev, objectType);
 
         if (subtypes != nullptr) {
           while (const char *str = *subtypes++) {
-            uint64_t strLen = strlen(str);
-            outbuf->write((const char *)&strLen, sizeof(strLen));
-            outbuf->write(str, strLen);
+            outbuf->write(std::string(str));
           }
         }
         write(MessageType::ObjectSubtypes, outbuf);
@@ -1046,24 +1022,19 @@ struct Server
         buf.seek(0);
 
         Handle deviceHandle;
-        buf.read((char *)&deviceHandle, sizeof(deviceHandle));
+        buf.read(deviceHandle);
 
         ANARIDataType objectType;
-        buf.read((char *)&objectType, sizeof(objectType));
+        buf.read(objectType);
 
-        uint64_t len;
-        buf.read((char *)&len, sizeof(len));
-        std::vector<char> objectSubtype(len + 1);
-        buf.read(objectSubtype.data(), len);
-        objectSubtype[len] = '\0';
+        std::string objectSubtype;
+        buf.read(objectSubtype);
 
-        buf.read((char *)&len, sizeof(len));
-        std::vector<char> infoName(len + 1);
-        buf.read(infoName.data(), len);
-        infoName[len] = '\0';
+        std::string infoName;
+        buf.read(infoName);
 
         ANARIDataType infoType;
-        buf.read((char *)&infoType, sizeof(infoType));
+        buf.read(infoType);
 
         ANARIDevice dev = resourceManager.getDevice(deviceHandle);
 
@@ -1075,14 +1046,10 @@ struct Server
         }
 
         auto outbuf = std::make_shared<Buffer>();
-        outbuf->write((const char *)&objectType, sizeof(objectType));
-        len = objectSubtype.size() - 1;
-        outbuf->write((const char *)&len, sizeof(len));
-        outbuf->write(objectSubtype.data(), len);
-        len = infoName.size() - 1;
-        outbuf->write((const char *)&len, sizeof(len));
-        outbuf->write(infoName.data(), len);
-        outbuf->write((const char *)&infoType, sizeof(infoType));
+        outbuf->write(objectType);
+        outbuf->write(std::string(objectSubtype));
+        outbuf->write(std::string(infoName));
+        outbuf->write(infoType);
 
         const void *info = anariGetObjectInfo(
             dev, objectType, objectSubtype.data(), infoName.data(), infoType);
@@ -1090,24 +1057,17 @@ struct Server
         if (info != nullptr) {
           if (infoType == ANARI_STRING) {
             auto *str = (const char *)info;
-            uint64_t strLen = strlen(str);
-            outbuf->write((const char *)&strLen, sizeof(strLen));
-            outbuf->write(str, strLen);
+            outbuf->write(std::string(str));
           } else if (infoType == ANARI_STRING_LIST) {
             const auto **strings = (const char **)info;
             while (const char *str = *strings++) {
-              uint64_t strLen = strlen(str);
-              outbuf->write((const char *)&strLen, sizeof(strLen));
-              outbuf->write(str, strLen);
+              outbuf->write(std::string(str));
             }
           } else if (infoType == ANARI_PARAMETER_LIST) {
             auto *parameter = (const ANARIParameter *)info;
             for (; parameter && parameter->name != nullptr; parameter++) {
-              uint64_t len = strlen(parameter->name);
-              outbuf->write((const char *)&len, sizeof(len));
-              outbuf->write(parameter->name, len);
-              outbuf->write(
-                  (const char *)&parameter->type, sizeof(parameter->type));
+              outbuf->write(std::string(parameter->name));
+              outbuf->write(parameter->type);
             }
           } else {
             outbuf->write((const char *)info, anari::sizeOf(infoType));
@@ -1123,32 +1083,25 @@ struct Server
         buf.seek(0);
 
         Handle deviceHandle;
-        buf.read((char *)&deviceHandle, sizeof(deviceHandle));
+        buf.read(deviceHandle);
 
         ANARIDataType objectType;
-        buf.read((char *)&objectType, sizeof(objectType));
+        buf.read(objectType);
 
-        uint64_t len;
-        buf.read((char *)&len, sizeof(len));
-        std::vector<char> objectSubtype(len + 1);
-        buf.read(objectSubtype.data(), len);
-        objectSubtype[len] = '\0';
+        std::string objectSubtype;
+        buf.read(objectSubtype);
 
-        buf.read((char *)&len, sizeof(len));
-        std::vector<char> parameterName(len + 1);
-        buf.read(parameterName.data(), len);
-        parameterName[len] = '\0';
+        std::string parameterName;
+        buf.read(parameterName);
 
         ANARIDataType parameterType;
-        buf.read((char *)&parameterType, sizeof(parameterType));
+        buf.read(parameterType);
 
-        buf.read((char *)&len, sizeof(len));
-        std::vector<char> infoName(len + 1);
-        buf.read(infoName.data(), len);
-        infoName[len] = '\0';
+        std::string infoName;
+        buf.read(infoName);
 
         ANARIDataType infoType;
-        buf.read((char *)&infoType, sizeof(infoType));
+        buf.read(infoType);
 
         ANARIDevice dev = resourceManager.getDevice(deviceHandle);
 
@@ -1160,18 +1113,12 @@ struct Server
         }
 
         auto outbuf = std::make_shared<Buffer>();
-        outbuf->write((const char *)&objectType, sizeof(objectType));
-        len = objectSubtype.size() - 1;
-        outbuf->write((const char *)&len, sizeof(len));
-        outbuf->write(objectSubtype.data(), len);
-        len = parameterName.size() - 1;
-        outbuf->write((const char *)&len, sizeof(len));
-        outbuf->write(parameterName.data(), len);
-        outbuf->write((const char *)&parameterType, sizeof(parameterType));
-        len = infoName.size() - 1;
-        outbuf->write((const char *)&len, sizeof(len));
-        outbuf->write(infoName.data(), len);
-        outbuf->write((const char *)&infoType, sizeof(infoType));
+        outbuf->write(objectType);
+        outbuf->write(objectSubtype);
+        outbuf->write(parameterName);
+        outbuf->write(parameterType);
+        outbuf->write(infoName);
+        outbuf->write(infoType);
 
         const void *info = anariGetParameterInfo(dev,
             objectType,
@@ -1184,24 +1131,17 @@ struct Server
         if (info != nullptr) {
           if (infoType == ANARI_STRING) {
             auto *str = (const char *)info;
-            uint64_t strLen = strlen(str);
-            outbuf->write((const char *)&strLen, sizeof(strLen));
-            outbuf->write(str, strLen);
+            outbuf->write(std::string(str));
           } else if (infoType == ANARI_STRING_LIST) {
             const auto **strings = (const char **)info;
             while (const char *str = *strings++) {
-              uint64_t strLen = strlen(str);
-              outbuf->write((const char *)&strLen, sizeof(strLen));
-              outbuf->write(str, strLen);
+              outbuf->write(std::string(str));
             }
           } else if (infoType == ANARI_PARAMETER_LIST) {
             auto *parameter = (const ANARIParameter *)info;
             for (; parameter && parameter->name != nullptr; parameter++) {
-              uint64_t len = strlen(parameter->name);
-              outbuf->write((const char *)&len, sizeof(len));
-              outbuf->write(parameter->name, len);
-              outbuf->write(
-                  (const char *)&parameter->type, sizeof(parameter->type));
+              outbuf->write(std::string(parameter->name));
+              outbuf->write(parameter->type);
             }
           } else {
             outbuf->write((const char *)info, anari::sizeOf(infoType));
