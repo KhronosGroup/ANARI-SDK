@@ -151,8 +151,8 @@ ANARIArray3D Device::newArray3D(const void *appMemory,
 void *Device::mapArray(ANARIArray array)
 {
   auto buf = std::make_shared<Buffer>();
-  buf->write((const char *)&remoteDevice, sizeof(remoteDevice));
-  buf->write((const char *)&array, sizeof(array));
+  buf->write(remoteDevice);
+  buf->write(array);
   write(MessageType::MapArray, buf);
 
   std::unique_lock l(syncMapArray.mtx);
@@ -169,8 +169,8 @@ void *Device::mapArray(ANARIArray array)
 void Device::unmapArray(ANARIArray array)
 {
   auto buf = std::make_shared<Buffer>();
-  buf->write((const char *)&remoteDevice, sizeof(remoteDevice));
-  buf->write((const char *)&array, sizeof(array));
+  buf->write(remoteDevice);
+  buf->write(array);
   uint64_t numBytes = arrays[array].value.size();
   buf->write(arrays[array].value.data(), numBytes);
   write(MessageType::UnmapArray, buf);
@@ -290,12 +290,10 @@ void Device::setParameter(
   }
 
   auto buf = std::make_shared<Buffer>();
-  buf->write((const char *)&remoteDevice, sizeof(remoteDevice));
-  buf->write((const char *)&object, sizeof(object));
-  uint64_t nameLen = strlen(name);
-  buf->write((const char *)&nameLen, sizeof(nameLen));
-  buf->write(name, nameLen);
-  buf->write((const char *)&type, sizeof(type));
+  buf->write(remoteDevice);
+  buf->write(object);
+  buf->write(std::string(name));
+  buf->write(type);
   buf->write(value.data(), value.size());
   write(MessageType::SetParam, buf);
 
@@ -311,11 +309,10 @@ void Device::unsetParameter(ANARIObject object, const char *name)
   }
 
   auto buf = std::make_shared<Buffer>();
-  buf->write((const char *)&remoteDevice, sizeof(remoteDevice));
+  buf->write(remoteDevice);
   buf->write((const char *)&object, sizeof(object));
   uint64_t nameLen = strlen(name);
-  buf->write((const char *)&nameLen, sizeof(nameLen));
-  buf->write(name, nameLen);
+  buf->write(std::string(name));
   write(MessageType::UnsetParam, buf);
 
   LOG(logging::Level::Info)
@@ -330,8 +327,8 @@ void Device::unsetAllParameters(ANARIObject object)
   }
 
   auto buf = std::make_shared<Buffer>();
-  buf->write((const char *)&remoteDevice, sizeof(remoteDevice));
-  buf->write((const char *)&object, sizeof(object));
+  buf->write(remoteDevice);
+  buf->write(object);
   write(MessageType::UnsetParam, buf);
 
   LOG(logging::Level::Info)
@@ -349,13 +346,13 @@ void Device::commitParameters(ANARIObject object)
       == (ANARIObject)this) { // TODO: what happens if we actually assign our
                               // pointer value via nextObjectID++ ??? :-D
     auto buf = std::make_shared<Buffer>();
-    buf->write((const char *)&remoteDevice, sizeof(remoteDevice));
+    buf->write(remoteDevice);
     write(
         MessageType::CommitParams, buf); // one handle only: commit the device!
   } else {
     auto buf = std::make_shared<Buffer>();
-    buf->write((const char *)&remoteDevice, sizeof(remoteDevice));
-    buf->write((const char *)&object, sizeof(object));
+    buf->write(remoteDevice);
+    buf->write(object);
     write(MessageType::CommitParams, buf);
 
     LOG(logging::Level::Info) << "Parameters committed on object " << object;
@@ -374,8 +371,8 @@ void Device::release(ANARIObject object)
     frames.erase(object);
 
   auto buf = std::make_shared<Buffer>();
-  buf->write((const char *)&remoteDevice, sizeof(remoteDevice));
-  buf->write((const char *)&object, sizeof(object));
+  buf->write(remoteDevice);
+  buf->write(object);
   write(MessageType::Release, buf);
 
   LOG(logging::Level::Info) << "Object released: " << object;
@@ -389,8 +386,8 @@ void Device::retain(ANARIObject object)
   }
 
   auto buf = std::make_shared<Buffer>();
-  buf->write((const char *)&remoteDevice, sizeof(remoteDevice));
-  buf->write((const char *)&object, sizeof(object));
+  buf->write(remoteDevice);
+  buf->write(object);
   write(MessageType::Retain, buf);
 
   LOG(logging::Level::Info) << "Object retained: " << object;
@@ -411,14 +408,12 @@ int Device::getProperty(ANARIObject object,
   }
 
   auto buf = std::make_shared<Buffer>();
-  buf->write((const char *)&remoteDevice, sizeof(remoteDevice));
-  buf->write((const char *)&object, sizeof(object));
-  uint64_t len = strlen(name);
-  buf->write((const char *)&len, sizeof(len));
-  buf->write(name, len);
-  buf->write((const char *)&type, sizeof(type));
-  buf->write((const char *)&size, sizeof(size));
-  buf->write((const char *)&mask, sizeof(mask));
+  buf->write(remoteDevice);
+  buf->write(object);
+  buf->write(std::string(name));
+  buf->write(type);
+  buf->write(size);
+  buf->write(mask);
   write(MessageType::GetProperty, buf);
 
   std::unique_lock l(syncProperties.mtx);
@@ -459,8 +454,8 @@ const char **Device::getObjectSubtypes(ANARIDataType objectType)
   }
 
   auto buf = std::make_shared<Buffer>();
-  buf->write((const char *)&remoteDevice, sizeof(remoteDevice));
-  buf->write((const char *)&objectType, sizeof(objectType));
+  buf->write(remoteDevice);
+  buf->write(objectType);
   write(MessageType::GetObjectSubtypes, buf);
 
   std::unique_lock l(syncObjectSubtypes.mtx);
@@ -493,15 +488,11 @@ const void *Device::getObjectInfo(ANARIDataType objectType,
   }
 
   auto buf = std::make_shared<Buffer>();
-  buf->write((const char *)&remoteDevice, sizeof(remoteDevice));
-  buf->write((const char *)&objectType, sizeof(objectType));
-  uint64_t len = strlen(objectSubtype);
-  buf->write((const char *)&len, sizeof(len));
-  buf->write(objectSubtype, len);
-  len = strlen(infoName);
-  buf->write((const char *)&len, sizeof(len));
-  buf->write(infoName, len);
-  buf->write((const char *)&infoType, sizeof(infoType));
+  buf->write(remoteDevice);
+  buf->write(objectType);
+  buf->write(std::string(objectSubtype));
+  buf->write(std::string(infoName));
+  buf->write(infoType);
   write(MessageType::GetObjectInfo, buf);
 
   std::unique_lock l(syncObjectInfo.mtx);
@@ -549,19 +540,13 @@ const void *Device::getParameterInfo(ANARIDataType objectType,
   }
 
   auto buf = std::make_shared<Buffer>();
-  buf->write((const char *)&remoteDevice, sizeof(remoteDevice));
-  buf->write((const char *)&objectType, sizeof(objectType));
-  uint64_t len = strlen(objectSubtype);
-  buf->write((const char *)&len, sizeof(len));
-  buf->write(objectSubtype, len);
-  len = strlen(parameterName);
-  buf->write((const char *)&len, sizeof(len));
-  buf->write(parameterName, len);
-  buf->write((const char *)&parameterType, sizeof(parameterType));
-  len = strlen(infoName);
-  buf->write((const char *)&len, sizeof(len));
-  buf->write(infoName, len);
-  buf->write((const char *)&infoType, sizeof(infoType));
+  buf->write(remoteDevice);
+  buf->write(objectType);
+  buf->write(std::string(objectSubtype));
+  buf->write(std::string(parameterName));
+  buf->write(parameterType);
+  buf->write(std::string(infoName));
+  buf->write(infoType);
   write(MessageType::GetParameterInfo, buf);
 
   std::unique_lock l(syncParameterInfo.mtx);
@@ -674,8 +659,8 @@ void Device::renderFrame(ANARIFrame frame)
   l.unlock();
 
   auto buf = std::make_shared<Buffer>();
-  buf->write((const char *)&remoteDevice, sizeof(remoteDevice));
-  buf->write((const char *)&frame, sizeof(frame));
+  buf->write(remoteDevice);
+  buf->write(frame);
   write(MessageType::RenderFrame, buf);
   frm.state = Frame::Render;
 }
@@ -696,9 +681,9 @@ int Device::frameReady(ANARIFrame frame, ANARIWaitMask m)
 
   if (frm.state == Frame::Render) {
     auto buf = std::make_shared<Buffer>();
-    buf->write((const char *)&remoteDevice, sizeof(remoteDevice));
-    buf->write((const char *)&frame, sizeof(frame));
-    buf->write((const char *)&m, sizeof(m));
+    buf->write(remoteDevice);
+    buf->write(frame);
+    buf->write(m);
     write(MessageType::FrameReady, buf);
     if (m == ANARI_WAIT) { // TODO: mask is probably a bitmask?!
       // block till device ID was returned by remote
@@ -785,12 +770,11 @@ ANARIObject Device::registerNewObject(ANARIDataType type, std::string subtype)
 
   auto buf = std::make_shared<Buffer>();
 
-  buf->write((const char *)&remoteDevice, sizeof(remoteDevice));
-  buf->write((const char *)&type, sizeof(type));
+  buf->write(remoteDevice);
+  buf->write(type);
   uint64_t len = subtype.length();
-  buf->write((const char *)&len, sizeof(len));
-  buf->write(subtype.c_str(), subtype.length());
-  buf->write((const char *)&objectID, sizeof(objectID));
+  buf->write(subtype);
+  buf->write(objectID);
 
   write(MessageType::NewObject, buf);
 
@@ -815,13 +799,13 @@ ANARIArray Device::registerNewArray(ANARIDataType type,
   memcpy(&array, &objectID, sizeof(objectID));
 
   auto buf = std::make_shared<Buffer>();
-  buf->write((const char *)&remoteDevice, sizeof(remoteDevice));
-  buf->write((const char *)&type, sizeof(type));
-  buf->write((const char *)&objectID, sizeof(objectID));
-  buf->write((const char *)&elementType, sizeof(elementType));
-  buf->write((const char *)&numItems1, sizeof(numItems1));
-  buf->write((const char *)&numItems2, sizeof(numItems2));
-  buf->write((const char *)&numItems3, sizeof(numItems3));
+  buf->write(remoteDevice);
+  buf->write(type);
+  buf->write(objectID);
+  buf->write(elementType);
+  buf->write(numItems1);
+  buf->write(numItems2);
+  buf->write(numItems3);
 
   ArrayInfo info(type, elementType, numItems1, numItems2, numItems3);
 
@@ -847,13 +831,11 @@ void Device::initClient()
   syncConnectionEstablished.cv.wait(l1, [this]() { return conn; });
   l1.unlock();
 
-  int32_t remoteSubtypeLength = remoteSubtype.length();
   CompressionFeatures cf = getCompressionFeatures();
 
   // request remote device to be created, send other client info along
   auto buf = std::make_shared<Buffer>();
-  buf->write((const char *)&remoteSubtypeLength, sizeof(remoteSubtypeLength));
-  buf->write(remoteSubtype.c_str(), remoteSubtype.length());
+  buf->write(remoteSubtype);
   buf->write((const char *)&cf, sizeof(cf));
   // write(MessageType::NewDevice, buf);
   //  post to queue directly: write() would call initClient() recursively!
@@ -996,27 +978,16 @@ void Device::handleMessage(async::connection::reason reason,
       buf.write(message->data(), message->size());
       buf.seek(0);
 
-      ANARIObject handle;
-      buf.read((char *)&handle, sizeof(handle));
-
-      property.object = handle;
-
-      uint64_t len;
-      buf.read((char *)&len, sizeof(len));
-
-      std::vector<char> name(len);
-      buf.read(name.data(), len);
-      name[len] = '\0'; // TODO: check...
-      property.name = std::string(name.data(), name.size());
-
-      buf.read((char *)&property.result, sizeof(property.result));
+      buf.read(property.object);
+      buf.read(property.name);
+      buf.read(property.result);
 
       if (property.type == ANARI_STRING_LIST) {
         // Delete old list (if exists)
         auto it = std::find_if(stringListProperties.begin(),
             stringListProperties.end(),
-            [name](const StringListProperty &prop) {
-              return prop.name == std::string(name.data());
+            [this](const StringListProperty &prop) {
+              return prop.name == property.name;
             });
         if (it != stringListProperties.end()) {
           for (size_t i = 0; i < it->value.size(); ++i) {
@@ -1026,18 +997,18 @@ void Device::handleMessage(async::connection::reason reason,
 
         StringListProperty prop;
 
-        prop.object = handle;
-        prop.name = std::string(name.data(), name.size());
+        prop.object = property.object;
+        prop.name = property.name;
 
         uint64_t listSize;
-        buf.read((char *)&listSize, sizeof(listSize));
+        buf.read(listSize);
 
         prop.value.resize(listSize + 1);
         prop.value[listSize] = nullptr;
 
         for (uint64_t i = 0; i < listSize; ++i) {
           uint64_t strLen;
-          buf.read((char *)&strLen, sizeof(strLen));
+          buf.read(strLen);
 
           prop.value[i] = new char[strLen + 1];
           buf.read(prop.value[i], strLen);
@@ -1066,7 +1037,7 @@ void Device::handleMessage(async::connection::reason reason,
 
       ObjectSubtypes os;
 
-      buf.read((char *)&os.objectType, sizeof(os.objectType));
+      buf.read(os.objectType);
 
       while (!buf.eof()) {
         uint64_t strLen;
@@ -1092,23 +1063,12 @@ void Device::handleMessage(async::connection::reason reason,
 
       ObjectInfo oi;
 
-      buf.read((char *)&oi.objectType, sizeof(oi.objectType));
-      uint64_t len;
-      buf.read((char *)&len, sizeof(len));
-      std::vector<char> bytesToString(len);
-      buf.read(bytesToString.data(), len);
-      oi.objectSubtype = std::string(bytesToString.data(), len);
-      buf.read((char *)&len, sizeof(len));
-      bytesToString.resize(len);
-      buf.read(bytesToString.data(), len);
-      oi.info.name = std::string(bytesToString.data(), len);
-      buf.read((char *)&oi.info.type, sizeof(oi.info.type));
+      buf.read(oi.objectType);
+      buf.read(oi.objectSubtype);
+      buf.read(oi.info.name);
+      buf.read(oi.info.type);
       if (oi.info.type == ANARI_STRING) {
-        uint64_t strLen;
-        buf.read((char *)&strLen, sizeof(strLen));
-        oi.info.asString.resize(strLen + 1);
-        buf.read(oi.info.asString.data(), strLen);
-        oi.info.asString[strLen] = '\0';
+        buf.read(oi.info.asString);
       } else if (oi.info.type == ANARI_STRING_LIST) {
         while (!buf.eof()) {
           uint64_t strLen;
@@ -1129,7 +1089,7 @@ void Device::handleMessage(async::connection::reason reason,
           name[len] = '\0';
 
           ANARIDataType type;
-          buf.read((char *)&type, sizeof(type));
+          buf.read(type);
           oi.info.asParameterList.push_back({name, type});
         }
         oi.info.asParameterList.push_back({nullptr, 0});
@@ -1153,28 +1113,14 @@ void Device::handleMessage(async::connection::reason reason,
 
       ParameterInfo pi;
 
-      buf.read((char *)&pi.objectType, sizeof(pi.objectType));
-      uint64_t len;
-      buf.read((char *)&len, sizeof(len));
-      std::vector<char> bytesToString(len);
-      buf.read(bytesToString.data(), len);
-      pi.objectSubtype = std::string(bytesToString.data(), len);
-      buf.read((char *)&len, sizeof(len));
-      bytesToString.resize(len);
-      buf.read(bytesToString.data(), len);
-      pi.parameterName = std::string(bytesToString.data(), len);
-      buf.read((char *)&pi.parameterType, sizeof(pi.parameterType));
-      buf.read((char *)&len, sizeof(len));
-      bytesToString.resize(len);
-      buf.read(bytesToString.data(), len);
-      pi.info.name = std::string(bytesToString.data(), len);
-      buf.read((char *)&pi.info.type, sizeof(pi.info.type));
+      buf.read(pi.objectType);
+      buf.read(pi.objectSubtype);
+      buf.read(pi.parameterName);
+      buf.read(pi.parameterType);
+      buf.read(pi.info.name);
+      buf.read(pi.info.type);
       if (pi.info.type == ANARI_STRING) {
-        uint64_t strLen;
-        buf.read((char *)&strLen, sizeof(strLen));
-        pi.info.asString.resize(strLen + 1);
-        buf.read(pi.info.asString.data(), strLen);
-        pi.info.asString[strLen] = '\0';
+        buf.read(pi.info.asString);
       } else if (pi.info.type == ANARI_STRING_LIST) {
         while (!buf.eof()) {
           uint64_t strLen;
@@ -1195,7 +1141,7 @@ void Device::handleMessage(async::connection::reason reason,
           name[len] = '\0';
 
           ANARIDataType type;
-          buf.read((char *)&type, sizeof(type));
+          buf.read(type);
           pi.info.asParameterList.push_back({name, type});
         }
         pi.info.asParameterList.push_back({nullptr, 0});
