@@ -109,14 +109,8 @@ ANARIArray1D Device::newArray1D(const void *appMemory,
     const ANARIDataType elementType,
     uint64_t numItems1)
 {
-  return (ANARIArray1D)registerNewArray(ANARI_ARRAY1D,
-      appMemory,
-      deleter,
-      userPtr,
-      elementType,
-      numItems1,
-      0,
-      0);
+  return (ANARIArray1D)registerNewArray(
+      ANARI_ARRAY1D, appMemory, deleter, userPtr, elementType, numItems1, 0, 0);
 }
 
 ANARIArray2D Device::newArray2D(const void *appMemory,
@@ -163,9 +157,8 @@ void *Device::mapArray(ANARIArray array)
 
   std::unique_lock l(syncMapArray.mtx);
   ArrayData &data = arrays[array];
-  syncMapArray.cv.wait(l, [&]() {
-    return (ssize_t)data.value.size() == data.bytesExpected;
-  });
+  syncMapArray.cv.wait(
+      l, [&]() { return (ssize_t)data.value.size() == data.bytesExpected; });
   l.unlock();
 
   LOG(logging::Level::Info) << "Array mapped: " << array;
@@ -269,14 +262,15 @@ void Device::setParameter(
   if (object == (ANARIObject)this) {
     if (strncmp(name, "server.hostname", 15) == 0) {
       if (remoteDevice != nullptr) {
-        LOG(logging::Level::Error) << "server.hostname must be set after device creation";
+        LOG(logging::Level::Error)
+            << "server.hostname must be set after device creation";
         return;
       }
       server.hostname = std::string((const char *)mem);
     } else if (strncmp(name, "server.port", 11) == 0) {
-
       if (remoteDevice != nullptr) {
-        LOG(logging::Level::Error) << "server.port must be set after device creation";
+        LOG(logging::Level::Error)
+            << "server.port must be set after device creation";
         return;
       }
       server.port = *(unsigned short *)mem;
@@ -454,13 +448,12 @@ int Device::getProperty(ANARIObject object,
   return result;
 }
 
-const char ** Device::getObjectSubtypes(ANARIDataType objectType)
+const char **Device::getObjectSubtypes(ANARIDataType objectType)
 {
   auto it = std::find_if(objectSubtypes.begin(),
       objectSubtypes.end(),
-      [objectType](const ObjectSubtypes &os) {
-        return os.objectType == objectType;
-      });
+      [objectType](
+          const ObjectSubtypes &os) { return os.objectType == objectType; });
   if (it != objectSubtypes.end()) {
     return (const char **)it->value.data();
   }
@@ -473,19 +466,18 @@ const char ** Device::getObjectSubtypes(ANARIDataType objectType)
   std::unique_lock l(syncObjectSubtypes.mtx);
   syncObjectSubtypes.cv.wait(l, [this, &it, objectType]() {
     it = std::find_if(objectSubtypes.begin(),
-      objectSubtypes.end(),
-      [&it, objectType](const ObjectSubtypes &os) {
-        return os.objectType == objectType;
-      });
+        objectSubtypes.end(),
+        [&it, objectType](
+            const ObjectSubtypes &os) { return os.objectType == objectType; });
     return it != objectSubtypes.end();
   });
 
   return (const char **)it->value.data();
 }
 
-const void* Device::getObjectInfo(ANARIDataType objectType,
-    const char* objectSubtype,
-    const char* infoName,
+const void *Device::getObjectInfo(ANARIDataType objectType,
+    const char *objectSubtype,
+    const char *infoName,
     ANARIDataType infoType)
 {
   auto it = std::find_if(objectInfos.begin(),
@@ -513,31 +505,38 @@ const void* Device::getObjectInfo(ANARIDataType objectType,
   write(MessageType::GetObjectInfo, buf);
 
   std::unique_lock l(syncObjectInfo.mtx);
-  syncObjectInfo.cv.wait(l, [this, &it, objectType, objectSubtype, infoName, infoType]() {
-    it = std::find_if(objectInfos.begin(),
-      objectInfos.end(),
-      [&it, objectType, objectSubtype, infoName, infoType](const ObjectInfo &oi) {
-        return oi.objectType == objectType
-            && oi.objectSubtype == std::string(objectSubtype)
-            && oi.info.name == std::string(infoName)
-            && oi.info.type == infoType;
+  syncObjectInfo.cv.wait(
+      l, [this, &it, objectType, objectSubtype, infoName, infoType]() {
+        it = std::find_if(objectInfos.begin(),
+            objectInfos.end(),
+            [&it, objectType, objectSubtype, infoName, infoType](
+                const ObjectInfo &oi) {
+              return oi.objectType == objectType
+                  && oi.objectSubtype == std::string(objectSubtype)
+                  && oi.info.name == std::string(infoName)
+                  && oi.info.type == infoType;
+            });
+        return it != objectInfos.end();
       });
-    return it != objectInfos.end();
-  });
 
   return it->info.data();
 }
 
-const void* Device::getParameterInfo(ANARIDataType objectType,
-    const char* objectSubtype,
-    const char* parameterName,
+const void *Device::getParameterInfo(ANARIDataType objectType,
+    const char *objectSubtype,
+    const char *parameterName,
     ANARIDataType parameterType,
-    const char* infoName,
+    const char *infoName,
     ANARIDataType infoType)
 {
   auto it = std::find_if(parameterInfos.begin(),
       parameterInfos.end(),
-      [objectType, objectSubtype, parameterName, parameterType, infoName, infoType](const ParameterInfo &pi) {
+      [objectType,
+          objectSubtype,
+          parameterName,
+          parameterType,
+          infoName,
+          infoType](const ParameterInfo &pi) {
         return pi.objectType == objectType
             && pi.objectSubtype == std::string(objectSubtype)
             && pi.parameterName == std::string(parameterName)
@@ -566,19 +565,33 @@ const void* Device::getParameterInfo(ANARIDataType objectType,
   write(MessageType::GetParameterInfo, buf);
 
   std::unique_lock l(syncParameterInfo.mtx);
-  syncParameterInfo.cv.wait(l, [this, &it, objectType, objectSubtype, parameterName, parameterType, infoName, infoType]() {
-    it = std::find_if(parameterInfos.begin(),
-      parameterInfos.end(),
-      [&it, objectType, objectSubtype, parameterName, parameterType, infoName, infoType](const ParameterInfo &pi) {
-        return pi.objectType == objectType
-            && pi.objectSubtype == std::string(objectSubtype)
-            && pi.parameterName == std::string(parameterName)
-            && pi.parameterType == parameterType
-            && pi.info.name == std::string(infoName)
-            && pi.info.type == infoType;
+  syncParameterInfo.cv.wait(l,
+      [this,
+          &it,
+          objectType,
+          objectSubtype,
+          parameterName,
+          parameterType,
+          infoName,
+          infoType]() {
+        it = std::find_if(parameterInfos.begin(),
+            parameterInfos.end(),
+            [&it,
+                objectType,
+                objectSubtype,
+                parameterName,
+                parameterType,
+                infoName,
+                infoType](const ParameterInfo &pi) {
+              return pi.objectType == objectType
+                  && pi.objectSubtype == std::string(objectSubtype)
+                  && pi.parameterName == std::string(parameterName)
+                  && pi.parameterType == parameterType
+                  && pi.info.name == std::string(infoName)
+                  && pi.info.type == infoType;
+            });
+        return it != parameterInfos.end();
       });
-    return it != parameterInfos.end();
-  });
 
   return it->info.data();
 }
@@ -717,8 +730,8 @@ Device::Device(std::string subtype) : manager(async::make_connection_manager())
   char *serverHostName = getenv("ANARI_REMOTE_SERVER_HOSTNAME");
   if (serverHostName) {
     server.hostname = std::string(serverHostName);
-    LOG(logging::Level::Info) << "Server hostname specified via environment: "
-      << server.hostname;
+    LOG(logging::Level::Info)
+        << "Server hostname specified via environment: " << server.hostname;
   }
 
   char *serverPort = getenv("ANARI_REMOTE_SERVER_PORT");
@@ -726,11 +739,11 @@ Device::Device(std::string subtype) : manager(async::make_connection_manager())
     int p = std::stoi(serverPort);
     if (p >= 0 && p <= USHRT_MAX) {
       server.port = (unsigned short)p;
-      LOG(logging::Level::Info) << "Server port specified via environment: "
-        << server.port;
+      LOG(logging::Level::Info)
+          << "Server port specified via environment: " << server.port;
     } else {
       LOG(logging::Level::Warning)
-        << "Server port specified via environment but ill-formed: " << p;
+          << "Server port specified via environment but ill-formed: " << p;
     }
   }
 
@@ -810,11 +823,7 @@ ANARIArray Device::registerNewArray(ANARIDataType type,
   buf->write((const char *)&numItems2, sizeof(numItems2));
   buf->write((const char *)&numItems3, sizeof(numItems3));
 
-  ArrayInfo info(type,
-      elementType,
-      numItems1,
-      numItems2,
-      numItems3);
+  ArrayInfo info(type, elementType, numItems1, numItems2, numItems3);
 
   if (appMemory)
     buf->write((const char *)appMemory, info.getSizeInBytes());
@@ -846,8 +855,8 @@ void Device::initClient()
   buf->write((const char *)&remoteSubtypeLength, sizeof(remoteSubtypeLength));
   buf->write(remoteSubtype.c_str(), remoteSubtype.length());
   buf->write((const char *)&cf, sizeof(cf));
-  //write(MessageType::NewDevice, buf);
-  // post to queue directly: write() would call initClient() recursively!
+  // write(MessageType::NewDevice, buf);
+  //  post to queue directly: write() would call initClient() recursively!
   queue.post(std::bind(&Device::writeImpl, this, MessageType::NewDevice, buf));
 
   // block till device ID was returned by remote
@@ -861,8 +870,12 @@ void Device::connect(std::string host, unsigned short port)
   LOG(logging::Level::Info)
       << "ANARIDevice client connecting, host " << host << ", port " << port;
 
-  manager->connect(
-      host, port, std::bind(&Device::handleNewConnection, this, std::placeholders::_1, std::placeholders::_2));
+  manager->connect(host,
+      port,
+      std::bind(&Device::handleNewConnection,
+          this,
+          std::placeholders::_1,
+          std::placeholders::_2));
 }
 
 void Device::run()
@@ -904,7 +917,11 @@ bool Device::handleNewConnection(
   // Accept and save this connection
   // and set the messange handler of the connection
   conn = new_conn;
-  conn->set_handler(std::bind(&Device::handleMessage, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+  conn->set_handler(std::bind(&Device::handleMessage,
+      this,
+      std::placeholders::_1,
+      std::placeholders::_2,
+      std::placeholders::_3));
 
   // Notify main thread about the connection established
   syncConnectionEstablished.cv.notify_all();
@@ -937,9 +954,10 @@ void Device::handleMessage(async::connection::reason reason,
       l.unlock();
       syncDeviceHandleRemote.cv.notify_all();
       LOG(logging::Level::Info) << "Got remote device handle: " << remoteDevice;
-      LOG(logging::Level::Info) << "Server has TurboJPEG: "
-        << server.compression.hasTurboJPEG;
-      LOG(logging::Level::Info) << "Server has SNAPPY: " << server.compression.hasSNAPPY;
+      LOG(logging::Level::Info)
+          << "Server has TurboJPEG: " << server.compression.hasTurboJPEG;
+      LOG(logging::Level::Info)
+          << "Server has SNAPPY: " << server.compression.hasSNAPPY;
     } else if (message->type() == MessageType::ArrayMapped) {
       std::unique_lock l(syncMapArray.mtx);
 
@@ -1225,9 +1243,11 @@ void Device::handleMessage(async::connection::reason reason,
       if (message->type() == MessageType::ChannelColor) {
         frm.resizeColor(width, height, type);
 
-        bool compressionTurboJPEG = cf.hasTurboJPEG && server.compression.hasTurboJPEG;
+        bool compressionTurboJPEG =
+            cf.hasTurboJPEG && server.compression.hasTurboJPEG;
 
-        if (compressionTurboJPEG && type == ANARI_UFIXED8_RGBA_SRGB) { // TODO: more formats..
+        if (compressionTurboJPEG
+            && type == ANARI_UFIXED8_RGBA_SRGB) { // TODO: more formats..
           uint32_t jpegSize = *(uint32_t *)(message->data() + off);
           off += sizeof(jpegSize);
 
