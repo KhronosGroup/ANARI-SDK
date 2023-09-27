@@ -3,6 +3,7 @@
 
 project(anari_viewer_nfd VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
+set(BUILD_SHARED_LIBS OFF)
 anari_sdk_fetch_project(
   NAME ${PROJECT_NAME}
   URL https://github.com/btzy/nativefiledialog-extended/archive/refs/tags/v1.0.3.zip
