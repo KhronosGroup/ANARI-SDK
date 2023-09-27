@@ -11,3 +11,7 @@ endif()
 
 project_add_executable(main.cpp ui_layout.cpp)
 project_link_libraries(PRIVATE anari::anari_viewer)
+
+if (INSTALL_VIEWER)
+  install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()

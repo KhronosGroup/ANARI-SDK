@@ -57,6 +57,8 @@ cmake_dependent_option(INSTALL_VIEWER_LIBRARY
   "BUILD_EXAMPLES;BUILD_VIEWER"
   OFF
 )
+option(INSTALL_VIEWER "Install anariViewer app" OFF)
+mark_as_advanced(INSTALL_VIEWER)
 
 ## The generate_all targets collects all offline code generation targets
 
