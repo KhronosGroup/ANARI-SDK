@@ -5,7 +5,9 @@
 #define TINYEXR_IMPLEMENTATION 1
 #include "external/stb_image/stb_image.h"
 #include "external/stb_image/stb_image_write.h"
+#ifndef _WIN32
 #include "external/tinyexr/tinyexr.h"
+#endif
 
 #include "HDRImage.h"
 
@@ -37,6 +39,9 @@ bool HDRImage::load(std::string fileName)
     stbi_image_free(imgData);
     return width > 0 && height > 0
         && (numComponents == 3 || numComponents == 4);
+#ifdef _WIN32
+  }
+#else
   } else {
     int w, h, n;
     float *imgData;
@@ -56,6 +61,7 @@ bool HDRImage::load(std::string fileName)
     return width > 0 && height > 0
         && (numComponents == 3 || numComponents == 4);
   }
+#endif
 
   return false;
 }
