@@ -49,6 +49,39 @@ size_t Buffer::read(char *ptr, size_t numBytes)
   return numBytes;
 }
 
+// read overload for string lists
+bool Buffer::read(StringList &val)
+{
+  uint64_t size = 0;
+  if (!read(size))
+    return false;
+
+  for (size_t i = 0; i < size; ++i) {
+    std::string str;
+    read(str);
+    val.push_back(str);
+  }
+
+  return true;
+}
+
+// write overload for string lists
+bool Buffer::write(const StringList &val)
+{
+  if (!write(uint64_t(val.size())))
+    return false;
+
+  const char **strings = val.data();
+  for (size_t i = 0; i < val.size(); ++i) {
+    std::string str;
+    if (strings[i] != nullptr)
+      str = std::string(strings[i]);
+    write(str);
+  }
+
+  return true;
+}
+
 // low-level write function
 size_t Buffer::write(const char *ptr, size_t numBytes)
 {

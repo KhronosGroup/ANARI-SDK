@@ -737,29 +737,6 @@ Device::Device(std::string subtype) : manager(async::make_connection_manager())
 
 Device::~Device()
 {
-  for (size_t i = 0; i < stringListProperties.size(); ++i) {
-    for (size_t j = 0; j < stringListProperties[i].value.size(); ++j) {
-      delete[] stringListProperties[i].value[j];
-    }
-  }
-
-  for (size_t i = 0; i < objectSubtypes.size(); ++i) {
-    for (size_t j = 0; j < objectSubtypes[i].value.size(); ++j) {
-      delete[] objectSubtypes[i].value[j];
-    }
-  }
-
-  for (size_t i = 0; i < objectInfos.size(); ++i) {
-    for (size_t j = 0; j < objectInfos[i].info.asStringList.size(); ++j) {
-      delete[] objectInfos[i].info.asStringList[j];
-    }
-  }
-
-  for (size_t i = 0; i < parameterInfos.size(); ++i) {
-    for (size_t j = 0; j < parameterInfos[i].info.asStringList.size(); ++j) {
-      delete[] parameterInfos[i].info.asStringList[j];
-    }
-  }
 }
 
 ANARIObject Device::registerNewObject(ANARIDataType type, std::string subtype)
@@ -981,33 +958,21 @@ void Device::handleMessage(async::connection::reason reason,
       buf.read(property.result);
 
       if (property.type == ANARI_STRING_LIST) {
-        // Delete old list (if exists)
+        // Remove old list (if exists)
         auto it = std::find_if(stringListProperties.begin(),
             stringListProperties.end(),
             [this](const StringListProperty &prop) {
               return prop.name == property.name;
             });
         if (it != stringListProperties.end()) {
-          for (size_t i = 0; i < it->value.size(); ++i) {
-            delete[] it->value[i];
-          }
+          stringListProperties.erase(it);
         }
 
         StringListProperty prop;
 
         prop.object = property.object;
         prop.name = property.name;
-
-        while (!buf.eof()) {
-          uint64_t strLen;
-          buf.read(strLen);
-
-          char *str = new char[strLen + 1];
-          buf.read(str, strLen);
-          str[strLen] = '\0';
-          prop.value.push_back(str);
-        }
-        prop.value.push_back(nullptr);
+        buf.read(prop.value);
 
         stringListProperties.push_back(prop);
       } else if (property.type == ANARI_DATA_TYPE_LIST) {
@@ -1030,17 +995,7 @@ void Device::handleMessage(async::connection::reason reason,
       ObjectSubtypes os;
 
       buf.read(os.objectType);
-
-      while (!buf.eof()) {
-        uint64_t strLen;
-        buf.read((char *)&strLen, sizeof(strLen));
-
-        char *subtype = new char[strLen + 1];
-        buf.read(subtype, strLen);
-        subtype[strLen] = '\0';
-        os.value.push_back(subtype);
-      }
-      os.value.push_back(nullptr);
+      buf.read(os.value);
 
       objectSubtypes.push_back(os);
 
@@ -1060,16 +1015,7 @@ void Device::handleMessage(async::connection::reason reason,
       if (oi.info.type == ANARI_STRING) {
         buf.read(oi.info.asString);
       } else if (oi.info.type == ANARI_STRING_LIST) {
-        while (!buf.eof()) {
-          uint64_t strLen;
-          buf.read((char *)&strLen, sizeof(strLen));
-
-          char *str = new char[strLen + 1];
-          buf.read(str, strLen);
-          str[strLen] = '\0';
-          oi.info.asStringList.push_back(str);
-        }
-        oi.info.asStringList.push_back(nullptr);
+        buf.read(oi.info.asStringList);
       } else if (oi.info.type == ANARI_PARAMETER_LIST) {
         while (!buf.eof()) {
           uint64_t len;
@@ -1110,16 +1056,7 @@ void Device::handleMessage(async::connection::reason reason,
       if (pi.info.type == ANARI_STRING) {
         buf.read(pi.info.asString);
       } else if (pi.info.type == ANARI_STRING_LIST) {
-        while (!buf.eof()) {
-          uint64_t strLen;
-          buf.read((char *)&strLen, sizeof(strLen));
-
-          char *str = new char[strLen + 1];
-          buf.read(str, strLen);
-          str[strLen] = '\0';
-          pi.info.asStringList.push_back(str);
-        }
-        pi.info.asStringList.push_back(nullptr);
+        buf.read(pi.info.asStringList);
       } else if (pi.info.type == ANARI_PARAMETER_LIST) {
         while (!buf.eof()) {
           uint64_t len;

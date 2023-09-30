@@ -9,6 +9,8 @@
 #include <vector>
 // anari
 #include <anari/anari.h>
+// ours
+#include "StringList.h"
 
 namespace remote {
 
@@ -43,6 +45,12 @@ struct Buffer : std::vector<char>
 
   // write overload for std::string
   bool write(const std::string &val);
+
+  // read overload for string lists
+  bool read(StringList &val);
+
+  // write overload for string lists
+  bool write(const StringList &val);
 
   // low-level read function
   size_t read(char *ptr, size_t numBytes);

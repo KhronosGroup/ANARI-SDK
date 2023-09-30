@@ -909,25 +909,16 @@ struct Server
         auto outbuf = std::make_shared<Buffer>();
 
         if (type == ANARI_STRING_LIST) {
-          const char *const *stringList = nullptr;
-          int result = anariGetProperty(dev,
-              serverObj.handle,
-              name.data(),
-              type,
-              &stringList,
-              size,
-              mask);
+          const char *const *value = nullptr;
+          int result = anariGetProperty(
+              dev, serverObj.handle, name.data(), type, &value, size, mask);
 
           outbuf->write(objectHandle);
           outbuf->write(name);
           outbuf->write(result);
 
-          auto sl = stringList;
-          if (sl != nullptr) {
-            while (const char *str = *sl++) {
-              outbuf->write(std::string(str));
-            }
-          }
+          StringList stringList((const char **)value);
+          outbuf->write(stringList);
         } else if (type == ANARI_DATA_TYPE_LIST) {
           throw std::runtime_error(
               "getProperty with ANARI_DATA_TYPE_LIST not implemented yet!");
@@ -970,11 +961,9 @@ struct Server
 
         const char **subtypes = anariGetObjectSubtypes(dev, objectType);
 
-        if (subtypes != nullptr) {
-          while (const char *str = *subtypes++) {
-            outbuf->write(std::string(str));
-          }
-        }
+        StringList stringList(subtypes);
+        outbuf->write(stringList);
+
         write(MessageType::ObjectSubtypes, outbuf);
       } else if (message->type() == MessageType::GetObjectInfo) {
         LOG(logging::Level::Info) << "Message: GetObjectInfo, message size: "
@@ -1020,10 +1009,8 @@ struct Server
             auto *str = (const char *)info;
             outbuf->write(std::string(str));
           } else if (infoType == ANARI_STRING_LIST) {
-            const auto **strings = (const char **)info;
-            while (const char *str = *strings++) {
-              outbuf->write(std::string(str));
-            }
+            StringList stringList((const char **)info);
+            outbuf->write(stringList);
           } else if (infoType == ANARI_PARAMETER_LIST) {
             auto *parameter = (const ANARIParameter *)info;
             for (; parameter && parameter->name != nullptr; parameter++) {
@@ -1092,10 +1079,8 @@ struct Server
             auto *str = (const char *)info;
             outbuf->write(std::string(str));
           } else if (infoType == ANARI_STRING_LIST) {
-            const auto **strings = (const char **)info;
-            while (const char *str = *strings++) {
-              outbuf->write(std::string(str));
-            }
+            StringList stringList((const char **)info);
+            outbuf->write(stringList);
           } else if (infoType == ANARI_PARAMETER_LIST) {
             auto *parameter = (const ANARIParameter *)info;
             for (; parameter && parameter->name != nullptr; parameter++) {
