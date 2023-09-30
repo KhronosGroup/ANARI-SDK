@@ -353,8 +353,8 @@ struct Server
 
         // return device handle and other info to client
         auto buf = std::make_shared<Buffer>();
-        buf->write((char *)&deviceHandle, sizeof(deviceHandle));
-        buf->write((char *)&cf, sizeof(cf));
+        buf->write(deviceHandle);
+        buf->write(cf);
         write(MessageType::DeviceHandle, buf);
 
         LOG(logging::Level::Info)

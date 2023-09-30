@@ -836,7 +836,7 @@ void Device::initClient()
   // request remote device to be created, send other client info along
   auto buf = std::make_shared<Buffer>();
   buf->write(remoteSubtype);
-  buf->write((const char *)&cf, sizeof(cf));
+  buf->write(cf);
   // write(MessageType::NewDevice, buf);
   //  post to queue directly: write() would call initClient() recursively!
   queue.post(std::bind(&Device::writeImpl, this, MessageType::NewDevice, buf));
