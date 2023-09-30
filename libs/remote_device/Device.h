@@ -178,60 +178,31 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
   async::connection_pointer conn;
   async::work_queue queue;
 
-  struct
+  struct SyncPrimitives
   {
     std::mutex mtx;
     std::condition_variable cv;
-  } syncConnectionEstablished;
+  };
 
-  struct
+  struct SyncPoints
   {
-    std::mutex mtx;
-    std::condition_variable cv;
-  } syncDeviceHandleRemote;
+    enum
+    {
+      ConnectionEstablished,
+      DeviceHandleRemote,
+      MapArray,
+      UnmapArray,
+      FrameIsReady,
+      Properties,
+      ObjectSubtypes,
+      ObjectInfo,
+      ParameterInfo,
+      // Keep last:
+      Count,
+    };
+  };
 
-  struct
-  {
-    std::mutex mtx;
-    std::condition_variable cv;
-  } syncMapArray;
-
-  struct
-  {
-    std::mutex mtx;
-    std::condition_variable cv;
-  } syncUnmapArray;
-
-  struct
-  {
-    std::mutex mtx;
-    std::condition_variable cv;
-  } syncFrameIsReady;
-
-  struct
-  {
-    std::mutex mtx;
-    std::condition_variable cv;
-    size_t which;
-  } syncProperties;
-
-  struct
-  {
-    std::mutex mtx;
-    std::condition_variable cv;
-  } syncObjectSubtypes;
-
-  struct
-  {
-    std::mutex mtx;
-    std::condition_variable cv;
-  } syncObjectInfo;
-
-  struct
-  {
-    std::mutex mtx;
-    std::condition_variable cv;
-  } syncParameterInfo;
+  SyncPrimitives sync[SyncPoints::Count];
 
   ANARIDevice remoteDevice{nullptr};
   std::string remoteSubtype = "default";
