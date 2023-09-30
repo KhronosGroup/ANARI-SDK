@@ -14,6 +14,14 @@ namespace remote {
 
 struct Buffer : std::vector<char>
 {
+  // Create empty buffer
+  Buffer() = default;
+
+  // Fill buffer with data and set position to zero
+  // This is equivalent to creating an empty buffer
+  // and then calling: write(ptr, numBytes); seek(0);
+  Buffer(const char *ptr, size_t numBytes);
+
   // trivial or POD layout read function
   template <typename T>
   bool read(T &val)

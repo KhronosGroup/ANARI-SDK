@@ -5,6 +5,12 @@
 
 namespace remote {
 
+Buffer::Buffer(const char *ptr, size_t numBytes)
+{
+  write(ptr, numBytes);
+  seek(0);
+}
+
 // read overload for std::string
 bool Buffer::read(std::string &val)
 {

@@ -368,9 +368,7 @@ struct Server
         LOG(logging::Level::Info) << "Message: NewObject, message size: "
                                   << prettyBytes(message->size());
 
-        Buffer buf;
-        buf.write(message->data(), message->size());
-        buf.seek(0);
+        Buffer buf(message->data(), message->size());
 
         ANARIDevice deviceHandle;
         buf.read(deviceHandle);
@@ -402,14 +400,12 @@ struct Server
         LOG(logging::Level::Info) << "Message: NewArray, message size: "
                                   << prettyBytes(message->size());
 
-        ArrayInfo info;
-        Buffer buf;
-        buf.write(message->data(), message->size());
-        buf.seek(0);
+        Buffer buf(message->data(), message->size());
 
         ANARIDevice deviceHandle;
         buf.read(deviceHandle);
 
+        ArrayInfo info;
         buf.read(info.type);
 
         uint64_t objectID;
@@ -443,9 +439,7 @@ struct Server
         LOG(logging::Level::Info) << "Message: SetParam, message size: "
                                   << prettyBytes(message->size());
 
-        Buffer buf;
-        buf.write(message->data(), message->size());
-        buf.seek(0);
+        Buffer buf(message->data(), message->size());
 
         Handle deviceHandle, objectHandle;
         buf.read(deviceHandle);
@@ -503,9 +497,7 @@ struct Server
         LOG(logging::Level::Info) << "Message: UnsetParam, message size: "
                                   << prettyBytes(message->size());
 
-        Buffer buf;
-        buf.write(message->data(), message->size());
-        buf.seek(0);
+        Buffer buf(message->data(), message->size());
 
         Handle deviceHandle, objectHandle;
         buf.read(deviceHandle);
@@ -530,9 +522,7 @@ struct Server
       } else if (message->type() == MessageType::UnsetAllParams) {
         LOG(logging::Level::Info) << "Message: UnsetAllParams";
 
-        Buffer buf;
-        buf.write(message->data(), message->size());
-        buf.seek(0);
+        Buffer buf(message->data(), message->size());
 
         Handle deviceHandle, objectHandle;
         buf.read(deviceHandle);
@@ -556,9 +546,7 @@ struct Server
         LOG(logging::Level::Info) << "Message: CommitParams, message size: "
                                   << prettyBytes(message->size());
 
-        Buffer buf;
-        buf.write(message->data(), message->size());
-        buf.seek(0);
+        Buffer buf(message->data(), message->size());
 
         if (message->size() == sizeof(Handle)) {
           // handle only => commit params of the device itself!
@@ -601,9 +589,7 @@ struct Server
         LOG(logging::Level::Info) << "Message: Release, message size: "
                                   << prettyBytes(message->size());
 
-        Buffer buf;
-        buf.write(message->data(), message->size());
-        buf.seek(0);
+        Buffer buf(message->data(), message->size());
 
         Handle deviceHandle, objectHandle;
         buf.read(deviceHandle);
@@ -629,9 +615,7 @@ struct Server
         LOG(logging::Level::Info) << "Message: Retain, message size: "
                                   << prettyBytes(message->size());
 
-        Buffer buf;
-        buf.write(message->data(), message->size());
-        buf.seek(0);
+        Buffer buf(message->data(), message->size());
 
         Handle deviceHandle, objectHandle;
         buf.read(deviceHandle);
@@ -657,9 +641,7 @@ struct Server
         LOG(logging::Level::Info) << "Message: MapArray, message size: "
                                   << prettyBytes(message->size());
 
-        Buffer buf;
-        buf.write(message->data(), message->size());
-        buf.seek(0);
+        Buffer buf(message->data(), message->size());
 
         Handle deviceHandle, objectHandle;
         buf.read(deviceHandle);
@@ -695,9 +677,7 @@ struct Server
         LOG(logging::Level::Info) << "Message: UnmapArray, message size: "
                                   << prettyBytes(message->size());
 
-        Buffer buf;
-        buf.write(message->data(), message->size());
-        buf.seek(0);
+        Buffer buf(message->data(), message->size());
 
         Handle deviceHandle, objectHandle;
         buf.read(deviceHandle);
@@ -742,9 +722,7 @@ struct Server
         LOG(logging::Level::Info) << "Message: RenderFrame, message size: "
                                   << prettyBytes(message->size());
 
-        Buffer buf;
-        buf.write(message->data(), message->size());
-        buf.seek(0);
+        Buffer buf(message->data(), message->size());
 
         Handle deviceHandle, objectHandle;
         buf.read(deviceHandle);
@@ -858,9 +836,7 @@ struct Server
         LOG(logging::Level::Info) << "Message: FrameReady, message size: "
                                   << prettyBytes(message->size());
 
-        Buffer buf;
-        buf.write(message->data(), message->size());
-        buf.seek(0);
+        Buffer buf(message->data(), message->size());
 
         Handle deviceHandle, objectHandle;
         buf.read(deviceHandle);
@@ -892,9 +868,7 @@ struct Server
         LOG(logging::Level::Info) << "Message: GetProperty, message size: "
                                   << prettyBytes(message->size());
 
-        Buffer buf;
-        buf.write(message->data(), message->size());
-        buf.seek(0);
+        Buffer buf(message->data(), message->size());
 
         Handle deviceHandle, objectHandle;
         buf.read(deviceHandle);
@@ -983,9 +957,7 @@ struct Server
             << "Message: GetObjectSubtypes, message size: "
             << prettyBytes(message->size());
 
-        Buffer buf;
-        buf.write(message->data(), message->size());
-        buf.seek(0);
+        Buffer buf(message->data(), message->size());
 
         Handle deviceHandle;
         buf.read(deviceHandle);
@@ -1017,9 +989,7 @@ struct Server
         LOG(logging::Level::Info) << "Message: GetObjectInfo, message size: "
                                   << prettyBytes(message->size());
 
-        Buffer buf;
-        buf.write(message->data(), message->size());
-        buf.seek(0);
+        Buffer buf(message->data(), message->size());
 
         Handle deviceHandle;
         buf.read(deviceHandle);
@@ -1078,9 +1048,7 @@ struct Server
         LOG(logging::Level::Info) << "Message: GetParameterInfo, message size: "
                                   << prettyBytes(message->size());
 
-        Buffer buf;
-        buf.write(message->data(), message->size());
-        buf.seek(0);
+        Buffer buf(message->data(), message->size());
 
         Handle deviceHandle;
         buf.read(deviceHandle);

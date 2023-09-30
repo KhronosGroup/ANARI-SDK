@@ -974,9 +974,7 @@ void Device::handleMessage(async::connection::reason reason,
     } else if (message->type() == MessageType::Property) {
       std::unique_lock l(syncProperties.mtx);
 
-      Buffer buf;
-      buf.write(message->data(), message->size());
-      buf.seek(0);
+      Buffer buf(message->data(), message->size());
 
       buf.read(property.object);
       buf.read(property.name);
@@ -1031,9 +1029,7 @@ void Device::handleMessage(async::connection::reason reason,
     } else if (message->type() == MessageType::ObjectSubtypes) {
       std::unique_lock l(syncObjectSubtypes.mtx);
 
-      Buffer buf;
-      buf.write(message->data(), message->size());
-      buf.seek(0);
+      Buffer buf(message->data(), message->size());
 
       ObjectSubtypes os;
 
@@ -1057,9 +1053,7 @@ void Device::handleMessage(async::connection::reason reason,
     } else if (message->type() == MessageType::ObjectInfo) {
       std::unique_lock l(syncObjectInfo.mtx);
 
-      Buffer buf;
-      buf.write(message->data(), message->size());
-      buf.seek(0);
+      Buffer buf(message->data(), message->size());
 
       ObjectInfo oi;
 
@@ -1107,9 +1101,7 @@ void Device::handleMessage(async::connection::reason reason,
     } else if (message->type() == MessageType::ParameterInfo) {
       std::unique_lock l(syncParameterInfo.mtx);
 
-      Buffer buf;
-      buf.write(message->data(), message->size());
-      buf.seek(0);
+      Buffer buf(message->data(), message->size());
 
       ParameterInfo pi;
 
