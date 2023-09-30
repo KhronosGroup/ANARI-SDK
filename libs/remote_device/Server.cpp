@@ -6,6 +6,7 @@
 #include <iostream>
 #include <sstream>
 #include "ArrayInfo.h"
+#include "Buffer.h"
 #include "Compression.h"
 #include "Logging.h"
 #include "async/connection.h"
