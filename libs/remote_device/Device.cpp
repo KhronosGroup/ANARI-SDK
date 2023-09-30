@@ -998,20 +998,16 @@ void Device::handleMessage(async::connection::reason reason,
         prop.object = property.object;
         prop.name = property.name;
 
-        uint64_t listSize;
-        buf.read(listSize);
-
-        prop.value.resize(listSize + 1);
-        prop.value[listSize] = nullptr;
-
-        for (uint64_t i = 0; i < listSize; ++i) {
+        while (!buf.eof()) {
           uint64_t strLen;
           buf.read(strLen);
 
-          prop.value[i] = new char[strLen + 1];
-          buf.read(prop.value[i], strLen);
-          prop.value[i][strLen] = '\0';
+          char *str = new char[strLen + 1];
+          buf.read(str, strLen);
+          str[strLen] = '\0';
+          prop.value.push_back(str);
         }
+        prop.value.push_back(nullptr);
 
         stringListProperties.push_back(prop);
       } else if (property.type == ANARI_DATA_TYPE_LIST) {

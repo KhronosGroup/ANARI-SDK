@@ -922,17 +922,7 @@ struct Server
           outbuf->write(name);
           outbuf->write(result);
 
-          uint64_t listSize = 0;
           auto sl = stringList;
-          if (sl != nullptr) {
-            while (const char *str = *sl++) {
-              listSize++;
-            }
-          }
-
-          outbuf->write(listSize);
-
-          sl = stringList;
           if (sl != nullptr) {
             while (const char *str = *sl++) {
               outbuf->write(std::string(str));
