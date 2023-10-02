@@ -269,23 +269,25 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
   // Cache for "object infos"
   struct ObjectInfo
   {
+    typedef std::shared_ptr<ObjectInfo> Ptr;
     ANARIDataType objectType;
     std::string objectSubtype;
     std::string infoName;
     Info info;
   };
-  std::vector<ObjectInfo> objectInfos;
+  std::vector<ObjectInfo::Ptr> objectInfos;
 
   // Cache for "parameter infos"
   struct ParameterInfo
   {
+    typedef std::shared_ptr<ParameterInfo> Ptr;
     ANARIDataType objectType;
     std::string objectSubtype;
     std::string parameterName;
     ANARIDataType parameterType;
     Info info;
   };
-  std::vector<ParameterInfo> parameterInfos;
+  std::vector<ParameterInfo::Ptr> parameterInfos;
 
   std::map<ANARIObject, Frame> frames;
   struct ArrayData

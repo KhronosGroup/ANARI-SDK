@@ -478,14 +478,14 @@ const void *Device::getObjectInfo(ANARIDataType objectType,
 {
   auto it = std::find_if(objectInfos.begin(),
       objectInfos.end(),
-      [objectType, objectSubtype, infoName, infoType](const ObjectInfo &oi) {
-        return oi.objectType == objectType
-            && oi.objectSubtype == std::string(objectSubtype)
-            && oi.info.name == std::string(infoName)
-            && oi.info.type == infoType;
+      [objectType, objectSubtype, infoName, infoType](const ObjectInfo::Ptr &oi) {
+        return oi->objectType == objectType
+            && oi->objectSubtype == std::string(objectSubtype)
+            && oi->info.name == std::string(infoName)
+            && oi->info.type == infoType;
       });
   if (it != objectInfos.end()) {
-    return it->info.data();
+    return (*it)->info.data();
   }
 
   auto buf = std::make_shared<Buffer>();
@@ -502,16 +502,16 @@ const void *Device::getObjectInfo(ANARIDataType objectType,
         it = std::find_if(objectInfos.begin(),
             objectInfos.end(),
             [&it, objectType, objectSubtype, infoName, infoType](
-                const ObjectInfo &oi) {
-              return oi.objectType == objectType
-                  && oi.objectSubtype == std::string(objectSubtype)
-                  && oi.info.name == std::string(infoName)
-                  && oi.info.type == infoType;
+                const ObjectInfo::Ptr &oi) {
+              return oi->objectType == objectType
+                  && oi->objectSubtype == std::string(objectSubtype)
+                  && oi->info.name == std::string(infoName)
+                  && oi->info.type == infoType;
             });
         return it != objectInfos.end();
       });
 
-  return it->info.data();
+  return (*it)->info.data();
 }
 
 const void *Device::getParameterInfo(ANARIDataType objectType,
@@ -528,16 +528,16 @@ const void *Device::getParameterInfo(ANARIDataType objectType,
           parameterName,
           parameterType,
           infoName,
-          infoType](const ParameterInfo &pi) {
-        return pi.objectType == objectType
-            && pi.objectSubtype == std::string(objectSubtype)
-            && pi.parameterName == std::string(parameterName)
-            && pi.parameterType == parameterType
-            && pi.info.name == std::string(infoName)
-            && pi.info.type == infoType;
+          infoType](const ParameterInfo::Ptr &pi) {
+        return pi->objectType == objectType
+            && pi->objectSubtype == std::string(objectSubtype)
+            && pi->parameterName == std::string(parameterName)
+            && pi->parameterType == parameterType
+            && pi->info.name == std::string(infoName)
+            && pi->info.type == infoType;
       });
   if (it != parameterInfos.end()) {
-    return it->info.data();
+    return (*it)->info.data();
   }
 
   auto buf = std::make_shared<Buffer>();
@@ -568,18 +568,18 @@ const void *Device::getParameterInfo(ANARIDataType objectType,
                 parameterName,
                 parameterType,
                 infoName,
-                infoType](const ParameterInfo &pi) {
-              return pi.objectType == objectType
-                  && pi.objectSubtype == std::string(objectSubtype)
-                  && pi.parameterName == std::string(parameterName)
-                  && pi.parameterType == parameterType
-                  && pi.info.name == std::string(infoName)
-                  && pi.info.type == infoType;
+                infoType](const ParameterInfo::Ptr &pi) {
+              return pi->objectType == objectType
+                  && pi->objectSubtype == std::string(objectSubtype)
+                  && pi->parameterName == std::string(parameterName)
+                  && pi->parameterType == parameterType
+                  && pi->info.name == std::string(infoName)
+                  && pi->info.type == infoType;
             });
         return it != parameterInfos.end();
       });
 
-  return it->info.data();
+  return (*it)->info.data();
 }
 
 //--- FrameBuffer Manipulation ------------------------
@@ -1011,17 +1011,17 @@ void Device::handleMessage(async::connection::reason reason,
 
       Buffer buf(message->data(), message->size());
 
-      ObjectInfo oi;
+      auto oi = std::make_shared<ObjectInfo>();
 
-      buf.read(oi.objectType);
-      buf.read(oi.objectSubtype);
-      buf.read(oi.info.name);
-      buf.read(oi.info.type);
-      if (oi.info.type == ANARI_STRING) {
-        buf.read(oi.info.asString);
-      } else if (oi.info.type == ANARI_STRING_LIST) {
-        buf.read(oi.info.asStringList);
-      } else if (oi.info.type == ANARI_PARAMETER_LIST) {
+      buf.read(oi->objectType);
+      buf.read(oi->objectSubtype);
+      buf.read(oi->info.name);
+      buf.read(oi->info.type);
+      if (oi->info.type == ANARI_STRING) {
+        buf.read(oi->info.asString);
+      } else if (oi->info.type == ANARI_STRING_LIST) {
+        buf.read(oi->info.asStringList);
+      } else if (oi->info.type == ANARI_PARAMETER_LIST) {
         while (!buf.eof()) {
           uint64_t len;
           buf.read((char *)&len, sizeof(len));
@@ -1031,13 +1031,13 @@ void Device::handleMessage(async::connection::reason reason,
 
           ANARIDataType type;
           buf.read(type);
-          oi.info.asParameterList.push_back({name, type});
+          oi->info.asParameterList.push_back({name, type});
         }
-        oi.info.asParameterList.push_back({nullptr, 0});
+        oi->info.asParameterList.push_back({nullptr, 0});
       } else {
         if (!buf.eof()) {
-          oi.info.asOther.resize(anari::sizeOf(oi.info.type));
-          buf.read(oi.info.asOther.data(), anari::sizeOf(oi.info.type));
+          oi->info.asOther.resize(anari::sizeOf(oi->info.type));
+          buf.read(oi->info.asOther.data(), anari::sizeOf(oi->info.type));
         }
       }
 
@@ -1050,19 +1050,19 @@ void Device::handleMessage(async::connection::reason reason,
 
       Buffer buf(message->data(), message->size());
 
-      ParameterInfo pi;
+      auto pi = std::make_shared<ParameterInfo>();
 
-      buf.read(pi.objectType);
-      buf.read(pi.objectSubtype);
-      buf.read(pi.parameterName);
-      buf.read(pi.parameterType);
-      buf.read(pi.info.name);
-      buf.read(pi.info.type);
-      if (pi.info.type == ANARI_STRING) {
-        buf.read(pi.info.asString);
-      } else if (pi.info.type == ANARI_STRING_LIST) {
-        buf.read(pi.info.asStringList);
-      } else if (pi.info.type == ANARI_PARAMETER_LIST) {
+      buf.read(pi->objectType);
+      buf.read(pi->objectSubtype);
+      buf.read(pi->parameterName);
+      buf.read(pi->parameterType);
+      buf.read(pi->info.name);
+      buf.read(pi->info.type);
+      if (pi->info.type == ANARI_STRING) {
+        buf.read(pi->info.asString);
+      } else if (pi->info.type == ANARI_STRING_LIST) {
+        buf.read(pi->info.asStringList);
+      } else if (pi->info.type == ANARI_PARAMETER_LIST) {
         while (!buf.eof()) {
           uint64_t len;
           buf.read((char *)&len, sizeof(len));
@@ -1072,13 +1072,13 @@ void Device::handleMessage(async::connection::reason reason,
 
           ANARIDataType type;
           buf.read(type);
-          pi.info.asParameterList.push_back({name, type});
+          pi->info.asParameterList.push_back({name, type});
         }
-        pi.info.asParameterList.push_back({nullptr, 0});
+        pi->info.asParameterList.push_back({nullptr, 0});
       } else {
         if (!buf.eof()) {
-          pi.info.asOther.resize(anari::sizeOf(pi.info.type));
-          buf.read(pi.info.asOther.data(), anari::sizeOf(pi.info.type));
+          pi->info.asOther.resize(anari::sizeOf(pi->info.type));
+          buf.read(pi->info.asOther.data(), anari::sizeOf(pi->info.type));
         }
       }
 
