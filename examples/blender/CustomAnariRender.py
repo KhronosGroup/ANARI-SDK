@@ -864,7 +864,7 @@ def anari_type_to_property(device, objtype, subtype, paramname, atype):
 def anari_to_propertygroup(engine, idname, scenename, device, objtype, subtype):
     parameters = anariGetObjectInfo(device, objtype, subtype, "parameter", ANARI_PARAMETER_LIST)
     properties = []
-    names = set()
+    names = {'name'} # exclude name from the displayed options
     for paramname, atype in parameters:
         if paramname in names:
             continue
