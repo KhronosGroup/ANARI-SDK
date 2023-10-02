@@ -669,17 +669,18 @@ void Device::renderFrame(ANARIFrame frame)
 
 int Device::frameReady(ANARIFrame frame, ANARIWaitMask m)
 {
-  if (m != ANARI_WAIT) {
-    LOG(logging::Level::Warning) << "Performance: anariFrameReady() will wait";
-    m = ANARI_WAIT;
-  }
-
   if (!frame) {
     LOG(logging::Level::Warning) << "Invalid object: " << __PRETTY_FUNCTION__;
     return 0;
   }
 
   Frame &frm = frames[frame];
+
+  if (m != ANARI_WAIT) {
+    if (frm.frameID == 0)
+      LOG(logging::Level::Warning) << "Performance: anariFrameReady() will wait";
+    m = ANARI_WAIT;
+  }
 
   if (frm.state == Frame::Render) {
     auto buf = std::make_shared<Buffer>();
@@ -949,6 +950,7 @@ void Device::handleMessage(async::connection::reason reason,
       ANARIObject hnd = *(ANARIObject *)message->data();
       Frame &frm = frames[hnd];
       frm.state = Frame::Ready;
+      frm.frameID++;
       sync[SyncPoints::FrameIsReady].cv.notify_all();
       // LOG(logging::Level::Info) << "Frame state: " << frameState;
     } else if (message->type() == MessageType::Property) {
