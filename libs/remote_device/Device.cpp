@@ -1020,15 +1020,18 @@ void Device::handleMessage(async::connection::reason reason,
       buf.read(oi->info.name);
       buf.read(oi->info.type);
       if (oi->info.type == ANARI_STRING) {
-        buf.read(oi->info.asString);
+        std::string str;
+        buf.read(str);
+        oi->info.asAny = helium::AnariAny(oi->info.type, str.c_str());
       } else if (oi->info.type == ANARI_STRING_LIST) {
         buf.read(oi->info.asStringList);
       } else if (oi->info.type == ANARI_PARAMETER_LIST) {
         buf.read(oi->info.asParameterList);
       } else {
         if (!buf.eof()) {
-          oi->info.asOther.resize(anari::sizeOf(oi->info.type));
-          buf.read(oi->info.asOther.data(), anari::sizeOf(oi->info.type));
+          std::vector<char> bytes(anari::sizeOf(oi->info.type));
+          buf.read(bytes.data(), bytes.size());
+          oi->info.asAny = helium::AnariAny(oi->info.type, bytes.data());
         }
       }
 
@@ -1050,15 +1053,18 @@ void Device::handleMessage(async::connection::reason reason,
       buf.read(pi->info.name);
       buf.read(pi->info.type);
       if (pi->info.type == ANARI_STRING) {
-        buf.read(pi->info.asString);
+        std::string str;
+        buf.read(str);
+        pi->info.asAny = helium::AnariAny(pi->info.type, str.c_str());
       } else if (pi->info.type == ANARI_STRING_LIST) {
         buf.read(pi->info.asStringList);
       } else if (pi->info.type == ANARI_PARAMETER_LIST) {
         buf.read(pi->info.asParameterList);
       } else {
         if (!buf.eof()) {
-          pi->info.asOther.resize(anari::sizeOf(pi->info.type));
-          buf.read(pi->info.asOther.data(), anari::sizeOf(pi->info.type));
+          std::vector<char> bytes(anari::sizeOf(pi->info.type));
+          buf.read(bytes.data(), bytes.size());
+          pi->info.asAny = helium::AnariAny(pi->info.type, bytes.data());
         }
       }
 

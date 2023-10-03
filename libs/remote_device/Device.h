@@ -16,6 +16,7 @@
 #include "async/connection.h"
 #include "async/connection_manager.h"
 #include "async/work_queue.h"
+#include "utility/AnariAny.h"
 #include "utility/IntrusivePtr.h"
 #include "utility/ParameterizedObject.h"
 
@@ -243,21 +244,20 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
   {
     std::string name;
     ANARIDataType type;
-    std::string asString;
+    helium::AnariAny asAny;
     StringList asStringList;
     remote::ParameterList asParameterList;
-    std::vector<char> asOther;
 
     const void *data() const
     {
-      if (type == ANARI_STRING)
-        return asString.data();
-      else if (type == ANARI_STRING_LIST)
+      if (type == ANARI_STRING_LIST)
         return asStringList.data();
       else if (type == ANARI_PARAMETER_LIST)
         return asParameterList.data();
+      else if (asAny.type() != ANARI_UNKNOWN)
+        return asAny.data();
       else
-        return asOther.data();
+        return nullptr;
     }
   };
 
