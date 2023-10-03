@@ -1022,18 +1022,7 @@ void Device::handleMessage(async::connection::reason reason,
       } else if (oi->info.type == ANARI_STRING_LIST) {
         buf.read(oi->info.asStringList);
       } else if (oi->info.type == ANARI_PARAMETER_LIST) {
-        while (!buf.eof()) {
-          uint64_t len;
-          buf.read((char *)&len, sizeof(len));
-          char *name = new char[len + 1];
-          buf.read(name, len);
-          name[len] = '\0';
-
-          ANARIDataType type;
-          buf.read(type);
-          oi->info.asParameterList.push_back({name, type});
-        }
-        oi->info.asParameterList.push_back({nullptr, 0});
+        buf.read(oi->info.asParameterList);
       } else {
         if (!buf.eof()) {
           oi->info.asOther.resize(anari::sizeOf(oi->info.type));
@@ -1063,18 +1052,7 @@ void Device::handleMessage(async::connection::reason reason,
       } else if (pi->info.type == ANARI_STRING_LIST) {
         buf.read(pi->info.asStringList);
       } else if (pi->info.type == ANARI_PARAMETER_LIST) {
-        while (!buf.eof()) {
-          uint64_t len;
-          buf.read((char *)&len, sizeof(len));
-          char *name = new char[len + 1];
-          buf.read(name, len);
-          name[len] = '\0';
-
-          ANARIDataType type;
-          buf.read(type);
-          pi->info.asParameterList.push_back({name, type});
-        }
-        pi->info.asParameterList.push_back({nullptr, 0});
+        buf.read(pi->info.asParameterList);
       } else {
         if (!buf.eof()) {
           pi->info.asOther.resize(anari::sizeOf(pi->info.type));

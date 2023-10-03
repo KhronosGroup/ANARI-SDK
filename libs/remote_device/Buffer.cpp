@@ -82,6 +82,43 @@ bool Buffer::write(const StringList &val)
   return true;
 }
 
+// read overload for parameter lists
+bool Buffer::read(ParameterList &val)
+{
+  uint64_t size = 0;
+  if (!read(size))
+    return false;
+
+  for (size_t i = 0; i < size; ++i) {
+    std::string name;
+    read(name);
+
+    ANARIDataType type;
+    read(type);
+
+    val.push_back(name, type);
+  }
+
+  return true;
+}
+
+// write overload for parameter lists
+bool Buffer::write(const ParameterList &val)
+{
+  if (!write(uint64_t(val.size())))
+    return false;
+
+  const Parameter *params = val.data();
+  for (size_t i = 0; i < val.size(); ++i) {
+    std::string name;
+    if (params[i].name != nullptr)
+      name = std::string(params[i].name);
+    write(name);
+    write(params[i].type);
+  }
+
+  return true;
+}
 // low-level write function
 size_t Buffer::write(const char *ptr, size_t numBytes)
 {

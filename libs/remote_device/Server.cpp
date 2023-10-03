@@ -1012,11 +1012,8 @@ struct Server
             StringList stringList((const char **)info);
             outbuf->write(stringList);
           } else if (infoType == ANARI_PARAMETER_LIST) {
-            auto *parameter = (const ANARIParameter *)info;
-            for (; parameter && parameter->name != nullptr; parameter++) {
-              outbuf->write(std::string(parameter->name));
-              outbuf->write(parameter->type);
-            }
+            ParameterList parameterList((const Parameter *)info);
+            outbuf->write(parameterList);
           } else {
             outbuf->write((const char *)info, anari::sizeOf(infoType));
           }
@@ -1082,11 +1079,8 @@ struct Server
             StringList stringList((const char **)info);
             outbuf->write(stringList);
           } else if (infoType == ANARI_PARAMETER_LIST) {
-            auto *parameter = (const ANARIParameter *)info;
-            for (; parameter && parameter->name != nullptr; parameter++) {
-              outbuf->write(std::string(parameter->name));
-              outbuf->write(parameter->type);
-            }
+            ParameterList parameterList((const Parameter *)info);
+            outbuf->write(parameterList);
           } else {
             outbuf->write((const char *)info, anari::sizeOf(infoType));
           }

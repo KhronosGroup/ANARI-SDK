@@ -11,6 +11,7 @@
 #include "Buffer.h"
 #include "Compression.h"
 #include "Frame.h"
+#include "ParameterList.h"
 #include "StringList.h"
 #include "async/connection.h"
 #include "async/connection_manager.h"
@@ -238,19 +239,13 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
   };
   std::vector<ObjectSubtypes> objectSubtypes;
 
-  struct Parameter
-  {
-    char *name;
-    ANARIDataType type;
-  };
-
   struct Info
   {
     std::string name;
     ANARIDataType type;
     std::string asString;
     StringList asStringList;
-    std::vector<Parameter> asParameterList;
+    remote::ParameterList asParameterList;
     std::vector<char> asOther;
 
     const void *data() const
