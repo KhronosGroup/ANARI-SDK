@@ -244,18 +244,21 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
   {
     std::string name;
     ANARIDataType type;
-    helium::AnariAny asAny;
-    StringList asStringList;
-    remote::ParameterList asParameterList;
+    struct
+    {
+      helium::AnariAny asAny;
+      StringList asStringList;
+      remote::ParameterList asParameterList;
+    } value;
 
     const void *data() const
     {
       if (type == ANARI_STRING_LIST)
-        return asStringList.data();
+        return value.asStringList.data();
       else if (type == ANARI_PARAMETER_LIST)
-        return asParameterList.data();
-      else if (asAny.type() != ANARI_UNKNOWN)
-        return asAny.data();
+        return value.asParameterList.data();
+      else if (value.asAny.type() != ANARI_UNKNOWN)
+        return value.asAny.data();
       else
         return nullptr;
     }
