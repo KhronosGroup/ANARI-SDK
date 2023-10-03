@@ -478,7 +478,8 @@ const void *Device::getObjectInfo(ANARIDataType objectType,
 {
   auto it = std::find_if(objectInfos.begin(),
       objectInfos.end(),
-      [objectType, objectSubtype, infoName, infoType](const ObjectInfo::Ptr &oi) {
+      [objectType, objectSubtype, infoName, infoType](
+          const ObjectInfo::Ptr &oi) {
         return oi->objectType == objectType
             && oi->objectSubtype == std::string(objectSubtype)
             && oi->info.name == std::string(infoName)
@@ -678,7 +679,8 @@ int Device::frameReady(ANARIFrame frame, ANARIWaitMask m)
 
   if (m != ANARI_WAIT) {
     if (frm.frameID == 0)
-      LOG(logging::Level::Warning) << "Performance: anariFrameReady() will wait";
+      LOG(logging::Level::Warning)
+          << "Performance: anariFrameReady() will wait";
     m = ANARI_WAIT;
   }
 
@@ -1100,6 +1102,18 @@ void Device::handleMessage(async::connection::reason reason,
         bool compressionTurboJPEG =
             cf.hasTurboJPEG && server.compression.hasTurboJPEG;
 
+        if (!compressionTurboJPEG && frm.frameID == 0) {
+          if (cf.hasTurboJPEG)
+            LOG(logging::Level::Warning)
+                << "Performance: client supports TurboJPEG compression for colors, but server does not";
+          else if (server.compression.hasTurboJPEG)
+            LOG(logging::Level::Warning)
+                << "Performance: server supports TurboJPEG compression for colors, but client does not";
+          else
+            LOG(logging::Level::Warning)
+                << "Performance: neither client nor server support TurboJPEG compression for colors";
+        }
+
         if (compressionTurboJPEG
             && type == ANARI_UFIXED8_RGBA_SRGB) { // TODO: more formats..
           uint32_t jpegSize = *(uint32_t *)(message->data() + off);
@@ -1127,6 +1141,18 @@ void Device::handleMessage(async::connection::reason reason,
         frm.resizeDepth(width, height, type);
 
         bool compressionSNAPPY = cf.hasSNAPPY && server.compression.hasSNAPPY;
+
+        if (!compressionSNAPPY && frm.frameID == 0) {
+          if (cf.hasTurboJPEG)
+            LOG(logging::Level::Warning)
+                << "Performance: client supports SNAPPY compression for depths, but server does not";
+          else if (server.compression.hasSNAPPY)
+            LOG(logging::Level::Warning)
+                << "Performance: server supports SNAPPY compression for depths, but client does not";
+          else
+            LOG(logging::Level::Warning)
+                << "Performance: neither client nor server support SNAPPY compression for depths";
+        }
 
         if (compressionSNAPPY && type == ANARI_FLOAT32) {
           uint32_t snappySize = *(uint32_t *)(message->data() + off);
