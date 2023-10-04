@@ -25,6 +25,11 @@ class ParameterList
     for (; parameter && parameter->name != nullptr; parameter++) {
       this->push_back(std::string(parameter->name), parameter->type);
     }
+
+    if (parameter != nullptr)
+      value.push_back({nullptr, parameter->type});
+    else
+      value.push_back({nullptr, ANARI_UNKNOWN});
   }
 
   ParameterList(const ParameterList &other)
