@@ -332,11 +332,11 @@ struct Server
       return;
     }
 
+    LOG(logging::Level::Info) << "Message: " << toString(message->type())
+        << ", message size: " << prettyBytes(message->size());
+
     if (reason == async::connection::Read) {
       if (message->type() == MessageType::NewDevice) {
-        LOG(logging::Level::Info) << "Message: NewDevice, message size: "
-                                  << prettyBytes(message->size());
-
         const char *msg = message->data();
 
         int32_t len = *(int32_t *)msg;
@@ -366,9 +366,6 @@ struct Server
         LOG(logging::Level::Info)
             << "Client has SNAPPY: " << client.compression.hasSNAPPY;
       } else if (message->type() == MessageType::NewObject) {
-        LOG(logging::Level::Info) << "Message: NewObject, message size: "
-                                  << prettyBytes(message->size());
-
         Buffer buf(message->data(), message->size());
 
         ANARIDevice deviceHandle;
@@ -398,9 +395,6 @@ struct Server
             << "Creating new object, objectID: " << objectID
             << ", ANARI handle: " << anariObj;
       } else if (message->type() == MessageType::NewArray) {
-        LOG(logging::Level::Info) << "Message: NewArray, message size: "
-                                  << prettyBytes(message->size());
-
         Buffer buf(message->data(), message->size());
 
         ANARIDevice deviceHandle;
@@ -437,9 +431,6 @@ struct Server
             << "Creating new array, objectID: " << objectID
             << ", ANARI handle: " << anariArr;
       } else if (message->type() == MessageType::SetParam) {
-        LOG(logging::Level::Info) << "Message: SetParam, message size: "
-                                  << prettyBytes(message->size());
-
         Buffer buf(message->data(), message->size());
 
         Handle deviceHandle, objectHandle;
@@ -495,9 +486,6 @@ struct Server
               << "Set param \"" << name << "\" on object: " << objectHandle;
         }
       } else if (message->type() == MessageType::UnsetParam) {
-        LOG(logging::Level::Info) << "Message: UnsetParam, message size: "
-                                  << prettyBytes(message->size());
-
         Buffer buf(message->data(), message->size());
 
         Handle deviceHandle, objectHandle;
@@ -521,8 +509,6 @@ struct Server
 
         anariUnsetParameter(dev, serverObj.handle, name.c_str());
       } else if (message->type() == MessageType::UnsetAllParams) {
-        LOG(logging::Level::Info) << "Message: UnsetAllParams";
-
         Buffer buf(message->data(), message->size());
 
         Handle deviceHandle, objectHandle;
@@ -544,9 +530,6 @@ struct Server
 
         anariUnsetAllParameters(dev, serverObj.handle);
       } else if (message->type() == MessageType::CommitParams) {
-        LOG(logging::Level::Info) << "Message: CommitParams, message size: "
-                                  << prettyBytes(message->size());
-
         Buffer buf(message->data(), message->size());
 
         if (message->size() == sizeof(Handle)) {
@@ -587,9 +570,6 @@ struct Server
               << "Committed object. Handle: " << objectHandle;
         }
       } else if (message->type() == MessageType::Release) {
-        LOG(logging::Level::Info) << "Message: Release, message size: "
-                                  << prettyBytes(message->size());
-
         Buffer buf(message->data(), message->size());
 
         Handle deviceHandle, objectHandle;
@@ -613,9 +593,6 @@ struct Server
         LOG(logging::Level::Info)
             << "Released object. Handle: " << objectHandle;
       } else if (message->type() == MessageType::Retain) {
-        LOG(logging::Level::Info) << "Message: Retain, message size: "
-                                  << prettyBytes(message->size());
-
         Buffer buf(message->data(), message->size());
 
         Handle deviceHandle, objectHandle;
@@ -639,9 +616,6 @@ struct Server
         LOG(logging::Level::Info)
             << "Retained object. Handle: " << objectHandle;
       } else if (message->type() == MessageType::MapArray) {
-        LOG(logging::Level::Info) << "Message: MapArray, message size: "
-                                  << prettyBytes(message->size());
-
         Buffer buf(message->data(), message->size());
 
         Handle deviceHandle, objectHandle;
@@ -675,9 +649,6 @@ struct Server
 
         LOG(logging::Level::Info) << "Mapped array. Handle: " << objectHandle;
       } else if (message->type() == MessageType::UnmapArray) {
-        LOG(logging::Level::Info) << "Message: UnmapArray, message size: "
-                                  << prettyBytes(message->size());
-
         Buffer buf(message->data(), message->size());
 
         Handle deviceHandle, objectHandle;
@@ -720,9 +691,6 @@ struct Server
 
         LOG(logging::Level::Info) << "Unmapped array. Handle: " << objectHandle;
       } else if (message->type() == MessageType::RenderFrame) {
-        LOG(logging::Level::Info) << "Message: RenderFrame, message size: "
-                                  << prettyBytes(message->size());
-
         Buffer buf(message->data(), message->size());
 
         Handle deviceHandle, objectHandle;
@@ -834,9 +802,6 @@ struct Server
         LOG(logging::Level::Info)
             << "Frame rendered. Object handle: " << objectHandle;
       } else if (message->type() == MessageType::FrameReady) {
-        LOG(logging::Level::Info) << "Message: FrameReady, message size: "
-                                  << prettyBytes(message->size());
-
         Buffer buf(message->data(), message->size());
 
         Handle deviceHandle, objectHandle;
@@ -866,9 +831,6 @@ struct Server
 
         LOG(logging::Level::Info) << "Signal frame is ready to client";
       } else if (message->type() == MessageType::GetProperty) {
-        LOG(logging::Level::Info) << "Message: GetProperty, message size: "
-                                  << prettyBytes(message->size());
-
         Buffer buf(message->data(), message->size());
 
         Handle deviceHandle, objectHandle;
@@ -935,10 +897,6 @@ struct Server
         }
         write(MessageType::Property, outbuf);
       } else if (message->type() == MessageType::GetObjectSubtypes) {
-        LOG(logging::Level::Info)
-            << "Message: GetObjectSubtypes, message size: "
-            << prettyBytes(message->size());
-
         Buffer buf(message->data(), message->size());
 
         Handle deviceHandle;
@@ -966,9 +924,6 @@ struct Server
 
         write(MessageType::ObjectSubtypes, outbuf);
       } else if (message->type() == MessageType::GetObjectInfo) {
-        LOG(logging::Level::Info) << "Message: GetObjectInfo, message size: "
-                                  << prettyBytes(message->size());
-
         Buffer buf(message->data(), message->size());
 
         Handle deviceHandle;
@@ -1020,9 +975,6 @@ struct Server
         }
         write(MessageType::ObjectInfo, outbuf);
       } else if (message->type() == MessageType::GetParameterInfo) {
-        LOG(logging::Level::Info) << "Message: GetParameterInfo, message size: "
-                                  << prettyBytes(message->size());
-
         Buffer buf(message->data(), message->size());
 
         Handle deviceHandle;
