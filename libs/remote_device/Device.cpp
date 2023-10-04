@@ -329,7 +329,7 @@ void Device::unsetAllParameters(ANARIObject object)
   auto buf = std::make_shared<Buffer>();
   buf->write(remoteDevice);
   buf->write(object);
-  write(MessageType::UnsetParam, buf);
+  write(MessageType::UnsetAllParams, buf);
 
   LOG(logging::Level::Info)
       << "All parameters unset on object unset on object " << object;
