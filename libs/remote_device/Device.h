@@ -11,9 +11,12 @@
 #include "Buffer.h"
 #include "Compression.h"
 #include "Frame.h"
+#include "ParameterList.h"
+#include "StringList.h"
 #include "async/connection.h"
 #include "async/connection_manager.h"
 #include "async/work_queue.h"
+#include "utility/AnariAny.h"
 #include "utility/IntrusivePtr.h"
 #include "utility/ParameterizedObject.h"
 
@@ -177,60 +180,31 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
   async::connection_pointer conn;
   async::work_queue queue;
 
-  struct
+  struct SyncPrimitives
   {
     std::mutex mtx;
     std::condition_variable cv;
-  } syncConnectionEstablished;
+  };
 
-  struct
+  struct SyncPoints
   {
-    std::mutex mtx;
-    std::condition_variable cv;
-  } syncDeviceHandleRemote;
+    enum
+    {
+      ConnectionEstablished,
+      DeviceHandleRemote,
+      MapArray,
+      UnmapArray,
+      FrameIsReady,
+      Properties,
+      ObjectSubtypes,
+      ObjectInfo,
+      ParameterInfo,
+      // Keep last:
+      Count,
+    };
+  };
 
-  struct
-  {
-    std::mutex mtx;
-    std::condition_variable cv;
-  } syncMapArray;
-
-  struct
-  {
-    std::mutex mtx;
-    std::condition_variable cv;
-  } syncUnmapArray;
-
-  struct
-  {
-    std::mutex mtx;
-    std::condition_variable cv;
-  } syncFrameIsReady;
-
-  struct
-  {
-    std::mutex mtx;
-    std::condition_variable cv;
-    size_t which;
-  } syncProperties;
-
-  struct
-  {
-    std::mutex mtx;
-    std::condition_variable cv;
-  } syncObjectSubtypes;
-
-  struct
-  {
-    std::mutex mtx;
-    std::condition_variable cv;
-  } syncObjectInfo;
-
-  struct
-  {
-    std::mutex mtx;
-    std::condition_variable cv;
-  } syncParameterInfo;
+  SyncPrimitives sync[SyncPoints::Count];
 
   ANARIDevice remoteDevice{nullptr};
   std::string remoteSubtype = "default";
@@ -253,7 +227,7 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
   {
     ANARIObject object{nullptr};
     std::string name;
-    std::vector<char *> value;
+    StringList value;
   };
   std::vector<StringListProperty> stringListProperties;
 
@@ -262,58 +236,56 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
   struct ObjectSubtypes
   {
     ANARIDataType objectType;
-    std::vector<char *> value;
+    StringList value;
   };
   std::vector<ObjectSubtypes> objectSubtypes;
-
-  struct Parameter
-  {
-    char *name;
-    ANARIDataType type;
-  };
 
   struct Info
   {
     std::string name;
     ANARIDataType type;
-    std::string asString;
-    std::vector<char *> asStringList;
-    std::vector<Parameter> asParameterList;
-    std::vector<char> asOther;
+    struct
+    {
+      helium::AnariAny asAny;
+      StringList asStringList;
+      remote::ParameterList asParameterList;
+    } value;
 
     const void *data() const
     {
-      if (type == ANARI_STRING)
-        return asString.data();
-      else if (type == ANARI_STRING_LIST)
-        return asStringList.data();
+      if (type == ANARI_STRING_LIST)
+        return value.asStringList.data();
       else if (type == ANARI_PARAMETER_LIST)
-        return asParameterList.data();
+        return value.asParameterList.data();
+      else if (value.asAny.type() != ANARI_UNKNOWN)
+        return value.asAny.data();
       else
-        return asOther.data();
+        return nullptr;
     }
   };
 
   // Cache for "object infos"
   struct ObjectInfo
   {
+    typedef std::shared_ptr<ObjectInfo> Ptr;
     ANARIDataType objectType;
     std::string objectSubtype;
     std::string infoName;
     Info info;
   };
-  std::vector<ObjectInfo> objectInfos;
+  std::vector<ObjectInfo::Ptr> objectInfos;
 
   // Cache for "parameter infos"
   struct ParameterInfo
   {
+    typedef std::shared_ptr<ParameterInfo> Ptr;
     ANARIDataType objectType;
     std::string objectSubtype;
     std::string parameterName;
     ANARIDataType parameterType;
     Info info;
   };
-  std::vector<ParameterInfo> parameterInfos;
+  std::vector<ParameterInfo::Ptr> parameterInfos;
 
   std::map<ANARIObject, Frame> frames;
   struct ArrayData

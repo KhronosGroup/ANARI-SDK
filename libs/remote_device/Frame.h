@@ -18,6 +18,8 @@ struct Frame
     Mapped,
   };
 
+  uint64_t frameID{0};
+
   void resizeColor(uint32_t width, uint32_t height, ANARIDataType type);
   void resizeDepth(uint32_t width, uint32_t height, ANARIDataType type);
 

@@ -4,7 +4,6 @@
 #pragma once
 
 #include <anari/anari.h>
-#include "Buffer.h"
 
 namespace remote {
 

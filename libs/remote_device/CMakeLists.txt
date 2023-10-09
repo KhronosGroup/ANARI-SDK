@@ -36,6 +36,7 @@ project_sources(PRIVATE
   async/connection_manager.cpp
   async/message.cpp
   ArrayInfo.cpp
+  Buffer.cpp
   Compression.cpp
   Device.cpp
   Frame.cpp
@@ -76,6 +77,7 @@ PRIVATE
   async/connection_manager.cpp
   async/message.cpp
   ArrayInfo.cpp
+  Buffer.cpp
   Compression.cpp
   Logging.cpp
   Server.cpp
