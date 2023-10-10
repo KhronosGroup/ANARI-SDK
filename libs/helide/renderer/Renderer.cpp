@@ -176,6 +176,9 @@ float4 Renderer::shadeRay(const float2 &screen,
   float3 color(0.f, 0.f, 0.f);
   float opacity = 0.f;
 
+  float3 volumeColor = bgColor;
+  float volumeOpacity = 0.f;
+
   float3 geometryColor(0.f, 0.f, 0.f);
   float geometryOpacity = hitGeometry ? 1.f : 0.f;
 
@@ -257,23 +260,26 @@ float4 Renderer::shadeRay(const float2 &screen,
           std::abs(linalg::dot(-ray.dir, linalg::normalize(n)));
       const float4 c = surface->getSurfaceColor(ray);
       const float3 sc = float3(c.x, c.y, c.z) * falloff;
-      geometryColor = linalg::min(
+      volumeColor = geometryColor = linalg::min(
           (0.8f * sc + 0.2f * float3(c.x, c.y, c.z)) * m_ambientRadiance,
           float3(1.f));
     }
 
     if (hitVolume)
-      vray.volume->render(vray, color, opacity);
+      vray.volume->render(vray, volumeColor, volumeOpacity);
 
   } break;
   }
 
-  color = linalg::min(color, float3(1.f));
+  geometryColor = linalg::min(geometryColor, float3(1.f));
+  volumeColor = linalg::min(volumeColor, float3(1.f));
 
-  accumulateValue(color, geometryColor, opacity);
+  accumulateValue(color, volumeColor * volumeOpacity, opacity);
+  accumulateValue(opacity, volumeOpacity, opacity);
+  accumulateValue(color, geometryColor * geometryOpacity, opacity);
   accumulateValue(opacity, geometryOpacity, opacity);
-  color *= opacity;
-  accumulateValue(color, bgColor, opacity);
+  accumulateValue(color, bgColor * bgColorOpacity.w, opacity);
+  accumulateValue(opacity, bgColorOpacity.w, opacity);
 
   return {color, opacity};
 }
