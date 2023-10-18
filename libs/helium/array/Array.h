@@ -23,6 +23,9 @@ struct BaseArray : public BaseObject
   // This is invoked when this object's public ref count is 0, but still has a
   // non-zero internal ref count. See README for additional explanation.
   virtual void privatize() = 0;
+
+  // Arrays are always considered to be valid, though subclasses can override
+  bool isValid() const override;
 };
 
 // Basic, host-based Array implementation /////////////////////////////////////
@@ -74,8 +77,6 @@ struct Array : public BaseArray
       void *ptr,
       uint32_t flags);
   virtual void commit();
-
-  bool isValid() const override;
 
  protected:
   void makePrivatizedCopy(size_t numElements);

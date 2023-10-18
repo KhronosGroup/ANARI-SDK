@@ -19,6 +19,11 @@ BaseArray::BaseArray(ANARIDataType type, BaseGlobalDeviceState *s)
     : BaseObject(type, s)
 {}
 
+bool BaseArray::isValid() const
+{
+  return true;
+}
+
 // Array //
 
 Array::Array(ANARIDataType type,
@@ -126,11 +131,6 @@ bool Array::getProperty(
 void Array::commit()
 {
   // no-op
-}
-
-bool Array::isValid() const
-{
-  return true;
 }
 
 void Array::makePrivatizedCopy(size_t numElements)
