@@ -3,40 +3,17 @@
 
 #pragma once
 
-#include "array/Array1D.h"
+#include "../HelideGlobalState.h"
+#include "Array1D.h"
+// helium
+#include "helium/array/ObjectArray.h"
 
 namespace helide {
 
-struct ObjectArray : public Array
+struct ObjectArray : public helium::ObjectArray
 {
   ObjectArray(HelideGlobalState *state, const Array1DMemoryDescriptor &d);
-  ~ObjectArray();
-
-  void commit() override;
-
-  size_t totalSize() const override;
-  size_t totalCapacity() const override;
-
-  size_t size() const;
-
-  void privatize() override;
-  void unmap() override;
-
-  Object **handlesBegin() const;
-  Object **handlesEnd() const;
-
-  void appendHandle(Object *);
-  void removeAppendedHandles();
-
- private:
-  void updateInternalHandleArrays() const;
-
-  mutable std::vector<Object *> m_appendedHandles;
-  mutable std::vector<Object *> m_appHandles;
-  mutable std::vector<Object *> m_liveHandles;
-  size_t m_capacity{0};
-  size_t m_begin{0};
-  size_t m_end{0};
+  ~ObjectArray() override;
 };
 
 } // namespace helide

@@ -1,15 +1,31 @@
-// Copyright 2022 The Khronos Group
+// Copyright 2023 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
 
-#include "Object.h"
-// helium
-#include "helium/BaseArray.h"
-// anari
-#include "anari/anari_cpp.hpp"
+#include "../BaseObject.h"
+#include "../helium_math.h"
 
-namespace helide {
+namespace helium {
+
+// BaseArray interface ////////////////////////////////////////////////////////
+
+struct BaseArray : public BaseObject
+{
+  BaseArray(ANARIDataType type, BaseGlobalDeviceState *s);
+
+  // Implement anariMapArray()
+  virtual void *map() = 0;
+
+  // Implement anariUnmapArray()
+  virtual void unmap() = 0;
+
+  // This is invoked when this object's public ref count is 0, but still has a
+  // non-zero internal ref count. See README for additional explanation.
+  virtual void privatize() = 0;
+};
+
+// Basic, host-based Array implementation /////////////////////////////////////
 
 enum class ArrayDataOwnership
 {
@@ -27,12 +43,12 @@ struct ArrayMemoryDescriptor
   ANARIDataType elementType{ANARI_UNKNOWN};
 };
 
-struct Array : public helium::BaseArray
+struct Array : public BaseArray
 {
   Array(ANARIDataType type,
-      HelideGlobalState *state,
+      BaseGlobalDeviceState *state,
       const ArrayMemoryDescriptor &d);
-  virtual ~Array();
+  virtual ~Array() override;
 
   ANARIDataType elementType() const;
   ArrayDataOwnership ownership() const;
@@ -45,20 +61,21 @@ struct Array : public helium::BaseArray
   virtual size_t totalSize() const = 0;
   virtual size_t totalCapacity() const;
 
-  bool getProperty(const std::string_view &name,
-      ANARIDataType type,
-      void *ptr,
-      uint32_t flags) override;
-  void commit() override;
-  void *map() override;
+  virtual void *map() override;
   virtual void unmap() override;
   virtual void privatize() override = 0;
 
+  bool isMapped() const;
+
   bool wasPrivatized() const;
 
-  // CONSOLIDATE INTO helide::Object //////////////////////////////////////////
-  HelideGlobalState *deviceState() const;
-  /////////////////////////////////////////////////////////////////////////////
+  virtual bool getProperty(const std::string_view &name,
+      ANARIDataType type,
+      void *ptr,
+      uint32_t flags);
+  virtual void commit();
+
+  bool isValid() const override;
 
  protected:
   void makePrivatizedCopy(size_t numElements);
@@ -98,7 +115,6 @@ struct Array : public helium::BaseArray
   ArrayDataOwnership m_ownership{ArrayDataOwnership::INVALID};
   ANARIDataType m_elementType{ANARI_UNKNOWN};
   bool m_privatized{false};
-  mutable bool m_usedOnDevice{false};
 };
 
 // Inlined definitions ////////////////////////////////////////////////////////
@@ -112,6 +128,7 @@ inline T *Array::dataAs() const
   return (T *)data();
 }
 
-} // namespace helide
+} // namespace helium
 
-HELIDE_ANARI_TYPEFOR_SPECIALIZATION(helide::Array *, ANARI_ARRAY);
+HELIUM_ANARI_TYPEFOR_SPECIALIZATION(helium::BaseArray *, ANARI_ARRAY);
+HELIUM_ANARI_TYPEFOR_SPECIALIZATION(helium::Array *, ANARI_ARRAY);

@@ -55,4 +55,21 @@ struct HelideGlobalState : public helium::BaseGlobalDeviceState
   void waitOnCurrentFrame() const;
 };
 
+// Helper functions/macros ////////////////////////////////////////////////////
+
+inline HelideGlobalState *asHelideState(helium::BaseGlobalDeviceState *s)
+{
+  return (HelideGlobalState *)s;
+}
+
+#define HELIDE_ANARI_TYPEFOR_SPECIALIZATION(type, anari_type)                  \
+  namespace anari {                                                            \
+  ANARI_TYPEFOR_SPECIALIZATION(type, anari_type);                              \
+  }
+
+#define HELIDE_ANARI_TYPEFOR_DEFINITION(type)                                  \
+  namespace anari {                                                            \
+  ANARI_TYPEFOR_DEFINITION(type);                                              \
+  }
+
 } // namespace helide

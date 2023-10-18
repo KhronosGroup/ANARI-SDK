@@ -64,7 +64,6 @@ project_sources(PRIVATE
   HelideGlobalState.cpp
   HelideLibrary.cpp
   Object.cpp
-  array/Array.cpp
   array/Array1D.cpp
   array/Array2D.cpp
   array/Array3D.cpp

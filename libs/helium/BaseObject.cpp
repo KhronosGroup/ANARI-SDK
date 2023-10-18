@@ -100,6 +100,11 @@ void BaseObject::notifyCommitObservers() const
     notifyObserver(o);
 }
 
+BaseGlobalDeviceState *BaseObject::deviceState() const
+{
+  return m_state;
+}
+
 void BaseObject::notifyObserver(BaseObject *obj) const
 {
   // no-op

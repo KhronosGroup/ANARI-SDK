@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "Object.h"
 #include "array/Array1D.h"
 // std
 #include <array>
@@ -22,11 +23,9 @@ struct Geometry : public Object
   void commit() override;
   void markCommitted() override;
 
-  virtual float4 getAttributeValue(
-      const Attribute &attr, const Ray &ray) const;
+  virtual float4 getAttributeValue(const Attribute &attr, const Ray &ray) const;
 
  protected:
-
   RTCGeometry m_embreeGeometry{nullptr};
 
   std::array<helium::IntrusivePtr<Array1D>, 5> m_attributes;

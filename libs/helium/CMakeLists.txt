@@ -10,11 +10,16 @@ project(helium LANGUAGES CXX)
 project_add_library(STATIC)
 
 project_sources(PRIVATE
-  BaseArray.cpp
   BaseDevice.cpp
   BaseFrame.cpp
   BaseGlobalDeviceState.cpp
   BaseObject.cpp
+
+  array/Array.cpp
+  array/Array1D.cpp
+  array/Array2D.cpp
+  array/Array3D.cpp
+  array/ObjectArray.cpp
 
   utility/DeferredCommitBuffer.cpp
   utility/ParameterizedObject.cpp

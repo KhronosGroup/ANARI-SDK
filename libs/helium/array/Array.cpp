@@ -1,9 +1,9 @@
-// Copyright 2022 The Khronos Group
+// Copyright 2023 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "array/Array.h"
 
-namespace helide {
+namespace helium {
 
 // Helper functions //
 
@@ -13,15 +13,19 @@ static void zeroOutStruct(T &v)
   std::memset(&v, 0, sizeof(T));
 }
 
+// BaseArray //
+
+BaseArray::BaseArray(ANARIDataType type, BaseGlobalDeviceState *s)
+    : BaseObject(type, s)
+{}
+
 // Array //
 
 Array::Array(ANARIDataType type,
-    HelideGlobalState *state,
+    BaseGlobalDeviceState *state,
     const ArrayMemoryDescriptor &d)
-    : helium::BaseArray(type, state), m_elementType(d.elementType)
+    : BaseArray(type, state), m_elementType(d.elementType)
 {
-  state->objectCounts.arrays++;
-
   if (d.appMemory) {
     m_ownership =
         d.deleter ? ArrayDataOwnership::CAPTURED : ArrayDataOwnership::SHARED;
@@ -45,7 +49,6 @@ Array::Array(ANARIDataType type,
 Array::~Array()
 {
   freeAppMemory();
-  deviceState()->objectCounts.arrays--;
 }
 
 ANARIDataType Array::elementType() const
@@ -83,6 +86,37 @@ size_t Array::totalCapacity() const
   return totalSize();
 }
 
+void *Array::map()
+{
+  if (isMapped()) {
+    reportMessage(ANARI_SEVERITY_WARNING,
+        "array mapped again without being previously unmapped");
+  }
+  m_mapped = true;
+  return data();
+}
+
+void Array::unmap()
+{
+  if (!isMapped()) {
+    reportMessage(ANARI_SEVERITY_WARNING,
+        "array unmapped again without being previously mapped");
+    return;
+  }
+  m_mapped = false;
+  notifyCommitObservers();
+}
+
+bool Array::isMapped() const
+{
+  return m_mapped;
+}
+
+bool Array::wasPrivatized() const
+{
+  return m_privatized;
+}
+
 bool Array::getProperty(
     const std::string_view &name, ANARIDataType type, void *ptr, uint32_t flags)
 {
@@ -94,36 +128,9 @@ void Array::commit()
   // no-op
 }
 
-void *Array::map()
+bool Array::isValid() const
 {
-  if (m_mapped) {
-    reportMessage(ANARI_SEVERITY_WARNING,
-        "array mapped again without being previously unmapped");
-  }
-  m_mapped = true;
-  deviceState()->waitOnCurrentFrame();
-  return data();
-}
-
-void Array::unmap()
-{
-  if (!m_mapped) {
-    reportMessage(ANARI_SEVERITY_WARNING,
-        "array unmapped again without being previously mapped");
-    return;
-  }
-  m_mapped = false;
-  notifyCommitObservers();
-}
-
-bool Array::wasPrivatized() const
-{
-  return m_privatized;
-}
-
-HelideGlobalState *Array::deviceState() const
-{
-  return (HelideGlobalState *)helium::BaseObject::m_state;
+  return true;
 }
 
 void Array::makePrivatizedCopy(size_t numElements)
@@ -183,6 +190,6 @@ void Array::notifyObserver(BaseObject *o) const
   deviceState()->commitBuffer.addObject(o);
 }
 
-} // namespace helide
+} // namespace helium
 
-HELIDE_ANARI_TYPEFOR_DEFINITION(helide::Array *);
+HELIUM_ANARI_TYPEFOR_DEFINITION(helium::Array *);

@@ -24,7 +24,7 @@ struct Object : public helium::BaseObject
 
   virtual void commit();
 
-  virtual bool isValid() const;
+  bool isValid() const override;
 
   HelideGlobalState *deviceState() const;
 };
@@ -37,15 +37,5 @@ struct UnknownObject : public Object
 };
 
 } // namespace helide
-
-#define HELIDE_ANARI_TYPEFOR_SPECIALIZATION(type, anari_type)                  \
-  namespace anari {                                                            \
-  ANARI_TYPEFOR_SPECIALIZATION(type, anari_type);                              \
-  }
-
-#define HELIDE_ANARI_TYPEFOR_DEFINITION(type)                                  \
-  namespace anari {                                                            \
-  ANARI_TYPEFOR_DEFINITION(type);                                              \
-  }
 
 HELIDE_ANARI_TYPEFOR_SPECIALIZATION(helide::Object *, ANARI_OBJECT);
