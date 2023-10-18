@@ -14,10 +14,6 @@ namespace helium::math {
 
 // Types //////////////////////////////////////////////////////////////////////
 
-using namespace linalg::aliases;
-using mat3 = float3x3;
-using mat4 = float4x4;
-
 template <typename T>
 struct range_t
 {
@@ -46,8 +42,8 @@ struct range_t
 };
 
 using box1 = range_t<float>;
-using box2 = range_t<float2>;
-using box3 = range_t<float3>;
+using box2 = range_t<anari::math::float2>;
+using box3 = range_t<anari::math::float3>;
 
 template <typename T>
 inline typename range_t<T>::element_t size(const range_t<T> &r)
@@ -67,7 +63,7 @@ inline float position(float v, const box1 &r)
   return (v - r.lower) * (1.f / size(r));
 }
 
-constexpr float4 DEFAULT_ATTRIBUTE_VALUE(0.f, 0.f, 0.f, 1.f);
+constexpr anari::math::float4 DEFAULT_ATTRIBUTE_VALUE(0.f, 0.f, 0.f, 1.f);
 
 enum class Attribute
 {
@@ -96,16 +92,11 @@ enum class AlphaMode
 
 // Functions //////////////////////////////////////////////////////////////////
 
-inline float radians(float degrees)
+inline anari::math::mat3 extractRotation(const anari::math::mat4 &m)
 {
-  return degrees * float(M_PI) / 180.f;
-}
-
-inline mat3 extractRotation(const mat4 &m)
-{
-  return mat3(float3(m[0].x, m[0].y, m[0].z),
-      float3(m[1].x, m[1].y, m[1].z),
-      float3(m[2].x, m[2].y, m[2].z));
+  return anari::math::mat3(anari::math::float3(m[0].x, m[0].y, m[0].z),
+      anari::math::float3(m[1].x, m[1].y, m[1].z),
+      anari::math::float3(m[2].x, m[2].y, m[2].z));
 }
 
 template <bool SRGB = true>
@@ -229,10 +220,11 @@ static const T *typedOffset(const void *mem, uint64_t offset)
 }
 
 template <typename ELEMENT_T, int NUM_COMPONENTS, bool SRGB = false>
-static float4 getAttributeArrayAt_ufixed(void *data, uint64_t offset)
+static anari::math::float4 getAttributeArrayAt_ufixed(
+    void *data, uint64_t offset)
 {
   constexpr float m = std::numeric_limits<ELEMENT_T>::max();
-  float4 retval(0.f, 0.f, 0.f, 1.f);
+  anari::math::float4 retval(0.f, 0.f, 0.f, 1.f);
   switch (NUM_COMPONENTS) {
   case 4:
     retval.w = toneMap<SRGB>(
@@ -253,7 +245,7 @@ static float4 getAttributeArrayAt_ufixed(void *data, uint64_t offset)
   return retval;
 }
 
-inline float4 readAsAttributeValueFlat(
+inline anari::math::float4 readAsAttributeValueFlat(
     void *data, ANARIDataType type, uint64_t i)
 {
   auto retval = DEFAULT_ATTRIBUTE_VALUE;
@@ -263,13 +255,19 @@ inline float4 readAsAttributeValueFlat(
     std::memcpy(&retval, typedOffset<float>(data, i), sizeof(float));
     break;
   case ANARI_FLOAT32_VEC2:
-    std::memcpy(&retval, typedOffset<float2>(data, i), sizeof(float2));
+    std::memcpy(&retval,
+        typedOffset<anari::math::float2>(data, i),
+        sizeof(anari::math::float2));
     break;
   case ANARI_FLOAT32_VEC3:
-    std::memcpy(&retval, typedOffset<float3>(data, i), sizeof(float3));
+    std::memcpy(&retval,
+        typedOffset<anari::math::float3>(data, i),
+        sizeof(anari::math::float3));
     break;
   case ANARI_FLOAT32_VEC4:
-    std::memcpy(&retval, typedOffset<float4>(data, i), sizeof(float4));
+    std::memcpy(&retval,
+        typedOffset<anari::math::float4>(data, i),
+        sizeof(anari::math::float4));
     break;
   case ANARI_UFIXED8_R_SRGB:
     retval = getAttributeArrayAt_ufixed<uint8_t, 1, true>(data, i);

@@ -10,7 +10,7 @@ namespace scenes {
 
 struct Point
 {
-  anari::float3 center;
+  math::float3 center;
   float weight;
 };
 
@@ -37,12 +37,12 @@ static std::vector<Point> generatePoints(size_t numPoints)
 }
 
 static std::vector<float> generateVoxels(
-    const std::vector<Point> &points, anari::int3 dims)
+    const std::vector<Point> &points, math::int3 dims)
 {
   // get world coordinate in [-1.f, 1.f] from logical coordinates in [0,
   // volumeDimension)
   auto logicalToWorldCoordinates = [&](int i, int j, int k) {
-    return anari::float3(-1.f + float(i) / float(dims.x - 1) * 2.f,
+    return math::float3(-1.f + float(i) / float(dims.x - 1) * 2.f,
         -1.f + float(j) / float(dims.y - 1) * 2.f,
         -1.f + float(k) / float(dims.z - 1) * 2.f);
   };
@@ -61,8 +61,8 @@ static std::vector<float> generateVoxels(
         float value = 0.f;
 
         for (auto &p : points) {
-          anari::float3 pointCoordinate = logicalToWorldCoordinates(i, j, k);
-          const float distance = anari::length(pointCoordinate - p.center);
+          math::float3 pointCoordinate = logicalToWorldCoordinates(i, j, k);
+          const float distance = math::length(pointCoordinate - p.center);
 
           // contribution proportional to weighted inverse-square distance
           // (i.e. gravity)
@@ -111,11 +111,11 @@ void GravityVolume::commit()
   const float voxelRange[2] = {0.f, 10.f};
 
   auto points = generatePoints(numPoints);
-  auto voxels = generateVoxels(points, anari::int3(volumeDims));
+  auto voxels = generateVoxels(points, math::int3(volumeDims));
 
   auto field = anari::newObject<anari::SpatialField>(d, "structuredRegular");
-  anari::setParameter(d, field, "origin", anari::float3(-1.f));
-  anari::setParameter(d, field, "spacing", anari::float3(2.f / volumeDims));
+  anari::setParameter(d, field, "origin", math::float3(-1.f));
+  anari::setParameter(d, field, "spacing", math::float3(2.f / volumeDims));
   anari::setParameterArray3D(
       d, field, "data", voxels.data(), volumeDims, volumeDims, volumeDims);
   anari::commitParameters(d, field);
@@ -124,7 +124,7 @@ void GravityVolume::commit()
   anari::setAndReleaseParameter(d, volume, "field", field);
 
   {
-    std::vector<anari::float3> colors;
+    std::vector<math::float3> colors;
     std::vector<float> opacities;
 
     colors.emplace_back(0.f, 0.f, 1.f);
@@ -146,7 +146,7 @@ void GravityVolume::commit()
   anari::commitParameters(d, volume);
 
   if (withGeometry) {
-    std::vector<anari::float3> positions(numPoints);
+    std::vector<math::float3> positions(numPoints);
     std::transform(
         points.begin(), points.end(), positions.begin(), [](const Point &p) {
           return p.center;

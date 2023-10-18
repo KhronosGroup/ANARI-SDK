@@ -6,7 +6,7 @@
 namespace anari {
 namespace scenes {
 
-static std::vector<anari::float3> vertices = {
+static std::vector<math::float3> vertices = {
     //
     {1.f, 1.f, 1.f},
     {1.f, 1.f, -1.f},
@@ -19,7 +19,7 @@ static std::vector<anari::float3> vertices = {
     //
 };
 
-static std::vector<anari::uint3> indices = {
+static std::vector<math::uint3> indices = {
     // top
     {0, 1, 2},
     {3, 2, 1},
@@ -41,7 +41,7 @@ static std::vector<anari::uint3> indices = {
     //
 };
 
-static std::vector<anari::float4> colors = {
+static std::vector<math::float4> colors = {
     //
     {0.f, 1.f, 0.f, 1.f},
     {0.f, 1.f, 1.f, 1.f},
@@ -112,18 +112,18 @@ void InstancedCubes::commit()
     for (int y = 1; y < 4; y++) {
       for (int z = 1; z < 4; z++) {
         auto inst = anari::newObject<anari::Instance>(d, "transform");
-        auto tl = anari::translation_matrix(4.f * anari::float3(x, y, z));
-        auto rot_x = anari::rotation_matrix(
-            anari::rotation_quat(anari::float3(1, 0, 0), float(x)));
-        auto rot_y = anari::rotation_matrix(
-            anari::rotation_quat(anari::float3(0, 1, 0), float(y)));
-        auto rot_z = anari::rotation_matrix(
-            anari::rotation_quat(anari::float3(0, 0, 1), float(z)));
+        auto tl = math::translation_matrix(4.f * math::float3(x, y, z));
+        auto rot_x = math::rotation_matrix(
+            math::rotation_quat(math::float3(1, 0, 0), float(x)));
+        auto rot_y = math::rotation_matrix(
+            math::rotation_quat(math::float3(0, 1, 0), float(y)));
+        auto rot_z = math::rotation_matrix(
+            math::rotation_quat(math::float3(0, 0, 1), float(z)));
 
         { // NOTE: exercise anari::setParameter with C-array type
-          // anari::mat4 _xfm = tl * rot_x * rot_y * rot_z;
-          anari::mat4 _xfm = anari::mul(
-              tl, anari::mul(rot_x, anari::mul(rot_y, rot_z)));
+          // math::mat4 _xfm = tl * rot_x * rot_y * rot_z;
+          math::mat4 _xfm = math::mul(
+              tl, math::mul(rot_x, math::mul(rot_y, rot_z)));
           float xfm[16];
           std::memcpy(xfm, &_xfm, sizeof(_xfm));
           anari::setParameter(d, inst, "transform", xfm);

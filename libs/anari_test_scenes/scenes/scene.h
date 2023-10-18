@@ -12,7 +12,7 @@
 namespace anari {
 namespace scenes {
 
-using box3 = std::array<anari::float3, 2>; // bounds_lower, bounds_upper;
+using box3 = std::array<math::float3, 2>; // bounds_lower, bounds_upper;
 
 struct ANARI_TEST_SCENES_INTERFACE TestScene
     : public helium::ParameterizedObject

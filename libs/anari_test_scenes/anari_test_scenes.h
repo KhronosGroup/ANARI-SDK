@@ -20,14 +20,14 @@ namespace anari {
 namespace scenes {
 
 using Any = helium::AnariAny;
-using mat4 = anari::mat4;
+using mat4 = math::mat4;
 
 struct Camera
 {
-  anari::float3 position;
-  anari::float3 direction;
-  anari::float3 at;
-  anari::float3 up;
+  math::float3 position;
+  math::float3 direction;
+  math::float3 at;
+  math::float3 up;
 };
 
 struct ParameterInfo
@@ -58,7 +58,7 @@ ParameterInfo makeParameterInfo(const char *name,
     const char *value,
     std::vector<std::string> stringValues);
 
-using Bounds = std::array<anari::float3, 2>;
+using Bounds = std::array<math::float3, 2>;
 
 struct TestScene;
 using SceneHandle = TestScene *;

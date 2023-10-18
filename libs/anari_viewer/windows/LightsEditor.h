@@ -26,9 +26,9 @@ struct Light
   LightType type{DIRECTIONAL};
   float intensity{1.f};
   float openingAngle{3.14159f};
-  anari::float3 color{1.f};
-  anari::float2 directionalAZEL{0.f, 345.f};
-  anari::float3 pointPosition{0.f};
+  anari::math::float3 color{1.f};
+  anari::math::float2 directionalAZEL{0.f, 345.f};
+  anari::math::float3 pointPosition{0.f};
   std::string hdriRadiance;
   float scale{1.f};
   std::vector<anari::Light> handles;

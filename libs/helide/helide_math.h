@@ -10,6 +10,7 @@
 
 namespace helide {
 
+using namespace anari::math;
 using namespace helium::math;
 
 struct Ray

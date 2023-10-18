@@ -30,7 +30,7 @@ void PbrSpheres::commit()
   auto surface = anari::newObject<anari::Surface>(d);
   auto geom = anari::newObject<anari::Geometry>(d, "sphere");
   auto mat = anari::newObject<anari::Material>(d, "physicallyBased");
-  anari::setParameter(d, mat, "baseColor", anari::float3(1,0,0));
+  anari::setParameter(d, mat, "baseColor", math::float3(1,0,0));
   anari::setParameter(d, mat, "metallic", "attribute0");
   anari::setParameter(d, mat, "roughness", "attribute1");
   anari::commitParameters(d, mat);
@@ -39,7 +39,7 @@ void PbrSpheres::commit()
       d, m_world, "surface", anari::newArray1D(d, &surface));
 
   auto light = anari::newObject<anari::Light>(d, "directional");
-  anari::setParameter(d, light, "direction", anari::float3(0, 0, 1));
+  anari::setParameter(d, light, "direction", math::float3(0, 0, 1));
   anari::setParameter(d, light, "irradiance", 1.f);
   anari::commitParameters(d, light);
   anari::setAndReleaseParameter(
@@ -51,12 +51,12 @@ void PbrSpheres::commit()
   anari::setParameter(d, surface, "geometry", geom);
   anari::setParameter(d, surface, "material", mat);
 
-  std::vector<anari::float3> spherePositions;
+  std::vector<math::float3> spherePositions;
   std::vector<float> sphereMetallic;
   std::vector<float> sphereRoughness;
   for(int i = 0;i<10;++i) {
     for(int j = 0;j<10;++j) {
-      spherePositions.push_back(anari::float3(i, j, 0));
+      spherePositions.push_back(math::float3(i, j, 0));
       sphereMetallic.push_back(i/10.0f + 0.1f);
       sphereRoughness.push_back(j/10.0f + 0.1f);
     }
