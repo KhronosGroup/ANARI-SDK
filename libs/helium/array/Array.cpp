@@ -34,6 +34,7 @@ Array::Array(ANARIDataType type,
   if (d.appMemory) {
     m_ownership =
         d.deleter ? ArrayDataOwnership::CAPTURED : ArrayDataOwnership::SHARED;
+    markDataModified();
   } else
     m_ownership = ArrayDataOwnership::MANAGED;
 
@@ -109,6 +110,7 @@ void Array::unmap()
     return;
   }
   m_mapped = false;
+  markDataModified();
   notifyCommitObservers();
 }
 
@@ -120,6 +122,38 @@ bool Array::isMapped() const
 bool Array::wasPrivatized() const
 {
   return m_privatized;
+}
+
+void Array::markDataModified()
+{
+  m_lastDataModified = helium::newTimeStamp();
+}
+
+bool Array::isOffloaded() const
+{
+  return m_isOffloaded;
+}
+
+void Array::markDataIsOffloaded(bool isOffloaded)
+{
+  m_isOffloaded = isOffloaded;
+}
+
+void Array::uploadArrayData() const
+{
+  if (!isOffloaded() || !needToUploadData())
+    return;
+  markDataUploaded();
+}
+
+void Array::markDataUploaded() const
+{
+  m_lastDataUploaded = helium::newTimeStamp();
+}
+
+bool Array::needToUploadData() const
+{
+  return m_lastDataModified > m_lastDataUploaded;
 }
 
 bool Array::getProperty(
