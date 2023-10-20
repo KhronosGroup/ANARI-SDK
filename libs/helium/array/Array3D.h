@@ -23,9 +23,9 @@ struct Array3D : public Array
   size_t totalSize() const override;
 
   size_t size(int dim) const;
-  uint3 size() const;
+  anari::math::uint3 size() const;
 
-  float4 readAsAttributeValue(int3 i,
+  anari::math::float4 readAsAttributeValue(anari::math::int3 i,
       WrapMode wrap1 = WrapMode::DEFAULT,
       WrapMode wrap2 = WrapMode::DEFAULT,
       WrapMode wrap3 = WrapMode::DEFAULT) const;

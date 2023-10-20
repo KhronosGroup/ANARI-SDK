@@ -58,8 +58,10 @@ void ObjectArray::commit()
     std::swap(m_begin, m_end);
   }
 
-  if (m_begin != oldBegin || m_end != oldEnd)
+  if (m_begin != oldBegin || m_end != oldEnd) {
+    markDataModified();
     notifyCommitObservers();
+  }
 }
 
 size_t ObjectArray::totalSize() const

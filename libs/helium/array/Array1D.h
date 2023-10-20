@@ -33,7 +33,7 @@ struct Array1D : public Array
 
   size_t size() const;
 
-  float4 readAsAttributeValue(
+  anari::math::float4 readAsAttributeValue(
       int32_t i, WrapMode wrap = WrapMode::DEFAULT) const;
   template <typename T>
   T valueAtLinear(float in) const; // 'in' must be clamped to [0, 1]
@@ -42,13 +42,13 @@ struct Array1D : public Array
 
   void privatize() override;
 
- private:
+ protected:
   size_t m_capacity{0};
   size_t m_begin{0};
   size_t m_end{0};
 };
 
-float4 readAttributeValue(const Array1D *arr, uint32_t i);
+anari::math::float4 readAttributeValue(const Array1D *arr, uint32_t i);
 
 // Inlined definitions ////////////////////////////////////////////////////////
 
