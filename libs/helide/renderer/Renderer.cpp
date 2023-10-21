@@ -96,11 +96,12 @@ Renderer::Renderer(HelideGlobalState *s) : Object(ANARI_RENDERER, s)
   m_heatmap = new Array1D(s, md);
   m_heatmap->refDec(helium::RefType::PUBLIC);
 
-  auto *colors = m_heatmap->beginAs<float3>();
+  auto *colors = (float3 *)m_heatmap->map();
   colors[0] = float3(0.f, 0.f, 1.f);
   colors[1] = float3(1.f, 0.f, 0.f);
   colors[2] = float3(1.f, 1.f, 0.f);
   colors[3] = float3(1.f, 1.f, 1.f);
+  m_heatmap->unmap();
 }
 
 Renderer::~Renderer()

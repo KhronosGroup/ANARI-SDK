@@ -23,13 +23,13 @@ struct Array1D : public Array
   size_t totalSize() const override;
   size_t totalCapacity() const override;
 
-  void *begin() const;
-  void *end() const;
+  const void *begin() const;
+  const void *end() const;
 
   template <typename T>
-  T *beginAs() const;
+  const T *beginAs() const;
   template <typename T>
-  T *endAs() const;
+  const T *endAs() const;
 
   size_t size() const;
 
@@ -53,7 +53,7 @@ anari::math::float4 readAttributeValue(const Array1D *arr, uint32_t i);
 // Inlined definitions ////////////////////////////////////////////////////////
 
 template <typename T>
-inline T *Array1D::beginAs() const
+inline const T *Array1D::beginAs() const
 {
   if (anari::ANARITypeFor<T>::value != elementType())
     throw std::runtime_error("incorrect element type queried for array");
@@ -62,7 +62,7 @@ inline T *Array1D::beginAs() const
 }
 
 template <typename T>
-inline T *Array1D::endAs() const
+inline const T *Array1D::endAs() const
 {
   if (anari::ANARITypeFor<T>::value != elementType())
     throw std::runtime_error("incorrect element type queried for array");

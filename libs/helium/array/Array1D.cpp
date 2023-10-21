@@ -48,14 +48,14 @@ size_t Array1D::totalCapacity() const
   return m_capacity;
 }
 
-void *Array1D::begin() const
+const void *Array1D::begin() const
 {
   auto *p = (unsigned char *)data();
   auto s = anari::sizeOf(elementType());
   return p + (s * m_begin);
 }
 
-void *Array1D::end() const
+const void *Array1D::end() const
 {
   auto *p = (unsigned char *)data();
   auto s = anari::sizeOf(elementType());

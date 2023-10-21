@@ -67,18 +67,17 @@ ArrayDataOwnership Array::ownership() const
   return m_ownership;
 }
 
-void *Array::data() const
+const void *Array::data() const
 {
   switch (ownership()) {
   case ArrayDataOwnership::SHARED:
-    return const_cast<void *>(
-        wasPrivatized() ? m_hostData.privatized.mem : m_hostData.shared.mem);
+    return wasPrivatized() ? m_hostData.privatized.mem : m_hostData.shared.mem;
     break;
   case ArrayDataOwnership::CAPTURED:
-    return const_cast<void *>(m_hostData.captured.mem);
+    return m_hostData.captured.mem;
     break;
   case ArrayDataOwnership::MANAGED:
-    return const_cast<void *>(m_hostData.managed.mem);
+    return m_hostData.managed.mem;
     break;
   default:
     break;
@@ -99,7 +98,7 @@ void *Array::map()
         "array mapped again without being previously unmapped");
   }
   m_mapped = true;
-  return data();
+  return const_cast<void *>(data());
 }
 
 void Array::unmap()
@@ -214,7 +213,7 @@ void Array::initManagedMemory()
   if (ownership() == ArrayDataOwnership::MANAGED) {
     auto totalBytes = totalSize() * anari::sizeOf(elementType());
     m_hostData.managed.mem = malloc(totalBytes);
-    std::memset(data(), 0, totalBytes);
+    std::memset(m_hostData.managed.mem, 0, totalBytes);
   }
 }
 

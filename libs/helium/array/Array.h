@@ -56,10 +56,10 @@ struct Array : public BaseArray
   ANARIDataType elementType() const;
   ArrayDataOwnership ownership() const;
 
-  void *data() const;
+  const void *data() const;
 
   template <typename T>
-  T *dataAs() const;
+  const T *dataAs() const;
 
   virtual size_t totalSize() const = 0;
   virtual size_t totalCapacity() const;
@@ -133,12 +133,12 @@ struct Array : public BaseArray
 // Inlined definitions ////////////////////////////////////////////////////////
 
 template <typename T>
-inline T *Array::dataAs() const
+inline const T *Array::dataAs() const
 {
   if (anari::ANARITypeFor<T>::value != m_elementType)
     throw std::runtime_error("incorrect element type queried for array");
 
-  return (T *)data();
+  return (const T *)data();
 }
 
 } // namespace helium

@@ -221,7 +221,7 @@ static const T *typedOffset(const void *mem, uint64_t offset)
 
 template <typename ELEMENT_T, int NUM_COMPONENTS, bool SRGB = false>
 static anari::math::float4 getAttributeArrayAt_ufixed(
-    void *data, uint64_t offset)
+    const void *data, uint64_t offset)
 {
   constexpr float m = std::numeric_limits<ELEMENT_T>::max();
   anari::math::float4 retval(0.f, 0.f, 0.f, 1.f);
@@ -246,7 +246,7 @@ static anari::math::float4 getAttributeArrayAt_ufixed(
 }
 
 inline anari::math::float4 readAsAttributeValueFlat(
-    void *data, ANARIDataType type, uint64_t i)
+    const void *data, ANARIDataType type, uint64_t i)
 {
   auto retval = DEFAULT_ATTRIBUTE_VALUE;
 
