@@ -861,7 +861,7 @@ def anari_type_to_property(device, objtype, subtype, paramname, atype):
     else:
         return None
 
-def anari_to_propertygroup(engine, idname, scenename, device, objtype, subtype):
+def device_to_propertygroup(engine, idname, scenename, device, objtype, subtype):
     parameters = anariGetObjectInfo(device, objtype, subtype, "parameter", ANARI_PARAMETER_LIST)
     properties = []
     names = {'name'} # exclude name from the displayed options
@@ -882,8 +882,10 @@ def anari_to_propertygroup(engine, idname, scenename, device, objtype, subtype):
         default = renderers[0])
     ))
 
+    param_selections = dict()
     for renderer_name in renderers:
         renderer_parameters = anariGetObjectInfo(device, ANARI_RENDERER, renderer_name, "parameter", ANARI_PARAMETER_LIST)
+        param_selections[renderer_name] = [x[0] for x in renderer_parameters]
         for paramname, atype in renderer_parameters:
             if paramname in names:
                 continue
@@ -906,8 +908,14 @@ def anari_to_propertygroup(engine, idname, scenename, device, objtype, subtype):
         layout.use_property_decorate = False
 
         col = layout.column()
+        props = getattr(context.scene.anari, self.scenename)
+        current_renderer = props.renderer
+        selection = self.param_selections[current_renderer]
+        col.prop(props, "renderer")
         for paramname, prop in self.panel_props:
-            col.prop(getattr(context.scene.anari, scenename), paramname)
+            row = col.row()
+            row.enabled = paramname in selection
+            row.prop(props, paramname)
 
     RENDER_PT_anari_device = type('RENDER_PT_%s_panel'%idname, (RenderButtonsPanel, Panel),{
         'bl_label': "Device",
@@ -916,6 +924,8 @@ def anari_to_propertygroup(engine, idname, scenename, device, objtype, subtype):
         'panel_props' : properties,
         'poll' : poll,
         'draw' : draw,
+        'param_selections' : param_selections,
+        'scenename' : copy.copy(scenename)
     })
 
     return (property_group, RENDER_PT_anari_device)
@@ -936,8 +946,8 @@ def register():
                 class ANARIDeviceRenderEngine(ANARIRenderEngine):
                     # These three members are used by blender to set up the
                     # RenderEngine; define its internal name, visible name and capabilities.
-                    bl_idname = idname
-                    bl_label = label
+                    bl_idname = copy.copy(idname)
+                    bl_label = copy.copy(label)
                     anari_library_name = copy.copy(name)
                     anari_device_name = copy.copy(devicename)
 
@@ -945,7 +955,7 @@ def register():
                         super().__init__()
 
                         if not hasattr(ANARISceneProperties, self.anari_library_name):
-                            self.props = anari_to_propertygroup(self.bl_idname, idname, self.anari_library_name, self.device, ANARI_DEVICE, 'default')
+                            self.props = device_to_propertygroup(self.bl_idname, idname, self.anari_library_name, self.device, ANARI_DEVICE, 'default')
 
                             bpy.utils.register_class(self.props[0])
                             setattr(ANARISceneProperties, self.anari_library_name, bpy.props.PointerProperty(
