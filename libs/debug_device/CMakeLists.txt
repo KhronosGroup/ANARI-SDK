@@ -32,7 +32,9 @@ project_link_libraries(PUBLIC anari helium)
 project_compile_definitions(PRIVATE "anari_library_debug_EXPORTS")
 
 install(TARGETS ${PROJECT_NAME}
+  EXPORT anari_Exports
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  NAMELINK_SKIP
 )
