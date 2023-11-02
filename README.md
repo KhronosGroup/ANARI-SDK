@@ -77,6 +77,20 @@ These targets can be found with CMake via `find_package(anari)`. The examples
 are written such that they can be built stand alone from the SDK source tree.
 The simplest usage can be found [here](examples/simple).
 
+The follwoing additional helper library components can be requested by listing
+them under `find_pacakge(anari)`:
+
+- `viewer` : Source library target `anari::anari_viewer` for building small viewer apps
+- `code_gen` : Enable the use of code generation CMake functions downstream
+
+Both of these libraries are both optionally installed and are not available
+to downstream projects unless they are explicitly requested. To request one of
+these components, simply add them to the `COMPONENTS` portion of `find_package`:
+
+```cmake
+find_package(anari COMPONENTS viewer code_gen)
+```
+
 ## Running the examples
 
 The basic tutorial app (built by default) uses the `helide` device as an
