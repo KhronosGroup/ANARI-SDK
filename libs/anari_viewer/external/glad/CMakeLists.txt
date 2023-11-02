@@ -1,7 +1,7 @@
 ## Copyright 2023 The Khronos Group
 ## SPDX-License-Identifier: Apache-2.0
 
-project(anari_viewer_glad VERSION ${PROJECT_VERSION} LANGUAGES C)
+project(anari_viewer_glad LANGUAGES C)
 
 project_add_library(INTERFACE)
 project_sources(INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/glad.c>)

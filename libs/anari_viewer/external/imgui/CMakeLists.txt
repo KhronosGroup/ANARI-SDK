@@ -1,7 +1,7 @@
 ## Copyright 2023 The Khronos Group
 ## SPDX-License-Identifier: Apache-2.0
 
-project(anari_viewer_imgui_glfw VERSION ${PROJECT_VERSION} LANGUAGES CXX)
+project(anari_viewer_imgui_glfw LANGUAGES CXX)
 
 anari_sdk_fetch_project(
   NAME ${PROJECT_NAME}
