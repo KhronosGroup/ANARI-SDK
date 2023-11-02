@@ -231,7 +231,7 @@ void LightsEditor::updateLight(const Light &l)
     if (l.type == Light::DIRECTIONAL || l.type == Light::SPOT) {
       const float az = radians(l.directionalAZEL.x);
       const float el = radians(l.directionalAZEL.y);
-      anari::float3 dir(std::sin(az) * std::cos(el),
+      anari::math::float3 dir(std::sin(az) * std::cos(el),
           std::sin(el),
           std::cos(az) * std::cos(el));
       anari::setParameter(device, light, "direction", dir);

@@ -1,9 +1,9 @@
-// Copyright 2022 The Khronos Group
+// Copyright 2023 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "array/Array.h"
 
-namespace helide {
+namespace helium {
 
 // Helper functions //
 
@@ -13,18 +13,28 @@ static void zeroOutStruct(T &v)
   std::memset(&v, 0, sizeof(T));
 }
 
+// BaseArray //
+
+BaseArray::BaseArray(ANARIDataType type, BaseGlobalDeviceState *s)
+    : BaseObject(type, s)
+{}
+
+bool BaseArray::isValid() const
+{
+  return true;
+}
+
 // Array //
 
 Array::Array(ANARIDataType type,
-    HelideGlobalState *state,
+    BaseGlobalDeviceState *state,
     const ArrayMemoryDescriptor &d)
-    : helium::BaseArray(type, state), m_elementType(d.elementType)
+    : BaseArray(type, state), m_elementType(d.elementType)
 {
-  state->objectCounts.arrays++;
-
   if (d.appMemory) {
     m_ownership =
         d.deleter ? ArrayDataOwnership::CAPTURED : ArrayDataOwnership::SHARED;
+    markDataModified();
   } else
     m_ownership = ArrayDataOwnership::MANAGED;
 
@@ -45,7 +55,6 @@ Array::Array(ANARIDataType type,
 Array::~Array()
 {
   freeAppMemory();
-  deviceState()->objectCounts.arrays--;
 }
 
 ANARIDataType Array::elementType() const
@@ -58,18 +67,17 @@ ArrayDataOwnership Array::ownership() const
   return m_ownership;
 }
 
-void *Array::data() const
+const void *Array::data() const
 {
   switch (ownership()) {
   case ArrayDataOwnership::SHARED:
-    return const_cast<void *>(
-        wasPrivatized() ? m_hostData.privatized.mem : m_hostData.shared.mem);
+    return wasPrivatized() ? m_hostData.privatized.mem : m_hostData.shared.mem;
     break;
   case ArrayDataOwnership::CAPTURED:
-    return const_cast<void *>(m_hostData.captured.mem);
+    return m_hostData.captured.mem;
     break;
   case ArrayDataOwnership::MANAGED:
-    return const_cast<void *>(m_hostData.managed.mem);
+    return m_hostData.managed.mem;
     break;
   default:
     break;
@@ -83,6 +91,70 @@ size_t Array::totalCapacity() const
   return totalSize();
 }
 
+void *Array::map()
+{
+  if (isMapped()) {
+    reportMessage(ANARI_SEVERITY_WARNING,
+        "array mapped again without being previously unmapped");
+  }
+  m_mapped = true;
+  return const_cast<void *>(data());
+}
+
+void Array::unmap()
+{
+  if (!isMapped()) {
+    reportMessage(ANARI_SEVERITY_WARNING,
+        "array unmapped again without being previously mapped");
+    return;
+  }
+  m_mapped = false;
+  markDataModified();
+  notifyCommitObservers();
+}
+
+bool Array::isMapped() const
+{
+  return m_mapped;
+}
+
+bool Array::wasPrivatized() const
+{
+  return m_privatized;
+}
+
+void Array::markDataModified()
+{
+  m_lastDataModified = helium::newTimeStamp();
+}
+
+bool Array::isOffloaded() const
+{
+  return m_isOffloaded;
+}
+
+void Array::markDataIsOffloaded(bool isOffloaded)
+{
+  m_isOffloaded = isOffloaded;
+}
+
+void Array::uploadArrayData() const
+{
+  if (!isOffloaded() || !needToUploadData())
+    return;
+  markDataUploaded();
+}
+
+void Array::markDataUploaded() const
+{
+  m_lastDataUploaded = helium::newTimeStamp();
+}
+
+bool Array::needToUploadData() const
+{
+  return m_lastDataModified > m_lastDataUploaded;
+}
+
 bool Array::getProperty(
     const std::string_view &name, ANARIDataType type, void *ptr, uint32_t flags)
 {
@@ -92,38 +164,6 @@ bool Array::getProperty(
 void Array::commit()
 {
   // no-op
-}
-
-void *Array::map()
-{
-  if (m_mapped) {
-    reportMessage(ANARI_SEVERITY_WARNING,
-        "array mapped again without being previously unmapped");
-  }
-  m_mapped = true;
-  deviceState()->waitOnCurrentFrame();
-  return data();
-}
-
-void Array::unmap()
-{
-  if (!m_mapped) {
-    reportMessage(ANARI_SEVERITY_WARNING,
-        "array unmapped again without being previously mapped");
-    return;
-  }
-  m_mapped = false;
-  notifyCommitObservers();
-}
-
-bool Array::wasPrivatized() const
-{
-  return m_privatized;
-}
-
-HelideGlobalState *Array::deviceState() const
-{
-  return (HelideGlobalState *)helium::BaseObject::m_state;
 }
 
 void Array::makePrivatizedCopy(size_t numElements)
@@ -173,7 +213,7 @@ void Array::initManagedMemory()
   if (ownership() == ArrayDataOwnership::MANAGED) {
     auto totalBytes = totalSize() * anari::sizeOf(elementType());
     m_hostData.managed.mem = malloc(totalBytes);
-    std::memset(data(), 0, totalBytes);
+    std::memset(m_hostData.managed.mem, 0, totalBytes);
   }
 }
 
@@ -183,6 +223,6 @@ void Array::notifyObserver(BaseObject *o) const
   deviceState()->commitBuffer.addObject(o);
 }
 
-} // namespace helide
+} // namespace helium
 
-HELIDE_ANARI_TYPEFOR_DEFINITION(helide::Array *);
+HELIUM_ANARI_TYPEFOR_DEFINITION(helium::Array *);

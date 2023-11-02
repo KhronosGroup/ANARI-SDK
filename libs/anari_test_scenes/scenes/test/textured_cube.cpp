@@ -11,7 +11,7 @@ static void anari_free(const void *ptr, const void *)
 namespace anari {
 namespace scenes {
 
-static std::vector<anari::float3> vertices = {
+static std::vector<math::float3> vertices = {
     //
     {-.5f, .5f, 0.f},
     {.5f, .5f, 0.f},
@@ -20,14 +20,14 @@ static std::vector<anari::float3> vertices = {
     //
 };
 
-static std::vector<anari::uint3> indices = {
+static std::vector<math::uint3> indices = {
     //
     {0, 2, 3},
     {3, 1, 0},
     //
 };
 
-static std::vector<anari::float2> texcoords = {
+static std::vector<math::float2> texcoords = {
     //
     {0.f, 1.f},
     {1.f, 1.f},
@@ -38,15 +38,15 @@ static std::vector<anari::float2> texcoords = {
 
 static anari::Array2D makeTextureData(anari::Device d, int dim)
 {
-  auto *data = new anari::float3[dim * dim];
+  auto *data = new math::float3[dim * dim];
 
   for (int h = 0; h < dim; h++) {
     for (int w = 0; w < dim; w++) {
       bool even = h & 1;
       if (even)
-        data[h * dim + w] = w & 1 ? anari::float3(.8f) : anari::float3(.2f);
+        data[h * dim + w] = w & 1 ? math::float3(.8f) : math::float3(.2f);
       else
-        data[h * dim + w] = w & 1 ? anari::float3(.2f) : anari::float3(.8f);
+        data[h * dim + w] = w & 1 ? math::float3(.2f) : math::float3(.8f);
     }
   }
 
@@ -119,29 +119,29 @@ void TexturedCube::commit()
 
   std::vector<anari::Instance> instances;
 
-  auto createInstance = [&](float rotation, anari::float3 axis) {
+  auto createInstance = [&](float rotation, math::float3 axis) {
     auto inst = anari::newObject<anari::Instance>(d, "transform");
 
-    auto tl = anari::translation_matrix(anari::float3(0, 0, .5f));
-    auto rot = anari::rotation_matrix(anari::rotation_quat(axis, rotation));
-    anari::setParameter(d, inst, "transform", anari::mul(rot, tl));
+    auto tl = math::translation_matrix(math::float3(0, 0, .5f));
+    auto rot = math::rotation_matrix(math::rotation_quat(axis, rotation));
+    anari::setParameter(d, inst, "transform", math::mul(rot, tl));
     anari::setParameter(d, inst, "group", group);
     anari::commitParameters(d, inst);
     return inst;
   };
 
   instances.push_back(
-      createInstance(anari::radians(0.f), anari::float3(0, 1, 0)));
+      createInstance(anari::radians(0.f), math::float3(0, 1, 0)));
   instances.push_back(
-      createInstance(anari::radians(180.f), anari::float3(0, 1, 0)));
+      createInstance(anari::radians(180.f), math::float3(0, 1, 0)));
   instances.push_back(
-      createInstance(anari::radians(90.f), anari::float3(0, 1, 0)));
+      createInstance(anari::radians(90.f), math::float3(0, 1, 0)));
   instances.push_back(
-      createInstance(anari::radians(270.f), anari::float3(0, 1, 0)));
+      createInstance(anari::radians(270.f), math::float3(0, 1, 0)));
   instances.push_back(
-      createInstance(anari::radians(90.f), anari::float3(1, 0, 0)));
+      createInstance(anari::radians(90.f), math::float3(1, 0, 0)));
   instances.push_back(
-      createInstance(anari::radians(270.f), anari::float3(1, 0, 0)));
+      createInstance(anari::radians(270.f), math::float3(1, 0, 0)));
 
   anari::setAndReleaseParameter(d,
       m_world,
@@ -160,10 +160,10 @@ void TexturedCube::commit()
 std::vector<Camera> TexturedCube::cameras()
 {
   Camera cam;
-  cam.position = anari::float3(1.25f);
-  cam.at = anari::float3(0.f);
-  cam.direction = anari::normalize(cam.at - cam.position);
-  cam.up = anari::float3(0, 1, 0);
+  cam.position = math::float3(1.25f);
+  cam.at = math::float3(0.f);
+  cam.direction = math::normalize(cam.at - cam.position);
+  cam.up = math::float3(0, 1, 0);
   return {cam};
 }
 

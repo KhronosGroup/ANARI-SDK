@@ -69,8 +69,8 @@ void RandomCylinders::commit()
   rng.seed(0);
   std::normal_distribution<float> vert_dist(0.5f, 0.5f);
 
-  std::vector<anari::float3> cylinderPositions(2 * (size_t(numCylinders)));
-  std::vector<anari::float4> cylinderColors(2 * (size_t(numCylinders)));
+  std::vector<math::float3> cylinderPositions(2 * (size_t(numCylinders)));
+  std::vector<math::float4> cylinderColors(2 * (size_t(numCylinders)));
 
   for (int i = 0; i < numCylinders; ++i) {
     auto &a = cylinderPositions[2 * i];

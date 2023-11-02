@@ -36,7 +36,7 @@ struct Viewport : public anari_viewer::Window
   anari::Device device() const;
 
  private:
-  void reshape(anari::int2 newWindowSize);
+  void reshape(anari::math::int2 newWindowSize);
 
   void startNewFrame();
   void updateFrame();
@@ -50,7 +50,7 @@ struct Viewport : public anari_viewer::Window
 
   // Data /////////////////////////////////////////////////////////////////////
 
-  anari::float2 m_previousMouse{-1.f, -1.f};
+  anari::math::float2 m_previousMouse{-1.f, -1.f};
   bool m_mouseRotating{false};
   bool m_manipulating{false};
   bool m_currentlyRendering{true};
@@ -91,8 +91,8 @@ struct Viewport : public anari_viewer::Window
   // OpenGL + display
 
   GLuint m_framebufferTexture{0};
-  anari::int2 m_viewportSize{1920, 1080};
-  anari::int2 m_renderSize{1920, 1080};
+  anari::math::int2 m_viewportSize{1920, 1080};
+  anari::math::int2 m_renderSize{1920, 1080};
 
   float m_latestFL{1.f};
   float m_minFL{std::numeric_limits<float>::max()};

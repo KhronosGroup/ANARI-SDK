@@ -7,7 +7,7 @@ namespace anari {
 namespace scenes {
 
 // quad mesh data
-static std::vector<anari::float3> vertices = {
+static std::vector<math::float3> vertices = {
     // Floor
     {1.00f, -1.00f, -1.00f},
     {-1.00f, -1.00f, -1.00f},
@@ -94,7 +94,7 @@ static std::vector<anari::float3> vertices = {
     {0.14f, -1.00f, 0.67f},
     {0.71f, -1.00f, 0.49f}};
 
-static std::vector<anari::uint3> indices = {
+static std::vector<math::uint3> indices = {
     {0, 1, 2}, // Floor
     {0, 2, 3}, // Floor
     {4, 5, 6}, // Ceiling
@@ -131,7 +131,7 @@ static std::vector<anari::uint3> indices = {
     {64, 66, 67}, // TallBox Bottom Face
 };
 
-static std::vector<anari::float4> colors = {
+static std::vector<math::float4> colors = {
     // Floor
     {0.725f, 0.710f, 0.68f, 1.0f},
     {0.725f, 0.710f, 0.68f, 1.0f},
@@ -275,14 +275,14 @@ void CornellBox::commit()
   // fix this up with new check
   if (false/*anari::deviceImplements(d, "ANARI_KHR_AREA_LIGHTS")*/) {
     light = anari::newObject<anari::Light>(d, "quad");
-    anari::setParameter(d, light, "color", anari::float3(0.78f, 0.551f, 0.183f));
+    anari::setParameter(d, light, "color", math::float3(0.78f, 0.551f, 0.183f));
     anari::setParameter(d, light, "intensity", 47.f);
-    anari::setParameter(d, light, "position", anari::float3(-0.23f, 0.98f, -0.16f));
-    anari::setParameter(d, light, "edge1", anari::float3(0.47f, 0.0f, 0.0f));
-    anari::setParameter(d, light, "edge2", anari::float3(0.0f, 0.0f, 0.38f));
+    anari::setParameter(d, light, "position", math::float3(-0.23f, 0.98f, -0.16f));
+    anari::setParameter(d, light, "edge1", math::float3(0.47f, 0.0f, 0.0f));
+    anari::setParameter(d, light, "edge2", math::float3(0.0f, 0.0f, 0.38f));
   } else {
     light = anari::newObject<anari::Light>(d, "directional");
-    anari::setParameter(d, light, "direction", anari::float3(0.f, -0.5f, 1.f));
+    anari::setParameter(d, light, "direction", math::float3(0.f, -0.5f, 1.f));
   }
 
   anari::commitParameters(d, light);

@@ -24,25 +24,25 @@ Camera TestScene::createDefaultCameraFromWorld(anari::World w)
 
   anari::getProperty(m_device, w, "bounds", bounds);
 
-  const anari::float3 bounds_size = bounds[1] - bounds[0];
-  const anari::float3 bounds_center = 0.5f * (bounds[0] + bounds[1]);
-  const float distance = anari::length(bounds_size) * 0.8f;
+  const math::float3 bounds_size = bounds[1] - bounds[0];
+  const math::float3 bounds_center = 0.5f * (bounds[0] + bounds[1]);
+  const float distance = math::length(bounds_size) * 0.8f;
 
-  const anari::float3 eye_pos = bounds_center + anari::float3(0, 0, -distance);
+  const math::float3 eye_pos = bounds_center + math::float3(0, 0, -distance);
 
   Camera cam;
 
   cam.position = eye_pos;
-  cam.direction = anari::normalize(bounds_center - eye_pos);
+  cam.direction = math::normalize(bounds_center - eye_pos);
   cam.at = bounds_center;
-  cam.up = anari::float3(0, 1, 0);
+  cam.up = math::float3(0, 1, 0);
 
   return cam;
 }
 
 box3 TestScene::bounds()
 {
-  box3 retval = {anari::float3(-5), anari::float3(5)};
+  box3 retval = {math::float3(-5), math::float3(5)};
   anari::getProperty(m_device, world(), "bounds", retval);
   return retval;
 }
@@ -70,7 +70,7 @@ void TestScene::computeNextFrame()
 void TestScene::setDefaultLight(anari::World w)
 {
   auto light = anari::newObject<anari::Light>(m_device, "directional");
-  anari::setParameter(m_device, light, "direction", anari::float3(0, -1, 0));
+  anari::setParameter(m_device, light, "direction", math::float3(0, -1, 0));
   anari::setParameter(m_device, light, "irradiance", 4.f);
   anari::commitParameters(m_device, light);
   anari::setAndReleaseParameter(

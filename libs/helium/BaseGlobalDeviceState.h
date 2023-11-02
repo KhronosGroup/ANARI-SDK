@@ -5,12 +5,16 @@
 
 #include "utility/DeferredCommitBuffer.h"
 // anari
-#include <anari/anari.h>
+#include <anari/anari_cpp/ext/linalg.h>
+#include <anari/anari_cpp.hpp>
 // std
 #include <functional>
 #include <string>
 
 namespace helium {
+
+using namespace linalg::aliases;
+using mat4 = float4x4;
 
 struct BaseGlobalDeviceState
 {

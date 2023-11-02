@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "BaseDevice.h"
-#include "BaseArray.h"
 #include "BaseFrame.h"
+#include "array/Array.h"
 // anari
 #include "anari/backend/LibraryImpl.h"
 

@@ -38,7 +38,7 @@ struct BaseObject : public RefCounted, ParameterizedObject
   // means. Devices must be able to handle object subtypes that it does not
   // implement, or handle cases when objects are ill-formed. This gives a
   // generic place to ask the object if it's 'OK' to use.
-  virtual bool isValid() const;
+  virtual bool isValid() const = 0;
 
   // Object
   ANARIDataType type() const;
@@ -59,6 +59,8 @@ struct BaseObject : public RefCounted, ParameterizedObject
   void addCommitObserver(BaseObject *obj);
   void removeCommitObserver(BaseObject *obj);
   void notifyCommitObservers() const;
+
+  BaseGlobalDeviceState *deviceState() const;
 
  protected:
   // Handle what happens when the observing object 'obj' is being notified of

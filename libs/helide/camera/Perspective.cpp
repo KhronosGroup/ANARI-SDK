@@ -14,7 +14,7 @@ void Perspective::commit()
   // NOTE: demonstrate alternative 'raw' method for getting parameter values
   float fovy = 0.f;
   if (!getParam("fovy", ANARI_FLOAT32, &fovy))
-    fovy = radians(60.f);
+    fovy = anari::radians(60.f);
   float aspect = getParam<float>("aspect", 1.f);
 
   float2 imgPlaneSize;
