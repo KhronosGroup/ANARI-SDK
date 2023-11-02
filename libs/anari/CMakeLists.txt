@@ -1,10 +1,6 @@
 ## Copyright 2021 The Khronos Group
 ## SPDX-License-Identifier: Apache-2.0
 
-set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
-set(THREADS_PREFER_PTHREAD_FLAG TRUE)
-find_package(Threads REQUIRED)
-
 project_add_library(
   anari_cpp_linalg_defs.cpp
   anari_cpp_std_defs.cpp
@@ -30,7 +26,7 @@ PUBLIC
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-project_link_libraries(PUBLIC ${CMAKE_DL_LIBS} PRIVATE Threads::Threads)
+project_link_libraries(PUBLIC ${CMAKE_DL_LIBS})
 
 ## Create version header
 
