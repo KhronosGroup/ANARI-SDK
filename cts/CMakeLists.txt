@@ -15,6 +15,10 @@ set(REFERENCE_LIB helide)
 
 project(anariCTSBackend LANGUAGES CXX)
 
+set(glm_DIR ${CMAKE_CURRENT_LIST_DIR}/external/glm/lib/cmake/glm)
+find_package(glm REQUIRED)
+mark_as_advanced(glm_DIR)
+
 find_package(anari REQUIRED)
 include(pybind11.cmake)
 

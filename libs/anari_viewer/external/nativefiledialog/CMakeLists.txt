@@ -1,7 +1,7 @@
 ## Copyright 2023 The Khronos Group
 ## SPDX-License-Identifier: Apache-2.0
 
-project(anari_viewer_nfd VERSION ${PROJECT_VERSION} LANGUAGES CXX)
+project(anari_viewer_nfd LANGUAGES CXX)
 
 set(BUILD_SHARED_LIBS OFF)
 anari_sdk_fetch_project(

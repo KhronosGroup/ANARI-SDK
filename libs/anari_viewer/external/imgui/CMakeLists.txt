@@ -1,7 +1,7 @@
 ## Copyright 2023 The Khronos Group
 ## SPDX-License-Identifier: Apache-2.0
 
-project(anari_viewer_imgui_glfw VERSION ${PROJECT_VERSION} LANGUAGES CXX)
+project(anari_viewer_imgui_glfw LANGUAGES CXX)
 
 anari_sdk_fetch_project(
   NAME ${PROJECT_NAME}
@@ -20,23 +20,21 @@ project_add_library(INTERFACE)
 
 project_sources(
 INTERFACE
-  $<BUILD_INTERFACE:${anari_viewer_imgui_glfw_LOCATION}/imgui.cpp>
-  $<BUILD_INTERFACE:${anari_viewer_imgui_glfw_LOCATION}/imgui_draw.cpp>
-  $<BUILD_INTERFACE:${anari_viewer_imgui_glfw_LOCATION}/imgui_demo.cpp>
-  $<BUILD_INTERFACE:${anari_viewer_imgui_glfw_LOCATION}/imgui_tables.cpp>
-  $<BUILD_INTERFACE:${anari_viewer_imgui_glfw_LOCATION}/imgui_widgets.cpp>
-
-  $<BUILD_INTERFACE:${anari_viewer_imgui_glfw_LOCATION}/backends/imgui_impl_glfw.cpp>
-  $<BUILD_INTERFACE:${anari_viewer_imgui_glfw_LOCATION}/backends/imgui_impl_opengl2.cpp>
-
-  $<BUILD_INTERFACE:${anari_viewer_imgui_glfw_LOCATION}/misc/cpp/imgui_stdlib.cpp>
+  ${anari_viewer_imgui_glfw_LOCATION}/imgui.cpp
+  ${anari_viewer_imgui_glfw_LOCATION}/imgui_draw.cpp
+  ${anari_viewer_imgui_glfw_LOCATION}/imgui_demo.cpp
+  ${anari_viewer_imgui_glfw_LOCATION}/imgui_tables.cpp
+  ${anari_viewer_imgui_glfw_LOCATION}/imgui_widgets.cpp
+  ${anari_viewer_imgui_glfw_LOCATION}/backends/imgui_impl_glfw.cpp
+  ${anari_viewer_imgui_glfw_LOCATION}/backends/imgui_impl_opengl2.cpp
+  ${anari_viewer_imgui_glfw_LOCATION}/misc/cpp/imgui_stdlib.cpp
 )
 
 project_link_libraries(INTERFACE glfw OpenGL::GL)
 
 project_include_directories(
 INTERFACE
-  $<BUILD_INTERFACE:${anari_viewer_imgui_glfw_LOCATION}>
-  $<BUILD_INTERFACE:${anari_viewer_imgui_glfw_LOCATION}/backends>
-  $<BUILD_INTERFACE:${anari_viewer_imgui_glfw_LOCATION}/misc/cpp>
+  ${anari_viewer_imgui_glfw_LOCATION}
+  ${anari_viewer_imgui_glfw_LOCATION}/backends
+  ${anari_viewer_imgui_glfw_LOCATION}/misc/cpp
 )
