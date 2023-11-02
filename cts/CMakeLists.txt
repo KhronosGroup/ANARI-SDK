@@ -15,6 +15,10 @@ set(REFERENCE_LIB helide)
 
 project(anariCTSBackend LANGUAGES CXX)
 
+set(glm_DIR ${CMAKE_CURRENT_LIST_DIR}/external/glm/lib/cmake/glm)
+find_package(glm REQUIRED)
+mark_as_advanced(glm_DIR)
+
 find_package(anari REQUIRED)
 include(pybind11.cmake)
 
@@ -36,7 +40,7 @@ PUBLIC
   ${CMAKE_CURRENT_LIST_DIR}/header
 )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC helium anari_test_scenes)
+target_link_libraries(${PROJECT_NAME} PUBLIC glm::glm helium anari_test_scenes)
 
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 

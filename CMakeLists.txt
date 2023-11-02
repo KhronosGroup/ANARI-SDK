@@ -71,10 +71,6 @@ include(cmake/anari_sdk_fetch_project.cmake)
 
 ## Add library and executable targets
 
-set(glm_DIR ${CMAKE_CURRENT_LIST_DIR}/external/glm/lib/cmake/glm)
-find_package(glm REQUIRED)
-mark_as_advanced(glm_DIR)
-
 add_subdirectory(libs)
 add_subdirectory(external)
 add_subdirectory(code_gen)
