@@ -33,7 +33,9 @@ endif()
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/anari_sdk_fetch_project.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/cmake_project_commands.cmake)
 
-if (anari_FIND_REQUIRED_viewer AND @INSTALL_VIEWER_LIBRARY@)
+if (TARGET anari::anari_viewer)
+  set(anari_viewer_FOUND 1)
+elseif (anari_FIND_REQUIRED_viewer AND @INSTALL_VIEWER_LIBRARY@)
   add_subdirectory(
     ${ANARI_DATAROOTDIR}/anari_viewer
     ${CMAKE_CURRENT_BINARY_DIR}/anari_viewer
