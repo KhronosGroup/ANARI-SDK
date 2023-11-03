@@ -51,12 +51,7 @@ cmake_dependent_option(BUILD_VIEWER
   "BUILD_EXAMPLES"
   OFF
 )
-cmake_dependent_option(INSTALL_VIEWER_LIBRARY
-  "Install anari::anari_viewer library target"
-  OFF
-  "BUILD_EXAMPLES;BUILD_VIEWER"
-  OFF
-)
+option(INSTALL_VIEWER_LIBRARY "Install anari::anari_viewer library target" ON)
 option(INSTALL_VIEWER "Install anariViewer app" OFF)
 mark_as_advanced(INSTALL_VIEWER)
 
