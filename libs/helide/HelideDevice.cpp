@@ -55,6 +55,12 @@ inline HANDLE_T createObjectForAPI(HelideGlobalState *s, Args &&...args)
 
 // Data Arrays ////////////////////////////////////////////////////////////////
 
+void *HelideDevice::mapArray(ANARIArray a)
+{
+  deviceState()->waitOnCurrentFrame();
+  return helium::BaseDevice::mapArray(a);
+}
+
 ANARIArray1D HelideDevice::newArray1D(const void *appMemory,
     ANARIMemoryDeleter deleter,
     const void *userData,
