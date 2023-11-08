@@ -108,7 +108,7 @@ void RandomCylinders::commit()
 
     std::vector<float> cylinderRadii((size_t(numCylinders)));
     for (auto &r : cylinderRadii)
-      r = radii_dist(rng);
+      r = std::abs(radii_dist(rng));
 
     anari::setAndReleaseParameter(d,
         geom,
