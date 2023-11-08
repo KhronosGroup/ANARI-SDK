@@ -31,7 +31,6 @@ prefixes = {
 }
 
 renderer_enum_info = [("default", "default", "default")]
-current_renderer = 0
 anari_in_use = 0
 
 def anari_status(device, source, sourceType, severity, code, message):
@@ -40,19 +39,6 @@ def anari_status(device, source, sourceType, severity, code, message):
 def get_renderer_enum_info(self, context):
     global renderer_enum_info
     return renderer_enum_info
-
-def set_current_renderer(self, value):
-    global current_renderer
-    current_renderer = value
-
-def get_current_renderer(self):
-    global current_renderer
-    return current_renderer
-
-def get_current_renderer_name():
-    global current_renderer
-    global renderer_enum_info
-    return renderer_enum_info[current_renderer][1]
 
 status_handle = ffi.new_handle(anari_status) #something needs to keep this handle alive
 
@@ -164,8 +150,8 @@ class ANARIRenderEngine(bpy.types.RenderEngine):
         self.perspective = anariNewCamera(self.device, 'perspective')
         self.ortho = anariNewCamera(self.device, 'orthographic')
         self.world = anariNewWorld(self.device)
-        self.current_renderer = current_renderer
-        self.renderer = anariNewRenderer(self.device, get_current_renderer_name())
+        self.current_renderer = "default"
+        self.renderer = anariNewRenderer(self.device, self.current_renderer)
         anariCommitParameters(self.device, self.renderer)
 
         self.default_material = anariNewMaterial(self.device, 'matte')
@@ -634,9 +620,11 @@ class ANARIRenderEngine(bpy.types.RenderEngine):
 
 
     def read_scene(self, depsgraph):
-        global current_renderer
-        if self.current_renderer != current_renderer:
-            self.renderer = anariNewRenderer(self.device, get_current_renderer_name())
+        renderer_params = getattr(depsgraph.scene.anari, self.anari_library_name)
+
+        if self.current_renderer != renderer_params.renderer:
+            self.renderer = anariNewRenderer(self.device, renderer_params.renderer)
+            self.current_renderer = renderer_params.renderer
 
         bg_color = depsgraph.scene.world.color[:]+(1.0,)
         anariSetParameter(self.device, self.renderer, 'background', ANARI_FLOAT32_VEC4, bg_color)
@@ -648,6 +636,8 @@ class ANARIRenderEngine(bpy.types.RenderEngine):
         anariSetParameter(self.device, self.renderer, 'ambientColor', ANARI_FLOAT32_VEC3, aColor)
 
         anariCommitParameters(self.device, self.renderer)
+
+
 
         self.read_meshes(depsgraph)
         self.read_lights(depsgraph)
@@ -913,17 +903,21 @@ def device_to_propertygroup(engine, idname, scenename, device, objtype, subtype)
         selection = self.param_selections[current_renderer]
         col.prop(props, "renderer")
         for paramname, prop in self.panel_props:
+            if paramname == "renderer":
+                continue
             row = col.row()
-            row.enabled = paramname in selection
+            row.enabled = paramname in selection or paramname in self.device_params
             row.prop(props, paramname)
 
     RENDER_PT_anari_device = type('RENDER_PT_%s_panel'%idname, (RenderButtonsPanel, Panel),{
-        'bl_label': "Device",
+        'bl_idname': 'RENDER_PT_%s_panel'%idname,
+        'bl_label': "%s Device Properties"%idname,
         'bl_parent_id' : "RENDER_PT_anari",
         'COMPAT_ENGINES' : {engine},
         'panel_props' : properties,
         'poll' : poll,
         'draw' : draw,
+        'device_params' : names,
         'param_selections' : param_selections,
         'scenename' : copy.copy(scenename)
     })
