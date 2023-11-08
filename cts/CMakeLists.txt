@@ -42,7 +42,7 @@ PUBLIC
 
 target_link_libraries(${PROJECT_NAME} PUBLIC glm::glm helium anari_test_scenes)
 
-find_package(Python3 REQUIRED COMPONENTS Interpreter)
+find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
 
 file(GLOB python_files ${CMAKE_CURRENT_LIST_DIR}/*.py)
 

@@ -1,6 +1,9 @@
 ## Copyright 2021 The Khronos Group
 ## SPDX-License-Identifier: Apache-2.0
 
+option(ANARI_FRONTEND_CATCH_EXCEPTIONS "Have libanari catch all exceptions" ON)
+mark_as_advanced(ANARI_FRONTEND_CATCH_EXCEPTIONS)
+
 project_add_library(
   anari_cpp_linalg_defs.cpp
   anari_cpp_std_defs.cpp
@@ -15,6 +18,10 @@ endif()
 
 if (WIN32)
   project_compile_definitions(PUBLIC -D_USE_MATH_DEFINES)
+endif()
+
+if (ANARI_FRONTEND_CATCH_EXCEPTIONS)
+  project_compile_definitions(PRIVATE -DANARI_FRONTEND_CATCH_EXCEPTIONS)
 endif()
 
 project_include_directories(

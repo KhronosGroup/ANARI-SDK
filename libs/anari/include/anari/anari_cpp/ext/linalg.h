@@ -767,6 +767,11 @@ inline float radians(float degrees)
   return degrees * float(M_PI) / 180.f;
 }
 
+inline float degrees(float radians)
+{
+  return radians * 180.f / float(M_PI);
+}
+
 } // namespace anari
 
 #endif

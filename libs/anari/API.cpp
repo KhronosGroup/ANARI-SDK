@@ -15,6 +15,7 @@
 #include <stdexcept>
 #include <string>
 
+#ifdef ANARI_FRONTEND_CATCH_EXCEPTIONS
 #define ANARI_CATCH_BEGIN try {
 #define ANARI_CATCH_END(a)                                                     \
   }                                                                            \
@@ -33,6 +34,10 @@
     std::terminate();                                                          \
     return a;                                                                  \
   }
+#else
+#define ANARI_CATCH_BEGIN {
+#define ANARI_CATCH_END(a) }
+#endif
 #define ANARI_NORETURN /**/
 #define ANARI_CATCH_END_NORETURN() ANARI_CATCH_END(ANARI_NORETURN)
 
