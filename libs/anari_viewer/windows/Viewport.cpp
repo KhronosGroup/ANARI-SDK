@@ -141,15 +141,17 @@ void Viewport::setWorld(anari::World world, bool resetCameraView)
 
 void Viewport::resetView(bool resetAzEl)
 {
-  anari::math::float3 bounds[2];
+  anari::math::float3 bounds[2] = {{0.f, 0.f, 0.f}, {1.f, 1.f, 1.f}};
 
-  anariGetProperty(m_device,
-      m_world,
-      "bounds",
-      ANARI_FLOAT32_BOX3,
-      &bounds[0],
-      sizeof(bounds),
-      ANARI_WAIT);
+  if (!anariGetProperty(m_device,
+          m_world,
+          "bounds",
+          ANARI_FLOAT32_BOX3,
+          &bounds[0],
+          sizeof(bounds),
+          ANARI_WAIT)) {
+    printf("WARNING: bounds not returned by the device! Using unit cube.\n");
+  }
 
   auto center = 0.5f * (bounds[0] + bounds[1]);
   auto diag = bounds[1] - bounds[0];
@@ -200,7 +202,8 @@ void Viewport::startNewFrame()
 
 void Viewport::updateFrame()
 {
-  anari::setParameter(m_device, m_frame, "size", anari::math::uint2(m_viewportSize));
+  anari::setParameter(
+      m_device, m_frame, "size", anari::math::uint2(m_viewportSize));
   anari::setParameter(
       m_device, m_frame, "channel.color", ANARI_UFIXED8_RGBA_SRGB);
   anari::setParameter(m_device, m_frame, "accumulation", true);
@@ -331,7 +334,8 @@ void Viewport::ui_handleInput()
 
       const anari::math::float2 mouseFrom =
           prev * 2.f / anari::math::float2(m_viewportSize);
-      const anari::math::float2 mouseTo = mouse * 2.f / anari::math::float2(m_viewportSize);
+      const anari::math::float2 mouseTo =
+          mouse * 2.f / anari::math::float2(m_viewportSize);
 
       const anari::math::float2 mouseDelta = mouseTo - mouseFrom;
 
