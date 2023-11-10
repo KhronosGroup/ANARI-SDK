@@ -1,0 +1,21 @@
+{
+    "info" : {
+        "name" : "KHR_FRAME_ACCUMULATION",
+        "type" : "extension",
+        "dependencies" : ["anari_core_1_0"]
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_FRAME",
+            "parameters" : [
+                {
+                    "name" : "accumulation",
+                    "types" : ["ANARI_BOOL"],
+                    "tags" : [],
+                    "description" : "enable device internal buffers for frame accumulation"
+                }
+            ]
+        }
+    ]
+}

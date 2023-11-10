@@ -20,6 +20,7 @@
             "khr_camera_rolling_shutter",
             "khr_camera_stereo",
             "khr_device_synchronization",
+            "khr_frame_accumulation",
             "khr_frame_channel_albedo",
             "khr_frame_channel_instance_id",
             "khr_frame_channel_normal",
