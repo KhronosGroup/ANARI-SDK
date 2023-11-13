@@ -48,8 +48,6 @@ class ANARISceneProperties(bpy.types.PropertyGroup):
 
     accumulation: bpy.props.BoolProperty(name = "accumulation", default = False)
     iterations: bpy.props.IntProperty(name = "iterations", default = 8)
-    ambient_radiance: bpy.props.FloatProperty(name = "ambient intensity", default = 1.0, min = 0.0)
-    ambient_color: bpy.props.FloatVectorProperty(name = "ambient color", default = (1.0, 1.0, 1.0), subtype = 'COLOR')
 
     @classmethod
     def register(cls):
@@ -626,14 +624,18 @@ class ANARIRenderEngine(bpy.types.RenderEngine):
             self.renderer = anariNewRenderer(self.device, renderer_params.renderer)
             self.current_renderer = renderer_params.renderer
 
+        params = self.param_selections[self.current_renderer]
+        print(renderer_params)
+        for p, t in params.items():
+            if hasattr(renderer_params, p):
+                v = getattr(renderer_params, p)
+                print(p, v)
+                if t == ANARI_FLOAT32_VEC3:
+                    v = v[:]
+                anariSetParameter(self.device, self.renderer, p, t, v)
+
         bg_color = depsgraph.scene.world.color[:]+(1.0,)
         anariSetParameter(self.device, self.renderer, 'background', ANARI_FLOAT32_VEC4, bg_color)
-
-        aRadiance = bpy.context.scene.anari.ambient_radiance
-        anariSetParameter(self.device, self.renderer, 'ambientRadiance', ANARI_FLOAT32, aRadiance)
-        aColor = bpy.context.scene.anari.ambient_color
-        aColor = (aColor.r, aColor.g, aColor.b)
-        anariSetParameter(self.device, self.renderer, 'ambientColor', ANARI_FLOAT32_VEC3, aColor)
 
         anariCommitParameters(self.device, self.renderer)
 
@@ -835,6 +837,11 @@ def anari_type_to_property(device, objtype, subtype, paramname, atype):
             return bpy.props.FloatProperty(name = paramname, default = value)
         else:
             return bpy.props.FloatProperty(name = paramname)
+    elif atype == ANARI_FLOAT32_VEC3:
+        if value:
+            return bpy.props.FloatVectorProperty(name = paramname, subtype='COLOR', default = value)
+        else:
+            return bpy.props.FloatVectorProperty(name = paramname, subtype='COLOR')
     elif atype == ANARI_STRING:
         selection = anariGetParameterInfo(device, objtype, subtype, paramname, atype, "value", ANARI_STRING_LIST)
         if selection:
@@ -875,7 +882,7 @@ def device_to_propertygroup(engine, idname, scenename, device, objtype, subtype)
     param_selections = dict()
     for renderer_name in renderers:
         renderer_parameters = anariGetObjectInfo(device, ANARI_RENDERER, renderer_name, "parameter", ANARI_PARAMETER_LIST)
-        param_selections[renderer_name] = [x[0] for x in renderer_parameters]
+        param_selections[renderer_name] = {x[0]:x[1] for x in renderer_parameters}
         for paramname, atype in renderer_parameters:
             if paramname in names:
                 continue
@@ -922,7 +929,7 @@ def device_to_propertygroup(engine, idname, scenename, device, objtype, subtype)
         'scenename' : copy.copy(scenename)
     })
 
-    return (property_group, RENDER_PT_anari_device)
+    return (property_group, RENDER_PT_anari_device, param_selections)
 
 def register():
     # Register the RenderEngine
@@ -960,6 +967,7 @@ def register():
                             bpy.utils.register_class(self.props[1])
                             classes.append(self.props[0])
                             classes.append(self.props[1])
+                            self.param_selections = self.props[2]
 
                 bpy.utils.register_class(ANARIDeviceRenderEngine)
                 classes.append(ANARIDeviceRenderEngine)
