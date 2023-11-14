@@ -13,11 +13,13 @@ namespace helium {
 
 void *BaseDevice::mapArray(ANARIArray a)
 {
+  auto lock = getObjectLock(a);
   return referenceFromHandle<BaseArray>(a).map();
 }
 
 void BaseDevice::unmapArray(ANARIArray a)
 {
+  auto lock = getObjectLock(a);
   referenceFromHandle<BaseArray>(a).unmap();
 }
 
@@ -32,9 +34,11 @@ int BaseDevice::getProperty(ANARIObject object,
 {
   if (!handleIsDevice(object)) {
     if (mask == ANARI_WAIT)
-      flushCommitBuffer();
+      m_state->commitBufferFlush();
+    auto lock = getObjectLock(object);
     return referenceFromHandle(object).getProperty(name, type, mem, mask);
-  }
+  } else
+    return deviceGetProperty(name, type, mem, mask);
 
   return 0;
 }
@@ -44,6 +48,8 @@ int BaseDevice::getProperty(ANARIObject object,
 void BaseDevice::setParameter(
     ANARIObject object, const char *name, ANARIDataType type, const void *mem)
 {
+  auto lock = getObjectLock(object);
+
   if (handleIsDevice(object)) {
     deviceSetParameter(name, type, mem);
     return;
@@ -58,6 +64,8 @@ void BaseDevice::setParameter(
 
 void BaseDevice::unsetParameter(ANARIObject o, const char *name)
 {
+  auto lock = getObjectLock(o);
+
   if (handleIsDevice(o))
     deviceUnsetParameter(name);
   else {
@@ -69,6 +77,8 @@ void BaseDevice::unsetParameter(ANARIObject o, const char *name)
 
 void BaseDevice::unsetAllParameters(ANARIObject o)
 {
+  auto lock = getObjectLock(o);
+
   if (handleIsDevice(o))
     deviceUnsetAllParameters();
   else {
@@ -129,6 +139,8 @@ void *BaseDevice::mapParameterArray3D(ANARIObject o,
 
 void BaseDevice::unmapParameterArray(ANARIObject o, const char *name)
 {
+  auto lock = getObjectLock(o);
+
   auto *obj = (BaseObject *)o;
   auto *array = obj->getParamObject<BaseArray>(name);
   array->unmap();
@@ -136,17 +148,21 @@ void BaseDevice::unmapParameterArray(ANARIObject o, const char *name)
 
 void BaseDevice::commitParameters(ANARIObject o)
 {
-  if (handleIsDevice(o))
+  if (handleIsDevice(o)) {
+    auto lock = scopeLockObject();
     deviceCommitParameters();
-  else
-    m_state->commitBuffer.addObject((BaseObject *)o);
+  } else
+    m_state->commitBufferAddObject((BaseObject *)o);
 }
 
 void BaseDevice::release(ANARIObject o)
 {
   if (o == nullptr)
     return;
-  else if (handleIsDevice(o)) {
+
+  auto lock = getObjectLock(o);
+
+  if (handleIsDevice(o)) {
     if (--m_refCount == 0)
       delete this;
     return;
@@ -176,6 +192,8 @@ void BaseDevice::release(ANARIObject o)
 
 void BaseDevice::retain(ANARIObject o)
 {
+  auto lock = getObjectLock(o);
+
   if (handleIsDevice(o))
     m_refCount++;
   else
@@ -190,11 +208,13 @@ const void *BaseDevice::frameBufferMap(ANARIFrame f,
     uint32_t *h,
     ANARIDataType *pixelType)
 {
+  auto lock = getObjectLock(f);
   return referenceFromHandle<BaseFrame>(f).map(channel, w, h, pixelType);
 }
 
 void BaseDevice::frameBufferUnmap(ANARIFrame f, const char *channel)
 {
+  auto lock = getObjectLock(f);
   return referenceFromHandle<BaseFrame>(f).unmap(channel);
 }
 
@@ -202,16 +222,19 @@ void BaseDevice::frameBufferUnmap(ANARIFrame f, const char *channel)
 
 void BaseDevice::renderFrame(ANARIFrame f)
 {
+  auto lock = getObjectLock(f);
   referenceFromHandle<BaseFrame>(f).renderFrame();
 }
 
 int BaseDevice::frameReady(ANARIFrame f, ANARIWaitMask m)
 {
+  auto lock = getObjectLock(f);
   return referenceFromHandle<BaseFrame>(f).frameReady(m);
 }
 
 void BaseDevice::discardFrame(ANARIFrame f)
 {
+  auto lock = getObjectLock(f);
   referenceFromHandle<BaseFrame>(f).discard();
 }
 
@@ -225,22 +248,18 @@ BaseDevice::BaseDevice(ANARIStatusCallback defaultCallback, const void *userPtr)
 
 BaseDevice::BaseDevice(ANARILibrary l) : DeviceImpl(l) {}
 
-void BaseDevice::flushCommitBuffer()
-{
-  m_state->commitBuffer.flush();
-}
-
-void BaseDevice::clearCommitBuffer()
-{
-  m_state->commitBuffer.clear();
-}
-
 void BaseDevice::deviceCommitParameters()
 {
   m_state->statusCB =
       getParam<ANARIStatusCallback>("statusCallback", defaultStatusCallback());
   m_state->statusCBUserPtr = getParam<const void *>(
       "statusCallbackUserData", defaultStatusCallbackUserPtr());
+}
+
+int BaseDevice::deviceGetProperty(
+    const char *name, ANARIDataType type, void *mem, uint64_t size)
+{
+  return 0;
 }
 
 void BaseDevice::deviceSetParameter(
@@ -257,6 +276,14 @@ void BaseDevice::deviceUnsetParameter(const char *id)
 void BaseDevice::deviceUnsetAllParameters()
 {
   removeAllParams();
+}
+
+std::scoped_lock<std::mutex> BaseDevice::getObjectLock(ANARIObject object)
+{
+  if (handleIsDevice(object))
+    return referenceFromHandle<BaseDevice>(object).scopeLockObject();
+  else
+    return referenceFromHandle(object).scopeLockObject();
 }
 
 } // namespace helium

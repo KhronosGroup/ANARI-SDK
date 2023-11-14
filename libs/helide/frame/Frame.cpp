@@ -153,7 +153,7 @@ void Frame::renderFrame()
 
   auto start = std::chrono::steady_clock::now();
 
-  state->commitBuffer.flush();
+  state->commitBufferFlush();
 
   if (!isValid()) {
     reportMessage(
@@ -163,7 +163,7 @@ void Frame::renderFrame()
     return;
   }
 
-  if (state->commitBuffer.lastFlush() <= m_frameLastRendered) {
+  if (state->commitBufferLastFlush() <= m_frameLastRendered) {
     this->refDec(helium::RefType::INTERNAL);
     return;
   }

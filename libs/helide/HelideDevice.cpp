@@ -61,6 +61,8 @@ void *HelideDevice::mapArray(ANARIArray a)
   return helium::BaseDevice::mapArray(a);
 }
 
+// API Objects ////////////////////////////////////////////////////////////////
+
 ANARIArray1D HelideDevice::newArray1D(const void *appMemory,
     ANARIMemoryDeleter deleter,
     const void *userData,
@@ -124,7 +126,37 @@ ANARIArray3D HelideDevice::newArray3D(const void *appMemory,
   return createObjectForAPI<Array3D, ANARIArray3D>(deviceState(), md);
 }
 
-// Renderable Objects /////////////////////////////////////////////////////////
+ANARICamera HelideDevice::newCamera(const char *subtype)
+{
+  initDevice();
+  return getHandleForAPI<ANARICamera>(
+      Camera::createInstance(subtype, deviceState()));
+}
+
+ANARIFrame HelideDevice::newFrame()
+{
+  initDevice();
+  return createObjectForAPI<Frame, ANARIFrame>(deviceState());
+}
+
+ANARIGeometry HelideDevice::newGeometry(const char *subtype)
+{
+  initDevice();
+  return getHandleForAPI<ANARIGeometry>(
+      Geometry::createInstance(subtype, deviceState()));
+}
+
+ANARIGroup HelideDevice::newGroup()
+{
+  initDevice();
+  return createObjectForAPI<Group, ANARIGroup>(deviceState());
+}
+
+ANARIInstance HelideDevice::newInstance(const char * /*subtype*/)
+{
+  initDevice();
+  return createObjectForAPI<Instance, ANARIInstance>(deviceState());
+}
 
 ANARILight HelideDevice::newLight(const char *subtype)
 {
@@ -133,18 +165,25 @@ ANARILight HelideDevice::newLight(const char *subtype)
       Light::createInstance(subtype, deviceState()));
 }
 
-ANARICamera HelideDevice::newCamera(const char *subtype)
+ANARIMaterial HelideDevice::newMaterial(const char *subtype)
 {
   initDevice();
-  return getHandleForAPI<ANARICamera>(
-      Camera::createInstance(subtype, deviceState()));
+  return getHandleForAPI<ANARIMaterial>(
+      Material::createInstance(subtype, deviceState()));
 }
 
-ANARIGeometry HelideDevice::newGeometry(const char *subtype)
+ANARIRenderer HelideDevice::newRenderer(const char *subtype)
 {
   initDevice();
-  return getHandleForAPI<ANARIGeometry>(
-      Geometry::createInstance(subtype, deviceState()));
+  return getHandleForAPI<ANARIRenderer>(
+      Renderer::createInstance(subtype, deviceState()));
+}
+
+ANARISampler HelideDevice::newSampler(const char *subtype)
+{
+  initDevice();
+  return getHandleForAPI<ANARISampler>(
+      Sampler::createInstance(subtype, deviceState()));
 }
 
 ANARISpatialField HelideDevice::newSpatialField(const char *subtype)
@@ -166,38 +205,6 @@ ANARIVolume HelideDevice::newVolume(const char *subtype)
   return getHandleForAPI<ANARIVolume>(
       Volume::createInstance(subtype, deviceState()));
 }
-
-// Surface Meta-Data //////////////////////////////////////////////////////////
-
-ANARIMaterial HelideDevice::newMaterial(const char *subtype)
-{
-  initDevice();
-  return getHandleForAPI<ANARIMaterial>(
-      Material::createInstance(subtype, deviceState()));
-}
-
-ANARISampler HelideDevice::newSampler(const char *subtype)
-{
-  initDevice();
-  return getHandleForAPI<ANARISampler>(
-      Sampler::createInstance(subtype, deviceState()));
-}
-
-// Instancing /////////////////////////////////////////////////////////////////
-
-ANARIGroup HelideDevice::newGroup()
-{
-  initDevice();
-  return createObjectForAPI<Group, ANARIGroup>(deviceState());
-}
-
-ANARIInstance HelideDevice::newInstance(const char * /*subtype*/)
-{
-  initDevice();
-  return createObjectForAPI<Instance, ANARIInstance>(deviceState());
-}
-
-// Top-level Worlds ///////////////////////////////////////////////////////////
 
 ANARIWorld HelideDevice::newWorld()
 {
@@ -245,42 +252,12 @@ int HelideDevice::getProperty(ANARIObject object,
     uint64_t size,
     uint32_t mask)
 {
-  if (handleIsDevice(object)) {
-    std::string_view prop = name;
-    if (prop == "extension" && type == ANARI_STRING_LIST) {
-      helium::writeToVoidP(mem, query_extensions());
-      return 1;
-    } else if (prop == "helide" && type == ANARI_BOOL) {
-      helium::writeToVoidP(mem, true);
-      return 1;
-    }
-  } else {
-    if (mask == ANARI_WAIT) {
-      deviceState()->waitOnCurrentFrame();
-      flushCommitBuffer();
-    }
-    return helium::referenceFromHandle(object).getProperty(
-        name, type, mem, mask);
+  if (mask == ANARI_WAIT) {
+    auto lock = scopeLockObject();
+    deviceState()->waitOnCurrentFrame();
   }
 
-  return 0;
-}
-
-// Frame Manipulation /////////////////////////////////////////////////////////
-
-ANARIFrame HelideDevice::newFrame()
-{
-  initDevice();
-  return createObjectForAPI<Frame, ANARIFrame>(deviceState());
-}
-
-// Frame Rendering ////////////////////////////////////////////////////////////
-
-ANARIRenderer HelideDevice::newRenderer(const char *subtype)
-{
-  initDevice();
-  return getHandleForAPI<ANARIRenderer>(
-      Renderer::createInstance(subtype, deviceState()));
+  return helium::BaseDevice::getProperty(object, name, type, mem, size, mask);
 }
 
 // Other HelideDevice definitions /////////////////////////////////////////////
@@ -302,7 +279,7 @@ HelideDevice::~HelideDevice()
 {
   auto &state = *deviceState();
 
-  state.commitBuffer.clear();
+  state.commitBufferClear();
 
   reportMessage(ANARI_SEVERITY_DEBUG, "destroying helide device (%p)", this);
 
@@ -315,11 +292,12 @@ HelideDevice::~HelideDevice()
   //       really add substantial code complexity, so they are provided out of
   //       convenience.
 
-  auto reportLeaks = [&](size_t &count, const char *handleType) {
-    if (count != 0) {
+  auto reportLeaks = [&](auto &count, const char *handleType) {
+    auto c = count.load();
+    if (c != 0) {
       reportMessage(ANARI_SEVERITY_WARNING,
           "detected %zu leaked %s objects",
-          count,
+          c,
           handleType);
     }
   };
@@ -338,10 +316,10 @@ HelideDevice::~HelideDevice()
   reportLeaks(state.objectCounts.spatialFields, "ANARISpatialField");
   reportLeaks(state.objectCounts.arrays, "ANARIArray");
 
-  if (state.objectCounts.unknown != 0) {
+  if (state.objectCounts.unknown.load() != 0) {
     reportMessage(ANARI_SEVERITY_WARNING,
         "detected %zu leaked ANARIObject objects created by unknown subtypes",
-        state.objectCounts.unknown);
+        state.objectCounts.unknown.load());
   }
 }
 
@@ -389,6 +367,20 @@ void HelideDevice::deviceCommitParameters()
     state.objectUpdates.lastBLSReconstructSceneRequest = helium::newTimeStamp();
 
   helium::BaseDevice::deviceCommitParameters();
+}
+
+int HelideDevice::deviceGetProperty(
+    const char *name, ANARIDataType type, void *mem, uint64_t size)
+{
+  std::string_view prop = name;
+  if (prop == "extension" && type == ANARI_STRING_LIST) {
+    helium::writeToVoidP(mem, query_extensions());
+    return 1;
+  } else if (prop == "helide" && type == ANARI_BOOL) {
+    helium::writeToVoidP(mem, true);
+    return 1;
+  }
+  return 0;
 }
 
 HelideGlobalState *HelideDevice::deviceState() const

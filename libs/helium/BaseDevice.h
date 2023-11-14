@@ -4,6 +4,7 @@
 #pragma once
 
 #include "BaseGlobalDeviceState.h"
+#include "LockableObject.h"
 #include "utility/IntrusivePtr.h"
 #include "utility/ParameterizedObject.h"
 // anari
@@ -11,7 +12,9 @@
 
 namespace helium {
 
-struct BaseDevice : public anari::DeviceImpl, public ParameterizedObject
+struct BaseDevice : public anari::DeviceImpl,
+                    ParameterizedObject,
+                    LockableObject
 {
   // Data Arrays //////////////////////////////////////////////////////////////
 
@@ -35,26 +38,25 @@ struct BaseDevice : public anari::DeviceImpl, public ParameterizedObject
   void unsetParameter(ANARIObject o, const char *name) override;
   void unsetAllParameters(ANARIObject o) override;
 
-  void* mapParameterArray1D(ANARIObject o,
-      const char* name,
+  void *mapParameterArray1D(ANARIObject o,
+      const char *name,
       ANARIDataType dataType,
       uint64_t numElements1,
       uint64_t *elementStride) override;
-  void* mapParameterArray2D(ANARIObject o,
-      const char* name,
+  void *mapParameterArray2D(ANARIObject o,
+      const char *name,
       ANARIDataType dataType,
       uint64_t numElements1,
       uint64_t numElements2,
       uint64_t *elementStride) override;
-  void* mapParameterArray3D(ANARIObject o,
-      const char* name,
+  void *mapParameterArray3D(ANARIObject o,
+      const char *name,
       ANARIDataType dataType,
       uint64_t numElements1,
       uint64_t numElements2,
       uint64_t numElements3,
       uint64_t *elementStride) override;
-  void unmapParameterArray(ANARIObject o,
-      const char* name) override;
+  void unmapParameterArray(ANARIObject o, const char *name) override;
 
   void commitParameters(ANARIObject o) override;
 
@@ -90,14 +92,16 @@ struct BaseDevice : public anari::DeviceImpl, public ParameterizedObject
   void reportMessage(
       ANARIStatusSeverity, const char *fmt, Args &&...args) const;
 
-  void flushCommitBuffer();
-  void clearCommitBuffer();
-
   virtual void deviceCommitParameters();
+  virtual int deviceGetProperty(
+      const char *name, ANARIDataType type, void *mem, uint64_t size);
 
   std::unique_ptr<BaseGlobalDeviceState> m_state;
 
  private:
+  std::scoped_lock<std::mutex> getObjectLock(ANARIObject object);
+
+  void deviceGetProperty(const char *id, ANARIDataType type, const void *mem);
   void deviceSetParameter(const char *id, ANARIDataType type, const void *mem);
   void deviceUnsetParameter(const char *id);
   void deviceUnsetAllParameters();
