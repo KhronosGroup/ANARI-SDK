@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "LockableObject.h"
 #include "utility/TimeStamp.h"
 // anari_cpp
 #include <anari/anari_cpp.hpp>
@@ -15,7 +16,7 @@
 
 namespace helium {
 
-struct BaseObject : public RefCounted, ParameterizedObject
+struct BaseObject : public RefCounted, ParameterizedObject, LockableObject
 {
   // Construct
   BaseObject(ANARIDataType type, BaseGlobalDeviceState *state);

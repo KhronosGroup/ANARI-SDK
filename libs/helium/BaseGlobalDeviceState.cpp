@@ -23,4 +23,28 @@ BaseGlobalDeviceState::BaseGlobalDeviceState(ANARIDevice d)
   };
 }
 
+void BaseGlobalDeviceState::commitBufferAddObject(BaseObject *o)
+{
+  std::lock_guard<std::mutex> guard(m_mutex);
+  m_commitBuffer.addObject(o);
+}
+
+void BaseGlobalDeviceState::commitBufferFlush()
+{
+  std::lock_guard<std::mutex> guard(m_mutex);
+  m_commitBuffer.flush();
+}
+
+void BaseGlobalDeviceState::commitBufferClear()
+{
+  std::lock_guard<std::mutex> guard(m_mutex);
+  m_commitBuffer.clear();
+}
+
+TimeStamp BaseGlobalDeviceState::commitBufferLastFlush() const
+{
+  std::lock_guard<std::mutex> guard(m_mutex);
+  return m_commitBuffer.lastFlush();
+}
+
 } // namespace helium
