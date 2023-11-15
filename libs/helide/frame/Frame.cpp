@@ -150,28 +150,28 @@ void Frame::renderFrame()
 
   auto *state = deviceState();
   state->waitOnCurrentFrame();
-
-  auto start = std::chrono::steady_clock::now();
-
-  state->commitBufferFlush();
-
-  if (!isValid()) {
-    reportMessage(
-        ANARI_SEVERITY_ERROR, "skipping render of incomplete frame object");
-    std::fill(m_pixelBuffer.begin(), m_pixelBuffer.end(), 0);
-    this->refDec(helium::RefType::INTERNAL);
-    return;
-  }
-
-  if (state->commitBufferLastFlush() <= m_frameLastRendered) {
-    this->refDec(helium::RefType::INTERNAL);
-    return;
-  }
-
-  m_frameLastRendered = helium::newTimeStamp();
   state->currentFrame = this;
 
-  m_future = async<void>([&, state, start]() {
+  m_future = async<void>([&, state]() {
+    auto start = std::chrono::steady_clock::now();
+    state->renderingSemaphore.frameStart();
+    state->commitBufferFlush();
+
+    if (!isValid()) {
+      reportMessage(
+          ANARI_SEVERITY_ERROR, "skipping render of incomplete frame object");
+      std::fill(m_pixelBuffer.begin(), m_pixelBuffer.end(), 0);
+      state->renderingSemaphore.frameEnd();
+      return;
+    }
+
+    if (state->commitBufferLastFlush() <= m_frameLastRendered) {
+      state->renderingSemaphore.frameEnd();
+      return;
+    }
+
+    m_frameLastRendered = helium::newTimeStamp();
+
     m_world->embreeSceneUpdate();
 
     const auto &size = m_frameData.size;
@@ -185,6 +185,8 @@ void Frame::renderFrame()
         writeSample(x, y, m_renderer->renderSample(screen, ray, *m_world));
       });
     });
+
+    state->renderingSemaphore.frameEnd();
 
     auto end = std::chrono::steady_clock::now();
     m_duration = std::chrono::duration<float>(end - start).count();

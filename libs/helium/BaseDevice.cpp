@@ -143,7 +143,7 @@ void BaseDevice::unmapParameterArray(ANARIObject o, const char *name)
 
   auto *obj = (BaseObject *)o;
   auto *array = obj->getParamObject<BaseArray>(name);
-  array->unmap();
+  unmapArray((ANARIArray)array);
 }
 
 void BaseDevice::commitParameters(ANARIObject o)

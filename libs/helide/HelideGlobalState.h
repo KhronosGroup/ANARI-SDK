@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "RenderingSemaphore.h"
 #include "helide_math.h"
 // helium
 #include "helium/BaseGlobalDeviceState.h"
@@ -10,6 +11,7 @@
 #include "embree3/rtcore.h"
 // std
 #include <atomic>
+#include <mutex>
 
 namespace helide {
 
@@ -44,6 +46,7 @@ struct HelideGlobalState : public helium::BaseGlobalDeviceState
     helium::TimeStamp lastTLSReconstructSceneRequest{0};
   } objectUpdates;
 
+  RenderingSemaphore renderingSemaphore;
   Frame *currentFrame{nullptr};
 
   RTCDevice embreeDevice{nullptr};
