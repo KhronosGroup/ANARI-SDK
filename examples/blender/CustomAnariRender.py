@@ -91,10 +91,6 @@ class RENDER_PT_anari(RenderButtonsPanel, Panel):
         col.enabled = context.scene.anari.accumulation
         col.prop(context.scene.anari, 'iterations')
 
-        col = layout.column()
-        col.prop(context.scene.anari, 'ambient_radiance')
-        col.prop(context.scene.anari, 'ambient_color')
-
 
 
 class ANARIRenderEngine(bpy.types.RenderEngine):
@@ -629,7 +625,6 @@ class ANARIRenderEngine(bpy.types.RenderEngine):
         for p, t in params.items():
             if hasattr(renderer_params, p):
                 v = getattr(renderer_params, p)
-                print(p, v)
                 if t == ANARI_FLOAT32_VEC3:
                     v = v[:]
                 anariSetParameter(self.device, self.renderer, p, t, v)
@@ -892,7 +887,26 @@ def device_to_propertygroup(engine, idname, scenename, device, objtype, subtype)
             if prop:
                 properties.append((paramname, prop))
 
-    property_group = dataclasses.make_dataclass(idname+'_properties', properties, bases=(bpy.types.PropertyGroup,))
+    @classmethod
+    def register(cls):
+        setattr(ANARISceneProperties, scenename, bpy.props.PointerProperty(
+            name="ANARI %s Scene Settings"%scenename,
+            description="ANARI %s scene settings"%scenename,
+            type=cls,
+        ))
+
+    @classmethod
+    def unregister(cls):
+        delattr(ANARISceneProperties, scenename)
+
+    property_group = dataclasses.make_dataclass(
+        idname+'_properties',
+        properties,
+        bases=(bpy.types.PropertyGroup,),
+        namespace={
+            'register':register,
+            'unregister':unregister,
+        })
 
 
     @classmethod
@@ -955,19 +969,14 @@ def register():
                     def __init__(self):
                         super().__init__()
 
-                        if not hasattr(ANARISceneProperties, self.anari_library_name):
-                            self.props = device_to_propertygroup(self.bl_idname, idname, self.anari_library_name, self.device, ANARI_DEVICE, 'default')
+                        self.props = device_to_propertygroup(self.bl_idname, idname, self.anari_library_name, self.device, ANARI_DEVICE, 'default')
+                        self.param_selections = self.props[2]
 
+                        if not hasattr(ANARISceneProperties, self.anari_library_name):
                             bpy.utils.register_class(self.props[0])
-                            setattr(ANARISceneProperties, self.anari_library_name, bpy.props.PointerProperty(
-                                name="ANARI Scene Settings",
-                                description="ANARI scene settings",
-                                type=self.props[0],
-                            ))
                             bpy.utils.register_class(self.props[1])
                             classes.append(self.props[0])
                             classes.append(self.props[1])
-                            self.param_selections = self.props[2]
 
                 bpy.utils.register_class(ANARIDeviceRenderEngine)
                 classes.append(ANARIDeviceRenderEngine)
