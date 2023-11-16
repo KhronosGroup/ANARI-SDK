@@ -47,3 +47,4 @@ elseif(anari_FIND_REQUIRED_viewer)
 endif()
 
 check_required_components(@PROJECT_NAME@)
+set(ANARI_FOUND TRUE)
