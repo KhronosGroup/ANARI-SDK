@@ -125,7 +125,6 @@ class ANARIRenderEngine(bpy.types.RenderEngine):
         features = anariGetDeviceExtensions(self.library, "default")
 
         rendererParameters = anariGetObjectInfo(self.device, ANARI_RENDERER, "default", "parameter", ANARI_PARAMETER_LIST)
-        print(rendererParameters)
 
         if bpy.context.scene.anari.debug:
             nested = self.device
@@ -621,7 +620,7 @@ class ANARIRenderEngine(bpy.types.RenderEngine):
             self.current_renderer = renderer_params.renderer
 
         params = self.param_selections[self.current_renderer]
-        print(renderer_params)
+
         for p, t in params.items():
             if hasattr(renderer_params, p):
                 v = getattr(renderer_params, p)
@@ -968,8 +967,7 @@ def register():
 
                     def __init__(self):
                         super().__init__()
-
-                        self.props = device_to_propertygroup(self.bl_idname, idname, self.anari_library_name, self.device, ANARI_DEVICE, 'default')
+                        self.props = device_to_propertygroup(self.bl_idname, self.bl_idname, self.anari_library_name, self.device, ANARI_DEVICE, 'default')
                         self.param_selections = self.props[2]
 
                         if not hasattr(ANARISceneProperties, self.anari_library_name):
