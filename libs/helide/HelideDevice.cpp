@@ -57,8 +57,14 @@ inline HANDLE_T createObjectForAPI(HelideGlobalState *s, Args &&...args)
 
 void *HelideDevice::mapArray(ANARIArray a)
 {
-  deviceState()->waitOnCurrentFrame();
+  deviceState()->renderingSemaphore.arrayMapAcquire();
   return helium::BaseDevice::mapArray(a);
+}
+
+void HelideDevice::unmapArray(ANARIArray a)
+{
+  helium::BaseDevice::unmapArray(a);
+  deviceState()->renderingSemaphore.arrayMapRelease();
 }
 
 // API Objects ////////////////////////////////////////////////////////////////
