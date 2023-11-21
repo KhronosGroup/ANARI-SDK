@@ -28,11 +28,8 @@ bool World::getProperty(
     const std::string_view &name, ANARIDataType type, void *ptr, uint32_t flags)
 {
   if (name == "bounds" && type == ANARI_FLOAT32_BOX3) {
-    if (flags & ANARI_WAIT) {
-      deviceState()->waitOnCurrentFrame();
-      deviceState()->commitBufferFlush();
+    if (flags & ANARI_WAIT)
       embreeSceneUpdate();
-    }
     auto bounds = getEmbreeSceneBounds(m_embreeScene);
     for (auto *i : instances()) {
       for (auto *v : i->group()->volumes()) {

@@ -135,8 +135,6 @@ bool Frame::getProperty(
     const std::string_view &name, ANARIDataType type, void *ptr, uint32_t flags)
 {
   if (type == ANARI_FLOAT32 && name == "duration") {
-    if (flags & ANARI_WAIT)
-      wait();
     helium::writeToVoidP(ptr, m_duration);
     return true;
   }

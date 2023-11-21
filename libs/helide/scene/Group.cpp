@@ -23,8 +23,6 @@ bool Group::getProperty(
 {
   if (name == "bounds" && type == ANARI_FLOAT32_BOX3) {
     if (flags & ANARI_WAIT) {
-      deviceState()->waitOnCurrentFrame();
-      deviceState()->commitBufferFlush();
       embreeSceneConstruct();
       embreeSceneCommit();
     }
