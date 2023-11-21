@@ -14,6 +14,9 @@ from bpy.types import Panel
 import numpy as np
 from anari import *
 
+# the plugin will attempt to use these anari library names
+librarynames = ['helide', 'visrtx', 'visgl']
+
 bl_info = {
     "name": "Custom ANARI renderer",
     "blender": (3, 5, 0),
@@ -96,8 +99,6 @@ class RENDER_PT_anari(RenderButtonsPanel, Panel):
 class ANARIRenderEngine(bpy.types.RenderEngine):
     # These three members are used by blender to set up the
     # RenderEngine; define its internal name, visible name and capabilities.
-#    bl_idname = "ANARI"
-#    bl_label = "Anari"
     bl_use_preview = True
     bl_use_shading_nodes_custom=False
 
@@ -846,8 +847,6 @@ def get_panels():
 
     return panels
 
-
-librarynames = ['helide', 'visrtx', 'visgl']
 
 classes = [
     ANARISceneProperties,
