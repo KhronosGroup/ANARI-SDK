@@ -155,6 +155,7 @@ class ANARIRenderEngine(bpy.types.RenderEngine):
         self.arrays = dict()
         self.images = dict()
         self.samplers = dict()
+        self.materials = dict()
 
         self.scene_instances = []
 
@@ -300,6 +301,7 @@ class ANARIRenderEngine(bpy.types.RenderEngine):
             result = (mesh, material, surface, group, instance)
             self.meshes[name] = result
             return result
+
 
     def get_light(self, name, subtype):
         if name in self.lights and self.lights[name][1] == subtype:
@@ -489,10 +491,43 @@ class ANARIRenderEngine(bpy.types.RenderEngine):
         if shader.type == 'BSDF_PRINCIPLED':
             material = anariNewMaterial(self.device, 'physicallyBased')
             self.parse_source_node(material, 'baseColor', ANARI_FLOAT32_VEC3, shader.inputs['Base Color'])
+            self.parse_source_node(material, 'normal', ANARI_FLOAT32_VEC3, shader.inputs['Normal'])
             anariSetParameter(self.device, material, "alphaMode", ANARI_STRING, "blend")
             self.parse_source_node(material, 'opacity', ANARI_FLOAT32, shader.inputs['Alpha'])
             self.parse_source_node(material, 'metallic', ANARI_FLOAT32, shader.inputs['Metallic'])
             self.parse_source_node(material, 'roughness', ANARI_FLOAT32, shader.inputs['Roughness'])
+            self.parse_source_node(material, 'emissive', ANARI_FLOAT32_VEC3, shader.inputs['Emission'])
+            self.parse_source_node(material, 'specular', ANARI_FLOAT32, shader.inputs['Specular'])
+            self.parse_source_node(material, 'specularColor', ANARI_FLOAT32, shader.inputs['Specular Tint'])
+            self.parse_source_node(material, 'clearcoat', ANARI_FLOAT32, shader.inputs['Clearcoat'])
+            self.parse_source_node(material, 'clearcoatRoughness', ANARI_FLOAT32, shader.inputs['Clearcoat Roughness'])
+            self.parse_source_node(material, 'clearcoatNormal', ANARI_FLOAT32_VEC3, shader.inputs['Clearcoat Normal'])
+            self.parse_source_node(material, 'sheenColor', ANARI_FLOAT32, shader.inputs['Sheen Tint'])
+            self.parse_source_node(material, 'sheenRoughness', ANARI_FLOAT32, shader.inputs['Sheen'])
+            self.parse_source_node(material, 'ior', ANARI_FLOAT32, shader.inputs['IOR'])
+            anariCommitParameters(self.device, material)
+            return material
+        elif shader.type == 'BSDF_DIFFUSE':
+            material = anariNewMaterial(self.device, 'physicallyBased')
+            self.parse_source_node(material, 'baseColor', ANARI_FLOAT32_VEC3, shader.inputs['Color'])
+            self.parse_source_node(material, 'normal', ANARI_FLOAT32_VEC3, shader.inputs['Normal'])
+            self.parse_source_node(material, 'roughness', ANARI_FLOAT32, shader.inputs['Roughness'])
+            anariCommitParameters(self.device, material)
+            return material
+        elif shader.type == 'BSDF_SPECULAR':
+            material = anariNewMaterial(self.device, 'physicallyBased')
+            self.parse_source_node(material, 'baseColor', ANARI_FLOAT32_VEC3, shader.inputs['Base Color'])
+            self.parse_source_node(material, 'normal', ANARI_FLOAT32_VEC3, shader.inputs['Normal'])
+            anariSetParameter(self.device, material, "alphaMode", ANARI_STRING, "blend")
+            self.parse_source_node(material, 'occlusion', ANARI_FLOAT32, shader.inputs['Ambient Occlusion'])
+            self.parse_source_node(material, 'opacity', ANARI_FLOAT32, shader.inputs['Transparency'])
+            self.parse_source_node(material, 'roughness', ANARI_FLOAT32, shader.inputs['Roughness'])
+
+            self.parse_source_node(material, 'emissive', ANARI_FLOAT32_VEC3, shader.inputs['Emissive Color'])
+            self.parse_source_node(material, 'specular', ANARI_FLOAT32_VEC3, shader.inputs['Specular'])
+            self.parse_source_node(material, 'clearcoat', ANARI_FLOAT32, shader.inputs['Clear Coat'])
+            self.parse_source_node(material, 'clearcoatRoughness', ANARI_FLOAT32, shader.inputs['Clear Coat Roughness'])
+            self.parse_source_node(material, 'clearcoatNormal', ANARI_FLOAT32_VEC3, shader.inputs['Clear Coat Normal'])
             anariCommitParameters(self.device, material)
             return material
         else:
@@ -507,29 +542,35 @@ class ANARIRenderEngine(bpy.types.RenderEngine):
 
             if isinstance(obj, bpy.types.Scene):
                 continue
-            elif obj.type in {'MESH', 'CURVE', 'SURFACE', 'FONT', 'META'}:
+            elif isinstance(obj, bpy.types.Material):
+                meshname = self.materials[name]
+                (mesh, material, surface, group, instance) = self.meshes[meshname]
+                material = self.parse_material(obj)
+                anariSetParameter(self.device, surface, 'material', ANARI_MATERIAL, material)
+                anariCommitParameters(self.device, surface)
+                self.meshes[name] = (mesh, material, surface, group, instance)
+            elif hasattr(obj, 'type') and obj.type in {'MESH', 'CURVE', 'SURFACE', 'FONT', 'META'}:
                 objmesh = obj.to_mesh()
-            else:
-                continue
+                is_new = name not in self.meshes
 
-            is_new = name not in self.meshes
+                (mesh, material, surface, group, instance) = self.get_mesh(name)
 
-            (mesh, material, surface, group, instance) = self.get_mesh(name)
+                if is_new or update.is_updated_geometry:
+                    self.mesh_to_geometry(objmesh, name, mesh)
 
-            if is_new or update.is_updated_geometry:
-                self.mesh_to_geometry(objmesh, name, mesh)
+                if is_new or update.is_updated_shading:
+                    if obj.material_slots:
+                        material = self.parse_material(obj.material_slots[0].material)
+                        anariSetParameter(self.device, surface, 'material', ANARI_MATERIAL, material)
+                        anariCommitParameters(self.device, surface)
+                        self.meshes[name] = (mesh, material, surface, group, instance)
 
-            if is_new or update.is_updated_shading:
-                if obj.material_slots:
-                    material = self.parse_material(obj.material_slots[0].material)
-                    anariSetParameter(self.device, surface, 'material', ANARI_MATERIAL, material)
-                    anariCommitParameters(self.device, surface)
-                    self.meshes[name] = (mesh, material, surface, group, instance)
-            
-            if is_new or update.is_updated_transform:
-                transform = [x for v in obj.matrix_world.transposed() for x in v]
-                anariSetParameter(self.device, instance, 'transform', ANARI_FLOAT32_MAT4, transform)
-                anariCommitParameters(self.device, instance)
+                if is_new or update.is_updated_transform:
+                    transform = [x for v in obj.matrix_world.transposed() for x in v]
+                    anariSetParameter(self.device, instance, 'transform', ANARI_FLOAT32_MAT4, transform)
+                    anariCommitParameters(self.device, instance)
+
+
 
         self.bounds_min = np.array([1.e20, 1.e20, 1.e20])
         self.bounds_max = np.array([-1.e20, -1.e20, -1.e20])
@@ -549,9 +590,11 @@ class ANARIRenderEngine(bpy.types.RenderEngine):
                 self.mesh_to_geometry(objmesh, name, mesh)
 
                 if obj.material_slots:
-                    material = self.parse_material(obj.material_slots[0].material)
+                    objmaterial = obj.material_slots[0].material
+                    material = self.parse_material(objmaterial)
                     anariSetParameter(self.device, surface, 'material', ANARI_MATERIAL, material)
                     anariCommitParameters(self.device, surface)
+                    self.materials[objmaterial.name] = name
                     self.meshes[name] = (mesh, material, surface, group, instance)
             
                 transform = [x for v in obj.matrix_world.transposed() for x in v]
