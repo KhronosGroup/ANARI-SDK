@@ -21,6 +21,6 @@ search path for it to find the actual anari library and devices.
 
 ## Limitations
 * Supports only objects that can be converted to meshes
-* Only basic materials (no complex graphs) using either the Principled, Diffuse or Specular shaders
+* Only supports part of the principled material shader
 * Only supports directional (Sun) and Point lights
 * The renderings are subject to limitations of the anari backends

@@ -497,38 +497,19 @@ class ANARIRenderEngine(bpy.types.RenderEngine):
             self.parse_source_node(material, 'opacity', ANARI_FLOAT32, shader.inputs['Alpha'])
             self.parse_source_node(material, 'metallic', ANARI_FLOAT32, shader.inputs['Metallic'])
             self.parse_source_node(material, 'roughness', ANARI_FLOAT32, shader.inputs['Roughness'])
-            self.parse_source_node(material, 'emissive', ANARI_FLOAT32_VEC3, shader.inputs['Emission'])
-            self.parse_source_node(material, 'specular', ANARI_FLOAT32, shader.inputs['Specular'])
-            self.parse_source_node(material, 'specularColor', ANARI_FLOAT32, shader.inputs['Specular Tint'])
-            self.parse_source_node(material, 'clearcoat', ANARI_FLOAT32, shader.inputs['Clearcoat'])
-            self.parse_source_node(material, 'clearcoatRoughness', ANARI_FLOAT32, shader.inputs['Clearcoat Roughness'])
-            self.parse_source_node(material, 'clearcoatNormal', ANARI_FLOAT32_VEC3, shader.inputs['Clearcoat Normal'])
-            self.parse_source_node(material, 'sheenColor', ANARI_FLOAT32, shader.inputs['Sheen Tint'])
-            self.parse_source_node(material, 'sheenRoughness', ANARI_FLOAT32, shader.inputs['Sheen'])
-            self.parse_source_node(material, 'ior', ANARI_FLOAT32, shader.inputs['IOR'])
-            anariCommitParameters(self.device, material)
-            return material
-        elif shader.type == 'BSDF_DIFFUSE':
-            material = anariNewMaterial(self.device, 'physicallyBased')
-            self.parse_source_node(material, 'baseColor', ANARI_FLOAT32_VEC3, shader.inputs['Color'])
-            self.parse_source_node(material, 'normal', ANARI_FLOAT32_VEC3, shader.inputs['Normal'])
-            self.parse_source_node(material, 'roughness', ANARI_FLOAT32, shader.inputs['Roughness'])
-            anariCommitParameters(self.device, material)
-            return material
-        elif shader.type == 'BSDF_SPECULAR':
-            material = anariNewMaterial(self.device, 'physicallyBased')
-            self.parse_source_node(material, 'baseColor', ANARI_FLOAT32_VEC3, shader.inputs['Base Color'])
-            self.parse_source_node(material, 'normal', ANARI_FLOAT32_VEC3, shader.inputs['Normal'])
-            anariSetParameter(self.device, material, "alphaMode", ANARI_STRING, "blend")
-            self.parse_source_node(material, 'occlusion', ANARI_FLOAT32, shader.inputs['Ambient Occlusion'])
-            self.parse_source_node(material, 'opacity', ANARI_FLOAT32, shader.inputs['Transparency'])
-            self.parse_source_node(material, 'roughness', ANARI_FLOAT32, shader.inputs['Roughness'])
+            if bpy.app.version < (4,0,0):
+                self.parse_source_node(material, 'emissive', ANARI_FLOAT32_VEC3, shader.inputs['Emission'])
+                self.parse_source_node(material, 'clearcoat', ANARI_FLOAT32, shader.inputs['Clearcoat'])
+                self.parse_source_node(material, 'clearcoatRoughness', ANARI_FLOAT32, shader.inputs['Clearcoat Roughness'])
+                self.parse_source_node(material, 'clearcoatNormal', ANARI_FLOAT32_VEC3, shader.inputs['Clearcoat Normal'])
+            else:
+                self.parse_source_node(material, 'emissive', ANARI_FLOAT32_VEC3, shader.inputs['Emission Color'])
+                self.parse_source_node(material, 'sheenRoughness', ANARI_FLOAT32, shader.inputs['Sheen Roughness'])
+                self.parse_source_node(material, 'clearcoat', ANARI_FLOAT32, shader.inputs['Coat Weight'])
+                self.parse_source_node(material, 'clearcoatRoughness', ANARI_FLOAT32, shader.inputs['Coat Roughness'])
+                self.parse_source_node(material, 'clearcoatNormal', ANARI_FLOAT32_VEC3, shader.inputs['Coat Normal'])
 
-            self.parse_source_node(material, 'emissive', ANARI_FLOAT32_VEC3, shader.inputs['Emissive Color'])
-            self.parse_source_node(material, 'specular', ANARI_FLOAT32_VEC3, shader.inputs['Specular'])
-            self.parse_source_node(material, 'clearcoat', ANARI_FLOAT32, shader.inputs['Clear Coat'])
-            self.parse_source_node(material, 'clearcoatRoughness', ANARI_FLOAT32, shader.inputs['Clear Coat Roughness'])
-            self.parse_source_node(material, 'clearcoatNormal', ANARI_FLOAT32_VEC3, shader.inputs['Clear Coat Normal'])
+            self.parse_source_node(material, 'ior', ANARI_FLOAT32, shader.inputs['IOR'])
             anariCommitParameters(self.device, material)
             return material
         else:
