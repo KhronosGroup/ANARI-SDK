@@ -92,7 +92,7 @@ Viewport::~Viewport()
 void Viewport::buildUI()
 {
   ImVec2 _viewportSize = ImGui::GetContentRegionAvail();
-  anari::int2 viewportSize(_viewportSize.x, _viewportSize.y);
+  anari::math::int2 viewportSize(_viewportSize.x, _viewportSize.y);
 
   if (m_viewportSize != viewportSize)
     reshape(viewportSize);
@@ -141,20 +141,22 @@ void Viewport::setWorld(anari::World world, bool resetCameraView)
 
 void Viewport::resetView(bool resetAzEl)
 {
-  anari::float3 bounds[2];
+  anari::math::float3 bounds[2] = {{0.f, 0.f, 0.f}, {1.f, 1.f, 1.f}};
 
-  anariGetProperty(m_device,
-      m_world,
-      "bounds",
-      ANARI_FLOAT32_BOX3,
-      &bounds[0],
-      sizeof(bounds),
-      ANARI_WAIT);
+  if (!anariGetProperty(m_device,
+          m_world,
+          "bounds",
+          ANARI_FLOAT32_BOX3,
+          &bounds[0],
+          sizeof(bounds),
+          ANARI_WAIT)) {
+    printf("WARNING: bounds not returned by the device! Using unit cube.\n");
+  }
 
   auto center = 0.5f * (bounds[0] + bounds[1]);
   auto diag = bounds[1] - bounds[0];
 
-  auto azel = resetAzEl ? anari::float2(180.f, 200.f) : m_arcball->azel();
+  auto azel = resetAzEl ? anari::math::float2(180.f, 200.f) : m_arcball->azel();
   m_arcball->setConfig(center, 1.25f * linalg::length(diag), azel);
   m_cameraToken = 0;
 }
@@ -164,7 +166,7 @@ anari::Device Viewport::device() const
   return m_device;
 }
 
-void Viewport::reshape(anari::int2 newSize)
+void Viewport::reshape(anari::math::int2 newSize)
 {
   if (newSize.x <= 0 || newSize.y <= 0)
     return;
@@ -200,7 +202,8 @@ void Viewport::startNewFrame()
 
 void Viewport::updateFrame()
 {
-  anari::setParameter(m_device, m_frame, "size", anari::uint2(m_viewportSize));
+  anari::setParameter(
+      m_device, m_frame, "size", anari::math::uint2(m_viewportSize));
   anari::setParameter(
       m_device, m_frame, "channel.color", ANARI_UFIXED8_RGBA_SRGB);
   anari::setParameter(m_device, m_frame, "accumulation", true);
@@ -313,7 +316,7 @@ void Viewport::ui_handleInput()
 
   if (!anyDown) {
     m_manipulating = false;
-    m_previousMouse = anari::float2(-1);
+    m_previousMouse = anari::math::float2(-1);
   } else if (ImGui::IsItemHovered() && !m_manipulating)
     m_manipulating = true;
 
@@ -321,21 +324,22 @@ void Viewport::ui_handleInput()
     m_mouseRotating = false;
 
   if (m_manipulating) {
-    anari::float2 position;
+    anari::math::float2 position;
     std::memcpy(&position, &io.MousePos, sizeof(position));
 
-    const anari::float2 mouse(position.x, position.y);
+    const anari::math::float2 mouse(position.x, position.y);
 
-    if (anyDown && m_previousMouse != anari::float2(-1)) {
-      const anari::float2 prev = m_previousMouse;
+    if (anyDown && m_previousMouse != anari::math::float2(-1)) {
+      const anari::math::float2 prev = m_previousMouse;
 
-      const anari::float2 mouseFrom =
-          prev * 2.f / anari::float2(m_viewportSize);
-      const anari::float2 mouseTo = mouse * 2.f / anari::float2(m_viewportSize);
+      const anari::math::float2 mouseFrom =
+          prev * 2.f / anari::math::float2(m_viewportSize);
+      const anari::math::float2 mouseTo =
+          mouse * 2.f / anari::math::float2(m_viewportSize);
 
-      const anari::float2 mouseDelta = mouseTo - mouseFrom;
+      const anari::math::float2 mouseDelta = mouseTo - mouseFrom;
 
-      if (mouseDelta != anari::float2(0.f)) {
+      if (mouseDelta != anari::math::float2(0.f)) {
         if (leftDown) {
           if (!m_mouseRotating) {
             m_arcball->startNewRotation();
@@ -433,7 +437,7 @@ void Viewport::ui_contextMenu()
     ImGui::Indent(INDENT_AMOUNT);
 
     if (ImGui::MenuItem("print bounds")) {
-      anari::float3 bounds[2];
+      anari::math::float3 bounds[2];
 
       anariGetProperty(m_device,
           m_world,

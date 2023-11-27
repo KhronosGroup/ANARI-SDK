@@ -11,6 +11,7 @@
 
 namespace anari {
 
+// Function prototypes for misc. library functions needed by API.cpp
 void *loadANARILibrary(const std::string &libName);
 void freeLibrary(void *lib);
 void *getSymbolAddress(void *lib, const std::string &symbol);
@@ -21,16 +22,24 @@ struct ANARI_INTERFACE LibraryImpl
       void *lib, ANARIStatusCallback defaultStatusCB, const void *statusCBPtr);
   virtual ~LibraryImpl();
 
+  // Create an instance of anari::DeviceImpl, typically using the 'new' operator
   virtual ANARIDevice newDevice(const char *subtype) = 0;
+  // Implement anariGetDevcieExtensions()
   virtual const char **getDeviceExtensions(const char *deviceType) = 0;
+  // Optionally implement anariGetDeviceSubtypes(), get {"default", 0} otherwise
   virtual const char **getDeviceSubtypes();
 
+  // Optionally implement anariLoadModule()
   virtual void loadModule(const char *name);
+  // Optionally implement anariUnloadModule()
   virtual void unloadModule(const char *name);
 
+  // Get the default callback passed to anariLoadLibrary()
   ANARIStatusCallback defaultStatusCB() const;
+  // Get the default callback user pointer passed to anariLoadLibrary()
   const void *defaultStatusCBUserPtr() const;
 
+  // Utility to get 'this' pointer as an ANARILibrary handle
   ANARILibrary this_library() const;
 
  private:

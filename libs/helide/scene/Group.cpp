@@ -23,8 +23,6 @@ bool Group::getProperty(
 {
   if (name == "bounds" && type == ANARI_FLOAT32_BOX3) {
     if (flags & ANARI_WAIT) {
-      deviceState()->waitOnCurrentFrame();
-      deviceState()->commitBuffer.flush();
       embreeSceneConstruct();
       embreeSceneCommit();
     }
@@ -54,7 +52,7 @@ void Group::commit()
     std::transform(m_volumeData->handlesBegin(),
         m_volumeData->handlesEnd(),
         std::back_inserter(m_volumes),
-        [](Object *o) { return (Volume *)o; });
+        [](auto *o) { return (Volume *)o; });
   }
 }
 
@@ -123,7 +121,7 @@ void Group::embreeSceneConstruct()
     uint32_t id = 0;
     std::for_each(m_surfaceData->handlesBegin(),
         m_surfaceData->handlesEnd(),
-        [&](Object *o) {
+        [&](auto *o) {
           auto *s = (Surface *)o;
           if (s && s->isValid()) {
             m_surfaces.push_back(s);

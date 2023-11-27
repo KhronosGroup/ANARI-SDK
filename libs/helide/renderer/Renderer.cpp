@@ -96,11 +96,12 @@ Renderer::Renderer(HelideGlobalState *s) : Object(ANARI_RENDERER, s)
   m_heatmap = new Array1D(s, md);
   m_heatmap->refDec(helium::RefType::PUBLIC);
 
-  auto *colors = m_heatmap->beginAs<float3>();
+  auto *colors = (float3 *)m_heatmap->map();
   colors[0] = float3(0.f, 0.f, 1.f);
   colors[1] = float3(1.f, 0.f, 0.f);
   colors[2] = float3(1.f, 1.f, 0.f);
   colors[3] = float3(1.f, 1.f, 1.f);
+  m_heatmap->unmap();
 }
 
 Renderer::~Renderer()
@@ -119,6 +120,8 @@ void Renderer::commit()
 PixelSample Renderer::renderSample(
     const float2 &screen, Ray ray, const World &w) const
 {
+  PixelSample retval;
+
   // Intersect Surfaces //
 
   RTCIntersectContext context;
@@ -137,9 +140,16 @@ PixelSample Renderer::renderSample(
 
   // Shade //
 
-  const float4 color = shadeRay(screen, ray, vray, w);
-  const float depth = hitVolume ? std::min(ray.tfar, vray.t.lower) : ray.tfar;
-  return {color, depth};
+  retval.color = shadeRay(screen, ray, vray, w);
+  retval.depth = hitVolume ? std::min(ray.tfar, vray.t.lower) : ray.tfar;
+  if (hitGeometry || hitVolume) {
+    retval.primId = hitVolume ? 0 : ray.primID;
+    retval.objId = hitVolume ? vray.volume->id() : w.surfaceFromRay(ray)->id();
+    retval.instId = hitVolume ? w.instanceFromRay(vray)->id()
+                              : w.instanceFromRay(ray)->id();
+  }
+
+  return retval;
 }
 
 Renderer *Renderer::createInstance(
@@ -166,6 +176,9 @@ float4 Renderer::shadeRay(const float2 &screen,
 
   float3 color(0.f, 0.f, 0.f);
   float opacity = 0.f;
+
+  float3 volumeColor = bgColor;
+  float volumeOpacity = 0.f;
 
   float3 geometryColor(0.f, 0.f, 0.f);
   float geometryOpacity = hitGeometry ? 1.f : 0.f;
@@ -222,8 +235,8 @@ float4 Renderer::shadeRay(const float2 &screen,
     break;
   case RenderMode::OPACITY_HEATMAP: {
     if (hitGeometry) {
-      const Instance *inst = w.instances()[ray.instID];
-      const Surface *surface = inst->group()->surfaces()[ray.geomID];
+      const Instance *inst = w.instanceFromRay(ray);
+      const Surface *surface = w.surfaceFromRay(ray);
 
       const auto n = linalg::mul(inst->xfmInvRot(), ray.Ng);
       const auto falloff =
@@ -240,31 +253,34 @@ float4 Renderer::shadeRay(const float2 &screen,
   case RenderMode::DEFAULT:
   default: {
     if (hitGeometry) {
-      const Instance *inst = w.instances()[ray.instID];
-      const Surface *surface = inst->group()->surfaces()[ray.geomID];
+      const Instance *inst = w.instanceFromRay(ray);
+      const Surface *surface = w.surfaceFromRay(ray);
 
       const auto n = linalg::mul(inst->xfmInvRot(), ray.Ng);
       const auto falloff =
           std::abs(linalg::dot(-ray.dir, linalg::normalize(n)));
       const float4 c = surface->getSurfaceColor(ray);
       const float3 sc = float3(c.x, c.y, c.z) * falloff;
-      geometryColor = linalg::min(
+      volumeColor = geometryColor = linalg::min(
           (0.8f * sc + 0.2f * float3(c.x, c.y, c.z)) * m_ambientRadiance,
           float3(1.f));
     }
 
     if (hitVolume)
-      vray.volume->render(vray, color, opacity);
+      vray.volume->render(vray, volumeColor, volumeOpacity);
 
   } break;
   }
 
-  color = linalg::min(color, float3(1.f));
+  geometryColor = linalg::min(geometryColor, float3(1.f));
+  volumeColor = linalg::min(volumeColor, float3(1.f));
 
-  accumulateValue(color, geometryColor, opacity);
+  accumulateValue(color, volumeColor * volumeOpacity, opacity);
+  accumulateValue(opacity, volumeOpacity, opacity);
+  accumulateValue(color, geometryColor * geometryOpacity, opacity);
   accumulateValue(opacity, geometryOpacity, opacity);
-  color *= opacity;
-  accumulateValue(color, bgColor, opacity);
+  accumulateValue(color, bgColor * bgColorOpacity.w, opacity);
+  accumulateValue(opacity, bgColorOpacity.w, opacity);
 
   return {color, opacity};
 }

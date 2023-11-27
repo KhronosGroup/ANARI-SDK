@@ -3,19 +3,22 @@
 
 #pragma once
 
-#include "Buffer.h"
-#include "async/connection.h"
-#include "async/connection_manager.h"
-#include "async/work_queue.h"
 #include <anari/backend/DeviceImpl.h>
-#include "utility/IntrusivePtr.h"
-#include "utility/ParameterizedObject.h"
 #include <condition_variable>
 #include <map>
 #include <mutex>
 #include <vector>
-#include "Frame.h"
+#include "Buffer.h"
 #include "Compression.h"
+#include "Frame.h"
+#include "ParameterList.h"
+#include "StringList.h"
+#include "async/connection.h"
+#include "async/connection_manager.h"
+#include "async/work_queue.h"
+#include "utility/AnariAny.h"
+#include "utility/IntrusivePtr.h"
+#include "utility/ParameterizedObject.h"
 
 namespace remote {
 
@@ -23,26 +26,25 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
 {
   //--- Data Arrays ---------------------------------
 
-  void* mapParameterArray1D(ANARIObject o,
-      const char* name,
+  void *mapParameterArray1D(ANARIObject o,
+      const char *name,
       ANARIDataType dataType,
       uint64_t numElements1,
       uint64_t *elementStride) override;
-  void* mapParameterArray2D(ANARIObject o,
-      const char* name,
+  void *mapParameterArray2D(ANARIObject o,
+      const char *name,
       ANARIDataType dataType,
       uint64_t numElements1,
       uint64_t numElements2,
       uint64_t *elementStride) override;
-  void* mapParameterArray3D(ANARIObject o,
-      const char* name,
+  void *mapParameterArray3D(ANARIObject o,
+      const char *name,
       ANARIDataType dataType,
       uint64_t numElements1,
       uint64_t numElements2,
       uint64_t numElements3,
       uint64_t *elementStride) override;
-  void unmapParameterArray(ANARIObject o,
-      const char* name) override;
+  void unmapParameterArray(ANARIObject o, const char *name) override;
 
   ANARIArray1D newArray1D(const void *appMemory,
       ANARIMemoryDeleter deleter,
@@ -125,16 +127,16 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
       uint64_t size,
       ANARIWaitMask mask) override;
 
-  const char ** getObjectSubtypes(ANARIDataType objectType) override;
-  const void* getObjectInfo(ANARIDataType objectType,
-      const char* objectSubtype,
-      const char* infoName,
+  const char **getObjectSubtypes(ANARIDataType objectType) override;
+  const void *getObjectInfo(ANARIDataType objectType,
+      const char *objectSubtype,
+      const char *infoName,
       ANARIDataType infoType) override;
-  const void* getParameterInfo(ANARIDataType objectType,
-      const char* objectSubtype,
-      const char* parameterName,
+  const void *getParameterInfo(ANARIDataType objectType,
+      const char *objectSubtype,
+      const char *parameterName,
       ANARIDataType parameterType,
-      const char* infoName,
+      const char *infoName,
       ANARIDataType infoType) override;
 
   //--- FrameBuffer Manipulation --------------------
@@ -167,7 +169,8 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
   void initClient();
   uint64_t nextObjectID = 1;
 
-  struct {
+  struct
+  {
     std::string hostname = "localhost";
     unsigned short port{31050};
     CompressionFeatures compression;
@@ -177,48 +180,31 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
   async::connection_pointer conn;
   async::work_queue queue;
 
-  struct
+  struct SyncPrimitives
   {
     std::mutex mtx;
     std::condition_variable cv;
-  } syncConnectionEstablished;
+  };
 
-  struct
+  struct SyncPoints
   {
-    std::mutex mtx;
-    std::condition_variable cv;
-  } syncDeviceHandleRemote;
+    enum
+    {
+      ConnectionEstablished,
+      DeviceHandleRemote,
+      MapArray,
+      UnmapArray,
+      FrameIsReady,
+      Properties,
+      ObjectSubtypes,
+      ObjectInfo,
+      ParameterInfo,
+      // Keep last:
+      Count,
+    };
+  };
 
-  struct
-  {
-    std::mutex mtx;
-    std::condition_variable cv;
-  } syncMapArray;
-
-  struct
-  {
-    std::mutex mtx;
-    std::condition_variable cv;
-  } syncUnmapArray;
-
-  struct
-  {
-    std::mutex mtx;
-    std::condition_variable cv;
-  } syncFrameIsReady;
-
-  struct
-  {
-    std::mutex mtx;
-    std::condition_variable cv;
-    size_t which;
-  } syncProperties;
-
-  struct
-  {
-    std::mutex mtx;
-    std::condition_variable cv;
-  } syncObjectSubtypes;
+  SyncPrimitives sync[SyncPoints::Count];
 
   ANARIDevice remoteDevice{nullptr};
   std::string remoteSubtype = "default";
@@ -241,7 +227,7 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
   {
     ANARIObject object{nullptr};
     std::string name;
-    std::vector<char *> value;
+    StringList value;
   };
   std::vector<StringListProperty> stringListProperties;
 
@@ -250,9 +236,56 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
   struct ObjectSubtypes
   {
     ANARIDataType objectType;
-    std::vector<char *> value;
+    StringList value;
   };
   std::vector<ObjectSubtypes> objectSubtypes;
+
+  struct Info
+  {
+    std::string name;
+    ANARIDataType type;
+    struct
+    {
+      helium::AnariAny asAny;
+      StringList asStringList;
+      remote::ParameterList asParameterList;
+    } value;
+
+    const void *data() const
+    {
+      if (type == ANARI_STRING_LIST)
+        return value.asStringList.data();
+      else if (type == ANARI_PARAMETER_LIST)
+        return value.asParameterList.data();
+      else if (value.asAny.type() != ANARI_UNKNOWN)
+        return value.asAny.data();
+      else
+        return nullptr;
+    }
+  };
+
+  // Cache for "object infos"
+  struct ObjectInfo
+  {
+    typedef std::shared_ptr<ObjectInfo> Ptr;
+    ANARIDataType objectType;
+    std::string objectSubtype;
+    std::string infoName;
+    Info info;
+  };
+  std::vector<ObjectInfo::Ptr> objectInfos;
+
+  // Cache for "parameter infos"
+  struct ParameterInfo
+  {
+    typedef std::shared_ptr<ParameterInfo> Ptr;
+    ANARIDataType objectType;
+    std::string objectSubtype;
+    std::string parameterName;
+    ANARIDataType parameterType;
+    Info info;
+  };
+  std::vector<ParameterInfo::Ptr> parameterInfos;
 
   std::map<ANARIObject, Frame> frames;
   struct ArrayData
@@ -268,11 +301,11 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
   {
     ANARIObject object{nullptr};
     const char *name = "";
-    bool operator<(const ParameterArray &other) const {
-      return object && object == other.object
-        && strlen(name) > 0
-        && std::string(name) < std::string(other.name);
-      }
+    bool operator<(const ParameterArray &other) const
+    {
+      return object && object == other.object && strlen(name) > 0
+          && std::string(name) < std::string(other.name);
+    }
   };
   std::map<ParameterArray, ANARIArray> parameterArrays;
 

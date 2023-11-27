@@ -28,7 +28,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
 ## Establish project
 
-project(anari VERSION 0.7.2 LANGUAGES C CXX)
+project(anari VERSION 0.8.0 LANGUAGES C CXX)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
@@ -51,12 +51,9 @@ cmake_dependent_option(BUILD_VIEWER
   "BUILD_EXAMPLES"
   OFF
 )
-cmake_dependent_option(INSTALL_VIEWER_LIBRARY
-  "Install anari::anari_viewer library target"
-  OFF
-  "BUILD_EXAMPLES;BUILD_VIEWER"
-  OFF
-)
+option(INSTALL_VIEWER_LIBRARY "Install anari::anari_viewer library target" ON)
+option(INSTALL_VIEWER "Install anariViewer app" OFF)
+mark_as_advanced(INSTALL_VIEWER)
 
 ## The generate_all targets collects all offline code generation targets
 
@@ -68,10 +65,6 @@ include(cmake/cmake_project_commands.cmake)
 include(cmake/anari_sdk_fetch_project.cmake)
 
 ## Add library and executable targets
-
-set(glm_DIR ${CMAKE_CURRENT_LIST_DIR}/external/glm/lib/cmake/glm)
-find_package(glm REQUIRED)
-mark_as_advanced(glm_DIR)
 
 add_subdirectory(libs)
 add_subdirectory(external)

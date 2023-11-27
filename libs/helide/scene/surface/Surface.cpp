@@ -17,6 +17,7 @@ Surface::~Surface()
 
 void Surface::commit()
 {
+  m_id = getParam<uint32_t>("id", ~0u);
   m_geometry = getParamObject<Geometry>("geometry");
   m_material = getParamObject<Material>("material");
 

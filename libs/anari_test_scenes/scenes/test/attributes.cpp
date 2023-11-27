@@ -577,10 +577,10 @@ void Attributes::commit()
     int y = i/4;
 
     auto inst = anari::newObject<anari::Instance>(d, "transform");
-    auto tl = anari::translation_matrix(2.0f*anari::float3(x-3.5f, y-3.5f, 0.f));
+    auto tl = math::translation_matrix(2.0f*math::float3(x-3.5f, y-3.5f, 0.f));
 
     { // NOTE: exercise anari::setParameter with C-array type
-      anari::mat4 _xfm = tl;
+      math::mat4 _xfm = tl;
       float xfm[16];
       std::memcpy(xfm, &_xfm, sizeof(_xfm));
       anari::setParameter(d, inst, "transform", xfm);
@@ -613,10 +613,10 @@ void Attributes::commit()
     int y = i/4;
 
     auto inst = anari::newObject<anari::Instance>(d, "transform");
-    auto tl = anari::translation_matrix(2.0f*anari::float3(x+0.5f, y-3.5f, 0.f));
+    auto tl = math::translation_matrix(2.0f*math::float3(x+0.5f, y-3.5f, 0.f));
 
     { // NOTE: exercise anari::setParameter with C-array type
-      anari::mat4 _xfm = tl;
+      math::mat4 _xfm = tl;
       float xfm[16];
       std::memcpy(xfm, &_xfm, sizeof(_xfm));
       anari::setParameter(d, inst, "transform", xfm);
@@ -663,7 +663,7 @@ void Attributes::commit()
     anari::release(d, i);
 
   auto light = anari::newObject<anari::Light>(d, "directional");
-  anari::setParameter(d, light, "direction", anari::float3(0, 0, 1));
+  anari::setParameter(d, light, "direction", math::float3(0, 0, 1));
   anari::setParameter(d, light, "irradiance", 1.f);
   anari::commitParameters(d, light);
   anari::setAndReleaseParameter(

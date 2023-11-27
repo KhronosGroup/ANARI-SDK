@@ -18,6 +18,7 @@ INTERFACE
   ${CMAKE_CURRENT_LIST_DIR}/windows/Viewport.cpp
   ${CMAKE_CURRENT_LIST_DIR}/windows/Window.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Application.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/HDRImage.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Orbit.cpp
   ${CMAKE_CURRENT_LIST_DIR}/ui_anari.cpp
 )
@@ -39,6 +40,7 @@ if (INSTALL_VIEWER_LIBRARY)
   set(SRC_INSTALL_ROOT ${CMAKE_INSTALL_DATAROOTDIR}/anari/anari_viewer)
   install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
     DESTINATION ${SRC_INSTALL_ROOT}/..
+    COMPONENT viewer
     FILES_MATCHING
       PATTERN *.h
       PATTERN *.c

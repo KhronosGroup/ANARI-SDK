@@ -43,10 +43,78 @@ struct MessageType
     Property,
     GetObjectSubtypes,
     ObjectSubtypes,
+    GetObjectInfo,
+    ObjectInfo,
+    GetParameterInfo,
+    ParameterInfo,
     ChannelColor,
     ChannelDepth,
   };
 };
+
+inline const char *toString(unsigned mt)
+{
+  switch (mt) {
+  case MessageType::NewDevice:
+    return "NewDevice";
+  case MessageType::NewObject:
+    return "NewObject";
+  case MessageType::NewArray:
+    return "NewArray";
+  case MessageType::DeviceHandle:
+    return "DeviceHandle";
+  case MessageType::SetParam:
+    return "SetParam";
+  case MessageType::UnsetParam:
+    return "UnsetParam";
+  case MessageType::UnsetAllParams:
+    return "UnsetAllParams";
+  case MessageType::CommitParams:
+    return "CommitParams";
+  case MessageType::Release:
+    return "Release";
+  case MessageType::Retain:
+    return "Retain";
+  case MessageType::ArrayData:
+    return "ArrayData";
+  case MessageType::MapArray:
+    return "MapArray";
+  case MessageType::ArrayMapped:
+    return "ArrayMapped";
+  case MessageType::UnmapArray:
+    return "UnmapArray";
+  case MessageType::ArrayUnmapped:
+    return "ArrayUnmapped";
+  case MessageType::RenderFrame:
+    return "RenderFrame";
+  case MessageType::FrameReady:
+    return "FrameReady";
+  case MessageType::FrameIsReady:
+    return "FrameIsReady";
+  case MessageType::GetProperty:
+    return "GetProperty";
+  case MessageType::Property:
+    return "Property";
+  case MessageType::GetObjectSubtypes:
+    return "GetObjectSubtypes";
+  case MessageType::ObjectSubtypes:
+    return "ObjectSubtypes";
+  case MessageType::GetObjectInfo:
+    return "GetObjectInfo";
+  case MessageType::ObjectInfo:
+    return "ObjectInfo";
+  case MessageType::GetParameterInfo:
+    return "GetParameterInfo";
+  case MessageType::ParameterInfo:
+    return "ParameterInfo";
+  case MessageType::ChannelColor:
+    return "CannelColor";
+  case MessageType::ChannelDepth:
+    return "ChannelDepth";
+  default:
+    return "Unknown";
+  }
+}
 
 typedef int64_t Handle;
 

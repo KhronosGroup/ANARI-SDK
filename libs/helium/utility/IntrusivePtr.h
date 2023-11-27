@@ -30,15 +30,11 @@ class RefCounted
 
   void refInc(RefType = PUBLIC) const;
   void refDec(RefType = PUBLIC) const;
-  uint64_t useCount(RefType = ALL) const;
+  uint32_t useCount(RefType = ALL) const;
 
  private:
-  uint64_t internalRefCount() const;
-
-  static constexpr uint64_t m_publicRefMask = 0x00000000FFFFFFFF;
-  static constexpr uint64_t m_internalRefMask = 0xFFFFFFFF00000000;
-
-  mutable std::atomic<uint64_t> m_refCounter{1};
+  mutable std::atomic<uint32_t> m_internalRefs{0};
+  mutable std::atomic<uint32_t> m_publicRefs{1};
 };
 
 // Inlined definitions //
@@ -46,38 +42,37 @@ class RefCounted
 inline void RefCounted::refInc(RefType type) const
 {
   if (type == RefType::PUBLIC)
-    m_refCounter++;
+    m_publicRefs++;
   else if (type == RefType::INTERNAL)
-    m_refCounter = ((internalRefCount() + 1) << 32) + useCount(RefType::PUBLIC);
+    m_internalRefs++;
+  else {
+    m_publicRefs++;
+    m_internalRefs++;
+  }
 }
 
 inline void RefCounted::refDec(RefType type) const
 {
   if (type == RefType::PUBLIC && useCount(RefType::PUBLIC) > 0)
-    m_refCounter--;
-  else if (type == RefType::INTERNAL && internalRefCount() > 0)
-    m_refCounter = ((internalRefCount() - 1) << 32) + useCount(RefType::PUBLIC);
+    m_publicRefs--;
+  else if (type == RefType::INTERNAL && useCount(RefType::INTERNAL) > 0)
+    m_internalRefs--;
 
   if (useCount(RefType::ALL) == 0)
     delete this;
 }
 
-inline uint64_t RefCounted::useCount(RefType type) const
+inline uint32_t RefCounted::useCount(RefType type) const
 {
-  auto publicCount = m_refCounter.load() & m_publicRefMask;
-  auto internalCount = internalRefCount();
+  auto publicRefs = m_publicRefs.load();
+  auto internalRefs = m_internalRefs.load();
 
   if (type == RefType::PUBLIC)
-    return publicCount;
+    return publicRefs;
   else if (type == RefType::INTERNAL)
-    return internalCount;
+    return internalRefs;
   else
-    return publicCount + internalCount;
-}
-
-inline uint64_t RefCounted::internalRefCount() const
-{
-  return (m_refCounter.load() & m_internalRefMask) >> 32;
+    return publicRefs + internalRefs;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

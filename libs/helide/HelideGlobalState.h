@@ -3,11 +3,15 @@
 
 #pragma once
 
+#include "RenderingSemaphore.h"
 #include "helide_math.h"
 // helium
 #include "helium/BaseGlobalDeviceState.h"
 // embree
 #include "embree3/rtcore.h"
+// std
+#include <atomic>
+#include <mutex>
 
 namespace helide {
 
@@ -19,20 +23,20 @@ struct HelideGlobalState : public helium::BaseGlobalDeviceState
 
   struct ObjectCounts
   {
-    size_t frames{0};
-    size_t cameras{0};
-    size_t renderers{0};
-    size_t worlds{0};
-    size_t instances{0};
-    size_t groups{0};
-    size_t surfaces{0};
-    size_t geometries{0};
-    size_t materials{0};
-    size_t samplers{0};
-    size_t volumes{0};
-    size_t spatialFields{0};
-    size_t arrays{0};
-    size_t unknown{0};
+    std::atomic<size_t> frames{0};
+    std::atomic<size_t> cameras{0};
+    std::atomic<size_t> renderers{0};
+    std::atomic<size_t> worlds{0};
+    std::atomic<size_t> instances{0};
+    std::atomic<size_t> groups{0};
+    std::atomic<size_t> surfaces{0};
+    std::atomic<size_t> geometries{0};
+    std::atomic<size_t> materials{0};
+    std::atomic<size_t> samplers{0};
+    std::atomic<size_t> volumes{0};
+    std::atomic<size_t> spatialFields{0};
+    std::atomic<size_t> arrays{0};
+    std::atomic<size_t> unknown{0};
   } objectCounts;
 
   struct ObjectUpdates
@@ -42,6 +46,7 @@ struct HelideGlobalState : public helium::BaseGlobalDeviceState
     helium::TimeStamp lastTLSReconstructSceneRequest{0};
   } objectUpdates;
 
+  RenderingSemaphore renderingSemaphore;
   Frame *currentFrame{nullptr};
 
   RTCDevice embreeDevice{nullptr};
@@ -54,5 +59,22 @@ struct HelideGlobalState : public helium::BaseGlobalDeviceState
   HelideGlobalState(ANARIDevice d);
   void waitOnCurrentFrame() const;
 };
+
+// Helper functions/macros ////////////////////////////////////////////////////
+
+inline HelideGlobalState *asHelideState(helium::BaseGlobalDeviceState *s)
+{
+  return (HelideGlobalState *)s;
+}
+
+#define HELIDE_ANARI_TYPEFOR_SPECIALIZATION(type, anari_type)                  \
+  namespace anari {                                                            \
+  ANARI_TYPEFOR_SPECIALIZATION(type, anari_type);                              \
+  }
+
+#define HELIDE_ANARI_TYPEFOR_DEFINITION(type)                                  \
+  namespace anari {                                                            \
+  ANARI_TYPEFOR_DEFINITION(type);                                              \
+  }
 
 } // namespace helide

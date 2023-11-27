@@ -68,8 +68,8 @@ void RandomSpheres::commit()
   rng.seed(0);
   std::normal_distribution<float> vert_dist(0.5f, 0.5f);
 
-  std::vector<anari::float3> spherePositions((size_t(numSpheres)));
-  std::vector<anari::float4> sphereColors((size_t(numSpheres)));
+  std::vector<math::float3> spherePositions((size_t(numSpheres)));
+  std::vector<math::float4> sphereColors((size_t(numSpheres)));
 
   for (auto &s : spherePositions) {
     s.x = vert_dist(rng);

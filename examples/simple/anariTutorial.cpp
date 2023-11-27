@@ -46,6 +46,12 @@ void statusFunc(const void *userData,
   }
 }
 
+template <typename T>
+static T getPixelValue(uvec2 coord, int width, const T *buf)
+{
+  return buf[coord[1] * width + coord[0]];
+}
+
 int main(int argc, const char **argv)
 {
   (void)argc;
@@ -120,10 +126,12 @@ int main(int argc, const char **argv)
   auto surface = anari::newObject<anari::Surface>(d);
   anari::setAndReleaseParameter(d, surface, "geometry", mesh);
   anari::setAndReleaseParameter(d, surface, "material", mat);
+  anari::setParameter(d, surface, "id", 2u);
   anari::commitParameters(d, surface);
 
   // put the surface directly onto the world
   anari::setParameterArray1D(d, world, "surface", &surface, 1);
+  anari::setParameter(d, world, "id", 3u);
   anari::release(d, surface);
 
   anari::commitParameters(d, world);
@@ -159,6 +167,9 @@ int main(int argc, const char **argv)
   auto frame = anari::newObject<anari::Frame>(d);
   anari::setParameter(d, frame, "size", imgSize);
   anari::setParameter(d, frame, "channel.color", ANARI_UFIXED8_RGBA_SRGB);
+  anari::setParameter(d, frame, "channel.primitiveId", ANARI_UINT32);
+  anari::setParameter(d, frame, "channel.objectId", ANARI_UINT32);
+  anari::setParameter(d, frame, "channel.instanceId", ANARI_UINT32);
 
   anari::setAndReleaseParameter(d, frame, "renderer", renderer);
   anari::setAndReleaseParameter(d, frame, "camera", camera);
@@ -183,6 +194,29 @@ int main(int argc, const char **argv)
   anari::unmap(d, frame, "channel.color");
 
   printf("done!\n");
+
+  // Check center pixel id buffers
+  auto fbPrimId = anari::map<uint32_t>(d, frame, "channel.primitiveId");
+  auto fbObjId = anari::map<uint32_t>(d, frame, "channel.objectId");
+  auto fbInstId = anari::map<uint32_t>(d, frame, "channel.instanceId");
+
+  uvec2 queryPixel = {imgSize[0] / 2, imgSize[1] / 2};
+
+  printf("checking id buffers @ [%u, %u]:\n", queryPixel[0], queryPixel[1]);
+
+  if (fbPrimId.pixelType == ANARI_UINT32) {
+    printf("    primId: %u\n",
+        getPixelValue(queryPixel, imgSize[0], fbPrimId.data));
+  }
+  if (fbObjId.pixelType == ANARI_UINT32) {
+    printf("     objId: %u\n",
+        getPixelValue(queryPixel, imgSize[0], fbObjId.data));
+  }
+  if (fbPrimId.pixelType == ANARI_UINT32) {
+    printf("    instId: %u\n",
+        getPixelValue(queryPixel, imgSize[0], fbInstId.data));
+  }
+
   printf("\ncleaning up objects...");
 
   // final cleanups

@@ -28,11 +28,8 @@ bool World::getProperty(
     const std::string_view &name, ANARIDataType type, void *ptr, uint32_t flags)
 {
   if (name == "bounds" && type == ANARI_FLOAT32_BOX3) {
-    if (flags & ANARI_WAIT) {
-      deviceState()->waitOnCurrentFrame();
-      deviceState()->commitBuffer.flush();
+    if (flags & ANARI_WAIT)
       embreeSceneUpdate();
-    }
     auto bounds = getEmbreeSceneBounds(m_embreeScene);
     for (auto *i : instances()) {
       for (auto *v : i->group()->volumes()) {
@@ -74,6 +71,8 @@ void World::commit()
   } else
     m_zeroGroup->removeParam("volume");
 
+  m_zeroInstance->setParam("id", getParam<uint32_t>("id", ~0u));
+
   m_zeroGroup->commit();
   m_zeroInstance->commit();
 
@@ -87,7 +86,7 @@ void World::commit()
       m_instanceData->appendHandle(m_zeroInstance.ptr);
     std::for_each(m_instanceData->handlesBegin(),
         m_instanceData->handlesEnd(),
-        [&](Object *o) {
+        [&](auto *o) {
           if (o && o->isValid())
             m_instances.push_back((Instance *)o);
         });
@@ -111,8 +110,13 @@ const std::vector<Instance *> &World::instances() const
 
 void World::intersectVolumes(VolumeRay &ray) const
 {
-  for (auto *i : instances())
-    i->group()->intersectVolumes(ray);
+  const auto &insts = instances();
+  for (uint32_t i = 0; i < insts.size(); i++) {
+    const auto *inst = insts[i];
+    inst->group()->intersectVolumes(ray);
+    if (ray.volume)
+      ray.instID = i;
+  }
 }
 
 RTCScene World::embreeScene() const

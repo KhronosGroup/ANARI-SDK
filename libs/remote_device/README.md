@@ -1,7 +1,7 @@
 # The Remote Device
 
-The remote device and `anari-remote-server` application establish a TCP
-connection. On the server side the `anari-remote-server` application connects
+The remote device and `anariRemoteServer` application establish a TCP
+connection. On the server side the `anariRemoteServer` application connects
 to an arbitrary ANARI device. ANARI commands from the client pass through the
 TCP connection; the server forwards the commands to the server-side device.
 Color and depth images are sent from the server to the client. These color and
@@ -10,11 +10,11 @@ client and server implement TCP passthrough and remote rendering.
 
 ## Usage
 
-On the server, run the `anari-remote-server` application with a ANARI library
+On the server, run the `anariRemoteServer` application with a ANARI library
 configured; the server will listen for incoming connections, e.g.:
 
 ```
-ANARI_LIBRARY=helide anari-remote-server
+ANARI_LIBRARY=helide anariRemoteServer
 ```
 
 the server will wait for any incoming TCP connections.

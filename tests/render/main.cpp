@@ -32,7 +32,7 @@ static const std::vector<std::vector<std::string>> g_scenes = []() {
 std::string g_category;
 std::string g_scene;
 
-anari::uint2 g_frameSize(1024, 768);
+anari::math::uint2 g_frameSize(1024, 768);
 int g_numPixelSamples = 1;
 std::string g_libraryType = "environment";
 std::string g_deviceType = "default";
@@ -117,7 +117,7 @@ static void renderScene(
   auto renderer = anari::newObject<anari::Renderer>(d, g_rendererType.c_str());
   anari::setParameter(d, renderer, "pixelSamples", g_numPixelSamples);
   anari::setParameter(
-      d, renderer, "background", anari::float4(anari::float3(0.1f), 1));
+      d, renderer, "background", anari::math::float4(anari::math::float3(0.1f), 1));
   anari::commitParameters(d, renderer);
 
   auto frame = anari::newObject<anari::Frame>(d);

@@ -36,6 +36,7 @@ project_sources(PRIVATE
   async/connection_manager.cpp
   async/message.cpp
   ArrayInfo.cpp
+  Buffer.cpp
   Compression.cpp
   Device.cpp
   Frame.cpp
@@ -76,6 +77,7 @@ PRIVATE
   async/connection_manager.cpp
   async/message.cpp
   ArrayInfo.cpp
+  Buffer.cpp
   Compression.cpp
   Logging.cpp
   Server.cpp
@@ -93,6 +95,7 @@ PUBLIC
 ## Installation ##
 
 install(TARGETS ${PROJECT_NAME}
+  EXPORT anari_Exports
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}

@@ -15,6 +15,7 @@ struct Surface : public Object
 
   void commit() override;
 
+  uint32_t id() const;
   const Geometry *geometry() const;
   const Material *material() const;
 
@@ -27,11 +28,17 @@ struct Surface : public Object
   bool isValid() const override;
 
  private:
+  uint32_t m_id{~0u};
   helium::IntrusivePtr<Geometry> m_geometry;
   helium::IntrusivePtr<Material> m_material;
 };
 
 // Inlined definitions ////////////////////////////////////////////////////////
+
+inline uint32_t Surface::id() const
+{
+  return m_id;
+}
 
 inline float Surface::adjustedAlpha(float a) const
 {

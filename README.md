@@ -5,12 +5,11 @@ ANARI-SDK
 
 This repository contains the source for the ANARI API SDK. This includes:
 
-- [Front-end library](libs/anari)
+- [Front-end library + implementation guide](libs/anari)
 - [Device implementation utilties for implementations](libs/helium)
 - [Example device implementation](libs/helide) (not intended for production use)
 - [Example applications](examples/)
 - [Interactive sample viewer](examples/viewer)
-- [Unit tests](tests/unit)
 - [Render tests](tests/render)
 
 The 1.0 ANARI specification can be found on the Khronos website
@@ -77,6 +76,20 @@ These targets can be found with CMake via `find_package(anari)`. The examples
 are written such that they can be built stand alone from the SDK source tree.
 The simplest usage can be found [here](examples/simple).
 
+The follwoing additional helper library components can be requested by listing
+them under `find_pacakge(anari)`:
+
+- `viewer` : Source library target `anari::anari_viewer` for building small viewer apps
+- `code_gen` : Enable the use of code generation CMake functions downstream
+
+Both of these libraries are both optionally installed and are not available
+to downstream projects unless they are explicitly requested. To request one of
+these components, simply add them to the `COMPONENTS` portion of `find_package`:
+
+```cmake
+find_package(anari COMPONENTS viewer code_gen)
+```
+
 ## Running the examples
 
 The basic tutorial app (built by default) uses the `helide` device as an
@@ -95,7 +108,7 @@ get the library to load. For example it can be run with:
 
 ```bash
 % export ANARI_LIBRARY=helide
-% ./anariViewer /path/to/some/file.obj
+% ./anariViewer
 ```
 
 Alternatively, either `--library` or `-l` can be used on the viewer's command

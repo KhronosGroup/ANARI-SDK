@@ -120,7 +120,7 @@ static void loadObj(
 
   auto defaultMaterial = anari::newObject<anari::Material>(d, "matte");
   anari::setParameter(
-      d, defaultMaterial, "color", anari::float3(0.f, 1.f, 0.f));
+      d, defaultMaterial, "color", math::float3(0.f, 1.f, 0.f));
   anari::commitParameters(d, defaultMaterial);
 
   TextureCache cache;
@@ -154,8 +154,8 @@ static void loadObj(
   auto *vertices = objdata.attrib.vertices.data();
   auto *texcoords = objdata.attrib.texcoords.data();
 
-  std::vector<anari::float3> v;
-  std::vector<anari::float2> vt;
+  std::vector<math::float3> v;
+  std::vector<math::float2> vt;
 
   for (auto &shape : objdata.shapes) {
     v.clear();

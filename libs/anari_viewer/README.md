@@ -22,10 +22,15 @@ target_link_libraries(myViewer anari::anari_viewer)
 ```
 
 Note that this target is only installed if `INSTALL_VIEWER_LIBRARY` is enabled
-when installing the SDK, which also requires enabling both `BUILD_EXAMPLES` and
-`BUILD_VIEWER`. Behind the scenes, this library target is a pure `INTERFACE`
-target that will import all the `.cpp` files necessary to use the viewer
-components.
+when installing the SDK _and_ the downstream CMake `find_package` includes the
+`viewer` component:
+
+```cmake
+find_package(anari REQUIRED COMPONENTS viewer)
+```
+
+Behind the scenes, this library target is a pure `INTERFACE` target that will
+import all the `.cpp` files necessary to use the viewer components.
 
 Given that this is not a stable library, it is assumed that users will read code
 in order to understand how to use it. The provided [example

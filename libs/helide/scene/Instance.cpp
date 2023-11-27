@@ -20,11 +20,17 @@ Instance::~Instance()
 
 void Instance::commit()
 {
+  m_id = getParam<uint32_t>("id", ~0u);
   m_xfm = getParam<mat4>("transform", mat4(linalg::identity));
   m_xfmInvRot = linalg::inverse(extractRotation(m_xfm));
   m_group = getParamObject<Group>("group");
   if (!m_group)
     reportMessage(ANARI_SEVERITY_WARNING, "missing 'group' on ANARIInstance");
+}
+
+uint32_t Instance::id() const
+{
+  return m_id;
 }
 
 const mat4 &Instance::xfm() const

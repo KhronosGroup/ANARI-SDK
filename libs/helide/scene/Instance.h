@@ -14,6 +14,8 @@ struct Instance : public Object
 
   void commit() override;
 
+  uint32_t id() const;
+
   const mat4 &xfm() const;
   const mat3 &xfmInvRot() const;
   bool xfmIsIdentity() const;
@@ -29,6 +31,7 @@ struct Instance : public Object
   bool isValid() const override;
 
  private:
+  uint32_t m_id{~0u};
   mat4 m_xfm;
   mat3 m_xfmInvRot;
   helium::IntrusivePtr<Group> m_group;
