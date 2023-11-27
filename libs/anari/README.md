@@ -26,7 +26,7 @@ representation of `ANARILibrary`, where the frontend library uses this class to
 manage all C API calls which are done on `ANARILibrary` (where the function's
 first argument is the library).
 
-Note that `anariLoadLibrary()` uses the follwing naming convention for
+Note that `anariLoadLibrary()` uses the following naming convention for
 dynamically loading an `ANARILibrary` at runtime: `anari_library_[name]`, where
 `[name]` matches the string passed to `anariLoadLibrary`. `[name]` is used to
 construct a C function name which is looked up as the entry point needed to
@@ -34,12 +34,12 @@ create an instance of `LibraryImpl`.  Implementations should use the
 `ANARI_DEFINE_LIBRARY_ENTRYPOINT` macro at the bottom of `LibraryImpl.h` to
 define this entrypoint function, where it is necessary to match the first macro
 argument with `[name]` in the physical shared library file. For example, the
-provided [`helide`](../helide) device on linux is compiles into the shared
-library `libanari_library_helide.so`, and `helide` is the first argument to
+provided [`helide`](../helide) device on linux compiles into the shared library
+`libanari_library_helide.so`, and `helide` is the first argument to
 `ANARI_DEFINE_LIBRARY_ENTRYPOINT`, as seen [here](../helide/HelideLibrary.cpp).
 
 It is possible to directly construct a device if client applications directly
-link your library itself, but it is highly recommended to always provide the
+links your library itself, but it is highly recommended to always provide the
 dynamic path via `anariLoadLibrary()` and `LibraryImpl` as this is the most
 common way to create ANARI devices. The alternate method of directly
 constructing a device via linking is show by the
@@ -58,12 +58,12 @@ implementations should always seek to make each instance of `DeviceImpl`
 independent from each other by avoiding any shared state between them (i.e.
 static state within the class or shared library).
 
-Almost the entirety of `DeviceImpl` corresponds directly to functions found
+Almost the entirety of `DeviceImpl` directly corresponds to functions found
 in [`anari.h`](include/anari/anari.h). The only state held by `DeviceImpl` are
 the default status callback and callback user pointer. `DeviceImpl` is intended
 to be very minimal -- implementors who desire SDK-provided implementations of
-much of the API should use the [`helium`](../helium) layer, which implements
-many common concepts, but requires implementations to opt-in to various `helium`
+much of the API should use the [`helium`](../helium) layer which implements many
+common concepts, but requires implementations to opt-in to various `helium`
 abstractions and classes. The provided [`helide`](../helide) device demonstrates
 ultimately how to implement `DeviceImpl` through using
 [`helium::BaseDevice`](../helium/BaseDevice.h).  Device implementors can use the
@@ -79,7 +79,7 @@ in order for applications to introspect what extensions (and their details) are
 offered. However, these functions can be quite tedius and repetitive to
 implement, so Python-based code generation tools are offered to let library and
 device authors minimize the effort in writing them. They use JSON definition
-files to generate C++ which can then be used to implement various query
+files to generate C++ which can then be used to implement the various query
 functions.
 
 All of the Python tooling is installed when `INSTALL_CODE_GEN_SCRIPTS` is
