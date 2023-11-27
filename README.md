@@ -5,12 +5,11 @@ ANARI-SDK
 
 This repository contains the source for the ANARI API SDK. This includes:
 
-- [Front-end library](libs/anari)
+- [Front-end library + implementation guide](libs/anari)
 - [Device implementation utilties for implementations](libs/helium)
 - [Example device implementation](libs/helide) (not intended for production use)
 - [Example applications](examples/)
 - [Interactive sample viewer](examples/viewer)
-- [Unit tests](tests/unit)
 - [Render tests](tests/render)
 
 The 1.0 ANARI specification can be found on the Khronos website
@@ -109,7 +108,7 @@ get the library to load. For example it can be run with:
 
 ```bash
 % export ANARI_LIBRARY=helide
-% ./anariViewer /path/to/some/file.obj
+% ./anariViewer
 ```
 
 Alternatively, either `--library` or `-l` can be used on the viewer's command
