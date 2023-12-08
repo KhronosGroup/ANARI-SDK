@@ -48,7 +48,9 @@ struct Array1D : public Array
   size_t m_end{0};
 };
 
-anari::math::float4 readAttributeValue(const Array1D *arr, uint32_t i);
+anari::math::float4 readAttributeValue(const Array1D *arr,
+    uint32_t i,
+    const anari::math::float4 &defaultValue = DEFAULT_ATTRIBUTE_VALUE);
 
 // Inlined definitions ////////////////////////////////////////////////////////
 

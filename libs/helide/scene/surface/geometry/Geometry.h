@@ -28,7 +28,8 @@ struct Geometry : public Object
  protected:
   RTCGeometry m_embreeGeometry{nullptr};
 
-  std::array<helium::IntrusivePtr<Array1D>, 5> m_attributes;
+  std::array<float4, 5> m_uniformAttr;
+  std::array<helium::IntrusivePtr<Array1D>, 5> m_primitiveAttr;
 };
 
 } // namespace helide

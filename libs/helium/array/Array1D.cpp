@@ -78,9 +78,9 @@ void Array1D::privatize()
   makePrivatizedCopy(size());
 }
 
-float4 readAttributeValue(const Array1D *arr, uint32_t i)
+float4 readAttributeValue(const Array1D *arr, uint32_t i, const float4 &d)
 {
-  return arr ? arr->readAsAttributeValue(i) : DEFAULT_ATTRIBUTE_VALUE;
+  return arr ? arr->readAsAttributeValue(i) : d;
 }
 
 } // namespace helium
