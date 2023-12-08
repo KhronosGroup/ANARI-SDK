@@ -17,6 +17,31 @@
                     "tags" : [],
                     "description" : "optional object name"
                 }, {
+                    "name" : "color",
+                    "types" : ["ANARI_FLOAT32_VEC4"],
+                    "tags" : [],
+                    "description" : "uniform color"
+                }, {
+                    "name" : "attribute0",
+                    "types" : ["ANARI_FLOAT32_VEC4"],
+                    "tags" : [],
+                    "description" : "uniform attribute0"
+                }, {
+                    "name" : "attribute1",
+                    "types" : ["ANARI_FLOAT32_VEC4"],
+                    "tags" : [],
+                    "description" : "uniform attribute1"
+                }, {
+                    "name" : "attribute2",
+                    "types" : ["ANARI_FLOAT32_VEC4"],
+                    "tags" : [],
+                    "description" : "uniform attribute2"
+                }, {
+                    "name" : "attribute3",
+                    "types" : ["ANARI_FLOAT32_VEC4"],
+                    "tags" : [],
+                    "description" : "uniform attribute3"
+                }, {
                     "name" : "primitive.color",
                     "types" : ["ANARI_ARRAY1D"],
                     "elementType" : [
