@@ -9,14 +9,7 @@ namespace helide {
 
 SpatialField::SpatialField(HelideGlobalState *s)
     : Object(ANARI_SPATIAL_FIELD, s)
-{
-  s->objectCounts.spatialFields++;
-}
-
-SpatialField::~SpatialField()
-{
-  deviceState()->objectCounts.spatialFields--;
-}
+{}
 
 SpatialField *SpatialField::createInstance(
     std::string_view subtype, HelideGlobalState *s)

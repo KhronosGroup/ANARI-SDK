@@ -7,15 +7,7 @@
 
 namespace helide {
 
-Volume::Volume(HelideGlobalState *s) : Object(ANARI_VOLUME, s)
-{
-  s->objectCounts.volumes++;
-}
-
-Volume::~Volume()
-{
-  deviceState()->objectCounts.volumes--;
-}
+Volume::Volume(HelideGlobalState *s) : Object(ANARI_VOLUME, s) {}
 
 Volume *Volume::createInstance(std::string_view subtype, HelideGlobalState *s)
 {

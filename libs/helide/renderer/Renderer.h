@@ -45,7 +45,7 @@ enum class RenderMode
 struct Renderer : public Object
 {
   Renderer(HelideGlobalState *s);
-  ~Renderer() override;
+  ~Renderer() override = default;
 
   virtual void commit() override;
 

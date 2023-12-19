@@ -10,7 +10,7 @@ namespace helide {
 struct Volume : public Object
 {
   Volume(HelideGlobalState *d);
-  virtual ~Volume();
+  virtual ~Volume() = default;
   static Volume *createInstance(std::string_view subtype, HelideGlobalState *d);
 
   void commit() override;

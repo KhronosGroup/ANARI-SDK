@@ -9,13 +9,11 @@ namespace helide {
 
 Group::Group(HelideGlobalState *s) : Object(ANARI_GROUP, s)
 {
-  s->objectCounts.groups++;
 }
 
 Group::~Group()
 {
   cleanup();
-  deviceState()->objectCounts.groups--;
 }
 
 bool Group::getProperty(

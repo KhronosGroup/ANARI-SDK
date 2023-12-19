@@ -290,43 +290,6 @@ HelideDevice::~HelideDevice()
   reportMessage(ANARI_SEVERITY_DEBUG, "destroying helide device (%p)", this);
 
   rtcReleaseDevice(state.embreeDevice);
-
-  // NOTE: These object leak warnings are not required to be done by
-  //       implementations as the debug layer in the SDK is far more
-  //       comprehensive and designed for detecting bugs like this. However
-  //       these simple checks are very straightforward to implement and do not
-  //       really add substantial code complexity, so they are provided out of
-  //       convenience.
-
-  auto reportLeaks = [&](auto &count, const char *handleType) {
-    auto c = count.load();
-    if (c != 0) {
-      reportMessage(ANARI_SEVERITY_WARNING,
-          "detected %zu leaked %s objects",
-          c,
-          handleType);
-    }
-  };
-
-  reportLeaks(state.objectCounts.frames, "ANARIFrame");
-  reportLeaks(state.objectCounts.cameras, "ANARICamera");
-  reportLeaks(state.objectCounts.renderers, "ANARIRenderer");
-  reportLeaks(state.objectCounts.worlds, "ANARIWorld");
-  reportLeaks(state.objectCounts.instances, "ANARIInstance");
-  reportLeaks(state.objectCounts.groups, "ANARIGroup");
-  reportLeaks(state.objectCounts.surfaces, "ANARISurface");
-  reportLeaks(state.objectCounts.geometries, "ANARIGeometry");
-  reportLeaks(state.objectCounts.materials, "ANARIMaterial");
-  reportLeaks(state.objectCounts.samplers, "ANARISampler");
-  reportLeaks(state.objectCounts.volumes, "ANARIVolume");
-  reportLeaks(state.objectCounts.spatialFields, "ANARISpatialField");
-  reportLeaks(state.objectCounts.arrays, "ANARIArray");
-
-  if (state.objectCounts.unknown.load() != 0) {
-    reportMessage(ANARI_SEVERITY_WARNING,
-        "detected %zu leaked ANARIObject objects created by unknown subtypes",
-        state.objectCounts.unknown.load());
-  }
 }
 
 void HelideDevice::initDevice()

@@ -20,7 +20,7 @@ struct BaseObject : public RefCounted, ParameterizedObject, LockableObject
 {
   // Construct
   BaseObject(ANARIDataType type, BaseGlobalDeviceState *state);
-  virtual ~BaseObject() = default;
+  virtual ~BaseObject();
 
   // Implement anariGetProperty()
   virtual bool getProperty(const std::string_view &name,
@@ -71,6 +71,9 @@ struct BaseObject : public RefCounted, ParameterizedObject, LockableObject
   BaseGlobalDeviceState *m_state{nullptr};
 
  private:
+  void incrementObjectCount();
+  void decrementObjectCount();
+
   std::vector<BaseObject *> m_observers;
   TimeStamp m_lastUpdated{0};
   TimeStamp m_lastCommitted{0};

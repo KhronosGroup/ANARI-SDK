@@ -57,15 +57,11 @@ static bool is_ready(const std::future<R> &f)
 
 // Frame definitions //////////////////////////////////////////////////////////
 
-Frame::Frame(HelideGlobalState *s) : helium::BaseFrame(s)
-{
-  s->objectCounts.frames++;
-}
+Frame::Frame(HelideGlobalState *s) : helium::BaseFrame(s) {}
 
 Frame::~Frame()
 {
   wait();
-  deviceState()->objectCounts.frames--;
 }
 
 bool Frame::isValid() const

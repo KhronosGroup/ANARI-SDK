@@ -8,15 +8,7 @@
 
 namespace helide {
 
-Material::Material(HelideGlobalState *s) : Object(ANARI_MATERIAL, s)
-{
-  s->objectCounts.materials++;
-}
-
-Material::~Material()
-{
-  deviceState()->objectCounts.materials--;
-}
+Material::Material(HelideGlobalState *s) : Object(ANARI_MATERIAL, s) {}
 
 Material *Material::createInstance(
     std::string_view subtype, HelideGlobalState *s)
