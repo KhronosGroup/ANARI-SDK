@@ -32,7 +32,7 @@ struct Object : public helium::BaseObject
 struct UnknownObject : public Object
 {
   UnknownObject(ANARIDataType type, HelideGlobalState *s);
-  ~UnknownObject() override;
+  ~UnknownObject() override = default;
   bool isValid() const override;
 };
 

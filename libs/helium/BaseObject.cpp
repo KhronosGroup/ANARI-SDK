@@ -49,7 +49,14 @@ std::string string_printf(const char *fmt, ...)
 
 BaseObject::BaseObject(ANARIDataType type, BaseGlobalDeviceState *state)
     : m_type(type), m_state(state)
-{}
+{
+  incrementObjectCount();
+}
+
+BaseObject::~BaseObject()
+{
+  decrementObjectCount();
+}
 
 bool BaseObject::isValid() const
 {
@@ -108,6 +115,118 @@ BaseGlobalDeviceState *BaseObject::deviceState() const
 void BaseObject::notifyObserver(BaseObject *obj) const
 {
   // no-op
+}
+
+void BaseObject::incrementObjectCount()
+{
+  auto *s = deviceState();
+  if (!s)
+    return;
+
+  switch (type()) {
+  case ANARI_FRAME:
+    s->objectCounts.frames++;
+    break;
+  case ANARI_CAMERA:
+    s->objectCounts.cameras++;
+    break;
+  case ANARI_RENDERER:
+    s->objectCounts.renderers++;
+    break;
+  case ANARI_WORLD:
+    s->objectCounts.worlds++;
+    break;
+  case ANARI_INSTANCE:
+    s->objectCounts.instances++;
+    break;
+  case ANARI_GROUP:
+    s->objectCounts.groups++;
+    break;
+  case ANARI_SURFACE:
+    s->objectCounts.surfaces++;
+    break;
+  case ANARI_GEOMETRY:
+    s->objectCounts.geometries++;
+    break;
+  case ANARI_MATERIAL:
+    s->objectCounts.materials++;
+    break;
+  case ANARI_SAMPLER:
+    s->objectCounts.samplers++;
+    break;
+  case ANARI_VOLUME:
+    s->objectCounts.volumes++;
+    break;
+  case ANARI_SPATIAL_FIELD:
+    s->objectCounts.spatialFields++;
+    break;
+  case ANARI_ARRAY:
+  case ANARI_ARRAY1D:
+  case ANARI_ARRAY2D:
+  case ANARI_ARRAY3D:
+    s->objectCounts.arrays++;
+    break;
+  case ANARI_UNKNOWN:
+  default:
+    s->objectCounts.unknown++;
+    break;
+  }
+}
+
+void BaseObject::decrementObjectCount()
+{
+  auto *s = deviceState();
+  if (!s)
+    return;
+
+  switch (type()) {
+  case ANARI_FRAME:
+    s->objectCounts.frames--;
+    break;
+  case ANARI_CAMERA:
+    s->objectCounts.cameras--;
+    break;
+  case ANARI_RENDERER:
+    s->objectCounts.renderers--;
+    break;
+  case ANARI_WORLD:
+    s->objectCounts.worlds--;
+    break;
+  case ANARI_INSTANCE:
+    s->objectCounts.instances--;
+    break;
+  case ANARI_GROUP:
+    s->objectCounts.groups--;
+    break;
+  case ANARI_SURFACE:
+    s->objectCounts.surfaces--;
+    break;
+  case ANARI_GEOMETRY:
+    s->objectCounts.geometries--;
+    break;
+  case ANARI_MATERIAL:
+    s->objectCounts.materials--;
+    break;
+  case ANARI_SAMPLER:
+    s->objectCounts.samplers--;
+    break;
+  case ANARI_VOLUME:
+    s->objectCounts.volumes--;
+    break;
+  case ANARI_SPATIAL_FIELD:
+    s->objectCounts.spatialFields--;
+    break;
+  case ANARI_ARRAY:
+  case ANARI_ARRAY1D:
+  case ANARI_ARRAY2D:
+  case ANARI_ARRAY3D:
+    s->objectCounts.arrays--;
+    break;
+  case ANARI_UNKNOWN:
+  default:
+    s->objectCounts.unknown--;
+    break;
+  }
 }
 
 } // namespace helium

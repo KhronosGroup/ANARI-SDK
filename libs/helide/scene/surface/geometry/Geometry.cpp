@@ -15,15 +15,11 @@
 
 namespace helide {
 
-Geometry::Geometry(HelideGlobalState *s) : Object(ANARI_GEOMETRY, s)
-{
-  s->objectCounts.geometries++;
-}
+Geometry::Geometry(HelideGlobalState *s) : Object(ANARI_GEOMETRY, s) {}
 
 Geometry::~Geometry()
 {
   rtcReleaseGeometry(m_embreeGeometry);
-  deviceState()->objectCounts.geometries--;
 }
 
 Geometry *Geometry::createInstance(

@@ -88,8 +88,6 @@ static float4 backgroundColorFromImage(
 
 Renderer::Renderer(HelideGlobalState *s) : Object(ANARI_RENDERER, s)
 {
-  s->objectCounts.renderers++;
-
   Array1DMemoryDescriptor md;
   md.elementType = ANARI_FLOAT32_VEC3;
   md.numItems = 4;
@@ -102,11 +100,6 @@ Renderer::Renderer(HelideGlobalState *s) : Object(ANARI_RENDERER, s)
   colors[2] = float3(1.f, 1.f, 0.f);
   colors[3] = float3(1.f, 1.f, 1.f);
   m_heatmap->unmap();
-}
-
-Renderer::~Renderer()
-{
-  deviceState()->objectCounts.renderers--;
 }
 
 void Renderer::commit()

@@ -10,7 +10,7 @@ namespace helide {
 struct SpatialField : public Object
 {
   SpatialField(HelideGlobalState *d);
-  virtual ~SpatialField();
+  virtual ~SpatialField() = default;
   static SpatialField *createInstance(
       std::string_view subtype, HelideGlobalState *d);
 

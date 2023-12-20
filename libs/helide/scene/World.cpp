@@ -7,8 +7,6 @@ namespace helide {
 
 World::World(HelideGlobalState *s) : Object(ANARI_WORLD, s)
 {
-  s->objectCounts.worlds++;
-
   m_zeroGroup = new Group(s);
   m_zeroInstance = new Instance(s);
   m_zeroInstance->setParamDirect("group", m_zeroGroup.ptr);
@@ -21,7 +19,6 @@ World::World(HelideGlobalState *s) : Object(ANARI_WORLD, s)
 World::~World()
 {
   cleanup();
-  deviceState()->objectCounts.worlds--;
 }
 
 bool World::getProperty(

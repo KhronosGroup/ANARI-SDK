@@ -11,7 +11,7 @@ namespace helide {
 struct Material : public Object
 {
   Material(HelideGlobalState *s);
-  ~Material() override;
+  ~Material() override = default;
 
   static Material *createInstance(
       std::string_view subtype, HelideGlobalState *s);

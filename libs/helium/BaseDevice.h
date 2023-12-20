@@ -85,7 +85,7 @@ struct BaseDevice : public anari::DeviceImpl,
 
   BaseDevice(ANARIStatusCallback defaultCallback, const void *userPtr);
   BaseDevice(ANARILibrary l);
-  virtual ~BaseDevice() override = default;
+  virtual ~BaseDevice() override;
 
  protected:
   template <typename... Args>

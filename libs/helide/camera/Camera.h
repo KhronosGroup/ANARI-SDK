@@ -10,7 +10,7 @@ namespace helide {
 struct Camera : public Object
 {
   Camera(HelideGlobalState *s);
-  ~Camera() override;
+  ~Camera() override = default;
 
   virtual void commit() override;
 
