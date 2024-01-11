@@ -5,8 +5,9 @@
 add_subdirectory(simple)
 
 option(BUILD_VIEWER "Build interactive viewer app (requires GLFW)" OFF)
-
 if (BUILD_VIEWER)
   add_subdirectory(viewer)
 endif()
+
 add_subdirectory(blender)
+add_subdirectory(empty_helium_device)
