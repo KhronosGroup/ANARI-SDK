@@ -1,4 +1,4 @@
-## Copyright 2022 The Khronos Group
+## Copyright 2024 The Khronos Group
 ## SPDX-License-Identifier: Apache-2.0
 
 cmake_minimum_required(VERSION 3.11)
@@ -31,7 +31,7 @@ set(CMAKE_INSTALL_MESSAGE LAZY)
 
 ## Establish project ##
 
-project(anari_library_helide LANGUAGES CXX)
+project(anari_library_hecore LANGUAGES CXX)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
@@ -43,30 +43,24 @@ include(GNUInstallDirs)
 
 find_package(anari REQUIRED)
 
-add_subdirectory(external/embree EXCLUDE_FROM_ALL)
-
 ## Code generation ##
 
 anari_generate_queries(
-  NAME helide
-  PREFIX HelideDevice
-  CPP_NAMESPACE helide
-  JSON_DEFINITIONS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/HelideDefinitions.json
+  NAME hecore
+  PREFIX HeCoreDevice
+  CPP_NAMESPACE hecore
+  JSON_DEFINITIONS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/HeCoreDefinitions.json
 )
 
-## Core device target ##
+## Build device target ##
 
-project_add_library(SHARED)
-
-project_sources(PRIVATE
-  HelideDevice.cpp
-  HelideDeviceQueries.cpp
-  HelideGlobalState.cpp
-  HelideLibrary.cpp
+add_library(${PROJECT_NAME} SHARED
+  HeCoreDevice.cpp
+  HeCoreDeviceQueries.cpp
+  HeCoreDeviceGlobalState.cpp
+  HeCoreLibrary.cpp
   Object.cpp
   camera/Camera.cpp
-  camera/Orthographic.cpp
-  camera/Perspective.cpp
   frame/Frame.cpp
   renderer/Renderer.cpp
   scene/Group.cpp
@@ -74,57 +68,28 @@ project_sources(PRIVATE
   scene/World.cpp
   scene/light/Light.cpp
   scene/surface/Surface.cpp
-  scene/surface/geometry/Cone.cpp
-  scene/surface/geometry/Curve.cpp
-  scene/surface/geometry/Cylinder.cpp
   scene/surface/geometry/Geometry.cpp
-  scene/surface/geometry/Quad.cpp
-  scene/surface/geometry/Sphere.cpp
-  scene/surface/geometry/Triangle.cpp
   scene/surface/material/Material.cpp
-  scene/surface/material/Matte.cpp
-  scene/surface/material/PBM.cpp
-  scene/surface/material/sampler/Image1D.cpp
-  scene/surface/material/sampler/Image2D.cpp
-  scene/surface/material/sampler/Image3D.cpp
-  scene/surface/material/sampler/PrimitiveSampler.cpp
   scene/surface/material/sampler/Sampler.cpp
-  scene/surface/material/sampler/TransformSampler.cpp
-  scene/volume/TransferFunction1D.cpp
   scene/volume/Volume.cpp
   scene/volume/spatial_field/SpatialField.cpp
-  scene/volume/spatial_field/StructuredRegularField.cpp
 )
 
-include(GenerateExportHeader)
-generate_export_header(${PROJECT_NAME} EXPORT_MACRO_NAME "HELIDE_EXPORT")
+target_link_libraries(${PROJECT_NAME} PRIVATE anari::helium)
 
-project_include_directories(
-PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
+include(GenerateExportHeader)
+generate_export_header(${PROJECT_NAME} EXPORT_MACRO_NAME "HECORE_EXPORT")
+
+target_include_directories(${PROJECT_NAME}
+PRIVATE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
 )
 
-project_link_libraries(PUBLIC anari::helium PRIVATE local_embree)
-
-if(WIN32)
-  project_compile_definitions(PRIVATE _USE_MATH_DEFINES)
-endif()
-
 ## Installation ##
 
 install(TARGETS ${PROJECT_NAME}
-  EXPORT anari_Exports
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
-
-install(
-FILES
-  ${PROJECT_BINARY_DIR}/${PROJECT_NAME}_export.h
-  ${CMAKE_CURRENT_LIST_DIR}/include/anari/ext/helide/anariNewHelideDevice.h
-DESTINATION
-  ${CMAKE_INSTALL_INCLUDEDIR}/anari/ext/helide
 )

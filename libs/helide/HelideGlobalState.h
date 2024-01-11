@@ -4,7 +4,7 @@
 #pragma once
 
 #include "RenderingSemaphore.h"
-#include "helide_math.h"
+#include "HelideMath.h"
 // helium
 #include "helium/BaseGlobalDeviceState.h"
 // embree

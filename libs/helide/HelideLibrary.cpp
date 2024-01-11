@@ -39,13 +39,13 @@ const char **HelideLibrary::getDeviceExtensions(const char * /*deviceType*/)
 
 // Define library entrypoint //////////////////////////////////////////////////
 
-extern "C" HELIDE_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_ENTRYPOINT(
+extern "C" HELIDE_EXPORT ANARI_DEFINE_LIBRARY_ENTRYPOINT(
     helide, handle, scb, scbPtr)
 {
   return (ANARILibrary) new helide::HelideLibrary(handle, scb, scbPtr);
 }
 
-extern "C" HELIDE_DEVICE_INTERFACE ANARIDevice anariNewHelideDevice(
+extern "C" HELIDE_EXPORT ANARIDevice anariNewHelideDevice(
     ANARIStatusCallback defaultCallback, const void *userPtr)
 {
   return (ANARIDevice) new helide::HelideDevice(defaultCallback, userPtr);
