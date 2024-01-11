@@ -16,7 +16,7 @@
 extern "C" {
 #endif
 
-HELIDE_DEVICE_INTERFACE ANARIDevice anariNewHelideDevice(
+HELIDE_EXPORT ANARIDevice anariNewHelideDevice(
     ANARIStatusCallback defaultCallback ANARI_DEFAULT_VAL(0),
     const void *userPtr ANARI_DEFAULT_VAL(0));
 

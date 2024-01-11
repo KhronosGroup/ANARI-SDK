@@ -51,7 +51,7 @@ anari_generate_queries(
   NAME helide
   PREFIX HelideDevice
   CPP_NAMESPACE helide
-  JSON_DEFINITIONS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/helide_device.json
+  JSON_DEFINITIONS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/HelideDefinitions.json
 )
 
 ## Core device target ##
@@ -97,9 +97,7 @@ project_sources(PRIVATE
 )
 
 include(GenerateExportHeader)
-generate_export_header(${PROJECT_NAME}
-  EXPORT_MACRO_NAME "HELIDE_DEVICE_INTERFACE"
-)
+generate_export_header(${PROJECT_NAME} EXPORT_MACRO_NAME "HELIDE_EXPORT")
 
 project_include_directories(
 PUBLIC

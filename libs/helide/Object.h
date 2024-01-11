@@ -4,7 +4,7 @@
 #pragma once
 
 #include "HelideGlobalState.h"
-#include "helide_math.h"
+#include "HelideMath.h"
 // helium
 #include "helium/BaseObject.h"
 // std

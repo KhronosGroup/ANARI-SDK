@@ -10,44 +10,9 @@
 #include "frame/Frame.h"
 #include "scene/volume/spatial_field/SpatialField.h"
 
+#include "HelideDeviceQueries.h"
+
 namespace helide {
-
-///////////////////////////////////////////////////////////////////////////////
-// Generated function declarations ////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-
-const char **query_object_types(ANARIDataType type);
-
-const void *query_object_info(ANARIDataType type,
-    const char *subtype,
-    const char *infoName,
-    ANARIDataType infoType);
-
-const void *query_param_info(ANARIDataType type,
-    const char *subtype,
-    const char *paramName,
-    ANARIDataType paramType,
-    const char *infoName,
-    ANARIDataType infoType);
-
-const char **query_extensions();
-
-///////////////////////////////////////////////////////////////////////////////
-// Helper functions ///////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-
-template <typename HANDLE_T, typename OBJECT_T>
-inline HANDLE_T getHandleForAPI(OBJECT_T *object)
-{
-  return (HANDLE_T)object;
-}
-
-template <typename OBJECT_T, typename HANDLE_T, typename... Args>
-inline HANDLE_T createObjectForAPI(HelideGlobalState *s, Args &&...args)
-{
-  return getHandleForAPI<HANDLE_T>(
-      new OBJECT_T(s, std::forward<Args>(args)...));
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 // HelideDevice definitions ///////////////////////////////////////////////////
@@ -85,9 +50,9 @@ ANARIArray1D HelideDevice::newArray1D(const void *appMemory,
   md.numItems = numItems;
 
   if (anari::isObject(type))
-    return createObjectForAPI<ObjectArray, ANARIArray1D>(deviceState(), md);
+    return (ANARIArray1D) new ObjectArray(deviceState(), md);
   else
-    return createObjectForAPI<Array1D, ANARIArray1D>(deviceState(), md);
+    return (ANARIArray1D) new Array1D(deviceState(), md);
 }
 
 ANARIArray2D HelideDevice::newArray2D(const void *appMemory,
@@ -107,7 +72,7 @@ ANARIArray2D HelideDevice::newArray2D(const void *appMemory,
   md.numItems1 = numItems1;
   md.numItems2 = numItems2;
 
-  return createObjectForAPI<Array2D, ANARIArray2D>(deviceState(), md);
+  return (ANARIArray2D) new Array2D(deviceState(), md);
 }
 
 ANARIArray3D HelideDevice::newArray3D(const void *appMemory,
@@ -129,93 +94,86 @@ ANARIArray3D HelideDevice::newArray3D(const void *appMemory,
   md.numItems2 = numItems2;
   md.numItems3 = numItems3;
 
-  return createObjectForAPI<Array3D, ANARIArray3D>(deviceState(), md);
+  return (ANARIArray3D) new Array3D(deviceState(), md);
 }
 
 ANARICamera HelideDevice::newCamera(const char *subtype)
 {
   initDevice();
-  return getHandleForAPI<ANARICamera>(
-      Camera::createInstance(subtype, deviceState()));
+  return (ANARICamera)Camera::createInstance(subtype, deviceState());
 }
 
 ANARIFrame HelideDevice::newFrame()
 {
   initDevice();
-  return createObjectForAPI<Frame, ANARIFrame>(deviceState());
+  return (ANARIFrame) new Frame(deviceState());
 }
 
 ANARIGeometry HelideDevice::newGeometry(const char *subtype)
 {
   initDevice();
-  return getHandleForAPI<ANARIGeometry>(
-      Geometry::createInstance(subtype, deviceState()));
+  return (ANARIGeometry)Geometry::createInstance(subtype, deviceState());
 }
 
 ANARIGroup HelideDevice::newGroup()
 {
   initDevice();
-  return createObjectForAPI<Group, ANARIGroup>(deviceState());
+  return (ANARIGroup) new Group(deviceState());
 }
 
 ANARIInstance HelideDevice::newInstance(const char * /*subtype*/)
 {
   initDevice();
-  return createObjectForAPI<Instance, ANARIInstance>(deviceState());
+  return (ANARIInstance) new Instance(deviceState());
 }
 
 ANARILight HelideDevice::newLight(const char *subtype)
 {
   initDevice();
-  return getHandleForAPI<ANARILight>(
-      Light::createInstance(subtype, deviceState()));
+  return (ANARILight)Light::createInstance(subtype, deviceState());
 }
 
 ANARIMaterial HelideDevice::newMaterial(const char *subtype)
 {
   initDevice();
-  return getHandleForAPI<ANARIMaterial>(
-      Material::createInstance(subtype, deviceState()));
+  return (ANARIMaterial)Material::createInstance(subtype, deviceState());
 }
 
 ANARIRenderer HelideDevice::newRenderer(const char *subtype)
 {
   initDevice();
-  return getHandleForAPI<ANARIRenderer>(
-      Renderer::createInstance(subtype, deviceState()));
+  return (ANARIRenderer)Renderer::createInstance(subtype, deviceState());
 }
 
 ANARISampler HelideDevice::newSampler(const char *subtype)
 {
   initDevice();
-  return getHandleForAPI<ANARISampler>(
-      Sampler::createInstance(subtype, deviceState()));
+  return (ANARISampler)Sampler::createInstance(subtype, deviceState());
 }
 
 ANARISpatialField HelideDevice::newSpatialField(const char *subtype)
 {
   initDevice();
-  return getHandleForAPI<ANARISpatialField>(
-      SpatialField::createInstance(subtype, deviceState()));
+  return (ANARISpatialField)SpatialField::createInstance(
+      subtype, deviceState());
 }
 
 ANARISurface HelideDevice::newSurface()
 {
   initDevice();
-  return createObjectForAPI<Surface, ANARISurface>(deviceState());
+  return (ANARISurface) new Surface(deviceState());
 }
 
 ANARIVolume HelideDevice::newVolume(const char *subtype)
 {
   initDevice();
-  return getHandleForAPI<ANARIVolume>(
-      Volume::createInstance(subtype, deviceState()));
+  return (ANARIVolume)Volume::createInstance(subtype, deviceState());
 }
 
 ANARIWorld HelideDevice::newWorld()
 {
   initDevice();
-  return createObjectForAPI<World, ANARIWorld>(deviceState());
+  return (ANARIWorld) new World(deviceState());
 }
 
 // Query functions ////////////////////////////////////////////////////////////
