@@ -41,6 +41,7 @@ struct BaseGlobalDeviceState
 
   friend struct BaseObject;
   friend struct BaseDevice;
+  friend struct Array;
   struct ObjectCounts
   {
     std::atomic<size_t> frames{0};

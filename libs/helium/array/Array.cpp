@@ -220,7 +220,7 @@ void Array::initManagedMemory()
 void Array::notifyObserver(BaseObject *o) const
 {
   o->markUpdated();
-  deviceState()->commitBufferAddObject(o);
+  deviceState()->m_commitBuffer.addObject(o);
 }
 
 } // namespace helium
