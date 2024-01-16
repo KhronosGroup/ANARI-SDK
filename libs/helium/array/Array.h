@@ -5,6 +5,8 @@
 
 #include "../BaseObject.h"
 #include "../helium_math.h"
+// std
+#include <sstream>
 
 namespace helium {
 
@@ -94,6 +96,9 @@ struct Array : public BaseArray
 
   void notifyObserver(BaseObject *) const override;
 
+  template <typename T>
+  void throwIfDifferentElementType() const;
+
   struct ArrayDescriptor
   {
     struct SharedData
@@ -135,10 +140,24 @@ struct Array : public BaseArray
 template <typename T>
 inline const T *Array::dataAs() const
 {
-  if (anari::ANARITypeFor<T>::value != m_elementType)
-    throw std::runtime_error("incorrect element type queried for array");
-
+  throwIfDifferentElementType<T>();
   return (const T *)data();
+}
+
+template <typename T>
+inline void Array::throwIfDifferentElementType() const
+{
+  constexpr auto t = anari::ANARITypeFor<T>::value;
+  static_assert(
+      t != ANARI_UNKNOWN, "unknown type used to query array element type");
+
+  if (t != elementType()) {
+    std::stringstream msg;
+    msg << "incorrect element type queried for array -- asked for '"
+        << anari::toString(t) << "', but array stores '"
+        << anari::toString(elementType()) << "'";
+    throw std::runtime_error(msg.str());
+  }
 }
 
 } // namespace helium

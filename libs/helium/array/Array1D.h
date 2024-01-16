@@ -57,19 +57,13 @@ anari::math::float4 readAttributeValue(const Array1D *arr,
 template <typename T>
 inline const T *Array1D::beginAs() const
 {
-  if (anari::ANARITypeFor<T>::value != elementType())
-    throw std::runtime_error("incorrect element type queried for array");
-
-  return (T *)data() + m_begin;
+  return dataAs<T>() + m_begin;
 }
 
 template <typename T>
 inline const T *Array1D::endAs() const
 {
-  if (anari::ANARITypeFor<T>::value != elementType())
-    throw std::runtime_error("incorrect element type queried for array");
-
-  return (T *)data() + m_end;
+  return dataAs<T>() + m_end;
 }
 
 template <typename T>
