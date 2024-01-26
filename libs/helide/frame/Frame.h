@@ -85,6 +85,7 @@ struct Frame : public helium::BaseFrame
   helium::TimeStamp m_frameLastRendered{0};
 
   mutable std::future<void> m_future;
+  std::packaged_task<void()> m_task;
 };
 
 } // namespace helide

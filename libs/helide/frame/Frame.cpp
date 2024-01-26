@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <chrono>
 #include <random>
-#include <thread>
 // embree
 #include "algorithms/parallel_for.h"
 
@@ -38,13 +37,11 @@ static void serial_for(I size, FUNC &&f)
 }
 
 template <typename R, typename TASK_T>
-static std::future<R> async(TASK_T &&fcn)
+static std::future<R> async(std::packaged_task<R()> &task, TASK_T &&fcn)
 {
-  auto task = std::packaged_task<R()>(std::forward<TASK_T>(fcn));
+  task = std::packaged_task<R()>(std::forward<TASK_T>(fcn));
   auto future = task.get_future();
-
-  std::thread([task = std::move(task)]() mutable { task(); }).detach();
-
+  embree::TaskScheduler::spawn([&]() { task(); });
   return future;
 }
 
@@ -146,7 +143,7 @@ void Frame::renderFrame()
   state->waitOnCurrentFrame();
   state->currentFrame = this;
 
-  m_future = async<void>([&, state]() {
+  m_future = async<void>(m_task, [&, state]() {
     auto start = std::chrono::steady_clock::now();
     state->renderingSemaphore.frameStart();
     state->commitBufferFlush();
