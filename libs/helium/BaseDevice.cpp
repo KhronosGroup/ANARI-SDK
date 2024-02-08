@@ -160,8 +160,6 @@ void BaseDevice::release(ANARIObject o)
   if (o == nullptr)
     return;
 
-  auto lock = getObjectLock(o);
-
   if (handleIsDevice(o)) {
     if (--m_refCount == 0)
       delete this;
