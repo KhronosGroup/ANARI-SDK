@@ -45,5 +45,4 @@ jobs:
 
     - name: Render Tests
       working-directory: ${{github.workspace}}/build
-      if: ${{ matrix.config == 'Release' }}
       run: ctest -R render_test -C ${{ matrix.config }}
