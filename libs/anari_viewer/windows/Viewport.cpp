@@ -308,19 +308,23 @@ void Viewport::ui_handleInput()
 {
   ImGuiIO &io = ImGui::GetIO();
 
-  const bool leftDown = ImGui::IsMouseDown(ImGuiMouseButton_Left);
-  const bool rightDown = ImGui::IsMouseDown(ImGuiMouseButton_Right);
-  const bool middleDown = ImGui::IsMouseDown(ImGuiMouseButton_Middle);
+  const bool dolly = ImGui::IsMouseDown(ImGuiMouseButton_Right)
+      || (ImGui::IsMouseDown(ImGuiMouseButton_Left)
+          && io.KeysDown[GLFW_KEY_LEFT_SHIFT]);
+  const bool pan = ImGui::IsMouseDown(ImGuiMouseButton_Middle)
+      || (ImGui::IsMouseDown(ImGuiMouseButton_Left)
+          && io.KeysDown[GLFW_KEY_LEFT_ALT]);
+  const bool orbit = ImGui::IsMouseDown(ImGuiMouseButton_Left);
 
-  const bool anyDown = leftDown || rightDown || middleDown;
+  const bool anyMovement = dolly || pan || orbit;
 
-  if (!anyDown) {
+  if (!anyMovement) {
     m_manipulating = false;
     m_previousMouse = anari::math::float2(-1);
   } else if (ImGui::IsItemHovered() && !m_manipulating)
     m_manipulating = true;
 
-  if (m_mouseRotating && !leftDown)
+  if (m_mouseRotating && !orbit)
     m_mouseRotating = false;
 
   if (m_manipulating) {
@@ -329,7 +333,7 @@ void Viewport::ui_handleInput()
 
     const anari::math::float2 mouse(position.x, position.y);
 
-    if (anyDown && m_previousMouse != anari::math::float2(-1)) {
+    if (anyMovement && m_previousMouse != anari::math::float2(-1)) {
       const anari::math::float2 prev = m_previousMouse;
 
       const anari::math::float2 mouseFrom =
@@ -340,17 +344,18 @@ void Viewport::ui_handleInput()
       const anari::math::float2 mouseDelta = mouseTo - mouseFrom;
 
       if (mouseDelta != anari::math::float2(0.f)) {
-        if (leftDown) {
+        if (dolly)
+          m_arcball->zoom(mouseDelta.y);
+        else if (pan)
+          m_arcball->pan(mouseDelta);
+        else if (orbit && !(pan || dolly)) {
           if (!m_mouseRotating) {
             m_arcball->startNewRotation();
             m_mouseRotating = true;
           }
 
           m_arcball->rotate(mouseDelta);
-        } else if (rightDown)
-          m_arcball->zoom(mouseDelta.y);
-        else if (middleDown)
-          m_arcball->pan(mouseDelta);
+        }
       }
     }
 
