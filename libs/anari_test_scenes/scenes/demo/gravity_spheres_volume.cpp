@@ -121,7 +121,7 @@ void GravityVolume::commit()
   anari::commitParameters(d, field);
 
   auto volume = anari::newObject<anari::Volume>(d, "transferFunction1D");
-  anari::setAndReleaseParameter(d, volume, "field", field);
+  anari::setAndReleaseParameter(d, volume, "value", field);
 
   {
     std::vector<math::float3> colors;
