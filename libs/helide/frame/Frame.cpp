@@ -13,22 +13,6 @@ namespace helide {
 
 // Helper functions ///////////////////////////////////////////////////////////
 
-static uint32_t cvt_uint32(const float &f)
-{
-  return static_cast<uint32_t>(255.f * std::clamp(f, 0.f, 1.f));
-}
-
-static uint32_t cvt_uint32(const float4 &v)
-{
-  return (cvt_uint32(v.x) << 0) | (cvt_uint32(v.y) << 8)
-      | (cvt_uint32(v.z) << 16) | (cvt_uint32(v.w) << 24);
-}
-
-static uint32_t cvt_uint32_srgb(const float4 &v)
-{
-  return cvt_uint32(float4(toneMap(v.x), toneMap(v.y), toneMap(v.z), v.w));
-}
-
 template <typename I, typename FUNC>
 static void serial_for(I size, FUNC &&f)
 {
@@ -263,12 +247,12 @@ void Frame::writeSample(int x, int y, const PixelSample &s)
   auto *color = m_pixelBuffer.data() + (idx * m_perPixelBytes);
   switch (m_colorType) {
   case ANARI_UFIXED8_VEC4: {
-    auto c = cvt_uint32(s.color);
+    auto c = helium::math::cvt_color_to_uint32(s.color);
     std::memcpy(color, &c, sizeof(c));
     break;
   }
   case ANARI_UFIXED8_RGBA_SRGB: {
-    auto c = cvt_uint32_srgb(s.color);
+    auto c = helium::math::cvt_color_to_uint32_srgb(s.color);
     std::memcpy(color, &c, sizeof(c));
     break;
   }
