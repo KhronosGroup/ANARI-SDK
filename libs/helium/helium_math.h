@@ -108,6 +108,32 @@ inline float toneMap(float v)
     return v;
 }
 
+inline anari::math::float4 cvt_color_to_float4(uint32_t rgba)
+{
+  const float a = ((rgba >> 24) & 0xff) / 255.f;
+  const float b = ((rgba >> 16) & 0xff) / 255.f;
+  const float g = ((rgba >> 8) & 0xff) / 255.f;
+  const float r = ((rgba >> 0) & 0xff) / 255.f;
+  return anari::math::float4(r, g, b, a);
+}
+
+inline uint32_t cvt_color_to_uint32(const float &f)
+{
+  return static_cast<uint32_t>(255.f * std::clamp(f, 0.f, 1.f));
+}
+
+inline uint32_t cvt_color_to_uint32(const anari::math::float4 &v)
+{
+  return (cvt_color_to_uint32(v.x) << 0) | (cvt_color_to_uint32(v.y) << 8)
+      | (cvt_color_to_uint32(v.z) << 16) | (cvt_color_to_uint32(v.w) << 24);
+}
+
+inline uint32_t cvt_color_to_uint32_srgb(const anari::math::float4 &v)
+{
+  return cvt_color_to_uint32(
+      anari::math::float4(toneMap(v.x), toneMap(v.y), toneMap(v.z), v.w));
+}
+
 struct Interpolant
 {
   int32_t lower;
@@ -124,12 +150,6 @@ inline Interpolant getInterpolant(float in, size_t size, bool texOffset = false)
   const int32_t high = low + 1;
   const float frac = lowf - low;
   return {low, high, frac};
-}
-
-template <typename T, typename U>
-inline T lerp(const T &x, const T &y, const U &a)
-{
-  return static_cast<T>(x * (U(1) - a) + y * a);
 }
 
 template <typename T>
