@@ -86,8 +86,8 @@ struct Array : public BaseArray
   virtual bool getProperty(const std::string_view &name,
       ANARIDataType type,
       void *ptr,
-      uint32_t flags);
-  virtual void commit();
+      uint32_t flags) override;
+  virtual void commit() override;
 
  protected:
   void makePrivatizedCopy(size_t numElements);

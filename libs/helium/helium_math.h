@@ -243,7 +243,7 @@ template <typename ELEMENT_T, int NUM_COMPONENTS, bool SRGB = false>
 static anari::math::float4 getAttributeArrayAt_ufixed(
     const void *data, uint64_t offset)
 {
-  constexpr float m = std::numeric_limits<ELEMENT_T>::max();
+  constexpr float m = float(std::numeric_limits<ELEMENT_T>::max());
   anari::math::float4 retval(0.f, 0.f, 0.f, 1.f);
   switch (NUM_COMPONENTS) {
   case 4:

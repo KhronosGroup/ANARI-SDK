@@ -129,7 +129,7 @@ class Application : public anari_viewer::Application
     auto *viewport = new windows::Viewport(device, "Viewport");
     viewport->setManipulator(&m_state.manipulator);
 
-    auto *leditor = new windows::LightsEditor({device});
+    auto *leditor = new windows::LightsEditor(device);
 
     auto *sselector = new windows::SceneSelector();
     sselector->setCallback([=](const char *category, const char *scene) {
