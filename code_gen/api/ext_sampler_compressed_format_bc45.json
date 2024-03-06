@@ -1,0 +1,25 @@
+{
+    "info" : {
+        "name" : "EXT_SAMPLER_COMPRESSED_FORMAT_BC45",
+        "type" : "extension",
+        "dependencies" : []
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_SAMPLER",
+            "name" : "compressedImage2D",
+            "parameters" : [
+               {
+                    "name" : "format",
+                    "values" : [
+                        "BC4",
+                        "BC4_SNORM",
+                        "BC5",
+                        "BC5_SNORM"
+                    ]
+                }
+            ]
+        }
+    ]
+}
