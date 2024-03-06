@@ -24,7 +24,6 @@ struct ANARIDataType
   ANARIDataType() = default;
   constexpr ANARIDataType(int v) noexcept : value(v) {}
   constexpr operator int() const noexcept { return value; }
-  constexpr bool operator==(int v) const noexcept { return v == value; }
  private:
   int value;
 };
