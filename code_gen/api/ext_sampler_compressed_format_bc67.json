@@ -1,0 +1,25 @@
+{
+    "info" : {
+        "name" : "EXT_SAMPLER_COMPRESSED_FORMAT_BC67",
+        "type" : "extension",
+        "dependencies" : []
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_SAMPLER",
+            "name" : "compressedImage2D",
+            "parameters" : [
+               {
+                    "name" : "format",
+                    "values" : [
+                        "BC6H_UFLOAT",
+                        "BC6H_SFLOAT",
+                        "BC7",
+                        "BC7_SRGB"
+                    ]
+                }
+            ]
+        }
+    ]
+}
