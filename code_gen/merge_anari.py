@@ -41,8 +41,9 @@ def merge_parameters(core, extension):
         name = param["name"]
         c = next((x for x in core if x["name"] == name), None)
         if c:
-            c["types"].extend(param["types"])
-            if "values" in c:
+            if "types" in c and "types" in param:
+                c["types"].extend(param["types"])
+            if "values" in c and "values" in param:
                 c["values"].extend(param["values"])
         else:
             core.append(param)
