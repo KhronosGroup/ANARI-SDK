@@ -722,14 +722,16 @@ template<class T> linalg::mat<T,4,4> linalg::frustum_matrix(T x0, T x1, T y0, T 
 
 // clang-format on
 
-namespace anari::math {
+namespace anari {
+namespace math {
 
 using namespace linalg::aliases;
 using namespace linalg;
 using mat3 = float3x3;
 using mat4 = float4x4;
 
-} // namespace anari::math
+} // namespace math
+} // namespace anari
 
 namespace anari {
 
