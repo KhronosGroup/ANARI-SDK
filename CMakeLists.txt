@@ -28,7 +28,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
 ## Establish project
 
-project(anari VERSION 0.8.1 LANGUAGES C CXX)
+project(anari VERSION 0.9.0 LANGUAGES C CXX)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
@@ -66,7 +66,7 @@ include(cmake/anari_sdk_fetch_project.cmake)
 
 ## Add library and executable targets
 
-add_subdirectory(libs)
+add_subdirectory(src)
 add_subdirectory(external)
 add_subdirectory(code_gen)
 if (BUILD_EXAMPLES)

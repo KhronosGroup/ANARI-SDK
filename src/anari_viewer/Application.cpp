@@ -190,6 +190,8 @@ void AppImpl::renderWindows()
 
 void AppImpl::cleanup()
 {
+  windows.clear();
+
   ImGui_ImplOpenGL2_Shutdown();
   ImGui_ImplGlfw_Shutdown();
 
