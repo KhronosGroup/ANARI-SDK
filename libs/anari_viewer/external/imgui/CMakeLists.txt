@@ -5,9 +5,9 @@ project(anari_viewer_imgui_glfw LANGUAGES CXX)
 
 anari_sdk_fetch_project(
   NAME ${PROJECT_NAME}
-  # v1.90 docking branch
-  URL https://github.com/ocornut/imgui/archive/ce0d0ac8298ce164b5d862577e8b087d92f6e90e.zip
-  MD5 40f838f4235dfc17a9ab5b3b96b33c6c
+  # v1.94 docking branch
+  URL https://github.com/ocornut/imgui/archive/adcc3217c38142e965eae679a299a34ce1c963d5.zip
+  MD5 6c69f7df87bd0c16de7872fd01333ada
 )
 
 include(CMakeFindDependencyMacro)
