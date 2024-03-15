@@ -1,4 +1,4 @@
-// Copyright 2021 The Khronos Group
+// Copyright 2021-2024 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
@@ -20,7 +20,7 @@ class SceneGenerator : public anari::scenes::TestScene
   std::vector<anari::scenes::ParameterInfo> parameters() override;
   void resetAllParameters();
   void resetSceneObjects();
-  
+
   void createAnariObject(
       int type, const std::string &subtype = "", const std::string& ctsType = "");
   template <typename T>
@@ -55,9 +55,9 @@ class SceneGenerator : public anari::scenes::TestScene
       std::vector<T> result;
       result.reserve(total_size);
       for (const auto &subvector : vector) {
-        result.insert(result.end(), subvector.begin(), subvector.end());      
+        result.insert(result.end(), subvector.begin(), subvector.end());
       }
-      
+
       anari::setAndReleaseParameter(m_device,
           m_currentObject,
           name.c_str(),

@@ -1,4 +1,4 @@
-# Copyright 2021 The Khronos Group
+# Copyright 2021-2024 The Khronos Group
 # SPDX-License-Identifier: Apache-2.0
 
 from cffi import FFI
@@ -130,7 +130,7 @@ if __name__ == "__main__":
         os.rename(pyanari_file[0], 'pyanari.so')
 
 
-boilerplate = '''# Copyright 2021 The Khronos Group
+boilerplate = '''# Copyright 2021-2024 The Khronos Group
 # SPDX-License-Identifier: Apache-2.0
 
 from pyanari import lib, ffi
@@ -322,7 +322,7 @@ special = {
     return _convert_pointer(infoType, result)
 
 ''',
-    
+
 
     'anariRelease' : '', # remove these to avoid confusion
     'anariRetain' : '',
