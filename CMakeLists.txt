@@ -66,7 +66,7 @@ include(cmake/anari_sdk_fetch_project.cmake)
 
 ## Add library and executable targets
 
-add_subdirectory(libs)
+add_subdirectory(src)
 add_subdirectory(external)
 add_subdirectory(code_gen)
 if (BUILD_EXAMPLES)
