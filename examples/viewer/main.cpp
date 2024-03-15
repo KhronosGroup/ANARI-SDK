@@ -1,4 +1,4 @@
-// Copyright 2023 The Khronos Group
+// Copyright 2023-2024 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "anari_viewer/Application.h"
@@ -129,7 +129,7 @@ class Application : public anari_viewer::Application
     auto *viewport = new windows::Viewport(device, "Viewport");
     viewport->setManipulator(&m_state.manipulator);
 
-    auto *leditor = new windows::LightsEditor({device});
+    auto *leditor = new windows::LightsEditor(device);
 
     auto *sselector = new windows::SceneSelector();
     sselector->setCallback([=](const char *category, const char *scene) {

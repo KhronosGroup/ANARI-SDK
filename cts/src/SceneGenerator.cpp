@@ -1,4 +1,4 @@
-// Copyright 2021 The Khronos Group
+// Copyright 2021-2024 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "SceneGenerator.h"
@@ -81,14 +81,14 @@ std::vector<anari::scenes::ParameterInfo> SceneGenerator::parameters()
   };
 }
 
-int SceneGenerator::anariTypeFromString(const std::string& type) 
+int SceneGenerator::anariTypeFromString(const std::string& type)
 {
   if (type == "material") {
     return ANARI_MATERIAL;
-  } 
+  }
   if (type == "camera") {
     return ANARI_CAMERA;
-  } 
+  }
   if (type == "light") {
     return ANARI_LIGHT;
   }
@@ -926,7 +926,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
   if (getParam<bool>("frameCompletionCallback", false)) {
     bool wasCalled = false;
     auto func = [](const void* userData, ANARIDevice, ANARIFrame)
-    {       
+    {
         *(static_cast<bool *>(const_cast<void *>(userData))) = true;
     };
     anari::setParameter(m_device, frame, "frameCompletionCallback", static_cast<ANARIFrameCompletionCallback>(func));
@@ -1038,7 +1038,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
                 colorValue = static_cast<uint8_t>(
                     pixels[i * componentCount + j] * 255.0f);
               }
-            }               
+            }
             rgba += colorValue << (8 * j);
           }
           converted.push_back(rgba);

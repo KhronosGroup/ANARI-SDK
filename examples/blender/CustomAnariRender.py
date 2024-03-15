@@ -1,4 +1,4 @@
-# Copyright 2021 The Khronos Group
+# Copyright 2021-2024 The Khronos Group
 # SPDX-License-Identifier: Apache-2.0
 
 import bpy
@@ -343,7 +343,7 @@ class ANARIRenderEngine(bpy.types.RenderEngine):
             npvert = npvert.reshape((vertexcount, 3))
             npvert = npvert[npindex]
             vertexcount = 3*indexcount
-        
+
         self.set_array(mesh, 'vertex.position', ANARI_FLOAT32_VEC3, vertexcount, npvert)
 
         normalcount = len(objmesh.loops)
@@ -353,7 +353,7 @@ class ANARIRenderEngine(bpy.types.RenderEngine):
             npnormal = npnormal.reshape((normalcount, 3))
             npnormal = npnormal[nploopindex]
             normalcount = 3*loopindexcount
-            
+
         self.set_array(mesh, 'vertex.normal', ANARI_FLOAT32_VEC3, normalcount, npnormal)
 
         if objmesh.uv_layers.active:
@@ -578,7 +578,7 @@ class ANARIRenderEngine(bpy.types.RenderEngine):
                     anariCommitParameters(self.device, surface)
                     self.materials[objmaterial.name] = name
                     self.meshes[name] = (mesh, material, surface, group, instance)
-            
+
                 transform = [x for v in obj.matrix_world.transposed() for x in v]
                 anariSetParameter(self.device, instance, 'transform', ANARI_FLOAT32_MAT4, transform)
                 anariCommitParameters(self.device, instance)
@@ -976,7 +976,7 @@ def register():
         library = anariLoadLibrary(name)
         if library:
             devices = anariGetDeviceSubtypes(library)
-            
+
             for devicename in devices:
                 label = "%s %s (Anari)"%(name, devicename)
                 idname = "ANARI_%s_%s"%(name, devicename)

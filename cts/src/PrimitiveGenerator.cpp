@@ -1,4 +1,4 @@
-// Copyright 2021 The Khronos Group
+// Copyright 2021-2024 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "PrimitiveGenerator.h"
@@ -162,7 +162,7 @@ std::vector<glm::vec3> PrimitiveGenerator::generateTriangulatedQuadsSoup(
     size_t primitiveCount)
 {
   std::vector<glm::vec3> vertices(primitiveCount * 6);
-  
+
   // create quads (all 6 vertices of any quad lie in a plane)
   size_t i = 0;
   glm::vec3 vertex0(0), vertex1(0), vertex2(0);
@@ -276,9 +276,9 @@ std::tuple<std::vector<glm::vec3>, std::vector<glm::uvec3>> PrimitiveGenerator::
   std::vector<glm::uvec3> indices;
   // vertices of a basic cube, used as a basis for each primitive
   const std::vector<glm::vec3> cubeVertices {
-    {0.0, 0.0, 0.0}, 
-    {1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0}, 
-    {1.0, 1.0, 0.0}, {1.0, 0.0, 1.0}, {0.0, 1.0, 1.0}, 
+    {0.0, 0.0, 0.0},
+    {1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0},
+    {1.0, 1.0, 0.0}, {1.0, 0.0, 1.0}, {0.0, 1.0, 1.0},
     {1.0, 1.0, 1.0}};
   // triangle indices of a basic cube, used as a basis for each primitive
   const std::vector<glm::uvec3> cubeIndices {
@@ -340,7 +340,7 @@ std::vector<glm::vec3> PrimitiveGenerator::generateQuads(size_t primitiveCount)
 // returns soup vector of vertices, each set of 24 vertices defines a randomly transformed cube
 // consisting of 6 quads. Range is roughly 0..1
 std::vector<glm::vec3> PrimitiveGenerator::generateQuadCubesSoup(
-      size_t primitiveCount) 
+      size_t primitiveCount)
   {
   std::vector<glm::vec3> vertices;
   // vertices of all quads of a basic cube, used as a basis for each primitive
