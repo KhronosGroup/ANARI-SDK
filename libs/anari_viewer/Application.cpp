@@ -1,4 +1,4 @@
-// Copyright 2021 Jefferson Amstutz
+// Copyright 2021-2024 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Application.h"

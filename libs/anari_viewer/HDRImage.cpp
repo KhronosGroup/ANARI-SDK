@@ -1,3 +1,6 @@
+// Copyright 2023-2024 The Khronos Group
+// SPDX-License-Identifier: Apache-2.0
+
 #include <algorithm>
 #include <cstring>
 
