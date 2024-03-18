@@ -170,7 +170,7 @@ float4 Renderer::shadeRay(const float2 &screen,
   float3 color(0.f, 0.f, 0.f);
   float opacity = 0.f;
 
-  float3 volumeColor = bgColor;
+  float3 volumeColor = color;
   float volumeOpacity = 0.f;
 
   float3 geometryColor(0.f, 0.f, 0.f);
@@ -266,13 +266,13 @@ float4 Renderer::shadeRay(const float2 &screen,
   }
 
   geometryColor = linalg::min(geometryColor, float3(1.f));
-  volumeColor = linalg::min(volumeColor, float3(1.f));
 
-  accumulateValue(color, volumeColor * volumeOpacity, opacity);
-  accumulateValue(opacity, volumeOpacity, opacity);
+  color = linalg::min(volumeColor, float3(1.f));
+  opacity = volumeOpacity;
+
   accumulateValue(color, geometryColor * geometryOpacity, opacity);
   accumulateValue(opacity, geometryOpacity, opacity);
-  accumulateValue(color, bgColor * bgColorOpacity.w, opacity);
+  accumulateValue(color, bgColor, opacity);
   accumulateValue(opacity, bgColorOpacity.w, opacity);
 
   return {color, opacity};
