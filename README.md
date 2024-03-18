@@ -134,9 +134,11 @@ independently from the SDK. (see below)
 Below is a list of available ANARI implemenations compatible with this SDK:
 
 - [AMD RadeonProRender](https://github.com/GPUOpen-LibrariesAndSDKs/RadeonProRenderANARI)
+- [Barney](https://github.com/ingowald/barney) (experimental MPI distributed renderer)
 - [Intel OSPRay](https://github.com/ospray/anari-ospray)
 - [NVIDIA USD](https://github.com/NVIDIA-Omniverse/AnariUsdDevice)
-- [NVIDIA VisRTX](https://github.com/NVIDIA/VisRTX)
+- [NVIDIA VisRTX + VisGL](https://github.com/NVIDIA/VisRTX)
+- [Visionaray](https://github.com/szellmann/anari-visionaray)
 
 If you implement a backend to the ANARI SDK, please open a PR to add it to this
 list!
