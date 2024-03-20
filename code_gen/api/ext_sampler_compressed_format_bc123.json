@@ -1,0 +1,29 @@
+{
+    "info" : {
+        "name" : "EXT_SAMPLER_COMPRESSED_FORMAT_BC123",
+        "type" : "extension",
+        "dependencies" : []
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_SAMPLER",
+            "name" : "compressedImage2D",
+            "parameters" : [
+               {
+                    "name" : "format",
+                    "values" : [
+                        "BC1_RGB",
+                        "BC1_RGB_SRGB",
+                        "BC1_RGBA",
+                        "BC1_RGBA_SRGB",
+                        "BC2",
+                        "BC2_SRGB",
+                        "BC3",
+                        "BC3_SRGB"
+                    ]
+                }
+            ]
+        }
+    ]
+}
