@@ -7,7 +7,8 @@
 
 namespace helide {
 
-Cone::Cone(HelideGlobalState *s) : Geometry(s)
+Cone::Cone(HelideGlobalState *s)
+    : Geometry(s), m_index(this), m_vertexPosition(this), m_vertexRadius(this)
 {
   m_embreeGeometry =
       rtcNewGeometry(s->embreeDevice, RTC_GEOMETRY_TYPE_CONE_LINEAR_CURVE);
@@ -16,8 +17,6 @@ Cone::Cone(HelideGlobalState *s) : Geometry(s)
 void Cone::commit()
 {
   Geometry::commit();
-
-  cleanup();
 
   m_index = getParamObject<Array1D>("primitive.index");
   m_vertexPosition = getParamObject<Array1D>("vertex.position");
@@ -33,10 +32,6 @@ void Cone::commit()
         "missing required parameter 'vertex.position' on cone geometry");
     return;
   }
-
-  if (m_index)
-    m_index->addCommitObserver(this);
-  m_vertexPosition->addCommitObserver(this);
 
   const float *radius =
       m_vertexRadius ? m_vertexRadius->beginAs<float>() : nullptr;
@@ -104,14 +99,6 @@ float4 Cone::getAttributeValue(const Attribute &attr, const Ray &ray) const
   auto b = readAttributeValue(attributeArray, idx.y);
 
   return a + (b - a) * ray.u;
-}
-
-void Cone::cleanup()
-{
-  if (m_index)
-    m_index->removeCommitObserver(this);
-  if (m_vertexPosition)
-    m_vertexPosition->removeCommitObserver(this);
 }
 
 } // namespace helide

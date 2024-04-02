@@ -104,7 +104,7 @@ void BaseObject::removeCommitObserver(BaseObject *obj)
 void BaseObject::notifyCommitObservers() const
 {
   for (auto o : m_observers)
-    notifyObserver(o);
+    notifyCommitObserver(o);
 }
 
 BaseGlobalDeviceState *BaseObject::deviceState() const
@@ -112,9 +112,11 @@ BaseGlobalDeviceState *BaseObject::deviceState() const
   return m_state;
 }
 
-void BaseObject::notifyObserver(BaseObject *obj) const
+void BaseObject::notifyCommitObserver(BaseObject *o) const
 {
-  // no-op
+  o->markUpdated();
+  if (auto *ds = deviceState(); ds)
+    ds->m_commitBuffer.addObject(o);
 }
 
 void BaseObject::incrementObjectCount()

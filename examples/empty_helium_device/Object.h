@@ -3,10 +3,11 @@
 
 #pragma once
 
-#include "HeCoreMath.h"
 #include "HeCoreDeviceGlobalState.h"
+#include "HeCoreMath.h"
 // helium
 #include "helium/BaseObject.h"
+#include "helium/utility/CommitObserverPtr.h"
 // std
 #include <string_view>
 
