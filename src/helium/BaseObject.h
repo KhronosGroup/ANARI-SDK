@@ -66,7 +66,7 @@ struct BaseObject : public RefCounted, ParameterizedObject, LockableObject
  protected:
   // Handle what happens when the observing object 'obj' is being notified of
   // that this object has changed.
-  virtual void notifyObserver(BaseObject *obj) const;
+  virtual void notifyCommitObserver(BaseObject *obj) const;
 
   BaseGlobalDeviceState *m_state{nullptr};
 
