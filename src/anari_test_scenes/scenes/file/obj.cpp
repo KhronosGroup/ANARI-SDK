@@ -7,6 +7,8 @@
 #include "tiny_obj_loader.h"
 // stb_image
 #include "stb_image.h"
+// KTX
+#include <ktx.h>
 // std
 #include <sstream>
 #include <unordered_map>
@@ -40,40 +42,92 @@ static void loadTexture(anari::Device d,
         return c == '\\' ? '/' : c;
       });
 
+
   anari::Sampler colorTex = cache[filename];
 
   if (!colorTex) {
-    int width, height, n;
-    stbi_set_flip_vertically_on_load(1);
-    void *data = stbi_loadf(filename.c_str(), &width, &height, &n, 0);
+    std::string fileExtension = filename.substr(filename.find_last_of('.'), std::string::npos);
+    if(fileExtension == ".ktx") {
+      ktxTexture2* texture;
+      KTX_error_code result;
+      ktx_size_t offset;
+      ktx_uint8_t* data;
 
-    if (!data || n < 1) {
-      if (!data)
-        printf("failed to load texture '%s'\n", filename.c_str());
-      else
-        printf(
-            "texture '%s' with %i channels not loaded\n", filename.c_str(), n);
-      return;
+      result = ktxTexture2_CreateFromNamedFile(filename.c_str(),
+                                              KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT,
+                                              &texture);
+      if(result != KTX_SUCCESS) {
+        printf("failed to load texture '%s' reason: %s\n", filename.c_str(), ktxErrorString(result));
+      }
+
+      result = ktxTexture2_TranscodeBasis(texture, KTX_TTF_RGBA32, 0);
+      if(result != KTX_SUCCESS) {
+        printf("failed to load texture '%s' reason: %s\n", filename.c_str(), ktxErrorString(result));
+      }
+
+      int texelType = ANARI_UFIXED8_VEC4;
+
+      ktx_uint32_t width = texture->baseWidth;
+      ktx_uint32_t height = texture->baseHeight;
+
+      printf("%d %d\n", (int)width, (int)height);
+
+      result = ktxTexture_GetImageOffset(ktxTexture(texture), 1, 0, 0, &offset);
+      if(result != KTX_SUCCESS) {
+        printf("failed to load texture '%s' reason: %s\n", filename.c_str(), ktxErrorString(result));
+      }
+
+      data = ktxTexture_GetData(ktxTexture(texture)) + offset;
+
+      colorTex = anari::newObject<anari::Sampler>(d, "image2D");
+
+
+
+      anari::setParameterArray2D(
+          d, colorTex, "image", texelType, data, width, height);
+
+      anari::setParameter(d, colorTex, "inAttribute", "attribute0");
+      anari::setParameter(d, colorTex, "wrapMode1", "repeat");
+      anari::setParameter(d, colorTex, "wrapMode2", "repeat");
+      anari::setParameter(d, colorTex, "filter", "linear");
+      anari::commitParameters(d, colorTex);
+
+
+      ktxTexture_Destroy(ktxTexture(texture));
+    } else {
+      int width, height, n;
+      stbi_set_flip_vertically_on_load(1);
+      void *data = stbi_loadf(filename.c_str(), &width, &height, &n, 0);
+
+      if (!data || n < 1) {
+        if (!data)
+          printf("failed to load texture '%s'\n", filename.c_str());
+        else
+          printf(
+              "texture '%s' with %i channels not loaded\n", filename.c_str(), n);
+        return;
+      }
+
+      colorTex = anari::newObject<anari::Sampler>(d, "image2D");
+
+      int texelType = ANARI_FLOAT32_VEC4;
+      if (n == 3)
+        texelType = ANARI_FLOAT32_VEC3;
+      else if (n == 2)
+        texelType = ANARI_FLOAT32_VEC2;
+      else if (n == 1)
+        texelType = ANARI_FLOAT32;
+
+      anari::setParameterArray2D(
+          d, colorTex, "image", texelType, data, width, height);
+
+      anari::setParameter(d, colorTex, "inAttribute", "attribute0");
+      anari::setParameter(d, colorTex, "wrapMode1", "repeat");
+      anari::setParameter(d, colorTex, "wrapMode2", "repeat");
+      anari::setParameter(d, colorTex, "filter", "linear");
+      anari::commitParameters(d, colorTex);
     }
 
-    colorTex = anari::newObject<anari::Sampler>(d, "image2D");
-
-    int texelType = ANARI_FLOAT32_VEC4;
-    if (n == 3)
-      texelType = ANARI_FLOAT32_VEC3;
-    else if (n == 2)
-      texelType = ANARI_FLOAT32_VEC2;
-    else if (n == 1)
-      texelType = ANARI_FLOAT32;
-
-    anari::setParameterArray2D(
-        d, colorTex, "image", texelType, data, width, height);
-
-    anari::setParameter(d, colorTex, "inAttribute", "attribute0");
-    anari::setParameter(d, colorTex, "wrapMode1", "repeat");
-    anari::setParameter(d, colorTex, "wrapMode2", "repeat");
-    anari::setParameter(d, colorTex, "filter", "linear");
-    anari::commitParameters(d, colorTex);
   }
 
   cache[filename] = colorTex;

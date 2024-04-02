@@ -27,7 +27,7 @@ PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/anari/anari_test_scenes>
 )
-project_link_libraries(PUBLIC anari helium PRIVATE $<BUILD_INTERFACE:stb_image>)
+project_link_libraries(PUBLIC anari helium ktx PRIVATE $<BUILD_INTERFACE:stb_image>)
 
 include(GenerateExportHeader)
 generate_export_header(${PROJECT_NAME}
