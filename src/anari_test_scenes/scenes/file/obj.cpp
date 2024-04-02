@@ -70,21 +70,28 @@ static void loadTexture(anari::Device d,
       ktx_uint32_t width = texture->baseWidth;
       ktx_uint32_t height = texture->baseHeight;
 
-      printf("%d %d\n", (int)width, (int)height);
+      result = ktxTexture_GetImageOffset(ktxTexture(texture), 0, 0, 0, &offset);
 
-      result = ktxTexture_GetImageOffset(ktxTexture(texture), 1, 0, 0, &offset);
+      printf("%d %d %d\n", (int)width, (int)height, (int)offset);
+
       if(result != KTX_SUCCESS) {
         printf("failed to load texture '%s' reason: %s\n", filename.c_str(), ktxErrorString(result));
       }
 
       data = ktxTexture_GetData(ktxTexture(texture)) + offset;
 
+      // why???
+      std::vector<uint8_t> flipped(width*height*4);
+      for(int i = 0;i<height;++i) {
+        std::copy(data+4*width*i, data+4*width*(i+1), flipped.begin()+4*width*(height-i-1));
+      }
+
       colorTex = anari::newObject<anari::Sampler>(d, "image2D");
 
 
 
       anari::setParameterArray2D(
-          d, colorTex, "image", texelType, data, width, height);
+          d, colorTex, "image", texelType, flipped.data(), width, height);
 
       anari::setParameter(d, colorTex, "inAttribute", "attribute0");
       anari::setParameter(d, colorTex, "wrapMode1", "repeat");
@@ -97,7 +104,7 @@ static void loadTexture(anari::Device d,
     } else {
       int width, height, n;
       stbi_set_flip_vertically_on_load(1);
-      void *data = stbi_loadf(filename.c_str(), &width, &height, &n, 0);
+      void *data = stbi_load(filename.c_str(), &width, &height, &n, 0);
 
       if (!data || n < 1) {
         if (!data)
@@ -110,13 +117,13 @@ static void loadTexture(anari::Device d,
 
       colorTex = anari::newObject<anari::Sampler>(d, "image2D");
 
-      int texelType = ANARI_FLOAT32_VEC4;
+      int texelType = ANARI_UFIXED8_VEC4;
       if (n == 3)
-        texelType = ANARI_FLOAT32_VEC3;
+        texelType = ANARI_UFIXED8_VEC3;
       else if (n == 2)
-        texelType = ANARI_FLOAT32_VEC2;
+        texelType = ANARI_UFIXED8_VEC2;
       else if (n == 1)
-        texelType = ANARI_FLOAT32;
+        texelType = ANARI_UFIXED8;
 
       anari::setParameterArray2D(
           d, colorTex, "image", texelType, data, width, height);
