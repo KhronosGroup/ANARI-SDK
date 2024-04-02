@@ -5,7 +5,8 @@
 
 namespace helide {
 
-Sphere::Sphere(HelideGlobalState *s) : Geometry(s)
+Sphere::Sphere(HelideGlobalState *s)
+    : Geometry(s), m_index(this), m_vertexPosition(this), m_vertexRadius(this)
 {
   m_embreeGeometry =
       rtcNewGeometry(s->embreeDevice, RTC_GEOMETRY_TYPE_SPHERE_POINT);
@@ -14,8 +15,6 @@ Sphere::Sphere(HelideGlobalState *s) : Geometry(s)
 void Sphere::commit()
 {
   Geometry::commit();
-
-  cleanup();
 
   m_index = getParamObject<Array1D>("primitive.index");
   m_vertexPosition = getParamObject<Array1D>("vertex.position");
@@ -31,12 +30,6 @@ void Sphere::commit()
         "missing required parameter 'vertex.position' on sphere geometry");
     return;
   }
-
-  m_vertexPosition->addCommitObserver(this);
-  if (m_vertexRadius)
-    m_vertexRadius->addCommitObserver(this);
-  if (m_index)
-    m_index->addCommitObserver(this);
 
   m_globalRadius = getParam<float>("radius", 0.01f);
 
@@ -97,16 +90,6 @@ float4 Sphere::getAttributeValue(const Attribute &attr, const Ray &ray) const
       m_attributeIndex.empty() ? ray.primID : m_attributeIndex[ray.primID];
 
   return readAttributeValue(attributeArray, primID);
-}
-
-void Sphere::cleanup()
-{
-  if (m_index)
-    m_index->removeCommitObserver(this);
-  if (m_vertexPosition)
-    m_vertexPosition->removeCommitObserver(this);
-  if (m_vertexRadius)
-    m_vertexRadius->removeCommitObserver(this);
 }
 
 } // namespace helide

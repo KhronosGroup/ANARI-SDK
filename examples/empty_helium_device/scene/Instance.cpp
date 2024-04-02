@@ -5,9 +5,7 @@
 
 namespace hecore {
 
-Instance::Instance(HeCoreDeviceGlobalState *s) : Object(ANARI_INSTANCE, s)
-{
-}
+Instance::Instance(HeCoreDeviceGlobalState *s) : Object(ANARI_INSTANCE, s) {}
 
 void Instance::commit()
 {

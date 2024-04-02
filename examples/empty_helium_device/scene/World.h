@@ -22,15 +22,13 @@ struct World : public Object
   const std::vector<Instance *> &instances() const;
 
  private:
-  void cleanup();
+  helium::CommitObserverPtr<ObjectArray> m_zeroSurfaceData;
+  helium::CommitObserverPtr<ObjectArray> m_zeroVolumeData;
+  helium::CommitObserverPtr<ObjectArray> m_zeroLightData;
 
-  helium::IntrusivePtr<ObjectArray> m_zeroSurfaceData;
-  helium::IntrusivePtr<ObjectArray> m_zeroVolumeData;
-
-  helium::IntrusivePtr<ObjectArray> m_instanceData;
+  helium::CommitObserverPtr<ObjectArray> m_instanceData;
   std::vector<Instance *> m_instances;
 
-  bool m_addZeroInstance{false};
   helium::IntrusivePtr<Group> m_zeroGroup;
   helium::IntrusivePtr<Instance> m_zeroInstance;
 };

@@ -7,7 +7,8 @@
 
 namespace helide {
 
-Curve::Curve(HelideGlobalState *s) : Geometry(s)
+Curve::Curve(HelideGlobalState *s)
+    : Geometry(s), m_index(this), m_vertexPosition(this), m_vertexRadius(this)
 {
   m_embreeGeometry =
       rtcNewGeometry(s->embreeDevice, RTC_GEOMETRY_TYPE_ROUND_LINEAR_CURVE);
@@ -16,8 +17,6 @@ Curve::Curve(HelideGlobalState *s) : Geometry(s)
 void Curve::commit()
 {
   Geometry::commit();
-
-  cleanup();
 
   m_index = getParamObject<Array1D>("primitive.index");
   m_vertexPosition = getParamObject<Array1D>("vertex.position");
@@ -33,10 +32,6 @@ void Curve::commit()
         "missing required parameter 'vertex.position' on curve geometry");
     return;
   }
-
-  if (m_index)
-    m_index->addCommitObserver(this);
-  m_vertexPosition->addCommitObserver(this);
 
   const float *radius =
       m_vertexRadius ? m_vertexRadius->beginAs<float>() : nullptr;
@@ -99,14 +94,6 @@ float4 Curve::getAttributeValue(const Attribute &attr, const Ray &ray) const
   auto b = readAttributeValue(attributeArray, idx + 1);
 
   return a + (b - a) * ray.u;
-}
-
-void Curve::cleanup()
-{
-  if (m_index)
-    m_index->removeCommitObserver(this);
-  if (m_vertexPosition)
-    m_vertexPosition->removeCommitObserver(this);
 }
 
 } // namespace helide
