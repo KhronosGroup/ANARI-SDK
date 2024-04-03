@@ -110,7 +110,15 @@ inline T ParameterizedObject::getParam(const std::string &name, T valIfNotFound)
   static_assert(type != ANARI_STRING && !std::is_same_v<T, std::string>,
       "use ParameterizedObject::getParamString() for getting strings");
   auto *p = findParam(name);
-  return p && p->second.type() == type ? p->second.get<T>() : valIfNotFound;
+  return p && p->second.is(type) ? p->second.get<T>() : valIfNotFound;
+}
+
+template <>
+inline bool ParameterizedObject::getParam(
+    const std::string &name, bool valIfNotFound)
+{
+  auto *p = findParam(name);
+  return p && p->second.is(ANARI_BOOL) ? p->second.get<bool>() : valIfNotFound;
 }
 
 template <typename T>

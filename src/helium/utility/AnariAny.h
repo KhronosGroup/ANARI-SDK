@@ -14,6 +14,17 @@
 
 namespace helium {
 
+namespace detail {
+
+template <typename T>
+constexpr bool validType()
+{
+  return std::is_same_v<T, bool>
+      || anari::ANARITypeFor<T>::value != ANARI_UNKNOWN;
+}
+
+} // namespace detail
+
 struct AnariAny
 {
   AnariAny();
@@ -32,9 +43,6 @@ struct AnariAny
 
   template <typename T>
   AnariAny &operator=(T rhs);
-
-  bool operator==(const AnariAny &rhs) const;
-  bool operator!=(const AnariAny &rhs) const;
 
   // Raw data access, note that string values will be limited in storage size
   const void *data() const;
@@ -60,6 +68,9 @@ struct AnariAny
   bool valid() const;
   operator bool() const;
   void reset();
+
+  bool operator==(const AnariAny &rhs) const;
+  bool operator!=(const AnariAny &rhs) const;
 
  private:
   template <typename T>
@@ -103,7 +114,7 @@ inline AnariAny::AnariAny(T value) : AnariAny()
 {
   constexpr auto type = anari::ANARITypeFor<T>::value;
   static_assert(
-      type != ANARI_UNKNOWN, "unknown type used initialize visrtx::AnariAny");
+      detail::validType<T>(), "unknown type used initialize visrtx::AnariAny");
 
   if constexpr (type == ANARI_STRING)
     m_string = value;
@@ -112,6 +123,13 @@ inline AnariAny::AnariAny(T value) : AnariAny()
 
   m_type = type;
   refIncObject();
+}
+
+template <>
+inline AnariAny::AnariAny(bool value) : AnariAny()
+{
+  uint32_t b = value;
+  *this = AnariAny(ANARI_BOOL, &b);
 }
 
 inline AnariAny::AnariAny(ANARIDataType type, const void *v) : AnariAny()
@@ -159,28 +177,6 @@ inline AnariAny &AnariAny::operator=(T rhs)
   return *this = AnariAny(rhs);
 }
 
-inline bool AnariAny::operator==(const AnariAny &rhs) const
-{
-  if (!valid() || !rhs.valid())
-    return false;
-  if (type() != rhs.type())
-    return false;
-  if (type() == ANARI_BOOL)
-    return get<bool>() == rhs.get<bool>();
-  else if (type() == ANARI_STRING)
-    return m_string == rhs.m_string;
-  else {
-    return std::equal(m_storage.data(),
-        m_storage.data() + ::anari::sizeOf(type()),
-        rhs.m_storage.data());
-  }
-}
-
-inline bool AnariAny::operator!=(const AnariAny &rhs) const
-{
-  return !(*this == rhs);
-}
-
 template <typename T>
 inline T AnariAny::get() const
 {
@@ -194,10 +190,23 @@ inline T AnariAny::get() const
     throw std::runtime_error("get() called on empty visrtx::AnariAny");
   if (!is<T>()) {
     throw std::runtime_error(
-        "get() called with invalid type on visrtx::AnariAny");
+        "get() called with incorrect type on visrtx::AnariAny");
   }
 
   return storageAs<T>();
+}
+
+template <>
+inline bool AnariAny::get() const
+{
+  if (!valid())
+    throw std::runtime_error("get() called on empty visrtx::AnariAny");
+  if (!is(ANARI_BOOL)) {
+    throw std::runtime_error(
+        "get() called with incorrect type on visrtx::AnariAny");
+  }
+
+  return storageAs<uint32_t>();
 }
 
 inline const void *AnariAny::data() const
@@ -227,6 +236,12 @@ inline bool AnariAny::is() const
   return is(anari::ANARITypeFor<T>::value);
 }
 
+template <>
+inline bool AnariAny::is<bool>() const
+{
+  return is(ANARI_BOOL);
+}
+
 inline bool AnariAny::is(ANARIDataType t) const
 {
   return type() == t;
@@ -253,6 +268,28 @@ inline void AnariAny::reset()
   std::fill(m_storage.begin(), m_storage.end(), 0);
   m_string.clear();
   m_type = ANARI_UNKNOWN;
+}
+
+inline bool AnariAny::operator==(const AnariAny &rhs) const
+{
+  if (!valid() || !rhs.valid())
+    return false;
+  if (type() != rhs.type())
+    return false;
+  if (type() == ANARI_BOOL)
+    return get<bool>() == rhs.get<bool>();
+  else if (type() == ANARI_STRING)
+    return m_string == rhs.m_string;
+  else {
+    return std::equal(m_storage.data(),
+        m_storage.data() + ::anari::sizeOf(type()),
+        rhs.m_storage.data());
+  }
+}
+
+inline bool AnariAny::operator!=(const AnariAny &rhs) const
+{
+  return !(*this == rhs);
 }
 
 template <typename T>

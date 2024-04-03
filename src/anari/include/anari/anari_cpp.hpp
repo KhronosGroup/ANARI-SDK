@@ -201,6 +201,7 @@ template <typename T>
 void setParameter(Device d, Object o, const char *name, T &&v);
 
 void setParameter(Device d, Object o, const char *name, std::string v);
+void setParameter(Device d, Object o, const char *name, bool v);
 
 void setParameter(
     Device d, Object o, const char *name, ANARIDataType type, const void *v);
