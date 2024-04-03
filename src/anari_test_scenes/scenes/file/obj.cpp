@@ -57,46 +57,93 @@ static void loadTexture(anari::Device d,
                                               KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT,
                                               &texture);
       if(result != KTX_SUCCESS) {
-        printf("failed to load texture '%s' reason: %s\n", filename.c_str(), ktxErrorString(result));
+        printf("failed to load texture '%s': %s\n", filename.c_str(), ktxErrorString(result));
       }
 
-      result = ktxTexture2_TranscodeBasis(texture, KTX_TTF_RGBA32, 0);
-      if(result != KTX_SUCCESS) {
-        printf("failed to load texture '%s' reason: %s\n", filename.c_str(), ktxErrorString(result));
+      khr_df_model_e colorModel = ktxTexture2_GetColorModel_e(texture);
+
+      // check if bc1 (DXT1) compression is usable by the device
+      bool bc1 = false;
+      const char ** device_extensions = nullptr;
+      if(anariGetProperty(d, d, "extension", ANARI_STRING_LIST, &device_extensions, sizeof(char**), ANARI_WAIT)) {
+        for(int i = 0;device_extensions[i] != nullptr;++i) {
+          if(strncmp("ANARI_EXT_SAMPLER_COMPRESSED_FORMAT_BC1", device_extensions[i], 40)==0){
+            bc1 = true;
+          }
+        }
       }
 
-      int texelType = ANARI_UFIXED8_VEC4;
+      if(bc1) {
+        result = ktxTexture2_TranscodeBasis(texture, KTX_TTF_BC1_RGB, 0);
+        if(result != KTX_SUCCESS) {
+          printf("failed to load texture '%s': %s\n", filename.c_str(), ktxErrorString(result));
+        }
 
-      ktx_uint32_t width = texture->baseWidth;
-      ktx_uint32_t height = texture->baseHeight;
+        ktx_uint32_t width = texture->baseWidth;
+        ktx_uint32_t height = texture->baseHeight;
+        int fmt = texture->vkFormat;
 
-      result = ktxTexture_GetImageOffset(ktxTexture(texture), 0, 0, 0, &offset);
+        result = ktxTexture_GetImageOffset(ktxTexture(texture), 0, 0, 0, &offset);
 
-      printf("%d %d %d\n", (int)width, (int)height, (int)offset);
+        printf("%d %d %d\n", (int)width, (int)height, fmt);
 
-      if(result != KTX_SUCCESS) {
-        printf("failed to load texture '%s' reason: %s\n", filename.c_str(), ktxErrorString(result));
+        if(result != KTX_SUCCESS) {
+          printf("failed to load texture '%s': %s\n", filename.c_str(), ktxErrorString(result));
+        }
+
+        data = ktxTexture_GetData(ktxTexture(texture)) + offset;
+        int bytes = ktxTexture_GetDataSize(ktxTexture(texture));
+
+        colorTex = anari::newObject<anari::Sampler>(d, "compressedImage2D");
+        anari::setParameterArray1D(
+            d, colorTex, "image", ANARI_UINT8, data, bytes);
+        anari::setParameter(d, colorTex, "format", "BC1_RGB");
+        uint64_t size[] = {width, height};
+        anariSetParameter(d, colorTex, "size", ANARI_UINT64_VEC2, size);
+      } else {
+        result = ktxTexture2_TranscodeBasis(texture, KTX_TTF_RGBA32, 0);
+        if(result != KTX_SUCCESS) {
+          printf("failed to load texture '%s': %s\n", filename.c_str(), ktxErrorString(result));
+        }
+
+        int texelType = ANARI_UFIXED8_VEC4;
+
+        ktx_uint32_t width = texture->baseWidth;
+        ktx_uint32_t height = texture->baseHeight;
+        int fmt = texture->vkFormat;
+
+        result = ktxTexture_GetImageOffset(ktxTexture(texture), 0, 0, 0, &offset);
+
+        printf("%d %d %d\n", (int)width, (int)height, fmt);
+
+        if(result != KTX_SUCCESS) {
+          printf("failed to load texture '%s': %s\n", filename.c_str(), ktxErrorString(result));
+        }
+
+        data = ktxTexture_GetData(ktxTexture(texture)) + offset;
+
+
+        colorTex = anari::newObject<anari::Sampler>(d, "image2D");
+        anari::setParameterArray2D(
+            d, colorTex, "image", texelType, data, width, height);
+
       }
-
-      data = ktxTexture_GetData(ktxTexture(texture)) + offset;
-
-      // why???
-      std::vector<uint8_t> flipped(width*height*4);
-      for(int i = 0;i<height;++i) {
-        std::copy(data+4*width*i, data+4*width*(i+1), flipped.begin()+4*width*(height-i-1));
-      }
-
-      colorTex = anari::newObject<anari::Sampler>(d, "image2D");
-
-
-
-      anari::setParameterArray2D(
-          d, colorTex, "image", texelType, flipped.data(), width, height);
 
       anari::setParameter(d, colorTex, "inAttribute", "attribute0");
       anari::setParameter(d, colorTex, "wrapMode1", "repeat");
       anari::setParameter(d, colorTex, "wrapMode2", "repeat");
       anari::setParameter(d, colorTex, "filter", "linear");
+      float flip[] = {
+        1.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, -1.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 1.0f,
+      };
+      anariSetParameter(d, colorTex, "inTransform", ANARI_FLOAT32_MAT4, flip);
+      float flipOffset[] = {
+        0.0f, 1.0f, 0.0f, 0.0f,
+      };
+      anariSetParameter(d, colorTex, "inOffset", ANARI_FLOAT32_VEC4, flipOffset);
       anari::commitParameters(d, colorTex);
 
 
