@@ -9,13 +9,14 @@ BaseGlobalDeviceState::BaseGlobalDeviceState(ANARIDevice d)
 {
   messageFunction = [&, d](ANARIStatusSeverity severity,
                         const std::string &msg,
+                        anari::DataType objType,
                         const void *obj) {
     if (!statusCB)
       return;
     statusCB(statusCBUserPtr,
         d,
         (ANARIObject)obj,
-        ANARI_OBJECT,
+        objType,
         severity,
         severity <= ANARI_SEVERITY_WARNING ? ANARI_STATUS_NO_ERROR
                                            : ANARI_STATUS_UNKNOWN_ERROR,
