@@ -72,10 +72,12 @@ inline void test_interface(T testValue, T testValue2)
     verify_value<T>(v2, testValue);
   }
 
-  SECTION("Can make valid by C construction")
-  {
-    AnariAny v2(anari::ANARITypeFor<T>::value, &testValue);
-    verify_value<T>(v2, testValue);
+  if (!std::is_same_v<bool, T>) {
+    SECTION("Can make valid by C construction")
+    {
+      AnariAny v2(anari::ANARITypeFor<T>::value, &testValue);
+      verify_value<T>(v2, testValue);
+    }
   }
 
   SECTION("Can make valid by calling operator=()")

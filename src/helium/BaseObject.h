@@ -100,7 +100,15 @@ inline void BaseObject::reportMessage(
 template <typename T>
 inline void writeToVoidP(void *_p, T v)
 {
-  T *p = (T *)_p;
+  auto *p = (T *)_p;
+  *p = v;
+}
+
+template <>
+inline void writeToVoidP(void *_p, bool _v)
+{
+  uint32_t v = _v;
+  auto *p = (uint32_t *)_p;
   *p = v;
 }
 
