@@ -178,52 +178,55 @@ float4 Renderer::shadeRay(const float2 &screen,
 
   switch (m_mode) {
   case RenderMode::PRIM_ID:
-    color = hitGeometry ? makeRandomColor(ray.primID) : bgColor;
+    geometryColor = hitGeometry ? makeRandomColor(ray.primID) : bgColor;
     break;
   case RenderMode::GEOM_ID:
-    color = hitGeometry ? makeRandomColor(ray.geomID) : bgColor;
+    geometryColor = hitGeometry ? makeRandomColor(ray.geomID) : bgColor;
     break;
   case RenderMode::INST_ID:
-    color = hitGeometry ? makeRandomColor(ray.instID) : bgColor;
+    geometryColor = hitGeometry ? makeRandomColor(ray.instID) : bgColor;
     break;
   case RenderMode::RAY_UVW:
-    color = hitGeometry ? float3(ray.u, ray.v, 1.f) : bgColor;
+    geometryColor = hitGeometry ? float3(ray.u, ray.v, 1.f) : bgColor;
     break;
   case RenderMode::HIT_SURFACE:
-    color = hitGeometry ? boolColor(hitGeometry) : bgColor;
+    geometryColor = hitGeometry ? boolColor(hitGeometry) : bgColor;
     break;
   case RenderMode::HIT_VOLUME:
-    color = hitVolume ? boolColor(hitVolume) : bgColor;
-    geometryOpacity = 1.f;
+    geometryColor = hitVolume ? boolColor(hitVolume) : bgColor;
     break;
   case RenderMode::BACKFACE:
-    color =
+    geometryColor =
         hitGeometry ? boolColor(linalg::dot(ray.Ng, ray.dir) < 0.f) : bgColor;
     break;
   case RenderMode::NG:
-    color = hitGeometry ? ray.Ng : bgColor;
+    geometryColor = hitGeometry ? normalize(ray.Ng) : bgColor;
     break;
   case RenderMode::NG_ABS:
-    color = hitGeometry ? linalg::abs(ray.Ng) : bgColor;
+    geometryColor = hitGeometry ? normalize(linalg::abs(ray.Ng)) : bgColor;
     break;
   case RenderMode::GEOMETRY_ATTRIBUTE_0:
-    color = hitGeometry ? readAttributeValue(Attribute::ATTRIBUTE_0, ray, w)
-                        : bgColor;
+    geometryColor = hitGeometry
+        ? readAttributeValue(Attribute::ATTRIBUTE_0, ray, w)
+        : bgColor;
     break;
   case RenderMode::GEOMETRY_ATTRIBUTE_1:
-    color = hitGeometry ? readAttributeValue(Attribute::ATTRIBUTE_1, ray, w)
-                        : bgColor;
+    geometryColor = hitGeometry
+        ? readAttributeValue(Attribute::ATTRIBUTE_1, ray, w)
+        : bgColor;
     break;
   case RenderMode::GEOMETRY_ATTRIBUTE_2:
-    color = hitGeometry ? readAttributeValue(Attribute::ATTRIBUTE_2, ray, w)
-                        : bgColor;
+    geometryColor = hitGeometry
+        ? readAttributeValue(Attribute::ATTRIBUTE_2, ray, w)
+        : bgColor;
     break;
   case RenderMode::GEOMETRY_ATTRIBUTE_3:
-    color = hitGeometry ? readAttributeValue(Attribute::ATTRIBUTE_3, ray, w)
-                        : bgColor;
+    geometryColor = hitGeometry
+        ? readAttributeValue(Attribute::ATTRIBUTE_3, ray, w)
+        : bgColor;
     break;
   case RenderMode::GEOMETRY_ATTRIBUTE_COLOR:
-    color =
+    geometryColor =
         hitGeometry ? readAttributeValue(Attribute::COLOR, ray, w) : bgColor;
     break;
   case RenderMode::OPACITY_HEATMAP: {
