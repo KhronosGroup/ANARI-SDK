@@ -19,7 +19,7 @@ namespace detail {
 template <typename T>
 constexpr bool validType()
 {
-  return std::is_same_v<T, bool>
+  return std::is_same<T, bool>::value
       || anari::ANARITypeFor<T>::value != ANARI_UNKNOWN;
 }
 
