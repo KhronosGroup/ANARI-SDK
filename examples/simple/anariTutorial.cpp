@@ -18,7 +18,7 @@ using vec3 = std::array<float, 3>;
 using vec4 = std::array<float, 4>;
 using box3 = std::array<vec3, 2>;
 
-void statusFunc(const void *userData,
+static void statusFunc(const void *userData,
     ANARIDevice device,
     ANARIObject source,
     ANARIDataType sourceType,
@@ -44,6 +44,11 @@ void statusFunc(const void *userData,
   } else if (severity == ANARI_SEVERITY_DEBUG) {
     fprintf(stderr, "[DEBUG] %s\n", message);
   }
+}
+
+static void onFrameCompletion(const void *, anari::Device d, anari::Frame f)
+{
+  printf("anari::Device(%p) finished rendering anari::Frame(%p)!\n", d, f);
 }
 
 template <typename T>
@@ -89,6 +94,10 @@ int main(int argc, const char **argv)
     printf("WARNING: device doesn't support ANARI_KHR_CAMERA_PERSPECTIVE\n");
   if (!extensions.ANARI_KHR_MATERIAL_MATTE)
     printf("WARNING: device doesn't support ANARI_KHR_MATERIAL_MATTE\n");
+  if (!extensions.ANARI_KHR_FRAME_COMPLETION_CALLBACK) {
+    printf(
+        "INFO: device doesn't support ANARI_KHR_FRAME_COMPLETION_CALLBACK\n");
+  }
 
   anari::Device d = anari::newDevice(lib, "default");
 
@@ -175,9 +184,14 @@ int main(int argc, const char **argv)
   anari::setAndReleaseParameter(d, frame, "camera", camera);
   anari::setAndReleaseParameter(d, frame, "world", world);
 
+  anari::setParameter(d,
+      frame,
+      "frameCompletionCallback",
+      (anari::FrameCompletionCallback)onFrameCompletion);
+
   anari::commitParameters(d, frame);
 
-  printf("rendering initial frame to firstFrame.png...");
+  printf("rendering frame to firstFrame.png...\n");
 
   // render one frame
   anari::render(d, frame);
@@ -193,7 +207,7 @@ int main(int argc, const char **argv)
       4 * int(fb.width));
   anari::unmap(d, frame, "channel.color");
 
-  printf("done!\n");
+  printf("...done!\n");
 
   // Check center pixel id buffers
   auto fbPrimId = anari::map<uint32_t>(d, frame, "channel.primitiveId");

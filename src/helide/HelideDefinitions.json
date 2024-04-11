@@ -12,6 +12,7 @@
       "khr_frame_channel_primitive_id",
       "khr_frame_channel_object_id",
       "khr_frame_channel_instance_id",
+      "khr_frame_completion_callback",
       "khr_geometry_cone",
       "khr_geometry_curve",
       "khr_geometry_cylinder",
