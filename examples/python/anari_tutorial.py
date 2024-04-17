@@ -48,7 +48,7 @@ def anari_status(device, source, sourceType, severity, code, message):
 status_handle = ffi.new_handle(anari_status) #something needs to keep this handle alive
 
 debug = anariLoadLibrary('debug', status_handle)
-library = anariLoadLibrary('example', status_handle)
+library = anariLoadLibrary('helide', status_handle)
 
 nested = anariNewDevice(library, 'default')
 anariCommitParameters(nested, nested)
