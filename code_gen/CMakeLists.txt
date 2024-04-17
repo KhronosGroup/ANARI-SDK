@@ -3,7 +3,7 @@
 
 if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
 
-  option(INSTALL_PYTHON_BINDINGS "Install python bindings" ON)
+  option(INSTALL_PYTHON_BINDINGS "Install python bindings" OFF) # If turned on, draws in all the custom targets below (generate_all)
   option(INSTALL_CODE_GEN_SCRIPTS "Install scripts in code_gen/" ON)
 
   find_package(Python3 REQUIRED COMPONENTS Interpreter)
