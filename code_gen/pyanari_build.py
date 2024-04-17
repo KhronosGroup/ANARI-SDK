@@ -125,9 +125,12 @@ if __name__ == "__main__":
     #ffibuilder.emit_c_code(str(args.outdir/"pyanari.c"))
     ffibuilder.compile(verbose=True, debug=False)
     #this ends up with a funny python version specific name despite being version agnostic
-    pyanari_file = glob.glob('pyanari.*.so')
-    if pyanari_file:
-        os.rename(pyanari_file[0], 'pyanari.so')
+    pyanari_files = glob.glob('pyanari.*.so') + glob.glob('pyanari.*.pyd')
+    for pyanari_file in pyanari_files:
+        fileWithExt = os.path.splitext(pyanari_file)
+        newFileName = f'pyanari{fileWithExt[1]}'
+        print(f'Renamed {pyanari_file} to {newFileName}')
+        os.replace(pyanari_file, newFileName)
 
 
 boilerplate = '''# Copyright 2021-2024 The Khronos Group

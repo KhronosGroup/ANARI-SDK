@@ -3,6 +3,7 @@
 
 if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
 
+  option(INSTALL_PYTHON_BINDINGS "Install python bindings" ON)
   option(INSTALL_CODE_GEN_SCRIPTS "Install scripts in code_gen/" ON)
 
   find_package(Python3 REQUIRED COMPONENTS Interpreter)
@@ -44,15 +45,21 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
 
   add_dependencies(generate_all generate_headers)
 
-  add_custom_target(python_bindings
+  if (INSTALL_PYTHON_BINDINGS)
+    set(BUILD_PYTHON_BINDINGS_BY_DEFAULT ALL)
+  endif()
+
+  add_custom_target(python_bindings ${BUILD_PYTHON_BINDINGS_BY_DEFAULT}
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/pyanari_build.py
     -d ${CMAKE_CURRENT_SOURCE_DIR}/devices/generic_device.json
     -j ${CMAKE_CURRENT_SOURCE_DIR}/api/
     -I ${CMAKE_SOURCE_DIR}/libs/anari/include/
     -I ${CMAKE_BINARY_DIR}/libs/anari/include/anari/
+    -I ${CMAKE_BINARY_DIR}/src/anari/include/anari/
     -L ${CMAKE_BINARY_DIR}
+    -L ${CMAKE_BINARY_DIR}/$<CONFIG>
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    DEPENDS pyanari_build.py anari ${API_JSON} devices/generic_device.json
+    DEPENDS pyanari_build.py anari ${API_JSON} devices/generic_device.json generate_all
   )
 
   if (INSTALL_CODE_GEN_SCRIPTS)
@@ -67,6 +74,17 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
         PATTERN templates/CMakeLists.txt
         PATTERN ./CMakeLists.txt EXCLUDE
     )
+  endif()
+
+  if (INSTALL_PYTHON_BINDINGS)
+    if (WIN32)
+      set(PYANARI_LIB_FILE pyanari.pyd)
+    else()
+      set(PYANARI_LIB_FILE pyanari.so)
+    endif()
+    install(
+      FILES ${CMAKE_CURRENT_BINARY_DIR}/anari.py ${CMAKE_CURRENT_BINARY_DIR}/${PYANARI_LIB_FILE}
+      DESTINATION ${CMAKE_INSTALL_LIBDIR}/python_bindings)
   endif()
 
 endif()
