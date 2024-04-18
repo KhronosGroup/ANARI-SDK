@@ -86,6 +86,9 @@ struct Frame : public helium::BaseFrame
 
   mutable std::future<void> m_future;
   std::packaged_task<void()> m_task;
+
+  anari::FrameCompletionCallback m_callback{nullptr};
+  const void *m_callbackUserPtr{nullptr};
 };
 
 } // namespace helide

@@ -18,12 +18,9 @@ namespace anari {
 namespace detail {
 
 template <typename T>
-inline ANARIDataType getType()
+constexpr ANARIDataType getType()
 {
-  constexpr ANARIDataType type = ANARITypeFor<T>::value;
-  static_assert(ANARITypeFor<T>::value != ANARI_UNKNOWN,
-      "Type used which doesn't have an inferrable ANARIDataType");
-  return type;
+  return ANARITypeFor<T>::value;
 }
 
 } // namespace detail
@@ -69,12 +66,13 @@ inline Object newObject(Device d, const char *type, const char *subtype)
 }
 
 template <typename T>
-struct NewObjectImpl {
-
+struct NewObjectImpl
+{
 };
 
 template <>
-struct NewObjectImpl<Surface> {
+struct NewObjectImpl<Surface>
+{
   static Surface newObject(Device d)
   {
     return anariNewSurface(d);
@@ -82,7 +80,8 @@ struct NewObjectImpl<Surface> {
 };
 
 template <>
-struct NewObjectImpl<Group> {
+struct NewObjectImpl<Group>
+{
   static Group newObject(Device d)
   {
     return anariNewGroup(d);
@@ -90,7 +89,8 @@ struct NewObjectImpl<Group> {
 };
 
 template <>
-struct NewObjectImpl<World> {
+struct NewObjectImpl<World>
+{
   static World newObject(Device d)
   {
     return anariNewWorld(d);
@@ -98,7 +98,8 @@ struct NewObjectImpl<World> {
 };
 
 template <>
-struct NewObjectImpl<Frame> {
+struct NewObjectImpl<Frame>
+{
   static Frame newObject(Device d)
   {
     return anariNewFrame(d);
@@ -106,7 +107,8 @@ struct NewObjectImpl<Frame> {
 };
 
 template <>
-struct NewObjectImpl<Instance> {
+struct NewObjectImpl<Instance>
+{
   static Instance newObject(Device d, const char *subtype)
   {
     return anariNewInstance(d, subtype);
@@ -114,7 +116,8 @@ struct NewObjectImpl<Instance> {
 };
 
 template <>
-struct NewObjectImpl<Camera> {
+struct NewObjectImpl<Camera>
+{
   static Camera newObject(Device d, const char *subtype)
   {
     return anariNewCamera(d, subtype);
@@ -122,7 +125,8 @@ struct NewObjectImpl<Camera> {
 };
 
 template <>
-struct NewObjectImpl<Light> {
+struct NewObjectImpl<Light>
+{
   static Light newObject(Device d, const char *subtype)
   {
     return anariNewLight(d, subtype);
@@ -130,7 +134,8 @@ struct NewObjectImpl<Light> {
 };
 
 template <>
-struct NewObjectImpl<Geometry> {
+struct NewObjectImpl<Geometry>
+{
   static Geometry newObject(Device d, const char *subtype)
   {
     return anariNewGeometry(d, subtype);
@@ -138,7 +143,8 @@ struct NewObjectImpl<Geometry> {
 };
 
 template <>
-struct NewObjectImpl<SpatialField> {
+struct NewObjectImpl<SpatialField>
+{
   static SpatialField newObject(Device d, const char *subtype)
   {
     return anariNewSpatialField(d, subtype);
@@ -146,7 +152,8 @@ struct NewObjectImpl<SpatialField> {
 };
 
 template <>
-struct NewObjectImpl<Volume> {
+struct NewObjectImpl<Volume>
+{
   static Volume newObject(Device d, const char *subtype)
   {
     return anariNewVolume(d, subtype);
@@ -154,7 +161,8 @@ struct NewObjectImpl<Volume> {
 };
 
 template <>
-struct NewObjectImpl<Material> {
+struct NewObjectImpl<Material>
+{
   static Material newObject(Device d, const char *subtype)
   {
     return anariNewMaterial(d, subtype);
@@ -162,7 +170,8 @@ struct NewObjectImpl<Material> {
 };
 
 template <>
-struct NewObjectImpl<Sampler> {
+struct NewObjectImpl<Sampler>
+{
   static Sampler newObject(Device d, const char *subtype)
   {
     return anariNewSampler(d, subtype);
@@ -170,13 +179,13 @@ struct NewObjectImpl<Sampler> {
 };
 
 template <>
-struct NewObjectImpl<Renderer> {
+struct NewObjectImpl<Renderer>
+{
   static Renderer newObject(Device d, const char *subtype)
   {
     return anariNewRenderer(d, subtype);
   }
 };
-
 
 template <typename T>
 inline T newObject(Device d)
@@ -453,10 +462,10 @@ template <typename T>
 inline void setParameter(ANARIDevice d, ANARIObject o, const char *name, T &&v)
 {
   using TYPE = typename std::remove_reference<T>::type;
-  constexpr bool validType = ANARITypeFor<TYPE>::value != ANARI_UNKNOWN;
+  constexpr bool validType = detail::getType<TYPE>() != ANARI_UNKNOWN;
   constexpr bool isString = std::is_convertible<TYPE, const char *>::value;
   constexpr bool isStringLiteral = isString && std::is_array<TYPE>::value;
-  constexpr bool isVoidPtr = ANARITypeFor<TYPE>::value == ANARI_VOID_POINTER;
+  constexpr bool isVoidPtr = detail::getType<TYPE>() == ANARI_VOID_POINTER;
   static_assert(validType || isString,
       "Only types corresponding to ANARIDataType values can be set "
       "as parameters on ANARI objects.");
@@ -474,6 +483,12 @@ inline void setParameter(
     ANARIDevice d, ANARIObject o, const char *name, std::string v)
 {
   setParameter(d, o, name, v.c_str());
+}
+
+inline void setParameter(ANARIDevice d, ANARIObject o, const char *name, bool v)
+{
+  const uint32_t b = v;
+  anariSetParameter(d, o, name, ANARI_BOOL, &b);
 }
 
 inline void setParameter(
@@ -529,6 +544,18 @@ inline bool getProperty(
       d, o, propertyName, detail::getType<T>(), &dst, sizeof(T), mask);
 }
 
+template <>
+inline bool getProperty(
+    Device d, Object o, const char *propertyName, bool &dst, WaitMask mask)
+{
+  uint32_t tmp = 0;
+  const auto retval =
+      anariGetProperty(d, o, propertyName, ANARI_BOOL, &tmp, sizeof(tmp), mask);
+  if (retval)
+    dst = bool(tmp);
+  return retval;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Frame Operations ///////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -568,7 +595,8 @@ inline void discard(Device d, Frame f)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// C++ Extension Utilities //////////////////////////////////////////////////////
+// C++ Extension Utilities
+// //////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
 namespace extension {

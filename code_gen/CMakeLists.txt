@@ -53,8 +53,7 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/pyanari_build.py
     -d ${CMAKE_CURRENT_SOURCE_DIR}/devices/generic_device.json
     -j ${CMAKE_CURRENT_SOURCE_DIR}/api/
-    -I ${CMAKE_SOURCE_DIR}/libs/anari/include/
-    -I ${CMAKE_BINARY_DIR}/libs/anari/include/anari/
+    -I ${CMAKE_SOURCE_DIR}/src/anari/include/
     -I ${CMAKE_BINARY_DIR}/src/anari/include/anari/
     -L ${CMAKE_BINARY_DIR}
     -L ${CMAKE_BINARY_DIR}/$<CONFIG>

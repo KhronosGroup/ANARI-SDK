@@ -34,7 +34,7 @@ struct TransferFunction1D : public Volume
 
   // Data //
 
-  helium::IntrusivePtr<SpatialField> m_field;
+  helium::CommitObserverPtr<SpatialField> m_field;
 
   box1 m_valueRange{0.f, 1.f};
   float m_invSize{0.f};
@@ -48,7 +48,7 @@ struct TransferFunction1D : public Volume
 
 inline const SpatialField *TransferFunction1D::field() const
 {
-  return m_field.ptr;
+  return m_field.get();
 }
 
 inline float3 TransferFunction1D::colorOf(float sample) const

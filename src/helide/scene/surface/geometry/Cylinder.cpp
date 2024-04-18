@@ -7,7 +7,8 @@
 
 namespace helide {
 
-Cylinder::Cylinder(HelideGlobalState *s) : Geometry(s)
+Cylinder::Cylinder(HelideGlobalState *s)
+    : Geometry(s), m_index(this), m_radius(this), m_vertexPosition(this)
 {
   m_embreeGeometry =
       rtcNewGeometry(s->embreeDevice, RTC_GEOMETRY_TYPE_CONE_LINEAR_CURVE);
@@ -16,8 +17,6 @@ Cylinder::Cylinder(HelideGlobalState *s) : Geometry(s)
 void Cylinder::commit()
 {
   Geometry::commit();
-
-  cleanup();
 
   m_index = getParamObject<Array1D>("primitive.index");
   m_radius = getParamObject<Array1D>("primitive.radius");
@@ -33,10 +32,6 @@ void Cylinder::commit()
         "missing required parameter 'vertex.position' on cylinder geometry");
     return;
   }
-
-  if (m_index)
-    m_index->addCommitObserver(this);
-  m_vertexPosition->addCommitObserver(this);
 
   const float *radius = m_radius ? m_radius->beginAs<float>() : nullptr;
   m_globalRadius = getParam<float>("radius", 1.f);
@@ -105,14 +100,6 @@ float4 Cylinder::getAttributeValue(const Attribute &attr, const Ray &ray) const
   auto b = readAttributeValue(attributeArray, idx.y);
 
   return a + (b - a) * ray.u;
-}
-
-void Cylinder::cleanup()
-{
-  if (m_index)
-    m_index->removeCommitObserver(this);
-  if (m_vertexPosition)
-    m_vertexPosition->removeCommitObserver(this);
 }
 
 } // namespace helide

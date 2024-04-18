@@ -7,7 +7,8 @@
 
 namespace helide {
 
-Triangle::Triangle(HelideGlobalState *s) : Geometry(s)
+Triangle::Triangle(HelideGlobalState *s)
+    : Geometry(s), m_index(this), m_vertexPosition(this)
 {
   m_embreeGeometry =
       rtcNewGeometry(s->embreeDevice, RTC_GEOMETRY_TYPE_TRIANGLE);
@@ -16,8 +17,6 @@ Triangle::Triangle(HelideGlobalState *s) : Geometry(s)
 void Triangle::commit()
 {
   Geometry::commit();
-
-  cleanup();
 
   m_index = getParamObject<Array1D>("primitive.index");
   m_vertexPosition = getParamObject<Array1D>("vertex.position");
@@ -32,10 +31,6 @@ void Triangle::commit()
         "missing required parameter 'vertex.position' on triangle geometry");
     return;
   }
-
-  m_vertexPosition->addCommitObserver(this);
-  if (m_index)
-    m_index->addCommitObserver(this);
 
   rtcSetSharedGeometryBuffer(embreeGeometry(),
       RTC_BUFFER_TYPE_VERTEX,
@@ -89,14 +84,6 @@ float4 Triangle::getAttributeValue(const Attribute &attr, const Ray &ray) const
   auto c = readAttributeValue(attributeArray, idx.z);
 
   return uvw.x * a + uvw.y * b + uvw.z * c;
-}
-
-void Triangle::cleanup()
-{
-  if (m_index)
-    m_index->removeCommitObserver(this);
-  if (m_vertexPosition)
-    m_vertexPosition->removeCommitObserver(this);
 }
 
 } // namespace helide

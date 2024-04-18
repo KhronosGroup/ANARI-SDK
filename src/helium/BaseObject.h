@@ -66,7 +66,7 @@ struct BaseObject : public RefCounted, ParameterizedObject, LockableObject
  protected:
   // Handle what happens when the observing object 'obj' is being notified of
   // that this object has changed.
-  virtual void notifyObserver(BaseObject *obj) const;
+  virtual void notifyCommitObserver(BaseObject *obj) const;
 
   BaseGlobalDeviceState *m_state{nullptr};
 
@@ -92,7 +92,7 @@ inline void BaseObject::reportMessage(
     ANARIStatusSeverity severity, const char *fmt, Args &&...args) const
 {
   auto msg = string_printf(fmt, std::forward<Args>(args)...);
-  m_state->messageFunction(severity, msg, this);
+  m_state->messageFunction(severity, msg, type(), this);
 }
 
 // Helper functions ///////////////////////////////////////////////////////////
@@ -100,7 +100,15 @@ inline void BaseObject::reportMessage(
 template <typename T>
 inline void writeToVoidP(void *_p, T v)
 {
-  T *p = (T *)_p;
+  auto *p = (T *)_p;
+  *p = v;
+}
+
+template <>
+inline void writeToVoidP(void *_p, bool _v)
+{
+  uint32_t v = _v;
+  auto *p = (uint32_t *)_p;
   *p = v;
 }
 

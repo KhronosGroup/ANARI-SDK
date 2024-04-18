@@ -49,7 +49,7 @@ def ANARIStatusCallback_python(usrPtr, device, source, sourceType, severity, cod
 
 
 debug = lib.anariLoadLibrary(b'debug', lib.ANARIStatusCallback_python, ffi.NULL)
-library = lib.anariLoadLibrary(b'example', lib.ANARIStatusCallback_python, ffi.NULL)
+library = lib.anariLoadLibrary(b'helide', lib.ANARIStatusCallback_python, ffi.NULL)
 
 nested = lib.anariNewDevice(library, b'default')
 lib.anariCommitParameters(nested, nested)

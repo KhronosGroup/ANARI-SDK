@@ -30,7 +30,8 @@ struct BaseGlobalDeviceState
   ANARIStatusCallback statusCB{nullptr};
   const void *statusCBUserPtr{nullptr};
 
-  std::function<void(int, const std::string &, const void *)> messageFunction;
+  std::function<void(int, const std::string &, anari::DataType, const void *)>
+      messageFunction;
 
   BaseGlobalDeviceState(ANARIDevice d);
   virtual ~BaseGlobalDeviceState() = default;

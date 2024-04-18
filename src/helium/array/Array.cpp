@@ -217,12 +217,6 @@ void Array::initManagedMemory()
   }
 }
 
-void Array::notifyObserver(BaseObject *o) const
-{
-  o->markUpdated();
-  deviceState()->m_commitBuffer.addObject(o);
-}
-
 } // namespace helium
 
 HELIUM_ANARI_TYPEFOR_DEFINITION(helium::Array *);
