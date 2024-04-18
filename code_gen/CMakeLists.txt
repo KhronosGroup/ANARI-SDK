@@ -10,7 +10,7 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
   set(API_JSON api/anari_core_1_0.json api/khr_frame_completion_callback.json)
 
   add_custom_target(generate_type_utility
-    COMMAND ${Python3_EXECUTABLE} generate_headers.py ${CMAKE_SOURCE_DIR}/libs/anari/include/anari/frontend/type_utility.h ${API_JSON}
+    COMMAND ${Python3_EXECUTABLE} generate_headers.py ${CMAKE_SOURCE_DIR}/src/anari/include/anari/frontend/type_utility.h ${API_JSON}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     DEPENDS ${API_JSON} generate_headers.py
   )
@@ -19,19 +19,19 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
     COMMAND ${Python3_EXECUTABLE} generate_extension_utility.py
     -j ${CMAKE_CURRENT_SOURCE_DIR}/api/
     -d devices/experimental_device.json
-    -o ${CMAKE_SOURCE_DIR}/libs/anari/include/anari/frontend
+    -o ${CMAKE_SOURCE_DIR}/src/anari/include/anari/frontend
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     DEPENDS devices/experimental_device.json generate_extension_utility.py
   )
 
   add_custom_target(generate_anari_h
-    COMMAND ${Python3_EXECUTABLE} generate_headers.py ${CMAKE_SOURCE_DIR}/libs/anari/include/anari/anari.h ${API_JSON}
+    COMMAND ${Python3_EXECUTABLE} generate_headers.py ${CMAKE_SOURCE_DIR}/src/anari/include/anari/anari.h ${API_JSON}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     DEPENDS ${API_JSON} generate_headers.py
   )
 
   add_custom_target(generate_anari_enums_h
-    COMMAND ${Python3_EXECUTABLE} generate_headers.py ${CMAKE_SOURCE_DIR}/libs/anari/include/anari/frontend/anari_enums.h ${API_JSON}
+    COMMAND ${Python3_EXECUTABLE} generate_headers.py ${CMAKE_SOURCE_DIR}/src/anari/include/anari/frontend/anari_enums.h ${API_JSON}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     DEPENDS ${API_JSON} generate_headers.py
   )
