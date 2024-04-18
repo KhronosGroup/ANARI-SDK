@@ -58,7 +58,7 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.12")
     -L ${CMAKE_BINARY_DIR}
     -L ${CMAKE_BINARY_DIR}/$<CONFIG>
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    DEPENDS pyanari_build.py anari ${API_JSON} devices/generic_device.json generate_all
+    DEPENDS pyanari_build.py anari ${API_JSON} devices/generic_device.json
   )
 
   if (INSTALL_CODE_GEN_SCRIPTS)
