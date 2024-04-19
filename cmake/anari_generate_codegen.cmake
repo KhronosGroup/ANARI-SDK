@@ -25,7 +25,7 @@ function(anari_generate_queries)
     set(EXTRA_JSON_OPTION --json ${GENERATE_JSON_ROOT_LOCATION})
   endif()
 
-  add_custom_target(generate_${GENERATE_NAME}_device
+  add_custom_target(generate_${GENERATE_NAME}
     COMMAND ${Python3_EXECUTABLE} ${ANARI_CODE_GEN_ROOT}/generate_queries.py
       --json ${ANARI_CODE_GEN_ROOT}
       ${EXTRA_JSON_OPTION}
@@ -37,6 +37,6 @@ function(anari_generate_queries)
   )
 
   if (TARGET generate_all)
-    add_dependencies(generate_all generate_${GENERATE_NAME}_device)
+    add_dependencies(generate_all generate_${GENERATE_NAME})
   endif()
 endfunction()
