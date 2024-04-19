@@ -183,8 +183,8 @@ bool buildUI(Parameter &p)
 
       if (ImGui::Button("...")) {
         nfdchar_t *outPath = nullptr;
-        nfdfilteritem_t filterItem[1] = {{"OBJ Files", "obj"}};
-        nfdresult_t result = NFD_OpenDialog(&outPath, filterItem, 1, nullptr);
+        nfdfilteritem_t filterItem[2] = {{"OBJ Files", "obj"}, {"glTF Files", "gltf"}};
+        nfdresult_t result = NFD_OpenDialog(&outPath, filterItem, 2, nullptr);
         if (result == NFD_OKAY) {
           p.value = std::string(outPath).c_str();
           update = true;

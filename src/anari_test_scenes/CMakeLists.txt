@@ -12,6 +12,7 @@ project_add_library(
   scenes/demo/gravity_spheres_volume.cpp
 
   scenes/file/obj.cpp
+  scenes/file/glTF.cpp
 
   scenes/test/attributes.cpp
   scenes/test/instanced_cubes.cpp
