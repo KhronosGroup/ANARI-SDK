@@ -22,7 +22,7 @@ mark_as_advanced(glm_DIR)
 find_package(anari REQUIRED)
 include(pybind11.cmake)
 
-set(src
+pybind11_add_module(${PROJECT_NAME}
   src/anariInfo.cpp
   src/anariWrapper.cpp
   src/ctsQueries.cpp
@@ -32,8 +32,6 @@ set(src
   src/ColorPalette.cpp
   src/TextureGenerator.cpp
 )
-
-pybind11_add_module(${PROJECT_NAME} ${src})
 
 target_include_directories(${PROJECT_NAME}
 PUBLIC
@@ -46,21 +44,17 @@ find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
 
 file(GLOB python_files ${CMAKE_CURRENT_LIST_DIR}/*.py)
 
-add_custom_target(generate_cts
-  COMMAND ${Python3_EXECUTABLE} ${ANARI_CODE_GEN_ROOT}/generate_queries.py
-    --json ${ANARI_CODE_GEN_ROOT}
-    --prefix cts
-    --device ${ANARI_CODE_GEN_ROOT}/devices/experimental_device.json
-    --namespace cts
-    --out src
-  COMMAND ${CMAKE_COMMAND} -E copy ${python_files} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}
+add_subdirectory(src) # query generation target
+
+add_custom_target(generate_cts_baseline
   COMMAND ${Python3_EXECUTABLE} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/createReferenceData.py
 	  --test_scenes ${CMAKE_CURRENT_LIST_DIR}/test_scenes -l ${REFERENCE_LIB}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    DEPENDS ${ANARI_CODE_GEN_ROOT}/devices/experimental_device.json
 )
+add_dependencies(generate_cts_baseline ${PROJECT_NAME})
 
-add_dependencies(generate_cts ${PROJECT_NAME})
+add_custom_target(generate_cts)
+add_dependencies(generate_cts generate_cts_queries generate_cts_baseline)
 add_dependencies(generate_all generate_cts)
 
 option(CTS_DEV "Copy compiled python module next to python script to make developing easier" OFF)
