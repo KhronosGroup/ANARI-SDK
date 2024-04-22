@@ -108,14 +108,7 @@ class Application : public anari_viewer::Application
 
     // ANARI //
 
-    initializeANARI();
-
-    auto device = g_device;
-
-    if (!device)
-      std::exit(1);
-
-    m_state.device = device;
+    m_state.device = g_device;
 
     // ImGui //
 
@@ -126,15 +119,15 @@ class Application : public anari_viewer::Application
     if (g_useDefaultLayout)
       ImGui::LoadIniSettingsFromMemory(getDefaultUILayout());
 
-    auto *viewport = new windows::Viewport(device, "Viewport");
+    auto *viewport = new windows::Viewport(g_device, "Viewport");
     viewport->setManipulator(&m_state.manipulator);
 
-    auto *leditor = new windows::LightsEditor(device);
+    auto *leditor = new windows::LightsEditor(g_device);
 
     auto *sselector = new windows::SceneSelector();
     sselector->setCallback([=](const char *category, const char *scene) {
       try {
-        auto s = anari::scenes::createScene(device, category, scene);
+        auto s = anari::scenes::createScene(g_device, category, scene);
         anari::scenes::commit(s);
         auto w = anari::scenes::getWorld(s);
         viewport->setWorld(w, true);
@@ -214,6 +207,9 @@ static void parseCommandLine(int argc, char *argv[])
 int main(int argc, char *argv[])
 {
   parseCommandLine(argc, argv);
+  viewer::initializeANARI();
+  if (!g_device)
+    return 1;
   viewer::Application app;
   app.run(1920, 1200, "ANARI Demo Viewer");
   return 0;
