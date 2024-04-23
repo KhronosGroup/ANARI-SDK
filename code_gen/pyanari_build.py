@@ -253,7 +253,7 @@ special = {
     '''def anariNewArray3D(device, appMemory, dataType, numItems1, numItems2, numItems3):
     result = lib.anariNewArray3D(device, ffi.NULL, ffi.NULL, ffi.NULL, dataType, numItems1, numItems2, numItems3)
     ptr = lib.anariMapArray(device, result)
-    ffi.memmove(ptr, appMemory, ffi.sizeof(_typeof[dataType])*numItems1)
+    ffi.memmove(ptr, appMemory, ffi.sizeof(_typeof[dataType])*numItems1*numItems2*numItems3)
     lib.anariUnmapArray(device, result)
     lib.anariRetain(device, device)
     return ffi.gc(result, lambda h, d=device: _releaseBoth(d, h))
