@@ -7,6 +7,7 @@
 // std
 #include <fstream>
 #include <iostream>
+#include <iomanip>
 
 #include "nlohmann/json.hpp"
 using json = nlohmann::json;
@@ -125,9 +126,9 @@ static const char* wrap_mode(int mode) {
 
 static const char* texcoord_attribute(int idx) {
   switch(idx) {
-    case 0: return "attribute0"; 
-    case 1: return "attribute1"; 
-    case 2: return "attribute2"; 
+    case 0: return "attribute0";
+    case 1: return "attribute1";
+    case 2: return "attribute2";
     case 3: return "attribute3";
     default: return nullptr; 
   }
@@ -141,6 +142,51 @@ void memcpy_to_uint32(void *dst0, const void *src0, size_t count) {
   std::copy(src, src+count, dst);
 }
 
+static uint32_t base64_sextet(char c) {
+  if('A' <= c && c <= 'Z') {
+    return 0+c-'A';
+  } else if('a' <= c && c <= 'z') {
+    return 26+c-'a';
+  } else if('0' <= c && c <= '9') {
+    return 52+c-'0';
+  } else if(c == '+') {
+    return 62;
+  } else if(c == '/') {
+    return 63;
+  } else if(c == '=') {
+    return 0;
+  } else {
+    return 0xFFFFu;
+  }
+}
+
+static void debase64(const char *in, size_t N_in, std::vector<char> out) {
+  int bitcount = 0;
+  uint32_t bits = 0;
+  for(size_t i = 0;i<N_in;++i) {
+    uint32_t sextet = base64_sextet(in[i]);
+    if(sextet<64u) {
+      bits = (bits<<6u) | sextet;
+      bitcount += 6;
+      if(bitcount>=8) {
+        bitcount -= 8;
+        out.push_back((char)((bits>>bitcount)&255u));
+      }
+    }
+  }
+}
+
+static void matmul(float *A, float *B, float *C) {
+  for (int i = 0; i < 4; ++i) {
+    for (int j = 0; j < 4; ++j) {
+      float dot = 0;
+      for (int k = 0; k < 4; ++k) {
+        dot += B[i + 4 * k] * C[k + 4 * j];
+      }
+      A[i + 4 * j] = dot;
+    }
+  }
+}
 
 struct gltf_context {
   json gltf;
@@ -172,15 +218,25 @@ struct gltf_context {
   template<typename T>
   ANARISampler configure_sampler(const T &texspec, float *swizzle = nullptr) {
       const auto &tex = gltf["textures"].at(int(texspec["index"]));
-      const auto &sampleparams = gltf["samplers"].at(int(tex["sampler"]));
-      
-      ANARISampler sampler = anariNewSampler(device, "image2D");
+      if(!tex.contains("source")) {
+        return nullptr;
+      }
+
       ANARIArray2D source = images.at(tex["source"]);
+      ANARISampler sampler = anariNewSampler(device, "image2D");
       anariSetParameter(device, sampler, "image", ANARI_ARRAY2D, &source);
       anariSetParameter(device, sampler, "inAttribute", ANARI_STRING, texcoord_attribute(texspec.value("texCoord", 0)));
-      anariSetParameter(device, sampler, "filter", ANARI_STRING, filter_mode(sampleparams.value("magFilter", 9729)));
-      anariSetParameter(device, sampler, "wrapMode1", ANARI_STRING, wrap_mode(sampleparams.value("wrapS", 10497)));
-      anariSetParameter(device, sampler, "wrapMode2", ANARI_STRING, wrap_mode(sampleparams.value("wrapT", 10497)));
+
+      if(tex.contains("sampler")) {
+        const auto &sampleparams = gltf["samplers"].at(int(tex["sampler"]));
+        anariSetParameter(device, sampler, "filter", ANARI_STRING, filter_mode(sampleparams.value("magFilter", 9729)));
+        anariSetParameter(device, sampler, "wrapMode1", ANARI_STRING, wrap_mode(sampleparams.value("wrapS", 10497)));
+        anariSetParameter(device, sampler, "wrapMode2", ANARI_STRING, wrap_mode(sampleparams.value("wrapT", 10497)));
+      } else {
+        anariSetParameter(device, sampler, "filter", ANARI_STRING, "linear");
+        anariSetParameter(device, sampler, "wrapMode1", ANARI_STRING, "repeat");
+        anariSetParameter(device, sampler, "wrapMode2", ANARI_STRING, "repeat");
+      }
       if(swizzle) {
         anariSetParameter(device, sampler, "outTransform", ANARI_FLOAT32_MAT4, swizzle);        
       }
@@ -188,29 +244,68 @@ struct gltf_context {
       return sampler;
   }
 
-  void load_assets() {
-    for(const auto &buf : gltf["buffers"]) {
-      if(buf.contains("uri")) {
-        std::ifstream buf_in(path + std::string(buf["uri"]), std::ios::in | std::ios::binary);
-        if(buf_in) {
-          size_t length = buf["byteLength"];
-          buffers.emplace_back(length);
-          buf_in.read(buffers.back().data(), length);
-        } else {
-          buffers.emplace_back();
-          std::cout << "failed to open " << path << std::string(buf["uri"]) << std::endl;
+  template<typename T>
+  std::vector<char> decode_buffer(const T &buf) {
+    std::vector<char> data;
+
+    if(buf.contains("uri")) {
+      std::string uri = buf["uri"];
+      size_t length = buf["byteLength"];
+      // base64 encoded data uri
+      if(uri.substr(0, 4) == "data") {
+        auto comma = uri.find_first_of(',');
+        if(comma != std::string::npos) {
+          data.reserve(length);
+          debase64(uri.c_str()+comma, uri.size()-comma, data);
         }
       } else {
-        buffers.emplace_back();
+        // bin file
+        data.resize(length);
+        std::ifstream buf_in(path + uri, std::ios::in | std::ios::binary);
+        if(buf_in) {
+          buf_in.read(data.data(), length);
+        }          
       }
+    }
+    return data;
+  }
+
+  template<typename T>
+  void* decode_image(const T &img, int *width, int *height, int *n) {
+    if(img.contains("uri")) {
+      std::string uri = img["uri"];
+      if(uri.substr(0, 4) == "data") {
+        auto comma = uri.find_first_of(',');
+        if(comma != std::string::npos) {
+          std::vector<char> buffer;
+          debase64(uri.c_str()+comma, uri.size()-comma, buffer);
+          return stbi_load_from_memory((const stbi_uc*)buffer.data(), buffer.size(), width, height, n, 0);
+        }
+      } else {
+        std::string filename = path + uri;
+        return stbi_load(filename.c_str(), width, height, n, 0);
+      }        
+    } else if(img.contains("bufferView")) {
+      const auto &bufferView = gltf["bufferViews"][int(img["bufferView"])];
+      const std::vector<char> &buffer = buffers.at(bufferView["buffer"]);
+      size_t offset = bufferView.value("byteOffset", 0);
+      size_t length = bufferView["byteLength"];
+      return stbi_load_from_memory((const stbi_uc*)buffer.data()+offset, length, width, height, n, 0);
+    }
+    return nullptr;
+  }
+
+  void load_assets() {    
+    for(const auto &buf : gltf["buffers"]) {
+      decode_buffer(buf);
     }
 
     for(const auto &img : gltf["images"]) {
-      std::string filename = path + std::string(img["uri"]);
 
       int width, height, n;
-      //stbi_set_flip_vertically_on_load(1);
-      void *data = stbi_load(filename.c_str(), &width, &height, &n, 0);
+      void *data = nullptr;
+
+      data = decode_image(img, &width, &height, &n);
 
       if(data) {
         int texelType = ANARI_UFIXED8_VEC4;
@@ -227,7 +322,6 @@ struct gltf_context {
         images.emplace_back(array);
       } else {
         images.emplace_back(nullptr);
-        std::cout << "failed to open " << filename << std::endl;
       }
     }
   }
@@ -265,9 +359,10 @@ struct gltf_context {
         }
 
         ANARISampler sampler = configure_sampler(pbr["baseColorTexture"], swizzle);
-        anariSetParameter(device, material, "baseColor", ANARI_SAMPLER, &sampler);
-        anariRelease(device, sampler);
-
+        if(sampler) {
+          anariSetParameter(device, material, "baseColor", ANARI_SAMPLER, &sampler);
+          anariRelease(device, sampler);
+        }
       } else if(pbr.contains("baseColorFactor")) {
         const auto &basecolor = pbr["baseColorFactor"];
         float color[4] = {0.0f ,0.0f ,0.0f ,1.0f };
@@ -298,12 +393,15 @@ struct gltf_context {
 
 
         ANARISampler metallicSampler = configure_sampler(pbr["metallicRoughnessTexture"], metallicSwizzle);
-        anariSetParameter(device, material, "metallic", ANARI_SAMPLER, &metallicSampler);
-        anariRelease(device, metallicSampler);
-
+        if(metallicSampler) {
+          anariSetParameter(device, material, "metallic", ANARI_SAMPLER, &metallicSampler);
+          anariRelease(device, metallicSampler);
+        }
         ANARISampler roughnessSampler = configure_sampler(pbr["metallicRoughnessTexture"], roughnessSwizzle);
-        anariSetParameter(device, material, "roughness", ANARI_SAMPLER, &roughnessSampler);
-        anariRelease(device, roughnessSampler);
+        if(roughnessSampler) {
+          anariSetParameter(device, material, "roughness", ANARI_SAMPLER, &roughnessSampler);
+          anariRelease(device, roughnessSampler);
+        }
       } else {
         if(pbr.contains("metallicFactor")) {
           float metallic = pbr["metallicFactor"];
@@ -335,7 +433,20 @@ struct gltf_context {
 
       for(const auto &prim : mesh["primitives"]) {
         int mode = prim.value("mode", 4);
-       
+
+        // mode
+        // 0 POINTS
+        // 1 LINES
+        // 2 LINE_LOOP
+        // 3 LINE_STRIP
+        // 4 TRIANGLES
+        // 5 TRIANGLE_STRIP
+        // 6 TRIANGLE_FAN
+
+        if(mode != 4) {
+          continue;
+        }
+
         ANARIGeometry geometry = anariNewGeometry(device, "triangle");
         for(const auto &attr : prim["attributes"].items()) {
 
@@ -346,6 +457,8 @@ struct gltf_context {
             paramname = "vertex.normal";
           } else if(attr.key() == "TANGENT") {
             paramname = "vertex.tangent";
+          } else if(attr.key() == "COLOR_0") {
+            paramname = "vertex.color";
           } else if(attr.key() == "TEXCOORD_0") {
             paramname = "vertex.attribute0";
           } else if(attr.key() == "TEXCOORD_1") {
@@ -434,6 +547,12 @@ struct gltf_context {
   }
 
   void init() {
+    if(gltf.contains("extensionsUsed")) {
+      std::cout << "extensions:" << std::endl;
+      for(const auto &ext : gltf["extensionsUsed"]) {
+        std::cout << ext << std::endl;
+      }      
+    }
     load_assets();
     load_materials();
     load_surfaces();
@@ -453,7 +572,6 @@ struct gltf_context {
 
 };
 
-
 void FileGLTF::commit()
 {
   if (!hasParam("fileName"))
@@ -463,16 +581,97 @@ void FileGLTF::commit()
   std::string path = "";
   auto pos = filename.find_last_of('/');
   if(pos != std::string::npos) {
-   path = filename.substr(0, pos+1);
+    path = filename.substr(0, pos+1);
+  }
+  pos = filename.find_last_of('.');
+  std::string ext = "";
+  if(pos != std::string::npos) {
+    ext = filename.substr(pos);
   }
 
-  std::ifstream gltf_in(filename.c_str());
+  gltf_context ctx;
+  ctx.path = path;
+  ctx.device = m_device;
+  
+
+  if(ext==".gltf") {
+    std::ifstream gltf_in(filename.c_str());
+    ctx.gltf = json::parse(gltf_in);
+  } else if(ext==".glb") {
+    std::ifstream gltf_in(filename.c_str(), std::ios::in | std::ios::binary);
+    uint32_t magic;
+    uint32_t version;
+    uint32_t length;
+    gltf_in.read(reinterpret_cast<char*>(&magic), sizeof(magic));
+    if(magic != 0x46546C67u) {
+      throw std::runtime_error("invalid gltf magic");
+    }
+    gltf_in.read(reinterpret_cast<char*>(&version), sizeof(version));
+    gltf_in.read(reinterpret_cast<char*>(&length), sizeof(length));
+
+    uint32_t chunkLength;
+    uint32_t chunkType;
+    gltf_in.read(reinterpret_cast<char*>(&chunkLength), sizeof(chunkLength));
+    gltf_in.read(reinterpret_cast<char*>(&chunkType), sizeof(chunkType));
+    std::vector<uint8_t> json_buf(chunkLength);
+    gltf_in.read(reinterpret_cast<char*>(json_buf.data()), chunkLength);
+    ctx.gltf = json::parse(json_buf);
+
+    if(gltf_in.read(reinterpret_cast<char*>(&chunkLength), sizeof(chunkLength))) {
+      gltf_in.read(reinterpret_cast<char*>(&chunkType), sizeof(chunkType));
+      ctx.buffers.emplace_back(chunkLength);
+      gltf_in.read(reinterpret_cast<char*>(ctx.buffers.back().data()), chunkLength);      
+    }
+  } else if(ext==".b3dm") {
+    std::ifstream gltf_in(filename.c_str(), std::ios::in | std::ios::binary);
+    uint32_t magic;
+    uint32_t version;
+    uint32_t length;
+
+    gltf_in.read(reinterpret_cast<char*>(&magic), sizeof(magic));
+    gltf_in.read(reinterpret_cast<char*>(&version), sizeof(version));
+    gltf_in.read(reinterpret_cast<char*>(&length), sizeof(length));
+
+    uint32_t featureTableJSONByteLength;
+    uint32_t featureTableBinaryByteLength;
+
+    uint32_t batchTableJSONByteLength;
+    uint32_t batchTableBinaryByteLength;
+
+    gltf_in.read(reinterpret_cast<char*>(&featureTableJSONByteLength), sizeof(featureTableJSONByteLength));
+    gltf_in.read(reinterpret_cast<char*>(&featureTableBinaryByteLength), sizeof(featureTableBinaryByteLength));
+    gltf_in.read(reinterpret_cast<char*>(&batchTableJSONByteLength), sizeof(batchTableJSONByteLength));
+    gltf_in.read(reinterpret_cast<char*>(&batchTableBinaryByteLength), sizeof(batchTableBinaryByteLength));
+    gltf_in.ignore(featureTableJSONByteLength);
+    gltf_in.ignore(featureTableBinaryByteLength);
+    gltf_in.ignore(batchTableJSONByteLength);
+    gltf_in.ignore(batchTableBinaryByteLength);
+
+
+    gltf_in.read(reinterpret_cast<char*>(&magic), sizeof(magic));
+    if(magic != 0x46546C67u) {
+      throw std::runtime_error("invalid gltf magic");
+    }
+    gltf_in.read(reinterpret_cast<char*>(&version), sizeof(version));
+    gltf_in.read(reinterpret_cast<char*>(&length), sizeof(length));
+
+    uint32_t chunkLength;
+    uint32_t chunkType;
+    gltf_in.read(reinterpret_cast<char*>(&chunkLength), sizeof(chunkLength));
+    gltf_in.read(reinterpret_cast<char*>(&chunkType), sizeof(chunkType));
+    std::vector<uint8_t> json_buf(chunkLength);
+    gltf_in.read(reinterpret_cast<char*>(json_buf.data()), chunkLength);
+    ctx.gltf = json::parse(json_buf);
+
+    if(gltf_in.read(reinterpret_cast<char*>(&chunkLength), sizeof(chunkLength))) {
+      gltf_in.read(reinterpret_cast<char*>(&chunkType), sizeof(chunkType));
+      ctx.buffers.emplace_back(chunkLength);
+      gltf_in.read(reinterpret_cast<char*>(ctx.buffers.back().data()), chunkLength);      
+    }
+  }
+
   //json gltf = json::parse(gltf_in);
 
-  gltf_context ctx;
-  ctx.device = m_device;
-  ctx.path = path;
-  ctx.gltf = json::parse(gltf_in);
 
   ctx.init();
 
@@ -486,6 +685,9 @@ void FileGLTF::commit()
     }
     anariUnmapParameterArray(m_device, m_world, "instance");
   }
+
+
+
   anariCommitParameters(m_device, m_world);
 
 
