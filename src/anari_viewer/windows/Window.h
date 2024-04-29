@@ -38,6 +38,4 @@ struct Window
   bool m_wrapBeginEnd{true};
 };
 
-using WindowArray = std::vector<std::unique_ptr<Window>>;
-
 } // namespace anari_viewer
