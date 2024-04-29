@@ -96,13 +96,12 @@ static void initializeANARI()
 
 // Application definition /////////////////////////////////////////////////////
 
-class Application : public anari_viewer::Application
+struct Application : public anari_viewer::Application
 {
- public:
   Application() = default;
   ~Application() override = default;
 
-  anari_viewer::WindowArray setup() override
+  anari_viewer::WindowArray setupWindows() override
   {
     ui::init();
 
@@ -146,7 +145,7 @@ class Application : public anari_viewer::Application
     return windows;
   }
 
-  void buildMainMenuUI() override
+  void uiFrameStart() override
   {
     if (ImGui::BeginMainMenuBar()) {
       if (ImGui::BeginMenu("File")) {
