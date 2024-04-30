@@ -13,6 +13,8 @@ TransferFunction1D::~TransferFunction1D() = default;
 
 void TransferFunction1D::commit()
 {
+  Volume::commit();
+
   m_field = getParamObject<SpatialField>("value");
   if (!m_field) {
     reportMessage(ANARI_SEVERITY_WARNING,
