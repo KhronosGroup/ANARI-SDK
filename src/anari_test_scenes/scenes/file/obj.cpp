@@ -7,8 +7,10 @@
 #include "tiny_obj_loader.h"
 // stb_image
 #include "stb_image.h"
+#ifdef ENABLE_KTX
 // KTX
 #include <ktx.h>
+#endif
 // std
 #include <sstream>
 #include <unordered_map>
@@ -42,53 +44,69 @@ static void loadTexture(anari::Device d,
         return c == '\\' ? '/' : c;
       });
 
-
   anari::Sampler colorTex = cache[filename];
 
   if (!colorTex) {
-    std::string fileExtension = filename.substr(filename.find_last_of('.'), std::string::npos);
-    if(fileExtension == ".ktx") {
-      ktxTexture2* texture;
+    std::string fileExtension =
+        filename.substr(filename.find_last_of('.'), std::string::npos);
+#ifdef ENABLE_KTX
+    if (fileExtension == ".ktx") {
+      ktxTexture2 *texture;
       KTX_error_code result;
       ktx_size_t offset;
-      ktx_uint8_t* data;
+      ktx_uint8_t *data;
 
-      result = ktxTexture2_CreateFromNamedFile(filename.c_str(),
-                                              KTX_TEXTURE_CREATE_NO_FLAGS,
-                                              &texture);
-      if(result != KTX_SUCCESS) {
-        printf("failed to load texture '%s': %s\n", filename.c_str(), ktxErrorString(result));
+      result = ktxTexture2_CreateFromNamedFile(
+          filename.c_str(), KTX_TEXTURE_CREATE_NO_FLAGS, &texture);
+      if (result != KTX_SUCCESS) {
+        printf("failed to load texture '%s': %s\n",
+            filename.c_str(),
+            ktxErrorString(result));
       }
 
       khr_df_model_e colorModel = ktxTexture2_GetColorModel_e(texture);
 
       // check if bc1 (DXT1) compression is usable by the device
       bool bc7 = false;
-      const char ** device_extensions = nullptr;
-      if(anariGetProperty(d, d, "extension", ANARI_STRING_LIST, &device_extensions, sizeof(char**), ANARI_WAIT)) {
-        for(int i = 0;device_extensions[i] != nullptr;++i) {
+      const char **device_extensions = nullptr;
+      if (anariGetProperty(d,
+              d,
+              "extension",
+              ANARI_STRING_LIST,
+              &device_extensions,
+              sizeof(char **),
+              ANARI_WAIT)) {
+        for (int i = 0; device_extensions[i] != nullptr; ++i) {
           printf("%s\n", device_extensions[i]);
-          if(strncmp("ANARI_EXT_SAMPLER_COMPRESSED_FORMAT_BC67", device_extensions[i], 40)==0){
+          if (strncmp("ANARI_EXT_SAMPLER_COMPRESSED_FORMAT_BC67",
+                  device_extensions[i],
+                  40)
+              == 0) {
             bc7 = true;
           }
         }
       }
 
-      if(bc7) {
+      if (bc7) {
         result = ktxTexture2_TranscodeBasis(texture, KTX_TTF_BC7_RGBA, 0);
 
-        if(result != KTX_SUCCESS) {
-          printf("failed to load texture '%s': %s\n", filename.c_str(), ktxErrorString(result));
+        if (result != KTX_SUCCESS) {
+          printf("failed to load texture '%s': %s\n",
+              filename.c_str(),
+              ktxErrorString(result));
         }
 
         ktx_uint32_t width = texture->baseWidth;
         ktx_uint32_t height = texture->baseHeight;
         int fmt = texture->vkFormat;
 
-        result = ktxTexture_GetImageOffset(ktxTexture(texture), 0, 0, 0, &offset);
+        result =
+            ktxTexture_GetImageOffset(ktxTexture(texture), 0, 0, 0, &offset);
 
-        if(result != KTX_SUCCESS) {
-          printf("failed to load texture '%s': %s\n", filename.c_str(), ktxErrorString(result));
+        if (result != KTX_SUCCESS) {
+          printf("failed to load texture '%s': %s\n",
+              filename.c_str(),
+              ktxErrorString(result));
         }
 
         data = ktxTexture_GetData(ktxTexture(texture)) + offset;
@@ -102,8 +120,10 @@ static void loadTexture(anari::Device d,
         anariSetParameter(d, colorTex, "size", ANARI_UINT64_VEC2, size);
       } else {
         result = ktxTexture2_TranscodeBasis(texture, KTX_TTF_RGBA32, 0);
-        if(result != KTX_SUCCESS) {
-          printf("failed to load texture '%s': %s\n", filename.c_str(), ktxErrorString(result));
+        if (result != KTX_SUCCESS) {
+          printf("failed to load texture '%s': %s\n",
+              filename.c_str(),
+              ktxErrorString(result));
         }
 
         int texelType = ANARI_UFIXED8_VEC4;
@@ -112,19 +132,20 @@ static void loadTexture(anari::Device d,
         ktx_uint32_t height = texture->baseHeight;
         int fmt = texture->vkFormat;
 
-        result = ktxTexture_GetImageOffset(ktxTexture(texture), 0, 0, 0, &offset);
+        result =
+            ktxTexture_GetImageOffset(ktxTexture(texture), 0, 0, 0, &offset);
 
-        if(result != KTX_SUCCESS) {
-          printf("failed to load texture '%s': %s\n", filename.c_str(), ktxErrorString(result));
+        if (result != KTX_SUCCESS) {
+          printf("failed to load texture '%s': %s\n",
+              filename.c_str(),
+              ktxErrorString(result));
         }
 
         data = ktxTexture_GetData(ktxTexture(texture)) + offset;
 
-
         colorTex = anari::newObject<anari::Sampler>(d, "image2D");
         anari::setParameterArray2D(
             d, colorTex, "image", texelType, data, width, height);
-
       }
 
       anari::setParameter(d, colorTex, "inAttribute", "attribute0");
@@ -132,21 +153,38 @@ static void loadTexture(anari::Device d,
       anari::setParameter(d, colorTex, "wrapMode2", "repeat");
       anari::setParameter(d, colorTex, "filter", "linear");
       float flip[] = {
-        1.0f, 0.0f, 0.0f, 0.0f,
-        0.0f, -1.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 1.0f, 0.0f,
-        0.0f, 0.0f, 0.0f, 1.0f,
+          1.0f,
+          0.0f,
+          0.0f,
+          0.0f,
+          0.0f,
+          -1.0f,
+          0.0f,
+          0.0f,
+          0.0f,
+          0.0f,
+          1.0f,
+          0.0f,
+          0.0f,
+          0.0f,
+          0.0f,
+          1.0f,
       };
       anariSetParameter(d, colorTex, "inTransform", ANARI_FLOAT32_MAT4, flip);
       float flipOffset[] = {
-        0.0f, 1.0f, 0.0f, 0.0f,
+          0.0f,
+          1.0f,
+          0.0f,
+          0.0f,
       };
-      anariSetParameter(d, colorTex, "inOffset", ANARI_FLOAT32_VEC4, flipOffset);
+      anariSetParameter(
+          d, colorTex, "inOffset", ANARI_FLOAT32_VEC4, flipOffset);
       anari::commitParameters(d, colorTex);
 
-
       ktxTexture_Destroy(ktxTexture(texture));
-    } else {
+    } else
+#endif
+    {
       int width, height, n;
       stbi_set_flip_vertically_on_load(1);
       void *data = stbi_load(filename.c_str(), &width, &height, &n, 0);
@@ -155,8 +193,9 @@ static void loadTexture(anari::Device d,
         if (!data)
           printf("failed to load texture '%s'\n", filename.c_str());
         else
-          printf(
-              "texture '%s' with %i channels not loaded\n", filename.c_str(), n);
+          printf("texture '%s' with %i channels not loaded\n",
+              filename.c_str(),
+              n);
         return;
       }
 
@@ -179,7 +218,6 @@ static void loadTexture(anari::Device d,
       anari::setParameter(d, colorTex, "filter", "linear");
       anari::commitParameters(d, colorTex);
     }
-
   }
 
   cache[filename] = colorTex;
@@ -225,8 +263,7 @@ static void loadObj(
   std::vector<ANARIMaterial> materials;
 
   auto defaultMaterial = anari::newObject<anari::Material>(d, "matte");
-  anari::setParameter(
-      d, defaultMaterial, "color", math::float3(0.f, 1.f, 0.f));
+  anari::setParameter(d, defaultMaterial, "color", math::float3(0.f, 1.f, 0.f));
   anari::commitParameters(d, defaultMaterial);
 
   TextureCache cache;

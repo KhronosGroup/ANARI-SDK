@@ -54,6 +54,18 @@ cmake_dependent_option(BUILD_VIEWER
 option(INSTALL_VIEWER_LIBRARY "Install anari::anari_viewer library target" ON)
 option(INSTALL_VIEWER "Install anariViewer app" OFF)
 mark_as_advanced(INSTALL_VIEWER)
+cmake_dependent_option(VIEWER_ENABLE_GLTF
+  "Enable glTF support in viewer"
+  OFF
+  "BUILD_VIEWER"
+  OFF
+)
+cmake_dependent_option(VIEWER_ENABLE_KTX
+  "Enable KTX support in viewer"
+  OFF
+  "BUILD_VIEWER"
+  OFF
+)
 
 ## The generate_all targets collects all offline code generation targets
 
