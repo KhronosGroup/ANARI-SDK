@@ -6,8 +6,8 @@
 #include "stb_image.h"
 // std
 #include <fstream>
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 
 #include "gltf2anari.h"
 
@@ -50,28 +50,35 @@ void FileGLTF::commit()
   gltf_data ctx(m_device);
   ctx.open_file(filename);
 
-  if(!ctx.instances.empty()) {
+  if (!ctx.instances.empty()) {
     uint64_t elementStride;
-    ANARIInstance *mapped = (ANARIInstance*)anariMapParameterArray1D(m_device, m_world, "instance", ANARI_INSTANCE, ctx.instances[0].size(), &elementStride);
-    std::copy(ctx.instances[0].begin(), ctx.instances[0].end(), mapped);    
+    ANARIInstance *mapped = (ANARIInstance *)anariMapParameterArray1D(m_device,
+        m_world,
+        "instance",
+        ANARI_INSTANCE,
+        ctx.instances[0].size(),
+        &elementStride);
+    std::copy(ctx.instances[0].begin(), ctx.instances[0].end(), mapped);
     anariUnmapParameterArray(m_device, m_world, "instance");
 
   } else {
     uint64_t elementStride;
-    ANARIInstance *mapped = (ANARIInstance*)anariMapParameterArray1D(m_device, m_world, "instance", ANARI_INSTANCE, ctx.groups.size(), &elementStride);
-    for(size_t i = 0;i<ctx.groups.size();++i) {
+    ANARIInstance *mapped = (ANARIInstance *)anariMapParameterArray1D(m_device,
+        m_world,
+        "instance",
+        ANARI_INSTANCE,
+        ctx.groups.size(),
+        &elementStride);
+    for (size_t i = 0; i < ctx.groups.size(); ++i) {
       mapped[i] = anariNewInstance(m_device, "transform");
-      anariSetParameter(m_device, mapped[i], "group", ANARI_GROUP, &ctx.groups[i]);
+      anariSetParameter(
+          m_device, mapped[i], "group", ANARI_GROUP, &ctx.groups[i]);
       anariCommitParameters(m_device, mapped[i]);
     }
     anariUnmapParameterArray(m_device, m_world, "instance");
   }
 
-
-
   anariCommitParameters(m_device, m_world);
-
-
 }
 
 TestScene *sceneFileGLTF(anari::Device d)
