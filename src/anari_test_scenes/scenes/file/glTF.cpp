@@ -51,34 +51,28 @@ void FileGLTF::commit()
   ctx.open_file(filename);
 
   if (!ctx.instances.empty()) {
-    uint64_t elementStride;
-    ANARIInstance *mapped = (ANARIInstance *)anariMapParameterArray1D(m_device,
+    anari::setParameterArray1D(m_device,
         m_world,
         "instance",
-        ANARI_INSTANCE,
-        ctx.instances[0].size(),
-        &elementStride);
-    std::copy(ctx.instances[0].begin(), ctx.instances[0].end(), mapped);
-    anariUnmapParameterArray(m_device, m_world, "instance");
-
+        ctx.instances[0].data(),
+        ctx.instances[0].size());
   } else {
-    uint64_t elementStride;
-    ANARIInstance *mapped = (ANARIInstance *)anariMapParameterArray1D(m_device,
+    uint64_t elementStride = 0;
+    auto *mapped = (anari::Instance *)anariMapParameterArray1D(m_device,
         m_world,
         "instance",
         ANARI_INSTANCE,
         ctx.groups.size(),
         &elementStride);
     for (size_t i = 0; i < ctx.groups.size(); ++i) {
-      mapped[i] = anariNewInstance(m_device, "transform");
-      anariSetParameter(
-          m_device, mapped[i], "group", ANARI_GROUP, &ctx.groups[i]);
-      anariCommitParameters(m_device, mapped[i]);
+      mapped[i] = anari::newObject<anari::Instance>(m_device, "transform");
+      anari::setParameter(m_device, mapped[i], "group", ctx.groups[i]);
+      anari::commitParameters(m_device, mapped[i]);
     }
     anariUnmapParameterArray(m_device, m_world, "instance");
   }
 
-  anariCommitParameters(m_device, m_world);
+  anari::commitParameters(m_device, m_world);
 }
 
 TestScene *sceneFileGLTF(anari::Device d)

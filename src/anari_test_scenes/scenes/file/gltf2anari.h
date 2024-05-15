@@ -7,7 +7,7 @@ using json = nlohmann::json;
 
 #include "webp/decode.h"
 
-static ANARIDataType accessor_type(int c)
+static anari::DataType accessor_type(int c)
 {
   switch (c - 5120) {
   case 0:
@@ -27,7 +27,7 @@ static ANARIDataType accessor_type(int c)
   }
 }
 
-static ANARIDataType accessor_components(const std::string &str)
+static anari::DataType accessor_components(const std::string &str)
 {
   if (str == "SCALAR") {
     return 1;
@@ -58,9 +58,9 @@ static ANARIDataType accessor_components(const std::string &str)
   }
 }
 
-static ANARIDataType accessor_element_type(int c, const std::string &str)
+static anari::DataType accessor_element_type(int c, const std::string &str)
 {
-  ANARIDataType baseType = accessor_type(c);
+  anari::DataType baseType = accessor_type(c);
   int components = accessor_components(str);
   if (baseType == ANARI_FLOAT32) {
     switch (components) {
@@ -86,7 +86,7 @@ static ANARIDataType accessor_element_type(int c, const std::string &str)
   }
 }
 
-static ANARIDataType draco_datatype(draco::DataType datatype)
+static anari::DataType draco_type_to_anari(draco::DataType datatype)
 {
   switch (datatype) {
   case draco::DT_INT8:
@@ -114,10 +114,10 @@ static ANARIDataType draco_datatype(draco::DataType datatype)
   }
 }
 
-static ANARIDataType draco_element_type(
+static anari::DataType draco_element_type_to_anari(
     draco::DataType datatype, uint8_t components)
 {
-  ANARIDataType baseType = draco_datatype(datatype);
+  anari::DataType baseType = draco_type_to_anari(datatype);
   if (baseType == ANARI_FLOAT32) {
     switch (components) {
     case 1:
@@ -289,13 +289,13 @@ struct gltf_data
 
   ANARIDevice device;
   std::vector<std::vector<char>> buffers;
-  std::vector<ANARIArray2D> images;
-  std::vector<ANARIMaterial> materials;
-  std::vector<ANARIGroup> groups;
-  std::vector<std::vector<ANARIInstance>> instances;
+  std::vector<anari::Array2D> images;
+  std::vector<anari::Material> materials;
+  std::vector<anari::Group> groups;
+  std::vector<std::vector<anari::Instance>> instances;
 
   const char *unpack_accessor(
-      int index, ANARIDataType &dataType, size_t &count, size_t &stride)
+      int index, anari::DataType &dataType, size_t &count, size_t &stride)
   {
     const auto &accessor = gltf["accessors"][index];
     size_t accessorOffset = accessor.value("byteOffset", 0);
@@ -314,7 +314,7 @@ struct gltf_data
   }
 
   template <typename T>
-  ANARISampler configure_sampler(const T &texspec, float *swizzle = nullptr)
+  anari::Sampler configure_sampler(const T &texspec, float *swizzle = nullptr)
   {
     const auto &tex = gltf["textures"].at(int(texspec["index"]));
 
@@ -328,42 +328,38 @@ struct gltf_data
       return nullptr;
     }
 
-    ANARIArray2D source = images.at(source_idx);
-    ANARISampler sampler = anariNewSampler(device, "image2D");
-    anariSetParameter(device, sampler, "image", ANARI_ARRAY2D, &source);
-    anariSetParameter(device,
+    auto sampler = anari::newObject<anari::Sampler>(device, "image2D");
+    anari::setParameter(device, sampler, "image", images.at(source_idx));
+    anari::setParameter(device,
         sampler,
         "inAttribute",
-        ANARI_STRING,
         texcoord_attribute(texspec.value("texCoord", 0)));
 
     if (tex.contains("sampler")) {
       const auto &sampleparams = gltf["samplers"].at(int(tex["sampler"]));
-      anariSetParameter(device,
+      anari::setParameter(device,
           sampler,
           "filter",
-          ANARI_STRING,
           filter_mode(sampleparams.value("magFilter", 9729)));
-      anariSetParameter(device,
+      anari::setParameter(device,
           sampler,
           "wrapMode1",
-          ANARI_STRING,
           wrap_mode(sampleparams.value("wrapS", 10497)));
-      anariSetParameter(device,
+      anari::setParameter(device,
           sampler,
           "wrapMode2",
           ANARI_STRING,
           wrap_mode(sampleparams.value("wrapT", 10497)));
     } else {
-      anariSetParameter(device, sampler, "filter", ANARI_STRING, "linear");
-      anariSetParameter(device, sampler, "wrapMode1", ANARI_STRING, "repeat");
-      anariSetParameter(device, sampler, "wrapMode2", ANARI_STRING, "repeat");
+      anari::setParameter(device, sampler, "filter", "linear");
+      anari::setParameter(device, sampler, "wrapMode1", "repeat");
+      anari::setParameter(device, sampler, "wrapMode2", "repeat");
     }
     if (swizzle) {
-      anariSetParameter(
+      anari::setParameter(
           device, sampler, "outTransform", ANARI_FLOAT32_MAT4, swizzle);
     }
-    anariCommitParameters(device, sampler);
+    anari::commitParameters(device, sampler);
     return sampler;
   }
 
@@ -489,7 +485,7 @@ struct gltf_data
 
     for (const auto &img : gltf["images"]) {
       int width, height, n;
-      void *data = nullptr;
+      const void *data = nullptr;
 
       data = decode_image(img, &width, &height, &n);
 
@@ -502,7 +498,7 @@ struct gltf_data
         else if (n == 1)
           texelType = ANARI_UFIXED8;
 
-        ANARIArray2D array = anariNewArray2D(
+        auto array = anari::newArray2D(
             device,
             data,
             [](const void *, const void *appMemory) {
@@ -522,138 +518,100 @@ struct gltf_data
   void load_materials()
   {
     for (const auto &mat : gltf["materials"]) {
-      ANARIMaterial material = anariNewMaterial(device, "physicallyBased");
+      auto material =
+          anari::newObject<anari::Material>(device, "physicallyBased");
       const auto &pbr = mat["pbrMetallicRoughness"];
       if (pbr.contains("baseColorTexture")) {
-        ANARISampler sampler = nullptr;
+        anari::Sampler sampler = nullptr;
         if (pbr.contains("baseColorFactor")) {
           const auto &basecolor = pbr["baseColorFactor"];
           float colorSwizzle[16] = {
-              basecolor[0],
-              0.0f,
-              0.0f,
-              0.0f,
-              0.0f,
-              basecolor[1],
-              0.0f,
-              0.0f,
-              0.0f,
-              0.0f,
-              basecolor[2],
-              0.0f,
-              0.0f,
-              0.0f,
-              0.0f,
-              basecolor[3],
+              // clang-format off
+              basecolor[0], 0.0f, 0.0f, 0.0f,
+              0.0f, basecolor[1], 0.0f, 0.0f,
+              0.0f, 0.0f, basecolor[2], 0.0f,
+              0.0f, 0.0f, 0.0f, basecolor[3],
+              // clang-format on
           };
           sampler = configure_sampler(pbr["baseColorTexture"], colorSwizzle);
         } else {
           sampler = configure_sampler(pbr["baseColorTexture"], nullptr);
         }
 
-        if (sampler) {
-          anariSetParameter(
-              device, material, "baseColor", ANARI_SAMPLER, &sampler);
-          anariRelease(device, sampler);
-        }
+        if (sampler)
+          anari::setAndReleaseParameter(device, material, "baseColor", sampler);
       } else if (pbr.contains("baseColorFactor")) {
         const auto &basecolor = pbr["baseColorFactor"];
         float color[4] = {0.0f, 0.0f, 0.0f, 1.0f};
         std::copy(basecolor.begin(),
             basecolor.begin() + std::min(4, int(basecolor.size())),
             color);
-        anariSetParameter(
-            device, material, "baseColor", ANARI_FLOAT32_VEC3, color);
-        anariSetParameter(
-            device, material, "opacity", ANARI_FLOAT32, color + 3);
+        anari::setParameter(
+            device, material, "baseColor", ANARI_FLOAT32_VEC3, &color[0]);
+        anari::setParameter(device, material, "opacity", color[3]);
       }
 
-      anariSetParameter(device, material, "alphaMode", ANARI_STRING, "blend");
+      anari::setParameter(device, material, "alphaMode", "blend");
 
       if (pbr.contains("metallicRoughnessTexture")) {
         float metallic = pbr.value("metallicFactor", 1);
         float roughness = pbr.value("roughnessFactor", 1);
 
         float metallicSwizzle[16] = {
-            0.0f,
-            0.0f,
-            0.0f,
-            0.0f,
-            0.0f,
-            0.0f,
-            0.0f,
-            0.0f,
-            metallic,
-            0.0f,
-            0.0f,
-            0.0f,
-            0.0f,
-            0.0f,
-            0.0f,
-            0.0f,
+            // clang-format off
+            0.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 0.0f,
+            metallic, 0.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 0.0f,
+            // clang-format on
         };
         float roughnessSwizzle[16] = {
-            0.0f,
-            0.0f,
-            0.0f,
-            0.0f,
-            roughness,
-            0.0f,
-            0.0f,
-            0.0f,
-            0.0f,
-            0.0f,
-            0.0f,
-            0.0f,
-            0.0f,
-            0.0f,
-            0.0f,
-            0.0f,
+            // clang-format off
+            0.0f, 0.0f, 0.0f, 0.0f,
+            roughness, 0.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 0.0f,
+            // clang-format on
         };
 
-        ANARISampler metallicSampler =
+        auto metallicSampler =
             configure_sampler(pbr["metallicRoughnessTexture"], metallicSwizzle);
         if (metallicSampler) {
-          anariSetParameter(
-              device, material, "metallic", ANARI_SAMPLER, &metallicSampler);
-          anariRelease(device, metallicSampler);
+          anari::setAndReleaseParameter(
+              device, material, "metallic", metallicSampler);
         }
-        ANARISampler roughnessSampler = configure_sampler(
+        auto roughnessSampler = configure_sampler(
             pbr["metallicRoughnessTexture"], roughnessSwizzle);
         if (roughnessSampler) {
-          anariSetParameter(
-              device, material, "roughness", ANARI_SAMPLER, &roughnessSampler);
-          anariRelease(device, roughnessSampler);
+          anari::setAndReleaseParameter(
+              device, material, "roughness", roughnessSampler);
         }
       } else {
         if (pbr.contains("metallicFactor")) {
-          float metallic = pbr["metallicFactor"];
-          anariSetParameter(
-              device, material, "metallic", ANARI_FLOAT32, &metallic);
+          anari::setParameter<float>(
+              device, material, "metallic", pbr["metallicFactor"]);
         }
 
         if (pbr.contains("roughnessFactor")) {
-          float roughness = pbr["roughnessFactor"];
-          anariSetParameter(
-              device, material, "roughness", ANARI_FLOAT32, &roughness);
+          anari::setParameter<float>(
+              device, material, "roughness", pbr["roughnessFactor"]);
         }
       }
 
-      anariCommitParameters(device, material);
+      anari::commitParameters(device, material);
       materials.emplace_back(material);
     }
   }
 
   void load_surfaces()
   {
-    ANARIMaterial defaultMaterial = anariNewMaterial(device, "matte");
-    float materialColor[] = {1.0f, 0.0f, 1.0f};
-    anariSetParameter(
-        device, defaultMaterial, "color", ANARI_FLOAT32_VEC3, materialColor);
-    anariCommitParameters(device, defaultMaterial);
+    auto defaultMaterial = anari::newObject<anari::Material>(device, "matte");
+    anari::setParameter(
+        device, defaultMaterial, "color", anari::math::float3(1.f, 0.f, 0.f));
+    anari::commitParameters(device, defaultMaterial);
 
     for (const auto &mesh : gltf["meshes"]) {
-      std::vector<ANARISurface> surfaces;
+      std::vector<anari::Surface> surfaces;
 
       for (const auto &prim : mesh["primitives"]) {
         int mode = prim.value("mode", 4);
@@ -671,7 +629,7 @@ struct gltf_data
           continue;
         }
 
-        ANARIGeometry geometry = anariNewGeometry(device, "triangle");
+        auto geometry = anari::newObject<anari::Geometry>(device, "triangle");
 
         if (prim.contains("extensions")
             && prim["extensions"].contains("KHR_draco_mesh_compression")) {
@@ -703,8 +661,8 @@ struct gltf_data
               }
               const auto &att =
                   draco_mesh->GetAttributeByUniqueId(attr.value());
-              ANARIDataType dataType =
-                  draco_element_type(att->data_type(), att->num_components());
+              anari::DataType dataType = draco_element_type_to_anari(
+                  att->data_type(), att->num_components());
               uint64_t elementStride;
               char *dst = (char *)anariMapParameterArray1D(device,
                   geometry,
@@ -739,30 +697,19 @@ struct gltf_data
 
             size_t stride;
             size_t count;
-            ANARIDataType dataType;
+            anari::DataType dataType = ANARI_UNKNOWN;
             const char *src =
                 unpack_accessor(attr.value(), dataType, count, stride);
             size_t dataSize = anari::sizeOf(dataType);
 
-            uint64_t elementStride;
-            char *dst = (char *)anariMapParameterArray1D(
-                device, geometry, paramname, dataType, count, &elementStride);
-
-            if (elementStride == stride) {
-              std::memcpy(dst, src, elementStride * count);
-            } else {
-              for (size_t i = 0; i < count; ++i) {
-                std::memcpy(
-                    dst + i * elementStride, src + i * stride, dataSize);
-              }
-            }
-            anariUnmapParameterArray(device, geometry, paramname);
+            anari::setParameterArray1DStrided(
+                device, geometry, paramname, dataType, src, count, stride);
           }
 
           if (prim.contains("indices")) {
             size_t stride;
             size_t count;
-            ANARIDataType dataType;
+            anari::DataType dataType;
             const char *src =
                 unpack_accessor(prim["indices"], dataType, count, stride);
             size_t dataSize = anari::sizeOf(dataType);
@@ -790,44 +737,30 @@ struct gltf_data
           }
         }
 
-        anariCommitParameters(device, geometry);
+        anari::commitParameters(device, geometry);
 
-        ANARISurface surface = anariNewSurface(device);
-        anariSetParameter(
-            device, surface, "geometry", ANARI_GEOMETRY, &geometry);
+        auto surface = anari::newObject<anari::Surface>(device);
+        anari::setAndReleaseParameter(device, surface, "geometry", geometry);
 
         if (prim.contains("material")) {
-          ANARIMaterial mat = materials.at(prim["material"]);
-          anariSetParameter(device, surface, "material", ANARI_MATERIAL, &mat);
-        } else {
-          anariSetParameter(
-              device, surface, "material", ANARI_MATERIAL, &defaultMaterial);
-        }
-        anariCommitParameters(device, surface);
-        anariRelease(device, geometry);
-
+          anari::setParameter(
+              device, surface, "material", materials.at(prim["material"]));
+        } else
+          anari::setParameter(device, surface, "material", defaultMaterial);
+        anari::commitParameters(device, surface);
         surfaces.push_back(surface);
       }
 
-      ANARIGroup group = anariNewGroup(device);
-      {
-        uint64_t elementStride;
-        ANARISurface *mapped = (ANARISurface *)anariMapParameterArray1D(device,
-            group,
-            "surface",
-            ANARI_SURFACE,
-            surfaces.size(),
-            &elementStride);
-        std::copy(surfaces.begin(), surfaces.end(), mapped);
-        anariUnmapParameterArray(device, group, "surface");
-      }
+      auto group = anari::newObject<anari::Group>(device);
+      anari::setParameterArray1D(
+          device, group, "surface", surfaces.data(), surfaces.size());
       for (auto s : surfaces)
-        anariRelease(device, s);
-      anariCommitParameters(device, group);
+        anari::release(device, s);
+      anari::commitParameters(device, group);
       groups.emplace_back(group);
     }
 
-    anariRelease(device, defaultMaterial);
+    anari::release(device, defaultMaterial);
   }
 
   template <typename T>
@@ -861,13 +794,10 @@ struct gltf_data
     float transform[16];
     matmul(transform, parent_transform, matrix);
     if (node.contains("mesh")) {
-      ANARIGroup group = groups.at(node["mesh"]);
-
-      ANARIInstance instance = anariNewInstance(device, "transform");
-      anariSetParameter(device, instance, "group", ANARI_GROUP, &group);
-      anariSetParameter(
-          device, instance, "transform", ANARI_FLOAT32_MAT4, transform);
-      anariCommitParameters(device, instance);
+      auto instance = anari::newObject<anari::Instance>(device, "transform");
+      anari::setParameter(device, instance, "group", groups.at(node["mesh"]));
+      anari::setParameter(device, instance, "transform", transform);
+      anari::commitParameters(device, instance);
       instances.back().push_back(instance);
     }
     if (node.contains("children")) {
@@ -1013,20 +943,16 @@ struct gltf_data
 
   ~gltf_data()
   {
-    for (auto obj : images) {
-      anariRelease(device, obj);
-    }
-    for (auto obj : groups) {
-      anariRelease(device, obj);
-    }
-    for (auto obj : materials) {
-      anariRelease(device, obj);
-    }
+    for (auto obj : images)
+      anari::release(device, obj);
+    for (auto obj : groups)
+      anari::release(device, obj);
+    for (auto obj : materials)
+      anari::release(device, obj);
     for (auto &scene : instances) {
-      for (auto obj : scene) {
-        anariRelease(device, obj);
-      }
+      for (auto obj : scene)
+        anari::release(device, obj);
     }
-    anariRelease(device, device);
+    anari::release(device, device);
   }
 };
