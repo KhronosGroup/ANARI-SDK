@@ -13,7 +13,7 @@
                 {"name" : "ANARI_DATA_TYPE", "value" : 100, "baseType" : "int32_t", "elements" : 1, "normalized" : false},
                 {"name" : "ANARI_STRING", "value" : 101, "baseType" : "const char*", "elements" : 1, "normalized" : false},
                 {"name" : "ANARI_VOID_POINTER", "value" : 102, "baseType" : "void*", "elements" : 1, "normalized" : false},
-                {"name" : "ANARI_BOOL", "value" : 103, "baseType" : "int32_t", "elements" : 1, "normalized" : false},
+                {"name" : "ANARI_BOOL", "value" : 103, "baseType" : "int8_t", "elements" : 1, "normalized" : false},
 
                 {"name" : "ANARI_STRING_LIST", "value" : 150, "baseType" : "const char**", "elements" : 1, "normalized" : false},
                 {"name" : "ANARI_DATA_TYPE_LIST", "value" : 151, "baseType" : "ANARIDataType*", "elements" : 1, "normalized" : false},

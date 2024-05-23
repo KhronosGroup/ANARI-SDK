@@ -126,13 +126,13 @@ struct ANARITypeProperties<ANARI_VOID_POINTER> {
 };
 template<>
 struct ANARITypeProperties<ANARI_BOOL> {
-    using base_type = int32_t;
+    using base_type = int8_t;
     static const int components = 1;
     static const bool normalized = false;
     using array_type = base_type[1];
     static constexpr const char* enum_name = "ANARI_BOOL";
-    static constexpr const char* type_name = "int32_t";
-    static constexpr const char* array_name = "int32_t[1]";
+    static constexpr const char* type_name = "int8_t";
+    static constexpr const char* array_name = "int8_t[1]";
     static constexpr const char* var_name = "varbool";
     static void fromFloat4(base_type *dst, const float *src) { }
     static void toFloat4(float *dst, const base_type *src) { }
@@ -2855,7 +2855,7 @@ inline size_t sizeOf(ANARIDataType type) {
         case ANARI_DATA_TYPE: return sizeof(int32_t)*1;
         case ANARI_STRING: return sizeof(const char*)*1;
         case ANARI_VOID_POINTER: return sizeof(void*)*1;
-        case ANARI_BOOL: return sizeof(int32_t)*1;
+        case ANARI_BOOL: return sizeof(int8_t)*1;
         case ANARI_STRING_LIST: return sizeof(const char**)*1;
         case ANARI_DATA_TYPE_LIST: return sizeof(ANARIDataType*)*1;
         case ANARI_PARAMETER_LIST: return sizeof(ANARIParameter*)*1;
@@ -3275,7 +3275,7 @@ inline const char* typenameOf(ANARIDataType type) {
         case ANARI_DATA_TYPE: return "int32_t";
         case ANARI_STRING: return "const char*";
         case ANARI_VOID_POINTER: return "void*";
-        case ANARI_BOOL: return "int32_t";
+        case ANARI_BOOL: return "int8_t";
         case ANARI_STRING_LIST: return "const char**";
         case ANARI_DATA_TYPE_LIST: return "ANARIDataType*";
         case ANARI_PARAMETER_LIST: return "ANARIParameter*";
