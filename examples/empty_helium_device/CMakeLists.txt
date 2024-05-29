@@ -46,11 +46,14 @@ find_package(anari REQUIRED)
 ## Code generation ##
 
 anari_generate_queries(
-  NAME hecore
+  NAME hecore_queries
   PREFIX HeCoreDevice
   CPP_NAMESPACE hecore
   JSON_DEFINITIONS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/HeCoreDefinitions.json
 )
+if (TARGET generate_all AND TARGET generate_hecore_queries)
+  add_dependencies(generate_all generate_hecore_queries)
+endif()
 
 ## Build device target ##
 

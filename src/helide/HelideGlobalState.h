@@ -28,6 +28,7 @@ struct HelideGlobalState : public helium::BaseGlobalDeviceState
   RenderingSemaphore renderingSemaphore;
   Frame *currentFrame{nullptr};
 
+  anari::Device anariDevice{nullptr}; // public handle of _this_ helide instance
   RTCDevice embreeDevice{nullptr};
 
   bool allowInvalidSurfaceMaterials{true};

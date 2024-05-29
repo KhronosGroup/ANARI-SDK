@@ -18,12 +18,9 @@ namespace anari {
 namespace detail {
 
 template <typename T>
-inline ANARIDataType getType()
+constexpr DataType getType()
 {
-  constexpr ANARIDataType type = ANARITypeFor<T>::value;
-  static_assert(ANARITypeFor<T>::value != ANARI_UNKNOWN,
-      "Type used which doesn't have an inferrable ANARIDataType");
-  return type;
+  return ANARITypeFor<T>::value;
 }
 
 } // namespace detail
@@ -58,7 +55,7 @@ inline void unloadModule(Library l, const char *name)
 // Object Creation ////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-inline anari::Device newDevice(Library l, const char *name)
+inline Device newDevice(Library l, const char *name)
 {
   return anariNewDevice(l, name);
 }
@@ -69,12 +66,13 @@ inline Object newObject(Device d, const char *type, const char *subtype)
 }
 
 template <typename T>
-struct NewObjectImpl {
-
+struct NewObjectImpl
+{
 };
 
 template <>
-struct NewObjectImpl<Surface> {
+struct NewObjectImpl<Surface>
+{
   static Surface newObject(Device d)
   {
     return anariNewSurface(d);
@@ -82,7 +80,8 @@ struct NewObjectImpl<Surface> {
 };
 
 template <>
-struct NewObjectImpl<Group> {
+struct NewObjectImpl<Group>
+{
   static Group newObject(Device d)
   {
     return anariNewGroup(d);
@@ -90,7 +89,8 @@ struct NewObjectImpl<Group> {
 };
 
 template <>
-struct NewObjectImpl<World> {
+struct NewObjectImpl<World>
+{
   static World newObject(Device d)
   {
     return anariNewWorld(d);
@@ -98,7 +98,8 @@ struct NewObjectImpl<World> {
 };
 
 template <>
-struct NewObjectImpl<Frame> {
+struct NewObjectImpl<Frame>
+{
   static Frame newObject(Device d)
   {
     return anariNewFrame(d);
@@ -106,7 +107,8 @@ struct NewObjectImpl<Frame> {
 };
 
 template <>
-struct NewObjectImpl<Instance> {
+struct NewObjectImpl<Instance>
+{
   static Instance newObject(Device d, const char *subtype)
   {
     return anariNewInstance(d, subtype);
@@ -114,7 +116,8 @@ struct NewObjectImpl<Instance> {
 };
 
 template <>
-struct NewObjectImpl<Camera> {
+struct NewObjectImpl<Camera>
+{
   static Camera newObject(Device d, const char *subtype)
   {
     return anariNewCamera(d, subtype);
@@ -122,7 +125,8 @@ struct NewObjectImpl<Camera> {
 };
 
 template <>
-struct NewObjectImpl<Light> {
+struct NewObjectImpl<Light>
+{
   static Light newObject(Device d, const char *subtype)
   {
     return anariNewLight(d, subtype);
@@ -130,7 +134,8 @@ struct NewObjectImpl<Light> {
 };
 
 template <>
-struct NewObjectImpl<Geometry> {
+struct NewObjectImpl<Geometry>
+{
   static Geometry newObject(Device d, const char *subtype)
   {
     return anariNewGeometry(d, subtype);
@@ -138,7 +143,8 @@ struct NewObjectImpl<Geometry> {
 };
 
 template <>
-struct NewObjectImpl<SpatialField> {
+struct NewObjectImpl<SpatialField>
+{
   static SpatialField newObject(Device d, const char *subtype)
   {
     return anariNewSpatialField(d, subtype);
@@ -146,7 +152,8 @@ struct NewObjectImpl<SpatialField> {
 };
 
 template <>
-struct NewObjectImpl<Volume> {
+struct NewObjectImpl<Volume>
+{
   static Volume newObject(Device d, const char *subtype)
   {
     return anariNewVolume(d, subtype);
@@ -154,7 +161,8 @@ struct NewObjectImpl<Volume> {
 };
 
 template <>
-struct NewObjectImpl<Material> {
+struct NewObjectImpl<Material>
+{
   static Material newObject(Device d, const char *subtype)
   {
     return anariNewMaterial(d, subtype);
@@ -162,7 +170,8 @@ struct NewObjectImpl<Material> {
 };
 
 template <>
-struct NewObjectImpl<Sampler> {
+struct NewObjectImpl<Sampler>
+{
   static Sampler newObject(Device d, const char *subtype)
   {
     return anariNewSampler(d, subtype);
@@ -170,13 +179,13 @@ struct NewObjectImpl<Sampler> {
 };
 
 template <>
-struct NewObjectImpl<Renderer> {
+struct NewObjectImpl<Renderer>
+{
   static Renderer newObject(Device d, const char *subtype)
   {
     return anariNewRenderer(d, subtype);
   }
 };
-
 
 template <typename T>
 inline T newObject(Device d)
@@ -196,6 +205,17 @@ inline T newObject(Device d, const char *subtype)
 
 // 1D //
 
+inline Array1D newArray1D(Device d,
+    const void *appMemory,
+    MemoryDeleter deleter,
+    const void *userPtr,
+    DataType elementType,
+    uint64_t numItems1)
+{
+  return anariNewArray1D(
+      d, appMemory, deleter, userPtr, elementType, numItems1);
+}
+
 template <typename T>
 inline Array1D newArray1D(Device d,
     const T *appMemory,
@@ -214,12 +234,24 @@ inline Array1D newArray1D(Device d, const T *appMemory, uint64_t numItems1)
       d, appMemory, nullptr, nullptr, detail::getType<T>(), numItems1);
 }
 
-inline Array1D newArray1D(Device d, ANARIDataType type, uint64_t numItems1)
+inline Array1D newArray1D(Device d, DataType type, uint64_t numItems1)
 {
   return anariNewArray1D(d, nullptr, nullptr, nullptr, type, numItems1);
 }
 
 // 2D //
+
+inline Array2D newArray2D(Device d,
+    const void *appMemory,
+    MemoryDeleter deleter,
+    const void *userPtr,
+    DataType elementType,
+    uint64_t numItems1,
+    uint64_t numItems2)
+{
+  return anariNewArray2D(
+      d, appMemory, deleter, userPtr, elementType, numItems1, numItems2);
+}
 
 template <typename T>
 inline Array2D newArray2D(Device d,
@@ -252,13 +284,32 @@ inline Array2D newArray2D(
 }
 
 inline Array2D newArray2D(
-    Device d, ANARIDataType type, uint64_t numItems1, uint64_t numItems2)
+    Device d, DataType type, uint64_t numItems1, uint64_t numItems2)
 {
   return anariNewArray2D(
       d, nullptr, nullptr, nullptr, type, numItems1, numItems2);
 }
 
 // 3D //
+
+inline Array3D newArray3D(Device d,
+    const void *appMemory,
+    MemoryDeleter deleter,
+    const void *userPtr,
+    DataType elementType,
+    uint64_t numItems1,
+    uint64_t numItems2,
+    uint64_t numItems3)
+{
+  return anariNewArray3D(d,
+      appMemory,
+      deleter,
+      userPtr,
+      elementType,
+      numItems1,
+      numItems2,
+      numItems3);
+}
 
 template <typename T>
 inline Array3D newArray3D(Device d,
@@ -297,7 +348,7 @@ inline Array3D newArray3D(Device d,
 }
 
 inline Array3D newArray3D(Device d,
-    ANARIDataType type,
+    DataType type,
     uint64_t numItems1,
     uint64_t numItems2,
     uint64_t numItems3)
@@ -321,29 +372,40 @@ inline void unmap(Device d, Array a)
 
 // Directly Mapped Array Parameters //
 
-inline void setParameterArray1D(Device d,
+inline void setParameterArray1DStrided(Device d,
     Object o,
     const char *name,
-    ANARIDataType type,
+    DataType type,
     const void *v,
-    uint64_t numElements1)
+    uint64_t numElements1,
+    uint64_t strideIn)
 {
-  uint64_t elementStride = 0;
+  const bool incomingDataIsDense = strideIn == sizeOf(type);
+  uint64_t strideOut = 0;
   if (void *mem = anariMapParameterArray1D(
-          d, o, name, type, numElements1, &elementStride)) {
-    uint64_t elementSize = anari::sizeOf(type);
-    if (elementStride == 0 || elementSize == elementStride) {
+          d, o, name, type, numElements1, &strideOut)) {
+    uint64_t elementSize = sizeOf(type);
+    if (incomingDataIsDense && (strideOut == 0 || elementSize == strideOut)) {
       std::memcpy(mem, v, elementSize * numElements1);
     } else {
       char *cmem = (char *)mem;
       const char *cv = (const char *)v;
       for (uint64_t i = 0; i < numElements1; ++i) {
-        std::memcpy(
-            cmem + elementStride * i, cv + elementSize * i, elementSize);
+        std::memcpy(cmem + strideOut * i, cv + strideIn * i, elementSize);
       }
     }
     anariUnmapParameterArray(d, o, name);
   }
+}
+
+inline void setParameterArray1D(Device d,
+    Object o,
+    const char *name,
+    DataType type,
+    const void *v,
+    uint64_t numElements)
+{
+  setParameterArray1DStrided(d, o, name, type, v, numElements, sizeOf(type));
 }
 
 template <typename T>
@@ -356,7 +418,7 @@ inline void setParameterArray1D(
 inline void setParameterArray2D(Device d,
     Object o,
     const char *name,
-    ANARIDataType type,
+    DataType type,
     const void *v,
     uint64_t numElements1,
     uint64_t numElements2)
@@ -364,7 +426,7 @@ inline void setParameterArray2D(Device d,
   uint64_t elementStride = 0;
   if (void *mem = anariMapParameterArray2D(
           d, o, name, type, numElements1, numElements2, &elementStride)) {
-    uint64_t elementSize = anari::sizeOf(type);
+    uint64_t elementSize = sizeOf(type);
     uint64_t totalElements = numElements1 * numElements2;
     if (elementStride == 0 || elementSize == elementStride) {
       std::memcpy(mem, v, elementSize * totalElements);
@@ -395,7 +457,7 @@ inline void setParameterArray2D(Device d,
 inline void setParameterArray3D(Device d,
     Object o,
     const char *name,
-    ANARIDataType type,
+    DataType type,
     const void *v,
     uint64_t numElements1,
     uint64_t numElements2,
@@ -410,7 +472,7 @@ inline void setParameterArray3D(Device d,
           numElements2,
           numElements3,
           &elementStride)) {
-    uint64_t elementSize = anari::sizeOf(type);
+    uint64_t elementSize = sizeOf(type);
     uint64_t totalElements = numElements1 * numElements2 * numElements3;
     if (elementStride == 0 || elementSize == elementStride) {
       std::memcpy(mem, v, elementSize * totalElements);
@@ -450,16 +512,16 @@ inline void setParameterArray3D(Device d,
 ///////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-inline void setParameter(ANARIDevice d, ANARIObject o, const char *name, T &&v)
+inline void setParameter(Device d, Object o, const char *name, T &&v)
 {
   using TYPE = typename std::remove_reference<T>::type;
-  constexpr bool validType = ANARITypeFor<TYPE>::value != ANARI_UNKNOWN;
+  constexpr bool validType = detail::getType<TYPE>() != ANARI_UNKNOWN;
   constexpr bool isString = std::is_convertible<TYPE, const char *>::value;
   constexpr bool isStringLiteral = isString && std::is_array<TYPE>::value;
-  constexpr bool isVoidPtr = ANARITypeFor<TYPE>::value == ANARI_VOID_POINTER;
+  constexpr bool isVoidPtr = detail::getType<TYPE>() == ANARI_VOID_POINTER;
   static_assert(validType || isString,
-      "Only types corresponding to ANARIDataType values can be set "
-      "as parameters on ANARI objects.");
+      "Only types corresponding to DataType values can be set "
+      "as parameters on  objects.");
   if (isStringLiteral)
     anariSetParameter(d, o, name, ANARI_STRING, (const char *)&v);
   else if (isString)
@@ -470,24 +532,36 @@ inline void setParameter(ANARIDevice d, ANARIObject o, const char *name, T &&v)
     anariSetParameter(d, o, name, ANARITypeFor<TYPE>::value, &v);
 }
 
-inline void setParameter(
-    ANARIDevice d, ANARIObject o, const char *name, std::string v)
+inline void setParameter(Device d, Object o, const char *name, std::string v)
 {
   setParameter(d, o, name, v.c_str());
 }
 
+inline void setParameter(Device d, Object o, const char *name, bool v)
+{
+  const uint32_t b = v;
+  anariSetParameter(d, o, name, ANARI_BOOL, &b);
+}
+
 inline void setParameter(
-    Device d, Object o, const char *name, ANARIDataType type, const void *v)
+    Device d, Object o, const char *name, DataType type, const void *v)
 {
   anariSetParameter(d, o, name, type, v);
 }
 
 template <typename T>
+inline void setParameterAs(
+    Device d, Object o, const char *name, DataType type, T &&v)
+{
+  anariSetParameter(d, o, name, type, &v);
+}
+
+template <typename T>
 inline void setAndReleaseParameter(
-    ANARIDevice d, ANARIObject o, const char *name, const T &v)
+    Device d, Object o, const char *name, const T &v)
 {
   static_assert(isObject(ANARITypeFor<T>::value),
-      "anari::setAndReleaseParameter() can only set ANARI objects as parameters");
+      "anari::setAndReleaseParameter() can only set anari::Objects as parameters");
   setParameter(d, o, name, v);
   anariRelease(d, v);
 }
@@ -529,6 +603,18 @@ inline bool getProperty(
       d, o, propertyName, detail::getType<T>(), &dst, sizeof(T), mask);
 }
 
+template <>
+inline bool getProperty(
+    Device d, Object o, const char *propertyName, bool &dst, WaitMask mask)
+{
+  uint32_t tmp = 0;
+  const auto retval =
+      anariGetProperty(d, o, propertyName, ANARI_BOOL, &tmp, sizeof(tmp), mask);
+  if (retval)
+    dst = bool(tmp);
+  return retval;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Frame Operations ///////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -568,7 +654,7 @@ inline void discard(Device d, Frame f)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// C++ Extension Utilities //////////////////////////////////////////////////////
+// C++ Extension Utilities ////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
 namespace extension {

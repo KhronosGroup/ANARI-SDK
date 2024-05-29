@@ -48,11 +48,14 @@ add_subdirectory(external/embree EXCLUDE_FROM_ALL)
 ## Code generation ##
 
 anari_generate_queries(
-  NAME helide
+  NAME helide_queries
   PREFIX HelideDevice
   CPP_NAMESPACE helide
   JSON_DEFINITIONS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/HelideDefinitions.json
 )
+if (TARGET generate_all AND TARGET generate_helide_queries)
+  add_dependencies(generate_all generate_helide_queries)
+endif()
 
 ## Core device target ##
 

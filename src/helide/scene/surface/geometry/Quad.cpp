@@ -7,7 +7,8 @@
 
 namespace helide {
 
-Quad::Quad(HelideGlobalState *s) : Geometry(s)
+Quad::Quad(HelideGlobalState *s)
+    : Geometry(s), m_index(this), m_vertexPosition(this)
 {
   m_embreeGeometry = rtcNewGeometry(s->embreeDevice, RTC_GEOMETRY_TYPE_QUAD);
 }
@@ -15,8 +16,6 @@ Quad::Quad(HelideGlobalState *s) : Geometry(s)
 void Quad::commit()
 {
   Geometry::commit();
-
-  cleanup();
 
   m_index = getParamObject<Array1D>("primitive.index");
   m_vertexPosition = getParamObject<Array1D>("vertex.position");
@@ -31,10 +30,6 @@ void Quad::commit()
         "missing required parameter 'vertex.position' on quad geometry");
     return;
   }
-
-  m_vertexPosition->addCommitObserver(this);
-  if (m_index)
-    m_index->addCommitObserver(this);
 
   rtcSetSharedGeometryBuffer(embreeGeometry(),
       RTC_BUFFER_TYPE_VERTEX,
@@ -94,14 +89,6 @@ float4 Quad::getAttributeValue(const Attribute &attr, const Ray &ray) const
   auto d = readAttributeValue(attributeArray, idx.w);
 
   return uv.x * a + uv.y * b + uv.z * c + uv.w * d;
-}
-
-void Quad::cleanup()
-{
-  if (m_index)
-    m_index->removeCommitObserver(this);
-  if (m_vertexPosition)
-    m_vertexPosition->removeCommitObserver(this);
 }
 
 } // namespace helide

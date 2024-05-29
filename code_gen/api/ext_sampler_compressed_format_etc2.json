@@ -1,0 +1,27 @@
+{
+    "info" : {
+        "name" : "EXT_SAMPLER_COMPRESSED_FORMAT_ETC2",
+        "type" : "extension",
+        "dependencies" : []
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_SAMPLER",
+            "name" : "compressedImage2D",
+            "parameters" : [
+               {
+                    "name" : "format",
+                    "values" : [
+                       "ETC2_R8G8B8",
+                       "ETC2_R8G8B8_SRGB",
+                       "ETC2_R8G8B8A1",
+                       "ETC2_R8G8B8A1_SRGB",
+                       "ETC2_R8G8B8A8",
+                       "ETC2_R8G8B8A8_SRGB"
+                    ]
+                }
+            ]
+        }
+    ]
+}

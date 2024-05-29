@@ -88,23 +88,23 @@ void BaseObject::markCommitted()
   m_lastCommitted = newTimeStamp();
 }
 
-void BaseObject::addCommitObserver(BaseObject *obj)
+void BaseObject::addChangeObserver(BaseObject *obj)
 {
-  m_observers.push_back(obj);
+  m_changeObservers.push_back(obj);
 }
 
-void BaseObject::removeCommitObserver(BaseObject *obj)
+void BaseObject::removeChangeObserver(BaseObject *obj)
 {
-  m_observers.erase(std::remove_if(m_observers.begin(),
-                        m_observers.end(),
-                        [&](BaseObject *o) -> bool { return o == obj; }),
-      m_observers.end());
+  m_changeObservers.erase(std::remove_if(m_changeObservers.begin(),
+                              m_changeObservers.end(),
+                              [&](BaseObject *o) -> bool { return o == obj; }),
+      m_changeObservers.end());
 }
 
-void BaseObject::notifyCommitObservers() const
+void BaseObject::notifyChangeObservers() const
 {
-  for (auto o : m_observers)
-    notifyObserver(o);
+  for (auto o : m_changeObservers)
+    notifyChangeObserver(o);
 }
 
 BaseGlobalDeviceState *BaseObject::deviceState() const
@@ -112,9 +112,11 @@ BaseGlobalDeviceState *BaseObject::deviceState() const
   return m_state;
 }
 
-void BaseObject::notifyObserver(BaseObject *obj) const
+void BaseObject::notifyChangeObserver(BaseObject *o) const
 {
-  // no-op
+  o->markUpdated();
+  if (auto *ds = deviceState(); ds)
+    ds->m_commitBuffer.addObject(o);
 }
 
 void BaseObject::incrementObjectCount()

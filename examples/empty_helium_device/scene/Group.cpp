@@ -7,12 +7,14 @@
 
 namespace hecore {
 
-Group::Group(HeCoreDeviceGlobalState *s) : Object(ANARI_GROUP, s) {}
+Group::Group(HeCoreDeviceGlobalState *s)
+    : Object(ANARI_GROUP, s),
+      m_surfaceData(this),
+      m_volumeData(this),
+      m_lightData(this)
+{}
 
-Group::~Group()
-{
-  cleanup();
-}
+Group::~Group() = default;
 
 bool Group::getProperty(
     const std::string_view &name, ANARIDataType type, void *ptr, uint32_t flags)
@@ -22,13 +24,15 @@ bool Group::getProperty(
 
 void Group::commit()
 {
-  cleanup();
+  m_surfaces.clear();
+  m_volumes.clear();
+  m_lights.clear();
 
   m_surfaceData = getParamObject<ObjectArray>("surface");
   m_volumeData = getParamObject<ObjectArray>("volume");
+  m_lightData = getParamObject<ObjectArray>("light");
 
   if (m_surfaceData) {
-    m_surfaceData->addCommitObserver(this);
     std::transform(m_surfaceData->handlesBegin(),
         m_surfaceData->handlesEnd(),
         std::back_inserter(m_surfaces),
@@ -36,11 +40,17 @@ void Group::commit()
   }
 
   if (m_volumeData) {
-    m_volumeData->addCommitObserver(this);
     std::transform(m_volumeData->handlesBegin(),
         m_volumeData->handlesEnd(),
         std::back_inserter(m_volumes),
         [](auto *o) { return (Volume *)o; });
+  }
+
+  if (m_lightData) {
+    std::transform(m_lightData->handlesBegin(),
+        m_lightData->handlesEnd(),
+        std::back_inserter(m_lights),
+        [](auto *o) { return (Light *)o; });
   }
 }
 
@@ -54,15 +64,9 @@ const std::vector<Volume *> &Group::volumes() const
   return m_volumes;
 }
 
-void Group::cleanup()
+const std::vector<Light *> &Group::lights() const
 {
-  if (m_surfaceData)
-    m_surfaceData->removeCommitObserver(this);
-  if (m_volumeData)
-    m_volumeData->removeCommitObserver(this);
-
-  m_surfaces.clear();
-  m_volumes.clear();
+  return m_lights;
 }
 
 } // namespace hecore

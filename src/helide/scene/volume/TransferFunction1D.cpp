@@ -5,18 +5,15 @@
 
 namespace helide {
 
-TransferFunction1D::TransferFunction1D(HelideGlobalState *d) : Volume(d) {}
+TransferFunction1D::TransferFunction1D(HelideGlobalState *d)
+    : Volume(d), m_field(this)
+{}
 
-TransferFunction1D::~TransferFunction1D()
-{
-  if (m_field)
-    m_field->removeCommitObserver(this);
-}
+TransferFunction1D::~TransferFunction1D() = default;
 
 void TransferFunction1D::commit()
 {
-  if (m_field)
-    m_field->removeCommitObserver(this);
+  Volume::commit();
 
   m_field = getParamObject<SpatialField>("value");
   if (!m_field) {
@@ -42,8 +39,6 @@ void TransferFunction1D::commit()
         "no opacity data provided to transfer function");
     return;
   }
-
-  m_field->addCommitObserver(this);
 }
 
 bool TransferFunction1D::isValid() const

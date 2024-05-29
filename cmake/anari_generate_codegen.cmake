@@ -19,13 +19,17 @@ function(anari_generate_queries)
     ${ARGN}
   )
 
-  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+  find_package(Python3 OPTIONAL_COMPONENTS Interpreter)
+  if (NOT TARGET Python3::Interpreter)
+    message(WARNING "Unable to find python interpreter, skipping code-gen targets")
+    return()
+  endif()
 
   if (DEFINED GENERATE_JSON_ROOT_LOCATION)
     set(EXTRA_JSON_OPTION --json ${GENERATE_JSON_ROOT_LOCATION})
   endif()
 
-  add_custom_target(generate_${GENERATE_NAME}_device
+  add_custom_target(generate_${GENERATE_NAME}
     COMMAND ${Python3_EXECUTABLE} ${ANARI_CODE_GEN_ROOT}/generate_queries.py
       --json ${ANARI_CODE_GEN_ROOT}
       ${EXTRA_JSON_OPTION}
@@ -37,6 +41,6 @@ function(anari_generate_queries)
   )
 
   if (TARGET generate_all)
-    add_dependencies(generate_all generate_${GENERATE_NAME}_device)
+    add_dependencies(generate_all generate_${GENERATE_NAME})
   endif()
 endfunction()

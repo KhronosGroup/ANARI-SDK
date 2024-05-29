@@ -5,7 +5,11 @@
 
 namespace helide {
 
-World::World(HelideGlobalState *s) : Object(ANARI_WORLD, s)
+World::World(HelideGlobalState *s)
+    : Object(ANARI_WORLD, s),
+      m_zeroSurfaceData(this),
+      m_zeroVolumeData(this),
+      m_instanceData(this)
 {
   m_zeroGroup = new Group(s);
   m_zeroInstance = new Instance(s);
@@ -48,8 +52,8 @@ void World::commit()
   m_zeroSurfaceData = getParamObject<ObjectArray>("surface");
   m_zeroVolumeData = getParamObject<ObjectArray>("volume");
 
-  m_addZeroInstance = m_zeroSurfaceData || m_zeroVolumeData;
-  if (m_addZeroInstance)
+  const bool addZeroInstance = m_zeroSurfaceData || m_zeroVolumeData;
+  if (addZeroInstance)
     reportMessage(ANARI_SEVERITY_DEBUG, "helide::World will add zero instance");
 
   if (m_zeroSurfaceData) {
@@ -78,26 +82,20 @@ void World::commit()
   m_instances.clear();
 
   if (m_instanceData) {
-    m_instanceData->removeAppendedHandles();
-    if (m_addZeroInstance)
-      m_instanceData->appendHandle(m_zeroInstance.ptr);
     std::for_each(m_instanceData->handlesBegin(),
         m_instanceData->handlesEnd(),
         [&](auto *o) {
           if (o && o->isValid())
             m_instances.push_back((Instance *)o);
         });
-  } else if (m_addZeroInstance)
+  }
+
+  if (addZeroInstance)
     m_instances.push_back(m_zeroInstance.ptr);
 
   m_objectUpdates.lastTLSBuild = 0;
   m_objectUpdates.lastBLSReconstructCheck = 0;
   m_objectUpdates.lastBLSCommitCheck = 0;
-
-  if (m_instanceData)
-    m_instanceData->addCommitObserver(this);
-  if (m_zeroSurfaceData)
-    m_zeroSurfaceData->addCommitObserver(this);
 }
 
 const std::vector<Instance *> &World::instances() const
@@ -209,11 +207,6 @@ void World::rebuildTLS()
 
 void World::cleanup()
 {
-  if (m_instanceData)
-    m_instanceData->removeCommitObserver(this);
-  if (m_zeroSurfaceData)
-    m_zeroSurfaceData->removeCommitObserver(this);
-
   rtcReleaseScene(m_embreeScene);
   m_embreeScene = nullptr;
 }

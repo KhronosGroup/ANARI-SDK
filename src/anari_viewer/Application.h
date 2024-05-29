@@ -12,6 +12,7 @@
 namespace anari_viewer {
 
 struct AppImpl;
+using WindowArray = std::vector<std::unique_ptr<Window>>;
 
 class Application
 {
@@ -19,10 +20,16 @@ class Application
   Application();
   virtual ~Application() = default;
 
-  virtual WindowArray setup() = 0;
-  virtual void buildMainMenuUI() = 0;
+  // Construct windows used by the application
+  virtual WindowArray setupWindows() = 0;
+  // This is called before ImGui on every frame (ex: ImGui main menu bar)
+  virtual void uiFrameStart();
+  // This is called after all ImGui calls are done on every frame
+  virtual void uiFrameEnd();
+  // Allow teardown of objects before application destruction
   virtual void teardown() = 0;
 
+  // Start the application run loop
   void run(int width, int height, const char *name);
 
  protected:

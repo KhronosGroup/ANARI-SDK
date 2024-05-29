@@ -10,6 +10,9 @@
 #include "scenes/demo/cornell_box.h"
 #include "scenes/demo/gravity_spheres_volume.h"
 #include "scenes/file/obj.h"
+#ifdef ENABLE_GLTF
+#include "scenes/file/glTF.h"
+#endif
 #include "scenes/test/attributes.h"
 #include "scenes/test/instanced_cubes.h"
 #include "scenes/test/pbr_spheres.h"
@@ -42,6 +45,9 @@ static void init()
 
     // file loaders
     registerScene("file", "obj", sceneFileObj);
+#ifdef ENABLE_GLTF
+    registerScene("file", "glTF", sceneFileGLTF);
+#endif
 
     // tests
     registerScene("test", "random_spheres", sceneRandomSpheres);

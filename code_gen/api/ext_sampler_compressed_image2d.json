@@ -1,0 +1,92 @@
+{
+    "info" : {
+        "name" : "EXT_SAMPLER_COMPRESSED_IMAGE2D",
+        "type" : "extension",
+        "dependencies" : []
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_SAMPLER",
+            "name" : "compressedImage2D",
+            "description" : "compressed image2D object",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "description" : "optional object name"
+                }, {
+                    "name" : "image",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "elementType" : [
+                        "ANARI_UINT8", "ANARI_INT8"],
+                    "tags" : ["required"],
+                    "description" : "array backing the sampler"
+                }, {
+                    "name" : "format",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : ["required"],
+                    "values" : [],
+                    "description" : "format"
+                }, {
+                    "name" : "size",
+                    "types" : ["ANARI_UINT64_VEC2"],
+                    "tags" : ["required"],
+                    "description" : "image size"
+                }, {
+                    "name" : "inAttribute",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : ["attribute"],
+                    "default" : "attribute0",
+                    "description" : "input surface attribute (texture coordinate)"
+                }, {
+                    "name" : "filter",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "default" : "nearest",
+                    "values" : ["nearest", "linear"],
+                    "description" : "filter mode"
+                }, {
+                    "name" : "wrapMode1",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "default" : "clampToEdge",
+                    "values" : ["clampToEdge", "repeat", "mirrorRepeat"],
+                    "description" : "wrap mode for the 1st dimension"
+                }, {
+                    "name" : "wrapMode2",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "default" : "clampToEdge",
+                    "values" : ["clampToEdge", "repeat", "mirrorRepeat"],
+                    "description" : "wrap mode for the 2nd dimension"
+                }, {
+                    "name" : "inTransform",
+                    "types" : ["ANARI_FLOAT32_MAT4"],
+                    "tags" : [],
+                    "default" : [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
+                    "description" : "transform applied to the input attribute before sampling"
+                }, {
+                    "name" : "inOffset",
+                    "types" : ["ANARI_FLOAT32_VEC4"],
+                    "tags" : [],
+                    "default" : [0,0,0,0],
+                    "description" : "offset added to output inTransform result"
+                }, {
+                    "name" : "outTransform",
+                    "types" : ["ANARI_FLOAT32_MAT4"],
+                    "tags" : [],
+                    "default" : [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
+                    "description" : "transform applied to the sampled values"
+                }, {
+                    "name" : "outOffset",
+                    "types" : ["ANARI_FLOAT32_VEC4"],
+                    "tags" : [],
+                    "default" : [0,0,0,0],
+                    "description" : "offset added to output outTransform result"
+                }
+            ]
+        }
+    ]
+}

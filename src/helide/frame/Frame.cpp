@@ -106,6 +106,11 @@ void Frame::commit()
     m_objIdBuffer.resize(numPixels);
   if (m_instIdType == ANARI_UINT32)
     m_instIdBuffer.resize(numPixels);
+
+  m_callback = getParam<ANARIFrameCompletionCallback>(
+      "frameCompletionCallback", nullptr);
+  m_callbackUserPtr =
+      getParam<void *>("frameCompletionCallbackUserData", nullptr);
 }
 
 bool Frame::getProperty(
@@ -160,6 +165,9 @@ void Frame::renderFrame()
         writeSample(x, y, m_renderer->renderSample(screen, ray, *m_world));
       });
     });
+
+    if (m_callback)
+      m_callback(m_callbackUserPtr, state->anariDevice, (ANARIFrame)this);
 
     state->renderingSemaphore.frameEnd();
 

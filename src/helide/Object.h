@@ -7,6 +7,7 @@
 #include "HelideMath.h"
 // helium
 #include "helium/BaseObject.h"
+#include "helium/utility/ChangeObserverPtr.h"
 // std
 #include <string_view>
 

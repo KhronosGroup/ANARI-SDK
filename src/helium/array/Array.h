@@ -94,8 +94,6 @@ struct Array : public BaseArray
   void freeAppMemory();
   void initManagedMemory();
 
-  void notifyObserver(BaseObject *) const override;
-
   template <typename T>
   void throwIfDifferentElementType() const;
 

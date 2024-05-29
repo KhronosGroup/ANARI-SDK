@@ -125,9 +125,12 @@ if __name__ == "__main__":
     #ffibuilder.emit_c_code(str(args.outdir/"pyanari.c"))
     ffibuilder.compile(verbose=True, debug=False)
     #this ends up with a funny python version specific name despite being version agnostic
-    pyanari_file = glob.glob('pyanari.*.so')
-    if pyanari_file:
-        os.rename(pyanari_file[0], 'pyanari.so')
+    pyanari_files = glob.glob('pyanari.*.so') + glob.glob('pyanari.*.pyd')
+    for pyanari_file in pyanari_files:
+        fileWithExt = os.path.splitext(pyanari_file)
+        newFileName = f'pyanari{fileWithExt[1]}'
+        print(f'Renamed {pyanari_file} to {newFileName}')
+        os.replace(pyanari_file, newFileName)
 
 
 boilerplate = '''# Copyright 2021-2024 The Khronos Group
@@ -250,7 +253,7 @@ special = {
     '''def anariNewArray3D(device, appMemory, dataType, numItems1, numItems2, numItems3):
     result = lib.anariNewArray3D(device, ffi.NULL, ffi.NULL, ffi.NULL, dataType, numItems1, numItems2, numItems3)
     ptr = lib.anariMapArray(device, result)
-    ffi.memmove(ptr, appMemory, ffi.sizeof(_typeof[dataType])*numItems1)
+    ffi.memmove(ptr, appMemory, ffi.sizeof(_typeof[dataType])*numItems1*numItems2*numItems3)
     lib.anariUnmapArray(device, result)
     lib.anariRetain(device, device)
     return ffi.gc(result, lambda h, d=device: _releaseBoth(d, h))

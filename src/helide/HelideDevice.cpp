@@ -259,6 +259,7 @@ void HelideDevice::initDevice()
 
   auto &state = *deviceState();
 
+  state.anariDevice = (anari::Device)this;
   state.embreeDevice = rtcNewDevice(nullptr);
 
   if (!state.embreeDevice) {

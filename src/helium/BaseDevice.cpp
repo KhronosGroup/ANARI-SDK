@@ -151,8 +151,11 @@ void BaseDevice::commitParameters(ANARIObject o)
   if (handleIsDevice(o)) {
     auto lock = scopeLockObject();
     deviceCommitParameters();
-  } else
-    m_state->commitBufferAddObject((BaseObject *)o);
+  } else {
+    auto *obj = (BaseObject *)o;
+    m_state->commitBufferAddObject(obj);
+    obj->notifyChangeObservers();
+  }
 }
 
 void BaseDevice::release(ANARIObject o)

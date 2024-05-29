@@ -24,19 +24,17 @@ struct Group : public Object
 
   const std::vector<Surface *> &surfaces() const;
   const std::vector<Volume *> &volumes() const;
+  const std::vector<Light *> &lights() const;
 
  private:
-  void cleanup();
-
-  // Geometry //
-
-  helium::IntrusivePtr<ObjectArray> m_surfaceData;
+  helium::ChangeObserverPtr<ObjectArray> m_surfaceData;
   std::vector<Surface *> m_surfaces;
 
-  // Volume //
-
-  helium::IntrusivePtr<ObjectArray> m_volumeData;
+  helium::ChangeObserverPtr<ObjectArray> m_volumeData;
   std::vector<Volume *> m_volumes;
+
+  helium::ChangeObserverPtr<ObjectArray> m_lightData;
+  std::vector<Light *> m_lights;
 };
 
 } // namespace hecore

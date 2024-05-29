@@ -47,6 +47,16 @@ Application::Application()
   glfwSetErrorCallback(glfw_error_callback);
 }
 
+void Application::uiFrameStart()
+{
+  // no-op
+}
+
+void Application::uiFrameEnd()
+{
+  // no-op
+}
+
 void Application::run(int width, int height, const char *name)
 {
   m_impl->width = width;
@@ -54,7 +64,7 @@ void Application::run(int width, int height, const char *name)
   m_impl->name = name;
 
   m_impl->init();
-  m_impl->windows = setup();
+  m_impl->windows = setupWindows();
   mainLoop();
   teardown();
   m_impl->cleanup();
@@ -91,7 +101,7 @@ void Application::mainLoop()
     if (io.KeysDown[GLFW_KEY_Q] && io.KeysDown[GLFW_KEY_LEFT_CONTROL])
       glfwSetWindowShouldClose(window, 1);
 
-    buildMainMenuUI();
+    uiFrameStart();
 
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDocking
         | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse
@@ -125,6 +135,8 @@ void Application::mainLoop()
 
     glfwSwapBuffers(window);
     m_impl->windowResized = false;
+
+    uiFrameEnd();
   }
 }
 

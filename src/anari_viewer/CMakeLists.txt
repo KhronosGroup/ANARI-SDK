@@ -1,6 +1,27 @@
 ## Copyright 2023-2024 The Khronos Group
 ## SPDX-License-Identifier: Apache-2.0
 
+## Installation ##
+
+if (INSTALL_VIEWER_LIBRARY)
+  set(SRC_INSTALL_ROOT ${CMAKE_INSTALL_DATAROOTDIR}/anari/anari_viewer)
+  install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+    DESTINATION ${SRC_INSTALL_ROOT}/..
+    COMPONENT viewer
+    FILES_MATCHING
+      PATTERN *.h
+      PATTERN *.c
+      PATTERN *.cpp
+      PATTERN CMakeLists.txt
+  )
+endif()
+
+## Local target for SDK examples ##
+
+if(DEFINED BUILD_VIEWER AND NOT BUILD_VIEWER)
+  return()
+endif()
+
 if (NOT TARGET anari::anari)
   find_package(anari MODULE REQUIRED)
 endif()
@@ -33,18 +54,3 @@ project_link_libraries(INTERFACE
 )
 
 add_library(anari::anari_viewer ALIAS ${PROJECT_NAME})
-
-## Installation ##
-
-if (INSTALL_VIEWER_LIBRARY)
-  set(SRC_INSTALL_ROOT ${CMAKE_INSTALL_DATAROOTDIR}/anari/anari_viewer)
-  install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-    DESTINATION ${SRC_INSTALL_ROOT}/..
-    COMPONENT viewer
-    FILES_MATCHING
-      PATTERN *.h
-      PATTERN *.c
-      PATTERN *.cpp
-      PATTERN CMakeLists.txt
-  )
-endif()

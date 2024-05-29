@@ -7,9 +7,9 @@
 
 namespace helide {
 
-Group::Group(HelideGlobalState *s) : Object(ANARI_GROUP, s)
-{
-}
+Group::Group(HelideGlobalState *s)
+    : Object(ANARI_GROUP, s), m_surfaceData(this), m_volumeData(this)
+{}
 
 Group::~Group()
 {
@@ -43,10 +43,7 @@ void Group::commit()
   m_surfaceData = getParamObject<ObjectArray>("surface");
   m_volumeData = getParamObject<ObjectArray>("volume");
 
-  if (m_surfaceData)
-    m_surfaceData->addCommitObserver(this);
   if (m_volumeData) {
-    m_volumeData->addCommitObserver(this);
     std::transform(m_volumeData->handlesBegin(),
         m_volumeData->handlesEnd(),
         std::back_inserter(m_volumes),
@@ -164,11 +161,6 @@ void Group::embreeSceneCommit()
 
 void Group::cleanup()
 {
-  if (m_surfaceData)
-    m_surfaceData->removeCommitObserver(this);
-  if (m_volumeData)
-    m_volumeData->removeCommitObserver(this);
-
   m_surfaces.clear();
   m_volumes.clear();
 

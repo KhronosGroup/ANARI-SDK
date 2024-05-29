@@ -92,7 +92,7 @@ enum class AlphaMode
 
 // Functions //////////////////////////////////////////////////////////////////
 
-inline anari::math::mat3 extractRotation(const anari::math::mat4 &m)
+constexpr anari::math::mat3 extractRotation(const anari::math::mat4 &m)
 {
   return anari::math::mat3(anari::math::float3(m[0].x, m[0].y, m[0].z),
       anari::math::float3(m[1].x, m[1].y, m[1].z),
@@ -100,7 +100,7 @@ inline anari::math::mat3 extractRotation(const anari::math::mat4 &m)
 }
 
 template <bool SRGB = true>
-inline float toneMap(float v)
+constexpr float toneMap(float v)
 {
   if constexpr (SRGB)
     return std::pow(v, 1.f / 2.2f);
@@ -108,7 +108,7 @@ inline float toneMap(float v)
     return v;
 }
 
-inline anari::math::float4 cvt_color_to_float4(uint32_t rgba)
+constexpr anari::math::float4 cvt_color_to_float4(uint32_t rgba)
 {
   const float a = ((rgba >> 24) & 0xff) / 255.f;
   const float b = ((rgba >> 16) & 0xff) / 255.f;
@@ -117,18 +117,18 @@ inline anari::math::float4 cvt_color_to_float4(uint32_t rgba)
   return anari::math::float4(r, g, b, a);
 }
 
-inline uint32_t cvt_color_to_uint32(const float &f)
+constexpr uint32_t cvt_color_to_uint32(const float &f)
 {
   return static_cast<uint32_t>(255.f * std::clamp(f, 0.f, 1.f));
 }
 
-inline uint32_t cvt_color_to_uint32(const anari::math::float4 &v)
+constexpr uint32_t cvt_color_to_uint32(const anari::math::float4 &v)
 {
   return (cvt_color_to_uint32(v.x) << 0) | (cvt_color_to_uint32(v.y) << 8)
       | (cvt_color_to_uint32(v.z) << 16) | (cvt_color_to_uint32(v.w) << 24);
 }
 
-inline uint32_t cvt_color_to_uint32_srgb(const anari::math::float4 &v)
+constexpr uint32_t cvt_color_to_uint32_srgb(const anari::math::float4 &v)
 {
   return cvt_color_to_uint32(
       anari::math::float4(toneMap(v.x), toneMap(v.y), toneMap(v.z), v.w));

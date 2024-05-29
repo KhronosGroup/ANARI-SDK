@@ -117,7 +117,7 @@ inline void BaseDevice::reportMessage(
     ANARIStatusSeverity severity, const char *fmt, Args &&...args) const
 {
   auto msg = string_printf(fmt, std::forward<Args>(args)...);
-  m_state->messageFunction(severity, msg, this);
+  m_state->messageFunction(severity, msg, ANARI_DEVICE, this);
 }
 
 // Helper functions ///////////////////////////////////////////////////////////

@@ -110,7 +110,7 @@ void Array::unmap()
   }
   m_mapped = false;
   markDataModified();
-  notifyCommitObservers();
+  notifyChangeObservers();
 }
 
 bool Array::isMapped() const
@@ -215,12 +215,6 @@ void Array::initManagedMemory()
     m_hostData.managed.mem = malloc(totalBytes);
     std::memset(m_hostData.managed.mem, 0, totalBytes);
   }
-}
-
-void Array::notifyObserver(BaseObject *o) const
-{
-  o->markUpdated();
-  deviceState()->m_commitBuffer.addObject(o);
 }
 
 } // namespace helium

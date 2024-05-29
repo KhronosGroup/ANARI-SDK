@@ -28,7 +28,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
 ## Establish project
 
-project(anari VERSION 0.9.1 LANGUAGES C CXX)
+project(anari VERSION 0.10.0 LANGUAGES C CXX)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
@@ -51,9 +51,27 @@ cmake_dependent_option(BUILD_VIEWER
   "BUILD_EXAMPLES"
   OFF
 )
+cmake_dependent_option(BUILD_SCENES_LIB
+  "Enable anari_test_scenes library"
+  ON
+  "NOT BUILD_TESTING;NOT BUILD_EXAMPLES;NOT BUILD_CTS"
+  ON
+)
 option(INSTALL_VIEWER_LIBRARY "Install anari::anari_viewer library target" ON)
 option(INSTALL_VIEWER "Install anariViewer app" OFF)
 mark_as_advanced(INSTALL_VIEWER)
+cmake_dependent_option(VIEWER_ENABLE_GLTF
+  "Enable glTF support in viewer"
+  OFF
+  "BUILD_VIEWER"
+  OFF
+)
+cmake_dependent_option(VIEWER_ENABLE_KTX
+  "Enable KTX support in viewer"
+  OFF
+  "BUILD_VIEWER"
+  OFF
+)
 
 ## The generate_all targets collects all offline code generation targets
 
@@ -78,7 +96,7 @@ if (BUILD_TESTING)
   add_subdirectory(tests)
 endif()
 
-if (BUILD_CTS AND (BUILD_TESTING OR BUILD_EXAMPLES))
+if (BUILD_CTS)
   add_subdirectory(cts)
 endif()
 
