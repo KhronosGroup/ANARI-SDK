@@ -38,12 +38,12 @@ struct Group : public Object
 
   // Geometry //
 
-  helium::CommitObserverPtr<ObjectArray> m_surfaceData;
+  helium::ChangeObserverPtr<ObjectArray> m_surfaceData;
   std::vector<Surface *> m_surfaces;
 
   // Volume //
 
-  helium::CommitObserverPtr<ObjectArray> m_volumeData;
+  helium::ChangeObserverPtr<ObjectArray> m_volumeData;
   std::vector<Volume *> m_volumes;
 
   // BVH //

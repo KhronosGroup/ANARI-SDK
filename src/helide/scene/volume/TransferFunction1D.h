@@ -34,7 +34,7 @@ struct TransferFunction1D : public Volume
 
   // Data //
 
-  helium::CommitObserverPtr<SpatialField> m_field;
+  helium::ChangeObserverPtr<SpatialField> m_field;
 
   box1 m_valueRange{0.f, 1.f};
   float m_invSize{0.f};

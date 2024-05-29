@@ -15,15 +15,15 @@ namespace helium {
 //   parameter in the constructor, then all assignments to it will use that
 //   object as the observer it manages on the incoming object being pointed to.
 template <typename T = BaseObject>
-struct CommitObserverPtr
+struct ChangeObserverPtr
 {
-  CommitObserverPtr(BaseObject *observer, T *initialPointee = nullptr);
-  ~CommitObserverPtr();
+  ChangeObserverPtr(BaseObject *observer, T *initialPointee = nullptr);
+  ~ChangeObserverPtr();
 
-  CommitObserverPtr(CommitObserverPtr &&input);
-  CommitObserverPtr &operator=(CommitObserverPtr &&input);
+  ChangeObserverPtr(ChangeObserverPtr &&input);
+  ChangeObserverPtr &operator=(ChangeObserverPtr &&input);
 
-  CommitObserverPtr &operator=(T *input);
+  ChangeObserverPtr &operator=(T *input);
 
   operator bool() const;
 
@@ -37,8 +37,8 @@ struct CommitObserverPtr
 
   ////////////
   // Move-only
-  CommitObserverPtr(const CommitObserverPtr &input) = delete;
-  CommitObserverPtr &operator=(const CommitObserverPtr &input) = delete;
+  ChangeObserverPtr(const ChangeObserverPtr &input) = delete;
+  ChangeObserverPtr &operator=(const ChangeObserverPtr &input) = delete;
   ////////////
 
  private:
@@ -52,20 +52,20 @@ struct CommitObserverPtr
 // Inlined definitions //
 
 template <typename T>
-inline CommitObserverPtr<T>::CommitObserverPtr(BaseObject *o, T *p)
+inline ChangeObserverPtr<T>::ChangeObserverPtr(BaseObject *o, T *p)
     : observer(o), ptr(p)
 {
   installObserver();
 }
 
 template <typename T>
-inline CommitObserverPtr<T>::~CommitObserverPtr()
+inline ChangeObserverPtr<T>::~ChangeObserverPtr()
 {
   removeObserver();
 }
 
 template <typename T>
-inline CommitObserverPtr<T>::CommitObserverPtr(CommitObserverPtr<T> &&input)
+inline ChangeObserverPtr<T>::ChangeObserverPtr(ChangeObserverPtr<T> &&input)
     : ptr(input.ptr), observer(input.observer)
 {
   input.ptr = nullptr;
@@ -73,8 +73,8 @@ inline CommitObserverPtr<T>::CommitObserverPtr(CommitObserverPtr<T> &&input)
 }
 
 template <typename T>
-inline CommitObserverPtr<T> &CommitObserverPtr<T>::operator=(
-    CommitObserverPtr &&input)
+inline ChangeObserverPtr<T> &ChangeObserverPtr<T>::operator=(
+    ChangeObserverPtr &&input)
 {
   ptr = input.ptr;
   observer = input.observer;
@@ -86,7 +86,7 @@ inline CommitObserverPtr<T> &CommitObserverPtr<T>::operator=(
 }
 
 template <typename T>
-inline CommitObserverPtr<T> &CommitObserverPtr<T>::operator=(T *input)
+inline ChangeObserverPtr<T> &ChangeObserverPtr<T>::operator=(T *input)
 {
   removeObserver();
   ptr = input;
@@ -95,72 +95,72 @@ inline CommitObserverPtr<T> &CommitObserverPtr<T>::operator=(T *input)
 }
 
 template <typename T>
-inline CommitObserverPtr<T>::operator bool() const
+inline ChangeObserverPtr<T>::operator bool() const
 {
   return ptr;
 }
 
 template <typename T>
-inline const T &CommitObserverPtr<T>::operator*() const
+inline const T &ChangeObserverPtr<T>::operator*() const
 {
   return *ptr;
 }
 
 template <typename T>
-inline T &CommitObserverPtr<T>::operator*()
+inline T &ChangeObserverPtr<T>::operator*()
 {
   return *ptr;
 }
 
 template <typename T>
-inline const T *CommitObserverPtr<T>::operator->() const
+inline const T *ChangeObserverPtr<T>::operator->() const
 {
   return get();
 }
 
 template <typename T>
-inline T *CommitObserverPtr<T>::operator->()
+inline T *ChangeObserverPtr<T>::operator->()
 {
   return get();
 }
 
 template <typename T>
-inline T *CommitObserverPtr<T>::get() const
+inline T *ChangeObserverPtr<T>::get() const
 {
   return ptr.ptr;
 }
 
 template <typename T>
-inline void CommitObserverPtr<T>::installObserver()
+inline void ChangeObserverPtr<T>::installObserver()
 {
   if (observer && ptr)
-    ptr->addCommitObserver(observer);
+    ptr->addChangeObserver(observer);
 }
 
 template <typename T>
-inline void CommitObserverPtr<T>::removeObserver()
+inline void ChangeObserverPtr<T>::removeObserver()
 {
   if (observer && ptr)
-    ptr->removeCommitObserver(observer);
+    ptr->removeChangeObserver(observer);
 }
 
 // Inlined operators //////////////////////////////////////////////////////////
 
 template <typename T>
 inline bool operator<(
-    const CommitObserverPtr<T> &a, const CommitObserverPtr<T> &b)
+    const ChangeObserverPtr<T> &a, const ChangeObserverPtr<T> &b)
 {
   return a.ptr.ptr < b.ptr.ptr;
 }
 
 template <typename T>
-bool operator==(const CommitObserverPtr<T> &a, const CommitObserverPtr<T> &b)
+bool operator==(const ChangeObserverPtr<T> &a, const ChangeObserverPtr<T> &b)
 {
   return a.ptr == b.ptr;
 }
 
 template <typename T>
-bool operator!=(const CommitObserverPtr<T> &a, const CommitObserverPtr<T> &b)
+bool operator!=(const ChangeObserverPtr<T> &a, const ChangeObserverPtr<T> &b)
 {
   return a.ptr != b.ptr;
 }

@@ -57,16 +57,21 @@ struct BaseObject : public RefCounted, ParameterizedObject, LockableObject
   void reportMessage(
       ANARIStatusSeverity, const char *fmt, Args &&...args) const;
 
-  void addCommitObserver(BaseObject *obj);
-  void removeCommitObserver(BaseObject *obj);
-  void notifyCommitObservers() const;
+  // Allow other objects to "listen" for when this object changes. By default
+  // listening objects are put into the commit buffer so they are committed
+  // again next frame.
+  void addChangeObserver(BaseObject *obj);
+  void removeChangeObserver(BaseObject *obj);
+  void notifyChangeObservers() const;
 
   BaseGlobalDeviceState *deviceState() const;
 
  protected:
   // Handle what happens when the observing object 'obj' is being notified of
-  // that this object has changed.
-  virtual void notifyCommitObserver(BaseObject *obj) const;
+  // that this object has changed. Default behavior is to mark 'obj' as being
+  // updated and putting it into the commit queue (so it gets committed next
+  // frame).
+  virtual void notifyChangeObserver(BaseObject *obj) const;
 
   BaseGlobalDeviceState *m_state{nullptr};
 
@@ -74,7 +79,7 @@ struct BaseObject : public RefCounted, ParameterizedObject, LockableObject
   void incrementObjectCount();
   void decrementObjectCount();
 
-  std::vector<BaseObject *> m_observers;
+  std::vector<BaseObject *> m_changeObservers;
   TimeStamp m_lastUpdated{0};
   TimeStamp m_lastCommitted{0};
   ANARIDataType m_type{ANARI_OBJECT};

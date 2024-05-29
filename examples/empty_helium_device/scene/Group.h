@@ -27,13 +27,13 @@ struct Group : public Object
   const std::vector<Light *> &lights() const;
 
  private:
-  helium::CommitObserverPtr<ObjectArray> m_surfaceData;
+  helium::ChangeObserverPtr<ObjectArray> m_surfaceData;
   std::vector<Surface *> m_surfaces;
 
-  helium::CommitObserverPtr<ObjectArray> m_volumeData;
+  helium::ChangeObserverPtr<ObjectArray> m_volumeData;
   std::vector<Volume *> m_volumes;
 
-  helium::CommitObserverPtr<ObjectArray> m_lightData;
+  helium::ChangeObserverPtr<ObjectArray> m_lightData;
   std::vector<Light *> m_lights;
 };
 

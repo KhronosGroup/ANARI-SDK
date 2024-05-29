@@ -36,10 +36,10 @@ struct World : public Object
   void rebuildTLS();
   void cleanup();
 
-  helium::CommitObserverPtr<ObjectArray> m_zeroSurfaceData;
-  helium::CommitObserverPtr<ObjectArray> m_zeroVolumeData;
+  helium::ChangeObserverPtr<ObjectArray> m_zeroSurfaceData;
+  helium::ChangeObserverPtr<ObjectArray> m_zeroVolumeData;
 
-  helium::CommitObserverPtr<ObjectArray> m_instanceData;
+  helium::ChangeObserverPtr<ObjectArray> m_instanceData;
   std::vector<Instance *> m_instances;
 
   bool m_addZeroInstance{false};
