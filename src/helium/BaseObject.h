@@ -107,8 +107,8 @@ inline void writeToVoidP(void *_p, T v)
 template <>
 inline void writeToVoidP(void *_p, bool _v)
 {
-  uint32_t v = _v;
-  auto *p = (uint32_t *)_p;
+  uint8_t v = _v;
+  auto *p = (uint8_t *)_p;
   *p = v;
 }
 
