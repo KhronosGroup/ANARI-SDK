@@ -13,7 +13,7 @@ anari_generate_queries(
   CPP_NAMESPACE sink_device
   JSON_DEFINITIONS_FILE ${ANARI_CODE_GEN_ROOT}/devices/experimental_device.json
 )
-if (TARGET generate_all)
+if (TARGET generate_all AND TARGET generate_sink_queries)
   add_dependencies(generate_all generate_sink_queries)
 endif()
 

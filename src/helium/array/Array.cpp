@@ -110,7 +110,7 @@ void Array::unmap()
   }
   m_mapped = false;
   markDataModified();
-  notifyCommitObservers();
+  notifyChangeObservers();
 }
 
 bool Array::isMapped() const

@@ -60,7 +60,7 @@ void ObjectArray::commit()
 
   if (m_begin != oldBegin || m_end != oldEnd) {
     markDataModified();
-    notifyCommitObservers();
+    notifyChangeObservers();
   }
 }
 

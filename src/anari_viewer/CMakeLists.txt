@@ -18,7 +18,7 @@ endif()
 
 ## Local target for SDK examples ##
 
-if(NOT BUILD_VIEWER)
+if(DEFINED BUILD_VIEWER AND NOT BUILD_VIEWER)
   return()
 endif()
 

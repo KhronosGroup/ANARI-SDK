@@ -24,10 +24,10 @@ if(CMAKE_VERSION VERSION_LESS "3.12")
   return()
 endif()
 
-find_package(Python3 COMPONENTS Interpreter)
+find_package(Python3 OPTIONAL_COMPONENTS Interpreter)
 
-if (NOT Python3_FOUND)
-  message(WARNING "Unable to find Python, skipping code-gen + API bindings")
+if (NOT TARGET Python3::Interpreter)
+  message(WARNING "Unable to find python interpreter, skipping code-gen + API bindings")
   return()
 endif()
 
