@@ -2,6 +2,7 @@
 ## SPDX-License-Identifier: Apache-2.0
 
 add_subdirectory(anari)
+add_subdirectory(anari_viewer)
 add_subdirectory(helium)
 add_subdirectory(debug_device)
 add_subdirectory(sink_device)
@@ -11,12 +12,8 @@ if (BUILD_HELIDE_DEVICE)
   add_subdirectory(helide)
 endif()
 
-if(BUILD_TESTING OR BUILD_EXAMPLES)
+if(BUILD_SCENES_LIB)
   add_subdirectory(anari_test_scenes)
-endif()
-
-if(BUILD_EXAMPLES AND BUILD_VIEWER)
-  add_subdirectory(anari_viewer)
 endif()
 
 option(BUILD_REMOTE_DEVICE "Build 'remote' TCP passthrough device" OFF)
