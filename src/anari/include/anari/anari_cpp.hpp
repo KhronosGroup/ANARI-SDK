@@ -86,6 +86,13 @@ T newObject(Device, const char *subtype);
 
 // 1D //
 
+Array1D newArray1D(Device,
+    const void *appMemory,
+    MemoryDeleter,
+    const void *userPtr,
+    anari::DataType elementType,
+    uint64_t numItems1);
+
 template <typename T>
 Array1D newArray1D(Device,
     const T *appMemory,
@@ -99,6 +106,14 @@ Array1D newArray1D(Device, const T *appMemory, uint64_t numItems1 = 1);
 Array1D newArray1D(Device d, ANARIDataType type, uint64_t numItems1);
 
 // 2D //
+
+Array2D newArray2D(Device,
+    const void *appMemory,
+    MemoryDeleter,
+    const void *userPtr,
+    anari::DataType elementType,
+    uint64_t numItems1,
+    uint64_t numItems2);
 
 template <typename T>
 Array2D newArray2D(Device,
@@ -116,6 +131,15 @@ Array2D newArray2D(
     Device d, ANARIDataType type, uint64_t numItems1, uint64_t numItems2);
 
 // 3D //
+
+Array3D newArray3D(Device,
+    const void *appMemory,
+    MemoryDeleter,
+    const void *userPtr,
+    anari::DataType elementType,
+    uint64_t numItems1,
+    uint64_t numItems2,
+    uint64_t numItems3);
 
 template <typename T>
 Array3D newArray3D(Device,
@@ -146,6 +170,14 @@ T *map(Device, Array);
 void unmap(Device, Array);
 
 // Directly Mapped Array Parameters //
+
+void setParameterArray1DStrided(Device d,
+    Object object,
+    const char *name,
+    ANARIDataType type,
+    const void *v,
+    uint64_t numElements1,
+    uint64_t stride);
 
 void setParameterArray1D(Device d,
     Object object,
@@ -199,12 +231,13 @@ void setParameterArray3D(ANARIDevice device,
 
 template <typename T>
 void setParameter(Device d, Object o, const char *name, T &&v);
-
 void setParameter(Device d, Object o, const char *name, std::string v);
 void setParameter(Device d, Object o, const char *name, bool v);
-
 void setParameter(
-    Device d, Object o, const char *name, ANARIDataType type, const void *v);
+    Device d, Object o, const char *name, DataType type, const void *v);
+
+template <typename T>
+void setParameterAs(Device d, Object o, const char *name, DataType type, T &&v);
 
 template <typename T>
 void setAndReleaseParameter(Device d, Object o, const char *name, const T &v);
@@ -243,7 +276,7 @@ void wait(Device, Frame);
 void discard(Device, Frame);
 
 ///////////////////////////////////////////////////////////////////////////////
-// C++ Extension Utilities //////////////////////////////////////////////////////
+// C++ Extension Utilities ////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
 using Extensions = ANARIExtensions;

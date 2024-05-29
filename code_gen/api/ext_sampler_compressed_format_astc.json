@@ -1,0 +1,49 @@
+{
+    "info" : {
+        "name" : "EXT_SAMPLER_COMPRESSED_FORMAT_ASTC",
+        "type" : "extension",
+        "dependencies" : []
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_SAMPLER",
+            "name" : "compressedImage2D",
+            "parameters" : [
+               {
+                    "name" : "format",
+                    "values" : [
+                        "ASTC_4x4",
+                        "ASTC_4x4_SRGB",
+                        "ASTC_5x4",
+                        "ASTC_5x4_SRGB",
+                        "ASTC_5x5",
+                        "ASTC_5x5_SRGB",
+                        "ASTC_6x5",
+                        "ASTC_6x5_SRGB",
+                        "ASTC_6x6",
+                        "ASTC_6x6_SRGB",
+                        "ASTC_8x5",
+                        "ASTC_8x5_SRGB",
+                        "ASTC_8x6",
+                        "ASTC_8x6_SRGB",
+                        "ASTC_8x8",
+                        "ASTC_8x8_SRGB",
+                        "ASTC_10x5",
+                        "ASTC_10x5_SRGB",
+                        "ASTC_10x6",
+                        "ASTC_10x6_SRGB",
+                        "ASTC_10x8",
+                        "ASTC_10x8_SRGB",
+                        "ASTC_10x10",
+                        "ASTC_10x10_SRGB",
+                        "ASTC_12x10",
+                        "ASTC_12x10_SRGB",
+                        "ASTC_12x12",
+                        "ASTC_12x12_SRGB"
+                    ]
+                }
+            ]
+        }
+    ]
+}

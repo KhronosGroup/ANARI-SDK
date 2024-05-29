@@ -205,6 +205,17 @@ inline T newObject(Device d, const char *subtype)
 
 // 1D //
 
+inline Array1D newArray1D(Device d,
+    const void *appMemory,
+    MemoryDeleter deleter,
+    const void *userPtr,
+    anari::DataType elementType,
+    uint64_t numItems1)
+{
+  return anariNewArray1D(
+      d, appMemory, deleter, userPtr, elementType, numItems1);
+}
+
 template <typename T>
 inline Array1D newArray1D(Device d,
     const T *appMemory,
@@ -229,6 +240,18 @@ inline Array1D newArray1D(Device d, ANARIDataType type, uint64_t numItems1)
 }
 
 // 2D //
+
+inline Array2D newArray2D(Device d,
+    const void *appMemory,
+    MemoryDeleter deleter,
+    const void *userPtr,
+    anari::DataType elementType,
+    uint64_t numItems1,
+    uint64_t numItems2)
+{
+  return anariNewArray2D(
+      d, appMemory, deleter, userPtr, elementType, numItems1, numItems2);
+}
 
 template <typename T>
 inline Array2D newArray2D(Device d,
@@ -268,6 +291,25 @@ inline Array2D newArray2D(
 }
 
 // 3D //
+
+inline Array3D newArray3D(Device d,
+    const void *appMemory,
+    MemoryDeleter deleter,
+    const void *userPtr,
+    anari::DataType elementType,
+    uint64_t numItems1,
+    uint64_t numItems2,
+    uint64_t numItems3)
+{
+  return anariNewArray3D(d,
+      appMemory,
+      deleter,
+      userPtr,
+      elementType,
+      numItems1,
+      numItems2,
+      numItems3);
+}
 
 template <typename T>
 inline Array3D newArray3D(Device d,
@@ -330,29 +372,41 @@ inline void unmap(Device d, Array a)
 
 // Directly Mapped Array Parameters //
 
-inline void setParameterArray1D(Device d,
+inline void setParameterArray1DStrided(Device d,
     Object o,
     const char *name,
     ANARIDataType type,
     const void *v,
-    uint64_t numElements1)
+    uint64_t numElements1,
+    uint64_t strideIn)
 {
-  uint64_t elementStride = 0;
+  const bool incomingDataIsDense = strideIn == anari::sizeOf(type);
+  uint64_t strideOut = 0;
   if (void *mem = anariMapParameterArray1D(
-          d, o, name, type, numElements1, &elementStride)) {
+          d, o, name, type, numElements1, &strideOut)) {
     uint64_t elementSize = anari::sizeOf(type);
-    if (elementStride == 0 || elementSize == elementStride) {
+    if (incomingDataIsDense && (strideOut == 0 || elementSize == strideOut)) {
       std::memcpy(mem, v, elementSize * numElements1);
     } else {
       char *cmem = (char *)mem;
       const char *cv = (const char *)v;
       for (uint64_t i = 0; i < numElements1; ++i) {
-        std::memcpy(
-            cmem + elementStride * i, cv + elementSize * i, elementSize);
+        std::memcpy(cmem + strideOut * i, cv + strideIn * i, elementSize);
       }
     }
     anariUnmapParameterArray(d, o, name);
   }
+}
+
+inline void setParameterArray1D(Device d,
+    Object o,
+    const char *name,
+    ANARIDataType type,
+    const void *v,
+    uint64_t numElements)
+{
+  setParameterArray1DStrided(
+      d, o, name, type, v, numElements, anari::sizeOf(type));
 }
 
 template <typename T>
@@ -459,7 +513,7 @@ inline void setParameterArray3D(Device d,
 ///////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-inline void setParameter(ANARIDevice d, ANARIObject o, const char *name, T &&v)
+inline void setParameter(Device d, Object o, const char *name, T &&v)
 {
   using TYPE = typename std::remove_reference<T>::type;
   constexpr bool validType = detail::getType<TYPE>() != ANARI_UNKNOWN;
@@ -479,13 +533,12 @@ inline void setParameter(ANARIDevice d, ANARIObject o, const char *name, T &&v)
     anariSetParameter(d, o, name, ANARITypeFor<TYPE>::value, &v);
 }
 
-inline void setParameter(
-    ANARIDevice d, ANARIObject o, const char *name, std::string v)
+inline void setParameter(Device d, Object o, const char *name, std::string v)
 {
   setParameter(d, o, name, v.c_str());
 }
 
-inline void setParameter(ANARIDevice d, ANARIObject o, const char *name, bool v)
+inline void setParameter(Device d, Object o, const char *name, bool v)
 {
   const uint32_t b = v;
   anariSetParameter(d, o, name, ANARI_BOOL, &b);
@@ -498,8 +551,15 @@ inline void setParameter(
 }
 
 template <typename T>
+inline void setParameterAs(
+    Device d, Object o, const char *name, DataType type, T &&v)
+{
+  anariSetParameter(d, o, name, type, &v);
+}
+
+template <typename T>
 inline void setAndReleaseParameter(
-    ANARIDevice d, ANARIObject o, const char *name, const T &v)
+    Device d, Object o, const char *name, const T &v)
 {
   static_assert(isObject(ANARITypeFor<T>::value),
       "anari::setAndReleaseParameter() can only set ANARI objects as parameters");

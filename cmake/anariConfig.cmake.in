@@ -5,6 +5,14 @@
 
 include(CMakeFindDependencyMacro)
 
+if (@VIEWER_ENABLE_GLTF@)
+  find_dependency(draco)
+  find_dependency(WebP)
+endif()
+if (@VIEWER_ENABLE_KTX@)
+  find_dependency(Ktx)
+endif()
+
 include(${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@_Exports.cmake)
 
 if (NOT TARGET anari::anari)
