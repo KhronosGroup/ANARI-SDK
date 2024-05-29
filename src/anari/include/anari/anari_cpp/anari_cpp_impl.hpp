@@ -18,7 +18,7 @@ namespace anari {
 namespace detail {
 
 template <typename T>
-constexpr ANARIDataType getType()
+constexpr DataType getType()
 {
   return ANARITypeFor<T>::value;
 }
@@ -55,7 +55,7 @@ inline void unloadModule(Library l, const char *name)
 // Object Creation ////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-inline anari::Device newDevice(Library l, const char *name)
+inline Device newDevice(Library l, const char *name)
 {
   return anariNewDevice(l, name);
 }
@@ -209,7 +209,7 @@ inline Array1D newArray1D(Device d,
     const void *appMemory,
     MemoryDeleter deleter,
     const void *userPtr,
-    anari::DataType elementType,
+    DataType elementType,
     uint64_t numItems1)
 {
   return anariNewArray1D(
@@ -234,7 +234,7 @@ inline Array1D newArray1D(Device d, const T *appMemory, uint64_t numItems1)
       d, appMemory, nullptr, nullptr, detail::getType<T>(), numItems1);
 }
 
-inline Array1D newArray1D(Device d, ANARIDataType type, uint64_t numItems1)
+inline Array1D newArray1D(Device d, DataType type, uint64_t numItems1)
 {
   return anariNewArray1D(d, nullptr, nullptr, nullptr, type, numItems1);
 }
@@ -245,7 +245,7 @@ inline Array2D newArray2D(Device d,
     const void *appMemory,
     MemoryDeleter deleter,
     const void *userPtr,
-    anari::DataType elementType,
+    DataType elementType,
     uint64_t numItems1,
     uint64_t numItems2)
 {
@@ -284,7 +284,7 @@ inline Array2D newArray2D(
 }
 
 inline Array2D newArray2D(
-    Device d, ANARIDataType type, uint64_t numItems1, uint64_t numItems2)
+    Device d, DataType type, uint64_t numItems1, uint64_t numItems2)
 {
   return anariNewArray2D(
       d, nullptr, nullptr, nullptr, type, numItems1, numItems2);
@@ -296,7 +296,7 @@ inline Array3D newArray3D(Device d,
     const void *appMemory,
     MemoryDeleter deleter,
     const void *userPtr,
-    anari::DataType elementType,
+    DataType elementType,
     uint64_t numItems1,
     uint64_t numItems2,
     uint64_t numItems3)
@@ -348,7 +348,7 @@ inline Array3D newArray3D(Device d,
 }
 
 inline Array3D newArray3D(Device d,
-    ANARIDataType type,
+    DataType type,
     uint64_t numItems1,
     uint64_t numItems2,
     uint64_t numItems3)
@@ -375,16 +375,16 @@ inline void unmap(Device d, Array a)
 inline void setParameterArray1DStrided(Device d,
     Object o,
     const char *name,
-    ANARIDataType type,
+    DataType type,
     const void *v,
     uint64_t numElements1,
     uint64_t strideIn)
 {
-  const bool incomingDataIsDense = strideIn == anari::sizeOf(type);
+  const bool incomingDataIsDense = strideIn == sizeOf(type);
   uint64_t strideOut = 0;
   if (void *mem = anariMapParameterArray1D(
           d, o, name, type, numElements1, &strideOut)) {
-    uint64_t elementSize = anari::sizeOf(type);
+    uint64_t elementSize = sizeOf(type);
     if (incomingDataIsDense && (strideOut == 0 || elementSize == strideOut)) {
       std::memcpy(mem, v, elementSize * numElements1);
     } else {
@@ -401,12 +401,11 @@ inline void setParameterArray1DStrided(Device d,
 inline void setParameterArray1D(Device d,
     Object o,
     const char *name,
-    ANARIDataType type,
+    DataType type,
     const void *v,
     uint64_t numElements)
 {
-  setParameterArray1DStrided(
-      d, o, name, type, v, numElements, anari::sizeOf(type));
+  setParameterArray1DStrided(d, o, name, type, v, numElements, sizeOf(type));
 }
 
 template <typename T>
@@ -419,7 +418,7 @@ inline void setParameterArray1D(
 inline void setParameterArray2D(Device d,
     Object o,
     const char *name,
-    ANARIDataType type,
+    DataType type,
     const void *v,
     uint64_t numElements1,
     uint64_t numElements2)
@@ -427,7 +426,7 @@ inline void setParameterArray2D(Device d,
   uint64_t elementStride = 0;
   if (void *mem = anariMapParameterArray2D(
           d, o, name, type, numElements1, numElements2, &elementStride)) {
-    uint64_t elementSize = anari::sizeOf(type);
+    uint64_t elementSize = sizeOf(type);
     uint64_t totalElements = numElements1 * numElements2;
     if (elementStride == 0 || elementSize == elementStride) {
       std::memcpy(mem, v, elementSize * totalElements);
@@ -458,7 +457,7 @@ inline void setParameterArray2D(Device d,
 inline void setParameterArray3D(Device d,
     Object o,
     const char *name,
-    ANARIDataType type,
+    DataType type,
     const void *v,
     uint64_t numElements1,
     uint64_t numElements2,
@@ -473,7 +472,7 @@ inline void setParameterArray3D(Device d,
           numElements2,
           numElements3,
           &elementStride)) {
-    uint64_t elementSize = anari::sizeOf(type);
+    uint64_t elementSize = sizeOf(type);
     uint64_t totalElements = numElements1 * numElements2 * numElements3;
     if (elementStride == 0 || elementSize == elementStride) {
       std::memcpy(mem, v, elementSize * totalElements);
@@ -521,8 +520,8 @@ inline void setParameter(Device d, Object o, const char *name, T &&v)
   constexpr bool isStringLiteral = isString && std::is_array<TYPE>::value;
   constexpr bool isVoidPtr = detail::getType<TYPE>() == ANARI_VOID_POINTER;
   static_assert(validType || isString,
-      "Only types corresponding to ANARIDataType values can be set "
-      "as parameters on ANARI objects.");
+      "Only types corresponding to DataType values can be set "
+      "as parameters on  objects.");
   if (isStringLiteral)
     anariSetParameter(d, o, name, ANARI_STRING, (const char *)&v);
   else if (isString)
@@ -545,7 +544,7 @@ inline void setParameter(Device d, Object o, const char *name, bool v)
 }
 
 inline void setParameter(
-    Device d, Object o, const char *name, ANARIDataType type, const void *v)
+    Device d, Object o, const char *name, DataType type, const void *v)
 {
   anariSetParameter(d, o, name, type, v);
 }
@@ -562,7 +561,7 @@ inline void setAndReleaseParameter(
     Device d, Object o, const char *name, const T &v)
 {
   static_assert(isObject(ANARITypeFor<T>::value),
-      "anari::setAndReleaseParameter() can only set ANARI objects as parameters");
+      "anari::setAndReleaseParameter() can only set anari::Objects as parameters");
   setParameter(d, o, name, v);
   anariRelease(d, v);
 }
@@ -655,8 +654,7 @@ inline void discard(Device d, Frame f)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// C++ Extension Utilities
-// //////////////////////////////////////////////////////
+// C++ Extension Utilities ////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
 namespace extension {

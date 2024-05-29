@@ -73,7 +73,7 @@ void unloadModule(Library, const char *name);
 
 // Object Creation ////////////////////////////////////////////////////////////
 
-anari::Device newDevice(Library, const char *name = "default");
+Device newDevice(Library, const char *name = "default");
 
 Object newObject(Device d, const char *type, const char *subtype);
 
@@ -90,7 +90,7 @@ Array1D newArray1D(Device,
     const void *appMemory,
     MemoryDeleter,
     const void *userPtr,
-    anari::DataType elementType,
+    DataType elementType,
     uint64_t numItems1);
 
 template <typename T>
@@ -103,7 +103,7 @@ Array1D newArray1D(Device,
 template <typename T>
 Array1D newArray1D(Device, const T *appMemory, uint64_t numItems1 = 1);
 
-Array1D newArray1D(Device d, ANARIDataType type, uint64_t numItems1);
+Array1D newArray1D(Device d, DataType type, uint64_t numItems1);
 
 // 2D //
 
@@ -111,7 +111,7 @@ Array2D newArray2D(Device,
     const void *appMemory,
     MemoryDeleter,
     const void *userPtr,
-    anari::DataType elementType,
+    DataType elementType,
     uint64_t numItems1,
     uint64_t numItems2);
 
@@ -128,7 +128,7 @@ Array2D newArray2D(
     Device, const T *appMemory, uint64_t numItems1, uint64_t numItems2);
 
 Array2D newArray2D(
-    Device d, ANARIDataType type, uint64_t numItems1, uint64_t numItems2);
+    Device d, DataType type, uint64_t numItems1, uint64_t numItems2);
 
 // 3D //
 
@@ -136,7 +136,7 @@ Array3D newArray3D(Device,
     const void *appMemory,
     MemoryDeleter,
     const void *userPtr,
-    anari::DataType elementType,
+    DataType elementType,
     uint64_t numItems1,
     uint64_t numItems2,
     uint64_t numItems3);
@@ -158,7 +158,7 @@ Array3D newArray3D(Device,
     uint64_t numItems3);
 
 Array3D newArray3D(Device d,
-    ANARIDataType type,
+    DataType type,
     uint64_t numItems1,
     uint64_t numItems2,
     uint64_t numItems3);
@@ -174,7 +174,7 @@ void unmap(Device, Array);
 void setParameterArray1DStrided(Device d,
     Object object,
     const char *name,
-    ANARIDataType type,
+    DataType type,
     const void *v,
     uint64_t numElements1,
     uint64_t stride);
@@ -182,13 +182,13 @@ void setParameterArray1DStrided(Device d,
 void setParameterArray1D(Device d,
     Object object,
     const char *name,
-    ANARIDataType type,
+    DataType type,
     const void *v,
     uint64_t numElements1);
 
 template <typename T>
-void setParameterArray1D(ANARIDevice device,
-    ANARIObject object,
+void setParameterArray1D(Device device,
+    Object object,
     const char *name,
     const T *data,
     uint64_t numElements1);
@@ -196,14 +196,14 @@ void setParameterArray1D(ANARIDevice device,
 void setParameterArray2D(Device d,
     Object o,
     const char *name,
-    ANARIDataType type,
+    DataType type,
     const void *v,
     uint64_t numElements1,
     uint64_t numElements2);
 
 template <typename T>
-void setParameterArray2D(ANARIDevice device,
-    ANARIObject object,
+void setParameterArray2D(Device device,
+    Object object,
     const char *name,
     const T *data,
     uint64_t numElements1,
@@ -212,15 +212,15 @@ void setParameterArray2D(ANARIDevice device,
 void setParameterArray3D(Device d,
     Object o,
     const char *name,
-    ANARIDataType type,
+    DataType type,
     const void *v,
     uint64_t numElements1,
     uint64_t numElements2,
     uint64_t numElements3);
 
 template <typename T>
-void setParameterArray3D(ANARIDevice device,
-    ANARIObject object,
+void setParameterArray3D(Device device,
+    Object object,
     const char *name,
     const T *data,
     uint64_t numElements1,
@@ -294,4 +294,4 @@ Extensions getInstanceExtensionStruct(Device, Object);
 
 } // namespace anari
 
-#include "anari_cpp/anari_cpp_impl.h"
+#include "anari_cpp/anari_cpp_impl.hpp"
