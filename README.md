@@ -5,12 +5,13 @@ ANARI-SDK
 
 This repository contains the source for the ANARI API SDK. This includes:
 
-- [Front-end library + implementation guide](libs/anari)
-- [Device implementation utilties for implementations](libs/helium)
-- [Example device implementation](libs/helide) (not intended for production use)
+- [Front-end library + implementation guide](src/anari)
+- [Device implementation utilties for implementations](src/helium)
+- [Example device implementation](src/helide) (not intended for production use)
 - [Example applications](examples/)
 - [Interactive sample viewer](examples/viewer)
 - [Render tests](tests/render)
+- [(experimental) OpenUSD Hydra render delegate plugin](src/hdanari)
 
 The 1.0 ANARI specification can be found on the Khronos website
 [here](https://www.khronos.org/registry/ANARI/).
@@ -56,6 +57,7 @@ available to enable. The following CMake options are offered:
 - `BUILD_REMOTE_DEVICE` : build the provided experimental `remote` device implementation
 - `BUILD_EXAMPLES`      : build example applications
 - `BUILD_VIEWER`        : build viewer too (needs glfw3) if building examples
+- `BUILD_HDANARI`       : build (experimental) OpenUSD Hydra delegate plugin
 
 Once built, the library can be installed via the `install` target created by
 CMake. This can be invoked from your build directory with (on any platform):

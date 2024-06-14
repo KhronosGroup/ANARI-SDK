@@ -1,0 +1,22 @@
+{
+    "Plugins": [
+        {
+            "Info": {
+                "Types": {
+                    "HdAnariRendererPlugin": {
+                        "bases": [
+                            "HdRendererPlugin"
+                        ],
+                        "displayName": "Anari",
+                        "priority": 99
+                    }
+                }
+            },
+            "LibraryPath": "../$<TARGET_FILE_NAME:hdAnari>",
+            "Name": "${PROJECT_NAME}",
+            "ResourcePath": "resources",
+            "Root": "..",
+            "Type": "library"
+        }
+    ]
+}
