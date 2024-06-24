@@ -167,7 +167,7 @@ static const void * ANARI_DEVICE_allowInvalidMaterials_info(ANARIDataType paramT
          }
       case 1: // default
          if(paramType == ANARI_BOOL && infoType == ANARI_BOOL) {
-            static const int32_t default_value[1] = {INT32_C(1)};
+            static const int8_t default_value[1] = {INT8_C(1)};
             return default_value;
          } else {
             return nullptr;
@@ -271,54 +271,6 @@ static const void * ANARI_DEVICE_param_info(const char *paramName, ANARIDataType
          return nullptr;
    }
 }
-static const void * ANARI_RENDERER_default_background_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
-   (void)paramType;
-   switch(infoName) {
-      case 0: // required
-         if(infoType == ANARI_BOOL) {
-            return &anari_false;
-         } else {
-            return nullptr;
-         }
-      case 1: // default
-         if(paramType == ANARI_FLOAT32_VEC4 && infoType == ANARI_FLOAT32_VEC4) {
-            static const float default_value[4] = {0.000000f, 0.000000f, 0.000000f, 1.000000f};
-            return default_value;
-         } else {
-            return nullptr;
-         }
-      case 4: // description
-         {
-            static const char *description = "background color and alpha (RGBA)";
-            return description;
-         }
-      default: return nullptr;
-   }
-}
-static const void * ANARI_RENDERER_default_ambientRadiance_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
-   (void)paramType;
-   switch(infoName) {
-      case 0: // required
-         if(infoType == ANARI_BOOL) {
-            return &anari_false;
-         } else {
-            return nullptr;
-         }
-      case 1: // default
-         if(paramType == ANARI_FLOAT32 && infoType == ANARI_FLOAT32) {
-            static const float default_value[1] = {1.000000f};
-            return default_value;
-         } else {
-            return nullptr;
-         }
-      case 4: // description
-         {
-            static const char *description = "ambient light intensity";
-            return description;
-         }
-      default: return nullptr;
-   }
-}
 static const void * ANARI_RENDERER_default_mode_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    (void)paramType;
    switch(infoName) {
@@ -405,18 +357,88 @@ static const void * ANARI_RENDERER_default_ambientColor_info(ANARIDataType param
       default: return nullptr;
    }
 }
+static const void * ANARI_RENDERER_default_ambientRadiance_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   (void)paramType;
+   switch(infoName) {
+      case 0: // required
+         if(infoType == ANARI_BOOL) {
+            return &anari_false;
+         } else {
+            return nullptr;
+         }
+      case 1: // default
+         if(paramType == ANARI_FLOAT32 && infoType == ANARI_FLOAT32) {
+            static const float default_value[1] = {0.000000f};
+            return default_value;
+         } else {
+            return nullptr;
+         }
+      case 4: // description
+         {
+            static const char *description = "the amount of light emitted by a point on the ambient light source in a direction, in W/sr/m^2";
+            return description;
+         }
+      case 7: // sourceExtension
+         if(infoType == ANARI_STRING) {
+            static const char *extension = "KHR_RENDERER_AMBIENT_LIGHT";
+            return extension;
+         } else if(infoType == ANARI_INT32) {
+            static const int32_t value = 15;
+            return &value;
+         }
+      default: return nullptr;
+   }
+}
+static const void * ANARI_RENDERER_default_background_info(ANARIDataType paramType, int infoName, ANARIDataType infoType) {
+   (void)paramType;
+   switch(infoName) {
+      case 0: // required
+         if(infoType == ANARI_BOOL) {
+            return &anari_false;
+         } else {
+            return nullptr;
+         }
+      case 1: // default
+         if(paramType == ANARI_FLOAT32_VEC4 && infoType == ANARI_FLOAT32_VEC4) {
+            static const float default_value[4] = {0.000000f, 0.000000f, 0.000000f, 1.000000f};
+            return default_value;
+         } else {
+            return nullptr;
+         }
+      case 11: // use
+         if(infoType == ANARI_STRING) {
+            return "color";
+         } else {
+            return nullptr;
+         }
+      case 4: // description
+         {
+            static const char *description = "the background color";
+            return description;
+         }
+      case 7: // sourceExtension
+         if(infoType == ANARI_STRING) {
+            static const char *extension = "KHR_RENDERER_BACKGROUND_COLOR";
+            return extension;
+         } else if(infoType == ANARI_INT32) {
+            static const int32_t value = 16;
+            return &value;
+         }
+      default: return nullptr;
+   }
+}
 static const void * ANARI_RENDERER_default_param_info(const char *paramName, ANARIDataType paramType, int infoName, ANARIDataType infoType) {
    switch(param_hash(paramName)) {
-      case 11:
-         return ANARI_RENDERER_default_background_info(paramType, infoName, infoType);
-      case 4:
-         return ANARI_RENDERER_default_ambientRadiance_info(paramType, infoName, infoType);
       case 40:
          return ANARI_RENDERER_default_mode_info(paramType, infoName, infoType);
       case 41:
          return ANARI_RENDERER_default_name_info(paramType, infoName, infoType);
       case 3:
          return ANARI_RENDERER_default_ambientColor_info(paramType, infoName, infoType);
+      case 4:
+         return ANARI_RENDERER_default_ambientRadiance_info(paramType, infoName, infoType);
+      case 11:
+         return ANARI_RENDERER_default_background_info(paramType, infoName, infoType);
       default:
          return nullptr;
    }
@@ -8170,14 +8192,12 @@ static const void * ANARI_RENDERER_default_info(int infoName, ANARIDataType info
       case 9: // parameter
          if(infoType == ANARI_PARAMETER_LIST) {
             static const ANARIParameter parameters[] = {
-               {"background", ANARI_FLOAT32_VEC4},
-               {"background", ANARI_FLOAT32_VEC4},
-               {"background", ANARI_ARRAY2D},
-               {"ambientRadiance", ANARI_FLOAT32},
-               {"ambientRadiance", ANARI_FLOAT32},
                {"mode", ANARI_STRING},
                {"name", ANARI_STRING},
                {"ambientColor", ANARI_FLOAT32_VEC3},
+               {"ambientRadiance", ANARI_FLOAT32},
+               {"background", ANARI_FLOAT32_VEC4},
+               {"background", ANARI_ARRAY2D},
                {0, ANARI_UNKNOWN}
             };
             return parameters;
