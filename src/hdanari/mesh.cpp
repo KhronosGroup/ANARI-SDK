@@ -137,9 +137,13 @@ HdDirtyBits HdAnariMesh::GetInitialDirtyBitsMask() const
   return static_cast<HdDirtyBits>(mask);
 }
 
-void HdAnariMesh::Finalize(HdRenderParam *renderParam)
+void HdAnariMesh::Finalize(HdRenderParam *renderParam_)
 {
-  // no-op?
+  if (_populated) {
+    auto *renderParam = static_cast<HdAnariRenderParam *>(renderParam_);
+    renderParam->RemoveMesh(this);
+    _populated = false;
+  }
 }
 
 void HdAnariMesh::Sync(HdSceneDelegate *sceneDelegate,
