@@ -32,7 +32,7 @@ struct ANARI_TEST_SCENES_INTERFACE TestScene
  protected:
   TestScene(anari::Device device);
 
-  Camera createDefaultCameraFromWorld(anari::World);
+  Camera createDefaultCameraFromWorld();
   void setDefaultLight(anari::World);
 
   anari::Device m_device{nullptr};

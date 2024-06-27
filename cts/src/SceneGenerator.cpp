@@ -913,7 +913,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
 
   if (getParam<bool>("camera_generate_transform", true)) {
     // setup camera transform
-    auto cam = createDefaultCameraFromWorld(m_world);
+    auto cam = createDefaultCameraFromWorld();
     anari::setParameter(m_device, camera, "position", cam.position);
     anari::setParameter(m_device, camera, "direction", cam.direction);
     anari::setParameter(m_device, camera, "up", cam.up);

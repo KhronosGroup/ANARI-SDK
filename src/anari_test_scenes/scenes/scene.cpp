@@ -18,14 +18,11 @@ TestScene::~TestScene()
   anari::release(m_device, m_device);
 }
 
-Camera TestScene::createDefaultCameraFromWorld(anari::World w)
+Camera TestScene::createDefaultCameraFromWorld()
 {
-  box3 bounds;
-
-  anari::getProperty(m_device, w, "bounds", bounds);
-
-  const math::float3 bounds_size = bounds[1] - bounds[0];
-  const math::float3 bounds_center = 0.5f * (bounds[0] + bounds[1]);
+  const box3 b = bounds();
+  const math::float3 bounds_size = b[1] - b[0];
+  const math::float3 bounds_center = 0.5f * (b[0] + b[1]);
   const float distance = math::length(bounds_size) * 0.8f;
 
   const math::float3 eye_pos = bounds_center + math::float3(0, 0, -distance);
@@ -42,14 +39,14 @@ Camera TestScene::createDefaultCameraFromWorld(anari::World w)
 
 box3 TestScene::bounds()
 {
-  box3 retval = {math::float3(-5), math::float3(5)};
+  box3 retval = {math::float3(-1), math::float3(1)};
   anari::getProperty(m_device, world(), "bounds", retval);
   return retval;
 }
 
 std::vector<Camera> TestScene::cameras()
 {
-  return {createDefaultCameraFromWorld(world())};
+  return {createDefaultCameraFromWorld()};
 }
 
 std::vector<ParameterInfo> TestScene::parameters()
