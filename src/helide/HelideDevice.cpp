@@ -259,8 +259,15 @@ void HelideDevice::initDevice()
 
   auto &state = *deviceState();
 
+  int numThreads = 0;
+  const char *numThreadsFromEnv = getenv("HELIDE_NUM_THREADS");
+  if (numThreadsFromEnv)
+    numThreads = std::atoi(numThreadsFromEnv);
+
+  std::string config = "threads=" + std::to_string(numThreads);
+
   state.anariDevice = (anari::Device)this;
-  state.embreeDevice = rtcNewDevice(nullptr);
+  state.embreeDevice = rtcNewDevice(config.c_str());
 
   if (!state.embreeDevice) {
     reportMessage(ANARI_SEVERITY_ERROR,
