@@ -17,8 +17,6 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-TF_DEBUG_CODES(ANARI);
-
 struct HdAnariMesh;
 using MeshList = std::vector<const HdAnariMesh *>;
 

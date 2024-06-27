@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "renderPass.h"
+#include "debugCodes.h"
 #include "mesh.h"
 #include "renderBuffer.h"
 #include "renderDelegate.h"
@@ -103,7 +104,7 @@ void HdAnariRenderPass::_Execute(
     HdRenderPassStateSharedPtr const &renderPassState,
     TfTokenVector const &renderTags)
 {
-  TF_DEBUG_MSG(ANARI, "HdAnariRenderPass::Execute\n");
+  TF_DEBUG_MSG(HD_ANARI_RENDERPASS, "HdAnariRenderPass::Execute\n");
 
   if (_renderParam) {
     _UpdateFrame(
@@ -115,7 +116,7 @@ void HdAnariRenderPass::_Execute(
     _WriteAovs(renderPassState->GetAovBindings());
   }
 
-  TF_DEBUG_MSG(ANARI, "HdAnariRenderPass::Execute done\n");
+  TF_DEBUG_MSG(HD_ANARI_RENDERPASS, "HdAnariRenderPass::Execute done\n");
 }
 
 void HdAnariRenderPass::_UpdateRenderer()

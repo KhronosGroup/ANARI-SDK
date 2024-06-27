@@ -11,6 +11,7 @@ find_package(USD REQUIRED NAMES pxr)
 find_package(anari REQUIRED)
 
 project_add_library(SHARED
+  debugCodes.cpp
   instancer.cpp
   material.cpp
   mesh.cpp
