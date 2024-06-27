@@ -27,7 +27,7 @@ PROPERTIES
   PREFIX ""
 )
 
-project_link_libraries(PUBLIC anari::anari usdImaging hd hdx)
+project_link_libraries(PUBLIC anari::anari ${PXR_LIBRARIES})
 
 ## Configure plugInfo file ##
 
