@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "mesh.h"
+
+#include "debugCodes.h"
 #include "instancer.h"
 #include "material.h"
 // pxr
@@ -93,6 +95,8 @@ HdAnariMesh::HdAnariMesh(
   if (!d)
     return;
 
+  TF_DEBUG_MSG(HD_ANARI_RENDERDELEGATE, "Create mesh with id %s\n", id.GetText());
+
   anari::retain(d, d);
 
   _anari.device = d;
@@ -145,6 +149,8 @@ void HdAnariMesh::Sync(HdSceneDelegate *sceneDelegate,
 {
   HD_TRACE_FUNCTION();
   HF_MALLOC_TAG_FUNCTION();
+
+  TF_DEBUG_MSG(HD_ANARI_RENDERDELEGATE, "Sync mesh with id %s\n", GetId().GetText());
 
   auto *renderParam = static_cast<HdAnariRenderParam *>(renderParam_);
   if (!renderParam || !_anari.device)
