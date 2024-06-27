@@ -254,26 +254,34 @@ void HdAnariUsdPreviewSurfaceConverter::ProcessUSDUVTexture(const HdMaterialNetw
     // mimic the connection behavior
     if (outputName == HdAnariUsdPreviewSurfaceToken->g) {
       static const constexpr float tx[] = {
+        1.0f, 0.0f, 0.0f, 0.0f,
+        1.0f, 0.0f, 0.0f, 0.0f,
+        1.0f, 0.0f, 0.0f, 0.0f,
+        1.0f, 0.0f, 0.0f, 0.0f,
+      };
+      anari::setParameter(_device, sampler, "outTransform", ANARI_FLOAT32_MAT4, tx);
+    } else if (outputName == HdAnariUsdPreviewSurfaceToken->g) {
+      static const constexpr float tx[] = {
         0.0f, 1.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f, 0.0f,
       };
       anari::setParameter(_device, sampler, "outTransform", ANARI_FLOAT32_MAT4, tx);
     } else if (outputName == HdAnariUsdPreviewSurfaceToken->b) {
       static const constexpr float tx[] = {
         0.0f, 0.0f, 1.0f, 0.0f,
-        0.0f, 0.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f,
       };
       anari::setParameter(_device, sampler, "outTransform", ANARI_FLOAT32_MAT4, tx);
     }  else if (outputName == HdAnariUsdPreviewSurfaceToken->a) {
       static const constexpr float tx[] = {
         0.0f, 0.0f, 0.0f, 1.0f,
-        0.0f, 0.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 1.0f,
+        0.0f, 0.0f, 0.0f, 1.0f,
+        0.0f, 0.0f, 0.0f, 1.0f,
       };
       anari::setParameter(_device, sampler, "outTransform", ANARI_FLOAT32_MAT4, tx);
     } // nothing to do for non swizzled data or just accessing the r channel
