@@ -10,6 +10,10 @@ project(hdAnari LANGUAGES C CXX)
 find_package(USD REQUIRED NAMES pxr)
 find_package(anari REQUIRED)
 
+if(GCC OR CLANG)
+  project_add_compile_options(-Wl,--no-undefined)
+endif()
+
 project_add_library(SHARED
   anariExtensionUtilityImpl.cpp
   debugCodes.cpp
