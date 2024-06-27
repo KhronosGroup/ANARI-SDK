@@ -22,11 +22,18 @@ using MeshList = std::vector<const HdAnariMesh *>;
 
 struct HdAnariRenderParam final : public HdRenderParam
 {
+  enum class MaterialType {
+    Matte,
+    PhysicallyBased,
+  };
+
   HdAnariRenderParam(anari::Device device);
   ~HdAnariRenderParam() override;
 
   anari::Device GetANARIDevice() const;
   anari::Material GetANARIDefaultMaterial() const;
+
+  MaterialType GetMaterialType() const { return _materialType; }
 
   void AddMesh(HdAnariMesh *m);
   const MeshList &Meshes() const;
@@ -38,6 +45,7 @@ struct HdAnariRenderParam final : public HdRenderParam
  private:
   anari::Device _device{nullptr};
   anari::Material _material{nullptr};
+  MaterialType _materialType{MaterialType::Matte};  
 
   std::mutex _mutex;
   MeshList _meshes;
@@ -50,6 +58,15 @@ inline HdAnariRenderParam::HdAnariRenderParam(anari::Device d) : _device(d)
 {
   if (!d)
     return;
+
+  anari::Extensions extensions =
+      anari::extension::getInstanceExtensionStruct(d, d);
+
+  if (extensions.ANARI_KHR_MATERIAL_PHYSICALLY_BASED) {
+    _materialType = MaterialType::PhysicallyBased;
+  } else {
+    _materialType = MaterialType::Matte;
+  }
 
   _material = anari::newObject<anari::Material>(d, "matte");
   anari::setParameter(d, _material, "alphaMode", "opaque");

@@ -24,6 +24,7 @@ project_add_library(SHARED
   debugCodes.cpp
   instancer.cpp
   material.cpp
+  material/usdPreviewSurface.cpp
   mesh.cpp
   renderBuffer.cpp
   renderDelegate.cpp
