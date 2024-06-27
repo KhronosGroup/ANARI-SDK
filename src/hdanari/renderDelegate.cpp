@@ -1,7 +1,12 @@
 // Copyright 2024 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
+#include <pxr/base/tf/debug.h>
+#include <pxr/base/tf/diagnostic.h>
+#include <anari/anari_cpp.hpp>
 #include <anari/anari_cpp/anari_cpp_impl.hpp>
+#include <cstdlib>
+#include <string_view>
 #include "debugCodes.h"
 
 #define HDANARI_TYPE_DEFINITIONS
@@ -294,8 +299,17 @@ HdSprim *HdAnariRenderDelegate::CreateSprim(
 
   if (typeId == HdPrimTypeTokens->camera)
     return new HdCamera(sprimId);
-  else if (typeId == HdPrimTypeTokens->material)
-    return new HdAnariMaterial(d, sprimId);
+  else if (typeId == HdPrimTypeTokens->material) {
+    switch (_renderParam->GetMaterialType()) {
+      case HdAnariRenderParam::MaterialType::PhysicallyBased: {
+        return new HdAnariPhysicallyBasedMaterial(d, sprimId);
+      }
+      default: {
+        return new HdAnariMatteMaterial(d, sprimId);
+      }
+
+    }
+  }
   else if (typeId == HdPrimTypeTokens->extComputation)
     return new HdExtComputation(sprimId);
 
@@ -311,7 +325,7 @@ HdSprim *HdAnariRenderDelegate::CreateFallbackSprim(TfToken const &typeId)
   if (typeId == HdPrimTypeTokens->camera)
     return new HdCamera(SdfPath::EmptyPath());
   else if (typeId == HdPrimTypeTokens->material)
-    return new HdAnariMaterial(d, SdfPath::EmptyPath());
+    return new HdAnariMatteMaterial(d, SdfPath::EmptyPath());
   else if (typeId == HdPrimTypeTokens->extComputation)
     return new HdExtComputation(SdfPath::EmptyPath());
 
