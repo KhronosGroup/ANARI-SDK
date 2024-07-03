@@ -15,7 +15,9 @@ struct Image1D : public Sampler
   bool isValid() const override;
   void commit() override;
 
-  float4 getSample(const Geometry &g, const Ray &r) const override;
+  float4 getSample(const Geometry &g,
+      const Ray &r,
+      const UniformAttributeSet &instAttrV) const override;
 
  private:
   helium::IntrusivePtr<Array1D> m_image;

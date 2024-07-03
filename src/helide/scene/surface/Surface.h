@@ -8,6 +8,8 @@
 
 namespace helide {
 
+struct Instance;
+
 struct Surface : public Object
 {
   Surface(HelideGlobalState *s);
@@ -19,8 +21,10 @@ struct Surface : public Object
   const Geometry *geometry() const;
   const Material *material() const;
 
-  float4 getSurfaceColor(const Ray &ray) const;
-  float getSurfaceOpacity(const Ray &ray) const;
+  float4 getSurfaceColor(
+      const Ray &ray, const UniformAttributeSet &instAttrV) const;
+  float getSurfaceOpacity(
+      const Ray &ray, const UniformAttributeSet &instAttrV) const;
 
   float adjustedAlpha(float a) const;
 
