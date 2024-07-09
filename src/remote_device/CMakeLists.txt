@@ -13,7 +13,7 @@ find_package(Threads REQUIRED)
 find_package(libjpeg-turbo)
 find_package(Snappy)
 set(Boost_INCLUDE_DIRS "3rdparty/boost")
-find_package(Boost COMPONENTS filesystem iostreams system REQUIRED)
+find_package(Boost COMPONENTS system REQUIRED)
 
 if (Snappy_FOUND)
   list(APPEND __remote_extra_libs Snappy::snappy)
@@ -50,8 +50,6 @@ project_link_libraries(
 PUBLIC
   anari::helium
   ${__remote_extra_libs}
-  Boost::filesystem
-  Boost::iostreams
   Boost::system
 )
 
