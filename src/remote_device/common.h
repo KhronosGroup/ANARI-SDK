@@ -116,7 +116,7 @@ inline const char *toString(unsigned mt)
   }
 }
 
-typedef int64_t Handle;
+typedef uint64_t Handle;
 
 inline std::string prettyNumber(const size_t s)
 {

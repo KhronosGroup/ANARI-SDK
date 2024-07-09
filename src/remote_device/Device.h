@@ -319,6 +319,8 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
       uint64_t numItems2,
       uint64_t numItems3);
 
+  ObjectDesc makeObjectDesc(ANARIObject object) const;
+
   //--- Net ---------------------------------------------
   void connect(std::string host, unsigned short port);
 
