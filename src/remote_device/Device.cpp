@@ -13,6 +13,7 @@
 #include "Compression.h"
 #include "Frame.h"
 #include "Logging.h"
+#include "ObjectDesc.h"
 #include "async/connection.h"
 #include "async/connection_manager.h"
 #include "async/work_queue.h"
@@ -151,8 +152,7 @@ ANARIArray3D Device::newArray3D(const void *appMemory,
 void *Device::mapArray(ANARIArray array)
 {
   auto buf = std::make_shared<Buffer>();
-  buf->write(remoteDevice);
-  buf->write(array);
+  buf->write(ObjectDesc(remoteDevice, array));
   write(MessageType::MapArray, buf);
 
   std::unique_lock l(sync[SyncPoints::MapArray].mtx);
@@ -169,8 +169,7 @@ void *Device::mapArray(ANARIArray array)
 void Device::unmapArray(ANARIArray array)
 {
   auto buf = std::make_shared<Buffer>();
-  buf->write(remoteDevice);
-  buf->write(array);
+  buf->write(ObjectDesc(remoteDevice, array));
   uint64_t numBytes = arrays[array].value.size();
   buf->write(arrays[array].value.data(), numBytes);
   write(MessageType::UnmapArray, buf);
@@ -258,16 +257,16 @@ void Device::setParameter(
     return;
   }
 
-  // Device parameteters
+  // Device parameters
   if (object == (ANARIObject)this) {
-    if (strncmp(name, "server.hostname", 15) == 0) {
+    if (std::string(name) == "server.hostname") {
       if (remoteDevice != nullptr) {
         LOG(logging::Level::Error)
             << "server.hostname must be set after device creation";
         return;
       }
       server.hostname = std::string((const char *)mem);
-    } else if (strncmp(name, "server.port", 11) == 0) {
+    } else if (std::string(name) == "server.port") {
       if (remoteDevice != nullptr) {
         LOG(logging::Level::Error)
             << "server.port must be set after device creation";
@@ -290,8 +289,7 @@ void Device::setParameter(
   }
 
   auto buf = std::make_shared<Buffer>();
-  buf->write(remoteDevice);
-  buf->write(object);
+  buf->write(makeObjectDesc(object));
   buf->write(std::string(name));
   buf->write(type);
   buf->write(value.data(), value.size());
@@ -309,9 +307,7 @@ void Device::unsetParameter(ANARIObject object, const char *name)
   }
 
   auto buf = std::make_shared<Buffer>();
-  buf->write(remoteDevice);
-  buf->write((const char *)&object, sizeof(object));
-  uint64_t nameLen = strlen(name);
+  buf->write(makeObjectDesc(object));
   buf->write(std::string(name));
   write(MessageType::UnsetParam, buf);
 
@@ -327,8 +323,7 @@ void Device::unsetAllParameters(ANARIObject object)
   }
 
   auto buf = std::make_shared<Buffer>();
-  buf->write(remoteDevice);
-  buf->write(object);
+  buf->write(makeObjectDesc(object));
   write(MessageType::UnsetAllParams, buf);
 
   LOG(logging::Level::Info)
@@ -342,21 +337,11 @@ void Device::commitParameters(ANARIObject object)
     return;
   }
 
-  if (object
-      == (ANARIObject)this) { // TODO: what happens if we actually assign our
-                              // pointer value via nextObjectID++ ??? :-D
-    auto buf = std::make_shared<Buffer>();
-    buf->write(remoteDevice);
-    write(
-        MessageType::CommitParams, buf); // one handle only: commit the device!
-  } else {
-    auto buf = std::make_shared<Buffer>();
-    buf->write(remoteDevice);
-    buf->write(object);
-    write(MessageType::CommitParams, buf);
+  auto buf = std::make_shared<Buffer>();
+  buf->write(makeObjectDesc(object));
+  write(MessageType::CommitParams, buf);
 
-    LOG(logging::Level::Info) << "Parameters committed on object " << object;
-  }
+  LOG(logging::Level::Info) << "Parameters committed on object " << object;
 }
 
 void Device::release(ANARIObject object)
@@ -371,8 +356,7 @@ void Device::release(ANARIObject object)
     frames.erase(object);
 
   auto buf = std::make_shared<Buffer>();
-  buf->write(remoteDevice);
-  buf->write(object);
+  buf->write(makeObjectDesc(object));
   write(MessageType::Release, buf);
 
   LOG(logging::Level::Info) << "Object released: " << object;
@@ -386,8 +370,7 @@ void Device::retain(ANARIObject object)
   }
 
   auto buf = std::make_shared<Buffer>();
-  buf->write(remoteDevice);
-  buf->write(object);
+  buf->write(makeObjectDesc(object));
   write(MessageType::Retain, buf);
 
   LOG(logging::Level::Info) << "Object retained: " << object;
@@ -408,8 +391,7 @@ int Device::getProperty(ANARIObject object,
   }
 
   auto buf = std::make_shared<Buffer>();
-  buf->write(remoteDevice);
-  buf->write(object);
+  buf->write(makeObjectDesc(object));
   buf->write(std::string(name));
   buf->write(type);
   buf->write(size);
@@ -455,7 +437,7 @@ const char **Device::getObjectSubtypes(ANARIDataType objectType)
   }
 
   auto buf = std::make_shared<Buffer>();
-  buf->write(remoteDevice);
+  buf->write(ObjectDesc(remoteDevice, remoteDevice));
   buf->write(objectType);
   write(MessageType::GetObjectSubtypes, buf);
 
@@ -490,7 +472,7 @@ const void *Device::getObjectInfo(ANARIDataType objectType,
   }
 
   auto buf = std::make_shared<Buffer>();
-  buf->write(remoteDevice);
+  buf->write(ObjectDesc(remoteDevice, remoteDevice));
   buf->write(objectType);
   buf->write(std::string(objectSubtype));
   buf->write(std::string(infoName));
@@ -542,7 +524,7 @@ const void *Device::getParameterInfo(ANARIDataType objectType,
   }
 
   auto buf = std::make_shared<Buffer>();
-  buf->write(remoteDevice);
+  buf->write(ObjectDesc(remoteDevice, remoteDevice));
   buf->write(objectType);
   buf->write(std::string(objectSubtype));
   buf->write(std::string(parameterName));
@@ -609,16 +591,16 @@ const void *Device::frameBufferMap(ANARIFrame fb,
   *width = frm.size[0];
   *height = frm.size[1];
 
-  if (strncmp(channel, "channel.color", 13) == 0)
+  if (std::string(channel) == "channel.color")
     *pixelType = frm.colorType;
-  else if (strncmp(channel, "channel.depth", 13) == 0)
+  else if (std::string(channel) == "channel.depth")
     *pixelType = frm.depthType;
 
   frm.state = Frame::Mapped; // this needs to be done on a per-channel level!!
 
-  if (strncmp(channel, "channel.color", 13) == 0)
+  if (std::string(channel) == "channel.color")
     return frm.color.data();
-  else if (strncmp(channel, "channel.depth", 13) == 0)
+  else if (std::string(channel) == "channel.depth")
     return frm.depth.data();
 
   return nullptr;
@@ -662,8 +644,7 @@ void Device::renderFrame(ANARIFrame frame)
   l.unlock();
 
   auto buf = std::make_shared<Buffer>();
-  buf->write(remoteDevice);
-  buf->write(frame);
+  buf->write(ObjectDesc(remoteDevice, frame));
   write(MessageType::RenderFrame, buf);
   frm.state = Frame::Render;
 }
@@ -686,8 +667,7 @@ int Device::frameReady(ANARIFrame frame, ANARIWaitMask m)
 
   if (frm.state == Frame::Render) {
     auto buf = std::make_shared<Buffer>();
-    buf->write(remoteDevice);
-    buf->write(frame);
+    buf->write(ObjectDesc(remoteDevice, frame));
     buf->write(m);
     write(MessageType::FrameReady, buf);
     if (m == ANARI_WAIT) { // TODO: mask is probably a bitmask?!
@@ -749,13 +729,12 @@ ANARIObject Device::registerNewObject(ANARIDataType type, std::string subtype)
   ANARIObject object;
   memcpy(&object, &objectID, sizeof(objectID));
 
-  auto buf = std::make_shared<Buffer>();
+  ObjectDesc obj = makeObjectDesc(object);
+  obj.type = type;
+  obj.subtype = subtype;
 
-  buf->write(remoteDevice);
-  buf->write(type);
-  uint64_t len = subtype.length();
-  buf->write(subtype);
-  buf->write(objectID);
+  auto buf = std::make_shared<Buffer>();
+  buf->write(obj);
 
   write(MessageType::NewObject, buf);
 
@@ -779,10 +758,12 @@ ANARIArray Device::registerNewArray(ANARIDataType type,
   ANARIArray array;
   memcpy(&array, &objectID, sizeof(objectID));
 
+  ObjectDesc obj = makeObjectDesc(array);
+  obj.type = type;
+  obj.subtype = "";
+
   auto buf = std::make_shared<Buffer>();
-  buf->write(remoteDevice);
-  buf->write(type);
-  buf->write(objectID);
+  buf->write(obj);
   buf->write(elementType);
   buf->write(numItems1);
   buf->write(numItems2);
@@ -802,6 +783,14 @@ ANARIArray Device::registerNewArray(ANARIDataType type,
   return array;
 }
 
+ObjectDesc Device::makeObjectDesc(ANARIObject object) const
+{
+  if (object == (ANARIObject)this)
+    object = remoteDevice;
+
+  return ObjectDesc(remoteDevice, object);
+}
+
 void Device::initClient()
 {
   connect(server.hostname, server.port);
@@ -817,6 +806,7 @@ void Device::initClient()
 
   // request remote device to be created, send other client info along
   auto buf = std::make_shared<Buffer>();
+  buf->write(ObjectDesc{});
   buf->write(remoteSubtype);
   buf->write(cf);
   // write(MessageType::NewDevice, buf);
@@ -912,6 +902,9 @@ void Device::handleMessage(async::connection::reason reason,
 
       remoteDevice = *(ANARIDevice *)msg;
       msg += sizeof(ANARIDevice);
+
+      // Make sure that device and object handles are unique:
+      nextObjectID = uint64_t(remoteDevice) + 1;
 
       server.compression = *(CompressionFeatures *)msg;
       msg += sizeof(CompressionFeatures);
