@@ -188,7 +188,7 @@ class ANARIRenderEngine(bpy.types.RenderEngine):
     def anari_frame(self, width=0, height=0):
         if not self.frame:
             self.frame = anariNewFrame(self.device)
-            anariSetParameter(self.device, self.frame, 'channel.color', ANARI_DATA_TYPE, ANARI_UFIXED8_VEC4)
+            anariSetParameter(self.device, self.frame, 'channel.color', ANARI_DATA_TYPE, ANARI_FLOAT32_VEC4)
 
         if width != 0 and height != 0:
             anariSetParameter(self.device, self.frame, 'size', ANARI_UINT32_VEC2, [width, height])
@@ -685,8 +685,8 @@ class ANARIRenderEngine(bpy.types.RenderEngine):
         anariFrameReady(self.device, frame, ANARI_WAIT)
         void_pixels, frame_width, frame_height, frame_type = anariMapFrame(self.device, frame, 'channel.color')
 
-        unpacked_pixels = ffi.buffer(void_pixels, frame_width*frame_height*4)
-        pixels = np.array(unpacked_pixels).astype(np.float32)*(1.0/255.0)
+        unpacked_pixels = ffi.buffer(void_pixels, frame_width*frame_height*4*4)
+        pixels = np.frombuffer(unpacked_pixels, dtype=np.float32)
         rect = pixels.reshape((width*height, 4))
         anariUnmapFrame(self.device, frame, 'channel.color')
 
@@ -757,8 +757,8 @@ class ANARIRenderEngine(bpy.types.RenderEngine):
         # pull new data if a render has completed
         if self.rendering and anariFrameReady(self.device, frame, ANARI_NO_WAIT):
             void_pixels, frame_width, frame_height, frame_type = anariMapFrame(self.device, frame, 'channel.color')
-            unpacked_pixels = ffi.buffer(void_pixels, frame_width*frame_height*4)
-            pixels = np.array(unpacked_pixels).astype(np.float32)*(1.0/255.0)
+            unpacked_pixels = ffi.buffer(void_pixels, frame_width*frame_height*4*4)
+            pixels = np.frombuffer(unpacked_pixels, dtype=np.float32)
             anariUnmapFrame(self.device, frame, 'channel.color')
 
             self.gpupixels = gpu.types.Buffer('FLOAT', frame_width * frame_height * 4, pixels)
