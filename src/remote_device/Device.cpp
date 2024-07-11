@@ -278,21 +278,19 @@ void Device::setParameter(
     return;
   }
 
-  // Object parameters passed to the server
-  std::vector<char> value;
-  if (anari::isObject(type)) {
-    value.resize(sizeof(uint64_t));
-    memcpy(value.data(), mem, sizeof(uint64_t));
-  } else {
-    value.resize(anari::sizeOf(type));
-    memcpy(value.data(), mem, anari::sizeOf(type));
-  }
-
   auto buf = std::make_shared<Buffer>();
   buf->write(makeObjectDesc(object));
   buf->write(std::string(name));
   buf->write(type);
-  buf->write(value.data(), value.size());
+
+  if (anari::isObject(type)) {
+    buf->write((const char *)mem, sizeof(ANARIObject));
+  } else if (type == ANARI_STRING) {
+    buf->write(std::string((const char *)mem));
+  } else {
+    buf->write((const char *)mem, anari::sizeOf(type));
+  }
+
   write(MessageType::SetParam, buf);
 
   LOG(logging::Level::Info)
