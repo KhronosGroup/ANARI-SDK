@@ -237,8 +237,9 @@ struct DEBUG_DEVICE_INTERFACE DebugDevice : public DeviceImpl, public helium::Re
   ANARIDevice getWrapped() const { return wrapped; }
 
  private:
-  ANARIDevice wrapped;
-  ANARIDevice staged;
+  std::string wrappedLibraryFromEnv;
+  ANARIDevice wrapped{nullptr};
+  ANARIDevice staged{nullptr};
 
   DebugObject<ANARI_DEVICE> deviceInfo;
 
@@ -246,7 +247,7 @@ struct DEBUG_DEVICE_INTERFACE DebugDevice : public DeviceImpl, public helium::Re
   std::vector<char> last_status_message;
 
   std::unique_ptr<DebugInterface> debug;
-  ObjectFactory *debugObjectFactory;
+  ObjectFactory *debugObjectFactory{nullptr};
 
   std::unique_ptr<SerializerInterface> serializer;
   SerializerInterface *(*createSerializer)(DebugDevice *) = nullptr;
