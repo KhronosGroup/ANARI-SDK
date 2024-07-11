@@ -61,9 +61,6 @@ static void initializeANARI()
   if (!library)
     throw std::runtime_error("Failed to load ANARI library");
 
-  if (g_enableDebug)
-    g_debug = anariLoadLibrary("debug", statusFunc, &g_true);
-
   anari::Device dev = anariNewDevice(library, "default");
 
   anari::unloadLibrary(library);
@@ -77,16 +74,9 @@ static void initializeANARI()
   anari::setParameter(dev, dev, "glAPI", "OpenGL");
 #endif
 
-  if (g_enableDebug) {
-    anari::Device dbg = anariNewDevice(g_debug, "debug");
-    anari::setParameter(dbg, dbg, "wrappedDevice", dev);
-    if (g_traceDir) {
-      anari::setParameter(dbg, dbg, "traceDir", g_traceDir);
-      anari::setParameter(dbg, dbg, "traceMode", "code");
-    }
-    anari::commitParameters(dbg, dbg);
-    anari::release(dev, dev);
-    dev = dbg;
+  if (g_traceDir) {
+    anari::setParameter(dev, dev, "traceDir", g_traceDir);
+    anari::setParameter(dev, dev, "traceMode", "code");
   }
 
   anari::commitParameters(dev, dev);
