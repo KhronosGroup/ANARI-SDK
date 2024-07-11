@@ -420,19 +420,12 @@ struct Server
         ANARIDataType parmType;
         inputBuffer->read(parmType);
 
-        std::vector<char> parmValue;
         if (anari::isObject(parmType)) {
-          parmValue.resize(sizeof(uint64_t));
-          inputBuffer->read((char *)parmValue.data(), sizeof(uint64_t));
-        } else {
-          parmValue.resize(anari::sizeOf(parmType));
-          inputBuffer->read((char *)parmValue.data(), anari::sizeOf(parmType));
-        }
+          Handle hnd;
+          inputBuffer->read((char *)&hnd, sizeof(hnd));
 
-        if (anari::isObject(parmType)) {
           const auto &registeredObjects =
               resourceManager.registeredObjects[(uint64_t)remoteObj.device];
-          Handle hnd = *(Handle *)parmValue.data();
           anariSetParameter(serverObj.device,
               serverObj.object,
               name.c_str(),
@@ -443,7 +436,19 @@ struct Server
               << "Set param \"" << name << "\" on object: " << remoteObj.object
               << ", param is an object. Handle: " << hnd
               << ", ANARI handle: " << registeredObjects[hnd].object;
+        } else if (parmType == ANARI_STRING) {
+          std::string parmValue;
+          inputBuffer->read(parmValue);
+
+          anariSetParameter(
+              serverObj.device, serverObj.object, name.c_str(), parmType, parmValue.c_str());
+
+          LOG(logging::Level::Info)
+              << "Set param \"" << name << "\" on object: " << remoteObj.object;
         } else {
+          std::vector<char> parmValue(anari::sizeOf(parmType));
+          inputBuffer->read((char *)parmValue.data(), anari::sizeOf(parmType));
+
           anariSetParameter(
               serverObj.device, serverObj.object, name.c_str(), parmType, parmValue.data());
 
