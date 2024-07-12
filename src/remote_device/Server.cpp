@@ -675,6 +675,8 @@ struct Server
 
           outputBuffer->write(remoteObj.object);
           outputBuffer->write(name);
+          outputBuffer->write(type);
+          outputBuffer->write(size);
           outputBuffer->write(result);
 
           StringList stringList((const char **)value);
@@ -690,6 +692,8 @@ struct Server
 
           outputBuffer->write(remoteObj.object);
           outputBuffer->write(name);
+          outputBuffer->write(type);
+          outputBuffer->write(size);
           outputBuffer->write(result);
           outputBuffer->write((const char *)mem.data(), size);
         }
