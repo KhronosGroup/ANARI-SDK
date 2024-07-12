@@ -272,7 +272,8 @@ struct Server
 
     // Translate remote to device handles
     if (anari::isObject(info.elementType)) {
-      const auto &registeredObjects = resourceManager.registeredObjects[(uint64_t)dev];
+      const auto &registeredObjects =
+          resourceManager.registeredObjects[(uint64_t)dev];
 
       size_t numObjects = info.numItems1 * std::max(uint64_t(1), info.numItems2)
           * std::max(uint64_t(1), info.numItems3);
@@ -329,26 +330,28 @@ struct Server
       return;
     }
 
-    LOG(logging::Level::Info) << "Message: " << toString(message->type())
+    LOG(logging::Level::Info)
+        << "Message: " << toString(message->type())
         << ", message size: " << prettyBytes(message->size());
 
-    #define CHECK(obj, errorMessage) \
-      if (!obj) { \
-        LOG(logging::Level::Error) << errorMessage; \
-        return; \
-      }
+#define CHECK(obj, errorMessage)                                               \
+  if (!obj) {                                                                  \
+    LOG(logging::Level::Error) << errorMessage;                                \
+    return;                                                                    \
+  }
 
     if (reason == async::connection::Read) {
-
       // Buffer with all the inputs
-      auto inputBuffer = std::make_shared<Buffer>(message->data(), message->size());
+      auto inputBuffer =
+          std::make_shared<Buffer>(message->data(), message->size());
 
       // Receive common object information:
       ObjectDesc remoteObj, serverObj;
       inputBuffer->read(remoteObj);
 
       // Translate to handles compatible with the underlying device:
-      serverObj = resourceManager.getObjectDesc((Handle)remoteObj.device, (Handle)remoteObj.object);
+      serverObj = resourceManager.getObjectDesc(
+          (Handle)remoteObj.device, (Handle)remoteObj.object);
       // Bring these in sync, in case the object wasn't registered yet:
       serverObj.type = remoteObj.type;
       serverObj.subtype = remoteObj.subtype;
@@ -378,11 +381,13 @@ struct Server
       } else if (message->type() == MessageType::NewObject) {
         CHECK(serverObj.device, "Error on anariNewObject: invalid device");
 
-        ANARIObject anariObj
-            = newObject(serverObj.device, serverObj.type, serverObj.subtype);
+        ANARIObject anariObj =
+            newObject(serverObj.device, serverObj.type, serverObj.subtype);
 
-        resourceManager.registerObject(
-            (Handle)remoteObj.device, (Handle)remoteObj.object, anariObj, remoteObj.type);
+        resourceManager.registerObject((Handle)remoteObj.device,
+            (Handle)remoteObj.object,
+            anariObj,
+            remoteObj.type);
 
         LOG(logging::Level::Info)
             << "Creating new object, objectID: " << remoteObj.object
@@ -403,9 +408,12 @@ struct Server
           arrayData = translateArrayData(*inputBuffer, remoteObj.device, info);
         }
 
-        ANARIArray anariArr = newArray(serverObj.device, info, arrayData.data());
-        resourceManager.registerArray(
-            (uint64_t)remoteObj.device, (uint64_t)remoteObj.object, anariArr, info);
+        ANARIArray anariArr =
+            newArray(serverObj.device, info, arrayData.data());
+        resourceManager.registerArray((uint64_t)remoteObj.device,
+            (uint64_t)remoteObj.object,
+            anariArr,
+            info);
 
         LOG(logging::Level::Info)
             << "Creating new array, objectID: " << remoteObj.object
@@ -440,8 +448,11 @@ struct Server
           std::string parmValue;
           inputBuffer->read(parmValue);
 
-          anariSetParameter(
-              serverObj.device, serverObj.object, name.c_str(), parmType, parmValue.c_str());
+          anariSetParameter(serverObj.device,
+              serverObj.object,
+              name.c_str(),
+              parmType,
+              parmValue.c_str());
 
           LOG(logging::Level::Info)
               << "Set param \"" << name << "\" on object: " << remoteObj.object;
@@ -449,8 +460,11 @@ struct Server
           std::vector<char> parmValue(anari::sizeOf(parmType));
           inputBuffer->read((char *)parmValue.data(), anari::sizeOf(parmType));
 
-          anariSetParameter(
-              serverObj.device, serverObj.object, name.c_str(), parmType, parmValue.data());
+          anariSetParameter(serverObj.device,
+              serverObj.object,
+              name.c_str(),
+              parmType,
+              parmValue.data());
 
           LOG(logging::Level::Info)
               << "Set param \"" << name << "\" on object: " << remoteObj.object;
@@ -464,13 +478,17 @@ struct Server
 
         anariUnsetParameter(serverObj.device, serverObj.object, name.c_str());
       } else if (message->type() == MessageType::UnsetAllParams) {
-        CHECK(serverObj.device, "Error on anariUnsetAllParameters: invalid device");
-        CHECK(serverObj.device, "Error on anariUnsetAllParameters: invalid object");
+        CHECK(serverObj.device,
+            "Error on anariUnsetAllParameters: invalid device");
+        CHECK(serverObj.device,
+            "Error on anariUnsetAllParameters: invalid object");
 
         anariUnsetAllParameters(serverObj.device, serverObj.object);
       } else if (message->type() == MessageType::CommitParams) {
-        CHECK(serverObj.device, "Error on anariCommitParameters: invalid device");
-        CHECK(serverObj.object, "Error on anariCommitParameters: invalid object");
+        CHECK(
+            serverObj.device, "Error on anariCommitParameters: invalid device");
+        CHECK(
+            serverObj.object, "Error on anariCommitParameters: invalid object");
 
         anariCommitParameters(serverObj.device, serverObj.object);
 
@@ -496,10 +514,11 @@ struct Server
         CHECK(serverObj.device, "Error on anariMapArray: invalid device");
         CHECK(serverObj.object, "Error on anariMapArray: invalid object");
 
-        void *ptr = anariMapArray(serverObj.device, (ANARIArray)serverObj.object);
+        void *ptr =
+            anariMapArray(serverObj.device, (ANARIArray)serverObj.object);
 
-        const ArrayInfo &info =
-            resourceManager.getArrayInfo((Handle)remoteObj.device, (Handle)remoteObj.object);
+        const ArrayInfo &info = resourceManager.getArrayInfo(
+            (Handle)remoteObj.device, (Handle)remoteObj.object);
 
         uint64_t numBytes = info.getSizeInBytes();
 
@@ -509,7 +528,8 @@ struct Server
         outputBuffer->write((const char *)ptr, numBytes);
         write(MessageType::ArrayMapped, outputBuffer);
 
-        LOG(logging::Level::Info) << "Mapped array. Handle: " << remoteObj.object;
+        LOG(logging::Level::Info)
+            << "Mapped array. Handle: " << remoteObj.object;
       } else if (message->type() == MessageType::UnmapArray) {
         CHECK(serverObj.device, "Error on anariUnmapArray: invalid device");
         CHECK(serverObj.object, "Error on anariUnmapArray: invalid object");
@@ -518,13 +538,14 @@ struct Server
         anariUnmapArray(serverObj.device, (ANARIArray)serverObj.object);
 
         // Now map so we can write to it
-        void *ptr = anariMapArray(serverObj.device, (ANARIArray)serverObj.object);
+        void *ptr =
+            anariMapArray(serverObj.device, (ANARIArray)serverObj.object);
 
         // Fetch data into separate buffer and copy
         std::vector<uint8_t> arrayData;
         if (inputBuffer->pos < message->size()) {
-          ArrayInfo info =
-              resourceManager.getArrayInfo((Handle)remoteObj.device, (Handle)remoteObj.object);
+          ArrayInfo info = resourceManager.getArrayInfo(
+              (Handle)remoteObj.device, (Handle)remoteObj.object);
           arrayData = translateArrayData(*inputBuffer, remoteObj.device, info);
           memcpy(ptr, arrayData.data(), arrayData.size());
         }
@@ -536,7 +557,8 @@ struct Server
         outputBuffer->write(remoteObj.object);
         write(MessageType::ArrayUnmapped, outputBuffer);
 
-        LOG(logging::Level::Info) << "Unmapped array. Handle: " << remoteObj.object;
+        LOG(logging::Level::Info)
+            << "Unmapped array. Handle: " << remoteObj.object;
       } else if (message->type() == MessageType::RenderFrame) {
         CHECK(serverObj.device, "Error on anariRenderFrame: invalid device");
         CHECK(serverObj.object, "Error on anariRenderFrame: invalid object");
@@ -585,7 +607,8 @@ struct Server
                       options)) {
                 uint32_t compressedSize32(compressedSize);
                 outputBuffer->write(compressedSize32);
-                outputBuffer->write((const char *)compressed.data(), compressedSize);
+                outputBuffer->write(
+                    (const char *)compressed.data(), compressedSize);
 
                 LOG(logging::Level::Info) << "turbojpeg compression size: "
                                           << prettyBytes(compressedSize);
@@ -626,7 +649,8 @@ struct Server
 
             uint32_t compressedSize32(compressedSize);
             outputBuffer->write(compressedSize32);
-            outputBuffer->write((const char *)compressed.data(), compressedSize);
+            outputBuffer->write(
+                (const char *)compressed.data(), compressedSize);
           } else {
             outputBuffer->write(depth, depthSize);
           }
@@ -670,8 +694,13 @@ struct Server
 
         if (type == ANARI_STRING_LIST) {
           const char *const *value = nullptr;
-          int result = anariGetProperty(
-              serverObj.device, serverObj.object, name.data(), type, &value, size, mask);
+          int result = anariGetProperty(serverObj.device,
+              serverObj.object,
+              name.data(),
+              type,
+              &value,
+              size,
+              mask);
 
           outputBuffer->write(remoteObj.object);
           outputBuffer->write(name);
@@ -687,8 +716,13 @@ struct Server
         } else { // POD!
           std::vector<char> mem(size);
 
-          int result = anariGetProperty(
-              serverObj.device, serverObj.object, name.data(), type, mem.data(), size, mask);
+          int result = anariGetProperty(serverObj.device,
+              serverObj.object,
+              name.data(),
+              type,
+              mem.data(),
+              size,
+              mask);
 
           outputBuffer->write(remoteObj.object);
           outputBuffer->write(name);
@@ -699,7 +733,8 @@ struct Server
         }
         write(MessageType::Property, outputBuffer);
       } else if (message->type() == MessageType::GetObjectSubtypes) {
-        CHECK(serverObj.device, "Error on anariGetObjectSubtypes: invalid device");
+        CHECK(serverObj.device,
+            "Error on anariGetObjectSubtypes: invalid device");
 
         ANARIDataType objectType;
         inputBuffer->read(objectType);
@@ -707,7 +742,8 @@ struct Server
         auto outputBuffer = std::make_shared<Buffer>();
         outputBuffer->write(objectType);
 
-        const char **subtypes = anariGetObjectSubtypes(serverObj.device, objectType);
+        const char **subtypes =
+            anariGetObjectSubtypes(serverObj.device, objectType);
 
         StringList stringList(subtypes);
         outputBuffer->write(stringList);
@@ -734,8 +770,11 @@ struct Server
         outputBuffer->write(std::string(infoName));
         outputBuffer->write(infoType);
 
-        const void *info = anariGetObjectInfo(
-            serverObj.device, objectType, objectSubtype.data(), infoName.data(), infoType);
+        const void *info = anariGetObjectInfo(serverObj.device,
+            objectType,
+            objectSubtype.data(),
+            infoName.data(),
+            infoType);
 
         if (info != nullptr) {
           if (infoType == ANARI_STRING) {
@@ -753,7 +792,8 @@ struct Server
         }
         write(MessageType::ObjectInfo, outputBuffer);
       } else if (message->type() == MessageType::GetParameterInfo) {
-        CHECK(serverObj.device, "Error on anariGetParameterInfo: invalid device");
+        CHECK(
+            serverObj.device, "Error on anariGetParameterInfo: invalid device");
 
         ANARIDataType objectType;
         inputBuffer->read(objectType);

@@ -11,11 +11,10 @@ struct ObjectDesc
 {
   ObjectDesc() = default;
 
-  ObjectDesc(ANARIDevice dev, ANARIObject obj) : device(dev), object(obj)
-  {}
+  ObjectDesc(ANARIDevice dev, ANARIObject obj) : device(dev), object(obj) {}
 
   ObjectDesc(ANARIDevice dev, ANARIObject obj, ANARIDataType t)
-    : device(dev), object(obj), type(t)
+      : device(dev), object(obj), type(t)
   {}
 
   ANARIDevice device{nullptr};
