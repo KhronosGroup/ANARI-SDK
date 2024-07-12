@@ -397,28 +397,24 @@ int Device::getProperty(ANARIObject object,
   write(MessageType::GetProperty, buf);
 
   std::unique_lock l(sync[SyncPoints::Properties].mtx);
-  property.object = nullptr;
-  property.type = type;
-  property.size = size;
+  std::vector<Property>::iterator it;
   sync[SyncPoints::Properties].cv.wait(
-      l, [&, this]() { return property.object; });
+      l, [this, &it, name]() {
+    it = std::find_if(properties.begin(),
+        properties.end(),
+        [name](const Property &prop) { return prop.name == std::string(name); });
+    return it != properties.end();
+  });
 
   if (type == ANARI_STRING_LIST) {
-    auto it = std::find_if(stringListProperties.begin(),
-        stringListProperties.end(),
-        [name](const StringListProperty &prop) {
-          return prop.name == std::string(name);
-        });
-    if (it != stringListProperties.end()) {
-      writeToVoidP(mem, it->value.data());
-    }
+    writeToVoidP(mem, it->value.asStringList.data());
   } else if (type == ANARI_DATA_TYPE_LIST) {
     throw std::runtime_error(
         "getProperty with ANARI_DATA_TYPE_LIST not implemented yet!");
   } else { // POD
-    memcpy(mem, property.mem.data(), size);
+    memcpy(mem, it->value.asAny.data(), size);
   }
-  int result = property.result;
+  int result = it->result;
   l.unlock();
 
   return result;
@@ -951,35 +947,43 @@ void Device::handleMessage(async::connection::reason reason,
 
       Buffer buf(message->data(), message->size());
 
-      buf.read(property.object);
-      buf.read(property.name);
-      buf.read(property.result);
+      Property prop;
 
-      if (property.type == ANARI_STRING_LIST) {
-        // Remove old list (if exists)
-        auto it = std::find_if(stringListProperties.begin(),
-            stringListProperties.end(),
-            [this](const StringListProperty &prop) {
-              return prop.name == property.name;
-            });
-        if (it != stringListProperties.end()) {
-          stringListProperties.erase(it);
-        }
+      buf.read(prop.object);
+      buf.read(prop.name);
+      buf.read(prop.type);
+      buf.read(prop.size);
+      buf.read(prop.result);
 
-        StringListProperty prop;
-
-        prop.object = property.object;
-        prop.name = property.name;
-        buf.read(prop.value);
-
-        stringListProperties.push_back(prop);
-      } else if (property.type == ANARI_DATA_TYPE_LIST) {
+      if (prop.type == ANARI_STRING) {
+        std::string str;
+        buf.read(str);
+        prop.value.asAny = helium::AnariAny(prop.type, str.c_str());
+      } else if (prop.type == ANARI_STRING_LIST) {
+        buf.read(prop.value.asStringList);
+      } else if (prop.type == ANARI_DATA_TYPE_LIST) {
         throw std::runtime_error(
             "getProperty with ANARI_DATA_TYPE_LIST not implemented yet!");
       } else { // POD
-        property.mem.resize(property.size);
-        buf.read(property.mem.data(), property.size);
+        if (!buf.eof()) {
+          std::vector<char> bytes(anari::sizeOf(prop.type));
+          buf.read(bytes.data(), bytes.size());
+          prop.value.asAny = helium::AnariAny(prop.type, bytes.data());
+        }
       }
+
+      // Remove old property entry (if exists)
+      auto it = std::find_if(properties.begin(),
+          properties.end(),
+          [prop](const Property &p) {
+            return p.name == prop.name;
+          });
+      if (it != properties.end()) {
+        properties.erase(it);
+      }
+
+      // Update list with new entry:
+      properties.push_back(prop);
 
       l.unlock();
       sync[SyncPoints::Properties].cv.notify_all();
