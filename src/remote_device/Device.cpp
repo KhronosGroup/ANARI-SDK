@@ -398,11 +398,11 @@ int Device::getProperty(ANARIObject object,
 
   std::unique_lock l(sync[SyncPoints::Properties].mtx);
   std::vector<Property>::iterator it;
-  sync[SyncPoints::Properties].cv.wait(
-      l, [this, &it, name]() {
-    it = std::find_if(properties.begin(),
-        properties.end(),
-        [name](const Property &prop) { return prop.name == std::string(name); });
+  sync[SyncPoints::Properties].cv.wait(l, [this, &it, name]() {
+    it = std::find_if(
+        properties.begin(), properties.end(), [name](const Property &prop) {
+          return prop.name == std::string(name);
+        });
     return it != properties.end();
   });
 
@@ -975,9 +975,7 @@ void Device::handleMessage(async::connection::reason reason,
       // Remove old property entry (if exists)
       auto it = std::find_if(properties.begin(),
           properties.end(),
-          [prop](const Property &p) {
-            return p.name == prop.name;
-          });
+          [prop](const Property &p) { return p.name == prop.name; });
       if (it != properties.end()) {
         properties.erase(it);
       }
