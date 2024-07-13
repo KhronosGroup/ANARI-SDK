@@ -452,12 +452,14 @@ const void *Device::getObjectInfo(ANARIDataType objectType,
     const char *infoName,
     ANARIDataType infoType)
 {
+  const std::string subtype = objectSubtype ? objectSubtype : "";
+
   auto it = std::find_if(objectInfos.begin(),
       objectInfos.end(),
-      [objectType, objectSubtype, infoName, infoType](
+      [objectType, subtype, infoName, infoType](
           const ObjectInfo::Ptr &oi) {
         return oi->objectType == objectType
-            && oi->objectSubtype == std::string(objectSubtype)
+            && oi->objectSubtype == subtype
             && oi->info.name == std::string(infoName)
             && oi->info.type == infoType;
       });
@@ -468,20 +470,20 @@ const void *Device::getObjectInfo(ANARIDataType objectType,
   auto buf = std::make_shared<Buffer>();
   buf->write(ObjectDesc(remoteDevice, remoteDevice));
   buf->write(objectType);
-  buf->write(std::string(objectSubtype));
+  buf->write(subtype);
   buf->write(std::string(infoName));
   buf->write(infoType);
   write(MessageType::GetObjectInfo, buf);
 
   std::unique_lock l(sync[SyncPoints::ObjectInfo].mtx);
   sync[SyncPoints::ObjectInfo].cv.wait(
-      l, [this, &it, objectType, objectSubtype, infoName, infoType]() {
+      l, [this, &it, objectType, subtype, infoName, infoType]() {
         it = std::find_if(objectInfos.begin(),
             objectInfos.end(),
-            [&it, objectType, objectSubtype, infoName, infoType](
+            [&it, objectType, subtype, infoName, infoType](
                 const ObjectInfo::Ptr &oi) {
               return oi->objectType == objectType
-                  && oi->objectSubtype == std::string(objectSubtype)
+                  //&& oi->objectSubtype == subtype
                   && oi->info.name == std::string(infoName)
                   && oi->info.type == infoType;
             });
@@ -498,16 +500,18 @@ const void *Device::getParameterInfo(ANARIDataType objectType,
     const char *infoName,
     ANARIDataType infoType)
 {
+  const std::string subtype = objectSubtype ? objectSubtype : "";
+
   auto it = std::find_if(parameterInfos.begin(),
       parameterInfos.end(),
       [objectType,
-          objectSubtype,
+          subtype,
           parameterName,
           parameterType,
           infoName,
           infoType](const ParameterInfo::Ptr &pi) {
         return pi->objectType == objectType
-            && pi->objectSubtype == std::string(objectSubtype)
+            && pi->objectSubtype == subtype
             && pi->parameterName == std::string(parameterName)
             && pi->parameterType == parameterType
             && pi->info.name == std::string(infoName)
@@ -520,7 +524,7 @@ const void *Device::getParameterInfo(ANARIDataType objectType,
   auto buf = std::make_shared<Buffer>();
   buf->write(ObjectDesc(remoteDevice, remoteDevice));
   buf->write(objectType);
-  buf->write(std::string(objectSubtype));
+  buf->write(subtype);
   buf->write(std::string(parameterName));
   buf->write(parameterType);
   buf->write(std::string(infoName));
@@ -532,7 +536,7 @@ const void *Device::getParameterInfo(ANARIDataType objectType,
       [this,
           &it,
           objectType,
-          objectSubtype,
+          subtype,
           parameterName,
           parameterType,
           infoName,
@@ -541,13 +545,13 @@ const void *Device::getParameterInfo(ANARIDataType objectType,
             parameterInfos.end(),
             [&it,
                 objectType,
-                objectSubtype,
+                subtype,
                 parameterName,
                 parameterType,
                 infoName,
                 infoType](const ParameterInfo::Ptr &pi) {
               return pi->objectType == objectType
-                  && pi->objectSubtype == std::string(objectSubtype)
+                  && pi->objectSubtype == subtype
                   && pi->parameterName == std::string(parameterName)
                   && pi->parameterType == parameterType
                   && pi->info.name == std::string(infoName)
