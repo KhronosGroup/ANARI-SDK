@@ -8,7 +8,6 @@
 #include "anariWrapper.h"
 #include "anari/frontend/type_utility.h"
 
-#include <glm/gtc/matrix_transform.hpp>
 #include <stdexcept>
 
 namespace cts {
@@ -295,7 +294,7 @@ void SceneGenerator::createAnariObject(
 
     if (subtype == "image1D") {
       size_t resolution = 16;
-      std::vector<glm::vec4> greyscale =
+      std::vector<anari::math::float4> greyscale =
           TextureGenerator::generateGreyScale(resolution);
       anari::setAndReleaseParameter(m_device,
           object,
@@ -660,7 +659,7 @@ void SceneGenerator::commit()
         colorCount = primitiveCount;
       }
 
-      std::vector<glm::vec3> attributeColor =
+      std::vector<anari::math::float3> attributeColor =
           colors::getColorVectorFromPalette(colorCount);
 
       anari::setAndReleaseParameter(d,
@@ -1068,9 +1067,9 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
           for (int i = 0; i < image_height * image_width; ++i) {
             auto colorValue = colors::getColorFromPalette(pixels[i]);
             uint32_t rgba = (255 << 24)
-                + (static_cast<uint8_t>(colorValue.b * 255.0f) << 16)
-                + (static_cast<uint8_t>(colorValue.g * 255.0f) << 8)
-                + static_cast<uint8_t>(colorValue.r * 255.0f);
+                + (static_cast<uint8_t>(colorValue.z * 255.0f) << 16)
+                + (static_cast<uint8_t>(colorValue.y * 255.0f) << 8)
+                + static_cast<uint8_t>(colorValue.x * 255.0f);
             converted.push_back(rgba);
           }
         } else {
