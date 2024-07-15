@@ -435,15 +435,15 @@ void SceneGenerator::commit()
     }
 
     size_t indiciCount = 0;
-    std::vector<glm::vec3> vertices;
+    std::vector<anari::math::float3> vertices;
     if (geometrySubtype == "triangle") { // handle all triangle geometry
-      std::vector<glm::uvec3> indices;
+      std::vector<anari::math::vec<uint32_t, 3>> indices;
       if (shape == "triangle") {
         vertices = generator.generateTriangles(primitiveCount);
 
         if (primitiveMode == "indexed") {
           for (size_t i = 0; i < vertices.size(); i += 3) {
-            indices.push_back(glm::uvec3(i, i + 1, i + 2));
+            indices.push_back(anari::math::vec<uint32_t, 3>(i, i + 1, i + 2));
           }
         }
       } else if (shape == "quad") {
@@ -480,13 +480,14 @@ void SceneGenerator::commit()
             anari::newArray1D(d, indices.data(), indices.size()));
       }
     } else if (geometrySubtype == "quad") { // handle all quad geometry
-      std::vector<glm::uvec4> indices;
+      std::vector<anari::math::vec<uint32_t, 4>> indices;
       if (shape == "quad") {
         vertices = generator.generateQuads(primitiveCount);
 
         if (primitiveMode == "indexed") {
           for (size_t i = 0; i < vertices.size(); i += 4) {
-            indices.push_back(glm::uvec4(i, i + 1, i + 2, i + 3));
+            indices.push_back(
+                anari::math::vec<uint32_t, 4>(i, i + 1, i + 2, i + 3));
           }
         }
       } else if (shape == "cube") {
@@ -595,7 +596,7 @@ void SceneGenerator::commit()
       anari::setParameter(d, geom, "caps", globalCaps);
 
       if (primitiveMode == "indexed") {
-        std::vector<glm::uvec2> indices;
+        std::vector<anari::math::vec<uint32_t, 2>> indices;
         for (uint32_t i = 0; i < vertices.size(); i += 2)
           indices.emplace_back(i, i + 1);
 
@@ -635,7 +636,7 @@ void SceneGenerator::commit()
       anari::setParameter(d, geom, "caps", globalCaps);
 
       if (primitiveMode == "indexed") {
-        std::vector<glm::uvec2> indices;
+        std::vector<anari::math::vec<uint32_t, 2>> indices;
         for (uint32_t i = 0; i < vertices.size(); i += 2)
           indices.emplace_back(i, i + 1);
 
@@ -896,7 +897,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
 
   // setup frame
   auto frame = anari::newObject<anari::Frame>(m_device);
-  anari::setParameter(m_device, frame, "size", glm::uvec2(image_height, image_width));
+  anari::setParameter(m_device, frame, "size", anari::math::vec<uint32_t, 2>(image_height, image_width));
   if (color_type != ANARI_UNKNOWN) {
     anari::setParameter(m_device, frame, channelName.c_str(), color_type);
   }
