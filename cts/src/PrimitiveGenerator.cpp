@@ -77,7 +77,7 @@ std::vector<anari::math::float3> PrimitiveGenerator::randomTransform(
         anari::math::float3(getRandomFloat(0.0f, 0.4f)));
 
     const float angle = getRandomFloat(0.0f, 360.0f);
-    const anari::math::float3 axis = getRandomVector3(0.0f, 1.0f);
+    const anari::math::float3 axis = anari::math::normalize(getRandomVector3(0.0f, 1.0f));
 
     const anari::math::float4 rotationQuat =
         anari::math::rotation_quat(axis, angle);
@@ -88,7 +88,7 @@ std::vector<anari::math::float3> PrimitiveGenerator::randomTransform(
     const anari::math::mat4 translation =
         anari::math::translation_matrix(getRandomVector3(0.0f, 0.6f));
 
-    const anari::math::mat4 transform = translation * rotation * scale;
+    const anari::math::mat4 transform = anari::math::mul(anari::math::mul(translation, rotation), scale);
 
     // apply one randomized transform to all vertices that belong to the same primitive
     for (size_t i = 0; i < verticesPerPrimitive; ++i) {
