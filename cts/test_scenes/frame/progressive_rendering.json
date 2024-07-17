@@ -1,4 +1,5 @@
 {
+  "description" : "Tests progressive rendering by comparing the first render with ten accumulated renderings. Output image is green if more than ten pixels differ, otherwise red.",
   "sceneParameters": {
     "progressiveRendering": true
   },
