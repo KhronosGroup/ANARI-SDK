@@ -669,30 +669,58 @@ def create_report(library, device = None, renderer = "default", test_scenes = "t
     write_report(merged_evaluations, output, check_features, verbosity)
     print("***Done***")
 
-def query_scene_info(parsed_json, *args):
-    info = {}
-    if "description" in parsed_json:
-        info["description"] = parsed_json["description"]
-    else:
-        info["description"] = "No description available"
-    if "requiredFeatures" in parsed_json:
-        info["required_features"] = parsed_json["requiredFeatures"]
-    else:
-        info["required_features"] = "No required features"
-    return info
+# parses json data from test scene files and returns tuple of information per test
+def parse_scenes_info(test_scenes):
+    result = {}
+    # gather available test scenes
+    collected_scenes = resolve_scenes(test_scenes)
+    if collected_scenes == []:
+        print("No scenes selected")
+        return result
+    
+    # loop over test scenes
+    for json_file_path in collected_scenes:
+        # parse test scene json files
+        test_name = json_file_path.name
+        scene_location_parts = json_file_path.parts
+        if "test_scenes" in scene_location_parts:
+            test_scenes_index = scene_location_parts[::-1].index("test_scenes")
+            test_name = str(Path(*(scene_location_parts[len(scene_location_parts) - test_scenes_index - 1:])).with_suffix(""))
 
-def query_scenes_info(library, test_scenes):
-    scene_descriptions = apply_to_scenes(query_scene_info, library, test_scenes=test_scenes, use_generator=False)
-    for info_tuple in scene_descriptions.items():
+        parsed_json = {}
+        with open(json_file_path, 'r') as f, open('default_test_scene.json', 'r') as defaultTestScene:
+            parsed_json = json.load(defaultTestScene)
+            parsed_json = recursive_update(parsed_json, json.load(f))
+
+        # collect information per test
+        info = {}
+        if "description" in parsed_json:
+            info["description"] = parsed_json["description"]
+        else:
+            info["description"] = "No description available"
+        if "requiredFeatures" in parsed_json:
+            info["required_features"] = parsed_json["requiredFeatures"]
+        else:
+            info["required_features"] = "No required features"
+        result[test_name] = info
+    
+    return result
+
+# gathers information about each test scene, then prints it to the console
+def query_scenes_info(test_scenes):
+    scenes_info = parse_scenes_info(test_scenes)
+    for info_tuple in scenes_info.items():
         info = info_tuple[1]
+        # name of the test
         print(info_tuple[0])
+        # description
         print("   description: " + info["description"])
+        # required features
         required_features = "   required Features: "
         for feature in info["required_features"]:
             required_features += feature + ", "
         required_features = required_features.removesuffix(", ")
-        print(required_features)
-        print("")
+        print(required_features + "\n")
 
 if __name__ == "__main__":
     # setup parent argument parsers
@@ -748,8 +776,9 @@ if __name__ == "__main__":
     create_reportParser.add_argument('-o', '--output', default=".", help="Output path")
 
     # command: query_scenes_info
-    queryInfoParser = subparsers.add_parser('query_scenes_info', parents=[libraryParser], description="Lists information about the given set of test scenes")
+    queryInfoParser = subparsers.add_parser('query_scenes_info', description="Lists information about the given set of test scenes")
     queryInfoParser.add_argument('-t', '--test_scenes', default="test_scenes", help="Folder with test scenes to test. Specify subfolder to test subsets")
+    queryInfoParser.add_argument('--log_dir', default=None, type=Path, help='Directory in which ANARI.log file is saved. Defaults to working directory')
 
     command_text = ""
     for subparser in subparsers.choices :
@@ -790,4 +819,4 @@ if __name__ == "__main__":
     elif args.command == "create_report":
         create_report(args.library, args.device, args.renderer, args.test_scenes, args.output, verboseLevel, not args.ignore_features, args.comparison_methods, args.thresholds)
     elif args.command == "query_scenes_info":
-        query_scenes_info(args.library, args.test_scenes)
+        query_scenes_info(args.test_scenes)
