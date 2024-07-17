@@ -246,17 +246,21 @@ def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, te
     except Exception as e:
         print(e)
         return -1
-
-    print(f'Frame duration: {frame_duration}')
-
-    # construct file names for rendered channels
-    output_path = Path(output)
-
+    
     if permutationString != "":
         permutationString = f'_{permutationString}'
 
     if variantString != "":
         permutationString += f'_{variantString}'
+
+    # print general information about the test to console
+    info = query_scene_info(parsed_json)
+    print_scene_info(f'{test_name}{permutationString}', info)
+
+    print(f'   Frame duration: {frame_duration}')
+
+    # construct file names for rendered channels
+    output_path = Path(output)
 
     file_name = output_path / Path(test_name)
 
@@ -270,14 +274,14 @@ def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, te
         image_out = Image.new("RGBA", (parsed_json["sceneParameters"]["image_height"], parsed_json["sceneParameters"]["image_width"]))
         image_out.putdata(image_data_list[0])
         outName = file_name.with_suffix('.png').with_stem(f'{prefix}{stem}{permutationString}_color')
-        print(f'Rendering to {outName.resolve()}')
+        print(f'   Rendering to {outName.resolve()}')
         image_out.save(outName)
 
     if "depth" in channels and image_data_list[1]:
         image_out = Image.new("RGBA", (parsed_json["sceneParameters"]["image_height"], parsed_json["sceneParameters"]["image_width"]))
         image_out.putdata(image_data_list[1])
         outName = file_name.with_suffix('.png').with_stem(f'{prefix}{stem}{permutationString}_depth')
-        print(f'Rendering to {outName.resolve()}')
+        print(f'   Rendering to {outName.resolve()}')
         image_out.save(outName)
 
     print("")
@@ -669,6 +673,34 @@ def create_report(library, device = None, renderer = "default", test_scenes = "t
     write_report(merged_evaluations, output, check_features, verbosity)
     print("***Done***")
 
+# collect information per test
+def query_scene_info(parsed_json):
+    info = {}
+    if "description" in parsed_json:
+        info["description"] = parsed_json["description"]
+    else:
+        info["description"] = "No description available"
+    if "requiredFeatures" in parsed_json:
+        info["required_features"] = parsed_json["requiredFeatures"]
+    else:
+        info["required_features"] = "No required features"
+    return info
+
+# print test scene information to console
+def print_scene_info(test_name, info):
+    print("")
+    # name of the test
+    print(test_name)
+    # description
+    print("   description: " + info["description"])
+    # required features
+    required_features = "   required Features: "
+    for feature in info["required_features"]:
+        required_features += feature + ", "
+    required_features = required_features.removesuffix(", ")
+    print(required_features)
+
+
 # parses json data from test scene files and returns tuple of information per test
 def parse_scenes_info(test_scenes):
     result = {}
@@ -688,21 +720,10 @@ def parse_scenes_info(test_scenes):
             test_name = str(Path(*(scene_location_parts[len(scene_location_parts) - test_scenes_index - 1:])).with_suffix(""))
 
         parsed_json = {}
-        with open(json_file_path, 'r') as f, open('default_test_scene.json', 'r') as defaultTestScene:
-            parsed_json = json.load(defaultTestScene)
-            parsed_json = recursive_update(parsed_json, json.load(f))
-
-        # collect information per test
-        info = {}
-        if "description" in parsed_json:
-            info["description"] = parsed_json["description"]
-        else:
-            info["description"] = "No description available"
-        if "requiredFeatures" in parsed_json:
-            info["required_features"] = parsed_json["requiredFeatures"]
-        else:
-            info["required_features"] = "No required features"
-        result[test_name] = info
+        with open(json_file_path, 'r') as f:
+            parsed_json = json.load(f)
+            
+        result[test_name] = query_scene_info(parsed_json)
     
     return result
 
@@ -710,17 +731,7 @@ def parse_scenes_info(test_scenes):
 def query_scenes_info(test_scenes):
     scenes_info = parse_scenes_info(test_scenes)
     for info_tuple in scenes_info.items():
-        info = info_tuple[1]
-        # name of the test
-        print(info_tuple[0])
-        # description
-        print("   description: " + info["description"])
-        # required features
-        required_features = "   required Features: "
-        for feature in info["required_features"]:
-            required_features += feature + ", "
-        required_features = required_features.removesuffix(", ")
-        print(required_features + "\n")
+        print_scene_info(info_tuple[0], info_tuple[1])
 
 if __name__ == "__main__":
     # setup parent argument parsers
@@ -776,8 +787,8 @@ if __name__ == "__main__":
     create_reportParser.add_argument('-o', '--output', default=".", help="Output path")
 
     # command: query_scenes_info
-    queryInfoParser = subparsers.add_parser('query_scenes_info', description="Lists information about the given set of test scenes")
-    queryInfoParser.add_argument('-t', '--test_scenes', default="test_scenes", help="Folder with test scenes to test. Specify subfolder to test subsets")
+    queryInfoParser = subparsers.add_parser('query_scenes_info', description="Lists information about the given test scene(s)")
+    queryInfoParser.add_argument('-t', '--test_scenes', default="test_scenes", help="Folder with test scenes OR a test scene file to gather information from")
     queryInfoParser.add_argument('--log_dir', default=None, type=Path, help='Directory in which ANARI.log file is saved. Defaults to working directory')
 
     command_text = ""
