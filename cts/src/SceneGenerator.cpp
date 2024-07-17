@@ -937,23 +937,28 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
     anari::commitParameters(m_device, frame);
     anari::render(m_device, frame);
     anari::wait(m_device, frame);
-    if (!wasCalled) {
-      uint32_t rgba = (255 << 24) + 255;
-      std::vector<uint32_t> errorImage(image_height * image_width, rgba);
-      result.emplace_back(errorImage);
-      result.emplace_back(errorImage);
-      // set frame duration member of this with last renderering's frame time
-      if (!anariGetProperty(m_device,
-              frame,
-              "duration",
-              ANARI_FLOAT32,
-              &frameDuration,
-              sizeof(frameDuration),
-              ANARI_WAIT)) {
-        frameDuration = -1.0f;
-      }
-      return result;
+    
+    uint32_t rgba;
+    if (wasCalled) {
+      rgba = (255 << 24) + (255 << 8);
+    } else {
+      rgba = (255 << 24) + 255;
     }
+
+    std::vector<uint32_t> errorImage(image_height * image_width, rgba);
+    result.emplace_back(errorImage);
+    result.emplace_back(errorImage);
+    // set frame duration member of this with last renderering's frame time
+    if (!anariGetProperty(m_device,
+            frame,
+            "duration",
+            ANARI_FLOAT32,
+            &frameDuration,
+            sizeof(frameDuration),
+            ANARI_WAIT)) {
+      frameDuration = -1.0f;
+    }
+    return result;
   } else if (getParam<bool>("progressiveRendering", false)) {
     if (color_type == ANARI_FLOAT32_VEC4) {
       throw std::runtime_error("ANARI_FLOAT32_VEC4 not supported for frameProgressiveRendering test");
