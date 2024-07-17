@@ -442,7 +442,9 @@ void SceneGenerator::commit()
 
         if (primitiveMode == "indexed") {
           for (size_t i = 0; i < vertices.size(); i += 3) {
-            indices.push_back(anari::math::vec<uint32_t, 3>(i, i + 1, i + 2));
+            const unsigned int index = static_cast<unsigned int>(i);
+            indices.push_back(
+                anari::math::vec<uint32_t, 3>(index, index + 1u, index + 2u));
           }
         }
       } else if (shape == "quad") {
@@ -485,8 +487,9 @@ void SceneGenerator::commit()
 
         if (primitiveMode == "indexed") {
           for (size_t i = 0; i < vertices.size(); i += 4) {
-            indices.push_back(
-                anari::math::vec<uint32_t, 4>(i, i + 1, i + 2, i + 3));
+            const unsigned int index = static_cast<unsigned int>(i);
+            indices.push_back(anari::math::vec<uint32_t, 4>(
+                index, index + 1u, index + 2u, index + 3u));
           }
         }
       } else if (shape == "cube") {
@@ -838,8 +841,8 @@ void SceneGenerator::commit()
 std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDistance)
 {
   // gather previously set parameters for rendering this scene
-  size_t image_height = getParam<int32_t>("image_height", 1024);
-  size_t image_width = getParam<int32_t>("image_width", 1024);
+  uint32_t image_height = getParam<uint32_t>("image_height", 1024);
+  uint32_t image_width = getParam<uint32_t>("image_width", 1024);
   std::string channelName = "";
   ANARIDataType color_type;
   bool normalChannel = false;
@@ -1026,9 +1029,9 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
       const float *pixels = anari::map<float>(m_device, frame, channelName.c_str()).data;
       std::vector<uint32_t> converted;
       if (pixels != nullptr) {
-        for (int i = 0; i < image_height * image_width; ++i) {
+        for (uint32_t i = 0; i < image_height * image_width; ++i) {
           uint32_t rgba = 0;
-          for (int j = 0; j < 4; ++j) {
+          for (uint32_t j = 0; j < 4; ++j) {
             uint8_t colorValue = j == 4 ? 255 : 0;
             if (j <= componentCount) {
               if (normalChannel) {
@@ -1064,7 +1067,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
         const uint32_t *pixels = anari::map<uint32_t>(m_device, frame, channelName.c_str()).data;
         std::vector<uint32_t> converted;
         if (pixels != nullptr) {
-          for (int i = 0; i < image_height * image_width; ++i) {
+          for (uint32_t i = 0; i < image_height * image_width; ++i) {
             auto colorValue = colors::getColorFromPalette(pixels[i]);
             uint32_t rgba = (255 << 24)
                 + (static_cast<uint8_t>(colorValue.z * 255.0f) << 16)
@@ -1083,9 +1086,9 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
             anari::map<uint8_t>(m_device, frame, channelName.c_str()).data;
         std::vector<uint32_t> converted;
         if (pixels != nullptr) {
-          for (int i = 0; i < image_height * image_width; ++i) {
+          for (uint32_t i = 0; i < image_height * image_width; ++i) {
             uint32_t rgba = 0;
-            for (int j = 0; j < 4; ++j) {
+            for (uint32_t j = 0; j < 4; ++j) {
               uint8_t colorValue = j == 4 ? 255 : 0;
               if (j <= componentCount) {
                 colorValue = pixels[i * componentCount + j];
@@ -1106,9 +1109,9 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
             anari::map<int16_t>(m_device, frame, channelName.c_str()).data;
         std::vector<uint32_t> converted;
         if (pixels != nullptr) {
-          for (int i = 0; i < image_height * image_width; ++i) {
+          for (uint32_t i = 0; i < image_height * image_width; ++i) {
             uint32_t rgba = 0;
-            for (int j = 0; j < 4; ++j) {
+            for (uint32_t j = 0; j < 4; ++j) {
               uint8_t colorValue = j == 4 ? 255 : 0;
               if (j <= componentCount) {
                 colorValue = TextureGenerator::convertShortNormalToColor(pixels[i * componentCount + j], j == 3);
@@ -1136,7 +1139,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
 
     std::vector<uint32_t> converted;
     if (pixels != nullptr) {
-      for (int i = 0; i < image_height * image_width; ++i) {
+      for (uint32_t i = 0; i < image_height * image_width; ++i) {
         uint8_t colorValue =
             static_cast<uint8_t>(pixels[i] / renderDistance * 255.0f);
         uint32_t rgba =
