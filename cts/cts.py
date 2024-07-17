@@ -669,6 +669,31 @@ def create_report(library, device = None, renderer = "default", test_scenes = "t
     write_report(merged_evaluations, output, check_features, verbosity)
     print("***Done***")
 
+def query_scene_info(parsed_json, *args):
+    info = {}
+    if "description" in parsed_json:
+        info["description"] = parsed_json["description"]
+    else:
+        info["description"] = "No description available"
+    if "requiredFeatures" in parsed_json:
+        info["required_features"] = parsed_json["requiredFeatures"]
+    else:
+        info["required_features"] = "No required features"
+    return info
+
+def query_scenes_info(library, test_scenes):
+    scene_descriptions = apply_to_scenes(query_scene_info, library, test_scenes=test_scenes, use_generator=False)
+    for info_tuple in scene_descriptions.items():
+        info = info_tuple[1]
+        print(info_tuple[0])
+        print("   description: " + info["description"])
+        required_features = "   required Features: "
+        for feature in info["required_features"]:
+            required_features += feature + ", "
+        required_features = required_features.removesuffix(", ")
+        print(required_features)
+        print("")
+
 if __name__ == "__main__":
     # setup parent argument parsers
     parser = argparse.ArgumentParser(description='ANARI CTS toolkit', formatter_class=argparse.RawTextHelpFormatter)
@@ -722,6 +747,10 @@ if __name__ == "__main__":
     create_reportParser = subparsers.add_parser('create_report', parents=[sceneParser, evaluationMethodParser, ignoreFeatureParser], description="Runs all tests and creates a pdf report")
     create_reportParser.add_argument('-o', '--output', default=".", help="Output path")
 
+    # command: query_scenes_info
+    queryInfoParser = subparsers.add_parser('query_scenes_info', parents=[libraryParser], description="Lists information about the given set of test scenes")
+    queryInfoParser.add_argument('-t', '--test_scenes', default="test_scenes", help="Folder with test scenes to test. Specify subfolder to test subsets")
+
     command_text = ""
     for subparser in subparsers.choices :
         subparsertext = subparser
@@ -760,3 +789,5 @@ if __name__ == "__main__":
             print(f'{key}: {value[0]}')
     elif args.command == "create_report":
         create_report(args.library, args.device, args.renderer, args.test_scenes, args.output, verboseLevel, not args.ignore_features, args.comparison_methods, args.thresholds)
+    elif args.command == "query_scenes_info":
+        query_scenes_info(args.library, args.test_scenes)
