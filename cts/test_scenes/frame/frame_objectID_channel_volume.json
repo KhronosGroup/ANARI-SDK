@@ -1,4 +1,5 @@
 {
+  "description" : "Tests object ID channel with two volumes. The volumes should have different colors.",
   "sceneParameters": {
     "primitiveCount": 8,
     "spatial_field_dimensions": [
@@ -7,7 +8,7 @@
       3
     ],
     "seed": 12345,
-    "frame_primitiveId_type": "UINT32",
+    "frame_objectId_type": "UINT32",
     "anari_objects": {
       "volume": [
         {

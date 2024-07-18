@@ -1,8 +1,9 @@
 {
+  "description" : "Tests instance ID channel with two instances containing two triangles. The triangles should have different colors.",
   "sceneParameters": {
     "primitiveCount": 1,
     "seed": 12345,
-    "frame_primitiveId_type": "UINT32",
+    "frame_instanceId_type": "UINT32",
     "anari_objects": {
       "instance": [
         {
