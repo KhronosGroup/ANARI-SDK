@@ -1,5 +1,5 @@
 {
-  "description" : "Tests primitive ID channel with eight triangles. The triangles should have different colors.",
+  "description": "Tests primitive ID channel with eight triangles. The triangles should have different colors.",
   "sceneParameters": {
     "primitiveCount": 8,
     "seed": 12345,

@@ -1,5 +1,5 @@
 {
-  "description" : "Tests instance ID channel with two instances containing two triangles. The triangles should have different colors.",
+  "description": "Tests instance ID channel with two instances containing two triangles. The triangles should have different colors.",
   "sceneParameters": {
     "primitiveCount": 1,
     "seed": 12345,

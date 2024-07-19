@@ -1,5 +1,5 @@
 {
-  "description" : "Tests object ID channel with two volumes. The volumes should have different colors.",
+  "description": "Tests object ID channel with two volumes. The volumes should have different colors.",
   "sceneParameters": {
     "primitiveCount": 8,
     "spatial_field_dimensions": [

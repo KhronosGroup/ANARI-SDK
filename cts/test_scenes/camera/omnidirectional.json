@@ -1,5 +1,5 @@
 {
-  "description" : "Generic test for omnidirectional camera properties.",
+  "description": "Generic test for omnidirectional camera parameters.",
   "sceneParameters": {
     "geometrySubtype": "triangle",
     "primitiveCount": 16,

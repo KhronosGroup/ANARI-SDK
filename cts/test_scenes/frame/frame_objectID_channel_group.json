@@ -1,5 +1,5 @@
 {
-  "description" : "Tests object ID channel with no user defined IDs, falling back to group indices. The triangles should have different colors.",
+  "description": "Tests object ID channel with no user defined IDs, falling back to group indices. The triangles should have different colors.",
   "sceneParameters": {
     "primitiveCount": 1,
     "seed": 12345,

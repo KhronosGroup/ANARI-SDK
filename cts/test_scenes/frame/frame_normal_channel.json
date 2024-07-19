@@ -1,5 +1,5 @@
 {
-  "description" : "Tests different data types of the normal channel.",
+  "description": "Tests different data types of the normal channel.",
   "sceneParameters": {
     "primitiveCount": 1,
     "seed": 12345,

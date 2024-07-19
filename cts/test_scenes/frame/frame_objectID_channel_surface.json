@@ -1,5 +1,5 @@
 {
-  "description" : "Tests object ID channel with two surfaces containing two triangles. The triangles should have different colors.",
+  "description": "Tests object ID channel with two surfaces containing two triangles. The triangles should have different colors.",
   "sceneParameters": {
     "primitiveCount": 1,
     "seed": 12345,

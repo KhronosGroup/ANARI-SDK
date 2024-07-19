@@ -1,5 +1,5 @@
 {
-  "description" : "Tests different data types of the albedo channel.",
+  "description": "Tests different data types of the albedo channel.",
   "sceneParameters": {
     "primitiveCount": 16,
     "seed": 12345,
