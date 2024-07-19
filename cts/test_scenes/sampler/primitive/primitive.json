@@ -1,4 +1,5 @@
 {
+  "description": "Tests parameter permutations of a primitive sampler. Results show different colors per primitive.",
   "sceneParameters": {
     "anari_objects": {
       "material": [

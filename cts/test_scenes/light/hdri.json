@@ -1,4 +1,5 @@
 {
+  "description": "Tests permutations of HDRI light parameters.",
   "sceneParameters": {
     "anari_objects": {
       "renderer": [

@@ -1,4 +1,5 @@
 {
+  "description": "Tests directional lights. Results show different light directions and strengths.",
   "sceneParameters": {
     "anari_objects": {
       "renderer": [
