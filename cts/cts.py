@@ -187,11 +187,16 @@ def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, 
             channelThresholds = color_thresholds
         # evaluate rendered scene against reference data (possibly using a custom comparison function)
         eval_result = ctsUtility.evaluate_scene(ref_path, candidate_path, methodsCopy, channelThresholds, custom_compare_function)
-        print(f'\n{test_name} {name} {channel}:')
+        # print(f'\n{test_name} {name} {channel}:')
+        
+        # print general information about the test to console
+        info = query_scene_info(parsed_json)
+        print_scene_info(f'{test_name} {name} {channel}:', info)
+
         for key in eval_result["metrics"]:
             # construct report text for passed or failed tests
             hasPassed = "\033[92mPassed\033[0m" if eval_result["passed"][key] else "\033[91mFailed\033[0m"
-            print(f'{key}: {hasPassed} {eval_result["metrics"][key]} Threshold: {eval_result["thresholds"][key]}')
+            print(f'   {key}: {hasPassed} {eval_result["metrics"][key]} Threshold: {eval_result["thresholds"][key]}')
         # integrate evaluation for this channel into results dictionary
         results[str(test_name)][name][channel] = eval_result
     return results
@@ -614,6 +619,11 @@ def create_report_for_scene(parsed_json, sceneGenerator, anari_renderer, scene_l
     report = {}
     report[test_name] = {}
     report[test_name][name] = {}
+
+    # gather descriptions for report
+    if "description" in parsed_json:
+        report[test_name]["description"] = parsed_json["description"]
+
     if sceneGenerator != None:
         # render test scenes and gather frame duration and property check results for the report
         frame_duration = render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, test_name, permutationString, variantString, output)
@@ -803,7 +813,7 @@ if __name__ == "__main__":
     # parse command and call corresponding functionality
     args = parser.parse_args()
 
-    if args.log_dir is not None:
+    if hasattr(args, 'log_dir') and args.log_dir is not None:
         log_file_path = args.log_dir / log_file_name
         os.makedirs(args.log_dir, exist_ok=True)
     else:

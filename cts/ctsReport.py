@@ -126,6 +126,18 @@ def generate_report_document(report_data, path, title, check_features = True, ve
             ]
             spacing += constSpacing
 
+            # Show descriptions in detailed page
+            if "description" in test_cases_value:
+                test_case_story.extend(
+                    [
+                        Paragraph("Description:", stylesheet["Normal"]),
+                        Paragraph(
+                            f'{test_cases_value["description"]}',
+                            stylesheet["Normal"],
+                        ),
+                    ]
+                )
+                
             # Show all required features in summary and detailed page
             if "requiredFeatures" in test_cases_value:
                 summaryItem.append(Paragraph(str(test_cases_value["requiredFeatures"])))
