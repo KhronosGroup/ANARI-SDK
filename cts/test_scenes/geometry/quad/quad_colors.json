@@ -1,4 +1,5 @@
 {
+  "description": "Tests quad geometry vertex and primitive color.",
   "sceneParameters": {
     "geometrySubtype": "quad",
     "primitiveCount": 4,
@@ -15,8 +16,8 @@
   },
   "permutations": {
     "color": [
-      "vertex.color",
-      "primitive.color"
+      "primitive.color",
+      "vertex.color"
     ]
   },
   "requiredFeatures": [

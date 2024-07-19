@@ -1,4 +1,5 @@
 {
+  "description": "Tests global caps parameter of cylinder geometry.",
   "sceneParameters": {
     "geometrySubtype": "cylinder",
     "primitiveCount": 16,

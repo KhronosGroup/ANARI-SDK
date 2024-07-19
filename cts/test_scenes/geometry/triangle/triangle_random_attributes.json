@@ -1,4 +1,5 @@
 {
+  "description": "Tests assignment of vertex and primitive attributes to random numbers. Does not affect rendering.",
   "sceneParameters": {
     "geometrySubtype": "triangle",
     "primitiveCount": 16,
