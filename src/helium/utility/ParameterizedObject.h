@@ -101,6 +101,14 @@ inline void ParameterizedObject::setParam(
   setParam(name, ANARI_STRING, v.c_str());
 }
 
+template <>
+inline void ParameterizedObject::setParam(
+    const std::string &name, const bool &v)
+{
+  uint8_t b = v;
+  setParam(name, ANARI_BOOL, &b);
+}
+
 template <typename T>
 inline T ParameterizedObject::getParam(const std::string &name, T valIfNotFound)
 {
