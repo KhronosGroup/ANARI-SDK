@@ -366,6 +366,8 @@ R anariTypeInvoke(ANARIDataType type, Args&&... args) {
         f.write('    }\n')
         f.write('}\n')
 
+        f.write('}\n')
+
         f.write('#endif\n')
 
 
@@ -435,8 +437,6 @@ inline int isNormalized(ANARIDataType type) {
             f.write('        case '+enum['name']+': return '+str(int(enum['normalized']))+';\n')
         f.write('        default: return 0;\n')
         f.write('    }\n')
-        f.write('}\n')
-
         f.write('}\n')
 
 output = sys.argv[1]
