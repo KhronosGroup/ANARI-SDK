@@ -1,4 +1,5 @@
 {
+  "description": "Tests the emission effect on pbr materials.",
   "sceneParameters": {
     "color": "vertex.attribute0",
     "anari_objects": {

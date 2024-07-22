@@ -1,4 +1,5 @@
 {
+  "description": "Tests triangle geometry vertex and primitive color.",
   "sceneParameters": {
     "geometrySubtype": "triangle",
     "primitiveCount": 4,
@@ -15,8 +16,8 @@
   },
   "permutations": {
     "color": [
-      "vertex.color",
-      "primitive.color"
+      "primitive.color",
+      "vertex.color"
     ]
   },
   "requiredFeatures": [

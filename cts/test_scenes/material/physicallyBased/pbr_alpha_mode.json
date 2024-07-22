@@ -1,4 +1,5 @@
 {
+  "description": "Tests all alpha modes of the pbr material. Results show different transparency effects.",
   "sceneParameters": {
     "opacity": "vertex.attribute2",
     "anari_objects": {

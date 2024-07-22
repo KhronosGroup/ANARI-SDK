@@ -187,11 +187,16 @@ def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, 
             channelThresholds = color_thresholds
         # evaluate rendered scene against reference data (possibly using a custom comparison function)
         eval_result = ctsUtility.evaluate_scene(ref_path, candidate_path, methodsCopy, channelThresholds, custom_compare_function)
-        print(f'\n{test_name} {name} {channel}:')
+        # print(f'\n{test_name} {name} {channel}:')
+        
+        # print general information about the test to console
+        info = query_scene_info(parsed_json)
+        print_scene_info(f'{test_name} {name} {channel}:', info)
+
         for key in eval_result["metrics"]:
             # construct report text for passed or failed tests
             hasPassed = "\033[92mPassed\033[0m" if eval_result["passed"][key] else "\033[91mFailed\033[0m"
-            print(f'{key}: {hasPassed} {eval_result["metrics"][key]} Threshold: {eval_result["thresholds"][key]}')
+            print(f'   {key}: {hasPassed} {eval_result["metrics"][key]} Threshold: {eval_result["thresholds"][key]}')
         # integrate evaluation for this channel into results dictionary
         results[str(test_name)][name][channel] = eval_result
     return results
@@ -246,17 +251,21 @@ def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, te
     except Exception as e:
         print(e)
         return -1
-
-    print(f'Frame duration: {frame_duration}')
-
-    # construct file names for rendered channels
-    output_path = Path(output)
-
+    
     if permutationString != "":
         permutationString = f'_{permutationString}'
 
     if variantString != "":
         permutationString += f'_{variantString}'
+
+    # print general information about the test to console
+    info = query_scene_info(parsed_json)
+    print_scene_info(f'{test_name}{permutationString}', info)
+
+    print(f'   Frame duration: {frame_duration}')
+
+    # construct file names for rendered channels
+    output_path = Path(output)
 
     file_name = output_path / Path(test_name)
 
@@ -270,14 +279,14 @@ def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, te
         image_out = Image.new("RGBA", (parsed_json["sceneParameters"]["image_height"], parsed_json["sceneParameters"]["image_width"]))
         image_out.putdata(image_data_list[0])
         outName = file_name.with_suffix('.png').with_stem(f'{prefix}{stem}{permutationString}_color')
-        print(f'Rendering to {outName.resolve()}')
+        print(f'   Rendering to {outName.resolve()}')
         image_out.save(outName)
 
     if "depth" in channels and image_data_list[1]:
         image_out = Image.new("RGBA", (parsed_json["sceneParameters"]["image_height"], parsed_json["sceneParameters"]["image_width"]))
         image_out.putdata(image_data_list[1])
         outName = file_name.with_suffix('.png').with_stem(f'{prefix}{stem}{permutationString}_depth')
-        print(f'Rendering to {outName.resolve()}')
+        print(f'   Rendering to {outName.resolve()}')
         image_out.save(outName)
 
     print("")
@@ -610,6 +619,11 @@ def create_report_for_scene(parsed_json, sceneGenerator, anari_renderer, scene_l
     report = {}
     report[test_name] = {}
     report[test_name][name] = {}
+
+    # gather descriptions for report
+    if "description" in parsed_json:
+        report[test_name]["description"] = parsed_json["description"]
+
     if sceneGenerator != None:
         # render test scenes and gather frame duration and property check results for the report
         frame_duration = render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, test_name, permutationString, variantString, output)
@@ -669,6 +683,66 @@ def create_report(library, device = None, renderer = "default", test_scenes = "t
     write_report(merged_evaluations, output, check_features, verbosity)
     print("***Done***")
 
+# collect information per test
+def query_scene_info(parsed_json):
+    info = {}
+    if "description" in parsed_json:
+        info["description"] = parsed_json["description"]
+    else:
+        info["description"] = "No description available"
+    if "requiredFeatures" in parsed_json:
+        info["required_features"] = parsed_json["requiredFeatures"]
+    else:
+        info["required_features"] = "No required features"
+    return info
+
+# print test scene information to console
+def print_scene_info(test_name, info):
+    print("")
+    # name of the test
+    print(test_name)
+    # description
+    print("   description: " + info["description"])
+    # required features
+    required_features = "   required Features: "
+    for feature in info["required_features"]:
+        required_features += feature + ", "
+    required_features = required_features.removesuffix(", ")
+    print(required_features)
+
+
+# parses json data from test scene files and returns tuple of information per test
+def parse_scenes_info(test_scenes):
+    result = {}
+    # gather available test scenes
+    collected_scenes = resolve_scenes(test_scenes)
+    if collected_scenes == []:
+        print("No scenes selected")
+        return result
+    
+    # loop over test scenes
+    for json_file_path in collected_scenes:
+        # parse test scene json files
+        test_name = json_file_path.name
+        scene_location_parts = json_file_path.parts
+        if "test_scenes" in scene_location_parts:
+            test_scenes_index = scene_location_parts[::-1].index("test_scenes")
+            test_name = str(Path(*(scene_location_parts[len(scene_location_parts) - test_scenes_index - 1:])).with_suffix(""))
+
+        parsed_json = {}
+        with open(json_file_path, 'r') as f:
+            parsed_json = json.load(f)
+            
+        result[test_name] = query_scene_info(parsed_json)
+    
+    return result
+
+# gathers information about each test scene, then prints it to the console
+def query_scenes_info(test_scenes):
+    scenes_info = parse_scenes_info(test_scenes)
+    for info_tuple in scenes_info.items():
+        print_scene_info(info_tuple[0], info_tuple[1])
+
 if __name__ == "__main__":
     # setup parent argument parsers
     parser = argparse.ArgumentParser(description='ANARI CTS toolkit', formatter_class=argparse.RawTextHelpFormatter)
@@ -722,6 +796,11 @@ if __name__ == "__main__":
     create_reportParser = subparsers.add_parser('create_report', parents=[sceneParser, evaluationMethodParser, ignoreFeatureParser], description="Runs all tests and creates a pdf report")
     create_reportParser.add_argument('-o', '--output', default=".", help="Output path")
 
+    # command: query_scenes_info
+    queryInfoParser = subparsers.add_parser('query_scenes_info', description="Lists information about the given test scene(s)")
+    queryInfoParser.add_argument('-t', '--test_scenes', default="test_scenes", help="Folder with test scenes OR a test scene file to gather information from")
+    queryInfoParser.add_argument('--log_dir', default=None, type=Path, help='Directory in which ANARI.log file is saved. Defaults to working directory')
+
     command_text = ""
     for subparser in subparsers.choices :
         subparsertext = subparser
@@ -734,7 +813,7 @@ if __name__ == "__main__":
     # parse command and call corresponding functionality
     args = parser.parse_args()
 
-    if args.log_dir is not None:
+    if hasattr(args, 'log_dir') and args.log_dir is not None:
         log_file_path = args.log_dir / log_file_name
         os.makedirs(args.log_dir, exist_ok=True)
     else:
@@ -760,3 +839,5 @@ if __name__ == "__main__":
             print(f'{key}: {value[0]}')
     elif args.command == "create_report":
         create_report(args.library, args.device, args.renderer, args.test_scenes, args.output, verboseLevel, not args.ignore_features, args.comparison_methods, args.thresholds)
+    elif args.command == "query_scenes_info":
+        query_scenes_info(args.test_scenes)

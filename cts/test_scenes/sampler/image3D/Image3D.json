@@ -1,4 +1,5 @@
 {
+  "description": "Tests parameter permutations of a 3D image sampler. Results show a slice of a 3D color fade.",
   "sceneParameters": {
     "frame_depth_type": "",
     "anari_objects": {

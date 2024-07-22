@@ -1,4 +1,5 @@
 {
+  "description": "Tests if the frame completion callback is called after rendering. Output image is green for success or red for failure.",
   "sceneParameters": {
     "frameCompletionCallback": true
   },

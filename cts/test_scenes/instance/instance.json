@@ -1,4 +1,5 @@
 {
+  "description": "Tests rendering two instances of a group with a default/custom transform. Results show two differently placed quad geometries.",
   "sceneParameters": {
     "primitiveCount": 1,
     "seed": 12345,

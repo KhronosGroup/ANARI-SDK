@@ -1,4 +1,5 @@
 {
+  "description": "Generic test for camera parameters. Uses perspective camera.",
   "sceneParameters": {
     "geometrySubtype": "triangle",
     "primitiveCount": 16,

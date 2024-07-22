@@ -1,4 +1,5 @@
 {
+  "description": "Tests indexed vertices of quad geometry with one unused vertex.",
   "sceneParameters": {
     "geometrySubtype": "quad",
     "primitiveCount": 4,

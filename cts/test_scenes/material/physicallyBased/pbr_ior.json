@@ -1,4 +1,5 @@
 {
+  "description": "Tests an arbitrary index of refraction (ior) on transmissive pbr materials. Results show intersecting transmissive geometry.",
   "sceneParameters": {
     "primitiveCount": 2,
     "seed": 4321,

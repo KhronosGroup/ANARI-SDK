@@ -1,4 +1,5 @@
 {
+  "description": "Generically tests parameters of volumes and spatial fields in combination.",
   "sceneParameters": {
     "spatial_field_dimensions": [
       3,

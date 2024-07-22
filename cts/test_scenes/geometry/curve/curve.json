@@ -1,4 +1,5 @@
 {
+  "description": "Tests soup and indexed vertices of curve geometry. Output should be the same.",
   "sceneParameters": {
     "geometrySubtype": "curve",
     "primitiveCount": 16,

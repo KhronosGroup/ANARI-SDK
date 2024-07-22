@@ -1,4 +1,5 @@
 {
+  "description": "Tests point lights. Results show different light positions and strengths.",
   "sceneParameters": {
     "anari_objects": {
       "renderer": [

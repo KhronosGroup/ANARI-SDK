@@ -1,4 +1,5 @@
 {
+  "description": "Tests soup and indexed vertices of triangle geometry. Output should be the same.",
   "sceneParameters": {
     "geometrySubtype": "triangle",
     "primitiveCount": 16,

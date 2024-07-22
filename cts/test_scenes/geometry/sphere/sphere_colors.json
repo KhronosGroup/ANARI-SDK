@@ -1,4 +1,5 @@
 {
+  "description": "Tests sphere geometry vertex and primitive color. Vertex and primitive color should be the same for spheres.",
   "sceneParameters": {
     "geometrySubtype": "sphere",
     "primitiveCount": 4,
@@ -14,8 +15,8 @@
   },
   "permutations": {
     "color": [
-      "vertex.color",
-      "primitive.color"
+      "primitive.color",
+      "vertex.color"
     ]
   },
   "requiredFeatures": [
