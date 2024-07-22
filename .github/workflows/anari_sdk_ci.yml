@@ -22,7 +22,7 @@ jobs:
 
     - name: Install Packages
       if: ${{ matrix.os == 'ubuntu-latest' }}
-      run: sudo apt install -y libboost-filesystem-dev libboost-system-dev libboost-iostreams-dev
+      run: sudo apt install -y libboost-system-dev
 
     - name: Configure CMake
       run: >

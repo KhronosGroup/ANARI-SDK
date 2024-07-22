@@ -209,27 +209,20 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
   ANARIDevice remoteDevice{nullptr};
   std::string remoteSubtype = "default";
 
-  // getProperty blocks until property.object is
-  // not null, then consumes the remaining values
-  struct
+  struct Property
   {
     ANARIObject object{nullptr};
     std::string name;
-    std::vector<char> mem;
+    struct
+    {
+      helium::AnariAny asAny;
+      StringList asStringList;
+    } value;
     ANARIDataType type;
     uint64_t size;
     int result;
-  } property;
-
-  // Cache string list properties and keep strings
-  // alive for the device's lifetime!
-  struct StringListProperty
-  {
-    ANARIObject object{nullptr};
-    std::string name;
-    StringList value;
   };
-  std::vector<StringListProperty> stringListProperties;
+  std::vector<Property> properties;
 
   // Store subtypes; if the subtype was already queried,
   // simply return the cached subtype list
@@ -318,6 +311,8 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
       uint64_t numItems1,
       uint64_t numItems2,
       uint64_t numItems3);
+
+  ObjectDesc makeObjectDesc(ANARIObject object) const;
 
   //--- Net ---------------------------------------------
   void connect(std::string host, unsigned short port);
