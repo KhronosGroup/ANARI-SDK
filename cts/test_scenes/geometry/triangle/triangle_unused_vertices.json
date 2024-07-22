@@ -1,0 +1,33 @@
+{
+  "description": "Tests indexed vertices of triangle geometry with three unused vertex.",
+  "sceneParameters": {
+    "geometrySubtype": "triangle",
+    "primitiveCount": 4,
+    "seed": 54321,
+    "shape": "triangle",
+    "primitiveMode": "indexed",
+    "frame_depth_type": "FLOAT32",
+    "unusedVertices": true
+  },
+  "requiredFeatures": [
+    "ANARI_KHR_GEOMETRY_QUAD"
+  ],
+  "metaData": {
+    "": {
+      "bounds": {
+        "world": [
+          [
+            -0.05071701109409332,
+            0.21228575706481934,
+            0.24453283846378326
+          ],
+          [
+            0.9700214862823486,
+            0.8268772959709167,
+            0.9431236982345581
+          ]
+        ]
+      }
+    }
+  }
+}
