@@ -786,14 +786,10 @@ void SceneGenerator::commit()
     if (auto it = m_anariObjects.find(ANARI_VOLUME);
         it != m_anariObjects.end() && !it->second.empty()) {
       volumes = it->second;
-    } else {
-      createAnariObject(ANARI_VOLUME, "transferFunction1D");
-      volumes.push_back(m_currentObject);
     }
 
     auto fieldIt = m_anariObjects.find(ANARI_SPATIAL_FIELD);
-    if (!volumes.empty()
-        && (fieldIt == m_anariObjects.end() || fieldIt->second.empty())) {
+    if (fieldIt == m_anariObjects.end() || fieldIt->second.empty()) {
       createSpatialFields = true;
     } else {
       spatialFields = fieldIt->second;
