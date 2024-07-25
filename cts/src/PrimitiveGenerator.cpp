@@ -231,7 +231,7 @@ PrimitiveGenerator::generateTriangulatedQuadsIndexed(size_t primitiveCount)
 
   // create indices (set of 3 per triangle, 6 per quad)
   for (size_t k = 0; k < primitiveCount; ++k) {
-    const size_t index = k * 4;
+    const uint32_t index = static_cast<uint32_t>(k) * 4;
     const size_t indicesIndex = k * 2;
     indices[indicesIndex] =
         anari::math::vec<uint32_t, 3>(index, index + 1, index + 2);

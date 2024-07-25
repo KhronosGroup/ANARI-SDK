@@ -441,7 +441,7 @@ void SceneGenerator::commit()
         vertices = generator.generateTriangles(primitiveCount);
 
         if (primitiveMode == "indexed") {
-          for (size_t i = 0; i < vertices.size(); i += 3) {
+          for (uint32_t i = 0; i < vertices.size(); i += 3) {
             indices.push_back(anari::math::vec<uint32_t, 3>(i, i + 1, i + 2));
           }
         }
@@ -484,7 +484,7 @@ void SceneGenerator::commit()
         vertices = generator.generateQuads(primitiveCount);
 
         if (primitiveMode == "indexed") {
-          for (size_t i = 0; i < vertices.size(); i += 4) {
+          for (uint32_t i = 0; i < vertices.size(); i += 4) {
             indices.push_back(
                 anari::math::vec<uint32_t, 4>(i, i + 1, i + 2, i + 3));
           }
@@ -896,7 +896,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
 
   // setup frame
   auto frame = anari::newObject<anari::Frame>(m_device);
-  anari::setParameter(m_device, frame, "size", anari::math::vec<uint32_t, 2>(image_height, image_width));
+  anari::setParameter(m_device, frame, "size", anari::math::vec<uint32_t, 2>(static_cast<uint32_t>(image_height), static_cast<uint32_t>(image_width)));
   if (color_type != ANARI_UNKNOWN) {
     anari::setParameter(m_device, frame, channelName.c_str(), color_type);
   }
