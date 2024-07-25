@@ -10,6 +10,7 @@ project_add_library(
   API.cpp
   DeviceImpl.cpp
   LibraryImpl.cpp
+  test_c_header_compilation.c
 )
 
 if (NOT BUILD_SHARED_LIBS)

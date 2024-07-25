@@ -197,7 +197,7 @@ void LibraryImpl::unloadModule(const char * /*name*/)
 
 const char **LibraryImpl::getDeviceSubtypes()
 {
-  static const char *subtypes[] = {"default"};
+  static const char *subtypes[] = {"default", nullptr};
   return subtypes;
 }
 

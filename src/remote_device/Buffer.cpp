@@ -26,6 +26,20 @@ bool Buffer::read(std::string &val)
   }
 }
 
+// write overload for object descriptor
+bool Buffer::write(const ObjectDesc &val)
+{
+  return write(val.device) && write(val.object) && write(val.type)
+      && write(val.subtype);
+}
+
+// read overload for object descriptor
+bool Buffer::read(ObjectDesc &val)
+{
+  return read(val.device) && read(val.object) && read(val.type)
+      && read(val.subtype);
+}
+
 // write overload for std::string
 bool Buffer::write(const std::string &val)
 {
