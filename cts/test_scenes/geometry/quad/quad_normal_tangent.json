@@ -21,7 +21,7 @@
     }
   },
   "simplified_permutations": true,
-  "permutations": {
+  "variants": {
     "/anari_objects/geometry/0/vertex.normal": [
       {
         "Array1D": [

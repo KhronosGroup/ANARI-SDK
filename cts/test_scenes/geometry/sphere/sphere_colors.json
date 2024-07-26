@@ -1,5 +1,5 @@
 {
-  "description": "Tests sphere geometry vertex and primitive color. Vertex and primitive color should be the same for spheres.",
+  "description": "Tests sphere geometry vertex and primitive color. Results should be the same for all permutations expect for indexed primitive colors.",
   "sceneParameters": {
     "geometrySubtype": "sphere",
     "primitiveCount": 4,
@@ -17,6 +17,10 @@
     "color": [
       "primitive.color",
       "vertex.color"
+    ],
+    "primitiveMode": [
+      "soup",
+      "indexed"
     ]
   },
   "requiredFeatures": [

@@ -6,7 +6,7 @@
     "frame_depth_type": "FLOAT32",
     "seed": 12345
   },
-  "permutations": {
+  "variants": {
     "primitiveMode": [
       "soup",
       "indexed"

@@ -7,7 +7,7 @@
     "frame_depth_type": "FLOAT32",
     "shape": "triangle"
   },
-  "permutations": {
+  "variants": {
     "primitiveMode": [
       "soup",
       "indexed"
