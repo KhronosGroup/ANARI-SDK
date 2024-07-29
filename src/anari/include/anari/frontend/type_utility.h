@@ -2847,9 +2847,10 @@ R anariTypeInvoke(ANARIDataType type, Args&&... args) {
         default: return F<ANARI_UNKNOWN>()(std::forward<Args>(args)...);
     }
 }
+} // namespace anari
 #endif
 
-inline size_t sizeOf(ANARIDataType type) {
+inline size_t anariSizeOf(ANARIDataType type) {
     switch (type) {
         case ANARI_UNKNOWN: return sizeof(int)*1;
         case ANARI_DATA_TYPE: return sizeof(int32_t)*1;
@@ -2989,7 +2990,7 @@ inline size_t sizeOf(ANARIDataType type) {
     }
 }
 
-inline size_t componentsOf(ANARIDataType type) {
+inline size_t anariComponentsOf(ANARIDataType type) {
     switch (type) {
         case ANARI_UNKNOWN: return 1;
         case ANARI_DATA_TYPE: return 1;
@@ -3129,7 +3130,7 @@ inline size_t componentsOf(ANARIDataType type) {
     }
 }
 
-inline const char* toString(ANARIDataType type) {
+inline const char* anariToString(ANARIDataType type) {
     switch (type) {
         case ANARI_UNKNOWN: return "ANARI_UNKNOWN";
         case ANARI_DATA_TYPE: return "ANARI_DATA_TYPE";
@@ -3269,7 +3270,7 @@ inline const char* toString(ANARIDataType type) {
     }
 }
 
-inline const char* typenameOf(ANARIDataType type) {
+inline const char* anariTypenameOf(ANARIDataType type) {
     switch (type) {
         case ANARI_UNKNOWN: return "int";
         case ANARI_DATA_TYPE: return "int32_t";
@@ -3409,7 +3410,7 @@ inline const char* typenameOf(ANARIDataType type) {
     }
 }
 
-inline const char* varnameOf(ANARIDataType type) {
+inline const char* anariVarnameOf(ANARIDataType type) {
     switch (type) {
         case ANARI_UNKNOWN: return "varunknown";
         case ANARI_DATA_TYPE: return "vardata_type";
@@ -3549,7 +3550,7 @@ inline const char* varnameOf(ANARIDataType type) {
     }
 }
 
-inline int isNormalized(ANARIDataType type) {
+inline int anariIsNormalized(ANARIDataType type) {
     switch (type) {
         case ANARI_UNKNOWN: return 0;
         case ANARI_DATA_TYPE: return 0;
@@ -3688,4 +3689,40 @@ inline int isNormalized(ANARIDataType type) {
         default: return 0;
     }
 }
+
+
+#ifdef __cplusplus
+namespace anari {
+
+inline size_t sizeOf(ANARIDataType type)
+{
+    return anariSizeOf(type);
 }
+
+inline size_t componentsOf(ANARIDataType type)
+{
+    return anariComponentsOf(type);
+}
+
+inline const char* toString(ANARIDataType type)
+{
+    return anariToString(type);
+}
+
+inline const char* typenameOf(ANARIDataType type)
+{
+    return anariTypenameOf(type);
+}
+
+inline const char* varnameOf(ANARIDataType type)
+{
+    return anariVarnameOf(type);
+}
+
+inline int isNormalized(ANARIDataType type)
+{
+    return anariIsNormalized(type);
+}
+
+} // namespace anari
+#endif

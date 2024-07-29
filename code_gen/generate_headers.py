@@ -366,12 +366,14 @@ R anariTypeInvoke(ANARIDataType type, Args&&... args) {
         f.write('    }\n')
         f.write('}\n')
 
+        f.write('} // namespace anari\n')
+
         f.write('#endif\n')
 
 
 
         f.write("""
-inline size_t sizeOf(ANARIDataType type) {
+inline size_t anariSizeOf(ANARIDataType type) {
     switch (type) {
 """)
         for enum in enums['values']:
@@ -383,7 +385,7 @@ inline size_t sizeOf(ANARIDataType type) {
 
 
         f.write("""
-inline size_t componentsOf(ANARIDataType type) {
+inline size_t anariComponentsOf(ANARIDataType type) {
     switch (type) {
 """)
         for enum in enums['values']:
@@ -395,7 +397,7 @@ inline size_t componentsOf(ANARIDataType type) {
 
 
         f.write("""
-inline const char* toString(ANARIDataType type) {
+inline const char* anariToString(ANARIDataType type) {
     switch (type) {
 """)
         for enum in enums['values']:
@@ -406,7 +408,7 @@ inline const char* toString(ANARIDataType type) {
 
 
         f.write("""
-inline const char* typenameOf(ANARIDataType type) {
+inline const char* anariTypenameOf(ANARIDataType type) {
     switch (type) {
 """)
         for enum in enums['values']:
@@ -417,7 +419,7 @@ inline const char* typenameOf(ANARIDataType type) {
 
 
         f.write("""
-inline const char* varnameOf(ANARIDataType type) {
+inline const char* anariVarnameOf(ANARIDataType type) {
     switch (type) {
 """)
         for enum in enums['values']:
@@ -428,16 +430,52 @@ inline const char* varnameOf(ANARIDataType type) {
 
 
         f.write("""
-inline int isNormalized(ANARIDataType type) {
+inline int anariIsNormalized(ANARIDataType type) {
     switch (type) {
 """)
         for enum in enums['values']:
             f.write('        case '+enum['name']+': return '+str(int(enum['normalized']))+';\n')
         f.write('        default: return 0;\n')
         f.write('    }\n')
-        f.write('}\n')
+        f.write('}\n\n')
 
-        f.write('}\n')
+        f.write("""
+#ifdef __cplusplus
+namespace anari {
+
+inline size_t sizeOf(ANARIDataType type)
+{
+    return anariSizeOf(type);
+}
+
+inline size_t componentsOf(ANARIDataType type)
+{
+    return anariComponentsOf(type);
+}
+
+inline const char* toString(ANARIDataType type)
+{
+    return anariToString(type);
+}
+
+inline const char* typenameOf(ANARIDataType type)
+{
+    return anariTypenameOf(type);
+}
+
+inline const char* varnameOf(ANARIDataType type)
+{
+    return anariVarnameOf(type);
+}
+
+inline int isNormalized(ANARIDataType type)
+{
+    return anariIsNormalized(type);
+}
+
+} // namespace anari
+#endif
+""")
 
 output = sys.argv[1]
 trees = [json.load(open(x)) for x in sys.argv[2:]]
