@@ -65,6 +65,8 @@ class SceneGenerator : public anari::scenes::TestScene
     }
   }
 
+  void setGenericTexture2D(const std::string &name, const std::string &textureType);
+
   void unsetGenericParameter(const std::string& name) {
     if (m_device != nullptr && m_currentObject != nullptr) {
       anari::unsetParameter(m_device, m_currentObject, name.c_str());

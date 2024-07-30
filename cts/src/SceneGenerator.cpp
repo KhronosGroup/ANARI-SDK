@@ -142,6 +142,19 @@ int SceneGenerator::anariTypeFromString(const std::string& type)
   return ANARI_UNKNOWN;
 }
 
+void SceneGenerator::setGenericTexture2D(
+    const std::string &name, const std::string &textureType)
+{
+    size_t resolution = 32;
+    auto pixels = TextureGenerator::generateCheckerBoard(resolution);
+    if (m_device && m_currentObject) {
+      anari::setAndReleaseParameter(m_device,
+          m_currentObject,
+          name.c_str(),
+          anari::newArray2D(m_device, pixels.data(), resolution, resolution));
+    }
+}
+
 void SceneGenerator::setReferenceParameter(int objectType, size_t objectIndex,
     const std::string &name, int refType, size_t refIndex)
 {
