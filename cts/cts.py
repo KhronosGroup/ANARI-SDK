@@ -693,7 +693,7 @@ def query_scene_info(parsed_json):
     if "requiredFeatures" in parsed_json:
         info["required_features"] = parsed_json["requiredFeatures"]
     else:
-        info["required_features"] = "No required features"
+        info["required_features"] = ["No required features"]
     return info
 
 # print test scene information to console
