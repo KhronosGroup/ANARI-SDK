@@ -17,6 +17,22 @@ import glob
 import math
 import os
 
+class terminalColors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    def warning(text):
+        return f'{terminalColors.WARNING}{text}{terminalColors.ENDC}'
+    def error(text):
+        return f'{terminalColors.FAIL}{text}{terminalColors.ENDC}'
+    def success(text):
+        return f'{terminalColors.OKGREEN}{text}{terminalColors.ENDC}'
+    def info(text):
+        return f'{terminalColors.OKBLUE}{text}{terminalColors.ENDC}'
+
 logger_mutex = threading.Lock()
 
 reference_prefix = "ref_"
@@ -407,7 +423,7 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                 print(e)
                 continue
 
-        if "permutations" in parsed_json or "variants" in parsed_json:
+        if "permutations" in parsed_json or ("variants" in parsed_json and not only_permutations):
             # gather permutations/variants from test scene json
             variant_keys = []
             keys = []
@@ -534,6 +550,11 @@ def compare_images(test_scenes = "test_scenes", candidates_path = "test_scenes",
 # compare candidate bounding box against reference bounding box using a tolerance value
 # return error message to list in a report if unsuccessful
 def check_bounding_boxes(ref, candidate, tolerance):
+
+    if len(ref) != 2 or len(ref[0]) != 3 or len(ref[1]) != 3:
+        return terminalColors.warning("Reference bounding box has wrong format\n")
+    if (len(candidate) != 2 or len(candidate[0]) != 3 or len(candidate[1]) != 3):
+        return terminalColors.error("Candidate bounding box has wrong format\n")
     axis = 'X'
     output = ""
     for i in range(3):
@@ -557,49 +578,47 @@ def check_object_properties_helper(parsed_json, sceneGenerator, anari_renderer, 
         bounds = sceneGenerator.getBounds()
     except Exception as e:
         print(e)
-        return "Error while retrieving bounds", False
+        return terminalColors.error("Error while retrieving bounds"), False
     if "metaData" in parsed_json:
         metaData = parsed_json["metaData"]
         if permutationString != "" and permutationString in metaData:
             metaData = metaData[permutationString]
-        if variantString != "":
-            permutationString += f'_{variantString}'
         if "bounds" not in metaData:
-            message = f'Bounds missing in reference'
+            message = terminalColors.warning(f'Bounds missing in reference')
             output += message
             return output, False
         ref_bounds = metaData["bounds"]
         if "world" not in ref_bounds:
-            message = f'Bounds missing in reference'
+            message = terminalColors.warning(f'Bounds missing in reference')
             output += message
             return output, False
         check_output = check_bounding_boxes(ref_bounds["world"], bounds[0][0], tolerance)
         if check_output != "":
-            message = f'Worlds bounds do not match!\n' + check_output
+            message = terminalColors.error(f'Worlds bounds do not match!\n' + check_output)
             output += message
         if "instances" in ref_bounds:
             for i in range(len(ref_bounds["instances"])):
                 check_output = check_bounding_boxes(ref_bounds["instances"][i], bounds[1][i], tolerance)
                 if check_output != "":
-                    message = f'Instance {i} bounds do not match!\n' + check_output
+                    message = terminalColors.error(f'Instance {i} bounds do not match!\n' + check_output)
                     output += message
         if "groups" in ref_bounds:
             for i in range(len(ref_bounds["groups"])):
                 check_output = check_bounding_boxes(ref_bounds["groups"][i], bounds[2][i], tolerance)
                 if check_output != "":
-                    message = f'Group {i} bounds do not match!\n'+ check_output
+                    message = terminalColors.error(f'Group {i} bounds do not match!\n'+ check_output)
                     output += message
     else:
-        message = f'MetaData missing in reference'
+        message = terminalColors.warning(f'MetaData missing in reference')
         output += message
     success = False
     if output == "":
         success = True
-        output = f'All bounds correct'
+        output = terminalColors.success(f'All bounds correct')
     return output, success
 
 def check_object_properties(anari_library, anari_device = None, test_scenes = "test_scenes"):
-    return apply_to_scenes(check_object_properties_helper, anari_library, anari_device, None, test_scenes)
+    return apply_to_scenes(check_object_properties_helper, anari_library, anari_device, "default", test_scenes)
 
 def query_metadata(anari_library, type = None, subtype = None, skipParameters = False, info = False):
     try:
@@ -836,7 +855,10 @@ if __name__ == "__main__":
     elif args.command == "check_object_properties":
         result = check_object_properties(args.library, args.device, args.test_scenes)
         for key, value in result.items():
-            print(f'{key}: {value[0]}')
+            if (isinstance(value, str)):
+                continue
+            else:
+                print(f'{key}: {value[0]}')
     elif args.command == "create_report":
         create_report(args.library, args.device, args.renderer, args.test_scenes, args.output, verboseLevel, not args.ignore_features, args.comparison_methods, args.thresholds)
     elif args.command == "query_scenes_info":
