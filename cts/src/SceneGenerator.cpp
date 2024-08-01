@@ -908,7 +908,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
 
   // setup frame
   auto frame = anari::newObject<anari::Frame>(m_device);
-  anari::setParameter(m_device, frame, "size", anari::math::vec<uint32_t, 2>(image_height, image_width));
+  anari::setParameter(m_device, frame, "size", anari::math::vec<uint32_t, 2>(static_cast<uint32_t>(image_height), static_cast<uint32_t>(image_width)));
   if (color_type != ANARI_UNKNOWN) {
     anari::setParameter(m_device, frame, channelName.c_str(), color_type);
   }

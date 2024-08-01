@@ -104,7 +104,7 @@ class SceneGenerator : public anari::scenes::TestScene
 
   anari::World m_world{nullptr};
   std::unordered_map<int, std::vector<anari::Object>> m_anariObjects;
-  anari::Object m_currentObject;
+  anari::Object m_currentObject = nullptr;
 };
 
 } // namespace cts

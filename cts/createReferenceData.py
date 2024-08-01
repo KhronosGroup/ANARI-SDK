@@ -15,9 +15,12 @@ def writeMetaData(sceneGenerator, scene_location, permutationString):
         metaData["bounds"]["instances"] = bounds[1]
     if len(bounds[2]) > 0:
         metaData["bounds"]["groups"] = bounds[2]
-    if "metaData" not in original_json:
-        original_json["metaData"] = {}
-    original_json["metaData"][permutationString] = metaData
+    if permutationString == "":
+        original_json["metaData"] = metaData
+    else:
+        if "metaData" not in original_json:
+            original_json["metaData"] = {}
+        original_json["metaData"][permutationString] = metaData
     with open(scene_location, "w") as scene_file:
         json.dump(original_json, scene_file, indent=2)
 
@@ -61,7 +64,7 @@ if __name__ == "__main__":
     parser.add_argument("-l", "--library", default="helide")
     parser.add_argument("-d", "--device", default=None)
     parser.add_argument("-r", "--renderer", default="default")
-    parser.add_argument("--test_scenes", default="test_scenes")
+    parser.add_argument("-t", "--test_scenes", default="test_scenes")
     parser.add_argument("--ignore_features", action="store_true")
 
     args = parser.parse_args()
