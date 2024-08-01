@@ -2,7 +2,7 @@
 import cts
 import json
 import argparse
-
+import math
 
 def writeMetaData(sceneGenerator, scene_location, permutationString):
     original_json = {}
@@ -10,11 +10,13 @@ def writeMetaData(sceneGenerator, scene_location, permutationString):
         original_json = json.load(scene_file)
     metaData = {"bounds": {}}
     bounds = sceneGenerator.getBounds()
-    metaData["bounds"]["world"] = bounds[0][0]
+
+    isInf = math.isinf(bounds[0][0][0][0])
+    metaData["bounds"]["world"] = bounds[0][0] if not isInf else "Infinity"
     if len(bounds[1]) > 0:
-        metaData["bounds"]["instances"] = bounds[1]
+        metaData["bounds"]["instances"] = bounds[1] if not isInf else "Infinity"
     if len(bounds[2]) > 0:
-        metaData["bounds"]["groups"] = bounds[2]
+        metaData["bounds"]["groups"] = bounds[2] if not isInf else "Infinity"
     if permutationString == "":
         original_json["metaData"] = metaData
     else:

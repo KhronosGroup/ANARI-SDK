@@ -552,7 +552,11 @@ def compare_images(test_scenes = "test_scenes", candidates_path = "test_scenes",
 # compare candidate bounding box against reference bounding box using a tolerance value
 # return error message to list in a report if unsuccessful
 def check_bounding_boxes(ref, candidate, tolerance):
-
+    if ref == "Infinity":
+        if math.isinf(candidate[0][0]):
+            return ""
+        else:
+            return "Reference bounding box is infinite, candidate is not\n"
     if len(ref) != 2 or len(ref[0]) != 3 or len(ref[1]) != 3:
         return terminalColors.warning("Reference bounding box has wrong format\n")
     if (len(candidate) != 2 or len(candidate[0]) != 3 or len(candidate[1]) != 3):
