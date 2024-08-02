@@ -20,7 +20,7 @@ void Image1D::commit()
   m_inAttribute =
       attributeFromString(getParamString("inAttribute", "attribute0"));
   m_linearFilter = getParamString("filter", "linear") != "nearest";
-  m_wrapMode = wrapModeFromString(getParamString("wrapMode1", "clampToEdge"));
+  m_wrapMode = wrapModeFromString(getParamString("wrapMode", "clampToEdge"));
   m_inTransform = getParam<mat4>("inTransform", mat4(linalg::identity));
   m_inOffset = getParam<float4>("inOffset", float4(0.f, 0.f, 0.f, 0.f));
   m_outTransform = getParam<mat4>("outTransform", mat4(linalg::identity));
