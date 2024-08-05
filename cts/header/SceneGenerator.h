@@ -21,6 +21,10 @@ class SceneGenerator : public anari::scenes::TestScene
   void resetAllParameters();
   void resetSceneObjects();
 
+  void loadGLTF(const std::string &jsonText,
+      std::vector<std::vector<char>> &sortedBuffers,
+      std::vector<std::vector<char>> &sortedImages);
+
   void createAnariObject(
       int type, const std::string &subtype = "", const std::string& ctsType = "");
   template <typename T>

@@ -40,6 +40,25 @@ class SceneGeneratorWrapper
       const std::optional<pybind11::function> &callback);
   ~SceneGeneratorWrapper();
 
+  void loadGLTF(const std::string &jsonText,
+      std::vector<std::string> &sortedBuffers,
+      std::vector<std::string> &sortedImages)
+  {
+    if (m_sceneGenerator) {
+      std::vector<std::vector<char>> convertedBuffers;
+      std::vector<std::vector<char>> convertedImages;
+      for (size_t i = 0; i < sortedBuffers.size(); ++i) {
+        convertedBuffers.emplace_back(sortedBuffers[i].begin(),
+            sortedBuffers[i].end());
+      }
+      for (size_t i = 0; i < sortedImages.size(); ++i) {
+        convertedImages.emplace_back(
+            sortedImages[i].begin(), sortedImages[i].end());
+      }
+      m_sceneGenerator->loadGLTF(jsonText, convertedBuffers, convertedImages);
+    }
+  }
+
   void commit()
   {
     if (m_sceneGenerator) {

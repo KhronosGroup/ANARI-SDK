@@ -7,6 +7,9 @@ using json = nlohmann::json;
 
 #include "webp/decode.h"
 
+#include <fstream>
+#include "stb_image.h"
+
 static anari::DataType accessor_type(int c)
 {
   switch (c - 5120) {
@@ -391,12 +394,16 @@ struct gltf_data
   }
 
   template <typename T, typename F>
-  void *decode_image_buffer(const T &img, F f)
+  void *decode_image_buffer(const T &img, std::vector<char> *imageData, F f)
   {
     std::vector<char> buffer;
     size_t length = 0;
     const char *ptr = nullptr;
     if (img.contains("uri")) {
+      if (imageData) {
+        return f(imageData->data(), imageData->size());
+      }
+      
       std::string uri = img["uri"];
 
       if (uri.substr(0, 5) == "data:") {
@@ -462,32 +469,44 @@ struct gltf_data
   }
 
   template <typename T>
-  void *decode_image(const T &img, int *width, int *height, int *n)
+  void *decode_image(const T &img, std::vector<char> *imageData, int *width, int *height, int *n)
   {
     if (mimeType(img) == "image/webp" || extension(img) == ".webp") {
-      return decode_image_buffer(img, [&](const char *data, size_t length) {
+      return decode_image_buffer(img, imageData, [&](const char *data, size_t length) {
         *n = 4;
         return WebPDecodeRGBA((const uint8_t *)data, length, width, height);
       });
     } else {
-      return decode_image_buffer(img, [&](const char *data, size_t length) {
+      return decode_image_buffer(
+          img, imageData, [&](const char *data, size_t length) {
         return stbi_load_from_memory(
             (const stbi_uc *)data, length, width, height, n, 0);
       });
     }
   }
 
-  void load_assets()
+  void load_assets(std::vector<std::vector<char>>& byteImages)
   {
-    for (const auto &buf : gltf["buffers"]) {
-      buffers.emplace_back(decode_buffer(buf));
+    if (buffers.empty()) {    
+        for (const auto &buf : gltf["buffers"]) {
+          buffers.emplace_back(decode_buffer(buf));
+        }
     }
 
+    size_t index = 0;
     for (const auto &img : gltf["images"]) {
       int width, height, n;
       const void *data = nullptr;
 
-      data = decode_image(img, &width, &height, &n);
+      std::vector<char> *imageData = nullptr;
+      if (img.contains("uri")) {
+        if (index < byteImages.size()) {
+          imageData = &byteImages[index];
+          }
+          ++index;      
+      }
+
+      data = decode_image(img, imageData, &width, &height, &n);
 
       if (data) {
         int texelType = ANARI_UFIXED8_RGBA_SRGB;
@@ -831,6 +850,18 @@ struct gltf_data
     }
   }
 
+  void parse_glTF(const std::string &jsonText,
+      std::vector<std::vector<char>> &sortedBuffers,
+      std::vector<std::vector<char>> &sortedImages)
+  {
+    gltf = json::parse(jsonText);
+    buffers = std::move(sortedBuffers);
+    load_assets(sortedImages);
+    load_materials();
+    load_surfaces();
+    load_nodes();
+  }
+
   void open_file(const std::string &filename)
   {
     auto pos = filename.find_last_of('/');
@@ -931,11 +962,12 @@ struct gltf_data
         std::cout << ext << std::endl;
       }
     }
-    load_assets();
+    std::vector<std::vector<char>> empty;
+    load_assets(empty);
     load_materials();
     load_surfaces();
     load_nodes();
-  }
+  } 
   gltf_data(ANARIDevice device) : device(device)
   {
     anariRetain(device, device);

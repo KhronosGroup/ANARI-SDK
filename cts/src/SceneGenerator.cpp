@@ -7,6 +7,7 @@
 #include "TextureGenerator.h"
 #include "anariWrapper.h"
 #include "anari/frontend/type_utility.h"
+#include "anari_test_scenes/scenes/file/gltf2anari.h"
 
 #include <stdexcept>
 
@@ -78,6 +79,19 @@ std::vector<anari::scenes::ParameterInfo> SceneGenerator::parameters()
 
       //
   };
+}
+
+void SceneGenerator::loadGLTF(const std::string &jsonText,
+    std::vector<std::vector<char>> &sortedBuffers,
+    std::vector<std::vector<char>> &sortedImages)
+{
+  gltf_data gltf(m_device);
+  gltf.parse_glTF(jsonText, sortedBuffers, sortedImages);
+  anari::setParameterArray1D(m_device,
+      m_world,
+      "instance",
+      gltf.instances[0].data(),
+      gltf.instances[0].size());
 }
 
 int SceneGenerator::anariTypeFromString(const std::string& type)

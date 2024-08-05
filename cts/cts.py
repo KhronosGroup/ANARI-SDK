@@ -16,6 +16,7 @@ import ctsUtility
 import glob
 import math
 import os
+import ctsGLTF
 
 class terminalColors:
     HEADER = '\033[95m'
@@ -414,6 +415,9 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                                     else:
                                         sceneGenerator.setGenericParameter(paramName, paramValue)
                                 sceneGenerator.releaseAnariObject()
+                    elif key == "gltf":
+                        gltf = ctsGLTF.loadGLB(value) if value.endswith(".glb") else ctsGLTF.loadGLTF(value)
+                        sceneGenerator.loadGLTF(json.dumps(gltf.json), gltf.buffers, gltf.images)
                     else:
                         sceneGenerator.setParameter(key, value)
                 
