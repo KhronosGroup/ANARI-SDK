@@ -1,4 +1,5 @@
 {
+  "description": "Tests ways to add color to pbr materials. Results show color ramps and textures.",
   "sceneParameters": {
     "color": "vertex.attribute0",
     "anari_objects": {

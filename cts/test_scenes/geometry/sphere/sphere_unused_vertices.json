@@ -1,10 +1,9 @@
 {
-  "description": "Tests indexed vertices of quad geometry with one unused vertex.",
+  "description": "Tests indexed vertices of sphere geometry with one unused vertex.",
   "sceneParameters": {
-    "geometrySubtype": "quad",
+    "geometrySubtype": "sphere",
     "primitiveCount": 4,
     "seed": 54321,
-    "shape": "quad",
     "primitiveMode": "indexed",
     "frame_depth_type": "FLOAT32",
     "unusedVertices": true
@@ -16,14 +15,14 @@
     "bounds": {
       "world": [
         [
-          -0.05071701109409332,
-          0.21228575706481934,
-          0.24453283846378326
+          -0.08789964765310287,
+          -0.28438711166381836,
+          0.05467072129249573
         ],
         [
-          0.679627537727356,
-          0.688468873500824,
-          0.8803867101669312
+          1.1669179201126099,
+          1.1838836669921875,
+          0.9511533975601196
         ]
       ]
     }

@@ -1,10 +1,9 @@
 {
-  "description": "Tests indexed vertices of quad geometry with one unused vertex.",
+  "description": "Tests indexed vertices of cone geometry with two unused vertex.",
   "sceneParameters": {
-    "geometrySubtype": "quad",
+    "geometrySubtype": "cone",
     "primitiveCount": 4,
     "seed": 54321,
-    "shape": "quad",
     "primitiveMode": "indexed",
     "frame_depth_type": "FLOAT32",
     "unusedVertices": true
@@ -16,14 +15,14 @@
     "bounds": {
       "world": [
         [
-          -0.05071701109409332,
-          0.21228575706481934,
-          0.24453283846378326
+          0.383639395236969,
+          -0.29854094982147217,
+          0.2262992262840271
         ],
         [
-          0.679627537727356,
-          0.688468873500824,
-          0.8803867101669312
+          1.2373735904693604,
+          0.9873693585395813,
+          1.1178778409957886
         ]
       ]
     }

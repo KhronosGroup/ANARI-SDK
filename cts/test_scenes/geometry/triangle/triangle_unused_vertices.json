@@ -1,10 +1,10 @@
 {
-  "description": "Tests indexed vertices of quad geometry with one unused vertex.",
+  "description": "Tests indexed vertices of triangle geometry with three unused vertex.",
   "sceneParameters": {
-    "geometrySubtype": "quad",
+    "geometrySubtype": "triangle",
     "primitiveCount": 4,
     "seed": 54321,
-    "shape": "quad",
+    "shape": "triangle",
     "primitiveMode": "indexed",
     "frame_depth_type": "FLOAT32",
     "unusedVertices": true
@@ -16,12 +16,12 @@
     "bounds": {
       "world": [
         [
-          -0.05071701109409332,
+          0.06454283744096756,
           0.21228575706481934,
           0.24453283846378326
         ],
         [
-          0.679627537727356,
+          0.433339923620224,
           0.688468873500824,
           0.8803867101669312
         ]

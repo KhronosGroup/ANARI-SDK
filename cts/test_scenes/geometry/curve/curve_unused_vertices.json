@@ -1,10 +1,9 @@
 {
-  "description": "Tests indexed vertices of quad geometry with one unused vertex.",
+  "description": "Tests indexed vertices of curve geometry with two unused vertex.",
   "sceneParameters": {
-    "geometrySubtype": "quad",
+    "geometrySubtype": "curve",
     "primitiveCount": 4,
     "seed": 54321,
-    "shape": "quad",
     "primitiveMode": "indexed",
     "frame_depth_type": "FLOAT32",
     "unusedVertices": true
@@ -16,14 +15,14 @@
     "bounds": {
       "world": [
         [
-          -0.05071701109409332,
-          0.21228575706481934,
-          0.24453283846378326
+          0.6209102272987366,
+          0.34210464358329773,
+          0.4937992990016937
         ],
         [
-          0.679627537727356,
-          0.688468873500824,
-          0.8803867101669312
+          0.8536397218704224,
+          0.659206748008728,
+          0.7897152304649353
         ]
       ]
     }

@@ -1,4 +1,5 @@
 {
+  "description": "Tests soup and indexed vertices of sphere geometry. Output should be the same.",
   "sceneParameters": {
     "geometrySubtype": "sphere",
     "frame_depth_type": "FLOAT32",

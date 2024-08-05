@@ -1,4 +1,5 @@
 {
+  "description": "Tests parameter permutations of a transform sampler. Results show different color fades.",
   "sceneParameters": {
     "color": "vertex.attribute0",
     "anari_objects": {

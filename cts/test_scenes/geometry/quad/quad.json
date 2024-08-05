@@ -1,4 +1,5 @@
 {
+  "description": "Tests soup and indexed vertices of quad geometry. Output should be the same.",
   "sceneParameters": {
     "geometrySubtype": "quad",
     "primitiveCount": 16,
@@ -6,7 +7,7 @@
     "frame_depth_type": "FLOAT32",
     "shape": "quad"
   },
-  "permutations": {
+  "variants": {
     "primitiveMode": [
       "soup",
       "indexed"
@@ -16,37 +17,19 @@
     "ANARI_KHR_GEOMETRY_QUAD"
   ],
   "metaData": {
-    "soup": {
-      "bounds": {
-        "world": [
-          [
-            0.07558941841125488,
-            -0.12582042813301086,
-            0.05612877756357193
-          ],
-          [
-            0.9340641498565674,
-            1.0793226957321167,
-            1.0406383275985718
-          ]
+    "bounds": {
+      "world": [
+        [
+          0.07558941841125488,
+          -0.12582042813301086,
+          0.05612877756357193
+        ],
+        [
+          0.9340641498565674,
+          1.0793226957321167,
+          1.0406383275985718
         ]
-      }
-    },
-    "indexed": {
-      "bounds": {
-        "world": [
-          [
-            0.07558941841125488,
-            -0.12582042813301086,
-            0.05612877756357193
-          ],
-          [
-            0.9340641498565674,
-            1.0793226957321167,
-            1.0406383275985718
-          ]
-        ]
-      }
+      ]
     }
   }
 }

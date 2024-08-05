@@ -1,8 +1,9 @@
 {
+  "description": "Tests object ID channel with no user defined IDs, falling back to group indices. The triangles should have different colors.",
   "sceneParameters": {
     "primitiveCount": 1,
     "seed": 12345,
-    "frame_primitiveId_type": "UINT32",
+    "frame_objectId_type": "UINT32",
     "anari_objects": {
       "instance": [
         {

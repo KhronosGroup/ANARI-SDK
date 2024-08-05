@@ -1,4 +1,5 @@
 {
+  "description": "Generic test for orthographic camera parameters.",
   "sceneParameters": {
     "geometrySubtype": "triangle",
     "primitiveCount": 16,
