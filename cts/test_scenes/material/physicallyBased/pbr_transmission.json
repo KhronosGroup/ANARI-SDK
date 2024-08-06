@@ -26,7 +26,7 @@
     ]
   },
   "requiredFeatures": [
-    "KHR_MATERIAL_PHYSICALLY_BASED"
+    "ANARI_KHR_MATERIAL_PHYSICALLY_BASED"
   ],
   "metaData": {
     "None": {

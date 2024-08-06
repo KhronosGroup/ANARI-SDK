@@ -97,7 +97,7 @@
   },
   "requiredFeatures": [
     "ANARI_KHR_SPATIAL_FIELD_STRUCTURED_REGULAR",
-    "KHR_VOLUME_TRANSFER_FUNCTION1D"
+    "ANARI_KHR_VOLUME_TRANSFER_FUNCTION1D"
   ],
   "metaData": {
     "None_[-1.0,-1.0,-1.0]_None_None_Array1D[[0.25,0.9,0.2],[0.9,0.1,0.0],[0.0,0.0,0.7]]_Array1D[0.25,0.7,1.0]": {
