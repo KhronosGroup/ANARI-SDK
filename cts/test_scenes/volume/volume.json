@@ -93,6 +93,10 @@
         ]
       },
       1.0
+    ],
+    "/anari_objects/volume/0/unitDistance": [
+      null,
+      0.1
     ]
   },
   "requiredFeatures": [
