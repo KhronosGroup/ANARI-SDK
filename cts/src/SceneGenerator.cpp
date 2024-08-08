@@ -812,7 +812,7 @@ void SceneGenerator::commit()
       if (createSpatialFields) {
         createAnariObject(ANARI_SPATIAL_FIELD, "structuredRegular");
         auto spatialField = m_currentObject;
-        anari::setParameter(m_device, volume, "field", spatialField);
+        anari::setParameter(m_device, volume, "value", spatialField);
         spatialFields.push_back(spatialField);
         anari::commitParameters(d, volume);
       }

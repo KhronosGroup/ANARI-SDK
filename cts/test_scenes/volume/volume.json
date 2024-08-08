@@ -12,7 +12,7 @@
       "volume": [
         {
           "subtype": "transferFunction1D",
-          "field": "ref_spatialField_0"
+          "value": "ref_spatialField_0"
         }
       ],
       "spatialField": [
