@@ -14,6 +14,7 @@ import json
 import itertools
 import ctsUtility
 import glob
+import fnmatch
 import math
 import os
 
@@ -230,13 +231,15 @@ def resolve_scenes(test_scenes):
                 print(f'Path does not exist: {str(path)}')
     else:
         # test_scenes is a directory
-        path = Path(Path(__file__).parent / test_scenes)
-        if not path.is_dir():
-            if path.suffix == '.json':
-                return [path]
-            print("No valid category")
-            return []
-        collected_scenes = list(path.rglob("*.json"))
+        if test_scenes != "" and (test_scenes[0] == "/" or test_scenes[0] == "\\"):
+            test_scenes = test_scenes[1:]
+        path = Path(__file__).parent
+        if (Path(path / test_scenes).is_dir()):
+            test_scenes += "/**/*.json"
+        collected_scenes = list(path.glob(test_scenes))
+        collected_scenes = fnmatch.filter(collected_scenes, "*.json")
+        if collected_scenes == []:
+            print("No test scenes found")
     return collected_scenes
 
 # renders a scene to filesystem that has been set up previously using a sceneGenerator
@@ -315,6 +318,8 @@ def passByType(paramName, type, paramValue, sceneGenerator):
         sceneGenerator.setGenericArray1DParameter(paramName, paramValue)
     elif type == "Array2D":
         sceneGenerator.setGenericArray2DParameter(paramName, paramValue)
+    elif type == "Texture2D":
+        sceneGenerator.setGenericTexture2D(paramName, paramValue)
     else:
         sceneGenerator.setGenericParameter(paramName, paramValue)
 
@@ -550,7 +555,11 @@ def compare_images(test_scenes = "test_scenes", candidates_path = "test_scenes",
 # compare candidate bounding box against reference bounding box using a tolerance value
 # return error message to list in a report if unsuccessful
 def check_bounding_boxes(ref, candidate, tolerance):
-
+    if ref == "Infinity":
+        if math.isinf(candidate[0][0]):
+            return ""
+        else:
+            return "Reference bounding box is infinite, candidate is not\n"
     if len(ref) != 2 or len(ref[0]) != 3 or len(ref[1]) != 3:
         return terminalColors.warning("Reference bounding box has wrong format\n")
     if (len(candidate) != 2 or len(candidate[0]) != 3 or len(candidate[1]) != 3):
@@ -712,7 +721,7 @@ def query_scene_info(parsed_json):
     if "requiredFeatures" in parsed_json:
         info["required_features"] = parsed_json["requiredFeatures"]
     else:
-        info["required_features"] = "No required features"
+        info["required_features"] = ["No required features"]
     return info
 
 # print test scene information to console
@@ -779,7 +788,7 @@ if __name__ == "__main__":
 
     sceneParser = argparse.ArgumentParser(add_help=False, parents=[deviceParser])
     sceneParser.add_argument('-r', '--renderer', default="default", help="Renderer used to render the images")
-    sceneParser.add_argument('-t', '--test_scenes', default="test_scenes", help="Folder with test scenes to test. Specify subfolder to test subsets")
+    sceneParser.add_argument('-t', '--test_scenes', default="test_scenes", help="Folder with test scenes to test. Specify subfolder to test subsets. Also accepts glob patterns")
 
     evaluationMethodParser = argparse.ArgumentParser(add_help=False)
     evaluationMethodParser.add_argument('--comparison_methods', default=["ssim"], nargs='+', choices=["ssim", "psnr"], help="Specify all comparison methods to test against")
@@ -809,7 +818,7 @@ if __name__ == "__main__":
 
     # command: check_object_properties
     checkObjectPropertiesParser = subparsers.add_parser('check_object_properties', parents=[deviceParser], description="Check if all properties are similar to the reference properties")
-    checkObjectPropertiesParser.add_argument('-t', '--test_scenes', default="test_scenes", help="Folder with test scenes to test. Specify subfolder to test subsets")
+    checkObjectPropertiesParser.add_argument('-t', '--test_scenes', default="test_scenes", help="Folder with test scenes to test. Specify subfolder to test subsets. Also accepts glob patterns")
 
     # command: create_report
     create_reportParser = subparsers.add_parser('create_report', parents=[sceneParser, evaluationMethodParser, ignoreFeatureParser], description="Runs all tests and creates a pdf report")
@@ -817,7 +826,7 @@ if __name__ == "__main__":
 
     # command: query_scenes_info
     queryInfoParser = subparsers.add_parser('query_scenes_info', description="Lists information about the given test scene(s)")
-    queryInfoParser.add_argument('-t', '--test_scenes', default="test_scenes", help="Folder with test scenes OR a test scene file to gather information from")
+    queryInfoParser.add_argument('-t', '--test_scenes', default="test_scenes", help="Folder with test scenes OR a test scene file to gather information from. Also accepts glob patterns")
     queryInfoParser.add_argument('--log_dir', default=None, type=Path, help='Directory in which ANARI.log file is saved. Defaults to working directory')
 
     command_text = ""

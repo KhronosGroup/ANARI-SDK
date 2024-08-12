@@ -33,7 +33,7 @@
     }
   },
   "requiredFeatures": [
-    "KHR_FRAME_CHANNEL_OBJECT_ID"
+    "ANARI_KHR_FRAME_CHANNEL_OBJECT_ID"
   ],
   "metaData": {
     "": {

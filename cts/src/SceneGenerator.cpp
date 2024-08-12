@@ -142,6 +142,19 @@ int SceneGenerator::anariTypeFromString(const std::string& type)
   return ANARI_UNKNOWN;
 }
 
+void SceneGenerator::setGenericTexture2D(
+    const std::string &name, const std::string &textureType)
+{
+    size_t resolution = 32;
+    auto pixels = TextureGenerator::generateCheckerBoard(resolution);
+    if (m_device && m_currentObject) {
+      anari::setAndReleaseParameter(m_device,
+          m_currentObject,
+          name.c_str(),
+          anari::newArray2D(m_device, pixels.data(), resolution, resolution));
+    }
+}
+
 void SceneGenerator::setReferenceParameter(int objectType, size_t objectIndex,
     const std::string &name, int refType, size_t refIndex)
 {
@@ -786,14 +799,10 @@ void SceneGenerator::commit()
     if (auto it = m_anariObjects.find(ANARI_VOLUME);
         it != m_anariObjects.end() && !it->second.empty()) {
       volumes = it->second;
-    } else {
-      createAnariObject(ANARI_VOLUME, "transferFunction1D");
-      volumes.push_back(m_currentObject);
     }
 
     auto fieldIt = m_anariObjects.find(ANARI_SPATIAL_FIELD);
-    if (!volumes.empty()
-        && (fieldIt == m_anariObjects.end() || fieldIt->second.empty())) {
+    if (fieldIt == m_anariObjects.end() || fieldIt->second.empty()) {
       createSpatialFields = true;
     } else {
       spatialFields = fieldIt->second;
@@ -803,7 +812,7 @@ void SceneGenerator::commit()
       if (createSpatialFields) {
         createAnariObject(ANARI_SPATIAL_FIELD, "structuredRegular");
         auto spatialField = m_currentObject;
-        anari::setParameter(m_device, volume, "field", spatialField);
+        anari::setParameter(m_device, volume, "value", spatialField);
         spatialFields.push_back(spatialField);
         anari::commitParameters(d, volume);
       }
