@@ -3,17 +3,55 @@
 
 #include "mesh.h"
 
+#include <anari/anari.h>
+#include <anari/anari_cpp.hpp>
+#include <anari/anari_cpp/Traits.h>
+#include <anari/anari_cpp/anari_cpp_impl.hpp>
+#include <anari/frontend/anari_enums.h>
+// pxr
+#include <pxr/base/gf/matrix4d.h>
+#include <pxr/base/gf/matrix4f.h>
+#include <pxr/base/gf/vec2f.h>
+#include <pxr/base/gf/vec3f.h>
+#include <pxr/base/gf/vec4f.h>
+#include <pxr/base/tf/debug.h>
+#include <pxr/base/tf/diagnostic.h>
+#include <pxr/base/tf/staticData.h>
+#include <pxr/base/tf/tf.h>
+#include <pxr/base/tf/token.h>
+#include <pxr/base/trace/staticKeyData.h>
+#include <pxr/base/trace/trace.h>
+#include <pxr/base/vt/types.h>
+#include <pxr/base/vt/value.h>
+#include <pxr/imaging/hd/changeTracker.h>
+#include <pxr/imaging/hd/enums.h>
+#include <pxr/imaging/hd/instancer.h>
+#include <pxr/imaging/hd/perfLog.h>
+#include <pxr/imaging/hd/renderIndex.h>
+#include <pxr/imaging/hd/rprim.h>
+#include <pxr/imaging/hd/sceneDelegate.h>
+#include <pxr/imaging/hd/tokens.h>
+#include <pxr/imaging/hd/types.h>
+#include <pxr/imaging/hd/vtBufferSource.h>
+#include <stdint.h>
+#include <algorithm>
+#include <array>
+#include <cstring>
+#include <iterator>
+#include <map>
+#include <set>
+// std
+// #include <cstring>
+#include <string>
+#include <utility>
+
 #include "debugCodes.h"
 #include "instancer.h"
 #include "material.h"
-// pxr
-#include <pxr/base/gf/matrix4d.h>
-// std
-#include <cstring>
+
+using namespace std::string_literals;
 
 PXR_NAMESPACE_OPEN_SCOPE
-
-TF_DEFINE_PRIVATE_TOKENS(HdAnariTokens, (st)(UVMap));
 
 // Helper functions ///////////////////////////////////////////////////////////
 
@@ -95,10 +133,6 @@ HdAnariMesh::HdAnariMesh(
   if (!d)
     return;
 
-  TF_DEBUG_MSG(HD_ANARI_RENDERDELEGATE, "Create mesh with id %s\n", id.GetText());
-
-  anari::retain(d, d);
-
   _anari.device = d;
   _anari.geometry = anari::newObject<anari::Geometry>(d, "triangle");
   _anari.surface = anari::newObject<anari::Surface>(d);
@@ -120,7 +154,6 @@ HdAnariMesh::~HdAnariMesh()
   anari::release(_anari.device, _anari.group);
   anari::release(_anari.device, _anari.surface);
   anari::release(_anari.device, _anari.geometry);
-  anari::release(_anari.device, _anari.device);
 }
 
 HdDirtyBits HdAnariMesh::GetInitialDirtyBitsMask() const
@@ -154,8 +187,6 @@ void HdAnariMesh::Sync(HdSceneDelegate *sceneDelegate,
   HD_TRACE_FUNCTION();
   HF_MALLOC_TAG_FUNCTION();
 
-  TF_DEBUG_MSG(HD_ANARI_RENDERDELEGATE, "Sync mesh with id %s\n", GetId().GetText());
-
   auto *renderParam = static_cast<HdAnariRenderParam *>(renderParam_);
   if (!renderParam || !_anari.device)
     return;
@@ -163,57 +194,99 @@ void HdAnariMesh::Sync(HdSceneDelegate *sceneDelegate,
   HdRenderIndex &renderIndex = sceneDelegate->GetRenderIndex();
   const SdfPath &id = GetId();
 
-  if (*dirtyBits & HdChangeTracker::DirtyMaterialId) {
+  // update our own instancer data.
+  _UpdateInstancer(sceneDelegate, dirtyBits);
+
+  // Make sure we call sync on parent instancers.
+  // XXX: In theory, this should be done automatically by the render index.
+  // At the moment, it's done by rprim-reference.  The helper function on
+  // HdInstancer needs to use a mutex to guard access, if there are actually
+  // updates pending, so this might be a contention point.
+  HdInstancer::_SyncInstancerAndParents(
+      sceneDelegate->GetRenderIndex(), GetInstancerId());
+
+  // Gather primvars if change either in the material or the primvars themselves
+  // (on the prim or the instancer)
+  bool needMaterialBindingUpdate = *dirtyBits
+      & (HdChangeTracker::DirtyMaterialId | HdChangeTracker::DirtyPrimvar
+          | HdChangeTracker::DirtyPoints | HdChangeTracker::DirtyNormals
+          | HdChangeTracker::DirtyInstancer);
+
+  HdPrimvarDescriptorVector primvarDescriptors;
+  if (needMaterialBindingUpdate) {
+    std::set<TfToken> alreadyProcessed;
+    for (size_t i = 0; i < HdInterpolationCount; ++i) {
+      auto interp = static_cast<HdInterpolation>(i);
+      auto primvars = GetPrimvarDescriptors(sceneDelegate, interp);
+      for (const HdPrimvarDescriptor &pvd : primvars) {
+        if (alreadyProcessed.find(pvd.name) == cend(alreadyProcessed)) {
+          alreadyProcessed.insert(pvd.name);
+          primvarDescriptors.push_back(pvd);
+        }
+      }
+    }
+
+    for (auto instancerId = GetInstancerId(); !instancerId.IsEmpty();
+         instancerId = sceneDelegate->GetRenderIndex()
+                           .GetInstancer(instancerId)
+                           ->GetParentId()) {
+      auto primvars = sceneDelegate->GetPrimvarDescriptors(
+          instancerId, HdInterpolationInstance);
+      for (const HdPrimvarDescriptor &pvd : primvars) {
+        if (pvd.name == HdInstancerTokens->instanceRotations
+            || pvd.name == HdInstancerTokens->instanceScales
+            || pvd.name == HdInstancerTokens->instanceTranslations
+            || pvd.name == HdInstancerTokens->instanceTransforms)
+          continue;
+
+        if (alreadyProcessed.find(pvd.name) == cend(alreadyProcessed)) {
+          alreadyProcessed.insert(pvd.name);
+          primvarDescriptors.push_back(pvd);
+        }
+      }
+    }
+  }
+
+  HdAnariMaterial::PrimvarBinding primvarBinding;
+
+  if (*dirtyBits & HdChangeTracker::DirtyMaterialId
+      || needMaterialBindingUpdate) {
     SetMaterialId(sceneDelegate->GetMaterialId(id));
-    auto *material = static_cast<const HdAnariMaterial *>(
+    auto *material = static_cast<HdAnariMaterial *>(
         renderIndex.GetSprim(HdPrimTypeTokens->material, GetMaterialId()));
     if (material) {
-      anari::setParameter(_anari.device,
-          _anari.surface,
-          "material",
-          material->GetANARIMaterial());
+      auto anariMat = material->GetAnariMaterial(sceneDelegate);
+      primvarBinding = material->GetPrimvarBinding();
+      anari::setParameter(_anari.device, _anari.surface, "material", anariMat);
     } else {
       anari::setParameter(_anari.device,
           _anari.surface,
           "material",
           renderParam->GetANARIDefaultMaterial());
+      primvarBinding = {
+          {HdTokens->displayColor, TfToken("color")},
+      };
     }
     anari::commitParameters(_anari.device, _anari.surface);
   }
 
-  // Vertex data //
-
-  if (HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->points)) {
-    anari::unsetParameter(_anari.device, _anari.geometry, "vertex.position");
-    VtValue value = sceneDelegate->Get(id, HdTokens->points);
-    auto points = value.Get<VtVec3fArray>();
-    if (!points.empty()) {
-      anari::setParameterArray1D(_anari.device,
-          _anari.geometry,
-          "vertex.position",
-          points.cdata(),
-          points.size());
-    }
-    anari::commitParameters(_anari.device, _anari.geometry);
-
-    anari::setParameter(
-        _anari.device, _anari.surface, "id", uint32_t(GetPrimId()));
-    anari::commitParameters(_anari.device, _anari.surface);
-  }
+  primvarBinding.emplace(HdTokens->points, "position");
+  primvarBinding.emplace(HdTokens->normals, "normal");
 
   // Triangle indices //
 
   bool recomputePrimvars = false;
   if (HdChangeTracker::IsTopologyDirty(*dirtyBits, id)) {
     _topology = HdMeshTopology(GetMeshTopology(sceneDelegate), 0);
-    _meshUtil = std::make_unique<HdMeshUtil>(&_topology, id);
+    _meshUtil = std::make_unique<HdAnariMeshUtil>(&_topology, id);
 
     anari::unsetParameter(_anari.device, _anari.geometry, "primitive.index");
 
     VtVec3iArray triangulatedIndices;
     VtIntArray trianglePrimitiveParams;
     _meshUtil->ComputeTriangleIndices(
-        &triangulatedIndices, &trianglePrimitiveParams);
+        &triangulatedIndices, &_trianglePrimitiveParams);
+
     if (!triangulatedIndices.empty()) {
       anari::setParameterArray1D(_anari.device,
           _anari.geometry,
@@ -235,27 +308,21 @@ void HdAnariMesh::Sync(HdSceneDelegate *sceneDelegate,
   // Primvars //
 
   if (recomputePrimvars
+      || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->points)
       || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->normals)
       || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->widths)
       || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->primvar)
       || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->displayColor)
       || HdChangeTracker::IsPrimvarDirty(
           *dirtyBits, id, HdTokens->displayOpacity)) {
-    _UpdatePrimvarSources(sceneDelegate, *dirtyBits);
+    _UpdatePrimvarSources(sceneDelegate,
+        renderParam,
+        *dirtyBits,
+        primvarDescriptors,
+        primvarBinding);
   }
 
-    // Populate instance objects.
-
-    // First, update our own instancer data.
-    _UpdateInstancer(sceneDelegate, dirtyBits);
-
-    // Make sure we call sync on parent instancers.
-    // XXX: In theory, this should be done automatically by the render index.
-    // At the moment, it's done by rprim-reference.  The helper function on
-    // HdInstancer needs to use a mutex to guard access, if there are actually
-    // updates pending, so this might be a contention point.
-    HdInstancer::_SyncInstancerAndParents(
-        sceneDelegate->GetRenderIndex(), GetInstancerId());
+  // Populate instance objects.
 
   // Transforms //
 
@@ -311,107 +378,116 @@ void HdAnariMesh::AddInstances(std::vector<anari::Instance> &instances) const
   }
 }
 
-void HdAnariMesh::_UpdatePrimvarSources(
-    HdSceneDelegate *sceneDelegate, HdDirtyBits dirtyBits)
+void HdAnariMesh::_UpdatePrimvarSources(HdSceneDelegate *sceneDelegate,
+    HdAnariRenderParam *renderParams,
+    HdDirtyBits dirtyBits,
+    const HdPrimvarDescriptorVector &primvarDescriptors,
+    HdAnariMaterial::PrimvarBinding primvarBinding)
 {
   HD_TRACE_FUNCTION();
   const SdfPath &id = GetId();
 
   TF_VERIFY(sceneDelegate);
 
-  HdPrimvarDescriptorVector primvars;
-  for (size_t i = 0; i < HdInterpolationCount; ++i) {
-    auto interp = static_cast<HdInterpolation>(i);
-    primvars = GetPrimvarDescriptors(sceneDelegate, interp);
-    for (const HdPrimvarDescriptor &pv : primvars) {
-      if (pv.name == HdTokens->points)
-        continue;
+  for (const auto &pvd : primvarDescriptors) {
+    if (auto pvbIt = primvarBinding.find(pvd.name);
+        pvbIt != cend(primvarBinding)) {
+      auto value = sceneDelegate->Get(id, pvd.name);
+      auto bindingPoint = pvbIt->second;
 
-      auto value = sceneDelegate->Get(id, pv.name);
-      const bool constant = interp == HdInterpolationConstant;
-      const bool perPrimitive = interp == HdInterpolationUniform;
-      const bool perVertex =
-          interp == HdInterpolationVertex || interp == HdInterpolationVarying;
-      const bool faceVarying = interp == HdInterpolationFaceVarying;
-
-      if ((pv.role == HdPrimvarRoleTokens->textureCoordinate
-              || pv.name == HdAnariTokens->UVMap)
-          && HdChangeTracker::IsPrimvarDirty(
-              dirtyBits, id, HdAnariTokens->UVMap)) {
-        if (faceVarying) {
-          HdVtBufferSource buffer(pv.name, value);
-          VtValue triangulatedPrimvar;
-          auto success =
-              _meshUtil->ComputeTriangulatedFaceVaryingPrimvar(buffer.GetData(),
-                  buffer.GetNumElements(),
-                  buffer.GetTupleType().type,
-                  &triangulatedPrimvar);
-          if (success) {
-            _SetGeometryAttributeArray(
-                "faceVarying.attribute0", triangulatedPrimvar);
-          } else
-            TF_CODING_ERROR("ERROR: could not triangulate face-varying data\n");
-        } else if (perVertex)
-          _SetGeometryAttributeArray("vertex.attribute0", value);
-        else if (perPrimitive)
-          _SetGeometryAttributeArray("primitive.attribute0", value);
-      } else if (pv.name == HdTokens->normals) {
-        if (value.IsHolding<VtVec3fArray>() && perVertex)
-          _SetGeometryAttributeArray("vertex.normal", value);
-        else {
-          anari::unsetParameter(
-              _anari.device, _anari.geometry, "vertex.normal");
-        }
-      } else if (pv.name == HdTokens->displayColor
-          && HdChangeTracker::IsPrimvarDirty(
-              dirtyBits, id, HdTokens->displayColor)) {
-        if (constant)
-          _SetGeometryAttributeConstant("color", value);
-        else if (perPrimitive)
-          _SetGeometryAttributeArray("primitive.color", value);
-        else if (perVertex)
-          _SetGeometryAttributeArray("vertex.color", value);
-        else if (interp == HdInterpolationFaceVarying)
-          printf("HdAnariMesh: HdInterpolationFaceVarying not yet supported\n");
-        else if (interp == HdInterpolationInstance)
-          printf("HdAnariMesh: HdInterpolationInstance not yet supported\n");
+      switch (pvd.interpolation) {
+      case HdInterpolationConstant: {
+        _SetGeometryAttributeConstant(bindingPoint, value);
+        break;
       }
-
-      anari::commitParameters(_anari.device, _anari.geometry);
+      case HdInterpolationUniform:
+      case HdInterpolationVarying:
+      case HdInterpolationVertex:
+      case HdInterpolationFaceVarying: {
+        _SetGeometryAttributeArray(
+            bindingPoint, pvd.name, pvd.interpolation, value);
+        break;
+      }
+      default:
+        break;
+      }
     }
   }
+
+  anari::commitParameters(_anari.device, _anari.geometry);
 }
 
 void HdAnariMesh::_SetGeometryAttributeConstant(
-    const char *attributeName, VtValue v)
+    const TfToken &attributeName, VtValue value) const
 {
   auto d = _anari.device;
   auto g = _anari.geometry;
 
   GfVec4f attrV(0.f, 0.f, 0.f, 1.f);
-  if (_GetVtValueAsAttribute(v, attrV))
-    anari::setParameter(d, g, attributeName, attrV);
+  if (_GetVtValueAsAttribute(value, attrV))
+    anari::setParameter(d, g, attributeName.GetText(), attrV);
   else
-    anari::unsetParameter(d, g, attributeName);
+    anari::unsetParameter(d, g, attributeName.GetText());
 }
 
-void HdAnariMesh::_SetGeometryAttributeArray(
-    const char *attributeName, VtValue v)
+void HdAnariMesh::_SetGeometryAttributeArray(const TfToken &attrName,
+    const TfToken &pvname,
+    HdInterpolation interpolation,
+    VtValue value) const
 {
-  if (!v.IsArrayValued())
+  static const auto bindingPrefix = std::array{
+      ""s, // HdInterpolationConstant = 0,
+      "primitive."s, // HdInterpolationUniform,
+      "vertex."s, // HdInterpolationVarying,
+      "vertex."s, // HdInterpolationVertex,
+      "faceVarying."s, // HdInterpolationFaceVarying,
+      ""s, // HdInterpolationInstance,
+  };
+
+  auto fullAttrName = bindingPrefix[int(interpolation)] + std::string(attrName);
+
+  if (!value.IsArrayValued())
     return;
 
   auto d = _anari.device;
   auto g = _anari.geometry;
+  switch (interpolation) {
+  case HdInterpolationUniform: {
+    VtValue perFace;
+    _meshUtil->GatherPerFacePrimvar(
+        GetId(), pvname, value, _trianglePrimitiveParams, &perFace);
+    value = perFace;
+    break;
+  }
+  case HdInterpolationFaceVarying: {
+    HdVtBufferSource buffer(pvname, value);
+    VtValue triangulatedPrimvar;
+    auto success =
+        _meshUtil->ComputeTriangulatedFaceVaryingPrimvar(buffer.GetData(),
+            buffer.GetNumElements(),
+            buffer.GetTupleType().type,
+            &triangulatedPrimvar);
+
+    if (success) {
+      value = triangulatedPrimvar;
+    } else {
+      TF_CODING_ERROR("     ERROR: could not triangulate face-varying data\n");
+      value = VtValue();
+    }
+    break;
+  }
+  default:
+    break;
+  }
 
   anari::DataType type = ANARI_UNKNOWN;
   const void *data = nullptr;
   size_t size = 0;
 
-  if (_GetVtArrayBufferData(v, &data, &size, &type))
-    anari::setParameterArray1D(d, g, attributeName, type, data, size);
-  else
-    anari::unsetParameter(d, g, attributeName);
+  if (_GetVtArrayBufferData(value, &data, &size, &type)) {
+    anari::setParameterArray1D(d, g, fullAttrName.c_str(), type, data, size);
+  } else
+    anari::unsetParameter(d, g, fullAttrName.c_str());
 }
 
 void HdAnariMesh::_ReleaseAnariInstances()
