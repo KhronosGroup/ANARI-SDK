@@ -169,19 +169,13 @@ std::map<SdfPath, anari::Sampler> HdAnariMaterial::CreateSamplers(
 
     auto sampler = HdAnariTextureLoader::LoadHioTexture2D(
         device, desc.assetPath, desc.minMagFilter, desc.colorspace);
+    if (!sampler) continue;
 
     anari::setParameter(device,
         sampler,
         "outTransform",
         ANARI_FLOAT32_MAT4,
         desc.transform.data());
-    TF_DEBUG_MSG(HD_ANARI_MATERIAL, "  tx is:\n");
-    for (int j = 0; j < 4; ++j) {
-      TF_DEBUG_MSG(HD_ANARI_MATERIAL, "    ");
-      for (int i = 0; i < 4; ++i)
-        TF_DEBUG_MSG(HD_ANARI_MATERIAL, "%f ", desc.transform[i + j * 4]);
-      TF_DEBUG_MSG(HD_ANARI_MATERIAL, "\n");
-    }
 
     anari::commitParameters(device, sampler);
 
