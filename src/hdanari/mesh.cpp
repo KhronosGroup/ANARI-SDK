@@ -333,16 +333,32 @@ void HdAnariMesh::Sync(HdSceneDelegate *sceneDelegate,
     auto baseTransform = GfMatrix4f(sceneDelegate->GetTransform(id));
 
     VtMatrix4dArray transforms;
+    std::map<TfToken, VtValue> primvarMap;
+
     if (!GetInstancerId().IsEmpty()) {
-      HdInstancer *instancer = renderIndex.GetInstancer(GetInstancerId());
-      transforms =
-          static_cast<HdAnariInstancer *>(instancer)->ComputeInstanceTransforms(
-              id);
+      auto instancer = static_cast<HdAnariInstancer *>(
+          renderIndex.GetInstancer(GetInstancerId()));
+      transforms = instancer->ComputeInstanceTransforms(id);
+
+      for (const auto &pvd : primvarDescriptors) {
+        if (pvd.interpolation != HdInterpolationInstance)
+          continue;
+
+        if (auto it = primvarBinding.find(pvd.name);
+            it != cend(primvarBinding)) {
+          auto pvv = instancer->GatherInstancePrimvar(GetId(), pvd.name);
+          if (!pvv.IsEmpty() && pvv.IsArrayValued() && pvv.GetArraySize() > 0) {
+            primvarMap.emplace(it->second, pvv);
+          }
+        }
+      }
     } else {
       transforms.push_back(GfMatrix4d(1.0));
     }
 
     _anari.instances.reserve(transforms.size());
+    VtIntArray instanceIndices =
+        sceneDelegate->GetInstanceIndices(GetInstancerId(), GetId());
     for (size_t i = 0; i < transforms.size(); i++) {
       const GfMatrix4d &transform = transforms[i];
       GfMatrix4f mat = baseTransform * GfMatrix4f(transform);
@@ -350,6 +366,42 @@ void HdAnariMesh::Sync(HdSceneDelegate *sceneDelegate,
       anari::setParameter(_anari.device, inst, "group", _anari.group);
       anari::setParameter(_anari.device, inst, "transform", mat);
       anari::setParameter(_anari.device, inst, "id", uint32_t(i));
+      for (auto &&[attributeName, vtvalue] : primvarMap) {
+        union
+        {
+          float f;
+          GfVec2f vec2;
+          GfVec3f vec3;
+          GfVec4f vec4;
+        } value = {.vec4 = {0.0f, 0.0f, 0.0f, 1.0f}};
+        HdVtBufferSource attributeBuffer(attributeName, vtvalue);
+
+        switch (attributeBuffer.GetTupleType().type) {
+        case HdTypeFloat: {
+          value.f = static_cast<const float *>(attributeBuffer.GetData())[i];
+          break;
+        }
+        case HdTypeFloatVec2: {
+          value.vec2 =
+              static_cast<const GfVec2f *>(attributeBuffer.GetData())[i];
+          break;
+        }
+        case HdTypeFloatVec3: {
+          value.vec3 =
+              static_cast<const GfVec3f *>(attributeBuffer.GetData())[i];
+          break;
+        }
+        case HdTypeFloatVec4: {
+          value.vec4 =
+              static_cast<const GfVec4f *>(attributeBuffer.GetData())[i];
+          break;
+        }
+        default:
+          continue;
+        }
+        anari::setParameter(
+            _anari.device, inst, attributeName.GetText(), value.vec4);
+      }
       anari::commitParameters(_anari.device, inst);
       _anari.instances.push_back(inst);
     }

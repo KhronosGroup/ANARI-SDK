@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <anari/anari.h>
+#include <anari/anari_cpp.hpp>
 #include <anari/anari_cpp/anari_cpp_impl.hpp>
 #include <anari/frontend/anari_enums.h>
 #include <pxr/base/gf/vec3f.h>
@@ -32,7 +33,7 @@
 #include <pxr/imaging/hd/tokens.h>
 
 #include "instancer.h"
-#include "material.h"
+#include "material/matte.h"
 #include "material/physicallyBased.h"
 #include "mesh.h"
 #include "renderBuffer.h"

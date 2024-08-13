@@ -90,14 +90,15 @@ HdMaterialNetwork2 HdAnariMaterial::convertToHdMaterialNetwork2(
 }
 
 HdAnariMaterial::HdAnariMaterial(anari::Device d, const SdfPath &id)
-    : HdMaterial(id), device_(d)
+    : HdMaterial(id), device_(d), material_{}
 {}
 
 HdAnariMaterial::~HdAnariMaterial()
 {
   ReleaseSamplers(device_, samplers_);
   samplers_.clear();
-  anari::release(device_, material_);
+  if (material_)
+    anari::release(device_, material_);
 }
 
 void HdAnariMaterial::ReleaseSamplers(
