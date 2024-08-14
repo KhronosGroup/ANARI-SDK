@@ -6,8 +6,8 @@ class gltTFFiles:
     buffers = [] # Sorted by appearance in the JSON file
     images = [] # Sorted by appearance in the JSON file
 
-def loadGLB(file):
-    with open(file, "rb") as f:
+def loadGLB(file, parent_path):
+    with open(parent_path.joinpath(file), "rb") as f:
         data = f.read()
     files = gltTFFiles()
     i = 0
@@ -41,31 +41,31 @@ def loadGLB(file):
             raise Exception("Invalid GLB chunk")
         bufferData = data[i:i+bufferLength]
         files.buffers.append(bufferData.rstrip(bytes.fromhex("00")))
-    _analyseGLTF(files)
+    _analyseGLTF(files, parent_path)
     return files
 
-def loadGLTF(file):
-    with open(file, "r") as f:
+def loadGLTF(file, parent_path):
+    with open(parent_path.joinpath(file), "r") as f:
         text = f.read()
     files = gltTFFiles()
     files.json = json.loads(text)
-    _analyseGLTF(files)
+    _analyseGLTF(files, parent_path)
     return files
 
-def _analyseGLTF(files):
+def _analyseGLTF(files, parent_path):
     if "buffers" in files.json:
         for buffer in files.json["buffers"]:
             if "uri" in buffer:
-                files.buffers.append(_loadURI(buffer["uri"]))
+                files.buffers.append(_loadURI(buffer["uri"], parent_path))
     if "images" in files.json:
         for image in files.json["images"]:
             if "uri" in image:
-                files.images.append(_loadURI(image["uri"]))
+                files.images.append(_loadURI(image["uri"], parent_path))
 
 
-def _loadURI(uri):
+def _loadURI(uri, parent_path):
     if uri.startswith("data:"):
         base64String = uri.split(",")[1]
         return base64.b64decode(base64String)
-    with open(uri, "rb") as f:
+    with open(parent_path.joinpath(uri), "rb") as f:
         return f.read()

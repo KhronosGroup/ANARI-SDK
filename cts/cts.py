@@ -345,6 +345,8 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
         # parse test scene json files
         test_name = json_file_path.name
         scene_location_parts = json_file_path.parts
+        path_to_test = json_file_path.parent
+
         if "test_scenes" in scene_location_parts:
             test_scenes_index = scene_location_parts[::-1].index("test_scenes")
             test_name = str(Path(*(scene_location_parts[len(scene_location_parts) - test_scenes_index - 1:])).with_suffix(""))
@@ -416,7 +418,7 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                                         sceneGenerator.setGenericParameter(paramName, paramValue)
                                 sceneGenerator.releaseAnariObject()
                     elif key == "gltf":
-                        gltf = ctsGLTF.loadGLB(value) if value.endswith(".glb") else ctsGLTF.loadGLTF(value)
+                        gltf = ctsGLTF.loadGLB(value, path_to_test) if value.endswith(".glb") else ctsGLTF.loadGLTF(value, path_to_test)
                         sceneGenerator.loadGLTF(json.dumps(gltf.json), gltf.buffers, gltf.images)
                     else:
                         sceneGenerator.setParameter(key, value)
