@@ -1,15 +1,16 @@
 import json
 import base64
 
-class gltTFFiles:
-    json = None
-    buffers = [] # Sorted by appearance in the JSON file
-    images = [] # Sorted by appearance in the JSON file
+class glTFFiles:
+    def __init__(self):
+        self.json = None
+        self.buffers = [] # Sorted by appearance in the JSON file
+        self.images = [] # Sorted by appearance in the JSON file
 
 def loadGLB(file, parent_path):
     with open(parent_path.joinpath(file), "rb") as f:
         data = f.read()
-    files = gltTFFiles()
+    files = glTFFiles()
     i = 0
     magic = data[i:i+4]
     i += 4
@@ -47,7 +48,7 @@ def loadGLB(file, parent_path):
 def loadGLTF(file, parent_path):
     with open(parent_path.joinpath(file), "r") as f:
         text = f.read()
-    files = gltTFFiles()
+    files = glTFFiles()
     files.json = json.loads(text)
     _analyseGLTF(files, parent_path)
     return files
@@ -61,7 +62,6 @@ def _analyseGLTF(files, parent_path):
         for image in files.json["images"]:
             if "uri" in image:
                 files.images.append(_loadURI(image["uri"], parent_path))
-
 
 def _loadURI(uri, parent_path):
     if uri.startswith("data:"):
