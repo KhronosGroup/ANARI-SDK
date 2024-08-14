@@ -123,6 +123,7 @@ void HdAnariMaterial::Sync(HdSceneDelegate *sceneDelegate,
 
   TF_DEBUG_MSG(HD_ANARI_MATERIAL, "Sync material %s\n", GetId().GetText());
 
+
   //  Find material network and store it as HdMaterialNetwork2 for later use.
   VtValue networkMapResource = sceneDelegate->GetMaterialResource(GetId());
   HdMaterialNetworkMap networkMap =
@@ -227,8 +228,7 @@ HdDirtyBits HdAnariMaterial::GetInitialDirtyBitsMask() const
   return HdMaterial::DirtyBits::AllDirty;
 }
 
-anari::Material HdAnariMaterial::GetAnariMaterial(
-    HdSceneDelegate *sceneDelegate) const
+anari::Material HdAnariMaterial::GetAnariMaterial() const
 {
   return material_;
 }

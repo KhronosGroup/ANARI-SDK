@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "renderParam.h"
 #include "material/textureLoader.h"
+
 // pxr
 #include <pxr/base/tf/token.h>
 #include <pxr/imaging/hd/enums.h>
@@ -12,6 +12,7 @@
 #include <pxr/imaging/hd/material.h>
 #include <pxr/imaging/hd/materialNetwork2Interface.h>
 #include <pxr/imaging/hd/mesh.h>
+#include <pxr/imaging/hd/renderDelegate.h>
 #include <pxr/imaging/hd/sceneDelegate.h>
 #include <pxr/usd/sdf/path.h>
 
@@ -34,7 +35,7 @@ struct HdAnariMaterial : public HdMaterial
   ~HdAnariMaterial() override;
 
   // Get a material instance.
-  anari::Material GetAnariMaterial(HdSceneDelegate *sceneDelegate) const;
+  anari::Material GetAnariMaterial() const;
 
   // Create thet transient materialnetwork2 representation. To be used by the above ProcessMaterialNetwork call.
   void Sync(HdSceneDelegate *sceneDelegate,

@@ -40,7 +40,7 @@ std::map<SdfPath, TfToken> HdAnariPhysicallyBasedMaterial::EnumeratePrimvars(con
     return HdAnariUsdPreviewSurfaceConverter::EnumeratePrimvars(materialNetworkIface, terminalNode);
   }
 
-  return {};
+  return { { materialNetworkIface.GetMaterialPrimPath(), TfToken("baseColor")} };
 }
 
 anari::Material HdAnariPhysicallyBasedMaterial::GetOrCreateMaterial(

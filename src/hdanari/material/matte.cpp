@@ -42,7 +42,7 @@ HdAnariMaterial::PrimvarMapping HdAnariMatteMaterial::EnumeratePrimvars(const Hd
     return HdAnariUsdPreviewSurfaceConverter::EnumeratePrimvars(materialNetworkIface, terminalNode);
   }
 
-  return {};
+  return { { materialNetworkIface.GetMaterialPrimPath(), TfToken("color")} };
 }
 
 anari::Material HdAnariMatteMaterial::GetOrCreateMaterial(

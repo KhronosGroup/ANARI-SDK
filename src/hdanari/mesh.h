@@ -13,6 +13,7 @@
 #include <pxr/imaging/hd/mesh.h>
 #include <pxr/imaging/hd/meshUtil.h>
 #include <pxr/imaging/hd/sceneDelegate.h>
+#include <pxr/imaging/hd/vertexAdjacency.h>
 
 // std
 #include <memory>
@@ -40,9 +41,7 @@ struct HdAnariMesh final : public HdMesh
   void AddInstances(std::vector<anari::Instance> &instances) const;
 
  private:
-
-  void _UpdatePrimvarSources(
-      HdSceneDelegate *sceneDelegate, HdAnariRenderParam *renderParams, HdDirtyBits dirtyBits, const HdPrimvarDescriptorVector& primvarDescriptors, HdAnariMaterial::PrimvarBinding primvarBinding);
+  void _UpdatePrimvarSources(HdSceneDelegate *sceneDelegate, const HdPrimvarDescriptorVector& primvarDescriptors, HdAnariMaterial::PrimvarBinding primvarBinding);
 
   void _SetGeometryAttributeConstant(const TfToken& attrName, VtValue v) const ;
   void _SetGeometryAttributeArray(const TfToken& attrName, const TfToken& pvname, HdInterpolation hdinterpolation, VtValue v) const;
@@ -59,10 +58,14 @@ struct HdAnariMesh final : public HdMesh
   // Data //
 
   bool _populated{false};
-  HdMeshTopology _topology;
-  std::unique_ptr<HdAnariMeshUtil> _meshUtil;
+  HdMeshTopology topology_;
+  std::unique_ptr<HdAnariMeshUtil> meshUtil_;
+  std::optional<Hd_VertexAdjacency> adjacency_;
+  VtVec3fArray normals_;
 
-  VtIntArray _trianglePrimitiveParams;
+  VtIntArray trianglePrimitiveParams_;
+
+  HdAnariMaterial::PrimvarBinding primvarBinding_;
 
   struct AnariObjects
   {
