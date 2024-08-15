@@ -106,7 +106,7 @@ void HdAnariRenderDelegate::Initialize()
   _settingDescriptors.resize(2);
   _settingDescriptors[0] = {"Ambient Radiance",
       HdAnariRenderSettingsTokens->ambientRadiance,
-      VtValue(1.f)};
+      VtValue(0.2f)};
   _settingDescriptors[1] = {"Ambient Color",
       HdAnariRenderSettingsTokens->ambientColor,
       VtValue(GfVec3f(0.8f, 0.8f, 0.8f))};
