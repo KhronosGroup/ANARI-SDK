@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "instanced_cubes.h"
+// std
+#include <random>
 
 namespace anari {
 namespace scenes {
@@ -108,6 +110,11 @@ void InstancedCubes::commit()
 
   std::vector<ANARIInstance> instances;
 
+  std::mt19937 rng;
+  rng.seed(0);
+  std::uniform_real_distribution<float> dist;
+
+  int i = 0;
   for (int x = 1; x < 4; x++) {
     for (int y = 1; y < 4; y++) {
       for (int z = 1; z < 4; z++) {
@@ -122,11 +129,18 @@ void InstancedCubes::commit()
 
         { // NOTE: exercise anari::setParameter with C-array type
           // math::mat4 _xfm = tl * rot_x * rot_y * rot_z;
-          math::mat4 _xfm = math::mul(
-              tl, math::mul(rot_x, math::mul(rot_y, rot_z)));
+          math::mat4 _xfm =
+              math::mul(tl, math::mul(rot_x, math::mul(rot_y, rot_z)));
           float xfm[16];
           std::memcpy(xfm, &_xfm, sizeof(_xfm));
           anari::setParameter(d, inst, "transform", xfm);
+        }
+
+        if (i++ % 2 == 0) {
+          anari::setParameter(d,
+              inst,
+              "color",
+              math::float4(dist(rng), dist(rng), dist(rng), 1.f));
         }
 
         anari::setParameter(d, inst, "group", group);

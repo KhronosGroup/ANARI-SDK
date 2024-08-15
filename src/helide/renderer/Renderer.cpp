@@ -237,8 +237,10 @@ float4 Renderer::shadeRay(const float2 &screen,
       const auto n = linalg::mul(inst->xfmInvRot(), ray.Ng);
       const auto falloff =
           std::abs(linalg::dot(-ray.dir, linalg::normalize(n)));
-      const float4 sc = surface->getSurfaceColor(ray);
-      const float so = surface->getSurfaceOpacity(ray);
+      const float4 sc =
+          surface->getSurfaceColor(ray, inst->getUniformAttributes());
+      const float so =
+          surface->getSurfaceOpacity(ray, inst->getUniformAttributes());
       const float o = surface->adjustedAlpha(std::clamp(sc.w * so, 0.f, 1.f));
       const float3 c = m_heatmap->valueAtLinear<float3>(o);
       const float3 fc = c * falloff;
@@ -255,7 +257,8 @@ float4 Renderer::shadeRay(const float2 &screen,
       const auto n = linalg::mul(inst->xfmInvRot(), ray.Ng);
       const auto falloff =
           std::abs(linalg::dot(-ray.dir, linalg::normalize(n)));
-      const float4 c = surface->getSurfaceColor(ray);
+      const float4 c =
+          surface->getSurfaceColor(ray, inst->getUniformAttributes());
       const float3 sc = float3(c.x, c.y, c.z) * falloff;
       volumeColor = geometryColor = linalg::min(
           (0.8f * sc + 0.2f * float3(c.x, c.y, c.z)) * m_ambientRadiance,

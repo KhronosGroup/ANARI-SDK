@@ -27,12 +27,15 @@ void Image3D::commit()
   m_outTransform = getParam<mat4>("outTransform", mat4(linalg::identity));
 }
 
-float4 Image3D::getSample(const Geometry &g, const Ray &r) const
+float4 Image3D::getSample(
+    const Geometry &g, const Ray &r, const UniformAttributeSet &instAttrV) const
 {
   if (m_inAttribute == Attribute::NONE)
     return DEFAULT_ATTRIBUTE_VALUE;
 
-  auto av = linalg::mul(m_inTransform, g.getAttributeValue(m_inAttribute, r))
+  const auto &ia = getUniformAttribute(instAttrV, m_inAttribute);
+  auto av = linalg::mul(
+                m_inTransform, ia ? *ia : g.getAttributeValue(m_inAttribute, r))
       + m_inOffset;
 
   const auto interp_x = getInterpolant(av.x, m_image->size().x, true);

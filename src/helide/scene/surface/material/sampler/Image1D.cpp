@@ -27,12 +27,15 @@ void Image1D::commit()
   m_outOffset = getParam<float4>("outOffset", float4(0.f, 0.f, 0.f, 0.f));
 }
 
-float4 Image1D::getSample(const Geometry &g, const Ray &r) const
+float4 Image1D::getSample(
+    const Geometry &g, const Ray &r, const UniformAttributeSet &instAttrV) const
 {
   if (m_inAttribute == Attribute::NONE)
     return DEFAULT_ATTRIBUTE_VALUE;
 
-  auto av = linalg::mul(m_inTransform, g.getAttributeValue(m_inAttribute, r))
+  const auto &ia = getUniformAttribute(instAttrV, m_inAttribute);
+  auto av = linalg::mul(
+                m_inTransform, ia ? *ia : g.getAttributeValue(m_inAttribute, r))
       + m_inOffset;
 
   const auto interp = getInterpolant(av.x, m_image->size(), true);

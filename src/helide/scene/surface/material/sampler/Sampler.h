@@ -14,7 +14,9 @@ struct Sampler : public Object
   Sampler(HelideGlobalState *d);
   virtual ~Sampler() override = default;
 
-  virtual float4 getSample(const Geometry &g, const Ray &r) const = 0;
+  virtual float4 getSample(const Geometry &g,
+      const Ray &r,
+      const UniformAttributeSet &instAttrV) const = 0;
 
   static Sampler *createInstance(
       std::string_view subtype, HelideGlobalState *d);

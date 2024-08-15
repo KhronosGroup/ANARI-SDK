@@ -3,12 +3,24 @@
 
 #pragma once
 
+#include "debugCodes.h"
 #include "hdAnariTypes.h"
+#include "material.h"
+
+#include <anari/anari_cpp.hpp>
+
 // pxr
 #include <pxr/base/tf/debug.h>
+#include <pxr/base/tf/diagnostic.h>
+#include <pxr/base/tf/hashmap.h>
+#include <pxr/base/tf/token.h>
+#include <pxr/imaging/hd/enums.h>
 #include <pxr/imaging/hd/renderDelegate.h>
 #include <pxr/imaging/hd/renderThread.h>
+#include <pxr/imaging/hd/tokens.h>
 #include <pxr/pxr.h>
+#include <pxr/usd/sdf/pathTable.h>
+
 // std
 #include <algorithm>
 #include <atomic>
@@ -22,7 +34,9 @@ using MeshList = std::vector<const HdAnariMesh *>;
 
 struct HdAnariRenderParam final : public HdRenderParam
 {
-  enum class MaterialType {
+
+  enum class MaterialType
+  {
     Matte,
     PhysicallyBased,
   };
@@ -31,9 +45,13 @@ struct HdAnariRenderParam final : public HdRenderParam
   ~HdAnariRenderParam() override;
 
   anari::Device GetANARIDevice() const;
-  anari::Material GetANARIDefaultMaterial() const;
+  anari::Material GetDefaultMaterial() const;
+  const HdAnariMaterial::PrimvarBinding& GetDefaultPrimvarBinding() const;
 
-  MaterialType GetMaterialType() const { return _materialType; }
+  MaterialType GetMaterialType() const
+  {
+    return _materialType;
+  }
 
   void AddMesh(HdAnariMesh *m);
   const MeshList &Meshes() const;
@@ -45,7 +63,8 @@ struct HdAnariRenderParam final : public HdRenderParam
  private:
   anari::Device _device{nullptr};
   anari::Material _material{nullptr};
-  MaterialType _materialType{MaterialType::Matte};  
+  MaterialType _materialType{MaterialType::Matte};
+  HdAnariMaterial::PrimvarBinding _primvarBinding;
 
   std::mutex _mutex;
   MeshList _meshes;
@@ -64,15 +83,19 @@ inline HdAnariRenderParam::HdAnariRenderParam(anari::Device d) : _device(d)
 
   if (extensions.ANARI_KHR_MATERIAL_PHYSICALLY_BASED) {
     _materialType = MaterialType::PhysicallyBased;
+    _material = anari::newObject<anari::Material>(d, "physicallyBased");
+    anari::setParameter(d, _material, "alphaMode", "opaque");
+    anari::setParameter(d, _material, "baseColor", "color");
+    anari::commitParameters(d, _material);
+    _primvarBinding.emplace(HdTokens->displayColor, "color");
   } else {
     _materialType = MaterialType::Matte;
+    _material = anari::newObject<anari::Material>(d, "matte");
+    anari::setParameter(d, _material, "alphaMode", "opaque");
+    anari::setParameter(d, _material, "color", "color");
+    anari::commitParameters(d, _material);
+    _primvarBinding.emplace(HdTokens->displayColor, "color");
   }
-
-  _material = anari::newObject<anari::Material>(d, "matte");
-  anari::setParameter(d, _material, "alphaMode", "opaque");
-  anari::setParameter(d, _material, "color", "color");
-  anari::commitParameters(d, _material);
-  // TODO: set some non-default material parameters to highlight use
 }
 
 inline HdAnariRenderParam::~HdAnariRenderParam()
@@ -82,17 +105,24 @@ inline HdAnariRenderParam::~HdAnariRenderParam()
 
   anari::release(_device, _material);
   anari::release(_device, _device);
+  _device = nullptr;
 }
 
 inline anari::Device HdAnariRenderParam::GetANARIDevice() const
 {
+  assert(_device != nullptr);
   return _device;
 }
 
-inline anari::Material HdAnariRenderParam::GetANARIDefaultMaterial() const
+inline anari::Material HdAnariRenderParam::GetDefaultMaterial() const
 {
   return _material;
 }
+
+inline const HdAnariMaterial::PrimvarBinding& HdAnariRenderParam::GetDefaultPrimvarBinding() const {
+  return _primvarBinding;
+}
+
 
 inline void HdAnariRenderParam::AddMesh(HdAnariMesh *m)
 {

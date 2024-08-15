@@ -20,6 +20,8 @@ struct Instance : public Object
   const mat3 &xfmInvRot() const;
   bool xfmIsIdentity() const;
 
+  const UniformAttributeSet &getUniformAttributes() const;
+
   const Group *group() const;
   Group *group();
 
@@ -35,6 +37,7 @@ struct Instance : public Object
   mat4 m_xfm;
   mat3 m_xfmInvRot;
   helium::IntrusivePtr<Group> m_group;
+  UniformAttributeSet m_uniformAttr;
   RTCGeometry m_embreeGeometry{nullptr};
 };
 

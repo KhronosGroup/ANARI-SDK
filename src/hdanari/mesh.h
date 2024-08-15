@@ -3,10 +3,18 @@
 
 #pragma once
 
+#include <anari/anari_cpp.hpp>
+
+#include "material.h"
+#include "meshUtil.h"
 #include "renderParam.h"
+
 // pxr
 #include <pxr/imaging/hd/mesh.h>
 #include <pxr/imaging/hd/meshUtil.h>
+#include <pxr/imaging/hd/sceneDelegate.h>
+#include <pxr/imaging/hd/vertexAdjacency.h>
+
 // std
 #include <memory>
 
@@ -33,10 +41,11 @@ struct HdAnariMesh final : public HdMesh
   void AddInstances(std::vector<anari::Instance> &instances) const;
 
  private:
-  void _UpdatePrimvarSources(
-      HdSceneDelegate *sceneDelegate, HdDirtyBits dirtyBits);
-  void _SetGeometryAttributeConstant(const char *attributeName, VtValue v);
-  void _SetGeometryAttributeArray(const char *attributeName, VtValue v);
+  void _UpdatePrimvarSources(HdSceneDelegate *sceneDelegate, const HdPrimvarDescriptorVector& primvarDescriptors, HdAnariMaterial::PrimvarBinding primvarBinding);
+
+  void _SetGeometryAttributeConstant(const TfToken& attrName, VtValue v) const ;
+  void _SetGeometryAttributeArray(const TfToken& attrName, const TfToken& pvname, HdInterpolation hdinterpolation, VtValue v) const;
+
   void _ReleaseAnariInstances();
 
   HdDirtyBits _PropagateDirtyBits(HdDirtyBits bits) const override;
@@ -45,11 +54,18 @@ struct HdAnariMesh final : public HdMesh
   HdAnariMesh(const HdAnariMesh &) = delete;
   HdAnariMesh &operator=(const HdAnariMesh &) = delete;
 
+
   // Data //
 
   bool _populated{false};
-  HdMeshTopology _topology;
-  std::unique_ptr<HdMeshUtil> _meshUtil;
+  HdMeshTopology topology_;
+  std::unique_ptr<HdAnariMeshUtil> meshUtil_;
+  std::optional<Hd_VertexAdjacency> adjacency_;
+  VtVec3fArray normals_;
+
+  VtIntArray trianglePrimitiveParams_;
+
+  HdAnariMaterial::PrimvarBinding primvarBinding_;
 
   struct AnariObjects
   {

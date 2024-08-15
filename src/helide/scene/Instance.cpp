@@ -22,6 +22,19 @@ void Instance::commit()
   m_xfm = getParam<mat4>("transform", mat4(linalg::identity));
   m_xfmInvRot = linalg::inverse(extractRotation(m_xfm));
   m_group = getParamObject<Group>("group");
+  for (auto &a : m_uniformAttr)
+    a.reset();
+  float4 attrV = DEFAULT_ATTRIBUTE_VALUE;
+  if (getParam("attribute0", ANARI_FLOAT32_VEC4, &attrV))
+    m_uniformAttr[0] = attrV;
+  if (getParam("attribute1", ANARI_FLOAT32_VEC4, &attrV))
+    m_uniformAttr[1] = attrV;
+  if (getParam("attribute2", ANARI_FLOAT32_VEC4, &attrV))
+    m_uniformAttr[2] = attrV;
+  if (getParam("attribute3", ANARI_FLOAT32_VEC4, &attrV))
+    m_uniformAttr[3] = attrV;
+  if (getParam("color", ANARI_FLOAT32_VEC4, &attrV))
+    m_uniformAttr[4] = attrV;
   if (!m_group)
     reportMessage(ANARI_SEVERITY_WARNING, "missing 'group' on ANARIInstance");
 }
@@ -44,6 +57,11 @@ const mat3 &Instance::xfmInvRot() const
 bool Instance::xfmIsIdentity() const
 {
   return xfm() == mat4(linalg::identity);
+}
+
+const UniformAttributeSet &Instance::getUniformAttributes() const
+{
+  return m_uniformAttr;
 }
 
 const Group *Instance::group() const

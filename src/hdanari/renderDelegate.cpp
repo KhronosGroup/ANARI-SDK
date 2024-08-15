@@ -1,31 +1,44 @@
 // Copyright 2024 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-#include <pxr/base/tf/debug.h>
-#include <pxr/base/tf/diagnostic.h>
+#include <anari/anari.h>
 #include <anari/anari_cpp.hpp>
 #include <anari/anari_cpp/anari_cpp_impl.hpp>
+#include <anari/frontend/anari_enums.h>
+#include <pxr/base/gf/vec3f.h>
+#include <pxr/base/gf/vec4f.h>
+#include <pxr/base/tf/debug.h>
+#include <pxr/base/tf/diagnostic.h>
+#include <pxr/base/vt/value.h>
+#include <pxr/imaging/hd/instancer.h>
+#include <pxr/imaging/hd/renderIndex.h>
+#include <pxr/imaging/hd/renderPass.h>
+#include <pxr/imaging/hd/rprim.h>
+#include <pxr/imaging/hd/sceneDelegate.h>
+#include <pxr/imaging/hd/sprim.h>
+#include <pxr/imaging/hd/types.h>
+#include <stdio.h>
 #include <cstdlib>
-#include <string_view>
+#include <string>
+
 #include "debugCodes.h"
 
 #define HDANARI_TYPE_DEFINITIONS
-#include "renderDelegate.h"
-
-#include "instancer.h"
-#include "renderBuffer.h"
-#include "renderPass.h"
-
+// XXX: Add other Sprim types later
+#include <pxr/imaging/hd/bprim.h>
+// XXX: Add other Rprim types later
+#include <pxr/imaging/hd/camera.h>
 #include <pxr/imaging/hd/extComputation.h>
 #include <pxr/imaging/hd/resourceRegistry.h>
 #include <pxr/imaging/hd/tokens.h>
 
-#include "material.h"
+#include "instancer.h"
+#include "material/matte.h"
+#include "material/physicallyBased.h"
 #include "mesh.h"
-// XXX: Add other Rprim types later
-#include <pxr/imaging/hd/camera.h>
-// XXX: Add other Sprim types later
-#include <pxr/imaging/hd/bprim.h>
+#include "renderBuffer.h"
+#include "renderDelegate.h"
+#include "renderPass.h"
 // XXX: Add bprim types
 
 static void hdAnariDeviceStatusFunc(const void *,
@@ -118,7 +131,7 @@ void HdAnariRenderDelegate::Initialize()
 
   anari::unloadLibrary(library);
 
-  if (!device) {    
+  if (!device) {
     TF_RUNTIME_ERROR("failed to create ANARI device");
     return;
   }
@@ -129,8 +142,10 @@ void HdAnariRenderDelegate::Initialize()
   if (auto enableDebug_s = std::getenv("HDANARI_ENABLE_DEBUG"); enableDebug_s) {
     if (auto enableDebug = std::string(enableDebug_s); enableDebug == "1") {
       useDebugDevice = true;
-    } else if (enableDebug != "0" && enableDebug != "")  {
-      TF_WARN("Unknown HDANARI_ENABLE_DEBUG value %s. Must be undefined or set to 0 or 1", enableDebug.c_str());
+    } else if (enableDebug != "0" && enableDebug != "") {
+      TF_WARN(
+          "Unknown HDANARI_ENABLE_DEBUG value %s. Must be undefined or set to 0 or 1",
+          enableDebug.c_str());
     }
   }
 
@@ -179,7 +194,7 @@ HdAnariRenderDelegate::GetRenderSettingDescriptors() const
   return _settingDescriptors;
 }
 
-HdRenderParam *HdAnariRenderDelegate::GetRenderParam() const
+HdAnariRenderParam *HdAnariRenderDelegate::GetRenderParam() const
 {
   return _renderParam.get();
 }
@@ -281,6 +296,9 @@ HdRprim *HdAnariRenderDelegate::CreateRprim(
 
   if (typeId == HdPrimTypeTokens->mesh)
     return new HdAnariMesh(d, rprimId);
+  // else if (typeId == HdPrimTypeTokens->points) {
+  //   return new HdAnariPoints(d, rprimId);
+  // }
 
   TF_CODING_ERROR("Unknown Rprim Type %s", typeId.GetText());
 
@@ -301,16 +319,14 @@ HdSprim *HdAnariRenderDelegate::CreateSprim(
     return new HdCamera(sprimId);
   else if (typeId == HdPrimTypeTokens->material) {
     switch (_renderParam->GetMaterialType()) {
-      case HdAnariRenderParam::MaterialType::PhysicallyBased: {
-        return new HdAnariPhysicallyBasedMaterial(d, sprimId);
-      }
-      default: {
-        return new HdAnariMatteMaterial(d, sprimId);
-      }
-
+    case HdAnariRenderParam::MaterialType::PhysicallyBased: {
+      return new HdAnariPhysicallyBasedMaterial(d, sprimId);
     }
-  }
-  else if (typeId == HdPrimTypeTokens->extComputation)
+    default: {
+      return new HdAnariMatteMaterial(d, sprimId);
+    }
+    }
+  } else if (typeId == HdPrimTypeTokens->extComputation)
     return new HdExtComputation(sprimId);
 
   TF_CODING_ERROR("Unknown Sprim Type %s", typeId.GetText());

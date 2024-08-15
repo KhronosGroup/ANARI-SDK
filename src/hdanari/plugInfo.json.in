@@ -13,7 +13,7 @@
                 }
             },
             "LibraryPath": "../$<TARGET_FILE_NAME:hdAnari>",
-            "Name": "${PROJECT_NAME}",
+            "Name": "hdAnari",
             "ResourcePath": "resources",
             "Root": "..",
             "Type": "library"
