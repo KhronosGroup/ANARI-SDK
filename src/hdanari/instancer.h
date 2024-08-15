@@ -65,7 +65,11 @@ class HdAnariInstancer : public HdInstancer
   VtValue GatherInstancePrimvar(
       const SdfPath &prototypeId, const TfToken &primvarName) const;
 
+   bool IsPrimvarDirty(const TfToken& name) const;
+
  private:
+   HdDirtyBits dirtyBits_;
+
   // Updates the cached primvars in _primvarMap based on scene delegate
   // data.  This is a helper function for Sync().
   void _SyncPrimvars(HdSceneDelegate *delegate, HdDirtyBits dirtyBits);

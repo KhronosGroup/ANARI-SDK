@@ -35,6 +35,7 @@
 #include <stddef.h>
 #include <algorithm>
 #include <iterator>
+#include <memory>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -79,6 +80,9 @@ void HdAnariInstancer::_SyncPrimvars(
   HD_TRACE_FUNCTION();
   HF_MALLOC_TAG_FUNCTION();
 
+  // Store dirty bits so they canbe queried by instanciated prims.
+  dirtyBits_ = dirtyBits;
+
   SdfPath const &id = GetId();
 
   HdPrimvarDescriptorVector primvars =
@@ -113,9 +117,8 @@ VtMatrix4dArray HdAnariInstancer::ComputeInstanceTransforms(
   // }
   // If any transform isn't provided, it's assumed to be the identity.
 
-  GfMatrix4d instancerTransform = GetDelegate()->GetInstancerTransform(GetId());
-  VtIntArray instanceIndices =
-      GetDelegate()->GetInstanceIndices(GetId(), prototypeId);
+  const GfMatrix4d& instancerTransform = GetDelegate()->GetInstancerTransform(GetId());
+  const VtIntArray& instanceIndices = GetDelegate()->GetInstanceIndices(GetId(), prototypeId);
 
   VtMatrix4dArray transforms(instanceIndices.size());
   for (size_t i = 0; i < instanceIndices.size(); ++i) {
@@ -204,7 +207,7 @@ VtMatrix4dArray HdAnariInstancer::ComputeInstanceTransforms(
   // foreach (parentXf : parentTransforms, xf : transforms) {
   //     parentXf * xf
   // }
-  VtMatrix4dArray parentTransforms =
+  const VtMatrix4dArray& parentTransforms =
       static_cast<HdAnariInstancer *>(parentInstancer)
           ->ComputeInstanceTransforms(GetId());
 
@@ -232,7 +235,7 @@ VtValue HdAnariInstancer::GatherInstancePrimvar(const SdfPath &prototypeId,
     const TfToken &primvarName,
     HdType dataType) const
 {
-  auto instanceIndices =
+  const auto& instanceIndices =
       GetDelegate()->GetInstanceIndices(GetId(), prototypeId);
   auto instanceCount = instanceIndices.size();
 
@@ -268,10 +271,11 @@ VtValue HdAnariInstancer::GatherInstancePrimvar(const SdfPath &prototypeId,
   // instancing. Should be one if primvar is on the leaf instancer
   auto multiplicativeFactor = 1;
   while (!instancerId.IsEmpty()) {
+    const auto& instanceIndices =
+        GetDelegate()->GetInstanceIndices(instancerId, prototypeId);
+
     auto instancer = static_cast<const HdAnariInstancer *>(
         GetDelegate()->GetRenderIndex().GetInstancer(instancerId));
-    instanceIndices =
-        GetDelegate()->GetInstanceIndices(instancerId, prototypeId);
 
     if (result.empty()) {
       // Build a new pattern based on current indices. Each index needs to be
@@ -381,5 +385,28 @@ VtValue HdAnariInstancer::GatherInstancePrimvar(
 
   return VtValue();
 }
+
+bool HdAnariInstancer::IsPrimvarDirty(const TfToken& name) const
+{
+  bool isDirty = false;
+    if (name == HdTokens->points) {
+        isDirty = (dirtyBits_ & HdChangeTracker::DirtyPoints) != 0;
+    } else if (name == HdTokens->velocities) {
+        isDirty = (dirtyBits_ & HdChangeTracker::DirtyPoints) != 0;
+    } else if (name == HdTokens->accelerations) {
+        isDirty = (dirtyBits_ & HdChangeTracker::DirtyPoints) != 0;
+    } else if (name == HdTokens->nonlinearSampleCount) {
+        isDirty = (dirtyBits_ & HdChangeTracker::DirtyPoints) != 0;
+    } else if (name == HdTokens->normals) {
+        isDirty = (dirtyBits_ & HdChangeTracker::DirtyNormals) != 0;
+    } else if (name == HdTokens->widths) {
+        isDirty = (dirtyBits_ & HdChangeTracker::DirtyWidths) != 0;
+    } else {
+        isDirty = (dirtyBits_ & HdChangeTracker::DirtyPrimvar) != 0;
+    }
+
+    return isDirty;
+}
+
 
 PXR_NAMESPACE_CLOSE_SCOPE
