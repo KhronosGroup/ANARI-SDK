@@ -299,8 +299,6 @@ void HdAnariMesh::Sync(HdSceneDelegate *sceneDelegate,
 
   // Assume that points and normals are to be always bound.
   updatedPrimvarBinding.emplace(HdTokens->points, "position");
-  updatedPrimvarBinding.emplace(HdTokens->normals, "normal");
-
 
   // Triangle indices //
   if (HdChangeTracker::IsTopologyDirty(*dirtyBits, id)) {
@@ -339,7 +337,10 @@ void HdAnariMesh::Sync(HdSceneDelegate *sceneDelegate,
   }
 
   // Handle normals
-  if (!normalIsAuthored) {
+  bool doSmoothNormals = (topology_.GetScheme() != PxOsdOpenSubdivTokens->none) && (topology_.GetScheme() != PxOsdOpenSubdivTokens->bilinear);
+  if (normalIsAuthored) updatedPrimvarBinding.emplace(HdTokens->normals, "normal");
+
+  if (!normalIsAuthored && doSmoothNormals) {
     if (HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->points)) {
       if (!adjacency_.has_value()) {
         adjacency_.emplace();
