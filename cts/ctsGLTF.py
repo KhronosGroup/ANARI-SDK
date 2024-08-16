@@ -7,7 +7,8 @@ class glTFFiles:
         self.buffers = [] # Sorted by appearance in the JSON file
         self.images = [] # Sorted by appearance in the JSON file
 
-def loadGLB(file, parent_path):
+def loadGLB(file):
+    parent_path = file.parent
     with open(parent_path.joinpath(file), "rb") as f:
         data = f.read()
     files = glTFFiles()
@@ -45,7 +46,8 @@ def loadGLB(file, parent_path):
     _analyseGLTF(files, parent_path)
     return files
 
-def loadGLTF(file, parent_path):
+def loadGLTF(file):
+    parent_path = file.parent
     with open(parent_path.joinpath(file), "r") as f:
         text = f.read()
     files = glTFFiles()
