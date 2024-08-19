@@ -1,0 +1,7 @@
+{
+  "description": "Test Unicode\u2764\u267bTest.glb",
+  "sceneParameters": {
+    "primitiveCount": 0,
+    "gltf": "C:\\Users\\David\\Work\\ANARI-SDK\\cts\\glTF-Sample-Models\\Unicode\u2764\u267bTest\\glTF-Binary\\Unicode\u2764\u267bTest.glb"
+  }
+}

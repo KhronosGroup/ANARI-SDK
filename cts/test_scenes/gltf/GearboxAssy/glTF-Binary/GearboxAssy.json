@@ -1,0 +1,7 @@
+{
+  "description": "Test GearboxAssy.glb",
+  "sceneParameters": {
+    "primitiveCount": 0,
+    "gltf": "C:\\Users\\David\\Work\\ANARI-SDK\\cts\\glTF-Sample-Models\\GearboxAssy\\glTF-Binary\\GearboxAssy.glb"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "description": "Test DirectionalLight.glb",
+  "sceneParameters": {
+    "primitiveCount": 0,
+    "gltf": "C:\\Users\\David\\Work\\ANARI-SDK\\cts\\glTF-Sample-Models\\DirectionalLight\\glTF-Binary\\DirectionalLight.glb"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "description": "Test SimpleInstancing.glb",
+  "sceneParameters": {
+    "primitiveCount": 0,
+    "gltf": "C:\\Users\\David\\Work\\ANARI-SDK\\cts\\glTF-Sample-Models\\SimpleInstancing\\glTF-Binary\\SimpleInstancing.glb"
+  }
+}

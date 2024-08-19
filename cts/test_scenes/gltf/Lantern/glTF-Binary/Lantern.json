@@ -1,0 +1,7 @@
+{
+  "description": "Test Lantern.glb",
+  "sceneParameters": {
+    "primitiveCount": 0,
+    "gltf": "C:\\Users\\David\\Work\\ANARI-SDK\\cts\\glTF-Sample-Models\\Lantern\\glTF-Binary\\Lantern.glb"
+  }
+}

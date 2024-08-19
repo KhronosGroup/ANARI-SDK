@@ -1,0 +1,7 @@
+{
+  "description": "Test EmissiveStrengthTest.glb",
+  "sceneParameters": {
+    "primitiveCount": 0,
+    "gltf": "C:\\Users\\David\\Work\\ANARI-SDK\\cts\\glTF-Sample-Models\\EmissiveStrengthTest\\glTF-Binary\\EmissiveStrengthTest.glb"
+  }
+}

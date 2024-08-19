@@ -1,0 +1,7 @@
+{
+  "description": "Test OrientationTest.gltf",
+  "sceneParameters": {
+    "primitiveCount": 0,
+    "gltf": "C:\\Users\\David\\Work\\ANARI-SDK\\cts\\glTF-Sample-Models\\OrientationTest\\glTF-Embedded\\OrientationTest.gltf"
+  }
+}

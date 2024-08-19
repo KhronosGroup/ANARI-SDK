@@ -1,0 +1,7 @@
+{
+  "description": "Test PrimitiveModeNormalsTest.gltf",
+  "sceneParameters": {
+    "primitiveCount": 0,
+    "gltf": "C:\\Users\\David\\Work\\ANARI-SDK\\cts\\glTF-Sample-Models\\PrimitiveModeNormalsTest\\glTF\\PrimitiveModeNormalsTest.gltf"
+  }
+}

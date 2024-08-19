@@ -1,0 +1,7 @@
+{
+  "description": "Test SheenChair.glb",
+  "sceneParameters": {
+    "primitiveCount": 0,
+    "gltf": "C:\\Users\\David\\Work\\ANARI-SDK\\cts\\glTF-Sample-Models\\SheenChair\\glTF-Binary\\SheenChair.glb"
+  }
+}
