@@ -21,6 +21,7 @@ endif()
 
 project_add_library(SHARED
   anariExtensionUtilityImpl.cpp
+  anariTokens.cpp
   debugCodes.cpp
   instancer.cpp
   material.cpp
