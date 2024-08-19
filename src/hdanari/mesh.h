@@ -47,10 +47,16 @@ struct HdAnariMesh final : public HdMesh
 
   void _SetGeometryAttributeConstant(const TfToken& attributeName, const VtValue& v);
   void _SetGeometryAttributeArray(const TfToken& attributeName, const TfToken& bindingPoint, const VtValue& v);
+#if USE_INSTANCE_ARRAYS
   void _SetInstanceAttributeArray(const TfToken& attributeName, const VtValue& v);
+#endif
 
   HdDirtyBits _PropagateDirtyBits(HdDirtyBits bits) const override;
   void _InitRepr(const TfToken &reprToken, HdDirtyBits *dirtyBits) override;
+
+#if !USE_INSTANCE_ARRAYS
+  void ReleaseInstances();
+#endif
 
   HdAnariMesh(const HdAnariMesh &) = delete;
   HdAnariMesh &operator=(const HdAnariMesh &) = delete;
@@ -76,7 +82,11 @@ struct HdAnariMesh final : public HdMesh
     anari::Geometry geometry{nullptr};
     anari::Surface surface{nullptr};
     anari::Group group{nullptr};
+#if USE_INSTANCE_ARRAYS
     anari::Instance instance{nullptr};
+#else
+    std::vector<anari::Instance> instances;
+#endif
   } _anari;
 };
 

@@ -183,7 +183,9 @@ HdAnariMesh::HdAnariMesh(
   _anari.geometry = anari::newObject<anari::Geometry>(d, "triangle");
   _anari.surface = anari::newObject<anari::Surface>(d);
   _anari.group = anari::newObject<anari::Group>(d);
+#if USE_INSTANCE_ARRAYS
   _anari.instance = anari::newObject<anari::Instance>(d, "transform");
+#endif
 
   anari::setParameter(d, _anari.surface, "geometry", _anari.geometry);
   anari::commitParameters(d, _anari.surface);
@@ -191,16 +193,19 @@ HdAnariMesh::HdAnariMesh(
   anari::setParameterArray1D(d, _anari.group, "surface", &_anari.surface, 1);
   anari::commitParameters(d, _anari.group);
 
+#if USE_INSTANCE_ARRAYS
   anari::setParameter(_anari.device, _anari.instance, "group", _anari.group);
   anari::commitParameters(d, _anari.instance);
+#endif
 }
 
 HdAnariMesh::~HdAnariMesh()
 {
   if (!_anari.device)
     return;
-
+#if USE_INSTANCE_ARRAYS
   anari::release(_anari.device, _anari.instance);
+#endif
   anari::release(_anari.device, _anari.group);
   anari::release(_anari.device, _anari.surface);
   anari::release(_anari.device, _anari.geometry);
@@ -222,6 +227,9 @@ HdDirtyBits HdAnariMesh::GetInitialDirtyBitsMask() const
 
 void HdAnariMesh::Finalize(HdRenderParam *renderParam_)
 {
+#if !USE_INSTANCE_ARRAYS
+  ReleaseInstances();
+#endif
   if (_populated) {
     auto *renderParam = static_cast<HdAnariRenderParam *>(renderParam_);
     renderParam->RemoveMesh(this);
@@ -326,7 +334,9 @@ void HdAnariMesh::Sync(HdSceneDelegate *sceneDelegate,
           if (auto geomIt = geometryBindingPoints_.find(pvb.second); geomIt != std::cend(geometryBindingPoints_)) {
             anari::unsetParameter(_anari.device, _anari.geometry, geomIt->second.GetText());
           } else if (auto instanceIt = instanceBindingPoints_.find(pvb.second); instanceIt != std::cend(instanceBindingPoints_)) {
+#if USE_INSTANCE_ARRAYS
             anari::unsetParameter(_anari.device, _anari.instance, instanceIt->second.GetText());
+#endif
           }
         }
   }
@@ -417,16 +427,24 @@ void HdAnariMesh::Sync(HdSceneDelegate *sceneDelegate,
   anari::commitParameters(_anari.device, _anari.geometry);
 
   // Populate instance objects.
+#if !USE_INSTANCE_ARRAYS
+  VtMatrix4fArray transforms_UNIQUE_INSTANCES;
+  VtUIntArray ids_UNIQUE_INSTANCES;
+#endif
 
   // Transforms //
   if (HdChangeTracker::IsTransformDirty(*dirtyBits, id) || HdChangeTracker::IsInstancerDirty(*dirtyBits, id) || HdChangeTracker::IsInstanceIndexDirty(*dirtyBits, id)) {
-
     auto baseTransform = sceneDelegate->GetTransform(id);
 
     // Set instance parameters
     if (GetInstancerId().IsEmpty()) {
+#if USE_INSTANCE_ARRAYS
       anari::setParameter(_anari.device, _anari.instance, "transform", GfMatrix4f(baseTransform));
       anari::setParameter(_anari.device, _anari.instance, "id", 0);
+#else
+      transforms_UNIQUE_INSTANCES.push_back(GfMatrix4f(baseTransform));
+      ids_UNIQUE_INSTANCES.push_back(0);
+#endif
     } else {
       auto instancer = static_cast<HdAnariInstancer *>(renderIndex.GetInstancer(GetInstancerId()));
 
@@ -440,10 +458,19 @@ void HdAnariMesh::Sync(HdSceneDelegate *sceneDelegate,
       VtUIntArray ids(transforms.size());
       std::iota(std::begin(ids), std::end(ids), 0);
 
+#if USE_INSTANCE_ARRAYS
       _SetInstanceAttributeArray(HdAnariTokens->transform, VtValue(transforms));
       _SetInstanceAttributeArray(HdAnariTokens->id, VtValue(ids));
+#else
+      transforms_UNIQUE_INSTANCES = std::move(transforms);
+      ids_UNIQUE_INSTANCES = std::move(ids);
+#endif
     }
   }
+
+#if !USE_INSTANCE_ARRAYS
+  std::vector<std::pair<TfToken, VtValue>> instancedPrimvar_UNIQUE_INSTANCES;
+#endif
 
   // Primvars
   if (HdChangeTracker::IsAnyPrimvarDirty(*dirtyBits, id) || HdChangeTracker::IsInstancerDirty(*dirtyBits, id) || HdChangeTracker::IsInstanceIndexDirty(*dirtyBits, id))
@@ -479,14 +506,52 @@ void HdAnariMesh::Sync(HdSceneDelegate *sceneDelegate,
 
       for (const auto& pv : instancePrimvarDescriptors) {
           if (auto it = updatedPrimvarBinding.find(pv.name); it != std::cend(updatedPrimvarBinding)) {
-            const auto& value = instancer->GatherInstancePrimvar(GetId(), pv.name);
-            _SetInstanceAttributeArray(it->second, value);
+#if USE_INSTANCE_ARRAYS
+            _SetInstanceAttributeArray(it->second, instancer->GatherInstancePrimvar(GetId(), pv.name));
+#else
+            instancedPrimvar_UNIQUE_INSTANCES.emplace_back(it->second, instancer->GatherInstancePrimvar(GetId(), pv.name));
+#endif
           }
       }
   }
 
-
+#if USE_INSTANCE_ARRAYS
   anari::commitParameters(_anari.device, _anari.instance);
+#else
+  ReleaseInstances();
+  _anari.instances.reserve(std::size(transforms_UNIQUE_INSTANCES));
+
+  for (auto i = 0ul; i < std::size(transforms_UNIQUE_INSTANCES); ++i) {
+    auto instance = anari::newObject<anari::Instance>(_anari.device, "transform");
+    anari::setParameter(_anari.device, instance, "group", _anari.group);
+    anari::setParameter(_anari.device, instance, "transform", transforms_UNIQUE_INSTANCES[i]);
+    anari::setParameter(_anari.device, instance, "id", ids_UNIQUE_INSTANCES[i]);
+
+    for (auto&& [attr, value] : instancedPrimvar_UNIQUE_INSTANCES) {
+      if (value.IsHolding<VtFloatArray>()) {
+        const auto& array = value.UncheckedGet<VtFloatArray>();
+        if (i < std::size(array))
+          anari::setParameter(_anari.device, instance, attr.GetText(), array[i]);
+      } else if (value.IsHolding<VtVec2fArray>()) {
+        const auto& array = value.UncheckedGet<VtVec2fArray>();
+        if (i < std::size(array))
+          anari::setParameter(_anari.device, instance, attr.GetText(), array[i]);
+      } else if (value.IsHolding<VtVec3fArray>()) {
+        const auto& array = value.UncheckedGet<VtVec3fArray>();
+        if (i < std::size(array))
+          anari::setParameter(_anari.device, instance, attr.GetText(), array[i]);
+      } else if (value.IsHolding<VtVec4fArray>()) {
+        const auto& array = value.UncheckedGet<VtVec4fArray>();
+        if (i < std::size(array))
+          anari::setParameter(_anari.device, instance, attr.GetText(), array[i]);
+      }
+    }
+    anari::commitParameters(_anari.device, instance);
+    _anari.instances.push_back(instance);
+  }
+
+  renderParam->MarkNewSceneVersion();
+#endif
 
   primvarBinding_ = updatedPrimvarBinding;
 
@@ -506,7 +571,11 @@ void HdAnariMesh::Sync(HdSceneDelegate *sceneDelegate,
 void HdAnariMesh::AddInstances(std::vector<anari::Instance> &instances) const
 {
   if (IsVisible()) {
+#if USE_INSTANCE_ARRAYS
     instances.push_back(_anari.instance);
+#else
+  std::copy(std::cbegin(_anari.instances), std::cend(_anari.instances), std::back_inserter(instances));
+#endif
   }
 }
 
@@ -683,6 +752,7 @@ void HdAnariMesh::_SetGeometryAttributeArray(const TfToken &attributeName, const
   }
 }
 
+#if USE_INSTANCE_ARRAYS
 void HdAnariMesh::_SetInstanceAttributeArray(const TfToken &attributeName, const VtValue& value)
 {
   anari::DataType type = ANARI_UNKNOWN;
@@ -699,6 +769,7 @@ void HdAnariMesh::_SetInstanceAttributeArray(const TfToken &attributeName, const
     TF_DEBUG_MSG(HD_ANARI_MESH, "Clearing instance primvar %s on mesh %s\n", attributeName.GetText(), GetId().GetText());
   }
 }
+#endif
 
 
 HdDirtyBits HdAnariMesh::_PropagateDirtyBits(HdDirtyBits bits) const
@@ -717,5 +788,15 @@ void HdAnariMesh::_InitRepr(const TfToken &reprToken, HdDirtyBits *dirtyBits)
     _reprs.emplace_back(reprToken, HdReprSharedPtr());
   }
 }
+
+#if !USE_INSTANCE_ARRAYS
+void HdAnariMesh::ReleaseInstances()
+{
+  for (const auto& instance : _anari.instances) {
+    anari::release(_anari.device, instance);
+  }
+  _anari.instances.clear();
+}
+#endif
 
 PXR_NAMESPACE_CLOSE_SCOPE

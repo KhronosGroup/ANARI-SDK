@@ -40,6 +40,13 @@ project_add_library(SHARED
   sampler.cpp
 )
 
+option(USE_INSTANCE_ARRAYS "Toggle on the use of instance arrays" OFF)
+if (USE_INSTANCE_ARRAYS)
+  target_compile_definitions(${PROJECT_NAME} PRIVATE "USE_INSTANCE_ARRAYS=1")
+else()
+  target_compile_definitions(${PROJECT_NAME} PRIVATE "USE_INSTANCE_ARRAYS=0")
+endif()
+
 set_target_properties(${PROJECT_NAME}
 PROPERTIES
   # The other libs in the plugin dir have no "lib" prefix, so let's match this
