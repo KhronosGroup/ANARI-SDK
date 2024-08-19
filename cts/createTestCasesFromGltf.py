@@ -48,7 +48,7 @@ def create_test_json(gltf_scene):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="ANARI CTS toolkit generation")
-    parser.add_argument("-g", "--gltf", default=".")
+    parser.add_argument("-g", "--gltf", default="./glTF-Sample-Models")
     parser.add_argument("-o", "--output", default="test_scenes/gltf")
 
     args = parser.parse_args()

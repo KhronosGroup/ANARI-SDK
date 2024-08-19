@@ -3,6 +3,13 @@
 
 cmake_minimum_required(VERSION 3.1)
 
+# Fix "DOWNLOAD_EXTRACT_TIMESTAMP" warning
+if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
+  cmake_policy(SET CMP0135 NEW)
+endif()
+
+include(FetchContent)
+
 if (TARGET anari)
   list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/../cmake)
 endif()
@@ -65,6 +72,15 @@ if (CTS_DEV AND NOT BUILD_SHARED_LIBS)
     VERBATIM
   )
 endif()
+
+message("Fetching glTF Sample Models")
+FetchContent_Declare(glTFSampleModels
+  URL https://github.com/KhronosGroup/glTF-Sample-Models/archive/refs/heads/main.zip)
+FetchContent_MakeAvailable(glTFSampleModels)
+
+message("Copying glTF Sample Models")
+file(GLOB GLTF_SAMPLE_MODELS_FILES ${gltfsamplemodels_SOURCE_DIR}/2.0/*)
+file(COPY ${GLTF_SAMPLE_MODELS_FILES} DESTINATION ${CMAKE_CURRENT_LIST_DIR}/gltf-Sample-Models)
 
 ## Installation ##
 
