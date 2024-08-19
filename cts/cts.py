@@ -803,7 +803,7 @@ if __name__ == "__main__":
     evaluateScenesParser.add_argument('-o', '--output', default=".", help="Output path")
 
     # command: query_features
-    checkExtensionsParser = subparsers.add_parser('query_features', parents=[deviceParser], description="Check which features are supported by the ")
+    checkExtensionsParser = subparsers.add_parser('query_features', parents=[deviceParser], description="Check which features are supported by the device")
 
     # command: query_metadata
     queryMetadataParser = subparsers.add_parser('query_metadata', parents=[libraryParser], description="Show metadata related to the specified library")
