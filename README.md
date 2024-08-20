@@ -168,6 +168,11 @@ how to setup the debug device without using environment variables.
 Note that if `ANARI_DEBUG_WRAPPED_LIBRARY` is set, it will take priority over
 programatically set wrapped devices.
 
+Tracing features of the debug device can be set using the following environment
+variables:
+- `ANARI_DEBUG_TRACE_MODE` sets the tracing mode, only `code` is supported for now.
+- `ANARI_DEBUG_TRACE_DIR` set the folder where the trace will be dumped.
+
 ### Unofficial list of publically available implementaions
 
 Below is a list of available ANARI implemenations compatible with this SDK:
