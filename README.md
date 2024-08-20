@@ -133,7 +133,7 @@ independently from the SDK. (see below)
 
 ### Using the debug device layer
 
-The ANARI-SDK ships with a [debug layer](src/debug) implemented as an ordinary
+The ANARI-SDK ships with a [debug layer](src/debug_device) implemented as an ordinary
 `ANARIDevice` which wraps a device (set as the `wrappedDevice` parameter on the
 debug device). This device uses the object queries reported by the wrapped
 device to validate correct usage of object subtypes, parameters, and properties,
