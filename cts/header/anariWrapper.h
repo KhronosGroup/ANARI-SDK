@@ -151,6 +151,14 @@ class SceneGeneratorWrapper
     }
   }
 
+  void setGenericTexture2D(
+      const std::string& name, const std::string& textureType)
+  {
+    if (m_sceneGenerator) {
+      m_sceneGenerator->setGenericTexture2D(name, textureType);
+    }
+  }
+
   void unsetGenericParameter(const std::string &name)
   {
     if (m_sceneGenerator) {

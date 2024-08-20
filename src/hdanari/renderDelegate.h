@@ -10,6 +10,7 @@
 #include <pxr/imaging/hd/renderThread.h>
 #include <pxr/pxr.h>
 
+#include <anari/anari_cpp.hpp>
 #include <mutex>
 
 PXR_NAMESPACE_OPEN_SCOPE
@@ -28,7 +29,7 @@ class HdAnariRenderDelegate final : public HdRenderDelegate
   HdAnariRenderDelegate(HdRenderSettingsMap const &settingsMap);
   ~HdAnariRenderDelegate() override;
 
-  HdRenderParam *GetRenderParam() const override;
+  HdAnariRenderParam *GetRenderParam() const override;
 
   const TfTokenVector &GetSupportedRprimTypes() const override;
   const TfTokenVector &GetSupportedSprimTypes() const override;

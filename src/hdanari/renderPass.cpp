@@ -2,12 +2,28 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "renderPass.h"
-#include "debugCodes.h"
+
+#include <anari/anari_cpp/anari_cpp_impl.hpp>
+#include <anari/frontend/anari_enums.h>
+#include <pxr/base/gf/vec2i.h>
+#include <pxr/base/gf/vec3d.h>
+#include <pxr/base/gf/vec3f.h>
+#include <pxr/base/gf/vec4d.h>
+#include <pxr/base/tf/staticData.h>
+#include <pxr/base/vt/value.h>
+#include <pxr/imaging/cameraUtil/framing.h>
+// pxr
+#include <pxr/imaging/hd/renderPassState.h>
+#include <pxr/imaging/hd/tokens.h>
+#include <pxr/imaging/hd/types.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <cmath>
+#include <vector>
+
 #include "mesh.h"
 #include "renderBuffer.h"
 #include "renderDelegate.h"
-// pxr
-#include <pxr/imaging/hd/renderPassState.h>
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -104,8 +120,6 @@ void HdAnariRenderPass::_Execute(
     HdRenderPassStateSharedPtr const &renderPassState,
     TfTokenVector const &renderTags)
 {
-  TF_DEBUG_MSG(HD_ANARI_RENDERPASS, "HdAnariRenderPass::Execute\n");
-
   if (_renderParam) {
     _UpdateFrame(
         _GetDataWindow(renderPassState), renderPassState->GetAovBindings());
@@ -115,8 +129,6 @@ void HdAnariRenderPass::_Execute(
     _UpdateWorld();
     _WriteAovs(renderPassState->GetAovBindings());
   }
-
-  TF_DEBUG_MSG(HD_ANARI_RENDERPASS, "HdAnariRenderPass::Execute done\n");
 }
 
 void HdAnariRenderPass::_UpdateRenderer()

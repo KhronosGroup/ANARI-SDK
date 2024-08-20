@@ -21,11 +21,15 @@ void TransformSampler::commit()
   m_transform = getParam<mat4>("transform", mat4(linalg::identity));
 }
 
-float4 TransformSampler::getSample(const Geometry &g, const Ray &r) const
+float4 TransformSampler::getSample(
+    const Geometry &g, const Ray &r, const UniformAttributeSet &instAttrV) const
 {
   if (m_inAttribute == Attribute::NONE)
     return DEFAULT_ATTRIBUTE_VALUE;
-  return linalg::mul(m_transform, g.getAttributeValue(m_inAttribute, r));
+
+  const auto &ia = getUniformAttribute(instAttrV, m_inAttribute);
+  return linalg::mul(
+      m_transform, ia ? *ia : g.getAttributeValue(m_inAttribute, r));
 }
 
 } // namespace helide

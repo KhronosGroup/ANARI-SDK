@@ -7,6 +7,9 @@
 #include "helium/helium_math.h"
 // embree
 #include <embree3/rtcore_common.h>
+// std
+#include <array>
+#include <optional>
 
 namespace helide {
 
@@ -45,5 +48,13 @@ struct VolumeRay
   Volume *volume{nullptr};
   uint32_t instID{RTC_INVALID_GEOMETRY_ID};
 };
+
+using UniformAttributeSet = std::array<std::optional<float4>, 5>;
+
+inline const std::optional<float4> &getUniformAttribute(
+    const UniformAttributeSet &ua, Attribute attr)
+{
+  return ua[static_cast<int>(attr)];
+}
 
 } // namespace helide

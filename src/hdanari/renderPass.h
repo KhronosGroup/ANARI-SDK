@@ -3,8 +3,18 @@
 
 #pragma once
 
+#include <anari/anari_cpp.hpp>
+#include <pxr/base/gf/matrix4d.h>
 #include <pxr/base/gf/rect2i.h>
+#include <pxr/base/gf/vec4f.h>
+#include <pxr/base/tf/token.h>
+#include <pxr/imaging/hd/aov.h>
+#include <pxr/imaging/hd/renderDelegate.h>
+#include <pxr/imaging/hd/renderIndex.h>
 #include <pxr/imaging/hd/renderPass.h>
+#include <pxr/imaging/hd/rprimCollection.h>
+#include <pxr/pxr.h>
+#include <memory>
 
 #include "renderParam.h"
 

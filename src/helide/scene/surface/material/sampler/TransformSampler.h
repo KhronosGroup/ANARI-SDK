@@ -14,7 +14,9 @@ struct TransformSampler : public Sampler
   bool isValid() const override;
   void commit() override;
 
-  float4 getSample(const Geometry &g, const Ray &r) const override;
+  float4 getSample(const Geometry &g,
+      const Ray &r,
+      const UniformAttributeSet &instAttrV) const override;
 
  private:
   Attribute m_inAttribute{Attribute::NONE};

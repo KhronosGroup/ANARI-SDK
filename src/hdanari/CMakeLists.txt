@@ -24,8 +24,14 @@ project_add_library(SHARED
   debugCodes.cpp
   instancer.cpp
   material.cpp
-  material/usdPreviewSurface.cpp
+  material/matte.cpp
+  material/physicallyBased.cpp
+  material/textureLoader.cpp
+  material/usdPreviewSurfaceConverter.cpp
+  materialTokens.cpp
+  materialTokens.h
   mesh.cpp
+  meshUtil.cpp
   renderBuffer.cpp
   renderDelegate.cpp
   rendererPlugin.cpp
