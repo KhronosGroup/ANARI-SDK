@@ -2,6 +2,6 @@
   "description": "Test SheenCloth.gltf",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "C:\\Users\\David\\Work\\ANARI-SDK\\cts\\glTF-Sample-Models\\SheenCloth\\glTF\\SheenCloth.gltf"
+    "gltf": "../../../../glTF-Sample-Models/SheenCloth/glTF/SheenCloth.gltf"
   }
 }

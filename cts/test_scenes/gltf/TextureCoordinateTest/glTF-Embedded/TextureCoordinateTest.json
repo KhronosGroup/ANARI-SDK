@@ -2,6 +2,6 @@
   "description": "Test TextureCoordinateTest.gltf",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "C:\\Users\\David\\Work\\ANARI-SDK\\cts\\glTF-Sample-Models\\TextureCoordinateTest\\glTF-Embedded\\TextureCoordinateTest.gltf"
+    "gltf": "../../../../glTF-Sample-Models/TextureCoordinateTest/glTF-Embedded/TextureCoordinateTest.gltf"
   }
 }

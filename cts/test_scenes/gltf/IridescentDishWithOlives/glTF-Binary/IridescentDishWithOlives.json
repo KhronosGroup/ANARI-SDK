@@ -2,6 +2,6 @@
   "description": "Test IridescentDishWithOlives.glb",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "C:\\Users\\David\\Work\\ANARI-SDK\\cts\\glTF-Sample-Models\\IridescentDishWithOlives\\glTF-Binary\\IridescentDishWithOlives.glb"
+    "gltf": "../../../../glTF-Sample-Models/IridescentDishWithOlives/glTF-Binary/IridescentDishWithOlives.glb"
   }
 }

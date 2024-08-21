@@ -2,6 +2,6 @@
   "description": "Test Cameras.gltf",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "C:\\Users\\David\\Work\\ANARI-SDK\\cts\\glTF-Sample-Models\\Cameras\\glTF\\Cameras.gltf"
+    "gltf": "../../../../glTF-Sample-Models/Cameras/glTF/Cameras.gltf"
   }
 }

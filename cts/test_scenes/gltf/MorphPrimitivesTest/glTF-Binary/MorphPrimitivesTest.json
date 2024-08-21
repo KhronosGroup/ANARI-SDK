@@ -2,6 +2,6 @@
   "description": "Test MorphPrimitivesTest.glb",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "C:\\Users\\David\\Work\\ANARI-SDK\\cts\\glTF-Sample-Models\\MorphPrimitivesTest\\glTF-Binary\\MorphPrimitivesTest.glb"
+    "gltf": "../../../../glTF-Sample-Models/MorphPrimitivesTest/glTF-Binary/MorphPrimitivesTest.glb"
   }
 }

@@ -2,6 +2,6 @@
   "description": "Test BoxVertexColors.gltf",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "C:\\Users\\David\\Work\\ANARI-SDK\\cts\\glTF-Sample-Models\\BoxVertexColors\\glTF\\BoxVertexColors.gltf"
+    "gltf": "../../../../glTF-Sample-Models/BoxVertexColors/glTF/BoxVertexColors.gltf"
   }
 }

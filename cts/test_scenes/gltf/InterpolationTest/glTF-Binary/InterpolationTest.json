@@ -2,6 +2,6 @@
   "description": "Test InterpolationTest.glb",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "C:\\Users\\David\\Work\\ANARI-SDK\\cts\\glTF-Sample-Models\\InterpolationTest\\glTF-Binary\\InterpolationTest.glb"
+    "gltf": "../../../../glTF-Sample-Models/InterpolationTest/glTF-Binary/InterpolationTest.glb"
   }
 }

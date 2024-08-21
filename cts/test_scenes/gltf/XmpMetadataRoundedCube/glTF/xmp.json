@@ -2,6 +2,6 @@
   "description": "Test xmp.gltf",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "C:\\Users\\David\\Work\\ANARI-SDK\\cts\\glTF-Sample-Models\\XmpMetadataRoundedCube\\glTF\\xmp.gltf"
+    "gltf": "../../../../glTF-Sample-Models/XmpMetadataRoundedCube/glTF/xmp.gltf"
   }
 }

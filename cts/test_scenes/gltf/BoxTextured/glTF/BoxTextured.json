@@ -2,6 +2,6 @@
   "description": "Test BoxTextured.gltf",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "C:\\Users\\David\\Work\\ANARI-SDK\\cts\\glTF-Sample-Models\\BoxTextured\\glTF\\BoxTextured.gltf"
+    "gltf": "../../../../glTF-Sample-Models/BoxTextured/glTF/BoxTextured.gltf"
   }
 }

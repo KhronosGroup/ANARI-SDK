@@ -2,6 +2,6 @@
   "description": "Test Box.gltf",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "C:\\Users\\David\\Work\\ANARI-SDK\\cts\\glTF-Sample-Models\\Box\\glTF\\Box.gltf"
+    "gltf": "../../../../glTF-Sample-Models/Box/glTF/Box.gltf"
   }
 }

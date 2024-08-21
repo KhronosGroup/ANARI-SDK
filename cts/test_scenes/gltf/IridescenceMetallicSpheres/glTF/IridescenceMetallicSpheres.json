@@ -2,6 +2,6 @@
   "description": "Test IridescenceMetallicSpheres.gltf",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "C:\\Users\\David\\Work\\ANARI-SDK\\cts\\glTF-Sample-Models\\IridescenceMetallicSpheres\\glTF\\IridescenceMetallicSpheres.gltf"
+    "gltf": "../../../../glTF-Sample-Models/IridescenceMetallicSpheres/glTF/IridescenceMetallicSpheres.gltf"
   }
 }

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 import json
 import argparse
 import os
@@ -11,13 +11,14 @@ def create_test_cases_from_gltf(gltf_dir, output_path):
         # create paths
         absolute_gltf_path = Path(__file__).parent / gltf_dir
         relative_gltf_path = os.path.relpath(gltf_scene.parent, absolute_gltf_path)
+        absolute_json_path = absolute_gltf_path.parent / Path(output_path) / Path(relative_gltf_path) / Path(gltf_scene.stem + '.json')
         # print info
         print("Creating test case")
         print(f"    Source glTF: " + str(gltf_scene))
-        print(f"    Test case: " + str(absolute_gltf_path.parent / Path(output_path) / Path(relative_gltf_path) / Path(gltf_scene.stem + '.json')))
+        print(f"    Test case: " + str(absolute_json_path))
         print("")
         # create test
-        json_data = create_test_json(gltf_scene)
+        json_data = create_test_json(gltf_scene.name, os.path.relpath(gltf_scene, absolute_json_path.parent))
         # write test
         output_dir = Path(output_path + "/" + relative_gltf_path)
         if not os.path.exists(output_dir):
@@ -36,12 +37,14 @@ def gather_gltf(gltf_dir):
         print("glTF path must lead to a directory")
         return []
 
-def create_test_json(gltf_scene):
+def create_test_json(name, path):
+    if os.path.sep == "\\":
+        path = PureWindowsPath(path).as_posix()
     json_data = {
-        "description": "Test " + str(gltf_scene.name),
+        "description": "Test " + str(name),
         "sceneParameters": {
             "primitiveCount": 0,
-            "gltf": str(gltf_scene)
+            "gltf": str(path)
         }
     }
     return json_data

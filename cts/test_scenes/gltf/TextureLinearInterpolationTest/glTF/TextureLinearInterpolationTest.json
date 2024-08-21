@@ -2,6 +2,6 @@
   "description": "Test TextureLinearInterpolationTest.gltf",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "C:\\Users\\David\\Work\\ANARI-SDK\\cts\\glTF-Sample-Models\\TextureLinearInterpolationTest\\glTF\\TextureLinearInterpolationTest.gltf"
+    "gltf": "../../../../glTF-Sample-Models/TextureLinearInterpolationTest/glTF/TextureLinearInterpolationTest.gltf"
   }
 }

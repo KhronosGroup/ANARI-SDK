@@ -2,6 +2,6 @@
   "description": "Test ClearcoatWicker.glb",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "C:\\Users\\David\\Work\\ANARI-SDK\\cts\\glTF-Sample-Models\\ClearcoatWicker\\glTF-Binary\\ClearcoatWicker.glb"
+    "gltf": "../../../../glTF-Sample-Models/ClearcoatWicker/glTF-Binary/ClearcoatWicker.glb"
   }
 }

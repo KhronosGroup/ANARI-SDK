@@ -2,6 +2,6 @@
   "description": "Test TwoSidedPlane.gltf",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "C:\\Users\\David\\Work\\ANARI-SDK\\cts\\glTF-Sample-Models\\TwoSidedPlane\\glTF\\TwoSidedPlane.gltf"
+    "gltf": "../../../../glTF-Sample-Models/TwoSidedPlane/glTF/TwoSidedPlane.gltf"
   }
 }

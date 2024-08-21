@@ -2,6 +2,6 @@
   "description": "Test TextureEncodingTest.glb",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "C:\\Users\\David\\Work\\ANARI-SDK\\cts\\glTF-Sample-Models\\TextureEncodingTest\\glTF-Binary\\TextureEncodingTest.glb"
+    "gltf": "../../../../glTF-Sample-Models/TextureEncodingTest/glTF-Binary/TextureEncodingTest.glb"
   }
 }

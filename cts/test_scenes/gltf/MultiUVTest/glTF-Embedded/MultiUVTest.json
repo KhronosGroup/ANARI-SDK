@@ -2,6 +2,6 @@
   "description": "Test MultiUVTest.gltf",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "C:\\Users\\David\\Work\\ANARI-SDK\\cts\\glTF-Sample-Models\\MultiUVTest\\glTF-Embedded\\MultiUVTest.gltf"
+    "gltf": "../../../../glTF-Sample-Models/MultiUVTest/glTF-Embedded/MultiUVTest.gltf"
   }
 }

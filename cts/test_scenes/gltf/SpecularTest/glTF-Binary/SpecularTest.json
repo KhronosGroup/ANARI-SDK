@@ -2,6 +2,6 @@
   "description": "Test SpecularTest.glb",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "C:\\Users\\David\\Work\\ANARI-SDK\\cts\\glTF-Sample-Models\\SpecularTest\\glTF-Binary\\SpecularTest.glb"
+    "gltf": "../../../../glTF-Sample-Models/SpecularTest/glTF-Binary/SpecularTest.glb"
   }
 }

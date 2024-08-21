@@ -2,6 +2,6 @@
   "description": "Test MetalRoughSpheresNoTextures.gltf",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "C:\\Users\\David\\Work\\ANARI-SDK\\cts\\glTF-Sample-Models\\MetalRoughSpheresNoTextures\\glTF\\MetalRoughSpheresNoTextures.gltf"
+    "gltf": "../../../../glTF-Sample-Models/MetalRoughSpheresNoTextures/glTF/MetalRoughSpheresNoTextures.gltf"
   }
 }

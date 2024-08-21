@@ -2,6 +2,6 @@
   "description": "Test RecursiveSkeletons.gltf",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "C:\\Users\\David\\Work\\ANARI-SDK\\cts\\glTF-Sample-Models\\RecursiveSkeletons\\glTF\\RecursiveSkeletons.gltf"
+    "gltf": "../../../../glTF-Sample-Models/RecursiveSkeletons/glTF/RecursiveSkeletons.gltf"
   }
 }

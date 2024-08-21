@@ -2,6 +2,6 @@
   "description": "Test Avocado.glb",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "C:\\Users\\David\\Work\\ANARI-SDK\\cts\\glTF-Sample-Models\\Avocado\\glTF-Binary\\Avocado.glb"
+    "gltf": "../../../../glTF-Sample-Models/Avocado/glTF-Binary/Avocado.glb"
   }
 }

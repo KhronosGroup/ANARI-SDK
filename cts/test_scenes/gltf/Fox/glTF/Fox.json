@@ -2,6 +2,6 @@
   "description": "Test Fox.gltf",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "C:\\Users\\David\\Work\\ANARI-SDK\\cts\\glTF-Sample-Models\\Fox\\glTF\\Fox.gltf"
+    "gltf": "../../../../glTF-Sample-Models/Fox/glTF/Fox.gltf"
   }
 }

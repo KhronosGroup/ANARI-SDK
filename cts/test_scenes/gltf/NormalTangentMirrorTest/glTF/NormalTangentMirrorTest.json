@@ -2,6 +2,6 @@
   "description": "Test NormalTangentMirrorTest.gltf",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "C:\\Users\\David\\Work\\ANARI-SDK\\cts\\glTF-Sample-Models\\NormalTangentMirrorTest\\glTF\\NormalTangentMirrorTest.gltf"
+    "gltf": "../../../../glTF-Sample-Models/NormalTangentMirrorTest/glTF/NormalTangentMirrorTest.gltf"
   }
 }

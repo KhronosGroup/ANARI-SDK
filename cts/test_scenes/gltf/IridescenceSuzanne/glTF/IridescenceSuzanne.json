@@ -2,6 +2,6 @@
   "description": "Test IridescenceSuzanne.gltf",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "C:\\Users\\David\\Work\\ANARI-SDK\\cts\\glTF-Sample-Models\\IridescenceSuzanne\\glTF\\IridescenceSuzanne.gltf"
+    "gltf": "../../../../glTF-Sample-Models/IridescenceSuzanne/glTF/IridescenceSuzanne.gltf"
   }
 }
