@@ -63,6 +63,12 @@ static bool _GetVtArrayBufferData(
 {
   if (_GetVtArrayBufferData_T<VtIntArray>(v, data, size, type))
     return true;
+  if (_GetVtArrayBufferData_T<VtVec2iArray>(v, data, size, type))
+    return true;
+  if (_GetVtArrayBufferData_T<VtVec3iArray>(v, data, size, type))
+    return true;
+  if (_GetVtArrayBufferData_T<VtVec4iArray>(v, data, size, type))
+    return true;
   if (_GetVtArrayBufferData_T<VtUIntArray>(v, data, size, type))
     return true;
   if (_GetVtArrayBufferData_T<VtFloatArray>(v, data, size, type))
@@ -224,7 +230,6 @@ void HdAnariGeometry::Sync(HdSceneDelegate *sceneDelegate,
 
   // Enumerate primvars
   bool pointsIsComputationPrimvar = false;
-  bool normalIsAuthored = false;
   bool displayColorIsAuthored = false;
   TfToken::Set allPrimvars;
   HdExtComputationPrimvarDescriptorVector computationPrimvarDescriptors;
@@ -253,8 +258,6 @@ void HdAnariGeometry::Sync(HdSceneDelegate *sceneDelegate,
         pointsIsComputationPrimvar = true;
       if (pv.name == HdTokens->displayColor)
         displayColorIsAuthored = true;
-      if (pv.name == HdTokens->normals)
-        normalIsAuthored = true;
     }
   }
 
@@ -282,8 +285,6 @@ void HdAnariGeometry::Sync(HdSceneDelegate *sceneDelegate,
       }
       if (pv.name == HdTokens->displayColor)
         displayColorIsAuthored = true;
-      if (pv.name == HdTokens->normals)
-        normalIsAuthored = true;
     }
   }
 
@@ -643,7 +644,7 @@ void HdAnariGeometry::_SetGeometryAttributeArray(const TfToken &attributeName,
     anari::setParameterArray1D(_anari.device,
         _anari.geometry,
         bindingPoint.GetText(),
-        type,
+        forcedType == ANARI_UNKNOWN ? type : forcedType,
         data,
         size);
     geometryBindingPoints_.emplace(attributeName, attributeName);
@@ -679,7 +680,7 @@ void HdAnariGeometry::_SetInstanceAttributeArray(const TfToken &attributeName,
     anari::setParameterArray1D(_anari.device,
         _anari.instance,
         attributeName.GetText(),
-        type,
+        forcedType == ANARI_UNKNOWN ? type : forcedType,
         data,
         size);
     instanceBindingPoints_.emplace(attributeName, attributeName);

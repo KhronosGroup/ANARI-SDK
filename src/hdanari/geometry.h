@@ -28,7 +28,6 @@
 #include <optional>
 #include <vector>
 
-#include "anariTokens.h"
 #include "material.h"
 #include "meshUtil.h"
 
@@ -77,10 +76,12 @@ class HdAnariGeometry : public HdMesh
       const TfToken &attributeName, const VtValue &v);
   void _SetGeometryAttributeArray(const TfToken &attributeName,
       const TfToken &bindingPoint,
-      const VtValue &v);
+      const VtValue &v,
+      anari::DataType forcedType = ANARI_UNKNOWN);
 #if USE_INSTANCE_ARRAYS
-  void _SetInstanceAttributeArray(
-      const TfToken &attributeName, const VtValue &v);
+  void _SetInstanceAttributeArray(const TfToken &attributeName,
+      const VtValue &v,
+      anari::DataType forcedType = ANARI_UNKNOWN);
 #endif
 
   void _InitRepr(const TfToken &reprToken, HdDirtyBits *dirtyBits) override;

@@ -60,10 +60,6 @@ struct HdAnariRenderParam final : public HdRenderParam
   void UnregisterGeometry(const HdAnariGeometry *geometry);
   const GeometryList &Geometries() const;
 
-  void AddMesh(HdAnariMesh *m);
-  const MeshList &Meshes() const;
-  void RemoveMesh(HdAnariMesh *m);
-
   int SceneVersion() const;
   void MarkNewSceneVersion();
 
@@ -74,7 +70,6 @@ struct HdAnariRenderParam final : public HdRenderParam
   HdAnariMaterial::PrimvarBinding _primvarBinding;
 
   std::mutex _mutex;
-  MeshList _meshes;
   GeometryList _geometries;
   std::atomic<int> _sceneVersion{0};
 };
@@ -131,23 +126,6 @@ inline const HdAnariMaterial::PrimvarBinding &
 HdAnariRenderParam::GetDefaultPrimvarBinding() const
 {
   return _primvarBinding;
-}
-
-inline void HdAnariRenderParam::AddMesh(HdAnariMesh *m)
-{
-  std::lock_guard<std::mutex> guard(_mutex);
-  _meshes.push_back(m);
-}
-
-inline const MeshList &HdAnariRenderParam::Meshes() const
-{
-  return _meshes;
-}
-
-inline void HdAnariRenderParam::RemoveMesh(HdAnariMesh *m)
-{
-  std::lock_guard<std::mutex> guard(_mutex);
-  _meshes.erase(std::remove(_meshes.begin(), _meshes.end(), m), _meshes.end());
 }
 
 inline void HdAnariRenderParam::RegisterGeometry(
