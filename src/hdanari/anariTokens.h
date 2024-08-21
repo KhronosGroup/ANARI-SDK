@@ -3,9 +3,13 @@
 
 #pragma once
 
-#include <pxr/pxr.h>
 #include <pxr/base/tf/staticTokens.h>
+#include <pxr/base/tf/token.h>
+#include <pxr/pxr.h>
 
+PXR_NAMESPACE_OPEN_SCOPE
+
+// clang-format off
 #define HDANARI_TOKENS \
   (attribute0) \
   (attribute1) \
@@ -32,6 +36,8 @@
   ((primitiveAttribute3, "primitive.attribute3")) \
   ((primitiveColor, "primitive.color")) \
   ((primitiveIndex, "primitive.index")) \
+  (radius) \
+  (sphere) \
   (transform) \
   ((vertexAttribute0, "vertex.attribute0")) \
   ((vertexAttribute1, "vertex.attribute1")) \
@@ -39,9 +45,10 @@
   ((vertexAttribute3, "vertex.attribute3")) \
   ((vertexColor, "vertex.color")) \
   ((vertexNormal, "vertex.normal")) \
-  ((vertexPosition, "vertex.position"))
+  ((vertexPosition, "vertex.position")) \
+  ((vertexRadius, "vertex.radius"))
 
-PXR_NAMESPACE_OPEN_SCOPE
+// clang-format on
 
 TF_DECLARE_PUBLIC_TOKENS(HdAnariTokens, HDANARI_TOKENS);
 
