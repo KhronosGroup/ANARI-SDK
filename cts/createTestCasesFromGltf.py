@@ -4,6 +4,8 @@ import json
 import argparse
 import os
 
+blacklist = ["Quantized", "Sparse"]
+
 def create_test_cases_from_gltf(gltf_dir, output_path):
     # gather all paths to gltf files in dir
     gltf_scenes = gather_gltf(gltf_dir)
@@ -32,6 +34,7 @@ def gather_gltf(gltf_dir):
         gltf_files = list(absolute_path.rglob("*.gltf"))
         glb_files = list(absolute_path.rglob("*.glb"))
         collected_gltf = gltf_files + glb_files
+        collected_gltf = filter(lambda x: not any(term in str(x) for term in blacklist), collected_gltf)
         return collected_gltf
     else:
         print("glTF path must lead to a directory")

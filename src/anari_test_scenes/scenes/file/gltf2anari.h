@@ -539,84 +539,85 @@ struct gltf_data
     for (const auto &mat : gltf["materials"]) {
       auto material =
           anari::newObject<anari::Material>(device, "physicallyBased");
-      const auto &pbr = mat["pbrMetallicRoughness"];
-      if (pbr.contains("baseColorTexture")) {
-        anari::Sampler sampler = nullptr;
-        if (pbr.contains("baseColorFactor")) {
+      if (mat.contains("pbrMetallicRoughness")) {
+        const auto &pbr = mat["pbrMetallicRoughness"];
+        if (pbr.contains("baseColorTexture")) {
+          anari::Sampler sampler = nullptr;
+          if (pbr.contains("baseColorFactor")) {
+            const auto &basecolor = pbr["baseColorFactor"];
+            float colorSwizzle[16] = {
+                // clang-format off
+                basecolor[0], 0.0f, 0.0f, 0.0f,
+                0.0f, basecolor[1], 0.0f, 0.0f,
+                0.0f, 0.0f, basecolor[2], 0.0f,
+                0.0f, 0.0f, 0.0f, basecolor[3],
+                // clang-format on
+            };
+            sampler = configure_sampler(pbr["baseColorTexture"], colorSwizzle);
+          } else {
+            sampler = configure_sampler(pbr["baseColorTexture"], nullptr);
+          }
+
+          if (sampler)
+            anari::setAndReleaseParameter(device, material, "baseColor", sampler);
+        } else if (pbr.contains("baseColorFactor")) {
           const auto &basecolor = pbr["baseColorFactor"];
-          float colorSwizzle[16] = {
+          float color[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+          std::copy(basecolor.begin(),
+              basecolor.begin() + std::min(4, int(basecolor.size())),
+              color);
+          anari::setParameter(
+              device, material, "baseColor", ANARI_FLOAT32_VEC3, &color[0]);
+          anari::setParameter(device, material, "opacity", color[3]);
+        }
+
+        anari::setParameter(device, material, "alphaMode", "blend");
+
+        if (pbr.contains("metallicRoughnessTexture")) {
+          float metallic = pbr.value("metallicFactor", 1);
+          float roughness = pbr.value("roughnessFactor", 1);
+
+          float metallicSwizzle[16] = {
               // clang-format off
-              basecolor[0], 0.0f, 0.0f, 0.0f,
-              0.0f, basecolor[1], 0.0f, 0.0f,
-              0.0f, 0.0f, basecolor[2], 0.0f,
-              0.0f, 0.0f, 0.0f, basecolor[3],
+              0.0f, 0.0f, 0.0f, 0.0f,
+              0.0f, 0.0f, 0.0f, 0.0f,
+              metallic, 0.0f, 0.0f, 0.0f,
+              0.0f, 0.0f, 0.0f, 0.0f,
               // clang-format on
           };
-          sampler = configure_sampler(pbr["baseColorTexture"], colorSwizzle);
+          float roughnessSwizzle[16] = {
+              // clang-format off
+              0.0f, 0.0f, 0.0f, 0.0f,
+              roughness, 0.0f, 0.0f, 0.0f,
+              0.0f, 0.0f, 0.0f, 0.0f,
+              0.0f, 0.0f, 0.0f, 0.0f,
+              // clang-format on
+          };
+
+          auto metallicSampler =
+              configure_sampler(pbr["metallicRoughnessTexture"], metallicSwizzle);
+          if (metallicSampler) {
+            anari::setAndReleaseParameter(
+                device, material, "metallic", metallicSampler);
+          }
+          auto roughnessSampler = configure_sampler(
+              pbr["metallicRoughnessTexture"], roughnessSwizzle);
+          if (roughnessSampler) {
+            anari::setAndReleaseParameter(
+                device, material, "roughness", roughnessSampler);
+          }
         } else {
-          sampler = configure_sampler(pbr["baseColorTexture"], nullptr);
-        }
+          if (pbr.contains("metallicFactor")) {
+            anari::setParameter<float>(
+                device, material, "metallic", pbr["metallicFactor"]);
+          }
 
-        if (sampler)
-          anari::setAndReleaseParameter(device, material, "baseColor", sampler);
-      } else if (pbr.contains("baseColorFactor")) {
-        const auto &basecolor = pbr["baseColorFactor"];
-        float color[4] = {0.0f, 0.0f, 0.0f, 1.0f};
-        std::copy(basecolor.begin(),
-            basecolor.begin() + std::min(4, int(basecolor.size())),
-            color);
-        anari::setParameter(
-            device, material, "baseColor", ANARI_FLOAT32_VEC3, &color[0]);
-        anari::setParameter(device, material, "opacity", color[3]);
-      }
-
-      anari::setParameter(device, material, "alphaMode", "blend");
-
-      if (pbr.contains("metallicRoughnessTexture")) {
-        float metallic = pbr.value("metallicFactor", 1);
-        float roughness = pbr.value("roughnessFactor", 1);
-
-        float metallicSwizzle[16] = {
-            // clang-format off
-            0.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 0.0f,
-            metallic, 0.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 0.0f,
-            // clang-format on
-        };
-        float roughnessSwizzle[16] = {
-            // clang-format off
-            0.0f, 0.0f, 0.0f, 0.0f,
-            roughness, 0.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 0.0f,
-            // clang-format on
-        };
-
-        auto metallicSampler =
-            configure_sampler(pbr["metallicRoughnessTexture"], metallicSwizzle);
-        if (metallicSampler) {
-          anari::setAndReleaseParameter(
-              device, material, "metallic", metallicSampler);
-        }
-        auto roughnessSampler = configure_sampler(
-            pbr["metallicRoughnessTexture"], roughnessSwizzle);
-        if (roughnessSampler) {
-          anari::setAndReleaseParameter(
-              device, material, "roughness", roughnessSampler);
-        }
-      } else {
-        if (pbr.contains("metallicFactor")) {
-          anari::setParameter<float>(
-              device, material, "metallic", pbr["metallicFactor"]);
-        }
-
-        if (pbr.contains("roughnessFactor")) {
-          anari::setParameter<float>(
-              device, material, "roughness", pbr["roughnessFactor"]);
+          if (pbr.contains("roughnessFactor")) {
+            anari::setParameter<float>(
+                device, material, "roughness", pbr["roughnessFactor"]);
+          }
         }
       }
-
       anari::commitParameters(device, material);
       materials.emplace_back(material);
     }
