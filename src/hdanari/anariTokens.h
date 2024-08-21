@@ -23,6 +23,7 @@ PXR_NAMESPACE_OPEN_SCOPE
   ((faceVaryingColor, "faceVarying.color")) \
   ((faceVaryingNormal, "faceVarying.normal")) \
   (id) \
+  (index) \
   ((instanceAttribute0, "attribute0")) \
   ((instanceAttribute1, "attribute1")) \
   ((instanceAttribute2, "attribute2")) \
@@ -39,6 +40,7 @@ PXR_NAMESPACE_OPEN_SCOPE
   (radius) \
   (sphere) \
   (transform) \
+  (triangle) \
   ((vertexAttribute0, "vertex.attribute0")) \
   ((vertexAttribute1, "vertex.attribute1")) \
   ((vertexAttribute2, "vertex.attribute2")) \

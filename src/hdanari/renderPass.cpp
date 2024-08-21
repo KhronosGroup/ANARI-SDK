@@ -225,9 +225,6 @@ void HdAnariRenderPass::_UpdateWorld()
 
   std::vector<anari::Instance> instances;
 
-  for (const auto *mesh : _renderParam->Meshes())
-    mesh->AddInstances(instances);
-
   for (const auto *geometry : _renderParam->Geometries())
     geometry->GatherInstances(instances);
 
