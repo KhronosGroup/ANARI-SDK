@@ -440,7 +440,7 @@ void HdAnariMesh::Sync(HdSceneDelegate *sceneDelegate,
     if (GetInstancerId().IsEmpty()) {
 #if USE_INSTANCE_ARRAYS
       anari::setParameter(_anari.device, _anari.instance, "transform", GfMatrix4f(baseTransform));
-      anari::setParameter(_anari.device, _anari.instance, "id", 0);
+      anari::setParameter(_anari.device, _anari.instance, "id", 0u);
 #else
       transforms_UNIQUE_INSTANCES.push_back(GfMatrix4f(baseTransform));
       ids_UNIQUE_INSTANCES.push_back(0);
