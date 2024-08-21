@@ -9,6 +9,7 @@ using json = nlohmann::json;
 
 #include <fstream>
 #include "stb_image.h"
+#include <set>
 
 static anari::DataType accessor_type(int c)
 {
@@ -321,13 +322,8 @@ struct gltf_data
   {
     const auto &tex = gltf["textures"].at(int(texspec["index"]));
 
-    int source_idx = -1;
-    if (tex.contains("extensions")
-        && tex["extensions"].contains("EXT_texture_webp")) {
-      source_idx = tex["extensions"]["EXT_texture_webp"]["source"];
-    } else if (tex.contains("source")) {
-      source_idx = tex["source"];
-    } else {
+    int source_idx = getImageIndexFromTexture(tex);
+    if (source_idx == -1) {
       return nullptr;
     }
 
@@ -485,6 +481,25 @@ struct gltf_data
     }
   }
 
+  int getImageIndexFromTextureInfo(const nlohmann::json& textureInfo) {
+    const int index = textureInfo.value("index", -1);
+    if (index != -1 && index < gltf["textures"].size()) {
+      const auto &texture = gltf["textures"][index];
+      return getImageIndexFromTexture(texture);
+    }
+    return -1;
+  }
+
+  int getImageIndexFromTexture(const nlohmann::json& texture) {
+    if (texture.contains("/extensions/EXT_texture_webp/source"_json_pointer)) {
+      return texture.at("/extensions/EXT_texture_webp/source"_json_pointer);
+    } else if (texture.contains(
+                   "/extensions/KHR_texture_basisu/source"_json_pointer)) {
+      return texture.at("/extensions/KHR_texture_basisu/source"_json_pointer);
+    }
+    return texture.value("source", -1);
+  }
+
   void load_assets(std::vector<std::vector<char>>& byteImages)
   {
     if (buffers.empty()) {    
@@ -493,29 +508,49 @@ struct gltf_data
         }
     }
 
-    size_t index = 0;
+    const std::vector<nlohmann::json_pointer<std::string>> sRGBTexturePointers =
+    {
+        "/emissiveTexture"_json_pointer,
+        "/pbrMetallicRoughness/baseColorTexture"_json_pointer,
+        "/extensions/KHR_materials_sheen/sheenColorTexture"_json_pointer,
+        "/extensions/KHR_materials_specular/specularColorTexture"_json_pointer
+    };
+
+    std::set<int> sRGBImages;
+    for (const auto &mat : gltf["materials"]) {
+      for (const auto &pointer : sRGBTexturePointers) {      
+          if (mat.contains(pointer)) {
+            sRGBImages.insert(getImageIndexFromTextureInfo(mat.at(pointer)));
+          }
+      }
+    }
+
+    size_t imageFilesIndex = 0;
+    size_t imageIndex = 0;
     for (const auto &img : gltf["images"]) {
       int width, height, n;
       const void *data = nullptr;
 
       std::vector<char> *imageData = nullptr;
       if (img.contains("uri")) {
-        if (index < byteImages.size()) {
-          imageData = &byteImages[index];
+        if (imageFilesIndex < byteImages.size()) {
+          imageData = &byteImages[imageFilesIndex];
           }
-          ++index;      
+        ++imageFilesIndex;      
       }
 
       data = decode_image(img, imageData, &width, &height, &n);
 
+      bool isSRGB = sRGBImages.find(imageIndex) != sRGBImages.end();
+
       if (data) {
-        int texelType = ANARI_UFIXED8_RGBA_SRGB;
+        int texelType = isSRGB ? ANARI_UFIXED8_RGBA_SRGB : ANARI_UFIXED8_VEC4;
         if (n == 3)
-          texelType = ANARI_UFIXED8_RGB_SRGB;
+          texelType = isSRGB ? ANARI_UFIXED8_RGB_SRGB : ANARI_UFIXED8_VEC3;
         else if (n == 2)
-          texelType = ANARI_UFIXED8_VEC2;
+          texelType = isSRGB ? ANARI_UFIXED8_RA_SRGB : ANARI_UFIXED8_VEC2;
         else if (n == 1)
-          texelType = ANARI_UFIXED8;
+          texelType = isSRGB ? ANARI_UFIXED8_R_SRGB : ANARI_UFIXED8;
 
         auto array = anari::newArray2D(
             device,
@@ -531,6 +566,7 @@ struct gltf_data
       } else {
         images.emplace_back(nullptr);
       }
+      ++imageIndex;
     }
   }
 
