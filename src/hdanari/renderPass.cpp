@@ -3,7 +3,6 @@
 
 #include "renderPass.h"
 
-#include <anari/anari_cpp/anari_cpp_impl.hpp>
 #include <anari/frontend/anari_enums.h>
 #include <pxr/base/gf/vec2i.h>
 #include <pxr/base/gf/vec3d.h>
@@ -12,6 +11,8 @@
 #include <pxr/base/tf/staticData.h>
 #include <pxr/base/vt/value.h>
 #include <pxr/imaging/cameraUtil/framing.h>
+#include <pxr/imaging/hd/renderDelegate.h>
+#include <anari/anari_cpp/anari_cpp_impl.hpp>
 // pxr
 #include <pxr/imaging/hd/renderPassState.h>
 #include <pxr/imaging/hd/tokens.h>
@@ -21,6 +22,7 @@
 #include <cmath>
 #include <vector>
 
+#include "geometry.h"
 #include "mesh.h"
 #include "renderBuffer.h"
 #include "renderDelegate.h"
@@ -221,10 +223,13 @@ void HdAnariRenderPass::_UpdateWorld()
   if (sceneVersion <= _lastSceneVersion)
     return;
 
-  const MeshList &meshes = _renderParam->Meshes();
   std::vector<anari::Instance> instances;
-  for (const auto *mesh : meshes)
+
+  for (const auto *mesh : _renderParam->Meshes())
     mesh->AddInstances(instances);
+
+  for (const auto *geometry : _renderParam->Geometries())
+    geometry->GatherInstances(instances);
 
   auto d = _renderParam->GetANARIDevice();
   if (instances.empty())

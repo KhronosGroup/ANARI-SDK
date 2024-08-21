@@ -4,31 +4,46 @@
 #pragma once
 
 #include <anari/anari_cpp.hpp>
-
-#include "material.h"
-#include "meshUtil.h"
-#include "renderParam.h"
-
 // pxr
+#include <pxr/base/tf/token.h>
+#include <pxr/base/vt/array.h>
+#include <pxr/base/vt/types.h>
+#include <pxr/base/vt/value.h>
+#include <pxr/imaging/hd/enums.h>
 #include <pxr/imaging/hd/extComputationUtils.h>
 #include <pxr/imaging/hd/mesh.h>
+#include <pxr/imaging/hd/meshTopology.h>
 #include <pxr/imaging/hd/meshUtil.h>
+#include <pxr/imaging/hd/renderDelegate.h>
 #include <pxr/imaging/hd/sceneDelegate.h>
+#include <pxr/imaging/hd/sphereSchema.h>
+#include <pxr/imaging/hd/types.h>
 #include <pxr/imaging/hd/vertexAdjacency.h>
-
+#include <pxr/imaging/hf/perfLog.h>
+#include <pxr/pxr.h>
+#include <pxr/usd/sdf/path.h>
+#include <map>
 // std
 #include <memory>
+#include <optional>
+#include <vector>
+
+#include "anariTokens.h"
+#include "material.h"
+#include "meshUtil.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-struct HdAnariMesh final : public HdMesh
+class HdAnariGeometry : public HdMesh
 {
-  HF_MALLOC_TAG_NEW("new HdAnariMesh");
+  HF_MALLOC_TAG_NEW("new HdAnariGeometry");
 
-  HdAnariMesh(anari::Device d,
+ public:
+  HdAnariGeometry(anari::Device d,
+      const TfToken &geometryType,
       const SdfPath &id,
       const SdfPath &instancerId = SdfPath());
-  ~HdAnariMesh() override;
+  ~HdAnariGeometry() override;
 
   HdDirtyBits GetInitialDirtyBitsMask() const override;
 
@@ -39,17 +54,24 @@ struct HdAnariMesh final : public HdMesh
       HdDirtyBits *dirtyBits,
       const TfToken &reprToken) override;
 
-  void AddInstances(std::vector<anari::Instance> &instances) const;
+  void GatherInstances(std::vector<anari::Instance> &instances) const;
 
- private:
-  void _UpdatePrimvarSources(HdSceneDelegate *sceneDelegate,
-      const HdPrimvarDescriptorVector &primvarDescriptors,
-      HdAnariMaterial::PrimvarBinding primvarBinding);
-  void _UpdateComputationPrimvarSources(HdSceneDelegate *sceneDelegate,
-      const HdExtComputationPrimvarDescriptorVector
-          &computationPrimvarDescriptors,
-      const HdExtComputationUtils::ValueStore &valueStore,
-      HdAnariMaterial::PrimvarBinding primvarBinding);
+  HdDirtyBits _PropagateDirtyBits(HdDirtyBits bits) const override;
+
+ protected:
+  virtual HdAnariMaterial::PrimvarBinding UpdateGeometry(
+      HdSceneDelegate *sceneDelegate,
+      HdDirtyBits *dirtyBits,
+      const TfToken::Set &allPrimvars,
+      const VtValue &points) = 0;
+  virtual void UpdatePrimvarSource(HdSceneDelegate *sceneDelegate,
+      HdInterpolation interpolation,
+      const TfToken &attributeName,
+      const VtValue &value) = 0;
+
+  TfToken _GetPrimitiveBindingPoint(const TfToken &attribute);
+  TfToken _GetFaceVaryingBindingPoint(const TfToken &attribute);
+  TfToken _GetVertexBindingPoint(const TfToken &attribute);
 
   void _SetGeometryAttributeConstant(
       const TfToken &attributeName, const VtValue &v);
@@ -61,18 +83,17 @@ struct HdAnariMesh final : public HdMesh
       const TfToken &attributeName, const VtValue &v);
 #endif
 
-  HdDirtyBits _PropagateDirtyBits(HdDirtyBits bits) const override;
   void _InitRepr(const TfToken &reprToken, HdDirtyBits *dirtyBits) override;
 
 #if !USE_INSTANCE_ARRAYS
   void ReleaseInstances();
 #endif
 
-  HdAnariMesh(const HdAnariMesh &) = delete;
-  HdAnariMesh &operator=(const HdAnariMesh &) = delete;
+  HdAnariGeometry(const HdAnariGeometry &) = delete;
+  HdAnariGeometry &operator=(const HdAnariGeometry &) = delete;
 
+ private:
   // Data //
-
   bool _populated{false};
   HdMeshTopology topology_;
   std::unique_ptr<HdAnariMeshUtil> meshUtil_;

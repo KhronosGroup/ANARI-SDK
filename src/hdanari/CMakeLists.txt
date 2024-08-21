@@ -23,6 +23,7 @@ project_add_library(SHARED
   anariExtensionUtilityImpl.cpp
   anariTokens.cpp
   debugCodes.cpp
+  geometry.cpp
   instancer.cpp
   material.cpp
   material/matte.cpp
@@ -33,6 +34,7 @@ project_add_library(SHARED
   materialTokens.h
   mesh.cpp
   meshUtil.cpp
+  points.cpp
   renderBuffer.cpp
   renderDelegate.cpp
   rendererPlugin.cpp

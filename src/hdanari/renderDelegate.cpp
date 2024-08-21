@@ -7,21 +7,16 @@
 #include <anari/frontend/anari_enums.h>
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/vec4f.h>
-#include <pxr/base/tf/debug.h>
 #include <pxr/base/tf/diagnostic.h>
 #include <pxr/base/vt/value.h>
 #include <pxr/imaging/hd/instancer.h>
 #include <pxr/imaging/hd/renderIndex.h>
-#include <pxr/imaging/hd/renderPass.h>
 #include <pxr/imaging/hd/rprim.h>
 #include <pxr/imaging/hd/sceneDelegate.h>
 #include <pxr/imaging/hd/sprim.h>
 #include <pxr/imaging/hd/types.h>
 #include <stdio.h>
-#include <cstdlib>
 #include <string>
-
-#include "debugCodes.h"
 
 #define HDANARI_TYPE_DEFINITIONS
 // XXX: Add other Sprim types later
@@ -36,6 +31,7 @@
 #include "material/matte.h"
 #include "material/physicallyBased.h"
 #include "mesh.h"
+#include "points.h"
 #include "renderBuffer.h"
 #include "renderDelegate.h"
 #include "renderPass.h"
@@ -72,6 +68,7 @@ TF_DEFINE_PUBLIC_TOKENS(
 
 const TfTokenVector HdAnariRenderDelegate::SUPPORTED_RPRIM_TYPES = {
     HdPrimTypeTokens->mesh,
+    HdPrimTypeTokens->points,
 };
 
 const TfTokenVector HdAnariRenderDelegate::SUPPORTED_SPRIM_TYPES = {
@@ -263,9 +260,8 @@ HdRprim *HdAnariRenderDelegate::CreateRprim(
 
   if (typeId == HdPrimTypeTokens->mesh)
     return new HdAnariMesh(d, rprimId);
-  // else if (typeId == HdPrimTypeTokens->points) {
-  //   return new HdAnariPoints(d, rprimId);
-  // }
+  else if (typeId == HdPrimTypeTokens->points)
+    return new HdAnariPoints(d, rprimId);
 
   TF_CODING_ERROR("Unknown Rprim Type %s", typeId.GetText());
 
