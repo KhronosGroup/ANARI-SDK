@@ -43,6 +43,9 @@ set(CMAKE_INSTALL_RPATH "$ORIGIN:$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
 option(BUILD_SHARED_LIBS "Build shared libraries instead of static" ON)
 option(BUILD_TESTING "Build tests for CTest" ON)
 # ANARI specific options
+option(USE_DRACO "Use draco when loading glTF files" OFF)
+option(USE_WEBP "Use webp when loading glTF files" OFF)
+option(USE_KTX "Use ktx when loading glTF files" OFF)
 option(BUILD_CTS "Build cts toolkit" ON)
 option(BUILD_EXAMPLES "Build example applications and example device" ON)
 cmake_dependent_option(BUILD_VIEWER

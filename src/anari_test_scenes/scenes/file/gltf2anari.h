@@ -1,11 +1,13 @@
 #include "nlohmann/json.hpp"
 using json = nlohmann::json;
 
-// #ifdef USE_DRACO
+#ifdef USE_DRACO
 #include "draco/compression/decode.h"
-// #endif
+#endif
 
+#ifdef USE_WEBP
 #include "webp/decode.h"
+#endif
 
 #include <fstream>
 #include "stb_image.h"
@@ -90,6 +92,7 @@ static anari::DataType accessor_element_type(int c, const std::string &str)
   }
 }
 
+#ifdef USE_DRACO
 static anari::DataType draco_type_to_anari(draco::DataType datatype)
 {
   switch (datatype) {
@@ -117,7 +120,9 @@ static anari::DataType draco_type_to_anari(draco::DataType datatype)
     return ANARI_UNKNOWN;
   }
 }
+#endif
 
+#ifdef USE_DRACO
 static anari::DataType draco_element_type_to_anari(
     draco::DataType datatype, uint8_t components)
 {
@@ -141,6 +146,7 @@ static anari::DataType draco_element_type_to_anari(
     return ANARI_UNKNOWN;
   }
 }
+#endif
 
 static const char *filter_mode(int mode)
 {
@@ -467,18 +473,20 @@ struct gltf_data
   template <typename T>
   void *decode_image(const T &img, std::vector<char> *imageData, int *width, int *height, int *n)
   {
+#ifdef USE_WEBP
     if (mimeType(img) == "image/webp" || extension(img) == ".webp") {
       return decode_image_buffer(img, imageData, [&](const char *data, size_t length) {
         *n = 4;
         return WebPDecodeRGBA((const uint8_t *)data, length, width, height);
       });
-    } else {
-      return decode_image_buffer(
-          img, imageData, [&](const char *data, size_t length) {
-        return stbi_load_from_memory(
-            (const stbi_uc *)data, length, width, height, n, 0);
-      });
     }
+#endif
+
+    return decode_image_buffer(
+        img, imageData, [&](const char *data, size_t length) {
+    return stbi_load_from_memory(
+        (const stbi_uc *)data, length, width, height, n, 0);
+    });
   }
 
   int getImageIndexFromTextureInfo(const nlohmann::json& textureInfo) {
@@ -691,6 +699,7 @@ struct gltf_data
             && prim["extensions"].contains("KHR_draco_mesh_compression")) {
           const auto &extensions = prim["extensions"];
           const auto &draco = extensions["KHR_draco_mesh_compression"];
+#ifdef USE_DRACO
           if (draco.contains("bufferView")) {
             const auto &bufferView =
                 gltf["bufferViews"][int(draco["bufferView"])];
@@ -744,6 +753,7 @@ struct gltf_data
               anariUnmapParameterArray(device, geometry, paramname);
             }
           }
+#endif
         } else {
           for (const auto &attr : prim["attributes"].items()) {
             const char *paramname = prim_attribute(attr.key());
