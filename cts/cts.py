@@ -9,7 +9,7 @@ import threading
 import datetime
 from pathlib import Path
 from tabulate import tabulate
-from PIL import Image
+from PIL import Image, ImageOps
 import json
 import itertools
 import ctsUtility
@@ -314,6 +314,7 @@ def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, te
     if "color" in channels and image_data_list[0]:
         image_out = Image.new("RGBA", (parsed_json["sceneParameters"]["image_height"], parsed_json["sceneParameters"]["image_width"]))
         image_out.putdata(image_data_list[0])
+        image_out = ImageOps.flip(image_out)
         outName = file_name.with_suffix('.png').with_stem(f'{prefix}{stem}{permutationString}_color')
         print(f'   Rendering to {outName.resolve()}')
         image_out.save(outName)
@@ -321,6 +322,7 @@ def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, te
     if "depth" in channels and image_data_list[1]:
         image_out = Image.new("RGBA", (parsed_json["sceneParameters"]["image_height"], parsed_json["sceneParameters"]["image_width"]))
         image_out.putdata(image_data_list[1])
+        image_out = ImageOps.flip(image_out)
         outName = file_name.with_suffix('.png').with_stem(f'{prefix}{stem}{permutationString}_depth')
         print(f'   Rendering to {outName.resolve()}')
         image_out.save(outName)
