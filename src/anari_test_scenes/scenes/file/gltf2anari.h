@@ -12,6 +12,7 @@ using json = nlohmann::json;
 #include <fstream>
 #include "stb_image.h"
 #include <set>
+#include <iostream>
 
 static anari::DataType accessor_type(int c)
 {
@@ -302,6 +303,7 @@ struct gltf_data
   std::vector<anari::Array2D> images;
   std::vector<anari::Material> materials;
   std::vector<anari::Group> groups;
+  std::vector<anari::Camera> cameras;
   std::vector<std::vector<anari::Instance>> instances;
 
   const char *unpack_accessor(
@@ -866,6 +868,46 @@ struct gltf_data
       anari::commitParameters(device, instance);
       instances.back().push_back(instance);
     }
+    if (node.contains("camera")) {
+      auto &glTFCamera = gltf["cameras"].at(int(node["camera"]));
+      std::string type = glTFCamera["type"].get<std::string>();
+
+      ANARICamera camera;
+      camera = anari::newObject<anari::Camera>(device, type.c_str());
+      
+      // position
+      anari::math::float3 position = anari::math::float3(transform[12], transform[13], transform[14]);
+      anari::setParameter(device, camera, "position", position);
+
+      // rotation
+      anari::math::mat4 transformMat = anari::math::mat4(transform);
+      anari::math::float3 direction = anari::math::mul(transformMat, anari::math::float4(0, 0, -1, 0)).xyz();
+      anari::math::float3 up = anari::math::mul(transformMat, anari::math::float4(0, 1, 0, 0)).xyz();
+      anari::setParameter(device, camera, "direction", direction);
+      anari::setParameter(device, camera, "up", up);
+      
+      // set perspective and orthographic properties
+      if (type == "perspective") {
+        auto &glTFPerspective = glTFCamera["perspective"];
+        anari::setParameter(device, camera, "fovy", glTFPerspective.contains("yfov") ? glTFPerspective["yfov"].get<float>() : 3.141592653589f / 3.0f);
+        anari::setParameter(device, camera, "aspect", glTFPerspective.contains("aspectRatio") ? glTFPerspective["aspectRatio"].get<float>() : 1.0f);
+        if (glTFPerspective.contains("znear")) {
+          anari::setParameter(device, camera, "near", glTFPerspective["znear"].get<float>());
+        }
+        if (glTFPerspective.contains("zfar")) {
+          anari::setParameter(device, camera, "far", glTFPerspective["zfar"].get<float>());
+        }
+      } else if (type == "orthographic") {
+        auto &glTFOrthographic = glTFCamera["orthographic"];
+        anari::setParameter(device, camera, "height", glTFOrthographic["ymag"].get<float>());
+        anari::setParameter(device, camera, "aspect", glTFOrthographic["xmag"].get<float>() / glTFOrthographic["ymag"].get<float>());
+        anari::setParameter(device, camera, "near", glTFOrthographic["znear"].get<float>());
+        anari::setParameter(device, camera, "far", glTFOrthographic["zfar"].get<float>());
+      }
+      
+      anari::commitParameters(device, camera);
+      cameras.emplace_back(camera);
+    }
     if (node.contains("children")) {
       for (int i : node["children"]) {
         const auto &node = gltf["nodes"].at(i);
@@ -1027,6 +1069,8 @@ struct gltf_data
     for (auto obj : groups)
       anari::release(device, obj);
     for (auto obj : materials)
+      anari::release(device, obj);
+    for (auto obj : cameras)
       anari::release(device, obj);
     for (auto &scene : instances) {
       for (auto obj : scene)

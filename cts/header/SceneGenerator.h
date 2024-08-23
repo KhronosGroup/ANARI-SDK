@@ -25,10 +25,11 @@ class SceneGenerator : public anari::scenes::TestScene
       std::vector<std::vector<char>> &sortedBuffers,
       std::vector<std::vector<char>> &sortedImages);
 
-  void createAnariObject(
-      int type, const std::string &subtype = "", const std::string& ctsType = "");
+  void createAnariObject(int type,
+      const std::string &subtype = "",
+      const std::string &ctsType = "");
   template <typename T>
-  void setGenericParameter(const std::string& name, T&& value)
+  void setGenericParameter(const std::string &name, T &&value)
   {
     if (m_device != nullptr && m_currentObject != nullptr) {
       anari::setParameter(m_device, m_currentObject, name.c_str(), value);
@@ -37,10 +38,13 @@ class SceneGenerator : public anari::scenes::TestScene
 
   template <typename T>
   void setGenericArray1DParameter(
-      const std::string& name, const std::vector<T>& vector)
+      const std::string &name, const std::vector<T> &vector)
   {
     if (m_device != nullptr && m_currentObject != nullptr) {
-      anari::setAndReleaseParameter(m_device, m_currentObject, name.c_str(), anari::newArray1D(m_device, vector.data(), vector.size()));
+      anari::setAndReleaseParameter(m_device,
+          m_currentObject,
+          name.c_str(),
+          anari::newArray1D(m_device, vector.data(), vector.size()));
     }
   }
 
@@ -65,7 +69,8 @@ class SceneGenerator : public anari::scenes::TestScene
       anari::setAndReleaseParameter(m_device,
           m_currentObject,
           name.c_str(),
-          anari::newArray2D(m_device, result.data(), vector.size(), vector.front().size()));
+          anari::newArray2D(
+              m_device, result.data(), vector.size(), vector.front().size()));
     }
   }
 
@@ -77,8 +82,16 @@ class SceneGenerator : public anari::scenes::TestScene
     }
   }
 
-  void setReferenceParameter(int objType, size_t objIndex, const std::string& name, int refType, size_t refIndex);
-  void setReferenceArray(int objType, size_t objIndex, const std::string& name, int refType, const std::vector<size_t>& refIndices);
+  void setReferenceParameter(int objType,
+      size_t objIndex,
+      const std::string &name,
+      int refType,
+      size_t refIndex);
+  void setReferenceArray(int objType,
+      size_t objIndex,
+      const std::string &name,
+      int refType,
+      const std::vector<size_t> &refIndices);
 
   void setCurrentObject(int type, size_t index);
 
@@ -103,9 +116,10 @@ class SceneGenerator : public anari::scenes::TestScene
   int anariTypeFromString(const std::string &input);
 
  private:
-
   float frameDuration = -1.0f;
 
+  ANARIObject m_camera{nullptr};
+  anari::Frame m_frame{nullptr};
   anari::World m_world{nullptr};
   std::unordered_map<int, std::vector<anari::Object>> m_anariObjects;
   anari::Object m_currentObject = nullptr;

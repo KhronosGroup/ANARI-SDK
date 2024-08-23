@@ -17,6 +17,7 @@ SceneGenerator::SceneGenerator(
     anari::Device device)
     : TestScene(device)
 {
+  m_frame = anari::newObject<anari::Frame>(m_device);
   m_world = anari::newObject<anari::World>(m_device);
 }
 
@@ -27,6 +28,7 @@ SceneGenerator::~SceneGenerator()
       anari::release(m_device, object);
     }
   }
+  anari::release(m_device, m_frame);
   anari::release(m_device, m_world);
 }
 
@@ -87,6 +89,9 @@ void SceneGenerator::loadGLTF(const std::string &jsonText,
 {
   gltf_data gltf(m_device);
   gltf.parse_glTF(jsonText, sortedBuffers, sortedImages);
+  // TODO use camera depending on permutation in test case
+  m_camera = gltf.cameras[0];
+  anari::setParameter(m_device, m_frame, "camera", m_camera);
   anari::setParameterArray1D(m_device,
       m_world,
       "instance",
@@ -894,14 +899,23 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
   std::string depth_type_param = getParamString("frame_depth_type", "");
 
   // create render camera
-  ANARIObject camera;
-  if (auto it = m_anariObjects.find(ANARI_CAMERA);
-      it != m_anariObjects.end() && !it->second.empty()) {
-    camera = it->second.front();
-  } else {
-    createAnariObject(ANARI_CAMERA, "perspective");
-    camera = m_currentObject;
+  if (m_camera == nullptr) {
+    ANARIObject camera;
+    if (auto it = m_anariObjects.find(ANARI_CAMERA);
+        it != m_anariObjects.end() && !it->second.empty()) {
+      camera = it->second.front();
+    } else {
+      createAnariObject(ANARI_CAMERA, "perspective");
+      camera = m_currentObject;
+    }
+    auto cam = createDefaultCameraFromWorld();
+    anari::setParameter(m_device, camera, "position", cam.position);
+    anari::setParameter(m_device, camera, "direction", cam.direction);
+    anari::setParameter(m_device, camera, "up", cam.up);
+    anari::commitParameters(m_device, camera);
+    anari::setParameter(m_device, m_frame, "camera", camera);
   }
+
 
   // create renderer
   ANARIObject renderer;
@@ -921,30 +935,19 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
  // anari::setParameter(m_device, renderer, "pixelSamples", 10);
 
   // setup frame
-  auto frame = anari::newObject<anari::Frame>(m_device);
-  anari::setParameter(m_device, frame, "size", anari::math::vec<uint32_t, 2>(static_cast<uint32_t>(image_height), static_cast<uint32_t>(image_width)));
+  anari::setParameter(m_device, m_frame, "size", anari::math::vec<uint32_t, 2>(static_cast<uint32_t>(image_height), static_cast<uint32_t>(image_width)));
   if (color_type != ANARI_UNKNOWN) {
-    anari::setParameter(m_device, frame, channelName.c_str(), color_type);
+    anari::setParameter(m_device, m_frame, channelName.c_str(), color_type);
   }
   if (depth_type_param == "FLOAT32") {
-    anari::setParameter(m_device, frame, "channel.depth", ANARI_FLOAT32);
+    anari::setParameter(m_device, m_frame, "channel.depth", ANARI_FLOAT32);
   }
 
 
-  anari::setParameter(m_device, frame, "renderer", renderer);
-  anari::setParameter(m_device, frame, "camera", camera);
-  anari::setParameter(m_device, frame, "world", m_world);
+  anari::setParameter(m_device, m_frame, "renderer", renderer);
+  anari::setParameter(m_device, m_frame, "world", m_world);
 
-  anari::commitParameters(m_device, frame);
-
-  if (getParam<bool>("camera_generate_transform", true)) {
-    // setup camera transform
-    auto cam = createDefaultCameraFromWorld();
-    anari::setParameter(m_device, camera, "position", cam.position);
-    anari::setParameter(m_device, camera, "direction", cam.direction);
-    anari::setParameter(m_device, camera, "up", cam.up);
-    anari::commitParameters(m_device, camera);
-  }
+  anari::commitParameters(m_device, m_frame);
 
   std::vector<std::vector<uint32_t>> result;
 
@@ -955,11 +958,14 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
     {
         *(static_cast<bool *>(const_cast<void *>(userData))) = true;
     };
-    anari::setParameter(m_device, frame, "frameCompletionCallback", static_cast<ANARIFrameCompletionCallback>(func));
-    anari::setParameter(m_device, frame, "frameCompletionCallbackUserData", static_cast<void*>(&wasCalled));
-    anari::commitParameters(m_device, frame);
-    anari::render(m_device, frame);
-    anari::wait(m_device, frame);
+    anari::setParameter(m_device, m_frame, "frameCompletionCallback", static_cast<ANARIFrameCompletionCallback>(func));
+    anari::setParameter(m_device,
+        m_frame,
+        "frameCompletionCallbackUserData",
+        static_cast<void *>(&wasCalled));
+    anari::commitParameters(m_device, m_frame);
+    anari::render(m_device, m_frame);
+    anari::wait(m_device, m_frame);
     
     uint32_t rgba;
     if (wasCalled) {
@@ -973,7 +979,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
     result.emplace_back(errorImage);
     // set frame duration member of this with last renderering's frame time
     if (!anariGetProperty(m_device,
-            frame,
+            m_frame,
             "duration",
             ANARI_FLOAT32,
             &frameDuration,
@@ -986,29 +992,29 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
     if (color_type == ANARI_FLOAT32_VEC4) {
       throw std::runtime_error("ANARI_FLOAT32_VEC4 not supported for frameProgressiveRendering test");
     }
-    anari::render(m_device, frame);
-    anari::wait(m_device, frame);
+    anari::render(m_device, m_frame);
+    anari::wait(m_device, m_frame);
     std::vector<uint32_t> firstImage;
     std::vector<uint32_t> accumulatedImage;
-    auto fb = anari::map<uint32_t>(m_device, frame, "channel.color");
+    auto fb = anari::map<uint32_t>(m_device, m_frame, "channel.color");
     if (fb.data != nullptr) {
       firstImage.assign(fb.data, fb.data + image_height * image_width);
     } else {
       printf("%s not supported\n", channel_type_param.c_str());
     }
-    anari::unmap(m_device, frame, "channel.color");
+    anari::unmap(m_device, m_frame, "channel.color");
 
     for (int frames = 0; frames < 10; frames++) {
-      anari::render(m_device, frame);
-      anari::wait(m_device, frame);
+      anari::render(m_device, m_frame);
+      anari::wait(m_device, m_frame);
     }
-    fb = anari::map<uint32_t>(m_device, frame, "channel.color");
+    fb = anari::map<uint32_t>(m_device, m_frame, "channel.color");
     if (fb.data != nullptr) {
       accumulatedImage.assign(fb.data, fb.data + image_height * image_width);
     } else {
       printf("%s not supported\n", channel_type_param.c_str());
     }
-    anari::unmap(m_device, frame, "channel.color");
+    anari::unmap(m_device, m_frame, "channel.color");
 
     if (firstImage.size() != accumulatedImage.size()) {
       throw std::runtime_error(
@@ -1032,7 +1038,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
     result.emplace_back(resultImage);
 
    if (!anariGetProperty(m_device,
-            frame,
+            m_frame,
             "duration",
             ANARI_FLOAT32,
             &frameDuration,
@@ -1045,8 +1051,8 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
 
   } else
   {
-    anari::render(m_device, frame);
-    anari::wait(m_device, frame);
+    anari::render(m_device, m_frame);
+    anari::wait(m_device, m_frame);
   }
 
   size_t componentCount = anari::componentsOf(color_type);
@@ -1054,7 +1060,8 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
   if (color_type != ANARI_UNKNOWN) {
     if (color_type == ANARI_FLOAT32_VEC4 || color_type == ANARI_FLOAT32_VEC3) {
       // handling of float data type
-      const float *pixels = anari::map<float>(m_device, frame, channelName.c_str()).data;
+      const float *pixels =
+          anari::map<float>(m_device, m_frame, channelName.c_str()).data;
       std::vector<uint32_t> converted;
       if (pixels != nullptr) {
         for (uint32_t i = 0; i < image_height * image_width; ++i) {
@@ -1079,20 +1086,22 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
       }
 
       result.emplace_back(converted);
-      anari::unmap(m_device, frame, channelName.c_str());
+      anari::unmap(m_device, m_frame, channelName.c_str());
     } else {
       if (componentCount == 4
           && anari::sizeOf(color_type) == sizeof(uint32_t)) {
         // handling of other types
-        const uint32_t* pixels = anari::map<uint32_t>(m_device, frame, channelName.c_str()).data;
+        const uint32_t *pixels =
+            anari::map<uint32_t>(m_device, m_frame, channelName.c_str()).data;
         if (pixels != nullptr) {
           result.emplace_back(pixels, pixels + image_height * image_width);
         } else {
           printf("%s not supported\n", channel_type_param.c_str());
         }
-        anari::unmap(m_device, frame, channelName.c_str());
+        anari::unmap(m_device, m_frame, channelName.c_str());
       } else if (color_type == ANARI_UINT32) {
-        const uint32_t *pixels = anari::map<uint32_t>(m_device, frame, channelName.c_str()).data;
+        const uint32_t *pixels =
+            anari::map<uint32_t>(m_device, m_frame, channelName.c_str()).data;
         std::vector<uint32_t> converted;
         if (pixels != nullptr) {
           for (uint32_t i = 0; i < image_height * image_width; ++i) {
@@ -1107,11 +1116,11 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
           printf("%s not supported\n", channel_type_param.c_str());
         }
         result.emplace_back(converted);
-        anari::unmap(m_device, frame, channelName.c_str());
+        anari::unmap(m_device, m_frame, channelName.c_str());
       } else if (anari::sizeOf(color_type) / componentCount == sizeof(char)) {
         // 8bit component
         const uint8_t *pixels =
-            anari::map<uint8_t>(m_device, frame, channelName.c_str()).data;
+            anari::map<uint8_t>(m_device, m_frame, channelName.c_str()).data;
         std::vector<uint32_t> converted;
         if (pixels != nullptr) {
           for (uint32_t i = 0; i < image_height * image_width; ++i) {
@@ -1130,11 +1139,11 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
         }
 
         result.emplace_back(converted);
-        anari::unmap(m_device, frame, channelName.c_str());
+        anari::unmap(m_device, m_frame, channelName.c_str());
       } else if (anari::sizeOf(color_type) / componentCount == sizeof(char) * 2) {
         // 16bit component
         const int16_t *pixels =
-            anari::map<int16_t>(m_device, frame, channelName.c_str()).data;
+            anari::map<int16_t>(m_device, m_frame, channelName.c_str()).data;
         std::vector<uint32_t> converted;
         if (pixels != nullptr) {
           for (uint32_t i = 0; i < image_height * image_width; ++i) {
@@ -1153,7 +1162,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
         }
 
         result.emplace_back(converted);
-        anari::unmap(m_device, frame, channelName.c_str());
+        anari::unmap(m_device, m_frame, channelName.c_str());
       }
     }
   } else {
@@ -1163,7 +1172,8 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
 
   // handle depth output
   if (depth_type_param == "FLOAT32") {
-    const float *pixels = anari::map<float>(m_device, frame, "channel.depth").data;
+    const float *pixels =
+        anari::map<float>(m_device, m_frame, "channel.depth").data;
 
     std::vector<uint32_t> converted;
     if (pixels != nullptr) {
@@ -1180,7 +1190,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
 
     result.emplace_back(converted);
 
-    anari::unmap(m_device, frame, "channel.depth");
+    anari::unmap(m_device, m_frame, "channel.depth");
   } else {
     // no depth rendered
     result.emplace_back();
@@ -1188,7 +1198,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
 
   // set frame duration member of this with last renderering's frame time
   if (!anariGetProperty(m_device,
-      frame,
+          m_frame,
       "duration",
       ANARI_FLOAT32,
           &frameDuration,
@@ -1196,9 +1206,6 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
           ANARI_WAIT)) {
     frameDuration = -1.0f;
   }
-
-  // cleanup
-  anari::release(m_device, frame);
 
   return result;
 }
