@@ -16,8 +16,8 @@ parser.add_argument("-d", "--device", dest="devicespec", type=open, help="The de
 parser.add_argument("-j", "--json", dest="json", type=pathlib.Path, action="append", help="Path to the core and extension json root.")
 parser.add_argument("-I", "--include", dest="incdirs", type=pathlib.Path, action="append", help="Include directories")
 parser.add_argument("-L", "--lib", dest="libdirs", type=pathlib.Path, action="append", help="Library directories")
+parser.add_argument("-R", "--forcereleaselink", action="store_true", help="Force the extension to implicitly link to a release python library on Windows, overriding possible debug python linking")
 args = parser.parse_args()
-
 
 #flattened list of all input jsons in supplied directories
 jsons = [entry for j in args.json for entry in j.glob("**/*.json")]
@@ -116,21 +116,29 @@ ffibuilder.cdef(defs)
 ffibuilder.set_source('pyanari',
 '''
 #include "anari/anari.h"
-''',
-    libraries = ['anari'],
-    library_dirs = [str(x) for x in args.libdirs],
-    include_dirs = [str(x) for x in args.incdirs])
+'''
+#    , libraries = ['anari'],
+#    library_dirs = [str(x) for x in args.libdirs],
+#    include_dirs = [str(x) for x in args.incdirs]
+    )
 
 if __name__ == "__main__":
-    #ffibuilder.emit_c_code(str(args.outdir/"pyanari.c"))
-    ffibuilder.compile(verbose=True, debug=False)
+    bindings_file = 'pyanari_bindings.c'
+    ffibuilder.emit_c_code(bindings_file)
+    if args.forcereleaselink:
+        # Add an undef _DEBUG to the file to force compilation in release mode
+        with open(bindings_file, 'r') as file:
+            existing_content = file.read()
+        with open(bindings_file, 'w') as file:
+            file.write('#undef _DEBUG' + '\n' + existing_content)
+    #ffibuilder.compile(verbose=True, debug=False)
     #this ends up with a funny python version specific name despite being version agnostic
-    pyanari_files = glob.glob('pyanari.*.so') + glob.glob('pyanari.*.pyd')
-    for pyanari_file in pyanari_files:
-        fileWithExt = os.path.splitext(pyanari_file)
-        newFileName = f'pyanari{fileWithExt[1]}'
-        print(f'Renamed {pyanari_file} to {newFileName}')
-        os.replace(pyanari_file, newFileName)
+    #pyanari_files = glob.glob('pyanari.*.so') + glob.glob('pyanari.*.pyd')
+    #for pyanari_file in pyanari_files:
+    #    fileWithExt = os.path.splitext(pyanari_file)
+    #    newFileName = f'pyanari{fileWithExt[1]}'
+    #    print(f'Renamed {pyanari_file} to {newFileName}')
+    #    os.replace(pyanari_file, newFileName)
 
 
 boilerplate = '''# Copyright 2021-2024 The Khronos Group
