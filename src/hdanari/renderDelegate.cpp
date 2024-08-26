@@ -136,39 +136,6 @@ void HdAnariRenderDelegate::Initialize()
     return;
   }
 
-  bool useDebugDevice = false;
-  TF_DEBUG_MSG(HD_ANARI_RENDERDELEGATE, "Check for debug device selection\n");
-
-  if (auto enableDebug_s = std::getenv("HDANARI_ENABLE_DEBUG"); enableDebug_s) {
-    if (auto enableDebug = std::string(enableDebug_s); enableDebug == "1") {
-      useDebugDevice = true;
-    } else if (enableDebug != "0" && enableDebug != "") {
-      TF_WARN(
-          "Unknown HDANARI_ENABLE_DEBUG value %s. Must be undefined or set to 0 or 1",
-          enableDebug.c_str());
-    }
-  }
-
-  if (useDebugDevice) {
-    TF_DEBUG_MSG(HD_ANARI_RENDERDELEGATE, "Enabling debug device\n");
-    auto debugLib = anari::loadLibrary("debug", hdAnariDeviceStatusFunc);
-    if (!debugLib) {
-      TF_RUNTIME_ERROR("failed to load ANARI debug library from environment");
-    }
-
-    anari::Device dbgDevice = anariNewDevice(debugLib, "debug");
-    anari::setParameter(dbgDevice, dbgDevice, "wrappedDevice", device);
-    if (auto traceDir_s = std::getenv("HDANARI_DEBUG_TRACE_DIR"); traceDir_s) {
-      if (auto traceDir = std::string(traceDir_s); !traceDir.empty()) {
-        anari::setParameter(dbgDevice, dbgDevice, "traceDir", traceDir.c_str());
-        anari::setParameter(dbgDevice, dbgDevice, "traceMode", "code");
-      }
-    }
-    anari::commitParameters(dbgDevice, dbgDevice);
-    anari::release(device, device);
-    device = dbgDevice;
-  }
-
   _renderParam = std::make_shared<HdAnariRenderParam>(device);
 
   std::lock_guard<std::mutex> guard(_mutexResourceRegistry);

@@ -8,6 +8,7 @@
 #include "CodeSerializer.h"
 #include "DebugBasics.h"
 #include "EmptySerializer.h"
+#include "anari/frontend/anari_enums.h"
 
 // std
 #include <cstdarg>
@@ -1002,6 +1003,16 @@ DebugDevice::DebugDevice(ANARILibrary library)
       wrapped = staged = anariNewDevice(library, "default");
     }
   }
+
+  const char *traceModeFromEnv = getenv("ANARI_DEBUG_TRACE_MODE");
+  const char *traceDirFromEnv = getenv("ANARI_DEBUG_TRACE_DIR");
+  if (traceModeFromEnv && traceDirFromEnv) {
+    anariSetParameter(this_device(), this_device(), "traceMode", ANARI_STRING, traceModeFromEnv);
+    anariSetParameter(this_device(), this_device(), "traceDir", ANARI_STRING, traceDirFromEnv);
+    anariCommitParameters(this_device(), this_device());
+  }
+  
+
 }
 
 DebugDevice::~DebugDevice()
