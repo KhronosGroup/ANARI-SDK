@@ -21,6 +21,7 @@ endif()
 
 project_add_library(SHARED
   anariExtensionUtilityImpl.cpp
+  anariTokens.cpp
   debugCodes.cpp
   instancer.cpp
   material.cpp
@@ -38,6 +39,13 @@ project_add_library(SHARED
   renderPass.cpp
   sampler.cpp
 )
+
+option(USE_INSTANCE_ARRAYS "Toggle on the use of instance arrays" OFF)
+if (USE_INSTANCE_ARRAYS)
+  target_compile_definitions(${PROJECT_NAME} PRIVATE "USE_INSTANCE_ARRAYS=1")
+else()
+  target_compile_definitions(${PROJECT_NAME} PRIVATE "USE_INSTANCE_ARRAYS=0")
+endif()
 
 set_target_properties(${PROJECT_NAME}
 PROPERTIES

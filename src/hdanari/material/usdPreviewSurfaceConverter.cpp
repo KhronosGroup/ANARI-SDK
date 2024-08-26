@@ -70,15 +70,16 @@ HdAnariUsdPreviewSurfaceConverter::EnumerateTextures(
         inputTextureName, HdAnariMaterialTokens->sourceColorSpace);
     TfToken colorspaceTk;
 
-    if (!colorspaceVt.IsEmpty() && colorspaceVt.IsHolding<TfToken>()) {
-      colorspaceTk = colorspaceVt.UncheckedGet<TfToken>();
-      if (colorspaceTk != HdAnariMaterialTokens->raw
-          && colorspaceTk != HdAnariMaterialTokens->sRGB) {
-        TF_WARN(
-            "Invalid colorspace value %s, ignoring\n", colorspaceTk.GetText());
-        colorspaceTk = TfToken();
-      }
-    } else if (!colorspaceVt.IsHolding<void>()) {
+    if (!colorspaceVt.IsEmpty()) {
+      if (colorspaceVt.IsHolding<TfToken>()) {
+        colorspaceTk = colorspaceVt.UncheckedGet<TfToken>();
+        if (colorspaceTk != HdAnariMaterialTokens->raw
+            && colorspaceTk != HdAnariMaterialTokens->sRGB) {
+          TF_WARN(
+              "Invalid colorspace value %s, ignoring\n", colorspaceTk.GetText());
+          colorspaceTk = TfToken();
+        }
+      } else
       TF_WARN("Invalid colorspace value type %s, ignoring\n",
           colorspaceVt.GetTypeName().c_str());
     }

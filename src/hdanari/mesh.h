@@ -10,6 +10,7 @@
 #include "renderParam.h"
 
 // pxr
+#include <pxr/imaging/hd/extComputationUtils.h>
 #include <pxr/imaging/hd/mesh.h>
 #include <pxr/imaging/hd/meshUtil.h>
 #include <pxr/imaging/hd/sceneDelegate.h>
@@ -42,14 +43,20 @@ struct HdAnariMesh final : public HdMesh
 
  private:
   void _UpdatePrimvarSources(HdSceneDelegate *sceneDelegate, const HdPrimvarDescriptorVector& primvarDescriptors, HdAnariMaterial::PrimvarBinding primvarBinding);
+  void _UpdateComputationPrimvarSources(HdSceneDelegate *sceneDelegate, const HdExtComputationPrimvarDescriptorVector& computationPrimvarDescriptors, const HdExtComputationUtils::ValueStore& valueStore, HdAnariMaterial::PrimvarBinding primvarBinding);
 
-  void _SetGeometryAttributeConstant(const TfToken& attrName, VtValue v) const ;
-  void _SetGeometryAttributeArray(const TfToken& attrName, const TfToken& pvname, HdInterpolation hdinterpolation, VtValue v) const;
-
-  void _ReleaseAnariInstances();
+  void _SetGeometryAttributeConstant(const TfToken& attributeName, const VtValue& v);
+  void _SetGeometryAttributeArray(const TfToken& attributeName, const TfToken& bindingPoint, const VtValue& v);
+#if USE_INSTANCE_ARRAYS
+  void _SetInstanceAttributeArray(const TfToken& attributeName, const VtValue& v);
+#endif
 
   HdDirtyBits _PropagateDirtyBits(HdDirtyBits bits) const override;
   void _InitRepr(const TfToken &reprToken, HdDirtyBits *dirtyBits) override;
+
+#if !USE_INSTANCE_ARRAYS
+  void ReleaseInstances();
+#endif
 
   HdAnariMesh(const HdAnariMesh &) = delete;
   HdAnariMesh &operator=(const HdAnariMesh &) = delete;
@@ -61,11 +68,13 @@ struct HdAnariMesh final : public HdMesh
   HdMeshTopology topology_;
   std::unique_ptr<HdAnariMeshUtil> meshUtil_;
   std::optional<Hd_VertexAdjacency> adjacency_;
-  VtVec3fArray normals_;
 
   VtIntArray trianglePrimitiveParams_;
 
   HdAnariMaterial::PrimvarBinding primvarBinding_;
+  std::map<TfToken, TfToken> geometryBindingPoints_;
+  std::map<TfToken, TfToken> instanceBindingPoints_;
+
 
   struct AnariObjects
   {
@@ -73,7 +82,11 @@ struct HdAnariMesh final : public HdMesh
     anari::Geometry geometry{nullptr};
     anari::Surface surface{nullptr};
     anari::Group group{nullptr};
+#if USE_INSTANCE_ARRAYS
+    anari::Instance instance{nullptr};
+#else
     std::vector<anari::Instance> instances;
+#endif
   } _anari;
 };
 
