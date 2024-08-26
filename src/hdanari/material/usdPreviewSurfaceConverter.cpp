@@ -102,9 +102,19 @@ HdAnariUsdPreviewSurfaceConverter::EnumerateTextures(
       0.0f, 0.0f, 1.0f, 0.0f,
       0.0f, 0.0f, 0.0f, 1.0f,
       };
+    auto offset = std::array{0.0f, 0.0f, 0.0f, 0.0f};
+
     // If connnected to a specific channel, swizzle the color components to
     // mimic the connection behavior
-    if (outputName == HdAnariMaterialTokens->r) {
+    if (outputName == HdAnariMaterialTokens->rgb) {
+      tx = std::array{
+        1.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f,
+      };
+      offset[3] = 1.0f;
+    } else if (outputName == HdAnariMaterialTokens->r) {
       // clang-format off
       tx = {
           1.0f, 1.0f, 1.0f, 1.0f,
@@ -150,7 +160,8 @@ HdAnariUsdPreviewSurfaceConverter::EnumerateTextures(
       assetPath,
       colorspace,
        HdAnariTextureLoader::MinMagFilter::Linear, // FIXME: Should be coming from the UsdShade node instead
-       tx
+       tx,
+       offset,
     };
   }
 
