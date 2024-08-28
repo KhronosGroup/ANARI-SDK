@@ -92,7 +92,7 @@ add_custom_command(
 )
 
 # Create the Python extension module
-add_library(pyanari MODULE
+add_library(pyanari MODULE EXCLUDE_FROM_ALL
     ${CMAKE_CURRENT_BINARY_DIR}/pyanari_bindings.c
 )
 
