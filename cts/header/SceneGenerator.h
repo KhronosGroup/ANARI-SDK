@@ -4,6 +4,7 @@
 #pragma once
 
 #include "scenes/scene.h"
+#include "anari_test_scenes/scenes/file/gltf2anari.h"
 
 #include <functional>
 #include <optional>
@@ -118,7 +119,7 @@ class SceneGenerator : public anari::scenes::TestScene
  private:
   float frameDuration = -1.0f;
 
-  ANARIObject m_camera{nullptr};
+  gltf_data m_gltf;
   anari::Frame m_frame{nullptr};
   anari::World m_world{nullptr};
   std::unordered_map<int, std::vector<anari::Object>> m_anariObjects;

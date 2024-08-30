@@ -7,7 +7,6 @@
 #include "TextureGenerator.h"
 #include "anariWrapper.h"
 #include "anari/frontend/type_utility.h"
-#include "anari_test_scenes/scenes/file/gltf2anari.h"
 
 #include <stdexcept>
 
@@ -15,7 +14,7 @@ namespace cts {
 
 SceneGenerator::SceneGenerator(
     anari::Device device)
-    : TestScene(device)
+    : TestScene(device), m_gltf(device)
 {
   m_frame = anari::newObject<anari::Frame>(m_device);
   m_world = anari::newObject<anari::World>(m_device);
@@ -68,7 +67,6 @@ std::vector<anari::scenes::ParameterInfo> SceneGenerator::parameters()
       {"primitive_attributes", false, "If primitive attributes should be filled randomly"},
       {"vertex_attributes", false, "If vertex attributes should be filled randomly"},
       {"seed", 0u, "Seed for random number generator to ensure that tests are consistent across platforms"},
-      {"camera_generate_transform", true, "If the camera position should be computed via world bounds"},
       {"vertexCaps", false, "Should cones and cylinders have caps (per vertex setting)"},
       {"globalCaps", "none", "Should cones and cylinders have caps (global setting). Possible values: \"none\", \"first\", \"second\", \"both\""},
       {"globalRadius", 1.0f, "Use the global radius property instead of a per vertex one"},
@@ -77,7 +75,8 @@ std::vector<anari::scenes::ParameterInfo> SceneGenerator::parameters()
       {"opacity", "", "Fill an attribute with opacity values. Possible values: \"vertex.attribute0\", \"primitive.attribute3\" and similar"},
       {"spatial_field_dimensions", std::array<uint32_t, 3>{0, 0, 0}, "Dimensions of the spatial field"},
       {"frameCompletionCallback", false, "Enables test for ANARI_KHR_FRAME_COMPLETION_CALLBACK. A red image is rendered on error."},
-      {"progressiveRendering", false, "Enables test for ANARI_KHR_PROGRESSIVE_RENDERING. A green image is rendered if the render improved a red image otherwise."}
+      {"progressiveRendering", false, "Enables test for ANARI_KHR_PROGRESSIVE_RENDERING. A green image is rendered if the render improved a red image otherwise."},
+      {"gltf_camera", -1, "glTF camera to use to render the scene"}
 
       //
   };
@@ -87,16 +86,12 @@ void SceneGenerator::loadGLTF(const std::string &jsonText,
     std::vector<std::vector<char>> &sortedBuffers,
     std::vector<std::vector<char>> &sortedImages)
 {
-  gltf_data gltf(m_device);
-  gltf.parse_glTF(jsonText, sortedBuffers, sortedImages);
-  // TODO use camera depending on permutation in test case
-  m_camera = gltf.cameras[0];
-  anari::setParameter(m_device, m_frame, "camera", m_camera);
+  m_gltf.parse_glTF(jsonText, sortedBuffers, sortedImages);
   anari::setParameterArray1D(m_device,
       m_world,
       "instance",
-      gltf.instances[0].data(),
-      gltf.instances[0].size());
+      m_gltf.instances[0].data(),
+      m_gltf.instances[0].size());
 }
 
 int SceneGenerator::anariTypeFromString(const std::string& type)
@@ -899,7 +894,11 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
   std::string depth_type_param = getParamString("frame_depth_type", "");
 
   // create render camera
-  if (m_camera == nullptr) {
+  const int gltf_camera_index = getParam<int>("gltf_camera", -1);
+  if (!m_gltf.cameras.empty() && gltf_camera_index != -1) {
+    anari::setParameter(
+        m_device, m_frame, "camera", m_gltf.cameras[gltf_camera_index]);
+  } else {
     ANARIObject camera;
     if (auto it = m_anariObjects.find(ANARI_CAMERA);
         it != m_anariObjects.end() && !it->second.empty()) {
@@ -915,7 +914,6 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
     anari::commitParameters(m_device, camera);
     anari::setParameter(m_device, m_frame, "camera", camera);
   }
-
 
   // create renderer
   ANARIObject renderer;
