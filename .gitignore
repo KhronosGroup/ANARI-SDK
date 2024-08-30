@@ -22,4 +22,4 @@ cts/*.exp
 cts/*.lib
 cts/*.ilk
 cts/*.pdb
-cts/glTF-Sample-Models
+cts/glTF-Sample-Assets

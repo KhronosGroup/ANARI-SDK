@@ -74,13 +74,14 @@ if (CTS_DEV AND NOT BUILD_SHARED_LIBS)
 endif()
 
 message("Fetching glTF Sample Models")
-FetchContent_Declare(glTFSampleModels
-  URL https://github.com/KhronosGroup/glTF-Sample-Models/archive/refs/heads/main.zip)
-FetchContent_MakeAvailable(glTFSampleModels)
+FetchContent_Declare(glTFSampleAssets
+  GIT_REPOSITORY https://github.com/KhronosGroup/glTF-Sample-Assets.git
+  GIT_TAG 754a32a333b27698b6c36d8bec8ff7ed5f729538)
+FetchContent_MakeAvailable(glTFSampleAssets)
 
 message("Copying glTF Sample Models")
-file(GLOB GLTF_SAMPLE_MODELS_FILES ${gltfsamplemodels_SOURCE_DIR}/2.0/*)
-file(COPY ${GLTF_SAMPLE_MODELS_FILES} DESTINATION ${CMAKE_CURRENT_LIST_DIR}/gltf-Sample-Models)
+file(GLOB GLTF_SAMPLE_ASSETS_FILES ${gltfsampleassets_SOURCE_DIR}/Models/*)
+file(COPY ${GLTF_SAMPLE_ASSETS_FILES} DESTINATION ${CMAKE_CURRENT_LIST_DIR}/gltf-Sample-Assets)
 
 ## Installation ##
 
@@ -104,5 +105,9 @@ install(FILES ${python_files} ${CMAKE_CURRENT_LIST_DIR}/default_test_scene.json
 )
 
 install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/test_scenes
+  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/anari/cts
+)
+
+install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/gltf-Sample-Assets
   DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/anari/cts
 )
