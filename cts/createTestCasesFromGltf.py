@@ -4,6 +4,8 @@ import json
 import argparse
 import os
 
+import ctsGLTF
+
 def create_test_cases_from_gltf(gltf_dir, output_path, blacklist = []):
     # gather all paths to gltf files in dir
     gltf_scenes = gather_sample_assets(gltf_dir, blacklist) if "gltf-Sample-Assets" in gltf_dir  else gather_gltf(gltf_dir, blacklist)
@@ -111,10 +113,7 @@ def create_test_json(name, paths, gltf_json):
     return json_data
 
 def load_gltf_json(gltf_path):
-    # TODO handle glbs
-    gltf_file = open(gltf_path)
-    gltf_json = json.load(gltf_file)
-    gltf_file.close()
+    gltf_json = ctsGLTF.loadGLB(gltf_path) if gltf_path.endswith(".glb") else ctsGLTF.loadGLTF(gltf_path)
     return gltf_json
 
 def get_camera_count(gltf_json):
