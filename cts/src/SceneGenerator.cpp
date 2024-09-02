@@ -76,7 +76,8 @@ std::vector<anari::scenes::ParameterInfo> SceneGenerator::parameters()
       {"spatial_field_dimensions", std::array<uint32_t, 3>{0, 0, 0}, "Dimensions of the spatial field"},
       {"frameCompletionCallback", false, "Enables test for ANARI_KHR_FRAME_COMPLETION_CALLBACK. A red image is rendered on error."},
       {"progressiveRendering", false, "Enables test for ANARI_KHR_PROGRESSIVE_RENDERING. A green image is rendered if the render improved a red image otherwise."},
-      {"gltf_camera", -1, "glTF camera to use to render the scene"}
+      {"gltf_camera", -1, "glTF camera to use to render the scene"},
+      {"gltf", "", "path to glTF"}
 
       //
   };
@@ -87,11 +88,6 @@ void SceneGenerator::loadGLTF(const std::string &jsonText,
     std::vector<std::vector<char>> &sortedImages)
 {
   m_gltf.parse_glTF(jsonText, sortedBuffers, sortedImages);
-  anari::setParameterArray1D(m_device,
-      m_world,
-      "instance",
-      m_gltf.instances[0].data(),
-      m_gltf.instances[0].size());
 }
 
 int SceneGenerator::anariTypeFromString(const std::string& type)
@@ -406,10 +402,6 @@ void SceneGenerator::commit()
   if (auto it = m_anariObjects.find(ANARI_INSTANCE);
       it != m_anariObjects.end() && !it->second.empty()) {
     instances = it->second;
-    anari::setAndReleaseParameter(d,
-        m_world,
-        "instance",
-        anari::newArray1D(d, instances.data(), instances.size()));
   }
 
   // create geometry
