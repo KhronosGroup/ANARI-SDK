@@ -440,6 +440,7 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                                         sceneGenerator.setGenericParameter(paramName, paramValue)
                                 sceneGenerator.releaseAnariObject()
                     elif key == "gltf":
+                        sceneGenerator.setParameter(key, value)
                         os.chdir(Path(json_file_path).parent)
                         pathToGltf = Path(value).resolve()
                         os.chdir(Path(__file__).parent)

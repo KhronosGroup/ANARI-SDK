@@ -854,6 +854,19 @@ void SceneGenerator::commit()
     }
   }
 
+  std::string glTFPath = getParamString("gltf", "");
+  if (!glTFPath.empty()) {
+    instances.insert(instances.end(),
+        m_gltf.instances[0].begin(),
+        m_gltf.instances[0].end());
+  }
+
+  if (!instances.empty()) {
+    anari::setAndReleaseParameter(d,
+        m_world,
+        "instance",
+        anari::newArray1D(d, instances.data(), instances.size()));
+  }
 
   anari::commitParameters(d, m_world);
 }
