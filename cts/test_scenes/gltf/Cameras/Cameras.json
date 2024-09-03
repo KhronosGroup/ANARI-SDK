@@ -1,0 +1,7 @@
+{
+  "description": "Test Cameras",
+  "sceneParameters": {
+    "primitiveCount": 0,
+    "gltf": "../../../gltf-Sample-Assets/Cameras/glTF/Cameras.gltf"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "description": "Test Lantern",
+  "sceneParameters": {
+    "primitiveCount": 0
+  },
+  "permutations": {
+    "gltf": [
+      "../../../gltf-Sample-Assets/Lantern/glTF-Draco/Lantern.gltf",
+      "../../../gltf-Sample-Assets/Lantern/glTF-Binary/Lantern.glb"
+    ]
+  }
+}

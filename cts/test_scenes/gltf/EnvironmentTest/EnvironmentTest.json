@@ -1,0 +1,7 @@
+{
+  "description": "Test EnvironmentTest",
+  "sceneParameters": {
+    "primitiveCount": 0,
+    "gltf": "../../../gltf-Sample-Assets/EnvironmentTest/glTF/EnvironmentTest.gltf"
+  }
+}

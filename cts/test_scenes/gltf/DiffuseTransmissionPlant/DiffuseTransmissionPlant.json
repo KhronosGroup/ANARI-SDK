@@ -1,0 +1,7 @@
+{
+  "description": "Test DiffuseTransmissionPlant",
+  "sceneParameters": {
+    "primitiveCount": 0,
+    "gltf": "../../../gltf-Sample-Assets/DiffuseTransmissionPlant/glTF-Binary/DiffuseTransmissionPlant.glb"
+  }
+}

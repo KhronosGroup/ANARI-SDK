@@ -1,7 +1,0 @@
-{
-  "description": "Test OrientationTest.gltf",
-  "sceneParameters": {
-    "primitiveCount": 0,
-    "gltf": "../../../../glTF-Sample-Models/OrientationTest/glTF/OrientationTest.gltf"
-  }
-}

@@ -1,7 +1,0 @@
-{
-  "description": "Test IridescenceDielectricSpheres.gltf",
-  "sceneParameters": {
-    "primitiveCount": 0,
-    "gltf": "../../../../glTF-Sample-Models/IridescenceDielectricSpheres/glTF/IridescenceDielectricSpheres.gltf"
-  }
-}

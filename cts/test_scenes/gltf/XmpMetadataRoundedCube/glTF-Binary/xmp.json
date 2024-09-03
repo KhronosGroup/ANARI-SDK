@@ -1,7 +1,0 @@
-{
-  "description": "Test xmp.glb",
-  "sceneParameters": {
-    "primitiveCount": 0,
-    "gltf": "../../../../glTF-Sample-Models/XmpMetadataRoundedCube/glTF-Binary/xmp.glb"
-  }
-}

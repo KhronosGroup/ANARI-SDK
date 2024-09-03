@@ -1,7 +1,0 @@
-{
-  "description": "Test SimpleInstancing.glb",
-  "sceneParameters": {
-    "primitiveCount": 0,
-    "gltf": "../../../../glTF-Sample-Models/SimpleInstancing/glTF-Binary/SimpleInstancing.glb"
-  }
-}

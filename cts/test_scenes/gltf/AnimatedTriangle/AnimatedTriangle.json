@@ -1,0 +1,7 @@
+{
+  "description": "Test AnimatedTriangle",
+  "sceneParameters": {
+    "primitiveCount": 0,
+    "gltf": "../../../gltf-Sample-Assets/AnimatedTriangle/glTF/AnimatedTriangle.gltf"
+  }
+}

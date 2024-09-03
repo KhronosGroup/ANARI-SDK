@@ -1,7 +1,0 @@
-{
-  "description": "Test TextureEncodingTest.gltf",
-  "sceneParameters": {
-    "primitiveCount": 0,
-    "gltf": "../../../../glTF-Sample-Models/TextureEncodingTest/glTF/TextureEncodingTest.gltf"
-  }
-}

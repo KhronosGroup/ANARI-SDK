@@ -1,7 +1,0 @@
-{
-  "description": "Test Box.gltf",
-  "sceneParameters": {
-    "primitiveCount": 0,
-    "gltf": "../../../../glTF-Sample-Models/Box/glTF/Box.gltf"
-  }
-}

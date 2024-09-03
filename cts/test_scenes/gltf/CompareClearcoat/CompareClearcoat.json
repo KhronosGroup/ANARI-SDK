@@ -1,0 +1,7 @@
+{
+  "description": "Test CompareClearcoat",
+  "sceneParameters": {
+    "primitiveCount": 0,
+    "gltf": "../../../gltf-Sample-Assets/CompareClearcoat/glTF-Binary/CompareClearcoat.glb"
+  }
+}

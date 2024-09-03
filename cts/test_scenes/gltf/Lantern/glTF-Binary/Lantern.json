@@ -1,7 +1,0 @@
-{
-  "description": "Test Lantern.glb",
-  "sceneParameters": {
-    "primitiveCount": 0,
-    "gltf": "../../../../glTF-Sample-Models/Lantern/glTF-Binary/Lantern.glb"
-  }
-}

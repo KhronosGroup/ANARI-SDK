@@ -1,7 +1,0 @@
-{
-  "description": "Test DragonAttenuation.gltf",
-  "sceneParameters": {
-    "primitiveCount": 0,
-    "gltf": "../../../../glTF-Sample-Models/DragonAttenuation/glTF-Meshopt/DragonAttenuation.gltf"
-  }
-}

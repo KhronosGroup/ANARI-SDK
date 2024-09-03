@@ -1,0 +1,7 @@
+{
+  "description": "Test ToyCar",
+  "sceneParameters": {
+    "primitiveCount": 0,
+    "gltf": "../../../gltf-Sample-Assets/ToyCar/glTF-Binary/ToyCar.glb"
+  }
+}

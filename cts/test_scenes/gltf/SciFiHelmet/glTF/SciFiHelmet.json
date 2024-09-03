@@ -1,7 +1,0 @@
-{
-  "description": "Test SciFiHelmet.gltf",
-  "sceneParameters": {
-    "primitiveCount": 0,
-    "gltf": "../../../../glTF-Sample-Models/SciFiHelmet/glTF/SciFiHelmet.gltf"
-  }
-}

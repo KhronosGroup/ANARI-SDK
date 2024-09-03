@@ -1,7 +1,0 @@
-{
-  "description": "Test BrainStem.glb",
-  "sceneParameters": {
-    "primitiveCount": 0,
-    "gltf": "../../../../glTF-Sample-Models/BrainStem/glTF-Binary/BrainStem.glb"
-  }
-}

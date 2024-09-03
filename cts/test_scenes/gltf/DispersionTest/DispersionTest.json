@@ -1,0 +1,7 @@
+{
+  "description": "Test DispersionTest",
+  "sceneParameters": {
+    "primitiveCount": 0,
+    "gltf": "../../../gltf-Sample-Assets/DispersionTest/glTF-Binary/DispersionTest.glb"
+  }
+}

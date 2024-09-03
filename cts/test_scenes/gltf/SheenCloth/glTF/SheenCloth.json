@@ -1,7 +1,0 @@
-{
-  "description": "Test SheenCloth.gltf",
-  "sceneParameters": {
-    "primitiveCount": 0,
-    "gltf": "../../../../glTF-Sample-Models/SheenCloth/glTF/SheenCloth.gltf"
-  }
-}

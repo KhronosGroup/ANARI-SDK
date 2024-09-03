@@ -1,7 +1,0 @@
-{
-  "description": "Test ClearcoatSphere.gltf",
-  "sceneParameters": {
-    "primitiveCount": 0,
-    "gltf": "../../../../glTF-Sample-Models/ClearcoatSphere/glTF/ClearcoatSphere.gltf"
-  }
-}

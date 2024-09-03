@@ -1,7 +1,0 @@
-{
-  "description": "Test IridescenceMetallicSpheres.gltf",
-  "sceneParameters": {
-    "primitiveCount": 0,
-    "gltf": "../../../../glTF-Sample-Models/IridescenceMetallicSpheres/glTF/IridescenceMetallicSpheres.gltf"
-  }
-}

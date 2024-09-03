@@ -1,7 +1,0 @@
-{
-  "description": "Test RiggedSimple.gltf",
-  "sceneParameters": {
-    "primitiveCount": 0,
-    "gltf": "../../../../glTF-Sample-Models/RiggedSimple/glTF-Draco/RiggedSimple.gltf"
-  }
-}

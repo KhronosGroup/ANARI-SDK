@@ -68,6 +68,7 @@ def gather_sample_assets(gltf_dir, blacklist = []):
     collected_gltfs = []
     current_collected_gltfs = []
     hasGlb = False
+    gltfs.sort()
     for gltf in reversed(gltfs):
         if current_parent != gltf.parent.parent:
             if current_parent != None:
@@ -75,11 +76,12 @@ def gather_sample_assets(gltf_dir, blacklist = []):
             current_collected_gltfs = []
             current_parent = gltf.parent.parent
             hasGlb = False
-        if (gltf.parent.stem == "glTF"):
+        if (gltf.parent.stem == "glTF-Binary"):
             hasGlb = True
         elif (gltf.suffix == ".gltf" and hasGlb):
             continue
         current_collected_gltfs.append(gltf)
+    collected_gltfs.append({current_parent: current_collected_gltfs})
 
     return collected_gltfs
         

@@ -1,7 +1,0 @@
-{
-  "description": "Test CarbonFibre.glb",
-  "sceneParameters": {
-    "primitiveCount": 0,
-    "gltf": "../../../../glTF-Sample-Models/CarbonFibre/glTF-Binary/CarbonFibre.glb"
-  }
-}

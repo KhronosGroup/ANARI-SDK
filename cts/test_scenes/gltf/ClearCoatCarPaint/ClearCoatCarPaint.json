@@ -1,0 +1,7 @@
+{
+  "description": "Test ClearCoatCarPaint",
+  "sceneParameters": {
+    "primitiveCount": 0,
+    "gltf": "../../../gltf-Sample-Assets/ClearCoatCarPaint/glTF-Binary/ClearCoatCarPaint.glb"
+  }
+}

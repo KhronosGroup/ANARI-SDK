@@ -1,0 +1,7 @@
+{
+  "description": "Test IORTestGrid",
+  "sceneParameters": {
+    "primitiveCount": 0,
+    "gltf": "../../../gltf-Sample-Assets/IORTestGrid/glTF-Binary/IORTestGrid.glb"
+  }
+}

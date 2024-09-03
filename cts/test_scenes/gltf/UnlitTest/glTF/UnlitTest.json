@@ -1,7 +1,0 @@
-{
-  "description": "Test UnlitTest.gltf",
-  "sceneParameters": {
-    "primitiveCount": 0,
-    "gltf": "../../../../glTF-Sample-Models/UnlitTest/glTF/UnlitTest.gltf"
-  }
-}

@@ -1,0 +1,12 @@
+{
+  "description": "Test RiggedFigure",
+  "sceneParameters": {
+    "primitiveCount": 0
+  },
+  "permutations": {
+    "gltf": [
+      "../../../gltf-Sample-Assets/RiggedFigure/glTF-Draco/RiggedFigure.gltf",
+      "../../../gltf-Sample-Assets/RiggedFigure/glTF-Binary/RiggedFigure.glb"
+    ]
+  }
+}

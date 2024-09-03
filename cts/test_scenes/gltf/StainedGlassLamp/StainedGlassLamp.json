@@ -1,0 +1,13 @@
+{
+  "description": "Test StainedGlassLamp",
+  "sceneParameters": {
+    "primitiveCount": 0
+  },
+  "permutations": {
+    "gltf": [
+      "../../../gltf-Sample-Assets/StainedGlassLamp/glTF-KTX-BasisU/StainedGlassLamp.gltf",
+      "../../../gltf-Sample-Assets/StainedGlassLamp/glTF-JPG-PNG/StainedGlassLamp.gltf",
+      "../../../gltf-Sample-Assets/StainedGlassLamp/glTF/StainedGlassLamp.gltf"
+    ]
+  }
+}

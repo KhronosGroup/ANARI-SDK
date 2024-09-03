@@ -1,7 +1,0 @@
-{
-  "description": "Test TextureLinearInterpolationTest.glb",
-  "sceneParameters": {
-    "primitiveCount": 0,
-    "gltf": "../../../../glTF-Sample-Models/TextureLinearInterpolationTest/glTF-Binary/TextureLinearInterpolationTest.glb"
-  }
-}

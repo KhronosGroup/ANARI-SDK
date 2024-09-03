@@ -1,0 +1,7 @@
+{
+  "description": "Test CompareAmbientOcclusion",
+  "sceneParameters": {
+    "primitiveCount": 0,
+    "gltf": "../../../gltf-Sample-Assets/CompareAmbientOcclusion/glTF-Binary/CompareAmbientOcclusion.glb"
+  }
+}

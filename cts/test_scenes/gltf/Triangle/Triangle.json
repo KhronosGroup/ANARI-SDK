@@ -1,0 +1,7 @@
+{
+  "description": "Test Triangle",
+  "sceneParameters": {
+    "primitiveCount": 0,
+    "gltf": "../../../gltf-Sample-Assets/Triangle/glTF/Triangle.gltf"
+  }
+}

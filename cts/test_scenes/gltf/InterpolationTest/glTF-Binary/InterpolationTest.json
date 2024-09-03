@@ -1,7 +1,0 @@
-{
-  "description": "Test InterpolationTest.glb",
-  "sceneParameters": {
-    "primitiveCount": 0,
-    "gltf": "../../../../glTF-Sample-Models/InterpolationTest/glTF-Binary/InterpolationTest.glb"
-  }
-}

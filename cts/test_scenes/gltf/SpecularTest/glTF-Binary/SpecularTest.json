@@ -1,7 +1,0 @@
-{
-  "description": "Test SpecularTest.glb",
-  "sceneParameters": {
-    "primitiveCount": 0,
-    "gltf": "../../../../glTF-Sample-Models/SpecularTest/glTF-Binary/SpecularTest.glb"
-  }
-}

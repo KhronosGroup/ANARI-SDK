@@ -1,0 +1,12 @@
+{
+  "description": "Test BoomBox",
+  "sceneParameters": {
+    "primitiveCount": 0
+  },
+  "permutations": {
+    "gltf": [
+      "../../../gltf-Sample-Assets/BoomBox/glTF-Draco/BoomBox.gltf",
+      "../../../gltf-Sample-Assets/BoomBox/glTF-Binary/BoomBox.glb"
+    ]
+  }
+}

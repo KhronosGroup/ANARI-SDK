@@ -1,0 +1,12 @@
+{
+  "description": "Test VirtualCity",
+  "sceneParameters": {
+    "primitiveCount": 0
+  },
+  "permutations": {
+    "gltf": [
+      "../../../gltf-Sample-Assets/VirtualCity/glTF-Draco/VirtualCity.gltf",
+      "../../../gltf-Sample-Assets/VirtualCity/glTF-Binary/VirtualCity.glb"
+    ]
+  }
+}

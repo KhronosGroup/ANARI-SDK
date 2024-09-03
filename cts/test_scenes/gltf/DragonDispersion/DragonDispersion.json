@@ -1,0 +1,7 @@
+{
+  "description": "Test DragonDispersion",
+  "sceneParameters": {
+    "primitiveCount": 0,
+    "gltf": "../../../gltf-Sample-Assets/DragonDispersion/glTF-Binary/DragonDispersion.glb"
+  }
+}

@@ -1,7 +1,0 @@
-{
-  "description": "Test TwoSidedPlane.gltf",
-  "sceneParameters": {
-    "primitiveCount": 0,
-    "gltf": "../../../../glTF-Sample-Models/TwoSidedPlane/glTF/TwoSidedPlane.gltf"
-  }
-}

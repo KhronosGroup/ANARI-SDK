@@ -1,0 +1,7 @@
+{
+  "description": "Test Box With Spaces",
+  "sceneParameters": {
+    "primitiveCount": 0,
+    "gltf": "../../../gltf-Sample-Assets/Box With Spaces/glTF/Box With Spaces.gltf"
+  }
+}

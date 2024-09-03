@@ -1,0 +1,7 @@
+{
+  "description": "Test AnimatedMorphCube",
+  "sceneParameters": {
+    "primitiveCount": 0,
+    "gltf": "../../../gltf-Sample-Assets/AnimatedMorphCube/glTF-Binary/AnimatedMorphCube.glb"
+  }
+}

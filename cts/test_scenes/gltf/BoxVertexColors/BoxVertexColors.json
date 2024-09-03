@@ -1,0 +1,7 @@
+{
+  "description": "Test BoxVertexColors",
+  "sceneParameters": {
+    "primitiveCount": 0,
+    "gltf": "../../../gltf-Sample-Assets/BoxVertexColors/glTF-Binary/BoxVertexColors.glb"
+  }
+}

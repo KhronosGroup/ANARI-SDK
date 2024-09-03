@@ -1,7 +1,0 @@
-{
-  "description": "Test Buggy.gltf",
-  "sceneParameters": {
-    "primitiveCount": 0,
-    "gltf": "../../../../glTF-Sample-Models/Buggy/glTF-Draco/Buggy.gltf"
-  }
-}

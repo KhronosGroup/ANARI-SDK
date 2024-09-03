@@ -1,7 +1,0 @@
-{
-  "description": "Test TextureCoordinateTest.gltf",
-  "sceneParameters": {
-    "primitiveCount": 0,
-    "gltf": "../../../../glTF-Sample-Models/TextureCoordinateTest/glTF/TextureCoordinateTest.gltf"
-  }
-}

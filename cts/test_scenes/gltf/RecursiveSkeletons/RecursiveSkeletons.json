@@ -1,0 +1,7 @@
+{
+  "description": "Test RecursiveSkeletons",
+  "sceneParameters": {
+    "primitiveCount": 0,
+    "gltf": "../../../gltf-Sample-Assets/RecursiveSkeletons/glTF-Binary/RecursiveSkeletons.glb"
+  }
+}

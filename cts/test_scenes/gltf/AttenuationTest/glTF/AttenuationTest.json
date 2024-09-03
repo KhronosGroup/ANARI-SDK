@@ -1,7 +1,0 @@
-{
-  "description": "Test AttenuationTest.gltf",
-  "sceneParameters": {
-    "primitiveCount": 0,
-    "gltf": "../../../../glTF-Sample-Models/AttenuationTest/glTF/AttenuationTest.gltf"
-  }
-}

@@ -1,0 +1,12 @@
+{
+  "description": "Test Corset",
+  "sceneParameters": {
+    "primitiveCount": 0
+  },
+  "permutations": {
+    "gltf": [
+      "../../../gltf-Sample-Assets/Corset/glTF-Draco/Corset.gltf",
+      "../../../gltf-Sample-Assets/Corset/glTF-Binary/Corset.glb"
+    ]
+  }
+}

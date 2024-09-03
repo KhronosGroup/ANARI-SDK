@@ -1,0 +1,7 @@
+{
+  "description": "Test VertexColorTest",
+  "sceneParameters": {
+    "primitiveCount": 0,
+    "gltf": "../../../gltf-Sample-Assets/VertexColorTest/glTF-Binary/VertexColorTest.glb"
+  }
+}

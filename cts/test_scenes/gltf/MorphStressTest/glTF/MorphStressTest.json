@@ -1,7 +1,0 @@
-{
-  "description": "Test MorphStressTest.gltf",
-  "sceneParameters": {
-    "primitiveCount": 0,
-    "gltf": "../../../../glTF-Sample-Models/MorphStressTest/glTF/MorphStressTest.gltf"
-  }
-}

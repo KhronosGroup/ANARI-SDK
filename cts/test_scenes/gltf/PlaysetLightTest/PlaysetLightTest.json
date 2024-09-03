@@ -1,0 +1,7 @@
+{
+  "description": "Test PlaysetLightTest",
+  "sceneParameters": {
+    "primitiveCount": 0,
+    "gltf": "../../../gltf-Sample-Assets/PlaysetLightTest/glTF-Binary/PlaysetLightTest.glb"
+  }
+}

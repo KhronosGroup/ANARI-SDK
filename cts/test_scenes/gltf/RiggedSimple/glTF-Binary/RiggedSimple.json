@@ -1,7 +1,0 @@
-{
-  "description": "Test RiggedSimple.glb",
-  "sceneParameters": {
-    "primitiveCount": 0,
-    "gltf": "../../../../glTF-Sample-Models/RiggedSimple/glTF-Binary/RiggedSimple.glb"
-  }
-}

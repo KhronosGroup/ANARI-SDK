@@ -1,0 +1,12 @@
+{
+  "description": "Test Duck",
+  "sceneParameters": {
+    "primitiveCount": 0
+  },
+  "permutations": {
+    "gltf": [
+      "../../../gltf-Sample-Assets/Duck/glTF-Draco/Duck.gltf",
+      "../../../gltf-Sample-Assets/Duck/glTF-Binary/Duck.glb"
+    ]
+  }
+}

@@ -1,7 +1,0 @@
-{
-  "description": "Test EmissiveStrengthTest.glb",
-  "sceneParameters": {
-    "primitiveCount": 0,
-    "gltf": "../../../../glTF-Sample-Models/EmissiveStrengthTest/glTF-Binary/EmissiveStrengthTest.glb"
-  }
-}

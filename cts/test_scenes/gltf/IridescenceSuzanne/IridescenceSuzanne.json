@@ -1,0 +1,7 @@
+{
+  "description": "Test IridescenceSuzanne",
+  "sceneParameters": {
+    "primitiveCount": 0,
+    "gltf": "../../../gltf-Sample-Assets/IridescenceSuzanne/glTF-Binary/IridescenceSuzanne.glb"
+  }
+}
