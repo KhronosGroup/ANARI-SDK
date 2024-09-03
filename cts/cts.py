@@ -524,6 +524,13 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                                         passByType(pointer[4], pointer[5], permutation[i], sceneGenerator)
                                     else:
                                         sceneGenerator.setGenericParameter(pointer[4], permutation[i])
+                            elif key == "gltf":
+                                sceneGenerator.setParameter(key, permutation[i])
+                                os.chdir(Path(json_file_path).parent)
+                                pathToGltf = Path(permutation[i]).resolve()
+                                os.chdir(Path(__file__).parent)
+                                gltf = ctsGLTF.loadGLB(pathToGltf) if permutation[i].endswith(".glb") else ctsGLTF.loadGLTF(pathToGltf)
+                                sceneGenerator.loadGLTF(json.dumps(gltf.json), gltf.buffers, gltf.images)
                             else:
                                 sceneGenerator.setParameter(key, permutation[i])
                         except Exception as e:
