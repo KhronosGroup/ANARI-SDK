@@ -928,7 +928,7 @@ void DebugDevice::deviceSetParameter(
     const char *_id, ANARIDataType type, const void *mem)
 {
   std::string id = _id;
-  if (!wrappedLibraryFromEnv.empty() && id == "wrappedDevice"
+  if (wrappedLibraryFromEnv.empty() && id == "wrappedDevice"
       && type == ANARI_DEVICE) {
     if (staged) {
       anariRelease(staged, staged);
@@ -1007,12 +1007,18 @@ DebugDevice::DebugDevice(ANARILibrary library)
   const char *traceModeFromEnv = getenv("ANARI_DEBUG_TRACE_MODE");
   const char *traceDirFromEnv = getenv("ANARI_DEBUG_TRACE_DIR");
   if (traceModeFromEnv && traceDirFromEnv) {
-    anariSetParameter(this_device(), this_device(), "traceMode", ANARI_STRING, traceModeFromEnv);
-    anariSetParameter(this_device(), this_device(), "traceDir", ANARI_STRING, traceDirFromEnv);
+    anariSetParameter(this_device(),
+        this_device(),
+        "traceMode",
+        ANARI_STRING,
+        traceModeFromEnv);
+    anariSetParameter(this_device(),
+        this_device(),
+        "traceDir",
+        ANARI_STRING,
+        traceDirFromEnv);
     anariCommitParameters(this_device(), this_device());
   }
-  
-
 }
 
 DebugDevice::~DebugDevice()
