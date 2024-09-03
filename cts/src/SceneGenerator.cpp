@@ -911,12 +911,13 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
     } else {
       createAnariObject(ANARI_CAMERA, "perspective");
       camera = m_currentObject;
+      
+      auto cameraTransform = createDefaultCameraFromWorld();
+      anari::setParameter(m_device, camera, "position", cameraTransform.position);
+      anari::setParameter(m_device, camera, "direction", cameraTransform.direction);
+      anari::setParameter(m_device, camera, "up", cameraTransform.up);
+      anari::commitParameters(m_device, camera);
     }
-    auto cam = createDefaultCameraFromWorld();
-    anari::setParameter(m_device, camera, "position", cam.position);
-    anari::setParameter(m_device, camera, "direction", cam.direction);
-    anari::setParameter(m_device, camera, "up", cam.up);
-    anari::commitParameters(m_device, camera);
     anari::setParameter(m_device, m_frame, "camera", camera);
   }
 
