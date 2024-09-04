@@ -2,6 +2,8 @@
   "description": "Test SpecularSilkPouf",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "../../../gltf-Sample-Assets/SpecularSilkPouf/glTF-Binary/SpecularSilkPouf.glb"
+    "gltf": {
+      "file": "../../../gltf-Sample-Assets/SpecularSilkPouf/glTF-Binary/SpecularSilkPouf.glb"
+    }
   }
 }

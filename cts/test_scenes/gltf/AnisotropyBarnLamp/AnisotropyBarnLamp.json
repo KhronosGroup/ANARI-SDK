@@ -4,7 +4,7 @@
     "primitiveCount": 0
   },
   "permutations": {
-    "gltf": [
+    "/gltf/file": [
       "../../../gltf-Sample-Assets/AnisotropyBarnLamp/glTF-KTX-BasisU/AnisotropyBarnLamp.gltf",
       "../../../gltf-Sample-Assets/AnisotropyBarnLamp/glTF-Binary/AnisotropyBarnLamp.glb"
     ]

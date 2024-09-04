@@ -2,6 +2,8 @@
   "description": "Test PrimitiveModeNormalsTest",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "../../../gltf-Sample-Assets/PrimitiveModeNormalsTest/glTF/PrimitiveModeNormalsTest.gltf"
+    "gltf": {
+      "file": "../../../gltf-Sample-Assets/PrimitiveModeNormalsTest/glTF/PrimitiveModeNormalsTest.gltf"
+    }
   }
 }

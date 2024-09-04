@@ -77,7 +77,7 @@ std::vector<anari::scenes::ParameterInfo> SceneGenerator::parameters()
       {"frameCompletionCallback", false, "Enables test for ANARI_KHR_FRAME_COMPLETION_CALLBACK. A red image is rendered on error."},
       {"progressiveRendering", false, "Enables test for ANARI_KHR_PROGRESSIVE_RENDERING. A green image is rendered if the render improved a red image otherwise."},
       {"gltf_camera", -1, "glTF camera to use to render the scene"},
-      {"gltf", "", "path to glTF"}
+      {"gltf_file", "", "path to glTF"}
 
       //
   };
@@ -846,7 +846,7 @@ void SceneGenerator::commit()
     }
   }
 
-  std::string glTFPath = getParamString("gltf", "");
+  std::string glTFPath = getParamString("gltf_file", "");
   if (!glTFPath.empty()) {
     instances.insert(instances.end(),
         m_gltf.instances[0].begin(),

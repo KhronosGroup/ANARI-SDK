@@ -2,6 +2,8 @@
   "description": "Test Suzanne",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "../../../gltf-Sample-Assets/Suzanne/glTF/Suzanne.gltf"
+    "gltf": {
+      "file": "../../../gltf-Sample-Assets/Suzanne/glTF/Suzanne.gltf"
+    }
   }
 }

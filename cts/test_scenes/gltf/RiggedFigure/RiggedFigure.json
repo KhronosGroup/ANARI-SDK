@@ -4,7 +4,7 @@
     "primitiveCount": 0
   },
   "permutations": {
-    "gltf": [
+    "/gltf/file": [
       "../../../gltf-Sample-Assets/RiggedFigure/glTF-Draco/RiggedFigure.gltf",
       "../../../gltf-Sample-Assets/RiggedFigure/glTF-Binary/RiggedFigure.glb"
     ]

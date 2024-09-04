@@ -2,6 +2,14 @@
   "description": "Test TransmissionTest",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "../../../gltf-Sample-Assets/TransmissionTest/glTF-Binary/TransmissionTest.glb"
+    "gltf": {
+      "file": "../../../gltf-Sample-Assets/TransmissionTest/glTF-Binary/TransmissionTest.glb"
+    }
+  },
+  "permutations": {
+    "/gltf/camera": [
+      null,
+      0
+    ]
   }
 }

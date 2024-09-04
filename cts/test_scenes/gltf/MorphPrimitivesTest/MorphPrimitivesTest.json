@@ -4,7 +4,7 @@
     "primitiveCount": 0
   },
   "permutations": {
-    "gltf": [
+    "/gltf/file": [
       "../../../gltf-Sample-Assets/MorphPrimitivesTest/glTF-Draco/MorphPrimitivesTest.gltf",
       "../../../gltf-Sample-Assets/MorphPrimitivesTest/glTF-Binary/MorphPrimitivesTest.glb"
     ]

@@ -4,7 +4,7 @@
     "primitiveCount": 0
   },
   "permutations": {
-    "gltf": [
+    "/gltf/file": [
       "../../../gltf-Sample-Assets/CesiumMan/glTF-Draco/CesiumMan.gltf",
       "../../../gltf-Sample-Assets/CesiumMan/glTF-Binary/CesiumMan.glb"
     ]

@@ -4,9 +4,13 @@
     "primitiveCount": 0
   },
   "permutations": {
-    "gltf": [
+    "/gltf/file": [
       "../../../gltf-Sample-Assets/Duck/glTF-Draco/Duck.gltf",
       "../../../gltf-Sample-Assets/Duck/glTF-Binary/Duck.glb"
+    ],
+    "/gltf/camera": [
+      null,
+      0
     ]
   }
 }

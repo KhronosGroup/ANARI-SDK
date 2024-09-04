@@ -1,5 +1,6 @@
 import json
 import base64
+from urllib.parse import unquote
 
 class glTFFiles:
     def __init__(self):
@@ -69,5 +70,5 @@ def _loadURI(uri, parent_path):
     if uri.startswith("data:"):
         base64String = uri.split(",")[1]
         return base64.b64decode(base64String)
-    with open(parent_path.joinpath(uri), "rb") as f:
+    with open(parent_path.joinpath(unquote(uri)), "rb") as f:
         return f.read()

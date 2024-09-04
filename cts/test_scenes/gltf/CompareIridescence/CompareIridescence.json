@@ -2,6 +2,8 @@
   "description": "Test CompareIridescence",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "../../../gltf-Sample-Assets/CompareIridescence/glTF-Binary/CompareIridescence.glb"
+    "gltf": {
+      "file": "../../../gltf-Sample-Assets/CompareIridescence/glTF-Binary/CompareIridescence.glb"
+    }
   }
 }

@@ -2,6 +2,15 @@
   "description": "Test DiffuseTransmissionPlant",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "../../../gltf-Sample-Assets/DiffuseTransmissionPlant/glTF-Binary/DiffuseTransmissionPlant.glb"
+    "gltf": {
+      "file": "../../../gltf-Sample-Assets/DiffuseTransmissionPlant/glTF-Binary/DiffuseTransmissionPlant.glb"
+    }
+  },
+  "permutations": {
+    "/gltf/camera": [
+      null,
+      0,
+      1
+    ]
   }
 }

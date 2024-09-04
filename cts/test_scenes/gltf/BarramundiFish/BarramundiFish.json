@@ -4,7 +4,7 @@
     "primitiveCount": 0
   },
   "permutations": {
-    "gltf": [
+    "/gltf/file": [
       "../../../gltf-Sample-Assets/BarramundiFish/glTF-Draco/BarramundiFish.gltf",
       "../../../gltf-Sample-Assets/BarramundiFish/glTF-Binary/BarramundiFish.glb"
     ]

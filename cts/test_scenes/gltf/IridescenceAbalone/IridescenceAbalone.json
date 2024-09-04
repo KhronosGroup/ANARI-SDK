@@ -2,6 +2,8 @@
   "description": "Test IridescenceAbalone",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "../../../gltf-Sample-Assets/IridescenceAbalone/glTF-Binary/IridescenceAbalone.glb"
+    "gltf": {
+      "file": "../../../gltf-Sample-Assets/IridescenceAbalone/glTF-Binary/IridescenceAbalone.glb"
+    }
   }
 }

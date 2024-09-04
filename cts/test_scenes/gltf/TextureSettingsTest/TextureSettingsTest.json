@@ -2,6 +2,8 @@
   "description": "Test TextureSettingsTest",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "../../../gltf-Sample-Assets/TextureSettingsTest/glTF-Binary/TextureSettingsTest.glb"
+    "gltf": {
+      "file": "../../../gltf-Sample-Assets/TextureSettingsTest/glTF-Binary/TextureSettingsTest.glb"
+    }
   }
 }

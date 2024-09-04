@@ -25,7 +25,7 @@ def create_test_cases_from_gltf(gltf_dir, output_path, blacklist = []):
                 print(f"    Test case: " + str(absolute_json_path))
                 print("")
                 # get glTF info
-                gltf_json = load_gltf_json(gltf_scene)
+                gltf_json = load_gltf_json(children[0])
                 # create test
                 json_data = create_test_json(parent.name, [PureWindowsPath(os.path.relpath(child, absolute_json_path.parent)).as_posix() for child in children], gltf_json)
         else:
@@ -96,27 +96,33 @@ def create_test_json(name, paths, gltf_json):
                 "primitiveCount": 0
             },
             "permutations" : {
-                "gltf" : paths
+                "/gltf/file": paths
             }
         }
         if camera_count > 0:
-            json_data["permutations"]["gltf_camera"] = list(range(0, camera_count))
+            cameras = list(range(0, camera_count))
+            cameras.insert(0, None)
+            json_data["permutations"]["/gltf/camera"] = cameras
         return json_data
 
     json_data = {
         "description": "Test " + str(name),
         "sceneParameters": {
             "primitiveCount": 0,
-            "gltf": str(paths[0])
+            "gltf": {
+                "file": str(paths[0])
+            }
         }
     }
     if camera_count > 0:
-        json_data["permutations"] = {"gltf_camera": list(range(0, camera_count))}
+        cameras = list(range(0, camera_count))
+        cameras.insert(0, None)
+        json_data["permutations"] = {"/gltf/camera": cameras}
     return json_data
 
 def load_gltf_json(gltf_path):
-    gltf_json = ctsGLTF.loadGLB(gltf_path) if gltf_path.endswith(".glb") else ctsGLTF.loadGLTF(gltf_path)
-    return gltf_json
+    gltf_json = ctsGLTF.loadGLB(gltf_path) if gltf_path.suffix == ".glb" else ctsGLTF.loadGLTF(gltf_path)
+    return gltf_json.json
 
 def get_camera_count(gltf_json):
     if "cameras" in gltf_json:

@@ -2,6 +2,8 @@
   "description": "Test NormalTangentTest",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "../../../gltf-Sample-Assets/NormalTangentTest/glTF-Binary/NormalTangentTest.glb"
+    "gltf": {
+      "file": "../../../gltf-Sample-Assets/NormalTangentTest/glTF-Binary/NormalTangentTest.glb"
+    }
   }
 }

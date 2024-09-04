@@ -2,6 +2,8 @@
   "description": "Test SimpleMaterial",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "../../../gltf-Sample-Assets/SimpleMaterial/glTF/SimpleMaterial.gltf"
+    "gltf": {
+      "file": "../../../gltf-Sample-Assets/SimpleMaterial/glTF/SimpleMaterial.gltf"
+    }
   }
 }

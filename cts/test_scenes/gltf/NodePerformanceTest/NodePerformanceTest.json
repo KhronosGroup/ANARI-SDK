@@ -2,6 +2,14 @@
   "description": "Test NodePerformanceTest",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "../../../gltf-Sample-Assets/NodePerformanceTest/glTF-Binary/NodePerformanceTest.glb"
+    "gltf": {
+      "file": "../../../gltf-Sample-Assets/NodePerformanceTest/glTF-Binary/NodePerformanceTest.glb"
+    }
+  },
+  "permutations": {
+    "/gltf/camera": [
+      null,
+      0
+    ]
   }
 }

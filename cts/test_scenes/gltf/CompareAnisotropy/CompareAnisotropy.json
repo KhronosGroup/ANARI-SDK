@@ -2,6 +2,8 @@
   "description": "Test CompareAnisotropy",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "../../../gltf-Sample-Assets/CompareAnisotropy/glTF-Binary/CompareAnisotropy.glb"
+    "gltf": {
+      "file": "../../../gltf-Sample-Assets/CompareAnisotropy/glTF-Binary/CompareAnisotropy.glb"
+    }
   }
 }

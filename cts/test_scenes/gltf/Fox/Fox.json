@@ -2,6 +2,8 @@
   "description": "Test Fox",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "../../../gltf-Sample-Assets/Fox/glTF-Binary/Fox.glb"
+    "gltf": {
+      "file": "../../../gltf-Sample-Assets/Fox/glTF-Binary/Fox.glb"
+    }
   }
 }

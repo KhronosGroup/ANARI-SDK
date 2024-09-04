@@ -2,6 +2,8 @@
   "description": "Test NegativeScaleTest",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "../../../gltf-Sample-Assets/NegativeScaleTest/glTF-Binary/NegativeScaleTest.glb"
+    "gltf": {
+      "file": "../../../gltf-Sample-Assets/NegativeScaleTest/glTF-Binary/NegativeScaleTest.glb"
+    }
   }
 }

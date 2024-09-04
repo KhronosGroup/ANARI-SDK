@@ -2,6 +2,15 @@
   "description": "Test Cameras",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "../../../gltf-Sample-Assets/Cameras/glTF/Cameras.gltf"
+    "gltf": {
+      "file": "../../../gltf-Sample-Assets/Cameras/glTF/Cameras.gltf"
+    }
+  },
+  "permutations": {
+    "/gltf/camera": [
+      null,
+      0,
+      1
+    ]
   }
 }

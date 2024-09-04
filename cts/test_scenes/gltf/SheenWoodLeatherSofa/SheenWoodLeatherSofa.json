@@ -2,6 +2,8 @@
   "description": "Test SheenWoodLeatherSofa",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "../../../gltf-Sample-Assets/SheenWoodLeatherSofa/glTF-Binary/SheenWoodLeatherSofa.glb"
+    "gltf": {
+      "file": "../../../gltf-Sample-Assets/SheenWoodLeatherSofa/glTF-Binary/SheenWoodLeatherSofa.glb"
+    }
   }
 }

@@ -2,6 +2,8 @@
   "description": "Test PotOfCoals",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "../../../gltf-Sample-Assets/PotOfCoals/glTF-Binary/PotOfCoals.glb"
+    "gltf": {
+      "file": "../../../gltf-Sample-Assets/PotOfCoals/glTF-Binary/PotOfCoals.glb"
+    }
   }
 }

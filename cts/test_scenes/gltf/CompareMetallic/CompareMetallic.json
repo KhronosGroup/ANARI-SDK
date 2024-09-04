@@ -2,6 +2,8 @@
   "description": "Test CompareMetallic",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "../../../gltf-Sample-Assets/CompareMetallic/glTF-Binary/CompareMetallic.glb"
+    "gltf": {
+      "file": "../../../gltf-Sample-Assets/CompareMetallic/glTF-Binary/CompareMetallic.glb"
+    }
   }
 }

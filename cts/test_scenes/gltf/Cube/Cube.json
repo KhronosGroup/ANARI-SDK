@@ -2,6 +2,8 @@
   "description": "Test Cube",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "../../../gltf-Sample-Assets/Cube/glTF/Cube.gltf"
+    "gltf": {
+      "file": "../../../gltf-Sample-Assets/Cube/glTF/Cube.gltf"
+    }
   }
 }

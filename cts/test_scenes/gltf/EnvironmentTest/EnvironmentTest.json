@@ -2,6 +2,14 @@
   "description": "Test EnvironmentTest",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "../../../gltf-Sample-Assets/EnvironmentTest/glTF/EnvironmentTest.gltf"
+    "gltf": {
+      "file": "../../../gltf-Sample-Assets/EnvironmentTest/glTF/EnvironmentTest.gltf"
+    }
+  },
+  "permutations": {
+    "/gltf/camera": [
+      null,
+      0
+    ]
   }
 }

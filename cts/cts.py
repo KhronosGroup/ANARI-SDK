@@ -439,13 +439,15 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                                     else:
                                         sceneGenerator.setGenericParameter(paramName, paramValue)
                                 sceneGenerator.releaseAnariObject()
-                    elif key == "gltf":
-                        sceneGenerator.setParameter(key, value)
-                        os.chdir(Path(json_file_path).parent)
-                        pathToGltf = Path(value).resolve()
-                        os.chdir(Path(__file__).parent)
-                        gltf = ctsGLTF.loadGLB(pathToGltf) if value.endswith(".glb") else ctsGLTF.loadGLTF(pathToGltf)
-                        sceneGenerator.loadGLTF(json.dumps(gltf.json), gltf.buffers, gltf.images)
+                    elif isinstance(value, dict):
+                        for [subkey, subvalue] in value.items():
+                                sceneGenerator.setParameter(f'{key}_{subkey}', subvalue)
+                                if key == "gltf" and subkey == "file":
+                                    os.chdir(Path(json_file_path).parent)
+                                    pathToGltf = Path(subvalue).resolve()
+                                    os.chdir(Path(__file__).parent)
+                                    gltf = ctsGLTF.loadGLB(pathToGltf) if subvalue.endswith(".glb") else ctsGLTF.loadGLTF(pathToGltf)
+                                    sceneGenerator.loadGLTF(json.dumps(gltf.json), gltf.buffers, gltf.images)
                     else:
                         sceneGenerator.setParameter(key, value)
                 
@@ -490,12 +492,16 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                 hasError = False
                 for i in range(len(permutation)) :
                     key = None
+                    simplifiedPermutationString = permutation[i]
+                    if "/gltf/file" in keys[i]:
+                        pathParts = permutation[i].split('/')
+                        simplifiedPermutationString = pathParts[-2]
                     if keys[i] in variant_keys:
                         key = (keys[i])[4:]
-                        variantString += f'{"_{}".format(permutation[i])}'
+                        variantString += f'{"_{}".format(simplifiedPermutationString)}'
                     else:
                         key = keys[i]
-                        permutationString += f'{"_{}".format(permutation[i])}'
+                        permutationString += f'{"_{}".format(simplifiedPermutationString)}'
 
                     if use_generator:
                         # set up scene generator with the permutated data for this rendering
@@ -524,13 +530,15 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                                         passByType(pointer[4], pointer[5], permutation[i], sceneGenerator)
                                     else:
                                         sceneGenerator.setGenericParameter(pointer[4], permutation[i])
-                            elif key == "gltf":
-                                sceneGenerator.setParameter(key, permutation[i])
-                                os.chdir(Path(json_file_path).parent)
-                                pathToGltf = Path(permutation[i]).resolve()
-                                os.chdir(Path(__file__).parent)
-                                gltf = ctsGLTF.loadGLB(pathToGltf) if permutation[i].endswith(".glb") else ctsGLTF.loadGLTF(pathToGltf)
-                                sceneGenerator.loadGLTF(json.dumps(gltf.json), gltf.buffers, gltf.images)
+                            elif key.startswith("/"):
+                                parameterName = key.replace("/", "_")
+                                sceneGenerator.setParameter(parameterName, permutation[i])
+                                if key == "/gltf/file":
+                                    os.chdir(Path(json_file_path).parent)
+                                    pathToGltf = Path(permutation[i]).resolve()
+                                    os.chdir(Path(__file__).parent)
+                                    gltf = ctsGLTF.loadGLB(pathToGltf) if permutation[i].endswith(".glb") else ctsGLTF.loadGLTF(pathToGltf)
+                                    sceneGenerator.loadGLTF(json.dumps(gltf.json), gltf.buffers, gltf.images)
                             else:
                                 sceneGenerator.setParameter(key, permutation[i])
                         except Exception as e:

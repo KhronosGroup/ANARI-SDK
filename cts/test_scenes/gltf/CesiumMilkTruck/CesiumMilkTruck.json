@@ -4,7 +4,7 @@
     "primitiveCount": 0
   },
   "permutations": {
-    "gltf": [
+    "/gltf/file": [
       "../../../gltf-Sample-Assets/CesiumMilkTruck/glTF-Draco/CesiumMilkTruck.gltf",
       "../../../gltf-Sample-Assets/CesiumMilkTruck/glTF-Binary/CesiumMilkTruck.glb"
     ]

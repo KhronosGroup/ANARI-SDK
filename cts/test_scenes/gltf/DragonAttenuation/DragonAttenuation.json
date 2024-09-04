@@ -2,6 +2,8 @@
   "description": "Test DragonAttenuation",
   "sceneParameters": {
     "primitiveCount": 0,
-    "gltf": "../../../gltf-Sample-Assets/DragonAttenuation/glTF-Binary/DragonAttenuation.glb"
+    "gltf": {
+      "file": "../../../gltf-Sample-Assets/DragonAttenuation/glTF-Binary/DragonAttenuation.glb"
+    }
   }
 }

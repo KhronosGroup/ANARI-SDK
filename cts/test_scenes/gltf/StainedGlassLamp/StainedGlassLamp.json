@@ -4,7 +4,7 @@
     "primitiveCount": 0
   },
   "permutations": {
-    "gltf": [
+    "/gltf/file": [
       "../../../gltf-Sample-Assets/StainedGlassLamp/glTF-KTX-BasisU/StainedGlassLamp.gltf",
       "../../../gltf-Sample-Assets/StainedGlassLamp/glTF-JPG-PNG/StainedGlassLamp.gltf",
       "../../../gltf-Sample-Assets/StainedGlassLamp/glTF/StainedGlassLamp.gltf"
