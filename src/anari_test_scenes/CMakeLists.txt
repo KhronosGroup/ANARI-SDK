@@ -44,6 +44,24 @@ if (VIEWER_ENABLE_KTX)
   project_compile_definitions(PRIVATE ENABLE_KTX=1)
 endif()
 
+if (USE_DRACO)
+  find_package(draco REQUIRED)
+  project_link_libraries(INTERFACE draco::draco)
+  project_compile_definitions(PUBLIC -DUSE_DRACO)
+endif()
+
+if (USE_WEBP)
+  find_package(WebP REQUIRED)
+  project_link_libraries(INTERFACE WebP::webp)
+  project_compile_definitions(PUBLIC -DUSE_WEBP)
+endif()
+
+if (USE_KTX)
+  find_package(Ktx REQUIRED)
+  project_link_libraries(INTERFACE KTX::ktx)
+  project_compile_definitions(PUBLIC -DUSE_KTX)
+endif()
+
 include(GenerateExportHeader)
 generate_export_header(${PROJECT_NAME}
   EXPORT_MACRO_NAME "ANARI_TEST_SCENES_INTERFACE"

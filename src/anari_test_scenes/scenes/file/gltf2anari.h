@@ -9,10 +9,15 @@ using json = nlohmann::json;
 #include "webp/decode.h"
 #endif
 
+#ifdef USE_KTX
+#include <ktx.h>
+#endif
+
 #include <fstream>
 #include "stb_image.h"
 #include <set>
 #include <iostream>
+#include <tuple>
 
 static anari::DataType accessor_type(int c)
 {
@@ -398,7 +403,8 @@ struct gltf_data
   }
 
   template <typename T, typename F>
-  void *decode_image_buffer(const T &img, std::vector<char> *imageData, F f)
+  std::tuple<void *, ANARIMemoryDeleter, void *> decode_image_buffer(
+      const T &img, std::vector<char> *imageData, F f)
   {
     std::vector<char> buffer;
     size_t length = 0;
@@ -417,7 +423,7 @@ struct gltf_data
           length = buffer.size();
           ptr = buffer.data();
         } else {
-          return nullptr;
+          return {nullptr, nullptr, nullptr};
         }
       } else {
         std::string filename = path + uri;
@@ -431,7 +437,7 @@ struct gltf_data
           in.read(buffer.data(), buffer.size());
           ptr = buffer.data();
         } else {
-          return nullptr;
+          return {nullptr, nullptr, nullptr};
         }
       }
     } else if (img.contains("bufferView")) {
@@ -441,7 +447,7 @@ struct gltf_data
       length = bufferView["byteLength"];
       ptr = buffer.data() + offset;
     } else {
-      return nullptr;
+      return {nullptr, nullptr, nullptr};
     }
 
     return f(ptr, length);
@@ -473,21 +479,131 @@ struct gltf_data
   }
 
   template <typename T>
-  void *decode_image(const T &img, std::vector<char> *imageData, int *width, int *height, int *n)
+  std::tuple<void *, ANARIMemoryDeleter, void*> decode_image(const T &img, std::vector<char> *imageData, int *width, int *height, int *n)
   {
 #ifdef USE_WEBP
     if (mimeType(img) == "image/webp" || extension(img) == ".webp") {
       return decode_image_buffer(img, imageData, [&](const char *data, size_t length) {
         *n = 4;
-        return WebPDecodeRGBA((const uint8_t *)data, length, width, height);
+        ANARIMemoryDeleter d = [](const void *, const void *mem) {
+            WebPFree(const_cast<void *>(mem));
+        };
+            return std::make_tuple(
+                WebPDecodeRGBA((const uint8_t *)data, length, width, height),
+                d,
+                nullptr);
       });
     }
 #endif
+#ifdef USE_KTX
+    /*
+    if (mimeType(img) == "image/ktx2" || extension(img) == ".ktx2") {
+      return decode_image_buffer(
+          img, imageData, [&](const char *input_data, size_t length) {
+            ktxTexture2 *texture;
+            KTX_error_code result;
+            ktx_size_t offset;
+            ktx_uint8_t *data;
+
+            result = ktxTexture2_CreateFromMemory(
+                input_data, length, KTX_TEXTURE_CREATE_NO_FLAGS, &texture);
+            if (result != KTX_SUCCESS) {
+              printf("failed to load texture: %s\n", ktxErrorString(result));
+            }
+
+            khr_df_model_e colorModel = ktxTexture2_GetColorModel_e(texture);
+
+            // check if bc1 (DXT1) compression is usable by the device
+            bool bc7 = false;
+            const char **device_extensions = nullptr;
+            if (anariGetProperty(d,
+                    d,
+                    "extension",
+                    ANARI_STRING_LIST,
+                    &device_extensions,
+                    sizeof(char **),
+                    ANARI_WAIT)) {
+              for (int i = 0; device_extensions[i] != nullptr; ++i) {
+                printf("%s\n", device_extensions[i]);
+                if (strncmp("ANARI_EXT_SAMPLER_COMPRESSED_FORMAT_BC67",
+                        device_extensions[i],
+                        40)
+                    == 0) {
+                  bc7 = true;
+                }
+              }
+            }
+
+            if (bc7) {
+              result = ktxTexture2_TranscodeBasis(texture, KTX_TTF_BC7_RGBA, 0);
+
+              if (result != KTX_SUCCESS) {
+                printf("failed to load texture '%s': %s\n",
+                    filename.c_str(),
+                    ktxErrorString(result));
+              }
+
+              ktx_uint32_t width = texture->baseWidth;
+              ktx_uint32_t height = texture->baseHeight;
+              int fmt = texture->vkFormat;
+
+              result = ktxTexture_GetImageOffset(
+                  ktxTexture(texture), 0, 0, 0, &offset);
+
+              if (result != KTX_SUCCESS) {
+                printf("failed to load texture: %s\n", ktxErrorString(result));
+              }
+
+              data = ktxTexture_GetData(ktxTexture(texture)) + offset;
+              int bytes = ktxTexture_GetDataSize(ktxTexture(texture));
+
+              colorTex =
+                  anari::newObject<anari::Sampler>(d, "compressedImage2D");
+              anari::setParameterArray1D(
+                  d, colorTex, "image", ANARI_UINT8, data, bytes);
+              anari::setParameter(d, colorTex, "format", "BC7");
+              uint64_t size[] = {width, height};
+              anariSetParameter(d, colorTex, "size", ANARI_UINT64_VEC2, size);
+            } else {
+              result = ktxTexture2_TranscodeBasis(texture, KTX_TTF_RGBA32, 0);
+              if (result != KTX_SUCCESS) {
+                printf("failed to load texture: %s\n", ktxErrorString(result));
+              }
+
+              int texelType = ANARI_UFIXED8_VEC4;
+
+              ktx_uint32_t width = texture->baseWidth;
+              ktx_uint32_t height = texture->baseHeight;
+              int fmt = texture->vkFormat;
+
+              result = ktxTexture_GetImageOffset(
+                  ktxTexture(texture), 0, 0, 0, &offset);
+
+              if (result != KTX_SUCCESS) {
+                printf("failed to load texture: %s\n", ktxErrorString(result));
+              }
+
+              data = ktxTexture_GetData(ktxTexture(texture)) + offset;
+
+              colorTex = anari::newObject<anari::Sampler>(d, "image2D");
+              anari::setParameterArray2D(
+                  d, colorTex, "image", texelType, data, width, height);
+            }
+
+            return std::make_tuple(data, ktxTexture2_Destroy, texture);
+          });
+    }
+    */
+#endif // USE_KTX
 
     return decode_image_buffer(
         img, imageData, [&](const char *data, size_t length) {
-    return stbi_load_from_memory(
-        (const stbi_uc *)data, length, width, height, n, 0);
+          ANARIMemoryDeleter d = [](const void*, const void* mem) {
+            stbi_image_free(const_cast<void*>(mem));
+          };
+    return std::make_tuple(stbi_load_from_memory(
+                  (const stbi_uc *)data, length, width, height, n, 0),
+              d, nullptr);
     });
   }
 
@@ -539,7 +655,6 @@ struct gltf_data
     size_t imageIndex = 0;
     for (const auto &img : gltf["images"]) {
       int width, height, n;
-      const void *data = nullptr;
 
       std::vector<char> *imageData = nullptr;
       if (img.contains("uri")) {
@@ -549,7 +664,7 @@ struct gltf_data
         ++imageFilesIndex;      
       }
 
-      data = decode_image(img, imageData, &width, &height, &n);
+      auto [data, func, usrptr] = decode_image(img, imageData, &width, &height, &n);
 
       bool isSRGB = sRGBImages.find(imageIndex) != sRGBImages.end();
 
@@ -565,10 +680,8 @@ struct gltf_data
         auto array = anari::newArray2D(
             device,
             data,
-            [](const void *, const void *appMemory) {
-              stbi_image_free((void *)appMemory);
-            },
-            nullptr,
+            func,
+            usrptr,
             texelType,
             width,
             height);
