@@ -38,6 +38,8 @@ class SceneGeneratorWrapper
   SceneGeneratorWrapper(const std::string &library,
       const std::optional<std::string> &device,
       const std::optional<pybind11::function> &callback);
+  // default constructor will wrap sink device in debug device to generate debug output on render
+  SceneGeneratorWrapper();
   ~SceneGeneratorWrapper();
 
   void loadGLTF(const std::string &jsonText,

@@ -163,6 +163,26 @@ SceneGeneratorWrapper::SceneGeneratorWrapper(const std::string &library,
   anari::release(dev, dev);
 }
 
+SceneGeneratorWrapper::SceneGeneratorWrapper()
+{
+  ANARILibrary lib = anariLoadLibrary("sink", statusFunc, NULL);
+
+  m_library = anari::loadLibrary("debug", statusFunc, NULL);
+
+  ANARIDevice nested = anariNewDevice(lib, "default");
+
+  ANARIDevice dev = anariNewDevice(m_library, "debug");
+  anariSetParameter(dev, dev, "wrappedDevice", ANARI_DEVICE, &nested);
+
+  anariCommitParameters(dev, dev);
+  anariRelease(nested, nested);
+
+  // create a SceneGenerator
+  m_sceneGenerator = std::make_unique<SceneGenerator>(dev);
+
+  anari::release(dev, dev);
+}
+
 SceneGeneratorWrapper::~SceneGeneratorWrapper()
 {
   if (m_library != nullptr) {
