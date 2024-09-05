@@ -511,6 +511,7 @@ struct gltf_data
             }
 
             khr_df_model_e colorModel = ktxTexture2_GetColorModel_e(texture);
+            *n = ktxTexture2_GetNumComponents(texture);
 
             // check if bc1 (DXT1) compression is usable by the device
             bool bc7 = false;
@@ -523,7 +524,6 @@ struct gltf_data
                     sizeof(char **),
                     ANARI_WAIT)) {
               for (int i = 0; device_extensions[i] != nullptr; ++i) {
-                printf("%s\n", device_extensions[i]);
                 if (strncmp("ANARI_EXT_SAMPLER_COMPRESSED_FORMAT_BC67",
                         device_extensions[i],
                         40)
