@@ -511,7 +511,6 @@ struct gltf_data
             }
 
             khr_df_model_e colorModel = ktxTexture2_GetColorModel_e(texture);
-            *n = ktxTexture2_GetNumComponents(texture);
 
             // check if bc1 (DXT1) compression is usable by the device
             bool bc7 = false;
@@ -544,6 +543,7 @@ struct gltf_data
 
               *width = texture->baseWidth;
               *height = texture->baseHeight;
+              *n = ktxTexture2_GetNumComponents(texture);
               int fmt = texture->vkFormat;
 
               result = ktxTexture_GetImageOffset(
@@ -566,6 +566,7 @@ struct gltf_data
 
               *width = texture->baseWidth;
               *height = texture->baseHeight;
+              *n = ktxTexture2_GetNumComponents(texture);
               int fmt = texture->vkFormat;
 
               result = ktxTexture_GetImageOffset(
