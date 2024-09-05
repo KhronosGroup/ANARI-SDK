@@ -496,7 +496,6 @@ struct gltf_data
     }
 #endif
 #ifdef USE_KTX
-    /*
     if (mimeType(img) == "image/ktx2" || extension(img) == ".ktx2") {
       return decode_image_buffer(
           img, imageData, [&](const char *input_data, size_t length) {
@@ -506,7 +505,7 @@ struct gltf_data
             ktx_uint8_t *data;
 
             result = ktxTexture2_CreateFromMemory(
-                input_data, length, KTX_TEXTURE_CREATE_NO_FLAGS, &texture);
+                reinterpret_cast<const ktx_uint8_t *>(input_data), length, KTX_TEXTURE_CREATE_NO_FLAGS, &texture);
             if (result != KTX_SUCCESS) {
               printf("failed to load texture: %s\n", ktxErrorString(result));
             }
@@ -516,8 +515,8 @@ struct gltf_data
             // check if bc1 (DXT1) compression is usable by the device
             bool bc7 = false;
             const char **device_extensions = nullptr;
-            if (anariGetProperty(d,
-                    d,
+            if (anariGetProperty(device,
+                    device,
                     "extension",
                     ANARI_STRING_LIST,
                     &device_extensions,
@@ -538,8 +537,7 @@ struct gltf_data
               result = ktxTexture2_TranscodeBasis(texture, KTX_TTF_BC7_RGBA, 0);
 
               if (result != KTX_SUCCESS) {
-                printf("failed to load texture '%s': %s\n",
-                    filename.c_str(),
+                printf("failed to load texture: %s\n",
                     ktxErrorString(result));
               }
 
@@ -555,15 +553,6 @@ struct gltf_data
               }
 
               data = ktxTexture_GetData(ktxTexture(texture)) + offset;
-              int bytes = ktxTexture_GetDataSize(ktxTexture(texture));
-
-              colorTex =
-                  anari::newObject<anari::Sampler>(d, "compressedImage2D");
-              anari::setParameterArray1D(
-                  d, colorTex, "image", ANARI_UINT8, data, bytes);
-              anari::setParameter(d, colorTex, "format", "BC7");
-              uint64_t size[] = {width, height};
-              anariSetParameter(d, colorTex, "size", ANARI_UINT64_VEC2, size);
             } else {
               result = ktxTexture2_TranscodeBasis(texture, KTX_TTF_RGBA32, 0);
               if (result != KTX_SUCCESS) {
@@ -582,18 +571,15 @@ struct gltf_data
               if (result != KTX_SUCCESS) {
                 printf("failed to load texture: %s\n", ktxErrorString(result));
               }
-
               data = ktxTexture_GetData(ktxTexture(texture)) + offset;
-
-              colorTex = anari::newObject<anari::Sampler>(d, "image2D");
-              anari::setParameterArray2D(
-                  d, colorTex, "image", texelType, data, width, height);
             }
-
-            return std::make_tuple(data, ktxTexture2_Destroy, texture);
+            ANARIMemoryDeleter d = [](const void *usrPtr, const void *mem) {
+              void *p = const_cast<void *>(usrPtr); 
+              ktxTexture2_Destroy(reinterpret_cast<ktxTexture2*>(p));
+            };
+            return std::make_tuple(data, d, texture);
           });
     }
-    */
 #endif // USE_KTX
 
     return decode_image_buffer(
