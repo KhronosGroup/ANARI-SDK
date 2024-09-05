@@ -528,12 +528,13 @@ struct gltf_data
                         device_extensions[i],
                         40)
                     == 0) {
+                  printf("ANARI_EXT_SAMPLER_COMPRESSED_FORMAT_BC67 TRUE");
                   bc7 = true;
                 }
               }
             }
-
-            if (bc7) {
+            bool needsTranscoding = ktxTexture2_NeedsTranscoding(texture);
+            if (bc7 && needsTranscoding) {
               result = ktxTexture2_TranscodeBasis(texture, KTX_TTF_BC7_RGBA, 0);
 
               if (result != KTX_SUCCESS) {
@@ -541,8 +542,8 @@ struct gltf_data
                     ktxErrorString(result));
               }
 
-              ktx_uint32_t width = texture->baseWidth;
-              ktx_uint32_t height = texture->baseHeight;
+              *width = texture->baseWidth;
+              *height = texture->baseHeight;
               int fmt = texture->vkFormat;
 
               result = ktxTexture_GetImageOffset(
@@ -554,15 +555,17 @@ struct gltf_data
 
               data = ktxTexture_GetData(ktxTexture(texture)) + offset;
             } else {
-              result = ktxTexture2_TranscodeBasis(texture, KTX_TTF_RGBA32, 0);
-              if (result != KTX_SUCCESS) {
-                printf("failed to load texture: %s\n", ktxErrorString(result));
+              if (needsTranscoding) {
+                result = ktxTexture2_TranscodeBasis(texture, KTX_TTF_RGBA32, 0);
+                if (result != KTX_SUCCESS) {
+                  printf("failed to load texture: %s\n", ktxErrorString(result));
+                }
               }
 
               int texelType = ANARI_UFIXED8_VEC4;
 
-              ktx_uint32_t width = texture->baseWidth;
-              ktx_uint32_t height = texture->baseHeight;
+              *width = texture->baseWidth;
+              *height = texture->baseHeight;
               int fmt = texture->vkFormat;
 
               result = ktxTexture_GetImageOffset(
