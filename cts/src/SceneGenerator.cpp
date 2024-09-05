@@ -1072,7 +1072,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
         for (uint32_t i = 0; i < image_height * image_width; ++i) {
           uint32_t rgba = 0;
           for (uint32_t j = 0; j < 4; ++j) {
-            uint8_t colorValue = j == 4 ? 255 : 0;
+            uint8_t colorValue = j == 3 ? 255 : 0;
             if (j <= componentCount) {
               if (normalChannel) {
                 colorValue = static_cast<uint8_t>(
