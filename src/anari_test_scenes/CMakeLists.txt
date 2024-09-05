@@ -46,19 +46,19 @@ endif()
 
 if (USE_DRACO)
   find_package(draco REQUIRED)
-  project_link_libraries(INTERFACE draco::draco)
+  project_link_libraries(PUBLIC draco::draco)
   project_compile_definitions(PUBLIC -DUSE_DRACO)
 endif()
 
 if (USE_WEBP)
   find_package(WebP REQUIRED)
-  project_link_libraries(INTERFACE WebP::webp)
+  project_link_libraries(PUBLIC WebP::webp)
   project_compile_definitions(PUBLIC -DUSE_WEBP)
 endif()
 
 if (USE_KTX)
   find_package(Ktx REQUIRED)
-  project_link_libraries(INTERFACE KTX::ktx)
+  project_link_libraries(PUBLIC KTX::ktx)
   project_compile_definitions(PUBLIC -DUSE_KTX)
 endif()
 
