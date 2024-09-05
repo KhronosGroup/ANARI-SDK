@@ -4,6 +4,7 @@
 #pragma once
 
 #include "debugCodes.h"
+#include "geometry.h"
 #include "hdAnariTypes.h"
 #include "material.h"
 
@@ -29,12 +30,14 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
+class HdAnariGeometry;
+using GeometryList = std::vector<const HdAnariGeometry *>;
+
 struct HdAnariMesh;
 using MeshList = std::vector<const HdAnariMesh *>;
 
 struct HdAnariRenderParam final : public HdRenderParam
 {
-
   enum class MaterialType
   {
     Matte,
@@ -46,16 +49,16 @@ struct HdAnariRenderParam final : public HdRenderParam
 
   anari::Device GetANARIDevice() const;
   anari::Material GetDefaultMaterial() const;
-  const HdAnariMaterial::PrimvarBinding& GetDefaultPrimvarBinding() const;
+  const HdAnariMaterial::PrimvarBinding &GetDefaultPrimvarBinding() const;
 
   MaterialType GetMaterialType() const
   {
     return _materialType;
   }
 
-  void AddMesh(HdAnariMesh *m);
-  const MeshList &Meshes() const;
-  void RemoveMesh(HdAnariMesh *m);
+  void RegisterGeometry(const HdAnariGeometry *geometry);
+  void UnregisterGeometry(const HdAnariGeometry *geometry);
+  const GeometryList &Geometries() const;
 
   int SceneVersion() const;
   void MarkNewSceneVersion();
@@ -67,7 +70,7 @@ struct HdAnariRenderParam final : public HdRenderParam
   HdAnariMaterial::PrimvarBinding _primvarBinding;
 
   std::mutex _mutex;
-  MeshList _meshes;
+  GeometryList _geometries;
   std::atomic<int> _sceneVersion{0};
 };
 
@@ -119,26 +122,31 @@ inline anari::Material HdAnariRenderParam::GetDefaultMaterial() const
   return _material;
 }
 
-inline const HdAnariMaterial::PrimvarBinding& HdAnariRenderParam::GetDefaultPrimvarBinding() const {
+inline const HdAnariMaterial::PrimvarBinding &
+HdAnariRenderParam::GetDefaultPrimvarBinding() const
+{
   return _primvarBinding;
 }
 
-
-inline void HdAnariRenderParam::AddMesh(HdAnariMesh *m)
+inline void HdAnariRenderParam::RegisterGeometry(
+    const HdAnariGeometry *geometry)
 {
   std::lock_guard<std::mutex> guard(_mutex);
-  _meshes.push_back(m);
+  _geometries.push_back(geometry);
 }
 
-inline const MeshList &HdAnariRenderParam::Meshes() const
-{
-  return _meshes;
-}
-
-inline void HdAnariRenderParam::RemoveMesh(HdAnariMesh *m)
+inline void HdAnariRenderParam::UnregisterGeometry(
+    const HdAnariGeometry *geometry)
 {
   std::lock_guard<std::mutex> guard(_mutex);
-  _meshes.erase(std::remove(_meshes.begin(), _meshes.end(), m), _meshes.end());
+  _geometries.erase(
+      std::remove(_geometries.begin(), _geometries.end(), geometry),
+      _geometries.end());
+}
+
+inline const GeometryList &HdAnariRenderParam::Geometries() const
+{
+  return _geometries;
 }
 
 inline int HdAnariRenderParam::SceneVersion() const

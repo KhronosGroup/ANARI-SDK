@@ -133,7 +133,7 @@ independently from the SDK. (see below)
 
 ### Using the debug device layer
 
-The ANARI-SDK ships with a [debug layer](src/debug) implemented as an ordinary
+The ANARI-SDK ships with a [debug layer](src/debug_device) implemented as an ordinary
 `ANARIDevice` which wraps a device (set as the `wrappedDevice` parameter on the
 debug device). This device uses the object queries reported by the wrapped
 device to validate correct usage of object subtypes, parameters, and properties,
@@ -167,6 +167,11 @@ how to setup the debug device without using environment variables.
 
 Note that if `ANARI_DEBUG_WRAPPED_LIBRARY` is set, it will take priority over
 programatically set wrapped devices.
+
+Tracing features of the debug device can be set using the following environment
+variables:
+- `ANARI_DEBUG_TRACE_MODE` sets the tracing mode, only `code` is supported for now.
+- `ANARI_DEBUG_TRACE_DIR` set the folder where the trace will be dumped.
 
 ### Unofficial list of publically available implementaions
 

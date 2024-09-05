@@ -7,21 +7,16 @@
 #include <anari/frontend/anari_enums.h>
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/vec4f.h>
-#include <pxr/base/tf/debug.h>
 #include <pxr/base/tf/diagnostic.h>
 #include <pxr/base/vt/value.h>
 #include <pxr/imaging/hd/instancer.h>
 #include <pxr/imaging/hd/renderIndex.h>
-#include <pxr/imaging/hd/renderPass.h>
 #include <pxr/imaging/hd/rprim.h>
 #include <pxr/imaging/hd/sceneDelegate.h>
 #include <pxr/imaging/hd/sprim.h>
 #include <pxr/imaging/hd/types.h>
 #include <stdio.h>
-#include <cstdlib>
 #include <string>
-
-#include "debugCodes.h"
 
 #define HDANARI_TYPE_DEFINITIONS
 // XXX: Add other Sprim types later
@@ -36,6 +31,7 @@
 #include "material/matte.h"
 #include "material/physicallyBased.h"
 #include "mesh.h"
+#include "points.h"
 #include "renderBuffer.h"
 #include "renderDelegate.h"
 #include "renderPass.h"
@@ -72,6 +68,7 @@ TF_DEFINE_PUBLIC_TOKENS(
 
 const TfTokenVector HdAnariRenderDelegate::SUPPORTED_RPRIM_TYPES = {
     HdPrimTypeTokens->mesh,
+    HdPrimTypeTokens->points,
 };
 
 const TfTokenVector HdAnariRenderDelegate::SUPPORTED_SPRIM_TYPES = {
@@ -134,39 +131,6 @@ void HdAnariRenderDelegate::Initialize()
   if (!device) {
     TF_RUNTIME_ERROR("failed to create ANARI device");
     return;
-  }
-
-  bool useDebugDevice = false;
-  TF_DEBUG_MSG(HD_ANARI_RENDERDELEGATE, "Check for debug device selection\n");
-
-  if (auto enableDebug_s = std::getenv("HDANARI_ENABLE_DEBUG"); enableDebug_s) {
-    if (auto enableDebug = std::string(enableDebug_s); enableDebug == "1") {
-      useDebugDevice = true;
-    } else if (enableDebug != "0" && enableDebug != "") {
-      TF_WARN(
-          "Unknown HDANARI_ENABLE_DEBUG value %s. Must be undefined or set to 0 or 1",
-          enableDebug.c_str());
-    }
-  }
-
-  if (useDebugDevice) {
-    TF_DEBUG_MSG(HD_ANARI_RENDERDELEGATE, "Enabling debug device\n");
-    auto debugLib = anari::loadLibrary("debug", hdAnariDeviceStatusFunc);
-    if (!debugLib) {
-      TF_RUNTIME_ERROR("failed to load ANARI debug library from environment");
-    }
-
-    anari::Device dbgDevice = anariNewDevice(debugLib, "debug");
-    anari::setParameter(dbgDevice, dbgDevice, "wrappedDevice", device);
-    if (auto traceDir_s = std::getenv("HDANARI_DEBUG_TRACE_DIR"); traceDir_s) {
-      if (auto traceDir = std::string(traceDir_s); !traceDir.empty()) {
-        anari::setParameter(dbgDevice, dbgDevice, "traceDir", traceDir.c_str());
-        anari::setParameter(dbgDevice, dbgDevice, "traceMode", "code");
-      }
-    }
-    anari::commitParameters(dbgDevice, dbgDevice);
-    anari::release(device, device);
-    device = dbgDevice;
   }
 
   _renderParam = std::make_shared<HdAnariRenderParam>(device);
@@ -296,9 +260,8 @@ HdRprim *HdAnariRenderDelegate::CreateRprim(
 
   if (typeId == HdPrimTypeTokens->mesh)
     return new HdAnariMesh(d, rprimId);
-  // else if (typeId == HdPrimTypeTokens->points) {
-  //   return new HdAnariPoints(d, rprimId);
-  // }
+  else if (typeId == HdPrimTypeTokens->points)
+    return new HdAnariPoints(d, rprimId);
 
   TF_CODING_ERROR("Unknown Rprim Type %s", typeId.GetText());
 

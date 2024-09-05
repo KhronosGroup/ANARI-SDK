@@ -37,6 +37,8 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 include(GNUInstallDirs)
 include(CMakeDependentOption)
 
+enable_testing()
+
 set(CMAKE_INSTALL_RPATH "$ORIGIN:$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
 
 # Built-in CMake options

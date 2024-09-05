@@ -2,7 +2,7 @@ name: ANARI-SDK CI
 
 on:
   push:
-    branches: [ jda/remote-device ]
+    branches: [ next_release ]
   pull_request:
     branches: [ main, next_release ]
 
@@ -31,6 +31,7 @@ jobs:
         -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/build/install
         -DBUILD_SHARED_LIBS=ON
         -DBUILD_EXAMPLES=ON
+        -DBUILD_HDANARI=OFF
         -DBUILD_HELIDE_DEVICE=ON
         -DBUILD_REMOTE_DEVICE=${{ matrix.os == 'ubuntu-latest' }}
         -DBUILD_TESTING=ON
@@ -46,3 +47,7 @@ jobs:
     - name: Render Tests
       working-directory: ${{github.workspace}}/build
       run: ctest -R render_test -C ${{ matrix.config }}
+
+    - name: Tutorial Tests
+      working-directory: ${{github.workspace}}/build
+      run: ctest -R anariTutorial -C ${{ matrix.config }}
