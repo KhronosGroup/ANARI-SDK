@@ -86,8 +86,7 @@
                     "name" : "isovalue",
                     "types" : ["ANARI_FLOAT32", "ANARI_ARRAY1D"],
                     "elementType" : ["ANARI_FLOAT32"],
-                    "tags" : [],
-                    "default" : 0.5,
+                    "tags" : ["required"],
                     "description" : "isovalue(s) defining the isosurface(s)"
                 }, {
                     "name" : "field",
