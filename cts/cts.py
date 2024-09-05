@@ -531,7 +531,7 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                                     else:
                                         sceneGenerator.setGenericParameter(pointer[4], permutation[i])
                             elif key.startswith("/"):
-                                parameterName = key.replace("/", "_")
+                                parameterName = key[1:].replace("/", "_")
                                 sceneGenerator.setParameter(parameterName, permutation[i])
                                 if key == "/gltf/file":
                                     os.chdir(Path(json_file_path).parent)
