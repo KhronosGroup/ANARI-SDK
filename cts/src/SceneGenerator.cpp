@@ -29,7 +29,6 @@ SceneGenerator::~SceneGenerator()
   }
   anari::release(m_device, m_frame);
   anari::release(m_device, m_world);
-  anari::release(m_device, m_device);
 }
 
 /***
