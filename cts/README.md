@@ -12,14 +12,14 @@ It contains the following features:
 
 ## Requirements
 
-The project was developed with the following python packages/versions. Other versions might work as well.
+The project uses poetry to manage package version. If using poetry is not wanted, one can manually install the dependencies specified in [pyproject.toml](pyproject.toml).
 
 - Your ANARI library files copied into this folder
-- [Python 3.10+](https://www.python.org/downloads/)
-- [Pillow 9.3.0](https://pypi.org/project/Pillow/)
-- [reportlab 3.6.10](https://pypi.org/project/reportlab/)
-- [scikit_image 0.19.3](https://pypi.org/project/scikit-image/)
-- [tabulate 0.8.10](https://pypi.org/project/tabulate/)
+- [Python 3.12](https://www.python.org/downloads/)
+- [poetry](https://python-poetry.org/)
+
+Install poetry as described [here](https://python-poetry.org/docs/#installing-with-pipx). You might need to add the poetry executable to your PATH.
+In the cts folder, run `poetry install` to install all dependencies and afterwards `poetry shell` to enter the virtual environment. From this shell you can run the cts normally via `python cts.py`.
 
 If the cts binary (.pyd) file for the desired SDK version is not provided, have a look at the [Build section](#building).
 

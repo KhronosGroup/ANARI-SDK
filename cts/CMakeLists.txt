@@ -16,6 +16,8 @@ set(REFERENCE_LIB helide)
 project(anariCTSBackend LANGUAGES CXX)
 
 find_package(anari REQUIRED)
+find_package(Python 3.12 REQUIRED COMPONENTS Interpreter Development)
+message("CTS Python version: ${Python_VERSION}\nCTS Python Path: ${Python_EXECUTABLE}")
 include(pybind11.cmake)
 
 pybind11_add_module(${PROJECT_NAME}
@@ -35,8 +37,6 @@ PUBLIC
 )
 
 target_link_libraries(${PROJECT_NAME} PUBLIC helium anari_test_scenes)
-
-find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
 
 file(GLOB python_files ${CMAKE_CURRENT_LIST_DIR}/*.py)
 
