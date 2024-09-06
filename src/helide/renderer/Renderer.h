@@ -62,6 +62,7 @@ struct Renderer : public Object
 
   float4 m_bgColor{float3(0.f), 1.f};
   float m_ambientRadiance{1.f};
+  float m_falloffBlendRatio{0.5f};
   RenderMode m_mode{RenderMode::DEFAULT};
 
   helium::IntrusivePtr<Array1D> m_heatmap;

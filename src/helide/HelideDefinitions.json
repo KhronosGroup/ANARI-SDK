@@ -92,6 +92,17 @@
             "opacityHeatmap"
           ],
           "description": "visualization modes (most for debugging)"
+        },
+        {
+          "name": "eyeLightBlendRatio",
+          "types": [
+            "ANARI_FLOAT32"
+          ],
+          "tags": [],
+          "default": 0.5,
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "how much eye lighting factor should be used in default render mode"
         }
       ]
     }

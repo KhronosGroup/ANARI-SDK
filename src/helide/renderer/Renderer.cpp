@@ -107,6 +107,7 @@ void Renderer::commit()
   m_bgColor = getParam<float4>("background", float4(float3(0.f), 1.f));
   m_bgImage = getParamObject<Array2D>("background");
   m_ambientRadiance = getParam<float>("ambientRadiance", 1.f);
+  m_falloffBlendRatio = getParam<float>("eyeLightBlendRatio", 0.5f);
   m_mode = renderModeFromString(getParamString("mode", "default"));
 }
 
@@ -174,7 +175,6 @@ float4 Renderer::shadeRay(const float2 &screen,
   float volumeOpacity = 0.f;
 
   float3 geometryColor(0.f, 0.f, 0.f);
-  float geometryOpacity = hitGeometry ? 1.f : 0.f;
 
   switch (m_mode) {
   case RenderMode::PRIM_ID:
@@ -244,8 +244,7 @@ float4 Renderer::shadeRay(const float2 &screen,
       const float o = surface->adjustedAlpha(std::clamp(sc.w * so, 0.f, 1.f));
       const float3 c = m_heatmap->valueAtLinear<float3>(o);
       const float3 fc = c * falloff;
-      geometryColor =
-          linalg::min((0.8f * fc + 0.2f * c) * m_ambientRadiance, float3(1.f));
+      geometryColor = (0.8f * fc + 0.2f * c) * m_ambientRadiance;
     }
   } break;
   case RenderMode::DEFAULT:
@@ -259,10 +258,11 @@ float4 Renderer::shadeRay(const float2 &screen,
           std::abs(linalg::dot(-ray.dir, linalg::normalize(n)));
       const float4 c =
           surface->getSurfaceColor(ray, inst->getUniformAttributes());
-      const float3 sc = float3(c.x, c.y, c.z) * falloff;
-      volumeColor = geometryColor = linalg::min(
-          (0.8f * sc + 0.2f * float3(c.x, c.y, c.z)) * m_ambientRadiance,
-          float3(1.f));
+      const float3 sc = float3(c.x, c.y, c.z) * std::clamp(falloff, 0.f, 1.f);
+      geometryColor =
+          ((m_falloffBlendRatio * sc)
+              + ((1.f - m_falloffBlendRatio) * float3(c.x, c.y, c.z)))
+          * m_ambientRadiance;
     }
 
     if (hitVolume)
@@ -274,10 +274,12 @@ float4 Renderer::shadeRay(const float2 &screen,
   geometryColor = linalg::min(geometryColor, float3(1.f));
 
   color = linalg::min(volumeColor, float3(1.f));
-  opacity = volumeOpacity;
+  opacity = std::clamp(volumeOpacity, 0.f, 1.f);
 
-  accumulateValue(color, geometryColor * geometryOpacity, opacity);
-  accumulateValue(opacity, geometryOpacity, opacity);
+  if (hitGeometry) {
+    accumulateValue(color, geometryColor, opacity);
+    accumulateValue(opacity, 1.f, opacity);
+  }
   accumulateValue(color, bgColor, opacity);
   accumulateValue(opacity, bgColorOpacity.w, opacity);
 
