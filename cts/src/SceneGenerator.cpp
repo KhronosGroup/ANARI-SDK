@@ -29,6 +29,9 @@ SceneGenerator::~SceneGenerator()
   }
   anari::release(m_device, m_frame);
   anari::release(m_device, m_world);
+
+  // TODO do we need to release the device as well? And do it here or in the wrapper?
+  // anariRelease(dev, dev); etc.
 }
 
 /***

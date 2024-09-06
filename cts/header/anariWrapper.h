@@ -38,8 +38,8 @@ class SceneGeneratorWrapper
   SceneGeneratorWrapper(const std::string &library,
       const std::optional<std::string> &device,
       const std::optional<pybind11::function> &callback);
-  // default constructor will wrap sink device in debug device to generate debug output on render
-  SceneGeneratorWrapper();
+  // this constructor will wrap sink device in debug device to generate debug output on render
+  SceneGeneratorWrapper(pybind11::function &callback);
   ~SceneGeneratorWrapper();
 
   void loadGLTF(const std::string &jsonText,
@@ -195,6 +195,10 @@ class SceneGeneratorWrapper
  private:
   std::unique_ptr<SceneGenerator> m_sceneGenerator;
   anari::Library m_library;
+  // TODO improve naming
+  anari::Library m_secondLibrary;
+  anari::Device m_device;
+  anari::Device m_secondDevice;
   std::optional<pybind11::function> m_callback;
 };
 
