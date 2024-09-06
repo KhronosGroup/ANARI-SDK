@@ -12,7 +12,7 @@ It contains the following features:
 
 ## Requirements
 
-The project uses poetry to manage package version. If using poetry is not wanted, one can manually install the dependencies specified in [pyproject.toml](pyproject.toml).
+The project uses poetry to manage package versions. If using poetry is not wanted, one can manually install the dependencies specified in [pyproject.toml](pyproject.toml).
 
 - Your ANARI library files copied into this folder
 - [Python 3.12](https://www.python.org/downloads/)

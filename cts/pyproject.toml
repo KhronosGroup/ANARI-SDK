@@ -1,8 +1,6 @@
 [tool.poetry]
 name = "cts"
-version = "0.1.0"
 description = "Conformance Test Suite of the ANARI SDK"
-authors = ["Your Name <you@example.com>"]
 license = "Apache 2.0"
 readme = "README.md"
 package-mode = false
