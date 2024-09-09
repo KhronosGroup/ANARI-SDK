@@ -38,7 +38,6 @@ class SceneGeneratorWrapper
   SceneGeneratorWrapper(const std::string &library,
       const std::optional<std::string> &device,
       const std::optional<pybind11::function> &callback);
-  // this constructor will wrap sink device in debug device to generate debug output on render
   SceneGeneratorWrapper(pybind11::function &callback);
   ~SceneGeneratorWrapper();
 
@@ -195,11 +194,11 @@ class SceneGeneratorWrapper
  private:
   std::unique_ptr<SceneGenerator> m_sceneGenerator;
   anari::Library m_library;
-  // TODO improve naming
-  anari::Library m_secondLibrary;
   anari::Device m_device;
-  anari::Device m_secondDevice;
   std::optional<pybind11::function> m_callback;
+  // wrapped device/library for use with debug library to generate debug output
+  anari::Library m_wrappedLibrary;
+  anari::Device m_wrappedDevice;
 };
 
 } // namespace cts

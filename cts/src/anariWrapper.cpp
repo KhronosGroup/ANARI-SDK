@@ -165,38 +165,33 @@ SceneGeneratorWrapper::SceneGeneratorWrapper(const std::string &library,
 
 SceneGeneratorWrapper::SceneGeneratorWrapper(pybind11::function &callback)
 {
+  // this constructor will wrap the sink device in the debug device to generate debug
+  // output on render without actually rendering
   m_callback = callback;
-
-  m_secondLibrary = anariLoadLibrary("sink", statusFunc, &m_callback);
-
+  m_wrappedLibrary = anariLoadLibrary("sink", statusFunc, &m_callback);
   m_library = anari::loadLibrary("debug", statusFunc, &m_callback);
-
-  m_secondDevice = anariNewDevice(m_secondLibrary, "default");
-
+  m_wrappedDevice = anariNewDevice(m_wrappedLibrary, "default");
   m_device = anariNewDevice(m_library, "debug");
   anariSetParameter(
-      m_device, m_device, "wrappedDevice", ANARI_DEVICE, &m_secondDevice);
+      m_device, m_device, "wrappedDevice", ANARI_DEVICE, &m_wrappedDevice);
 
   anariCommitParameters(m_device, m_device);
-  anariRelease(m_secondDevice, m_secondDevice);
+  anariRelease(m_wrappedDevice, m_wrappedDevice);
 
   // create a SceneGenerator
-  // TODO do we need to release the dev device in the destructor of SceneGenerator? What about the second device?
   m_sceneGenerator = std::make_unique<SceneGenerator>(m_device);
-
-  // TODO remove debug code
-  std::cout << "End SceneGeneratorWrapper Constructor" << std::endl;
 }
 
 SceneGeneratorWrapper::~SceneGeneratorWrapper()
 {
   anariRelease(m_device, m_device);
+
   if (m_library != nullptr) {
     anari::unloadLibrary(m_library);
   }
   // unload second lib as well if exists
-  if (m_secondLibrary != nullptr) {
-    anari::unloadLibrary(m_secondLibrary);
+  if (m_wrappedLibrary != nullptr) {
+    anari::unloadLibrary(m_wrappedLibrary);
   }
 }
 

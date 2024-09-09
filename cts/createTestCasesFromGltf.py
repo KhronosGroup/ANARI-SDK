@@ -14,16 +14,18 @@ parsing_required_features = False
 def record_features(message):
     global parsing_required_features
     global required_features
-    # start parsing features
+
     if "used features:" in message:
+        # start parsing features
         parsing_required_features = True
         return
     if "ANARI_" in message and parsing_required_features:
+        # parse feature
         split_message = message.split("]")
         feature = split_message[1].strip()
         required_features.append(feature)
-        return
     else:
+        # stop parsing features
         if parsing_required_features:
             parsing_required_features = False
 
