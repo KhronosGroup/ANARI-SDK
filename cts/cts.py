@@ -254,7 +254,7 @@ def resolve_scenes(test_scenes):
         if (Path(path / test_scenes).is_dir()):
             test_scenes += "/**/*.json"
         collected_scenes = list(path.glob(test_scenes))
-        collected_scenes = fnmatch.filter(collected_scenes, "*.json")
+        collected_scenes = [n for n in collected_scenes if fnmatch.fnmatch(str(n), "*.json")]
         if collected_scenes == []:
             print("No test scenes found")
     return collected_scenes
@@ -531,7 +531,7 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                                     else:
                                         sceneGenerator.setGenericParameter(pointer[4], permutation[i])
                             elif key.startswith("/"):
-                                parameterName = key.replace("/", "_")
+                                parameterName = key[1:].replace("/", "_")
                                 sceneGenerator.setParameter(parameterName, permutation[i])
                                 if key == "/gltf/file":
                                     os.chdir(Path(json_file_path).parent)

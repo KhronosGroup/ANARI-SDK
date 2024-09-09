@@ -90,6 +90,7 @@ void SceneGenerator::loadGLTF(const std::string &jsonText,
     std::vector<std::vector<char>> &sortedBuffers,
     std::vector<std::vector<char>> &sortedImages)
 {
+  m_gltf = gltf_data(m_device);
   m_gltf.parse_glTF(jsonText, sortedBuffers, sortedImages);
 }
 
@@ -1223,6 +1224,7 @@ void SceneGenerator::resetSceneObjects() {
 // reset all parameters and objects in the scene
 void SceneGenerator::resetAllParameters() {
   resetSceneObjects();
+  m_gltf = gltf_data(m_device);
   for (auto &[key, value] : m_anariObjects) {
     for (auto &object : value) {
       anari::release(m_device, object);
