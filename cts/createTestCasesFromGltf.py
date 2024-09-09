@@ -7,10 +7,25 @@ import os
 import anariCTSBackend
 import ctsGLTF
 
+required_features = []
+parsing_required_features = False
 
-# TODO do not print, but parse messages for required features
-def log(message):
-    print(message)
+
+def record_features(message):
+    global parsing_required_features
+    global required_features
+    # start parsing features
+    if "used features:" in message:
+        parsing_required_features = True
+        return
+    if "ANARI_" in message and parsing_required_features:
+        split_message = message.split("]")
+        feature = split_message[1].strip()
+        required_features.append(feature)
+        return
+    else:
+        if parsing_required_features:
+            parsing_required_features = False
 
 
 def create_test_cases_from_gltf(gltf_dir, output_path, blacklist=[]):
@@ -74,25 +89,25 @@ def create_test_cases_from_gltf(gltf_dir, output_path, blacklist=[]):
                 ],
                 gltf.json,
             )
+        # fill test case with required features
+        query_required_features(gltf)
+        json_data["requiredFeatures"] = required_features.copy()
+        required_features.clear()
         # write test
         output_dir = Path(output_path + "/" + relative_gltf_path)
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
         with open(output_dir / Path(gltf_scene_name + ".json"), "w") as f:
             json.dump(json_data, f, indent=2)
-        # fill test case with required features
-        required_features = query_required_features(gltf)
-        print("Required features: " + str(required_features))
 
 
 def query_required_features(gltf):
     # use this in case of global scene generator
     # sceneGenerator.resetAllParameters()
-    sceneGenerator = anariCTSBackend.SceneGenerator(log)
+    sceneGenerator = anariCTSBackend.SceneGenerator(record_features)
 
     sceneGenerator.loadGLTF(json.dumps(gltf.json), gltf.buffers, gltf.images)
     _ = sceneGenerator.renderScene(0.0)
-    return ["feature1", "feature2"]
 
 
 def gather_gltf(gltf_dir, blacklist=[]):
