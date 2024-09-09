@@ -8,5 +8,11 @@
       "../../../gltf-Sample-Assets/BrainStem/glTF-Draco/BrainStem.gltf",
       "../../../gltf-Sample-Assets/BrainStem/glTF-Binary/BrainStem.glb"
     ]
-  }
+  },
+  "requiredFeatures": [
+    "ANARI_KHR_CAMERA_PERSPECTIVE",
+    "ANARI_KHR_GEOMETRY_TRIANGLE",
+    "ANARI_KHR_MATERIAL_MATTE",
+    "ANARI_KHR_MATERIAL_PHYSICALLY_BASED"
+  ]
 }

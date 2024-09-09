@@ -5,5 +5,12 @@
     "gltf": {
       "file": "../../../gltf-Sample-Assets/PrimitiveModeNormalsTest/glTF/PrimitiveModeNormalsTest.gltf"
     }
-  }
+  },
+  "requiredFeatures": [
+    "ANARI_KHR_CAMERA_PERSPECTIVE",
+    "ANARI_KHR_GEOMETRY_TRIANGLE",
+    "ANARI_KHR_MATERIAL_MATTE",
+    "ANARI_KHR_MATERIAL_PHYSICALLY_BASED",
+    "ANARI_KHR_SAMPLER_IMAGE2D"
+  ]
 }
