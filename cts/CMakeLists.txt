@@ -15,9 +15,12 @@ set(REFERENCE_LIB helide)
 
 project(anariCTSBackend LANGUAGES CXX)
 
+set(Python3_ROOT_DIR "" CACHE PATH "Path to python3 directory")
+set(Python3_FIND_REGISTRY "LAST")
+set(Python3_FIND_STRATEGY "LOCATION")
 find_package(anari REQUIRED)
-find_package(Python 3.12 REQUIRED COMPONENTS Interpreter Development)
-message("CTS Python version: ${Python_VERSION}\nCTS Python Path: ${Python_EXECUTABLE}")
+find_package(Python3 3.9...<3.20 REQUIRED COMPONENTS Interpreter Development)
+message("CTS Python version: ${Python3_VERSION}\nCTS Python Path: ${Python3_EXECUTABLE}")
 include(pybind11.cmake)
 
 pybind11_add_module(${PROJECT_NAME}

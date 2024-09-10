@@ -15,11 +15,14 @@ It contains the following features:
 The project uses poetry to manage package versions. If using poetry is not wanted, one can manually install the dependencies specified in [pyproject.toml](pyproject.toml).
 
 - Your ANARI library files copied into this folder
-- [Python 3.12](https://www.python.org/downloads/)
+- [Python 3.9+](https://www.python.org/downloads/)
 - [poetry](https://python-poetry.org/)
 
 Install poetry as described [here](https://python-poetry.org/docs/#installing-with-pipx). You might need to add the poetry executable to your PATH.
-In the cts folder, run `poetry install` to install all dependencies and afterwards `poetry shell` to enter the virtual environment. From this shell you can run the cts normally via `python cts.py`.
+
+In the cts folder, run `poetry install` to install all dependencies. This will automatically search for a suitable python version. If poetry can not find a python version or you want to specify a specific one, you can use `poetry env use <path to python executable>` before calling `poetry install`.
+
+Afterwards, use `poetry shell` to enter the virtual environment. From this shell you can run the cts normally via `python cts.py`.
 
 If the cts binary (.pyd) file for the desired SDK version is not provided, have a look at the [Build section](#building).
 
@@ -305,4 +308,5 @@ Here is a sample `launch.json` for Windows to get the debugger running:
 ```
 
 Open the `cts` folder in VS Code. Add `/.vscode/launch.json` and run `Python C++ Debugger: CTS` to start debugging. Use `args` to invoke different python functions.\
- `Python C++ Debugger: CTS REF` can be used to debug `createReferenceData.py`.
+ `Python C++ Debugger: CTS REF` can be used to debug `createReferenceData.py`.\
+If multiple python versions are installed, make sure to select the correct python interpreter in VS Code.
