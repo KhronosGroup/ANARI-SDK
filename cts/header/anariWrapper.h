@@ -194,11 +194,9 @@ class SceneGeneratorWrapper
  private:
   std::unique_ptr<SceneGenerator> m_sceneGenerator;
   anari::Library m_library;
-  anari::Device m_device;
   std::optional<pybind11::function> m_callback;
-  // wrapped device/library for use with debug library to generate debug output
+  // wrapped library for use with debug library to generate debug output
   anari::Library m_wrappedLibrary;
-  anari::Device m_wrappedDevice;
 };
 
 } // namespace cts
