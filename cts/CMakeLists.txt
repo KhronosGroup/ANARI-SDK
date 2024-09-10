@@ -87,6 +87,8 @@ else()
 endif()
 
 install(FILES ${python_files} ${CMAKE_CURRENT_LIST_DIR}/default_test_scene.json
+  ${CMAKE_CURRENT_LIST_DIR}/pyproject.toml 
+  ${CMAKE_CURRENT_LIST_DIR}/poetry.lock
   DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/anari/cts
 )
 
