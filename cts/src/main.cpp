@@ -13,6 +13,14 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(anariCTSBackend, m)
 {
+  /*  py::call_guard<py::gil_scoped_release>() release the GIL for the whole function,
+      because the GIL is only aquired for the main thread and needs to be manually aquired for multithreading.
+      The GIL is only needed if we interact with python from C++,
+      which is currently only needed for the logger.
+      To aquire the GIL one can use py::gil_scoped_aquire.
+      Release the GIL afterwards again with py::gil_scoped_release.
+  */
+
   m.def("query_features", &cts::queryExtensions, R"pbdoc(
         Query which extensions are supported by this device.
     )pbdoc", py::call_guard<py::gil_scoped_release>());
@@ -52,7 +60,7 @@ PYBIND11_MODULE(anariCTSBackend, m)
       .def("setGenericArray2DParameter",&cts::SceneGeneratorWrapper::setGenericArray2DParameter<std::vector<std::vector<std::array<float, 4>>>>, py::call_guard<py::gil_scoped_release>())
       .def("setGenericTexture2D",&cts::SceneGeneratorWrapper::setGenericTexture2D, py::call_guard<py::gil_scoped_release>())
       .def("setReferenceParameter",&cts::SceneGeneratorWrapper::setReferenceParameter, py::call_guard<py::gil_scoped_release>())
-      .def("setReferenceParameter",&cts::SceneGeneratorWrapper::setReferenceArray, py::call_guard<py::gil_scoped_release>(), py::call_guard<py::gil_scoped_release>())
+      .def("setReferenceParameter",&cts::SceneGeneratorWrapper::setReferenceArray, py::call_guard<py::gil_scoped_release>())
       .def("unsetGenericParameter", &cts::SceneGeneratorWrapper::unsetGenericParameter, py::call_guard<py::gil_scoped_release>())
       .def("releaseAnariObject", &cts::SceneGeneratorWrapper::releaseAnariObject, py::call_guard<py::gil_scoped_release>())
       .def("commit", &cts::SceneGeneratorWrapper::commit, py::call_guard<py::gil_scoped_release>())

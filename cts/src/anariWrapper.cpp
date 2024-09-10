@@ -23,7 +23,7 @@ void statusFunc(const void *userData,
   if (!userData) {
     return;
   }
-  pybind11::gil_scoped_acquire acc;
+  pybind11::gil_scoped_acquire acq;
   auto &logger = *reinterpret_cast<const pybind11::function *>(userData);
   (void)device;
   (void)source;
