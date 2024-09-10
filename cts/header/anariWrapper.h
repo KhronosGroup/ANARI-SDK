@@ -196,7 +196,7 @@ class SceneGeneratorWrapper
   anari::Library m_library;
   std::optional<pybind11::function> m_callback;
   // wrapped library for use with debug library to generate debug output
-  anari::Library m_wrappedLibrary;
+  anari::Library m_wrappedLibrary{nullptr};
 };
 
 } // namespace cts
