@@ -20,7 +20,8 @@ The project uses poetry to manage package versions. If using poetry is not wante
 
 Install poetry as described [here](https://python-poetry.org/docs/#installing-with-pipx). You might need to add the poetry executable to your PATH.
 
-In the cts folder, run `poetry install` to install all dependencies. This will automatically search for a suitable python version. If poetry can not find a python version or you want to specify a specific one, you can use `poetry env use <path to python executable>` before calling `poetry install`.
+In the cts folder, run `poetry install` to install all dependencies. This will automatically search for a suitable python version. If poetry can not find a python version or you want to specify a specific one, you can use `poetry env use <path to python executable>` before calling `poetry install`.\
+On Windows, `poetry install` might fail since the resulting path can exceed 260 characters. To fix this issue [enable long paths in Windows](https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=powershell).
 
 Afterwards, use `poetry shell` to enter the virtual environment. From this shell you can run the cts normally via `python cts.py`.
 
