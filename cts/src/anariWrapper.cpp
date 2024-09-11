@@ -20,6 +20,10 @@ void statusFunc(const void *userData,
     ANARIStatusCode code,
     const char *message)
 {
+  if (!userData) {
+    return;
+  }
+  pybind11::gil_scoped_acquire acq;
   auto &logger = *reinterpret_cast<const pybind11::function *>(userData);
   (void)device;
   (void)source;
@@ -38,6 +42,7 @@ void statusFunc(const void *userData,
   } else if (severity == ANARI_SEVERITY_DEBUG) {
     logger("[DEBUG] " + std::string(message));
   }
+  pybind11::gil_scoped_release rel;
 }
 
 // returns vector of pairs consisting of the feature name and whether it is
@@ -163,10 +168,54 @@ SceneGeneratorWrapper::SceneGeneratorWrapper(const std::string &library,
   anari::release(dev, dev);
 }
 
+SceneGeneratorWrapper::SceneGeneratorWrapper(pybind11::function &callback)
+{
+  // this constructor will wrap the sink device in the debug device to generate debug
+  // output on render without actually rendering
+
+  // load libraries
+  m_callback = callback;
+  m_wrappedLibrary = anariLoadLibrary("sink", statusFunc, &m_callback);
+  m_library = anari::loadLibrary("debug", statusFunc, &m_callback);
+
+  if (m_library == nullptr) {
+    throw std::runtime_error("Debug library could not be loaded");
+  }
+  if (m_wrappedLibrary == nullptr) {
+    throw std::runtime_error("Sink library could not be loaded");
+  }
+
+  // setup devices
+  anari::Device wrappedDevice = anariNewDevice(m_wrappedLibrary, "default");
+  anari::Device device = anariNewDevice(m_library, "debug");
+
+  if (device == nullptr) {
+    throw std::runtime_error("Debug device of the debug library could not be created");
+  }
+  if (wrappedDevice == nullptr) {
+    throw std::runtime_error("Default device of the sink library could not be created");
+  }
+
+  anariSetParameter(
+      device, device, "wrappedDevice", ANARI_DEVICE, &wrappedDevice);
+
+  anariCommitParameters(device, device);
+  anariRelease(wrappedDevice, wrappedDevice);
+
+  // create a SceneGenerator
+  m_sceneGenerator = std::make_unique<SceneGenerator>(device);
+
+  anariRelease(device, device);
+}
+
 SceneGeneratorWrapper::~SceneGeneratorWrapper()
 {
   if (m_library != nullptr) {
     anari::unloadLibrary(m_library);
+  }
+  // unload second lib as well if exists
+  if (m_wrappedLibrary != nullptr) {
+    anari::unloadLibrary(m_wrappedLibrary);
   }
 }
 

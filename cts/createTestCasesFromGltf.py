@@ -4,65 +4,133 @@ import json
 import argparse
 import os
 
+import anariCTSBackend
 import ctsGLTF
 
-def create_test_cases_from_gltf(gltf_dir, output_path, blacklist = []):
+required_features = []
+parsing_required_features = False
+
+
+def record_features(message):
+    global parsing_required_features
+    global required_features
+
+    if "used features:" in message:
+        # start parsing features
+        parsing_required_features = True
+        return
+    if "ANARI_" in message and parsing_required_features:
+        # parse feature
+        split_message = message.split("]")
+        feature = split_message[1].strip()
+        required_features.append(feature)
+    else:
+        # stop parsing features
+        if parsing_required_features:
+            parsing_required_features = False
+
+
+def create_test_cases_from_gltf(gltf_dir, output_path, blacklist=[]):
     # gather all paths to gltf files in dir
-    gltf_scenes = gather_sample_assets(gltf_dir, blacklist) if "gltf-Sample-Assets" in gltf_dir  else gather_gltf(gltf_dir, blacklist)
+    gltf_scenes = (
+        gather_sample_assets(gltf_dir, blacklist)
+        if "gltf-Sample-Assets" in gltf_dir
+        else gather_gltf(gltf_dir, blacklist)
+    )
     for gltf_scene in gltf_scenes:
         gltf_scene_name = None
         absolute_gltf_path = Path(__file__).parent / gltf_dir
         relative_gltf_path = None
-        if (isinstance(gltf_scene, dict)):
+        if isinstance(gltf_scene, dict):
             for parent, children in gltf_scene.items():
                 gltf_scene_name = parent.stem
                 # create paths
                 relative_gltf_path = os.path.relpath(parent, absolute_gltf_path)
-                absolute_json_path = absolute_gltf_path.parent / Path(output_path) / Path(relative_gltf_path) / Path(parent.stem + '.json')
+                absolute_json_path = (
+                    absolute_gltf_path.parent
+                    / Path(output_path)
+                    / Path(relative_gltf_path)
+                    / Path(parent.stem + ".json")
+                )
                 # print info
-                print("Creating test case")
-                print(f"    Source glTF: " + str(parent))
-                print(f"    Test case: " + str(absolute_json_path))
-                print("")
+                print_info(parent, absolute_json_path)
                 # get glTF info
-                gltf_json = load_gltf_json(children[0])
+                gltf = load_gltf(children[0])
                 # create test
-                json_data = create_test_json(parent.name, [PureWindowsPath(os.path.relpath(child, absolute_json_path.parent)).as_posix() for child in children], gltf_json)
+                json_data = create_test_json(
+                    parent.name,
+                    [
+                        PureWindowsPath(
+                            os.path.relpath(child, absolute_json_path.parent)
+                        ).as_posix()
+                        for child in children
+                    ],
+                    gltf.json,
+                )
         else:
             # create paths
             gltf_scene_name = gltf_scene.stem
             relative_gltf_path = os.path.relpath(gltf_scene.parent, absolute_gltf_path)
-            absolute_json_path = absolute_gltf_path.parent / Path(output_path) / Path(relative_gltf_path) / Path(gltf_scene.stem + '.json')
+            absolute_json_path = (
+                absolute_gltf_path.parent
+                / Path(output_path)
+                / Path(relative_gltf_path)
+                / Path(gltf_scene.stem + ".json")
+            )
             # print info
-            print("Creating test case")
-            print(f"    Source glTF: " + str(gltf_scene))
-            print(f"    Test case: " + str(absolute_json_path))
-            print("")
+            print_info(gltf_scene, absolute_json_path)
             # get glTF info
-            gltf_json = load_gltf_json(gltf_scene)
+            gltf = load_gltf(gltf_scene)
             # create test
-            json_data = create_test_json(gltf_scene.name, [PureWindowsPath(os.path.relpath(gltf_scene, absolute_json_path.parent)).as_posix()], gltf_json)
+            json_data = create_test_json(
+                gltf_scene.name,
+                [
+                    PureWindowsPath(
+                        os.path.relpath(gltf_scene, absolute_json_path.parent)
+                    ).as_posix()
+                ],
+                gltf.json,
+            )
+        # fill test case with required features
+        query_required_features(gltf)
+        json_data["requiredFeatures"] = required_features.copy()
+        required_features.clear()
         # write test
         output_dir = Path(output_path + "/" + relative_gltf_path)
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
-        with open(output_dir / Path(gltf_scene_name + '.json'), 'w') as f:
+        with open(output_dir / Path(gltf_scene_name + ".json"), "w") as f:
             json.dump(json_data, f, indent=2)
 
-def gather_gltf(gltf_dir, blacklist = []):
+
+def query_required_features(gltf):
+    # use this in case of global scene generator
+    # sceneGenerator.resetAllParameters()
+    sceneGenerator = anariCTSBackend.SceneGenerator(record_features)
+
+    sceneGenerator.loadGLTF(json.dumps(gltf.json), gltf.buffers, gltf.images)
+    _ = sceneGenerator.renderScene(0.0)
+
+
+def gather_gltf(gltf_dir, blacklist=[]):
     absolute_path = Path(Path(__file__).parent / gltf_dir)
     if absolute_path.is_dir():
         gltf_files = list(absolute_path.rglob("*.gltf"))
         glb_files = list(absolute_path.rglob("*.glb"))
         collected_gltf = gltf_files + glb_files
-        collected_gltf = [x for x in collected_gltf if (not any(term in str(x) for term in blacklist))]
+        collected_gltf = [
+            x for x in collected_gltf if (not any(term in str(x) for term in blacklist))
+        ]
         return collected_gltf
     else:
         print("glTF path must lead to a directory")
         return []
-    
-def gather_sample_assets(gltf_dir, blacklist = []):
-    blacklist.extend(["glTF-Quantized", "Sparse", "glTF-Embedded", "glTF-Meshopt", "glTF-IBL"])
+
+
+def gather_sample_assets(gltf_dir, blacklist=[]):
+    blacklist.extend(
+        ["glTF-Quantized", "Sparse", "glTF-Embedded", "glTF-Meshopt", "glTF-IBL"]
+    )
     gltfs = gather_gltf(gltf_dir, blacklist)
     current_parent = None
     collected_gltfs = []
@@ -76,15 +144,14 @@ def gather_sample_assets(gltf_dir, blacklist = []):
             current_collected_gltfs = []
             current_parent = gltf.parent.parent
             hasGlb = False
-        if (gltf.parent.stem == "glTF-Binary"):
+        if gltf.parent.stem == "glTF-Binary":
             hasGlb = True
-        elif (gltf.suffix == ".gltf" and hasGlb):
+        elif gltf.suffix == ".gltf" and hasGlb:
             continue
         current_collected_gltfs.append(gltf)
     collected_gltfs.append({current_parent: current_collected_gltfs})
 
     return collected_gltfs
-        
 
 
 def create_test_json(name, paths, gltf_json):
@@ -92,12 +159,8 @@ def create_test_json(name, paths, gltf_json):
     if len(paths) > 1:
         json_data = {
             "description": "Test " + str(name),
-            "sceneParameters": {
-                "primitiveCount": 0
-            },
-            "permutations" : {
-                "/gltf/file": paths
-            }
+            "sceneParameters": {"primitiveCount": 0},
+            "permutations": {"/gltf/file": paths},
         }
         if camera_count > 0:
             cameras = list(range(0, camera_count))
@@ -107,12 +170,7 @@ def create_test_json(name, paths, gltf_json):
 
     json_data = {
         "description": "Test " + str(name),
-        "sceneParameters": {
-            "primitiveCount": 0,
-            "gltf": {
-                "file": str(paths[0])
-            }
-        }
+        "sceneParameters": {"primitiveCount": 0, "gltf": {"file": str(paths[0])}},
     }
     if camera_count > 0:
         cameras = list(range(0, camera_count))
@@ -120,14 +178,28 @@ def create_test_json(name, paths, gltf_json):
         json_data["permutations"] = {"/gltf/camera": cameras}
     return json_data
 
-def load_gltf_json(gltf_path):
-    gltf_json = ctsGLTF.loadGLB(gltf_path) if gltf_path.suffix == ".glb" else ctsGLTF.loadGLTF(gltf_path)
-    return gltf_json.json
+
+def load_gltf(gltf_path):
+    gltf = (
+        ctsGLTF.loadGLB(gltf_path)
+        if gltf_path.suffix == ".glb"
+        else ctsGLTF.loadGLTF(gltf_path)
+    )
+    return gltf
+
 
 def get_camera_count(gltf_json):
     if "cameras" in gltf_json:
         return len(gltf_json["cameras"])
     return 0
+
+
+def print_info(source_path, test_path):
+    print("Creating test case")
+    print(f"    Source glTF: " + str(source_path))
+    print(f"    Test case: " + str(test_path))
+    print("")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="ANARI CTS toolkit generation")

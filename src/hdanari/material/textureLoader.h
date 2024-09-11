@@ -34,6 +34,7 @@ public:
       0.0f, 0.0f, 1.0f, 0.0f,
       0.0f, 0.0f, 0.0f, 1.0f,
       };
+    std::array<float, 4> offset = { 0.0f, 0.0f, 0.0f, 0.0f };
   };
 
   static anari::DataType HioFormatToAnari(HioFormat f);

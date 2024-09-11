@@ -38,6 +38,7 @@ class SceneGeneratorWrapper
   SceneGeneratorWrapper(const std::string &library,
       const std::optional<std::string> &device,
       const std::optional<pybind11::function> &callback);
+  SceneGeneratorWrapper(pybind11::function &callback);
   ~SceneGeneratorWrapper();
 
   void loadGLTF(const std::string &jsonText,
@@ -194,6 +195,8 @@ class SceneGeneratorWrapper
   std::unique_ptr<SceneGenerator> m_sceneGenerator;
   anari::Library m_library;
   std::optional<pybind11::function> m_callback;
+  // wrapped library for use with debug library to generate debug output
+  anari::Library m_wrappedLibrary{nullptr};
 };
 
 } // namespace cts

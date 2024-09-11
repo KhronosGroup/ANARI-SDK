@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 import anariCTSBackend
 try:
     import ctsReport
@@ -254,7 +254,7 @@ def resolve_scenes(test_scenes):
         if (Path(path / test_scenes).is_dir()):
             test_scenes += "/**/*.json"
         collected_scenes = list(path.glob(test_scenes))
-        collected_scenes = fnmatch.filter(collected_scenes, "*.json")
+        collected_scenes = [n for n in collected_scenes if fnmatch.fnmatch(str(n), "*.json")]
         if collected_scenes == []:
             print("No test scenes found")
     return collected_scenes

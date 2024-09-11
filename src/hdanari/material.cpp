@@ -177,6 +177,12 @@ std::map<SdfPath, anari::Sampler> HdAnariMaterial::CreateSamplers(
         "outTransform",
         ANARI_FLOAT32_MAT4,
         desc.transform.data());
+    
+    anari::setParameter(device,
+        sampler,
+        "outOffset",
+        ANARI_FLOAT32_VEC4,
+        desc.offset.data());
 
     anari::commitParameters(device, sampler);
 

@@ -21,7 +21,9 @@ endif()
 
 project_add_library(SHARED
   anariExtensionUtilityImpl.cpp
+  anariTokens.cpp
   debugCodes.cpp
+  geometry.cpp
   instancer.cpp
   material.cpp
   material/matte.cpp
@@ -32,12 +34,20 @@ project_add_library(SHARED
   materialTokens.h
   mesh.cpp
   meshUtil.cpp
+  points.cpp
   renderBuffer.cpp
   renderDelegate.cpp
   rendererPlugin.cpp
   renderPass.cpp
   sampler.cpp
 )
+
+option(USE_INSTANCE_ARRAYS "Toggle on the use of instance arrays" OFF)
+if (USE_INSTANCE_ARRAYS)
+  target_compile_definitions(${PROJECT_NAME} PRIVATE "USE_INSTANCE_ARRAYS=1")
+else()
+  target_compile_definitions(${PROJECT_NAME} PRIVATE "USE_INSTANCE_ARRAYS=0")
+endif()
 
 set_target_properties(${PROJECT_NAME}
 PROPERTIES

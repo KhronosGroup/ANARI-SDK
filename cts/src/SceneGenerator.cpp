@@ -29,6 +29,9 @@ SceneGenerator::~SceneGenerator()
   }
   anari::release(m_device, m_frame);
   anari::release(m_device, m_world);
+
+  // TODO do we need to release the device as well? And do it here or in the wrapper?
+  // anariRelease(dev, dev); etc.
 }
 
 /***
@@ -930,11 +933,6 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
   } else {
     createAnariObject(ANARI_RENDERER, "default");
     renderer = m_currentObject;
-    std::array<float, 4> bgColor = {0.f, 0.f, 0.f, 1.f};
-    std::array<float, 3> ambientColor = {1.f, 1.f, 1.f};
-    anari::setParameter(m_device, renderer, "background", bgColor); // white
-    anari::setParameter(m_device, renderer, "ambientRadiance", 0.0f);
-    anari::setParameter(m_device, renderer, "ambientColor", ambientColor);
     anari::commitParameters(m_device, renderer);
   }
  // anari::setParameter(m_device, renderer, "pixelSamples", 10);

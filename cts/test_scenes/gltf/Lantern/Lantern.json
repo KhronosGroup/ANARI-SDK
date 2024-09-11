@@ -8,5 +8,12 @@
       "../../../gltf-Sample-Assets/Lantern/glTF-Draco/Lantern.gltf",
       "../../../gltf-Sample-Assets/Lantern/glTF-Binary/Lantern.glb"
     ]
-  }
+  },
+  "requiredFeatures": [
+    "ANARI_KHR_CAMERA_PERSPECTIVE",
+    "ANARI_KHR_GEOMETRY_TRIANGLE",
+    "ANARI_KHR_MATERIAL_MATTE",
+    "ANARI_KHR_MATERIAL_PHYSICALLY_BASED",
+    "ANARI_KHR_SAMPLER_IMAGE2D"
+  ]
 }

@@ -304,11 +304,13 @@ struct gltf_data
   std::string ext;
 
   ANARIDevice device;
+  ANARILibrary library;
   std::vector<std::vector<char>> buffers;
   std::vector<anari::Array2D> images;
   std::vector<anari::Material> materials;
   std::vector<anari::Group> groups;
   std::vector<anari::Camera> cameras;
+  std::vector<anari::Light> lights;
   std::vector<std::vector<anari::Instance>> instances;
 
   const char *unpack_accessor(
@@ -775,8 +777,9 @@ struct gltf_data
   void load_surfaces()
   {
     auto defaultMaterial = anari::newObject<anari::Material>(device, "matte");
+    // TODO choose correct color
     anari::setParameter(
-        device, defaultMaterial, "color", anari::math::float3(1.f, 0.f, 0.f));
+        device, defaultMaterial, "color", anari::math::float3(0.23f, 0.14f, 0.35f));
     anari::commitParameters(device, defaultMaterial);
 
     for (const auto &mesh : gltf["meshes"]) {
@@ -1010,6 +1013,77 @@ struct gltf_data
       
       anari::commitParameters(device, camera);
       cameras.emplace_back(camera);
+    }
+    if (node.contains("extensions")
+        && node["extensions"].contains("KHR_lights_punctual")) {
+      const auto &glTFLights = gltf["extensions"]["KHR_lights_punctual"]["lights"];
+      const auto &glTFLight = glTFLights.at(
+          int(node["extensions"]["KHR_lights_punctual"]["light"]));
+      // type
+      const std::string type = glTFLight["type"].get<std::string>();
+      if (type == "directional" || type == "point" || type == "spot") {
+        ANARILight light = anari::newObject<anari::Light>(device, type.c_str());
+
+        // color
+        float glTFColor[3] = {1.0f, 1.0f, 1.0f};
+        if (glTFLight.contains("color") && glTFLight["color"].size() == 3) {
+          std::copy(
+              glTFLight["color"].begin(), glTFLight["color"].end(), glTFColor);
+        }
+        anari::math::float3 color =
+            anari::math::float3(glTFColor[0], glTFColor[1], glTFColor[2]);
+        anari::setParameter(device, light, "color", color);
+
+        if (type == "point" || type == "spot") {
+          // intensity
+          float intensity = 1.0f;
+          if (glTFLight.contains("intensity")) {
+            intensity = glTFLight["intensity"].get<float>();
+          }
+          anari::setParameter(device, light, "intensity", intensity);
+
+          // position
+          anari::math::float3 position =
+              anari::math::float3(transform[12], transform[13], transform[14]);
+          anari::setParameter(device, light, "position", position);
+        }
+
+        if (type == "spot" && type == "directional") {
+          // direction
+          anari::math::float3 direction =
+              anari::math::mul(transformMat, anari::math::float4(0, 0, -1, 0))
+                  .xyz();
+          anari::setParameter(device, light, "direction", direction);
+        }
+
+        if (type == "spot") {
+          if (glTFLight.contains("spot")) {
+            const auto &glTFSpot = glTFLight["spot"];
+
+            // glTF outer cone angle / ANARI opening angle
+            float outerConeAngle = 3.141592653589f;
+            if (glTFSpot.contains("outerConeAngle")) {
+              outerConeAngle = glTFSpot["outerConeAngle"].get<float>();
+            }
+            anari::setParameter(
+                device, light, "openingAngle", outerConeAngle);
+
+            // glTF inner cone angle / ANARI falloff angle
+            float innerConeAngle = 0.1f;
+            if (glTFSpot.contains("innerConeAngle")) {
+              innerConeAngle = glTFSpot["innerConeAngle"].get<float>();
+            }
+            anari::setParameter(device, light, "falloffAngle", innerConeAngle);
+          }
+        }
+
+        if (type == "directional") {
+          // TODO
+        }
+
+        anari::commitParameters(device, light);
+        lights.emplace_back(light);
+      }
     }
     if (node.contains("children")) {
       for (int i : node["children"]) {

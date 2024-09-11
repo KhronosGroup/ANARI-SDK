@@ -52,7 +52,7 @@ float4 Surface::getSurfaceColor(
   if (colorSampler && colorSampler->isValid())
     return colorSampler->getSample(*geometry(), ray, instAttrV);
   else if (colorAttribute == Attribute::NONE)
-    return material()->color();
+    return mat->color();
   else if (const auto &ia = getUniformAttribute(instAttrV, colorAttribute); ia)
     return *ia;
   else
@@ -76,7 +76,7 @@ float Surface::getSurfaceOpacity(
   if (opacitySampler && opacitySampler->isValid())
     return opacitySampler->getSample(*geometry(), ray, instAttrV).x;
   else if (opacityAttribute == Attribute::NONE)
-    return material()->opacity();
+    return mat->opacity();
   else if (const auto &ia = getUniformAttribute(instAttrV, opacityAttribute);
            ia)
     return ia->x;

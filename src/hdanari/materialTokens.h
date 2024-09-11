@@ -27,6 +27,7 @@
   (opacityThreshold) \
   (r) \
   (raw) \
+  (rgb) \
   (roughness) \
   (scale) \
   (sourceColorSpace) \

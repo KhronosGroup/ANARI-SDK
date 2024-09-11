@@ -1,0 +1,100 @@
+{
+    "info" : {
+        "name" : "KHR_GEOMETRY_ISOSURFACE",
+        "type" : "extension",
+        "dependencies" : []
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_GEOMETRY",
+            "name" : "isosurface",
+            "description" : "isosurface geometry object",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "description" : "optional object name"
+                }, {
+                    "name" : "color",
+                    "types" : ["ANARI_FLOAT32_VEC4"],
+                    "tags" : [],
+                    "description" : "uniform color"
+                }, {
+                    "name" : "attribute0",
+                    "types" : ["ANARI_FLOAT32_VEC4"],
+                    "tags" : [],
+                    "description" : "uniform attribute0"
+                }, {
+                    "name" : "attribute1",
+                    "types" : ["ANARI_FLOAT32_VEC4"],
+                    "tags" : [],
+                    "description" : "uniform attribute1"
+                }, {
+                    "name" : "attribute2",
+                    "types" : ["ANARI_FLOAT32_VEC4"],
+                    "tags" : [],
+                    "description" : "uniform attribute2"
+                }, {
+                    "name" : "attribute3",
+                    "types" : ["ANARI_FLOAT32_VEC4"],
+                    "tags" : [],
+                    "description" : "uniform attribute3"
+                }, {
+                    "name" : "primitive.color",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "elementType" : [
+                        "ANARI_UFIXED8", "ANARI_UFIXED8_VEC2", "ANARI_UFIXED8_VEC3", "ANARI_UFIXED8_VEC4",
+                        "ANARI_UFIXED8_R_SRGB", "ANARI_UFIXED8_RA_SRGB", "ANARI_UFIXED8_RGB_SRGB", "ANARI_UFIXED8_RGBA_SRGB",
+                        "ANARI_UFIXED16", "ANARI_UFIXED16_VEC2", "ANARI_UFIXED16_VEC3", "ANARI_UFIXED16_VEC4",
+                        "ANARI_UFIXED32", "ANARI_UFIXED32_VEC2", "ANARI_UFIXED32_VEC3", "ANARI_UFIXED32_VEC4",
+                        "ANARI_FLOAT32", "ANARI_FLOAT32_VEC2", "ANARI_FLOAT32_VEC3", "ANARI_FLOAT32_VEC4"],
+                    "tags" : [],
+                    "description" : "per primitive color"
+                }, {
+                    "name" : "primitive.attribute0",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "elementType" : ["ANARI_FLOAT32", "ANARI_FLOAT32_VEC2", "ANARI_FLOAT32_VEC3", "ANARI_FLOAT32_VEC4"],
+                    "tags" : [],
+                    "description" : "per primitive attribute0"
+                }, {
+                    "name" : "primitive.attribute1",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "elementType" : ["ANARI_FLOAT32", "ANARI_FLOAT32_VEC2", "ANARI_FLOAT32_VEC3", "ANARI_FLOAT32_VEC4"],
+                    "tags" : [],
+                    "description" : "per primitive attribute1"
+                }, {
+                    "name" : "primitive.attribute2",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "elementType" : ["ANARI_FLOAT32", "ANARI_FLOAT32_VEC2", "ANARI_FLOAT32_VEC3", "ANARI_FLOAT32_VEC4"],
+                    "tags" : [],
+                    "description" : "per primitive attribute2"
+                }, {
+                    "name" : "primitive.attribute3",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "elementType" : ["ANARI_FLOAT32", "ANARI_FLOAT32_VEC2", "ANARI_FLOAT32_VEC3", "ANARI_FLOAT32_VEC4"],
+                    "tags" : [],
+                    "description" : "per primitive attribute3"
+                }, {
+                    "name" : "primitive.id",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "elementType" : ["ANARI_UINT32", "ANARI_UINT64"],
+                    "tags" : [],
+                    "description" : "primitive id"
+                }, {
+                    "name" : "isovalue",
+                    "types" : ["ANARI_FLOAT32", "ANARI_ARRAY1D"],
+                    "elementType" : ["ANARI_FLOAT32"],
+                    "tags" : ["required"],
+                    "description" : "isovalue(s) defining the isosurface(s)"
+                }, {
+                    "name" : "field",
+                    "types" : ["ANARI_SPATIAL_FIELD"],
+                    "tags" : ["required"],
+                    "description" : "spatial field to be isosurfaced"
+                }
+            ]
+        }
+    ]
+}
