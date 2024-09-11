@@ -666,6 +666,198 @@ struct gltf_data
           }
         }
       }
+      if (mat.contains("extensions")) {
+        const auto &extensions = mat["extensions"];
+        // sheen
+        if (extensions.contains("KHR_materials_sheen")) {
+          const auto &sheen = extensions["KHR_materials_sheen"];
+          // sheenColor
+          if (sheen.contains("sheenColorTexture")) {
+            anari::Sampler sampler = nullptr;
+            if (sheen.contains("sheenColorFactor")) {
+              const auto &sheenColorFactor = sheen["sheenColorFactor"];
+              float colorSwizzle[16] = {
+                  // clang-format off
+                  sheenColorFactor[0], 0.0f, 0.0f, 0.0f,
+                  0.0f, sheenColorFactor[1], 0.0f, 0.0f,
+                  0.0f, 0.0f, sheenColorFactor[2], 0.0f,
+                  0.0f, 0.0f, 0.0f, 1.0f,
+                  // clang-format on
+              };
+              sampler = configure_sampler(sheen["sheenColorTexture"], colorSwizzle);
+            } else {
+              sampler = configure_sampler(sheen["sheenColorTexture"], nullptr);
+            }
+
+            if (sampler) {
+              anari::setAndReleaseParameter(device, material, "sheenColor", sampler);
+            }
+          } else if (sheen.contains("sheenColorFactor")) {
+            const auto &sheenColorFactor = sheen["sheenColorFactor"];
+            float color[3] = {0.0f, 0.0f, 0.0f};
+            std::copy(sheenColorFactor.begin(), sheenColorFactor.end(), color);
+            anari::setParameter(
+                device, material, "sheenColor", ANARI_FLOAT32_VEC3, &color[0]);
+          }
+          // sheenRoughness
+          if (sheen.contains("sheenRoughnessTexture")) {
+            anari::Sampler sampler = nullptr;
+            if (sheen.contains("sheenRoughnessFactor")) {
+              const auto &sheenRoughnessFactor = sheen["sheenRoughnessFactor"];
+              float roughnessSwizzle[16] = {
+                  // clang-format off
+                  sheenRoughnessFactor.get<float>(), 0.0f, 0.0f, 0.0f,
+                  0.0f, 1.0f, 0.0f, 0.0f,
+                  0.0f, 0.0f, 1.0f, 0.0f,
+                  0.0f, 0.0f, 0.0f, 1.0f,
+                  // clang-format on
+              };
+              sampler = configure_sampler(
+                  sheen["sheenRoughnessTexture"], roughnessSwizzle);
+            } else {
+              sampler = configure_sampler(sheen["sheenRoughnessTexture"], nullptr);
+            }
+
+            if (sampler) {
+              anari::setAndReleaseParameter(device, material, "sheenRoughness", sampler);
+            }
+          } else if (sheen.contains("sheenRoughnessFactor")) {
+            const auto &sheenRoughnessFactor = sheen["sheenRoughnessFactor"];
+            anari::setParameter(
+                device, material, "sheenRoughness", sheenRoughnessFactor.get<float>());
+          }
+        }
+        // specular
+        if (extensions.contains("KHR_materials_specular")) {
+          const auto &specular = extensions["KHR_materials_specular"];
+          // specular
+          if (specular.contains("specularTexture")) {
+            anari::Sampler sampler = nullptr;
+            if (specular.contains("specularFactor")) {
+              const auto &specularFactor = specular["specularFactor"];
+              float colorSwizzle[16] = {
+                  // clang-format off
+                  specularFactor.get<float>(), 0.0f, 0.0f, 0.0f,
+                  0.0f, 1.0f, 0.0f, 0.0f,
+                  0.0f, 0.0f, 1.0f, 0.0f,
+                  0.0f, 0.0f, 0.0f, 1.0f,
+                  // clang-format on
+              };
+              sampler = configure_sampler(specular["specularTexture"], colorSwizzle);
+            } else {
+              sampler = configure_sampler(specular["specularTexture"], nullptr);
+            }
+
+            if (sampler) {
+              anari::setAndReleaseParameter(device, material, "specular", sampler);
+            }
+          } else if (specular.contains("specularFactor")) {
+            const auto &specularFactor = specular["specularFactor"];
+            anari::setParameter(
+                device, material, "specular", specularFactor.get<float>());
+          }
+          // specularFactor
+          if (specular.contains("specularColorTexture")) {
+            anari::Sampler sampler = nullptr;
+            if (specular.contains("specularColorFactor")) {
+              const auto &specularColorFactor = specular["specularColorFactor"];
+              float colorSwizzle[16] = {
+                  // clang-format off
+                  specularColorFactor[0], 0.0f, 0.0f, 0.0f,
+                  0.0f, specularColorFactor[1], 0.0f, 0.0f,
+                  0.0f, 0.0f, specularColorFactor[2], 0.0f,
+                  0.0f, 0.0f, 0.0f, 1.0f,
+                  // clang-format on
+              };
+              sampler = configure_sampler(specular["specularColorTexture"], colorSwizzle);
+            } else {
+              sampler = configure_sampler(specular["specularColorTexture"], nullptr);
+            }
+
+            if (sampler) {
+              anari::setAndReleaseParameter(device, material, "specularColor", sampler);
+            }
+          } else if (specular.contains("specularColorFactor")) {
+            const auto &specularColorFactor = specular["specularColorFactor"];
+            float color[3] = {0.0f, 0.0f, 0.0f};
+            std::copy(specularColorFactor.begin(), specularColorFactor.end(), color);
+            anari::setParameter(
+                device, material, "specularColor", ANARI_FLOAT32_VEC3, &color[0]);
+          }
+        }
+        // clearcoat
+        if (extensions.contains("KHR_materials_clearcoat")) {
+          const auto &clearcoat = extensions["KHR_materials_clearcoat"];
+          // clearcoat
+          if (clearcoat.contains("clearcoatTexture")) {
+            anari::Sampler sampler = nullptr;
+            if (clearcoat.contains("clearcoatFactor")) {
+              const auto &clearcoatFactor = clearcoat["clearcoatFactor"];
+              float colorSwizzle[16] = {
+                  // clang-format off
+                  clearcoatFactor.get<float>(), 0.0f, 0.0f, 0.0f,
+                  0.0f, 1.0f, 0.0f, 0.0f,
+                  0.0f, 0.0f, 1.0f, 0.0f,
+                  0.0f, 0.0f, 0.0f, 1.0f,
+                  // clang-format on
+              };
+              sampler = configure_sampler(
+                  clearcoat["clearcoatTexture"], colorSwizzle);
+            } else {
+              sampler =
+                  configure_sampler(clearcoat["clearcoatTexture"], nullptr);
+            }
+
+            if (sampler) {
+              anari::setAndReleaseParameter(
+                  device, material, "clearcoat", sampler);
+            }
+          } else if (clearcoat.contains("clearcoatFactor")) {
+            const auto &clearcoatFactor = clearcoat["clearcoatFactor"];
+            anari::setParameter(
+                device, material, "clearcoat", clearcoatFactor.get<float>());
+          }
+          // clearcoatRoughness
+          if (clearcoat.contains("clearcoatRoughnessTexture")) {
+            anari::Sampler sampler = nullptr;
+            if (clearcoat.contains("clearcoatRoughnessFactor")) {
+              const auto &clearcoatRoughnessFactor =
+                  clearcoat["clearcoatRoughnessFactor"];
+              float roughnessSwizzle[16] = {
+                  // clang-format off
+                  clearcoatRoughnessFactor.get<float>(), 0.0f, 0.0f, 0.0f,
+                  0.0f, 1.0f, 0.0f, 0.0f,
+                  0.0f, 0.0f, 1.0f, 0.0f,
+                  0.0f, 0.0f, 0.0f, 1.0f,
+                  // clang-format on
+              };
+              sampler = configure_sampler(
+                  clearcoat["clearcoatRoughnessTexture"], roughnessSwizzle);
+            } else {
+              sampler = configure_sampler(
+                  clearcoat["clearcoatRoughnessTexture"], nullptr);
+            }
+
+            if (sampler) {
+              anari::setAndReleaseParameter(
+                  device, material, "clearcoatRoughness", sampler);
+            }
+          } else if (clearcoat.contains("clearcoatRoughnessFactor")) {
+            const auto &clearcoatRoughnessFactor =
+                clearcoat["clearcoatRoughnessFactor"];
+            anari::setParameter(device,
+                material,
+                "clearcoatRoughness",
+                clearcoatRoughnessFactor.get<float>());
+          }
+          // clearcoatNormal
+          if (clearcoat.contains("clearcoatNormalTexture")) {
+            anari::Sampler sampler = nullptr;
+            sampler = configure_sampler(clearcoat["clearcoatNormalTexture"], nullptr);
+            anari::setAndReleaseParameter(device, material, "clearcoatNormal", sampler);
+          }
+        }
+      }
       anari::commitParameters(device, material);
       materials.emplace_back(material);
     }
