@@ -22,7 +22,12 @@ set(REFERENCE_LIB helide)
 
 project(anariCTSBackend LANGUAGES CXX)
 
+set(Python3_ROOT_DIR "" CACHE PATH "Path to python3 directory")
+set(Python3_FIND_REGISTRY "LAST")
+set(Python3_FIND_STRATEGY "LOCATION")
 find_package(anari REQUIRED)
+find_package(Python3 3.9...<3.20 REQUIRED COMPONENTS Interpreter Development)
+message("CTS Python version: ${Python3_VERSION}\nCTS Python Path: ${Python3_EXECUTABLE}")
 include(pybind11.cmake)
 
 pybind11_add_module(${PROJECT_NAME}
@@ -42,8 +47,6 @@ PUBLIC
 )
 
 target_link_libraries(${PROJECT_NAME} PUBLIC helium anari_test_scenes)
-
-find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
 
 file(GLOB python_files ${CMAKE_CURRENT_LIST_DIR}/*.py)
 
@@ -101,6 +104,8 @@ else()
 endif()
 
 install(FILES ${python_files} ${CMAKE_CURRENT_LIST_DIR}/default_test_scene.json
+  ${CMAKE_CURRENT_LIST_DIR}/pyproject.toml 
+  ${CMAKE_CURRENT_LIST_DIR}/poetry.lock
   DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/anari/cts
 )
 

@@ -20,6 +20,10 @@ void statusFunc(const void *userData,
     ANARIStatusCode code,
     const char *message)
 {
+  if (!userData) {
+    return;
+  }
+  pybind11::gil_scoped_acquire acq;
   auto &logger = *reinterpret_cast<const pybind11::function *>(userData);
   (void)device;
   (void)source;
@@ -38,6 +42,7 @@ void statusFunc(const void *userData,
   } else if (severity == ANARI_SEVERITY_DEBUG) {
     logger("[DEBUG] " + std::string(message));
   }
+  pybind11::gil_scoped_release rel;
 }
 
 // returns vector of pairs consisting of the feature name and whether it is
