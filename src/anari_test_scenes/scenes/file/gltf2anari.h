@@ -967,6 +967,7 @@ struct gltf_data
     }
     float transform[16];
     matmul(transform, parent_transform, matrix);
+    anari::math::mat4 transformMat = anari::math::mat4(transform);
     if (node.contains("mesh")) {
       auto instance = anari::newObject<anari::Instance>(device, "transform");
       anari::setParameter(device, instance, "group", groups.at(node["mesh"]));
@@ -986,7 +987,6 @@ struct gltf_data
       anari::setParameter(device, camera, "position", position);
 
       // rotation
-      anari::math::mat4 transformMat = anari::math::mat4(transform);
       anari::math::float3 direction = anari::math::mul(transformMat, anari::math::float4(0, 0, -1, 0)).xyz();
       anari::math::float3 up = anari::math::mul(transformMat, anari::math::float4(0, 1, 0, 0)).xyz();
       anari::setParameter(device, camera, "direction", direction);
