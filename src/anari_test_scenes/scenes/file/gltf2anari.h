@@ -500,8 +500,8 @@ struct gltf_data
   template <typename T>
   std::tuple<void *, ANARIMemoryDeleter, void*> decode_image(const T &img, size_t imgIndex, std::vector<char> *imageData, int *width, int *height, int *n)
   {
-#ifdef USE_WEBP
     if (mimeType(img) == "image/webp" || extension(img) == ".webp") {
+#ifdef USE_WEBP
       return decode_image_buffer(img, imageData, [&](const char *data, size_t length) {
         *n = 4;
         ANARIMemoryDeleter d = [](const void *, const void *mem) {
@@ -512,10 +512,12 @@ struct gltf_data
                 d,
                 nullptr);
       });
-    }
+#else
+      return {nullptr, nullptr, nullptr};
 #endif
-#ifdef USE_KTX
+    }
     if (mimeType(img) == "image/ktx2" || extension(img) == ".ktx2") {
+#ifdef USE_KTX
       return decode_image_buffer(
           img, imageData, [&](const char *input_data, size_t length) {
             ktxTexture2 *texture;
@@ -619,8 +621,10 @@ struct gltf_data
             };
             return std::make_tuple(data, d, texture);
           });
-    }
+#else
+      return {nullptr, nullptr, nullptr};
 #endif // USE_KTX
+    }
 
     return decode_image_buffer(
         img, imageData, [&](const char *data, size_t length) {
@@ -644,11 +648,20 @@ struct gltf_data
 
   int getImageIndexFromTexture(const nlohmann::json& texture) {
     if (texture.contains("/extensions/EXT_texture_webp/source"_json_pointer)) {
+#ifdef USE_WEBP
       return texture.at("/extensions/EXT_texture_webp/source"_json_pointer);
-    } else if (texture.contains(
-                   "/extensions/KHR_texture_basisu/source"_json_pointer)) {
-      return texture.at("/extensions/KHR_texture_basisu/source"_json_pointer);
+#else
+      printf("Skipping WEBP texture: Build without WEBP support.");
+#endif // USE_WEBP
     }
+    if (texture.contains("/extensions/KHR_texture_basisu/source"_json_pointer)) {
+#ifdef USE_KTX
+      return texture.at("/extensions/KHR_texture_basisu/source"_json_pointer);
+#else
+      printf("Skipping KTX texture: Build without KTX support.");
+#endif // USE_KTX
+    }
+
     return texture.value("source", -1);
   }
 
@@ -713,6 +726,7 @@ struct gltf_data
             height);
         images.emplace_back(array);
       } else {
+        printf("Could not decode image at index %zu", imageIndex);
         images.emplace_back(nullptr);
       }
       ++imageIndex;
@@ -895,6 +909,8 @@ struct gltf_data
               anariUnmapParameterArray(device, geometry, paramname);
             }
           }
+#else
+          printf("Could not load mesh: Build without Draco support.");
 #endif
         } else {
           for (const auto &attr : prim["attributes"].items()) {
