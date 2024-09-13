@@ -98,8 +98,8 @@ def create_test_cases_from_gltf(gltf_dir, output_path, blacklist=[]):
         if not "materials" in gltf.json or not gltf.json["materials"]:
             if "ANARI_KHR_MATERIAL_PHYSICALLY_BASED" in required_features:
                 required_features.remove("ANARI_KHR_MATERIAL_PHYSICALLY_BASED")
-            if "ANARI_KHR_MATERIAL_MATTE" in required_features:
-                required_features.remove("ANARI_KHR_MATERIAL_MATTE")
+        if "ANARI_KHR_MATERIAL_MATTE" in required_features:
+            required_features.remove("ANARI_KHR_MATERIAL_MATTE")
 
         json_data["requiredFeatures"] = required_features.copy()
         # clear required features for next test case
