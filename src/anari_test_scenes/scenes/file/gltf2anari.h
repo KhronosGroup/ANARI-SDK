@@ -595,6 +595,7 @@ struct gltf_data
           anari::newObject<anari::Material>(device, "physicallyBased");
       if (mat.contains("pbrMetallicRoughness")) {
         const auto &pbr = mat["pbrMetallicRoughness"];
+        // baseColor
         if (pbr.contains("baseColorTexture")) {
           anari::Sampler sampler = nullptr;
           if (pbr.contains("baseColorFactor")) {
@@ -625,8 +626,10 @@ struct gltf_data
           anari::setParameter(device, material, "opacity", color[3]);
         }
 
+        // alphaMode
         anari::setParameter(device, material, "alphaMode", "blend");
 
+        // metallic roughness
         if (pbr.contains("metallicRoughnessTexture")) {
           float metallic = pbr.value("metallicFactor", 1);
           float roughness = pbr.value("roughnessFactor", 1);
@@ -672,6 +675,50 @@ struct gltf_data
           }
         }
       }
+      // emissive
+      float emissiveStrength = 1.0f;
+      if (mat.contains("extensions")) {
+        // emissiveStrength
+        const auto &extensions = mat["extensions"];
+        if (extensions.contains("KHR_materials_emissive_strength")) {
+          const auto &emissiveStrengthExtension =
+              extensions["KHR_materials_emissive_strength"];
+          if (emissiveStrengthExtension.contains("emissiveStrength")) {
+            emissiveStrength =
+                emissiveStrengthExtension["emissiveStrength"].get<float>();
+          }
+        }
+      }
+      if (mat.contains("emissiveTexture")) {
+        anari::Sampler sampler = nullptr;
+        if (mat.contains("emissiveFactor")) {
+          const auto &emissiveFactor = mat["emissiveFactor"];
+          float colorSwizzle[16] = {
+              // clang-format off
+              emissiveFactor[0] * emissiveStrength, 0.0f, 0.0f, 0.0f,
+              0.0f, emissiveFactor[1] * emissiveStrength, 0.0f, 0.0f,
+              0.0f, 0.0f, emissiveFactor[2] * emissiveStrength, 0.0f,
+              0.0f, 0.0f, 0.0f, 1.0f,
+              // clang-format on
+          };
+          sampler = configure_sampler(mat["emissiveTexture"], colorSwizzle);
+        } else {
+          sampler = configure_sampler(mat["emissiveTexture"], nullptr);
+        }
+
+        if (sampler)
+          anari::setAndReleaseParameter(device, material, "emissive", sampler);
+      } else if (mat.contains("emissiveFactor")) {
+        const auto &emissiveFactor = mat["emissiveFactor"];
+        float color[3] = {
+            emissiveFactor[0] * emissiveStrength,
+            emissiveFactor[1] * emissiveStrength,
+            emissiveFactor[2] * emissiveStrength
+        };
+        anari::setParameter(
+            device, material, "emissive", ANARI_FLOAT32_VEC3, &color[0]);
+      }
+      // pbr extensions
       if (mat.contains("extensions")) {
         const auto &extensions = mat["extensions"];
         // sheen
