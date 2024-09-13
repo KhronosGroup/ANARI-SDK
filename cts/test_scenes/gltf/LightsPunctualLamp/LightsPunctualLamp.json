@@ -7,6 +7,7 @@
     }
   },
   "requiredFeatures": [
+    "ANARI_KHR_LIGHT_POINT",
     "ANARI_KHR_CAMERA_PERSPECTIVE",
     "ANARI_KHR_GEOMETRY_TRIANGLE",
     "ANARI_KHR_MATERIAL_MATTE",
