@@ -1251,11 +1251,43 @@ struct gltf_data
 
   void load_surfaces()
   {
-    auto defaultMaterial = anari::newObject<anari::Material>(device, "matte");
-    // TODO choose correct color
-    anari::setParameter(
-        device, defaultMaterial, "color", anari::math::float3(0.23f, 0.14f, 0.35f));
-    anari::commitParameters(device, defaultMaterial);
+    // check support for pbr materials, otherwise use a matte material as default
+    bool deviceSupportsPBR = false;
+    const char **device_extensions = nullptr;
+    if (anariGetProperty(device,
+        device,
+        "extension",
+        ANARI_STRING_LIST,
+        &device_extensions,
+        sizeof(char **),
+        ANARI_WAIT)) {
+      for (int i = 0; device_extensions[i] != nullptr; ++i) {
+        if (strncmp("KHR_MATERIAL_PHYSICALLY_BASED",
+                device_extensions[i],
+                29)
+            == 0) {
+          deviceSupportsPBR = true;
+        }
+      }
+    }
+    anari::Material defaultMaterial = nullptr;
+    if (deviceSupportsPBR) {
+      defaultMaterial = anari::newObject<anari::Material>(device, "physicallyBased");
+      // set color explicitly since default values differ between pbr and matte
+      anari::setParameter(device,
+          defaultMaterial,
+          "baseColor",
+          anari::math::float3(1.0f, 1.0f, 1.0f));
+      anari::commitParameters(device, defaultMaterial);
+    } else {
+      defaultMaterial = anari::newObject<anari::Material>(device, "matte");
+      // set color explicitly since default values differ between pbr and matte
+      anari::setParameter(device,
+          defaultMaterial,
+          "color",
+          anari::math::float3(1.0f, 1.0f, 1.0f));
+      anari::commitParameters(device, defaultMaterial);
+    }
 
     for (const auto &mesh : gltf["meshes"]) {
       std::vector<anari::Surface> surfaces;
