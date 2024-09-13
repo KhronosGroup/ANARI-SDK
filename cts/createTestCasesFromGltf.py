@@ -95,9 +95,11 @@ def create_test_cases_from_gltf(gltf_dir, output_path, blacklist=[]):
         query_required_features(gltf)
         # remove material requirements if no materials are present
         # default material usage should not be in this list
-        if "materials" in gltf.json:
-            if not required_features["materials"]:
-                required_features.remove("KHR_MATERIAL_PHYSICALLY_BASED")
+        if not "materials" in gltf.json or not gltf.json["materials"]:
+            if "ANARI_KHR_MATERIAL_PHYSICALLY_BASED" in required_features:
+                required_features.remove("ANARI_KHR_MATERIAL_PHYSICALLY_BASED")
+            if "ANARI_KHR_MATERIAL_MATTE" in required_features:
+                required_features.remove("ANARI_KHR_MATERIAL_MATTE")
 
         json_data["requiredFeatures"] = required_features.copy()
         # clear required features for next test case

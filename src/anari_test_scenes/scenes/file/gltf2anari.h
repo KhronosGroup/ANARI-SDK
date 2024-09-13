@@ -1262,7 +1262,7 @@ struct gltf_data
         sizeof(char **),
         ANARI_WAIT)) {
       for (int i = 0; device_extensions[i] != nullptr; ++i) {
-        if (strncmp("KHR_MATERIAL_PHYSICALLY_BASED",
+        if (strncmp("ANARI_KHR_MATERIAL_PHYSICALLY_BASED",
                 device_extensions[i],
                 29)
             == 0) {
