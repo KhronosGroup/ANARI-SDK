@@ -13,6 +13,8 @@ using json = nlohmann::json;
 #include <ktx.h>
 #endif
 
+#include "anari/anari_cpp/ext/linalg.h"
+
 #include <fstream>
 #include "stb_image.h"
 #include <set>
@@ -332,9 +334,8 @@ struct gltf_data
     return buffer.data() + viewOffset + accessorOffset;
   }
 
-  template <typename T>
   anari::Sampler configure_sampler(
-      const T &texspec, float *swizzle = nullptr, float *outOffset = nullptr)
+      const json &texspec, float *swizzle = nullptr, float *outOffset = nullptr)
   {
     const auto &tex = gltf["textures"].at(int(texspec["index"]));
 
@@ -362,10 +363,44 @@ struct gltf_data
       anari::setParameter(device, sampler, "image", images.at(source_idx));
     }
 
+    int texCoord = texspec.value("texCoord", 0);
+    if (texspec.contains("/extensions/KHR_texture_transform"_json_pointer)) {
+      const auto &textureTransform =
+          texspec.at("/extensions/KHR_texture_transform"_json_pointer);
+      if (textureTransform.contains("texCoord")) {
+        texCoord = textureTransform["texCoord"];
+      }
+      anari::math::mat4 rotation = anari::math::identity;
+      anari::math::mat4 scale = anari::math::identity;
+      anari::math::mat4 translation = anari::math::identity;
+      if (textureTransform.contains("rotation")) {
+        float rad = textureTransform["rotation"];
+        float s = anari::math::sin(rad);
+        float c = anari::math::cos(rad);
+        rotation[0][0] = c;
+        rotation[0][1] = -s;
+        rotation[1][0] = s;
+        rotation[1][1] = c;
+      }
+      if (textureTransform.contains("scale")) {
+        std::vector<float> s = textureTransform["scale"];
+        scale[0][0] = s[0];
+        scale[1][1] = s[1];
+      }
+      if (textureTransform.contains("offset")) {
+        std::vector<float> offset = textureTransform["offset"];
+        scale[0][3] = offset[0];
+        scale[1][3] = offset[1];
+      }
+      anari::math::mat4 transform = anari::math::mul(translation, rotation);
+      transform = anari::math::mul(transform, scale);
+      anari::setParameter(
+          device, sampler, "inTransform", ANARI_FLOAT32_MAT4, &transform);
+    }
+
     anari::setParameter(device,
         sampler,
-        "inAttribute",
-        texcoord_attribute(texspec.value("texCoord", 0)));
+        "inAttribute", texcoord_attribute(texCoord));
 
     if (tex.contains("sampler")) {
       const auto &sampleparams = gltf["samplers"].at(int(tex["sampler"]));
