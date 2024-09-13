@@ -381,6 +381,10 @@ void SceneGenerator::commit()
   std::array<uint32_t, 3> spatialFieldDim =
       getParam<std::array<uint32_t, 3>>("spatial_field_dimensions", {0, 0, 0});
   int primitiveCount = getParam<int>("primitiveCount", 20);
+  if (primitiveCount < 1) {
+    geometrySubtype = "";
+  }
+
   std::string shape = getParamString("shape", "triangle");
   int seed = getParam<int>("seed", 0);
   std::optional<int32_t> vertexCaps = std::nullopt;
@@ -710,77 +714,80 @@ void SceneGenerator::commit()
               d, attributeOpacity.data(), attributeOpacity.size()));
     }
 
-    anari::setAndReleaseParameter(d,
-        geom,
-        "vertex.position",
-        anari::newArray1D(d, vertices.data(), vertices.size()));
+    if (vertices.size() > 0) {
+      anari::setAndReleaseParameter(d,
+          geom,
+          "vertex.position",
+          anari::newArray1D(d, vertices.data(), vertices.size()));
 
-    // generate vertex attributes and primitive attributes
-    if (indiciCount == 0) {
-      indiciCount = vertices.size() / componentCount;
-    }
-    float attributeMin = getParam<float>("attribute_min", 0.0f);
-    float attributeMax = getParam<float>("attribute_max", 1.0f);
-    bool generateVertexAttributes = getParam<bool>("vertex_attributes", false);
-    bool generatePrimitiveAttributes =
-        getParam<bool>("primitive_attributes", false);
-    if (generateVertexAttributes) {
-      auto attributeFloat = generator.generateAttributeFloat(
-          vertices.size(), attributeMin, attributeMax);
-      anari::setAndReleaseParameter(d,
-          geom,
-          "vertex.attribute0",
-          anari::newArray1D(d, attributeFloat.data(), attributeFloat.size()));
+      // generate vertex attributes and primitive attributes
+      if (indiciCount == 0) {
+        indiciCount = vertices.size() / componentCount;
+      }
+      float attributeMin = getParam<float>("attribute_min", 0.0f);
+      float attributeMax = getParam<float>("attribute_max", 1.0f);
+      bool generateVertexAttributes =
+          getParam<bool>("vertex_attributes", false);
+      bool generatePrimitiveAttributes =
+          getParam<bool>("primitive_attributes", false);
+      if (generateVertexAttributes) {
+        auto attributeFloat = generator.generateAttributeFloat(
+            vertices.size(), attributeMin, attributeMax);
+        anari::setAndReleaseParameter(d,
+            geom,
+            "vertex.attribute0",
+            anari::newArray1D(d, attributeFloat.data(), attributeFloat.size()));
 
-      auto attributeVec2 = generator.generateAttributeVec2(
-          vertices.size(), attributeMin, attributeMax);
-      anari::setAndReleaseParameter(d,
-          geom,
-          "vertex.attribute1",
-          anari::newArray1D(d, attributeVec2.data(), attributeVec2.size()));
+        auto attributeVec2 = generator.generateAttributeVec2(
+            vertices.size(), attributeMin, attributeMax);
+        anari::setAndReleaseParameter(d,
+            geom,
+            "vertex.attribute1",
+            anari::newArray1D(d, attributeVec2.data(), attributeVec2.size()));
 
-      auto attributeVec3 = generator.generateAttributeVec3(
-          vertices.size(), attributeMin, attributeMax);
-      anari::setAndReleaseParameter(d,
-          geom,
-          "vertex.attribute2",
-          anari::newArray1D(d, attributeVec3.data(), attributeVec3.size()));
+        auto attributeVec3 = generator.generateAttributeVec3(
+            vertices.size(), attributeMin, attributeMax);
+        anari::setAndReleaseParameter(d,
+            geom,
+            "vertex.attribute2",
+            anari::newArray1D(d, attributeVec3.data(), attributeVec3.size()));
 
-      auto attributeVec4 = generator.generateAttributeVec4(
-          vertices.size(), attributeMin, attributeMax);
-      anari::setAndReleaseParameter(d,
-          geom,
-          "vertex.attribute3",
-          anari::newArray1D(d, attributeVec4.data(), attributeVec4.size()));
-    }
-    if (generatePrimitiveAttributes) {
-      auto attributeFloat = generator.generateAttributeFloat(
-          indiciCount, attributeMin, attributeMax);
-      anari::setAndReleaseParameter(d,
-          geom,
-          "primitive.attribute0",
-          anari::newArray1D(d, attributeFloat.data(), attributeFloat.size()));
+        auto attributeVec4 = generator.generateAttributeVec4(
+            vertices.size(), attributeMin, attributeMax);
+        anari::setAndReleaseParameter(d,
+            geom,
+            "vertex.attribute3",
+            anari::newArray1D(d, attributeVec4.data(), attributeVec4.size()));
+      }
+      if (generatePrimitiveAttributes) {
+        auto attributeFloat = generator.generateAttributeFloat(
+            indiciCount, attributeMin, attributeMax);
+        anari::setAndReleaseParameter(d,
+            geom,
+            "primitive.attribute0",
+            anari::newArray1D(d, attributeFloat.data(), attributeFloat.size()));
 
-      auto attributeVec2 = generator.generateAttributeVec2(
-          indiciCount, attributeMin, attributeMax);
-      anari::setAndReleaseParameter(d,
-          geom,
-          "primitive.attribute1",
-          anari::newArray1D(d, attributeVec2.data(), attributeVec2.size()));
+        auto attributeVec2 = generator.generateAttributeVec2(
+            indiciCount, attributeMin, attributeMax);
+        anari::setAndReleaseParameter(d,
+            geom,
+            "primitive.attribute1",
+            anari::newArray1D(d, attributeVec2.data(), attributeVec2.size()));
 
-      auto attributeVec3 = generator.generateAttributeVec3(
-          indiciCount, attributeMin, attributeMax);
-      anari::setAndReleaseParameter(d,
-          geom,
-          "primitive.attribute2",
-          anari::newArray1D(d, attributeVec3.data(), attributeVec3.size()));
+        auto attributeVec3 = generator.generateAttributeVec3(
+            indiciCount, attributeMin, attributeMax);
+        anari::setAndReleaseParameter(d,
+            geom,
+            "primitive.attribute2",
+            anari::newArray1D(d, attributeVec3.data(), attributeVec3.size()));
 
-      auto attributeVec4 = generator.generateAttributeVec4(
-          indiciCount, attributeMin, attributeMax);
-      anari::setAndReleaseParameter(d,
-          geom,
-          "primitive.attribute3",
-          anari::newArray1D(d, attributeVec4.data(), attributeVec4.size()));
+        auto attributeVec4 = generator.generateAttributeVec4(
+            indiciCount, attributeMin, attributeMax);
+        anari::setAndReleaseParameter(d,
+            geom,
+            "primitive.attribute3",
+            anari::newArray1D(d, attributeVec4.data(), attributeVec4.size()));
+      }
     }
     // commit everything to the device
     anari::commitParameters(d, geom);
