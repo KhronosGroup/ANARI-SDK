@@ -777,9 +777,6 @@ struct gltf_data
           anari::setParameter(device, material, "opacity", color[3]);
         }
 
-        // alphaMode
-        anari::setParameter(device, material, "alphaMode", "blend");
-
         // metallic roughness
         if (pbr.contains("metallicRoughnessTexture")) {
           float metallic = pbr.value("metallicFactor", 1);
@@ -825,6 +822,28 @@ struct gltf_data
                 device, material, "roughness", pbr["roughnessFactor"]);
           }
         }
+      }
+      // alphaMode
+      if (mat.contains("alphaMode")) {
+        const auto &alphaMode = mat["alphaMode"];
+        anari::setParameter(device, material, "alphaMode", alphaMode.get<std::string>());
+      }
+      // alphaCutoff
+      if (mat.contains("alphaCutoff")) {
+        const auto &alphaCutoff = mat["alphaCutoff"];
+        anari::setParameter(device, material, "alphaCutoff", alphaCutoff.get<float>());
+      }
+      // normal
+      if (mat.contains("normalTexture")) {
+        anari::Sampler sampler = nullptr;
+        sampler = configure_sampler(mat["normalTexture"], nullptr);
+        anari::setAndReleaseParameter(device, material, "normal", sampler);
+      }
+      // occlusion
+      if (mat.contains("occlusionTexture")) {
+        anari::Sampler sampler = nullptr;
+        sampler = configure_sampler(mat["occlusionTexture"], nullptr);
+        anari::setAndReleaseParameter(device, material, "occlusion", sampler);
       }
       // emissive
       float emissiveStrength = 1.0f;
