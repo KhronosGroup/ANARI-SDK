@@ -389,8 +389,8 @@ struct gltf_data
       }
       if (textureTransform.contains("offset")) {
         std::vector<float> offset = textureTransform["offset"];
-        scale[0][3] = offset[0];
-        scale[1][3] = offset[1];
+        translation[3][0] = offset[0];
+        translation[3][1] = offset[1];
       }
       anari::math::mat4 transform = anari::math::mul(translation, rotation);
       transform = anari::math::mul(transform, scale);
