@@ -1549,7 +1549,7 @@ struct gltf_data
         }
       } else if (type == "orthographic") {
         auto &glTFOrthographic = glTFCamera["orthographic"];
-        anari::setParameter(device, camera, "height", glTFOrthographic["ymag"].get<float>());
+        anari::setParameter(device, camera, "height", glTFOrthographic["ymag"].get<float>() * 2.0f); //ymag in glTF is half of the image height
         anari::setParameter(device, camera, "aspect", glTFOrthographic["xmag"].get<float>() / glTFOrthographic["ymag"].get<float>());
         anari::setParameter(device, camera, "near", glTFOrthographic["znear"].get<float>());
         anari::setParameter(device, camera, "far", glTFOrthographic["zfar"].get<float>());
