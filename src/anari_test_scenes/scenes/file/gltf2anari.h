@@ -903,7 +903,7 @@ struct gltf_data
               emissiveFactor[0] * emissiveStrength, 0.0f, 0.0f, 0.0f,
               0.0f, emissiveFactor[1] * emissiveStrength, 0.0f, 0.0f,
               0.0f, 0.0f, emissiveFactor[2] * emissiveStrength, 0.0f,
-              0.0f, 0.0f, 0.0f, 1.0f,
+              0.0f, 0.0f, 0.0f, 0.0f,
               // clang-format on
           };
           sampler = configure_sampler(mat["emissiveTexture"], colorSwizzle);
@@ -939,7 +939,7 @@ struct gltf_data
                   sheenColorFactor[0], 0.0f, 0.0f, 0.0f,
                   0.0f, sheenColorFactor[1], 0.0f, 0.0f,
                   0.0f, 0.0f, sheenColorFactor[2], 0.0f,
-                  0.0f, 0.0f, 0.0f, 1.0f,
+                  0.0f, 0.0f, 0.0f, 0.0f,
                   // clang-format on
               };
               sampler = configure_sampler(sheen["sheenColorTexture"], colorSwizzle);
@@ -964,10 +964,10 @@ struct gltf_data
               const auto &sheenRoughnessFactor = sheen["sheenRoughnessFactor"];
               float roughnessSwizzle[16] = {
                   // clang-format off
+                  0.0f, 0.0f, 0.0f, 0.0f,
+                  0.0f, 0.0f, 0.0f, 0.0f,
+                  0.0f, 0.0f, 0.0f, 0.0f,
                   sheenRoughnessFactor.get<float>(), 0.0f, 0.0f, 0.0f,
-                  0.0f, 1.0f, 0.0f, 0.0f,
-                  0.0f, 0.0f, 1.0f, 0.0f,
-                  0.0f, 0.0f, 0.0f, 1.0f,
                   // clang-format on
               };
               sampler = configure_sampler(
@@ -995,10 +995,10 @@ struct gltf_data
               const auto &specularFactor = specular["specularFactor"];
               float colorSwizzle[16] = {
                   // clang-format off
+                  0.0f, 0.0f, 0.0f, 0.0f,
+                  0.0f, 0.0f, 0.0f, 0.0f,
+                  0.0f, 0.0f, 0.0f, 0.0f,
                   specularFactor.get<float>(), 0.0f, 0.0f, 0.0f,
-                  0.0f, 1.0f, 0.0f, 0.0f,
-                  0.0f, 0.0f, 1.0f, 0.0f,
-                  0.0f, 0.0f, 0.0f, 1.0f,
                   // clang-format on
               };
               sampler = configure_sampler(specular["specularTexture"], colorSwizzle);
@@ -1024,7 +1024,7 @@ struct gltf_data
                   specularColorFactor[0], 0.0f, 0.0f, 0.0f,
                   0.0f, specularColorFactor[1], 0.0f, 0.0f,
                   0.0f, 0.0f, specularColorFactor[2], 0.0f,
-                  0.0f, 0.0f, 0.0f, 1.0f,
+                  0.0f, 0.0f, 0.0f, 0.0f,
                   // clang-format on
               };
               sampler = configure_sampler(specular["specularColorTexture"], colorSwizzle);
@@ -1054,9 +1054,9 @@ struct gltf_data
               float colorSwizzle[16] = {
                   // clang-format off
                   clearcoatFactor.get<float>(), 0.0f, 0.0f, 0.0f,
-                  0.0f, 1.0f, 0.0f, 0.0f,
-                  0.0f, 0.0f, 1.0f, 0.0f,
-                  0.0f, 0.0f, 0.0f, 1.0f,
+                  0.0f, 0.0f, 0.0f, 0.0f,
+                  0.0f, 0.0f, 0.0f, 0.0f,
+                  0.0f, 0.0f, 0.0f, 0.0f,
                   // clang-format on
               };
               sampler = configure_sampler(
@@ -1083,10 +1083,10 @@ struct gltf_data
                   clearcoat["clearcoatRoughnessFactor"];
               float roughnessSwizzle[16] = {
                   // clang-format off
+                  0.0f, 0.0f, 0.0f, 0.0f,
                   clearcoatRoughnessFactor.get<float>(), 0.0f, 0.0f, 0.0f,
-                  0.0f, 1.0f, 0.0f, 0.0f,
-                  0.0f, 0.0f, 1.0f, 0.0f,
-                  0.0f, 0.0f, 0.0f, 1.0f,
+                  0.0f, 0.0f, 0.0f, 0.0f,
+                  0.0f, 0.0f, 0.0f, 0.0f,
                   // clang-format on
               };
               sampler = configure_sampler(
@@ -1126,9 +1126,9 @@ struct gltf_data
               float colorSwizzle[16] = {
                   // clang-format off
                   transmissionFactor.get<float>(), 0.0f, 0.0f, 0.0f,
-                  0.0f, 1.0f, 0.0f, 0.0f,
-                  0.0f, 0.0f, 1.0f, 0.0f,
-                  0.0f, 0.0f, 0.0f, 1.0f,
+                  0.0f, 0.0f, 0.0f, 0.0f,
+                  0.0f, 0.0f, 0.0f, 0.0f,
+                  0.0f, 0.0f, 0.0f, 0.0f,
                   // clang-format on
               };
               sampler = configure_sampler(
@@ -1168,10 +1168,10 @@ struct gltf_data
               const auto &thicknessFactor = volume["thicknessFactor"];
               float thicknessSwizzle[16] = {
                   // clang-format off
+                  0.0f, 0.0f, 0.0f, 0.0f,
                   thicknessFactor.get<float>(), 0.0f, 0.0f, 0.0f,
-                  0.0f, 1.0f, 0.0f, 0.0f,
-                  0.0f, 0.0f, 1.0f, 0.0f,
-                  0.0f, 0.0f, 0.0f, 1.0f,
+                  0.0f, 0.0f, 0.0f, 0.0f,
+                  0.0f, 0.0f, 0.0f, 0.0f,
                   // clang-format on
               };
               sampler = configure_sampler(
@@ -1216,9 +1216,9 @@ struct gltf_data
               float iridescenceSwizzle[16] = {
                   // clang-format off
                   iridescenceFactor.get<float>(), 0.0f, 0.0f, 0.0f,
-                  0.0f, 1.0f, 0.0f, 0.0f,
-                  0.0f, 0.0f, 1.0f, 0.0f,
-                  0.0f, 0.0f, 0.0f, 1.0f,
+                  0.0f, 0.0f, 0.0f, 0.0f,
+                  0.0f, 0.0f, 0.0f, 0.0f,
+                  0.0f, 0.0f, 0.0f, 0.0f,
                   // clang-format on
               };
               sampler = configure_sampler(
@@ -1257,10 +1257,10 @@ struct gltf_data
             float thicknessFactor = iridescenceThicknessMaximum - iridescenceThicknessMinimum;
             float thicknessSwizzle[16] = {
               // clang-format off
+              0.0f, 0.0f, 0.0f, 0.0f,
               thicknessFactor, 0.0f, 0.0f, 0.0f,
-              0.0f, 1.0f, 0.0f, 0.0f,
-              0.0f, 0.0f, 1.0f, 0.0f,
-              0.0f, 0.0f, 0.0f, 1.0f,
+              0.0f, 0.0f, 0.0f, 0.0f,
+              0.0f, 0.0f, 0.0f, 0.0f,
               // clang-format on
             };
             float outOffset[4] = {
