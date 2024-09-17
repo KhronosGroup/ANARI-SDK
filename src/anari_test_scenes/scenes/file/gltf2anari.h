@@ -344,6 +344,49 @@ struct gltf_data
       return nullptr;
     }
 
+    if (auto normalScale = texspec.value("scale", 1.0f); normalScale != 1.0f) {
+      if (swizzle != nullptr) {
+        printf(
+            "WARNING: Normal texture has unexpected swizzle which is overwritten");
+      }
+      float normalSwizzle[16] = {
+          // clang-format off
+              normalScale, 0.0f, 0.0f, 0.0f,
+              0.0f, normalScale, 0.0f, 0.0f,
+              0.0f, 0.0f, 1.0f, 0.0f,
+              0.0f, 0.0f, 0.0f, 0.0f,
+          // clang-format on
+      };
+      swizzle = normalSwizzle;
+    }
+
+    if (auto occlusionStrength = texspec.value("strength", 1.0f);
+        occlusionStrength != 1.0f) {
+      if (swizzle != nullptr) {
+        printf(
+            "WARNING: Occlusion texture has unexpected swizzle which is overwritten");
+      }
+      if (outOffset != nullptr) {
+        printf(
+            "WARNING: Occlusion texture has unexpected outOffset which is overwritten");
+      }
+
+      float occlusionSwizzle[16] = {
+          // clang-format off
+              occlusionStrength, 0.0f, 0.0f, 0.0f,
+              0.0f, 0.0f, 0.0f, 0.0f,
+              0.0f, 0.0f, 0.0f, 0.0f,
+              0.0f, 0.0f, 0.0f, 0.0f,
+          // clang-format on
+      };
+      swizzle = occlusionSwizzle;
+
+      float occlusionOffset[4] = {
+        1.0f - occlusionStrength, 0.0f, 0.0f, 0.0f
+      };
+      outOffset = occlusionOffset;
+    }
+
     anari::Sampler sampler = nullptr;
     if (tex.contains("/extras/ANARISampler"_json_pointer)) {
       auto &samplerExtras = tex.at("/extras/ANARISampler"_json_pointer);
@@ -641,8 +684,6 @@ struct gltf_data
                 }
               }
 
-              int texelType = ANARI_UFIXED8_VEC4;
-
               *width = texture->baseWidth;
               *height = texture->baseHeight;
               *n = ktxTexture2_GetNumComponents(texture);
@@ -722,12 +763,23 @@ struct gltf_data
         "/extensions/KHR_materials_specular/specularColorTexture"_json_pointer
     };
 
+    const std::vector<nlohmann::json_pointer<std::string>> normalTexturePointers = {
+        "/normalTexture"_json_pointer,
+        "/extensions/KHR_materials_clearcoat/clearcoatNormalTexture"_json_pointer
+    };
+
     std::set<int> sRGBImages;
+    std::set<int> normalMaps;
     for (const auto &mat : gltf["materials"]) {
       for (const auto &pointer : sRGBTexturePointers) {      
           if (mat.contains(pointer)) {
             sRGBImages.insert(getImageIndexFromTextureInfo(mat.at(pointer)));
           }
+      }
+      for (const auto &pointer : normalTexturePointers) {
+        if (mat.contains(pointer)) {
+          normalMaps.insert(getImageIndexFromTextureInfo(mat.at(pointer)));
+        }
       }
     }
 
@@ -744,18 +796,31 @@ struct gltf_data
         ++imageFilesIndex;      
       }
 
+      bool isSRGB = sRGBImages.find(imageIndex) != sRGBImages.end();
+      bool isNormalMap = normalMaps.find(imageIndex) != normalMaps.end();
+
       auto [data, func, usrptr] = decode_image(img, imageIndex, imageData, &width, &height, &n);
 
-      bool isSRGB = sRGBImages.find(imageIndex) != sRGBImages.end();
-
       if (data) {
-        int texelType = isSRGB ? ANARI_UFIXED8_RGBA_SRGB : ANARI_UFIXED8_VEC4;
-        if (n == 3)
-          texelType = isSRGB ? ANARI_UFIXED8_RGB_SRGB : ANARI_UFIXED8_VEC3;
-        else if (n == 2)
-          texelType = isSRGB ? ANARI_UFIXED8_RA_SRGB : ANARI_UFIXED8_VEC2;
-        else if (n == 1)
-          texelType = isSRGB ? ANARI_UFIXED8_R_SRGB : ANARI_UFIXED8;
+        int texelType = ANARI_UNKNOWN;
+        if (!isSRGB) {
+          texelType = isNormalMap ? ANARI_FIXED8_VEC4 : ANARI_UFIXED8_VEC4;
+          if (n == 3) {
+            texelType = isNormalMap ? ANARI_FIXED8_VEC3 : ANARI_UFIXED8_VEC3;
+          } else if (n == 2) {
+            texelType = isNormalMap ? ANARI_FIXED8_VEC2 : ANARI_UFIXED8_VEC2;
+          } else if (n == 1) {
+            texelType = isNormalMap ? ANARI_FIXED8 : ANARI_UFIXED8;
+          }
+        } else {
+          texelType = ANARI_UFIXED8_RGBA_SRGB;
+          if (n == 3)
+            texelType = ANARI_UFIXED8_RGB_SRGB;
+          else if (n == 2)
+            texelType = ANARI_UFIXED8_RA_SRGB;
+          else if (n == 1)
+            texelType = ANARI_UFIXED8_R_SRGB;
+        }
 
         auto array = anari::newArray2D(
             device,
