@@ -712,12 +712,15 @@ void SceneGenerator::commit()
       }
 
       if (vertices.size() == 0) {
-        printf("WARNING: No vertices are set for geometry.");
+        if (geometrySubtype != "isosurface") {
+            printf("WARNING: No vertices are set for geometry.");
+        }
+      } else {      
+          anari::setAndReleaseParameter(d,
+              geom,
+              "vertex.position",
+              anari::newArray1D(d, vertices.data(), vertices.size()));
       }
-      anari::setAndReleaseParameter(d,
-          geom,
-          "vertex.position",
-          anari::newArray1D(d, vertices.data(), vertices.size()));
 
       // generate vertex attributes and primitive attributes
       if (indiciCount == 0) {
