@@ -40,11 +40,11 @@ std::vector<anari::math::float4> TextureGenerator::generateCheckerBoard(
   return checkerBoard;
 }
 
-std::vector<anari::math::float4> TextureGenerator::generateCheckerBoardHDR(size_t resolution)
+std::vector<anari::math::float3> TextureGenerator::generateCheckerBoardHDR(size_t resolution)
 {
   PrimitiveGenerator generator(0);
   size_t counter = 0;
-  std::vector<anari::math::float4> checkerBoard(resolution * resolution);
+  std::vector<anari::math::float3> checkerBoard(resolution * resolution);
   for (size_t i = 0; i < 8; ++i) {
     size_t offset = resolution * i * resolution / 8;
     if (i % 2 == 0) {
@@ -57,7 +57,7 @@ std::vector<anari::math::float4> TextureGenerator::generateCheckerBoardHDR(size_
       for (size_t x = 0; x < resolution / 8; ++x) {
         for (size_t y = 0; y < resolution / 8; ++y) {
           checkerBoard[y + j * resolution / 8 + x * resolution + offset] =
-              anari::math::float4(color, 1.0f);
+              color;
         }
       }
       ++counter;
