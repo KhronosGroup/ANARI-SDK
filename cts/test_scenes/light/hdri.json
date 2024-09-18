@@ -39,8 +39,8 @@
       null,
       [
         0.0,
-        0.0,
-        -1.0
+        -1.0,
+        0.0
       ]
     ],
     "/anari_objects/light/0/scale": [
