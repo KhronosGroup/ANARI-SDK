@@ -3,7 +3,7 @@
 
 #include "SceneSelector.h"
 
-namespace windows {
+namespace anari_viewer::windows {
 
 static bool UI_callback(void *_stringList, int index, const char **out_text)
 {
@@ -94,4 +94,4 @@ void SceneSelector::notify()
   }
 }
 
-} // namespace windows
+} // namespace anari_viewer::windows

@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-namespace anari_viewer {
+namespace anari_viewer::windows {
 
 struct Window
 {
@@ -38,4 +38,4 @@ struct Window
   bool m_wrapBeginEnd{true};
 };
 
-} // namespace anari_viewer
+} // namespace anari_viewer::windows
