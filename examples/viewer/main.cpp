@@ -21,11 +21,9 @@ static const char *g_traceDir = nullptr;
 
 extern const char *getDefaultUILayout();
 
-namespace viewer {
-
 struct AppState
 {
-  manipulators::Orbit manipulator;
+  anari_viewer::manipulators::Orbit manipulator;
   anari::Device device{nullptr};
 };
 
@@ -93,7 +91,7 @@ struct Application : public anari_viewer::Application
 
   anari_viewer::WindowArray setupWindows() override
   {
-    ui::init();
+    anari_viewer::ui::init();
 
     // ANARI //
 
@@ -108,12 +106,12 @@ struct Application : public anari_viewer::Application
     if (g_useDefaultLayout)
       ImGui::LoadIniSettingsFromMemory(getDefaultUILayout());
 
-    auto *viewport = new windows::Viewport(g_device, "Viewport");
+    auto *viewport = new anari_viewer::windows::Viewport(g_device, "Viewport");
     viewport->setManipulator(&m_state.manipulator);
 
-    auto *leditor = new windows::LightsEditor(g_device);
+    auto *leditor = new anari_viewer::windows::LightsEditor(g_device);
 
-    auto *sselector = new windows::SceneSelector();
+    auto *sselector = new anari_viewer::windows::SceneSelector();
     sselector->setCallback([=](const char *category, const char *scene) {
       try {
         auto s = anari::scenes::createScene(g_device, category, scene);
@@ -154,15 +152,15 @@ struct Application : public anari_viewer::Application
   void teardown() override
   {
     anari::release(m_state.device, m_state.device);
-    ui::shutdown();
+    anari_viewer::ui::shutdown();
   }
 
  private:
   AppState m_state;
 };
 
-} // namespace viewer
-
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
 static void printUsage()
@@ -196,10 +194,10 @@ static void parseCommandLine(int argc, char *argv[])
 int main(int argc, char *argv[])
 {
   parseCommandLine(argc, argv);
-  viewer::initializeANARI();
+  initializeANARI();
   if (!g_device)
     return 1;
-  viewer::Application app;
+  Application app;
   app.run(1920, 1200, "ANARI Demo Viewer");
   return 0;
 }

@@ -7,7 +7,7 @@
 // stb_image
 #include "stb_image_write.h"
 
-namespace windows {
+namespace anari_viewer::windows {
 
 ///////////////////////////////////////////////////////////////////////////////
 // Viewport definitions ///////////////////////////////////////////////////////
@@ -545,4 +545,4 @@ void Viewport::ui_overlay()
   ImGui::End();
 }
 
-} // namespace windows
+} // namespace anari_viewer::windows

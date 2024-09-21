@@ -11,11 +11,11 @@
 
 #include "Window.h"
 
-namespace windows {
+namespace anari_viewer::windows {
 
 using SceneSelectionCallback = std::function<void(const char *, const char *)>;
 
-struct SceneSelector : public anari_viewer::Window
+struct SceneSelector : public Window
 {
   SceneSelector(const char *name = "Scene");
   ~SceneSelector();
@@ -41,4 +41,4 @@ struct SceneSelector : public anari_viewer::Window
   int m_currentScene{0};
 };
 
-} // namespace windows
+} // namespace anari_viewer::windows

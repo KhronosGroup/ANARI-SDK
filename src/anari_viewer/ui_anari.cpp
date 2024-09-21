@@ -7,7 +7,7 @@
 // std
 #include <limits>
 
-namespace ui {
+namespace anari_viewer::ui {
 
 // Helper functions ///////////////////////////////////////////////////////////
 
@@ -247,4 +247,4 @@ void buildUI(anari::Device d, anari::Object o, Parameter &p)
   }
 }
 
-} // namespace ui
+} // namespace anari_viewer::ui
