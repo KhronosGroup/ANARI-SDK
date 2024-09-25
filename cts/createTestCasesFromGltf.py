@@ -93,13 +93,7 @@ def create_test_cases_from_gltf(gltf_dir, output_path, blacklist=[]):
             )
         # fill test case with required features
         query_required_features(gltf)
-        # remove material requirements if no materials are present
-        # default material usage should not be in this list
-        if not "materials" in gltf.json or not gltf.json["materials"]:
-            if "ANARI_KHR_MATERIAL_PHYSICALLY_BASED" in required_features:
-                required_features.remove("ANARI_KHR_MATERIAL_PHYSICALLY_BASED")
-        if "ANARI_KHR_MATERIAL_MATTE" in required_features:
-            required_features.remove("ANARI_KHR_MATERIAL_MATTE")
+        cleanup_required_features(gltf.json)
 
         json_data["requiredFeatures"] = required_features.copy()
         # clear required features for next test case
@@ -119,6 +113,20 @@ def query_required_features(gltf):
 
     sceneGenerator.loadGLTF(json.dumps(gltf.json), gltf.buffers, gltf.images)
     _ = sceneGenerator.renderScene(0.0)
+
+
+def cleanup_required_features(gltfJson):
+    # remove material requirements if no materials are present
+    if not "materials" in gltfJson or not gltfJson["materials"]:
+        if "ANARI_KHR_MATERIAL_PHYSICALLY_BASED" in required_features:
+            required_features.remove("ANARI_KHR_MATERIAL_PHYSICALLY_BASED")
+    # remove certain requirements that are prerequisites for the whole test suite
+    if "ANARI_KHR_MATERIAL_MATTE" in required_features:
+        required_features.remove("ANARI_KHR_MATERIAL_MATTE")
+    if "ANARI_KHR_GEOMETRY_TRIANGLE" in required_features:
+        required_features.remove("ANARI_KHR_GEOMETRY_TRIANGLE")
+    if "ANARI_KHR_CAMERA_PERSPECTIVE" in required_features:
+        required_features.remove("ANARI_KHR_CAMERA_PERSPECTIVE")
 
 
 def gather_gltf(gltf_dir, blacklist=[]):

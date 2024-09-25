@@ -6,8 +6,5 @@
       "file": "../../../gltf-Sample-Assets/MeshPrimitiveModes/glTF/MeshPrimitiveModes.gltf"
     }
   },
-  "requiredFeatures": [
-    "ANARI_KHR_CAMERA_PERSPECTIVE",
-    "ANARI_KHR_GEOMETRY_TRIANGLE"
-  ]
+  "requiredFeatures": []
 }
