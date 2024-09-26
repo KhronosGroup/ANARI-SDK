@@ -8,11 +8,23 @@ It contains the following features:
 - Verification of object/parameter info metadata
 - Verification of known object properties
 - List core extensions implemented by a device
-- Create pdf report
+- Create a pdf report
 
 ## Requirements
 
-The project uses poetry to manage package versions. If using poetry is not wanted, one can manually install the dependencies specified in [pyproject.toml](pyproject.toml).
+### ANARI Feature Support
+
+Any libraries/devices being tested need to at least support the following features:
+
+- ANARI_KHR_MATERIAL_MATTE
+- ANARI_KHR_GEOMETRY_TRIANGLE
+- ANARI_KHR_CAMERA_PERSPECTIVE
+- ANARI_KHR_RENDERER_BACKGROUND_COLOR
+- ANARI_KHR_RENDERER_AMBIENT_LIGHT
+
+### Software Dependencies
+
+This project uses poetry to manage package versions. To bypass using poetry the packages listed in [pyproject.toml](pyproject.toml) can be installed manually.
 
 - Your ANARI library files copied into this folder
 - [Python 3.9+](https://www.python.org/downloads/)
