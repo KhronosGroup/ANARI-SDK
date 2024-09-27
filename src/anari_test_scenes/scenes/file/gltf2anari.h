@@ -312,6 +312,7 @@ struct gltf_data
   std::vector<anari::Material> materials;
   std::vector<anari::Group> groups;
   std::vector<anari::Camera> cameras;
+  std::vector<float> cameraAspectRatios;
   std::vector<anari::Light> lights;
   std::vector<std::vector<anari::Instance>> instances;
 
@@ -1601,11 +1602,15 @@ struct gltf_data
       anari::setParameter(device, camera, "direction", direction);
       anari::setParameter(device, camera, "up", up);
       
+      float aspectRatio = 1.0f;
       // set perspective and orthographic properties
       if (type == "perspective") {
         auto &glTFPerspective = glTFCamera["perspective"];
         anari::setParameter(device, camera, "fovy", glTFPerspective.contains("yfov") ? glTFPerspective["yfov"].get<float>() : 3.141592653589f / 3.0f);
-        anari::setParameter(device, camera, "aspect", glTFPerspective.contains("aspectRatio") ? glTFPerspective["aspectRatio"].get<float>() : 1.0f);
+        aspectRatio = glTFPerspective.contains("aspectRatio")
+            ? glTFPerspective["aspectRatio"].get<float>()
+            : 1.0f;
+        anari::setParameter(device, camera, "aspect", aspectRatio);
         if (glTFPerspective.contains("znear")) {
           anari::setParameter(device, camera, "near", glTFPerspective["znear"].get<float>());
         }
@@ -1615,12 +1620,15 @@ struct gltf_data
       } else if (type == "orthographic") {
         auto &glTFOrthographic = glTFCamera["orthographic"];
         anari::setParameter(device, camera, "height", glTFOrthographic["ymag"].get<float>() * 2.0f); //ymag in glTF is half of the image height
-        anari::setParameter(device, camera, "aspect", glTFOrthographic["xmag"].get<float>() / glTFOrthographic["ymag"].get<float>());
+        aspectRatio = glTFOrthographic["xmag"].get<float>()
+            / glTFOrthographic["ymag"].get<float>();
+        anari::setParameter(device, camera, "aspect", aspectRatio);
         anari::setParameter(device, camera, "near", glTFOrthographic["znear"].get<float>());
         anari::setParameter(device, camera, "far", glTFOrthographic["zfar"].get<float>());
       }
       
       anari::commitParameters(device, camera);
+      cameraAspectRatios.push_back(aspectRatio);
       cameras.emplace_back(camera);
     }
     if (node.contains("extensions")

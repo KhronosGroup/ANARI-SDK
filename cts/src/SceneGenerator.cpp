@@ -79,7 +79,9 @@ std::vector<anari::scenes::ParameterInfo> SceneGenerator::parameters()
       {"spatial_field_dimensions", std::array<uint32_t, 3>{0, 0, 0}, "Dimensions of the spatial field"},
       {"frameCompletionCallback", false, "Enables test for ANARI_KHR_FRAME_COMPLETION_CALLBACK. A red image is rendered on error."},
       {"progressiveRendering", false, "Enables test for ANARI_KHR_PROGRESSIVE_RENDERING. A green image is rendered if the render improved a red image otherwise."},
+      // TODO should "gltf_camera" be "/gltf/camera" or similar like in the test cases?
       {"gltf_camera", -1, "glTF camera to use to render the scene"},
+      // TODO does this work as intended? check thoroughly with permutation glTF files as well, in test case called "/gltf/file"
       {"gltf_file", "", "path to glTF"}
 
       //
@@ -915,10 +917,13 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
   std::string depth_type_param = getParamString("frame_depth_type", "");
 
   // create render camera
+  // TODO should gltf_camera be /gltf/camera or similar?
   const int gltf_camera_index = getParam<int>("gltf_camera", -1);
+  std::optional<float> aspectRatio = std::nullopt;
   if (!m_gltf.cameras.empty() && gltf_camera_index != -1) {
     anari::setParameter(
         m_device, m_frame, "camera", m_gltf.cameras[gltf_camera_index]);
+    aspectRatio = m_gltf.cameraAspectRatios[gltf_camera_index];
   } else {
     ANARIObject camera;
     if (auto it = m_anariObjects.find(ANARI_CAMERA);
@@ -935,6 +940,22 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
       anari::commitParameters(m_device, camera);
     }
     anari::setParameter(m_device, m_frame, "camera", camera);
+  }
+
+  if (aspectRatio.has_value()) {
+    // always choose the largest image dimension as basis to apply an aspect ratio
+    // important if a non-square image is requested in the test case
+    const uint32_t imageSize = image_height > image_width ? image_height : image_width;
+    // scale one image dimension to meet the aspect ratio criteria
+    if (aspectRatio.value() >= 1.0f) {
+      image_height = static_cast<uint32_t>(anari::math::round(
+          static_cast<float>(imageSize) / aspectRatio.value()));
+      image_width = imageSize;
+    } else {
+      image_width = static_cast<uint32_t>(anari::math::round(
+          static_cast<float>(imageSize) * aspectRatio.value()));
+      image_height = imageSize;
+    }
   }
 
   // create renderer
