@@ -127,6 +127,10 @@ def cleanup_required_features(gltfJson):
         required_features.remove("ANARI_KHR_GEOMETRY_TRIANGLE")
     if "ANARI_KHR_CAMERA_PERSPECTIVE" in required_features:
         required_features.remove("ANARI_KHR_CAMERA_PERSPECTIVE")
+    if "ANARI_KHR_RENDERER_BACKGROUND_COLOR" in required_features:
+        required_features.remove("ANARI_KHR_RENDERER_BACKGROUND_COLOR")
+    if "ANARI_KHR_RENDERER_AMBIENT_LIGHT" in required_features:
+        required_features.remove("ANARI_KHR_RENDERER_AMBIENT_LIGHT")
 
 
 def gather_gltf(gltf_dir, blacklist=[]):
