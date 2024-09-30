@@ -9,7 +9,24 @@ from reportlab.platypus import (
     PageBreak,
 )
 from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib import colors, pagesizes
+from reportlab.lib import colors, pagesizes, utils
+
+# global value for maximum height of an image in the report
+# used to catch cases where thin images would be taller than a page
+max_image_height = 600
+
+# load an image and preserve its aspect ratio
+def load_image(path, width):
+    # get aspect ratio
+    image = utils.ImageReader(path)
+    image_width, image_height = image.getSize()
+    aspect_ratio = image_height / float(image_width)
+    # find width and height in document using aspect ratio, while shrinking the image if too tall
+    image_too_tall = width * aspect_ratio > max_image_height
+    report_image_height = max_image_height if image_too_tall else width * aspect_ratio
+    report_image_width = max_image_height / aspect_ratio if image_too_tall else width
+
+    return Image(path, width=report_image_width, height=report_image_height)
 
 
 def generate_report_document(report_data, path, title, check_features = True, verbosity = 0):
@@ -254,26 +271,17 @@ def generate_report_document(report_data, path, title, check_features = True, ve
                             channel_story.append(Spacer(1, 12))
                             # Candidate and reference image
                             image_size = doc.width / 2
+
                             images_data = [
                                 [
                                     Paragraph("Reference", stylesheet["Heading4"]),
                                     Paragraph("Candidate", stylesheet["Heading4"]),
                                 ],
                                 [
-                                    Image(
-                                        path / results["image_paths"]["reference"],
-                                        width=image_size
-                                        - (margin["left"] + margin["right"]),
-                                        height=image_size
-                                        - (margin["top"] + margin["bottom"]),
-                                    ),
-                                    Image(
-                                        path / results["image_paths"]["candidate"],
-                                        width=image_size
-                                        - (margin["left"] + margin["right"]),
-                                        height=image_size
-                                        - (margin["top"] + margin["bottom"]),
-                                    ),
+                                    load_image(path / results["image_paths"]["reference"], image_size
+                                        - (margin["left"] + margin["right"])),
+                                    load_image(path / results["image_paths"]["candidate"], image_size
+                                        - (margin["left"] + margin["right"]))
                                 ],
                             ]
                             t = Table(images_data, 2 * [image_size])
@@ -314,20 +322,10 @@ def generate_report_document(report_data, path, title, check_features = True, ve
                                     Paragraph("5% Threshold", stylesheet["Heading4"]),
                                 ],
                                 [
-                                    Image(
-                                        path / results["image_paths"]["diff"],
-                                        width=image_size
-                                        - (margin["left"] + margin["right"]),
-                                        height=image_size
-                                        - (margin["top"] + margin["bottom"]),
-                                    ),
-                                    Image(
-                                        path / results["image_paths"]["threshold"],
-                                        width=image_size
-                                        - (margin["left"] + margin["right"]),
-                                        height=image_size
-                                        - (margin["top"] + margin["bottom"]),
-                                    ),
+                                    load_image(path / results["image_paths"]["diff"], image_size
+                                        - (margin["left"] + margin["right"])),
+                                    load_image(path / results["image_paths"]["threshold"], image_size
+                                        - (margin["left"] + margin["right"]))
                                 ],
                             ]
                             t = Table(images_data, 2 * [image_size])
