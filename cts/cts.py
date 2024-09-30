@@ -289,8 +289,8 @@ def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, te
         return -1
     
     image_data_list = render_result[0]
-    image_height = render_result[1]
-    image_width = render_result[2]
+    image_width = render_result[1]
+    image_height = render_result[2]
     
     if permutationString != "":
         permutationString = f'_{permutationString}'
@@ -316,7 +316,7 @@ def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, te
 
     # construct images from rendered data and write to filesystem
     if "color" in channels and image_data_list[0]:
-        image_out = Image.new("RGBA", (image_height, image_width))
+        image_out = Image.new("RGBA", (image_width, image_height))
         image_out.putdata(image_data_list[0])
         image_out = ImageOps.flip(image_out)
         outName = file_name.with_suffix('.png').with_stem(f'{prefix}{stem}{permutationString}_color')
@@ -324,7 +324,7 @@ def render_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, te
         image_out.save(outName)
 
     if "depth" in channels and image_data_list[1]:
-        image_out = Image.new("RGBA", (image_height, image_width))
+        image_out = Image.new("RGBA", (image_width, image_height))
         image_out.putdata(image_data_list[1])
         image_out = ImageOps.flip(image_out)
         outName = file_name.with_suffix('.png').with_stem(f'{prefix}{stem}{permutationString}_depth')

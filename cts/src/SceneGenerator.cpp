@@ -971,7 +971,7 @@ std::tuple<std::vector<std::vector<uint32_t>>, uint32_t, uint32_t> SceneGenerato
  // anari::setParameter(m_device, renderer, "pixelSamples", 10);
 
   // setup frame
-  anari::setParameter(m_device, m_frame, "size", anari::math::vec<uint32_t, 2>(static_cast<uint32_t>(image_height), static_cast<uint32_t>(image_width)));
+  anari::setParameter(m_device, m_frame, "size", anari::math::vec<uint32_t, 2>(static_cast<uint32_t>(image_width), static_cast<uint32_t>(image_height)));
   if (color_type != ANARI_UNKNOWN) {
     anari::setParameter(m_device, m_frame, channelName.c_str(), color_type);
   }
@@ -1023,7 +1023,7 @@ std::tuple<std::vector<std::vector<uint32_t>>, uint32_t, uint32_t> SceneGenerato
             ANARI_WAIT)) {
       frameDuration = -1.0f;
     }
-    return {imageResult, image_height, image_width};
+    return {imageResult, image_width, image_height};
   } else if (getParam<bool>("progressiveRendering", false)) {
     if (color_type == ANARI_FLOAT32_VEC4) {
       throw std::runtime_error("ANARI_FLOAT32_VEC4 not supported for frameProgressiveRendering test");
@@ -1084,7 +1084,7 @@ std::tuple<std::vector<std::vector<uint32_t>>, uint32_t, uint32_t> SceneGenerato
     }
 
     return {
-        imageResult, image_height, image_width
+        imageResult, image_width, image_height
     };
 
   } else
@@ -1245,7 +1245,7 @@ std::tuple<std::vector<std::vector<uint32_t>>, uint32_t, uint32_t> SceneGenerato
     frameDuration = -1.0f;
   }
 
-  return {imageResult, image_height, image_width};
+  return {imageResult, image_width, image_height};
 }
 
 // clear any existing objects in the scene
