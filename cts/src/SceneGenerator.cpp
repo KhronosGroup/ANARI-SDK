@@ -884,7 +884,7 @@ void SceneGenerator::commit()
 // render the scene with the given rendererType and renderDistance
 // commit() needs to be called before this
 // returns color and/or depth image data
-std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDistance)
+std::tuple<std::vector<std::vector<uint32_t>>, uint32_t, uint32_t> SceneGenerator::renderScene(float renderDistance)
 {
   // gather previously set parameters for rendering this scene
   uint32_t image_height = getParam<uint32_t>("image_height", 1024);
@@ -985,7 +985,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
 
   anari::commitParameters(m_device, m_frame);
 
-  std::vector<std::vector<uint32_t>> result;
+  std::vector<std::vector<uint32_t>> imageResult;
 
   // render scene
   if (getParam<bool>("frameCompletionCallback", false)) {
@@ -1011,8 +1011,8 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
     }
 
     std::vector<uint32_t> errorImage(image_height * image_width, rgba);
-    result.emplace_back(errorImage);
-    result.emplace_back(errorImage);
+    imageResult.emplace_back(errorImage);
+    imageResult.emplace_back(errorImage);
     // set frame duration member of this with last renderering's frame time
     if (!anariGetProperty(m_device,
             m_frame,
@@ -1023,7 +1023,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
             ANARI_WAIT)) {
       frameDuration = -1.0f;
     }
-    return result;
+    return {imageResult, image_height, image_width};
   } else if (getParam<bool>("progressiveRendering", false)) {
     if (color_type == ANARI_FLOAT32_VEC4) {
       throw std::runtime_error("ANARI_FLOAT32_VEC4 not supported for frameProgressiveRendering test");
@@ -1071,7 +1071,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
       rgba = (255 << 24) + 255;
     }
     std::vector<uint32_t> resultImage(image_height * image_width, rgba);
-    result.emplace_back(resultImage);
+    imageResult.emplace_back(resultImage);
 
    if (!anariGetProperty(m_device,
             m_frame,
@@ -1083,7 +1083,9 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
       frameDuration = -1.0f;
     }
 
-    return result;
+    return {
+        imageResult, image_height, image_width
+    };
 
   } else
   {
@@ -1121,7 +1123,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
         printf("%s not supported\n", channel_type_param.c_str());
       }
 
-      result.emplace_back(converted);
+      imageResult.emplace_back(converted);
       anari::unmap(m_device, m_frame, channelName.c_str());
     } else {
       if (componentCount == 4
@@ -1130,7 +1132,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
         const uint32_t *pixels =
             anari::map<uint32_t>(m_device, m_frame, channelName.c_str()).data;
         if (pixels != nullptr) {
-          result.emplace_back(pixels, pixels + image_height * image_width);
+          imageResult.emplace_back(pixels, pixels + image_height * image_width);
         } else {
           printf("%s not supported\n", channel_type_param.c_str());
         }
@@ -1151,7 +1153,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
         } else {
           printf("%s not supported\n", channel_type_param.c_str());
         }
-        result.emplace_back(converted);
+        imageResult.emplace_back(converted);
         anari::unmap(m_device, m_frame, channelName.c_str());
       } else if (anari::sizeOf(color_type) / componentCount == sizeof(char)) {
         // 8bit component
@@ -1174,7 +1176,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
           printf("%s not supported\n", channel_type_param.c_str());
         }
 
-        result.emplace_back(converted);
+        imageResult.emplace_back(converted);
         anari::unmap(m_device, m_frame, channelName.c_str());
       } else if (anari::sizeOf(color_type) / componentCount == sizeof(char) * 2) {
         // 16bit component
@@ -1197,13 +1199,13 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
           printf("%s not supported\n", channel_type_param.c_str());
         }
 
-        result.emplace_back(converted);
+        imageResult.emplace_back(converted);
         anari::unmap(m_device, m_frame, channelName.c_str());
       }
     }
   } else {
     // no color rendered
-    result.emplace_back();
+    imageResult.emplace_back();
   }
 
   // handle depth output
@@ -1224,12 +1226,12 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
       printf("Depth channel not supported\n");
     }
 
-    result.emplace_back(converted);
+    imageResult.emplace_back(converted);
 
     anari::unmap(m_device, m_frame, "channel.depth");
   } else {
     // no depth rendered
-    result.emplace_back();
+    imageResult.emplace_back();
   }
 
   // set frame duration member of this with last renderering's frame time
@@ -1243,7 +1245,7 @@ std::vector<std::vector<uint32_t>> SceneGenerator::renderScene(float renderDista
     frameDuration = -1.0f;
   }
 
-  return result;
+  return {imageResult, image_height, image_width};
 }
 
 // clear any existing objects in the scene
