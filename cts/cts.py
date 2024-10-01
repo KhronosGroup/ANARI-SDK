@@ -172,6 +172,9 @@ def evaluate_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, 
     # get required features from test scene json
     if "requiredFeatures" in parsed_json:
         results[test_name]["requiredFeatures"] = parsed_json["requiredFeatures"]
+    # get optional features from test scene json
+    if "optionalFeatures" in parsed_json:
+        results[test_name]["optionalFeatures"] = parsed_json["optionalFeatures"]
     # find which channel(s) to evaluate
     channels = get_channels(parsed_json)
 

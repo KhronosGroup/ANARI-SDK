@@ -167,6 +167,23 @@ def generate_report_document(report_data, path, title, check_features = True, ve
                         ),
                     ]
                 )
+                
+            # Check for special case of ANARI_KHR_MATERIAL_PHYSICALLY_BASED not being supported
+            if "optionalFeatures" in test_cases_value and "ANARI_KHR_MATERIAL_PHYSICALLY_BASED" in test_cases_value["optionalFeatures"] and "features" in report_data:
+                for feature in report_data["features"]:
+                    if feature[0] == "ANARI_KHR_MATERIAL_PHYSICALLY_BASED":
+                        if feature[1] == False:
+                            test_case_story.extend(
+                                [
+                                    Paragraph("Notes:", stylesheet["Normal"]),
+                                    Paragraph(
+                                        f'{"ANARI_KHR_MATERIAL_MATTE was used, since ANARI_KHR_MATERIAL_PHYSICALLY_BASED is not supported by the device."}',
+                                        stylesheet["Normal"],
+                                    ),
+                                ]
+                            )
+                        break
+
             # Save current count to check if subsections were added later
             oldCount = len(test_case_story)
             summary.append(summaryItem)

@@ -8,12 +8,14 @@ import anariCTSBackend
 import ctsGLTF
 
 required_features = []
+optional_features = []
 parsing_required_features = False
 
 
 def record_features(message):
     global parsing_required_features
     global required_features
+    global optional_features
 
     if "used features:" in message:
         # start parsing features
@@ -23,7 +25,11 @@ def record_features(message):
         # parse feature
         split_message = message.split("]")
         feature = split_message[1].strip()
-        required_features.append(feature)
+        if feature == "ANARI_KHR_MATERIAL_PHYSICALLY_BASED":
+            # fallback to matte material means that pbr materials are an optional feature
+            optional_features.append(feature)
+        else:
+            required_features.append(feature)
     else:
         # stop parsing features
         if parsing_required_features:
@@ -91,13 +97,15 @@ def create_test_cases_from_gltf(gltf_dir, output_path, blacklist=[]):
                 ],
                 gltf.json,
             )
-        # fill test case with required features
-        query_required_features(gltf)
+        # fill test case with required/optional features
+        query_features(gltf)
         cleanup_required_features(gltf.json)
 
         json_data["requiredFeatures"] = required_features.copy()
-        # clear required features for next test case
+        json_data["optionalFeatures"] = optional_features.copy()
+        # clear features for next test case
         required_features.clear()
+        optional_features.clear()
         # write test
         output_dir = Path(output_path + "/" + relative_gltf_path)
         if not os.path.exists(output_dir):
@@ -106,7 +114,7 @@ def create_test_cases_from_gltf(gltf_dir, output_path, blacklist=[]):
             json.dump(json_data, f, indent=2)
 
 
-def query_required_features(gltf):
+def query_features(gltf):
     # use this in case of global scene generator
     # sceneGenerator.resetAllParameters()
     sceneGenerator = anariCTSBackend.SceneGenerator(record_features)
@@ -123,6 +131,8 @@ def cleanup_required_features(gltfJson):
     # remove certain requirements that are prerequisites for the whole test suite
     if "ANARI_KHR_MATERIAL_MATTE" in required_features:
         required_features.remove("ANARI_KHR_MATERIAL_MATTE")
+    if "ANARI_KHR_MATERIAL_PHYSICALLY_BASED" in required_features:
+        required_features.remove("ANARI_KHR_MATERIAL_PHYSICALLY_BASED")
     if "ANARI_KHR_GEOMETRY_TRIANGLE" in required_features:
         required_features.remove("ANARI_KHR_GEOMETRY_TRIANGLE")
     if "ANARI_KHR_CAMERA_PERSPECTIVE" in required_features:
