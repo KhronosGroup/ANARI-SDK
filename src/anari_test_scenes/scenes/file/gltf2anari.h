@@ -1526,11 +1526,14 @@ struct gltf_data
         auto surface = anari::newObject<anari::Surface>(device);
         anari::setAndReleaseParameter(device, surface, "geometry", geometry);
 
-        if (prim.contains("material")) {
+        if (prim.contains("material") && deviceSupportsPBR) {
           anari::setParameter(
               device, surface, "material", materials.at(prim["material"]));
-        } else
+        } else {
+          // use default material if no material is present
+          // use default material (in this case matte) if pbr is not supported
           anari::setParameter(device, surface, "material", defaultMaterial);
+        }
         anari::commitParameters(device, surface);
         surfaces.push_back(surface);
       }
