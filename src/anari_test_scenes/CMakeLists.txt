@@ -13,6 +13,7 @@ project_sources(PRIVATE
   scenes/demo/gravity_spheres_volume.cpp
 
   scenes/file/obj.cpp
+  scenes/file/mikktspace/mikktspace.c
 
   scenes/test/attributes.cpp
   scenes/test/instanced_cubes.cpp

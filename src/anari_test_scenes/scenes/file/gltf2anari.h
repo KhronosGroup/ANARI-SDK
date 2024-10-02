@@ -453,51 +453,6 @@ struct gltf_data
     return buffer.data() + viewOffset + accessorOffset;
   }
 
-  const std::vector<anari::math::vec<float, 3>> formatDataVec3(const char* buffer, anari::DataType dataType, size_t count, size_t stride)
-  {
-    std::vector<anari::math::vec<float, 3>> result;
-    size_t dataSize = anari::sizeOf(dataType); // 12
-
-    for (int i = 0; i < count; ++i) {
-      anari::math::vec<float, 3> element = {
-          floatFromByteArray(buffer, i * dataSize + 0 * 4),
-          floatFromByteArray(buffer, i * dataSize + 1 * 4),
-          floatFromByteArray(buffer, i * dataSize + 2 * 4)};
-      result.push_back(element);
-    }
-
-    return result;
-  }
-
-  const std::vector<anari::math::vec<float, 2>> formatDataVec2(
-      const char *buffer, anari::DataType dataType, size_t count, size_t stride)
-  {
-    std::vector<anari::math::vec<float, 2>> result;
-    size_t dataSize = anari::sizeOf(dataType); // 12
-
-    for (int i = 0; i < count; ++i) {
-      anari::math::vec<float, 2> element = {
-          floatFromByteArray(buffer, i * dataSize + 0 * 4),
-          floatFromByteArray(buffer, i * dataSize + 1 * 4)};
-      result.push_back(element);
-    }
-
-    return result;
-  }
-
-  const float floatFromByteArray(const char *buffer, size_t index)
-  {
-    float f;
-    // TODO reverse order if needed
-    // TODO use stride if needed, probably not needed, since 4-byte alignment
-    char b[] = {buffer[index + 0],
-        buffer[index + 1],
-        buffer[index + 2],
-        buffer[index + 3]};
-    memcpy(&f, &b, sizeof(f));
-    return f;
-  }
-
   template <typename T>
   inline std::vector<T> getAccessorData(const char *buffer, size_t dataSize, size_t count)
   {
@@ -1682,13 +1637,13 @@ struct gltf_data
               const char *src = unpack_accessor(
                   prim["attributes"]["POSITION"], dataType, count, stride);
               size_t dataSize = anari::sizeOf(dataType);
-              // primData.pPosAccessor = formatDataVec3(src, dataType, count, stride);
-
-              // alternative
               primData.pPosAccessor = getAccessorData<anari::math::vec<float,
               3>>(src, dataSize, count);
 
               verticesCount = count;
+              
+              // set tangent size
+              primData.outTangents.resize(count);
             }
 
             // Normal
@@ -1699,9 +1654,6 @@ struct gltf_data
               const char *src = unpack_accessor(
                   prim["attributes"]["NORMAL"], dataType, count, stride);
               size_t dataSize = anari::sizeOf(dataType);
-              // primData.pNormalAccessor = formatDataVec3(src, dataType, count, stride);
-
-              // alternative
               primData.pNormalAccessor = getAccessorData<anari::math::vec<float,
               3>>(src, dataSize, count);
             }
@@ -1714,9 +1666,6 @@ struct gltf_data
               const char *src = unpack_accessor(
                   prim["attributes"]["TEXCOORD_0"], dataType, count, stride);
               size_t dataSize = anari::sizeOf(dataType);
-              // primData.pUVAccessor = formatDataVec2(src, dataType, count, stride);
-
-              // alternative
               primData.pUVAccessor = getAccessorData<anari::math::vec<float,
               2>>(src, dataSize, count);
             }
@@ -1747,11 +1696,10 @@ struct gltf_data
               verticesCount = count;
             }
 
-            // get number of verts from position count or if available indices
-            // count
+            // get number of verts from position count or if available indices count
             primData.facesCount = verticesCount / 3;
 
-            // feed to Mikktspace algorithm
+            // apply Mikktspace algorithm
             SMikkTSpaceContext s_context{};
             SMikkTSpaceInterface s_interface{};
             s_context.m_pInterface = nullptr;
@@ -1764,7 +1712,12 @@ struct gltf_data
             s_interface.m_getTexCoord = get_texture_coordinate;
             s_interface.m_setTSpaceBasic = set_tspace;
 
-            // directly send new tangents to device WITHOUT first adding it back to the glTF
+            if (genTangSpaceDefault(&s_context) == false) {
+              throw std::runtime_error{
+                  "Failed to generate tangents for this mesh"};
+            }
+            
+            // supply generated tangents to device
             {
               size_t count = primData.outTangents.size();
               anari::DataType dataType = ANARI_FLOAT32_VEC4;
