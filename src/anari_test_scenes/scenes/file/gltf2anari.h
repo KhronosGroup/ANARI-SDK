@@ -1,3 +1,5 @@
+#pragma once
+
 #include "nlohmann/json.hpp"
 using json = nlohmann::json;
 
@@ -14,12 +16,128 @@ using json = nlohmann::json;
 #endif
 
 #include "anari/anari_cpp/ext/linalg.h"
+#include "mikktspace/mikktspace.h"
 
 #include <fstream>
 #include "stb_image.h"
 #include <set>
 #include <iostream>
 #include <tuple>
+#include <variant>
+
+// TODO can this be shortened for our purpose?
+typedef std::variant<std::monostate,
+    std::vector<uint8_t>,
+    std::vector<uint16_t>,
+    std::vector<uint32_t>,
+    std::vector<float>,
+    std::vector<anari::math::vec<float, 2>>,
+    std::vector<anari::math::vec<float, 3>>,
+    std::vector<anari::math::vec<float, 4>>>
+    AccessorTypeVariant;
+
+struct PrimitiveData
+{
+  std::vector<anari::math::vec<float, 3>> pPosAccessor; /* vertices */
+  AccessorTypeVariant pIndicesAccessor = std::monostate(); /* indices */
+  std::vector<anari::math::vec<float, 3>> pNormalAccessor; /* normals */
+  std::vector<anari::math::vec<float, 2>> pUVAccessor; /* texture coordinates */
+  std::vector<anari::math::vec<float, 4>> outTangents; /* output tangents */
+  uint32_t facesCount; /* number of polygons */
+};
+
+// TODO combine function definitions with declarations
+static uint32_t indexLookup(AccessorTypeVariant indicesData, uint32_t idx)
+{
+  if (std::holds_alternative<std::vector<uint32_t>>(indicesData)) {
+    return std::get<std::vector<uint32_t>>(indicesData)[idx];
+  }
+  if (std::holds_alternative<std::vector<uint16_t>>(indicesData)) {
+    return std::get<std::vector<uint16_t>>(indicesData)[idx];
+  }
+  if (std::holds_alternative<std::vector<uint8_t>>(indicesData)) {
+    return std::get<std::vector<uint8_t>>(indicesData)[idx];
+  }
+  return idx;
+}
+
+/* Mikktspace's API Functions*/
+static int get_num_faces(const SMikkTSpaceContext *pContext)
+{
+  PrimitiveData *pPrimData =
+      static_cast<PrimitiveData *>(pContext->m_pUserData);
+  return static_cast<int>(pPrimData->facesCount);
+}
+
+static int get_num_verts_of_face(
+    const SMikkTSpaceContext *pContext, const int face_idx)
+{
+  return 3;
+}
+
+// get position data of one vertex
+static void get_position(const SMikkTSpaceContext *pContext,
+    float r_co[3],
+    const int face_idx,
+    const int vert_idx)
+{
+  auto primData = static_cast<PrimitiveData *>(pContext->m_pUserData);
+  auto idx = static_cast<uint32_t>(face_idx * 3 + vert_idx);
+  idx = indexLookup(primData->pIndicesAccessor, idx);
+  anari::math::vec<float, 3> position = primData->pPosAccessor[idx];
+
+  r_co[0] = position.x;
+  r_co[1] = position.y;
+  r_co[2] = position.z;
+}
+
+// get tex coords data of one vertex
+static void get_texture_coordinate(const SMikkTSpaceContext *pContext,
+    float r_uv[2],
+    const int face_idx,
+    const int vert_idx)
+{
+  auto primData = static_cast<PrimitiveData *>(pContext->m_pUserData);
+  auto idx = static_cast<uint32_t>(face_idx * 3 + vert_idx);
+  idx = indexLookup(primData->pIndicesAccessor, idx);
+  anari::math::vec<float, 2> uv = primData->pUVAccessor[idx];
+
+  r_uv[0] = uv.x;
+  r_uv[1] = uv.y;
+}
+
+// get normal data of one vertex
+static void get_normal(const SMikkTSpaceContext *pContext,
+    float r_no[3],
+    const int face_idx,
+    const int vert_idx)
+{
+  auto primData = static_cast<PrimitiveData *>(pContext->m_pUserData);
+  auto idx = static_cast<uint32_t>(face_idx * 3 + vert_idx);
+  idx = indexLookup(primData->pIndicesAccessor, idx);
+  anari::math::vec<float, 3> normal = primData->pNormalAccessor[idx];
+
+  r_no[0] = normal.x;
+  r_no[1] = normal.y;
+  r_no[2] = normal.z;
+}
+
+static void set_tspace(const SMikkTSpaceContext *pContext,
+    const float fv_tangent[3],
+    const float face_sign,
+    const int face_idx,
+    const int vert_idx)
+{
+  auto primData = static_cast<PrimitiveData *>(pContext->m_pUserData);
+  std::vector<anari::math::vec<float, 4>> &tangentData = primData->outTangents;
+  auto idx = static_cast<uint32_t>(face_idx * 3 + vert_idx);
+  idx = indexLookup(primData->pIndicesAccessor, idx);
+
+  tangentData[idx].x = fv_tangent[0];
+  tangentData[idx].y = fv_tangent[1];
+  tangentData[idx].z = fv_tangent[2];
+  tangentData[idx].w = face_sign;
+}
 
 static anari::DataType accessor_type(int c)
 {
@@ -333,6 +451,62 @@ struct gltf_data
     stride = bufferView.value("byteStride", dataSize);
 
     return buffer.data() + viewOffset + accessorOffset;
+  }
+
+  const std::vector<anari::math::vec<float, 3>> formatDataVec3(const char* buffer, anari::DataType dataType, size_t count, size_t stride)
+  {
+    std::vector<anari::math::vec<float, 3>> result;
+    size_t dataSize = anari::sizeOf(dataType); // 12
+
+    for (int i = 0; i < count; ++i) {
+      anari::math::vec<float, 3> element = {
+          floatFromByteArray(buffer, i * dataSize + 0 * 4),
+          floatFromByteArray(buffer, i * dataSize + 1 * 4),
+          floatFromByteArray(buffer, i * dataSize + 2 * 4)};
+      result.push_back(element);
+    }
+
+    return result;
+  }
+
+  const std::vector<anari::math::vec<float, 2>> formatDataVec2(
+      const char *buffer, anari::DataType dataType, size_t count, size_t stride)
+  {
+    std::vector<anari::math::vec<float, 2>> result;
+    size_t dataSize = anari::sizeOf(dataType); // 12
+
+    for (int i = 0; i < count; ++i) {
+      anari::math::vec<float, 2> element = {
+          floatFromByteArray(buffer, i * dataSize + 0 * 4),
+          floatFromByteArray(buffer, i * dataSize + 1 * 4)};
+      result.push_back(element);
+    }
+
+    return result;
+  }
+
+  const float floatFromByteArray(const char *buffer, size_t index)
+  {
+    float f;
+    // TODO reverse order if needed
+    // TODO use stride if needed, probably not needed, since 4-byte alignment
+    char b[] = {buffer[index + 0],
+        buffer[index + 1],
+        buffer[index + 2],
+        buffer[index + 3]};
+    memcpy(&f, &b, sizeof(f));
+    return f;
+  }
+
+  template <typename T>
+  inline std::vector<T> getAccessorData(const char *buffer, size_t dataSize, size_t count)
+  {
+    // TODO does not handle padding/byteStride yet
+    std::vector<T> typedVector;
+    size_t bufferByteSize = dataSize * count;
+    typedVector.resize(bufferByteSize / sizeof(T));
+    memcpy(typedVector.data(), buffer, bufferByteSize);
+    return typedVector;
   }
 
   anari::Sampler configure_sampler(
@@ -1488,6 +1662,120 @@ struct gltf_data
 
             anari::setParameterArray1DStrided(
                 device, geometry, paramname, dataType, src, count, stride);
+          }
+
+          if (!prim["attributes"].contains("TANGENT")
+              && prim["attributes"].contains("POSITION")
+              && prim["attributes"].contains("NORMAL")
+              && prim["attributes"].contains("TEXCOORD_0")) {
+            // TODO only perform this step if not deactivated via python
+            // TODO put all of this into a separate function or class/namespace
+            // TODO what about the draco branch? Generate tangents there, too
+
+            PrimitiveData primData;
+            uint32_t verticesCount;
+            // Position
+            {
+              size_t stride;
+              size_t count;
+              anari::DataType dataType = ANARI_UNKNOWN;
+              const char *src = unpack_accessor(
+                  prim["attributes"]["POSITION"], dataType, count, stride);
+              size_t dataSize = anari::sizeOf(dataType);
+              // primData.pPosAccessor = formatDataVec3(src, dataType, count, stride);
+
+              // alternative
+              primData.pPosAccessor = getAccessorData<anari::math::vec<float,
+              3>>(src, dataSize, count);
+
+              verticesCount = count;
+            }
+
+            // Normal
+            {
+              size_t stride;
+              size_t count;
+              anari::DataType dataType = ANARI_UNKNOWN;
+              const char *src = unpack_accessor(
+                  prim["attributes"]["NORMAL"], dataType, count, stride);
+              size_t dataSize = anari::sizeOf(dataType);
+              // primData.pNormalAccessor = formatDataVec3(src, dataType, count, stride);
+
+              // alternative
+              primData.pNormalAccessor = getAccessorData<anari::math::vec<float,
+              3>>(src, dataSize, count);
+            }
+
+            // Texcoord_0
+            {
+              size_t stride;
+              size_t count;
+              anari::DataType dataType = ANARI_UNKNOWN;
+              const char *src = unpack_accessor(
+                  prim["attributes"]["TEXCOORD_0"], dataType, count, stride);
+              size_t dataSize = anari::sizeOf(dataType);
+              // primData.pUVAccessor = formatDataVec2(src, dataType, count, stride);
+
+              // alternative
+              primData.pUVAccessor = getAccessorData<anari::math::vec<float,
+              2>>(src, dataSize, count);
+            }
+
+            // Indices if available
+            if (prim.contains("Indices")) {
+              size_t stride;
+              size_t count;
+              anari::DataType dataType = ANARI_UNKNOWN;
+              const char *src = unpack_accessor(
+                  prim["Indices"], dataType, count, stride);
+              size_t dataSize = anari::sizeOf(dataType);
+              switch (dataType) {
+                case ANARI_UINT8:
+                  primData.pIndicesAccessor =
+                      getAccessorData<uint8_t>(src, dataSize, count);
+                  break;
+                case ANARI_UINT16:
+                  primData.pIndicesAccessor =
+                      getAccessorData<uint16_t>(src, dataSize, count);
+                  break;
+                case ANARI_UINT32:
+                  primData.pIndicesAccessor =
+                      getAccessorData<uint32_t>(src, dataSize, count);
+                  break;
+              }
+
+              verticesCount = count;
+            }
+
+            // get number of verts from position count or if available indices
+            // count
+            primData.facesCount = verticesCount / 3;
+
+            // feed to Mikktspace algorithm
+            SMikkTSpaceContext s_context{};
+            SMikkTSpaceInterface s_interface{};
+            s_context.m_pInterface = nullptr;
+            s_context.m_pUserData = &primData;
+            s_context.m_pInterface = &s_interface;
+            s_interface.m_getNumFaces = get_num_faces;
+            s_interface.m_getNumVerticesOfFace = get_num_verts_of_face;
+            s_interface.m_getPosition = get_position;
+            s_interface.m_getNormal = get_normal;
+            s_interface.m_getTexCoord = get_texture_coordinate;
+            s_interface.m_setTSpaceBasic = set_tspace;
+
+            // directly send new tangents to device WITHOUT first adding it back to the glTF
+            {
+              size_t count = primData.outTangents.size();
+              anari::DataType dataType = ANARI_FLOAT32_VEC4;
+
+              anari::setParameterArray1D(device,
+                  geometry,
+                  "vertex.tangent",
+                  dataType,
+                  primData.outTangents.data(),
+                  count);
+            }
           }
 
           if (prim.contains("indices")) {
