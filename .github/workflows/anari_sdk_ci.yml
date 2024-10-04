@@ -52,7 +52,7 @@ jobs:
       working-directory: ${{github.workspace}}/build
       run: ctest -R anariTutorial -C ${{ matrix.config }}
 
-    - name: Test CTS
+    - name: Test CTS create test cases
       working-directory: ${{github.workspace}}/build/install/x64-${{ matrix.config }}/share/anari/cts
       run: |
         sudo apt update
@@ -62,4 +62,9 @@ jobs:
         poetry install
         poetry shell
         python ./createTestCasesFromGltf.py
+
+    - name: Test CTS create reference data
+      working-directory: ${{github.workspace}}/build/install/x64-${{ matrix.config }}/share/anari/cts
+      run: |
+        poetry shell
         python ./createReferenceData.py
