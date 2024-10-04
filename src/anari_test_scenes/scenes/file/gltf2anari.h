@@ -25,7 +25,6 @@ using json = nlohmann::json;
 #include <tuple>
 #include <variant>
 
-// TODO can this be shortened for our purpose?
 typedef std::variant<std::monostate,
     std::vector<uint8_t>,
     std::vector<uint16_t>,
@@ -46,7 +45,6 @@ struct PrimitiveData
   uint32_t facesCount; /* number of polygons */
 };
 
-// TODO combine function definitions with declarations
 static uint32_t indexLookup(AccessorTypeVariant indicesData, uint32_t idx)
 {
   if (std::holds_alternative<std::vector<uint32_t>>(indicesData)) {
@@ -61,7 +59,7 @@ static uint32_t indexLookup(AccessorTypeVariant indicesData, uint32_t idx)
   return idx;
 }
 
-/* Mikktspace's API Functions*/
+/* BEGIN Mikktspace's API Functions*/
 static int get_num_faces(const SMikkTSpaceContext *pContext)
 {
   PrimitiveData *pPrimData =
@@ -138,6 +136,7 @@ static void set_tspace(const SMikkTSpaceContext *pContext,
   tangentData[idx].z = fv_tangent[2];
   tangentData[idx].w = face_sign;
 }
+/* END Mikktspace's API Functions*/
 
 static anari::DataType accessor_type(int c)
 {
@@ -456,7 +455,6 @@ struct gltf_data
   template <typename T>
   inline std::vector<T> getAccessorData(const char *buffer, size_t dataSize, size_t count)
   {
-    // TODO does not handle padding/byteStride yet
     std::vector<T> typedVector;
     size_t bufferByteSize = dataSize * count;
     typedVector.resize(bufferByteSize / sizeof(T));
@@ -1624,8 +1622,6 @@ struct gltf_data
               && prim["attributes"].contains("NORMAL")
               && prim["attributes"].contains("TEXCOORD_0")
               && generateTangents) {
-            // TODO put all of this into a separate function or class/namespace
-            // TODO what about the draco branch? Generate tangents there, too
 
             PrimitiveData primData;
             uint32_t verticesCount;
@@ -1939,7 +1935,12 @@ struct gltf_data
         }
 
         if (type == "directional") {
-          // TODO
+          // irradiance
+          float irradiance = 1.0f;
+          if (glTFLight.contains("intensity")) {
+            irradiance = glTFLight["intensity"].get<float>();
+          }
+          anari::setParameter(device, light, "irradiance", irradiance);
         }
 
         anari::commitParameters(device, light);
