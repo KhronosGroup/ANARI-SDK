@@ -1479,7 +1479,7 @@ struct gltf_data
     }
   }
 
-  void load_surfaces()
+  void load_surfaces(bool generateTangents = true)
   {
     // check support for pbr materials, otherwise use a matte material as default
     bool deviceSupportsPBR = false;
@@ -1622,8 +1622,8 @@ struct gltf_data
           if (!prim["attributes"].contains("TANGENT")
               && prim["attributes"].contains("POSITION")
               && prim["attributes"].contains("NORMAL")
-              && prim["attributes"].contains("TEXCOORD_0")) {
-            // TODO only perform this step if not deactivated via python
+              && prim["attributes"].contains("TEXCOORD_0")
+              && generateTangents) {
             // TODO put all of this into a separate function or class/namespace
             // TODO what about the draco branch? Generate tangents there, too
 
@@ -1979,13 +1979,14 @@ struct gltf_data
 
   void parse_glTF(const std::string &jsonText,
       std::vector<std::vector<char>> &sortedBuffers,
-      std::vector<std::vector<char>> &sortedImages)
+      std::vector<std::vector<char>> &sortedImages,
+      bool generateTangents = true)
   {
     gltf = json::parse(jsonText);
     buffers = std::move(sortedBuffers);
     load_assets(sortedImages);
     load_materials();
-    load_surfaces();
+    load_surfaces(generateTangents);
     load_nodes();
   }
 

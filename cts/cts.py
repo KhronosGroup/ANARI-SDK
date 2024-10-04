@@ -351,7 +351,7 @@ def passByType(paramName, type, paramValue, sceneGenerator):
 
 # applies a function to each test scene (or test permutation), passing additional args to that function
 # returns a dictonary of return values of the passed function with the test scene names as keys
-def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", only_permutations = False, check_features = True, use_generator = True,  *args):
+def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", only_permutations = False, check_features = True, use_generator = True, tangent_gen = True, *args):
     result = {}
     # gather available test scenes
     collected_scenes = resolve_scenes(test_scenes)
@@ -454,7 +454,7 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                                     pathToGltf = Path(subvalue).resolve()
                                     os.chdir(Path(__file__).parent)
                                     gltf = ctsGLTF.loadGLB(pathToGltf) if subvalue.endswith(".glb") else ctsGLTF.loadGLTF(pathToGltf)
-                                    sceneGenerator.loadGLTF(json.dumps(gltf.json), gltf.buffers, gltf.images)
+                                    sceneGenerator.loadGLTF(json.dumps(gltf.json), gltf.buffers, gltf.images, tangent_gen)
                     else:
                         sceneGenerator.setParameter(key, value)
                 
@@ -545,7 +545,7 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                                     pathToGltf = Path(permutation[i]).resolve()
                                     os.chdir(Path(__file__).parent)
                                     gltf = ctsGLTF.loadGLB(pathToGltf) if permutation[i].endswith(".glb") else ctsGLTF.loadGLTF(pathToGltf)
-                                    sceneGenerator.loadGLTF(json.dumps(gltf.json), gltf.buffers, gltf.images)
+                                    sceneGenerator.loadGLTF(json.dumps(gltf.json), gltf.buffers, gltf.images, tangent_gen)
                             else:
                                 sceneGenerator.setParameter(key, permutation[i])
                         except Exception as e:
@@ -575,12 +575,12 @@ def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "
                     print(e)
                     continue
             # call function for each test scene and collect return values per test scene
-            result[test_name] = (func(parsed_json, sceneGenerator, anari_renderer, json_file_path, test_name,"", "", *args))
+            result[test_name] = (func(parsed_json, sceneGenerator, anari_renderer, json_file_path, test_name, "", "", *args))
     return result
 
 # apply the render_scene() function to all test scenes available
-def render_scenes(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", check_features = True, output = "."):
-    apply_to_scenes(render_scene, anari_library, anari_device, anari_renderer, test_scenes, False, check_features, True, output)
+def render_scenes(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", check_features = True, output = ".", tangent_gen = True):
+    apply_to_scenes(render_scene, anari_library, anari_device, anari_renderer, test_scenes, False, check_features, True, tangent_gen, output)
 
 # compare existing candidate and reference images and write the results into a pdf report
 # this report will only contain image comparisons and no further data like e.g. queried features
@@ -727,7 +727,7 @@ def create_report_for_scene(parsed_json, sceneGenerator, anari_renderer, scene_l
     return report
 
 # queries metadata and features, renders test scenes, compares reference and candidate images and writes all results into a pdf report
-def create_report(library, device = None, renderer = "default", test_scenes = "test_scenes", output = ".", verbosity = 0, check_features = True, comparison_methods = ["ssim"], thresholds = None, custom_compare_function = None):
+def create_report(library, device = None, renderer = "default", test_scenes = "test_scenes", output = ".", verbosity = 0, check_features = True, tangent_gen = True, comparison_methods = ["ssim"], thresholds = None, custom_compare_function = None):
     # query metadata and features from the library / device
     merged_evaluations = {}
     merged_evaluations["anariInfo"] = query_metadata(library, device)
@@ -741,13 +741,13 @@ def create_report(library, device = None, renderer = "default", test_scenes = "t
         return
     print("***Create renderings***\n")
     # render test scenes
-    result1 = apply_to_scenes(create_report_for_scene, library, device, renderer, test_scenes, False, check_features, True, output, comparison_methods, thresholds, custom_compare_function, merged_evaluations["features"])
+    result1 = apply_to_scenes(create_report_for_scene, library, device, renderer, test_scenes, False, check_features, True, tangent_gen, output, comparison_methods, thresholds, custom_compare_function, merged_evaluations["features"])
     if not result1:
         print("Report could not be created")
         return
     print("\n***Compare renderings***\n")
     # evaluate rendered images
-    result2 = apply_to_scenes(create_report_for_scene, library, device, renderer, test_scenes, False, check_features, False, output, comparison_methods, thresholds, custom_compare_function, merged_evaluations["features"])
+    result2 = apply_to_scenes(create_report_for_scene, library, device, renderer, test_scenes, False, check_features, False, tangent_gen, output, comparison_methods, thresholds, custom_compare_function, merged_evaluations["features"])
     # write all images to filesystem to later incorporate in report
     result2 = write_images(result2, output)
     # combine rendering results and image evaluation results with previously queried data
@@ -832,6 +832,9 @@ if __name__ == "__main__":
     ignoreFeatureParser = argparse.ArgumentParser(add_help=False)
     ignoreFeatureParser.add_argument('--ignore_features', action='store_true', help='Run tests even if feature is not supported')
 
+    noTangentGenParser = argparse.ArgumentParser(add_help=False)
+    noTangentGenParser.add_argument('--no_tangent_generation', action='store_true', help='If set, the CTS will not generate tangents for glTF test files that do not have any')
+
     deviceParser = argparse.ArgumentParser(add_help=False, parents=[libraryParser])
     deviceParser.add_argument('-d', '--device', default=None, help='ANARI device on which to perform the test')
 
@@ -846,7 +849,7 @@ if __name__ == "__main__":
     evaluationMethodParser.add_argument('-vv', '--verbose_all', action='store_true', help="Include verbose infos of all tests in report")
 
     # command: render_scenes
-    renderScenesParser = subparsers.add_parser('render_scenes', description='Renders an image to disk for each test scene', parents=[sceneParser,ignoreFeatureParser])
+    renderScenesParser = subparsers.add_parser('render_scenes', description='Renders an image to disk for each test scene', parents=[sceneParser, ignoreFeatureParser, noTangentGenParser])
     renderScenesParser.add_argument('-o', '--output', default=".", help="Output path")
 
     # command: compare_images
@@ -870,7 +873,7 @@ if __name__ == "__main__":
     checkObjectPropertiesParser.add_argument('-t', '--test_scenes', default="test_scenes", help="Folder with test scenes to test. Specify subfolder to test subsets. Also accepts glob patterns")
 
     # command: create_report
-    create_reportParser = subparsers.add_parser('create_report', parents=[sceneParser, evaluationMethodParser, ignoreFeatureParser], description="Runs all tests and creates a pdf report")
+    create_reportParser = subparsers.add_parser('create_report', parents=[sceneParser, evaluationMethodParser, ignoreFeatureParser, noTangentGenParser], description="Runs all tests and creates a pdf report")
     create_reportParser.add_argument('-o', '--output', default=".", help="Output path")
 
     # command: query_scenes_info
@@ -902,7 +905,7 @@ if __name__ == "__main__":
     verboseLevel = 2 if "verbose_all" in args and args.verbose_all else 1 if "verbose_error" in args and args.verbose_error else 0
 
     if args.command == "render_scenes":
-        render_scenes(args.library, args.device, args.renderer, args.test_scenes, not args.ignore_features, args.output)
+        render_scenes(args.library, args.device, args.renderer, args.test_scenes, not args.ignore_features, args.output, not args.no_tangent_generation)
     elif args.command == "compare_images":
         compare_images(args.test_scenes, args.candidates, args.output, verboseLevel, args.comparison_methods, args.thresholds)
     elif args.command == "query_features":
@@ -918,6 +921,6 @@ if __name__ == "__main__":
             else:
                 print(f'{key}: {value[0]}')
     elif args.command == "create_report":
-        create_report(args.library, args.device, args.renderer, args.test_scenes, args.output, verboseLevel, not args.ignore_features, args.comparison_methods, args.thresholds)
+        create_report(args.library, args.device, args.renderer, args.test_scenes, args.output, verboseLevel, not args.ignore_features, not args.no_tangent_generation, args.comparison_methods, args.thresholds)
     elif args.command == "query_scenes_info":
         query_scenes_info(args.test_scenes)

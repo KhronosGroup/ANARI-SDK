@@ -24,7 +24,8 @@ class SceneGenerator : public anari::scenes::TestScene
 
   void loadGLTF(const std::string &jsonText,
       std::vector<std::vector<char>> &sortedBuffers,
-      std::vector<std::vector<char>> &sortedImages);
+      std::vector<std::vector<char>> &sortedImages,
+      bool generateTangents);
 
   void createAnariObject(int type,
       const std::string &subtype = "",

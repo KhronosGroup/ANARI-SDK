@@ -68,6 +68,7 @@ if __name__ == "__main__":
     parser.add_argument("-r", "--renderer", default="default")
     parser.add_argument("-t", "--test_scenes", default="test_scenes")
     parser.add_argument("--ignore_features", action="store_true")
+    parser.add_argument("--no_tangent_generation", action="store_true")
 
     args = parser.parse_args()
     cts.apply_to_scenes(
@@ -80,5 +81,7 @@ if __name__ == "__main__":
         args.renderer,
         args.test_scenes,
         True,
-        not args.ignore_features
+        not args.ignore_features,
+        True,
+        not args.no_tangent_generation
     )
