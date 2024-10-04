@@ -51,3 +51,15 @@ jobs:
     - name: Tutorial Tests
       working-directory: ${{github.workspace}}/build
       run: ctest -R anariTutorial -C ${{ matrix.config }}
+
+    - name: Test CTS
+      working-directory: ${{github.workspace}}/build/install/x64-${{ matrix.config }}/share/anari/cts
+      run: |
+        sudo apt update
+        sudo apt install pipx
+        pipx ensurepath
+        pipx install poetry
+        poetry install
+        poetry shell
+        python ./createTestCasesFromGltf.py
+        python ./createReferenceData.py
