@@ -1,7 +1,7 @@
 ## Copyright 2021-2024 The Khronos Group
 ## SPDX-License-Identifier: Apache-2.0
 
-project(anari_test_scenes LANGUAGES CXX)
+project(anari_test_scenes LANGUAGES C CXX)
 
 project_add_library()
 project_sources(PRIVATE
