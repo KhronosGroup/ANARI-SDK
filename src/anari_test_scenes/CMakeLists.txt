@@ -13,7 +13,6 @@ project_sources(PRIVATE
   scenes/demo/gravity_spheres_volume.cpp
 
   scenes/file/obj.cpp
-  scenes/file/mikktspace/mikktspace.c
 
   scenes/test/attributes.cpp
   scenes/test/instanced_cubes.cpp
@@ -30,6 +29,7 @@ PUBLIC
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/anari/anari_test_scenes>
 )
 project_link_libraries(PUBLIC helium PUBLIC $<BUILD_INTERFACE:stb_image>)
+project_link_libraries(PUBLIC helium PUBLIC $<BUILD_INTERFACE:mikktspace>)
 
 if (VIEWER_ENABLE_GLTF)
   project_sources(PRIVATE scenes/file/glTF.cpp)
