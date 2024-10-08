@@ -36,6 +36,7 @@ jobs:
         -DBUILD_REMOTE_DEVICE=${{ matrix.os == 'ubuntu-latest' }}
         -DBUILD_TESTING=ON
         -DBUILD_VIEWER=OFF
+        -DCTS_ENABLE_GLTF=OFF
 
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config ${{ matrix.config }} --target install
