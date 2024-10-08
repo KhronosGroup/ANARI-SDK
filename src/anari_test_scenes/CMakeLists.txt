@@ -3,6 +3,7 @@
 
 project(anari_test_scenes LANGUAGES CXX)
 
+message("Reached CMakeLists in anari/anari_test_scenes/")
 project_add_library()
 project_sources(PRIVATE
   anari_test_scenes.cpp
