@@ -53,6 +53,9 @@ jobs:
       working-directory: ${{github.workspace}}/build
       run: ctest -R anariTutorial -C ${{ matrix.config }}
 
+    - name: Build CTS
+      run: cmake --build ${{github.workspace}}/build --config ${{ matrix.config }} --target anariCTSBackend
+
     - name: Prepare CTS Linux
       if: ${{ matrix.os == 'ubuntu-latest' }}
       run: |
