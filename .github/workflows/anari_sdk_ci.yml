@@ -72,7 +72,7 @@ jobs:
         pipx ensurepath
 
     - name: Test CTS create test cases
-      working-directory: ${{github.workspace}}/build/install/share/anari/cts
+      working-directory: ${{github.workspace}}/cts
       run: |
         pipx install poetry
         poetry install
@@ -80,7 +80,7 @@ jobs:
         python ./createTestCasesFromGltf.py
 
     - name: Test CTS create reference data
-      working-directory: ${{github.workspace}}/build/install/share/anari/cts
+      working-directory: ${{github.workspace}}/cts
       run: |
         poetry shell
         python ./createReferenceData.py
