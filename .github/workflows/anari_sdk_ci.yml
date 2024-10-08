@@ -37,7 +37,6 @@ jobs:
         -DBUILD_TESTING=ON
         -DBUILD_VIEWER=OFF
         -DCTS_ENABLE_GLTF=OFF
-        -DBUILD_SCENES_LIB=ON
 
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config ${{ matrix.config }} --target install
@@ -54,19 +53,34 @@ jobs:
       working-directory: ${{github.workspace}}/build
       run: ctest -R anariTutorial -C ${{ matrix.config }}
 
-    - name: Test CTS create test cases
-      working-directory: ${{github.workspace}}/build/install/x64-${{ matrix.config }}/share/anari/cts
+    - name: Prepare CTS Linux
+      if: ${{ matrix.os == 'ubuntu-latest' }}
       run: |
-        sudo apt update
         sudo apt install pipx
         pipx ensurepath
+      
+    - name: Prepare CTS Windows
+      if: ${{ matrix.os == 'windows-latest' }}
+      run: |
+        python -m pip install --user pipx
+        python -m pipx ensurepath
+
+    - name: Prepare CTS MacOS
+      if: ${{ matrix.os == 'macos-latest' }}
+      run: |
+        brew install --user 
+        pipx ensurepath
+
+    - name: Test CTS create test cases
+      working-directory: ${{github.workspace}}/build/install/share/anari/cts
+      run: |
         pipx install poetry
         poetry install
         poetry shell
         python ./createTestCasesFromGltf.py
 
     - name: Test CTS create reference data
-      working-directory: ${{github.workspace}}/build/install/x64-${{ matrix.config }}/share/anari/cts
+      working-directory: ${{github.workspace}}/build/install/share/anari/cts
       run: |
         poetry shell
         python ./createReferenceData.py
