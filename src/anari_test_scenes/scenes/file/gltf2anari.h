@@ -16,7 +16,7 @@ using json = nlohmann::json;
 #endif
 
 #include "anari/anari_cpp/ext/linalg.h"
-#include "mikktspace/mikktspace.h"
+#include "mikktspace.h"
 
 #include <fstream>
 #include "stb_image.h"
