@@ -8,6 +8,7 @@ on:
 
 env:
   ANARI_LIBRARY: helide
+  PYTHONPATH: ${{github.workspace}}
 
 jobs:
   build:
