@@ -84,6 +84,7 @@ FetchContent_MakeAvailable(glTFSampleAssets)
 
 message("Copying glTF Sample Models")
 file(GLOB GLTF_SAMPLE_ASSETS_FILES ${gltfsampleassets_SOURCE_DIR}/Models/*)
+list(FILTER GLTF_SAMPLE_ASSETS_FILES EXCLUDE REGEX ".*Unicode❤♻Test")
 file(COPY ${GLTF_SAMPLE_ASSETS_FILES} DESTINATION ${CMAKE_CURRENT_LIST_DIR}/gltf-Sample-Assets)
 
 ## Installation ##
