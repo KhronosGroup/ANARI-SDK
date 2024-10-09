@@ -55,50 +55,58 @@ jobs:
 
     - name: Build CTS
       run: cmake --build ${{github.workspace}}/build --config ${{ matrix.config }} --target anariCTSBackend
-
-    - name: Debug Print Linux
-      working-directory: ${{github.workspace}}/build/${{matrix.config}}
-      if: ${{ matrix.os == 'ubuntu-latest' }}
-      run: |
-        echo "PYTHONPATH: $PYTHONPATH"
-        ls
-      
-    - name: Debug Print Windows
-      working-directory: ${{github.workspace}}/build/${{matrix.config}}
-      if: ${{ matrix.os == 'windows-latest' }}
-      run: |
-        echo "PYTHONPATH: $env:PYTHONPATH"
-        ls
     
-    - name: Prepare CTS Linux
+    - name: CTS test case creation Linux
+      working-directory: ${{github.workspace}}/cts
       if: ${{ matrix.os == 'ubuntu-latest' }}
       run: |
         sudo apt install pipx
         pipx ensurepath
+        pipx install poetry
+        poetry install
+        poetry shell
+        python3 ./createTestCasesFromGltf.py
       
-    - name: Prepare CTS Windows
+    - name: CTS test case creation Windows
+      working-directory: ${{github.workspace}}/cts
       if: ${{ matrix.os == 'windows-latest' }}
       run: |
         python -m pip install --user pipx
         python -m pipx ensurepath
         python -m pip install win-unicode-console
-
-    - name: Prepare CTS MacOS
-      if: ${{ matrix.os == 'macos-latest' }}
-      run: |
-        brew install pipx
-        pipx ensurepath
-
-    - name: Test CTS create test cases
-      working-directory: ${{github.workspace}}/cts
-      run: |
         pipx install poetry
         poetry install
         poetry shell
         python ./createTestCasesFromGltf.py
 
-    - name: Test CTS create reference data
+    - name: CTS test case creation MacOS
       working-directory: ${{github.workspace}}/cts
+      if: ${{ matrix.os == 'macos-latest' }}
+      run: |
+        brew install pipx
+        pipx ensurepath
+        pipx install poetry
+        poetry install
+        poetry shell
+        python3 ./createTestCasesFromGltf.py
+
+    - name: CTS create reference data Linux
+      working-directory: ${{github.workspace}}/cts
+      if: ${{ matrix.os == 'ubuntu-latest' }}
+      run: |
+        poetry shell
+        python3 ./createReferenceData.py
+        
+    - name: CTS reate reference data Windows
+      working-directory: ${{github.workspace}}/cts
+      if: ${{ matrix.os == 'windows-latest' }}
       run: |
         poetry shell
         python ./createReferenceData.py
+
+    - name: CTS create reference data MacOS
+      working-directory: ${{github.workspace}}/cts
+      if: ${{ matrix.os == 'macos-latest' }}
+      run: |
+        poetry shell
+        python3 ./createReferenceData.py
