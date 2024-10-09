@@ -110,7 +110,9 @@ def create_test_cases_from_gltf(gltf_dir, output_path, blacklist=[]):
         output_dir = Path(output_path + "/" + relative_gltf_path)
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
-        with open(output_dir / Path(gltf_scene_name + ".json"), "w") as f:
+        with open(
+            output_dir / Path(gltf_scene_name + ".json", encoding="utf-8"), "w"
+        ) as f:
             json.dump(json_data, f, indent=2)
 
 
