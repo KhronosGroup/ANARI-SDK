@@ -57,6 +57,21 @@ jobs:
     - name: Build CTS
       run: cmake --build ${{github.workspace}}/build --config ${{ matrix.config }} --target anariCTSBackend
 
+    - name: Debug Print Linux
+      working-directory: ${{github.workspace}}/build/${{github.workspace}}
+      if: ${{ matrix.os == 'ubuntu-latest' }}
+      run: |
+        echo "PYTHONPATH: $PYTHONPATH"
+        ls
+      
+    - name: Debug Print Windows
+      working-directory: ${{github.workspace}}/build/${{github.workspace}}
+      if: ${{ matrix.os == 'windows-latest' }}
+      run: |
+        echo "PYTHONPATH: $env:PYTHONPATH"
+        ls
+
+    
     - name: Prepare CTS Linux
       if: ${{ matrix.os == 'ubuntu-latest' }}
       run: |
