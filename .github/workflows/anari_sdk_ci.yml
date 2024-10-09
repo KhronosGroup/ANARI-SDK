@@ -6,10 +6,6 @@ on:
   pull_request:
     branches: [ main, next_release ]
 
-env:
-  ANARI_LIBRARY: helide
-  PYTHONPATH: ${{github.workspace}}/build/${{github.workspace}}
-
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -17,6 +13,9 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         config: [Release, Debug]
+    env:
+      ANARI_LIBRARY: helide
+      PYTHONPATH: ${{github.workspace}}/build/${{matrix.config}}
 
     steps:
     - uses: actions/checkout@v3
@@ -58,14 +57,14 @@ jobs:
       run: cmake --build ${{github.workspace}}/build --config ${{ matrix.config }} --target anariCTSBackend
 
     - name: Debug Print Linux
-      working-directory: ${{github.workspace}}/build/${{github.workspace}}
+      working-directory: ${{github.workspace}}/build/${{matrix.config}}
       if: ${{ matrix.os == 'ubuntu-latest' }}
       run: |
         echo "PYTHONPATH: $PYTHONPATH"
         ls
       
     - name: Debug Print Windows
-      working-directory: ${{github.workspace}}/build/${{github.workspace}}
+      working-directory: ${{github.workspace}}/build/${{matrix.config}}
       if: ${{ matrix.os == 'windows-latest' }}
       run: |
         echo "PYTHONPATH: $env:PYTHONPATH"
