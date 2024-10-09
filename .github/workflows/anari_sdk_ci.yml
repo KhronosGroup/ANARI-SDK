@@ -86,7 +86,7 @@ jobs:
     - name: Prepare CTS MacOS
       if: ${{ matrix.os == 'macos-latest' }}
       run: |
-        brew install --user pipx
+        brew install pipx
         pipx ensurepath
 
     - name: Test CTS create test cases
