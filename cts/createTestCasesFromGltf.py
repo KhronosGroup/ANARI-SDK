@@ -119,7 +119,7 @@ def query_features(gltf):
     # sceneGenerator.resetAllParameters()
     sceneGenerator = anariCTSBackend.SceneGenerator(record_features)
 
-    sceneGenerator.loadGLTF(json.dumps(gltf.json), gltf.buffers, gltf.images)
+    sceneGenerator.loadGLTF(json.dumps(gltf.json), gltf.buffers, gltf.images, False)
     _ = sceneGenerator.renderScene(0.0)
 
 
