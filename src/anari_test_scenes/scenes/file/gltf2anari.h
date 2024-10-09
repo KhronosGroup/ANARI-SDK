@@ -1093,9 +1093,9 @@ struct gltf_data
           const auto &emissiveFactor = mat["emissiveFactor"];
           float colorSwizzle[16] = {
               // clang-format off
-              emissiveFactor[0] * emissiveStrength, 0.0f, 0.0f, 0.0f,
-              0.0f, emissiveFactor[1] * emissiveStrength, 0.0f, 0.0f,
-              0.0f, 0.0f, emissiveFactor[2] * emissiveStrength, 0.0f,
+              emissiveFactor[0].get<float>() * emissiveStrength, 0.0f, 0.0f, 0.0f,
+              0.0f, emissiveFactor[1].get<float>() * emissiveStrength, 0.0f, 0.0f,
+              0.0f, 0.0f, emissiveFactor[2].get<float>() * emissiveStrength, 0.0f,
               0.0f, 0.0f, 0.0f, 0.0f,
               // clang-format on
           };
@@ -1109,9 +1109,9 @@ struct gltf_data
       } else if (mat.contains("emissiveFactor")) {
         const auto &emissiveFactor = mat["emissiveFactor"];
         float color[3] = {
-            emissiveFactor[0] * emissiveStrength,
-            emissiveFactor[1] * emissiveStrength,
-            emissiveFactor[2] * emissiveStrength
+            emissiveFactor[0].get<float>() * emissiveStrength,
+            emissiveFactor[1].get<float>() * emissiveStrength,
+            emissiveFactor[2].get<float>() * emissiveStrength
         };
         anari::setParameter(
             device, material, "emissive", ANARI_FLOAT32_VEC3, &color[0]);
