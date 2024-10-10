@@ -6,5 +6,6 @@
       "file": "../../../gltf-Sample-Assets/SimpleMorph/glTF/SimpleMorph.gltf"
     }
   },
-  "requiredFeatures": []
+  "requiredFeatures": [],
+  "optionalFeatures": []
 }

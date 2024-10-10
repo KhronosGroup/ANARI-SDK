@@ -6,5 +6,6 @@
       "file": "../../../gltf-Sample-Assets/TriangleWithoutIndices/glTF/TriangleWithoutIndices.gltf"
     }
   },
-  "requiredFeatures": []
+  "requiredFeatures": [],
+  "optionalFeatures": []
 }

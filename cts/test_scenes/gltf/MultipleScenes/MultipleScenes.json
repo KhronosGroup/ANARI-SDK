@@ -6,5 +6,6 @@
       "file": "../../../gltf-Sample-Assets/MultipleScenes/glTF/MultipleScenes.gltf"
     }
   },
-  "requiredFeatures": []
+  "requiredFeatures": [],
+  "optionalFeatures": []
 }

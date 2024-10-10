@@ -10,8 +10,8 @@
       "../../../gltf-Sample-Assets/StainedGlassLamp/glTF/StainedGlassLamp.gltf"
     ]
   },
-  "requiredFeatures": [
-    "ANARI_KHR_MATERIAL_PHYSICALLY_BASED",
-    "ANARI_KHR_SAMPLER_IMAGE2D"
+  "requiredFeatures": [],
+  "optionalFeatures": [
+    "ANARI_KHR_MATERIAL_PHYSICALLY_BASED"
   ]
 }

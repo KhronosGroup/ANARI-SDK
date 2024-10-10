@@ -15,5 +15,6 @@
   },
   "requiredFeatures": [
     "ANARI_KHR_CAMERA_ORTHOGRAPHIC"
-  ]
+  ],
+  "optionalFeatures": []
 }

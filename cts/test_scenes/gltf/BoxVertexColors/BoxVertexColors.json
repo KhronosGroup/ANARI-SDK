@@ -6,5 +6,6 @@
       "file": "../../../gltf-Sample-Assets/BoxVertexColors/glTF-Binary/BoxVertexColors.glb"
     }
   },
-  "requiredFeatures": []
+  "requiredFeatures": [],
+  "optionalFeatures": []
 }

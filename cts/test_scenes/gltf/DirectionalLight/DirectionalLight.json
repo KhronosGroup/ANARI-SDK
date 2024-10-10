@@ -13,7 +13,9 @@
     ]
   },
   "requiredFeatures": [
-    "ANARI_KHR_LIGHT_DIRECTIONAL",
+    "ANARI_KHR_LIGHT_DIRECTIONAL"
+  ],
+  "optionalFeatures": [
     "ANARI_KHR_MATERIAL_PHYSICALLY_BASED"
   ]
 }

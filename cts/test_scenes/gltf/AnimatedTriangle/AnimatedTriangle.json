@@ -6,5 +6,6 @@
       "file": "../../../gltf-Sample-Assets/AnimatedTriangle/glTF/AnimatedTriangle.gltf"
     }
   },
-  "requiredFeatures": []
+  "requiredFeatures": [],
+  "optionalFeatures": []
 }

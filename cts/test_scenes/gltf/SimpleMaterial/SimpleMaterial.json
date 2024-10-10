@@ -6,7 +6,8 @@
       "file": "../../../gltf-Sample-Assets/SimpleMaterial/glTF/SimpleMaterial.gltf"
     }
   },
-  "requiredFeatures": [
+  "requiredFeatures": [],
+  "optionalFeatures": [
     "ANARI_KHR_MATERIAL_PHYSICALLY_BASED"
   ]
 }

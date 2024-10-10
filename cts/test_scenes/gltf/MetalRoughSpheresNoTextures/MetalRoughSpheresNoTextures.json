@@ -6,7 +6,8 @@
       "file": "../../../gltf-Sample-Assets/MetalRoughSpheresNoTextures/glTF-Binary/MetalRoughSpheresNoTextures.glb"
     }
   },
-  "requiredFeatures": [
+  "requiredFeatures": [],
+  "optionalFeatures": [
     "ANARI_KHR_MATERIAL_PHYSICALLY_BASED"
   ]
 }
