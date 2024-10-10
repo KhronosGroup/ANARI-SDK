@@ -64,8 +64,7 @@ jobs:
         pipx ensurepath
         pipx install poetry
         poetry install
-        poetry shell
-        python3 ./createTestCasesFromGltf.py
+        poetry run python3 ./createTestCasesFromGltf.py
       
     - name: CTS test case creation Windows
       working-directory: ${{github.workspace}}/cts
@@ -75,8 +74,7 @@ jobs:
         python -m pipx ensurepath
         pipx install poetry
         poetry install
-        poetry shell
-        python ./createTestCasesFromGltf.py
+        poetry run python ./createTestCasesFromGltf.py
 
     - name: CTS test case creation MacOS
       working-directory: ${{github.workspace}}/cts
@@ -86,8 +84,7 @@ jobs:
         pipx ensurepath
         pipx install poetry
         poetry install
-        poetry shell
-        python3 ./createTestCasesFromGltf.py
+        poetry run python3 ./createTestCasesFromGltf.py
 
     - name: CTS create reference data Linux
       working-directory: ${{github.workspace}}/cts
