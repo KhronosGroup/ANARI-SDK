@@ -44,7 +44,8 @@ class SceneGeneratorWrapper
   void loadGLTF(const std::string &jsonText,
       std::vector<std::string> &sortedBuffers,
       std::vector<std::string> &sortedImages,
-      bool generateTangents)
+      bool generateTangents,
+      bool parseLights)
   {
     if (m_sceneGenerator) {
       std::vector<std::vector<char>> convertedBuffers;
@@ -57,7 +58,11 @@ class SceneGeneratorWrapper
         convertedImages.emplace_back(
             sortedImages[i].begin(), sortedImages[i].end());
       }
-      m_sceneGenerator->loadGLTF(jsonText, convertedBuffers, convertedImages, generateTangents);
+      m_sceneGenerator->loadGLTF(jsonText,
+          convertedBuffers,
+          convertedImages,
+          generateTangents,
+          parseLights);
     }
   }
 

@@ -486,6 +486,7 @@ def apply_to_scenes(
     check_features=True,
     use_generator=True,
     tangent_gen=True,
+    light_parsing=True,
     *args,
 ):
     result = {}
@@ -655,6 +656,7 @@ def apply_to_scenes(
                                     gltf.buffers,
                                     gltf.images,
                                     tangent_gen,
+                                    light_parsing,
                                 )
                     else:
                         sceneGenerator.setParameter(key, value)
@@ -797,6 +799,7 @@ def apply_to_scenes(
                                         gltf.buffers,
                                         gltf.images,
                                         tangent_gen,
+                                        light_parsing,
                                     )
                             else:
                                 sceneGenerator.setParameter(key, permutation[i])
@@ -858,6 +861,7 @@ def render_scenes(
     check_features=True,
     output=".",
     tangent_gen=True,
+    light_parsing=True,
 ):
     apply_to_scenes(
         render_scene,
@@ -869,6 +873,7 @@ def render_scenes(
         check_features,
         True,
         tangent_gen,
+        light_parsing,
         output,
     )
 
@@ -1134,6 +1139,7 @@ def create_report(
     verbosity=0,
     check_features=True,
     tangent_gen=True,
+    light_parsing=True,
     comparison_methods=["ssim"],
     thresholds=None,
     custom_compare_function=None,
@@ -1165,6 +1171,7 @@ def create_report(
         check_features,
         True,
         tangent_gen,
+        light_parsing,
         output,
         comparison_methods,
         thresholds,
@@ -1186,6 +1193,7 @@ def create_report(
         check_features,
         False,
         tangent_gen,
+        light_parsing,
         output,
         comparison_methods,
         thresholds,
@@ -1306,6 +1314,13 @@ if __name__ == "__main__":
         help="If set, the CTS will not generate tangents for glTF test files that do not have any",
     )
 
+    noLightParsing = argparse.ArgumentParser(add_help=False)
+    noLightParsing.add_argument(
+        "--no_light_parsing",
+        action="store_true",
+        help="If set, the CTS will not parse lights for glTF test files - ambient lighting will be used in rendering",
+    )
+
     deviceParser = argparse.ArgumentParser(add_help=False, parents=[libraryParser])
     deviceParser.add_argument(
         "-d", "--device", default=None, help="ANARI device on which to perform the test"
@@ -1353,7 +1368,7 @@ if __name__ == "__main__":
     renderScenesParser = subparsers.add_parser(
         "render_scenes",
         description="Renders an image to disk for each test scene",
-        parents=[sceneParser, ignoreFeatureParser, noTangentGenParser],
+        parents=[sceneParser, ignoreFeatureParser, noTangentGenParser, noLightParsing],
     )
     renderScenesParser.add_argument("-o", "--output", default=".", help="Output path")
 
@@ -1425,6 +1440,7 @@ if __name__ == "__main__":
             evaluationMethodParser,
             ignoreFeatureParser,
             noTangentGenParser,
+            noLightParsing,
         ],
         description="Runs all tests and creates a pdf report",
     )
@@ -1486,6 +1502,7 @@ if __name__ == "__main__":
             not args.ignore_features,
             args.output,
             not args.no_tangent_generation,
+            not args.no_light_parsing,
         )
     elif args.command == "compare_images":
         compare_images(
@@ -1522,6 +1539,7 @@ if __name__ == "__main__":
             verboseLevel,
             not args.ignore_features,
             not args.no_tangent_generation,
+            not args.no_light_parsing,
             args.comparison_methods,
             args.thresholds,
         )

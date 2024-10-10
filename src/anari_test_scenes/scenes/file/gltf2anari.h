@@ -1788,7 +1788,7 @@ struct gltf_data
   }
 
   template <typename T>
-  void traverse_node(const T &node, const float *parent_transform)
+  void traverse_node(const T &node, const float *parent_transform, bool parseLights)
   {
     float matrix[16] = {
         // clang-format off
@@ -1872,7 +1872,8 @@ struct gltf_data
       cameras.emplace_back(camera);
     }
     if (node.contains("extensions")
-        && node["extensions"].contains("KHR_lights_punctual")) {
+        && node["extensions"].contains("KHR_lights_punctual") 
+        && parseLights) {
       const auto &glTFLights = gltf["extensions"]["KHR_lights_punctual"]["lights"];
       const auto &glTFLight = glTFLights.at(
           int(node["extensions"]["KHR_lights_punctual"]["light"]));
@@ -1950,12 +1951,12 @@ struct gltf_data
     if (node.contains("children")) {
       for (int i : node["children"]) {
         const auto &node = gltf["nodes"].at(i);
-        traverse_node(node, transform);
+        traverse_node(node, transform, parseLights);
       }
     }
   }
 
-  void load_nodes()
+  void load_nodes(bool parseLights = true)
   {
     if (!gltf.contains("scenes"))
       return;
@@ -1973,7 +1974,7 @@ struct gltf_data
       instances.emplace_back();
       for (int i : scene["nodes"]) {
         const auto &node = gltf["nodes"].at(i);
-        traverse_node(node, identity);
+        traverse_node(node, identity, parseLights);
       }
     }
   }
@@ -1981,14 +1982,15 @@ struct gltf_data
   void parse_glTF(const std::string &jsonText,
       std::vector<std::vector<char>> &sortedBuffers,
       std::vector<std::vector<char>> &sortedImages,
-      bool generateTangents = true)
+      bool generateTangents = true,
+      bool parseLights = true)
   {
     gltf = json::parse(jsonText);
     buffers = std::move(sortedBuffers);
     load_assets(sortedImages);
     load_materials();
     load_surfaces(generateTangents);
-    load_nodes();
+    load_nodes(parseLights);
   }
 
   void open_file(const std::string &filename)

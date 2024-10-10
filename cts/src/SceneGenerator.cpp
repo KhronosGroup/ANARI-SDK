@@ -91,10 +91,12 @@ std::vector<anari::scenes::ParameterInfo> SceneGenerator::parameters()
 void SceneGenerator::loadGLTF(const std::string &jsonText,
     std::vector<std::vector<char>> &sortedBuffers,
     std::vector<std::vector<char>> &sortedImages,
-    bool generateTangents)
+    bool generateTangents,
+    bool parseLights)
 {
   m_gltf = gltf_data(m_device);
-  m_gltf.parse_glTF(jsonText, sortedBuffers, sortedImages, generateTangents);
+  m_gltf.parse_glTF(
+      jsonText, sortedBuffers, sortedImages, generateTangents, parseLights);
 }
 
 int SceneGenerator::anariTypeFromString(const std::string& type)
