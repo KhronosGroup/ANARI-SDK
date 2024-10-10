@@ -6,5 +6,6 @@
       "file": "../../../gltf-Sample-Assets/SimpleMeshes/glTF/SimpleMeshes.gltf"
     }
   },
-  "requiredFeatures": []
+  "requiredFeatures": [],
+  "optionalFeatures": []
 }

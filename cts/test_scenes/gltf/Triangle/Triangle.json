@@ -6,5 +6,6 @@
       "file": "../../../gltf-Sample-Assets/Triangle/glTF/Triangle.gltf"
     }
   },
-  "requiredFeatures": []
+  "requiredFeatures": [],
+  "optionalFeatures": []
 }

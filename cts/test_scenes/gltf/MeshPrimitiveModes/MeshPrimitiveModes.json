@@ -6,5 +6,6 @@
       "file": "../../../gltf-Sample-Assets/MeshPrimitiveModes/glTF/MeshPrimitiveModes.gltf"
     }
   },
-  "requiredFeatures": []
+  "requiredFeatures": [],
+  "optionalFeatures": []
 }

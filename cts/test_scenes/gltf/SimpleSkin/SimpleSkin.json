@@ -6,5 +6,6 @@
       "file": "../../../gltf-Sample-Assets/SimpleSkin/glTF/SimpleSkin.gltf"
     }
   },
-  "requiredFeatures": []
+  "requiredFeatures": [],
+  "optionalFeatures": []
 }

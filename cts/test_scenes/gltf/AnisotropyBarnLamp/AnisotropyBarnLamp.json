@@ -9,8 +9,8 @@
       "../../../gltf-Sample-Assets/AnisotropyBarnLamp/glTF-Binary/AnisotropyBarnLamp.glb"
     ]
   },
-  "requiredFeatures": [
-    "ANARI_KHR_MATERIAL_PHYSICALLY_BASED",
-    "ANARI_KHR_SAMPLER_IMAGE2D"
+  "requiredFeatures": [],
+  "optionalFeatures": [
+    "ANARI_KHR_MATERIAL_PHYSICALLY_BASED"
   ]
 }

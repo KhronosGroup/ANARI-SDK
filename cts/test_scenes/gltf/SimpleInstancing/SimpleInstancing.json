@@ -6,5 +6,6 @@
       "file": "../../../gltf-Sample-Assets/SimpleInstancing/glTF-Binary/SimpleInstancing.glb"
     }
   },
-  "requiredFeatures": []
+  "requiredFeatures": [],
+  "optionalFeatures": []
 }

@@ -9,7 +9,8 @@
       "../../../gltf-Sample-Assets/Box/glTF-Binary/Box.glb"
     ]
   },
-  "requiredFeatures": [
+  "requiredFeatures": [],
+  "optionalFeatures": [
     "ANARI_KHR_MATERIAL_PHYSICALLY_BASED"
   ]
 }
