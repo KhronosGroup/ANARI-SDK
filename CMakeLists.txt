@@ -53,9 +53,10 @@ option(USE_WEBP "Use webp when loading glTF files" OFF)
 option(USE_KTX "Use ktx when loading glTF files" OFF)
 
 if (CTS_ENABLE_GLTF)
-    set(USE_KTX ON)
-    set(USE_WEBP ON)
-    set(USE_DRACO ON)
+    # To enforce WEBP, KTX and DRACO support (CI does not have these dependecies)
+    # set(USE_KTX ON)
+    # set(USE_WEBP ON)
+    # set(USE_DRACO ON)
 endif()
 
 option(BUILD_EXAMPLES "Build example applications and example device" ON)
@@ -81,8 +82,9 @@ cmake_dependent_option(VIEWER_ENABLE_GLTF
   OFF
 )
 if (VIEWER_ENABLE_GLTF)
-    set(USE_WEBP ON)
-    set(USE_DRACO ON)
+    # To enforce WEBP and DRACO support (CI does not have these dependecies)
+    # set(USE_WEBP ON)
+    # set(USE_DRACO ON)
 endif()
 cmake_dependent_option(VIEWER_ENABLE_KTX
   "Enable KTX support in viewer"
