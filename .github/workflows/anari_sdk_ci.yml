@@ -93,22 +93,16 @@ jobs:
       working-directory: ${{github.workspace}}/cts
       if: ${{ matrix.os == 'ubuntu-latest' }}
       run: |
-        poetry install
-        poetry shell
-        python3 ./createReferenceData.py
+        poetry run python3 ./createReferenceData.py
         
-    - name: CTS reate reference data Windows
+    - name: CTS create reference data Windows
       working-directory: ${{github.workspace}}/cts
       if: ${{ matrix.os == 'windows-latest' }}
       run: |
-        poetry install
-        poetry shell
-        python ./createReferenceData.py
+        poetry run python ./createReferenceData.py
 
     - name: CTS create reference data MacOS
       working-directory: ${{github.workspace}}/cts
       if: ${{ matrix.os == 'macos-latest' }}
       run: |
-        poetry install
-        poetry shell
-        python3 ./createReferenceData.py
+        poetry run python3 ./createReferenceData.py
