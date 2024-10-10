@@ -808,14 +808,6 @@ void SceneGenerator::commit()
     }
   }
 
-  if (auto lightIt = m_anariObjects.find(ANARI_LIGHT);
-      instances.empty() && lightIt != m_anariObjects.end() && !lightIt->second.empty()) {
-    anari::setAndReleaseParameter(d,
-        m_world,
-        "light",
-        anari::newArray1D(d, lightIt->second.data(), lightIt->second.size()));
-  }
-
   if (spatialFieldDim[0] != 0 && spatialFieldDim[1] != 0
       && spatialFieldDim[2] != 0) {
     // create spatial field
@@ -867,11 +859,25 @@ void SceneGenerator::commit()
     }
   }
 
+  std::vector<ANARIObject> lights;
+  if (auto lightIt = m_anariObjects.find(ANARI_LIGHT); instances.empty()
+      && lightIt != m_anariObjects.end() && !lightIt->second.empty()) {
+    lights = lightIt->second;
+  }
+
   std::string glTFPath = getParamString("gltf_file", "");
   if (!glTFPath.empty()) {
     instances.insert(instances.end(),
         m_gltf.instances[0].begin(),
         m_gltf.instances[0].end());
+    lights.insert(lights.end(), m_gltf.lights.begin(), m_gltf.lights.end());
+  }
+
+  if (lights.size() > 0) {
+    anari::setAndReleaseParameter(d,
+        m_world,
+        "light",
+        anari::newArray1D(d, lights.data(), lights.size()));
   }
 
   if (!instances.empty()) {
