@@ -540,11 +540,11 @@ def apply_to_scenes(
                 for feature in parsed_json["requiredFeatures"]:
                     if not check_feature(feature_list, feature):
                         all_features_available = False
-                        print("Feature %s is not supported" % feature)
+                        print(f"Feature {feature} is not supported")
 
             if not all_features_available and check_features:
                 # skip this test scene if a required feature is missing
-                print("Scene %s is not supported" % json_file_path)
+                print(f"Scene {json_file_path} is not supported")
                 result[test_name] = "Features not supported"
                 continue
             try:
