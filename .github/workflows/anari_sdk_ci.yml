@@ -16,7 +16,6 @@ jobs:
         config: [Release, Debug]
     env:
       ANARI_LIBRARY: helide
-      PYTHONPATH: ${{github.workspace}}/build/${{matrix.config}}
 
     steps:
     - uses: actions/checkout@v3
@@ -59,6 +58,8 @@ jobs:
     
     - name: CTS test case creation Linux
       working-directory: ${{github.workspace}}/cts
+      env: 
+        PYTHONPATH: ${{github.workspace}}/build/install/lib
       if: ${{ matrix.os == 'ubuntu-latest' }}
       run: |
         sudo apt install pipx
@@ -69,6 +70,8 @@ jobs:
       
     - name: CTS test case creation Windows
       working-directory: ${{github.workspace}}/cts
+      env: 
+        PYTHONPATH: ${{github.workspace}}/build/install/${{matrix.config}}/bin
       if: ${{ matrix.os == 'windows-latest' }}
       run: |
         python -m pip install --user pipx
@@ -79,6 +82,8 @@ jobs:
 
     - name: CTS test case creation MacOS
       working-directory: ${{github.workspace}}/cts
+      env: 
+        PYTHONPATH: ${{github.workspace}}/build/install/lib
       if: ${{ matrix.os == 'macos-latest' }}
       run: |
         brew install pipx
@@ -89,18 +94,24 @@ jobs:
 
     - name: CTS create reference data Linux
       working-directory: ${{github.workspace}}/cts
+      env: 
+        PYTHONPATH: ${{github.workspace}}/build/install/lib
       if: ${{ matrix.os == 'ubuntu-latest' }}
       run: |
         poetry run python3 ./createReferenceData.py
         
     - name: CTS create reference data Windows
       working-directory: ${{github.workspace}}/cts
+      env: 
+        PYTHONPATH: ${{github.workspace}}/build/install/${{matrix.config}}/bin
       if: ${{ matrix.os == 'windows-latest' }}
       run: |
         poetry run python ./createReferenceData.py
 
     - name: CTS create reference data MacOS
       working-directory: ${{github.workspace}}/cts
+      env: 
+        PYTHONPATH: ${{github.workspace}}/build/install/lib
       if: ${{ matrix.os == 'macos-latest' }}
       run: |
         poetry run python3 ./createReferenceData.py
