@@ -1,0 +1,15 @@
+{
+  "description": "Test FlightHelmet",
+  "sceneParameters": {
+    "primitiveCount": 0,
+    "gltf": {
+      "file": "../../../gltf-Sample-Assets/FlightHelmet/glTF/FlightHelmet.gltf"
+    }
+  },
+  "requiredFeatures": [
+    "ANARI_KHR_SAMPLER_IMAGE2D"
+  ],
+  "optionalFeatures": [
+    "ANARI_KHR_MATERIAL_PHYSICALLY_BASED"
+  ]
+}

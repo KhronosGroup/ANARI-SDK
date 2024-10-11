@@ -1,0 +1,13 @@
+{
+  "description": "Test OrientationTest",
+  "sceneParameters": {
+    "primitiveCount": 0,
+    "gltf": {
+      "file": "../../../gltf-Sample-Assets/OrientationTest/glTF-Binary/OrientationTest.glb"
+    }
+  },
+  "requiredFeatures": [],
+  "optionalFeatures": [
+    "ANARI_KHR_MATERIAL_PHYSICALLY_BASED"
+  ]
+}

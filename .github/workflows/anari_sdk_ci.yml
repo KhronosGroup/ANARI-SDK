@@ -6,16 +6,16 @@ on:
   pull_request:
     branches: [ main, next_release ]
 
-env:
-  ANARI_LIBRARY: helide
-
 jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         config: [Release, Debug]
+    env:
+      ANARI_LIBRARY: helide
 
     steps:
     - uses: actions/checkout@v3
@@ -36,6 +36,7 @@ jobs:
         -DBUILD_REMOTE_DEVICE=${{ matrix.os == 'ubuntu-latest' }}
         -DBUILD_TESTING=ON
         -DBUILD_VIEWER=OFF
+        -DCTS_ENABLE_GLTF=OFF
 
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config ${{ matrix.config }} --target install
@@ -51,3 +52,73 @@ jobs:
     - name: Tutorial Tests
       working-directory: ${{github.workspace}}/build
       run: ctest -R anariTutorial -C ${{ matrix.config }}
+
+    - name: Build CTS
+      run: cmake --build ${{github.workspace}}/build --config ${{ matrix.config }} --target anariCTSBackend
+    
+    - name: Debug Output Windows
+      working-directory: ${{github.workspace}}/build/install/
+      if: ${{ matrix.os == 'windows-latest' }}
+      run: |
+        echo "Directories in build/install/:"
+        ls
+    
+    - name: CTS test case creation Linux
+      working-directory: ${{github.workspace}}/build/install/share/anari/cts
+      env: 
+        PYTHONPATH: ${{github.workspace}}/build/install/lib
+      if: ${{ matrix.os == 'ubuntu-latest' }}
+      run: |
+        sudo apt install pipx
+        pipx ensurepath
+        pipx install poetry
+        poetry install
+        poetry run python3 ./createTestCasesFromGltf.py
+      
+    - name: CTS test case creation Windows
+      working-directory: ${{github.workspace}}/build/install/share/anari/cts
+      env: 
+        PYTHONPATH: ${{github.workspace}}/build/install/bin
+      if: ${{ matrix.os == 'windows-latest' }}
+      run: |
+        python -m pip install --user pipx
+        python -m pipx ensurepath
+        pipx install poetry
+        poetry install
+        poetry run python ./createTestCasesFromGltf.py
+
+    - name: CTS test case creation MacOS
+      working-directory: ${{github.workspace}}/build/install/share/anari/cts
+      env: 
+        PYTHONPATH: ${{github.workspace}}/build/install/lib
+      if: ${{ matrix.os == 'macos-latest' }}
+      run: |
+        brew install pipx
+        pipx ensurepath
+        pipx install poetry
+        poetry install
+        poetry run python3 ./createTestCasesFromGltf.py
+
+    - name: CTS create reference data Linux
+      working-directory: ${{github.workspace}}/build/install/share/anari/cts
+      env: 
+        PYTHONPATH: ${{github.workspace}}/build/install/lib
+      if: ${{ matrix.os == 'ubuntu-latest' }}
+      run: |
+        poetry run python3 ./createReferenceData.py
+        
+    - name: CTS create reference data Windows
+      working-directory: ${{github.workspace}}/build/install/share/anari/cts
+      env: 
+        PYTHONPATH: ${{github.workspace}}/build/install/bin
+      if: ${{ matrix.os == 'windows-latest' }}
+      run: |
+        poetry run python ./createReferenceData.py
+
+    - name: CTS create reference data MacOS
+      working-directory: ${{github.workspace}}/build/install/share/anari/cts
+      env: 
+        PYTHONPATH: ${{github.workspace}}/build/install/lib
+      if: ${{ matrix.os == 'macos-latest' }}
+      run: |
+        poetry run python3 ./createReferenceData.py

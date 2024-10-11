@@ -1,8 +1,12 @@
 ## Copyright 2021-2024 The Khronos Group
 ## SPDX-License-Identifier: Apache-2.0
 
-project(anari_test_scenes LANGUAGES CXX)
+project(anari_test_scenes LANGUAGES C CXX)
 
+message("Reached CMakeLists in anari/anari_test_scenes/")
+message(${CMAKE_CURRENT_BINARY_DIR})
+message(${CMAKE_CURRENT_LIST_DIR})
+message("${CMAKE_INSTALL_INCLUDEDIR}/anari/anari_test_scenes")
 project_add_library()
 project_sources(PRIVATE
   anari_test_scenes.cpp
@@ -28,20 +32,30 @@ PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/anari/anari_test_scenes>
 )
-project_link_libraries(PUBLIC helium PRIVATE $<BUILD_INTERFACE:stb_image>)
+project_link_libraries(PUBLIC helium PUBLIC $<BUILD_INTERFACE:stb_image>)
+project_link_libraries(PUBLIC helium PUBLIC $<BUILD_INTERFACE:mikktspace>)
 
 if (VIEWER_ENABLE_GLTF)
   project_sources(PRIVATE scenes/file/glTF.cpp)
-  find_package(draco REQUIRED)
-  find_package(WebP REQUIRED)
-  project_link_libraries(PUBLIC WebP::webp draco::draco)
   project_compile_definitions(PRIVATE ENABLE_GLTF=1)
 endif()
 
-if (VIEWER_ENABLE_KTX)
+if (USE_DRACO)
+  find_package(draco REQUIRED)
+  project_link_libraries(PUBLIC draco::draco)
+  project_compile_definitions(PUBLIC -DUSE_DRACO)
+endif()
+
+if (USE_WEBP)
+  find_package(WebP REQUIRED)
+  project_link_libraries(PUBLIC WebP::webp)
+  project_compile_definitions(PUBLIC -DUSE_WEBP)
+endif()
+
+if (USE_KTX)
   find_package(Ktx REQUIRED)
   project_link_libraries(PUBLIC KTX::ktx)
-  project_compile_definitions(PRIVATE ENABLE_KTX=1)
+  project_compile_definitions(PUBLIC -DUSE_KTX)
 endif()
 
 include(GenerateExportHeader)

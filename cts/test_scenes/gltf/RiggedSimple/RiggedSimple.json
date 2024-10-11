@@ -1,0 +1,16 @@
+{
+  "description": "Test RiggedSimple",
+  "sceneParameters": {
+    "primitiveCount": 0
+  },
+  "permutations": {
+    "/gltf/file": [
+      "../../../gltf-Sample-Assets/RiggedSimple/glTF-Draco/RiggedSimple.gltf",
+      "../../../gltf-Sample-Assets/RiggedSimple/glTF-Binary/RiggedSimple.glb"
+    ]
+  },
+  "requiredFeatures": [],
+  "optionalFeatures": [
+    "ANARI_KHR_MATERIAL_PHYSICALLY_BASED"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "description": "Test BarramundiFish",
+  "sceneParameters": {
+    "primitiveCount": 0
+  },
+  "permutations": {
+    "/gltf/file": [
+      "../../../gltf-Sample-Assets/BarramundiFish/glTF-Draco/BarramundiFish.gltf",
+      "../../../gltf-Sample-Assets/BarramundiFish/glTF-Binary/BarramundiFish.glb"
+    ]
+  },
+  "requiredFeatures": [
+    "ANARI_KHR_SAMPLER_IMAGE2D"
+  ],
+  "optionalFeatures": [
+    "ANARI_KHR_MATERIAL_PHYSICALLY_BASED"
+  ]
+}
