@@ -827,7 +827,7 @@ struct gltf_data
             }
             ANARIMemoryDeleter d = [](const void *usrPtr, const void *mem) {
               void *p = const_cast<void *>(usrPtr); 
-              ktxTexture2_Destroy(reinterpret_cast<ktxTexture2*>(p));
+              ktxTexture_Destroy(reinterpret_cast<ktxTexture*>(p));
             };
             return std::make_tuple(data, d, texture);
           });
