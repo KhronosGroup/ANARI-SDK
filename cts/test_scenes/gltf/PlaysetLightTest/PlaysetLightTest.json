@@ -1,0 +1,23 @@
+{
+  "description": "Test PlaysetLightTest",
+  "sceneParameters": {
+    "primitiveCount": 0,
+    "gltf": {
+      "file": "../../../gltf-Sample-Assets/PlaysetLightTest/glTF-Binary/PlaysetLightTest.glb"
+    }
+  },
+  "permutations": {
+    "/gltf/camera": [
+      null,
+      0
+    ]
+  },
+  "requiredFeatures": [
+    "ANARI_KHR_LIGHT_DIRECTIONAL",
+    "ANARI_KHR_LIGHT_POINT",
+    "ANARI_KHR_SAMPLER_IMAGE2D"
+  ],
+  "optionalFeatures": [
+    "ANARI_KHR_MATERIAL_PHYSICALLY_BASED"
+  ]
+}

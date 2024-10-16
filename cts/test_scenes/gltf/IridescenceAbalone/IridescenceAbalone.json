@@ -1,0 +1,15 @@
+{
+  "description": "Test IridescenceAbalone",
+  "sceneParameters": {
+    "primitiveCount": 0,
+    "gltf": {
+      "file": "../../../gltf-Sample-Assets/IridescenceAbalone/glTF-Binary/IridescenceAbalone.glb"
+    }
+  },
+  "requiredFeatures": [
+    "ANARI_KHR_SAMPLER_IMAGE2D"
+  ],
+  "optionalFeatures": [
+    "ANARI_KHR_MATERIAL_PHYSICALLY_BASED"
+  ]
+}

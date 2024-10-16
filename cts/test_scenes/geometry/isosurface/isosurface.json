@@ -8,7 +8,7 @@
       ],
       "primitiveCount": 3,
       "frame_depth_type": "FLOAT32",
-      "geometrySubtype": "",
+      "geometrySubtype": "isosurface",
       "color": "primitive.color",
       "anari_objects": {
         "geometry": [

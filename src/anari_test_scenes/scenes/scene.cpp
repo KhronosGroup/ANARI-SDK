@@ -8,6 +8,8 @@
 namespace anari {
 namespace scenes {
 
+constexpr float cameraDistanceFactor = 1.0f;
+
 TestScene::TestScene(anari::Device device) : m_device(device)
 {
   anari::retain(m_device, m_device);
@@ -23,9 +25,9 @@ Camera TestScene::createDefaultCameraFromWorld()
   const box3 b = bounds();
   const math::float3 bounds_size = b[1] - b[0];
   const math::float3 bounds_center = 0.5f * (b[0] + b[1]);
-  const float distance = math::length(bounds_size) * 0.8f;
+  const float distance = math::length(bounds_size) * cameraDistanceFactor;
 
-  const math::float3 eye_pos = bounds_center + math::float3(0, 0, -distance);
+  const math::float3 eye_pos = bounds_center + math::float3(0, 0, distance);
 
   Camera cam;
 

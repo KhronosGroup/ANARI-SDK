@@ -3,6 +3,13 @@
 
 cmake_minimum_required(VERSION 3.1)
 
+# Fix "DOWNLOAD_EXTRACT_TIMESTAMP" warning
+if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
+  cmake_policy(SET CMP0135 NEW)
+endif()
+
+include(FetchContent)
+
 if (TARGET anari)
   list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/../cmake)
 endif()
@@ -69,6 +76,17 @@ if (CTS_DEV AND NOT BUILD_SHARED_LIBS)
   )
 endif()
 
+message("Fetching glTF Sample Models")
+FetchContent_Declare(glTFSampleAssets
+  GIT_REPOSITORY https://github.com/KhronosGroup/glTF-Sample-Assets.git
+  GIT_TAG 754a32a333b27698b6c36d8bec8ff7ed5f729538)
+FetchContent_MakeAvailable(glTFSampleAssets)
+
+message("Copying glTF Sample Models")
+file(GLOB GLTF_SAMPLE_ASSETS_FILES ${gltfsampleassets_SOURCE_DIR}/Models/*)
+list(FILTER GLTF_SAMPLE_ASSETS_FILES EXCLUDE REGEX ".*Unicode❤♻Test")
+file(COPY ${GLTF_SAMPLE_ASSETS_FILES} DESTINATION ${CMAKE_CURRENT_LIST_DIR}/gltf-Sample-Assets)
+
 ## Installation ##
 
 # .pyd files are considered library files
@@ -93,5 +111,9 @@ install(FILES ${python_files} ${CMAKE_CURRENT_LIST_DIR}/default_test_scene.json
 )
 
 install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/test_scenes
+  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/anari/cts
+)
+
+install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/gltf-Sample-Assets
   DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/anari/cts
 )

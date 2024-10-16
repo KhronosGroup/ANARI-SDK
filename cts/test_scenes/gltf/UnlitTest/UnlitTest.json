@@ -1,0 +1,13 @@
+{
+  "description": "Test UnlitTest",
+  "sceneParameters": {
+    "primitiveCount": 0,
+    "gltf": {
+      "file": "../../../gltf-Sample-Assets/UnlitTest/glTF-Binary/UnlitTest.glb"
+    }
+  },
+  "requiredFeatures": [],
+  "optionalFeatures": [
+    "ANARI_KHR_MATERIAL_PHYSICALLY_BASED"
+  ]
+}

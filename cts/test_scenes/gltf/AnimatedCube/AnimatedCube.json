@@ -1,0 +1,15 @@
+{
+  "description": "Test AnimatedCube",
+  "sceneParameters": {
+    "primitiveCount": 0,
+    "gltf": {
+      "file": "../../../gltf-Sample-Assets/AnimatedCube/glTF/AnimatedCube.gltf"
+    }
+  },
+  "requiredFeatures": [
+    "ANARI_KHR_SAMPLER_IMAGE2D"
+  ],
+  "optionalFeatures": [
+    "ANARI_KHR_MATERIAL_PHYSICALLY_BASED"
+  ]
+}

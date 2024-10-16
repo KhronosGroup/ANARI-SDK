@@ -1,0 +1,13 @@
+{
+  "description": "Test AnimatedMorphCube",
+  "sceneParameters": {
+    "primitiveCount": 0,
+    "gltf": {
+      "file": "../../../gltf-Sample-Assets/AnimatedMorphCube/glTF-Binary/AnimatedMorphCube.glb"
+    }
+  },
+  "requiredFeatures": [],
+  "optionalFeatures": [
+    "ANARI_KHR_MATERIAL_PHYSICALLY_BASED"
+  ]
+}

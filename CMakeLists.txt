@@ -45,7 +45,20 @@ set(CMAKE_INSTALL_RPATH "$ORIGIN:$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
 option(BUILD_SHARED_LIBS "Build shared libraries instead of static" ON)
 option(BUILD_TESTING "Build tests for CTest" ON)
 # ANARI specific options
+
 option(BUILD_CTS "Build cts toolkit" ON)
+cmake_dependent_option(CTS_ENABLE_GLTF "Enable glTF support for cts" ON "BUILD_CTS" ON)
+option(USE_DRACO "Use draco when loading glTF files" OFF)
+option(USE_WEBP "Use webp when loading glTF files" OFF)
+option(USE_KTX "Use ktx when loading glTF files" OFF)
+
+if (CTS_ENABLE_GLTF)
+    # To enforce WEBP, KTX and DRACO support (CI does not have these dependecies)
+    # set(USE_KTX ON)
+    # set(USE_WEBP ON)
+    # set(USE_DRACO ON)
+endif()
+
 option(BUILD_EXAMPLES "Build example applications and example device" ON)
 cmake_dependent_option(BUILD_VIEWER
   "Build interactive viewer app (requires GLFW)"
@@ -68,12 +81,20 @@ cmake_dependent_option(VIEWER_ENABLE_GLTF
   "BUILD_VIEWER"
   OFF
 )
+if (VIEWER_ENABLE_GLTF)
+    # To enforce WEBP and DRACO support (CI does not have these dependecies)
+    # set(USE_WEBP ON)
+    # set(USE_DRACO ON)
+endif()
 cmake_dependent_option(VIEWER_ENABLE_KTX
   "Enable KTX support in viewer"
   OFF
   "BUILD_VIEWER"
   OFF
 )
+if (VIEWER_ENABLE_KTX)
+    set(USE_KTX ON)
+endif()
 
 ## The generate_all targets collects all offline code generation targets
 

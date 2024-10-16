@@ -32,6 +32,10 @@ PYBIND11_MODULE(anariCTSBackend, m)
 
   py::class_<cts::SceneGeneratorWrapper>(m, "SceneGenerator")
       .def(py::init<const std::string&, const std::optional<std::string>, const std::optional<py::function>&>(), py::call_guard<py::gil_scoped_release>())
+      .def(py::init<py::function &>(), py::call_guard<py::gil_scoped_release>())
+      .def("loadGLTF",
+          &cts::SceneGeneratorWrapper::loadGLTF,
+          py::call_guard<py::gil_scoped_release>())
       .def("setParameter", &cts::SceneGeneratorWrapper::setParam<std::string>, py::call_guard<py::gil_scoped_release>())
       .def("setParameter", &cts::SceneGeneratorWrapper::setParam<bool>, py::call_guard<py::gil_scoped_release>())
       .def("setParameter", &cts::SceneGeneratorWrapper::setParam<int>, py::call_guard<py::gil_scoped_release>())

@@ -1,0 +1,35 @@
+{
+  "description": "Test VirtualCity",
+  "sceneParameters": {
+    "primitiveCount": 0
+  },
+  "permutations": {
+    "/gltf/file": [
+      "../../../gltf-Sample-Assets/VirtualCity/glTF-Draco/VirtualCity.gltf",
+      "../../../gltf-Sample-Assets/VirtualCity/glTF-Binary/VirtualCity.glb"
+    ],
+    "/gltf/camera": [
+      null,
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13
+    ]
+  },
+  "requiredFeatures": [
+    "ANARI_KHR_SAMPLER_IMAGE2D"
+  ],
+  "optionalFeatures": [
+    "ANARI_KHR_MATERIAL_PHYSICALLY_BASED"
+  ]
+}
