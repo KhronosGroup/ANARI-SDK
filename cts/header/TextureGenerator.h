@@ -20,7 +20,7 @@ class TextureGenerator
   static std::vector<anari::math::float4> generateCheckerBoardNormalMap(
       size_t resolution);
 
-  static std::vector<anari::math::float4> generateCheckerBoardHDR(
+  static std::vector<anari::math::float3> generateCheckerBoardHDR(
       size_t resolution);
 
   static anari::math::float3 convertColorToNormal(anari::math::float3 color);
