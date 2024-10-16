@@ -24,6 +24,12 @@
           {
             "subtype": "structuredRegular"
           }
+        ],
+        "material": [
+          {
+            "subtype": "matte",
+            "color": "color"
+          }
         ]
       }
     },

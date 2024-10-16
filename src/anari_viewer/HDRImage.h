@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-namespace importers {
+namespace anari_viewer::importers {
 
 struct HDRImage
 {
@@ -19,4 +19,4 @@ struct HDRImage
   std::vector<float> pixel;
 };
 
-} // namespace importers
+} // namespace anari_viewer::importers

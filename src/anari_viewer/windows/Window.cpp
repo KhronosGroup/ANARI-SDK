@@ -3,7 +3,7 @@
 
 #include "Window.h"
 
-namespace anari_viewer {
+namespace anari_viewer::windows {
 
 Window::Window(const char *name, bool startShown, bool wrapBeginEnd)
     : m_name(name), m_visible(startShown), m_wrapBeginEnd(wrapBeginEnd)
@@ -55,4 +55,4 @@ ImGuiWindowFlags Window::windowFlags() const
   return 0;
 }
 
-} // namespace anari_viewer
+} // namespace anari_viewer::windows

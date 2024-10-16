@@ -573,12 +573,9 @@ def apply_to_scenes(
                                     subtype = item["subtype"]
                                 if (
                                     anariObjectName == "geometry"
-                                    and parsed_json["sceneParameters"][
-                                        "geometrySubtype"
-                                    ]
-                                    != None
-                                    and subtype
-                                    != parsed_json["sceneParameters"]["geometrySubtype"]
+                                    and parsed_json["sceneParameters"]["geometrySubtype"] != None
+                                    and parsed_json["sceneParameters"]["geometrySubtype"] != ""
+                                    and subtype != parsed_json["sceneParameters"]["geometrySubtype"]
                                 ):
                                     # If geometrySubtype is not the same as subtype ignore the generic anari object
                                     continue
