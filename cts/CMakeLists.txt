@@ -8,8 +8,6 @@ if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
   cmake_policy(SET CMP0135 NEW)
 endif()
 
-include(FetchContent)
-
 if (TARGET anari)
   list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/../cmake)
 endif()
@@ -76,14 +74,14 @@ if (CTS_DEV AND NOT BUILD_SHARED_LIBS)
   )
 endif()
 
-message("Fetching glTF Sample Models")
-FetchContent_Declare(glTFSampleAssets
-  GIT_REPOSITORY https://github.com/KhronosGroup/glTF-Sample-Assets.git
-  GIT_TAG 754a32a333b27698b6c36d8bec8ff7ed5f729538)
-FetchContent_MakeAvailable(glTFSampleAssets)
+anari_sdk_fetch_project(
+  NAME anari_cts_glTFSampleAssets
+  URL https://github.com/KhronosGroup/glTF-Sample-Assets/archive/754a32a333b27698b6c36d8bec8ff7ed5f729538.zip
+  MD5 1250786407d1d0e649faaade748c24ab
+)
 
 message("Copying glTF Sample Models")
-file(GLOB GLTF_SAMPLE_ASSETS_FILES ${gltfsampleassets_SOURCE_DIR}/Models/*)
+file(GLOB GLTF_SAMPLE_ASSETS_FILES ${anari_cts_glTFSampleAssets_LOCATION}/Models/*)
 list(FILTER GLTF_SAMPLE_ASSETS_FILES EXCLUDE REGEX ".*Unicode❤♻Test")
 file(COPY ${GLTF_SAMPLE_ASSETS_FILES} DESTINATION ${CMAKE_CURRENT_LIST_DIR}/gltf-Sample-Assets)
 
@@ -105,7 +103,7 @@ else()
 endif()
 
 install(FILES ${python_files} ${CMAKE_CURRENT_LIST_DIR}/default_test_scene.json
-  ${CMAKE_CURRENT_LIST_DIR}/pyproject.toml 
+  ${CMAKE_CURRENT_LIST_DIR}/pyproject.toml
   ${CMAKE_CURRENT_LIST_DIR}/poetry.lock
   DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/anari/cts
 )
