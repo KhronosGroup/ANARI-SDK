@@ -109,6 +109,8 @@ void Renderer::commit()
   m_ambientRadiance = getParam<float>("ambientRadiance", 1.f);
   m_falloffBlendRatio = getParam<float>("eyeLightBlendRatio", 0.5f);
   m_mode = renderModeFromString(getParamString("mode", "default"));
+  m_taskGrainSize.x = getParam<int32_t>("taskGrainSizeWidth", 4);
+  m_taskGrainSize.y = getParam<int32_t>("taskGrainSizeHeight", 4);
 }
 
 PixelSample Renderer::renderSample(
@@ -118,9 +120,9 @@ PixelSample Renderer::renderSample(
 
   // Intersect Surfaces //
 
-  RTCIntersectContext context;
-  rtcInitIntersectContext(&context);
-  rtcIntersect1(w.embreeScene(), &context, (RTCRayHit *)&ray);
+  RTCIntersectArguments iargs;
+  rtcInitIntersectArguments(&iargs);
+  rtcIntersect1(w.embreeScene(), (RTCRayHit *)&ray, &iargs);
   const bool hitGeometry = ray.geomID != RTC_INVALID_GEOMETRY_ID;
 
   // Intersect Volumes //

@@ -6,7 +6,7 @@
 // helium
 #include "helium/helium_math.h"
 // embree
-#include <embree3/rtcore_common.h>
+#include <embree4/rtcore_common.h>
 // std
 #include <array>
 #include <optional>
@@ -25,18 +25,19 @@ struct Ray
   float3 dir;
   float time{0.f};
   float tfar{std::numeric_limits<float>::max()};
-  unsigned int mask{~0u};
-  unsigned int id{0};
-  unsigned int flags{0};
+  uint32_t mask{~0u};
+  uint32_t id{0u};
+  uint32_t flags{0u};
 
   // Hit //
 
   float3 Ng;
   float u;
   float v;
-  unsigned int primID{RTC_INVALID_GEOMETRY_ID}; // primitive ID
-  unsigned int geomID{RTC_INVALID_GEOMETRY_ID}; // geometry ID
-  unsigned int instID{RTC_INVALID_GEOMETRY_ID}; // instance ID
+  uint32_t primID{RTC_INVALID_GEOMETRY_ID}; // primitive ID
+  uint32_t geomID{RTC_INVALID_GEOMETRY_ID}; // geometry ID
+  uint32_t instID{RTC_INVALID_GEOMETRY_ID}; // instance ID
+  uint32_t instArrayID{RTC_INVALID_GEOMETRY_ID}; // instance sub-array ID
 };
 
 struct Volume;
@@ -47,6 +48,7 @@ struct VolumeRay
   box1 t{0.f, std::numeric_limits<float>::max()};
   Volume *volume{nullptr};
   uint32_t instID{RTC_INVALID_GEOMETRY_ID};
+  uint32_t instArrayID{RTC_INVALID_GEOMETRY_ID};
 };
 
 using UniformAttributeSet = std::array<std::optional<float4>, 5>;

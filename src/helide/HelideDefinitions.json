@@ -39,18 +39,14 @@
       "parameters": [
         {
           "name": "allowInvalidMaterials",
-          "types": [
-            "ANARI_BOOL"
-          ],
+          "types": ["ANARI_BOOL"],
           "tags": [],
           "default": true,
           "description": "show surfaces with invalid materials"
         },
         {
           "name": "invalidMaterialColor",
-          "types": [
-            "ANARI_FLOAT32_VEC4"
-          ],
+          "types": ["ANARI_FLOAT32_VEC4"],
           "tags": [],
           "default": [
             1.0,
@@ -68,9 +64,7 @@
       "parameters": [
         {
           "name": "mode",
-          "types": [
-            "ANARI_STRING"
-          ],
+          "types": ["ANARI_STRING"],
           "tags": [],
           "default": "default",
           "values": [
@@ -95,14 +89,30 @@
         },
         {
           "name": "eyeLightBlendRatio",
-          "types": [
-            "ANARI_FLOAT32"
-          ],
+          "types": ["ANARI_FLOAT32"],
           "tags": [],
           "default": 0.5,
           "minimum": 0.0,
           "maximum": 1.0,
           "description": "how much eye lighting factor should be used in default render mode"
+        },
+        {
+          "name": "taskGrainSizeWidth",
+          "types": ["ANARI_INT32"],
+          "tags": [],
+          "default": 4,
+          "minimum": 1,
+          "maximum": 128,
+          "description": "grain size of the render task along the width of the frame"
+        },
+        {
+          "name": "taskGrainSizeHeight",
+          "types": ["ANARI_INT32"],
+          "tags": [],
+          "default": 4,
+          "minimum": 1,
+          "maximum": 128,
+          "description": "grain size of the render task along the height of the frame"
         }
       ]
     }
