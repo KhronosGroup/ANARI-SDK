@@ -5,10 +5,11 @@
 
 namespace helide {
 
-Instance::Instance(HelideGlobalState *s) : Object(ANARI_INSTANCE, s)
+Instance::Instance(HelideGlobalState *s)
+    : Object(ANARI_INSTANCE, s), m_xfmArray(this), m_idArray(this)
 {
   m_embreeGeometry =
-      rtcNewGeometry(s->embreeDevice, RTC_GEOMETRY_TYPE_INSTANCE);
+      rtcNewGeometry(s->embreeDevice, RTC_GEOMETRY_TYPE_INSTANCE_ARRAY);
 }
 
 Instance::~Instance()
@@ -18,10 +19,30 @@ Instance::~Instance()
 
 void Instance::commit()
 {
+  m_idArray = getParamObject<Array1D>("id");
+  if (m_idArray && m_idArray->elementType() != ANARI_UINT32) {
+    reportMessage(ANARI_SEVERITY_WARNING,
+        "'id' array elements are %s, but need to be %s",
+        anari::toString(m_idArray->elementType()),
+        anari::toString(ANARI_UINT32));
+    m_idArray = {};
+  }
   m_id = getParam<uint32_t>("id", ~0u);
+
+  m_xfmArray = getParamObject<Array1D>("transform");
+  if (m_xfmArray && m_xfmArray->elementType() != ANARI_FLOAT32_MAT4) {
+    reportMessage(ANARI_SEVERITY_WARNING,
+        "'transform' array elements are %s, but need to be %s",
+        anari::toString(m_idArray->elementType()),
+        anari::toString(ANARI_FLOAT32_MAT4));
+    m_xfmArray = {};
+  }
   m_xfm = getParam<mat4>("transform", mat4(linalg::identity));
-  m_xfmInvRot = linalg::inverse(extractRotation(m_xfm));
+
   m_group = getParamObject<Group>("group");
+  if (!m_group)
+    reportMessage(ANARI_SEVERITY_WARNING, "missing 'group' on ANARIInstance");
+
   for (auto &a : m_uniformAttr)
     a.reset();
   float4 attrV = DEFAULT_ATTRIBUTE_VALUE;
@@ -35,33 +56,45 @@ void Instance::commit()
     m_uniformAttr[3] = attrV;
   if (getParam("color", ANARI_FLOAT32_VEC4, &attrV))
     m_uniformAttr[4] = attrV;
-  if (!m_group)
-    reportMessage(ANARI_SEVERITY_WARNING, "missing 'group' on ANARIInstance");
+
+  m_uniformAttrArrays.attribute0 = getParamObject<Array1D>("attribute0");
+  m_uniformAttrArrays.attribute1 = getParamObject<Array1D>("attribute1");
+  m_uniformAttrArrays.attribute2 = getParamObject<Array1D>("attribute2");
+  m_uniformAttrArrays.attribute3 = getParamObject<Array1D>("attribute3");
+  m_uniformAttrArrays.color = getParamObject<Array1D>("color");
 }
 
-uint32_t Instance::id() const
+uint32_t Instance::numTransforms() const
 {
-  return m_id;
+  return m_xfmArray ? uint32_t(m_xfmArray->totalSize()) : 1u;
 }
 
-const mat4 &Instance::xfm() const
+uint32_t Instance::id(uint32_t i) const
 {
-  return m_xfm;
+  return m_xfmArray && m_idArray ? *m_idArray->valueAt<uint32_t>(i) : m_id;
 }
 
-const mat3 &Instance::xfmInvRot() const
+const mat4 &Instance::xfm(uint32_t i) const
 {
-  return m_xfmInvRot;
+  return m_xfmArray ? *m_xfmArray->valueAt<mat4>(i) : m_xfm;
 }
 
-bool Instance::xfmIsIdentity() const
+UniformAttributeSet Instance::getUniformAttributes(uint32_t i) const
 {
-  return xfm() == mat4(linalg::identity);
-}
+  UniformAttributeSet retval = m_uniformAttr;
 
-const UniformAttributeSet &Instance::getUniformAttributes() const
-{
-  return m_uniformAttr;
+  if (m_uniformAttrArrays.attribute0)
+    retval[0] = m_uniformAttrArrays.attribute0->readAsAttributeValue(i);
+  if (m_uniformAttrArrays.attribute1)
+    retval[1] = m_uniformAttrArrays.attribute1->readAsAttributeValue(i);
+  if (m_uniformAttrArrays.attribute2)
+    retval[2] = m_uniformAttrArrays.attribute2->readAsAttributeValue(i);
+  if (m_uniformAttrArrays.attribute3)
+    retval[3] = m_uniformAttrArrays.attribute3->readAsAttributeValue(i);
+  if (m_uniformAttrArrays.color)
+    retval[4] = m_uniformAttrArrays.color->readAsAttributeValue(i);
+
+  return retval;
 }
 
 const Group *Instance::group() const
@@ -82,8 +115,15 @@ RTCGeometry Instance::embreeGeometry() const
 void Instance::embreeGeometryUpdate()
 {
   rtcSetGeometryInstancedScene(m_embreeGeometry, group()->embreeScene());
-  rtcSetGeometryTransform(
-      m_embreeGeometry, 0, RTC_FORMAT_FLOAT4X4_COLUMN_MAJOR, &m_xfm);
+  auto *xfms = rtcSetNewGeometryBuffer(m_embreeGeometry,
+      RTC_BUFFER_TYPE_TRANSFORM,
+      0,
+      RTC_FORMAT_FLOAT4X4_COLUMN_MAJOR,
+      sizeof(mat4),
+      this->numTransforms());
+  std::memcpy(xfms,
+      m_xfmArray ? m_xfmArray->begin() : &m_xfm,
+      this->numTransforms() * sizeof(mat4));
   rtcCommitGeometry(m_embreeGeometry);
 }
 

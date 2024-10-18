@@ -109,6 +109,8 @@ void Renderer::commit()
   m_ambientRadiance = getParam<float>("ambientRadiance", 1.f);
   m_falloffBlendRatio = getParam<float>("eyeLightBlendRatio", 0.5f);
   m_mode = renderModeFromString(getParamString("mode", "default"));
+  m_taskGrainSize.x = getParam<int32_t>("taskGrainSizeWidth", 4);
+  m_taskGrainSize.y = getParam<int32_t>("taskGrainSizeHeight", 4);
 }
 
 PixelSample Renderer::renderSample(
@@ -118,9 +120,9 @@ PixelSample Renderer::renderSample(
 
   // Intersect Surfaces //
 
-  RTCIntersectContext context;
-  rtcInitIntersectContext(&context);
-  rtcIntersect1(w.embreeScene(), &context, (RTCRayHit *)&ray);
+  RTCIntersectArguments iargs;
+  rtcInitIntersectArguments(&iargs);
+  rtcIntersect1(w.embreeScene(), (RTCRayHit *)&ray, &iargs);
   const bool hitGeometry = ray.geomID != RTC_INVALID_GEOMETRY_ID;
 
   // Intersect Volumes //
@@ -139,8 +141,8 @@ PixelSample Renderer::renderSample(
   if (hitGeometry || hitVolume) {
     retval.primId = hitVolume ? 0 : ray.primID;
     retval.objId = hitVolume ? vray.volume->id() : w.surfaceFromRay(ray)->id();
-    retval.instId = hitVolume ? w.instanceFromRay(vray)->id()
-                              : w.instanceFromRay(ray)->id();
+    retval.instId = hitVolume ? w.instanceFromRay(vray)->id(vray.instArrayID)
+                              : w.instanceFromRay(ray)->id(ray.instArrayID);
   }
 
   return retval;
@@ -237,10 +239,10 @@ float4 Renderer::shadeRay(const float2 &screen,
       const auto n = linalg::mul(inst->xfmInvRot(), ray.Ng);
       const auto falloff =
           std::abs(linalg::dot(-ray.dir, linalg::normalize(n)));
-      const float4 sc =
-          surface->getSurfaceColor(ray, inst->getUniformAttributes());
-      const float so =
-          surface->getSurfaceOpacity(ray, inst->getUniformAttributes());
+      const float4 sc = surface->getSurfaceColor(
+          ray, inst->getUniformAttributes(ray.instArrayID));
+      const float so = surface->getSurfaceOpacity(
+          ray, inst->getUniformAttributes(ray.instArrayID));
       const float o = surface->adjustedAlpha(std::clamp(sc.w * so, 0.f, 1.f));
       const float3 c = m_heatmap->valueAtLinear<float3>(o);
       const float3 fc = c * falloff;
@@ -253,11 +255,11 @@ float4 Renderer::shadeRay(const float2 &screen,
       const Instance *inst = w.instanceFromRay(ray);
       const Surface *surface = w.surfaceFromRay(ray);
 
-      const auto n = linalg::mul(inst->xfmInvRot(), ray.Ng);
+      const auto n = linalg::mul(inst->xfmInvRot(ray.instArrayID), ray.Ng);
       const auto falloff =
           std::abs(linalg::dot(-ray.dir, linalg::normalize(n)));
-      const float4 c =
-          surface->getSurfaceColor(ray, inst->getUniformAttributes());
+      const float4 c = surface->getSurfaceColor(
+          ray, inst->getUniformAttributes(ray.instArrayID));
       const float3 sc = float3(c.x, c.y, c.z) * std::clamp(falloff, 0.f, 1.f);
       geometryColor =
           ((m_falloffBlendRatio * sc)

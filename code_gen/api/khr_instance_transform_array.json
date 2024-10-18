@@ -1,0 +1,30 @@
+{
+    "info" : {
+        "name" : "KHR_INSTANCE_TRANSFORM_ARRAY",
+        "type" : "extension",
+        "dependencies" : ["khr_instance_transform"]
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_INSTANCE",
+            "name" : "transform",
+            "description" : "instance object",
+            "parameters" : [
+                {
+                    "name" : "transform",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "elementType" : ["ANARI_FLOAT32_MAT4"],
+                    "tags" : [],
+                    "description" : "array of transforms applied to objects in the instance"
+                }, {
+                    "name" : "id",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "elementType" : ["ANARI_UINT32"],
+                    "tags" : [],
+                    "description" : "per-transform user id for instanceId channel"
+                }
+            ]
+        }
+    ]
+}

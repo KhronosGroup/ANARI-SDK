@@ -8,7 +8,7 @@
 // helium
 #include "helium/BaseGlobalDeviceState.h"
 // embree
-#include "embree3/rtcore.h"
+#include "embree4/rtcore.h"
 
 namespace helide {
 
