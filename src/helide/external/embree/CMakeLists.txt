@@ -23,13 +23,13 @@ else()
   option(EMBREE_ISA_SSE2           "" OFF)
 endif()
 option(EMBREE_ISPC_SUPPORT             "" OFF)
-option(EMBREE_MAX_INSTANCE_LEVEL_COUNT "" 1)
 option(EMBREE_STATIC_LIB               "" ON)
 option(EMBREE_STAT_COUNTERS            "" OFF)
 option(EMBREE_SYCL_SUPPORT             "" OFF)
 option(EMBREE_TUTORIALS                "" OFF)
 option(EMBREE_TUTORIALS_GLFW           "" OFF)
 set(EMBREE_TASKING_SYSTEM "INTERNAL" CACHE STRING "" FORCE)
+set(EMBREE_MAX_INSTANCE_LEVEL_COUNT "1" CACHE STRING "" FORCE)
 
 anari_sdk_fetch_project(
   NAME anari_helide_embree
