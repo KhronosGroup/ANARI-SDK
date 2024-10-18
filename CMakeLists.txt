@@ -53,7 +53,7 @@ option(BUILD_SHARED_LIBS "Build shared libraries instead of static" ON)
 option(BUILD_TESTING "Build tests for CTest" ON)
 # ANARI specific options
 
-option(BUILD_CTS "Build cts toolkit" ON)
+option(BUILD_CTS "Build cts toolkit" OFF)
 cmake_dependent_option(CTS_ENABLE_GLTF "Enable glTF support for cts" ON "BUILD_CTS" ON)
 option(USE_DRACO "Use draco when loading glTF files" OFF)
 option(USE_WEBP "Use webp when loading glTF files" OFF)
@@ -69,7 +69,7 @@ endif()
 option(BUILD_EXAMPLES "Build example applications and example device" ON)
 cmake_dependent_option(BUILD_VIEWER
   "Build interactive viewer app (requires GLFW)"
-  ON
+  OFF
   "BUILD_EXAMPLES"
   OFF
 )
