@@ -146,7 +146,7 @@ inline Interpolant getInterpolant(float in, size_t size, bool texOffset = false)
   const float scale = float(size);
   const float lowf =
       texOffset ? (in - (0.5f / scale)) * scale : (in * (scale - 1.f));
-  const int32_t low = std::floor(lowf);
+  const int32_t low = static_cast<int32_t>(std::floor(lowf));
   const int32_t high = low + 1;
   const float frac = lowf - low;
   return {low, high, frac};

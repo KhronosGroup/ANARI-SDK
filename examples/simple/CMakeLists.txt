@@ -63,7 +63,7 @@ add_executable(anariTutorialInitFromEnv anariTutorialInitFromEnv.c)
 target_link_libraries(anariTutorialInitFromEnv PRIVATE anari::anari)
 
 add_executable(anariInfo anariInfo.cpp)
-target_link_libraries(anariInfo PRIVATE anari::anari)
+target_link_libraries(anariInfo PRIVATE anari::anari_static)
 
 if (IN_SDK_SOURCE_TREE)
   install(TARGETS anariInfo RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

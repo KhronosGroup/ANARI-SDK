@@ -17,6 +17,12 @@ set_target_properties(anari::anari PROPERTIES
     "anari"
 )
 
+add_library(anari::anari_static INTERFACE IMPORTED)
+set_target_properties(anari::anari_static PROPERTIES
+  INTERFACE_LINK_LIBRARIES
+    "anari_static"
+)
+
 add_library(anari::anari_test_scenes INTERFACE IMPORTED)
 set_target_properties(anari::anari_test_scenes PROPERTIES
   INTERFACE_LINK_LIBRARIES
