@@ -5,7 +5,7 @@
 // std
 #include <cmath>
 
-namespace manipulators {
+namespace anari_viewer::manipulators {
 
 // Helper functions ///////////////////////////////////////////////////////////
 
@@ -71,7 +71,8 @@ Orbit::Orbit(anari::math::float3 at, float dist, anari::math::float2 azel)
   setConfig(at, dist, azel);
 }
 
-void Orbit::setConfig(anari::math::float3 at, float dist, anari::math::float2 azel)
+void Orbit::setConfig(
+    anari::math::float3 at, float dist, anari::math::float2 azel)
 {
   m_at = at;
   m_distance = dist;
@@ -174,7 +175,8 @@ void Orbit::update()
   const float azimuth = degreesToRadians(m_azel.x);
   const float elevation = degreesToRadians(m_azel.y);
 
-  const anari::math::float3 toLocalOrbit = azelToDirection(azimuth, elevation, axis);
+  const anari::math::float3 toLocalOrbit =
+      azelToDirection(azimuth, elevation, axis);
 
   const anari::math::float3 localOrbitPos = toLocalOrbit * distance;
   const anari::math::float3 fromLocalOrbit = -localOrbitPos;
@@ -184,7 +186,8 @@ void Orbit::update()
 
   const anari::math::float3 cameraRight =
       linalg::cross(toLocalOrbit, alteredElevation);
-  const anari::math::float3 cameraUp = linalg::cross(cameraRight, fromLocalOrbit);
+  const anari::math::float3 cameraUp =
+      linalg::cross(cameraRight, fromLocalOrbit);
 
   m_eye = localOrbitPos + m_at;
   m_up = linalg::normalize(cameraUp);
@@ -195,4 +198,4 @@ void Orbit::update()
   m_token++;
 }
 
-} // namespace manipulators
+} // namespace anari_viewer::manipulators

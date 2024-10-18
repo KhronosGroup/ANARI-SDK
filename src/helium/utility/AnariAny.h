@@ -128,7 +128,7 @@ inline AnariAny::AnariAny(T value) : AnariAny()
 template <>
 inline AnariAny::AnariAny(bool value) : AnariAny()
 {
-  uint32_t b = value;
+  uint8_t b = value;
   *this = AnariAny(ANARI_BOOL, &b);
 }
 

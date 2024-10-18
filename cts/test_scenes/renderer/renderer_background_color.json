@@ -1,0 +1,65 @@
+{
+  "description": "Tests different background colors.",
+  "sceneParameters": {
+    "primitiveCount": 0,
+    "seed": 12345,
+    "anari_objects": {
+      "renderer": [
+        {}
+      ]
+    }
+  },
+  "permutations": {
+    "/anari_objects/renderer/0/background": [
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      [
+        0.5,
+        0.5,
+        0.5,
+        1.0
+      ],
+      [
+        0.0,
+        0.0,
+        1.0,
+        1.0
+      ],
+      [
+        0.0,
+        0.0,
+        1.0,
+        0.5
+      ]
+    ]
+  },
+  "requiredFeatures": [
+    "ANARI_KHR_RENDERER_BACKGROUND_COLOR"
+  ],
+  "metaData": {
+    "[0.0,0.0,0.0,1.0]": {
+      "bounds": {
+        "world": "Infinity"
+      }
+    },
+    "[0.5,0.5,0.5,1.0]": {
+      "bounds": {
+        "world": "Infinity"
+      }
+    },
+    "[0.0,0.0,1.0,1.0]": {
+      "bounds": {
+        "world": "Infinity"
+      }
+    },
+    "[0.0,0.0,1.0,0.5]": {
+      "bounds": {
+        "world": "Infinity"
+      }
+    }
+  }
+}

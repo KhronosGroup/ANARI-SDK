@@ -18,9 +18,9 @@
 
 #include "Window.h"
 
-namespace windows {
+namespace anari_viewer::windows {
 
-struct Viewport : public anari_viewer::Window
+struct Viewport : public Window
 {
   Viewport(anari::Device device, const char *name = "Viewport");
   ~Viewport();
@@ -102,4 +102,4 @@ struct Viewport : public anari_viewer::Window
   std::string m_contextMenuName;
 };
 
-} // namespace windows
+} // namespace anari_viewer::windows

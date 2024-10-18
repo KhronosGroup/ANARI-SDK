@@ -38,7 +38,33 @@ class SceneGeneratorWrapper
   SceneGeneratorWrapper(const std::string &library,
       const std::optional<std::string> &device,
       const std::optional<pybind11::function> &callback);
+  SceneGeneratorWrapper(pybind11::function &callback);
   ~SceneGeneratorWrapper();
+
+  void loadGLTF(const std::string &jsonText,
+      std::vector<std::string> &sortedBuffers,
+      std::vector<std::string> &sortedImages,
+      bool generateTangents,
+      bool parseLights)
+  {
+    if (m_sceneGenerator) {
+      std::vector<std::vector<char>> convertedBuffers;
+      std::vector<std::vector<char>> convertedImages;
+      for (size_t i = 0; i < sortedBuffers.size(); ++i) {
+        convertedBuffers.emplace_back(sortedBuffers[i].begin(),
+            sortedBuffers[i].end());
+      }
+      for (size_t i = 0; i < sortedImages.size(); ++i) {
+        convertedImages.emplace_back(
+            sortedImages[i].begin(), sortedImages[i].end());
+      }
+      m_sceneGenerator->loadGLTF(jsonText,
+          convertedBuffers,
+          convertedImages,
+          generateTangents,
+          parseLights);
+    }
+  }
 
   void commit()
   {
@@ -78,7 +104,7 @@ class SceneGeneratorWrapper
     }
   }
 
-  std::vector<std::vector<uint32_t>> renderScene(float renderDistance)
+  std::tuple<std::vector<std::vector<uint32_t>>, uint32_t, uint32_t> renderScene(float renderDistance)
   {
     if (m_sceneGenerator) {
       return m_sceneGenerator->renderScene(renderDistance);
@@ -132,6 +158,14 @@ class SceneGeneratorWrapper
     }
   }
 
+  void setGenericTexture2D(
+      const std::string& name, const std::string& textureType)
+  {
+    if (m_sceneGenerator) {
+      m_sceneGenerator->setGenericTexture2D(name, textureType);
+    }
+  }
+
   void unsetGenericParameter(const std::string &name)
   {
     if (m_sceneGenerator) {
@@ -167,6 +201,8 @@ class SceneGeneratorWrapper
   std::unique_ptr<SceneGenerator> m_sceneGenerator;
   anari::Library m_library;
   std::optional<pybind11::function> m_callback;
+  // wrapped library for use with debug library to generate debug output
+  anari::Library m_wrappedLibrary{nullptr};
 };
 
 } // namespace cts

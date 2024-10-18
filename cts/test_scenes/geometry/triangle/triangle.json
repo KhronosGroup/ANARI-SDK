@@ -1,4 +1,5 @@
 {
+  "description": "Tests soup and indexed vertices of triangle geometry. Output should be the same.",
   "sceneParameters": {
     "geometrySubtype": "triangle",
     "primitiveCount": 16,
@@ -6,7 +7,7 @@
     "frame_depth_type": "FLOAT32",
     "shape": "triangle"
   },
-  "permutations": {
+  "variants": {
     "primitiveMode": [
       "soup",
       "indexed"
@@ -16,37 +17,19 @@
     "ANARI_KHR_GEOMETRY_TRIANGLE"
   ],
   "metaData": {
-    "soup": {
-      "bounds": {
-        "world": [
-          [
-            0.10628136992454529,
-            0.07447968423366547,
-            0.08119118958711624
-          ],
-          [
-            0.8897861838340759,
-            0.9648289084434509,
-            0.8715502023696899
-          ]
+    "bounds": {
+      "world": [
+        [
+          0.10628136992454529,
+          0.07447968423366547,
+          0.08119118958711624
+        ],
+        [
+          0.8897861838340759,
+          0.9648289084434509,
+          0.8715502023696899
         ]
-      }
-    },
-    "indexed": {
-      "bounds": {
-        "world": [
-          [
-            0.10628136992454529,
-            0.07447968423366547,
-            0.08119118958711624
-          ],
-          [
-            0.8897861838340759,
-            0.9648289084434509,
-            0.8715502023696899
-          ]
-        ]
-      }
+      ]
     }
   }
 }

@@ -1,4 +1,5 @@
 {
+  "description": "Tests frame color channels with quad geometry. Color of FLOAT32_VEC4 and UFIXED8_VEC4 should be the same.",
   "sceneParameters": {
     "geometrySubtype": "quad",
     "primitiveCount": 16,

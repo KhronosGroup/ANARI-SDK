@@ -5,7 +5,7 @@
 
 #include <anari/anari_cpp/ext/linalg.h>
 
-namespace manipulators {
+namespace anari_viewer::manipulators {
 
 using UpdateToken = size_t;
 
@@ -23,10 +23,13 @@ class Orbit
 {
  public:
   Orbit() = default;
-  Orbit(anari::math::float3 at, float dist, anari::math::float2 azel = anari::math::float2(0.f));
+  Orbit(anari::math::float3 at,
+      float dist,
+      anari::math::float2 azel = anari::math::float2(0.f));
 
-  void setConfig(
-      anari::math::float3 at, float dist, anari::math::float2 azel = anari::math::float2(0.f));
+  void setConfig(anari::math::float3 at,
+      float dist,
+      anari::math::float2 azel = anari::math::float2(0.f));
 
   void startNewRotation();
 
@@ -74,4 +77,4 @@ class Orbit
   OrbitAxis m_axis{OrbitAxis::POS_Y};
 };
 
-} // namespace manipulators
+} // namespace anari_viewer::manipulators

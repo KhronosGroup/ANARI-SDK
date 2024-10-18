@@ -3,7 +3,6 @@
 
 #include "PrimitiveGenerator.h"
 
-#include <glm/gtc/matrix_transform.hpp>
 #include <iterator>
 #include <vector>
 
@@ -23,14 +22,14 @@ float PrimitiveGenerator::getRandomFloat(float min, float max)
 }
 
 // helper function to get random vec2 with each component in range min..max
-glm::vec2 PrimitiveGenerator::getRandomVector2(float min, float max)
+anari::math::float2 PrimitiveGenerator::getRandomVector2(float min, float max)
 {
   return {getRandomFloat(min, max),
       getRandomFloat(min, max)};
 }
 
 // helper function to get random vec3 with each component in range min..max
-glm::vec3 PrimitiveGenerator::getRandomVector3(float min, float max)
+anari::math::float3 PrimitiveGenerator::getRandomVector3(float min, float max)
 {
   return {getRandomFloat(min, max),
       getRandomFloat(min, max),
@@ -38,7 +37,7 @@ glm::vec3 PrimitiveGenerator::getRandomVector3(float min, float max)
 }
 
 // helper function to get random vec4 with each component in range min..max
-glm::vec4 PrimitiveGenerator::getRandomVector4(float min, float max)
+anari::math::float4 PrimitiveGenerator::getRandomVector4(float min, float max)
 {
   return {getRandomFloat(min, max),
       getRandomFloat(min, max),
@@ -48,14 +47,14 @@ glm::vec4 PrimitiveGenerator::getRandomVector4(float min, float max)
 
 // applies random translation on a per primitives basis to create more useful test scenes
 // keeping the vertices roughly in range 0..1
-std::vector<glm::vec3> PrimitiveGenerator::randomTranslate(
-    std::vector<glm::vec3> vertices, size_t verticesPerPrimitive)
+std::vector<anari::math::float3> PrimitiveGenerator::randomTranslate(
+    std::vector<anari::math::float3> vertices, size_t verticesPerPrimitive)
 {
   const float maxTranslation = 0.6f;
   const float scale = 0.4f;
 
   for (size_t i = 0; i < vertices.size();) {
-    const glm::vec3 translation(getRandomVector3(0.0f, maxTranslation));
+    const anari::math::float3 translation(getRandomVector3(0.0f, maxTranslation));
     for (size_t k = 0; k < verticesPerPrimitive; ++k, ++i) {
       vertices[i] = (vertices[i] * scale) + translation;
     }
@@ -67,29 +66,34 @@ std::vector<glm::vec3> PrimitiveGenerator::randomTranslate(
 
 // applies random transformation on a per primitive basis to create more useful test scenes
 // keeping the vertices roughly in range 0..1
-std::vector<glm::vec3> PrimitiveGenerator::randomTransform(
-    std::vector<glm::vec3> vertices, size_t verticesPerPrimitive)
+std::vector<anari::math::float3> PrimitiveGenerator::randomTransform(
+    std::vector<anari::math::float3> vertices, size_t verticesPerPrimitive)
 {
   const size_t primitiveCount = vertices.size() / verticesPerPrimitive;
 
   // generate a randomized transform for each primitive
   for (size_t k = 0; k < primitiveCount; ++k) {
-    const glm::mat4 scale =
-        glm::scale(glm::mat4(1.0f), glm::vec3(getRandomFloat(0.0f, 0.4f)));
+    const anari::math::mat4 scale = anari::math::scaling_matrix(
+        anari::math::float3(getRandomFloat(0.0f, 0.4f)));
 
-    const glm::mat4 rotation = glm::rotate(glm::mat4(1.0f),
-        getRandomFloat(0.0f, 360.0f),
-        getRandomVector3(0.0f, 1.0f));
+    const float angle = getRandomFloat(0.0f, 360.0f);
+    const anari::math::float3 axis = anari::math::normalize(getRandomVector3(0.0f, 1.0f));
 
-    const glm::mat4 translation =
-        glm::translate(glm::mat4(1.0f), getRandomVector3(0.0f, 0.6f));
+    const anari::math::float4 rotationQuat =
+        anari::math::rotation_quat(axis, angle);
 
-    const glm::mat4 transform = translation * rotation * scale;
+    const anari::math::mat4 rotation =
+        anari::math::rotation_matrix(rotationQuat);
+
+    const anari::math::mat4 translation =
+        anari::math::translation_matrix(getRandomVector3(0.0f, 0.6f));
+
+    const anari::math::mat4 transform = anari::math::mul(anari::math::mul(translation, rotation), scale);
 
     // apply one randomized transform to all vertices that belong to the same primitive
     for (size_t i = 0; i < verticesPerPrimitive; ++i) {
       const size_t index = i + verticesPerPrimitive * k;
-      vertices[index] = transform * glm::vec4(vertices[index], 1.0);
+      vertices[index] =  anari::math::mul(transform, anari::math::float4(vertices[index], 1.0)).xyz();
     }
   }
 
@@ -107,10 +111,10 @@ std::vector<float> PrimitiveGenerator::generateAttributeFloat(size_t elementCoun
 
 // returns vector of randomized attribute data, each attribute being in range
 // min..max
-std::vector<glm::vec2> PrimitiveGenerator::generateAttributeVec2(
+std::vector<anari::math::float2> PrimitiveGenerator::generateAttributeVec2(
     size_t elementCount, float min, float max)
 {
-  std::vector<glm::vec2> attributes(elementCount);
+  std::vector<anari::math::float2> attributes(elementCount);
   for (auto &attribute : attributes) {
     attribute = getRandomVector2(min, max);
   }
@@ -119,10 +123,10 @@ std::vector<glm::vec2> PrimitiveGenerator::generateAttributeVec2(
 
 // returns vector of randomized attribute data, each attribute being in range
 // min..max
-std::vector<glm::vec3> PrimitiveGenerator::generateAttributeVec3(
+std::vector<anari::math::float3> PrimitiveGenerator::generateAttributeVec3(
     size_t elementCount, float min, float max)
 {
-  std::vector<glm::vec3> attributes(elementCount);
+  std::vector<anari::math::float3> attributes(elementCount);
   for (auto &attribute : attributes) {
     attribute = getRandomVector3(min, max);
   }
@@ -131,10 +135,10 @@ std::vector<glm::vec3> PrimitiveGenerator::generateAttributeVec3(
 
 // returns vector of randomized attribute data, each attribute being in range
 // min..max
-std::vector<glm::vec4> PrimitiveGenerator::generateAttributeVec4(
+std::vector<anari::math::float4> PrimitiveGenerator::generateAttributeVec4(
     size_t elementCount, float min, float max)
 {
-  std::vector<glm::vec4> attributes(elementCount);
+  std::vector<anari::math::float4> attributes(elementCount);
   for (auto &attribute : attributes) {
     attribute = getRandomVector4(min, max);
   }
@@ -143,10 +147,10 @@ std::vector<glm::vec4> PrimitiveGenerator::generateAttributeVec4(
 
 // returns vector of vertices, each set of 3 vertices defines a randomly oriented triangle
 // roughly in range 0..1
-std::vector<glm::vec3> PrimitiveGenerator::generateTriangles(
+std::vector<anari::math::float3> PrimitiveGenerator::generateTriangles(
     size_t primitiveCount)
 {
-  std::vector<glm::vec3> vertices(primitiveCount * 3);
+  std::vector<anari::math::float3> vertices(primitiveCount * 3);
   for (auto& vertex : vertices) {
     vertex = getRandomVector3(0.0f, 1.0f);
   }
@@ -158,14 +162,14 @@ std::vector<glm::vec3> PrimitiveGenerator::generateTriangles(
 
 // returns soup vector of vertices, each set of 6 vertices defines a randomly oriented quad
 // consisting of 2 triangles. Range is roughly 0..1
-std::vector<glm::vec3> PrimitiveGenerator::generateTriangulatedQuadsSoup(
+std::vector<anari::math::float3> PrimitiveGenerator::generateTriangulatedQuadsSoup(
     size_t primitiveCount)
 {
-  std::vector<glm::vec3> vertices(primitiveCount * 6);
+  std::vector<anari::math::float3> vertices(primitiveCount * 6);
 
   // create quads (all 6 vertices of any quad lie in a plane)
   size_t i = 0;
-  glm::vec3 vertex0(0), vertex1(0), vertex2(0);
+  anari::math::float3 vertex0(0.0), vertex1(0.0), vertex2(0.0);
   for (auto& vertex : vertices) {
     if (i == 3) {
       vertex = vertex2;
@@ -195,15 +199,16 @@ std::vector<glm::vec3> PrimitiveGenerator::generateTriangulatedQuadsSoup(
 
 // returns vectors of vertices and indices, each set of 4 vertices defines a randomly oriented quad
 // consisting of 2 triangles, defined by the indices. Range is roughly 0..1
-std::tuple<std::vector<glm::vec3>, std::vector<glm::uvec3>>
+std::tuple<std::vector<anari::math::float3>,
+    std::vector<anari::math::vec<uint32_t, 3>>>
 PrimitiveGenerator::generateTriangulatedQuadsIndexed(size_t primitiveCount)
 {
-  std::vector<glm::vec3> vertices(primitiveCount * 4);
-  std::vector<glm::uvec3> indices(primitiveCount * 2);
+  std::vector<anari::math::float3> vertices(primitiveCount * 4);
+  std::vector<anari::math::vec<uint32_t, 3>> indices(primitiveCount * 2);
 
   // create quads (all 4 vertices of any quad lie in a plane)
   size_t i = 0;
-  glm::vec3 vertex0(0), vertex1(0), vertex2(0);
+  anari::math::float3 vertex0(0.0f), vertex1(0.0f), vertex2(0.0f);
   for (auto &vertex : vertices) {
     if (i == 3) {
       vertex = vertex2 + (vertex1 - vertex0);
@@ -226,10 +231,12 @@ PrimitiveGenerator::generateTriangulatedQuadsIndexed(size_t primitiveCount)
 
   // create indices (set of 3 per triangle, 6 per quad)
   for (size_t k = 0; k < primitiveCount; ++k) {
-    const size_t index = k * 4;
+    const uint32_t index = static_cast<uint32_t>(k) * 4;
     const size_t indicesIndex = k * 2;
-    indices[indicesIndex] = glm::uvec3(index, index + 1, index + 2);
-    indices[indicesIndex + 1] = glm::uvec3(index + 2, index + 1, index + 3);
+    indices[indicesIndex] =
+        anari::math::vec<uint32_t, 3>(index, index + 1, index + 2);
+    indices[indicesIndex + 1] =
+        anari::math::vec<uint32_t, 3>(index + 2, index + 1, index + 3);
   }
 
   return std::make_tuple(vertices, indices);
@@ -237,12 +244,12 @@ PrimitiveGenerator::generateTriangulatedQuadsIndexed(size_t primitiveCount)
 
 // returns soup vector of vertices, each set of 36 vertices defines a randomly transformed cube
 // consisting of 12 triangles. Range is roughly 0..1
-std::vector<glm::vec3> PrimitiveGenerator::generateTriangulatedCubesSoup(
+std::vector<anari::math::float3> PrimitiveGenerator::generateTriangulatedCubesSoup(
     size_t primitiveCount)
 {
-  std::vector<glm::vec3> vertices;
+  std::vector<anari::math::float3> vertices;
   // vertices of all triangles of a basic cube, used as a basis for each primitive
-  const std::vector<glm::vec3> cubeVertices{
+  const std::vector<anari::math::float3> cubeVertices{
     {0.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {1.0, 0.0, 0.0}, // front
     {1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {1.0, 1.0, 0.0},
     {1.0, 0.0, 0.0}, {1.0, 1.0, 0.0}, {1.0, 0.0, 1.0}, // right
@@ -269,19 +276,21 @@ std::vector<glm::vec3> PrimitiveGenerator::generateTriangulatedCubesSoup(
 
 // returns vectors of vertices and indices, each set of 8 vertices defines a randomly transformed cube
 // consisting of 12 triangles, defined by the indices. Range is roughly 0..1
-std::tuple<std::vector<glm::vec3>, std::vector<glm::uvec3>> PrimitiveGenerator::generateTriangulatedCubesIndexed(
+std::tuple<std::vector<anari::math::float3>,
+    std::vector<anari::math::vec<uint32_t, 3>>>
+PrimitiveGenerator::generateTriangulatedCubesIndexed(
     size_t primitiveCount)
 {
-  std::vector<glm::vec3> vertices;
-  std::vector<glm::uvec3> indices;
+  std::vector<anari::math::float3> vertices;
+  std::vector<anari::math::vec<uint32_t, 3>> indices;
   // vertices of a basic cube, used as a basis for each primitive
-  const std::vector<glm::vec3> cubeVertices {
+  const std::vector<anari::math::float3> cubeVertices {
     {0.0, 0.0, 0.0},
     {1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0},
     {1.0, 1.0, 0.0}, {1.0, 0.0, 1.0}, {0.0, 1.0, 1.0},
     {1.0, 1.0, 1.0}};
   // triangle indices of a basic cube, used as a basis for each primitive
-  const std::vector<glm::uvec3> cubeIndices {
+  const std::vector<anari::math::vec<uint32_t, 3>> cubeIndices{
     {0, 2, 1}, {1, 2, 4}, // front
     {1, 4, 5}, {5, 4, 7}, // right
     {5, 7, 3}, {6, 7, 3}, // back
@@ -296,11 +305,12 @@ std::tuple<std::vector<glm::vec3>, std::vector<glm::uvec3>> PrimitiveGenerator::
         cubeVertices.end(),
         std::back_insert_iterator(vertices));
 
-    std::vector<glm::uvec3> newIndices = cubeIndices;
+    std::vector<anari::math::vec<uint32_t, 3>> newIndices = cubeIndices;
 
     // add offset to basic cube indices depending on number of primitives
     for (auto &indexVector : newIndices) {
-      indexVector += glm::uvec3(static_cast<int>(i * cubeVertices.size()));
+      indexVector += anari::math::vec<uint32_t, 3>(
+          static_cast<int>(i * cubeVertices.size()));
     }
 
     std::copy(newIndices.begin(),
@@ -315,19 +325,19 @@ std::tuple<std::vector<glm::vec3>, std::vector<glm::uvec3>> PrimitiveGenerator::
 
 // returns vector of vertices, each set of 4 vertices defines a randomly oriented quad
 // roughly in range 0..1
-std::vector<glm::vec3> PrimitiveGenerator::generateQuads(size_t primitiveCount)
+std::vector<anari::math::float3> PrimitiveGenerator::generateQuads(size_t primitiveCount)
 {
-  std::vector<glm::vec3> vertices;
+  std::vector<anari::math::float3> vertices;
 
   for (size_t i = 0; i < primitiveCount; ++i) {
-    glm::vec3 vertex0(0), vertex1(0), vertex2(0), vertex3(0);
+    anari::math::float3 vertex0(0.0f), vertex1(0.0f), vertex2(0.0f), vertex3(0.0f);
 
     vertex0 = getRandomVector3(0.0f, 1.0f);
     vertex1 = getRandomVector3(0.0f, 1.0f);
     vertex2 = getRandomVector3(0.0f, 1.0f);
     vertex3 = vertex2 + (vertex1 - vertex0);
 
-    std::vector<glm::vec3> quad = {vertex0, vertex1, vertex3, vertex2};
+    std::vector<anari::math::float3> quad = {vertex0, vertex1, vertex3, vertex2};
 
     std::copy(quad.begin(), quad.end(), std::back_insert_iterator(vertices));
   }
@@ -339,12 +349,12 @@ std::vector<glm::vec3> PrimitiveGenerator::generateQuads(size_t primitiveCount)
 
 // returns soup vector of vertices, each set of 24 vertices defines a randomly transformed cube
 // consisting of 6 quads. Range is roughly 0..1
-std::vector<glm::vec3> PrimitiveGenerator::generateQuadCubesSoup(
+std::vector<anari::math::float3> PrimitiveGenerator::generateQuadCubesSoup(
       size_t primitiveCount)
   {
-  std::vector<glm::vec3> vertices;
+  std::vector<anari::math::float3> vertices;
   // vertices of all quads of a basic cube, used as a basis for each primitive
-  const std::vector<glm::vec3> cubeVertices{
+  const std::vector<anari::math::float3> cubeVertices{
     {0.0, 0.0, 0.0}, {1.0, 0.0, 0.0}, {1.0, 1.0, 0.0}, {0.0, 1.0, 0.0}, // front
     {1.0, 0.0, 0.0}, {1.0, 1.0, 0.0}, {1.0, 1.0, 1.0}, {1.0, 0.0, 1.0}, // right
     {1.0, 0.0, 1.0}, {0.0, 0.0, 1.0}, {0.0, 1.0, 1.0}, {1.0, 1.0, 1.0}, // back
@@ -365,13 +375,14 @@ std::vector<glm::vec3> PrimitiveGenerator::generateQuadCubesSoup(
 
 // returns vectors of vertices and indices, each set of 8 vertices defines a randomly transformed cube
 // consisting of 6 quads, defined by the indices. Range is roughly 0..1
-std::tuple<std::vector<glm::vec3>, std::vector<glm::uvec4>>
+std::tuple<std::vector<anari::math::float3>,
+    std::vector<anari::math::vec<uint32_t, 4>>>
 PrimitiveGenerator::generateQuadCubesIndexed(size_t primitiveCount)
 {
-  std::vector<glm::vec3> vertices;
-  std::vector<glm::uvec4> indices;
+  std::vector<anari::math::float3> vertices;
+  std::vector<anari::math::vec<uint32_t, 4>> indices;
   // vertices of a basic cube, used as a basis for each primitive
-  const std::vector<glm::vec3> cubeVertices{{0.0, 0.0, 0.0},
+  const std::vector<anari::math::float3> cubeVertices{{0.0, 0.0, 0.0},
       {1.0, 0.0, 0.0},
       {0.0, 1.0, 0.0},
       {0.0, 0.0, 1.0},
@@ -380,7 +391,7 @@ PrimitiveGenerator::generateQuadCubesIndexed(size_t primitiveCount)
       {0.0, 1.0, 1.0},
       {1.0, 1.0, 1.0}};
   // quad indices of a basic cube, used as a basis for each primitive
-  const std::vector<glm::uvec4> cubeIndices{
+  const std::vector<anari::math::vec<uint32_t, 4>> cubeIndices{
       {0, 2, 4, 1}, // front
       {1, 4, 7, 5}, // right
       {5, 7, 6, 3}, // back
@@ -395,11 +406,12 @@ PrimitiveGenerator::generateQuadCubesIndexed(size_t primitiveCount)
         cubeVertices.end(),
         std::back_insert_iterator(vertices));
 
-    std::vector<glm::uvec4> newIndices = cubeIndices;
+    std::vector<anari::math::vec<uint32_t, 4>> newIndices = cubeIndices;
 
     // add offset to basic cube indices depending on number of primitives
     for (auto &indexVector : newIndices) {
-      indexVector += glm::uvec4(static_cast<int>(i * cubeVertices.size()));
+      indexVector += anari::math::vec<uint32_t, 4>(
+          static_cast<int>(i * cubeVertices.size()));
     }
 
     std::copy(newIndices.begin(),
@@ -415,10 +427,10 @@ PrimitiveGenerator::generateQuadCubesIndexed(size_t primitiveCount)
 // returns vectors of vertices and radii
 // each set of 1 vertex and 1 radius defines a randomly transformed sphere
 // roughly in range 0..1
-std::tuple<std::vector<glm::vec3>, std::vector<float>>
+std::tuple<std::vector<anari::math::float3>, std::vector<float>>
 PrimitiveGenerator::generateSpheres(size_t primitiveCount)
 {
-  std::vector<glm::vec3> vertices;
+  std::vector<anari::math::float3> vertices;
   std::vector<float> radii;
 
   for (size_t i = 0; i < primitiveCount; ++i) {
@@ -432,10 +444,10 @@ PrimitiveGenerator::generateSpheres(size_t primitiveCount)
 // returns vectors of vertices and radii
 // each set of 2 vertices and 2 radii defines a randomly transformed curve segment
 // roughly in range 0..1
-std::tuple<std::vector<glm::vec3>, std::vector<float>>
+std::tuple<std::vector<anari::math::float3>, std::vector<float>>
 PrimitiveGenerator::generateCurves(size_t primitiveCount)
 {
-  std::vector<glm::vec3> vertices;
+  std::vector<anari::math::float3> vertices;
   std::vector<float> radii;
 
   for (size_t i = 0; i < primitiveCount * 2; ++i) {
@@ -451,11 +463,11 @@ PrimitiveGenerator::generateCurves(size_t primitiveCount)
 // returns vectors of vertices and radii
 // each set of 2 vertices and 2 radii defines a randomly transformed cone
 // roughly in range 0..1
-std::tuple<std::vector<glm::vec3>, std::vector<float>, std::vector<uint8_t>>
+std::tuple<std::vector<anari::math::float3>, std::vector<float>, std::vector<uint8_t>>
 PrimitiveGenerator::generateCones(
     size_t primitiveCount, std::optional<int32_t> vertexCaps)
 {
-  std::vector<glm::vec3> vertices;
+  std::vector<anari::math::float3> vertices;
   std::vector<float> radii;
   std::vector<uint8_t> caps;
 
@@ -475,11 +487,11 @@ PrimitiveGenerator::generateCones(
 // returns vectors of vertices and radii
 // each set of 2 vertices and 1 radius defines a randomly transformed cylinder
 // roughly in range 0..1
-std::tuple<std::vector<glm::vec3>, std::vector<float>, std::vector<uint8_t>>
+std::tuple<std::vector<anari::math::float3>, std::vector<float>, std::vector<uint8_t>>
 PrimitiveGenerator::generateCylinders(
     size_t primitiveCount, std::optional<int32_t> vertexCaps)
 {
-  std::vector<glm::vec3> vertices;
+  std::vector<anari::math::float3> vertices;
   std::vector<float> radii;
   std::vector<uint8_t> caps;
 

@@ -21,7 +21,9 @@ void PrimitiveSampler::commit()
       uint32_t(getParam<uint64_t>("offset", getParam<uint32_t>("offset", 0)));
 }
 
-float4 PrimitiveSampler::getSample(const Geometry &g, const Ray &r) const
+float4 PrimitiveSampler::getSample(const Geometry &g,
+    const Ray &r,
+    const UniformAttributeSet & /*instAttrV*/) const
 {
   return m_array->readAsAttributeValue(uint32_t(r.primID + m_offset));
 }

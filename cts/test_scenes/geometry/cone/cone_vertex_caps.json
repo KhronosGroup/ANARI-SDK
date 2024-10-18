@@ -1,4 +1,5 @@
 {
+  "description": "Tests vertex caps parameter of cone geometry.",
   "sceneParameters": {
     "geometrySubtype": "cone",
     "primitiveCount": 16,

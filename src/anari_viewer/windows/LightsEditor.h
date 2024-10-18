@@ -12,7 +12,7 @@
 
 #include "Window.h"
 
-namespace windows {
+namespace anari_viewer::windows {
 
 struct Light
 {
@@ -34,7 +34,7 @@ struct Light
   std::vector<anari::Light> handles;
 };
 
-struct LightsEditor : public anari_viewer::Window
+struct LightsEditor : public Window
 {
   LightsEditor(
       std::vector<anari::Device> devices, const char *name = "Lights Editor");
@@ -60,4 +60,4 @@ struct LightsEditor : public anari_viewer::Window
   std::vector<Light> m_lights;
 };
 
-} // namespace windows
+} // namespace anari_viewer::windows

@@ -33,6 +33,9 @@ struct Array1D : public Array
 
   size_t size() const;
 
+  template <typename T>
+  const T *valueAt(size_t i) const;
+
   anari::math::float4 readAsAttributeValue(
       int32_t i, WrapMode wrap = WrapMode::DEFAULT) const;
   template <typename T>
@@ -64,6 +67,12 @@ template <typename T>
 inline const T *Array1D::endAs() const
 {
   return dataAs<T>() + m_end;
+}
+
+template <typename T>
+inline const T *Array1D::valueAt(size_t i) const
+{
+  return &beginAs<T>()[i];
 }
 
 template <typename T>

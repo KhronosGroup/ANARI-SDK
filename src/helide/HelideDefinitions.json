@@ -5,7 +5,6 @@
     "dependencies": [
       "anari_core_1_0",
       "anari_core_objects_base_1_0",
-      "khr_instance_transform",
       "khr_camera_orthographic",
       "khr_camera_perspective",
       "khr_device_synchronization",
@@ -19,6 +18,8 @@
       "khr_geometry_quad",
       "khr_geometry_sphere",
       "khr_geometry_triangle",
+      "khr_instance_transform",
+      "khr_instance_transform_array",
       "khr_material_matte",
       "khr_material_physicallyBased",
       "khr_renderer_ambient_light",
@@ -39,18 +40,14 @@
       "parameters": [
         {
           "name": "allowInvalidMaterials",
-          "types": [
-            "ANARI_BOOL"
-          ],
+          "types": ["ANARI_BOOL"],
           "tags": [],
           "default": true,
           "description": "show surfaces with invalid materials"
         },
         {
           "name": "invalidMaterialColor",
-          "types": [
-            "ANARI_FLOAT32_VEC4"
-          ],
+          "types": ["ANARI_FLOAT32_VEC4"],
           "tags": [],
           "default": [
             1.0,
@@ -67,33 +64,8 @@
       "name": "default",
       "parameters": [
         {
-          "name": "background",
-          "types": [
-            "ANARI_FLOAT32_VEC4"
-          ],
-          "tags": [],
-          "default": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "description": "background color and alpha (RGBA)"
-        },
-        {
-          "name": "ambientRadiance",
-          "types": [
-            "ANARI_FLOAT32"
-          ],
-          "tags": [],
-          "default": 1.0,
-          "description": "ambient light intensity"
-        },
-        {
           "name": "mode",
-          "types": [
-            "ANARI_STRING"
-          ],
+          "types": ["ANARI_STRING"],
           "tags": [],
           "default": "default",
           "values": [
@@ -115,6 +87,33 @@
             "opacityHeatmap"
           ],
           "description": "visualization modes (most for debugging)"
+        },
+        {
+          "name": "eyeLightBlendRatio",
+          "types": ["ANARI_FLOAT32"],
+          "tags": [],
+          "default": 0.5,
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "how much eye lighting factor should be used in default render mode"
+        },
+        {
+          "name": "taskGrainSizeWidth",
+          "types": ["ANARI_INT32"],
+          "tags": [],
+          "default": 4,
+          "minimum": 1,
+          "maximum": 128,
+          "description": "grain size of the render task along the width of the frame"
+        },
+        {
+          "name": "taskGrainSizeHeight",
+          "types": ["ANARI_INT32"],
+          "tags": [],
+          "default": 4,
+          "minimum": 1,
+          "maximum": 128,
+          "description": "grain size of the render task along the height of the frame"
         }
       ]
     }

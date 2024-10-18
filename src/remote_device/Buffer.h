@@ -10,6 +10,7 @@
 // anari
 #include <anari/anari.h>
 // ours
+#include "ObjectDesc.h"
 #include "ParameterList.h"
 #include "StringList.h"
 
@@ -46,6 +47,12 @@ struct Buffer : std::vector<char>
 
   // write overload for std::string
   bool write(const std::string &val);
+
+  // read overload for object descriptor
+  bool read(ObjectDesc &val);
+
+  // write overload for object descriptor
+  bool write(const ObjectDesc &val);
 
   // read overload for string lists
   bool read(StringList &val);

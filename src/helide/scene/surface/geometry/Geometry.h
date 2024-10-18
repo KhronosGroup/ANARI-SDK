@@ -5,8 +5,6 @@
 
 #include "Object.h"
 #include "array/Array1D.h"
-// std
-#include <array>
 
 namespace helide {
 
@@ -28,7 +26,7 @@ struct Geometry : public Object
  protected:
   RTCGeometry m_embreeGeometry{nullptr};
 
-  std::array<float4, 5> m_uniformAttr;
+  UniformAttributeSet m_uniformAttr;
   std::array<helium::IntrusivePtr<Array1D>, 5> m_primitiveAttr;
 };
 

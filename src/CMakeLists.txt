@@ -20,3 +20,8 @@ option(BUILD_REMOTE_DEVICE "Build 'remote' TCP passthrough device" OFF)
 if (BUILD_REMOTE_DEVICE)
   add_subdirectory(remote_device)
 endif()
+
+option(BUILD_HDANARI "Build OpenUSD Hydra delegate plugin" OFF)
+if (BUILD_HDANARI)
+  add_subdirectory(hdanari)
+endif()

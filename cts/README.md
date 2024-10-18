@@ -8,18 +8,34 @@ It contains the following features:
 - Verification of object/parameter info metadata
 - Verification of known object properties
 - List core extensions implemented by a device
-- Create pdf report
+- Create a pdf report
 
 ## Requirements
 
-The project was developed with the following python packages/versions. Other versions might work as well.
+### ANARI Feature Support
+
+Any libraries/devices being tested need to at least support the following features:
+
+- ANARI_KHR_MATERIAL_MATTE
+- ANARI_KHR_GEOMETRY_TRIANGLE
+- ANARI_KHR_CAMERA_PERSPECTIVE
+- ANARI_KHR_RENDERER_BACKGROUND_COLOR
+- ANARI_KHR_RENDERER_AMBIENT_LIGHT
+
+### Software Dependencies
+
+This project uses poetry to manage package versions. To bypass using poetry the packages listed in [pyproject.toml](pyproject.toml) can be installed manually.
 
 - Your ANARI library files copied into this folder
-- [Python 3.10+](https://www.python.org/downloads/)
-- [Pillow 9.3.0](https://pypi.org/project/Pillow/)
-- [reportlab 3.6.10](https://pypi.org/project/reportlab/)
-- [scikit_image 0.19.3](https://pypi.org/project/scikit-image/)
-- [tabulate 0.8.10](https://pypi.org/project/tabulate/)
+- [Python 3.9+](https://www.python.org/downloads/)
+- [poetry](https://python-poetry.org/)
+
+Install poetry as described [here](https://python-poetry.org/docs/#installing-with-pipx). You might need to add the poetry executable to your PATH.
+
+In the cts folder, run `poetry install` to install all dependencies. This will automatically search for a suitable python version. If poetry can not find a python version or you want to specify a specific one, you can use `poetry env use <path to python executable>` before calling `poetry install`.\
+On Windows, `poetry install` might fail since the resulting path can exceed 260 characters. To fix this issue [enable long paths in Windows](https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=powershell).
+
+Afterwards, use `poetry shell` to enter the virtual environment. From this shell you can run the cts normally via `python cts.py`.
 
 If the cts binary (.pyd) file for the desired SDK version is not provided, have a look at the [Build section](#building).
 
@@ -150,7 +166,6 @@ Here is the [sphere test file](test_scenes/primitives/sphere/sphere.json) as an 
   - `spatial_field_dimensions`: A 3-integer array, describing the dimensions of all spatial fields in this test. If no spatial field is defined in `anariObjects`, a default one will be used.
   - `frameCompletionCallback`: When set to `true`, checks if `ANARI_KHR_FRAME_COMPLETION_CALLBACK` works correctly. Renders a green image on success and a red image otherwise.
   - `progressiveRendering`: When set to `true`, checks if `ANARI_KHR_PROGRESSIVE_RENDERING` works correctly. Renders a green image if more then 10 pixels differ from the previous rendering and a red image otherwise.
-  - `camera_generate_transform`: Enables automatic adaptation of the camera position to the scene.
   - `anari_objects`: This JSON object can be used to set generic parameters for all ANARI objects except World. It holds arrays that each have their type name as their key. Each array should only have one element. This array contains objects with parameters for each ANARI object. The parameter `subtype` is mandatory for all object types that define it. `null` can be used to reset/use the default of a parameter (useful for permutations). To set a parameter to a reference to another object, use the `ref_` prefix, then add the type and index, e.g. `ref_sampler_0`. All other `sceneParameters` take precedence over the ones set using the generic `anari_objects`. This also implies that for geometries, subtypes can not be mixed and `subtype` in `anariObjects` need to match `geometrySubtype`. Additionally, if `instances` are used no objects are added to the world despite the instances. There is no need to create e.g. a default `surface` to display materials or geometry. If an object is missing, a default object is used instead. To set `Array1D` or `Array2D` parameters, the value needs to be a JSON object containing the type as key together with its value, e.g. `{"Array1D": [0, 1, 2, 3]}`.
 -  `simplified_permutations`: When set to `true`, only the first value of each permutation list is used with permutations of other parameters, therefore reducing the amount of tests to N_0 + N_1 + ... instead of a cartesian product
 - `permutations` and `variants`: These specify scene parameters where different values should be tested. Therefore, these JSON objects contain the name of a scene parameter and a list of values for each of them. The permutations specify changes which result in a different outcome (e.g. 1 or 16 primitives). The variants should not change the outcome, therefore only one reference rendering is needed for these (e.g. the soup and indexed variants should look the same). The cartesian product is performed for all parameters. In the current example this results in four test images: 1 primitive + soup, 1 primitive + indexed, 16 primitives + soup, 16 primitives + indexed; As well as two reference images: 1 primitive (soup or indexed), 16 primitives (soup or indexed). To permutate a parameter in an ANARI object, the object needs to be defined in `anariObjects` without the parameter. In the permutation or variant object a JSON pointer e.g. `"/anari_objects/material/0/color"` should be used as key as seen in the example.
@@ -305,4 +320,5 @@ Here is a sample `launch.json` for Windows to get the debugger running:
 ```
 
 Open the `cts` folder in VS Code. Add `/.vscode/launch.json` and run `Python C++ Debugger: CTS` to start debugging. Use `args` to invoke different python functions.\
- `Python C++ Debugger: CTS REF` can be used to debug `createReferenceData.py`.
+ `Python C++ Debugger: CTS REF` can be used to debug `createReferenceData.py`.\
+If multiple python versions are installed, make sure to select the correct python interpreter in VS Code.

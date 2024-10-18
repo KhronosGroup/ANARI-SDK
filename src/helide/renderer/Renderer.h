@@ -49,6 +49,8 @@ struct Renderer : public Object
 
   virtual void commit() override;
 
+  int2 taskGrainSize() const;
+
   PixelSample renderSample(const float2 &screen, Ray ray, const World &w) const;
 
   static Renderer *createInstance(
@@ -62,11 +64,20 @@ struct Renderer : public Object
 
   float4 m_bgColor{float3(0.f), 1.f};
   float m_ambientRadiance{1.f};
+  float m_falloffBlendRatio{0.5f};
   RenderMode m_mode{RenderMode::DEFAULT};
+  int2 m_taskGrainSize{4, 4};
 
   helium::IntrusivePtr<Array1D> m_heatmap;
   helium::IntrusivePtr<Array2D> m_bgImage;
 };
+
+// Inlined definitions ////////////////////////////////////////////////////////
+
+inline int2 Renderer::taskGrainSize() const
+{
+  return m_taskGrainSize;
+}
 
 } // namespace helide
 

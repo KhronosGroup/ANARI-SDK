@@ -1,10 +1,10 @@
 {
+  "description": "Generic test for perspective camera parameters.",
   "sceneParameters": {
     "geometrySubtype": "triangle",
     "primitiveCount": 16,
     "seed": 12345,
     "shape": "triangle",
-    "camera_generate_transform": false,
     "anari_objects": {
       "camera": [
         {

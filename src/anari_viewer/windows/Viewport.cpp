@@ -7,7 +7,7 @@
 // stb_image
 #include "stb_image_write.h"
 
-namespace windows {
+namespace anari_viewer::windows {
 
 ///////////////////////////////////////////////////////////////////////////////
 // Viewport definitions ///////////////////////////////////////////////////////
@@ -204,8 +204,7 @@ void Viewport::updateFrame()
 {
   anari::setParameter(
       m_device, m_frame, "size", anari::math::uint2(m_viewportSize));
-  anari::setParameter(
-      m_device, m_frame, "channel.color", ANARI_UFIXED8_RGBA_SRGB);
+  anari::setParameter(m_device, m_frame, "channel.color", m_format);
   anari::setParameter(m_device, m_frame, "accumulation", true);
   anari::setParameter(m_device, m_frame, "world", m_world);
   if (m_useOrthoCamera)
@@ -268,16 +267,31 @@ void Viewport::updateImage()
     auto fb = anari::map<uint32_t>(m_device, m_frame, "channel.color");
 
     if (fb.data) {
-      glBindTexture(GL_TEXTURE_2D, m_framebufferTexture);
-      glTexSubImage2D(GL_TEXTURE_2D,
-          0,
-          0,
-          0,
-          fb.width,
-          fb.height,
-          GL_RGBA,
-          GL_UNSIGNED_BYTE,
-          fb.data);
+      const bool isByteChannles = fb.pixelType == ANARI_UFIXED8_RGBA_SRGB
+          || fb.pixelType == ANARI_UFIXED8_VEC4;
+      if (isByteChannles) {
+        glBindTexture(GL_TEXTURE_2D, m_framebufferTexture);
+        glTexSubImage2D(GL_TEXTURE_2D,
+            0,
+            0,
+            0,
+            fb.width,
+            fb.height,
+            GL_RGBA,
+            GL_UNSIGNED_BYTE,
+            fb.data);
+      } else {
+        glBindTexture(GL_TEXTURE_2D, m_framebufferTexture);
+        glTexSubImage2D(GL_TEXTURE_2D,
+            0,
+            0,
+            0,
+            fb.width,
+            fb.height,
+            GL_RGBA,
+            GL_FLOAT,
+            fb.data);
+      }
     } else {
       printf("mapped bad frame: %p | %i x %i\n", fb.data, fb.width, fb.height);
     }
@@ -426,6 +440,23 @@ void Viewport::ui_contextMenu()
     ImGui::Text("Viewport:");
     ImGui::Indent(INDENT_AMOUNT);
 
+    if (ImGui::BeginMenu("format")) {
+      const anari::DataType format = m_format;
+
+      if (ImGui::RadioButton(
+              "UFIXED8_RGBA_SRGB", m_format == ANARI_UFIXED8_RGBA_SRGB))
+        m_format = ANARI_UFIXED8_RGBA_SRGB;
+      if (ImGui::RadioButton("UFIXED8_VEC4", m_format == ANARI_UFIXED8_VEC4))
+        m_format = ANARI_UFIXED8_VEC4;
+      if (ImGui::RadioButton("FLOAT32_VEC4", m_format == ANARI_FLOAT32_VEC4))
+        m_format = ANARI_FLOAT32_VEC4;
+
+      if (format != m_format)
+        updateFrame();
+
+      ImGui::EndMenu();
+    }
+
     ImGui::Checkbox("show stats", &m_showOverlay);
     if (ImGui::MenuItem("reset stats")) {
       m_minFL = m_latestFL;
@@ -514,4 +545,4 @@ void Viewport::ui_overlay()
   ImGui::End();
 }
 
-} // namespace windows
+} // namespace anari_viewer::windows

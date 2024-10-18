@@ -23,10 +23,14 @@ static void serial_for(I size, FUNC &&f)
 template <typename R, typename TASK_T>
 static std::future<R> async(std::packaged_task<R()> &task, TASK_T &&fcn)
 {
+#if 1
+  return std::async(fcn);
+#else
   task = std::packaged_task<R()>(std::forward<TASK_T>(fcn));
   auto future = task.get_future();
   embree::TaskScheduler::spawn([&]() { task(); });
   return future;
+#endif
 }
 
 template <typename R>
@@ -154,16 +158,23 @@ void Frame::renderFrame()
 
     m_world->embreeSceneUpdate();
 
+    const auto taskGrainSize = uint2(m_renderer->taskGrainSize());
+
     const auto &size = m_frameData.size;
-    embree::parallel_for(size.y, [&](int y) {
-      serial_for(size.x, [&](int x) {
-        auto screen = screenFromPixel(float2(x, y));
-        auto imageRegion = m_camera->imageRegion();
-        screen.x = linalg::lerp(imageRegion.x, imageRegion.z, screen.x);
-        screen.y = linalg::lerp(imageRegion.y, imageRegion.w, screen.y);
-        Ray ray = m_camera->createRay(screen);
-        writeSample(x, y, m_renderer->renderSample(screen, ray, *m_world));
-      });
+    using Range = embree::range<uint32_t>;
+    embree::parallel_for(0u, size.y, taskGrainSize.y, [&](const Range &ry) {
+      for (auto y = ry.begin(); y < ry.end(); y++) {
+        embree::parallel_for(0u, size.x, taskGrainSize.x, [&](const Range &rx) {
+          for (auto x = rx.begin(); x < rx.end(); x++) {
+            auto screen = screenFromPixel(float2(x, y));
+            auto imageRegion = m_camera->imageRegion();
+            screen.x = linalg::lerp(imageRegion.x, imageRegion.z, screen.x);
+            screen.y = linalg::lerp(imageRegion.y, imageRegion.w, screen.y);
+            Ray ray = m_camera->createRay(screen);
+            writeSample(x, y, m_renderer->renderSample(screen, ray, *m_world));
+          }
+        });
+      }
     });
 
     if (m_callback)

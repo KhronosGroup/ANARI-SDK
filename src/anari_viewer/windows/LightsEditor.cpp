@@ -8,7 +8,7 @@
 // std
 #include <cmath>
 
-namespace windows {
+namespace anari_viewer::windows {
 
 static const char *lightToType(Light::LightType type)
 {
@@ -310,4 +310,4 @@ void LightsEditor::updateLightsArray()
   }
 }
 
-} // namespace windows
+} // namespace anari_viewer::windows

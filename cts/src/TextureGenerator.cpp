@@ -6,8 +6,8 @@
 #include "PrimitiveGenerator.h"
 
 namespace cts {
-std::vector<glm::vec4> TextureGenerator::generateGreyScale(size_t resolution) {
-  std::vector<glm::vec4> greyscale;
+std::vector<anari::math::float4> TextureGenerator::generateGreyScale(size_t resolution) {
+  std::vector<anari::math::float4> greyscale;
   greyscale.reserve(resolution);
   for (size_t i = 0; i < resolution; ++i) {
     greyscale.push_back({1.0f * i / (resolution - 1),
@@ -18,11 +18,11 @@ std::vector<glm::vec4> TextureGenerator::generateGreyScale(size_t resolution) {
   return greyscale;
 }
 
-std::vector<glm::vec4> TextureGenerator::generateCheckerBoard(
+std::vector<anari::math::float4> TextureGenerator::generateCheckerBoard(
     size_t resolution)
 {
   size_t counter = 0;
-  std::vector<glm::vec4> checkerBoard(resolution * resolution);
+  std::vector<anari::math::float4> checkerBoard(resolution * resolution);
   for (size_t i = 0; i < 8; ++i) {
     size_t offset = resolution * i * resolution / 8;
     if (i % 2 == 0) {
@@ -31,7 +31,7 @@ std::vector<glm::vec4> TextureGenerator::generateCheckerBoard(
     for (size_t j = 0; j < 8; j += 2) {
       for (size_t x = 0; x < resolution / 8; ++x) {
         for (size_t y = 0; y < resolution / 8; ++y) {
-          checkerBoard[y + j * resolution / 8 + x * resolution + offset] = glm::vec4(colors::getColorFromPalette(counter), 1.0f);
+          checkerBoard[y + j * resolution / 8 + x * resolution + offset] = anari::math::float4(colors::getColorFromPalette(counter), 1.0f);
         }
       }
       ++counter;
@@ -40,24 +40,24 @@ std::vector<glm::vec4> TextureGenerator::generateCheckerBoard(
   return checkerBoard;
 }
 
-std::vector<glm::vec4> TextureGenerator::generateCheckerBoardHDR(size_t resolution)
+std::vector<anari::math::float3> TextureGenerator::generateCheckerBoardHDR(size_t resolution)
 {
   PrimitiveGenerator generator(0);
   size_t counter = 0;
-  std::vector<glm::vec4> checkerBoard(resolution * resolution);
+  std::vector<anari::math::float3> checkerBoard(resolution * resolution);
   for (size_t i = 0; i < 8; ++i) {
     size_t offset = resolution * i * resolution / 8;
     if (i % 2 == 0) {
       offset += resolution / 8;
     }
     for (size_t j = 0; j < 8; j += 2) {
-      glm::vec3 color = colors::getColorFromPalette(counter);
+      anari::math::float3 color = colors::getColorFromPalette(counter);
       color += generator.getRandomFloat(-0.5f, 0.5f);
-      color = glm::clamp(color, 0.0f, 2.0f);
+      color = anari::math::clamp(color, 0.0f, 2.0f);
       for (size_t x = 0; x < resolution / 8; ++x) {
         for (size_t y = 0; y < resolution / 8; ++y) {
           checkerBoard[y + j * resolution / 8 + x * resolution + offset] =
-              glm::vec4(color, 1.0f);
+              color;
         }
       }
       ++counter;
@@ -66,10 +66,10 @@ std::vector<glm::vec4> TextureGenerator::generateCheckerBoardHDR(size_t resoluti
   return checkerBoard;
 }
 
-std::vector<glm::vec4>
+std::vector<anari::math::float4>
 TextureGenerator::generateRGBRamp(size_t resolution)
 {
-  std::vector<glm::vec4> RGBRamp(resolution * resolution * resolution);
+  std::vector<anari::math::float4> RGBRamp(resolution * resolution * resolution);
   for (size_t x = 0; x < resolution; ++x) {
     for (size_t y = 0; y < resolution; ++y) {
       for (size_t z = 0; z < resolution; ++z) {
@@ -102,24 +102,24 @@ float TextureGenerator::convertNormalToColor(float input, bool isZ)
   }
 }
 
-glm::vec3 TextureGenerator::convertColorToNormal(glm::vec3 color) {
-  glm::vec3 result;
+anari::math::float3 TextureGenerator::convertColorToNormal(anari::math::float3 color) {
+  anari::math::float3 result;
   result.x = color.x * 2.0f - 1.0f;
   result.y = color.y * 2.0f - 1.0f;
   result.z = color.z * -1.0f;
-  result = glm::normalize(result);
+  result = anari::math::normalize(result);
   result.x = result.x / 2.0f + 0.5f;
   result.y = result.y / 2.0f + 0.5f;
   result.z = result.z / -2.0f + 0.5f;
   return result;
 }
 
-std::vector<glm::vec4> TextureGenerator::generateCheckerBoardNormalMap(
+std::vector<anari::math::float4> TextureGenerator::generateCheckerBoardNormalMap(
     size_t resolution)
 {
   size_t counter = 0;
-  glm::vec4 defaultNormal = {0.5f, 0.5f, 1.0f, 1.0f};
-  std::vector<glm::vec4> checkerBoard(resolution * resolution);
+  anari::math::float4 defaultNormal = {0.5f, 0.5f, 1.0f, 1.0f};
+  std::vector<anari::math::float4> checkerBoard(resolution * resolution);
   for (size_t i = 0; i < 8; ++i) {
     size_t offset = resolution * i * resolution / 8;
     size_t rowOffset = 0;
@@ -130,10 +130,10 @@ std::vector<glm::vec4> TextureGenerator::generateCheckerBoardNormalMap(
       for (size_t x = 0; x < resolution / 8; ++x) {
         for (size_t y = 0; y < resolution / 8; ++y) {
           if (j % 2 == 0) {
-            glm::vec3 color =
+            anari::math::float3 color =
                 convertColorToNormal(colors::getColorFromPalette(counter));
             checkerBoard[y + j * resolution / 8 + x * resolution + offset + rowOffset] =
-                glm::vec4(color, 1.0f);
+                anari::math::float4(color, 1.0f);
           } else {
             checkerBoard[y + j * resolution / 8 + x * resolution + offset - rowOffset] =
                 defaultNormal;

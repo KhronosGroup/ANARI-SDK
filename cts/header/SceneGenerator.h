@@ -4,6 +4,7 @@
 #pragma once
 
 #include "scenes/scene.h"
+#include "anari_test_scenes/scenes/file/gltf2anari.h"
 
 #include <functional>
 #include <optional>
@@ -21,10 +22,17 @@ class SceneGenerator : public anari::scenes::TestScene
   void resetAllParameters();
   void resetSceneObjects();
 
-  void createAnariObject(
-      int type, const std::string &subtype = "", const std::string& ctsType = "");
+  void loadGLTF(const std::string &jsonText,
+      std::vector<std::vector<char>> &sortedBuffers,
+      std::vector<std::vector<char>> &sortedImages,
+      bool generateTangents,
+      bool parseLights);
+
+  void createAnariObject(int type,
+      const std::string &subtype = "",
+      const std::string &ctsType = "");
   template <typename T>
-  void setGenericParameter(const std::string& name, T&& value)
+  void setGenericParameter(const std::string &name, T &&value)
   {
     if (m_device != nullptr && m_currentObject != nullptr) {
       anari::setParameter(m_device, m_currentObject, name.c_str(), value);
@@ -33,10 +41,13 @@ class SceneGenerator : public anari::scenes::TestScene
 
   template <typename T>
   void setGenericArray1DParameter(
-      const std::string& name, const std::vector<T>& vector)
+      const std::string &name, const std::vector<T> &vector)
   {
     if (m_device != nullptr && m_currentObject != nullptr) {
-      anari::setAndReleaseParameter(m_device, m_currentObject, name.c_str(), anari::newArray1D(m_device, vector.data(), vector.size()));
+      anari::setAndReleaseParameter(m_device,
+          m_currentObject,
+          name.c_str(),
+          anari::newArray1D(m_device, vector.data(), vector.size()));
     }
   }
 
@@ -61,9 +72,12 @@ class SceneGenerator : public anari::scenes::TestScene
       anari::setAndReleaseParameter(m_device,
           m_currentObject,
           name.c_str(),
-          anari::newArray2D(m_device, result.data(), vector.size(), vector.front().size()));
+          anari::newArray2D(
+              m_device, result.data(), vector.size(), vector.front().size()));
     }
   }
+
+  void setGenericTexture2D(const std::string &name, const std::string &textureType);
 
   void unsetGenericParameter(const std::string& name) {
     if (m_device != nullptr && m_currentObject != nullptr) {
@@ -71,8 +85,16 @@ class SceneGenerator : public anari::scenes::TestScene
     }
   }
 
-  void setReferenceParameter(int objType, size_t objIndex, const std::string& name, int refType, size_t refIndex);
-  void setReferenceArray(int objType, size_t objIndex, const std::string& name, int refType, const std::vector<size_t>& refIndices);
+  void setReferenceParameter(int objType,
+      size_t objIndex,
+      const std::string &name,
+      int refType,
+      size_t refIndex);
+  void setReferenceArray(int objType,
+      size_t objIndex,
+      const std::string &name,
+      int refType,
+      const std::vector<size_t> &refIndices);
 
   void setCurrentObject(int type, size_t index);
 
@@ -85,7 +107,8 @@ class SceneGenerator : public anari::scenes::TestScene
 
   void commit() override;
 
-  std::vector<std::vector<uint32_t>> renderScene(float renderDistance);
+  std::tuple<std::vector<std::vector<uint32_t>>, uint32_t, uint32_t>
+    renderScene(float renderDistance);
   std::vector<std::vector<std::vector<std::vector<float>>>> getBounds();
 
   // after renderScene was called, use this to get the duration of the rendering
@@ -97,12 +120,13 @@ class SceneGenerator : public anari::scenes::TestScene
   int anariTypeFromString(const std::string &input);
 
  private:
-
   float frameDuration = -1.0f;
 
+  gltf_data m_gltf;
+  anari::Frame m_frame{nullptr};
   anari::World m_world{nullptr};
   std::unordered_map<int, std::vector<anari::Object>> m_anariObjects;
-  anari::Object m_currentObject;
+  anari::Object m_currentObject = nullptr;
 };
 
 } // namespace cts

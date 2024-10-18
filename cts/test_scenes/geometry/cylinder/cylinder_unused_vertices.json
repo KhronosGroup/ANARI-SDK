@@ -1,0 +1,30 @@
+{
+  "description": "Tests indexed vertices of cylinder geometry with two unused vertex.",
+  "sceneParameters": {
+    "geometrySubtype": "cylinder",
+    "primitiveCount": 4,
+    "seed": 54321,
+    "primitiveMode": "indexed",
+    "frame_depth_type": "FLOAT32",
+    "unusedVertices": true
+  },
+  "requiredFeatures": [
+    "ANARI_KHR_GEOMETRY_QUAD"
+  ],
+  "metaData": {
+    "bounds": {
+      "world": [
+        [
+          0.2344459742307663,
+          0.03928111493587494,
+          0.03252050280570984
+        ],
+        [
+          0.9197961091995239,
+          0.8254515528678894,
+          1.0629374980926514
+        ]
+      ]
+    }
+  }
+}

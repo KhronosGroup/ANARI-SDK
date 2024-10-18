@@ -63,7 +63,7 @@ add_executable(anariTutorialInitFromEnv anariTutorialInitFromEnv.c)
 target_link_libraries(anariTutorialInitFromEnv PRIVATE anari::anari)
 
 add_executable(anariInfo anariInfo.cpp)
-target_link_libraries(anariInfo PRIVATE anari::anari)
+target_link_libraries(anariInfo PRIVATE anari::anari_static)
 
 if (IN_SDK_SOURCE_TREE)
   install(TARGETS anariInfo RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
@@ -74,5 +74,11 @@ if (IN_SDK_SOURCE_TREE)
     # such a direct function in it.
     add_executable(anariTutorialDirectLink anariTutorialDirectLink.c)
     target_link_libraries(anariTutorialDirectLink PRIVATE anari_library_helide)
+  endif()
+
+  if (BUILD_TESTING)
+    add_test(NAME anariTutorial COMMAND anariTutorial)
+    add_test(NAME anariTutorialCpp COMMAND anariTutorialCpp)
+    add_test(NAME anariTutorialDebug COMMAND anariTutorialDebug)
   endif()
 endif()

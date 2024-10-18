@@ -1,0 +1,15 @@
+{
+  "description": "Test ClearCoatCarPaint",
+  "sceneParameters": {
+    "primitiveCount": 0,
+    "gltf": {
+      "file": "../../../gltf-Sample-Assets/ClearCoatCarPaint/glTF-Binary/ClearCoatCarPaint.glb"
+    }
+  },
+  "requiredFeatures": [
+    "ANARI_KHR_SAMPLER_IMAGE2D"
+  ],
+  "optionalFeatures": [
+    "ANARI_KHR_MATERIAL_PHYSICALLY_BASED"
+  ]
+}

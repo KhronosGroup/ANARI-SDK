@@ -1,4 +1,5 @@
 {
+  "description": "Tests sphere geometry vertex and primitive color. Results should be the same for all permutations expect for indexed primitive colors.",
   "sceneParameters": {
     "geometrySubtype": "sphere",
     "primitiveCount": 4,
@@ -14,15 +15,19 @@
   },
   "permutations": {
     "color": [
-      "vertex.color",
-      "primitive.color"
+      "primitive.color",
+      "vertex.color"
+    ],
+    "primitiveMode": [
+      "soup",
+      "indexed"
     ]
   },
   "requiredFeatures": [
     "ANARI_KHR_GEOMETRY_SPHERE"
   ],
   "metaData": {
-    "vertex.color": {
+    "primitive.color_soup": {
       "bounds": {
         "world": [
           [
@@ -38,7 +43,39 @@
         ]
       }
     },
-    "primitive.color": {
+    "primitive.color_indexed": {
+      "bounds": {
+        "world": [
+          [
+            -0.08789964765310287,
+            -0.28438711166381836,
+            0.05467072129249573
+          ],
+          [
+            1.1669179201126099,
+            1.1838836669921875,
+            0.9511533975601196
+          ]
+        ]
+      }
+    },
+    "vertex.color_soup": {
+      "bounds": {
+        "world": [
+          [
+            -0.08789964765310287,
+            -0.28438711166381836,
+            0.05467072129249573
+          ],
+          [
+            1.1669179201126099,
+            1.1838836669921875,
+            0.9511533975601196
+          ]
+        ]
+      }
+    },
+    "vertex.color_indexed": {
       "bounds": {
         "world": [
           [

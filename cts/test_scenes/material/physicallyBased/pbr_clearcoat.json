@@ -1,4 +1,5 @@
 {
+  "description": "Tests permutations of the clearcoat effect on pbr materials.",
   "sceneParameters": {
     "color": "vertex.attribute0",
     "anari_objects": {
@@ -41,7 +42,7 @@
     ]
   },
   "requiredFeatures": [
-    "KHR_MATERIAL_PHYSICALLY_BASED"
+    "ANARI_KHR_MATERIAL_PHYSICALLY_BASED"
   ],
   "metaData": {
     "0.5_0.5_None": {

@@ -13,6 +13,7 @@
 #include "Compression.h"
 #include "Frame.h"
 #include "Logging.h"
+#include "ObjectDesc.h"
 #include "async/connection.h"
 #include "async/connection_manager.h"
 #include "async/work_queue.h"
@@ -151,8 +152,7 @@ ANARIArray3D Device::newArray3D(const void *appMemory,
 void *Device::mapArray(ANARIArray array)
 {
   auto buf = std::make_shared<Buffer>();
-  buf->write(remoteDevice);
-  buf->write(array);
+  buf->write(ObjectDesc(remoteDevice, array));
   write(MessageType::MapArray, buf);
 
   std::unique_lock l(sync[SyncPoints::MapArray].mtx);
@@ -169,8 +169,7 @@ void *Device::mapArray(ANARIArray array)
 void Device::unmapArray(ANARIArray array)
 {
   auto buf = std::make_shared<Buffer>();
-  buf->write(remoteDevice);
-  buf->write(array);
+  buf->write(ObjectDesc(remoteDevice, array));
   uint64_t numBytes = arrays[array].value.size();
   buf->write(arrays[array].value.data(), numBytes);
   write(MessageType::UnmapArray, buf);
@@ -258,16 +257,16 @@ void Device::setParameter(
     return;
   }
 
-  // Device parameteters
+  // Device parameters
   if (object == (ANARIObject)this) {
-    if (strncmp(name, "server.hostname", 15) == 0) {
+    if (std::string(name) == "server.hostname") {
       if (remoteDevice != nullptr) {
         LOG(logging::Level::Error)
             << "server.hostname must be set after device creation";
         return;
       }
       server.hostname = std::string((const char *)mem);
-    } else if (strncmp(name, "server.port", 11) == 0) {
+    } else if (std::string(name) == "server.port") {
       if (remoteDevice != nullptr) {
         LOG(logging::Level::Error)
             << "server.port must be set after device creation";
@@ -279,22 +278,19 @@ void Device::setParameter(
     return;
   }
 
-  // Object parameters passed to the server
-  std::vector<char> value;
-  if (anari::isObject(type)) {
-    value.resize(sizeof(uint64_t));
-    memcpy(value.data(), mem, sizeof(uint64_t));
-  } else {
-    value.resize(anari::sizeOf(type));
-    memcpy(value.data(), mem, anari::sizeOf(type));
-  }
-
   auto buf = std::make_shared<Buffer>();
-  buf->write(remoteDevice);
-  buf->write(object);
+  buf->write(makeObjectDesc(object));
   buf->write(std::string(name));
   buf->write(type);
-  buf->write(value.data(), value.size());
+
+  if (anari::isObject(type)) {
+    buf->write((const char *)mem, sizeof(ANARIObject));
+  } else if (type == ANARI_STRING) {
+    buf->write(std::string((const char *)mem));
+  } else {
+    buf->write((const char *)mem, anari::sizeOf(type));
+  }
+
   write(MessageType::SetParam, buf);
 
   LOG(logging::Level::Info)
@@ -309,9 +305,7 @@ void Device::unsetParameter(ANARIObject object, const char *name)
   }
 
   auto buf = std::make_shared<Buffer>();
-  buf->write(remoteDevice);
-  buf->write((const char *)&object, sizeof(object));
-  uint64_t nameLen = strlen(name);
+  buf->write(makeObjectDesc(object));
   buf->write(std::string(name));
   write(MessageType::UnsetParam, buf);
 
@@ -327,8 +321,7 @@ void Device::unsetAllParameters(ANARIObject object)
   }
 
   auto buf = std::make_shared<Buffer>();
-  buf->write(remoteDevice);
-  buf->write(object);
+  buf->write(makeObjectDesc(object));
   write(MessageType::UnsetAllParams, buf);
 
   LOG(logging::Level::Info)
@@ -342,21 +335,11 @@ void Device::commitParameters(ANARIObject object)
     return;
   }
 
-  if (object
-      == (ANARIObject)this) { // TODO: what happens if we actually assign our
-                              // pointer value via nextObjectID++ ??? :-D
-    auto buf = std::make_shared<Buffer>();
-    buf->write(remoteDevice);
-    write(
-        MessageType::CommitParams, buf); // one handle only: commit the device!
-  } else {
-    auto buf = std::make_shared<Buffer>();
-    buf->write(remoteDevice);
-    buf->write(object);
-    write(MessageType::CommitParams, buf);
+  auto buf = std::make_shared<Buffer>();
+  buf->write(makeObjectDesc(object));
+  write(MessageType::CommitParams, buf);
 
-    LOG(logging::Level::Info) << "Parameters committed on object " << object;
-  }
+  LOG(logging::Level::Info) << "Parameters committed on object " << object;
 }
 
 void Device::release(ANARIObject object)
@@ -371,8 +354,7 @@ void Device::release(ANARIObject object)
     frames.erase(object);
 
   auto buf = std::make_shared<Buffer>();
-  buf->write(remoteDevice);
-  buf->write(object);
+  buf->write(makeObjectDesc(object));
   write(MessageType::Release, buf);
 
   LOG(logging::Level::Info) << "Object released: " << object;
@@ -386,8 +368,7 @@ void Device::retain(ANARIObject object)
   }
 
   auto buf = std::make_shared<Buffer>();
-  buf->write(remoteDevice);
-  buf->write(object);
+  buf->write(makeObjectDesc(object));
   write(MessageType::Retain, buf);
 
   LOG(logging::Level::Info) << "Object retained: " << object;
@@ -408,8 +389,7 @@ int Device::getProperty(ANARIObject object,
   }
 
   auto buf = std::make_shared<Buffer>();
-  buf->write(remoteDevice);
-  buf->write(object);
+  buf->write(makeObjectDesc(object));
   buf->write(std::string(name));
   buf->write(type);
   buf->write(size);
@@ -417,28 +397,24 @@ int Device::getProperty(ANARIObject object,
   write(MessageType::GetProperty, buf);
 
   std::unique_lock l(sync[SyncPoints::Properties].mtx);
-  property.object = nullptr;
-  property.type = type;
-  property.size = size;
-  sync[SyncPoints::Properties].cv.wait(
-      l, [&, this]() { return property.object; });
-
-  if (type == ANARI_STRING_LIST) {
-    auto it = std::find_if(stringListProperties.begin(),
-        stringListProperties.end(),
-        [name](const StringListProperty &prop) {
+  std::vector<Property>::iterator it;
+  sync[SyncPoints::Properties].cv.wait(l, [this, &it, name]() {
+    it = std::find_if(
+        properties.begin(), properties.end(), [name](const Property &prop) {
           return prop.name == std::string(name);
         });
-    if (it != stringListProperties.end()) {
-      writeToVoidP(mem, it->value.data());
-    }
+    return it != properties.end();
+  });
+
+  if (type == ANARI_STRING_LIST) {
+    writeToVoidP(mem, it->value.asStringList.data());
   } else if (type == ANARI_DATA_TYPE_LIST) {
     throw std::runtime_error(
         "getProperty with ANARI_DATA_TYPE_LIST not implemented yet!");
   } else { // POD
-    memcpy(mem, property.mem.data(), size);
+    memcpy(mem, it->value.asAny.data(), size);
   }
-  int result = property.result;
+  int result = it->result;
   l.unlock();
 
   return result;
@@ -455,7 +431,7 @@ const char **Device::getObjectSubtypes(ANARIDataType objectType)
   }
 
   auto buf = std::make_shared<Buffer>();
-  buf->write(remoteDevice);
+  buf->write(ObjectDesc(remoteDevice, remoteDevice));
   buf->write(objectType);
   write(MessageType::GetObjectSubtypes, buf);
 
@@ -476,12 +452,14 @@ const void *Device::getObjectInfo(ANARIDataType objectType,
     const char *infoName,
     ANARIDataType infoType)
 {
+  const std::string subtype = objectSubtype ? objectSubtype : "";
+
   auto it = std::find_if(objectInfos.begin(),
       objectInfos.end(),
-      [objectType, objectSubtype, infoName, infoType](
+      [objectType, subtype, infoName, infoType](
           const ObjectInfo::Ptr &oi) {
         return oi->objectType == objectType
-            && oi->objectSubtype == std::string(objectSubtype)
+            && oi->objectSubtype == subtype
             && oi->info.name == std::string(infoName)
             && oi->info.type == infoType;
       });
@@ -490,22 +468,22 @@ const void *Device::getObjectInfo(ANARIDataType objectType,
   }
 
   auto buf = std::make_shared<Buffer>();
-  buf->write(remoteDevice);
+  buf->write(ObjectDesc(remoteDevice, remoteDevice));
   buf->write(objectType);
-  buf->write(std::string(objectSubtype));
+  buf->write(subtype);
   buf->write(std::string(infoName));
   buf->write(infoType);
   write(MessageType::GetObjectInfo, buf);
 
   std::unique_lock l(sync[SyncPoints::ObjectInfo].mtx);
   sync[SyncPoints::ObjectInfo].cv.wait(
-      l, [this, &it, objectType, objectSubtype, infoName, infoType]() {
+      l, [this, &it, objectType, subtype, infoName, infoType]() {
         it = std::find_if(objectInfos.begin(),
             objectInfos.end(),
-            [&it, objectType, objectSubtype, infoName, infoType](
+            [&it, objectType, subtype, infoName, infoType](
                 const ObjectInfo::Ptr &oi) {
               return oi->objectType == objectType
-                  && oi->objectSubtype == std::string(objectSubtype)
+                  //&& oi->objectSubtype == subtype
                   && oi->info.name == std::string(infoName)
                   && oi->info.type == infoType;
             });
@@ -522,16 +500,18 @@ const void *Device::getParameterInfo(ANARIDataType objectType,
     const char *infoName,
     ANARIDataType infoType)
 {
+  const std::string subtype = objectSubtype ? objectSubtype : "";
+
   auto it = std::find_if(parameterInfos.begin(),
       parameterInfos.end(),
       [objectType,
-          objectSubtype,
+          subtype,
           parameterName,
           parameterType,
           infoName,
           infoType](const ParameterInfo::Ptr &pi) {
         return pi->objectType == objectType
-            && pi->objectSubtype == std::string(objectSubtype)
+            && pi->objectSubtype == subtype
             && pi->parameterName == std::string(parameterName)
             && pi->parameterType == parameterType
             && pi->info.name == std::string(infoName)
@@ -542,9 +522,9 @@ const void *Device::getParameterInfo(ANARIDataType objectType,
   }
 
   auto buf = std::make_shared<Buffer>();
-  buf->write(remoteDevice);
+  buf->write(ObjectDesc(remoteDevice, remoteDevice));
   buf->write(objectType);
-  buf->write(std::string(objectSubtype));
+  buf->write(subtype);
   buf->write(std::string(parameterName));
   buf->write(parameterType);
   buf->write(std::string(infoName));
@@ -556,7 +536,7 @@ const void *Device::getParameterInfo(ANARIDataType objectType,
       [this,
           &it,
           objectType,
-          objectSubtype,
+          subtype,
           parameterName,
           parameterType,
           infoName,
@@ -565,13 +545,13 @@ const void *Device::getParameterInfo(ANARIDataType objectType,
             parameterInfos.end(),
             [&it,
                 objectType,
-                objectSubtype,
+                subtype,
                 parameterName,
                 parameterType,
                 infoName,
                 infoType](const ParameterInfo::Ptr &pi) {
               return pi->objectType == objectType
-                  && pi->objectSubtype == std::string(objectSubtype)
+                  && pi->objectSubtype == subtype
                   && pi->parameterName == std::string(parameterName)
                   && pi->parameterType == parameterType
                   && pi->info.name == std::string(infoName)
@@ -609,16 +589,16 @@ const void *Device::frameBufferMap(ANARIFrame fb,
   *width = frm.size[0];
   *height = frm.size[1];
 
-  if (strncmp(channel, "channel.color", 13) == 0)
+  if (std::string(channel) == "channel.color")
     *pixelType = frm.colorType;
-  else if (strncmp(channel, "channel.depth", 13) == 0)
+  else if (std::string(channel) == "channel.depth")
     *pixelType = frm.depthType;
 
   frm.state = Frame::Mapped; // this needs to be done on a per-channel level!!
 
-  if (strncmp(channel, "channel.color", 13) == 0)
+  if (std::string(channel) == "channel.color")
     return frm.color.data();
-  else if (strncmp(channel, "channel.depth", 13) == 0)
+  else if (std::string(channel) == "channel.depth")
     return frm.depth.data();
 
   return nullptr;
@@ -662,8 +642,7 @@ void Device::renderFrame(ANARIFrame frame)
   l.unlock();
 
   auto buf = std::make_shared<Buffer>();
-  buf->write(remoteDevice);
-  buf->write(frame);
+  buf->write(ObjectDesc(remoteDevice, frame));
   write(MessageType::RenderFrame, buf);
   frm.state = Frame::Render;
 }
@@ -686,8 +665,7 @@ int Device::frameReady(ANARIFrame frame, ANARIWaitMask m)
 
   if (frm.state == Frame::Render) {
     auto buf = std::make_shared<Buffer>();
-    buf->write(remoteDevice);
-    buf->write(frame);
+    buf->write(ObjectDesc(remoteDevice, frame));
     buf->write(m);
     write(MessageType::FrameReady, buf);
     if (m == ANARI_WAIT) { // TODO: mask is probably a bitmask?!
@@ -749,13 +727,12 @@ ANARIObject Device::registerNewObject(ANARIDataType type, std::string subtype)
   ANARIObject object;
   memcpy(&object, &objectID, sizeof(objectID));
 
-  auto buf = std::make_shared<Buffer>();
+  ObjectDesc obj = makeObjectDesc(object);
+  obj.type = type;
+  obj.subtype = subtype;
 
-  buf->write(remoteDevice);
-  buf->write(type);
-  uint64_t len = subtype.length();
-  buf->write(subtype);
-  buf->write(objectID);
+  auto buf = std::make_shared<Buffer>();
+  buf->write(obj);
 
   write(MessageType::NewObject, buf);
 
@@ -779,10 +756,12 @@ ANARIArray Device::registerNewArray(ANARIDataType type,
   ANARIArray array;
   memcpy(&array, &objectID, sizeof(objectID));
 
+  ObjectDesc obj = makeObjectDesc(array);
+  obj.type = type;
+  obj.subtype = "";
+
   auto buf = std::make_shared<Buffer>();
-  buf->write(remoteDevice);
-  buf->write(type);
-  buf->write(objectID);
+  buf->write(obj);
   buf->write(elementType);
   buf->write(numItems1);
   buf->write(numItems2);
@@ -802,6 +781,14 @@ ANARIArray Device::registerNewArray(ANARIDataType type,
   return array;
 }
 
+ObjectDesc Device::makeObjectDesc(ANARIObject object) const
+{
+  if (object == (ANARIObject)this)
+    object = remoteDevice;
+
+  return ObjectDesc(remoteDevice, object);
+}
+
 void Device::initClient()
 {
   connect(server.hostname, server.port);
@@ -817,6 +804,7 @@ void Device::initClient()
 
   // request remote device to be created, send other client info along
   auto buf = std::make_shared<Buffer>();
+  buf->write(ObjectDesc{});
   buf->write(remoteSubtype);
   buf->write(cf);
   // write(MessageType::NewDevice, buf);
@@ -913,6 +901,9 @@ void Device::handleMessage(async::connection::reason reason,
       remoteDevice = *(ANARIDevice *)msg;
       msg += sizeof(ANARIDevice);
 
+      // Make sure that device and object handles are unique:
+      nextObjectID = uint64_t(remoteDevice) + 1;
+
       server.compression = *(CompressionFeatures *)msg;
       msg += sizeof(CompressionFeatures);
 
@@ -960,35 +951,41 @@ void Device::handleMessage(async::connection::reason reason,
 
       Buffer buf(message->data(), message->size());
 
-      buf.read(property.object);
-      buf.read(property.name);
-      buf.read(property.result);
+      Property prop;
 
-      if (property.type == ANARI_STRING_LIST) {
-        // Remove old list (if exists)
-        auto it = std::find_if(stringListProperties.begin(),
-            stringListProperties.end(),
-            [this](const StringListProperty &prop) {
-              return prop.name == property.name;
-            });
-        if (it != stringListProperties.end()) {
-          stringListProperties.erase(it);
-        }
+      buf.read(prop.object);
+      buf.read(prop.name);
+      buf.read(prop.type);
+      buf.read(prop.size);
+      buf.read(prop.result);
 
-        StringListProperty prop;
-
-        prop.object = property.object;
-        prop.name = property.name;
-        buf.read(prop.value);
-
-        stringListProperties.push_back(prop);
-      } else if (property.type == ANARI_DATA_TYPE_LIST) {
+      if (prop.type == ANARI_STRING) {
+        std::string str;
+        buf.read(str);
+        prop.value.asAny = helium::AnariAny(prop.type, str.c_str());
+      } else if (prop.type == ANARI_STRING_LIST) {
+        buf.read(prop.value.asStringList);
+      } else if (prop.type == ANARI_DATA_TYPE_LIST) {
         throw std::runtime_error(
             "getProperty with ANARI_DATA_TYPE_LIST not implemented yet!");
       } else { // POD
-        property.mem.resize(property.size);
-        buf.read(property.mem.data(), property.size);
+        if (!buf.eof()) {
+          std::vector<char> bytes(anari::sizeOf(prop.type));
+          buf.read(bytes.data(), bytes.size());
+          prop.value.asAny = helium::AnariAny(prop.type, bytes.data());
+        }
       }
+
+      // Remove old property entry (if exists)
+      auto it = std::find_if(properties.begin(),
+          properties.end(),
+          [prop](const Property &p) { return p.name == prop.name; });
+      if (it != properties.end()) {
+        properties.erase(it);
+      }
+
+      // Update list with new entry:
+      properties.push_back(prop);
 
       l.unlock();
       sync[SyncPoints::Properties].cv.notify_all();

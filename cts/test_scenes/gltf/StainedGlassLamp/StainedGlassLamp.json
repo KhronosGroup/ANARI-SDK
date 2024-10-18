@@ -1,0 +1,17 @@
+{
+  "description": "Test StainedGlassLamp",
+  "sceneParameters": {
+    "primitiveCount": 0
+  },
+  "permutations": {
+    "/gltf/file": [
+      "../../../gltf-Sample-Assets/StainedGlassLamp/glTF-KTX-BasisU/StainedGlassLamp.gltf",
+      "../../../gltf-Sample-Assets/StainedGlassLamp/glTF-JPG-PNG/StainedGlassLamp.gltf",
+      "../../../gltf-Sample-Assets/StainedGlassLamp/glTF/StainedGlassLamp.gltf"
+    ]
+  },
+  "requiredFeatures": [],
+  "optionalFeatures": [
+    "ANARI_KHR_MATERIAL_PHYSICALLY_BASED"
+  ]
+}

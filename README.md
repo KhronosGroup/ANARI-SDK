@@ -5,12 +5,13 @@ ANARI-SDK
 
 This repository contains the source for the ANARI API SDK. This includes:
 
-- [Front-end library + implementation guide](libs/anari)
-- [Device implementation utilties for implementations](libs/helium)
-- [Example device implementation](libs/helide) (not intended for production use)
+- [Front-end library + implementation guide](src/anari)
+- [Device implementation utilties for implementations](src/helium)
+- [Example device implementation](src/helide) (not intended for production use)
 - [Example applications](examples/)
 - [Interactive sample viewer](examples/viewer)
 - [Render tests](tests/render)
+- [(experimental) OpenUSD Hydra render delegate plugin](src/hdanari)
 
 The 1.0 ANARI specification can be found on the Khronos website
 [here](https://www.khronos.org/registry/ANARI/).
@@ -56,6 +57,7 @@ available to enable. The following CMake options are offered:
 - `BUILD_REMOTE_DEVICE` : build the provided experimental `remote` device implementation
 - `BUILD_EXAMPLES`      : build example applications
 - `BUILD_VIEWER`        : build viewer too (needs glfw3) if building examples
+- `BUILD_HDANARI`       : build (experimental) OpenUSD Hydra delegate plugin
 
 Once built, the library can be installed via the `install` target created by
 CMake. This can be invoked from your build directory with (on any platform):
@@ -120,16 +122,58 @@ the viewer to select/override which library is loaded at runtime.
 
 ## Available Implementations
 
-### SDK provided ExampleDevice implementation
+### SDK provided example implementation
 
-An example device implementation [helide](libs/helide) is provided as a
+An example device implementation [helide](src/helide) is provided as a
 starting point for users exploring the SDK and for implementors to see how the
 API might be implemented. It implements a very simple, geometry-only ray tracing
 implementation using Embree for intersection. Users should look to use vendor
 provided, hardware-optimized ANARI implementations which are shipped
 independently from the SDK. (see below)
 
-### List of publically available implementaions
+### Using the debug device layer
+
+The ANARI-SDK ships with a [debug layer](src/debug_device) implemented as an ordinary
+`ANARIDevice` which wraps a device (set as the `wrappedDevice` parameter on the
+debug device). This device uses the object queries reported by the wrapped
+device to validate correct usage of object subtypes, parameters, and properties,
+as well as validate correct object lifetimes. The wrapped device is then used
+to actually implement the ANARI API to allow applications to still function
+normally.
+
+The device can be created by using the normal library loading mechanics using
+`anariLoadLibrary("debug", ...)`, creating a the debug device instances with,
+`anariNewDevice(debugLibrary, "default")`, and then creating a device to use
+and set it on the device with
+`anariSetParameter(debugDevice, "wrappedDevice", ANARI_DEVICE, &wrappedHandle)`.
+
+As a convenience, users can use the `ANARI_DEBUG_WRAPPED_LIBRARY` environment
+variable to have the debug device do the mechanics of loading and creating the
+underlying wrapped library. For example, you can do the following to run the
+viewer with the debug device wrapping `helide`:
+
+```
+% ANARI_LIBRARY=debug ANARI_DEBUG_WRAPPED_LIBRARY=helide ./anariViewer
+```
+
+Or using the `-l` syntax for specifying the library:
+
+```
+% ANARI_DEBUG_WRAPPED_LIBRARY=helide ./anariViewer -l debug
+```
+
+See the [simple debug device turorial](examples/simple/anariTutorialDebug.c) for
+how to setup the debug device without using environment variables.
+
+Note that if `ANARI_DEBUG_WRAPPED_LIBRARY` is set, it will take priority over
+programatically set wrapped devices.
+
+Tracing features of the debug device can be set using the following environment
+variables:
+- `ANARI_DEBUG_TRACE_MODE` sets the tracing mode, only `code` is supported for now.
+- `ANARI_DEBUG_TRACE_DIR` set the folder where the trace will be dumped.
+
+### Unofficial list of publically available implementaions
 
 Below is a list of available ANARI implemenations compatible with this SDK:
 

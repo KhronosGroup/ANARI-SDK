@@ -1,0 +1,18 @@
+{
+  "description": "Test Avocado",
+  "sceneParameters": {
+    "primitiveCount": 0
+  },
+  "permutations": {
+    "/gltf/file": [
+      "../../../gltf-Sample-Assets/Avocado/glTF-Draco/Avocado.gltf",
+      "../../../gltf-Sample-Assets/Avocado/glTF-Binary/Avocado.glb"
+    ]
+  },
+  "requiredFeatures": [
+    "ANARI_KHR_SAMPLER_IMAGE2D"
+  ],
+  "optionalFeatures": [
+    "ANARI_KHR_MATERIAL_PHYSICALLY_BASED"
+  ]
+}

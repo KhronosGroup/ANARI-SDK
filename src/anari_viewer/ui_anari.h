@@ -14,7 +14,7 @@
 #include <string>
 #include <vector>
 
-namespace ui {
+namespace anari_viewer::ui {
 
 void init();
 void shutdown();
@@ -30,4 +30,4 @@ bool buildUI(Parameter &p);
 void buildUI(anari::scenes::SceneHandle s, Parameter &p);
 void buildUI(anari::Device d, anari::Object o, Parameter &p);
 
-} // namespace ui
+} // namespace anari_viewer::ui

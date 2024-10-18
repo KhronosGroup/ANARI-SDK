@@ -1,4 +1,5 @@
 {
+  "description": "Tests assignment of vertex and primitive attributes to random numbers. Does not affect rendering.",
   "sceneParameters": {
     "geometrySubtype": "triangle",
     "primitiveCount": 16,
@@ -12,21 +13,19 @@
     "ANARI_KHR_GEOMETRY_TRIANGLE"
   ],
   "metaData": {
-    "": {
-      "bounds": {
-        "world": [
-          [
-            0.10628136992454529,
-            0.07447968423366547,
-            0.08119118958711624
-          ],
-          [
-            0.8897861838340759,
-            0.9648289084434509,
-            0.8715502023696899
-          ]
+    "bounds": {
+      "world": [
+        [
+          0.10628136992454529,
+          0.07447968423366547,
+          0.08119118958711624
+        ],
+        [
+          0.8897861838340759,
+          0.9648289084434509,
+          0.8715502023696899
         ]
-      }
+      ]
     }
   }
 }

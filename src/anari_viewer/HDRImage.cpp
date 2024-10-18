@@ -14,7 +14,7 @@
 
 #include "HDRImage.h"
 
-namespace importers {
+namespace anari_viewer::importers {
 
 bool HDRImage::load(std::string fileName)
 {
@@ -69,4 +69,4 @@ bool HDRImage::load(std::string fileName)
   return false;
 }
 
-} // namespace importers
+} // namespace anari_viewer::importers

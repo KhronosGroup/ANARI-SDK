@@ -7,7 +7,7 @@
 #include "tiny_obj_loader.h"
 // stb_image
 #include "stb_image.h"
-#ifdef ENABLE_KTX
+#ifdef USE_KTX
 // KTX
 #include <ktx.h>
 #endif
@@ -49,7 +49,7 @@ static void loadTexture(anari::Device d,
   if (!colorTex) {
     std::string fileExtension =
         filename.substr(filename.find_last_of('.'), std::string::npos);
-#ifdef ENABLE_KTX
+#ifdef USE_KTX
     if (fileExtension == ".ktx") {
       ktxTexture2 *texture;
       KTX_error_code result;

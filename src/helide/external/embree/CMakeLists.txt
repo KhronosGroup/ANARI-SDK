@@ -3,15 +3,16 @@
 
 project(local_embree LANGUAGES CXX)
 
-option(EMBREE_GEOMETRY_CURVE       "" ON)
-option(EMBREE_GEOMETRY_GRID        "" OFF)
-option(EMBREE_GEOMETRY_INSTANCE    "" ON)
-option(EMBREE_GEOMETRY_POINT       "" ON)
-option(EMBREE_GEOMETRY_QUAD        "" ON)
-option(EMBREE_GEOMETRY_SUBDIVISION "" OFF)
-option(EMBREE_GEOMETRY_TRIANGLE    "" ON)
-option(EMBREE_GEOMETRY_USER        "" OFF)
-if (APPLE AND ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "arm64")
+option(EMBREE_GEOMETRY_CURVE          "" ON)
+option(EMBREE_GEOMETRY_GRID           "" OFF)
+option(EMBREE_GEOMETRY_INSTANCE       "" ON)
+option(EMBREE_GEOMETRY_INSTANCE_ARRAY "" ON)
+option(EMBREE_GEOMETRY_POINT          "" ON)
+option(EMBREE_GEOMETRY_QUAD           "" ON)
+option(EMBREE_GEOMETRY_SUBDIVISION    "" OFF)
+option(EMBREE_GEOMETRY_TRIANGLE       "" ON)
+option(EMBREE_GEOMETRY_USER           "" OFF)
+if ((APPLE OR UNIX) AND ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "arm64")
   option(EMBREE_ISA_NEON           "" OFF)
   option(EMBREE_ISA_NEON2X         "" ON)
 else()
@@ -21,16 +22,19 @@ else()
   option(EMBREE_ISA_SSE42          "" ON)
   option(EMBREE_ISA_SSE2           "" OFF)
 endif()
-option(EMBREE_ISPC_SUPPORT         "" OFF)
-option(EMBREE_STATIC_LIB           "" ON)
-option(EMBREE_TUTORIALS            "" OFF)
-option(EMBREE_TUTORIALS_GLFW       "" OFF)
+option(EMBREE_ISPC_SUPPORT             "" OFF)
+option(EMBREE_STATIC_LIB               "" ON)
+option(EMBREE_STAT_COUNTERS            "" OFF)
+option(EMBREE_SYCL_SUPPORT             "" OFF)
+option(EMBREE_TUTORIALS                "" OFF)
+option(EMBREE_TUTORIALS_GLFW           "" OFF)
 set(EMBREE_TASKING_SYSTEM "INTERNAL" CACHE STRING "" FORCE)
+set(EMBREE_MAX_INSTANCE_LEVEL_COUNT "1" CACHE STRING "" FORCE)
 
 anari_sdk_fetch_project(
   NAME anari_helide_embree
-  URL "https://github.com/embree/embree/archive/refs/tags/v3.13.5.zip"
-  MD5 d87ce56557a38e332cb3e0fa5cac8cfd
+  URL "https://github.com/RenderKit/embree/archive/refs/tags/v4.3.3.zip"
+  MD5 a03f49d17084612dc0f28bdc36d92e89
   ADD_SUBDIR
 )
 

@@ -1,4 +1,5 @@
 {
+  "description": "Tests ways to set the opacity of pbr materials. Results show partially transparent materials.",
   "sceneParameters": {
     "opacity": "vertex.attribute2",
     "anari_objects": {
@@ -31,7 +32,7 @@
     ]
   },
   "requiredFeatures": [
-    "KHR_MATERIAL_PHYSICALLY_BASED"
+    "ANARI_KHR_MATERIAL_PHYSICALLY_BASED"
   ],
   "metaData": {
     "None": {

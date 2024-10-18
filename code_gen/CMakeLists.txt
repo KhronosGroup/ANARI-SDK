@@ -24,7 +24,7 @@ if(CMAKE_VERSION VERSION_LESS "3.12")
   return()
 endif()
 
-find_package(Python3 OPTIONAL_COMPONENTS Interpreter)
+find_package(Python3 OPTIONAL_COMPONENTS Interpreter Development.Module)
 
 if (NOT TARGET Python3::Interpreter)
   message(WARNING "Unable to find python interpreter, skipping code-gen + API bindings")
@@ -32,6 +32,7 @@ if (NOT TARGET Python3::Interpreter)
 endif()
 
 option(INSTALL_PYTHON_BINDINGS "Install python bindings" OFF) # If turned on, draws in all the custom targets below (generate_all)
+cmake_dependent_option(LINK_BINDINGS_TO_RELEASE_PYTHON "Force the python bindings to implicitly link to a release python library on Windows, overriding possible debug python linking" OFF INSTALL_PYTHON_BINDINGS OFF)
 
 set(API_JSON api/anari_core_1_0.json api/khr_frame_completion_callback.json)
 
@@ -74,25 +75,64 @@ if (INSTALL_PYTHON_BINDINGS)
   set(BUILD_PYTHON_BINDINGS_BY_DEFAULT ALL)
 endif()
 
+if (LINK_BINDINGS_TO_RELEASE_PYTHON)
+  set(LINK_BINDINGS_TO_RELEASE_PYTHON_FLAG "-R")
+endif()
+
+# Generate the C file using the Python script
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/pyanari_bindings.c
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/pyanari_build.py
+        -d ${CMAKE_CURRENT_SOURCE_DIR}/devices/generic_device.json
+        -j ${CMAKE_CURRENT_SOURCE_DIR}/api/
+        ${LINK_BINDINGS_TO_RELEASE_PYTHON_FLAG}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS pyanari_build.py ${API_JSON} devices/generic_device.json
+    COMMENT "Generating Python bindings C file"
+)
+
+# Create the Python extension module
+add_library(pyanari MODULE EXCLUDE_FROM_ALL
+    ${CMAKE_CURRENT_BINARY_DIR}/pyanari_bindings.c
+)
+
+# Set the output name to match Python's expectations
+if (WIN32)
+  set(PYTHON_OBJ_EXT .pyd)
+else()
+  set(PYTHON_OBJ_EXT .so)
+endif()
+set_target_properties(pyanari
+    PROPERTIES
+      PREFIX ""
+      SUFFIX ${PYTHON_OBJ_EXT}
+)
+
+# Force cffi to keep the python api as usual
+target_compile_definitions(pyanari PRIVATE
+    _CFFI_NO_LIMITED_API
+)
+
+# Link against Python libraries and anari
+target_link_libraries(pyanari PRIVATE Python3::Module anari)
+
+# Include directories for Python and anari headers
+target_include_directories(pyanari PRIVATE
+    ${Python3_INCLUDE_DIRS}
+    ${CMAKE_SOURCE_DIR}/src/anari/include/
+    ${CMAKE_BINARY_DIR}/src/anari/include/anari/
+)
+
+# Add the custom target for Python bindings
 add_custom_target(python_bindings ${BUILD_PYTHON_BINDINGS_BY_DEFAULT}
-  COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/pyanari_build.py
-  -d ${CMAKE_CURRENT_SOURCE_DIR}/devices/generic_device.json
-  -j ${CMAKE_CURRENT_SOURCE_DIR}/api/
-  -I ${CMAKE_SOURCE_DIR}/src/anari/include/
-  -I ${CMAKE_BINARY_DIR}/src/anari/include/anari/
-  -L ${CMAKE_BINARY_DIR}
-  -L ${CMAKE_BINARY_DIR}/$<CONFIG>
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-  DEPENDS pyanari_build.py anari ${API_JSON} devices/generic_device.json
+    DEPENDS pyanari
 )
 
 if (INSTALL_PYTHON_BINDINGS)
-  if (WIN32)
-    set(PYANARI_LIB_FILE pyanari.pyd)
-  else()
-    set(PYANARI_LIB_FILE pyanari.so)
-  endif()
   install(
-    FILES ${CMAKE_CURRENT_BINARY_DIR}/anari.py ${CMAKE_CURRENT_BINARY_DIR}/${PYANARI_LIB_FILE}
+    FILES ${CMAKE_CURRENT_BINARY_DIR}/anari.py
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/python_bindings)
+  install(TARGETS pyanari
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/python_bindings
+    RUNTIME DESTINATION ${CMAKE_INSTALL_LIBDIR}/python_bindings)
 endif()

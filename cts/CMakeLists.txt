@@ -3,6 +3,11 @@
 
 cmake_minimum_required(VERSION 3.1)
 
+# Fix "DOWNLOAD_EXTRACT_TIMESTAMP" warning
+if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
+  cmake_policy(SET CMP0135 NEW)
+endif()
+
 if (TARGET anari)
   list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/../cmake)
 endif()
@@ -15,11 +20,12 @@ set(REFERENCE_LIB helide)
 
 project(anariCTSBackend LANGUAGES CXX)
 
-set(glm_DIR ${CMAKE_CURRENT_LIST_DIR}/external/glm/lib/cmake/glm)
-find_package(glm REQUIRED)
-mark_as_advanced(glm_DIR)
-
+set(Python3_ROOT_DIR "" CACHE PATH "Path to python3 directory")
+set(Python3_FIND_REGISTRY "LAST")
+set(Python3_FIND_STRATEGY "LOCATION")
 find_package(anari REQUIRED)
+find_package(Python3 3.9...<3.20 REQUIRED COMPONENTS Interpreter Development)
+message("CTS Python version: ${Python3_VERSION}\nCTS Python Path: ${Python3_EXECUTABLE}")
 include(pybind11.cmake)
 
 pybind11_add_module(${PROJECT_NAME}
@@ -38,9 +44,7 @@ PUBLIC
   ${CMAKE_CURRENT_LIST_DIR}/header
 )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC glm::glm helium anari_test_scenes)
-
-find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+target_link_libraries(${PROJECT_NAME} PUBLIC helium anari_test_scenes)
 
 file(GLOB python_files ${CMAKE_CURRENT_LIST_DIR}/*.py)
 
@@ -70,6 +74,17 @@ if (CTS_DEV AND NOT BUILD_SHARED_LIBS)
   )
 endif()
 
+anari_sdk_fetch_project(
+  NAME anari_cts_glTFSampleAssets
+  URL https://github.com/KhronosGroup/glTF-Sample-Assets/archive/754a32a333b27698b6c36d8bec8ff7ed5f729538.zip
+  MD5 1250786407d1d0e649faaade748c24ab
+)
+
+message("Copying glTF Sample Models")
+file(GLOB GLTF_SAMPLE_ASSETS_FILES ${anari_cts_glTFSampleAssets_LOCATION}/Models/*)
+list(FILTER GLTF_SAMPLE_ASSETS_FILES EXCLUDE REGEX ".*Unicode❤♻Test")
+file(COPY ${GLTF_SAMPLE_ASSETS_FILES} DESTINATION ${CMAKE_CURRENT_LIST_DIR}/gltf-Sample-Assets)
+
 ## Installation ##
 
 # .pyd files are considered library files
@@ -88,9 +103,15 @@ else()
 endif()
 
 install(FILES ${python_files} ${CMAKE_CURRENT_LIST_DIR}/default_test_scene.json
+  ${CMAKE_CURRENT_LIST_DIR}/pyproject.toml
+  ${CMAKE_CURRENT_LIST_DIR}/poetry.lock
   DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/anari/cts
 )
 
 install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/test_scenes
+  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/anari/cts
+)
+
+install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/gltf-Sample-Assets
   DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/anari/cts
 )

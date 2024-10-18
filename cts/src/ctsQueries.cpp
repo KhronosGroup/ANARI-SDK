@@ -405,7 +405,7 @@ static const void * ANARI_LIGHT_directional_visible_info(ANARIDataType paramType
          }
       case 1: // default
          if(paramType == ANARI_BOOL && infoType == ANARI_BOOL) {
-            static const int32_t default_value[1] = {INT32_C(1)};
+            static const int8_t default_value[1] = {INT8_C(1)};
             return default_value;
          } else {
             return nullptr;
@@ -700,7 +700,7 @@ static const void * ANARI_LIGHT_point_visible_info(ANARIDataType paramType, int 
          }
       case 1: // default
          if(paramType == ANARI_BOOL && infoType == ANARI_BOOL) {
-            static const int32_t default_value[1] = {INT32_C(1)};
+            static const int8_t default_value[1] = {INT8_C(1)};
             return default_value;
          } else {
             return nullptr;
@@ -1195,7 +1195,7 @@ static const void * ANARI_LIGHT_ring_visible_info(ANARIDataType paramType, int i
          }
       case 1: // default
          if(paramType == ANARI_BOOL && infoType == ANARI_BOOL) {
-            static const int32_t default_value[1] = {INT32_C(1)};
+            static const int8_t default_value[1] = {INT8_C(1)};
             return default_value;
          } else {
             return nullptr;
@@ -1619,7 +1619,7 @@ static const void * ANARI_LIGHT_quad_visible_info(ANARIDataType paramType, int i
          }
       case 1: // default
          if(paramType == ANARI_BOOL && infoType == ANARI_BOOL) {
-            static const int32_t default_value[1] = {INT32_C(1)};
+            static const int8_t default_value[1] = {INT8_C(1)};
             return default_value;
          } else {
             return nullptr;
@@ -1891,7 +1891,7 @@ static const void * ANARI_LIGHT_hdri_visible_info(ANARIDataType paramType, int i
          }
       case 1: // default
          if(paramType == ANARI_BOOL && infoType == ANARI_BOOL) {
-            static const int32_t default_value[1] = {INT32_C(1)};
+            static const int8_t default_value[1] = {INT8_C(1)};
             return default_value;
          } else {
             return nullptr;
@@ -4171,7 +4171,7 @@ static const void * ANARI_LIGHT_spot_visible_info(ANARIDataType paramType, int i
          }
       case 1: // default
          if(paramType == ANARI_BOOL && infoType == ANARI_BOOL) {
-            static const int32_t default_value[1] = {INT32_C(1)};
+            static const int8_t default_value[1] = {INT8_C(1)};
             return default_value;
          } else {
             return nullptr;

@@ -1,4 +1,5 @@
 {
+  "description": "Tests directional lights. Results show different light directions and strengths.",
   "sceneParameters": {
     "anari_objects": {
       "renderer": [
@@ -34,13 +35,13 @@
     "/anari_objects/light/0/direction": [
       [
         0,
-        0.242536,
-        0.970143
+        -0.242536,
+        -0.970143
       ],
       [
         0,
         0,
-        0.970143
+        -0.970143
       ]
     ],
     "/anari_objects/light/0/irradiance": [

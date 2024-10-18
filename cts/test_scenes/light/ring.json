@@ -1,4 +1,5 @@
 {
+  "description": "Tests permutations of ring light parameters.",
   "sceneParameters": {
     "anari_objects": {
       "renderer": [
@@ -35,15 +36,15 @@
       [
         0.2,
         0.2,
-        -0.1
+        0.1
       ],
       null
     ],
     "/anari_objects/light/0/direction": [
       [
         0.0,
-        0.20601,
-        0.97855
+        -0.20601,
+        -0.97855
       ],
       null
     ],

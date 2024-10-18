@@ -1,0 +1,30 @@
+{
+  "description": "Tests indexed vertices of curve geometry with two unused vertex.",
+  "sceneParameters": {
+    "geometrySubtype": "curve",
+    "primitiveCount": 4,
+    "seed": 54321,
+    "primitiveMode": "indexed",
+    "frame_depth_type": "FLOAT32",
+    "unusedVertices": true
+  },
+  "requiredFeatures": [
+    "ANARI_KHR_GEOMETRY_QUAD"
+  ],
+  "metaData": {
+    "bounds": {
+      "world": [
+        [
+          0.6209102272987366,
+          0.34210464358329773,
+          0.4937992990016937
+        ],
+        [
+          0.8536397218704224,
+          0.659206748008728,
+          0.7897152304649353
+        ]
+      ]
+    }
+  }
+}

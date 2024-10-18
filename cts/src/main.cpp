@@ -13,52 +13,65 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(anariCTSBackend, m)
 {
+  /*  py::call_guard<py::gil_scoped_release>() release the GIL for the whole function,
+      because the GIL is only aquired for the main thread and needs to be manually aquired for multithreading.
+      The GIL is only needed if we interact with python from C++,
+      which is currently only needed for the logger.
+      To aquire the GIL one can use py::gil_scoped_aquire.
+      Release the GIL afterwards again with py::gil_scoped_release.
+  */
+
   m.def("query_features", &cts::queryExtensions, R"pbdoc(
         Query which extensions are supported by this device.
-    )pbdoc");
+    )pbdoc", py::call_guard<py::gil_scoped_release>());
   m.def("query_metadata", &cts::queryInfo, R"pbdoc(
         Queries object/parameter info metadata of a library.
-    )pbdoc");
+    )pbdoc", py::call_guard<py::gil_scoped_release>());
 
-  m.def("getDefaultDeviceName", &cts::getDefaultDeviceName);
+  m.def("getDefaultDeviceName", &cts::getDefaultDeviceName, py::call_guard<py::gil_scoped_release>());
 
   py::class_<cts::SceneGeneratorWrapper>(m, "SceneGenerator")
-      .def(py::init<const std::string&, const std::optional<std::string>, const std::optional<py::function>&>())
-      .def("setParameter", &cts::SceneGeneratorWrapper::setParam<std::string>)
-      .def("setParameter", &cts::SceneGeneratorWrapper::setParam<bool>)
-      .def("setParameter", &cts::SceneGeneratorWrapper::setParam<int>)
-      .def("setParameter", &cts::SceneGeneratorWrapper::setParam<float>)
-      .def("setParameter", &cts::SceneGeneratorWrapper::setParam<std::array<uint32_t, 3>>)
-      .def("createAnariObject", &cts::SceneGeneratorWrapper::createAnariObject)
-      .def("setCurrentObject", &cts::SceneGeneratorWrapper::setCurrentObject)
-      .def("setGenericParameter", &cts::SceneGeneratorWrapper::setGenericParameter<std::string>)
-      .def("setGenericParameter",&cts::SceneGeneratorWrapper::setGenericParameter<float>)
-      .def("setGenericParameter",&cts::SceneGeneratorWrapper::setGenericParameter<bool>)
-      .def("setGenericParameter",&cts::SceneGeneratorWrapper::setGenericParameter<std::array<float, 2>>)
-      .def("setGenericParameter",&cts::SceneGeneratorWrapper::setGenericParameter<std::array<float, 3>>)
-      .def("setGenericParameter",&cts::SceneGeneratorWrapper::setGenericParameter<std::array<float, 4>>)
+      .def(py::init<const std::string&, const std::optional<std::string>, const std::optional<py::function>&>(), py::call_guard<py::gil_scoped_release>())
+      .def(py::init<py::function &>(), py::call_guard<py::gil_scoped_release>())
+      .def("loadGLTF",
+          &cts::SceneGeneratorWrapper::loadGLTF,
+          py::call_guard<py::gil_scoped_release>())
+      .def("setParameter", &cts::SceneGeneratorWrapper::setParam<std::string>, py::call_guard<py::gil_scoped_release>())
+      .def("setParameter", &cts::SceneGeneratorWrapper::setParam<bool>, py::call_guard<py::gil_scoped_release>())
+      .def("setParameter", &cts::SceneGeneratorWrapper::setParam<int>, py::call_guard<py::gil_scoped_release>())
+      .def("setParameter", &cts::SceneGeneratorWrapper::setParam<float>, py::call_guard<py::gil_scoped_release>())
+      .def("setParameter", &cts::SceneGeneratorWrapper::setParam<std::array<uint32_t, 3>>, py::call_guard<py::gil_scoped_release>())
+      .def("createAnariObject", &cts::SceneGeneratorWrapper::createAnariObject, py::call_guard<py::gil_scoped_release>())
+      .def("setCurrentObject", &cts::SceneGeneratorWrapper::setCurrentObject, py::call_guard<py::gil_scoped_release>())
+      .def("setGenericParameter", &cts::SceneGeneratorWrapper::setGenericParameter<std::string>, py::call_guard<py::gil_scoped_release>())
+      .def("setGenericParameter",&cts::SceneGeneratorWrapper::setGenericParameter<float>, py::call_guard<py::gil_scoped_release>())
+      .def("setGenericParameter",&cts::SceneGeneratorWrapper::setGenericParameter<bool>, py::call_guard<py::gil_scoped_release>())
+      .def("setGenericParameter",&cts::SceneGeneratorWrapper::setGenericParameter<std::array<float, 2>>, py::call_guard<py::gil_scoped_release>())
+      .def("setGenericParameter",&cts::SceneGeneratorWrapper::setGenericParameter<std::array<float, 3>>, py::call_guard<py::gil_scoped_release>())
+      .def("setGenericParameter",&cts::SceneGeneratorWrapper::setGenericParameter<std::array<float, 4>>, py::call_guard<py::gil_scoped_release>())
       //.def("setGenericParameter",&cts::SceneGeneratorWrapper::setGenericParameter<std::array<std::array<float, 3>, 4>>)
-      .def("setGenericParameter",&cts::SceneGeneratorWrapper::setGenericParameter<std::array<std::array<float, 4>, 4>>)
-      .def("setGenericParameter",&cts::SceneGeneratorWrapper::setGenericParameter<std::array<std::array<float, 2>, 2>>)
-      .def("setGenericArray1DParameter",&cts::SceneGeneratorWrapper::setGenericArray1DParameter<std::vector<int>>)
-      .def("setGenericArray1DParameter",&cts::SceneGeneratorWrapper::setGenericArray1DParameter<std::vector<float>>)
-      .def("setGenericArray1DParameter",&cts::SceneGeneratorWrapper::setGenericArray1DParameter<std::vector<std::array<float, 2>>>)
-      .def("setGenericArray1DParameter",&cts::SceneGeneratorWrapper::setGenericArray1DParameter<std::vector<std::array<float, 3>>>)
-      .def("setGenericArray1DParameter",&cts::SceneGeneratorWrapper::setGenericArray1DParameter<std::vector<std::array<float, 4>>>)
-      .def("setGenericArray2DParameter",&cts::SceneGeneratorWrapper::setGenericArray2DParameter<std::vector<std::vector<int>>>)
-      .def("setGenericArray2DParameter",&cts::SceneGeneratorWrapper::setGenericArray2DParameter<std::vector<std::vector<float>>>)
-      .def("setGenericArray2DParameter",&cts::SceneGeneratorWrapper::setGenericArray2DParameter<std::vector<std::vector<std::array<float, 2>>>>)
-      .def("setGenericArray2DParameter",&cts::SceneGeneratorWrapper::setGenericArray2DParameter<std::vector<std::vector<std::array<float, 3>>>>)
-      .def("setGenericArray2DParameter",&cts::SceneGeneratorWrapper::setGenericArray2DParameter<std::vector<std::vector<std::array<float, 4>>>>)
-      .def("setReferenceParameter",&cts::SceneGeneratorWrapper::setReferenceParameter)
-      .def("setReferenceParameter",&cts::SceneGeneratorWrapper::setReferenceArray)
-      .def("unsetGenericParameter", &cts::SceneGeneratorWrapper::unsetGenericParameter)
-      .def("releaseAnariObject", &cts::SceneGeneratorWrapper::releaseAnariObject)
-      .def("commit", &cts::SceneGeneratorWrapper::commit)
-      .def("renderScene", &cts::SceneGeneratorWrapper::renderScene)
+      .def("setGenericParameter",&cts::SceneGeneratorWrapper::setGenericParameter<std::array<std::array<float, 4>, 4>>, py::call_guard<py::gil_scoped_release>())
+      .def("setGenericParameter",&cts::SceneGeneratorWrapper::setGenericParameter<std::array<std::array<float, 2>, 2>>, py::call_guard<py::gil_scoped_release>())
+      .def("setGenericArray1DParameter",&cts::SceneGeneratorWrapper::setGenericArray1DParameter<std::vector<int>>, py::call_guard<py::gil_scoped_release>())
+      .def("setGenericArray1DParameter",&cts::SceneGeneratorWrapper::setGenericArray1DParameter<std::vector<float>>, py::call_guard<py::gil_scoped_release>())
+      .def("setGenericArray1DParameter",&cts::SceneGeneratorWrapper::setGenericArray1DParameter<std::vector<std::array<float, 2>>>, py::call_guard<py::gil_scoped_release>())
+      .def("setGenericArray1DParameter",&cts::SceneGeneratorWrapper::setGenericArray1DParameter<std::vector<std::array<float, 3>>>, py::call_guard<py::gil_scoped_release>())
+      .def("setGenericArray1DParameter",&cts::SceneGeneratorWrapper::setGenericArray1DParameter<std::vector<std::array<float, 4>>>, py::call_guard<py::gil_scoped_release>())
+      .def("setGenericArray2DParameter",&cts::SceneGeneratorWrapper::setGenericArray2DParameter<std::vector<std::vector<int>>>, py::call_guard<py::gil_scoped_release>())
+      .def("setGenericArray2DParameter",&cts::SceneGeneratorWrapper::setGenericArray2DParameter<std::vector<std::vector<float>>>, py::call_guard<py::gil_scoped_release>())
+      .def("setGenericArray2DParameter",&cts::SceneGeneratorWrapper::setGenericArray2DParameter<std::vector<std::vector<std::array<float, 2>>>>, py::call_guard<py::gil_scoped_release>())
+      .def("setGenericArray2DParameter",&cts::SceneGeneratorWrapper::setGenericArray2DParameter<std::vector<std::vector<std::array<float, 3>>>>, py::call_guard<py::gil_scoped_release>())
+      .def("setGenericArray2DParameter",&cts::SceneGeneratorWrapper::setGenericArray2DParameter<std::vector<std::vector<std::array<float, 4>>>>, py::call_guard<py::gil_scoped_release>())
+      .def("setGenericTexture2D",&cts::SceneGeneratorWrapper::setGenericTexture2D, py::call_guard<py::gil_scoped_release>())
+      .def("setReferenceParameter",&cts::SceneGeneratorWrapper::setReferenceParameter, py::call_guard<py::gil_scoped_release>())
+      .def("setReferenceParameter",&cts::SceneGeneratorWrapper::setReferenceArray, py::call_guard<py::gil_scoped_release>())
+      .def("unsetGenericParameter", &cts::SceneGeneratorWrapper::unsetGenericParameter, py::call_guard<py::gil_scoped_release>())
+      .def("releaseAnariObject", &cts::SceneGeneratorWrapper::releaseAnariObject, py::call_guard<py::gil_scoped_release>())
+      .def("commit", &cts::SceneGeneratorWrapper::commit, py::call_guard<py::gil_scoped_release>())
+      .def("renderScene", &cts::SceneGeneratorWrapper::renderScene, py::call_guard<py::gil_scoped_release>())
       .def(
-          "resetAllParameters", &cts::SceneGeneratorWrapper::resetAllParameters)
-      .def("resetSceneObjects", &cts::SceneGeneratorWrapper::resetSceneObjects)
-      .def("getBounds", &cts::SceneGeneratorWrapper::getBounds)
-      .def("getFrameDuration", &cts::SceneGeneratorWrapper::getFrameDuration);
+          "resetAllParameters", &cts::SceneGeneratorWrapper::resetAllParameters, py::call_guard<py::gil_scoped_release>())
+      .def("resetSceneObjects", &cts::SceneGeneratorWrapper::resetSceneObjects, py::call_guard<py::gil_scoped_release>())
+      .def("getBounds", &cts::SceneGeneratorWrapper::getBounds, py::call_guard<py::gil_scoped_release>())
+      .def("getFrameDuration", &cts::SceneGeneratorWrapper::getFrameDuration, py::call_guard<py::gil_scoped_release>());
 }

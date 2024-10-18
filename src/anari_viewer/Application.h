@@ -12,7 +12,7 @@
 namespace anari_viewer {
 
 struct AppImpl;
-using WindowArray = std::vector<std::unique_ptr<Window>>;
+using WindowArray = std::vector<std::unique_ptr<windows::Window>>;
 
 class Application
 {

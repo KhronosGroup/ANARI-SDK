@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Surface.h"
+#include "../Instance.h"
 
 namespace helide {
 
@@ -34,27 +35,32 @@ const Material *Surface::material() const
   return m_material.ptr;
 }
 
-float4 Surface::getSurfaceColor(const Ray &ray) const
+float4 Surface::getSurfaceColor(
+    const Ray &ray, const UniformAttributeSet &instAttrV) const
 {
-  auto &state = *deviceState();
-  auto &imc = state.invalidMaterialColor;
+  const auto &state = *deviceState();
+  const auto &imc = state.invalidMaterialColor;
 
-  auto *mat = material();
+  const auto *mat = material();
 
   if (!mat)
     return float4(imc.x, imc.y, imc.z, 1.f);
 
   const auto colorAttribute = mat->colorAttribute();
   const auto *colorSampler = mat->colorSampler();
+
   if (colorSampler && colorSampler->isValid())
-    return colorSampler->getSample(*geometry(), ray);
+    return colorSampler->getSample(*geometry(), ray, instAttrV);
   else if (colorAttribute == Attribute::NONE)
-    return material()->color();
+    return mat->color();
+  else if (const auto &ia = getUniformAttribute(instAttrV, colorAttribute); ia)
+    return *ia;
   else
     return geometry()->getAttributeValue(colorAttribute, ray);
 }
 
-float Surface::getSurfaceOpacity(const Ray &ray) const
+float Surface::getSurfaceOpacity(
+    const Ray &ray, const UniformAttributeSet &instAttrV) const
 {
   auto &state = *deviceState();
   auto &imc = state.invalidMaterialColor;
@@ -66,10 +72,14 @@ float Surface::getSurfaceOpacity(const Ray &ray) const
 
   const auto opacityAttribute = mat->opacityAttribute();
   const auto *opacitySampler = mat->opacitySampler();
+
   if (opacitySampler && opacitySampler->isValid())
-    return opacitySampler->getSample(*geometry(), ray).x;
+    return opacitySampler->getSample(*geometry(), ray, instAttrV).x;
   else if (opacityAttribute == Attribute::NONE)
-    return material()->opacity();
+    return mat->opacity();
+  else if (const auto &ia = getUniformAttribute(instAttrV, opacityAttribute);
+           ia)
+    return ia->x;
   else
     return geometry()->getAttributeValue(opacityAttribute, ray).x;
 }
