@@ -141,8 +141,8 @@ PixelSample Renderer::renderSample(
   if (hitGeometry || hitVolume) {
     retval.primId = hitVolume ? 0 : ray.primID;
     retval.objId = hitVolume ? vray.volume->id() : w.surfaceFromRay(ray)->id();
-    retval.instId = hitVolume ? w.instanceFromRay(vray)->id()
-                              : w.instanceFromRay(ray)->id();
+    retval.instId = hitVolume ? w.instanceFromRay(vray)->id(vray.instArrayID)
+                              : w.instanceFromRay(ray)->id(ray.instArrayID);
   }
 
   return retval;
@@ -239,10 +239,10 @@ float4 Renderer::shadeRay(const float2 &screen,
       const auto n = linalg::mul(inst->xfmInvRot(), ray.Ng);
       const auto falloff =
           std::abs(linalg::dot(-ray.dir, linalg::normalize(n)));
-      const float4 sc =
-          surface->getSurfaceColor(ray, inst->getUniformAttributes());
-      const float so =
-          surface->getSurfaceOpacity(ray, inst->getUniformAttributes());
+      const float4 sc = surface->getSurfaceColor(
+          ray, inst->getUniformAttributes(ray.instArrayID));
+      const float so = surface->getSurfaceOpacity(
+          ray, inst->getUniformAttributes(ray.instArrayID));
       const float o = surface->adjustedAlpha(std::clamp(sc.w * so, 0.f, 1.f));
       const float3 c = m_heatmap->valueAtLinear<float3>(o);
       const float3 fc = c * falloff;
@@ -255,11 +255,11 @@ float4 Renderer::shadeRay(const float2 &screen,
       const Instance *inst = w.instanceFromRay(ray);
       const Surface *surface = w.surfaceFromRay(ray);
 
-      const auto n = linalg::mul(inst->xfmInvRot(), ray.Ng);
+      const auto n = linalg::mul(inst->xfmInvRot(ray.instArrayID), ray.Ng);
       const auto falloff =
           std::abs(linalg::dot(-ray.dir, linalg::normalize(n)));
-      const float4 c =
-          surface->getSurfaceColor(ray, inst->getUniformAttributes());
+      const float4 c = surface->getSurfaceColor(
+          ray, inst->getUniformAttributes(ray.instArrayID));
       const float3 sc = float3(c.x, c.y, c.z) * std::clamp(falloff, 0.f, 1.f);
       geometryColor =
           ((m_falloffBlendRatio * sc)

@@ -5,7 +5,6 @@
     "dependencies": [
       "anari_core_1_0",
       "anari_core_objects_base_1_0",
-      "khr_instance_transform",
       "khr_camera_orthographic",
       "khr_camera_perspective",
       "khr_device_synchronization",
@@ -19,6 +18,8 @@
       "khr_geometry_quad",
       "khr_geometry_sphere",
       "khr_geometry_triangle",
+      "khr_instance_transform",
+      "khr_instance_transform_array",
       "khr_material_matte",
       "khr_material_physicallyBased",
       "khr_renderer_ambient_light",
