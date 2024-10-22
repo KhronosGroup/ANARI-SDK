@@ -4,6 +4,10 @@
 option(ANARI_FRONTEND_CATCH_EXCEPTIONS "Have libanari catch all exceptions" ON)
 mark_as_advanced(ANARI_FRONTEND_CATCH_EXCEPTIONS)
 
+# Some platforms simply don't function without linking against Threads::Threads
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
 macro(add_anari_frontend_library_target LIB_TYPE)
   project_add_library(${LIB_TYPE}
     anari_cpp_linalg_defs.cpp
@@ -31,7 +35,7 @@ macro(add_anari_frontend_library_target LIB_TYPE)
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
   )
 
-  project_link_libraries(PUBLIC ${CMAKE_DL_LIBS})
+  project_link_libraries(PUBLIC Threads::Threads ${CMAKE_DL_LIBS})
 
   set_target_properties(${PROJECT_NAME}
     PROPERTIES
