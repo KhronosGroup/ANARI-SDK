@@ -5,6 +5,7 @@
     "dependencies": [
       "anari_core_1_0",
       "anari_core_objects_base_1_0",
+      "khr_volume_transfer_function1d",
       "khr_camera_orthographic",
       "khr_camera_perspective",
       "khr_device_synchronization",
@@ -30,8 +31,7 @@
       "khr_sampler_image3d",
       "khr_sampler_primitive",
       "khr_sampler_transform",
-      "khr_spatial_field_structured_regular",
-      "khr_volume_transfer_function1d"
+      "khr_spatial_field_structured_regular"
     ]
   },
   "objects": [
