@@ -280,6 +280,7 @@ BaseDevice::~BaseDevice()
   reportLeaks(state.objectCounts.worlds, "ANARIWorld");
   reportLeaks(state.objectCounts.instances, "ANARIInstance");
   reportLeaks(state.objectCounts.groups, "ANARIGroup");
+  reportLeaks(state.objectCounts.lights, "ANARILight");
   reportLeaks(state.objectCounts.surfaces, "ANARISurface");
   reportLeaks(state.objectCounts.geometries, "ANARIGeometry");
   reportLeaks(state.objectCounts.materials, "ANARIMaterial");

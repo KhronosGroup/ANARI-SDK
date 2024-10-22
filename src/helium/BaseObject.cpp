@@ -144,6 +144,9 @@ void BaseObject::incrementObjectCount()
   case ANARI_GROUP:
     s->objectCounts.groups++;
     break;
+  case ANARI_LIGHT:
+    s->objectCounts.lights++;
+    break;
   case ANARI_SURFACE:
     s->objectCounts.surfaces++;
     break;
@@ -199,6 +202,9 @@ void BaseObject::decrementObjectCount()
     break;
   case ANARI_GROUP:
     s->objectCounts.groups--;
+    break;
+  case ANARI_LIGHT:
+    s->objectCounts.lights--;
     break;
   case ANARI_SURFACE:
     s->objectCounts.surfaces--;
