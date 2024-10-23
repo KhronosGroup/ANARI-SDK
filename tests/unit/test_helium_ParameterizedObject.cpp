@@ -55,6 +55,7 @@ SCENARIO(
     THEN("The named parameter should have the correct type and value")
     {
       REQUIRE(obj.hasParam(name));
+      REQUIRE(obj.hasParam(name, ANARI_INT32));
       REQUIRE(obj.getParam<int>(name, 4) == v);
       REQUIRE(obj.getParam<short>(name, 4) == 4);
 
@@ -71,6 +72,7 @@ SCENARIO(
       THEN("The paramter should no longer exist on the object")
       {
         REQUIRE(!obj.hasParam(name));
+        REQUIRE(!obj.hasParam(name, ANARI_INT32));
         REQUIRE(obj.getParam<int>(name, 4) == 4);
         REQUIRE(obj.getParam<short>(name, 4) == 4);
 
@@ -99,6 +101,7 @@ SCENARIO(
     THEN("The named parameter should have the correct type and value")
     {
       REQUIRE(obj.hasParam(name));
+      REQUIRE(obj.hasParam(name, ANARI_STRING));
       REQUIRE(obj.getParamString(name, "") == testStr);
       REQUIRE(obj.getParam<short>(name, 4) == 4);
     }
@@ -110,6 +113,7 @@ SCENARIO(
       THEN("The paramter should no longer exist on the object")
       {
         REQUIRE(!obj.hasParam(name));
+        REQUIRE(!obj.hasParam(name, ANARI_STRING));
         REQUIRE(obj.getParamString(name, "") == "");
         REQUIRE(obj.getParam<short>(name, 4) == 4);
       }
