@@ -134,7 +134,7 @@ static void set_tspace(const SMikkTSpaceContext *pContext,
   tangentData[idx].x = fv_tangent[0];
   tangentData[idx].y = fv_tangent[1];
   tangentData[idx].z = fv_tangent[2];
-  tangentData[idx].w = face_sign;
+  tangentData[idx].w = -face_sign;
 }
 /* END Mikktspace's API Functions*/
 
