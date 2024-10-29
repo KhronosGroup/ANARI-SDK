@@ -46,7 +46,13 @@ include(CMakeDependentOption)
 
 enable_testing()
 
-set(CMAKE_INSTALL_RPATH "$ORIGIN:$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
+if (APPLE)
+  list(APPEND CMAKE_INSTALL_RPATH "@loader_path")
+  list(APPEND CMAKE_INSTALL_RPATH "@loader_path/../${CMAKE_INSTALL_LIBDIR}")
+elseif(UNIX)
+  list(APPEND CMAKE_INSTALL_RPATH "$ORIGIN")
+  list(APPEND CMAKE_INSTALL_RPATH "$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
+endif()
 
 # Built-in CMake options
 option(BUILD_SHARED_LIBS "Build shared libraries instead of static" ON)
