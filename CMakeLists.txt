@@ -54,7 +54,7 @@ option(BUILD_TESTING "Build tests for CTest" ON)
 # ANARI specific options
 
 option(BUILD_CTS "Build cts toolkit" OFF)
-cmake_dependent_option(CTS_ENABLE_GLTF "Enable glTF support for cts" ON "BUILD_CTS" ON)
+cmake_dependent_option(CTS_ENABLE_GLTF "Enable glTF support for cts" ON "BUILD_CTS" OFF)
 option(USE_DRACO "Use draco when loading glTF files" OFF)
 option(USE_WEBP "Use webp when loading glTF files" OFF)
 option(USE_KTX "Use ktx when loading glTF files" OFF)
