@@ -20,7 +20,11 @@ struct ParameterizedObject
   virtual ~ParameterizedObject() = default;
 
   // Return true if there was a parameter set with the corresponding 'name'
-  bool hasParam(const std::string &name);
+  bool hasParam(const std::string &name) const;
+
+  // Return true if there was a parameter set with the corresponding 'name' and
+  // if it matches the corresponding type
+  bool hasParam(const std::string &name, ANARIDataType type) const;
 
   // Set the value of the parameter 'name', or add it if it doesn't exist yet
   void setParam(const std::string &name, ANARIDataType type, const void *v);
@@ -37,13 +41,13 @@ struct ParameterizedObject
   // access ANARIObject or ANARIString parameters, see special methods for
   // getting parameters of those types.
   template <typename T>
-  T getParam(const std::string &name, T valIfNotFound);
+  T getParam(const std::string &name, T valIfNotFound) const;
 
   // Get the value of the parameter associated with 'name' and write it to
   // location 'v', returning whether the was actually read. Just like the
   // templated version above, this requires that 'type' exactly match what the
   // application set. This function also cannot get objects or strings.
-  bool getParam(const std::string &name, ANARIDataType type, void *v);
+  bool getParam(const std::string &name, ANARIDataType type, void *v) const;
 
   // Get the pointer to an object parameter (returns null if not present). While
   // ParameterizedObject will track object lifetime appropriately, accessing
@@ -51,17 +55,17 @@ struct ParameterizedObject
   // should consider using `helium::IntrusivePtr<>` to guarantee correct
   // lifetime handling.
   template <typename T>
-  T *getParamObject(const std::string &name);
+  T *getParamObject(const std::string &name) const;
 
   // Get a string parameter value
   std::string getParamString(
-      const std::string &name, const std::string &valIfNotFound);
+      const std::string &name, const std::string &valIfNotFound) const;
 
   // Get/Set the container holding the value of a parameter (default constructed
   // AnariAny if not present). Getting this container will create a copy of the
   // parameter value, which for objects will incur the correct ref count changes
   // accordingly (handled by AnariAny).
-  AnariAny getParamDirect(const std::string &name);
+  AnariAny getParamDirect(const std::string &name) const;
   void setParamDirect(const std::string &name, const AnariAny &v);
 
   // Remove the value of the parameter associated with 'name'.
@@ -80,7 +84,8 @@ struct ParameterizedObject
  private:
   // Data members //
 
-  Param *findParam(const std::string &name, bool addIfNotExist = false);
+  const Param *findParam(const std::string &name) const;
+  Param *findParam(const std::string &name);
 
   ParameterList m_params;
 };
@@ -110,7 +115,8 @@ inline void ParameterizedObject::setParam(
 }
 
 template <typename T>
-inline T ParameterizedObject::getParam(const std::string &name, T valIfNotFound)
+inline T ParameterizedObject::getParam(
+    const std::string &name, T valIfNotFound) const
 {
   constexpr ANARIDataType type = anari::ANARITypeFor<T>::value;
   static_assert(!anari::isObject(type),
@@ -123,14 +129,14 @@ inline T ParameterizedObject::getParam(const std::string &name, T valIfNotFound)
 
 template <>
 inline bool ParameterizedObject::getParam(
-    const std::string &name, bool valIfNotFound)
+    const std::string &name, bool valIfNotFound) const
 {
   auto *p = findParam(name);
   return p && p->second.is(ANARI_BOOL) ? p->second.get<bool>() : valIfNotFound;
 }
 
 template <typename T>
-inline T *ParameterizedObject::getParamObject(const std::string &name)
+inline T *ParameterizedObject::getParamObject(const std::string &name) const
 {
   auto *p = findParam(name);
   return p ? p->second.getObject<T>() : nullptr;

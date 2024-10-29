@@ -339,10 +339,13 @@ const void *SinkDevice::frameBufferMap(ANARIFrame fb,
       }
       *width = data->width;
       *height = data->height;
-      *pixelType = ANARI_FLOAT32;
+      *pixelType = ANARI_FLOAT32_VEC4;
       return obj->memory;
     }
   }
+  *width = 0;
+  *height = 0;
+  *pixelType = ANARI_UNKNOWN;
   return nullptr;
 }
 

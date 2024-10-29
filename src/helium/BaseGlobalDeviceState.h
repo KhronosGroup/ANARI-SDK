@@ -51,6 +51,7 @@ struct BaseGlobalDeviceState
     std::atomic<size_t> worlds{0};
     std::atomic<size_t> instances{0};
     std::atomic<size_t> groups{0};
+    std::atomic<size_t> lights{0};
     std::atomic<size_t> surfaces{0};
     std::atomic<size_t> geometries{0};
     std::atomic<size_t> materials{0};

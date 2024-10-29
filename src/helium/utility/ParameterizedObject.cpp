@@ -7,24 +7,31 @@
 
 namespace helium {
 
-bool ParameterizedObject::hasParam(const std::string &name)
+bool ParameterizedObject::hasParam(const std::string &name) const
 {
-  return findParam(name, false) != nullptr;
+  return findParam(name) != nullptr;
+}
+
+bool ParameterizedObject::hasParam(
+    const std::string &name, ANARIDataType type) const
+{
+  auto *p = findParam(name);
+  return p ? p->second.type() == type : false;
 }
 
 void ParameterizedObject::setParam(
     const std::string &name, ANARIDataType type, const void *v)
 {
-  findParam(name, true)->second = AnariAny(type, v);
+  findParam(name)->second = AnariAny(type, v);
 }
 
 bool ParameterizedObject::getParam(
-    const std::string &name, ANARIDataType type, void *v)
+    const std::string &name, ANARIDataType type, void *v) const
 {
   if (type == ANARI_STRING || anari::isObject(type))
     return false;
 
-  auto *p = findParam(name, false);
+  auto *p = findParam(name);
   if (!p || !p->second.is(type))
     return false;
 
@@ -33,13 +40,13 @@ bool ParameterizedObject::getParam(
 }
 
 std::string ParameterizedObject::getParamString(
-    const std::string &name, const std::string &valIfNotFound)
+    const std::string &name, const std::string &valIfNotFound) const
 {
   auto *p = findParam(name);
   return p ? p->second.getString() : valIfNotFound;
 }
 
-AnariAny ParameterizedObject::getParamDirect(const std::string &name)
+AnariAny ParameterizedObject::getParamDirect(const std::string &name) const
 {
   auto *p = findParam(name);
   return p ? p->second : AnariAny();
@@ -48,7 +55,7 @@ AnariAny ParameterizedObject::getParamDirect(const std::string &name)
 void ParameterizedObject::setParamDirect(
     const std::string &name, const AnariAny &v)
 {
-  findParam(name, true)->second = v;
+  findParam(name)->second = v;
 }
 
 void ParameterizedObject::removeParam(const std::string &name)
@@ -76,8 +83,8 @@ ParameterizedObject::ParameterList::iterator ParameterizedObject::params_end()
   return m_params.end();
 }
 
-ParameterizedObject::Param *ParameterizedObject::findParam(
-    const std::string &name, bool addIfNotExist)
+const ParameterizedObject::Param *ParameterizedObject::findParam(
+    const std::string &name) const
 {
   auto foundParam = std::find_if(m_params.begin(),
       m_params.end(),
@@ -85,11 +92,22 @@ ParameterizedObject::Param *ParameterizedObject::findParam(
 
   if (foundParam != m_params.end())
     return &(*foundParam);
-  else if (addIfNotExist) {
+  return nullptr;
+}
+
+ParameterizedObject::Param *ParameterizedObject::findParam(
+    const std::string &name)
+{
+  auto foundParam = std::find_if(m_params.begin(),
+      m_params.end(),
+      [&](const Param &p) { return p.first == name; });
+
+  if (foundParam != m_params.end())
+    return &(*foundParam);
+  else {
     m_params.emplace_back(name, AnariAny());
     return &m_params[m_params.size() - 1];
-  } else
-    return nullptr;
+  }
 }
 
 } // namespace helium

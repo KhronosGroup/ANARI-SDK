@@ -30,7 +30,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
 set(ANARI_SDK_VERSION_MAJOR 0)
 set(ANARI_SDK_VERSION_MINOR 11)
-set(ANARI_SDK_VERSION_PATCH 0)
+set(ANARI_SDK_VERSION_PATCH 1)
 set(ANARI_SDK_VERSION
   ${ANARI_SDK_VERSION_MAJOR}.${ANARI_SDK_VERSION_MINOR}.${ANARI_SDK_VERSION_PATCH}
 )
@@ -46,7 +46,13 @@ include(CMakeDependentOption)
 
 enable_testing()
 
-set(CMAKE_INSTALL_RPATH "$ORIGIN:$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
+if (APPLE)
+  list(APPEND CMAKE_INSTALL_RPATH "@loader_path")
+  list(APPEND CMAKE_INSTALL_RPATH "@loader_path/../${CMAKE_INSTALL_LIBDIR}")
+elseif(UNIX)
+  list(APPEND CMAKE_INSTALL_RPATH "$ORIGIN")
+  list(APPEND CMAKE_INSTALL_RPATH "$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
+endif()
 
 # Built-in CMake options
 option(BUILD_SHARED_LIBS "Build shared libraries instead of static" ON)
@@ -54,7 +60,7 @@ option(BUILD_TESTING "Build tests for CTest" ON)
 # ANARI specific options
 
 option(BUILD_CTS "Build cts toolkit" OFF)
-cmake_dependent_option(CTS_ENABLE_GLTF "Enable glTF support for cts" ON "BUILD_CTS" ON)
+cmake_dependent_option(CTS_ENABLE_GLTF "Enable glTF support for cts" ON "BUILD_CTS" OFF)
 option(USE_DRACO "Use draco when loading glTF files" OFF)
 option(USE_WEBP "Use webp when loading glTF files" OFF)
 option(USE_KTX "Use ktx when loading glTF files" OFF)
