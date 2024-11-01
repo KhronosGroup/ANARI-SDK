@@ -3,6 +3,14 @@
 
 project(local_embree LANGUAGES CXX)
 
+if (APPLE AND ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "arm64")
+  set(COMPILE_FOR_ARM ON)
+elseif (UNIX AND ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "aarch64")
+  set(COMPILE_FOR_ARM ON)
+else()
+  set(COMPILE_FOR_ARM OFF)
+endif()
+
 option(EMBREE_GEOMETRY_CURVE          "" ON)
 option(EMBREE_GEOMETRY_GRID           "" OFF)
 option(EMBREE_GEOMETRY_INSTANCE       "" ON)
@@ -12,7 +20,7 @@ option(EMBREE_GEOMETRY_QUAD           "" ON)
 option(EMBREE_GEOMETRY_SUBDIVISION    "" OFF)
 option(EMBREE_GEOMETRY_TRIANGLE       "" ON)
 option(EMBREE_GEOMETRY_USER           "" OFF)
-if ((APPLE OR UNIX) AND ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "arm64")
+if (COMPILE_FOR_ARM)
   option(EMBREE_ISA_NEON           "" OFF)
   option(EMBREE_ISA_NEON2X         "" ON)
 else()
@@ -47,4 +55,6 @@ if (WIN32)
   INTERFACE
     /D__SSE__ /D__SSE2__ /D__SSE3__ /D__SSSE3__ /D__SSE4_1__ /D__SSE4_2__
   )
+elseif(COMPILE_FOR_ARM)
+  project_compile_options(INTERFACE -flax-vector-conversions -fsigned-char)
 endif()
