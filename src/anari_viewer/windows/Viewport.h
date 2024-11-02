@@ -87,6 +87,8 @@ struct Viewport : public Window
   manipulators::Orbit m_localArcball;
   manipulators::Orbit *m_arcball{nullptr};
   manipulators::UpdateToken m_cameraToken{0};
+  float m_apertureRadius{0.f};
+  float m_focusDistance{1.f};
 
   // OpenGL + display
 
