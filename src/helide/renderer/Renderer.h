@@ -23,8 +23,11 @@ enum class RenderMode
 {
   DEFAULT,
   PRIM_ID,
-  GEOM_ID,
+  OBJ_ID,
   INST_ID,
+  PRIM_INDEX,
+  GEOM_INDEX,
+  INST_INDEX,
   NG,
   NG_ABS,
   NS,
@@ -57,7 +60,8 @@ struct Renderer : public Object
       std::string_view subtype, HelideGlobalState *d);
 
  private:
-  float4 shadeRay(const float2 &screen,
+  void shadeRay(PixelSample &retval,
+      const float2 &screen,
       const Ray &ray,
       const VolumeRay &vray,
       const World &w) const;

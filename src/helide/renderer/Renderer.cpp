@@ -9,12 +9,18 @@ namespace helide {
 
 static RenderMode renderModeFromString(const std::string &name)
 {
-  if (name == "primID")
+  if (name == "primitiveId")
     return RenderMode::PRIM_ID;
-  else if (name == "geomID")
-    return RenderMode::GEOM_ID;
-  else if (name == "instID")
+  else if (name == "objectId")
+    return RenderMode::OBJ_ID;
+  else if (name == "instanceId")
     return RenderMode::INST_ID;
+  else if (name == "embreePrimID")
+    return RenderMode::PRIM_INDEX;
+  else if (name == "embreeGeomID")
+    return RenderMode::GEOM_INDEX;
+  else if (name == "embreeInstID")
+    return RenderMode::INST_INDEX;
   else if (name == "Ng")
     return RenderMode::NG;
   else if (name == "Ng.abs")
@@ -123,7 +129,6 @@ PixelSample Renderer::renderSample(
   RTCIntersectArguments iargs;
   rtcInitIntersectArguments(&iargs);
   rtcIntersect1(w.embreeScene(), (RTCRayHit *)&ray, &iargs);
-  const bool hitGeometry = ray.geomID != RTC_INVALID_GEOMETRY_ID;
 
   // Intersect Volumes //
 
@@ -132,18 +137,10 @@ PixelSample Renderer::renderSample(
   vray.dir = ray.dir;
   vray.t.upper = ray.tfar;
   w.intersectVolumes(vray);
-  const bool hitVolume = vray.volume != nullptr;
 
   // Shade //
 
-  retval.color = shadeRay(screen, ray, vray, w);
-  retval.depth = hitVolume ? std::min(ray.tfar, vray.t.lower) : ray.tfar;
-  if (hitGeometry || hitVolume) {
-    retval.primId = hitVolume ? 0 : ray.primID;
-    retval.objId = hitVolume ? vray.volume->id() : w.surfaceFromRay(ray)->id();
-    retval.instId = hitVolume ? w.instanceFromRay(vray)->id(vray.instArrayID)
-                              : w.instanceFromRay(ray)->id(ray.instArrayID);
-  }
+  shadeRay(retval, screen, ray, vray, w);
 
   return retval;
 }
@@ -154,7 +151,8 @@ Renderer *Renderer::createInstance(
   return new Renderer(s);
 }
 
-float4 Renderer::shadeRay(const float2 &screen,
+void Renderer::shadeRay(PixelSample &retval,
+    const float2 &screen,
     const Ray &ray,
     const VolumeRay &vray,
     const World &w) const
@@ -165,8 +163,26 @@ float4 Renderer::shadeRay(const float2 &screen,
   const float4 bgColorOpacity =
       m_bgImage ? backgroundColorFromImage(*m_bgImage, screen) : m_bgColor;
 
-  if (!hitGeometry && !hitVolume)
-    return bgColorOpacity;
+  if (!hitGeometry && !hitVolume) {
+    retval.color = bgColorOpacity;
+    return;
+  }
+
+  // Write depth //
+
+  retval.depth = hitVolume ? std::min(ray.tfar, vray.t.lower) : ray.tfar;
+
+  // Write ids //
+
+  if (hitGeometry || hitVolume) {
+    retval.primId =
+        hitVolume ? 0 : w.surfaceFromRay(ray)->geometry()->getPrimID(ray);
+    retval.objId = hitVolume ? vray.volume->id() : w.surfaceFromRay(ray)->id();
+    retval.instId = hitVolume ? w.instanceFromRay(vray)->id(vray.instArrayID)
+                              : w.instanceFromRay(ray)->id(ray.instArrayID);
+  }
+
+  // Write color //
 
   const float3 bgColor(bgColorOpacity.x, bgColorOpacity.y, bgColorOpacity.z);
 
@@ -180,12 +196,21 @@ float4 Renderer::shadeRay(const float2 &screen,
 
   switch (m_mode) {
   case RenderMode::PRIM_ID:
-    geometryColor = hitGeometry ? makeRandomColor(ray.primID) : bgColor;
+    geometryColor = makeRandomColor(retval.primId);
     break;
-  case RenderMode::GEOM_ID:
-    geometryColor = hitGeometry ? makeRandomColor(ray.geomID) : bgColor;
+  case RenderMode::OBJ_ID:
+    geometryColor = makeRandomColor(retval.objId);
     break;
   case RenderMode::INST_ID:
+    geometryColor = makeRandomColor(retval.instId);
+    break;
+  case RenderMode::PRIM_INDEX:
+    geometryColor = hitGeometry ? makeRandomColor(ray.primID) : bgColor;
+    break;
+  case RenderMode::GEOM_INDEX:
+    geometryColor = hitGeometry ? makeRandomColor(ray.geomID) : bgColor;
+    break;
+  case RenderMode::INST_INDEX:
     geometryColor = hitGeometry ? makeRandomColor(ray.instID) : bgColor;
     break;
   case RenderMode::RAY_UVW:
@@ -285,7 +310,7 @@ float4 Renderer::shadeRay(const float2 &screen,
   accumulateValue(color, bgColor, opacity);
   accumulateValue(opacity, bgColorOpacity.w, opacity);
 
-  return {color, opacity};
+  retval.color = float4(color, opacity);
 }
 
 } // namespace helide
