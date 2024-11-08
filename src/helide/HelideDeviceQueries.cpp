@@ -295,7 +295,7 @@ static const void * ANARI_RENDERER_default_mode_info(ANARIDataType paramType, in
          }
       case 6: // value
          if(paramType == ANARI_STRING && infoType == ANARI_STRING_LIST) {
-            static const char *values[] = {"default", "primID", "geomID", "instID", "Ng", "Ng.abs", "uvw", "backface", "hitSurface", "hitVolume", "geometry.attribute0", "geometry.attribute1", "geometry.attribute2", "geometry.attribute3", "geometry.color", "opacityHeatmap", nullptr};
+            static const char *values[] = {"default", "primitiveId", "objectId", "instanceId", "embreePrimID", "embreeGeomID", "embreeInstID", "Ng", "Ng.abs", "uvw", "backface", "hitSurface", "hitVolume", "geometry.attribute0", "geometry.attribute1", "geometry.attribute2", "geometry.attribute3", "geometry.color", "opacityHeatmap", nullptr};
             return values;
          } else {
             return nullptr;

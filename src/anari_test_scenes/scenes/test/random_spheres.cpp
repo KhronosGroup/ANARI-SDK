@@ -3,6 +3,7 @@
 
 #include "random_spheres.h"
 // std
+#include <algorithm>
 #include <random>
 
 namespace anari {
@@ -24,7 +25,8 @@ std::vector<ParameterInfo> RandomSpheres::parameters()
       // clang-format off
       {makeParameterInfo("numSpheres", "Number of spheres to generate", int(1e3), int(1), int(1e6))},
       {makeParameterInfo("radius", "Radius of all spheres", 1.5e-2f)},
-      {makeParameterInfo("randomizeRadii", "Randomize per-sphere radius", true)}
+      {makeParameterInfo("randomizeRadii", "Randomize per-sphere radius", true)},
+      {makeParameterInfo("remapPrimitiveIds", "remap primitive ids using primitive.id array", false)}
       // clang-format on
   };
 }
@@ -54,9 +56,10 @@ void RandomSpheres::commit()
   anari::setParameter(d, surface, "geometry", geom);
   anari::setParameter(d, surface, "material", mat);
 
-  int numSpheres = getParam<int>("numSpheres", 2e4);
-  float radius = getParam<float>("radius", 1.5e-2f);
-  bool randomizeRadii = getParam<bool>("randomizeRadii", true);
+  const int numSpheres = getParam<int>("numSpheres", 2e4);
+  const float radius = getParam<float>("radius", 1.5e-2f);
+  const bool randomizeRadii = getParam<bool>("randomizeRadii", true);
+  const bool remapPrimitiveIds = getParam<bool>("remapPrimitiveIds", false);
 
   if (numSpheres < 1)
     throw std::runtime_error("'numSpheres' must be >= 1");
@@ -70,6 +73,7 @@ void RandomSpheres::commit()
 
   std::vector<math::float3> spherePositions((size_t(numSpheres)));
   std::vector<math::float4> sphereColors((size_t(numSpheres)));
+  std::vector<uint32_t> sphereIds((size_t(numSpheres)));
 
   for (auto &s : spherePositions) {
     s.x = vert_dist(rng);
@@ -84,6 +88,8 @@ void RandomSpheres::commit()
     s.w = 1.f;
   }
 
+  std::fill(sphereIds.begin(), sphereIds.end(), 1);
+
   anari::setParameterArray1D(d,
       geom,
       "vertex.position",
@@ -91,6 +97,10 @@ void RandomSpheres::commit()
       spherePositions.size());
   anari::setParameterArray1D(
       d, geom, "vertex.color", sphereColors.data(), sphereColors.size());
+  if (remapPrimitiveIds) {
+    anari::setParameterArray1D(
+        d, geom, "primitive.id", sphereIds.data(), sphereIds.size());
+  }
 
   if (randomizeRadii) {
     std::normal_distribution<float> radii_dist(radius / 10.f, radius);
