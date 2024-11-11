@@ -71,6 +71,11 @@ add_custom_target(generate_headers DEPENDS
 
 add_dependencies(generate_all generate_headers)
 
+if (NOT TARGET Python3::Module)
+  message(WARNING "Unable to find python Module, skipping python bindings")
+  return()
+endif()
+
 if (INSTALL_PYTHON_BINDINGS)
   set(BUILD_PYTHON_BINDINGS_BY_DEFAULT ALL)
 endif()
