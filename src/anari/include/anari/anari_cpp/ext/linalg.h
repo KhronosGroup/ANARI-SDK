@@ -727,8 +727,8 @@ namespace math {
 
 using namespace linalg::aliases;
 using namespace linalg;
-  using mat3 = anari::math::float3x3;
-  using mat4 = anari::math::float4x4;
+using mat3 = anari::math::float3x3;
+using mat4 = anari::math::float4x4;
 
 } // namespace math
 } // namespace anari

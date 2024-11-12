@@ -16,7 +16,7 @@
 namespace helium {
 
 using namespace linalg::aliases;
-  using mat4 = anari::math::float4x4;
+using mat4 = anari::math::float4x4;
 
 struct BaseGlobalDeviceState
 {
