@@ -106,6 +106,12 @@ class HdAnariGeometry : public HdMesh
   std::map<TfToken, TfToken> geometryBindingPoints_;
   std::map<TfToken, TfToken> instanceBindingPoints_;
 
+#if !USE_INSTANCE_ARRAYS
+  VtMatrix4fArray transforms_UNIQUE_INSTANCES_;
+  VtUIntArray ids_UNIQUE_INSTANCES_;
+  std::vector<std::pair<TfToken, VtValue>> instancedPrimvar_UNIQUE_INSTANCES_;
+#endif
+
   struct AnariObjects
   {
     anari::Device device{nullptr};
