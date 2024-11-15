@@ -60,28 +60,15 @@ struct HdAnariMaterial : public HdMaterial
   }
 
  protected:
-  // Load and returns all textures associated with this material.
-  virtual TextureDescMapping EnumerateTextures(
-      const HdMaterialNetwork2Interface &materialNetworkInterface,
-      TfToken terminal) const = 0;
-  virtual PrimvarMapping EnumeratePrimvars(
-      const HdMaterialNetwork2Interface &materialNetworkInterface,
-      TfToken terminal) const = 0;
+  TextureDescMapping textures_{};
+  SamplerMapping samplers_{};
+  PrimvarMapping primvars_{};
+  PrimvarBinding attributes_{};
 
-  virtual anari::Material GetOrCreateMaterial(
-      const HdMaterialNetwork2Interface &materialNetworkIface,
-      const PrimvarBinding &primvarBinding,
-      const PrimvarMapping &primvarMapping,
-      const SamplerMapping &samplerMapping) const = 0;
+  HdMaterialNetwork2 materialNetwork2_{};
 
-  TextureDescMapping textures_;
-  SamplerMapping samplers_;
-  PrimvarMapping primvars_;
-  PrimvarBinding attributes_;
-
-  HdMaterialNetwork2 materialNetwork2_;
-  anari::Device device_;
-  anari::Material material_;
+  anari::Device device_{};
+  anari::Material material_{};
 
  private:
   // Convert the given material network to the newer HdMaterialNetwork2

@@ -3,33 +3,40 @@
 
 #include "physicallyBased.h"
 
-#include "usdPreviewSurfaceConverter.h"
 #include "../materialTokens.h"
+#include "usdPreviewSurfaceConverter.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-HdAnariMaterial::TextureDescMapping HdAnariPhysicallyBasedMaterial::EnumerateTextures(
+HdAnariMaterial::TextureDescMapping
+HdAnariPhysicallyBasedMaterial::EnumerateTextures(
     const HdMaterialNetwork2Interface &materialNetworkIface,
-    TfToken terminalName) const
+    TfToken terminalName)
 {
   auto con = materialNetworkIface.GetTerminalConnection(terminalName);
   if (!con.first) {
-    TF_WARN("Cannot find a surface terminal on prim %s", GetId().GetText());
+    TF_WARN("Cannot find a surface terminal on prim %s",
+        materialNetworkIface.GetMaterialPrimPath().GetText());
     return {};
   }
   TfToken terminalNode = con.second.upstreamNodeName;
   TfToken terminalNodeType = materialNetworkIface.GetNodeType(terminalNode);
   if (terminalNodeType == HdAnariMaterialTokens->UsdPreviewSurface) {
-    return HdAnariUsdPreviewSurfaceConverter::EnumerateTextures(materialNetworkIface, terminalNode);
+    return HdAnariUsdPreviewSurfaceConverter::EnumerateTextures(
+        materialNetworkIface, terminalNode);
   }
 
   return {};
 }
 
-std::map<SdfPath, TfToken> HdAnariPhysicallyBasedMaterial::EnumeratePrimvars(const HdMaterialNetwork2Interface &materialNetworkIface, TfToken terminal) const {
+HdAnariMaterial::PrimvarMapping
+HdAnariPhysicallyBasedMaterial::EnumeratePrimvars(
+    const HdMaterialNetwork2Interface &materialNetworkIface, TfToken terminal)
+{
   auto con = materialNetworkIface.GetTerminalConnection(terminal);
   if (!con.first) {
-    TF_CODING_ERROR("Cannot find a surface terminal on prim %s", GetId().GetText());
+    TF_CODING_ERROR("Cannot find a surface terminal on prim %s",
+        materialNetworkIface.GetMaterialPrimPath().GetText());
     return {};
   }
 
@@ -37,42 +44,60 @@ std::map<SdfPath, TfToken> HdAnariPhysicallyBasedMaterial::EnumeratePrimvars(con
   TfToken terminalNodeType = materialNetworkIface.GetNodeType(terminalNode);
 
   if (terminalNodeType == HdAnariMaterialTokens->UsdPreviewSurface) {
-    return HdAnariUsdPreviewSurfaceConverter::EnumeratePrimvars(materialNetworkIface, terminalNode);
+    return HdAnariUsdPreviewSurfaceConverter::EnumeratePrimvars(
+        materialNetworkIface, terminalNode);
   }
 
-  return { { materialNetworkIface.GetMaterialPrimPath(), TfToken("baseColor")} };
+  return {{materialNetworkIface.GetMaterialPrimPath(), TfToken("baseColor")}};
 }
 
 anari::Material HdAnariPhysicallyBasedMaterial::GetOrCreateMaterial(
-    const HdMaterialNetwork2Interface& materialNetworkIface,
-    const PrimvarBinding& primvarBinding,
-    const PrimvarMapping& primvarMapping,
-    const SamplerMapping& samplerMapping
-  ) const
+    anari::Device device,
+    const HdMaterialNetwork2Interface &materialNetworkIface,
+    const HdAnariMaterial::PrimvarBinding &primvarBinding,
+    const HdAnariMaterial::PrimvarMapping &primvarMapping,
+    const HdAnariMaterial::SamplerMapping &samplerMapping)
 {
-  auto material = anari::newObject<anari::Material>(device_, "physicallyBased");
+  auto material = anari::newObject<anari::Material>(device, "physicallyBased");
 
-  auto con = materialNetworkIface.GetTerminalConnection(HdMaterialTerminalTokens->surface);
+  auto con = materialNetworkIface.GetTerminalConnection(
+      HdMaterialTerminalTokens->surface);
   if (con.first) {
     TfToken terminalNode = con.second.upstreamNodeName;
     TfToken terminalNodeType = materialNetworkIface.GetNodeType(terminalNode);
     if (terminalNodeType == HdAnariMaterialTokens->UsdPreviewSurface) {
-      ProcessUsdPreviewSurfaceNode(material, materialNetworkIface, terminalNode, primvarBinding, primvarMapping, samplerMapping);
+      ProcessUsdPreviewSurfaceNode(device,
+          material,
+          materialNetworkIface,
+          terminalNode,
+          primvarBinding,
+          primvarMapping,
+          samplerMapping);
     }
   } else {
-    TF_CODING_ERROR("Cannot find a surface terminal on prim %s", GetId().GetText());
+    TF_CODING_ERROR("Cannot find a surface terminal on prim %s",
+        materialNetworkIface.GetMaterialPrimPath().GetText());
   }
 
   return material;
 }
 
-
-void HdAnariPhysicallyBasedMaterial::ProcessUsdPreviewSurfaceNode(anari::Material material, const HdMaterialNetwork2Interface &materialNetworkIface, TfToken terminal,
-    const PrimvarBinding& primvarBinding, const PrimvarMapping& primvarMapping, const SamplerMapping& samplerMapping) const
+void HdAnariPhysicallyBasedMaterial::ProcessUsdPreviewSurfaceNode(
+    anari::Device device,
+    anari::Material material,
+    const HdMaterialNetwork2Interface &materialNetworkIface,
+    TfToken terminal,
+    const HdAnariMaterial::PrimvarBinding &primvarBinding,
+    const HdAnariMaterial::PrimvarMapping &primvarMapping,
+    const HdAnariMaterial::SamplerMapping &samplerMapping)
 {
-  HdAnariUsdPreviewSurfaceConverter upsc(device_, material,
-      &materialNetworkIface, terminal,
-      &primvarBinding, &primvarMapping, &samplerMapping);
+  HdAnariUsdPreviewSurfaceConverter upsc(device,
+      material,
+      &materialNetworkIface,
+      terminal,
+      &primvarBinding,
+      &primvarMapping,
+      &samplerMapping);
 
   upsc.ProcessInput(HdAnariMaterialTokens->diffuseColor,
       "baseColor",
@@ -80,8 +105,8 @@ void HdAnariPhysicallyBasedMaterial::ProcessUsdPreviewSurfaceNode(anari::Materia
       HdAnariTextureLoader::ColorSpace::SRgb);
   upsc.ProcessInputConnection(HdAnariMaterialTokens->normal,
       "normal",
-      HdAnariTextureLoader::ColorSpace::
-          Raw); // No default value to be set if no connection
+      HdAnariTextureLoader::ColorSpace::Raw); // No default value to be set if
+                                              // no connection
   upsc.ProcessInput(HdAnariMaterialTokens->opacity,
       "opacity",
       1.0f,
@@ -111,20 +136,19 @@ void HdAnariPhysicallyBasedMaterial::ProcessUsdPreviewSurfaceNode(anari::Materia
 
   switch (upsc.GetAlphaMode(materialNetworkIface, terminal)) {
   case HdAnariUsdPreviewSurfaceConverter::AlphaMode::Blend: {
-    anari::setParameter(device_, material, "alphaMode", "blend");
-    anari::unsetParameter(device_, material, "alphaCutoff");
+    anari::setParameter(device, material, "alphaMode", "blend");
+    anari::unsetParameter(device, material, "alphaCutoff");
     break;
   }
   case HdAnariUsdPreviewSurfaceConverter::AlphaMode::Opaque: {
-    anari::setParameter(device_, material, "alphaMode", "opaque");
-    anari::unsetParameter(device_, material, "alphaCutoff");
+    anari::setParameter(device, material, "alphaMode", "opaque");
+    anari::unsetParameter(device, material, "alphaCutoff");
     break;
   }
   case HdAnariUsdPreviewSurfaceConverter::AlphaMode::Mask: {
-    anari::setParameter(device_, material, "alphaMode", "mask");
-    upsc.ProcessInputValue(HdAnariMaterialTokens->opacityThreshold,
-        "alphaCutoff",
-        0.5f);
+    anari::setParameter(device, material, "alphaMode", "mask");
+    upsc.ProcessInputValue(
+        HdAnariMaterialTokens->opacityThreshold, "alphaCutoff", 0.5f);
     break;
   }
   }

@@ -7,11 +7,13 @@
 #include "geometry.h"
 #include "hdAnariTypes.h"
 #include "material.h"
+#include "materialTokens.h"
 
 #include <anari/anari_cpp.hpp>
 #include <anari/anari_cpp/anari_cpp_impl.hpp>
 
 // pxr
+#include <pxr/base/gf/vec3f.h>
 #include <pxr/base/tf/debug.h>
 #include <pxr/base/tf/diagnostic.h>
 #include <pxr/base/tf/hashmap.h>
@@ -25,6 +27,7 @@
 
 // std
 #include <algorithm>
+#include <anari/anari_cpp/anari_cpp_impl.hpp>
 #include <atomic>
 #include <cassert>
 #include <mutex>
@@ -47,7 +50,8 @@ class HdAnariRenderParam final : public HdRenderParam
     PhysicallyBased,
   };
 
-  HdAnariRenderParam(anari::Device device);
+  HdAnariRenderParam(anari::Device device,
+      MaterialType materialType = MaterialType::PhysicallyBased);
   ~HdAnariRenderParam() override;
 
   anari::Device GetANARIDevice() const;
@@ -79,29 +83,21 @@ class HdAnariRenderParam final : public HdRenderParam
 
 // Inlined definitions ////////////////////////////////////////////////////////
 
-inline HdAnariRenderParam::HdAnariRenderParam(anari::Device d) : _device(d)
+inline HdAnariRenderParam::HdAnariRenderParam(
+    anari::Device d, MaterialType materialType)
+    : _device(d), _materialType(materialType)
 {
   if (!d)
     return;
 
-  anari::Extensions extensions =
-      anari::extension::getInstanceExtensionStruct(d, d);
+  // Always go with white matte as a fallback material.
+  _material = anari::newObject<anari::Material>(d, "matte");
+  anari::setParameter(d, _material, "alphaMode", "opaque");
+  anari::setParameter(
+      d, _material, "color", GfVec3f(0.8f, 0.8f, 0.8f)); // "color");
+  anari::commitParameters(d, _material);
 
-  if (extensions.ANARI_KHR_MATERIAL_PHYSICALLY_BASED) {
-    _materialType = MaterialType::PhysicallyBased;
-    _material = anari::newObject<anari::Material>(d, "physicallyBased");
-    anari::setParameter(d, _material, "alphaMode", "opaque");
-    anari::setParameter(d, _material, "baseColor", "color");
-    anari::commitParameters(d, _material);
-    _primvarBinding.emplace(HdTokens->displayColor, "color");
-  } else {
-    _materialType = MaterialType::Matte;
-    _material = anari::newObject<anari::Material>(d, "matte");
-    anari::setParameter(d, _material, "alphaMode", "opaque");
-    anari::setParameter(d, _material, "color", "color");
-    anari::commitParameters(d, _material);
-    _primvarBinding.emplace(HdTokens->displayColor, "color");
-  }
+  _primvarBinding.emplace(HdTokens->displayColor, "color");
 }
 
 inline HdAnariRenderParam::~HdAnariRenderParam()
