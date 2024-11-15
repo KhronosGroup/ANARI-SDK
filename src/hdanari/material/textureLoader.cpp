@@ -130,13 +130,13 @@ anari::Sampler HdAnariTextureLoader::LoadHioTexture2D(anari::Device d,
   }
 
   HioImage::StorageSpec desc;
-  desc.format = AjudstColorspace(image->GetFormat(), colorspace);
+  desc.format = image->GetFormat();
   desc.width = image->GetWidth();
   desc.height = image->GetHeight();
   desc.depth = 1;
   desc.flipped = true;
 
-  auto format = HioFormatToAnari(desc.format);
+  auto format = HioFormatToAnari(AjudstColorspace(desc.format, colorspace));
   if (format == ANARI_UNKNOWN) {
     TF_WARN("failed to load texture '%s' due to unsupported format\n",
         file.c_str());
