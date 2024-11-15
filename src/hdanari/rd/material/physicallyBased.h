@@ -6,28 +6,33 @@
 #include "../material.h"
 
 #include <pxr/pxr.h>
+#include <anari/anari_cpp.hpp>
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-struct HdAnariPhysicallyBasedMaterial final : public HdAnariMaterial
+struct HdAnariPhysicallyBasedMaterial final
 {
-public:
-  using HdAnariMaterial::HdAnariMaterial;
+  static HdAnariMaterial::TextureDescMapping EnumerateTextures(
+      const HdMaterialNetwork2Interface &materialNetworkInterface,
+      TfToken terminal);
+  static HdAnariMaterial::PrimvarMapping EnumeratePrimvars(
+      const HdMaterialNetwork2Interface &materialNetworkInterface,
+      TfToken terminal);
 
-protected:
-  TextureDescMapping EnumerateTextures(const HdMaterialNetwork2Interface &materialNetworkInterface, TfToken terminal) const override;
-  PrimvarMapping EnumeratePrimvars(const HdMaterialNetwork2Interface &materialNetworkInterface, TfToken terminal) const override;
-
-  anari::Material GetOrCreateMaterial(
-    const HdMaterialNetwork2Interface& materialNetworkIface,
-    const PrimvarBinding& primvarBinding,
-    const PrimvarMapping& primvarMapping,
-    const SamplerMapping& samplerMapping
-  ) const override;
+  static anari::Material GetOrCreateMaterial(anari::Device device,
+      const HdMaterialNetwork2Interface &materialNetworkIface,
+      const HdAnariMaterial::PrimvarBinding &primvarBinding,
+      const HdAnariMaterial::PrimvarMapping &primvarMapping,
+      const HdAnariMaterial::SamplerMapping &samplerMapping);
 
  private:
-  void ProcessUsdPreviewSurfaceNode(anari::Material material, const HdMaterialNetwork2Interface &materialNetworkIface, TfToken terminal,
-      const PrimvarBinding& primvarBinding, const PrimvarMapping& primvarMapping, const SamplerMapping& samplerMapping) const;
+  static void ProcessUsdPreviewSurfaceNode(anari::Device device,
+      anari::Material material,
+      const HdMaterialNetwork2Interface &materialNetworkIface,
+      TfToken terminal,
+      const HdAnariMaterial::PrimvarBinding &primvarBinding,
+      const HdAnariMaterial::PrimvarMapping &primvarMapping,
+      const HdAnariMaterial::SamplerMapping &samplerMapping);
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

@@ -1,6 +1,10 @@
 // Copyright 2024-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
+#include "material.h"
+#include "materialTokens.h"
+#include "renderParam.h"
+
 #include <anari/anari.h>
 #include <anari/frontend/anari_enums.h>
 #include <pxr/base/gf/vec3f.h>
@@ -38,6 +42,10 @@
 #include "renderDelegate.h"
 #include "renderPass.h"
 // XXX: Add bprim types
+
+#include <string_view>
+
+using namespace std::string_view_literals;
 
 static void hdAnariDeviceStatusFunc(const void *,
     ANARIDevice,
@@ -117,12 +125,18 @@ void HdAnariRenderDelegate::Initialize()
     return;
   }
 
-  anari::Extensions extensions =
-      anari::extension::getDeviceExtensionStruct(library, "default");
+  auto extensions = anariGetDeviceExtensions(library, "default");
+  bool hasANARI_KHR_DEVICE_SYNCHRONIZATION = false;
+  bool hasANARI_KHR_MATERIAL_PHYSICALLY_BASED = false;
+  for (auto e = extensions; *e; ++e) {
+    if ("ANARI_KHR_DEVICE_SYNCHRONIZATION"sv == *e)
+      hasANARI_KHR_DEVICE_SYNCHRONIZATION = true;
+    if ("ANARI_KHR_MATERIAL_PHYSICALLY_BASED"sv == *e)
+      hasANARI_KHR_MATERIAL_PHYSICALLY_BASED = true;
+  }
 
-  if (!extensions.ANARI_KHR_DEVICE_SYNCHRONIZATION) {
-    TF_RUNTIME_ERROR(
-        "device doesn't support ANARI_KHR_DEVICE_SYNCHRONIAZATION");
+  if (!hasANARI_KHR_DEVICE_SYNCHRONIZATION) {
+    TF_RUNTIME_ERROR("device doesn't support ANARI_KHR_DEVICE_SYNCHRONIZATION");
     return;
   }
 
@@ -135,7 +149,11 @@ void HdAnariRenderDelegate::Initialize()
     return;
   }
 
-  _renderParam = std::make_shared<HdAnariRenderParam>(device);
+  HdAnariRenderParam::MaterialType materialType =
+      hasANARI_KHR_MATERIAL_PHYSICALLY_BASED
+      ? HdAnariRenderParam::MaterialType::PhysicallyBased
+      : HdAnariRenderParam::MaterialType::Matte;
+  _renderParam = std::make_shared<HdAnariRenderParam>(device, materialType);
 
   std::lock_guard<std::mutex> guard(_mutexResourceRegistry);
   if (_counterResourceRegistry.fetch_add(1) == 0)
@@ -280,17 +298,10 @@ HdSprim *HdAnariRenderDelegate::CreateSprim(
 {
   anari::Device d = _renderParam ? _renderParam->GetANARIDevice() : nullptr;
 
-  if (typeId == HdPrimTypeTokens->camera)
+  if (typeId == HdPrimTypeTokens->camera) {
     return new HdCamera(sprimId);
-  else if (typeId == HdPrimTypeTokens->material) {
-    switch (_renderParam->GetMaterialType()) {
-    case HdAnariRenderParam::MaterialType::PhysicallyBased: {
-      return new HdAnariPhysicallyBasedMaterial(d, sprimId);
-    }
-    default: {
-      return new HdAnariMatteMaterial(d, sprimId);
-    }
-    }
+  } else if (typeId == HdPrimTypeTokens->material) {
+    return new HdAnariMaterial(d, sprimId);
   } else if (typeId == HdPrimTypeTokens->extComputation)
     return new HdExtComputation(sprimId);
 
@@ -306,7 +317,7 @@ HdSprim *HdAnariRenderDelegate::CreateFallbackSprim(TfToken const &typeId)
   if (typeId == HdPrimTypeTokens->camera)
     return new HdCamera(SdfPath::EmptyPath());
   else if (typeId == HdPrimTypeTokens->material)
-    return new HdAnariMatteMaterial(d, SdfPath::EmptyPath());
+    return new HdAnariMaterial(d, SdfPath::EmptyPath());
   else if (typeId == HdPrimTypeTokens->extComputation)
     return new HdExtComputation(SdfPath::EmptyPath());
 

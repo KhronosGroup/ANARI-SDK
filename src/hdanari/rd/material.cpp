@@ -2,6 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "material.h"
+#include "material/matte.h"
+#include "material/physicallyBased.h"
+
+#include "renderDelegate.h"
+#include "renderParam.h"
 
 #include <anari/anari.h>
 #include <anari/anari_cpp.hpp>
@@ -30,6 +35,7 @@
 
 #include "debugCodes.h"
 #include "material/textureLoader.h"
+#include "renderParam.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -90,7 +96,7 @@ HdMaterialNetwork2 HdAnariMaterial::convertToHdMaterialNetwork2(
 }
 
 HdAnariMaterial::HdAnariMaterial(anari::Device d, const SdfPath &id)
-    : HdMaterial(id), device_(d), material_{}
+    : HdMaterial(id), device_(d)
 {}
 
 HdAnariMaterial::~HdAnariMaterial()
@@ -117,42 +123,86 @@ void HdAnariMaterial::Sync(HdSceneDelegate *sceneDelegate,
     HdRenderParam *renderParam,
     HdDirtyBits *dirtyBits)
 {
-  if ((*dirtyBits & HdMaterial::DirtyResource) == 0) {
-    return;
-  }
-
   TF_DEBUG_MSG(HD_ANARI_RD_MATERIAL, "Sync material %s\n", GetId().GetText());
 
-  //  Find material network and store it as HdMaterialNetwork2 for later use.
-  VtValue networkMapResource = sceneDelegate->GetMaterialResource(GetId());
-  HdMaterialNetworkMap networkMap =
-      networkMapResource.GetWithDefault<HdMaterialNetworkMap>();
+  auto hdAnariRenderParam = static_cast<HdAnariRenderParam *>(renderParam);
 
-  materialNetwork2_ = convertToHdMaterialNetwork2(networkMap);
-  auto materialNetworkIface =
-      HdMaterialNetwork2Interface(GetId(), &materialNetwork2_);
+  if ((*dirtyBits & HdMaterial::DirtyResource)) {
+    //  Find material network and store it as HdMaterialNetwork2 for later use.
+    VtValue networkMapResource = sceneDelegate->GetMaterialResource(GetId());
+    HdMaterialNetworkMap networkMap =
+        networkMapResource.GetWithDefault<HdMaterialNetworkMap>();
 
-  // Enumerate primvars
-  primvars_ = EnumeratePrimvars(
-      materialNetworkIface, HdMaterialTerminalTokens->surface);
+    materialNetwork2_ = convertToHdMaterialNetwork2(networkMap);
 
-  // Enumerate textures and load them, releasing previously used one
-  textures_ = EnumerateTextures(
-      materialNetworkIface, HdMaterialTerminalTokens->surface);
+    if (materialNetwork2_.terminals.empty()) {
+      material_ = hdAnariRenderParam->GetDefaultMaterial();
+    }
 
-  // Build primvar mapping so we can load the texture and configure the related
-  // samplers
-  attributes_ = BuildPrimvarBinding(primvars_);
+    auto materialNetworkIface =
+        HdMaterialNetwork2Interface(GetId(), &materialNetwork2_);
 
-  // Load the textures and create the samplers
-  ReleaseSamplers(device_, samplers_);
-  samplers_ = CreateSamplers(device_, textures_);
+    switch (hdAnariRenderParam->GetMaterialType()) {
+    case HdAnariRenderParam::MaterialType::Matte: {
+      // Enumerate primvars
+      primvars_ = HdAnariMatteMaterial::EnumeratePrimvars(
+          materialNetworkIface, HdMaterialTerminalTokens->surface);
 
-  // Enmerate primvars
-  material_ = GetOrCreateMaterial(
-      materialNetworkIface, attributes_, primvars_, samplers_);
+      // Enumerate textures and load them, releasing previously used one
+      textures_ = HdAnariMatteMaterial::EnumerateTextures(
+          materialNetworkIface, HdMaterialTerminalTokens->surface);
+      break;
+    }
+    case HdAnariRenderParam::MaterialType::PhysicallyBased: {
+      // Enumerate primvars
+      primvars_ = HdAnariPhysicallyBasedMaterial::EnumeratePrimvars(
+          materialNetworkIface, HdMaterialTerminalTokens->surface);
 
-  anari::commitParameters(device_, material_);
+      // Enumerate textures and load them, releasing previously used one
+      textures_ = HdAnariPhysicallyBasedMaterial::EnumerateTextures(
+          materialNetworkIface, HdMaterialTerminalTokens->surface);
+      break;
+    }
+    }
+
+    // Build primvar mapping so we can load the texture and configure the
+    // related samplers
+    attributes_ = BuildPrimvarBinding(primvars_);
+  }
+
+  if (*dirtyBits & HdMaterial::DirtyParams) {
+    auto materialNetworkIface =
+        HdMaterialNetwork2Interface(GetId(), &materialNetwork2_);
+
+    // Load the textures and create the samplers
+    // FIXME: This one should be finer grain and only work on the diffs between
+    // syncs. Load new textures and release unused ones...
+    ReleaseSamplers(device_, samplers_);
+    samplers_ = CreateSamplers(device_, textures_);
+
+    // Actually create the material. Release a possible previous instance.
+    if (material_)
+      anari::release(device_, material_);
+    material_ = {};
+
+    switch (hdAnariRenderParam->GetMaterialType()) {
+    case HdAnariRenderParam::MaterialType::Matte: {
+      material_ = HdAnariMatteMaterial::GetOrCreateMaterial(
+          device_, materialNetworkIface, attributes_, primvars_, samplers_);
+      break;
+    }
+    case HdAnariRenderParam::MaterialType::PhysicallyBased: {
+      material_ = HdAnariPhysicallyBasedMaterial::GetOrCreateMaterial(
+          device_, materialNetworkIface, attributes_, primvars_, samplers_);
+      break;
+    }
+    default:
+      break;
+    }
+  }
+
+  if (*dirtyBits && material_)
+    anari::commitParameters(device_, material_);
 
   *dirtyBits &= ~DirtyBits::AllDirty;
 }
