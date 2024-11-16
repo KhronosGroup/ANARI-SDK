@@ -9,6 +9,7 @@
 #include "material.h"
 
 #include <anari/anari_cpp.hpp>
+#include <anari/anari_cpp/anari_cpp_impl.hpp>
 
 // pxr
 #include <pxr/base/tf/debug.h>
@@ -25,6 +26,7 @@
 // std
 #include <algorithm>
 #include <atomic>
+#include <cassert>
 #include <mutex>
 #include <vector>
 
@@ -36,8 +38,9 @@ using GeometryList = std::vector<const HdAnariGeometry *>;
 struct HdAnariMesh;
 using MeshList = std::vector<const HdAnariMesh *>;
 
-struct HdAnariRenderParam final : public HdRenderParam
+class HdAnariRenderParam final : public HdRenderParam
 {
+ public:
   enum class MaterialType
   {
     Matte,

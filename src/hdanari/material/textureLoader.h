@@ -7,6 +7,8 @@
 #include <pxr/usd/sdf/assetPath.h>
 #include <anari/anari_cpp.hpp>
 
+#include <array>
+
 PXR_NAMESPACE_OPEN_SCOPE
 
 class HdAnariTextureLoader
@@ -31,7 +33,7 @@ class HdAnariTextureLoader
     MinMagFilter minMagFilter = MinMagFilter::Linear;
     // clang-format off
     std::array<float, 16> transform = {
-      1.0f, 0.0f, 0.0, 0.0f,
+      1.0f, 0.0f, 0.0f, 0.0f,
       0.0f, 1.0f, 0.0f, 0.0f,
       0.0f, 0.0f, 1.0f, 0.0f,
       0.0f, 0.0f, 0.0f, 1.0f,
