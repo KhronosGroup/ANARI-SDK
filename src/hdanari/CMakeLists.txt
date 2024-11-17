@@ -18,6 +18,14 @@ project(hdAnari)
 
 find_package(USD REQUIRED NAMES pxr)
 find_package(anari REQUIRED)
+if(LINUX)
+  # MaterialX and USD might depend on X11 and OpenGL, but they
+  # fail to declare that and directly use the related
+  # targets. Try and find those packages as optional
+  # so they don't actually break the build if missing.
+  find_package(X11)
+  find_package(OpenGL)
+endif()
 
 if(GCC OR CLANG)
   project_add_compile_options(-Wl,--no-undefined)
