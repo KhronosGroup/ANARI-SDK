@@ -126,24 +126,13 @@ inline AnariAny::AnariAny(T value) : AnariAny()
   static_assert(
       detail::validType<T>(), "unknown type used initialize visrtx::AnariAny");
 
+  static_assert(
+    type != ANARI_STRING_LIST, "Don't know how to build a string list from the given type. Please specialize AnariAny constructor."
+  );
+
   if constexpr (type == ANARI_STRING)
     m_string = value;
-  else if constexpr (type == ANARI_STRING_LIST) {
-    if constexpr (std::is_same_v<T, std::vector<std::string>>) {
-      m_stringList = value;
-      m_stringListPtrs.clear();
-    } else if constexpr (std::is_same_v<T, const char **>) {
-      m_stringList.clear();
-      m_stringListPtrs.clear();
-      if (value) {
-        while (*value)
-          m_stringList.push_back(*value++);
-      }
-    } else
-      static_assert(false,
-          "AnariAny string list can only be built from const char**, const char*[] and vector<string>.");
-
-  } else
+  else 
     std::memcpy(m_storage.data(), &value, sizeof(value));
 
   m_type = type;
@@ -155,6 +144,32 @@ inline AnariAny::AnariAny(bool value) : AnariAny()
 {
   uint8_t b = value;
   *this = AnariAny(ANARI_BOOL, &b);
+}
+
+template<>
+inline AnariAny::AnariAny(std::vector<std::string> value) : AnariAny()
+{
+    m_stringList = value;
+}
+
+template<>
+inline AnariAny::AnariAny(char** value) : AnariAny(ANARI_STRING_LIST, value)
+{
+}
+
+template<>
+inline AnariAny::AnariAny(const char** value) : AnariAny(ANARI_STRING_LIST, value)
+{
+}
+
+template<>
+inline AnariAny::AnariAny(char* const* value) : AnariAny(ANARI_STRING_LIST, value)
+{
+}
+
+template<>
+inline AnariAny::AnariAny(const char* const* value) : AnariAny(ANARI_STRING_LIST, value)
+{
 }
 
 inline AnariAny::AnariAny(ANARIDataType type, const void *v) : AnariAny()
