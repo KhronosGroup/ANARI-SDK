@@ -44,241 +44,248 @@ ANARI_TYPEFOR_DEFINITION(helium::RefCounted *);
 
 namespace {
 
-template<typename T>
-static constexpr const bool IsStringListLike = 
-  std::is_pointer_v<T> &&
-  std::is_pointer_v<std::remove_pointer_t<T>> &&
-  std::is_same_v<std::decay_t<std::remove_pointer_t<std::remove_pointer_t<T>>>, char>;
-
+template <typename T>
+static constexpr const bool IsStringListLike =
+    std::is_pointer_v<T> && std::is_pointer_v<std::remove_pointer_t<T>>
+    && std::is_same_v<
+        std::decay_t<std::remove_pointer_t<std::remove_pointer_t<T>>>,
+        char>;
 
 using helium::AnariAny;
 
-template<typename T, typename Enabler = void>
-struct VerifyValue {
-static inline void verify_value(const AnariAny &v, T correctValue)
+template <typename T, typename Enabler = void>
+struct VerifyValue
 {
-  REQUIRE(v.valid());
-  REQUIRE(v.is<T>());
-  REQUIRE(v.get<T>() == correctValue);
-}
+  static inline void verify_value(const AnariAny &v, T correctValue)
+  {
+    REQUIRE(v.valid());
+    REQUIRE(v.is<T>());
+    REQUIRE(v.get<T>() == correctValue);
+  }
 };
 
 template <>
-struct VerifyValue<const char*> {
-static inline void verify_value(const AnariAny &v, const char *correctValue)
+struct VerifyValue<const char *>
 {
-  REQUIRE(v.valid());
-  REQUIRE(v.type() == ANARI_STRING);
-  REQUIRE(v.getString() == correctValue);
-}
+  static inline void verify_value(const AnariAny &v, const char *correctValue)
+  {
+    REQUIRE(v.valid());
+    REQUIRE(v.type() == ANARI_STRING);
+    REQUIRE(v.getString() == correctValue);
+  }
 };
 
 template <typename T>
-struct VerifyValue<T, std::enable_if_t<IsStringListLike<T>>> {
-static inline void verify_value(const AnariAny &v, T correctValue)
+struct VerifyValue<T, std::enable_if_t<IsStringListLike<T>>>
 {
-  REQUIRE(v.valid());
-  REQUIRE(v.type() == ANARI_STRING_LIST);
-  auto stringList = v.getStringList();
-  REQUIRE(stringList.empty()
-      == (correctValue == nullptr || *correctValue == nullptr));
+  static inline void verify_value(const AnariAny &v, T correctValue)
+  {
+    REQUIRE(v.valid());
+    REQUIRE(v.type() == ANARI_STRING_LIST);
+    auto stringList = v.getStringList();
+    REQUIRE(stringList.empty()
+        == (correctValue == nullptr || *correctValue == nullptr));
 
-  auto it = stringList.cbegin();
-  while (it != stringList.cend() && *correctValue) {
-    REQUIRE(*it == *correctValue);
-    ++it;
-    ++correctValue;
+    auto it = stringList.cbegin();
+    while (it != stringList.cend() && *correctValue) {
+      REQUIRE(*it == *correctValue);
+      ++it;
+      ++correctValue;
+    }
+    REQUIRE((it == stringList.cend() && *correctValue == nullptr));
   }
-  REQUIRE((it == stringList.cend() && *correctValue == nullptr));
-}
 };
 
-template<typename T, typename Enabler = void>
-struct TestInterface {
-    using VerifyValue = ::VerifyValue<T>;
-static inline void test_interface(T testValue, T testValue2)
+template <typename T, typename Enabler = void>
+struct TestInterface
 {
-  AnariAny v;
-  REQUIRE(!v.valid());
-
-  SECTION("Can make valid by C++ construction")
+  using VerifyValue = ::VerifyValue<T>;
+  static inline void test_interface(T testValue, T testValue2)
   {
-    AnariAny v2(testValue);
-    VerifyValue::verify_value(v2, testValue);
-  }
+    AnariAny v;
+    REQUIRE(!v.valid());
 
-  if (!std::is_same_v<bool, T>) {
-    SECTION("Can make valid by C construction")
+    SECTION("Can make valid by C++ construction")
     {
-      AnariAny v2(anari::ANARITypeFor<T>::value, &testValue);
+      AnariAny v2(testValue);
       VerifyValue::verify_value(v2, testValue);
     }
-  }
 
-  SECTION("Can make valid by calling operator=()")
-  {
-    v = testValue;
-    VerifyValue::verify_value(v, testValue);
-  }
+    if (!std::is_same_v<bool, T>) {
+      SECTION("Can make valid by C construction")
+      {
+        AnariAny v2(anari::ANARITypeFor<T>::value, &testValue);
+        VerifyValue::verify_value(v2, testValue);
+      }
+    }
 
-  SECTION("Can make valid by copy construction")
-  {
-    v = testValue;
-    AnariAny v2(v);
-    VerifyValue::verify_value(v2, testValue);
-  }
+    SECTION("Can make valid by calling operator=()")
+    {
+      v = testValue;
+      VerifyValue::verify_value(v, testValue);
+    }
 
-  SECTION("Two objects with same value are equal if constructed the same")
-  {
-    v = testValue;
-    AnariAny v2 = testValue;
-    REQUIRE(v.type() == v2.type());
-    REQUIRE(v == v2);
-  }
+    SECTION("Can make valid by copy construction")
+    {
+      v = testValue;
+      AnariAny v2(v);
+      VerifyValue::verify_value(v2, testValue);
+    }
 
-  SECTION("Two objects with same value are equal if assigned from another")
-  {
-    v = testValue;
-    AnariAny v2 = testValue2;
-    v = v2;
-    REQUIRE(v == v2);
-  }
+    SECTION("Two objects with same value are equal if constructed the same")
+    {
+      v = testValue;
+      AnariAny v2 = testValue;
+      REQUIRE(v.type() == v2.type());
+      REQUIRE(v == v2);
+    }
 
-  SECTION("Two objects with different values are not equal")
-  {
-    v = testValue;
-    AnariAny v2 = testValue2;
-    REQUIRE(v != v2);
+    SECTION("Two objects with same value are equal if assigned from another")
+    {
+      v = testValue;
+      AnariAny v2 = testValue2;
+      v = v2;
+      REQUIRE(v == v2);
+    }
+
+    SECTION("Two objects with different values are not equal")
+    {
+      v = testValue;
+      AnariAny v2 = testValue2;
+      REQUIRE(v != v2);
+    }
   }
-}
 };
 
-template<>
-struct TestInterface<const char*> {
-    using VerifyValue = ::VerifyValue<const char*>;
-static inline void test_interface(const char* testValue, const char* testValue2)
+template <>
+struct TestInterface<const char *>
 {
-  AnariAny v;
-  REQUIRE(!v.valid());
-
-  SECTION("Can make valid by C++ construction")
+  using VerifyValue = ::VerifyValue<const char *>;
+  static inline void test_interface(
+      const char *testValue, const char *testValue2)
   {
-    AnariAny v2(testValue);
-    VerifyValue::verify_value(v2, testValue);
-  }
+    AnariAny v;
+    REQUIRE(!v.valid());
 
-  SECTION("Can make valid by C construction")
-  {
-    AnariAny v2(ANARI_STRING, testValue);
-    VerifyValue::verify_value(v2, testValue);
-  }
+    SECTION("Can make valid by C++ construction")
+    {
+      AnariAny v2(testValue);
+      VerifyValue::verify_value(v2, testValue);
+    }
 
-  SECTION("Can make valid by calling operator=()")
-  {
-    v = testValue;
-    VerifyValue::verify_value(v, testValue);
-  }
+    SECTION("Can make valid by C construction")
+    {
+      AnariAny v2(ANARI_STRING, testValue);
+      VerifyValue::verify_value(v2, testValue);
+    }
 
-  SECTION("Can make valid by copy construction")
-  {
-    v = testValue;
-    AnariAny v2(v);
-    VerifyValue::verify_value(v2, testValue);
-  }
+    SECTION("Can make valid by calling operator=()")
+    {
+      v = testValue;
+      VerifyValue::verify_value(v, testValue);
+    }
 
-  SECTION("Two objects with same value are equal if constructed the same")
-  {
-    v = testValue;
-    AnariAny v2 = testValue;
-    REQUIRE(v.type() == v2.type());
-    REQUIRE(v == v2);
-  }
+    SECTION("Can make valid by copy construction")
+    {
+      v = testValue;
+      AnariAny v2(v);
+      VerifyValue::verify_value(v2, testValue);
+    }
 
-  SECTION("Two objects with same value are equal if assigned from another")
-  {
-    v = testValue;
-    AnariAny v2 = testValue2;
-    v = v2;
-    REQUIRE(v == v2);
-  }
+    SECTION("Two objects with same value are equal if constructed the same")
+    {
+      v = testValue;
+      AnariAny v2 = testValue;
+      REQUIRE(v.type() == v2.type());
+      REQUIRE(v == v2);
+    }
 
-  SECTION("Two objects with different values are not equal")
-  {
-    v = testValue;
-    AnariAny v2 = testValue2;
-    REQUIRE(v != v2);
+    SECTION("Two objects with same value are equal if assigned from another")
+    {
+      v = testValue;
+      AnariAny v2 = testValue2;
+      v = v2;
+      REQUIRE(v == v2);
+    }
+
+    SECTION("Two objects with different values are not equal")
+    {
+      v = testValue;
+      AnariAny v2 = testValue2;
+      REQUIRE(v != v2);
+    }
   }
-}
 };
 
 template <typename T>
-struct TestInterface<T, std::enable_if_t<IsStringListLike<T>>> {
-    using VerifyValue = ::VerifyValue<T>;
-static inline void test_interface(T testValue, T testValue2)
+struct TestInterface<T, std::enable_if_t<IsStringListLike<T>>>
 {
-  AnariAny v;
-  REQUIRE(!v.valid());
-
-  SECTION("Can make valid by C++ construction")
+  using VerifyValue = ::VerifyValue<T>;
+  static inline void test_interface(T testValue, T testValue2)
   {
-    AnariAny v2(testValue);
-    VerifyValue::verify_value(v2, testValue);
-  }
+    AnariAny v;
+    REQUIRE(!v.valid());
 
-  SECTION("Can make valid by C construction")
-  {
-    AnariAny v2(ANARI_STRING_LIST, testValue);
-    VerifyValue::verify_value(v2, testValue);
-  }
-
-  SECTION("Can make valid by calling operator=()")
-  {
-    v = testValue;
-    VerifyValue::verify_value(v, testValue);
-  }
-
-  SECTION("Can make valid by copy construction")
-  {
-    v = testValue;
-    AnariAny v2(v);
-    VerifyValue::verify_value(v2, testValue);
-  }
-
-  SECTION("Two objects with same value are equal if constructed the same")
-  {
-    v = testValue;
-    AnariAny v2 = testValue;
-    REQUIRE(v.type() == v2.type());
-    REQUIRE(v == v2);
-  }
-
-  SECTION("Two objects with same value are equal if assigned from another")
-  {
-    v = testValue;
-    AnariAny v2 = testValue2;
-    v = v2;
-    REQUIRE(v == v2);
-  }
-
-  SECTION("Two objects with different values are not equal")
-  {
-    v = testValue;
-    AnariAny v2 = testValue2;
-    REQUIRE(v != v2);
-  }
-
-  SECTION("Get raw data from matches the input data")
-  {
-    v = testValue;
-    auto anyValue = reinterpret_cast<decltype(testValue)>(v.data());
-    REQUIRE(anyValue != nullptr);
-    while (*testValue && *anyValue) {
-      REQUIRE(strcmp(*testValue++, *anyValue++) == 0);
+    SECTION("Can make valid by C++ construction")
+    {
+      AnariAny v2(testValue);
+      VerifyValue::verify_value(v2, testValue);
     }
-    REQUIRE(*testValue == nullptr);
-    REQUIRE(*anyValue == nullptr);
+
+    SECTION("Can make valid by C construction")
+    {
+      AnariAny v2(ANARI_STRING_LIST, testValue);
+      VerifyValue::verify_value(v2, testValue);
+    }
+
+    SECTION("Can make valid by calling operator=()")
+    {
+      v = testValue;
+      VerifyValue::verify_value(v, testValue);
+    }
+
+    SECTION("Can make valid by copy construction")
+    {
+      v = testValue;
+      AnariAny v2(v);
+      VerifyValue::verify_value(v2, testValue);
+    }
+
+    SECTION("Two objects with same value are equal if constructed the same")
+    {
+      v = testValue;
+      AnariAny v2 = testValue;
+      REQUIRE(v.type() == v2.type());
+      REQUIRE(v == v2);
+    }
+
+    SECTION("Two objects with same value are equal if assigned from another")
+    {
+      v = testValue;
+      AnariAny v2 = testValue2;
+      v = v2;
+      REQUIRE(v == v2);
+    }
+
+    SECTION("Two objects with different values are not equal")
+    {
+      v = testValue;
+      AnariAny v2 = testValue2;
+      REQUIRE(v != v2);
+    }
+
+    SECTION("Get raw data from matches the input data")
+    {
+      v = testValue;
+      auto anyValue = reinterpret_cast<decltype(testValue)>(v.data());
+      REQUIRE(anyValue != nullptr);
+      while (*testValue && *anyValue) {
+        REQUIRE(strcmp(*testValue++, *anyValue++) == 0);
+      }
+      REQUIRE(*testValue == nullptr);
+      REQUIRE(*anyValue == nullptr);
+    }
   }
-}
 };
 
 // Value Tests ////////////////////////////////////////////////////////////////
@@ -317,12 +324,17 @@ TEST_CASE("helium::AnariAny 'stringList' type behavior", "[helium_AnariAny]")
       nullptr,
   };
   TestInterface<char **>::test_interface(test1, test2);
-  TestInterface<const char **>::test_interface((const char**)test1, (const char**)test2);
-  TestInterface<char * const*>::test_interface((char*const*)test1, (char*const*)test2);
-  TestInterface<const char * const*>::test_interface((const char*const*)test1, (const char*const*)test2);
+  TestInterface<const char **>::test_interface(
+      (const char **)test1, (const char **)test2);
+  TestInterface<char *const *>::test_interface(
+      (char *const *)test1, (char *const *)test2);
+  TestInterface<const char *const *>::test_interface(
+      (const char *const *)test1, (const char *const *)test2);
 
-  for (auto ptr : test1) free(ptr);
-  for (auto ptr : test2) free(ptr);
+  for (auto ptr : test1)
+    free(ptr);
+  for (auto ptr : test2)
+    free(ptr);
 }
 // Object Tests ///////////////////////////////////////////////////////////////
 
