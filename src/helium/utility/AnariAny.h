@@ -7,10 +7,11 @@
 // anari
 #include <anari/anari_cpp.hpp>
 // std
-#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <cstring>
+#include <string>
+#include <vector>
 
 namespace helium {
 
@@ -58,6 +59,10 @@ struct AnariAny
   void reserveString(size_t size);
   void resizeString(size_t size);
 
+  std::vector<std::string> getStringList() const;
+  void reserveStringList(size_t size);
+  void resizeStringList(size_t size);
+
   template <typename T>
   bool is() const;
 
@@ -83,6 +88,8 @@ struct AnariAny
 
   std::array<uint8_t, MAX_LOCAL_STORAGE> m_storage;
   std::string m_string;
+  std::vector<std::string> m_stringList;
+  mutable std::vector<const char *> m_stringListPtrs;
   ANARIDataType m_type{ANARI_UNKNOWN};
 };
 
@@ -97,6 +104,7 @@ inline AnariAny::AnariAny(const AnariAny &copy)
 {
   std::memcpy(m_storage.data(), copy.m_storage.data(), m_storage.size());
   m_string = copy.m_string;
+  m_stringList = copy.m_stringList;
   m_type = copy.m_type;
   refIncObject();
 }
@@ -105,6 +113,8 @@ inline AnariAny::AnariAny(AnariAny &&tmp)
 {
   std::memcpy(m_storage.data(), tmp.m_storage.data(), m_storage.size());
   m_string = std::move(tmp.m_string);
+  m_stringList = std::move(tmp.m_stringList);
+  m_stringListPtrs = std::move(tmp.m_stringListPtrs);
   m_type = tmp.m_type;
   tmp.m_type = ANARI_UNKNOWN;
 }
@@ -118,7 +128,22 @@ inline AnariAny::AnariAny(T value) : AnariAny()
 
   if constexpr (type == ANARI_STRING)
     m_string = value;
-  else
+  else if constexpr (type == ANARI_STRING_LIST) {
+    if constexpr (std::is_same_v<T, std::vector<std::string>>) {
+      m_stringList = value;
+      m_stringListPtrs.clear();
+    } else if constexpr (std::is_same_v<T, const char **>) {
+      m_stringList.clear();
+      m_stringListPtrs.clear();
+      if (value) {
+        while (*value)
+          m_stringList.push_back(*value++);
+      }
+    } else
+      static_assert(false,
+          "AnariAny string list can only be built from const char**, const char*[] and vector<string>.");
+
+  } else
     std::memcpy(m_storage.data(), &value, sizeof(value));
 
   m_type = type;
@@ -138,7 +163,13 @@ inline AnariAny::AnariAny(ANARIDataType type, const void *v) : AnariAny()
   if (v != nullptr) {
     if (type == ANARI_STRING)
       m_string = (const char *)v;
-    else if (type == ANARI_VOID_POINTER)
+    else if (type == ANARI_STRING_LIST) {
+      const char **stringPtr = (const char **)v;
+      m_stringList.clear();
+      m_stringListPtrs.clear();
+      while (stringPtr && *stringPtr)
+        m_stringList.push_back(*stringPtr++);
+    } else if (type == ANARI_VOID_POINTER)
       std::memcpy(m_storage.data(), &v, anari::sizeOf(type));
     else
       std::memcpy(m_storage.data(), v, anari::sizeOf(type));
@@ -156,6 +187,8 @@ inline AnariAny &AnariAny::operator=(const AnariAny &rhs)
   reset();
   std::memcpy(m_storage.data(), rhs.m_storage.data(), m_storage.size());
   m_string = rhs.m_string;
+  m_stringList = rhs.m_stringList;
+  m_stringListPtrs.clear();
   m_type = rhs.m_type;
   refIncObject();
   return *this;
@@ -166,6 +199,8 @@ inline AnariAny &AnariAny::operator=(AnariAny &&rhs)
   reset();
   std::memcpy(m_storage.data(), rhs.m_storage.data(), m_storage.size());
   m_string = std::move(rhs.m_string);
+  m_stringList = std::move(rhs.m_stringList);
+  m_stringListPtrs = std::move(rhs.m_stringListPtrs);
   m_type = rhs.m_type;
   rhs.m_type = ANARI_UNKNOWN;
   return *this;
@@ -185,6 +220,8 @@ inline T AnariAny::get() const
       !anari::isObject(type), "use AnariAny::getObject() for getting objects");
   static_assert(
       type != ANARI_STRING, "use AnariAny::getString() for getting strings");
+  static_assert(type != ANARI_STRING_LIST,
+      "use AnaryAny::getStringList() for getting string lists");
 
   if (!valid())
     throw std::runtime_error("get() called on empty visrtx::AnariAny");
@@ -211,14 +248,26 @@ inline bool AnariAny::get() const
 
 inline const void *AnariAny::data() const
 {
-  return type() == ANARI_STRING ? (const void *)m_string.data()
-                                : (const void *)m_storage.data();
+  switch (type()) {
+  case ANARI_STRING:
+    return m_string.data();
+  case ANARI_STRING_LIST: {
+    if (m_stringListPtrs.empty()) {
+      m_stringListPtrs.reserve(m_stringList.size() + 1);
+      for (const auto &s : m_stringList)
+        m_stringListPtrs.push_back(s.c_str());
+      m_stringListPtrs.push_back(nullptr);
+    }
+    return m_stringListPtrs.data();
+  }
+  default:
+    return m_storage.data();
+  }
 }
 
 inline void *AnariAny::data()
 {
-  return type() == ANARI_STRING ? (void *)m_string.data()
-                                : (void *)m_storage.data();
+  return const_cast<void *>(const_cast<const AnariAny *>(this)->data());
 }
 
 template <typename T>
@@ -267,6 +316,8 @@ inline void AnariAny::reset()
   refDecObject();
   std::fill(m_storage.begin(), m_storage.end(), 0);
   m_string.clear();
+  m_stringList.clear();
+  m_stringListPtrs.clear();
   m_type = ANARI_UNKNOWN;
 }
 
@@ -280,6 +331,8 @@ inline bool AnariAny::operator==(const AnariAny &rhs) const
     return get<bool>() == rhs.get<bool>();
   else if (type() == ANARI_STRING)
     return m_string == rhs.m_string;
+  else if (type() == ANARI_STRING_LIST)
+    return m_stringList == rhs.m_stringList;
   else {
     return std::equal(m_storage.data(),
         m_storage.data() + ::anari::sizeOf(type()),
@@ -314,6 +367,23 @@ inline void AnariAny::reserveString(size_t size)
 inline void AnariAny::resizeString(size_t size)
 {
   m_string.resize(size);
+}
+
+inline std::vector<std::string> AnariAny::getStringList() const
+{
+  return type() == ANARI_STRING_LIST ? m_stringList
+                                     : std::vector<std::string>{};
+}
+
+inline void AnariAny::reserveStringList(size_t size)
+{
+  m_stringList.reserve(size);
+}
+
+inline void AnariAny::resizeStringList(size_t size)
+{
+  m_stringListPtrs.clear();
+  m_stringList.resize(size);
 }
 
 inline void AnariAny::refIncObject() const
