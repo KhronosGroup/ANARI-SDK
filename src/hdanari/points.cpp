@@ -3,7 +3,6 @@
 
 #include "points.h"
 
-#include <anari/anari_cpp.hpp>
 #include <pxr/base/tf/diagnostic.h>
 #include <pxr/base/tf/staticData.h>
 #include <pxr/base/tf/token.h>
@@ -16,6 +15,7 @@
 #include <pxr/imaging/hd/tokens.h>
 #include <pxr/imaging/hd/types.h>
 #include <algorithm>
+#include <anari/anari_cpp.hpp>
 #include <iterator>
 // std
 #include <string>
@@ -48,7 +48,10 @@ HdDirtyBits HdAnariPoints::GetInitialDirtyBitsMask() const
 }
 
 HdAnariMaterial::PrimvarBinding HdAnariPoints::UpdateGeometry(
-    HdSceneDelegate *sceneDelegate, HdDirtyBits *dirtyBits, const TfToken::Set& allPrimvars, const VtValue& points)
+    HdSceneDelegate *sceneDelegate,
+    HdDirtyBits *dirtyBits,
+    const TfToken::Set &allPrimvars,
+    const VtValue &points)
 {
   // Sphere radii //
   if (HdChangeTracker::IsDirty(HdChangeTracker::DirtyWidths)) {
@@ -62,10 +65,10 @@ HdAnariMaterial::PrimvarBinding HdAnariPoints::UpdateGeometry(
           std::back_inserter(radii),
           [](auto v) { return v / 2.0f; });
       _SetGeometryAttributeArray(
-         HdAnariTokens->radius, HdAnariTokens->vertexRadius, VtValue(radii));
+          HdAnariTokens->radius, HdAnariTokens->vertexRadius, VtValue(radii));
     } else {
       _SetGeometryAttributeArray(
-        HdAnariTokens->radius, HdAnariTokens->vertexRadius, VtValue());
+          HdAnariTokens->radius, HdAnariTokens->vertexRadius, VtValue());
     }
   }
 

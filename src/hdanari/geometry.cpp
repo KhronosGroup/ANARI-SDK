@@ -609,7 +609,7 @@ void HdAnariGeometry::_SetGeometryAttributeConstant(
   if (_GetVtValueAsAttribute(value, attrV)) {
     anari::setParameter(d, g, attributeName.GetText(), attrV);
     geometryBindingPoints_.emplace(attributeName, attributeName);
-    TF_DEBUG_MSG(HD_ANARI_GEOMETRY,
+    TF_DEBUG_MSG(HD_ANARI_RD_GEOMETRY,
         "Assigning constant %s to mesh %s\n",
         attributeName.GetText(),
         GetId().GetText());
@@ -617,7 +617,7 @@ void HdAnariGeometry::_SetGeometryAttributeConstant(
     if (auto it = geometryBindingPoints_.find(attributeName);
         it != std::end(geometryBindingPoints_)) {
       geometryBindingPoints_.erase(it);
-      TF_DEBUG_MSG(HD_ANARI_GEOMETRY,
+      TF_DEBUG_MSG(HD_ANARI_RD_GEOMETRY,
           "Clearing constant %s on mesh %s\n",
           attributeName.GetText(),
           GetId().GetText());
@@ -636,7 +636,7 @@ void HdAnariGeometry::_SetGeometryAttributeArray(const TfToken &attributeName,
   size_t size = 0;
 
   if (!value.IsEmpty() && _GetVtArrayBufferData(value, &data, &size, &type)) {
-    TF_DEBUG_MSG(HD_ANARI_GEOMETRY,
+    TF_DEBUG_MSG(HD_ANARI_RD_GEOMETRY,
         "Assigning geometry primvar %s to %s on mesh %s\n",
         attributeName.GetText(),
         bindingPoint.GetText(),
@@ -654,7 +654,7 @@ void HdAnariGeometry::_SetGeometryAttributeArray(const TfToken &attributeName,
       geometryBindingPoints_.erase(it);
       anari::unsetParameter(
           _anari.device, _anari.geometry, bindingPoint.GetText());
-      TF_DEBUG_MSG(HD_ANARI_GEOMETRY,
+      TF_DEBUG_MSG(HD_ANARI_RD_GEOMETRY,
           "Clearing geometry primvar %s on %s on mesh %s\n",
           attributeName.GetText(),
           bindingPoint.GetText(),
@@ -673,7 +673,7 @@ void HdAnariGeometry::_SetInstanceAttributeArray(const TfToken &attributeName,
   size_t size = 0;
 
   if (!value.IsEmpty() && _GetVtArrayBufferData(value, &data, &size, &type)) {
-    TF_DEBUG_MSG(HD_ANARI_GEOMETRY,
+    TF_DEBUG_MSG(HD_ANARI_RD_GEOMETRY,
         "Assigning instance primvar %s to mesh %s\n",
         attributeName.GetText(),
         GetId().GetText());
@@ -690,7 +690,7 @@ void HdAnariGeometry::_SetInstanceAttributeArray(const TfToken &attributeName,
       instanceBindingPoints_.erase(it);
       anari::unsetParameter(
           _anari.device, _anari.instance, attributeName.GetText());
-      TF_DEBUG_MSG(HD_ANARI_GEOMETRY,
+      TF_DEBUG_MSG(HD_ANARI_RD_GEOMETRY,
           "Clearing instance primvar %s on mesh %s\n",
           attributeName.GetText(),
           GetId().GetText());

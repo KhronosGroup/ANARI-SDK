@@ -1,22 +1,18 @@
 {
-    "Plugins": [
-        {
-            "Info": {
-                "Types": {
-                    "HdAnariRendererPlugin": {
-                        "bases": [
-                            "HdRendererPlugin"
-                        ],
-                        "displayName": "Anari",
-                        "priority": 99
-                    }
-                }
-            },
-            "LibraryPath": "../$<TARGET_FILE_NAME:hdAnari>",
-            "Name": "hdAnari",
-            "ResourcePath": "resources",
-            "Root": "..",
-            "Type": "library"
+  "Plugins" : [{
+    "Info": {
+      "Types": {
+        "HdAnariRendererPlugin": {
+          "bases": ["HdRendererPlugin"],
+          "displayName": "Anari",
+          "priority": 99
         }
-    ]
+      }
+    },
+    "LibraryPath": "../$<TARGET_FILE_NAME:hdanari_rd>",
+    "Name": "hdAnariRd",
+    "ResourcePath": "resources",
+    "Root": "..",
+    "Type": "library"
+  }]
 }

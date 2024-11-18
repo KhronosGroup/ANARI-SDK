@@ -6,6 +6,7 @@
 #include "renderParam.h"
 
 #include <pxr/base/tf/staticTokens.h>
+#include <pxr/base/tf/token.h>
 #include <pxr/imaging/hd/renderDelegate.h>
 #include <pxr/imaging/hd/renderThread.h>
 #include <pxr/pxr.h>
