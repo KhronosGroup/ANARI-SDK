@@ -2,12 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <anari/anari.h>
-#include <anari/anari_cpp.hpp>
-#include <anari/anari_cpp/anari_cpp_impl.hpp>
 #include <anari/frontend/anari_enums.h>
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/vec4f.h>
 #include <pxr/base/tf/diagnostic.h>
+#include <pxr/base/tf/token.h>
 #include <pxr/base/vt/value.h>
 #include <pxr/imaging/hd/instancer.h>
 #include <pxr/imaging/hd/renderIndex.h>
@@ -16,6 +15,8 @@
 #include <pxr/imaging/hd/sprim.h>
 #include <pxr/imaging/hd/types.h>
 #include <stdio.h>
+#include <anari/anari_cpp.hpp>
+#include <anari/anari_cpp/anari_cpp_impl.hpp>
 #include <string>
 
 #define HDANARI_TYPE_DEFINITIONS
@@ -26,6 +27,7 @@
 #include <pxr/imaging/hd/extComputation.h>
 #include <pxr/imaging/hd/resourceRegistry.h>
 #include <pxr/imaging/hd/tokens.h>
+#include <pxr/usd/usdShade/tokens.h>
 
 #include "instancer.h"
 #include "material/matte.h"

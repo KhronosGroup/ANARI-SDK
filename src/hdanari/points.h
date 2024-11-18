@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include <anari/anari_cpp.hpp>
 #include <pxr/base/tf/token.h>
 #include <pxr/base/vt/value.h>
 #include <pxr/imaging/hd/enums.h>
+#include <anari/anari_cpp.hpp>
 
 // pxr
 #include <pxr/imaging/hd/sceneDelegate.h>
@@ -29,8 +29,10 @@ class HdAnariPoints final : public HdAnariGeometry
   HdDirtyBits GetInitialDirtyBitsMask() const override;
 
  protected:
-  HdAnariMaterial::PrimvarBinding UpdateGeometry(
-      HdSceneDelegate *sceneDelegate, HdDirtyBits *dirtyBits, const TfToken::Set& allPrimvars, const VtValue& points) override;
+  HdAnariMaterial::PrimvarBinding UpdateGeometry(HdSceneDelegate *sceneDelegate,
+      HdDirtyBits *dirtyBits,
+      const TfToken::Set &allPrimvars,
+      const VtValue &points) override;
   void UpdatePrimvarSource(HdSceneDelegate *sceneDelegate,
       HdInterpolation interpolation,
       const TfToken &attributeName,
