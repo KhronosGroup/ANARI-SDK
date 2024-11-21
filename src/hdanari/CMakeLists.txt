@@ -37,3 +37,14 @@ set(OPENUSD_PLUGIN_INSTALL_PREFIX
 )
 
 add_subdirectory(rd)
+
+# Conditionally install a main plugInfo.json file
+# Rational is the following: If OPENUSD_INSTALL_DIR is set to the main OpenUSD folder
+# this very file will exist and have a meaningful content. This will enable our plugins to
+# be found in a standard OpenUSD plugin hierarchy.
+# If not, then we create our own file that will expose all our pluginis from a single search path.
+# This path will have to be added to the PXR_PLUGINPATH_NAME variable.
+if(NOT EXISTS "${OPENUSD_PLUGIN_INSTALL_PREFIX}/plugInfo.json")
+  install(FILES plugInfo.json DESTINATION "${OPENUSD_PLUGIN_INSTALL_PREFIX}/")
+endif()
+
