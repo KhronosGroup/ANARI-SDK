@@ -29,4 +29,11 @@ if(GCC OR CLANG)
   project_add_compile_options(-Wl,--no-undefined)
 endif()
 
+set(OPENUSD_PLUGIN_INSTALL_PREFIX
+  "${USD_DIR}/plugin/usd"
+  CACHE
+  PATH
+  "OpenUSD location to install USD plugin"
+)
+
 add_subdirectory(rd)
