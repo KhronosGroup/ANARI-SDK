@@ -163,14 +163,14 @@ void Renderer::shadeRay(PixelSample &retval,
   const float4 bgColorOpacity =
       m_bgImage ? backgroundColorFromImage(*m_bgImage, screen) : m_bgColor;
 
+  // Write depth //
+
+  retval.depth = hitVolume ? std::min(ray.tfar, vray.t.lower) : ray.tfar;
+
   if (!hitGeometry && !hitVolume) {
     retval.color = bgColorOpacity;
     return;
   }
-
-  // Write depth //
-
-  retval.depth = hitVolume ? std::min(ray.tfar, vray.t.lower) : ray.tfar;
 
   // Write ids //
 
