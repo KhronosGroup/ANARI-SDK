@@ -22,10 +22,10 @@ choices) ought to instead directly implement the ANARI API interface.
 
 ### Example implementation (Helide)
 
-The [helide device](../helide) is a minimal implementation which combines
-helium and Embree to do very basic CPU rendering with ray tracing. Potential
-helium library users can use helide as a guide for how helium abstractions are
-intended to be used.
+The [helide device](../devices/helide) is a minimal implementation which
+combines helium and Embree to do very basic CPU rendering with ray tracing.
+Potential helium library users can use helide as a guide for how helium
+abstractions are intended to be used.
 
 ### Where did the name "Helium" come from?
 
@@ -48,6 +48,10 @@ target_link_libraries(anari_device_myDevice PRIVATE anari::helium)
 # ...
 ```
 
+Note that `anari::helium` will still require linking either `anari::anari` or
+`anari::anari_static` to give consumers the option whether to link the ANARI
+API dynamically or statically.
+
 The following sections will outline various design choices relevent to
 implementors using helium.
 
@@ -65,12 +69,12 @@ object commits need to occur or can be skipped.
 The [helium::BaseDevice](BaseDevice.h) class implements a subset of the main API
 class that the C API forward to
 ([anari::DeviceImpl](../anari/include/anari/backend/DeviceImpl.h)).
-Implementations are mostly responsible for implementing all the `new*()` methods
+Subclasses are mostly responsible for implementing all the `new*()` methods
 of `anari::DeviceImpl` as helium doesn't know how to create concrete objects.
 
-Some implementations may desire to still "intercept" all base implemented API
-calls, which can easily be done by overriding the method found in
-`helium::BaseDevice` and then call it when appropriately. This may look like:
+Some subclasses may desire to still "intercept" all base implemented API calls,
+which can easily be done by overriding the method found in `helium::BaseDevice`
+and then call it when appropriately. This may look like:
 
 ```cpp
 void MyDevice::setParameter(
@@ -99,8 +103,9 @@ All parameter handling is done through
 [helium::ParameterizedObject](utility/ParameterizedObject.h). Helium uses a
 'pull' based model for handling parameters -- all parameter values are
 generically stored in the object and are expected to be read on
-`helium::BaseObject::commit()`. See comments on `ParameterizedObject` methods
-for a further explanation.
+`helium::BaseObject::commit()`. See comments on
+[ParameterizedObject](utility/ParameterizedObject.h) methods for a further
+explanation.
 
 Object commits are deferred until the device chooses to flush the
 [DefferedCommitBuffer](utiltiy/DeferredCommitBuffer.h) that lives in the
@@ -111,7 +116,7 @@ values are queried.
 
 Finally, objects can use `helium::BaseObject::reportMessage()` to generically
 report status messages through the application provided callbacks (setup and
-managed by `helium::BaseDevice`).
+managed for you in `helium::BaseDevice`).
 
 ### BaseArray + BaseFrame
 
@@ -137,6 +142,12 @@ accordingly based on what the implementation may require. Note that using
 exclusively using it will cleanly divide application ref count changes vs.
 internal ref counts.
 
+Additionally, there are basic (host-only) array implementations provided that
+can be used out-of-the-box for many implementations. Their common functionality
+is found in [Array](array/Array.h), with complete interfaces in
+[Array1D](array/Array1D.h), [Array2D](array/Array2D.h),
+[Array3D](array/Array3D.h), and [ObjectArray](array/ObjectArray.h) respectively.
+
 ### BaseGlobalDeviceState
 
 [helium::BaseGlobalDeviceState](BaseGlobalDeviceState.h) is a struct containing
@@ -149,3 +160,11 @@ Implementations must construct the protected `BaseDevice::m_state` variable so
 that status callback output can function properly. Devices which extend
 `BaseGlobalDeviceState` instead should initialze `m_state` with their own
 derived type which the downstream implementation can safely cast to.
+
+### Math + shading utility functions
+
+Helium uses the [ANARI provided math
+types](../anari/include/anari/anari_cpp/ext/linalg.h) extensively, as well as
+providing various common functions that can be useful for implementing ANARI.
+All such functionality is found in the single [helium_math.h](helium_math.h)
+header.
