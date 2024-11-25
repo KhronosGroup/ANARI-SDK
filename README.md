@@ -7,7 +7,7 @@ This repository contains the source for the ANARI API SDK. This includes:
 
 - [Front-end library + implementation guide](src/anari)
 - [Device implementation utilties for implementations](src/helium)
-- [Example device implementation](src/helide) (not intended for production use)
+- [Example device implementation](src/devices/helide) (not intended for production use)
 - [Example applications](examples/)
 - [Interactive sample viewer](examples/viewer)
 - [Render tests](tests/render)
@@ -71,14 +71,19 @@ CMake. This can be invoked from your build directory with (on any platform):
 The ANARI SDK exports CMake targets for the main front-end library and utilities
 helper library. The targets which are exported are as follows:
 
-- `anari::anari` : main library target to link with `libanari`
-- `anari::helium` : (static) library target containing base device implementation abstractions
+- `anari::anari`        : dynamically link the main ANARI API library target
+- `anari::anari_static` : statically link the main ANARI API library target
+- `anari::helium`       : library containing base device implementation abstractions (static)
 
 These targets can be found with CMake via `find_package(anari)`. The examples
 are written such that they can be built stand alone from the SDK source tree.
 The simplest usage can be found [here](examples/simple).
 
-The follwoing additional helper library components can be requested by listing
+Note that `anari::helium` will still require linking either `anari::anari` or
+`anari::anari_static` to give consumers the option whether to link the ANARI
+API dynamically or statically.
+
+The following additional helper library components can be requested by listing
 them under `find_pacakge(anari)`:
 
 - `viewer` : Source library target `anari::anari_viewer` for building small viewer apps
@@ -124,7 +129,7 @@ the viewer to select/override which library is loaded at runtime.
 
 ### SDK provided example implementation
 
-An example device implementation [helide](src/helide) is provided as a
+An example device implementation [helide](src/devices/helide) is provided as a
 starting point for users exploring the SDK and for implementors to see how the
 API might be implemented. It implements a very simple ray tracing implementation
 using Embree for intersection. Users should look to use vendor provided,
@@ -133,7 +138,7 @@ the SDK. (see below)
 
 ### Using the debug device layer
 
-The ANARI-SDK ships with a [debug layer](src/debug_device) implemented as an
+The ANARI-SDK ships with a [debug layer](src/devices/debug) implemented as an
 ordinary `ANARIDevice` which wraps a device (set as the `wrappedDevice`
 parameter on the debug device). This device uses the object queries reported by
 the wrapped device to validate correct usage of object subtypes, parameters, and
