@@ -86,6 +86,7 @@ project_include_directories(PRIVATE ${Boost_INCLUDE_DIRS})
 project_link_libraries(
 PUBLIC
   anari::helium
+  anari::anari_static
   ${__remote_extra_libs}
   ${CMAKE_THREAD_LIBS_INIT}
 )
