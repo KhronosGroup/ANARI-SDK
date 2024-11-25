@@ -28,8 +28,8 @@ PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/anari/anari_test_scenes>
 )
-project_link_libraries(PUBLIC helium PUBLIC $<BUILD_INTERFACE:stb_image>)
-project_link_libraries(PUBLIC helium PUBLIC $<BUILD_INTERFACE:mikktspace>)
+project_link_libraries(PUBLIC helium anari_static PUBLIC $<BUILD_INTERFACE:stb_image>)
+project_link_libraries(PUBLIC helium anari_static PUBLIC $<BUILD_INTERFACE:mikktspace>)
 
 if (VIEWER_ENABLE_GLTF)
   project_sources(PRIVATE scenes/file/glTF.cpp)

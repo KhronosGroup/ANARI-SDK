@@ -11,26 +11,19 @@ if (TARGET anari::anari)
   return()
 endif()
 
-add_library(anari::anari INTERFACE IMPORTED)
-set_target_properties(anari::anari PROPERTIES
-  INTERFACE_LINK_LIBRARIES
-    "anari"
+set(ANARI_LOCAL_TARGETS
+  anari_headers
+  anari_backend
+  anari
+  anari_static
+  anari_test_scenes
+  helium
 )
 
-add_library(anari::anari_static INTERFACE IMPORTED)
-set_target_properties(anari::anari_static PROPERTIES
-  INTERFACE_LINK_LIBRARIES
-    "anari_static"
-)
-
-add_library(anari::anari_test_scenes INTERFACE IMPORTED)
-set_target_properties(anari::anari_test_scenes PROPERTIES
-  INTERFACE_LINK_LIBRARIES
-    "anari_test_scenes"
-)
-
-add_library(anari::helium INTERFACE IMPORTED)
-set_target_properties(anari::helium PROPERTIES
-  INTERFACE_LINK_LIBRARIES
-    "helium"
-)
+foreach(TARGET ${ANARI_LOCAL_TARGETS})
+  add_library(anari::${TARGET} INTERFACE IMPORTED)
+  set_target_properties(anari::${TARGET} PROPERTIES
+    INTERFACE_LINK_LIBRARIES
+      "${TARGET}"
+  )
+endforeach()

@@ -35,7 +35,7 @@ set(ANARI_SDK_VERSION
   ${ANARI_SDK_VERSION_MAJOR}.${ANARI_SDK_VERSION_MINOR}.${ANARI_SDK_VERSION_PATCH}
 )
 
-project(anari VERSION ${ANARI_SDK_VERSION} LANGUAGES C CXX)
+project(anari-sdk VERSION ${ANARI_SDK_VERSION} LANGUAGES C CXX)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
@@ -141,7 +141,7 @@ include(cmake/mark_cache_variables_as_advanced.cmake)
 ## Configure CMake find_package() config files ##
 
 set(ANARI_CMAKE_INSTALL_DESTINATION
-  ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}-${PROJECT_VERSION}
+  ${CMAKE_INSTALL_LIBDIR}/cmake/anari-${PROJECT_VERSION}
 )
 
 install(EXPORT anari_Exports
@@ -152,21 +152,21 @@ install(EXPORT anari_Exports
 include(CMakePackageConfigHelpers)
 
 configure_package_config_file(
-  "${PROJECT_SOURCE_DIR}/cmake/${PROJECT_NAME}Config.cmake.in"
-  "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+  "${PROJECT_SOURCE_DIR}/cmake/anariConfig.cmake.in"
+  "${PROJECT_BINARY_DIR}/anariConfig.cmake"
 INSTALL_DESTINATION
   ${ANARI_CMAKE_INSTALL_DESTINATION}
 )
 
 write_basic_package_version_file(
-    "${PROJECT_NAME}ConfigVersion.cmake"
+    "anariConfigVersion.cmake"
     VERSION ${PROJECT_VERSION}
     COMPATIBILITY SameMajorVersion
 )
 
 install(FILES
-  ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
-  ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/anariConfig.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/anariConfigVersion.cmake
 DESTINATION
   ${ANARI_CMAKE_INSTALL_DESTINATION}
 )
