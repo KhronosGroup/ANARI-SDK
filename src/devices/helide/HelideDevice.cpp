@@ -10,7 +10,7 @@
 #include "frame/Frame.h"
 #include "scene/volume/spatial_field/SpatialField.h"
 
-#include "HelideDeviceQueries.h"
+#include "anari_library_helide_queries.h"
 
 namespace helide {
 

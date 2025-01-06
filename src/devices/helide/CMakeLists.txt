@@ -45,25 +45,18 @@ find_package(anari REQUIRED)
 
 add_subdirectory(external/embree EXCLUDE_FROM_ALL)
 
-## Code generation ##
-
-anari_generate_queries(
-  NAME helide_queries
-  PREFIX HelideDevice
-  CPP_NAMESPACE helide
-  JSON_DEFINITIONS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/HelideDefinitions.json
-)
-if (TARGET generate_all AND TARGET generate_helide_queries)
-  add_dependencies(generate_all generate_helide_queries)
-endif()
-
 ## Core device target ##
 
 project_add_library(SHARED)
 
+anari_generate_queries(
+  DEVICE_TARGET ${PROJECT_NAME}
+  CPP_NAMESPACE helide
+  JSON_DEFINITIONS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/HelideDefinitions.json
+)
+
 project_sources(PRIVATE
   HelideDevice.cpp
-  HelideDeviceQueries.cpp
   HelideGlobalState.cpp
   HelideLibrary.cpp
   Object.cpp
