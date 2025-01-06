@@ -5,20 +5,18 @@ set(CMAKE_CXX_STANDARD 11)
 
 project(anari_library_debug LANGUAGES CXX)
 
-anari_generate_queries(
-  NAME debug_queries
-  PREFIX Extended
-  CPP_NAMESPACE anari::debug_queries
-  JSON_DEFINITIONS_FILE ${ANARI_CODE_GEN_ROOT}/devices/experimental_device.json
-)
-
 project_add_library(SHARED
   DebugDevice.cpp
   DebugObject.cpp
   DebugBasics.cpp
   DebugLibrary.cpp
-  ExtendedQueries.cpp
   CodeSerializer.cpp
+)
+
+anari_generate_queries(
+  DEVICE_TARGET ${PROJECT_NAME}
+  CPP_NAMESPACE anari::debug_queries
+  JSON_DEFINITIONS_FILE ${ANARI_CODE_GEN_ROOT}/devices/experimental_device.json
 )
 
 project_include_directories(

@@ -12,12 +12,14 @@ function(anari_generate_queries)
   # options
     ""
   # single-arg options
-    "PREFIX;NAME;CPP_NAMESPACE;JSON_DEFINITIONS_FILE;JSON_ROOT_LOCATION;OUTPUT_LOCATION"
+    "CPP_NAMESPACE;JSON_DEFINITIONS_FILE;JSON_ROOT_LOCATION;JSON_EXTENSION_FILES;DEVICE_TARGET"
   # multi-arg options
     ""
   # string to parse
     ${ARGN}
   )
+
+  file(GLOB_RECURSE CORE_JSONS ${ANARI_CODE_GEN_ROOT}/api/*.json)
 
   find_package(Python3 OPTIONAL_COMPONENTS Interpreter)
   if (NOT TARGET Python3::Interpreter)
@@ -25,34 +27,34 @@ function(anari_generate_queries)
     return()
   endif()
 
+  if (NOT DEFINED GENERATE_DEVICE_TARGET)
+    message(FATAL_ERROR "DEVICE_TARGET option required for anari_generate_queries()")
+  endif()
+
+  set(GENERATE_PREFIX "${GENERATE_DEVICE_TARGET}")
+
   if (DEFINED GENERATE_JSON_ROOT_LOCATION)
     set(EXTRA_JSON_OPTION --json ${GENERATE_JSON_ROOT_LOCATION})
   endif()
 
-  if (DEFINED GENERATE_OUTPUT_LOCATION)
-    set(OUTPUT_LOCATION ${GENERATE_OUTPUT_LOCATION})
-  else()
-    set(OUTPUT_LOCATION ${CMAKE_CURRENT_SOURCE_DIR})
-  endif()
+  set(OUTPUT_LOC ${CMAKE_CURRENT_BINARY_DIR})
+  set(OUTPUT_H ${OUTPUT_LOC}/${GENERATE_PREFIX}_queries.h)
+  set(OUTPUT_CPP ${OUTPUT_LOC}/${GENERATE_PREFIX}_queries.cpp)
 
-  add_custom_target(generate_${GENERATE_NAME}
+  add_custom_command(
+    OUTPUT ${OUTPUT_H} ${OUTPUT_CPP}
     COMMAND ${Python3_EXECUTABLE} ${ANARI_CODE_GEN_ROOT}/generate_queries.py
       --json ${ANARI_CODE_GEN_ROOT}
       ${EXTRA_JSON_OPTION}
       --prefix ${GENERATE_PREFIX}
       --device ${GENERATE_JSON_DEFINITIONS_FILE}
       --namespace ${GENERATE_CPP_NAMESPACE}
-      --output ${OUTPUT_LOCATION}
+      --output ${OUTPUT_LOC}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    DEPENDS ${GENERATE_JSON_DEFINITIONS_FILE}
+    DEPENDS ${CORE_JSONS} ${GENERATE_JSON_DEFINITIONS_FILE} ${GENERATE_JSON_EXTENSION_FILES}
   )
 
-  set_source_files_properties(
-    ${OUTPUT_LOCATION}/${GENERATE_PREFIX}Queries.h ${OUTPUT_LOCATION}/${GENERATE_PREFIX}Queries.cpp
-    PROPERTIES GENERATED ON
-  )
-
-  if (TARGET generate_all)
-    add_dependencies(generate_all generate_${GENERATE_NAME})
-  endif()
+  set_source_files_properties(${OUTPUT_H} ${OUTPUT_CPP} PROPERTIES GENERATED ON)
+  target_sources(${GENERATE_DEVICE_TARGET} PRIVATE ${OUTPUT_CPP})
+  target_include_directories(${GENERATE_DEVICE_TARGET} PRIVATE ${OUTPUT_LOC})
 endfunction()

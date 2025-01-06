@@ -24,7 +24,7 @@
 
 #include <cstdarg>
 
-#include "ExtendedQueries.h"
+#include "anari_library_debug_queries.h"
 
 namespace anari {
 namespace debug_device {
