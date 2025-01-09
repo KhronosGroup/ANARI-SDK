@@ -13,7 +13,7 @@ find_package(Threads REQUIRED)
 find_package(libjpeg-turbo)
 find_package(Snappy)
 set(Boost_INCLUDE_DIRS "3rdparty/boost")
-find_package(Boost COMPONENTS system REQUIRED)
+find_package(Boost COMPONENTS asio signals2 system uuid REQUIRED)
 
 if (Snappy_FOUND)
   list(APPEND __remote_extra_libs Snappy::snappy)
@@ -21,7 +21,7 @@ if (Snappy_FOUND)
 endif()
 
 if (libjpeg-turbo_FOUND)
-  list(APPEND __remote_extra_libs libjpeg-turbo::turbojpeg)
+  list(APPEND __remote_extra_libs $<IF:$<TARGET_EXISTS:libjpeg-turbo::turbojpeg>,libjpeg-turbo::turbojpeg,libjpeg-turbo::turbojpeg-static>)
   list(APPEND __remote_definitions HAVE_TURBOJPEG=1)
 endif()
 
