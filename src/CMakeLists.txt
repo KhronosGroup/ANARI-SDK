@@ -2,13 +2,10 @@
 ## SPDX-License-Identifier: Apache-2.0
 
 add_subdirectory(anari)
+add_subdirectory(anari_test_scenes)
 add_subdirectory(anari_viewer)
 add_subdirectory(helium)
 add_subdirectory(devices)
-
-if(BUILD_SCENES_LIB)
-  add_subdirectory(anari_test_scenes)
-endif()
 
 option(BUILD_HDANARI "Build OpenUSD Hydra delegate plugin" OFF)
 if (BUILD_HDANARI)
