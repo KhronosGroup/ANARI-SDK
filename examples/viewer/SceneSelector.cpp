@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "SceneSelector.h"
+// anari_viewer
+#include "anari_viewer/ui_anari.h"
 
 namespace anari_viewer::windows {
 
@@ -10,6 +12,13 @@ static bool UI_callback(void *_stringList, int index, const char **out_text)
   auto &stringList = *(std::vector<std::string> *)_stringList;
   *out_text = stringList[index].c_str();
   return true;
+}
+
+static void buildUISceneHandle(
+    anari::scenes::SceneHandle s, helium::ParameterInfo &p)
+{
+  if (ui::buildUI(p))
+    anari::scenes::setParameter(s, p.name, p.value);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -59,7 +68,7 @@ void SceneSelector::buildUI()
     return;
 
   for (auto &p : m_parameters)
-    ui::buildUI(m_scene, p);
+    buildUISceneHandle(m_scene, p);
 
   ImGui::NewLine();
 
@@ -93,5 +102,9 @@ void SceneSelector::notify()
     m_callback(c, s);
   }
 }
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
 } // namespace anari_viewer::windows
