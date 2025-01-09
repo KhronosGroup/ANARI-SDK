@@ -77,7 +77,7 @@ struct Viewport : public Window
   anari::Camera m_orthoCamera{nullptr};
 
   std::vector<std::string> m_rendererNames;
-  std::vector<ui::ParameterList> m_rendererParameters;
+  std::vector<ui::ParameterInfoList> m_rendererParameters;
   std::vector<anari::Renderer> m_renderers;
   int m_currentRenderer{0};
 

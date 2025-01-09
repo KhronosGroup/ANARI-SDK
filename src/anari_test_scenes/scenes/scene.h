@@ -8,6 +8,8 @@
 #include "anari/anari_cpp/ext/std.h"
 // helium
 #include "helium/utility/ParameterizedObject.h"
+// std
+#include <utility>
 
 namespace anari {
 namespace scenes {
@@ -37,6 +39,14 @@ struct ANARI_TEST_SCENES_INTERFACE TestScene
 
   anari::Device m_device{nullptr};
 };
+
+// Inlined helper functions ///////////////////////////////////////////////////
+
+template <typename... Args>
+inline helium::ParameterInfo makeParameterInfo(Args &&...args)
+{
+  return helium::makeParameterInfo(std::forward<Args>(args)...);
+}
 
 } // namespace scenes
 

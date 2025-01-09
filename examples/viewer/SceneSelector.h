@@ -3,13 +3,14 @@
 
 #pragma once
 
-#include "../ui_anari.h"
 // std
 #include <functional>
 #include <string>
 #include <vector>
-
-#include "Window.h"
+// anari_test_scenes
+#include "anari_test_scenes.h"
+// anari_viewer
+#include "anari_viewer/windows/Window.h"
 
 namespace anari_viewer::windows {
 
@@ -35,7 +36,7 @@ struct SceneSelector : public Window
   SceneSelectionCallback m_callback;
 
   anari::scenes::SceneHandle m_scene{nullptr};
-  ui::ParameterList m_parameters;
+  helium::ParameterInfoList m_parameters;
 
   int m_currentCategory{0};
   int m_currentScene{0};

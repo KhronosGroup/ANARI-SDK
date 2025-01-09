@@ -8,26 +8,24 @@
 #include <imgui.h>
 // helium
 #include "helium/utility/AnariAny.h"
-// anari
-#include "anari_test_scenes.h"
+#include "helium/utility/ParameterInfo.h"
 // std
 #include <string>
 #include <vector>
 
 namespace anari_viewer::ui {
 
+using Any = helium::AnariAny;
+using ParameterInfo = helium::ParameterInfo;
+using ParameterInfoList = helium::ParameterInfoList;
+
 void init();
 void shutdown();
 
-using Any = helium::AnariAny;
-using Parameter = anari::scenes::ParameterInfo;
-using ParameterList = std::vector<Parameter>;
-
-ParameterList parseParameters(
+ParameterInfoList parseParameters(
     anari::Device d, ANARIDataType objectType, const char *subtype);
 
-bool buildUI(Parameter &p);
-void buildUI(anari::scenes::SceneHandle s, Parameter &p);
-void buildUI(anari::Device d, anari::Object o, Parameter &p);
+bool buildUI(ParameterInfo &p);
+void buildUI(anari::Device d, anari::Object o, ParameterInfo &p);
 
 } // namespace anari_viewer::ui

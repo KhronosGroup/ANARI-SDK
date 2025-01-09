@@ -46,16 +46,16 @@ void shutdown()
   NFD_Quit();
 }
 
-ParameterList parseParameters(
+ParameterInfoList parseParameters(
     anari::Device d, ANARIDataType objectType, const char *subtype)
 {
-  ParameterList retval;
+  ParameterInfoList retval;
 
   auto *parameter = (const ANARIParameter *)anariGetObjectInfo(
       d, objectType, subtype, "parameter", ANARI_PARAMETER_LIST);
 
   for (; parameter && parameter->name != nullptr; parameter++) {
-    Parameter p;
+    ParameterInfo p;
 
     auto *description = (const char *)anariGetParameterInfo(d,
         objectType,
@@ -118,7 +118,7 @@ ParameterList parseParameters(
   return retval;
 }
 
-bool buildUI(Parameter &p)
+bool buildUI(ParameterInfo &p)
 {
   bool update = false;
 
@@ -203,7 +203,7 @@ bool buildUI(Parameter &p)
       ImGui::SameLine();
 
       auto text_cb = [](ImGuiInputTextCallbackData *cbd) {
-        auto &p = *(ui::Parameter *)cbd->UserData;
+        auto &p = *(ui::ParameterInfo *)cbd->UserData;
         p.value.resizeString(cbd->BufTextLen);
         return 0;
       };
@@ -229,13 +229,7 @@ bool buildUI(Parameter &p)
   return update;
 }
 
-void buildUI(anari::scenes::SceneHandle s, Parameter &p)
-{
-  if (buildUI(p))
-    anari::scenes::setParameter(s, p.name, p.value);
-}
-
-void buildUI(anari::Device d, anari::Object o, Parameter &p)
+void buildUI(anari::Device d, anari::Object o, ParameterInfo &p)
 {
   ANARIDataType type = p.value.type();
   const char *name = p.name.c_str();
