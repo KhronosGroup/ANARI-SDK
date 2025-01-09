@@ -79,12 +79,6 @@ cmake_dependent_option(BUILD_VIEWER
   "BUILD_EXAMPLES"
   OFF
 )
-cmake_dependent_option(BUILD_SCENES_LIB
-  "Enable anari_test_scenes library"
-  ON
-  "NOT BUILD_TESTING;NOT BUILD_EXAMPLES;NOT BUILD_CTS"
-  ON
-)
 option(INSTALL_VIEWER_LIBRARY "Install anari::anari_viewer library target" ON)
 option(INSTALL_VIEWER "Install anariViewer app" OFF)
 mark_as_advanced(INSTALL_VIEWER)
