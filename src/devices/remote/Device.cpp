@@ -21,6 +21,8 @@
 
 #ifndef _WIN32
 #include <sys/time.h>
+#else
+#define __PRETTY_FUNCTION__ __FUNCSIG__
 #endif
 
 using namespace std::placeholders;
@@ -158,7 +160,7 @@ void *Device::mapArray(ANARIArray array)
   std::unique_lock l(sync[SyncPoints::MapArray].mtx);
   ArrayData &data = arrays[array];
   sync[SyncPoints::MapArray].cv.wait(
-      l, [&]() { return (ssize_t)data.value.size() == data.bytesExpected; });
+      l, [&]() { return (std::int64_t)data.value.size() == data.bytesExpected; });
   l.unlock();
 
   LOG(logging::Level::Info) << "Array mapped: " << array;

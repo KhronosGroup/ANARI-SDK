@@ -283,7 +283,7 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
   std::map<ANARIObject, Frame> frames;
   struct ArrayData
   {
-    ssize_t bytesExpected{-1};
+    std::int64_t bytesExpected{-1};
     std::vector<char> value;
   };
   std::map<ANARIArray, ArrayData> arrays;
