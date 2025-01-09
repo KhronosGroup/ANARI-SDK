@@ -13,7 +13,7 @@ find_package(Threads REQUIRED)
 find_package(libjpeg-turbo)
 find_package(Snappy)
 set(Boost_INCLUDE_DIRS "3rdparty/boost")
-find_package(Boost COMPONENTS asio signals2 system uuid REQUIRED)
+find_package(Boost COMPONENTS system REQUIRED)
 
 if (Snappy_FOUND)
   list(APPEND __remote_extra_libs Snappy::snappy)
@@ -44,7 +44,13 @@ project_sources(PRIVATE
   Logging.cpp
 )
 
-project_compile_definitions(PUBLIC ${__remote_definitions})
+project_compile_definitions(
+PUBLIC
+  ${__remote_definitions}
+PRIVATE
+ "anari_library_remote_EXPORTS"
+)
+
 project_include_directories(PUBLIC ${Boost_INCLUDE_DIRS})
 project_link_libraries(
 PUBLIC

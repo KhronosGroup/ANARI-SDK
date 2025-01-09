@@ -4,6 +4,22 @@
 #include "Device.h"
 #include "anari/backend/LibraryImpl.h"
 
+#ifdef _WIN32
+#ifdef REMOTE_DEVICE_STATIC_DEFINE
+#define REMOTE_LIBRARY_INTERFACE
+#else
+#ifdef anari_library_remote_EXPORTS
+#define REMOTE_LIBRARY_INTERFACE __declspec(dllexport)
+#else
+#define REMOTE_LIBRARY_INTERFACE __declspec(dllimport)
+#endif
+#endif
+#elif defined __GNUC__
+#define REMOTE_LIBRARY_INTERFACE __attribute__((__visibility__("default")))
+#else
+#define REMOTE_LIBRARY_INTERFACE
+#endif
+
 namespace remote {
 
 struct RemoteLibrary : public anari::LibraryImpl
@@ -36,7 +52,7 @@ const char **RemoteLibrary::getDeviceExtensions(const char * /*deviceType*/)
 
 // Define library entrypoint //////////////////////////////////////////////////
 
-extern "C" ANARI_DEFINE_LIBRARY_ENTRYPOINT(remote, handle, scb, scbPtr)
+extern "C" REMOTE_LIBRARY_INTERFACE ANARI_DEFINE_LIBRARY_ENTRYPOINT(remote, handle, scb, scbPtr)
 {
   return (ANARILibrary) new remote::RemoteLibrary(handle, scb, scbPtr);
 }
