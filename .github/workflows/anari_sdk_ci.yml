@@ -1,3 +1,6 @@
+## Copyright 2021-2024 The Khronos Group
+## SPDX-License-Identifier: Apache-2.0
+
 name: ANARI-SDK CI
 
 on:
@@ -10,85 +13,60 @@ env:
   ANARI_LIBRARY: helide
 
 jobs:
-  build:
+  build-linux:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-20.04, ubuntu-22.04, ubuntu-24.04]
         config: [Release, Debug]
-
+        exclude:
+          - os: ubuntu-20.04
+            config: Debug
     steps:
-    - uses: actions/checkout@v3
-
     - name: Install Packages
-      if: ${{ matrix.os == 'ubuntu-latest' }}
-      run: sudo apt install -y libboost-system-dev
+      run: sudo apt install -y libboost-system-dev libpython3-dev
+    - name: Check out code
+      uses: actions/checkout@v4
+    - name: Build and test
+      uses: ./.github/actions/configure_and_build
+      with:
+        workspace: ${{ github.workspace }}
+        config: ${{ matrix.config }}
+        os: ${{ matrix.os }}
+        shell: bash
 
-    - name: Configure CMake
-      run: >
-        cmake -LA -B ${{ github.workspace }}/build
-        -DCMAKE_BUILD_TYPE=${{ matrix.config }}
-        -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/build/install
-        -DBUILD_SHARED_LIBS=ON
-        -DBUILD_CTS=ON
-        -DBUILD_EXAMPLES=ON
-        -DBUILD_HDANARI=OFF
-        -DBUILD_HELIDE_DEVICE=ON
-        -DBUILD_REMOTE_DEVICE=${{ matrix.os == 'ubuntu-latest' }}
-        -DBUILD_TESTING=ON
-        -DBUILD_VIEWER=OFF
-
-    - name: Build
-      run: cmake --build ${{github.workspace}}/build --config ${{ matrix.config }} --target install
-
-    - name: Unit Tests
-      working-directory: ${{ github.workspace }}/build
-      run: ctest -R unit_test -C ${{ matrix.config }}
-
-    - name: Render Tests
-      working-directory: ${{github.workspace}}/build
-      run: ctest -R render_test -C ${{ matrix.config }}
-
-    - name: Tutorial Tests
-      working-directory: ${{github.workspace}}/build
-      run: ctest -R anariTutorial -C ${{ matrix.config }}
+  build-windows:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest]
+        config: [Release, Debug]
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v4
+    - name: Build and test
+      uses: ./.github/actions/configure_and_build
+      with:
+        workspace: ${{ github.workspace }}
+        config: ${{ matrix.config }}
+        os: ${{ matrix.os }}
+        shell: pwsh
 
   build-macos:
     # iOS is 10x expensive to run on GitHub machines, so only run if we know something else passed as well
-    needs: build
+    needs: [build-linux, build-windows]
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [macos-latest]
         config: [Release]
-
     steps:
-    - uses: actions/checkout@v3
-
-    - name: Configure CMake
-      run: >
-        cmake -LA -B ${{ github.workspace }}/build
-        -DCMAKE_BUILD_TYPE=${{ matrix.config }}
-        -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/build/install
-        -DBUILD_SHARED_LIBS=ON
-        -DBUILD_EXAMPLES=ON
-        -DBUILD_HDANARI=OFF
-        -DBUILD_HELIDE_DEVICE=ON
-        -DBUILD_REMOTE_DEVICE=OFF
-        -DBUILD_TESTING=ON
-        -DBUILD_VIEWER=OFF
-
-    - name: Build
-      run: cmake --build ${{ github.workspace }}/build --config ${{ matrix.config }} --target install
-
-    - name: Unit Tests
-      working-directory: ${{ github.workspace }}/build
-      run: ctest -R unit_test -C ${{ matrix.config }}
-
-    - name: Render Tests
-      working-directory: ${{ github.workspace }}/build
-      run: ctest -R render_test -C ${{ matrix.config }}
-
-    - name: Tutorial Tests
-      working-directory: ${{ github.workspace }}/build
-      run: ctest -R anariTutorial -C ${{ matrix.config }}
+    - name: Check out code
+      uses: actions/checkout@v4
+    - name: Build and test
+      uses: ./.github/actions/configure_and_build
+      with:
+        workspace: ${{ github.workspace }}
+        config: ${{ matrix.config }}
+        os: ${{ matrix.os }}
+        shell: bash
