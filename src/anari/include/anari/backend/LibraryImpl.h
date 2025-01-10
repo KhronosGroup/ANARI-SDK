@@ -16,7 +16,7 @@ void *loadANARILibrary(const std::string &libName);
 void freeLibrary(void *lib);
 void *getSymbolAddress(void *lib, const std::string &symbol);
 
-struct ANARI_INTERFACE LibraryImpl
+struct LibraryImpl
 {
   LibraryImpl(
       void *lib, ANARIStatusCallback defaultStatusCB, const void *statusCBPtr);

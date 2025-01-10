@@ -11,7 +11,7 @@
 
 namespace anari {
 
-struct ANARI_INTERFACE DeviceImpl
+struct DeviceImpl
 {
   /////////////////////////////////////////////////////////////////////////////
   // Main virtual interface to accepting API calls

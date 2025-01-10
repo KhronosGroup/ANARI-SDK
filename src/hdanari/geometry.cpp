@@ -376,11 +376,7 @@ void HdAnariGeometry::Sync(HdSceneDelegate *sceneDelegate,
   }
 
   // Now with this instancing
-// Populate instance objects.
-#if !USE_INSTANCE_ARRAYS
-  VtMatrix4fArray transforms_UNIQUE_INSTANCES;
-  VtUIntArray ids_UNIQUE_INSTANCES;
-#endif
+  // Populate instance objects.
 
   // Transforms //
   if (HdChangeTracker::IsTransformDirty(*dirtyBits, id)
@@ -397,8 +393,8 @@ void HdAnariGeometry::Sync(HdSceneDelegate *sceneDelegate,
           GfMatrix4f(baseTransform));
       anari::setParameter(_anari.device, _anari.instance, "id", 0u);
 #else
-      transforms_UNIQUE_INSTANCES.push_back(GfMatrix4f(baseTransform));
-      ids_UNIQUE_INSTANCES.push_back(0);
+      transforms_UNIQUE_INSTANCES_.push_back(GfMatrix4f(baseTransform));
+      ids_UNIQUE_INSTANCES_.push_back(0);
 #endif
     } else {
       auto instancer = static_cast<HdAnariInstancer *>(
@@ -421,15 +417,11 @@ void HdAnariGeometry::Sync(HdSceneDelegate *sceneDelegate,
       _SetInstanceAttributeArray(HdAnariTokens->transform, VtValue(transforms));
       _SetInstanceAttributeArray(HdAnariTokens->id, VtValue(ids));
 #else
-      transforms_UNIQUE_INSTANCES = std::move(transforms);
-      ids_UNIQUE_INSTANCES = std::move(ids);
+      transforms_UNIQUE_INSTANCES_ = std::move(transforms);
+      ids_UNIQUE_INSTANCES_ = std::move(ids);
 #endif
     }
   }
-
-#if !USE_INSTANCE_ARRAYS
-  std::vector<std::pair<TfToken, VtValue>> instancedPrimvar_UNIQUE_INSTANCES;
-#endif
 
   // Primvars
   if (HdChangeTracker::IsAnyPrimvarDirty(*dirtyBits, id)
@@ -482,7 +474,7 @@ void HdAnariGeometry::Sync(HdSceneDelegate *sceneDelegate,
         _SetInstanceAttributeArray(
             it->second, instancer->GatherInstancePrimvar(GetId(), pv.name));
 #else
-        instancedPrimvar_UNIQUE_INSTANCES.emplace_back(
+        instancedPrimvar_UNIQUE_INSTANCES_.emplace_back(
             it->second, instancer->GatherInstancePrimvar(GetId(), pv.name));
 #endif
       }
@@ -493,17 +485,18 @@ void HdAnariGeometry::Sync(HdSceneDelegate *sceneDelegate,
   anari::commitParameters(_anari.device, _anari.instance);
 #else
   ReleaseInstances();
-  _anari.instances.reserve(std::size(transforms_UNIQUE_INSTANCES));
+  _anari.instances.reserve(std::size(transforms_UNIQUE_INSTANCES_));
 
-  for (auto i = 0ul; i < std::size(transforms_UNIQUE_INSTANCES); ++i) {
+  for (auto i = 0ul; i < std::size(transforms_UNIQUE_INSTANCES_); ++i) {
     auto instance =
         anari::newObject<anari::Instance>(_anari.device, "transform");
     anari::setParameter(_anari.device, instance, "group", _anari.group);
     anari::setParameter(
-        _anari.device, instance, "transform", transforms_UNIQUE_INSTANCES[i]);
-    anari::setParameter(_anari.device, instance, "id", ids_UNIQUE_INSTANCES[i]);
+        _anari.device, instance, "transform", transforms_UNIQUE_INSTANCES_[i]);
+    anari::setParameter(
+        _anari.device, instance, "id", ids_UNIQUE_INSTANCES_[i]);
 
-    for (auto &&[attr, value] : instancedPrimvar_UNIQUE_INSTANCES) {
+    for (auto &&[attr, value] : instancedPrimvar_UNIQUE_INSTANCES_) {
       if (value.IsHolding<VtFloatArray>()) {
         const auto &array = value.UncheckedGet<VtFloatArray>();
         if (i < std::size(array))
@@ -609,7 +602,7 @@ void HdAnariGeometry::_SetGeometryAttributeConstant(
   if (_GetVtValueAsAttribute(value, attrV)) {
     anari::setParameter(d, g, attributeName.GetText(), attrV);
     geometryBindingPoints_.emplace(attributeName, attributeName);
-    TF_DEBUG_MSG(HD_ANARI_GEOMETRY,
+    TF_DEBUG_MSG(HD_ANARI_RD_GEOMETRY,
         "Assigning constant %s to mesh %s\n",
         attributeName.GetText(),
         GetId().GetText());
@@ -617,7 +610,7 @@ void HdAnariGeometry::_SetGeometryAttributeConstant(
     if (auto it = geometryBindingPoints_.find(attributeName);
         it != std::end(geometryBindingPoints_)) {
       geometryBindingPoints_.erase(it);
-      TF_DEBUG_MSG(HD_ANARI_GEOMETRY,
+      TF_DEBUG_MSG(HD_ANARI_RD_GEOMETRY,
           "Clearing constant %s on mesh %s\n",
           attributeName.GetText(),
           GetId().GetText());
@@ -636,7 +629,7 @@ void HdAnariGeometry::_SetGeometryAttributeArray(const TfToken &attributeName,
   size_t size = 0;
 
   if (!value.IsEmpty() && _GetVtArrayBufferData(value, &data, &size, &type)) {
-    TF_DEBUG_MSG(HD_ANARI_GEOMETRY,
+    TF_DEBUG_MSG(HD_ANARI_RD_GEOMETRY,
         "Assigning geometry primvar %s to %s on mesh %s\n",
         attributeName.GetText(),
         bindingPoint.GetText(),
@@ -654,7 +647,7 @@ void HdAnariGeometry::_SetGeometryAttributeArray(const TfToken &attributeName,
       geometryBindingPoints_.erase(it);
       anari::unsetParameter(
           _anari.device, _anari.geometry, bindingPoint.GetText());
-      TF_DEBUG_MSG(HD_ANARI_GEOMETRY,
+      TF_DEBUG_MSG(HD_ANARI_RD_GEOMETRY,
           "Clearing geometry primvar %s on %s on mesh %s\n",
           attributeName.GetText(),
           bindingPoint.GetText(),
@@ -673,7 +666,7 @@ void HdAnariGeometry::_SetInstanceAttributeArray(const TfToken &attributeName,
   size_t size = 0;
 
   if (!value.IsEmpty() && _GetVtArrayBufferData(value, &data, &size, &type)) {
-    TF_DEBUG_MSG(HD_ANARI_GEOMETRY,
+    TF_DEBUG_MSG(HD_ANARI_RD_GEOMETRY,
         "Assigning instance primvar %s to mesh %s\n",
         attributeName.GetText(),
         GetId().GetText());
@@ -690,7 +683,7 @@ void HdAnariGeometry::_SetInstanceAttributeArray(const TfToken &attributeName,
       instanceBindingPoints_.erase(it);
       anari::unsetParameter(
           _anari.device, _anari.instance, attributeName.GetText());
-      TF_DEBUG_MSG(HD_ANARI_GEOMETRY,
+      TF_DEBUG_MSG(HD_ANARI_RD_GEOMETRY,
           "Clearing instance primvar %s on mesh %s\n",
           attributeName.GetText(),
           GetId().GetText());

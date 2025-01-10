@@ -49,7 +49,7 @@ HdAnariInstancer::HdAnariInstancer(HdSceneDelegate *delegate, SdfPath const &id)
     : HdInstancer(delegate, id)
 {
   TF_DEBUG_MSG(
-      HD_ANARI_INSTANCER, "Creating instancer with id %s\n", id.GetText());
+      HD_ANARI_RD_INSTANCER, "Creating instancer with id %s\n", id.GetText());
 }
 
 HdAnariInstancer::~HdAnariInstancer()
@@ -66,7 +66,7 @@ void HdAnariInstancer::Sync(HdSceneDelegate *delegate,
     HdDirtyBits *dirtyBits)
 {
   TF_DEBUG_MSG(
-      HD_ANARI_INSTANCER, "Syncing instancer at %s\n", GetId().GetText());
+      HD_ANARI_RD_INSTANCER, "Syncing instancer at %s\n", GetId().GetText());
   _UpdateInstancer(delegate, dirtyBits);
 
   if (HdChangeTracker::IsAnyPrimvarDirty(*dirtyBits, GetId())) {
@@ -117,8 +117,10 @@ VtMatrix4dArray HdAnariInstancer::ComputeInstanceTransforms(
   // }
   // If any transform isn't provided, it's assumed to be the identity.
 
-  const GfMatrix4d& instancerTransform = GetDelegate()->GetInstancerTransform(GetId());
-  const VtIntArray& instanceIndices = GetDelegate()->GetInstanceIndices(GetId(), prototypeId);
+  const GfMatrix4d &instancerTransform =
+      GetDelegate()->GetInstancerTransform(GetId());
+  const VtIntArray &instanceIndices =
+      GetDelegate()->GetInstanceIndices(GetId(), prototypeId);
 
   VtMatrix4dArray transforms(instanceIndices.size());
   for (size_t i = 0; i < instanceIndices.size(); ++i) {
@@ -207,7 +209,7 @@ VtMatrix4dArray HdAnariInstancer::ComputeInstanceTransforms(
   // foreach (parentXf : parentTransforms, xf : transforms) {
   //     parentXf * xf
   // }
-  const VtMatrix4dArray& parentTransforms =
+  const VtMatrix4dArray &parentTransforms =
       static_cast<HdAnariInstancer *>(parentInstancer)
           ->ComputeInstanceTransforms(GetId());
 
@@ -235,7 +237,7 @@ VtValue HdAnariInstancer::GatherInstancePrimvar(const SdfPath &prototypeId,
     const TfToken &primvarName,
     HdType dataType) const
 {
-  const auto& instanceIndices =
+  const auto &instanceIndices =
       GetDelegate()->GetInstanceIndices(GetId(), prototypeId);
   auto instanceCount = instanceIndices.size();
 
@@ -271,7 +273,7 @@ VtValue HdAnariInstancer::GatherInstancePrimvar(const SdfPath &prototypeId,
   // instancing. Should be one if primvar is on the leaf instancer
   auto multiplicativeFactor = 1;
   while (!instancerId.IsEmpty()) {
-    const auto& instanceIndices =
+    const auto &instanceIndices =
         GetDelegate()->GetInstanceIndices(instancerId, prototypeId);
 
     auto instancer = static_cast<const HdAnariInstancer *>(
@@ -386,27 +388,26 @@ VtValue HdAnariInstancer::GatherInstancePrimvar(
   return VtValue();
 }
 
-bool HdAnariInstancer::IsPrimvarDirty(const TfToken& name) const
+bool HdAnariInstancer::IsPrimvarDirty(const TfToken &name) const
 {
   bool isDirty = false;
-    if (name == HdTokens->points) {
-        isDirty = (dirtyBits_ & HdChangeTracker::DirtyPoints) != 0;
-    } else if (name == HdTokens->velocities) {
-        isDirty = (dirtyBits_ & HdChangeTracker::DirtyPoints) != 0;
-    } else if (name == HdTokens->accelerations) {
-        isDirty = (dirtyBits_ & HdChangeTracker::DirtyPoints) != 0;
-    } else if (name == HdTokens->nonlinearSampleCount) {
-        isDirty = (dirtyBits_ & HdChangeTracker::DirtyPoints) != 0;
-    } else if (name == HdTokens->normals) {
-        isDirty = (dirtyBits_ & HdChangeTracker::DirtyNormals) != 0;
-    } else if (name == HdTokens->widths) {
-        isDirty = (dirtyBits_ & HdChangeTracker::DirtyWidths) != 0;
-    } else {
-        isDirty = (dirtyBits_ & HdChangeTracker::DirtyPrimvar) != 0;
-    }
+  if (name == HdTokens->points) {
+    isDirty = (dirtyBits_ & HdChangeTracker::DirtyPoints) != 0;
+  } else if (name == HdTokens->velocities) {
+    isDirty = (dirtyBits_ & HdChangeTracker::DirtyPoints) != 0;
+  } else if (name == HdTokens->accelerations) {
+    isDirty = (dirtyBits_ & HdChangeTracker::DirtyPoints) != 0;
+  } else if (name == HdTokens->nonlinearSampleCount) {
+    isDirty = (dirtyBits_ & HdChangeTracker::DirtyPoints) != 0;
+  } else if (name == HdTokens->normals) {
+    isDirty = (dirtyBits_ & HdChangeTracker::DirtyNormals) != 0;
+  } else if (name == HdTokens->widths) {
+    isDirty = (dirtyBits_ & HdChangeTracker::DirtyWidths) != 0;
+  } else {
+    isDirty = (dirtyBits_ & HdChangeTracker::DirtyPrimvar) != 0;
+  }
 
-    return isDirty;
+  return isDirty;
 }
-
 
 PXR_NAMESPACE_CLOSE_SCOPE

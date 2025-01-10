@@ -9,8 +9,8 @@ if (NOT TARGET anari::anari)
   find_package(anari REQUIRED COMPONENTS viewer)
 endif()
 
-project_add_executable(main.cpp ui_layout.cpp)
-project_link_libraries(PRIVATE anari::anari_viewer)
+project_add_executable(main.cpp SceneSelector.cpp ui_layout.cpp)
+project_link_libraries(PRIVATE anari::anari_viewer anari::anari_test_scenes)
 
 if (INSTALL_VIEWER)
   install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

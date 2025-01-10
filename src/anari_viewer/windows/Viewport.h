@@ -77,7 +77,7 @@ struct Viewport : public Window
   anari::Camera m_orthoCamera{nullptr};
 
   std::vector<std::string> m_rendererNames;
-  std::vector<ui::ParameterList> m_rendererParameters;
+  std::vector<ui::ParameterInfoList> m_rendererParameters;
   std::vector<anari::Renderer> m_renderers;
   int m_currentRenderer{0};
 
@@ -87,6 +87,8 @@ struct Viewport : public Window
   manipulators::Orbit m_localArcball;
   manipulators::Orbit *m_arcball{nullptr};
   manipulators::UpdateToken m_cameraToken{0};
+  float m_apertureRadius{0.f};
+  float m_focusDistance{1.f};
 
   // OpenGL + display
 

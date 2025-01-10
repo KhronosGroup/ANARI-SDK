@@ -7,7 +7,7 @@ This repository contains the source for the ANARI API SDK. This includes:
 
 - [Front-end library + implementation guide](src/anari)
 - [Device implementation utilties for implementations](src/helium)
-- [Example device implementation](src/helide) (not intended for production use)
+- [Example device implementation](src/devices/helide) (not intended for production use)
 - [Example applications](examples/)
 - [Interactive sample viewer](examples/viewer)
 - [Render tests](tests/render)
@@ -71,21 +71,26 @@ CMake. This can be invoked from your build directory with (on any platform):
 The ANARI SDK exports CMake targets for the main front-end library and utilities
 helper library. The targets which are exported are as follows:
 
-- `anari::anari` : main library target to link with `libanari`
-- `anari::helium` : (static) library target containing base device implementation abstractions
+- `anari::anari`        : dynamically link the main ANARI API library target
+- `anari::anari_static` : statically link the main ANARI API library target
+- `anari::helium`       : library containing base device implementation abstractions (static)
 
 These targets can be found with CMake via `find_package(anari)`. The examples
 are written such that they can be built stand alone from the SDK source tree.
 The simplest usage can be found [here](examples/simple).
 
-The follwoing additional helper library components can be requested by listing
+Note that `anari::helium` will still require linking either `anari::anari` or
+`anari::anari_static` to give consumers the option whether to link the ANARI
+API dynamically or statically.
+
+The following additional helper library components can be requested by listing
 them under `find_pacakge(anari)`:
 
 - `viewer` : Source library target `anari::anari_viewer` for building small viewer apps
 - `code_gen` : Enable the use of code generation CMake functions downstream
 
-Both of these libraries are both optionally installed and are not available
-to downstream projects unless they are explicitly requested. To request one of
+Both of these libraries are optionally installed and are not available to
+downstream projects unless they are explicitly requested. To request one of
 these components, simply add them to the `COMPONENTS` portion of `find_package`:
 
 ```cmake
@@ -120,26 +125,26 @@ The regression test binary (`anariRenderTests`) used to render the test scenes
 without a window (results saved out as PNG images) uses the same mechanisms as
 the viewer to select/override which library is loaded at runtime.
 
-## Available Implementations
+## Available implementations
 
 ### SDK provided example implementation
 
-An example device implementation [helide](src/helide) is provided as a
+An example device implementation [helide](src/devices/helide) is provided as a
 starting point for users exploring the SDK and for implementors to see how the
-API might be implemented. It implements a very simple, geometry-only ray tracing
-implementation using Embree for intersection. Users should look to use vendor
-provided, hardware-optimized ANARI implementations which are shipped
-independently from the SDK. (see below)
+API might be implemented. It implements a very simple ray tracing implementation
+using Embree for intersection. Users should look to use vendor provided,
+hardware-optimized ANARI implementations which are shipped independently from
+the SDK. (see below)
 
 ### Using the debug device layer
 
-The ANARI-SDK ships with a [debug layer](src/debug_device) implemented as an ordinary
-`ANARIDevice` which wraps a device (set as the `wrappedDevice` parameter on the
-debug device). This device uses the object queries reported by the wrapped
-device to validate correct usage of object subtypes, parameters, and properties,
-as well as validate correct object lifetimes. The wrapped device is then used
-to actually implement the ANARI API to allow applications to still function
-normally.
+The ANARI-SDK ships with a [debug layer](src/devices/debug) implemented as an
+ordinary `ANARIDevice` which wraps a device (set as the `wrappedDevice`
+parameter on the debug device). This device uses the object queries reported by
+the wrapped device to validate correct usage of object subtypes, parameters, and
+properties, as well as validate correct object lifetimes. The wrapped device is
+then used to actually implement the ANARI API to allow applications to still
+function normally.
 
 The device can be created by using the normal library loading mechanics using
 `anariLoadLibrary("debug", ...)`, creating a the debug device instances with,
@@ -173,16 +178,41 @@ variables:
 - `ANARI_DEBUG_TRACE_MODE` sets the tracing mode, only `code` is supported for now.
 - `ANARI_DEBUG_TRACE_DIR` set the folder where the trace will be dumped.
 
-### Unofficial list of publically available implementaions
-
-Below is a list of available ANARI implemenations compatible with this SDK:
+### (Unofficial) list of available ANARI implementations
 
 - [AMD RadeonProRender](https://github.com/GPUOpen-LibrariesAndSDKs/RadeonProRenderANARI)
 - [Barney](https://github.com/ingowald/barney) (experimental MPI distributed renderer)
+- [Cycles](https://github.com/jeffamstutz/cycles)
 - [Intel OSPRay](https://github.com/ospray/anari-ospray)
 - [NVIDIA USD](https://github.com/NVIDIA-Omniverse/AnariUsdDevice)
 - [NVIDIA VisRTX + VisGL](https://github.com/NVIDIA/VisRTX)
 - [Visionaray](https://github.com/szellmann/anari-visionaray)
+- [VTK-m](https://github.com/dpugmire/anari-library-vtkm)
 
 If you implement a backend to the ANARI SDK, please open a PR to add it to this
+list!
+
+## ANARI-enabled applications
+
+### Publicly available applications + libraries using ANARI
+
+- [Blender](https://www.blender.org/) (via [plugin](examples/blender))
+- [COVISE](https://www.hlrs.de/solutions/types-of-computing/visualization/covise)
+- [HayStack](https://github.com/ingowald/hayStack)
+- [OVITO](https://www.ovito.org/)
+- [OpenUSD](https://openusd.org/release/index.html) (via [hdAnari](src/hdanari) plugin)
+- [pynari](https://github.com/ingowald/pynari)
+- [TSD](https://github.com/NVIDIA/VisRTX/tree/next_release/tsd)
+- [Vistle](https://vistle.io/)
+- [VMD](https://www.ks.uiuc.edu/Research/vmd/)
+- [VTK](https://vtk.org/)
+- [VTK-m](https://m.vtk.org/)
+
+### Integrations in-progress
+
+- [Ascent](https://ascent.readthedocs.io/en/latest/)
+- [ParaView](https://www.paraview.org/)
+- [VisIt](https://visit-dav.github.io/visit-website/index.html)
+
+If you integrate ANARI into your application, please open a PR to add it to this
 list!

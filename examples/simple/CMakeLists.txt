@@ -76,11 +76,15 @@ if (IN_SDK_SOURCE_TREE)
   install(TARGETS anariInfo RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
   if (TARGET anari_library_helide)
-    # This app links to the include 'helide' device library directly to use its
-    # direct device creation function. Vendors can choose to ship a header with
-    # such a direct function in it.
     add_executable(anariTutorialDirectLink anariTutorialDirectLink.c)
-    target_link_libraries(anariTutorialDirectLink PRIVATE anari_library_helide)
+    target_link_libraries(anariTutorialDirectLink
+    PRIVATE
+      anari_static
+      # This app links to the include 'helide' device library directly to use
+      # its direct device creation function. Vendors can choose to ship a header
+      # with such a direct function in it.
+      anari_library_helide
+    )
   endif()
 
   if (BUILD_TESTING)

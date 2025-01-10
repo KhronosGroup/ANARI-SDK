@@ -16,7 +16,7 @@ if (@VIEWER_ENABLE_KTX@)
   find_dependency(Ktx)
 endif()
 
-include(${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@_Exports.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/anari_Exports.cmake)
 
 if (NOT TARGET anari::anari)
   message(FATAL_ERROR "CMAKE_PREFIX_PATH or anari_DIR are pointing to an \

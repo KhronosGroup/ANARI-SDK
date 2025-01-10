@@ -35,7 +35,6 @@ project_add_library(INTERFACE)
 project_sources(
 INTERFACE
   ${CMAKE_CURRENT_LIST_DIR}/windows/LightsEditor.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/windows/SceneSelector.cpp
   ${CMAKE_CURRENT_LIST_DIR}/windows/Viewport.cpp
   ${CMAKE_CURRENT_LIST_DIR}/windows/Window.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Application.cpp
@@ -46,7 +45,6 @@ INTERFACE
 project_include_directories(INTERFACE ${CMAKE_CURRENT_LIST_DIR}/..)
 project_link_libraries(INTERFACE
   anari::anari
-  anari::anari_test_scenes
   anari_viewer_glad
   anari_viewer_imgui_glfw
   anari_viewer_nfd

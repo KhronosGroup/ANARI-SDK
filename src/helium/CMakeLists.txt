@@ -34,7 +34,7 @@ PUBLIC
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/anari/backend>
 )
 
-project_link_libraries(PUBLIC anari)
+project_link_libraries(PUBLIC anari_headers anari_backend)
 
 ## Install library + targets ##
 

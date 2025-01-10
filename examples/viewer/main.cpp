@@ -3,12 +3,13 @@
 
 #include "anari_viewer/Application.h"
 #include "anari_viewer/windows/LightsEditor.h"
-#include "anari_viewer/windows/SceneSelector.h"
 #include "anari_viewer/windows/Viewport.h"
 // anari
 #include <anari_test_scenes.h>
 // std
 #include <iostream>
+
+#include "SceneSelector.h"
 
 static const bool g_true = true;
 static bool g_verbose = false;

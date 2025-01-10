@@ -29,13 +29,13 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 ## Establish project
 
 set(ANARI_SDK_VERSION_MAJOR 0)
-set(ANARI_SDK_VERSION_MINOR 11)
-set(ANARI_SDK_VERSION_PATCH 1)
+set(ANARI_SDK_VERSION_MINOR 12)
+set(ANARI_SDK_VERSION_PATCH 0)
 set(ANARI_SDK_VERSION
   ${ANARI_SDK_VERSION_MAJOR}.${ANARI_SDK_VERSION_MINOR}.${ANARI_SDK_VERSION_PATCH}
 )
 
-project(anari VERSION ${ANARI_SDK_VERSION} LANGUAGES C CXX)
+project(anari-sdk VERSION ${ANARI_SDK_VERSION} LANGUAGES C CXX)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
@@ -78,12 +78,6 @@ cmake_dependent_option(BUILD_VIEWER
   OFF
   "BUILD_EXAMPLES"
   OFF
-)
-cmake_dependent_option(BUILD_SCENES_LIB
-  "Enable anari_test_scenes library"
-  ON
-  "NOT BUILD_TESTING;NOT BUILD_EXAMPLES;NOT BUILD_CTS"
-  ON
 )
 option(INSTALL_VIEWER_LIBRARY "Install anari::anari_viewer library target" ON)
 option(INSTALL_VIEWER "Install anariViewer app" OFF)
@@ -141,7 +135,7 @@ include(cmake/mark_cache_variables_as_advanced.cmake)
 ## Configure CMake find_package() config files ##
 
 set(ANARI_CMAKE_INSTALL_DESTINATION
-  ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}-${PROJECT_VERSION}
+  ${CMAKE_INSTALL_LIBDIR}/cmake/anari-${PROJECT_VERSION}
 )
 
 install(EXPORT anari_Exports
@@ -152,21 +146,21 @@ install(EXPORT anari_Exports
 include(CMakePackageConfigHelpers)
 
 configure_package_config_file(
-  "${PROJECT_SOURCE_DIR}/cmake/${PROJECT_NAME}Config.cmake.in"
-  "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+  "${PROJECT_SOURCE_DIR}/cmake/anariConfig.cmake.in"
+  "${PROJECT_BINARY_DIR}/anariConfig.cmake"
 INSTALL_DESTINATION
   ${ANARI_CMAKE_INSTALL_DESTINATION}
 )
 
 write_basic_package_version_file(
-    "${PROJECT_NAME}ConfigVersion.cmake"
+    "anariConfigVersion.cmake"
     VERSION ${PROJECT_VERSION}
     COMPATIBILITY SameMajorVersion
 )
 
 install(FILES
-  ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
-  ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/anariConfig.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/anariConfigVersion.cmake
 DESTINATION
   ${ANARI_CMAKE_INSTALL_DESTINATION}
 )

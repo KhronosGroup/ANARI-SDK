@@ -195,11 +195,11 @@ void HdAnariRenderPass::_UpdateCamera(
     _camera.invView = view.GetInverse();
     _camera.invProj = proj.GetInverse();
 
-    const GfVec3f projDir = _camera.invProj.Transform(GfVec3f(0, 0, -1));
-    const GfVec3f origin = _camera.invView.Transform(GfVec3f(0, 0, 0));
-    const GfVec3f dir = _camera.invView.TransformDir(projDir).GetNormalized();
+    const GfVec3f projDir = GfVec3f(_camera.invProj.Transform(GfVec3f(0, 0, -1)));
+    const GfVec3f origin = GfVec3f(_camera.invView.Transform(GfVec3f(0, 0, 0)));
+    const GfVec3f dir = GfVec3f(_camera.invView.TransformDir(projDir).GetNormalized());
     const GfVec3f up =
-        _camera.invView.TransformDir(GfVec3f(0, 1, 0)).GetNormalized();
+        GfVec3f(_camera.invView.TransformDir(GfVec3f(0, 1, 0)).GetNormalized());
 
     anari::setParameter(d, _anari.camera, "position", origin);
     anari::setParameter(d, _anari.camera, "direction", dir);

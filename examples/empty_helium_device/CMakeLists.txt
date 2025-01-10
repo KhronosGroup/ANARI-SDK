@@ -43,23 +43,11 @@ include(GNUInstallDirs)
 
 find_package(anari REQUIRED)
 
-## Code generation ##
-
-anari_generate_queries(
-  NAME hecore_queries
-  PREFIX HeCoreDevice
-  CPP_NAMESPACE hecore
-  JSON_DEFINITIONS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/HeCoreDefinitions.json
-)
-if (TARGET generate_all AND TARGET generate_hecore_queries)
-  add_dependencies(generate_all generate_hecore_queries)
-endif()
 
 ## Build device target ##
 
 add_library(${PROJECT_NAME} SHARED
   HeCoreDevice.cpp
-  HeCoreDeviceQueries.cpp
   HeCoreDeviceGlobalState.cpp
   HeCoreLibrary.cpp
   Object.cpp
@@ -87,6 +75,14 @@ target_include_directories(${PROJECT_NAME}
 PRIVATE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+)
+
+## Code generation ##
+
+anari_generate_queries(
+  DEVICE_TARGET ${PROJECT_NAME}
+  CPP_NAMESPACE hecore
+  JSON_DEFINITIONS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/HeCoreDefinitions.json
 )
 
 ## Installation ##

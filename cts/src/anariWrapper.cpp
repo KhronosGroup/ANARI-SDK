@@ -2,7 +2,7 @@
 #include <anari/anari_cpp/ext/std.h>
 #include <pybind11/pybind11.h>
 #include <anari/anari_cpp.hpp>
-#include "ctsQueries.h"
+#include "anariCTSBackend_queries.h"
 
 typedef union ANARIExtensions_u
 {

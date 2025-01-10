@@ -10,7 +10,7 @@
 #include "frame/Frame.h"
 #include "scene/volume/spatial_field/SpatialField.h"
 
-#include "HeCoreDeviceQueries.h"
+#include "anari_library_hecore_queries.h"
 
 namespace hecore {
 

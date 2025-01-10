@@ -245,6 +245,9 @@ void Viewport::updateCamera(bool force)
   auto radians = [](float degrees) -> float { return degrees * M_PI / 180.f; };
   anari::setParameter(m_device, m_perspCamera, "fovy", radians(m_fov));
 
+  anari::setParameter(m_device, m_perspCamera, "apertureRadius", m_apertureRadius);
+  anari::setParameter(m_device, m_perspCamera, "focusDistance", m_focusDistance);
+
   anari::commitParameters(m_device, m_perspCamera);
   anari::commitParameters(m_device, m_orthoCamera);
 }
@@ -423,6 +426,16 @@ void Viewport::ui_contextMenu()
 
     if (ImGui::SliderFloat("fov", &m_fov, 0.1f, 180.f))
       updateCamera(true);
+
+    if (ImGui::BeginMenu("DoF")) {
+      if (ImGui::DragFloat("aperture", &m_apertureRadius, 0.01f, 0.f, 1.f))
+        updateCamera(true);
+
+      if (ImGui::DragFloat(
+              "focus distance", &m_focusDistance, 0.1f, 0.f, 1e20f))
+        updateCamera(true);
+      ImGui::EndMenu();
+    }
 
     ImGui::EndDisabled();
 

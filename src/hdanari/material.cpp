@@ -121,13 +121,13 @@ void HdAnariMaterial::Sync(HdSceneDelegate *sceneDelegate,
     return;
   }
 
-  TF_DEBUG_MSG(HD_ANARI_MATERIAL, "Sync material %s\n", GetId().GetText());
-
+  TF_DEBUG_MSG(HD_ANARI_RD_MATERIAL, "Sync material %s\n", GetId().GetText());
 
   //  Find material network and store it as HdMaterialNetwork2 for later use.
   VtValue networkMapResource = sceneDelegate->GetMaterialResource(GetId());
   HdMaterialNetworkMap networkMap =
-      networkMapResource.Get<HdMaterialNetworkMap>();
+      networkMapResource.GetWithDefault<HdMaterialNetworkMap>();
+
   materialNetwork2_ = convertToHdMaterialNetwork2(networkMap);
   auto materialNetworkIface =
       HdMaterialNetwork2Interface(GetId(), &materialNetwork2_);
@@ -163,26 +163,24 @@ std::map<SdfPath, anari::Sampler> HdAnariMaterial::CreateSamplers(
 {
   std::map<SdfPath, anari::Sampler> textures;
   for (auto &&[path, desc] : textureDescs) {
-    TF_DEBUG_MSG(HD_ANARI_MATERIAL,
+    TF_DEBUG_MSG(HD_ANARI_RD_MATERIAL,
         "Loading texture %s for %s\n",
         desc.assetPath.c_str(),
         path.GetText());
 
     auto sampler = HdAnariTextureLoader::LoadHioTexture2D(
         device, desc.assetPath, desc.minMagFilter, desc.colorspace);
-    if (!sampler) continue;
+    if (!sampler)
+      continue;
 
     anari::setParameter(device,
         sampler,
         "outTransform",
         ANARI_FLOAT32_MAT4,
         desc.transform.data());
-    
-    anari::setParameter(device,
-        sampler,
-        "outOffset",
-        ANARI_FLOAT32_VEC4,
-        desc.offset.data());
+
+    anari::setParameter(
+        device, sampler, "outOffset", ANARI_FLOAT32_VEC4, desc.offset.data());
 
     anari::commitParameters(device, sampler);
 

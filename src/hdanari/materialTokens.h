@@ -3,9 +3,10 @@
 
 #pragma once
 
-#include <pxr/pxr.h>
 #include <pxr/base/tf/staticTokens.h>
+#include <pxr/pxr.h>
 
+// clang-format off
 #define HDANARI_MATERIAL_TOKENS \
   (a) \
   (b) \
@@ -41,6 +42,7 @@
   (varname) \
   (wrapS) \
   (wrapT)
+// clang-format on
 
 PXR_NAMESPACE_OPEN_SCOPE
 

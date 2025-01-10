@@ -14,7 +14,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest]
         config: [Release, Debug]
 
     steps:
@@ -26,10 +26,11 @@ jobs:
 
     - name: Configure CMake
       run: >
-        cmake -LA -B ${{github.workspace}}/build
+        cmake -LA -B ${{ github.workspace }}/build
         -DCMAKE_BUILD_TYPE=${{ matrix.config }}
-        -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/build/install
+        -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/build/install
         -DBUILD_SHARED_LIBS=ON
+        -DBUILD_CTS=ON
         -DBUILD_EXAMPLES=ON
         -DBUILD_HDANARI=OFF
         -DBUILD_HELIDE_DEVICE=ON
@@ -41,7 +42,7 @@ jobs:
       run: cmake --build ${{github.workspace}}/build --config ${{ matrix.config }} --target install
 
     - name: Unit Tests
-      working-directory: ${{github.workspace}}/build
+      working-directory: ${{ github.workspace }}/build
       run: ctest -R unit_test -C ${{ matrix.config }}
 
     - name: Render Tests
@@ -50,4 +51,44 @@ jobs:
 
     - name: Tutorial Tests
       working-directory: ${{github.workspace}}/build
+      run: ctest -R anariTutorial -C ${{ matrix.config }}
+
+  build-macos:
+    # iOS is 10x expensive to run on GitHub machines, so only run if we know something else passed as well
+    needs: build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest]
+        config: [Release]
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Configure CMake
+      run: >
+        cmake -LA -B ${{ github.workspace }}/build
+        -DCMAKE_BUILD_TYPE=${{ matrix.config }}
+        -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/build/install
+        -DBUILD_SHARED_LIBS=ON
+        -DBUILD_EXAMPLES=ON
+        -DBUILD_HDANARI=OFF
+        -DBUILD_HELIDE_DEVICE=ON
+        -DBUILD_REMOTE_DEVICE=OFF
+        -DBUILD_TESTING=ON
+        -DBUILD_VIEWER=OFF
+
+    - name: Build
+      run: cmake --build ${{ github.workspace }}/build --config ${{ matrix.config }} --target install
+
+    - name: Unit Tests
+      working-directory: ${{ github.workspace }}/build
+      run: ctest -R unit_test -C ${{ matrix.config }}
+
+    - name: Render Tests
+      working-directory: ${{ github.workspace }}/build
+      run: ctest -R render_test -C ${{ matrix.config }}
+
+    - name: Tutorial Tests
+      working-directory: ${{ github.workspace }}/build
       run: ctest -R anariTutorial -C ${{ matrix.config }}
