@@ -38,7 +38,7 @@ jobs:
       if: ${{ matrix.config == 'Release' && matrix.os == 'ubuntu-20.04' }}
       uses: actions/upload-artifact@v4
       with:
-        name: ANARI-SDK_${{ matrix.os }}
+        name: ANARI-SDK_ubuntu-20.04
         path: ${{ github.workspace }}/build/install
 
   build-windows:
@@ -61,7 +61,7 @@ jobs:
       if: ${{ matrix.config == 'Release' }}
       uses: actions/upload-artifact@v4
       with:
-        name: ANARI-SDK_${{ matrix.os }}
+        name: ANARI-SDK_windows
         path: ${{ github.workspace }}/build/install
 
   build-macos:
@@ -86,5 +86,5 @@ jobs:
       if: ${{ matrix.config == 'Release' }}
       uses: actions/upload-artifact@v4
       with:
-        name: ANARI-SDK_${{ matrix.os }}
+        name: ANARI-SDK_macos
         path: ${{ github.workspace }}/build/install

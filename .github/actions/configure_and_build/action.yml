@@ -23,9 +23,6 @@ runs:
       shell: ${{ inputs.shell }}
       run: >
         cmake -LA -B ${{ inputs.workspace }}/build
-        -DCMAKE_BUILD_TYPE=${{ inputs.config }}
-        -DCMAKE_INSTALL_PREFIX=${{ inputs.workspace }}/build/install
-        -DBUILD_SHARED_LIBS=ON
         -DBUILD_CTS=${{ inputs.os != 'ubuntu-20.04' }}
         -DBUILD_EXAMPLES=ON
         -DBUILD_HDANARI=OFF
@@ -33,6 +30,10 @@ runs:
         -DBUILD_REMOTE_DEVICE=${{ inputs.os == 'ubuntu-latest' }}
         -DBUILD_TESTING=ON
         -DBUILD_VIEWER=OFF
+        -DCMAKE_BUILD_TYPE=${{ inputs.config }}
+        -DCMAKE_INSTALL_PREFIX=${{ inputs.workspace }}/build/install
+        -DCTS_ENABLE_GLTF=OFF
+        -DINSTALL_CTS=ON
 
     - name: Build
       shell: ${{ inputs.shell }}

@@ -66,7 +66,7 @@ add_dependencies(generate_all generate_cts)
 
 option(CTS_DEV "Copy compiled python module next to python script to make developing easier" OFF)
 mark_as_advanced(CTS_DEV)
-if (CTS_DEV AND NOT BUILD_SHARED_LIBS)
+if (CTS_DEV)
   add_custom_command(TARGET ${PROJECT_NAME}
     COMMAND ${CMAKE_COMMAND}
         -DBUILD_CONFIG_DIR=${CMAKE_CFG_INTDIR}
@@ -77,44 +77,50 @@ if (CTS_DEV AND NOT BUILD_SHARED_LIBS)
   )
 endif()
 
-anari_sdk_fetch_project(
-  NAME anari_cts_glTFSampleAssets
-  URL https://github.com/KhronosGroup/glTF-Sample-Assets/archive/754a32a333b27698b6c36d8bec8ff7ed5f729538.zip
-  MD5 1250786407d1d0e649faaade748c24ab
-)
+if (CTS_ENABLE_GLTF)
+  anari_sdk_fetch_project(
+    NAME anari_cts_glTFSampleAssets
+    URL https://github.com/KhronosGroup/glTF-Sample-Assets/archive/754a32a333b27698b6c36d8bec8ff7ed5f729538.zip
+    MD5 1250786407d1d0e649faaade748c24ab
+  )
 
-message("Copying glTF Sample Models")
-file(GLOB GLTF_SAMPLE_ASSETS_FILES ${anari_cts_glTFSampleAssets_LOCATION}/Models/*)
-list(FILTER GLTF_SAMPLE_ASSETS_FILES EXCLUDE REGEX ".*Unicode❤♻Test")
-file(COPY ${GLTF_SAMPLE_ASSETS_FILES} DESTINATION ${CMAKE_CURRENT_LIST_DIR}/gltf-Sample-Assets)
+  message("Copying glTF Sample Models")
+  file(GLOB GLTF_SAMPLE_ASSETS_FILES ${anari_cts_glTFSampleAssets_LOCATION}/Models/*)
+  list(FILTER GLTF_SAMPLE_ASSETS_FILES EXCLUDE REGEX ".*Unicode❤♻Test")
+  file(COPY ${GLTF_SAMPLE_ASSETS_FILES} DESTINATION ${CMAKE_CURRENT_LIST_DIR}/gltf-Sample-Assets)
+endif()
 
 ## Installation ##
 
-# .pyd files are considered library files
-if (WIN32)
-  install(TARGETS ${PROJECT_NAME}
-    LIBRARY DESTINATION ${CMAKE_INSTALL_BINDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+if (INSTALL_CTS)
+  # .pyd files are considered library files
+  if (WIN32)
+    install(TARGETS ${PROJECT_NAME}
+      LIBRARY DESTINATION ${CMAKE_INSTALL_BINDIR}
+      RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+      ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    )
+  else()
+    install(TARGETS ${PROJECT_NAME}
+      LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+      RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+      ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    )
+  endif()
+
+  install(FILES ${python_files} ${CMAKE_CURRENT_LIST_DIR}/default_test_scene.json
+    ${CMAKE_CURRENT_LIST_DIR}/pyproject.toml
+    ${CMAKE_CURRENT_LIST_DIR}/poetry.lock
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/anari/cts
   )
-else()
-  install(TARGETS ${PROJECT_NAME}
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+
+  install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/test_scenes
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/anari/cts
   )
+
+  if (CTS_ENABLE_GLTF)
+    install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/gltf-Sample-Assets
+      DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/anari/cts
+    )
+  endif()
 endif()
-
-install(FILES ${python_files} ${CMAKE_CURRENT_LIST_DIR}/default_test_scene.json
-  ${CMAKE_CURRENT_LIST_DIR}/pyproject.toml
-  ${CMAKE_CURRENT_LIST_DIR}/poetry.lock
-  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/anari/cts
-)
-
-install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/test_scenes
-  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/anari/cts
-)
-
-install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/gltf-Sample-Assets
-  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/anari/cts
-)
