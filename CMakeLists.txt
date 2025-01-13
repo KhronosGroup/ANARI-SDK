@@ -54,9 +54,12 @@ elseif(UNIX)
   list(APPEND CMAKE_INSTALL_RPATH "$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
 endif()
 
-# Built-in CMake options
+## Built-in CMake options ##
+
 option(BUILD_TESTING "Build tests for CTest" ON)
-# ANARI specific options
+option(BUILD_SHARED_LIBS "Build shared libraries instead of static" ON)
+
+## ANARI specific options ##
 
 option(BUILD_CTS "Build cts toolkit" OFF)
 cmake_dependent_option(CTS_ENABLE_GLTF "Enable glTF support for cts" ON "BUILD_CTS" OFF)
