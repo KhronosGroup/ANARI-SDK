@@ -34,6 +34,12 @@ jobs:
         config: ${{ matrix.config }}
         os: ${{ matrix.os }}
         shell: bash
+    - name: Upload install
+      if: ${{ matrix.config == 'Release' && matrix.os == 'ubuntu-20.04' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: ANARI-SDK_${{ matrix.os }}
+        path: ${{ github.workspace }}/build/install
 
   build-windows:
     runs-on: ${{ matrix.os }}
@@ -51,6 +57,12 @@ jobs:
         config: ${{ matrix.config }}
         os: ${{ matrix.os }}
         shell: pwsh
+    - name: Upload install
+      if: ${{ matrix.config == 'Release' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: ANARI-SDK_${{ matrix.os }}
+        path: ${{ github.workspace }}/build/install
 
   build-macos:
     # iOS is 10x expensive to run on GitHub machines, so only run if we know something else passed as well
@@ -70,3 +82,9 @@ jobs:
         config: ${{ matrix.config }}
         os: ${{ matrix.os }}
         shell: bash
+    - name: Upload install
+      if: ${{ matrix.config == 'Release' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: ANARI-SDK_${{ matrix.os }}
+        path: ${{ github.workspace }}/build/install
