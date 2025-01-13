@@ -24,6 +24,7 @@ jobs:
             config: Debug
     steps:
     - name: Install Packages
+      if: ${{ matrix.os == 'ubuntu-20.04' }}
       run: sudo apt install -y libboost-system-dev libpython3-dev
     - name: Check out code
       uses: actions/checkout@v4

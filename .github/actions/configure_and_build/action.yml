@@ -27,7 +27,7 @@ runs:
         -DBUILD_EXAMPLES=ON
         -DBUILD_HDANARI=OFF
         -DBUILD_HELIDE_DEVICE=ON
-        -DBUILD_REMOTE_DEVICE=${{ inputs.os == 'ubuntu-latest' }}
+        -DBUILD_REMOTE_DEVICE=${{ inputs.os == 'ubuntu-20.04' }}
         -DBUILD_TESTING=ON
         -DBUILD_VIEWER=OFF
         -DCMAKE_BUILD_TYPE=${{ inputs.config }}
