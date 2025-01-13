@@ -14,7 +14,7 @@ inputs:
     description: "Operating system"
     required: true
   shell:
-    description: "Operating system"
+    description: "Native shell to use for job steps"
     required: true
 runs:
   using: "composite"
@@ -45,10 +45,10 @@ runs:
 
     - name: Render Tests
       shell: ${{ inputs.shell }}
-      working-directory: ${{inputs.workspace}}/build
+      working-directory: ${{ inputs.workspace }}/build
       run: ctest -R render_test -C ${{ inputs.config }}
 
     - name: Tutorial Tests
       shell: ${{ inputs.shell }}
-      working-directory: ${{inputs.workspace}}/build
+      working-directory: ${{ inputs.workspace }}/build
       run: ctest -R anariTutorial -C ${{ inputs.config }}
