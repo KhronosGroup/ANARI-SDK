@@ -1,0 +1,55 @@
+## Copyright 2021-2024 The Khronos Group
+## SPDX-License-Identifier: Apache-2.0
+
+name: "Configure, build, and test ANARI-SDK"
+description: "Runs cmake to configure, build, and test the ANARI-SDK"
+inputs:
+  workspace:
+    description: "Main working directory"
+    required: true
+  config:
+    description: "Build configuration"
+    required: true
+  os:
+    description: "Operating system"
+    required: true
+  shell:
+    description: "Native shell to use for job steps"
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Configure CMake
+      shell: ${{ inputs.shell }}
+      run: >
+        cmake -LA -B ${{ inputs.workspace }}/build
+        -DBUILD_CTS=${{ inputs.os != 'ubuntu-20.04' }}
+        -DBUILD_EXAMPLES=ON
+        -DBUILD_HDANARI=OFF
+        -DBUILD_HELIDE_DEVICE=ON
+        -DBUILD_REMOTE_DEVICE=${{ inputs.os == 'ubuntu-20.04' }}
+        -DBUILD_TESTING=ON
+        -DBUILD_VIEWER=OFF
+        -DCMAKE_BUILD_TYPE=${{ inputs.config }}
+        -DCMAKE_INSTALL_PREFIX=${{ inputs.workspace }}/build/install
+        -DCTS_ENABLE_GLTF=OFF
+        -DINSTALL_CTS=ON
+
+    - name: Build
+      shell: ${{ inputs.shell }}
+      run: cmake --build ${{ inputs.workspace }}/build --config ${{ inputs.config }} --target install
+
+    - name: Unit Tests
+      shell: ${{ inputs.shell }}
+      working-directory: ${{ inputs.workspace }}/build
+      run: ctest -R unit_test -C ${{ inputs.config }}
+
+    - name: Render Tests
+      shell: ${{ inputs.shell }}
+      working-directory: ${{ inputs.workspace }}/build
+      run: ctest -R render_test -C ${{ inputs.config }}
+
+    - name: Tutorial Tests
+      shell: ${{ inputs.shell }}
+      working-directory: ${{ inputs.workspace }}/build
+      run: ctest -R anariTutorial -C ${{ inputs.config }}
