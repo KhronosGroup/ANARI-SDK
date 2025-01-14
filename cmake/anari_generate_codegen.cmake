@@ -6,6 +6,8 @@ function(anari_generate_queries)
     return()
   endif()
 
+  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+
   cmake_parse_arguments(
   # prefix
     "GENERATE"
@@ -20,12 +22,6 @@ function(anari_generate_queries)
   )
 
   file(GLOB_RECURSE CORE_JSONS ${ANARI_CODE_GEN_ROOT}/api/*.json)
-
-  find_package(Python3 OPTIONAL_COMPONENTS Interpreter)
-  if (NOT TARGET Python3::Interpreter)
-    message(WARNING "Unable to find python interpreter, skipping code-gen targets")
-    return()
-  endif()
 
   if (NOT DEFINED GENERATE_DEVICE_TARGET)
     message(FATAL_ERROR "DEVICE_TARGET option required for anari_generate_queries()")
