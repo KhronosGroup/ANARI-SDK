@@ -35,12 +35,19 @@ project_add_library(INTERFACE)
 project_sources(
 INTERFACE
   ${CMAKE_CURRENT_LIST_DIR}/windows/LightsEditor.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/windows/LightsEditor.h
   ${CMAKE_CURRENT_LIST_DIR}/windows/Viewport.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/windows/Viewport.h
   ${CMAKE_CURRENT_LIST_DIR}/windows/Window.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/windows/Window.h
   ${CMAKE_CURRENT_LIST_DIR}/Application.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/Application.h
   ${CMAKE_CURRENT_LIST_DIR}/HDRImage.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/HDRImage.h
   ${CMAKE_CURRENT_LIST_DIR}/Orbit.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/Orbit.h
   ${CMAKE_CURRENT_LIST_DIR}/ui_anari.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/ui_anari.h
 )
 project_include_directories(INTERFACE ${CMAKE_CURRENT_LIST_DIR}/..)
 project_link_libraries(INTERFACE
