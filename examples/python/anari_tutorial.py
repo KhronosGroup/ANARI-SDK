@@ -81,6 +81,7 @@ anariSetParameter(device, mesh, 'primitive.index', ANARI_ARRAY1D, array)
 anariCommitParameters(device, mesh)
 
 material = anariNewMaterial(device, 'matte')
+anariSetParameter(device, material, 'color', ANARI_STRING, 'color')
 anariCommitParameters(device, material)
 
 surface = anariNewSurface(device)
