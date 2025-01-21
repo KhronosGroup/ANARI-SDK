@@ -36,9 +36,9 @@ struct Light
 
 struct LightsEditor : public Window
 {
-  LightsEditor(
+  LightsEditor(Application *app,
       std::vector<anari::Device> devices, const char *name = "Lights Editor");
-  LightsEditor(anari::Device device, const char *name = "Lights Editor");
+  LightsEditor(Application *app, anari::Device device, const char *name = "Lights Editor");
   ~LightsEditor();
 
   void buildUI() override;

@@ -13,11 +13,12 @@ namespace anari_viewer::windows {
 // Viewport definitions ///////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-Viewport::Viewport(anari::Device device,
+Viewport::Viewport(Application *app,
+    anari::Device device,
     const char *name,
     bool useOrthoCamera,
     int initRendererId)
-    : Window(name, true),
+    : Window(app, name, true),
       m_useOrthoCamera(useOrthoCamera),
       m_device(device),
       m_currentRenderer(initRendererId)
@@ -30,23 +31,13 @@ Viewport::Viewport(anari::Device device,
   m_contextMenuName = "vpContextMenu_";
   m_contextMenuName += name;
 
-  // GL //
-
-  glGenTextures(1, &m_framebufferTexture);
-  glBindTexture(GL_TEXTURE_2D, m_framebufferTexture);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glTexImage2D(GL_TEXTURE_2D,
-      0,
-      GL_RGBA8,
-      m_viewportSize.x,
-      m_viewportSize.y,
-      0,
-      GL_RGBA,
-      GL_UNSIGNED_BYTE,
-      0);
+  auto renderer = m_app->sdlRenderer();
+  m_framebufferTexture = SDL_CreateTexture(
+    renderer,
+    SDL_PIXELFORMAT_ARGB8888,
+    SDL_TEXTUREACCESS_STREAMING,
+    m_viewportSize.x,
+    m_viewportSize.y);
 
   // ANARI //
 
@@ -108,7 +99,7 @@ void Viewport::buildUI()
   updateImage();
   updateCamera();
 
-  ImGui::Image((void *)(intptr_t)m_framebufferTexture,
+  ImGui::Image((ImTextureID)(intptr_t)m_framebufferTexture,
       ImGui::GetContentRegionAvail(),
       ImVec2(1, 0),
       ImVec2(0, 1));
@@ -193,18 +184,18 @@ void Viewport::reshape(anari::math::int2 newSize)
 
   m_viewportSize = newSize;
 
-  glViewport(0, 0, newSize.x, newSize.y);
+  auto renderer = m_app->sdlRenderer();
 
-  glBindTexture(GL_TEXTURE_2D, m_framebufferTexture);
-  glTexImage2D(GL_TEXTURE_2D,
-      0,
-      GL_RGBA8,
-      newSize.x,
-      newSize.y,
-      0,
-      GL_RGBA,
-      GL_UNSIGNED_BYTE,
-      0);
+  SDL_DestroyTexture(m_framebufferTexture);
+
+  m_framebufferTexture = SDL_CreateTexture(
+    renderer,
+    SDL_PIXELFORMAT_ARGB8888,
+    SDL_TEXTUREACCESS_STREAMING,
+    m_viewportSize.x,
+    m_viewportSize.y);
+
+  updateFrame();
 
   updateFrame();
   updateCamera(true);
@@ -297,27 +288,18 @@ void Viewport::updateImage()
       const bool isByteChannles = fb.pixelType == ANARI_UFIXED8_RGBA_SRGB
           || fb.pixelType == ANARI_UFIXED8_VEC4;
       if (isByteChannles) {
-        glBindTexture(GL_TEXTURE_2D, m_framebufferTexture);
-        glTexSubImage2D(GL_TEXTURE_2D,
-            0,
-            0,
-            0,
-            fb.width,
-            fb.height,
-            GL_RGBA,
-            GL_UNSIGNED_BYTE,
-            fb.data);
+        SDL_UpdateTexture(m_framebufferTexture, nullptr, fb.data, fb.width*4);
       } else {
-        glBindTexture(GL_TEXTURE_2D, m_framebufferTexture);
-        glTexSubImage2D(GL_TEXTURE_2D,
-            0,
-            0,
-            0,
-            fb.width,
-            fb.height,
-            GL_RGBA,
-            GL_FLOAT,
-            fb.data);
+        // glBindTexture(GL_TEXTURE_2D, m_framebufferTexture);
+        // glTexSubImage2D(GL_TEXTURE_2D,
+        //     0,
+        //     0,
+        //     0,
+        //     fb.width,
+        //     fb.height,
+        //     GL_RGBA,
+        //     GL_FLOAT,
+        //     fb.data);
       }
     } else {
       printf("mapped bad frame: %p | %i x %i\n", fb.data, fb.width, fb.height);
@@ -351,10 +333,10 @@ void Viewport::ui_handleInput()
 
   const bool dolly = ImGui::IsMouseDown(ImGuiMouseButton_Right)
       || (ImGui::IsMouseDown(ImGuiMouseButton_Left)
-          && io.KeysDown[GLFW_KEY_LEFT_SHIFT]);
+          && io.KeyShift);
   const bool pan = ImGui::IsMouseDown(ImGuiMouseButton_Middle)
       || (ImGui::IsMouseDown(ImGuiMouseButton_Left)
-          && io.KeysDown[GLFW_KEY_LEFT_ALT]);
+          && io.KeyAlt);
   const bool orbit = ImGui::IsMouseDown(ImGuiMouseButton_Left);
 
   const bool anyMovement = dolly || pan || orbit;

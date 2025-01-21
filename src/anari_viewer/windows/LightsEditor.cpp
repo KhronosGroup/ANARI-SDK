@@ -26,8 +26,8 @@ static const char *lightToType(Light::LightType type)
   }
 }
 
-LightsEditor::LightsEditor(std::vector<anari::Device> devices, const char *name)
-    : Window(name, true), m_devices(devices)
+LightsEditor::LightsEditor(Application *app, std::vector<anari::Device> devices, const char *name)
+    : Window(app, name, true), m_devices(devices)
 {
   for (auto d : m_devices)
     anari::retain(d, d);
@@ -35,8 +35,8 @@ LightsEditor::LightsEditor(std::vector<anari::Device> devices, const char *name)
   m_worlds.resize(m_devices.size(), nullptr);
 }
 
-LightsEditor::LightsEditor(anari::Device device, const char *name)
-    : LightsEditor(std::vector<anari::Device>{device}, name)
+LightsEditor::LightsEditor(Application *app, anari::Device device, const char *name)
+    : LightsEditor(app, std::vector<anari::Device>{device}, name)
 {}
 
 LightsEditor::~LightsEditor()

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "windows/Window.h"
+#include <SDL3/SDL.h>
 // std
 #include <memory>
 #include <string_view>
@@ -12,6 +12,10 @@
 namespace anari_viewer {
 
 struct AppImpl;
+
+namespace windows {
+struct Window;
+}
 using WindowArray = std::vector<std::unique_ptr<windows::Window>>;
 
 class Application
@@ -36,6 +40,8 @@ class Application
   virtual void mainLoopEnd();
   // Allow teardown of objects before application destruction
   virtual void teardown() = 0;
+
+  SDL_Renderer* sdlRenderer();
 
   // Start the application run loop
   void run(int width, int height, const char *name);
