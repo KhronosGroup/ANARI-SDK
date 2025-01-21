@@ -11,11 +11,13 @@
 #include <string>
 #include <vector>
 
+#include "../Application.h"
+
 namespace anari_viewer::windows {
 
 struct Window
 {
-  Window(const char *name, bool startShown = false, bool wrapBeginEnd = true);
+  Window(Application *app, const char *name, bool startShown = false, bool wrapBeginEnd = true);
   virtual ~Window() = default;
 
   void renderUI();
@@ -31,6 +33,7 @@ struct Window
 
  protected:
   virtual void buildUI() = 0;
+  Application *const m_app;
 
  private:
   std::string m_name;
