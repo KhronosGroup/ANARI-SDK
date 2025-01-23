@@ -201,12 +201,13 @@ list!
 - [HayStack](https://github.com/ingowald/hayStack)
 - [OVITO](https://www.ovito.org/)
 - [OpenUSD](https://openusd.org/release/index.html) (via [hdAnari](src/hdanari) plugin)
-- [pynari](https://github.com/ingowald/pynari)
+- [pynari](https://github.com/ingowald/pynari) (Python language bindings)
 - [TSD](https://github.com/NVIDIA/VisRTX/tree/next_release/tsd)
 - [Vistle](https://vistle.io/)
 - [VMD](https://www.ks.uiuc.edu/Research/vmd/)
 - [VTK](https://vtk.org/)
 - [VTK-m](https://m.vtk.org/)
+- [ANARI-Java](https://bitbucket.org/Eclesia/anari-java/src/main/) (Java language bindings)
 
 ### Integrations in-progress
 
