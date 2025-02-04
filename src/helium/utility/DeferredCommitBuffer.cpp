@@ -20,6 +20,7 @@ DeferredCommitBuffer::~DeferredCommitBuffer()
 
 void DeferredCommitBuffer::addObject(BaseObject *obj)
 {
+  std::lock_guard<std::recursive_mutex> guard(m_mutex);
   obj->refInc(RefType::INTERNAL);
   if (commitPriority(obj->type()) != commitPriority(ANARI_OBJECT))
     m_needToSortCommits = true;
@@ -30,6 +31,8 @@ bool DeferredCommitBuffer::flush()
 {
   if (m_commitBuffer.empty())
     return false;
+
+  std::lock_guard<std::recursive_mutex> guard(m_mutex);
 
   if (m_needToSortCommits) {
     std::sort(m_commitBuffer.begin(),
@@ -66,6 +69,8 @@ TimeStamp DeferredCommitBuffer::lastFlush() const
 
 void DeferredCommitBuffer::clear()
 {
+  std::lock_guard<std::recursive_mutex> guard(m_mutex);
+
   for (auto &obj : m_commitBuffer)
     obj->refDec(RefType::INTERNAL);
   m_commitBuffer.clear();
