@@ -5,6 +5,7 @@
 
 #include "TimeStamp.h"
 // std
+#include <mutex>
 #include <vector>
 
 namespace helium {
@@ -36,6 +37,7 @@ struct DeferredCommitBuffer
   std::vector<BaseObject *> m_commitBuffer;
   bool m_needToSortCommits{false};
   TimeStamp m_lastFlush{0};
+  std::recursive_mutex m_mutex;
 };
 
 } // namespace helium
