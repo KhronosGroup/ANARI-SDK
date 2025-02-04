@@ -44,12 +44,14 @@ bool DeferredCommitBuffer::flush()
 
   m_needToSortCommits = false;
 
+  bool didCommit = false;
   size_t i = 0;
   size_t end = m_commitBuffer.size();
   while (i != end) {
     for (;i < end; i++) {
       auto obj = m_commitBuffer[i];
       if (obj->useCount() > 1 && obj->lastUpdated() > obj->lastCommitted()) {
+        didCommit = true;
         obj->commit();
         obj->markCommitted();
       }
@@ -59,7 +61,7 @@ bool DeferredCommitBuffer::flush()
 
   clear();
   m_lastFlush = newTimeStamp();
-  return true;
+  return didCommit;
 }
 
 TimeStamp DeferredCommitBuffer::lastFlush() const
