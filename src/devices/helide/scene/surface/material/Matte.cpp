@@ -7,9 +7,9 @@ namespace helide {
 
 Matte::Matte(HelideGlobalState *s) : Material(s) {}
 
-void Matte::commit()
+void Matte::commitParameters()
 {
-  Material::commit();
+  Material::commitParameters();
 
   m_color = float4(1.f, 1.f, 1.f, 1.f);
   getParam("color", ANARI_FLOAT32_VEC3, &m_color);

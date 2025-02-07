@@ -13,9 +13,9 @@ bool TransformSampler::isValid() const
   return Sampler::isValid();
 }
 
-void TransformSampler::commit()
+void TransformSampler::commitParameters()
 {
-  Sampler::commit();
+  Sampler::commitParameters();
   m_inAttribute =
       attributeFromString(getParamString("inAttribute", "attribute0"));
   m_transform = getParam<mat4>("transform", mat4(linalg::identity));

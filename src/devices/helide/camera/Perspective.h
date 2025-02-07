@@ -11,11 +11,14 @@ struct Perspective : public Camera
 {
   Perspective(HelideGlobalState *s);
 
-  void commit() override;
+  void commitParameters() override;
+  void finalize() override;
 
   Ray createRay(const float2 &screen) const override;
 
  private:
+   float m_fovy{0.f};
+   float m_aspect{1.f};
    float3 m_dir_du;
    float3 m_dir_dv;
    float3 m_dir_00;

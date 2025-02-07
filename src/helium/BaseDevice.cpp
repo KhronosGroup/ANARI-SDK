@@ -59,7 +59,7 @@ void BaseDevice::setParameter(
     o.removeParam(name);
   else
     o.setParam(name, type, mem);
-  o.markUpdated();
+  o.markParameterChanged();
 }
 
 void BaseDevice::unsetParameter(ANARIObject o, const char *name)
@@ -71,7 +71,7 @@ void BaseDevice::unsetParameter(ANARIObject o, const char *name)
   else {
     auto &obj = referenceFromHandle(o);
     obj.removeParam(name);
-    obj.markUpdated();
+    obj.markParameterChanged();
   }
 }
 
@@ -84,7 +84,7 @@ void BaseDevice::unsetAllParameters(ANARIObject o)
   else {
     auto &obj = referenceFromHandle(o);
     obj.removeAllParams();
-    obj.markUpdated();
+    obj.markParameterChanged();
   }
 }
 

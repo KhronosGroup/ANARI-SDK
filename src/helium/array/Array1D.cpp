@@ -11,11 +11,8 @@ Array1D::Array1D(BaseGlobalDeviceState *state, const Array1DMemoryDescriptor &d)
   initManagedMemory();
 }
 
-void Array1D::commit()
+void Array1D::commitParameters()
 {
-  auto oldBegin = m_begin;
-  auto oldEnd = m_end;
-
   m_begin = getParam<size_t>("begin", 0);
   m_begin = std::clamp(m_begin, size_t(0), m_capacity - 1);
   m_end = getParam<size_t>("end", m_capacity);
@@ -31,11 +28,12 @@ void Array1D::commit()
         "array 'begin' is not less than 'end', swapping values");
     std::swap(m_begin, m_end);
   }
+}
 
-  if (m_begin != oldBegin || m_end != oldEnd) {
-    markDataModified();
-    notifyChangeObservers();
-  }
+void Array1D::finalize()
+{
+  markDataModified();
+  notifyChangeObservers();
 }
 
 size_t Array1D::totalSize() const

@@ -7,20 +7,20 @@ namespace helide {
 
 Perspective::Perspective(HelideGlobalState *s) : Camera(s) {}
 
-void Perspective::commit()
+void Perspective::commitParameters()
 {
-  Camera::commit();
-
+  Camera::commitParameters();
   // NOTE: demonstrate alternative 'raw' method for getting parameter values
-  float fovy = 0.f;
-  if (!getParam("fovy", ANARI_FLOAT32, &fovy))
-    fovy = anari::radians(60.f);
-  float aspect = getParam<float>("aspect", 1.f);
+  if (!getParam("fovy", ANARI_FLOAT32, &m_fovy))
+    m_fovy = anari::radians(60.f);
+  m_aspect = getParam<float>("aspect", 1.f);
+}
 
+void Perspective::finalize()
+{
   float2 imgPlaneSize;
-  imgPlaneSize.y = 2.f * tanf(0.5f * fovy);
-  imgPlaneSize.x = imgPlaneSize.y * aspect;
-
+  imgPlaneSize.y = 2.f * tanf(0.5f * m_fovy);
+  imgPlaneSize.x = imgPlaneSize.y * m_aspect;
   m_dir_du = normalize(cross(m_dir, m_up)) * imgPlaneSize.x;
   m_dir_dv = normalize(cross(m_dir_du, m_dir)) * imgPlaneSize.y;
   m_dir_00 = m_dir - .5f * m_dir_du - .5f * m_dir_dv;

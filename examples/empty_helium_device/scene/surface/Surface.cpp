@@ -7,7 +7,7 @@ namespace hecore {
 
 Surface::Surface(HeCoreDeviceGlobalState *s) : Object(ANARI_SURFACE, s) {}
 
-void Surface::commit()
+void Surface::commitParameters()
 {
   m_id = getParam<uint32_t>("id", ~0u);
   m_geometry = getParamObject<Geometry>("geometry");

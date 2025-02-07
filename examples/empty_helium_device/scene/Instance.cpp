@@ -7,7 +7,7 @@ namespace hecore {
 
 Instance::Instance(HeCoreDeviceGlobalState *s) : Object(ANARI_INSTANCE, s) {}
 
-void Instance::commit()
+void Instance::commitParameters()
 {
   m_id = getParam<uint32_t>("id", ~0u);
   m_xfm = getParam<mat4>("transform", mat4(linalg::identity));

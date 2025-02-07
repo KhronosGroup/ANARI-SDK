@@ -11,11 +11,14 @@ struct Orthographic : public Camera
 {
   Orthographic(HelideGlobalState *s);
 
-  void commit() override;
+  void commitParameters() override;
+  void finalize() override;
 
   Ray createRay(const float2 &screen) const override;
 
  private:
+   float m_aspect{1.f};
+   float m_height{1.f};
    float3 m_pos_du;
    float3 m_pos_dv;
    float3 m_pos_00;

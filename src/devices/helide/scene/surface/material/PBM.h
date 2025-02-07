@@ -10,7 +10,7 @@ namespace helide {
 struct PBM : public Material
 {
   PBM(HelideGlobalState *s);
-  void commit() override;
+  void commitParameters() override;
 };
 
 } // namespace helide

@@ -7,9 +7,9 @@ namespace helide {
 
 PBM::PBM(HelideGlobalState *s) : Material(s) {}
 
-void PBM::commit()
+void PBM::commitParameters()
 {
-  Material::commit();
+  Material::commitParameters();
 
   m_color = float4(1.f, 1.f, 1.f, 1.f);
   getParam("baseColor", ANARI_FLOAT32_VEC3, &m_color);

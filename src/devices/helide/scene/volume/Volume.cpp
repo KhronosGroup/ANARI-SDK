@@ -17,7 +17,7 @@ Volume *Volume::createInstance(std::string_view subtype, HelideGlobalState *s)
     return (Volume *)new UnknownObject(ANARI_VOLUME, s);
 }
 
-void Volume::commit()
+void Volume::commitParameters()
 {
   m_id = getParam<uint32_t>("id", ~0u);
 }

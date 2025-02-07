@@ -15,7 +15,7 @@ struct Volume : public Object
   static Volume *createInstance(
       std::string_view subtype, HeCoreDeviceGlobalState *d);
 
-  void commit() override;
+  void commitParameters() override;
 
   uint32_t id() const;
 
