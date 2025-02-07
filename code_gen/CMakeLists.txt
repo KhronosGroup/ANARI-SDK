@@ -24,6 +24,7 @@ if(CMAKE_VERSION VERSION_LESS "3.12")
   return()
 endif()
 
+find_package(Python3 QUIET COMPONENTS Interpreter Development.Module)
 if (NOT TARGET Python3::Interpreter)
   message(WARNING "Unable to find python interpreter, skipping code-gen + API bindings")
   return()
@@ -69,7 +70,6 @@ add_custom_target(generate_headers DEPENDS
 
 add_dependencies(generate_all generate_headers)
 
-find_package(Python3 QUIET COMPONENTS Interpreter Development.Module)
 if (NOT TARGET Python3::Module)
   message(WARNING "Unable to find python Module, skipping python bindings")
   return()
