@@ -17,31 +17,13 @@ Instance::~Instance()
   rtcReleaseGeometry(m_embreeGeometry);
 }
 
-void Instance::commit()
+void Instance::commitParameters()
 {
   m_idArray = getParamObject<Array1D>("id");
-  if (m_idArray && m_idArray->elementType() != ANARI_UINT32) {
-    reportMessage(ANARI_SEVERITY_WARNING,
-        "'id' array elements are %s, but need to be %s",
-        anari::toString(m_idArray->elementType()),
-        anari::toString(ANARI_UINT32));
-    m_idArray = {};
-  }
   m_id = getParam<uint32_t>("id", ~0u);
-
   m_xfmArray = getParamObject<Array1D>("transform");
-  if (m_xfmArray && m_xfmArray->elementType() != ANARI_FLOAT32_MAT4) {
-    reportMessage(ANARI_SEVERITY_WARNING,
-        "'transform' array elements are %s, but need to be %s",
-        anari::toString(m_idArray->elementType()),
-        anari::toString(ANARI_FLOAT32_MAT4));
-    m_xfmArray = {};
-  }
   m_xfm = getParam<mat4>("transform", mat4(linalg::identity));
-
   m_group = getParamObject<Group>("group");
-  if (!m_group)
-    reportMessage(ANARI_SEVERITY_WARNING, "missing 'group' on ANARIInstance");
 
   for (auto &a : m_uniformAttr)
     a.reset();
@@ -63,6 +45,39 @@ void Instance::commit()
   m_uniformAttrArrays.attribute3 = getParamObject<Array1D>("attribute3");
   m_uniformAttrArrays.color = getParamObject<Array1D>("color");
 }
+
+void Instance::finalize()
+{
+  if (m_idArray && m_idArray->elementType() != ANARI_UINT32) {
+    reportMessage(ANARI_SEVERITY_WARNING,
+        "'id' array elements are %s, but need to be %s",
+        anari::toString(m_idArray->elementType()),
+        anari::toString(ANARI_UINT32));
+    m_idArray = {};
+  }
+  if (m_xfmArray && m_xfmArray->elementType() != ANARI_FLOAT32_MAT4) {
+    reportMessage(ANARI_SEVERITY_WARNING,
+        "'transform' array elements are %s, but need to be %s",
+        anari::toString(m_idArray->elementType()),
+        anari::toString(ANARI_FLOAT32_MAT4));
+    m_xfmArray = {};
+  }
+  if (!m_group)
+    reportMessage(ANARI_SEVERITY_WARNING, "missing 'group' on ANARIInstance");
+}
+
+void Instance::markFinalized()
+{
+  Object::markFinalized();
+  deviceState()->objectUpdates.lastTLSReconstructSceneRequest =
+      helium::newTimeStamp();
+}
+
+bool Instance::isValid() const
+{
+  return m_group;
+}
+
 
 uint32_t Instance::numTransforms() const
 {
@@ -125,18 +140,6 @@ void Instance::embreeGeometryUpdate()
       m_xfmArray ? m_xfmArray->begin() : &m_xfm,
       this->numTransforms() * sizeof(mat4));
   rtcCommitGeometry(m_embreeGeometry);
-}
-
-void Instance::markCommitted()
-{
-  Object::markCommitted();
-  deviceState()->objectUpdates.lastTLSReconstructSceneRequest =
-      helium::newTimeStamp();
-}
-
-bool Instance::isValid() const
-{
-  return m_group;
 }
 
 } // namespace helide

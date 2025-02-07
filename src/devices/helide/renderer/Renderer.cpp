@@ -108,7 +108,7 @@ Renderer::Renderer(HelideGlobalState *s) : Object(ANARI_RENDERER, s)
   m_heatmap->unmap();
 }
 
-void Renderer::commit()
+void Renderer::commitParameters()
 {
   m_bgColor = getParam<float4>("background", float4(float3(0.f), 1.f));
   m_bgImage = getParamObject<Array2D>("background");

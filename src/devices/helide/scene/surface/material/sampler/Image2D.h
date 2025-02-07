@@ -13,7 +13,7 @@ struct Image2D : public Sampler
   Image2D(HelideGlobalState *d);
 
   bool isValid() const override;
-  void commit() override;
+  void commitParameters() override;
 
   float4 getSample(const Geometry &g,
       const Ray &r,

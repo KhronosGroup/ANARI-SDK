@@ -50,7 +50,7 @@ struct Renderer : public Object
   Renderer(HelideGlobalState *s);
   ~Renderer() override = default;
 
-  virtual void commit() override;
+  virtual void commitParameters() override;
 
   int2 taskGrainSize() const;
 

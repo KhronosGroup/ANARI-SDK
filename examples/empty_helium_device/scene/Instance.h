@@ -15,7 +15,7 @@ struct Instance : public Object
   Instance(HeCoreDeviceGlobalState *s);
   ~Instance() override = default;
 
-  void commit() override;
+  void commitParameters() override;
 
   uint32_t id() const;
 

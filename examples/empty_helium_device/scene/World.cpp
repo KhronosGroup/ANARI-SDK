@@ -29,12 +29,16 @@ bool World::getProperty(
   return Object::getProperty(name, type, ptr, flags);
 }
 
-void World::commit()
+void World::commitParameters()
 {
   m_zeroSurfaceData = getParamObject<ObjectArray>("surface");
   m_zeroVolumeData = getParamObject<ObjectArray>("volume");
   m_zeroLightData = getParamObject<ObjectArray>("light");
+  m_instanceData = getParamObject<ObjectArray>("instance");
+}
 
+void World::finalize()
+{
   const bool addZeroInstance =
       m_zeroSurfaceData || m_zeroVolumeData || m_zeroLightData;
   if (addZeroInstance)
@@ -66,10 +70,8 @@ void World::commit()
 
   m_zeroInstance->setParam("id", getParam<uint32_t>("id", ~0u));
 
-  m_zeroGroup->commit();
-  m_zeroInstance->commit();
-
-  m_instanceData = getParamObject<ObjectArray>("instance");
+  m_zeroGroup->commitParameters();
+  m_zeroInstance->commitParameters();
 
   m_instances.clear();
 

@@ -8,20 +8,38 @@ namespace helide {
 
 Surface::Surface(HelideGlobalState *s) : Object(ANARI_SURFACE, s) {}
 
-void Surface::commit()
+void Surface::commitParameters()
 {
   m_id = getParam<uint32_t>("id", ~0u);
   m_geometry = getParamObject<Geometry>("geometry");
   m_material = getParamObject<Material>("material");
+}
 
-  if (!m_material) {
+void Surface::finalize()
+{
+  if (!m_material)
     reportMessage(ANARI_SEVERITY_WARNING, "missing 'material' on ANARISurface");
-    return;
-  }
 
-  if (!m_geometry) {
+  if (!m_geometry)
     reportMessage(ANARI_SEVERITY_WARNING, "missing 'geometry' on ANARISurface");
-    return;
+}
+
+void Surface::markFinalized()
+{
+  Object::markFinalized();
+  deviceState()->objectUpdates.lastBLSReconstructSceneRequest =
+      helium::newTimeStamp();
+}
+
+bool Surface::isValid() const
+{
+  bool allowInvalidMaterial = deviceState()->allowInvalidSurfaceMaterials;
+
+  if (allowInvalidMaterial) {
+    return m_geometry && m_geometry->isValid();
+  } else {
+    return m_geometry && m_material && m_geometry->isValid()
+        && m_material->isValid();
   }
 }
 
@@ -82,25 +100,6 @@ float Surface::getSurfaceOpacity(
     return ia->x;
   else
     return geometry()->getAttributeValue(opacityAttribute, ray).x;
-}
-
-void Surface::markCommitted()
-{
-  Object::markCommitted();
-  deviceState()->objectUpdates.lastBLSReconstructSceneRequest =
-      helium::newTimeStamp();
-}
-
-bool Surface::isValid() const
-{
-  bool allowInvalidMaterial = deviceState()->allowInvalidSurfaceMaterials;
-
-  if (allowInvalidMaterial) {
-    return m_geometry && m_geometry->isValid();
-  } else {
-    return m_geometry && m_material && m_geometry->isValid()
-        && m_material->isValid();
-  }
 }
 
 } // namespace helide

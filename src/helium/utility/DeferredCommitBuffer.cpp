@@ -8,6 +8,22 @@
 
 namespace helium {
 
+// Helper functions ///////////////////////////////////////////////////////////
+
+template <typename T, typename FCN_T>
+static void dyanmic_foreach(std::vector<T> &buffer, FCN_T &&fcn)
+{
+  size_t i = 0;
+  size_t end = buffer.size();
+  while (i != end) {
+    for (; i < end; i++)
+      fcn(i);
+    end = buffer.size();
+  }
+}
+
+// DeferredCommitBuffer definitions ///////////////////////////////////////////
+
 DeferredCommitBuffer::DeferredCommitBuffer()
 {
   m_commitBuffer.reserve(100);
@@ -44,24 +60,29 @@ bool DeferredCommitBuffer::flush()
 
   m_needToSortCommits = false;
 
-  bool didCommit = false;
-  size_t i = 0;
-  size_t end = m_commitBuffer.size();
-  while (i != end) {
-    for (;i < end; i++) {
-      auto obj = m_commitBuffer[i];
-      if (obj->useCount() > 1 && obj->lastUpdated() > obj->lastCommitted()) {
-        didCommit = true;
-        obj->commit();
-        obj->markCommitted();
-      }
+  dyanmic_foreach(m_commitBuffer, [&](size_t i) {
+    auto obj = m_commitBuffer[i];
+    if (obj->useCount() > 1
+        && obj->lastParameterChanged() > obj->lastCommitted()) {
+      obj->commitParameters();
+      obj->markCommitted();
+      obj->markUpdated();
     }
-    end = m_commitBuffer.size();
-  }
+  });
+
+  bool didFinalize = false;
+  dyanmic_foreach(m_commitBuffer, [&](size_t i) {
+    auto obj = m_commitBuffer[i];
+    if (obj->useCount() > 1 && obj->lastUpdated() > obj->lastFinalized()) {
+      didFinalize = true;
+      obj->finalize();
+      obj->markFinalized();
+    }
+  });
 
   clear();
   m_lastFlush = newTimeStamp();
-  return didCommit;
+  return didFinalize;
 }
 
 TimeStamp DeferredCommitBuffer::lastFlush() const

@@ -10,7 +10,7 @@ namespace helide {
 struct Matte : public Material
 {
   Matte(HelideGlobalState *s);
-  void commit() override;
+  void commitParameters() override;
 };
 
 } // namespace helide

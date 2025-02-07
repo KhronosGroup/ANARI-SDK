@@ -13,9 +13,9 @@ bool Image2D::isValid() const
   return Sampler::isValid() && m_image;
 }
 
-void Image2D::commit()
+void Image2D::commitParameters()
 {
-  Sampler::commit();
+  Sampler::commitParameters();
   m_image = getParamObject<Array2D>("image");
   m_inAttribute =
       attributeFromString(getParamString("inAttribute", "attribute0"));

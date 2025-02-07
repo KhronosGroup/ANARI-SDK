@@ -17,7 +17,8 @@ struct World : public Object
       void *ptr,
       uint32_t flags) override;
 
-  void commit() override;
+  void commitParameters() override;
+  void finalize() override;
 
   const std::vector<Instance *> &instances() const;
 

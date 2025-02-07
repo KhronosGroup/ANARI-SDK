@@ -68,6 +68,16 @@ ANARIDataType BaseObject::type() const
   return m_type;
 }
 
+TimeStamp BaseObject::lastParameterChanged() const
+{
+  return m_lastParameterChanged;
+}
+
+void BaseObject::markParameterChanged()
+{
+  m_lastParameterChanged = newTimeStamp();
+}
+
 TimeStamp BaseObject::lastUpdated() const
 {
   return m_lastUpdated;
@@ -86,6 +96,16 @@ TimeStamp BaseObject::lastCommitted() const
 void BaseObject::markCommitted()
 {
   m_lastCommitted = newTimeStamp();
+}
+
+TimeStamp BaseObject::lastFinalized() const
+{
+  return m_lastFinalized;
+}
+
+void BaseObject::markFinalized()
+{
+  m_lastFinalized = newTimeStamp();
 }
 
 void BaseObject::addChangeObserver(BaseObject *obj)
