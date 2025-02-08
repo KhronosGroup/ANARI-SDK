@@ -136,7 +136,7 @@ void BaseObject::notifyChangeObserver(BaseObject *o) const
 {
   o->markUpdated();
   if (auto *ds = deviceState(); ds)
-    ds->m_commitBuffer.addObject(o);
+    ds->commitBuffer.addObjectToFinalize(o);
 }
 
 void BaseObject::incrementObjectCount()

@@ -142,7 +142,7 @@ void Frame::renderFrame()
   m_future = async<void>(m_task, [&, state]() {
     auto start = std::chrono::steady_clock::now();
     state->renderingSemaphore.frameStart();
-    state->commitBufferFlush();
+    state->commitBuffer.flush();
 
     if (!isValid()) {
       reportMessage(
@@ -152,7 +152,7 @@ void Frame::renderFrame()
       return;
     }
 
-    if (state->commitBufferLastFlush() <= m_frameLastRendered) {
+    if (state->commitBuffer.lastFlush() <= m_frameLastRendered) {
       state->renderingSemaphore.frameEnd();
       return;
     }
