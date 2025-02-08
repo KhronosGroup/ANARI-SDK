@@ -128,33 +128,6 @@ void Array::markDataModified()
   m_lastDataModified = helium::newTimeStamp();
 }
 
-bool Array::isOffloaded() const
-{
-  return m_isOffloaded;
-}
-
-void Array::markDataIsOffloaded(bool isOffloaded)
-{
-  m_isOffloaded = isOffloaded;
-}
-
-void Array::uploadArrayData() const
-{
-  if (!isOffloaded() || !needToUploadData())
-    return;
-  markDataUploaded();
-}
-
-void Array::markDataUploaded() const
-{
-  m_lastDataUploaded = helium::newTimeStamp();
-}
-
-bool Array::needToUploadData() const
-{
-  return m_lastDataModified > m_lastDataUploaded;
-}
-
 bool Array::getProperty(
     const std::string_view &name, ANARIDataType type, void *ptr, uint32_t flags)
 {
