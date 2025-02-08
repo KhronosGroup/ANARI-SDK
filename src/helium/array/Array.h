@@ -76,13 +76,6 @@ struct Array : public BaseArray
 
   void markDataModified();
 
-  bool isOffloaded() const;
-  void markDataIsOffloaded(bool isOffloaded = true);
-
-  virtual void uploadArrayData() const;
-  void markDataUploaded() const;
-  bool needToUploadData() const;
-
   virtual bool getProperty(const std::string_view &name,
       ANARIDataType type,
       void *ptr,
@@ -124,14 +117,12 @@ struct Array : public BaseArray
   } m_hostData;
 
   helium::TimeStamp m_lastDataModified{0};
-  mutable helium::TimeStamp m_lastDataUploaded{0};
   bool m_mapped{false};
 
  private:
   ArrayDataOwnership m_ownership{ArrayDataOwnership::INVALID};
   ANARIDataType m_elementType{ANARI_UNKNOWN};
   bool m_privatized{false};
-  mutable bool m_isOffloaded{false};
 };
 
 // Inlined definitions ////////////////////////////////////////////////////////
