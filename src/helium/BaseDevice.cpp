@@ -34,7 +34,7 @@ int BaseDevice::getProperty(ANARIObject object,
 {
   if (!handleIsDevice(object)) {
     if (mask == ANARI_WAIT)
-      m_state->commitBufferFlush();
+      m_state->commitBuffer.flush();
     auto lock = getObjectLock(object);
     return referenceFromHandle(object).getProperty(name, type, mem, mask);
   } else
@@ -157,7 +157,7 @@ void BaseDevice::commitParameters(ANARIObject o)
     deviceCommitParameters();
   } else {
     auto *obj = (BaseObject *)o;
-    m_state->commitBufferAddObject(obj);
+    m_state->commitBuffer.addObjectToCommit(obj);
     obj->notifyChangeObservers();
   }
 }

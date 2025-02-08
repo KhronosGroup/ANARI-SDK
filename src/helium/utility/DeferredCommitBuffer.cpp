@@ -27,6 +27,7 @@ static void dyanmic_foreach(std::vector<T> &buffer, FCN_T &&fcn)
 DeferredCommitBuffer::DeferredCommitBuffer()
 {
   m_commitBuffer.reserve(100);
+  m_finalizationBuffer.reserve(100);
 }
 
 DeferredCommitBuffer::~DeferredCommitBuffer()
@@ -34,51 +35,27 @@ DeferredCommitBuffer::~DeferredCommitBuffer()
   clear();
 }
 
-void DeferredCommitBuffer::addObject(BaseObject *obj)
+void DeferredCommitBuffer::addObjectToCommit(BaseObject *obj)
 {
   std::lock_guard<std::recursive_mutex> guard(m_mutex);
-  obj->refInc(RefType::INTERNAL);
-  if (commitPriority(obj->type()) != commitPriority(ANARI_OBJECT))
-    m_needToSortCommits = true;
-  m_commitBuffer.push_back(obj);
+  addObjectToCommitImpl(obj);
+}
+
+void DeferredCommitBuffer::addObjectToFinalize(BaseObject *obj)
+{
+  std::lock_guard<std::recursive_mutex> guard(m_mutex);
+  addObjectToFinalizeImpl(obj);
 }
 
 bool DeferredCommitBuffer::flush()
 {
-  if (m_commitBuffer.empty())
+  if (empty())
     return false;
 
   std::lock_guard<std::recursive_mutex> guard(m_mutex);
 
-  if (m_needToSortCommits) {
-    std::sort(m_commitBuffer.begin(),
-        m_commitBuffer.end(),
-        [](BaseObject *o1, BaseObject *o2) {
-          return commitPriority(o1->type()) < commitPriority(o2->type());
-        });
-  }
-
-  m_needToSortCommits = false;
-
-  dyanmic_foreach(m_commitBuffer, [&](size_t i) {
-    auto obj = m_commitBuffer[i];
-    if (obj->useCount() > 1
-        && obj->lastParameterChanged() > obj->lastCommitted()) {
-      obj->commitParameters();
-      obj->markCommitted();
-      obj->markUpdated();
-    }
-  });
-
-  bool didFinalize = false;
-  dyanmic_foreach(m_commitBuffer, [&](size_t i) {
-    auto obj = m_commitBuffer[i];
-    if (obj->useCount() > 1 && obj->lastUpdated() > obj->lastFinalized()) {
-      didFinalize = true;
-      obj->finalize();
-      obj->markFinalized();
-    }
-  });
+  flushCommits();
+  const bool didFinalize = flushFinalizations();
 
   clear();
   m_lastFlush = newTimeStamp();
@@ -96,13 +73,68 @@ void DeferredCommitBuffer::clear()
 
   for (auto &obj : m_commitBuffer)
     obj->refDec(RefType::INTERNAL);
+  for (auto &obj : m_finalizationBuffer)
+    obj->refDec(RefType::INTERNAL);
   m_commitBuffer.clear();
+  m_finalizationBuffer.clear();
   m_lastFlush = 0;
 }
 
 bool DeferredCommitBuffer::empty() const
 {
-  return m_commitBuffer.empty();
+  return m_commitBuffer.empty() && m_finalizationBuffer.empty();
+}
+
+void DeferredCommitBuffer::addObjectToCommitImpl(BaseObject *obj)
+{
+  obj->refInc(RefType::INTERNAL);
+  m_commitBuffer.push_back(obj);
+}
+
+void DeferredCommitBuffer::addObjectToFinalizeImpl(BaseObject *obj)
+{
+  obj->refInc(RefType::INTERNAL);
+  if (commitPriority(obj->type()) != commitPriority(ANARI_OBJECT))
+    m_needToSortFinalizations = true;
+  m_finalizationBuffer.push_back(obj);
+}
+
+void DeferredCommitBuffer::flushCommits()
+{
+  dyanmic_foreach(m_commitBuffer, [&](size_t i) {
+    auto obj = m_commitBuffer[i];
+    if (obj->lastParameterChanged() > obj->lastCommitted()) {
+      obj->commitParameters();
+      obj->markCommitted();
+      obj->markUpdated();
+      addObjectToFinalizeImpl(obj);
+    }
+  });
+}
+
+bool DeferredCommitBuffer::flushFinalizations()
+{
+  if (m_needToSortFinalizations) {
+    std::sort(m_finalizationBuffer.begin(),
+        m_finalizationBuffer.end(),
+        [](BaseObject *o1, BaseObject *o2) {
+          return commitPriority(o1->type()) < commitPriority(o2->type());
+        });
+  }
+
+  m_needToSortFinalizations = false;
+
+  bool didFinalize = false;
+  dyanmic_foreach(m_finalizationBuffer, [&](size_t i) {
+    auto obj = m_finalizationBuffer[i];
+    if (obj->lastUpdated() > obj->lastFinalized()) {
+      didFinalize = true;
+      obj->finalize();
+      obj->markFinalized();
+    }
+  });
+
+  return didFinalize;
 }
 
 } // namespace helium
