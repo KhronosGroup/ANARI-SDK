@@ -80,6 +80,8 @@ void World::finalize()
 
   m_zeroGroup->commitParameters();
   m_zeroInstance->commitParameters();
+  m_zeroGroup->finalize();
+  m_zeroInstance->finalize();
 
   m_instances.clear();
 
