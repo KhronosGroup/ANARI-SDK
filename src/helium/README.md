@@ -103,16 +103,27 @@ All parameter handling is done through
 [helium::ParameterizedObject](utility/ParameterizedObject.h). Helium uses a
 'pull' based model for handling parameters -- all parameter values are
 generically stored in the object and are expected to be read on
-`helium::BaseObject::commit()`. See comments on
+`helium::BaseObject::commitParameters()`. See comments on
 [ParameterizedObject](utility/ParameterizedObject.h) methods for a further
 explanation.
 
-Object commits are deferred until the device chooses to flush the
-[DefferedCommitBuffer](utiltiy/DeferredCommitBuffer.h) that lives in the
+Object parameter commits are deferred until the device chooses to flush the
+[DeferedCommitBuffer](utiltiy/DeferredCommitBuffer.h) that lives in the
 global device state instance on the device itself. It is entirely up to the
 implementation to choose when this buffer should be flushed -- most commonly
 this will be done at the beginning of rendering a frame and when some property
-values are queried.
+values are queried. Please refer to the documentation within the
+[DeferedCommitBuffer](utiltiy/DeferredCommitBuffer.h) header for more deatils.
+
+Note that objects also have an ability to be "finalized" via the
+`helium::BaseObject::finalize()` virtual method. This is separately tracked
+from committing parameters, so internal state can be triggered to be updated
+independent from needing to read parameter values again. The
+`DeferredCommitBuffer` handles both parameter commits and finalization and will
+only do either option if necessary using time stamps to record object
+parameters being changed and internal state being updated. Objects which have
+new parameters committed will automatically trigger finalization when the
+`DeferredCommitBuffer` is being flushed.
 
 Finally, objects can use `helium::BaseObject::reportMessage()` to generically
 report status messages through the application provided callbacks (setup and
