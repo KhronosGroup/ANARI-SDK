@@ -28,7 +28,8 @@ struct Frame : public helium::BaseFrame
       void *ptr,
       uint32_t flags) override;
 
-  void commit() override;
+  void commitParameters() override;
+  void finalize() override;
 
   void renderFrame() override;
 

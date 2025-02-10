@@ -11,7 +11,8 @@ struct Sphere : public Geometry
 {
   Sphere(HelideGlobalState *s);
 
-  void commit() override;
+  void commitParameters() override;
+  void finalize() override;
 
   float4 getAttributeValue(
       const Attribute &attr, const Ray &ray) const override;

@@ -21,7 +21,7 @@ Material *Material::createInstance(
     return (Material *)new UnknownObject(ANARI_MATERIAL, s);
 }
 
-void Material::commit()
+void Material::commitParameters()
 {
   m_alphaMode = alphaModeFromString(getParamString("alphaMode", "opaque"));
   m_alphaCutoff = getParam<float>("alphaCutoff", 0.5f);

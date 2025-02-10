@@ -14,7 +14,8 @@ struct TransferFunction1D : public Volume
   TransferFunction1D(HelideGlobalState *d);
   ~TransferFunction1D() override;
 
-  void commit() override;
+  void commitParameters() override;
+  void finalize() override;
 
   bool isValid() const override;
 

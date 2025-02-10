@@ -23,7 +23,8 @@ struct Object : public helium::BaseObject
       void *ptr,
       uint32_t flags) override;
 
-  virtual void commit() override;
+  virtual void commitParameters() override;
+  virtual void finalize() override;
 
   bool isValid() const override;
 

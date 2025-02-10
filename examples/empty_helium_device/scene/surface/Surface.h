@@ -14,7 +14,7 @@ struct Surface : public Object
   Surface(HeCoreDeviceGlobalState *s);
   ~Surface() override = default;
 
-  void commit() override;
+  void commitParameters() override;
 
   uint32_t id() const;
   const Geometry *geometry() const;

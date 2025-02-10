@@ -13,7 +13,7 @@ struct Volume : public Object
   virtual ~Volume() = default;
   static Volume *createInstance(std::string_view subtype, HelideGlobalState *d);
 
-  void commit() override;
+  void commitParameters() override;
 
   uint32_t id() const;
 

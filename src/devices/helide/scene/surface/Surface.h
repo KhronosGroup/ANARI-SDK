@@ -15,7 +15,10 @@ struct Surface : public Object
   Surface(HelideGlobalState *s);
   ~Surface() override = default;
 
-  void commit() override;
+  void commitParameters() override;
+  void finalize() override;
+  void markFinalized() override;
+  bool isValid() const override;
 
   uint32_t id() const;
   const Geometry *geometry() const;
@@ -27,9 +30,6 @@ struct Surface : public Object
       const Ray &ray, const UniformAttributeSet &instAttrV) const;
 
   float adjustedAlpha(float a) const;
-
-  void markCommitted() override;
-  bool isValid() const override;
 
  private:
   uint32_t m_id{~0u};

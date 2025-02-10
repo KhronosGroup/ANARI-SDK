@@ -46,7 +46,7 @@ RTCGeometry Geometry::embreeGeometry() const
   return m_embreeGeometry;
 }
 
-void Geometry::commit()
+void Geometry::commitParameters()
 {
   for (auto &a : m_uniformAttr)
     a.reset();
@@ -74,9 +74,9 @@ void Geometry::commit()
   }
 }
 
-void Geometry::markCommitted()
+void Geometry::markFinalized()
 {
-  Object::markCommitted();
+  Object::markFinalized();
   deviceState()->objectUpdates.lastBLSCommitSceneRequest =
       helium::newTimeStamp();
 }

@@ -13,10 +13,9 @@ Quad::Quad(HelideGlobalState *s)
   m_embreeGeometry = rtcNewGeometry(s->embreeDevice, RTC_GEOMETRY_TYPE_QUAD);
 }
 
-void Quad::commit()
+void Quad::commitParameters()
 {
-  Geometry::commit();
-
+  Geometry::commitParameters();
   m_index = getParamObject<Array1D>("primitive.index");
   m_vertexPosition = getParamObject<Array1D>("vertex.position");
   m_vertexAttributes[0] = getParamObject<Array1D>("vertex.attribute0");
@@ -24,7 +23,10 @@ void Quad::commit()
   m_vertexAttributes[2] = getParamObject<Array1D>("vertex.attribute2");
   m_vertexAttributes[3] = getParamObject<Array1D>("vertex.attribute3");
   m_vertexAttributes[4] = getParamObject<Array1D>("vertex.color");
+}
 
+void Quad::finalize()
+{
   if (!m_vertexPosition) {
     reportMessage(ANARI_SEVERITY_WARNING,
         "missing required parameter 'vertex.position' on quad geometry");

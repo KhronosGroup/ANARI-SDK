@@ -16,7 +16,7 @@ struct Material : public Object
   static Material *createInstance(
       std::string_view subtype, HelideGlobalState *s);
 
-  void commit() override;
+  void commitParameters() override;
 
   float4 color() const;
   Attribute colorAttribute() const;

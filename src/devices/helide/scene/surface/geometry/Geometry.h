@@ -18,8 +18,8 @@ struct Geometry : public Object
 
   RTCGeometry embreeGeometry() const;
 
-  void commit() override;
-  void markCommitted() override;
+  void commitParameters() override;
+  void markFinalized() override;
 
   virtual float4 getAttributeValue(const Attribute &attr, const Ray &ray) const;
   uint32_t getPrimID(const Ray &ray) const;

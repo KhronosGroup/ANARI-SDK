@@ -13,7 +13,7 @@ Renderer *Renderer::createInstance(
   return new Renderer(s);
 }
 
-void Renderer::commit()
+void Renderer::commitParameters()
 {
   m_background = getParam<float4>("background", float4(float3(0.f), 1.f));
 }

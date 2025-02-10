@@ -11,10 +11,15 @@ StructuredRegularField::StructuredRegularField(HelideGlobalState *d)
     : SpatialField(d)
 {}
 
-void StructuredRegularField::commit()
+void StructuredRegularField::commitParameters()
 {
   m_dataArray = getParamObject<Array3D>("data");
+  m_origin = getParam<float3>("origin", float3(0.f));
+  m_spacing = getParam<float3>("spacing", float3(1.f));
+}
 
+void StructuredRegularField::finalize()
+{
   if (!m_dataArray) {
     reportMessage(ANARI_SEVERITY_WARNING,
         "missing required parameter 'data' on 'structuredRegular' field");
@@ -24,9 +29,6 @@ void StructuredRegularField::commit()
   m_data = m_dataArray->data();
   m_type = m_dataArray->elementType();
   m_dims = m_dataArray->size();
-
-  m_origin = getParam<float3>("origin", float3(0.f));
-  m_spacing = getParam<float3>("spacing", float3(1.f));
 
   m_invSpacing = 1.f / m_spacing;
   m_coordUpperBound = float3(std::nextafter(m_dims.x - 1, 0),

@@ -27,7 +27,7 @@ struct Renderer : public Object
   static Renderer *createInstance(
       std::string_view subtype, HeCoreDeviceGlobalState *d);
 
-  void commit() override;
+  void commitParameters() override;
 
   float4 background() const;
 

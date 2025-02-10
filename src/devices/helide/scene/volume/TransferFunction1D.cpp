@@ -11,33 +11,30 @@ TransferFunction1D::TransferFunction1D(HelideGlobalState *d)
 
 TransferFunction1D::~TransferFunction1D() = default;
 
-void TransferFunction1D::commit()
+void TransferFunction1D::commitParameters()
 {
-  Volume::commit();
-
+  Volume::commitParameters();
   m_field = getParamObject<SpatialField>("value");
-  if (!m_field) {
-    reportMessage(ANARI_SEVERITY_WARNING,
-        "no spatial field provided to transferFunction1D volume");
-    return;
-  }
-
   m_valueRange = getParam<box1>("valueRange", box1(0.f, 1.f));
-  m_invSize = 1.f / size(m_valueRange);
-
   m_colorData = getParamObject<Array1D>("color");
   m_opacityData = getParamObject<Array1D>("opacity");
   m_densityScale = getParam<float>("densityScale", 1.f);
+}
 
+void TransferFunction1D::finalize()
+{
+  m_invSize = 1.f / size(m_valueRange);
+  if (!m_field) {
+    reportMessage(ANARI_SEVERITY_WARNING,
+        "no spatial field provided to transferFunction1D volume");
+  }
   if (!m_colorData) {
     reportMessage(ANARI_SEVERITY_WARNING,
         "no color data provided to transferFunction1D volume");
-    return;
   }
   if (!m_opacityData) {
     reportMessage(ANARI_SEVERITY_WARNING,
         "no opacity data provided to transfer function");
-    return;
   }
 }
 

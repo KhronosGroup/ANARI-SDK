@@ -36,19 +36,28 @@ bool Group::getProperty(
   return Object::getProperty(name, type, ptr, flags);
 }
 
-void Group::commit()
+void Group::commitParameters()
 {
-  cleanup();
-
   m_surfaceData = getParamObject<ObjectArray>("surface");
   m_volumeData = getParamObject<ObjectArray>("volume");
+}
 
+void Group::finalize()
+{
+  cleanup();
   if (m_volumeData) {
     std::transform(m_volumeData->handlesBegin(),
         m_volumeData->handlesEnd(),
         std::back_inserter(m_volumes),
         [](auto *o) { return (Volume *)o; });
   }
+}
+
+void Group::markFinalized()
+{
+  Object::markFinalized();
+  deviceState()->objectUpdates.lastBLSReconstructSceneRequest =
+      helium::newTimeStamp();
 }
 
 const std::vector<Surface *> &Group::surfaces() const
@@ -86,13 +95,6 @@ void Group::intersectVolumes(VolumeRay &ray) const
 
   if (ray.volume != originalVolume)
     ray.t = t;
-}
-
-void Group::markCommitted()
-{
-  Object::markCommitted();
-  deviceState()->objectUpdates.lastBLSReconstructSceneRequest =
-      helium::newTimeStamp();
 }
 
 RTCScene Group::embreeScene() const

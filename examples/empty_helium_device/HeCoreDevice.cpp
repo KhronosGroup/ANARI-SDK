@@ -207,7 +207,7 @@ HeCoreDevice::HeCoreDevice(ANARILibrary l) : helium::BaseDevice(l)
 HeCoreDevice::~HeCoreDevice()
 {
   auto &state = *deviceState();
-  state.commitBufferClear();
+  state.commitBuffer.clear();
   reportMessage(ANARI_SEVERITY_DEBUG, "destroying HeCore device (%p)", this);
 }
 

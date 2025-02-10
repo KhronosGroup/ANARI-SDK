@@ -12,7 +12,10 @@ struct Instance : public Object
   Instance(HelideGlobalState *s);
   ~Instance() override;
 
-  void commit() override;
+  void commitParameters() override;
+  void finalize() override;
+  void markFinalized() override;
+  bool isValid() const override;
 
   uint32_t numTransforms() const;
 
@@ -29,9 +32,6 @@ struct Instance : public Object
   RTCGeometry embreeGeometry() const;
   void embreeGeometryUpdate();
 
-  void markCommitted() override;
-
-  bool isValid() const override;
 
  private:
   mat4 m_xfm;

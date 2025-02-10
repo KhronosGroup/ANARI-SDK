@@ -12,7 +12,7 @@ struct Camera : public Object
   Camera(HelideGlobalState *s);
   ~Camera() override = default;
 
-  virtual void commit() override;
+  virtual void commitParameters() override;
 
   static Camera *createInstance(
       std::string_view type, HelideGlobalState *state);
