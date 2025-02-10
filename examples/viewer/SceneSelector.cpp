@@ -25,7 +25,7 @@ static void buildUISceneHandle(
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-SceneSelector::SceneSelector(const char *name) : Window(name, true)
+SceneSelector::SceneSelector(Application *app, const char *name) : Window(app, name, true)
 {
   m_categories = anari::scenes::getAvailableSceneCategories();
   m_scenes.resize(m_categories.size());
