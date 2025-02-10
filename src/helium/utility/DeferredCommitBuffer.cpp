@@ -11,7 +11,7 @@ namespace helium {
 // Helper functions ///////////////////////////////////////////////////////////
 
 template <typename T, typename FCN_T>
-static void dyanmic_foreach(std::vector<T> &buffer, FCN_T &&fcn)
+static void dynamic_foreach(std::vector<T> &buffer, FCN_T &&fcn)
 {
   size_t i = 0;
   size_t end = buffer.size();
@@ -101,7 +101,7 @@ void DeferredCommitBuffer::addObjectToFinalizeImpl(BaseObject *obj)
 
 void DeferredCommitBuffer::flushCommits()
 {
-  dyanmic_foreach(m_commitBuffer, [&](size_t i) {
+  dynamic_foreach(m_commitBuffer, [&](size_t i) {
     auto obj = m_commitBuffer[i];
     if (obj->lastParameterChanged() > obj->lastCommitted()) {
       obj->commitParameters();
@@ -125,7 +125,7 @@ bool DeferredCommitBuffer::flushFinalizations()
   m_needToSortFinalizations = false;
 
   bool didFinalize = false;
-  dyanmic_foreach(m_finalizationBuffer, [&](size_t i) {
+  dynamic_foreach(m_finalizationBuffer, [&](size_t i) {
     auto obj = m_finalizationBuffer[i];
     if (obj->lastUpdated() > obj->lastFinalized()) {
       didFinalize = true;
