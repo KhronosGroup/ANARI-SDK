@@ -101,7 +101,8 @@ static void *loadLibrary(
   else if (withAnchor && dwRet == 0)
     errorMsg = "GetCurrentDirectory() failed for unknown reason";
   else {
-    SetCurrentDirectory(libLocation.c_str());
+    if (/* this check only avoids a 'SetCurrentDir("")' */ withAnchor)
+      SetCurrentDirectory(libLocation.c_str());
 
     // Load the library
     std::string fullName = libLocation + file + ".dll";
@@ -123,8 +124,12 @@ static void *loadLibrary(
       LocalFree(lpMsgBuf);
     }
 
-    // Change cwd back to its original value
-    SetCurrentDirectory(currentWd);
+    // iw: check if 'withAnchor' is on - if now, currentWd has never been queried
+    // and points to an un-initialized memory location
+    if (withAnchor) {
+      // Change cwd back to its original value
+      SetCurrentDirectory(currentWd);
+    }
   }
 
 #else
