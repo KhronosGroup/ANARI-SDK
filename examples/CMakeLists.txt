@@ -2,6 +2,12 @@
 ## SPDX-License-Identifier: Apache-2.0
 
 # Example applications which use the ANARI API
+
+if (ANARI_LIBRARY_ONLY)
+  return()
+endif()
+   
+
 add_subdirectory(simple)
 
 option(BUILD_VIEWER "Build interactive viewer app (requires GLFW)" OFF)

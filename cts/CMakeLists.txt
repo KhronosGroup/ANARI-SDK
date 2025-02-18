@@ -3,6 +3,10 @@
 
 cmake_minimum_required(VERSION 3.1)
 
+if (ANARI_LIBRARY_ONLY)
+  return()
+endif()
+
 # Fix "DOWNLOAD_EXTRACT_TIMESTAMP" warning
 if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
   cmake_policy(SET CMP0135 NEW)
