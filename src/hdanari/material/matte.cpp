@@ -1,4 +1,4 @@
-// Copyright 2024 The Khronos Group
+// Copyright 2024-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "matte.h"
@@ -58,7 +58,7 @@ anari::Material HdAnariMatteMaterial::GetOrCreateMaterial(
   if (con.first) {
     TfToken terminalNode = con.second.upstreamNodeName;
     TfToken terminalNodeType = materialNetworkIface.GetNodeType(terminalNode);
-    if (terminalNodeType == HdAnariMaterialTokens->UsdPreviewSurface) {  
+    if (terminalNodeType == HdAnariMaterialTokens->UsdPreviewSurface) {
       ProcessUsdPreviewSurfaceNode(material, materialNetworkIface, terminalNode, primvarBinding, primvarMapping, samplerMapping);
     }
   } else {
@@ -71,7 +71,7 @@ anari::Material HdAnariMatteMaterial::GetOrCreateMaterial(
 void HdAnariMatteMaterial::ProcessUsdPreviewSurfaceNode(anari::Material material, const HdMaterialNetwork2Interface &materialNetworkIface, TfToken terminal,
     const PrimvarBinding& primvarBinding, const PrimvarMapping& primvarMapping, const SamplerMapping& samplerMapping) const
 {
-  HdAnariUsdPreviewSurfaceConverter upsc(device_, material, 
+  HdAnariUsdPreviewSurfaceConverter upsc(device_, material,
       &materialNetworkIface, terminal,
       &primvarBinding, &primvarMapping, &samplerMapping);
 
