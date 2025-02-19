@@ -69,6 +69,7 @@ struct Renderer : public Object
   float4 m_bgColor{float3(0.f), 1.f};
   float m_ambientRadiance{1.f};
   float m_falloffBlendRatio{0.5f};
+  float m_invVolumeSR{1.f};
   RenderMode m_mode{RenderMode::DEFAULT};
   int2 m_taskGrainSize{4, 4};
 
