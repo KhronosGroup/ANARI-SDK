@@ -19,7 +19,10 @@ struct Volume : public Object
 
   virtual box3 bounds() const = 0;
   virtual void render(
-      const VolumeRay &vray, float3 &outputColor, float &outputOpacity) = 0;
+      const VolumeRay &vray,
+      float invVolumeSamplingRate,
+      float3 &outputColor,
+      float &outputOpacity) = 0;
 
   private:
   uint32_t m_id{~0u};
