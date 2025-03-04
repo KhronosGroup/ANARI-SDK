@@ -108,6 +108,12 @@ if(WIN32)
   project_compile_definitions(PRIVATE _USE_MATH_DEFINES)
 endif()
 
+set_target_properties(anari_library_helide
+PROPERTIES
+  CXX_VISIBILITY_PRESET hidden
+  C_VISIBILITY_PRESET hidden
+)
+
 ## Installation ##
 
 install(TARGETS ${PROJECT_NAME}
