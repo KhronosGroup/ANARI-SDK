@@ -17,15 +17,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04, ubuntu-22.04, ubuntu-24.04]
+        os: [ubuntu-22.04, ubuntu-24.04]
         config: [Release, Debug]
-        exclude:
-          - os: ubuntu-20.04
-            config: Debug
     steps:
-    - name: Install Packages
-      if: ${{ matrix.os == 'ubuntu-20.04' }}
-      run: sudo apt install -y libboost-system-dev libpython3-dev
     - name: Check out code
       uses: actions/checkout@v4
     - name: Build and test
@@ -36,10 +30,10 @@ jobs:
         os: ${{ matrix.os }}
         shell: bash
     - name: Upload install
-      if: ${{ matrix.config == 'Release' && matrix.os == 'ubuntu-20.04' }}
+      if: ${{ matrix.config == 'Release' && matrix.os == 'ubuntu-22.04' }}
       uses: actions/upload-artifact@v4
       with:
-        name: ANARI-SDK_ubuntu-20.04
+        name: ANARI-SDK_ubuntu-22.04
         path: ${{ github.workspace }}/build/install
 
   build-windows:
