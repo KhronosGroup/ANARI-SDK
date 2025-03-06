@@ -27,10 +27,13 @@ struct DeferredCommitBuffer
 
   // Sort objects by priority and call BaseObject::commitParameters() and
   // BaseObject::finalize() on each object.
-  bool flush();
+  void flush();
 
-  // Return when this buffer was last flushed
-  TimeStamp lastFlush() const;
+  // Return when this buffer was last committed any object
+  TimeStamp lastObjectCommit() const;
+
+  // Return when this buffer was last finalized any object
+  TimeStamp lastObjectFinalization() const;
 
   // Clear the buffer without committing any of them
   void clear();
@@ -42,12 +45,13 @@ struct DeferredCommitBuffer
   void addObjectToCommitImpl(BaseObject *obj);
   void addObjectToFinalizeImpl(BaseObject *obj);
   void flushCommits();
-  bool flushFinalizations();
+  void flushFinalizations();
 
   std::vector<BaseObject *> m_commitBuffer;
   std::vector<BaseObject *> m_finalizationBuffer;
   bool m_needToSortFinalizations{false};
-  TimeStamp m_lastFlush{0};
+  TimeStamp m_lastCommit{0};
+  TimeStamp m_lastFinalization{0};
   std::recursive_mutex m_mutex;
 };
 

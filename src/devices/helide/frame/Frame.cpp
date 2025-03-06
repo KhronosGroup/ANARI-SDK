@@ -152,7 +152,7 @@ void Frame::renderFrame()
       return;
     }
 
-    if (state->commitBuffer.lastFlush() <= m_frameLastRendered) {
+    if (state->commitBuffer.lastObjectFinalization() <= m_frameLastRendered) {
       state->renderingSemaphore.frameEnd();
       return;
     }

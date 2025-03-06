@@ -47,24 +47,23 @@ void DeferredCommitBuffer::addObjectToFinalize(BaseObject *obj)
   addObjectToFinalizeImpl(obj);
 }
 
-bool DeferredCommitBuffer::flush()
+void DeferredCommitBuffer::flush()
 {
   if (empty())
-    return false;
-
+    return;
   std::lock_guard<std::recursive_mutex> guard(m_mutex);
-
   flushCommits();
-  const bool didFinalize = flushFinalizations();
-
-  clear();
-  m_lastFlush = newTimeStamp();
-  return didFinalize;
+  flushFinalizations();
 }
 
-TimeStamp DeferredCommitBuffer::lastFlush() const
+TimeStamp DeferredCommitBuffer::lastObjectCommit() const
 {
-  return m_lastFlush;
+  return m_lastCommit;
+}
+
+TimeStamp DeferredCommitBuffer::lastObjectFinalization() const
+{
+  return m_lastFinalization;
 }
 
 void DeferredCommitBuffer::clear()
@@ -77,7 +76,6 @@ void DeferredCommitBuffer::clear()
     obj->refDec(RefType::INTERNAL);
   m_commitBuffer.clear();
   m_finalizationBuffer.clear();
-  m_lastFlush = 0;
 }
 
 bool DeferredCommitBuffer::empty() const
@@ -101,18 +99,23 @@ void DeferredCommitBuffer::addObjectToFinalizeImpl(BaseObject *obj)
 
 void DeferredCommitBuffer::flushCommits()
 {
+  bool didCommit = false;
   dynamic_foreach(m_commitBuffer, [&](size_t i) {
     auto obj = m_commitBuffer[i];
     if (obj->lastParameterChanged() > obj->lastCommitted()) {
+      didCommit = true;
       obj->commitParameters();
       obj->markCommitted();
       obj->markUpdated();
       addObjectToFinalizeImpl(obj);
     }
   });
+
+  if (didCommit)
+    m_lastCommit = newTimeStamp();
 }
 
-bool DeferredCommitBuffer::flushFinalizations()
+void DeferredCommitBuffer::flushFinalizations()
 {
   if (m_needToSortFinalizations) {
     std::sort(m_finalizationBuffer.begin(),
@@ -134,7 +137,8 @@ bool DeferredCommitBuffer::flushFinalizations()
     }
   });
 
-  return didFinalize;
+  if (didFinalize)
+    m_lastFinalization = newTimeStamp();
 }
 
 } // namespace helium
