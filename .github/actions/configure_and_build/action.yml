@@ -23,11 +23,11 @@ runs:
       shell: ${{ inputs.shell }}
       run: >
         cmake -LA -B ${{ inputs.workspace }}/build
-        -DBUILD_CTS=${{ inputs.os != 'ubuntu-20.04' }}
+        -DBUILD_CTS=ON
         -DBUILD_EXAMPLES=ON
         -DBUILD_HDANARI=OFF
         -DBUILD_HELIDE_DEVICE=ON
-        -DBUILD_REMOTE_DEVICE=${{ inputs.os == 'ubuntu-20.04' }}
+        -DBUILD_REMOTE_DEVICE=OFF
         -DBUILD_TESTING=ON
         -DBUILD_VIEWER=OFF
         -DCMAKE_BUILD_TYPE=${{ inputs.config }}
