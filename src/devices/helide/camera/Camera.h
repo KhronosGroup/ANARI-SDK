@@ -1,4 +1,4 @@
-// Copyright 2022-2024 The Khronos Group
+// Copyright 2021-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
@@ -12,7 +12,7 @@ struct Camera : public Object
   Camera(HelideGlobalState *s);
   ~Camera() override = default;
 
-  virtual void commit() override;
+  virtual void commitParameters() override;
 
   static Camera *createInstance(
       std::string_view type, HelideGlobalState *state);

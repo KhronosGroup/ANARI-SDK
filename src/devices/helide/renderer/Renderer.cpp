@@ -1,4 +1,4 @@
-// Copyright 2022-2024 The Khronos Group
+// Copyright 2021-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Renderer.h"
@@ -108,12 +108,13 @@ Renderer::Renderer(HelideGlobalState *s) : Object(ANARI_RENDERER, s)
   m_heatmap->unmap();
 }
 
-void Renderer::commit()
+void Renderer::commitParameters()
 {
   m_bgColor = getParam<float4>("background", float4(float3(0.f), 1.f));
   m_bgImage = getParamObject<Array2D>("background");
   m_ambientRadiance = getParam<float>("ambientRadiance", 1.f);
   m_falloffBlendRatio = getParam<float>("eyeLightBlendRatio", 0.5f);
+  m_invVolumeSR = 1.f / getParam<float>("volumeSamplingRate", 1.f);
   m_mode = renderModeFromString(getParamString("mode", "default"));
   m_taskGrainSize.x = getParam<int32_t>("taskGrainSizeWidth", 4);
   m_taskGrainSize.y = getParam<int32_t>("taskGrainSizeHeight", 4);
@@ -293,7 +294,7 @@ void Renderer::shadeRay(PixelSample &retval,
     }
 
     if (hitVolume)
-      vray.volume->render(vray, volumeColor, volumeOpacity);
+      vray.volume->render(vray, m_invVolumeSR, volumeColor, volumeOpacity);
 
   } break;
   }

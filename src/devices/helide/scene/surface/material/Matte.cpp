@@ -1,4 +1,4 @@
-// Copyright 2022-2024 The Khronos Group
+// Copyright 2021-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Matte.h"
@@ -7,9 +7,9 @@ namespace helide {
 
 Matte::Matte(HelideGlobalState *s) : Material(s) {}
 
-void Matte::commit()
+void Matte::commitParameters()
 {
-  Material::commit();
+  Material::commitParameters();
 
   m_color = float4(1.f, 1.f, 1.f, 1.f);
   getParam("color", ANARI_FLOAT32_VEC3, &m_color);

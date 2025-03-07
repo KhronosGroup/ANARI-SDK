@@ -1,4 +1,4 @@
-// Copyright 2021-2024 The Khronos Group
+// Copyright 2021-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "SceneGenerator.h"
@@ -720,7 +720,7 @@ void SceneGenerator::commit()
         if (geometrySubtype != "isosurface") {
             printf("WARNING: No vertices are set for geometry.");
         }
-      } else {      
+      } else {
           anari::setAndReleaseParameter(d,
               geom,
               "vertex.position",
@@ -795,7 +795,7 @@ void SceneGenerator::commit()
             "primitive.attribute3",
             anari::newArray1D(d, attributeVec4.data(), attributeVec4.size()));
       }
-      
+
       // commit everything to the device
       anari::commitParameters(d, geom);
     }
@@ -941,7 +941,7 @@ std::tuple<std::vector<std::vector<uint32_t>>, uint32_t, uint32_t> SceneGenerato
     } else {
       createAnariObject(ANARI_CAMERA, "perspective");
       camera = m_currentObject;
-      
+
       auto cameraTransform = createDefaultCameraFromWorld();
       anari::setParameter(m_device, camera, "position", cameraTransform.position);
       anari::setParameter(m_device, camera, "direction", cameraTransform.direction);
@@ -1011,7 +1011,7 @@ std::tuple<std::vector<std::vector<uint32_t>>, uint32_t, uint32_t> SceneGenerato
     anari::commitParameters(m_device, m_frame);
     anari::render(m_device, m_frame);
     anari::wait(m_device, m_frame);
-    
+
     uint32_t rgba;
     if (wasCalled) {
       rgba = (255 << 24) + (255 << 8);

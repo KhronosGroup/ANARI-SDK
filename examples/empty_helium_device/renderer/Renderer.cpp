@@ -1,4 +1,4 @@
-// Copyright 2024 The Khronos Group
+// Copyright 2024-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Renderer.h"
@@ -13,7 +13,7 @@ Renderer *Renderer::createInstance(
   return new Renderer(s);
 }
 
-void Renderer::commit()
+void Renderer::commitParameters()
 {
   m_background = getParam<float4>("background", float4(float3(0.f), 1.f));
 }

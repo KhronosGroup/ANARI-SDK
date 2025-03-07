@@ -1,4 +1,4 @@
-// Copyright 2022-2024 The Khronos Group
+// Copyright 2021-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "BaseObject.h"
@@ -68,6 +68,16 @@ ANARIDataType BaseObject::type() const
   return m_type;
 }
 
+TimeStamp BaseObject::lastParameterChanged() const
+{
+  return m_lastParameterChanged;
+}
+
+void BaseObject::markParameterChanged()
+{
+  m_lastParameterChanged = newTimeStamp();
+}
+
 TimeStamp BaseObject::lastUpdated() const
 {
   return m_lastUpdated;
@@ -86,6 +96,16 @@ TimeStamp BaseObject::lastCommitted() const
 void BaseObject::markCommitted()
 {
   m_lastCommitted = newTimeStamp();
+}
+
+TimeStamp BaseObject::lastFinalized() const
+{
+  return m_lastFinalized;
+}
+
+void BaseObject::markFinalized()
+{
+  m_lastFinalized = newTimeStamp();
 }
 
 void BaseObject::addChangeObserver(BaseObject *obj)
@@ -116,7 +136,7 @@ void BaseObject::notifyChangeObserver(BaseObject *o) const
 {
   o->markUpdated();
   if (auto *ds = deviceState(); ds)
-    ds->m_commitBuffer.addObject(o);
+    ds->commitBuffer.addObjectToFinalize(o);
 }
 
 void BaseObject::incrementObjectCount()

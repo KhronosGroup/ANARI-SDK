@@ -1,4 +1,4 @@
-﻿// Copyright 2022-2024 The Khronos Group
+﻿// Copyright 2021-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "BaseDevice.h"
@@ -34,7 +34,7 @@ int BaseDevice::getProperty(ANARIObject object,
 {
   if (!handleIsDevice(object)) {
     if (mask == ANARI_WAIT)
-      m_state->commitBufferFlush();
+      m_state->commitBuffer.flush();
     auto lock = getObjectLock(object);
     return referenceFromHandle(object).getProperty(name, type, mem, mask);
   } else
@@ -54,12 +54,16 @@ void BaseDevice::setParameter(
     deviceSetParameter(name, type, mem);
     return;
   }
+
+  bool valueChanged = false;
   auto &o = referenceFromHandle(object);
   if (anari::isObject(type) && mem == nullptr)
-    o.removeParam(name);
+    valueChanged = o.removeParam(name);
   else
-    o.setParam(name, type, mem);
-  o.markUpdated();
+    valueChanged = o.setParam(name, type, mem);
+
+  if (valueChanged)
+    o.markParameterChanged();
 }
 
 void BaseDevice::unsetParameter(ANARIObject o, const char *name)
@@ -70,8 +74,8 @@ void BaseDevice::unsetParameter(ANARIObject o, const char *name)
     deviceUnsetParameter(name);
   else {
     auto &obj = referenceFromHandle(o);
-    obj.removeParam(name);
-    obj.markUpdated();
+    if (obj.removeParam(name))
+      obj.markParameterChanged();
   }
 }
 
@@ -83,8 +87,8 @@ void BaseDevice::unsetAllParameters(ANARIObject o)
     deviceUnsetAllParameters();
   else {
     auto &obj = referenceFromHandle(o);
-    obj.removeAllParams();
-    obj.markUpdated();
+    if (obj.removeAllParams())
+      obj.markParameterChanged();
   }
 }
 
@@ -153,7 +157,7 @@ void BaseDevice::commitParameters(ANARIObject o)
     deviceCommitParameters();
   } else {
     auto *obj = (BaseObject *)o;
-    m_state->commitBufferAddObject(obj);
+    m_state->commitBuffer.addObjectToCommit(obj);
     obj->notifyChangeObservers();
   }
 }

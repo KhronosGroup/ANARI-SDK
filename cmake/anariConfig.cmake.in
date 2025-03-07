@@ -1,4 +1,4 @@
-## Copyright 2021-2024 The Khronos Group
+## Copyright 2021-2025 The Khronos Group
 ## SPDX-License-Identifier: Apache-2.0
 
 @PACKAGE_INIT@
@@ -8,11 +8,13 @@ include(CMakeFindDependencyMacro)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_dependency(Threads)
 
-if (@CTS_ENABLE_GLTF@ OR @VIEWER_ENABLE_GLTF@)
+if (@USE_DRACO@)
   find_dependency(draco)
+endif()
+if (@USE_WEBP@)
   find_dependency(WebP)
 endif()
-if (@VIEWER_ENABLE_KTX@)
+if (@USE_KTX@)
   find_dependency(Ktx)
 endif()
 

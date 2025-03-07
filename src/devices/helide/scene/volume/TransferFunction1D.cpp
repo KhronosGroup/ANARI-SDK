@@ -1,7 +1,9 @@
-// Copyright 2022-2024 The Khronos Group
+// Copyright 2021-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "TransferFunction1D.h"
+// std
+#include <random>
 
 namespace helide {
 
@@ -11,39 +13,31 @@ TransferFunction1D::TransferFunction1D(HelideGlobalState *d)
 
 TransferFunction1D::~TransferFunction1D() = default;
 
-void TransferFunction1D::commit()
+void TransferFunction1D::commitParameters()
 {
-  Volume::commit();
-
+  Volume::commitParameters();
   m_field = getParamObject<SpatialField>("value");
+  m_valueRange = getParam<box1>("valueRange", box1(0.f, 1.f));
+  m_colorData = getParamObject<Array1D>("color");
+  m_uniformColor = float4(1.f);
+  getParam("color", ANARI_FLOAT32_VEC3, &m_uniformColor);
+  getParam("color", ANARI_FLOAT32_VEC4, &m_uniformColor);
+  m_opacityData = getParamObject<Array1D>("opacity");
+  m_uniformOpacity = getParam<float>("opacity", 1.f) * m_uniformColor.w;
+  m_unitDistance = getParam<float>("unitDistance", 1.f);
+}
+
+void TransferFunction1D::finalize()
+{
   if (!m_field) {
     reportMessage(ANARI_SEVERITY_WARNING,
         "no spatial field provided to transferFunction1D volume");
-    return;
-  }
-
-  m_valueRange = getParam<box1>("valueRange", box1(0.f, 1.f));
-  m_invSize = 1.f / size(m_valueRange);
-
-  m_colorData = getParamObject<Array1D>("color");
-  m_opacityData = getParamObject<Array1D>("opacity");
-  m_densityScale = getParam<float>("densityScale", 1.f);
-
-  if (!m_colorData) {
-    reportMessage(ANARI_SEVERITY_WARNING,
-        "no color data provided to transferFunction1D volume");
-    return;
-  }
-  if (!m_opacityData) {
-    reportMessage(ANARI_SEVERITY_WARNING,
-        "no opacity data provided to transfer function");
-    return;
   }
 }
 
 bool TransferFunction1D::isValid() const
 {
-  return m_field && m_field->isValid() && m_colorData && m_opacityData;
+  return m_field && m_field->isValid();
 }
 
 box3 TransferFunction1D::bounds() const
@@ -52,22 +46,28 @@ box3 TransferFunction1D::bounds() const
 }
 
 void TransferFunction1D::render(
-    const VolumeRay &vray, float3 &color, float &opacity)
+    const VolumeRay &vray, float invSamplingRate, float3 &color, float &opacity)
 {
-  const float stepSize = field()->stepSize();
-  const float jitter = 1.f; // NOTE: use uniform rng if/when lower sampling rate
+  const float stepSize = field()->stepSize() * invSamplingRate;
   box1 currentInterval = vray.t;
-  currentInterval.lower += stepSize * jitter;
+  std::mt19937 rng;
+  rng.seed(vray.t.lower * 100);
+  std::uniform_real_distribution<float> dist(0.f, stepSize);
+  currentInterval.lower += dist(rng);
 
+  float transmittance = 1.f;
   while (opacity < 0.99f && size(currentInterval) >= 0.f) {
     const float3 p = vray.org + vray.dir * currentInterval.lower;
     const float s = field()->sampleAt(p);
 
     if (!std::isnan(s)) {
       const float3 c = colorOf(s);
-      const float o = opacityOf(s) * m_densityScale;
-      accumulateValue(color, c * o, opacity);
-      accumulateValue(opacity, o, opacity);
+      const float o = opacityOf(s);
+      const float stepTransmittance =
+          std::pow(1.f - o, stepSize / m_unitDistance);
+      color += transmittance * (1.f - stepTransmittance) * c;
+      opacity += transmittance * (1.f - stepTransmittance);
+      transmittance *= stepTransmittance;
     }
 
     currentInterval.lower += stepSize;

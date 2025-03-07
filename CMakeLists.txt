@@ -1,4 +1,4 @@
-## Copyright 2021-2024 The Khronos Group
+## Copyright 2021-2025 The Khronos Group
 ## SPDX-License-Identifier: Apache-2.0
 
 cmake_minimum_required(VERSION 3.11)
@@ -29,8 +29,8 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 ## Establish project
 
 set(ANARI_SDK_VERSION_MAJOR 0)
-set(ANARI_SDK_VERSION_MINOR 12)
-set(ANARI_SDK_VERSION_PATCH 1)
+set(ANARI_SDK_VERSION_MINOR 13)
+set(ANARI_SDK_VERSION_PATCH 0)
 set(ANARI_SDK_VERSION
   ${ANARI_SDK_VERSION_MAJOR}.${ANARI_SDK_VERSION_MINOR}.${ANARI_SDK_VERSION_PATCH}
 )
@@ -83,15 +83,6 @@ cmake_dependent_option(VIEWER_ENABLE_GLTF
   "BUILD_VIEWER"
   OFF
 )
-cmake_dependent_option(VIEWER_ENABLE_KTX
-  "Enable KTX support in viewer"
-  OFF
-  "BUILD_VIEWER"
-  OFF
-)
-if (VIEWER_ENABLE_KTX)
-  set(USE_KTX ON)
-endif()
 
 ## The generate_all targets collects all offline code generation targets
 

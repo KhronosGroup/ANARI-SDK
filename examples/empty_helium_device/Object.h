@@ -1,4 +1,4 @@
-// Copyright 2024 The Khronos Group
+// Copyright 2024-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
@@ -27,7 +27,8 @@ struct Object : public helium::BaseObject
       void *ptr,
       uint32_t flags) override;
 
-  virtual void commit() override;
+  virtual void commitParameters() override;
+  virtual void finalize() override;
 
   // Returns whether this object is valid or not. Validity is defined as being
   // a known object subtype and it is sufficiently parameterized to do something

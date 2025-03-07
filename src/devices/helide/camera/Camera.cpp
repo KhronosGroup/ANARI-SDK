@@ -1,4 +1,4 @@
-// Copyright 2022-2024 The Khronos Group
+// Copyright 2021-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Camera.h"
@@ -20,14 +20,13 @@ Camera *Camera::createInstance(std::string_view type, HelideGlobalState *s)
     return (Camera *)new UnknownObject(ANARI_CAMERA, s);
 }
 
-void Camera::commit()
+void Camera::commitParameters()
 {
   m_pos = getParam<float3>("position", float3(0.f));
   m_dir = normalize(getParam<float3>("direction", float3(0.f, 0.f, 1.f)));
   m_up = normalize(getParam<float3>("up", float3(0.f, 1.f, 0.f)));
   m_imageRegion = float4(0.f, 0.f, 1.f, 1.f);
   getParam("imageRegion", ANARI_FLOAT32_BOX2, &m_imageRegion);
-  markUpdated();
 }
 
 } // namespace helide

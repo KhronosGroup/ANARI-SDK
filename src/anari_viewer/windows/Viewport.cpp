@@ -1,4 +1,4 @@
-// Copyright 2023-2024 The Khronos Group
+// Copyright 2023-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Viewport.h"
@@ -30,6 +30,8 @@ Viewport::Viewport(anari::Device device, const char *name)
   glBindTexture(GL_TEXTURE_2D, m_framebufferTexture);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glTexImage2D(GL_TEXTURE_2D,
       0,
       GL_RGBA8,

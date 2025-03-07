@@ -1,4 +1,4 @@
-// Copyright 2022-2024 The Khronos Group
+// Copyright 2021-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "ParameterizedObject.h"
@@ -19,10 +19,16 @@ bool ParameterizedObject::hasParam(
   return p ? p->second.type() == type : false;
 }
 
-void ParameterizedObject::setParam(
+bool ParameterizedObject::setParam(
     const std::string &name, ANARIDataType type, const void *v)
 {
-  findParam(name)->second = AnariAny(type, v);
+  AnariAny value(type, v);
+  auto *p = findParam(name);
+  if (p->second != value) {
+    p->second = value;
+    return true;
+  } else
+    return false;
 }
 
 bool ParameterizedObject::getParam(
@@ -58,19 +64,26 @@ void ParameterizedObject::setParamDirect(
   findParam(name)->second = v;
 }
 
-void ParameterizedObject::removeParam(const std::string &name)
+bool ParameterizedObject::removeParam(const std::string &name)
 {
   auto foundParam = std::find_if(m_params.begin(),
       m_params.end(),
       [&](const Param &p) { return p.first == name; });
 
-  if (foundParam != m_params.end())
+  if (foundParam != m_params.end()) {
     m_params.erase(foundParam);
+    return true;
+  } else
+    return false;
 }
 
-void ParameterizedObject::removeAllParams()
+bool ParameterizedObject::removeAllParams()
 {
-  m_params.clear();
+  if (!m_params.empty()) {
+    m_params.clear();
+    return true;
+  } else
+    return false;
 }
 
 ParameterizedObject::ParameterList::iterator ParameterizedObject::params_begin()

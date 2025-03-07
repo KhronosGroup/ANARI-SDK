@@ -101,6 +101,15 @@
           "description": "how much eye lighting factor should be used in default render mode"
         },
         {
+          "name": "volumeSamplingRate",
+          "types": ["ANARI_FLOAT32"],
+          "tags": [],
+          "default": 0.125,
+          "minimum": 0.001,
+          "maximum": 10.0,
+          "description": "sampling rate of volumes when ray marching"
+        },
+        {
           "name": "taskGrainSizeWidth",
           "types": ["ANARI_INT32"],
           "tags": [],

@@ -1,4 +1,4 @@
-// Copyright 2021-2024 The Khronos Group
+// Copyright 2021-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "HeCoreDevice.h"
@@ -207,7 +207,7 @@ HeCoreDevice::HeCoreDevice(ANARILibrary l) : helium::BaseDevice(l)
 HeCoreDevice::~HeCoreDevice()
 {
   auto &state = *deviceState();
-  state.commitBufferClear();
+  state.commitBuffer.clear();
   reportMessage(ANARI_SEVERITY_DEBUG, "destroying HeCore device (%p)", this);
 }
 

@@ -1,4 +1,4 @@
-// Copyright 2022-2024 The Khronos Group
+// Copyright 2021-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
@@ -11,7 +11,8 @@ struct Triangle : public Geometry
 {
   Triangle(HelideGlobalState *s);
 
-  void commit() override;
+  void commitParameters() override;
+  void finalize() override;
 
   float4 getAttributeValue(
       const Attribute &attr, const Ray &ray) const override;

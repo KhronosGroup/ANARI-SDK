@@ -1,4 +1,4 @@
-// Copyright 2022-2024 The Khronos Group
+// Copyright 2021-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
@@ -20,10 +20,7 @@ using mat4 = anari::math::float4x4;
 
 struct BaseGlobalDeviceState
 {
-  void commitBufferAddObject(BaseObject *o);
-  void commitBufferFlush();
-  void commitBufferClear();
-  TimeStamp commitBufferLastFlush() const;
+  DeferredCommitBuffer commitBuffer;
 
   // Data //
 
@@ -37,8 +34,6 @@ struct BaseGlobalDeviceState
   virtual ~BaseGlobalDeviceState() = default;
 
  private:
-  DeferredCommitBuffer m_commitBuffer;
-  mutable std::mutex m_mutex;
 
   friend struct BaseObject;
   friend struct BaseDevice;

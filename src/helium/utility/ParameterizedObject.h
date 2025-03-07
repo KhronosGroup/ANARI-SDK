@@ -1,4 +1,4 @@
-// Copyright 2022-2024 The Khronos Group
+// Copyright 2021-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
@@ -27,11 +27,15 @@ struct ParameterizedObject
   bool hasParam(const std::string &name, ANARIDataType type) const;
 
   // Set the value of the parameter 'name', or add it if it doesn't exist yet
-  void setParam(const std::string &name, ANARIDataType type, const void *v);
+  //
+  // Returns 'true' if the value for that parameter actually changed
+  bool setParam(const std::string &name, ANARIDataType type, const void *v);
 
   // Set the value of the parameter 'name', or add it if it doesn't exist yet
+  //
+  // Returns 'true' if the value for that parameter actually changed
   template <typename T>
-  void setParam(const std::string &name, const T &v);
+  bool setParam(const std::string &name, const T &v);
 
   // Get the value of the parameter associated with 'name', or return
   // 'valueIfNotFound' if the parameter isn't set. This is strongly typed by
@@ -69,10 +73,14 @@ struct ParameterizedObject
   void setParamDirect(const std::string &name, const AnariAny &v);
 
   // Remove the value of the parameter associated with 'name'.
-  void removeParam(const std::string &name);
+  //
+  // Returns 'true' if anything actually happened
+  bool removeParam(const std::string &name);
 
   // Remove all set parameters
-  void removeAllParams();
+  //
+  // Returns 'true' if anything actually happened
+  bool removeAllParams();
 
  protected:
   using Param = std::pair<std::string, AnariAny>;
@@ -93,25 +101,25 @@ struct ParameterizedObject
 // Inlined ParameterizedObject definitions ////////////////////////////////////
 
 template <typename T>
-inline void ParameterizedObject::setParam(const std::string &name, const T &v)
+inline bool ParameterizedObject::setParam(const std::string &name, const T &v)
 {
   constexpr ANARIDataType type = anari::ANARITypeFor<T>::value;
-  setParam(name, type, &v);
+  return setParam(name, type, &v);
 }
 
 template <>
-inline void ParameterizedObject::setParam(
+inline bool ParameterizedObject::setParam(
     const std::string &name, const std::string &v)
 {
-  setParam(name, ANARI_STRING, v.c_str());
+  return setParam(name, ANARI_STRING, v.c_str());
 }
 
 template <>
-inline void ParameterizedObject::setParam(
+inline bool ParameterizedObject::setParam(
     const std::string &name, const bool &v)
 {
   uint8_t b = v;
-  setParam(name, ANARI_BOOL, &b);
+  return setParam(name, ANARI_BOOL, &b);
 }
 
 template <typename T>

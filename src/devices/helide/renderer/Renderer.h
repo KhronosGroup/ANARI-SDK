@@ -1,4 +1,4 @@
-// Copyright 2022-2024 The Khronos Group
+// Copyright 2021-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
@@ -50,7 +50,7 @@ struct Renderer : public Object
   Renderer(HelideGlobalState *s);
   ~Renderer() override = default;
 
-  virtual void commit() override;
+  virtual void commitParameters() override;
 
   int2 taskGrainSize() const;
 
@@ -69,6 +69,7 @@ struct Renderer : public Object
   float4 m_bgColor{float3(0.f), 1.f};
   float m_ambientRadiance{1.f};
   float m_falloffBlendRatio{0.5f};
+  float m_invVolumeSR{1.f};
   RenderMode m_mode{RenderMode::DEFAULT};
   int2 m_taskGrainSize{4, 4};
 

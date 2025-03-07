@@ -1,4 +1,4 @@
-// Copyright 2022-2024 The Khronos Group
+// Copyright 2021-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "TransformSampler.h"
@@ -13,9 +13,9 @@ bool TransformSampler::isValid() const
   return Sampler::isValid();
 }
 
-void TransformSampler::commit()
+void TransformSampler::commitParameters()
 {
-  Sampler::commit();
+  Sampler::commitParameters();
   m_inAttribute =
       attributeFromString(getParamString("inAttribute", "attribute0"));
   m_transform = getParam<mat4>("transform", mat4(linalg::identity));

@@ -1,4 +1,4 @@
-// Copyright 2022-2024 The Khronos Group
+// Copyright 2021-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
@@ -12,7 +12,7 @@ struct TransformSampler : public Sampler
   TransformSampler(HelideGlobalState *d);
 
   bool isValid() const override;
-  void commit() override;
+  void commitParameters() override;
 
   float4 getSample(const Geometry &g,
       const Ray &r,

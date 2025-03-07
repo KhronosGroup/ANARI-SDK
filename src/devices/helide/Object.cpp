@@ -1,4 +1,4 @@
-// Copyright 2022-2024 The Khronos Group
+// Copyright 2021-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Object.h"
@@ -14,7 +14,12 @@ Object::Object(ANARIDataType type, HelideGlobalState *s)
     : helium::BaseObject(type, s)
 {}
 
-void Object::commit()
+void Object::commitParameters()
+{
+  // no-op
+}
+
+void Object::finalize()
 {
   // no-op
 }

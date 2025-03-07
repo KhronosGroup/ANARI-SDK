@@ -1,4 +1,4 @@
-## Copyright 2022-2024 The Khronos Group
+## Copyright 2022-2025 The Khronos Group
 ## SPDX-License-Identifier: Apache-2.0
 
 cmake_minimum_required(VERSION 3.11)
@@ -107,6 +107,12 @@ project_link_libraries(PUBLIC anari::helium PRIVATE local_embree)
 if(WIN32)
   project_compile_definitions(PRIVATE _USE_MATH_DEFINES)
 endif()
+
+set_target_properties(anari_library_helide
+PROPERTIES
+  CXX_VISIBILITY_PRESET hidden
+  C_VISIBILITY_PRESET hidden
+)
 
 ## Installation ##
 

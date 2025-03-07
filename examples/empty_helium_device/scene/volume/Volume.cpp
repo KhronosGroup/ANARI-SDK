@@ -1,4 +1,4 @@
-// Copyright 2024 The Khronos Group
+// Copyright 2024-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Volume.h"
@@ -13,7 +13,7 @@ Volume *Volume::createInstance(
   return (Volume *)new UnknownObject(ANARI_VOLUME, s);
 }
 
-void Volume::commit()
+void Volume::commitParameters()
 {
   m_id = getParam<uint32_t>("id", ~0u);
 }

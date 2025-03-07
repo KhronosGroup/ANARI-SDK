@@ -1,21 +1,27 @@
-// Copyright 2024 The Khronos Group
+// Copyright 2024-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "meshUtil.h"
 
-#include <pxr/imaging/hd/perfLog.h>
-#include <pxr/imaging/hd/vtBufferSource.h>
-#include <pxr/pxr.h>
-
+// pxr
 #include <pxr/base/gf/vec2d.h>
 #include <pxr/base/gf/vec2f.h>
-#include <pxr/base/gf/vec2i.h>
 #include <pxr/base/gf/vec3d.h>
 #include <pxr/base/gf/vec3f.h>
-#include <pxr/base/gf/vec3i.h>
 #include <pxr/base/gf/vec4d.h>
 #include <pxr/base/gf/vec4f.h>
-#include <pxr/base/gf/vec4i.h>
+#include <pxr/base/tf/diagnostic.h>
+#include <pxr/base/tf/token.h>
+#include <pxr/base/trace/staticKeyData.h>
+#include <pxr/base/trace/trace.h>
+#include <pxr/base/vt/array.h>
+#include <pxr/base/vt/types.h>
+#include <pxr/base/vt/value.h>
+#include <pxr/imaging/hd/perfLog.h>
+#include <pxr/imaging/hd/types.h>
+#include <pxr/imaging/hd/vtBufferSource.h>
+#include <pxr/pxr.h>
+#include <pxr/usd/sdf/path.h>
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -36,11 +42,32 @@ void HdAnariMeshUtil::GatherPerFacePrimVar(VtIntArray const &primitiveParams,
   *mappedPrimvar = results;
 }
 
+bool GatherGeomSubsetTopology(VtIntArray geomSubsetIndices,
+    VtIntArray primitiveParameters,
+    VtVec3iArray *triangleIndices)
+{
+  if (triangleIndices == nullptr) {
+    TF_CODING_ERROR(
+        "No output buffer provided for trianglulated geomsubset topology generation");
+    return false;
+  }
+
+  VtVec3iArray result;
+  // At least as many triangles as requested indices. It will be more in case
+  // of a non triangle mesh.
+  result.reserve(geomSubsetIndices.size());
+
+  for (auto index : geomSubsetIndices) {
+  }
+
+  return true;
+}
+
 bool HdAnariMeshUtil::GatherPerFacePrimvar(const SdfPath &id,
     const TfToken &pvname,
     VtValue value,
     VtIntArray primitiveParameters,
-    VtValue *mappedPrimvar) const
+    VtValue *mappedPrimvar)
 {
   HD_TRACE_FUNCTION();
 

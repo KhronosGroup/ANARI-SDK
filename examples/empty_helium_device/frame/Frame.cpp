@@ -1,4 +1,4 @@
-// Copyright 2024 The Khronos Group
+// Copyright 2024-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Frame.h"
@@ -45,30 +45,33 @@ HeCoreDeviceGlobalState *Frame::deviceState() const
   return (HeCoreDeviceGlobalState *)helium::BaseObject::m_state;
 }
 
-void Frame::commit()
+void Frame::commitParameters()
 {
   m_renderer = getParamObject<Renderer>("renderer");
+  m_camera = getParamObject<Camera>("camera");
+  m_world = getParamObject<World>("world");
+  m_colorType = getParam<anari::DataType>("channel.color", ANARI_UNKNOWN);
+  m_depthType = getParam<anari::DataType>("channel.depth", ANARI_UNKNOWN);
+  m_size = getParam<uint2>("size", uint2(0u, 0u));
+}
+
+void Frame::finalize()
+{
   if (!m_renderer) {
     reportMessage(ANARI_SEVERITY_WARNING,
         "missing required parameter 'renderer' on frame");
   }
 
-  m_camera = getParamObject<Camera>("camera");
   if (!m_camera) {
     reportMessage(
         ANARI_SEVERITY_WARNING, "missing required parameter 'camera' on frame");
   }
 
-  m_world = getParamObject<World>("world");
   if (!m_world) {
     reportMessage(
         ANARI_SEVERITY_WARNING, "missing required parameter 'world' on frame");
   }
 
-  m_colorType = getParam<anari::DataType>("channel.color", ANARI_UNKNOWN);
-  m_depthType = getParam<anari::DataType>("channel.depth", ANARI_UNKNOWN);
-
-  m_size = getParam<uint2>("size", uint2(0u, 0u));
   const auto numPixels = m_size.x * m_size.y;
 
   m_perPixelBytes = 4 * (m_colorType == ANARI_FLOAT32_VEC4 ? 4 : 1);

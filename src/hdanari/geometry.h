@@ -1,16 +1,22 @@
-// Copyright 2024 The Khronos Group
+// Copyright 2024-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
 
+#include "material.h"
+
+// anari
+#include <anari/frontend/anari_enums.h>
 #include <anari/anari_cpp.hpp>
 // pxr
+#include <pxr/base/gf/vec4f.h>
 #include <pxr/base/tf/token.h>
 #include <pxr/base/vt/array.h>
 #include <pxr/base/vt/types.h>
 #include <pxr/base/vt/value.h>
 #include <pxr/imaging/hd/enums.h>
 #include <pxr/imaging/hd/extComputationUtils.h>
+#include <pxr/imaging/hd/geomSubset.h>
 #include <pxr/imaging/hd/mesh.h>
 #include <pxr/imaging/hd/meshTopology.h>
 #include <pxr/imaging/hd/meshUtil.h>
@@ -22,14 +28,11 @@
 #include <pxr/imaging/hf/perfLog.h>
 #include <pxr/pxr.h>
 #include <pxr/usd/sdf/path.h>
-#include <map>
 // std
-#include <memory>
-#include <optional>
+#include <cstddef>
+#include <unordered_map>
+#include <variant>
 #include <vector>
-
-#include "material.h"
-#include "meshUtil.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -58,72 +61,147 @@ class HdAnariGeometry : public HdMesh
   HdDirtyBits _PropagateDirtyBits(HdDirtyBits bits) const override;
 
  protected:
-  virtual HdAnariMaterial::PrimvarBinding UpdateGeometry(
+  // Used to handle shape specific (as in non material) primvars.
+  // For instance normals for meshs or radius for points.
+  struct GeomSpecificPrimVar
+  {
+    TfToken bindingPoint;
+    anari::Array1D array;
+  };
+  using GeomSpecificPrimvars = std::vector<GeomSpecificPrimVar>;
+
+  virtual GeomSpecificPrimvars GetGeomSpecificPrimvars(
       HdSceneDelegate *sceneDelegate,
       HdDirtyBits *dirtyBits,
       const TfToken::Set &allPrimvars,
-      const VtValue &points) = 0;
-  virtual void UpdatePrimvarSource(HdSceneDelegate *sceneDelegate,
+      const VtVec3fArray &points,
+      const SdfPath &geomsetId = {})
+  {
+    return {};
+  };
+
+  // Store the actual value of a primvar source.
+  using PrimvarSource = std::variant<std::monostate, GfVec4f, anari::Array1D>;
+  // Shape specific creation of a primvar source based on its value and
+  // interpolation. This is used to create the actual constant or
+  // anari::Array1D.
+  virtual PrimvarSource UpdatePrimvarSource(HdSceneDelegate *sceneDelegate,
       HdInterpolation interpolation,
       const TfToken &attributeName,
       const VtValue &value) = 0;
 
-  TfToken _GetPrimitiveBindingPoint(const TfToken &attribute);
-  TfToken _GetFaceVaryingBindingPoint(const TfToken &attribute);
-  TfToken _GetVertexBindingPoint(const TfToken &attribute);
+  // Helper functions returning anari attribute name based on the given
+  // HdInterpolation.
+  static TfToken _GetBindingPoint(
+      const TfToken &token, HdInterpolation interpolation);
 
-  void _SetGeometryAttributeConstant(
-      const TfToken &attributeName, const VtValue &v);
-  void _SetGeometryAttributeArray(const TfToken &attributeName,
-      const TfToken &bindingPoint,
-      const VtValue &v,
-      anari::DataType forcedType = ANARI_UNKNOWN);
-#if USE_INSTANCE_ARRAYS
-  void _SetInstanceAttributeArray(const TfToken &attributeName,
-      const VtValue &v,
-      anari::DataType forcedType = ANARI_UNKNOWN);
-#endif
+  static TfToken _GetPrimitiveBindingPoint(const TfToken &attribute);
+  static TfToken _GetFaceVaryingBindingPoint(const TfToken &attribute);
+  static TfToken _GetVertexBindingPoint(const TfToken &attribute);
+
+  // Creates an array out of the given VtValue.
+  anari::Array1D _GetAttributeArray(
+      const VtValue &v, anari::DataType forcedType = ANARI_UNKNOWN);
 
   void _InitRepr(const TfToken &reprToken, HdDirtyBits *dirtyBits) override;
 
-#if !USE_INSTANCE_ARRAYS
-  void ReleaseInstances();
-#endif
+  // More helper  function to extract data from VtValue.
+  static bool _GetVtValueAsAttribute(VtValue v, GfVec4f &out);
+  static bool _GetVtArrayBufferData(
+      VtValue v, const void **data, size_t *size, anari::DataType *type);
 
   HdAnariGeometry(const HdAnariGeometry &) = delete;
   HdAnariGeometry &operator=(const HdAnariGeometry &) = delete;
 
+  // Returns the shape geomsubsets.
+  virtual HdGeomSubsets GetGeomSubsets(
+      HdSceneDelegate *sceneDelegate, HdDirtyBits *dirtyBits)
+  {
+    return {};
+  }
+
  private:
   // Data //
   bool _populated{false};
-  HdMeshTopology topology_;
-  std::unique_ptr<HdAnariMeshUtil> meshUtil_;
-  std::optional<Hd_VertexAdjacency> adjacency_;
+  // The anari geometry type.
+  TfToken geometryType_;
 
-  VtIntArray trianglePrimitiveParams_;
-
-  HdAnariMaterial::PrimvarBinding primvarBinding_;
-  std::map<TfToken, TfToken> geometryBindingPoints_;
-  std::map<TfToken, TfToken> instanceBindingPoints_;
-
-#if !USE_INSTANCE_ARRAYS
-  VtMatrix4fArray transforms_UNIQUE_INSTANCES_;
-  VtUIntArray ids_UNIQUE_INSTANCES_;
-  std::vector<std::pair<TfToken, VtValue>> instancedPrimvar_UNIQUE_INSTANCES_;
-#endif
-
-  struct AnariObjects
+  // Stores material and related primvar binndings for a given geomsubset.
+  struct GeomSubsetInfo
   {
-    anari::Device device{nullptr};
-    anari::Geometry geometry{nullptr};
-    anari::Surface surface{nullptr};
-    anari::Group group{nullptr};
-#if USE_INSTANCE_ARRAYS
-    anari::Instance instance{nullptr};
-#else
-    std::vector<anari::Instance> instances;
-#endif
-  } _anari;
+    anari::Material material;
+    HdAnariMaterial::PrimvarBinding primvarBinding;
+  };
+  // main and geomsubset infos.
+  GeomSubsetInfo mainGeomInfo_;
+  using GeomSubsetToInfo =
+      std::unordered_map<SdfPath, GeomSubsetInfo, SdfPath::Hash>;
+  GeomSubsetToInfo geomSubsetInfo_;
+
+  // Primvar source cache
+  using PrimvarToSource =
+      std::unordered_map<TfToken, PrimvarSource, TfToken::HashFunctor>;
+  using PrimvarToInterpolation =
+      std::unordered_map<TfToken, HdInterpolation, TfToken::HashFunctor>;
+
+  // Keep track of which primvars are known, their bindings and interpolation
+  PrimvarToSource primvarSource_;
+  PrimvarToInterpolation primvarInterpolation_;
+  HdAnariMaterial::PrimvarBinding primvarBindings_;
+
+  // Same with geometry specific primvars
+  using GeomSpecificPrimvarBindings = TfTokenVector;
+  using GeomSubsetToSpecificPrimvarBindings =
+      std::unordered_map<SdfPath, GeomSpecificPrimvarBindings, SdfPath::Hash>;
+  GeomSubsetToSpecificPrimvarBindings geomSpecificPrimvarBindings_;
+
+  // Anari objects for a geomsubset
+  struct AnariInstanceDesc
+  {
+    anari::Geometry geometry{};
+    anari::Surface surface{};
+    anari::Group group{};
+    anari::Instance instance{};
+  };
+
+  using GeomSubsetToAnariInstanceDesc =
+      std::unordered_map<SdfPath, AnariInstanceDesc, SdfPath::Hash>;
+  GeomSubsetToAnariInstanceDesc geomSubsetGeometry_;
+
+ protected:
+  anari::Device device_{nullptr};
+  std::vector<anari::Instance> instances_;
+
+  // Stores the state of primvars and their interpolation.
+  // Used to handle removal and additon of primvars compared to previous sync.
+  struct PrimvarStateDesc
+  {
+    std::vector<TfToken> primvars;
+    std::unordered_map<TfToken, HdInterpolation, TfToken::HashFunctor>
+        primvarsInterpolation;
+  };
+
+  // Handles updating a single anari goemetry.
+  static void SyncAnariGeometry(anari::Device device,
+      anari::Geometry geometry,
+
+      const PrimvarToSource &primvarSources,
+      HdAnariMaterial::PrimvarBinding updatedPrimvarsBinding,
+      HdAnariMaterial::PrimvarBinding previousPrimvarsBinding,
+
+      const PrimvarStateDesc &updates,
+      const PrimvarStateDesc &removes);
+
+  // Handles updating a single anari instance.
+  static void SyncAnariInstance(anari::Device device,
+      anari::Instance instance,
+
+      const PrimvarToSource &primvarSources,
+      HdAnariMaterial::PrimvarBinding updatedPrimvarsBinding,
+      HdAnariMaterial::PrimvarBinding previousPrimvarsBinding,
+
+      const PrimvarStateDesc &updates,
+      const PrimvarStateDesc &removes);
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

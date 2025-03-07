@@ -1,4 +1,4 @@
-// Copyright 2022-2024 The Khronos Group
+// Copyright 2021-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Material.h"
@@ -21,7 +21,7 @@ Material *Material::createInstance(
     return (Material *)new UnknownObject(ANARI_MATERIAL, s);
 }
 
-void Material::commit()
+void Material::commitParameters()
 {
   m_alphaMode = alphaModeFromString(getParamString("alphaMode", "opaque"));
   m_alphaCutoff = getParam<float>("alphaCutoff", 0.5f);

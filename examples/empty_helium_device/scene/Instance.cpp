@@ -1,4 +1,4 @@
-// Copyright 2024 The Khronos Group
+// Copyright 2024-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Instance.h"
@@ -7,7 +7,7 @@ namespace hecore {
 
 Instance::Instance(HeCoreDeviceGlobalState *s) : Object(ANARI_INSTANCE, s) {}
 
-void Instance::commit()
+void Instance::commitParameters()
 {
   m_id = getParam<uint32_t>("id", ~0u);
   m_xfm = getParam<mat4>("transform", mat4(linalg::identity));

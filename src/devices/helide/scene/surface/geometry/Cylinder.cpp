@@ -1,4 +1,4 @@
-// Copyright 2022-2024 The Khronos Group
+// Copyright 2021-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Cylinder.h"
@@ -14,10 +14,9 @@ Cylinder::Cylinder(HelideGlobalState *s)
       rtcNewGeometry(s->embreeDevice, RTC_GEOMETRY_TYPE_CONE_LINEAR_CURVE);
 }
 
-void Cylinder::commit()
+void Cylinder::commitParameters()
 {
-  Geometry::commit();
-
+  Geometry::commitParameters();
   m_index = getParamObject<Array1D>("primitive.index");
   m_radius = getParamObject<Array1D>("primitive.radius");
   m_vertexPosition = getParamObject<Array1D>("vertex.position");
@@ -26,7 +25,10 @@ void Cylinder::commit()
   m_vertexAttributes[2] = getParamObject<Array1D>("vertex.attribute2");
   m_vertexAttributes[3] = getParamObject<Array1D>("vertex.attribute3");
   m_vertexAttributes[4] = getParamObject<Array1D>("vertex.color");
+}
 
+void Cylinder::finalize()
+{
   if (!m_vertexPosition) {
     reportMessage(ANARI_SEVERITY_WARNING,
         "missing required parameter 'vertex.position' on cylinder geometry");

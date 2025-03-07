@@ -1,4 +1,4 @@
-// Copyright 2022-2024 The Khronos Group
+// Copyright 2021-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "BaseGlobalDeviceState.h"
@@ -22,30 +22,6 @@ BaseGlobalDeviceState::BaseGlobalDeviceState(ANARIDevice d)
                                            : ANARI_STATUS_UNKNOWN_ERROR,
         msg.c_str());
   };
-}
-
-void BaseGlobalDeviceState::commitBufferAddObject(BaseObject *o)
-{
-  std::lock_guard<std::mutex> guard(m_mutex);
-  m_commitBuffer.addObject(o);
-}
-
-void BaseGlobalDeviceState::commitBufferFlush()
-{
-  std::lock_guard<std::mutex> guard(m_mutex);
-  m_commitBuffer.flush();
-}
-
-void BaseGlobalDeviceState::commitBufferClear()
-{
-  std::lock_guard<std::mutex> guard(m_mutex);
-  m_commitBuffer.clear();
-}
-
-TimeStamp BaseGlobalDeviceState::commitBufferLastFlush() const
-{
-  std::lock_guard<std::mutex> guard(m_mutex);
-  return m_commitBuffer.lastFlush();
 }
 
 } // namespace helium

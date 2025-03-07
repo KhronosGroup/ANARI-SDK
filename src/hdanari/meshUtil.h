@@ -1,16 +1,14 @@
-// Copyright 2024 The Khronos Group
+// Copyright 2024-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
 
-#include <pxr/imaging/hd/meshUtil.h>
-#include <pxr/pxr.h>
-
+#include <pxr/base/tf/token.h>
 #include <pxr/base/vt/array.h>
 #include <pxr/base/vt/types.h>
 #include <pxr/base/vt/value.h>
-
-#include <pxr/base/tf/token.h>
+#include <pxr/imaging/hd/meshUtil.h>
+#include <pxr/pxr.h>
 #include <pxr/usd/sdf/path.h>
 
 PXR_NAMESPACE_OPEN_SCOPE
@@ -21,11 +19,15 @@ class HdAnariMeshUtil : public HdMeshUtil
   using HdMeshUtil::HdMeshUtil;
 
   // Gather per face primvar after a triangulation or quadrangulation
-  bool GatherPerFacePrimvar(const SdfPath &id,
+  static bool GatherPerFacePrimvar(const SdfPath &id,
       const TfToken &pvname,
       VtValue value,
       VtIntArray primitiveParameters,
-      VtValue *mappedPrimvar) const;
+      VtValue *mappedPrimvar);
+
+  static bool GatherGeomSubsetTopology(VtIntArray geomSubsetIndices,
+      VtIntArray primitiveParameters,
+      VtVec3iArray *triangleIndices);
 
  private:
   // Gather per face primvar after a triangulation or quadrangulation

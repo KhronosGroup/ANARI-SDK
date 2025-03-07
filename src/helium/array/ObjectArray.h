@@ -1,4 +1,4 @@
-// Copyright 2023-2024 The Khronos Group
+// Copyright 2023-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
@@ -12,7 +12,8 @@ struct ObjectArray : public Array
   ObjectArray(BaseGlobalDeviceState *state, const Array1DMemoryDescriptor &d);
   ~ObjectArray();
 
-  void commit() override;
+  void commitParameters() override;
+  void finalize() override;
 
   size_t totalSize() const override;
   size_t totalCapacity() const override;

@@ -1,4 +1,4 @@
-// Copyright 2024 The Khronos Group
+// Copyright 2024-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Group.h"
@@ -22,15 +22,18 @@ bool Group::getProperty(
   return Object::getProperty(name, type, ptr, flags);
 }
 
-void Group::commit()
+void Group::commitParameters()
+{
+  m_surfaceData = getParamObject<ObjectArray>("surface");
+  m_volumeData = getParamObject<ObjectArray>("volume");
+  m_lightData = getParamObject<ObjectArray>("light");
+}
+
+void Group::finalize()
 {
   m_surfaces.clear();
   m_volumes.clear();
   m_lights.clear();
-
-  m_surfaceData = getParamObject<ObjectArray>("surface");
-  m_volumeData = getParamObject<ObjectArray>("volume");
-  m_lightData = getParamObject<ObjectArray>("light");
 
   if (m_surfaceData) {
     std::transform(m_surfaceData->handlesBegin(),

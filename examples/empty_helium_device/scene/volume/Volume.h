@@ -1,4 +1,4 @@
-// Copyright 2024 The Khronos Group
+// Copyright 2024-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
@@ -15,7 +15,7 @@ struct Volume : public Object
   static Volume *createInstance(
       std::string_view subtype, HeCoreDeviceGlobalState *d);
 
-  void commit() override;
+  void commitParameters() override;
 
   uint32_t id() const;
 

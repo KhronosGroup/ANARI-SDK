@@ -1,4 +1,4 @@
-// Copyright 2024 The Khronos Group
+// Copyright 2024-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
@@ -32,7 +32,7 @@ public:
     HdAnariUsdPreviewSurfaceConverter(anari::Device device, anari::Material material,
         const HdMaterialNetwork2Interface* materialNetworkIface, const TfToken& terminalNode,
             const HdAnariMaterial::PrimvarBinding* primvarBinding, const HdAnariMaterial::PrimvarMapping* primvarMapping, const HdAnariMaterial::SamplerMapping* samplerMapping);
-    
+
 
     void ProcessInputConnection(TfToken usdInputName, const char* anariParameterName, HdAnariTextureLoader::ColorSpace  fallbackColorspace = HdAnariTextureLoader::ColorSpace::SRgb) {
         if (!ProcessConnection(usdInputName, anariParameterName, fallbackColorspace)) {

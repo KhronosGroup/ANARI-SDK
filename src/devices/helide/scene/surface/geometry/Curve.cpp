@@ -1,4 +1,4 @@
-// Copyright 2022-2024 The Khronos Group
+// Copyright 2021-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Curve.h"
@@ -14,10 +14,9 @@ Curve::Curve(HelideGlobalState *s)
       rtcNewGeometry(s->embreeDevice, RTC_GEOMETRY_TYPE_ROUND_LINEAR_CURVE);
 }
 
-void Curve::commit()
+void Curve::commitParameters()
 {
-  Geometry::commit();
-
+  Geometry::commitParameters();
   m_index = getParamObject<Array1D>("primitive.index");
   m_vertexPosition = getParamObject<Array1D>("vertex.position");
   m_vertexRadius = getParamObject<Array1D>("vertex.radius");
@@ -26,7 +25,10 @@ void Curve::commit()
   m_vertexAttributes[2] = getParamObject<Array1D>("vertex.attribute2");
   m_vertexAttributes[3] = getParamObject<Array1D>("vertex.attribute3");
   m_vertexAttributes[4] = getParamObject<Array1D>("vertex.color");
+}
 
+void Curve::finalize()
+{
   if (!m_vertexPosition) {
     reportMessage(ANARI_SEVERITY_WARNING,
         "missing required parameter 'vertex.position' on curve geometry");

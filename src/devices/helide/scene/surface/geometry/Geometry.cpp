@@ -1,4 +1,4 @@
-// Copyright 2022-2024 The Khronos Group
+// Copyright 2021-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Geometry.h"
@@ -46,7 +46,7 @@ RTCGeometry Geometry::embreeGeometry() const
   return m_embreeGeometry;
 }
 
-void Geometry::commit()
+void Geometry::commitParameters()
 {
   for (auto &a : m_uniformAttr)
     a.reset();
@@ -74,9 +74,9 @@ void Geometry::commit()
   }
 }
 
-void Geometry::markCommitted()
+void Geometry::markFinalized()
 {
-  Object::markCommitted();
+  Object::markFinalized();
   deviceState()->objectUpdates.lastBLSCommitSceneRequest =
       helium::newTimeStamp();
 }

@@ -1,4 +1,4 @@
-// Copyright 2022-2024 The Khronos Group
+// Copyright 2021-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Frame.h"
@@ -59,21 +59,37 @@ HelideGlobalState *Frame::deviceState() const
   return (HelideGlobalState *)helium::BaseObject::m_state;
 }
 
-void Frame::commit()
+void Frame::commitParameters()
 {
   m_renderer = getParamObject<Renderer>("renderer");
+  m_camera = getParamObject<Camera>("camera");
+  m_world = getParamObject<World>("world");
+
+  m_colorType = getParam<anari::DataType>("channel.color", ANARI_UNKNOWN);
+  m_depthType = getParam<anari::DataType>("channel.depth", ANARI_UNKNOWN);
+  m_primIdType =
+      getParam<anari::DataType>("channel.primitiveId", ANARI_UNKNOWN);
+  m_objIdType = getParam<anari::DataType>("channel.objectId", ANARI_UNKNOWN);
+  m_instIdType = getParam<anari::DataType>("channel.instanceId", ANARI_UNKNOWN);
+  m_frameData.size = getParam<uint2>("size", uint2(10));
+  m_callback = getParam<ANARIFrameCompletionCallback>(
+      "frameCompletionCallback", nullptr);
+  m_callbackUserPtr =
+      getParam<void *>("frameCompletionCallbackUserData", nullptr);
+}
+
+void Frame::finalize()
+{
   if (!m_renderer) {
     reportMessage(ANARI_SEVERITY_WARNING,
         "missing required parameter 'renderer' on frame");
   }
 
-  m_camera = getParamObject<Camera>("camera");
   if (!m_camera) {
     reportMessage(
         ANARI_SEVERITY_WARNING, "missing required parameter 'camera' on frame");
   }
 
-  m_world = getParamObject<World>("world");
   if (!m_world) {
     reportMessage(
         ANARI_SEVERITY_WARNING, "missing required parameter 'world' on frame");
@@ -82,14 +98,6 @@ void Frame::commit()
   m_valid = m_renderer && m_renderer->isValid() && m_camera
       && m_camera->isValid() && m_world && m_world->isValid();
 
-  m_colorType = getParam<anari::DataType>("channel.color", ANARI_UNKNOWN);
-  m_depthType = getParam<anari::DataType>("channel.depth", ANARI_UNKNOWN);
-  m_primIdType =
-      getParam<anari::DataType>("channel.primitiveId", ANARI_UNKNOWN);
-  m_objIdType = getParam<anari::DataType>("channel.objectId", ANARI_UNKNOWN);
-  m_instIdType = getParam<anari::DataType>("channel.instanceId", ANARI_UNKNOWN);
-
-  m_frameData.size = getParam<uint2>("size", uint2(10));
   m_frameData.invSize = 1.f / float2(m_frameData.size);
 
   const auto numPixels = m_frameData.size.x * m_frameData.size.y;
@@ -110,11 +118,6 @@ void Frame::commit()
     m_objIdBuffer.resize(numPixels);
   if (m_instIdType == ANARI_UINT32)
     m_instIdBuffer.resize(numPixels);
-
-  m_callback = getParam<ANARIFrameCompletionCallback>(
-      "frameCompletionCallback", nullptr);
-  m_callbackUserPtr =
-      getParam<void *>("frameCompletionCallbackUserData", nullptr);
 }
 
 bool Frame::getProperty(
@@ -139,7 +142,7 @@ void Frame::renderFrame()
   m_future = async<void>(m_task, [&, state]() {
     auto start = std::chrono::steady_clock::now();
     state->renderingSemaphore.frameStart();
-    state->commitBufferFlush();
+    state->commitBuffer.flush();
 
     if (!isValid()) {
       reportMessage(
@@ -149,7 +152,7 @@ void Frame::renderFrame()
       return;
     }
 
-    if (state->commitBufferLastFlush() <= m_frameLastRendered) {
+    if (state->commitBuffer.lastObjectFinalization() <= m_frameLastRendered) {
       state->renderingSemaphore.frameEnd();
       return;
     }

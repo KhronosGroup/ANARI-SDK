@@ -1,8 +1,12 @@
-// Copyright 2024 The Khronos Group
+// Copyright 2024-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "instancer.h"
 
+#include "debugCodes.h"
+#include "sampler.h"
+
+// pxr
 #include <pxr/base/gf/matrix4d.h>
 #include <pxr/base/gf/quatd.h>
 #include <pxr/base/gf/quath.h>
@@ -25,23 +29,20 @@
 #include <pxr/imaging/hd/enums.h>
 #include <pxr/imaging/hd/instancer.h>
 #include <pxr/imaging/hd/perfLog.h>
-#include <pxr/imaging/hd/renderDelegate.h>
 #include <pxr/imaging/hd/renderIndex.h>
 #include <pxr/imaging/hd/sceneDelegate.h>
 #include <pxr/imaging/hd/tokens.h>
 #include <pxr/imaging/hd/types.h>
 #include <pxr/imaging/hd/vtBufferSource.h>
 #include <pxr/imaging/hf/perfLog.h>
-#include <stddef.h>
+#include <pxr/usd/sdf/path.h>
+// std
 #include <algorithm>
+#include <cstddef>
 #include <iterator>
-#include <memory>
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
-#include "debugCodes.h"
-#include "sampler.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -338,10 +339,10 @@ VtValue HdAnariInstancer::GatherInstancePrimvar(
     dataType = it->second->GetTupleType().type;
   } else {
     for (auto instancerId = GetParentId(); !instancerId.IsEmpty();
-         instancerId = GetDelegate()
-                           ->GetRenderIndex()
-                           .GetInstancer(instancerId)
-                           ->GetParentId()) {
+        instancerId = GetDelegate()
+            ->GetRenderIndex()
+            .GetInstancer(instancerId)
+            ->GetParentId()) {
       auto instancer = static_cast<const HdAnariInstancer *>(
           GetDelegate()->GetRenderIndex().GetInstancer(instancerId));
       if (auto it = instancer->_primvarMap.find(primvarName);
@@ -376,6 +377,9 @@ VtValue HdAnariInstancer::GatherInstancePrimvar(
     break;
   case HdTypeDoubleVec4:
     return GatherInstancePrimvar<GfVec4d>(prototypeId, primvarName, dataType);
+    break;
+  case HdTypeInvalid:
+    // Invalid means we did not find a matching primvar.
     break;
   default:
     TF_CODING_ERROR("Unsupported primvar type for instance gathering [%s.%s]",
