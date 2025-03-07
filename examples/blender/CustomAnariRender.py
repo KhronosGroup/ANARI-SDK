@@ -321,7 +321,8 @@ class ANARIRenderEngine(bpy.types.RenderEngine):
 
     def mesh_to_geometry(self, objmesh, name, mesh):
         objmesh.calc_loop_triangles()
-        objmesh.calc_normals_split()
+        if bpy.app.version < (4,1,0):
+            objmesh.calc_normals_split()
 
         indexcount = len(objmesh.loop_triangles)
         npindex = np.zeros([indexcount*3], dtype=np.uint32)
