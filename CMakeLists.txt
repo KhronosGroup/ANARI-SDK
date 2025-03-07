@@ -83,15 +83,6 @@ cmake_dependent_option(VIEWER_ENABLE_GLTF
   "BUILD_VIEWER"
   OFF
 )
-cmake_dependent_option(VIEWER_ENABLE_KTX
-  "Enable KTX support in viewer"
-  OFF
-  "BUILD_VIEWER"
-  OFF
-)
-if (VIEWER_ENABLE_KTX)
-  set(USE_KTX ON)
-endif()
 
 ## The generate_all targets collects all offline code generation targets
 
