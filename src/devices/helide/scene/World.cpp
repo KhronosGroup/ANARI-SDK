@@ -31,6 +31,9 @@ bool World::getProperty(
   if (name == "bounds" && type == ANARI_FLOAT32_BOX3) {
     if (flags & ANARI_WAIT)
       embreeSceneUpdate();
+    if (!m_embreeScene)
+      return false;
+
     auto bounds = getEmbreeSceneBounds(m_embreeScene);
     for (auto *i : instances()) {
       for (auto *v : i->group()->volumes()) {

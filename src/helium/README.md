@@ -108,12 +108,12 @@ generically stored in the object and are expected to be read on
 explanation.
 
 Object parameter commits are deferred until the device chooses to flush the
-[DeferedCommitBuffer](utiltiy/DeferredCommitBuffer.h) that lives in the
+[DeferedCommitBuffer](utility/DeferredCommitBuffer.h) that lives in the
 global device state instance on the device itself. It is entirely up to the
 implementation to choose when this buffer should be flushed -- most commonly
 this will be done at the beginning of rendering a frame and when some property
 values are queried. Please refer to the documentation within the
-[DeferedCommitBuffer](utiltiy/DeferredCommitBuffer.h) header for more deatils.
+[DeferedCommitBuffer](utility/DeferredCommitBuffer.h) header for more deatils.
 
 Note that objects also have an ability to be "finalized" via the
 `helium::BaseObject::finalize()` virtual method. This is separately tracked
