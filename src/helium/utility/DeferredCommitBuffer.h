@@ -46,6 +46,7 @@ struct DeferredCommitBuffer
   void addObjectToFinalizeImpl(BaseObject *obj);
   void flushCommits();
   void flushFinalizations();
+  void clearImpl();
 
   std::vector<BaseObject *> m_commitBuffer;
   std::vector<BaseObject *> m_finalizationBuffer;
