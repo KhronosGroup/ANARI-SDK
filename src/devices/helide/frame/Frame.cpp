@@ -159,6 +159,9 @@ void Frame::renderFrame()
 
     m_frameLastRendered = helium::newTimeStamp();
 
+    // NOTE(jda) - We don't want any anariGetProperty() calls also trying to
+    //             rebuild the Embree scene in parallel to us doing a rebuild.
+    auto worldLock = m_world->scopeLockObject();
     m_world->embreeSceneUpdate();
 
     const auto taskGrainSize = uint2(m_renderer->taskGrainSize());
