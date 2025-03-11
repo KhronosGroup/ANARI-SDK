@@ -32,7 +32,7 @@ DeferredCommitBuffer::DeferredCommitBuffer()
 
 DeferredCommitBuffer::~DeferredCommitBuffer()
 {
-  clear();
+  clearImpl();
 }
 
 void DeferredCommitBuffer::addObjectToCommit(BaseObject *obj)
@@ -54,6 +54,7 @@ void DeferredCommitBuffer::flush()
   std::lock_guard<std::recursive_mutex> guard(m_mutex);
   flushCommits();
   flushFinalizations();
+  clearImpl();
 }
 
 TimeStamp DeferredCommitBuffer::lastObjectCommit() const
@@ -69,13 +70,7 @@ TimeStamp DeferredCommitBuffer::lastObjectFinalization() const
 void DeferredCommitBuffer::clear()
 {
   std::lock_guard<std::recursive_mutex> guard(m_mutex);
-
-  for (auto &obj : m_commitBuffer)
-    obj->refDec(RefType::INTERNAL);
-  for (auto &obj : m_finalizationBuffer)
-    obj->refDec(RefType::INTERNAL);
-  m_commitBuffer.clear();
-  m_finalizationBuffer.clear();
+  clearImpl();
 }
 
 bool DeferredCommitBuffer::empty() const
@@ -139,6 +134,17 @@ void DeferredCommitBuffer::flushFinalizations()
 
   if (didFinalize)
     m_lastFinalization = newTimeStamp();
+}
+
+void DeferredCommitBuffer::clearImpl()
+{
+  for (auto &obj : m_commitBuffer)
+    obj->refDec(RefType::INTERNAL);
+  for (auto &obj : m_finalizationBuffer)
+    obj->refDec(RefType::INTERNAL);
+  m_commitBuffer.clear();
+  m_finalizationBuffer.clear();
+  m_needToSortFinalizations = false;
 }
 
 } // namespace helium
