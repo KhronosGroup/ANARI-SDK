@@ -207,23 +207,6 @@ const void *HelideDevice::getParameterInfo(ANARIDataType objectType,
       infoType);
 }
 
-// Object + Parameter Lifetime Management /////////////////////////////////////
-
-int HelideDevice::getProperty(ANARIObject object,
-    const char *name,
-    ANARIDataType type,
-    void *mem,
-    uint64_t size,
-    uint32_t mask)
-{
-  if (mask == ANARI_WAIT) {
-    auto lock = scopeLockObject();
-    deviceState()->waitOnCurrentFrame();
-  }
-
-  return helium::BaseDevice::getProperty(object, name, type, mem, size, mask);
-}
-
 // Other HelideDevice definitions /////////////////////////////////////////////
 
 HelideDevice::HelideDevice(ANARIStatusCallback cb, const void *ptr)

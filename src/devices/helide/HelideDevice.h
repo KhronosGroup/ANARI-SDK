@@ -70,15 +70,6 @@ struct HelideDevice : public helium::BaseDevice
       const char *infoName,
       ANARIDataType infoType) override;
 
-  // Object + Parameter Lifetime Management ///////////////////////////////////
-
-  int getProperty(ANARIObject object,
-      const char *name,
-      ANARIDataType type,
-      void *mem,
-      uint64_t size,
-      uint32_t mask) override;
-
   /////////////////////////////////////////////////////////////////////////////
   // Helper/other functions and data members
   /////////////////////////////////////////////////////////////////////////////
