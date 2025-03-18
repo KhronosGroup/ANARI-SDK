@@ -48,6 +48,7 @@ struct VolumeRay
   float3 dir;
   box1 t{0.f, std::numeric_limits<float>::max()};
   Volume *volume{nullptr};
+  mat4 invXfm;
   uint32_t instID{RTC_INVALID_GEOMETRY_ID};
   uint32_t instArrayID{RTC_INVALID_GEOMETRY_ID};
 };
@@ -58,6 +59,17 @@ inline const std::optional<float4> &getUniformAttribute(
     const UniformAttributeSet &ua, Attribute attr)
 {
   return ua[static_cast<int>(attr)];
+}
+
+inline float3 xfmVec(const mat4 &m, const float3 &p)
+{
+  return linalg::mul(extractRotation(m), p);
+}
+
+inline float3 xfmPoint(const mat4 &m, const float3 &p)
+{
+  auto r = linalg::mul(m, float4(p.x, p.y, p.z, 1.f));
+  return float3(r.x, r.y, r.z);
 }
 
 } // namespace helide

@@ -27,7 +27,7 @@ struct Group : public Object
   const std::vector<Surface *> &surfaces() const;
   const std::vector<Volume *> &volumes() const;
 
-  void intersectVolumes(VolumeRay &ray) const;
+  void intersectVolumes(VolumeRay &ray, const mat4 &invMat) const;
 
   RTCScene embreeScene() const;
   void embreeSceneConstruct();

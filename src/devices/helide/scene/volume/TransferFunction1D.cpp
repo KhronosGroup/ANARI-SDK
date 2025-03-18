@@ -8,7 +8,7 @@
 namespace helide {
 
 TransferFunction1D::TransferFunction1D(HelideGlobalState *d)
-    : Volume(d), m_field(this)
+    : Volume(d), m_field(this), m_colorData(this), m_opacityData(this)
 {}
 
 TransferFunction1D::~TransferFunction1D() = default;
@@ -51,18 +51,22 @@ void TransferFunction1D::render(
   const float stepSize = field()->stepSize() * invSamplingRate;
   box1 currentInterval = vray.t;
   std::mt19937 rng;
-  rng.seed(vray.t.lower * 100);
+  rng.seed(vray.t.lower * 10000);
   std::uniform_real_distribution<float> dist(0.f, stepSize);
   currentInterval.lower += dist(rng);
 
+  const float3 org = xfmPoint(vray.invXfm, vray.org);
+  const float3 dir = xfmVec(vray.invXfm, vray.dir);
+
   float transmittance = 1.f;
   while (opacity < 0.99f && size(currentInterval) >= 0.f) {
-    const float3 p = vray.org + vray.dir * currentInterval.lower;
+    const float3 p = org + dir * currentInterval.lower;
     const float s = field()->sampleAt(p);
 
     if (!std::isnan(s)) {
-      const float3 c = colorOf(s);
-      const float o = opacityOf(s);
+      const float4 co = colorOf(s);
+      const float3 c(co.x, co.y, co.z);
+      const float o = opacityOf(s) * co.w;
       const float stepTransmittance =
           std::pow(1.f - o, stepSize / m_unitDistance);
       color += transmittance * (1.f - stepTransmittance) * c;
