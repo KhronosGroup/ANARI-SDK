@@ -18,6 +18,11 @@ void TransferFunction1D::commitParameters()
   Volume::commitParameters();
   m_field = getParamObject<SpatialField>("value");
   m_valueRange = getParam<box1>("valueRange", box1(0.f, 1.f));
+  double valueRange_d[2] = {0.0, 1.0};
+  if (getParam("valueRange", ANARI_FLOAT64_BOX1, &valueRange_d[0])) {
+    m_valueRange.lower = float(valueRange_d[0]);
+    m_valueRange.upper = float(valueRange_d[1]);
+  }
   m_colorData = getParamObject<Array1D>("color");
   m_uniformColor = float4(1.f);
   getParam("color", ANARI_FLOAT32_VEC3, &m_uniformColor);
