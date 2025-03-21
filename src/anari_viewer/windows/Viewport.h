@@ -6,9 +6,7 @@
 #include "../Orbit.h"
 #include "../ui_anari.h"
 // glad
-#include "glad/glad.h"
-// glfw
-#include <GLFW/glfw3.h>
+#include <SDL3/SDL.h>
 // anari
 #include <anari/anari_cpp/ext/linalg.h>
 #include <anari/anari_cpp.hpp>
@@ -22,7 +20,7 @@ namespace anari_viewer::windows {
 
 struct Viewport : public Window
 {
-  Viewport(anari::Device device, const char *name = "Viewport");
+  Viewport(Application *app, anari::Device device, const char *name = "Viewport");
   ~Viewport();
 
   void buildUI() override;
@@ -92,7 +90,7 @@ struct Viewport : public Window
 
   // OpenGL + display
 
-  GLuint m_framebufferTexture{0};
+  SDL_Texture *m_framebufferTexture;
   anari::math::int2 m_viewportSize{1920, 1080};
   anari::math::int2 m_renderSize{1920, 1080};
 

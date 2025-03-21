@@ -107,12 +107,12 @@ struct Application : public anari_viewer::Application
     if (g_useDefaultLayout)
       ImGui::LoadIniSettingsFromMemory(getDefaultUILayout());
 
-    auto *viewport = new anari_viewer::windows::Viewport(g_device, "Viewport");
+    auto *viewport = new anari_viewer::windows::Viewport(this, g_device, "Viewport");
     viewport->setManipulator(&m_state.manipulator);
 
-    auto *leditor = new anari_viewer::windows::LightsEditor(g_device);
+    auto *leditor = new anari_viewer::windows::LightsEditor(this, g_device);
 
-    auto *sselector = new anari_viewer::windows::SceneSelector();
+    auto *sselector = new anari_viewer::windows::SceneSelector(this);
     sselector->setCallback([=](const char *category, const char *scene) {
       try {
         auto s = anari::scenes::createScene(g_device, category, scene);

@@ -5,8 +5,8 @@
 
 namespace anari_viewer::windows {
 
-Window::Window(const char *name, bool startShown, bool wrapBeginEnd)
-    : m_name(name), m_visible(startShown), m_wrapBeginEnd(wrapBeginEnd)
+Window::Window(Application *app, const char *name, bool startShown, bool wrapBeginEnd)
+    : m_app(app), m_name(name), m_visible(startShown), m_wrapBeginEnd(wrapBeginEnd)
 {}
 
 void Window::renderUI()
