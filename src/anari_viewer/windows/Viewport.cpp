@@ -13,8 +13,14 @@ namespace anari_viewer::windows {
 // Viewport definitions ///////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-Viewport::Viewport(anari::Device device, const char *name)
-    : Window(name, true), m_device(device)
+Viewport::Viewport(anari::Device device,
+    const char *name,
+    bool useOrthoCamera,
+    int initRendererId)
+    : Window(name, true),
+      m_useOrthoCamera(useOrthoCamera),
+      m_device(device),
+      m_currentRenderer(initRendererId)
 {
   setManipulator(nullptr);
 
