@@ -174,6 +174,14 @@ anari::Device Viewport::device() const
   return m_device;
 }
 
+void Viewport::setViewportFrameReadyCallback(
+    ViewportFrameReadyCallback cb, void *userData)
+{
+  this->m_onViewportFrameReady = cb;
+  this->m_onViewportFrameReadyUserData = userData;
+}
+
+
 void Viewport::reshape(anari::math::int2 newSize)
 {
   if (newSize.x <= 0 || newSize.y <= 0)
@@ -270,6 +278,10 @@ void Viewport::updateImage()
 
     float duration = 0.f;
     anari::getProperty(m_device, m_frame, "duration", duration);
+    if (this->m_onViewportFrameReady) {
+      this->m_onViewportFrameReady(
+          this->m_onViewportFrameReadyUserData, this, duration);
+    }
 
     m_latestFL = duration * 1000;
     m_minFL = std::min(m_minFL, m_latestFL);
