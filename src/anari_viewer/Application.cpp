@@ -47,12 +47,32 @@ Application::Application()
   glfwSetErrorCallback(glfw_error_callback);
 }
 
+void Application::mainLoopStart()
+{
+  // no-op
+}
+
 void Application::uiFrameStart()
 {
   // no-op
 }
 
+void Application::uiRenderStart()
+{
+  // no-op
+}
+
+void Application::uiRenderEnd()
+{
+  // no-op
+}
+
 void Application::uiFrameEnd()
+{
+  // no-op
+}
+
+void Application::mainLoopEnd()
 {
   // no-op
 }
@@ -90,6 +110,7 @@ void Application::mainLoop()
   while (!glfwWindowShouldClose(window)) {
     m_impl->frameStartTime = m_impl->frameEndTime;
     m_impl->frameEndTime = std::chrono::steady_clock::now();
+    mainLoopStart();
     glfwPollEvents();
 
     ImGui_ImplOpenGL2_NewFrame();
@@ -129,14 +150,18 @@ void Application::mainLoop()
 
     ImGui::Render();
 
+    // Enclose opengl calls inside uiRenderStart/uiRenderEnd
+    uiRenderStart();
     glClearColor(0.1f, 0.1f, 0.1f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT);
     ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
+    uiRenderEnd();
 
     glfwSwapBuffers(window);
     m_impl->windowResized = false;
 
     uiFrameEnd();
+    mainLoopEnd();
   }
 }
 
