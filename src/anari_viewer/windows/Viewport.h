@@ -13,7 +13,6 @@
 #include <anari/anari_cpp/ext/linalg.h>
 #include <anari/anari_cpp.hpp>
 // std
-#include <array>
 #include <limits>
 
 #include "Window.h"
@@ -22,7 +21,10 @@ namespace anari_viewer::windows {
 
 struct Viewport : public Window
 {
-  Viewport(anari::Device device, const char *name = "Viewport");
+  Viewport(anari::Device device,
+      const char *name = "Viewport",
+      bool useOrthoCamera = false,
+      int initRendererId = 0);
   ~Viewport();
 
   void buildUI() override;
@@ -102,6 +104,11 @@ struct Viewport : public Window
 
   std::string m_overlayWindowName;
   std::string m_contextMenuName;
+
+  ViewportFrameReadyCallback m_onViewportFrameReady = nullptr;
+  void *m_onViewportFrameReadyUserData = nullptr;
+
+  std::vector<std::unique_ptr<Overlay>> m_overlays;
 };
 
 } // namespace anari_viewer::windows
