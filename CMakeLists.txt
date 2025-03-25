@@ -63,6 +63,7 @@ option(BUILD_SHARED_LIBS "Build shared libraries instead of static" ON)
 
 option(BUILD_CTS "Build cts toolkit" OFF)
 cmake_dependent_option(CTS_ENABLE_GLTF "Enable glTF support for cts" ON "BUILD_CTS" OFF)
+option(BUILD_CAT "Build capability analysis tool" OFF)
 option(USE_DRACO "Use draco when loading glTF files" OFF)
 option(USE_WEBP "Use webp when loading glTF files" OFF)
 option(USE_KTX "Use ktx when loading glTF files" OFF)
@@ -73,9 +74,15 @@ cmake_dependent_option(BUILD_VIEWER
   "BUILD_EXAMPLES"
   OFF
 )
+if (BUILD_CAT)
+  # CAT requires anari::anari_viewer library
+  set(BUILD_VIEWER ON CACHE BOOL "Build interactive viewer app (requires GLFW)" FORCE)
+endif ()
 option(INSTALL_CTS "Install CTS scripts and data" OFF)
 option(INSTALL_VIEWER_LIBRARY "Install anari::anari_viewer library target" ON)
 option(INSTALL_VIEWER "Install anariViewer app" OFF)
+option(INSTALL_CAT "Install anariCat app" OFF)
+mark_as_advanced(INSTALL_CAT)
 mark_as_advanced(INSTALL_VIEWER)
 cmake_dependent_option(VIEWER_ENABLE_GLTF
   "Enable glTF support in viewer"
@@ -110,6 +117,10 @@ endif()
 if (BUILD_CTS)
   add_subdirectory(cts)
 endif()
+
+if (BUILD_CAT)
+  add_subdirectory(cat)
+endif ()
 
 include(cmake/mark_cache_variables_as_advanced.cmake)
 
