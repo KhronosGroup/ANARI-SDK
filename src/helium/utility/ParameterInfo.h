@@ -34,7 +34,6 @@ template <typename T>
 ParameterInfo makeParameterInfo(
     const char *name, const char *description, T value, T min, T max);
 
-template <typename T>
 ParameterInfo makeParameterInfo(const char *name,
     const char *description,
     const char *value,
@@ -66,7 +65,6 @@ inline ParameterInfo makeParameterInfo(
   return retval;
 }
 
-template <typename T>
 inline ParameterInfo makeParameterInfo(const char *name,
     const char *description,
     const char *value,
