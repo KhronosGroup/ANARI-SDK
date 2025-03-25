@@ -146,6 +146,25 @@ bool buildUI(ParameterInfo &p)
     } else
       update |= ImGui::InputInt(name, (int *)value);
     break;
+  case ANARI_UINT32:
+    if (bounded) {
+      if (p.min && p.max) {
+        std::uint32_t v_min = p.min.get<std::uint32_t>();
+        std::uint32_t v_max = p.max.get<std::uint32_t>();
+        update |= ImGui::SliderScalar(
+            name, ImGuiDataType_U32, (std::uint32_t *)value, &v_min, &v_max);
+      } else {
+        std::uint32_t min = p.min
+            ? p.min.get<std::uint32_t>()
+            : std::numeric_limits<std::uint32_t>::lowest();
+        std::uint32_t max = p.max ? p.max.get<std::uint32_t>()
+                                  : std::numeric_limits<std::uint32_t>::max();
+        update |= ImGui::DragScalar(
+            name, ImGuiDataType_U32, (std::uint32_t *)value, 1.f, &min, &max);
+      }
+    } else
+      update |= ImGui::InputScalar(name, ImGuiDataType_U32, (int *)value);
+    break;
   case ANARI_FLOAT32:
     if (bounded) {
       if (p.min && p.max) {
