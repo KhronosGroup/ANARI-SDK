@@ -2,18 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "SceneGenerator.h"
-#include "PrimitiveGenerator.h"
 #include "ColorPalette.h"
+#include "PrimitiveGenerator.h"
 #include "TextureGenerator.h"
-#include "anariWrapper.h"
 #include "anari/frontend/type_utility.h"
 
 #include <stdexcept>
 
-namespace cts {
+namespace anari::scenes {
 
-SceneGenerator::SceneGenerator(
-    anari::Device device)
+SceneGenerator::SceneGenerator(anari::Device device)
     : TestScene(device), m_gltf(device)
 {
   m_frame = anari::newObject<anari::Frame>(m_device);
@@ -22,7 +20,7 @@ SceneGenerator::SceneGenerator(
 
 SceneGenerator::~SceneGenerator()
 {
-  for (auto& [key, value] : m_anariObjects) {
+  for (auto &[key, value] : m_anariObjects) {
     for (auto &object : value) {
       anari::release(m_device, object);
     }
@@ -30,13 +28,14 @@ SceneGenerator::~SceneGenerator()
   anari::release(m_device, m_frame);
   anari::release(m_device, m_world);
 
-  // TODO do we need to release the device as well? And do it here or in the wrapper?
-  // anariRelease(dev, dev); etc.
+  // TODO do we need to release the device as well? And do it here or in the
+  // wrapper? anariRelease(dev, dev); etc.
 }
 
 /***
-* This function is not used currently. It documents all available parameters of a test scene
-***/
+ * This function is not used currently. It documents all available parameters of
+ *a test scene
+ ***/
 std::vector<anari::scenes::ParameterInfo> SceneGenerator::parameters()
 {
   return {
@@ -46,42 +45,74 @@ std::vector<anari::scenes::ParameterInfo> SceneGenerator::parameters()
       {"shape",
           "triangle",
           "Which shape should be generated. Currently only relevant for triangles and quads. Possible values: triangle, quad, cube"},
-      {"primitiveMode",
-          "soup",
-          "How the data is arranged (soup or indexed)"},
-      {"primitiveCount",
-          1,
-          "How many primitives should be generated"},
+      {"primitiveMode", "soup", "How the data is arranged (soup or indexed)"},
+      {"primitiveCount", 1, "How many primitives should be generated"},
       {"frame_color_type",
           "",
           "Type of the color framebuffer. If empty, color buffer will not be used. Possible values: UFIXED8_RGBA_SRGB, FLOAT32_VEC4, UFIXED8_VEC4"},
       {"frame_depth_type",
           "",
           "Type of the depth framebuffer. If empty, depth buffer will not be used. Possible values: FLOAT32"},
-      {"frame_albedo_type", "", "This setting will render the albedo channel instead of the color channel if KHR_FRAME_CHANNEL_ALBEDO is supported. Possible values: UFIXED8_VEC3, UFIXED8_RGB_SRGB, FLOAT32_VEC3"},
-      {"frame_normal_type", "", "This setting will render the normal channel instead of the color channel if KHR_FRAME_CHANNEL_NORMAL is supported. Possible values: FIXED16_VEC3, FLOAT32_VEC3"},
-      {"frame_primitiveId_type", "", "This setting will render the primitive ID channel as colors instead of the color channel if KHR_FRAME_CHANNEL_PRIMITIVE_ID is supported. Possible values: UINT32"},
-      {"frame_objectId_type", "", "This setting will render the object ID channel as colors instead of the color channel if KHR_FRAME_CHANNEL_OBJECT_ID is supported. Possible values: UINT32"},
-      {"frame_instanceId_type", "", "This setting will render the instance ID channel as colors instead of the color channel if KHR_FRAME_CHANNEL_INSTANCE_ID is supported. Possible values: UINT32"},
+      {"frame_albedo_type",
+          "",
+          "This setting will render the albedo channel instead of the color channel if KHR_FRAME_CHANNEL_ALBEDO is supported. Possible values: UFIXED8_VEC3, UFIXED8_RGB_SRGB, FLOAT32_VEC3"},
+      {"frame_normal_type",
+          "",
+          "This setting will render the normal channel instead of the color channel if KHR_FRAME_CHANNEL_NORMAL is supported. Possible values: FIXED16_VEC3, FLOAT32_VEC3"},
+      {"frame_primitiveId_type",
+          "",
+          "This setting will render the primitive ID channel as colors instead of the color channel if KHR_FRAME_CHANNEL_PRIMITIVE_ID is supported. Possible values: UINT32"},
+      {"frame_objectId_type",
+          "",
+          "This setting will render the object ID channel as colors instead of the color channel if KHR_FRAME_CHANNEL_OBJECT_ID is supported. Possible values: UINT32"},
+      {"frame_instanceId_type",
+          "",
+          "This setting will render the instance ID channel as colors instead of the color channel if KHR_FRAME_CHANNEL_INSTANCE_ID is supported. Possible values: UINT32"},
       {"image_height", 1024, "Height of the image"},
       {"image_width", 1024, "Width of the image"},
       {"attribute_min", 0.0f, "Minimum random value for attributes"},
       {"attribute_max", 1.0f, "Maximum random value for attributes"},
-      {"primitive_attributes", false, "If primitive attributes should be filled randomly"},
-      {"vertex_attributes", false, "If vertex attributes should be filled randomly"},
-      {"seed", 0u, "Seed for random number generator to ensure that tests are consistent across platforms"},
-      {"vertexCaps", false, "Should cones and cylinders have caps (per vertex setting)"},
-      {"globalCaps", "none", "Should cones and cylinders have caps (global setting). Possible values: \"none\", \"first\", \"second\", \"both\""},
-      {"globalRadius", 1.0f, "Use the global radius property instead of a per vertex one"},
-      {"unusedVertices", false, "The last primitive's indices in the index buffer will be removed to test handling of unused/skipped vertices in the vertex buffer"},
-      {"color", "", "Fill an attribute with colors. Possible values: \"vertex.color\", \"vertex.attribute0\", \"primitive.attribute3\" and similar"},
-      {"opacity", "", "Fill an attribute with opacity values. Possible values: \"vertex.attribute0\", \"primitive.attribute3\" and similar"},
-      {"spatial_field_dimensions", std::array<uint32_t, 3>{0, 0, 0}, "Dimensions of the spatial field"},
-      {"frameCompletionCallback", false, "Enables test for ANARI_KHR_FRAME_COMPLETION_CALLBACK. A red image is rendered on error."},
-      {"progressiveRendering", false, "Enables test for ANARI_KHR_PROGRESSIVE_RENDERING. A green image is rendered if the render improved a red image otherwise."},
-      // TODO should "gltf_camera" be "/gltf/camera" or similar like in the test cases?
+      {"primitive_attributes",
+          false,
+          "If primitive attributes should be filled randomly"},
+      {"vertex_attributes",
+          false,
+          "If vertex attributes should be filled randomly"},
+      {"seed",
+          0u,
+          "Seed for random number generator to ensure that tests are consistent across platforms"},
+      {"vertexCaps",
+          false,
+          "Should cones and cylinders have caps (per vertex setting)"},
+      {"globalCaps",
+          "none",
+          "Should cones and cylinders have caps (global setting). Possible values: \"none\", \"first\", \"second\", \"both\""},
+      {"globalRadius",
+          1.0f,
+          "Use the global radius property instead of a per vertex one"},
+      {"unusedVertices",
+          false,
+          "The last primitive's indices in the index buffer will be removed to test handling of unused/skipped vertices in the vertex buffer"},
+      {"color",
+          "",
+          "Fill an attribute with colors. Possible values: \"vertex.color\", \"vertex.attribute0\", \"primitive.attribute3\" and similar"},
+      {"opacity",
+          "",
+          "Fill an attribute with opacity values. Possible values: \"vertex.attribute0\", \"primitive.attribute3\" and similar"},
+      {"spatial_field_dimensions",
+          std::array<uint32_t, 3>{0, 0, 0},
+          "Dimensions of the spatial field"},
+      {"frameCompletionCallback",
+          false,
+          "Enables test for ANARI_KHR_FRAME_COMPLETION_CALLBACK. A red image is rendered on error."},
+      {"progressiveRendering",
+          false,
+          "Enables test for ANARI_KHR_PROGRESSIVE_RENDERING. A green image is rendered if the render improved a red image otherwise."},
+      // TODO should "gltf_camera" be "/gltf/camera" or similar like in the test
+      // cases?
       {"gltf_camera", -1, "glTF camera to use to render the scene"},
-      // TODO does this work as intended? check thoroughly with permutation glTF files as well, in test case called "/gltf/file"
+      // TODO does this work as intended? check thoroughly with permutation glTF
+      // files as well, in test case called "/gltf/file"
       {"gltf_file", "", "path to glTF"}
 
       //
@@ -99,7 +130,7 @@ void SceneGenerator::loadGLTF(const std::string &jsonText,
       jsonText, sortedBuffers, sortedImages, generateTangents, parseLights);
 }
 
-int SceneGenerator::anariTypeFromString(const std::string& type)
+int SceneGenerator::anariTypeFromString(const std::string &type)
 {
   if (type == "material") {
     return ANARI_MATERIAL;
@@ -164,18 +195,21 @@ int SceneGenerator::anariTypeFromString(const std::string& type)
 void SceneGenerator::setGenericTexture2D(
     const std::string &name, const std::string &textureType)
 {
-    size_t resolution = 32;
-    auto pixels = TextureGenerator::generateCheckerBoard(resolution);
-    if (m_device && m_currentObject) {
-      anari::setAndReleaseParameter(m_device,
-          m_currentObject,
-          name.c_str(),
-          anari::newArray2D(m_device, pixels.data(), resolution, resolution));
-    }
+  size_t resolution = 32;
+  auto pixels = TextureGenerator::generateCheckerBoard(resolution);
+  if (m_device && m_currentObject) {
+    anari::setAndReleaseParameter(m_device,
+        m_currentObject,
+        name.c_str(),
+        anari::newArray2D(m_device, pixels.data(), resolution, resolution));
+  }
 }
 
-void SceneGenerator::setReferenceParameter(int objectType, size_t objectIndex,
-    const std::string &name, int refType, size_t refIndex)
+void SceneGenerator::setReferenceParameter(int objectType,
+    size_t objectIndex,
+    const std::string &name,
+    int refType,
+    size_t refIndex)
 {
   if (auto itObj = m_anariObjects.find(objectType);
       itObj != m_anariObjects.end() && objectIndex < itObj->second.size()) {
@@ -194,7 +228,7 @@ void SceneGenerator::setReferenceArray(int objectType,
     size_t objectIndex,
     const std::string &name,
     int refType,
-    const std::vector<size_t>& refIndices)
+    const std::vector<size_t> &refIndices)
 {
   if (auto itObj = m_anariObjects.find(objectType);
       itObj != m_anariObjects.end() && objectIndex < itObj->second.size()) {
@@ -220,14 +254,14 @@ void SceneGenerator::setReferenceArray(int objectType,
 
 void SceneGenerator::setCurrentObject(int type, size_t index)
 {
-    if (auto it = m_anariObjects.find(type);
-        it != m_anariObjects.end() && index < it->second.size()) {
-        m_currentObject = it->second[index];
-    }
+  if (auto it = m_anariObjects.find(type);
+      it != m_anariObjects.end() && index < it->second.size()) {
+    m_currentObject = it->second[index];
+  }
 }
 
 void SceneGenerator::createAnariObject(
-    int type, const std::string &subtype, const std::string& ctsType)
+    int type, const std::string &subtype, const std::string &ctsType)
 {
   ANARIObject object = nullptr;
   switch (type) {
@@ -294,7 +328,7 @@ void SceneGenerator::createAnariObject(
     object = anari::newObject<anari::SpatialField>(m_device, subtype.c_str());
     auto it = m_anariObjects.try_emplace(
         int(ANARI_SPATIAL_FIELD), std::vector<ANARIObject>());
-        it.first->second.emplace_back(object);
+    it.first->second.emplace_back(object);
     break;
   }
   case ANARI_INSTANCE: {
@@ -342,8 +376,8 @@ void SceneGenerator::createAnariObject(
       anari::setAndReleaseParameter(m_device,
           object,
           "image",
-          anari::newArray2D(m_device,
-              checkerboard.data(), resolution, resolution));
+          anari::newArray2D(
+              m_device, checkerboard.data(), resolution, resolution));
       break;
     }
     if (subtype == "image3D") {
@@ -352,10 +386,8 @@ void SceneGenerator::createAnariObject(
       anari::setAndReleaseParameter(m_device,
           object,
           "image",
-          anari::newArray3D(m_device,
-              rgbRamp.data(),
-              resolution,
-              resolution, resolution));
+          anari::newArray3D(
+              m_device, rgbRamp.data(), resolution, resolution, resolution));
       break;
     }
     break;
@@ -718,13 +750,13 @@ void SceneGenerator::commit()
 
       if (vertices.size() == 0) {
         if (geometrySubtype != "isosurface") {
-            printf("WARNING: No vertices are set for geometry.");
+          printf("WARNING: No vertices are set for geometry.");
         }
       } else {
-          anari::setAndReleaseParameter(d,
-              geom,
-              "vertex.position",
-              anari::newArray1D(d, vertices.data(), vertices.size()));
+        anari::setAndReleaseParameter(d,
+            geom,
+            "vertex.position",
+            anari::newArray1D(d, vertices.data(), vertices.size()));
       }
 
       // generate vertex attributes and primitive attributes
@@ -846,7 +878,8 @@ void SceneGenerator::commit()
 
     for (auto spatialField : spatialFields) {
       std::vector<float> data = generator.generateAttributeFloat(
-          static_cast<size_t>(spatialFieldDim[0]) * spatialFieldDim[1] * spatialFieldDim[2]);
+          static_cast<size_t>(spatialFieldDim[0]) * spatialFieldDim[1]
+          * spatialFieldDim[2]);
       anari::setAndReleaseParameter(m_device,
           spatialField,
           "data",
@@ -893,7 +926,8 @@ void SceneGenerator::commit()
 // render the scene with the given rendererType and renderDistance
 // commit() needs to be called before this
 // returns color and/or depth image data
-std::tuple<std::vector<std::vector<uint32_t>>, uint32_t, uint32_t> SceneGenerator::renderScene(float renderDistance)
+std::tuple<std::vector<std::vector<uint32_t>>, uint32_t, uint32_t>
+SceneGenerator::renderScene(float renderDistance)
 {
   // gather previously set parameters for rendering this scene
   uint32_t image_height = getParam<uint32_t>("image_height", 1024);
@@ -905,20 +939,20 @@ std::tuple<std::vector<std::vector<uint32_t>>, uint32_t, uint32_t> SceneGenerato
   if (!channel_type_param.empty()) {
     channelName = "channel.instanceId";
   } else if (channel_type_param = getParamString("frame_normal_type", "");
-             !channel_type_param.empty()) {
+      !channel_type_param.empty()) {
     channelName = "channel.normal";
     normalChannel = true;
   } else if (channel_type_param = getParamString("frame_albedo_type", "");
-             !channel_type_param.empty()) {
+      !channel_type_param.empty()) {
     channelName = "channel.albedo";
   } else if (channel_type_param = getParamString("frame_primitiveId_type", "");
-             !channel_type_param.empty()) {
+      !channel_type_param.empty()) {
     channelName = "channel.primitiveId";
   } else if (channel_type_param = getParamString("frame_objectId_type", "");
-             !channel_type_param.empty()) {
+      !channel_type_param.empty()) {
     channelName = "channel.objectId";
   } else if (channel_type_param = getParamString("frame_color_type", "");
-             !channel_type_param.empty()) {
+      !channel_type_param.empty()) {
     channelName = "channel.color";
   }
   color_type = anariTypeFromString(channel_type_param);
@@ -943,8 +977,10 @@ std::tuple<std::vector<std::vector<uint32_t>>, uint32_t, uint32_t> SceneGenerato
       camera = m_currentObject;
 
       auto cameraTransform = createDefaultCameraFromWorld();
-      anari::setParameter(m_device, camera, "position", cameraTransform.position);
-      anari::setParameter(m_device, camera, "direction", cameraTransform.direction);
+      anari::setParameter(
+          m_device, camera, "position", cameraTransform.position);
+      anari::setParameter(
+          m_device, camera, "direction", cameraTransform.direction);
       anari::setParameter(m_device, camera, "up", cameraTransform.up);
       anari::commitParameters(m_device, camera);
     }
@@ -952,9 +988,10 @@ std::tuple<std::vector<std::vector<uint32_t>>, uint32_t, uint32_t> SceneGenerato
   }
 
   if (aspectRatio.has_value()) {
-    // always choose the largest image dimension as basis to apply an aspect ratio
-    // important if a non-square image is requested in the test case
-    const uint32_t imageSize = image_height > image_width ? image_height : image_width;
+    // always choose the largest image dimension as basis to apply an aspect
+    // ratio important if a non-square image is requested in the test case
+    const uint32_t imageSize =
+        image_height > image_width ? image_height : image_width;
     // scale one image dimension to meet the aspect ratio criteria
     if (aspectRatio.value() >= 1.0f) {
       image_height = static_cast<uint32_t>(anari::math::round(
@@ -977,17 +1014,20 @@ std::tuple<std::vector<std::vector<uint32_t>>, uint32_t, uint32_t> SceneGenerato
     renderer = m_currentObject;
     anari::commitParameters(m_device, renderer);
   }
- // anari::setParameter(m_device, renderer, "pixelSamples", 10);
+  // anari::setParameter(m_device, renderer, "pixelSamples", 10);
 
   // setup frame
-  anari::setParameter(m_device, m_frame, "size", anari::math::vec<uint32_t, 2>(static_cast<uint32_t>(image_width), static_cast<uint32_t>(image_height)));
+  anari::setParameter(m_device,
+      m_frame,
+      "size",
+      anari::math::vec<uint32_t, 2>(static_cast<uint32_t>(image_width),
+          static_cast<uint32_t>(image_height)));
   if (color_type != ANARI_UNKNOWN) {
     anari::setParameter(m_device, m_frame, channelName.c_str(), color_type);
   }
   if (depth_type_param == "FLOAT32") {
     anari::setParameter(m_device, m_frame, "channel.depth", ANARI_FLOAT32);
   }
-
 
   anari::setParameter(m_device, m_frame, "renderer", renderer);
   anari::setParameter(m_device, m_frame, "world", m_world);
@@ -999,11 +1039,13 @@ std::tuple<std::vector<std::vector<uint32_t>>, uint32_t, uint32_t> SceneGenerato
   // render scene
   if (getParam<bool>("frameCompletionCallback", false)) {
     bool wasCalled = false;
-    auto func = [](const void* userData, ANARIDevice, ANARIFrame)
-    {
-        *(static_cast<bool *>(const_cast<void *>(userData))) = true;
+    auto func = [](const void *userData, ANARIDevice, ANARIFrame) {
+      *(static_cast<bool *>(const_cast<void *>(userData))) = true;
     };
-    anari::setParameter(m_device, m_frame, "frameCompletionCallback", static_cast<ANARIFrameCompletionCallback>(func));
+    anari::setParameter(m_device,
+        m_frame,
+        "frameCompletionCallback",
+        static_cast<ANARIFrameCompletionCallback>(func));
     anari::setParameter(m_device,
         m_frame,
         "frameCompletionCallbackUserData",
@@ -1035,7 +1077,8 @@ std::tuple<std::vector<std::vector<uint32_t>>, uint32_t, uint32_t> SceneGenerato
     return {imageResult, image_width, image_height};
   } else if (getParam<bool>("progressiveRendering", false)) {
     if (color_type == ANARI_FLOAT32_VEC4) {
-      throw std::runtime_error("ANARI_FLOAT32_VEC4 not supported for frameProgressiveRendering test");
+      throw std::runtime_error(
+          "ANARI_FLOAT32_VEC4 not supported for frameProgressiveRendering test");
     }
     anari::render(m_device, m_frame);
     anari::wait(m_device, m_frame);
@@ -1062,8 +1105,7 @@ std::tuple<std::vector<std::vector<uint32_t>>, uint32_t, uint32_t> SceneGenerato
     anari::unmap(m_device, m_frame, "channel.color");
 
     if (firstImage.size() != accumulatedImage.size()) {
-      throw std::runtime_error(
-          "Images have different sizes");
+      throw std::runtime_error("Images have different sizes");
     }
 
     size_t changedPixels = 0;
@@ -1082,7 +1124,7 @@ std::tuple<std::vector<std::vector<uint32_t>>, uint32_t, uint32_t> SceneGenerato
     std::vector<uint32_t> resultImage(image_height * image_width, rgba);
     imageResult.emplace_back(resultImage);
 
-   if (!anariGetProperty(m_device,
+    if (!anariGetProperty(m_device,
             m_frame,
             "duration",
             ANARI_FLOAT32,
@@ -1092,12 +1134,9 @@ std::tuple<std::vector<std::vector<uint32_t>>, uint32_t, uint32_t> SceneGenerato
       frameDuration = -1.0f;
     }
 
-    return {
-        imageResult, image_width, image_height
-    };
+    return {imageResult, image_width, image_height};
 
-  } else
-  {
+  } else {
     anari::render(m_device, m_frame);
     anari::wait(m_device, m_frame);
   }
@@ -1118,7 +1157,9 @@ std::tuple<std::vector<std::vector<uint32_t>>, uint32_t, uint32_t> SceneGenerato
             if (j <= componentCount) {
               if (normalChannel) {
                 colorValue = static_cast<uint8_t>(
-                    TextureGenerator::convertNormalToColor(pixels[i * componentCount + j], j == 3) * 255.0f);
+                    TextureGenerator::convertNormalToColor(
+                        pixels[i * componentCount + j], j == 3)
+                    * 255.0f);
               } else {
                 colorValue = static_cast<uint8_t>(
                     pixels[i * componentCount + j] * 255.0f);
@@ -1187,7 +1228,8 @@ std::tuple<std::vector<std::vector<uint32_t>>, uint32_t, uint32_t> SceneGenerato
 
         imageResult.emplace_back(converted);
         anari::unmap(m_device, m_frame, channelName.c_str());
-      } else if (anari::sizeOf(color_type) / componentCount == sizeof(char) * 2) {
+      } else if (anari::sizeOf(color_type) / componentCount
+          == sizeof(char) * 2) {
         // 16bit component
         const int16_t *pixels =
             anari::map<int16_t>(m_device, m_frame, channelName.c_str()).data;
@@ -1198,7 +1240,8 @@ std::tuple<std::vector<std::vector<uint32_t>>, uint32_t, uint32_t> SceneGenerato
             for (uint32_t j = 0; j < 4; ++j) {
               uint8_t colorValue = j == 4 ? 255 : 0;
               if (j <= componentCount) {
-                colorValue = TextureGenerator::convertShortNormalToColor(pixels[i * componentCount + j], j == 3);
+                colorValue = TextureGenerator::convertShortNormalToColor(
+                    pixels[i * componentCount + j], j == 3);
               }
               rgba += colorValue << (8 * j);
             }
@@ -1246,8 +1289,8 @@ std::tuple<std::vector<std::vector<uint32_t>>, uint32_t, uint32_t> SceneGenerato
   // set frame duration member of this with last renderering's frame time
   if (!anariGetProperty(m_device,
           m_frame,
-      "duration",
-      ANARI_FLOAT32,
+          "duration",
+          ANARI_FLOAT32,
           &frameDuration,
           sizeof(frameDuration),
           ANARI_WAIT)) {
@@ -1258,7 +1301,8 @@ std::tuple<std::vector<std::vector<uint32_t>>, uint32_t, uint32_t> SceneGenerato
 }
 
 // clear any existing objects in the scene
-void SceneGenerator::resetSceneObjects() {
+void SceneGenerator::resetSceneObjects()
+{
   anari::unsetParameter(m_device, m_world, "instance");
   anari::unsetParameter(m_device, m_world, "surface");
   anari::unsetParameter(m_device, m_world, "volume");
@@ -1266,7 +1310,8 @@ void SceneGenerator::resetSceneObjects() {
 }
 
 // reset all parameters and objects in the scene
-void SceneGenerator::resetAllParameters() {
+void SceneGenerator::resetAllParameters()
+{
   resetSceneObjects();
   m_gltf = gltf_data(m_device);
   for (auto &[key, value] : m_anariObjects) {
@@ -1288,18 +1333,18 @@ void SceneGenerator::resetAllParameters() {
 // world bounds, instances bounds, group bounds
 // each containing a set of min and max bounds
 // one set for the world, one per instance and one per group
-std::vector<std::vector<std::vector<std::vector<float>>>> SceneGenerator::getBounds()
+std::vector<std::vector<std::vector<std::vector<float>>>>
+SceneGenerator::getBounds()
 {
   std::vector<std::vector<std::vector<std::vector<float>>>> result;
   std::vector<std::vector<std::vector<float>>> worldBounds;
   std::vector<std::vector<std::vector<float>>> instancesBounds;
   std::vector<std::vector<std::vector<float>>> groupBounds;
-  std::vector<std::vector<float>> &singleBound =
-      worldBounds.emplace_back();
+  std::vector<std::vector<float>> &singleBound = worldBounds.emplace_back();
   // gather world bounds
   auto anariWorldBounds = bounds();
   for (const auto &bound : anariWorldBounds) {
-    std::vector<float>& vector = singleBound.emplace_back();
+    std::vector<float> &vector = singleBound.emplace_back();
     for (int i = 0; i < 3; ++i) {
       vector.push_back(bound[i]);
     }
@@ -1341,4 +1386,4 @@ std::vector<std::vector<std::vector<std::vector<float>>>> SceneGenerator::getBou
   return result;
 }
 
-} // namespace cts
+} // namespace anari::scenes

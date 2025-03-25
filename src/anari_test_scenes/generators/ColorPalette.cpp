@@ -1,6 +1,6 @@
 #include "ColorPalette.h"
 
-const std::vector<anari::math::float3> colors::palette = {
+const std::vector<anari::math::float3> anari::scenes::colors::palette = {
     {0.55f, 0.82f, 0.78f},
     {1.00f, 1.00f, 0.70f},
     {0.74f, 0.73f, 0.85f},

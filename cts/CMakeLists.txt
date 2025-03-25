@@ -32,10 +32,6 @@ pybind11_add_module(${PROJECT_NAME}
   src/anariInfo.cpp
   src/anariWrapper.cpp
   src/main.cpp
-  src/PrimitiveGenerator.cpp
-  src/SceneGenerator.cpp
-  src/ColorPalette.cpp
-  src/TextureGenerator.cpp
 )
 
 anari_generate_queries(

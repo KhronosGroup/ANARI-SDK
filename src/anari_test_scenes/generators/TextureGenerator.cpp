@@ -5,7 +5,7 @@
 #include "ColorPalette.h"
 #include "PrimitiveGenerator.h"
 
-namespace cts {
+namespace anari::scenes {
 std::vector<anari::math::float4> TextureGenerator::generateGreyScale(size_t resolution) {
   std::vector<anari::math::float4> greyscale;
   greyscale.reserve(resolution);
@@ -148,4 +148,4 @@ std::vector<anari::math::float4> TextureGenerator::generateCheckerBoardNormalMap
   return checkerBoard;
 }
 
-} // namespace cts
+} // namespace anari::scenes
