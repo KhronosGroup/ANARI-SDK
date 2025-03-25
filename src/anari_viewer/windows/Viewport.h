@@ -19,6 +19,11 @@
 
 namespace anari_viewer::windows {
 
+struct Viewport;
+struct Overlay
+{
+  virtual void buildUI(Viewport *viewport) = 0;
+};
 
 using ViewportFrameReadyCallback = std::function<void(const void *,
     const anari_viewer::windows::Viewport *,
@@ -43,6 +48,8 @@ struct Viewport : public Window
 
   void setViewportFrameReadyCallback(
       ViewportFrameReadyCallback cb, void *userData);
+
+  void addOverlay(Overlay *overlay);
 
  private:
   void reshape(anari::math::int2 newWindowSize);
