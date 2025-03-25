@@ -3,36 +3,39 @@
 
 #pragma once
 
-#include "scenes/scene.h"
 #include "anari_test_scenes/scenes/file/gltf2anari.h"
+#include "anari_test_scenes_export.h"
+#include "scenes/scene.h"
 
 #include <functional>
 #include <optional>
 #include <random>
 #include <unordered_map>
 
-namespace cts {
-
+namespace anari {
+namespace scenes {
 class SceneGenerator : public anari::scenes::TestScene
 {
  public:
-  SceneGenerator(anari::Device device);
-  ~SceneGenerator();
-  std::vector<anari::scenes::ParameterInfo> parameters() override;
-  void resetAllParameters();
-  void resetSceneObjects();
+  ANARI_TEST_SCENES_INTERFACE SceneGenerator(anari::Device device);
+  ANARI_TEST_SCENES_INTERFACE ~SceneGenerator();
+  ANARI_TEST_SCENES_INTERFACE std::vector<anari::scenes::ParameterInfo>
+  parameters() override;
+  ANARI_TEST_SCENES_INTERFACE void resetAllParameters();
+  ANARI_TEST_SCENES_INTERFACE void resetSceneObjects();
 
-  void loadGLTF(const std::string &jsonText,
+  ANARI_TEST_SCENES_INTERFACE void loadGLTF(const std::string &jsonText,
       std::vector<std::vector<char>> &sortedBuffers,
       std::vector<std::vector<char>> &sortedImages,
       bool generateTangents,
       bool parseLights);
 
-  void createAnariObject(int type,
+  ANARI_TEST_SCENES_INTERFACE void createAnariObject(int type,
       const std::string &subtype = "",
       const std::string &ctsType = "");
   template <typename T>
-  void setGenericParameter(const std::string &name, T &&value)
+  void setGenericParameter(
+      const std::string &name, T &&value)
   {
     if (m_device != nullptr && m_currentObject != nullptr) {
       anari::setParameter(m_device, m_currentObject, name.c_str(), value);
@@ -77,47 +80,53 @@ class SceneGenerator : public anari::scenes::TestScene
     }
   }
 
-  void setGenericTexture2D(const std::string &name, const std::string &textureType);
+  ANARI_TEST_SCENES_INTERFACE void setGenericTexture2D(
+      const std::string &name, const std::string &textureType);
 
-  void unsetGenericParameter(const std::string& name) {
+  ANARI_TEST_SCENES_INTERFACE void unsetGenericParameter(
+      const std::string &name)
+  {
     if (m_device != nullptr && m_currentObject != nullptr) {
       anari::unsetParameter(m_device, m_currentObject, name.c_str());
     }
   }
 
-  void setReferenceParameter(int objType,
+  ANARI_TEST_SCENES_INTERFACE void setReferenceParameter(int objType,
       size_t objIndex,
       const std::string &name,
       int refType,
       size_t refIndex);
-  void setReferenceArray(int objType,
+  ANARI_TEST_SCENES_INTERFACE void setReferenceArray(int objType,
       size_t objIndex,
       const std::string &name,
       int refType,
       const std::vector<size_t> &refIndices);
 
-  void setCurrentObject(int type, size_t index);
+  ANARI_TEST_SCENES_INTERFACE void setCurrentObject(int type, size_t index);
 
-  void releaseAnariObject()
+  ANARI_TEST_SCENES_INTERFACE void releaseAnariObject()
   {
     m_currentObject = nullptr;
   }
 
-  anari::World world() override;
+  ANARI_TEST_SCENES_INTERFACE anari::World world() override;
 
-  void commit() override;
+  ANARI_TEST_SCENES_INTERFACE void commit() override;
 
-  std::tuple<std::vector<std::vector<uint32_t>>, uint32_t, uint32_t>
-    renderScene(float renderDistance);
-  std::vector<std::vector<std::vector<std::vector<float>>>> getBounds();
+  ANARI_TEST_SCENES_INTERFACE
+      std::tuple<std::vector<std::vector<uint32_t>>, uint32_t, uint32_t>
+      renderScene(float renderDistance);
+  ANARI_TEST_SCENES_INTERFACE
+      std::vector<std::vector<std::vector<std::vector<float>>>>
+      getBounds();
 
   // after renderScene was called, use this to get the duration of the rendering
-  float getFrameDuration() const
+  ANARI_TEST_SCENES_INTERFACE float getFrameDuration() const
   {
     return frameDuration;
   }
 
-  int anariTypeFromString(const std::string &input);
+  ANARI_TEST_SCENES_INTERFACE int anariTypeFromString(const std::string &input);
 
  private:
   float frameDuration = -1.0f;
@@ -128,5 +137,5 @@ class SceneGenerator : public anari::scenes::TestScene
   std::unordered_map<int, std::vector<anari::Object>> m_anariObjects;
   anari::Object m_currentObject = nullptr;
 };
-
-} // namespace cts
+} // namespace scenes
+} // namespace anari

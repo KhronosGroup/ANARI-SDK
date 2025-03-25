@@ -7,6 +7,11 @@ project_add_library()
 project_sources(PRIVATE
   anari_test_scenes.cpp
 
+  generators/ColorPalette.cpp
+  generators/PrimitiveGenerator.cpp
+  generators/SceneGenerator.cpp
+  generators/TextureGenerator.cpp
+
   scenes/scene.cpp
 
   scenes/demo/cornell_box.cpp

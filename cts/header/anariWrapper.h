@@ -9,7 +9,7 @@
 #include <pybind11/pybind11.h>
 
 #include <anari/anari_cpp.hpp>
-#include "SceneGenerator.h"
+#include <anari_test_scenes/generators/SceneGenerator.h>
 
 namespace cts {
 void statusFunc(const void *userData,
@@ -198,7 +198,7 @@ class SceneGeneratorWrapper
   }
 
  private:
-  std::unique_ptr<SceneGenerator> m_sceneGenerator;
+  std::unique_ptr<anari::scenes::SceneGenerator> m_sceneGenerator;
   anari::Library m_library;
   std::optional<pybind11::function> m_callback;
   // wrapped library for use with debug library to generate debug output

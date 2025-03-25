@@ -7,15 +7,17 @@
 
 #include <vector>
 
-namespace cts {
+#include "anari_test_scenes_export.h"
 
-class TextureGenerator
+namespace anari {
+namespace scenes {
+class ANARI_TEST_SCENES_INTERFACE TextureGenerator
 {
  public:
   static std::vector<anari::math::float4> generateGreyScale(size_t resolution);
-  static std::vector<anari::math::float4> generateCheckerBoard(size_t resolution);
-  static std::vector<anari::math::float4> generateRGBRamp(
+  static std::vector<anari::math::float4> generateCheckerBoard(
       size_t resolution);
+  static std::vector<anari::math::float4> generateRGBRamp(size_t resolution);
 
   static std::vector<anari::math::float4> generateCheckerBoardNormalMap(
       size_t resolution);
@@ -27,4 +29,5 @@ class TextureGenerator
   static float convertNormalToColor(float input, bool isZ);
   static uint8_t convertShortNormalToColor(int16_t input, bool isZ);
 };
-} // namespace cts
+} // namespace scenes
+} // namespace anari
