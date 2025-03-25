@@ -67,6 +67,7 @@ option(BUILD_CAT "Build capability analysis tool" OFF)
 option(USE_DRACO "Use draco when loading glTF files" OFF)
 option(USE_WEBP "Use webp when loading glTF files" OFF)
 option(USE_KTX "Use ktx when loading glTF files" OFF)
+option(USE_KOKKOS "Use Kokkos to accelerate scene build and updates" OFF)
 option(BUILD_EXAMPLES "Build example applications and example device" ON)
 cmake_dependent_option(BUILD_VIEWER
   "Build interactive viewer app (requires GLFW)"
