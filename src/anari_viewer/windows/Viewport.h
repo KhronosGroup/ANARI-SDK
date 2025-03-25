@@ -19,6 +19,10 @@
 
 namespace anari_viewer::windows {
 
+
+using ViewportFrameReadyCallback = std::function<void(const void *,
+    const anari_viewer::windows::Viewport *,
+    const float /*duration*/)>;
 struct Viewport : public Window
 {
   Viewport(anari::Device device,
@@ -36,6 +40,9 @@ struct Viewport : public Window
   void resetView(bool resetAzEl = true);
 
   anari::Device device() const;
+
+  void setViewportFrameReadyCallback(
+      ViewportFrameReadyCallback cb, void *userData);
 
  private:
   void reshape(anari::math::int2 newWindowSize);
