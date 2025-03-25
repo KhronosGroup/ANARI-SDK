@@ -181,6 +181,10 @@ void Viewport::setViewportFrameReadyCallback(
   this->m_onViewportFrameReadyUserData = userData;
 }
 
+void Viewport::addOverlay(Overlay *overlay)
+{
+  m_overlays.emplace_back(overlay);
+}
 
 void Viewport::reshape(anari::math::int2 newSize)
 {
@@ -563,6 +567,8 @@ void Viewport::ui_overlay()
 
   ImGui::Separator();
 
+  // Begin overlays
+  // Show default camera information overlay.
   static bool showCameraInfo = false;
 
   ImGui::Checkbox("camera info", &showCameraInfo);
@@ -573,6 +579,10 @@ void Viewport::ui_overlay()
     ImGui::Text("  az: %f", azel.x);
     ImGui::Text("  el: %f", azel.y);
     ImGui::Text("dist: %f", dist);
+  }
+  // Draw custom overlay sections.
+  for (const auto &overlay : m_overlays) {
+    overlay->buildUI(this);
   }
 
   ImGui::End();
