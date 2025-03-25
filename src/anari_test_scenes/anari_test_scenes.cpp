@@ -17,6 +17,7 @@
 #include "scenes/performance/particles.h"
 #include "scenes/performance/primitives.h"
 #include "scenes/performance/spinning_cubes.h"
+#include "scenes/performance/surfaces.h"
 #include "scenes/test/attributes.h"
 #include "scenes/test/instanced_cubes.h"
 #include "scenes/test/pbr_spheres.h"
@@ -58,6 +59,7 @@ static void init()
     registerScene("perf", "particles", sceneParticles);
     registerScene("perf", "primitives", scenePrimitives);
     registerScene("perf", "spinning_cubes", sceneSpinningCubes);
+    registerScene("perf", "surfaces", sceneSurfaces);
 
     // tests
     registerScene("test", "random_spheres", sceneRandomSpheres);
