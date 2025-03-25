@@ -20,6 +20,7 @@ project_sources(PRIVATE
   scenes/file/obj.cpp
 
   scenes/performance/materials.cpp
+  scenes/performance/particles.cpp
 
   scenes/test/attributes.cpp
   scenes/test/instanced_cubes.cpp
