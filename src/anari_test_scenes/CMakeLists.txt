@@ -19,6 +19,8 @@ project_sources(PRIVATE
 
   scenes/file/obj.cpp
 
+  scenes/performance/materials.cpp
+
   scenes/test/attributes.cpp
   scenes/test/instanced_cubes.cpp
   scenes/test/pbr_spheres.cpp
@@ -58,6 +60,9 @@ if (USE_KTX)
   project_link_libraries(PUBLIC KTX::ktx)
   project_compile_definitions(PUBLIC -DUSE_KTX)
 endif()
+
+# For initializing an aggregate with designated initializers 
+project_compile_features(PRIVATE cxx_std_20)
 
 include(GenerateExportHeader)
 generate_export_header(${PROJECT_NAME}
