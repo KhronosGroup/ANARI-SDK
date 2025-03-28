@@ -23,4 +23,7 @@ mark_cache_variables_as_advanced(
   "^FETCHCONTENT"
   "^NFD"
   "^PYBIND"
+  "^Kokkos"
+  "^CLI11"
+  "^X11"
 )
