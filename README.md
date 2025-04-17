@@ -182,8 +182,8 @@ variables:
 ### (Unofficial) list of available ANARI implementations
 
 - [AMD RadeonProRender](https://github.com/GPUOpen-LibrariesAndSDKs/RadeonProRenderANARI)
-- [Barney](https://github.com/ingowald/barney) (experimental MPI distributed renderer)
-- [Cycles](https://github.com/jeffamstutz/cycles)
+- [Barney](https://github.com/ingowald/barney) (MPI distributed renderer)
+- [Cycles (Blender)](https://github.com/jeffamstutz/anari-cycles)
 - [Intel OSPRay](https://github.com/ospray/anari-ospray)
 - [NVIDIA USD](https://github.com/NVIDIA-Omniverse/AnariUsdDevice)
 - [NVIDIA VisRTX + VisGL](https://github.com/NVIDIA/VisRTX)
