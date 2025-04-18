@@ -20,7 +20,6 @@ struct ObjectArray : public Array
 
   size_t size() const;
 
-  void privatize() override;
   void unmap() override;
 
   BaseObject **handlesBegin() const;
@@ -38,6 +37,9 @@ struct ObjectArray : public Array
   size_t m_capacity{0};
   size_t m_begin{0};
   size_t m_end{0};
+
+ private:
+  void privatize() override;
 };
 
 } // namespace helium

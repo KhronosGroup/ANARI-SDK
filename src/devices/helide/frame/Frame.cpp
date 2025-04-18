@@ -139,7 +139,7 @@ void Frame::renderFrame()
   state->waitOnCurrentFrame();
   state->currentFrame = this;
 
-  m_future = async<void>(m_task, [&, state]() {
+  auto doRender = [&, state]() {
     auto start = std::chrono::steady_clock::now();
     state->renderingSemaphore.frameStart();
     state->commitBuffer.flush();
@@ -190,7 +190,9 @@ void Frame::renderFrame()
 
     auto end = std::chrono::steady_clock::now();
     m_duration = std::chrono::duration<float>(end - start).count();
-  });
+  };
+
+  m_future = async<void>(m_task, doRender);
 }
 
 void *Frame::map(std::string_view channel,
@@ -251,7 +253,7 @@ bool Frame::ready() const
   return is_ready(m_future);
 }
 
-void Frame::wait() const
+void Frame::wait()
 {
   if (m_future.valid()) {
     m_future.get();

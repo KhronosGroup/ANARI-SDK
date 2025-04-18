@@ -30,10 +30,11 @@ struct Array3D : public Array
       WrapMode wrap2 = WrapMode::DEFAULT,
       WrapMode wrap3 = WrapMode::DEFAULT) const;
 
-  void privatize() override;
-
  private:
   size_t m_size[3] = {0, 0, 0};
+
+ private:
+  void privatize() override;
 };
 
 } // namespace helium

@@ -796,7 +796,7 @@ void DebugDevice::release(ANARIObject object)
   if (!object) {
     return;
   } else if (handleIsDevice(object)) {
-    this->refDec();
+    this->refDec(helium::RefType::PUBLIC);
   } else {
     debug->anariRelease(this_device(), object);
     anariRelease(wrapped, unwrapHandle(object));
@@ -815,7 +815,7 @@ void DebugDevice::retain(ANARIObject object)
   if (!object) {
     return;
   } else if (handleIsDevice(object)) {
-    this->refInc();
+    this->refInc(helium::RefType::PUBLIC);
   } else {
     debug->anariRetain(this_device(), object);
     anariRetain(wrapped, unwrapHandle(object));

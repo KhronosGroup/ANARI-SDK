@@ -182,16 +182,6 @@ void BaseDevice::release(ANARIObject o)
     return;
   }
 
-  if (obj.useCount(RefType::PUBLIC) == 1) {
-    if (anari::isArray(obj.type()) && obj.useCount(RefType::INTERNAL) > 0)
-      ((BaseArray *)o)->privatize();
-    else if (obj.type() == ANARI_FRAME) {
-      auto *f = (BaseFrame *)o;
-      f->discard();
-      f->frameReady(ANARI_WAIT);
-    }
-  }
-
   obj.refDec(RefType::PUBLIC);
 }
 
