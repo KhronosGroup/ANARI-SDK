@@ -1,7 +1,7 @@
 ## Copyright 2022-2025 The Khronos Group
 ## SPDX-License-Identifier: Apache-2.0
 
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.11)
 
 # Fix "DOWNLOAD_EXTRACT_TIMESTAMP" warning
 if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
