@@ -42,7 +42,7 @@ struct Frame : public helium::BaseFrame
   void discard() override;
 
   bool ready() const;
-  void wait() const;
+  void wait();
 
  private:
   float2 screenFromPixel(const float2 &p) const;

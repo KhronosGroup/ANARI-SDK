@@ -68,7 +68,6 @@ struct Array : public BaseArray
 
   virtual void *map() override;
   virtual void unmap() override;
-  virtual void privatize() override = 0;
 
   bool isMapped() const;
 
@@ -84,6 +83,8 @@ struct Array : public BaseArray
   virtual void finalize() override;
 
  protected:
+  virtual void privatize() override = 0;
+
   void makePrivatizedCopy(size_t numElements);
   void freeAppMemory();
   void initManagedMemory();
@@ -120,6 +121,8 @@ struct Array : public BaseArray
   bool m_mapped{false};
 
  private:
+  void on_NoPublicReferences() override;
+
   ArrayDataOwnership m_ownership{ArrayDataOwnership::INVALID};
   ANARIDataType m_elementType{ANARI_UNKNOWN};
   bool m_privatized{false};

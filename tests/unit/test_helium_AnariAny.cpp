@@ -373,7 +373,7 @@ SCENARIO("helium::AnariAny object behavior", "[helium_AnariAny]")
 
     REQUIRE(obj->useCount() == 1);
 
-    obj->refDec();
+    obj->refDec(helium::RefType::PUBLIC);
   }
 }
 

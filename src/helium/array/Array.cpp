@@ -195,6 +195,13 @@ void Array::initManagedMemory()
   }
 }
 
+void Array::on_NoPublicReferences()
+{
+  reportMessage(ANARI_SEVERITY_DEBUG, "privatizing array");
+  if (!wasPrivatized() && ownership() != ArrayDataOwnership::MANAGED)
+    privatize();
+}
+
 } // namespace helium
 
 HELIUM_ANARI_TYPEFOR_DEFINITION(helium::Array *);

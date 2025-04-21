@@ -77,16 +77,6 @@ size_t ObjectArray::size() const
   return m_end - m_begin;
 }
 
-void ObjectArray::privatize()
-{
-  makePrivatizedCopy(size());
-  freeAppMemory();
-  if (data()) {
-    reportMessage(ANARI_SEVERITY_WARNING,
-        "ObjectArray privatized but host array still present");
-  }
-}
-
 void ObjectArray::unmap()
 {
   if (isMapped())
@@ -138,6 +128,16 @@ void ObjectArray::updateInternalHandleArrays() const
   std::copy(m_appendedHandles.begin(),
       m_appendedHandles.end(),
       m_liveHandles.begin() + size());
+}
+
+void ObjectArray::privatize()
+{
+  makePrivatizedCopy(size());
+  freeAppMemory();
+  if (data()) {
+    reportMessage(ANARI_SEVERITY_WARNING,
+        "ObjectArray privatized but host array still present");
+  }
 }
 
 } // namespace helium
