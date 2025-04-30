@@ -26,6 +26,9 @@ project_add_library(SHARED
   renderPass.cpp
   sampler.cpp
 )
+# Visual Studio compiler might kill some symbols (arch_ctor_<name>) used to initialize USD plugins at load time.
+# Disabling that optimization for the renderPlugin file works around the issue.
+set_source_files_properties(rendererPlugin.cpp PROPERTIES COMPILE_FLAGS $<$<CXX_COMPILER_ID:MSVC>:"/Zc:inline-">)
 
 set_target_properties(${PROJECT_NAME}
 PROPERTIES
