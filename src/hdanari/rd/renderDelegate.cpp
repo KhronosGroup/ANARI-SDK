@@ -1,6 +1,8 @@
 // Copyright 2024-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
+#include <pxr/imaging/hd/light.h>
+#include "light.h"
 #include "material.h"
 #include "materialTokens.h"
 #include "renderParam.h"
@@ -85,6 +87,14 @@ const TfTokenVector HdAnariRenderDelegate::SUPPORTED_SPRIM_TYPES = {
     HdPrimTypeTokens->camera,
     HdPrimTypeTokens->material,
     HdPrimTypeTokens->extComputation,
+
+    HdPrimTypeTokens->distantLight,  // directional
+    HdPrimTypeTokens->domeLight, // hdri
+    // HdPrimTypeTokens->rectLight, // quad
+    // HdPrimTypeTokens->sphereLight, // point
+    
+    // HdPrimTypeTokens->simpleLight, // ???
+    
 };
 
 const TfTokenVector HdAnariRenderDelegate::SUPPORTED_BPRIM_TYPES = {
@@ -135,7 +145,12 @@ void HdAnariRenderDelegate::Initialize()
       hasANARI_KHR_MATERIAL_PHYSICALLY_BASED = true;
   }
 
-  if (!hasANARI_KHR_DEVICE_SYNCHRONIZATION) {
+  auto needsDeviceSync = []() {
+    auto limit = std::getenv("PXR_WORK_THREAD_LIMIT");
+    return limit && atoi(limit) > 1;
+  }();
+
+  if (needsDeviceSync && !hasANARI_KHR_DEVICE_SYNCHRONIZATION) {
     TF_RUNTIME_ERROR("device doesn't support ANARI_KHR_DEVICE_SYNCHRONIZATION");
     return;
   }
@@ -302,8 +317,17 @@ HdSprim *HdAnariRenderDelegate::CreateSprim(
     return new HdCamera(sprimId);
   } else if (typeId == HdPrimTypeTokens->material) {
     return new HdAnariMaterial(d, sprimId);
-  } else if (typeId == HdPrimTypeTokens->extComputation)
+  } else if (typeId == HdPrimTypeTokens->extComputation) {
     return new HdExtComputation(sprimId);
+  } else if (typeId == HdPrimTypeTokens->domeLight ||
+  typeId == HdPrimTypeTokens->simpleLight ||
+  typeId == HdPrimTypeTokens->sphereLight ||
+  typeId == HdPrimTypeTokens->diskLight ||
+  typeId == HdPrimTypeTokens->distantLight ||
+  typeId == HdPrimTypeTokens->cylinderLight ||
+  typeId == HdPrimTypeTokens->rectLight) {
+    return new HdAnariLight(d, sprimId, typeId);
+  }
 
   TF_CODING_ERROR("Unknown Sprim Type %s", typeId.GetText());
 
@@ -320,6 +344,14 @@ HdSprim *HdAnariRenderDelegate::CreateFallbackSprim(TfToken const &typeId)
     return new HdAnariMaterial(d, SdfPath::EmptyPath());
   else if (typeId == HdPrimTypeTokens->extComputation)
     return new HdExtComputation(SdfPath::EmptyPath());
+  else if (typeId == HdPrimTypeTokens->domeLight ||
+    typeId == HdPrimTypeTokens->simpleLight ||
+    typeId == HdPrimTypeTokens->sphereLight ||
+    typeId == HdPrimTypeTokens->diskLight ||
+    typeId == HdPrimTypeTokens->distantLight ||
+    typeId == HdPrimTypeTokens->cylinderLight ||
+    typeId == HdPrimTypeTokens->rectLight)
+    return new HdAnariLight(d, SdfPath::EmptyPath(), typeId);
 
   TF_CODING_ERROR("Unknown Sprim Type %s", typeId.GetText());
 
