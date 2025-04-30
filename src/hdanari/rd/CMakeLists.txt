@@ -36,7 +36,7 @@ PROPERTIES
   PREFIX ""
 )
 
-project_link_libraries(PUBLIC anari::anari ${PXR_LIBRARIES})
+project_link_libraries(PUBLIC anari::anari_static ${PXR_LIBRARIES})
 
 ## Configure plugInfo file ##
 
