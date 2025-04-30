@@ -12,6 +12,7 @@
 #include <pxr/base/vt/value.h>
 #include <pxr/imaging/cameraUtil/framing.h>
 #include <pxr/imaging/hd/renderDelegate.h>
+#include <anari/anari_cpp.hpp>
 #include <anari/anari_cpp/anari_cpp_impl.hpp>
 // pxr
 #include <pxr/imaging/hd/renderPassState.h>
@@ -224,6 +225,9 @@ void HdAnariRenderPass::_UpdateWorld()
     return;
 
   std::vector<anari::Instance> instances;
+
+  for (const auto *light : _renderParam->Lights())
+    instances.push_back(light->GetAnariLightInstance());
 
   for (const auto *geometry : _renderParam->Geometries())
     geometry->GatherInstances(instances);

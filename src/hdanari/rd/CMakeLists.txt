@@ -9,6 +9,7 @@ project_add_library(SHARED
   debugCodes.cpp
   geometry.cpp
   instancer.cpp
+  light.cpp
   material.cpp
   material/matte.cpp
   material/physicallyBased.cpp

@@ -8,6 +8,7 @@
 #include "hdAnariTypes.h"
 #include "material.h"
 #include "materialTokens.h"
+#include "light.h"
 
 #include <anari/anari_cpp.hpp>
 #include <anari/anari_cpp/anari_cpp_impl.hpp>
@@ -38,8 +39,8 @@ PXR_NAMESPACE_OPEN_SCOPE
 class HdAnariGeometry;
 using GeometryList = std::vector<const HdAnariGeometry *>;
 
-struct HdAnariMesh;
-using MeshList = std::vector<const HdAnariMesh *>;
+class HdAnariLight;
+using LightList = std::vector<const HdAnariLight *>;
 
 class HdAnariRenderParam final : public HdRenderParam
 {
@@ -65,7 +66,11 @@ class HdAnariRenderParam final : public HdRenderParam
 
   void RegisterGeometry(const HdAnariGeometry *geometry);
   void UnregisterGeometry(const HdAnariGeometry *geometry);
+  void RegisterLight(const HdAnariLight *light);
+  void UnregisterLight(const HdAnariLight *light);
+
   const GeometryList &Geometries() const;
+  const LightList &Lights() const;
 
   int SceneVersion() const;
   void MarkNewSceneVersion();
@@ -78,6 +83,7 @@ class HdAnariRenderParam final : public HdRenderParam
 
   std::mutex _mutex;
   GeometryList _geometries;
+  LightList _lights;
   std::atomic<int> _sceneVersion{0};
 };
 
@@ -128,7 +134,7 @@ HdAnariRenderParam::GetDefaultPrimvarBinding() const
 }
 
 inline void HdAnariRenderParam::RegisterGeometry(
-    const HdAnariGeometry *geometry)
+  const HdAnariGeometry *geometry)
 {
   std::lock_guard<std::mutex> guard(_mutex);
   _geometries.push_back(geometry);
@@ -143,9 +149,30 @@ inline void HdAnariRenderParam::UnregisterGeometry(
       _geometries.end());
 }
 
+inline void HdAnariRenderParam::RegisterLight(
+  const HdAnariLight *light)
+{
+  std::lock_guard<std::mutex> guard(_mutex);
+  _lights.push_back(light);
+}
+
+inline void HdAnariRenderParam::UnregisterLight(
+    const HdAnariLight *light)
+{
+  std::lock_guard<std::mutex> guard(_mutex);
+  _lights.erase(
+      std::remove(_lights.begin(), _lights.end(), light),
+      _lights.end());
+}
+
 inline const GeometryList &HdAnariRenderParam::Geometries() const
 {
   return _geometries;
+}
+
+inline const LightList &HdAnariRenderParam::Lights() const
+{
+  return _lights;
 }
 
 inline int HdAnariRenderParam::SceneVersion() const
