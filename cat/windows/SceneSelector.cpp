@@ -27,11 +27,12 @@ static void buildUISceneHandle(
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-SceneSelector::SceneSelector(const char *name,
+SceneSelector::SceneSelector(anari_viewer::Application *app,
+    const char *name,
     int currentCategory /*=0*/,
     int currentScene /*=0*/,
     bool initAnimate /*=false*/)
-    : Window(name, true),
+    : Window(app, name, true),
       m_currentCategory(currentCategory),
       m_currentScene(currentScene),
       m_animate(initAnimate)
