@@ -17,7 +17,10 @@ namespace anari_viewer::windows {
 
 struct Window
 {
-  Window(Application *app, const char *name, bool startShown = false, bool wrapBeginEnd = true);
+  Window(Application *app,
+      const char *name,
+      bool startShown = false,
+      bool wrapBeginEnd = true);
   virtual ~Window() = default;
 
   void renderUI();

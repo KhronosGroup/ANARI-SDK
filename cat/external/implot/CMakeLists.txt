@@ -20,7 +20,7 @@ INTERFACE
   ${cat_implot_LOCATION}/implot_items.cpp
 )
 
-project_link_libraries(INTERFACE anari_viewer_imgui_glfw)
+project_link_libraries(INTERFACE anari_viewer_imgui_sdl)
 
 project_include_directories(
 INTERFACE

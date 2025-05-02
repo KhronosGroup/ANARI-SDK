@@ -20,7 +20,8 @@ using SceneSelectionCallback = std::function<void(const char *, const char *)>;
 
 struct SceneSelector : public anari_viewer::windows::Window
 {
-  SceneSelector(const char *name = "Scene",
+  SceneSelector(anari_viewer::Application *app,
+      const char *name = "Scene",
       int currentCategory = 0,
       int currentScene = 0,
       bool initAnimate = false);

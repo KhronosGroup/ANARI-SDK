@@ -26,8 +26,8 @@
 
 // kokkos
 #if defined(USE_KOKKOS)
-#include "Kokkos_Core.hpp"
 #include <thread>
+#include "Kokkos_Core.hpp"
 #endif
 
 // stb_image
@@ -104,34 +104,34 @@ struct Application::Impl
   anari_viewer::manipulators::Orbit manipulator;
   anari::Device device = nullptr;
   anari::Library library = nullptr;
-  
+
   char **argv = nullptr;
-  
+
   float framesDropped = 0.f;
   float frameTimeStamp = 0.f;
-  
+
   int argc = 0;
   int initCategoryId = 0;
   int initRendererId = 0;
   int initSceneId = 0;
-  
+
   mutable bool frameReady = false;
   mutable float lastFrameTimeMilis = 0.f;
-  
+
   std::ofstream csv;
-  
+
   std::shared_ptr<anari_cat::Recorder> metricsRecorder;
-  
+
   std::size_t framesRendered = 0;
   std::size_t numFramesWidth = 0;
   std::size_t timespanWidth = 0;
-  
+
   std::unique_ptr<CLI::App> app;
-  
+
   std::vector<std::string> deviceNames;
   std::vector<std::string> sceneNames;
   std::vector<std::vector<std::string>> rendererNames;
-  
+
 #if defined(USE_KOKKOS)
   unsigned int kokkosNumThreads = std::thread::hardware_concurrency();
 #endif
@@ -311,7 +311,8 @@ anari_viewer::WindowArray Application::setupWindows()
   //
   // Create Viewport
   //
-  auto *viewport = new anari_viewer::windows::Viewport(m_impl->device,
+  auto *viewport = new anari_viewer::windows::Viewport(this,
+      m_impl->device,
       /*name=*/"Viewport",
       /*useOrthoCamera=*/m_orthographic,
       /*initRendererId=*/m_impl->initRendererId);
@@ -321,8 +322,11 @@ anari_viewer::WindowArray Application::setupWindows()
   //
   // Create SceneSelector
   //
-  auto *sselector = new anari_cat::windows::SceneSelector(
-      /*name=*/"Scene", m_impl->initCategoryId, m_impl->initSceneId, m_animate);
+  auto *sselector = new anari_cat::windows::SceneSelector(this,
+      /*name=*/"Scene",
+      m_impl->initCategoryId,
+      m_impl->initSceneId,
+      m_animate);
   sselector->setPerformanceRecorder(m_impl->metricsRecorder);
   sselector->setCallback([=](const char *category, const char *scene) {
     try {
@@ -862,7 +866,7 @@ void Application::onRun()
               << GetUnits(LATENCY_ANARI_DEVICE) << "\n\tMin" << '\t'
               << statistics[LATENCY_ANARI_DEVICE].Minimum
               << GetUnits(LATENCY_ANARI_DEVICE) << "\n\tMax" << '\t'
-              << statistics[LATENCY_ANARI_DEVICE].Maximum 
+              << statistics[LATENCY_ANARI_DEVICE].Maximum
               << GetUnits(LATENCY_ANARI_DEVICE) << '\n'
               << GetLabel(TIME_SCENE_UPDATE) << "\n\tAvg" << '\t'
               << statistics[TIME_SCENE_UPDATE].Mean
