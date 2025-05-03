@@ -5,6 +5,7 @@
 #include "windows/Window.h"
 // sdl
 #include <SDL3/SDL.h>
+#include <SDL3/SDL_opengl.h>
 // imgui
 #define IMGUI_DISABLE_INCLUDE_IMCONFIG_H
 #include "imgui_impl_sdl3.h"
@@ -71,7 +72,7 @@ void Application::mainLoopEnd()
   // no-op
 }
 
-SDL_Renderer* Application::sdlRenderer()
+SDL_Renderer *Application::sdlRenderer()
 {
   return m_impl->sdl_renderer;
 }
@@ -112,13 +113,13 @@ void Application::mainLoop()
     m_impl->frameEndTime = std::chrono::steady_clock::now();
     mainLoopStart();
     SDL_Event event;
-    while (SDL_PollEvent(&event))
-    {
-        ImGui_ImplSDL3_ProcessEvent(&event);
-        if (event.type == SDL_EVENT_QUIT)
-            open = false;
-        if (event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED && event.window.windowID == SDL_GetWindowID(window))
-            open = false;
+    while (SDL_PollEvent(&event)) {
+      ImGui_ImplSDL3_ProcessEvent(&event);
+      if (event.type == SDL_EVENT_QUIT)
+        open = false;
+      if (event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED
+          && event.window.windowID == SDL_GetWindowID(window))
+        open = false;
     }
 
     ImGui_ImplSDLRenderer3_NewFrame();
@@ -126,7 +127,8 @@ void Application::mainLoop()
 
     ImGui::NewFrame();
 
-    ImGuiIO &io = ImGui::GetIO();
+    if (ImGui::IsKeyChordPressed(ImGuiKey_Q | ImGuiMod_Ctrl))
+      open = false;
 
     uiFrameStart();
 
@@ -155,11 +157,12 @@ void Application::mainLoop()
     ImGui::End();
 
     ImGui::Render();
-    m_impl->width = io.DisplaySize.x;
-    m_impl->height = io.DisplaySize.y;
 
     // Enclose opengl calls inside uiRenderStart/uiRenderEnd
     uiRenderStart();
+    ImGuiIO &io = ImGui::GetIO();
+    m_impl->width = io.DisplaySize.x;
+    m_impl->height = io.DisplaySize.y;
     auto sdl_renderer = m_impl->sdl_renderer;
     SDL_SetRenderDrawColorFloat(sdl_renderer, 0.1f, 0.1f, 0.1f, 1.f);
     SDL_RenderClear(sdl_renderer);
@@ -179,8 +182,8 @@ void AppImpl::init()
   if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD))
     throw std::runtime_error("failed to initialize SDL");
 
-
-  Uint32 window_flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN;
+  Uint32 window_flags =
+      SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN;
   window = SDL_CreateWindow(name.c_str(), width, height, window_flags);
 
   if (window == nullptr)
@@ -189,8 +192,7 @@ void AppImpl::init()
   sdl_renderer = SDL_CreateRenderer(window, nullptr);
 
   SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
-  if (sdl_renderer == nullptr)
-  {
+  if (sdl_renderer == nullptr) {
     SDL_DestroyWindow(window);
     SDL_Quit();
     throw std::runtime_error("Failed to create SDL renderer");
@@ -207,7 +209,6 @@ void AppImpl::init()
   ImGuiIO &io = ImGui::GetIO();
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-  io.ConfigWindowsMoveFromTitleBarOnly = true;
   ImGui::StyleColorsDark();
 
   ImGuiStyle &style = ImGui::GetStyle();
