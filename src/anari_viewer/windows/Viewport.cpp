@@ -32,12 +32,11 @@ Viewport::Viewport(Application *app,
   m_contextMenuName += name;
 
   auto renderer = m_app->sdlRenderer();
-  m_framebufferTexture = SDL_CreateTexture(
-    renderer,
-    SDL_PIXELFORMAT_ARGB8888,
-    SDL_TEXTUREACCESS_STREAMING,
-    m_viewportSize.x,
-    m_viewportSize.y);
+  m_framebufferTexture = SDL_CreateTexture(renderer,
+      SDL_PIXELFORMAT_RGBA32,
+      SDL_TEXTUREACCESS_STREAMING,
+      m_viewportSize.x,
+      m_viewportSize.y);
 
   // ANARI //
 
@@ -188,12 +187,12 @@ void Viewport::reshape(anari::math::int2 newSize)
 
   SDL_DestroyTexture(m_framebufferTexture);
 
-  m_framebufferTexture = SDL_CreateTexture(
-    renderer,
-    SDL_PIXELFORMAT_ARGB8888,
-    SDL_TEXTUREACCESS_STREAMING,
-    m_viewportSize.x,
-    m_viewportSize.y);
+  m_framebufferTexture = SDL_CreateTexture(renderer,
+      m_format == ANARI_FLOAT32_VEC4 ? SDL_PIXELFORMAT_RGBA128_FLOAT
+                                     : SDL_PIXELFORMAT_RGBA32,
+      SDL_TEXTUREACCESS_STREAMING,
+      m_viewportSize.x,
+      m_viewportSize.y);
 
   updateFrame();
   updateCamera(true);
@@ -254,8 +253,10 @@ void Viewport::updateCamera(bool force)
   auto radians = [](float degrees) -> float { return degrees * M_PI / 180.f; };
   anari::setParameter(m_device, m_perspCamera, "fovy", radians(m_fov));
 
-  anari::setParameter(m_device, m_perspCamera, "apertureRadius", m_apertureRadius);
-  anari::setParameter(m_device, m_perspCamera, "focusDistance", m_focusDistance);
+  anari::setParameter(
+      m_device, m_perspCamera, "apertureRadius", m_apertureRadius);
+  anari::setParameter(
+      m_device, m_perspCamera, "focusDistance", m_focusDistance);
 
   anari::commitParameters(m_device, m_perspCamera);
   anari::commitParameters(m_device, m_orthoCamera);
@@ -280,37 +281,18 @@ void Viewport::updateImage()
     m_minFL = std::min(m_minFL, m_latestFL);
     m_maxFL = std::max(m_maxFL, m_latestFL);
 
-    auto fb = anari::map<char>(m_device, m_frame, "channel.color");
+    auto fb = anari::map<void>(m_device, m_frame, "channel.color");
 
     if (fb.data) {
-      const bool isByteChannles = fb.pixelType == ANARI_UFIXED8_RGBA_SRGB
-          || fb.pixelType == ANARI_UFIXED8_VEC4;
-      char *pixels = nullptr;
-      int pitch = 0;
-      SDL_LockTexture(m_framebufferTexture, nullptr, (void**)&pixels, &pitch);
-      if (isByteChannles) {
-        if(fb.width == m_viewportSize.x && fb.height == m_viewportSize.y) {
-          if(pitch == 4*m_viewportSize.x) {
-            std::memcpy(pixels, fb.data, 4*m_viewportSize.x*m_viewportSize.y);
-          }
-        }
-      } else {
-        if(fb.width == m_viewportSize.x && fb.height == m_viewportSize.y) {
-          for(int row = 0;row<m_viewportSize.y;++row){
-            uint8_t *dst = (uint8_t*)(pixels+row*pitch);
-            float *src = (float*)(fb.data+row*4*sizeof(float)*fb.width);
-            for(int col = 0;col<4*m_viewportSize.x;++col) {
-              dst[col] = 255u*src[col];
-            }
-          }
-        }
-      }
-      SDL_UnlockTexture(m_framebufferTexture);
+      SDL_UpdateTexture(m_framebufferTexture,
+          nullptr,
+          fb.data,
+          fb.width * anari::sizeOf(m_format));
     } else {
       printf("mapped bad frame: %p | %i x %i\n", fb.data, fb.width, fb.height);
     }
 
-    if (m_saveNextFrame) {
+    if (m_saveNextFrame && m_format == ANARI_FLOAT32_VEC4) {
       std::string filename =
           "screenshot" + std::to_string(m_screenshotIndex++) + ".png";
       stbi_write_png(
@@ -337,11 +319,9 @@ void Viewport::ui_handleInput()
   ImGuiIO &io = ImGui::GetIO();
 
   const bool dolly = ImGui::IsMouseDown(ImGuiMouseButton_Right)
-      || (ImGui::IsMouseDown(ImGuiMouseButton_Left)
-          && io.KeyShift);
+      || (ImGui::IsMouseDown(ImGuiMouseButton_Left) && io.KeyShift);
   const bool pan = ImGui::IsMouseDown(ImGuiMouseButton_Middle)
-      || (ImGui::IsMouseDown(ImGuiMouseButton_Left)
-          && io.KeyAlt);
+      || (ImGui::IsMouseDown(ImGuiMouseButton_Left) && io.KeyAlt);
   const bool orbit = ImGui::IsMouseDown(ImGuiMouseButton_Left);
 
   const bool anyMovement = dolly || pan || orbit;
@@ -475,8 +455,10 @@ void Viewport::ui_contextMenu()
       if (ImGui::RadioButton("FLOAT32_VEC4", m_format == ANARI_FLOAT32_VEC4))
         m_format = ANARI_FLOAT32_VEC4;
 
-      if (format != m_format)
+      if (format != m_format) {
         updateFrame();
+        reshape(m_viewportSize);
+      }
 
       ImGui::EndMenu();
     }
