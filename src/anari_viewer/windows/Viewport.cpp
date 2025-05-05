@@ -99,7 +99,8 @@ void Viewport::buildUI()
   updateImage();
   updateCamera();
 
-  ImGui::Image((ImTextureID)(intptr_t)m_framebufferTexture,
+  ImGui::Image(
+      (ImTextureID)(intptr_t)m_framebufferTexture,
       ImGui::GetContentRegionAvail(),
       ImVec2(1, 0),
       ImVec2(0, 1));
@@ -194,8 +195,6 @@ void Viewport::reshape(anari::math::int2 newSize)
     SDL_TEXTUREACCESS_STREAMING,
     m_viewportSize.x,
     m_viewportSize.y);
-
-  updateFrame();
 
   updateFrame();
   updateCamera(true);
