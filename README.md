@@ -57,7 +57,7 @@ available to enable. The following CMake options are offered:
 - `BUILD_HELIDE_DEVICE` : build the provided example `helide` device implementation
 - `BUILD_REMOTE_DEVICE` : build the provided experimental `remote` device implementation
 - `BUILD_EXAMPLES`      : build example applications
-- `BUILD_VIEWER`        : build viewer too (needs glfw3) if building examples
+- `BUILD_VIEWER`        : build viewer too (needs SDL3) if building examples
 - `BUILD_HDANARI`       : build (experimental) OpenUSD Hydra delegate plugin
 
 Once built, the library can be installed via the `install` target created by
