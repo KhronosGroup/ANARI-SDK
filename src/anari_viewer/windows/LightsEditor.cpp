@@ -3,8 +3,8 @@
 
 #include "LightsEditor.h"
 #include "../HDRImage.h"
-// anari_viewer
-#include "nfd.h"
+// SDL
+#include <SDL3/SDL_dialog.h>
 // std
 #include <cmath>
 
@@ -26,7 +26,8 @@ static const char *lightToType(Light::LightType type)
   }
 }
 
-LightsEditor::LightsEditor(Application *app, std::vector<anari::Device> devices, const char *name)
+LightsEditor::LightsEditor(
+    Application *app, std::vector<anari::Device> devices, const char *name)
     : Window(app, name, true), m_devices(devices)
 {
   for (auto d : m_devices)
@@ -35,7 +36,8 @@ LightsEditor::LightsEditor(Application *app, std::vector<anari::Device> devices,
   m_worlds.resize(m_devices.size(), nullptr);
 }
 
-LightsEditor::LightsEditor(Application *app, anari::Device device, const char *name)
+LightsEditor::LightsEditor(
+    Application *app, anari::Device device, const char *name)
     : LightsEditor(app, std::vector<anari::Device>{device}, name)
 {}
 
@@ -121,16 +123,34 @@ void LightsEditor::buildUI()
       constexpr int MAX_LENGTH = 2000;
       l.hdriRadiance.reserve(MAX_LENGTH);
 
+      static std::string outPath;
       if (ImGui::Button("...")) {
-        nfdchar_t *outPath = nullptr;
-        nfdfilteritem_t filterItem[1] = {{"HDR Image Files", "exr,hdr"}};
-        nfdresult_t result = NFD_OpenDialog(&outPath, filterItem, 1, nullptr);
-        if (result == NFD_OKAY) {
-          l.hdriRadiance = std::string(outPath).c_str();
-          NFD_FreePath(outPath);
-        } else {
-          printf("NFD Error: %s\n", NFD_GetError());
-        }
+        outPath.clear();
+        auto fileDialogCb =
+            [](void *userdata, const char *const *filelist, int filter) {
+              std::string &out = *(std::string *)userdata;
+              if (!filelist) {
+                printf("ERROR: %s\n", SDL_GetError());
+                return;
+              }
+
+              if (*filelist)
+                out = *filelist;
+            };
+
+        SDL_DialogFileFilter filterItem[1] = {{"HDR Image Files", "exr;hdr"}};
+        SDL_ShowOpenFileDialog(fileDialogCb,
+            &outPath,
+            m_app->sdlWindow(),
+            filterItem,
+            1,
+            nullptr,
+            false);
+      }
+
+      if (!outPath.empty()) {
+        l.hdriRadiance = outPath;
+        outPath.clear();
       }
 
       ImGui::SameLine();

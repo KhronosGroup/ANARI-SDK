@@ -15,9 +15,9 @@ static bool UI_callback(void *_stringList, int index, const char **out_text)
 }
 
 static void buildUISceneHandle(
-    anari::scenes::SceneHandle s, helium::ParameterInfo &p)
+    SDL_Window *w, anari::scenes::SceneHandle s, helium::ParameterInfo &p)
 {
-  if (ui::buildUI(p))
+  if (ui::buildUI(w, p))
     anari::scenes::setParameter(s, p.name, p.value);
 }
 
@@ -25,7 +25,8 @@ static void buildUISceneHandle(
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-SceneSelector::SceneSelector(Application *app, const char *name) : Window(app, name, true)
+SceneSelector::SceneSelector(Application *app, const char *name)
+    : Window(app, name, true)
 {
   m_categories = anari::scenes::getAvailableSceneCategories();
   m_scenes.resize(m_categories.size());
@@ -68,7 +69,7 @@ void SceneSelector::buildUI()
     return;
 
   for (auto &p : m_parameters)
-    buildUISceneHandle(m_scene, p);
+    buildUISceneHandle(m_app->sdlWindow(), m_scene, p);
 
   ImGui::NewLine();
 

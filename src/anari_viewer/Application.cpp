@@ -20,7 +20,7 @@ namespace anari_viewer {
 
 struct AppImpl
 {
-  SDL_Window *window{nullptr};
+  SDL_Window *sdl_window{nullptr};
   SDL_Renderer *sdl_renderer{nullptr};
   int width{0};
   int height{0};
@@ -77,6 +77,11 @@ SDL_Renderer *Application::sdlRenderer()
   return m_impl->sdl_renderer;
 }
 
+SDL_Window *Application::sdlWindow()
+{
+  return m_impl->sdl_window;
+}
+
 void Application::run(int width, int height, const char *name)
 {
   m_impl->width = width;
@@ -105,7 +110,7 @@ float Application::getLastFrameLatency() const
 
 void Application::mainLoop()
 {
-  auto window = m_impl->window;
+  auto window = sdlWindow();
 
   bool open = true;
   while (open) {
@@ -184,26 +189,27 @@ void AppImpl::init()
 
   Uint32 window_flags =
       SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN;
-  window = SDL_CreateWindow(name.c_str(), width, height, window_flags);
+  sdl_window = SDL_CreateWindow(name.c_str(), width, height, window_flags);
 
-  if (window == nullptr)
+  if (sdl_window == nullptr)
     throw std::runtime_error("failed to create SDL window");
 
-  sdl_renderer = SDL_CreateRenderer(window, nullptr);
+  sdl_renderer = SDL_CreateRenderer(sdl_window, nullptr);
 
-  SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+  SDL_SetWindowPosition(
+      sdl_window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
   if (sdl_renderer == nullptr) {
-    SDL_DestroyWindow(window);
+    SDL_DestroyWindow(sdl_window);
     SDL_Quit();
     throw std::runtime_error("Failed to create SDL renderer");
   }
 
-  SDL_ShowWindow(window);
+  SDL_ShowWindow(sdl_window);
 
   ImGui::CreateContext();
   ImGui::StyleColorsDark();
 
-  ImGui_ImplSDL3_InitForSDLRenderer(window, sdl_renderer);
+  ImGui_ImplSDL3_InitForSDLRenderer(sdl_window, sdl_renderer);
   ImGui_ImplSDLRenderer3_Init(sdl_renderer);
 
   ImGuiIO &io = ImGui::GetIO();
@@ -240,10 +246,10 @@ void AppImpl::cleanup()
   ImGui::DestroyContext();
 
   SDL_DestroyRenderer(sdl_renderer);
-  SDL_DestroyWindow(window);
+  SDL_DestroyWindow(sdl_window);
   SDL_Quit();
 
-  window = nullptr;
+  sdl_window = nullptr;
 }
 
 } // namespace anari_viewer
