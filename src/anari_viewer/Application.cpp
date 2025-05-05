@@ -127,8 +127,6 @@ void Application::mainLoop()
     ImGui::NewFrame();
 
     ImGuiIO &io = ImGui::GetIO();
-    // if (io.KeysDown[GLFW_KEY_Q] && io.KeysDown[GLFW_KEY_LEFT_CONTROL])
-    //   open = false;
 
     uiFrameStart();
 
@@ -165,10 +163,9 @@ void Application::mainLoop()
     auto sdl_renderer = m_impl->sdl_renderer;
     SDL_SetRenderDrawColorFloat(sdl_renderer, 0.1f, 0.1f, 0.1f, 1.f);
     SDL_RenderClear(sdl_renderer);
-    ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
-    uiRenderEnd();
-
+    ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), sdl_renderer);
     SDL_RenderPresent(sdl_renderer);
+    uiRenderEnd();
 
     m_impl->windowResized = false;
 
@@ -210,6 +207,7 @@ void AppImpl::init()
   ImGuiIO &io = ImGui::GetIO();
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+  io.ConfigWindowsMoveFromTitleBarOnly = true;
   ImGui::StyleColorsDark();
 
   ImGuiStyle &style = ImGui::GetStyle();
