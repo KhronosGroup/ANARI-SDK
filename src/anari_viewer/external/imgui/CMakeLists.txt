@@ -11,8 +11,6 @@ anari_sdk_fetch_project(
 
 include(CMakeFindDependencyMacro)
 
-set(OpenGL_GL_PREFERENCE "LEGACY")
-find_dependency(OpenGL 4 REQUIRED)
 find_dependency(SDL3 REQUIRED)
 
 project_add_library(INTERFACE)
@@ -29,7 +27,7 @@ INTERFACE
   ${anari_viewer_imgui_sdl_LOCATION}/misc/cpp/imgui_stdlib.cpp
 )
 
-project_link_libraries(INTERFACE SDL3::SDL3 OpenGL::GL)
+project_link_libraries(INTERFACE SDL3::SDL3)
 
 project_include_directories(
 INTERFACE
