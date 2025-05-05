@@ -26,4 +26,9 @@ mark_cache_variables_as_advanced(
   "^Kokkos"
   "^CLI11"
   "^X11"
+  "^HAVE"
+  "^SDL"
+  "^LibUSB"
+  "^WAYLAND"
+  "LIB$"
 )

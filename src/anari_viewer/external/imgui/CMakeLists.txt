@@ -9,9 +9,22 @@ anari_sdk_fetch_project(
   MD5 2cfbf7b7790076d6debe5060ec1fb47f
 )
 
-include(CMakeFindDependencyMacro)
-
-find_dependency(SDL3 REQUIRED)
+find_package(SDL3 QUIET)
+if (NOT TARGET SDL3::SDL3)
+  mark_as_advanced(SDL3_DIR)
+  anari_sdk_fetch_project(
+    NAME anari_sdl3
+    URL https://github.com/libsdl-org/SDL/archive/refs/tags/release-3.2.12.zip
+    MD5 62da6ae22e546cdacdb6dfef520391bf
+  )
+  add_subdirectory(
+    ${anari_sdl3_LOCATION}
+    ${CMAKE_CURRENT_BINARY_DIR}/anari_sdl3
+    EXCLUDE_FROM_ALL
+  )
+else()
+  mark_as_advanced(CLEAR SDL3_DIR)
+endif()
 
 project_add_library(INTERFACE)
 
