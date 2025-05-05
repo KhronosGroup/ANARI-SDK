@@ -42,6 +42,7 @@ class Application
   virtual void teardown() = 0;
 
   SDL_Renderer* sdlRenderer();
+  SDL_Window* sdlWindow();
 
   // Start the application run loop
   void run(int width, int height, const char *name);

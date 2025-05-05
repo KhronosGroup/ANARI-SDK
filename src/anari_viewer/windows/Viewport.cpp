@@ -400,7 +400,7 @@ void Viewport::ui_contextMenu()
       auto &parameters = m_rendererParameters[m_currentRenderer];
       auto renderer = m_renderers[m_currentRenderer];
       for (auto &p : parameters)
-        ui::buildUI(m_device, renderer, p);
+        ui::buildUI(m_app->sdlWindow(), m_device, renderer, p);
       ImGui::EndMenu();
     }
 

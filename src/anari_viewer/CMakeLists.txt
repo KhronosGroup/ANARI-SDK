@@ -53,7 +53,6 @@ project_include_directories(INTERFACE ${CMAKE_CURRENT_LIST_DIR}/..)
 project_link_libraries(INTERFACE
   anari::anari
   anari_viewer_imgui_sdl
-  anari_viewer_nfd
   anari_viewer_stb_image
 )
 

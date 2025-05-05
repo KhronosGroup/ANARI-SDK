@@ -17,9 +17,9 @@ static bool UI_callback(void *_stringList, int index, const char **out_text)
 }
 
 static void buildUISceneHandle(
-    anari::scenes::SceneHandle s, helium::ParameterInfo &p)
+    SDL_Window *w, anari::scenes::SceneHandle s, helium::ParameterInfo &p)
 {
-  if (anari_viewer::ui::buildUI(p))
+  if (anari_viewer::ui::buildUI(w, p))
     anari::scenes::setParameter(s, p.name, p.value);
 }
 
@@ -108,7 +108,7 @@ void SceneSelector::buildUI()
   }
 
   for (auto &p : m_parameters)
-    buildUISceneHandle(m_scene, p);
+    buildUISceneHandle(m_app->sdlWindow(), m_scene, p);
 
   ImGui::NewLine();
 

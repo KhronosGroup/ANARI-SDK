@@ -13,6 +13,8 @@
 #include <string>
 #include <vector>
 
+struct SDL_Window;
+
 namespace anari_viewer::ui {
 
 using Any = helium::AnariAny;
@@ -25,7 +27,7 @@ void shutdown();
 ParameterInfoList parseParameters(
     anari::Device d, ANARIDataType objectType, const char *subtype);
 
-bool buildUI(ParameterInfo &p);
-void buildUI(anari::Device d, anari::Object o, ParameterInfo &p);
+bool buildUI(SDL_Window *w, ParameterInfo &p);
+void buildUI(SDL_Window *w, anari::Device d, anari::Object o, ParameterInfo &p);
 
 } // namespace anari_viewer::ui
