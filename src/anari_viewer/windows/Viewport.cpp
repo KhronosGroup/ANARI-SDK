@@ -99,8 +99,7 @@ void Viewport::buildUI()
   updateImage();
   updateCamera();
 
-  ImGui::Image(
-      (ImTextureID)(intptr_t)m_framebufferTexture,
+  ImGui::Image((ImTextureID)(intptr_t)m_framebufferTexture,
       ImGui::GetContentRegionAvail(),
       ImVec2(1, 0),
       ImVec2(0, 1));
@@ -281,25 +280,32 @@ void Viewport::updateImage()
     m_minFL = std::min(m_minFL, m_latestFL);
     m_maxFL = std::max(m_maxFL, m_latestFL);
 
-    auto fb = anari::map<uint32_t>(m_device, m_frame, "channel.color");
+    auto fb = anari::map<char>(m_device, m_frame, "channel.color");
 
     if (fb.data) {
       const bool isByteChannles = fb.pixelType == ANARI_UFIXED8_RGBA_SRGB
           || fb.pixelType == ANARI_UFIXED8_VEC4;
+      char *pixels = nullptr;
+      int pitch = 0;
+      SDL_LockTexture(m_framebufferTexture, nullptr, (void**)&pixels, &pitch);
       if (isByteChannles) {
-        SDL_UpdateTexture(m_framebufferTexture, nullptr, fb.data, fb.width*4);
+        if(fb.width == m_viewportSize.x && fb.height == m_viewportSize.y) {
+          if(pitch == 4*m_viewportSize.x) {
+            std::memcpy(pixels, fb.data, 4*m_viewportSize.x*m_viewportSize.y);
+          }
+        }
       } else {
-        // glBindTexture(GL_TEXTURE_2D, m_framebufferTexture);
-        // glTexSubImage2D(GL_TEXTURE_2D,
-        //     0,
-        //     0,
-        //     0,
-        //     fb.width,
-        //     fb.height,
-        //     GL_RGBA,
-        //     GL_FLOAT,
-        //     fb.data);
+        if(fb.width == m_viewportSize.x && fb.height == m_viewportSize.y) {
+          for(int row = 0;row<m_viewportSize.y;++row){
+            uint8_t *dst = (uint8_t*)(pixels+row*pitch);
+            float *src = (float*)(fb.data+row*4*sizeof(float)*fb.width);
+            for(int col = 0;col<4*m_viewportSize.x;++col) {
+              dst[col] = 255u*src[col];
+            }
+          }
+        }
       }
+      SDL_UnlockTexture(m_framebufferTexture);
     } else {
       printf("mapped bad frame: %p | %i x %i\n", fb.data, fb.width, fb.height);
     }
