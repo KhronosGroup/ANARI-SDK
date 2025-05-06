@@ -283,7 +283,7 @@ void Viewport::updateImage()
 
     auto fb = anari::map<void>(m_device, m_frame, "channel.color");
 
-    if (fb.data) {
+    if (fb.data && fb.pixelType == m_format) {
       SDL_UpdateTexture(m_framebufferTexture,
           nullptr,
           fb.data,
