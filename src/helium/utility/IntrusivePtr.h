@@ -32,7 +32,7 @@ class RefCounted
 
   void refInc(RefType = RefType::INTERNAL);
   void refDec(RefType = RefType::INTERNAL);
-  uint32_t useCount(RefType = ALL) const;
+  uint32_t useCount(RefType = RefType::ALL) const;
 
  protected:
   virtual void on_NoPublicReferences();
@@ -48,14 +48,14 @@ class RefCounted
 
 inline void RefCounted::refInc(RefType type)
 {
-  assert(type == PUBLIC || type == INTERNAL);
+  assert(type == RefType::PUBLIC || type == RefType::INTERNAL);
 
   m_count += type;
 }
 
 inline void RefCounted::refDec(RefType type)
 {
-  assert(type == PUBLIC || type == INTERNAL);
+  assert(type == RefType::PUBLIC || type == RefType::INTERNAL);
 
   std::uint64_t prev = m_count.fetch_sub(type);
   // if the previous value was type it has to be 0 now
@@ -64,9 +64,9 @@ inline void RefCounted::refDec(RefType type)
     return;
   }
 
-  if (type == PUBLIC && (prev&PUBLIC_MASK) == PUBLIC)
+  if (type == RefType::PUBLIC && (prev&PUBLIC_MASK) == RefType::PUBLIC)
     on_NoPublicReferences();
-  if (type == INTERNAL && (prev&INTERNAL_MASK) == INTERNAL)
+  if (type == RefType::INTERNAL && (prev&INTERNAL_MASK) == RefType::INTERNAL)
     on_NoInternalReferences();
 }
 
