@@ -404,7 +404,7 @@ inline void AnariAny::refIncObject() const
   if (anari::isObject(type())) {
     auto *o = storageAs<RefCounted *>();
     if (o)
-      o->refInc(RefType::STAGED);
+      o->refInc(RefType::INTERNAL);
   }
 }
 
@@ -413,7 +413,7 @@ inline void AnariAny::refDecObject() const
   if (anari::isObject(type())) {
     auto *o = storageAs<RefCounted *>();
     if (o)
-      o->refDec(RefType::STAGED);
+      o->refDec(RefType::INTERNAL);
   }
 }
 

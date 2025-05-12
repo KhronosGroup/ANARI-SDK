@@ -85,11 +85,6 @@ SCENARIO("helium::RefCounted interface", "[helium_RefCounted]")
       REQUIRE(obj->useCount(RefType::INTERNAL) == 0);
     }
 
-    THEN("The staged ref count is initially 0")
-    {
-      REQUIRE(obj->useCount(RefType::STAGED) == 0);
-    }
-
     WHEN("The public ref count is incremented")
     {
       obj->refInc(RefType::PUBLIC);
@@ -115,11 +110,6 @@ SCENARIO("helium::RefCounted interface", "[helium_RefCounted]")
         REQUIRE(obj->useCount(RefType::INTERNAL) == 0);
       }
 
-      THEN("The staged ref count is still 0")
-      {
-        REQUIRE(obj->useCount(RefType::STAGED) == 0);
-      }
-
       WHEN("The public ref is decremented again")
       {
         obj->refDec(RefType::PUBLIC);
@@ -129,7 +119,6 @@ SCENARIO("helium::RefCounted interface", "[helium_RefCounted]")
           REQUIRE(obj->useCount(RefType::ALL) == 1);
           REQUIRE(obj->useCount(RefType::PUBLIC) == 1);
           REQUIRE(obj->useCount(RefType::INTERNAL) == 0);
-          REQUIRE(obj->useCount(RefType::STAGED) == 0);
         }
 
         THEN("The ref callbacks still have not triggered")
@@ -165,11 +154,6 @@ SCENARIO("helium::RefCounted interface", "[helium_RefCounted]")
         REQUIRE(obj->useCount(RefType::INTERNAL) == 1);
       }
 
-      THEN("The staged ref count is still 0")
-      {
-        REQUIRE(obj->useCount(RefType::STAGED) == 0);
-      }
-
       WHEN("The internal ref is decremented again")
       {
         obj->refDec(RefType::INTERNAL);
@@ -178,7 +162,6 @@ SCENARIO("helium::RefCounted interface", "[helium_RefCounted]")
           REQUIRE(obj->useCount(RefType::ALL) == 1);
           REQUIRE(obj->useCount(RefType::PUBLIC) == 1);
           REQUIRE(obj->useCount(RefType::INTERNAL) == 0);
-          REQUIRE(obj->useCount(RefType::STAGED) == 0);
         }
 
         THEN("Then only on_NoInternalReferences() should be triggered")
@@ -209,14 +192,9 @@ SCENARIO("helium::RefCounted interface", "[helium_RefCounted]")
         REQUIRE(obj->useCount(RefType::PUBLIC) == 1);
       }
 
-      THEN("The staged ref count is now 1")
-      {
-        REQUIRE(obj->useCount(RefType::STAGED) == 1);
-      }
-
       THEN("The internal ref count is still 0")
       {
-        REQUIRE(obj->useCount(RefType::INTERNAL) == 0);
+        REQUIRE(obj->useCount(RefType::INTERNAL) == 1);
       }
 
       WHEN("The AnariAny is cleared")
@@ -227,7 +205,6 @@ SCENARIO("helium::RefCounted interface", "[helium_RefCounted]")
           REQUIRE(obj->useCount(RefType::ALL) == 1);
           REQUIRE(obj->useCount(RefType::PUBLIC) == 1);
           REQUIRE(obj->useCount(RefType::INTERNAL) == 0);
-          REQUIRE(obj->useCount(RefType::STAGED) == 0);
         }
 
         THEN("Then only on_NoInternalReferences() should be triggered")
@@ -253,7 +230,6 @@ SCENARIO("helium::RefCounted interface", "[helium_RefCounted]")
         REQUIRE(obj->useCount(RefType::ALL) == 2);
         REQUIRE(obj->useCount(RefType::PUBLIC) == 1);
         REQUIRE(obj->useCount(RefType::INTERNAL) == 1);
-        REQUIRE(obj->useCount(RefType::STAGED) == 0);
 
         WHEN("The IntrusivePtr<> is removed")
         {
@@ -264,7 +240,6 @@ SCENARIO("helium::RefCounted interface", "[helium_RefCounted]")
             REQUIRE(obj->useCount(RefType::ALL) == 1);
             REQUIRE(obj->useCount(RefType::PUBLIC) == 1);
             REQUIRE(obj->useCount(RefType::INTERNAL) == 0);
-            REQUIRE(obj->useCount(RefType::STAGED) == 0);
           }
 
           THEN("Then only on_NoInternalReferences() should be triggered")
