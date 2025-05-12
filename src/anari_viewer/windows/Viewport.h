@@ -20,6 +20,7 @@ namespace anari_viewer::windows {
 struct Viewport;
 struct Overlay
 {
+  virtual ~Overlay() = default;
   virtual void buildUI(Viewport *viewport) = 0;
 };
 
