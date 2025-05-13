@@ -6,15 +6,16 @@
 #include <atomic>
 #include <stdexcept>
 #include <type_traits>
+#include <cstdint>
+#include <cassert>
 
 namespace helium {
 
-enum RefType
+enum RefType : std::uint64_t
 {
-  PUBLIC,
-  STAGED, // when placed in AnariAny
-  INTERNAL,
-  ALL
+  PUBLIC = 1,
+  INTERNAL = UINT64_C(0x100000000),
+  ALL = PUBLIC+INTERNAL
 };
 
 class RefCounted
@@ -31,73 +32,52 @@ class RefCounted
 
   void refInc(RefType = RefType::INTERNAL);
   void refDec(RefType = RefType::INTERNAL);
-  uint32_t useCount(RefType = ALL) const;
+  uint32_t useCount(RefType = RefType::ALL) const;
 
  protected:
   virtual void on_NoPublicReferences();
   virtual void on_NoInternalReferences();
 
  private:
-  std::atomic<uint32_t> m_internalRefs{0};
-  std::atomic<uint32_t> m_stagedRefs{0};
-  std::atomic<uint32_t> m_publicRefs{1};
+  static constexpr std::uint64_t PUBLIC_MASK = UINT64_C(0x00000000FFFFFFFF);
+  static constexpr std::uint64_t INTERNAL_MASK = UINT64_C(0xFFFFFFFF00000000);
+  std::atomic<std::uint64_t> m_count{1};
 };
 
 // Inlined definitions //
 
 inline void RefCounted::refInc(RefType type)
 {
-  if (type == RefType::PUBLIC)
-    m_publicRefs++;
-  else if (type == RefType::STAGED)
-    m_stagedRefs++;
-  else if (type == RefType::INTERNAL)
-    m_internalRefs++;
-  else {
-    m_publicRefs++;
-    m_stagedRefs++;
-    m_internalRefs++;
-  }
+  assert(type == RefType::PUBLIC || type == RefType::INTERNAL);
+
+  m_count += type;
 }
 
 inline void RefCounted::refDec(RefType type)
 {
-  const auto prevPublicRefs = useCount(RefType::PUBLIC);
-  const auto prevStagedRefs = useCount(RefType::STAGED);
-  const auto prevInternalRefs = useCount(RefType::INTERNAL);
+  assert(type == RefType::PUBLIC || type == RefType::INTERNAL);
 
-  const bool publicRef = type == RefType::PUBLIC || type == RefType::ALL;
-  const bool stagedRef = type == RefType::STAGED || type == RefType::ALL;
-  const bool internalRef = type == RefType::INTERNAL || type == RefType::ALL;
-
-  if (publicRef && useCount(RefType::PUBLIC) > 0)
-    m_publicRefs--;
-  if (stagedRef && useCount(RefType::STAGED) > 0)
-    m_stagedRefs--;
-  if (internalRef && useCount(RefType::INTERNAL) > 0)
-    m_internalRefs--;
-
-  if (useCount(RefType::ALL) == 0) {
+  std::uint64_t prev = m_count.fetch_sub(type);
+  // if the previous value was type it has to be 0 now
+  if (prev == type) {
     delete this;
     return;
   }
 
-  if (publicRef && prevPublicRefs == 1)
+  if (type == RefType::PUBLIC && (prev&PUBLIC_MASK) == RefType::PUBLIC)
     on_NoPublicReferences();
-  if ((internalRef || stagedRef) && ((prevInternalRefs + prevStagedRefs) == 1))
+  if (type == RefType::INTERNAL && (prev&INTERNAL_MASK) == RefType::INTERNAL)
     on_NoInternalReferences();
 }
 
 inline uint32_t RefCounted::useCount(RefType type) const
 {
   if (type == RefType::PUBLIC)
-    return m_publicRefs;
-  else if (type == RefType::STAGED)
-    return m_stagedRefs;
+    return m_count&PUBLIC_MASK;
   else if (type == RefType::INTERNAL)
-    return m_internalRefs;
+    return m_count>>UINT64_C(32);
   else
-    return m_publicRefs + m_stagedRefs + m_internalRefs;
+    return (m_count&PUBLIC_MASK) + (m_count>>UINT64_C(32));
 }
 
 inline void RefCounted::on_NoPublicReferences()
