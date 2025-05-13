@@ -39,6 +39,15 @@ struct TestObject : public helium::RefCounted
 {
   bool on_NoPublicReferences_triggered{false};
   bool on_NoInternalReferences_triggered{false};
+  bool &destroyed;
+  TestObject(bool &d) : destroyed(d)
+  {
+    destroyed = false;
+  }
+  ~TestObject()
+  {
+    destroyed = true;
+  }
 
  private:
   void on_NoPublicReferences() override
@@ -68,7 +77,8 @@ SCENARIO("helium::RefCounted interface", "[helium_RefCounted]")
 {
   GIVEN("A default constructed RefCounted object")
   {
-    auto *obj = new TestObject();
+    bool destroyed = false;
+    auto *obj = new TestObject(destroyed);
 
     THEN("The total ref count is initially 1")
     {
@@ -266,7 +276,17 @@ SCENARIO("helium::RefCounted interface", "[helium_RefCounted]")
       obj->refDec(RefType::INTERNAL);
     }
 
-    obj->refDec(RefType::PUBLIC);
+    WHEN("The refcount is decremented to zero")
+    {
+      REQUIRE(destroyed == false);
+
+      obj->refDec(RefType::PUBLIC);
+
+      THEN("Then the object is destroyed")
+      {
+        REQUIRE(destroyed == true);
+      }
+    }
   }
 }
 
