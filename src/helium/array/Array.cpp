@@ -204,4 +204,5 @@ void Array::on_NoPublicReferences()
 
 } // namespace helium
 
+HELIUM_ANARI_TYPEFOR_DEFINITION(helium::BaseArray *);
 HELIUM_ANARI_TYPEFOR_DEFINITION(helium::Array *);

@@ -289,7 +289,9 @@ inline T *AnariAny::getObject() const
   constexpr ANARIDataType type = anari::ANARITypeFor<T *>::value;
   static_assert(
       anari::isObject(type), "use AnariAny::get() for getting non-objects");
-  return anari::isObject(this->type()) ? storageAs<T *>() : nullptr;
+  const bool correctType = this->type() == type
+      || type == ANARI_ARRAY && anari::isArray(this->type());
+  return correctType ? storageAs<T *>() : nullptr;
 }
 
 template <typename T>
