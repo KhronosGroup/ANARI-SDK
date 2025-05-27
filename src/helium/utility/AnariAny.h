@@ -290,7 +290,7 @@ inline T *AnariAny::getObject() const
   static_assert(
       anari::isObject(type), "use AnariAny::get() for getting non-objects");
   const bool correctType = this->type() == type
-      || type == ANARI_ARRAY && anari::isArray(this->type());
+      || (type == ANARI_ARRAY && anari::isArray(this->type()));
   return correctType ? storageAs<T *>() : nullptr;
 }
 
