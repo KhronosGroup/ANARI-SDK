@@ -242,7 +242,7 @@
                 }, {
                     "name" : "volume",
                     "types" : ["ANARI_ARRAY1D"],
-                    "elementType" : ["ANARI_LIGHT"],
+                    "elementType" : ["ANARI_VOLUME"],
                     "tags" : [],
                     "description" : "array of non-instanced volume objects in the world"
                 }, {
@@ -291,6 +291,10 @@
                     "types" : ["ANARI_MATERIAL"],
                     "tags" : ["required"],
                     "description" : "material object defining the surface appearance"
+                }, {
+                    "name" : "visible",
+                    "types" : ["ANARI_BOOL"],
+                    "tags" : []
                 }
             ]
         }

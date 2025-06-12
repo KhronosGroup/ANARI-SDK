@@ -251,6 +251,14 @@
                 {"name" : "name", "type" : "const char*"},
                 {"name" : "type", "type" : "ANARIDataType"}
             ]
+        },
+        {
+            "name" : "ANARIParameterValue",
+            "members" : [
+                {"name" : "name", "type" : "const char*"},
+                {"name" : "type", "type" : "ANARIDataType"},
+                {"name" : "value", "type" : "const void*"}
+            ]
         }
     ],
 
@@ -289,6 +297,14 @@
             "arguments" : [
                 {"name" : "library", "type" : "ANARILibrary"},
                 {"name" : "type", "type" : "const char*", "default" : "\"default\""}
+            ]
+        }, {
+            "name" : "anariNewInitializedDevice",
+            "returnType" : "ANARIDevice",
+            "arguments" : [
+                {"name" : "library", "type" : "ANARILibrary"},
+                {"name" : "type", "type" : "const char*"},
+                {"name" : "initializers", "type" : "ANARIParameterValue*"}
             ]
         }, {
             "name" : "anariNewArray1D",

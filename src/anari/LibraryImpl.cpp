@@ -24,7 +24,8 @@
 #endif
 
 #ifdef _WIN32
-#define LOOKUP_SYM(lib, symbol) (void*)GetProcAddress((HMODULE)lib, symbol.c_str());
+#define LOOKUP_SYM(lib, symbol)                                                \
+  (void *)GetProcAddress((HMODULE)lib, symbol.c_str());
 #define FREE_LIB(lib) FreeLibrary((HMODULE)lib);
 #else
 #define LOOKUP_SYM(lib, symbol) dlsym(lib, symbol.c_str());
@@ -124,8 +125,8 @@ static void *loadLibrary(
       LocalFree(lpMsgBuf);
     }
 
-    // iw: check if 'withAnchor' is on - if now, currentWd has never been queried
-    // and points to an un-initialized memory location
+    // iw: check if 'withAnchor' is on - if now, currentWd has never been
+    // queried and points to an un-initialized memory location
     if (withAnchor) {
       // Change cwd back to its original value
       SetCurrentDirectory(currentWd);
@@ -188,6 +189,13 @@ LibraryImpl::LibraryImpl(
 LibraryImpl::~LibraryImpl()
 {
   freeLibrary(m_lib);
+}
+
+ANARIDevice LibraryImpl::newInitializedDevice(
+    const char *subtype, ANARIParameterValue *)
+{
+  // by default, just forward to parameterless version
+  return newDevice(subtype);
 }
 
 void LibraryImpl::loadModule(const char * /*name*/)
