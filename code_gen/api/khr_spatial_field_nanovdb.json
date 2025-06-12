@@ -1,0 +1,36 @@
+{
+    "info" : {
+        "name" : "KHR_SPATIAL_FIELD_NANOVDB",
+        "type" : "extension",
+        "dependencies" : []
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_SPATIAL_FIELD",
+            "name" : "nanovdb",
+            "description" : "nanovdb spatial field object",
+            "parameters" : [
+                {
+                    "name" : "name",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "description" : "optional object name"
+                }, {
+                    "name" : "data",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "elementType" : ["ANARI_UINT8"],
+                    "tags" : ["required"],
+                    "description" : "nanovdb binary blob"
+                }, {
+                    "name" : "filter",
+                    "types" : ["ANARI_STRING"],
+                    "tags" : [],
+                    "default" : "linear",
+                    "values" : ["nearest", "linear"],
+                    "description" : "filter mode used to interpolate the grid"
+                }
+            ]
+        }
+    ]
+}

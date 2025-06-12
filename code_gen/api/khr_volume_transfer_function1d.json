@@ -17,6 +17,10 @@
                     "tags" : [],
                     "description" : "optional object name"
                 }, {
+                    "name" : "visible",
+                    "types" : ["ANARI_BOOL"],
+                    "tags" : []
+                }, {
                     "name" : "value",
                     "types" : ["ANARI_SPATIAL_FIELD"],
                     "tags" : ["required"],
