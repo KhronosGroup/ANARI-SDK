@@ -250,9 +250,8 @@ void *SinkDevice::mapParameterArray1D(ANARIObject object,
     uint64_t *elementStride)
 {
   if (auto obj = getObject(object)) {
-    if (elementStride) {
-      *elementStride = 0;
-    }
+    if (elementStride)
+      *elementStride = sizeOf(dataType);
     return obj->mapArray(name, sizeOf(dataType) * numElements1);
   } else {
     return nullptr;
@@ -267,9 +266,8 @@ void *SinkDevice::mapParameterArray2D(ANARIObject object,
     uint64_t *elementStride)
 {
   if (auto obj = getObject(object)) {
-    if (elementStride) {
-      *elementStride = 0;
-    }
+    if (elementStride)
+      *elementStride = sizeOf(dataType);
     return obj->mapArray(name, sizeOf(dataType) * numElements1 * numElements2);
   } else {
     return nullptr;
@@ -285,9 +283,8 @@ void *SinkDevice::mapParameterArray3D(ANARIObject object,
     uint64_t *elementStride)
 {
   if (auto obj = getObject(object)) {
-    if (elementStride) {
-      *elementStride = 0;
-    }
+    if (elementStride)
+      *elementStride = sizeOf(dataType);
     return obj->mapArray(
         name, sizeOf(dataType) * numElements1 * numElements2 * numElements3);
   } else {

@@ -136,6 +136,53 @@
                     "tags" : [],
                     "description" : "vertex attribute3"
                 }, {
+                    "name" : "faceVarying.normal",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "elementType" : ["ANARI_FLOAT32_VEC3", "ANARI_FIXED16_VEC3"],
+                    "tags" : [],
+                    "description" : "faceVarying normal"
+                }, {
+                    "name" : "faceVarying.tangent",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "elementType" : ["ANARI_FLOAT32_VEC3", "ANARI_FIXED16_VEC3", "ANARI_FLOAT32_VEC4", "ANARI_FIXED16_VEC4"],
+                    "tags" : [],
+                    "description" : "faceVarying normal"
+                }, {
+                    "name" : "faceVarying.color",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "elementType" : [
+                        "ANARI_UFIXED8", "ANARI_UFIXED8_VEC2", "ANARI_UFIXED8_VEC3", "ANARI_UFIXED8_VEC4",
+                        "ANARI_UFIXED8_R_SRGB", "ANARI_UFIXED8_RA_SRGB", "ANARI_UFIXED8_RGB_SRGB", "ANARI_UFIXED8_RGBA_SRGB",
+                        "ANARI_UFIXED16", "ANARI_UFIXED16_VEC2", "ANARI_UFIXED16_VEC3", "ANARI_UFIXED16_VEC4",
+                        "ANARI_UFIXED32", "ANARI_UFIXED32_VEC2", "ANARI_UFIXED32_VEC3", "ANARI_UFIXED32_VEC4",
+                        "ANARI_FLOAT32", "ANARI_FLOAT32_VEC2", "ANARI_FLOAT32_VEC3", "ANARI_FLOAT32_VEC4"],
+                    "tags" : [],
+                    "description" : "faceVarying color"
+                }, {
+                    "name" : "faceVarying.attribute0",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "elementType" : ["ANARI_FLOAT32", "ANARI_FLOAT32_VEC2", "ANARI_FLOAT32_VEC3", "ANARI_FLOAT32_VEC4"],
+                    "tags" : [],
+                    "description" : "faceVarying attribute0"
+                }, {
+                    "name" : "faceVarying.attribute1",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "elementType" : ["ANARI_FLOAT32", "ANARI_FLOAT32_VEC2", "ANARI_FLOAT32_VEC3", "ANARI_FLOAT32_VEC4"],
+                    "tags" : [],
+                    "description" : "faceVarying attribute1"
+                }, {
+                    "name" : "faceVarying.attribute2",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "elementType" : ["ANARI_FLOAT32", "ANARI_FLOAT32_VEC2", "ANARI_FLOAT32_VEC3", "ANARI_FLOAT32_VEC4"],
+                    "tags" : [],
+                    "description" : "faceVarying attribute2"
+                }, {
+                    "name" : "faceVarying.attribute3",
+                    "types" : ["ANARI_ARRAY1D"],
+                    "elementType" : ["ANARI_FLOAT32", "ANARI_FLOAT32_VEC2", "ANARI_FLOAT32_VEC3", "ANARI_FLOAT32_VEC4"],
+                    "tags" : [],
+                    "description" : "vertex attribute3"
+                }, {
                     "name" : "primitive.index",
                     "types" : ["ANARI_ARRAY1D"],
                     "elementType" : ["ANARI_UINT32_VEC3", "ANARI_UINT64_VEC3"],

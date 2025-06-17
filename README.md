@@ -51,12 +51,13 @@ Using a tool like `ccmake` or `cmake-gui` will let you see which options are
 available to enable. The following CMake options are offered:
 
 - `BUILD_SHARED_LIBS`   : build everything as shared libraries or static libraries
+- `BUILD_CAT`           : build the capability analysis tool
 - `BUILD_CTS`           : build the conformance test suite
 - `BUILD_TESTING`       : build unit and regression test binaries
 - `BUILD_HELIDE_DEVICE` : build the provided example `helide` device implementation
 - `BUILD_REMOTE_DEVICE` : build the provided experimental `remote` device implementation
 - `BUILD_EXAMPLES`      : build example applications
-- `BUILD_VIEWER`        : build viewer too (needs glfw3) if building examples
+- `BUILD_VIEWER`        : build viewer too (needs SDL3) if building examples
 - `BUILD_HDANARI`       : build (experimental) OpenUSD Hydra delegate plugin
 
 Once built, the library can be installed via the `install` target created by
@@ -181,8 +182,8 @@ variables:
 ### (Unofficial) list of available ANARI implementations
 
 - [AMD RadeonProRender](https://github.com/GPUOpen-LibrariesAndSDKs/RadeonProRenderANARI)
-- [Barney](https://github.com/ingowald/barney) (experimental MPI distributed renderer)
-- [Cycles](https://github.com/jeffamstutz/cycles)
+- [Barney](https://github.com/ingowald/barney) (MPI distributed renderer)
+- [Cycles (Blender)](https://github.com/jeffamstutz/anari-cycles)
 - [Intel OSPRay](https://github.com/ospray/anari-ospray)
 - [NVIDIA USD](https://github.com/NVIDIA-Omniverse/AnariUsdDevice)
 - [NVIDIA VisRTX + VisGL](https://github.com/NVIDIA/VisRTX)

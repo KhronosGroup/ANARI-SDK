@@ -70,7 +70,7 @@ const std::vector<Volume *> &Group::volumes() const
   return m_volumes;
 }
 
-void Group::intersectVolumes(VolumeRay &ray) const
+void Group::intersectVolumes(VolumeRay &ray, const mat4 &invMat) const
 {
   Volume *originalVolume = ray.volume;
   box1 t = ray.t;
@@ -78,9 +78,11 @@ void Group::intersectVolumes(VolumeRay &ray) const
   for (auto *v : volumes()) {
     if (!v->isValid())
       continue;
+    const float3 org = xfmPoint(invMat, ray.org);
+    const float3 dir = xfmVec(invMat, ray.dir);
     const box3 bounds = v->bounds();
-    const float3 mins = (bounds.lower - ray.org) * (1.f / ray.dir);
-    const float3 maxs = (bounds.upper - ray.org) * (1.f / ray.dir);
+    const float3 mins = (bounds.lower - org) * (1.f / dir);
+    const float3 maxs = (bounds.upper - org) * (1.f / dir);
     const float3 nears = linalg::min(mins, maxs);
     const float3 fars = linalg::max(mins, maxs);
 
@@ -93,8 +95,10 @@ void Group::intersectVolumes(VolumeRay &ray) const
     }
   }
 
-  if (ray.volume != originalVolume)
+  if (ray.volume != originalVolume) {
     ray.t = t;
+    ray.invXfm = invMat;
+  }
 }
 
 RTCScene Group::embreeScene() const

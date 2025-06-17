@@ -19,7 +19,7 @@
                 }, {
                     "name" : "data",
                     "types" : ["ANARI_ARRAY3D"],
-                    "elementType" : ["ANARI_UINT8", "ANARI_INT16", "ANARI_UINT16", "ANARI_FLOAT32", "ANARI_FLOAT64"],
+                    "elementType" : ["ANARI_UFIXED8", "ANARI_FIXED16", "ANARI_UFIXED16", "ANARI_FLOAT32", "ANARI_FLOAT64"],
                     "tags" : ["required"],
                     "description" : "array of vertex centered scalar values"
                 }, {

@@ -23,6 +23,7 @@ runs:
       shell: ${{ inputs.shell }}
       run: >
         cmake -LA -B ${{ inputs.workspace }}/build
+        -DBUILD_CAT=OFF
         -DBUILD_CTS=ON
         -DBUILD_EXAMPLES=ON
         -DBUILD_HDANARI=OFF

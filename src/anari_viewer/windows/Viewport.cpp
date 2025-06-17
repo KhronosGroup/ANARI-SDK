@@ -13,8 +13,15 @@ namespace anari_viewer::windows {
 // Viewport definitions ///////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-Viewport::Viewport(anari::Device device, const char *name)
-    : Window(name, true), m_device(device)
+Viewport::Viewport(Application *app,
+    anari::Device device,
+    const char *name,
+    bool useOrthoCamera,
+    int initRendererId)
+    : Window(app, name, true),
+      m_useOrthoCamera(useOrthoCamera),
+      m_device(device),
+      m_currentRenderer(initRendererId)
 {
   setManipulator(nullptr);
 
@@ -24,23 +31,12 @@ Viewport::Viewport(anari::Device device, const char *name)
   m_contextMenuName = "vpContextMenu_";
   m_contextMenuName += name;
 
-  // GL //
-
-  glGenTextures(1, &m_framebufferTexture);
-  glBindTexture(GL_TEXTURE_2D, m_framebufferTexture);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glTexImage2D(GL_TEXTURE_2D,
-      0,
-      GL_RGBA8,
+  auto renderer = m_app->sdlRenderer();
+  m_framebufferTexture = SDL_CreateTexture(renderer,
+      SDL_PIXELFORMAT_RGBA32,
+      SDL_TEXTUREACCESS_STREAMING,
       m_viewportSize.x,
-      m_viewportSize.y,
-      0,
-      GL_RGBA,
-      GL_UNSIGNED_BYTE,
-      0);
+      m_viewportSize.y);
 
   // ANARI //
 
@@ -102,7 +98,7 @@ void Viewport::buildUI()
   updateImage();
   updateCamera();
 
-  ImGui::Image((void *)(intptr_t)m_framebufferTexture,
+  ImGui::Image((ImTextureID)(intptr_t)m_framebufferTexture,
       ImGui::GetContentRegionAvail(),
       ImVec2(1, 0),
       ImVec2(0, 1));
@@ -168,6 +164,18 @@ anari::Device Viewport::device() const
   return m_device;
 }
 
+void Viewport::setViewportFrameReadyCallback(
+    ViewportFrameReadyCallback cb, void *userData)
+{
+  this->m_onViewportFrameReady = cb;
+  this->m_onViewportFrameReadyUserData = userData;
+}
+
+void Viewport::addOverlay(Overlay *overlay)
+{
+  m_overlays.emplace_back(overlay);
+}
+
 void Viewport::reshape(anari::math::int2 newSize)
 {
   if (newSize.x <= 0 || newSize.y <= 0)
@@ -175,18 +183,16 @@ void Viewport::reshape(anari::math::int2 newSize)
 
   m_viewportSize = newSize;
 
-  glViewport(0, 0, newSize.x, newSize.y);
+  auto renderer = m_app->sdlRenderer();
 
-  glBindTexture(GL_TEXTURE_2D, m_framebufferTexture);
-  glTexImage2D(GL_TEXTURE_2D,
-      0,
-      GL_RGBA8,
-      newSize.x,
-      newSize.y,
-      0,
-      GL_RGBA,
-      GL_UNSIGNED_BYTE,
-      0);
+  SDL_DestroyTexture(m_framebufferTexture);
+
+  m_framebufferTexture = SDL_CreateTexture(renderer,
+      m_format == ANARI_FLOAT32_VEC4 ? SDL_PIXELFORMAT_RGBA128_FLOAT
+                                     : SDL_PIXELFORMAT_RGBA32,
+      SDL_TEXTUREACCESS_STREAMING,
+      m_viewportSize.x,
+      m_viewportSize.y);
 
   updateFrame();
   updateCamera(true);
@@ -247,8 +253,10 @@ void Viewport::updateCamera(bool force)
   auto radians = [](float degrees) -> float { return degrees * M_PI / 180.f; };
   anari::setParameter(m_device, m_perspCamera, "fovy", radians(m_fov));
 
-  anari::setParameter(m_device, m_perspCamera, "apertureRadius", m_apertureRadius);
-  anari::setParameter(m_device, m_perspCamera, "focusDistance", m_focusDistance);
+  anari::setParameter(
+      m_device, m_perspCamera, "apertureRadius", m_apertureRadius);
+  anari::setParameter(
+      m_device, m_perspCamera, "focusDistance", m_focusDistance);
 
   anari::commitParameters(m_device, m_perspCamera);
   anari::commitParameters(m_device, m_orthoCamera);
@@ -264,44 +272,27 @@ void Viewport::updateImage()
 
     float duration = 0.f;
     anari::getProperty(m_device, m_frame, "duration", duration);
+    if (this->m_onViewportFrameReady) {
+      this->m_onViewportFrameReady(
+          this->m_onViewportFrameReadyUserData, this, duration);
+    }
 
     m_latestFL = duration * 1000;
     m_minFL = std::min(m_minFL, m_latestFL);
     m_maxFL = std::max(m_maxFL, m_latestFL);
 
-    auto fb = anari::map<uint32_t>(m_device, m_frame, "channel.color");
+    auto fb = anari::map<void>(m_device, m_frame, "channel.color");
 
-    if (fb.data) {
-      const bool isByteChannles = fb.pixelType == ANARI_UFIXED8_RGBA_SRGB
-          || fb.pixelType == ANARI_UFIXED8_VEC4;
-      if (isByteChannles) {
-        glBindTexture(GL_TEXTURE_2D, m_framebufferTexture);
-        glTexSubImage2D(GL_TEXTURE_2D,
-            0,
-            0,
-            0,
-            fb.width,
-            fb.height,
-            GL_RGBA,
-            GL_UNSIGNED_BYTE,
-            fb.data);
-      } else {
-        glBindTexture(GL_TEXTURE_2D, m_framebufferTexture);
-        glTexSubImage2D(GL_TEXTURE_2D,
-            0,
-            0,
-            0,
-            fb.width,
-            fb.height,
-            GL_RGBA,
-            GL_FLOAT,
-            fb.data);
-      }
+    if (fb.data && fb.pixelType == m_format) {
+      SDL_UpdateTexture(m_framebufferTexture,
+          nullptr,
+          fb.data,
+          fb.width * anari::sizeOf(m_format));
     } else {
       printf("mapped bad frame: %p | %i x %i\n", fb.data, fb.width, fb.height);
     }
 
-    if (m_saveNextFrame) {
+    if (m_saveNextFrame && m_format == ANARI_FLOAT32_VEC4) {
       std::string filename =
           "screenshot" + std::to_string(m_screenshotIndex++) + ".png";
       stbi_write_png(
@@ -328,11 +319,9 @@ void Viewport::ui_handleInput()
   ImGuiIO &io = ImGui::GetIO();
 
   const bool dolly = ImGui::IsMouseDown(ImGuiMouseButton_Right)
-      || (ImGui::IsMouseDown(ImGuiMouseButton_Left)
-          && io.KeysDown[GLFW_KEY_LEFT_SHIFT]);
+      || (ImGui::IsMouseDown(ImGuiMouseButton_Left) && io.KeyShift);
   const bool pan = ImGui::IsMouseDown(ImGuiMouseButton_Middle)
-      || (ImGui::IsMouseDown(ImGuiMouseButton_Left)
-          && io.KeysDown[GLFW_KEY_LEFT_ALT]);
+      || (ImGui::IsMouseDown(ImGuiMouseButton_Left) && io.KeyAlt);
   const bool orbit = ImGui::IsMouseDown(ImGuiMouseButton_Left);
 
   const bool anyMovement = dolly || pan || orbit;
@@ -411,7 +400,7 @@ void Viewport::ui_contextMenu()
       auto &parameters = m_rendererParameters[m_currentRenderer];
       auto renderer = m_renderers[m_currentRenderer];
       for (auto &p : parameters)
-        ui::buildUI(m_device, renderer, p);
+        ui::buildUI(m_app->sdlWindow(), m_device, renderer, p);
       ImGui::EndMenu();
     }
 
@@ -466,8 +455,10 @@ void Viewport::ui_contextMenu()
       if (ImGui::RadioButton("FLOAT32_VEC4", m_format == ANARI_FLOAT32_VEC4))
         m_format = ANARI_FLOAT32_VEC4;
 
-      if (format != m_format)
+      if (format != m_format) {
         updateFrame();
+        reshape(m_viewportSize);
+      }
 
       ImGui::EndMenu();
     }
@@ -545,6 +536,8 @@ void Viewport::ui_overlay()
 
   ImGui::Separator();
 
+  // Begin overlays
+  // Show default camera information overlay.
   static bool showCameraInfo = false;
 
   ImGui::Checkbox("camera info", &showCameraInfo);
@@ -555,6 +548,10 @@ void Viewport::ui_overlay()
     ImGui::Text("  az: %f", azel.x);
     ImGui::Text("  el: %f", azel.y);
     ImGui::Text("dist: %f", dist);
+  }
+  // Draw custom overlay sections.
+  for (const auto &overlay : m_overlays) {
+    overlay->buildUI(this);
   }
 
   ImGui::End();

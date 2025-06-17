@@ -20,6 +20,7 @@ struct Instance : public Object
   uint32_t numTransforms() const;
 
   const mat4 &xfm(uint32_t i = 0) const;
+  const mat4 &invXfm(uint32_t i = 0) const;
   mat3 xfmInvRot(uint32_t i = 0) const;
 
   uint32_t id(uint32_t i = 0) const;
@@ -35,7 +36,9 @@ struct Instance : public Object
 
  private:
   mat4 m_xfm;
+  mat4 m_invXfm;
   helium::ChangeObserverPtr<Array1D> m_xfmArray;
+  std::vector<mat4> m_invXfmData;
 
   uint32_t m_id{~0u};
   helium::ChangeObserverPtr<Array1D> m_idArray;

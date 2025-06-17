@@ -28,6 +28,9 @@ struct BaseFrame : public BaseObject
 
   // Implement anariDiscardFrame()
   virtual void discard() = 0;
+
+  private:
+  void on_NoPublicReferences() override;
 };
 
 } // namespace helium

@@ -6,23 +6,34 @@
 #include "../Orbit.h"
 #include "../ui_anari.h"
 // glad
-#include "glad/glad.h"
-// glfw
-#include <GLFW/glfw3.h>
+#include <SDL3/SDL.h>
 // anari
 #include <anari/anari_cpp/ext/linalg.h>
 #include <anari/anari_cpp.hpp>
 // std
-#include <array>
 #include <limits>
 
 #include "Window.h"
 
 namespace anari_viewer::windows {
 
+struct Viewport;
+struct Overlay
+{
+  virtual ~Overlay() = default;
+  virtual void buildUI(Viewport *viewport) = 0;
+};
+
+using ViewportFrameReadyCallback = std::function<void(const void *,
+    const anari_viewer::windows::Viewport *,
+    const float /*duration*/)>;
 struct Viewport : public Window
 {
-  Viewport(anari::Device device, const char *name = "Viewport");
+  Viewport(Application *app,
+      anari::Device device,
+      const char *name = "Viewport",
+      bool useOrthoCamera = false,
+      int initRendererId = 0);
   ~Viewport();
 
   void buildUI() override;
@@ -34,6 +45,11 @@ struct Viewport : public Window
   void resetView(bool resetAzEl = true);
 
   anari::Device device() const;
+
+  void setViewportFrameReadyCallback(
+      ViewportFrameReadyCallback cb, void *userData);
+
+  void addOverlay(Overlay *overlay);
 
  private:
   void reshape(anari::math::int2 newWindowSize);
@@ -92,7 +108,7 @@ struct Viewport : public Window
 
   // OpenGL + display
 
-  GLuint m_framebufferTexture{0};
+  SDL_Texture *m_framebufferTexture;
   anari::math::int2 m_viewportSize{1920, 1080};
   anari::math::int2 m_renderSize{1920, 1080};
 
@@ -102,6 +118,11 @@ struct Viewport : public Window
 
   std::string m_overlayWindowName;
   std::string m_contextMenuName;
+
+  ViewportFrameReadyCallback m_onViewportFrameReady = nullptr;
+  void *m_onViewportFrameReadyUserData = nullptr;
+
+  std::vector<std::unique_ptr<Overlay>> m_overlays;
 };
 
 } // namespace anari_viewer::windows

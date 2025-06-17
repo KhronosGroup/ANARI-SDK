@@ -168,6 +168,14 @@ extern "C" ANARIDevice anariNewDevice(
 }
 ANARI_CATCH_END(nullptr)
 
+extern "C" ANARIDevice anariNewInitializedDevice(ANARILibrary l,
+    const char *deviceType,
+    ANARIParameterValue *parameters) ANARI_CATCH_BEGIN
+{
+  return libraryRef(l).newInitializedDevice(deviceType, parameters);
+}
+ANARI_CATCH_END(nullptr)
+
 ///////////////////////////////////////////////////////////////////////////////
 // Object Introspection ///////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////

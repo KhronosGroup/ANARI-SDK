@@ -287,7 +287,7 @@ special = {
     'anariMapParameterArray2D' :
     '''def anariMapParameterArray2D(device, object, name, dataType, numElements1, numElements2):
     elementStride = ffi.new('uint64_t*', 0)
-    result = lib.anariMapParameterArray1D(device, object, name.encode('utf-8'), dataType, numElements1, numElements2, elementStride)
+    result = lib.anariMapParameterArray2D(device, object, name.encode('utf-8'), dataType, numElements1, numElements2, elementStride)
     result = ffi.cast(_basepointer[dataType], result)
     return (result, int(elementStride[0]))
 
@@ -295,7 +295,7 @@ special = {
     'anariMapParameterArray3D' :
     '''def anariMapParameterArray3D(device, object, name, dataType, numElements1, numElements2, numElements3):
     elementStride = ffi.new('uint64_t*', 0)
-    result = lib.anariMapParameterArray1D(device, object, name.encode('utf-8'), dataType, numElements1, numElements2, numElements3, elementStride)
+    result = lib.anariMapParameterArray3D(device, object, name.encode('utf-8'), dataType, numElements1, numElements2, numElements3, elementStride)
     result = ffi.cast(_basepointer[dataType], result)
     return (result, int(elementStride[0]))
 

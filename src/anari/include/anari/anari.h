@@ -134,6 +134,11 @@ typedef struct {
   const char* name;
   ANARIDataType type;
 } ANARIParameter;
+typedef struct {
+  const char* name;
+  ANARIDataType type;
+  const void* value;
+} ANARIParameterValue;
 
 typedef void (*ANARIMemoryDeleter)(const void* userPtr, const void* appMemory);
 typedef void (*ANARIStatusCallback)(const void* userPtr, ANARIDevice device, ANARIObject source, ANARIDataType sourceType, ANARIStatusSeverity severity, ANARIStatusCode code, const char* message);
@@ -144,6 +149,7 @@ ANARI_INTERFACE void anariUnloadLibrary(ANARILibrary module);
 ANARI_INTERFACE void anariLoadModule(ANARILibrary library, const char* name);
 ANARI_INTERFACE void anariUnloadModule(ANARILibrary library, const char* name);
 ANARI_INTERFACE ANARIDevice anariNewDevice(ANARILibrary library, const char* type ANARI_DEFAULT_VAL("default"));
+ANARI_INTERFACE ANARIDevice anariNewInitializedDevice(ANARILibrary library, const char* type, ANARIParameterValue* initializers);
 ANARI_INTERFACE ANARIArray1D anariNewArray1D(ANARIDevice device, const void* appMemory, ANARIMemoryDeleter deleter, const void* userData, ANARIDataType dataType, uint64_t numElements1);
 ANARI_INTERFACE ANARIArray2D anariNewArray2D(ANARIDevice device, const void* appMemory, ANARIMemoryDeleter deleter, const void* userData, ANARIDataType dataType, uint64_t numElements1, uint64_t numElements2);
 ANARI_INTERFACE ANARIArray3D anariNewArray3D(ANARIDevice device, const void* appMemory, ANARIMemoryDeleter deleter, const void* userData, ANARIDataType dataType, uint64_t numElements1, uint64_t numElements2, uint64_t numElements3);

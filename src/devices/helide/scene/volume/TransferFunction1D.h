@@ -27,7 +27,7 @@ struct TransferFunction1D : public Volume
       float &outputOpacity) override;
 
  private:
-  float3 colorOf(float sample) const;
+  float4 colorOf(float sample) const;
   float opacityOf(float sample) const;
 
   const SpatialField *field() const;
@@ -43,8 +43,8 @@ struct TransferFunction1D : public Volume
   float4 m_uniformColor{1.f, 1.f, 1.f, 1.f};
   float m_uniformOpacity{1.f};
 
-  helium::IntrusivePtr<Array1D> m_colorData;
-  helium::IntrusivePtr<Array1D> m_opacityData;
+  helium::ChangeObserverPtr<Array1D> m_colorData;
+  helium::ChangeObserverPtr<Array1D> m_opacityData;
 };
 
 // Inlined defintions /////////////////////////////////////////////////////////
@@ -54,16 +54,22 @@ inline const SpatialField *TransferFunction1D::field() const
   return m_field.get();
 }
 
-inline float3 TransferFunction1D::colorOf(float sample) const
+inline float4 TransferFunction1D::colorOf(float sample) const
 {
-  return m_colorData ? m_colorData->valueAtLinear<float3>(normalized(sample)) :
-  float3(m_uniformColor.x, m_uniformColor.y, m_uniformColor.z);
+  if (!m_colorData)
+    return m_uniformColor;
+  else if (m_colorData->elementType() == ANARI_FLOAT32_VEC3)
+    return float4(m_colorData->valueAtLinear<float3>(normalized(sample)), 1.f);
+  else if (m_colorData->elementType() == ANARI_FLOAT32_VEC4)
+    return m_colorData->valueAtLinear<float4>(normalized(sample));
+  else
+    return float4(0.f); // error, invalid
 }
 
 inline float TransferFunction1D::opacityOf(float sample) const
 {
   return m_opacityData ? m_opacityData->valueAtLinear<float>(normalized(sample))
-   : m_uniformOpacity;
+                       : m_uniformOpacity;
 }
 
 inline float TransferFunction1D::normalized(float sample) const

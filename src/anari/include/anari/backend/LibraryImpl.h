@@ -24,6 +24,12 @@ struct LibraryImpl
 
   // Create an instance of anari::DeviceImpl, typically using the 'new' operator
   virtual ANARIDevice newDevice(const char *subtype) = 0;
+  // Create an instance of anari::DeviceImpl with immutable parameters. This is
+  // _not_ pure virtual -- default implementation ignores 'parameters' and
+  // just calls 'newDevice(subtype)'. Override if your device has any custom
+  // parameters to be consumed in this way.
+  virtual ANARIDevice newInitializedDevice(
+      const char *subtype, ANARIParameterValue *parameters);
   // Implement anariGetDevcieExtensions()
   virtual const char **getDeviceExtensions(const char *deviceType) = 0;
   // Optionally implement anariGetDeviceSubtypes(), get {"default", 0} otherwise

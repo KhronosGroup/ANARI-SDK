@@ -44,12 +44,13 @@ struct Array1D : public Array
   template <typename T>
   T valueAtClosest(float in) const; // 'in' must be clamped to [0, 1]
 
-  void privatize() override;
-
  protected:
   size_t m_capacity{0};
   size_t m_begin{0};
   size_t m_end{0};
+
+ private:
+  void privatize() override;
 };
 
 anari::math::float4 readAttributeValue(const Array1D *arr,

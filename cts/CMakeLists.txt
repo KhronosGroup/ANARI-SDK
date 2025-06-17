@@ -1,7 +1,7 @@
 ## Copyright 2022-2025 The Khronos Group
 ## SPDX-License-Identifier: Apache-2.0
 
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.11)
 
 # Fix "DOWNLOAD_EXTRACT_TIMESTAMP" warning
 if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
@@ -32,10 +32,6 @@ pybind11_add_module(${PROJECT_NAME}
   src/anariInfo.cpp
   src/anariWrapper.cpp
   src/main.cpp
-  src/PrimitiveGenerator.cpp
-  src/SceneGenerator.cpp
-  src/ColorPalette.cpp
-  src/TextureGenerator.cpp
 )
 
 anari_generate_queries(

@@ -1,11 +1,18 @@
 ## Copyright 2021-2025 The Khronos Group
 ## SPDX-License-Identifier: Apache-2.0
 
+add_subdirectory(external)
+
 project(anari_test_scenes LANGUAGES C CXX)
 
 project_add_library()
 project_sources(PRIVATE
   anari_test_scenes.cpp
+
+  generators/ColorPalette.cpp
+  generators/PrimitiveGenerator.cpp
+  generators/SceneGenerator.cpp
+  generators/TextureGenerator.cpp
 
   scenes/scene.cpp
 
@@ -13,6 +20,12 @@ project_sources(PRIVATE
   scenes/demo/gravity_spheres_volume.cpp
 
   scenes/file/obj.cpp
+
+  scenes/performance/materials.cpp
+  scenes/performance/particles.cpp
+  scenes/performance/primitives.cpp
+  scenes/performance/spinning_cubes.cpp
+  scenes/performance/surfaces.cpp
 
   scenes/test/attributes.cpp
   scenes/test/instanced_cubes.cpp
@@ -53,6 +66,14 @@ if (USE_KTX)
   project_link_libraries(PUBLIC KTX::ktx)
   project_compile_definitions(PUBLIC -DUSE_KTX)
 endif()
+
+if (USE_KOKKOS)
+  project_link_libraries(PRIVATE Kokkos::kokkos)
+  project_compile_definitions(PRIVATE -DUSE_KOKKOS)
+endif ()
+
+# For initializing an aggregate with designated initializers 
+project_compile_features(PRIVATE cxx_std_20)
 
 include(GenerateExportHeader)
 generate_export_header(${PROJECT_NAME}

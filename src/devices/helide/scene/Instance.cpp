@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Instance.h"
+// std
+#include <algorithm>
 
 namespace helide {
 
@@ -48,6 +50,7 @@ void Instance::commitParameters()
 
 void Instance::finalize()
 {
+  m_invXfmData.clear();
   if (m_idArray && m_idArray->elementType() != ANARI_UINT32) {
     reportMessage(ANARI_SEVERITY_WARNING,
         "'id' array elements are %s, but need to be %s",
@@ -61,9 +64,17 @@ void Instance::finalize()
         anari::toString(m_idArray->elementType()),
         anari::toString(ANARI_FLOAT32_MAT4));
     m_xfmArray = {};
+  } else if (m_xfmArray) {
+    m_invXfmData.resize(m_xfmArray->totalSize());
+    std::transform(m_xfmArray->beginAs<mat4>(),
+        m_xfmArray->endAs<mat4>(),
+        m_invXfmData.begin(),
+        [](const mat4 &m) { return linalg::inverse(m); });
   }
   if (!m_group)
     reportMessage(ANARI_SEVERITY_WARNING, "missing 'group' on ANARIInstance");
+
+  m_invXfm = linalg::inverse(m_xfm);
 }
 
 void Instance::markFinalized()
@@ -78,7 +89,6 @@ bool Instance::isValid() const
   return m_group;
 }
 
-
 uint32_t Instance::numTransforms() const
 {
   return m_xfmArray ? uint32_t(m_xfmArray->totalSize()) : 1u;
@@ -92,6 +102,11 @@ uint32_t Instance::id(uint32_t i) const
 const mat4 &Instance::xfm(uint32_t i) const
 {
   return m_xfmArray ? *m_xfmArray->valueAt<mat4>(i) : m_xfm;
+}
+
+const mat4 &Instance::invXfm(uint32_t i) const
+{
+  return m_invXfmData.empty() ? m_invXfm : m_invXfmData[i];
 }
 
 UniformAttributeSet Instance::getUniformAttributes(uint32_t i) const

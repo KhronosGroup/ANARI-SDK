@@ -15,6 +15,7 @@ using json = nlohmann::json;
 #include <ktx.h>
 #endif
 
+#include "anari/anari_cpp.hpp"
 #include "anari/anari_cpp/ext/linalg.h"
 #include "mikktspace.h"
 
@@ -842,7 +843,7 @@ struct gltf_data
             stbi_image_free(const_cast<void*>(mem));
           };
     return std::make_tuple(stbi_load_from_memory(
-                  (const stbi_uc *)data, length, width, height, n, 0),
+                  (const stbi_uc *)data, static_cast<int>(length), width, height, n, 0),
               d, nullptr);
     });
   }
@@ -924,8 +925,8 @@ struct gltf_data
         ++imageFilesIndex;      
       }
 
-      bool isSRGB = sRGBImages.find(imageIndex) != sRGBImages.end();
-      bool isNormalMap = normalMaps.find(imageIndex) != normalMaps.end();
+      bool isSRGB = sRGBImages.find(static_cast<int>(imageIndex)) != sRGBImages.end();
+      bool isNormalMap = normalMaps.find(static_cast<int>(imageIndex)) != normalMaps.end();
 
       auto [data, func, usrptr] = decode_image(img, imageIndex, imageData, &width, &height, &n);
 
@@ -1007,8 +1008,8 @@ struct gltf_data
 
         // metallic roughness
         if (pbr.contains("metallicRoughnessTexture")) {
-          float metallic = pbr.value("metallicFactor", 1);
-          float roughness = pbr.value("roughnessFactor", 1);
+          float metallic = pbr.value("metallicFactor", 1.f);
+          float roughness = pbr.value("roughnessFactor", 1.f);
 
           float metallicSwizzle[16] = {
               // clang-format off
@@ -1636,7 +1637,7 @@ struct gltf_data
               primData.pPosAccessor = getAccessorData<anari::math::vec<float,
               3>>(src, dataSize, count);
 
-              verticesCount = count;
+              verticesCount = static_cast<uint32_t>(count);
               
               // set tangent size
               primData.outTangents.resize(count);
@@ -1689,7 +1690,7 @@ struct gltf_data
                   break;
               }
 
-              verticesCount = count;
+              verticesCount = static_cast<uint32_t>(count);
             }
 
             // get number of verts from position count or if available indices count

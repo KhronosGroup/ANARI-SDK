@@ -163,7 +163,7 @@ SceneGeneratorWrapper::SceneGeneratorWrapper(const std::string &library,
   }
 
   // create a SceneGenerator
-  m_sceneGenerator = std::make_unique<SceneGenerator>(dev);
+  m_sceneGenerator = std::make_unique<anari::scenes::SceneGenerator>(dev);
 
   anari::release(dev, dev);
 }
@@ -203,7 +203,7 @@ SceneGeneratorWrapper::SceneGeneratorWrapper(pybind11::function &callback)
   anariRelease(wrappedDevice, wrappedDevice);
 
   // create a SceneGenerator
-  m_sceneGenerator = std::make_unique<SceneGenerator>(device);
+  m_sceneGenerator = std::make_unique<anari::scenes::SceneGenerator>(device);
 
   anariRelease(device, device);
 }

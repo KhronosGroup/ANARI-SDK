@@ -18,7 +18,7 @@ using SceneSelectionCallback = std::function<void(const char *, const char *)>;
 
 struct SceneSelector : public Window
 {
-  SceneSelector(const char *name = "Scene");
+  SceneSelector(Application *app, const char *name = "Scene");
   ~SceneSelector();
 
   void buildUI() override;

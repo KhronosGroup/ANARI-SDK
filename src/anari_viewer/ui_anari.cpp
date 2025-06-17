@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "ui_anari.h"
-// anari_viewer
-#include "nfd.h"
+// SDL
+#include <SDL3/SDL_dialog.h>
 // std
 #include <limits>
 
@@ -38,12 +38,12 @@ static bool UI_stringList_callback(
 
 void init()
 {
-  NFD_Init();
+  // no-op
 }
 
 void shutdown()
 {
-  NFD_Quit();
+  // no-op
 }
 
 ParameterInfoList parseParameters(
@@ -118,7 +118,7 @@ ParameterInfoList parseParameters(
   return retval;
 }
 
-bool buildUI(ParameterInfo &p)
+bool buildUI(SDL_Window *window, ParameterInfo &p)
 {
   bool update = false;
 
@@ -145,6 +145,25 @@ bool buildUI(ParameterInfo &p)
       }
     } else
       update |= ImGui::InputInt(name, (int *)value);
+    break;
+  case ANARI_UINT32:
+    if (bounded) {
+      if (p.min && p.max) {
+        std::uint32_t v_min = p.min.get<std::uint32_t>();
+        std::uint32_t v_max = p.max.get<std::uint32_t>();
+        update |= ImGui::SliderScalar(
+            name, ImGuiDataType_U32, (std::uint32_t *)value, &v_min, &v_max);
+      } else {
+        std::uint32_t min = p.min
+            ? p.min.get<std::uint32_t>()
+            : std::numeric_limits<std::uint32_t>::lowest();
+        std::uint32_t max = p.max ? p.max.get<std::uint32_t>()
+                                  : std::numeric_limits<std::uint32_t>::max();
+        update |= ImGui::DragScalar(
+            name, ImGuiDataType_U32, (std::uint32_t *)value, 1.f, &min, &max);
+      }
+    } else
+      update |= ImGui::InputScalar(name, ImGuiDataType_U32, (int *)value);
     break;
   case ANARI_FLOAT32:
     if (bounded) {
@@ -184,20 +203,34 @@ bool buildUI(ParameterInfo &p)
       constexpr int MAX_LENGTH = 2000;
       p.value.reserveString(MAX_LENGTH);
 
+      static std::string outPath;
       if (ImGui::Button("...")) {
-        nfdchar_t *outPath = nullptr;
-        nfdfilteritem_t filterItem[3] = {
-            {"All Supported Files", "gltf,glb,obj"},
-            {"glTF Files", "gltf,glb"},
-            {"OBJ Files", "obj"}};
-        nfdresult_t result = NFD_OpenDialog(&outPath, filterItem, 3, nullptr);
-        if (result == NFD_OKAY) {
-          p.value = std::string(outPath).c_str();
-          update = true;
-          NFD_FreePath(outPath);
-        } else {
-          printf("NFD Error: %s\n", NFD_GetError());
-        }
+        outPath.clear();
+        auto fileDialogCb =
+            [](void *userdata, const char *const *filelist, int filter) {
+              std::string &out = *(std::string *)userdata;
+              if (!filelist) {
+                printf("ERROR: %s\n", SDL_GetError());
+                return;
+              }
+
+              if (*filelist)
+                out = *filelist;
+            };
+
+        SDL_DialogFileFilter filterItem[4] = {
+            {"All Supported Files", "gltf;glb;obj"},
+            {"glTF Files", "gltf;glb"},
+            {"OBJ Files", "obj"},
+            {"All Files", "*"}};
+        SDL_ShowOpenFileDialog(
+            fileDialogCb, &outPath, window, filterItem, 4, nullptr, false);
+      }
+
+      if (!outPath.empty()) {
+        p.value = outPath.c_str();
+        update = true;
+        outPath.clear();
       }
 
       ImGui::SameLine();
@@ -229,13 +262,13 @@ bool buildUI(ParameterInfo &p)
   return update;
 }
 
-void buildUI(anari::Device d, anari::Object o, ParameterInfo &p)
+void buildUI(SDL_Window *w, anari::Device d, anari::Object o, ParameterInfo &p)
 {
   ANARIDataType type = p.value.type();
   const char *name = p.name.c_str();
   void *value = p.value.data();
 
-  if (buildUI(p)) {
+  if (buildUI(w, p)) {
     if (p.value.type() == ANARI_STRING)
       anari::setParameter(d, o, name, p.value.getString());
     else

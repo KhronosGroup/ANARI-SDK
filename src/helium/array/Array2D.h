@@ -28,10 +28,11 @@ struct Array2D : public Array
       WrapMode wrap1 = WrapMode::DEFAULT,
       WrapMode wrap2 = WrapMode::DEFAULT) const;
 
-  void privatize() override;
-
  private:
   size_t m_size[2] = {0, 0};
+
+ private:
+  void privatize() override;
 };
 
 } // namespace helium

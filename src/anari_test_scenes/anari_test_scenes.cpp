@@ -13,6 +13,11 @@
 #ifdef ENABLE_GLTF
 #include "scenes/file/glTF.h"
 #endif
+#include "scenes/performance/materials.h"
+#include "scenes/performance/particles.h"
+#include "scenes/performance/primitives.h"
+#include "scenes/performance/spinning_cubes.h"
+#include "scenes/performance/surfaces.h"
 #include "scenes/test/attributes.h"
 #include "scenes/test/instanced_cubes.h"
 #include "scenes/test/pbr_spheres.h"
@@ -48,6 +53,13 @@ static void init()
 #ifdef ENABLE_GLTF
     registerScene("file", "glTF", sceneFileGLTF);
 #endif
+
+    // performance
+    registerScene("perf", "materials", sceneMaterials);
+    registerScene("perf", "particles", sceneParticles);
+    registerScene("perf", "primitives", scenePrimitives);
+    registerScene("perf", "spinning_cubes", sceneSpinningCubes);
+    registerScene("perf", "surfaces", sceneSurfaces);
 
     // tests
     registerScene("test", "random_spheres", sceneRandomSpheres);
