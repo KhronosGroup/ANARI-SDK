@@ -118,6 +118,10 @@ void Renderer::commitParameters()
   m_mode = renderModeFromString(getParamString("mode", "default"));
   m_taskGrainSize.x = getParam<int32_t>("taskGrainSizeWidth", 4);
   m_taskGrainSize.y = getParam<int32_t>("taskGrainSizeHeight", 4);
+
+  bool ignoreAmbientLighting = getParam<bool>("ignoreAmbientLighting", true);
+  if (ignoreAmbientLighting)
+    m_ambientRadiance = 1.f;
 }
 
 PixelSample Renderer::renderSample(
