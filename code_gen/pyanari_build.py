@@ -328,9 +328,20 @@ special = {
     return _convert_pointer(infoType, result)
 
 ''', 'anariGetProperty' :
-    '''def anariGetProperty(device, object, name, type, mem, size, mask):
+    '''def anariGetProperty(device, object, name, type, mask):
+    if type == ANARI_STRING:
+        size = anariGetProperty(device, object, name+'.size', ANARI_UINT32, mask)
+        if size is None:
+            return None
+    else:
+        size = ffi.sizeof(_typeof[type])
+
+    mem = ffi.new('char[]', size)
     result = lib.anariGetProperty(device, object, name.encode('utf-8'), type, mem, size, mask)
-    return _convert_pointer(infoType, result)
+    if result:
+        return _convert_pointer(type, mem)
+    else:
+        return None
 
 ''',
 

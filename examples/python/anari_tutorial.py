@@ -58,6 +58,9 @@ anariSetParameter(device, device, 'wrappedDevice', ANARI_DEVICE, nested)
 anariSetParameter(device, device, 'traceMode', ANARI_STRING, 'code')
 anariCommitParameters(device, device)
 
+version = anariGetProperty(device, device, 'version.name', ANARI_STRING, ANARI_WAIT)
+print("version.name =", version)
+
 camera = anariNewCamera(device, 'perspective')
 anariSetParameter(device, camera, 'aspect', ANARI_FLOAT32, width/height)
 anariSetParameter(device, camera, 'position', ANARI_FLOAT32_VEC3, cam_pos)
