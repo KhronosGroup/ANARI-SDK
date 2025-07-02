@@ -32,6 +32,7 @@ struct BaseObject : public RefCounted, ParameterizedObject, LockableObject
   virtual bool getProperty(const std::string_view &name,
       ANARIDataType type,
       void *ptr,
+      uint64_t size,
       uint32_t flags) = 0;
 
   // Implement anariCommitParameters(), but this will only occur when the
