@@ -9,14 +9,12 @@
 #include "array/ObjectArray.h"
 #include "frame/Frame.h"
 #include "scene/volume/spatial_field/SpatialField.h"
+// std
+#include <limits>
 
 #include "anari_library_helide_queries.h"
 
 namespace helide {
-
-///////////////////////////////////////////////////////////////////////////////
-// HelideDevice definitions ///////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
 
 // Data Arrays ////////////////////////////////////////////////////////////////
 
@@ -293,6 +291,30 @@ int HelideDevice::deviceGetProperty(
   std::string_view prop = name;
   if (prop == "extension" && type == ANARI_STRING_LIST) {
     helium::writeToVoidP(mem, query_extensions());
+    return 1;
+  } else if (prop == "version" && type == ANARI_INT32) {
+    int version = ANARI_SDK_VERSION_MAJOR * 1000
+        + ANARI_SDK_VERSION_MINOR * 100
+        + ANARI_SDK_VERSION_PATCH;
+    helium::writeToVoidP(mem, version);
+    return 1;
+  } else if (prop == "version.major" && type == ANARI_INT32) {
+    helium::writeToVoidP(mem, int(ANARI_SDK_VERSION_MAJOR));
+    return 1;
+  } else if (prop == "version.minor" && type == ANARI_INT32) {
+    helium::writeToVoidP(mem, int(ANARI_SDK_VERSION_MINOR));
+    return 1;
+  } else if (prop == "version.patch" && type == ANARI_INT32) {
+    helium::writeToVoidP(mem, int(ANARI_SDK_VERSION_PATCH));
+    return 1;
+  } else if (prop == "anariVersion.major" && type == ANARI_INT32) {
+    helium::writeToVoidP(mem, 1);
+    return 1;
+  } else if (prop == "anariVersion.minor" && type == ANARI_INT32) {
+    helium::writeToVoidP(mem, 1);
+    return 1;
+  } else if (prop == "geometryMaxIndex" && type == ANARI_UINT64) {
+    helium::writeToVoidP(mem, uint64_t(std::numeric_limits<uint32_t>::max()));
     return 1;
   } else if (prop == "helide" && type == ANARI_BOOL) {
     helium::writeToVoidP(mem, true);
