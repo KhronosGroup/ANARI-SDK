@@ -92,6 +92,13 @@
           "description": "visualization modes (most for debugging)"
         },
         {
+          "name": "ignoreAmbientLighting",
+          "types": ["ANARI_BOOL"],
+          "tags": [],
+          "default": true,
+          "description": "ignore 'ambientRaidance' and 'ambientColor' parameters on the renderer"
+        },
+        {
           "name": "eyeLightBlendRatio",
           "types": ["ANARI_FLOAT32"],
           "tags": [],
