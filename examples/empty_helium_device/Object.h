@@ -25,6 +25,7 @@ struct Object : public helium::BaseObject
   virtual bool getProperty(const std::string_view &name,
       ANARIDataType type,
       void *ptr,
+      uint64_t size,
       uint32_t flags) override;
 
   virtual void commitParameters() override;

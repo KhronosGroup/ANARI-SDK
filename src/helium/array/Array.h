@@ -78,6 +78,7 @@ struct Array : public BaseArray
   virtual bool getProperty(const std::string_view &name,
       ANARIDataType type,
       void *ptr,
+      uint64_t size,
       uint32_t flags) override;
   virtual void commitParameters() override;
   virtual void finalize() override;

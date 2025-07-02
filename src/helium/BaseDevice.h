@@ -94,7 +94,7 @@ struct BaseDevice : public anari::DeviceImpl,
 
   virtual void deviceCommitParameters();
   virtual int deviceGetProperty(
-      const char *name, ANARIDataType type, void *mem, uint64_t size);
+      const char *name, ANARIDataType type, void *mem, uint64_t size, uint32_t mask);
 
   std::unique_ptr<BaseGlobalDeviceState> m_state;
 
