@@ -318,7 +318,7 @@ int HelideDevice::deviceGetProperty(
     return 1;
   } else if (prop == "version.name" && type == ANARI_STRING) {
     std::memset(mem, 0, size);
-    std::memcpy(mem, helide_version.data(), std::min(helide_version.size(), size-1));
+    std::memcpy(mem, helide_version.data(), std::min(uint64_t(helide_version.size()), size-1));
     return 1;
   } else if (prop == "anariVersion.major" && type == ANARI_INT32) {
     helium::writeToVoidP(mem, 1);
