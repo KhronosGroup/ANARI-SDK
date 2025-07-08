@@ -330,7 +330,7 @@ special = {
 ''', 'anariGetProperty' :
     '''def anariGetProperty(device, object, name, type, mask):
     if type == ANARI_STRING:
-        size = anariGetProperty(device, object, name+'.size', ANARI_UINT32, mask)
+        size = anariGetProperty(device, object, name+'.size', ANARI_UINT64, mask)
         if size is None:
             return None
     else:

@@ -313,8 +313,8 @@ int HelideDevice::deviceGetProperty(
   } else if (prop == "version.patch" && type == ANARI_INT32) {
     helium::writeToVoidP(mem, int(ANARI_SDK_VERSION_PATCH));
     return 1;
-  } else if (prop == "version.name.size" && type == ANARI_UINT32) {
-    helium::writeToVoidP(mem, uint32_t(helide_version.size()+1));
+  } else if (prop == "version.name.size" && type == ANARI_UINT64) {
+    helium::writeToVoidP(mem, uint64_t(helide_version.size()+1));
     return 1;
   } else if (prop == "version.name" && type == ANARI_STRING) {
     std::memset(mem, 0, size);
