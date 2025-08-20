@@ -36,6 +36,15 @@ set(OPENUSD_PLUGIN_INSTALL_PREFIX
   "OpenUSD location to install USD plugin"
 )
 
+option(HDANARI_ENABLE_MDL "Enable MDL support for HdAnari" OFF)
+if(HDANARI_ENABLE_MDL)
+  find_package(MDL_SDK REQUIRED)
+  add_subdirectory(mdl)
+  option(HDANARI_ENABLE_SDR "Build OpenUSD SDR plugin (MDL material discovery suppport for standalone HdAnari)" ON)
+  if (HDANARI_ENABLE_SDR)
+    add_subdirectory(sdr)
+  endif()
+endif()
 add_subdirectory(rd)
 
 # Conditionally install a main plugInfo.json file

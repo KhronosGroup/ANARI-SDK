@@ -1,0 +1,23 @@
+{
+  "Plugins" : [{
+    "Info": {
+      "Types": {
+        "HdAnariMdlDiscoveryPlugin": {
+          "bases": ["NdrDiscoveryPlugin"],
+          "displayName": "HdAnari MDL Discovery",
+          "priority": 0
+        },
+        "HdAnariMdlParserPlugin": {
+          "bases": ["NdrParserPlugin"],
+          "displayName": "HdAnari MDL Node Parser",
+          "priority": 0
+        }
+      }
+    },
+    "LibraryPath": "../$<TARGET_FILE_NAME:hdanari_sdr>",
+    "Name": "hdAnariSdr",
+    "ResourcePath": "resources",
+    "Root": "..",
+    "Type": "library"
+  }]
+}
