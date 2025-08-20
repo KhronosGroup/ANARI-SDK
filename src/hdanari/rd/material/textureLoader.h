@@ -3,9 +3,10 @@
 
 #pragma once
 
+#include <anari/anari_cpp.hpp>
+
 #include <pxr/imaging/hio/image.h>
 #include <pxr/usd/sdf/assetPath.h>
-#include <anari/anari_cpp.hpp>
 
 #include <array>
 
@@ -43,11 +44,11 @@ class HdAnariTextureLoader
   };
 
   static anari::DataType HioFormatToAnari(HioFormat f);
-  static HioFormat AjudstColorspace(HioFormat format, ColorSpace colorspace);
-  static anari::Sampler LoadHioTexture2D(anari::Device d,
+  static anari::Array2D LoadHioTexture2D(anari::Device d,
       const std::string &file,
       MinMagFilter minMagFilter,
-      ColorSpace colorspace);
+      ColorSpace colorspace,
+      ANARIDataType requestedFormat = ANARI_UNKNOWN);
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE
