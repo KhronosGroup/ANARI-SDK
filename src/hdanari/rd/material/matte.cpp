@@ -2,10 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "matte.h"
-#include <anari/anari_cpp.hpp>
 
+#include "../hdAnariTypes.h"
 #include "../materialTokens.h"
 #include "usdPreviewSurfaceConverter.h"
+
+#include <anari/anari_cpp.hpp>
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -52,14 +54,19 @@ HdAnariMaterial::PrimvarMapping HdAnariMatteMaterial::EnumeratePrimvars(
   return {{materialNetworkIface.GetMaterialPrimPath(), TfToken("color")}};
 }
 
-anari::Material HdAnariMatteMaterial::GetOrCreateMaterial(anari::Device device,
+anari::Material HdAnariMatteMaterial::CreateMaterial(anari::Device device,
+    const HdMaterialNetwork2Interface &materialNetworkIface)
+{
+  return anari::newObject<anari::Material>(device, "matte");
+}
+
+void HdAnariMatteMaterial::SyncMaterialParameters(anari::Device device,
+    anari::Material material,
     const HdMaterialNetwork2Interface &materialNetworkIface,
     const HdAnariMaterial::PrimvarBinding &primvarBinding,
     const HdAnariMaterial::PrimvarMapping &primvarMapping,
     const HdAnariMaterial::SamplerMapping &samplerMapping)
 {
-  auto material = anari::newObject<anari::Material>(device, "matte");
-
   auto con = materialNetworkIface.GetTerminalConnection(
       HdMaterialTerminalTokens->surface);
   if (con.first) {
@@ -78,8 +85,6 @@ anari::Material HdAnariMatteMaterial::GetOrCreateMaterial(anari::Device device,
     TF_CODING_ERROR("Cannot find a surface terminal on prim %s",
         materialNetworkIface.GetMaterialPrimPath().GetText());
   }
-
-  return material;
 }
 
 void HdAnariMatteMaterial::ProcessUsdPreviewSurfaceNode(anari::Device device,

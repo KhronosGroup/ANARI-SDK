@@ -66,10 +66,11 @@ class HdAnariRenderDelegate final : public HdRenderDelegate
 
   void CommitResources(HdChangeTracker *tracker) override;
 
-  TfToken GetMaterialBindingPurpose() const override
-  {
-    return HdTokens->full;
-  }
+  TfToken GetMaterialBindingPurpose() const override;
+
+  TfTokenVector GetMaterialRenderContexts() const override;
+
+  TfTokenVector GetShaderSourceTypes() const override;
 
   HdAovDescriptor GetDefaultAovDescriptor(TfToken const &name) const override;
 
