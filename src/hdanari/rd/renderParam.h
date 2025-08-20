@@ -6,9 +6,9 @@
 #include "debugCodes.h"
 #include "geometry.h"
 #include "hdAnariTypes.h"
+#include "light.h"
 #include "material.h"
 #include "materialTokens.h"
-#include "light.h"
 
 #include <anari/anari_cpp.hpp>
 #include <anari/anari_cpp/anari_cpp_impl.hpp>
@@ -134,7 +134,7 @@ HdAnariRenderParam::GetDefaultPrimvarBinding() const
 }
 
 inline void HdAnariRenderParam::RegisterGeometry(
-  const HdAnariGeometry *geometry)
+    const HdAnariGeometry *geometry)
 {
   std::lock_guard<std::mutex> guard(_mutex);
   _geometries.push_back(geometry);
@@ -149,20 +149,17 @@ inline void HdAnariRenderParam::UnregisterGeometry(
       _geometries.end());
 }
 
-inline void HdAnariRenderParam::RegisterLight(
-  const HdAnariLight *light)
+inline void HdAnariRenderParam::RegisterLight(const HdAnariLight *light)
 {
   std::lock_guard<std::mutex> guard(_mutex);
   _lights.push_back(light);
 }
 
-inline void HdAnariRenderParam::UnregisterLight(
-    const HdAnariLight *light)
+inline void HdAnariRenderParam::UnregisterLight(const HdAnariLight *light)
 {
   std::lock_guard<std::mutex> guard(_mutex);
   _lights.erase(
-      std::remove(_lights.begin(), _lights.end(), light),
-      _lights.end());
+      std::remove(_lights.begin(), _lights.end(), light), _lights.end());
 }
 
 inline const GeometryList &HdAnariRenderParam::Geometries() const

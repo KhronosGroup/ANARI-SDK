@@ -18,7 +18,9 @@ PXR_NAMESPACE_OPEN_SCOPE
 
 class HdAnariRenderParam;
 
-#define HDANARI_RENDER_SETTINGS_TOKENS (ambientRadiance)(ambientColor)
+#define HDANARI_RENDER_SETTINGS_TOKENS                                         \
+  (ambientRadiance)(ambientColor)(                                             \
+      ambientSamples)(sampleLimit)(maxRayDepth)(denoise)(renderSubtype)(debugMethod)
 
 TF_DECLARE_PUBLIC_TOKENS(
     HdAnariRenderSettingsTokens, HDANARI_RENDER_SETTINGS_TOKENS);
