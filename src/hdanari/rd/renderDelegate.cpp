@@ -88,13 +88,14 @@ const TfTokenVector HdAnariRenderDelegate::SUPPORTED_SPRIM_TYPES = {
     HdPrimTypeTokens->material,
     HdPrimTypeTokens->extComputation,
 
-    HdPrimTypeTokens->distantLight,  // directional
+    HdPrimTypeTokens->distantLight, // directional
     HdPrimTypeTokens->domeLight, // hdri
-    // HdPrimTypeTokens->rectLight, // quad
-    // HdPrimTypeTokens->sphereLight, // point
-    
-    // HdPrimTypeTokens->simpleLight, // ???
-    
+    HdPrimTypeTokens->diskLight, // ring with inner radius = 0
+    HdPrimTypeTokens->rectLight, // quad
+    HdPrimTypeTokens->sphereLight, // point
+
+    HdPrimTypeTokens->simpleLight, // ???
+
 };
 
 const TfTokenVector HdAnariRenderDelegate::SUPPORTED_BPRIM_TYPES = {
@@ -339,13 +340,13 @@ HdSprim *HdAnariRenderDelegate::CreateSprim(
     return new HdAnariMaterial(d, sprimId);
   } else if (typeId == HdPrimTypeTokens->extComputation) {
     return new HdExtComputation(sprimId);
-  } else if (typeId == HdPrimTypeTokens->domeLight ||
-  typeId == HdPrimTypeTokens->simpleLight ||
-  typeId == HdPrimTypeTokens->sphereLight ||
-  typeId == HdPrimTypeTokens->diskLight ||
-  typeId == HdPrimTypeTokens->distantLight ||
-  typeId == HdPrimTypeTokens->cylinderLight ||
-  typeId == HdPrimTypeTokens->rectLight) {
+  } else if (typeId == HdPrimTypeTokens->cylinderLight
+      || typeId == HdPrimTypeTokens->diskLight
+      || typeId == HdPrimTypeTokens->distantLight
+      || typeId == HdPrimTypeTokens->domeLight
+      || typeId == HdPrimTypeTokens->rectLight
+      || typeId == HdPrimTypeTokens->simpleLight
+      || typeId == HdPrimTypeTokens->sphereLight) {
     return new HdAnariLight(d, sprimId, typeId);
   }
 
@@ -364,13 +365,13 @@ HdSprim *HdAnariRenderDelegate::CreateFallbackSprim(TfToken const &typeId)
     return new HdAnariMaterial(d, SdfPath::EmptyPath());
   else if (typeId == HdPrimTypeTokens->extComputation)
     return new HdExtComputation(SdfPath::EmptyPath());
-  else if (typeId == HdPrimTypeTokens->domeLight ||
-    typeId == HdPrimTypeTokens->simpleLight ||
-    typeId == HdPrimTypeTokens->sphereLight ||
-    typeId == HdPrimTypeTokens->diskLight ||
-    typeId == HdPrimTypeTokens->distantLight ||
-    typeId == HdPrimTypeTokens->cylinderLight ||
-    typeId == HdPrimTypeTokens->rectLight)
+  else if (typeId == HdPrimTypeTokens->cylinderLight
+      || typeId == HdPrimTypeTokens->diskLight
+      || typeId == HdPrimTypeTokens->distantLight
+      || typeId == HdPrimTypeTokens->domeLight
+      || typeId == HdPrimTypeTokens->rectLight
+      || typeId == HdPrimTypeTokens->simpleLight
+      || typeId == HdPrimTypeTokens->sphereLight)
     return new HdAnariLight(d, SdfPath::EmptyPath(), typeId);
 
   TF_CODING_ERROR("Unknown Sprim Type %s", typeId.GetText());
