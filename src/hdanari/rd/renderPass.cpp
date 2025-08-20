@@ -8,9 +8,12 @@
 #include <pxr/base/gf/vec3d.h>
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/vec4d.h>
+#include <pxr/base/tf/debug.h>
+#include <pxr/base/tf/diagnostic.h>
 #include <pxr/base/tf/staticData.h>
 #include <pxr/base/vt/value.h>
 #include <pxr/imaging/cameraUtil/framing.h>
+#include <pxr/imaging/hd/debugCodes.h>
 #include <pxr/imaging/hd/renderDelegate.h>
 #include <anari/anari_cpp.hpp>
 #include <anari/anari_cpp/anari_cpp_impl.hpp>
@@ -92,15 +95,14 @@ HdAnariRenderPass::HdAnariRenderPass(HdRenderIndex *index,
   anari::setParameter(d, _anari.frame, "channel.objectId", ANARI_UINT32);
   anari::setParameter(d, _anari.frame, "channel.instanceId", ANARI_UINT32);
 
-  _anari.renderer = anari::newObject<anari::Renderer>(d, "default");
   _anari.camera = anari::newObject<anari::Camera>(d, "perspective");
   _anari.world = anari::newObject<anari::World>(d);
+
+  _UpdateRenderer();
 
   anari::setParameter(d, _anari.frame, "camera", _anari.camera);
   anari::setParameter(d, _anari.frame, "renderer", _anari.renderer);
   anari::setParameter(d, _anari.frame, "world", _anari.world);
-
-  anari::setParameter(d, _anari.renderer, "ambientRadiance", 1.f);
 
   anari::commitParameters(d, _anari.frame);
 }
@@ -141,9 +143,65 @@ void HdAnariRenderPass::_UpdateRenderer()
   if (_lastSettingsVersion != currentSettingsVersion) {
     auto d = _renderParam->GetANARIDevice();
 
-    const float ar = renderDelegate->GetRenderSetting<float>(
-        HdAnariRenderSettingsTokens->ambientRadiance, 1.f);
-    anari::setParameter(d, _anari.renderer, "ambientRadiance", ar);
+    const auto renderSubtype = renderDelegate->GetRenderSetting(
+        HdAnariRenderSettingsTokens->renderSubtype);
+    if (TF_VERIFY(renderSubtype.IsHolding<std::string>())) {
+      if (_anari.renderer) {
+        anari::release(d, _anari.renderer);
+        anari::commitParameters(d, d);
+      }
+      _anari.renderer = anari::newObject<anari::Renderer>(
+          d, renderSubtype.UncheckedGet<std::string>().c_str());
+      anari::setParameter(d, _anari.frame, "renderer", _anari.renderer);
+      anari::commitParameters(d, _anari.frame);
+    }
+
+    const VtValue ar = renderDelegate->GetRenderSetting(
+        HdAnariRenderSettingsTokens->ambientRadiance);
+    TF_WARN("ar holds a %s\n", ar.GetTypeName().c_str());
+    if (TF_VERIFY(ar.CanCast<float>())) {
+      auto v = VtValue::Cast<float>(ar).UncheckedGet<float>();
+      TF_WARN("ar is a float with value %f\n", v);
+      anari::setParameter(d,
+          _anari.renderer,
+          "ambientRadiance",
+          VtValue::Cast<float>(ar).UncheckedGet<float>());
+    }
+
+    const auto ac = renderDelegate->GetRenderSetting(
+        HdAnariRenderSettingsTokens->ambientColor);
+    if (TF_VERIFY(ac.IsHolding<GfVec3f>())) {
+      anari::setParameter(
+          d, _anari.renderer, "ambientColor", ac.UncheckedGet<GfVec3f>());
+    }
+
+    const auto as = renderDelegate->GetRenderSetting(
+        HdAnariRenderSettingsTokens->ambientSamples);
+    if (TF_VERIFY(as.IsHolding<int>())) {
+      anari::setParameter(
+          d, _anari.renderer, "ambientSamples", as.UncheckedGet<int>());
+    }
+
+    const auto sp = renderDelegate->GetRenderSetting(
+        HdAnariRenderSettingsTokens->sampleLimit);
+    if (TF_VERIFY(sp.IsHolding<int>())) {
+      anari::setParameter(
+          d, _anari.renderer, "sampleLimit", sp.UncheckedGet<int>());
+    }
+
+    const auto rb = renderDelegate->GetRenderSetting(
+        HdAnariRenderSettingsTokens->maxRayDepth);
+    if (TF_VERIFY(rb.IsHolding<int>())) {
+      anari::setParameter(
+          d, _anari.renderer, "maxRayDepth", rb.UncheckedGet<int>());
+    }
+
+    const auto denoise =
+        renderDelegate->GetRenderSetting(HdAnariRenderSettingsTokens->denoise);
+    if (TF_VERIFY(denoise.IsHolding<bool>())) {
+      anari::setParameter(
+          d, _anari.renderer, "denoise", denoise.UncheckedGet<bool>());
+    }
 
     anari::commitParameters(d, _anari.renderer);
 
@@ -196,9 +254,11 @@ void HdAnariRenderPass::_UpdateCamera(
     _camera.invView = view.GetInverse();
     _camera.invProj = proj.GetInverse();
 
-    const GfVec3f projDir = GfVec3f(_camera.invProj.Transform(GfVec3f(0, 0, -1)));
+    const GfVec3f projDir =
+        GfVec3f(_camera.invProj.Transform(GfVec3f(0, 0, -1)));
     const GfVec3f origin = GfVec3f(_camera.invView.Transform(GfVec3f(0, 0, 0)));
-    const GfVec3f dir = GfVec3f(_camera.invView.TransformDir(projDir).GetNormalized());
+    const GfVec3f dir =
+        GfVec3f(_camera.invView.TransformDir(projDir).GetNormalized());
     const GfVec3f up =
         GfVec3f(_camera.invView.TransformDir(GfVec3f(0, 1, 0)).GetNormalized());
 

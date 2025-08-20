@@ -120,13 +120,33 @@ HdAnariRenderDelegate::HdAnariRenderDelegate(
 void HdAnariRenderDelegate::Initialize()
 {
   // Initialize the settings and settings descriptors.
-  _settingDescriptors.resize(2);
-  _settingDescriptors[0] = {"Ambient Radiance",
+  _settingDescriptors.clear();
+  _settingDescriptors.push_back({"Ambient Radiance",
       HdAnariRenderSettingsTokens->ambientRadiance,
-      VtValue(0.2f)};
-  _settingDescriptors[1] = {"Ambient Color",
+      VtValue(0.2f)});
+  _settingDescriptors.push_back({"Ambient Color",
       HdAnariRenderSettingsTokens->ambientColor,
-      VtValue(GfVec3f(0.8f, 0.8f, 0.8f))};
+      VtValue(GfVec3f(0.8f, 0.8f, 0.8f))});
+  _settingDescriptors.push_back({"Ambient Samples",
+      HdAnariRenderSettingsTokens->ambientSamples,
+      VtValue(1)});
+
+  _settingDescriptors.push_back(
+      {"Sample Limit", HdAnariRenderSettingsTokens->sampleLimit, VtValue(128)});
+
+  _settingDescriptors.push_back(
+      {"Max Ray Depth", HdAnariRenderSettingsTokens->maxRayDepth, VtValue(0)});
+
+  _settingDescriptors.push_back(
+      {"Denoise", HdAnariRenderSettingsTokens->denoise, VtValue(false)});
+
+  _settingDescriptors.push_back({"subtype",
+      HdAnariRenderSettingsTokens->renderSubtype,
+      VtValue("default")});
+  _settingDescriptors.push_back({"debug:method",
+      HdAnariRenderSettingsTokens->debugMethod,
+      VtValue("Ns.abs")});
+
   _PopulateDefaultSettings(_settingDescriptors);
 
   auto library = anari::loadLibrary("environment", hdAnariDeviceStatusFunc);
