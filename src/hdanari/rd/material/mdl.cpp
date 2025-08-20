@@ -3,7 +3,7 @@
 
 #include "mdl.h"
 
-#include "../hdAnariTypes.h"
+#include "../anariTypes.h"
 #include "mdl/mdlRegistry.h"
 #include "rd/material.h"
 #include "rd/material/usdPreviewSurfaceConverter.h"

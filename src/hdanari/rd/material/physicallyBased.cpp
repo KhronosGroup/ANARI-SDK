@@ -3,7 +3,7 @@
 
 #include "physicallyBased.h"
 
-#include "../hdAnariTypes.h"
+#include "../anariTypes.h"
 #include "../materialTokens.h"
 
 #include "usdPreviewSurfaceConverter.h"

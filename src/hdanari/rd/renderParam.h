@@ -5,7 +5,7 @@
 
 #include "debugCodes.h"
 #include "geometry.h"
-#include "hdAnariTypes.h"
+#include "anariTypes.h"
 #include "light.h"
 #include "material.h"
 #include "materialTokens.h"

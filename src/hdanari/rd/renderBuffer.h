@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "hdAnariTypes.h"
+#include "anariTypes.h"
 // pxr
 #include <pxr/imaging/hd/renderBuffer.h>
 #include <pxr/pxr.h>
