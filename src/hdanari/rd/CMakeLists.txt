@@ -36,6 +36,11 @@ PROPERTIES
   PREFIX ""
 )
 
+if (MSVC)
+  # Some of our code relies on standard preprocessor behavior. Let's make sure MSVC honours that.
+  target_compile_options(${PROJECT_NAME} PRIVATE /Zc:preprocessor)
+endif()
+
 project_link_libraries(PUBLIC anari::anari_static ${PXR_LIBRARIES})
 if(HDANARI_ENABLE_MDL)
   project_sources(
