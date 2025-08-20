@@ -25,6 +25,13 @@ PXR_NAMESPACE_OPEN_SCOPE
 struct HdAnariMaterial : public HdMaterial
 {
  public:
+  enum class MaterialType
+  {
+    Matte,
+    PhysicallyBased,
+    Mdl,
+  };
+
   using PrimvarBinding =
       std::map<TfToken, TfToken>; // Maps a primvar to an anari attribute name
   using PrimvarMapping =
@@ -69,6 +76,8 @@ struct HdAnariMaterial : public HdMaterial
 
   anari::Device device_{};
   anari::Material material_{};
+
+  MaterialType materialType_{MaterialType::Matte};
 
  private:
   // Convert the given material network to the newer HdMaterialNetwork2

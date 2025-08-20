@@ -1,26 +1,23 @@
-// Copyright 2024-2025 The Khronos Group
+// Copyright 2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
 
 #include "../material.h"
 
+#include <pxr/imaging/hd/sceneDelegate.h>
 #include <pxr/pxr.h>
-#include <anari/anari_cpp.hpp>
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-struct HdAnariPhysicallyBasedMaterial final
+struct HdAnariMdlMaterial final
 {
-  static HdAnariMaterial::TextureDescMapping EnumerateTextures(
-      const HdMaterialNetwork2Interface &materialNetworkInterface,
-      TfToken terminal);
+  static anari::Material CreateMaterial(anari::Device device,
+      const HdMaterialNetwork2Interface &materialNetworkIface);
+
   static HdAnariMaterial::PrimvarMapping EnumeratePrimvars(
       const HdMaterialNetwork2Interface &materialNetworkInterface,
       TfToken terminal);
-
-  static anari::Material CreateMaterial(anari::Device device,
-      const HdMaterialNetwork2Interface &materialNetworkIface);
 
   static void SyncMaterialParameters(anari::Device device,
       anari::Material material,
@@ -29,8 +26,19 @@ struct HdAnariPhysicallyBasedMaterial final
       const HdAnariMaterial::PrimvarMapping &primvarMapping,
       const HdAnariMaterial::SamplerMapping &samplerMapping);
 
- private:
+  static HdAnariMaterial::TextureDescMapping EnumerateTextures(
+      const HdMaterialNetwork2Interface &materialNetworkIface,
+      TfToken terminalName);
+
   static void ProcessUsdPreviewSurfaceNode(anari::Device device,
+      anari::Material material,
+      const HdMaterialNetwork2Interface &materialNetworkIface,
+      TfToken terminal,
+      const HdAnariMaterial::PrimvarBinding &primvarBinding,
+      const HdAnariMaterial::PrimvarMapping &primvarMapping,
+      const HdAnariMaterial::SamplerMapping &samplerMapping);
+
+  static void ProcessMdlNode(anari::Device device,
       anari::Material material,
       const HdMaterialNetwork2Interface &materialNetworkIface,
       TfToken terminal,

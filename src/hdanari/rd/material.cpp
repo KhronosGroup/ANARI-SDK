@@ -2,8 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "material.h"
+
+#include "debugCodes.h"
 #include "material/matte.h"
 #include "material/physicallyBased.h"
+#include "material/textureLoader.h"
+
+#ifdef HDANARI_ENABLE_MDL
+#include "material/mdl.h"
+#endif
 
 #include "renderDelegate.h"
 #include "renderParam.h"
@@ -26,16 +33,14 @@
 #include <pxr/imaging/hd/sceneDelegate.h>
 #include <pxr/imaging/hd/tokens.h>
 #include <pxr/imaging/hd/types.h>
+
 #include <algorithm>
 #include <array>
+#include <cstdio>
 #include <iterator>
 #include <string>
 #include <utility>
 #include <vector>
-
-#include "debugCodes.h"
-#include "material/textureLoader.h"
-#include "renderParam.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -128,41 +133,81 @@ void HdAnariMaterial::Sync(HdSceneDelegate *sceneDelegate,
   auto hdAnariRenderParam = static_cast<HdAnariRenderParam *>(renderParam);
 
   if ((*dirtyBits & HdMaterial::DirtyResource)) {
+    if (material_) {
+      // Forcing rprims to have a dirty material id to re-evaluate
+      // their material state as we don't know which rprims are bound to
+      // this one. We can skip this invalidation the first time this
+      // material is Sync'd since any affected Rprim should already be
+      // marked with a dirty material id.
+      HdChangeTracker &changeTracker =
+          sceneDelegate->GetRenderIndex().GetChangeTracker();
+      changeTracker.MarkAllRprimsDirty(HdChangeTracker::DirtyMaterialId);
+    }
+
     //  Find material network and store it as HdMaterialNetwork2 for later use.
     VtValue networkMapResource = sceneDelegate->GetMaterialResource(GetId());
     HdMaterialNetworkMap networkMap =
         networkMapResource.GetWithDefault<HdMaterialNetworkMap>();
 
     materialNetwork2_ = convertToHdMaterialNetwork2(networkMap);
-
-    if (materialNetwork2_.terminals.empty()) {
-      material_ = hdAnariRenderParam->GetDefaultMaterial();
-    }
-
     auto materialNetworkIface =
         HdMaterialNetwork2Interface(GetId(), &materialNetwork2_);
+    
+    auto surfaceTerminalConnection = materialNetworkIface.GetTerminalConnection(HdMaterialTerminalTokens->surface);
+    if (!surfaceTerminalConnection.first) {
+      TF_CODING_ERROR("Cannot find a surface terminal on prim %s",
+          materialNetworkIface.GetMaterialPrimPath().GetText());
+      material_ = hdAnariRenderParam->GetDefaultMaterial();
+      primvars_.clear();
+      textures_.clear();
+      return;
+    }
 
-    switch (hdAnariRenderParam->GetMaterialType()) {
-    case HdAnariRenderParam::MaterialType::Matte: {
-      // Enumerate primvars
+    // Try and guess the appropriate implementation for the surface terminal type
+    auto terminalType = materialNetworkIface.GetNodeType(surfaceTerminalConnection.second.upstreamNodeName);
+    // Assume Matte is a safe fallback.
+    materialType_ = MaterialType::Matte;
+#ifdef HDANARI_ENABLE_MDL
+    if (terminalType.GetString().find("<mdl>") != std::string::npos) {
+      materialType_ = MaterialType::Mdl;
+    } else
+#endif
+    if (terminalType == HdAnariMaterialTokens->UsdPreviewSurface) {
+      materialType_ = hdAnariRenderParam->GetMaterialType();
+    }
+
+    switch (materialType_) {
+    case MaterialType::Matte: {
+      // Create support material, enumerate primvars and textures
+      material_ =
+          HdAnariMatteMaterial::CreateMaterial(device_, materialNetworkIface);
       primvars_ = HdAnariMatteMaterial::EnumeratePrimvars(
           materialNetworkIface, HdMaterialTerminalTokens->surface);
-
-      // Enumerate textures and load them, releasing previously used one
       textures_ = HdAnariMatteMaterial::EnumerateTextures(
           materialNetworkIface, HdMaterialTerminalTokens->surface);
       break;
     }
-    case HdAnariRenderParam::MaterialType::PhysicallyBased: {
-      // Enumerate primvars
+    case MaterialType::PhysicallyBased: {
+      // Create support material, enumerate primvars and textures
+      material_ = HdAnariPhysicallyBasedMaterial::CreateMaterial(
+          device_, materialNetworkIface);
       primvars_ = HdAnariPhysicallyBasedMaterial::EnumeratePrimvars(
           materialNetworkIface, HdMaterialTerminalTokens->surface);
-
-      // Enumerate textures and load them, releasing previously used one
       textures_ = HdAnariPhysicallyBasedMaterial::EnumerateTextures(
           materialNetworkIface, HdMaterialTerminalTokens->surface);
       break;
     }
+#ifdef HDANARI_ENABLE_MDL
+    case MaterialType::Mdl: {
+      material_ =
+          HdAnariMdlMaterial::CreateMaterial(device_, materialNetworkIface);
+      primvars_ = HdAnariMdlMaterial::EnumeratePrimvars(
+          materialNetworkIface, HdMaterialTerminalTokens->surface);
+      textures_ = HdAnariMdlMaterial::EnumerateTextures(
+          materialNetworkIface, HdMaterialTerminalTokens->surface);
+      break;
+    }
+#endif
     }
 
     // Build primvar mapping so we can load the texture and configure the
@@ -180,24 +225,36 @@ void HdAnariMaterial::Sync(HdSceneDelegate *sceneDelegate,
     ReleaseSamplers(device_, samplers_);
     samplers_ = CreateSamplers(device_, textures_);
 
-    // Actually create the material. Release a possible previous instance.
-    if (material_)
-      anari::release(device_, material_);
-    material_ = {};
-
-    switch (hdAnariRenderParam->GetMaterialType()) {
-    case HdAnariRenderParam::MaterialType::Matte: {
-      material_ = HdAnariMatteMaterial::GetOrCreateMaterial(
-          device_, materialNetworkIface, attributes_, primvars_, samplers_);
+    switch (materialType_) {
+    case MaterialType::Matte: {
+      HdAnariMatteMaterial::SyncMaterialParameters(device_,
+          material_,
+          materialNetworkIface,
+          attributes_,
+          primvars_,
+          samplers_);
       break;
     }
-    case HdAnariRenderParam::MaterialType::PhysicallyBased: {
-      material_ = HdAnariPhysicallyBasedMaterial::GetOrCreateMaterial(
-          device_, materialNetworkIface, attributes_, primvars_, samplers_);
+    case MaterialType::PhysicallyBased: {
+      HdAnariPhysicallyBasedMaterial::SyncMaterialParameters(device_,
+          material_,
+          materialNetworkIface,
+          attributes_,
+          primvars_,
+          samplers_);
       break;
     }
-    default:
+#ifdef HDANARI_ENABLE_MDL
+    case MaterialType::Mdl: {
+      HdAnariMdlMaterial::SyncMaterialParameters(device_,
+          material_,
+          materialNetworkIface,
+          attributes_,
+          primvars_,
+          samplers_);
       break;
+    }
+#endif
     }
   }
 
@@ -218,10 +275,19 @@ std::map<SdfPath, anari::Sampler> HdAnariMaterial::CreateSamplers(
         desc.assetPath.c_str(),
         path.GetText());
 
-    auto sampler = HdAnariTextureLoader::LoadHioTexture2D(
+    auto array = HdAnariTextureLoader::LoadHioTexture2D(
         device, desc.assetPath, desc.minMagFilter, desc.colorspace);
-    if (!sampler)
+    if (!array)
       continue;
+
+    auto sampler = anari::newObject<anari::Sampler>(device, "image2D");
+    anari::setAndReleaseParameter(device, sampler, "image", array);
+    anari::setParameter(device,
+        sampler,
+        "filter",
+        desc.minMagFilter == HdAnariTextureLoader::MinMagFilter::Nearest
+            ? "nearest"
+            : "linear");
 
     anari::setParameter(device,
         sampler,

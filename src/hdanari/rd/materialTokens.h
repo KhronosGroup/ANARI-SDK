@@ -21,6 +21,7 @@
   (g) \
   (infoFilename) \
   (ior) \
+  (mdl) \
   (metallic) \
   (normal) \
   (occlusion) \

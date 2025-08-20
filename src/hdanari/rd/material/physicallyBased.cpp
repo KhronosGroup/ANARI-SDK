@@ -3,7 +3,9 @@
 
 #include "physicallyBased.h"
 
+#include "../hdAnariTypes.h"
 #include "../materialTokens.h"
+
 #include "usdPreviewSurfaceConverter.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
@@ -51,15 +53,21 @@ HdAnariPhysicallyBasedMaterial::EnumeratePrimvars(
   return {{materialNetworkIface.GetMaterialPrimPath(), TfToken("baseColor")}};
 }
 
-anari::Material HdAnariPhysicallyBasedMaterial::GetOrCreateMaterial(
+anari::Material HdAnariPhysicallyBasedMaterial::CreateMaterial(
     anari::Device device,
+    const HdMaterialNetwork2Interface &materialNetworkIface)
+{
+  return anari::newObject<anari::Material>(device, "physicallyBased");
+}
+
+void HdAnariPhysicallyBasedMaterial::SyncMaterialParameters(
+    anari::Device device,
+    anari::Material material,
     const HdMaterialNetwork2Interface &materialNetworkIface,
     const HdAnariMaterial::PrimvarBinding &primvarBinding,
     const HdAnariMaterial::PrimvarMapping &primvarMapping,
     const HdAnariMaterial::SamplerMapping &samplerMapping)
 {
-  auto material = anari::newObject<anari::Material>(device, "physicallyBased");
-
   auto con = materialNetworkIface.GetTerminalConnection(
       HdMaterialTerminalTokens->surface);
   if (con.first) {
@@ -78,8 +86,6 @@ anari::Material HdAnariPhysicallyBasedMaterial::GetOrCreateMaterial(
     TF_CODING_ERROR("Cannot find a surface terminal on prim %s",
         materialNetworkIface.GetMaterialPrimPath().GetText());
   }
-
-  return material;
 }
 
 void HdAnariPhysicallyBasedMaterial::ProcessUsdPreviewSurfaceNode(

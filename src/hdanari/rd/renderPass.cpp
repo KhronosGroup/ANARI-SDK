@@ -143,9 +143,9 @@ void HdAnariRenderPass::_UpdateRenderer()
   if (_lastSettingsVersion != currentSettingsVersion) {
     auto d = _renderParam->GetANARIDevice();
 
-    const auto renderSubtype = renderDelegate->GetRenderSetting(
+    if (const auto renderSubtype = renderDelegate->GetRenderSetting(
         HdAnariRenderSettingsTokens->renderSubtype);
-    if (TF_VERIFY(renderSubtype.IsHolding<std::string>())) {
+        TF_VERIFY(renderSubtype.IsHolding<std::string>())) {
       if (_anari.renderer) {
         anari::release(d, _anari.renderer);
         anari::commitParameters(d, d);
@@ -156,51 +156,58 @@ void HdAnariRenderPass::_UpdateRenderer()
       anari::commitParameters(d, _anari.frame);
     }
 
-    const VtValue ar = renderDelegate->GetRenderSetting(
+    if (const VtValue ar = renderDelegate->GetRenderSetting(
         HdAnariRenderSettingsTokens->ambientRadiance);
-    TF_WARN("ar holds a %s\n", ar.GetTypeName().c_str());
-    if (TF_VERIFY(ar.CanCast<float>())) {
+        TF_VERIFY(ar.CanCast<float>())) {
       auto v = VtValue::Cast<float>(ar).UncheckedGet<float>();
-      TF_WARN("ar is a float with value %f\n", v);
       anari::setParameter(d,
           _anari.renderer,
           "ambientRadiance",
           VtValue::Cast<float>(ar).UncheckedGet<float>());
     }
 
-    const auto ac = renderDelegate->GetRenderSetting(
+    if (const auto ac = renderDelegate->GetRenderSetting(
         HdAnariRenderSettingsTokens->ambientColor);
-    if (TF_VERIFY(ac.IsHolding<GfVec3f>())) {
+        TF_VERIFY(ac.IsHolding<GfVec3f>())) {
       anari::setParameter(
           d, _anari.renderer, "ambientColor", ac.UncheckedGet<GfVec3f>());
     }
 
-    const auto as = renderDelegate->GetRenderSetting(
+    if (const auto as = renderDelegate->GetRenderSetting(
         HdAnariRenderSettingsTokens->ambientSamples);
-    if (TF_VERIFY(as.IsHolding<int>())) {
+        TF_VERIFY(as.IsHolding<int>())) {
       anari::setParameter(
           d, _anari.renderer, "ambientSamples", as.UncheckedGet<int>());
     }
 
-    const auto sp = renderDelegate->GetRenderSetting(
+    if (const auto sp = renderDelegate->GetRenderSetting(
         HdAnariRenderSettingsTokens->sampleLimit);
-    if (TF_VERIFY(sp.IsHolding<int>())) {
+        TF_VERIFY(sp.IsHolding<int>())) {
       anari::setParameter(
           d, _anari.renderer, "sampleLimit", sp.UncheckedGet<int>());
     }
 
-    const auto rb = renderDelegate->GetRenderSetting(
+    if (const auto rb = renderDelegate->GetRenderSetting(
         HdAnariRenderSettingsTokens->maxRayDepth);
-    if (TF_VERIFY(rb.IsHolding<int>())) {
+        TF_VERIFY(rb.IsHolding<int>())) {
       anari::setParameter(
           d, _anari.renderer, "maxRayDepth", rb.UncheckedGet<int>());
     }
 
-    const auto denoise =
+    if (const auto denoise =
         renderDelegate->GetRenderSetting(HdAnariRenderSettingsTokens->denoise);
-    if (TF_VERIFY(denoise.IsHolding<bool>())) {
+        TF_VERIFY(denoise.IsHolding<bool>())) {
       anari::setParameter(
           d, _anari.renderer, "denoise", denoise.UncheckedGet<bool>());
+    }
+
+    if (const auto debugMethod = renderDelegate->GetRenderSetting(
+        HdAnariRenderSettingsTokens->debugMethod);
+        debugMethod.IsHolding<std::string>()) {
+      anari::setParameter(d,
+          _anari.renderer,
+          "method",
+          debugMethod.UncheckedGet<std::string>().c_str());
     }
 
     anari::commitParameters(d, _anari.renderer);
