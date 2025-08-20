@@ -3,6 +3,20 @@
 
 #include "textureLoader.h"
 
+#include "../anariTypeHelpers.h"
+#include "../debugCodes.h"
+
+#include <anari/frontend/anari_enums.h>
+#include <anari/frontend/type_utility.h>
+#include <pxr/base/tf/debug.h>
+
+#include <anari/anari_cpp.hpp>
+#include <cstddef>
+#include <cstdio>
+#include <limits>
+#include <memory>
+#include <type_traits>
+
 PXR_NAMESPACE_OPEN_SCOPE
 
 anari::DataType HdAnariTextureLoader::HioFormatToAnari(HioFormat f)
@@ -80,6 +94,7 @@ anari::DataType HdAnariTextureLoader::HioFormatToAnari(HioFormat f)
     return ANARI_INT32_VEC3;
   case HioFormatInt32Vec4:
     return ANARI_INT32_VEC4;
+
   case HioFormatUNorm8srgb:
     return ANARI_UFIXED8_R_SRGB;
   case HioFormatUNorm8Vec2srgb:
@@ -96,32 +111,167 @@ anari::DataType HdAnariTextureLoader::HioFormatToAnari(HioFormat f)
   return ANARI_UNKNOWN;
 }
 
-HioFormat HdAnariTextureLoader::AjudstColorspace(
-    HioFormat format, ColorSpace colorspace)
+ANARIDataType updateWithColorSpace(
+    ANARIDataType format, HdAnariTextureLoader::ColorSpace colorSpace)
 {
-  if (colorspace == ColorSpace::SRgb) {
-    return format;
+  if (colorSpace == HdAnariTextureLoader::ColorSpace::SRgb) {
+    switch (format) {
+    case ANARI_UFIXED8:
+      return ANARI_UFIXED8_R_SRGB;
+    case ANARI_UFIXED8_VEC2:
+      return ANARI_UFIXED8_RA_SRGB;
+    case ANARI_UFIXED8_VEC3:
+      return ANARI_UFIXED8_RGB_SRGB;
+    case ANARI_UFIXED8_VEC4:
+      return ANARI_UFIXED8_RGBA_SRGB;
+    default:
+      return format;
+    }
+  } else {
+    switch (format) {
+    case ANARI_UFIXED8_R_SRGB:
+      return ANARI_UFIXED8;
+    case ANARI_UFIXED8_RA_SRGB:
+      return ANARI_UFIXED8_VEC2;
+    case ANARI_UFIXED8_RGB_SRGB:
+      return ANARI_UFIXED8_VEC3;
+    case ANARI_UFIXED8_RGBA_SRGB:
+      return ANARI_UFIXED8_VEC4;
+    default:
+      return format;
+    }
   }
-
-  switch (format) {
-  case HioFormatUNorm8srgb:
-    return HioFormatUNorm8;
-  case HioFormatUNorm8Vec2srgb:
-    return HioFormatUNorm8Vec2;
-  case HioFormatUNorm8Vec3srgb:
-    return HioFormatUNorm8Vec3;
-  case HioFormatUNorm8Vec4srgb:
-    return HioFormatUNorm8Vec4;
-  default:;
-  }
-
-  return format;
 }
 
-anari::Sampler HdAnariTextureLoader::LoadHioTexture2D(anari::Device d,
+template <typename Tin, typename Tout, std::size_t Nin, std::size_t Nout>
+struct Remapper
+{
+  // static_assert(Nin >= Nout, "Input size must be greater than or equal to
+  // output size");
+
+  static constexpr const auto ScaleDown = std::is_integral_v<Tin>;
+  static constexpr const auto ScaleUp = std::is_integral_v<Tout>;
+
+  using CommonType =
+      std::conditional_t<std::is_integral_v<Tin> && std::is_integral_v<Tout>,
+          double,
+          std::common_type_t<Tin, Tout>>;
+
+  static void remap(
+      Tin const (&dataIn)[][Nin], Tout (&dataOut)[][Nout], std::size_t size)
+  {
+    for (auto i = 0ul; i < size; ++i) {
+      for (auto c = 0ul; c < Nout; ++c) {
+        if constexpr (ScaleUp || ScaleDown) {
+          CommonType v = dataIn[i][c];
+          if constexpr (ScaleDown)
+            v /= CommonType(std::numeric_limits<Tin>::max());
+          if constexpr (ScaleUp)
+            v *= CommonType(std::numeric_limits<Tout>::max());
+          dataOut[i][c] = Tout(v);
+        } else {
+          dataOut[i][c] = Tout(dataIn[i][c]);
+        }
+      }
+    }
+  }
+
+  static void linearToSrgb(
+      Tin const (&dataIn)[][Nin], Tout (&dataOut)[][Nout], std::size_t size)
+  {
+    // Only consider the alpha case when input and output have the same number
+    // of components.
+    constexpr const auto HasAlphaComponent = (Nin & 1) && Nin == Nout;
+    constexpr const auto NonAlphaComponentCount =
+        HasAlphaComponent ? (Nout - 1) : Nout;
+
+    for (auto i = 0ul; i < size; ++i) {
+      for (auto c = 0; c < NonAlphaComponentCount; ++c) {
+        CommonType v = dataIn[i][c];
+        if constexpr (ScaleDown) {
+          v /= CommonType(std::numeric_limits<Tin>::max());
+        }
+        v = std::pow<CommonType>(v, CommonType(1.0 / 2.2));
+        if constexpr (ScaleUp) {
+          v *= CommonType(std::numeric_limits<Tout>::max());
+        }
+        dataOut[i][c] = Tout(v);
+      }
+      if constexpr (HasAlphaComponent) {
+        CommonType v = dataIn[i][Nout - 1];
+        if constexpr (ScaleDown) {
+          v /= CommonType(std::numeric_limits<Tin>::max());
+        }
+        if constexpr (ScaleUp) {
+          v *= CommonType(std::numeric_limits<Tout>::max());
+        }
+        dataOut[i][Nout - 1] = Tout(v);
+      }
+    }
+  }
+
+  static void srgbToLinear(
+      Tin const (&dataIn)[][Nin], Tout (&dataOut)[][Nout], std::size_t size)
+  {
+    // Only consider the alpha case when input and output have the same number
+    // of components.
+    constexpr const auto HasAlphaComponent = (Nin & 1) == 0 && Nin == Nout;
+    constexpr const auto NonAlphaComponentCount =
+        HasAlphaComponent ? (Nout - 1) : Nout;
+
+    for (auto i = 0ul; i < size; ++i) {
+      for (auto c = 0; c < NonAlphaComponentCount; ++c) {
+        CommonType v = dataIn[i][c];
+        if constexpr (ScaleDown) {
+          v /= CommonType(std::numeric_limits<Tin>::max());
+        }
+        v = std::pow<CommonType>(v, CommonType(2.2));
+        if constexpr (ScaleUp) {
+          v *= CommonType(std::numeric_limits<Tout>::max());
+        }
+        dataOut[i][c] = Tout(v);
+      }
+      if constexpr (HasAlphaComponent) {
+        CommonType v = dataIn[i][Nout - 1];
+        if constexpr (ScaleDown) {
+          v /= CommonType(std::numeric_limits<Tin>::max());
+        }
+        if constexpr (ScaleUp) {
+          v *= CommonType(std::numeric_limits<Tout>::max());
+        }
+        dataOut[i][Nout - 1] = Tout(v);
+      }
+    }
+  }
+};
+
+#define REMAP(                                                                 \
+    inputData, outputData, size, Tin, Nin, SrgbIn, Tout, Nout, SrgbOut)        \
+  do {                                                                         \
+    if constexpr (Nin >= Nout) {                                               \
+      using RemapperType = Remapper<Tin, Tout, Nin, Nout>;                     \
+      if constexpr (SrgbIn == SrgbOut)                                         \
+        RemapperType::remap(*reinterpret_cast<Tin const(*)[][Nin]>(inputData), \
+            *reinterpret_cast<Tout(*)[][Nout]>(outputData),                    \
+            size);                                                             \
+      else if constexpr (SrgbIn && !SrgbOut)                                   \
+        RemapperType::srgbToLinear(                                            \
+            *reinterpret_cast<Tin const(*)[][Nin]>(inputData),                 \
+            *reinterpret_cast<Tout(*)[][Nout]>(outputData),                    \
+            size);                                                             \
+      else if constexpr (!SrgbIn && SrgbOut)                                   \
+        RemapperType::linearToSrgb(                                            \
+            *reinterpret_cast<Tin const(*)[][Nin]>(inputData),                 \
+            *reinterpret_cast<Tout(*)[][Nout]>(outputData),                    \
+            size);                                                             \
+    }                                                                          \
+  } while (0)
+
+anari::Array2D HdAnariTextureLoader::LoadHioTexture2D(anari::Device d,
     const std::string &file,
     MinMagFilter minMagFilter,
-    ColorSpace colorspace)
+    ColorSpace colorspace,
+    ANARIDataType requestedFormat)
 {
   const auto image = HioImage::OpenForReading(file);
   if (!image) {
@@ -136,36 +286,58 @@ anari::Sampler HdAnariTextureLoader::LoadHioTexture2D(anari::Device d,
   desc.depth = 1;
   desc.flipped = true;
 
-  auto format = HioFormatToAnari(AjudstColorspace(desc.format, colorspace));
-  if (format == ANARI_UNKNOWN) {
+  auto inputFormat = HioFormatToAnari(desc.format);
+  auto outputFormat =
+      requestedFormat == ANARI_UNKNOWN ? inputFormat : requestedFormat;
+  if (outputFormat == ANARI_UNKNOWN) {
     TF_WARN("failed to load texture '%s' due to unsupported format\n",
         file.c_str());
     return {};
   }
 
-  auto array = anari::newArray2D(d, format, desc.width, desc.height);
-  desc.data = anari::map<void>(d, array);
-
-  bool loaded = image->Read(desc);
-  if (!loaded) {
-    TF_WARN("failed to load texture '%s'\n", file.c_str());
-    anari::unmap(d, array);
-    anari::release(d, array);
+  if (anari::componentsOf(inputFormat) < anari::componentsOf(outputFormat)) {
+    TF_WARN("failed to load texture '%s', cannot convert from %s to %s\n",
+        file.c_str(),
+        anari::toString(inputFormat),
+        anari::toString(outputFormat));
     return {};
   }
 
+  std::vector<std::uint8_t> textureData;
+  auto byteSize = anari::sizeOf(inputFormat);
+  textureData.resize(desc.width * desc.height * byteSize);
+  desc.data = textureData.data();
+
+  bool loaded = image->Read(desc);
+  if (!loaded) {
+    TF_WARN("failed to read texture '%s'\n", file.c_str());
+    return {};
+  }
+
+  outputFormat = updateWithColorSpace(outputFormat, ColorSpace::Raw);
+
+  TF_DEBUG_MSG(HD_ANARI_RD_MATERIAL,
+      "Loading texture '%s' from format %s as %s\n",
+      file.c_str(),
+      anari::toString(inputFormat),
+      anari::toString(outputFormat));
+
+  auto array = anari::newArray2D(d, outputFormat, desc.width, desc.height);
+  auto inputData = desc.data;
+  auto outputData = anari::map<void>(d, array);
+
+  HDANARI_FOR_EACH_DATATYPE(inputFormat,
+      HDANARI_FOR_EACH_DATATYPE_REC,
+      outputFormat,
+      REMAP,
+      inputData,
+      outputData,
+      desc.width * desc.height);
+
   anari::unmap(d, array);
+  anari::commitParameters(d, array);
 
-  auto texture = anari::newObject<anari::Sampler>(d, "image2D");
-  anari::setParameter(d, texture, "image", array);
-  anari::setParameter(d,
-      texture,
-      "filter",
-      minMagFilter == MinMagFilter::Nearest ? "nearest" : "linear");
-
-  anari::release(d, array);
-
-  return texture;
+  return array;
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE
