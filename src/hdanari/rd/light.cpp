@@ -70,13 +70,6 @@ void HdAnariLight::Sync(HdSceneDelegate *sceneDelegate,
     bool normalize =
         sceneDelegate->GetLightParamValue(id, HdLightTokens->normalize)
             .GetWithDefault<bool>(false);
-    // if (normalize) {
-    //   anari::setParameter(device_, light_, "intensity", intensity);
-    //   anari::unsetParameter(device_, light_, "power");
-    // } else {
-    //   anari::setParameter(device_, light_, "power", intensity);
-    //   anari::unsetParameter(device_, light_, "intensity");
-    // }
 
     if (lightType_ == HdPrimTypeTokens->sphereLight) {
       float radius =
