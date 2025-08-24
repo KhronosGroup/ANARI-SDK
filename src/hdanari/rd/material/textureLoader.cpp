@@ -152,10 +152,11 @@ struct Remapper
   static constexpr const auto ScaleDown = std::is_integral_v<Tin>;
   static constexpr const auto ScaleUp = std::is_integral_v<Tout>;
 
-  using CommonType =
-      std::conditional_t<std::is_integral_v<Tin> && std::is_integral_v<Tout>,
-          double,
-          std::common_type_t<Tin, Tout>>;
+  using CommonType = std::conditional_t<
+      std::is_integral_v<Tin> && std::is_integral_v<Tout>,
+      std::conditional_t<(std::numeric_limits<Tin>::digits <= std::numeric_limits<float>::digits), float, double>,
+      std::common_type_t<std::decay_t<Tin>, std::decay_t<Tout>>
+    >;
 
   static void remap(
       Tin const (&dataIn)[][Nin], Tout (&dataOut)[][Nout], std::size_t size)
@@ -191,7 +192,7 @@ struct Remapper
         if constexpr (ScaleDown) {
           v /= CommonType(std::numeric_limits<Tin>::max());
         }
-        v = std::pow<CommonType>(v, CommonType(1.0 / 2.2));
+        v = std::pow(v, CommonType(1.0 / 2.2));
         if constexpr (ScaleUp) {
           v *= CommonType(std::numeric_limits<Tout>::max());
         }
@@ -225,7 +226,7 @@ struct Remapper
         if constexpr (ScaleDown) {
           v /= CommonType(std::numeric_limits<Tin>::max());
         }
-        v = std::pow<CommonType>(v, CommonType(2.2));
+        v = std::pow(v, CommonType(2.2));
         if constexpr (ScaleUp) {
           v *= CommonType(std::numeric_limits<Tout>::max());
         }
