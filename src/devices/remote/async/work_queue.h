@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <boost/asio/io_service.hpp>
+#include <boost/asio/io_context.hpp>
 #include <boost/asio/strand.hpp>
 #include <boost/bind/bind.hpp>
 #include <thread>
@@ -13,18 +13,21 @@ namespace async {
 class work_queue
 {
   // The io_service object
-  boost::asio::io_service io_service_;
-  // Prevents the io_service from exiting if it has nothing to do
-  boost::asio::io_service::work work_;
+  boost::asio::io_context io_context_;
+  // Prevents the io_context from exiting if it has nothing to do
+  boost::asio::executor_work_guard<boost::asio::io_context::executor_type> work_;
   // Provides serialised handler execution
-  boost::asio::io_service::strand strand_;
+  boost::asio::io_context::strand strand_;
   // The worker thread
   std::thread thread_;
 
  public:
   // Constructor.
   work_queue()
-      : io_service_(), work_(io_service_), strand_(io_service_), thread_()
+      : io_context_(),
+        work_(boost::asio::make_work_guard(io_context_)),
+        strand_(io_context_),
+        thread_()
   {}
 
   // Destructor.
@@ -37,7 +40,7 @@ class work_queue
   // Start working
   void run()
   {
-    io_service_.run();
+    io_context_.run();
   }
 
   // Start working
@@ -50,7 +53,7 @@ class work_queue
   void stop()
   {
     // Stop the io_service
-    io_service_.stop();
+    io_context_.stop();
     // Wait for the worker thread
     thread_.join();
   }
@@ -59,7 +62,7 @@ class work_queue
   template <class Function>
   void post(Function func)
   {
-    strand_.post(func);
+    boost::asio::post(io_context_, func);
   }
 };
 

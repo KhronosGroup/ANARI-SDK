@@ -123,14 +123,12 @@ class connection_manager
   using connections = std::set<connection_pointer>;
   using messages = std::deque<std::pair<connection_pointer, message_pointer>>;
 
-  // The IO service
-  boost::asio::io_service io_service_;
+  // The IO context
+  boost::asio::io_context io_context_;
   // The acceptor object used to accept incoming socket connections.
   boost::asio::ip::tcp::acceptor acceptor_;
-  // To protect the list of messages...
-  boost::asio::io_service::strand strand_;
-  // To keep the io_service running...
-  std::shared_ptr<boost::asio::io_service::work> work_;
+  // To keep the io_context running...
+  boost::asio::executor_work_guard<boost::asio::io_context::executor_type> work_;
   // The list of active connections
   connections connections_;
   // List of messages to be written

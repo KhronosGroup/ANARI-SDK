@@ -323,11 +323,11 @@ struct Device : anari::DeviceImpl, helium::ParameterizedObject
   void write(unsigned type, const void *begin, const void *end);
 
   bool handleNewConnection(
-      async::connection_pointer new_conn, boost::system::error_code const &e);
+      async::connection_pointer new_conn, std::error_code const &e);
 
   void handleMessage(async::connection::reason reason,
       async::message_pointer message,
-      boost::system::error_code const &e);
+      std::error_code const &e);
 
   void writeImpl(unsigned type, std::shared_ptr<Buffer> buf);
   void writeImpl2(unsigned type, const void *begin, const void *end);

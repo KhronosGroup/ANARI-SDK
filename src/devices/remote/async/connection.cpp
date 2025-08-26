@@ -24,7 +24,7 @@ using boost::asio::ip::tcp;
 //
 
 connection::connection(connection_manager &manager)
-    : manager_(manager), socket_(manager.io_service_)
+    : manager_(manager), socket_(manager.io_context_)
 {
 #ifndef NDEBUG
   std::cout << "connection::connection [" << (void *)this << "]\n";
