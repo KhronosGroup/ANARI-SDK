@@ -13,8 +13,6 @@ struct Array2DMemoryDescriptor : public ArrayMemoryDescriptor
   uint64_t numItems2{0};
 };
 
-bool isCompact(const Array2DMemoryDescriptor &d);
-
 struct Array2D : public Array
 {
   Array2D(BaseGlobalDeviceState *state, const Array2DMemoryDescriptor &d);
