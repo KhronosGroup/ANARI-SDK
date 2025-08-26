@@ -12,7 +12,6 @@ find_package(Threads REQUIRED)
 # encoding, decoding, and sending color buffers takes significantly longer without
 find_package(libjpeg-turbo)
 find_package(Snappy)
-set(Boost_INCLUDE_DIRS "3rdparty/boost")
 find_package(Boost COMPONENTS system REQUIRED)
 
 if (Snappy_FOUND)
@@ -51,7 +50,6 @@ PRIVATE
  "anari_library_remote_EXPORTS"
 )
 
-project_include_directories(PUBLIC ${Boost_INCLUDE_DIRS})
 project_link_libraries(
 PUBLIC
   anari::helium
@@ -88,13 +86,13 @@ PRIVATE
 )
 
 project_compile_definitions(PRIVATE ${__remote_definitions})
-project_include_directories(PRIVATE ${Boost_INCLUDE_DIRS})
 project_link_libraries(
 PUBLIC
   anari::helium
   anari::anari_static
   ${__remote_extra_libs}
   ${CMAKE_THREAD_LIBS_INIT}
+  Boost::system
 )
 
 ## Installation ##
