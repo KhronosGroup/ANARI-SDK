@@ -158,7 +158,6 @@ void BaseDevice::commitParameters(ANARIObject o)
   } else {
     auto *obj = (BaseObject *)o;
     m_state->commitBuffer.addObjectToCommit(obj);
-    obj->notifyChangeObservers();
   }
 }
 

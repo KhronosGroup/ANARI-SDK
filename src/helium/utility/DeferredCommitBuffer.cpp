@@ -129,6 +129,7 @@ void DeferredCommitBuffer::flushFinalizations()
       didFinalize = true;
       obj->finalize();
       obj->markFinalized();
+      obj->notifyChangeObservers();
     }
   });
 
