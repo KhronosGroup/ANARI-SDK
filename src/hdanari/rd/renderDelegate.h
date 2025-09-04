@@ -18,9 +18,18 @@ PXR_NAMESPACE_OPEN_SCOPE
 
 class HdAnariRenderParam;
 
+// clang-format off
 #define HDANARI_RENDER_SETTINGS_TOKENS                                         \
-  (ambientRadiance)(ambientColor)(                                             \
-      ambientSamples)(sampleLimit)(maxRayDepth)(denoise)(renderSubtype)(debugMethod)
+  (ambientColor) \
+  (ambientRadiance) \
+  (ambientSamples) \
+  (debugMethod) \
+  (denoise) \
+  (maxRayDepth) \
+  (pixelSamples) \
+  (renderSubtype) \
+  (sampleLimit)
+// clang-format on
 
 TF_DECLARE_PUBLIC_TOKENS(
     HdAnariRenderSettingsTokens, HDANARI_RENDER_SETTINGS_TOKENS);
