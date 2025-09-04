@@ -136,6 +136,9 @@ void HdAnariRenderDelegate::Initialize()
       {"Max Ray Depth", HdAnariRenderSettingsTokens->maxRayDepth, VtValue(0)});
 
   _settingDescriptors.push_back(
+      { "Pixel Samples",HdAnariRenderSettingsTokens->pixelSamples, VtValue(1) });
+
+  _settingDescriptors.push_back(
       {"Denoise", HdAnariRenderSettingsTokens->denoise, VtValue(false)});
 
   _settingDescriptors.push_back({"subtype",

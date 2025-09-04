@@ -194,6 +194,13 @@ void HdAnariRenderPass::_UpdateRenderer()
           d, _anari.renderer, "maxRayDepth", rb.UncheckedGet<int>());
     }
 
+    if (const auto ps = renderDelegate->GetRenderSetting(
+        HdAnariRenderSettingsTokens->pixelSamples);
+        TF_VERIFY(ps.IsHolding<int>())) {
+      anari::setParameter(
+          d, _anari.renderer, "pixelSamples", ps.UncheckedGet<int>());
+    }
+
     if (const auto denoise =
         renderDelegate->GetRenderSetting(HdAnariRenderSettingsTokens->denoise);
         TF_VERIFY(denoise.IsHolding<bool>())) {
