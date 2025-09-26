@@ -130,3 +130,21 @@ FILES
 DESTINATION
   ${CMAKE_INSTALL_INCLUDEDIR}/anari/ext/helide
 )
+
+######################################################################
+# build python module
+######################################################################
+
+set(DEVICE_LIBRARY_NAME helide)
+configure_file(${ANARI_CODE_GEN_ROOT}/device_trampoline.py.in ${CMAKE_CURRENT_BINARY_DIR}/__init__.py)
+
+install(
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/__init__.py
+  EXCLUDE_FROM_ALL
+  COMPONENT helide_module
+  DESTINATION helide/)
+install(TARGETS anari_library_helide
+  EXCLUDE_FROM_ALL
+  COMPONENT helide_module
+  LIBRARY DESTINATION helide
+  RUNTIME DESTINATION helide)

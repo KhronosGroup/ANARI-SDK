@@ -1,0 +1,24 @@
+[project] # Project metadata
+name = "anari"
+requires-python = ">=3.7"
+readme = "README.md"
+license = "APACHE"
+license-files = ["LICENSE"]
+dependencies = ["cffi","numpy"]
+version = "0.15"
+
+[build-system] # How pip and other frontends should build this project
+requires = ["py-build-cmake~=0.5.0", "cffi"]
+build-backend = "py_build_cmake.build"
+
+[tool.py-build-cmake.sdist]
+include = ['*']
+
+[tool.py-build-cmake.module]
+generated = "package"
+
+[tool.py-build-cmake.cmake] # How to build the CMake project
+build_type = "RelWithDebInfo"
+source_path = "."
+build_args = ["--target", "neo_bindings"]
+install_components = ["python_module"]

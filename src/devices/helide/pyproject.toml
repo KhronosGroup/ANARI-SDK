@@ -1,0 +1,33 @@
+[project] # Project metadata
+name = "helide"
+requires-python = ">=3.7"
+readme = "README.md"
+license = "APACHE"
+license-files = ["LICENSE"]
+dependencies = ["cffi","anari"]
+version = "1.0"
+
+[build-system] # How pip and other frontends should build this project
+requires = ["py-build-cmake~=0.5.0"]
+build-backend = "py_build_cmake.build"
+
+[tool.py-build-cmake.sdist]
+include = ['*']
+
+[tool.py-build-cmake.module]
+generated = "package"
+
+[tool.py-build-cmake.cmake] # How to build the CMake project
+build_type = "RelWithDebInfo"
+source_path = "."
+build_args = ["-j"]
+install_components = ["helide_module"]
+
+[tool.cibuildwheel.linux]
+before-all = """
+git clone -b next_release https://github.com/KhronosGroup/ANARI-SDK.git
+mkdir ANARI-SDK/build
+cd ANARI-SDK/build
+cmake ../ -DBUILD_EXAMPLES=OFF -DBUILD_HELIDE_DEVICE=OFF -DBUILD_TESTING=OFF -DINSTALL_VIEWER_LIBRARY=OFF
+make && make install
+"""

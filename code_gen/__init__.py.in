@@ -1,0 +1,491 @@
+from .${ANARI_MODULE_NAME} import lib, ffi
+from .utils import *
+from .utils import _typeof, _convert_pointer, _basepointer, _conversions, _from_string_list, _elements
+
+from collections.abc import Sequence as _Sequence
+from math import prod as _prod
+import numpy as _np
+
+_prefixes = {
+    lib.ANARI_SEVERITY_FATAL_ERROR : "FATAL",
+    lib.ANARI_SEVERITY_ERROR : "ERROR",
+    lib.ANARI_SEVERITY_WARNING : "WARNING",
+    lib.ANARI_SEVERITY_PERFORMANCE_WARNING : "PERFORMANCE",
+    lib.ANARI_SEVERITY_INFO : "INFO",
+    lib.ANARI_SEVERITY_DEBUG : "DEBUG"
+}
+
+def _all_status(device, source, sourceType, severity, code, message):
+    print('[%s]: '%_prefixes[severity]+message)
+
+all_status_handle = ffi.new_handle(_all_status) #something needs to keep this handle alive
+
+def _error_status(device, source, sourceType, severity, code, message):
+    if severity == lib.ANARI_SEVERITY_ERROR:
+        print('[ERROR]: '+message)
+
+error_status_handle = ffi.new_handle(_error_status) #something needs to keep this handle alive
+
+_baseptr2dtype = {
+    'int8_t*' : _np.int8,
+    'int16_t*' : _np.int16,
+    'int32_t*' : _np.int32,
+    'int64_t*' : _np.int64,
+    'uint8_t*' : _np.uint8,
+    'uint16_t*' : _np.uint16,
+    'uint32_t*' : _np.uint32,
+    'uint64_t*' : _np.uint64,
+    'float*' : _np.float32,
+    'double*' : _np.float64
+}
+
+# construct a table mapping anari types to numpy dtypes
+_dtypeof = {atype : _baseptr2dtype[base] for atype, base in _basepointer.items() if base in _baseptr2dtype}
+_itemsizeof = {atype : ffi.sizeof(base[:-1]) for atype, base in _basepointer.items() if not base.startswith('void')}
+
+class Object:
+    def __init__(self, device, handle):
+        self.device = device
+        self.handle = handle
+        lib.anariRetain(self.device, self.device)
+
+    def __del__(self):
+        lib.anariRelease(self.device, self.handle)
+        lib.anariRelease(self.device, self.device)
+
+    def setParameter(self, name, atype, value):
+        if isinstance(value, Object):
+            lib.anariSetParameter(
+                self.device, self.handle, name.encode('utf-8'),
+                atype, ffi.new(_conversions[atype], value.handle))
+        elif isinstance(value, str):
+            value = value.encode('utf-8')
+            lib.anariSetParameter(
+                self.device, self.handle, name.encode('utf-8'),
+                atype, ffi.new('const char[]', value))
+        else:
+            lib.anariSetParameter(
+                self.device, self.handle, name.encode('utf-8'),
+                atype, ffi.new(_conversions[atype], value))
+
+    def mapParameterArray1D(self, name, dataType, numElements1):
+        elementStride = ffi.new('uint64_t*', 0)
+        result = lib.anariMapParameterArray1D(self.device, self.handle, name.encode('utf-8'), dataType, numElements1, elementStride)
+        result = ffi.cast(_basepointer[dataType], result)
+        return (result, int(elementStride[0]))
+
+    def mapParameterArray2D(self, name, dataType, numElements1, numElements2):
+        elementStride = ffi.new('uint64_t*', 0)
+        result = lib.anariMapParameterArray2D(self.device, self.handle, name.encode('utf-8'), dataType, numElements1, numElements2, elementStride)
+        result = ffi.cast(_basepointer[dataType], result)
+        return (result, int(elementStride[0]))
+
+    def mapParameterArray3D(self, name, dataType, numElements1, numElements2, numElements3):
+        elementStride = ffi.new('uint64_t*', 0)
+        result = lib.anariMapParameterArray3D(self.device, self.handle, name.encode('utf-8'), dataType, numElements1, numElements2, numElements3, elementStride)
+        result = ffi.cast(_basepointer[dataType], result)
+        return (result, int(elementStride[0]))
+
+    def unmapParameterArray(self, name):
+        lib.anariUnmapParameterArray(self.device, self.handle, name.encode('utf-8'))
+
+    def setParameterArray1D(self, name, dataType, appMemory, numItems1 = None):
+        if isinstance(appMemory, ffi.CData):
+                appMemory = ffi.buffer(appMemory)
+
+        if isinstance(appMemory, _Sequence):
+            if numItems1 is None:
+                numItems1 = len(appMemory)
+            dst, stride = self.mapParameterArray1D(name, dataType, numItems1)
+            elemsize = ffi.sizeof(_typeof[dataType])
+            if stride == elemsize:
+                for idx, obj in enumerate(appMemory):
+                    dst[idx] = obj.handle if isinstance(obj, Object) else obj
+            else:
+                raise TypeError('strided copy requested') 
+
+            self.unmapParameterArray(name)
+        else:
+            if numItems1 is None:
+                try:
+                    view = memoryview(appMemory)
+                    if view.ndim == 1:
+                        numItems1 = view.shape[0]//_elements[dataType]
+                    elif view.ndim == 2 and view.shape[-1] == _elements[dataType]:
+                        numItems1 = view.shape[0]
+                    else:
+                        raise TypeError('unexpected shape '+str(view.shape))
+
+                    if not view.c_contiguous:
+                        raise TypeError('array is not contiguous')
+
+                    if view.itemsize != _itemsizeof[dataType]:
+                        raise TypeError('item size does not match data type')
+
+                except:
+                    raise TypeError('could not access memoryview') 
+
+            ptr, stride = self.mapParameterArray1D(name, dataType, numItems1)
+            if ptr == ffi.NULL:
+                return
+            elemsize = ffi.sizeof(_typeof[dataType])
+            if stride == elemsize:
+                src = ffi.from_buffer(appMemory)
+                ffi.memmove(ptr, src, elemsize*numItems1)
+            else:
+                raise TypeError('strided copy requested') 
+            self.unmapParameterArray(name)
+
+    def setParameterArray2D(self, name, dataType, appMemory, numItems1 = None, numItems2 = None):
+        if isinstance(appMemory, ffi.CData):
+                appMemory = ffi.buffer(appMemory)
+
+        if numItems1 is None:
+            try:
+                view = memoryview(appMemory)
+                if view.ndim == 2 and _elements[dataType] == 1 or view.ndim == 3 and view.shape[-1] == _elements[dataType]:
+                    numItems1 = view.shape[0]
+                    numItems2 = view.shape[1]
+                else:
+                    raise TypeError('unexpected shape '+str(view.shape))
+
+                if not view.c_contiguous:
+                    raise TypeError('array is not contiguous')
+
+                if view.itemsize != _itemsizeof[dataType]:
+                    raise TypeError('item size does not match data type')
+
+            except:
+                raise TypeError('could not access memoryview') 
+
+        ptr, stride = self.mapParameterArray2D(name, dataType, numItems1, numItems2)
+        if ptr == ffi.NULL:
+            return
+        elemsize = ffi.sizeof(_typeof[dataType])
+        if stride == elemsize:
+            src = ffi.from_buffer(appMemory)
+            ffi.memmove(ptr, src, ffi.sizeof(_typeof[dataType])*numItems1*numItems2)
+        else:
+            raise TypeError('strided copy requested') 
+        self.unmapParameterArray(name)
+
+    def setParameterArray3D(self, name, dataType, appMemory, numItems1 = None, numItems2 = None, numItems3 = None):
+        if isinstance(appMemory, ffi.CData):
+                appMemory = ffi.buffer(appMemory)
+
+        if numItems1 is None:
+            try:
+                view = memoryview(appMemory)
+                if view.ndim == 3 and _elements[dataType] == 1 or view.ndim == 4 and view.shape[-1] == _elements[dataType]:
+                    numItems1 = view.shape[0]
+                    numItems2 = view.shape[1]
+                    numItems3 = view.shape[2]
+                else:
+                    raise TypeError('unexpected shape '+str(view.shape))
+
+                if not view.c_contiguous:
+                    raise TypeError('array is not contiguous')
+
+                if view.itemsize != _itemsizeof[dataType]:
+                    raise TypeError('item size does not match data type')
+
+            except:
+                raise TypeError('could not access memoryview') 
+
+        ptr, stride = self.mapParameterArray3D(name, dataType, numItems1, numItems2, numItems3)
+        if ptr == ffi.NULL:
+            return
+        elemsize = ffi.sizeof(_typeof[dataType])
+        if stride == elemsize:
+            src = ffi.from_buffer(appMemory)
+            ffi.memmove(ptr, src, ffi.sizeof(_typeof[dataType])*numItems1*numItems2*numItems3)
+        else:
+            raise TypeError('strided copy requested') 
+        self.unmapParameterArray(name)
+
+    def unsetParameter(self, name):
+        lib.anariUnsetParameter(self.device, self.handle, name.encode('utf-8'))
+
+    def unsetAllParameters(self):
+        lib.anariUnsetAllParameters(self.device, self.handle)
+
+    def commitParameters(self):
+        lib.anariCommitParameters(self.device, self.handle)
+
+    def getProperty(self, name, type, mask):
+        if type == lib.ANARI_STRING:
+            size = self.getProperty(name+'.size', UINT64, mask)
+            if size is None:
+                return None
+        else:
+            size = ffi.sizeof(_typeof[type])
+
+        mem = ffi.new('char[]', size)
+        result = lib.anariGetProperty(self.device, self.handle, name.encode('utf-8'), type, mem, size, mask)
+        if result:
+            return _convert_pointer(type, mem)
+        else:
+            return None
+
+
+class Array(Object):
+    def mapArray(self):
+        result = lib.anariMapArray(self.device, self.array)
+        return result
+
+    def unmapArray(self):
+        lib.anariUnmapArray(self.device, self.array)
+
+class Frame(Object):
+    def mapFrame(self, channel):
+        frame_width = ffi.new('uint32_t*', 0)
+        frame_height = ffi.new('uint32_t*', 0)
+        frame_type = ffi.new('ANARIDataType*', 0)
+        result = lib.anariMapFrame(self.device, self.handle, channel.encode('utf-8'), frame_width, frame_height, frame_type)
+        ptr = ffi.cast(_basepointer[frame_type[0]], result)
+        return (ptr, int(frame_width[0]), int(frame_height[0]), int(frame_type[0]))
+
+    def unmapFrame(self, channel):
+        lib.anariUnmapFrame(self.device, self.handle, channel.encode('utf-8'))
+
+    def channelAsNdarray(self, channel):
+        pixels, width, height, type = self.mapFrame(channel)
+        elements = _elements[type]
+        dtype = _dtypeof[type]
+        buf = ffi.buffer(pixels, width*height*elements*_np.dtype(dtype).itemsize);
+        result = _np.frombuffer(buf, dtype = dtype).reshape([height, width, elements]).copy()
+        self.unmapFrame(channel)
+        return result
+
+    def renderFrame(self):
+        lib.anariRenderFrame(self.device, self.handle)
+
+    def frameReady(self, mask):
+        result = lib.anariFrameReady(self.device, self.handle, mask)
+        return result
+
+    def discardFrame(self):
+        lib.anariDiscardFrame(self.device, self.handle)
+
+
+class Device(Object):
+    def newLight(self, type):
+        result = lib.anariNewLight(self.device, type.encode('utf-8'))
+        return Object(self.device, result)
+
+    def newCamera(self, type):
+        result = lib.anariNewCamera(self.device, type.encode('utf-8'))
+        return Object(self.device, result)
+
+    def newGeometry(self, type):
+        result = lib.anariNewGeometry(self.device, type.encode('utf-8'))
+        return Object(self.device, result)
+
+    def newSpatialField(self, type):
+        result = lib.anariNewSpatialField(self.device, type.encode('utf-8'))
+        return Object(self.device, result)
+
+    def newVolume(self, type):
+        result = lib.anariNewVolume(self.device, type.encode('utf-8'))
+        return Object(self.device, result)
+
+    def newSurface(self):
+        result = lib.anariNewSurface(self.device)
+        return Object(self.device, result)
+
+    def newMaterial(self, type):
+        result = lib.anariNewMaterial(self.device, type.encode('utf-8'))
+        return Object(self.device, result)
+
+    def newSampler(self, type):
+        result = lib.anariNewSampler(self.device, type.encode('utf-8'))
+        return Object(self.device, result)
+
+    def newGroup(self):
+        result = lib.anariNewGroup(self.device)
+        return Object(self.device, result)
+
+    def newInstance(self, itype):
+        result = lib.anariNewInstance(self.device, type.encode('utf-8'))
+        return Object(self.device, result)
+
+    def newWorld(self):
+        result = lib.anariNewWorld(self.device)
+        return Object(self.device, result)
+
+    def newRenderer(self, type):
+        result = lib.anariNewRenderer(self.device, type.encode('utf-8'))
+        return Object(self.device, result)
+
+    def newObject(self, objectType, type):
+        result = lib.anariNewObject(self.device, objectType.encode('utf-8'), type.encode('utf-8'))
+        return Object(self.device, result)
+
+    def newFrame(self):
+        result = lib.anariNewFrame(self.device)
+        return Frame(self.device, result)
+
+    def newArray1D(self, appMemory, dataType, numItems1 = None):
+
+        if appMemory is not None and appMemory is not ffi.NULL:
+            if isinstance(appMemory, ffi.CData):
+                appMemory = ffi.buffer(appMemory)
+
+            if isinstance(appMemory, _Sequence):
+                if numItems1 is None:
+                    numItems1 = len(appMemory)
+                result = lib.anariNewArray1D(self.device, ffi.NULL, ffi.NULL, ffi.NULL, dataType, numItems1)
+                ptr = lib.anariMapArray(self.device, result)
+            
+                dst = ffi.cast(_conversions[dataType], ptr)
+                for idx, obj in enumerate(appMemory):
+                    dst[idx] = obj.handle if isinstance(obj, Object) else obj
+                lib.anariUnmapArray(self.device, result)
+            else:
+                if numItems1 is None:
+                    try:
+                        view = memoryview(appMemory)
+                        if view.ndim == 1:
+                            numItems1 = view.shape[0]//_elements[dataType]
+                        elif view.ndim == 2 and view.shape[-1] == _elements[dataType]:
+                            numItems1 = view.shape[0]
+                        else:
+                            raise TypeError('unexpected shape '+str(view.shape))
+
+                        if not view.c_contiguous:
+                            raise TypeError('array is not contiguous')
+
+                        if view.itemsize != _itemsizeof[dataType]:
+                            raise TypeError('item size does not match data type')
+
+                    except:
+                        raise TypeError('could not access memoryview') 
+
+                result = lib.anariNewArray1D(self.device, ffi.NULL, ffi.NULL, ffi.NULL, dataType, numItems1)
+                ptr = lib.anariMapArray(self.device, result)
+                src = ffi.from_buffer(appMemory)
+                ffi.memmove(ptr, src, ffi.sizeof(_typeof[dataType])*numItems1)
+                lib.anariUnmapArray(self.device, result)
+        else:
+            result = lib.anariNewArray1D(self.device, ffi.NULL, ffi.NULL, ffi.NULL, dataType, numItems1)
+
+        return Array(self.device, result)
+
+    def newArray2D(self, appMemory, dataType, numItems1 = None, numItems2 = None):
+        if appMemory is not None and appMemory is not ffi.NULL:
+            if isinstance(appMemory, ffi.CData):
+                appMemory = ffi.buffer(appMemory)
+
+            if numItems1 is None:
+                try:
+                    view = memoryview(appMemory)
+                    if view.ndim == 2 and _elements[dataType] == 1 or view.ndim == 3 and view.shape[-1] == _elements[dataType]:
+                        numItems1 = view.shape[0]
+                        numItems2 = view.shape[1]
+                    else:
+                        raise TypeError('unexpected shape '+str(view.shape))
+
+                    if not view.c_contiguous:
+                        raise TypeError('array is not contiguous')
+
+                    if view.itemsize != _itemsizeof[dataType]:
+                        raise TypeError('item size does not match data type')
+
+                except:
+                    raise TypeError('could not access memoryview') 
+
+
+            result = lib.anariNewArray2D(self.device, ffi.NULL, ffi.NULL, ffi.NULL, dataType, numItems1, numItems2)
+            src = ffi.from_buffer(appMemory)
+            ptr = lib.anariMapArray(self.device, result)
+            ffi.memmove(ptr, src, ffi.sizeof(_typeof[dataType])*numItems1*numItems2)
+            lib.anariUnmapArray(self.device, result)
+        else:
+            result = lib.anariNewArray2D(self.device, ffi.NULL, ffi.NULL, ffi.NULL, dataType, numItems1, numItems2)
+
+        return Array(self.device, result)
+
+    def newArray3D(self, appMemory, dataType, numItems1 = None, numItems2 = None, numItems3 = None):
+        if appMemory is not None and appMemory is not ffi.NULL:
+            if isinstance(appMemory, ffi.CData):
+                appMemory = ffi.buffer(appMemory)
+
+            if numItems1 is None:
+                try:
+                    view = memoryview(appMemory)
+                    if view.ndim == 3 and _elements[dataType] == 1 or view.ndim == 4 and view.shape[-1] == _elements[dataType]:
+                        numItems1 = view.shape[0]
+                        numItems2 = view.shape[1]
+                        numItems3 = view.shape[2]
+                    else:
+                        raise TypeError('unexpected shape '+str(view.shape))
+
+                    if not view.c_contiguous:
+                        raise TypeError('array is not contiguous')
+
+                    if view.itemsize != _itemsizeof[dataType]:
+                        raise TypeError('item size does not match data type')
+
+                except:
+                    raise TypeError('could not access memoryview') 
+
+            result = lib.anariNewArray3D(self.device, ffi.NULL, ffi.NULL, ffi.NULL, dataType, numItems1, numItems2, numItems3)
+            ptr = lib.anariMapArray(self.device, result)
+            src = ffi.from_buffer(appMemory)
+            ffi.memmove(ptr, src, ffi.sizeof(_typeof[dataType])*numItems1*numItems2*numItems3)
+            lib.anariUnmapArray(self.device, result)
+        else:
+            result = lib.anariNewArray3D(self.device, ffi.NULL, ffi.NULL, ffi.NULL, dataType, numItems1, numItems2, numItems3)
+
+        return Array(self.device, result)
+
+    def getObjectSubtypes(self, objectType):
+        result = lib.anariGetObjectSubtypes(self.device, objectType)
+        return _from_string_list(result)
+
+    def getObjectInfo(self, objectType, objectSubtype, infoName, infoType):
+        result = lib.anariGetObjectInfo(self.device, objectType, objectSubtype.encode('utf-8'), infoName.encode('utf-8'), infoType)
+        return _convert_pointer(infoType, result)
+
+    def getParameterInfo(self, objectType, objectSubtype, parameterName, parameterType, infoName, infoType):
+        result = lib.anariGetParameterInfo(self.device, objectType, objectSubtype.encode('utf-8'), parameterName.encode('utf-8'), parameterType, infoName.encode('utf-8'), infoType)
+        return _convert_pointer(infoType, result)
+
+
+class Library:
+    def __init__(self, handle):
+        self.handle = handle
+
+    def __del__(self):
+        lib.anariUnloadLibrary(self.handle)
+
+    def loadModule(self, name):
+        lib.anariLoadModule(self.handle, name.encode('utf-8'))
+
+    def unloadModule(self, name):
+        lib.anariUnloadModule(self.handle, name.encode('utf-8'))
+
+    def newDevice(self, type):
+        result = lib.anariNewDevice(self.handle, type.encode('utf-8'))
+        return Device(result, result)
+
+    def newInitializedDevice(self, type, initializers):
+        result = lib.anariNewInitializedDevice(self.handle, type.encode('utf-8'), initializers)
+        return Device(result, result)
+
+    def getDeviceSubtypes(self):
+        result = lib.anariGetDeviceSubtypes(self.handle)
+        return _from_string_list(result)
+
+    def getDeviceExtensions(self, deviceSubtype):
+        result = lib.anariGetDeviceExtensions(self.handle, deviceSubtype.encode('utf-8'))
+        return _from_string_list(result)
+
+
+def loadLibrary(name, callback = ffi.NULL):
+    cbwrapper = ffi.NULL if callback == ffi.NULL else lib.ANARIStatusCallback_python
+    result = lib.anariLoadLibrary(name.encode('utf-8'), cbwrapper, callback)
+    if result == ffi.NULL:
+        return None
+    else:
+        return Library(result)
