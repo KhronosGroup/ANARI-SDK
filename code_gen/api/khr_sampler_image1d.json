@@ -41,7 +41,7 @@
                     "values" : ["nearest", "linear"],
                     "description" : "filter mode"
                 }, {
-                    "name" : "wrapMode1",
+                    "name" : "wrapMode",
                     "types" : ["ANARI_STRING"],
                     "tags" : [],
                     "default" : "clampToEdge",
