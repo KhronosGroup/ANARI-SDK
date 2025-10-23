@@ -1,0 +1,73 @@
+{
+    "info" : {
+        "name" : "KHR_IMAGE_SAMPLER_CLAMP_TO_BORDER",
+        "type" : "extension",
+        "dependencies" : ["khr_sampler_image1d", "khr_sampler_image2d", "khr_sampler_image3d"]
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_SAMPLER",
+            "name" : "image1D",
+            "parameters" : [
+                {
+                    "name" : "wrapMode",
+                    "values" : ["clampToBorder"]
+                },
+                {
+                    "name" : "borderColor",
+                    "types" : ["ANARI_FLOAT32_VEC4"],
+                    "tags" : ["color"],
+                    "default" : [0.0, 0.0, 0.0, 0.0],
+                    "description" : "color of the border when clampToBorder wrap mode is used"
+                }
+            ]
+        },
+        {
+            "type" : "ANARI_SAMPLER",
+            "name" : "image2D",
+            "parameters" : [
+                {
+                    "name" : "wrapMode1",
+                    "values" : ["clampToBorder"]
+                },
+                {
+                    "name" : "wrapMode2",
+                    "values" : ["clampToBorder"]
+                },
+                {
+                    "name" : "borderColor",
+                    "types" : ["ANARI_FLOAT32_VEC4"],
+                    "tags" : ["color"],
+                    "default" : [0.0, 0.0, 0.0, 0.0],
+                    "description" : "color of the border when clampToBorder wrap mode is used"
+                }
+            ]
+        },
+        {
+            "type" : "ANARI_SAMPLER",
+            "name" : "image3D",
+            "parameters" : [
+                {
+                    "name" : "wrapMode1",
+                    "values" : ["clampToBorder"]
+                },
+                {
+                    "name" : "wrapMode2",
+                    "values" : ["clampToBorder"]
+                },
+                {
+                    "name" : "wrapMode3",
+                    "values" : ["clampToBorder"]
+                },
+                {
+                    "name" : "borderColor",
+                    "types" : ["ANARI_FLOAT32_VEC4"],
+                    "tags" : ["color"],
+                    "default" : [0.0, 0.0, 0.0, 0.0],
+                    "description" : "color of the border when clampToBorder wrap mode is used"
+                }
+            ]
+        }
+    ]
+}
