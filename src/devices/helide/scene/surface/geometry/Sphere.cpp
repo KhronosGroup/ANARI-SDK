@@ -80,8 +80,8 @@ void Sphere::finalize()
 
 float4 Sphere::getAttributeValue(const Attribute &attr, const Ray &ray) const
 {
-  if (attr == Attribute::NONE)
-    return Geometry::getAttributeValue(attr, ray);
+  if (auto a = getRayAttribute(attr, ray); a.has_value())
+    return *a;
 
   auto attrIdx = static_cast<int>(attr);
   auto *attributeArray = m_vertexAttributes[attrIdx].ptr;

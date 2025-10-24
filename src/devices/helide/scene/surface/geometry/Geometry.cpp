@@ -83,8 +83,8 @@ void Geometry::markFinalized()
 
 float4 Geometry::getAttributeValue(const Attribute &attr, const Ray &ray) const
 {
-  if (attr == Attribute::NONE)
-    return DEFAULT_ATTRIBUTE_VALUE;
+  if (auto a = getRayAttribute(attr, ray); a.has_value())
+    return *a;
 
   const auto attrIdx = static_cast<int>(attr);
   return readAttributeValue(m_primitiveAttr[attrIdx].ptr,
