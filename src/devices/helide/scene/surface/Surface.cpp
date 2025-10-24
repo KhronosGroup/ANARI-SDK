@@ -69,6 +69,15 @@ float4 Surface::getSurfaceColor(
 
   if (colorSampler && colorSampler->isValid())
     return colorSampler->getSample(*geometry(), ray, instAttrV);
+  else if (colorAttribute == Attribute::WORLD_POSITION)
+    return float4(ray.org + ray.dir * ray.tfar, 1.f);
+  else if (colorAttribute == Attribute::WORLD_NORMAL)
+    return float4(normalize(ray.Ng), 1.f);
+  else if (colorAttribute == Attribute::OBJECT_POSITION)
+    return float4(
+        ray.org + ray.dir * ray.tfar, 1.f); // TODO: transform to object space
+  else if (colorAttribute == Attribute::OBJECT_NORMAL)
+    return float4(normalize(ray.Ng), 1.f); // TODO: transform to object space
   else if (colorAttribute == Attribute::NONE)
     return mat->color();
   else if (const auto &ia = getUniformAttribute(instAttrV, colorAttribute); ia)
@@ -96,7 +105,7 @@ float Surface::getSurfaceOpacity(
   else if (opacityAttribute == Attribute::NONE)
     return mat->opacity();
   else if (const auto &ia = getUniformAttribute(instAttrV, opacityAttribute);
-           ia)
+      ia)
     return ia->x;
   else
     return geometry()->getAttributeValue(opacityAttribute, ray).x;

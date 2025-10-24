@@ -87,8 +87,8 @@ void Cylinder::finalize()
 
 float4 Cylinder::getAttributeValue(const Attribute &attr, const Ray &ray) const
 {
-  if (attr == Attribute::NONE)
-    return DEFAULT_ATTRIBUTE_VALUE;
+  if (auto a = getRayAttribute(attr, ray); a.has_value())
+    return *a;
 
   auto attrIdx = static_cast<int>(attr);
   auto *attributeArray = m_vertexAttributes[attrIdx].ptr;

@@ -72,6 +72,10 @@ enum class Attribute
   ATTRIBUTE_2,
   ATTRIBUTE_3,
   COLOR,
+  WORLD_POSITION,
+  WORLD_NORMAL,
+  OBJECT_POSITION,
+  OBJECT_NORMAL,
   NONE
 };
 
@@ -193,6 +197,14 @@ inline Attribute attributeFromString(const std::string &str)
     return Attribute::ATTRIBUTE_2;
   else if (str == "attribute3")
     return Attribute::ATTRIBUTE_3;
+  else if (str == "worldPosition")
+    return Attribute::WORLD_POSITION;
+  else if (str == "worldNormal")
+    return Attribute::WORLD_NORMAL;
+  else if (str == "objectPosition")
+    return Attribute::OBJECT_POSITION;
+  else if (str == "objectNormal")
+    return Attribute::OBJECT_NORMAL;
   else
     return Attribute::NONE;
 }
