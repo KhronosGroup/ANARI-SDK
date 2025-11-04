@@ -185,14 +185,7 @@ target_compile_definitions(anari_api PRIVATE
 )
 
 # Link against Python libraries and anari
-target_link_libraries(anari_api PRIVATE Python3::Module anari)
-
-# Include directories for Python and anari headers
-target_include_directories(anari_api PRIVATE
-    ${Python3_INCLUDE_DIRS}
-    ${CMAKE_SOURCE_DIR}/src/anari/include/
-    ${CMAKE_BINARY_DIR}/src/anari/include/anari/
-)
+target_link_libraries(anari_api PRIVATE Python3::Module anari_static)
 
 set(ANARI_MODULE_NAME anari_api)
 configure_file(${ANARI_CODE_GEN_ROOT}/__init__.py.in ${CMAKE_CURRENT_BINARY_DIR}/__init__.py)
@@ -208,7 +201,7 @@ install(
   COMPONENT python_module
   DESTINATION anari)
 install(
-  TARGETS anari_api anari
+  TARGETS anari_api
   EXCLUDE_FROM_ALL
   COMPONENT python_module
   LIBRARY DESTINATION anari
