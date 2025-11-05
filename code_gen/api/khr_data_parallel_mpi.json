@@ -13,7 +13,7 @@
                     "name" : "mpiCommunicator",
                     "types" : ["ANARI_VOID_POINTER"],
                     "tags" : [],
-                    "default" : "MPI_COMM_WORLD",
+                    "default" : "nullptr",
                     "description" : "the MPI communicator which the device should treat as the MPI world"
                 }
             ]
