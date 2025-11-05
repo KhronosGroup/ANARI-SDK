@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "TransformSampler.h"
-#include "scene/surface/geometry/Geometry.h"
+#include "geometry/Geometry.h"
 
 namespace helide {
 

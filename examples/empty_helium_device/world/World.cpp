@@ -23,8 +23,11 @@ World::World(HeCoreDeviceGlobalState *s)
 
 World::~World() = default;
 
-bool World::getProperty(
-    const std::string_view &name, ANARIDataType type, void *ptr, uint64_t size, uint32_t flags)
+bool World::getProperty(const std::string_view &name,
+    ANARIDataType type,
+    void *ptr,
+    uint64_t size,
+    uint32_t flags)
 {
   return Object::getProperty(name, type, ptr, size, flags);
 }

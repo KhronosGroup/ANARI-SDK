@@ -8,7 +8,7 @@
 #include "array/Array3D.h"
 #include "array/ObjectArray.h"
 #include "frame/Frame.h"
-#include "scene/volume/spatial_field/SpatialField.h"
+#include "spatial_field/SpatialField.h"
 // std
 #include <limits>
 
@@ -287,11 +287,15 @@ void HelideDevice::deviceCommitParameters()
 
 #define HELIDE_STRINGIFY(s) HELIDE_STRINGIFY2(s)
 #define HELIDE_STRINGIFY2(s) #s
-#define HELIDE_VERSION_STRING\
-  "helide " HELIDE_STRINGIFY(ANARI_SDK_VERSION_MAJOR) "." HELIDE_STRINGIFY(ANARI_SDK_VERSION_MINOR) "." HELIDE_STRINGIFY(ANARI_SDK_VERSION_PATCH)
+#define HELIDE_VERSION_STRING                                                  \
+  "helide " HELIDE_STRINGIFY(ANARI_SDK_VERSION_MAJOR) "." HELIDE_STRINGIFY(    \
+      ANARI_SDK_VERSION_MINOR) "." HELIDE_STRINGIFY(ANARI_SDK_VERSION_PATCH)
 
-int HelideDevice::deviceGetProperty(
-    const char *name, ANARIDataType type, void *mem, uint64_t size, uint32_t mask)
+int HelideDevice::deviceGetProperty(const char *name,
+    ANARIDataType type,
+    void *mem,
+    uint64_t size,
+    uint32_t mask)
 {
   static const std::string helide_version = HELIDE_VERSION_STRING;
   std::string_view prop = name;
@@ -299,8 +303,7 @@ int HelideDevice::deviceGetProperty(
     helium::writeToVoidP(mem, query_extensions());
     return 1;
   } else if (prop == "version" && type == ANARI_INT32) {
-    int version = ANARI_SDK_VERSION_MAJOR * 1000
-        + ANARI_SDK_VERSION_MINOR * 100
+    int version = ANARI_SDK_VERSION_MAJOR * 1000 + ANARI_SDK_VERSION_MINOR * 100
         + ANARI_SDK_VERSION_PATCH;
     helium::writeToVoidP(mem, version);
     return 1;
@@ -314,11 +317,13 @@ int HelideDevice::deviceGetProperty(
     helium::writeToVoidP(mem, int(ANARI_SDK_VERSION_PATCH));
     return 1;
   } else if (prop == "version.name.size" && type == ANARI_UINT64) {
-    helium::writeToVoidP(mem, uint64_t(helide_version.size()+1));
+    helium::writeToVoidP(mem, uint64_t(helide_version.size() + 1));
     return 1;
   } else if (prop == "version.name" && type == ANARI_STRING) {
     std::memset(mem, 0, size);
-    std::memcpy(mem, helide_version.data(), std::min(uint64_t(helide_version.size()), size-1));
+    std::memcpy(mem,
+        helide_version.data(),
+        std::min(uint64_t(helide_version.size()), size - 1));
     return 1;
   } else if (prop == "anariVersion.major" && type == ANARI_INT32) {
     helium::writeToVoidP(mem, 1);

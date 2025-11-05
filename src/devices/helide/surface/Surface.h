@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "scene/surface/geometry/Geometry.h"
-#include "scene/surface/material/Material.h"
+#include "geometry/Geometry.h"
+#include "material/Material.h"
 
 namespace helide {
 

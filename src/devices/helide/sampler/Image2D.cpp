@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Image2D.h"
-#include "scene/surface/geometry/Geometry.h"
+#include "geometry/Geometry.h"
 
 namespace helide {
 
