@@ -59,9 +59,10 @@ static void statusFunc(const void *userData,
   const bool verbose = userData ? *(const bool *)userData : false;
   if (severity == ANARI_SEVERITY_FATAL_ERROR) {
     fprintf(stderr, "[ANARI][FATAL][%p] %s\n", source, message);
+    std::exit(1);
   } else if (severity == ANARI_SEVERITY_ERROR) {
     fprintf(stderr, "[ANARI][ERROR][%p] %s\n", source, message);
-  } else if (verbose && severity == ANARI_SEVERITY_WARNING) {
+  } else if (severity == ANARI_SEVERITY_WARNING) {
     fprintf(stderr, "[ANARI][WARN ][%p] %s\n", source, message);
   } else if (verbose && severity == ANARI_SEVERITY_PERFORMANCE_WARNING) {
     fprintf(stderr, "[ANARI][PERF ][%p] %s\n", source, message);
@@ -190,7 +191,7 @@ void printHelp()
 
     --verbose | -v
 
-        Enable verbose output from the device, otherwise just errors
+        Enable verbose output from the device, otherwise just errors + warnings
 
     --num_samples [int]
 
