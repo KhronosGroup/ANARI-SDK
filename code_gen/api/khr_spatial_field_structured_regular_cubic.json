@@ -1,0 +1,20 @@
+{
+    "info" : {
+        "name" : "KHR_SPATIAL_FIELD_STRUCTURED_REGULAR_CUBIC",
+        "type" : "extension",
+        "dependencies" : ["khr_spatial_field_structured_regular"]
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_SPATIAL_FIELD",
+            "name" : "structuredRegular",
+            "parameters" : [
+                {
+                    "name" : "filter",
+                    "values" : ["cubic"]
+                }
+            ]
+        }
+    ]
+}
