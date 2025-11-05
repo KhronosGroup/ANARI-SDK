@@ -8,7 +8,7 @@
 #include "array/Array3D.h"
 #include "array/ObjectArray.h"
 #include "frame/Frame.h"
-#include "scene/volume/spatial_field/SpatialField.h"
+#include "spatial_field/SpatialField.h"
 
 #include "anari_library_hecore_queries.h"
 

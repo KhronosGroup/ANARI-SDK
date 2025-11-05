@@ -5,7 +5,7 @@
 
 #include "camera/Camera.h"
 #include "renderer/Renderer.h"
-#include "scene/World.h"
+#include "world/World.h"
 // helium
 #include "helium/BaseFrame.h"
 // std

@@ -53,17 +53,17 @@ add_library(${PROJECT_NAME} SHARED
   Object.cpp
   camera/Camera.cpp
   frame/Frame.cpp
+  geometry/Geometry.cpp
+  light/Light.cpp
+  material/Material.cpp
   renderer/Renderer.cpp
-  scene/Group.cpp
-  scene/Instance.cpp
-  scene/World.cpp
-  scene/light/Light.cpp
-  scene/surface/Surface.cpp
-  scene/surface/geometry/Geometry.cpp
-  scene/surface/material/Material.cpp
-  scene/surface/material/sampler/Sampler.cpp
-  scene/volume/Volume.cpp
-  scene/volume/spatial_field/SpatialField.cpp
+  sampler/Sampler.cpp
+  spatial_field/SpatialField.cpp
+  surface/Surface.cpp
+  volume/Volume.cpp
+  world/Group.cpp
+  world/Instance.cpp
+  world/World.cpp
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE anari::helium)

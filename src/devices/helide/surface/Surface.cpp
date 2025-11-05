@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Surface.h"
-#include "../Instance.h"
+#include "world/Instance.h"
 
 namespace helide {
 

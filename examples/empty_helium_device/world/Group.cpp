@@ -16,8 +16,11 @@ Group::Group(HeCoreDeviceGlobalState *s)
 
 Group::~Group() = default;
 
-bool Group::getProperty(
-    const std::string_view &name, ANARIDataType type, void *ptr, uint64_t size, uint32_t flags)
+bool Group::getProperty(const std::string_view &name,
+    ANARIDataType type,
+    void *ptr,
+    uint64_t size,
+    uint32_t flags)
 {
   return Object::getProperty(name, type, ptr, size, flags);
 }

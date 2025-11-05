@@ -7,7 +7,8 @@ namespace hecore {
 
 Light::Light(HeCoreDeviceGlobalState *s) : Object(ANARI_LIGHT, s) {}
 
-Light *Light::createInstance(std::string_view /*subtype*/, HeCoreDeviceGlobalState *s)
+Light *Light::createInstance(
+    std::string_view /*subtype*/, HeCoreDeviceGlobalState *s)
 {
   return (Light *)new UnknownObject(ANARI_LIGHT, s);
 }
