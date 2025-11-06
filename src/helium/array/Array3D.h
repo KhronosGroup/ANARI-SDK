@@ -14,8 +14,6 @@ struct Array3DMemoryDescriptor : public ArrayMemoryDescriptor
   uint64_t numItems3{0};
 };
 
-bool isCompact(const Array3DMemoryDescriptor &d);
-
 struct Array3D : public Array
 {
   Array3D(BaseGlobalDeviceState *state, const Array3DMemoryDescriptor &d);

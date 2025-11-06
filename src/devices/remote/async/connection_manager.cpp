@@ -35,21 +35,17 @@ inline std::string to_string(T const &x)
 //
 
 connection_manager::connection_manager()
-    : io_service_(),
-      acceptor_(io_service_),
-      strand_(io_service_),
-      work_(std::make_shared<boost::asio::io_service::work>(
-          std::ref(io_service_))),
+    : io_context_(),
+      acceptor_(io_context_),
+      work_(boost::asio::make_work_guard(io_context_)),
       connections_(),
       write_queue_()
 {}
 
 connection_manager::connection_manager(unsigned short port)
-    : io_service_(),
-      acceptor_(io_service_, tcp::endpoint(tcp::v6(), port)),
-      strand_(io_service_),
-      work_(std::make_shared<boost::asio::io_service::work>(
-          std::ref(io_service_))),
+    : io_context_(),
+      acceptor_(io_context_, tcp::endpoint(tcp::v6(), port)),
+      work_(boost::asio::make_work_guard(io_context_)),
       connections_(),
       write_queue_()
 {}
@@ -68,13 +64,13 @@ void connection_manager::run()
 {
 #ifndef NDEBUG
   try {
-    io_service_.run();
+    io_context_.run();
   } catch (std::exception const &e) {
     printf("connection_manager::run: EXCEPTION caught: %s", e.what());
     throw;
   }
 #else
-  io_service_.run();
+  io_context_.run();
 #endif
 }
 
@@ -92,21 +88,20 @@ void connection_manager::stop()
 {
   work_.reset();
 
-  io_service_.stop();
-  io_service_.reset();
+  io_context_.stop();
 }
 
 void connection_manager::accept(handler h)
 {
   // Start an accept operation for a new connection.
-  strand_.post(boost::bind(&connection_manager::do_accept, this, h));
+  boost::asio::post(io_context_, boost::bind(&connection_manager::do_accept, this, h));
 }
 
 void connection_manager::connect(
     std::string const &host, unsigned short port, handler h)
 {
   // Start a new connection operation
-  strand_.post(
+  boost::asio::post(io_context_,
       boost::bind(&connection_manager::do_connect, this, host, port, h));
 }
 
@@ -118,15 +113,13 @@ connection_pointer connection_manager::connect(
   connection_pointer conn(new connection(*this));
 
   // Resolve the host name into an IP address.
-  tcp::resolver resolver(io_service_);
-  tcp::resolver::query query(host, to_string(port));
-  tcp::resolver::iterator I = resolver.resolve(query);
-  tcp::resolver::iterator E;
+  tcp::resolver resolver(io_context_);
+  auto R = resolver.resolve(host, to_string(port));
 
   boost::system::error_code error_code;
 
   // Connect
-  boost::asio::connect(conn->socket_, I, E, error_code);
+  boost::asio::connect(conn->socket_, R, error_code);
 
   if (error_code) {
     return connection_pointer();
@@ -188,11 +181,10 @@ connection_pointer connection_manager::find(
   using boost::asio::ip::tcp;
 
   // Get the endpoint
-  tcp::resolver resolver(io_service_);
-  tcp::resolver::query query(host, to_string(port));
-  tcp::resolver::iterator it = resolver.resolve(query);
+  tcp::resolver resolver(io_context_);
+  auto R = resolver.resolve(host, to_string(port));
 
-  tcp::endpoint endpoint = *it;
+  tcp::endpoint endpoint = R.begin()->endpoint();
 
   // Check if a connection with the required endpoint exists
   for (connections::iterator I = connections_.begin(), E = connections_.end();
@@ -248,13 +240,13 @@ void connection_manager::do_connect(
   connection_pointer conn(new connection(*this));
 
   // Resolve the host name into an IP address.
-  tcp::resolver resolver(io_service_);
-  tcp::resolver::query query(host, to_string(port));
-  tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+  tcp::resolver resolver(io_context_);
+  auto R = resolver.resolve(host, to_string(port));
 
   // Start an asynchronous connect operation.
   boost::asio::async_connect(conn->socket_,
-      endpoint_iterator,
+      R.begin(),
+      R.end(),
       boost::bind(&connection_manager::handle_connect,
           this,
           boost::asio::placeholders::error,
@@ -352,7 +344,8 @@ void connection_manager::handle_read_data(boost::system::error_code const &e,
 
 void connection_manager::write(message_pointer msg, connection_pointer conn)
 {
-  strand_.post(boost::bind(&connection_manager::do_write, this, msg, conn));
+  boost::asio::post(
+      io_context_, boost::bind(&connection_manager::do_write, this, msg, conn));
 }
 
 void connection_manager::do_write(message_pointer msg, connection_pointer conn)

@@ -83,9 +83,18 @@ static std::vector<void *> g_loadedLibs;
 static void *loadLibrary(
     const std::string &libName, bool withAnchor, std::string &errorMessage)
 {
-  std::string file = libName;
+
+  auto n = libName.find(',');
+  std::string name = libName.substr(0, n);
+
+  std::string file = std::string("anari_library_") + name;
   std::string errorMsg;
   std::string libLocation = withAnchor ? library_location() : std::string();
+  if(n != libName.npos) {
+    libLocation = libName.substr(n+1);
+  }
+
+
   void *lib = nullptr;
 #ifdef _WIN32
   // Set cwd to library location, to make sure dependent libraries are found as
@@ -135,7 +144,7 @@ static void *loadLibrary(
 
 #else
   std::string fullName = libLocation + "lib" + file + RKCOMMON_LIB_EXT;
-  lib = dlopen(fullName.c_str(), RTLD_LAZY | RTLD_LOCAL);
+  lib = dlopen(fullName.c_str(), RTLD_LAZY | RTLD_LOCAL);    
   if (lib == nullptr) {
     errorMsg += dlerror();
   }

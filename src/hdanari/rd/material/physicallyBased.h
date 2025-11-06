@@ -19,7 +19,11 @@ struct HdAnariPhysicallyBasedMaterial final
       const HdMaterialNetwork2Interface &materialNetworkInterface,
       TfToken terminal);
 
-  static anari::Material GetOrCreateMaterial(anari::Device device,
+  static anari::Material CreateMaterial(anari::Device device,
+      const HdMaterialNetwork2Interface &materialNetworkIface);
+
+  static void SyncMaterialParameters(anari::Device device,
+      anari::Material material,
       const HdMaterialNetwork2Interface &materialNetworkIface,
       const HdAnariMaterial::PrimvarBinding &primvarBinding,
       const HdAnariMaterial::PrimvarMapping &primvarMapping,

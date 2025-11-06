@@ -8,26 +8,6 @@
 
 namespace hecore {
 
-// Helper functions ///////////////////////////////////////////////////////////
-
-static uint32_t cvt_uint32(const float &f)
-{
-  return static_cast<uint32_t>(255.f * std::clamp(f, 0.f, 1.f));
-}
-
-static uint32_t cvt_uint32(const float4 &v)
-{
-  return (cvt_uint32(v.x) << 0) | (cvt_uint32(v.y) << 8)
-      | (cvt_uint32(v.z) << 16) | (cvt_uint32(v.w) << 24);
-}
-
-static uint32_t cvt_uint32_srgb(const float4 &v)
-{
-  return cvt_uint32(float4(toneMap(v.x), toneMap(v.y), toneMap(v.z), v.w));
-}
-
-// Frame definitions //////////////////////////////////////////////////////////
-
 Frame::Frame(HeCoreDeviceGlobalState *s) : helium::BaseFrame(s) {}
 
 Frame::~Frame()
@@ -83,8 +63,11 @@ void Frame::finalize()
       && m_camera->isValid() && m_world && m_world->isValid();
 }
 
-bool Frame::getProperty(
-    const std::string_view &name, ANARIDataType type, void *ptr, uint32_t flags)
+bool Frame::getProperty(const std::string_view &name,
+    ANARIDataType type,
+    void *ptr,
+    uint64_t size,
+    uint32_t flags)
 {
   if (type == ANARI_FLOAT32 && name == "duration") {
     helium::writeToVoidP(ptr, m_duration);
@@ -177,12 +160,12 @@ void Frame::writeSample(int x, int y, const PixelSample &s)
   auto *color = m_pixelBuffer.data() + (idx * m_perPixelBytes);
   switch (m_colorType) {
   case ANARI_UFIXED8_VEC4: {
-    auto c = cvt_uint32(s.color);
+    auto c = helium::cvt_color_to_uint32(s.color);
     std::memcpy(color, &c, sizeof(c));
     break;
   }
   case ANARI_UFIXED8_RGBA_SRGB: {
-    auto c = cvt_uint32_srgb(s.color);
+    auto c = helium::cvt_color_to_uint32_srgb(s.color);
     std::memcpy(color, &c, sizeof(c));
     break;
   }

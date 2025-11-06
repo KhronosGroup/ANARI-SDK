@@ -5,7 +5,7 @@
 
 #include "camera/Camera.h"
 #include "renderer/Renderer.h"
-#include "scene/World.h"
+#include "world/World.h"
 // helium
 #include "helium/BaseFrame.h"
 // std
@@ -25,6 +25,7 @@ struct Frame : public helium::BaseFrame
   bool getProperty(const std::string_view &name,
       ANARIDataType type,
       void *ptr,
+      uint64_t size,
       uint32_t flags) override;
 
   void commitParameters() override;

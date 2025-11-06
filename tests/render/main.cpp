@@ -34,6 +34,7 @@ std::string g_scene;
 
 anari::math::uint2 g_frameSize(1024, 768);
 int g_numPixelSamples = 1;
+float g_ambientRadiance = 0.25f;
 std::string g_libraryType = "environment";
 std::string g_deviceType = "default";
 std::string g_rendererType = "default";
@@ -57,17 +58,18 @@ static void statusFunc(const void *userData,
 {
   const bool verbose = userData ? *(const bool *)userData : false;
   if (severity == ANARI_SEVERITY_FATAL_ERROR) {
-    fprintf(stderr, "[FATAL][%p] %s\n", source, message);
+    fprintf(stderr, "[ANARI][FATAL][%p] %s\n", source, message);
+    std::exit(1);
   } else if (severity == ANARI_SEVERITY_ERROR) {
-    fprintf(stderr, "[ERROR][%p] %s\n", source, message);
-  } else if (verbose && severity == ANARI_SEVERITY_WARNING) {
-    fprintf(stderr, "[WARN ][%p] %s\n", source, message);
+    fprintf(stderr, "[ANARI][ERROR][%p] %s\n", source, message);
+  } else if (severity == ANARI_SEVERITY_WARNING) {
+    fprintf(stderr, "[ANARI][WARN ][%p] %s\n", source, message);
   } else if (verbose && severity == ANARI_SEVERITY_PERFORMANCE_WARNING) {
-    fprintf(stderr, "[PERF ][%p] %s\n", source, message);
+    fprintf(stderr, "[ANARI][PERF ][%p] %s\n", source, message);
   } else if (verbose && severity == ANARI_SEVERITY_INFO) {
-    fprintf(stderr, "[INFO ][%p] %s\n", source, message);
+    fprintf(stderr, "[ANARI][INFO ][%p] %s\n", source, message);
   } else if (verbose && severity == ANARI_SEVERITY_DEBUG) {
-    fprintf(stderr, "[DEBUG][%p] %s\n", source, message);
+    fprintf(stderr, "[ANARI][DEBUG][%p] %s\n", source, message);
   }
 }
 
@@ -116,8 +118,11 @@ static void renderScene(
 
   auto renderer = anari::newObject<anari::Renderer>(d, g_rendererType.c_str());
   anari::setParameter(d, renderer, "pixelSamples", g_numPixelSamples);
-  anari::setParameter(
-      d, renderer, "background", anari::math::float4(anari::math::float3(0.1f), 1));
+  anari::setParameter(d, renderer, "ambientRadiance", g_ambientRadiance);
+  anari::setParameter(d,
+      renderer,
+      "background",
+      anari::math::float4(anari::math::float3(0.1f), 1));
   anari::commitParameters(d, renderer);
 
   auto frame = anari::newObject<anari::Frame>(d);
@@ -186,14 +191,20 @@ void printHelp()
 
     --verbose | -v
 
-        Enable verbose output from the device, otherwise just errors
+        Enable verbose output from the device, otherwise just errors + warnings
 
-    --num_samples [N]
+    --num_samples [int]
 
         Number of samples to be take for each pixel per-frame,
         relevant to ray tracers
 
         default --> 1
+
+    --ambientRadiance [float]
+
+        Ambient radiance value for the scene lighting
+
+        default --> 0.25
 
     --renderer [name]
 
@@ -232,6 +243,8 @@ void parseCommandLine(int argc, const char *argv[])
       g_numPixelSamples = std::atoi(argv[++i]);
     } else if (arg == "--renderer") {
       g_rendererType = argv[++i];
+    } else if (arg == "--ambientRadiance") {
+      g_ambientRadiance = std::atof(argv[++i]);
     } else if (arg == "--scene" || arg == "-s") {
       g_category = argv[++i];
       g_scene = argv[++i];
@@ -249,10 +262,11 @@ void parseCommandLine(int argc, const char *argv[])
 void printConfig()
 {
   printf("CONFIGURATION:\n");
-  printf("    image size = {%i, %i}\n", g_frameSize.x, g_frameSize.y);
-  printf("        device = %s\n", g_deviceType.c_str());
-  printf("      renderer = %s\n", g_rendererType.c_str());
-  printf(" pixel samples = %i\n", g_numPixelSamples);
+  printf("    image size    = {%i, %i}\n", g_frameSize.x, g_frameSize.y);
+  printf("        device    = %s\n", g_deviceType.c_str());
+  printf("      renderer    = %s\n", g_rendererType.c_str());
+  printf(" pixel samples    = %i\n", g_numPixelSamples);
+  printf(" ambient radiance = %f\n", g_ambientRadiance);
   printf("\n");
 }
 

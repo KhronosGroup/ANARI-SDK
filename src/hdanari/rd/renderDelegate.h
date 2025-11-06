@@ -18,7 +18,18 @@ PXR_NAMESPACE_OPEN_SCOPE
 
 class HdAnariRenderParam;
 
-#define HDANARI_RENDER_SETTINGS_TOKENS (ambientRadiance)(ambientColor)
+// clang-format off
+#define HDANARI_RENDER_SETTINGS_TOKENS                                         \
+  (ambientColor) \
+  (ambientRadiance) \
+  (ambientSamples) \
+  (debugMethod) \
+  (denoise) \
+  (maxRayDepth) \
+  (pixelSamples) \
+  (renderSubtype) \
+  (sampleLimit)
+// clang-format on
 
 TF_DECLARE_PUBLIC_TOKENS(
     HdAnariRenderSettingsTokens, HDANARI_RENDER_SETTINGS_TOKENS);
@@ -64,10 +75,11 @@ class HdAnariRenderDelegate final : public HdRenderDelegate
 
   void CommitResources(HdChangeTracker *tracker) override;
 
-  TfToken GetMaterialBindingPurpose() const override
-  {
-    return HdTokens->full;
-  }
+  TfToken GetMaterialBindingPurpose() const override;
+
+  TfTokenVector GetMaterialRenderContexts() const override;
+
+  TfTokenVector GetShaderSourceTypes() const override;
 
   HdAovDescriptor GetDefaultAovDescriptor(TfToken const &name) const override;
 

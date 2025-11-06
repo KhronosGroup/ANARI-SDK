@@ -5,6 +5,7 @@
 #include <functional>
 #include <iostream>
 #include <sstream>
+#include <system_error>
 #include "ArrayInfo.h"
 #include "Buffer.h"
 #include "Compression.h"
@@ -291,7 +292,7 @@ struct Server
   }
 
   bool handleNewConnection(
-      async::connection_pointer new_conn, boost::system::error_code const &e)
+      async::connection_pointer new_conn, std::error_code const &e)
   {
     if (e) {
       LOG(logging::Level::Error)
@@ -321,7 +322,7 @@ struct Server
 
   void handleMessage(async::connection::reason reason,
       async::message_pointer message,
-      boost::system::error_code const &e)
+      std::error_code const &e)
   {
     if (e) {
       LOG(logging::Level::Error) << "Server: error: " << e.message();

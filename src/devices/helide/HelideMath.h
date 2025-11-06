@@ -58,7 +58,36 @@ using UniformAttributeSet = std::array<std::optional<float4>, 5>;
 inline const std::optional<float4> &getUniformAttribute(
     const UniformAttributeSet &ua, Attribute attr)
 {
+  static std::optional<float4> emptyValue;
+  switch (attr) {
+  case Attribute::NONE:
+  case Attribute::WORLD_POSITION:
+  case Attribute::WORLD_NORMAL:
+  case Attribute::OBJECT_POSITION:
+  case Attribute::OBJECT_NORMAL:
+    return emptyValue;
+  default:
+    break;
+  }
   return ua[static_cast<int>(attr)];
+}
+
+inline std::optional<float4> getRayAttribute(Attribute attr, const Ray &ray)
+{
+  switch (attr) {
+  case Attribute::WORLD_POSITION:
+    return float4(ray.org + ray.dir * ray.tfar, 1.f);
+  case Attribute::WORLD_NORMAL:
+    return float4(normalize(ray.Ng), 1.f);
+  case Attribute::OBJECT_POSITION:
+    return float4(
+        ray.org + ray.dir * ray.tfar, 1.f); // TODO: transform to object space
+  case Attribute::OBJECT_NORMAL:
+    return float4(normalize(ray.Ng), 1.f); // TODO: transform to object space
+  default:
+    break;
+  }
+  return {};
 }
 
 inline float3 xfmVec(const mat4 &m, const float3 &p)

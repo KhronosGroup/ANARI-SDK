@@ -8,7 +8,7 @@
 #include "array/Array3D.h"
 #include "array/ObjectArray.h"
 #include "frame/Frame.h"
-#include "scene/volume/spatial_field/SpatialField.h"
+#include "spatial_field/SpatialField.h"
 
 #include "anari_library_hecore_queries.h"
 
@@ -225,7 +225,7 @@ void HeCoreDevice::deviceCommitParameters()
 }
 
 int HeCoreDevice::deviceGetProperty(
-    const char *name, ANARIDataType type, void *mem, uint64_t size)
+    const char *name, ANARIDataType type, void *mem, uint64_t size, uint32_t mask)
 {
   std::string_view prop = name;
   if (prop == "extension" && type == ANARI_STRING_LIST) {

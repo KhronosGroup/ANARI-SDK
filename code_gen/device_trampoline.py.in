@@ -1,0 +1,7 @@
+import anari
+from pathlib import Path as _Path
+
+library = anari.loadLibrary('${DEVICE_LIBRARY_NAME},'+str(_Path(__file__).parent)+'/', anari.error_status_handle)
+
+def newDevice(name = "default"):
+    return library.newDevice(name)

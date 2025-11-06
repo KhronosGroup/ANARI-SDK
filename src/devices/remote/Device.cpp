@@ -857,7 +857,7 @@ void Device::write(unsigned type, const void *begin, const void *end)
 }
 
 bool Device::handleNewConnection(
-    async::connection_pointer new_conn, boost::system::error_code const &e)
+    async::connection_pointer new_conn, std::error_code const &e)
 {
   if (e) {
     LOG(logging::Level::Error)
@@ -886,7 +886,7 @@ bool Device::handleNewConnection(
 
 void Device::handleMessage(async::connection::reason reason,
     async::message_pointer message,
-    boost::system::error_code const &e)
+    std::error_code const &e)
 {
   if (e) {
     LOG(logging::Level::Error) << "ANARIDevice client: error" << e.message();

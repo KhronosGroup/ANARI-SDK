@@ -10,6 +10,7 @@ if (INSTALL_CODE_GEN_SCRIPTS)
     COMPONENT code_gen
     FILES_MATCHING
       PATTERN *.py
+      PATTERN *.py.in
       PATTERN *.h
       PATTERN *.cpp
       PATTERN *.json
@@ -32,6 +33,10 @@ endif()
 
 option(INSTALL_PYTHON_BINDINGS "Install python bindings" OFF) # If turned on, draws in all the custom targets below (generate_all)
 cmake_dependent_option(LINK_BINDINGS_TO_RELEASE_PYTHON "Force the python bindings to implicitly link to a release python library on Windows, overriding possible debug python linking" OFF INSTALL_PYTHON_BINDINGS OFF)
+
+option(INSTALL_LEGACY_PYTHON_BINDINGS "Install legacy python bindings" OFF) # If turned on, draws in all the custom targets below (generate_all)
+cmake_dependent_option(LINK_BINDINGS_TO_RELEASE_PYTHON "Force the python bindings to implicitly link to a release python library on Windows, overriding possible debug python linking" OFF INSTALL_LEGACY_PYTHON_BINDINGS OFF)
+
 
 set(API_JSON api/anari_core_1_0.json api/khr_frame_completion_callback.json)
 
@@ -132,7 +137,7 @@ add_custom_target(python_bindings ${BUILD_PYTHON_BINDINGS_BY_DEFAULT}
     DEPENDS pyanari
 )
 
-if (INSTALL_PYTHON_BINDINGS)
+if (INSTALL_LEGACY_PYTHON_BINDINGS)
   install(
     FILES ${CMAKE_CURRENT_BINARY_DIR}/anari.py
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/python_bindings)
@@ -140,3 +145,64 @@ if (INSTALL_PYTHON_BINDINGS)
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/python_bindings
     RUNTIME DESTINATION ${CMAKE_INSTALL_LIBDIR}/python_bindings)
 endif()
+
+# New bindings
+
+# Generate the C file using the Python script
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/anari_api_bindings.c ${CMAKE_CURRENT_BINARY_DIR}/utils.py
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/cffi_gen.py
+        -d ${CMAKE_CURRENT_SOURCE_DIR}/devices/generic_device.json
+        -j ${CMAKE_CURRENT_SOURCE_DIR}/api/
+        -n anari_api
+        -O ${CMAKE_CURRENT_BINARY_DIR}
+        ${LINK_BINDINGS_TO_RELEASE_PYTHON_FLAG}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS cffi_gen.py ${API_JSON} devices/generic_device.json
+    COMMENT "Generating Python bindings C file"
+)
+
+# Create the Python extension module
+add_library(anari_api MODULE EXCLUDE_FROM_ALL
+    ${CMAKE_CURRENT_BINARY_DIR}/anari_api_bindings.c
+)
+
+# Set the output name to match Python's expectations
+if (WIN32)
+  set(PYTHON_OBJ_EXT .pyd)
+else()
+  set(PYTHON_OBJ_EXT .so)
+endif()
+set_target_properties(anari_api
+    PROPERTIES
+      PREFIX ""
+      SUFFIX ${PYTHON_OBJ_EXT}
+)
+
+# Force cffi to keep the python api as usual
+target_compile_definitions(anari_api PRIVATE
+    _CFFI_NO_LIMITED_API
+)
+
+# Link against Python libraries and anari
+target_link_libraries(anari_api PRIVATE Python3::Module anari_static)
+
+set(ANARI_MODULE_NAME anari_api)
+configure_file(${ANARI_CODE_GEN_ROOT}/__init__.py.in ${CMAKE_CURRENT_BINARY_DIR}/__init__.py)
+
+# Add the custom target for Python bindings
+add_custom_target(neo_bindings ${BUILD_PYTHON_BINDINGS_BY_DEFAULT}
+    DEPENDS anari_api
+)
+
+install(
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/__init__.py ${CMAKE_CURRENT_BINARY_DIR}/utils.py
+  EXCLUDE_FROM_ALL
+  COMPONENT python_module
+  DESTINATION anari)
+install(
+  TARGETS anari_api
+  EXCLUDE_FROM_ALL
+  COMPONENT python_module
+  LIBRARY DESTINATION anari
+  RUNTIME DESTINATION anari)

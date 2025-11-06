@@ -104,14 +104,16 @@ extern "C" ANARILibrary anariLoadLibrary(const char *libraryName,
 
   NewLibraryFcn newLibraryFcn = nullptr;
   void *lib = nullptr;
-  auto &name = libraryName;
+  std::string name = libraryName;
+  std::string libname = name.substr(0, name.find(','));
 
   try {
-    lib = anari::loadANARILibrary(std::string("anari_library_") + name);
+    lib = anari::loadANARILibrary(name);
     if (!lib)
-      throw std::runtime_error("failed to load library " + std::string(name));
+      throw std::runtime_error("failed to load library " + libname);
 
-    std::string prefix = "anari_library_" + std::string(name);
+
+    std::string prefix = "anari_library_" + libname;
     std::string newLibraryFcnName = prefix + "_new_library";
 
     newLibraryFcn =
@@ -119,7 +121,7 @@ extern "C" ANARILibrary anariLoadLibrary(const char *libraryName,
 
     if (!newLibraryFcn) {
       throw std::runtime_error("failed to find entrypoint function for "
-          + std::string(name) + " library");
+          + libname + " library");
     }
   } catch (const std::exception &e) {
     std::string msg = "failed to load ANARILibrary '";

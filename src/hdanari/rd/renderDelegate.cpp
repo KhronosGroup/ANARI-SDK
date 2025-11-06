@@ -1,49 +1,46 @@
 // Copyright 2024-2025 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-#include <pxr/imaging/hd/light.h>
+#define HDANARI_TYPE_DEFINITIONS
+
+#include "renderDelegate.h"
+#include "instancer.h"
 #include "light.h"
 #include "material.h"
 #include "materialTokens.h"
+#include "mesh.h"
+#include "points.h"
+#include "renderBuffer.h"
 #include "renderParam.h"
+#include "renderPass.h"
 
-#include <anari/anari.h>
-#include <anari/frontend/anari_enums.h>
+#ifdef HDANARI_ENABLE_MDL
+#include "mdl/mdlRegistry.h"
+#endif
+
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/vec4f.h>
 #include <pxr/base/tf/diagnostic.h>
 #include <pxr/base/tf/token.h>
 #include <pxr/base/vt/value.h>
+#include <pxr/imaging/hd/bprim.h>
+#include <pxr/imaging/hd/camera.h>
+#include <pxr/imaging/hd/extComputation.h>
 #include <pxr/imaging/hd/instancer.h>
+#include <pxr/imaging/hd/light.h>
 #include <pxr/imaging/hd/renderIndex.h>
+#include <pxr/imaging/hd/resourceRegistry.h>
 #include <pxr/imaging/hd/rprim.h>
 #include <pxr/imaging/hd/sceneDelegate.h>
 #include <pxr/imaging/hd/sprim.h>
-#include <pxr/imaging/hd/types.h>
-#include <stdio.h>
-#include <anari/anari_cpp.hpp>
-#include <anari/anari_cpp/anari_cpp_impl.hpp>
-#include <string>
-
-#define HDANARI_TYPE_DEFINITIONS
-// XXX: Add other Sprim types later
-#include <pxr/imaging/hd/bprim.h>
-// XXX: Add other Rprim types later
-#include <pxr/imaging/hd/camera.h>
-#include <pxr/imaging/hd/extComputation.h>
-#include <pxr/imaging/hd/resourceRegistry.h>
 #include <pxr/imaging/hd/tokens.h>
+#include <pxr/imaging/hd/types.h>
 #include <pxr/usd/usdShade/tokens.h>
 
-#include "instancer.h"
-#include "material/matte.h"
-#include "material/physicallyBased.h"
-#include "mesh.h"
-#include "points.h"
-#include "renderBuffer.h"
-#include "renderDelegate.h"
-#include "renderPass.h"
-// XXX: Add bprim types
+#include <anari/anari.h>
+#include <anari/frontend/anari_enums.h>
+#include <anari/anari_cpp.hpp>
+#include <anari/anari_cpp/anari_cpp_impl.hpp>
 
 #include <string_view>
 
@@ -88,13 +85,14 @@ const TfTokenVector HdAnariRenderDelegate::SUPPORTED_SPRIM_TYPES = {
     HdPrimTypeTokens->material,
     HdPrimTypeTokens->extComputation,
 
-    HdPrimTypeTokens->distantLight,  // directional
+    HdPrimTypeTokens->distantLight, // directional
     HdPrimTypeTokens->domeLight, // hdri
-    // HdPrimTypeTokens->rectLight, // quad
-    // HdPrimTypeTokens->sphereLight, // point
-    
-    // HdPrimTypeTokens->simpleLight, // ???
-    
+    HdPrimTypeTokens->diskLight, // ring with inner radius = 0
+    HdPrimTypeTokens->rectLight, // quad
+    HdPrimTypeTokens->sphereLight, // point
+
+    HdPrimTypeTokens->simpleLight, // ???
+
 };
 
 const TfTokenVector HdAnariRenderDelegate::SUPPORTED_BPRIM_TYPES = {
@@ -120,13 +118,36 @@ HdAnariRenderDelegate::HdAnariRenderDelegate(
 void HdAnariRenderDelegate::Initialize()
 {
   // Initialize the settings and settings descriptors.
-  _settingDescriptors.resize(2);
-  _settingDescriptors[0] = {"Ambient Radiance",
+  _settingDescriptors.clear();
+  _settingDescriptors.push_back({"Ambient Radiance",
       HdAnariRenderSettingsTokens->ambientRadiance,
-      VtValue(0.2f)};
-  _settingDescriptors[1] = {"Ambient Color",
+      VtValue(0.2f)});
+  _settingDescriptors.push_back({"Ambient Color",
       HdAnariRenderSettingsTokens->ambientColor,
-      VtValue(GfVec3f(0.8f, 0.8f, 0.8f))};
+      VtValue(GfVec3f(0.8f, 0.8f, 0.8f))});
+  _settingDescriptors.push_back({"Ambient Samples",
+      HdAnariRenderSettingsTokens->ambientSamples,
+      VtValue(1)});
+
+  _settingDescriptors.push_back(
+      {"Sample Limit", HdAnariRenderSettingsTokens->sampleLimit, VtValue(128)});
+
+  _settingDescriptors.push_back(
+      {"Max Ray Depth", HdAnariRenderSettingsTokens->maxRayDepth, VtValue(0)});
+
+  _settingDescriptors.push_back(
+      { "Pixel Samples",HdAnariRenderSettingsTokens->pixelSamples, VtValue(1) });
+
+  _settingDescriptors.push_back(
+      {"Denoise", HdAnariRenderSettingsTokens->denoise, VtValue(false)});
+
+  _settingDescriptors.push_back({"subtype",
+      HdAnariRenderSettingsTokens->renderSubtype,
+      VtValue("default")});
+  _settingDescriptors.push_back({"debug:method",
+      HdAnariRenderSettingsTokens->debugMethod,
+      VtValue("Ns.abs")});
+
   _PopulateDefaultSettings(_settingDescriptors);
 
   auto library = anari::loadLibrary("environment", hdAnariDeviceStatusFunc);
@@ -138,24 +159,37 @@ void HdAnariRenderDelegate::Initialize()
   auto extensions = anariGetDeviceExtensions(library, "default");
   bool hasANARI_KHR_DEVICE_SYNCHRONIZATION = false;
   bool hasANARI_KHR_MATERIAL_PHYSICALLY_BASED = false;
-  for (auto e = extensions; *e; ++e) {
+#ifdef HDANARI_ENABLE_MDL
+  bool hasANARI_VISRTX_MATERIAL_MDL = false;
+#endif
+  for (auto e = extensions; e && *e; ++e) {
     if ("ANARI_KHR_DEVICE_SYNCHRONIZATION"sv == *e)
       hasANARI_KHR_DEVICE_SYNCHRONIZATION = true;
-    if ("ANARI_KHR_MATERIAL_PHYSICALLY_BASED"sv == *e)
+    else if ("ANARI_KHR_MATERIAL_PHYSICALLY_BASED"sv == *e)
       hasANARI_KHR_MATERIAL_PHYSICALLY_BASED = true;
+#ifdef HDANARI_ENABLE_MDL
+    else if ("ANARI_VISRTX_MATERIAL_MDL"sv == *e)
+      hasANARI_VISRTX_MATERIAL_MDL = true;
+#endif
   }
 
-  auto needsDeviceSync = []() {
-    auto limit = std::getenv("PXR_WORK_THREAD_LIMIT");
-    return limit && atoi(limit) > 1;
-  }();
-
-  if (needsDeviceSync && !hasANARI_KHR_DEVICE_SYNCHRONIZATION) {
+  if (!hasANARI_KHR_DEVICE_SYNCHRONIZATION) {
     TF_RUNTIME_ERROR("device doesn't support ANARI_KHR_DEVICE_SYNCHRONIZATION");
     return;
   }
 
   auto device = anari::newDevice(library, "default");
+#ifdef HDANARI_ENABLE_MDL
+  if (hasANARI_VISRTX_MATERIAL_MDL) {
+    if (auto mdlRegistryInstance = HdAnariMdlRegistry::GetInstance()) {
+      anari::setParameter(device,
+          device,
+          "ineuray",
+          ANARI_VOID_POINTER,
+          mdlRegistryInstance->getINeuray());
+    }
+  }
+#endif
 
   anari::unloadLibrary(library);
 
@@ -164,10 +198,10 @@ void HdAnariRenderDelegate::Initialize()
     return;
   }
 
-  HdAnariRenderParam::MaterialType materialType =
+  HdAnariMaterial::MaterialType materialType =
       hasANARI_KHR_MATERIAL_PHYSICALLY_BASED
-      ? HdAnariRenderParam::MaterialType::PhysicallyBased
-      : HdAnariRenderParam::MaterialType::Matte;
+      ? HdAnariMaterial::MaterialType::PhysicallyBased
+      : HdAnariMaterial::MaterialType::Matte;
   _renderParam = std::make_shared<HdAnariRenderParam>(device, materialType);
 
   std::lock_guard<std::mutex> guard(_mutexResourceRegistry);
@@ -319,13 +353,13 @@ HdSprim *HdAnariRenderDelegate::CreateSprim(
     return new HdAnariMaterial(d, sprimId);
   } else if (typeId == HdPrimTypeTokens->extComputation) {
     return new HdExtComputation(sprimId);
-  } else if (typeId == HdPrimTypeTokens->domeLight ||
-  typeId == HdPrimTypeTokens->simpleLight ||
-  typeId == HdPrimTypeTokens->sphereLight ||
-  typeId == HdPrimTypeTokens->diskLight ||
-  typeId == HdPrimTypeTokens->distantLight ||
-  typeId == HdPrimTypeTokens->cylinderLight ||
-  typeId == HdPrimTypeTokens->rectLight) {
+  } else if (typeId == HdPrimTypeTokens->cylinderLight
+      || typeId == HdPrimTypeTokens->diskLight
+      || typeId == HdPrimTypeTokens->distantLight
+      || typeId == HdPrimTypeTokens->domeLight
+      || typeId == HdPrimTypeTokens->rectLight
+      || typeId == HdPrimTypeTokens->simpleLight
+      || typeId == HdPrimTypeTokens->sphereLight) {
     return new HdAnariLight(d, sprimId, typeId);
   }
 
@@ -344,13 +378,13 @@ HdSprim *HdAnariRenderDelegate::CreateFallbackSprim(TfToken const &typeId)
     return new HdAnariMaterial(d, SdfPath::EmptyPath());
   else if (typeId == HdPrimTypeTokens->extComputation)
     return new HdExtComputation(SdfPath::EmptyPath());
-  else if (typeId == HdPrimTypeTokens->domeLight ||
-    typeId == HdPrimTypeTokens->simpleLight ||
-    typeId == HdPrimTypeTokens->sphereLight ||
-    typeId == HdPrimTypeTokens->diskLight ||
-    typeId == HdPrimTypeTokens->distantLight ||
-    typeId == HdPrimTypeTokens->cylinderLight ||
-    typeId == HdPrimTypeTokens->rectLight)
+  else if (typeId == HdPrimTypeTokens->cylinderLight
+      || typeId == HdPrimTypeTokens->diskLight
+      || typeId == HdPrimTypeTokens->distantLight
+      || typeId == HdPrimTypeTokens->domeLight
+      || typeId == HdPrimTypeTokens->rectLight
+      || typeId == HdPrimTypeTokens->simpleLight
+      || typeId == HdPrimTypeTokens->sphereLight)
     return new HdAnariLight(d, SdfPath::EmptyPath(), typeId);
 
   TF_CODING_ERROR("Unknown Sprim Type %s", typeId.GetText());
@@ -387,6 +421,29 @@ HdBprim *HdAnariRenderDelegate::CreateFallbackBprim(TfToken const &typeId)
 void HdAnariRenderDelegate::DestroyBprim(HdBprim *bPrim)
 {
   delete bPrim;
+}
+
+TfToken HdAnariRenderDelegate::GetMaterialBindingPurpose() const
+{
+  return HdTokens->full;
+}
+
+TfTokenVector HdAnariRenderDelegate::GetMaterialRenderContexts() const
+{
+  return {
+#ifdef HDANARI_ENABLE_MDL
+      HdAnariMaterialTokens->mdl,
+#endif
+      UsdShadeTokens->universalRenderContext};
+}
+
+TfTokenVector HdAnariRenderDelegate::GetShaderSourceTypes() const
+{
+  return {
+#ifdef HDANARI_ENABLE_MDL
+      HdAnariMaterialTokens->mdl,
+#endif
+      UsdShadeTokens->universalRenderContext};
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE

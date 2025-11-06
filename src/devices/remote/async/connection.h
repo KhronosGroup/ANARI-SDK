@@ -10,9 +10,10 @@
 #endif
 #endif
 
+#include <system_error>
 #include <memory>
 
-#include <boost/asio/io_service.hpp>
+#include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/strand.hpp>
 
@@ -44,7 +45,7 @@ class connection : public std::enable_shared_from_this<connection>
   };
 
   using signal_type = boost::signals2::signal<void(
-      reason r, message_pointer message, boost::system::error_code const &e)>;
+      reason r, message_pointer message, std::error_code const &e)>;
 
  public:
   // Constructor.

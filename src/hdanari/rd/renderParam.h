@@ -5,10 +5,10 @@
 
 #include "debugCodes.h"
 #include "geometry.h"
-#include "hdAnariTypes.h"
+#include "anariTypes.h"
+#include "light.h"
 #include "material.h"
 #include "materialTokens.h"
-#include "light.h"
 
 #include <anari/anari_cpp.hpp>
 #include <anari/anari_cpp/anari_cpp_impl.hpp>
@@ -45,21 +45,15 @@ using LightList = std::vector<const HdAnariLight *>;
 class HdAnariRenderParam final : public HdRenderParam
 {
  public:
-  enum class MaterialType
-  {
-    Matte,
-    PhysicallyBased,
-  };
-
   HdAnariRenderParam(anari::Device device,
-      MaterialType materialType = MaterialType::PhysicallyBased);
+      HdAnariMaterial::MaterialType materialType = HdAnariMaterial::MaterialType::PhysicallyBased);
   ~HdAnariRenderParam() override;
 
   anari::Device GetANARIDevice() const;
   anari::Material GetDefaultMaterial() const;
   const HdAnariMaterial::PrimvarBinding &GetDefaultPrimvarBinding() const;
 
-  MaterialType GetMaterialType() const
+  HdAnariMaterial::MaterialType GetMaterialType() const
   {
     return _materialType;
   }
@@ -78,7 +72,7 @@ class HdAnariRenderParam final : public HdRenderParam
  private:
   anari::Device _device{nullptr};
   anari::Material _material{nullptr};
-  MaterialType _materialType{MaterialType::Matte};
+  HdAnariMaterial::MaterialType _materialType{HdAnariMaterial::MaterialType::Matte};
   HdAnariMaterial::PrimvarBinding _primvarBinding;
 
   std::mutex _mutex;
@@ -90,7 +84,7 @@ class HdAnariRenderParam final : public HdRenderParam
 // Inlined definitions ////////////////////////////////////////////////////////
 
 inline HdAnariRenderParam::HdAnariRenderParam(
-    anari::Device d, MaterialType materialType)
+    anari::Device d, HdAnariMaterial::MaterialType materialType)
     : _device(d), _materialType(materialType)
 {
   if (!d)
@@ -134,7 +128,7 @@ HdAnariRenderParam::GetDefaultPrimvarBinding() const
 }
 
 inline void HdAnariRenderParam::RegisterGeometry(
-  const HdAnariGeometry *geometry)
+    const HdAnariGeometry *geometry)
 {
   std::lock_guard<std::mutex> guard(_mutex);
   _geometries.push_back(geometry);
@@ -149,20 +143,17 @@ inline void HdAnariRenderParam::UnregisterGeometry(
       _geometries.end());
 }
 
-inline void HdAnariRenderParam::RegisterLight(
-  const HdAnariLight *light)
+inline void HdAnariRenderParam::RegisterLight(const HdAnariLight *light)
 {
   std::lock_guard<std::mutex> guard(_mutex);
   _lights.push_back(light);
 }
 
-inline void HdAnariRenderParam::UnregisterLight(
-    const HdAnariLight *light)
+inline void HdAnariRenderParam::UnregisterLight(const HdAnariLight *light)
 {
   std::lock_guard<std::mutex> guard(_mutex);
   _lights.erase(
-      std::remove(_lights.begin(), _lights.end(), light),
-      _lights.end());
+      std::remove(_lights.begin(), _lights.end(), light), _lights.end());
 }
 
 inline const GeometryList &HdAnariRenderParam::Geometries() const

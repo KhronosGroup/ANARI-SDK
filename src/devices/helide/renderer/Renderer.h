@@ -6,7 +6,7 @@
 #include "Object.h"
 #include "array/Array1D.h"
 #include "array/Array2D.h"
-#include "scene/World.h"
+#include "world/World.h"
 
 namespace helide {
 

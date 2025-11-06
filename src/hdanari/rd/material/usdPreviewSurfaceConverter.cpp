@@ -6,7 +6,7 @@
 #include "textureLoader.h"
 
 #include "../debugCodes.h"
-#include "../hdAnariTypes.h"
+#include "../anariTypes.h"
 
 #include <anari/frontend/anari_enums.h>
 #include <pxr/base/gf/vec2f.h>

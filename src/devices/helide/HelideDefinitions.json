@@ -136,5 +136,15 @@
         }
       ]
     }
+  ],
+  "functions" : [
+    {
+      "name" : "anariNewHelideDevice",
+      "returnType" : "ANARIDevice",
+      "arguments" : [
+        {"name" : "statusCallback", "type" : "ANARIStatusCallback", "default" : "0"},
+        {"name" : "statusCallbackUserData", "type" : "const void*", "default" : "0"}
+      ]
+    }
   ]
 }
