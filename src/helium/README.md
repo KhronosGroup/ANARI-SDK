@@ -60,7 +60,7 @@ implementors using helium.
 
 The concept of a [TimeStamp](utility/TimeStamp.h) is just a unique integer for
 every time `helium::newTimeStamp()` is called -- this makes it easy to track
-when two events occured relative to each other in time, but the precise clock
+when two events occurred relative to each other in time, but the precise clock
 time does not matter. This concept/abstraction is primarily used to track if
 object commits need to occur or can be skipped.
 
@@ -135,7 +135,7 @@ managed for you in `helium::BaseDevice`).
 classes which add additional interface to `helium::BaseObject` for handling
 ANARI API calls specific to those objects.
 
-`helium::BaseArray` also maitains a list of objects which opt-in to being
+`helium::BaseArray` also maintains a list of objects which opt-in to being
 notified when an array changes -- this relationship is often best managed when
 an object containing the array is committed. Note that array classes inheriting
 from `helium::BaseArray` are responsible for notifying objects observing them
