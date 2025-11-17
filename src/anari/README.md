@@ -7,8 +7,8 @@ API itself is detailed at length in the ANARI specification.
 
 The primary function of this library is to dispatch
 [ANARI C API function calls](include/anari/anari.h) to the corresponding ANARI
-devcie implementing the API (designated by an `ANARIDevice` handle in the
-functioin signature). There are two core concepts that implementations must
+device implementing the API (designated by an `ANARIDevice` handle in the
+function signature). There are two core concepts that implementations must
 implement, along with optional additional tools which can aid in implementing
 various ANARI features.
 
@@ -34,9 +34,9 @@ create an instance of `LibraryImpl`.  Implementations should use the
 `ANARI_DEFINE_LIBRARY_ENTRYPOINT` macro at the bottom of `LibraryImpl.h` to
 define this entrypoint function, where it is necessary to match the first macro
 argument with `[name]` in the physical shared library file. For example, the
-provided [`helide`](../helide) device on linux compiles into the shared library
+provided [`helide`](../devices/helide) device on linux compiles into the shared library
 `libanari_library_helide.so`, and `helide` is the first argument to
-`ANARI_DEFINE_LIBRARY_ENTRYPOINT`, as seen [here](../helide/HelideLibrary.cpp).
+`ANARI_DEFINE_LIBRARY_ENTRYPOINT`, as seen [here](../devices/helide/HelideLibrary.cpp).
 
 It is possible to directly construct a device if client applications directly
 links your library itself, but it is highly recommended to always provide the
@@ -110,5 +110,5 @@ example of how these components all go together.
 
 Note that all core spec extensions are defined in a collection of
 [JSON files](../../code_gen/api) that are referenced in the downstream JSON
-definitions. It is recommened to copy an existing JSON definitions file and
+definitions. It is recommended to copy an existing JSON definitions file and
 modify it accordingly.
