@@ -185,6 +185,11 @@ inline int32_t calculateWrapIndex(int32_t i, size_t size, WrapMode wrap)
   }
 }
 
+inline float fract(float v)
+{
+  return v - std::floor(v);
+}
+
 inline Attribute attributeFromString(const std::string &str)
 {
   if (str == "color")

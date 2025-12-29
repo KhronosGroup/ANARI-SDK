@@ -38,9 +38,16 @@ float4 Image3D::getSample(
                 m_inTransform, ia ? *ia : g.getAttributeValue(m_inAttribute, r))
       + m_inOffset;
 
-  const auto interp_x = getInterpolant(av.x, m_image->size().x, true);
-  const auto interp_y = getInterpolant(av.y, m_image->size().y, true);
-  const auto interp_z = getInterpolant(av.z, m_image->size().z, true);
+  // Select the appropriate coordinate wrapping mode for x, y and z.
+  // If the wrap mode is REPEAT, the coordinate is wrapped using fract();
+  // otherwise, it is left unchanged.
+  float x = m_wrapMode1 == WrapMode::REPEAT ? fract(av.x) : av.x;
+  float y = m_wrapMode2 == WrapMode::REPEAT ? fract(av.y) : av.y;
+  float z = m_wrapMode3 == WrapMode::REPEAT ? fract(av.z) : av.z;
+
+  const auto interp_x = getInterpolant(x, m_image->size().x, true);
+  const auto interp_y = getInterpolant(y, m_image->size().y, true);
+  const auto interp_z = getInterpolant(z, m_image->size().z, true);
 
   const auto v000 = m_image->readAsAttributeValue(
       {interp_x.lower, interp_y.lower, interp_z.lower},

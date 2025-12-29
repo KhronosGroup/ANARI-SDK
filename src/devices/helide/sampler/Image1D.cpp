@@ -38,7 +38,11 @@ float4 Image1D::getSample(
                 m_inTransform, ia ? *ia : g.getAttributeValue(m_inAttribute, r))
       + m_inOffset;
 
-  const auto interp = getInterpolant(av.x, m_image->size(), true);
+  // Select the appropriate coordinate wrapping mode for x.
+  // If the wrap mode is REPEAT, the coordinate is wrapped using fract();
+  // otherwise, it is left unchanged.
+  float x = m_wrapMode == WrapMode::REPEAT ? fract(av.x) : av.x;
+  const auto interp = getInterpolant(x, m_image->size(), true);
   const auto v0 = m_image->readAsAttributeValue(interp.lower, m_wrapMode);
   const auto v1 = m_image->readAsAttributeValue(interp.upper, m_wrapMode);
   const auto retval = m_linearFilter ? linalg::lerp(v0, v1, interp.frac)
