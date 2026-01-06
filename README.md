@@ -211,7 +211,7 @@ list!
 - [Vistle](https://vistle.io/)
 - [VTK](https://vtk.org/)
 - [Viskores](https://github.com/Viskores/viskores) (formerly known as VTK-m)
-- [ANARI-Java](https://bitbucket.org/Eclesia/anari-java/src/main/) (Java language bindings)
+- [ANARI-Java](https://codeberg.org/jsorel/anari-java/) (Java language bindings)
 
 ### Integrations in-progress
 
