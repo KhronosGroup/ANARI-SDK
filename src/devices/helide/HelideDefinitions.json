@@ -87,7 +87,8 @@
             "geometry.attribute2",
             "geometry.attribute3",
             "geometry.color",
-            "opacityHeatmap"
+            "opacityHeatmap",
+            "testFrame"
           ],
           "description": "visualization modes (most for debugging)"
         },
