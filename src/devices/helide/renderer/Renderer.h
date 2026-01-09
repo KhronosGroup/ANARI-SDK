@@ -42,7 +42,8 @@ enum class RenderMode
   GEOMETRY_ATTRIBUTE_2,
   GEOMETRY_ATTRIBUTE_3,
   GEOMETRY_ATTRIBUTE_COLOR,
-  OPACITY_HEATMAP
+  OPACITY_HEATMAP,
+  TEST_FRAME
 };
 
 struct Renderer : public Object
