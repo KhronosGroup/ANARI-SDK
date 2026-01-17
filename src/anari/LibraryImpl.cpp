@@ -1,4 +1,4 @@
-// Copyright 2021-2025 The Khronos Group
+// Copyright 2021-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "anari/backend/LibraryImpl.h"
@@ -144,7 +144,7 @@ static void *loadLibrary(
 
 #else
   std::string fullName = libLocation + "lib" + file + RKCOMMON_LIB_EXT;
-  lib = dlopen(fullName.c_str(), RTLD_LAZY | RTLD_LOCAL);    
+  lib = dlopen(fullName.c_str(), RTLD_LAZY | RTLD_LOCAL);
   if (lib == nullptr) {
     errorMsg += dlerror();
   }
