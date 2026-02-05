@@ -35,8 +35,6 @@ option(INSTALL_PYTHON_BINDINGS "Install python bindings" OFF) # If turned on, dr
 cmake_dependent_option(LINK_BINDINGS_TO_RELEASE_PYTHON "Force the python bindings to implicitly link to a release python library on Windows, overriding possible debug python linking" OFF INSTALL_PYTHON_BINDINGS OFF)
 
 option(INSTALL_LEGACY_PYTHON_BINDINGS "Install legacy python bindings" OFF) # If turned on, draws in all the custom targets below (generate_all)
-cmake_dependent_option(LINK_BINDINGS_TO_RELEASE_PYTHON "Force the python bindings to implicitly link to a release python library on Windows, overriding possible debug python linking" OFF INSTALL_LEGACY_PYTHON_BINDINGS OFF)
-
 
 set(API_JSON api/anari_core_1_0.json api/khr_frame_completion_callback.json)
 
