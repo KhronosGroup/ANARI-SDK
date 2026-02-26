@@ -14,6 +14,7 @@ struct Volume : public Object
   static Volume *createInstance(std::string_view subtype, HelideGlobalState *d);
 
   void commitParameters() override;
+  bool isVisible() const;
 
   uint32_t id() const;
 
@@ -26,6 +27,7 @@ struct Volume : public Object
 
   private:
   uint32_t m_id{~0u};
+  bool m_visible{true};
 };
 
 // Inlined definitions ////////////////////////////////////////////////////////
