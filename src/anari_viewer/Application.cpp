@@ -210,6 +210,10 @@ void AppImpl::init(Uint32 window_flags)
 
   SDL_ShowWindow(sdl_window);
 
+  // Set render scale to match pixel density for HiDPI/Retina displays.
+  float scale = SDL_GetWindowPixelDensity(sdl_window);
+  SDL_SetRenderScale(sdl_renderer, scale, scale);
+
   ImGui::CreateContext();
   ImGui::StyleColorsDark();
 
