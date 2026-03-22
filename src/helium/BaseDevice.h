@@ -12,6 +12,18 @@
 
 namespace helium {
 
+/*
+ * Concrete base class that implements the anari::DeviceImpl interface on top of
+ * the Helium infrastructure. Routes all ANARI C API calls (setParameter,
+ * commitParameters, mapArray, renderFrame, etc.) to the appropriate BaseObject,
+ * BaseArray, or BaseFrame subclass instances, acquiring per-object locks around
+ * each call. Device implementors subclass BaseDevice, override
+ * deviceCommitParameters() to read device-level parameters, and override the
+ * object factory methods (newCamera(), newGeometry(), ...) declared in
+ * anari::DeviceImpl. All objects passed through the API must derive from
+ * BaseObject, BaseArray, or BaseFrame. The device owns m_state and is expected
+ * to populate it with a concrete BaseGlobalDeviceState subclass.
+ */
 struct BaseDevice : public anari::DeviceImpl,
                     ParameterizedObject,
                     LockableObject
@@ -93,8 +105,11 @@ struct BaseDevice : public anari::DeviceImpl,
       ANARIStatusSeverity, const char *fmt, Args &&...args) const;
 
   virtual void deviceCommitParameters();
-  virtual int deviceGetProperty(
-      const char *name, ANARIDataType type, void *mem, uint64_t size, uint32_t mask);
+  virtual int deviceGetProperty(const char *name,
+      ANARIDataType type,
+      void *mem,
+      uint64_t size,
+      uint32_t mask);
 
   std::unique_ptr<BaseGlobalDeviceState> m_state;
 

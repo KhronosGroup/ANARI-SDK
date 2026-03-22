@@ -7,11 +7,22 @@
 
 namespace helium {
 
+/*
+ * Memory descriptor for a 1D array, extending the base descriptor with the
+ * element count used to determine iteration bounds and totalSize().
+ */
 struct Array1DMemoryDescriptor : public ArrayMemoryDescriptor
 {
   uint64_t numItems{0};
 };
 
+/*
+ * One-dimensional host array that stores a flat sequence of uniformly typed
+ * elements. Supports sub-range iteration (m_begin/m_end are element indices)
+ * and provides linear/nearest-neighbor interpolation helpers used by sampler
+ * implementations for 1D texture lookups. The readAsAttributeValue() method
+ * converts any supported element type to float4 for use as a vertex attribute.
+ */
 struct Array1D : public Array
 {
   Array1D(BaseGlobalDeviceState *state, const Array1DMemoryDescriptor &d);

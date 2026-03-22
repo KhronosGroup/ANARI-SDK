@@ -18,6 +18,14 @@ namespace helium {
 using namespace linalg::aliases;
 using mat4 = anari::math::float4x4;
 
+/*
+ * Shared state bag owned by BaseDevice and accessible from every BaseObject
+ * without a circular include dependency. Holds the DeferredCommitBuffer,
+ * the application-provided status callback, and a message-dispatch function.
+ * Device implementors should subclass this to add device-specific context
+ * (GPU handles, allocators, render state, etc.) and cast deviceState() to
+ * their subtype inside object implementations.
+ */
 struct BaseGlobalDeviceState
 {
   DeferredCommitBuffer commitBuffer;
@@ -34,10 +42,13 @@ struct BaseGlobalDeviceState
   virtual ~BaseGlobalDeviceState() = default;
 
  private:
-
   friend struct BaseObject;
   friend struct BaseDevice;
   friend struct Array;
+  /*
+   * Per-type live-object counters, accessible via anariGetProperty on the
+   * device. Updated atomically as objects are constructed and destroyed.
+   */
   struct ObjectCounts
   {
     std::atomic<size_t> frames{0};

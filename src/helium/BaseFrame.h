@@ -7,6 +7,13 @@
 
 namespace helium {
 
+/*
+ * Abstract base class for the ANARIFrame object. Device implementations
+ * subclass this and implement renderFrame(), map(), unmap(), frameReady(), and
+ * discard(). When the application releases its last public reference while a
+ * render is still in flight, on_NoPublicReferences() calls discard() to abort
+ * the render and prevent the frame from being used after deletion.
+ */
 struct BaseFrame : public BaseObject
 {
   BaseFrame(BaseGlobalDeviceState *state);
@@ -29,7 +36,7 @@ struct BaseFrame : public BaseObject
   // Implement anariDiscardFrame()
   virtual void discard() = 0;
 
-  private:
+ private:
   void on_NoPublicReferences() override;
 };
 

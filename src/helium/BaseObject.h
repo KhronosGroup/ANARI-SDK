@@ -16,6 +16,16 @@
 
 namespace helium {
 
+/*
+ * Abstract base class for all ANARI scene-graph objects (geometries, materials,
+ * lights, cameras, renderers, etc.). Combines reference counting (RefCounted),
+ * parameter storage (ParameterizedObject), and thread locking (LockableObject).
+ * Concrete device objects must subclass BaseObject and implement isValid(),
+ * getProperty(), commitParameters(), and finalize(). The class also tracks four
+ * TimeStamps so the DeferredCommitBuffer can skip redundant work, and provides
+ * the change-observer mechanism that propagates updates from one object (e.g.
+ * an array) to all objects that reference it (e.g. samplers/geometries).
+ */
 struct BaseObject : public RefCounted, ParameterizedObject, LockableObject
 {
   // Construct
@@ -103,7 +113,7 @@ struct BaseObject : public RefCounted, ParameterizedObject, LockableObject
   ANARIDataType m_type{ANARI_OBJECT};
 };
 
-// Return a value to correctly order object by type in the commit buffer
+/* Return a value to correctly order object by type in the commit buffer */
 int commitPriority(ANARIDataType type);
 
 std::string string_printf(const char *fmt, ...);

@@ -289,8 +289,11 @@ BaseDevice::~BaseDevice()
   }
 }
 
-int BaseDevice::deviceGetProperty(
-    const char *name, ANARIDataType type, void *mem, uint64_t size, uint32_t mask)
+int BaseDevice::deviceGetProperty(const char *name,
+    ANARIDataType type,
+    void *mem,
+    uint64_t size,
+    uint32_t mask)
 {
   return 0;
 }

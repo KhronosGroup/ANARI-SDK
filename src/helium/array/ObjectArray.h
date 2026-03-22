@@ -7,6 +7,16 @@
 
 namespace helium {
 
+/*
+ * Specialization of Array that holds ANARIObject handles (pointers to
+ * BaseObject subclasses) rather than plain data. Maintains three parallel
+ * handle lists: m_appHandles (raw pointers from the application), m_liveHandles
+ * (only the non-null, valid entries used during traversal), and
+ * m_appendedHandles (extra handles added by the device after construction, e.g.
+ * to inject implicit objects). The device iterates handlesBegin()/handlesEnd()
+ * to visit live objects. unmap() re-syncs internal lists and notifies change
+ * observers so dependent objects are re-committed.
+ */
 struct ObjectArray : public Array
 {
   ObjectArray(BaseGlobalDeviceState *state, const Array1DMemoryDescriptor &d);

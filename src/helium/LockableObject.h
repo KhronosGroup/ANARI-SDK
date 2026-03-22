@@ -8,6 +8,13 @@
 
 namespace helium {
 
+/*
+ * Mixin that provides per-object mutual exclusion. BaseObject and BaseDevice
+ * both inherit this so that concurrent API calls operating on the same object
+ * can be serialized with scopeLockObject(). The lock is acquired through RAII
+ * via std::scoped_lock and released automatically when the returned value goes
+ * out of scope.
+ */
 struct LockableObject
 {
   LockableObject() = default;

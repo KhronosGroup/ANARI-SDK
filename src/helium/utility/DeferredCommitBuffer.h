@@ -12,6 +12,18 @@ namespace helium {
 
 struct BaseObject;
 
+/*
+ * Pending-commit queue that decouples anariCommitParameters() from the actual
+ * object update work. When the application calls anariCommitParameters(), the
+ * object is enqueued here rather than updated immediately. The device flushes
+ * the buffer at frame start and before property queries. During flush, objects
+ * are sorted by commit priority (Frame > World > Instance > Group > Surface/
+ * Volume > Material > others) so that dependencies are always committed before
+ * the objects that reference them. Each object goes through two phases: first
+ * commitParameters() (re-reads parameters), then finalize() (updates state that
+ * depends on other already-committed objects). TimeStamps are used to skip
+ * redundant work when parameters have not changed since the last commit.
+ */
 struct DeferredCommitBuffer
 {
   DeferredCommitBuffer();

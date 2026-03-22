@@ -26,6 +26,14 @@ constexpr bool validType()
 
 } // namespace detail
 
+/*
+ * Type-erasing value container for ANARI parameter values.
+ * Stores any ANARI-typed value — scalars, vectors, matrices, object handles,
+ * strings, and string lists — in a fixed-size local buffer (up to 64 bytes)
+ * with overflow into std::string/std::vector for variable-length types. Object
+ * handles stored in AnariAny automatically have their INTERNAL ref count
+ * managed so objects stay alive as long as any AnariAny holds them.
+ */
 struct AnariAny
 {
   AnariAny();

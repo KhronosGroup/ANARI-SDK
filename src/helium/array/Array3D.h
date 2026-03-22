@@ -7,6 +7,10 @@
 
 namespace helium {
 
+/*
+ * Memory descriptor for a 3D array, extending the base descriptor with the
+ * element count for each dimension.
+ */
 struct Array3DMemoryDescriptor : public ArrayMemoryDescriptor
 {
   uint64_t numItems1{0};
@@ -14,6 +18,12 @@ struct Array3DMemoryDescriptor : public ArrayMemoryDescriptor
   uint64_t numItems3{0};
 };
 
+/*
+ * Three-dimensional host array, typically used for volumetric data and 3D
+ * textures. Stored as a flat buffer in x-major order; size() returns the
+ * dimensions as uint3. readAsAttributeValue() supports independent wrap modes
+ * per axis.
+ */
 struct Array3D : public Array
 {
   Array3D(BaseGlobalDeviceState *state, const Array3DMemoryDescriptor &d);
