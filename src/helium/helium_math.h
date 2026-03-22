@@ -14,6 +14,11 @@ namespace helium::math {
 
 // Types //////////////////////////////////////////////////////////////////////
 
+/*
+ * Generic axis-aligned range [lower, upper] parameterized on an element type.
+ * Initialized to an inverted/empty range so that the first extend() call sets
+ * both bounds. Used as box1/box2/box3 for 1D/2D/3D bounding boxes.
+ */
 template <typename T>
 struct range_t
 {
@@ -65,6 +70,11 @@ inline float position(float v, const box1 &r)
 
 constexpr anari::math::float4 DEFAULT_ATTRIBUTE_VALUE(0.f, 0.f, 0.f, 1.f);
 
+/*
+ * Enumerates the per-vertex/per-primitive attribute slots supported by the
+ * ANARI geometry model. Devices map these to their own shading attribute
+ * arrays.
+ */
 enum class Attribute
 {
   ATTRIBUTE_0 = 0,
@@ -79,6 +89,10 @@ enum class Attribute
   NONE
 };
 
+/*
+ * Texture coordinate wrap modes corresponding to the ANARI sampler "wrap"
+ * parameter values. DEFAULT resolves to CLAMP_TO_EDGE.
+ */
 enum WrapMode
 {
   CLAMP_TO_EDGE = 0,
@@ -87,6 +101,12 @@ enum WrapMode
   DEFAULT
 };
 
+/*
+ * Material transparency modes corresponding to the ANARI "alphaMode" parameter:
+ *   OPAQUE — alpha is always 1 regardless of texture/color.
+ *   MASK   — alpha is thresholded to 0 or 1 based on a cutoff value.
+ *   BLEND  — alpha is passed through as-is for order-independent transparency.
+ */
 enum class AlphaMode
 {
   OPAQUE,
@@ -138,6 +158,10 @@ constexpr uint32_t cvt_color_to_uint32_srgb(const anari::math::float4 &v)
       anari::math::float4(toneMap(v.x), toneMap(v.y), toneMap(v.z), v.w));
 }
 
+/*
+ * Result of getInterpolant(): a pair of adjacent integer indices and the
+ * fractional blend weight between them, used for bilinear/linear sampling.
+ */
 struct Interpolant
 {
   int32_t lower;

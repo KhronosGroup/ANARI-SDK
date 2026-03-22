@@ -14,6 +14,16 @@
 
 namespace helium {
 
+/*
+ * Mixin that provides type-safe parameter storage and retrieval.
+ * Parameters are stored as (name → AnariAny) pairs and accessed via strongly-
+ * typed getParam<T>()/getParamObject<T>()/getParamString() methods. Device
+ * objects inherit this to implement the pull model used during
+ * commitParameters(): the object reads whatever parameters it needs rather than
+ * receiving them as arguments. Object parameters do not affect lifetime on
+ * their own — callers should store the result in an IntrusivePtr<T> to ensure
+ * correct lifetime.
+ */
 struct ParameterizedObject
 {
   ParameterizedObject() = default;
