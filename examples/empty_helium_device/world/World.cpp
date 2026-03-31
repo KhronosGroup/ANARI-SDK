@@ -74,7 +74,9 @@ void World::finalize()
   m_zeroInstance->setParam("id", getParam<uint32_t>("id", ~0u));
 
   m_zeroGroup->commitParameters();
+  m_zeroGroup->finalize();
   m_zeroInstance->commitParameters();
+  m_zeroInstance->finalize();
 
   m_instances.clear();
 
