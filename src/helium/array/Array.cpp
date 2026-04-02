@@ -128,6 +128,11 @@ void Array::markDataModified()
   m_lastDataModified = helium::newTimeStamp();
 }
 
+helium::TimeStamp Array::lastDataModified() const
+{
+  return m_lastDataModified;
+}
+
 bool Array::getProperty(const std::string_view &name,
     ANARIDataType type,
     void *ptr,

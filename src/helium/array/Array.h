@@ -102,6 +102,7 @@ struct Array : public BaseArray
   bool wasPrivatized() const;
 
   void markDataModified();
+  helium::TimeStamp lastDataModified() const;
 
   virtual bool getProperty(const std::string_view &name,
       ANARIDataType type,
