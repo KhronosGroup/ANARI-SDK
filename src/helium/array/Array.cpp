@@ -91,6 +91,12 @@ size_t Array::totalCapacity() const
   return totalSize();
 }
 
+float4 Array::readAsAttributeValue(int32_t i, WrapMode wrap) const
+{
+  const auto idx = calculateWrapIndex(i, totalSize(), wrap);
+  return readAsAttributeValueFlat(data(), elementType(), idx);
+}
+
 void *Array::map()
 {
   if (isMapped()) {
@@ -208,6 +214,11 @@ void Array::on_NoPublicReferences()
   reportMessage(ANARI_SEVERITY_DEBUG, "privatizing array");
   if (!wasPrivatized() && ownership() != ArrayDataOwnership::MANAGED)
     privatize();
+}
+
+float4 readAttributeValue(const Array *arr, uint32_t i, const float4 &d)
+{
+  return arr ? arr->readAsAttributeValue(i) : d;
 }
 
 } // namespace helium

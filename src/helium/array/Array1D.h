@@ -43,16 +43,6 @@ struct Array1D : public Array
 
   size_t size() const;
 
-  template <typename T>
-  const T *valueAt(size_t i) const;
-
-  anari::math::float4 readAsAttributeValue(
-      int32_t i, WrapMode wrap = WrapMode::DEFAULT) const;
-  template <typename T>
-  T valueAtLinear(float in) const; // 'in' must be clamped to [0, 1]
-  template <typename T>
-  T valueAtClosest(float in) const; // 'in' must be clamped to [0, 1]
-
  protected:
   size_t m_capacity{0};
   size_t m_begin{0};
@@ -61,10 +51,6 @@ struct Array1D : public Array
  private:
   void privatize() override;
 };
-
-anari::math::float4 readAttributeValue(const Array1D *arr,
-    uint32_t i,
-    const anari::math::float4 &defaultValue = DEFAULT_ATTRIBUTE_VALUE);
 
 // Inlined definitions ////////////////////////////////////////////////////////
 
@@ -78,28 +64,6 @@ template <typename T>
 inline const T *Array1D::endAs() const
 {
   return dataAs<T>() + m_end;
-}
-
-template <typename T>
-inline const T *Array1D::valueAt(size_t i) const
-{
-  return &beginAs<T>()[i];
-}
-
-template <typename T>
-inline T Array1D::valueAtLinear(float in) const
-{
-  const T *data = dataAs<T>();
-  const auto i = getInterpolant(in, size(), false);
-  return linalg::lerp(data[i.lower], data[i.upper], i.frac);
-}
-
-template <typename T>
-inline T Array1D::valueAtClosest(float in) const
-{
-  const T *data = dataAs<T>();
-  const auto i = getInterpolant(in, size(), false);
-  return i.frac <= 0.5f ? data[i.lower] : data[i.upper];
 }
 
 } // namespace helium

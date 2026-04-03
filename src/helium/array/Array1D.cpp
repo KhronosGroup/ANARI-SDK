@@ -65,20 +65,9 @@ size_t Array1D::size() const
   return m_end - m_begin;
 }
 
-float4 Array1D::readAsAttributeValue(int32_t i, WrapMode wrap) const
-{
-  const auto idx = calculateWrapIndex(i, size(), wrap);
-  return readAsAttributeValueFlat(begin(), elementType(), idx);
-}
-
 void Array1D::privatize()
 {
   makePrivatizedCopy(size());
-}
-
-float4 readAttributeValue(const Array1D *arr, uint32_t i, const float4 &d)
-{
-  return arr ? arr->readAsAttributeValue(i) : d;
 }
 
 } // namespace helium
