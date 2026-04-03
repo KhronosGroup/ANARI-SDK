@@ -94,6 +94,16 @@ struct Array : public BaseArray
   virtual size_t totalSize() const = 0;
   virtual size_t totalCapacity() const;
 
+  template <typename T>
+  const T *valueAt(size_t i) const;
+
+  anari::math::float4 readAsAttributeValue(
+      int32_t i, WrapMode wrap = WrapMode::DEFAULT) const;
+  template <typename T>
+  T valueAtLinear(float in) const; // 'in' must be clamped to [0, 1]
+  template <typename T>
+  T valueAtClosest(float in) const; // 'in' must be clamped to [0, 1]
+
   virtual void *map() override;
   virtual void unmap() override;
 
@@ -163,6 +173,10 @@ struct Array : public BaseArray
   bool m_privatized{false};
 };
 
+anari::math::float4 readAttributeValue(const Array *arr,
+    uint32_t i,
+    const anari::math::float4 &defaultValue = DEFAULT_ATTRIBUTE_VALUE);
+
 // Inlined definitions ////////////////////////////////////////////////////////
 
 template <typename T>
@@ -170,6 +184,28 @@ inline const T *Array::dataAs() const
 {
   throwIfDifferentElementType<T>();
   return (const T *)data();
+}
+
+template <typename T>
+inline const T *Array::valueAt(size_t i) const
+{
+  return &dataAs<T>()[i];
+}
+
+template <typename T>
+inline T Array::valueAtLinear(float in) const
+{
+  const T *data = dataAs<T>();
+  const auto i = getInterpolant(in, totalSize(), false);
+  return linalg::lerp(data[i.lower], data[i.upper], i.frac);
+}
+
+template <typename T>
+inline T Array::valueAtClosest(float in) const
+{
+  const T *data = dataAs<T>();
+  const auto i = getInterpolant(in, totalSize(), false);
+  return i.frac <= 0.5f ? data[i.lower] : data[i.upper];
 }
 
 template <typename T>
