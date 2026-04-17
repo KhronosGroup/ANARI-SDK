@@ -10,10 +10,4 @@ HelideGlobalState::HelideGlobalState(ANARIDevice d)
     : helium::BaseGlobalDeviceState(d)
 {}
 
-void HelideGlobalState::waitOnCurrentFrame() const
-{
-  if (currentFrame)
-    currentFrame->wait();
-}
-
 } // namespace helide

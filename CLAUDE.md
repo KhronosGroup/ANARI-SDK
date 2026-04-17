@@ -35,6 +35,7 @@ Key CMake options:
 - `BUILD_SHARED_LIBS` (ON) — shared vs. static libraries
 - `BUILD_VIEWER` (OFF) — requires SDL3 or GLFW
 - `BUILD_CTS` (OFF) — conformance test suite, requires Python 3.9+
+- `BUILD_HELIDE_GPU_DEVICE` (ON) — GPU-accelerated example device, requires SDL3 3.2+ and glslangValidator
 - `BUILD_REMOTE_DEVICE` (OFF) — experimental MPI/network device
 - `BUILD_HDANARI` (OFF) — experimental OpenUSD Hydra delegate
 - `BUILD_CAT` (OFF) — capability analysis tool
@@ -66,6 +67,8 @@ Rendering Backend (e.g., Embree for helide)
 **`src/helium/`** — Optional base abstractions for device implementors. Provides `BaseDevice`, `BaseObject`, `BaseArray`, `BaseFrame`, and utilities for parameter management, deferred commits, timestamp tracking, and property queries. Most device implementations should build on Helium rather than implementing raw interfaces.
 
 **`src/devices/helide/`** — The reference ray-tracing device built on Intel Embree. Implements the full ANARI object hierarchy (geometries, materials, lights, cameras, renderers, volumes, spatial fields, samplers). Study this as the canonical example of a Helium-based device.
+
+**`src/devices/helide_gpu/`** — An in-progress GPU-accelerated example device built on SDL3's cross-platform GPU abstraction. Uses a dedicated GPU thread for all SDL3_gpu commands, compiles GLSL shaders to SPIR-V at build time, and supports SSAO post-processing. Requires SDL3 3.2+, `glslangValidator`, and optionally `spirv-cross` for Metal/MSL support.
 
 **`src/devices/debug/`** — A passthrough wrapper device that validates API usage without modifying rendering behavior.
 

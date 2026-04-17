@@ -8,8 +8,7 @@
 #include "world/World.h"
 // helium
 #include "helium/BaseFrame.h"
-// std
-#include <future>
+#include "helium/TaskQueue.h"
 #include <vector>
 
 namespace helide {
@@ -46,6 +45,7 @@ struct Frame : public helium::BaseFrame
   void wait();
 
  private:
+  void waitOnOutstandingWorkIfNeeded();
   float2 screenFromPixel(const float2 &p) const;
   void writeSample(int x, int y, const PixelSample &s);
 
@@ -92,8 +92,7 @@ struct Frame : public helium::BaseFrame
   helium::TimeStamp m_lastCommitOccured{0};
   helium::TimeStamp m_frameLastRendered{0};
 
-  mutable std::future<void> m_future;
-  std::packaged_task<void()> m_task;
+  mutable helium::tasking::Future m_future;
 
   anari::FrameCompletionCallback m_callback{nullptr};
   const void *m_callbackUserPtr{nullptr};

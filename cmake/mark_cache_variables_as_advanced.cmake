@@ -31,4 +31,5 @@ mark_cache_variables_as_advanced(
   "^LibUSB"
   "^WAYLAND"
   "LIB$"
+  "^GLM"
 )
