@@ -8,6 +8,7 @@ This repository contains the source for the ANARI API SDK. This includes:
 - [Front-end library + implementation guide](src/anari)
 - [Device implementation utilties for implementations](src/helium)
 - [Example device implementation](src/devices/helide) (not intended for production use)
+- [Example GPU device implementation](src/devices/helide_gpu) (in-progress, requires SDL3)
 - [Example applications](examples/)
 - [Interactive sample viewer](examples/viewer)
 - [Render tests](tests/render)
@@ -54,8 +55,9 @@ available to enable. The following CMake options are offered:
 - `BUILD_CAT`           : build the capability analysis tool
 - `BUILD_CTS`           : build the conformance test suite
 - `BUILD_TESTING`       : build unit and regression test binaries
-- `BUILD_HELIDE_DEVICE` : build the provided example `helide` device implementation
-- `BUILD_REMOTE_DEVICE` : build the provided experimental `remote` device implementation
+- `BUILD_HELIDE_DEVICE`     : build the provided example `helide` device implementation
+- `BUILD_HELIDE_GPU_DEVICE` : build the provided example `helide_gpu` GPU device (needs SDL3)
+- `BUILD_REMOTE_DEVICE`     : build the provided experimental `remote` device implementation
 - `BUILD_EXAMPLES`      : build example applications
 - `BUILD_VIEWER`        : build viewer too (needs SDL3) if building examples
 - `BUILD_HDANARI`       : build (experimental) OpenUSD Hydra delegate plugin
@@ -136,6 +138,11 @@ API might be implemented. It implements a very simple ray tracing implementation
 using Embree for intersection. Users should look to use vendor provided,
 hardware-optimized ANARI implementations which are shipped independently from
 the SDK. (see below)
+
+A GPU-accelerated example device [helide_gpu](src/devices/helide_gpu) is also
+available. It uses SDL3's cross-platform GPU abstraction layer for rendering and
+is currently in-progress. Build it with `BUILD_HELIDE_GPU_DEVICE=ON` (requires
+SDL3 3.2+ and `glslangValidator` in PATH).
 
 ### Using the debug device layer
 

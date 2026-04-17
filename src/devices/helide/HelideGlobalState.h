@@ -7,6 +7,7 @@
 #include "HelideMath.h"
 // helium
 #include "helium/BaseGlobalDeviceState.h"
+#include "helium/TaskQueue.h"
 // embree
 #include <embree4/rtcore.h>
 
@@ -25,8 +26,8 @@ struct HelideGlobalState : public helium::BaseGlobalDeviceState
     helium::TimeStamp lastTLSReconstructSceneRequest{0};
   } objectUpdates;
 
+  helium::tasking::TaskQueue taskQueue{64};
   RenderingSemaphore renderingSemaphore;
-  Frame *currentFrame{nullptr};
 
   anari::Device anariDevice{nullptr}; // public handle of _this_ helide instance
   RTCDevice embreeDevice{nullptr};
@@ -37,7 +38,6 @@ struct HelideGlobalState : public helium::BaseGlobalDeviceState
   // Helper methods //
 
   HelideGlobalState(ANARIDevice d);
-  void waitOnCurrentFrame() const;
 };
 
 // Helper functions/macros ////////////////////////////////////////////////////

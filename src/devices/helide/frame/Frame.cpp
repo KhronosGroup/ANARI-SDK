@@ -5,40 +5,10 @@
 // std
 #include <algorithm>
 #include <chrono>
-#include <random>
 // embree
 #include "algorithms/parallel_for.h"
 
 namespace helide {
-
-// Helper functions ///////////////////////////////////////////////////////////
-
-template <typename I, typename FUNC>
-static void serial_for(I size, FUNC &&f)
-{
-  for (I i = 0; i < size; i++)
-    f(i);
-}
-
-template <typename R, typename TASK_T>
-static std::future<R> async(std::packaged_task<R()> &task, TASK_T &&fcn)
-{
-#if 1
-  return std::async(fcn);
-#else
-  task = std::packaged_task<R()>(std::forward<TASK_T>(fcn));
-  auto future = task.get_future();
-  embree::TaskScheduler::spawn([&]() { task(); });
-  return future;
-#endif
-}
-
-template <typename R>
-static bool is_ready(const std::future<R> &f)
-{
-  return !f.valid()
-      || f.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
-}
 
 // Frame definitions //////////////////////////////////////////////////////////
 
@@ -62,6 +32,8 @@ HelideGlobalState *Frame::deviceState() const
 
 void Frame::commitParameters()
 {
+  waitOnOutstandingWorkIfNeeded();
+
   m_renderer = getParamObject<Renderer>("renderer");
   m_camera = getParamObject<Camera>("camera");
   m_world = getParamObject<World>("world");
@@ -84,6 +56,8 @@ void Frame::commitParameters()
 
 void Frame::finalize()
 {
+  waitOnOutstandingWorkIfNeeded();
+
   if (!m_renderer) {
     reportMessage(ANARI_SEVERITY_WARNING,
         "missing required parameter 'renderer' on frame");
@@ -141,16 +115,16 @@ bool Frame::getProperty(const std::string_view &name,
 
 void Frame::renderFrame()
 {
+  auto *state = deviceState();
+  wait();
+
   this->refInc(helium::RefType::INTERNAL);
 
-  auto *state = deviceState();
-  state->waitOnCurrentFrame();
-  state->currentFrame = this;
+  state->taskQueue.enqueue([state]() { state->commitBuffer.flush(); });
 
-  auto doRender = [&, state]() {
+  m_future = state->taskQueue.enqueue([this, state]() {
     auto start = std::chrono::steady_clock::now();
     state->renderingSemaphore.frameStart();
-    state->commitBuffer.flush();
 
     if (!isValid()) {
       reportMessage(
@@ -198,9 +172,7 @@ void Frame::renderFrame()
 
     auto end = std::chrono::steady_clock::now();
     m_duration = std::chrono::duration<float>(end - start).count();
-  };
-
-  m_future = async<void>(m_task, doRender);
+  });
 }
 
 void *Frame::map(std::string_view channel,
@@ -258,7 +230,7 @@ void Frame::discard()
 
 bool Frame::ready() const
 {
-  return is_ready(m_future);
+  return helium::tasking::isReady(m_future);
 }
 
 void Frame::wait()
@@ -266,9 +238,14 @@ void Frame::wait()
   if (m_future.valid()) {
     m_future.get();
     this->refDec(helium::RefType::INTERNAL);
-    if (deviceState()->currentFrame == this)
-      deviceState()->currentFrame = nullptr;
   }
+}
+
+void Frame::waitOnOutstandingWorkIfNeeded()
+{
+  auto *state = deviceState();
+  if (!state->taskQueue.onWorkerThread())
+    wait();
 }
 
 float2 Frame::screenFromPixel(const float2 &p) const

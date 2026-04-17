@@ -224,6 +224,7 @@ HelideDevice::~HelideDevice()
 {
   auto &state = *deviceState();
 
+  state.taskQueue.flush();
   state.commitBuffer.clear();
 
   reportMessage(ANARI_SEVERITY_DEBUG, "destroying helide device (%p)", this);
