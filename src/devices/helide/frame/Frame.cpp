@@ -51,7 +51,8 @@ Frame::~Frame()
 
 bool Frame::isValid() const
 {
-  return m_valid;
+  return m_renderer && m_renderer->isValid() && m_camera && m_camera->isValid()
+      && m_world && m_world->isValid();
 }
 
 HelideGlobalState *Frame::deviceState() const
@@ -64,14 +65,17 @@ void Frame::commitParameters()
   m_renderer = getParamObject<Renderer>("renderer");
   m_camera = getParamObject<Camera>("camera");
   m_world = getParamObject<World>("world");
-
-  m_colorType = getParam<anari::DataType>("channel.color", ANARI_UNKNOWN);
-  m_depthType = getParam<anari::DataType>("channel.depth", ANARI_UNKNOWN);
-  m_primIdType =
+  m_incomingTypes.color =
+      getParam<anari::DataType>("channel.color", ANARI_UNKNOWN);
+  m_incomingTypes.depth =
+      getParam<anari::DataType>("channel.depth", ANARI_UNKNOWN);
+  m_incomingTypes.primId =
       getParam<anari::DataType>("channel.primitiveId", ANARI_UNKNOWN);
-  m_objIdType = getParam<anari::DataType>("channel.objectId", ANARI_UNKNOWN);
-  m_instIdType = getParam<anari::DataType>("channel.instanceId", ANARI_UNKNOWN);
-  m_frameData.size = getParam<uint2>("size", uint2(10));
+  m_incomingTypes.objId =
+      getParam<anari::DataType>("channel.objectId", ANARI_UNKNOWN);
+  m_incomingTypes.instId =
+      getParam<anari::DataType>("channel.instanceId", ANARI_UNKNOWN);
+  m_incomingFrameSize = getParam<uint2>("size", uint2(10));
   m_callback = getParam<ANARIFrameCompletionCallback>(
       "frameCompletionCallback", nullptr);
   m_callbackUserPtr =
@@ -95,29 +99,30 @@ void Frame::finalize()
         ANARI_SEVERITY_WARNING, "missing required parameter 'world' on frame");
   }
 
-  m_valid = m_renderer && m_renderer->isValid() && m_camera
-      && m_camera->isValid() && m_world && m_world->isValid();
+  m_frameData.size = m_incomingFrameSize;
+  m_currentTypes = m_incomingTypes;
+  m_perPixelBytes = 4 * (m_currentTypes.color == ANARI_FLOAT32_VEC4 ? 4 : 1);
 
   m_frameData.invSize = 1.f / float2(m_frameData.size);
 
-  const auto numPixels = m_frameData.size.x * m_frameData.size.y;
-
-  m_perPixelBytes = 4 * (m_colorType == ANARI_FLOAT32_VEC4 ? 4 : 1);
-  m_pixelBuffer.resize(numPixels * m_perPixelBytes);
-
-  m_depthBuffer.resize(m_depthType == ANARI_FLOAT32 ? numPixels : 0);
-  m_frameChanged = true;
-
+  m_pixelBuffer.clear();
+  m_depthBuffer.clear();
   m_primIdBuffer.clear();
   m_objIdBuffer.clear();
   m_instIdBuffer.clear();
 
-  if (m_primIdType == ANARI_UINT32)
+  const auto numPixels = m_frameData.size.x * m_frameData.size.y;
+  m_pixelBuffer.resize(numPixels * m_perPixelBytes);
+  if (m_currentTypes.depth == ANARI_FLOAT32)
+    m_depthBuffer.resize(numPixels);
+  if (m_currentTypes.primId == ANARI_UINT32)
     m_primIdBuffer.resize(numPixels);
-  if (m_objIdType == ANARI_UINT32)
+  if (m_currentTypes.objId == ANARI_UINT32)
     m_objIdBuffer.resize(numPixels);
-  if (m_instIdType == ANARI_UINT32)
+  if (m_currentTypes.instId == ANARI_UINT32)
     m_instIdBuffer.resize(numPixels);
+
+  m_frameChanged = true;
 }
 
 bool Frame::getProperty(const std::string_view &name,
@@ -209,19 +214,19 @@ void *Frame::map(std::string_view channel,
   *height = m_frameData.size.y;
 
   if (channel == "channel.color") {
-    *pixelType = m_colorType;
+    *pixelType = m_currentTypes.color;
     return m_pixelBuffer.data();
   } else if (channel == "channel.depth" && !m_depthBuffer.empty()) {
-    *pixelType = ANARI_FLOAT32;
+    *pixelType = m_currentTypes.depth;
     return m_depthBuffer.data();
   } else if (channel == "channel.primitiveId" && !m_primIdBuffer.empty()) {
-    *pixelType = ANARI_UINT32;
+    *pixelType = m_currentTypes.primId;
     return m_primIdBuffer.data();
   } else if (channel == "channel.objectId" && !m_objIdBuffer.empty()) {
-    *pixelType = ANARI_UINT32;
+    *pixelType = m_currentTypes.objId;
     return m_objIdBuffer.data();
   } else if (channel == "channel.instanceId" && !m_instIdBuffer.empty()) {
-    *pixelType = ANARI_UINT32;
+    *pixelType = m_currentTypes.instId;
     return m_instIdBuffer.data();
   } else {
     *width = 0;
@@ -275,7 +280,7 @@ void Frame::writeSample(int x, int y, const PixelSample &s)
 {
   const auto idx = y * m_frameData.size.x + x;
   auto *color = m_pixelBuffer.data() + (idx * m_perPixelBytes);
-  switch (m_colorType) {
+  switch (m_currentTypes.color) {
   case ANARI_UFIXED8_VEC4: {
     auto c = helium::math::cvt_color_to_uint32(s.color);
     std::memcpy(color, &c, sizeof(c));

@@ -51,7 +51,6 @@ struct Frame : public helium::BaseFrame
 
   //// Data ////
 
-  bool m_valid{false};
   int m_perPixelBytes{1};
 
   struct FrameData
@@ -61,11 +60,18 @@ struct Frame : public helium::BaseFrame
     float2 invSize;
   } m_frameData;
 
-  anari::DataType m_colorType{ANARI_UNKNOWN};
-  anari::DataType m_depthType{ANARI_UNKNOWN};
-  anari::DataType m_primIdType{ANARI_UNKNOWN};
-  anari::DataType m_objIdType{ANARI_UNKNOWN};
-  anari::DataType m_instIdType{ANARI_UNKNOWN};
+  struct FrameTypes
+  {
+    anari::DataType color{ANARI_UNKNOWN};
+    anari::DataType depth{ANARI_UNKNOWN};
+    anari::DataType primId{ANARI_UNKNOWN};
+    anari::DataType objId{ANARI_UNKNOWN};
+    anari::DataType instId{ANARI_UNKNOWN};
+  };
+
+  FrameTypes m_incomingTypes;
+  FrameTypes m_currentTypes;
+  uint2 m_incomingFrameSize{0, 0};
 
   std::vector<uint8_t> m_pixelBuffer;
   std::vector<float> m_depthBuffer;

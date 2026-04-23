@@ -54,14 +54,16 @@ struct DeferredCommitBuffer
   bool empty() const;
 
  private:
-  void addObjectToCommitImpl(BaseObject *obj);
-  void addObjectToFinalizeImpl(BaseObject *obj);
+  void swapBuffers();
   void flushCommits();
   void flushFinalizations();
   void clearImpl();
 
+  std::vector<BaseObject *> m_commitBufferStaging;
+  std::vector<BaseObject *> m_finalizationBufferStaging;
   std::vector<BaseObject *> m_commitBuffer;
   std::vector<BaseObject *> m_finalizationBuffer;
+  bool m_needToSortFinalizationsStaging{false};
   bool m_needToSortFinalizations{false};
   TimeStamp m_lastCommit{0};
   TimeStamp m_lastFinalization{0};
