@@ -26,32 +26,38 @@ static void dynamic_foreach(std::vector<T> &buffer, FCN_T &&fcn)
 
 DeferredCommitBuffer::DeferredCommitBuffer()
 {
+  m_commitBufferStaging.reserve(100);
+  m_finalizationBufferStaging.reserve(100);
   m_commitBuffer.reserve(100);
   m_finalizationBuffer.reserve(100);
 }
 
 DeferredCommitBuffer::~DeferredCommitBuffer()
 {
-  clearImpl();
+  clear();
 }
 
 void DeferredCommitBuffer::addObjectToCommit(BaseObject *obj)
 {
   std::lock_guard<std::recursive_mutex> guard(m_mutex);
-  addObjectToCommitImpl(obj);
+  obj->refInc(RefType::INTERNAL);
+  m_commitBufferStaging.push_back(obj);
 }
 
 void DeferredCommitBuffer::addObjectToFinalize(BaseObject *obj)
 {
   std::lock_guard<std::recursive_mutex> guard(m_mutex);
-  addObjectToFinalizeImpl(obj);
+  obj->refInc(RefType::INTERNAL);
+  if (commitPriority(obj->type()) != commitPriority(ANARI_OBJECT))
+    m_needToSortFinalizationsStaging = true;
+  m_finalizationBufferStaging.push_back(obj);
 }
 
 void DeferredCommitBuffer::flush()
 {
   if (empty())
     return;
-  std::lock_guard<std::recursive_mutex> guard(m_mutex);
+  swapBuffers();
   flushCommits();
   flushFinalizations();
   clearImpl();
@@ -69,27 +75,22 @@ TimeStamp DeferredCommitBuffer::lastObjectFinalization() const
 
 void DeferredCommitBuffer::clear()
 {
-  std::lock_guard<std::recursive_mutex> guard(m_mutex);
+  clearImpl();
+  swapBuffers();
   clearImpl();
 }
 
 bool DeferredCommitBuffer::empty() const
 {
-  return m_commitBuffer.empty() && m_finalizationBuffer.empty();
+  return m_commitBufferStaging.empty() && m_finalizationBufferStaging.empty();
 }
 
-void DeferredCommitBuffer::addObjectToCommitImpl(BaseObject *obj)
+void DeferredCommitBuffer::swapBuffers()
 {
-  obj->refInc(RefType::INTERNAL);
-  m_commitBuffer.push_back(obj);
-}
-
-void DeferredCommitBuffer::addObjectToFinalizeImpl(BaseObject *obj)
-{
-  obj->refInc(RefType::INTERNAL);
-  if (commitPriority(obj->type()) != commitPriority(ANARI_OBJECT))
-    m_needToSortFinalizations = true;
-  m_finalizationBuffer.push_back(obj);
+  std::lock_guard<std::recursive_mutex> guard(m_mutex);
+  std::swap(m_commitBuffer, m_commitBufferStaging);
+  std::swap(m_finalizationBuffer, m_finalizationBufferStaging);
+  std::swap(m_needToSortFinalizations, m_needToSortFinalizationsStaging);
 }
 
 void DeferredCommitBuffer::flushCommits()
@@ -102,7 +103,12 @@ void DeferredCommitBuffer::flushCommits()
       obj->commitParameters();
       obj->markCommitted();
       obj->markUpdated();
-      addObjectToFinalizeImpl(obj);
+      {
+        obj->refInc(RefType::INTERNAL);
+        if (commitPriority(obj->type()) != commitPriority(ANARI_OBJECT))
+          m_needToSortFinalizations = true;
+        m_finalizationBuffer.push_back(obj);
+      }
     }
   });
 
