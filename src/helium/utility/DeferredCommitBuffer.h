@@ -67,7 +67,8 @@ struct DeferredCommitBuffer
   bool m_needToSortFinalizations{false};
   TimeStamp m_lastCommit{0};
   TimeStamp m_lastFinalization{0};
-  std::recursive_mutex m_mutex;
+  mutable std::recursive_mutex m_swapMutex;
+  mutable std::recursive_mutex m_flushMutex;
 };
 
 } // namespace helium
