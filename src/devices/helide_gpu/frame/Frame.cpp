@@ -38,7 +38,7 @@ Frame::~Frame()
 bool Frame::isValid() const
 {
   return m_renderer && m_renderer->isValid() && m_camera && m_camera->isValid()
-      && m_world && m_world->isValid();
+      && m_world && m_world->isValid() && m_size.x > 0 && m_size.y > 0;
 }
 
 HelideGPUDeviceGlobalState *Frame::deviceState() const
@@ -79,6 +79,9 @@ void Frame::finalize()
         ANARI_SEVERITY_WARNING, "missing required parameter 'world' on frame");
   }
 
+  if (m_size.x == 0 || m_size.y == 0)
+    reportMessage(ANARI_SEVERITY_WARNING, "invalid frame dimensions");
+
   gpu_enqueue_method(&Frame::gpu_allocateObjects);
 }
 
@@ -99,14 +102,7 @@ bool Frame::getProperty(const std::string_view &name,
 void Frame::renderFrame()
 {
   m_renderStartTime = std::chrono::steady_clock::now();
-
   wait();
-
-  auto &state = *deviceState();
-  if (state.commitBuffer.empty())
-    return;
-
-  m_frameLastRendered = helium::newTimeStamp();
   m_future = gpu_enqueue_method(&Frame::gpu_renderFrame);
 }
 
@@ -120,6 +116,9 @@ void *Frame::map(std::string_view channel,
   *width = m_size.x;
   *height = m_size.y;
   void *ptr = nullptr;
+
+  if (!isValid())
+    return ptr;
 
   if (channel == "channel.color") {
     *pixelType = m_colorType;
@@ -206,7 +205,7 @@ void Frame::gpu_allocateObjects()
 
   auto &state = *deviceState();
   auto *dev = state.gpu.device;
-  if (!dev)
+  if (!dev || m_size.x == 0 || m_size.y == 0)
     return;
 
   gpu_freeObjects();
@@ -276,8 +275,6 @@ void Frame::gpu_freeObjects()
 
 void Frame::gpu_renderFrame()
 {
-  auto start = std::chrono::steady_clock::now();
-
   auto &state = *deviceState();
   state.commitBuffer.flush();
 
@@ -289,6 +286,8 @@ void Frame::gpu_renderFrame()
 
   if (state.commitBuffer.lastObjectFinalization() <= m_frameLastRendered)
     return;
+
+  m_frameLastRendered = helium::newTimeStamp();
 
   auto *dev = state.gpu.device;
   if (!dev || !m_gpuState.colorTarget)
