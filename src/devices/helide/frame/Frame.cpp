@@ -22,7 +22,8 @@ Frame::~Frame()
 bool Frame::isValid() const
 {
   return m_renderer && m_renderer->isValid() && m_camera && m_camera->isValid()
-      && m_world && m_world->isValid();
+      && m_world && m_world->isValid() && m_frameData.size.x > 0
+      && m_frameData.size.y > 0;
 }
 
 HelideGlobalState *Frame::deviceState() const
@@ -47,7 +48,7 @@ void Frame::commitParameters()
       getParam<anari::DataType>("channel.objectId", ANARI_UNKNOWN);
   m_incomingTypes.instId =
       getParam<anari::DataType>("channel.instanceId", ANARI_UNKNOWN);
-  m_incomingFrameSize = getParam<uint2>("size", uint2(10));
+  m_incomingFrameSize = getParam<uint2>("size", uint2(0u));
   m_callback = getParam<ANARIFrameCompletionCallback>(
       "frameCompletionCallback", nullptr);
   m_callbackUserPtr =
@@ -73,11 +74,17 @@ void Frame::finalize()
         ANARI_SEVERITY_WARNING, "missing required parameter 'world' on frame");
   }
 
+  if (m_incomingFrameSize.x == 0 || m_incomingFrameSize.y == 0)
+    reportMessage(ANARI_SEVERITY_WARNING, "invalid frame dimensions");
+
   m_frameData.size = m_incomingFrameSize;
   m_currentTypes = m_incomingTypes;
   m_perPixelBytes = 4 * (m_currentTypes.color == ANARI_FLOAT32_VEC4 ? 4 : 1);
 
-  m_frameData.invSize = 1.f / float2(m_frameData.size);
+  if (m_frameData.size.x > 0 && m_frameData.size.y > 0)
+    m_frameData.invSize = 1.f / float2(m_frameData.size);
+  else
+    m_frameData.invSize = float2(0.f);
 
   m_pixelBuffer.clear();
   m_depthBuffer.clear();
@@ -149,6 +156,8 @@ void Frame::renderFrame()
     const auto taskGrainSize = uint2(m_renderer->taskGrainSize());
 
     const auto &size = m_frameData.size;
+    const float frameAspect = float(size.x) / float(size.y);
+    const auto rayGen = m_camera->createRayGenerator(frameAspect);
     using Range = embree::range<uint32_t>;
     embree::parallel_for(0u, size.y, taskGrainSize.y, [&](const Range &ry) {
       for (auto y = ry.begin(); y < ry.end(); y++) {
@@ -158,7 +167,7 @@ void Frame::renderFrame()
             auto imageRegion = m_camera->imageRegion();
             screen.x = linalg::lerp(imageRegion.x, imageRegion.z, screen.x);
             screen.y = linalg::lerp(imageRegion.y, imageRegion.w, screen.y);
-            Ray ray = m_camera->createRay(screen);
+            Ray ray = rayGen.createRay(screen);
             writeSample(x, y, m_renderer->renderSample(screen, ray, *m_world));
           }
         });

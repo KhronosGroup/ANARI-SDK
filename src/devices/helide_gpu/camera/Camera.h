@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "../Object.h"
 #include "../HelideGPUMath.h"
+#include "../Object.h"
 
 namespace helide_gpu {
 
@@ -16,7 +16,7 @@ struct Camera : public Object
       std::string_view type, HelideGPUDeviceGlobalState *state);
 
   virtual mat4 viewMatrix() const = 0;
-  virtual mat4 projMatrix() const = 0;
+  virtual mat4 projMatrix(float frameAspect) const = 0;
 };
 
 } // namespace helide_gpu
