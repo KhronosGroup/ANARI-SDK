@@ -7,9 +7,9 @@
 #include "renderer/Renderer.h"
 #include "world/World.h"
 // helium
+#include <vector>
 #include "helium/BaseFrame.h"
 #include "helium/TaskQueue.h"
-#include <vector>
 
 namespace helide {
 
@@ -56,8 +56,8 @@ struct Frame : public helium::BaseFrame
   struct FrameData
   {
     int frameID{0};
-    uint2 size;
-    float2 invSize;
+    uint2 size{0u, 0u};
+    float2 invSize{0.f};
   } m_frameData;
 
   struct FrameTypes

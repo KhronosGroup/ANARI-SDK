@@ -10,24 +10,25 @@ Orthographic::Orthographic(HelideGlobalState *s) : Camera(s) {}
 void Orthographic::commitParameters()
 {
   Camera::commitParameters();
-  m_aspect = getParam<float>("aspect", 1.f);
+  if (hasParam("aspect", ANARI_FLOAT32))
+    m_aspect = getParam<float>("aspect", 1.f);
+  else
+    m_aspect.reset();
   m_height = getParam<float>("height", 1.f);
 }
 
-void Orthographic::finalize()
+RayGenerator Orthographic::createRayGenerator(float frameAspect) const
 {
-  float2 imgPlaneSize(m_height * m_aspect, m_height);
-  m_pos_du = normalize(cross(m_dir, m_up)) * imgPlaneSize.x;
-  m_pos_dv = normalize(cross(m_pos_du, m_dir)) * imgPlaneSize.y;
-  m_pos_00 = m_pos - .5f * m_pos_du - .5f * m_pos_dv;
-}
+  const float aspect = m_aspect.value_or(frameAspect);
+  float2 imgPlaneSize(m_height * aspect, m_height);
 
-Ray Orthographic::createRay(const float2 &screen) const
-{
-  Ray ray;
-  ray.dir = m_dir;
-  ray.org = m_pos_00 + screen.x * m_pos_du + screen.y * m_pos_dv;
-  return ray;
+  RayGenerator rg;
+  rg.mode = RayGenerator::Mode::ORTHOGRAPHIC;
+  rg.dir = m_dir;
+  rg.du = normalize(cross(m_dir, m_up)) * imgPlaneSize.x;
+  rg.dv = normalize(cross(rg.du, m_dir)) * imgPlaneSize.y;
+  rg.ray_00 = m_pos - .5f * rg.du - .5f * rg.dv;
+  return rg;
 }
 
 } // namespace helide

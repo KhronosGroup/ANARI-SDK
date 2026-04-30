@@ -369,7 +369,8 @@ void Frame::gpu_renderFrame_geometryPass(SDL_GPUCommandBuffer *cmd)
   auto *cam = dynamic_cast<Camera *>(m_camera.ptr);
   if (cam && m_renderer && m_world) {
     const mat4 V = cam->viewMatrix();
-    const mat4 P = cam->projMatrix();
+    const float frameAspect = float(m_size.x) / float(m_size.y);
+    const mat4 P = cam->projMatrix(frameAspect);
 
     SDL_GPUViewport viewport{};
     viewport.x = 0.f;
@@ -455,7 +456,8 @@ void Frame::gpu_renderFrame_ssaoPass(
 {
   auto &state = *deviceState();
 
-  const mat4 P = cam->projMatrix();
+  const float frameAspect = float(m_size.x) / float(m_size.y);
+  const mat4 P = cam->projMatrix(frameAspect);
   const mat4 V = cam->viewMatrix();
 
   SDL_GPUViewport viewport{};
