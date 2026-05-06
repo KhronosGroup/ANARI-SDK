@@ -18,7 +18,12 @@ class HdAnariRendererPlugin final : public HdRendererPlugin
       HdRenderSettingsMap const &settingsMap) override;
   void DeleteRenderDelegate(HdRenderDelegate *renderDelegate) override;
 
+#if PXR_VERSION >= 2605
+  bool IsSupported(HdRendererCreateArgs const &rendererCreateArgs,
+      std::string *reasonWhyNot = nullptr) const override;
+#else
   bool IsSupported(bool gpuEnabled = true) const override;
+#endif
 
  private:
   HdAnariRendererPlugin(const HdAnariRendererPlugin &) = delete;
