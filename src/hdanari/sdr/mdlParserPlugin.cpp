@@ -8,8 +8,6 @@
 #include <pxr/base/plug/plugin.h>
 #include <pxr/base/plug/registry.h>
 #include <pxr/pxr.h>
-#include <pxr/usd/ndr/declare.h>
-#include <pxr/usd/ndr/node.h>
 #include <pxr/usd/sdr/declare.h>
 #include <pxr/usd/sdr/shaderNode.h>
 #include <pxr/usd/sdr/shaderProperty.h>
@@ -18,18 +16,18 @@ using namespace std::string_literals;
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-NDR_REGISTER_PARSER_PLUGIN(HdAnariMdlParserPlugin)
+SDR_REGISTER_PARSER_PLUGIN(HdAnariMdlParserPlugin)
 
-NdrNodeUniquePtr HdAnariMdlParserPlugin::Parse(
-    const NdrNodeDiscoveryResult &discoveryRes)
+SdrShaderNodeUniquePtr HdAnariMdlParserPlugin::ParseShaderNode(
+    const SdrShaderNodeDiscoveryResult &discoveryResult)
 {
-  auto sdrNode = MdlSdrShaderNode::ParseSdrDiscoveryResult(discoveryRes);
-  return NdrNodeUniquePtr(sdrNode);
+  auto sdrNode = MdlSdrShaderNode::ParseSdrDiscoveryResult(discoveryResult);
+  return SdrShaderNodeUniquePtr(sdrNode);
 }
 
-const NdrTokenVec &HdAnariMdlParserPlugin::GetDiscoveryTypes() const
+const SdrTokenVec &HdAnariMdlParserPlugin::GetDiscoveryTypes() const
 {
-  static const NdrTokenVec discoveryTypes = {HdAnariSdrTokens->mdl};
+  static const SdrTokenVec discoveryTypes = {HdAnariSdrTokens->mdl};
   return discoveryTypes;
 }
 

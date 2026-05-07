@@ -3,12 +3,12 @@
     "Info": {
       "Types": {
         "HdAnariMdlDiscoveryPlugin": {
-          "bases": ["NdrDiscoveryPlugin"],
+          "bases": ["SdrDiscoveryPlugin"],
           "displayName": "HdAnari MDL Discovery",
           "priority": 0
         },
         "HdAnariMdlParserPlugin": {
-          "bases": ["NdrParserPlugin"],
+          "bases": ["SdrParserPlugin"],
           "displayName": "HdAnari MDL Node Parser",
           "priority": 0
         }

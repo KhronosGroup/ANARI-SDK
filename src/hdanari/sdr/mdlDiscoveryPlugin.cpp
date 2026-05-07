@@ -5,17 +5,17 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-NDR_REGISTER_DISCOVERY_PLUGIN(HdAnariMdlDiscoveryPlugin)
+SDR_REGISTER_DISCOVERY_PLUGIN(HdAnariMdlDiscoveryPlugin)
 
-NdrNodeDiscoveryResultVec HdAnariMdlDiscoveryPlugin::DiscoverNodes(
+SdrShaderNodeDiscoveryResultVec HdAnariMdlDiscoveryPlugin::DiscoverShaderNodes(
     const Context &context)
 {
-  return NdrNodeDiscoveryResultVec{};
+  return SdrShaderNodeDiscoveryResultVec{};
 }
 
-const NdrStringVec &HdAnariMdlDiscoveryPlugin::GetSearchURIs() const
+const SdrStringVec &HdAnariMdlDiscoveryPlugin::GetSearchURIs() const
 {
-  static NdrStringVec searchPaths = NdrStringVec{};
+  static SdrStringVec searchPaths = SdrStringVec{};
   return searchPaths;
 }
 
