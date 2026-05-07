@@ -31,7 +31,7 @@ void HdAnariRendererPlugin::DeleteRenderDelegate(
   delete renderDelegate;
 }
 
-#if PXR_VERSION >= 2605
+#if PXR_VERSION >= 2511
 bool HdAnariRendererPlugin::IsSupported(
     HdRendererCreateArgs const & /* rendererCreateArgs */,
     std::string * /* reasonWhyNot */) const
