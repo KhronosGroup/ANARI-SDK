@@ -254,7 +254,7 @@ HdAnariGeometry::PrimvarSource HdAnariMesh::UpdatePrimvarSource(
             buffer.GetTupleType().type,
             &triangulatedPrimvar);
 
-#if PXR_VERSION >= 2605
+#if PXR_VERSION >= 2511
     if (result == HdMeshComputationResult::Success) {
       return _GetAttributeArray(triangulatedPrimvar);
     } else if (result == HdMeshComputationResult::Unchanged) {
