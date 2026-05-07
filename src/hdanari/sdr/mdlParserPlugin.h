@@ -4,20 +4,21 @@
 #pragma once
 
 #include <pxr/pxr.h>
-#include <pxr/usd/ndr/parserPlugin.h>
+#include <pxr/usd/sdr/declare.h>
+#include <pxr/usd/sdr/parserPlugin.h>
+#include <pxr/usd/sdr/shaderNodeDiscoveryResult.h>
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-class HdAnariMdlParserPlugin : public NdrParserPlugin
+class HdAnariMdlParserPlugin : public SdrParserPlugin
 {
  public:
-  NdrNodeUniquePtr Parse(const NdrNodeDiscoveryResult &discoveryRes) override;
+  SdrShaderNodeUniquePtr ParseShaderNode(
+      const SdrShaderNodeDiscoveryResult &discoveryResult) override;
 
-  const NdrTokenVec &GetDiscoveryTypes() const override;
+  const SdrTokenVec &GetDiscoveryTypes() const override;
 
   const TfToken &GetSourceType() const override;
-
- private:
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

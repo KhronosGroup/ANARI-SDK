@@ -8,8 +8,9 @@
 #include <mi/neuraylib/itransaction.h>
 
 #include <pxr/pxr.h>
-#include <pxr/usd/ndr/declare.h>
+#include <pxr/usd/sdr/declare.h>
 #include <pxr/usd/sdr/shaderNode.h>
+#include <pxr/usd/sdr/shaderNodeDiscoveryResult.h>
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -19,7 +20,7 @@ class MdlSdrShaderNode : public SdrShaderNode
   using SdrShaderNode::SdrShaderNode;
 
   static MdlSdrShaderNode *ParseSdrDiscoveryResult(
-      const NdrNodeDiscoveryResult &discoveryResult);
+      const SdrShaderNodeDiscoveryResult &discoveryResult);
 };
 
 class MdlFunctionSdrNode : public MdlSdrShaderNode
@@ -27,22 +28,22 @@ class MdlFunctionSdrNode : public MdlSdrShaderNode
   friend class MdlSdrShaderNode;
 
  protected:
-  MdlFunctionSdrNode(const NdrNodeDiscoveryResult &discoveryResult,
+  MdlFunctionSdrNode(const SdrShaderNodeDiscoveryResult &discoveryResult,
       const mi::neuraylib::IFunction_definition *functionDefinition,
       mi::neuraylib::ITransaction *transaction,
-      NdrPropertyUniquePtrVec &&shaderProperties,
-      NdrTokenMap &&shaderMetadata);
+      SdrShaderPropertyUniquePtrVec &&shaderProperties,
+      SdrTokenMap &&shaderMetadata);
 
-  static NdrPropertyUniquePtrVec GetShaderProperties(
-      const NdrNodeDiscoveryResult &discoveryResult,
+  static SdrShaderPropertyUniquePtrVec GetShaderProperties(
+      const SdrShaderNodeDiscoveryResult &discoveryResult,
       const mi::neuraylib::IFunction_definition *functionDefinition,
       mi::neuraylib::ITransaction *transaction);
-  static NdrTokenMap GetShaderMetadata(
-      const NdrNodeDiscoveryResult &discoveryResult,
+  static SdrTokenMap GetShaderMetadata(
+      const SdrShaderNodeDiscoveryResult &discoveryResult,
       const mi::neuraylib::IFunction_definition *functionDefinition,
       mi::neuraylib::ITransaction *transaction);
 
-  static NdrTokenMap createMetadataFromAnnotation(
+  static SdrTokenMap createMetadataFromAnnotation(
       const mi::neuraylib::Annotation_wrapper *annotations);
 
   template <typename ScalarType, typename ITypeType>
@@ -63,7 +64,7 @@ class MdlFunctionSdrNode : public MdlSdrShaderNode
       const mi::neuraylib::Annotation_wrapper *annotations);
 
  private:
-  MdlFunctionSdrNode(const NdrNodeDiscoveryResult &discoveryResult,
+  MdlFunctionSdrNode(const SdrShaderNodeDiscoveryResult &discoveryResult,
       const mi::neuraylib::IFunction_definition *functionDefinition,
       mi::neuraylib::ITransaction *transaction);
 };
@@ -73,17 +74,17 @@ class MdlMaterialSdrNode : public MdlFunctionSdrNode
   friend class MdlSdrShaderNode;
 
  protected:
-  static NdrPropertyUniquePtrVec GetShaderProperties(
-      const NdrNodeDiscoveryResult &discoveryResult,
+  static SdrShaderPropertyUniquePtrVec GetShaderProperties(
+      const SdrShaderNodeDiscoveryResult &discoveryResult,
       const mi::neuraylib::IFunction_definition *functionDefinition,
       mi::neuraylib::ITransaction *transaction);
-  static NdrTokenMap GetShaderMetadata(
-      const NdrNodeDiscoveryResult &discoveryResult,
+  static SdrTokenMap GetShaderMetadata(
+      const SdrShaderNodeDiscoveryResult &discoveryResult,
       const mi::neuraylib::IFunction_definition *functionDefinition,
       mi::neuraylib::ITransaction *transaction);
 
  private:
-  MdlMaterialSdrNode(const NdrNodeDiscoveryResult &discoveryResult,
+  MdlMaterialSdrNode(const SdrShaderNodeDiscoveryResult &discoveryResult,
       const mi::neuraylib::IFunction_definition *functionDefinition,
       mi::neuraylib::ITransaction *transaction);
 };

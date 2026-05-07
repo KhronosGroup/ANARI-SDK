@@ -19,12 +19,10 @@
 #include <pxr/base/tf/scoped.h>
 #include <pxr/base/tf/token.h>
 #include <pxr/pxr.h>
-#include <pxr/usd/ndr/declare.h>
-#include <pxr/usd/ndr/node.h>
-#include <pxr/usd/ndr/property.h>
 #include <pxr/usd/sdf/assetPath.h>
 #include <pxr/usd/sdr/declare.h>
 #include <pxr/usd/sdr/shaderNode.h>
+#include <pxr/usd/sdr/shaderNodeDiscoveryResult.h>
 #include <pxr/usd/sdr/shaderProperty.h>
 
 #include <string>
@@ -36,7 +34,7 @@ using namespace std::string_view_literals;
 PXR_NAMESPACE_OPEN_SCOPE
 
 MdlSdrShaderNode *MdlSdrShaderNode::ParseSdrDiscoveryResult(
-    const NdrNodeDiscoveryResult &discoveryResult)
+    const SdrShaderNodeDiscoveryResult &discoveryResult)
 {
   auto registry = HdAnariMdlRegistry::GetInstance();
   if (!registry)
@@ -102,11 +100,11 @@ MdlSdrShaderNode *MdlSdrShaderNode::ParseSdrDiscoveryResult(
 }
 
 MdlFunctionSdrNode::MdlFunctionSdrNode(
-    const NdrNodeDiscoveryResult &discoveryResult,
+    const SdrShaderNodeDiscoveryResult &discoveryResult,
     const mi::neuraylib::IFunction_definition *functionDefinition,
     mi::neuraylib::ITransaction *transaction,
-    NdrPropertyUniquePtrVec &&shaderProperties,
-    NdrTokenMap &&shaderMetadata)
+    SdrShaderPropertyUniquePtrVec &&shaderProperties,
+    SdrTokenMap &&shaderMetadata)
     : MdlSdrShaderNode(discoveryResult.identifier,
           discoveryResult.version,
           discoveryResult.name,
@@ -120,7 +118,7 @@ MdlFunctionSdrNode::MdlFunctionSdrNode(
 {}
 
 MdlFunctionSdrNode::MdlFunctionSdrNode(
-    const NdrNodeDiscoveryResult &discoveryResult,
+    const SdrShaderNodeDiscoveryResult &discoveryResult,
     const mi::neuraylib::IFunction_definition *functionDefinition,
     mi::neuraylib::ITransaction *transaction)
     : MdlFunctionSdrNode(discoveryResult,
@@ -130,10 +128,10 @@ MdlFunctionSdrNode::MdlFunctionSdrNode(
           GetShaderMetadata(discoveryResult, functionDefinition, transaction))
 {}
 
-NdrTokenMap MdlFunctionSdrNode::createMetadataFromAnnotation(
+SdrTokenMap MdlFunctionSdrNode::createMetadataFromAnnotation(
     const mi::neuraylib::Annotation_wrapper *annotations)
 {
-  NdrTokenMap metadata;
+  SdrTokenMap metadata;
 
   if (auto index =
           annotations->get_annotation_index("::anno::in_group(string,bool)");
@@ -271,12 +269,12 @@ SdrShaderPropertyUniquePtr MdlFunctionSdrNode::createTextureInputProperty(
       ));
 }
 
-NdrPropertyUniquePtrVec MdlFunctionSdrNode::GetShaderProperties(
-    const NdrNodeDiscoveryResult &discoveryResult,
+SdrShaderPropertyUniquePtrVec MdlFunctionSdrNode::GetShaderProperties(
+    const SdrShaderNodeDiscoveryResult &discoveryResult,
     const mi::neuraylib::IFunction_definition *functionDefinition,
     mi::neuraylib::ITransaction *transaction)
 {
-  NdrPropertyUniquePtrVec properties;
+  SdrShaderPropertyUniquePtrVec properties;
 
   return properties;
 
@@ -358,8 +356,8 @@ NdrPropertyUniquePtrVec MdlFunctionSdrNode::GetShaderProperties(
   return properties;
 }
 
-NdrTokenMap MdlFunctionSdrNode::GetShaderMetadata(
-    const NdrNodeDiscoveryResult &discoveryResult,
+SdrTokenMap MdlFunctionSdrNode::GetShaderMetadata(
+    const SdrShaderNodeDiscoveryResult &discoveryResult,
     const mi::neuraylib::IFunction_definition *functionDefinition,
     mi::neuraylib::ITransaction *transaction)
 {
@@ -372,7 +370,7 @@ NdrTokenMap MdlFunctionSdrNode::GetShaderMetadata(
 }
 
 MdlMaterialSdrNode::MdlMaterialSdrNode(
-    const NdrNodeDiscoveryResult &discoveryResult,
+    const SdrShaderNodeDiscoveryResult &discoveryResult,
     const mi::neuraylib::IFunction_definition *functionDefinition,
     mi::neuraylib::ITransaction *transaction)
     : MdlFunctionSdrNode(discoveryResult,
@@ -382,8 +380,8 @@ MdlMaterialSdrNode::MdlMaterialSdrNode(
           GetShaderMetadata(discoveryResult, functionDefinition, transaction))
 {}
 
-NdrPropertyUniquePtrVec MdlMaterialSdrNode::GetShaderProperties(
-    const NdrNodeDiscoveryResult &discoveryResult,
+SdrShaderPropertyUniquePtrVec MdlMaterialSdrNode::GetShaderProperties(
+    const SdrShaderNodeDiscoveryResult &discoveryResult,
     const mi::neuraylib::IFunction_definition *functionDefinition,
     mi::neuraylib::ITransaction *transaction)
 {
@@ -407,8 +405,8 @@ NdrPropertyUniquePtrVec MdlMaterialSdrNode::GetShaderProperties(
   return properties;
 }
 
-NdrTokenMap MdlMaterialSdrNode::GetShaderMetadata(
-    const NdrNodeDiscoveryResult &discoveryResult,
+SdrTokenMap MdlMaterialSdrNode::GetShaderMetadata(
+    const SdrShaderNodeDiscoveryResult &discoveryResult,
     const mi::neuraylib::IFunction_definition *functionDefinition,
     mi::neuraylib::ITransaction *transaction)
 {
