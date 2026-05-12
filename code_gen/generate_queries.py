@@ -55,6 +55,8 @@ class QueryGenerator:
         self.uses = {"color", "direction", "point", "vector"}
 
     def format_as(self, value, anari_type):
+        if value is None:
+            return "nullptr"
         basetype = self.type_enum_dict[anari_type]["baseType"]
         if isinstance(value, str):
             return value
