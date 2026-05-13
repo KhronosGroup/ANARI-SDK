@@ -368,7 +368,7 @@ ANARIMaterial setupSamplerTransform(ANARIDevice d,
   anari::setParameter(d, sampler, "inAttribute", "attribute0");
 
   if(transform) {
-    anari::setParameter(d, sampler, "transform", ANARI_FLOAT32_MAT4, transform);
+    anari::setParameter(d, sampler, "outTransform", ANARI_FLOAT32_MAT4, transform);
   }
 
   anari::commitParameters(d, sampler);
@@ -384,7 +384,7 @@ ANARIMaterial setupSamplerPrimitive(ANARIDevice d, ANARIArray1D array1d, uint64_
 {
   ANARISampler sampler = anariNewSampler(d, "primitive");
   anari::setParameter(d, sampler, "array", array1d);
-  anari::setParameter(d, sampler, "offset", offset);
+  anari::setParameter(d, sampler, "inOffset", offset);
 
   anari::commitParameters(d, sampler);
 
