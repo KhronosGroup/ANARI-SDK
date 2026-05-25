@@ -1,10 +1,10 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to coding agents working in this repository.
 
 ## Overview
 
-The CTS (Conformance Test Suite) is a Python toolkit with a C++ pybind11 backend that validates ANARI device implementations against a reference device (helide). It lives in `cts/` within the ANARI-SDK repo. See the parent `CLAUDE.md` for overall SDK context.
+The CTS (Conformance Test Suite) is a Python toolkit with a C++ pybind11 backend that validates ANARI device implementations against a reference device (helide). It lives in `cts/` within the ANARI-SDK repo. See the parent `AGENTS.md` for overall SDK context.
 
 ## Build Commands
 

@@ -1,12 +1,12 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to coding agents working in this repository.
 
 ## Overview
 
 This is the **remote ANARI device** — a client-server system for distributed rendering over TCP. An ANARI application runs on the client side (loaded as `ANARI_LIBRARY=remote`) and forwards all rendering work to a server running an actual backend device (e.g., Helide).
 
-See the repo-level `CLAUDE.md` for general build/test commands and the overall ANARI-SDK architecture.
+See the repo-level `AGENTS.md` for general build/test commands and the overall ANARI-SDK architecture.
 
 ## Building
 

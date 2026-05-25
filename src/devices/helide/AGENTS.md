@@ -1,10 +1,10 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to coding agents working in this repository.
 
 ## Overview
 
-This is the **helide** reference ray-tracing device for the ANARI SDK, built on Intel Embree. It is the canonical example of a complete Helium-based ANARI device. See the root `CLAUDE.md` for SDK-wide context and build commands.
+This is the **helide** reference ray-tracing device for the ANARI SDK, built on Intel Embree. It is the canonical example of a complete Helium-based ANARI device. See the root `AGENTS.md` for SDK-wide context and build commands.
 
 ## Object Hierarchy
 
