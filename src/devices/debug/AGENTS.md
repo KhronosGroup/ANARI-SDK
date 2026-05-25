@@ -1,12 +1,12 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to coding agents working in this repository.
 
 ## Overview
 
 This directory implements the ANARI debug device (`anari_library_debug`) — a passthrough wrapper that intercepts every ANARI API call, performs validation, then forwards to a wrapped inner device. It does **not** do any rendering itself.
 
-See the root-level `CLAUDE.md` for build commands, overall SDK architecture, and coding conventions.
+See the root-level `AGENTS.md` for build commands, overall SDK architecture, and coding conventions.
 
 ## How the Debug Device Works
 

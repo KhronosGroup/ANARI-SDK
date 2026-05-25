@@ -1,8 +1,8 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to coding agents working in this repository.
 
-See the root `CLAUDE.md` for build commands, code style, and overall SDK architecture.
+See the root `AGENTS.md` for build commands, code style, and overall SDK architecture.
 
 ## What Helium Provides
 
