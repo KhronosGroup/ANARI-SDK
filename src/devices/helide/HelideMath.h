@@ -17,7 +17,7 @@ using namespace anari::math;
 using namespace helium::math;
 using namespace embree_for_helide;
 
-struct Ray
+struct alignas(16) Ray
 {
   // Ray //
 
