@@ -145,7 +145,7 @@ ANARI_CATCH_END(nullptr)
 
 extern "C" void anariUnloadLibrary(ANARILibrary l) ANARI_CATCH_BEGIN
 {
-  delete l;
+  delete (LibraryImpl *)l;
 }
 ANARI_CATCH_END_NORETURN()
 
