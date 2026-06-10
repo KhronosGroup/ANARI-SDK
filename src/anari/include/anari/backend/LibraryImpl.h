@@ -48,6 +48,12 @@ struct LibraryImpl
   // Utility to get 'this' pointer as an ANARILibrary handle
   ANARILibrary this_library() const;
 
+  // Get the loaded OS library handle. The handle must only be freed (via
+  // freeLibrary()) after this object is destroyed, never from within the
+  // destructor: the object lives in the module being freed, so unloading it
+  // mid-destruction unmaps the code that completes the delete.
+  void *libraryHandle() const;
+
  private:
   void *m_lib{nullptr};
 

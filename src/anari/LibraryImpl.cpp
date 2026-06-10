@@ -83,17 +83,15 @@ static std::vector<void *> g_loadedLibs;
 static void *loadLibrary(
     const std::string &libName, bool withAnchor, std::string &errorMessage)
 {
-
   auto n = libName.find(',');
   std::string name = libName.substr(0, n);
 
   std::string file = std::string("anari_library_") + name;
   std::string errorMsg;
   std::string libLocation = withAnchor ? library_location() : std::string();
-  if(n != libName.npos) {
-    libLocation = libName.substr(n+1);
+  if (n != libName.npos) {
+    libLocation = libName.substr(n + 1);
   }
-
 
   void *lib = nullptr;
 #ifdef _WIN32
@@ -195,10 +193,10 @@ LibraryImpl::LibraryImpl(
       m_defaultStatusCBUserPtr(statusCBPtr)
 {}
 
-LibraryImpl::~LibraryImpl()
-{
-  freeLibrary(m_lib);
-}
+// Do not freeLibrary(m_lib) here: this object lives in the module being
+// freed. Unloading it from the destructor unmaps the code that finishes the
+// delete. anariUnloadLibrary() frees the handle after the object is destroyed.
+LibraryImpl::~LibraryImpl() = default;
 
 ANARIDevice LibraryImpl::newInitializedDevice(
     const char *subtype, ANARIParameterValue *)
@@ -236,6 +234,11 @@ const void *LibraryImpl::defaultStatusCBUserPtr() const
 ANARILibrary LibraryImpl::this_library() const
 {
   return (ANARILibrary)this;
+}
+
+void *LibraryImpl::libraryHandle() const
+{
+  return m_lib;
 }
 
 ANARI_TYPEFOR_DEFINITION(LibraryImpl *);
