@@ -135,10 +135,6 @@ void HdAnariLight::Sync(HdSceneDelegate *sceneDelegate,
 
         anari::setAndReleaseParameter(
             device_, light_, "intensityDistribution", array);
-      } else {
-        TF_RUNTIME_ERROR("Failed to open texture file `%s` for `%s`, ignoring",
-            textureFile.GetResolvedPath().c_str(),
-            GetId().GetText());
       }
     } else if (lightType_ == HdPrimTypeTokens->diskLight) {
       float radius =
@@ -175,13 +171,15 @@ void HdAnariLight::Sync(HdSceneDelegate *sceneDelegate,
               ANARI_FLOAT32_VEC3);
           anari::setAndReleaseParameter(device_, light_, "radiance", array);
         } else {
-          TF_RUNTIME_ERROR(
-              "Failed to open texture file `%s` for `%s`, ignoring",
-              textureFilePath.GetResolvedPath().c_str(),
+          // No resolvable HDRI: keep the uniform radiance set at construction
+          // so the dome acts as a constant environment instead of aborting.
+          TF_WARN("No usable texture for dome light `%s`; "
+                  "falling back to uniform radiance",
               GetId().GetText());
         }
       } else {
-        TF_RUNTIME_ERROR("Unsupported hdri texture format `%s` for `%s`",
+        TF_WARN("Unsupported hdri texture format `%s` for `%s`; "
+                "falling back to uniform radiance",
             textureFormatTk.GetText(),
             GetId().GetText());
       }
@@ -197,10 +195,6 @@ void HdAnariLight::Sync(HdSceneDelegate *sceneDelegate,
 
         anari::setAndReleaseParameter(
             device_, light_, "intensityDistribution", array);
-      } else {
-        TF_RUNTIME_ERROR("Failed to open texture file `%s` for `%s`, ignoring",
-            textureFile.GetResolvedPath().c_str(),
-            GetId().GetText());
       }
     }
     anari::commitParameters(device_, light_);
