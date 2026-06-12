@@ -49,6 +49,7 @@ class HdAnariMesh final : public HdAnariGeometry
   void Finalize(HdRenderParam *renderParam_) override;
 
  protected:
+  bool HasMainGeometry() const override;
   HdGeomSubsets GetGeomSubsets(
       HdSceneDelegate *sceneDelegate, HdDirtyBits *dirtyBits) override;
   HdAnariGeometry::GeomSpecificPrimvars GetGeomSpecificPrimvars(

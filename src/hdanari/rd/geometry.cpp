@@ -712,8 +712,9 @@ void HdAnariGeometry::Sync(HdSceneDelegate *sceneDelegate,
 
   // Handle anari objects creation
   std::vector<anari::Instance> instances;
-  if (geomSubsetInfos.empty()) {
-    //  Use main geom is no subset is defined.
+  // Build the main geometry when no subset is defined, or when subsets leave
+  // some faces uncovered (those remaining faces use the prim's own material).
+  if (geomSubsetInfos.empty() || HasMainGeometry()) {
     geomSubsetInfos.insert({GetId(), mainGeomInfo});
   }
 

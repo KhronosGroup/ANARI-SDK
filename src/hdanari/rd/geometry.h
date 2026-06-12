@@ -120,6 +120,14 @@ class HdAnariGeometry : public HdMesh
     return {};
   }
 
+  // Whether a "main" geometry (the prim's own material) should be built in
+  // addition to any geomsubsets. True unless a subset partition covers every
+  // face, in which case there is nothing left for the main material.
+  virtual bool HasMainGeometry() const
+  {
+    return true;
+  }
+
  private:
   // Data //
   bool _populated{false};
