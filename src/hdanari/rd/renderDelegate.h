@@ -26,9 +26,11 @@ class HdAnariRenderParam;
   (debugMethod) \
   (denoise) \
   (maxRayDepth) \
+  (exposure) \
   (pixelSamples) \
   (renderSubtype) \
-  (sampleLimit)
+  (sampleLimit) \
+  (tonemap)
 // clang-format on
 
 TF_DECLARE_PUBLIC_TOKENS(
