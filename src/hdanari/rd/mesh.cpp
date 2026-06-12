@@ -122,34 +122,62 @@ void HdAnariMesh::Sync(HdSceneDelegate *sceneDelegate,
       // We go a slightly different path here.
       // In order to be able to share faceVarying and face primvars between
       // subsets, we generate degenerate triangles for triangles not belonging
-      // to the subset, so all topology have the same size.
-      for (auto subset : geomsubsets_) {
-        auto id = subset.id;
+      // to the subset, so all topology have the same size. Seed from the first
+      // index; when the mesh triangulates to nothing the seed is unused (the
+      // built index arrays are empty), so avoid indexing an empty array.
+      const GfVec3i degenerate = triangulatedIndices_.empty()
+          ? GfVec3i(0)
+          : GfVec3i(triangulatedIndices_[trianglesStarts[0]][0]);
 
-        // Fill with a degenerate triangle, that is using vertices from the
-        // actual geomsubset so its extent stays valid.
-        VtVec3iArray indices(triangulatedIndices_.size(),
-            GfVec3i(triangulatedIndices_[trianglesStarts[0]][0]));
+      // Track which faces a subset claims so we can render the remainder (faces
+      // covered by no subset) with the prim's own material below.
+      std::vector<bool> faceCovered(trianglesCounts.size(), false);
 
-        for (auto i : subset.indices) {
-          auto trianglesStart = trianglesStarts[i];
-          auto trianglesCount = trianglesCounts[i];
-
-          for (auto i = 0; i < trianglesCount; ++i) {
-            indices[trianglesStart + i] =
-                triangulatedIndices_[trianglesStart + i];
+      auto buildTriangles = [&](const auto &faceIndices) {
+        VtVec3iArray indices(triangulatedIndices_.size(), degenerate);
+        for (auto faceIndex : faceIndices) {
+          auto trianglesStart = trianglesStarts[faceIndex];
+          auto trianglesCount = trianglesCounts[faceIndex];
+          for (auto t = 0; t < trianglesCount; ++t) {
+            indices[trianglesStart + t] =
+                triangulatedIndices_[trianglesStart + t];
           }
         }
+        return _GetAttributeArray(VtValue(indices), ANARI_UINT32_VEC3);
+      };
 
-        auto subsetTriangles =
-            _GetAttributeArray(VtValue(indices), ANARI_UINT32_VEC3);
-        geomSubsetTriangles_[id] = subsetTriangles;
+      for (auto subset : geomsubsets_) {
+        for (auto faceIndex : subset.indices)
+          faceCovered[faceIndex] = true;
+        geomSubsetTriangles_[subset.id] = buildTriangles(subset.indices);
       }
+
+      // A geomsubset partition need not cover every face. Faces left over use
+      // the prim's own material; without this they would never be rendered.
+      if (auto it = geomSubsetTriangles_.find(GetId());
+          it != cend(geomSubsetTriangles_)) {
+        anari::release(device_, it->second);
+        geomSubsetTriangles_.erase(it);
+      }
+      VtIntArray remainderFaces;
+      for (size_t faceIndex = 0; faceIndex < faceCovered.size(); ++faceIndex) {
+        if (!faceCovered[faceIndex])
+          remainderFaces.push_back(int(faceIndex));
+      }
+      if (!remainderFaces.empty())
+        geomSubsetTriangles_[GetId()] = buildTriangles(remainderFaces);
     }
   }
 
   // Call the main geometry sync.
   HdAnariGeometry::Sync(sceneDelegate, renderParam_, dirtyBits, reprToken);
+}
+
+bool HdAnariMesh::HasMainGeometry() const
+{
+  // Present either when there are no subsets (full triangulation) or when a
+  // subset partition leaves uncovered faces (the remainder triangle set).
+  return geomSubsetTriangles_.count(GetId()) > 0;
 }
 
 HdGeomSubsets HdAnariMesh::GetGeomSubsets(
