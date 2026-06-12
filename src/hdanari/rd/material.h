@@ -76,6 +76,13 @@ struct HdAnariMaterial : public HdMaterial
 
   anari::Device device_{};
   anari::Material material_{};
+  // material_ may point at the render param's shared default material (when the
+  // network has no usable surface terminal) or at a cache-shared MDL material.
+  // Only release material_ when we actually created it (ownsMaterial_).
+  bool ownsMaterial_{false};
+  // Non-empty when material_ is a reference into the render param's shared MDL
+  // material cache; released through the cache, not directly.
+  std::string mdlCacheKey_{};
 
   MaterialType materialType_{MaterialType::Matte};
 
