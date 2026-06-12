@@ -13,6 +13,7 @@
 #include <pxr/base/tf/staticData.h>
 #include <pxr/base/vt/value.h>
 #include <pxr/imaging/cameraUtil/framing.h>
+#include <pxr/imaging/hd/camera.h>
 #include <pxr/imaging/hd/debugCodes.h>
 #include <pxr/imaging/hd/renderDelegate.h>
 #include <anari/anari_cpp.hpp>
@@ -126,6 +127,11 @@ void HdAnariRenderPass::_Execute(
     TfTokenVector const &renderTags)
 {
   if (_renderParam) {
+    // UsdGeomCamera exposure travels with the scene; fold its linear scale in
+    // alongside the 'exposure' render setting. Defaults to 1 (neutral).
+    if (const HdCamera *camera = renderPassState->GetCamera())
+      _cameraExposureScale = camera->GetLinearExposureScale();
+
     bool sceneChanged = false;
     sceneChanged |= _UpdateFrame(
         _GetDataWindow(renderPassState), renderPassState->GetAovBindings());
@@ -219,6 +225,20 @@ bool HdAnariRenderPass::_UpdateRenderer()
           _anari.renderer,
           "method",
           debugMethod.UncheckedGet<std::string>().c_str());
+    }
+
+    // Exposure and tonemapping are applied by hdanari to the color AOV, not
+    // by the ANARI renderer, so these are read but not forwarded to the device.
+    if (const auto exposure = renderDelegate->GetRenderSetting(
+        HdAnariRenderSettingsTokens->exposure);
+        exposure.CanCast<float>()) {
+      _exposure = VtValue::Cast<float>(exposure).UncheckedGet<float>();
+    }
+
+    if (const auto tonemap = renderDelegate->GetRenderSetting(
+        HdAnariRenderSettingsTokens->tonemap);
+        tonemap.IsHolding<bool>()) {
+      _tonemap = tonemap.UncheckedGet<bool>();
     }
 
     anari::commitParameters(d, _anari.renderer);
@@ -366,9 +386,11 @@ void HdAnariRenderPass::_WriteAovs(
   if (!anari::isReady(d, _anari.frame))
     return;
 
+  const float exposureScale = std::exp2(_exposure) * _cameraExposureScale;
   for (auto &aov : aovBindings) {
     auto *b = (HdAnariRenderBuffer *)aov.renderBuffer;
-    b->CopyFromAnariFrame(d, _anari.frame, aov.aovName, aov.clearValue);
+    b->CopyFromAnariFrame(
+        d, _anari.frame, aov.aovName, aov.clearValue, exposureScale, _tonemap);
   }
 
   // A scene change this frame restarted accumulation, so report progress as

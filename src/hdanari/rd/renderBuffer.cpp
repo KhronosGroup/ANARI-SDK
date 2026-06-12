@@ -7,6 +7,9 @@
 #include <pxr/base/gf/half.h>
 #include <pxr/imaging/hd/tokens.h>
 
+#include <algorithm>
+#include <cstring>
+
 PXR_NAMESPACE_OPEN_SCOPE
 
 // Helper functions ///////////////////////////////////////////////////////////
@@ -84,6 +87,33 @@ static void _WriteOutput(
 static size_t _GetBufferSize(GfVec2i const &dims, HdFormat format)
 {
   return dims[0] * dims[1] * HdDataSizeOfFormat(format);
+}
+
+// ACES filmic tonemap (Narkowicz approximation). Compresses linear HDR
+// radiance into [0, 1] so bright (e.g. dome-lit) scenes don't clamp to white.
+static float _AcesToneMap(float x)
+{
+  constexpr float a = 2.51f;
+  constexpr float b = 0.03f;
+  constexpr float c = 2.43f;
+  constexpr float d = 0.59f;
+  constexpr float e = 0.14f;
+  const float y = (x * (a * x + b)) / (x * (c * x + d) + e);
+  return std::clamp(y, 0.0f, 1.0f);
+}
+
+// Apply exposure (linear scale) and optional ACES tonemapping to the RGB of a
+// float32 RGBA color buffer in place, preserving alpha.
+static void _ProcessColorFloat4(
+    uint8_t *data, size_t pixelCount, float exposureScale, bool tonemap)
+{
+  auto *rgba = reinterpret_cast<float *>(data);
+  for (size_t i = 0; i < pixelCount; ++i) {
+    for (int c = 0; c < 3; ++c) {
+      const float v = rgba[4 * i + c] * exposureScale;
+      rgba[4 * i + c] = tonemap ? _AcesToneMap(v) : v;
+    }
+  }
 }
 
 static HdFormat _GetSampleFormat(HdFormat format)
@@ -204,7 +234,9 @@ void HdAnariRenderBuffer::SetConverged(bool cv)
 void HdAnariRenderBuffer::CopyFromAnariFrame(anari::Device d,
     anari::Frame f,
     const TfToken &aovName,
-    const VtValue &clearValue)
+    const VtValue &clearValue,
+    float exposureScale,
+    bool tonemap)
 {
   auto setData = [&](const char *channel, bool checkPixelType) -> bool {
     auto fb = anari::map<void>(d, f, channel);
@@ -242,9 +274,14 @@ void HdAnariRenderBuffer::CopyFromAnariFrame(anari::Device d,
 
   bool dataWritten = false;
 
-  if (aovName == HdAovTokens->color)
+  if (aovName == HdAovTokens->color) {
     dataWritten = setData("channel.color", true);
-  else if (aovName == HdAovTokens->cameraDepth || aovName == HdAovTokens->depth)
+    const bool needsProcessing = tonemap || exposureScale != 1.0f;
+    if (dataWritten && needsProcessing && _format == HdFormatFloat32Vec4)
+      _ProcessColorFloat4(
+          _buffer.data(), size_t(_width) * _height, exposureScale, tonemap);
+  } else if (aovName == HdAovTokens->cameraDepth
+      || aovName == HdAovTokens->depth)
     dataWritten = setData("channel.depth", true);
   else if (aovName == HdAovTokens->elementId)
     dataWritten = setData("channel.primitiveId", false);

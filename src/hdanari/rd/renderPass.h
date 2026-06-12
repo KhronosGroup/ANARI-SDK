@@ -64,6 +64,9 @@ struct HdAnariRenderPass final : public HdRenderPass
 
   int _lastSettingsVersion{-1};
   int _lastSceneVersion{-1};
+  float _exposure{0.0f};
+  float _cameraExposureScale{1.0f};
+  bool _tonemap{false};
 
   struct AnariObjects
   {

@@ -141,6 +141,15 @@ void HdAnariRenderDelegate::Initialize()
   _settingDescriptors.push_back(
       {"Denoise", HdAnariRenderSettingsTokens->denoise, VtValue(false)});
 
+  // VisRTX outputs linear radiance with no display tonemapping or exposure.
+  // Exposure (EV stops) scales the color AOV by 2^exposure to bring an
+  // over/under-lit scene into range; tonemap then applies an ACES filmic
+  // curve to compress remaining highlights. Both default to off/neutral.
+  _settingDescriptors.push_back(
+      {"Exposure", HdAnariRenderSettingsTokens->exposure, VtValue(0.0f)});
+  _settingDescriptors.push_back(
+      {"Tonemap", HdAnariRenderSettingsTokens->tonemap, VtValue(false)});
+
   _settingDescriptors.push_back({"subtype",
       HdAnariRenderSettingsTokens->renderSubtype,
       VtValue("default")});
