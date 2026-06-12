@@ -170,6 +170,8 @@ class HdAnariGeometry : public HdMesh
     anari::Surface surface{};
     anari::Group group{};
     anari::Instance instance{};
+    // Last material bound to the surface, so we only re-commit it on change.
+    anari::Material material{};
   };
 
   using GeomSubsetToAnariInstanceDesc =
