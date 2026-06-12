@@ -13,6 +13,7 @@
 #include <anari/anari_cpp/anari_cpp_impl.hpp>
 // pxr
 #include <pxr/base/gf/vec3f.h>
+#include <pxr/base/gf/vec3i.h>
 #include <pxr/base/gf/vec4f.h>
 #include <pxr/base/tf/diagnostic.h>
 #include <pxr/base/tf/staticData.h>
@@ -25,11 +26,9 @@
 #include <pxr/imaging/hd/geomSubset.h>
 #include <pxr/imaging/hd/meshUtil.h>
 #include <pxr/imaging/hd/sceneDelegate.h>
-#include <pxr/imaging/hd/smoothNormals.h>
 #include <pxr/imaging/hd/tokens.h>
 #include <pxr/imaging/hd/types.h>
 #include <pxr/imaging/hd/vtBufferSource.h>
-#include <pxr/imaging/pxOsd/tokens.h>
 // std
 #include <cassert>
 #include <iterator>
@@ -74,7 +73,6 @@ void HdAnariMesh::Sync(HdSceneDelegate *sceneDelegate,
 
     topology_ = HdMeshTopology(GetMeshTopology(sceneDelegate), 0);
     meshUtil_ = std::make_unique<HdAnariMeshUtil>(&topology_, GetId());
-    adjacency_.reset();
 
     meshUtil_->ComputeTriangleIndices(
         &triangulatedIndices_, &trianglePrimitiveParams_);
@@ -186,6 +184,55 @@ HdGeomSubsets HdAnariMesh::GetGeomSubsets(
   return geomsubsets_;
 }
 
+// Per-corner (faceVarying) normals with crease splitting: a vertex's incident
+// face normals are accumulated only within an angle threshold, so smooth
+// regions stay smooth (sphere) while sharp features keep hard edges (cube
+// edges, cone/cylinder caps). USD ships no normals for implicit surfaces, and
+// plain adjacency averaging flattens capped shapes by blending the cap and
+// side normals into their shared rim vertices.
+static constexpr float kCosCreaseThreshold = 0.342f; // cos(70 degrees)
+
+static GfVec3f _SafeNormalize(const GfVec3f &v)
+{
+  const float len = v.GetLength();
+  return len > 0.0f ? v / len : GfVec3f(0.0f);
+}
+
+static VtVec3fArray _ComputeCreaseNormals(
+    const VtVec3fArray &points, const VtVec3iArray &triangles)
+{
+  const size_t numTris = std::size(triangles);
+
+  std::vector<GfVec3f> faceNormal(numTris); // normalized, for the angle test
+  std::vector<GfVec3f> faceWeighted(numTris); // area-weighted, for accumulation
+  for (size_t t = 0; t < numTris; ++t) {
+    const GfVec3i &tri = triangles[t];
+    const GfVec3f &p0 = points[tri[0]];
+    const GfVec3f cross = GfCross(points[tri[1]] - p0, points[tri[2]] - p0);
+    faceWeighted[t] = cross; // length is proportional to twice the area
+    faceNormal[t] = _SafeNormalize(cross);
+  }
+
+  std::vector<std::vector<int>> incidentTriangles(std::size(points));
+  for (size_t t = 0; t < numTris; ++t)
+    for (int c = 0; c < 3; ++c)
+      incidentTriangles[triangles[t][c]].push_back(int(t));
+
+  VtVec3fArray normals(3 * numTris);
+  for (size_t t = 0; t < numTris; ++t) {
+    for (int c = 0; c < 3; ++c) {
+      GfVec3f acc(0.0f);
+      for (int other : incidentTriangles[triangles[t][c]]) {
+        if (GfDot(faceNormal[t], faceNormal[other]) >= kCosCreaseThreshold)
+          acc += faceWeighted[other];
+      }
+      const GfVec3f n = _SafeNormalize(acc);
+      normals[3 * t + c] = (n == GfVec3f(0.0f)) ? faceNormal[t] : n;
+    }
+  }
+  return normals;
+}
+
 HdAnariGeometry::GeomSpecificPrimvars HdAnariMesh::GetGeomSpecificPrimvars(
     HdSceneDelegate *sceneDelegate,
     HdDirtyBits *dirtyBits,
@@ -205,33 +252,23 @@ HdAnariGeometry::GeomSpecificPrimvars HdAnariMesh::GetGeomSpecificPrimvars(
         {HdAnariTokens->primitiveIndex, geomSubsetTriangles_[geomsetId]});
   }
 
-  // Normals smoothing if needed.
-  const auto &normals = sceneDelegate->Get(GetId(), HdTokens->normals);
-  bool normalIsAuthored =
+  // When the prim authors no normals, synthesize crease-aware per-corner
+  // normals. Implicit surfaces (sphere, cube, cone, cylinder, capsule, plane)
+  // arrive with none, and so do polygonal meshes that omit them.
+  const bool normalIsAuthored =
       allPrimvars.find(HdTokens->normals) != std::cend(allPrimvars);
-  bool doSmoothNormals = (topology_.GetScheme() != PxOsdOpenSubdivTokens->none)
-      && (topology_.GetScheme() != PxOsdOpenSubdivTokens->bilinear);
-
-  if (!normalIsAuthored && doSmoothNormals) {
+  if (!normalIsAuthored) {
     if (HdChangeTracker::IsTopologyDirty(*dirtyBits, GetId())
         || HdChangeTracker::IsPrimvarDirty(
             *dirtyBits, GetId(), HdTokens->points)) {
-      if (!adjacency_.has_value()) {
-        adjacency_.emplace();
-        adjacency_->BuildAdjacencyTable(&topology_);
-      }
-
       anari::release(device_, normals_);
-
-      if (TF_VERIFY(std::size(points) > 0)) {
-        const VtVec3fArray &normals = Hd_SmoothNormals::ComputeSmoothNormals(
-            &*adjacency_, std::size(points), std::cbegin(points));
-        normals_ = _GetAttributeArray(VtValue(normals));
-        primvars.push_back({HdAnariTokens->vertexNormal, normals_});
-      } else {
-        normals_ = {};
-      }
+      normals_ = (std::size(points) > 0 && !triangulatedIndices_.empty())
+          ? _GetAttributeArray(
+                VtValue(_ComputeCreaseNormals(points, triangulatedIndices_)))
+          : anari::Array1D{};
     }
+    if (normals_)
+      primvars.push_back({HdAnariTokens->faceVaryingNormal, normals_});
   } else {
     anari::release(device_, normals_);
     normals_ = {};
