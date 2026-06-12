@@ -20,13 +20,11 @@
 #include <pxr/imaging/hd/renderDelegate.h>
 #include <pxr/imaging/hd/sceneDelegate.h>
 #include <pxr/imaging/hd/types.h>
-#include <pxr/imaging/hd/vertexAdjacency.h>
 #include <pxr/imaging/hf/perfLog.h>
 #include <pxr/pxr.h>
 #include <pxr/usd/sdf/path.h>
 // std
 #include <memory>
-#include <optional>
 #include <unordered_map>
 
 PXR_NAMESPACE_OPEN_SCOPE
@@ -70,7 +68,6 @@ class HdAnariMesh final : public HdAnariGeometry
 
   HdMeshTopology topology_;
   std::unique_ptr<HdAnariMeshUtil> meshUtil_;
-  std::optional<Hd_VertexAdjacency> adjacency_;
 
   HdGeomSubsets geomsubsets_;
 

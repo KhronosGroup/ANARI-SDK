@@ -8,6 +8,7 @@ project_add_library(SHARED
   anariTokens.cpp
   debugCodes.cpp
   geometry.cpp
+  implicitSurfaceSceneIndexPlugin.cpp
   instancer.cpp
   light.cpp
   material.cpp
