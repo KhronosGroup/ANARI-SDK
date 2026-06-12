@@ -126,21 +126,25 @@ void HdAnariRenderPass::_Execute(
     TfTokenVector const &renderTags)
 {
   if (_renderParam) {
-    _UpdateFrame(
+    bool sceneChanged = false;
+    sceneChanged |= _UpdateFrame(
         _GetDataWindow(renderPassState), renderPassState->GetAovBindings());
-    _UpdateRenderer();
-    _UpdateCamera(renderPassState->GetWorldToViewMatrix(),
+    sceneChanged |= _UpdateRenderer();
+    sceneChanged |= _UpdateCamera(renderPassState->GetWorldToViewMatrix(),
         renderPassState->GetProjectionMatrix());
-    _UpdateWorld();
-    _WriteAovs(renderPassState->GetAovBindings());
+    sceneChanged |= _UpdateWorld();
+    _WriteAovs(renderPassState->GetAovBindings(), sceneChanged);
   }
 }
 
-void HdAnariRenderPass::_UpdateRenderer()
+bool HdAnariRenderPass::_UpdateRenderer()
 {
   HdRenderDelegate *renderDelegate = GetRenderIndex()->GetRenderDelegate();
   int currentSettingsVersion = renderDelegate->GetRenderSettingsVersion();
-  if (_lastSettingsVersion != currentSettingsVersion) {
+  if (_lastSettingsVersion == currentSettingsVersion)
+    return false;
+
+  {
     auto d = _renderParam->GetANARIDevice();
 
     if (const auto renderSubtype = renderDelegate->GetRenderSetting(
@@ -221,12 +225,15 @@ void HdAnariRenderPass::_UpdateRenderer()
 
     _lastSettingsVersion = currentSettingsVersion;
   }
+
+  return true;
 }
 
-void HdAnariRenderPass::_UpdateFrame(
+bool HdAnariRenderPass::_UpdateFrame(
     const GfRect2i &size, const HdRenderPassAovBindingVector &aovBindings)
 {
   auto d = _renderParam->GetANARIDevice();
+  bool changed = false;
 
   if (_frameSize != size) {
     _frameSize = size;
@@ -234,6 +241,7 @@ void HdAnariRenderPass::_UpdateFrame(
         (uint32_t)size.GetWidth(), (uint32_t)size.GetHeight()};
     anari::setParameter(d, _anari.frame, "size", s);
     anari::commitParameters(d, _anari.frame);
+    changed = true;
   }
 
   bool aovDirty = (_aovBindings.empty() || _aovBindings != aovBindings);
@@ -251,18 +259,24 @@ void HdAnariRenderPass::_UpdateFrame(
         _clearColor = clearColor;
         anari::setParameter(d, _anari.renderer, "background", _clearColor);
         anari::commitParameters(d, _anari.renderer);
+        changed = true;
       }
       break;
     }
   }
+
+  return changed;
 }
 
-void HdAnariRenderPass::_UpdateCamera(
+bool HdAnariRenderPass::_UpdateCamera(
     const GfMatrix4d &view, const GfMatrix4d &proj)
 {
   auto d = _renderParam->GetANARIDevice();
 
-  if (_camera.view != view || _camera.proj != proj) {
+  if (_camera.view == view && _camera.proj == proj)
+    return false;
+
+  {
     _camera.view = view;
     _camera.proj = proj;
     _camera.invView = view.GetInverse();
@@ -290,13 +304,15 @@ void HdAnariRenderPass::_UpdateCamera(
 
     anari::commitParameters(d, _anari.camera);
   }
+
+  return true;
 }
 
-void HdAnariRenderPass::_UpdateWorld()
+bool HdAnariRenderPass::_UpdateWorld()
 {
   auto sceneVersion = _renderParam->SceneVersion();
   if (sceneVersion <= _lastSceneVersion)
-    return;
+    return false;
 
   std::vector<anari::Instance> instances;
 
@@ -316,10 +332,31 @@ void HdAnariRenderPass::_UpdateWorld()
   anari::commitParameters(d, _anari.world);
 
   _lastSceneVersion = sceneVersion;
+
+  return true;
+}
+
+bool HdAnariRenderPass::_FrameIsConverged() const
+{
+  auto d = _renderParam->GetANARIDevice();
+
+  // Devices that don't report sample progress render a complete frame in a
+  // single pass, so a finished frame is already converged.
+  int numSamples = 0;
+  if (!anari::getProperty(
+          d, _anari.frame, "numSamples", numSamples, ANARI_WAIT))
+    return true;
+
+  HdRenderDelegate *renderDelegate = GetRenderIndex()->GetRenderDelegate();
+  const VtValue sp = renderDelegate->GetRenderSetting(
+      HdAnariRenderSettingsTokens->sampleLimit);
+  const int sampleLimit = sp.IsHolding<int>() ? sp.UncheckedGet<int>() : 0;
+
+  return sampleLimit > 0 && numSamples >= sampleLimit;
 }
 
 void HdAnariRenderPass::_WriteAovs(
-    const HdRenderPassAovBindingVector &aovBindings)
+    const HdRenderPassAovBindingVector &aovBindings, bool sceneChanged)
 {
   auto d = _renderParam->GetANARIDevice();
   if (!anari::isReady(d, _anari.frame))
@@ -330,7 +367,18 @@ void HdAnariRenderPass::_WriteAovs(
     b->CopyFromAnariFrame(d, _anari.frame, aov.aovName, aov.clearValue);
   }
 
-  anari::render(d, _anari.frame);
+  // A scene change this frame restarted accumulation, so report progress as
+  // unconverged regardless of the (now stale) sample count.
+  const bool converged = !sceneChanged && _FrameIsConverged();
+  for (auto &aov : aovBindings) {
+    static_cast<HdAnariRenderBuffer *>(aov.renderBuffer)
+        ->SetConverged(converged);
+  }
+
+  // Kick the next accumulation pass only while there is more work to do;
+  // re-rendering a converged frame would never let usdrecord terminate.
+  if (!converged)
+    anari::render(d, _anari.frame);
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE
