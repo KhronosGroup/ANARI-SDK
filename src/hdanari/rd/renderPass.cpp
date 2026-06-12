@@ -336,22 +336,26 @@ bool HdAnariRenderPass::_UpdateWorld()
   return true;
 }
 
-bool HdAnariRenderPass::_FrameIsConverged() const
+bool HdAnariRenderPass::_UpdateProgress()
 {
   auto d = _renderParam->GetANARIDevice();
 
-  // Devices that don't report sample progress render a complete frame in a
-  // single pass, so a finished frame is already converged.
   int numSamples = 0;
-  if (!anari::getProperty(
-          d, _anari.frame, "numSamples", numSamples, ANARI_WAIT))
-    return true;
+  const bool hasNumSamples = anari::getProperty(
+      d, _anari.frame, "numSamples", numSamples, ANARI_WAIT);
 
   HdRenderDelegate *renderDelegate = GetRenderIndex()->GetRenderDelegate();
   const VtValue sp = renderDelegate->GetRenderSetting(
       HdAnariRenderSettingsTokens->sampleLimit);
   const int sampleLimit = sp.IsHolding<int>() ? sp.UncheckedGet<int>() : 0;
 
+  // Devices that don't report sample progress render a complete frame in a
+  // single pass, so a finished frame is already fully converged.
+  const int completedSamples = hasNumSamples ? numSamples : sampleLimit;
+  _renderParam->SetProgress(completedSamples, sampleLimit);
+
+  if (!hasNumSamples)
+    return true;
   return sampleLimit > 0 && numSamples >= sampleLimit;
 }
 
@@ -369,7 +373,7 @@ void HdAnariRenderPass::_WriteAovs(
 
   // A scene change this frame restarted accumulation, so report progress as
   // unconverged regardless of the (now stale) sample count.
-  const bool converged = !sceneChanged && _FrameIsConverged();
+  const bool converged = !sceneChanged && _UpdateProgress();
   for (auto &aov : aovBindings) {
     static_cast<HdAnariRenderBuffer *>(aov.renderBuffer)
         ->SetConverged(converged);

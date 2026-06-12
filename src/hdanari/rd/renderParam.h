@@ -69,6 +69,12 @@ class HdAnariRenderParam final : public HdRenderParam
   int SceneVersion() const;
   void MarkNewSceneVersion();
 
+  // Accumulation progress, published by the render pass and read back by the
+  // render delegate's GetRenderStats().
+  void SetProgress(int completedSamples, int sampleLimit);
+  int CompletedSamples() const;
+  int SampleLimit() const;
+
  private:
   anari::Device _device{nullptr};
   anari::Material _material{nullptr};
@@ -79,6 +85,8 @@ class HdAnariRenderParam final : public HdRenderParam
   GeometryList _geometries;
   LightList _lights;
   std::atomic<int> _sceneVersion{0};
+  std::atomic<int> _completedSamples{0};
+  std::atomic<int> _sampleLimit{0};
 };
 
 // Inlined definitions ////////////////////////////////////////////////////////
@@ -174,6 +182,23 @@ inline int HdAnariRenderParam::SceneVersion() const
 inline void HdAnariRenderParam::MarkNewSceneVersion()
 {
   _sceneVersion++;
+}
+
+inline void HdAnariRenderParam::SetProgress(
+    int completedSamples, int sampleLimit)
+{
+  _completedSamples.store(completedSamples);
+  _sampleLimit.store(sampleLimit);
+}
+
+inline int HdAnariRenderParam::CompletedSamples() const
+{
+  return _completedSamples.load();
+}
+
+inline int HdAnariRenderParam::SampleLimit() const
+{
+  return _sampleLimit.load();
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE

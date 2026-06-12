@@ -40,7 +40,9 @@ struct HdAnariRenderPass final : public HdRenderPass
       const GfRect2i &size, const HdRenderPassAovBindingVector &aovBindings);
   bool _UpdateCamera(const GfMatrix4d &invView, const GfMatrix4d &invProj);
   bool _UpdateWorld();
-  bool _FrameIsConverged() const;
+  // Publishes accumulation progress to the render param and returns whether
+  // the frame has reached its sample limit.
+  bool _UpdateProgress();
   void _WriteAovs(
       const HdRenderPassAovBindingVector &aovBindings, bool sceneChanged);
 
