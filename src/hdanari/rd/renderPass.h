@@ -33,12 +33,16 @@ struct HdAnariRenderPass final : public HdRenderPass
       TfTokenVector const &renderTags) override;
 
  private:
-  void _UpdateRenderer();
-  void _UpdateFrame(
+  // The _Update* helpers return true when they change ANARI state, which
+  // resets the device's sample accumulation and thus restarts convergence.
+  bool _UpdateRenderer();
+  bool _UpdateFrame(
       const GfRect2i &size, const HdRenderPassAovBindingVector &aovBindings);
-  void _UpdateCamera(const GfMatrix4d &invView, const GfMatrix4d &invProj);
-  void _UpdateWorld();
-  void _WriteAovs(const HdRenderPassAovBindingVector &aovBindings);
+  bool _UpdateCamera(const GfMatrix4d &invView, const GfMatrix4d &invProj);
+  bool _UpdateWorld();
+  bool _FrameIsConverged() const;
+  void _WriteAovs(
+      const HdRenderPassAovBindingVector &aovBindings, bool sceneChanged);
 
   std::shared_ptr<HdAnariRenderParam> _renderParam;
 
