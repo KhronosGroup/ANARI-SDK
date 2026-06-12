@@ -3,9 +3,9 @@
 
 #pragma once
 
+#include "anariTypes.h"
 #include "debugCodes.h"
 #include "geometry.h"
-#include "anariTypes.h"
 #include "light.h"
 #include "material.h"
 #include "materialTokens.h"
@@ -31,7 +31,10 @@
 #include <anari/anari_cpp/anari_cpp_impl.hpp>
 #include <atomic>
 #include <cassert>
+#include <functional>
 #include <mutex>
+#include <string>
+#include <unordered_map>
 #include <vector>
 
 PXR_NAMESPACE_OPEN_SCOPE
@@ -46,7 +49,8 @@ class HdAnariRenderParam final : public HdRenderParam
 {
  public:
   HdAnariRenderParam(anari::Device device,
-      HdAnariMaterial::MaterialType materialType = HdAnariMaterial::MaterialType::PhysicallyBased);
+      HdAnariMaterial::MaterialType materialType =
+          HdAnariMaterial::MaterialType::PhysicallyBased);
   ~HdAnariRenderParam() override;
 
   anari::Device GetANARIDevice() const;
@@ -75,11 +79,28 @@ class HdAnariRenderParam final : public HdRenderParam
   int CompletedSamples() const;
   int SampleLimit() const;
 
+  // Share one anari material across instances whose content (MDL source +
+  // parameters) is identical, so the device only compiles it and loads its
+  // textures once. `key` identifies the content; `create` builds the material
+  // on the first request. Balanced by ReleaseMdlMaterial.
+  anari::Material AcquireMdlMaterial(
+      const std::string &key, const std::function<anari::Material()> &create);
+  void ReleaseMdlMaterial(const std::string &key);
+
  private:
   anari::Device _device{nullptr};
   anari::Material _material{nullptr};
-  HdAnariMaterial::MaterialType _materialType{HdAnariMaterial::MaterialType::Matte};
+  HdAnariMaterial::MaterialType _materialType{
+      HdAnariMaterial::MaterialType::Matte};
   HdAnariMaterial::PrimvarBinding _primvarBinding;
+
+  struct MdlMaterialCacheEntry
+  {
+    anari::Material material;
+    int refCount;
+  };
+  std::mutex _mdlMaterialMutex;
+  std::unordered_map<std::string, MdlMaterialCacheEntry> _mdlMaterialCache;
 
   std::mutex _mutex;
   GeometryList _geometries;
@@ -113,9 +134,40 @@ inline HdAnariRenderParam::~HdAnariRenderParam()
   if (!_device)
     return;
 
+  for (auto &entry : _mdlMaterialCache)
+    anari::release(_device, entry.second.material);
+  _mdlMaterialCache.clear();
+
   anari::release(_device, _material);
   anari::release(_device, _device);
   _device = nullptr;
+}
+
+inline anari::Material HdAnariRenderParam::AcquireMdlMaterial(
+    const std::string &key, const std::function<anari::Material()> &create)
+{
+  std::lock_guard<std::mutex> guard(_mdlMaterialMutex);
+  auto it = _mdlMaterialCache.find(key);
+  if (it == cend(_mdlMaterialCache)) {
+    auto material = create();
+    if (!material)
+      return nullptr; // don't cache a failed creation and poison this key
+    it = _mdlMaterialCache.insert({key, {material, 0}}).first;
+  }
+  ++it->second.refCount;
+  return it->second.material;
+}
+
+inline void HdAnariRenderParam::ReleaseMdlMaterial(const std::string &key)
+{
+  std::lock_guard<std::mutex> guard(_mdlMaterialMutex);
+  auto it = _mdlMaterialCache.find(key);
+  if (it == cend(_mdlMaterialCache) || it->second.refCount == 0)
+    return;
+  if (--it->second.refCount == 0) {
+    anari::release(_device, it->second.material);
+    _mdlMaterialCache.erase(it);
+  }
 }
 
 inline anari::Device HdAnariRenderParam::GetANARIDevice() const
