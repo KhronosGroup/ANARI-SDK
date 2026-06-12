@@ -534,6 +534,18 @@ void HdAnariGeometry::Sync(HdSceneDelegate *sceneDelegate,
     }
   }
 
+  // Re-uploading/committing a geometry makes the device rebuild it (recompute
+  // tangents, rebuild the BVH). Native-instanced prototypes are flagged Varying
+  // and re-Synced every frame with no real change, so only touch the geometry
+  // when its own bound data changed. Use the rprim's geometry dirty bits only:
+  // instancer primvar dirtiness (transform, per-instance values) is bound on
+  // the instance, not the geometry, and must not trigger a geometry rebuild.
+  const bool geometryDataDirty = (*dirtyBits
+      & (HdChangeTracker::DirtyPoints | HdChangeTracker::DirtyNormals
+          | HdChangeTracker::DirtyTopology | HdChangeTracker::DirtyPrimvar
+          | HdChangeTracker::DirtyDisplayStyle | HdChangeTracker::DirtyWidths))
+      != 0;
+
   // Based on the above, gather needed primvars descriptors. To be used to
   // create primvars sources.
   // Compute primvars have precedence over regular primvars.
@@ -736,6 +748,9 @@ void HdAnariGeometry::Sync(HdSceneDelegate *sceneDelegate,
   // anari objects.
   for (auto &&[subsetId, geomInfo] : geomSubsetInfos) {
     auto &geometryDesc = geomSubsetGeometry_[subsetId];
+    const bool firstTime = !geometryDesc.instance;
+    const bool materialChanged =
+        !firstTime && geometryDesc.material != geomInfo.material;
 
     PrimvarStateDesc removedState;
     PrimvarStateDesc updatedState;
@@ -754,6 +769,7 @@ void HdAnariGeometry::Sync(HdSceneDelegate *sceneDelegate,
           device_, geometryDesc.surface, "id", uint32_t(GetPrimId()));
       anari::setParameter(
           device_, geometryDesc.surface, "material", geomInfo.material);
+      geometryDesc.material = geomInfo.material;
       anari::commitParameters(device_, geometryDesc.surface);
 
       geometryDesc.group = anari::newObject<anari::Group>(device_);
@@ -798,99 +814,111 @@ void HdAnariGeometry::Sync(HdSceneDelegate *sceneDelegate,
       newPrimvarsBinding = mainGeomInfo.primvarBinding;
     }
 
-    // FIXME: Do the same with displayOpacity and maybe others...
-    if (displayColorIsAuthored) {
-      // Make sure any previous default display color is removed so the actual
-      // authored one is used.
-      if (std::binary_search(cbegin(updatedPrimvars),
-              cend(updatedPrimvars),
-              HdTokens->displayColor)) {
-        // Clear the constant value so any other can be used instead
-        if (auto it = previousPrimvarsBinding.find(HdTokens->displayColor);
-            it != cend(previousPrimvarsBinding)) {
-          anari::unsetParameter(
-              device_, geometryDesc.geometry, it->second.GetText());
+    if (firstTime || geometryDataDirty || materialChanged) {
+      // FIXME: Do the same with displayOpacity and maybe others...
+      if (displayColorIsAuthored) {
+        // Make sure any previous default display color is removed so the actual
+        // authored one is used.
+        if (std::binary_search(cbegin(updatedPrimvars),
+                cend(updatedPrimvars),
+                HdTokens->displayColor)) {
+          // Clear the constant value so any other can be used instead
+          if (auto it = previousPrimvarsBinding.find(HdTokens->displayColor);
+              it != cend(previousPrimvarsBinding)) {
+            anari::unsetParameter(
+                device_, geometryDesc.geometry, it->second.GetText());
+          }
+        }
+      } else {
+        // If the material depends on displayColor, make sure we handle the case
+        // it is not authored.
+        if (auto it = newPrimvarsBinding.find(HdTokens->displayColor);
+            it != cend(newPrimvarsBinding)) {
+          anari::setParameter(device_,
+              geometryDesc.geometry,
+              it->second.GetText(),
+              GfVec4f(0.8f, 0.8f, 0.8f, 1.0f));
         }
       }
-    } else {
-      // If the material depends on displayColor, make sure we handle the case
-      // it is not authored.
-      if (auto it = newPrimvarsBinding.find(HdTokens->displayColor);
-          it != cend(newPrimvarsBinding)) {
-        anari::setParameter(device_,
-            geometryDesc.geometry,
-            it->second.GetText(),
-            GfVec4f(0.8f, 0.8f, 0.8f, 1.0f));
-      }
-    }
-    // Apply the changes to the geometry object
-    SyncAnariGeometry(device_,
-        geometryDesc.geometry,
-        primvarSource_,
-        newPrimvarsBinding,
-        previousPrimvarsBinding,
-
-        updatedState,
-        removedState);
-
-    // We do try and get them at each sync, as it is not clear when those are
-    // dirtied. The expectation is that the implementation of
-    // GetGeomSpecificPrimvars is doing the caching.
-    auto geomSpecificBindingPoints = GetGeomSpecificPrimvars(sceneDelegate,
-        dirtyBits,
-        TfToken::Set(cbegin(allPrimvars), cend(allPrimvars)),
-        points,
-        subsetId);
-
-    for (auto &&[bindingPoint, array] : geomSpecificBindingPoints) {
-      geomSpecificPrimvarBindings[subsetId].push_back(bindingPoint);
-      anari::setParameter(
-          device_, geometryDesc.geometry, bindingPoint.GetText(), array);
-    }
-
-    // Clear geomspecfic binding points set by previous sync that are no more
-    // used.
-    std::vector<TfToken> geomSpecificRemovedBindings;
-    std::set_difference(cbegin(geomSpecificPrimvarBindings_[subsetId]),
-        cend(geomSpecificPrimvarBindings_[subsetId]),
-        cbegin(geomSpecificPrimvarBindings[subsetId]),
-        cend(geomSpecificPrimvarBindings[subsetId]),
-        back_inserter(geomSpecificRemovedBindings));
-
-    for (const auto &bindingPoint : geomSpecificRemovedBindings) {
-      anari::unsetParameter(
-          device_, geometryDesc.geometry, bindingPoint.GetText());
-    }
-
-    anari::commitParameters(device_, geometryDesc.geometry);
-
-    // Material update
-    if (*dirtyBits & HdChangeTracker::DirtyMaterialId) {
-      anari::setParameter(
-          device_, geometryDesc.surface, "material", geomInfo.material);
-    }
-    anari::commitParameters(device_, geometryDesc.surface);
-
-    // Instance update
-    if (instancer) {
-      SyncAnariInstance(device_,
-          geometryDesc.instance,
+      // Apply the changes to the geometry object
+      SyncAnariGeometry(device_,
+          geometryDesc.geometry,
           primvarSource_,
           newPrimvarsBinding,
           previousPrimvarsBinding,
 
           updatedState,
           removedState);
+
+      // We do try and get them at each sync, as it is not clear when those are
+      // dirtied. The expectation is that the implementation of
+      // GetGeomSpecificPrimvars is doing the caching.
+      auto geomSpecificBindingPoints = GetGeomSpecificPrimvars(sceneDelegate,
+          dirtyBits,
+          TfToken::Set(cbegin(allPrimvars), cend(allPrimvars)),
+          points,
+          subsetId);
+
+      for (auto &&[bindingPoint, array] : geomSpecificBindingPoints) {
+        geomSpecificPrimvarBindings[subsetId].push_back(bindingPoint);
+        anari::setParameter(
+            device_, geometryDesc.geometry, bindingPoint.GetText(), array);
+      }
+
+      // Clear geomspecfic binding points set by previous sync that are no more
+      // used.
+      std::vector<TfToken> geomSpecificRemovedBindings;
+      std::set_difference(cbegin(geomSpecificPrimvarBindings_[subsetId]),
+          cend(geomSpecificPrimvarBindings_[subsetId]),
+          cbegin(geomSpecificPrimvarBindings[subsetId]),
+          cend(geomSpecificPrimvarBindings[subsetId]),
+          back_inserter(geomSpecificRemovedBindings));
+
+      for (const auto &bindingPoint : geomSpecificRemovedBindings) {
+        anari::unsetParameter(
+            device_, geometryDesc.geometry, bindingPoint.GetText());
+      }      anari::commitParameters(device_, geometryDesc.geometry);
     } else {
-      auto baseTransform = sceneDelegate->GetTransform(GetId());
-      anari::setParameter(device_,
-          geometryDesc.instance,
-          "transform",
-          GfMatrix4f(baseTransform));
-      anari::setParameter(device_, geometryDesc.instance, "id", 0u);
+      // Unchanged geometry: keep the existing anari object and carry the
+      // geom-specific binding bookkeeping forward for the next sync's diff.
+      geomSpecificPrimvarBindings[subsetId] =
+          geomSpecificPrimvarBindings_[subsetId];
     }
 
-    anari::commitParameters(device_, geometryDesc.instance);
+    // Material update: only re-commit the surface when the bound material
+    // actually changed. DirtyMaterialId is re-flagged every frame on Varying
+    // prims; committing the surface unconditionally would reset the renderer's
+    // accumulation each frame and prevent convergence.
+    if (geometryDesc.material != geomInfo.material) {      geometryDesc.material = geomInfo.material;
+      anari::setParameter(
+          device_, geometryDesc.surface, "material", geomInfo.material);
+      anari::commitParameters(device_, geometryDesc.surface);
+    }
+
+    // Instance update: only when the transform/instancing actually changed.
+    const bool instanceDirty = firstTime
+        || HdChangeTracker::IsTransformDirty(*dirtyBits, id)
+        || HdChangeTracker::IsInstancerDirty(*dirtyBits, id)
+        || HdChangeTracker::IsInstanceIndexDirty(*dirtyBits, id);
+    if (instanceDirty) {
+      if (instancer) {
+        SyncAnariInstance(device_,
+            geometryDesc.instance,
+            primvarSource_,
+            newPrimvarsBinding,
+            previousPrimvarsBinding,
+
+            updatedState,
+            removedState);
+      } else {
+        auto baseTransform = sceneDelegate->GetTransform(GetId());
+        anari::setParameter(device_,
+            geometryDesc.instance,
+            "transform",
+            GfMatrix4f(baseTransform));
+        anari::setParameter(device_, geometryDesc.instance, "id", 0u);
+      }      anari::commitParameters(device_, geometryDesc.instance);
+    }
     instances.push_back(geometryDesc.instance);
   }
 
