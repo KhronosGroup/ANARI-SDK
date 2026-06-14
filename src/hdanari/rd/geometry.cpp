@@ -1047,8 +1047,11 @@ anari::Array1D HdAnariGeometry::_GetAttributeArray(
   const void *data = nullptr;
   size_t size = 0;
 
-  if (!value.IsEmpty() && _GetVtArrayBufferData(value, &data, &size, &type)
-      && size) {
+  if (!value.IsEmpty() && _GetVtArrayBufferData(value, &data, &size, &type)) {
+    // A recognized but empty primvar (e.g. an empty-points/normals placeholder
+    // mesh) yields no attribute -- that's benign, not an error.
+    if (size == 0)
+      return {};
     // Don't assume any ownership of the data. Map can copy asap.
     if (overrideType != ANARI_UNKNOWN)
       type = overrideType;
@@ -1059,7 +1062,8 @@ anari::Array1D HdAnariGeometry::_GetAttributeArray(
     return array;
   }
 
-  TF_RUNTIME_ERROR("Cannot extract value buffer from VtValue");
+  TF_RUNTIME_ERROR("Cannot extract value buffer from VtValue of type '%s'",
+      value.GetTypeName().c_str());
   return {};
 }
 
