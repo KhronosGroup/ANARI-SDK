@@ -91,6 +91,13 @@ MdlSdrShaderNode *MdlSdrShaderNode::ParseSdrDiscoveryResult(
   TfScoped releaseFunctionDefinition(
       [&functionDefinition]() { functionDefinition.reset(); });
 
+  // getFunctionDefinition returns null when the module compiled but the
+  // requested function/material is absent -- e.g. a material whose body failed
+  // to compile (unresolved imports, missing textures). Bail instead of
+  // dereferencing null.
+  if (!functionDefinition)
+    return nullptr;
+
   if (functionDefinition->is_material()) {
     return new MdlMaterialSdrNode(
         discoveryResult, functionDefinition.get(), transaction.get());
@@ -275,8 +282,6 @@ SdrShaderPropertyUniquePtrVec MdlFunctionSdrNode::GetShaderProperties(
     mi::neuraylib::ITransaction *transaction)
 {
   SdrShaderPropertyUniquePtrVec properties;
-
-  return properties;
 
   // handle return type
   auto returnType =
