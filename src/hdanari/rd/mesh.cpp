@@ -6,6 +6,7 @@
 #include "anariTokens.h"
 #include "geometry.h"
 #include "renderParam.h"
+#include "subdivision.h"
 // anari
 #include <anari/anari.h>
 #include <anari/frontend/anari_enums.h>
@@ -68,10 +69,19 @@ void HdAnariMesh::Sync(HdSceneDelegate *sceneDelegate,
 {
   auto renderParam = static_cast<HdAnariRenderParam *>(renderParam_);
 
-  if (HdChangeTracker::IsTopologyDirty(*dirtyBits, GetId())) {
+  if (HdChangeTracker::IsTopologyDirty(*dirtyBits, GetId())
+      || (*dirtyBits & HdChangeTracker::DirtyDisplayStyle)) {
     auto rp = static_cast<HdAnariRenderParam *>(renderParam_);
 
-    topology_ = HdMeshTopology(GetMeshTopology(sceneDelegate), 0);
+    // Refine the control cage to the USD complexity-derived level. When the
+    // mesh isn't refinable (no scheme / level 0 / geom subsets) we keep the
+    // coarse topology. Refinement clears the subdivision scheme, so the result
+    // is treated as a plain polygonal mesh from here on.
+    const HdMeshTopology coarseTopology(GetMeshTopology(sceneDelegate), 0);
+    const int refineLevel = sceneDelegate->GetDisplayStyle(GetId()).refineLevel;
+    subdivision_ = HdAnariSubdivision::Create(coarseTopology, refineLevel);
+    topology_ =
+        subdivision_ ? subdivision_->refinedTopology() : coarseTopology;
     meshUtil_ = std::make_unique<HdAnariMeshUtil>(&topology_, GetId());
 
     meshUtil_->ComputeTriangleIndices(
@@ -255,16 +265,36 @@ HdAnariGeometry::GeomSpecificPrimvars HdAnariMesh::GetGeomSpecificPrimvars(
   // When the prim authors no normals, synthesize crease-aware per-corner
   // normals. Implicit surfaces (sphere, cube, cone, cylinder, capsule, plane)
   // arrive with none, and so do polygonal meshes that omit them.
-  const bool normalIsAuthored =
+  bool normalIsAuthored =
       allPrimvars.find(HdTokens->normals) != std::cend(allPrimvars);
+  // Subdivision refines vertex/varying primvars but drops face-varying ones
+  // (UpdatePrimvarSource returns empty), so face-varying authored normals would
+  // leave the refined surface with none. Treat them as unauthored and
+  // synthesize crease normals instead.
+  if (normalIsAuthored && subdivision_) {
+    for (const auto &pv : sceneDelegate->GetPrimvarDescriptors(
+             GetId(), HdInterpolationFaceVarying)) {
+      if (pv.name == HdTokens->normals) {
+        normalIsAuthored = false;
+        break;
+      }
+    }
+  }
   if (!normalIsAuthored) {
     if (HdChangeTracker::IsTopologyDirty(*dirtyBits, GetId())
+        || (*dirtyBits & HdChangeTracker::DirtyDisplayStyle)
         || HdChangeTracker::IsPrimvarDirty(
             *dirtyBits, GetId(), HdTokens->points)) {
+      // Normals are per refined corner, so compute them from the refined
+      // points that match triangulatedIndices_.
+      const VtVec3fArray refinedPoints = subdivision_
+          ? subdivision_->Refine(VtValue(points), HdInterpolationVertex)
+                .GetWithDefault<VtVec3fArray>(points)
+          : points;
       anari::release(device_, normals_);
-      normals_ = (std::size(points) > 0 && !triangulatedIndices_.empty())
-          ? _GetAttributeArray(
-                VtValue(_ComputeCreaseNormals(points, triangulatedIndices_)))
+      normals_ = (std::size(refinedPoints) > 0 && !triangulatedIndices_.empty())
+          ? _GetAttributeArray(VtValue(
+                _ComputeCreaseNormals(refinedPoints, triangulatedIndices_)))
           : anari::Array1D{};
     }
     if (normals_)
@@ -283,20 +313,31 @@ HdAnariGeometry::PrimvarSource HdAnariMesh::UpdatePrimvarSource(
     const TfToken &attributeName,
     const VtValue &value)
 {
+  // When refining, interpolate the coarse primvar onto the refined mesh so it
+  // stays consistent with the refined vertices and faces. Face-varying primvars
+  // are not refined in v1 and are dropped (Refine returns an empty value).
+  VtValue refinedValue;
+  if (subdivision_) {
+    refinedValue = subdivision_->Refine(value, interpolation);
+    if (refinedValue.IsEmpty())
+      return {};
+  }
+  const VtValue &pvValue = subdivision_ ? refinedValue : value;
+
   switch (interpolation) {
   case HdInterpolationConstant: {
-    if (value.IsArrayValued()) {
-      if (value.GetArraySize() == 0) {
+    if (pvValue.IsArrayValued()) {
+      if (pvValue.GetArraySize() == 0) {
         TF_RUNTIME_ERROR("Constant interpolation with no value.");
         return {};
       }
-      if (value.GetArraySize() > 1) {
+      if (pvValue.GetArraySize() > 1) {
         TF_RUNTIME_ERROR("Constant interpolation with more than one value.");
       }
     }
 
     GfVec4f v;
-    if (_GetVtValueAsAttribute(value, v)) {
+    if (_GetVtValueAsAttribute(pvValue, v)) {
       return v;
     } else {
       TF_RUNTIME_ERROR(
@@ -307,11 +348,11 @@ HdAnariGeometry::PrimvarSource HdAnariMesh::UpdatePrimvarSource(
   case HdInterpolationUniform: {
     VtValue perFace;
     meshUtil_->GatherPerFacePrimvar(
-        GetId(), attributeName, value, trianglePrimitiveParams_, &perFace);
+        GetId(), attributeName, pvValue, trianglePrimitiveParams_, &perFace);
     return _GetAttributeArray(perFace);
   }
   case HdInterpolationFaceVarying: {
-    HdVtBufferSource buffer(attributeName, value);
+    HdVtBufferSource buffer(attributeName, pvValue);
     VtValue triangulatedPrimvar;
     auto result =
         meshUtil_->ComputeTriangulatedFaceVaryingPrimvar(buffer.GetData(),
@@ -323,7 +364,7 @@ HdAnariGeometry::PrimvarSource HdAnariMesh::UpdatePrimvarSource(
     if (result == HdMeshComputationResult::Success) {
       return _GetAttributeArray(triangulatedPrimvar);
     } else if (result == HdMeshComputationResult::Unchanged) {
-      return _GetAttributeArray(value);
+      return _GetAttributeArray(pvValue);
     } else {
       TF_CODING_ERROR("     ERROR: could not triangulate face-varying data\n");
       return {};
@@ -340,7 +381,7 @@ HdAnariGeometry::PrimvarSource HdAnariMesh::UpdatePrimvarSource(
   }
   case HdInterpolationVarying:
   case HdInterpolationVertex: {
-    return _GetAttributeArray(value);
+    return _GetAttributeArray(pvValue);
   }
   case HdInterpolationInstance:
   case HdInterpolationCount:

@@ -26,6 +26,7 @@ project_add_library(SHARED
   rendererPlugin.cpp
   renderPass.cpp
   sampler.cpp
+  subdivision.cpp
 )
 # Visual Studio compiler might kill some symbols (arch_ctor_<name>) used to initialize USD plugins at load time.
 # Disabling that optimization for the renderPlugin file works around the issue.
@@ -42,7 +43,12 @@ if (MSVC)
   target_compile_options(${PROJECT_NAME} PRIVATE /Zc:preprocessor)
 endif()
 
+# OpenSubdiv (osdCPU) is used by subdivision.cpp for mesh refinement. USD
+# already depends on it, so it resolves to the same install.
+find_package(OpenSubdiv REQUIRED)
+
 project_link_libraries(PUBLIC anari::anari_static ${PXR_LIBRARIES})
+project_link_libraries(PRIVATE OpenSubdiv::osdCPU)
 if(HDANARI_ENABLE_MDL)
   project_sources(
     PRIVATE material/mdl.cpp
