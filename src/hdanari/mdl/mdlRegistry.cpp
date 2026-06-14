@@ -47,6 +47,9 @@
 #include <exception>
 #include <stdexcept>
 #include <string>
+#include <unordered_set>
+
+#include <pxr/base/tf/diagnostic.h>
 
 using namespace std::string_literals;
 using namespace std::string_view_literals;
@@ -300,8 +303,31 @@ auto HdAnariMdlRegistry::loadModule(std::string_view moduleOrFileName,
 
   if (impexpApi->load_module(
           transaction, moduleName.c_str(), m_executionContext.get())
-      < 0)
+      < 0) {
+    // Surface *why* the module failed, once per module. Otherwise the MDL
+    // compiler errors (e.g. C120 unresolved imports from a missing search
+    // path) are buried in SDK output and every dependent material only reports
+    // a generic "parser returned null" -- 800+ identical lines for one missing
+    // package.
+    static std::unordered_set<std::string> reported;
+    if (reported.insert(moduleName).second) {
+      std::string errors;
+      for (auto i = 0ull,
+                n = m_executionContext->get_error_messages_count();
+          i < n;
+          ++i) {
+        auto message = make_handle(m_executionContext->get_error_message(i));
+        errors += "\n  ";
+        errors += message->get_string();
+      }
+      TF_WARN(
+          "MDL module '%s' failed to load; dependent materials will be "
+          "skipped. Check MDL search paths (MDL_SYSTEM_PATH/MDL_USER_PATH).%s",
+          moduleName.c_str(),
+          errors.c_str());
+    }
     return {};
+  }
 
   // Get the database name for the module we loaded
   auto moduleDbName = make_handle(
