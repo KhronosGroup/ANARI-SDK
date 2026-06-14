@@ -136,7 +136,7 @@ void HdAnariRenderDelegate::Initialize()
       {"Max Ray Depth", HdAnariRenderSettingsTokens->maxRayDepth, VtValue(0)});
 
   _settingDescriptors.push_back(
-      { "Pixel Samples",HdAnariRenderSettingsTokens->pixelSamples, VtValue(1) });
+      {"Pixel Samples", HdAnariRenderSettingsTokens->pixelSamples, VtValue(1)});
 
   _settingDescriptors.push_back(
       {"Denoise", HdAnariRenderSettingsTokens->denoise, VtValue(false)});
@@ -149,6 +149,13 @@ void HdAnariRenderDelegate::Initialize()
       {"Exposure", HdAnariRenderSettingsTokens->exposure, VtValue(0.0f)});
   _settingDescriptors.push_back(
       {"Tonemap", HdAnariRenderSettingsTokens->tonemap, VtValue(false)});
+
+  // Stage up axis used to resolve a dome light's poleAxis="scene". A Hydra
+  // render delegate has no direct access to UsdGeomGetStageUpAxis, so the host
+  // supplies it here; defaults to USD's "Y".
+  _settingDescriptors.push_back({"Stage Up Axis",
+      HdAnariRenderSettingsTokens->upAxis,
+      VtValue(TfToken("Y"))});
 
   _settingDescriptors.push_back({"subtype",
       HdAnariRenderSettingsTokens->renderSubtype,

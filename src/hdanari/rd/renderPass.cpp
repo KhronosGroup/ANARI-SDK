@@ -14,7 +14,9 @@
 #include <pxr/base/vt/value.h>
 #include <pxr/imaging/cameraUtil/framing.h>
 #include <pxr/imaging/hd/camera.h>
+#include <pxr/imaging/hd/changeTracker.h>
 #include <pxr/imaging/hd/debugCodes.h>
+#include <pxr/imaging/hd/light.h>
 #include <pxr/imaging/hd/renderDelegate.h>
 #include <anari/anari_cpp.hpp>
 #include <anari/anari_cpp/anari_cpp_impl.hpp>
@@ -131,6 +133,8 @@ void HdAnariRenderPass::_Execute(
     // alongside the 'exposure' render setting. Defaults to 1 (neutral).
     if (const HdCamera *camera = renderPassState->GetCamera())
       _cameraExposureScale = camera->GetLinearExposureScale();
+
+    _SyncDomeUpAxis();
 
     bool sceneChanged = false;
     sceneChanged |= _UpdateFrame(
@@ -326,6 +330,34 @@ bool HdAnariRenderPass::_UpdateCamera(
   }
 
   return true;
+}
+
+void HdAnariRenderPass::_SyncDomeUpAxis()
+{
+  HdRenderDelegate *renderDelegate = GetRenderIndex()->GetRenderDelegate();
+  const VtValue v =
+      renderDelegate->GetRenderSetting(HdAnariRenderSettingsTokens->upAxis);
+  TfToken upAxis;
+  if (v.IsHolding<TfToken>())
+    upAxis = v.UncheckedGet<TfToken>();
+  else if (v.IsHolding<std::string>())
+    upAxis = TfToken(v.UncheckedGet<std::string>());
+
+  if (upAxis == _lastUpAxis)
+    return;
+
+  // The first observation just records the baseline: dome lights read the same
+  // setting on their initial sync, so there is nothing stale to invalidate yet.
+  const bool firstObservation = _lastUpAxis.IsEmpty();
+  _lastUpAxis = upAxis;
+  if (firstObservation)
+    return;
+
+  HdChangeTracker &tracker = GetRenderIndex()->GetChangeTracker();
+  for (const auto *light : _renderParam->Lights()) {
+    if (light->GetLightType() == HdPrimTypeTokens->domeLight)
+      tracker.MarkSprimDirty(light->GetId(), HdLight::DirtyParams);
+  }
 }
 
 bool HdAnariRenderPass::_UpdateWorld()

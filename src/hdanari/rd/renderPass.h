@@ -40,6 +40,11 @@ struct HdAnariRenderPass final : public HdRenderPass
       const GfRect2i &size, const HdRenderPassAovBindingVector &aovBindings);
   bool _UpdateCamera(const GfMatrix4d &invView, const GfMatrix4d &invProj);
   bool _UpdateWorld();
+  // A render-settings change (e.g. the host re-reporting the stage up axis)
+  // doesn't dirty Sprims, so dome lights whose poleAxis resolves to "scene"
+  // would keep a stale orientation. Detect upAxis changes and force the domes
+  // to re-sync.
+  void _SyncDomeUpAxis();
   // Publishes accumulation progress to the render param and returns whether
   // the frame has reached its sample limit.
   bool _UpdateProgress();
@@ -64,6 +69,7 @@ struct HdAnariRenderPass final : public HdRenderPass
 
   int _lastSettingsVersion{-1};
   int _lastSceneVersion{-1};
+  TfToken _lastUpAxis;
   float _exposure{0.0f};
   float _cameraExposureScale{1.0f};
   bool _tonemap{false};

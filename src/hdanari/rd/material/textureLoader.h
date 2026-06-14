@@ -44,11 +44,15 @@ class HdAnariTextureLoader
   };
 
   static anari::DataType HioFormatToAnari(HioFormat f);
+  // flipVertical uploads bottom-origin (element (0,0) is the bottom scanline).
+  // Samplers want top-origin (the default); the hdri light is the lone ANARI
+  // node that reads its radiance array bottom-up, so the dome must opt in.
   static anari::Array2D LoadHioTexture2D(anari::Device d,
       const std::string &file,
       MinMagFilter minMagFilter,
       ColorSpace colorspace,
-      ANARIDataType requestedFormat = ANARI_UNKNOWN);
+      ANARIDataType requestedFormat = ANARI_UNKNOWN,
+      bool flipVertical = false);
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE
