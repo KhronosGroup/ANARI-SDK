@@ -75,6 +75,51 @@ static bool _GetVtArrayBufferData_T(
   return false;
 }
 
+// USD authors texture coordinates with v=0 at the bottom of the image; ANARI
+// samples arrays with element (0,0) at the top. HdAnari uploads texture arrays
+// top-origin, so the v axis of texture-coordinate primvars is flipped here to
+// reconcile the two conventions. Detection is by primvar role or the
+// conventional UV names only -- material-declared inputs are not consulted.
+static const std::array<TfToken, 6> kTextureCoordinatePrimvarNames = {
+    TfToken("st"),
+    TfToken("st0"),
+    TfToken("st1"),
+    TfToken("uv"),
+    TfToken("UVMap"),
+    TfToken("map1")};
+
+static bool _IsTextureCoordinatePrimvar(const HdPrimvarDescriptor &pvd)
+{
+  if (pvd.role == HdPrimvarRoleTokens->textureCoordinate)
+    return true;
+  return std::find(begin(kTextureCoordinatePrimvarNames),
+             end(kTextureCoordinatePrimvarNames),
+             pvd.name)
+      != end(kTextureCoordinatePrimvarNames);
+}
+
+template <typename VEC_ARRAY_T>
+static bool _FlipVIfHolding(VtValue *value)
+{
+  if (!value->IsHolding<VEC_ARRAY_T>())
+    return false;
+  VEC_ARRAY_T a = value->UncheckedGet<VEC_ARRAY_T>();
+  using Scalar = typename VEC_ARRAY_T::value_type::ScalarType;
+  for (auto &uv : a)
+    uv[1] = Scalar(1) - uv[1];
+  *value = VtValue(a);
+  return true;
+}
+
+static VtValue _FlipTextureCoordinateV(VtValue value)
+{
+  _FlipVIfHolding<VtVec2fArray>(&value)
+      || _FlipVIfHolding<VtVec3fArray>(&value)
+      || _FlipVIfHolding<VtVec2dArray>(&value)
+      || _FlipVIfHolding<VtVec2hArray>(&value);
+  return value;
+}
+
 bool HdAnariGeometry::_GetVtArrayBufferData(
     VtValue v, const void **data, size_t *size, anari::DataType *type)
 {
@@ -615,8 +660,11 @@ void HdAnariGeometry::Sync(HdSceneDelegate *sceneDelegate,
 
       // FIXME: What if an instance prim is a computation primvar. This cannot
       // work with the actual implementation of GatherInstancePrimvar.
+      VtValue value = valueIt->second;
+      if (_IsTextureCoordinatePrimvar(pvd))
+        value = _FlipTextureCoordinateV(std::move(value));
       auto source = UpdatePrimvarSource(
-          sceneDelegate, pvd.interpolation, pvd.name, valueIt->second);
+          sceneDelegate, pvd.interpolation, pvd.name, value);
 
       // The spot should always be free as it was removed if needed when
       // processing primvar removal.
@@ -628,10 +676,11 @@ void HdAnariGeometry::Sync(HdSceneDelegate *sceneDelegate,
       if (primvarSource_.count(pvd.name) != 0) {
         continue;
       }
-      auto source = UpdatePrimvarSource(sceneDelegate,
-          pvd.interpolation,
-          pvd.name,
-          sceneDelegate->Get(id, pvd.name));
+      VtValue value = sceneDelegate->Get(id, pvd.name);
+      if (_IsTextureCoordinatePrimvar(pvd))
+        value = _FlipTextureCoordinateV(std::move(value));
+      auto source = UpdatePrimvarSource(
+          sceneDelegate, pvd.interpolation, pvd.name, value);
 
       primvarSource_.insert({pvd.name, source});
       primvarInterpolation.insert({pvd.name, pvd.interpolation});
