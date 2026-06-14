@@ -45,6 +45,7 @@
 #include <array>
 #include <cstdio>
 #include <exception>
+#include <filesystem>
 #include <stdexcept>
 #include <string>
 #include <unordered_set>
@@ -277,6 +278,71 @@ auto HdAnariMdlRegistry::preprendUserSearchPath(std::string_view path) -> void
   }
 }
 
+auto HdAnariMdlRegistry::loadModuleByCanonicalName(std::string_view filePath,
+    mi::neuraylib::ITransaction *transaction) -> const mi::neuraylib::IModule *
+{
+  std::string path(filePath);
+  if (path.find('/') == std::string::npos)
+    return {}; // already a module name, nothing to recover
+
+  auto impexpApi = make_handle(
+      m_neuray->get_api_component<mi::neuraylib::IMdl_impexp_api>());
+  auto mdlConfiguration = make_handle(
+      m_neuray->get_api_component<mi::neuraylib::IMdl_configuration>());
+
+  // If the failing path passes through a directory whose basename matches a
+  // search root (e.g. ".../vMaterials_2/Concrete/Concrete_Precast.mdl" with a
+  // "/data/mdl/vMaterials_2" root), the canonical module name is the tail after
+  // it ("::Concrete::Concrete_Precast"). Loading that by name lets the entity
+  // resolver pick a complete copy on the search path, with its resources
+  // co-located, instead of the incomplete local file.
+  auto pathsCount = mdlConfiguration->get_mdl_paths_length();
+  for (auto i = decltype(pathsCount)(0); i < pathsCount; ++i) {
+    auto rootName =
+        std::filesystem::path(
+            make_handle(mdlConfiguration->get_mdl_path(i))->get_c_str())
+            .filename()
+            .string();
+    if (rootName.empty())
+      continue;
+
+    auto marker = "/" + rootName + "/";
+    auto pos = path.rfind(marker);
+    if (pos == std::string::npos)
+      continue;
+
+    auto tail = path.substr(pos + marker.size());
+    if (auto n = tail.size(); n > 4 && tail.substr(n - 4) == ".mdl")
+      tail = tail.substr(0, n - 4);
+    if (tail.empty())
+      continue;
+
+    std::string moduleName = "::";
+    for (char c : tail)
+      moduleName += (c == '/') ? "::"s : std::string(1, c);
+
+    auto context = make_handle(m_mdlFactory->create_execution_context());
+    if (impexpApi->load_module(transaction, moduleName.c_str(), context.get())
+        < 0)
+      continue;
+
+    auto moduleDbName =
+        make_handle(m_mdlFactory->get_db_module_name(moduleName.c_str()));
+    if (auto *module = transaction->access<mi::neuraylib::IModule>(
+            moduleDbName->get_c_str())) {
+      if (m_logger)
+        m_logger->message(mi::base::MESSAGE_SEVERITY_INFO,
+            "hdanari::mdl",
+            ("Recovered '"s + path + "' from the MDL search path as '"
+                + moduleName + "'")
+                .c_str());
+      return module;
+    }
+  }
+
+  return {};
+}
+
 auto HdAnariMdlRegistry::loadModule(std::string_view moduleOrFileName,
     mi::neuraylib::ITransaction *transaction) -> const mi::neuraylib::IModule *
 {
@@ -304,6 +370,14 @@ auto HdAnariMdlRegistry::loadModule(std::string_view moduleOrFileName,
   if (impexpApi->load_module(
           transaction, moduleName.c_str(), m_executionContext.get())
       < 0) {
+    // A scene may ship a .mdl without its resources (e.g. a vMaterials module
+    // copied without its ./textures), so the local copy fails to compile.
+    // A complete copy usually exists on the MDL search path -- recover it by
+    // canonical name before giving up.
+    if (auto *recovered =
+            loadModuleByCanonicalName(moduleOrFileName, transaction))
+      return recovered;
+
     // Surface *why* the module failed, once per module. Otherwise the MDL
     // compiler errors (e.g. C120 unresolved imports from a missing search
     // path) are buried in SDK output and every dependent material only reports
