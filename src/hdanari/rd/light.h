@@ -26,6 +26,7 @@ public:
     HdDirtyBits GetInitialDirtyBitsMask() const override;
 
     anari::Instance GetAnariLightInstance() const { return instance_; }
+    const TfToken &GetLightType() const { return lightType_; }
 
     void Finalize(HdRenderParam *renderParam) override;
 

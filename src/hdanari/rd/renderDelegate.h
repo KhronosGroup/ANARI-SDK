@@ -30,7 +30,8 @@ class HdAnariRenderParam;
   (pixelSamples) \
   (renderSubtype) \
   (sampleLimit) \
-  (tonemap)
+  (tonemap) \
+  (upAxis)
 // clang-format on
 
 TF_DECLARE_PUBLIC_TOKENS(

@@ -272,7 +272,8 @@ anari::Array2D HdAnariTextureLoader::LoadHioTexture2D(anari::Device d,
     const std::string &file,
     MinMagFilter minMagFilter,
     ColorSpace colorspace,
-    ANARIDataType requestedFormat)
+    ANARIDataType requestedFormat,
+    bool flipVertical)
 {
   const auto image = HioImage::OpenForReading(file);
   if (!image) {
@@ -285,10 +286,12 @@ anari::Array2D HdAnariTextureLoader::LoadHioTexture2D(anari::Device d,
   desc.width = image->GetWidth();
   desc.height = image->GetHeight();
   desc.depth = 1;
-  // Upload top-origin to match ANARI's sampler convention (element (0,0) is the
-  // top scanline). The USD bottom-origin UV convention is reconciled by flipping
-  // the v axis of texture-coordinate primvars in geometry.cpp instead.
-  desc.flipped = false;
+  // Samplers upload top-origin to match ANARI's sampler convention (element
+  // (0,0) is the top scanline); the USD bottom-origin UV convention is
+  // reconciled by flipping the v axis of texture-coordinate primvars in
+  // geometry.cpp. The hdri light instead reads its radiance array bottom-up and
+  // has no primvar to compensate, so the dome opts into a vertical flip.
+  desc.flipped = flipVertical;
 
   auto inputFormat = HioFormatToAnari(desc.format);
   auto outputFormat =
