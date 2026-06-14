@@ -29,6 +29,8 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
+class HdAnariSubdivision;
+
 class HdAnariMesh final : public HdAnariGeometry
 {
  public:
@@ -68,6 +70,7 @@ class HdAnariMesh final : public HdAnariGeometry
 
   HdMeshTopology topology_;
   std::unique_ptr<HdAnariMeshUtil> meshUtil_;
+  std::unique_ptr<HdAnariSubdivision> subdivision_;
 
   HdGeomSubsets geomsubsets_;
 
