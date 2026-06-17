@@ -149,106 +149,72 @@ void HdAnariRenderPass::_Execute(
 
 bool HdAnariRenderPass::_UpdateRenderer()
 {
-  HdRenderDelegate *renderDelegate = GetRenderIndex()->GetRenderDelegate();
+  auto *renderDelegate = static_cast<HdAnariRenderDelegate *>(
+      GetRenderIndex()->GetRenderDelegate());
   int currentSettingsVersion = renderDelegate->GetRenderSettingsVersion();
   if (_lastSettingsVersion == currentSettingsVersion)
     return false;
 
-  {
-    auto d = _renderParam->GetANARIDevice();
+  auto d = _renderParam->GetANARIDevice();
 
-    if (const auto renderSubtype = renderDelegate->GetRenderSetting(
-        HdAnariRenderSettingsTokens->renderSubtype);
-        TF_VERIFY(renderSubtype.IsHolding<std::string>())) {
-      if (_anari.renderer) {
-        anari::release(d, _anari.renderer);
-        anari::commitParameters(d, d);
-      }
-      _anari.renderer = anari::newObject<anari::Renderer>(
-          d, renderSubtype.UncheckedGet<std::string>().c_str());
-      anari::setParameter(d, _anari.frame, "renderer", _anari.renderer);
-      anari::commitParameters(d, _anari.frame);
-    }
+  std::string subtype = "default";
+  if (const auto rs = renderDelegate->GetRenderSetting(
+          HdAnariRenderSettingsTokens->renderSubtype);
+      rs.IsHolding<std::string>() && !rs.UncheckedGet<std::string>().empty())
+    subtype = rs.UncheckedGet<std::string>();
+  else if (rs.IsHolding<TfToken>() && !rs.UncheckedGet<TfToken>().IsEmpty())
+    subtype = rs.UncheckedGet<TfToken>().GetString();
 
-    if (const VtValue ar = renderDelegate->GetRenderSetting(
-        HdAnariRenderSettingsTokens->ambientRadiance);
-        TF_VERIFY(ar.CanCast<float>())) {
-      auto v = VtValue::Cast<float>(ar).UncheckedGet<float>();
-      anari::setParameter(d,
-          _anari.renderer,
-          "ambientRadiance",
-          VtValue::Cast<float>(ar).UncheckedGet<float>());
-    }
-
-    if (const auto ac = renderDelegate->GetRenderSetting(
-        HdAnariRenderSettingsTokens->ambientColor);
-        TF_VERIFY(ac.IsHolding<GfVec3f>())) {
-      anari::setParameter(
-          d, _anari.renderer, "ambientColor", ac.UncheckedGet<GfVec3f>());
-    }
-
-    if (const auto as = renderDelegate->GetRenderSetting(
-        HdAnariRenderSettingsTokens->ambientSamples);
-        TF_VERIFY(as.IsHolding<int>())) {
-      anari::setParameter(
-          d, _anari.renderer, "ambientSamples", as.UncheckedGet<int>());
-    }
-
-    if (const auto sp = renderDelegate->GetRenderSetting(
-        HdAnariRenderSettingsTokens->sampleLimit);
-        TF_VERIFY(sp.IsHolding<int>())) {
-      anari::setParameter(
-          d, _anari.renderer, "sampleLimit", sp.UncheckedGet<int>());
-    }
-
-    if (const auto rb = renderDelegate->GetRenderSetting(
-        HdAnariRenderSettingsTokens->maxRayDepth);
-        TF_VERIFY(rb.IsHolding<int>())) {
-      anari::setParameter(
-          d, _anari.renderer, "maxRayDepth", rb.UncheckedGet<int>());
-    }
-
-    if (const auto ps = renderDelegate->GetRenderSetting(
-        HdAnariRenderSettingsTokens->pixelSamples);
-        TF_VERIFY(ps.IsHolding<int>())) {
-      anari::setParameter(
-          d, _anari.renderer, "pixelSamples", ps.UncheckedGet<int>());
-    }
-
-    if (const auto denoise =
-        renderDelegate->GetRenderSetting(HdAnariRenderSettingsTokens->denoise);
-        TF_VERIFY(denoise.IsHolding<bool>())) {
-      anari::setParameter(
-          d, _anari.renderer, "denoise", denoise.UncheckedGet<bool>());
-    }
-
-    if (const auto debugMethod = renderDelegate->GetRenderSetting(
-        HdAnariRenderSettingsTokens->debugMethod);
-        debugMethod.IsHolding<std::string>()) {
-      anari::setParameter(d,
-          _anari.renderer,
-          "method",
-          debugMethod.UncheckedGet<std::string>().c_str());
-    }
-
-    // Exposure and tonemapping are applied by hdanari to the color AOV, not
-    // by the ANARI renderer, so these are read but not forwarded to the device.
-    if (const auto exposure = renderDelegate->GetRenderSetting(
-        HdAnariRenderSettingsTokens->exposure);
-        exposure.CanCast<float>()) {
-      _exposure = VtValue::Cast<float>(exposure).UncheckedGet<float>();
-    }
-
-    if (const auto tonemap = renderDelegate->GetRenderSetting(
-        HdAnariRenderSettingsTokens->tonemap);
-        tonemap.IsHolding<bool>()) {
-      _tonemap = tonemap.UncheckedGet<bool>();
-    }
-
-    anari::commitParameters(d, _anari.renderer);
-
-    _lastSettingsVersion = currentSettingsVersion;
+  // (Re)create the renderer on first use or whenever the subtype changes; this
+  // also re-derives the parameter set advertised for that subtype.
+  if (!_anari.renderer || subtype != _rendererSubtype) {
+    if (_anari.renderer)
+      anari::release(d, _anari.renderer);
+    _rendererSubtype = subtype;
+    renderDelegate->SyncActiveRendererSubtype(subtype);
+    _anari.renderer = anari::newObject<anari::Renderer>(d, subtype.c_str());
+    anari::setParameter(d, _anari.frame, "renderer", _anari.renderer);
+    anari::commitParameters(d, _anari.frame);
+    // background is driven from the Hydra color AOV clear value; re-apply it so
+    // the freshly created renderer keeps the current clear color.
+    anari::setParameter(d, _anari.renderer, "background", _clearColor);
   }
+
+  // Forward every host setting that maps to an introspected renderer parameter.
+  for (const auto &param : renderDelegate->GetRendererParameters()) {
+    const auto value = renderDelegate->GetRenderSetting(param.key);
+    if (value.IsEmpty())
+      continue;
+    // Don't forward a fabricated default (the device advertised none) the user
+    // hasn't overridden -- it would clobber the renderer's own implicit default.
+    if (!param.hasDeviceDefault && value == param.defaultValue)
+      continue;
+    if (!HdAnariSetRendererParameter(d, _anari.renderer, param, value)) {
+      TF_WARN(
+          "hdAnari: render setting '%s' could not be forwarded to ANARI "
+          "renderer parameter of type %s",
+          param.name.c_str(),
+          anari::toString(param.type));
+    }
+  }
+
+  // Exposure and tonemapping are applied by hdanari to the color AOV, not by
+  // the ANARI renderer, so these are read but not forwarded to the device.
+  if (const auto exposure = renderDelegate->GetRenderSetting(
+          HdAnariRenderSettingsTokens->exposure);
+      exposure.CanCast<float>()) {
+    _exposure = VtValue::Cast<float>(exposure).UncheckedGet<float>();
+  }
+
+  if (const auto tonemap = renderDelegate->GetRenderSetting(
+          HdAnariRenderSettingsTokens->tonemap);
+      tonemap.IsHolding<bool>()) {
+    _tonemap = tonemap.UncheckedGet<bool>();
+  }
+
+  anari::commitParameters(d, _anari.renderer);
+
+  _lastSettingsVersion = currentSettingsVersion;
 
   return true;
 }
@@ -393,22 +359,39 @@ bool HdAnariRenderPass::_UpdateProgress()
   auto d = _renderParam->GetANARIDevice();
 
   int numSamples = 0;
-  const bool hasNumSamples = anari::getProperty(
-      d, _anari.frame, "numSamples", numSamples, ANARI_WAIT);
+  const bool hasNumSamples =
+      anari::getProperty(d, _anari.frame, "numSamples", numSamples, ANARI_WAIT);
 
+  // The accumulation bound is the renderer's introspected "sampleLimit"
+  // parameter, when it advertises one.
+  static const TfToken sampleLimitToken("sampleLimit");
   HdRenderDelegate *renderDelegate = GetRenderIndex()->GetRenderDelegate();
-  const VtValue sp = renderDelegate->GetRenderSetting(
-      HdAnariRenderSettingsTokens->sampleLimit);
-  const int sampleLimit = sp.IsHolding<int>() ? sp.UncheckedGet<int>() : 0;
+  const VtValue sp = renderDelegate->GetRenderSetting(sampleLimitToken);
+  // When the active renderer advertises no sampleLimit (e.g. VisRTX's "default"
+  // renderer exposes none), fall back to a finite host-side bound so batch
+  // renders (usdrecord) converge instead of accumulating forever. A renderer
+  // that DOES expose sampleLimit but is explicitly set to 0 still means
+  // "unbounded" and keeps refining (interactive viewers). Cast rather than
+  // IsHolding<int> so an int32/uint32/int64-typed parameter is honored, not
+  // silently treated as the fallback.
+  static constexpr int kFallbackSampleLimit = 128;
+  const int sampleLimit = sp.CanCast<int>()
+      ? VtValue::Cast<int>(sp).UncheckedGet<int>()
+      : kFallbackSampleLimit;
 
   // Devices that don't report sample progress render a complete frame in a
   // single pass, so a finished frame is already fully converged.
   const int completedSamples = hasNumSamples ? numSamples : sampleLimit;
   _renderParam->SetProgress(completedSamples, sampleLimit);
 
+  // No per-sample progress reported: a finished frame is fully converged.
   if (!hasNumSamples)
     return true;
-  return sampleLimit > 0 && numSamples >= sampleLimit;
+  // An explicit sampleLimit of 0 means "unbounded": keep refining (the fallback
+  // above only applies when the renderer advertises no sampleLimit at all).
+  if (sampleLimit <= 0)
+    return false;
+  return numSamples >= sampleLimit;
 }
 
 void HdAnariRenderPass::_WriteAovs(

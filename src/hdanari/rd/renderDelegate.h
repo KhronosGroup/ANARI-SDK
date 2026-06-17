@@ -4,6 +4,7 @@
 #pragma once
 
 #include "renderParam.h"
+#include "rendererParameters.h"
 
 #include <pxr/base/tf/staticTokens.h>
 #include <pxr/base/tf/token.h>
@@ -13,23 +14,21 @@
 
 #include <anari/anari_cpp.hpp>
 #include <mutex>
+#include <string>
 
 PXR_NAMESPACE_OPEN_SCOPE
 
 class HdAnariRenderParam;
 
+// Render settings hdanari owns directly; every other renderer parameter is
+// discovered from the device and keyed by its verbatim ANARI name.
+//   renderSubtype: selects the ANARI renderer subtype.
+//   upAxis:        stage up axis, resolves dome-light poleAxis="scene".
+//   exposure/tonemap: applied by hdanari to the color AOV, not forwarded.
 // clang-format off
 #define HDANARI_RENDER_SETTINGS_TOKENS                                         \
-  (ambientColor) \
-  (ambientRadiance) \
-  (ambientSamples) \
-  (debugMethod) \
-  (denoise) \
-  (maxRayDepth) \
   (exposure) \
-  (pixelSamples) \
   (renderSubtype) \
-  (sampleLimit) \
   (tonemap) \
   (upAxis)
 // clang-format on
@@ -53,6 +52,14 @@ class HdAnariRenderDelegate final : public HdRenderDelegate
   HdResourceRegistrySharedPtr GetResourceRegistry() const override;
 
   HdRenderSettingDescriptorList GetRenderSettingDescriptors() const override;
+
+  // Renderer parameters discovered for the active subtype, consumed by the
+  // render pass to forward host render settings to the ANARI renderer.
+  const HdAnariRendererParamList &GetRendererParameters() const;
+
+  // Re-query parameters and rebuild the render-setting descriptors when the
+  // render pass switches the active renderer subtype. No-op if unchanged.
+  void SyncActiveRendererSubtype(const std::string &subtype);
 
   bool IsPauseSupported() const override;
   bool Pause() override;
@@ -106,9 +113,21 @@ class HdAnariRenderDelegate final : public HdRenderDelegate
   // Must outlive the device, so it is unloaded in the destructor after
   // _renderParam.
   anari::Library _library{nullptr};
+
+  // Re-query the subtype's parameters and rebuild _settingDescriptors. Caller
+  // must hold _settingsMutex.
+  void _SetActiveRendererSubtypeLocked(
+      anari::Device device, const std::string &subtype);
+  void _BuildSettingDescriptorsLocked();
+
   std::shared_ptr<HdAnariRenderParam> _renderParam;
 
+  // Guards _settingDescriptors / _rendererParams / _activeRendererSubtype,
+  // which the render thread rebuilds while the host reads descriptors.
+  mutable std::mutex _settingsMutex;
   HdRenderSettingDescriptorList _settingDescriptors;
+  HdAnariRendererParamList _rendererParams;
+  std::string _activeRendererSubtype;
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

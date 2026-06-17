@@ -17,6 +17,7 @@
 #include <pxr/pxr.h>
 
 #include <memory>
+#include <string>
 
 #include "renderParam.h"
 
@@ -69,6 +70,9 @@ struct HdAnariRenderPass final : public HdRenderPass
 
   int _lastSettingsVersion{-1};
   int _lastSceneVersion{-1};
+  // Active ANARI renderer subtype; a change triggers renderer recreation and
+  // re-derivation of the forwarded parameter set.
+  std::string _rendererSubtype;
   TfToken _lastUpAxis;
   float _exposure{0.0f};
   float _cameraExposureScale{1.0f};

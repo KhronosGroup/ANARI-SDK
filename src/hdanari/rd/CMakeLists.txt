@@ -23,6 +23,7 @@ project_add_library(SHARED
   points.cpp
   renderBuffer.cpp
   renderDelegate.cpp
+  rendererParameters.cpp
   rendererPlugin.cpp
   renderPass.cpp
   sampler.cpp
