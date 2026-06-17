@@ -117,55 +117,6 @@ HdAnariRenderDelegate::HdAnariRenderDelegate(
 
 void HdAnariRenderDelegate::Initialize()
 {
-  // Initialize the settings and settings descriptors.
-  _settingDescriptors.clear();
-  _settingDescriptors.push_back({"Ambient Radiance",
-      HdAnariRenderSettingsTokens->ambientRadiance,
-      VtValue(0.2f)});
-  _settingDescriptors.push_back({"Ambient Color",
-      HdAnariRenderSettingsTokens->ambientColor,
-      VtValue(GfVec3f(0.8f, 0.8f, 0.8f))});
-  _settingDescriptors.push_back({"Ambient Samples",
-      HdAnariRenderSettingsTokens->ambientSamples,
-      VtValue(1)});
-
-  _settingDescriptors.push_back(
-      {"Sample Limit", HdAnariRenderSettingsTokens->sampleLimit, VtValue(128)});
-
-  _settingDescriptors.push_back(
-      {"Max Ray Depth", HdAnariRenderSettingsTokens->maxRayDepth, VtValue(0)});
-
-  _settingDescriptors.push_back(
-      {"Pixel Samples", HdAnariRenderSettingsTokens->pixelSamples, VtValue(1)});
-
-  _settingDescriptors.push_back(
-      {"Denoise", HdAnariRenderSettingsTokens->denoise, VtValue(false)});
-
-  // VisRTX outputs linear radiance with no display tonemapping or exposure.
-  // Exposure (EV stops) scales the color AOV by 2^exposure to bring an
-  // over/under-lit scene into range; tonemap then applies an ACES filmic
-  // curve to compress remaining highlights. Both default to off/neutral.
-  _settingDescriptors.push_back(
-      {"Exposure", HdAnariRenderSettingsTokens->exposure, VtValue(0.0f)});
-  _settingDescriptors.push_back(
-      {"Tonemap", HdAnariRenderSettingsTokens->tonemap, VtValue(false)});
-
-  // Stage up axis used to resolve a dome light's poleAxis="scene". A Hydra
-  // render delegate has no direct access to UsdGeomGetStageUpAxis, so the host
-  // supplies it here; defaults to USD's "Y".
-  _settingDescriptors.push_back({"Stage Up Axis",
-      HdAnariRenderSettingsTokens->upAxis,
-      VtValue(TfToken("Y"))});
-
-  _settingDescriptors.push_back({"subtype",
-      HdAnariRenderSettingsTokens->renderSubtype,
-      VtValue("default")});
-  _settingDescriptors.push_back({"debug:method",
-      HdAnariRenderSettingsTokens->debugMethod,
-      VtValue("Ns.abs")});
-
-  _PopulateDefaultSettings(_settingDescriptors);
-
   auto library = anari::loadLibrary("environment", hdAnariDeviceStatusFunc);
   if (!library) {
     TF_RUNTIME_ERROR("failed to load ANARI library from environment");
@@ -216,6 +167,14 @@ void HdAnariRenderDelegate::Initialize()
     return;
   }
 
+  // Derive the render-setting descriptors from device introspection. Every
+  // ANARI renderer supports the "default" subtype, so start there; the host can
+  // switch via the renderSubtype setting.
+  {
+    std::lock_guard<std::mutex> guard(_settingsMutex);
+    _SetActiveRendererSubtypeLocked(device, "default");
+  }
+
   HdAnariMaterial::MaterialType materialType =
       hasANARI_KHR_MATERIAL_PHYSICALLY_BASED
       ? HdAnariMaterial::MaterialType::PhysicallyBased
@@ -245,7 +204,59 @@ HdAnariRenderDelegate::~HdAnariRenderDelegate()
 HdRenderSettingDescriptorList
 HdAnariRenderDelegate::GetRenderSettingDescriptors() const
 {
+  std::lock_guard<std::mutex> guard(_settingsMutex);
   return _settingDescriptors;
+}
+
+const HdAnariRendererParamList &
+HdAnariRenderDelegate::GetRendererParameters() const
+{
+  std::lock_guard<std::mutex> guard(_settingsMutex);
+  return _rendererParams;
+}
+
+void HdAnariRenderDelegate::SyncActiveRendererSubtype(
+    const std::string &subtype)
+{
+  std::lock_guard<std::mutex> guard(_settingsMutex);
+  if (subtype == _activeRendererSubtype)
+    return;
+  _SetActiveRendererSubtypeLocked(_renderParam->GetANARIDevice(), subtype);
+}
+
+void HdAnariRenderDelegate::_SetActiveRendererSubtypeLocked(
+    anari::Device device, const std::string &subtype)
+{
+  _activeRendererSubtype = subtype;
+  _rendererParams = HdAnariQueryRendererParameters(device, subtype.c_str());
+  _BuildSettingDescriptorsLocked();
+  _PopulateDefaultSettings(_settingDescriptors);
+}
+
+void HdAnariRenderDelegate::_BuildSettingDescriptorsLocked()
+{
+  _settingDescriptors.clear();
+
+  // Host-owned settings with no ANARI renderer counterpart.
+  _settingDescriptors.push_back({"subtype",
+      HdAnariRenderSettingsTokens->renderSubtype,
+      VtValue(_activeRendererSubtype)});
+  // Stage up axis used to resolve a dome light's poleAxis="scene". A Hydra
+  // render delegate has no direct access to UsdGeomGetStageUpAxis, so the host
+  // supplies it here; defaults to USD's "Y".
+  _settingDescriptors.push_back({"Stage Up Axis",
+      HdAnariRenderSettingsTokens->upAxis,
+      VtValue(TfToken("Y"))});
+  // Exposure (EV stops) scales the color AOV by 2^exposure; tonemap applies an
+  // ACES filmic curve. Both are applied by hdanari, not the ANARI renderer.
+  _settingDescriptors.push_back(
+      {"Exposure", HdAnariRenderSettingsTokens->exposure, VtValue(0.0f)});
+  _settingDescriptors.push_back(
+      {"Tonemap", HdAnariRenderSettingsTokens->tonemap, VtValue(false)});
+
+  // Renderer parameters discovered from the device, keyed by ANARI name.
+  for (const auto &param : _rendererParams)
+    _settingDescriptors.push_back({param.name, param.key, param.defaultValue});
 }
 
 HdAnariRenderParam *HdAnariRenderDelegate::GetRenderParam() const
@@ -303,10 +314,18 @@ HdAovDescriptor HdAnariRenderDelegate::GetDefaultAovDescriptor(
 VtDictionary HdAnariRenderDelegate::GetRenderStats() const
 {
   VtDictionary stats;
-#if 0
-  stats[HdPerfTokens->numCompletedSamples.GetString()] =
-      _renderer.GetCompletedSamples();
-#endif
+  if (!_renderParam)
+    return stats;
+
+  const int completedSamples = _renderParam->CompletedSamples();
+  const int sampleLimit = _renderParam->SampleLimit();
+
+  stats[HdPerfTokens->numCompletedSamples.GetString()] = completedSamples;
+  if (sampleLimit > 0) {
+    stats["totalSamples"] = sampleLimit;
+    stats["percentDone"] = 100.0 * completedSamples / sampleLimit;
+  }
+
   return stats;
 }
 
