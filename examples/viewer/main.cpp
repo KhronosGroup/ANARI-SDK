@@ -17,6 +17,7 @@ static bool g_useDefaultLayout = true;
 static bool g_enableDebug = false;
 static std::string g_libraryName = "environment";
 static anari::Library g_debug = nullptr;
+static anari::Library g_library = nullptr;
 static anari::Device g_device = nullptr;
 static const char *g_traceDir = nullptr;
 
@@ -62,7 +63,8 @@ static void initializeANARI()
 
   anari::Device dev = anariNewDevice(library, "default");
 
-  anari::unloadLibrary(library);
+  // Keep the library loaded until the device is released in teardown().
+  g_library = library;
 
   if (g_enableDebug)
     anari::setParameter(dev, dev, "glDebug", true);
@@ -153,6 +155,7 @@ struct Application : public anari_viewer::Application
   void teardown() override
   {
     anari::release(m_state.device, m_state.device);
+    anari::unloadLibrary(g_library);
     anari_viewer::ui::shutdown();
   }
 

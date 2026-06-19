@@ -156,6 +156,10 @@ void HdAnariRenderDelegate::Initialize()
     return;
   }
 
+  // Keep the library loaded until the device is destroyed. Storing it here also
+  // releases it on the early-return error paths below.
+  _library = library;
+
   auto extensions = anariGetDeviceExtensions(library, "default");
   bool hasANARI_KHR_DEVICE_SYNCHRONIZATION = false;
   bool hasANARI_KHR_MATERIAL_PHYSICALLY_BASED = false;
@@ -191,8 +195,6 @@ void HdAnariRenderDelegate::Initialize()
   }
 #endif
 
-  anari::unloadLibrary(library);
-
   if (!device) {
     TF_RUNTIME_ERROR("failed to create ANARI device");
     return;
@@ -219,6 +221,9 @@ HdAnariRenderDelegate::~HdAnariRenderDelegate()
   }
 
   _renderParam.reset();
+
+  if (_library)
+    anari::unloadLibrary(_library);
 }
 
 HdRenderSettingDescriptorList

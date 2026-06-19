@@ -210,6 +210,9 @@ SceneGeneratorWrapper::SceneGeneratorWrapper(pybind11::function &callback)
 
 SceneGeneratorWrapper::~SceneGeneratorWrapper()
 {
+  // Destroy the device (owned by the scene generator) before unloading the
+  // libraries it was created from.
+  m_sceneGenerator.reset();
   if (m_library != nullptr) {
     anari::unloadLibrary(m_library);
   }

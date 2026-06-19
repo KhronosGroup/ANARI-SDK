@@ -100,6 +100,9 @@ class HdAnariRenderDelegate final : public HdRenderDelegate
 
   void Initialize();
 
+  // Must outlive the device, so it is unloaded in the destructor after
+  // _renderParam.
+  anari::Library _library{nullptr};
   std::shared_ptr<HdAnariRenderParam> _renderParam;
 
   HdRenderSettingDescriptorList _settingDescriptors;
