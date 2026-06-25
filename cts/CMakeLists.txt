@@ -1,7 +1,7 @@
 ## Copyright 2022-2026 The Khronos Group
 ## SPDX-License-Identifier: Apache-2.0
 
-# The CTS is now a self-contained C++ tool (`cts`, target anariCts) built by
+# The CTS is now a self-contained C++ tool (`anariCts`) built by
 # src/anari_test_scenes, plus a thin Python reporting layer (ctsReport.py) that
 # only reads the per-Case sidecar tree. The former pybind/Python backend, the
 # JSON scene format, and the orchestration scripts have been removed.

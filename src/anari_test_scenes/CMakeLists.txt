@@ -116,12 +116,11 @@ generate_export_header(${PROJECT_NAME}
 
 ## CTS conformance tool ##
 
-# The self-contained `cts` command-line runner is now the canonical CTS build
-# (it replaced the legacy Python/pybind tool). Built when the CTS is requested
-# (BUILD_CTS) or for the test suite (BUILD_TESTING).
+# The self-contained `anariCts` command-line runner is now the canonical CTS
+# build (it replaced the legacy Python/pybind tool). Built when the CTS is
+# requested (BUILD_CTS) or for the test suite (BUILD_TESTING).
 if (BUILD_CTS OR BUILD_TESTING)
   add_executable(anariCts cts/tool/main.cpp)
-  set_target_properties(anariCts PROPERTIES OUTPUT_NAME cts)
   target_link_libraries(anariCts PRIVATE ${PROJECT_NAME})
   target_compile_features(anariCts PRIVATE cxx_std_20)
 

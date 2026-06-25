@@ -123,9 +123,7 @@ if (BUILD_TESTING)
 endif()
 
 if (BUILD_CTS OR CTS_ENABLE_GLTF)
-  # Distinct binary dir: the `cts` executable (anariCts) lives at the build root,
-  # which would collide with a build tree named `cts`.
-  add_subdirectory(cts cts_payload)
+  add_subdirectory(cts)
 endif()
 
 if (BUILD_CAT)

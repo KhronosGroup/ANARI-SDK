@@ -2,7 +2,7 @@
 
 A capability-by-capability reference for the CTS. It complements
 [README.md](README.md) (setup + command reference) and [CONTEXT.md](CONTEXT.md)
-(vocabulary). Every capability below is delivered by the `cts` C++ tool, except
+(vocabulary). Every capability below is delivered by the `anariCts` C++ tool, except
 reporting and device-diff, which are the Python layer reading the results tree
 (`docs/adr/0001`).
 
@@ -20,8 +20,8 @@ reference device (helide) renders the ground truth; the candidate device renders
 the same Cases and each Channel is scored against ground truth.
 
 ```bash
-cts generate --workdir myrun          # ground truth from the reference device
-cts run helide --workdir myrun        # render + score a candidate
+anariCts generate --workdir myrun     # ground truth from the reference device
+anariCts run helide --workdir myrun   # render + score a candidate
 ```
 
 Ground truth is generated on demand into `myrun/ground_truth/` and is never
@@ -67,7 +67,7 @@ Test's id, category, axes, required features, channels, thresholds, and Case
 count. It opens no device, so it works without any library present.
 
 ```bash
-cts query-metadata --filter frame
+anariCts query-metadata --filter frame
 ```
 
 ```json
@@ -93,7 +93,7 @@ A Test is skipped when the device is missing any of its required extensions.
 or will be skipped and which features are missing:
 
 ```bash
-cts check-properties helide --filter frame
+anariCts check-properties helide --filter frame
 ```
 
 ```
@@ -113,7 +113,7 @@ cts check-properties helide --filter frame
 `anariGetDeviceExtensions`, one per line:
 
 ```bash
-cts query-features helide
+anariCts query-features helide
 ```
 
 ```

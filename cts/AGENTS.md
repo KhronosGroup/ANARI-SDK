@@ -7,8 +7,8 @@ This file provides guidance to coding agents working in the CTS. See the parent
 ## Overview
 
 The CTS (Conformance Test Suite) validates ANARI device implementations against
-a reference device (helide). It is a self-contained C++ command-line tool, `cts`
-(target `anariCts`), that renders each test *and* scores it against generated
+a reference device (helide). It is a self-contained C++ command-line tool,
+`anariCts`, that renders each test *and* scores it against generated
 ground truth, plus a thin Python reporting layer (`ctsReport.py`) that only
 reads the results the tool writes. The two communicate through files only — there
 is no pybind11, no JSON scene format, and no Python orchestration (these were
@@ -27,7 +27,7 @@ cmake -DBUILD_CTS=ON -DBUILD_HELIDE_DEVICE=ON -DCTS_ENABLE_GLTF=ON ..
 #   -DUSE_DRACO=ON -DUSE_KTX=ON -DUSE_WEBP=ON
 ```
 
-Relevant targets: `anariCts` (the `cts` tool), `anari_test_scenes` (the library
+Relevant targets: `anariCts` (the CTS tool), `anari_test_scenes` (the library
 holding the catalog + runner), `anariCatalogTests` (the unit tests).
 
 ### Running locally
@@ -37,23 +37,23 @@ A stale install of the anari libs on `LD_LIBRARY_PATH` can shadow a fresh build
 
 ```bash
 cd build
-LD_LIBRARY_PATH="$PWD:$LD_LIBRARY_PATH" ./cts run helide --workdir /tmp/run
+LD_LIBRARY_PATH="$PWD:$LD_LIBRARY_PATH" ./anariCts run helide --workdir /tmp/run
 LD_LIBRARY_PATH="$PWD:$LD_LIBRARY_PATH" ./anariCatalogTests
 ```
 
 ## Running the suite
 
 ```bash
-cts generate --workdir myrun           # ground truth from the reference device (helide)
-cts run helide --workdir myrun         # render + score a candidate against it
+anariCts generate --workdir myrun      # ground truth from the reference device (helide)
+anariCts run helide --workdir myrun    # render + score a candidate against it
 python ../cts/ctsReport.py report myrun [--pdf out.pdf]
 python ../cts/ctsReport.py diff runA runB [--json]
 
-cts list [--filter <pat>]              # enumerate the catalog
-cts query-features <device>            # device extensions
-cts query-metadata [--filter <pat>]    # catalog metadata as JSON (no device)
-cts query-device-info <device>         # device introspection: object subtypes + parameter metadata
-cts check-properties <device>          # per test: runnable vs skipped + missing features
+anariCts list [--filter <pat>]         # enumerate the catalog
+anariCts query-features <device>       # device extensions
+anariCts query-metadata [--filter <pat>]   # catalog metadata as JSON (no device)
+anariCts query-device-info <device>    # device introspection: object subtypes + parameter metadata
+anariCts check-properties <device>     # per test: runnable vs skipped + missing features
 ```
 
 `query-device-info` is genuine device introspection (the old `anariInfo`
@@ -67,7 +67,7 @@ test's `<category>/<test>` id. `run` and `report` exit non-zero on any failure.
 ## Architecture
 
 ```
-cts (anariCts)            CLI dispatch: cts/tool/main.cpp
+anariCts                 CLI dispatch: cts/tool/main.cpp
   Catalog                 in-C++ registry of every Test (one per-category file)
   Runner                  build world -> render each Channel -> generate GT or score vs GT -> sidecar
   Metrics                 SSIM / PSNR (single source of metrics, ADR-0004)

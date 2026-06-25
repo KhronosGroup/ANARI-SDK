@@ -3,8 +3,8 @@
 The Conformance Test Suite (CTS) validates an ANARI device implementation by
 rendering a known battery of scenes and comparing each render against
 ground-truth images produced by a reference device (helide). It is a
-self-contained C++ command-line tool, `cts`, plus a thin Python reporting layer
-(`ctsReport.py`) that only reads the results the tool writes.
+self-contained C++ command-line tool, `anariCts`, plus a thin Python reporting
+layer (`ctsReport.py`) that only reads the results the tool writes.
 
 It can:
 
@@ -22,7 +22,7 @@ decisions behind the architecture.
 ## Architecture
 
 ```
-cts  (C++ tool, target anariCts)        renders + scores; writes results/ and ground_truth/
+anariCts  (C++ tool)                    renders + scores; writes results/ and ground_truth/
     ↓ loads at runtime                   sidecar JSON + PNGs under a --workdir
 ANARI device (helide, or a candidate)
     ↓ files only (ADR-0001)
@@ -65,7 +65,7 @@ dependencies. See [pyproject.toml](pyproject.toml).
 ## Usage
 
 ```
-cts <command> [options]
+anariCts <command> [options]
 
 commands:
   list                       list the catalog (categories, tests, case counts)
@@ -95,10 +95,10 @@ step is always to generate it with the reference device, then run the candidate:
 
 ```bash
 # 1. Generate ground truth for the whole catalog with the reference device.
-cts generate --workdir myrun
+anariCts generate --workdir myrun
 
 # 2. Render + score a candidate device against it.
-cts run helide --workdir myrun
+anariCts run helide --workdir myrun
 
 # 3. Summarize the run (optionally as a PDF).
 python cts/ctsReport.py report myrun
@@ -113,16 +113,16 @@ python cts/ctsReport.py report myrun --pdf myrun.pdf
 each test's `<category>/<test>` id:
 
 ```bash
-cts list --filter geometry          # see what a filter selects
-cts generate --filter geometry/sphere --workdir myrun
-cts run helide --filter "light/*" --workdir myrun
+anariCts list --filter geometry          # see what a filter selects
+anariCts generate --filter geometry/sphere --workdir myrun
+anariCts run helide --filter "light/*" --workdir myrun
 ```
 
 `run --stdin` reads one filter pattern per line, accumulating into the same
 workdir — useful for an interactively chosen subset:
 
 ```bash
-printf 'geometry/sphere\nlight/directional\n' | cts run helide --stdin --workdir myrun
+printf 'geometry/sphere\nlight/directional\n' | anariCts run helide --stdin --workdir myrun
 ```
 
 Because results are per-Case sidecars, running subsets at different times
@@ -131,9 +131,9 @@ accumulates in one workdir without clobbering (ADR-0003).
 ### Introspecting a device
 
 ```bash
-cts query-features helide            # extensions the device reports
-cts check-properties helide          # per test: [run ] or [skip] + missing features
-cts query-metadata --filter frame    # catalog metadata as JSON (no device needed)
+anariCts query-features helide            # extensions the device reports
+anariCts check-properties helide          # per test: [run ] or [skip] + missing features
+anariCts query-metadata --filter frame    # catalog metadata as JSON (no device needed)
 ```
 
 `check-properties` is the quick way to see why a Test will be skipped on a
