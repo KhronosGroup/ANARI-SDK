@@ -12,8 +12,11 @@
 namespace anari {
 namespace cts {
 
-// An 8-bit RGBA raster, row-major with row 0 at the top. The common currency
-// for rendered channels, ground truth, and metric comparison.
+// An 8-bit RGBA raster, row-major in ANARI's convention: row 0 is the bottom
+// of the image. The common currency for rendered channels, ground truth, and
+// metric comparison. PNG I/O (loadPNG/savePNG) flips vertically so files on
+// disk are stored top-left and view right-side-up; the in-memory data always
+// stays bottom-left, matching what ANARI hands back from a mapped frame.
 struct Image
 {
   uint32_t width{0};
