@@ -42,6 +42,20 @@ std::filesystem::path Workdir::resultImagePath(
       / (c.id() + "." + channelName(channel) + ".png");
 }
 
+std::filesystem::path Workdir::diffImagePath(
+    const Case &c, Channel channel) const
+{
+  return resultsDir() / c.category / c.testName
+      / (c.id() + "." + channelName(channel) + ".diff.png");
+}
+
+std::filesystem::path Workdir::thresholdImagePath(
+    const Case &c, Channel channel) const
+{
+  return resultsDir() / c.category / c.testName
+      / (c.id() + "." + channelName(channel) + ".threshold.png");
+}
+
 std::filesystem::path Workdir::groundTruthImagePath(
     const Case &c, Channel channel) const
 {

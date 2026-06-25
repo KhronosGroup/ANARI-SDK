@@ -198,6 +198,7 @@ TEST_CASE(
   RunOptions opts;
   opts.width = 64;
   opts.height = 64;
+  opts.device = {"helide", "default", "default"};
 
   Runner runner(d, Workdir(root), opts);
 
@@ -259,6 +260,10 @@ TEST_CASE(
     CHECK(text.find("\"verdict\": \"passed\"") != std::string::npos);
     CHECK(text.find("ssim") != std::string::npos);
     CHECK(std::filesystem::exists(wd.resultImagePath(tri, Channel::Color)));
+    // The run records its device identity (schema v2) and emits debug images.
+    CHECK(text.find("\"library\": \"helide\"") != std::string::npos);
+    CHECK(std::filesystem::exists(wd.diffImagePath(tri, Channel::Color)));
+    CHECK(std::filesystem::exists(wd.thresholdImagePath(tri, Channel::Color)));
 
     // The bogus-feature test is skipped with a feature reason.
     Case bogus;

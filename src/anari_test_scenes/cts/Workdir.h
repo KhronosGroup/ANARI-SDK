@@ -32,6 +32,10 @@ class ANARI_TEST_SCENES_INTERFACE Workdir
   std::filesystem::path sidecarPath(const Case &c) const;
   // results/<category>/<test>/<caseId>.<channel>.png
   std::filesystem::path resultImagePath(const Case &c, Channel channel) const;
+  // results/<category>/<test>/<caseId>.<channel>.diff.png (debug image)
+  std::filesystem::path diffImagePath(const Case &c, Channel channel) const;
+  // results/<category>/<test>/<caseId>.<channel>.threshold.png (debug image)
+  std::filesystem::path thresholdImagePath(const Case &c, Channel channel) const;
   // ground_truth/<category>/<test>/<gtKey>.<channel>.png
   std::filesystem::path groundTruthImagePath(
       const Case &c, Channel channel) const;

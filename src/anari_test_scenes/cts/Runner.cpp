@@ -279,17 +279,68 @@ anari::Renderer defaultRenderer(anari::Device d)
   return renderer;
 }
 
-CaseResult baseResult(const Case &c)
+CaseResult baseResult(const Case &c, const DeviceSpec &device)
 {
   CaseResult r;
   r.category = c.category;
   r.test = c.testName;
   r.caseId = c.id();
   r.groundTruthKey = c.groundTruthKey();
+  r.device = device;
   for (const auto &cv : c.values)
     r.axisValues.emplace_back(cv.axisName, anyToString(cv.value));
   return r;
 }
+
+// Per-pixel absolute RGB difference between two equal-sized images, with opaque
+// alpha so the result is viewable. Returns an invalid Image if the sizes differ
+// (then the caller skips the debug images).
+Image makeDiffImage(const Image &reference, const Image &candidate)
+{
+  if (!reference.valid() || reference.width != candidate.width
+      || reference.height != candidate.height)
+    return {};
+  Image diff;
+  diff.width = reference.width;
+  diff.height = reference.height;
+  diff.rgba.resize(reference.rgba.size());
+  const size_t n = reference.pixelCount();
+  for (size_t i = 0; i < n; ++i) {
+    for (int c = 0; c < 3; ++c) {
+      const int d =
+          int(reference.rgba[i * 4 + c]) - int(candidate.rgba[i * 4 + c]);
+      diff.rgba[i * 4 + c] = static_cast<uint8_t>(d < 0 ? -d : d);
+    }
+    diff.rgba[i * 4 + 3] = 255;
+  }
+  return diff;
+}
+
+// A black/white mask of a diff image: white where any RGB channel differs by
+// more than `threshold` (0..255), black otherwise.
+Image makeThresholdImage(const Image &diff, uint8_t threshold)
+{
+  Image out;
+  out.width = diff.width;
+  out.height = diff.height;
+  out.rgba.resize(diff.rgba.size());
+  const size_t n = diff.pixelCount();
+  for (size_t i = 0; i < n; ++i) {
+    const bool over = diff.rgba[i * 4 + 0] > threshold
+        || diff.rgba[i * 4 + 1] > threshold
+        || diff.rgba[i * 4 + 2] > threshold;
+    const uint8_t v = over ? 255 : 0;
+    out.rgba[i * 4 + 0] = v;
+    out.rgba[i * 4 + 1] = v;
+    out.rgba[i * 4 + 2] = v;
+    out.rgba[i * 4 + 3] = 255;
+  }
+  return out;
+}
+
+// Diff intensity (0..255) above which the threshold mask marks a pixel: ~0.05
+// of full range, matching the legacy debug-image cutoff.
+constexpr uint8_t kDiffThreshold8 = 13;
 
 } // namespace
 
@@ -342,7 +393,7 @@ void Runner::releaseScene(SceneObjects &scene)
 
 void Runner::writeFeatureSkip(const Case &c, RunSummary &summary)
 {
-  CaseResult result = baseResult(c);
+  CaseResult result = baseResult(c, m_options.device);
   result.verdict = Verdict::Skipped;
   result.skipReason = "device is missing a required feature";
   writeSidecar(m_workdir.sidecarPath(c), result);
@@ -352,7 +403,7 @@ void Runner::writeFeatureSkip(const Case &c, RunSummary &summary)
 void Runner::writeCaseFailure(
     const Case &c, const std::string &detail, RunSummary &summary)
 {
-  CaseResult result = baseResult(c);
+  CaseResult result = baseResult(c, m_options.device);
   result.verdict = Verdict::Failed;
   result.detail = detail;
   writeSidecar(m_workdir.sidecarPath(c), result);
@@ -466,7 +517,7 @@ RunSummary Runner::run(const Catalog &catalog,
           continue;
         }
 
-        CaseResult result = baseResult(c);
+        CaseResult result = baseResult(c, m_options.device);
 
         // Need ground truth for every channel before we can compare.
         bool haveGroundTruth = true;
@@ -522,6 +573,20 @@ RunSummary Runner::run(const Catalog &catalog,
               m_workdir.relativeToRoot(m_workdir.resultImagePath(c, ch));
           cr.groundTruthImage =
               m_workdir.relativeToRoot(m_workdir.groundTruthImagePath(c, ch));
+
+          // Debug images alongside the result: the absolute per-pixel
+          // difference and a thresholded mask of it, to localize a mismatch.
+          const Image diffImg = makeDiffImage(groundTruth[i], images[i]);
+          if (diffImg.valid()) {
+            savePNG(m_workdir.diffImagePath(c, ch).string(), diffImg);
+            savePNG(m_workdir.thresholdImagePath(c, ch).string(),
+                makeThresholdImage(diffImg, kDiffThreshold8));
+            cr.diffImage =
+                m_workdir.relativeToRoot(m_workdir.diffImagePath(c, ch));
+            cr.thresholdImage =
+                m_workdir.relativeToRoot(m_workdir.thresholdImagePath(c, ch));
+          }
+
           allPassed = allPassed && cr.passed;
           result.channels.push_back(std::move(cr));
         }
@@ -557,7 +622,7 @@ void Runner::runBehaviorTest(const TestDef &test,
     // released on every path (buildScene releases a partial build on throw).
     SceneObjects scene;
     try {
-      CaseResult result = baseResult(c);
+      CaseResult result = baseResult(c, m_options.device);
 
       scene = buildScene(test, c);
       if (!scene.valid()) {

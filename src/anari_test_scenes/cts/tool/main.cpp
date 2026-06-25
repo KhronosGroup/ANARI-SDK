@@ -273,6 +273,7 @@ int cmdGenerate(const Options &o)
   RunOptions ro;
   ro.width = o.width;
   ro.height = o.height;
+  ro.device = {deviceName, "default", "default"};
   Runner runner(d, Workdir(o.workdir), ro);
 
   auto s = runner.generate(catalog, Filter{o.filter}, features);
@@ -301,6 +302,7 @@ int cmdRun(const Options &o)
   RunOptions ro;
   ro.width = o.width;
   ro.height = o.height;
+  ro.device = {o.device, "default", "default"};
   Runner runner(d, Workdir(o.workdir), ro);
 
   RunSummary s;

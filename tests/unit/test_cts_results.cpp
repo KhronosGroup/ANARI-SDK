@@ -54,6 +54,14 @@ TEST_CASE(
       == std::filesystem::path(
           "/tmp/run/results/geometry/sphere/1_soup.depth.png"));
 
+  // Debug images sit beside the result image, keyed by the same Case id.
+  CHECK(wd.diffImagePath(c, Channel::Color)
+      == std::filesystem::path(
+          "/tmp/run/results/geometry/sphere/1_soup.color.diff.png"));
+  CHECK(wd.thresholdImagePath(c, Channel::Color)
+      == std::filesystem::path(
+          "/tmp/run/results/geometry/sphere/1_soup.color.threshold.png"));
+
   // Ground truth is keyed by the shared ground-truth key (variants collapse).
   CHECK(wd.groundTruthImagePath(c, Channel::Color)
       == std::filesystem::path(
@@ -110,6 +118,7 @@ TEST_CASE("sidecar JSON carries the contract fields", "[cts][sidecar]")
   r.test = "sphere";
   r.caseId = "1_soup";
   r.groundTruthKey = "1";
+  r.device = {"helide", "default", "default"};
   r.axisValues = {{"primitiveCount", "1"}, {"primitiveMode", "soup"}};
   r.verdict = Verdict::Passed;
   r.durationMs = 12.5;
@@ -121,12 +130,14 @@ TEST_CASE("sidecar JSON carries the contract fields", "[cts][sidecar]")
   ch.passed = true;
   ch.resultImage = "results/geometry/sphere/1_soup.color.png";
   ch.groundTruthImage = "ground_truth/geometry/sphere/1.color.png";
+  ch.diffImage = "results/geometry/sphere/1_soup.color.diff.png";
+  ch.thresholdImage = "results/geometry/sphere/1_soup.color.threshold.png";
   r.channels.push_back(ch);
 
   const std::string text = toJson(r);
 
   // Spot-check the contract surface without depending on key ordering.
-  CHECK(text.find("\"schemaVersion\": 1") != std::string::npos);
+  CHECK(text.find("\"schemaVersion\": 2") != std::string::npos);
   CHECK(text.find("\"verdict\": \"passed\"") != std::string::npos);
   CHECK(text.find("\"groundTruthKey\": \"1\"") != std::string::npos);
   CHECK(text.find("\"primitiveMode\"") != std::string::npos);
@@ -134,6 +145,26 @@ TEST_CASE("sidecar JSON carries the contract fields", "[cts][sidecar]")
   CHECK(text.find("ssim") != std::string::npos);
   CHECK(text.find("results/geometry/sphere/1_soup.color.png")
       != std::string::npos);
+
+  // schema v2: the producing device names the run.
+  CHECK(text.find("\"device\"") != std::string::npos);
+  CHECK(text.find("\"library\": \"helide\"") != std::string::npos);
+  CHECK(text.find("\"renderer\": \"default\"") != std::string::npos);
+
+  // Optional debug image paths round-trip when present.
+  CHECK(text.find("1_soup.color.diff.png") != std::string::npos);
+  CHECK(text.find("1_soup.color.threshold.png") != std::string::npos);
+}
+
+TEST_CASE("device defaults serialize when unset", "[cts][sidecar]")
+{
+  CaseResult r;
+  r.verdict = Verdict::Skipped;
+  const std::string text = toJson(r);
+  // Always present so the Python diff can rely on the field (v2); the library
+  // is empty for a default-constructed spec, device/renderer default.
+  CHECK(text.find("\"device\"") != std::string::npos);
+  CHECK(text.find("\"device\": \"default\"") != std::string::npos);
 }
 
 TEST_CASE(

@@ -33,6 +33,11 @@ std::string toJson(const CaseResult &result)
   j["test"] = result.test;
   j["case"] = result.caseId;
   j["groundTruthKey"] = result.groundTruthKey;
+  // Which device produced this result (schema v2): the diff tool labels runs
+  // by this identity instead of by workdir name.
+  j["device"] = {{"library", result.device.library},
+      {"device", result.device.device},
+      {"renderer", result.device.renderer}};
   j["verdict"] = verdictName(result.verdict);
   j["skipReason"] = result.skipReason;
   j["detail"] = result.detail;
@@ -50,6 +55,9 @@ std::string toJson(const CaseResult &result)
     c["passed"] = ch.passed;
     c["resultImage"] = ch.resultImage;
     c["groundTruthImage"] = ch.groundTruthImage;
+    // Optional debug images; absent (empty string) when not emitted.
+    c["diffImage"] = ch.diffImage;
+    c["thresholdImage"] = ch.thresholdImage;
     // Non-finite scores (e.g. PSNR of identical images) serialize as null.
     c["metrics"] = json::object();
     for (const auto &[name, score] : ch.metrics)

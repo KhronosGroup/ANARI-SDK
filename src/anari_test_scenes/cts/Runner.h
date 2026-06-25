@@ -5,6 +5,7 @@
 
 #include "Catalog.h"
 #include "Image.h"
+#include "Sidecar.h"
 #include "TestDef.h"
 #include "Workdir.h"
 #include "anari_test_scenes_export.h"
@@ -24,6 +25,9 @@ struct RunOptions
   uint32_t height{256};
   double ssimThreshold{0.70}; // ctsUtility defaults; overridden per-test
   double psnrThreshold{20.0};
+  // Identity of the device this run uses, recorded in every sidecar (schema
+  // v2) so a two-device diff can label runs by device, not by workdir name.
+  DeviceSpec device;
 };
 
 struct RunSummary

@@ -21,7 +21,10 @@ namespace cts {
 // versioned so the reader can stay in step. New *optional* fields (read with a
 // default by the Python layer) are additive and do not bump this version; a
 // breaking change to an existing field's shape would.
-constexpr int kSidecarSchemaVersion = 1;
+//
+// v2 adds the `device` object identifying which device produced the run, so a
+// two-device diff can label runs by device rather than by workdir name.
+constexpr int kSidecarSchemaVersion = 2;
 
 // A Case's pass/fail outcome.
 enum class Verdict
@@ -33,6 +36,16 @@ enum class Verdict
 
 ANARI_TEST_SCENES_INTERFACE const char *verdictName(Verdict v);
 
+// Which device produced a run, by the names the CLI loaded it with: the ANARI
+// library, the device subtype, and the default renderer subtype. For a suite
+// whose purpose is comparing devices, this is what labels a run.
+struct DeviceSpec
+{
+  std::string library;
+  std::string device{"default"};
+  std::string renderer{"default"};
+};
+
 // One channel's comparison against ground truth.
 struct ChannelResult
 {
@@ -42,6 +55,11 @@ struct ChannelResult
   bool passed{false};
   std::string resultImage; // path relative to the workdir root
   std::string groundTruthImage; // path relative to the workdir root
+  // Optional per-channel debug images written when a comparison runs: the
+  // absolute per-channel difference and a thresholded mask of it. Empty when
+  // not emitted. Paths are relative to the workdir root, like the others.
+  std::string diffImage;
+  std::string thresholdImage;
 };
 
 // The full per-Case result.
@@ -51,6 +69,7 @@ struct CaseResult
   std::string test;
   std::string caseId;
   std::string groundTruthKey;
+  DeviceSpec device; // which device produced this result (schema v2)
   std::vector<std::pair<std::string, std::string>> axisValues; // name -> value
   Verdict verdict{Verdict::Skipped};
   std::string skipReason; // empty unless skipped

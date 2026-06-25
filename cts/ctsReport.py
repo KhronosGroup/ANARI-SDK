@@ -13,8 +13,8 @@ Commands:
   report <workdir> [--pdf report.pdf]   summarize one run; optional PDF.
   diff <workdir_a> <workdir_b> [--json] compare two candidates' results.
 
-The sidecar schema is versioned (schemaVersion); this reader targets version 1
-and warns on a mismatch.
+The sidecar schema is versioned (schemaVersion); this reader targets version 2
+(which added the producing-device identity) and warns on a mismatch.
 """
 
 import argparse
@@ -22,7 +22,7 @@ import json
 import sys
 from pathlib import Path
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 # Metrics shown in summaries/diffs, in display order.
 METRICS = ["ssim", "psnr"]
@@ -67,6 +67,34 @@ def load_results(workdir):
     return out
 
 
+def run_device(results):
+    """The device identity shared by a run's sidecars (schema v2), or None.
+
+    Every sidecar in one workdir is produced by the same device, so the first
+    one carrying a populated `device` object answers for the whole run.
+    """
+    for data in results.values():
+        device = data.get("device")
+        if isinstance(device, dict) and device.get("library"):
+            return device
+    return None
+
+
+def device_label(results, fallback):
+    """A human label for a run: its device identity, or the workdir name.
+
+    For a suite whose purpose is comparing devices, the device is the right
+    label; the workdir name is only a fallback for pre-v2 sidecars.
+    """
+    device = run_device(results)
+    if not device:
+        return fallback
+    return (
+        f"{device.get('library')} "
+        f"({device.get('device', 'default')}/{device.get('renderer', 'default')})"
+    )
+
+
 # --- Aggregation -------------------------------------------------------------
 
 
@@ -105,6 +133,14 @@ def channel_metric(data, channel, metric):
 def write_text_summary(workdir, results, out=sys.stdout):
     s = summarize(results)
     print(f"CTS report: {workdir}", file=out)
+    device = run_device(results)
+    if device:
+        print(
+            f"  device: {device.get('library')} "
+            f"({device.get('device', 'default')}/"
+            f"{device.get('renderer', 'default')})",
+            file=out,
+        )
     print(
         f"  {s['total']} cases: {s['passed']} passed, {s['failed']} failed, "
         f"{s['skipped']} skipped",
@@ -243,6 +279,16 @@ def generate_pdf(workdir, results, out_path):
     s = summarize(results)
 
     story.append(Paragraph(f"CTS Report: {root.name}", styles["Heading1"]))
+    device = run_device(results)
+    if device:
+        story.append(
+            Paragraph(
+                f"Device: {device.get('library')} "
+                f"({device.get('device', 'default')}/"
+                f"{device.get('renderer', 'default')})",
+                styles["Normal"],
+            )
+        )
     story.append(
         Paragraph(
             f"{s['total']} cases — {s['passed']} passed, {s['failed']} failed, "
@@ -290,10 +336,17 @@ def generate_pdf(workdir, results, out_path):
                 )
                 story.append(Paragraph(f"{ch.get('channel')}: {metrics}", styles["Normal"]))
                 imgs = []
-                for label in ("resultImage", "groundTruthImage"):
-                    p = root / ch.get(label, "")
-                    if p.is_file():
-                        imgs.append(load_image(p))
+                # Result, ground truth, then the debug images (diff + mask) when
+                # the runner emitted them (schema v2).
+                for label in (
+                    "resultImage",
+                    "groundTruthImage",
+                    "diffImage",
+                    "thresholdImage",
+                ):
+                    rel = ch.get(label, "")
+                    if rel and (root / rel).is_file():
+                        imgs.append(load_image(root / rel))
                 if imgs:
                     story.append(Table([imgs], hAlign="LEFT"))
             story.append(Spacer(1, 12))
@@ -332,11 +385,17 @@ def main(argv=None):
         ra = load_results(args.workdir_a)
         rb = load_results(args.workdir_b)
         diff = diff_results(ra, rb)
+        # Label the two runs by their producing device (schema v2), falling
+        # back to the workdir name for pre-v2 sidecars.
+        label_a = device_label(ra, args.workdir_a)
+        label_b = device_label(rb, args.workdir_b)
+        diff["device_a"] = label_a
+        diff["device_b"] = label_b
         if args.json:
             json.dump(diff, sys.stdout, indent=2)
             sys.stdout.write("\n")
         else:
-            write_text_diff(args.workdir_a, args.workdir_b, diff)
+            write_text_diff(label_a, label_b, diff)
         changed = bool(
             diff["only_in_a"]
             or diff["only_in_b"]
