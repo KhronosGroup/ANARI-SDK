@@ -8,13 +8,13 @@
 // attribute1 (texcoords for samplers), and attribute2 (opacity) so any of those
 // bindings resolves.
 
-#include "Categories.h"
 #include "../BuildContext.h"
 #include "../TestBuilder.h"
 #include "../WorldBuilder.h"
+#include "Categories.h"
 #include "generators/ColorPalette.h"
-#include "generators/PrimitiveGenerator.h"
 // std
+#include <algorithm>
 #include <functional>
 #include <string>
 #include <vector>
@@ -24,6 +24,7 @@ namespace cts {
 
 namespace {
 
+using anari::math::float2;
 using anari::math::float3;
 using anari::math::float4;
 using V = std::vector<Any>;
@@ -43,13 +44,36 @@ using ApplyFn = std::function<void(BuildContext &,
     anari::Material,
     const std::vector<anari::Sampler> &)>;
 
-// A triangle with attribute0 = palette colors, attribute1 = texcoords,
-// attribute2 = per-vertex opacity, so material bindings to "attribute0"/
-// "attribute2" and samplers reading "attribute1" all resolve.
-anari::Geometry materialBaseGeometry(anari::Device d, int count, int seed)
+// The canonical triangle Layout (ADR-0007) carrying attribute0 = palette
+// colors, attribute1 = planar texcoords, attribute2 = a left-to-right opacity
+// ramp, so material bindings to "attribute0"/"attribute2" and samplers reading
+// "attribute1" all resolve. The UVs are derived planarly from the grid's XY
+// extent (scaled so the checkerboard sampler tiles), and opacity ramps across
+// the grid so an opacity binding visibly varies.
+anari::Geometry materialBaseGeometry(anari::Device d, int count)
 {
-  scenes::PrimitiveGenerator gen(seed);
-  auto verts = gen.generateTriangles(count);
+  auto verts = layoutTriangleSoup(count);
+
+  float minX = verts[0].x, maxX = verts[0].x;
+  float minY = verts[0].y, maxY = verts[0].y;
+  for (const auto &v : verts) {
+    minX = std::min(minX, v.x);
+    maxX = std::max(maxX, v.x);
+    minY = std::min(minY, v.y);
+    maxY = std::max(maxY, v.y);
+  }
+  const float spanX = maxX > minX ? maxX - minX : 1.f;
+  const float spanY = maxY > minY ? maxY - minY : 1.f;
+
+  std::vector<float2> uv(verts.size());
+  std::vector<float> op(verts.size());
+  for (size_t i = 0; i < verts.size(); ++i) {
+    const float u = (verts[i].x - minX) / spanX;
+    const float w = (verts[i].y - minY) / spanY;
+    uv[i] = float2(2.f * u, 2.f * w); // [0,2] so the checkerboard tiles
+    op[i] = u; // left (transparent) -> right (opaque)
+  }
+
   auto geom = anari::newObject<anari::Geometry>(d, "triangle");
   anari::setAndReleaseParameter(d,
       geom,
@@ -60,10 +84,8 @@ anari::Geometry materialBaseGeometry(anari::Device d, int count, int seed)
       geom,
       "vertex.attribute0",
       anari::newArray1D(d, cols.data(), cols.size()));
-  auto uv = gen.generateAttributeVec2(verts.size(), 0.f, 2.f);
   anari::setAndReleaseParameter(
       d, geom, "vertex.attribute1", anari::newArray1D(d, uv.data(), uv.size()));
-  auto op = gen.generateAttributeFloat(verts.size(), 0.f, 1.f);
   anari::setAndReleaseParameter(
       d, geom, "vertex.attribute2", anari::newArray1D(d, op.data(), op.size()));
   anari::commitParameters(d, geom);
@@ -73,12 +95,11 @@ anari::Geometry materialBaseGeometry(anari::Device d, int count, int seed)
 anari::World materialWorld(BuildContext &ctx,
     const char *subtype,
     int count,
-    int seed,
     const std::vector<SamplerSpec> &specs,
     const ApplyFn &apply)
 {
   auto d = ctx.device();
-  auto geom = materialBaseGeometry(d, count, seed);
+  auto geom = materialBaseGeometry(d, count);
 
   std::vector<anari::Sampler> samplers;
   for (const auto &s : specs) {
@@ -127,7 +148,6 @@ void registerMaterialTests(Catalog &catalog)
         return materialWorld(ctx,
             "matte",
             16,
-            12345,
             {},
             [](BuildContext &ctx,
                 anari::Device d,
@@ -149,7 +169,6 @@ void registerMaterialTests(Catalog &catalog)
         return materialWorld(ctx,
             "matte",
             16,
-            12345,
             {{"image2D", "attribute1", false}},
             [](BuildContext &ctx,
                 anari::Device d,
@@ -171,7 +190,6 @@ void registerMaterialTests(Catalog &catalog)
         return materialWorld(ctx,
             "matte",
             16,
-            12345,
             {{"image1D", "attribute1", false}},
             [](BuildContext &ctx,
                 anari::Device d,
@@ -193,7 +211,6 @@ void registerMaterialTests(Catalog &catalog)
         return materialWorld(ctx,
             "physicallyBased",
             16,
-            12345,
             {},
             [](BuildContext &ctx,
                 anari::Device d,
@@ -215,7 +232,6 @@ void registerMaterialTests(Catalog &catalog)
         return materialWorld(ctx,
             "physicallyBased",
             16,
-            12345,
             {{"image2D", "attribute1", false}},
             [](BuildContext &ctx,
                 anari::Device d,
@@ -237,7 +253,6 @@ void registerMaterialTests(Catalog &catalog)
         return materialWorld(ctx,
             "physicallyBased",
             16,
-            12345,
             {{"image1D", "attribute1", false}, {"image2D", "attribute1", true}},
             [](BuildContext &ctx,
                 anari::Device d,
@@ -262,7 +277,6 @@ void registerMaterialTests(Catalog &catalog)
         return materialWorld(ctx,
             "physicallyBased",
             16,
-            12345,
             {{"image2D", "attribute1", false}},
             [](BuildContext &ctx,
                 anari::Device d,
@@ -284,7 +298,6 @@ void registerMaterialTests(Catalog &catalog)
         return materialWorld(ctx,
             "physicallyBased",
             2,
-            4321,
             {},
             [](BuildContext &ctx,
                 anari::Device d,
@@ -304,7 +317,6 @@ void registerMaterialTests(Catalog &catalog)
         return materialWorld(ctx,
             "physicallyBased",
             16,
-            12345,
             {{"image1D", "attribute1", false}},
             [](BuildContext &ctx,
                 anari::Device d,
@@ -329,7 +341,6 @@ void registerMaterialTests(Catalog &catalog)
         return materialWorld(ctx,
             "physicallyBased",
             16,
-            12345,
             {{"image1D", "attribute1", false}, {"image2D", "attribute1", true}},
             [](BuildContext &ctx,
                 anari::Device d,
@@ -354,7 +365,6 @@ void registerMaterialTests(Catalog &catalog)
         return materialWorld(ctx,
             "physicallyBased",
             16,
-            12345,
             {{"image1D", "attribute1", false}},
             [](BuildContext &ctx,
                 anari::Device d,
@@ -375,8 +385,8 @@ void registerMaterialTests(Catalog &catalog)
         return materialWorld(ctx,
             "physicallyBased",
             16,
-            12345,
-            {{"image2D", "attribute1", false}, {"image1D", "attribute1", false}},
+            {{"image2D", "attribute1", false},
+                {"image1D", "attribute1", false}},
             [](BuildContext &ctx,
                 anari::Device d,
                 anari::Material mat,
@@ -401,8 +411,8 @@ void registerMaterialTests(Catalog &catalog)
         return materialWorld(ctx,
             "physicallyBased",
             16,
-            12345,
-            {{"image2D", "attribute1", false}, {"image1D", "attribute1", false}},
+            {{"image2D", "attribute1", false},
+                {"image1D", "attribute1", false}},
             [](BuildContext &ctx,
                 anari::Device d,
                 anari::Material mat,
@@ -427,7 +437,6 @@ void registerMaterialTests(Catalog &catalog)
         return materialWorld(ctx,
             "physicallyBased",
             16,
-            12345,
             {{"image1D", "attribute1", false}},
             [](BuildContext &ctx,
                 anari::Device d,
@@ -452,7 +461,6 @@ void registerMaterialTests(Catalog &catalog)
         return materialWorld(ctx,
             "physicallyBased",
             16,
-            12345,
             {{"image1D", "attribute1", false}},
             [](BuildContext &ctx,
                 anari::Device d,

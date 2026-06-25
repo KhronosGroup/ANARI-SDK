@@ -42,7 +42,6 @@ anari::World triangleSurfaceWorld(BuildContext &ctx, float3 color, int count)
   o.subtype = "triangle";
   o.shape = "triangle";
   o.primitiveCount = count;
-  o.seed = 12345;
   auto geom = buildGeometry(d, o);
   auto mat = makeMatteMaterial(d, color);
   auto surface = makeSurface(d, geom, mat);
@@ -58,15 +57,21 @@ anari::World triangleSurfaceWorld(BuildContext &ctx, float3 color, int count)
   return world;
 }
 
-// A surface over a single-triangle geometry, optionally tagged with an id.
-anari::Surface idSurface(anari::Device d, int seed, uint32_t id, bool setId)
+// A surface over a single canonical triangle translated by `offset`, optionally
+// tagged with an id. The id tests place two of these at different offsets so
+// the two ids occupy distinct, non-overlapping regions of the id channel.
+anari::Surface idSurface(
+    anari::Device d, float3 offset, uint32_t id, bool setId)
 {
-  GeometryOptions o;
-  o.subtype = "triangle";
-  o.shape = "triangle";
-  o.primitiveCount = 1;
-  o.seed = seed;
-  auto geom = buildGeometry(d, o);
+  auto verts = layoutTriangleSoup(1);
+  for (auto &v : verts)
+    v = v + offset;
+  auto geom = anari::newObject<anari::Geometry>(d, "triangle");
+  anari::setAndReleaseParameter(d,
+      geom,
+      "vertex.position",
+      anari::newArray1D(d, verts.data(), verts.size()));
+  anari::commitParameters(d, geom);
   auto mat = makeMatteMaterial(d, float3(0.7f, 0.7f, 0.7f));
   auto s = anari::newObject<anari::Surface>(d);
   anari::setParameter(d, s, "geometry", geom);
@@ -79,20 +84,18 @@ anari::Surface idSurface(anari::Device d, int seed, uint32_t id, bool setId)
   return s;
 }
 
-// An instance wrapping a group with one surface, optionally tagged with an id.
-anari::Instance idInstance(anari::Device d, int seed, uint32_t id, bool setId)
+// An instance wrapping a group with one surface, translated by `offset` so two
+// instances occupy distinct regions, optionally tagged with an id.
+anari::Instance idInstance(
+    anari::Device d, float3 offset, uint32_t id, bool setId)
 {
-  auto s = idSurface(d, seed, 0, false);
-  auto group = anari::newObject<anari::Group>(d);
-  anari::setAndReleaseParameter(
-      d, group, "surface", anari::newArray1D(d, &s, 1));
-  anari::commitParameters(d, group);
+  auto s = idSurface(d, float3(0.f), 0, false);
+  auto inst = makeInstance(d, {s}, anari::math::translation_matrix(offset));
   anari::release(d, s);
-  auto inst = anari::newObject<anari::Instance>(d, "transform");
-  if (setId)
+  if (setId) {
     anari::setParameter(d, inst, "id", id);
-  anari::setAndReleaseParameter(d, inst, "group", group);
-  anari::commitParameters(d, inst);
+    anari::commitParameters(d, inst);
+  }
   return inst;
 }
 
@@ -261,7 +264,6 @@ void registerFrameTests(Catalog &catalog)
         o.subtype = "triangle";
         o.shape = "triangle";
         o.primitiveCount = 8;
-        o.seed = 12345;
         auto geom = buildGeometry(d, o);
         std::vector<uint32_t> ids = {5, 3, 4, 2, 7, 6, 0, 1};
         anari::setAndReleaseParameter(d,
@@ -287,8 +289,8 @@ void registerFrameTests(Catalog &catalog)
   makeTest("frame", "frame_objectID_channel_surface")
       .build([](BuildContext &ctx) {
         auto d = ctx.device();
-        auto s0 = idSurface(d, 12345, 1, true);
-        auto s1 = idSurface(d, 54321, 0, true);
+        auto s0 = idSurface(d, float3(-0.3f, 0.f, 0.f), 1, true);
+        auto s1 = idSurface(d, float3(0.3f, 0.f, 0.f), 0, true);
         WorldContents wc;
         wc.surfaces = {s0, s1};
         auto world = assembleWorld(d, wc);
@@ -304,8 +306,8 @@ void registerFrameTests(Catalog &catalog)
   makeTest("frame", "frame_objectID_channel_group")
       .build([](BuildContext &ctx) {
         auto d = ctx.device();
-        auto i0 = idInstance(d, 12345, 0, false);
-        auto i1 = idInstance(d, 54321, 0, false);
+        auto i0 = idInstance(d, float3(-0.3f, 0.f, 0.f), 0, false);
+        auto i1 = idInstance(d, float3(0.3f, 0.f, 0.f), 0, false);
         WorldContents wc;
         wc.instances = {i0, i1};
         auto world = assembleWorld(d, wc);
@@ -321,8 +323,12 @@ void registerFrameTests(Catalog &catalog)
   makeTest("frame", "frame_objectID_channel_volume")
       .build([](BuildContext &ctx) {
         auto d = ctx.device();
-        auto makeVol = [&](int seed, uint32_t id) {
-          auto field = makeStructuredRegularField(d, {3, 3, 3}, seed);
+        // Two volumes side by side (origin shifted along X) so the two ids
+        // occupy distinct, non-overlapping regions of the id channel.
+        auto makeVol = [&](float originX, uint32_t id) {
+          auto field = newStructuredRegularField(d, {3, 3, 3});
+          anari::setParameter(d, field, "origin", float3(originX, -1.f, -1.f));
+          anari::commitParameters(d, field);
           auto vol = anari::newObject<anari::Volume>(d, "scivis");
           anari::setParameter(d, vol, "value", field);
           std::vector<float3> col = {{0.f, 0.f, 1.f}, {1.f, 0.f, 0.f}};
@@ -336,8 +342,8 @@ void registerFrameTests(Catalog &catalog)
           anari::release(d, field);
           return vol;
         };
-        auto v0 = makeVol(12345, 1);
-        auto v1 = makeVol(54321, 0);
+        auto v0 = makeVol(-2.5f, 1);
+        auto v1 = makeVol(0.5f, 0);
         WorldContents wc;
         wc.volumes = {v0, v1};
         auto world = assembleWorld(d, wc);
@@ -355,8 +361,8 @@ void registerFrameTests(Catalog &catalog)
   makeTest("frame", "frame_instanceID_channel")
       .build([](BuildContext &ctx) {
         auto d = ctx.device();
-        auto i0 = idInstance(d, 12345, 1, true);
-        auto i1 = idInstance(d, 54321, 0, true);
+        auto i0 = idInstance(d, float3(-0.3f, 0.f, 0.f), 1, true);
+        auto i1 = idInstance(d, float3(0.3f, 0.f, 0.f), 0, true);
         WorldContents wc;
         wc.instances = {i0, i1};
         auto world = assembleWorld(d, wc);

@@ -70,13 +70,12 @@ anari::World surfaceWorld(BuildContext &ctx, const GeometryOptions &opts)
 }
 
 // Build options for a basic shape Test of the given subtype/shape.
-GeometryOptions base(const char *subtype, const char *shape, int count, int seed)
+GeometryOptions base(const char *subtype, const char *shape, int count)
 {
   GeometryOptions o;
   o.subtype = subtype;
   o.shape = shape;
   o.primitiveCount = count;
-  o.seed = seed;
   return o;
 }
 
@@ -142,7 +141,7 @@ anari::World normalTangentWorld(BuildContext &ctx, bool quad)
 anari::World isosurfaceWorld(BuildContext &ctx)
 {
   auto d = ctx.device();
-  auto field = makeStructuredRegularField(d, {3, 3, 3}, 12345);
+  auto field = makeStructuredRegularField(d, {16, 16, 16});
   auto geom = anari::newObject<anari::Geometry>(d, "isosurface");
   anari::setParameter(d, geom, "field", field);
   std::vector<float> iso = {0.25f, 0.5f, 0.75f};
@@ -183,7 +182,7 @@ void registerShape(Catalog &catalog,
   // Basic soup-vs-indexed equivalence: a Variant sharing one ground truth.
   auto basic = makeTest("geometry", prefix);
   basic.build([=](BuildContext &ctx) {
-    return surfaceWorld(ctx, withAxes(ctx, base(subtype, shape, 16, 12345)));
+    return surfaceWorld(ctx, withAxes(ctx, base(subtype, shape, 16)));
   });
   if (soupVariantOnly)
     basic.variant("primitiveMode", {"soup", "indexed"});
@@ -210,7 +209,8 @@ void registerGeometryTests(Catalog &catalog)
 
   makeTest("geometry", "triangle_colors")
       .build([](BuildContext &ctx) {
-        return surfaceWorld(ctx, withAxes(ctx, base("triangle", "triangle", 4, 12345)));
+        return surfaceWorld(
+            ctx, withAxes(ctx, base("triangle", "triangle", 4)));
       })
       .permute("color", {"primitive.color", "vertex.color"})
       .channels(kColorOnly)
@@ -228,7 +228,7 @@ void registerGeometryTests(Catalog &catalog)
 
   makeTest("geometry", "triangle_random_attributes")
       .build([](BuildContext &ctx) {
-        GeometryOptions o = base("triangle", "triangle", 16, 12345);
+        GeometryOptions o = base("triangle", "triangle", 16);
         o.vertexAttributes = true;
         o.primitiveAttributes = true;
         return surfaceWorld(ctx, withAxes(ctx, o));
@@ -239,7 +239,7 @@ void registerGeometryTests(Catalog &catalog)
 
   makeTest("geometry", "triangle_unused_vertices")
       .build([](BuildContext &ctx) {
-        GeometryOptions o = base("triangle", "triangle", 4, 54321);
+        GeometryOptions o = base("triangle", "triangle", 4);
         o.primitiveMode = "indexed";
         o.unusedVertices = true;
         return surfaceWorld(ctx, withAxes(ctx, o));
@@ -255,7 +255,7 @@ void registerGeometryTests(Catalog &catalog)
 
   makeTest("geometry", "quad_colors")
       .build([](BuildContext &ctx) {
-        return surfaceWorld(ctx, withAxes(ctx, base("quad", "quad", 4, 54321)));
+        return surfaceWorld(ctx, withAxes(ctx, base("quad", "quad", 4)));
       })
       .permute("color", {"primitive.color", "vertex.color"})
       .channels(kColorOnly)
@@ -264,7 +264,7 @@ void registerGeometryTests(Catalog &catalog)
 
   makeTest("geometry", "quad_frame_color_types")
       .build([](BuildContext &ctx) {
-        return surfaceWorld(ctx, withAxes(ctx, base("quad", "quad", 16, 12345)));
+        return surfaceWorld(ctx, withAxes(ctx, base("quad", "quad", 16)));
       })
       .permute("frame_color_type", kFrameColorTypes)
       .channels(kColorOnly)
@@ -282,7 +282,7 @@ void registerGeometryTests(Catalog &catalog)
 
   makeTest("geometry", "quad_unused_vertices")
       .build([](BuildContext &ctx) {
-        GeometryOptions o = base("quad", "quad", 4, 54321);
+        GeometryOptions o = base("quad", "quad", 4);
         o.primitiveMode = "indexed";
         o.unusedVertices = true;
         return surfaceWorld(ctx, withAxes(ctx, o));
@@ -294,7 +294,7 @@ void registerGeometryTests(Catalog &catalog)
   // ---- sphere ---------------------------------------------------------------
   makeTest("geometry", "sphere")
       .build([](BuildContext &ctx) {
-        return surfaceWorld(ctx, withAxes(ctx, base("sphere", "", 16, 54321)));
+        return surfaceWorld(ctx, withAxes(ctx, base("sphere", "", 16)));
       })
       .permute("primitiveCount", {1, 16})
       .variant("primitiveMode", {"soup", "indexed"})
@@ -304,7 +304,7 @@ void registerGeometryTests(Catalog &catalog)
 
   makeTest("geometry", "sphere_colors")
       .build([](BuildContext &ctx) {
-        return surfaceWorld(ctx, withAxes(ctx, base("sphere", "", 4, 54321)));
+        return surfaceWorld(ctx, withAxes(ctx, base("sphere", "", 4)));
       })
       .permute("color", {"primitive.color", "vertex.color"})
       .permute("primitiveMode", {"soup", "indexed"})
@@ -314,7 +314,7 @@ void registerGeometryTests(Catalog &catalog)
 
   makeTest("geometry", "sphere_frame_color_types")
       .build([](BuildContext &ctx) {
-        return surfaceWorld(ctx, withAxes(ctx, base("sphere", "", 16, 54321)));
+        return surfaceWorld(ctx, withAxes(ctx, base("sphere", "", 16)));
       })
       .permute("frame_color_type", kFrameColorTypes)
       .channels(kColorOnly)
@@ -323,7 +323,7 @@ void registerGeometryTests(Catalog &catalog)
 
   makeTest("geometry", "sphere_global_radii")
       .build([](BuildContext &ctx) {
-        GeometryOptions o = base("sphere", "", 16, 54321);
+        GeometryOptions o = base("sphere", "", 16);
         o.globalRadius = 0.05f;
         return surfaceWorld(ctx, withAxes(ctx, o));
       })
@@ -333,7 +333,7 @@ void registerGeometryTests(Catalog &catalog)
 
   makeTest("geometry", "sphere_unused_vertices")
       .build([](BuildContext &ctx) {
-        GeometryOptions o = base("sphere", "", 4, 54321);
+        GeometryOptions o = base("sphere", "", 4);
         o.primitiveMode = "indexed";
         o.unusedVertices = true;
         return surfaceWorld(ctx, withAxes(ctx, o));
@@ -347,7 +347,7 @@ void registerGeometryTests(Catalog &catalog)
 
   makeTest("geometry", "cone_colors")
       .build([](BuildContext &ctx) {
-        return surfaceWorld(ctx, withAxes(ctx, base("cone", "", 4, 12345)));
+        return surfaceWorld(ctx, withAxes(ctx, base("cone", "", 4)));
       })
       .permute("color", {"primitive.color", "vertex.color"})
       .channels(kColorOnly)
@@ -356,7 +356,7 @@ void registerGeometryTests(Catalog &catalog)
 
   makeTest("geometry", "cone_frame_color_types")
       .build([](BuildContext &ctx) {
-        return surfaceWorld(ctx, withAxes(ctx, base("cone", "", 16, 12345)));
+        return surfaceWorld(ctx, withAxes(ctx, base("cone", "", 16)));
       })
       .permute("frame_color_type", kFrameColorTypes)
       .channels(kColorOnly)
@@ -365,7 +365,7 @@ void registerGeometryTests(Catalog &catalog)
 
   makeTest("geometry", "cone_global_caps")
       .build([](BuildContext &ctx) {
-        return surfaceWorld(ctx, withAxes(ctx, base("cone", "", 16, 12345)));
+        return surfaceWorld(ctx, withAxes(ctx, base("cone", "", 16)));
       })
       .permute("globalCaps", {"none", "first", "second", "both"})
       .channels(kColorDepth)
@@ -374,7 +374,7 @@ void registerGeometryTests(Catalog &catalog)
 
   makeTest("geometry", "cone_vertex_caps")
       .build([](BuildContext &ctx) {
-        return surfaceWorld(ctx, withAxes(ctx, base("cone", "", 16, 12345)));
+        return surfaceWorld(ctx, withAxes(ctx, base("cone", "", 16)));
       })
       .permute("vertexCaps", V{Any(true), Any(false)})
       .channels(kColorDepth)
@@ -383,7 +383,7 @@ void registerGeometryTests(Catalog &catalog)
 
   makeTest("geometry", "cone_unused_vertices")
       .build([](BuildContext &ctx) {
-        GeometryOptions o = base("cone", "", 4, 54321);
+        GeometryOptions o = base("cone", "", 4);
         o.primitiveMode = "indexed";
         o.unusedVertices = true;
         return surfaceWorld(ctx, withAxes(ctx, o));
@@ -398,7 +398,7 @@ void registerGeometryTests(Catalog &catalog)
 
   makeTest("geometry", "cylinder_colors")
       .build([](BuildContext &ctx) {
-        return surfaceWorld(ctx, withAxes(ctx, base("cylinder", "", 4, 12345)));
+        return surfaceWorld(ctx, withAxes(ctx, base("cylinder", "", 4)));
       })
       .permute("color", {"primitive.color", "vertex.color"})
       .channels(kColorOnly)
@@ -407,7 +407,7 @@ void registerGeometryTests(Catalog &catalog)
 
   makeTest("geometry", "cylinder_frame_color_types")
       .build([](BuildContext &ctx) {
-        return surfaceWorld(ctx, withAxes(ctx, base("cylinder", "", 16, 12345)));
+        return surfaceWorld(ctx, withAxes(ctx, base("cylinder", "", 16)));
       })
       .permute("frame_color_type", kFrameColorTypes)
       .channels(kColorOnly)
@@ -416,7 +416,7 @@ void registerGeometryTests(Catalog &catalog)
 
   makeTest("geometry", "cylinder_global_caps")
       .build([](BuildContext &ctx) {
-        return surfaceWorld(ctx, withAxes(ctx, base("cylinder", "", 16, 12345)));
+        return surfaceWorld(ctx, withAxes(ctx, base("cylinder", "", 16)));
       })
       .permute("globalCaps", {"none", "first", "second", "both"})
       .channels(kColorDepth)
@@ -425,7 +425,7 @@ void registerGeometryTests(Catalog &catalog)
 
   makeTest("geometry", "cylinder_global_radii")
       .build([](BuildContext &ctx) {
-        GeometryOptions o = base("cylinder", "", 16, 12345);
+        GeometryOptions o = base("cylinder", "", 16);
         o.globalRadius = 0.05f;
         return surfaceWorld(ctx, withAxes(ctx, o));
       })
@@ -435,7 +435,7 @@ void registerGeometryTests(Catalog &catalog)
 
   makeTest("geometry", "cylinder_vertex_caps")
       .build([](BuildContext &ctx) {
-        return surfaceWorld(ctx, withAxes(ctx, base("cylinder", "", 16, 12345)));
+        return surfaceWorld(ctx, withAxes(ctx, base("cylinder", "", 16)));
       })
       .permute("vertexCaps", V{Any(true), Any(false)})
       .channels(kColorDepth)
@@ -444,7 +444,7 @@ void registerGeometryTests(Catalog &catalog)
 
   makeTest("geometry", "cylinder_unused_vertices")
       .build([](BuildContext &ctx) {
-        GeometryOptions o = base("cylinder", "", 4, 54321);
+        GeometryOptions o = base("cylinder", "", 4);
         o.primitiveMode = "indexed";
         o.unusedVertices = true;
         return surfaceWorld(ctx, withAxes(ctx, o));
@@ -459,7 +459,7 @@ void registerGeometryTests(Catalog &catalog)
 
   makeTest("geometry", "curve_colors")
       .build([](BuildContext &ctx) {
-        return surfaceWorld(ctx, withAxes(ctx, base("curve", "", 4, 12345)));
+        return surfaceWorld(ctx, withAxes(ctx, base("curve", "", 4)));
       })
       .permute("color", {"primitive.color", "vertex.color"})
       .channels(kColorOnly)
@@ -468,7 +468,7 @@ void registerGeometryTests(Catalog &catalog)
 
   makeTest("geometry", "curve_frame_color_types")
       .build([](BuildContext &ctx) {
-        return surfaceWorld(ctx, withAxes(ctx, base("curve", "", 16, 12345)));
+        return surfaceWorld(ctx, withAxes(ctx, base("curve", "", 16)));
       })
       .permute("frame_color_type", kFrameColorTypes)
       .channels(kColorOnly)
@@ -477,7 +477,7 @@ void registerGeometryTests(Catalog &catalog)
 
   makeTest("geometry", "curve_global_radii")
       .build([](BuildContext &ctx) {
-        GeometryOptions o = base("curve", "", 16, 12345);
+        GeometryOptions o = base("curve", "", 16);
         o.globalRadius = 0.05f;
         return surfaceWorld(ctx, withAxes(ctx, o));
       })
@@ -487,7 +487,7 @@ void registerGeometryTests(Catalog &catalog)
 
   makeTest("geometry", "curve_unused_vertices")
       .build([](BuildContext &ctx) {
-        GeometryOptions o = base("curve", "", 4, 54321);
+        GeometryOptions o = base("curve", "", 4);
         o.primitiveMode = "indexed";
         o.unusedVertices = true;
         return surfaceWorld(ctx, withAxes(ctx, o));

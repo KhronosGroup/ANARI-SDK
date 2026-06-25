@@ -40,7 +40,6 @@ anari::World buildTriangleWorld(BuildContext &ctx)
   opts.subtype = "triangle";
   opts.primitiveCount = ctx.get<int>("primitiveCount", 4);
   opts.primitiveMode = ctx.getString("primitiveMode", "soup");
-  opts.seed = 11;
   auto geom = buildGeometry(d, opts);
   auto mat = makeMatteMaterial(d, float3(0.8f, 0.4f, 0.2f));
   auto surface = makeSurface(d, geom, mat);
@@ -62,7 +61,6 @@ anari::World buildSphereWorld(BuildContext &ctx)
   GeometryOptions opts;
   opts.subtype = "sphere";
   opts.primitiveCount = 6;
-  opts.seed = 3;
   auto geom = buildGeometry(d, opts);
   auto mat = makeMatteMaterial(d, float3(0.3f, 0.7f, 0.5f));
   auto surface = makeSurface(d, geom, mat);

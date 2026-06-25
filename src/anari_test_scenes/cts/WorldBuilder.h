@@ -11,6 +11,7 @@
 // std
 #include <array>
 #include <cstdint>
+#include <functional>
 #include <optional>
 #include <string>
 #include <vector>
@@ -54,8 +55,11 @@ inline void setBoundParameter(anari::Device d,
 
 // --- Geometry ----------------------------------------------------------------
 
-// How a geometry is generated. Mirrors the parameters the old SceneGenerator
-// drove from JSON.
+// How a geometry is laid out. The primitives are placed as a deterministic,
+// human-viewable Layout (ADR-0007): a near-square grid of identical canonical
+// primitives, centered at the origin in the XY plane and facing +Z (the
+// camera). No randomness is involved; the feature combinations a Test asserts
+// live in these named fields.
 struct GeometryOptions
 {
   // triangle, quad, sphere, curve, cone, cylinder
@@ -65,7 +69,6 @@ struct GeometryOptions
   // soup or indexed.
   std::string primitiveMode{"soup"};
   int primitiveCount{1};
-  int seed{0};
 
   // Cones/cylinders/spheres/curves: use one global radius instead of per-vertex.
   std::optional<float> globalRadius;
@@ -78,10 +81,12 @@ struct GeometryOptions
 
   // Fill an attribute with palette colors (e.g. "vertex.color").
   std::string colorAttribute;
-  // Fill an attribute with opacity values (e.g. "vertex.attribute0").
+  // Fill an attribute with a left-to-right opacity ramp (e.g.
+  // "vertex.attribute0").
   std::string opacityAttribute;
 
-  // Fill the standard vertex/primitive attribute0..3 slots with random data.
+  // Fill the standard vertex/primitive attribute0..3 slots with deterministic
+  // ramps (used by tests that assert attribute arrays exist, not their values).
   bool vertexAttributes{false};
   bool primitiveAttributes{false};
   float attributeMin{0.0f};
@@ -92,6 +97,13 @@ struct GeometryOptions
 // committed handle (caller owns it).
 ANARI_TEST_SCENES_INTERFACE anari::Geometry buildGeometry(
     anari::Device d, const GeometryOptions &opts);
+
+// The canonical equilateral-triangle Layout: three vertices per triangle in
+// soup order, laid out on the near-square grid for `count` primitives. Shared
+// by buildGeometry (triangle/triangle) and the material backdrop so both place
+// their triangles identically.
+ANARI_TEST_SCENES_INTERFACE std::vector<anari::math::float3> layoutTriangleSoup(
+    int count);
 
 // --- Surfaces, materials, lights ---------------------------------------------
 
@@ -132,16 +144,32 @@ ANARI_TEST_SCENES_INTERFACE anari::Sampler newImageSampler(anari::Device d,
 
 // --- Volumes -----------------------------------------------------------------
 
-// A structuredRegular spatial field filled with random data of the given
-// dimensions.
-ANARI_TEST_SCENES_INTERFACE anari::SpatialField makeStructuredRegularField(
-    anari::Device d, std::array<uint32_t, 3> dimensions, int seed = 0);
+// A scalar field sampled over the field's domain. The argument is a position in
+// the centered, normalized domain [-1,1]^3; the return is the scalar stored at
+// that grid point. Swap in a different function (e.g. a smooth sinusoid) to
+// change the field's shape without touching the fill machinery (ADR-0007).
+using FieldFn = std::function<float(anari::math::float3)>;
 
-// A structuredRegular spatial field with its random data array and default
+// Radial distance from the domain center: 0 at the center, growing to ~sqrt(3)
+// at the corners. Isosurfaces at 0.25/0.5/0.75 are nested spheres fully inside
+// the domain; a transfer-function volume shows a smooth radial gradient. This
+// is the default field of (new|make)StructuredRegularField.
+ANARI_TEST_SCENES_INTERFACE float radialDistanceField(anari::math::float3 p);
+
+// A structuredRegular spatial field filled by sampling `field` over its domain.
+ANARI_TEST_SCENES_INTERFACE anari::SpatialField makeStructuredRegularField(
+    anari::Device d,
+    std::array<uint32_t, 3> dimensions,
+    const FieldFn &field = {});
+
+// A structuredRegular spatial field with its analytic data array and default
 // origin/spacing set, but NOT committed, so a Test can override origin/spacing/
-// filter per Case and then commit.
+// filter per Case and then commit. A null `field` defaults to
+// radialDistanceField.
 ANARI_TEST_SCENES_INTERFACE anari::SpatialField newStructuredRegularField(
-    anari::Device d, std::array<uint32_t, 3> dimensions, int seed = 0);
+    anari::Device d,
+    std::array<uint32_t, 3> dimensions,
+    const FieldFn &field = {});
 
 // A transferFunction1D volume over the given spatial field.
 ANARI_TEST_SCENES_INTERFACE anari::Volume makeVolume(

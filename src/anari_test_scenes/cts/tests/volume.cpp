@@ -58,7 +58,7 @@ void registerVolumeTests(Catalog &catalog)
   makeTest("volume", "volume")
       .build([](BuildContext &ctx) {
         auto d = ctx.device();
-        auto field = newStructuredRegularField(d, {3, 3, 3}, 12345);
+        auto field = newStructuredRegularField(d, {3, 3, 3});
         setBoundParameter(d, field, "filter", ctx.value("filter"));
         setBoundParameter(d, field, "origin", ctx.value("origin"));
         setBoundParameter(d, field, "spacing", ctx.value("spacing"));

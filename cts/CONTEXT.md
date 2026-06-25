@@ -87,6 +87,14 @@ An optional per-Case builder a Test supplies beyond `build()` — `cameraBuild`
 renderer, and light categories vary the render camera or renderer instead of the
 runner's bounds-framed camera / `default` renderer (ADR-0006).
 
+**Layout**:
+The deterministic, human-viewable placement of a Test's primitives — their
+positions, orientations, and sizes — so a rendered Case reads as orderly geometry
+(a near-square grid of identical canonical primitives facing the camera) rather
+than a random pile. Owned by the `anari::cts` layer and driven by
+`buildGeometry`; distinct from the viewer-only random `PrimitiveGenerator`.
+_Avoid_: arrangement, placement (as standalone terms)
+
 **Workdir**:
 The single root directory a run operates under, containing the conventional
 subdirs `results/`, `ground_truth/`, and `assets/`. Files mirror the Catalog

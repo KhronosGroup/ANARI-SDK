@@ -17,3 +17,6 @@ build and run the Reference device to (re)generate ground truth first. Ground
 truth is not version-pinned unless separately archived, so cross-machine
 reproducibility depends on the Reference device being deterministic across
 platforms (the scene `seed` parameters exist for exactly this reason).
+
+**Update (see ADR-0007):** the `seed` mechanism named above is superseded for CTS
+geometry by a deterministic RNG-free Layout; determinism is now by construction.

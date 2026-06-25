@@ -3,11 +3,13 @@
 
 #include "WorldBuilder.h"
 #include "generators/ColorPalette.h"
-#include "generators/PrimitiveGenerator.h"
 #include "generators/TextureGenerator.h"
 // std
+#include <algorithm>
+#include <cmath>
 #include <cstring>
 #include <string>
+#include <utility>
 
 namespace anari {
 namespace cts {
@@ -60,19 +62,359 @@ void setBoundParameterImpl(anari::Device d,
 
 } // namespace detail
 
-// --- Geometry ----------------------------------------------------------------
+// --- Geometry: deterministic Layout (ADR-0007) -------------------------------
+
+namespace {
+
+using vec2u = math::vec<uint32_t, 2>;
+using vec3u = math::vec<uint32_t, 3>;
+using vec4u = math::vec<uint32_t, 4>;
+
+// Grid + primitive proportions, all in world units. The grid is centered at the
+// origin in the XY plane; primitives face +Z (toward the bounds-framed camera).
+constexpr float kPitch = 0.5f; // cell-to-cell spacing
+constexpr float kGutter =
+    0.2f; // fraction of a cell left empty around a primitive
+constexpr float kPrimSize = kPitch * (1.f - kGutter); // primitive extent (0.4)
+constexpr float kHalf = kPrimSize * 0.5f; // half extent (0.2)
+constexpr float kTubeRadius =
+    0.3f * kPitch; // cone base / cylinder radius (0.15)
+constexpr float kSphereRadius = 0.3f * kPitch; // sphere radius (0.15)
+constexpr float kCurveRadius = 0.1f * kPitch; // curve segment radius (0.05)
+constexpr float kCubeYawDeg = 35.f; // cube three-quarter view yaw (about Y)
+constexpr float kCubePitchDeg = 25.f; // cube three-quarter view pitch (about X)
+
+// Columns/rows of the near-square grid holding `n` primitives.
+struct Grid
+{
+  int cols;
+  int rows;
+};
+
+Grid gridFor(int n)
+{
+  const int count = n < 1 ? 1 : n;
+  const int cols =
+      static_cast<int>(std::ceil(std::sqrt(static_cast<double>(count))));
+  const int rows = (count + cols - 1) / cols;
+  return {cols, rows};
+}
+
+// World-space center of the cell holding primitive `i`, grid centered at
+// origin. Primitive 0 is the top-left cell; index increases left-to-right,
+// top-to-bottom.
+math::float3 cellCenter(int i, const Grid &g)
+{
+  const int r = i / g.cols;
+  const int c = i % g.cols;
+  const float x = (static_cast<float>(c) - (g.cols - 1) * 0.5f) * kPitch;
+  const float y = ((g.rows - 1) * 0.5f - static_cast<float>(r)) * kPitch;
+  return math::float3(x, y, 0.f);
+}
+
+// The eight corners of a unit cube tilted into a three-quarter view, in the
+// canonical 0..7 vertex order, centered at `c`. Index order matches the cube
+// index tables below.
+std::array<math::float3, 8> cubeCorners(const math::float3 &c)
+{
+  // yaw about Y, then pitch about X — computed once.
+  static const math::mat4 rot = math::mul(
+      math::rotation_matrix(math::rotation_quat(
+          math::float3(1.f, 0.f, 0.f), anari::radians(kCubePitchDeg))),
+      math::rotation_matrix(math::rotation_quat(
+          math::float3(0.f, 1.f, 0.f), anari::radians(kCubeYawDeg))));
+  // Canonical 0..1 corner coordinates (matching PrimitiveGenerator's indexed
+  // cube), remapped to a [-kHalf, kHalf] cube and rotated.
+  static const std::array<math::float3, 8> unit = {math::float3(0, 0, 0),
+      math::float3(1, 0, 0),
+      math::float3(0, 1, 0),
+      math::float3(0, 0, 1),
+      math::float3(1, 1, 0),
+      math::float3(1, 0, 1),
+      math::float3(0, 1, 1),
+      math::float3(1, 1, 1)};
+  std::array<math::float3, 8> out;
+  for (size_t i = 0; i < 8; ++i) {
+    const math::float3 local((unit[i].x * 2.f - 1.f) * kHalf,
+        (unit[i].y * 2.f - 1.f) * kHalf,
+        (unit[i].z * 2.f - 1.f) * kHalf);
+    out[i] = c + math::mul(rot, math::float4(local, 1.f)).xyz();
+  }
+  return out;
+}
+
+// Triangle face indices of the canonical cube (12 triangles).
+const std::array<vec3u, 12> kCubeTris = {vec3u{0, 2, 1},
+    vec3u{1, 2, 4},
+    vec3u{1, 4, 5},
+    vec3u{5, 4, 7},
+    vec3u{5, 7, 3},
+    vec3u{6, 7, 3},
+    vec3u{0, 3, 6},
+    vec3u{0, 6, 2},
+    vec3u{2, 7, 4},
+    vec3u{2, 6, 7},
+    vec3u{0, 5, 1},
+    vec3u{0, 3, 5}};
+
+// Quad face indices of the canonical cube (6 quads).
+const std::array<vec4u, 6> kCubeQuads = {vec4u{0, 2, 4, 1},
+    vec4u{1, 4, 7, 5},
+    vec4u{5, 7, 6, 3},
+    vec4u{0, 3, 6, 2},
+    vec4u{2, 6, 7, 4},
+    vec4u{0, 1, 5, 3}};
+
+// The four corners of a unit square facing +Z, centered at `c`, CCW from +Z.
+std::array<math::float3, 4> squareCorners(const math::float3 &c)
+{
+  return {c + math::float3(-kHalf, -kHalf, 0.f),
+      c + math::float3(kHalf, -kHalf, 0.f),
+      c + math::float3(kHalf, kHalf, 0.f),
+      c + math::float3(-kHalf, kHalf, 0.f)};
+}
+
+// soup: two triangles per square, expanded as 6 vertices.
+std::vector<math::float3> layoutTriQuadsSoup(int n)
+{
+  const Grid g = gridFor(n);
+  std::vector<math::float3> v;
+  v.reserve(static_cast<size_t>(n) * 6);
+  for (int i = 0; i < n; ++i) {
+    const auto s = squareCorners(cellCenter(i, g));
+    v.insert(v.end(), {s[0], s[1], s[2], s[0], s[2], s[3]});
+  }
+  return v;
+}
+
+// indexed: four shared vertices per square + two-triangle index list.
+std::pair<std::vector<math::float3>, std::vector<vec3u>> layoutTriQuadsIndexed(
+    int n)
+{
+  const Grid g = gridFor(n);
+  std::vector<math::float3> v;
+  std::vector<vec3u> idx;
+  v.reserve(static_cast<size_t>(n) * 4);
+  idx.reserve(static_cast<size_t>(n) * 2);
+  for (int i = 0; i < n; ++i) {
+    const auto s = squareCorners(cellCenter(i, g));
+    const uint32_t b = static_cast<uint32_t>(i) * 4u;
+    v.insert(v.end(), {s[0], s[1], s[2], s[3]});
+    idx.push_back(vec3u{b, b + 1u, b + 2u});
+    idx.push_back(vec3u{b, b + 2u, b + 3u});
+  }
+  return {v, idx};
+}
+
+// soup: 36 vertices per cube, expanded from the triangle index table.
+std::vector<math::float3> layoutTriCubesSoup(int n)
+{
+  const Grid g = gridFor(n);
+  std::vector<math::float3> v;
+  v.reserve(static_cast<size_t>(n) * 36);
+  for (int i = 0; i < n; ++i) {
+    const auto corners = cubeCorners(cellCenter(i, g));
+    for (const auto &t : kCubeTris)
+      v.insert(v.end(), {corners[t.x], corners[t.y], corners[t.z]});
+  }
+  return v;
+}
+
+// indexed: eight shared corners per cube + the triangle index table.
+std::pair<std::vector<math::float3>, std::vector<vec3u>> layoutTriCubesIndexed(
+    int n)
+{
+  const Grid g = gridFor(n);
+  std::vector<math::float3> v;
+  std::vector<vec3u> idx;
+  v.reserve(static_cast<size_t>(n) * 8);
+  idx.reserve(static_cast<size_t>(n) * 12);
+  for (int i = 0; i < n; ++i) {
+    const auto corners = cubeCorners(cellCenter(i, g));
+    const uint32_t b = static_cast<uint32_t>(i) * 8u;
+    v.insert(v.end(), corners.begin(), corners.end());
+    for (const auto &t : kCubeTris)
+      idx.push_back(vec3u{t.x + b, t.y + b, t.z + b});
+  }
+  return {v, idx};
+}
+
+// soup: four vertices per quad.
+std::vector<math::float3> layoutQuads(int n)
+{
+  const Grid g = gridFor(n);
+  std::vector<math::float3> v;
+  v.reserve(static_cast<size_t>(n) * 4);
+  for (int i = 0; i < n; ++i) {
+    const auto s = squareCorners(cellCenter(i, g));
+    v.insert(v.end(), s.begin(), s.end());
+  }
+  return v;
+}
+
+// soup: 24 vertices per cube, expanded from the quad index table.
+std::vector<math::float3> layoutQuadCubesSoup(int n)
+{
+  const Grid g = gridFor(n);
+  std::vector<math::float3> v;
+  v.reserve(static_cast<size_t>(n) * 24);
+  for (int i = 0; i < n; ++i) {
+    const auto corners = cubeCorners(cellCenter(i, g));
+    for (const auto &q : kCubeQuads)
+      v.insert(
+          v.end(), {corners[q.x], corners[q.y], corners[q.z], corners[q.w]});
+  }
+  return v;
+}
+
+// indexed: eight shared corners per cube + the quad index table.
+std::pair<std::vector<math::float3>, std::vector<vec4u>> layoutQuadCubesIndexed(
+    int n)
+{
+  const Grid g = gridFor(n);
+  std::vector<math::float3> v;
+  std::vector<vec4u> idx;
+  v.reserve(static_cast<size_t>(n) * 8);
+  idx.reserve(static_cast<size_t>(n) * 6);
+  for (int i = 0; i < n; ++i) {
+    const auto corners = cubeCorners(cellCenter(i, g));
+    const uint32_t b = static_cast<uint32_t>(i) * 8u;
+    v.insert(v.end(), corners.begin(), corners.end());
+    for (const auto &q : kCubeQuads)
+      idx.push_back(vec4u{q.x + b, q.y + b, q.z + b, q.w + b});
+  }
+  return {v, idx};
+}
+
+// One sphere center per cell.
+std::vector<math::float3> layoutSpheres(int n)
+{
+  const Grid g = gridFor(n);
+  std::vector<math::float3> v;
+  v.reserve(n);
+  for (int i = 0; i < n; ++i)
+    v.push_back(cellCenter(i, g));
+  return v;
+}
+
+// Two vertices per primitive: a vertical segment from the cell's bottom to its
+// top. Used by cones and cylinders, which stand upright facing +Z with a fixed
+// bottom->top orientation (cone base at the bottom, apex at the top).
+std::vector<math::float3> layoutVerticalSegments(int n)
+{
+  const Grid g = gridFor(n);
+  std::vector<math::float3> v;
+  v.reserve(static_cast<size_t>(n) * 2);
+  for (int i = 0; i < n; ++i) {
+    const math::float3 c = cellCenter(i, g);
+    v.push_back(c + math::float3(0.f, -kHalf, 0.f)); // bottom
+    v.push_back(c + math::float3(0.f, kHalf, 0.f)); // top
+  }
+  return v;
+}
+
+// Vertical curve segments, but ordered so the un-indexed (soup) polyline —
+// which connects all consecutive vertices — reads as a clean crenellated wave
+// rather than a diagonal scribble: walk the grid in a boustrophedon (reverse
+// every other row) and alternate each segment's bottom->top / top->bottom
+// direction, so segment-to-segment connectors run along the cell tops/bottoms.
+// The indexed variant still selects the upright vertical bars.
+std::vector<math::float3> layoutCurveSegments(int n)
+{
+  const Grid g = gridFor(n);
+  std::vector<math::float3> v;
+  v.reserve(static_cast<size_t>(n) * 2);
+  for (int i = 0; i < n; ++i) {
+    const int r = i / g.cols;
+    int c = i % g.cols;
+    if (r % 2 == 1)
+      c = g.cols - 1 - c; // reverse odd rows
+    const math::float3 ctr = cellCenter(r * g.cols + c, g);
+    const math::float3 lo = ctr + math::float3(0.f, -kHalf, 0.f);
+    const math::float3 hi = ctr + math::float3(0.f, kHalf, 0.f);
+    if (i % 2 == 0) {
+      v.push_back(lo);
+      v.push_back(hi);
+    } else {
+      v.push_back(hi);
+      v.push_back(lo);
+    }
+  }
+  return v;
+}
+
+// Deterministic 0..1 ramp across n elements.
+float ramp01(size_t i, size_t n)
+{
+  return n > 1 ? static_cast<float>(i) / static_cast<float>(n - 1) : 0.f;
+}
+
+// Fill prefix.attribute0..3 with deterministic ramps in [lo, hi]. The values
+// are invisible on matte; this only keeps the array paths exercised (ADR-0007).
+void setAttributeRamps(anari::Device d,
+    anari::Geometry geom,
+    const char *prefix,
+    size_t n,
+    float lo,
+    float hi)
+{
+  std::vector<float> a0(n);
+  std::vector<math::float2> a1(n);
+  std::vector<math::float3> a2(n);
+  std::vector<math::float4> a3(n);
+  for (size_t i = 0; i < n; ++i) {
+    const float t = lo + (hi - lo) * ramp01(i, n);
+    a0[i] = t;
+    a1[i] = math::float2(t);
+    a2[i] = math::float3(t);
+    a3[i] = math::float4(t);
+  }
+  const std::string p = prefix;
+  anari::setAndReleaseParameter(d,
+      geom,
+      (p + ".attribute0").c_str(),
+      anari::newArray1D(d, a0.data(), a0.size()));
+  anari::setAndReleaseParameter(d,
+      geom,
+      (p + ".attribute1").c_str(),
+      anari::newArray1D(d, a1.data(), a1.size()));
+  anari::setAndReleaseParameter(d,
+      geom,
+      (p + ".attribute2").c_str(),
+      anari::newArray1D(d, a2.data(), a2.size()));
+  anari::setAndReleaseParameter(d,
+      geom,
+      (p + ".attribute3").c_str(),
+      anari::newArray1D(d, a3.data(), a3.size()));
+}
+
+} // namespace
+
+std::vector<math::float3> layoutTriangleSoup(int count)
+{
+  const Grid g = gridFor(count);
+  std::vector<math::float3> v;
+  v.reserve(static_cast<size_t>(count) * 3);
+  for (int i = 0; i < count; ++i) {
+    const math::float3 c = cellCenter(i, g);
+    // Equilateral triangle inscribed in a radius-kHalf circle, apex up, CCW
+    // from +Z so its face normal points at the camera.
+    constexpr float kSqrt3Over2 = 0.8660254f;
+    v.push_back(c + math::float3(0.f, kHalf, 0.f));
+    v.push_back(c + math::float3(-kHalf * kSqrt3Over2, -kHalf * 0.5f, 0.f));
+    v.push_back(c + math::float3(kHalf * kSqrt3Over2, -kHalf * 0.5f, 0.f));
+  }
+  return v;
+}
 
 anari::Geometry buildGeometry(anari::Device d, const GeometryOptions &opts)
 {
-  scenes::PrimitiveGenerator generator(opts.seed);
-
   auto geom = anari::newObject<anari::Geometry>(d, opts.subtype.c_str());
 
   const std::string &subtype = opts.subtype;
   const std::string &shape = opts.shape;
-  const std::string &primitiveMode = opts.primitiveMode;
   const int primitiveCount = opts.primitiveCount;
-  const bool indexed = primitiveMode == "indexed";
+  const bool indexed = opts.primitiveMode == "indexed";
 
   size_t componentCount = 3;
   if (subtype == "quad")
@@ -86,34 +428,33 @@ anari::Geometry buildGeometry(anari::Device d, const GeometryOptions &opts)
   std::vector<math::float3> vertices;
 
   if (subtype == "triangle") {
-    std::vector<math::vec<uint32_t, 3>> indices;
+    std::vector<vec3u> indices;
     if (shape == "triangle") {
-      vertices = generator.generateTriangles(primitiveCount);
+      vertices = layoutTriangleSoup(primitiveCount);
       if (indexed) {
         for (size_t i = 0; i < vertices.size(); i += 3) {
-          const auto idx = static_cast<unsigned int>(i);
-          indices.push_back(math::vec<uint32_t, 3>(idx, idx + 1u, idx + 2u));
+          const auto idx = static_cast<uint32_t>(i);
+          indices.push_back(vec3u(idx, idx + 1u, idx + 2u));
         }
       }
     } else if (shape == "quad") {
       if (indexed) {
-        auto [v, i] = generator.generateTriangulatedQuadsIndexed(primitiveCount);
+        auto [v, i] = layoutTriQuadsIndexed(primitiveCount);
         vertices = v;
         indices = i;
       } else {
-        vertices = generator.generateTriangulatedQuadsSoup(primitiveCount);
+        vertices = layoutTriQuadsSoup(primitiveCount);
       }
     } else if (shape == "cube") {
       if (indexed) {
-        auto [v, i] = generator.generateTriangulatedCubesIndexed(primitiveCount);
+        auto [v, i] = layoutTriCubesIndexed(primitiveCount);
         vertices = v;
         indices = i;
       } else {
-        vertices = generator.generateTriangulatedCubesSoup(primitiveCount);
+        vertices = layoutTriCubesSoup(primitiveCount);
       }
     }
     if (indexed) {
-      generator.shuffleVector(indices);
       if (opts.unusedVertices && !indices.empty())
         indices.resize(indices.size() - 1);
       indiciCount = indices.size();
@@ -123,27 +464,25 @@ anari::Geometry buildGeometry(anari::Device d, const GeometryOptions &opts)
           anari::newArray1D(d, indices.data(), indices.size()));
     }
   } else if (subtype == "quad") {
-    std::vector<math::vec<uint32_t, 4>> indices;
+    std::vector<vec4u> indices;
     if (shape == "quad") {
-      vertices = generator.generateQuads(primitiveCount);
+      vertices = layoutQuads(primitiveCount);
       if (indexed) {
         for (size_t i = 0; i < vertices.size(); i += 4) {
-          const auto idx = static_cast<unsigned int>(i);
-          indices.push_back(
-              math::vec<uint32_t, 4>(idx, idx + 1u, idx + 2u, idx + 3u));
+          const auto idx = static_cast<uint32_t>(i);
+          indices.push_back(vec4u(idx, idx + 1u, idx + 2u, idx + 3u));
         }
       }
     } else if (shape == "cube") {
       if (indexed) {
-        auto [v, i] = generator.generateQuadCubesIndexed(primitiveCount);
+        auto [v, i] = layoutQuadCubesIndexed(primitiveCount);
         vertices = v;
         indices = i;
       } else {
-        vertices = generator.generateQuadCubesSoup(primitiveCount);
+        vertices = layoutQuadCubesSoup(primitiveCount);
       }
     }
     if (indexed) {
-      generator.shuffleVector(indices);
       if (opts.unusedVertices && !indices.empty())
         indices.resize(indices.size() - 1);
       indiciCount = indices.size();
@@ -153,11 +492,11 @@ anari::Geometry buildGeometry(anari::Device d, const GeometryOptions &opts)
           anari::newArray1D(d, indices.data(), indices.size()));
     }
   } else if (subtype == "sphere") {
-    auto [v, radii] = generator.generateSpheres(primitiveCount);
-    vertices = v;
+    vertices = layoutSpheres(primitiveCount);
     if (opts.globalRadius.has_value()) {
       anari::setParameter(d, geom, "radius", opts.globalRadius.value());
     } else {
+      std::vector<float> radii(vertices.size(), kSphereRadius);
       anari::setAndReleaseParameter(
           d, geom, "vertex.radius", anari::newArray1D(d, radii.data(), radii.size()));
     }
@@ -165,7 +504,6 @@ anari::Geometry buildGeometry(anari::Device d, const GeometryOptions &opts)
       std::vector<uint32_t> indices;
       for (size_t i = 0; i < vertices.size(); ++i)
         indices.push_back(static_cast<uint32_t>(i));
-      generator.shuffleVector(indices);
       if (opts.unusedVertices && !indices.empty())
         indices.resize(indices.size() - 1);
       anari::setAndReleaseParameter(d,
@@ -174,11 +512,11 @@ anari::Geometry buildGeometry(anari::Device d, const GeometryOptions &opts)
           anari::newArray1D(d, indices.data(), indices.size()));
     }
   } else if (subtype == "curve") {
-    auto [v, radii] = generator.generateCurves(primitiveCount);
-    vertices = v;
+    vertices = layoutCurveSegments(primitiveCount);
     if (opts.globalRadius.has_value()) {
       anari::setParameter(d, geom, "radius", opts.globalRadius.value());
     } else {
+      std::vector<float> radii(vertices.size(), kCurveRadius);
       anari::setAndReleaseParameter(
           d, geom, "vertex.radius", anari::newArray1D(d, radii.data(), radii.size()));
     }
@@ -186,30 +524,6 @@ anari::Geometry buildGeometry(anari::Device d, const GeometryOptions &opts)
       std::vector<uint32_t> indices;
       for (uint32_t i = 0; i < vertices.size() / 2; i++)
         indices.push_back(i * 2);
-      generator.shuffleVector(indices);
-      if (opts.unusedVertices && indices.size() >= 2)
-        indices.resize(indices.size() - 2);
-      indiciCount = indices.size();
-      anari::setAndReleaseParameter(d,
-          geom,
-          "primitive.index",
-          anari::newArray1D(d, indices.data(), indices.size()));
-    }
-  } else if (subtype == "cone") {
-    auto [v, radii, caps] = generator.generateCones(primitiveCount, opts.vertexCaps);
-    vertices = v;
-    anari::setAndReleaseParameter(
-        d, geom, "vertex.radius", anari::newArray1D(d, radii.data(), radii.size()));
-    if (!caps.empty()) {
-      anari::setAndReleaseParameter(
-          d, geom, "vertex.cap", anari::newArray1D(d, caps.data(), caps.size()));
-    }
-    anari::setParameter(d, geom, "caps", opts.globalCaps);
-    if (indexed) {
-      std::vector<math::vec<uint32_t, 2>> indices;
-      for (uint32_t i = 0; i < vertices.size(); i += 2)
-        indices.emplace_back(i, i + 1);
-      generator.shuffleVector(indices);
       if (opts.unusedVertices && !indices.empty())
         indices.resize(indices.size() - 1);
       indiciCount = indices.size();
@@ -218,13 +532,30 @@ anari::Geometry buildGeometry(anari::Device d, const GeometryOptions &opts)
           "primitive.index",
           anari::newArray1D(d, indices.data(), indices.size()));
     }
-  } else if (subtype == "cylinder") {
-    auto [v, radii, caps] =
-        generator.generateCylinders(primitiveCount, opts.vertexCaps);
-    vertices = v;
-    if (opts.globalRadius.has_value()) {
+  } else if (subtype == "cone" || subtype == "cylinder") {
+    const bool cone = subtype == "cone";
+    vertices = layoutVerticalSegments(primitiveCount);
+    std::vector<uint8_t> caps;
+    if (opts.vertexCaps.has_value()) {
+      const uint8_t cap = opts.vertexCaps.value() == 0 ? 0u : 1u;
+      caps.assign(vertices.size(), cap);
+    }
+    if (cone) {
+      // True cone: base radius at the bottom vertex, apex radius 0 at the top.
+      std::vector<float> radii;
+      radii.reserve(vertices.size());
+      for (int i = 0; i < primitiveCount; ++i) {
+        radii.push_back(kTubeRadius);
+        radii.push_back(0.f);
+      }
+      anari::setAndReleaseParameter(d,
+          geom,
+          "vertex.radius",
+          anari::newArray1D(d, radii.data(), radii.size()));
+    } else if (opts.globalRadius.has_value()) {
       anari::setParameter(d, geom, "radius", opts.globalRadius.value());
     } else {
+      std::vector<float> radii(primitiveCount, kTubeRadius); // one per cylinder
       anari::setAndReleaseParameter(d,
           geom,
           "primitive.radius",
@@ -236,10 +567,9 @@ anari::Geometry buildGeometry(anari::Device d, const GeometryOptions &opts)
     }
     anari::setParameter(d, geom, "caps", opts.globalCaps);
     if (indexed) {
-      std::vector<math::vec<uint32_t, 2>> indices;
+      std::vector<vec2u> indices;
       for (uint32_t i = 0; i < vertices.size(); i += 2)
         indices.emplace_back(i, i + 1);
-      generator.shuffleVector(indices);
       if (opts.unusedVertices && !indices.empty())
         indices.resize(indices.size() - 1);
       indiciCount = indices.size();
@@ -265,8 +595,9 @@ anari::Geometry buildGeometry(anari::Device d, const GeometryOptions &opts)
     size_t opacityCount = vertices.size();
     if (opts.opacityAttribute.rfind("primitive", 0) == 0)
       opacityCount = primitiveCount;
-    auto attributeOpacity =
-        generator.generateAttributeFloat(opacityCount, 0.0f, 1.0f);
+    std::vector<float> attributeOpacity(opacityCount);
+    for (size_t i = 0; i < opacityCount; ++i)
+      attributeOpacity[i] = ramp01(i, opacityCount);
     anari::setAndReleaseParameter(d,
         geom,
         opts.opacityAttribute.c_str(),
@@ -284,55 +615,21 @@ anari::Geometry buildGeometry(anari::Device d, const GeometryOptions &opts)
     indiciCount = vertices.size() / componentCount;
 
   if (opts.vertexAttributes) {
-    const auto f = generator.generateAttributeFloat(
-        vertices.size(), opts.attributeMin, opts.attributeMax);
-    anari::setAndReleaseParameter(
-        d, geom, "vertex.attribute0", anari::newArray1D(d, f.data(), f.size()));
-    const auto v2 = generator.generateAttributeVec2(
-        vertices.size(), opts.attributeMin, opts.attributeMax);
-    anari::setAndReleaseParameter(d,
+    setAttributeRamps(d,
         geom,
-        "vertex.attribute1",
-        anari::newArray1D(d, v2.data(), v2.size()));
-    const auto v3 = generator.generateAttributeVec3(
-        vertices.size(), opts.attributeMin, opts.attributeMax);
-    anari::setAndReleaseParameter(d,
-        geom,
-        "vertex.attribute2",
-        anari::newArray1D(d, v3.data(), v3.size()));
-    const auto v4 = generator.generateAttributeVec4(
-        vertices.size(), opts.attributeMin, opts.attributeMax);
-    anari::setAndReleaseParameter(d,
-        geom,
-        "vertex.attribute3",
-        anari::newArray1D(d, v4.data(), v4.size()));
+        "vertex",
+        vertices.size(),
+        opts.attributeMin,
+        opts.attributeMax);
   }
 
   if (opts.primitiveAttributes) {
-    const auto f = generator.generateAttributeFloat(
-        indiciCount, opts.attributeMin, opts.attributeMax);
-    anari::setAndReleaseParameter(d,
+    setAttributeRamps(d,
         geom,
-        "primitive.attribute0",
-        anari::newArray1D(d, f.data(), f.size()));
-    const auto v2 = generator.generateAttributeVec2(
-        indiciCount, opts.attributeMin, opts.attributeMax);
-    anari::setAndReleaseParameter(d,
-        geom,
-        "primitive.attribute1",
-        anari::newArray1D(d, v2.data(), v2.size()));
-    const auto v3 = generator.generateAttributeVec3(
-        indiciCount, opts.attributeMin, opts.attributeMax);
-    anari::setAndReleaseParameter(d,
-        geom,
-        "primitive.attribute2",
-        anari::newArray1D(d, v3.data(), v3.size()));
-    const auto v4 = generator.generateAttributeVec4(
-        indiciCount, opts.attributeMin, opts.attributeMax);
-    anari::setAndReleaseParameter(d,
-        geom,
-        "primitive.attribute3",
-        anari::newArray1D(d, v4.data(), v4.size()));
+        "primitive",
+        indiciCount,
+        opts.attributeMin,
+        opts.attributeMax);
   }
 
   anari::commitParameters(d, geom);
@@ -431,39 +728,52 @@ anari::Sampler newImageSampler(anari::Device d,
 
 // --- Volumes -----------------------------------------------------------------
 
-anari::SpatialField newStructuredRegularField(
-    anari::Device d, std::array<uint32_t, 3> dimensions, int seed)
+float radialDistanceField(math::float3 p)
 {
-  auto field = anari::newObject<anari::SpatialField>(d, "structuredRegular");
-  scenes::PrimitiveGenerator generator(seed);
+  return math::length(p);
+}
 
-  const size_t count = static_cast<size_t>(dimensions[0]) * dimensions[1]
-      * dimensions[2];
-  auto data = generator.generateAttributeFloat(count);
+anari::SpatialField newStructuredRegularField(
+    anari::Device d, std::array<uint32_t, 3> dimensions, const FieldFn &field)
+{
+  auto sf = anari::newObject<anari::SpatialField>(d, "structuredRegular");
+  const FieldFn &fn = field ? field : FieldFn(radialDistanceField);
 
-  anari::setParameter(d, field, "origin", math::float3(-1.f));
+  // Sample the field at each grid point, mapping the index along each axis to a
+  // centered, normalized coordinate in [-1, 1] (a singleton axis sits at 0).
+  auto coord = [](uint32_t i, uint32_t dim) {
+    return dim > 1
+        ? 2.f * static_cast<float>(i) / static_cast<float>(dim - 1) - 1.f
+        : 0.f;
+  };
+  std::vector<float> data;
+  data.reserve(
+      static_cast<size_t>(dimensions[0]) * dimensions[1] * dimensions[2]);
+  for (uint32_t z = 0; z < dimensions[2]; ++z)
+    for (uint32_t y = 0; y < dimensions[1]; ++y)
+      for (uint32_t x = 0; x < dimensions[0]; ++x)
+        data.push_back(fn(math::float3(coord(x, dimensions[0]),
+            coord(y, dimensions[1]),
+            coord(z, dimensions[2]))));
+
+  anari::setParameter(d, sf, "origin", math::float3(-1.f));
   anari::setParameter(d,
-      field,
+      sf,
       "spacing",
       math::float3(dimensions[0] ? 2.f / dimensions[0] : 0.f,
           dimensions[1] ? 2.f / dimensions[1] : 0.f,
           dimensions[2] ? 2.f / dimensions[2] : 0.f));
-  anari::setParameterArray3D(d,
-      field,
-      "data",
-      data.data(),
-      dimensions[0],
-      dimensions[1],
-      dimensions[2]);
-  return field; // uncommitted: caller may override origin/spacing/filter
+  anari::setParameterArray3D(
+      d, sf, "data", data.data(), dimensions[0], dimensions[1], dimensions[2]);
+  return sf; // uncommitted: caller may override origin/spacing/filter
 }
 
 anari::SpatialField makeStructuredRegularField(
-    anari::Device d, std::array<uint32_t, 3> dimensions, int seed)
+    anari::Device d, std::array<uint32_t, 3> dimensions, const FieldFn &field)
 {
-  auto field = newStructuredRegularField(d, dimensions, seed);
-  anari::commitParameters(d, field);
-  return field;
+  auto sf = newStructuredRegularField(d, dimensions, field);
+  anari::commitParameters(d, sf);
+  return sf;
 }
 
 anari::Volume makeVolume(anari::Device d, anari::SpatialField field)

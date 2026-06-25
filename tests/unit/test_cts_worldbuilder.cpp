@@ -111,7 +111,6 @@ TEST_CASE("world-build helpers produce error-free worlds", "[cts][worldbuilder][
       if (!spec.shape.empty())
         opts.shape = spec.shape;
       opts.primitiveCount = 8;
-      opts.seed = 42;
 
       auto geom = buildGeometry(d, opts);
       auto mat = makeMatteMaterial(d, float3(0.8f, 0.3f, 0.2f));
@@ -144,7 +143,6 @@ TEST_CASE("world-build helpers produce error-free worlds", "[cts][worldbuilder][
       opts.shape = "cube";
       opts.primitiveMode = mode;
       opts.primitiveCount = 6;
-      opts.seed = 7;
       auto geom = buildGeometry(d, opts);
       auto mat = makeMatteMaterial(d, float3(0.5f));
       auto surface = makeSurface(d, geom, mat);
@@ -175,7 +173,7 @@ TEST_CASE("world-build helpers produce error-free worlds", "[cts][worldbuilder][
   SECTION("a structuredRegular volume world builds cleanly")
   {
     status.errors = 0;
-    auto field = makeStructuredRegularField(d, {8, 8, 8}, 1);
+    auto field = makeStructuredRegularField(d, {8, 8, 8});
     auto volume = makeVolume(d, field);
     WorldContents contents;
     contents.volumes = {volume};

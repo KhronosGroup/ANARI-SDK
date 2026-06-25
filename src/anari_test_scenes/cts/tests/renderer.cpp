@@ -30,7 +30,6 @@ anari::World ambientSubject(BuildContext &ctx)
   o.subtype = "triangle";
   o.shape = "triangle";
   o.primitiveCount = 16;
-  o.seed = 12345;
   auto geom = buildGeometry(d, o);
   auto mat = makeMatteMaterial(d, float3(0.7f, 0.7f, 0.7f));
   auto surface = makeSurface(d, geom, mat);
