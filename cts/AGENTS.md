@@ -1,111 +1,124 @@
 # AGENTS.md
 
-This file provides guidance to coding agents working in this repository.
+This file provides guidance to coding agents working in the CTS. See the parent
+`AGENTS.md` for overall SDK context, and `CONTEXT.md` here for the vocabulary
+(Test / Axis / Permutation / Variant / Case / Channel / Ground truth / Workdir).
 
 ## Overview
 
-The CTS (Conformance Test Suite) is a Python toolkit with a C++ pybind11 backend that validates ANARI device implementations against a reference device (helide). It lives in `cts/` within the ANARI-SDK repo. See the parent `AGENTS.md` for overall SDK context.
+The CTS (Conformance Test Suite) validates ANARI device implementations against
+a reference device (helide). It is a self-contained C++ command-line tool, `cts`
+(target `anariCts`), that renders each test *and* scores it against generated
+ground truth, plus a thin Python reporting layer (`ctsReport.py`) that only
+reads the results the tool writes. The two communicate through files only — there
+is no pybind11, no JSON scene format, and no Python orchestration (these were
+removed; see `docs/adr/0001`–`0002`).
 
 ## Build Commands
 
 ```bash
-# Build CTS from the SDK root build directory
+# From the SDK root build directory. The tool builds under BUILD_CTS or BUILD_TESTING.
 cmake -DBUILD_CTS=ON -DBUILD_HELIDE_DEVICE=ON ..
-cmake --build . --config Release
+cmake --build . -j
 
-# Development mode: copies built binaries into cts/ source dir for direct python invocation
-cmake -DBUILD_CTS=ON -DBUILD_HELIDE_DEVICE=ON -DCTS_DEV=ON ..
-cmake --build .
-
-# Generate reference images + metadata + C++ query stubs (uses helide)
-cmake --build . --target generate_cts_baseline
-# Or regenerate everything:
-cmake --build . --target generate_cts
+# glTF asset tests are gated separately (decoupled from BUILD_CTS):
+cmake -DBUILD_CTS=ON -DBUILD_HELIDE_DEVICE=ON -DCTS_ENABLE_GLTF=ON ..
+# ...and need the optional encodings for full texture coverage:
+#   -DUSE_DRACO=ON -DUSE_KTX=ON -DUSE_WEBP=ON
 ```
 
-## Python Environment
+Relevant targets: `anariCts` (the `cts` tool), `anari_test_scenes` (the library
+holding the catalog + runner), `anariCatalogTests` (the unit tests).
+
+### Running locally
+
+A stale install of the anari libs on `LD_LIBRARY_PATH` can shadow a fresh build
+("undefined symbol" at runtime). Prepend the build dir when running:
 
 ```bash
-cd cts/
-poetry install       # installs pillow, reportlab, scikit-image, tabulate
-poetry shell         # enter venv
-
-# Main CLI — all commands
-python cts.py --help
-python cts.py <command> --help
+cd build
+LD_LIBRARY_PATH="$PWD:$LD_LIBRARY_PATH" ./cts run helide --workdir /tmp/run
+LD_LIBRARY_PATH="$PWD:$LD_LIBRARY_PATH" ./anariCatalogTests
 ```
 
-## Running Tests
+## Running the suite
 
 ```bash
-# Render all test scenes with a library
-python cts.py render_scenes helide
+cts generate --workdir myrun           # ground truth from the reference device (helide)
+cts run helide --workdir myrun         # render + score a candidate against it
+python ../cts/ctsReport.py report myrun [--pdf out.pdf]
+python ../cts/ctsReport.py diff runA runB [--json]
 
-# Compare rendered images against reference (SSIM + PSNR)
-python cts.py compare_images
-
-# Run a single test category (subfolder of test_scenes/)
-python cts.py render_scenes helide --test_scenes test_scenes/geometry/sphere
-
-# Generate full PDF report
-python cts.py create_report helide -o output_dir
-
-# Verbose report showing failing test detail
-python cts.py create_report helide --verbose_error
-
-# Query device features / metadata
-python cts.py query_features helide
-python cts.py query_metadata helide
+cts list [--filter <pat>]              # enumerate the catalog
+cts query-features <device>            # device extensions
+cts query-metadata [--filter <pat>]    # catalog metadata as JSON (no device)
+cts check-properties <device>          # per test: runnable vs skipped + missing features
 ```
 
-Logs go to `ANARI.log` in the working directory (override with `--log_dir` or `ANARI_CTS_LOG`).
+`--filter` is a substring or glob (`*`,`?`) matched case-insensitively over a
+test's `<category>/<test>` id. `run` and `report` exit non-zero on any failure.
 
 ## Architecture
 
 ```
-Python CLI (cts.py)          — argparse command dispatcher
-    ↓ pybind11
-C++ module (anariCTSBackend) — anariWrapper.cpp + anariInfo.cpp + SceneGenerator.cpp
-    ↓
-ANARI library (helide, etc.) — loaded at runtime via anariLoadLibrary()
+cts (anariCts)            CLI dispatch: cts/tool/main.cpp
+  Catalog                 in-C++ registry of every Test (one per-category file)
+  Runner                  build world -> render each Channel -> generate GT or score vs GT -> sidecar
+  Metrics                 SSIM / PSNR (single source of metrics, ADR-0004)
+  Workdir / Sidecar       results/ ground_truth/ assets/ tree; per-Case sidecar JSON (ADR-0003)
+ctsReport.py              reads the sidecar tree only; report + device diff
 ```
 
-### Key source files
+### Key source files (`src/anari_test_scenes/cts/`)
 
-**Python layer** (`cts/`):
-- `cts.py` — all CLI commands; `apply_to_scenes()` is the core iterator that drives every command over permutations/variants
-- `ctsUtility.py` — image metrics (`ssim`, `psnr`, `evaluate_metrics`)
-- `ctsReport.py` — PDF report generation via reportlab
-- `createReferenceData.py` — regenerates `ref_*.png` and `metaData` in test JSONs
+**Harness / runner:**
+- `TestDef.h` — a registered Test: `build` (world), optional `cameraBuild` /
+  `rendererBuild` build hooks (ADR-0006) and `behaviorCheck` hook, axes,
+  required features, thresholds (test-wide + per-channel), channels.
+- `TestBuilder.{h,cpp}` — the `makeTest(...)` fluent builder. Note the verb is
+  `requireFeatures()`, not the C++20 keyword `requires`.
+- `Axis.h` / `Case.{h,cpp}` / `Expansion.{h,cpp}` — axes expand into Cases
+  (cartesian, or one-factor-at-a-time when `simplified`); variants share a
+  ground-truth key, permutations get distinct ones.
+- `Catalog.{h,cpp}` / `Filter.{h,cpp}` — the registry and its substring/glob filter.
+- `BuildContext.{h,cpp}` / `Value.{h,cpp}` — per-Case axis values handed to
+  `build()`, backed by `helium::ParameterizedObject`.
+- `Runner.{h,cpp}` — builds, renders, and scores Cases; owns the camera/renderer
+  defaults and the per-Channel readback; runs the behavior hook for behavioral tests.
+- `FrameFormats.{h,cpp}` — resolves a Case's per-Channel output `ANARIDataType`
+  from its `frame_<channel>_type` axis (color/albedo/normal); pure + unit-tested.
+- `Metrics.{h,cpp}` / `Image.{h,cpp}` — SSIM/PSNR and PNG I/O (stb).
+- `Workdir.{h,cpp}` / `Sidecar.{h,cpp}` — the results tree layout and the
+  versioned per-Case sidecar contract.
+- `WorldBuilder.{h,cpp}` + `generators/` — shared world-build helpers lifted
+  from the old `SceneGenerator::commit()`.
 
-**C++ layer** (`cts/src/`):
-- `SceneGenerator.cpp` — inherits `anari_test_scenes::TestScene`; `commit()` builds ANARI objects, `renderScene()` sets up camera/renderer/frame and returns pixel data; `parameters()` documents all supported scene params
-- `PrimitiveGenerator.cpp` — generates vertex/index data for each geometry subtype
-- `anariWrapper.cpp` — library loading, status callback, `SceneGeneratorWrapper` (prevents Python GC of callbacks)
-- `anariInfo.cpp` — device introspection (refactored from SDK examples)
-- `main.cpp` — pybind11 bindings; GIL released for ANARI calls
-- `ctsQueries.cpp` — **autogenerated** by the `generate_cts` CMake target; do not edit manually
+**Tests (the catalog):** `cts/tests/<category>.cpp` (geometry, material, sampler,
+light, camera, frame, renderer, instance, volume) each define a
+`register<Category>Tests(Catalog&)`; `cts/tests/gltf.cpp` is the glTF
+asset-scanning factory (gated on `ENABLE_GLTF`). `BuiltinTests.cpp` wires them
+all into the catalog.
 
-## Test Scene Format
+**Unit tests:** `tests/unit/test_cts_*.cpp` (catalog/expansion/filter/builder,
+metrics, results/sidecar/workdir, runner). Pure tests are tagged `[cts]`;
+device-backed ones add `[helide]` and self-skip if no device loads.
 
-Tests are JSON files in `test_scenes/`. `default_test_scene.json` defines all defaults.
-
-Critical distinction:
-- **`permutations`**: parameter values that produce *different* rendered output → each combination gets its own reference image
-- **`variants`**: parameter values that should produce *identical* output (e.g. `soup` vs `indexed`) → share one reference image; used to test implementation equivalence
-
-`metaData` is auto-populated by `createReferenceData.py` with per-permutation bounds data. Do not hand-edit it.
-
-`requiredFeatures` causes the test to be skipped if the device lacks the feature. Implicit baseline features (perspective camera, matte material, triangle geometry, etc.) need not be listed.
-
-JSON pointer syntax (`"/anari_objects/material/0/color"`) is used as a key in `permutations`/`variants` to target nested ANARI object parameters.
+**Python:** `ctsReport.py` — `report` and `diff` over the sidecar tree.
 
 ## Extending the CTS
 
-**New scene parameter**: Add to a test JSON, then read in `SceneGenerator.cpp` via `getParam<Type>("name", default)`. Document it in `parameters()`.
+**New Test:** add a `makeTest(...)....registerInto(catalog)` to the relevant
+`cts/tests/<category>.cpp`. Author the world in `build()` with ANARI C++ calls
+plus the `WorldBuilder.h` helpers; declare axes, required features, channels.
 
-**New Python command**: Use `apply_to_scenes(func, library, ...)` where `func` receives `(parsed_json, sceneGenerator, renderer, scene_location, test_name, permutationString, variantString)`.
+**New per-Case axis the runner must act on** (e.g. a new output format): resolve
+it in `FrameFormats.cpp` (pure, unit-test it) and honor it in `Runner.cpp`.
 
-**New image metric**: Add to `ctsUtility.py` following the `(reference, candidate, threshold) → (passed, threshold, result)` signature, then register in `evaluate_metrics()`.
+**New metric:** add it to `Metrics.{h,cpp}`, record it in the runner's
+`ChannelResult`, and add it to the `METRICS` list in `ctsReport.py` so reports
+and diffs surface it. There is exactly one metric implementation, in C++.
 
-**New C++ SceneGenerator method exposed to Python**: Add to `SceneGenerator`, then `SceneGeneratorWrapper` (`anariWrapper.cpp`/`.h`), then the pybind11 binding in `main.cpp`.
+**Sidecar schema change:** the sidecar is a versioned cross-language contract
+(ADR-0003). Additive optional fields (read with a default on the Python side)
+don't bump `kSidecarSchemaVersion`; a breaking change to an existing field does,
+and must update the Python reader in lockstep.
