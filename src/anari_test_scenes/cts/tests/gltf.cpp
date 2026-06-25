@@ -21,7 +21,9 @@
 #include "scenes/file/gltf2anari.h"
 // std
 #include <algorithm>
+#include <cstdio>
 #include <cstdlib>
+#include <exception>
 #include <filesystem>
 #include <string>
 #include <vector>
@@ -36,8 +38,8 @@ namespace {
 
 namespace fs = std::filesystem;
 
-// The standard glTF encodings that load without optional dependencies. Draco and
-// KTX-based encodings are added only when those features are compiled in.
+// The standard glTF encodings that load without optional dependencies. Draco
+// and KTX-based encodings are added only when those features are compiled in.
 struct Encoding
 {
   const char *dir;
@@ -84,11 +86,8 @@ anari::World worldFromGltf(anari::Device d, ::gltf_data &ctx)
 {
   auto world = anari::newObject<anari::World>(d);
   if (!ctx.instances.empty()) {
-    anari::setParameterArray1D(d,
-        world,
-        "instance",
-        ctx.instances[0].data(),
-        ctx.instances[0].size());
+    anari::setParameterArray1D(
+        d, world, "instance", ctx.instances[0].data(), ctx.instances[0].size());
   } else if (!ctx.groups.empty()) {
     std::vector<anari::Instance> instances;
     for (auto group : ctx.groups) {
@@ -138,15 +137,35 @@ void registerGltfTests(Catalog &catalog)
       continue;
 
     const std::string rootStr = root.string();
-    auto build = [rootStr, asset](BuildContext &ctx) -> anari::World {
+    // The default encoding when a Case carries no `encoding` axis value (i.e.
+    // the asset ships a single encoding, so no axis was registered). It must be
+    // the asset's actual encoding, not a hard-coded "glTF": several assets ship
+    // only glTF-Binary, and defaulting to "glTF" would look for a .gltf that
+    // isn't there.
+    const std::string defaultEnc = available.front();
+    auto build = [rootStr, asset, defaultEnc](
+                     BuildContext &ctx) -> anari::World {
       auto d = ctx.device();
-      const std::string enc = ctx.getString("encoding", "glTF");
+      const std::string enc = ctx.getString("encoding", defaultEnc);
       const std::string ext = (enc == "glTF-Binary") ? ".glb" : ".gltf";
       const std::string file =
           rootStr + "/" + asset + "/" + enc + "/" + asset + ext;
-      ::gltf_data gltf(d);
-      gltf.open_file(file);
-      return worldFromGltf(d, gltf);
+      // The glTF loader throws on malformed/unreadable JSON, missing buffers,
+      // or unsupported encodings. Contain it: one bad asset must become a
+      // failed Case, not abort the whole sweep (the runner records a build that
+      // returns no world as a failure).
+      try {
+        ::gltf_data gltf(d);
+        gltf.open_file(file);
+        return worldFromGltf(d, gltf);
+      } catch (const std::exception &e) {
+        fprintf(stderr,
+            "[cts][gltf] failed to load %s (%s): %s\n",
+            asset.c_str(),
+            enc.c_str(),
+            e.what());
+        return nullptr;
+      }
     };
 
     auto t = makeTest("gltf", sanitizeName(asset));
