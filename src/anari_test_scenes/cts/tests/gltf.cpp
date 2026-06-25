@@ -6,10 +6,11 @@
 // scans the glTF-Sample-Assets tree at registration time and registers one Test
 // per asset, loading the asset with the in-tree C++ glTF loader (gltf2anari.h).
 //
-// Gated on ENABLE_GLTF (the same flag that compiles the glTF loader, set by
-// VIEWER_ENABLE_GLTF). When glTF is not built, registerGltfTests is a no-op so
-// the default build and catalog are unaffected. Encodings that need optional
-// dependencies (Draco/KTX) are only offered when those are built.
+// Gated on ENABLE_GLTF, the flag that compiles the glTF loader (set by CMake
+// when either CTS_ENABLE_GLTF or VIEWER_ENABLE_GLTF is on). When glTF is not
+// built, registerGltfTests is a no-op so the default build and catalog are
+// unaffected. Encodings that need optional dependencies (Draco/KTX) are only
+// offered when those are built.
 
 #include "Categories.h"
 
