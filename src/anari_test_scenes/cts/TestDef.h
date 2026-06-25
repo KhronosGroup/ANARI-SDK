@@ -10,6 +10,7 @@
 // anari
 #include "anari/anari_cpp.hpp"
 // std
+#include <cstdint>
 #include <functional>
 #include <map>
 #include <string>
@@ -31,10 +32,32 @@ using BuildFn = std::function<anari::World(BuildContext &)>;
 using CameraFn =
     std::function<anari::Camera(BuildContext &, const anari::scenes::Bounds &)>;
 
-// Optional per-Case renderer builder. By default the runner uses a parameterless
-// "default" renderer; a Test that exercises renderer parameters (ambient,
-// background) supplies one. Returns a committed renderer the runner owns.
+// Optional per-Case renderer builder. By default the runner uses a
+// parameterless "default" renderer; a Test that exercises renderer parameters
+// (ambient, background) supplies one. Returns a committed renderer the runner
+// owns.
 using RendererFn = std::function<anari::Renderer(BuildContext &)>;
+
+// The outcome of a behavioral check: a self-contained pass/fail with a
+// human-readable detail. Distinct from render-and-compare scoring.
+struct BehaviorResult
+{
+  bool passed{false};
+  std::string detail;
+};
+
+// Optional per-Case behavioral check, for conformance guarantees the
+// render-and-compare path can't express (e.g. a frame-completion callback
+// firing, progressive accumulation converging). When a Test sets one, the
+// runner builds the world/camera/renderer, calls this instead of rendering and
+// scoring against ground truth, and records the returned verdict + detail in
+// the sidecar. No ground truth is generated or needed for such a Test.
+using BehaviorFn = std::function<BehaviorResult(anari::Device,
+    anari::World,
+    anari::Camera,
+    anari::Renderer,
+    uint32_t width,
+    uint32_t height)>;
 
 // A single registered definition in the Catalog: a world-build function plus
 // its axes, required features, thresholds, and bounds tolerance. A Test expands
@@ -44,11 +67,17 @@ struct TestDef
   std::string category;
   std::string name;
   BuildFn build;
-  CameraFn cameraBuild;     // empty -> runner frames camera from world bounds
+  CameraFn cameraBuild; // empty -> runner frames camera from world bounds
   RendererFn rendererBuild; // empty -> runner uses a "default" renderer
+  BehaviorFn behaviorCheck; // set -> verify behavior instead of render+compare
   std::vector<Axis> axes;
   std::vector<std::string> requiredFeatures;
-  std::map<std::string, double> thresholds; // metric name -> threshold
+  std::map<std::string, double>
+      thresholds; // metric name -> threshold (all channels)
+  // Per-channel metric thresholds, overriding `thresholds` for that channel
+  // only. Most tests compare every channel against one threshold; a test that
+  // needs a stricter (or looser) bar on a specific channel sets it here.
+  std::map<Channel, std::map<std::string, double>> channelThresholds;
   double boundsTolerance{0.0};
   std::vector<Channel> channels{Channel::Color};
   // When set, expand one-factor-at-a-time instead of the full cartesian
@@ -65,6 +94,21 @@ struct TestDef
   {
     auto it = thresholds.find(metric);
     return it != thresholds.end() ? it->second : valIfNotFound;
+  }
+
+  // The threshold to apply for a metric on a specific channel: a per-channel
+  // override if one is set, else the test-wide metric threshold, else the
+  // supplied default (the runner's RunOptions default).
+  double thresholdFor(
+      Channel channel, const std::string &metric, double valIfNotFound) const
+  {
+    auto cit = channelThresholds.find(channel);
+    if (cit != channelThresholds.end()) {
+      auto mit = cit->second.find(metric);
+      if (mit != cit->second.end())
+        return mit->second;
+    }
+    return thresholdOr(metric, valIfNotFound);
   }
 };
 

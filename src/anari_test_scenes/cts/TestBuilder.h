@@ -30,6 +30,11 @@ class ANARI_TEST_SCENES_INTERFACE TestBuilder
   TestBuilder &camera(CameraFn fn);
   TestBuilder &renderer(RendererFn fn);
 
+  // Verify device behavior with a bespoke check instead of rendering and
+  // comparing against ground truth (e.g. a completion callback firing). A Test
+  // with a behavior check generates no ground truth.
+  TestBuilder &behavior(BehaviorFn fn);
+
   // Permutation axis: values produce different output (distinct ground truth).
   TestBuilder &permute(std::string axis, std::vector<Any> values);
   template <typename T>
@@ -49,7 +54,11 @@ class ANARI_TEST_SCENES_INTERFACE TestBuilder
   TestBuilder &simplified(bool on = true);
   TestBuilder &requireFeatures(std::vector<std::string> features);
   TestBuilder &requireFeature(std::string feature);
+  // Test-wide metric threshold (applies to every channel).
   TestBuilder &threshold(std::string metric, double value);
+  // Per-channel metric threshold, overriding the test-wide one for that
+  // channel.
+  TestBuilder &threshold(Channel channel, std::string metric, double value);
   TestBuilder &boundsTolerance(double tolerance);
   TestBuilder &channels(std::vector<Channel> ch);
 

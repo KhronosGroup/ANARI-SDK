@@ -15,6 +15,7 @@ project_sources(PRIVATE
   cts/Catalog.cpp
   cts/Expansion.cpp
   cts/Filter.cpp
+  cts/FrameFormats.cpp
   cts/Image.cpp
   cts/Metrics.cpp
   cts/Runner.cpp

@@ -3,7 +3,9 @@
 
 #include "catch.hpp"
 // cts
+#include "cts/Case.h"
 #include "cts/Catalog.h"
+#include "cts/FrameFormats.h"
 #include "cts/Runner.h"
 #include "cts/TestBuilder.h"
 #include "cts/WorldBuilder.h"
@@ -104,9 +106,76 @@ std::string readFile(const std::filesystem::path &p)
   return ss.str();
 }
 
+// A Case carrying a single output-format axis value.
+Case caseWithFormat(const std::string &axis, anari::cts::Any value)
+{
+  Case c;
+  c.category = "frame";
+  c.testName = "fmt";
+  c.values = {{axis, std::move(value), AxisKind::Permutation}};
+  return c;
+}
+
 } // namespace
 
-TEST_CASE("Runner generates ground truth then scores a run", "[cts][runner][helide]")
+// Frame output-format resolution (pure; no device) ////////////////////////////
+
+TEST_CASE("output-format strings map to ANARIDataType", "[cts][frameformat]")
+{
+  CHECK(colorFormatFromString("UFIXED8_RGBA_SRGB") == ANARI_UFIXED8_RGBA_SRGB);
+  CHECK(colorFormatFromString("UFIXED8_VEC4") == ANARI_UFIXED8_VEC4);
+  CHECK(colorFormatFromString("FLOAT32_VEC4") == ANARI_FLOAT32_VEC4);
+  CHECK(colorFormatFromString("nonsense") == ANARI_UNKNOWN);
+
+  CHECK(albedoFormatFromString("UFIXED8_VEC3") == ANARI_UFIXED8_VEC3);
+  CHECK(albedoFormatFromString("UFIXED8_RGB_SRGB") == ANARI_UFIXED8_RGB_SRGB);
+  CHECK(albedoFormatFromString("FLOAT32_VEC3") == ANARI_FLOAT32_VEC3);
+  CHECK(
+      albedoFormatFromString("FIXED16_VEC3") == ANARI_UNKNOWN); // wrong channel
+
+  CHECK(normalFormatFromString("FIXED16_VEC3") == ANARI_FIXED16_VEC3);
+  CHECK(normalFormatFromString("FLOAT32_VEC3") == ANARI_FLOAT32_VEC3);
+  CHECK(
+      normalFormatFromString("UFIXED8_VEC3") == ANARI_UNKNOWN); // wrong channel
+}
+
+TEST_CASE("channels have fixed default formats", "[cts][frameformat]")
+{
+  CHECK(channelDefaultFormat(Channel::Color) == ANARI_UFIXED8_RGBA_SRGB);
+  CHECK(channelDefaultFormat(Channel::Depth) == ANARI_FLOAT32);
+  CHECK(channelDefaultFormat(Channel::Albedo) == ANARI_FLOAT32_VEC3);
+  CHECK(channelDefaultFormat(Channel::Normal) == ANARI_FLOAT32_VEC3);
+  CHECK(channelDefaultFormat(Channel::PrimitiveId) == ANARI_UINT32);
+}
+
+TEST_CASE("caseChannelFormat honors the output-format axis per channel",
+    "[cts][frameformat]")
+{
+  // The color axis overrides the color channel.
+  auto colorCase = caseWithFormat("frame_color_type", Any("FLOAT32_VEC4"));
+  CHECK(caseChannelFormat(colorCase, Channel::Color) == ANARI_FLOAT32_VEC4);
+  // ...but does not bleed into other channels.
+  CHECK(caseChannelFormat(colorCase, Channel::Depth) == ANARI_FLOAT32);
+
+  // Albedo and normal axes drive their own channels (D2).
+  auto albedoCase = caseWithFormat("frame_albedo_type", Any("UFIXED8_VEC3"));
+  CHECK(caseChannelFormat(albedoCase, Channel::Albedo) == ANARI_UFIXED8_VEC3);
+
+  auto normalCase = caseWithFormat("frame_normal_type", Any("FIXED16_VEC3"));
+  CHECK(caseChannelFormat(normalCase, Channel::Normal) == ANARI_FIXED16_VEC3);
+
+  // No axis -> the channel default.
+  Case bare;
+  CHECK(caseChannelFormat(bare, Channel::Albedo) == ANARI_FLOAT32_VEC3);
+  CHECK(caseChannelFormat(bare, Channel::Color) == ANARI_UFIXED8_RGBA_SRGB);
+
+  // An unrecognized axis value falls back to the channel default.
+  auto bogus = caseWithFormat("frame_color_type", Any("BOGUS"));
+  CHECK(caseChannelFormat(bogus, Channel::Color) == ANARI_UFIXED8_RGBA_SRGB);
+}
+
+TEST_CASE(
+    "Runner generates ground truth then scores a run", "[cts][runner][helide]")
 {
   anari::Library lib = anari::loadLibrary("helide", statusFunc, nullptr);
   if (!lib) {
@@ -122,7 +191,8 @@ TEST_CASE("Runner generates ground truth then scores a run", "[cts][runner][heli
   std::filesystem::remove_all(root, ec);
 
   auto catalog = makeCatalog();
-  const std::set<std::string> features; // no real features required by the tests
+  const std::set<std::string>
+      features; // no real features required by the tests
   RunOptions opts;
   opts.width = 64;
   opts.height = 64;
@@ -163,13 +233,16 @@ TEST_CASE("Runner generates ground truth then scores a run", "[cts][runner][heli
     tri.testName = "triangle";
     tri.values = {{"primitiveCount", Any(4), AxisKind::Permutation},
         {"primitiveMode", Any("soup"), AxisKind::Variant}};
-    CHECK(std::filesystem::exists(wd.groundTruthImagePath(tri, Channel::Color)));
+    CHECK(
+        std::filesystem::exists(wd.groundTruthImagePath(tri, Channel::Color)));
 
     Case sph;
     sph.category = "geometry";
     sph.testName = "sphere";
-    CHECK(std::filesystem::exists(wd.groundTruthImagePath(sph, Channel::Color)));
-    CHECK(std::filesystem::exists(wd.groundTruthImagePath(sph, Channel::Depth)));
+    CHECK(
+        std::filesystem::exists(wd.groundTruthImagePath(sph, Channel::Color)));
+    CHECK(
+        std::filesystem::exists(wd.groundTruthImagePath(sph, Channel::Depth)));
 
     // A candidate identical to the reference (both helide) must pass.
     auto runSummary = runner.run(catalog, Filter{""}, features);
@@ -190,6 +263,101 @@ TEST_CASE("Runner generates ground truth then scores a run", "[cts][runner][heli
     bogus.category = "demo";
     bogus.testName = "needs_bogus";
     const auto bogusText = readFile(wd.sidecarPath(bogus));
+    CHECK(bogusText.find("\"verdict\": \"skipped\"") != std::string::npos);
+    CHECK(bogusText.find("feature") != std::string::npos);
+  }
+
+  std::filesystem::remove_all(root, ec);
+  anari::release(d, d);
+  anari::unloadLibrary(lib);
+}
+
+TEST_CASE("Runner verifies behavioral tests via the behavior hook",
+    "[cts][runner][helide]")
+{
+  anari::Library lib = anari::loadLibrary("helide", statusFunc, nullptr);
+  if (!lib) {
+    WARN("helide library not available; skipping behavior hook test");
+    return;
+  }
+  anari::Device d = anari::newDevice(lib, "default");
+  REQUIRE(d != nullptr);
+  anari::commitParameters(d, d);
+
+  const auto root =
+      std::filesystem::temp_directory_path() / "cts_behavior_test";
+  std::error_code ec;
+  std::filesystem::remove_all(root, ec);
+
+  Catalog cat;
+  // A behavior check that inspects what the runner built and passes.
+  makeTest("frame", "behaves")
+      .build(buildTriangleWorld)
+      .behavior([](anari::Device dev,
+                    anari::World w,
+                    anari::Camera cam,
+                    anari::Renderer r,
+                    uint32_t width,
+                    uint32_t height) -> BehaviorResult {
+        const bool ok = dev != nullptr && w != nullptr && cam != nullptr
+            && r != nullptr && width > 0 && height > 0;
+        return {ok, ok ? "scene objects present" : "missing scene objects"};
+      })
+      .registerInto(cat);
+  // A behavior check gated on a feature no device has -> skipped, never called.
+  makeTest("frame", "behaves_bogus")
+      .build(buildTriangleWorld)
+      .behavior(
+          [](anari::Device,
+              anari::World,
+              anari::Camera,
+              anari::Renderer,
+              uint32_t,
+              uint32_t) -> BehaviorResult { return {false, "should not run"}; })
+      .requireFeature("ANARI_KHR_BOGUS_FEATURE")
+      .registerInto(cat);
+
+  RunOptions opts;
+  opts.width = 32;
+  opts.height = 32;
+  Runner runner(d, Workdir(root), opts);
+
+  SECTION("generate skips behavioral tests (no ground truth)")
+  {
+    auto g = runner.generate(cat, Filter{""}, {});
+    CHECK(g.total == 2);
+    CHECK(g.skipped == 2);
+    CHECK(g.passed == 0);
+    // No ground truth produced for a behavioral test.
+    Case behaves;
+    behaves.category = "frame";
+    behaves.testName = "behaves";
+    CHECK_FALSE(std::filesystem::exists(
+        Workdir(root).groundTruthImagePath(behaves, Channel::Color)));
+  }
+
+  SECTION("run invokes the hook and records verdict + detail")
+  {
+    auto s = runner.run(cat, Filter{""}, {});
+    CHECK(s.total == 2);
+    CHECK(s.passed == 1);
+    CHECK(s.skipped == 1);
+    CHECK(s.failed == 0);
+
+    Case behaves;
+    behaves.category = "frame";
+    behaves.testName = "behaves";
+    const auto text = readFile(Workdir(root).sidecarPath(behaves));
+    CHECK(text.find("\"verdict\": \"passed\"") != std::string::npos);
+    CHECK(text.find("scene objects present") != std::string::npos);
+    // No images are rendered for a behavioral case.
+    CHECK_FALSE(std::filesystem::exists(
+        Workdir(root).resultImagePath(behaves, Channel::Color)));
+
+    Case bogus;
+    bogus.category = "frame";
+    bogus.testName = "behaves_bogus";
+    const auto bogusText = readFile(Workdir(root).sidecarPath(bogus));
     CHECK(bogusText.find("\"verdict\": \"skipped\"") != std::string::npos);
     CHECK(bogusText.find("feature") != std::string::npos);
   }

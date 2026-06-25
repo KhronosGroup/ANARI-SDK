@@ -8,16 +8,20 @@
 //
 // Two of the originals are behavioral checks the old suite implemented with a
 // synthetic pass/fail image (frame_completion_callback, progressive_rendering).
-// The render-and-compare runner can't express that assertion, so they are
-// registered as ordinary color renders gated on their feature, keeping the
-// corpus complete; the behavioral guarantee is not verified here.
+// The render-and-compare runner can't express those assertions, so they use the
+// runner's behavior hook (TestDef::behaviorCheck) instead: the callback test
+// asserts the frame-completion callback fires, and the progressive test asserts
+// re-rendering the same frame accumulates. Both still skip where the feature is
+// unsupported.
 
-#include "Categories.h"
 #include "../BuildContext.h"
 #include "../TestBuilder.h"
+#include "../TestDef.h"
 #include "../WorldBuilder.h"
+#include "Categories.h"
 // std
 #include <cstdint>
+#include <string>
 #include <vector>
 
 namespace anari {
@@ -80,7 +84,8 @@ anari::Instance idInstance(anari::Device d, int seed, uint32_t id, bool setId)
 {
   auto s = idSurface(d, seed, 0, false);
   auto group = anari::newObject<anari::Group>(d);
-  anari::setAndReleaseParameter(d, group, "surface", anari::newArray1D(d, &s, 1));
+  anari::setAndReleaseParameter(
+      d, group, "surface", anari::newArray1D(d, &s, 1));
   anari::commitParameters(d, group);
   anari::release(d, s);
   auto inst = anari::newObject<anari::Instance>(d, "transform");
@@ -89,6 +94,113 @@ anari::Instance idInstance(anari::Device d, int seed, uint32_t id, bool setId)
   anari::setAndReleaseParameter(d, inst, "group", group);
   anari::commitParameters(d, inst);
   return inst;
+}
+
+// A frame carrying the runner's world/camera/renderer, ready to render. The
+// caller owns and releases it.
+anari::Frame behaviorFrame(anari::Device d,
+    anari::World world,
+    anari::Camera camera,
+    anari::Renderer renderer,
+    uint32_t w,
+    uint32_t h)
+{
+  auto frame = anari::newObject<anari::Frame>(d);
+  anari::setParameter(d, frame, "size", anari::math::vec<uint32_t, 2>(w, h));
+  anari::setParameter(d, frame, "channel.color", ANARI_UFIXED8_RGBA_SRGB);
+  anari::setParameter(d, frame, "renderer", renderer);
+  anari::setParameter(d, frame, "camera", camera);
+  anari::setParameter(d, frame, "world", world);
+  return frame;
+}
+
+// Behavioral check: the device must invoke the frame-completion callback
+// exactly when a frame finishes. Passes if the callback fired during
+// render/wait.
+BehaviorResult checkFrameCompletionCallback(anari::Device d,
+    anari::World world,
+    anari::Camera camera,
+    anari::Renderer renderer,
+    uint32_t w,
+    uint32_t h)
+{
+  auto frame = behaviorFrame(d, world, camera, renderer, w, h);
+
+  int fired = 0;
+  anari::setParameter(d,
+      frame,
+      "frameCompletionCallback",
+      (anari::FrameCompletionCallback)(
+          +[](const void *userPtr, ANARIDevice, ANARIFrame) {
+            if (userPtr)
+              ++*static_cast<int *>(const_cast<void *>(userPtr));
+          }));
+  anari::setParameter(
+      d, frame, "frameCompletionCallbackUserData", static_cast<void *>(&fired));
+  anari::commitParameters(d, frame);
+
+  anari::render(d, frame);
+  anari::wait(d, frame);
+  // Read the flag before releasing the frame; a conformant device fires the
+  // callback during the wait above (this assumes synchronous completion).
+  const bool ok = fired > 0;
+  anari::release(d, frame);
+
+  return {ok,
+      ok ? "frame completion callback fired"
+         : "frame completion callback did not fire"};
+}
+
+// Behavioral check: a progressive renderer accumulates across successive
+// renders of the same frame, refining the image; a non-progressive one
+// reproduces an identical image. Render once, accumulate several more renders,
+// then compare against the first. The 10-render accumulation and the >10-pixel
+// bar mirror the original behavioral test (which compared frame 1 against the
+// 10x-accumulated frame), not just two consecutive frames.
+BehaviorResult checkProgressiveRendering(anari::Device d,
+    anari::World world,
+    anari::Camera camera,
+    anari::Renderer renderer,
+    uint32_t w,
+    uint32_t h)
+{
+  auto frame = behaviorFrame(d, world, camera, renderer, w, h);
+  anari::commitParameters(d, frame);
+
+  auto snapshot = [&]() {
+    std::vector<uint32_t> px;
+    auto fb = anari::map<uint32_t>(d, frame, "channel.color");
+    if (fb.data != nullptr)
+      px.assign(fb.data, fb.data + static_cast<size_t>(fb.width) * fb.height);
+    anari::unmap(d, frame, "channel.color");
+    return px;
+  };
+
+  anari::render(d, frame);
+  anari::wait(d, frame);
+  const auto first = snapshot();
+
+  constexpr int kAccumulationFrames = 10;
+  for (int i = 0; i < kAccumulationFrames; ++i) {
+    anari::render(d, frame);
+    anari::wait(d, frame);
+  }
+  const auto accumulated = snapshot();
+
+  anari::release(d, frame);
+
+  // A failed or short color-buffer readback can't be judged for accumulation;
+  // report that plainly instead of mistaking an empty buffer for "no change".
+  if (first.empty() || first.size() != accumulated.size())
+    return {false, "could not read back the color buffer"};
+
+  size_t changed = 0;
+  for (size_t i = 0; i < first.size(); ++i)
+    if (first[i] != accumulated[i])
+      ++changed;
+
+  const bool ok = changed > 10;
+  return {ok, std::to_string(changed) + " pixels changed after accumulation"};
 }
 
 } // namespace
@@ -118,9 +230,9 @@ void registerFrameTests(Catalog &catalog)
       .registerInto(catalog);
 
   // ---- albedo channel output types (skips where unsupported) ----------------
-  // The runner renders albedo as FLOAT32_VEC3; the output-type axis distinguishes
-  // ground truth but is not itself honored as a buffer format (helide has no
-  // albedo channel, so these skip there).
+  // The runner renders albedo at the axis's buffer format (UFIXED8_VEC3 /
+  // UFIXED8_RGB_SRGB / FLOAT32_VEC3) and reads it back accordingly (D2). helide
+  // has no albedo channel, so these still skip there.
   makeTest("frame", "frame_albedo_channel")
       .build([](BuildContext &ctx) {
         return triangleSurfaceWorld(ctx, float3(0.55f, 0.82f, 0.78f), 16);
@@ -152,8 +264,10 @@ void registerFrameTests(Catalog &catalog)
         o.seed = 12345;
         auto geom = buildGeometry(d, o);
         std::vector<uint32_t> ids = {5, 3, 4, 2, 7, 6, 0, 1};
-        anari::setAndReleaseParameter(
-            d, geom, "primitive.id", anari::newArray1D(d, ids.data(), ids.size()));
+        anari::setAndReleaseParameter(d,
+            geom,
+            "primitive.id",
+            anari::newArray1D(d, ids.data(), ids.size()));
         anari::commitParameters(d, geom);
         auto mat = makeMatteMaterial(d, float3(0.7f, 0.7f, 0.7f));
         auto surface = makeSurface(d, geom, mat);
@@ -254,11 +368,12 @@ void registerFrameTests(Catalog &catalog)
       .requireFeature("ANARI_KHR_FRAME_CHANNEL_INSTANCE_ID")
       .registerInto(catalog);
 
-  // ---- behavioral checks (corpus completeness; not verified by comparison) --
+  // ---- behavioral checks (verified by the runner's behavior hook) -----------
   makeTest("frame", "frame_completion_callback")
       .build([](BuildContext &ctx) {
         return triangleSurfaceWorld(ctx, float3(0.7f, 0.5f, 0.3f), 1);
       })
+      .behavior(checkFrameCompletionCallback)
       .requireFeature("ANARI_KHR_FRAME_COMPLETION_CALLBACK")
       .registerInto(catalog);
 
@@ -266,6 +381,7 @@ void registerFrameTests(Catalog &catalog)
       .build([](BuildContext &ctx) {
         return triangleSurfaceWorld(ctx, float3(0.7f, 0.5f, 0.3f), 1);
       })
+      .behavior(checkProgressiveRendering)
       .requireFeature("ANARI_KHR_PROGRESSIVE_RENDERING")
       .registerInto(catalog);
 }

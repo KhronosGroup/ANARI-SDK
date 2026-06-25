@@ -34,7 +34,8 @@ Case sphereCase()
 
 // Workdir paths //////////////////////////////////////////////////////////////
 
-TEST_CASE("Workdir mirrors the catalog hierarchy under each subdir", "[cts][workdir]")
+TEST_CASE(
+    "Workdir mirrors the catalog hierarchy under each subdir", "[cts][workdir]")
 {
   Workdir wd("/tmp/run");
   auto c = sphereCase();
@@ -66,9 +67,11 @@ TEST_CASE("Workdir relativeToRoot strips the root prefix", "[cts][workdir]")
       == "results/geometry/sphere/1_soup.color.png");
 }
 
-TEST_CASE("Workdir writes a .gitignore that ignores everything", "[cts][workdir]")
+TEST_CASE(
+    "Workdir writes a .gitignore that ignores everything", "[cts][workdir]")
 {
-  const auto root = std::filesystem::temp_directory_path() / "cts_gitignore_test";
+  const auto root =
+      std::filesystem::temp_directory_path() / "cts_gitignore_test";
   std::error_code ec;
   std::filesystem::remove_all(root, ec);
 
@@ -87,12 +90,14 @@ TEST_CASE("Workdir writes a .gitignore that ignores everything", "[cts][workdir]
 
 // Verdict ////////////////////////////////////////////////////////////////////
 
-TEST_CASE("metricPassed is a strict higher-is-better threshold", "[cts][verdict]")
+TEST_CASE(
+    "metricPassed is a strict higher-is-better threshold", "[cts][verdict]")
 {
   CHECK(metricPassed(0.8, 0.7));
   CHECK_FALSE(metricPassed(0.7, 0.7)); // strict
   CHECK_FALSE(metricPassed(0.6, 0.7));
-  CHECK(metricPassed(std::numeric_limits<double>::infinity(), 20.0)); // identical
+  CHECK(
+      metricPassed(std::numeric_limits<double>::infinity(), 20.0)); // identical
   CHECK_FALSE(metricPassed(std::numeric_limits<double>::quiet_NaN(), 20.0));
 }
 
@@ -131,6 +136,24 @@ TEST_CASE("sidecar JSON carries the contract fields", "[cts][sidecar]")
       != std::string::npos);
 }
 
+TEST_CASE(
+    "sidecar carries a behavioral case's verdict and detail", "[cts][sidecar]")
+{
+  CaseResult r;
+  r.category = "frame";
+  r.test = "frame_completion_callback";
+  r.caseId = "default";
+  r.verdict = Verdict::Passed;
+  r.detail = "frame completion callback fired";
+  // Behavioral cases have no channels.
+
+  const std::string text = toJson(r);
+  CHECK(text.find("\"verdict\": \"passed\"") != std::string::npos);
+  CHECK(text.find("\"detail\": \"frame completion callback fired\"")
+      != std::string::npos);
+  CHECK(text.find("\"channels\": []") != std::string::npos);
+}
+
 TEST_CASE("non-finite scores serialize as JSON null", "[cts][sidecar]")
 {
   CaseResult r;
@@ -144,7 +167,8 @@ TEST_CASE("non-finite scores serialize as JSON null", "[cts][sidecar]")
   CHECK(text.find("\"psnr\": null") != std::string::npos);
 }
 
-TEST_CASE("writeSidecar creates directories and a readable file", "[cts][sidecar]")
+TEST_CASE(
+    "writeSidecar creates directories and a readable file", "[cts][sidecar]")
 {
   const auto dir =
       std::filesystem::temp_directory_path() / "cts_sidecar_test" / "nested";

@@ -4,14 +4,17 @@
 #include "Runner.h"
 #include "BuildContext.h"
 #include "Expansion.h"
+#include "FrameFormats.h"
 #include "Metrics.h"
 #include "Sidecar.h"
 #include "Value.h"
 #include "WorldBuilder.h"
 #include "generators/ColorPalette.h"
 // std
+#include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <cstdint>
 #include <cstring>
 
 namespace anari {
@@ -40,91 +43,37 @@ const char *channelFrameParam(Channel ch)
   return "channel.color";
 }
 
-ANARIDataType channelFormat(Channel ch)
-{
-  switch (ch) {
-  case Channel::Color:
-    return ANARI_UFIXED8_RGBA_SRGB;
-  case Channel::Depth:
-    return ANARI_FLOAT32;
-  case Channel::Albedo:
-  case Channel::Normal:
-    return ANARI_FLOAT32_VEC3;
-  case Channel::PrimitiveId:
-  case Channel::ObjectId:
-  case Channel::InstanceId:
-    return ANARI_UINT32;
-  }
-  return ANARI_UFIXED8_RGBA_SRGB;
-}
-
-// Map a frame color-channel output-format axis value (the legacy
-// `frame_color_type` strings) to its ANARIDataType. Returns ANARI_UNKNOWN for
-// an unrecognized string so the caller can fall back to the default.
-ANARIDataType colorFormatFromString(const std::string &s)
-{
-  if (s == "UFIXED8_RGBA_SRGB")
-    return ANARI_UFIXED8_RGBA_SRGB;
-  if (s == "UFIXED8_VEC4")
-    return ANARI_UFIXED8_VEC4;
-  if (s == "FLOAT32_VEC4")
-    return ANARI_FLOAT32_VEC4;
-  return ANARI_UNKNOWN;
-}
-
-// The output format the Case requests for a channel. Only the color channel is
-// Case-overridable today (via a `frame_color_type` axis), which is what the
-// migrated frame/geometry color-type tests exercise; every other channel uses
-// its fixed default.
-ANARIDataType caseChannelFormat(const Case &c, Channel ch)
-{
-  if (ch == Channel::Color) {
-    for (const auto &cv : c.values) {
-      if (cv.axisName == "frame_color_type" && cv.value.type() == ANARI_STRING) {
-        const ANARIDataType t = colorFormatFromString(cv.value.getString());
-        if (t != ANARI_UNKNOWN)
-          return t;
-      }
-    }
-  }
-  return channelFormat(ch);
-}
-
 uint8_t toU8(float v)
 {
   const float s = v * 255.0f;
   return static_cast<uint8_t>(s < 0.f ? 0.f : (s > 255.f ? 255.f : s));
 }
 
-Image colorToImage(anari::Device d,
-    anari::Frame frame,
-    uint32_t w,
-    uint32_t h,
-    ANARIDataType colorFmt)
+Image colorToImage(anari::Device d, anari::Frame frame, uint32_t w, uint32_t h)
 {
   Image image;
   image.width = w;
   image.height = h;
   image.rgba.assign(static_cast<size_t>(w) * h * 4, 0);
   const size_t n = static_cast<size_t>(w) * h;
-  if (colorFmt == ANARI_FLOAT32_VEC4) {
-    // Float color buffers are read componentwise and quantized to 8-bit for the
-    // (8-bit) comparison image. Generate and run share this path, so a Case and
-    // its ground truth quantize identically.
-    auto fb = anari::map<float>(d, frame, "channel.color");
-    if (fb.data != nullptr) {
+  // Read by the device-reported pixel type, not the requested one: a device may
+  // return a different format than asked for, and reading at the wrong stride
+  // would corrupt the comparison image. Each device's own readback is correct,
+  // so a candidate and its ground truth stay comparable even across devices.
+  auto fb = anari::map<uint8_t>(d, frame, "channel.color");
+  if (fb.data != nullptr) {
+    if (fb.pixelType == ANARI_FLOAT32_VEC4) {
+      // Float color is read componentwise and quantized to 8-bit.
+      const auto *p = reinterpret_cast<const float *>(fb.data);
       for (size_t i = 0; i < n; ++i)
         for (int c = 0; c < 4; ++c)
-          image.rgba[i * 4 + c] = toU8(fb.data[i * 4 + c]);
-    }
-    anari::unmap(d, frame, "channel.color");
-  } else {
-    // UFIXED8_* buffers are already packed RGBA8.
-    auto fb = anari::map<uint32_t>(d, frame, "channel.color");
-    if (fb.data != nullptr)
+          image.rgba[i * 4 + c] = toU8(p[i * 4 + c]);
+    } else {
+      // UFIXED8_RGBA_SRGB / UFIXED8_VEC4 are already packed RGBA8.
       std::memcpy(image.rgba.data(), fb.data, image.rgba.size());
-    anari::unmap(d, frame, "channel.color");
+    }
   }
+  anari::unmap(d, frame, "channel.color");
   return image;
 }
 
@@ -159,6 +108,11 @@ Image depthToImage(anari::Device d,
   return image;
 }
 
+// Read a 3-component channel (albedo/normal) into the 8-bit comparison image.
+// Dispatch on the device-reported pixel type (float, unsigned-normalized 8-bit,
+// or signed-normalized 16-bit) rather than the requested format, so a device
+// that returns a different format than asked is still read at the right stride.
+// signedRange maps a [-1,1] value (normals) into [0,1] before quantizing.
 Image vec3ToImage(anari::Device d,
     anari::Frame frame,
     const char *channel,
@@ -170,17 +124,51 @@ Image vec3ToImage(anari::Device d,
   image.width = w;
   image.height = h;
   image.rgba.assign(static_cast<size_t>(w) * h * 4, 0);
-  auto fb = anari::map<float>(d, frame, channel);
+  const size_t n = static_cast<size_t>(w) * h;
+
+  // Map raw bytes so we can reinterpret by whatever pixel type the device
+  // reports.
+  auto fb = anari::map<uint8_t>(d, frame, channel);
   if (fb.data != nullptr) {
-    const size_t n = static_cast<size_t>(w) * h;
-    for (size_t i = 0; i < n; ++i) {
-      for (int c = 0; c < 3; ++c) {
-        float v = fb.data[i * 3 + c];
-        if (signedRange) // map [-1,1] -> [0,1] (normals)
-          v = v * 0.5f + 0.5f;
-        image.rgba[i * 4 + c] = toU8(v);
+    switch (fb.pixelType) {
+    case ANARI_UFIXED8_VEC3:
+    case ANARI_UFIXED8_RGB_SRGB: {
+      // Already 8-bit per component; copy verbatim (sRGB encoding preserved).
+      const uint8_t *p = fb.data;
+      for (size_t i = 0; i < n; ++i) {
+        for (int c = 0; c < 3; ++c)
+          image.rgba[i * 4 + c] = p[i * 3 + c];
+        image.rgba[i * 4 + 3] = 255;
       }
-      image.rgba[i * 4 + 3] = 255;
+      break;
+    }
+    case ANARI_FIXED16_VEC3: {
+      // Signed-normalized 16-bit: value = raw / 32767 in [-1, 1].
+      const auto *p = reinterpret_cast<const int16_t *>(fb.data);
+      for (size_t i = 0; i < n; ++i) {
+        for (int c = 0; c < 3; ++c) {
+          float v = std::max(p[i * 3 + c] / 32767.0f, -1.0f);
+          if (signedRange) // map [-1,1] -> [0,1] (normals)
+            v = v * 0.5f + 0.5f;
+          image.rgba[i * 4 + c] = toU8(v);
+        }
+        image.rgba[i * 4 + 3] = 255;
+      }
+      break;
+    }
+    default: { // ANARI_FLOAT32_VEC3 (and any unexpected format)
+      const auto *p = reinterpret_cast<const float *>(fb.data);
+      for (size_t i = 0; i < n; ++i) {
+        for (int c = 0; c < 3; ++c) {
+          float v = p[i * 3 + c];
+          if (signedRange) // map [-1,1] -> [0,1] (normals)
+            v = v * 0.5f + 0.5f;
+          image.rgba[i * 4 + c] = toU8(v);
+        }
+        image.rgba[i * 4 + 3] = 255;
+      }
+      break;
+    }
     }
   }
   anari::unmap(d, frame, channel);
@@ -213,8 +201,9 @@ Image idToImage(anari::Device d,
 }
 
 // Render one channel of an already-assembled world with a caller-owned camera
-// and renderer. colorFmt is the requested color-buffer format (the comparison
-// image is always 8-bit RGBA). depthScale deterministically maps depth to gray.
+// and renderer. chFmt is the buffer format the Case requested for this channel
+// (the comparison image is always 8-bit RGBA). depthScale deterministically
+// maps depth to gray.
 Image renderChannel(anari::Device d,
     anari::World world,
     anari::Camera camera,
@@ -223,13 +212,19 @@ Image renderChannel(anari::Device d,
     uint32_t w,
     uint32_t h,
     float depthScale,
-    ANARIDataType colorFmt)
+    ANARIDataType chFmt)
 {
   auto frame = anari::newObject<anari::Frame>(d);
   anari::setParameter(d, frame, "size", anari::math::vec<uint32_t, 2>(w, h));
-  anari::setParameter(d, frame, "channel.color", colorFmt);
+  // The frame always carries a color buffer; only the channel being read needs
+  // the Case's requested format, so non-color channels keep a plain color
+  // buffer.
+  anari::setParameter(d,
+      frame,
+      "channel.color",
+      ch == Channel::Color ? chFmt : ANARI_UFIXED8_RGBA_SRGB);
   if (ch != Channel::Color)
-    anari::setParameter(d, frame, channelFrameParam(ch), channelFormat(ch));
+    anari::setParameter(d, frame, channelFrameParam(ch), chFmt);
   anari::setParameter(d, frame, "renderer", renderer);
   anari::setParameter(d, frame, "camera", camera);
   anari::setParameter(d, frame, "world", world);
@@ -241,7 +236,7 @@ Image renderChannel(anari::Device d,
   Image image;
   switch (ch) {
   case Channel::Color:
-    image = colorToImage(d, frame, w, h, colorFmt);
+    image = colorToImage(d, frame, w, h);
     break;
   case Channel::Depth:
     image = depthToImage(d, frame, w, h, depthScale);
@@ -300,48 +295,80 @@ Runner::Runner(anari::Device device, Workdir workdir, RunOptions options)
     : m_device(device), m_workdir(std::move(workdir)), m_options(options)
 {}
 
-std::vector<Image> Runner::renderCase(const TestDef &test, const Case &c)
+Runner::SceneObjects Runner::buildScene(const TestDef &test, const Case &c)
 {
+  SceneObjects scene;
   if (!test.build)
-    return {};
+    return scene;
 
   BuildContext ctx(m_device);
   for (const auto &cv : c.values)
     ctx.set(cv.axisName, cv.value);
 
-  anari::World world = test.build(ctx);
-  if (world == nullptr)
-    return {};
+  scene.world = test.build(ctx);
+  if (scene.world == nullptr)
+    return scene;
 
-  const auto bounds = worldBounds(m_device, world);
+  scene.bounds = worldBounds(m_device, scene.world);
+  scene.camera = test.cameraBuild
+      ? test.cameraBuild(ctx, scene.bounds)
+      : defaultCamera(
+            m_device, scene.bounds, m_options.width, m_options.height);
+  scene.renderer =
+      test.rendererBuild ? test.rendererBuild(ctx) : defaultRenderer(m_device);
+  return scene;
+}
+
+void Runner::releaseScene(SceneObjects &scene)
+{
+  if (scene.world)
+    anari::release(m_device, scene.world);
+  if (scene.camera)
+    anari::release(m_device, scene.camera);
+  if (scene.renderer)
+    anari::release(m_device, scene.renderer);
+  scene = {};
+}
+
+void Runner::writeFeatureSkip(const Case &c, RunSummary &summary)
+{
+  CaseResult result = baseResult(c);
+  result.verdict = Verdict::Skipped;
+  result.skipReason = "device is missing a required feature";
+  writeSidecar(m_workdir.sidecarPath(c), result);
+  summary.skipped++;
+}
+
+std::vector<Image> Runner::renderCase(const TestDef &test, const Case &c)
+{
+  SceneObjects scene = buildScene(test, c);
+  if (!scene.valid()) {
+    releaseScene(
+        scene); // release a partial build (world but no camera/renderer)
+    return {};
+  }
+
   // Deterministic depth scale derived from the (shared) scene bounds: the
   // default camera sits ~one diagonal from the center, so 2x covers near..far.
-  const float depthScale = 2.0f * anari::math::length(bounds[1] - bounds[0]);
-
-  anari::Camera camera = test.cameraBuild
-      ? test.cameraBuild(ctx, bounds)
-      : defaultCamera(m_device, bounds, m_options.width, m_options.height);
-  anari::Renderer renderer =
-      test.rendererBuild ? test.rendererBuild(ctx) : defaultRenderer(m_device);
+  const float depthScale =
+      2.0f * anari::math::length(scene.bounds[1] - scene.bounds[0]);
 
   std::vector<Image> images;
   images.reserve(test.channels.size());
   for (Channel ch : test.channels) {
-    const ANARIDataType colorFmt = caseChannelFormat(c, ch);
+    const ANARIDataType chFmt = caseChannelFormat(c, ch);
     images.push_back(renderChannel(m_device,
-        world,
-        camera,
-        renderer,
+        scene.world,
+        scene.camera,
+        scene.renderer,
         ch,
         m_options.width,
         m_options.height,
         depthScale,
-        colorFmt));
+        chFmt));
   }
 
-  anari::release(m_device, world);
-  anari::release(m_device, camera);
-  anari::release(m_device, renderer);
+  releaseScene(scene);
   return images;
 }
 
@@ -352,6 +379,13 @@ RunSummary Runner::generate(const Catalog &catalog,
   m_workdir.writeGitignore();
   RunSummary summary;
   for (const TestDef *test : catalog.filter(filter)) {
+    // Behavioral tests verify themselves at run time and have no ground truth.
+    if (test->behaviorCheck) {
+      const int n = static_cast<int>(expand(*test).size());
+      summary.total += n;
+      summary.skipped += n;
+      continue;
+    }
     for (const Case &c : expand(*test)) {
       summary.total++;
       if (!isSupported(*test, referenceFeatures)) {
@@ -365,7 +399,8 @@ RunSummary Runner::generate(const Catalog &catalog,
       }
       bool ok = true;
       for (size_t i = 0; i < test->channels.size(); ++i) {
-        if (!savePNG(m_workdir.groundTruthImagePath(c, test->channels[i]).string(),
+        if (!savePNG(
+                m_workdir.groundTruthImagePath(c, test->channels[i]).string(),
                 images[i]))
           ok = false;
       }
@@ -382,20 +417,19 @@ RunSummary Runner::run(const Catalog &catalog,
   m_workdir.writeGitignore();
   RunSummary summary;
   for (const TestDef *test : catalog.filter(filter)) {
-    const double ssimThreshold = test->thresholdOr("ssim", m_options.ssimThreshold);
-    const double psnrThreshold = test->thresholdOr("psnr", m_options.psnrThreshold);
-
+    if (test->behaviorCheck) {
+      runBehaviorTest(*test, candidateFeatures, summary);
+      continue;
+    }
     for (const Case &c : expand(*test)) {
       summary.total++;
-      CaseResult result = baseResult(c);
 
       if (!isSupported(*test, candidateFeatures)) {
-        result.verdict = Verdict::Skipped;
-        result.skipReason = "device is missing a required feature";
-        writeSidecar(m_workdir.sidecarPath(c), result);
-        summary.skipped++;
+        writeFeatureSkip(c, summary);
         continue;
       }
+
+      CaseResult result = baseResult(c);
 
       // Need ground truth for every channel before we can compare.
       bool haveGroundTruth = true;
@@ -437,6 +471,10 @@ RunSummary Runner::run(const Catalog &catalog,
 
         ChannelResult cr;
         cr.channel = ch;
+        const double ssimThreshold =
+            test->thresholdFor(ch, "ssim", m_options.ssimThreshold);
+        const double psnrThreshold =
+            test->thresholdFor(ch, "psnr", m_options.psnrThreshold);
         const double ssimScore = ssim(groundTruth[i], images[i]);
         const double psnrScore = psnr(groundTruth[i], images[i]);
         cr.metrics = {{"ssim", ssimScore}, {"psnr", psnrScore}};
@@ -457,6 +495,49 @@ RunSummary Runner::run(const Catalog &catalog,
     }
   }
   return summary;
+}
+
+void Runner::runBehaviorTest(const TestDef &test,
+    const std::set<std::string> &candidateFeatures,
+    RunSummary &summary)
+{
+  for (const Case &c : expand(test)) {
+    summary.total++;
+
+    if (!isSupported(test, candidateFeatures)) {
+      writeFeatureSkip(c, summary);
+      continue;
+    }
+
+    CaseResult result = baseResult(c);
+
+    SceneObjects scene = buildScene(test, c);
+    if (!scene.valid()) {
+      releaseScene(scene); // release a partial build
+      result.verdict = Verdict::Failed;
+      result.detail = "world/camera/renderer build failed";
+      writeSidecar(m_workdir.sidecarPath(c), result);
+      summary.failed++;
+      continue;
+    }
+
+    const auto start = std::chrono::steady_clock::now();
+    const BehaviorResult br = test.behaviorCheck(m_device,
+        scene.world,
+        scene.camera,
+        scene.renderer,
+        m_options.width,
+        m_options.height);
+    const auto end = std::chrono::steady_clock::now();
+    result.durationMs =
+        std::chrono::duration<double, std::milli>(end - start).count();
+    result.verdict = br.passed ? Verdict::Passed : Verdict::Failed;
+    result.detail = br.detail;
+    writeSidecar(m_workdir.sidecarPath(c), result);
+    br.passed ? summary.passed++ : summary.failed++;
+
+    releaseScene(scene);
+  }
 }
 
 } // namespace cts

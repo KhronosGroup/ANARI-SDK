@@ -61,6 +61,38 @@ class ANARI_TEST_SCENES_INTERFACE Runner
   std::vector<Image> renderCase(const TestDef &test, const Case &c);
 
  private:
+  // The committed render objects for one Case: the world plus the camera and
+  // renderer (either the Test's build hooks or the runner's defaults). `world`
+  // is null when the Test has no build function or build() returned null.
+  struct SceneObjects
+  {
+    anari::World world{nullptr};
+    anari::Camera camera{nullptr};
+    anari::Renderer renderer{nullptr};
+    anari::scenes::Bounds bounds{};
+
+    // A renderable scene needs all three objects; a build hook (or default
+    // camera/renderer) returning null leaves it invalid.
+    bool valid() const
+    {
+      return world && camera && renderer;
+    }
+  };
+
+  // Build a Case's world, camera, and renderer. The caller owns the result and
+  // must releaseScene() it (even when !valid(), to release a partial build).
+  SceneObjects buildScene(const TestDef &test, const Case &c);
+  void releaseScene(SceneObjects &scene);
+
+  // Write a "missing required feature" skip sidecar for a Case and tally it.
+  void writeFeatureSkip(const Case &c, RunSummary &summary);
+
+  // Run a behavioral Test (TestDef::behaviorCheck set): one Case at a time,
+  // feature-gating then invoking the check and writing its verdict + detail.
+  void runBehaviorTest(const TestDef &test,
+      const std::set<std::string> &candidateFeatures,
+      RunSummary &summary);
+
   anari::Device m_device{nullptr};
   Workdir m_workdir;
   RunOptions m_options;

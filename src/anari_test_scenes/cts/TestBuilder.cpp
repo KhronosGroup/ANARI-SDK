@@ -30,6 +30,12 @@ TestBuilder &TestBuilder::renderer(RendererFn fn)
   return *this;
 }
 
+TestBuilder &TestBuilder::behavior(BehaviorFn fn)
+{
+  m_def.behaviorCheck = std::move(fn);
+  return *this;
+}
+
 TestBuilder &TestBuilder::permute(std::string axis, std::vector<Any> values)
 {
   m_def.axes.push_back(
@@ -66,6 +72,13 @@ TestBuilder &TestBuilder::requireFeature(std::string feature)
 TestBuilder &TestBuilder::threshold(std::string metric, double value)
 {
   m_def.thresholds[std::move(metric)] = value;
+  return *this;
+}
+
+TestBuilder &TestBuilder::threshold(
+    Channel channel, std::string metric, double value)
+{
+  m_def.channelThresholds[channel][std::move(metric)] = value;
   return *this;
 }
 

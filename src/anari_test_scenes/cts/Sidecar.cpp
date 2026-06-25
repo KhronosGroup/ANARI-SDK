@@ -35,6 +35,7 @@ std::string toJson(const CaseResult &result)
   j["groundTruthKey"] = result.groundTruthKey;
   j["verdict"] = verdictName(result.verdict);
   j["skipReason"] = result.skipReason;
+  j["detail"] = result.detail;
   j["durationMs"] = result.durationMs;
 
   // Ordered array so axis declaration order survives the round-trip.

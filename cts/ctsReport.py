@@ -127,7 +127,11 @@ def write_text_summary(workdir, results, out=sys.stdout):
                     f"{m}={ch['metrics'].get(m)}" for m in METRICS if m in ch.get("metrics", {})
                 )
                 scores.append(f"{ch.get('channel')}({vals})")
-            print(f"    {key}  {'; '.join(scores)}", file=out)
+            # Cases with no channel scores (behavioral, or a failed render)
+            # carry their reason in detail or skipReason instead.
+            reason = data.get("detail") or data.get("skipReason", "")
+            summary_text = "; ".join(scores) if scores else reason
+            print(f"    {key}  {summary_text}", file=out)
     return s
 
 
@@ -272,6 +276,12 @@ def generate_pdf(workdir, results, out_path):
                     styles["Heading3"],
                 )
             )
+            # Cases with no channels (behavioral, or a failed render) carry a
+            # reason note instead of channel images.
+            if not data.get("channels"):
+                reason = data.get("detail") or data.get("skipReason", "")
+                if reason:
+                    story.append(Paragraph(reason, styles["Normal"]))
             for ch in data.get("channels", []):
                 if ch.get("passed"):
                     continue

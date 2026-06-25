@@ -76,14 +76,16 @@ TEST_CASE("anyToString renders axis values for keys", "[cts][value]")
     // Commas are sanitized to '-' so the key stays a safe path segment.
     CHECK(anyToString(Any(float3(0.f, 0.f, 1.f))) == "0-0-1");
     CHECK(anyToString(Any(float2(0.25f, 0.75f))) == "0.25-0.75");
-    CHECK(anyToString(Any(float4(0.7f, -0.4f, 0.6f, -0.2f))) == "0.7--0.4-0.6--0.2");
+    CHECK(anyToString(Any(float4(0.7f, -0.4f, 0.6f, -0.2f)))
+        == "0.7--0.4-0.6--0.2");
     // Distinct vectors must yield distinct keys (no ground-truth collision).
     CHECK(anyToString(Any(float3(0.f, 0.f, 1.f)))
         != anyToString(Any(float3(0.f, 0.f, -1.f))));
   }
 }
 
-// Expansion: counts ////////////////////////////////////////////////////////////
+// Expansion: counts
+// ////////////////////////////////////////////////////////////
 
 TEST_CASE("a Test with no axes expands to one default Case", "[cts][expand]")
 {
@@ -132,7 +134,8 @@ TEST_CASE("cartesian count is the product of axis sizes", "[cts][expand]")
   CHECK(expand(t).size() == 3 * 2 * 4);
 }
 
-// Expansion: ground-truth keys //////////////////////////////////////////////////
+// Expansion: ground-truth keys
+// //////////////////////////////////////////////////
 
 TEST_CASE("variants share a ground-truth key; permutations do not",
     "[cts][expand][groundtruth]")
@@ -171,9 +174,11 @@ TEST_CASE("a variant-only Test shares a single ground truth across all cases",
   CHECK(cases[1].id() == "indexed");
 }
 
-// Expansion: simplified (one-factor-at-a-time) //////////////////////////////////
+// Expansion: simplified (one-factor-at-a-time)
+// //////////////////////////////////
 
-TEST_CASE("simplified expansion is one-factor-at-a-time", "[cts][expand][simplified]")
+TEST_CASE(
+    "simplified expansion is one-factor-at-a-time", "[cts][expand][simplified]")
 {
   // Mirrors cts/test_scenes/camera/perspective.json: 4 axes of 2 values each.
   // Full cartesian would be 16; simplified is 1 baseline + 4 = 5.
@@ -219,9 +224,11 @@ TEST_CASE("simplified honors variant/permutation kinds for keys",
                .variant("mode", {"soup", "indexed"})
                .take();
   auto cases = expand(t);
-  // baseline (1, soup), then count=16 (16, soup), then mode=indexed (1, indexed)
+  // baseline (1, soup), then count=16 (16, soup), then mode=indexed (1,
+  // indexed)
   REQUIRE(cases.size() == 3);
-  CHECK(ids(cases) == std::vector<std::string>{"1_soup", "16_soup", "1_indexed"});
+  CHECK(
+      ids(cases) == std::vector<std::string>{"1_soup", "16_soup", "1_indexed"});
   // The variant case shares the baseline's ground truth.
   CHECK(cases[0].groundTruthKey() == "1");
   CHECK(cases[2].groundTruthKey() == "1");
@@ -229,7 +236,8 @@ TEST_CASE("simplified honors variant/permutation kinds for keys",
   CHECK(cases[1].groundTruthKey() == "16");
 }
 
-// Filter ////////////////////////////////////////////////////////////////////////
+// Filter
+// ////////////////////////////////////////////////////////////////////////
 
 TEST_CASE("globMatch handles wildcards anchored over the whole string",
     "[cts][filter]")
@@ -248,7 +256,8 @@ TEST_CASE("globMatch handles wildcards anchored over the whole string",
   CHECK(globMatch("ABC", "abc")); // case-insensitive
 }
 
-TEST_CASE("Filter selects by substring or glob over the test id", "[cts][filter]")
+TEST_CASE(
+    "Filter selects by substring or glob over the test id", "[cts][filter]")
 {
   auto t = makeTest("geometry", "sphere").take();
 
@@ -264,12 +273,14 @@ TEST_CASE("Filter selects by substring or glob over the test id", "[cts][filter]
   CHECK_FALSE(matches(Filter{"light/*"}, t));
 }
 
-// Feature gating /////////////////////////////////////////////////////////////////
+// Feature gating
+// /////////////////////////////////////////////////////////////////
 
 TEST_CASE("isSupported requires every feature to be present", "[cts][features]")
 {
   auto t = makeTest("geometry", "sphere")
-               .requireFeatures({"ANARI_KHR_GEOMETRY_SPHERE", "ANARI_KHR_CAMERA_PERSPECTIVE"})
+               .requireFeatures({"ANARI_KHR_GEOMETRY_SPHERE",
+                   "ANARI_KHR_CAMERA_PERSPECTIVE"})
                .take();
 
   CHECK(isSupported(t,
@@ -286,9 +297,11 @@ TEST_CASE("isSupported requires every feature to be present", "[cts][features]")
   }
 }
 
-// Builder ///////////////////////////////////////////////////////////////////////
+// Builder
+// ///////////////////////////////////////////////////////////////////////
 
-TEST_CASE("makeTest builds a TestDef with the configured fields", "[cts][builder]")
+TEST_CASE(
+    "makeTest builds a TestDef with the configured fields", "[cts][builder]")
 {
   auto t = makeTest("geometry", "sphere")
                .permute("primitiveCount", {1, 16})
@@ -325,9 +338,33 @@ TEST_CASE("channels default to color only", "[cts][builder]")
   CHECK(t.channels[0] == Channel::Color);
 }
 
-// BuildContext ////////////////////////////////////////////////////////////////////
+// Per-channel thresholds //////////////////////////////////////////////////////
 
-TEST_CASE("BuildContext round-trips axis values by name and type", "[cts][context]")
+TEST_CASE("thresholdFor falls back through channel, test-wide, then default",
+    "[cts][builder][threshold]")
+{
+  auto t = makeTest("frame", "channels")
+               .threshold("ssim", 0.8) // test-wide
+               .threshold(Channel::Depth, "psnr", 35.0) // per-channel override
+               .threshold(Channel::Depth, "ssim", 0.95)
+               .take();
+
+  // Per-channel override wins where present.
+  CHECK(t.thresholdFor(Channel::Depth, "psnr", 20.0) == Approx(35.0));
+  CHECK(t.thresholdFor(Channel::Depth, "ssim", 0.7) == Approx(0.95));
+
+  // A channel with no override falls back to the test-wide metric threshold...
+  CHECK(t.thresholdFor(Channel::Color, "ssim", 0.7) == Approx(0.8));
+  // ...and to the supplied default when the test sets neither.
+  CHECK(t.thresholdFor(Channel::Color, "psnr", 20.0) == Approx(20.0));
+  CHECK(t.thresholdFor(Channel::Normal, "ssim", 0.7) == Approx(0.8));
+}
+
+// BuildContext
+// ////////////////////////////////////////////////////////////////////
+
+TEST_CASE(
+    "BuildContext round-trips axis values by name and type", "[cts][context]")
 {
   BuildContext ctx; // null device is fine for value storage
 
@@ -364,7 +401,8 @@ TEST_CASE("BuildContext round-trips axis values by name and type", "[cts][contex
   }
 }
 
-// Catalog //////////////////////////////////////////////////////////////////////////
+// Catalog
+// //////////////////////////////////////////////////////////////////////////
 
 TEST_CASE("Catalog registers, lists, and filters tests", "[cts][catalog]")
 {
@@ -378,7 +416,8 @@ TEST_CASE("Catalog registers, lists, and filters tests", "[cts][catalog]")
 
   SECTION("categories are sorted and de-duplicated")
   {
-    CHECK(catalog.categories() == std::vector<std::string>{"geometry", "light"});
+    CHECK(
+        catalog.categories() == std::vector<std::string>{"geometry", "light"});
   }
 
   SECTION("filter selects a slice")
