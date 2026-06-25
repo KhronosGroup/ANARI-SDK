@@ -24,6 +24,11 @@ bool BuildContext::has(const std::string &name) const
   return m_params.hasParam(name);
 }
 
+Any BuildContext::value(const std::string &name) const
+{
+  return m_params.getParamDirect(name);
+}
+
 void BuildContext::set(const std::string &name, const Any &value)
 {
   // A `none()` value means "leave unset"; dropping it lets get<>() fall back to

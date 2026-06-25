@@ -67,6 +67,20 @@ TEST_CASE("anyToString renders axis values for keys", "[cts][value]")
   {
     CHECK(anyToString(Any("a/b c")) == "a-b-c");
   }
+
+  SECTION("vector and matrix values render component-wise and distinctly")
+  {
+    using anari::math::float2;
+    using anari::math::float3;
+    using anari::math::float4;
+    // Commas are sanitized to '-' so the key stays a safe path segment.
+    CHECK(anyToString(Any(float3(0.f, 0.f, 1.f))) == "0-0-1");
+    CHECK(anyToString(Any(float2(0.25f, 0.75f))) == "0.25-0.75");
+    CHECK(anyToString(Any(float4(0.7f, -0.4f, 0.6f, -0.2f))) == "0.7--0.4-0.6--0.2");
+    // Distinct vectors must yield distinct keys (no ground-truth collision).
+    CHECK(anyToString(Any(float3(0.f, 0.f, 1.f)))
+        != anyToString(Any(float3(0.f, 0.f, -1.f))));
+  }
 }
 
 // Expansion: counts ////////////////////////////////////////////////////////////

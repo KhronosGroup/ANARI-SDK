@@ -18,6 +18,18 @@ TestBuilder &TestBuilder::build(BuildFn fn)
   return *this;
 }
 
+TestBuilder &TestBuilder::camera(CameraFn fn)
+{
+  m_def.cameraBuild = std::move(fn);
+  return *this;
+}
+
+TestBuilder &TestBuilder::renderer(RendererFn fn)
+{
+  m_def.rendererBuild = std::move(fn);
+  return *this;
+}
+
 TestBuilder &TestBuilder::permute(std::string axis, std::vector<Any> values)
 {
   m_def.axes.push_back(

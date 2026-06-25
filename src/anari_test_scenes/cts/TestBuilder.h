@@ -25,6 +25,11 @@ class ANARI_TEST_SCENES_INTERFACE TestBuilder
 
   TestBuilder &build(BuildFn fn);
 
+  // Supply a custom render camera / renderer instead of the runner defaults
+  // (bounds-framed camera, parameterless "default" renderer).
+  TestBuilder &camera(CameraFn fn);
+  TestBuilder &renderer(RendererFn fn);
+
   // Permutation axis: values produce different output (distinct ground truth).
   TestBuilder &permute(std::string axis, std::vector<Any> values);
   template <typename T>

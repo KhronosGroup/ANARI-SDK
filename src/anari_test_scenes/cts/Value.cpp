@@ -35,6 +35,42 @@ static std::string sanitize(const std::string &in)
   return out;
 }
 
+// Render a fixed-length, float-component value (vec2/3/4, mat*, box*) as its
+// components joined by commas. Distinct vector values must yield distinct keys
+// so they don't collide a shared ground-truth path.
+static std::string floatComponents(const Any &v)
+{
+  const size_t n = anari::sizeOf(v.type()) / sizeof(float);
+  const auto *f = static_cast<const float *>(v.data());
+  std::string out;
+  for (size_t i = 0; i < n; ++i) {
+    if (i)
+      out.push_back(',');
+    out += trimFloat(f[i]);
+  }
+  return out;
+}
+
+// True for the fixed-length float-composite ANARI types the harness uses as
+// axis values (vectors, matrices, boxes). These are read component-wise.
+static bool isFloatComposite(ANARIDataType t)
+{
+  switch (t) {
+  case ANARI_FLOAT32_VEC2:
+  case ANARI_FLOAT32_VEC3:
+  case ANARI_FLOAT32_VEC4:
+  case ANARI_FLOAT32_MAT2:
+  case ANARI_FLOAT32_MAT3:
+  case ANARI_FLOAT32_MAT4:
+  case ANARI_FLOAT32_BOX1:
+  case ANARI_FLOAT32_BOX2:
+  case ANARI_FLOAT32_BOX3:
+    return true;
+  default:
+    return false;
+  }
+}
+
 std::string anyToString(const Any &v)
 {
   if (!v.valid())
@@ -58,6 +94,8 @@ std::string anyToString(const Any &v)
   case ANARI_STRING:
     return sanitize(v.getString());
   default:
+    if (isFloatComposite(v.type()))
+      return sanitize(floatComponents(v));
     return "none";
   }
 }

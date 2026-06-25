@@ -7,11 +7,58 @@
 #include "generators/TextureGenerator.h"
 // std
 #include <cstring>
+#include <string>
 
 namespace anari {
 namespace cts {
 
 namespace scenes = anari::scenes;
+
+// --- Generic axis-value parameter binding ------------------------------------
+
+namespace detail {
+
+void setBoundParameterImpl(anari::Device d,
+    anari::Object obj,
+    const char *param,
+    const Any &value,
+    const std::vector<anari::Sampler> &samplers)
+{
+  if (!value.valid())
+    return; // none() -> leave unset so the device default applies
+
+  const ANARIDataType t = value.type();
+
+  if (t == ANARI_STRING) {
+    const std::string s = value.getString();
+    const std::string refPrefix = "ref_sampler_";
+    if (s.rfind(refPrefix, 0) == 0) {
+      size_t idx = 0;
+      try {
+        idx = static_cast<size_t>(std::stoul(s.substr(refPrefix.size())));
+      } catch (const std::exception &) {
+        return;
+      }
+      if (idx < samplers.size()) {
+        anari::Sampler sm = samplers[idx];
+        anariSetParameter(d, obj, param, ANARI_SAMPLER, &sm);
+      }
+      return;
+    }
+    // A plain string is an attribute name (e.g. "color", "attribute0").
+    anariSetParameter(d, obj, param, ANARI_STRING, s.c_str());
+    return;
+  }
+
+  if (anari::isObject(t))
+    return; // object handles are not carried as axis values
+
+  // Scalars, vectors, matrices, boxes: set the parameter with its exact stored
+  // type and raw bytes.
+  anariSetParameter(d, obj, param, t, value.data());
+}
+
+} // namespace detail
 
 // --- Geometry ----------------------------------------------------------------
 
@@ -322,6 +369,18 @@ anari::Light makeDirectionalLight(
   return light;
 }
 
+anari::Light newLight(anari::Device d, const std::string &subtype)
+{
+  auto light = anari::newObject<anari::Light>(d, subtype.c_str());
+  if (subtype == "hdri") {
+    const size_t res = 64;
+    auto hdr = scenes::TextureGenerator::generateCheckerBoardHDR(res);
+    anari::setAndReleaseParameter(
+        d, light, "radiance", anari::newArray2D(d, hdr.data(), res, res));
+  }
+  return light; // uncommitted: caller sets per-Case params, then commits
+}
+
 // --- Samplers ----------------------------------------------------------------
 
 anari::Sampler makeCheckerboardSampler(anari::Device d, bool normalMap)
@@ -339,9 +398,40 @@ anari::Sampler makeCheckerboardSampler(anari::Device d, bool normalMap)
   return sampler;
 }
 
+anari::Sampler newImageSampler(anari::Device d,
+    const std::string &subtype,
+    const std::string &inAttribute,
+    bool normalMap)
+{
+  auto sampler = anari::newObject<anari::Sampler>(d, subtype.c_str());
+
+  if (subtype == "image1D") {
+    auto img = scenes::TextureGenerator::generateGreyScale(16);
+    anari::setAndReleaseParameter(
+        d, sampler, "image", anari::newArray1D(d, img.data(), img.size()));
+  } else if (subtype == "image2D") {
+    const size_t res = 64;
+    auto img = normalMap
+        ? scenes::TextureGenerator::generateCheckerBoardNormalMap(res)
+        : scenes::TextureGenerator::generateCheckerBoard(res);
+    anari::setAndReleaseParameter(
+        d, sampler, "image", anari::newArray2D(d, img.data(), res, res));
+  } else if (subtype == "image3D") {
+    const size_t res = 32;
+    auto img = scenes::TextureGenerator::generateRGBRamp(res);
+    anari::setAndReleaseParameter(
+        d, sampler, "image", anari::newArray3D(d, img.data(), res, res, res));
+  }
+
+  if (!inAttribute.empty())
+    anari::setParameter(d, sampler, "inAttribute", inAttribute.c_str());
+
+  return sampler; // uncommitted: caller sets per-Case params, then commits
+}
+
 // --- Volumes -----------------------------------------------------------------
 
-anari::SpatialField makeStructuredRegularField(
+anari::SpatialField newStructuredRegularField(
     anari::Device d, std::array<uint32_t, 3> dimensions, int seed)
 {
   auto field = anari::newObject<anari::SpatialField>(d, "structuredRegular");
@@ -365,6 +455,13 @@ anari::SpatialField makeStructuredRegularField(
       dimensions[0],
       dimensions[1],
       dimensions[2]);
+  return field; // uncommitted: caller may override origin/spacing/filter
+}
+
+anari::SpatialField makeStructuredRegularField(
+    anari::Device d, std::array<uint32_t, 3> dimensions, int seed)
+{
+  auto field = newStructuredRegularField(d, dimensions, seed);
   anari::commitParameters(d, field);
   return field;
 }
@@ -386,6 +483,13 @@ anari::Volume makeVolume(anari::Device d, anari::SpatialField field)
   anari::setParameter(d, volume, "valueRange", math::float2(0.f, 1.f));
   anari::commitParameters(d, volume);
   return volume;
+}
+
+// --- Renderer ----------------------------------------------------------------
+
+anari::Renderer newRenderer(anari::Device d, const std::string &subtype)
+{
+  return anari::newObject<anari::Renderer>(d, subtype.c_str());
 }
 
 // --- Instances ---------------------------------------------------------------

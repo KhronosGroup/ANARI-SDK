@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "Value.h"
 #include "anari_test_scenes.h"
 #include "anari_test_scenes_export.h"
 // anari
@@ -23,6 +24,33 @@
 
 namespace anari {
 namespace cts {
+
+// --- Generic axis-value parameter binding ------------------------------------
+
+namespace detail {
+// Apply a harness axis value to an object parameter. Dispatches on the value's
+// ANARI type: a float/vecN/matN/int/bool is set as that constant; a plain
+// string is set as an attribute name; a "ref_sampler_N" string binds
+// samplers[N]; an invalid (none) value leaves the parameter unset so the device
+// default applies. This mirrors how the old JSON engine encoded a parameter
+// that could be a constant, an attribute name, or a sampler reference.
+ANARI_TEST_SCENES_INTERFACE void setBoundParameterImpl(anari::Device d,
+    anari::Object obj,
+    const char *param,
+    const Any &value,
+    const std::vector<anari::Sampler> &samplers);
+} // namespace detail
+
+template <typename H>
+inline void setBoundParameter(anari::Device d,
+    H obj,
+    const char *param,
+    const Any &value,
+    const std::vector<anari::Sampler> &samplers = {})
+{
+  detail::setBoundParameterImpl(
+      d, reinterpret_cast<anari::Object>(obj), param, value, samplers);
+}
 
 // --- Geometry ----------------------------------------------------------------
 
@@ -79,11 +107,28 @@ ANARI_TEST_SCENES_INTERFACE anari::Surface makeSurface(
 ANARI_TEST_SCENES_INTERFACE anari::Light makeDirectionalLight(
     anari::Device d, anari::math::float3 direction, float irradiance = 4.0f);
 
+// Create a light of the given subtype with no parameters set yet (caller sets
+// per-Case parameters then commits). The `hdri` subtype additionally gets a
+// synthetic radiance image, matching the old engine.
+ANARI_TEST_SCENES_INTERFACE anari::Light newLight(
+    anari::Device d, const std::string &subtype);
+
 // --- Samplers ----------------------------------------------------------------
 
 // A 2D image sampler holding a synthetic checkerboard (or its normal map).
 ANARI_TEST_SCENES_INTERFACE anari::Sampler makeCheckerboardSampler(
     anari::Device d, bool normalMap = false);
+
+// Create an image sampler with its synthetic image and `inAttribute` set, but
+// NOT committed, so a Test can apply per-Case parameters (filter, wrapMode,
+// transforms, offsets) and then commit. The image mirrors the old generators:
+//   image1D -> 16-texel greyscale ramp
+//   image2D -> 64x64 checkerboard, or its normal map when normalMap is true
+//   image3D -> 32x32x32 RGB ramp
+ANARI_TEST_SCENES_INTERFACE anari::Sampler newImageSampler(anari::Device d,
+    const std::string &subtype,
+    const std::string &inAttribute,
+    bool normalMap = false);
 
 // --- Volumes -----------------------------------------------------------------
 
@@ -92,9 +137,22 @@ ANARI_TEST_SCENES_INTERFACE anari::Sampler makeCheckerboardSampler(
 ANARI_TEST_SCENES_INTERFACE anari::SpatialField makeStructuredRegularField(
     anari::Device d, std::array<uint32_t, 3> dimensions, int seed = 0);
 
+// A structuredRegular spatial field with its random data array and default
+// origin/spacing set, but NOT committed, so a Test can override origin/spacing/
+// filter per Case and then commit.
+ANARI_TEST_SCENES_INTERFACE anari::SpatialField newStructuredRegularField(
+    anari::Device d, std::array<uint32_t, 3> dimensions, int seed = 0);
+
 // A transferFunction1D volume over the given spatial field.
 ANARI_TEST_SCENES_INTERFACE anari::Volume makeVolume(
     anari::Device d, anari::SpatialField field);
+
+// --- Renderer ----------------------------------------------------------------
+
+// Create a renderer of the given subtype with no parameters set yet (caller
+// sets per-Case parameters then commits). Used by the renderer build hook.
+ANARI_TEST_SCENES_INTERFACE anari::Renderer newRenderer(
+    anari::Device d, const std::string &subtype = "default");
 
 // --- Instances ---------------------------------------------------------------
 

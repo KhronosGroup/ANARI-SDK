@@ -24,6 +24,16 @@ project_sources(PRIVATE
   cts/WorldBuilder.cpp
   cts/Workdir.cpp
 
+  cts/tests/geometry.cpp
+  cts/tests/material.cpp
+  cts/tests/sampler.cpp
+  cts/tests/light.cpp
+  cts/tests/camera.cpp
+  cts/tests/frame.cpp
+  cts/tests/renderer.cpp
+  cts/tests/instance.cpp
+  cts/tests/volume.cpp
+
   generators/ColorPalette.cpp
   generators/PrimitiveGenerator.cpp
   generators/SceneGenerator.cpp

@@ -77,8 +77,15 @@ _Avoid_: test registry, scene registry (that name is the other one)
 
 **BuildContext**:
 The object the harness hands to a Test's `build()` carrying the current Case's
-resolved axis values, read typed-by-name (`get<int>("count", 1)`). Backed by
-`helium::ParameterizedObject`.
+resolved axis values, read typed-by-name (`get<int>("count", 1)`) or as a raw
+`Any` (`value("color")`) for helpers that dispatch on the value's ANARI type.
+Backed by `helium::ParameterizedObject`.
+
+**Build hook**:
+An optional per-Case builder a Test supplies beyond `build()` — `cameraBuild`
+(`.camera(...)`) and `rendererBuild` (`.renderer(...)`) — letting the camera,
+renderer, and light categories vary the render camera or renderer instead of the
+runner's bounds-framed camera / `default` renderer (ADR-0006).
 
 **Workdir**:
 The single root directory a run operates under, containing the conventional

@@ -39,6 +39,11 @@ class ANARI_TEST_SCENES_INTERFACE BuildContext
 
   bool has(const std::string &name) const;
 
+  // The raw axis value carried under 'name', or an invalid Any (none()) when
+  // unset. Used by helpers that dispatch on the value's ANARI type (constant vs
+  // attribute-name string vs sampler reference).
+  Any value(const std::string &name) const;
+
   // Load a resolved axis value. A `none()` (invalid) value is intentionally
   // dropped so that get<>() falls back to the build()-supplied default.
   void set(const std::string &name, const Any &value);
