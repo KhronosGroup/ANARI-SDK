@@ -52,8 +52,14 @@ python ../cts/ctsReport.py diff runA runB [--json]
 cts list [--filter <pat>]              # enumerate the catalog
 cts query-features <device>            # device extensions
 cts query-metadata [--filter <pat>]    # catalog metadata as JSON (no device)
+cts query-device-info <device>         # device introspection: object subtypes + parameter metadata
 cts check-properties <device>          # per test: runnable vs skipped + missing features
 ```
+
+`query-device-info` is genuine device introspection (the old `anariInfo`
+capability): `--type`/`--subtype` restrict by name substring, `--skip-parameters`
+lists subtypes only, `--info` adds per-parameter default/min/max/values/
+description. It is distinct from `query-metadata`, which dumps the catalog's shape.
 
 `--filter` is a substring or glob (`*`,`?`) matched case-insensitively over a
 test's `<category>/<test>` id. `run` and `report` exit non-zero on any failure.
@@ -89,7 +95,10 @@ ctsReport.py              reads the sidecar tree only; report + device diff
   from its `frame_<channel>_type` axis (color/albedo/normal); pure + unit-tested.
 - `Metrics.{h,cpp}` / `Image.{h,cpp}` — SSIM/PSNR and PNG I/O (stb).
 - `Workdir.{h,cpp}` / `Sidecar.{h,cpp}` — the results tree layout and the
-  versioned per-Case sidecar contract.
+  versioned per-Case sidecar contract (carries the producing `device` identity
+  since schema v2; `Workdir` also keys the per-channel diff/threshold images).
+- `DeviceInfo.{h,cpp}` — device introspection (`query-device-info`): subtypes +
+  parameter metadata as text, returned (not printed) so it is unit-testable.
 - `WorldBuilder.{h,cpp}` + `generators/` — shared world-build helpers lifted
   from the old `SceneGenerator::commit()`.
 
@@ -119,6 +128,10 @@ it in `FrameFormats.cpp` (pure, unit-test it) and honor it in `Runner.cpp`.
 and diffs surface it. There is exactly one metric implementation, in C++.
 
 **Sidecar schema change:** the sidecar is a versioned cross-language contract
-(ADR-0003). Additive optional fields (read with a default on the Python side)
-don't bump `kSidecarSchemaVersion`; a breaking change to an existing field does,
-and must update the Python reader in lockstep.
+(ADR-0003). A purely incidental optional field (read with a default on the
+Python side) need not bump `kSidecarSchemaVersion`. Bump it when a change is
+either breaking *or* semantically significant to consumers — i.e. a field they
+should know to rely on — and update the Python reader in lockstep. v2 did the
+latter: it added the `device` object that the device-diff now keys runs on
+(plus the optional per-channel `diffImage`/`thresholdImage` debug paths), so the
+reader targets v2 and warns on older sidecars, prompting a regenerate.
