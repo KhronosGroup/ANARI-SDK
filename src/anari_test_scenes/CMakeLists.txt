@@ -10,6 +10,7 @@ project_sources(PRIVATE
   anari_test_scenes.cpp
 
   cts/BuildContext.cpp
+  cts/BuiltinTests.cpp
   cts/Case.cpp
   cts/Catalog.cpp
   cts/Expansion.cpp
@@ -93,6 +94,22 @@ include(GenerateExportHeader)
 generate_export_header(${PROJECT_NAME}
   EXPORT_MACRO_NAME "ANARI_TEST_SCENES_INTERFACE"
 )
+
+## CTS conformance tool ##
+
+# The self-contained `cts` command-line runner. Built alongside the tests; will
+# replace the legacy Python-driven cts/ tool in a later phase.
+if (BUILD_TESTING)
+  add_executable(anariCts cts/tool/main.cpp)
+  set_target_properties(anariCts PROPERTIES OUTPUT_NAME cts)
+  target_link_libraries(anariCts PRIVATE ${PROJECT_NAME})
+  target_compile_features(anariCts PRIVATE cxx_std_20)
+
+  # Device-free smoke tests of the tool surface. (Device-backed run/generate
+  # are covered by the runner integration test.)
+  add_test(NAME cts_tool::list COMMAND anariCts list)
+  add_test(NAME cts_tool::query-metadata COMMAND anariCts query-metadata)
+endif()
 
 ## Installation ##
 
