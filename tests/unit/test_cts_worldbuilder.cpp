@@ -216,6 +216,22 @@ TEST_CASE("world-build helpers produce error-free worlds", "[cts][worldbuilder][
     anari::release(d, world);
   }
 
+  SECTION("a perspective camera accepts optional intrinsics")
+  {
+    status.errors = 0;
+    scenes::Bounds b = {float3(-1.f), float3(1.f)};
+    auto camDesc = cameraFromBounds(b);
+    PerspectiveCameraOptions opts;
+    opts.fovy = 0.6f;
+    opts.aspect = 1.77f;
+    opts.near = 0.01f;
+    opts.far = 100.f;
+    auto camera = makePerspectiveCamera(d, camDesc, opts);
+    CHECK(status.errors == 0); // fovy/aspect supported; near/far at most warn
+    INFO("last ANARI error: " << status.lastMessage);
+    anari::release(d, camera);
+  }
+
   SECTION("a built world renders a color frame")
   {
     status.errors = 0;

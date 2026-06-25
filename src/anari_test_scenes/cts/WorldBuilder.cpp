@@ -431,14 +431,20 @@ scenes::Camera cameraFromBounds(const scenes::Bounds &bounds)
 
 anari::Camera makePerspectiveCamera(anari::Device d,
     const scenes::Camera &camera,
-    std::optional<float> aspect)
+    const PerspectiveCameraOptions &opts)
 {
   auto cam = anari::newObject<anari::Camera>(d, "perspective");
   anari::setParameter(d, cam, "position", camera.position);
   anari::setParameter(d, cam, "direction", camera.direction);
   anari::setParameter(d, cam, "up", camera.up);
-  if (aspect.has_value())
-    anari::setParameter(d, cam, "aspect", aspect.value());
+  if (opts.fovy.has_value())
+    anari::setParameter(d, cam, "fovy", opts.fovy.value());
+  if (opts.aspect.has_value())
+    anari::setParameter(d, cam, "aspect", opts.aspect.value());
+  if (opts.near.has_value())
+    anari::setParameter(d, cam, "near", opts.near.value());
+  if (opts.far.has_value())
+    anari::setParameter(d, cam, "far", opts.far.value());
   anari::commitParameters(d, cam);
   return cam;
 }
@@ -492,10 +498,10 @@ anari::Frame makeColorFrame(
 {
   const auto bounds = worldBounds(d, world);
   const auto camDesc = cameraFromBounds(bounds);
-  auto camera = makePerspectiveCamera(d,
-      camDesc,
-      height != 0 ? static_cast<float>(width) / static_cast<float>(height)
-                  : std::optional<float>(std::nullopt));
+  PerspectiveCameraOptions camOpts;
+  if (height != 0)
+    camOpts.aspect = static_cast<float>(width) / static_cast<float>(height);
+  auto camera = makePerspectiveCamera(d, camDesc, camOpts);
 
   auto renderer = anari::newObject<anari::Renderer>(d, "default");
   anari::commitParameters(d, renderer);

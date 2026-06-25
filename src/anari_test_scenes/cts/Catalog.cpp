@@ -22,7 +22,7 @@ const TestDef &Catalog::add(TestDef test)
   return m_tests.back();
 }
 
-const std::vector<TestDef> &Catalog::tests() const
+const std::deque<TestDef> &Catalog::tests() const
 {
   return m_tests;
 }

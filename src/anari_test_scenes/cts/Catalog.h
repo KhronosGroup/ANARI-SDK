@@ -7,6 +7,7 @@
 #include "TestDef.h"
 #include "anari_test_scenes_export.h"
 // std
+#include <deque>
 #include <set>
 #include <string>
 #include <vector>
@@ -25,10 +26,11 @@ ANARI_TEST_SCENES_INTERFACE bool isSupported(
 class ANARI_TEST_SCENES_INTERFACE Catalog
 {
  public:
-  // Register a Test. Returns a reference to the stored definition.
+  // Register a Test. Returns a reference to the stored definition, which stays
+  // valid for the catalog's lifetime even as further tests are registered.
   const TestDef &add(TestDef test);
 
-  const std::vector<TestDef> &tests() const;
+  const std::deque<TestDef> &tests() const;
 
   // Sorted, de-duplicated category names.
   std::vector<std::string> categories() const;
@@ -45,7 +47,9 @@ class ANARI_TEST_SCENES_INTERFACE Catalog
   }
 
  private:
-  std::vector<TestDef> m_tests;
+  // A deque (not a vector) so references and pointers handed out by add(),
+  // list(), and filter() remain valid as more tests are registered.
+  std::deque<TestDef> m_tests;
 };
 
 // The process-wide catalog that authored tests register into.

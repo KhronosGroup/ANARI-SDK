@@ -109,11 +109,22 @@ ANARI_TEST_SCENES_INTERFACE anari::Instance makeInstance(anari::Device d,
 ANARI_TEST_SCENES_INTERFACE anari::scenes::Camera cameraFromBounds(
     const anari::scenes::Bounds &bounds);
 
-// A perspective camera placed per a Camera description.
-ANARI_TEST_SCENES_INTERFACE anari::Camera makePerspectiveCamera(
-    anari::Device d,
+// Optional perspective-camera parameters. Each is set on the camera only when
+// present, so a Test can vary just the ones it cares about (the camera category
+// permutes fovy/aspect/near/far). Note: the helide reference device implements
+// fovy/aspect and ignores near/far.
+struct PerspectiveCameraOptions
+{
+  std::optional<float> fovy; // radians
+  std::optional<float> aspect;
+  std::optional<float> near;
+  std::optional<float> far;
+};
+
+// A perspective camera placed per a Camera description, with optional intrinsics.
+ANARI_TEST_SCENES_INTERFACE anari::Camera makePerspectiveCamera(anari::Device d,
     const anari::scenes::Camera &camera,
-    std::optional<float> aspect = std::nullopt);
+    const PerspectiveCameraOptions &opts = {});
 
 // --- World assembly + framing ------------------------------------------------
 

@@ -109,3 +109,23 @@ std::vector<ParameterInfo> parameters() override {
   return { makeParameterInfo("count", "Sphere count", 1000, 1, 1e6) };
 }
 ```
+
+### Conformance Test Suite harness (`cts/`)
+
+The revamped CTS lives in the **`anari::cts`** sub-namespace (distinct from the
+`anari::scenes` public API and the `registerScene` scene registry). It has no
+ANARI device dependency except the world-build helpers. See `cts/CONTEXT.md` for
+the glossary and `cts/docs/adr/` for the design decisions.
+
+| Type | Purpose |
+|---|---|
+| `Axis` / `AxisKind` | A parameter dimension; `Permutation` (distinct ground truth) or `Variant` (shared ground truth) |
+| `TestDef` + `makeTest()` `TestBuilder` | A catalog Test: build fn, axes, required features, thresholds, channels. Fluent builder; use `requireFeatures()` (not `requires`, a C++20 keyword) |
+| `Case` + `expand()` | One resolved combination; full cartesian or simplified one-factor-at-a-time. `id()` (all values) vs `groundTruthKey()` (permutation values only) |
+| `BuildContext` | Carries a Case's axis values to `build()`, read typed-by-name over `helium::ParameterizedObject` |
+| `Catalog` + `Filter` | The in-C++ Test registry: register/list/filter/categories + feature gating |
+| `WorldBuilder.h` | Free functions (`buildGeometry`, `makeSurface`, `makeMatteMaterial`, `makeDirectionalLight`, `makeVolume`, `makeInstance`, `cameraFromBounds`, `assembleWorld`, …) extracted from `SceneGenerator::commit()` for authoring worlds directly |
+
+Unit tests: `tests/unit/test_cts_catalog.cpp` (pure, device-free) and
+`tests/unit/test_cts_worldbuilder.cpp` (helide-backed smoke tests, skipped if no
+device loads), both in the `anariCatalogTests` target.
