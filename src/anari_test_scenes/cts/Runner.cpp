@@ -16,6 +16,8 @@
 #include <cmath>
 #include <cstdint>
 #include <cstring>
+#include <exception>
+#include <string>
 
 namespace anari {
 namespace cts {
@@ -305,17 +307,25 @@ Runner::SceneObjects Runner::buildScene(const TestDef &test, const Case &c)
   for (const auto &cv : c.values)
     ctx.set(cv.axisName, cv.value);
 
-  scene.world = test.build(ctx);
-  if (scene.world == nullptr)
-    return scene;
+  // A build hook (or a default camera/renderer) may throw after some handles
+  // are already created; release the partial scene before letting the
+  // exception unwind so a throwing Case leaks nothing (ADR-0003).
+  try {
+    scene.world = test.build(ctx);
+    if (scene.world == nullptr)
+      return scene;
 
-  scene.bounds = worldBounds(m_device, scene.world);
-  scene.camera = test.cameraBuild
-      ? test.cameraBuild(ctx, scene.bounds)
-      : defaultCamera(
-            m_device, scene.bounds, m_options.width, m_options.height);
-  scene.renderer =
-      test.rendererBuild ? test.rendererBuild(ctx) : defaultRenderer(m_device);
+    scene.bounds = worldBounds(m_device, scene.world);
+    scene.camera = test.cameraBuild
+        ? test.cameraBuild(ctx, scene.bounds)
+        : defaultCamera(
+              m_device, scene.bounds, m_options.width, m_options.height);
+    scene.renderer = test.rendererBuild ? test.rendererBuild(ctx)
+                                        : defaultRenderer(m_device);
+  } catch (...) {
+    releaseScene(scene);
+    throw;
+  }
   return scene;
 }
 
@@ -339,6 +349,16 @@ void Runner::writeFeatureSkip(const Case &c, RunSummary &summary)
   summary.skipped++;
 }
 
+void Runner::writeCaseFailure(
+    const Case &c, const std::string &detail, RunSummary &summary)
+{
+  CaseResult result = baseResult(c);
+  result.verdict = Verdict::Failed;
+  result.detail = detail;
+  writeSidecar(m_workdir.sidecarPath(c), result);
+  summary.failed++;
+}
+
 std::vector<Image> Runner::renderCase(const TestDef &test, const Case &c)
 {
   SceneObjects scene = buildScene(test, c);
@@ -354,18 +374,25 @@ std::vector<Image> Runner::renderCase(const TestDef &test, const Case &c)
       2.0f * anari::math::length(scene.bounds[1] - scene.bounds[0]);
 
   std::vector<Image> images;
-  images.reserve(test.channels.size());
-  for (Channel ch : test.channels) {
-    const ANARIDataType chFmt = caseChannelFormat(c, ch);
-    images.push_back(renderChannel(m_device,
-        scene.world,
-        scene.camera,
-        scene.renderer,
-        ch,
-        m_options.width,
-        m_options.height,
-        depthScale,
-        chFmt));
+  // Release the scene even if a channel render throws (then let it unwind to
+  // the per-case handler, which records the failure and continues the run).
+  try {
+    images.reserve(test.channels.size());
+    for (Channel ch : test.channels) {
+      const ANARIDataType chFmt = caseChannelFormat(c, ch);
+      images.push_back(renderChannel(m_device,
+          scene.world,
+          scene.camera,
+          scene.renderer,
+          ch,
+          m_options.width,
+          m_options.height,
+          depthScale,
+          chFmt));
+    }
+  } catch (...) {
+    releaseScene(scene);
+    throw;
   }
 
   releaseScene(scene);
@@ -392,19 +419,25 @@ RunSummary Runner::generate(const Catalog &catalog,
         summary.skipped++;
         continue;
       }
-      auto images = renderCase(*test, c);
-      if (images.size() != test->channels.size()) {
+      // A throwing build helper (or fatal) loses only this Case's ground
+      // truth; the rest of the generate run continues (ADR-0003).
+      try {
+        auto images = renderCase(*test, c);
+        if (images.size() != test->channels.size()) {
+          summary.failed++;
+          continue;
+        }
+        bool ok = true;
+        for (size_t i = 0; i < test->channels.size(); ++i) {
+          if (!savePNG(
+                  m_workdir.groundTruthImagePath(c, test->channels[i]).string(),
+                  images[i]))
+            ok = false;
+        }
+        ok ? summary.passed++ : summary.failed++;
+      } catch (...) {
         summary.failed++;
-        continue;
       }
-      bool ok = true;
-      for (size_t i = 0; i < test->channels.size(); ++i) {
-        if (!savePNG(
-                m_workdir.groundTruthImagePath(c, test->channels[i]).string(),
-                images[i]))
-          ok = false;
-      }
-      ok ? summary.passed++ : summary.failed++;
     }
   }
   return summary;
@@ -424,74 +457,84 @@ RunSummary Runner::run(const Catalog &catalog,
     for (const Case &c : expand(*test)) {
       summary.total++;
 
-      if (!isSupported(*test, candidateFeatures)) {
-        writeFeatureSkip(c, summary);
-        continue;
-      }
-
-      CaseResult result = baseResult(c);
-
-      // Need ground truth for every channel before we can compare.
-      bool haveGroundTruth = true;
-      std::vector<Image> groundTruth;
-      for (Channel ch : test->channels) {
-        auto gt = loadPNG(m_workdir.groundTruthImagePath(c, ch).string());
-        if (!gt.valid()) {
-          haveGroundTruth = false;
-          break;
+      // Per-case crash isolation (ADR-0003): a throwing build helper or fatal
+      // becomes a failed sidecar for this Case and the run continues. Handles
+      // built mid-case are released by buildScene/renderCase as they unwind.
+      try {
+        if (!isSupported(*test, candidateFeatures)) {
+          writeFeatureSkip(c, summary);
+          continue;
         }
-        groundTruth.push_back(std::move(gt));
-      }
-      if (!haveGroundTruth) {
-        result.verdict = Verdict::Skipped;
-        result.skipReason = "no ground truth (run generate first)";
+
+        CaseResult result = baseResult(c);
+
+        // Need ground truth for every channel before we can compare.
+        bool haveGroundTruth = true;
+        std::vector<Image> groundTruth;
+        for (Channel ch : test->channels) {
+          auto gt = loadPNG(m_workdir.groundTruthImagePath(c, ch).string());
+          if (!gt.valid()) {
+            haveGroundTruth = false;
+            break;
+          }
+          groundTruth.push_back(std::move(gt));
+        }
+        if (!haveGroundTruth) {
+          result.verdict = Verdict::Skipped;
+          result.skipReason = "no ground truth (run generate first)";
+          writeSidecar(m_workdir.sidecarPath(c), result);
+          summary.skipped++;
+          continue;
+        }
+
+        const auto start = std::chrono::steady_clock::now();
+        auto images = renderCase(*test, c);
+        const auto end = std::chrono::steady_clock::now();
+        result.durationMs =
+            std::chrono::duration<double, std::milli>(end - start).count();
+
+        if (images.size() != test->channels.size()) {
+          result.verdict = Verdict::Failed;
+          result.skipReason = "render produced no image";
+          writeSidecar(m_workdir.sidecarPath(c), result);
+          summary.failed++;
+          continue;
+        }
+
+        bool allPassed = true;
+        for (size_t i = 0; i < test->channels.size(); ++i) {
+          const Channel ch = test->channels[i];
+          savePNG(m_workdir.resultImagePath(c, ch).string(), images[i]);
+
+          ChannelResult cr;
+          cr.channel = ch;
+          const double ssimThreshold =
+              test->thresholdFor(ch, "ssim", m_options.ssimThreshold);
+          const double psnrThreshold =
+              test->thresholdFor(ch, "psnr", m_options.psnrThreshold);
+          const double ssimScore = ssim(groundTruth[i], images[i]);
+          const double psnrScore = psnr(groundTruth[i], images[i]);
+          cr.metrics = {{"ssim", ssimScore}, {"psnr", psnrScore}};
+          cr.thresholds = {{"ssim", ssimThreshold}, {"psnr", psnrThreshold}};
+          cr.passed = metricPassed(ssimScore, ssimThreshold)
+              && metricPassed(psnrScore, psnrThreshold);
+          cr.resultImage =
+              m_workdir.relativeToRoot(m_workdir.resultImagePath(c, ch));
+          cr.groundTruthImage =
+              m_workdir.relativeToRoot(m_workdir.groundTruthImagePath(c, ch));
+          allPassed = allPassed && cr.passed;
+          result.channels.push_back(std::move(cr));
+        }
+
+        result.verdict = allPassed ? Verdict::Passed : Verdict::Failed;
         writeSidecar(m_workdir.sidecarPath(c), result);
-        summary.skipped++;
-        continue;
+        allPassed ? summary.passed++ : summary.failed++;
+      } catch (const std::exception &e) {
+        writeCaseFailure(
+            c, std::string("exception during run: ") + e.what(), summary);
+      } catch (...) {
+        writeCaseFailure(c, "unknown exception during run", summary);
       }
-
-      const auto start = std::chrono::steady_clock::now();
-      auto images = renderCase(*test, c);
-      const auto end = std::chrono::steady_clock::now();
-      result.durationMs =
-          std::chrono::duration<double, std::milli>(end - start).count();
-
-      if (images.size() != test->channels.size()) {
-        result.verdict = Verdict::Failed;
-        result.skipReason = "render produced no image";
-        writeSidecar(m_workdir.sidecarPath(c), result);
-        summary.failed++;
-        continue;
-      }
-
-      bool allPassed = true;
-      for (size_t i = 0; i < test->channels.size(); ++i) {
-        const Channel ch = test->channels[i];
-        savePNG(m_workdir.resultImagePath(c, ch).string(), images[i]);
-
-        ChannelResult cr;
-        cr.channel = ch;
-        const double ssimThreshold =
-            test->thresholdFor(ch, "ssim", m_options.ssimThreshold);
-        const double psnrThreshold =
-            test->thresholdFor(ch, "psnr", m_options.psnrThreshold);
-        const double ssimScore = ssim(groundTruth[i], images[i]);
-        const double psnrScore = psnr(groundTruth[i], images[i]);
-        cr.metrics = {{"ssim", ssimScore}, {"psnr", psnrScore}};
-        cr.thresholds = {{"ssim", ssimThreshold}, {"psnr", psnrThreshold}};
-        cr.passed = metricPassed(ssimScore, ssimThreshold)
-            && metricPassed(psnrScore, psnrThreshold);
-        cr.resultImage =
-            m_workdir.relativeToRoot(m_workdir.resultImagePath(c, ch));
-        cr.groundTruthImage =
-            m_workdir.relativeToRoot(m_workdir.groundTruthImagePath(c, ch));
-        allPassed = allPassed && cr.passed;
-        result.channels.push_back(std::move(cr));
-      }
-
-      result.verdict = allPassed ? Verdict::Passed : Verdict::Failed;
-      writeSidecar(m_workdir.sidecarPath(c), result);
-      allPassed ? summary.passed++ : summary.failed++;
     }
   }
   return summary;
@@ -509,33 +552,42 @@ void Runner::runBehaviorTest(const TestDef &test,
       continue;
     }
 
-    CaseResult result = baseResult(c);
+    // Per-case crash isolation (ADR-0003): a throwing build hook or behavior
+    // check becomes a failed sidecar and the run continues; the scene is
+    // released on every path (buildScene releases a partial build on throw).
+    SceneObjects scene;
+    try {
+      CaseResult result = baseResult(c);
 
-    SceneObjects scene = buildScene(test, c);
-    if (!scene.valid()) {
-      releaseScene(scene); // release a partial build
-      result.verdict = Verdict::Failed;
-      result.detail = "world/camera/renderer build failed";
-      writeSidecar(m_workdir.sidecarPath(c), result);
-      summary.failed++;
-      continue;
+      scene = buildScene(test, c);
+      if (!scene.valid()) {
+        result.verdict = Verdict::Failed;
+        result.detail = "world/camera/renderer build failed";
+        writeSidecar(m_workdir.sidecarPath(c), result);
+        summary.failed++;
+      } else {
+        const auto start = std::chrono::steady_clock::now();
+        const BehaviorResult br = test.behaviorCheck(m_device,
+            scene.world,
+            scene.camera,
+            scene.renderer,
+            m_options.width,
+            m_options.height);
+        const auto end = std::chrono::steady_clock::now();
+        result.durationMs =
+            std::chrono::duration<double, std::milli>(end - start).count();
+        result.verdict = br.passed ? Verdict::Passed : Verdict::Failed;
+        result.detail = br.detail;
+        writeSidecar(m_workdir.sidecarPath(c), result);
+        br.passed ? summary.passed++ : summary.failed++;
+      }
+    } catch (const std::exception &e) {
+      writeCaseFailure(c,
+          std::string("exception during behavior test: ") + e.what(),
+          summary);
+    } catch (...) {
+      writeCaseFailure(c, "unknown exception during behavior test", summary);
     }
-
-    const auto start = std::chrono::steady_clock::now();
-    const BehaviorResult br = test.behaviorCheck(m_device,
-        scene.world,
-        scene.camera,
-        scene.renderer,
-        m_options.width,
-        m_options.height);
-    const auto end = std::chrono::steady_clock::now();
-    result.durationMs =
-        std::chrono::duration<double, std::milli>(end - start).count();
-    result.verdict = br.passed ? Verdict::Passed : Verdict::Failed;
-    result.detail = br.detail;
-    writeSidecar(m_workdir.sidecarPath(c), result);
-    br.passed ? summary.passed++ : summary.failed++;
-
     releaseScene(scene);
   }
 }

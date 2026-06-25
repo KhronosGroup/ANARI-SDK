@@ -12,8 +12,10 @@
 // std
 #include <filesystem>
 #include <fstream>
+#include <memory>
 #include <set>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 
 using namespace anari::cts;
@@ -265,6 +267,95 @@ TEST_CASE(
     const auto bogusText = readFile(wd.sidecarPath(bogus));
     CHECK(bogusText.find("\"verdict\": \"skipped\"") != std::string::npos);
     CHECK(bogusText.find("feature") != std::string::npos);
+  }
+
+  std::filesystem::remove_all(root, ec);
+  anari::release(d, d);
+  anari::unloadLibrary(lib);
+}
+
+TEST_CASE("Runner isolates a throwing case and completes the rest",
+    "[cts][runner][helide]")
+{
+  anari::Library lib = anari::loadLibrary("helide", statusFunc, nullptr);
+  if (!lib) {
+    WARN("helide library not available; skipping crash-isolation test");
+    return;
+  }
+  anari::Device d = anari::newDevice(lib, "default");
+  REQUIRE(d != nullptr);
+  anari::commitParameters(d, d);
+
+  const auto root = std::filesystem::temp_directory_path() / "cts_crash_test";
+  std::error_code ec;
+  std::filesystem::remove_all(root, ec);
+
+  // A build hook that throws only when the shared flag is set, so we can
+  // generate clean ground truth first and then make the same Case explode.
+  auto shouldThrow = std::make_shared<bool>(false);
+  Catalog cat;
+  makeTest("geometry", "triangle").build(buildTriangleWorld).registerInto(cat);
+  makeTest("geometry", "explodes")
+      .build([shouldThrow](BuildContext &ctx) -> anari::World {
+        if (*shouldThrow)
+          throw std::runtime_error("boom during build");
+        return buildSphereWorld(ctx);
+      })
+      .registerInto(cat);
+  makeTest("geometry", "sphere").build(buildSphereWorld).registerInto(cat);
+
+  const std::set<std::string> features;
+  RunOptions opts;
+  opts.width = 32;
+  opts.height = 32;
+  Runner runner(d, Workdir(root), opts);
+
+  Case explodes;
+  explodes.category = "geometry";
+  explodes.testName = "explodes";
+
+  SECTION("a throw during run() yields one failed sidecar; the run continues")
+  {
+    // Ground truth for every Case (nothing throws yet).
+    auto gen = runner.generate(cat, Filter{""}, features);
+    CHECK(gen.total == 3);
+    CHECK(gen.passed == 3);
+
+    // Now make the middle Case throw during its build.
+    *shouldThrow = true;
+    auto s = runner.run(cat, Filter{""}, features);
+    CHECK(s.total == 3);
+    CHECK(s.passed == 2); // triangle + sphere still scored
+    CHECK(s.failed == 1); // explodes
+    CHECK(s.skipped == 0);
+
+    // The throwing Case is recorded as failed with the message in detail.
+    const auto text = readFile(Workdir(root).sidecarPath(explodes));
+    CHECK(text.find("\"verdict\": \"failed\"") != std::string::npos);
+    CHECK(text.find("boom during build") != std::string::npos);
+
+    // The cases after the throwing one still produced their sidecars.
+    Case sph;
+    sph.category = "geometry";
+    sph.testName = "sphere";
+    const auto sphText = readFile(Workdir(root).sidecarPath(sph));
+    CHECK(sphText.find("\"verdict\": \"passed\"") != std::string::npos);
+  }
+
+  SECTION("a throw during generate() loses only that case")
+  {
+    *shouldThrow = true;
+    auto gen = runner.generate(cat, Filter{""}, features);
+    CHECK(gen.total == 3);
+    CHECK(gen.passed == 2); // triangle + sphere ground truth produced
+    CHECK(gen.failed == 1); // explodes
+
+    // The surrounding cases' ground truth exists despite the throw.
+    Case tri;
+    tri.category = "geometry";
+    tri.testName = "triangle";
+    CHECK(std::filesystem::exists(
+        Workdir(root).groundTruthImagePath(tri, Channel::Color)));
   }
 
   std::filesystem::remove_all(root, ec);
