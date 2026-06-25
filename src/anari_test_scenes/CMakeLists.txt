@@ -33,6 +33,7 @@ project_sources(PRIVATE
   cts/tests/renderer.cpp
   cts/tests/instance.cpp
   cts/tests/volume.cpp
+  cts/tests/gltf.cpp
 
   generators/ColorPalette.cpp
   generators/PrimitiveGenerator.cpp
@@ -69,9 +70,16 @@ PUBLIC
 project_link_libraries(PUBLIC helium anari_static PUBLIC $<BUILD_INTERFACE:stb_image>)
 project_link_libraries(PUBLIC helium anari_static PUBLIC $<BUILD_INTERFACE:mikktspace>)
 
-if (VIEWER_ENABLE_GLTF)
+# glTF support is needed by both the viewer (VIEWER_ENABLE_GLTF, gated on the
+# viewer/GLFW) and the CTS glTF asset-scan factory (CTS_ENABLE_GLTF, root
+# option). The latter only needs the loader, not the viewer.
+if (VIEWER_ENABLE_GLTF OR CTS_ENABLE_GLTF)
   project_sources(PRIVATE scenes/file/glTF.cpp)
   project_compile_definitions(PRIVATE ENABLE_GLTF=1)
+  # The glTF asset-scan factory (cts/tests/gltf.cpp) defaults to this source-tree
+  # asset root; override at runtime with ANARI_CTS_GLTF_ASSETS.
+  project_compile_definitions(PRIVATE
+    CTS_GLTF_ASSET_DIR="${CMAKE_CURRENT_LIST_DIR}/../../cts/gltf-Sample-Assets")
 endif()
 
 if (USE_DRACO)

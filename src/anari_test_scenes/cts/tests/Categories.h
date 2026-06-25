@@ -22,5 +22,9 @@ void registerRendererTests(Catalog &catalog);
 void registerInstanceTests(Catalog &catalog);
 void registerVolumeTests(Catalog &catalog);
 
+// glTF asset-scan factory: registers one Test per asset found under the
+// gltf-Sample-Assets tree. A no-op unless the build enabled glTF (ENABLE_GLTF).
+void registerGltfTests(Catalog &catalog);
+
 } // namespace cts
 } // namespace anari
