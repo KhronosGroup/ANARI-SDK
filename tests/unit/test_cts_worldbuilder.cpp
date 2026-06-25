@@ -63,8 +63,11 @@ TEST_CASE("cameraFromBounds frames a box from +Z", "[cts][worldbuilder]")
   CHECK(cam.at.x == Approx(0.f));
   CHECK(cam.at.y == Approx(0.f));
   CHECK(cam.at.z == Approx(0.f));
-  // Eye is pushed out along +Z by the bounds diagonal length.
-  CHECK(cam.position.z == Approx(std::sqrt(12.f)));
+  // Eye sits in front of the box on +Z, close enough that the subject fills most
+  // of the frame: margin * inPlaneHalfExtent / tan(halfFovy) + halfDepth. For a
+  // [-1,1] box both half-extents are 1.
+  const float expectedZ = 1.1f * 1.f / 0.5774f + 1.f;
+  CHECK(cam.position.z == Approx(expectedZ));
   CHECK(cam.position.x == Approx(0.f));
   // Looking back toward -Z.
   CHECK(cam.direction.z == Approx(-1.f));

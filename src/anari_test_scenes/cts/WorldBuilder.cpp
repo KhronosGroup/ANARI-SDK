@@ -832,7 +832,20 @@ scenes::Camera cameraFromBounds(const scenes::Bounds &bounds)
 {
   const math::float3 size = bounds[1] - bounds[0];
   const math::float3 center = 0.5f * (bounds[0] + bounds[1]);
-  const float distance = math::length(size);
+
+  // Place the eye so the subject fills most of the frame. The camera looks down
+  // -Z with the reference device's default 60° vertical fovy, so the frustum
+  // half-height at a given depth is tan(30°) ≈ 0.577 times that depth. Fit the
+  // larger in-plane half-extent (which also covers the width for any frame at
+  // least as wide as it is tall), then back off by the half-depth so the nearest
+  // face stays inside the frustum. kMargin leaves a thin border around the
+  // content. (The bounds diagonal used previously framed the subject at only
+  // ~60% of the frame.)
+  constexpr float kTanHalfFovy = 0.5774f; // tan(30°); reference fovy is 60°
+  constexpr float kMargin = 1.1f; // ~10% border around the content
+  const float halfInPlane = 0.5f * std::max(size.x, size.y);
+  const float distance =
+      kMargin * halfInPlane / kTanHalfFovy + 0.5f * size.z;
   const math::float3 eye = center + math::float3(0.f, 0.f, distance);
 
   scenes::Camera cam;
@@ -902,8 +915,14 @@ anari::World assembleWorld(anari::Device d, const WorldContents &contents)
 
 scenes::Bounds worldBounds(anari::Device d, anari::World world)
 {
+  // scenes::Bounds is std::array<float3,2>, which has no ANARI type mapping, so
+  // anari::getProperty() would deduce the wrong type and the query would fail
+  // (leaving the default below). Query through the C API with an explicit
+  // ANARI_FLOAT32_BOX3 — the layout matches — so devices actually report the
+  // scene's bounds and the camera frames the real content (not a fixed box).
   scenes::Bounds b = {math::float3(-1.f), math::float3(1.f)};
-  anari::getProperty(d, world, "bounds", b);
+  anariGetProperty(
+      d, world, "bounds", ANARI_FLOAT32_BOX3, &b, sizeof(b), ANARI_WAIT);
   return b;
 }
 

@@ -191,7 +191,8 @@ ANARI_TEST_SCENES_INTERFACE anari::Instance makeInstance(anari::Device d,
 
 // --- Cameras -----------------------------------------------------------------
 
-// Frame a bounding box from +Z, looking at its center. Pure: no device needed.
+// Frame a bounding box from +Z, looking at its center, with the subject filling
+// most of the frame (assumes the reference 60° fovy). Pure: no device needed.
 ANARI_TEST_SCENES_INTERFACE anari::scenes::Camera cameraFromBounds(
     const anari::scenes::Bounds &bounds);
 

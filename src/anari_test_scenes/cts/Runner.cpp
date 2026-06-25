@@ -420,7 +420,8 @@ std::vector<Image> Runner::renderCase(const TestDef &test, const Case &c)
   }
 
   // Deterministic depth scale derived from the (shared) scene bounds: the
-  // default camera sits ~one diagonal from the center, so 2x covers near..far.
+  // default camera sits within one bounds diagonal of the center, so 2x is a
+  // conservative bound that covers the whole near..far range.
   const float depthScale =
       2.0f * anari::math::length(scene.bounds[1] - scene.bounds[0]);
 
