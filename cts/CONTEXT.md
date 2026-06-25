@@ -1,0 +1,86 @@
+# Conformance Test Suite (CTS)
+
+The CTS validates an ANARI device implementation by rendering a known battery of
+scenes and comparing the output against ground-truth images. This context covers
+the C++ test catalog, the C++ runner that executes it, and the Python layer that
+reports on and diffs runs.
+
+## Language
+
+### Authoring a test
+
+**Test**:
+A single registered definition in the C++ catalog: a world-build function plus
+its axes, required features, thresholds, and bounds tolerance. A Test expands
+into one or more Cases.
+_Avoid_: scene, test scene (for this concept)
+
+**Axis**:
+A named parameter dimension a Test is expanded over. Every Axis is either a
+Permutation or a Variant.
+_Avoid_: dimension, parameter list
+
+**Permutation**:
+An Axis whose values produce *different* expected output, so each value gets its
+own ground-truth image.
+
+**Variant**:
+An Axis whose values must produce *identical* output (e.g. `soup` vs `indexed`).
+All values share one ground-truth image, which asserts implementation
+equivalence.
+
+**Case**:
+One concrete combination of axis values produced by expanding a Test. A Case is
+what actually gets rendered and compared. Variant values of the same Case map to
+a shared ground-truth image; Permutation values map to distinct ones.
+_Avoid_: instance, permutation (as a noun for the result)
+
+### Running and comparing
+
+**Reference device**:
+The device whose renders define ground truth (currently helide).
+_Avoid_: golden device
+
+**Candidate**:
+The device being tested against ground truth.
+_Avoid_: device under test, SUT
+
+**Ground truth**:
+The expected reference image(s) a Case is compared against, produced by the
+Reference device.
+_Avoid_: reference image, golden image, baseline
+
+**Channel**:
+A frame output buffer (color, depth, albedo, normal, primitive/object/instance
+id) that can be compared independently.
+
+**Manifest**:
+The machine-readable file the C++ runner writes for a run (which Cases ran, their
+pass/fail, metric scores, paths). The Python layer reads Manifests; it never
+renders.
+_Avoid_: results file, report
+
+**Report**:
+The human-facing PDF the Python layer produces from one Manifest.
+
+**Device diff**:
+The Python comparison of two Candidates' Manifests/images against each other
+(parity), as distinct from comparing a Candidate against Ground truth (pass/fail).
+
+### Tooling
+
+**Catalog**:
+The in-C++ registry of all Tests, living in `anari_test_scenes`. `cts list`
+enumerates it; `cts run` expands and executes a filtered slice of it. Distinct
+from the pre-existing scene registry (`registerScene`) used by example viewers.
+_Avoid_: test registry, scene registry (that name is the other one)
+
+**BuildContext**:
+The object the harness hands to a Test's `build()` carrying the current Case's
+resolved axis values, read typed-by-name (`get<int>("count", 1)`). Backed by
+`helium::ParameterizedObject`.
+
+**Workdir**:
+The single root directory a run operates under, containing the conventional
+subdirs `results/`, `ground_truth/`, and `assets/`. Files mirror the Catalog
+hierarchy under each (`<sub>/<category>/<test>/<case>...`).
