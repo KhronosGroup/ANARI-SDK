@@ -81,9 +81,19 @@ options:
 Options parseOptions(int argc, char **argv, int start)
 {
   Options o;
+  auto parseDim = [](const std::string &s, uint32_t fallback) {
+    try {
+      return static_cast<uint32_t>(std::stoul(s));
+    } catch (const std::exception &) {
+      std::cerr << "warning: invalid dimension '" << s << "', keeping default\n";
+      return fallback;
+    }
+  };
   for (int i = start; i < argc; ++i) {
     const std::string a = argv[i];
-    auto next = [&]() { return (i + 1 < argc) ? argv[++i] : ""; };
+    auto next = [&]() -> std::string {
+      return (i + 1 < argc) ? argv[++i] : "";
+    };
     if (a == "--filter")
       o.filter = next();
     else if (a == "--workdir")
@@ -91,9 +101,9 @@ Options parseOptions(int argc, char **argv, int start)
     else if (a == "--device")
       o.device = next();
     else if (a == "--width")
-      o.width = static_cast<uint32_t>(std::stoul(next()));
+      o.width = parseDim(next(), o.width);
     else if (a == "--height")
-      o.height = static_cast<uint32_t>(std::stoul(next()));
+      o.height = parseDim(next(), o.height);
     else if (a == "--stdin")
       o.useStdin = true;
     else if (a == "--verbose")
@@ -126,6 +136,8 @@ anari::Device loadDevice(const std::string &name, anari::Library &lib)
   auto d = anari::newDevice(lib, "default");
   if (!d) {
     std::cerr << "error: failed to create device from '" << name << "'\n";
+    anari::unloadLibrary(lib);
+    lib = nullptr;
     return nullptr;
   }
   anari::commitParameters(d, d);

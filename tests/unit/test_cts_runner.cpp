@@ -153,6 +153,9 @@ TEST_CASE("Runner generates ground truth then scores a run", "[cts][runner][heli
     CHECK(genSummary.passed == 5); // bogus is skipped
     CHECK(genSummary.skipped == 1);
 
+    // ADR-0005: the generated workdir ignores itself.
+    CHECK(std::filesystem::exists(root / ".gitignore"));
+
     // Ground-truth images exist, keyed by the shared ground-truth key.
     Workdir wd(root);
     Case tri;

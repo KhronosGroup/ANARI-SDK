@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Workdir.h"
+// std
+#include <fstream>
 
 namespace anari {
 namespace cts {
@@ -52,6 +54,19 @@ std::string Workdir::relativeToRoot(const std::filesystem::path &p) const
   std::error_code ec;
   auto rel = std::filesystem::relative(p, m_root, ec);
   return ec ? p.generic_string() : rel.generic_string();
+}
+
+bool Workdir::writeGitignore() const
+{
+  std::error_code ec;
+  std::filesystem::create_directories(m_root, ec);
+  if (ec)
+    return false;
+  std::ofstream out(m_root / ".gitignore");
+  if (!out)
+    return false;
+  out << "# Generated CTS workdir: ground truth, results, and assets.\n*\n";
+  return static_cast<bool>(out);
 }
 
 } // namespace cts

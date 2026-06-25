@@ -77,7 +77,15 @@ Image colorToImage(anari::Device d, anari::Frame frame, uint32_t w, uint32_t h)
   return image;
 }
 
-Image depthToImage(anari::Device d, anari::Frame frame, uint32_t w, uint32_t h)
+// Encode depth to grayscale with a fixed, scene-derived scale (not the
+// per-frame maximum, which would differ between candidate and reference and
+// make the comparison non-deterministic). depthScale is the same for both
+// because both render the same world with the same bounds-framed camera.
+Image depthToImage(anari::Device d,
+    anari::Frame frame,
+    uint32_t w,
+    uint32_t h,
+    float depthScale)
 {
   Image image;
   image.width = w;
@@ -86,13 +94,7 @@ Image depthToImage(anari::Device d, anari::Frame frame, uint32_t w, uint32_t h)
   auto fb = anari::map<float>(d, frame, "channel.depth");
   if (fb.data != nullptr) {
     const size_t n = static_cast<size_t>(w) * h;
-    float maxDepth = 0.f;
-    for (size_t i = 0; i < n; ++i) {
-      const float v = fb.data[i];
-      if (std::isfinite(v) && v > maxDepth)
-        maxDepth = v;
-    }
-    const float scale = maxDepth > 0.f ? 1.f / maxDepth : 0.f;
+    const float scale = depthScale > 0.f ? 1.f / depthScale : 0.f;
     for (size_t i = 0; i < n; ++i) {
       const float v = fb.data[i];
       const uint8_t g = std::isfinite(v) ? toU8(v * scale) : 255;
@@ -169,6 +171,11 @@ Image renderChannel(
     camOpts.aspect = static_cast<float>(w) / static_cast<float>(h);
   auto camera = makePerspectiveCamera(d, camDesc, camOpts);
 
+  // Deterministic depth scale derived from the (shared) scene bounds: the
+  // camera sits ~one diagonal from the center, so 2x covers near..far.
+  const float depthScale =
+      2.0f * anari::math::length(bounds[1] - bounds[0]);
+
   auto renderer = anari::newObject<anari::Renderer>(d, "default");
   anari::commitParameters(d, renderer);
 
@@ -191,7 +198,7 @@ Image renderChannel(
     image = colorToImage(d, frame, w, h);
     break;
   case Channel::Depth:
-    image = depthToImage(d, frame, w, h);
+    image = depthToImage(d, frame, w, h, depthScale);
     break;
   case Channel::Albedo:
     image = vec3ToImage(d, frame, "channel.albedo", w, h, false);
@@ -257,6 +264,7 @@ RunSummary Runner::generate(const Catalog &catalog,
     const Filter &filter,
     const std::set<std::string> &referenceFeatures)
 {
+  m_workdir.writeGitignore();
   RunSummary summary;
   for (const TestDef *test : catalog.filter(filter)) {
     for (const Case &c : expand(*test)) {
@@ -286,6 +294,7 @@ RunSummary Runner::run(const Catalog &catalog,
     const Filter &filter,
     const std::set<std::string> &candidateFeatures)
 {
+  m_workdir.writeGitignore();
   RunSummary summary;
   for (const TestDef *test : catalog.filter(filter)) {
     const double ssimThreshold = test->thresholdOr("ssim", m_options.ssimThreshold);

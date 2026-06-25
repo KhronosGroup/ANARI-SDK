@@ -39,6 +39,11 @@ class ANARI_TEST_SCENES_INTERFACE Workdir
   // A path expressed relative to the workdir root (for storing in sidecars).
   std::string relativeToRoot(const std::filesystem::path &p) const;
 
+  // Create the root and drop a ".gitignore" of "*" into it, so the whole
+  // workdir (generated ground truth, results, assets) is untracked wherever it
+  // lives (ADR-0005). Idempotent; returns false on a filesystem error.
+  bool writeGitignore() const;
+
  private:
   std::filesystem::path m_root;
 };

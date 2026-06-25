@@ -66,6 +66,25 @@ TEST_CASE("Workdir relativeToRoot strips the root prefix", "[cts][workdir]")
       == "results/geometry/sphere/1_soup.color.png");
 }
 
+TEST_CASE("Workdir writes a .gitignore that ignores everything", "[cts][workdir]")
+{
+  const auto root = std::filesystem::temp_directory_path() / "cts_gitignore_test";
+  std::error_code ec;
+  std::filesystem::remove_all(root, ec);
+
+  Workdir wd(root);
+  REQUIRE(wd.writeGitignore()); // ADR-0005: generated workdir is gitignored
+  const auto ignore = root / ".gitignore";
+  REQUIRE(std::filesystem::exists(ignore));
+
+  std::ifstream in(ignore);
+  std::stringstream buffer;
+  buffer << in.rdbuf();
+  CHECK(buffer.str().find("*") != std::string::npos);
+
+  std::filesystem::remove_all(root, ec);
+}
+
 // Verdict ////////////////////////////////////////////////////////////////////
 
 TEST_CASE("metricPassed is a strict higher-is-better threshold", "[cts][verdict]")
