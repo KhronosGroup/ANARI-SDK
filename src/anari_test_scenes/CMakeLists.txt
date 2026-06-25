@@ -9,6 +9,14 @@ project_add_library()
 project_sources(PRIVATE
   anari_test_scenes.cpp
 
+  cts/BuildContext.cpp
+  cts/Case.cpp
+  cts/Catalog.cpp
+  cts/Expansion.cpp
+  cts/Filter.cpp
+  cts/TestBuilder.cpp
+  cts/Value.cpp
+
   generators/ColorPalette.cpp
   generators/PrimitiveGenerator.cpp
   generators/SceneGenerator.cpp

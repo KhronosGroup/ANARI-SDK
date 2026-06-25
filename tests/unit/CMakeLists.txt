@@ -18,3 +18,16 @@ target_link_libraries(${PROJECT_NAME} PRIVATE helium)
 add_test(NAME unit_test::helium::AnariAny            COMMAND ${PROJECT_NAME} "[helium_AnariAny]"           )
 add_test(NAME unit_test::helium::ParameterizedObject COMMAND ${PROJECT_NAME} "[helium_ParameterizedObject]")
 add_test(NAME unit_test::helium::RefCounted          COMMAND ${PROJECT_NAME} "[helium_RefCounted]"         )
+
+## CTS conformance-harness catalog tests ##
+
+add_executable(anariCatalogTests
+  catch_main.cpp
+
+  test_cts_catalog.cpp
+)
+
+target_link_libraries(anariCatalogTests PRIVATE anari_test_scenes)
+target_compile_features(anariCatalogTests PRIVATE cxx_std_20)
+
+add_test(NAME unit_test::cts::catalog COMMAND anariCatalogTests "[cts]")
