@@ -16,6 +16,7 @@ project_sources(PRIVATE
   cts/Filter.cpp
   cts/TestBuilder.cpp
   cts/Value.cpp
+  cts/WorldBuilder.cpp
 
   generators/ColorPalette.cpp
   generators/PrimitiveGenerator.cpp
