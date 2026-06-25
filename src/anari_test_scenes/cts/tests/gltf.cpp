@@ -150,13 +150,14 @@ void registerGltfTests(Catalog &catalog)
 
     auto t = makeTest("gltf", sanitizeName(asset));
     t.build(build);
-    // Different encodings of one asset must render identically: a Variant axis
-    // sharing one ground-truth image (only added when more than one exists).
+    // Each encoding (glTF / glTF-Binary / glTF-Embedded / Draco) is scored
+    // against its own ground truth: a Permutation, since the encodings are not
+    // guaranteed to render pixel-identically (textures, quantization).
     if (available.size() > 1) {
       std::vector<Any> values;
       for (const auto &e : available)
         values.emplace_back(Any(e.c_str()));
-      t.variant("encoding", std::move(values));
+      t.permute("encoding", std::move(values));
     }
     t.registerInto(catalog);
   }

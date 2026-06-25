@@ -37,7 +37,6 @@ project_sources(PRIVATE
 
   generators/ColorPalette.cpp
   generators/PrimitiveGenerator.cpp
-  generators/SceneGenerator.cpp
   generators/TextureGenerator.cpp
 
   scenes/scene.cpp
@@ -115,14 +114,21 @@ generate_export_header(${PROJECT_NAME}
 
 ## CTS conformance tool ##
 
-# The self-contained `cts` command-line runner. Built alongside the tests; will
-# replace the legacy Python-driven cts/ tool in a later phase.
-if (BUILD_TESTING)
+# The self-contained `cts` command-line runner is now the canonical CTS build
+# (it replaced the legacy Python/pybind tool). Built when the CTS is requested
+# (BUILD_CTS) or for the test suite (BUILD_TESTING).
+if (BUILD_CTS OR BUILD_TESTING)
   add_executable(anariCts cts/tool/main.cpp)
   set_target_properties(anariCts PROPERTIES OUTPUT_NAME cts)
   target_link_libraries(anariCts PRIVATE ${PROJECT_NAME})
   target_compile_features(anariCts PRIVATE cxx_std_20)
 
+  if (BUILD_CTS)
+    install(TARGETS anariCts RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+  endif()
+endif()
+
+if (BUILD_TESTING)
   # Device-free smoke tests of the tool surface. (Device-backed run/generate
   # are covered by the runner integration test.)
   add_test(NAME cts_tool::list COMMAND anariCts list)

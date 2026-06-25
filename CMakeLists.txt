@@ -66,8 +66,10 @@ option(BUILD_SHARED_LIBS "Build shared libraries instead of static" ON)
 
 ## ANARI specific options ##
 
-option(BUILD_CTS "Build cts toolkit" OFF)
-cmake_dependent_option(CTS_ENABLE_GLTF "Enable glTF support for cts" ON "BUILD_CTS" OFF)
+option(BUILD_CTS "Build the cts conformance tool" OFF)
+# Decoupled from BUILD_CTS: the glTF asset tests need only the glTF loader, not
+# the (removed) Python/pybind toolkit. CMP0077 (NEW, set above) lets -D override.
+option(CTS_ENABLE_GLTF "Enable the CTS glTF asset-scanning tests" OFF)
 option(BUILD_CAT "Build capability analysis tool" OFF)
 option(USE_DRACO "Use draco when loading glTF files" OFF)
 option(USE_WEBP "Use webp when loading glTF files" OFF)
@@ -120,8 +122,10 @@ if (BUILD_TESTING)
   add_subdirectory(tests)
 endif()
 
-if (BUILD_CTS)
-  add_subdirectory(cts)
+if (BUILD_CTS OR CTS_ENABLE_GLTF)
+  # Distinct binary dir: the `cts` executable (anariCts) lives at the build root,
+  # which would collide with a build tree named `cts`.
+  add_subdirectory(cts cts_payload)
 endif()
 
 if (BUILD_CAT)
