@@ -7,6 +7,7 @@
 
 #include "cts/BuiltinTests.h"
 #include "cts/Catalog.h"
+#include "cts/DeviceInfo.h"
 #include "cts/Expansion.h"
 #include "cts/Runner.h"
 #include "cts/Workdir.h"
@@ -51,6 +52,12 @@ struct Options
   uint32_t width = 256;
   uint32_t height = 256;
   bool useStdin = false;
+  // query-device-info: restrict to an object type / subtype substring, list
+  // subtypes only, or include detailed per-parameter info.
+  std::string typeFilter;
+  std::string subtypeFilter;
+  bool skipParameters = false;
+  bool info = false;
 };
 
 void printUsage()
@@ -63,6 +70,7 @@ commands:
   run <device> [options]     render + score a candidate device against ground truth
   query-features <device>    print the device's supported extensions
   query-metadata [options]   print catalog metadata as JSON
+  query-device-info <device> introspect a device: object subtypes + parameter metadata
   check-properties <device>  report which tests the device can run vs. will skip
 
 options:
@@ -73,6 +81,12 @@ options:
   --height <n>         render height (default: 256)
   --stdin              read newline-separated filter patterns from stdin (run)
   --verbose            print ANARI warnings
+
+query-device-info options:
+  --type <name>        restrict to object types whose name contains <name>
+  --subtype <name>     restrict to subtypes whose name contains <name>
+  --skip-parameters    list subtypes only, omit parameters
+  --info               include detailed per-parameter info (default/min/max/values/...)
 )";
 }
 
@@ -106,6 +120,14 @@ Options parseOptions(int argc, char **argv, int start)
       o.height = parseDim(next(), o.height);
     else if (a == "--stdin")
       o.useStdin = true;
+    else if (a == "--type")
+      o.typeFilter = next();
+    else if (a == "--subtype")
+      o.subtypeFilter = next();
+    else if (a == "--skip-parameters")
+      o.skipParameters = true;
+    else if (a == "--info")
+      o.info = true;
     else if (a == "--verbose")
       g_verbose = true;
     else if (!a.empty() && a[0] != '-' && o.device.empty())
@@ -221,6 +243,23 @@ int cmdQueryFeatures(const Options &o)
     return 2;
   for (const auto &e : deviceExtensions(lib, "default"))
     std::cout << e << "\n";
+  anari::release(d, d);
+  anari::unloadLibrary(lib);
+  return 0;
+}
+
+int cmdQueryDeviceInfo(const Options &o)
+{
+  if (o.device.empty()) {
+    std::cerr << "error: query-device-info requires a <device>\n";
+    return 2;
+  }
+  anari::Library lib = nullptr;
+  auto d = loadDevice(o.device, lib);
+  if (!d)
+    return 2;
+  std::cout << queryDeviceInfo(
+      d, o.typeFilter, o.subtypeFilter, o.skipParameters, o.info);
   anari::release(d, d);
   anari::unloadLibrary(lib);
   return 0;
@@ -356,6 +395,8 @@ int main(int argc, char **argv)
     return cmdQueryFeatures(o);
   if (command == "query-metadata")
     return cmdQueryMetadata(o);
+  if (command == "query-device-info")
+    return cmdQueryDeviceInfo(o);
   if (command == "check-properties")
     return cmdCheckProperties(o);
 

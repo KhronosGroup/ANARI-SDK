@@ -25,6 +25,7 @@ add_executable(anariCatalogTests
   catch_main.cpp
 
   test_cts_catalog.cpp
+  test_cts_deviceinfo.cpp
   test_cts_metrics.cpp
   test_cts_results.cpp
   test_cts_runner.cpp

@@ -13,6 +13,7 @@ project_sources(PRIVATE
   cts/BuiltinTests.cpp
   cts/Case.cpp
   cts/Catalog.cpp
+  cts/DeviceInfo.cpp
   cts/Expansion.cpp
   cts/Filter.cpp
   cts/FrameFormats.cpp
