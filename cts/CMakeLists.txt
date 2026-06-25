@@ -27,7 +27,6 @@ if (INSTALL_CTS)
   install(FILES
     ${CMAKE_CURRENT_LIST_DIR}/ctsReport.py
     ${CMAKE_CURRENT_LIST_DIR}/pyproject.toml
-    ${CMAKE_CURRENT_LIST_DIR}/poetry.lock
     DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/anari/cts
   )
   if (CTS_ENABLE_GLTF AND EXISTS ${CMAKE_CURRENT_LIST_DIR}/gltf-Sample-Assets)
