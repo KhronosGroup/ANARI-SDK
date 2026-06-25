@@ -14,9 +14,14 @@ project_sources(PRIVATE
   cts/Catalog.cpp
   cts/Expansion.cpp
   cts/Filter.cpp
+  cts/Image.cpp
+  cts/Metrics.cpp
+  cts/Runner.cpp
+  cts/Sidecar.cpp
   cts/TestBuilder.cpp
   cts/Value.cpp
   cts/WorldBuilder.cpp
+  cts/Workdir.cpp
 
   generators/ColorPalette.cpp
   generators/PrimitiveGenerator.cpp

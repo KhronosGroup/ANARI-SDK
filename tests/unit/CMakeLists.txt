@@ -25,13 +25,17 @@ add_executable(anariCatalogTests
   catch_main.cpp
 
   test_cts_catalog.cpp
+  test_cts_metrics.cpp
+  test_cts_results.cpp
+  test_cts_runner.cpp
   test_cts_worldbuilder.cpp
 )
 
 target_link_libraries(anariCatalogTests PRIVATE anari_test_scenes)
 target_compile_features(anariCatalogTests PRIVATE cxx_std_20)
 
-# Pure harness tests run anywhere; the world-build smoke tests need a device
-# (helide) and skip themselves if one cannot be loaded.
+# Pure harness/metrics/results tests run anywhere; the device-backed tests
+# (world-build smoke + runner integration) need helide and skip themselves if no
+# device can be loaded.
 add_test(NAME unit_test::cts::catalog COMMAND anariCatalogTests "[cts]~[helide]")
-add_test(NAME unit_test::cts::worldbuilder COMMAND anariCatalogTests "[worldbuilder]")
+add_test(NAME unit_test::cts::device COMMAND anariCatalogTests "[helide]")
