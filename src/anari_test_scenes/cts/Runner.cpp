@@ -214,7 +214,8 @@ Image renderChannel(anari::Device d,
     uint32_t w,
     uint32_t h,
     float depthScale,
-    ANARIDataType chFmt)
+    ANARIDataType chFmt,
+    uint32_t accumulationFrames)
 {
   auto frame = anari::newObject<anari::Frame>(d);
   anari::setParameter(d, frame, "size", anari::math::vec<uint32_t, 2>(w, h));
@@ -230,10 +231,28 @@ Image renderChannel(anari::Device d,
   anari::setParameter(d, frame, "renderer", renderer);
   anari::setParameter(d, frame, "camera", camera);
   anari::setParameter(d, frame, "world", world);
+  // Accumulate only the color channel: depth/normal/albedo/*Id are
+  // deterministic, so accumulating them is wasted work (and could alias the id
+  // channels). Only set the param when gated on; never set it false, so the
+  // disabled path is byte-for-byte identical to before and we never poke the
+  // param on a device that does not support accumulation.
+  const bool accumulate = accumulationFrames > 1 && ch == Channel::Color;
+  if (accumulate)
+    anari::setParameter(d, frame, "accumulation", true);
   anari::commitParameters(d, frame);
 
-  anari::render(d, frame);
-  anari::wait(d, frame);
+  // The frame is created fresh each call, so accumulation starts at sample 0;
+  // rendering the same frame N times refines the image (matches
+  // tests/frame.cpp's progressive-rendering check).
+  if (accumulate) {
+    for (uint32_t i = 0; i < accumulationFrames; ++i) {
+      anari::render(d, frame);
+      anari::wait(d, frame);
+    }
+  } else {
+    anari::render(d, frame);
+    anari::wait(d, frame);
+  }
 
   Image image;
   switch (ch) {
@@ -348,6 +367,20 @@ Runner::Runner(anari::Device device, Workdir workdir, RunOptions options)
     : m_device(device), m_workdir(std::move(workdir)), m_options(options)
 {}
 
+void Runner::resolveCapabilities(const std::set<std::string> &features)
+{
+  m_effectiveAccumulationFrames = (m_options.accumulationFrames > 1
+                                      && features.count(
+                                          "ANARI_KHR_FRAME_ACCUMULATION"))
+      ? m_options.accumulationFrames
+      : 1;
+  // Denoise is applied whenever requested, even if the device does not report
+  // ANARI_KHR_RENDERER_DENOISE: setting an unadvertised renderer parameter is
+  // harmless (an unsupporting device ignores it), and the CLI warns about the
+  // mismatch. Unlike accumulation, it is not gated on the feature set.
+  m_denoiseEnabled = m_options.denoise;
+}
+
 Runner::SceneObjects Runner::buildScene(const TestDef &test, const Case &c)
 {
   SceneObjects scene;
@@ -373,6 +406,15 @@ Runner::SceneObjects Runner::buildScene(const TestDef &test, const Case &c)
               m_device, scene.bounds, m_options.width, m_options.height);
     scene.renderer = test.rendererBuild ? test.rendererBuild(ctx)
                                         : defaultRenderer(m_device);
+    // Denoising is additive: set one extra bool on the already-built+committed
+    // renderer (test's or default) and re-commit, without disturbing its other
+    // params. Set whenever --denoise was requested, even on a device that does
+    // not report ANARI_KHR_RENDERER_DENOISE (it ignores the unknown param; the
+    // CLI warns about the mismatch).
+    if (m_denoiseEnabled && scene.renderer) {
+      anari::setParameter(m_device, scene.renderer, "denoise", true);
+      anari::commitParameters(m_device, scene.renderer);
+    }
   } catch (...) {
     releaseScene(scene);
     throw;
@@ -440,7 +482,8 @@ std::vector<Image> Runner::renderCase(const TestDef &test, const Case &c)
           m_options.width,
           m_options.height,
           depthScale,
-          chFmt));
+          chFmt,
+          m_effectiveAccumulationFrames));
     }
   } catch (...) {
     releaseScene(scene);
@@ -455,6 +498,7 @@ RunSummary Runner::generate(const Catalog &catalog,
     const Filter &filter,
     const std::set<std::string> &referenceFeatures)
 {
+  resolveCapabilities(referenceFeatures);
   m_workdir.writeGitignore();
   RunSummary summary;
   for (const TestDef *test : catalog.filter(filter)) {
@@ -499,6 +543,7 @@ RunSummary Runner::run(const Catalog &catalog,
     const Filter &filter,
     const std::set<std::string> &candidateFeatures)
 {
+  resolveCapabilities(candidateFeatures);
   m_workdir.writeGitignore();
   RunSummary summary;
   for (const TestDef *test : catalog.filter(filter)) {
@@ -591,6 +636,16 @@ RunSummary Runner::run(const Catalog &catalog,
           allPassed = allPassed && cr.passed;
           result.channels.push_back(std::move(cr));
         }
+
+        // Record the effective render settings additively in the existing
+        // detail field (no schema bump). generate writes no sidecars (ADR-0005),
+        // so this note is run-only; it makes a mixed-capability diff (e.g. an
+        // accumulating candidate vs. a single-render ground truth) interpretable.
+        std::string note = "accumulation="
+            + std::to_string(m_effectiveAccumulationFrames)
+            + ", denoise=" + (m_denoiseEnabled ? "on" : "off");
+        result.detail =
+            result.detail.empty() ? note : result.detail + "; " + note;
 
         result.verdict = allPassed ? Verdict::Passed : Verdict::Failed;
         writeSidecar(m_workdir.sidecarPath(c), result);

@@ -25,6 +25,16 @@ struct RunOptions
   uint32_t height{256};
   double ssimThreshold{0.70}; // ctsUtility defaults; overridden per-test
   double psnrThreshold{20.0};
+  // Progressive frame accumulation: render the color channel this many times
+  // on a fresh accumulating frame to cut Monte-Carlo noise. <=1 is today's
+  // single-render behavior; gated on ANARI_KHR_FRAME_ACCUMULATION per device.
+  // Defaults stay at today's behavior so RunOptions{}-based unit tests are
+  // unaffected; the CLI supplies the user-facing default (16).
+  uint32_t accumulationFrames{1};
+  // Enable renderer denoising. Applied whenever set, even on a device that does
+  // not report ANARI_KHR_RENDERER_DENOISE (the CLI warns); unlike accumulation,
+  // it is not gated on the feature set.
+  bool denoise{false};
   // Identity of the device this run uses, recorded in every sidecar (schema
   // v2) so a two-device diff can label runs by device, not by workdir name.
   DeviceSpec device;
@@ -88,6 +98,13 @@ class ANARI_TEST_SCENES_INTERFACE Runner
   SceneObjects buildScene(const TestDef &test, const Case &c);
   void releaseScene(SceneObjects &scene);
 
+  // Resolve the requested accumulation/denoise options against one device's
+  // advertised feature set. Accumulation is gated off when
+  // ANARI_KHR_FRAME_ACCUMULATION is absent; denoise is applied unconditionally
+  // (see RunOptions::denoise). Sets m_effectiveAccumulationFrames and
+  // m_denoiseEnabled. Called once at the start of generate()/run().
+  void resolveCapabilities(const std::set<std::string> &features);
+
   // Write a "missing required feature" skip sidecar for a Case and tally it.
   void writeFeatureSkip(const Case &c, RunSummary &summary);
 
@@ -106,6 +123,11 @@ class ANARI_TEST_SCENES_INTERFACE Runner
   anari::Device m_device{nullptr};
   Workdir m_workdir;
   RunOptions m_options;
+
+  // Capabilities resolved against the running device's feature set (see
+  // resolveCapabilities). Default to today's behavior until resolved.
+  uint32_t m_effectiveAccumulationFrames{1};
+  bool m_denoiseEnabled{false};
 };
 
 } // namespace cts

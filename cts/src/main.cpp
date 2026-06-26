@@ -18,7 +18,9 @@
 // std
 #include <cstring>
 #include <iostream>
+#include <limits>
 #include <set>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -58,6 +60,11 @@ struct Options
   std::string subtypeFilter;
   bool skipParameters = false;
   bool info = false;
+  // Progressive frame accumulation (color channel) and renderer denoising,
+  // each gated on the device's feature set in the Runner. The accumulation
+  // value is the user-facing default; <=1 disables it.
+  uint32_t accumulationFrames = 16;
+  bool denoise = false;
 };
 
 void printUsage()
@@ -79,6 +86,11 @@ options:
   --device <lib>       reference device library for generate (default: helide)
   --width <n>          render width (default: 256)
   --height <n>         render height (default: 256)
+  --accumulation <n>   progressive color-channel frames when the device supports
+                       ANARI_KHR_FRAME_ACCUMULATION (default: 16; <=1 disables)
+  --no-accumulation    render each channel once (equivalent to --accumulation 1)
+  --denoise            set the renderer "denoise" parameter (warns, but still
+                       sets it, if the device lacks ANARI_KHR_RENDERER_DENOISE)
   --stdin              read newline-separated filter patterns from stdin (run)
   --verbose            print ANARI warnings
 
@@ -95,11 +107,22 @@ query-device-info options:
 Options parseOptions(int argc, char **argv, int start)
 {
   Options o;
-  auto parseDim = [](const std::string &s, uint32_t fallback) {
+  // Parse a non-negative integer argument (width/height/accumulation). std::stoul
+  // silently wraps a leading '-' to a huge value (so e.g. --accumulation -1 would
+  // become ~4.3 billion frames -> an unbounded render loop) and only throws above
+  // ULONG_MAX, so reject negatives, trailing garbage, and anything that does not
+  // fit in uint32_t explicitly; keep the caller's default on any error.
+  auto parseDim = [](const std::string &s, uint32_t fallback) -> uint32_t {
     try {
-      return static_cast<uint32_t>(std::stoul(s));
+      if (s.empty() || s[0] == '-')
+        throw std::invalid_argument("not a non-negative integer");
+      size_t pos = 0;
+      const unsigned long v = std::stoul(s, &pos);
+      if (pos != s.size() || v > std::numeric_limits<uint32_t>::max())
+        throw std::out_of_range("does not fit in uint32_t");
+      return static_cast<uint32_t>(v);
     } catch (const std::exception &) {
-      std::cerr << "warning: invalid dimension '" << s << "', keeping default\n";
+      std::cerr << "warning: invalid value '" << s << "', keeping default\n";
       return fallback;
     }
   };
@@ -118,6 +141,12 @@ Options parseOptions(int argc, char **argv, int start)
       o.width = parseDim(next(), o.width);
     else if (a == "--height")
       o.height = parseDim(next(), o.height);
+    else if (a == "--accumulation")
+      o.accumulationFrames = parseDim(next(), o.accumulationFrames);
+    else if (a == "--no-accumulation")
+      o.accumulationFrames = 1;
+    else if (a == "--denoise")
+      o.denoise = true;
     else if (a == "--stdin")
       o.useStdin = true;
     else if (a == "--type")
@@ -145,6 +174,19 @@ std::set<std::string> deviceExtensions(anari::Library lib, const char *deviceTyp
   for (int i = 0; ext && ext[i]; ++i)
     out.insert(ext[i]);
   return out;
+}
+
+// --denoise sets the renderer's "denoise" parameter unconditionally; warn (but
+// still proceed) when the device does not advertise ANARI_KHR_RENDERER_DENOISE,
+// since the parameter is then ignored or device-defined.
+void warnIfDenoiseUnsupported(const std::string &deviceName,
+    const std::set<std::string> &features,
+    bool denoiseRequested)
+{
+  if (denoiseRequested && !features.count("ANARI_KHR_RENDERER_DENOISE"))
+    std::cerr << "warning: device '" << deviceName
+              << "' does not report ANARI_KHR_RENDERER_DENOISE; setting the "
+                 "renderer 'denoise' parameter anyway\n";
 }
 
 // Load a device library and create its default device, or null on failure.
@@ -307,11 +349,14 @@ int cmdGenerate(const Options &o)
   if (!d)
     return 2;
   const auto features = deviceExtensions(lib, "default");
+  warnIfDenoiseUnsupported(deviceName, features, o.denoise);
 
   auto catalog = buildCatalog();
   RunOptions ro;
   ro.width = o.width;
   ro.height = o.height;
+  ro.accumulationFrames = o.accumulationFrames;
+  ro.denoise = o.denoise;
   ro.device = {deviceName, "default", "default"};
   Runner runner(d, Workdir(o.workdir), ro);
 
@@ -336,11 +381,14 @@ int cmdRun(const Options &o)
   if (!d)
     return 2;
   const auto features = deviceExtensions(lib, "default");
+  warnIfDenoiseUnsupported(o.device, features, o.denoise);
 
   auto catalog = buildCatalog();
   RunOptions ro;
   ro.width = o.width;
   ro.height = o.height;
+  ro.accumulationFrames = o.accumulationFrames;
+  ro.denoise = o.denoise;
   ro.device = {o.device, "default", "default"};
   Runner runner(d, Workdir(o.workdir), ro);
 

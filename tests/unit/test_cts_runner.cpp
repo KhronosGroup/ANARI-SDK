@@ -277,6 +277,62 @@ TEST_CASE(
   anari::unloadLibrary(lib);
 }
 
+TEST_CASE(
+    "accumulation gates off when unsupported but denoise is applied "
+    "unconditionally; the sidecar records the effective settings",
+    "[cts][runner][helide]")
+{
+  anari::Library lib = anari::loadLibrary("helide", statusFunc, nullptr);
+  if (!lib) {
+    WARN("helide library not available; skipping accumulation/denoise test");
+    return;
+  }
+  anari::Device d = anari::newDevice(lib, "default");
+  REQUIRE(d != nullptr);
+  anari::commitParameters(d, d);
+
+  const auto root =
+      std::filesystem::temp_directory_path() / "cts_accum_denoise_test";
+  std::error_code ec;
+  std::filesystem::remove_all(root, ec);
+
+  Catalog cat;
+  makeTest("geometry", "sphere").build(buildSphereWorld).registerInto(cat);
+
+  // Request accumulation + denoise, but helide advertises neither extension.
+  const std::set<std::string> features; // helide: no accumulation, no denoise
+  RunOptions opts;
+  opts.width = 32;
+  opts.height = 32;
+  opts.accumulationFrames = 16; // CLI default; gated off here (no extension)
+  opts.denoise = true; //          applied even though helide lacks the extension
+  opts.device = {"helide", "default", "default"};
+
+  Runner runner(d, Workdir(root), opts);
+
+  // Ground truth then a run. Accumulation gates off (-> 1). Denoise is set on
+  // the renderer regardless, but helide ignores the unknown param, so a
+  // candidate identical to its own ground truth still passes.
+  auto gen = runner.generate(cat, Filter{""}, features);
+  CHECK(gen.passed == 1);
+  auto s = runner.run(cat, Filter{""}, features);
+  CHECK(s.total == 1);
+  CHECK(s.passed == 1);
+  CHECK(s.failed == 0);
+
+  // The sidecar detail records the effective settings: accumulation resolved to
+  // 1 (gated off, no extension) but denoise stays on (applied unconditionally).
+  Case sph;
+  sph.category = "geometry";
+  sph.testName = "sphere";
+  const auto text = readFile(Workdir(root).sidecarPath(sph));
+  CHECK(text.find("accumulation=1, denoise=on") != std::string::npos);
+
+  std::filesystem::remove_all(root, ec);
+  anari::release(d, d);
+  anari::unloadLibrary(lib);
+}
+
 TEST_CASE("Runner isolates a throwing case and completes the rest",
     "[cts][runner][helide]")
 {
