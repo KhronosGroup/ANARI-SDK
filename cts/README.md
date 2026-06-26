@@ -195,4 +195,5 @@ makeTest("geometry", "sphere")
 
 The harness lives in `src/anari_test_scenes/cts/` (`Axis`, `Case`, `Catalog`,
 `Expansion`, `BuildContext`, `Runner`, `Metrics`, `Workdir`, `Sidecar`, …); the
-CLI is `cts/tool/main.cpp`. See [AGENTS.md](AGENTS.md) for a map of the source.
+CLI entry point is `cts/src/main.cpp`, which links `anari_test_scenes`. See
+[AGENTS.md](AGENTS.md) for a map of the source.

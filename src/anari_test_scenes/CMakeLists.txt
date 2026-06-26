@@ -114,27 +114,9 @@ generate_export_header(${PROJECT_NAME}
   EXPORT_MACRO_NAME "ANARI_TEST_SCENES_INTERFACE"
 )
 
-## CTS conformance tool ##
-
-# The self-contained `anariCts` command-line runner is now the canonical CTS
-# build (it replaced the legacy Python/pybind tool). Built when the CTS is
-# requested (BUILD_CTS) or for the test suite (BUILD_TESTING).
-if (BUILD_CTS OR BUILD_TESTING)
-  add_executable(anariCts cts/tool/main.cpp)
-  target_link_libraries(anariCts PRIVATE ${PROJECT_NAME})
-  target_compile_features(anariCts PRIVATE cxx_std_20)
-
-  if (BUILD_CTS)
-    install(TARGETS anariCts RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-  endif()
-endif()
-
-if (BUILD_TESTING)
-  # Device-free smoke tests of the tool surface. (Device-backed run/generate
-  # are covered by the runner integration test.)
-  add_test(NAME cts_tool::list COMMAND anariCts list)
-  add_test(NAME cts_tool::query-metadata COMMAND anariCts query-metadata)
-endif()
+# This library carries the CTS harness, runner, and Test definitions (cts/*),
+# which the anariCts CLI binary links. That binary is built in cts/ (its entry
+# point, cts/src/main.cpp, links this library).
 
 ## Installation ##
 

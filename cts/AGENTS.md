@@ -67,7 +67,7 @@ test's `<category>/<test>` id. `run` and `report` exit non-zero on any failure.
 ## Architecture
 
 ```
-anariCts                 CLI dispatch: cts/tool/main.cpp
+anariCts                 CLI dispatch: cts/src/main.cpp (links anari_test_scenes)
   Catalog                 in-C++ registry of every Test (one per-category file)
   Runner                  build world -> render each Channel -> generate GT or score vs GT -> sidecar
   Metrics                 SSIM / PSNR (single source of metrics, ADR-0004)
