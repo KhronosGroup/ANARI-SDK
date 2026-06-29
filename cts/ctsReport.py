@@ -61,23 +61,45 @@ def iter_sidecars(workdir):
 def load_results(workdir):
     """All sidecars in a workdir, keyed by 'category/test/case'."""
     out = {}
-    for _, data in iter_sidecars(workdir):
+    sources = {}
+    for path, data in iter_sidecars(workdir):
         key = f"{data.get('category','')}/{data.get('test','')}/{data.get('case','')}"
+        if key in out:
+            print(
+                f"warning: duplicate logical Case key {key} in {path}; "
+                f"keeping {sources[key]}",
+                file=sys.stderr,
+            )
+            continue
         out[key] = data
+        sources[key] = path
     return out
 
 
 def run_device(results):
-    """The device identity shared by a run's sidecars (schema v2), or None.
+    """The consistent device identity in a run's sidecars, or None.
 
-    Every sidecar in one workdir is produced by the same device, so the first
-    one carrying a populated `device` object answers for the whole run.
+    Schema-v2 sidecars should all name the same device. Mixed identities are
+    diagnosed instead of labeling the run with whichever sidecar was read first.
     """
+    devices = {}
     for data in results.values():
         device = data.get("device")
         if isinstance(device, dict) and device.get("library"):
-            return device
-    return None
+            identity = (
+                device["library"],
+                device.get("device", "default"),
+                device.get("renderer", "default"),
+            )
+            devices.setdefault(identity, device)
+    if len(devices) > 1:
+        labels = ", ".join(
+            f"{library} ({device}/{renderer})"
+            for library, device, renderer in sorted(devices)
+        )
+        print(f"warning: mixed device identities in one run: {labels}", file=sys.stderr)
+        return None
+    return next(iter(devices.values()), None)
 
 
 def device_label(results, fallback):
@@ -179,7 +201,8 @@ def diff_results(results_a, results_b):
 
     Each is scored against the same ground truth, so a fair comparison is the
     arithmetic of their sidecars: verdict differences, per-channel metric deltas
-    (b - a), timing deltas, and cases present in only one run. This never
+    (b - a), and cases present in only one run. Duration deltas accompany Cases
+    with semantic changes but do not create changes on their own. This never
     re-compares pixels.
     """
     keys = sorted(set(results_a) | set(results_b))
@@ -215,6 +238,16 @@ def diff_results(results_a, results_b):
     return diff
 
 
+def has_differences(diff):
+    """Whether a device diff contains any semantic result differences."""
+    return bool(
+        diff["only_in_a"]
+        or diff["only_in_b"]
+        or diff["verdict_changed"]
+        or any(entry["channels"] for entry in diff["cases"])
+    )
+
+
 def write_text_diff(name_a, name_b, diff, out=sys.stdout):
     print(f"CTS device diff: A={name_a}  B={name_b}", file=out)
     if diff["only_in_a"]:
@@ -241,9 +274,7 @@ def write_text_diff(name_a, name_b, diff, out=sys.stdout):
                     f"{c['a']} -> {c['b']} ({ds})",
                     file=out,
                 )
-    if not (
-        diff["only_in_a"] or diff["only_in_b"] or diff["verdict_changed"] or metric_changes
-    ):
+    if not has_differences(diff):
         print("  no differences", file=out)
 
 
@@ -396,12 +427,7 @@ def main(argv=None):
             sys.stdout.write("\n")
         else:
             write_text_diff(label_a, label_b, diff)
-        changed = bool(
-            diff["only_in_a"]
-            or diff["only_in_b"]
-            or diff["verdict_changed"]
-        )
-        return 1 if changed else 0
+        return 1 if has_differences(diff) else 0
 
     return 2
 

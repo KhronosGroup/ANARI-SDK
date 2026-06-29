@@ -158,7 +158,9 @@ A device diff is manifest arithmetic over the two sidecar trees — verdict
 differences, per-channel metric deltas, and cases present in only one run. It
 compares each device against the common ground truth; it does not re-compare
 pixels between the two devices (ADR-0004). `report` exits non-zero if any Case
-failed; `diff` exits non-zero if the two runs differ.
+failed; `diff` exits non-zero if the two runs differ. Rendering duration is
+intentionally excluded from this semantic comparison, so timing-only changes do
+not produce differences or a non-zero exit status.
 
 ## Comparison metrics
 

@@ -38,6 +38,15 @@ if (BUILD_TESTING)
   # are covered by the runner integration test in tests/unit.)
   add_test(NAME cts_tool::list COMMAND anariCts list)
   add_test(NAME cts_tool::query-metadata COMMAND anariCts query-metadata)
+
+  find_package(Python3 3.9 REQUIRED COMPONENTS Interpreter)
+  add_test(
+    NAME cts_report::contract
+    COMMAND ${Python3_EXECUTABLE} -m unittest cts.test_cts_report
+  )
+  set_tests_properties(cts_report::contract PROPERTIES
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+  )
 endif()
 
 ## glTF sample assets ##

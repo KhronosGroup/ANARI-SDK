@@ -142,5 +142,7 @@ failed Case.
 
 A **device diff** is manifest arithmetic over two sidecar trees that were each
 scored against the same ground truth: verdict differences, per-Channel metric
-deltas, timing deltas, and Cases present in only one run. It does not re-compare
-pixels between the two devices (`docs/adr/0004`).
+deltas, and Cases present in only one run. Rendering duration is intentionally
+excluded from semantic equality, so timing-only changes do not make repeated
+runs differ. It does not re-compare pixels between the two devices
+(`docs/adr/0004`).
