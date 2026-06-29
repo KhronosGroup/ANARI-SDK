@@ -4,12 +4,15 @@
 #include "catch.hpp"
 // cts harness
 #include "cts/BuildContext.h"
+#include "cts/BuiltinTests.h"
 #include "cts/Case.h"
 #include "cts/Catalog.h"
 #include "cts/Expansion.h"
 #include "cts/Filter.h"
 #include "cts/TestBuilder.h"
 #include "cts/Value.h"
+// anari
+#include "anari/frontend/anari_extension_utility.h"
 // std
 #include <set>
 #include <string>
@@ -275,6 +278,42 @@ TEST_CASE(
 
 // Feature gating
 // /////////////////////////////////////////////////////////////////
+
+TEST_CASE("generated extension utility exposes canonical extension names",
+    "[cts][features]")
+{
+  std::set<std::string> names;
+  size_t nameCount = 0;
+  for (auto name = anariGetExtensionNames(); *name; ++name, ++nameCount)
+    names.insert(*name);
+
+  CHECK(names.size() == nameCount);
+  CHECK(names.count("ANARI_KHR_FRAME_ACCUMULATION") == 1);
+  CHECK(names.count("ANARI_KHR_GEOMETRY_ISOSURFACE") == 1);
+  CHECK(names.count("ANARI_KHR_INSTANCE_TRANSFORM_ARRAY") == 1);
+  CHECK(names.count("ANARI_KHR_VOLUME_TRANSFER_FUNCTION1D") == 1);
+  CHECK(names.count("ANARI_KHR_PROGRESSIVE_RENDERING") == 0);
+  CHECK(names.count("ANARI_KHR_VOLUME_SCIVIS") == 0);
+}
+
+TEST_CASE("built-in Tests require only canonical extensions",
+    "[cts][catalog][features]")
+{
+  std::set<std::string> canonicalNames;
+  for (auto name = anariGetExtensionNames(); *name; ++name)
+    canonicalNames.insert(*name);
+
+  Catalog catalog;
+  registerBuiltinTests(catalog);
+  for (const auto &test : catalog.tests()) {
+    for (const auto &feature : test.requiredFeatures) {
+      DYNAMIC_SECTION(test.id() << " requires canonical feature " << feature)
+      {
+        CHECK(canonicalNames.count(feature) == 1);
+      }
+    }
+  }
+}
 
 TEST_CASE("isSupported requires every feature to be present", "[cts][features]")
 {

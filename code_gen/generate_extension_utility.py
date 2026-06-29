@@ -21,15 +21,26 @@ import pathlib
 """
 
 class ExtensionUtilityGenerator:
-    def __init__(self, anari):
+    def __init__(self, anari, extension_names):
         self.anari = anari
         self.extensions = ["ANARI_"+f for f in self.anari["extensions"]]
+        self.extension_names = extension_names
 
     def generate_extension_header(self):
         code = "typedef struct {\n"
         for extension in self.extensions:
             code += "   int %s;\n"%extension
         code += "} ANARIExtensions;\n"
+        code += "// Return all extension identifiers defined by the API JSON inputs.\n"
+        code += "// The returned array is terminated by a null pointer.\n"
+        code += "static inline const char *const *anariGetExtensionNames(void) {\n"
+        code += "    static const char *const names[] = {\n"
+        for extension in self.extension_names:
+            code += "        \"%s\",\n"%extension
+        code += "        0\n"
+        code += "    };\n"
+        code += "    return names;\n"
+        code += "}\n"
         code += "int anariGetDeviceExtensionStruct(ANARIExtensions *extensions, ANARILibrary library, const char *deviceName);\n"
         code += "int anariGetObjectExtensionStruct(ANARIExtensions *extensions, ANARIDevice device, ANARIDataType objectType, const char *objectName);\n"
         code += "int anariGetInstanceExtensionStruct(ANARIExtensions *extensions, ANARIDevice device, ANARIObject object);\n"
@@ -104,8 +115,18 @@ for x in dependencies:
         merge_anari.tag_extension(extension)
         merge_anari.merge(device, extension)
 
+def canonical_extension_names(json_paths):
+    names = set()
+    for path in json_paths:
+        with open(path) as source:
+            definition = json.load(source)
+        if definition.get("info", {}).get("type") == "extension":
+            names.add("ANARI_" + definition["info"]["name"])
+    return sorted(names)
+
+
 #generate files
-gen = ExtensionUtilityGenerator(device)
+gen = ExtensionUtilityGenerator(device, canonical_extension_names(jsons))
 
 
 def begin_namespaces(args):
@@ -132,4 +153,3 @@ with open(args.outdir/"anari_extension_utility.h", mode='w') as f:
     f.write("#pragma once\n")
     f.write("#include <anari/anari.h>\n")
     f.write(gen.generate_extension_header())
-

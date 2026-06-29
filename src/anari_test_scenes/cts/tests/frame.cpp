@@ -172,6 +172,7 @@ BehaviorResult checkProgressiveRendering(anari::Device d,
 {
   auto frame = behaviorFrame(d, world, camera, renderer, w, h);
   const auto f = frame.get();
+  anari::setParameter(d, f, "accumulation", true);
   anari::commitParameters(d, f);
 
   auto snapshot = [&]() {
@@ -329,14 +330,7 @@ void registerFrameTests(Catalog &catalog)
           auto field = newStructuredRegularField(d, {3, 3, 3});
           anari::setParameter(d, field, "origin", float3(originX, -1.f, -1.f));
           anari::commitParameters(d, field);
-          auto vol = anari::newObject<anari::Volume>(d, "scivis");
-          anari::setParameter(d, vol, "value", field);
-          std::vector<float3> col = {{0.f, 0.f, 1.f}, {1.f, 0.f, 0.f}};
-          std::vector<float> op = {0.f, 1.f};
-          anari::setAndReleaseParameter(
-              d, vol, "color", anari::newArray1D(d, col.data(), col.size()));
-          anari::setAndReleaseParameter(
-              d, vol, "opacity", anari::newArray1D(d, op.data(), op.size()));
+          auto vol = makeVolume(d, field);
           anari::setParameter(d, vol, "id", id);
           anari::commitParameters(d, vol);
           anari::release(d, field);
@@ -354,7 +348,7 @@ void registerFrameTests(Catalog &catalog)
       .channels({Channel::ObjectId})
       .requireFeatures({"ANARI_KHR_FRAME_CHANNEL_OBJECT_ID",
           "ANARI_KHR_SPATIAL_FIELD_STRUCTURED_REGULAR",
-          "ANARI_KHR_VOLUME_SCIVIS"})
+          "ANARI_KHR_VOLUME_TRANSFER_FUNCTION1D"})
       .registerInto(catalog);
 
   // ---- instance id channel --------------------------------------------------
@@ -388,7 +382,7 @@ void registerFrameTests(Catalog &catalog)
         return triangleSurfaceWorld(ctx, float3(0.7f, 0.5f, 0.3f), 1);
       })
       .behavior(checkProgressiveRendering)
-      .requireFeature("ANARI_KHR_PROGRESSIVE_RENDERING")
+      .requireFeature("ANARI_KHR_FRAME_ACCUMULATION")
       .registerInto(catalog);
 }
 

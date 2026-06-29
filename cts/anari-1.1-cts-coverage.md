@@ -4,7 +4,7 @@ Source inputs:
 
 - `/home/jamstutz/Downloads/ANARI-1.1.pdf`, title `ANARI(TM) 1.1.0 - Specification`, generated October 8, 2025.
 - ANARI 1.1 extension semantics from PDF section 2.4, object chapters 4-5, and Appendix B.
-- Active CTS catalog from `_build/cts-runner/anariCts query-metadata`, after rebuilding `_build/cts-runner` from the current checkout.
+- Active CTS catalog from `/home/jamstutz/build/codex/ANARI-SDK/anariCts query-metadata`, after rebuilding that tree from the current checkout.
 - CTS source under `src/anari_test_scenes/cts/tests/`.
 
 Spec premise: section 2.4 says extensions are observable ANARI API behavior, usually object subtypes but also parameter behavior, function pre/post conditions, or property availability. Appendix B lists 54 KHR extensions in ANARI 1.1. The active CTS catalog has 83 tests and 314 cases.
@@ -27,13 +27,16 @@ No active `gltf/*` tests registered in this build, even with `CTS_ENABLE_GLTF=ON
 
 ## Extensions Currently Tested
 
-The CTS currently gates tests on 35 ANARI 1.1 extension names.
+The CTS currently gates tests on 36 ANARI 1.1 extension names. A unit test
+validates every active gate against the canonical names emitted by the extension
+utility generator.
 
 | Extension | CTS coverage |
 | --- | --- |
 | `KHR_CAMERA_OMNIDIRECTIONAL` | `camera/omnidirectional` exercises `layout` with default and `equirectangular`. |
 | `KHR_CAMERA_ORTHOGRAPHIC` | `camera/orthographic` exercises `aspect`, `height`, `near`, `far`. |
 | `KHR_CAMERA_PERSPECTIVE` | `camera/camera_general` exercises `direction`, `up`, `imageRegion`; `camera/perspective` exercises `fovy`, `aspect`, `near`, `far`. |
+| `KHR_FRAME_ACCUMULATION` | `frame/progressive_rendering` opts into frame accumulation and verifies that repeated renders refine the image. |
 | `KHR_FRAME_CHANNEL_ALBEDO` | `frame/frame_albedo_channel` exercises `UFIXED8_VEC3`, `UFIXED8_RGB_SRGB`, `FLOAT32_VEC3`. |
 | `KHR_FRAME_CHANNEL_INSTANCE_ID` | `frame/frame_instanceID_channel` exercises explicit instance IDs. |
 | `KHR_FRAME_CHANNEL_NORMAL` | `frame/frame_normal_channel` exercises `FIXED16_VEC3`, `FLOAT32_VEC3`. |
@@ -65,22 +68,12 @@ The CTS currently gates tests on 35 ANARI 1.1 extension names.
 | `KHR_SAMPLER_PRIMITIVE` | `sampler/primitive` exercises 1-4 component arrays and offset. |
 | `KHR_SAMPLER_TRANSFORM` | `sampler/transform` exercises transform and outOffset. |
 | `KHR_SPATIAL_FIELD_STRUCTURED_REGULAR` | `volume/volume`, `geometry/isosurface`, and frame object-ID volume support use structuredRegular fields. |
-| `KHR_VOLUME_TRANSFER_FUNCTION1D` | `volume/volume` exercises value field, filter/origin/spacing, valueRange, color, opacity, unitDistance. |
+| `KHR_VOLUME_TRANSFER_FUNCTION1D` | `volume/volume` exercises value field, filter/origin/spacing, valueRange, color, opacity, unitDistance; `frame/frame_objectID_channel_volume` exercises object IDs on `transferFunction1D` volumes. |
 
-## Invalid Or Drifted CTS Gates
-
-These are active CTS requirements but are not ANARI 1.1 Appendix B extension names.
-
-| Gate | Location | Issue |
-| --- | --- | --- |
-| `ANARI_KHR_PROGRESSIVE_RENDERING` | `frame/progressive_rendering` | ANARI 1.1 uses `KHR_FRAME_ACCUMULATION` and the frame parameter is `accumulation`. The test intention is valid, but devices reporting the spec name will be skipped incorrectly. |
-| `ANARI_KHR_VOLUME_SCIVIS` | `frame/frame_objectID_channel_volume` | ANARI 1.1 uses `KHR_VOLUME_TRANSFER_FUNCTION1D`; the test also constructs subtype `scivis`, while the spec subtype is `transferFunction1D`. |
-
-Related repo definition drift:
+## Repository Extension Definition Drift
 
 - ANARI 1.1 names `KHR_CAMERA_ROLLING_SHUTTER`; `code_gen/api/khr_camera_rolling_shutter.json` has `info.name = KHR_CAMERA_SHUTTER`, so the generated extension utility has no `ANARI_KHR_CAMERA_ROLLING_SHUTTER` field.
 - ANARI 1.1 names `KHR_SPATIAL_FIELD_STRUCTURED_REGULAR_FILTER_CUBIC`; the repo JSON/header use `KHR_SPATIAL_FIELD_STRUCTURED_REGULAR_CUBIC`.
-- ANARI 1.1 includes `KHR_RENDERER_DENOISE`; there is no `code_gen/api/khr_renderer_denoise.json` and no generated extension utility field for it.
 
 ## ANARI 1.1 Extensions Not Tested
 
@@ -94,14 +87,13 @@ Related repo definition drift:
 | `KHR_CAMERA_STEREO` | `stereoMode` values `left`, `right`, `sideBySide`, `topBottom`; `interpupillaryDistance`. |
 | `KHR_DATA_PARALLEL_MPI` | Device `mpiCommunicator`. This is hard to image-compare, but still query/behavior-testable. |
 | `KHR_DEVICE_SYNCHRONIZATION` | Relaxed API synchronization semantics. Could be query/behavior tested, not image tested. |
-| `KHR_FRAME_ACCUMULATION` | Intended by `frame/progressive_rendering`, but the active gate is the non-spec `ANARI_KHR_PROGRESSIVE_RENDERING`; it also does not set/test the `accumulation` parameter. |
 | `KHR_GEOMETRY_QUAD_MOTION_DEFORMATION` | Quad `vertex.position`, `vertex.normal`, `vertex.tangent` arrays-of-arrays plus `time`. |
 | `KHR_GEOMETRY_TRIANGLE_MOTION_DEFORMATION` | Triangle deformation arrays-of-arrays plus `time`. |
 | `KHR_INSTANCE_TRANSFORM_ARRAY` | Matrix-array transforms and array instance IDs on transform instances. |
 | `KHR_INSTANCE_MOTION_TRANSFORM` | `motionTransform` instance subtype, `motion.transform`, `time`, and shutter interaction. |
 | `KHR_INSTANCE_MOTION_SCALE_ROTATION_TRANSLATION` | `motionScaleRotationTranslation` subtype and decomposed motion arrays. |
 | `KHR_LIGHT_PRIMARY_VISIBILITY` | `visible` behavior for area/environment lights. |
-| `KHR_RENDERER_DENOISE` | Renderer `denoise` boolean; absent from repo codegen. |
+| `KHR_RENDERER_DENOISE` | Renderer `denoise` boolean; the runner can request it, but no dedicated Test verifies the behavior. |
 | `KHR_SPATIAL_FIELD_NANOVDB` | `nanovdb` field subtype, `data`, and filter. |
 | `KHR_SPATIAL_FIELD_STRUCTURED_REGULAR_FILTER_CUBIC` | `structuredRegular.filter = cubic`; blocked by repo naming drift. |
 | `KHR_SPATIAL_FIELD_UNSTRUCTURED` | `unstructured` field subtype and its vertex/cell topology/data parameters. |
@@ -116,9 +108,9 @@ Sampler tests cover filter, wrap, transform, offsets, and primitive sampler dime
 
 Camera tests cover perspective, orthographic, and omnidirectional basics, but do not cover depth of field, shutter, rolling shutter, stereo, or motion transformation. General `position/direction/up/imageRegion` is only tested through a perspective camera.
 
-Frame tests cover color/depth plus albedo/normal/primitive/object/instance ID channels and callback behavior. Gaps are format breadth, default ID behavior after the ANARI 1.1 change to no implicit IDs, `UINT64` ID paths, frame accumulation under the spec extension name, and the invalid volume-object-ID subtype/gate.
+Frame tests cover color/depth plus albedo/normal/primitive/object/instance ID channels, callback behavior, and opt-in frame accumulation. Gaps are format breadth, default ID behavior after the ANARI 1.1 change to no implicit IDs, and `UINT64` ID paths.
 
-Renderer tests cover ambient light, background color, and background image. They do not cover denoise because the repo lacks the extension definition, nor do they test precedence/typing when both background color and image are supported.
+Renderer tests cover ambient light, background color, and background image. They do not have a dedicated denoise Test, nor do they test precedence/typing when both background color and image are supported.
 
 Light tests cover the main subtype parameter surfaces for directional, point, spot, quad, ring, and hdri lights. Gaps are `KHR_LIGHT_PRIMARY_VISIBILITY`, HDRI `color`/`radiance`/`layout` variations beyond the helper default, and broader energy-unit/default interactions.
 
@@ -128,8 +120,7 @@ Instance coverage only tests the basic `transform` subtype with one explicit mat
 
 ## Priority Fix List
 
-1. Rename/fix gates: replace `ANARI_KHR_PROGRESSIVE_RENDERING` with `ANARI_KHR_FRAME_ACCUMULATION`, replace `ANARI_KHR_VOLUME_SCIVIS`/`scivis` with `ANARI_KHR_VOLUME_TRANSFER_FUNCTION1D`/`transferFunction1D`, and align generated extension names for rolling shutter and cubic structuredRegular filtering.
-2. Add missing codegen definition for `KHR_RENDERER_DENOISE`.
-3. Add focused CTS tests for the 1.1 new extensions: MPI query/behavior, isosurface already exists, transform arrays, light primary visibility, denoise, nanovdb, cubic filter, unstructured field.
-4. Add motion/shutter family tests as a group: camera shutter, camera rolling shutter, camera motion transformation, triangle/quad deformation, instance motion transform, and instance decomposed motion.
-5. Deepen typed-format coverage for geometry attributes/colors, samplers, frame channels, volume color/valueRange, and ID channels.
+1. Align generated extension names for rolling shutter and cubic structuredRegular filtering.
+2. Add focused CTS tests for the 1.1 new extensions: MPI query/behavior, transform arrays, light primary visibility, denoise, nanovdb, cubic filter, and unstructured field; isosurface already has a Test.
+3. Add motion/shutter family tests as a group: camera shutter, camera rolling shutter, camera motion transformation, triangle/quad deformation, instance motion transform, and instance decomposed motion.
+4. Deepen typed-format coverage for geometry attributes/colors, samplers, frame channels, volume color/valueRange, and ID channels.

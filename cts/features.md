@@ -102,9 +102,9 @@ anariCts check-properties helide --filter frame
 [skip] frame/frame_albedo_channel  missing: ANARI_KHR_FRAME_CHANNEL_ALBEDO
 [skip] frame/frame_normal_channel  missing: ANARI_KHR_FRAME_CHANNEL_NORMAL
 [run ] frame/frame_completion_callback
-[skip] frame/progressive_rendering  missing: ANARI_KHR_PROGRESSIVE_RENDERING
+[skip] frame/progressive_rendering  missing: ANARI_KHR_FRAME_ACCUMULATION
 ...
-12 runnable, 4 skipped on 'helide'
+13 runnable, 3 skipped on 'helide'
 ```
 
 ## List the extensions a device implements
