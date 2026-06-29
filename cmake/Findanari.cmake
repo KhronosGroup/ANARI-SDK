@@ -16,6 +16,7 @@ set(ANARI_LOCAL_TARGETS
   anari_backend
   anari
   anari_static
+  anari_device_introspection
   anari_test_scenes
   helium
 )

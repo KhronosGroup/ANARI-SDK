@@ -63,7 +63,7 @@ add_executable(anariTutorialInitFromEnv anariTutorialInitFromEnv.c)
 target_link_libraries(anariTutorialInitFromEnv PRIVATE anari::anari)
 
 add_executable(anariInfo anariInfo.cpp)
-target_link_libraries(anariInfo PRIVATE anari::anari_static)
+target_link_libraries(anariInfo PRIVATE anari::anari_device_introspection)
 
 option(USE_MPI "Enable MPI and Distributed Tutorial")
 if (USE_MPI)

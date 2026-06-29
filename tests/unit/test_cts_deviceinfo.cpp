@@ -2,14 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "catch.hpp"
-// cts
-#include "cts/DeviceInfo.h"
 // anari
 #include "anari/anari_cpp.hpp"
+#include "anari/frontend/anari_device_introspection.h"
 // std
+#include <cctype>
 #include <string>
 
-using namespace anari::cts;
+namespace introspection = anari::introspection;
 
 namespace {
 
@@ -27,9 +27,24 @@ bool has(const std::string &haystack, const std::string &needle)
   return haystack.find(needle) != std::string::npos;
 }
 
+std::string normalizedParameters(const std::string &report)
+{
+  const auto begin = report.find("Parameters:");
+  if (begin == std::string::npos)
+    return {};
+
+  std::string normalized;
+  for (auto i = begin; i < report.size(); ++i) {
+    const unsigned char c = report[i];
+    if (!std::isspace(c) && c != '"')
+      normalized += static_cast<char>(c);
+  }
+  return normalized;
+}
+
 } // namespace
 
-TEST_CASE("queryDeviceInfo introspects device subtypes and parameters",
+TEST_CASE("device introspection reports named subtypes and parameters",
     "[cts][deviceinfo][helide]")
 {
   anari::Library lib = anari::loadLibrary("helide", statusFunc, nullptr);
@@ -41,45 +56,88 @@ TEST_CASE("queryDeviceInfo introspects device subtypes and parameters",
   REQUIRE(d != nullptr);
   anari::commitParameters(d, d);
 
-  SECTION("full report names subtypes and a parameters section")
-  {
-    const std::string out = queryDeviceInfo(d);
-    CHECK(has(out, "SDK version:"));
-    CHECK(has(out, "Subtypes:"));
-    CHECK(has(out, "Parameters:"));
-    // Subtypes every reference device advertises.
-    CHECK(has(out, "perspective")); // camera
-    CHECK(has(out, "triangle")); // geometry
-    // A subtype's parameter is listed with its ANARI type.
-    CHECK(has(out, "CAMERA perspective:"));
-  }
+  const auto info = introspection::queryDeviceInfo(d);
+  const std::string out = introspection::formatDeviceInfo(info);
+  CHECK(has(out, "SDK version:"));
+  CHECK(has(out, "Subtypes:"));
+  CHECK(has(out, "Parameters:"));
+  CHECK(has(out, "perspective"));
+  CHECK(has(out, "triangle"));
+  CHECK(has(out, "ANARI_CAMERA perspective:"));
 
-  SECTION("skipParameters lists subtypes but omits the parameters section")
-  {
-    const std::string out = queryDeviceInfo(d, "", "", /*skipParameters*/ true);
-    CHECK(has(out, "Subtypes:"));
-    CHECK(has(out, "perspective"));
-    CHECK_FALSE(has(out, "Parameters:"));
-  }
+  introspection::QueryOptions detailedOptions;
+  detailedOptions.typeFilter = "ANARI_CAMERA";
+  detailedOptions.subtypeFilter = "perspective";
+  detailedOptions.includeParameterInfo = true;
+  const auto detailedInfo = introspection::queryDeviceInfo(d, detailedOptions);
+  const std::string detailed = introspection::formatDeviceInfo(detailedInfo);
+  CHECK(has(detailed, "default = 0.0, 0.0, -1.0"));
+  CHECK(has(detailed, "default = 1.0"));
+  CHECK(has(detailed, "use = point"));
+  CHECK(has(detailed, "description = \"main viewing direction\""));
+  CHECK(has(detailed, "sourceExtension = KHR_CAMERA_PERSPECTIVE"));
 
-  SECTION("type filter restricts output to the matching object type")
-  {
-    const std::string out = queryDeviceInfo(d, "CAMERA");
-    CHECK(has(out, "CAMERA"));
-    CHECK(has(out, "perspective"));
-    // The parameters section should not list other object types' subtypes.
-    CHECK_FALSE(has(out, "GEOMETRY triangle:"));
-  }
+  introspection::FormatOptions anariInfoFormat;
+  anariInfoFormat.indent = "   ";
+  anariInfoFormat.parameterNameWidth = 25;
+  anariInfoFormat.parameterTypeWidth = 25;
+  anariInfoFormat.includeSdkVersion = false;
+  anariInfoFormat.includeFrameChannels = true;
+  anariInfoFormat.quoteStringValues = true;
+  const std::string anariInfoReport =
+      introspection::formatDeviceInfo(detailedInfo, anariInfoFormat);
+  CHECK(has(anariInfoReport, "use = \"point\""));
+  CHECK(has(detailed, "use = point"));
+  CHECK(
+      normalizedParameters(anariInfoReport) == normalizedParameters(detailed));
 
-  SECTION("info mode is a superset of the plain listing")
-  {
-    const std::string plain = queryDeviceInfo(d);
-    const std::string detailed = queryDeviceInfo(d, "", "", false, true);
-    // Detailed output keeps every line the plain listing has (parameters are
-    // still named) and only adds per-parameter info, so it is at least as long.
-    CHECK(detailed.size() >= plain.size());
-    CHECK(has(detailed, "CAMERA perspective:"));
-  }
+  introspection::QueryOptions geometryOptions;
+  geometryOptions.typeFilter = "ANARI_GEOMETRY";
+  geometryOptions.subtypeFilter = "cone";
+  geometryOptions.includeParameterInfo = true;
+  const std::string geometry = introspection::formatDeviceInfo(
+      introspection::queryDeviceInfo(d, geometryOptions));
+  CHECK(has(geometry, "default = none"));
+  CHECK(has(geometry, "value =\n               \"none\""));
+  CHECK(has(geometry, "elementType =\n               ANARI_FLOAT32_VEC3"));
+  CHECK(has(geometry, "required"));
+
+  introspection::QueryOptions frameOptions;
+  frameOptions.typeFilter = "ANARI_FRAME";
+  frameOptions.includeParameterInfo = true;
+  const std::string frame = introspection::formatDeviceInfo(
+      introspection::queryDeviceInfo(d, frameOptions));
+  CHECK(has(frame, "ANARI_FRAME:"));
+  CHECK(has(frame, "value =\n               ANARI_UFIXED8_VEC4"));
+  CHECK(has(frame, "sourceExtension = KHR_FRAME_CHANNEL_PRIMITIVE_ID"));
+
+  introspection::QueryOptions rendererOptions;
+  rendererOptions.typeFilter = "ANARI_RENDERER";
+  rendererOptions.subtypeFilter = "default";
+  rendererOptions.includeParameterInfo = true;
+  const std::string renderer = introspection::formatDeviceInfo(
+      introspection::queryDeviceInfo(d, rendererOptions));
+  CHECK(has(renderer, "default = 4"));
+  CHECK(has(renderer, "minimum = 1"));
+  CHECK(has(renderer, "maximum = 128"));
+
+  introspection::QueryOptions filteredOptions;
+  filteredOptions.typeFilter = "ANARI_CAMERA";
+  filteredOptions.subtypeFilter = "perspective";
+  const std::string filtered = introspection::formatDeviceInfo(
+      introspection::queryDeviceInfo(d, filteredOptions));
+  CHECK(has(filtered, "ANARI_CAMERA perspective:"));
+  CHECK_FALSE(has(filtered, "ANARI_CAMERA orthographic:"));
+  CHECK_FALSE(has(filtered, "ANARI_GEOMETRY:"));
+  CHECK_FALSE(has(filtered, "ANARI_GEOMETRY triangle:"));
+  CHECK_FALSE(has(filtered, "ANARI_FRAME:"));
+
+  introspection::QueryOptions subtypeOnlyOptions;
+  subtypeOnlyOptions.includeParameters = false;
+  const std::string subtypeOnly = introspection::formatDeviceInfo(
+      introspection::queryDeviceInfo(d, subtypeOnlyOptions));
+  CHECK(has(subtypeOnly, "Subtypes:"));
+  CHECK_FALSE(has(subtypeOnly, "Parameters:"));
 
   anari::release(d, d);
   anari::unloadLibrary(lib);

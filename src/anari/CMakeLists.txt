@@ -57,6 +57,11 @@ project(anari_static)
 add_anari_frontend_library_target(STATIC)
 project_compile_definitions(PUBLIC -DANARI_STATIC_DEFINE)
 
+project(anari_device_introspection)
+project_add_library(STATIC DeviceIntrospection.cpp)
+project_compile_features(PUBLIC cxx_std_17)
+project_link_libraries(PUBLIC anari_static)
+
 ## Create version header ##
 
 configure_file(anari_sdk_version.h.in include/anari/frontend/anari_sdk_version.h)
@@ -68,6 +73,7 @@ set(ANARI_TARGETS
   anari_static
   anari_backend
   anari_headers
+  anari_device_introspection
 )
 
 install(
@@ -98,4 +104,3 @@ install(
   FILES ${CMAKE_CURRENT_BINARY_DIR}/include/anari/frontend/anari_sdk_version.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/anari/frontend
 )
-

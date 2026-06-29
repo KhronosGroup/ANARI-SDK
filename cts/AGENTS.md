@@ -58,8 +58,9 @@ anariCts check-properties <device>     # per test: runnable vs skipped + missing
 
 `query-device-info` is genuine device introspection (the old `anariInfo`
 capability): `--type`/`--subtype` restrict by name substring, `--skip-parameters`
-lists subtypes only, `--info` adds per-parameter default/min/max/values/
-description. It is distinct from `query-metadata`, which dumps the catalog's shape.
+lists subtypes only, `--info` adds per-parameter default/min/max/use/values/
+element types/description/source extension. It is distinct from
+`query-metadata`, which dumps the catalog's shape.
 
 `--filter` is a substring or glob (`*`,`?`) matched case-insensitively over a
 test's `<category>/<test>` id. `run` and `report` exit non-zero on any failure.
@@ -67,7 +68,9 @@ test's `<category>/<test>` id. `run` and `report` exit non-zero on any failure.
 ## Architecture
 
 ```
-anariCts                 CLI dispatch: cts/src/main.cpp (links anari_test_scenes)
+anariCts                 CLI dispatch: cts/src/main.cpp
+  DeviceIntrospection     frontend utility linked directly for query-device-info
+  anari_test_scenes       CTS catalog, harness, runner, and Test definitions
   Catalog                 in-C++ registry of every Test (one per-category file)
   Runner                  build world -> render each Channel -> generate GT or score vs GT -> sidecar
   Metrics                 SSIM / PSNR (single source of metrics, ADR-0004)
@@ -99,10 +102,11 @@ ctsReport.py              reads the sidecar tree only; report + device diff
 - `Workdir.{h,cpp}` / `Sidecar.{h,cpp}` — the results tree layout and the
   versioned per-Case sidecar contract (carries the producing `device` identity
   since schema v2; `Workdir` also keys the per-channel diff/threshold images).
-- `DeviceInfo.{h,cpp}` — device introspection (`query-device-info`): subtypes +
-  parameter metadata as text, returned (not printed) so it is unit-testable.
 - `WorldBuilder.{h,cpp}` + `generators/` — shared world-build helpers lifted
   from the old `SceneGenerator::commit()`.
+
+`query-device-info` is a thin CLI adapter over the shared frontend utility in
+`src/anari/DeviceIntrospection.cpp`; the same utility backs `anariInfo`.
 
 **Tests (the catalog):** `cts/tests/<category>.cpp` (geometry, material, sampler,
 light, camera, frame, renderer, instance, volume) each define a

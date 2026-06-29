@@ -7,12 +7,12 @@
 
 #include "cts/BuiltinTests.h"
 #include "cts/Catalog.h"
-#include "cts/DeviceInfo.h"
 #include "cts/Expansion.h"
 #include "cts/Runner.h"
 #include "cts/Workdir.h"
 // anari
 #include "anari/anari_cpp.hpp"
+#include "anari/frontend/anari_device_introspection.h"
 // nlohmann json (vendored with the glTF loader)
 #include "scenes/file/nlohmann/json.hpp"
 // std
@@ -300,8 +300,13 @@ int cmdQueryDeviceInfo(const Options &o)
   auto d = loadDevice(o.device, lib);
   if (!d)
     return 2;
-  std::cout << queryDeviceInfo(
-      d, o.typeFilter, o.subtypeFilter, o.skipParameters, o.info);
+  anari::introspection::QueryOptions options;
+  options.typeFilter = o.typeFilter;
+  options.subtypeFilter = o.subtypeFilter;
+  options.includeParameters = !o.skipParameters;
+  options.includeParameterInfo = o.info;
+  std::cout << anari::introspection::formatDeviceInfo(
+      anari::introspection::queryDeviceInfo(d, options));
   anari::release(d, d);
   anari::unloadLibrary(lib);
   return 0;

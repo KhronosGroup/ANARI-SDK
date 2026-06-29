@@ -32,7 +32,11 @@ add_executable(anariCatalogTests
   test_cts_worldbuilder.cpp
 )
 
-target_link_libraries(anariCatalogTests PRIVATE anari_test_scenes)
+target_link_libraries(anariCatalogTests
+PRIVATE
+  anari_test_scenes
+  anari_device_introspection
+)
 target_compile_features(anariCatalogTests PRIVATE cxx_std_20)
 
 # Pure harness/metrics/results tests run anywhere; the device-backed tests

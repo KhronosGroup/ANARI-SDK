@@ -25,7 +25,11 @@
 # Built when the CTS is requested (BUILD_CTS) or for the test suite (BUILD_TESTING).
 if (BUILD_CTS OR BUILD_TESTING)
   add_executable(anariCts src/main.cpp)
-  target_link_libraries(anariCts PRIVATE anari_test_scenes)
+  target_link_libraries(anariCts
+  PRIVATE
+    anari_test_scenes
+    anari_device_introspection
+  )
   target_compile_features(anariCts PRIVATE cxx_std_20)
 
   if (BUILD_CTS)
