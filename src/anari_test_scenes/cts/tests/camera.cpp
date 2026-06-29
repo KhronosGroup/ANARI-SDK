@@ -1,15 +1,10 @@
 // Copyright 2021-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-// Camera conformance tests, migrated from cts/test_scenes/camera/**. Each views
-// a fixed triangle surface with a camera placed at a fixed position, varying the
-// camera's parameters via the camera build hook (so the runner uses this camera
-// instead of its bounds-framed default).
-
-#include "Categories.h"
 #include "../BuildContext.h"
 #include "../TestBuilder.h"
 #include "../WorldBuilder.h"
+#include "Categories.h"
 // std
 #include <vector>
 

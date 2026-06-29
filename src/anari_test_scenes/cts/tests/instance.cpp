@@ -1,14 +1,10 @@
 // Copyright 2021-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-// Instance conformance test, migrated from cts/test_scenes/instance/instance.json:
-// two instances of the same group, one with the default transform and one with a
-// custom transform, so the shared surface appears in two places.
-
-#include "Categories.h"
 #include "../BuildContext.h"
 #include "../TestBuilder.h"
 #include "../WorldBuilder.h"
+#include "Categories.h"
 // std
 #include <cstring>
 

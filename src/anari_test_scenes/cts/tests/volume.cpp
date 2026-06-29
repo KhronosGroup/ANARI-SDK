@@ -1,16 +1,10 @@
 // Copyright 2021-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-// Volume conformance test, migrated from cts/test_scenes/volume/volume.json: a
-// transferFunction1D volume over a structuredRegular field, permuting the
-// field's filter/origin/spacing and the volume's color/opacity/valueRange/
-// unitDistance one-factor-at-a-time. Array-vs-constant color and opacity are
-// selected by per-Case tokens.
-
-#include "Categories.h"
 #include "../BuildContext.h"
 #include "../TestBuilder.h"
 #include "../WorldBuilder.h"
+#include "Categories.h"
 // std
 #include <string>
 #include <vector>

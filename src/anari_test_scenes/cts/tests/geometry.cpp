@@ -1,17 +1,10 @@
 // Copyright 2021-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-// Geometry conformance tests, migrated from cts/test_scenes/geometry/**.
-// Each builds a single-surface, lit world from one geometry subtype, varying
-// the parameters the old JSON scenes exercised: soup-vs-indexed equivalence
-// (a Variant), primitive count, caps, global radius, unused vertices, vertex/
-// primitive color and attribute arrays, normals/tangents, and frame color
-// output types.
-
-#include "Categories.h"
 #include "../BuildContext.h"
 #include "../TestBuilder.h"
 #include "../WorldBuilder.h"
+#include "Categories.h"
 #include "generators/ColorPalette.h"
 // std
 #include <string>
@@ -200,12 +193,24 @@ void registerGeometryTests(Catalog &catalog)
   using V = std::vector<Any>;
 
   // ---- triangle -------------------------------------------------------------
-  registerShape(catalog, "triangle", "triangle", "triangle",
-      "ANARI_KHR_GEOMETRY_TRIANGLE", /*soupVariantOnly=*/true);
-  registerShape(catalog, "triangle_quad", "triangle", "quad",
-      "ANARI_KHR_GEOMETRY_TRIANGLE", true);
-  registerShape(catalog, "triangle_cube", "triangle", "cube",
-      "ANARI_KHR_GEOMETRY_TRIANGLE", true);
+  registerShape(catalog,
+      "triangle",
+      "triangle",
+      "triangle",
+      "ANARI_KHR_GEOMETRY_TRIANGLE",
+      /*soupVariantOnly=*/true);
+  registerShape(catalog,
+      "triangle_quad",
+      "triangle",
+      "quad",
+      "ANARI_KHR_GEOMETRY_TRIANGLE",
+      true);
+  registerShape(catalog,
+      "triangle_cube",
+      "triangle",
+      "cube",
+      "ANARI_KHR_GEOMETRY_TRIANGLE",
+      true);
 
   makeTest("geometry", "triangle_colors")
       .build([](BuildContext &ctx) {
@@ -249,9 +254,10 @@ void registerGeometryTests(Catalog &catalog)
       .registerInto(catalog);
 
   // ---- quad -----------------------------------------------------------------
-  registerShape(catalog, "quad", "quad", "quad", "ANARI_KHR_GEOMETRY_QUAD", true);
-  registerShape(catalog, "quad_cube", "quad", "cube",
-      "ANARI_KHR_GEOMETRY_QUAD", true);
+  registerShape(
+      catalog, "quad", "quad", "quad", "ANARI_KHR_GEOMETRY_QUAD", true);
+  registerShape(
+      catalog, "quad_cube", "quad", "cube", "ANARI_KHR_GEOMETRY_QUAD", true);
 
   makeTest("geometry", "quad_colors")
       .build([](BuildContext &ctx) {
@@ -393,8 +399,8 @@ void registerGeometryTests(Catalog &catalog)
       .registerInto(catalog);
 
   // ---- cylinder -------------------------------------------------------------
-  registerShape(catalog, "cylinder", "cylinder", "",
-      "ANARI_KHR_GEOMETRY_CYLINDER", true);
+  registerShape(
+      catalog, "cylinder", "cylinder", "", "ANARI_KHR_GEOMETRY_CYLINDER", true);
 
   makeTest("geometry", "cylinder_colors")
       .build([](BuildContext &ctx) {
@@ -454,7 +460,11 @@ void registerGeometryTests(Catalog &catalog)
       .registerInto(catalog);
 
   // ---- curve ----------------------------------------------------------------
-  registerShape(catalog, "curve", "curve", "", "ANARI_KHR_GEOMETRY_CURVE",
+  registerShape(catalog,
+      "curve",
+      "curve",
+      "",
+      "ANARI_KHR_GEOMETRY_CURVE",
       /*soupVariantOnly=*/false);
 
   makeTest("geometry", "curve_colors")

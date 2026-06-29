@@ -9,9 +9,7 @@
 namespace anari {
 namespace cts {
 
-// Register the built-in conformance Tests into a catalog. This is a small seed
-// covering a couple of geometry tests so the runner and the `cts` tool are
-// exercisable end to end; Phase 3 grows it into the full migrated corpus.
+// Register the built-in conformance Tests into a catalog.
 ANARI_TEST_SCENES_INTERFACE void registerBuiltinTests(Catalog &catalog);
 
 } // namespace cts

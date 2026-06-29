@@ -87,8 +87,7 @@ TEST_CASE("anyToString renders axis values for keys", "[cts][value]")
   }
 }
 
-// Expansion: counts
-// ////////////////////////////////////////////////////////////
+// Expansion: counts //////////////////////////////////////////////////////////
 
 TEST_CASE("a Test with no axes expands to one default Case", "[cts][expand]")
 {
@@ -137,8 +136,7 @@ TEST_CASE("cartesian count is the product of axis sizes", "[cts][expand]")
   CHECK(expand(t).size() == 3 * 2 * 4);
 }
 
-// Expansion: ground-truth keys
-// //////////////////////////////////////////////////
+// Expansion: ground-truth keys ///////////////////////////////////////////////
 
 TEST_CASE("variants share a ground-truth key; permutations do not",
     "[cts][expand][groundtruth]")
@@ -177,8 +175,7 @@ TEST_CASE("a variant-only Test shares a single ground truth across all cases",
   CHECK(cases[1].id() == "indexed");
 }
 
-// Expansion: simplified (one-factor-at-a-time)
-// //////////////////////////////////
+// Expansion: simplified //////////////////////////////////////////////////////
 
 TEST_CASE(
     "simplified expansion is one-factor-at-a-time", "[cts][expand][simplified]")
@@ -239,8 +236,7 @@ TEST_CASE("simplified honors variant/permutation kinds for keys",
   CHECK(cases[1].groundTruthKey() == "16");
 }
 
-// Filter
-// ////////////////////////////////////////////////////////////////////////
+// Filter //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("globMatch handles wildcards anchored over the whole string",
     "[cts][filter]")
@@ -276,8 +272,7 @@ TEST_CASE(
   CHECK_FALSE(matches(Filter{"light/*"}, t));
 }
 
-// Feature gating
-// /////////////////////////////////////////////////////////////////
+// Feature gating /////////////////////////////////////////////////////////////
 
 TEST_CASE("generated extension utility exposes canonical extension names",
     "[cts][features]")
@@ -336,8 +331,7 @@ TEST_CASE("isSupported requires every feature to be present", "[cts][features]")
   }
 }
 
-// Builder
-// ///////////////////////////////////////////////////////////////////////
+// Builder /////////////////////////////////////////////////////////////////////
 
 TEST_CASE(
     "makeTest builds a TestDef with the configured fields", "[cts][builder]")
@@ -399,8 +393,7 @@ TEST_CASE("thresholdFor falls back through channel, test-wide, then default",
   CHECK(t.thresholdFor(Channel::Normal, "ssim", 0.7) == Approx(0.8));
 }
 
-// BuildContext
-// ////////////////////////////////////////////////////////////////////
+// BuildContext ////////////////////////////////////////////////////////////////
 
 TEST_CASE(
     "BuildContext round-trips axis values by name and type", "[cts][context]")
@@ -440,8 +433,7 @@ TEST_CASE(
   }
 }
 
-// Catalog
-// //////////////////////////////////////////////////////////////////////////
+// Catalog /////////////////////////////////////////////////////////////////////
 
 TEST_CASE("Catalog registers, lists, and filters tests", "[cts][catalog]")
 {

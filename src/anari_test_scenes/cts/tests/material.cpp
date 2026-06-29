@@ -1,13 +1,6 @@
 // Copyright 2021-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-// Material conformance tests, migrated from cts/test_scenes/material/**.
-// Each builds a single triangle surface whose material parameters are driven by
-// heterogeneous axes: a constant, an attribute name, a bound sampler, or unset
-// (the old JSON null). The base geometry carries attribute0 (palette colors),
-// attribute1 (texcoords for samplers), and attribute2 (opacity) so any of those
-// bindings resolves.
-
 #include "../BuildContext.h"
 #include "../TestBuilder.h"
 #include "../WorldBuilder.h"
@@ -128,7 +121,8 @@ anari::World materialWorld(BuildContext &ctx,
   return world;
 }
 
-// Apply one axis value to a material parameter (constant / attribute / sampler).
+// Apply one axis value to a material parameter (constant / attribute /
+// sampler).
 void bind(BuildContext &ctx,
     anari::Device d,
     anari::Material mat,
@@ -216,7 +210,8 @@ void registerMaterialTests(Catalog &catalog)
                 anari::Device d,
                 anari::Material mat,
                 const std::vector<anari::Sampler> &s) {
-              anari::setParameter(d, mat, "baseColor", float3(0.98f, 0.5f, 0.44f));
+              anari::setParameter(
+                  d, mat, "baseColor", float3(0.98f, 0.5f, 0.44f));
               anari::setParameter(d, mat, "opacity", "attribute2");
               bind(ctx, d, mat, "alphaMode", s);
               bind(ctx, d, mat, "alphaCutoff", s);

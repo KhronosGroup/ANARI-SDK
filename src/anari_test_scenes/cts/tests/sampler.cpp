@@ -1,16 +1,10 @@
 // Copyright 2021-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-// Sampler conformance tests, migrated from cts/test_scenes/sampler/**.
-// Each textures a quad (matte color bound to the sampler) and permutes the
-// sampler's parameters: filter, wrap modes, in/out transforms and offsets for
-// the image samplers; an array + offset for the primitive sampler; a transform
-// + offset for the transform sampler.
-
-#include "Categories.h"
 #include "../BuildContext.h"
 #include "../TestBuilder.h"
 #include "../WorldBuilder.h"
+#include "Categories.h"
 #include "generators/ColorPalette.h"
 // std
 #include <functional>
@@ -44,17 +38,16 @@ const mat4 kOutTransform = mat4(float4(-1.f, -1.f, 0.f, 0.f),
 const float4 kOffset = float4(0.7f, -0.4f, 0.6f, -0.2f);
 
 using GeomFn = std::function<void(anari::Device, anari::Geometry)>;
-using SamplerFn = std::function<void(BuildContext &, anari::Device, anari::Sampler)>;
+using SamplerFn =
+    std::function<void(BuildContext &, anari::Device, anari::Sampler)>;
 
 // A quad (two triangles) facing the camera, with attribute0 = palette colors
 // (used by the transform sampler). Uncommitted so the caller can add the
 // per-test texcoord attribute.
 anari::Geometry samplerQuad(anari::Device d)
 {
-  std::vector<float3> pos = {{0.f, 0.f, 0.f},
-      {1.f, 0.f, 0.f},
-      {0.f, 1.f, 0.f},
-      {1.f, 1.f, 0.f}};
+  std::vector<float3> pos = {
+      {0.f, 0.f, 0.f}, {1.f, 0.f, 0.f}, {0.f, 1.f, 0.f}, {1.f, 1.f, 0.f}};
   std::vector<uint3> idx = {{0u, 1u, 2u}, {2u, 1u, 3u}};
   auto geom = anari::newObject<anari::Geometry>(d, "triangle");
   anari::setAndReleaseParameter(
@@ -64,8 +57,10 @@ anari::Geometry samplerQuad(anari::Device d)
   std::vector<float4> cols;
   for (size_t i = 0; i < pos.size(); ++i)
     cols.emplace_back(scenes::colors::getColorFromPalette(i), 1.f);
-  anari::setAndReleaseParameter(
-      d, geom, "vertex.attribute0", anari::newArray1D(d, cols.data(), cols.size()));
+  anari::setAndReleaseParameter(d,
+      geom,
+      "vertex.attribute0",
+      anari::newArray1D(d, cols.data(), cols.size()));
   return geom;
 }
 
@@ -113,7 +108,8 @@ anari::World samplerWorld(BuildContext &ctx,
   return world;
 }
 
-void set(BuildContext &ctx, anari::Device d, anari::Sampler s, const char *param)
+void set(
+    BuildContext &ctx, anari::Device d, anari::Sampler s, const char *param)
 {
   setBoundParameter(d, s, param, ctx.value(param));
 }
@@ -123,7 +119,8 @@ void set(BuildContext &ctx, anari::Device d, anari::Sampler s, const char *param
 void registerSamplerTests(Catalog &catalog)
 {
   const V filter = {none(), Any("nearest"), Any("linear")};
-  const V wrap = {none(), Any("clampToEdge"), Any("repeat"), Any("mirrorRepeat")};
+  const V wrap = {
+      none(), Any("clampToEdge"), Any("repeat"), Any("mirrorRepeat")};
   const V xform = {none(), Any(kInTransform)};
   const V outXform = {none(), Any(kOutTransform)};
   const V offset = {none(), Any(kOffset)};
@@ -131,10 +128,15 @@ void registerSamplerTests(Catalog &catalog)
   // ---- image1D --------------------------------------------------------------
   makeTest("sampler", "image1D")
       .build([](BuildContext &ctx) {
-        return samplerWorld(ctx, "image1D", "attribute1",
+        return samplerWorld(
+            ctx,
+            "image1D",
+            "attribute1",
             [](anari::Device d, anari::Geometry g) {
               std::vector<float> uv = {0.f, 2.f, 0.f, 2.f};
-              anari::setAndReleaseParameter(d, g, "vertex.attribute1",
+              anari::setAndReleaseParameter(d,
+                  g,
+                  "vertex.attribute1",
                   anari::newArray1D(d, uv.data(), uv.size()));
             },
             [](BuildContext &ctx, anari::Device d, anari::Sampler s) {
@@ -159,11 +161,16 @@ void registerSamplerTests(Catalog &catalog)
   // ---- image2D --------------------------------------------------------------
   makeTest("sampler", "image2D")
       .build([](BuildContext &ctx) {
-        return samplerWorld(ctx, "image2D", "attribute1",
+        return samplerWorld(
+            ctx,
+            "image2D",
+            "attribute1",
             [](anari::Device d, anari::Geometry g) {
               std::vector<float2> uv = {
                   {0.f, 0.f}, {2.f, 0.f}, {0.f, 2.f}, {2.f, 2.f}};
-              anari::setAndReleaseParameter(d, g, "vertex.attribute1",
+              anari::setAndReleaseParameter(d,
+                  g,
+                  "vertex.attribute1",
                   anari::newArray1D(d, uv.data(), uv.size()));
             },
             [](BuildContext &ctx, anari::Device d, anari::Sampler s) {
@@ -190,11 +197,18 @@ void registerSamplerTests(Catalog &catalog)
   // ---- image3D --------------------------------------------------------------
   makeTest("sampler", "image3D")
       .build([](BuildContext &ctx) {
-        return samplerWorld(ctx, "image3D", "attribute1",
+        return samplerWorld(
+            ctx,
+            "image3D",
+            "attribute1",
             [](anari::Device d, anari::Geometry g) {
-              std::vector<float3> uv = {
-                  {0.f, 0.f, 0.f}, {2.f, 0.f, 0.f}, {0.f, 2.f, 0.f}, {2.f, 2.f, 2.f}};
-              anari::setAndReleaseParameter(d, g, "vertex.attribute1",
+              std::vector<float3> uv = {{0.f, 0.f, 0.f},
+                  {2.f, 0.f, 0.f},
+                  {0.f, 2.f, 0.f},
+                  {2.f, 2.f, 2.f}};
+              anari::setAndReleaseParameter(d,
+                  g,
+                  "vertex.attribute1",
                   anari::newArray1D(d, uv.data(), uv.size()));
             },
             [](BuildContext &ctx, anari::Device d, anari::Sampler s) {
@@ -225,7 +239,9 @@ void registerSamplerTests(Catalog &catalog)
   // token and build the (2-element) array of that width in the sampler setup.
   makeTest("sampler", "primitive")
       .build([](BuildContext &ctx) {
-        return samplerWorld(ctx, "primitive", "",
+        return samplerWorld(ctx,
+            "primitive",
+            "",
             nullptr,
             [](BuildContext &ctx, anari::Device d, anari::Sampler s) {
               setBoundParameter(d, s, "offset", ctx.value("offset"));
@@ -258,7 +274,9 @@ void registerSamplerTests(Catalog &catalog)
   // ---- transform ------------------------------------------------------------
   makeTest("sampler", "transform")
       .build([](BuildContext &ctx) {
-        return samplerWorld(ctx, "transform", "attribute0",
+        return samplerWorld(ctx,
+            "transform",
+            "attribute0",
             nullptr,
             [](BuildContext &ctx, anari::Device d, anari::Sampler s) {
               set(ctx, d, s, "transform");

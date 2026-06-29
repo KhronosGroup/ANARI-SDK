@@ -16,12 +16,8 @@
 #include <string>
 #include <vector>
 
-// Reusable world-building helpers extracted from the old generic
-// SceneGenerator::commit(). Tests author their ANARI world by calling these
-// free functions with normal ANARI C++ calls; the harness owns the resulting
-// World. Each maker returns a committed handle owned by the caller (release it,
-// or hand it to the World which retains it). These build on PrimitiveGenerator,
-// TextureGenerator, and ColorPalette.
+// Reusable CTS world-building helpers. Makers return committed handles owned by
+// the caller.
 
 namespace anari {
 namespace cts {
@@ -29,12 +25,8 @@ namespace cts {
 // --- Generic axis-value parameter binding ------------------------------------
 
 namespace detail {
-// Apply a harness axis value to an object parameter. Dispatches on the value's
-// ANARI type: a float/vecN/matN/int/bool is set as that constant; a plain
-// string is set as an attribute name; a "ref_sampler_N" string binds
-// samplers[N]; an invalid (none) value leaves the parameter unset so the device
-// default applies. This mirrors how the old JSON engine encoded a parameter
-// that could be a constant, an attribute name, or a sampler reference.
+// Apply an axis value to an object parameter, resolving "ref_sampler_N"
+// references through the supplied sampler list. Invalid values leave it unset.
 ANARI_TEST_SCENES_INTERFACE void setBoundParameterImpl(anari::Device d,
     anari::Object obj,
     const char *param,
@@ -70,7 +62,8 @@ struct GeometryOptions
   std::string primitiveMode{"soup"};
   int primitiveCount{1};
 
-  // Cones/cylinders/spheres/curves: use one global radius instead of per-vertex.
+  // Cones/cylinders/spheres/curves: use one global radius instead of
+  // per-vertex.
   std::optional<float> globalRadius;
   // Cones/cylinders: per-vertex caps flag (nullopt = leave unset).
   std::optional<int32_t> vertexCaps;
@@ -208,7 +201,8 @@ struct PerspectiveCameraOptions
   std::optional<float> far;
 };
 
-// A perspective camera placed per a Camera description, with optional intrinsics.
+// A perspective camera placed per a Camera description, with optional
+// intrinsics.
 ANARI_TEST_SCENES_INTERFACE anari::Camera makePerspectiveCamera(anari::Device d,
     const anari::scenes::Camera &camera,
     const PerspectiveCameraOptions &opts = {});
@@ -234,10 +228,8 @@ ANARI_TEST_SCENES_INTERFACE anari::scenes::Bounds worldBounds(
 
 // A committed frame with a default renderer, a color channel, and a camera
 // framing the world's bounds. Convenience for smoke tests / simple renders.
-ANARI_TEST_SCENES_INTERFACE anari::Frame makeColorFrame(anari::Device d,
-    anari::World world,
-    uint32_t width,
-    uint32_t height);
+ANARI_TEST_SCENES_INTERFACE anari::Frame makeColorFrame(
+    anari::Device d, anari::World world, uint32_t width, uint32_t height);
 
 } // namespace cts
 } // namespace anari

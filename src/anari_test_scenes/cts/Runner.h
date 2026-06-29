@@ -28,18 +28,9 @@ struct RunOptions
   uint32_t height{256};
   double ssimThreshold{0.70}; // ctsUtility defaults; overridden per-test
   double psnrThreshold{20.0};
-  // Progressive frame accumulation: render the color channel this many times
-  // on a fresh accumulating frame to cut Monte-Carlo noise. <=1 is today's
-  // single-render behavior; gated on ANARI_KHR_FRAME_ACCUMULATION per device.
-  // Defaults stay at today's behavior so RunOptions{}-based unit tests are
-  // unaffected; the CLI supplies the user-facing default (16).
+  // Color-channel renders per frame when accumulation is supported.
   uint32_t accumulationFrames{1};
-  // Enable renderer denoising. Applied whenever set, even on a device that does
-  // not report ANARI_KHR_RENDERER_DENOISE (the CLI warns); unlike accumulation,
-  // it is not gated on the feature set.
   bool denoise{false};
-  // Identity of the device this run uses, recorded in every sidecar (schema
-  // v2) so a two-device diff can label runs by device, not by workdir name.
   DeviceSpec device;
 };
 
@@ -138,8 +129,6 @@ class ANARI_TEST_SCENES_INTERFACE Runner
   ArtifactPublisher m_artifacts;
   RunOptions m_options;
 
-  // Capabilities resolved against the running device's feature set (see
-  // resolveCapabilities). Default to today's behavior until resolved.
   uint32_t m_effectiveAccumulationFrames{1};
   bool m_denoiseEnabled{false};
 };

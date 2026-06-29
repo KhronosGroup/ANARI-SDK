@@ -11,9 +11,7 @@
 namespace anari {
 namespace cts {
 
-// Move-only ownership for a temporary ANARI object. Keeping the Device beside
-// the object makes every return and exception path release through one small
-// interface instead of hand-written cleanup blocks.
+// Move-only owner for an ANARI object and the device used to release it.
 template <typename T>
 class UniqueAnariObject
 {

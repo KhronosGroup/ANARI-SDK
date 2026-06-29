@@ -1,16 +1,10 @@
 // Copyright 2021-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-// Light conformance tests, migrated from cts/test_scenes/light/**. Each lights a
-// matte triangle surface with one light whose parameters are permuted, under a
-// renderer with a black background and no ambient term so only the light
-// contributes. (helide exposes no light extension, so these register and skip
-// there; they run on devices that support the light subtypes.)
-
-#include "Categories.h"
 #include "../BuildContext.h"
 #include "../TestBuilder.h"
 #include "../WorldBuilder.h"
+#include "Categories.h"
 // std
 #include <functional>
 #include <string>
@@ -25,9 +19,11 @@ using anari::math::float3;
 using anari::math::float4;
 using V = std::vector<Any>;
 
-using LightFn = std::function<void(BuildContext &, anari::Device, anari::Light)>;
+using LightFn =
+    std::function<void(BuildContext &, anari::Device, anari::Light)>;
 
-anari::World lightWorld(BuildContext &ctx, const char *subtype, const LightFn &apply)
+anari::World lightWorld(
+    BuildContext &ctx, const char *subtype, const LightFn &apply)
 {
   auto d = ctx.device();
   GeometryOptions o;
@@ -73,20 +69,21 @@ void lp(BuildContext &ctx, anari::Device d, anari::Light l, const char *param)
 }
 
 // Set an intensityDistribution array from a per-Case token ("none"/"1d"/"2d").
-void setIntensityDistribution(BuildContext &ctx, anari::Device d, anari::Light l)
+void setIntensityDistribution(
+    BuildContext &ctx, anari::Device d, anari::Light l)
 {
   const std::string id = ctx.getString("intensityDistribution", "none");
   if (id == "1d") {
     std::vector<float> a = {0.2f, 0.8f, 0.4f, 0.6f};
-    anari::setAndReleaseParameter(
-        d, l, "intensityDistribution", anari::newArray1D(d, a.data(), a.size()));
-  } else if (id == "2d") {
-    std::vector<float> a = {
-        0.2f, 0.8f, 0.4f, 0.3f, 0.7f, 0.5f, 0.1f, 0.9f, 0.6f};
     anari::setAndReleaseParameter(d,
         l,
         "intensityDistribution",
-        anari::newArray2D(d, a.data(), 3, 3));
+        anari::newArray1D(d, a.data(), a.size()));
+  } else if (id == "2d") {
+    std::vector<float> a = {
+        0.2f, 0.8f, 0.4f, 0.3f, 0.7f, 0.5f, 0.1f, 0.9f, 0.6f};
+    anari::setAndReleaseParameter(
+        d, l, "intensityDistribution", anari::newArray2D(d, a.data(), 3, 3));
   }
 }
 
@@ -97,7 +94,8 @@ void registerLightTests(Catalog &catalog)
   // ---- directional ----------------------------------------------------------
   makeTest("light", "directional")
       .build([](BuildContext &ctx) {
-        return lightWorld(ctx, "directional",
+        return lightWorld(ctx,
+            "directional",
             [](BuildContext &ctx, anari::Device d, anari::Light l) {
               anari::setParameter(d, l, "color", float3(0.7f, 0.62f, 0.78f));
               lp(ctx, d, l, "direction");
@@ -116,7 +114,8 @@ void registerLightTests(Catalog &catalog)
   // ---- point ----------------------------------------------------------------
   makeTest("light", "point")
       .build([](BuildContext &ctx) {
-        return lightWorld(ctx, "point",
+        return lightWorld(ctx,
+            "point",
             [](BuildContext &ctx, anari::Device d, anari::Light l) {
               anari::setParameter(d, l, "color", float3(0.3f, 0.59f, 0.9f));
               lp(ctx, d, l, "position");
@@ -136,7 +135,8 @@ void registerLightTests(Catalog &catalog)
   // ---- spot -----------------------------------------------------------------
   makeTest("light", "spot")
       .build([](BuildContext &ctx) {
-        return lightWorld(ctx, "spot",
+        return lightWorld(ctx,
+            "spot",
             [](BuildContext &ctx, anari::Device d, anari::Light l) {
               anari::setParameter(d, l, "color", float3(0.74f, 0.73f, 0.85f));
               lp(ctx, d, l, "position");
@@ -164,7 +164,8 @@ void registerLightTests(Catalog &catalog)
   // ---- quad -----------------------------------------------------------------
   makeTest("light", "quad")
       .build([](BuildContext &ctx) {
-        return lightWorld(ctx, "quad",
+        return lightWorld(ctx,
+            "quad",
             [](BuildContext &ctx, anari::Device d, anari::Light l) {
               anari::setParameter(d, l, "color", float3(0.7f, 0.87f, 0.41f));
               lp(ctx, d, l, "position");
@@ -193,7 +194,8 @@ void registerLightTests(Catalog &catalog)
   // ---- ring -----------------------------------------------------------------
   makeTest("light", "ring")
       .build([](BuildContext &ctx) {
-        return lightWorld(ctx, "ring",
+        return lightWorld(ctx,
+            "ring",
             [](BuildContext &ctx, anari::Device d, anari::Light l) {
               anari::setParameter(d, l, "color", float3(0.98f, 0.5f, 0.44f));
               lp(ctx, d, l, "position");
@@ -228,7 +230,8 @@ void registerLightTests(Catalog &catalog)
   // ---- hdri -----------------------------------------------------------------
   makeTest("light", "hdri")
       .build([](BuildContext &ctx) {
-        return lightWorld(ctx, "hdri",
+        return lightWorld(ctx,
+            "hdri",
             [](BuildContext &ctx, anari::Device d, anari::Light l) {
               lp(ctx, d, l, "up");
               lp(ctx, d, l, "direction");

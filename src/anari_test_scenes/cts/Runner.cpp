@@ -75,11 +75,7 @@ Image renderChannel(anari::Device d,
   anari::setParameter(d, f, "renderer", renderer);
   anari::setParameter(d, f, "camera", camera);
   anari::setParameter(d, f, "world", world);
-  // Accumulate only the color channel: depth/normal/albedo/*Id are
-  // deterministic, so accumulating them is wasted work (and could alias the id
-  // channels). Only set the param when gated on; never set it false, so the
-  // disabled path is byte-for-byte identical to before and we never poke the
-  // param on a device that does not support accumulation.
+  // Depth, normal, albedo, and id channels do not benefit from accumulation.
   const bool accumulate = accumulationFrames > 1 && ch == Channel::Color;
   if (accumulate)
     anari::setParameter(d, f, "accumulation", true);
@@ -210,7 +206,7 @@ Runner::Runner(anari::Device device,
     : m_device(device),
       m_workdir(std::move(workdir)),
       m_artifacts(m_workdir, std::move(artifactWriter)),
-      m_options(options)
+      m_options(std::move(options))
 {}
 
 void Runner::resolveCapabilities(const std::set<std::string> &features)
@@ -220,10 +216,6 @@ void Runner::resolveCapabilities(const std::set<std::string> &features)
           && features.count("ANARI_KHR_FRAME_ACCUMULATION"))
       ? m_options.accumulationFrames
       : 1;
-  // Denoise is applied whenever requested, even if the device does not report
-  // ANARI_KHR_RENDERER_DENOISE: setting an unadvertised renderer parameter is
-  // harmless (an unsupporting device ignores it), and the CLI warns about the
-  // mismatch. Unlike accumulation, it is not gated on the feature set.
   m_denoiseEnabled = m_options.denoise;
 }
 
@@ -249,11 +241,6 @@ Runner::SceneObjects Runner::buildScene(const TestDef &test, const Case &c)
                 m_device, scene.bounds, m_options.width, m_options.height));
   scene.renderer = UniqueAnariObject<anari::Renderer>(m_device,
       test.rendererBuild ? test.rendererBuild(ctx) : defaultRenderer(m_device));
-  // Denoising is additive: set one extra bool on the already-built+committed
-  // renderer (test's or default) and re-commit, without disturbing its other
-  // params. Set whenever --denoise was requested, even on a device that does
-  // not report ANARI_KHR_RENDERER_DENOISE (it ignores the unknown param; the
-  // CLI warns about the mismatch).
   if (m_denoiseEnabled && scene.renderer) {
     anari::setParameter(m_device, scene.renderer.get(), "denoise", true);
     anari::commitParameters(m_device, scene.renderer.get());
@@ -368,8 +355,10 @@ RunSummary Runner::generate(const Catalog &catalog,
               {m_workdir.groundTruthImagePath(c, test->channels[i]),
                   std::move(images[i])});
         }
-        const bool ok = m_artifacts.publishGroundTruth(artifacts);
-        ok ? summary.passed++ : summary.failed++;
+        if (m_artifacts.publishGroundTruth(artifacts))
+          summary.passed++;
+        else
+          summary.failed++;
       } catch (...) {
         summary.failed++;
       }
@@ -431,7 +420,7 @@ RunSummary Runner::run(const Catalog &catalog,
 
         if (images.size() != test->channels.size()) {
           result.verdict = Verdict::Failed;
-          result.skipReason = "render produced no image";
+          result.detail = "render produced no image";
           recordResult(c, result, summary);
           continue;
         }
@@ -524,21 +513,22 @@ void Runner::runBehaviorTest(const TestDef &test,
         result.verdict = Verdict::Failed;
         result.detail = "world/camera/renderer build failed";
         recordResult(c, result, summary);
-      } else {
-        const auto start = std::chrono::steady_clock::now();
-        const BehaviorResult br = test.behaviorCheck(m_device,
-            scene.world.get(),
-            scene.camera.get(),
-            scene.renderer.get(),
-            m_options.width,
-            m_options.height);
-        const auto end = std::chrono::steady_clock::now();
-        result.durationMs =
-            std::chrono::duration<double, std::milli>(end - start).count();
-        result.verdict = br.passed ? Verdict::Passed : Verdict::Failed;
-        result.detail = br.detail;
-        recordResult(c, result, summary);
+        continue;
       }
+
+      const auto start = std::chrono::steady_clock::now();
+      const BehaviorResult br = test.behaviorCheck(m_device,
+          scene.world.get(),
+          scene.camera.get(),
+          scene.renderer.get(),
+          m_options.width,
+          m_options.height);
+      const auto end = std::chrono::steady_clock::now();
+      result.durationMs =
+          std::chrono::duration<double, std::milli>(end - start).count();
+      result.verdict = br.passed ? Verdict::Passed : Verdict::Failed;
+      result.detail = br.detail;
+      recordResult(c, result, summary);
     } catch (const std::exception &e) {
       writeCaseFailure(c,
           std::string("exception during behavior test: ") + e.what(),

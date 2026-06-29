@@ -1,14 +1,10 @@
 // Copyright 2021-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-// Renderer conformance tests, migrated from cts/test_scenes/renderer/**: ambient
-// light parameters, background color, and background image. The renderer is
-// supplied per Case via the renderer build hook.
-
-#include "Categories.h"
 #include "../BuildContext.h"
 #include "../TestBuilder.h"
 #include "../WorldBuilder.h"
+#include "Categories.h"
 #include "generators/TextureGenerator.h"
 // std
 #include <vector>
@@ -58,7 +54,8 @@ void registerRendererTests(Catalog &catalog)
         auto d = ctx.device();
         auto r = newRenderer(d, "default");
         setBoundParameter(d, r, "ambientColor", ctx.value("ambientColor"));
-        setBoundParameter(d, r, "ambientRadiance", ctx.value("ambientRadiance"));
+        setBoundParameter(
+            d, r, "ambientRadiance", ctx.value("ambientRadiance"));
         anari::commitParameters(d, r);
         return r;
       })

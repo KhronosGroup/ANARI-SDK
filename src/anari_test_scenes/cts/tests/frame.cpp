@@ -1,19 +1,6 @@
 // Copyright 2021-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-// Frame conformance tests, migrated from cts/test_scenes/frame/**. Cover the
-// frame output channels: color (output type permutations), depth, albedo,
-// normal, and the primitive/object/instance id channels (built from multi-
-// surface / multi-instance / multi-volume worlds with explicit ids).
-//
-// Two of the originals are behavioral checks the old suite implemented with a
-// synthetic pass/fail image (frame_completion_callback, progressive_rendering).
-// The render-and-compare runner can't express those assertions, so they use the
-// runner's behavior hook (TestDef::behaviorCheck) instead: the callback test
-// asserts the frame-completion callback fires, and the progressive test asserts
-// re-rendering the same frame accumulates. Both still skip where the feature is
-// unsupported.
-
 #include "../AnariObject.h"
 #include "../BuildContext.h"
 #include "../FrameReadback.h"
