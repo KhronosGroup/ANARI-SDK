@@ -4,8 +4,14 @@
 #include "../AnariObject.h"
 #include "../BuildContext.h"
 #include "../FrameReadback.h"
+#include "../GeometryBuilder.h"
+#include "../GeometryLayout.h"
+#include "../InstanceBuilder.h"
+#include "../LightBuilder.h"
+#include "../SurfaceBuilder.h"
 #include "../TestBuilder.h"
 #include "../TestDef.h"
+#include "../VolumeBuilder.h"
 #include "../WorldBuilder.h"
 #include "Categories.h"
 // std
@@ -28,11 +34,9 @@ const char *kTriangle = "ANARI_KHR_GEOMETRY_TRIANGLE";
 anari::World triangleSurfaceWorld(BuildContext &ctx, float3 color, int count)
 {
   auto d = ctx.device();
-  GeometryOptions o;
-  o.subtype = "triangle";
-  o.shape = "triangle";
-  o.primitiveCount = count;
-  auto geom = buildGeometry(d, o);
+  TriangleSpec spec;
+  spec.primitiveCount = count;
+  auto geom = buildTriangleGeometry(d, spec);
   auto mat = makeMatteMaterial(d, color);
   auto surface = makeSurface(d, geom, mat);
   auto light = makeDirectionalLight(d, float3(0.f, -1.f, -1.f));
@@ -248,11 +252,9 @@ void registerFrameTests(Catalog &catalog)
   makeTest("frame", "frame_primitiveID_channel")
       .build([](BuildContext &ctx) {
         auto d = ctx.device();
-        GeometryOptions o;
-        o.subtype = "triangle";
-        o.shape = "triangle";
-        o.primitiveCount = 8;
-        auto geom = buildGeometry(d, o);
+        TriangleSpec spec;
+        spec.primitiveCount = 8;
+        auto geom = buildTriangleGeometry(d, spec);
         std::vector<uint32_t> ids = {5, 3, 4, 2, 7, 6, 0, 1};
         anari::setAndReleaseParameter(d,
             geom,

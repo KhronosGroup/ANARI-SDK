@@ -3,9 +3,21 @@
 
 #include "catch.hpp"
 // cts world-build helpers
+#include "cts/BuildContext.h"
+#include "cts/GeometryBuilder.h"
+#include "cts/GeometryLayout.h"
+#include "cts/InstanceBuilder.h"
+#include "cts/LightBuilder.h"
+#include "cts/ParameterBinding.h"
+#include "cts/SamplerBuilder.h"
+#include "cts/SurfaceBuilder.h"
+#include "cts/Value.h"
+#include "cts/ViewBuilder.h"
+#include "cts/VolumeBuilder.h"
 #include "cts/WorldBuilder.h"
 // std
 #include <cmath>
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -53,7 +65,69 @@ bool validBounds(const scenes::Bounds &b)
 
 } // namespace
 
-// Pure: no device needed ////////////////////////////////////////////////////////
+// Pure: no device needed
+// ////////////////////////////////////////////////////////
+
+TEST_CASE("typed geometry specifications reject invalid layouts",
+    "[cts][worldbuilder]")
+{
+  CHECK(parsePrimitiveMode("soup") == PrimitiveMode::Soup);
+  CHECK(parsePrimitiveMode("indexed") == PrimitiveMode::Indexed);
+  CHECK_THROWS_WITH(parsePrimitiveMode("strip"),
+      Catch::Matchers::Contains("strip")
+          && Catch::Matchers::Contains("primitive mode"));
+
+  CHECK_THROWS_WITH(makeTriangleLayout(
+                        TriangleShape::Triangle, PrimitiveMode::Soup, 0, false),
+      Catch::Matchers::Contains("primitive count"));
+  CHECK_THROWS_WITH(makeSphereLayout(PrimitiveMode::Soup, 4, true),
+      Catch::Matchers::Contains("unused vertices")
+          && Catch::Matchers::Contains("indexed"));
+  CHECK_THROWS_WITH(
+      makeQuadLayout(static_cast<QuadShape>(99), PrimitiveMode::Soup, 1, false),
+      Catch::Matchers::Contains("quad shape"));
+}
+
+TEST_CASE("typed parameter bindings reject invalid definitions",
+    "[cts][worldbuilder]")
+{
+  CHECK(anyToString(Any(unsetBinding())) == "none");
+  CHECK(anyToString(Any(constantBinding(0.5f))) == "0.5");
+  CHECK(anyToString(Any(attributeBinding("attribute0"))) == "attribute0");
+  // The external label remains stable so catalog metadata and ground-truth
+  // paths do not change; internally this is a typed sampler index.
+  CHECK(anyToString(Any(samplerBinding(1))) == "ref_sampler_1");
+
+  BuildContext context;
+  context.set("color", Any(samplerBinding(1)));
+  CHECK(
+      std::get<SamplerParameter>(context.binding("color").value()).index == 1);
+  context.set("color", Any(0.5f));
+  CHECK_THROWS_WITH(context.binding("color"),
+      Catch::Matchers::Contains("color")
+          && Catch::Matchers::Contains("typed parameter binding"));
+
+  CHECK_THROWS_WITH(
+      attributeBinding(""), Catch::Matchers::Contains("attribute name"));
+  CHECK_THROWS_WITH(applyParameterBinding(nullptr,
+                        static_cast<anari::Object>(nullptr),
+                        "color",
+                        samplerBinding(2),
+                        {}),
+      Catch::Matchers::Contains("color")
+          && Catch::Matchers::Contains("sampler index 2"));
+
+  RawValue unsupported(ANARI_VOID_POINTER, nullptr);
+  CHECK_THROWS_WITH(applyParameterValue(nullptr,
+                        static_cast<anari::Object>(nullptr),
+                        "callback",
+                        unsupported),
+      Catch::Matchers::Contains("callback")
+          && Catch::Matchers::Contains("ANARI_VOID_POINTER"));
+  CHECK_THROWS_WITH(newImageSampler(nullptr, "image4D", "attribute0"),
+      Catch::Matchers::Contains("image4D")
+          && Catch::Matchers::Contains("sampler subtype"));
+}
 
 TEST_CASE("cameraFromBounds frames a box from +Z", "[cts][worldbuilder]")
 {
@@ -63,8 +137,9 @@ TEST_CASE("cameraFromBounds frames a box from +Z", "[cts][worldbuilder]")
   CHECK(cam.at.x == Approx(0.f));
   CHECK(cam.at.y == Approx(0.f));
   CHECK(cam.at.z == Approx(0.f));
-  // Eye sits in front of the box on +Z, close enough that the subject fills most
-  // of the frame: margin * inPlaneHalfExtent / tan(halfFovy) + halfDepth. For a
+  // Eye sits in front of the box on +Z, close enough that the subject fills
+  // most of the frame: margin * inPlaneHalfExtent / tan(halfFovy) + halfDepth.
+  // For a
   // [-1,1] box both half-extents are 1.
   const float expectedZ = 1.1f * 1.f / 0.5774f + 1.f;
   CHECK(cam.position.z == Approx(expectedZ));
@@ -74,9 +149,11 @@ TEST_CASE("cameraFromBounds frames a box from +Z", "[cts][worldbuilder]")
   CHECK(cam.up.y == Approx(1.f));
 }
 
-// Device-backed smoke tests (need helide) ////////////////////////////////////////
+// Device-backed smoke tests (need helide)
+// ////////////////////////////////////////
 
-TEST_CASE("world-build helpers produce error-free worlds", "[cts][worldbuilder][helide]")
+TEST_CASE("world-build helpers produce error-free worlds",
+    "[cts][worldbuilder][helide]")
 {
   Status status;
   anari::Library lib = anari::loadLibrary("helide", statusFunc, &status);
@@ -90,32 +167,57 @@ TEST_CASE("world-build helpers produce error-free worlds", "[cts][worldbuilder][
 
   SECTION("each geometry subtype builds a valid, lit world")
   {
-    struct Spec
-    {
-      std::string subtype;
-      std::string shape;
-    };
-    const std::vector<Spec> specs = {
-        {"triangle", "triangle"},
-        {"triangle", "cube"},
-        {"quad", "quad"},
-        {"sphere", ""},
-        {"curve", ""},
-        {"cone", ""},
-        {"cylinder", ""},
+    using Factory = std::function<anari::Geometry(anari::Device)>;
+    const std::vector<std::pair<std::string, Factory>> factories = {
+        {"triangle",
+            [](anari::Device d) {
+              TriangleSpec spec;
+              spec.primitiveCount = 8;
+              return buildTriangleGeometry(d, spec);
+            }},
+        {"triangle cube",
+            [](anari::Device d) {
+              TriangleSpec spec;
+              spec.shape = TriangleShape::Cube;
+              spec.primitiveCount = 8;
+              return buildTriangleGeometry(d, spec);
+            }},
+        {"quad",
+            [](anari::Device d) {
+              QuadSpec spec;
+              spec.primitiveCount = 8;
+              return buildQuadGeometry(d, spec);
+            }},
+        {"sphere",
+            [](anari::Device d) {
+              SphereSpec spec;
+              spec.primitiveCount = 8;
+              return buildSphereGeometry(d, spec);
+            }},
+        {"curve",
+            [](anari::Device d) {
+              CurveSpec spec;
+              spec.primitiveCount = 8;
+              return buildCurveGeometry(d, spec);
+            }},
+        {"cone",
+            [](anari::Device d) {
+              ConeSpec spec;
+              spec.primitiveCount = 8;
+              return buildConeGeometry(d, spec);
+            }},
+        {"cylinder",
+            [](anari::Device d) {
+              CylinderSpec spec;
+              spec.primitiveCount = 8;
+              return buildCylinderGeometry(d, spec);
+            }},
     };
 
-    for (const auto &spec : specs) {
-      INFO("subtype=" << spec.subtype << " shape=" << spec.shape);
+    for (const auto &[name, build] : factories) {
+      INFO("geometry=" << name);
       status.errors = 0;
-
-      GeometryOptions opts;
-      opts.subtype = spec.subtype;
-      if (!spec.shape.empty())
-        opts.shape = spec.shape;
-      opts.primitiveCount = 8;
-
-      auto geom = buildGeometry(d, opts);
+      auto geom = build(d);
       auto mat = makeMatteMaterial(d, float3(0.8f, 0.3f, 0.2f));
       auto surface = makeSurface(d, geom, mat);
       auto light = makeDirectionalLight(d, float3(0.f, -1.f, -1.f));
@@ -141,12 +243,11 @@ TEST_CASE("world-build helpers produce error-free worlds", "[cts][worldbuilder][
   SECTION("soup and indexed variants of a geometry share their bounds")
   {
     auto buildBounds = [&](const std::string &mode) {
-      GeometryOptions opts;
-      opts.subtype = "triangle";
-      opts.shape = "cube";
-      opts.primitiveMode = mode;
-      opts.primitiveCount = 6;
-      auto geom = buildGeometry(d, opts);
+      TriangleSpec spec;
+      spec.shape = TriangleShape::Cube;
+      spec.mode = parsePrimitiveMode(mode);
+      spec.primitiveCount = 6;
+      auto geom = buildTriangleGeometry(d, spec);
       auto mat = makeMatteMaterial(d, float3(0.5f));
       auto surface = makeSurface(d, geom, mat);
       WorldContents contents;
@@ -194,10 +295,9 @@ TEST_CASE("world-build helpers produce error-free worlds", "[cts][worldbuilder][
   SECTION("an instanced surface world builds cleanly")
   {
     status.errors = 0;
-    GeometryOptions opts;
-    opts.subtype = "sphere";
-    opts.primitiveCount = 4;
-    auto geom = buildGeometry(d, opts);
+    SphereSpec spec;
+    spec.primitiveCount = 4;
+    auto geom = buildSphereGeometry(d, spec);
     auto mat = makeMatteMaterial(d, float3(0.2f, 0.6f, 0.9f));
     auto surface = makeSurface(d, geom, mat);
     auto instance = makeInstance(d, {surface});
@@ -236,10 +336,9 @@ TEST_CASE("world-build helpers produce error-free worlds", "[cts][worldbuilder][
   SECTION("a built world renders a color frame")
   {
     status.errors = 0;
-    GeometryOptions opts;
-    opts.subtype = "triangle";
-    opts.primitiveCount = 8;
-    auto geom = buildGeometry(d, opts);
+    TriangleSpec spec;
+    spec.primitiveCount = 8;
+    auto geom = buildTriangleGeometry(d, spec);
     auto mat = makeMatteMaterial(d, float3(0.8f));
     auto surface = makeSurface(d, geom, mat);
     auto light = makeDirectionalLight(d, float3(0.f, -1.f, -1.f));

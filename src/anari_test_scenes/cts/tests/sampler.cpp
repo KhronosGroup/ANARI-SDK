@@ -2,6 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "../BuildContext.h"
+#include "../LightBuilder.h"
+#include "../SamplerBuilder.h"
+#include "../SurfaceBuilder.h"
 #include "../TestBuilder.h"
 #include "../WorldBuilder.h"
 #include "Categories.h"
@@ -111,7 +114,7 @@ anari::World samplerWorld(BuildContext &ctx,
 void set(
     BuildContext &ctx, anari::Device d, anari::Sampler s, const char *param)
 {
-  setBoundParameter(d, s, param, ctx.value(param));
+  applyParameterValue(d, s, param, ctx.value(param).raw());
 }
 
 } // namespace
@@ -244,7 +247,7 @@ void registerSamplerTests(Catalog &catalog)
             "",
             nullptr,
             [](BuildContext &ctx, anari::Device d, anari::Sampler s) {
-              setBoundParameter(d, s, "offset", ctx.value("offset"));
+              applyParameterValue(d, s, "offset", ctx.value("offset").raw());
               const std::string dim = ctx.getString("arrayDim", "1");
               if (dim == "1") {
                 std::vector<float> a = {0.5f, 1.0f};

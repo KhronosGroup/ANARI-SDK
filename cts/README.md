@@ -182,8 +182,9 @@ a Case passes only when every metric on every Channel clears its threshold.
 Tests are authored directly in C++ (ADR-0002), one per-category file under
 `src/anari_test_scenes/cts/tests/`. A Test is declared with the `makeTest`
 fluent builder: a `build()` that authors an ANARI world with normal ANARI C++
-calls plus the shared world-build helpers (`WorldBuilder.h`,
-`PrimitiveGenerator`, `TextureGenerator`, `ColorPalette`), its axes
+calls plus the focused construction helpers (`GeometryLayout.h`,
+`GeometryBuilder.h`, the remaining `*Builder.h` modules, `TextureGenerator`,
+and `ColorPalette`), its axes
 (`permute`/`variant`), required features, thresholds, and channels. For example:
 
 ```cpp

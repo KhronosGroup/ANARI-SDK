@@ -2,6 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "../BuildContext.h"
+#include "../GeometryBuilder.h"
+#include "../LightBuilder.h"
+#include "../SurfaceBuilder.h"
 #include "../TestBuilder.h"
 #include "../WorldBuilder.h"
 #include "Categories.h"
@@ -22,11 +25,9 @@ const char *kTriangle = "ANARI_KHR_GEOMETRY_TRIANGLE";
 anari::World cameraSubjectWorld(BuildContext &ctx)
 {
   auto d = ctx.device();
-  GeometryOptions o;
-  o.subtype = "triangle";
-  o.shape = "triangle";
-  o.primitiveCount = 16;
-  auto geom = buildGeometry(d, o);
+  TriangleSpec spec;
+  spec.primitiveCount = 16;
+  auto geom = buildTriangleGeometry(d, spec);
   auto mat = makeMatteMaterial(d, float3(0.7f, 0.5f, 0.3f));
   auto surface = makeSurface(d, geom, mat);
   auto light = makeDirectionalLight(d, float3(0.f, -1.f, -1.f));
@@ -51,7 +52,7 @@ Any box2(float lx, float ly, float hx, float hy)
 
 void cp(BuildContext &ctx, anari::Device d, anari::Camera c, const char *param)
 {
-  setBoundParameter(d, c, param, ctx.value(param));
+  applyParameterValue(d, c, param, ctx.value(param).raw());
 }
 
 } // namespace

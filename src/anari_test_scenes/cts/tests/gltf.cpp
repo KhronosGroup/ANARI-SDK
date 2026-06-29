@@ -6,7 +6,6 @@
 #ifdef ENABLE_GLTF
 #include "../BuildContext.h"
 #include "../TestBuilder.h"
-#include "../WorldBuilder.h"
 #include "scenes/file/gltf2anari.h"
 // std
 #include <algorithm>

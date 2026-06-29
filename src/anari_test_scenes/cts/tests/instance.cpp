@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "../BuildContext.h"
+#include "../GeometryBuilder.h"
+#include "../SurfaceBuilder.h"
 #include "../TestBuilder.h"
 #include "../WorldBuilder.h"
 #include "Categories.h"
@@ -24,11 +26,8 @@ void registerInstanceTests(Catalog &catalog)
   makeTest("instance", "instance")
       .build([](BuildContext &ctx) {
         auto d = ctx.device();
-        GeometryOptions o;
-        o.subtype = "triangle";
-        o.shape = "triangle";
-        o.primitiveCount = 1;
-        auto geom = buildGeometry(d, o);
+        TriangleSpec spec;
+        auto geom = buildTriangleGeometry(d, spec);
         auto mat = makeMatteMaterial(d, float3(0.7f, 0.5f, 0.3f));
         auto surface = makeSurface(d, geom, mat);
 

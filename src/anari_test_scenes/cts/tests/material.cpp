@@ -2,6 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "../BuildContext.h"
+#include "../GeometryLayout.h"
+#include "../LightBuilder.h"
+#include "../SamplerBuilder.h"
+#include "../SurfaceBuilder.h"
 #include "../TestBuilder.h"
 #include "../WorldBuilder.h"
 #include "Categories.h"
@@ -10,6 +14,7 @@
 #include <algorithm>
 #include <functional>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace anari {
@@ -21,6 +26,22 @@ using anari::math::float2;
 using anari::math::float3;
 using anari::math::float4;
 using V = std::vector<Any>;
+
+template <typename T>
+ParameterBinding constant(T value)
+{
+  return constantBinding(std::move(value));
+}
+
+ParameterBinding attribute(const char *name)
+{
+  return attributeBinding(name);
+}
+
+ParameterBinding sampler(size_t index)
+{
+  return samplerBinding(index);
+}
 
 const char *kMatte = "ANARI_KHR_MATERIAL_MATTE";
 const char *kPbr = "ANARI_KHR_MATERIAL_PHYSICALLY_BASED";
@@ -129,7 +150,7 @@ void bind(BuildContext &ctx,
     const char *param,
     const std::vector<anari::Sampler> &s)
 {
-  setBoundParameter(d, mat, param, ctx.value(param), s);
+  applyParameterBinding(d, mat, param, ctx.binding(param), s);
 }
 
 } // namespace
@@ -153,8 +174,12 @@ void registerMaterialTests(Catalog &catalog)
               bind(ctx, d, mat, "alphaCutoff", s);
             });
       })
-      .permute("alphaMode", V{Any("mask"), none(), Any("opaque"), Any("blend")})
-      .permute("alphaCutoff", V{none(), Any(0.1f)})
+      .permute("alphaMode",
+          V{constant("mask"),
+              unsetBinding(),
+              constant("opaque"),
+              constant("blend")})
+      .permute("alphaCutoff", V{unsetBinding(), constant(0.1f)})
       .requireFeature(kMatte)
       .registerInto(catalog);
 
@@ -172,10 +197,10 @@ void registerMaterialTests(Catalog &catalog)
             });
       })
       .permute("color",
-          V{none(),
-              Any(float3(0.98f, 0.5f, 0.44f)),
-              Any("attribute0"),
-              Any("ref_sampler_0")})
+          V{unsetBinding(),
+              constant(float3(0.98f, 0.5f, 0.44f)),
+              attribute("attribute0"),
+              sampler(0)})
       .requireFeature(kMatte)
       .registerInto(catalog);
 
@@ -195,7 +220,10 @@ void registerMaterialTests(Catalog &catalog)
             });
       })
       .permute("opacity",
-          V{none(), Any(0.5f), Any("attribute2"), Any("ref_sampler_0")})
+          V{unsetBinding(),
+              constant(0.5f),
+              attribute("attribute2"),
+              sampler(0)})
       .requireFeature(kMatte)
       .registerInto(catalog);
 
@@ -217,8 +245,12 @@ void registerMaterialTests(Catalog &catalog)
               bind(ctx, d, mat, "alphaCutoff", s);
             });
       })
-      .permute("alphaMode", V{none(), Any("opaque"), Any("blend"), Any("mask")})
-      .permute("alphaCutoff", V{none(), Any(0.1f)})
+      .permute("alphaMode",
+          V{unsetBinding(),
+              constant("opaque"),
+              constant("blend"),
+              constant("mask")})
+      .permute("alphaCutoff", V{unsetBinding(), constant(0.1f)})
       .requireFeature(kPbr)
       .registerInto(catalog);
 
@@ -236,10 +268,10 @@ void registerMaterialTests(Catalog &catalog)
             });
       })
       .permute("baseColor",
-          V{none(),
-              Any(float3(0.98f, 0.5f, 0.44f)),
-              Any("attribute0"),
-              Any("ref_sampler_0")})
+          V{unsetBinding(),
+              constant(float3(0.98f, 0.5f, 0.44f)),
+              attribute("attribute0"),
+              sampler(0)})
       .requireFeature(kPbr)
       .registerInto(catalog);
 
@@ -260,10 +292,16 @@ void registerMaterialTests(Catalog &catalog)
       })
       .simplified()
       .permute("clearcoat",
-          V{Any(0.5f), none(), Any("attribute0"), Any("ref_sampler_0")})
+          V{constant(0.5f),
+              unsetBinding(),
+              attribute("attribute0"),
+              sampler(0)})
       .permute("clearcoatRoughness",
-          V{Any(0.5f), none(), Any("attribute0"), Any("ref_sampler_0")})
-      .permute("clearcoatNormal", V{none(), Any("ref_sampler_1")})
+          V{constant(0.5f),
+              unsetBinding(),
+              attribute("attribute0"),
+              sampler(0)})
+      .permute("clearcoatNormal", V{unsetBinding(), sampler(1)})
       .requireFeature(kPbr)
       .registerInto(catalog);
 
@@ -281,10 +319,10 @@ void registerMaterialTests(Catalog &catalog)
             });
       })
       .permute("emissive",
-          V{none(),
-              Any(float3(1.f, 0.f, 0.f)),
-              Any("attribute0"),
-              Any("ref_sampler_0")})
+          V{unsetBinding(),
+              constant(float3(1.f, 0.f, 0.f)),
+              attribute("attribute0"),
+              sampler(0)})
       .requireFeature(kPbr)
       .registerInto(catalog);
 
@@ -303,7 +341,7 @@ void registerMaterialTests(Catalog &catalog)
               bind(ctx, d, mat, "ior", s);
             });
       })
-      .permute("ior", V{none(), Any(2.42f)})
+      .permute("ior", V{unsetBinding(), constant(2.42f)})
       .requireFeature(kPbr)
       .registerInto(catalog);
 
@@ -324,10 +362,16 @@ void registerMaterialTests(Catalog &catalog)
       })
       .simplified()
       .permute("iridescence",
-          V{Any(0.5f), none(), Any("attribute0"), Any("ref_sampler_0")})
-      .permute("iridescenceIor", V{none(), Any(2.0f)})
+          V{constant(0.5f),
+              unsetBinding(),
+              attribute("attribute0"),
+              sampler(0)})
+      .permute("iridescenceIor", V{unsetBinding(), constant(2.0f)})
       .permute("iridescenceThickness",
-          V{Any(0.5f), none(), Any("attribute0"), Any("ref_sampler_0")})
+          V{constant(0.5f),
+              unsetBinding(),
+              attribute("attribute0"),
+              sampler(0)})
       .requireFeature(kPbr)
       .registerInto(catalog);
 
@@ -348,10 +392,16 @@ void registerMaterialTests(Catalog &catalog)
       })
       .simplified()
       .permute("metallic",
-          V{Any(0.5f), none(), Any("attribute0"), Any("ref_sampler_0")})
+          V{constant(0.5f),
+              unsetBinding(),
+              attribute("attribute0"),
+              sampler(0)})
       .permute("roughness",
-          V{Any(0.5f), none(), Any("attribute0"), Any("ref_sampler_0")})
-      .permute("normal", V{none(), Any("ref_sampler_1")})
+          V{constant(0.5f),
+              unsetBinding(),
+              attribute("attribute0"),
+              sampler(0)})
+      .permute("normal", V{unsetBinding(), sampler(1)})
       .requireFeature(kPbr)
       .registerInto(catalog);
 
@@ -371,7 +421,10 @@ void registerMaterialTests(Catalog &catalog)
             });
       })
       .permute("opacity",
-          V{none(), Any(0.5f), Any("attribute2"), Any("ref_sampler_0")})
+          V{unsetBinding(),
+              constant(0.5f),
+              attribute("attribute2"),
+              sampler(0)})
       .requireFeature(kPbr)
       .registerInto(catalog);
 
@@ -392,12 +445,15 @@ void registerMaterialTests(Catalog &catalog)
       })
       .simplified()
       .permute("sheenColor",
-          V{Any(float3(0.98f, 0.5f, 0.44f)),
-              none(),
-              Any("attribute0"),
-              Any("ref_sampler_0")})
+          V{constant(float3(0.98f, 0.5f, 0.44f)),
+              unsetBinding(),
+              attribute("attribute0"),
+              sampler(0)})
       .permute("sheenRoughness",
-          V{Any(0.5f), none(), Any("attribute0"), Any("ref_sampler_1")})
+          V{constant(0.5f),
+              unsetBinding(),
+              attribute("attribute0"),
+              sampler(1)})
       .requireFeature(kPbr)
       .registerInto(catalog);
 
@@ -418,12 +474,15 @@ void registerMaterialTests(Catalog &catalog)
       })
       .simplified()
       .permute("specular",
-          V{Any(0.5f), none(), Any("attribute0"), Any("ref_sampler_1")})
+          V{constant(0.5f),
+              unsetBinding(),
+              attribute("attribute0"),
+              sampler(1)})
       .permute("specularColor",
-          V{Any(float3(0.98f, 0.5f, 0.44f)),
-              none(),
-              Any("attribute0"),
-              Any("ref_sampler_0")})
+          V{constant(float3(0.98f, 0.5f, 0.44f)),
+              unsetBinding(),
+              attribute("attribute0"),
+              sampler(0)})
       .requireFeature(kPbr)
       .registerInto(catalog);
 
@@ -445,9 +504,13 @@ void registerMaterialTests(Catalog &catalog)
       })
       .simplified()
       .permute("thickness",
-          V{Any(0.5f), none(), Any("attribute0"), Any("ref_sampler_0")})
-      .permute("attenuationDistance", V{Any(0.5f), none()})
-      .permute("attenuationColor", V{Any(float3(0.98f, 0.5f, 0.44f)), none()})
+          V{constant(0.5f),
+              unsetBinding(),
+              attribute("attribute0"),
+              sampler(0)})
+      .permute("attenuationDistance", V{constant(0.5f), unsetBinding()})
+      .permute("attenuationColor",
+          V{constant(float3(0.98f, 0.5f, 0.44f)), unsetBinding()})
       .requireFeature(kPbr)
       .registerInto(catalog);
 
@@ -465,7 +528,10 @@ void registerMaterialTests(Catalog &catalog)
             });
       })
       .permute("transmission",
-          V{none(), Any(0.5f), Any("attribute0"), Any("ref_sampler_0")})
+          V{unsetBinding(),
+              constant(0.5f),
+              attribute("attribute0"),
+              sampler(0)})
       .requireFeature(kPbr)
       .registerInto(catalog);
 }

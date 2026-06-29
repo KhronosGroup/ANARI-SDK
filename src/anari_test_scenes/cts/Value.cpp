@@ -5,9 +5,24 @@
 // std
 #include <cctype>
 #include <cstdint>
+#include <stdexcept>
 
 namespace anari {
 namespace cts {
+
+const RawValue &Any::raw() const
+{
+  if (isBinding())
+    throw std::logic_error("typed parameter binding is not a raw ANARI value");
+  return std::get<RawValue>(m_value);
+}
+
+const ParameterBinding &Any::binding() const
+{
+  if (!isBinding())
+    throw std::logic_error("raw ANARI value is not a parameter binding");
+  return std::get<ParameterBinding>(m_value);
+}
 
 // Render a floating point value without a fixed number of trailing zeros so
 // keys stay short and readable (100.0 -> "100", 0.6 -> "0.6").
@@ -73,6 +88,25 @@ static bool isFloatComposite(ANARIDataType t)
 
 std::string anyToString(const Any &v)
 {
+  if (v.isBinding()) {
+    return std::visit(
+        [](const auto &source) -> std::string {
+          using T = std::decay_t<decltype(source)>;
+          if constexpr (std::is_same_v<T, UnsetParameter>) {
+            return "none";
+          } else if constexpr (std::is_same_v<T, ConstantParameter>) {
+            return anyToString(Any(source.value));
+          } else if constexpr (std::is_same_v<T, AttributeParameter>) {
+            return sanitize(source.name);
+          } else {
+            // Compatibility label only: the sampler reference remains typed in
+            // memory, while catalog metadata and ground-truth keys stay stable.
+            return "ref_sampler_" + std::to_string(source.index);
+          }
+        },
+        v.binding().value());
+  }
+
   if (!v.valid())
     return "none";
 

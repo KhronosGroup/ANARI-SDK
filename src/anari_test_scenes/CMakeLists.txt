@@ -18,12 +18,21 @@ project_sources(PRIVATE
   cts/Filter.cpp
   cts/FrameFormats.cpp
   cts/FrameReadback.cpp
+  cts/GeometryBuilder.cpp
+  cts/GeometryLayout.cpp
   cts/Image.cpp
+  cts/InstanceBuilder.cpp
+  cts/LightBuilder.cpp
   cts/Metrics.cpp
+  cts/ParameterBinding.cpp
   cts/Runner.cpp
   cts/Sidecar.cpp
+  cts/SamplerBuilder.cpp
+  cts/SurfaceBuilder.cpp
   cts/TestBuilder.cpp
   cts/Value.cpp
+  cts/ViewBuilder.cpp
+  cts/VolumeBuilder.cpp
   cts/WorldBuilder.cpp
   cts/Workdir.cpp
 

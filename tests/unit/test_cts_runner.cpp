@@ -7,7 +7,10 @@
 #include "cts/Catalog.h"
 #include "cts/FrameFormats.h"
 #include "cts/FrameReadback.h"
+#include "cts/GeometryBuilder.h"
+#include "cts/LightBuilder.h"
 #include "cts/Runner.h"
+#include "cts/SurfaceBuilder.h"
 #include "cts/TestBuilder.h"
 #include "cts/WorldBuilder.h"
 // std
@@ -40,11 +43,10 @@ void statusFunc(const void *,
 anari::World buildTriangleWorld(BuildContext &ctx)
 {
   auto d = ctx.device();
-  GeometryOptions opts;
-  opts.subtype = "triangle";
-  opts.primitiveCount = ctx.get<int>("primitiveCount", 4);
-  opts.primitiveMode = ctx.getString("primitiveMode", "soup");
-  auto geom = buildGeometry(d, opts);
+  TriangleSpec spec;
+  spec.primitiveCount = ctx.get<int>("primitiveCount", 4);
+  spec.mode = parsePrimitiveMode(ctx.getString("primitiveMode", "soup"));
+  auto geom = buildTriangleGeometry(d, spec);
   auto mat = makeMatteMaterial(d, float3(0.8f, 0.4f, 0.2f));
   auto surface = makeSurface(d, geom, mat);
   auto light = makeDirectionalLight(d, float3(0.f, -1.f, -1.f));
@@ -62,10 +64,9 @@ anari::World buildTriangleWorld(BuildContext &ctx)
 anari::World buildSphereWorld(BuildContext &ctx)
 {
   auto d = ctx.device();
-  GeometryOptions opts;
-  opts.subtype = "sphere";
-  opts.primitiveCount = 6;
-  auto geom = buildGeometry(d, opts);
+  SphereSpec spec;
+  spec.primitiveCount = 6;
+  auto geom = buildSphereGeometry(d, spec);
   auto mat = makeMatteMaterial(d, float3(0.3f, 0.7f, 0.5f));
   auto surface = makeSurface(d, geom, mat);
   auto light = makeDirectionalLight(d, float3(0.f, -1.f, -1.f));

@@ -102,8 +102,14 @@ ctsReport.py              reads the sidecar tree only; report + device diff
 - `Workdir.{h,cpp}` / `Sidecar.{h,cpp}` — the results tree layout and the
   versioned per-Case sidecar contract (carries the producing `device` identity
   since schema v2; `Workdir` also keys the per-channel diff/threshold images).
-- `WorldBuilder.{h,cpp}` + `generators/` — shared world-build helpers lifted
-  from the old `SceneGenerator::commit()`.
+- `GeometryLayout.{h,cpp}` — pure deterministic Layout generation using typed
+  shape and primitive-mode enums.
+- `GeometryBuilder.{h,cpp}` — geometry-family specifications and ANARI
+  publication; one entry point per supported family.
+- `ParameterBinding.{h,cpp}` — checked constant/attribute/sampler/unset
+  material bindings. `SurfaceBuilder`, `LightBuilder`, `SamplerBuilder`,
+  `VolumeBuilder`, `InstanceBuilder`, `ViewBuilder`, and `WorldBuilder` own the
+  remaining focused construction responsibilities.
 
 `query-device-info` is a thin CLI adapter over the shared frontend utility in
 `src/anari/DeviceIntrospection.cpp`; the same utility backs `anariInfo`.
@@ -124,7 +130,8 @@ device-backed ones add `[helide]` and self-skip if no device loads.
 
 **New Test:** add a `makeTest(...)....registerInto(catalog)` to the relevant
 `cts/tests/<category>.cpp`. Author the world in `build()` with ANARI C++ calls
-plus the `WorldBuilder.h` helpers; declare axes, required features, channels.
+plus the focused `*Builder.h` helpers; declare axes, required features, and
+channels.
 
 **New per-Case axis the runner must act on** (e.g. a new output format): resolve
 it in `FrameFormats.cpp` (pure, unit-test it) and honor it in `Runner.cpp`.

@@ -3,6 +3,7 @@
 
 #include "../BuildContext.h"
 #include "../TestBuilder.h"
+#include "../VolumeBuilder.h"
 #include "../WorldBuilder.h"
 #include "Categories.h"
 // std
@@ -53,17 +54,19 @@ void registerVolumeTests(Catalog &catalog)
       .build([](BuildContext &ctx) {
         auto d = ctx.device();
         auto field = newStructuredRegularField(d, {3, 3, 3});
-        setBoundParameter(d, field, "filter", ctx.value("filter"));
-        setBoundParameter(d, field, "origin", ctx.value("origin"));
-        setBoundParameter(d, field, "spacing", ctx.value("spacing"));
+        applyParameterValue(d, field, "filter", ctx.value("filter").raw());
+        applyParameterValue(d, field, "origin", ctx.value("origin").raw());
+        applyParameterValue(d, field, "spacing", ctx.value("spacing").raw());
         anari::commitParameters(d, field);
 
         auto vol = anari::newObject<anari::Volume>(d, "transferFunction1D");
         anari::setParameter(d, vol, "value", field);
         setVolumeColor(ctx, d, vol);
         setVolumeOpacity(ctx, d, vol);
-        setBoundParameter(d, vol, "valueRange", ctx.value("valueRange"));
-        setBoundParameter(d, vol, "unitDistance", ctx.value("unitDistance"));
+        applyParameterValue(
+            d, vol, "valueRange", ctx.value("valueRange").raw());
+        applyParameterValue(
+            d, vol, "unitDistance", ctx.value("unitDistance").raw());
         anari::commitParameters(d, vol);
 
         WorldContents wc;

@@ -11,6 +11,7 @@
 #include "helium/utility/ParameterizedObject.h"
 // std
 #include <string>
+#include <unordered_map>
 
 namespace anari {
 namespace cts {
@@ -40,9 +41,12 @@ class ANARI_TEST_SCENES_INTERFACE BuildContext
   bool has(const std::string &name) const;
 
   // The raw axis value carried under 'name', or an invalid Any (none()) when
-  // unset. Used by helpers that dispatch on the value's ANARI type (constant vs
-  // attribute-name string vs sampler reference).
+  // unset.
   Any value(const std::string &name) const;
+
+  // The typed material binding carried under 'name'. Throws an actionable
+  // diagnostic when the axis is absent or contains a regular value.
+  const ParameterBinding &binding(const std::string &name) const;
 
   // Load a resolved axis value. A `none()` (invalid) value is intentionally
   // dropped so that get<>() falls back to the build()-supplied default.
@@ -57,6 +61,7 @@ class ANARI_TEST_SCENES_INTERFACE BuildContext
  private:
   anari::Device m_device{nullptr};
   helium::ParameterizedObject m_params;
+  std::unordered_map<std::string, ParameterBinding> m_bindings;
 };
 
 } // namespace cts

@@ -2,7 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "../BuildContext.h"
+#include "../GeometryBuilder.h"
+#include "../SurfaceBuilder.h"
 #include "../TestBuilder.h"
+#include "../ViewBuilder.h"
 #include "../WorldBuilder.h"
 #include "Categories.h"
 #include "generators/TextureGenerator.h"
@@ -22,11 +25,9 @@ using V = std::vector<Any>;
 anari::World ambientSubject(BuildContext &ctx)
 {
   auto d = ctx.device();
-  GeometryOptions o;
-  o.subtype = "triangle";
-  o.shape = "triangle";
-  o.primitiveCount = 16;
-  auto geom = buildGeometry(d, o);
+  TriangleSpec spec;
+  spec.primitiveCount = 16;
+  auto geom = buildTriangleGeometry(d, spec);
   auto mat = makeMatteMaterial(d, float3(0.7f, 0.7f, 0.7f));
   auto surface = makeSurface(d, geom, mat);
   WorldContents wc;
@@ -53,9 +54,10 @@ void registerRendererTests(Catalog &catalog)
       .renderer([](BuildContext &ctx) {
         auto d = ctx.device();
         auto r = newRenderer(d, "default");
-        setBoundParameter(d, r, "ambientColor", ctx.value("ambientColor"));
-        setBoundParameter(
-            d, r, "ambientRadiance", ctx.value("ambientRadiance"));
+        applyParameterValue(
+            d, r, "ambientColor", ctx.value("ambientColor").raw());
+        applyParameterValue(
+            d, r, "ambientRadiance", ctx.value("ambientRadiance").raw());
         anari::commitParameters(d, r);
         return r;
       })
@@ -74,7 +76,7 @@ void registerRendererTests(Catalog &catalog)
       .renderer([](BuildContext &ctx) {
         auto d = ctx.device();
         auto r = newRenderer(d, "default");
-        setBoundParameter(d, r, "background", ctx.value("background"));
+        applyParameterValue(d, r, "background", ctx.value("background").raw());
         anari::commitParameters(d, r);
         return r;
       })

@@ -2,7 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "../BuildContext.h"
+#include "../GeometryBuilder.h"
+#include "../LightBuilder.h"
+#include "../SurfaceBuilder.h"
 #include "../TestBuilder.h"
+#include "../ViewBuilder.h"
 #include "../WorldBuilder.h"
 #include "Categories.h"
 // std
@@ -26,11 +30,9 @@ anari::World lightWorld(
     BuildContext &ctx, const char *subtype, const LightFn &apply)
 {
   auto d = ctx.device();
-  GeometryOptions o;
-  o.subtype = "triangle";
-  o.shape = "triangle";
-  o.primitiveCount = 16;
-  auto geom = buildGeometry(d, o);
+  TriangleSpec spec;
+  spec.primitiveCount = 16;
+  auto geom = buildTriangleGeometry(d, spec);
   auto mat = makeMatteMaterial(d, float3(0.7f, 0.7f, 0.7f));
   auto surface = makeSurface(d, geom, mat);
 
@@ -65,7 +67,7 @@ anari::Renderer darkRenderer(BuildContext &ctx)
 
 void lp(BuildContext &ctx, anari::Device d, anari::Light l, const char *param)
 {
-  setBoundParameter(d, l, param, ctx.value(param));
+  applyParameterValue(d, l, param, ctx.value(param).raw());
 }
 
 // Set an intensityDistribution array from a per-Case token ("none"/"1d"/"2d").

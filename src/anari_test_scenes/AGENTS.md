@@ -124,7 +124,9 @@ the glossary and `cts/docs/adr/` for the design decisions.
 | `Case` + `expand()` | One resolved combination; full cartesian or simplified one-factor-at-a-time. `id()` (all values) vs `groundTruthKey()` (permutation values only) |
 | `BuildContext` | Carries a Case's axis values to `build()`, read typed-by-name over `helium::ParameterizedObject` |
 | `Catalog` + `Filter` | The in-C++ Test registry: register/list/filter/categories + feature gating |
-| `WorldBuilder.h` | Free functions (`buildGeometry`, `makeSurface`, `makeMatteMaterial`, `makeDirectionalLight`, `makeVolume`, `makeInstance`, `cameraFromBounds`, `assembleWorld`, …) extracted from `SceneGenerator::commit()` for authoring worlds directly |
+| `GeometryLayout.h` / `GeometryBuilder.h` | Typed geometry specifications, pure deterministic Layout generation, and focused ANARI geometry publication |
+| `ParameterBinding.h` | Explicit constant, attribute, sampler, and unset material bindings with checked publication |
+| `*Builder.h` | Focused helpers for surfaces, lights, samplers, volumes, instances, views, and World assembly |
 
 Unit tests: `tests/unit/test_cts_catalog.cpp` (pure, device-free) and
 `tests/unit/test_cts_worldbuilder.cpp` (helide-backed smoke tests, skipped if no

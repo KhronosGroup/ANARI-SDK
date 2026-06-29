@@ -9,6 +9,7 @@
 #include "Metrics.h"
 #include "Sidecar.h"
 #include "Value.h"
+#include "ViewBuilder.h"
 #include "WorldBuilder.h"
 // std
 #include <algorithm>
