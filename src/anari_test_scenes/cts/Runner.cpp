@@ -137,6 +137,17 @@ CaseResult baseResult(const Case &c, const DeviceSpec &device)
   return r;
 }
 
+RunSummary workdirFailureSummary(const Catalog &catalog, const Filter &filter)
+{
+  RunSummary summary;
+  for (const TestDef *test : catalog.filter(filter)) {
+    const int cases = static_cast<int>(expand(*test).size());
+    summary.total += cases;
+    summary.failed += cases;
+  }
+  return summary;
+}
+
 // Per-pixel absolute RGB difference between two equal-sized images, with opaque
 // alpha so the result is viewable. Returns an invalid Image if the sizes differ
 // (then the caller skips the debug images).
@@ -189,7 +200,17 @@ constexpr uint8_t kDiffThreshold8 = 13;
 } // namespace
 
 Runner::Runner(anari::Device device, Workdir workdir, RunOptions options)
-    : m_device(device), m_workdir(std::move(workdir)), m_options(options)
+    : Runner(device, std::move(workdir), std::move(options), nullptr)
+{}
+
+Runner::Runner(anari::Device device,
+    Workdir workdir,
+    RunOptions options,
+    std::shared_ptr<ArtifactWriter> artifactWriter)
+    : m_device(device),
+      m_workdir(std::move(workdir)),
+      m_artifacts(m_workdir, std::move(artifactWriter)),
+      m_options(options)
 {}
 
 void Runner::resolveCapabilities(const std::set<std::string> &features)
@@ -245,8 +266,30 @@ void Runner::writeFeatureSkip(const Case &c, RunSummary &summary)
   CaseResult result = baseResult(c, m_options.device);
   result.verdict = Verdict::Skipped;
   result.skipReason = "device is missing a required feature";
-  writeSidecar(m_workdir.sidecarPath(c), result);
-  summary.skipped++;
+  recordResult(c, result, summary);
+}
+
+void Runner::recordResult(const Case &c,
+    const CaseResult &result,
+    RunSummary &summary,
+    const std::vector<ImageArtifact> &images)
+{
+  if (!m_artifacts.publishResult(c, result, images)) {
+    summary.failed++;
+    return;
+  }
+
+  switch (result.verdict) {
+  case Verdict::Passed:
+    summary.passed++;
+    break;
+  case Verdict::Failed:
+    summary.failed++;
+    break;
+  case Verdict::Skipped:
+    summary.skipped++;
+    break;
+  }
 }
 
 void Runner::writeCaseFailure(
@@ -255,8 +298,7 @@ void Runner::writeCaseFailure(
   CaseResult result = baseResult(c, m_options.device);
   result.verdict = Verdict::Failed;
   result.detail = detail;
-  writeSidecar(m_workdir.sidecarPath(c), result);
-  summary.failed++;
+  recordResult(c, result, summary);
 }
 
 std::vector<Image> Runner::renderCase(const TestDef &test, const Case &c)
@@ -294,7 +336,8 @@ RunSummary Runner::generate(const Catalog &catalog,
     const std::set<std::string> &referenceFeatures)
 {
   resolveCapabilities(referenceFeatures);
-  m_workdir.writeGitignore();
+  if (!m_workdir.writeGitignore())
+    return workdirFailureSummary(catalog, filter);
   RunSummary summary;
   for (const TestDef *test : catalog.filter(filter)) {
     // Behavioral tests verify themselves at run time and have no ground truth.
@@ -318,13 +361,14 @@ RunSummary Runner::generate(const Catalog &catalog,
           summary.failed++;
           continue;
         }
-        bool ok = true;
+        std::vector<ImageArtifact> artifacts;
+        artifacts.reserve(test->channels.size());
         for (size_t i = 0; i < test->channels.size(); ++i) {
-          if (!savePNG(
-                  m_workdir.groundTruthImagePath(c, test->channels[i]).string(),
-                  images[i]))
-            ok = false;
+          artifacts.push_back(
+              {m_workdir.groundTruthImagePath(c, test->channels[i]),
+                  std::move(images[i])});
         }
+        const bool ok = m_artifacts.publishGroundTruth(artifacts);
         ok ? summary.passed++ : summary.failed++;
       } catch (...) {
         summary.failed++;
@@ -339,7 +383,8 @@ RunSummary Runner::run(const Catalog &catalog,
     const std::set<std::string> &candidateFeatures)
 {
   resolveCapabilities(candidateFeatures);
-  m_workdir.writeGitignore();
+  if (!m_workdir.writeGitignore())
+    return workdirFailureSummary(catalog, filter);
   RunSummary summary;
   for (const TestDef *test : catalog.filter(filter)) {
     if (test->behaviorCheck) {
@@ -374,8 +419,7 @@ RunSummary Runner::run(const Catalog &catalog,
         if (!haveGroundTruth) {
           result.verdict = Verdict::Skipped;
           result.skipReason = "no ground truth (run generate first)";
-          writeSidecar(m_workdir.sidecarPath(c), result);
-          summary.skipped++;
+          recordResult(c, result, summary);
           continue;
         }
 
@@ -388,15 +432,16 @@ RunSummary Runner::run(const Catalog &catalog,
         if (images.size() != test->channels.size()) {
           result.verdict = Verdict::Failed;
           result.skipReason = "render produced no image";
-          writeSidecar(m_workdir.sidecarPath(c), result);
-          summary.failed++;
+          recordResult(c, result, summary);
           continue;
         }
 
         bool allPassed = true;
+        std::vector<ImageArtifact> artifacts;
+        artifacts.reserve(test->channels.size() * 3);
         for (size_t i = 0; i < test->channels.size(); ++i) {
           const Channel ch = test->channels[i];
-          savePNG(m_workdir.resultImagePath(c, ch).string(), images[i]);
+          artifacts.push_back({m_workdir.resultImagePath(c, ch), images[i]});
 
           ChannelResult cr;
           cr.channel = ch;
@@ -419,9 +464,9 @@ RunSummary Runner::run(const Catalog &catalog,
           // difference and a thresholded mask of it, to localize a mismatch.
           const Image diffImg = makeDiffImage(groundTruth[i], images[i]);
           if (diffImg.valid()) {
-            savePNG(m_workdir.diffImagePath(c, ch).string(), diffImg);
-            savePNG(m_workdir.thresholdImagePath(c, ch).string(),
-                makeThresholdImage(diffImg, kDiffThreshold8));
+            artifacts.push_back({m_workdir.diffImagePath(c, ch), diffImg});
+            artifacts.push_back({m_workdir.thresholdImagePath(c, ch),
+                makeThresholdImage(diffImg, kDiffThreshold8)});
             cr.diffImage =
                 m_workdir.relativeToRoot(m_workdir.diffImagePath(c, ch));
             cr.thresholdImage =
@@ -444,8 +489,7 @@ RunSummary Runner::run(const Catalog &catalog,
             result.detail.empty() ? note : result.detail + "; " + note;
 
         result.verdict = allPassed ? Verdict::Passed : Verdict::Failed;
-        writeSidecar(m_workdir.sidecarPath(c), result);
-        allPassed ? summary.passed++ : summary.failed++;
+        recordResult(c, result, summary, artifacts);
       } catch (const std::exception &e) {
         writeCaseFailure(
             c, std::string("exception during run: ") + e.what(), summary);
@@ -479,8 +523,7 @@ void Runner::runBehaviorTest(const TestDef &test,
       if (!scene.valid()) {
         result.verdict = Verdict::Failed;
         result.detail = "world/camera/renderer build failed";
-        writeSidecar(m_workdir.sidecarPath(c), result);
-        summary.failed++;
+        recordResult(c, result, summary);
       } else {
         const auto start = std::chrono::steady_clock::now();
         const BehaviorResult br = test.behaviorCheck(m_device,
@@ -494,8 +537,7 @@ void Runner::runBehaviorTest(const TestDef &test,
             std::chrono::duration<double, std::milli>(end - start).count();
         result.verdict = br.passed ? Verdict::Passed : Verdict::Failed;
         result.detail = br.detail;
-        writeSidecar(m_workdir.sidecarPath(c), result);
-        br.passed ? summary.passed++ : summary.failed++;
+        recordResult(c, result, summary);
       }
     } catch (const std::exception &e) {
       writeCaseFailure(c,

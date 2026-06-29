@@ -110,6 +110,44 @@ std::string readFile(const std::filesystem::path &p)
   return ss.str();
 }
 
+bool hasPublicationTemporary(const std::filesystem::path &root)
+{
+  if (!std::filesystem::exists(root))
+    return false;
+  for (const auto &entry :
+      std::filesystem::recursive_directory_iterator(root)) {
+    const auto name = entry.path().filename().string();
+    if (name.find(".stage.") != std::string::npos
+        || name.find(".backup.") != std::string::npos)
+      return true;
+  }
+  return false;
+}
+
+class FailingArtifactWriter : public ArtifactWriter
+{
+ public:
+  int failImageWrite{-1};
+  bool failSidecarWrite{false};
+
+  bool writeImage(
+      const std::filesystem::path &path, const Image &image) override
+  {
+    if (m_imageWrites++ == failImageWrite)
+      return false;
+    return savePNG(path.string(), image);
+  }
+
+  bool writeSidecar(
+      const std::filesystem::path &path, const CaseResult &result) override
+  {
+    return !failSidecarWrite && anari::cts::writeSidecar(path, result);
+  }
+
+ private:
+  int m_imageWrites{0};
+};
+
 // A Case carrying a single output-format axis value.
 Case caseWithFormat(const std::string &axis, anari::cts::Any value)
 {
@@ -477,6 +515,148 @@ TEST_CASE(
     const auto bogusText = readFile(wd.sidecarPath(bogus));
     CHECK(bogusText.find("\"verdict\": \"skipped\"") != std::string::npos);
     CHECK(bogusText.find("feature") != std::string::npos);
+  }
+
+  SECTION("a result directory creation failure fails the Case")
+  {
+    auto genSummary = runner.generate(catalog, Filter{"geometry"}, features);
+    REQUIRE(genSummary.passed == 5);
+
+    const auto blockedDirectory = root / "results" / "geometry" / "sphere";
+    std::filesystem::create_directories(blockedDirectory.parent_path());
+    {
+      std::ofstream blocker(blockedDirectory);
+      REQUIRE(blocker);
+      blocker << "not a directory\n";
+    }
+
+    const auto runSummary = runner.run(catalog, Filter{"geometry"}, features);
+    CHECK(runSummary.total == 5);
+    CHECK(runSummary.passed == 4);
+    CHECK(runSummary.failed == 1);
+
+    Case sph;
+    sph.category = "geometry";
+    sph.testName = "sphere";
+    CHECK_FALSE(std::filesystem::exists(Workdir(root).sidecarPath(sph)));
+  }
+
+  SECTION("a workdir setup failure fails every selected Case")
+  {
+    {
+      std::ofstream blocker(root);
+      REQUIRE(blocker);
+      blocker << "not a directory\n";
+    }
+
+    const auto summary = runner.generate(catalog, Filter{"demo"}, features);
+    CHECK(summary.total == 1);
+    CHECK(summary.passed == 0);
+    CHECK(summary.failed == 1);
+    CHECK(summary.skipped == 0);
+  }
+
+  SECTION("an image write failure cannot leave a stale passing sidecar")
+  {
+    REQUIRE(runner.generate(catalog, Filter{"sphere"}, features).passed == 1);
+    REQUIRE(runner.run(catalog, Filter{"sphere"}, features).passed == 1);
+
+    Case sph;
+    sph.category = "geometry";
+    sph.testName = "sphere";
+    const Workdir wd(root);
+    REQUIRE(std::filesystem::exists(wd.sidecarPath(sph)));
+    const auto previousImage =
+        readFile(wd.resultImagePath(sph, Channel::Color));
+
+    auto writer = std::make_shared<FailingArtifactWriter>();
+    writer->failImageWrite = 0;
+    Runner failingRunner(d, wd, opts, writer);
+    const auto summary = failingRunner.run(catalog, Filter{"sphere"}, features);
+
+    CHECK(summary.total == 1);
+    CHECK(summary.passed == 0);
+    CHECK(summary.failed == 1);
+    CHECK_FALSE(std::filesystem::exists(wd.sidecarPath(sph)));
+    CHECK(readFile(wd.resultImagePath(sph, Channel::Color)) == previousImage);
+    CHECK_FALSE(hasPublicationTemporary(root));
+  }
+
+  SECTION("a sidecar write failure fails the Case and preserves its images")
+  {
+    REQUIRE(runner.generate(catalog, Filter{"sphere"}, features).passed == 1);
+    REQUIRE(runner.run(catalog, Filter{"sphere"}, features).passed == 1);
+
+    Case sph;
+    sph.category = "geometry";
+    sph.testName = "sphere";
+    const Workdir wd(root);
+    const auto previousImage =
+        readFile(wd.resultImagePath(sph, Channel::Color));
+
+    auto writer = std::make_shared<FailingArtifactWriter>();
+    writer->failSidecarWrite = true;
+    Runner failingRunner(d, wd, opts, writer);
+    const auto summary = failingRunner.run(catalog, Filter{"sphere"}, features);
+
+    CHECK(summary.total == 1);
+    CHECK(summary.passed == 0);
+    CHECK(summary.failed == 1);
+    CHECK_FALSE(std::filesystem::exists(wd.sidecarPath(sph)));
+    CHECK(readFile(wd.resultImagePath(sph, Channel::Color)) == previousImage);
+    CHECK_FALSE(hasPublicationTemporary(root));
+  }
+
+  SECTION("partial multi-channel ground truth is not published")
+  {
+    auto writer = std::make_shared<FailingArtifactWriter>();
+    writer->failImageWrite = 1;
+    Runner failingRunner(d, Workdir(root), opts, writer);
+    const auto summary =
+        failingRunner.generate(catalog, Filter{"sphere"}, features);
+
+    CHECK(summary.total == 1);
+    CHECK(summary.passed == 0);
+    CHECK(summary.failed == 1);
+
+    Case sph;
+    sph.category = "geometry";
+    sph.testName = "sphere";
+    const Workdir wd(root);
+    CHECK_FALSE(
+        std::filesystem::exists(wd.groundTruthImagePath(sph, Channel::Color)));
+    CHECK_FALSE(
+        std::filesystem::exists(wd.groundTruthImagePath(sph, Channel::Depth)));
+    CHECK_FALSE(hasPublicationTemporary(root));
+  }
+
+  SECTION("failed ground-truth replacement preserves the complete old set")
+  {
+    REQUIRE(runner.generate(catalog, Filter{"sphere"}, features).passed == 1);
+
+    Case sph;
+    sph.category = "geometry";
+    sph.testName = "sphere";
+    const Workdir wd(root);
+    const auto previousColor =
+        readFile(wd.groundTruthImagePath(sph, Channel::Color));
+    const auto previousDepth =
+        readFile(wd.groundTruthImagePath(sph, Channel::Depth));
+
+    auto writer = std::make_shared<FailingArtifactWriter>();
+    writer->failImageWrite = 1;
+    Runner failingRunner(d, wd, opts, writer);
+    const auto summary =
+        failingRunner.generate(catalog, Filter{"sphere"}, features);
+
+    CHECK(summary.total == 1);
+    CHECK(summary.passed == 0);
+    CHECK(summary.failed == 1);
+    CHECK(readFile(wd.groundTruthImagePath(sph, Channel::Color))
+        == previousColor);
+    CHECK(readFile(wd.groundTruthImagePath(sph, Channel::Depth))
+        == previousDepth);
+    CHECK_FALSE(hasPublicationTemporary(root));
   }
 
   std::filesystem::remove_all(root, ec);

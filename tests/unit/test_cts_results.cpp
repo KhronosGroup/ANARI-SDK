@@ -3,6 +3,7 @@
 
 #include "catch.hpp"
 // cts
+#include "cts/ArtifactPublication.h"
 #include "cts/Case.h"
 #include "cts/Metrics.h"
 #include "cts/Sidecar.h"
@@ -28,6 +29,15 @@ Case sphereCase()
       {"primitiveMode", Any("soup"), AxisKind::Variant},
   };
   return c;
+}
+
+Image solidImage(uint8_t red, uint8_t green, uint8_t blue)
+{
+  Image image;
+  image.width = 1;
+  image.height = 1;
+  image.rgba = {red, green, blue, 255};
+  return image;
 }
 
 } // namespace
@@ -223,6 +233,87 @@ TEST_CASE(
   const std::string contents = buffer.str();
   CHECK(contents.find("\"verdict\": \"skipped\"") != std::string::npos);
   CHECK(contents.find("missing feature") != std::string::npos);
+  in.close();
+
+  r.verdict = Verdict::Passed;
+  r.skipReason.clear();
+  REQUIRE(writeSidecar(path, r));
+  std::ifstream replacement(path);
+  std::stringstream replacementBuffer;
+  replacementBuffer << replacement.rdbuf();
+  CHECK(replacementBuffer.str().find("\"verdict\": \"passed\"")
+      != std::string::npos);
+  replacement.close();
+
+  for (const auto &entry : std::filesystem::directory_iterator(dir)) {
+    CHECK(entry.path().filename() == path.filename());
+  }
 
   std::filesystem::remove_all(dir.parent_path(), ec);
+}
+
+// Artifact publication ///////////////////////////////////////////////////////
+
+TEST_CASE("ArtifactPublisher replaces a complete ground-truth set",
+    "[cts][publication]")
+{
+  const auto root =
+      std::filesystem::temp_directory_path() / "cts_gt_publication_test";
+  std::error_code ec;
+  std::filesystem::remove_all(root, ec);
+
+  const Workdir wd(root);
+  ArtifactPublisher publisher(wd);
+  const auto colorPath = wd.groundTruthImagePath(sphereCase(), Channel::Color);
+  const auto depthPath = wd.groundTruthImagePath(sphereCase(), Channel::Depth);
+
+  REQUIRE(publisher.publishGroundTruth({{colorPath, solidImage(255, 0, 0)},
+      {depthPath, solidImage(0, 0, 255)}}));
+  CHECK(loadPNG(colorPath.string()).rgba == solidImage(255, 0, 0).rgba);
+  CHECK(loadPNG(depthPath.string()).rgba == solidImage(0, 0, 255).rgba);
+
+  REQUIRE(publisher.publishGroundTruth({{colorPath, solidImage(0, 255, 0)},
+      {depthPath, solidImage(255, 255, 255)}}));
+  CHECK(loadPNG(colorPath.string()).rgba == solidImage(0, 255, 0).rgba);
+  CHECK(loadPNG(depthPath.string()).rgba == solidImage(255, 255, 255).rgba);
+
+  std::filesystem::remove_all(root, ec);
+}
+
+TEST_CASE(
+    "ArtifactPublisher withholds a sidecar until every referenced image "
+    "is readable",
+    "[cts][publication]")
+{
+  const auto root =
+      std::filesystem::temp_directory_path() / "cts_result_publication_test";
+  std::error_code ec;
+  std::filesystem::remove_all(root, ec);
+
+  const Case c = sphereCase();
+  const Workdir wd(root);
+  ArtifactPublisher publisher(wd);
+
+  CaseResult result;
+  result.category = c.category;
+  result.test = c.testName;
+  result.caseId = c.id();
+  result.groundTruthKey = c.groundTruthKey();
+  result.verdict = Verdict::Passed;
+  ChannelResult channel;
+  channel.channel = Channel::Color;
+  channel.passed = true;
+  channel.resultImage =
+      wd.relativeToRoot(wd.resultImagePath(c, Channel::Color));
+  channel.groundTruthImage =
+      wd.relativeToRoot(wd.groundTruthImagePath(c, Channel::Color));
+  result.channels.push_back(channel);
+
+  CHECK_FALSE(publisher.publishResult(c,
+      result,
+      {{wd.resultImagePath(c, Channel::Color), solidImage(255, 0, 0)}}));
+  CHECK_FALSE(std::filesystem::exists(wd.sidecarPath(c)));
+  CHECK_FALSE(std::filesystem::exists(wd.resultImagePath(c, Channel::Color)));
+
+  std::filesystem::remove_all(root, ec);
 }

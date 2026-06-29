@@ -4,6 +4,7 @@
 #pragma once
 
 #include "AnariObject.h"
+#include "ArtifactPublication.h"
 #include "Catalog.h"
 #include "Image.h"
 #include "Sidecar.h"
@@ -13,6 +14,7 @@
 // anari
 #include "anari/anari_cpp.hpp"
 // std
+#include <memory>
 #include <set>
 #include <string>
 #include <vector>
@@ -57,6 +59,10 @@ class ANARI_TEST_SCENES_INTERFACE Runner
 {
  public:
   Runner(anari::Device device, Workdir workdir, RunOptions options = {});
+  Runner(anari::Device device,
+      Workdir workdir,
+      RunOptions options,
+      std::shared_ptr<ArtifactWriter> artifactWriter);
 
   // Render every selected Case and save its channels under ground_truth/.
   // Does not score or write sidecars (ADR-0005).
@@ -108,6 +114,13 @@ class ANARI_TEST_SCENES_INTERFACE Runner
   // Write a "missing required feature" skip sidecar for a Case and tally it.
   void writeFeatureSkip(const Case &c, RunSummary &summary);
 
+  // Publish a Case's complete result and tally its verdict. A publication
+  // failure always tallies as failed, regardless of the intended verdict.
+  void recordResult(const Case &c,
+      const CaseResult &result,
+      RunSummary &summary,
+      const std::vector<ImageArtifact> &images = {});
+
   // Write a failed sidecar for a Case whose build/render threw, recording the
   // reason in `detail`, and tally it. Per-case crash isolation (ADR-0003): a
   // throwing case is contained so the run continues.
@@ -122,6 +135,7 @@ class ANARI_TEST_SCENES_INTERFACE Runner
 
   anari::Device m_device{nullptr};
   Workdir m_workdir;
+  ArtifactPublisher m_artifacts;
   RunOptions m_options;
 
   // Capabilities resolved against the running device's feature set (see

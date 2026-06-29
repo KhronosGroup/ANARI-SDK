@@ -5,12 +5,27 @@
 // nlohmann json (vendored with the glTF loader)
 #include "scenes/file/nlohmann/json.hpp"
 // std
+#include <atomic>
 #include <fstream>
+#include <system_error>
 
 namespace anari {
 namespace cts {
 
 using nlohmann::json;
+
+namespace {
+
+std::filesystem::path temporarySidecarPath(
+    const std::filesystem::path &path, const char *purpose)
+{
+  static std::atomic_uint64_t nextId{0};
+  return path.parent_path()
+      / ("." + path.filename().string() + "." + purpose + "."
+          + std::to_string(nextId.fetch_add(1, std::memory_order_relaxed)));
+}
+
+} // namespace
 
 const char *verdictName(Verdict v)
 {
@@ -80,11 +95,49 @@ bool writeSidecar(const std::filesystem::path &path, const CaseResult &result)
       return false;
   }
 
-  std::ofstream out(path);
-  if (!out)
+  const auto stagedPath = temporarySidecarPath(path, "stage");
+  {
+    std::ofstream out(stagedPath);
+    if (!out)
+      return false;
+    out << toJson(result) << '\n';
+    out.close();
+    if (!out) {
+      std::error_code ec;
+      std::filesystem::remove(stagedPath, ec);
+      return false;
+    }
+  }
+
+  std::error_code ec;
+  std::filesystem::path backupPath;
+  if (std::filesystem::exists(path, ec)) {
+    if (ec || !std::filesystem::is_regular_file(path, ec) || ec) {
+      std::filesystem::remove(stagedPath, ec);
+      return false;
+    }
+    backupPath = temporarySidecarPath(path, "backup");
+    std::filesystem::rename(path, backupPath, ec);
+    if (ec) {
+      std::filesystem::remove(stagedPath, ec);
+      return false;
+    }
+  } else if (ec) {
+    std::filesystem::remove(stagedPath, ec);
     return false;
-  out << toJson(result) << '\n';
-  return static_cast<bool>(out);
+  }
+
+  std::filesystem::rename(stagedPath, path, ec);
+  if (ec) {
+    std::filesystem::remove(stagedPath, ec);
+    if (!backupPath.empty())
+      std::filesystem::rename(backupPath, path, ec);
+    return false;
+  }
+
+  if (!backupPath.empty())
+    std::filesystem::remove(backupPath, ec);
+  return true;
 }
 
 } // namespace cts

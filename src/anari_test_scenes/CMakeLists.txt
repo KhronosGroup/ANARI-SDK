@@ -9,6 +9,7 @@ project_add_library()
 project_sources(PRIVATE
   anari_test_scenes.cpp
 
+  cts/ArtifactPublication.cpp
   cts/BuildContext.cpp
   cts/BuiltinTests.cpp
   cts/Case.cpp

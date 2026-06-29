@@ -81,7 +81,8 @@ struct CaseResult
 // Serialize a CaseResult to its sidecar JSON text (pretty-printed).
 ANARI_TEST_SCENES_INTERFACE std::string toJson(const CaseResult &result);
 
-// Write the sidecar to disk, creating parent directories. False on failure.
+// Write the sidecar through a temporary sibling and atomically rename it into
+// place, creating parent directories. False on failure.
 ANARI_TEST_SCENES_INTERFACE bool writeSidecar(
     const std::filesystem::path &path, const CaseResult &result);
 
