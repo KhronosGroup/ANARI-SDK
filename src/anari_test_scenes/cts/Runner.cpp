@@ -5,19 +5,19 @@
 #include "BuildContext.h"
 #include "Expansion.h"
 #include "FrameFormats.h"
+#include "FrameReadback.h"
 #include "Metrics.h"
 #include "Sidecar.h"
 #include "Value.h"
 #include "WorldBuilder.h"
-#include "generators/ColorPalette.h"
 // std
 #include <algorithm>
 #include <chrono>
-#include <cmath>
 #include <cstdint>
-#include <cstring>
 #include <exception>
+#include <stdexcept>
 #include <string>
+#include <utility>
 
 namespace anari {
 namespace cts {
@@ -45,163 +45,6 @@ const char *channelFrameParam(Channel ch)
   return "channel.color";
 }
 
-uint8_t toU8(float v)
-{
-  const float s = v * 255.0f;
-  return static_cast<uint8_t>(s < 0.f ? 0.f : (s > 255.f ? 255.f : s));
-}
-
-Image colorToImage(anari::Device d, anari::Frame frame, uint32_t w, uint32_t h)
-{
-  Image image;
-  image.width = w;
-  image.height = h;
-  image.rgba.assign(static_cast<size_t>(w) * h * 4, 0);
-  const size_t n = static_cast<size_t>(w) * h;
-  // Read by the device-reported pixel type, not the requested one: a device may
-  // return a different format than asked for, and reading at the wrong stride
-  // would corrupt the comparison image. Each device's own readback is correct,
-  // so a candidate and its ground truth stay comparable even across devices.
-  auto fb = anari::map<uint8_t>(d, frame, "channel.color");
-  if (fb.data != nullptr) {
-    if (fb.pixelType == ANARI_FLOAT32_VEC4) {
-      // Float color is read componentwise and quantized to 8-bit.
-      const auto *p = reinterpret_cast<const float *>(fb.data);
-      for (size_t i = 0; i < n; ++i)
-        for (int c = 0; c < 4; ++c)
-          image.rgba[i * 4 + c] = toU8(p[i * 4 + c]);
-    } else {
-      // UFIXED8_RGBA_SRGB / UFIXED8_VEC4 are already packed RGBA8.
-      std::memcpy(image.rgba.data(), fb.data, image.rgba.size());
-    }
-  }
-  anari::unmap(d, frame, "channel.color");
-  return image;
-}
-
-// Encode depth to grayscale with a fixed, scene-derived scale (not the
-// per-frame maximum, which would differ between candidate and reference and
-// make the comparison non-deterministic). depthScale is the same for both
-// because both render the same world with the same bounds-framed camera.
-Image depthToImage(anari::Device d,
-    anari::Frame frame,
-    uint32_t w,
-    uint32_t h,
-    float depthScale)
-{
-  Image image;
-  image.width = w;
-  image.height = h;
-  image.rgba.assign(static_cast<size_t>(w) * h * 4, 255);
-  auto fb = anari::map<float>(d, frame, "channel.depth");
-  if (fb.data != nullptr) {
-    const size_t n = static_cast<size_t>(w) * h;
-    const float scale = depthScale > 0.f ? 1.f / depthScale : 0.f;
-    for (size_t i = 0; i < n; ++i) {
-      const float v = fb.data[i];
-      const uint8_t g = std::isfinite(v) ? toU8(v * scale) : 255;
-      image.rgba[i * 4 + 0] = g;
-      image.rgba[i * 4 + 1] = g;
-      image.rgba[i * 4 + 2] = g;
-      image.rgba[i * 4 + 3] = 255;
-    }
-  }
-  anari::unmap(d, frame, "channel.depth");
-  return image;
-}
-
-// Read a 3-component channel (albedo/normal) into the 8-bit comparison image.
-// Dispatch on the device-reported pixel type (float, unsigned-normalized 8-bit,
-// or signed-normalized 16-bit) rather than the requested format, so a device
-// that returns a different format than asked is still read at the right stride.
-// signedRange maps a [-1,1] value (normals) into [0,1] before quantizing.
-Image vec3ToImage(anari::Device d,
-    anari::Frame frame,
-    const char *channel,
-    uint32_t w,
-    uint32_t h,
-    bool signedRange)
-{
-  Image image;
-  image.width = w;
-  image.height = h;
-  image.rgba.assign(static_cast<size_t>(w) * h * 4, 0);
-  const size_t n = static_cast<size_t>(w) * h;
-
-  // Map raw bytes so we can reinterpret by whatever pixel type the device
-  // reports.
-  auto fb = anari::map<uint8_t>(d, frame, channel);
-  if (fb.data != nullptr) {
-    switch (fb.pixelType) {
-    case ANARI_UFIXED8_VEC3:
-    case ANARI_UFIXED8_RGB_SRGB: {
-      // Already 8-bit per component; copy verbatim (sRGB encoding preserved).
-      const uint8_t *p = fb.data;
-      for (size_t i = 0; i < n; ++i) {
-        for (int c = 0; c < 3; ++c)
-          image.rgba[i * 4 + c] = p[i * 3 + c];
-        image.rgba[i * 4 + 3] = 255;
-      }
-      break;
-    }
-    case ANARI_FIXED16_VEC3: {
-      // Signed-normalized 16-bit: value = raw / 32767 in [-1, 1].
-      const auto *p = reinterpret_cast<const int16_t *>(fb.data);
-      for (size_t i = 0; i < n; ++i) {
-        for (int c = 0; c < 3; ++c) {
-          float v = std::max(p[i * 3 + c] / 32767.0f, -1.0f);
-          if (signedRange) // map [-1,1] -> [0,1] (normals)
-            v = v * 0.5f + 0.5f;
-          image.rgba[i * 4 + c] = toU8(v);
-        }
-        image.rgba[i * 4 + 3] = 255;
-      }
-      break;
-    }
-    default: { // ANARI_FLOAT32_VEC3 (and any unexpected format)
-      const auto *p = reinterpret_cast<const float *>(fb.data);
-      for (size_t i = 0; i < n; ++i) {
-        for (int c = 0; c < 3; ++c) {
-          float v = p[i * 3 + c];
-          if (signedRange) // map [-1,1] -> [0,1] (normals)
-            v = v * 0.5f + 0.5f;
-          image.rgba[i * 4 + c] = toU8(v);
-        }
-        image.rgba[i * 4 + 3] = 255;
-      }
-      break;
-    }
-    }
-  }
-  anari::unmap(d, frame, channel);
-  return image;
-}
-
-Image idToImage(anari::Device d,
-    anari::Frame frame,
-    const char *channel,
-    uint32_t w,
-    uint32_t h)
-{
-  Image image;
-  image.width = w;
-  image.height = h;
-  image.rgba.assign(static_cast<size_t>(w) * h * 4, 0);
-  auto fb = anari::map<uint32_t>(d, frame, channel);
-  if (fb.data != nullptr) {
-    const size_t n = static_cast<size_t>(w) * h;
-    for (size_t i = 0; i < n; ++i) {
-      const auto color = scenes::colors::getColorFromPalette(fb.data[i]);
-      image.rgba[i * 4 + 0] = toU8(color.x);
-      image.rgba[i * 4 + 1] = toU8(color.y);
-      image.rgba[i * 4 + 2] = toU8(color.z);
-      image.rgba[i * 4 + 3] = 255;
-    }
-  }
-  anari::unmap(d, frame, channel);
-  return image;
-}
-
 // Render one channel of an already-assembled world with a caller-owned camera
 // and renderer. chFmt is the buffer format the Case requested for this channel
 // (the comparison image is always 8-bit RGBA). depthScale deterministically
@@ -217,20 +60,21 @@ Image renderChannel(anari::Device d,
     ANARIDataType chFmt,
     uint32_t accumulationFrames)
 {
-  auto frame = anari::newObject<anari::Frame>(d);
-  anari::setParameter(d, frame, "size", anari::math::vec<uint32_t, 2>(w, h));
+  UniqueAnariObject<anari::Frame> frame(d, anari::newObject<anari::Frame>(d));
+  const auto f = frame.get();
+  anari::setParameter(d, f, "size", anari::math::vec<uint32_t, 2>(w, h));
   // The frame always carries a color buffer; only the channel being read needs
   // the Case's requested format, so non-color channels keep a plain color
   // buffer.
   anari::setParameter(d,
-      frame,
+      f,
       "channel.color",
       ch == Channel::Color ? chFmt : ANARI_UFIXED8_RGBA_SRGB);
   if (ch != Channel::Color)
-    anari::setParameter(d, frame, channelFrameParam(ch), chFmt);
-  anari::setParameter(d, frame, "renderer", renderer);
-  anari::setParameter(d, frame, "camera", camera);
-  anari::setParameter(d, frame, "world", world);
+    anari::setParameter(d, f, channelFrameParam(ch), chFmt);
+  anari::setParameter(d, f, "renderer", renderer);
+  anari::setParameter(d, f, "camera", camera);
+  anari::setParameter(d, f, "world", world);
   // Accumulate only the color channel: depth/normal/albedo/*Id are
   // deterministic, so accumulating them is wasted work (and could alias the id
   // channels). Only set the param when gated on; never set it false, so the
@@ -238,45 +82,26 @@ Image renderChannel(anari::Device d,
   // param on a device that does not support accumulation.
   const bool accumulate = accumulationFrames > 1 && ch == Channel::Color;
   if (accumulate)
-    anari::setParameter(d, frame, "accumulation", true);
-  anari::commitParameters(d, frame);
+    anari::setParameter(d, f, "accumulation", true);
+  anari::commitParameters(d, f);
 
   // The frame is created fresh each call, so accumulation starts at sample 0;
   // rendering the same frame N times refines the image (matches
   // tests/frame.cpp's progressive-rendering check).
   if (accumulate) {
     for (uint32_t i = 0; i < accumulationFrames; ++i) {
-      anari::render(d, frame);
-      anari::wait(d, frame);
+      anari::render(d, f);
+      anari::wait(d, f);
     }
   } else {
-    anari::render(d, frame);
-    anari::wait(d, frame);
+    anari::render(d, f);
+    anari::wait(d, f);
   }
 
-  Image image;
-  switch (ch) {
-  case Channel::Color:
-    image = colorToImage(d, frame, w, h);
-    break;
-  case Channel::Depth:
-    image = depthToImage(d, frame, w, h, depthScale);
-    break;
-  case Channel::Albedo:
-    image = vec3ToImage(d, frame, "channel.albedo", w, h, false);
-    break;
-  case Channel::Normal:
-    image = vec3ToImage(d, frame, "channel.normal", w, h, true);
-    break;
-  case Channel::PrimitiveId:
-  case Channel::ObjectId:
-  case Channel::InstanceId:
-    image = idToImage(d, frame, channelFrameParam(ch), w, h);
-    break;
-  }
-
-  anari::release(d, frame);
-  return image;
+  auto readback = readFrameChannel(d, f, ch, w, h, depthScale);
+  if (!readback)
+    throw std::runtime_error(readback.detail);
+  return std::move(readback.image);
 }
 
 // The default render camera: a perspective camera framing the world bounds.
@@ -293,9 +118,10 @@ anari::Camera defaultCamera(
 // The default renderer: parameterless "default".
 anari::Renderer defaultRenderer(anari::Device d)
 {
-  auto renderer = anari::newObject<anari::Renderer>(d, "default");
-  anari::commitParameters(d, renderer);
-  return renderer;
+  UniqueAnariObject<anari::Renderer> renderer(
+      d, anari::newObject<anari::Renderer>(d, "default"));
+  anari::commitParameters(d, renderer.get());
+  return renderer.release();
 }
 
 CaseResult baseResult(const Case &c, const DeviceSpec &device)
@@ -346,8 +172,7 @@ Image makeThresholdImage(const Image &diff, uint8_t threshold)
   const size_t n = diff.pixelCount();
   for (size_t i = 0; i < n; ++i) {
     const bool over = diff.rgba[i * 4 + 0] > threshold
-        || diff.rgba[i * 4 + 1] > threshold
-        || diff.rgba[i * 4 + 2] > threshold;
+        || diff.rgba[i * 4 + 1] > threshold || diff.rgba[i * 4 + 2] > threshold;
     const uint8_t v = over ? 255 : 0;
     out.rgba[i * 4 + 0] = v;
     out.rgba[i * 4 + 1] = v;
@@ -369,9 +194,9 @@ Runner::Runner(anari::Device device, Workdir workdir, RunOptions options)
 
 void Runner::resolveCapabilities(const std::set<std::string> &features)
 {
-  m_effectiveAccumulationFrames = (m_options.accumulationFrames > 1
-                                      && features.count(
-                                          "ANARI_KHR_FRAME_ACCUMULATION"))
+  m_effectiveAccumulationFrames =
+      (m_options.accumulationFrames > 1
+          && features.count("ANARI_KHR_FRAME_ACCUMULATION"))
       ? m_options.accumulationFrames
       : 1;
   // Denoise is applied whenever requested, even if the device does not report
@@ -391,46 +216,28 @@ Runner::SceneObjects Runner::buildScene(const TestDef &test, const Case &c)
   for (const auto &cv : c.values)
     ctx.set(cv.axisName, cv.value);
 
-  // A build hook (or a default camera/renderer) may throw after some handles
-  // are already created; release the partial scene before letting the
-  // exception unwind so a throwing Case leaks nothing (ADR-0003).
-  try {
-    scene.world = test.build(ctx);
-    if (scene.world == nullptr)
-      return scene;
+  scene.world = UniqueAnariObject<anari::World>(m_device, test.build(ctx));
+  if (!scene.world)
+    return scene;
 
-    scene.bounds = worldBounds(m_device, scene.world);
-    scene.camera = test.cameraBuild
-        ? test.cameraBuild(ctx, scene.bounds)
-        : defaultCamera(
-              m_device, scene.bounds, m_options.width, m_options.height);
-    scene.renderer = test.rendererBuild ? test.rendererBuild(ctx)
-                                        : defaultRenderer(m_device);
-    // Denoising is additive: set one extra bool on the already-built+committed
-    // renderer (test's or default) and re-commit, without disturbing its other
-    // params. Set whenever --denoise was requested, even on a device that does
-    // not report ANARI_KHR_RENDERER_DENOISE (it ignores the unknown param; the
-    // CLI warns about the mismatch).
-    if (m_denoiseEnabled && scene.renderer) {
-      anari::setParameter(m_device, scene.renderer, "denoise", true);
-      anari::commitParameters(m_device, scene.renderer);
-    }
-  } catch (...) {
-    releaseScene(scene);
-    throw;
+  scene.bounds = worldBounds(m_device, scene.world.get());
+  scene.camera = UniqueAnariObject<anari::Camera>(m_device,
+      test.cameraBuild
+          ? test.cameraBuild(ctx, scene.bounds)
+          : defaultCamera(
+                m_device, scene.bounds, m_options.width, m_options.height));
+  scene.renderer = UniqueAnariObject<anari::Renderer>(m_device,
+      test.rendererBuild ? test.rendererBuild(ctx) : defaultRenderer(m_device));
+  // Denoising is additive: set one extra bool on the already-built+committed
+  // renderer (test's or default) and re-commit, without disturbing its other
+  // params. Set whenever --denoise was requested, even on a device that does
+  // not report ANARI_KHR_RENDERER_DENOISE (it ignores the unknown param; the
+  // CLI warns about the mismatch).
+  if (m_denoiseEnabled && scene.renderer) {
+    anari::setParameter(m_device, scene.renderer.get(), "denoise", true);
+    anari::commitParameters(m_device, scene.renderer.get());
   }
   return scene;
-}
-
-void Runner::releaseScene(SceneObjects &scene)
-{
-  if (scene.world)
-    anari::release(m_device, scene.world);
-  if (scene.camera)
-    anari::release(m_device, scene.camera);
-  if (scene.renderer)
-    anari::release(m_device, scene.renderer);
-  scene = {};
 }
 
 void Runner::writeFeatureSkip(const Case &c, RunSummary &summary)
@@ -455,11 +262,8 @@ void Runner::writeCaseFailure(
 std::vector<Image> Runner::renderCase(const TestDef &test, const Case &c)
 {
   SceneObjects scene = buildScene(test, c);
-  if (!scene.valid()) {
-    releaseScene(
-        scene); // release a partial build (world but no camera/renderer)
+  if (!scene.valid())
     return {};
-  }
 
   // Deterministic depth scale derived from the (shared) scene bounds: the
   // default camera sits within one bounds diagonal of the center, so 2x is a
@@ -468,29 +272,20 @@ std::vector<Image> Runner::renderCase(const TestDef &test, const Case &c)
       2.0f * anari::math::length(scene.bounds[1] - scene.bounds[0]);
 
   std::vector<Image> images;
-  // Release the scene even if a channel render throws (then let it unwind to
-  // the per-case handler, which records the failure and continues the run).
-  try {
-    images.reserve(test.channels.size());
-    for (Channel ch : test.channels) {
-      const ANARIDataType chFmt = caseChannelFormat(c, ch);
-      images.push_back(renderChannel(m_device,
-          scene.world,
-          scene.camera,
-          scene.renderer,
-          ch,
-          m_options.width,
-          m_options.height,
-          depthScale,
-          chFmt,
-          m_effectiveAccumulationFrames));
-    }
-  } catch (...) {
-    releaseScene(scene);
-    throw;
+  images.reserve(test.channels.size());
+  for (Channel ch : test.channels) {
+    const ANARIDataType chFmt = caseChannelFormat(c, ch);
+    images.push_back(renderChannel(m_device,
+        scene.world.get(),
+        scene.camera.get(),
+        scene.renderer.get(),
+        ch,
+        m_options.width,
+        m_options.height,
+        depthScale,
+        chFmt,
+        m_effectiveAccumulationFrames));
   }
-
-  releaseScene(scene);
   return images;
 }
 
@@ -638,11 +433,12 @@ RunSummary Runner::run(const Catalog &catalog,
         }
 
         // Record the effective render settings additively in the existing
-        // detail field (no schema bump). generate writes no sidecars (ADR-0005),
-        // so this note is run-only; it makes a mixed-capability diff (e.g. an
-        // accumulating candidate vs. a single-render ground truth) interpretable.
-        std::string note = "accumulation="
-            + std::to_string(m_effectiveAccumulationFrames)
+        // detail field (no schema bump). generate writes no sidecars
+        // (ADR-0005), so this note is run-only; it makes a mixed-capability
+        // diff (e.g. an accumulating candidate vs. a single-render ground
+        // truth) interpretable.
+        std::string note =
+            "accumulation=" + std::to_string(m_effectiveAccumulationFrames)
             + ", denoise=" + (m_denoiseEnabled ? "on" : "off");
         result.detail =
             result.detail.empty() ? note : result.detail + "; " + note;
@@ -674,13 +470,12 @@ void Runner::runBehaviorTest(const TestDef &test,
     }
 
     // Per-case crash isolation (ADR-0003): a throwing build hook or behavior
-    // check becomes a failed sidecar and the run continues; the scene is
-    // released on every path (buildScene releases a partial build on throw).
-    SceneObjects scene;
+    // check becomes a failed sidecar and the run continues; SceneObjects owns
+    // every handle and releases partial or complete builds on scope exit.
     try {
       CaseResult result = baseResult(c, m_options.device);
 
-      scene = buildScene(test, c);
+      SceneObjects scene = buildScene(test, c);
       if (!scene.valid()) {
         result.verdict = Verdict::Failed;
         result.detail = "world/camera/renderer build failed";
@@ -689,9 +484,9 @@ void Runner::runBehaviorTest(const TestDef &test,
       } else {
         const auto start = std::chrono::steady_clock::now();
         const BehaviorResult br = test.behaviorCheck(m_device,
-            scene.world,
-            scene.camera,
-            scene.renderer,
+            scene.world.get(),
+            scene.camera.get(),
+            scene.renderer.get(),
             m_options.width,
             m_options.height);
         const auto end = std::chrono::steady_clock::now();
@@ -709,7 +504,6 @@ void Runner::runBehaviorTest(const TestDef &test,
     } catch (...) {
       writeCaseFailure(c, "unknown exception during behavior test", summary);
     }
-    releaseScene(scene);
   }
 }
 

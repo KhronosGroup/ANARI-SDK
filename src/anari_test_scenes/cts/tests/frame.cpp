@@ -14,12 +14,15 @@
 // re-rendering the same frame accumulates. Both still skip where the feature is
 // unsupported.
 
+#include "../AnariObject.h"
 #include "../BuildContext.h"
+#include "../FrameReadback.h"
 #include "../TestBuilder.h"
 #include "../TestDef.h"
 #include "../WorldBuilder.h"
 #include "Categories.h"
 // std
+#include <algorithm>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -99,21 +102,21 @@ anari::Instance idInstance(
   return inst;
 }
 
-// A frame carrying the runner's world/camera/renderer, ready to render. The
-// caller owns and releases it.
-anari::Frame behaviorFrame(anari::Device d,
+// A frame carrying the runner's world/camera/renderer, ready to render.
+UniqueAnariObject<anari::Frame> behaviorFrame(anari::Device d,
     anari::World world,
     anari::Camera camera,
     anari::Renderer renderer,
     uint32_t w,
     uint32_t h)
 {
-  auto frame = anari::newObject<anari::Frame>(d);
-  anari::setParameter(d, frame, "size", anari::math::vec<uint32_t, 2>(w, h));
-  anari::setParameter(d, frame, "channel.color", ANARI_UFIXED8_RGBA_SRGB);
-  anari::setParameter(d, frame, "renderer", renderer);
-  anari::setParameter(d, frame, "camera", camera);
-  anari::setParameter(d, frame, "world", world);
+  UniqueAnariObject<anari::Frame> frame(d, anari::newObject<anari::Frame>(d));
+  const auto f = frame.get();
+  anari::setParameter(d, f, "size", anari::math::vec<uint32_t, 2>(w, h));
+  anari::setParameter(d, f, "channel.color", ANARI_UFIXED8_RGBA_SRGB);
+  anari::setParameter(d, f, "renderer", renderer);
+  anari::setParameter(d, f, "camera", camera);
+  anari::setParameter(d, f, "world", world);
   return frame;
 }
 
@@ -128,10 +131,11 @@ BehaviorResult checkFrameCompletionCallback(anari::Device d,
     uint32_t h)
 {
   auto frame = behaviorFrame(d, world, camera, renderer, w, h);
+  const auto f = frame.get();
 
   int fired = 0;
   anari::setParameter(d,
-      frame,
+      f,
       "frameCompletionCallback",
       (anari::FrameCompletionCallback)(
           +[](const void *userPtr, ANARIDevice, ANARIFrame) {
@@ -139,15 +143,14 @@ BehaviorResult checkFrameCompletionCallback(anari::Device d,
               ++*static_cast<int *>(const_cast<void *>(userPtr));
           }));
   anari::setParameter(
-      d, frame, "frameCompletionCallbackUserData", static_cast<void *>(&fired));
-  anari::commitParameters(d, frame);
+      d, f, "frameCompletionCallbackUserData", static_cast<void *>(&fired));
+  anari::commitParameters(d, f);
 
-  anari::render(d, frame);
-  anari::wait(d, frame);
-  // Read the flag before releasing the frame; a conformant device fires the
-  // callback during the wait above (this assumes synchronous completion).
+  anari::render(d, f);
+  anari::wait(d, f);
+  // A conformant device fires the callback during the wait above (this assumes
+  // synchronous completion).
   const bool ok = fired > 0;
-  anari::release(d, frame);
 
   return {ok,
       ok ? "frame completion callback fired"
@@ -168,39 +171,36 @@ BehaviorResult checkProgressiveRendering(anari::Device d,
     uint32_t h)
 {
   auto frame = behaviorFrame(d, world, camera, renderer, w, h);
-  anari::commitParameters(d, frame);
+  const auto f = frame.get();
+  anari::commitParameters(d, f);
 
   auto snapshot = [&]() {
-    std::vector<uint32_t> px;
-    auto fb = anari::map<uint32_t>(d, frame, "channel.color");
-    if (fb.data != nullptr)
-      px.assign(fb.data, fb.data + static_cast<size_t>(fb.width) * fb.height);
-    anari::unmap(d, frame, "channel.color");
-    return px;
+    return readFrameChannel(d, f, Channel::Color, w, h);
   };
 
-  anari::render(d, frame);
-  anari::wait(d, frame);
+  anari::render(d, f);
+  anari::wait(d, f);
   const auto first = snapshot();
 
   constexpr int kAccumulationFrames = 10;
   for (int i = 0; i < kAccumulationFrames; ++i) {
-    anari::render(d, frame);
-    anari::wait(d, frame);
+    anari::render(d, f);
+    anari::wait(d, f);
   }
   const auto accumulated = snapshot();
 
-  anari::release(d, frame);
-
-  // A failed or short color-buffer readback can't be judged for accumulation;
-  // report that plainly instead of mistaking an empty buffer for "no change".
-  if (first.empty() || first.size() != accumulated.size())
-    return {false, "could not read back the color buffer"};
+  if (!first)
+    return {false, "initial color readback failed: " + first.detail};
+  if (!accumulated)
+    return {false, "accumulated color readback failed: " + accumulated.detail};
 
   size_t changed = 0;
-  for (size_t i = 0; i < first.size(); ++i)
-    if (first[i] != accumulated[i])
+  for (size_t i = 0; i < first.image.rgba.size(); i += 4) {
+    if (!std::equal(first.image.rgba.begin() + i,
+            first.image.rgba.begin() + i + 4,
+            accumulated.image.rgba.begin() + i))
       ++changed;
+  }
 
   const bool ok = changed > 10;
   return {ok, std::to_string(changed) + " pixels changed after accumulation"};

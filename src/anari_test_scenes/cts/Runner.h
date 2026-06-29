@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "AnariObject.h"
 #include "Catalog.h"
 #include "Image.h"
 #include "Sidecar.h"
@@ -80,9 +81,9 @@ class ANARI_TEST_SCENES_INTERFACE Runner
   // is null when the Test has no build function or build() returned null.
   struct SceneObjects
   {
-    anari::World world{nullptr};
-    anari::Camera camera{nullptr};
-    anari::Renderer renderer{nullptr};
+    UniqueAnariObject<anari::World> world;
+    UniqueAnariObject<anari::Camera> camera;
+    UniqueAnariObject<anari::Renderer> renderer;
     anari::scenes::Bounds bounds{};
 
     // A renderable scene needs all three objects; a build hook (or default
@@ -93,10 +94,9 @@ class ANARI_TEST_SCENES_INTERFACE Runner
     }
   };
 
-  // Build a Case's world, camera, and renderer. The caller owns the result and
-  // must releaseScene() it (even when !valid(), to release a partial build).
+  // Build a Case's world, camera, and renderer. SceneObjects owns every handle
+  // and releases partial or complete builds when it leaves scope.
   SceneObjects buildScene(const TestDef &test, const Case &c);
-  void releaseScene(SceneObjects &scene);
 
   // Resolve the requested accumulation/denoise options against one device's
   // advertised feature set. Accumulation is gated off when

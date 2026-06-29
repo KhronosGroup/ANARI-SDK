@@ -17,6 +17,7 @@ project_sources(PRIVATE
   cts/Expansion.cpp
   cts/Filter.cpp
   cts/FrameFormats.cpp
+  cts/FrameReadback.cpp
   cts/Image.cpp
   cts/Metrics.cpp
   cts/Runner.cpp

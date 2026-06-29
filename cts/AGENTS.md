@@ -90,7 +90,9 @@ ctsReport.py              reads the sidecar tree only; report + device diff
 - `BuildContext.{h,cpp}` / `Value.{h,cpp}` — per-Case axis values handed to
   `build()`, backed by `helium::ParameterizedObject`.
 - `Runner.{h,cpp}` — builds, renders, and scores Cases; owns the camera/renderer
-  defaults and the per-Channel readback; runs the behavior hook for behavioral tests.
+  defaults and runs the behavior hook for behavioral tests.
+- `FrameReadback.{h,cpp}` — validates mapped frame descriptors and converts
+  supported per-Channel formats behind the shared map/unmap boundary.
 - `FrameFormats.{h,cpp}` — resolves a Case's per-Channel output `ANARIDataType`
   from its `frame_<channel>_type` axis (color/albedo/normal); pure + unit-tested.
 - `Metrics.{h,cpp}` / `Image.{h,cpp}` — SSIM/PSNR and PNG I/O (stb).

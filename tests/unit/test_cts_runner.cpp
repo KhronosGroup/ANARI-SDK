@@ -6,17 +6,21 @@
 #include "cts/Case.h"
 #include "cts/Catalog.h"
 #include "cts/FrameFormats.h"
+#include "cts/FrameReadback.h"
 #include "cts/Runner.h"
 #include "cts/TestBuilder.h"
 #include "cts/WorldBuilder.h"
 // std
 #include <filesystem>
 #include <fstream>
+#include <limits>
 #include <memory>
 #include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <utility>
+#include <vector>
 
 using namespace anari::cts;
 using anari::math::float3;
@@ -119,6 +123,209 @@ Case caseWithFormat(const std::string &axis, anari::cts::Any value)
 } // namespace
 
 // Frame output-format resolution (pure; no device) ////////////////////////////
+
+TEST_CASE("frame readback rejects null mapped data", "[cts][framereadback]")
+{
+  const MappedFrameDescriptor mapped{nullptr, 2, 2, ANARI_UFIXED8_RGBA_SRGB};
+
+  const auto result = decodeFrameChannel(Channel::Color, mapped, 2, 2);
+
+  CHECK_FALSE(result);
+  CHECK(result.error == FrameReadbackError::NullData);
+  CHECK(result.detail.find("channel.color") != std::string::npos);
+  CHECK(result.detail.find("null") != std::string::npos);
+}
+
+TEST_CASE(
+    "frame readback requires exact mapped dimensions", "[cts][framereadback]")
+{
+  const uint32_t pixel = 0;
+
+  SECTION("short dimensions")
+  {
+    const MappedFrameDescriptor mapped{&pixel, 1, 2, ANARI_UFIXED8_RGBA_SRGB};
+    const auto result = decodeFrameChannel(Channel::Color, mapped, 2, 2);
+
+    CHECK_FALSE(result);
+    CHECK(result.error == FrameReadbackError::DimensionMismatch);
+    CHECK(result.detail.find("expected 2x2") != std::string::npos);
+    CHECK(result.detail.find("got 1x2") != std::string::npos);
+  }
+
+  SECTION("oversized dimensions")
+  {
+    const MappedFrameDescriptor mapped{&pixel, 3, 2, ANARI_UFIXED8_RGBA_SRGB};
+    const auto result = decodeFrameChannel(Channel::Color, mapped, 2, 2);
+
+    CHECK_FALSE(result);
+    CHECK(result.error == FrameReadbackError::DimensionMismatch);
+    CHECK(result.detail.find("expected 2x2") != std::string::npos);
+    CHECK(result.detail.find("got 3x2") != std::string::npos);
+  }
+}
+
+TEST_CASE("frame readback rejects unsupported types for every channel",
+    "[cts][framereadback]")
+{
+  const uint32_t pixel = 0;
+  const std::pair<Channel, ANARIDataType> cases[] = {
+      {Channel::Color, ANARI_FLOAT32},
+      {Channel::Depth, ANARI_UINT32},
+      {Channel::Albedo, ANARI_FIXED16_VEC3},
+      {Channel::Normal, ANARI_UFIXED8_VEC3},
+      {Channel::PrimitiveId, ANARI_FLOAT32},
+      {Channel::ObjectId, ANARI_FLOAT32},
+      {Channel::InstanceId, ANARI_FLOAT32},
+  };
+
+  for (const auto &[channel, pixelType] : cases) {
+    INFO("channel: " << channelName(channel));
+    const MappedFrameDescriptor mapped{&pixel, 1, 1, pixelType};
+    const auto result = decodeFrameChannel(channel, mapped, 1, 1);
+
+    CHECK_FALSE(result);
+    CHECK(result.error == FrameReadbackError::UnsupportedType);
+    CHECK(result.detail.find(channelName(channel)) != std::string::npos);
+    CHECK(result.detail.find(anari::toString(pixelType)) != std::string::npos);
+  }
+}
+
+TEST_CASE(
+    "frame readback rejects overflow-sized dimensions", "[cts][framereadback]")
+{
+  const uint32_t pixel = 0;
+  constexpr uint32_t huge = std::numeric_limits<uint32_t>::max();
+  const MappedFrameDescriptor mapped{
+      &pixel, huge, huge, ANARI_UFIXED8_RGBA_SRGB};
+
+  const auto result = decodeFrameChannel(Channel::Color, mapped, huge, huge);
+
+  CHECK_FALSE(result);
+  CHECK(result.error == FrameReadbackError::SizeOverflow);
+  CHECK(result.detail.find("overflow") != std::string::npos);
+}
+
+TEST_CASE("frame readback decodes every supported color format",
+    "[cts][framereadback]")
+{
+  SECTION("UFIXED8_VEC4")
+  {
+    const uint8_t pixel[] = {10, 20, 30, 40};
+    const MappedFrameDescriptor mapped{pixel, 1, 1, ANARI_UFIXED8_VEC4};
+    const auto result = decodeFrameChannel(Channel::Color, mapped, 1, 1);
+
+    REQUIRE(result);
+    CHECK(result.image.rgba == std::vector<uint8_t>{10, 20, 30, 40});
+  }
+
+  SECTION("UFIXED8_RGBA_SRGB")
+  {
+    const uint8_t pixel[] = {50, 60, 70, 80};
+    const MappedFrameDescriptor mapped{pixel, 1, 1, ANARI_UFIXED8_RGBA_SRGB};
+    const auto result = decodeFrameChannel(Channel::Color, mapped, 1, 1);
+
+    REQUIRE(result);
+    CHECK(result.image.rgba == std::vector<uint8_t>{50, 60, 70, 80});
+  }
+
+  SECTION("FLOAT32_VEC4")
+  {
+    const float pixel[] = {0.f, 0.25f, 0.5f, 1.f};
+    const MappedFrameDescriptor mapped{pixel, 1, 1, ANARI_FLOAT32_VEC4};
+    const auto result = decodeFrameChannel(Channel::Color, mapped, 1, 1);
+
+    REQUIRE(result);
+    CHECK(result.image.rgba == std::vector<uint8_t>{0, 63, 127, 255});
+  }
+}
+
+TEST_CASE(
+    "frame readback decodes depth with the scene scale", "[cts][framereadback]")
+{
+  const float pixels[] = {0.f, 2.f, std::numeric_limits<float>::infinity()};
+  const MappedFrameDescriptor mapped{pixels, 3, 1, ANARI_FLOAT32};
+
+  const auto result = decodeFrameChannel(Channel::Depth, mapped, 3, 1, 4.f);
+
+  REQUIRE(result);
+  CHECK(result.image.rgba
+      == std::vector<uint8_t>{
+          0, 0, 0, 255, 127, 127, 127, 255, 255, 255, 255, 255});
+}
+
+TEST_CASE("frame readback decodes every supported albedo format",
+    "[cts][framereadback]")
+{
+  SECTION("UFIXED8_VEC3")
+  {
+    const uint8_t pixel[] = {10, 20, 30};
+    const MappedFrameDescriptor mapped{pixel, 1, 1, ANARI_UFIXED8_VEC3};
+    const auto result = decodeFrameChannel(Channel::Albedo, mapped, 1, 1);
+
+    REQUIRE(result);
+    CHECK(result.image.rgba == std::vector<uint8_t>{10, 20, 30, 255});
+  }
+
+  SECTION("UFIXED8_RGB_SRGB")
+  {
+    const uint8_t pixel[] = {40, 50, 60};
+    const MappedFrameDescriptor mapped{pixel, 1, 1, ANARI_UFIXED8_RGB_SRGB};
+    const auto result = decodeFrameChannel(Channel::Albedo, mapped, 1, 1);
+
+    REQUIRE(result);
+    CHECK(result.image.rgba == std::vector<uint8_t>{40, 50, 60, 255});
+  }
+
+  SECTION("FLOAT32_VEC3")
+  {
+    const float pixel[] = {0.25f, 0.5f, 1.f};
+    const MappedFrameDescriptor mapped{pixel, 1, 1, ANARI_FLOAT32_VEC3};
+    const auto result = decodeFrameChannel(Channel::Albedo, mapped, 1, 1);
+
+    REQUIRE(result);
+    CHECK(result.image.rgba == std::vector<uint8_t>{63, 127, 255, 255});
+  }
+}
+
+TEST_CASE("frame readback decodes every supported normal format",
+    "[cts][framereadback]")
+{
+  SECTION("FIXED16_VEC3")
+  {
+    const int16_t pixel[] = {-32768, 0, 32767};
+    const MappedFrameDescriptor mapped{pixel, 1, 1, ANARI_FIXED16_VEC3};
+    const auto result = decodeFrameChannel(Channel::Normal, mapped, 1, 1);
+
+    REQUIRE(result);
+    CHECK(result.image.rgba == std::vector<uint8_t>{0, 127, 255, 255});
+  }
+
+  SECTION("FLOAT32_VEC3")
+  {
+    const float pixel[] = {-1.f, 0.f, 1.f};
+    const MappedFrameDescriptor mapped{pixel, 1, 1, ANARI_FLOAT32_VEC3};
+    const auto result = decodeFrameChannel(Channel::Normal, mapped, 1, 1);
+
+    REQUIRE(result);
+    CHECK(result.image.rgba == std::vector<uint8_t>{0, 127, 255, 255});
+  }
+}
+
+TEST_CASE("frame readback decodes every ID channel", "[cts][framereadback]")
+{
+  const uint32_t pixel = 0;
+  const Channel channels[] = {
+      Channel::PrimitiveId, Channel::ObjectId, Channel::InstanceId};
+
+  for (const Channel channel : channels) {
+    INFO("channel: " << channelName(channel));
+    const MappedFrameDescriptor mapped{&pixel, 1, 1, ANARI_UINT32};
+    const auto result = decodeFrameChannel(channel, mapped, 1, 1);
+
+    REQUIRE(result);
+    CHECK(result.image.rgba == std::vector<uint8_t>{140, 209, 198, 255});
+  }
+}
 
 TEST_CASE("output-format strings map to ANARIDataType", "[cts][frameformat]")
 {
@@ -305,7 +512,8 @@ TEST_CASE(
   opts.width = 32;
   opts.height = 32;
   opts.accumulationFrames = 16; // CLI default; gated off here (no extension)
-  opts.denoise = true; //          applied even though helide lacks the extension
+  // Applied even though helide lacks the extension.
+  opts.denoise = true;
   opts.device = {"helide", "default", "default"};
 
   Runner runner(d, Workdir(root), opts);
