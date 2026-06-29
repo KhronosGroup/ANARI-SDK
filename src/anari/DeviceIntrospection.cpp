@@ -1,7 +1,7 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-#include "anari/frontend/anari_device_introspection.h"
+#include "anari/frontend/anari_device_introspection.hpp"
 
 #include "anari/anari_cpp/Traits.h"
 #include "anari/frontend/type_utility.h"

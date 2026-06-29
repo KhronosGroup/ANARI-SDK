@@ -8,7 +8,7 @@
 #include <string.h>
 
 // anari
-#include "anari/frontend/anari_device_introspection.h"
+#include "anari/frontend/anari_device_introspection.hpp"
 
 const char *helptext =
     "anariInfo -l <library> [-p -t <type> -s <subtype>]\n"

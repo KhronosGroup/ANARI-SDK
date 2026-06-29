@@ -4,7 +4,7 @@
 #include "catch.hpp"
 // anari
 #include "anari/anari_cpp.hpp"
-#include "anari/frontend/anari_device_introspection.h"
+#include "anari/frontend/anari_device_introspection.hpp"
 // std
 #include <cctype>
 #include <string>
