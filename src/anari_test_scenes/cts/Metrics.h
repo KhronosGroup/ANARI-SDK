@@ -4,7 +4,7 @@
 #pragma once
 
 #include "Image.h"
-#include "anari_test_scenes_export.h"
+#include "Export.h"
 
 namespace anari {
 namespace cts {
@@ -17,14 +17,14 @@ namespace cts {
 // Peak signal-to-noise ratio in decibels. +infinity for identical images, NaN
 // if the two images differ in size or are invalid. Higher is better.
 // Mirrors skimage.metrics.peak_signal_noise_ratio.
-ANARI_TEST_SCENES_INTERFACE double psnr(
+ANARI_CTS_CORE_INTERFACE double psnr(
     const Image &reference, const Image &candidate);
 
 // Mean structural similarity in [-1, 1], averaged over the RGB channels with a
 // 7x7 uniform window and sample covariance. 1.0 means identical. NaN if the
 // images differ in size, are invalid, or are smaller than the window.
 // Mirrors skimage.metrics.structural_similarity(..., channel_axis=2).
-ANARI_TEST_SCENES_INTERFACE double ssim(
+ANARI_CTS_CORE_INTERFACE double ssim(
     const Image &reference, const Image &candidate);
 
 // Whether a score clears its threshold. Both metrics are higher-is-better, so

@@ -5,15 +5,15 @@
 
 #include "anari/anari_cpp.hpp"
 #include "anari/anari_cpp/ext/linalg.h"
-#include "anari_test_scenes_export.h"
+#include "Export.h"
 
 namespace anari {
 namespace cts {
 
-ANARI_TEST_SCENES_INTERFACE anari::Material makeMatteMaterial(
+ANARI_CTS_CORE_INTERFACE anari::Material makeMatteMaterial(
     anari::Device d, anari::math::float3 color);
 
-ANARI_TEST_SCENES_INTERFACE anari::Surface makeSurface(
+ANARI_CTS_CORE_INTERFACE anari::Surface makeSurface(
     anari::Device d, anari::Geometry geometry, anari::Material material);
 
 } // namespace cts

@@ -7,8 +7,8 @@
 # have been removed.
 #
 # The anariCts binary's entry point lives here (src/main.cpp). The CTS harness,
-# runner, and Test definitions it drives compile into anari_test_scenes (see
-# src/anari_test_scenes/cts/), so anariCts just links that library.
+# runner, and Test definitions it drives compile into the internal static
+# anari_cts_core target (defined beside its sources in anari_test_scenes/).
 #
 # This directory also provides:
 #   - the optional glTF sample-asset payload the glTF asset-scan factory reads
@@ -16,21 +16,14 @@
 #     it is absent), and
 #   - installation of the Python reporting layer.
 #
-# It is added to the build when BUILD_CTS, CTS_ENABLE_GLTF, or BUILD_TESTING is set.
+# It is added to the build when a CTS consumer or its install payload is needed.
 
 ## CTS conformance tool ##
 
-# The anariCts CLI binary. main.cpp's `cts/*.h` includes resolve through
-# anari_test_scenes's PUBLIC include dirs (the harness lives in that library).
 # Built when the CTS is requested (BUILD_CTS) or for the test suite (BUILD_TESTING).
 if (BUILD_CTS OR BUILD_TESTING)
   add_executable(anariCts src/main.cpp)
-  target_link_libraries(anariCts
-  PRIVATE
-    anari_test_scenes
-    anari_device_introspection
-  )
-  target_compile_features(anariCts PRIVATE cxx_std_20)
+  target_link_libraries(anariCts PRIVATE anari_cts_core)
 
   if (BUILD_CTS)
     install(TARGETS anariCts RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

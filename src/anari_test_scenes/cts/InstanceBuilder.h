@@ -5,14 +5,14 @@
 
 #include "anari/anari_cpp.hpp"
 #include "anari/anari_cpp/ext/linalg.h"
-#include "anari_test_scenes_export.h"
+#include "Export.h"
 // std
 #include <vector>
 
 namespace anari {
 namespace cts {
 
-ANARI_TEST_SCENES_INTERFACE anari::Instance makeInstance(anari::Device d,
+ANARI_CTS_CORE_INTERFACE anari::Instance makeInstance(anari::Device d,
     const std::vector<anari::Surface> &surfaces,
     anari::math::mat4 transform = anari::math::identity);
 

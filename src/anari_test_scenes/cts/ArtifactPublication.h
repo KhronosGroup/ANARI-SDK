@@ -6,7 +6,7 @@
 #include "Image.h"
 #include "Sidecar.h"
 #include "Workdir.h"
-#include "anari_test_scenes_export.h"
+#include "Export.h"
 // std
 #include <filesystem>
 #include <memory>
@@ -24,7 +24,7 @@ struct ImageArtifact
 
 // The serialization seam used by ArtifactPublisher. Tests can inject an
 // adapter that fails a selected write without relying on file permissions.
-class ANARI_TEST_SCENES_INTERFACE ArtifactWriter
+class ANARI_CTS_CORE_INTERFACE ArtifactWriter
 {
  public:
   virtual ~ArtifactWriter() = default;
@@ -39,7 +39,7 @@ class ANARI_TEST_SCENES_INTERFACE ArtifactWriter
 // before any final path is replaced. Result sidecars are commit markers: they
 // are staged with the images and renamed into place only after every path they
 // reference is present and readable.
-class ANARI_TEST_SCENES_INTERFACE ArtifactPublisher
+class ANARI_CTS_CORE_INTERFACE ArtifactPublisher
 {
  public:
   explicit ArtifactPublisher(

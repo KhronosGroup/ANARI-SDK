@@ -123,8 +123,8 @@ if (BUILD_TESTING)
 endif()
 
 # Added after tests/ so include(CTest) above enables the anariCts smoke tests.
-# Built under BUILD_TESTING too (the default test path produces anariCts).
-if (BUILD_CTS OR CTS_ENABLE_GLTF OR BUILD_TESTING)
+# CTS_ENABLE_GLTF only affects a CTS consumer; it does not create one itself.
+if (BUILD_CTS OR BUILD_TESTING OR INSTALL_CTS)
   add_subdirectory(cts)
 endif()
 

@@ -4,7 +4,7 @@
 #pragma once
 
 #include "Value.h"
-#include "anari_test_scenes_export.h"
+#include "Export.h"
 // anari
 #include "anari/anari_cpp.hpp"
 // helium
@@ -20,7 +20,7 @@ namespace cts {
 // resolved axis values, read typed-by-name (get<int>("count", 1)). Backed by
 // helium::ParameterizedObject. The contained device is a non-owning handle; the
 // runner owns the device's lifetime.
-class ANARI_TEST_SCENES_INTERFACE BuildContext
+class ANARI_CTS_CORE_INTERFACE BuildContext
 {
  public:
   explicit BuildContext(anari::Device device = nullptr);

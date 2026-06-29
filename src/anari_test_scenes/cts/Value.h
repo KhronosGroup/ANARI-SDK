@@ -4,7 +4,7 @@
 #pragma once
 
 #include "ParameterBinding.h"
-#include "anari_test_scenes_export.h"
+#include "Export.h"
 // std
 #include <string>
 #include <type_traits>
@@ -80,7 +80,7 @@ inline Any none()
 // Stable, filesystem-safe string for an axis value, used to build Case ids and
 // ground-truth keys. Scalars render without trailing zeros, strings pass
 // through (sanitized), an invalid value renders as "none".
-ANARI_TEST_SCENES_INTERFACE std::string anyToString(const Any &v);
+ANARI_CTS_CORE_INTERFACE std::string anyToString(const Any &v);
 
 } // namespace cts
 } // namespace anari

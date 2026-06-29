@@ -5,7 +5,7 @@
 
 #include "Case.h"
 #include "Channel.h"
-#include "anari_test_scenes_export.h"
+#include "Export.h"
 // anari
 #include "anari/anari_cpp.hpp"
 // std
@@ -26,21 +26,21 @@ namespace cts {
 // format string here needs a corresponding supported type and conversion there.
 
 // The fixed default output format for a channel's frame buffer.
-ANARI_TEST_SCENES_INTERFACE ANARIDataType channelDefaultFormat(Channel channel);
+ANARI_CTS_CORE_INTERFACE ANARIDataType channelDefaultFormat(Channel channel);
 
 // Map an output-format axis string to its ANARIDataType, or ANARI_UNKNOWN for
 // an unrecognized string so the caller can fall back to the channel default.
-ANARI_TEST_SCENES_INTERFACE ANARIDataType colorFormatFromString(
+ANARI_CTS_CORE_INTERFACE ANARIDataType colorFormatFromString(
     const std::string &s);
-ANARI_TEST_SCENES_INTERFACE ANARIDataType albedoFormatFromString(
+ANARI_CTS_CORE_INTERFACE ANARIDataType albedoFormatFromString(
     const std::string &s);
-ANARI_TEST_SCENES_INTERFACE ANARIDataType normalFormatFromString(
+ANARI_CTS_CORE_INTERFACE ANARIDataType normalFormatFromString(
     const std::string &s);
 
 // The output format a Case requests for a channel: its output-format axis value
 // (frame_color_type / frame_albedo_type / frame_normal_type) when present and
 // recognized, else the channel's fixed default.
-ANARI_TEST_SCENES_INTERFACE ANARIDataType caseChannelFormat(
+ANARI_CTS_CORE_INTERFACE ANARIDataType caseChannelFormat(
     const Case &c, Channel channel);
 
 } // namespace cts

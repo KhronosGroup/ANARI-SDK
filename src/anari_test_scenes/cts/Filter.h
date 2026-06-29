@@ -4,7 +4,7 @@
 #pragma once
 
 #include "TestDef.h"
-#include "anari_test_scenes_export.h"
+#include "Export.h"
 // std
 #include <string>
 
@@ -22,10 +22,10 @@ struct Filter
 
 // Anchored case-insensitive glob: '*' matches any run of characters, '?' any
 // single character. Every other character matches itself.
-ANARI_TEST_SCENES_INTERFACE bool globMatch(
+ANARI_CTS_CORE_INTERFACE bool globMatch(
     const std::string &pattern, const std::string &text);
 
-ANARI_TEST_SCENES_INTERFACE bool matches(const Filter &f, const TestDef &test);
+ANARI_CTS_CORE_INTERFACE bool matches(const Filter &f, const TestDef &test);
 
 } // namespace cts
 } // namespace anari

@@ -21,6 +21,7 @@ ANARI_LIBRARY=helide ctest -R render_test
 
 Optional CMake flags that affect this library:
 - `VIEWER_ENABLE_GLTF` — include glTF file loader scene
+- `CTS_ENABLE_GLTF` — also include the loader when a CTS consumer is built
 - `USE_DRACO`, `USE_WEBP`, `USE_KTX` — glTF compression/texture extensions
 - `USE_KOKKOS` — parallel processing backend
 
@@ -95,7 +96,6 @@ Reusable procedural utilities for scene construction:
 | `PrimitiveGenerator` | Mesh generation: triangles, quads, spheres, cylinders, cones, curves; random attributes and transforms |
 | `TextureGenerator` | Synthetic textures: ramps, checkerboards, gradients, normal maps, HDR |
 | `ColorPalette` | Indexed color palette |
-| `SceneGenerator` | Higher-level scene builder used by the CTS; supports arbitrary ANARI object creation and glTF loading |
 
 ### Scene Parameter Pattern
 
@@ -115,7 +115,10 @@ std::vector<ParameterInfo> parameters() override {
 The revamped CTS lives in the **`anari::cts`** sub-namespace (distinct from the
 `anari::scenes` public API and the `registerScene` scene registry). It has no
 ANARI device dependency except the world-build helpers. See `cts/CONTEXT.md` for
-the glossary and `cts/docs/adr/` for the design decisions.
+the glossary and `cts/docs/adr/` for the design decisions. These sources compile
+only into the internal static `anari_cts_core` target when `BUILD_CTS` or
+`BUILD_TESTING` creates a CTS consumer; they are not part of the installed
+`anari_test_scenes` library or its public interface.
 
 | Type | Purpose |
 |---|---|

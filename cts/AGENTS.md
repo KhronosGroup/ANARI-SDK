@@ -27,8 +27,9 @@ cmake -DBUILD_CTS=ON -DBUILD_HELIDE_DEVICE=ON -DCTS_ENABLE_GLTF=ON ..
 #   -DUSE_DRACO=ON -DUSE_KTX=ON -DUSE_WEBP=ON
 ```
 
-Relevant targets: `anariCts` (the CTS tool), `anari_test_scenes` (the library
-holding the catalog + runner), `anariCatalogTests` (the unit tests).
+Relevant targets: `anariCts` (the CTS tool), `anari_cts_core` (the internal
+static library holding the catalog + runner), `anari_test_scenes` (shared scene
+and generator utilities), and `anariCatalogTests` (the unit tests).
 
 ### Running locally
 
@@ -69,8 +70,9 @@ test's `<category>/<test>` id. `run` and `report` exit non-zero on any failure.
 
 ```
 anariCts                 CLI dispatch: cts/src/main.cpp
-  DeviceIntrospection     frontend utility linked directly for query-device-info
-  anari_test_scenes       CTS catalog, harness, runner, and Test definitions
+  anari_cts_core          internal static CTS implementation
+    DeviceIntrospection   frontend utility for query-device-info
+    anari_test_scenes     shared scene and generator utilities
   Catalog                 in-C++ registry of every Test (one per-category file)
   Runner                  build world -> render each Channel -> generate GT or score vs GT -> sidecar
   Metrics                 SSIM / PSNR (single source of metrics, ADR-0004)

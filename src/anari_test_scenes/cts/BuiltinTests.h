@@ -4,13 +4,13 @@
 #pragma once
 
 #include "Catalog.h"
-#include "anari_test_scenes_export.h"
+#include "Export.h"
 
 namespace anari {
 namespace cts {
 
 // Register the built-in conformance Tests into a catalog.
-ANARI_TEST_SCENES_INTERFACE void registerBuiltinTests(Catalog &catalog);
+ANARI_CTS_CORE_INTERFACE void registerBuiltinTests(Catalog &catalog);
 
 } // namespace cts
 } // namespace anari

@@ -9,44 +9,6 @@ project_add_library()
 project_sources(PRIVATE
   anari_test_scenes.cpp
 
-  cts/ArtifactPublication.cpp
-  cts/BuildContext.cpp
-  cts/BuiltinTests.cpp
-  cts/Case.cpp
-  cts/Catalog.cpp
-  cts/Expansion.cpp
-  cts/Filter.cpp
-  cts/FrameFormats.cpp
-  cts/FrameReadback.cpp
-  cts/GeometryBuilder.cpp
-  cts/GeometryLayout.cpp
-  cts/Image.cpp
-  cts/InstanceBuilder.cpp
-  cts/LightBuilder.cpp
-  cts/Metrics.cpp
-  cts/ParameterBinding.cpp
-  cts/Runner.cpp
-  cts/Sidecar.cpp
-  cts/SamplerBuilder.cpp
-  cts/SurfaceBuilder.cpp
-  cts/TestBuilder.cpp
-  cts/Value.cpp
-  cts/ViewBuilder.cpp
-  cts/VolumeBuilder.cpp
-  cts/WorldBuilder.cpp
-  cts/Workdir.cpp
-
-  cts/tests/geometry.cpp
-  cts/tests/material.cpp
-  cts/tests/sampler.cpp
-  cts/tests/light.cpp
-  cts/tests/camera.cpp
-  cts/tests/frame.cpp
-  cts/tests/renderer.cpp
-  cts/tests/instance.cpp
-  cts/tests/volume.cpp
-  cts/tests/gltf.cpp
-
   generators/ColorPalette.cpp
   generators/PrimitiveGenerator.cpp
   generators/TextureGenerator.cpp
@@ -81,16 +43,12 @@ PUBLIC
 project_link_libraries(PUBLIC helium anari_static PUBLIC $<BUILD_INTERFACE:stb_image>)
 project_link_libraries(PUBLIC helium anari_static PUBLIC $<BUILD_INTERFACE:mikktspace>)
 
-# glTF support is needed by both the viewer (VIEWER_ENABLE_GLTF, gated on the
-# viewer/GLFW) and the CTS glTF asset-scan factory (CTS_ENABLE_GLTF, root
-# option). The latter only needs the loader, not the viewer.
-if (VIEWER_ENABLE_GLTF OR CTS_ENABLE_GLTF)
+# glTF support is needed by the viewer and, when built, the CTS core. Enabling
+# CTS glTF tests without a CTS consumer must not add the loader to this general-
+# purpose scene library.
+if (VIEWER_ENABLE_GLTF OR ((BUILD_CTS OR BUILD_TESTING) AND CTS_ENABLE_GLTF))
   project_sources(PRIVATE scenes/file/glTF.cpp)
   project_compile_definitions(PRIVATE ENABLE_GLTF=1)
-  # The glTF asset-scan factory (cts/tests/gltf.cpp) defaults to this source-tree
-  # asset root; override at runtime with ANARI_CTS_GLTF_ASSETS.
-  project_compile_definitions(PRIVATE
-    CTS_GLTF_ASSET_DIR="${CMAKE_CURRENT_LIST_DIR}/../../cts/gltf-Sample-Assets")
 endif()
 
 if (USE_DRACO)
@@ -124,9 +82,70 @@ generate_export_header(${PROJECT_NAME}
   EXPORT_MACRO_NAME "ANARI_TEST_SCENES_INTERFACE"
 )
 
-# This library carries the CTS harness, runner, and Test definitions (cts/*),
-# which the anariCts CLI binary links. That binary is built in cts/ (its entry
-# point, cts/src/main.cpp, links this library).
+## Internal CTS core ##
+
+# Keep the CTS implementation out of the installed scene library. The core is
+# explicitly static so an installed anariCts remains self-contained and does
+# not introduce another runtime library or exported SDK target.
+if (BUILD_CTS OR BUILD_TESTING)
+  add_library(anari_cts_core STATIC
+    cts/ArtifactPublication.cpp
+    cts/BuildContext.cpp
+    cts/BuiltinTests.cpp
+    cts/Case.cpp
+    cts/Catalog.cpp
+    cts/Expansion.cpp
+    cts/Filter.cpp
+    cts/FrameFormats.cpp
+    cts/FrameReadback.cpp
+    cts/GeometryBuilder.cpp
+    cts/GeometryLayout.cpp
+    cts/Image.cpp
+    cts/InstanceBuilder.cpp
+    cts/LightBuilder.cpp
+    cts/Metrics.cpp
+    cts/ParameterBinding.cpp
+    cts/Runner.cpp
+    cts/Sidecar.cpp
+    cts/SamplerBuilder.cpp
+    cts/SurfaceBuilder.cpp
+    cts/TestBuilder.cpp
+    cts/Value.cpp
+    cts/ViewBuilder.cpp
+    cts/VolumeBuilder.cpp
+    cts/WorldBuilder.cpp
+    cts/Workdir.cpp
+
+    cts/tests/camera.cpp
+    cts/tests/frame.cpp
+    cts/tests/geometry.cpp
+    cts/tests/gltf.cpp
+    cts/tests/instance.cpp
+    cts/tests/light.cpp
+    cts/tests/material.cpp
+    cts/tests/renderer.cpp
+    cts/tests/sampler.cpp
+    cts/tests/volume.cpp
+  )
+  target_include_directories(anari_cts_core
+  PUBLIC
+    ${CMAKE_CURRENT_LIST_DIR}
+  )
+  target_link_libraries(anari_cts_core
+  PUBLIC
+    anari_test_scenes
+    anari_device_introspection
+  )
+  target_compile_features(anari_cts_core PUBLIC cxx_std_20)
+
+  if (CTS_ENABLE_GLTF)
+    target_compile_definitions(anari_cts_core
+    PRIVATE
+      ENABLE_GLTF=1
+      CTS_GLTF_ASSET_DIR="${CMAKE_CURRENT_LIST_DIR}/../../cts/gltf-Sample-Assets"
+    )
+  endif()
+endif()
 
 ## Installation ##
 

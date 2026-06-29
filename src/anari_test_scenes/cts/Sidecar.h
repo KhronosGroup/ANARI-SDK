@@ -4,7 +4,7 @@
 #pragma once
 
 #include "Channel.h"
-#include "anari_test_scenes_export.h"
+#include "Export.h"
 // std
 #include <filesystem>
 #include <map>
@@ -34,7 +34,7 @@ enum class Verdict
   Skipped,
 };
 
-ANARI_TEST_SCENES_INTERFACE const char *verdictName(Verdict v);
+ANARI_CTS_CORE_INTERFACE const char *verdictName(Verdict v);
 
 // Which device produced a run, by the names the CLI loaded it with: the ANARI
 // library, the device subtype, and the default renderer subtype. For a suite
@@ -79,11 +79,11 @@ struct CaseResult
 };
 
 // Serialize a CaseResult to its sidecar JSON text (pretty-printed).
-ANARI_TEST_SCENES_INTERFACE std::string toJson(const CaseResult &result);
+ANARI_CTS_CORE_INTERFACE std::string toJson(const CaseResult &result);
 
 // Write the sidecar through a temporary sibling and atomically rename it into
 // place, creating parent directories. False on failure.
-ANARI_TEST_SCENES_INTERFACE bool writeSidecar(
+ANARI_CTS_CORE_INTERFACE bool writeSidecar(
     const std::filesystem::path &path, const CaseResult &result);
 
 } // namespace cts

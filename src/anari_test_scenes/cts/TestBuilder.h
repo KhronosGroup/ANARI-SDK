@@ -6,7 +6,7 @@
 #include "Catalog.h"
 #include "TestDef.h"
 #include "Value.h"
-#include "anari_test_scenes_export.h"
+#include "Export.h"
 // std
 #include <initializer_list>
 #include <string>
@@ -18,7 +18,7 @@ namespace cts {
 
 // Fluent builder for a TestDef. Note: the conformance verb is requireFeatures()
 // rather than `requires`, which is a reserved keyword in C++20.
-class ANARI_TEST_SCENES_INTERFACE TestBuilder
+class ANARI_CTS_CORE_INTERFACE TestBuilder
 {
  public:
   TestBuilder(std::string category, std::string name);

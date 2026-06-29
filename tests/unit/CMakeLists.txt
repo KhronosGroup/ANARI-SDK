@@ -34,10 +34,8 @@ add_executable(anariCatalogTests
 
 target_link_libraries(anariCatalogTests
 PRIVATE
-  anari_test_scenes
-  anari_device_introspection
+  anari_cts_core
 )
-target_compile_features(anariCatalogTests PRIVATE cxx_std_20)
 
 # Pure harness/metrics/results tests run anywhere; the device-backed tests
 # (world-build smoke + runner integration) need helide and skip themselves if no

@@ -70,9 +70,10 @@ The Python comparison of two Candidates' Manifests/images against each other
 ### Tooling
 
 **Catalog**:
-The in-C++ registry of all Tests, living in `anari_test_scenes`. `anariCts list`
-enumerates it; `anariCts run` expands and executes a filtered slice of it. Distinct
-from the pre-existing scene registry (`registerScene`) used by example viewers.
+The in-C++ registry of all Tests, living in the internal `anari_cts_core`
+target. `anariCts list` enumerates it; `anariCts run` expands and executes a
+filtered slice of it. Distinct from the pre-existing scene registry
+(`registerScene`) used by example viewers.
 _Avoid_: test registry, scene registry (that name is the other one)
 
 **BuildContext**:
