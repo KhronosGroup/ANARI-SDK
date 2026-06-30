@@ -5,7 +5,6 @@
 
 #include "Case.h"
 #include "Channel.h"
-#include "Export.h"
 // std
 #include <filesystem>
 #include <string>
@@ -18,7 +17,7 @@ namespace cts {
 // hierarchy: <sub>/<category>/<test>/<leaf>. Result files are keyed by the
 // Case id (unique); ground-truth files by the Case's ground-truth key (shared
 // by variants). All accessors return absolute paths and create no directories.
-class ANARI_CTS_CORE_INTERFACE Workdir
+class Workdir
 {
  public:
   explicit Workdir(std::filesystem::path root);

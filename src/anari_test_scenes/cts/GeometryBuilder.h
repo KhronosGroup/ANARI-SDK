@@ -4,7 +4,6 @@
 #pragma once
 
 #include "GeometryLayout.h"
-#include "Export.h"
 // std
 #include <optional>
 #include <string_view>
@@ -93,21 +92,21 @@ struct CylinderSpec
   GeometryAttributes attributes;
 };
 
-ANARI_CTS_CORE_INTERFACE ColorAttribute parseColorAttribute(
+ColorAttribute parseColorAttribute(
     std::string_view attribute);
-ANARI_CTS_CORE_INTERFACE CapsMode parseCapsMode(std::string_view mode);
+CapsMode parseCapsMode(std::string_view mode);
 
-ANARI_CTS_CORE_INTERFACE anari::Geometry buildTriangleGeometry(
+anari::Geometry buildTriangleGeometry(
     anari::Device d, const TriangleSpec &spec);
-ANARI_CTS_CORE_INTERFACE anari::Geometry buildQuadGeometry(
+anari::Geometry buildQuadGeometry(
     anari::Device d, const QuadSpec &spec);
-ANARI_CTS_CORE_INTERFACE anari::Geometry buildSphereGeometry(
+anari::Geometry buildSphereGeometry(
     anari::Device d, const SphereSpec &spec);
-ANARI_CTS_CORE_INTERFACE anari::Geometry buildCurveGeometry(
+anari::Geometry buildCurveGeometry(
     anari::Device d, const CurveSpec &spec);
-ANARI_CTS_CORE_INTERFACE anari::Geometry buildConeGeometry(
+anari::Geometry buildConeGeometry(
     anari::Device d, const ConeSpec &spec);
-ANARI_CTS_CORE_INTERFACE anari::Geometry buildCylinderGeometry(
+anari::Geometry buildCylinderGeometry(
     anari::Device d, const CylinderSpec &spec);
 
 } // namespace cts

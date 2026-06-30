@@ -5,7 +5,6 @@
 
 #include "Case.h"
 #include "TestDef.h"
-#include "Export.h"
 // std
 #include <vector>
 
@@ -24,7 +23,7 @@ namespace cts {
 //
 // A Test with no axes expands to a single default Case. If any axis has no
 // values the product is empty and no Cases are produced.
-ANARI_CTS_CORE_INTERFACE std::vector<Case> expand(const TestDef &test);
+std::vector<Case> expand(const TestDef &test);
 
 } // namespace cts
 } // namespace anari

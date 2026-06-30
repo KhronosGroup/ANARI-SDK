@@ -5,7 +5,6 @@
 
 #include "Filter.h"
 #include "TestDef.h"
-#include "Export.h"
 // std
 #include <deque>
 #include <set>
@@ -17,13 +16,13 @@ namespace cts {
 
 // True when every required feature of the test is present in deviceFeatures.
 // A test with no required features is always supported.
-ANARI_CTS_CORE_INTERFACE bool isSupported(
+bool isSupported(
     const TestDef &test, const std::set<std::string> &deviceFeatures);
 
 // The in-C++ registry of all Tests. `cts list` enumerates it; `cts run`
 // expands and executes a filtered slice of it. Distinct from the pre-existing
 // scene registry (registerScene) used by example viewers.
-class ANARI_CTS_CORE_INTERFACE Catalog
+class Catalog
 {
  public:
   // Register a Test. Returns a reference to the stored definition, which stays
@@ -53,7 +52,7 @@ class ANARI_CTS_CORE_INTERFACE Catalog
 };
 
 // The process-wide catalog that authored tests register into.
-ANARI_CTS_CORE_INTERFACE Catalog &globalCatalog();
+Catalog &globalCatalog();
 
 } // namespace cts
 } // namespace anari

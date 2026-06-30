@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include "Export.h"
 // std
 #include <cstdint>
 #include <string>
@@ -36,11 +35,11 @@ struct Image
 };
 
 // Load a PNG as RGBA8. Returns an invalid Image (valid() == false) on failure.
-ANARI_CTS_CORE_INTERFACE Image loadPNG(const std::string &path);
+Image loadPNG(const std::string &path);
 
 // Write an RGBA8 image as a PNG, creating parent directories as needed.
 // Returns false on failure (including an invalid image).
-ANARI_CTS_CORE_INTERFACE bool savePNG(
+bool savePNG(
     const std::string &path, const Image &image);
 
 } // namespace cts

@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include "Export.h"
 // anari
 #include "anari/anari_cpp.hpp"
 // helium
@@ -41,7 +40,7 @@ struct SamplerParameter
 
 // A material parameter's source. Callers cannot accidentally confuse an
 // attribute name with a literal string, or a sampler slot with either one.
-class ANARI_CTS_CORE_INTERFACE ParameterBinding
+class ParameterBinding
 {
  public:
   using Value = std::variant<UnsetParameter,
@@ -85,12 +84,12 @@ inline ParameterBinding samplerBinding(size_t index)
 
 namespace detail {
 
-ANARI_CTS_CORE_INTERFACE void applyParameterValueImpl(anari::Device d,
+void applyParameterValueImpl(anari::Device d,
     anari::Object object,
     const char *parameter,
     const RawValue &value);
 
-ANARI_CTS_CORE_INTERFACE void applyParameterBindingImpl(anari::Device d,
+void applyParameterBindingImpl(anari::Device d,
     anari::Object object,
     const char *parameter,
     const ParameterBinding &binding,

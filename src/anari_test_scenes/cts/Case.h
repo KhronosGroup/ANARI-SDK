@@ -5,7 +5,6 @@
 
 #include "Axis.h"
 #include "Value.h"
-#include "Export.h"
 // std
 #include <string>
 #include <vector>
@@ -32,12 +31,12 @@ struct Case
   std::vector<CaseValue> values; // in axis-declaration order
 
   // Leaf name uniquely identifying this Case within its Test (all axis values).
-  ANARI_CTS_CORE_INTERFACE std::string id() const;
+  std::string id() const;
 
   // Leaf name shared by every variant of this Case (permutation values only).
   // Cases differing only in variant values share this key and thus a single
   // ground-truth image.
-  ANARI_CTS_CORE_INTERFACE std::string groundTruthKey() const;
+  std::string groundTruthKey() const;
 };
 
 } // namespace cts

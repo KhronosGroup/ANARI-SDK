@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include "Export.h"
 // anari
 #include "anari/anari_cpp.hpp"
 #include "anari/anari_cpp/ext/linalg.h"
@@ -68,33 +67,33 @@ struct SegmentLayout
   std::vector<uint2> indices;
 };
 
-ANARI_CTS_CORE_INTERFACE PrimitiveMode parsePrimitiveMode(
+PrimitiveMode parsePrimitiveMode(
     std::string_view mode);
 
-ANARI_CTS_CORE_INTERFACE TriangleLayout makeTriangleLayout(
+TriangleLayout makeTriangleLayout(
     TriangleShape shape,
     PrimitiveMode mode,
     int primitiveCount,
     bool unusedVertices = false);
 
-ANARI_CTS_CORE_INTERFACE QuadLayout makeQuadLayout(QuadShape shape,
+QuadLayout makeQuadLayout(QuadShape shape,
     PrimitiveMode mode,
     int primitiveCount,
     bool unusedVertices = false);
 
-ANARI_CTS_CORE_INTERFACE SphereLayout makeSphereLayout(
+SphereLayout makeSphereLayout(
     PrimitiveMode mode, int primitiveCount, bool unusedVertices = false);
 
-ANARI_CTS_CORE_INTERFACE CurveLayout makeCurveLayout(
+CurveLayout makeCurveLayout(
     PrimitiveMode mode, int primitiveCount, bool unusedVertices = false);
 
-ANARI_CTS_CORE_INTERFACE SegmentLayout makeSegmentLayout(
+SegmentLayout makeSegmentLayout(
     PrimitiveMode mode, int primitiveCount, bool unusedVertices = false);
 
 // The canonical equilateral-triangle Layout: three vertices per triangle in
 // soup order. Material tests use it to add their own attribute arrays without
 // depending on ANARI object publication.
-ANARI_CTS_CORE_INTERFACE std::vector<math::float3> layoutTriangleSoup(
+std::vector<math::float3> layoutTriangleSoup(
     int primitiveCount);
 
 } // namespace cts

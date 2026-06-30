@@ -5,7 +5,6 @@
 
 #include "anari/anari_cpp.hpp"
 #include "anari_test_scenes.h"
-#include "Export.h"
 // std
 #include <vector>
 
@@ -20,10 +19,10 @@ struct WorldContents
   std::vector<anari::Instance> instances;
 };
 
-ANARI_CTS_CORE_INTERFACE anari::World assembleWorld(
+anari::World assembleWorld(
     anari::Device d, const WorldContents &contents);
 
-ANARI_CTS_CORE_INTERFACE anari::scenes::Bounds worldBounds(
+anari::scenes::Bounds worldBounds(
     anari::Device d, anari::World world);
 
 } // namespace cts

@@ -5,7 +5,6 @@
 
 #include "Channel.h"
 #include "Image.h"
-#include "Export.h"
 // anari
 #include "anari/anari_cpp.hpp"
 // std
@@ -50,7 +49,7 @@ struct FrameReadbackResult
 
 // Validate and decode one mapped Channel into the CTS comparison-image format.
 // depthScale is used only for Channel::Depth.
-ANARI_CTS_CORE_INTERFACE FrameReadbackResult decodeFrameChannel(
+FrameReadbackResult decodeFrameChannel(
     Channel channel,
     const MappedFrameDescriptor &mapped,
     uint32_t expectedWidth,
@@ -60,7 +59,7 @@ ANARI_CTS_CORE_INTERFACE FrameReadbackResult decodeFrameChannel(
 // Map, validate, and decode one frame Channel. The scoped mapping pairs every
 // successful map with exactly one unmap, including validation failures and
 // exceptions raised while allocating or converting the comparison image.
-ANARI_CTS_CORE_INTERFACE FrameReadbackResult readFrameChannel(
+FrameReadbackResult readFrameChannel(
     anari::Device device,
     anari::Frame frame,
     Channel channel,
