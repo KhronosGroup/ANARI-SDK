@@ -11,6 +11,7 @@ CMakeSettings.json
 .anari_deps
 .claude
 .codex
+todo/*
 
 # cts
 cts/anari_library_debug*

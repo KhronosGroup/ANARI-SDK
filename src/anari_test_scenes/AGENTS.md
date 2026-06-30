@@ -21,6 +21,7 @@ ANARI_LIBRARY=helide ctest -R render_test
 
 Optional CMake flags that affect this library:
 - `VIEWER_ENABLE_GLTF` — include glTF file loader scene
+- `CTS_ENABLE_GLTF` — also include the loader when a CTS consumer is built
 - `USE_DRACO`, `USE_WEBP`, `USE_KTX` — glTF compression/texture extensions
 - `USE_KOKKOS` — parallel processing backend
 
@@ -95,7 +96,6 @@ Reusable procedural utilities for scene construction:
 | `PrimitiveGenerator` | Mesh generation: triangles, quads, spheres, cylinders, cones, curves; random attributes and transforms |
 | `TextureGenerator` | Synthetic textures: ramps, checkerboards, gradients, normal maps, HDR |
 | `ColorPalette` | Indexed color palette |
-| `SceneGenerator` | Higher-level scene builder used by the CTS; supports arbitrary ANARI object creation and glTF loading |
 
 ### Scene Parameter Pattern
 
@@ -109,3 +109,28 @@ std::vector<ParameterInfo> parameters() override {
   return { makeParameterInfo("count", "Sphere count", 1000, 1, 1e6) };
 }
 ```
+
+### Conformance Test Suite harness (`cts/`)
+
+The revamped CTS lives in the **`anari::cts`** sub-namespace (distinct from the
+`anari::scenes` public API and the `registerScene` scene registry). It has no
+ANARI device dependency except the world-build helpers. See `cts/CONTEXT.md` for
+the glossary and `cts/docs/adr/` for the design decisions. These sources compile
+only into the internal static `anari_cts_core` target when `BUILD_CTS` or
+`BUILD_TESTING` creates a CTS consumer; they are not part of the installed
+`anari_test_scenes` library or its public interface.
+
+| Type | Purpose |
+|---|---|
+| `Axis` / `AxisKind` | A parameter dimension; `Permutation` (distinct ground truth) or `Variant` (shared ground truth) |
+| `TestDef` + `makeTest()` `TestBuilder` | A catalog Test: human-readable description, build fn, axes, required features, thresholds, channels. Fluent builder; use `requireFeatures()` (not `requires`, a C++20 keyword) |
+| `Case` + `expand()` | One resolved combination; full cartesian or simplified one-factor-at-a-time. `id()` (all values) vs `groundTruthKey()` (permutation values only) |
+| `BuildContext` | Carries a Case's axis values to `build()`, read typed-by-name over `helium::ParameterizedObject` |
+| `Catalog` + `Filter` | The in-C++ Test registry: register/list/filter/categories + feature gating |
+| `GeometryLayout.h` / `GeometryBuilder.h` | Typed geometry specifications, pure deterministic Layout generation, and focused ANARI geometry publication |
+| `ParameterBinding.h` | Explicit constant, attribute, sampler, and unset material bindings with checked publication |
+| `*Builder.h` | Focused helpers for surfaces, lights, samplers, volumes, instances, views, and World assembly |
+
+Unit tests: `tests/unit/test_cts_catalog.cpp` (pure, device-free) and
+`tests/unit/test_cts_worldbuilder.cpp` (helide-backed smoke tests, skipped if no
+device loads), both in the `anariCatalogTests` target.

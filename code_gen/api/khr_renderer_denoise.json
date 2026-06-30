@@ -1,0 +1,23 @@
+{
+    "info" : {
+        "name" : "KHR_RENDERER_DENOISE",
+        "type" : "extension",
+        "dependencies" : []
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_RENDERER",
+            "name" : "default",
+            "parameters" : [
+                {
+                    "name" : "denoise",
+                    "types" : ["ANARI_BOOL"],
+                    "tags" : [],
+                    "default" : false,
+                    "description" : "whether the rendered image should be denoised"
+                }
+            ]
+        }
+    ]
+}
