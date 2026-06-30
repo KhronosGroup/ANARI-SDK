@@ -72,35 +72,45 @@ TF_INSTANTIATE_SINGLETON(HdAnariMdlRegistry);
 
 HdAnariMdlRegistry *HdAnariMdlRegistry::GetInstance()
 {
-  try {
-    return &TfSingleton<HdAnariMdlRegistry>::GetInstance();
-  } catch (const std::exception &e) {
-    TF_RUNTIME_ERROR("Failed to create MdlRegistry singleton.");
-    return nullptr;
-  }
+  // Construction never throws (see the constructors): on failure it publishes a
+  // disabled instance whose getINeuray() is null. No try/catch here -- swallowing
+  // a construction throw would leave TfSingleton wedged (isInitializing set,
+  // instance null) and hang every later call.
+  return &TfSingleton<HdAnariMdlRegistry>::GetInstance();
 }
 
 mi::neuraylib::INeuray *HdAnariMdlRegistry::AcquireNeuray(DllHandle dllHandle)
 {
+  // Return null (don't throw) on failure: callers build a disabled registry
+  // rather than letting an exception escape the singleton ctor.
+  if (dllHandle == nullptr) {
+    TF_RUNTIME_ERROR("MDL SDK library is not loaded");
+    return nullptr;
+  }
+
   // Get neuray main entry point
   auto symbol = getProcAddress(dllHandle, "mi_factory");
-  if (symbol == nullptr)
-    throw std::runtime_error("Failed to find MDL SDK mi_factory symbol");
+  if (symbol == nullptr) {
+    TF_RUNTIME_ERROR("Failed to find MDL SDK mi_factory symbol");
+    return nullptr;
+  }
 
   auto neuray = mi::neuraylib::mi_factory<mi::neuraylib::INeuray>(symbol);
   if (neuray == nullptr) {
-    // Check if we have a valid neuray instance, otherwise check why.
+    // INeuray can be acquired only once per process; a null here usually means
+    // another subsystem (e.g. the VisRTX device) already holds it, or a version
+    // mismatch.
     auto version =
         make_handle(mi::neuraylib::mi_factory<mi::neuraylib::IVersion>(symbol));
-    if (!version) {
-      throw std::runtime_error("Cannot get MDL SDK library version");
-    } else {
-      throw std::runtime_error(
-          "Cannot get INeuray interface from mi_factory, either there is a version mismatch or the interface has already been acquired: "s
-          "Expected version is " MI_NEURAYLIB_PRODUCT_VERSION_STRING
-          ", library version is "
-          + version->get_product_version());
-    }
+    if (!version)
+      TF_RUNTIME_ERROR("Cannot get MDL SDK library version");
+    else
+      TF_RUNTIME_ERROR(
+          "Cannot get INeuray: version mismatch or the interface is already "
+          "acquired (expected %s, library %s)",
+          MI_NEURAYLIB_PRODUCT_VERSION_STRING,
+          version->get_product_version());
+    return nullptr;
   }
 
   return neuray;
@@ -141,10 +151,7 @@ HdAnariMdlRegistry::HdAnariMdlRegistry(DllHandle dllHandle)
     : HdAnariMdlRegistry(dllHandle, AcquireNeuray(dllHandle))
 {}
 
-HdAnariMdlRegistry::HdAnariMdlRegistry(DllHandle dllHandle,
-    mi::neuraylib::INeuray *neuray,
-    mi::base::ILogger *logger)
-    : m_dllHandle(dllHandle), m_neuray(neuray)
+void HdAnariMdlRegistry::_Initialize(mi::base::ILogger *logger)
 {
   // Get the MDL configuration component so main path can be added.
   auto mdlConfiguration = make_handle(
@@ -204,6 +211,14 @@ HdAnariMdlRegistry::HdAnariMdlRegistry(DllHandle dllHandle,
   if (!m_globalScope.is_valid_interface())
     throw std::runtime_error("Failed to acquire neuray database global scope");
 
+  // Isolate our introspection work from any other consumer of this shared
+  // INeuray (e.g. the VisRTX device): use a private child scope rather than
+  // the global one.
+  m_introspectionScope =
+      make_handle(database->create_scope(m_globalScope.get()));
+  if (!m_introspectionScope.is_valid_interface())
+    throw std::runtime_error("Failed to create MDL introspection scope");
+
   // Get an execution context for later use.
   m_mdlFactory =
       make_handle(m_neuray->get_api_component<mi::neuraylib::IMdl_factory>());
@@ -215,7 +230,35 @@ HdAnariMdlRegistry::HdAnariMdlRegistry(DllHandle dllHandle,
   if (!m_executionContext.is_valid_interface()) {
     throw std::runtime_error("Failed acquiring an execution context");
   }
+}
 
+HdAnariMdlRegistry::HdAnariMdlRegistry(DllHandle dllHandle,
+    mi::neuraylib::INeuray *neuray,
+    mi::base::ILogger *logger)
+    : m_dllHandle(dllHandle), m_neuray(neuray)
+{
+  // Never let an exception escape this ctor: one that escapes TfSingleton's
+  // construction leaves isInitializing=true / instance=null forever, so every
+  // later GetInstance() spins (deadlock). On failure publish a disabled
+  // registry (getINeuray()==null) and let callers fall back.
+  try {
+    if (!m_neuray)
+      throw std::runtime_error(
+          "MDL INeuray unavailable (acquisition failed, or already held by "
+          "another subsystem)");
+    _Initialize(logger);
+  } catch (const std::exception &e) {
+    TF_RUNTIME_ERROR("HdAnariMdlRegistry disabled: %s", e.what());
+    m_executionContext = {};
+    m_mdlFactory = {};
+    m_introspectionScope = {};
+    m_globalScope = {};
+    m_neuray = {};
+    if (m_dllHandle) {
+      freeLibrary(m_dllHandle);
+      m_dllHandle = {};
+    }
+  }
   TfSingleton<HdAnariMdlRegistry>::SetInstanceConstructed(*this);
 }
 
@@ -223,8 +266,9 @@ HdAnariMdlRegistry::~HdAnariMdlRegistry()
 {
   m_executionContext = {};
   m_mdlFactory = {};
+  m_introspectionScope = {};
   m_globalScope = {};
-  if (m_dllHandle) {
+  if (m_dllHandle && m_neuray) {
     m_neuray->shutdown();
     m_neuray = {};
     freeLibrary(m_dllHandle);
@@ -253,7 +297,7 @@ auto HdAnariMdlRegistry::createTransaction(mi::neuraylib::IScope *scope)
     -> mi::neuraylib::ITransaction *
 {
   if (!scope)
-    scope = m_globalScope.get();
+    scope = m_introspectionScope.get();
   return scope->create_transaction();
 }
 
