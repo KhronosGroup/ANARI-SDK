@@ -126,6 +126,7 @@ TEST_CASE("sidecar JSON carries the contract fields", "[cts][sidecar]")
   CaseResult r;
   r.category = "geometry";
   r.test = "sphere";
+  r.description = "Checks sphere geometry rendering.";
   r.caseId = "1_soup";
   r.groundTruthKey = "1";
   r.device = {"helide", "default", "default"};
@@ -149,6 +150,8 @@ TEST_CASE("sidecar JSON carries the contract fields", "[cts][sidecar]")
   // Spot-check the contract surface without depending on key ordering.
   CHECK(text.find("\"schemaVersion\": 2") != std::string::npos);
   CHECK(text.find("\"verdict\": \"passed\"") != std::string::npos);
+  CHECK(text.find("\"description\": \"Checks sphere geometry rendering.\"")
+      != std::string::npos);
   CHECK(text.find("\"groundTruthKey\": \"1\"") != std::string::npos);
   CHECK(text.find("\"primitiveMode\"") != std::string::npos);
   CHECK(text.find("\"channel\": \"color\"") != std::string::npos);

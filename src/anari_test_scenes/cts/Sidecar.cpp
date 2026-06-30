@@ -46,6 +46,7 @@ std::string toJson(const CaseResult &result)
   j["schemaVersion"] = kSidecarSchemaVersion;
   j["category"] = result.category;
   j["test"] = result.test;
+  j["description"] = result.description;
   j["case"] = result.caseId;
   j["groundTruthKey"] = result.groundTruthKey;
   // Which device produced this result (schema v2): the diff tool labels runs

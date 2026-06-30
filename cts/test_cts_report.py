@@ -28,11 +28,13 @@ def make_sidecar(
     psnr=31.0,
     duration_ms=10.0,
     device_library="helide",
+    description="Checks triangle geometry rendering.",
 ):
     return {
         "schemaVersion": 2,
         "category": category,
         "test": test,
+        "description": description,
         "case": case,
         "device": {
             "library": device_library,
@@ -128,7 +130,7 @@ class ReportContractTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             workdir = Path(temp) / "candidate"
             minimal = make_sidecar(case="minimal")
-            for optional in ("device", "durationMs", "channels"):
+            for optional in ("device", "description", "durationMs", "channels"):
                 minimal.pop(optional)
             write_sidecar_data(workdir, minimal)
             old_schema = make_sidecar(case="old-schema")
@@ -201,6 +203,55 @@ class ReportContractTests(unittest.TestCase):
         self.assertIn("geometry/triangle/failed [failed]", text)
         self.assertIn("geometry/triangle/skipped [skipped]", text)
         self.assertIn("missing feature", text)
+
+    def test_text_report_includes_descriptions_for_itemized_cases(self):
+        results = {
+            "geometry/triangle/failed": make_sidecar(
+                case="failed",
+                verdict="failed",
+                description="Checks triangle geometry rendering.",
+            )
+        }
+        output = io.StringIO()
+
+        ctsReport.write_text_summary("candidate", results, output)
+
+        self.assertIn(
+            "Description: Checks triangle geometry rendering.",
+            output.getvalue(),
+        )
+
+    def test_pdf_report_includes_descriptions_for_itemized_cases(self):
+        try:
+            from reportlab.platypus import Paragraph as real_paragraph
+        except ImportError:
+            self.skipTest("reportlab is not installed")
+
+        results = {
+            "geometry/triangle/default": make_sidecar(
+                description="Checks triangle geometry rendering."
+            )
+        }
+        paragraphs = []
+
+        def capture_paragraph(text, style, *args, **kwargs):
+            paragraphs.append(text)
+            return real_paragraph(text, style, *args, **kwargs)
+
+        with tempfile.TemporaryDirectory() as temp:
+            out_path = Path(temp) / "report.pdf"
+            with mock.patch(
+                "reportlab.platypus.Paragraph", side_effect=capture_paragraph
+            ):
+                self.assertTrue(
+                    ctsReport.generate_pdf(
+                        temp, results, out_path, include_all=True
+                    )
+                )
+
+        self.assertIn(
+            "Description: Checks triangle geometry rendering.", paragraphs
+        )
 
     def test_all_flag_is_forwarded_to_pdf_generation(self):
         with tempfile.TemporaryDirectory() as temp:

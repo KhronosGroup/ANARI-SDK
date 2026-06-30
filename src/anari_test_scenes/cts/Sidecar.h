@@ -23,6 +23,8 @@ namespace cts {
 //
 // v2 adds the `device` object identifying which device produced the run, so a
 // two-device diff can label runs by device rather than by workdir name.
+// `description` is additive optional catalog metadata; readers treat its
+// absence in older v2 workdirs as an empty description.
 constexpr int kSidecarSchemaVersion = 2;
 
 // A Case's pass/fail outcome.
@@ -66,6 +68,7 @@ struct CaseResult
 {
   std::string category;
   std::string test;
+  std::string description; // optional human-readable summary of the Test
   std::string caseId;
   std::string groundTruthKey;
   DeviceSpec device; // which device produced this result (schema v2)
@@ -82,8 +85,7 @@ std::string toJson(const CaseResult &result);
 
 // Write the sidecar through a temporary sibling and atomically rename it into
 // place, creating parent directories. False on failure.
-bool writeSidecar(
-    const std::filesystem::path &path, const CaseResult &result);
+bool writeSidecar(const std::filesystem::path &path, const CaseResult &result);
 
 } // namespace cts
 } // namespace anari

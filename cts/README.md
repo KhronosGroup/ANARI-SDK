@@ -165,8 +165,10 @@ intentionally excluded from this semantic comparison, so timing-only changes do
 not produce differences or a non-zero exit status.
 
 By default, report details are limited to failed Cases. Pass `--all` to itemize
-passed, failed, and skipped Cases. In a PDF, rendered Cases include their metric
-scores and available candidate and ground-truth images.
+passed, failed, and skipped Cases. Itemized PDF Cases include the Test's
+human-readable description; rendered Cases also include their metric scores and
+available candidate and ground-truth images. Text reports include the
+description under every itemized Case as well.
 
 ## Comparison metrics
 

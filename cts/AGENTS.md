@@ -104,7 +104,8 @@ ctsReport.py              reads the sidecar tree only; report + device diff
 - `Metrics.{h,cpp}` / `Image.{h,cpp}` — SSIM/PSNR and PNG I/O (stb).
 - `Workdir.{h,cpp}` / `Sidecar.{h,cpp}` — the results tree layout and the
   versioned per-Case sidecar contract (carries the producing `device` identity
-  since schema v2; `Workdir` also keys the per-channel diff/threshold images).
+  since schema v2 plus optional Test descriptions; `Workdir` also keys the
+  per-channel diff/threshold images).
 - `GeometryLayout.{h,cpp}` — pure deterministic Layout generation using typed
   shape and primitive-mode enums.
 - `GeometryBuilder.{h,cpp}` — geometry-family specifications and ANARI

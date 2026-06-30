@@ -101,7 +101,8 @@ struct Runner
   void resolveCapabilities(const std::set<std::string> &features);
 
   // Write a "missing required feature" skip sidecar for a Case and tally it.
-  void writeFeatureSkip(const Case &c, RunSummary &summary);
+  void writeFeatureSkip(
+      const TestDef &test, const Case &c, RunSummary &summary);
 
   // Publish a Case's complete result and tally its verdict. A publication
   // failure always tallies as failed, regardless of the intended verdict.
@@ -113,8 +114,10 @@ struct Runner
   // Write a failed sidecar for a Case whose build/render threw, recording the
   // reason in `detail`, and tally it. Per-case crash isolation (ADR-0003): a
   // throwing case is contained so the run continues.
-  void writeCaseFailure(
-      const Case &c, const std::string &detail, RunSummary &summary);
+  void writeCaseFailure(const TestDef &test,
+      const Case &c,
+      const std::string &detail,
+      RunSummary &summary);
 
   // Run a behavioral Test (TestDef::behaviorCheck set): one Case at a time,
   // feature-gating then invoking the check and writing its verdict + detail.

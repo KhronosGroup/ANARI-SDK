@@ -19,6 +19,7 @@ The sidecar schema is versioned (schemaVersion); this reader targets version 2
 """
 
 import argparse
+import html
 import json
 import sys
 from pathlib import Path
@@ -201,6 +202,9 @@ def write_text_summary(workdir, results, out=sys.stdout, include_all=False):
             summary_text = "; ".join(scores) if scores else reason
             verdict = f" [{data.get('verdict', 'skipped')}]" if include_all else ""
             print(f"    {key}{verdict}  {summary_text}", file=out)
+            description = data.get("description")
+            if isinstance(description, str) and description:
+                print(f"      Description: {description}", file=out)
     return s
 
 
@@ -366,6 +370,14 @@ def generate_pdf(workdir, results, out_path, *, include_all=False):
                     styles["Heading3"],
                 )
             )
+            description = data.get("description")
+            if isinstance(description, str) and description:
+                story.append(
+                    Paragraph(
+                        f"Description: {html.escape(description)}",
+                        styles["Normal"],
+                    )
+                )
             if include_all:
                 verdict = data.get("verdict", "skipped").capitalize()
                 story.append(Paragraph(f"Verdict: {verdict}", styles["Normal"]))

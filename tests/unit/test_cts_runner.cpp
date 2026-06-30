@@ -86,17 +86,20 @@ Catalog makeCatalog()
   Catalog cat;
   // 2 permutations x 2 variants = 4 cases, 2 ground-truth keys.
   makeTest("geometry", "triangle")
+      .description("Checks triangle primitive layouts.")
       .build(buildTriangleWorld)
       .permute("primitiveCount", {4, 8})
       .variant("primitiveMode", {"soup", "indexed"})
       .registerInto(cat);
   // Single case, two channels.
   makeTest("geometry", "sphere")
+      .description("Checks sphere color and depth rendering.")
       .build(buildSphereWorld)
       .channels({Channel::Color, Channel::Depth})
       .registerInto(cat);
   // Requires a feature no device has -> always skipped.
   makeTest("demo", "needs_bogus")
+      .description("Checks feature-gated Test reporting.")
       .build(buildSphereWorld)
       .requireFeature("ANARI_KHR_BOGUS_FEATURE")
       .registerInto(cat);
@@ -501,6 +504,8 @@ TEST_CASE(
     REQUIRE(std::filesystem::exists(sidecar));
     const auto text = readFile(sidecar);
     CHECK(text.find("\"verdict\": \"passed\"") != std::string::npos);
+    CHECK(text.find("\"description\": \"Checks triangle primitive layouts.\"")
+        != std::string::npos);
     CHECK(text.find("ssim") != std::string::npos);
     CHECK(std::filesystem::exists(wd.resultImagePath(tri, Channel::Color)));
     // The run records its device identity (schema v2) and emits debug images.
@@ -514,6 +519,9 @@ TEST_CASE(
     bogus.testName = "needs_bogus";
     const auto bogusText = readFile(wd.sidecarPath(bogus));
     CHECK(bogusText.find("\"verdict\": \"skipped\"") != std::string::npos);
+    CHECK(bogusText.find(
+              "\"description\": \"Checks feature-gated Test reporting.\"")
+        != std::string::npos);
     CHECK(bogusText.find("feature") != std::string::npos);
   }
 

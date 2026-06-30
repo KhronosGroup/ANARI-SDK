@@ -121,11 +121,13 @@ anari::Renderer defaultRenderer(anari::Device d)
   return renderer.release();
 }
 
-CaseResult baseResult(const Case &c, const DeviceSpec &device)
+CaseResult baseResult(
+    const TestDef &test, const Case &c, const DeviceSpec &device)
 {
   CaseResult r;
   r.category = c.category;
   r.test = c.testName;
+  r.description = test.description;
   r.caseId = c.id();
   r.groundTruthKey = c.groundTruthKey();
   r.device = device;
@@ -249,9 +251,10 @@ Runner::SceneObjects Runner::buildScene(const TestDef &test, const Case &c)
   return scene;
 }
 
-void Runner::writeFeatureSkip(const Case &c, RunSummary &summary)
+void Runner::writeFeatureSkip(
+    const TestDef &test, const Case &c, RunSummary &summary)
 {
-  CaseResult result = baseResult(c, m_options.device);
+  CaseResult result = baseResult(test, c, m_options.device);
   result.verdict = Verdict::Skipped;
   result.skipReason = "device is missing a required feature";
   recordResult(c, result, summary);
@@ -280,10 +283,12 @@ void Runner::recordResult(const Case &c,
   }
 }
 
-void Runner::writeCaseFailure(
-    const Case &c, const std::string &detail, RunSummary &summary)
+void Runner::writeCaseFailure(const TestDef &test,
+    const Case &c,
+    const std::string &detail,
+    RunSummary &summary)
 {
-  CaseResult result = baseResult(c, m_options.device);
+  CaseResult result = baseResult(test, c, m_options.device);
   result.verdict = Verdict::Failed;
   result.detail = detail;
   recordResult(c, result, summary);
@@ -389,11 +394,11 @@ RunSummary Runner::run(const Catalog &catalog,
       // built mid-case are released by buildScene/renderCase as they unwind.
       try {
         if (!isSupported(*test, candidateFeatures)) {
-          writeFeatureSkip(c, summary);
+          writeFeatureSkip(*test, c, summary);
           continue;
         }
 
-        CaseResult result = baseResult(c, m_options.device);
+        CaseResult result = baseResult(*test, c, m_options.device);
 
         // Need ground truth for every channel before we can compare.
         bool haveGroundTruth = true;
@@ -481,10 +486,12 @@ RunSummary Runner::run(const Catalog &catalog,
         result.verdict = allPassed ? Verdict::Passed : Verdict::Failed;
         recordResult(c, result, summary, artifacts);
       } catch (const std::exception &e) {
-        writeCaseFailure(
-            c, std::string("exception during run: ") + e.what(), summary);
+        writeCaseFailure(*test,
+            c,
+            std::string("exception during run: ") + e.what(),
+            summary);
       } catch (...) {
-        writeCaseFailure(c, "unknown exception during run", summary);
+        writeCaseFailure(*test, c, "unknown exception during run", summary);
       }
     }
   }
@@ -499,7 +506,7 @@ void Runner::runBehaviorTest(const TestDef &test,
     summary.total++;
 
     if (!isSupported(test, candidateFeatures)) {
-      writeFeatureSkip(c, summary);
+      writeFeatureSkip(test, c, summary);
       continue;
     }
 
@@ -507,7 +514,7 @@ void Runner::runBehaviorTest(const TestDef &test,
     // check becomes a failed sidecar and the run continues; SceneObjects owns
     // every handle and releases partial or complete builds on scope exit.
     try {
-      CaseResult result = baseResult(c, m_options.device);
+      CaseResult result = baseResult(test, c, m_options.device);
 
       SceneObjects scene = buildScene(test, c);
       if (!scene.valid()) {
@@ -531,11 +538,13 @@ void Runner::runBehaviorTest(const TestDef &test,
       result.detail = br.detail;
       recordResult(c, result, summary);
     } catch (const std::exception &e) {
-      writeCaseFailure(c,
+      writeCaseFailure(test,
+          c,
           std::string("exception during behavior test: ") + e.what(),
           summary);
     } catch (...) {
-      writeCaseFailure(c, "unknown exception during behavior test", summary);
+      writeCaseFailure(
+          test, c, "unknown exception during behavior test", summary);
     }
   }
 }
