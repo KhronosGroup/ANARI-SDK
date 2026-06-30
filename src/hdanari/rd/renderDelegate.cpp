@@ -139,7 +139,7 @@ void HdAnariRenderDelegate::Initialize()
     else if ("ANARI_KHR_MATERIAL_PHYSICALLY_BASED"sv == *e)
       hasANARI_KHR_MATERIAL_PHYSICALLY_BASED = true;
 #ifdef HDANARI_ENABLE_MDL
-    else if ("ANARI_VISRTX_MATERIAL_MDL"sv == *e)
+    else if ("ANARI_VISRTX_MATERIAL_MDL_SURFACE"sv == *e)
       hasANARI_VISRTX_MATERIAL_MDL = true;
 #endif
   }
@@ -149,16 +149,30 @@ void HdAnariRenderDelegate::Initialize()
     return;
   }
 
+#ifdef HDANARI_ENABLE_MDL
+  // Build the MDL registry once, single-threaded, BEFORE the device exists, so
+  // HdAnari owns the MDL SDK's single INeuray and the device reuses it.
+  // Unconditional: the SDR parser and the <mdl> material backend call
+  // GetInstance() during Sync (on worker threads). If the registry is first
+  // built there, its default ctor self-acquires a second INeuray, throws
+  // (already held by the device), and poisons the TfSingleton -> every later
+  // GetInstance() spins forever. So acquire it here, regardless of the device
+  // extension, before anything can race on it.
+  auto *mdlRegistryInstance = HdAnariMdlRegistry::GetInstance();
+#endif
+
   auto device = anari::newDevice(library, "default");
 #ifdef HDANARI_ENABLE_MDL
-  if (hasANARI_VISRTX_MATERIAL_MDL) {
-    if (auto mdlRegistryInstance = HdAnariMdlRegistry::GetInstance()) {
-      anari::setParameter(device,
-          device,
-          "ineuray",
-          ANARI_VOID_POINTER,
-          mdlRegistryInstance->getINeuray());
-    }
+  if (mdlRegistryInstance && hasANARI_VISRTX_MATERIAL_MDL) {
+    anari::setParameter(device,
+        device,
+        "ineuray",
+        ANARI_VOID_POINTER,
+        mdlRegistryInstance->getINeuray());
+    // Device parameters only take effect once committed; without this the
+    // device never receives our shared INeuray and MDL material support
+    // silently fails to initialize.
+    anari::commitParameters(device, device);
   }
 #endif
 
