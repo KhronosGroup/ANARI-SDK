@@ -139,7 +139,7 @@ void HdAnariRenderDelegate::Initialize()
     else if ("ANARI_KHR_MATERIAL_PHYSICALLY_BASED"sv == *e)
       hasANARI_KHR_MATERIAL_PHYSICALLY_BASED = true;
 #ifdef HDANARI_ENABLE_MDL
-    else if ("ANARI_VISRTX_MATERIAL_MDL_SURFACE"sv == *e)
+    else if ("ANARI_VISRTX_MATERIAL_MDL"sv == *e)
       hasANARI_VISRTX_MATERIAL_MDL = true;
 #endif
   }
