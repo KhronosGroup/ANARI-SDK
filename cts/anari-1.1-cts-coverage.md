@@ -2,9 +2,9 @@
 
 Source inputs:
 
-- `/home/jamstutz/Downloads/ANARI-1.1.pdf`, title `ANARI(TM) 1.1.0 - Specification`, generated October 8, 2025.
+- ANARI 1.1 specification PDF, title `ANARI(TM) 1.1.0 - Specification`, generated October 8, 2025.
 - ANARI 1.1 extension semantics from PDF section 2.4, object chapters 4-5, and Appendix B.
-- Active CTS catalog from `/home/jamstutz/build/codex/ANARI-SDK/anariCts query-metadata`, after rebuilding that tree from the current checkout.
+- Active CTS catalog from `anariCts query-metadata`, after rebuilding the current checkout.
 - CTS source under `src/anari_test_scenes/cts/tests/`.
 
 Spec premise: section 2.4 says extensions are observable ANARI API behavior, usually object subtypes but also parameter behavior, function pre/post conditions, or property availability. Appendix B lists 54 KHR extensions in ANARI 1.1. The active CTS catalog has 83 tests and 314 cases.
