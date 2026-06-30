@@ -322,6 +322,7 @@ def generate_pdf(workdir, results, out_path, *, include_all=False):
 
     root = Path(workdir)
     styles = getSampleStyleSheet()
+    doc = SimpleDocTemplate(str(out_path), pagesize=pagesizes.A4)
     story = []
     s = summarize(results)
 
@@ -394,7 +395,7 @@ def generate_pdf(workdir, results, out_path, *, include_all=False):
                     f"{m}={ch['metrics'].get(m)}" for m in METRICS if m in ch.get("metrics", {})
                 )
                 story.append(Paragraph(f"{ch.get('channel')}: {metrics}", styles["Normal"]))
-                imgs = []
+                image_paths = []
                 # Result, ground truth, then the debug images (diff + mask) when
                 # the runner emitted them (schema v2).
                 for label in (
@@ -405,12 +406,41 @@ def generate_pdf(workdir, results, out_path, *, include_all=False):
                 ):
                     rel = ch.get(label, "")
                     if rel and (root / rel).is_file():
-                        imgs.append(load_image(root / rel))
-                if imgs:
-                    story.append(Table([imgs], hAlign="LEFT"))
+                        image_paths.append(root / rel)
+                if image_paths:
+                    columns = min(2, len(image_paths))
+                    cell_padding = 6
+                    image_width = min(
+                        240, doc.width / columns - 2 * cell_padding
+                    )
+                    imgs = [load_image(path, image_width) for path in image_paths]
+                    image_rows = [
+                        imgs[i : i + columns]
+                        for i in range(0, len(imgs), columns)
+                    ]
+                    image_table = Table(image_rows, hAlign="LEFT")
+                    image_table.setStyle(
+                        TableStyle(
+                            [
+                                (
+                                    "LEFTPADDING",
+                                    (0, 0),
+                                    (-1, -1),
+                                    cell_padding,
+                                ),
+                                (
+                                    "RIGHTPADDING",
+                                    (0, 0),
+                                    (-1, -1),
+                                    cell_padding,
+                                ),
+                            ]
+                        )
+                    )
+                    story.append(image_table)
             story.append(Spacer(1, 12))
 
-    SimpleDocTemplate(str(out_path), pagesize=pagesizes.A4).build(story)
+    doc.build(story)
     print(f"wrote {out_path}")
     return True
 

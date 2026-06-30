@@ -2,6 +2,7 @@
 # Copyright 2026 The Khronos Group
 # SPDX-License-Identifier: Apache-2.0
 
+import base64
 import contextlib
 import io
 import json
@@ -252,6 +253,64 @@ class ReportContractTests(unittest.TestCase):
         self.assertIn(
             "Description: Checks triangle geometry rendering.", paragraphs
         )
+
+    def test_pdf_image_comparison_tables_fit_page(self):
+        try:
+            from reportlab.lib.pagesizes import A4
+            from reportlab.platypus import Image as ReportImage
+            from reportlab.platypus import SimpleDocTemplate
+            from reportlab.platypus import Table as real_table
+        except ImportError:
+            self.skipTest("reportlab is not installed")
+
+        failed = make_sidecar(verdict="failed")
+        failed["channels"][0].update(
+            {
+                "resultImage": "image.png",
+                "groundTruthImage": "image.png",
+                "diffImage": "image.png",
+                "thresholdImage": "image.png",
+            }
+        )
+        image_tables = []
+
+        def capture_table(rows, *args, **kwargs):
+            table = real_table(rows, *args, **kwargs)
+            if any(
+                isinstance(cell, ReportImage)
+                for row in rows
+                for cell in row
+            ):
+                image_tables.append(table)
+            return table
+
+        with tempfile.TemporaryDirectory() as temp:
+            workdir = Path(temp)
+            out_path = workdir / "report.pdf"
+            image_bytes = base64.b64decode(
+                "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwC"
+                "AAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+            )
+            (workdir / "image.png").write_bytes(image_bytes)
+
+            with mock.patch(
+                "reportlab.platypus.Table", side_effect=capture_table
+            ):
+                self.assertTrue(
+                    ctsReport.generate_pdf(
+                        workdir,
+                        {"geometry/triangle/default": failed},
+                        out_path,
+                    )
+                )
+
+            content_width = SimpleDocTemplate(
+                str(out_path), pagesize=A4
+            ).width
+
+        self.assertEqual(len(image_tables), 1)
+        table_width, _ = image_tables[0].wrap(content_width, A4[1])
+        self.assertLessEqual(table_width, content_width)
 
     def test_all_flag_is_forwarded_to_pdf_generation(self):
         with tempfile.TemporaryDirectory() as temp:
