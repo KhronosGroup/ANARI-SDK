@@ -37,9 +37,8 @@ const char *frameChannelParameter(Channel channel)
   return nullptr;
 }
 
-class ScopedFrameMapping
+struct ScopedFrameMapping
 {
- public:
   ScopedFrameMapping(
       anari::Device device, anari::Frame frame, const char *channel)
       : m_device(device), m_frame(frame), m_channel(channel)

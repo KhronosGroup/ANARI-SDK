@@ -16,9 +16,8 @@ namespace cts {
 // An axis value, or any value the harness carries by name. Most values are raw
 // ANARI values. Material axes may instead carry a typed ParameterBinding so
 // constants, attributes, sampler slots, and unset values stay distinct.
-class Any
+struct Any
 {
- public:
   Any() = default;
   Any(RawValue value) : m_value(std::move(value)) {}
   Any(ParameterBinding binding) : m_value(std::move(binding)) {}

@@ -22,9 +22,8 @@ bool isSupported(
 // The in-C++ registry of all Tests. `cts list` enumerates it; `cts run`
 // expands and executes a filtered slice of it. Distinct from the pre-existing
 // scene registry (registerScene) used by example viewers.
-class Catalog
+struct Catalog
 {
- public:
   // Register a Test. Returns a reference to the stored definition, which stays
   // valid for the catalog's lifetime even as further tests are registered.
   const TestDef &add(TestDef test);

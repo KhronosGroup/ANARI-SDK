@@ -57,9 +57,8 @@ bool readableImage(const std::filesystem::path &path)
   return loadPNG(path.string()).valid();
 }
 
-class FilesystemArtifactWriter : public ArtifactWriter
+struct FilesystemArtifactWriter : public ArtifactWriter
 {
- public:
   bool writeImage(
       const std::filesystem::path &path, const Image &image) override
   {
@@ -81,9 +80,8 @@ struct StagedImage
   bool installed{false};
 };
 
-class ImageTransaction
+struct ImageTransaction
 {
- public:
   explicit ImageTransaction(ArtifactWriter &writer) : m_writer(writer) {}
 
   ~ImageTransaction()

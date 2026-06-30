@@ -125,9 +125,8 @@ bool hasPublicationTemporary(const std::filesystem::path &root)
   return false;
 }
 
-class FailingArtifactWriter : public ArtifactWriter
+struct FailingArtifactWriter : public ArtifactWriter
 {
- public:
   int failImageWrite{-1};
   bool failSidecarWrite{false};
 

@@ -17,9 +17,8 @@ namespace cts {
 // hierarchy: <sub>/<category>/<test>/<leaf>. Result files are keyed by the
 // Case id (unique); ground-truth files by the Case's ground-truth key (shared
 // by variants). All accessors return absolute paths and create no directories.
-class Workdir
+struct Workdir
 {
- public:
   explicit Workdir(std::filesystem::path root);
 
   const std::filesystem::path &root() const;

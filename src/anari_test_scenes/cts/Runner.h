@@ -45,9 +45,8 @@ struct RunSummary
 // per-case sidecars under a Workdir (ADR-0001/0003). One Runner wraps one
 // device: `generate` is driven with the reference device, `run` with a
 // candidate. Cameras are framed from world bounds.
-class Runner
+struct Runner
 {
- public:
   Runner(anari::Device device, Workdir workdir, RunOptions options = {});
   Runner(anari::Device device,
       Workdir workdir,

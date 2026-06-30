@@ -13,9 +13,8 @@ namespace cts {
 
 // Move-only owner for an ANARI object and the device used to release it.
 template <typename T>
-class UniqueAnariObject
+struct UniqueAnariObject
 {
- public:
   UniqueAnariObject() = default;
   UniqueAnariObject(anari::Device device, T object)
       : m_device(device), m_object(object)

@@ -40,9 +40,8 @@ struct SamplerParameter
 
 // A material parameter's source. Callers cannot accidentally confuse an
 // attribute name with a literal string, or a sampler slot with either one.
-class ParameterBinding
+struct ParameterBinding
 {
- public:
   using Value = std::variant<UnsetParameter,
       ConstantParameter,
       AttributeParameter,

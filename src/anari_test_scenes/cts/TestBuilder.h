@@ -17,9 +17,8 @@ namespace cts {
 
 // Fluent builder for a TestDef. Note: the conformance verb is requireFeatures()
 // rather than `requires`, which is a reserved keyword in C++20.
-class TestBuilder
+struct TestBuilder
 {
- public:
   TestBuilder(std::string category, std::string name);
 
   TestBuilder &build(BuildFn fn);

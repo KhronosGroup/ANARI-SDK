@@ -23,9 +23,8 @@ struct ImageArtifact
 
 // The serialization seam used by ArtifactPublisher. Tests can inject an
 // adapter that fails a selected write without relying on file permissions.
-class ArtifactWriter
+struct ArtifactWriter
 {
- public:
   virtual ~ArtifactWriter() = default;
 
   virtual bool writeImage(
@@ -38,9 +37,8 @@ class ArtifactWriter
 // before any final path is replaced. Result sidecars are commit markers: they
 // are staged with the images and renamed into place only after every path they
 // reference is present and readable.
-class ArtifactPublisher
+struct ArtifactPublisher
 {
- public:
   explicit ArtifactPublisher(
       Workdir workdir, std::shared_ptr<ArtifactWriter> writer = nullptr);
 
