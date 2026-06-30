@@ -163,7 +163,8 @@ void HdAnariRenderDelegate::Initialize()
 
   auto device = anari::newDevice(library, "default");
 #ifdef HDANARI_ENABLE_MDL
-  if (mdlRegistryInstance && hasANARI_VISRTX_MATERIAL_MDL) {
+  if (mdlRegistryInstance && mdlRegistryInstance->getINeuray()
+      && hasANARI_VISRTX_MATERIAL_MDL) {
     anari::setParameter(device,
         device,
         "ineuray",

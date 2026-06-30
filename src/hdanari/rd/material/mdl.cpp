@@ -142,6 +142,10 @@ void HdAnariMdlMaterial::ProcessMdlNode(anari::Device device,
       terminalNodeType, HdAnariMaterialTokens->mdl);
 
   auto mdlRegistryInstance = HdAnariMdlRegistry::GetInstance();
+  if (!mdlRegistryInstance || !mdlRegistryInstance->getINeuray()) {
+    TF_WARN("MDL registry unavailable; skipping MDL material %s", id.GetText());
+    return; // registry disabled (no INeuray) -> leave material unconfigured
+  }
 
   auto uri = shaderNode->GetResolvedImplementationURI();
 

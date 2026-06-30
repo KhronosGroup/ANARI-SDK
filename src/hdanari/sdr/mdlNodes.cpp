@@ -37,8 +37,8 @@ MdlSdrShaderNode *MdlSdrShaderNode::ParseSdrDiscoveryResult(
     const SdrShaderNodeDiscoveryResult &discoveryResult)
 {
   auto registry = HdAnariMdlRegistry::GetInstance();
-  if (!registry)
-    return nullptr;
+  if (!registry || !registry->getINeuray())
+    return nullptr; // registry disabled (no INeuray) -> MDL discovery off
 
   if (discoveryResult.resolvedUri.length() > discoveryResult.uri.length()) {
     // Try and get a meaningful search path from the resolvedUri and uri
