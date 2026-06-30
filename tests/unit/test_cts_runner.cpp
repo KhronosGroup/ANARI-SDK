@@ -81,6 +81,25 @@ anari::World buildSphereWorld(BuildContext &ctx)
   return world;
 }
 
+// A matte triangle surface with no explicit lights. Tests can make the
+// renderer's ambient term the only source of illumination.
+anari::World buildAmbientWorld(BuildContext &ctx)
+{
+  auto d = ctx.device();
+  TriangleSpec spec;
+  spec.primitiveCount = 4;
+  auto geom = buildTriangleGeometry(d, spec);
+  auto mat = makeMatteMaterial(d, float3(0.7f, 0.7f, 0.7f));
+  auto surface = makeSurface(d, geom, mat);
+  WorldContents wc;
+  wc.surfaces = {surface};
+  auto world = assembleWorld(d, wc);
+  anari::release(d, geom);
+  anari::release(d, mat);
+  anari::release(d, surface);
+  return world;
+}
+
 Catalog makeCatalog()
 {
   Catalog cat;
@@ -126,6 +145,14 @@ bool hasPublicationTemporary(const std::filesystem::path &root)
       return true;
   }
   return false;
+}
+
+uint64_t imageEnergy(const Image &image)
+{
+  uint64_t energy = 0;
+  for (size_t i = 0; i < image.rgba.size(); i += 4)
+    energy += image.rgba[i] + image.rgba[i + 1] + image.rgba[i + 2];
+  return energy;
 }
 
 struct FailingArtifactWriter : public ArtifactWriter
@@ -668,6 +695,67 @@ TEST_CASE(
   }
 
   std::filesystem::remove_all(root, ec);
+  anari::release(d, d);
+  anari::unloadLibrary(lib);
+}
+
+TEST_CASE("Runner applies ambientRadiance before Test renderer overrides",
+    "[cts][runner][helide]")
+{
+  anari::Library lib = anari::loadLibrary("helide", statusFunc, nullptr);
+  if (!lib) {
+    WARN("helide library not available; skipping renderer defaults test");
+    return;
+  }
+  anari::Device d = anari::newDevice(lib, "default");
+  REQUIRE(d != nullptr);
+  anari::commitParameters(d, d);
+
+  auto rendererTestBuilder = makeTest("renderer", "defaults");
+  rendererTestBuilder.build(buildAmbientWorld)
+      .renderer([](BuildContext &ctx, anari::Renderer renderer) {
+        // Helide's implementation-specific switch allows the standard ambient
+        // parameters to affect this focused integration test.
+        anari::setParameter(
+            ctx.device(), renderer, "ignoreAmbientLighting", false);
+      });
+  const TestDef rendererTest = rendererTestBuilder.take();
+  Case c;
+  c.category = rendererTest.category;
+  c.testName = rendererTest.name;
+
+  RunOptions darkOptions;
+  darkOptions.width = 32;
+  darkOptions.height = 32;
+  darkOptions.ambientRadiance = 0.f;
+  Runner darkRunner(d, Workdir(std::filesystem::path{}), darkOptions);
+  const auto dark = darkRunner.renderCase(rendererTest, c);
+
+  RunOptions brightOptions = darkOptions;
+  brightOptions.ambientRadiance = 4.f;
+  Runner brightRunner(d, Workdir(std::filesystem::path{}), brightOptions);
+  const auto bright = brightRunner.renderCase(rendererTest, c);
+
+  REQUIRE(dark.size() == 1);
+  REQUIRE(bright.size() == 1);
+  CHECK(imageEnergy(bright.front()) > imageEnergy(dark.front()));
+
+  auto overrideTestBuilder = makeTest("renderer", "ambient_override");
+  overrideTestBuilder.build(buildAmbientWorld)
+      .renderer([](BuildContext &ctx, anari::Renderer renderer) {
+        auto d = ctx.device();
+        anari::setParameter(d, renderer, "ignoreAmbientLighting", false);
+        anari::setParameter(d, renderer, "ambientRadiance", 0.5f);
+      });
+  const TestDef overrideTest = overrideTestBuilder.take();
+  c.testName = overrideTest.name;
+
+  const auto overriddenDark = darkRunner.renderCase(overrideTest, c);
+  const auto overriddenBright = brightRunner.renderCase(overrideTest, c);
+  REQUIRE(overriddenDark.size() == 1);
+  REQUIRE(overriddenBright.size() == 1);
+  CHECK(overriddenDark.front().rgba == overriddenBright.front().rgba);
+
   anari::release(d, d);
   anari::unloadLibrary(lib);
 }

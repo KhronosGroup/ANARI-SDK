@@ -84,7 +84,7 @@ ctsReport.py              reads the sidecar tree only; report + device diff
 
 **Harness / runner:**
 - `TestDef.h` — a registered Test: human-readable `description`, `build`
-  (world), optional `cameraBuild` / `rendererBuild` build hooks (ADR-0006) and
+  (world), optional `cameraBuild` / `rendererConfig` hooks (ADR-0006) and
   `behaviorCheck` hook, axes, required features, thresholds (test-wide +
   per-channel), channels.
 - `TestBuilder.{h,cpp}` — the `makeTest(...)` fluent builder. Note the verb is
@@ -95,8 +95,9 @@ ctsReport.py              reads the sidecar tree only; report + device diff
 - `Catalog.{h,cpp}` / `Filter.{h,cpp}` — the registry and its substring/glob filter.
 - `BuildContext.{h,cpp}` / `Value.{h,cpp}` — per-Case axis values handed to
   `build()`, backed by `helium::ParameterizedObject`.
-- `Runner.{h,cpp}` — builds, renders, and scores Cases; owns the camera/renderer
-  defaults and runs the behavior hook for behavioral tests.
+- `Runner.{h,cpp}` — builds, renders, and scores Cases; owns renderer creation
+  and baseline configuration, owns the default camera, and runs the behavior
+  hook for behavioral tests.
 - `FrameReadback.{h,cpp}` — validates mapped frame descriptors and converts
   supported per-Channel formats behind the shared map/unmap boundary.
 - `FrameFormats.{h,cpp}` — resolves a Case's per-Channel output `ANARIDataType`

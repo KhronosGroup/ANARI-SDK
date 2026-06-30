@@ -25,8 +25,8 @@ struct TestBuilder
   TestBuilder &description(std::string text);
   TestBuilder &build(BuildFn fn);
 
-  // Supply a custom render camera / renderer instead of the runner defaults
-  // (bounds-framed camera, parameterless "default" renderer).
+  // Supply a custom render camera, or configure the renderer after the runner
+  // applies its selected subtype and baseline parameters.
   TestBuilder &camera(CameraFn fn);
   TestBuilder &renderer(RendererFn fn);
 

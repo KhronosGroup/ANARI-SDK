@@ -112,12 +112,15 @@ anari::Camera defaultCamera(
   return makePerspectiveCamera(d, camDesc, camOpts);
 }
 
-// The default renderer: parameterless "default".
-anari::Renderer defaultRenderer(anari::Device d)
+// Create the selected renderer subtype and apply the runner's baseline. The
+// caller lets a Test override parameters before committing it once.
+anari::Renderer configuredRenderer(
+    anari::Device d, const std::string &subtype, float ambientRadiance)
 {
   UniqueAnariObject<anari::Renderer> renderer(
-      d, anari::newObject<anari::Renderer>(d, "default"));
-  anari::commitParameters(d, renderer.get());
+      d, anari::newObject<anari::Renderer>(d, subtype.c_str()));
+  if (renderer)
+    anari::setParameter(d, renderer.get(), "ambientRadiance", ambientRadiance);
   return renderer.release();
 }
 
@@ -243,9 +246,13 @@ Runner::SceneObjects Runner::buildScene(const TestDef &test, const Case &c)
           : defaultCamera(
                 m_device, scene.bounds, m_options.width, m_options.height));
   scene.renderer = UniqueAnariObject<anari::Renderer>(m_device,
-      test.rendererBuild ? test.rendererBuild(ctx) : defaultRenderer(m_device));
-  if (m_denoiseEnabled && scene.renderer) {
-    anari::setParameter(m_device, scene.renderer.get(), "denoise", true);
+      configuredRenderer(
+          m_device, m_options.device.renderer, m_options.ambientRadiance));
+  if (scene.renderer) {
+    if (test.rendererConfig)
+      test.rendererConfig(ctx, scene.renderer.get());
+    if (m_denoiseEnabled)
+      anari::setParameter(m_device, scene.renderer.get(), "denoise", true);
     anari::commitParameters(m_device, scene.renderer.get());
   }
   return scene;

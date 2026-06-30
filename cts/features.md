@@ -20,12 +20,14 @@ reference device (helide) renders the ground truth; the candidate device renders
 the same Cases and each Channel is scored against ground truth.
 
 ```bash
-anariCts generate --workdir myrun     # ground truth from the reference device
-anariCts run helide --workdir myrun   # render + score a candidate
+anariCts generate --renderer default --ambientRadiance 1 --workdir myrun
+anariCts run helide --renderer default --ambientRadiance 1 --workdir myrun
 ```
 
 Ground truth is generated on demand into `myrun/ground_truth/` and is never
 committed (`docs/adr/0005`), so it always matches the current scene code.
+Generation and execution accept the same renderer subtype and ambient-radiance
+baseline; use matching values when comparing a Candidate to Ground truth.
 Rendered candidate images and a per-Case sidecar land in `myrun/results/`,
 mirroring the catalog hierarchy `<category>/<test>/<case>`. A Case is rendered
 once per Channel it declares (color, depth, albedo, normal, primitive/object/

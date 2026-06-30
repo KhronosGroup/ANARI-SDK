@@ -38,7 +38,7 @@ enum class Verdict
 const char *verdictName(Verdict v);
 
 // Which device produced a run, by the names the CLI loaded it with: the ANARI
-// library, the device subtype, and the default renderer subtype. For a suite
+// library, the device subtype, and the selected renderer subtype. For a suite
 // whose purpose is comparing devices, this is what labels a run.
 struct DeviceSpec
 {

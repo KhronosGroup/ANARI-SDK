@@ -32,7 +32,7 @@ TestBuilder &TestBuilder::camera(CameraFn fn)
 
 TestBuilder &TestBuilder::renderer(RendererFn fn)
 {
-  m_def.rendererBuild = std::move(fn);
+  m_def.rendererConfig = std::move(fn);
   return *this;
 }
 

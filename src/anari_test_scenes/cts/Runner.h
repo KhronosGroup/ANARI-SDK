@@ -29,6 +29,8 @@ struct RunOptions
   double psnrThreshold{20.0};
   // Color-channel renders per frame when accumulation is supported.
   uint32_t accumulationFrames{1};
+  // Baseline renderer ambient light. A renderer Test may override this.
+  float ambientRadiance{1.f};
   bool denoise{false};
   DeviceSpec device;
 };
@@ -72,8 +74,9 @@ struct Runner
 
  private:
   // The committed render objects for one Case: the world plus the camera and
-  // renderer (either the Test's build hooks or the runner's defaults). `world`
-  // is null when the Test has no build function or build() returned null.
+  // renderer (with the Test's optional camera build / renderer configuration
+  // hooks applied). `world` is null when the Test has no build function or
+  // build() returned null.
   struct SceneObjects
   {
     UniqueAnariObject<anari::World> world;
@@ -89,8 +92,8 @@ struct Runner
     }
   };
 
-  // Build a Case's world, camera, and renderer. SceneObjects owns every handle
-  // and releases partial or complete builds when it leaves scope.
+  // Build a Case's world and camera, then configure its renderer. SceneObjects
+  // owns every handle and releases partial or complete builds on scope exit.
   SceneObjects buildScene(const TestDef &test, const Case &c);
 
   // Resolve the requested accumulation/denoise options against one device's

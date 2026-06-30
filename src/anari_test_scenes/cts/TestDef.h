@@ -32,11 +32,11 @@ using BuildFn = std::function<anari::World(BuildContext &)>;
 using CameraFn =
     std::function<anari::Camera(BuildContext &, const anari::scenes::Bounds &)>;
 
-// Optional per-Case renderer builder. By default the runner uses a
-// parameterless "default" renderer; a Test that exercises renderer parameters
-// (ambient, background) supplies one. Returns a committed renderer the runner
-// owns.
-using RendererFn = std::function<anari::Renderer(BuildContext &)>;
+// Optional per-Case renderer configuration. The runner creates the configured
+// renderer subtype and applies its baseline parameters first; a Test that
+// exercises renderer parameters (ambient, background) can then override them.
+// The runner commits and owns the renderer.
+using RendererFn = std::function<void(BuildContext &, anari::Renderer)>;
 
 // The outcome of a behavioral check: a self-contained pass/fail with a
 // human-readable detail. Distinct from render-and-compare scoring.
@@ -69,7 +69,7 @@ struct TestDef
   std::string description;
   BuildFn build;
   CameraFn cameraBuild; // empty -> runner frames camera from world bounds
-  RendererFn rendererBuild; // empty -> runner uses a "default" renderer
+  RendererFn rendererConfig; // empty -> runner keeps its renderer baseline
   BehaviorFn behaviorCheck; // set -> verify behavior instead of render+compare
   std::vector<Axis> axes;
   std::vector<std::string> requiredFeatures;

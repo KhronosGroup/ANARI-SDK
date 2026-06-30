@@ -81,6 +81,13 @@ options:
   --device <lib>       reference device library for generate (default: helide)
   --width <n>          render width (default: 256)
   --height <n>         render height (default: 256)
+  -r, --renderer <subtype>
+                       renderer subtype (default: default)
+  --ambientRadiance <value>
+                       baseline renderer ambientRadiance (default: 1)
+  --accumulation <n>   progressive color-channel frames when supported (default: 16)
+  --no-accumulation    render each channel once
+  --denoise            set the renderer denoise parameter
   --stdin              read newline-separated filter patterns from stdin (run)
   --verbose            print ANARI warnings
 ```
@@ -95,10 +102,10 @@ step is always to generate it with the reference device, then run the candidate:
 
 ```bash
 # 1. Generate ground truth for the whole catalog with the reference device.
-anariCts generate --workdir myrun
+anariCts generate --renderer default --ambientRadiance 1 --workdir myrun
 
 # 2. Render + score a candidate device against it.
-anariCts run helide --workdir myrun
+anariCts run helide --renderer default --ambientRadiance 1 --workdir myrun
 
 # 3. Summarize the run (optionally as a PDF).
 python cts/ctsReport.py report myrun
@@ -107,6 +114,11 @@ python cts/ctsReport.py report myrun --all --pdf myrun-all.pdf
 ```
 
 `run` exits non-zero if any Case failed, so it drops into CI directly.
+
+Use the same `--renderer` and `--ambientRadiance` values for `generate` and
+`run`; they are part of the rendering configuration being compared. The
+ambient value is a baseline for ordinary Tests. A renderer Test that explicitly
+exercises `ambientRadiance` overrides it with the Case's axis value.
 
 ### Running a slice
 

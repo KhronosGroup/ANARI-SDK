@@ -16,6 +16,7 @@
 // nlohmann json (vendored with the glTF loader)
 #include "scenes/file/nlohmann/json.hpp"
 // std
+#include <cmath>
 #include <cstring>
 #include <iostream>
 #include <limits>
@@ -53,6 +54,8 @@ struct Options
   std::string device; // library name for run/query/check
   uint32_t width = 256;
   uint32_t height = 256;
+  std::string renderer = "default";
+  float ambientRadiance = 1.f;
   bool useStdin = false;
   // query-device-info: restrict to an object type / subtype substring, list
   // subtypes only, or include detailed per-parameter info.
@@ -86,6 +89,10 @@ options:
   --device <lib>       reference device library for generate (default: helide)
   --width <n>          render width (default: 256)
   --height <n>         render height (default: 256)
+  -r, --renderer <subtype>
+                       renderer subtype (default: default)
+  --ambientRadiance <value>
+                       baseline renderer ambientRadiance (default: 1)
   --accumulation <n>   progressive color-channel frames when the device supports
                        ANARI_KHR_FRAME_ACCUMULATION (default: 16; <=1 disables)
   --no-accumulation    render each channel once (equivalent to --accumulation 1)
@@ -127,6 +134,18 @@ Options parseOptions(int argc, char **argv, int start)
       return fallback;
     }
   };
+  auto parseFloat = [](const std::string &s, float fallback) -> float {
+    try {
+      size_t pos = 0;
+      const float v = std::stof(s, &pos);
+      if (pos != s.size() || !std::isfinite(v))
+        throw std::invalid_argument("not a finite float");
+      return v;
+    } catch (const std::exception &) {
+      std::cerr << "warning: invalid value '" << s << "', keeping default\n";
+      return fallback;
+    }
+  };
   for (int i = start; i < argc; ++i) {
     const std::string a = argv[i];
     auto next = [&]() -> std::string {
@@ -142,6 +161,10 @@ Options parseOptions(int argc, char **argv, int start)
       o.width = parseDim(next(), o.width);
     else if (a == "--height")
       o.height = parseDim(next(), o.height);
+    else if (a == "--renderer" || a == "-r")
+      o.renderer = next();
+    else if (a == "--ambientRadiance")
+      o.ambientRadiance = parseFloat(next(), o.ambientRadiance);
     else if (a == "--accumulation")
       o.accumulationFrames = parseDim(next(), o.accumulationFrames);
     else if (a == "--no-accumulation")
@@ -366,9 +389,10 @@ int cmdGenerate(const Options &o)
   RunOptions ro;
   ro.width = o.width;
   ro.height = o.height;
+  ro.ambientRadiance = o.ambientRadiance;
   ro.accumulationFrames = o.accumulationFrames;
   ro.denoise = o.denoise;
-  ro.device = {deviceName, "default", "default"};
+  ro.device = {deviceName, "default", o.renderer};
   Runner runner(d, Workdir(o.workdir), ro);
 
   auto s = runner.generate(catalog, Filter{o.filter}, features);
@@ -398,9 +422,10 @@ int cmdRun(const Options &o)
   RunOptions ro;
   ro.width = o.width;
   ro.height = o.height;
+  ro.ambientRadiance = o.ambientRadiance;
   ro.accumulationFrames = o.accumulationFrames;
   ro.denoise = o.denoise;
-  ro.device = {o.device, "default", "default"};
+  ro.device = {o.device, "default", o.renderer};
   Runner runner(d, Workdir(o.workdir), ro);
 
   RunSummary s;

@@ -5,7 +5,6 @@
 #include "../GeometryBuilder.h"
 #include "../SurfaceBuilder.h"
 #include "../TestBuilder.h"
-#include "../ViewBuilder.h"
 #include "../WorldBuilder.h"
 #include "Categories.h"
 #include "generators/TextureGenerator.h"
@@ -52,15 +51,12 @@ void registerRendererTests(Catalog &catalog)
   makeTest("renderer", "renderer_ambient")
       .description("Checks renderer ambient light color and radiance.")
       .build(ambientSubject)
-      .renderer([](BuildContext &ctx) {
+      .renderer([](BuildContext &ctx, anari::Renderer r) {
         auto d = ctx.device();
-        auto r = newRenderer(d, "default");
         applyParameterValue(
             d, r, "ambientColor", ctx.value("ambientColor").raw());
         applyParameterValue(
             d, r, "ambientRadiance", ctx.value("ambientRadiance").raw());
-        anari::commitParameters(d, r);
-        return r;
       })
       .simplified()
       .permute("ambientColor",
@@ -75,12 +71,9 @@ void registerRendererTests(Catalog &catalog)
   makeTest("renderer", "renderer_background_color")
       .description("Checks renderer background color and alpha values.")
       .build(emptyWorld)
-      .renderer([](BuildContext &ctx) {
+      .renderer([](BuildContext &ctx, anari::Renderer r) {
         auto d = ctx.device();
-        auto r = newRenderer(d, "default");
         applyParameterValue(d, r, "background", ctx.value("background").raw());
-        anari::commitParameters(d, r);
-        return r;
       })
       .permute("background",
           V{Any(float4(0.f, 0.f, 0.f, 1.f)),
@@ -93,15 +86,12 @@ void registerRendererTests(Catalog &catalog)
   makeTest("renderer", "renderer_background_image")
       .description("Checks image-based renderer backgrounds.")
       .build(emptyWorld)
-      .renderer([](BuildContext &ctx) {
+      .renderer([](BuildContext &ctx, anari::Renderer r) {
         auto d = ctx.device();
-        auto r = newRenderer(d, "default");
         const size_t res = 32;
         auto img = scenes::TextureGenerator::generateCheckerBoard(res);
         anari::setAndReleaseParameter(
             d, r, "background", anari::newArray2D(d, img.data(), res, res));
-        anari::commitParameters(d, r);
-        return r;
       })
       .requireFeature("ANARI_KHR_RENDERER_BACKGROUND_IMAGE")
       .registerInto(catalog);

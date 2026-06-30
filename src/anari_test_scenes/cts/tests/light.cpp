@@ -6,7 +6,6 @@
 #include "../LightBuilder.h"
 #include "../SurfaceBuilder.h"
 #include "../TestBuilder.h"
-#include "../ViewBuilder.h"
 #include "../WorldBuilder.h"
 #include "Categories.h"
 // std
@@ -52,17 +51,14 @@ anari::World lightWorld(
   return world;
 }
 
-// A renderer with a black background and no ambient light, so the test light is
-// the only illumination.
-anari::Renderer darkRenderer(BuildContext &ctx)
+// Configure a black background and no ambient light, so the test light is the
+// only illumination.
+void darkRenderer(BuildContext &ctx, anari::Renderer r)
 {
   auto d = ctx.device();
-  auto r = newRenderer(d, "default");
   anari::setParameter(d, r, "background", float4(0.f, 0.f, 0.f, 1.f));
   anari::setParameter(d, r, "ambientRadiance", 0.f);
   anari::setParameter(d, r, "ambientColor", float3(0.f, 0.f, 0.f));
-  anari::commitParameters(d, r);
-  return r;
 }
 
 void lp(BuildContext &ctx, anari::Device d, anari::Light l, const char *param)

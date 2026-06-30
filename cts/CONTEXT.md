@@ -83,10 +83,11 @@ resolved axis values, read typed-by-name (`get<int>("count", 1)`) or as a raw
 Backed by `helium::ParameterizedObject`.
 
 **Build hook**:
-An optional per-Case builder a Test supplies beyond `build()` — `cameraBuild`
-(`.camera(...)`) and `rendererBuild` (`.renderer(...)`) — letting the camera,
-renderer, and light categories vary the render camera or renderer instead of the
-runner's bounds-framed camera / `default` renderer (ADR-0006).
+An optional per-Case builder a Test supplies beyond `build()`. `cameraBuild`
+(`.camera(...)`) replaces the runner's bounds-framed camera. The related
+`rendererConfig` hook (`.renderer(...)`) instead mutates the runner-created
+renderer after its selected subtype and baseline parameters are applied
+(ADR-0006).
 
 **Layout**:
 The deterministic, human-viewable placement of a Test's primitives — their

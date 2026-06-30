@@ -33,6 +33,14 @@ endif()
 if (BUILD_TESTING)
   # Device-free smoke tests of the tool surface. (Device-backed run/generate
   # are covered by the runner integration test in tests/unit.)
+  add_test(NAME cts_tool::help COMMAND anariCts --help)
+  set_tests_properties(cts_tool::help PROPERTIES
+    PASS_REGULAR_EXPRESSION "--ambientRadiance <value>"
+  )
+  add_test(NAME cts_tool::help_renderer COMMAND anariCts --help)
+  set_tests_properties(cts_tool::help_renderer PROPERTIES
+    PASS_REGULAR_EXPRESSION "--renderer <subtype>"
+  )
   add_test(NAME cts_tool::list COMMAND anariCts list)
   add_test(NAME cts_tool::query-metadata COMMAND anariCts query-metadata)
 
