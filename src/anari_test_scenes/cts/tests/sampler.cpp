@@ -130,6 +130,8 @@ void registerSamplerTests(Catalog &catalog)
 
   // ---- image1D --------------------------------------------------------------
   makeTest("sampler", "image1D")
+      .description(
+          "Checks 1D image filtering, wrapping, transforms, and offsets.")
       .build([](BuildContext &ctx) {
         return samplerWorld(
             ctx,
@@ -163,6 +165,8 @@ void registerSamplerTests(Catalog &catalog)
 
   // ---- image2D --------------------------------------------------------------
   makeTest("sampler", "image2D")
+      .description(
+          "Checks 2D image filtering, wrapping, transforms, and offsets.")
       .build([](BuildContext &ctx) {
         return samplerWorld(
             ctx,
@@ -199,6 +203,8 @@ void registerSamplerTests(Catalog &catalog)
 
   // ---- image3D --------------------------------------------------------------
   makeTest("sampler", "image3D")
+      .description(
+          "Checks 3D image filtering, wrapping, transforms, and offsets.")
       .build([](BuildContext &ctx) {
         return samplerWorld(
             ctx,
@@ -241,6 +247,7 @@ void registerSamplerTests(Catalog &catalog)
   // The array value is itself an axis; encode the per-Case element width as a
   // token and build the (2-element) array of that width in the sampler setup.
   makeTest("sampler", "primitive")
+      .description("Checks primitive sampler offsets and array element widths.")
       .build([](BuildContext &ctx) {
         return samplerWorld(ctx,
             "primitive",
@@ -276,6 +283,7 @@ void registerSamplerTests(Catalog &catalog)
 
   // ---- transform ------------------------------------------------------------
   makeTest("sampler", "transform")
+      .description("Checks transform sampler matrices and output offsets.")
       .build([](BuildContext &ctx) {
         return samplerWorld(ctx,
             "transform",

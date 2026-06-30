@@ -95,6 +95,7 @@ void registerLightTests(Catalog &catalog)
 {
   // ---- directional ----------------------------------------------------------
   makeTest("light", "directional")
+      .description("Checks directional light direction and irradiance.")
       .build([](BuildContext &ctx) {
         return lightWorld(ctx,
             "directional",
@@ -115,6 +116,7 @@ void registerLightTests(Catalog &catalog)
 
   // ---- point ----------------------------------------------------------------
   makeTest("light", "point")
+      .description("Checks point light position, intensity, and power.")
       .build([](BuildContext &ctx) {
         return lightWorld(ctx,
             "point",
@@ -136,6 +138,8 @@ void registerLightTests(Catalog &catalog)
 
   // ---- spot -----------------------------------------------------------------
   makeTest("light", "spot")
+      .description(
+          "Checks spot light placement, cone angles, intensity, and power.")
       .build([](BuildContext &ctx) {
         return lightWorld(ctx,
             "spot",
@@ -165,6 +169,8 @@ void registerLightTests(Catalog &catalog)
 
   // ---- quad -----------------------------------------------------------------
   makeTest("light", "quad")
+      .description(
+          "Checks quad light shape, emission, sidedness, and distribution.")
       .build([](BuildContext &ctx) {
         return lightWorld(ctx,
             "quad",
@@ -195,6 +201,8 @@ void registerLightTests(Catalog &catalog)
 
   // ---- ring -----------------------------------------------------------------
   makeTest("light", "ring")
+      .description(
+          "Checks ring light shape, emission, orientation, and distribution.")
       .build([](BuildContext &ctx) {
         return lightWorld(ctx,
             "ring",
@@ -231,6 +239,7 @@ void registerLightTests(Catalog &catalog)
 
   // ---- hdri -----------------------------------------------------------------
   makeTest("light", "hdri")
+      .description("Checks HDRI light orientation and intensity scaling.")
       .build([](BuildContext &ctx) {
         return lightWorld(ctx,
             "hdri",

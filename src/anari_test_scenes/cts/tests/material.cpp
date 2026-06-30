@@ -159,6 +159,7 @@ void registerMaterialTests(Catalog &catalog)
 {
   // ---- matte ----------------------------------------------------------------
   makeTest("material", "matte_alpha_mode")
+      .description("Checks matte alpha modes and alpha cutoff handling.")
       .build([](BuildContext &ctx) {
         return materialWorld(ctx,
             "matte",
@@ -184,6 +185,8 @@ void registerMaterialTests(Catalog &catalog)
       .registerInto(catalog);
 
   makeTest("material", "matte_color")
+      .description(
+          "Checks matte color from constants, attributes, and samplers.")
       .build([](BuildContext &ctx) {
         return materialWorld(ctx,
             "matte",
@@ -205,6 +208,8 @@ void registerMaterialTests(Catalog &catalog)
       .registerInto(catalog);
 
   makeTest("material", "matte_opacity")
+      .description(
+          "Checks matte opacity from constants, attributes, and samplers.")
       .build([](BuildContext &ctx) {
         return materialWorld(ctx,
             "matte",
@@ -229,6 +234,8 @@ void registerMaterialTests(Catalog &catalog)
 
   // ---- physicallyBased ------------------------------------------------------
   makeTest("material", "pbr_alpha_mode")
+      .description(
+          "Checks physically based alpha modes and alpha cutoff handling.")
       .build([](BuildContext &ctx) {
         return materialWorld(ctx,
             "physicallyBased",
@@ -255,6 +262,8 @@ void registerMaterialTests(Catalog &catalog)
       .registerInto(catalog);
 
   makeTest("material", "pbr_base_color")
+      .description(
+          "Checks PBR base color from constants, attributes, and samplers.")
       .build([](BuildContext &ctx) {
         return materialWorld(ctx,
             "physicallyBased",
@@ -276,6 +285,8 @@ void registerMaterialTests(Catalog &catalog)
       .registerInto(catalog);
 
   makeTest("material", "pbr_clearcoat")
+      .description(
+          "Checks PBR clearcoat amount, roughness, and normal parameters.")
       .build([](BuildContext &ctx) {
         return materialWorld(ctx,
             "physicallyBased",
@@ -306,6 +317,8 @@ void registerMaterialTests(Catalog &catalog)
       .registerInto(catalog);
 
   makeTest("material", "pbr_emissive")
+      .description(
+          "Checks PBR emissive color from constants, attributes, and samplers.")
       .build([](BuildContext &ctx) {
         return materialWorld(ctx,
             "physicallyBased",
@@ -327,6 +340,7 @@ void registerMaterialTests(Catalog &catalog)
       .registerInto(catalog);
 
   makeTest("material", "pbr_ior")
+      .description("Checks the PBR index-of-refraction parameter.")
       .build([](BuildContext &ctx) {
         return materialWorld(ctx,
             "physicallyBased",
@@ -346,6 +360,8 @@ void registerMaterialTests(Catalog &catalog)
       .registerInto(catalog);
 
   makeTest("material", "pbr_iridescence")
+      .description(
+          "Checks PBR iridescence amount, index, and thickness parameters.")
       .build([](BuildContext &ctx) {
         return materialWorld(ctx,
             "physicallyBased",
@@ -376,6 +392,7 @@ void registerMaterialTests(Catalog &catalog)
       .registerInto(catalog);
 
   makeTest("material", "pbr_metallic_roughness")
+      .description("Checks PBR metallic, roughness, and normal parameters.")
       .build([](BuildContext &ctx) {
         return materialWorld(ctx,
             "physicallyBased",
@@ -406,6 +423,8 @@ void registerMaterialTests(Catalog &catalog)
       .registerInto(catalog);
 
   makeTest("material", "pbr_opacity")
+      .description(
+          "Checks PBR opacity from constants, attributes, and samplers.")
       .build([](BuildContext &ctx) {
         return materialWorld(ctx,
             "physicallyBased",
@@ -429,6 +448,7 @@ void registerMaterialTests(Catalog &catalog)
       .registerInto(catalog);
 
   makeTest("material", "pbr_sheen")
+      .description("Checks PBR sheen color and roughness parameters.")
       .build([](BuildContext &ctx) {
         return materialWorld(ctx,
             "physicallyBased",
@@ -458,6 +478,7 @@ void registerMaterialTests(Catalog &catalog)
       .registerInto(catalog);
 
   makeTest("material", "pbr_specular")
+      .description("Checks PBR specular amount and color parameters.")
       .build([](BuildContext &ctx) {
         return materialWorld(ctx,
             "physicallyBased",
@@ -487,6 +508,7 @@ void registerMaterialTests(Catalog &catalog)
       .registerInto(catalog);
 
   makeTest("material", "pbr_thickness")
+      .description("Checks PBR thickness and volume attenuation parameters.")
       .build([](BuildContext &ctx) {
         return materialWorld(ctx,
             "physicallyBased",
@@ -515,6 +537,8 @@ void registerMaterialTests(Catalog &catalog)
       .registerInto(catalog);
 
   makeTest("material", "pbr_transmission")
+      .description(
+          "Checks PBR transmission from constants, attributes, and samplers.")
       .build([](BuildContext &ctx) {
         return materialWorld(ctx,
             "physicallyBased",

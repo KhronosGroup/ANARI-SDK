@@ -207,6 +207,7 @@ void registerFrameTests(Catalog &catalog)
 
   // ---- color channel output types -------------------------------------------
   makeTest("frame", "frame_color_channel")
+      .description("Checks color channel output across supported buffer types.")
       .build([](BuildContext &ctx) {
         return triangleSurfaceWorld(ctx, float3(0.55f, 0.82f, 0.78f), 16);
       })
@@ -217,6 +218,7 @@ void registerFrameTests(Catalog &catalog)
 
   // ---- depth channel --------------------------------------------------------
   makeTest("frame", "frame_depth_channel")
+      .description("Checks depth channel values for rendered geometry.")
       .build([](BuildContext &ctx) {
         return triangleSurfaceWorld(ctx, float3(0.7f, 0.5f, 0.3f), 16);
       })
@@ -229,6 +231,8 @@ void registerFrameTests(Catalog &catalog)
   // UFIXED8_RGB_SRGB / FLOAT32_VEC3) and reads it back accordingly (D2). helide
   // has no albedo channel, so these still skip there.
   makeTest("frame", "frame_albedo_channel")
+      .description(
+          "Checks albedo channel output across supported buffer types.")
       .build([](BuildContext &ctx) {
         return triangleSurfaceWorld(ctx, float3(0.55f, 0.82f, 0.78f), 16);
       })
@@ -240,6 +244,8 @@ void registerFrameTests(Catalog &catalog)
 
   // ---- normal channel output types ------------------------------------------
   makeTest("frame", "frame_normal_channel")
+      .description(
+          "Checks normal channel output across supported buffer types.")
       .build([](BuildContext &ctx) {
         return triangleSurfaceWorld(ctx, float3(0.7f, 0.5f, 0.3f), 1);
       })
@@ -250,6 +256,7 @@ void registerFrameTests(Catalog &catalog)
 
   // ---- primitive id channel -------------------------------------------------
   makeTest("frame", "frame_primitiveID_channel")
+      .description("Checks primitive IDs returned by the frame channel.")
       .build([](BuildContext &ctx) {
         auto d = ctx.device();
         TriangleSpec spec;
@@ -277,6 +284,7 @@ void registerFrameTests(Catalog &catalog)
 
   // ---- object id channel (per-surface ids) ----------------------------------
   makeTest("frame", "frame_objectID_channel_surface")
+      .description("Checks surface object IDs returned by the frame channel.")
       .build([](BuildContext &ctx) {
         auto d = ctx.device();
         auto s0 = idSurface(d, float3(-0.3f, 0.f, 0.f), 1, true);
@@ -294,6 +302,8 @@ void registerFrameTests(Catalog &catalog)
 
   // ---- object id channel (fallback to group/instance index) -----------------
   makeTest("frame", "frame_objectID_channel_group")
+      .description(
+          "Checks fallback object IDs for instanced groups and surfaces.")
       .build([](BuildContext &ctx) {
         auto d = ctx.device();
         auto i0 = idInstance(d, float3(-0.3f, 0.f, 0.f), 0, false);
@@ -311,6 +321,7 @@ void registerFrameTests(Catalog &catalog)
 
   // ---- object id channel (per-volume ids) -----------------------------------
   makeTest("frame", "frame_objectID_channel_volume")
+      .description("Checks volume object IDs returned by the frame channel.")
       .build([](BuildContext &ctx) {
         auto d = ctx.device();
         // Two volumes side by side (origin shifted along X) so the two ids
@@ -342,6 +353,7 @@ void registerFrameTests(Catalog &catalog)
 
   // ---- instance id channel --------------------------------------------------
   makeTest("frame", "frame_instanceID_channel")
+      .description("Checks instance IDs returned by the frame channel.")
       .build([](BuildContext &ctx) {
         auto d = ctx.device();
         auto i0 = idInstance(d, float3(-0.3f, 0.f, 0.f), 1, true);
@@ -359,6 +371,8 @@ void registerFrameTests(Catalog &catalog)
 
   // ---- behavioral checks (verified by the runner's behavior hook) -----------
   makeTest("frame", "frame_completion_callback")
+      .description(
+          "Checks that rendering invokes the frame completion callback.")
       .build([](BuildContext &ctx) {
         return triangleSurfaceWorld(ctx, float3(0.7f, 0.5f, 0.3f), 1);
       })
@@ -367,6 +381,8 @@ void registerFrameTests(Catalog &catalog)
       .registerInto(catalog);
 
   makeTest("frame", "progressive_rendering")
+      .description(
+          "Checks that progressive frame accumulation converges over time.")
       .build([](BuildContext &ctx) {
         return triangleSurfaceWorld(ctx, float3(0.7f, 0.5f, 0.3f), 1);
       })

@@ -68,7 +68,7 @@ dependencies. See [pyproject.toml](pyproject.toml).
 anariCts <command> [options]
 
 commands:
-  list                       list the catalog (categories, tests, case counts)
+  list                       list tests, descriptions, and case counts
   generate [options]         render ground truth with the reference device
   run <device> [options]     render + score a candidate device against ground truth
   query-features <device>    print the device's supported extensions
@@ -134,7 +134,7 @@ accumulates in one workdir without clobbering (ADR-0003).
 ```bash
 anariCts query-features helide            # extensions the device reports
 anariCts check-properties helide          # per test: [run ] or [skip] + missing features
-anariCts query-metadata --filter frame    # catalog metadata as JSON (no device needed)
+anariCts query-metadata --filter frame    # descriptions and catalog metadata as JSON
 ```
 
 `check-properties` is the quick way to see why a Test will be skipped on a
@@ -190,11 +190,12 @@ Tests are authored directly in C++ (ADR-0002), one per-category file under
 fluent builder: a `build()` that authors an ANARI world with normal ANARI C++
 calls plus the focused construction helpers (`GeometryLayout.h`,
 `GeometryBuilder.h`, the remaining `*Builder.h` modules, `TextureGenerator`,
-and `ColorPalette`), its axes
+and `ColorPalette`), a short human-readable `description()`, its axes
 (`permute`/`variant`), required features, thresholds, and channels. For example:
 
 ```cpp
 makeTest("geometry", "sphere")
+    .description("Checks sphere counts and equivalent soup and indexed layouts.")
     .build([](BuildContext &ctx) { /* author + return an anari::World */ })
     .permute("primitiveCount", {1, 16})   // distinct ground truth per value
     .variant("primitiveMode", {"soup", "indexed"})  // shared ground truth

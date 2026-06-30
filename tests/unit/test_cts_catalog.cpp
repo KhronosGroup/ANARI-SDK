@@ -310,6 +310,20 @@ TEST_CASE("built-in Tests require only canonical extensions",
   }
 }
 
+TEST_CASE("every built-in Test has a human-readable description",
+    "[cts][catalog][description]")
+{
+  Catalog catalog;
+  registerBuiltinTests(catalog);
+  REQUIRE_FALSE(catalog.tests().empty());
+  for (const auto &test : catalog.tests()) {
+    DYNAMIC_SECTION(test.id())
+    {
+      CHECK_FALSE(test.description.empty());
+    }
+  }
+}
+
 TEST_CASE("isSupported requires every feature to be present", "[cts][features]")
 {
   auto t = makeTest("geometry", "sphere")
@@ -337,6 +351,7 @@ TEST_CASE(
     "makeTest builds a TestDef with the configured fields", "[cts][builder]")
 {
   auto t = makeTest("geometry", "sphere")
+               .description("Checks sphere geometry rendering.")
                .permute("primitiveCount", {1, 16})
                .variant("primitiveMode", {"soup", "indexed"})
                .requireFeature("ANARI_KHR_GEOMETRY_SPHERE")
@@ -347,6 +362,7 @@ TEST_CASE(
                .take();
 
   CHECK(t.id() == "geometry/sphere");
+  CHECK(t.description == "Checks sphere geometry rendering.");
   REQUIRE(t.axes.size() == 2);
   CHECK(t.axes[0].name == "primitiveCount");
   CHECK(t.axes[0].kind == AxisKind::Permutation);

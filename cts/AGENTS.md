@@ -83,9 +83,10 @@ ctsReport.py              reads the sidecar tree only; report + device diff
 ### Key source files (`src/anari_test_scenes/cts/`)
 
 **Harness / runner:**
-- `TestDef.h` — a registered Test: `build` (world), optional `cameraBuild` /
-  `rendererBuild` build hooks (ADR-0006) and `behaviorCheck` hook, axes,
-  required features, thresholds (test-wide + per-channel), channels.
+- `TestDef.h` — a registered Test: human-readable `description`, `build`
+  (world), optional `cameraBuild` / `rendererBuild` build hooks (ADR-0006) and
+  `behaviorCheck` hook, axes, required features, thresholds (test-wide +
+  per-channel), channels.
 - `TestBuilder.{h,cpp}` — the `makeTest(...)` fluent builder. Note the verb is
   `requireFeatures()`, not the C++20 keyword `requires`.
 - `Axis.h` / `Case.{h,cpp}` / `Expansion.{h,cpp}` — axes expand into Cases
@@ -132,8 +133,8 @@ device-backed ones add `[helide]` and self-skip if no device loads.
 
 **New Test:** add a `makeTest(...)....registerInto(catalog)` to the relevant
 `cts/tests/<category>.cpp`. Author the world in `build()` with ANARI C++ calls
-plus the focused `*Builder.h` helpers; declare axes, required features, and
-channels.
+plus the focused `*Builder.h` helpers; add a short `description()` of the
+primary check, then declare axes, required features, and channels.
 
 **New per-Case axis the runner must act on** (e.g. a new output format): resolve
 it in `FrameFormats.cpp` (pure, unit-test it) and honor it in `Runner.cpp`.

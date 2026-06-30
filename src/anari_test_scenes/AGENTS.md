@@ -123,7 +123,7 @@ only into the internal static `anari_cts_core` target when `BUILD_CTS` or
 | Type | Purpose |
 |---|---|
 | `Axis` / `AxisKind` | A parameter dimension; `Permutation` (distinct ground truth) or `Variant` (shared ground truth) |
-| `TestDef` + `makeTest()` `TestBuilder` | A catalog Test: build fn, axes, required features, thresholds, channels. Fluent builder; use `requireFeatures()` (not `requires`, a C++20 keyword) |
+| `TestDef` + `makeTest()` `TestBuilder` | A catalog Test: human-readable description, build fn, axes, required features, thresholds, channels. Fluent builder; use `requireFeatures()` (not `requires`, a C++20 keyword) |
 | `Case` + `expand()` | One resolved combination; full cartesian or simplified one-factor-at-a-time. `id()` (all values) vs `groundTruthKey()` (permutation values only) |
 | `BuildContext` | Carries a Case's axis values to `build()`, read typed-by-name over `helium::ParameterizedObject` |
 | `Catalog` + `Filter` | The in-C++ Test registry: register/list/filter/categories + feature gating |

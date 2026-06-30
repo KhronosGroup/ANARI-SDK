@@ -72,7 +72,7 @@ void printUsage()
   std::cout << R"(usage: cts <command> [options]
 
 commands:
-  list                       list the catalog (categories, tests, case counts)
+  list                       list tests, descriptions, and case counts
   generate [options]         render ground truth with the reference device
   run <device> [options]     render + score a candidate device against ground truth
   query-features <device>    print the device's supported extensions
@@ -102,16 +102,17 @@ query-device-info options:
 )";
 }
 
-// Parse the options that follow a subcommand. A lone leading token that is not a
-// flag is taken as the positional <device>.
+// Parse the options that follow a subcommand. A lone leading token that is not
+// a flag is taken as the positional <device>.
 Options parseOptions(int argc, char **argv, int start)
 {
   Options o;
-  // Parse a non-negative integer argument (width/height/accumulation). std::stoul
-  // silently wraps a leading '-' to a huge value (so e.g. --accumulation -1 would
-  // become ~4.3 billion frames -> an unbounded render loop) and only throws above
-  // ULONG_MAX, so reject negatives, trailing garbage, and anything that does not
-  // fit in uint32_t explicitly; keep the caller's default on any error.
+  // Parse a non-negative integer argument (width/height/accumulation).
+  // std::stoul silently wraps a leading '-' to a huge value (so e.g.
+  // --accumulation -1 would become ~4.3 billion frames -> an unbounded render
+  // loop) and only throws above ULONG_MAX, so reject negatives, trailing
+  // garbage, and anything that does not fit in uint32_t explicitly; keep the
+  // caller's default on any error.
   auto parseDim = [](const std::string &s, uint32_t fallback) -> uint32_t {
     try {
       if (s.empty() || s[0] == '-')
@@ -167,7 +168,8 @@ Options parseOptions(int argc, char **argv, int start)
   return o;
 }
 
-std::set<std::string> deviceExtensions(anari::Library lib, const char *deviceType)
+std::set<std::string> deviceExtensions(
+    anari::Library lib, const char *deviceType)
 {
   std::set<std::string> out;
   const char **ext = anariGetDeviceExtensions(lib, deviceType);
@@ -235,8 +237,10 @@ int cmdList(const Options &o)
     if (t->simplified)
       std::cout << ", simplified";
     std::cout << ")\n";
+    std::cout << "    " << t->description << "\n";
   }
-  std::cout << "\n" << catalog.filter(filter).size() << " test(s), " << totalCases
+  std::cout << "\n"
+            << catalog.filter(filter).size() << " test(s), " << totalCases
             << " case(s)\n";
   return 0;
 }
@@ -250,6 +254,7 @@ int cmdQueryMetadata(const Options &o)
     jt["id"] = t->id();
     jt["category"] = t->category;
     jt["name"] = t->name;
+    jt["description"] = t->description;
     jt["simplified"] = t->simplified;
     jt["caseCount"] = expand(*t).size();
     jt["requiredFeatures"] = t->requiredFeatures;
@@ -339,7 +344,8 @@ int cmdCheckProperties(const Options &o)
     }
     std::cout << "\n";
   }
-  std::cout << "\n" << runnable << " runnable, " << skipped << " skipped on '"
+  std::cout << "\n"
+            << runnable << " runnable, " << skipped << " skipped on '"
             << o.device << "'\n";
   anari::release(d, d);
   anari::unloadLibrary(lib);
@@ -367,8 +373,8 @@ int cmdGenerate(const Options &o)
 
   auto s = runner.generate(catalog, Filter{o.filter}, features);
   std::cout << "generate (" << deviceName << "): " << s.passed << " generated, "
-            << s.skipped << " skipped, " << s.failed << " failed (of " << s.total
-            << ")\n";
+            << s.skipped << " skipped, " << s.failed << " failed (of "
+            << s.total << ")\n";
 
   anari::release(d, d);
   anari::unloadLibrary(lib);
@@ -413,8 +419,9 @@ int cmdRun(const Options &o)
     s = runner.run(catalog, Filter{o.filter}, features);
   }
 
-  std::cout << "run (" << o.device << "): " << s.passed << " passed, " << s.failed
-            << " failed, " << s.skipped << " skipped (of " << s.total << ")\n";
+  std::cout << "run (" << o.device << "): " << s.passed << " passed, "
+            << s.failed << " failed, " << s.skipped << " skipped (of "
+            << s.total << ")\n";
 
   anari::release(d, d);
   anari::unloadLibrary(lib);

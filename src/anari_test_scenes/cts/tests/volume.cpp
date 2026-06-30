@@ -51,6 +51,8 @@ void setVolumeOpacity(BuildContext &ctx, anari::Device d, anari::Volume vol)
 void registerVolumeTests(Catalog &catalog)
 {
   makeTest("volume", "volume")
+      .description(
+          "Checks structured volume sampling and transfer-function parameters.")
       .build([](BuildContext &ctx) {
         auto d = ctx.device();
         auto field = newStructuredRegularField(d, {3, 3, 3});

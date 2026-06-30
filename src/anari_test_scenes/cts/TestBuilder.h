@@ -21,6 +21,8 @@ struct TestBuilder
 {
   TestBuilder(std::string category, std::string name);
 
+  // Summarize the test's primary conformance check for human readers.
+  TestBuilder &description(std::string text);
   TestBuilder &build(BuildFn fn);
 
   // Supply a custom render camera / renderer instead of the runner defaults

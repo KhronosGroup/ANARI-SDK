@@ -260,11 +260,13 @@ template <typename Spec>
 void registerShape(Catalog &catalog,
     const char *prefix,
     Spec spec,
+    const char *description,
     const char *feature,
     bool soupVariantOnly)
 {
   // Basic soup-vs-indexed equivalence: a Variant sharing one ground truth.
   auto basic = makeTest("geometry", prefix);
+  basic.description(description);
   basic.build([=](BuildContext &ctx) {
     return surfaceWorld(ctx, withAxes(ctx, spec));
   });
@@ -287,20 +289,24 @@ void registerGeometryTests(Catalog &catalog)
   registerShape(catalog,
       "triangle",
       triangle(TriangleShape::Triangle, 16),
+      "Checks basic triangle geometry in soup and indexed modes.",
       "ANARI_KHR_GEOMETRY_TRIANGLE",
       /*soupVariantOnly=*/true);
   registerShape(catalog,
       "triangle_quad",
       triangle(TriangleShape::Quad, 16),
+      "Checks triangles arranged as a quad in soup and indexed modes.",
       "ANARI_KHR_GEOMETRY_TRIANGLE",
       true);
   registerShape(catalog,
       "triangle_cube",
       triangle(TriangleShape::Cube, 16),
+      "Checks triangles arranged as a cube in soup and indexed modes.",
       "ANARI_KHR_GEOMETRY_TRIANGLE",
       true);
 
   makeTest("geometry", "triangle_colors")
+      .description("Checks primitive and vertex colors on triangle geometry.")
       .build([](BuildContext &ctx) {
         return surfaceWorld(
             ctx, withAxes(ctx, triangle(TriangleShape::Triangle, 4)));
@@ -311,6 +317,8 @@ void registerGeometryTests(Catalog &catalog)
       .registerInto(catalog);
 
   makeTest("geometry", "triangle_normal_tangent")
+      .description(
+          "Checks optional triangle normal and tangent attribute layouts.")
       .build([](BuildContext &ctx) { return normalTangentWorld(ctx, false); })
       .variant("normal", {"set", "unset"})
       .variant("tangent", {"unset", "vec3", "vec4"})
@@ -320,6 +328,8 @@ void registerGeometryTests(Catalog &catalog)
       .registerInto(catalog);
 
   makeTest("geometry", "triangle_random_attributes")
+      .description(
+          "Checks triangle vertex and primitive attributes with varied values.")
       .build([](BuildContext &ctx) {
         auto spec = triangle(TriangleShape::Triangle, 16);
         spec.attributes.vertexRamps = true;
@@ -331,6 +341,8 @@ void registerGeometryTests(Catalog &catalog)
       .registerInto(catalog);
 
   makeTest("geometry", "triangle_unused_vertices")
+      .description(
+          "Checks indexed triangles that contain unreferenced vertices.")
       .build([](BuildContext &ctx) {
         auto spec = triangle(TriangleShape::Triangle, 4);
         spec.mode = PrimitiveMode::Indexed;
@@ -345,15 +357,18 @@ void registerGeometryTests(Catalog &catalog)
   registerShape(catalog,
       "quad",
       quad(QuadShape::Quad, 16),
+      "Checks basic quad geometry in soup and indexed modes.",
       "ANARI_KHR_GEOMETRY_QUAD",
       true);
   registerShape(catalog,
       "quad_cube",
       quad(QuadShape::Cube, 16),
+      "Checks quads arranged as a cube in soup and indexed modes.",
       "ANARI_KHR_GEOMETRY_QUAD",
       true);
 
   makeTest("geometry", "quad_colors")
+      .description("Checks primitive and vertex colors on quad geometry.")
       .build([](BuildContext &ctx) {
         return surfaceWorld(ctx, withAxes(ctx, quad(QuadShape::Quad, 4)));
       })
@@ -363,6 +378,7 @@ void registerGeometryTests(Catalog &catalog)
       .registerInto(catalog);
 
   makeTest("geometry", "quad_frame_color_types")
+      .description("Checks quad rendering across supported color buffer types.")
       .build([](BuildContext &ctx) {
         return surfaceWorld(ctx, withAxes(ctx, quad(QuadShape::Quad, 16)));
       })
@@ -372,6 +388,7 @@ void registerGeometryTests(Catalog &catalog)
       .registerInto(catalog);
 
   makeTest("geometry", "quad_normal_tangent")
+      .description("Checks optional quad normal and tangent attribute layouts.")
       .build([](BuildContext &ctx) { return normalTangentWorld(ctx, true); })
       .variant("normal", {"set", "unset"})
       .variant("tangent", {"unset", "vec3", "vec4"})
@@ -381,6 +398,7 @@ void registerGeometryTests(Catalog &catalog)
       .registerInto(catalog);
 
   makeTest("geometry", "quad_unused_vertices")
+      .description("Checks indexed quads that contain unreferenced vertices.")
       .build([](BuildContext &ctx) {
         auto spec = quad(QuadShape::Quad, 4);
         spec.mode = PrimitiveMode::Indexed;
@@ -393,6 +411,8 @@ void registerGeometryTests(Catalog &catalog)
 
   // ---- sphere ---------------------------------------------------------------
   makeTest("geometry", "sphere")
+      .description(
+          "Checks sphere counts and equivalent soup and indexed layouts.")
       .build([](BuildContext &ctx) {
         return surfaceWorld(ctx, withAxes(ctx, sphere(16)));
       })
@@ -403,6 +423,7 @@ void registerGeometryTests(Catalog &catalog)
       .registerInto(catalog);
 
   makeTest("geometry", "sphere_colors")
+      .description("Checks primitive and vertex colors on sphere geometry.")
       .build([](BuildContext &ctx) {
         return surfaceWorld(ctx, withAxes(ctx, sphere(4)));
       })
@@ -413,6 +434,8 @@ void registerGeometryTests(Catalog &catalog)
       .registerInto(catalog);
 
   makeTest("geometry", "sphere_frame_color_types")
+      .description(
+          "Checks sphere rendering across supported color buffer types.")
       .build([](BuildContext &ctx) {
         return surfaceWorld(ctx, withAxes(ctx, sphere(16)));
       })
@@ -422,6 +445,7 @@ void registerGeometryTests(Catalog &catalog)
       .registerInto(catalog);
 
   makeTest("geometry", "sphere_global_radii")
+      .description("Checks the global radius parameter on sphere geometry.")
       .build([](BuildContext &ctx) {
         auto spec = sphere(16);
         spec.globalRadius = 0.05f;
@@ -432,6 +456,7 @@ void registerGeometryTests(Catalog &catalog)
       .registerInto(catalog);
 
   makeTest("geometry", "sphere_unused_vertices")
+      .description("Checks indexed spheres that contain unreferenced vertices.")
       .build([](BuildContext &ctx) {
         auto spec = sphere(4);
         spec.mode = PrimitiveMode::Indexed;
@@ -443,9 +468,15 @@ void registerGeometryTests(Catalog &catalog)
       .registerInto(catalog);
 
   // ---- cone -----------------------------------------------------------------
-  registerShape(catalog, "cone", cone(16), "ANARI_KHR_GEOMETRY_CONE", true);
+  registerShape(catalog,
+      "cone",
+      cone(16),
+      "Checks basic cone geometry in soup and indexed modes.",
+      "ANARI_KHR_GEOMETRY_CONE",
+      true);
 
   makeTest("geometry", "cone_colors")
+      .description("Checks primitive and vertex colors on cone geometry.")
       .build([](BuildContext &ctx) {
         return surfaceWorld(ctx, withAxes(ctx, cone(4)));
       })
@@ -455,6 +486,7 @@ void registerGeometryTests(Catalog &catalog)
       .registerInto(catalog);
 
   makeTest("geometry", "cone_frame_color_types")
+      .description("Checks cone rendering across supported color buffer types.")
       .build([](BuildContext &ctx) {
         return surfaceWorld(ctx, withAxes(ctx, cone(16)));
       })
@@ -464,6 +496,7 @@ void registerGeometryTests(Catalog &catalog)
       .registerInto(catalog);
 
   makeTest("geometry", "cone_global_caps")
+      .description("Checks global end-cap modes on cone geometry.")
       .build([](BuildContext &ctx) {
         return surfaceWorld(ctx, withAxes(ctx, cone(16)));
       })
@@ -473,6 +506,7 @@ void registerGeometryTests(Catalog &catalog)
       .registerInto(catalog);
 
   makeTest("geometry", "cone_vertex_caps")
+      .description("Checks per-vertex end-cap control on cone geometry.")
       .build([](BuildContext &ctx) {
         return surfaceWorld(ctx, withAxes(ctx, cone(16)));
       })
@@ -482,6 +516,7 @@ void registerGeometryTests(Catalog &catalog)
       .registerInto(catalog);
 
   makeTest("geometry", "cone_unused_vertices")
+      .description("Checks indexed cones that contain unreferenced vertices.")
       .build([](BuildContext &ctx) {
         auto spec = cone(4);
         spec.mode = PrimitiveMode::Indexed;
@@ -493,10 +528,15 @@ void registerGeometryTests(Catalog &catalog)
       .registerInto(catalog);
 
   // ---- cylinder -------------------------------------------------------------
-  registerShape(
-      catalog, "cylinder", cylinder(16), "ANARI_KHR_GEOMETRY_CYLINDER", true);
+  registerShape(catalog,
+      "cylinder",
+      cylinder(16),
+      "Checks basic cylinder geometry in soup and indexed modes.",
+      "ANARI_KHR_GEOMETRY_CYLINDER",
+      true);
 
   makeTest("geometry", "cylinder_colors")
+      .description("Checks primitive and vertex colors on cylinder geometry.")
       .build([](BuildContext &ctx) {
         return surfaceWorld(ctx, withAxes(ctx, cylinder(4)));
       })
@@ -506,6 +546,8 @@ void registerGeometryTests(Catalog &catalog)
       .registerInto(catalog);
 
   makeTest("geometry", "cylinder_frame_color_types")
+      .description(
+          "Checks cylinder rendering across supported color buffer types.")
       .build([](BuildContext &ctx) {
         return surfaceWorld(ctx, withAxes(ctx, cylinder(16)));
       })
@@ -515,6 +557,7 @@ void registerGeometryTests(Catalog &catalog)
       .registerInto(catalog);
 
   makeTest("geometry", "cylinder_global_caps")
+      .description("Checks global end-cap modes on cylinder geometry.")
       .build([](BuildContext &ctx) {
         return surfaceWorld(ctx, withAxes(ctx, cylinder(16)));
       })
@@ -524,6 +567,7 @@ void registerGeometryTests(Catalog &catalog)
       .registerInto(catalog);
 
   makeTest("geometry", "cylinder_global_radii")
+      .description("Checks the global radius parameter on cylinder geometry.")
       .build([](BuildContext &ctx) {
         auto spec = cylinder(16);
         spec.globalRadius = 0.05f;
@@ -534,6 +578,7 @@ void registerGeometryTests(Catalog &catalog)
       .registerInto(catalog);
 
   makeTest("geometry", "cylinder_vertex_caps")
+      .description("Checks per-vertex end-cap control on cylinder geometry.")
       .build([](BuildContext &ctx) {
         return surfaceWorld(ctx, withAxes(ctx, cylinder(16)));
       })
@@ -543,6 +588,8 @@ void registerGeometryTests(Catalog &catalog)
       .registerInto(catalog);
 
   makeTest("geometry", "cylinder_unused_vertices")
+      .description(
+          "Checks indexed cylinders that contain unreferenced vertices.")
       .build([](BuildContext &ctx) {
         auto spec = cylinder(4);
         spec.mode = PrimitiveMode::Indexed;
@@ -557,10 +604,12 @@ void registerGeometryTests(Catalog &catalog)
   registerShape(catalog,
       "curve",
       curve(16),
+      "Checks basic curve geometry in soup and indexed modes.",
       "ANARI_KHR_GEOMETRY_CURVE",
       /*soupVariantOnly=*/false);
 
   makeTest("geometry", "curve_colors")
+      .description("Checks primitive and vertex colors on curve geometry.")
       .build([](BuildContext &ctx) {
         return surfaceWorld(ctx, withAxes(ctx, curve(4)));
       })
@@ -570,6 +619,8 @@ void registerGeometryTests(Catalog &catalog)
       .registerInto(catalog);
 
   makeTest("geometry", "curve_frame_color_types")
+      .description(
+          "Checks curve rendering across supported color buffer types.")
       .build([](BuildContext &ctx) {
         return surfaceWorld(ctx, withAxes(ctx, curve(16)));
       })
@@ -579,6 +630,7 @@ void registerGeometryTests(Catalog &catalog)
       .registerInto(catalog);
 
   makeTest("geometry", "curve_global_radii")
+      .description("Checks the global radius parameter on curve geometry.")
       .build([](BuildContext &ctx) {
         auto spec = curve(16);
         spec.globalRadius = 0.05f;
@@ -589,6 +641,7 @@ void registerGeometryTests(Catalog &catalog)
       .registerInto(catalog);
 
   makeTest("geometry", "curve_unused_vertices")
+      .description("Checks indexed curves that contain unreferenced vertices.")
       .build([](BuildContext &ctx) {
         auto spec = curve(4);
         spec.mode = PrimitiveMode::Indexed;
@@ -601,6 +654,8 @@ void registerGeometryTests(Catalog &catalog)
 
   // ---- isosurface -----------------------------------------------------------
   makeTest("geometry", "isosurface")
+      .description(
+          "Checks isosurface extraction from a structured regular field.")
       .build([](BuildContext &ctx) { return isosurfaceWorld(ctx); })
       .channels(kColorDepth)
       .requireFeatures({"ANARI_KHR_SPATIAL_FIELD_STRUCTURED_REGULAR",

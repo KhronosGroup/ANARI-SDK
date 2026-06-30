@@ -61,6 +61,7 @@ void registerCameraTests(Catalog &catalog)
 {
   // ---- perspective: general (direction / up / imageRegion) ------------------
   makeTest("camera", "camera_general")
+      .description("Checks camera orientation and image-region parameters.")
       .build(cameraSubjectWorld)
       .camera([](BuildContext &ctx, const scenes::Bounds &) -> anari::Camera {
         auto d = ctx.device();
@@ -83,6 +84,8 @@ void registerCameraTests(Catalog &catalog)
 
   // ---- perspective: intrinsics ----------------------------------------------
   makeTest("camera", "perspective")
+      .description(
+          "Checks perspective field of view, aspect, and clipping planes.")
       .build(cameraSubjectWorld)
       .camera([](BuildContext &ctx, const scenes::Bounds &) -> anari::Camera {
         auto d = ctx.device();
@@ -105,6 +108,7 @@ void registerCameraTests(Catalog &catalog)
 
   // ---- orthographic ---------------------------------------------------------
   makeTest("camera", "orthographic")
+      .description("Checks orthographic height, aspect, and clipping planes.")
       .build(cameraSubjectWorld)
       .camera([](BuildContext &ctx, const scenes::Bounds &) -> anari::Camera {
         auto d = ctx.device();
@@ -127,6 +131,7 @@ void registerCameraTests(Catalog &catalog)
 
   // ---- omnidirectional ------------------------------------------------------
   makeTest("camera", "omnidirectional")
+      .description("Checks omnidirectional camera layout handling.")
       .build(cameraSubjectWorld)
       .camera([](BuildContext &ctx, const scenes::Bounds &) -> anari::Camera {
         auto d = ctx.device();

@@ -12,6 +12,12 @@ TestBuilder::TestBuilder(std::string category, std::string name)
   m_def.name = std::move(name);
 }
 
+TestBuilder &TestBuilder::description(std::string text)
+{
+  m_def.description = std::move(text);
+  return *this;
+}
+
 TestBuilder &TestBuilder::build(BuildFn fn)
 {
   m_def.build = std::move(fn);

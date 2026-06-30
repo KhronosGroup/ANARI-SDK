@@ -59,13 +59,14 @@ using BehaviorFn = std::function<BehaviorResult(anari::Device,
     uint32_t width,
     uint32_t height)>;
 
-// A single registered definition in the Catalog: a world-build function plus
-// its axes, required features, thresholds, and bounds tolerance. A Test expands
-// into one or more Cases.
+// A single registered definition in the Catalog: a human-readable description,
+// world-build function, axes, required features, thresholds, and bounds
+// tolerance. A Test expands into one or more Cases.
 struct TestDef
 {
   std::string category;
   std::string name;
+  std::string description;
   BuildFn build;
   CameraFn cameraBuild; // empty -> runner frames camera from world bounds
   RendererFn rendererBuild; // empty -> runner uses a "default" renderer

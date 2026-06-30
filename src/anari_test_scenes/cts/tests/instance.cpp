@@ -24,6 +24,7 @@ using anari::math::mat4;
 void registerInstanceTests(Catalog &catalog)
 {
   makeTest("instance", "instance")
+      .description("Checks multiple transformed instances sharing one group.")
       .build([](BuildContext &ctx) {
         auto d = ctx.device();
         TriangleSpec spec;

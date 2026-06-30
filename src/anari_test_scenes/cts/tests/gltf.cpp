@@ -157,6 +157,8 @@ void registerGltfTests(Catalog &catalog)
     };
 
     auto t = makeTest("gltf", sanitizeName(asset));
+    t.description("Checks loading and rendering the " + asset
+        + " glTF sample in each available encoding.");
     t.build(build);
     // Each encoding (glTF / glTF-Binary / glTF-Embedded / Draco) is scored
     // against its own ground truth: a Permutation, since the encodings are not

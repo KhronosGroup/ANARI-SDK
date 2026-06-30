@@ -50,6 +50,7 @@ anari::World emptyWorld(BuildContext &ctx)
 void registerRendererTests(Catalog &catalog)
 {
   makeTest("renderer", "renderer_ambient")
+      .description("Checks renderer ambient light color and radiance.")
       .build(ambientSubject)
       .renderer([](BuildContext &ctx) {
         auto d = ctx.device();
@@ -72,6 +73,7 @@ void registerRendererTests(Catalog &catalog)
       .registerInto(catalog);
 
   makeTest("renderer", "renderer_background_color")
+      .description("Checks renderer background color and alpha values.")
       .build(emptyWorld)
       .renderer([](BuildContext &ctx) {
         auto d = ctx.device();
@@ -89,6 +91,7 @@ void registerRendererTests(Catalog &catalog)
       .registerInto(catalog);
 
   makeTest("renderer", "renderer_background_image")
+      .description("Checks image-based renderer backgrounds.")
       .build(emptyWorld)
       .renderer([](BuildContext &ctx) {
         auto d = ctx.device();

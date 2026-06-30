@@ -10,9 +10,9 @@ reports on and diffs runs.
 ### Authoring a test
 
 **Test**:
-A single registered definition in the C++ catalog: a world-build function plus
-its axes, required features, thresholds, and bounds tolerance. A Test expands
-into one or more Cases.
+A single registered definition in the C++ catalog: a short human-readable
+description, world-build function, axes, required features, thresholds, and
+bounds tolerance. A Test expands into one or more Cases.
 _Avoid_: scene, test scene (for this concept)
 
 **Axis**:
