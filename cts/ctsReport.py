@@ -10,7 +10,8 @@ JSON next to its images (ADR-0003). This module is the Python reporting layer
 and never re-computes image metrics.
 
 Commands:
-  report <workdir> [--pdf report.pdf]   summarize one run; optional PDF.
+  report <workdir> [--all] [--pdf report.pdf]
+                                        summarize one run; optional PDF.
   diff <workdir_a> <workdir_b> [--json] compare two candidates' results.
 
 The sidecar schema is versioned (schemaVersion); this reader targets version 2
@@ -152,7 +153,14 @@ def channel_metric(data, channel, metric):
     return None
 
 
-def write_text_summary(workdir, results, out=sys.stdout):
+def report_case_keys(results, include_all=False):
+    """Case keys to itemize: every Case, or only failures by default."""
+    if include_all:
+        return sorted(results)
+    return summarize(results)["failures"]
+
+
+def write_text_summary(workdir, results, out=sys.stdout, include_all=False):
     s = summarize(results)
     print(f"CTS report: {workdir}", file=out)
     device = run_device(results)
@@ -175,9 +183,11 @@ def write_text_summary(workdir, results, out=sys.stdout):
             f"{c['skipped']:4d} skipped",
             file=out,
         )
-    if s["failures"]:
-        print("  failed cases:", file=out)
-        for key in s["failures"]:
+    case_keys = report_case_keys(results, include_all)
+    if case_keys:
+        heading = "all cases" if include_all else "failed cases"
+        print(f"  {heading}:", file=out)
+        for key in case_keys:
             data = results[key]
             scores = []
             for ch in data.get("channels", []):
@@ -189,7 +199,8 @@ def write_text_summary(workdir, results, out=sys.stdout):
             # carry their reason in detail or skipReason instead.
             reason = data.get("detail") or data.get("skipReason", "")
             summary_text = "; ".join(scores) if scores else reason
-            print(f"    {key}  {summary_text}", file=out)
+            verdict = f" [{data.get('verdict', 'skipped')}]" if include_all else ""
+            print(f"    {key}{verdict}  {summary_text}", file=out)
     return s
 
 
@@ -281,9 +292,10 @@ def write_text_diff(name_a, name_b, diff, out=sys.stdout):
 # --- PDF report (optional; requires reportlab) -------------------------------
 
 
-def generate_pdf(workdir, results, out_path):
+def generate_pdf(workdir, results, out_path, *, include_all=False):
     """Render a PDF report from the sidecars. Embeds result/ground-truth images
-    for failed cases. Requires reportlab."""
+    for failed cases, or every case when include_all is true. Requires
+    reportlab."""
     try:
         from reportlab.lib import colors, pagesizes, utils
         from reportlab.lib.styles import getSampleStyleSheet
@@ -342,17 +354,21 @@ def generate_pdf(workdir, results, out_path):
         aspect = ih / float(iw)
         return Image(str(path), width=width, height=width * aspect)
 
-    failed = [results[k] for k in s["failures"]]
-    if failed:
+    reported_cases = [results[k] for k in report_case_keys(results, include_all)]
+    if reported_cases:
         story.append(PageBreak())
-        story.append(Paragraph("Failed cases", styles["Heading2"]))
-        for data in failed:
+        heading = "All cases" if include_all else "Failed cases"
+        story.append(Paragraph(heading, styles["Heading2"]))
+        for data in reported_cases:
             story.append(
                 Paragraph(
                     f"{data['category']}/{data['test']}/{data['case']}",
                     styles["Heading3"],
                 )
             )
+            if include_all:
+                verdict = data.get("verdict", "skipped").capitalize()
+                story.append(Paragraph(f"Verdict: {verdict}", styles["Normal"]))
             # Cases with no channels (behavioral, or a failed render) carry a
             # reason note instead of channel images.
             if not data.get("channels"):
@@ -360,7 +376,7 @@ def generate_pdf(workdir, results, out_path):
                 if reason:
                     story.append(Paragraph(reason, styles["Normal"]))
             for ch in data.get("channels", []):
-                if ch.get("passed"):
+                if not include_all and ch.get("passed"):
                     continue
                 metrics = ", ".join(
                     f"{m}={ch['metrics'].get(m)}" for m in METRICS if m in ch.get("metrics", {})
@@ -397,6 +413,11 @@ def main(argv=None):
     p_report = sub.add_parser("report", help="summarize one run's sidecar tree")
     p_report.add_argument("workdir")
     p_report.add_argument("--pdf", metavar="PATH", help="also write a PDF report")
+    p_report.add_argument(
+        "--all",
+        action="store_true",
+        help="itemize every case (PDF default: failed cases only)",
+    )
 
     p_diff = sub.add_parser("diff", help="compare two runs' sidecar trees")
     p_diff.add_argument("workdir_a")
@@ -407,9 +428,11 @@ def main(argv=None):
 
     if args.command == "report":
         results = load_results(args.workdir)
-        s = write_text_summary(args.workdir, results)
+        s = write_text_summary(args.workdir, results, include_all=args.all)
         if args.pdf:
-            generate_pdf(args.workdir, results, Path(args.pdf))
+            generate_pdf(
+                args.workdir, results, Path(args.pdf), include_all=args.all
+            )
         return 1 if s["failed"] else 0
 
     if args.command == "diff":

@@ -10,6 +10,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from cts import ctsReport
 
@@ -176,6 +177,76 @@ class ReportContractTests(unittest.TestCase):
         self.assertEqual(summary["skipped"], 1)
         self.assertEqual(summary["failures"], ["geometry/triangle/failed"])
         self.assertIn("4 cases: 2 passed, 1 failed, 1 skipped", output.getvalue())
+
+    def test_all_mode_lists_every_case_with_its_verdict(self):
+        skipped = make_sidecar(case="skipped", verdict="skipped")
+        skipped["channels"] = []
+        skipped["skipReason"] = "missing feature"
+        results = {
+            "geometry/triangle/passed": make_sidecar(case="passed"),
+            "geometry/triangle/failed": make_sidecar(
+                case="failed", verdict="failed"
+            ),
+            "geometry/triangle/skipped": skipped,
+        }
+        output = io.StringIO()
+
+        ctsReport.write_text_summary(
+            "candidate", results, output, include_all=True
+        )
+
+        text = output.getvalue()
+        self.assertIn("all cases:", text)
+        self.assertIn("geometry/triangle/passed [passed]", text)
+        self.assertIn("geometry/triangle/failed [failed]", text)
+        self.assertIn("geometry/triangle/skipped [skipped]", text)
+        self.assertIn("missing feature", text)
+
+    def test_all_flag_is_forwarded_to_pdf_generation(self):
+        with tempfile.TemporaryDirectory() as temp:
+            workdir = Path(temp) / "candidate"
+            out_path = Path(temp) / "report.pdf"
+            write_sidecar(workdir)
+
+            with mock.patch.object(ctsReport, "generate_pdf") as generate_pdf:
+                with mock.patch.object(
+                    ctsReport,
+                    "write_text_summary",
+                    return_value={"failed": 0},
+                ) as write_text_summary:
+                    return_code = ctsReport.main(
+                        [
+                            "report",
+                            str(workdir),
+                            "--all",
+                            "--pdf",
+                            str(out_path),
+                        ]
+                    )
+
+        self.assertEqual(return_code, 0)
+        self.assertTrue(write_text_summary.call_args.kwargs["include_all"])
+        generate_pdf.assert_called_once()
+        self.assertTrue(generate_pdf.call_args.kwargs["include_all"])
+
+    def test_default_pdf_mode_remains_failure_only(self):
+        with tempfile.TemporaryDirectory() as temp:
+            workdir = Path(temp) / "candidate"
+            out_path = Path(temp) / "report.pdf"
+            write_sidecar(workdir)
+
+            with mock.patch.object(ctsReport, "generate_pdf") as generate_pdf:
+                with mock.patch.object(
+                    ctsReport,
+                    "write_text_summary",
+                    return_value={"failed": 0},
+                ) as write_text_summary:
+                    ctsReport.main(
+                        ["report", str(workdir), "--pdf", str(out_path)]
+                    )
+
+        self.assertFalse(write_text_summary.call_args.kwargs["include_all"])
+        self.assertFalse(generate_pdf.call_args.kwargs["include_all"])
 
 
 class DeviceDiffContractTests(unittest.TestCase):

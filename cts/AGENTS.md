@@ -47,7 +47,7 @@ LD_LIBRARY_PATH="$PWD:$LD_LIBRARY_PATH" ./anariCatalogTests
 ```bash
 anariCts generate --workdir myrun      # ground truth from the reference device (helide)
 anariCts run helide --workdir myrun    # render + score a candidate against it
-python ../cts/ctsReport.py report myrun [--pdf out.pdf]
+python ../cts/ctsReport.py report myrun [--all] [--pdf out.pdf]
 python ../cts/ctsReport.py diff runA runB [--json]
 
 anariCts list [--filter <pat>]         # enumerate the catalog

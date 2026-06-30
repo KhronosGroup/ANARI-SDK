@@ -131,6 +131,7 @@ ANARI_KHR_MATERIAL_MATTE
 ```bash
 python cts/ctsReport.py report myrun            # text summary
 python cts/ctsReport.py report myrun --pdf out.pdf
+python cts/ctsReport.py report myrun --all --pdf all.pdf
 python cts/ctsReport.py diff runA runB          # compare two candidates
 python cts/ctsReport.py diff runA runB --json
 ```
@@ -138,7 +139,8 @@ python cts/ctsReport.py diff runA runB --json
 `report` prints overall and per-category pass/fail/skip counts and lists failing
 Cases (with their per-Channel metric scores, or the behavioral detail note). The
 optional PDF additionally embeds the candidate vs. ground-truth images for each
-failed Case.
+failed Case. Pass `--all` to itemize passed, failed, and skipped Cases and embed
+the available images for every rendered Case in the PDF.
 
 A **device diff** is manifest arithmetic over two sidecar trees that were each
 scored against the same ground truth: verdict differences, per-Channel metric

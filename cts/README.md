@@ -103,6 +103,7 @@ anariCts run helide --workdir myrun
 # 3. Summarize the run (optionally as a PDF).
 python cts/ctsReport.py report myrun
 python cts/ctsReport.py report myrun --pdf myrun.pdf
+python cts/ctsReport.py report myrun --all --pdf myrun-all.pdf
 ```
 
 `run` exits non-zero if any Case failed, so it drops into CI directly.
@@ -148,6 +149,7 @@ extensions.
 # Summarize one run (per-category pass/fail/skip, plus failing Cases).
 python cts/ctsReport.py report myrun
 python cts/ctsReport.py report myrun --pdf myrun.pdf   # also embed failures in a PDF
+python cts/ctsReport.py report myrun --all --pdf myrun-all.pdf  # embed every Case
 
 # Compare two candidates, each already run against the same ground truth.
 python cts/ctsReport.py diff runA runB
@@ -161,6 +163,10 @@ pixels between the two devices (ADR-0004). `report` exits non-zero if any Case
 failed; `diff` exits non-zero if the two runs differ. Rendering duration is
 intentionally excluded from this semantic comparison, so timing-only changes do
 not produce differences or a non-zero exit status.
+
+By default, report details are limited to failed Cases. Pass `--all` to itemize
+passed, failed, and skipped Cases. In a PDF, rendered Cases include their metric
+scores and available candidate and ground-truth images.
 
 ## Comparison metrics
 
