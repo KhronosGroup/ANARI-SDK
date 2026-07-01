@@ -24,6 +24,7 @@ int commitPriority(ANARIDataType type)
   case ANARI_VOLUME:
     return 2;
   case ANARI_MATERIAL:
+  case ANARI_GEOMETRY:
     return 1;
   default:
     return 0;
