@@ -40,7 +40,7 @@ void Curve::finalize()
   m_globalRadius = getParam<float>("radius", 1.f);
 
   const auto numSegments =
-      m_index ? m_index->size() : m_vertexPosition->size() / 2;
+      m_index ? m_index->size() : m_vertexPosition->size() - 1;
 
   {
     auto *vr = (float4 *)rtcSetNewGeometryBuffer(embreeGeometry(),
