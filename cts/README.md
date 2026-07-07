@@ -85,6 +85,11 @@ options:
                        renderer subtype (default: default)
   --ambientRadiance <value>
                        baseline renderer ambientRadiance (default: 1)
+  -p, --renderer-param NAME=VALUE
+                       set a custom renderer parameter on every rendered case
+                       (repeatable; device-agnostic). VALUE parses into the
+                       renderer's device-declared type, else inferred as bool/
+                       int/float/float-vector/string. e.g. -p ambientSample=4
   --accumulation <n>   progressive color-channel frames when supported (default: 16)
   --no-accumulation    render each channel once
   --denoise            set the renderer denoise parameter
@@ -119,6 +124,15 @@ Use the same `--renderer` and `--ambientRadiance` values for `generate` and
 `run`; they are part of the rendering configuration being compared. The
 ambient value is a baseline for ordinary Tests. A renderer Test that explicitly
 exercises `ambientRadiance` overrides it with the Case's axis value.
+
+Pass device-specific renderer knobs with `-p/--renderer-param NAME=VALUE`
+(repeatable), e.g. `-p ambientSample=4`. It stays device-agnostic: the value is
+typed against the renderer subtype's device-declared parameter metadata (falling
+back to inference when the device does not report the parameter), so no
+device-specific names live in the CTS. Overrides apply over the baseline but
+before a renderer Test's own configuration, so such a Test still wins on
+conflict. As with `--ambientRadiance`, use the same overrides for `generate` and
+`run` when they affect the compared image.
 
 ### Running a slice
 

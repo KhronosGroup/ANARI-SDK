@@ -11,11 +11,14 @@
 #include "Value.h"
 #include "ViewBuilder.h"
 #include "WorldBuilder.h"
+// anari
+#include "anari/frontend/anari_device_introspection.hpp"
 // std
 #include <algorithm>
 #include <chrono>
 #include <cstdint>
 #include <exception>
+#include <iostream>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -223,6 +226,42 @@ void Runner::resolveCapabilities(const std::set<std::string> &features)
       ? m_options.accumulationFrames
       : 1;
   m_denoiseEnabled = m_options.denoise;
+  resolveRendererParamTypes();
+}
+
+void Runner::resolveRendererParamTypes()
+{
+  m_rendererParamTypes.clear();
+  if (m_options.rendererParams.empty())
+    return;
+
+  introspection::QueryOptions qo;
+  qo.typeFilter = "RENDERER";
+  qo.includeParameters = true;
+  const auto info = introspection::queryDeviceInfo(m_device, qo);
+  for (const auto &obj : info.objects) {
+    if (obj.type != ANARI_RENDERER || obj.subtype != m_options.device.renderer)
+      continue;
+    for (const auto &p : obj.parameters)
+      m_rendererParamTypes[p.name] = p.type;
+  }
+}
+
+void Runner::applyRendererParams(anari::Renderer renderer)
+{
+  for (const auto &param : m_options.rendererParams) {
+    const auto it = m_rendererParamTypes.find(param.name);
+    const ANARIDataType declared =
+        it != m_rendererParamTypes.end() ? it->second : ANARI_UNKNOWN;
+    const auto parsed = parseParamValue(declared, param.value);
+    if (!parsed) {
+      std::cerr << "warning: could not parse renderer parameter '" << param.name
+                << "=" << param.value << "'; skipping\n";
+      continue;
+    }
+    anariSetParameter(
+        m_device, renderer, param.name.c_str(), parsed->type, parsed->data());
+  }
 }
 
 Runner::SceneObjects Runner::buildScene(const TestDef &test, const Case &c)
@@ -249,6 +288,7 @@ Runner::SceneObjects Runner::buildScene(const TestDef &test, const Case &c)
       configuredRenderer(
           m_device, m_options.device.renderer, m_options.ambientRadiance));
   if (scene.renderer) {
+    applyRendererParams(scene.renderer.get());
     if (test.rendererConfig)
       test.rendererConfig(ctx, scene.renderer.get());
     if (m_denoiseEnabled)

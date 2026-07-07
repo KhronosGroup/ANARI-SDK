@@ -9,6 +9,7 @@
 #include "cts/Catalog.h"
 #include "cts/Expansion.h"
 #include "cts/HtmlReport.h"
+#include "cts/RendererParams.h"
 #include "cts/Report.h"
 #include "cts/Runner.h"
 #include "cts/Workdir.h"
@@ -59,6 +60,9 @@ struct Options
   uint32_t height = 256;
   std::string renderer = "default";
   float ambientRadiance = 1.f;
+  // Device-agnostic renderer parameter overrides (repeatable --renderer-param
+  // NAME=VALUE), applied to every rendered Case's renderer.
+  std::vector<RendererParam> rendererParams;
   bool useStdin = false;
   // query-device-info: restrict to an object type / subtype substring, list
   // subtypes only, or include detailed per-parameter info.
@@ -103,6 +107,11 @@ options:
                        renderer subtype (default: default)
   --ambientRadiance <value>
                        baseline renderer ambientRadiance (default: 1)
+  -p, --renderer-param NAME=VALUE
+                       set a custom renderer parameter on every rendered case
+                       (repeatable; device-agnostic). VALUE is parsed into the
+                       renderer's device-declared type, else inferred as bool/
+                       int/float/float-vector/string. e.g. -p ambientSample=4
   --accumulation <n>   progressive color-channel frames when the device supports
                        ANARI_KHR_FRAME_ACCUMULATION (default: 16; <=1 disables)
   --no-accumulation    render each channel once (equivalent to --accumulation 1)
@@ -181,7 +190,14 @@ Options parseOptions(int argc, char **argv, int start)
       o.renderer = next();
     else if (a == "--ambientRadiance")
       o.ambientRadiance = parseFloat(next(), o.ambientRadiance);
-    else if (a == "--accumulation")
+    else if (a == "--renderer-param" || a == "-p") {
+      const std::string spec = next();
+      if (auto p = parseRendererParam(spec))
+        o.rendererParams.push_back(*p);
+      else
+        std::cerr << "warning: ignoring malformed --renderer-param '" << spec
+                  << "' (expected NAME=VALUE)\n";
+    } else if (a == "--accumulation")
       o.accumulationFrames = parseDim(next(), o.accumulationFrames);
     else if (a == "--no-accumulation")
       o.accumulationFrames = 1;
@@ -416,6 +432,7 @@ int cmdGenerate(const Options &o)
   ro.ambientRadiance = o.ambientRadiance;
   ro.accumulationFrames = o.accumulationFrames;
   ro.denoise = o.denoise;
+  ro.rendererParams = o.rendererParams;
   ro.device = {deviceName, "default", o.renderer};
   Runner runner(d, Workdir(o.workdir), ro);
 
@@ -449,6 +466,7 @@ int cmdRun(const Options &o)
   ro.ambientRadiance = o.ambientRadiance;
   ro.accumulationFrames = o.accumulationFrames;
   ro.denoise = o.denoise;
+  ro.rendererParams = o.rendererParams;
   ro.device = {o.device, "default", o.renderer};
   Runner runner(d, Workdir(o.workdir), ro);
 
