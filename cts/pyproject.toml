@@ -1,13 +1,12 @@
 ## Copyright 2022-2026 The Khronos Group
 ## SPDX-License-Identifier: Apache-2.0
 
-# The CTS is a self-contained C++ tool (`cts`) that renders and scores; this
-# Python layer (ctsReport.py) only ever reads the results tree it writes — the
-# `report` and `diff` commands. Those use the standard library alone; the
-# optional PDF report is the layer's only third-party dependency, reportlab,
-# imported lazily. So nothing is required to run a text report or a device diff:
+# The CTS is a self-contained C++ tool (`anariCts`) that renders, scores, and
+# reports (text/HTML, ADR-0008). This Python layer (ctsReport.py) is
+# retained only for the PDF, which it renders from the results tree the tool
+# writes. Its one third-party dependency is reportlab, imported lazily:
 #
-#   pip install reportlab        # only needed for `ctsReport.py report --pdf`
+#   pip install reportlab        # required for `ctsReport.py report --pdf`
 #   pip install ".[pdf]"         # equivalent, from this directory
 
 [project]
