@@ -7,12 +7,14 @@
 #include "ArtifactPublication.h"
 #include "Catalog.h"
 #include "Image.h"
+#include "RendererParams.h"
 #include "Sidecar.h"
 #include "TestDef.h"
 #include "Workdir.h"
 // anari
 #include "anari/anari_cpp.hpp"
 // std
+#include <map>
 #include <memory>
 #include <set>
 #include <string>
@@ -32,6 +34,11 @@ struct RunOptions
   // Baseline renderer ambient light. A renderer Test may override this.
   float ambientRadiance{1.f};
   bool denoise{false};
+  // Device-agnostic renderer parameter overrides (CLI NAME=VALUE), applied to
+  // every Case's renderer over the baseline but before the Test's own renderer
+  // config, so a renderer Test that sets the same name still wins. Types
+  // resolve against the device's declared parameter metadata.
+  std::vector<RendererParam> rendererParams;
   DeviceSpec device;
 };
 
@@ -103,6 +110,17 @@ struct Runner
   // m_denoiseEnabled. Called once at the start of generate()/run().
   void resolveCapabilities(const std::set<std::string> &features);
 
+  // Query the selected renderer subtype's declared parameter types once, so
+  // CLI overrides parse into the device's expected type. Populates
+  // m_rendererParamTypes; leaves it empty when introspection yields nothing.
+  void resolveRendererParamTypes();
+
+  // Apply the CLI renderer parameter overrides to `renderer` (does not commit).
+  // Each value parses into its device-declared type, falling back to inference
+  // when the device does not report the parameter; a value that cannot be
+  // parsed is skipped with a warning.
+  void applyRendererParams(anari::Renderer renderer);
+
   // Write a "missing required feature" skip sidecar for a Case and tally it.
   void writeFeatureSkip(
       const TestDef &test, const Case &c, RunSummary &summary);
@@ -135,6 +153,9 @@ struct Runner
 
   uint32_t m_effectiveAccumulationFrames{1};
   bool m_denoiseEnabled{false};
+  // Declared parameter types for the selected renderer subtype (name -> type),
+  // resolved once from device introspection to type the CLI overrides.
+  std::map<std::string, ANARIDataType> m_rendererParamTypes;
 };
 
 } // namespace cts
