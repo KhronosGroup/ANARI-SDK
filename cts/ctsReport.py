@@ -2,17 +2,17 @@
 # Copyright 2021-2026 The Khronos Group
 # SPDX-License-Identifier: Apache-2.0
 
-"""CTS reporting and device-diff, driven entirely by the per-Case sidecar tree.
+"""CTS PDF report, driven entirely by the per-Case sidecar tree.
 
-The C++ `cts` runner renders and scores every Case and writes a per-Case sidecar
-JSON next to its images (ADR-0003). This module is the Python reporting layer
-(ADR-0001/0004): it only ever *reads* that tree — it never opens an ANARI device
-and never re-computes image metrics.
+Reporting is a C++ responsibility (ADR-0008): `anariCts report` emits the text
+summary and the interactive HTML report. This module is retained only for the
+one output not worth reproducing in C++ — the reportlab PDF. Like the C++
+reporter, it only ever *reads* the results tree the runner writes
+(ADR-0001/0003/0004); it never opens an ANARI device and never re-computes image
+metrics.
 
-Commands:
-  report <workdir> [--all] [--pdf report.pdf]
-                                        summarize one run; optional PDF.
-  diff <workdir_a> <workdir_b> [--json] compare two candidates' results.
+Command:
+  report <workdir> --pdf report.pdf [--all]   write a PDF from one run.
 
 The sidecar schema is versioned (schemaVersion); this reader targets version 2
 (which added the producing-device identity) and warns on a mismatch.
@@ -26,7 +26,8 @@ from pathlib import Path
 
 SCHEMA_VERSION = 2
 
-# Metrics shown in summaries/diffs, in display order.
+# Metrics shown in the PDF, in display order. The C++ reporters keep their own
+# copy (kReportMetrics); both are independent readers of the one contract.
 METRICS = ["ssim", "psnr"]
 
 
@@ -146,14 +147,6 @@ def summarize(results):
     return summary
 
 
-def channel_metric(data, channel, metric):
-    """A channel's metric score, or None if absent/non-finite."""
-    for ch in data.get("channels", []):
-        if ch.get("channel") == channel:
-            return ch.get("metrics", {}).get(metric)
-    return None
-
-
 def report_case_keys(results, include_all=False):
     """Case keys to itemize: every Case, or only failures by default."""
     if include_all:
@@ -161,139 +154,7 @@ def report_case_keys(results, include_all=False):
     return summarize(results)["failures"]
 
 
-def write_text_summary(workdir, results, out=sys.stdout, include_all=False):
-    s = summarize(results)
-    print(f"CTS report: {workdir}", file=out)
-    device = run_device(results)
-    if device:
-        print(
-            f"  device: {device.get('library')} "
-            f"({device.get('device', 'default')}/"
-            f"{device.get('renderer', 'default')})",
-            file=out,
-        )
-    print(
-        f"  {s['total']} cases: {s['passed']} passed, {s['failed']} failed, "
-        f"{s['skipped']} skipped",
-        file=out,
-    )
-    print("  by category:", file=out)
-    for cat, c in sorted(s["categories"].items()):
-        print(
-            f"    {cat:12s} {c['passed']:4d} passed  {c['failed']:4d} failed  "
-            f"{c['skipped']:4d} skipped",
-            file=out,
-        )
-    case_keys = report_case_keys(results, include_all)
-    if case_keys:
-        heading = "all cases" if include_all else "failed cases"
-        print(f"  {heading}:", file=out)
-        for key in case_keys:
-            data = results[key]
-            scores = []
-            for ch in data.get("channels", []):
-                vals = ", ".join(
-                    f"{m}={ch['metrics'].get(m)}" for m in METRICS if m in ch.get("metrics", {})
-                )
-                scores.append(f"{ch.get('channel')}({vals})")
-            # Cases with no channel scores (behavioral, or a failed render)
-            # carry their reason in detail or skipReason instead.
-            reason = data.get("detail") or data.get("skipReason", "")
-            summary_text = "; ".join(scores) if scores else reason
-            verdict = f" [{data.get('verdict', 'skipped')}]" if include_all else ""
-            print(f"    {key}{verdict}  {summary_text}", file=out)
-            description = data.get("description")
-            if isinstance(description, str) and description:
-                print(f"      Description: {description}", file=out)
-    return s
-
-
-# --- Device diff (ADR-0004) --------------------------------------------------
-
-
-def diff_results(results_a, results_b):
-    """Compare two candidates' sidecar trees.
-
-    Each is scored against the same ground truth, so a fair comparison is the
-    arithmetic of their sidecars: verdict differences, per-channel metric deltas
-    (b - a), and cases present in only one run. Duration deltas accompany Cases
-    with semantic changes but do not create changes on their own. This never
-    re-compares pixels.
-    """
-    keys = sorted(set(results_a) | set(results_b))
-    diff = {"only_in_a": [], "only_in_b": [], "verdict_changed": [], "cases": []}
-    for key in keys:
-        a = results_a.get(key)
-        b = results_b.get(key)
-        if a is None:
-            diff["only_in_b"].append(key)
-            continue
-        if b is None:
-            diff["only_in_a"].append(key)
-            continue
-        va, vb = a.get("verdict"), b.get("verdict")
-        entry = {"case": key, "verdict_a": va, "verdict_b": vb, "channels": []}
-        if va != vb:
-            diff["verdict_changed"].append(entry)
-        for metric in METRICS:
-            for ch in {c.get("channel") for c in a.get("channels", [])} | {
-                c.get("channel") for c in b.get("channels", [])
-            }:
-                ma = channel_metric(a, ch, metric)
-                mb = channel_metric(b, ch, metric)
-                delta = (mb - ma) if (isinstance(ma, (int, float)) and isinstance(mb, (int, float))) else None
-                if ma != mb:
-                    entry["channels"].append(
-                        {"channel": ch, "metric": metric, "a": ma, "b": mb, "delta": delta}
-                    )
-        ta, tb = a.get("durationMs", 0.0), b.get("durationMs", 0.0)
-        entry["durationDeltaMs"] = tb - ta
-        if entry["channels"] or va != vb:
-            diff["cases"].append(entry)
-    return diff
-
-
-def has_differences(diff):
-    """Whether a device diff contains any semantic result differences."""
-    return bool(
-        diff["only_in_a"]
-        or diff["only_in_b"]
-        or diff["verdict_changed"]
-        or any(entry["channels"] for entry in diff["cases"])
-    )
-
-
-def write_text_diff(name_a, name_b, diff, out=sys.stdout):
-    print(f"CTS device diff: A={name_a}  B={name_b}", file=out)
-    if diff["only_in_a"]:
-        print(f"  only in A ({len(diff['only_in_a'])}):", file=out)
-        for k in diff["only_in_a"]:
-            print(f"    {k}", file=out)
-    if diff["only_in_b"]:
-        print(f"  only in B ({len(diff['only_in_b'])}):", file=out)
-        for k in diff["only_in_b"]:
-            print(f"    {k}", file=out)
-    if diff["verdict_changed"]:
-        print(f"  verdict changed ({len(diff['verdict_changed'])}):", file=out)
-        for e in diff["verdict_changed"]:
-            print(f"    {e['case']}: {e['verdict_a']} -> {e['verdict_b']}", file=out)
-    metric_changes = [e for e in diff["cases"] if e["channels"]]
-    if metric_changes:
-        print(f"  metric deltas ({len(metric_changes)} cases):", file=out)
-        for e in metric_changes:
-            for c in e["channels"]:
-                d = c["delta"]
-                ds = f"{d:+.4f}" if isinstance(d, (int, float)) else "n/a"
-                print(
-                    f"    {e['case']} [{c['channel']}/{c['metric']}] "
-                    f"{c['a']} -> {c['b']} ({ds})",
-                    file=out,
-                )
-    if not has_differences(diff):
-        print("  no differences", file=out)
-
-
-# --- PDF report (optional; requires reportlab) -------------------------------
+# --- PDF report (requires reportlab) -----------------------------------------
 
 
 def generate_pdf(workdir, results, out_path, *, include_all=False):
@@ -315,7 +176,7 @@ def generate_pdf(workdir, results, out_path, *, include_all=False):
     except ImportError:
         print(
             "error: reportlab is not installed; cannot write a PDF "
-            "(text summary still works without --pdf)",
+            "(anariCts report gives text/HTML without it)",
             file=sys.stderr,
         )
         return False
@@ -452,47 +313,25 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
 
-    p_report = sub.add_parser("report", help="summarize one run's sidecar tree")
+    p_report = sub.add_parser("report", help="write a PDF from one run's sidecar tree")
     p_report.add_argument("workdir")
-    p_report.add_argument("--pdf", metavar="PATH", help="also write a PDF report")
+    p_report.add_argument("--pdf", metavar="PATH", required=True, help="PDF output path")
     p_report.add_argument(
         "--all",
         action="store_true",
-        help="itemize every case (PDF default: failed cases only)",
+        help="itemize every case (default: failed cases only)",
     )
-
-    p_diff = sub.add_parser("diff", help="compare two runs' sidecar trees")
-    p_diff.add_argument("workdir_a")
-    p_diff.add_argument("workdir_b")
-    p_diff.add_argument("--json", action="store_true", help="emit JSON instead of text")
 
     args = parser.parse_args(argv)
 
     if args.command == "report":
         results = load_results(args.workdir)
-        s = write_text_summary(args.workdir, results, include_all=args.all)
-        if args.pdf:
-            generate_pdf(
-                args.workdir, results, Path(args.pdf), include_all=args.all
-            )
-        return 1 if s["failed"] else 0
-
-    if args.command == "diff":
-        ra = load_results(args.workdir_a)
-        rb = load_results(args.workdir_b)
-        diff = diff_results(ra, rb)
-        # Label the two runs by their producing device (schema v2), falling
-        # back to the workdir name for pre-v2 sidecars.
-        label_a = device_label(ra, args.workdir_a)
-        label_b = device_label(rb, args.workdir_b)
-        diff["device_a"] = label_a
-        diff["device_b"] = label_b
-        if args.json:
-            json.dump(diff, sys.stdout, indent=2)
-            sys.stdout.write("\n")
-        else:
-            write_text_diff(label_a, label_b, diff)
-        return 1 if has_differences(diff) else 0
+        ok = generate_pdf(
+            args.workdir, results, Path(args.pdf), include_all=args.all
+        )
+        if not ok:
+            return 2
+        return 1 if summarize(results)["failed"] else 0
 
     return 2
 
