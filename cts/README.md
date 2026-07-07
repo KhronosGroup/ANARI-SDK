@@ -3,8 +3,8 @@
 The Conformance Test Suite (CTS) validates an ANARI device implementation by
 rendering a known battery of scenes and comparing each render against
 ground-truth images produced by a reference device (helide). It is a
-self-contained C++ command-line tool, `anariCts`, plus a thin Python reporting
-layer (`ctsReport.py`) that only reads the results the tool writes.
+self-contained C++ command-line tool, `anariCts`, with a thin Python layer
+(`ctsReport.py`) retained only for producing a PDF.
 
 It can:
 
@@ -13,7 +13,8 @@ It can:
 - render and score a candidate device against that ground truth (`run`),
 - report which extensions a device implements (`query-features`) and which
   tests it can run vs. will skip (`check-properties`),
-- summarize a run, optionally as a PDF, and diff two devices (`ctsReport.py`).
+- summarize a run as text or an interactive HTML report (`report`) — a PDF is
+  available via `ctsReport.py`.
 
 See [CONTEXT.md](CONTEXT.md) for the vocabulary (Test, Axis, Permutation,
 Variant, Case, Channel, Ground truth, Workdir, …) and `docs/adr/` for the design
@@ -23,15 +24,15 @@ decisions behind the architecture.
 
 ```
 anariCts  (C++ tool)                    renders + scores; writes results/ and ground_truth/
-    ↓ loads at runtime                   sidecar JSON + PNGs under a --workdir
-ANARI device (helide, or a candidate)
-    ↓ files only (ADR-0001)
-ctsReport.py  (Python)                   reads the results tree; report + device diff
+    │                                    sidecar JSON + PNGs under a --workdir
+    ├─ report                            reads the results tree -> text / HTML (ADR-0008)
+    └─ files only (ADR-0001)
+ctsReport.py  (Python)                   reads the same results tree; retained only for the PDF
 ```
 
-The C++ tool is the single source of image metrics (SSIM, PSNR); Python never
-opens a device and never re-computes a metric (ADR-0004). The two communicate
-only through the per-Case sidecar files in the workdir (ADR-0003).
+The C++ tool is the single source of image metrics (SSIM, PSNR); no reader ever
+opens a device or re-computes a metric (ADR-0004). Reporting reads the per-Case
+sidecar files in the workdir (ADR-0003); the results tree is the only contract.
 
 ## Building
 
@@ -58,9 +59,9 @@ for full coverage; without them, expect benign "Could not decode image" warnings
 (those Cases still pass, since ground truth and candidate are both rendered by
 the same device).
 
-The Python reporting layer needs only Python 3.9+, and `reportlab` *only* if you
-want a PDF — the text summary and the device diff have no third-party
-dependencies. See [pyproject.toml](pyproject.toml).
+The text summary and HTML report are built into `anariCts` and need nothing
+further. The Python layer is needed *only* for a PDF, and then only Python 3.9+
+plus `reportlab`. See [pyproject.toml](pyproject.toml).
 
 ## Usage
 
@@ -74,6 +75,7 @@ commands:
   query-features <device>    print the device's supported extensions
   query-metadata [options]   print catalog metadata as JSON
   check-properties <device>  report which tests the device can run vs. will skip
+  report <workdir>           summarize a run's results tree (text + optional HTML)
 
 options:
   --filter <pattern>   select a slice of the catalog (substring or glob over <category>/<test>)
@@ -95,6 +97,12 @@ options:
   --denoise            set the renderer denoise parameter
   --stdin              read newline-separated filter patterns from stdin (run)
   --verbose            print ANARI warnings
+
+report options:
+  --html <path>        also write an interactive HTML report
+  --embed              inline images in the HTML (portable single file; embeds
+                       only the initially-shown cases unless combined with --all)
+  --all                itemize every case (default: failures only)
 ```
 
 The library being tested must be loadable at runtime (on its
@@ -112,10 +120,11 @@ anariCts generate --renderer default --ambientRadiance 1 --workdir myrun
 # 2. Render + score a candidate device against it.
 anariCts run helide --renderer default --ambientRadiance 1 --workdir myrun
 
-# 3. Summarize the run (optionally as a PDF).
-python cts/ctsReport.py report myrun
-python cts/ctsReport.py report myrun --pdf myrun.pdf
-python cts/ctsReport.py report myrun --all --pdf myrun-all.pdf
+# 3. Summarize the run (text, or an interactive HTML report).
+anariCts report myrun
+anariCts report myrun --html myrun.html
+anariCts report myrun --all --embed --html myrun-all.html   # portable single file
+python cts/ctsReport.py report myrun --pdf myrun.pdf         # PDF, if you want one
 ```
 
 `run` exits non-zero if any Case failed, so it drops into CI directly.
@@ -167,34 +176,37 @@ anariCts query-metadata --filter frame    # descriptions and catalog metadata as
 device — a Test is skipped when the device is missing any of its required
 extensions.
 
-## Reporting and device diff
+## Reporting
 
-`ctsReport.py` reads a workdir's sidecar tree; it never renders.
+`anariCts report` reads a workdir's results tree; it never renders or opens a
+device (ADR-0008).
 
 ```bash
 # Summarize one run (per-category pass/fail/skip, plus failing Cases).
-python cts/ctsReport.py report myrun
-python cts/ctsReport.py report myrun --pdf myrun.pdf   # also embed failures in a PDF
-python cts/ctsReport.py report myrun --all --pdf myrun-all.pdf  # embed every Case
+anariCts report myrun
+anariCts report myrun --html myrun.html          # interactive HTML alongside the text
+anariCts report myrun --all --html myrun-all.html   # itemize every Case
+anariCts report myrun --all --embed --html myrun.html  # inline images: one portable file
 
-# Compare two candidates, each already run against the same ground truth.
-python cts/ctsReport.py diff runA runB
-python cts/ctsReport.py diff runA runB --json
+# A PDF is still available from the Python layer.
+python cts/ctsReport.py report myrun --pdf myrun.pdf
 ```
 
-A device diff is manifest arithmetic over the two sidecar trees — verdict
-differences, per-channel metric deltas, and cases present in only one run. It
-compares each device against the common ground truth; it does not re-compare
-pixels between the two devices (ADR-0004). `report` exits non-zero if any Case
-failed; `diff` exits non-zero if the two runs differ. Rendering duration is
-intentionally excluded from this semantic comparison, so timing-only changes do
-not produce differences or a non-zero exit status.
+`report` exits non-zero if any Case failed, so it drops into CI directly.
 
 By default, report details are limited to failed Cases. Pass `--all` to itemize
-passed, failed, and skipped Cases. Itemized PDF Cases include the Test's
-human-readable description; rendered Cases also include their metric scores and
-available candidate and ground-truth images. Text reports include the
-description under every itemized Case as well.
+passed, failed, and skipped Cases. The HTML report always carries every Case's
+metadata so its status filter and search work client-side; it defaults to a
+"failed first" ordering (with a synthetic Failed section) when the run has
+failures, and can switch back to grouping by category. With `--embed`, images
+travel inline as base64 for the initially-shown Cases only (add `--all` to embed
+everything), so a shared file stays bounded; without it, the HTML references the
+PNGs in the workdir. Each channel offers a result/ground-truth A/B flip (click
+or toggle) and an interactive difference-mask canvas — a threshold slider paints
+the exceeding pixels red, with an "over actual" toggle to see them on a dimmed
+render. (Reading diff pixels needs canvas-readable images: works with `--embed`
+or when served over http; a referenced `file://` diff falls back to the static
+image.)
 
 ## Comparison metrics
 

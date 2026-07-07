@@ -2,8 +2,8 @@
 
 The CTS validates an ANARI device implementation by rendering a known battery of
 scenes and comparing the output against ground-truth images. This context covers
-the C++ test catalog, the C++ runner that executes it, and the Python layer that
-reports on and diffs runs.
+the C++ test catalog, the C++ runner that executes it, and the C++ reporting
+that summarizes runs (with a Python layer retained only for PDF).
 
 ## Language
 
@@ -54,18 +54,25 @@ _Avoid_: reference image, golden image, baseline
 A frame output buffer (color, depth, albedo, normal, primitive/object/instance
 id) that can be compared independently.
 
-**Manifest**:
-The machine-readable file the C++ runner writes for a run (which Cases ran, their
-pass/fail, metric scores, paths). The Python layer reads Manifests; it never
-renders.
-_Avoid_: results file, report
+**Sidecar**:
+The machine-readable JSON file the C++ runner writes next to a Case's images:
+which axis values it ran, its per-channel metric scores and pass/fail verdict,
+any skip reason, timing, image paths, and the producing device's identity. One
+per Case.
+_Avoid_: manifest, results file
+
+**Results tree**:
+The `results/` subtree of a Workdir — the full set of a run's Sidecars and
+images. It is the cross-language contract: every reader (the C++ `report`
+command and the Python PDF layer) consumes it by globbing, and none of them
+render or open a device.
+_Avoid_: manifest
 
 **Report**:
-The human-facing PDF the Python layer produces from one Manifest.
-
-**Device diff**:
-The Python comparison of two Candidates' Manifests/images against each other
-(parity), as distinct from comparing a Candidate against Ground truth (pass/fail).
+The human-facing summary of one run, produced by `anariCts report` from the
+Results tree: a text summary (default) or an interactive HTML report (`--html`).
+A PDF is an optional extra still produced by `ctsReport.py`.
+_Avoid_: manifest
 
 ### Tooling
 
