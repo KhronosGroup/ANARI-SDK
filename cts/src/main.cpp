@@ -8,6 +8,8 @@
 #include "cts/BuiltinTests.h"
 #include "cts/Catalog.h"
 #include "cts/Expansion.h"
+#include "cts/HtmlReport.h"
+#include "cts/Report.h"
 #include "cts/Runner.h"
 #include "cts/Workdir.h"
 // anari
@@ -18,6 +20,7 @@
 // std
 #include <cmath>
 #include <cstring>
+#include <fstream>
 #include <iostream>
 #include <limits>
 #include <set>
@@ -68,6 +71,12 @@ struct Options
   // value is the user-facing default; <=1 disables it.
   uint32_t accumulationFrames = 16;
   bool denoise = false;
+  // report: itemize every case, write an HTML file, and embed images in it.
+  // The positional arg holds the workdir.
+  bool includeAll = false;
+  bool embed = false;
+  std::string htmlOut;
+  std::vector<std::string> positionals;
 };
 
 void printUsage()
@@ -82,6 +91,7 @@ commands:
   query-metadata [options]   print catalog metadata as JSON
   query-device-info <device> introspect a device: object subtypes + parameter metadata
   check-properties <device>  report which tests the device can run vs. will skip
+  report <workdir>           summarize a run's results tree (text + optional HTML)
 
 options:
   --filter <pattern>   select a slice of the catalog (substring or glob over <category>/<test>)
@@ -100,6 +110,12 @@ options:
                        sets it, if the device lacks ANARI_KHR_RENDERER_DENOISE)
   --stdin              read newline-separated filter patterns from stdin (run)
   --verbose            print ANARI warnings
+
+report options:
+  --html <path>        also write an interactive HTML report
+  --embed              inline images in the HTML (portable single file; embeds
+                       only the initially-shown cases unless combined with --all)
+  --all                itemize every case (default: failures only)
 
 query-device-info options:
   --type <name>        restrict to object types whose name contains <name>
@@ -181,11 +197,19 @@ Options parseOptions(int argc, char **argv, int start)
       o.skipParameters = true;
     else if (a == "--info")
       o.info = true;
+    else if (a == "--all")
+      o.includeAll = true;
+    else if (a == "--embed")
+      o.embed = true;
+    else if (a == "--html")
+      o.htmlOut = next();
     else if (a == "--verbose")
       g_verbose = true;
-    else if (!a.empty() && a[0] != '-' && o.device.empty())
-      o.device = a; // positional <device>
-    else
+    else if (!a.empty() && a[0] != '-') {
+      o.positionals.push_back(a);
+      if (o.device.empty())
+        o.device = a; // first positional doubles as <device> for run/query
+    } else
       std::cerr << "warning: ignoring unknown argument '" << a << "'\n";
   }
   return o;
@@ -453,6 +477,31 @@ int cmdRun(const Options &o)
   return s.failed > 0 ? 1 : 0;
 }
 
+// Reporting reads the results tree only; it never loads a device (ADR-0008).
+int cmdReport(const Options &o)
+{
+  const std::string workdir =
+      o.positionals.empty() ? o.workdir : o.positionals.front();
+  auto results = loadResults(workdir, std::cerr);
+  writeTextSummary(std::cout, workdir, results, o.includeAll);
+
+  if (!o.htmlOut.empty()) {
+    HtmlOptions html;
+    html.includeAll = o.includeAll;
+    html.embed = o.embed;
+    html.htmlPath = o.htmlOut;
+    const std::string doc = generateHtml(workdir, results, html);
+    std::ofstream out(o.htmlOut, std::ios::binary);
+    if (!out || !(out << doc)) {
+      std::cerr << "error: failed to write HTML report '" << o.htmlOut << "'\n";
+      return 2;
+    }
+    std::cout << "wrote " << o.htmlOut << "\n";
+  }
+
+  return summarize(results).failed > 0 ? 1 : 0;
+}
+
 } // namespace
 
 int main(int argc, char **argv)
@@ -484,6 +533,8 @@ int main(int argc, char **argv)
     return cmdQueryDeviceInfo(o);
   if (command == "check-properties")
     return cmdCheckProperties(o);
+  if (command == "report")
+    return cmdReport(o);
 
   std::cerr << "error: unknown command '" << command << "'\n\n";
   printUsage();

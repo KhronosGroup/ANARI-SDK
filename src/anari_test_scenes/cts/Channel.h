@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <string>
+
 namespace anari {
 namespace cts {
 
@@ -37,6 +39,25 @@ inline const char *channelName(Channel c)
     return "instanceId";
   }
   return "unknown";
+}
+
+// Inverse of channelName; defaults to Color for an unknown name so a
+// best-effort read of an older or foreign sidecar still yields a Channel.
+inline Channel channelFromName(const std::string &name)
+{
+  if (name == "depth")
+    return Channel::Depth;
+  if (name == "albedo")
+    return Channel::Albedo;
+  if (name == "normal")
+    return Channel::Normal;
+  if (name == "primitiveId")
+    return Channel::PrimitiveId;
+  if (name == "objectId")
+    return Channel::ObjectId;
+  if (name == "instanceId")
+    return Channel::InstanceId;
+  return Channel::Color;
 }
 
 } // namespace cts
