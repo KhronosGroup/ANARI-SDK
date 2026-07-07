@@ -83,7 +83,7 @@ Rendering Backend (e.g., Embree for helide)
 - `generate_headers.py` — regenerates public C/C++ headers from the spec
 - Downstream devices invoke `anari_generate_queries()` in CMake (provided via the `code_gen` find_package component) rather than calling scripts directly.
 
-**`cts/`** — Conformance Test Suite. A self-contained C++ tool, `anariCts` (entry point `cts/src/main.cpp`, built with `BUILD_CTS=ON`), renders each test and scores it against generated ground truth; a thin Python reporting layer (`ctsReport.py`) reads the results. The harness/runner/Test definitions under `src/anari_test_scenes/cts/` compile into the internal static `anari_cts_core` target; `anariCts` and `anariCatalogTests` link that core. (The former pybind11/Python orchestration was removed.)
+**`cts/`** — Conformance Test Suite. A self-contained C++ tool, `anariCts` (entry point `cts/src/main.cpp`, built with `BUILD_CTS=ON`), renders each test, scores it against generated ground truth, and reports on the results tree (`report`: text and interactive HTML — ADR-0008); a thin Python layer (`ctsReport.py`) is retained only for a PDF. The harness/runner/Test definitions under `src/anari_test_scenes/cts/` compile into the internal static `anari_cts_core` target; `anariCts` and `anariCatalogTests` link that core. (The former pybind11/Python orchestration was removed.)
 
 ### Object Commit Model
 

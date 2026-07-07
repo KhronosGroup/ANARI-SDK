@@ -1,10 +1,10 @@
 ## Copyright 2022-2026 The Khronos Group
 ## SPDX-License-Identifier: Apache-2.0
 
-# The CTS is a self-contained C++ tool (`anariCts`) plus a thin Python reporting
-# layer (ctsReport.py) that only reads the per-Case sidecar tree. The former
-# pybind/Python backend, the JSON scene format, and the orchestration scripts
-# have been removed.
+# The CTS is a self-contained C++ tool (`anariCts`) that renders, scores, and
+# reports on the results tree (report, ADR-0008); a thin Python layer
+# (ctsReport.py) is retained only for the PDF. The former pybind/Python backend,
+# the JSON scene format, and the orchestration scripts have been removed.
 #
 # The anariCts binary's entry point lives here (src/main.cpp). The CTS harness,
 # runner, and Test definitions it drives compile into the internal static

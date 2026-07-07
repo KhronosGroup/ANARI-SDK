@@ -159,6 +159,11 @@ header {
   margin-bottom: 10px; }
 .pane-head .lbl { font-size: 11px; color: var(--muted2); text-transform: uppercase;
   letter-spacing: .07em; }
+.chan { margin-left: 7px; padding: 1px 6px; border-radius: 4px;
+  font-size: 9.5px; font-weight: 700; letter-spacing: .05em;
+  background: var(--border); color: var(--muted2); }
+.chan-color { background: rgba(72,122,144,.15); color: var(--accent); }
+.chan-depth { background: rgba(111,119,129,.18); color: var(--dark); }
 .stage { position: relative; border: 1px solid var(--border); border-radius: 9px;
   overflow: hidden; background: #000; cursor: pointer; aspect-ratio: 1 / 1; }
 .stage .layer { position: absolute; inset: 0; width: 100%; height: 100%;
@@ -544,6 +549,15 @@ const char *verdictClass(Verdict v)
   return "skipped";
 }
 
+// The channel name, upper-cased for the pane-head chip (e.g. "COLOR").
+std::string channelTag(Channel c)
+{
+  std::string s = channelName(c);
+  for (char &ch : s)
+    ch = static_cast<char>(std::toupper(static_cast<unsigned char>(ch)));
+  return s;
+}
+
 const char *verdictLabel(Verdict v)
 {
   switch (v) {
@@ -597,7 +611,9 @@ void appendComparePane(std::ostringstream &os,
 
   // A/B compare pane: click or the toggle flips reference vs. actual.
   os << "<div class=\"compare-pane\"><div class=\"pane-head\"><span "
-        "class=\"lbl\">A / B compare</span>";
+        "class=\"lbl\">A / B compare<span class=\"chan chan-"
+     << channelName(ch.channel) << "\">" << channelTag(ch.channel)
+     << "</span></span>";
   if (!result.empty() && !truth.empty())
     os << "<span class=\"segmented\"><button type=\"button\" class=\"abseg "
           "active\" data-ab=\"result\">Actual</button><button type=\"button\" "
@@ -630,7 +646,9 @@ void appendComparePane(std::ostringstream &os,
   // fallback below still guards cases whose diff is not embedded (an
   // initially-hidden passing case in a failures-only report).
   os << "<div class=\"mask-pane\"><div class=\"pane-head\"><span "
-        "class=\"lbl\">Difference mask</span>";
+        "class=\"lbl\">Difference mask<span class=\"chan chan-"
+     << channelName(ch.channel) << "\">" << channelTag(ch.channel)
+     << "</span></span>";
   if (!diff.empty())
     os << "<label class=\"overtoggle\"><input type=\"checkbox\" "
           "class=\"over-actual\"> over actual</label>";

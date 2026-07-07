@@ -8,10 +8,11 @@ This file provides guidance to coding agents working in the CTS. See the parent
 
 The CTS (Conformance Test Suite) validates ANARI device implementations against
 a reference device (helide). It is a self-contained C++ command-line tool,
-`anariCts`, that renders each test *and* scores it against generated
-ground truth, plus a thin Python reporting layer (`ctsReport.py`) that only
-reads the results the tool writes. The two communicate through files only — there
-is no pybind11, no JSON scene format, and no Python orchestration (these were
+`anariCts`, that renders each test, scores it against generated ground truth,
+*and* reports on the results tree (`report`, ADR-0008). A thin Python
+layer (`ctsReport.py`) is retained only for the one output not worth porting to
+C++ — the `reportlab` PDF. Everything communicates through files only — there is
+no pybind11, no JSON scene format, and no Python orchestration (these were
 removed; see `docs/adr/0001`–`0002`).
 
 ## Build Commands
@@ -47,8 +48,9 @@ LD_LIBRARY_PATH="$PWD:$LD_LIBRARY_PATH" ./anariCatalogTests
 ```bash
 anariCts generate --workdir myrun      # ground truth from the reference device (helide)
 anariCts run helide --workdir myrun    # render + score a candidate against it
-python ../cts/ctsReport.py report myrun [--all] [--pdf out.pdf]
-python ../cts/ctsReport.py diff runA runB [--json]
+anariCts run rtx --workdir myrun -p ambientSample=4   # custom renderer params
+anariCts report myrun [--all] [--html out.html] [--embed]  # text + optional HTML
+python ../cts/ctsReport.py report myrun --pdf out.pdf      # PDF only
 
 anariCts list [--filter <pat>]         # enumerate the catalog
 anariCts query-features <device>       # device extensions
@@ -77,7 +79,8 @@ anariCts                 CLI dispatch: cts/src/main.cpp
   Runner                  build world -> render each Channel -> generate GT or score vs GT -> sidecar
   Metrics                 SSIM / PSNR (single source of metrics, ADR-0004)
   Workdir / Sidecar       results/ ground_truth/ assets/ tree; per-Case sidecar JSON (ADR-0003)
-ctsReport.py              reads the sidecar tree only; report + device diff
+  Report / HtmlReport     read the results tree -> text / HTML summary (ADR-0008)
+ctsReport.py              reads the results tree too; retained only for the PDF
 ```
 
 ### Key source files (`src/anari_test_scenes/cts/`)
@@ -102,11 +105,23 @@ ctsReport.py              reads the sidecar tree only; report + device diff
   supported per-Channel formats behind the shared map/unmap boundary.
 - `FrameFormats.{h,cpp}` — resolves a Case's per-Channel output `ANARIDataType`
   from its `frame_<channel>_type` axis (color/albedo/normal); pure + unit-tested.
+- `RendererParams.{h,cpp}` — pure parsing of CLI `--renderer-param NAME=VALUE`
+  overrides into ANARI-typed bytes (unit-tested). The runner resolves each
+  name's type from device introspection (falling back to inference) and sets it
+  on every Case's renderer before the Test's own `rendererConfig`, so it stays
+  device-agnostic and a renderer Test still wins on conflict.
 - `Metrics.{h,cpp}` / `Image.{h,cpp}` — SSIM/PSNR and PNG I/O (stb).
 - `Workdir.{h,cpp}` / `Sidecar.{h,cpp}` — the results tree layout and the
   versioned per-Case sidecar contract (carries the producing `device` identity
   since schema v2 plus optional Test descriptions; `Workdir` also keys the
-  per-channel diff/threshold images).
+  per-channel diff/threshold images). `Sidecar` both writes (`toJson`/
+  `writeSidecar`) and reads (`fromJson`/`readSidecar`) the contract.
+- `Report.{h,cpp}` — reads the results tree (`loadResults`), aggregates it
+  (`summarize`, `runDevice`), and emits the text summary. `kReportMetrics` is
+  the single list of reported metrics. Pure; unit-tested.
+- `HtmlReport.{h,cpp}` — renders the self-contained interactive HTML report
+  (inline CSS/JS, optional base64 `--embed`); pure `htmlEscape`/`base64Encode`
+  are unit-tested.
 - `GeometryLayout.{h,cpp}` — pure deterministic Layout generation using typed
   shape and primitive-mode enums.
 - `GeometryBuilder.{h,cpp}` — geometry-family specifications and ANARI
@@ -126,10 +141,12 @@ asset-scanning factory (gated on `ENABLE_GLTF`). `BuiltinTests.cpp` wires them
 all into the catalog.
 
 **Unit tests:** `tests/unit/test_cts_*.cpp` (catalog/expansion/filter/builder,
-metrics, results/sidecar/workdir, runner). Pure tests are tagged `[cts]`;
-device-backed ones add `[helide]` and self-skip if no device loads.
+metrics, results/sidecar/workdir, report/html, runner). Pure tests are
+tagged `[cts]`; device-backed ones add `[helide]` and self-skip if no device
+loads.
 
-**Python:** `ctsReport.py` — `report` and `diff` over the sidecar tree.
+**Python:** `ctsReport.py` — the `report --pdf` path only; it reads the results
+tree exactly as the C++ `report` does. Text and HTML live in C++.
 
 ## Extending the CTS
 
@@ -142,14 +159,17 @@ primary check, then declare axes, required features, and channels.
 it in `FrameFormats.cpp` (pure, unit-test it) and honor it in `Runner.cpp`.
 
 **New metric:** add it to `Metrics.{h,cpp}`, record it in the runner's
-`ChannelResult`, and add it to the `METRICS` list in `ctsReport.py` so reports
-and diffs surface it. There is exactly one metric implementation, in C++.
+`ChannelResult`, add it to `kReportMetrics` in `Report.h` (the C++ text/HTML),
+and to the `METRICS` list in `ctsReport.py` (the PDF). There is exactly one
+metric *implementation*, in C++; the two reported-metric lists are just display
+order for two independent readers of the one contract.
 
 **Sidecar schema change:** the sidecar is a versioned cross-language contract
-(ADR-0003). A purely incidental optional field (read with a default on the
-Python side) need not bump `kSidecarSchemaVersion`. Bump it when a change is
-either breaking *or* semantically significant to consumers — i.e. a field they
-should know to rely on — and update the Python reader in lockstep. v2 did the
-latter: it added the `device` object that the device-diff now keys runs on
-(plus the optional per-channel `diffImage`/`thresholdImage` debug paths), so the
-reader targets v2 and warns on older sidecars, prompting a regenerate.
+(ADR-0003) with two readers — the C++ `Sidecar` reader (`fromJson`) behind
+`report`, and `ctsReport.py` for the PDF. A purely incidental optional field
+(read with a default on both sides) need not bump `kSidecarSchemaVersion`. Bump
+it when a change is either breaking *or* semantically significant to consumers —
+i.e. a field they should know to rely on — and update both readers in lockstep.
+v2 did the latter: it added the `device` object that labels a run (plus the
+optional per-channel `diffImage`/`thresholdImage` debug paths), so the readers
+target v2 and warn on older sidecars, prompting a regenerate.
