@@ -37,6 +37,10 @@ enum class Verdict
 
 const char *verdictName(Verdict v);
 
+// Parse a verdict name; unknown names read as Skipped (best-effort, matching
+// the Python reader's default).
+Verdict verdictFromName(const std::string &name);
+
 // Which device produced a run, by the names the CLI loaded it with: the ANARI
 // library, the device subtype, and the selected renderer subtype. For a suite
 // whose purpose is comparing devices, this is what labels a run.
@@ -86,6 +90,19 @@ std::string toJson(const CaseResult &result);
 // Write the sidecar through a temporary sibling and atomically rename it into
 // place, creating parent directories. False on failure.
 bool writeSidecar(const std::filesystem::path &path, const CaseResult &result);
+
+// Parse sidecar JSON text into a CaseResult. Returns false when the text is not
+// a sidecar (invalid JSON or missing the `verdict` field). Optional fields read
+// with defaults, so older schema versions parse best-effort; when
+// `schemaMismatch` is non-null it is set true if the text's schemaVersion
+// differs from kSidecarSchemaVersion.
+bool fromJson(
+    const std::string &text, CaseResult &out, bool *schemaMismatch = nullptr);
+
+// Read and parse a sidecar file. False when unreadable or not a sidecar.
+bool readSidecar(const std::filesystem::path &path,
+    CaseResult &out,
+    bool *schemaMismatch = nullptr);
 
 } // namespace cts
 } // namespace anari

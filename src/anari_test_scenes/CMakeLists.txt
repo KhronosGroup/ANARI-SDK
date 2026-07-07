@@ -100,11 +100,13 @@ if (BUILD_CTS OR BUILD_TESTING)
     cts/FrameReadback.cpp
     cts/GeometryBuilder.cpp
     cts/GeometryLayout.cpp
+    cts/HtmlReport.cpp
     cts/Image.cpp
     cts/InstanceBuilder.cpp
     cts/LightBuilder.cpp
     cts/Metrics.cpp
     cts/ParameterBinding.cpp
+    cts/Report.cpp
     cts/Runner.cpp
     cts/Sidecar.cpp
     cts/SamplerBuilder.cpp
