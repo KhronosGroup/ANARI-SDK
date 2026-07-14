@@ -1,6 +1,6 @@
 {
     "info" : {
-        "name" : "KHR_SPATIAL_FIELD_STRUCTURED_REGULAR_CUBIC",
+        "name" : "KHR_SPATIAL_FIELD_STRUCTURED_REGULAR_FILTER_CUBIC",
         "type" : "extension",
         "dependencies" : ["khr_spatial_field_structured_regular"]
     },

@@ -58,7 +58,6 @@
                     "name" : "power",
                     "types" : ["ANARI_FLOAT32"],
                     "tags" : [],
-                    "default" : 1.0,
                     "description" : "overall amount of light energy emitted in W"
                 }
             ]

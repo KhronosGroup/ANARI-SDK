@@ -41,7 +41,7 @@ utility generator.
 | `KHR_FRAME_CHANNEL_INSTANCE_ID` | `frame/frame_instanceID_channel` exercises explicit instance IDs. |
 | `KHR_FRAME_CHANNEL_NORMAL` | `frame/frame_normal_channel` exercises `FIXED16_VEC3`, `FLOAT32_VEC3`. |
 | `KHR_FRAME_CHANNEL_OBJECT_ID` | `frame/frame_objectID_channel_surface`, `frame/frame_objectID_channel_group`, `frame/frame_objectID_channel_volume`. |
-| `KHR_FRAME_CHANNEL_PRIMITIVE_ID` | `frame/frame_primitiveID_channel` exercises triangle `primitive.id`. |
+| `KHR_FRAME_CHANNEL_PRIMITIVE_ID` | `frame/frame_primitiveID_channel` exercises implicit triangle primitive indices. |
 | `KHR_FRAME_COMPLETION_CALLBACK` | `frame/frame_completion_callback` behavior check verifies callback firing. |
 | `KHR_GEOMETRY_CONE` | 6 tests: basic primitive mode, color, frame color type, global caps, vertex caps, unused indexed vertices. |
 | `KHR_GEOMETRY_CURVE` | 5 tests: primitive mode, color, frame color type, global radius, unused indexed vertices. |
@@ -70,11 +70,6 @@ utility generator.
 | `KHR_SPATIAL_FIELD_STRUCTURED_REGULAR` | `volume/volume`, `geometry/isosurface`, and frame object-ID volume support use structuredRegular fields. |
 | `KHR_VOLUME_TRANSFER_FUNCTION1D` | `volume/volume` exercises value field, filter/origin/spacing, valueRange, color, opacity, unitDistance; `frame/frame_objectID_channel_volume` exercises object IDs on `transferFunction1D` volumes. |
 
-## Repository Extension Definition Drift
-
-- ANARI 1.1 names `KHR_CAMERA_ROLLING_SHUTTER`; `code_gen/api/khr_camera_rolling_shutter.json` has `info.name = KHR_CAMERA_SHUTTER`, so the generated extension utility has no `ANARI_KHR_CAMERA_ROLLING_SHUTTER` field.
-- ANARI 1.1 names `KHR_SPATIAL_FIELD_STRUCTURED_REGULAR_FILTER_CUBIC`; the repo JSON/header use `KHR_SPATIAL_FIELD_STRUCTURED_REGULAR_CUBIC`.
-
 ## ANARI 1.1 Extensions Not Tested
 
 | Extension | Observable feature missing from CTS |
@@ -82,12 +77,12 @@ utility generator.
 | `KHR_ARRAY1D_REGION` | `ANARIArray1D::region` parameter for changing the valid array region at runtime. |
 | `KHR_CAMERA_DEPTH_OF_FIELD` | Camera `apertureRadius` and `focusDistance`. |
 | `KHR_CAMERA_MOTION_TRANSFORMATION` | Camera `motion.transform`, `motion.scale`, `motion.rotation`, `motion.translation`, and `time` with shutter/motion blur. |
-| `KHR_CAMERA_ROLLING_SHUTTER` | `rollingShutterDirection` and `rollingShutterDuration`; also blocked by repo naming drift. |
+| `KHR_CAMERA_ROLLING_SHUTTER` | `rollingShutterDirection` and `rollingShutterDuration`. |
 | `KHR_CAMERA_SHUTTER` | Camera `shutter` and motion-blur interactions. |
 | `KHR_CAMERA_STEREO` | `stereoMode` values `left`, `right`, `sideBySide`, `topBottom`; `interpupillaryDistance`. |
-| `KHR_DATA_PARALLEL_MPI` | Device `mpiCommunicator`. This is hard to image-compare, but still query/behavior-testable. |
+| `KHR_DATA_PARALLEL_MPI` | Frame `mpiCommunicator`. This is hard to image-compare, but still query/behavior-testable. |
 | `KHR_DEVICE_SYNCHRONIZATION` | Relaxed API synchronization semantics. Could be query/behavior tested, not image tested. |
-| `KHR_GEOMETRY_QUAD_MOTION_DEFORMATION` | Quad `vertex.position`, `vertex.normal`, `vertex.tangent` arrays-of-arrays plus `time`. |
+| `KHR_GEOMETRY_QUAD_MOTION_DEFORMATION` | Quad `motion.vertex.position`, `motion.vertex.normal`, `motion.vertex.tangent` arrays-of-arrays plus `time`. |
 | `KHR_GEOMETRY_TRIANGLE_MOTION_DEFORMATION` | Triangle deformation arrays-of-arrays plus `time`. |
 | `KHR_INSTANCE_TRANSFORM_ARRAY` | Matrix-array transforms and array instance IDs on transform instances. |
 | `KHR_INSTANCE_MOTION_TRANSFORM` | `motionTransform` instance subtype, `motion.transform`, `time`, and shutter interaction. |
@@ -95,12 +90,12 @@ utility generator.
 | `KHR_LIGHT_PRIMARY_VISIBILITY` | `visible` behavior for area/environment lights. |
 | `KHR_RENDERER_DENOISE` | Renderer `denoise` boolean; the runner can request it, but no dedicated Test verifies the behavior. |
 | `KHR_SPATIAL_FIELD_NANOVDB` | `nanovdb` field subtype, `data`, and filter. |
-| `KHR_SPATIAL_FIELD_STRUCTURED_REGULAR_FILTER_CUBIC` | `structuredRegular.filter = cubic`; blocked by repo naming drift. |
+| `KHR_SPATIAL_FIELD_STRUCTURED_REGULAR_FILTER_CUBIC` | `structuredRegular.filter = cubic`. |
 | `KHR_SPATIAL_FIELD_UNSTRUCTURED` | `unstructured` field subtype and its vertex/cell topology/data parameters. |
 
 ## Partial Coverage Inside Tested Areas
 
-Geometry coverage is broad for subtype smoke/rendering, but shallow across legal parameter types. The tests cover indexed vs soup, colors, some attributes, caps/radii, normal/tangent on triangle/quad, and depth/color channels. They do not cover uniform geometry `color` or `attribute0..3`, face-varying data on triangle/quad, most allowed color element types, `UINT64` indices/IDs, `primitive.id` across every geometry subtype, scalar `isovalue`, or motion deformation.
+Geometry coverage is broad for subtype smoke/rendering, but shallow across legal parameter types. The tests cover indexed vs soup, colors, some attributes, caps/radii, normal/tangent on triangle/quad, and depth/color channels. They do not cover uniform geometry `color` or `attribute0..3`, face-varying data on triangle/quad, most allowed color element types, `UINT64` indices, scalar `isovalue`, or motion deformation.
 
 Material coverage is one of the stronger areas. It tests matte and physicallyBased parameters using constants, attributes, samplers, and unset defaults for most visible PBR knobs. Gaps remain for physicallyBased `occlusion`, full texture/element-type diversity, interaction tests between multiple PBR features, and edge/default-value assertions beyond image comparison.
 
@@ -120,7 +115,6 @@ Instance coverage only tests the basic `transform` subtype with one explicit mat
 
 ## Priority Fix List
 
-1. Align generated extension names for rolling shutter and cubic structuredRegular filtering.
-2. Add focused CTS tests for the 1.1 new extensions: MPI query/behavior, transform arrays, light primary visibility, denoise, nanovdb, cubic filter, and unstructured field; isosurface already has a Test.
-3. Add motion/shutter family tests as a group: camera shutter, camera rolling shutter, camera motion transformation, triangle/quad deformation, instance motion transform, and instance decomposed motion.
-4. Deepen typed-format coverage for geometry attributes/colors, samplers, frame channels, volume color/valueRange, and ID channels.
+1. Add focused CTS tests for the 1.1 new extensions: MPI query/behavior, transform arrays, light primary visibility, denoise, nanovdb, cubic filter, and unstructured field; isosurface already has a Test.
+2. Add motion/shutter family tests as a group: camera shutter, camera rolling shutter, camera motion transformation, triangle/quad deformation, instance motion transform, and instance decomposed motion.
+3. Deepen typed-format coverage for geometry attributes/colors, samplers, frame channels, volume color/valueRange, and ID channels.

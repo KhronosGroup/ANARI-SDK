@@ -52,13 +52,11 @@
                     "name" : "power",
                     "types" : ["ANARI_FLOAT32"],
                     "tags" : [],
-                    "default" : 1.0,
                     "description" : "overall amount of light energy emitted in W"
                 }, {
                     "name" : "radiance",
                     "types" : ["ANARI_FLOAT32"],
                     "tags" : [],
-                    "default" : 1.0,
                     "description" : "the amount of light emitted by a point on the light source in a direction in W/sr/m^2"
                 }, {
                     "name" : "side",
@@ -70,7 +68,7 @@
                 }, {
                     "name" : "intensityDistribution",
                     "types" : ["ANARI_ARRAY1D", "ANARI_ARRAY2D"],
-                    "elementType" : ["ANARI_FLOAT32_VEC3"],
+                    "elementType" : ["ANARI_FLOAT32"],
                     "tags" : [],
                     "description" : "luminous intensity distribution for photometric lights"
                 }

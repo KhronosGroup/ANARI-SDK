@@ -262,11 +262,6 @@ void registerFrameTests(Catalog &catalog)
         TriangleSpec spec;
         spec.primitiveCount = 8;
         auto geom = buildTriangleGeometry(d, spec);
-        std::vector<uint32_t> ids = {5, 3, 4, 2, 7, 6, 0, 1};
-        anari::setAndReleaseParameter(d,
-            geom,
-            "primitive.id",
-            anari::newArray1D(d, ids.data(), ids.size()));
         anari::commitParameters(d, geom);
         auto mat = makeMatteMaterial(d, float3(0.7f, 0.7f, 0.7f));
         auto surface = makeSurface(d, geom, mat);
