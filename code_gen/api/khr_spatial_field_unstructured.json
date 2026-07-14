@@ -9,7 +9,7 @@
         {
             "type" : "ANARI_SPATIAL_FIELD",
             "name" : "unstructured",
-            "description" : "ustructured spatial field object",
+            "description" : "unstructured spatial field object",
             "parameters" : [
                 {
                     "name" : "name",
@@ -31,7 +31,7 @@
                 }, {
                     "name" : "index",
                     "types" : ["ANARI_ARRAY1D"],
-                    "elementType" : ["ANARI_UINT32_VEC3"],
+                    "elementType" : ["ANARI_UINT32"],
                     "tags" : [],
                     "description" : "index array"
                 }, {
@@ -41,7 +41,7 @@
                     "tags" : [],
                     "description" : "cell-centered scalar values"
                 }, {
-                    "name" : "cell.ype",
+                    "name" : "cell.type",
                     "types" : ["ANARI_ARRAY1D"],
                     "elementType" : ["ANARI_UINT8"],
                     "tags" : [],

@@ -1,6 +1,6 @@
 {
     "info" : {
-        "name" : "KHR_CAMERA_SHUTTER",
+        "name" : "KHR_CAMERA_ROLLING_SHUTTER",
         "type" : "extension",
         "dependencies" : ["khr_camera_shutter"]
     },

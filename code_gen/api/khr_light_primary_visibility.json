@@ -1,0 +1,90 @@
+{
+    "info" : {
+        "name" : "KHR_LIGHT_PRIMARY_VISIBILITY",
+        "type" : "extension",
+        "dependencies" : [
+            "khr_light_directional",
+            "khr_light_hdri",
+            "khr_light_point",
+            "khr_light_quad",
+            "khr_light_ring",
+            "khr_light_spot"
+        ]
+    },
+
+    "objects" : [
+        {
+            "type" : "ANARI_LIGHT",
+            "name" : "directional",
+            "parameters" : [
+                {
+                    "name" : "visible",
+                    "types" : ["ANARI_BOOL"],
+                    "tags" : [],
+                    "default" : true,
+                    "description" : "whether the light can be directly seen"
+                }
+            ]
+        }, {
+            "type" : "ANARI_LIGHT",
+            "name" : "point",
+            "parameters" : [
+                {
+                    "name" : "visible",
+                    "types" : ["ANARI_BOOL"],
+                    "tags" : [],
+                    "default" : true,
+                    "description" : "whether the light can be directly seen"
+                }
+            ]
+        }, {
+            "type" : "ANARI_LIGHT",
+            "name" : "spot",
+            "parameters" : [
+                {
+                    "name" : "visible",
+                    "types" : ["ANARI_BOOL"],
+                    "tags" : [],
+                    "default" : true,
+                    "description" : "whether the light can be directly seen"
+                }
+            ]
+        }, {
+            "type" : "ANARI_LIGHT",
+            "name" : "quad",
+            "parameters" : [
+                {
+                    "name" : "visible",
+                    "types" : ["ANARI_BOOL"],
+                    "tags" : [],
+                    "default" : true,
+                    "description" : "whether the light can be directly seen"
+                }
+            ]
+        }, {
+            "type" : "ANARI_LIGHT",
+            "name" : "ring",
+            "parameters" : [
+                {
+                    "name" : "visible",
+                    "types" : ["ANARI_BOOL"],
+                    "tags" : [],
+                    "default" : true,
+                    "description" : "whether the light can be directly seen"
+                }
+            ]
+        }, {
+            "type" : "ANARI_LIGHT",
+            "name" : "hdri",
+            "parameters" : [
+                {
+                    "name" : "visible",
+                    "types" : ["ANARI_BOOL"],
+                    "tags" : [],
+                    "default" : true,
+                    "description" : "whether the light can be directly seen"
+                }
+            ]
+        }
+    ]
+}

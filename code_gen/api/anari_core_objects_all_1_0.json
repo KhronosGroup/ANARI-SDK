@@ -4,7 +4,6 @@
         "type" : "meta",
         "dependencies" : [
             "anari_core_objects_base_1_0",
-            "khr_area_lights",
             "khr_array1d_region",
             "khr_camera_depth_of_field",
             "khr_camera_motion_transformation",
@@ -36,6 +35,7 @@
             "khr_light_directional",
             "khr_light_hdri",
             "khr_light_point",
+            "khr_light_primary_visibility",
             "khr_light_quad",
             "khr_light_ring",
             "khr_light_spot",
