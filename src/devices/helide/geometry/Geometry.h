@@ -29,19 +29,13 @@ struct Geometry : public Object
 
   UniformAttributeSet m_uniformAttr;
   std::array<helium::IntrusivePtr<Array1D>, 5> m_primitiveAttr;
-  helium::IntrusivePtr<Array1D> m_primitiveId;
 };
 
 // Inlined definitions ////////////////////////////////////////////////////////
 
 inline uint32_t Geometry::getPrimID(const Ray &ray) const
 {
-  if (m_primitiveId) {
-    return m_primitiveId->elementType() == ANARI_UINT32
-        ? *m_primitiveId->valueAt<uint32_t>(ray.primID)
-        : uint32_t(*m_primitiveId->valueAt<uint64_t>(ray.primID));
-  } else
-    return ray.primID;
+  return ray.primID;
 }
 
 } // namespace helide

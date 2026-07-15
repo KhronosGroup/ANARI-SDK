@@ -21,7 +21,6 @@ struct CylinderGPUState
   GPUBuffer vertexData;
   GPUBuffer sourceVertexIds;
   GPUBuffer sourcePrimitiveIds;
-  GPUBuffer primitiveIds;
   GPUBuffer attr[NUM_ATTR_SLOTS];
 
   uint32_t vertexCount{0};
@@ -31,7 +30,6 @@ struct CylinderGPUState
   uint32_t packedComponents{0};
   vec4 uniformAttr[NUM_ATTR_SLOTS]{};
   bool hasSourcePrimitiveIds{false};
-  bool hasPrimitiveIds{false};
 };
 
 struct Cylinder : public Geometry
@@ -62,7 +60,6 @@ struct Cylinder : public Geometry
   helium::ChangeObserverPtr<Array1D> m_indices;
   helium::ChangeObserverPtr<Array1D> m_radii;
   helium::ChangeObserverPtr<Array1D> m_caps;
-  helium::ChangeObserverPtr<Array1D> m_primitiveIds;
   float m_uniformRadius{0.01f};
   std::string m_globalCaps{"none"};
 

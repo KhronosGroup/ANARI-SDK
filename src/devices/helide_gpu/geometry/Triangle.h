@@ -20,9 +20,8 @@ struct TriangleGPUState
   GPUBuffer positions; // slot 0
   GPUBuffer normals; // slot 1
   GPUBuffer indices; // slot 2
-  GPUBuffer attr[NUM_ATTR_SLOTS]; // slots 3-7 (legacy) or 1-5 (mesh path)
+  GPUBuffer attr[NUM_ATTR_SLOTS]; // slots 3-7 (legacy) or 2-6 (mesh path)
   GPUBuffer sourcePrimitiveIds; // source primitive index per generated triangle
-  GPUBuffer primitiveIds; // optional primitive.id remap per source primitive
 
   // Explicit vertex-input representation used by triangle geometry.
   GPUBuffer vertexData;
@@ -38,7 +37,6 @@ struct TriangleGPUState
   bool hasIndices{false};
   bool hasNormals{false};
   bool hasSourcePrimitiveIds{false};
-  bool hasPrimitiveIds{false};
 };
 
 struct Triangle : public Geometry
@@ -68,7 +66,6 @@ struct Triangle : public Geometry
   helium::ChangeObserverPtr<Array1D> m_positions;
   helium::ChangeObserverPtr<Array1D> m_normals;
   helium::ChangeObserverPtr<Array1D> m_indices;
-  helium::ChangeObserverPtr<Array1D> m_primitiveIds;
 
   // Per-vertex and per-primitive arrays for each attribute slot
   // Slot 0 = color, 1-4 = attribute0..3

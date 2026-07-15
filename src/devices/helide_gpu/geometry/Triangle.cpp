@@ -16,8 +16,7 @@ Triangle::Triangle(HelideGPUDeviceGlobalState *s)
     : Geometry(s),
       m_positions(this),
       m_normals(this),
-      m_indices(this),
-      m_primitiveIds(this)
+      m_indices(this)
 {
   m_vertexAttr.reserve(NUM_ATTR_SLOTS);
   m_primitiveAttr.reserve(NUM_ATTR_SLOTS);
@@ -37,7 +36,6 @@ void Triangle::commitParameters()
   m_positions = getParamObject<Array1D>("vertex.position");
   m_normals = getParamObject<Array1D>("vertex.normal");
   m_indices = getParamObject<Array1D>("primitive.index");
-  m_primitiveIds = getParamObject<Array1D>("primitive.id");
 
   // Attribute slot 0 = color, slots 1-4 = attribute0..3
   m_vertexAttr[0] = getParamObject<Array1D>("vertex.color");
@@ -112,31 +110,29 @@ void Triangle::bindPipelineAndBuffers(SDL_GPURenderPass *pass,
 
     const bool usingMSL =
         ds->gpu.sdlDevice.shaderFormat == SDL_GPU_SHADERFORMAT_MSL;
-    SDL_GPUBuffer *storageBufs[8];
+    SDL_GPUBuffer *storageBufs[7];
     if (usingMSL) {
       storageBufs[0] =
           gs.sourcePrimitiveIds ? gs.sourcePrimitiveIds.sdlBuffer() : dummyBuf;
-      storageBufs[1] = gs.primitiveIds ? gs.primitiveIds.sdlBuffer() : dummyBuf;
-      storageBufs[2] = gs.sourceVertexIds ? gs.sourceVertexIds.sdlBuffer()
+      storageBufs[1] = gs.sourceVertexIds ? gs.sourceVertexIds.sdlBuffer()
                                           : dummyBuf;
-      storageBufs[3] = gs.attr[0] ? gs.attr[0].sdlBuffer() : dummyBuf;
-      storageBufs[4] = gs.attr[1] ? gs.attr[1].sdlBuffer() : dummyBuf;
-      storageBufs[5] = gs.attr[2] ? gs.attr[2].sdlBuffer() : dummyBuf;
-      storageBufs[6] = gs.attr[3] ? gs.attr[3].sdlBuffer() : dummyBuf;
-      storageBufs[7] = gs.attr[4] ? gs.attr[4].sdlBuffer() : dummyBuf;
+      storageBufs[2] = gs.attr[0] ? gs.attr[0].sdlBuffer() : dummyBuf;
+      storageBufs[3] = gs.attr[1] ? gs.attr[1].sdlBuffer() : dummyBuf;
+      storageBufs[4] = gs.attr[2] ? gs.attr[2].sdlBuffer() : dummyBuf;
+      storageBufs[5] = gs.attr[3] ? gs.attr[3].sdlBuffer() : dummyBuf;
+      storageBufs[6] = gs.attr[4] ? gs.attr[4].sdlBuffer() : dummyBuf;
     } else {
       storageBufs[0] = gs.sourceVertexIds ? gs.sourceVertexIds.sdlBuffer()
                                           : dummyBuf;
       storageBufs[1] =
           gs.sourcePrimitiveIds ? gs.sourcePrimitiveIds.sdlBuffer() : dummyBuf;
-      storageBufs[2] = gs.primitiveIds ? gs.primitiveIds.sdlBuffer() : dummyBuf;
-      storageBufs[3] = gs.attr[0] ? gs.attr[0].sdlBuffer() : dummyBuf;
-      storageBufs[4] = gs.attr[1] ? gs.attr[1].sdlBuffer() : dummyBuf;
-      storageBufs[5] = gs.attr[2] ? gs.attr[2].sdlBuffer() : dummyBuf;
-      storageBufs[6] = gs.attr[3] ? gs.attr[3].sdlBuffer() : dummyBuf;
-      storageBufs[7] = gs.attr[4] ? gs.attr[4].sdlBuffer() : dummyBuf;
+      storageBufs[2] = gs.attr[0] ? gs.attr[0].sdlBuffer() : dummyBuf;
+      storageBufs[3] = gs.attr[1] ? gs.attr[1].sdlBuffer() : dummyBuf;
+      storageBufs[4] = gs.attr[2] ? gs.attr[2].sdlBuffer() : dummyBuf;
+      storageBufs[5] = gs.attr[3] ? gs.attr[3].sdlBuffer() : dummyBuf;
+      storageBufs[6] = gs.attr[4] ? gs.attr[4].sdlBuffer() : dummyBuf;
     }
-    SDL_BindGPUVertexStorageBuffers(pass, 0, storageBufs, 8);
+    SDL_BindGPUVertexStorageBuffers(pass, 0, storageBufs, 7);
 
     struct
     {
@@ -148,10 +144,7 @@ void Triangle::bindPipelineAndBuffers(SDL_GPURenderPass *pass,
     } u{ctx.MVP,
         ctx.MV,
         ctx.M,
-        uvec4(gs.attrMask,
-            gs.hasSourcePrimitiveIds ? 1u : 0u,
-            gs.hasPrimitiveIds ? 1u : 0u,
-            0u),
+        uvec4(gs.attrMask, gs.hasSourcePrimitiveIds ? 1u : 0u, 0u, 0u),
         uvec4(gs.attrKind, gs.packedComponents, 0u, 0u)};
     SDL_PushGPUVertexUniformData(cmd, 0, &u, sizeof(u));
   } else if (ds->gpu.trianglePipeline && gs.positions) {
@@ -259,31 +252,6 @@ void Triangle::gpu_finalizeGeometry()
         buf.uploadArray(arr, convertToFloat);
       };
 
-  auto syncPrimitiveIdBuffer = [dev, numPrims](GPUBuffer &buf, const Array1D *arr) {
-    if (!arr || arr->size() < numPrims) {
-      buf = {};
-      return false;
-    }
-
-    std::vector<uint32_t> ids(numPrims, 0u);
-    if (arr->elementType() == ANARI_UINT32) {
-      const auto *src = arr->beginAs<uint32_t>();
-      std::copy(src, src + numPrims, ids.begin());
-    } else if (arr->elementType() == ANARI_UINT64) {
-      const auto *src = arr->beginAs<uint64_t>();
-      for (size_t i = 0; i < numPrims; ++i)
-        ids[i] = static_cast<uint32_t>(src[i]);
-    } else {
-      buf = {};
-      return false;
-    }
-
-    if (!buf)
-      buf = GPUBuffer(dev, SDL_GPU_BUFFERUSAGE_GRAPHICS_STORAGE_READ);
-    buf.upload(ids.data(), ids.size());
-    return true;
-  };
-
   // Build an explicit draw-ready vertex stream for triangle geometry.
   // This avoids the gl_VertexIndex + SSBO fetch path on Metal.
   std::vector<float> vertexData(numPrims * 3 * 6, 0.f);
@@ -354,8 +322,6 @@ void Triangle::gpu_finalizeGeometry()
   m_gpuState.hasNormals = true;
   m_gpuState.sourcePrimitiveIds = {};
   m_gpuState.hasSourcePrimitiveIds = false;
-  m_gpuState.hasPrimitiveIds =
-      syncPrimitiveIdBuffer(m_gpuState.primitiveIds, m_primitiveIds.get());
 
   // --- Sync attribute arrays ---
   m_gpuState.attrMask = 0;
@@ -397,7 +363,6 @@ void Triangle::gpu_freeGeometry()
   for (int s = 0; s < NUM_ATTR_SLOTS; ++s)
     m_gpuState.attr[s] = {};
   m_gpuState.sourcePrimitiveIds = {};
-  m_gpuState.primitiveIds = {};
   m_gpuState.vertexCount = 0;
   m_gpuState.triangleCount = 0;
   m_gpuState.posCount = 0;
@@ -407,7 +372,6 @@ void Triangle::gpu_freeGeometry()
   m_gpuState.hasIndices = false;
   m_gpuState.hasNormals = false;
   m_gpuState.hasSourcePrimitiveIds = false;
-  m_gpuState.hasPrimitiveIds = false;
 }
 
 } // namespace helide_gpu
