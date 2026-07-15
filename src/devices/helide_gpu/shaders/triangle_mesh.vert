@@ -6,19 +6,18 @@ layout(location = 1) in vec3 inNormal;
 // Per-triangle-mesh storage buffers (set=0 for vertex stage in SDL3_gpu SPIR-V)
 layout(set = 0, binding = 0, std430) readonly buffer SrcVertexIdBuf { uint sourceVertexIds[]; };
 layout(set = 0, binding = 1, std430) readonly buffer SrcPrimIndexBuf { uint sourcePrimitiveIds[]; };
-layout(set = 0, binding = 2, std430) readonly buffer PrimitiveIdBuf { uint primitiveIds[]; };
-layout(set = 0, binding = 3, std430) readonly buffer Attr0Buf { float attr0Data[]; };
-layout(set = 0, binding = 4, std430) readonly buffer Attr1Buf { float attr1Data[]; };
-layout(set = 0, binding = 5, std430) readonly buffer Attr2Buf { float attr2Data[]; };
-layout(set = 0, binding = 6, std430) readonly buffer Attr3Buf { float attr3Data[]; };
-layout(set = 0, binding = 7, std430) readonly buffer Attr4Buf { float attr4Data[]; };
+layout(set = 0, binding = 2, std430) readonly buffer Attr0Buf { float attr0Data[]; };
+layout(set = 0, binding = 3, std430) readonly buffer Attr1Buf { float attr1Data[]; };
+layout(set = 0, binding = 4, std430) readonly buffer Attr2Buf { float attr2Data[]; };
+layout(set = 0, binding = 5, std430) readonly buffer Attr3Buf { float attr3Data[]; };
+layout(set = 0, binding = 6, std430) readonly buffer Attr4Buf { float attr4Data[]; };
 
 // Vertex uniforms (set=1, binding=0 in SDL3_gpu SPIR-V convention)
 layout(set = 1, binding = 0) uniform Transforms {
     mat4 MVP;   // proj * view * model
     mat4 MV;    // view * model
     mat4 M;     // model (world) transform
-    uvec4 geomInfo;  // x=attrMask, y=hasSourcePrimitiveIds, z=hasPrimitiveIds
+    uvec4 geomInfo;  // x=attrMask, y=hasSourcePrimitiveIds
     uvec4 attrInfo;  // x=attrKind (per-prim bitmask), y=packedComponents
 } u;
 
@@ -52,7 +51,6 @@ void main()
     uint vid = gl_VertexIndex;
     uint triId = vid / 3u;
     uint sourcePrimIndex = (u.geomInfo.y != 0u) ? sourcePrimitiveIds[triId] : triId;
-    uint primitiveId = (u.geomInfo.z != 0u) ? primitiveIds[sourcePrimIndex] : sourcePrimIndex;
     uint posIdx = sourceVertexIds[vid];
 
     vec3 pos = inPosition;
@@ -99,7 +97,7 @@ void main()
     }
 
     vPrimitiveIndex = sourcePrimIndex;
-    vPrimitiveId = primitiveId;
+    vPrimitiveId = sourcePrimIndex;
     gl_Position = u.MVP * vec4(pos, 1.0);
     gl_Position.y = -gl_Position.y;
 }
