@@ -166,7 +166,7 @@ void HelideGPUDeviceGlobalState::gpu_initPipelines()
   {
     SDL_GPUShaderCreateInfo vertInfo{};
     fillShaderInfo(vertInfo, kTriangleMeshVert, fmt, SDL_GPU_SHADERSTAGE_VERTEX);
-    vertInfo.num_storage_buffers = 8;
+    vertInfo.num_storage_buffers = 7;
     vertInfo.num_uniform_buffers = 1;
 
     auto *vert = SDL_CreateGPUShader(dev, &vertInfo);
