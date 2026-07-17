@@ -113,8 +113,7 @@ static bool _FlipVIfHolding(VtValue *value)
 
 static VtValue _FlipTextureCoordinateV(VtValue value)
 {
-  _FlipVIfHolding<VtVec2fArray>(&value)
-      || _FlipVIfHolding<VtVec3fArray>(&value)
+  _FlipVIfHolding<VtVec2fArray>(&value) || _FlipVIfHolding<VtVec3fArray>(&value)
       || _FlipVIfHolding<VtVec2dArray>(&value)
       || _FlipVIfHolding<VtVec2hArray>(&value);
   return value;
@@ -585,10 +584,12 @@ void HdAnariGeometry::Sync(HdSceneDelegate *sceneDelegate,
   // when its own bound data changed. Use the rprim's geometry dirty bits only:
   // instancer primvar dirtiness (transform, per-instance values) is bound on
   // the instance, not the geometry, and must not trigger a geometry rebuild.
-  const bool geometryDataDirty = (*dirtyBits
-      & (HdChangeTracker::DirtyPoints | HdChangeTracker::DirtyNormals
-          | HdChangeTracker::DirtyTopology | HdChangeTracker::DirtyPrimvar
-          | HdChangeTracker::DirtyDisplayStyle | HdChangeTracker::DirtyWidths))
+  const bool geometryDataDirty =
+      (*dirtyBits
+          & (HdChangeTracker::DirtyPoints | HdChangeTracker::DirtyNormals
+              | HdChangeTracker::DirtyTopology | HdChangeTracker::DirtyPrimvar
+              | HdChangeTracker::DirtyDisplayStyle
+              | HdChangeTracker::DirtyWidths))
       != 0;
 
   // Based on the above, gather needed primvars descriptors. To be used to
@@ -926,7 +927,8 @@ void HdAnariGeometry::Sync(HdSceneDelegate *sceneDelegate,
       for (const auto &bindingPoint : geomSpecificRemovedBindings) {
         anari::unsetParameter(
             device_, geometryDesc.geometry, bindingPoint.GetText());
-      }      anari::commitParameters(device_, geometryDesc.geometry);
+      }
+      anari::commitParameters(device_, geometryDesc.geometry);
     } else {
       // Unchanged geometry: keep the existing anari object and carry the
       // geom-specific binding bookkeeping forward for the next sync's diff.
@@ -938,7 +940,8 @@ void HdAnariGeometry::Sync(HdSceneDelegate *sceneDelegate,
     // actually changed. DirtyMaterialId is re-flagged every frame on Varying
     // prims; committing the surface unconditionally would reset the renderer's
     // accumulation each frame and prevent convergence.
-    if (geometryDesc.material != geomInfo.material) {      geometryDesc.material = geomInfo.material;
+    if (geometryDesc.material != geomInfo.material) {
+      geometryDesc.material = geomInfo.material;
       anari::setParameter(
           device_, geometryDesc.surface, "material", geomInfo.material);
       anari::commitParameters(device_, geometryDesc.surface);
@@ -966,7 +969,8 @@ void HdAnariGeometry::Sync(HdSceneDelegate *sceneDelegate,
             "transform",
             GfMatrix4f(baseTransform));
         anari::setParameter(device_, geometryDesc.instance, "id", 0u);
-      }      anari::commitParameters(device_, geometryDesc.instance);
+      }
+      anari::commitParameters(device_, geometryDesc.instance);
     }
     instances.push_back(geometryDesc.instance);
   }
