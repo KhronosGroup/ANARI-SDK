@@ -71,8 +71,6 @@ void HdAnariMesh::Sync(HdSceneDelegate *sceneDelegate,
 
   if (HdChangeTracker::IsTopologyDirty(*dirtyBits, GetId())
       || (*dirtyBits & HdChangeTracker::DirtyDisplayStyle)) {
-    auto rp = static_cast<HdAnariRenderParam *>(renderParam_);
-
     // Refine the control cage to the USD complexity-derived level. When the
     // mesh isn't refinable (no scheme / level 0 / geom subsets) we keep the
     // coarse topology. Refinement clears the subdivision scheme, so the result
@@ -80,37 +78,26 @@ void HdAnariMesh::Sync(HdSceneDelegate *sceneDelegate,
     const HdMeshTopology coarseTopology(GetMeshTopology(sceneDelegate), 0);
     const int refineLevel = sceneDelegate->GetDisplayStyle(GetId()).refineLevel;
     subdivision_ = HdAnariSubdivision::Create(coarseTopology, refineLevel);
-    topology_ =
-        subdivision_ ? subdivision_->refinedTopology() : coarseTopology;
+    topology_ = subdivision_ ? subdivision_->refinedTopology() : coarseTopology;
     meshUtil_ = std::make_unique<HdAnariMeshUtil>(&topology_, GetId());
 
     meshUtil_->ComputeTriangleIndices(
         &triangulatedIndices_, &trianglePrimitiveParams_);
 
-    // Create transient mapping structure to be able to map a face to its
-    // subdivised triangles. To be used to build geomsubset topology.
-    VtIntArray trianglesCounts;
-
-    auto count = 1ull;
-    auto prev = HdMeshUtil::DecodeFaceIndexFromCoarseFaceParam(
-        trianglePrimitiveParams_.front());
-    for (auto i = 1ull; i < trianglePrimitiveParams_.size(); ++i) {
-      auto pp = trianglePrimitiveParams_[i];
+    // Map each coarse face to its triangulated triangle span. Indexed by true
+    // coarse face index (not order-of-appearance): a face that triangulates to
+    // zero triangles keeps a count of 0 and an empty span, so geom-subset face
+    // indices stay in bounds even when an earlier face is degenerate.
+    const int numFaces = topology_.GetNumFaces();
+    VtIntArray trianglesCounts(numFaces, 0);
+    for (auto pp : trianglePrimitiveParams_) {
       int faceIndex = HdMeshUtil::DecodeFaceIndexFromCoarseFaceParam(pp);
-      if (faceIndex != prev) {
-        trianglesCounts.push_back(count);
-        prev = faceIndex;
-        count = 1;
-      } else {
-        ++count;
-      }
+      ++trianglesCounts[faceIndex];
     }
-    trianglesCounts.push_back(count);
 
-    VtIntArray trianglesStarts(1, 0);
-    for (auto i = 0; i < trianglesCounts.size(); ++i) {
-      trianglesStarts.push_back(trianglesStarts.back() + trianglesCounts[i]);
-    }
+    VtIntArray trianglesStarts(numFaces + 1, 0);
+    for (int i = 0; i < numFaces; ++i)
+      trianglesStarts[i + 1] = trianglesStarts[i] + trianglesCounts[i];
 
     // Build topology/triangle sets for each subgeom.
     // Release any previously owned anari array before assigning the new one.
@@ -157,6 +144,12 @@ void HdAnariMesh::Sync(HdSceneDelegate *sceneDelegate,
       for (auto subset : geomsubsets_) {
         for (auto faceIndex : subset.indices)
           faceCovered[faceIndex] = true;
+        // Release any array previously held for this subset before replacing
+        // it; this block re-runs on DirtyDisplayStyle, not just topology
+        // change.
+        if (auto it = geomSubsetTriangles_.find(subset.id);
+            it != cend(geomSubsetTriangles_))
+          anari::release(device_, it->second);
         geomSubsetTriangles_[subset.id] = buildTriangles(subset.indices);
       }
 

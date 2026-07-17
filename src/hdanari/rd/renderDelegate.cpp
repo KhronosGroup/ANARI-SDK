@@ -223,9 +223,10 @@ HdAnariRenderDelegate::GetRenderSettingDescriptors() const
   return _settingDescriptors;
 }
 
-const HdAnariRendererParamList &
-HdAnariRenderDelegate::GetRendererParameters() const
+HdAnariRendererParamList HdAnariRenderDelegate::GetRendererParameters() const
 {
+  // Return a copy: a concurrent SyncActiveRendererSubtype reallocates
+  // _rendererParams, so a reference would dangle while the caller iterates.
   std::lock_guard<std::mutex> guard(_settingsMutex);
   return _rendererParams;
 }
