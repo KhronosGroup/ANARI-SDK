@@ -15,9 +15,13 @@
 
 #include <anari/anari_cpp.hpp>
 
+#include <cmath>
+
 PXR_NAMESPACE_OPEN_SCOPE
 
 namespace {
+
+constexpr float kPi = 3.14159265358979323846f;
 
 // Stage up axis used to align a dome light whose poleAxis is "scene".
 TfToken ResolveDomePoleAxis(HdSceneDelegate *sceneDelegate, const SdfPath &id)
@@ -114,6 +118,15 @@ void HdAnariLight::Sync(HdSceneDelegate *sceneDelegate,
     float intensity =
         sceneDelegate->GetLightParamValue(id, HdLightTokens->intensity)
             .GetWithDefault<float>(1.0f);
+    float exposure =
+        sceneDelegate->GetLightParamValue(id, HdLightTokens->exposure)
+            .GetWithDefault<float>(0.0f);
+    // UsdLux folds exposure into intensity as a power-of-two stop scale.
+    float scaledIntensity = intensity * std::exp2(exposure);
+    auto color = sceneDelegate->GetLightParamValue(id, HdLightTokens->color)
+                     .GetWithDefault<GfVec3f>(GfVec3f(1.0f));
+    // When set, UsdLux area lights hold total emitted power constant by
+    // dividing the authored radiance by the emitter area.
     bool normalize =
         sceneDelegate->GetLightParamValue(id, HdLightTokens->normalize)
             .GetWithDefault<bool>(false);
@@ -121,14 +134,27 @@ void HdAnariLight::Sync(HdSceneDelegate *sceneDelegate,
     if (lightType_ == HdPrimTypeTokens->sphereLight) {
       float radius =
           sceneDelegate->GetLightParamValue(id, HdLightTokens->radius)
-              .GetWithDefault<float>(0.0f);
+              .GetWithDefault<float>(0.5f);
       anari::setParameter(device_, light_, "radius", radius);
+      // Authored emission was previously dropped; the ANARI point light stayed
+      // at its default. Map UsdLux intensity to radiant intensity (W/sr).
+      // normalize holds total power constant by dividing by the emitter surface
+      // area (4*pi*r^2), matching the rect/disk lights.
+      float area = 4.0f * kPi * radius * radius;
+      float intensity =
+          (normalize && area > 0.0f) ? scaledIntensity / area : scaledIntensity;
+      anari::setParameter(device_, light_, "color", color);
+      anari::setParameter(device_, light_, "intensity", intensity);
     } else if (lightType_ == HdPrimTypeTokens->distantLight) {
       anari::setParameter(
           device_, light_, "direction", GfVec3f(0.0f, 0.0f, -1.0f));
       float angle = sceneDelegate->GetLightParamValue(id, HdLightTokens->angle)
                         .GetWithDefault<float>(0.53f);
       anari::setParameter(device_, light_, "angularDiameter", angle);
+      // Authored intensity/exposure/color were previously dropped, leaving the
+      // ANARI directional light at its default irradiance of 1 W/m^2.
+      anari::setParameter(device_, light_, "color", color);
+      anari::setParameter(device_, light_, "irradiance", scaledIntensity);
     } else if (lightType_ == HdPrimTypeTokens->domeLight) {
       // ANARI hdri up/direction are world-space directions the device rotates
       // by the instance transform, so they hold the latlong frame relative to
@@ -145,23 +171,31 @@ void HdAnariLight::Sync(HdSceneDelegate *sceneDelegate,
           "up",
           GfVec3f(poleAlign.TransformDir(GfVec3d(0.0, 1.0, 0.0))));
 
-      auto intensity =
-          sceneDelegate->GetLightParamValue(id, HdLightTokens->intensity)
-              .GetWithDefault<float>(1.0f);
-      anari::setParameter(device_, light_, "scale", intensity);
+      anari::setParameter(device_, light_, "color", color);
+      anari::setParameter(device_, light_, "scale", scaledIntensity);
     } else if (lightType_ == HdPrimTypeTokens->rectLight) {
       auto width = sceneDelegate->GetLightParamValue(id, HdLightTokens->width)
                        .GetWithDefault<float>(1.0f);
       auto height = sceneDelegate->GetLightParamValue(id, HdLightTokens->height)
                         .GetWithDefault<float>(1.0f);
-      auto edge1 = GfVec3f(width / 2.0f, 0.0f, 0.0f);
-      auto edge2 = GfVec3f(0.0f, height / 2.0f, 0.0f);
+      // edge1 x edge2 is the emitting normal; order the full-width edges so it
+      // points along local -Z to match UsdLux rect emission.
+      auto edge1 = GfVec3f(width, 0.0f, 0.0f);
+      auto edge2 = GfVec3f(0.0f, -height, 0.0f);
       anari::setParameter(device_,
           light_,
           "position",
-          GfVec3f(-width / 2.0f, -height / 2.0f, 0.0f));
+          GfVec3f(-width / 2.0f, height / 2.0f, 0.0f));
       anari::setParameter(device_, light_, "edge1", edge1);
       anari::setParameter(device_, light_, "edge2", edge2);
+      // UsdLux rect intensity is emitted radiance; normalize divides it by the
+      // emitter area so total power is size-independent. The ANARI quad light's
+      // emitted radiance is carried by "intensity" (VisRTX ignores "radiance").
+      float area = width * height;
+      float radiance =
+          (normalize && area > 0.0f) ? scaledIntensity / area : scaledIntensity;
+      anari::setParameter(device_, light_, "color", color);
+      anari::setParameter(device_, light_, "intensity", radiance);
 
       auto textureFile =
           sceneDelegate->GetLightParamValue(id, HdLightTokens->textureFile)
@@ -178,8 +212,15 @@ void HdAnariLight::Sync(HdSceneDelegate *sceneDelegate,
     } else if (lightType_ == HdPrimTypeTokens->diskLight) {
       float radius =
           sceneDelegate->GetLightParamValue(id, HdLightTokens->radius)
-              .GetWithDefault<float>(0.0f);
+              .GetWithDefault<float>(0.5f);
       anari::setParameter(device_, light_, "outerRadius", radius);
+      // The ANARI ring light takes radiant intensity, not radiance. For a
+      // Lambertian disk the on-axis radiant intensity is radiance * area.
+      float area = kPi * radius * radius;
+      float radiance =
+          (normalize && area > 0.0f) ? scaledIntensity / area : scaledIntensity;
+      anari::setParameter(device_, light_, "color", color);
+      anari::setParameter(device_, light_, "intensity", radiance * area);
     }
     anari::commitParameters(device_, light_);
   }
