@@ -67,7 +67,7 @@ devices/helide_gpu/
 
 ### Threading model
 
-All GPU commands **must** be submitted from the dedicated GPU thread. `HelideGPUDeviceGlobalState::gpu.thread` is a `tasking::TaskQueue` (a single fixed-size ring-buffer thread). Use `gpu_enqueue_method(object, &Class::gpu_method)` (free function in `Object.h`) or the member helper in `Frame` to post work to this thread. Methods named with the `gpu_` prefix run on the GPU thread; all others run on the calling thread.
+All GPU commands **must** be submitted from the dedicated GPU thread. `HelideGPUDeviceGlobalState::gpu.thread` is a `helium::tasking::TaskQueue` (a single background worker thread with a growable FIFO queue). Use `gpu_enqueue_method(object, &Class::gpu_method)` (free function in `Object.h`) or the member helper in `Frame` to post work to this thread. Methods named with the `gpu_` prefix run on the GPU thread; all others run on the calling thread.
 
 ### Key types
 
