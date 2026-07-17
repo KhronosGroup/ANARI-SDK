@@ -46,6 +46,7 @@
 #include <cstdio>
 #include <exception>
 #include <filesystem>
+#include <mutex>
 #include <stdexcept>
 #include <string>
 #include <unordered_set>
@@ -73,9 +74,9 @@ TF_INSTANTIATE_SINGLETON(HdAnariMdlRegistry);
 HdAnariMdlRegistry *HdAnariMdlRegistry::GetInstance()
 {
   // Construction never throws (see the constructors): on failure it publishes a
-  // disabled instance whose getINeuray() is null. No try/catch here -- swallowing
-  // a construction throw would leave TfSingleton wedged (isInitializing set,
-  // instance null) and hang every later call.
+  // disabled instance whose getINeuray() is null. No try/catch here --
+  // swallowing a construction throw would leave TfSingleton wedged
+  // (isInitializing set, instance null) and hang every later call.
   return &TfSingleton<HdAnariMdlRegistry>::GetInstance();
 }
 
@@ -266,6 +267,15 @@ HdAnariMdlRegistry::~HdAnariMdlRegistry()
 {
   m_executionContext = {};
   m_mdlFactory = {};
+  // Remove our private introspection scope from the database. When we own
+  // neuray the shutdown below tears everything down anyway, but for a shared
+  // INeuray (m_dllHandle == nullptr) neuray outlives us, so the scope would
+  // otherwise leak in the shared database.
+  if (m_neuray && m_introspectionScope) {
+    if (auto database = make_handle(
+            m_neuray->get_api_component<mi::neuraylib::IDatabase>()))
+      database->remove_scope(m_introspectionScope->get_id());
+  }
   m_introspectionScope = {};
   m_globalScope = {};
   if (m_dllHandle && m_neuray) {
@@ -279,6 +289,8 @@ HdAnariMdlRegistry::~HdAnariMdlRegistry()
 auto HdAnariMdlRegistry::createScope(std::string_view scopeName,
     mi::neuraylib::IScope *parent) -> mi::neuraylib::IScope *
 {
+  if (!m_neuray)
+    return {}; // disabled registry
   auto database =
       make_handle(m_neuray->get_api_component<mi::neuraylib::IDatabase>());
 
@@ -287,6 +299,8 @@ auto HdAnariMdlRegistry::createScope(std::string_view scopeName,
 
 auto HdAnariMdlRegistry::removeScope(mi::neuraylib::IScope *scope) -> void
 {
+  if (!m_neuray || !scope)
+    return;
   auto database =
       make_handle(m_neuray->get_api_component<mi::neuraylib::IDatabase>());
 
@@ -298,11 +312,15 @@ auto HdAnariMdlRegistry::createTransaction(mi::neuraylib::IScope *scope)
 {
   if (!scope)
     scope = m_introspectionScope.get();
+  if (!scope)
+    return {}; // disabled registry: no introspection scope to transact on
   return scope->create_transaction();
 }
 
 auto HdAnariMdlRegistry::preprendUserSearchPath(std::string_view path) -> void
 {
+  if (!m_neuray)
+    return; // disabled registry
   auto mdlConfiguration = make_handle(
       m_neuray->get_api_component<mi::neuraylib::IMdl_configuration>());
 
@@ -325,6 +343,8 @@ auto HdAnariMdlRegistry::preprendUserSearchPath(std::string_view path) -> void
 auto HdAnariMdlRegistry::loadModuleByCanonicalName(std::string_view filePath,
     mi::neuraylib::ITransaction *transaction) -> const mi::neuraylib::IModule *
 {
+  if (!m_neuray)
+    return {}; // disabled registry
   std::string path(filePath);
   if (path.find('/') == std::string::npos)
     return {}; // already a module name, nothing to recover
@@ -342,11 +362,10 @@ auto HdAnariMdlRegistry::loadModuleByCanonicalName(std::string_view filePath,
   // co-located, instead of the incomplete local file.
   auto pathsCount = mdlConfiguration->get_mdl_paths_length();
   for (auto i = decltype(pathsCount)(0); i < pathsCount; ++i) {
-    auto rootName =
-        std::filesystem::path(
-            make_handle(mdlConfiguration->get_mdl_path(i))->get_c_str())
-            .filename()
-            .string();
+    auto rootName = std::filesystem::path(
+        make_handle(mdlConfiguration->get_mdl_path(i))->get_c_str())
+                        .filename()
+                        .string();
     if (rootName.empty())
       continue;
 
@@ -390,6 +409,8 @@ auto HdAnariMdlRegistry::loadModuleByCanonicalName(std::string_view filePath,
 auto HdAnariMdlRegistry::loadModule(std::string_view moduleOrFileName,
     mi::neuraylib::ITransaction *transaction) -> const mi::neuraylib::IModule *
 {
+  if (!m_neuray)
+    return {}; // disabled registry
   auto impexpApi = make_handle(
       m_neuray->get_api_component<mi::neuraylib::IMdl_impexp_api>());
 
@@ -411,8 +432,12 @@ auto HdAnariMdlRegistry::loadModule(std::string_view moduleOrFileName,
     moduleName = name->get_c_str();
   }
 
+  // Use a local execution context, not the shared m_executionContext: the SDR
+  // parser and <mdl> backend call loadModule from Hydra worker threads, and a
+  // shared context would race on its error state.
+  auto context = make_handle(m_mdlFactory->create_execution_context());
   if (impexpApi->load_module(
-          transaction, moduleName.c_str(), m_executionContext.get())
+          transaction, moduleName.c_str(), context.get())
       < 0) {
     // A scene may ship a .mdl without its resources (e.g. a vMaterials module
     // copied without its ./textures), so the local copy fails to compile.
@@ -427,14 +452,15 @@ auto HdAnariMdlRegistry::loadModule(std::string_view moduleOrFileName,
     // path) are buried in SDK output and every dependent material only reports
     // a generic "parser returned null" -- 800+ identical lines for one missing
     // package.
+    static std::mutex reportedMutex;
     static std::unordered_set<std::string> reported;
+    std::lock_guard<std::mutex> reportedGuard(reportedMutex);
     if (reported.insert(moduleName).second) {
       std::string errors;
-      for (auto i = 0ull,
-                n = m_executionContext->get_error_messages_count();
+      for (auto i = 0ull, n = context->get_error_messages_count();
           i < n;
           ++i) {
-        auto message = make_handle(m_executionContext->get_error_message(i));
+        auto message = make_handle(context->get_error_message(i));
         errors += "\n  ";
         errors += message->get_string();
       }
@@ -459,6 +485,8 @@ auto HdAnariMdlRegistry::getFunctionDefinition(
     mi::neuraylib::ITransaction *transaction)
     -> const mi::neuraylib::IFunction_definition *
 {
+  if (!module || functionName.empty())
+    return {};
   std::string functionQualifiedName;
   if (functionName.back()
       == ')') // Already a full qualified function signature.
