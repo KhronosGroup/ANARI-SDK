@@ -55,7 +55,7 @@ class HdAnariRenderDelegate final : public HdRenderDelegate
 
   // Renderer parameters discovered for the active subtype, consumed by the
   // render pass to forward host render settings to the ANARI renderer.
-  const HdAnariRendererParamList &GetRendererParameters() const;
+  HdAnariRendererParamList GetRendererParameters() const;
 
   // Re-query parameters and rebuild the render-setting descriptors when the
   // render pass switches the active renderer subtype. No-op if unchanged.
