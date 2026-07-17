@@ -4,15 +4,14 @@
 #pragma once
 
 // std
-#include <atomic>
 #include <chrono>
 #include <condition_variable>
+#include <deque>
 #include <functional>
 #include <future>
 #include <mutex>
 #include <thread>
 #include <utility>
-#include <vector>
 
 namespace helium::tasking {
 
@@ -21,8 +20,18 @@ using Future = std::future<void>;
 /*
  * Single-worker task queue that dispatches callable tasks onto a dedicated
  * background thread; each enqueued task returns a Future for completion
- * tracking. Flushing the queue will block the caller until all tasks are
+ * tracking. Tasks always run in FIFO order -- including tasks enqueued from
+ * within a running task (i.e. from the worker thread itself), which are
+ * appended and run after the current task returns rather than nested inline.
+ * This lets a task re-enqueue its own continuation without unbounded stack
+ * growth. Flushing the queue will block the caller until all tasks are
  * complete.
+ *
+ * Storage grows on demand: enqueue never blocks on a full queue, so a task
+ * running on the worker thread can always append (a self-enqueue can never
+ * deadlock waiting for a drain only it could perform). Note this removes the
+ * bounded-queue backpressure the class once had; a runaway external producer
+ * can grow memory without bound. The device usage here has bounded producers.
  *
  * Example:
  *   TaskQueue q(64);
@@ -31,6 +40,8 @@ using Future = std::future<void>;
  */
 struct TaskQueue
 {
+  // n is retained for API compatibility as an initial-size hint; storage now
+  // grows on demand so it imposes no upper bound.
   TaskQueue(size_t n);
   ~TaskQueue();
 
@@ -43,10 +54,8 @@ struct TaskQueue
  private:
   static void thread_fun(TaskQueue *ct);
 
-  std::vector<std::packaged_task<void()>> m_tasks;
+  std::deque<std::packaged_task<void()>> m_tasks;
   bool m_stop{false};
-  int m_next{0};
-  int m_last{0};
 
   std::mutex m_mutex;
   std::condition_variable m_condition;
@@ -58,8 +67,7 @@ void wait(const Future &f);
 
 // Inlined definitions ////////////////////////////////////////////////////////
 
-inline TaskQueue::TaskQueue(size_t n) : m_tasks(n), m_thread(thread_fun, this)
-{}
+inline TaskQueue::TaskQueue(size_t /*n*/) : m_thread(thread_fun, this) {}
 
 inline TaskQueue::~TaskQueue()
 {
@@ -78,14 +86,12 @@ inline Future TaskQueue::enqueue(F &&f, Args &&...args)
       std::bind(std::forward<F>(f), std::forward<Args>(args)...));
   Future future = task.get_future();
 
-  if (std::this_thread::get_id() == m_thread.get_id())
-    task();
-  else {
+  // Always append (FIFO), never run inline. Growable storage means we never
+  // wait on a "not full" predicate, so a task enqueuing from the worker thread
+  // cannot block on a drain only it could perform.
+  {
     std::unique_lock<std::mutex> lock(m_mutex);
-    m_condition.wait(
-        lock, [&] { return (m_last + 1) % m_tasks.size() != m_next; });
-    m_tasks[m_last] = std::move(task);
-    m_last = (m_last + 1) % m_tasks.size();
+    m_tasks.push_back(std::move(task));
     m_condition.notify_one();
   }
 
@@ -109,12 +115,12 @@ inline void TaskQueue::thread_fun(TaskQueue *ct)
     {
       std::unique_lock<std::mutex> lock(ct->m_mutex);
       ct->m_condition.wait(
-          lock, [ct] { return ct->m_stop || ct->m_next != ct->m_last; });
-      if (ct->m_stop && ct->m_next == ct->m_last)
+          lock, [ct] { return ct->m_stop || !ct->m_tasks.empty(); });
+      // Drain any remaining tasks before stopping (drain-or-stop).
+      if (ct->m_stop && ct->m_tasks.empty())
         break;
-      task = std::move(ct->m_tasks[ct->m_next]);
-      ct->m_next = (ct->m_next + 1) % ct->m_tasks.size();
-      ct->m_condition.notify_one();
+      task = std::move(ct->m_tasks.front());
+      ct->m_tasks.pop_front();
     }
     task();
   }
