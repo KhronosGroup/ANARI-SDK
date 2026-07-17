@@ -9,6 +9,8 @@
 #include "helium/BaseObject.h"
 #include "helium/utility/ChangeObserverPtr.h"
 // std
+#include <functional>
+#include <future>
 #include <string_view>
 
 namespace helide_gpu {
@@ -46,6 +48,17 @@ template <typename OBJECT_T, typename METHOD_T>
 inline helium::tasking::Future gpu_enqueue_method(OBJECT_T *o, METHOD_T m)
 {
   auto &state = *o->deviceState();
+  if (state.gpu.thread.onWorkerThread()) {
+    // Already on the GPU thread (e.g. finalize() during a commitBuffer flush
+    // inside gpu_renderFrame): run now, in order, so GPU resources exist before
+    // the render pass. TaskQueue::enqueue no longer runs worker-thread work
+    // inline (that FIFO change is required by the forward device), so this
+    // synchronous path must live here.
+    std::packaged_task<void()> t(std::bind(m, o));
+    auto f = t.get_future();
+    t();
+    return f;
+  }
   return state.gpu.thread.enqueue(m, o);
 }
 

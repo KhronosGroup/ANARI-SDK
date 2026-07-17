@@ -13,6 +13,8 @@
 #include "helium/BaseFrame.h"
 #include "helium/utility/TimeStamp.h"
 // std
+#include <functional>
+#include <future>
 #include <vector>
 
 namespace helide_gpu {
@@ -132,6 +134,17 @@ template <typename METHOD_T>
 inline helium::tasking::Future Frame::gpu_enqueue_method(METHOD_T m)
 {
   auto &state = *deviceState();
+  if (state.gpu.thread.onWorkerThread()) {
+    // Already on the GPU thread (e.g. finalize() during a commitBuffer flush
+    // inside gpu_renderFrame): run now, in order, so GPU resources exist before
+    // the render pass. TaskQueue::enqueue no longer runs worker-thread work
+    // inline (that FIFO change is required by the forward device), so this
+    // synchronous path must live here.
+    std::packaged_task<void()> t(std::bind(m, this));
+    auto f = t.get_future();
+    t();
+    return f;
+  }
   return state.gpu.thread.enqueue(m, this);
 }
 
