@@ -11,13 +11,17 @@ add_executable(${PROJECT_NAME}
   test_helium_AnariAny.cpp
   test_helium_ParameterizedObject.cpp
   test_helium_RefCounted.cpp
+  test_helium_TaskQueue.cpp
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE helium)
+find_package(Threads REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads)
 
 add_test(NAME unit_test::helium::AnariAny            COMMAND ${PROJECT_NAME} "[helium_AnariAny]"           )
 add_test(NAME unit_test::helium::ParameterizedObject COMMAND ${PROJECT_NAME} "[helium_ParameterizedObject]")
 add_test(NAME unit_test::helium::RefCounted          COMMAND ${PROJECT_NAME} "[helium_RefCounted]"         )
+add_test(NAME unit_test::helium::TaskQueue           COMMAND ${PROJECT_NAME} "[helium_TaskQueue]"          )
 
 ## CTS conformance-harness catalog tests ##
 
