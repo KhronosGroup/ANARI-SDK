@@ -9,12 +9,15 @@ add_executable(${PROJECT_NAME}
   catch_main.cpp
 
   test_helium_AnariAny.cpp
+  test_helium_commit_snapshot.cpp
   test_helium_ParameterizedObject.cpp
   test_helium_RefCounted.cpp
   test_helium_TaskQueue.cpp
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE helium)
+# helium for the direct base-layer tests; anari (the loader) for the device-
+# backed commit-snapshot test, which loads helide and skips itself if absent.
+target_link_libraries(${PROJECT_NAME} PRIVATE helium anari)
 find_package(Threads REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads)
 
@@ -22,6 +25,7 @@ add_test(NAME unit_test::helium::AnariAny            COMMAND ${PROJECT_NAME} "[h
 add_test(NAME unit_test::helium::ParameterizedObject COMMAND ${PROJECT_NAME} "[helium_ParameterizedObject]")
 add_test(NAME unit_test::helium::RefCounted          COMMAND ${PROJECT_NAME} "[helium_RefCounted]"         )
 add_test(NAME unit_test::helium::TaskQueue           COMMAND ${PROJECT_NAME} "[helium_TaskQueue]"          )
+add_test(NAME unit_test::helium::CommitSnapshot      COMMAND ${PROJECT_NAME} "[helium_commit_snapshot]"    )
 
 ## CTS conformance-harness catalog tests ##
 

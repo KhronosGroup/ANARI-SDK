@@ -102,7 +102,16 @@ void DeferredCommitBuffer::flushCommits()
     auto obj = m_commitBuffer[i];
     if (obj->lastParameterChanged() > obj->lastCommitted()) {
       didCommit = true;
-      obj->commitParameters();
+      // Read the committed snapshot (taken at anariCommitParameters() time),
+      // not the live store, so a setParam that arrived after the commit call
+      // does not leak into this commit. ReadCommittedScope holds the object's
+      // snapshot mutex (not its object lock -- frameReady() holds the object
+      // lock while blocked on this flush, so that would deadlock), serializing
+      // the read against a concurrent re-commit of the same object.
+      {
+        ParameterizedObject::ReadCommittedScope readScope(obj);
+        obj->commitParameters();
+      }
       obj->markCommitted();
       obj->markUpdated();
       {
@@ -135,7 +144,15 @@ void DeferredCommitBuffer::flushFinalizations()
     auto obj = m_finalizationBuffer[i];
     if (obj->lastUpdated() > obj->lastFinalized()) {
       didFinalize = true;
-      obj->finalize();
+      // finalize() also reads parameters (e.g. helide's Sphere reads "radius"),
+      // so it must see the same committed snapshot as commitParameters(), under
+      // the same snapshot mutex. Objects driven directly by a parent's
+      // finalize() (e.g. helide World's internal zero group/instance) are not
+      // the scope's active object and correctly read their live staging store.
+      {
+        ParameterizedObject::ReadCommittedScope readScope(obj);
+        obj->finalize();
+      }
       obj->markFinalized();
       obj->notifyChangeObservers();
     }
