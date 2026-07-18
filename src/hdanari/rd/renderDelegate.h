@@ -53,6 +53,11 @@ class HdAnariRenderDelegate final : public HdRenderDelegate
 
   HdRenderSettingDescriptorList GetRenderSettingDescriptors() const override;
 
+  // Namespace prefix for render settings authored on a UsdRenderSettings prim
+  // (e.g. `anari:renderSubtype`). USD only surfaces namespaced attributes as
+  // namespacedSettings; this tells usdImaging to collect the "anari" ones.
+  TfTokenVector GetRenderSettingsNamespaces() const override;
+
   // Renderer parameters discovered for the active subtype, consumed by the
   // render pass to forward host render settings to the ANARI renderer.
   HdAnariRendererParamList GetRendererParameters() const;

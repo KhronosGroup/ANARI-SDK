@@ -11,6 +11,7 @@
 #include "mesh.h"
 #include "points.h"
 #include "renderBuffer.h"
+#include "renderSettings.h"
 #include "renderParam.h"
 #include "renderPass.h"
 
@@ -97,6 +98,7 @@ const TfTokenVector HdAnariRenderDelegate::SUPPORTED_SPRIM_TYPES = {
 
 const TfTokenVector HdAnariRenderDelegate::SUPPORTED_BPRIM_TYPES = {
     HdPrimTypeTokens->renderBuffer,
+    HdPrimTypeTokens->renderSettings,
 };
 
 std::mutex HdAnariRenderDelegate::_mutexResourceRegistry;
@@ -221,6 +223,12 @@ HdAnariRenderDelegate::GetRenderSettingDescriptors() const
 {
   std::lock_guard<std::mutex> guard(_settingsMutex);
   return _settingDescriptors;
+}
+
+TfTokenVector HdAnariRenderDelegate::GetRenderSettingsNamespaces() const
+{
+  static const TfTokenVector namespaces = {TfToken("anari")};
+  return namespaces;
 }
 
 HdAnariRendererParamList HdAnariRenderDelegate::GetRendererParameters() const
@@ -458,6 +466,8 @@ HdBprim *HdAnariRenderDelegate::CreateBprim(
 {
   if (typeId == HdPrimTypeTokens->renderBuffer)
     return new HdAnariRenderBuffer(bprimId);
+  if (typeId == HdPrimTypeTokens->renderSettings)
+    return new HdAnariRenderSettings(bprimId);
 
   TF_CODING_ERROR("Unknown Bprim Type %s", typeId.GetText());
 
@@ -468,6 +478,8 @@ HdBprim *HdAnariRenderDelegate::CreateFallbackBprim(TfToken const &typeId)
 {
   if (typeId == HdPrimTypeTokens->renderBuffer)
     return new HdAnariRenderBuffer(SdfPath::EmptyPath());
+  if (typeId == HdPrimTypeTokens->renderSettings)
+    return new HdAnariRenderSettings(SdfPath::EmptyPath());
 
   TF_CODING_ERROR("Unknown Bprim Type %s", typeId.GetText());
 
