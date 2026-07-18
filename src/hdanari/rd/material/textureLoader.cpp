@@ -19,6 +19,30 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
+namespace {
+
+// The REMAP datatype switch (anariTypeHelpers.h) has no FLOAT16 case, so a
+// half-float array would never be populated and would render black. Ask HIO to
+// convert half textures (e.g. ACEScg .exr) to float32 on read instead, which
+// the REMAP path fully supports.
+HioFormat PromoteHalfFloatFormat(HioFormat f)
+{
+  switch (f) {
+  case HioFormatFloat16:
+    return HioFormatFloat32;
+  case HioFormatFloat16Vec2:
+    return HioFormatFloat32Vec2;
+  case HioFormatFloat16Vec3:
+    return HioFormatFloat32Vec3;
+  case HioFormatFloat16Vec4:
+    return HioFormatFloat32Vec4;
+  default:
+    return f;
+  }
+}
+
+} // namespace
+
 anari::DataType HdAnariTextureLoader::HioFormatToAnari(HioFormat f)
 {
   switch (f) {
@@ -282,7 +306,7 @@ anari::Array2D HdAnariTextureLoader::LoadHioTexture2D(anari::Device d,
   }
 
   HioImage::StorageSpec desc;
-  desc.format = image->GetFormat();
+  desc.format = PromoteHalfFloatFormat(image->GetFormat());
   desc.width = image->GetWidth();
   desc.height = image->GetHeight();
   desc.depth = 1;
@@ -320,7 +344,6 @@ anari::Array2D HdAnariTextureLoader::LoadHioTexture2D(anari::Device d,
     TF_WARN("failed to read texture '%s'\n", file.c_str());
     return {};
   }
-
   outputFormat = updateWithColorSpace(outputFormat, ColorSpace::Raw);
 
   TF_DEBUG_MSG(HD_ANARI_RD_MATERIAL,
