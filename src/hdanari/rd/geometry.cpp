@@ -88,14 +88,18 @@ static const std::array<TfToken, 6> kTextureCoordinatePrimvarNames = {
     TfToken("UVMap"),
     TfToken("map1")};
 
-static bool _IsTextureCoordinatePrimvar(const HdPrimvarDescriptor &pvd)
+static bool _IsTextureCoordinatePrimvarName(const TfToken &name)
 {
-  if (pvd.role == HdPrimvarRoleTokens->textureCoordinate)
-    return true;
   return std::find(begin(kTextureCoordinatePrimvarNames),
              end(kTextureCoordinatePrimvarNames),
-             pvd.name)
+             name)
       != end(kTextureCoordinatePrimvarNames);
+}
+
+static bool _IsTextureCoordinatePrimvar(const HdPrimvarDescriptor &pvd)
+{
+  return pvd.role == HdPrimvarRoleTokens->textureCoordinate
+      || _IsTextureCoordinatePrimvarName(pvd.name);
 }
 
 template <typename VEC_ARRAY_T>
@@ -117,6 +121,37 @@ static VtValue _FlipTextureCoordinateV(VtValue value)
       || _FlipVIfHolding<VtVec2dArray>(&value)
       || _FlipVIfHolding<VtVec2hArray>(&value);
   return value;
+}
+
+// The material backends bind their texture-coordinate input to the primvar
+// literally named `st` (the MDL/MaterialX default set, read as attribute0..N).
+// A mesh whose UVs are authored under another name (Blender `UVMap`, `map1`,
+// ...) would then deliver no texcoords. Re-key each texcoord binding whose
+// primvar is absent on the mesh to an unused mesh texture-coordinate primvar so
+// the data still reaches its attribute. `meshTexcoords` and `meshPrimvarsSorted`
+// are sorted; the latter enables a binary search for presence.
+static HdAnariMaterial::PrimvarBinding _ResolveTexcoordBinding(
+    const HdAnariMaterial::PrimvarBinding &binding,
+    const std::vector<TfToken> &meshTexcoords,
+    const std::vector<TfToken> &meshPrimvarsSorted)
+{
+  std::vector<TfToken> unclaimed;
+  for (const TfToken &tc : meshTexcoords)
+    if (binding.find(tc) == cend(binding))
+      unclaimed.push_back(tc);
+
+  HdAnariMaterial::PrimvarBinding resolved;
+  size_t next = 0;
+  for (const auto &[name, attribute] : binding) {
+    const bool onMesh = std::binary_search(
+        cbegin(meshPrimvarsSorted), cend(meshPrimvarsSorted), name);
+    if (!onMesh && _IsTextureCoordinatePrimvarName(name)
+        && next < unclaimed.size())
+      resolved.emplace(unclaimed[next++], attribute);
+    else
+      resolved.emplace(name, attribute);
+  }
+  return resolved;
 }
 
 bool HdAnariGeometry::_GetVtArrayBufferData(
@@ -431,16 +466,22 @@ void HdAnariGeometry::Sync(HdSceneDelegate *sceneDelegate,
     }
   }
 
+  std::vector<TfToken> meshTexcoords;
   for (auto i = 0; i < HdInterpolationCount; ++i) {
     for (const auto &pv :
         sceneDelegate->GetPrimvarDescriptors(GetId(), HdInterpolation(i))) {
       allPrimvars.push_back(pv.name);
       if (pv.name == HdTokens->displayColor)
         displayColorIsAuthored = true;
+      if (_IsTextureCoordinatePrimvar(pv))
+        meshTexcoords.push_back(pv.name);
     }
   }
   // Make sure this is stored we can do binary searches and set differences.
   std::sort(begin(allPrimvars), end(allPrimvars));
+  std::sort(begin(meshTexcoords), end(meshTexcoords));
+  meshTexcoords.erase(
+      std::unique(begin(meshTexcoords), end(meshTexcoords)), end(meshTexcoords));
 
   // Get an exhaustive list of primvars used by the different materials
   // referenced this geometry and its subsets.
@@ -455,7 +496,8 @@ void HdAnariGeometry::Sync(HdSceneDelegate *sceneDelegate,
       renderIndex.GetSprim(HdPrimTypeTokens->material, GetMaterialId()));
   if (auto mat = material ? material->GetAnariMaterial() : nullptr) {
     mainGeomInfo.material = material->GetAnariMaterial();
-    mainGeomInfo.primvarBinding = material->GetPrimvarBinding();
+    mainGeomInfo.primvarBinding = _ResolveTexcoordBinding(
+        material->GetPrimvarBinding(), meshTexcoords, allPrimvars);
   } else {
     mainGeomInfo.material = renderParam->GetDefaultMaterial();
     mainGeomInfo.primvarBinding = renderParam->GetDefaultPrimvarBinding();
@@ -484,7 +526,9 @@ void HdAnariGeometry::Sync(HdSceneDelegate *sceneDelegate,
         renderIndex.GetSprim(HdPrimTypeTokens->material, subset.materialId));
     auto geomSubsetInfo = (material && material->GetAnariMaterial())
         ? GeomSubsetInfo{material->GetAnariMaterial(),
-              material->GetPrimvarBinding()}
+              _ResolveTexcoordBinding(material->GetPrimvarBinding(),
+                  meshTexcoords,
+                  allPrimvars)}
         : GeomSubsetInfo{renderParam->GetDefaultMaterial(),
               renderParam->GetDefaultPrimvarBinding()};
 
