@@ -66,12 +66,12 @@ void ParameterizedObject::setParamDirect(
 
 bool ParameterizedObject::removeParam(const std::string &name)
 {
-  auto foundParam = std::find_if(m_params.begin(),
-      m_params.end(),
+  auto foundParam = std::find_if(m_paramsStaging.begin(),
+      m_paramsStaging.end(),
       [&](const Param &p) { return p.first == name; });
 
-  if (foundParam != m_params.end()) {
-    m_params.erase(foundParam);
+  if (foundParam != m_paramsStaging.end()) {
+    m_paramsStaging.erase(foundParam);
     return true;
   } else
     return false;
@@ -79,31 +79,65 @@ bool ParameterizedObject::removeParam(const std::string &name)
 
 bool ParameterizedObject::removeAllParams()
 {
-  if (!m_params.empty()) {
-    m_params.clear();
+  if (!m_paramsStaging.empty()) {
+    m_paramsStaging.clear();
     return true;
   } else
     return false;
 }
 
+void ParameterizedObject::commitParameterSnapshot()
+{
+  // Serialize against a deferred read (ReadCommittedScope) so the snapshot is
+  // never overwritten while the flush is reading it. Vector copy-assignment
+  // runs AnariAny's copy semantics per element, which release the previous
+  // snapshot's object refs and acquire the new ones.
+  std::lock_guard<std::mutex> guard(m_commitReadMutex);
+  m_paramsCommitted = m_paramsStaging;
+}
+
+ParameterizedObject::ReadCommittedScope::ReadCommittedScope(
+    ParameterizedObject *obj)
+    : m_obj(obj)
+{
+  // Hold the snapshot mutex for the whole commit/finalize so a concurrent
+  // commitParameterSnapshot() cannot mutate m_paramsCommitted mid-read.
+  m_obj->m_commitReadMutex.lock();
+  m_obj->m_readCommitted.store(true, std::memory_order_relaxed);
+}
+
+ParameterizedObject::ReadCommittedScope::~ReadCommittedScope()
+{
+  m_obj->m_readCommitted.store(false, std::memory_order_relaxed);
+  m_obj->m_commitReadMutex.unlock();
+}
+
 ParameterizedObject::ParameterList::iterator ParameterizedObject::params_begin()
 {
-  return m_params.begin();
+  return m_paramsStaging.begin();
 }
 
 ParameterizedObject::ParameterList::iterator ParameterizedObject::params_end()
 {
-  return m_params.end();
+  return m_paramsStaging.end();
+}
+
+const ParameterizedObject::ParameterList &ParameterizedObject::readParams()
+    const
+{
+  return m_readCommitted.load(std::memory_order_relaxed) ? m_paramsCommitted
+                                                         : m_paramsStaging;
 }
 
 const ParameterizedObject::Param *ParameterizedObject::findParam(
     const std::string &name) const
 {
-  auto foundParam = std::find_if(m_params.begin(),
-      m_params.end(),
+  const auto &params = readParams();
+  auto foundParam = std::find_if(params.begin(),
+      params.end(),
       [&](const Param &p) { return p.first == name; });
 
-  if (foundParam != m_params.end())
+  if (foundParam != params.end())
     return &(*foundParam);
   return nullptr;
 }
@@ -111,15 +145,16 @@ const ParameterizedObject::Param *ParameterizedObject::findParam(
 ParameterizedObject::Param *ParameterizedObject::findParam(
     const std::string &name)
 {
-  auto foundParam = std::find_if(m_params.begin(),
-      m_params.end(),
+  // Mutators always operate on the live staging store.
+  auto foundParam = std::find_if(m_paramsStaging.begin(),
+      m_paramsStaging.end(),
       [&](const Param &p) { return p.first == name; });
 
-  if (foundParam != m_params.end())
+  if (foundParam != m_paramsStaging.end())
     return &(*foundParam);
   else {
-    m_params.emplace_back(name, AnariAny());
-    return &m_params[m_params.size() - 1];
+    m_paramsStaging.emplace_back(name, AnariAny());
+    return &m_paramsStaging[m_paramsStaging.size() - 1];
   }
 }
 

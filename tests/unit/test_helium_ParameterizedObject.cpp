@@ -84,6 +84,48 @@ SCENARIO(
     }
   }
 
+  GIVEN("A ParameterizedObject that has been committed then changed")
+  {
+    helium::ParameterizedObject obj;
+    auto name = "test_int";
+
+    obj.setParam<int>(name, 1); // value 'A'
+    obj.commitParameterSnapshot(); // snapshot taken at commit time
+    obj.setParam<int>(name, 2); // late value 'B', before the buffer flushes
+
+    THEN("the live store reflects the newer value")
+    {
+      REQUIRE(obj.getParam<int>(name, 0) == 2);
+    }
+
+    WHEN("reading in committed mode (as commitParameters()/finalize() do)")
+    {
+      {
+        helium::ParameterizedObject::ReadCommittedScope readScope(&obj);
+        THEN("the getter reads the snapshot ('A'), not the late value")
+        {
+          REQUIRE(obj.getParam<int>(name, 0) == 1);
+        }
+      }
+
+      THEN("outside the scope, live reads are restored ('B')")
+      {
+        REQUIRE(obj.getParam<int>(name, 0) == 2);
+      }
+    }
+
+    WHEN("a subsequent snapshot is taken")
+    {
+      obj.commitParameterSnapshot();
+      helium::ParameterizedObject::ReadCommittedScope readScope(&obj);
+
+      THEN("committed reads now see the newer value ('B')")
+      {
+        REQUIRE(obj.getParam<int>(name, 0) == 2);
+      }
+    }
+  }
+
   GIVEN("A ParameterizedObject with a string parameter")
   {
     helium::ParameterizedObject obj;

@@ -7,8 +7,10 @@
 // anari
 #include "anari/anari_cpp/Traits.h"
 // stl
+#include <atomic>
 #include <cstring>
 #include <memory>
+#include <mutex>
 #include <utility>
 #include <vector>
 
@@ -92,6 +94,38 @@ struct ParameterizedObject
   // Returns 'true' if anything actually happened
   bool removeAllParams();
 
+  // Snapshot the current (staging) parameter store into the committed store.
+  // Called by the deferred-commit machinery at anariCommitParameters() time so
+  // that a later commitParameters()/finalize() reads the state captured at the
+  // commit call rather than the live store (which may receive further setParam
+  // calls before the commit buffer is flushed). AnariAny's copy semantics
+  // manage object-parameter ref counts, so the previous snapshot's object refs
+  // are released and the new snapshot's refs acquired exactly once.
+  void commitParameterSnapshot();
+
+  // RAII scope that routes this object's (const) getters to its committed
+  // snapshot for the scope's duration. The deferred-commit machinery wraps an
+  // object's buffered commitParameters()/finalize() in one of these so those
+  // reads see the state captured at commit time. Constructing the scope holds
+  // m_commitReadMutex, which serializes the deferred read against a concurrent
+  // commitParameterSnapshot() (a legal anariCommitParameters() while a frame
+  // using the object is still in flight), keeping m_paramsCommitted stable for
+  // the whole commit/finalize. The selector itself lives on the object (not a
+  // thread-local) so it is robust to helium being statically linked into
+  // multiple modules. Objects driven directly by a parent's commit (e.g. helide
+  // World's internal zero group) get no scope of their own and so correctly
+  // read their live staging store.
+  struct ReadCommittedScope
+  {
+    explicit ReadCommittedScope(ParameterizedObject *obj);
+    ~ReadCommittedScope();
+    ReadCommittedScope(const ReadCommittedScope &) = delete;
+    ReadCommittedScope &operator=(const ReadCommittedScope &) = delete;
+
+   private:
+    ParameterizedObject *m_obj;
+  };
+
  protected:
   using Param = std::pair<std::string, AnariAny>;
   using ParameterList = std::vector<Param>;
@@ -105,7 +139,23 @@ struct ParameterizedObject
   const Param *findParam(const std::string &name) const;
   Param *findParam(const std::string &name);
 
-  ParameterList m_params;
+  // The store the getters read: the committed snapshot while a
+  // ReadCommittedScope is active on this object, else the live staging store.
+  const ParameterList &readParams() const;
+
+  ParameterList m_paramsStaging;
+  ParameterList m_paramsCommitted;
+  // Guards m_paramsCommitted between the snapshot write
+  // (commitParameterSnapshot, at anariCommitParameters() time) and the deferred
+  // read (a ReadCommittedScope around commitParameters()/finalize() on the
+  // flush thread). A dedicated mutex, not the object lock: frameReady() holds
+  // the object lock while blocked on the flush, so reusing it here would
+  // deadlock.
+  std::mutex m_commitReadMutex;
+  // Selects committed vs. staging reads (see ReadCommittedScope). Atomic
+  // because the flush thread toggles it while an app-side getter may read it
+  // (under the object lock) on another thread.
+  std::atomic<bool> m_readCommitted{false};
 };
 
 // Inlined ParameterizedObject definitions ////////////////////////////////////

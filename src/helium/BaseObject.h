@@ -66,6 +66,14 @@ struct BaseObject : public RefCounted, ParameterizedObject, LockableObject
   TimeStamp lastParameterChanged() const;
   void markParameterChanged();
 
+  // Capture the object's live parameters into a committed snapshot at
+  // anariCommitParameters() time, along with the parameter-change time that
+  // snapshot represents. A later buffered commitParameters()/finalize() reads
+  // this snapshot (see ParameterizedObject::ReadCommittedScope) rather than the
+  // live store, so a setParam issued before the commit buffer flushes cannot
+  // leak into this commit.
+  void snapshotParameters();
+
   // Event tracking of when an object's internal state changed
   TimeStamp lastUpdated() const;
   void markUpdated();
@@ -107,6 +115,7 @@ struct BaseObject : public RefCounted, ParameterizedObject, LockableObject
 
   std::vector<BaseObject *> m_changeObservers;
   TimeStamp m_lastParameterChanged{0};
+  TimeStamp m_lastCommitSnapshot{0};
   TimeStamp m_lastUpdated{0};
   TimeStamp m_lastCommitted{0};
   TimeStamp m_lastFinalized{0};
