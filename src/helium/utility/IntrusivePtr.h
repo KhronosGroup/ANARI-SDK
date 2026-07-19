@@ -1,23 +1,41 @@
-// Copyright 2021-2025 The Khronos Group
+// Copyright 2021-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
 
 #include <atomic>
+#include <cassert>
+#include <cstdint>
 #include <stdexcept>
 #include <type_traits>
-#include <cstdint>
-#include <cassert>
 
 namespace helium {
 
+/*
+ * Selects which of the two independent reference counts to operate on.
+ * PUBLIC tracks application-held references; INTERNAL tracks device-internal
+ * references (via IntrusivePtr). ALL is used only for querying the combined
+ * sum.
+ */
 enum RefType : std::uint64_t
 {
   PUBLIC = 1,
   INTERNAL = UINT64_C(0x100000000),
-  ALL = PUBLIC+INTERNAL
+  ALL = PUBLIC + INTERNAL
 };
 
+/*
+ * Base class for all heap-allocated ANARI objects that need reference counting.
+ * Maintains two independent 32-bit counters packed into one 64-bit atomic:
+ *   - PUBLIC  (lower 32 bits): incremented/decremented by the application via
+ *     anariRetain/anariRelease. When this reaches zero, on_NoPublicReferences()
+ *     fires (arrays privatize their memory here; frames discard inflight
+ * renders).
+ *   - INTERNAL (upper 32 bits): incremented/decremented by IntrusivePtr<T>.
+ *     Keeps the object alive even after the application releases it.
+ * The object is deleted only when both counts reach zero simultaneously.
+ * RefCounted objects are non-copyable and non-movable.
+ */
 class RefCounted
 {
  public:
@@ -64,20 +82,20 @@ inline void RefCounted::refDec(RefType type)
     return;
   }
 
-  if (type == RefType::PUBLIC && (prev&PUBLIC_MASK) == RefType::PUBLIC)
+  if (type == RefType::PUBLIC && (prev & PUBLIC_MASK) == RefType::PUBLIC)
     on_NoPublicReferences();
-  if (type == RefType::INTERNAL && (prev&INTERNAL_MASK) == RefType::INTERNAL)
+  if (type == RefType::INTERNAL && (prev & INTERNAL_MASK) == RefType::INTERNAL)
     on_NoInternalReferences();
 }
 
 inline uint32_t RefCounted::useCount(RefType type) const
 {
   if (type == RefType::PUBLIC)
-    return m_count&PUBLIC_MASK;
+    return m_count & PUBLIC_MASK;
   else if (type == RefType::INTERNAL)
-    return m_count>>UINT64_C(32);
+    return m_count >> UINT64_C(32);
   else
-    return (m_count&PUBLIC_MASK) + (m_count>>UINT64_C(32));
+    return (m_count & PUBLIC_MASK) + (m_count >> UINT64_C(32));
 }
 
 inline void RefCounted::on_NoPublicReferences()
@@ -94,6 +112,13 @@ inline void RefCounted::on_NoInternalReferences()
 // Pointer to a RefCounted object /////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
+/*
+ * RAII smart pointer that manages the INTERNAL reference count of a RefCounted
+ * object. Use IntrusivePtr<T> inside the device to hold references to objects
+ * without affecting the PUBLIC ref count visible to the application. This keeps
+ * the two ref counts cleanly separated: the application owns the PUBLIC count
+ * while the device owns INTERNAL counts through IntrusivePtrs.
+ */
 template <typename T = RefCounted>
 class IntrusivePtr
 {

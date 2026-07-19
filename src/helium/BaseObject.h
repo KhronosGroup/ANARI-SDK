@@ -1,4 +1,4 @@
-// Copyright 2021-2025 The Khronos Group
+// Copyright 2021-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
@@ -16,6 +16,16 @@
 
 namespace helium {
 
+/*
+ * Abstract base class for all ANARI scene-graph objects (geometries, materials,
+ * lights, cameras, renderers, etc.). Combines reference counting (RefCounted),
+ * parameter storage (ParameterizedObject), and thread locking (LockableObject).
+ * Concrete device objects must subclass BaseObject and implement isValid(),
+ * getProperty(), commitParameters(), and finalize(). The class also tracks four
+ * TimeStamps so the DeferredCommitBuffer can skip redundant work, and provides
+ * the change-observer mechanism that propagates updates from one object (e.g.
+ * an array) to all objects that reference it (e.g. samplers/geometries).
+ */
 struct BaseObject : public RefCounted, ParameterizedObject, LockableObject
 {
   // Construct
@@ -55,6 +65,14 @@ struct BaseObject : public RefCounted, ParameterizedObject, LockableObject
   // Event tracking of when parameters have changed (via set or unset)
   TimeStamp lastParameterChanged() const;
   void markParameterChanged();
+
+  // Capture the object's live parameters into a committed snapshot at
+  // anariCommitParameters() time, along with the parameter-change time that
+  // snapshot represents. A later buffered commitParameters()/finalize() reads
+  // this snapshot (see ParameterizedObject::ReadCommittedScope) rather than the
+  // live store, so a setParam issued before the commit buffer flushes cannot
+  // leak into this commit.
+  void snapshotParameters();
 
   // Event tracking of when an object's internal state changed
   TimeStamp lastUpdated() const;
@@ -97,13 +115,14 @@ struct BaseObject : public RefCounted, ParameterizedObject, LockableObject
 
   std::vector<BaseObject *> m_changeObservers;
   TimeStamp m_lastParameterChanged{0};
+  TimeStamp m_lastCommitSnapshot{0};
   TimeStamp m_lastUpdated{0};
   TimeStamp m_lastCommitted{0};
   TimeStamp m_lastFinalized{0};
   ANARIDataType m_type{ANARI_OBJECT};
 };
 
-// Return a value to correctly order object by type in the commit buffer
+/* Return a value to correctly order object by type in the commit buffer */
 int commitPriority(ANARIDataType type);
 
 std::string string_printf(const char *fmt, ...);

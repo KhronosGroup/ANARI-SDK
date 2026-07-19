@@ -58,7 +58,6 @@
                     "name" : "power",
                     "types" : ["ANARI_FLOAT32"],
                     "tags" : [],
-                    "default" : 1.0,
                     "description" : "overall amount of light energy emitted in W"
                 }, {
                     "name" : "radius",
@@ -76,7 +75,6 @@
                     "name" : "radiance",
                     "types" : ["ANARI_FLOAT32"],
                     "tags" : [],
-                    "default" : 1.0,
                     "description" : "the amount of light emitted by a point on the light source in a direction in W/sr/m^2"
                 }, {
                     "name" : "intensityDistribution",

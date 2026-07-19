@@ -39,7 +39,7 @@
                     "types" : ["ANARI_FLOAT32_BOX1"],
                     "tags" : [],
                     "default" : [0.0, 1.0],
-                    "description" : "time associated with the first and laste entry in the motion.transform array"
+                    "description" : "time associated with the first and last entry in the motion.transform array"
                 }
             ]
         }

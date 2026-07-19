@@ -7,8 +7,8 @@ API itself is detailed at length in the ANARI specification.
 
 The primary function of this library is to dispatch
 [ANARI C API function calls](include/anari/anari.h) to the corresponding ANARI
-devcie implementing the API (designated by an `ANARIDevice` handle in the
-functioin signature). There are two core concepts that implementations must
+device implementing the API (designated by an `ANARIDevice` handle in the
+function signature). There are two core concepts that implementations must
 implement, along with optional additional tools which can aid in implementing
 various ANARI features.
 
@@ -34,9 +34,9 @@ create an instance of `LibraryImpl`.  Implementations should use the
 `ANARI_DEFINE_LIBRARY_ENTRYPOINT` macro at the bottom of `LibraryImpl.h` to
 define this entrypoint function, where it is necessary to match the first macro
 argument with `[name]` in the physical shared library file. For example, the
-provided [`helide`](../helide) device on linux compiles into the shared library
+provided [`helide`](../devices/helide) device on linux compiles into the shared library
 `libanari_library_helide.so`, and `helide` is the first argument to
-`ANARI_DEFINE_LIBRARY_ENTRYPOINT`, as seen [here](../helide/HelideLibrary.cpp).
+`ANARI_DEFINE_LIBRARY_ENTRYPOINT`, as seen [here](../devices/helide/HelideLibrary.cpp).
 
 It is possible to directly construct a device if client applications directly
 links your library itself, but it is highly recommended to always provide the
@@ -64,11 +64,11 @@ the default status callback and callback user pointer. `DeviceImpl` is intended
 to be very minimal -- implementors who desire SDK-provided implementations of
 much of the API should use the [`helium`](../helium) layer which implements many
 common concepts, but requires implementations to opt-in to various `helium`
-abstractions and classes. The provided [`helide`](../helide) device demonstrates
+abstractions and classes. The provided [`helide`](../devices/helide) device demonstrates
 ultimately how to implement `DeviceImpl` through using
 [`helium::BaseDevice`](../helium/BaseDevice.h).  Device implementors can use the
 sum of `helium::BaseDevice` and
-[`helide::HelideDevice`](../helide/HelideDevice.h) as a full example of
+[`helide::HelideDevice`](../devices/helide/HelideDevice.h) as a full example of
 implementing ANARI. Further documentation of what functionality `helium`
 provides can be found in its [README](../helium/README.md).
 
@@ -95,20 +95,19 @@ which has the following signature:
 
 ```cmake
 anari_generate_queries(
-  NAME [device_name]
-  PREFIX [device_prefix]
+  DEVICE_TARGET [device_target]
   CPP_NAMESPACE [namespace]
   JSON_DEFINITIONS_FILE [path/to/device/definitions.json]
 )
 ```
 
-This CMake function will create a target called `generate_[device_name]_device`,
-which must be built manually in order to generate any C++. By invoking this
-targets, a `[device_prefix]Queries.cpp/.h` are created, which can be included
-in the local device build's source. Please refer to [helide](../helide) as an
+This CMake function generates `[device_target]_queries.cpp/.h` and attaches the
+generated source directly to `[device_target]` (via `target_sources()`), so the
+queries are built automatically as part of the device -- no separate target
+needs to be built manually. Please refer to [helide](../devices/helide) as an
 example of how these components all go together.
 
 Note that all core spec extensions are defined in a collection of
 [JSON files](../../code_gen/api) that are referenced in the downstream JSON
-definitions. It is recommened to copy an existing JSON definitions file and
+definitions. It is recommended to copy an existing JSON definitions file and
 modify it accordingly.

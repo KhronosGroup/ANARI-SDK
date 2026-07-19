@@ -157,7 +157,7 @@
                     "types" : ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
                     "tags" : ["attribute"],
                     "default" : 0.0,
-                    "description" : "iridescence thicknness"
+                    "description" : "iridescence thickness"
                 }
             ]
         }

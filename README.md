@@ -8,10 +8,11 @@ This repository contains the source for the ANARI API SDK. This includes:
 - [Front-end library + implementation guide](src/anari)
 - [Device implementation utilties for implementations](src/helium)
 - [Example device implementation](src/devices/helide) (not intended for production use)
+- [Example GPU device implementation](src/devices/helide_gpu) (in-progress, requires SDL3)
 - [Example applications](examples/)
 - [Interactive sample viewer](examples/viewer)
 - [Render tests](tests/render)
-- [(experimental) OpenUSD Hydra render delegate plugin](src/hdanari)
+- [OpenUSD Hydra plugin](src/hdanari)
 
 The ANARI specification can be found on the Khronos website
 [here](https://www.khronos.org/registry/ANARI/).
@@ -54,8 +55,9 @@ available to enable. The following CMake options are offered:
 - `BUILD_CAT`           : build the capability analysis tool
 - `BUILD_CTS`           : build the conformance test suite
 - `BUILD_TESTING`       : build unit and regression test binaries
-- `BUILD_HELIDE_DEVICE` : build the provided example `helide` device implementation
-- `BUILD_REMOTE_DEVICE` : build the provided experimental `remote` device implementation
+- `BUILD_HELIDE_DEVICE`     : build the provided example `helide` device implementation
+- `BUILD_HELIDE_GPU_DEVICE` : build the provided example `helide_gpu` GPU device (needs SDL3)
+- `BUILD_REMOTE_DEVICE`     : build the provided experimental `remote` device implementation
 - `BUILD_EXAMPLES`      : build example applications
 - `BUILD_VIEWER`        : build viewer too (needs SDL3) if building examples
 - `BUILD_HDANARI`       : build (experimental) OpenUSD Hydra delegate plugin
@@ -137,6 +139,11 @@ using Embree for intersection. Users should look to use vendor provided,
 hardware-optimized ANARI implementations which are shipped independently from
 the SDK. (see below)
 
+A GPU-accelerated example device [helide_gpu](src/devices/helide_gpu) is also
+available. It uses SDL3's cross-platform GPU abstraction layer for rendering and
+is currently in-progress. Build it with `BUILD_HELIDE_GPU_DEVICE=ON` (requires
+SDL3 3.2+ and `glslangValidator` in PATH).
+
 ### Using the debug device layer
 
 The ANARI-SDK ships with a [debug layer](src/devices/debug) implemented as an
@@ -181,19 +188,24 @@ variables:
 
 ### (Unofficial) list of actively developed ANARI implementations
 
-- [Barney](https://github.com/ingowald/barney) (MPI distributed renderer)
-- [ANARI-PTC](https://github.com/ingowald/ANARI-PTC) (MPI distributed adapter device)
-- [Cycles (Blender)](https://github.com/jeffamstutz/anari-cycles)
+- [ANARI-PTC](https://github.com/ingowald/ANARI-PTC) (MPI distributed adapter)
+- [ANARI-WebGPU](https://github.com/sankhesh/anari-webgpu)
+- [Cycles](https://github.com/jeffamstutz/anari-cycles) (Blender's path tracer)
+- [Halogen](https://github.com/MetaversalCorp/Halogen) (built on [Filament](https://github.com/google/filament))
+- [helide](src/devices/helide)
+- [helide_gpu](src/devices/helide_gpu)
 - [Intel OSPRay](https://github.com/ospray/anari-ospray)
+- [NVIDIA Barney](https://github.com/NVIDIA/barney) (MPI distributed renderer)
 - [NVIDIA USD](https://github.com/NVIDIA-Omniverse/AnariUsdDevice)
-- [NVIDIA VisRTX + VisGL](https://github.com/NVIDIA/VisRTX)
+- [NVIDIA VisRTX](https://github.com/NVIDIA/VisRTX)
+- [Photon](https://github.com/mvictoras/photon)
 - [Visionaray](https://github.com/szellmann/anari-visionaray)
-- [VTK-m](https://github.com/dpugmire/anari-library-vtkm)
+- [Viskores](https://github.com/Viskores/viskores)
 
 If you implement a backend to the ANARI SDK, please open a PR to add it to this
 list!
 
-### list of ANARI implementations no longer maintained
+### ANARI implementations no longer maintained
 
 - [AMD RadeonProRender](https://github.com/GPUOpen-LibrariesAndSDKs/RadeonProRenderANARI)
 
@@ -201,23 +213,24 @@ list!
 
 ### Publicly available applications + libraries using ANARI
 
-- [Blender](https://www.blender.org/) (via [addon](examples/blender) found in the ANARI-SDK)
+- [ANARI-Java](https://codeberg.org/jsorel/anari-java/) (Java language bindings)
+- [Blender](https://www.blender.org/) (via Python [addon](examples/blender))
 - [COVISE](https://www.hlrs.de/solutions/types-of-computing/visualization/covise)
 - [HayStack](https://github.com/ingowald/hayStack)
 - [OVITO](https://www.ovito.org/)
-- [OpenUSD](https://openusd.org/release/index.html) (via [hdAnari](src/hdanari) plugin found in the ANARI-SDK)
+- [OpenUSD](https://openusd.org/release/index.html) (via [hdAnari](src/hdanari) plugin)
+- [ParaView](https://www.paraview.org/)
 - [pynari](https://github.com/ingowald/pynari) (Python language bindings)
+- [Sneeze](https://github.com/MetaversalCorp/Sneeze) (Open Metaverse Browser Initiative)
 - [TSD](https://github.com/NVIDIA/VisRTX/tree/next_release/tsd)
+- [VisIt](https://visit-dav.github.io/visit-website/index.html)
+- [Viskores](https://github.com/Viskores/viskores)
 - [Vistle](https://vistle.io/)
 - [VTK](https://vtk.org/)
-- [Viskores](https://github.com/Viskores/viskores) (formerly known as VTK-m)
-- [ANARI-Java](https://bitbucket.org/Eclesia/anari-java/src/main/) (Java language bindings)
 
 ### Integrations in-progress
 
 - [Ascent](https://ascent.readthedocs.io/en/latest/)
-- [ParaView](https://www.paraview.org/)
-- [VisIt](https://visit-dav.github.io/visit-website/index.html)
 - [VMD](https://www.ks.uiuc.edu/Research/vmd/)
 
 If you integrate ANARI into your application, please open a PR to add it to this

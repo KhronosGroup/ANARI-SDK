@@ -1,4 +1,4 @@
-// Copyright 2023-2025 The Khronos Group
+// Copyright 2023-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
@@ -8,6 +8,13 @@
 
 namespace helium {
 
+/*
+ * Mixin that provides per-object mutual exclusion. BaseObject and BaseDevice
+ * both inherit this so that concurrent API calls operating on the same object
+ * can be serialized with scopeLockObject(). The lock is acquired through RAII
+ * via std::scoped_lock and released automatically when the returned value goes
+ * out of scope.
+ */
 struct LockableObject
 {
   LockableObject() = default;

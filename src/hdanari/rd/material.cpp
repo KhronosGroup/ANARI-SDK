@@ -1,4 +1,4 @@
-// Copyright 2024-2025 The Khronos Group
+// Copyright 2024-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "material.h"
@@ -152,7 +152,7 @@ void HdAnariMaterial::Sync(HdSceneDelegate *sceneDelegate,
     materialNetwork2_ = convertToHdMaterialNetwork2(networkMap);
     auto materialNetworkIface =
         HdMaterialNetwork2Interface(GetId(), &materialNetwork2_);
-    
+
     auto surfaceTerminalConnection = materialNetworkIface.GetTerminalConnection(HdMaterialTerminalTokens->surface);
     if (!surfaceTerminalConnection.first) {
       TF_CODING_ERROR("Cannot find a surface terminal on prim %s",

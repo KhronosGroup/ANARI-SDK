@@ -77,12 +77,6 @@
                     "tags" : [],
                     "description" : "per primitive attribute3"
                 }, {
-                    "name" : "primitive.id",
-                    "types" : ["ANARI_ARRAY1D"],
-                    "elementType" : ["ANARI_UINT32", "ANARI_UINT64"],
-                    "tags" : [],
-                    "description" : "primitive id"
-                }, {
                     "name" : "isovalue",
                     "types" : ["ANARI_FLOAT32", "ANARI_ARRAY1D"],
                     "elementType" : ["ANARI_FLOAT32"],

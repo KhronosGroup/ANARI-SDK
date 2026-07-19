@@ -1,4 +1,4 @@
-// Copyright 2021-2025 The Khronos Group
+// Copyright 2021-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Renderer.h"
@@ -45,6 +45,8 @@ static RenderMode renderModeFromString(const std::string &name)
     return RenderMode::GEOMETRY_ATTRIBUTE_COLOR;
   else if (name == "opacityHeatmap")
     return RenderMode::OPACITY_HEATMAP;
+  else if (name == "testFrame")
+    return RenderMode::TEST_FRAME;
   else
     return RenderMode::DEFAULT;
 }
@@ -127,6 +129,16 @@ void Renderer::commitParameters()
 PixelSample Renderer::renderSample(
     const float2 &screen, Ray ray, const World &w) const
 {
+  if (m_mode == RenderMode::TEST_FRAME) {
+    PixelSample retval;
+    retval.color = float4(ray.dir.x * 0.5f + 0.5f,
+        ray.dir.y * 0.5f + 0.5f,
+        ray.dir.z * 0.5f + 0.5f,
+        1.f);
+    retval.depth = 0.f;
+    return retval;
+  }
+
   PixelSample retval;
 
   // Intersect Surfaces //

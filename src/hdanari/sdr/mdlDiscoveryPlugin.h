@@ -1,14 +1,16 @@
-// Copyright 2025 The Khronos Group
+// Copyright 2025-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
 
 #include <pxr/pxr.h>
-#include <pxr/usd/ndr/discoveryPlugin.h>
+#include <pxr/usd/sdr/declare.h>
+#include <pxr/usd/sdr/discoveryPlugin.h>
+#include <pxr/usd/sdr/shaderNodeDiscoveryResult.h>
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-class HdAnariMdlDiscoveryPlugin final : public NdrDiscoveryPlugin
+class HdAnariMdlDiscoveryPlugin final : public SdrDiscoveryPlugin
 {
  public:
   HdAnariMdlDiscoveryPlugin() = default;
@@ -17,10 +19,11 @@ class HdAnariMdlDiscoveryPlugin final : public NdrDiscoveryPlugin
 
   /// Discover all of the nodes that appear within the the search paths
   /// provided and match the extensions provided.
-  NdrNodeDiscoveryResultVec DiscoverNodes(const Context &) override;
+  SdrShaderNodeDiscoveryResultVec DiscoverShaderNodes(
+      const Context &) override;
 
   /// Gets the paths that this plugin is searching for nodes in.
-  const NdrStringVec &GetSearchURIs() const override;
+  const SdrStringVec &GetSearchURIs() const override;
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

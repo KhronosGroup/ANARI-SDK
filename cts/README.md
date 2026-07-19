@@ -1,324 +1,251 @@
 # CTS
 
-The Conformance Test Suite (CTS) is a python toolkit using [pybind11](https://github.com/pybind/pybind11) to test the ANARI implementation of different libraries/devices against a reference device.
-It contains the following features:
+The Conformance Test Suite (CTS) validates an ANARI device implementation by
+rendering a known battery of scenes and comparing each render against
+ground-truth images produced by a reference device (helide). It is a
+self-contained C++ command-line tool, `anariCts`, with a thin Python layer
+(`ctsReport.py`) retained only for producing a PDF.
 
-- Render set of known test scenes
-- Image comparison “smoke tests”
-- Verification of object/parameter info metadata
-- Verification of known object properties
-- List core extensions implemented by a device
-- Create a pdf report
+It can:
 
-## Requirements
+- enumerate the test catalog (`list`, `query-metadata`),
+- generate ground-truth images with the reference device (`generate`),
+- render and score a candidate device against that ground truth (`run`),
+- report which extensions a device implements (`query-features`), introspect a
+  device's object subtypes and parameter metadata (`query-device-info`), and
+  report which tests it can run vs. will skip (`check-properties`),
+- summarize a run as text or an interactive HTML report (`report`) — a PDF is
+  available via `ctsReport.py`.
 
-### ANARI Feature Support
+See [CONTEXT.md](CONTEXT.md) for the vocabulary (Test, Axis, Permutation,
+Variant, Case, Channel, Ground truth, Workdir, …) and `docs/adr/` for the design
+decisions behind the architecture.
 
-Any libraries/devices being tested need to at least support the following features:
-
-- ANARI_KHR_MATERIAL_MATTE
-- ANARI_KHR_GEOMETRY_TRIANGLE
-- ANARI_KHR_CAMERA_PERSPECTIVE
-- ANARI_KHR_RENDERER_BACKGROUND_COLOR
-- ANARI_KHR_RENDERER_AMBIENT_LIGHT
-
-### Software Dependencies
-
-This project uses poetry to manage package versions. To bypass using poetry the packages listed in [pyproject.toml](pyproject.toml) can be installed manually.
-
-- Your ANARI library files copied into this folder
-- [Python 3.9+](https://www.python.org/downloads/)
-- [poetry](https://python-poetry.org/)
-
-Install poetry as described [here](https://python-poetry.org/docs/#installing-with-pipx). You might need to add the poetry executable to your PATH.
-
-In the cts folder, run `poetry install` to install all dependencies. This will automatically search for a suitable python version. If poetry can not find a python version or you want to specify a specific one, you can use `poetry env use <path to python executable>` before calling `poetry install`.\
-On Windows, `poetry install` might fail since the resulting path can exceed 260 characters. To fix this issue [enable long paths in Windows](https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=powershell).
-
-Afterwards, use `poetry shell` to enter the virtual environment. From this shell you can run the cts normally via `python cts.py`.
-
-If the cts binary (.pyd) file for the desired SDK version is not provided, have a look at the [Build section](#building).
-
-## Install
-CTS will be installed alongside ANARI via calling
-```bash
-% cmake --build . -t install
-```
-in the main ANARI build folder.
-To run the CTS, one has to set the `PYTHONPATH` environment variable to the location of the ANARI library files.
-On Linux this defaults to `/usr/local/lib`, on Windows to `<install location>/bin`.
-The `cts.py` file as well as all test scenes etc. are located in `<install location>/share/anari/cts`. 
-## Usage
-
-Run the toolkit in the command line via
+## Architecture
 
 ```
-.\cts.py --help
-```
-On linux one might need to make `cts.py` executable by running `chmod +x cts.py`.
-
-This will show all available commands. To get more information about the individual commands call them with the help flag.
-
-A detailed explanation of each feature can be found in [features.md](features.md).
-
-Example: To create the pdf report for the helide library, make sure the `anari_library_helide.dll` (or _.so / _.dylib) is placed into this folder and call:
-
-```
-.\cts.py create_report helide
+anariCts  (C++ tool)                    renders + scores; writes results/ and ground_truth/
+    │                                    sidecar JSON + PNGs under a --workdir
+    ├─ report                            reads the results tree -> text / HTML (ADR-0008)
+    └─ files only (ADR-0001)
+ctsReport.py  (Python)                   reads the same results tree; retained only for the PDF
 ```
 
-Not all C++ exceptions from ANARI devices can be caught. If possible, the exception will be printed to the console and the task will resume (e.g. continuing with the next test). If the CTS crashes, have a look at the `ANARI.log` file. It contains all ANARI logger information and might reveal the reason of a crash or unexpected behavior. It is found by default in the current working directory, but the location can also be specified using `--log_dir` or the environment variable `ANARI_CTS_LOG`.
+The C++ tool is the single source of image metrics (SSIM, PSNR); no reader ever
+opens a device or re-computes a metric (ADR-0004). Reporting reads the per-Case
+sidecar files in the workdir (ADR-0003); the results tree is the only contract.
 
 ## Building
 
-To build the CTS, CMake and a C++17 compiler is required. The project was tested with the MSVC compiler.\
-On Windows the `anariCTSBackend` target does not show up in the CMake Tools for Visual Studio Code. It can either be seen in Visual Studio in the CMake Targets View or by using e.g. CMake GUI to create a Visual Studio solution. Nevertheless, the anariCTSBackend target is always build when `build all` is selected.
-
-For easier development, build ANARI statically (by setting `BUILD_SHARED_LIBS=OFF`). The `CTS_DEV` option will copy the build binaries into the `cts` folder since they are needed for executing the python files. The helide and debug libraries are copied as well so they can be used as example devices.
-`anariCTSBackend*.pyd` is the python module which is imported in the `cts.py` file.
-
-Once built, the library can be installed via the `install` target created by
-CMake. This is invoked for the whole ANARI project from your build directory with (on any platform):
+The tool builds as part of the SDK when either `BUILD_CTS` or `BUILD_TESTING` is
+on, and needs a device to test against (helide is the reference):
 
 ```bash
-% cmake --build . -t install
+cmake -DBUILD_CTS=ON -DBUILD_HELIDE_DEVICE=ON ..
+cmake --build . -j
 ```
 
-## Test scene format
+The glTF asset tests are gated separately on `CTS_ENABLE_GLTF` (decoupled from
+`BUILD_CTS`, since they need only the glTF loader, not the tool itself):
 
-A test is written as a JSON file with a specific structure. [`default_test_scene.json`](default_test_scene.json) contains the default values for each test. These can be overwritten by the specific tests. Tests should be placed in the [test_scenes folder](test_scenes/). By using subfolders, categories can be created that allow running the CTS on selected tests only.
-
-Here is the [sphere test file](test_scenes/primitives/sphere/sphere.json) as an example:
-
-```json
-{
-  "sceneParameters": {
-    "geometrySubtype": "sphere",
-    "seed": 54321,
-    "anari_objects": {
-      "material": [
-        {
-          "subtype": "transparentMatte",
-          "opacity": 0.5
-        }
-      ],
-      "sampler": [
-        {
-          "subtype": "Image2D"
-        }
-      ]
-    }
-  },
-  "permutations": {
-    "primitiveCount": [1, 16],
-    "/anari_objects/material/0/color": [null, [1.0, 1.0, 1.0], "ref_sampler_0"]
-  },
-  "variants": {
-    "primitiveMode": ["soup", "indexed"]
-  },
-  "requiredFeatures": ["ANARI_KHR_GEOMETRY_SPHERE"],
-  "metaData": {
-    "1": {
-      "bounds": {
-        "world": [
-          [0.8382989764213562, 0.43637922406196594, 0.5504830479621887],
-          [0.9849825501441956, 0.5830627679824829, 0.6971666216850281]
-        ]
-      }
-    },
-    "16": {
-      "bounds": {
-        "world": [
-          [-0.08789964765310287, -0.28438711166381836, -0.20388446748256683],
-          [1.1669179201126099, 1.1838836669921875, 1.3429962396621704]
-        ]
-      }
-    }
-  }
-}
+```bash
+cmake -DBUILD_CTS=ON -DBUILD_HELIDE_DEVICE=ON -DCTS_ENABLE_GLTF=ON ..
 ```
 
-- `sceneParameters`: This json objects contains all key value pairs which are passed to the C++ scene generator. The following parameters are supported. They are also documented in the [parameters() function in SceneGenerator.cpp](src/SceneGenerator.cpp/#L38):
-  - `geometrySubtype`: Which type of geometry to generate. Possible values: `triangle`, `quad`, `sphere`, `curve`, `cone`, `cylinder`. Default: `triangle`
-  - `shape`: Which shape should be generated. Currently only relevant for triangles and quads. Possible values: `triangle`, `quad`, `cube`. Default: `triangle`
-  - `primitiveMode`: How the vertex data is arranged (`soup` or `indexed`). Default: `soup`
-  - `primitiveCount`: Number of primitives to generate. Default: `1`
-  - `vertexCaps`: Whether cones and cylinders should have caps (per vertex setting). Default: `false`
-  - `globalCaps`: Whether cones and cylinders should have caps (global setting). Possible values: `none`, `first`, `second`, `both`. Default: `none`
-  - `globalRadius`: Set the global radius property instead of using a per vertex one
-  - `unusedVertices`: The last primitive's indices in the index buffer will be removed to test handling of unused/skipped vertices in the vertex buffer
-  - `color`: Fill an attribute with colors. Possible values: `vertex.color`, `vertex.attribute0`, `primitive.attribute3` and similar
-  - `opacity`: Fill an attribute with opacity values. Possible values: `vertex.attribute0`, `primitive.attribute3` and similar
-  - `frame_color_type`: Type of the color channel. If empty, the color channel will not be used. Possible values: `UFIXED8_RGBA_SRGB`, `FLOAT32_VEC4`, `UFIXED8_VEC4`
-  - `frame_albedo_type`: Render the albedo channel instead of the color channel if `KHR_FRAME_CHANNEL_ALBEDO` is supported. Possible values: `UFIXED8_VEC3`, `UFIXED8_RGB_SRGB`, `FLOAT32_VEC3`
-  - `frame_normal_type`: Render the normal channel instead of the color channel if `KHR_FRAME_CHANNEL_NORMAL` is supported. Possible values: `FIXED16_VEC3`, `FLOAT32_VEC3`
-  - `frame_primitiveId_type`: Render the primitive ID channel as colors instead of the color channel if `KHR_FRAME_CHANNEL_PRIMITIVE_ID` is supported. Possible values: `UINT32`
-  - `frame_objectId_type`: Render the object ID channel as colors instead of the color channel if `KHR_FRAME_CHANNEL_OBJECT_ID` is supported. Possible values: `UINT32`
-  - `frame_instanceId_type`: Render the instance ID channel as colors instead of the color channel if `KHR_FRAME_CHANNEL_INSTANCE_ID` is supported. Possible values: `UINT32`
-  - `frame_depth_type`: Type of the depth channel. If empty, the depth channel will not be used. Possible values: `FLOAT32`
-  - `image_height`: Height of the image. Default: `1024`
-  - `image_width`: Width of the image. Default: `1024`
-  - `attribute_min`: Minimum random value for attributes. Default: `0.0`
-  - `attribute_max`: Maximum random value for attributes. Default: `1.0`
-  - `primitive_attributes`: Whether primitive attributes should be filled randomly. Default: `false`
-  - `vertex_attribtues`: Whether vertex attributes should be filled randomly. Default: `false`
-  - `seed`: Seed for random number generator to ensure that tests are consistent across platforms. Default `0`
-  - `spatial_field_dimensions`: A 3-integer array, describing the dimensions of all spatial fields in this test. If no spatial field is defined in `anariObjects`, a default one will be used.
-  - `frameCompletionCallback`: When set to `true`, checks if `ANARI_KHR_FRAME_COMPLETION_CALLBACK` works correctly. Renders a green image on success and a red image otherwise.
-  - `progressiveRendering`: When set to `true`, checks if `ANARI_KHR_PROGRESSIVE_RENDERING` works correctly. Renders a green image if more then 10 pixels differ from the previous rendering and a red image otherwise.
-  - `anari_objects`: This JSON object can be used to set generic parameters for all ANARI objects except World. It holds arrays that each have their type name as their key. Each array should only have one element. This array contains objects with parameters for each ANARI object. The parameter `subtype` is mandatory for all object types that define it. `null` can be used to reset/use the default of a parameter (useful for permutations). To set a parameter to a reference to another object, use the `ref_` prefix, then add the type and index, e.g. `ref_sampler_0`. All other `sceneParameters` take precedence over the ones set using the generic `anari_objects`. This also implies that for geometries, subtypes can not be mixed and `subtype` in `anariObjects` need to match `geometrySubtype`. Additionally, if `instances` are used no objects are added to the world despite the instances. There is no need to create e.g. a default `surface` to display materials or geometry. If an object is missing, a default object is used instead. To set `Array1D` or `Array2D` parameters, the value needs to be a JSON object containing the type as key together with its value, e.g. `{"Array1D": [0, 1, 2, 3]}`.
--  `simplified_permutations`: When set to `true`, only the first value of each permutation list is used with permutations of other parameters, therefore reducing the amount of tests to N_0 + N_1 + ... instead of a cartesian product
-- `permutations` and `variants`: These specify scene parameters where different values should be tested. Therefore, these JSON objects contain the name of a scene parameter and a list of values for each of them. The permutations specify changes which result in a different outcome (e.g. 1 or 16 primitives). The variants should not change the outcome, therefore only one reference rendering is needed for these (e.g. the soup and indexed variants should look the same). The cartesian product is performed for all parameters. In the current example this results in four test images: 1 primitive + soup, 1 primitive + indexed, 16 primitives + soup, 16 primitives + indexed; As well as two reference images: 1 primitive (soup or indexed), 16 primitives (soup or indexed). To permutate a parameter in an ANARI object, the object needs to be defined in `anariObjects` without the parameter. In the permutation or variant object a JSON pointer e.g. `"/anari_objects/material/0/color"` should be used as key as seen in the example.
-- `requiredFeatures`: A list of features which need to be supported by the device to perform the test. Some features (e.g. perspective camera) which are needed for every test are implicitly required. This list should only contain the features which are explicitly tested. If the device does not support the feature, the test is skipped.
-- `bounds_tolerance`: Specifies the percentage the bounds can vary in each dimension and still be considered correct.
-- `thresholds`: Specifies the threshold for each comparison method and for this specific test only (can not be overwritten). The value consists of a JSON object with key value pairs consisting of the name of the metric and its threshold.
-- `metaData`: This JSON object is automatically created while generating the reference images. It contains ANARI object properties for each permutation (currently only bounds information).
+That registers one Test per asset under `cts/gltf-Sample-Assets/` (override the
+location at runtime with `ANARI_CTS_GLTF_ASSETS`); it is a no-op when the assets
+directory is absent. Texture-heavy assets need the optional encodings the SDK's
+glTF loader supports — build with `-DUSE_DRACO=ON -DUSE_KTX=ON -DUSE_WEBP=ON`
+for full coverage; without them, expect benign "Could not decode image" warnings
+(those Cases still pass, since ground truth and candidate are both rendered by
+the same device).
 
-## Extending the Scene Generator
+The text summary and HTML report are built into `anariCts` and need nothing
+further. The Python layer is needed *only* for a PDF, and then only Python 3.9+
+plus `reportlab`. See [pyproject.toml](pyproject.toml).
 
-The C++ code is divided into the following source files:
+## Usage
 
-- `main.cpp` contains the pybind11 definitions. For more information check the pybind11 documentation.
-- `anariInfo.cpp` contains the refactored version of the `anariInfo.cpp` from the examples.
-- `ctsQueries.cpp` is autogenerated by the generate_cts target.
-- `anariWrapper.cpp` contains the functions which do not need to be applied to all scenes (query_features), the ANARI status function, and a wrapper around the SceneGenerator. This wrapper is needed to ensure the python callback is not garbage collected by pybind11.
-- `SceneGenerator.cpp` inherits the `TestScene` class from `anari_test_scenes` and translates the test cases into ANARI objects.
-- `PrimitiveGenerator.cpp` is used by the `SceneGenerator` to create the data needed for the ANARI geometries (e.g. vertex data, radii).
+```
+anariCts <command> [options]
 
-To add a new scene parameter, it just needs to be added to the JSON file of a test. To access it in C++ call
+commands:
+  list                       list tests, descriptions, and case counts
+  generate [options]         render ground truth with the reference device
+  run <device> [options]     render + score a candidate device against ground truth
+  query-features <device>    print the device's supported extensions
+  query-metadata [options]   print catalog metadata as JSON
+  query-device-info <device> introspect a device: object subtypes + parameter metadata
+  check-properties <device>  report which tests the device can run vs. will skip
+  report <workdir>           summarize a run's results tree (text + optional HTML)
+
+options:
+  --filter <pattern>   select a slice of the catalog (substring or glob over <category>/<test>)
+  --workdir <dir>      run root holding results/ ground_truth/ assets/ (default: cts_workdir)
+  --device <lib>       reference device library for generate (default: helide)
+  --width <n>          render width (default: 256)
+  --height <n>         render height (default: 256)
+  -r, --renderer <subtype>
+                       renderer subtype (default: default)
+  --ambientRadiance <value>
+                       baseline renderer ambientRadiance (default: 1)
+  -p, --renderer-param NAME=VALUE
+                       set a custom renderer parameter on every rendered case
+                       (repeatable; device-agnostic). VALUE parses into the
+                       renderer's device-declared type, else inferred as bool/
+                       int/float/float-vector/string. e.g. -p ambientSample=4
+  --accumulation <n>   progressive color-channel frames when supported (default: 16)
+  --no-accumulation    render each channel once
+  --denoise            set the renderer denoise parameter
+  --stdin              read newline-separated filter patterns from stdin (run)
+  --verbose            print ANARI warnings
+
+report options:
+  --html <path>        also write an interactive HTML report
+  --embed              inline images in the HTML (portable single file; embeds
+                       only the initially-shown cases unless combined with --all)
+  --all                itemize every case (default: failures only)
+```
+
+The library being tested must be loadable at runtime (on its
+`ANARI_LIBRARY`/`LD_LIBRARY_PATH`), exactly as for any ANARI application.
+
+### Typical flow
+
+Ground truth is generated on demand and never committed (ADR-0005), so the first
+step is always to generate it with the reference device, then run the candidate:
+
+```bash
+# 1. Generate ground truth for the whole catalog with the reference device.
+anariCts generate --renderer default --ambientRadiance 1 --workdir myrun
+
+# 2. Render + score a candidate device against it.
+anariCts run helide --renderer default --ambientRadiance 1 --workdir myrun
+
+# 3. Summarize the run (text, or an interactive HTML report).
+anariCts report myrun
+anariCts report myrun --html myrun.html
+anariCts report myrun --all --embed --html myrun-all.html   # portable single file
+python cts/ctsReport.py report myrun --pdf myrun.pdf         # PDF, if you want one
+```
+
+`run` exits non-zero if any Case failed, so it drops into CI directly.
+
+Use the same `--renderer` and `--ambientRadiance` values for `generate` and
+`run`; they are part of the rendering configuration being compared. The
+ambient value is a baseline for ordinary Tests. A renderer Test that explicitly
+exercises `ambientRadiance` overrides it with the Case's axis value.
+
+Pass device-specific renderer knobs with `-p/--renderer-param NAME=VALUE`
+(repeatable), e.g. `-p ambientSample=4`. It stays device-agnostic: the value is
+typed against the renderer subtype's device-declared parameter metadata (falling
+back to inference when the device does not report the parameter), so no
+device-specific names live in the CTS. Overrides apply over the baseline but
+before a renderer Test's own configuration, so such a Test still wins on
+conflict. As with `--ambientRadiance`, use the same overrides for `generate` and
+`run` when they affect the compared image.
+
+### Running a slice
+
+`--filter` takes a substring or glob (`*`, `?`) matched case-insensitively over
+each test's `<category>/<test>` id:
+
+```bash
+anariCts list --filter geometry          # see what a filter selects
+anariCts generate --filter geometry/sphere --workdir myrun
+anariCts run helide --filter "light/*" --workdir myrun
+```
+
+`run --stdin` reads one filter pattern per line, accumulating into the same
+workdir — useful for an interactively chosen subset:
+
+```bash
+printf 'geometry/sphere\nlight/directional\n' | anariCts run helide --stdin --workdir myrun
+```
+
+Because results are per-Case sidecars, running subsets at different times
+accumulates in one workdir without clobbering (ADR-0003).
+
+### Introspecting a device
+
+```bash
+anariCts query-features helide            # extensions the device reports
+anariCts check-properties helide          # per test: [run ] or [skip] + missing features
+anariCts query-metadata --filter frame    # descriptions and catalog metadata as JSON
+```
+
+`check-properties` is the quick way to see why a Test will be skipped on a
+device — a Test is skipped when the device is missing any of its required
+extensions.
+
+## Reporting
+
+`anariCts report` reads a workdir's results tree; it never renders or opens a
+device (ADR-0008).
+
+```bash
+# Summarize one run (per-category pass/fail/skip, plus failing Cases).
+anariCts report myrun
+anariCts report myrun --html myrun.html          # interactive HTML alongside the text
+anariCts report myrun --all --html myrun-all.html   # itemize every Case
+anariCts report myrun --all --embed --html myrun.html  # inline images: one portable file
+
+# A PDF is still available from the Python layer.
+python cts/ctsReport.py report myrun --pdf myrun.pdf
+```
+
+`report` exits non-zero if any Case failed, so it drops into CI directly.
+
+By default, report details are limited to failed Cases. Pass `--all` to itemize
+passed, failed, and skipped Cases. The HTML report always carries every Case's
+metadata so its status filter and search work client-side; it defaults to a
+"failed first" ordering (with a synthetic Failed section) when the run has
+failures, and can switch back to grouping by category. With `--embed`, images
+travel inline as base64 for the initially-shown Cases only (add `--all` to embed
+everything), so a shared file stays bounded; without it, the HTML references the
+PNGs in the workdir. Each channel offers a result/ground-truth A/B flip (click
+or toggle) and an interactive difference-mask canvas — a threshold slider paints
+the exceeding pixels red, with an "over actual" toggle to see them on a dimmed
+render. (Reading diff pixels needs canvas-readable images: works with `--embed`
+or when served over http; a referenced `file://` diff falls back to the static
+image.)
+
+## Comparison metrics
+
+Each rendered Channel is compared against its ground-truth image with two
+metrics, ported faithfully from the former scikit-image pipeline so the
+historical thresholds keep their meaning:
+
+- **SSIM** (structural similarity), default threshold `0.70` — compares image
+  structure rather than absolute pixel values, so it tolerates shading
+  differences while catching structural ones.
+- **PSNR** (peak signal-to-noise ratio, dB), default threshold `20.0`.
+
+Both composite alpha over a white background and use a data range of 255. The
+default thresholds can be overridden per Test (and per Channel) in the catalog;
+a Case passes only when every metric on every Channel clears its threshold.
+
+## Extending the catalog
+
+Tests are authored directly in C++ (ADR-0002), one per-category file under
+`src/anari_test_scenes/cts/tests/`. A Test is declared with the `makeTest`
+fluent builder: a `build()` that authors an ANARI world with normal ANARI C++
+calls plus the focused construction helpers (`GeometryLayout.h`,
+`GeometryBuilder.h`, the remaining `*Builder.h` modules, `TextureGenerator`,
+and `ColorPalette`), a short human-readable `description()`, its axes
+(`permute`/`variant`), required features, thresholds, and channels. For example:
 
 ```cpp
-auto newParameter = getParam<Type>("newParameterName", valueIfNotExists);
+makeTest("geometry", "sphere")
+    .description("Checks sphere counts and equivalent soup and indexed layouts.")
+    .build([](BuildContext &ctx) { /* author + return an anari::World */ })
+    .permute("primitiveCount", {1, 16})   // distinct ground truth per value
+    .variant("primitiveMode", {"soup", "indexed"})  // shared ground truth
+    .requireFeature("ANARI_KHR_GEOMETRY_SPHERE")
+    .registerInto(catalog);
 ```
 
-The `parameters()` function in `SceneGenerator.cpp` documents all available parameters. It should be extended while adding new parameters. The scene generator has two important functions: `commit()` sets up the scene by creating the ANARI objects after all parameters are set. `renderScene()` is only called by the `render_scenes()` python function and creates the default camera based on the image resolution, the renderer based on the specified subtype, the frame with the provided data types for each channel and finally renders the scene and returns the pixel data for each channel. The logic for new parameters should generally be added in one of the two functions.
-
-`resetSceneObjects()` resets all ANARI objects but does not reset the parameters. It is used after a permutation/variant.
-`resetAllParameters()` additionally resets all parameters and is used before a new scene is initialized.
-
-To keep track of ANARI objects for e.g. property checks such as bounds, `m_anariObjects` can be used. It is a map which holds a vector of ANARI objects for each ANARI_TYPE. Do not release objects you added to this map, it will be done by the reset functions or the destructor.
-
-If new functions need to be added to the scene generator and accessible from python, keep in mind that they also need to be added in `anariWrapper` and `main.cpp`.
-
-## Creating the reference renderings/metadata
-
-The `generateCTS` target can be build to generate all reference images, add the meta data to the test JSON files and generate the C++ ANARI query code. Currently the `helide` library is used to generate the references. To change this, modify `REFERENCE_LIB` in [CMakeLists.txt](CMakeLists.txt/#L10). One can also manually call the [`createReferenceData.py`](createReferenceData.py) script.\
-This will clear and set the metaData objects of all tests in [`test_scenes`](test_scenes/) and place the reference renderings next to the corresponding json files with a `ref_` prefix.
-
-## Extending the python scripts
-
-The python code is divided into 4 files:
-
-- [cts.py](cts.py): The main python file which parses all arguments and contains functions for each feature.
-- [ctsUtility.py](ctsUtility.py): This file contains utility functions e.g. image comparison functions.
-- [ctsReport.py](ctsReport.py): This file contains the functions to create the PDF report from JSON style input data.
-- [createReferenceData.py](createReferenceData.py): This script can be used to create the reference data.
-
-### Image compare functions
-
-The comparison functions are defined at the top of [ctsUtility.py](ctsUtility.py). Currently, `PSMR` and `SSIM` from `scikit_image` are used as metrics. To permanently add a new metric, define a function like this:
-
-```python
-def newMetric(reference, candidate, threshold):
-    result = newMetric(reference, candidate)
-    return result > threshold, threshold, result
-```
-
-The function takes the reference and candidate pixel data and a threshold. It returns a bool if the candidate passed the test, the threshold and the actual result.
-
-Now this function needs to be called in `evalute_metrics`:
-
-```python
-if "newMetric" in methods:
-    threshold =  getThreshold(methods, thresholds, "newMetric", 0.7) # 0.7 is the default threshold value
-    passed["newMetric"], usedThresholds["newMetric"], results["newMetric"] = newMetric(reference, candidate, threshold)
-```
-
-Now the new metric can be used and is automatically added to the report.
-
-Another way to add a new metric temporarily is by using the `custom_compare_function` parameter of `compare_images` or `create_report`. This parameter can be set to a function with the following signature:
-
-```python
-def custom_compare_function(reference, candidate):
-    # ...
-    return result > threshold, threshold, result
-```
-
-Note that no threshold is passed to the custom function. The threshold needs to be defined in the custom function and be returned as the second value.
-
-### Apply to scene
-
-To add new functionality to the CTS the `apply_to_scene` function can be used.
-
-```python
-def function_per_scene(parsed_json, sceneGenerator, anari_renderer, scene_location, test_name, permutationString, variantString)
-
-def apply_to_scenes(func, anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", only_permutations = False, check_features = True, use_generator = True,  *args)
-```
-
-It takes a function e.g. `function_per_scene` and calls it for each scene or each scene permutation, if present. The function receives the parsed json test file, the C++ sceneGenerator object, the name of the ANARI renderer, the file location of the test, the name of the test, the current permutation and variant or empty strings if none exist.
-The return value is stored in a dictionary as a value with the key being the test's name + the permutation/variant string.
-
-The `only_permutations` parameter of `apply_to_scenes` can be used to ignore variants. This is relevant for the reference creation. `check_features` can be set to `False` to run all tests even if the required features are not implemented. `use_generator` specifies if the C++ SceneGenerator should be initialized or not. In the latter case, `sceneGenerator` is set to `None`. Additional parameters can be added (denoted as `*args`) and will be passed directly to the apply function.
-
-### PDF report
-
-The PDF report is created in [ctsReport.py](ctsReport.py) with the reportlab library. It takes a JSON-like structured item, which represents the different sections and subsection of the PDF. Therefore, the required features for each test can be found in `data[test_name]`, while the actual result can be found in `data[test_name][permutation][channel]`. Test case independent information such as the supported features and anariInfo output is stored in the top level JSON data. Additionally, a summary is compiled at the top of the report, showing each test case and whether it failed or passed, as well as a link to the corresponding detailed page. By default the detailed pages are not created. `--verbose_error` (verbosity level 1) shows these pages for failed tests and `--verbose_all` (verbosity level 2) shows it for every test regardless of its outcome.
-
-## Debugging
-
-To debug the python and C++ code simultaneously, the Visual Studio Code extension [Python C++ Debugger](https://marketplace.visualstudio.com/items?itemName=benjamin-simmonds.pythoncpp-debug) can be used. This automatically attaches the C++ debugger the correct process.
-
-Here is a sample `launch.json` for Windows to get the debugger running:
-
-```json
-{
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "name": "Python C++ Debugger: CTS",
-      "type": "pythoncpp",
-      "request": "launch",
-      "pythonLaunchName": "Python: CTS",
-      "cppAttachName": "(Windows) Attach"
-    },
-    {
-      "name": "Python C++ Debugger: CTS REF",
-      "type": "pythoncpp",
-      "request": "launch",
-      "pythonLaunchName": "Python: CTS REF",
-      "cppAttachName": "(Windows) Attach"
-    },
-    {
-      "name": "(Windows) Attach",
-      "type": "cppvsdbg",
-      "request": "attach",
-      "processId": ""
-    },
-    {
-      "name": "Python: CTS",
-      "type": "python",
-      "request": "launch",
-      "program": "${workspaceFolder}/cts.py",
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal",
-      "env": { "PYTHONPATH": "${workspaceRoot}" },
-      "args": ["render_scenes", "helide"]
-    },
-    {
-      "name": "Python: CTS REF",
-      "type": "python",
-      "request": "launch",
-      "program": "${workspaceFolder}/createReferenceData.py",
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal",
-      "env": { "PYTHONPATH": "${workspaceRoot}" },
-      "args": []
-    }
-  ]
-}
-```
-
-Open the `cts` folder in VS Code. Add `/.vscode/launch.json` and run `Python C++ Debugger: CTS` to start debugging. Use `args` to invoke different python functions.\
- `Python C++ Debugger: CTS REF` can be used to debug `createReferenceData.py`.\
-If multiple python versions are installed, make sure to select the correct python interpreter in VS Code.
+The harness lives in `src/anari_test_scenes/cts/` (`Axis`, `Case`, `Catalog`,
+`Expansion`, `BuildContext`, `Runner`, `Metrics`, `Workdir`, `Sidecar`, …); the
+CLI entry point is `cts/src/main.cpp`, which links the internal static
+`anari_cts_core` target. See [AGENTS.md](AGENTS.md) for a map of the source.

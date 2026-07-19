@@ -1,4 +1,4 @@
-// Copyright 2021-2025 The Khronos Group
+// Copyright 2021-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
@@ -19,6 +19,7 @@ struct Surface : public Object
   void finalize() override;
   void markFinalized() override;
   bool isValid() const override;
+  bool isVisible() const;
 
   uint32_t id() const;
   const Geometry *geometry() const;
@@ -33,6 +34,7 @@ struct Surface : public Object
 
  private:
   uint32_t m_id{~0u};
+  bool m_visible{true};
   helium::IntrusivePtr<Geometry> m_geometry;
   helium::IntrusivePtr<Material> m_material;
 };

@@ -1,4 +1,4 @@
-// Copyright 2023-2025 The Khronos Group
+// Copyright 2023-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
@@ -12,6 +12,14 @@ namespace helium {
 
 // BaseArray interface ////////////////////////////////////////////////////////
 
+/*
+ * Abstract interface for all ANARI array objects. Adds map()/unmap() and
+ * privatize() to the BaseObject interface. privatize() is called when the
+ * application releases its last public reference while the device still holds
+ * an internal reference; host arrays copy the application memory at that point
+ * so it remains valid after the app frees it. Derived classes that wrap GPU
+ * memory should override privatize() to copy the data to device-owned storage.
+ */
 struct BaseArray : public BaseObject
 {
   BaseArray(ANARIDataType type, BaseGlobalDeviceState *s);
@@ -32,6 +40,13 @@ struct BaseArray : public BaseObject
 
 // Basic, host-based Array implementation /////////////////////////////////////
 
+/*
+ * Describes who owns the backing memory of a host Array:
+ *   SHARED   — application retains ownership; the array holds a raw pointer.
+ *   CAPTURED — array takes ownership and calls the deleter on destruction.
+ *   MANAGED  — array allocates and manages its own heap memory.
+ *   INVALID  — uninitialized/error state.
+ */
 enum class ArrayDataOwnership
 {
   SHARED,
@@ -40,6 +55,10 @@ enum class ArrayDataOwnership
   INVALID
 };
 
+/*
+ * Input descriptor passed to Array constructors, carrying the raw memory
+ * pointer, optional deleter callback, and element type from the ANARI API call.
+ */
 struct ArrayMemoryDescriptor
 {
   const void *appMemory{nullptr};
@@ -48,6 +67,15 @@ struct ArrayMemoryDescriptor
   ANARIDataType elementType{ANARI_UNKNOWN};
 };
 
+/*
+ * Host-side array implementation that manages a flat buffer of uniformly typed
+ * elements. Handles all three ownership modes (SHARED/CAPTURED/MANAGED) and
+ * implements privatize() by copying the application buffer to a private heap
+ * allocation when the app releases its public reference. Subclasses (Array1D,
+ * Array2D, Array3D, ObjectArray) specialize the dimensionality interpretation.
+ * m_lastDataModified is bumped on unmap() so change observers can detect when
+ * new data has been written without a parameter change being logged.
+ */
 struct Array : public BaseArray
 {
   Array(ANARIDataType type,
@@ -66,6 +94,16 @@ struct Array : public BaseArray
   virtual size_t totalSize() const = 0;
   virtual size_t totalCapacity() const;
 
+  template <typename T>
+  const T *valueAt(size_t i) const;
+
+  anari::math::float4 readAsAttributeValue(
+      int32_t i, WrapMode wrap = WrapMode::DEFAULT) const;
+  template <typename T>
+  T valueAtLinear(float in) const; // 'in' must be clamped to [0, 1]
+  template <typename T>
+  T valueAtClosest(float in) const; // 'in' must be clamped to [0, 1]
+
   virtual void *map() override;
   virtual void unmap() override;
 
@@ -74,6 +112,7 @@ struct Array : public BaseArray
   bool wasPrivatized() const;
 
   void markDataModified();
+  helium::TimeStamp lastDataModified() const;
 
   virtual bool getProperty(const std::string_view &name,
       ANARIDataType type,
@@ -93,6 +132,11 @@ struct Array : public BaseArray
   template <typename T>
   void throwIfDifferentElementType() const;
 
+  /*
+   * Union-like descriptor that holds the memory pointer for whichever ownership
+   * mode is active. Only one of shared/captured/managed/privatized is in use
+   * at any given time, determined by m_ownership.
+   */
   struct ArrayDescriptor
   {
     struct SharedData
@@ -129,6 +173,10 @@ struct Array : public BaseArray
   bool m_privatized{false};
 };
 
+anari::math::float4 readAttributeValue(const Array *arr,
+    uint32_t i,
+    const anari::math::float4 &defaultValue = DEFAULT_ATTRIBUTE_VALUE);
+
 // Inlined definitions ////////////////////////////////////////////////////////
 
 template <typename T>
@@ -136,6 +184,28 @@ inline const T *Array::dataAs() const
 {
   throwIfDifferentElementType<T>();
   return (const T *)data();
+}
+
+template <typename T>
+inline const T *Array::valueAt(size_t i) const
+{
+  return &dataAs<T>()[i];
+}
+
+template <typename T>
+inline T Array::valueAtLinear(float in) const
+{
+  const T *data = dataAs<T>();
+  const auto i = getInterpolant(in, totalSize(), false);
+  return linalg::lerp(data[i.lower], data[i.upper], i.frac);
+}
+
+template <typename T>
+inline T Array::valueAtClosest(float in) const
+{
+  const T *data = dataAs<T>();
+  const auto i = getInterpolant(in, totalSize(), false);
+  return i.frac <= 0.5f ? data[i.lower] : data[i.upper];
 }
 
 template <typename T>

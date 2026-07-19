@@ -1,7 +1,7 @@
-# Copyright 2021-2025 The Khronos Group
+# Copyright 2021-2026 The Khronos Group
 # SPDX-License-Identifier: Apache-2.0
 
-license = '''# Copyright 2021-2025 The Khronos Group
+license = '''# Copyright 2021-2026 The Khronos Group
 # SPDX-License-Identifier: Apache-2.0
 
 '''
@@ -102,7 +102,7 @@ def write_wrappers(anari, name):
     code = license
     code += 'from .' + name + ' import lib, ffi\n'
     code += boilerplate
-    
+
     for enum in anari['enums']:
         for value in enum['values']:
             code += value['name'][6:]+' = lib.'+value['name']+'\n'

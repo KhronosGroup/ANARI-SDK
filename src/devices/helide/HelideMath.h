@@ -1,4 +1,4 @@
-// Copyright 2021-2025 The Khronos Group
+// Copyright 2021-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
@@ -17,7 +17,7 @@ using namespace anari::math;
 using namespace helium::math;
 using namespace embree_for_helide;
 
-struct Ray
+struct alignas(16) Ray
 {
   // Ray //
 

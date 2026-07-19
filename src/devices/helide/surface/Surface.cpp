@@ -1,4 +1,4 @@
-// Copyright 2021-2025 The Khronos Group
+// Copyright 2021-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Surface.h"
@@ -13,6 +13,7 @@ void Surface::commitParameters()
   m_id = getParam<uint32_t>("id", ~0u);
   m_geometry = getParamObject<Geometry>("geometry");
   m_material = getParamObject<Material>("material");
+  m_visible = getParam<bool>("visible", true);
 }
 
 void Surface::finalize()
@@ -41,6 +42,11 @@ bool Surface::isValid() const
     return m_geometry && m_material && m_geometry->isValid()
         && m_material->isValid();
   }
+}
+
+bool Surface::isVisible() const
+{
+  return m_visible;
 }
 
 const Geometry *Surface::geometry() const

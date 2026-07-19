@@ -19,7 +19,9 @@
                 }, {
                     "name" : "visible",
                     "types" : ["ANARI_BOOL"],
-                    "tags" : []
+                    "tags" : [],
+                    "default" : true,
+                    "description" : "whether the volume is visible"
                 }, {
                     "name" : "value",
                     "types" : ["ANARI_SPATIAL_FIELD"],
@@ -40,13 +42,15 @@
                         "ANARI_UFIXED16", "ANARI_UFIXED16_VEC2", "ANARI_UFIXED16_VEC3", "ANARI_UFIXED16_VEC4",
                         "ANARI_UFIXED32", "ANARI_UFIXED32_VEC2", "ANARI_UFIXED32_VEC3", "ANARI_UFIXED32_VEC4",
                         "ANARI_FLOAT32", "ANARI_FLOAT32_VEC2", "ANARI_FLOAT32_VEC3", "ANARI_FLOAT32_VEC4"],
-                    "tags" : ["required"],
+                    "tags" : [],
+                    "default" : [1.0, 1.0, 1.0, 1.0],
                     "description" : "sampled color"
                 }, {
                     "name" : "opacity",
                     "types" : ["ANARI_FLOAT32", "ANARI_ARRAY1D"],
                     "elementType" : ["ANARI_FLOAT32"],
-                    "tags" : ["required"],
+                    "tags" : [],
+                    "default" : 1.0,
                     "description" : "sampled opacity"
                 }, {
                     "name" : "unitDistance",

@@ -1,4 +1,4 @@
-// Copyright 2024-2025 The Khronos Group
+// Copyright 2024-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "rendererPlugin.h"
@@ -31,7 +31,13 @@ void HdAnariRendererPlugin::DeleteRenderDelegate(
   delete renderDelegate;
 }
 
+#if PXR_VERSION >= 2511
+bool HdAnariRendererPlugin::IsSupported(
+    HdRendererCreateArgs const & /* rendererCreateArgs */,
+    std::string * /* reasonWhyNot */) const
+#else
 bool HdAnariRendererPlugin::IsSupported(bool /* gpuEnabled */) const
+#endif
 {
   return true;
 }

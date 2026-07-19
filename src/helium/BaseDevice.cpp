@@ -1,4 +1,4 @@
-﻿// Copyright 2021-2025 The Khronos Group
+﻿// Copyright 2021-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "BaseDevice.h"
@@ -157,6 +157,14 @@ void BaseDevice::commitParameters(ANARIObject o)
     deviceCommitParameters();
   } else {
     auto *obj = (BaseObject *)o;
+    // Snapshot the object's parameters at the commit call so a later setParam
+    // (before the buffer flushes) cannot leak into this commit. The object lock
+    // makes the snapshot race-free vs a concurrent setParam, and is taken
+    // before addObjectToCommit so the snapshot is published prior to enqueue.
+    {
+      auto lock = obj->scopeLockObject();
+      obj->snapshotParameters();
+    }
     m_state->commitBuffer.addObjectToCommit(obj);
   }
 }
@@ -289,8 +297,11 @@ BaseDevice::~BaseDevice()
   }
 }
 
-int BaseDevice::deviceGetProperty(
-    const char *name, ANARIDataType type, void *mem, uint64_t size, uint32_t mask)
+int BaseDevice::deviceGetProperty(const char *name,
+    ANARIDataType type,
+    void *mem,
+    uint64_t size,
+    uint32_t mask)
 {
   return 0;
 }

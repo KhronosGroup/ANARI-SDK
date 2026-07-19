@@ -28,6 +28,7 @@
                     "name" : "id",
                     "types" : ["ANARI_UINT32"],
                     "tags" : [],
+                    "default" : 4294967295,
                     "description" : "user id for instanceId channel"
                 }
             ]

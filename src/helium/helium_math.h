@@ -1,4 +1,4 @@
-// Copyright 2021-2025 The Khronos Group
+// Copyright 2021-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
@@ -14,6 +14,11 @@ namespace helium::math {
 
 // Types //////////////////////////////////////////////////////////////////////
 
+/*
+ * Generic axis-aligned range [lower, upper] parameterized on an element type.
+ * Initialized to an inverted/empty range so that the first extend() call sets
+ * both bounds. Used as box1/box2/box3 for 1D/2D/3D bounding boxes.
+ */
 template <typename T>
 struct range_t
 {
@@ -65,6 +70,11 @@ inline float position(float v, const box1 &r)
 
 constexpr anari::math::float4 DEFAULT_ATTRIBUTE_VALUE(0.f, 0.f, 0.f, 1.f);
 
+/*
+ * Enumerates the per-vertex/per-primitive attribute slots supported by the
+ * ANARI geometry model. Devices map these to their own shading attribute
+ * arrays.
+ */
 enum class Attribute
 {
   ATTRIBUTE_0 = 0,
@@ -79,6 +89,10 @@ enum class Attribute
   NONE
 };
 
+/*
+ * Texture coordinate wrap modes corresponding to the ANARI sampler "wrap"
+ * parameter values. DEFAULT resolves to CLAMP_TO_EDGE.
+ */
 enum WrapMode
 {
   CLAMP_TO_EDGE = 0,
@@ -87,6 +101,12 @@ enum WrapMode
   DEFAULT
 };
 
+/*
+ * Material transparency modes corresponding to the ANARI "alphaMode" parameter:
+ *   OPAQUE — alpha is always 1 regardless of texture/color.
+ *   MASK   — alpha is thresholded to 0 or 1 based on a cutoff value.
+ *   BLEND  — alpha is passed through as-is for order-independent transparency.
+ */
 enum class AlphaMode
 {
   OPAQUE,
@@ -103,11 +123,20 @@ constexpr anari::math::mat3 extractRotation(const anari::math::mat4 &m)
       anari::math::float3(m[2].x, m[2].y, m[2].z));
 }
 
-template <bool SRGB = true>
+enum class ToneMapMode
+{
+  TO_SRGB,
+  FROM_SRGB,
+  NONE
+};
+
+template <ToneMapMode MODE>
 constexpr float toneMap(float v)
 {
-  if constexpr (SRGB)
+  if constexpr (MODE == ToneMapMode::TO_SRGB)
     return std::pow(v, 1.f / 2.2f);
+  else if constexpr (MODE == ToneMapMode::FROM_SRGB)
+    return std::pow(v, 2.2f);
   else
     return v;
 }
@@ -135,9 +164,16 @@ constexpr uint32_t cvt_color_to_uint32(const anari::math::float4 &v)
 constexpr uint32_t cvt_color_to_uint32_srgb(const anari::math::float4 &v)
 {
   return cvt_color_to_uint32(
-      anari::math::float4(toneMap(v.x), toneMap(v.y), toneMap(v.z), v.w));
+      anari::math::float4(toneMap<ToneMapMode::TO_SRGB>(v.x),
+          toneMap<ToneMapMode::TO_SRGB>(v.y),
+          toneMap<ToneMapMode::TO_SRGB>(v.z),
+          v.w));
 }
 
+/*
+ * Result of getInterpolant(): a pair of adjacent integer indices and the
+ * fractional blend weight between them, used for bilinear/linear sampling.
+ */
 struct Interpolant
 {
   int32_t lower;
@@ -183,6 +219,11 @@ inline int32_t calculateWrapIndex(int32_t i, size_t size, WrapMode wrap)
     return computeMirroredRepeatIndex(i, int32_t(size));
     break;
   }
+}
+
+inline float fract(float v)
+{
+  return v - std::floor(v);
 }
 
 inline Attribute attributeFromString(const std::string &str)
@@ -251,7 +292,9 @@ static const T *typedOffset(const void *mem, uint64_t offset)
   return ((const T *)mem) + offset;
 }
 
-template <typename ELEMENT_T, int NUM_COMPONENTS, bool SRGB = false>
+template <typename ELEMENT_T,
+    int NUM_COMPONENTS,
+    ToneMapMode MODE = ToneMapMode::NONE>
 static anari::math::float4 getAttributeArrayAt_ufixed(
     const void *data, uint64_t offset)
 {
@@ -259,16 +302,16 @@ static anari::math::float4 getAttributeArrayAt_ufixed(
   anari::math::float4 retval(0.f, 0.f, 0.f, 1.f);
   switch (NUM_COMPONENTS) {
   case 4:
-    retval.w = toneMap<SRGB>(
+    retval.w = toneMap<MODE>(
         *typedOffset<ELEMENT_T>(data, NUM_COMPONENTS * offset + 3) / m);
   case 3:
-    retval.z = toneMap<SRGB>(
+    retval.z = toneMap<MODE>(
         *typedOffset<ELEMENT_T>(data, NUM_COMPONENTS * offset + 2) / m);
   case 2:
-    retval.y = toneMap<SRGB>(
+    retval.y = toneMap<MODE>(
         *typedOffset<ELEMENT_T>(data, NUM_COMPONENTS * offset + 1) / m);
   case 1:
-    retval.x = toneMap<SRGB>(
+    retval.x = toneMap<MODE>(
         *typedOffset<ELEMENT_T>(data, NUM_COMPONENTS * offset + 0) / m);
   default:
     break;
@@ -302,16 +345,20 @@ inline anari::math::float4 readAsAttributeValueFlat(
         sizeof(anari::math::float4));
     break;
   case ANARI_UFIXED8_R_SRGB:
-    retval = getAttributeArrayAt_ufixed<uint8_t, 1, true>(data, i);
+    retval =
+        getAttributeArrayAt_ufixed<uint8_t, 1, ToneMapMode::FROM_SRGB>(data, i);
     break;
   case ANARI_UFIXED8_RA_SRGB:
-    retval = getAttributeArrayAt_ufixed<uint8_t, 2, true>(data, i);
+    retval =
+        getAttributeArrayAt_ufixed<uint8_t, 2, ToneMapMode::FROM_SRGB>(data, i);
     break;
   case ANARI_UFIXED8_RGB_SRGB:
-    retval = getAttributeArrayAt_ufixed<uint8_t, 3, true>(data, i);
+    retval =
+        getAttributeArrayAt_ufixed<uint8_t, 3, ToneMapMode::FROM_SRGB>(data, i);
     break;
   case ANARI_UFIXED8_RGBA_SRGB:
-    retval = getAttributeArrayAt_ufixed<uint8_t, 4, true>(data, i);
+    retval =
+        getAttributeArrayAt_ufixed<uint8_t, 4, ToneMapMode::FROM_SRGB>(data, i);
     break;
   case ANARI_UFIXED8:
     retval = getAttributeArrayAt_ufixed<uint8_t, 1>(data, i);

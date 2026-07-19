@@ -1,4 +1,4 @@
-// Copyright 2021-2025 The Khronos Group
+// Copyright 2021-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Image2D.h"
@@ -39,8 +39,14 @@ float4 Image2D::getSample(
                 m_inTransform, ia ? *ia : g.getAttributeValue(m_inAttribute, r))
       + m_inOffset;
 
-  const auto interp_x = getInterpolant(av.x, m_image->size().x, true);
-  const auto interp_y = getInterpolant(av.y, m_image->size().y, true);
+  // Select the appropriate coordinate wrapping mode for x and y.
+  // If the wrap mode is REPEAT, the coordinate is wrapped using fract();
+  // otherwise, it is left unchanged.
+  float x = m_wrapMode1 == WrapMode::REPEAT ? fract(av.x) : av.x;
+  float y = m_wrapMode2 == WrapMode::REPEAT ? fract(av.y) : av.y;
+
+  const auto interp_x = getInterpolant(x, m_image->size().x, true);
+  const auto interp_y = getInterpolant(y, m_image->size().y, true);
   const auto v00 = m_image->readAsAttributeValue(
       {interp_x.lower, interp_y.lower}, m_wrapMode1, m_wrapMode2);
   const auto v01 = m_image->readAsAttributeValue(

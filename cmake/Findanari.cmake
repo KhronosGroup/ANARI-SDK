@@ -1,4 +1,4 @@
-## Copyright 2021-2025 The Khronos Group
+## Copyright 2021-2026 The Khronos Group
 ## SPDX-License-Identifier: Apache-2.0
 
 ## NOTE: DO NOT USE THIS MODULE FILE!!! This CMake module sets up fake imported
@@ -16,6 +16,7 @@ set(ANARI_LOCAL_TARGETS
   anari_backend
   anari
   anari_static
+  anari_device_introspection
   anari_test_scenes
   helium
 )

@@ -1,4 +1,4 @@
-// Copyright 2021-2025 The Khronos Group
+// Copyright 2021-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 // anari
@@ -112,7 +112,6 @@ extern "C" ANARILibrary anariLoadLibrary(const char *libraryName,
     if (!lib)
       throw std::runtime_error("failed to load library " + libname);
 
-
     std::string prefix = "anari_library_" + libname;
     std::string newLibraryFcnName = prefix + "_new_library";
 
@@ -120,8 +119,8 @@ extern "C" ANARILibrary anariLoadLibrary(const char *libraryName,
         (NewLibraryFcn)anari::getSymbolAddress(lib, newLibraryFcnName);
 
     if (!newLibraryFcn) {
-      throw std::runtime_error("failed to find entrypoint function for "
-          + libname + " library");
+      throw std::runtime_error(
+          "failed to find entrypoint function for " + libname + " library");
     }
   } catch (const std::exception &e) {
     std::string msg = "failed to load ANARILibrary '";
@@ -145,7 +144,15 @@ ANARI_CATCH_END(nullptr)
 
 extern "C" void anariUnloadLibrary(ANARILibrary l) ANARI_CATCH_BEGIN
 {
-  delete l;
+  if (!l)
+    return;
+
+  auto *impl = (LibraryImpl *)l;
+  void *lib = impl->libraryHandle();
+  delete impl;
+  // Free the OS handle only after the object (which lives in that module) is
+  // gone, otherwise we unmap code mid-delete and crash. See LibraryImpl.cpp.
+  anari::freeLibrary(lib);
 }
 ANARI_CATCH_END_NORETURN()
 

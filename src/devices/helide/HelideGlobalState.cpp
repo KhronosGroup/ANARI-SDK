@@ -1,4 +1,4 @@
-// Copyright 2023-2025 The Khronos Group
+// Copyright 2023-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "HelideGlobalState.h"
@@ -9,11 +9,5 @@ namespace helide {
 HelideGlobalState::HelideGlobalState(ANARIDevice d)
     : helium::BaseGlobalDeviceState(d)
 {}
-
-void HelideGlobalState::waitOnCurrentFrame() const
-{
-  if (currentFrame)
-    currentFrame->wait();
-}
 
 } // namespace helide

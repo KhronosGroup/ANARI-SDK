@@ -1,4 +1,4 @@
-// Copyright 2023-2025 The Khronos Group
+// Copyright 2023-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
@@ -7,11 +7,22 @@
 
 namespace helium {
 
+/*
+ * Memory descriptor for a 1D array, extending the base descriptor with the
+ * element count used to determine iteration bounds and totalSize().
+ */
 struct Array1DMemoryDescriptor : public ArrayMemoryDescriptor
 {
   uint64_t numItems{0};
 };
 
+/*
+ * One-dimensional host array that stores a flat sequence of uniformly typed
+ * elements. Supports sub-range iteration (m_begin/m_end are element indices)
+ * and provides linear/nearest-neighbor interpolation helpers used by sampler
+ * implementations for 1D texture lookups. The readAsAttributeValue() method
+ * converts any supported element type to float4 for use as a vertex attribute.
+ */
 struct Array1D : public Array
 {
   Array1D(BaseGlobalDeviceState *state, const Array1DMemoryDescriptor &d);
@@ -32,16 +43,6 @@ struct Array1D : public Array
 
   size_t size() const;
 
-  template <typename T>
-  const T *valueAt(size_t i) const;
-
-  anari::math::float4 readAsAttributeValue(
-      int32_t i, WrapMode wrap = WrapMode::DEFAULT) const;
-  template <typename T>
-  T valueAtLinear(float in) const; // 'in' must be clamped to [0, 1]
-  template <typename T>
-  T valueAtClosest(float in) const; // 'in' must be clamped to [0, 1]
-
  protected:
   size_t m_capacity{0};
   size_t m_begin{0};
@@ -50,10 +51,6 @@ struct Array1D : public Array
  private:
   void privatize() override;
 };
-
-anari::math::float4 readAttributeValue(const Array1D *arr,
-    uint32_t i,
-    const anari::math::float4 &defaultValue = DEFAULT_ATTRIBUTE_VALUE);
 
 // Inlined definitions ////////////////////////////////////////////////////////
 
@@ -67,28 +64,6 @@ template <typename T>
 inline const T *Array1D::endAs() const
 {
   return dataAs<T>() + m_end;
-}
-
-template <typename T>
-inline const T *Array1D::valueAt(size_t i) const
-{
-  return &beginAs<T>()[i];
-}
-
-template <typename T>
-inline T Array1D::valueAtLinear(float in) const
-{
-  const T *data = dataAs<T>();
-  const auto i = getInterpolant(in, size(), false);
-  return linalg::lerp(data[i.lower], data[i.upper], i.frac);
-}
-
-template <typename T>
-inline T Array1D::valueAtClosest(float in) const
-{
-  const T *data = dataAs<T>();
-  const auto i = getInterpolant(in, size(), false);
-  return i.frac <= 0.5f ? data[i.lower] : data[i.upper];
 }
 
 } // namespace helium

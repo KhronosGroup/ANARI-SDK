@@ -1,4 +1,4 @@
-// Copyright 2021-2025 The Khronos Group
+// Copyright 2021-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
@@ -7,10 +7,9 @@
 #include "renderer/Renderer.h"
 #include "world/World.h"
 // helium
-#include "helium/BaseFrame.h"
-// std
-#include <future>
 #include <vector>
+#include "helium/BaseFrame.h"
+#include "helium/TaskQueue.h"
 
 namespace helide {
 
@@ -46,26 +45,33 @@ struct Frame : public helium::BaseFrame
   void wait();
 
  private:
+  void waitOnOutstandingWorkIfNeeded();
   float2 screenFromPixel(const float2 &p) const;
   void writeSample(int x, int y, const PixelSample &s);
 
   //// Data ////
 
-  bool m_valid{false};
   int m_perPixelBytes{1};
 
   struct FrameData
   {
     int frameID{0};
-    uint2 size;
-    float2 invSize;
+    uint2 size{0u, 0u};
+    float2 invSize{0.f};
   } m_frameData;
 
-  anari::DataType m_colorType{ANARI_UNKNOWN};
-  anari::DataType m_depthType{ANARI_UNKNOWN};
-  anari::DataType m_primIdType{ANARI_UNKNOWN};
-  anari::DataType m_objIdType{ANARI_UNKNOWN};
-  anari::DataType m_instIdType{ANARI_UNKNOWN};
+  struct FrameTypes
+  {
+    anari::DataType color{ANARI_UNKNOWN};
+    anari::DataType depth{ANARI_UNKNOWN};
+    anari::DataType primId{ANARI_UNKNOWN};
+    anari::DataType objId{ANARI_UNKNOWN};
+    anari::DataType instId{ANARI_UNKNOWN};
+  };
+
+  FrameTypes m_incomingTypes;
+  FrameTypes m_currentTypes;
+  uint2 m_incomingFrameSize{0, 0};
 
   std::vector<uint8_t> m_pixelBuffer;
   std::vector<float> m_depthBuffer;
@@ -86,8 +92,7 @@ struct Frame : public helium::BaseFrame
   helium::TimeStamp m_lastCommitOccured{0};
   helium::TimeStamp m_frameLastRendered{0};
 
-  mutable std::future<void> m_future;
-  std::packaged_task<void()> m_task;
+  mutable helium::tasking::Future m_future;
 
   anari::FrameCompletionCallback m_callback{nullptr};
   const void *m_callbackUserPtr{nullptr};

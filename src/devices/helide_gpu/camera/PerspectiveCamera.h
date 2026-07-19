@@ -1,0 +1,32 @@
+// Copyright 2026 The Khronos Group
+// SPDX-License-Identifier: Apache-2.0
+
+#pragma once
+
+#include "Camera.h"
+// std
+#include <optional>
+
+namespace helide_gpu {
+
+struct PerspectiveCamera : public Camera
+{
+  PerspectiveCamera(HelideGPUDeviceGlobalState *s);
+  ~PerspectiveCamera() override = default;
+
+  void commitParameters() override;
+
+  mat4 viewMatrix() const override;
+  mat4 projMatrix(float frameAspect) const override;
+
+ private:
+  vec3 m_position{0.f, 0.f, 0.f};
+  vec3 m_direction{0.f, 0.f, -1.f};
+  vec3 m_up{0.f, 1.f, 0.f};
+  float m_fovy{glm::radians(60.f)};
+  std::optional<float> m_aspect;
+  float m_near{0.001f};
+  float m_far{1e6f};
+};
+
+} // namespace helide_gpu

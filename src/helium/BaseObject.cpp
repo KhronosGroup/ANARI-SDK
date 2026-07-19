@@ -1,4 +1,4 @@
-// Copyright 2021-2025 The Khronos Group
+// Copyright 2021-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "BaseObject.h"
@@ -24,6 +24,7 @@ int commitPriority(ANARIDataType type)
   case ANARI_VOLUME:
     return 2;
   case ANARI_MATERIAL:
+  case ANARI_GEOMETRY:
     return 1;
   default:
     return 0;
@@ -78,6 +79,12 @@ void BaseObject::markParameterChanged()
   m_lastParameterChanged = newTimeStamp();
 }
 
+void BaseObject::snapshotParameters()
+{
+  commitParameterSnapshot();
+  m_lastCommitSnapshot = m_lastParameterChanged;
+}
+
 TimeStamp BaseObject::lastUpdated() const
 {
   return m_lastUpdated;
@@ -95,7 +102,12 @@ TimeStamp BaseObject::lastCommitted() const
 
 void BaseObject::markCommitted()
 {
-  m_lastCommitted = newTimeStamp();
+  // Advance only to the parameter-change time captured by the snapshot that was
+  // just committed -- not to "now". Using newTimeStamp() here would step over a
+  // setParam that arrived after this commit was snapshotted but before it was
+  // flushed, causing that pending change to be silently dropped by the
+  // lastParameterChanged() > lastCommitted() gate on the next flush.
+  m_lastCommitted = m_lastCommitSnapshot;
 }
 
 TimeStamp BaseObject::lastFinalized() const

@@ -1,4 +1,4 @@
-// Copyright 2021-2025 The Khronos Group
+// Copyright 2021-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
@@ -42,7 +42,8 @@ enum class RenderMode
   GEOMETRY_ATTRIBUTE_2,
   GEOMETRY_ATTRIBUTE_3,
   GEOMETRY_ATTRIBUTE_COLOR,
-  OPACITY_HEATMAP
+  OPACITY_HEATMAP,
+  TEST_FRAME
 };
 
 struct Renderer : public Object

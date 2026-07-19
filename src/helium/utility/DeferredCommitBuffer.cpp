@@ -1,4 +1,4 @@
-// Copyright 2021-2025 The Khronos Group
+// Copyright 2021-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "DeferredCommitBuffer.h"
@@ -26,32 +26,39 @@ static void dynamic_foreach(std::vector<T> &buffer, FCN_T &&fcn)
 
 DeferredCommitBuffer::DeferredCommitBuffer()
 {
+  m_commitBufferStaging.reserve(100);
+  m_finalizationBufferStaging.reserve(100);
   m_commitBuffer.reserve(100);
   m_finalizationBuffer.reserve(100);
 }
 
 DeferredCommitBuffer::~DeferredCommitBuffer()
 {
-  clearImpl();
+  clear();
 }
 
 void DeferredCommitBuffer::addObjectToCommit(BaseObject *obj)
 {
-  std::lock_guard<std::recursive_mutex> guard(m_mutex);
-  addObjectToCommitImpl(obj);
+  std::lock_guard<std::recursive_mutex> guard(m_swapMutex);
+  obj->refInc(RefType::INTERNAL);
+  m_commitBufferStaging.push_back(obj);
 }
 
 void DeferredCommitBuffer::addObjectToFinalize(BaseObject *obj)
 {
-  std::lock_guard<std::recursive_mutex> guard(m_mutex);
-  addObjectToFinalizeImpl(obj);
+  std::lock_guard<std::recursive_mutex> guard(m_swapMutex);
+  obj->refInc(RefType::INTERNAL);
+  if (commitPriority(obj->type()) != commitPriority(ANARI_OBJECT))
+    m_needToSortFinalizationsStaging = true;
+  m_finalizationBufferStaging.push_back(obj);
 }
 
 void DeferredCommitBuffer::flush()
 {
   if (empty())
     return;
-  std::lock_guard<std::recursive_mutex> guard(m_mutex);
+  std::lock_guard<std::recursive_mutex> guard(m_flushMutex);
+  swapBuffers();
   flushCommits();
   flushFinalizations();
   clearImpl();
@@ -69,27 +76,23 @@ TimeStamp DeferredCommitBuffer::lastObjectFinalization() const
 
 void DeferredCommitBuffer::clear()
 {
-  std::lock_guard<std::recursive_mutex> guard(m_mutex);
+  clearImpl();
+  swapBuffers();
   clearImpl();
 }
 
 bool DeferredCommitBuffer::empty() const
 {
-  return m_commitBuffer.empty() && m_finalizationBuffer.empty();
+  std::lock_guard<std::recursive_mutex> guard(m_flushMutex);
+  return m_commitBufferStaging.empty() && m_finalizationBufferStaging.empty();
 }
 
-void DeferredCommitBuffer::addObjectToCommitImpl(BaseObject *obj)
+void DeferredCommitBuffer::swapBuffers()
 {
-  obj->refInc(RefType::INTERNAL);
-  m_commitBuffer.push_back(obj);
-}
-
-void DeferredCommitBuffer::addObjectToFinalizeImpl(BaseObject *obj)
-{
-  obj->refInc(RefType::INTERNAL);
-  if (commitPriority(obj->type()) != commitPriority(ANARI_OBJECT))
-    m_needToSortFinalizations = true;
-  m_finalizationBuffer.push_back(obj);
+  std::lock_guard<std::recursive_mutex> guard(m_swapMutex);
+  std::swap(m_commitBuffer, m_commitBufferStaging);
+  std::swap(m_finalizationBuffer, m_finalizationBufferStaging);
+  std::swap(m_needToSortFinalizations, m_needToSortFinalizationsStaging);
 }
 
 void DeferredCommitBuffer::flushCommits()
@@ -99,10 +102,24 @@ void DeferredCommitBuffer::flushCommits()
     auto obj = m_commitBuffer[i];
     if (obj->lastParameterChanged() > obj->lastCommitted()) {
       didCommit = true;
-      obj->commitParameters();
+      // Read the committed snapshot (taken at anariCommitParameters() time),
+      // not the live store, so a setParam that arrived after the commit call
+      // does not leak into this commit. ReadCommittedScope holds the object's
+      // snapshot mutex (not its object lock -- frameReady() holds the object
+      // lock while blocked on this flush, so that would deadlock), serializing
+      // the read against a concurrent re-commit of the same object.
+      {
+        ParameterizedObject::ReadCommittedScope readScope(obj);
+        obj->commitParameters();
+      }
       obj->markCommitted();
       obj->markUpdated();
-      addObjectToFinalizeImpl(obj);
+      {
+        obj->refInc(RefType::INTERNAL);
+        if (commitPriority(obj->type()) != commitPriority(ANARI_OBJECT))
+          m_needToSortFinalizations = true;
+        m_finalizationBuffer.push_back(obj);
+      }
     }
   });
 
@@ -127,7 +144,15 @@ void DeferredCommitBuffer::flushFinalizations()
     auto obj = m_finalizationBuffer[i];
     if (obj->lastUpdated() > obj->lastFinalized()) {
       didFinalize = true;
-      obj->finalize();
+      // finalize() also reads parameters (e.g. helide's Sphere reads "radius"),
+      // so it must see the same committed snapshot as commitParameters(), under
+      // the same snapshot mutex. Objects driven directly by a parent's
+      // finalize() (e.g. helide World's internal zero group/instance) are not
+      // the scope's active object and correctly read their live staging store.
+      {
+        ParameterizedObject::ReadCommittedScope readScope(obj);
+        obj->finalize();
+      }
       obj->markFinalized();
       obj->notifyChangeObservers();
     }
@@ -139,6 +164,7 @@ void DeferredCommitBuffer::flushFinalizations()
 
 void DeferredCommitBuffer::clearImpl()
 {
+  std::lock_guard<std::recursive_mutex> guard(m_swapMutex);
   for (auto &obj : m_commitBuffer)
     obj->refDec(RefType::INTERNAL);
   for (auto &obj : m_finalizationBuffer)

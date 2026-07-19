@@ -1,4 +1,4 @@
-// Copyright 2021-2025 The Khronos Group
+// Copyright 2021-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Geometry.h"
@@ -66,12 +66,6 @@ void Geometry::commitParameters()
   m_primitiveAttr[2] = getParamObject<Array1D>("primitive.attribute2");
   m_primitiveAttr[3] = getParamObject<Array1D>("primitive.attribute3");
   m_primitiveAttr[4] = getParamObject<Array1D>("primitive.color");
-  m_primitiveId = getParamObject<Array1D>("primitive.id");
-  if (m_primitiveId
-      && !(m_primitiveId->elementType() != ANARI_UINT32
-          || m_primitiveId->elementType() != ANARI_UINT64)) {
-    m_primitiveId = nullptr;
-  }
 }
 
 void Geometry::markFinalized()

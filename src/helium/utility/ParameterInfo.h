@@ -1,4 +1,4 @@
-// Copyright 2021-2025 The Khronos Group
+// Copyright 2021-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
@@ -10,6 +10,14 @@
 
 namespace helium {
 
+/*
+ * Descriptor for a single device-queryable parameter, used to implement
+ * anariGetProperty() for parameter introspection. Holds the parameter's name,
+ * current value, optional min/max bounds, a human-readable description, and
+ * (for string-enum parameters) the list of valid string values with the
+ * currently selected index. Typically stored in a ParameterInfoList on each
+ * object subtype.
+ */
 struct ParameterInfo
 {
   std::string name;

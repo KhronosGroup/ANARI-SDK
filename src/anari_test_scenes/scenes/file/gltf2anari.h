@@ -362,7 +362,7 @@ static uint32_t base64_sextet(char c)
   }
 }
 
-static void debase64(const char *in, size_t N_in, std::vector<char> out)
+static void debase64(const char *in, size_t N_in, std::vector<char> &out)
 {
   int bitcount = 0;
   uint32_t bits = 0;

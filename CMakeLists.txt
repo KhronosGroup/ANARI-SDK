@@ -1,7 +1,12 @@
-## Copyright 2021-2025 The Khronos Group
+## Copyright 2021-2026 The Khronos Group
 ## SPDX-License-Identifier: Apache-2.0
 
 cmake_minimum_required(VERSION 3.11)
+
+# Honor normal/cache variables (e.g. -DCTS_ENABLE_GLTF=ON) set before option().
+if (POLICY CMP0077)
+  cmake_policy(SET CMP0077 NEW)
+endif ()
 
 message(STATUS "CMake version: ${CMAKE_VERSION}")
 
@@ -29,7 +34,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 ## Establish project
 
 set(ANARI_SDK_VERSION_MAJOR 0)
-set(ANARI_SDK_VERSION_MINOR 15)
+set(ANARI_SDK_VERSION_MINOR 16)
 set(ANARI_SDK_VERSION_PATCH 0)
 set(ANARI_SDK_VERSION
   ${ANARI_SDK_VERSION_MAJOR}.${ANARI_SDK_VERSION_MINOR}.${ANARI_SDK_VERSION_PATCH}
@@ -61,8 +66,10 @@ option(BUILD_SHARED_LIBS "Build shared libraries instead of static" ON)
 
 ## ANARI specific options ##
 
-option(BUILD_CTS "Build cts toolkit" OFF)
-cmake_dependent_option(CTS_ENABLE_GLTF "Enable glTF support for cts" ON "BUILD_CTS" OFF)
+option(BUILD_CTS "Build the cts conformance tool" OFF)
+# Decoupled from BUILD_CTS: the glTF asset tests need only the glTF loader, not
+# the (removed) Python/pybind toolkit. CMP0077 (NEW, set above) lets -D override.
+option(CTS_ENABLE_GLTF "Enable the CTS glTF asset-scanning tests" OFF)
 option(BUILD_CAT "Build capability analysis tool" OFF)
 option(USE_DRACO "Use draco when loading glTF files" OFF)
 option(USE_WEBP "Use webp when loading glTF files" OFF)
@@ -70,14 +77,14 @@ option(USE_KTX "Use ktx when loading glTF files" OFF)
 option(USE_KOKKOS "Use Kokkos to accelerate scene build and updates" OFF)
 option(BUILD_EXAMPLES "Build example applications and example device" ON)
 cmake_dependent_option(BUILD_VIEWER
-  "Build interactive viewer app (requires GLFW)"
+  "Build interactive viewer app (requires SDL3)"
   OFF
   "BUILD_EXAMPLES"
   OFF
 )
 if (BUILD_CAT)
   # CAT requires anari::anari_viewer library
-  set(BUILD_VIEWER ON CACHE BOOL "Build interactive viewer app (requires GLFW)" FORCE)
+  set(BUILD_VIEWER ON CACHE BOOL "Build interactive viewer app (requires SDL3)" FORCE)
 endif ()
 option(INSTALL_CTS "Install CTS scripts and data" OFF)
 option(INSTALL_VIEWER_LIBRARY "Install anari::anari_viewer library target" ON)
@@ -115,7 +122,9 @@ if (BUILD_TESTING)
   add_subdirectory(tests)
 endif()
 
-if (BUILD_CTS)
+# Added after tests/ so include(CTest) above enables the anariCts smoke tests.
+# CTS_ENABLE_GLTF only affects a CTS consumer; it does not create one itself.
+if (BUILD_CTS OR BUILD_TESTING OR INSTALL_CTS)
   add_subdirectory(cts)
 endif()
 

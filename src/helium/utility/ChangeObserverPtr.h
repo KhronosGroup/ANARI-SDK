@@ -1,4 +1,4 @@
-// Copyright 2021-2025 The Khronos Group
+// Copyright 2021-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
@@ -7,13 +7,15 @@
 
 namespace helium {
 
-// Extend IntrusivePtr<> to automatically install/remove an observing object.
-//
-//   This smart pointer class builds on IntrusivePtr<> by having this pointer
-//   also install/remove an observer automatically. The expected use of this
-//   class is to pass the observing object's 'this' pointer as the 'observer'
-//   parameter in the constructor, then all assignments to it will use that
-//   object as the observer it manages on the incoming object being pointed to.
+/*
+ * Extend IntrusivePtr<> to automatically install/remove an observing object.
+ *
+ *   This smart pointer class builds on IntrusivePtr<> by having this pointer
+ *   also install/remove an observer automatically. The expected use of this
+ *   class is to pass the observing object's 'this' pointer as the 'observer'
+ *   parameter in the constructor, then all assignments to it will use that
+ *   object as the observer it manages on the incoming object being pointed to.
+ */
 template <typename T = BaseObject>
 struct ChangeObserverPtr
 {

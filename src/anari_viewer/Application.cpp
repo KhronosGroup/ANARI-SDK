@@ -1,4 +1,4 @@
-// Copyright 2021-2025 The Khronos Group
+// Copyright 2021-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Application.h"
@@ -32,7 +32,7 @@ struct AppImpl
 
   WindowArray windows;
 
-  void init();
+  void init(Uint32 window_flags);
   void renderWindows();
   void cleanup();
 };
@@ -82,13 +82,19 @@ SDL_Window *Application::sdlWindow()
   return m_impl->sdl_window;
 }
 
+Uint32 Application::sdlWindowFlags() const
+{
+  return SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN
+      | SDL_WINDOW_HIGH_PIXEL_DENSITY;
+}
+
 void Application::run(int width, int height, const char *name)
 {
   m_impl->width = width;
   m_impl->height = height;
   m_impl->name = name;
 
-  m_impl->init();
+  m_impl->init(sdlWindowFlags());
   m_impl->windows = setupWindows();
   mainLoop();
   teardown();
@@ -182,13 +188,11 @@ void Application::mainLoop()
   }
 }
 
-void AppImpl::init()
+void AppImpl::init(Uint32 window_flags)
 {
   if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD))
     throw std::runtime_error("failed to initialize SDL");
 
-  Uint32 window_flags =
-      SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN;
   sdl_window = SDL_CreateWindow(name.c_str(), width, height, window_flags);
 
   if (sdl_window == nullptr)
@@ -205,6 +209,10 @@ void AppImpl::init()
   }
 
   SDL_ShowWindow(sdl_window);
+
+  // Set render scale to match pixel density for HiDPI/Retina displays.
+  float scale = SDL_GetWindowPixelDensity(sdl_window);
+  SDL_SetRenderScale(sdl_renderer, scale, scale);
 
   ImGui::CreateContext();
   ImGui::StyleColorsDark();

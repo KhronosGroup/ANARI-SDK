@@ -1,4 +1,4 @@
-// Copyright 2021-2025 The Khronos Group
+// Copyright 2021-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Group.h"
@@ -16,8 +16,11 @@ Group::~Group()
   cleanup();
 }
 
-bool Group::getProperty(
-    const std::string_view &name, ANARIDataType type, void *ptr, uint64_t size, uint32_t flags)
+bool Group::getProperty(const std::string_view &name,
+    ANARIDataType type,
+    void *ptr,
+    uint64_t size,
+    uint32_t flags)
 {
   if (name == "bounds" && type == ANARI_FLOAT32_BOX3) {
     if (flags & ANARI_WAIT) {
@@ -26,7 +29,7 @@ bool Group::getProperty(
     }
     auto bounds = getEmbreeSceneBounds(m_embreeScene);
     for (auto *v : volumes()) {
-      if (v->isValid())
+      if (v && v->isValid() && v->isVisible())
         bounds.extend(v->bounds());
     }
     std::memcpy(ptr, &bounds, sizeof(bounds));
@@ -76,7 +79,7 @@ void Group::intersectVolumes(VolumeRay &ray, const mat4 &invMat) const
   box1 t = ray.t;
 
   for (auto *v : volumes()) {
-    if (!v->isValid())
+    if (!v || !v->isValid() || !v->isVisible())
       continue;
     const float3 org = xfmPoint(invMat, ray.org);
     const float3 dir = xfmVec(invMat, ray.dir);
@@ -118,29 +121,33 @@ void Group::embreeSceneConstruct()
   rtcReleaseScene(m_embreeScene);
   m_embreeScene = rtcNewScene(deviceState()->embreeDevice);
 
+  m_surfaces.clear();
+
   if (m_surfaceData) {
     uint32_t id = 0;
     std::for_each(m_surfaceData->handlesBegin(),
         m_surfaceData->handlesEnd(),
         [&](auto *o) {
           auto *s = (Surface *)o;
-          if (s && s->isValid()) {
+          if (s && s->isValid() && s->isVisible()) {
             m_surfaces.push_back(s);
             rtcAttachGeometryByID(
                 m_embreeScene, s->geometry()->embreeGeometry(), id++);
-          } else {
+          } else if (!s || !s->isValid()) {
             reportMessage(ANARI_SEVERITY_DEBUG,
                 "helide::Group rejecting invalid surface(%p) in building BLS",
                 s);
-            auto *g = s->geometry();
-            if (!g || !g->isValid()) {
-              reportMessage(
-                  ANARI_SEVERITY_DEBUG, "    helide::Geometry is invalid");
-            }
-            auto *m = s->material();
-            if (!m || !m->isValid()) {
-              reportMessage(
-                  ANARI_SEVERITY_DEBUG, "    helide::Material is invalid");
+            if (s) {
+              auto *g = s->geometry();
+              if (!g || !g->isValid()) {
+                reportMessage(
+                    ANARI_SEVERITY_DEBUG, "    helide::Geometry is invalid");
+              }
+              auto *m = s->material();
+              if (!m || !m->isValid()) {
+                reportMessage(
+                    ANARI_SEVERITY_DEBUG, "    helide::Material is invalid");
+              }
             }
           }
         });

@@ -1,4 +1,4 @@
-// Copyright 2021-2025 The Khronos Group
+// Copyright 2021-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Volume.h"
@@ -20,6 +20,12 @@ Volume *Volume::createInstance(std::string_view subtype, HelideGlobalState *s)
 void Volume::commitParameters()
 {
   m_id = getParam<uint32_t>("id", ~0u);
+  m_visible = getParam<bool>("visible", true);
+}
+
+bool Volume::isVisible() const
+{
+  return m_visible;
 }
 
 } // namespace helide

@@ -1,4 +1,4 @@
-// Copyright 2024-2025 The Khronos Group
+// Copyright 2024-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "mesh.h"
@@ -248,18 +248,29 @@ HdAnariGeometry::PrimvarSource HdAnariMesh::UpdatePrimvarSource(
   case HdInterpolationFaceVarying: {
     HdVtBufferSource buffer(attributeName, value);
     VtValue triangulatedPrimvar;
-    auto success =
+    auto result =
         meshUtil_->ComputeTriangulatedFaceVaryingPrimvar(buffer.GetData(),
             buffer.GetNumElements(),
             buffer.GetTupleType().type,
             &triangulatedPrimvar);
 
-    if (success) {
+#if PXR_VERSION >= 2511
+    if (result == HdMeshComputationResult::Success) {
+      return _GetAttributeArray(triangulatedPrimvar);
+    } else if (result == HdMeshComputationResult::Unchanged) {
+      return _GetAttributeArray(value);
+    } else {
+      TF_CODING_ERROR("     ERROR: could not triangulate face-varying data\n");
+      return {};
+    }
+#else
+    if (result) {
       return _GetAttributeArray(triangulatedPrimvar);
     } else {
       TF_CODING_ERROR("     ERROR: could not triangulate face-varying data\n");
       return {};
     }
+#endif
     break;
   }
   case HdInterpolationVarying:

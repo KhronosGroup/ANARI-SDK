@@ -161,7 +161,7 @@
                     "types" : ["ANARI_DATA_TYPE"],
                     "tags" : [],
                     "values" : ["ANARI_FLOAT32"],
-                    "description" : "enables mapping the color channel as the type specified"
+                    "description" : "enables mapping the depth channel as the type specified"
                 }
             ],
             "properties" : [
@@ -294,7 +294,9 @@
                 }, {
                     "name" : "visible",
                     "types" : ["ANARI_BOOL"],
-                    "tags" : []
+                    "tags" : [],
+                    "default" : true,
+                    "description" : "whether the surface is visible"
                 }
             ]
         }

@@ -9,6 +9,9 @@ out
 CMakeSettings.json
 .match3D
 .anari_deps
+.claude
+.codex
+todo/*
 
 # cts
 cts/anari_library_debug*

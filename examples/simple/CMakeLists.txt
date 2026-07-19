@@ -1,4 +1,4 @@
-## Copyright 2021-2025 The Khronos Group
+## Copyright 2021-2026 The Khronos Group
 ## SPDX-License-Identifier: Apache-2.0
 
 cmake_minimum_required(VERSION 3.11)
@@ -63,7 +63,7 @@ add_executable(anariTutorialInitFromEnv anariTutorialInitFromEnv.c)
 target_link_libraries(anariTutorialInitFromEnv PRIVATE anari::anari)
 
 add_executable(anariInfo anariInfo.cpp)
-target_link_libraries(anariInfo PRIVATE anari::anari_static)
+target_link_libraries(anariInfo PRIVATE anari::anari_device_introspection)
 
 option(USE_MPI "Enable MPI and Distributed Tutorial")
 if (USE_MPI)

@@ -27,7 +27,7 @@
                     "types" : ["ANARI_STRING"],
                     "tags" : [],
                     "default" : "linear",
-                    "values" : ["nearest", "linear"],
+                    "values" : ["nearest", "linear", "cubic"],
                     "description" : "filter mode used to interpolate the grid"
                 }
             ]

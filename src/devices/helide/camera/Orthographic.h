@@ -1,9 +1,11 @@
-// Copyright 2021-2025 The Khronos Group
+// Copyright 2021-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
 
 #include "Camera.h"
+// std
+#include <optional>
 
 namespace helide {
 
@@ -12,16 +14,12 @@ struct Orthographic : public Camera
   Orthographic(HelideGlobalState *s);
 
   void commitParameters() override;
-  void finalize() override;
 
-  Ray createRay(const float2 &screen) const override;
+  RayGenerator createRayGenerator(float frameAspect) const override;
 
  private:
-   float m_aspect{1.f};
-   float m_height{1.f};
-   float3 m_pos_du;
-   float3 m_pos_dv;
-   float3 m_pos_00;
+  std::optional<float> m_aspect;
+  float m_height{1.f};
 };
 
 } // namespace helide

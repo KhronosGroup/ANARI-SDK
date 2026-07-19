@@ -77,12 +77,6 @@
                     "tags" : [],
                     "description" : "per primitive attribute3"
                 }, {
-                    "name" : "primitive.id",
-                    "types" : ["ANARI_ARRAY1D"],
-                    "elementType" : ["ANARI_UINT32", "ANARI_UINT64"],
-                    "tags" : [],
-                    "description" : "primitive id"
-                }, {
                     "name" : "vertex.position",
                     "types" : ["ANARI_ARRAY1D"],
                     "elementType" : ["ANARI_FLOAT32_VEC3"],
@@ -99,7 +93,7 @@
                     "types" : ["ANARI_ARRAY1D"],
                     "elementType" : ["ANARI_FLOAT32_VEC3", "ANARI_FIXED16_VEC3", "ANARI_FLOAT32_VEC4", "ANARI_FIXED16_VEC4"],
                     "tags" : [],
-                    "description" : "vertex normal"
+                    "description" : "vertex tangent"
                 }, {
                     "name" : "vertex.color",
                     "types" : ["ANARI_ARRAY1D"],
@@ -146,7 +140,7 @@
                     "types" : ["ANARI_ARRAY1D"],
                     "elementType" : ["ANARI_FLOAT32_VEC3", "ANARI_FIXED16_VEC3", "ANARI_FLOAT32_VEC4", "ANARI_FIXED16_VEC4"],
                     "tags" : [],
-                    "description" : "faceVarying normal"
+                    "description" : "faceVarying tangent"
                 }, {
                     "name" : "faceVarying.color",
                     "types" : ["ANARI_ARRAY1D"],

@@ -1,4 +1,4 @@
-// Copyright 2023-2025 The Khronos Group
+// Copyright 2023-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
@@ -7,12 +7,21 @@
 
 namespace helium {
 
+/*
+ * Memory descriptor for a 2D array, extending the base descriptor with the
+ * element count for each dimension.
+ */
 struct Array2DMemoryDescriptor : public ArrayMemoryDescriptor
 {
   uint64_t numItems1{0};
   uint64_t numItems2{0};
 };
 
+/*
+ * Two-dimensional host array, typically used for 2D textures and image data.
+ * Stored as a row-major flat buffer; size() returns the dimensions as uint2.
+ * readAsAttributeValue() supports independent wrap modes per axis.
+ */
 struct Array2D : public Array
 {
   Array2D(BaseGlobalDeviceState *state, const Array2DMemoryDescriptor &d);

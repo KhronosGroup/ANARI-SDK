@@ -1,261 +1,152 @@
-# CTS Features <!-- omit in toc -->
+# CTS Features
 
-- [Render a set of known test scenes](#render-a-set-of-known-test-scenes)
-  - [Python API](#python-api)
-  - [C++](#c)
-  - [Example output](#example-output)
-- [Image comparison “smoke tests”](#image-comparison-smoke-tests)
-  - [Python API](#python-api-1)
-  - [Comparison methods](#comparison-methods)
-  - [Example output](#example-output-1)
-- [Verification of object/parameter info metadata](#verification-of-objectparameter-info-metadata)
-  - [Python API](#python-api-2)
-  - [C++](#c-1)
-  - [Example output](#example-output-2)
-- [Verification of known object properties](#verification-of-known-object-properties)
-  - [Python API](#python-api-3)
-  - [C++](#c-2)
-  - [Example output](#example-output-3)
-- [List ANARI features implemented by a device](#list-anari-features-implemented-by-a-device)
-  - [Python API](#python-api-4)
-  - [C++](#c-3)
-  - [Example output](#example-output-4)
-- [Aggregate test results](#aggregate-test-results)
-  - [Example output](#example-output-5)
-- [References](#references)
+A capability-by-capability reference for the CTS. It complements
+[README.md](README.md) (setup + command reference) and [CONTEXT.md](CONTEXT.md)
+(vocabulary). Every capability below is delivered by the `anariCts` C++ tool, except
+reporting and device-diff, which are the Python layer reading the results tree
+(`docs/adr/0001`).
 
+- [Render and score test scenes](#render-and-score-test-scenes)
+- [Comparison metrics](#comparison-metrics)
+- [Query object/parameter metadata](#query-objectparameter-metadata)
+- [Check which tests a device can run](#check-which-tests-a-device-can-run)
+- [List the extensions a device implements](#list-the-extensions-a-device-implements)
+- [Aggregate results: report and device diff](#aggregate-results-report-and-device-diff)
 
-## Render a set of known test scenes
-### Python API
+## Render and score test scenes
 
-The Python API is used by the user to invoke the rendering. The function signature looks like this:
-```python
-def render_scenes(anari_library, anari_device = None, anari_renderer = "default", test_scenes = "test_scenes", output = ".")
-```
-```bash
-# Example call
-.\cts.py render_scenes helide -d default -r default -t test_scenes -o .
-```
-
-This invokes the required ANARI calls for the specified device and library in the C++ backend via pybind11. If `anari_device` is set to `None`, the default device is used (first device of anariGetDeviceSubtypes). Now, all specified test scenes are rendered with the specified renderer. If no renderer is given, the default renderer is used. `test_scenes` can either be a category denoted by a path into the `test_scenes` folder or be a number of scenes denoted by a list of strings. If no scene is given, all test scenes are used by default. `output` specifies the folder in which the renderings are saved. It defaults to the folder where the script is executed from. The renderings will be arranged in the same folder structure as the test cases. Therefore, by default the images are placed next to the JSON files. The Python API receives the pixel data from the C++ backend and writes the renderings to disk.
-
-### C++
-The C++ backend first sets up the ANARI device. Afterwards, all passed test scenes are initialized and rendered. The pixel data for RGBA and depth channel as well as the ANARI log messages are passed to Python via pybind11.
-
-### Example output
-<p float="left">
-  <img src="./doc/images/cube_soup_depth.png" width="300"/>
-  <img src="./doc/images/sphere_16_indexed_color.png" width="300"/>
-  <img src="./doc/images/sphere_16_indexed_depth.png" width="300"/>
-</p>
-<figcaption>Renderings from sphere and quad test cases </figcaption>
-
-## Image comparison “smoke tests”
-
-### Python API
-
-The Python API performs the image comparison between the previously rendered scenes from an ANARI device and the ground truth. The user can customize various parameters in regards to the comparison. The Python function could look similar to this:
-
-```python
-def compare_images(test_scenes = "test_scenes",  candidates_path = "test_scenes", output = ".", verbosity = 0, comparison_methods = ["SSIM"], thresholds = None, custom_compare_function = None)
-```
+The catalog is a set of C++ Tests, each expanding into one or more Cases. The
+reference device (helide) renders the ground truth; the candidate device renders
+the same Cases and each Channel is scored against ground truth.
 
 ```bash
-# Example call
-.\cts.py compare_images -t test_scenes --candidates test_scenes -o . --verbose_all --comparison_methods ssim psnr --thresholds 0.7 0.5
+anariCts generate --renderer default --ambientRadiance 1 --workdir myrun
+anariCts run helide --renderer default --ambientRadiance 1 --workdir myrun
 ```
 
-- `test_scenes` is the path to the folder containing the test files + reference images.
-- `candidates_path` is the path to folder containing the candidate renderings.
-- `output` is the path to the folder where the PDF file with the results is stored. A subfolder called evaluation is created. If `output` is `None` the results will only be shown via Python standard output.
-- `verbosity` specifies how much detailed information should be shown in the report. 0 - None, 1 - Only for failed tests, 2 - For all tests
-- `comparison_methods` is a list of strings containing all algorithms which should be used to compare the sets of images. The list of proposed algorithms is listed in section [Comparison methods](#comparison-methods).
-- `thresholds` is a list of numbers containing values which determine for each comparison method whether the tested image fails or passes the test. If `None` is given, predefined thresholds are used.
-- `custom_compare_function` can be used by the user to define a custom function to compare the images with. The signature should look like this:
+Ground truth is generated on demand into `myrun/ground_truth/` and is never
+committed (`docs/adr/0005`), so it always matches the current scene code.
+Generation and execution accept the same renderer subtype and ambient-radiance
+baseline; use matching values when comparing a Candidate to Ground truth.
+Rendered candidate images and a per-Case sidecar land in `myrun/results/`,
+mirroring the catalog hierarchy `<category>/<test>/<case>`. A Case is rendered
+once per Channel it declares (color, depth, albedo, normal, primitive/object/
+instance id); each Channel is compared independently.
 
-```python
-def custom_compare_function(reference, candidate):
-    # ...    
-    return result > threshold, threshold, result
-```
+A handful of Tests verify *behavior* the render-and-compare path can't express
+(the frame-completion callback firing, progressive accumulation converging).
+Those use the runner's behavior hook and record a pass/fail with a detail note
+instead of comparing images.
 
-If a custom compare function is provided it will be used additionally to the defined comparison methods (if any are defined) and included in the final result.
+## Comparison metrics
 
-### Comparison methods
+Each Channel is compared against its ground-truth image with two metrics, ported
+faithfully from the former scikit-image pipeline so the historical thresholds
+keep their meaning. C++ is the single source of these metrics (`docs/adr/0004`);
+the Python layer never re-computes them.
 
-For comparing the images, the metrics module of the scikit-image[^scikit-image] library is used. It implements the most commonly used comparison algorithms, such as mean squared error (MSE)[^mse], peak signal noise ratio (PSNR)[^psnr] or structural similarity (SSIM)[^ssim].
+- **SSIM** (structural similarity), default threshold `0.70`. SSIM mimics human
+  perception and compares the *structure* of two images rather than their
+  absolute pixel values, so it tolerates differences in lighting/shading while
+  still catching structural differences. (If two images differ too much, SSIM
+  also drops, so it is not blind to shading.)
+- **PSNR** (peak signal-to-noise ratio, dB), default threshold `20.0`.
 
-Since the CTS should only compare structural differences between images and disregard changes in lighting or shading, the following methods are used. In contrast to MSE or PSNR, which compare the pixel values of images directly, SSIM tries to mimic human perception and compares the structure of images. Therefore, the relationship between pixels is taken into account and SSIM can be used for pattern recognition between two images. However, SSIM does not totally disregard lighting and shading. If the differences are too big, SSIM will not be able to recognize structurally similar patterns.\
-For comparing only the actual vertices, the depth channel is rendered to an image. This is a grayscale image as seen below which encodes the distance from each pixel to the camera as euclidean distance as defined in the ANARI specification. These renderings are independent from any shading or light source and only take the actual primitives into account. Therefore, these images are compared with PSNR with a strict threshold.
+Both composite the alpha channel over a white background before comparing and
+use a data range of 255. The **depth** Channel is rendered to a grayscale image
+(distance from the camera, per the ANARI spec) with a fixed, scene-derived scale
+so it is deterministic across devices; depth images are independent of shading
+and exercise only the primitives.
 
-### Example output
+Thresholds are configurable per Test, and per Channel within a Test (e.g. a
+stricter bar on depth than on color). A Case passes only when every metric on
+every Channel clears its threshold.
 
-<figure>
-  <img src="./doc/images/image_compare.png" width="500"/>
+## Query object/parameter metadata
 
-</figure>
+`query-metadata` prints the catalog's machine-readable metadata as JSON — each
+Test's id, category, axes, required features, channels, thresholds, and Case
+count. It opens no device, so it works without any library present.
 
-Screenshot of example report.
-
-## Verification of object/parameter info metadata
-The CTS is able to query all static object/parameter info metadata of a library. This can be used to check which types and features are implemented by an ANARI library.
-### Python API
-The Python API is used by the user to invoke the query. The function signature looks like this:
-```python
-def query_metadata(anari_library, type = None, subtype = None, skipParameters = False, info = False)
-```
 ```bash
-# Example call
-.\cts.py query_metadata helide --type ANARI_GEOMETRY --subtype cone --info
+anariCts query-metadata --filter frame
 ```
 
-This invokes the required ANARI calls for `anari_library` in the C++ backend via pybind11. The queried information will be displayed via Python standard output. `type`, `subtype` and `skipParameters` can be used to limit the output to the specified types. `info` can be enabled to show more detailed information.  
-
-### C++
-The code of the `anariInfo` tool was refactored for this task to return a string instead of writing directly to the output via `printf`.
-
-### Example output
-Example output for the example library:
+```json
+[
+  {
+    "id": "frame/frame_depth_channel",
+    "category": "frame",
+    "name": "frame_depth_channel",
+    "caseCount": 1,
+    "channels": ["depth"],
+    "requiredFeatures": ["ANARI_KHR_GEOMETRY_TRIANGLE"],
+    "axes": [],
+    "thresholds": {},
+    "simplified": false
+  }
+]
 ```
-Devices:
-   example
-Device "example":
-   Subtypes:
-      ANARI_CAMERA: omnidirectional orthographic perspective
-      ANARI_GEOMETRY: cone curve cylinder quad sphere triangle
-      ANARI_LIGHT: directional point spot
-      ANARI_MATERIAL: matte transparentMatte
-      ANARI_RENDERER: default scivis ao pathtracer debug raycast rayDir
-      ANARI_SAMPLER: image1D image2D image3D primitive transform
-      ANARI_SPATIAL_FIELD: structuredRegular
-      ANARI_VOLUME: scivis
-   Parameters:
-      ANARI_CAMERA omnidirectional:
-         * name                      ANARI_STRING
-         * position                  ANARI_FLOAT32_VEC3
-         * direction                 ANARI_FLOAT32_VEC3
-         * up                        ANARI_FLOAT32_VEC3
-         * transform                 ANARI_FLOAT32_MAT3x4
-         * imageRegion               ANARI_FLOAT32_BOX2
-         * apertureRadius            ANARI_FLOAT32
-         * focusDistance             ANARI_FLOAT32
-         * stereoMode                ANARI_STRING
-         * interpupillaryDistance    ANARI_FLOAT32
-         * layout                    ANARI_STRING
 
+## Check which tests a device can run
+
+A Test is skipped when the device is missing any of its required extensions.
+`check-properties` loads a device and reports, per Test, whether it is runnable
+or will be skipped and which features are missing:
+
+```bash
+anariCts check-properties helide --filter frame
+```
+
+```
+[run ] frame/frame_color_channel
+[run ] frame/frame_depth_channel
+[skip] frame/frame_albedo_channel  missing: ANARI_KHR_FRAME_CHANNEL_ALBEDO
+[skip] frame/frame_normal_channel  missing: ANARI_KHR_FRAME_CHANNEL_NORMAL
+[run ] frame/frame_completion_callback
+[skip] frame/progressive_rendering  missing: ANARI_KHR_FRAME_ACCUMULATION
+...
+13 runnable, 3 skipped on 'helide'
+```
+
+## List the extensions a device implements
+
+`query-features` loads a device and prints the extensions it reports via
+`anariGetDeviceExtensions`, one per line:
+
+```bash
+anariCts query-features helide
+```
+
+```
+ANARI_KHR_CAMERA_PERSPECTIVE
+ANARI_KHR_FRAME_COMPLETION_CALLBACK
+ANARI_KHR_GEOMETRY_TRIANGLE
+ANARI_KHR_MATERIAL_MATTE
 ...
 ```
 
-## Verification of known object properties
+## Aggregate results: report and device diff
 
-The CTS is able to check if output object properties are correct. This is done by loading the test scenes and verifying whether the properties match the excepted values from the JSON files.
+`ctsReport.py` reads a workdir's sidecar tree and never renders.
 
-### Python API
-
-The Python API is used by the user to invoke the check. The function signature looks like this:
-```python
-def check_object_properties(anari_library, anari_device = None, test_scenes = "test_scenes")
-```
 ```bash
-# Example call
-.\cts.py check_object_properties helide -d default -t test_scenes
-```
-This invokes the required ANARI calls for the specified device and test scenes (see [Render a set of known test scenes](#python-api)) in the C++ backend via pybind11. If `anari_device` is set to `None`, the default device is used (first device of `anariGetDeviceSubtypes`). A list of all properties will be displayed via Python standard output showing the result.
-
-### C++
-
-The C++ backend will first setup the ANARI device and load the test scene. It will check the properties `bounds` of `Group`, `Instance` and `World`. The `waitMask` parameter is set to `ANARI_WAIT`. The correct values are generated and written in the test scene.
-The results will be returned to the Python API.
-
-### Example output
-
-```
-Feature ANARI_KHR_GEOMETRY_CURVE is not supported
-Scene D:\reps\ANARI-SDK\cts\test_scenes\primitives\curve\curve.json is not supported
-test_scenes\primitives\cone\cone_soup: Worlds bounds do not match!
-MIN X mismatch: Is -0.11385399103164673. Should be -0.21904073655605316 ± 0.07143060490489006
-MAX X mismatch: Is 1.0190626382827759. Should be 1.209571361541748 ± 0.07143060490489006
-MIN Y mismatch: Is -0.13137219846248627. Should be -0.25435739755630493 ± 0.07117505371570587
-MIN Z mismatch: Is 0.012333530932664871. Should be -0.08156748116016388 ± 0.06556123271584512
-
+python cts/ctsReport.py report myrun            # text summary
+python cts/ctsReport.py report myrun --pdf out.pdf
+python cts/ctsReport.py report myrun --all --pdf all.pdf
+python cts/ctsReport.py diff runA runB          # compare two candidates
+python cts/ctsReport.py diff runA runB --json
 ```
 
-## List ANARI features implemented by a device
-The CTS is able to list all ANARI features and show which ones are implemented by the ANARI device.
-### Python API
-The Python API can be invoked by a function similar to this:
-```python
-def query_features(anari_library, anari_device = None)
-```
-```bash
-# Example call
-.\cts.py query_features helide -d default
-```
-If no `anari_device` is specified, the default device is used.
-### C++
-The C++ backend sets up the ANARI device and calls `anariGetObjectFeatures` on it. Then, it is checked whether each feature is included in the supported features list and the result is returned.
+`report` prints overall and per-category pass/fail/skip counts and lists failing
+Cases (with their per-Channel metric scores, or the behavioral detail note). The
+optional PDF additionally embeds the candidate vs. ground-truth images for each
+failed Case. Pass `--all` to itemize passed, failed, and skipped Cases and embed
+the available images for every rendered Case in the PDF.
 
-### Example output
-```
-------------------------------------------  -----
-ANARI_KHR_CAMERA_OMNIDIRECTIONAL            False
-ANARI_KHR_CAMERA_ORTHOGRAPHIC               True
-ANARI_KHR_CAMERA_PERSPECTIVE                True
-ANARI_KHR_GEOMETRY_CONE                     True
-ANARI_KHR_GEOMETRY_CURVE                    True
-ANARI_KHR_GEOMETRY_CYLINDER                 True
-ANARI_KHR_GEOMETRY_QUAD                     True
-ANARI_KHR_GEOMETRY_SPHERE                   True
-ANARI_KHR_GEOMETRY_TRIANGLE                 True
-ANARI_KHR_LIGHT_DIRECTIONAL                 False
-ANARI_KHR_LIGHT_POINT                       True
-ANARI_KHR_LIGHT_SPOT                        False
-ANARI_KHR_MATERIAL_MATTE                    True
-ANARI_KHR_MATERIAL_TRANSPARENT_MATTE        True
-ANARI_KHR_SAMPLER_IMAGE1D                   True
-ANARI_KHR_SAMPLER_IMAGE2D                   False
-ANARI_KHR_SAMPLER_IMAGE3D                   False
-ANARI_KHR_SAMPLER_PRIMITIVE                 False
-ANARI_KHR_SAMPLER_TRANSFORM                 False
-ANARI_KHR_SPATIAL_FIELD_STRUCTURED_REGULAR  True
-ANARI_KHR_VOLUME_SCIVIS                     True
-ANARI_KHR_LIGHT_RING                        False
-ANARI_KHR_LIGHT_QUAD                        False
-ANARI_KHR_LIGHT_HDRI                        False
-ANARI_KHR_FRAME_CONTINUATION                False
-ANARI_KHR_AUXILIARY_BUFFERS                 False
-ANARI_KHR_AREA_LIGHTS                       False
-ANARI_KHR_STOCHASTIC_RENDERING              False
-ANARI_KHR_TRANSFORMATION_MOTION_BLUR        False
-ANARI_KHR_ARRAY1D_REGION                    False
-------------------------------------------  -----
-```
-
-## Aggregate test results
-The Python API is able to call all previously defined features and accumulate their results in a PDF file. The API function can be defined as:
-```python
-def create_report(library, device = None, renderer = "default", test_scenes = "test_scenes", output = ".", verbosity = 0, comparison_methods = ["ssim"], thresholds = None, custom_compare_function = None)
-```
-```bash
-# Example call
-.\cts.py create_report helide -d default -r default -t test_scenes -o . --verbose_all --comparison_methods ssim --thresholds 0.7 
-```
-This function runs all tests with their respective parameters. After all tests are run their results are accumulated in a PDF and stored inside the subfolder `evaluation` in the output path. This is done with the `reportlab` library. The first page contains a summary of all tests. Afterwards, the results from `query_features` and `query_metadata` are shown. Depending on the verbosity level, the detailed results of each test are displayed as well. These contain the image comparison, the frame duration and the result from `check_object_properties`.
-
-### Example output
-
-<figure>
-  <img src="./doc/images/report_summary.png" width="500"/>
-
-</figure>
-
-First page of an example report
-
-## References
-
-[^pybind]: https://github.com/pybind/pybind11
-[^argparse]: https://docs.python.org/3/library/argparse.html
-[^ssim]: https://en.wikipedia.org/wiki/Structural_similarity
-[^scikit-image]: https://scikit-image.org/
-[^psnr]: https://en.wikipedia.org/wiki/Peak_signal-to-noise_ratio
-[^mse]: https://en.wikipedia.org/wiki/Mean_squared_error
+A **device diff** is manifest arithmetic over two sidecar trees that were each
+scored against the same ground truth: verdict differences, per-Channel metric
+deltas, and Cases present in only one run. Rendering duration is intentionally
+excluded from semantic equality, so timing-only changes do not make repeated
+runs differ. It does not re-compare pixels between the two devices
+(`docs/adr/0004`).

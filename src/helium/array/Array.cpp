@@ -1,4 +1,4 @@
-// Copyright 2023-2025 The Khronos Group
+// Copyright 2023-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "array/Array.h"
@@ -91,6 +91,12 @@ size_t Array::totalCapacity() const
   return totalSize();
 }
 
+float4 Array::readAsAttributeValue(int32_t i, WrapMode wrap) const
+{
+  const auto idx = calculateWrapIndex(i, totalSize(), wrap);
+  return readAsAttributeValueFlat(data(), elementType(), idx);
+}
+
 void *Array::map()
 {
   if (isMapped()) {
@@ -128,8 +134,16 @@ void Array::markDataModified()
   m_lastDataModified = helium::newTimeStamp();
 }
 
-bool Array::getProperty(
-    const std::string_view &name, ANARIDataType type, void *ptr, uint64_t size, uint32_t flags)
+helium::TimeStamp Array::lastDataModified() const
+{
+  return m_lastDataModified;
+}
+
+bool Array::getProperty(const std::string_view &name,
+    ANARIDataType type,
+    void *ptr,
+    uint64_t size,
+    uint32_t flags)
 {
   return 0;
 }
@@ -200,6 +214,11 @@ void Array::on_NoPublicReferences()
   reportMessage(ANARI_SEVERITY_DEBUG, "privatizing array");
   if (!wasPrivatized() && ownership() != ArrayDataOwnership::MANAGED)
     privatize();
+}
+
+float4 readAttributeValue(const Array *arr, uint32_t i, const float4 &d)
+{
+  return arr ? arr->readAsAttributeValue(i) : d;
 }
 
 } // namespace helium

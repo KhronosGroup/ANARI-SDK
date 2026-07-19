@@ -1,4 +1,4 @@
-// Copyright 2023-2025 The Khronos Group
+// Copyright 2023-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Viewport.h"
@@ -283,12 +283,13 @@ void Viewport::updateImage()
 
     auto fb = anari::map<void>(m_device, m_frame, "channel.color");
 
-    if (fb.data && fb.pixelType == m_format) {
+    if (fb.data && fb.pixelType == m_format
+        && fb.width == m_viewportSize.x && fb.height == m_viewportSize.y) {
       SDL_UpdateTexture(m_framebufferTexture,
           nullptr,
           fb.data,
           fb.width * anari::sizeOf(m_format));
-    } else {
+    } else if (!fb.data || fb.pixelType != m_format) {
       printf("mapped bad frame: %p | %i x %i\n", fb.data, fb.width, fb.height);
     }
 

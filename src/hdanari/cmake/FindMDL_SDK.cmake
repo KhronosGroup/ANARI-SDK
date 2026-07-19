@@ -1,4 +1,4 @@
-# Copyright 2025 The Khronos Group
+# Copyright 2025-2026 The Khronos Group
 # SPDX-License-Identifier: Apache-2.0
 
 if (TARGET MDL_SDK::MDL_SDK)
