@@ -11,8 +11,9 @@ It can:
 - enumerate the test catalog (`list`, `query-metadata`),
 - generate ground-truth images with the reference device (`generate`),
 - render and score a candidate device against that ground truth (`run`),
-- report which extensions a device implements (`query-features`) and which
-  tests it can run vs. will skip (`check-properties`),
+- report which extensions a device implements (`query-features`), introspect a
+  device's object subtypes and parameter metadata (`query-device-info`), and
+  report which tests it can run vs. will skip (`check-properties`),
 - summarize a run as text or an interactive HTML report (`report`) — a PDF is
   available via `ctsReport.py`.
 
@@ -74,6 +75,7 @@ commands:
   run <device> [options]     render + score a candidate device against ground truth
   query-features <device>    print the device's supported extensions
   query-metadata [options]   print catalog metadata as JSON
+  query-device-info <device> introspect a device: object subtypes + parameter metadata
   check-properties <device>  report which tests the device can run vs. will skip
   report <workdir>           summarize a run's results tree (text + optional HTML)
 

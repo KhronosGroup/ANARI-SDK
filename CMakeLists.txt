@@ -77,14 +77,14 @@ option(USE_KTX "Use ktx when loading glTF files" OFF)
 option(USE_KOKKOS "Use Kokkos to accelerate scene build and updates" OFF)
 option(BUILD_EXAMPLES "Build example applications and example device" ON)
 cmake_dependent_option(BUILD_VIEWER
-  "Build interactive viewer app (requires GLFW)"
+  "Build interactive viewer app (requires SDL3)"
   OFF
   "BUILD_EXAMPLES"
   OFF
 )
 if (BUILD_CAT)
   # CAT requires anari::anari_viewer library
-  set(BUILD_VIEWER ON CACHE BOOL "Build interactive viewer app (requires GLFW)" FORCE)
+  set(BUILD_VIEWER ON CACHE BOOL "Build interactive viewer app (requires SDL3)" FORCE)
 endif ()
 option(INSTALL_CTS "Install CTS scripts and data" OFF)
 option(INSTALL_VIEWER_LIBRARY "Install anari::anari_viewer library target" ON)

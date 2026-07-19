@@ -12,7 +12,7 @@ This repository contains the source for the ANARI API SDK. This includes:
 - [Example applications](examples/)
 - [Interactive sample viewer](examples/viewer)
 - [Render tests](tests/render)
-- [(experimental) OpenUSD Hydra render delegate plugin](src/hdanari)
+- [OpenUSD Hydra plugin](src/hdanari)
 
 The ANARI specification can be found on the Khronos website
 [here](https://www.khronos.org/registry/ANARI/).
@@ -188,19 +188,24 @@ variables:
 
 ### (Unofficial) list of actively developed ANARI implementations
 
-- [Barney](https://github.com/ingowald/barney) (MPI distributed renderer)
-- [ANARI-PTC](https://github.com/ingowald/ANARI-PTC) (MPI distributed adapter device)
-- [Cycles (Blender)](https://github.com/jeffamstutz/anari-cycles)
+- [ANARI-PTC](https://github.com/ingowald/ANARI-PTC) (MPI distributed adapter)
+- [ANARI-WebGPU](https://github.com/sankhesh/anari-webgpu)
+- [Cycles](https://github.com/jeffamstutz/anari-cycles) (Blender's path tracer)
+- [Halogen](https://github.com/MetaversalCorp/Halogen) (built on [Filament](https://github.com/google/filament))
+- [helide](src/devices/helide)
+- [helide_gpu](src/devices/helide_gpu)
 - [Intel OSPRay](https://github.com/ospray/anari-ospray)
+- [NVIDIA Barney](https://github.com/NVIDIA/barney) (MPI distributed renderer)
 - [NVIDIA USD](https://github.com/NVIDIA-Omniverse/AnariUsdDevice)
-- [NVIDIA VisRTX + VisGL](https://github.com/NVIDIA/VisRTX)
+- [NVIDIA VisRTX](https://github.com/NVIDIA/VisRTX)
+- [Photon](https://github.com/mvictoras/photon)
 - [Visionaray](https://github.com/szellmann/anari-visionaray)
-- [VTK-m](https://github.com/dpugmire/anari-library-vtkm)
+- [Viskores](https://github.com/Viskores/viskores)
 
 If you implement a backend to the ANARI SDK, please open a PR to add it to this
 list!
 
-### list of ANARI implementations no longer maintained
+### ANARI implementations no longer maintained
 
 - [AMD RadeonProRender](https://github.com/GPUOpen-LibrariesAndSDKs/RadeonProRenderANARI)
 
@@ -208,23 +213,24 @@ list!
 
 ### Publicly available applications + libraries using ANARI
 
-- [Blender](https://www.blender.org/) (via [addon](examples/blender) found in the ANARI-SDK)
+- [ANARI-Java](https://codeberg.org/jsorel/anari-java/) (Java language bindings)
+- [Blender](https://www.blender.org/) (via Python [addon](examples/blender))
 - [COVISE](https://www.hlrs.de/solutions/types-of-computing/visualization/covise)
 - [HayStack](https://github.com/ingowald/hayStack)
 - [OVITO](https://www.ovito.org/)
-- [OpenUSD](https://openusd.org/release/index.html) (via [hdAnari](src/hdanari) plugin found in the ANARI-SDK)
+- [OpenUSD](https://openusd.org/release/index.html) (via [hdAnari](src/hdanari) plugin)
+- [ParaView](https://www.paraview.org/)
 - [pynari](https://github.com/ingowald/pynari) (Python language bindings)
+- [Sneeze](https://github.com/MetaversalCorp/Sneeze) (Open Metaverse Browser Initiative)
 - [TSD](https://github.com/NVIDIA/VisRTX/tree/next_release/tsd)
+- [VisIt](https://visit-dav.github.io/visit-website/index.html)
+- [Viskores](https://github.com/Viskores/viskores)
 - [Vistle](https://vistle.io/)
 - [VTK](https://vtk.org/)
-- [Viskores](https://github.com/Viskores/viskores) (formerly known as VTK-m)
-- [ANARI-Java](https://codeberg.org/jsorel/anari-java/) (Java language bindings)
 
 ### Integrations in-progress
 
 - [Ascent](https://ascent.readthedocs.io/en/latest/)
-- [ParaView](https://www.paraview.org/)
-- [VisIt](https://visit-dav.github.io/visit-website/index.html)
 - [VMD](https://www.ks.uiuc.edu/Research/vmd/)
 
 If you integrate ANARI into your application, please open a PR to add it to this

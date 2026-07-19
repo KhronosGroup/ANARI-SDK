@@ -4,7 +4,7 @@
 # Example applications which use the ANARI API
 add_subdirectory(simple)
 
-option(BUILD_VIEWER "Build interactive viewer app (requires GLFW)" OFF)
+option(BUILD_VIEWER "Build interactive viewer app (requires SDL3)" OFF)
 if (BUILD_VIEWER)
   add_subdirectory(viewer)
 endif()

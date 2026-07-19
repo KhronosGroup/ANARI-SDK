@@ -64,11 +64,11 @@ the default status callback and callback user pointer. `DeviceImpl` is intended
 to be very minimal -- implementors who desire SDK-provided implementations of
 much of the API should use the [`helium`](../helium) layer which implements many
 common concepts, but requires implementations to opt-in to various `helium`
-abstractions and classes. The provided [`helide`](../helide) device demonstrates
+abstractions and classes. The provided [`helide`](../devices/helide) device demonstrates
 ultimately how to implement `DeviceImpl` through using
 [`helium::BaseDevice`](../helium/BaseDevice.h).  Device implementors can use the
 sum of `helium::BaseDevice` and
-[`helide::HelideDevice`](../helide/HelideDevice.h) as a full example of
+[`helide::HelideDevice`](../devices/helide/HelideDevice.h) as a full example of
 implementing ANARI. Further documentation of what functionality `helium`
 provides can be found in its [README](../helium/README.md).
 
@@ -95,17 +95,16 @@ which has the following signature:
 
 ```cmake
 anari_generate_queries(
-  NAME [device_name]
-  PREFIX [device_prefix]
+  DEVICE_TARGET [device_target]
   CPP_NAMESPACE [namespace]
   JSON_DEFINITIONS_FILE [path/to/device/definitions.json]
 )
 ```
 
-This CMake function will create a target called `generate_[device_name]_device`,
-which must be built manually in order to generate any C++. By invoking this
-targets, a `[device_prefix]Queries.cpp/.h` are created, which can be included
-in the local device build's source. Please refer to [helide](../helide) as an
+This CMake function generates `[device_target]_queries.cpp/.h` and attaches the
+generated source directly to `[device_target]` (via `target_sources()`), so the
+queries are built automatically as part of the device -- no separate target
+needs to be built manually. Please refer to [helide](../devices/helide) as an
 example of how these components all go together.
 
 Note that all core spec extensions are defined in a collection of
