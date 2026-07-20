@@ -63,7 +63,8 @@ static void initializeANARI()
 
   anari::Device dev = anariNewDevice(library, "default");
 
-  // Keep the library loaded until the device is released in teardown().
+  // Keep the library loaded until Application::run() has destroyed every
+  // window holding a retained device reference.
   g_library = library;
 
   if (g_enableDebug)
@@ -155,7 +156,6 @@ struct Application : public anari_viewer::Application
   void teardown() override
   {
     anari::release(m_state.device, m_state.device);
-    anari::unloadLibrary(g_library);
     anari_viewer::ui::shutdown();
   }
 
@@ -203,5 +203,6 @@ int main(int argc, char *argv[])
     return 1;
   Application app;
   app.run(1920, 1200, "ANARI Demo Viewer");
+  anari::unloadLibrary(g_library);
   return 0;
 }
