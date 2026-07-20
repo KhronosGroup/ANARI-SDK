@@ -119,11 +119,13 @@ inline HdAnariRenderParam::HdAnariRenderParam(
   if (!d)
     return;
 
-  // Always go with white matte as a fallback material.
+  // Fallback matte that samples the geometry's "color" attribute rather than a
+  // constant, so material-less geometry honors per-vertex displayColor. The
+  // geometry side writes that attribute: the authored displayColor array when
+  // present, or a constant fallback when absent (see HdAnariGeometry sync).
   _material = anari::newObject<anari::Material>(d, "matte");
   anari::setParameter(d, _material, "alphaMode", "opaque");
-  anari::setParameter(
-      d, _material, "color", GfVec3f(0.8f, 0.8f, 0.8f)); // "color");
+  anari::setParameter(d, _material, "color", "color");
   anari::commitParameters(d, _material);
 
   _primvarBinding.emplace(HdTokens->displayColor, "color");

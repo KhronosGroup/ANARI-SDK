@@ -128,8 +128,9 @@ static VtValue _FlipTextureCoordinateV(VtValue value)
 // A mesh whose UVs are authored under another name (Blender `UVMap`, `map1`,
 // ...) would then deliver no texcoords. Re-key each texcoord binding whose
 // primvar is absent on the mesh to an unused mesh texture-coordinate primvar so
-// the data still reaches its attribute. `meshTexcoords` and `meshPrimvarsSorted`
-// are sorted; the latter enables a binary search for presence.
+// the data still reaches its attribute. `meshTexcoords` and
+// `meshPrimvarsSorted` are sorted; the latter enables a binary search for
+// presence.
 static HdAnariMaterial::PrimvarBinding _ResolveTexcoordBinding(
     const HdAnariMaterial::PrimvarBinding &binding,
     const std::vector<TfToken> &meshTexcoords,
@@ -480,8 +481,8 @@ void HdAnariGeometry::Sync(HdSceneDelegate *sceneDelegate,
   // Make sure this is stored we can do binary searches and set differences.
   std::sort(begin(allPrimvars), end(allPrimvars));
   std::sort(begin(meshTexcoords), end(meshTexcoords));
-  meshTexcoords.erase(
-      std::unique(begin(meshTexcoords), end(meshTexcoords)), end(meshTexcoords));
+  meshTexcoords.erase(std::unique(begin(meshTexcoords), end(meshTexcoords)),
+      end(meshTexcoords));
 
   // Get an exhaustive list of primvars used by the different materials
   // referenced this geometry and its subsets.
@@ -492,16 +493,26 @@ void HdAnariGeometry::Sync(HdSceneDelegate *sceneDelegate,
   // Main geometry first...
   GeomSubsetInfo mainGeomInfo;
 
+  // Resolve an anari material + primvar binding for a (possibly null) material
+  // prim. Falls back to the shared default whenever there is no material *or*
+  // the material resolved to the shared default (e.g. a network with no surface
+  // terminal): that default samples the "color" attribute, so it must always be
+  // paired with the default binding that makes the geometry expose it -- else
+  // the attribute is missing and the surface renders black.
+  auto resolveMaterialAndBinding =
+      [&](HdAnariMaterial *material) -> GeomSubsetInfo {
+    auto anariMat = material ? material->GetAnariMaterial() : nullptr;
+    if (!anariMat || anariMat == renderParam->GetDefaultMaterial())
+      return {renderParam->GetDefaultMaterial(),
+          renderParam->GetDefaultPrimvarBinding()};
+    return {anariMat,
+        _ResolveTexcoordBinding(
+            material->GetPrimvarBinding(), meshTexcoords, allPrimvars)};
+  };
+
   HdAnariMaterial *material = static_cast<HdAnariMaterial *>(
       renderIndex.GetSprim(HdPrimTypeTokens->material, GetMaterialId()));
-  if (auto mat = material ? material->GetAnariMaterial() : nullptr) {
-    mainGeomInfo.material = material->GetAnariMaterial();
-    mainGeomInfo.primvarBinding = _ResolveTexcoordBinding(
-        material->GetPrimvarBinding(), meshTexcoords, allPrimvars);
-  } else {
-    mainGeomInfo.material = renderParam->GetDefaultMaterial();
-    mainGeomInfo.primvarBinding = renderParam->GetDefaultPrimvarBinding();
-  }
+  mainGeomInfo = resolveMaterialAndBinding(material);
 
   // Points and normals are implicit bindings
   mainGeomInfo.primvarBinding.insert(
@@ -524,13 +535,7 @@ void HdAnariGeometry::Sync(HdSceneDelegate *sceneDelegate,
   for (auto subset : GetGeomSubsets(sceneDelegate, dirtyBits)) {
     HdAnariMaterial *material = static_cast<HdAnariMaterial *>(
         renderIndex.GetSprim(HdPrimTypeTokens->material, subset.materialId));
-    auto geomSubsetInfo = (material && material->GetAnariMaterial())
-        ? GeomSubsetInfo{material->GetAnariMaterial(),
-              _ResolveTexcoordBinding(material->GetPrimvarBinding(),
-                  meshTexcoords,
-                  allPrimvars)}
-        : GeomSubsetInfo{renderParam->GetDefaultMaterial(),
-              renderParam->GetDefaultPrimvarBinding()};
+    auto geomSubsetInfo = resolveMaterialAndBinding(material);
 
     // Points and normals are implicit bindings
     geomSubsetInfo.primvarBinding.insert(
