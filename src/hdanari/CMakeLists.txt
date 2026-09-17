@@ -22,7 +22,7 @@ find_package(Threads REQUIRED)
 
 find_package(USD REQUIRED NAMES pxr)
 find_package(anari REQUIRED)
-if(LINUX)
+if(LINUX OR APPLE)
   # MaterialX and USD might depend on X11 and OpenGL, but they
   # fail to declare that and directly use the related
   # targets. Try and find those packages as optional
