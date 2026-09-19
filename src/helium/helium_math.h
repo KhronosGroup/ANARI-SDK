@@ -143,10 +143,17 @@ constexpr float toneMap(float v)
 
 constexpr anari::math::float4 cvt_color_to_float4(uint32_t rgba)
 {
+#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+  const float a = ((rgba >> 0) & 0xff) / 255.f;
+  const float b = ((rgba >> 8) & 0xff) / 255.f;
+  const float g = ((rgba >> 16) & 0xff) / 255.f;
+  const float r = ((rgba >> 24) & 0xff) / 255.f;
+#else
   const float a = ((rgba >> 24) & 0xff) / 255.f;
   const float b = ((rgba >> 16) & 0xff) / 255.f;
   const float g = ((rgba >> 8) & 0xff) / 255.f;
   const float r = ((rgba >> 0) & 0xff) / 255.f;
+#endif
   return anari::math::float4(r, g, b, a);
 }
 
@@ -157,8 +164,13 @@ constexpr uint32_t cvt_color_to_uint32(const float &f)
 
 constexpr uint32_t cvt_color_to_uint32(const anari::math::float4 &v)
 {
+#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+  return (cvt_color_to_uint32(v.x) << 24) | (cvt_color_to_uint32(v.y) << 16)
+      | (cvt_color_to_uint32(v.z) << 8) | (cvt_color_to_uint32(v.w) << 0);
+#else
   return (cvt_color_to_uint32(v.x) << 0) | (cvt_color_to_uint32(v.y) << 8)
       | (cvt_color_to_uint32(v.z) << 16) | (cvt_color_to_uint32(v.w) << 24);
+#endif
 }
 
 constexpr uint32_t cvt_color_to_uint32_srgb(const anari::math::float4 &v)
