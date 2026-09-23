@@ -222,7 +222,7 @@ list!
 - [ParaView](https://www.paraview.org/)
 - [pynari](https://github.com/ingowald/pynari) (Python language bindings)
 - [Sneeze](https://github.com/MetaversalCorp/Sneeze) (Open Metaverse Browser Initiative)
-- [TSD](https://github.com/NVIDIA/VisRTX/tree/next_release/tsd)
+- [Vela](https://github.com/NVIDIA/Vela)
 - [VisIt](https://visit-dav.github.io/visit-website/index.html)
 - [Viskores](https://github.com/Viskores/viskores)
 - [Vistle](https://vistle.io/)
