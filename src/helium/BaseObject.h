@@ -8,6 +8,7 @@
 // anari_cpp
 #include <anari/anari_cpp.hpp>
 // std
+#include <atomic>
 #include <string_view>
 
 #include "BaseGlobalDeviceState.h"
@@ -110,15 +111,31 @@ struct BaseObject : public RefCounted, ParameterizedObject, LockableObject
   BaseGlobalDeviceState *m_state{nullptr};
 
  private:
+  friend struct DeferredCommitBuffer;
+
+  // Runs finalize() (then markFinalized() and notifies observers) if the object
+  // was updated since the last update a finalize() covered. Returns true if
+  // finalize() ran. Called only by the commit buffer.
+  bool finalizeIfUpdated();
+
   void incrementObjectCount();
   void decrementObjectCount();
 
   std::vector<BaseObject *> m_changeObservers;
-  TimeStamp m_lastParameterChanged{0};
-  TimeStamp m_lastCommitSnapshot{0};
-  TimeStamp m_lastUpdated{0};
-  TimeStamp m_lastCommitted{0};
-  TimeStamp m_lastFinalized{0};
+  // Atomic: markUpdated() runs on whichever thread notifies an observer (an
+  // app thread unmapping an array) while the commit buffer may be reading and
+  // writing these on another thread.
+  std::atomic<TimeStamp> m_lastParameterChanged{0};
+  std::atomic<TimeStamp> m_lastCommitSnapshot{0};
+  std::atomic<TimeStamp> m_lastUpdated{0};
+  std::atomic<TimeStamp> m_lastCommitted{0};
+  std::atomic<TimeStamp> m_lastFinalized{0};
+  // The lastUpdated() time that the most recent finalize() covered. Unlike
+  // m_lastFinalized (stamped after finalize() returns), an update that lands
+  // while finalize() runs (e.g. an observed array unmapped on an app thread
+  // while the buffer flushes on another thread) is newer than this, so the
+  // object is finalized again rather than the update being dropped.
+  std::atomic<TimeStamp> m_lastFinalizedUpdate{0};
   ANARIDataType m_type{ANARI_OBJECT};
 };
 

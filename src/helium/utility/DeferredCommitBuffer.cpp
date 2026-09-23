@@ -108,11 +108,17 @@ void DeferredCommitBuffer::flushCommits()
       // snapshot mutex (not its object lock -- frameReady() holds the object
       // lock while blocked on this flush, so that would deadlock), serializing
       // the read against a concurrent re-commit of the same object.
+      //
+      // markCommitted() reads the snapshot's parameter-change time, so it runs
+      // inside the same scope: a concurrent re-commit blocked on the snapshot
+      // mutex must not publish its newer time before this commit records the
+      // one it actually read, or that re-commit would be skipped as already
+      // committed.
       {
         ParameterizedObject::ReadCommittedScope readScope(obj);
         obj->commitParameters();
+        obj->markCommitted();
       }
-      obj->markCommitted();
       obj->markUpdated();
       {
         obj->refInc(RefType::INTERNAL);
@@ -141,21 +147,8 @@ void DeferredCommitBuffer::flushFinalizations()
 
   bool didFinalize = false;
   dynamic_foreach(m_finalizationBuffer, [&](size_t i) {
-    auto obj = m_finalizationBuffer[i];
-    if (obj->lastUpdated() > obj->lastFinalized()) {
+    if (m_finalizationBuffer[i]->finalizeIfUpdated())
       didFinalize = true;
-      // finalize() also reads parameters (e.g. helide's Sphere reads "radius"),
-      // so it must see the same committed snapshot as commitParameters(), under
-      // the same snapshot mutex. Objects driven directly by a parent's
-      // finalize() (e.g. helide World's internal zero group/instance) are not
-      // the scope's active object and correctly read their live staging store.
-      {
-        ParameterizedObject::ReadCommittedScope readScope(obj);
-        obj->finalize();
-      }
-      obj->markFinalized();
-      obj->notifyChangeObservers();
-    }
   });
 
   if (didFinalize)
