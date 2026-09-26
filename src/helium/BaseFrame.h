@@ -36,6 +36,19 @@ struct BaseFrame : public BaseObject
   // Implement anariDiscardFrame()
   virtual void discard() = 0;
 
+  // True while this frame's completion callback runs on the calling thread.
+  // BaseDevice skips the frame's object lock for such calls: an app thread
+  // blocked in frameReady(ANARI_WAIT) or map on this frame holds that lock
+  // while it waits for the callback to return.
+  bool completingOnThisThread() const;
+
+ protected:
+  // Call the app's frame completion callback. Devices should invoke callbacks
+  // only through this, so the callback may call back into the device on this
+  // frame (map, frameReady, getProperty, ...).
+  void invokeCompletionCallback(
+      ANARIFrameCompletionCallback cb, const void *userPtr, ANARIDevice device);
+
  private:
   void on_NoPublicReferences() override;
 };

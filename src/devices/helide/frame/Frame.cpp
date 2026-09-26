@@ -122,6 +122,15 @@ bool Frame::getProperty(const std::string_view &name,
 
 void Frame::renderFrame()
 {
+  // m_future tracks the job running the callback, and an app thread may be
+  // blocked on it; replacing it from here would race with that wait.
+  if (completingOnThisThread()) {
+    reportMessage(ANARI_SEVERITY_WARNING,
+        "helide does not support rendering a frame from its own completion "
+        "callback");
+    return;
+  }
+
   auto *state = deviceState();
   wait();
 
@@ -174,8 +183,7 @@ void Frame::renderFrame()
       }
     });
 
-    if (m_callback)
-      m_callback(m_callbackUserPtr, state->anariDevice, (ANARIFrame)this);
+    invokeCompletionCallback(m_callback, m_callbackUserPtr, state->anariDevice);
 
     state->renderingSemaphore.frameEnd();
 
@@ -239,11 +247,15 @@ void Frame::discard()
 
 bool Frame::ready() const
 {
-  return helium::tasking::isReady(m_future);
+  return completingOnThisThread() || helium::tasking::isReady(m_future);
 }
 
 void Frame::wait()
 {
+  // A completion callback runs inside the job m_future tracks; that job has
+  // finished rendering, and waiting on it from there would never return.
+  if (completingOnThisThread())
+    return;
   if (m_future.valid()) {
     m_future.get();
     this->refDec(helium::RefType::INTERNAL);
