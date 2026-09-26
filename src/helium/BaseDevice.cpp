@@ -162,7 +162,7 @@ void BaseDevice::commitParameters(ANARIObject o)
     // makes the snapshot race-free vs a concurrent setParam, and is taken
     // before addObjectToCommit so the snapshot is published prior to enqueue.
     {
-      auto lock = obj->scopeLockObject();
+      auto lock = getObjectLock(o);
       obj->snapshotParameters();
     }
     m_state->commitBuffer.addObjectToCommit(obj);

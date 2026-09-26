@@ -245,6 +245,7 @@ struct CallbackRecord
   TestDevice *device{nullptr};
   TestFrame *other{nullptr};
   bool mapped{false};
+  bool committed{false};
   int ready{-1};
   bool completingHere{false};
   bool otherCompletingHere{true};
@@ -267,6 +268,10 @@ void callbackIntoDevice(const void *userPtr, ANARIDevice, ANARIFrame f)
   d.retain(f);
   d.release(f);
   d.discardFrame(f);
+  int value = 7;
+  d.setParameter(f, "value", ANARI_INT32, &value);
+  d.commitParameters(f);
+  r.committed = true;
 
   auto *frame = (TestFrame *)f;
   r.completingHere = frame->completingOnThisThread();
@@ -327,6 +332,8 @@ SCENARIO("a completion callback can call into the device on its own frame",
 
       CHECK(record->mapped);
       CHECK(record->ready == 1);
+      CHECK(record->committed);
+      CHECK(frame->getParam<int>("value", 0) == 7);
 
       // Only that frame, on the callback's thread, counts as completing.
       CHECK(record->completingHere);
@@ -334,6 +341,7 @@ SCENARIO("a completion callback can call into the device on its own frame",
       CHECK_FALSE(record->completingOnAnotherThread);
       CHECK_FALSE(frame->completingOnThisThread());
 
+      device->state()->commitBuffer.clear();
       frame->refDec(helium::RefType::PUBLIC);
       other->refDec(helium::RefType::PUBLIC);
       delete record;
