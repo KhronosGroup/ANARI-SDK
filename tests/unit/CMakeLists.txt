@@ -13,6 +13,7 @@ add_executable(${PROJECT_NAME}
   test_helium_concurrent_updates.cpp
   test_helium_ParameterizedObject.cpp
   test_helium_RefCounted.cpp
+  test_helium_srgb.cpp
   test_helium_TaskQueue.cpp
 )
 
@@ -25,6 +26,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads)
 add_test(NAME unit_test::helium::AnariAny            COMMAND ${PROJECT_NAME} "[helium_AnariAny]"           )
 add_test(NAME unit_test::helium::ParameterizedObject COMMAND ${PROJECT_NAME} "[helium_ParameterizedObject]")
 add_test(NAME unit_test::helium::RefCounted          COMMAND ${PROJECT_NAME} "[helium_RefCounted]"         )
+add_test(NAME unit_test::helium::SRGB                COMMAND ${PROJECT_NAME} "[helium_srgb]"               )
 add_test(NAME unit_test::helium::TaskQueue           COMMAND ${PROJECT_NAME} "[helium_TaskQueue]"          )
 add_test(NAME unit_test::helium::CommitSnapshot      COMMAND ${PROJECT_NAME} "[helium_commit_snapshot]"    )
 add_test(NAME unit_test::helium::ConcurrentUpdates   COMMAND ${PROJECT_NAME} "[helium_concurrent_updates]" )
