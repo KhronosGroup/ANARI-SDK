@@ -322,12 +322,16 @@ void BaseDevice::deviceUnsetAllParameters()
   removeAllParams();
 }
 
-std::scoped_lock<std::mutex> BaseDevice::getObjectLock(ANARIObject object)
+std::unique_lock<std::mutex> BaseDevice::getObjectLock(ANARIObject object)
 {
   if (handleIsDevice(object))
     return referenceFromHandle<BaseDevice>(object).scopeLockObject();
-  else
-    return referenceFromHandle(object).scopeLockObject();
+
+  auto &o = referenceFromHandle(object);
+  if (o.type() == ANARI_FRAME
+      && static_cast<BaseFrame &>(o).completingOnThisThread())
+    return {};
+  return o.scopeLockObject();
 }
 
 } // namespace helium
