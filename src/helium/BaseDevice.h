@@ -114,7 +114,9 @@ struct BaseDevice : public anari::DeviceImpl,
   std::unique_ptr<BaseGlobalDeviceState> m_state;
 
  private:
-  std::scoped_lock<std::mutex> getObjectLock(ANARIObject object);
+  // Holds the object's lock; empty for a frame whose completion callback is
+  // running on this thread (see BaseFrame::completingOnThisThread()).
+  std::unique_lock<std::mutex> getObjectLock(ANARIObject object);
 
   void deviceGetProperty(const char *id, ANARIDataType type, const void *mem);
   void deviceSetParameter(const char *id, ANARIDataType type, const void *mem);

@@ -5,6 +5,9 @@
 
 namespace helium {
 
+// The frame whose completion callback is running on this thread, if any.
+static thread_local const BaseFrame *t_completingFrame = nullptr;
+
 BaseFrame::BaseFrame(BaseGlobalDeviceState *state)
     : BaseObject(ANARI_FRAME, state)
 {}
@@ -16,6 +19,22 @@ void BaseFrame::on_NoPublicReferences()
     discard();
     frameReady(ANARI_WAIT);
   }
+}
+
+bool BaseFrame::completingOnThisThread() const
+{
+  return t_completingFrame == this;
+}
+
+void BaseFrame::invokeCompletionCallback(
+    ANARIFrameCompletionCallback cb, const void *userPtr, ANARIDevice device)
+{
+  if (!cb)
+    return;
+  const BaseFrame *outer = t_completingFrame;
+  t_completingFrame = this;
+  cb(userPtr, device, (ANARIFrame)this);
+  t_completingFrame = outer;
 }
 
 } // namespace helium
