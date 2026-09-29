@@ -230,9 +230,11 @@ inline int32_t calculateWrapIndex(int32_t i, size_t size, WrapMode wrap)
   default:
     return linalg::clamp(i, 0, int32_t(size - 1));
     break;
-  case WrapMode::REPEAT:
-    return i % size;
-    break;
+  case WrapMode::REPEAT: {
+    // Stay signed: i % size_t would convert a negative i to a huge unsigned.
+    const int32_t s = int32_t(size);
+    return ((i % s) + s) % s;
+  }
   case WrapMode::MIRROR_REPEAT:
     return computeMirroredRepeatIndex(i, int32_t(size));
     break;
