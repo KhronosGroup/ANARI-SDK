@@ -15,6 +15,7 @@
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
+#include <limits>
 #include <mutex>
 #include <string>
 #include <vector>
@@ -236,8 +237,8 @@ inline size_t countMismatches(
   return mismatches;
 }
 
-// Number of pixels whose depths differ by more than 1e-4 (equal infinities,
-// the depth of pixels that hit nothing, match).
+// Number of pixels whose depths differ by more than 1e-4 (equal depths match,
+// including infinities and the FLT_MAX of pixels that hit nothing).
 inline size_t countDepthMismatches(
     const std::vector<float> &a, const std::vector<float> &b)
 {
@@ -280,13 +281,17 @@ inline size_t countId(const std::vector<uint32_t> &ids, uint32_t id)
   return n;
 }
 
-// Number of pixels that hit something, i.e. whose depth is finite.
+// Whether a pixel of the given depth hit something: helide writes the depth
+// of a pixel that hit nothing as FLT_MAX.
+inline bool isHit(float depth)
+{
+  return depth < std::numeric_limits<float>::max();
+}
+
+// Number of pixels that hit something (see isHit()).
 inline size_t countHits(const std::vector<float> &depth)
 {
-  size_t n = 0;
-  for (auto v : depth)
-    n += std::isfinite(v);
-  return n;
+  return std::count_if(depth.begin(), depth.end(), isHit);
 }
 
 } // namespace helide_test
