@@ -104,4 +104,17 @@ inline float3 xfmPoint(const mat4 &m, const float3 &p)
   return float3(r.x, r.y, r.z);
 }
 
+// Bounds of the box 'b' after transforming its eight corners by 'm'.
+inline box3 xfmBox(const mat4 &m, const box3 &b)
+{
+  box3 result = box3(xfmPoint(m, b.lower));
+  for (int i = 1; i < 8; i++) {
+    result.extend(xfmPoint(m,
+        float3(i & 1 ? b.upper.x : b.lower.x,
+            i & 2 ? b.upper.y : b.lower.y,
+            i & 4 ? b.upper.z : b.lower.z)));
+  }
+  return result;
+}
+
 } // namespace helide

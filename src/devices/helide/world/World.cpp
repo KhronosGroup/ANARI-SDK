@@ -37,8 +37,10 @@ bool World::getProperty(
     auto bounds = getEmbreeSceneBounds(m_embreeScene);
     for (auto *i : instances()) {
       for (auto *v : i->group()->volumes()) {
-        if (v->isValid())
-          bounds.extend(v->bounds());
+        if (!v || !v->isValid() || !v->isVisible())
+          continue;
+        for (uint32_t t = 0; t < i->numTransforms(); t++)
+          bounds.extend(xfmBox(i->xfm(t), v->bounds()));
       }
     }
     std::memcpy(ptr, &bounds, sizeof(bounds));
