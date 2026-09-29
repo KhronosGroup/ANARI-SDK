@@ -9,6 +9,8 @@
 #include <anari/anari_cpp/ext/linalg.h>
 #include <anari/anari_cpp.hpp>
 // std
+#include <cmath>
+#include <cstdint>
 #include <cstdio>
 #include <string>
 #include <vector>
@@ -34,9 +36,17 @@ inline void printErrors(const void *,
   }
 }
 
+// The color, depth and objectId channels of one rendered frame.
+struct RenderResult
+{
+  std::vector<float4> color;
+  std::vector<float> depth;
+  std::vector<uint32_t> objectId;
+};
+
 // Renders 'world' at kImageSize from (0, 0, 2) looking down -z with a black
-// background, returning the float color channel.
-inline std::vector<float4> render(
+// background, returning the color, depth and objectId channels.
+inline RenderResult renderChannels(
     anari::Device d, anari::World world, const std::string &mode = "default")
 {
   auto camera = anari::newObject<anari::Camera>(d, "perspective");
@@ -54,6 +64,8 @@ inline std::vector<float4> render(
   auto frame = anari::newObject<anari::Frame>(d);
   anari::setParameter(d, frame, "size", kImageSize);
   anari::setParameter(d, frame, "channel.color", ANARI_FLOAT32_VEC4);
+  anari::setParameter(d, frame, "channel.depth", ANARI_FLOAT32);
+  anari::setParameter(d, frame, "channel.objectId", ANARI_UINT32);
   anari::setAndReleaseParameter(d, frame, "camera", camera);
   anari::setAndReleaseParameter(d, frame, "renderer", renderer);
   anari::setParameter(d, frame, "world", world);
@@ -62,12 +74,30 @@ inline std::vector<float4> render(
   anari::render(d, frame);
   anari::wait(d, frame);
 
-  auto fb = anari::map<float4>(d, frame, "channel.color");
-  std::vector<float4> pixels(fb.data, fb.data + fb.width * fb.height);
+  RenderResult result;
+
+  auto color = anari::map<float4>(d, frame, "channel.color");
+  result.color.assign(color.data, color.data + color.width * color.height);
   anari::unmap(d, frame, "channel.color");
 
+  auto depth = anari::map<float>(d, frame, "channel.depth");
+  result.depth.assign(depth.data, depth.data + depth.width * depth.height);
+  anari::unmap(d, frame, "channel.depth");
+
+  auto objectId = anari::map<uint32_t>(d, frame, "channel.objectId");
+  result.objectId.assign(
+      objectId.data, objectId.data + objectId.width * objectId.height);
+  anari::unmap(d, frame, "channel.objectId");
+
   anari::release(d, frame);
-  return pixels;
+  return result;
+}
+
+// Renders 'world' as renderChannels() does, returning only the color channel.
+inline std::vector<float4> render(
+    anari::Device d, anari::World world, const std::string &mode = "default")
+{
+  return renderChannels(d, world, mode).color;
 }
 
 // Number of pixels whose channels differ by more than 1e-3.
@@ -77,6 +107,31 @@ inline size_t countMismatches(
   size_t mismatches = 0;
   for (size_t i = 0; i < a.size(); i++) {
     if (linalg::maxelem(linalg::abs(a[i] - b[i])) > 1e-3f)
+      mismatches++;
+  }
+  return mismatches;
+}
+
+// Number of pixels whose depths differ by more than 1e-4 (equal infinities,
+// the depth of pixels that hit nothing, match).
+inline size_t countDepthMismatches(
+    const std::vector<float> &a, const std::vector<float> &b)
+{
+  size_t mismatches = 0;
+  for (size_t i = 0; i < a.size(); i++) {
+    if (a[i] != b[i] && !(std::abs(a[i] - b[i]) <= 1e-4f))
+      mismatches++;
+  }
+  return mismatches;
+}
+
+// Number of pixels whose ids differ.
+inline size_t countIdMismatches(
+    const std::vector<uint32_t> &a, const std::vector<uint32_t> &b)
+{
+  size_t mismatches = 0;
+  for (size_t i = 0; i < a.size(); i++) {
+    if (a[i] != b[i])
       mismatches++;
   }
   return mismatches;

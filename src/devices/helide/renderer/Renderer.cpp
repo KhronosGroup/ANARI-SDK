@@ -152,7 +152,7 @@ PixelSample Renderer::renderSample(
   VolumeRay vray;
   vray.org = ray.org;
   vray.dir = ray.dir;
-  vray.t.upper = ray.tfar;
+  vray.tfar = ray.tfar;
   w.intersectVolumes(vray);
 
   // Shade //

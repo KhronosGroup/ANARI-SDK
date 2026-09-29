@@ -12,6 +12,7 @@ add_executable(${PROJECT_NAME}
   test_helide_instance.cpp
   test_helide_primitive_sampler.cpp
   test_helide_transform_sampler.cpp
+  test_helide_volume_interval.cpp
   test_helium_AnariAny.cpp
   test_helium_commit_snapshot.cpp
   test_helium_concurrent_updates.cpp
@@ -24,7 +25,8 @@ add_executable(${PROJECT_NAME}
 
 # helium for the direct base-layer tests; anari (the loader) for the device-
 # backed tests (commit-snapshot, helide instance normals, image3D, primitive
-# and transform samplers), which load helide and skip themselves if absent.
+# and transform samplers, volume interval selection), which load helide and
+# skip themselves if absent.
 target_link_libraries(${PROJECT_NAME} PRIVATE helium anari)
 find_package(Threads REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads)
@@ -41,6 +43,7 @@ add_test(NAME unit_test::helide::Image3DSampler      COMMAND ${PROJECT_NAME} "[h
 add_test(NAME unit_test::helide::InstanceNormals     COMMAND ${PROJECT_NAME} "[helide_instance]"           )
 add_test(NAME unit_test::helide::PrimitiveSampler    COMMAND ${PROJECT_NAME} "[helide_primitive_sampler]"  )
 add_test(NAME unit_test::helide::TransformSampler    COMMAND ${PROJECT_NAME} "[helide_transform_sampler]"  )
+add_test(NAME unit_test::helide::VolumeInterval      COMMAND ${PROJECT_NAME} "[helide_volume_interval]"    )
 
 ## CTS conformance-harness catalog tests ##
 

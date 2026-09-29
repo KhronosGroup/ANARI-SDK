@@ -46,6 +46,9 @@ struct VolumeRay
 {
   float3 org;
   float3 dir;
+  // Volume intervals are clipped to [0, tfar] (tfar is the surface hit's t)
+  float tfar{std::numeric_limits<float>::max()};
+  // The hit volume and its clipped interval (valid when 'volume' is set)
   box1 t{0.f, std::numeric_limits<float>::max()};
   Volume *volume{nullptr};
   mat4 invXfm;

@@ -3,6 +3,7 @@
 
 #include "Group.h"
 // std
+#include <algorithm>
 #include <iterator>
 
 namespace helide {
@@ -75,32 +76,29 @@ const std::vector<Volume *> &Group::volumes() const
 
 void Group::intersectVolumes(VolumeRay &ray, const mat4 &invMat) const
 {
-  Volume *originalVolume = ray.volume;
-  box1 t = ray.t;
+  const float3 org = xfmPoint(invMat, ray.org);
+  const float3 dir = xfmVec(invMat, ray.dir);
 
   for (auto *v : volumes()) {
     if (!v || !v->isValid() || !v->isVisible())
       continue;
-    const float3 org = xfmPoint(invMat, ray.org);
-    const float3 dir = xfmVec(invMat, ray.dir);
     const box3 bounds = v->bounds();
     const float3 mins = (bounds.lower - org) * (1.f / dir);
     const float3 maxs = (bounds.upper - org) * (1.f / dir);
     const float3 nears = linalg::min(mins, maxs);
     const float3 fars = linalg::max(mins, maxs);
 
-    const box1 lt(linalg::maxelem(nears), linalg::minelem(fars));
+    // Clip to [0, tfar] before the empty test, so volumes behind the camera or
+    // wholly behind the surface hit are missed; keep the nearest (first on
+    // ties) over all volumes tested with this ray.
+    const box1 lt(std::max(linalg::maxelem(nears), 0.f),
+        std::min(linalg::minelem(fars), ray.tfar));
 
-    if (lt.lower < lt.upper && (!ray.volume || lt.lower < t.lower)) {
-      t.lower = clamp(lt.lower, t);
-      t.upper = clamp(lt.upper, t);
+    if (lt.lower < lt.upper && (!ray.volume || lt.lower < ray.t.lower)) {
+      ray.t = lt;
       ray.volume = v;
+      ray.invXfm = invMat;
     }
-  }
-
-  if (ray.volume != originalVolume) {
-    ray.t = t;
-    ray.invXfm = invMat;
   }
 }
 
