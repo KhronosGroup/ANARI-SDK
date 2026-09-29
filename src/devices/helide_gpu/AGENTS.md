@@ -61,6 +61,8 @@ devices/helide_gpu/
 ├── HelideGPUDevice.h/.cpp         # Top-level ANARI device
 ├── HelideGPUDeviceGlobalState.h/.cpp  # Per-device singleton (GPU thread + SDL device)
 ├── HelideGPULibrary.cpp           # ANARI library entry point
+├── HelideGPUColorSpace.h          # vec4 sRGB decode (wraps HelideGPUSRGB.h)
+├── HelideGPUSRGB.h                # glm-free sRGB decode helpers (unit-testable)
 └── HelideGPUMath.h                # Math utilities (GLM wrappers)
 ```
 

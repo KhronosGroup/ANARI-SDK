@@ -10,7 +10,7 @@
 #include "catch.hpp"
 #include "helium_test_device.h"
 
-#include "HelideGPUColorSpace.h"
+#include "HelideGPUSRGB.h"
 #include "gpu/ArrayUpload.h"
 
 #include "helium/array/Array1D.h"
@@ -79,8 +79,9 @@ std::vector<float> expectedSRGB(
 {
   std::vector<float> v;
   for (size_t i = begin; i < end; i++) {
-    const auto c = helide_gpu::srgbBytesToLinear(&app[4 * i], 4);
-    v.insert(v.end(), {c.x, c.y, c.z, c.w});
+    float c[4];
+    helide_gpu::srgbBytesToLinear(&app[4 * i], 4, c);
+    v.insert(v.end(), c, c + 4);
   }
   return v;
 }

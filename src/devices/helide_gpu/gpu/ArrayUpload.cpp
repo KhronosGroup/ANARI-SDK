@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "ArrayUpload.h"
-#include "HelideGPUColorSpace.h"
+#include "HelideGPUSRGB.h"
 // helium
 #include "helium/array/Array1D.h"
 // anari
@@ -59,7 +59,8 @@ ArrayUploadData arrayUploadData(const helium::Array *arr, bool convertToFloat)
     const int srgbNC = srgbComponentCount(type);
     const auto *bytes = static_cast<const uint8_t *>(firstElement(arr));
     for (size_t i = 0; i < numElements; ++i) {
-      vec4 v = srgbBytesToLinear(bytes + i * srgbNC, srgbNC);
+      float v[4];
+      srgbBytesToLinear(bytes + i * srgbNC, srgbNC, v);
       for (uint32_t c = 0; c < nc; ++c)
         converted[i * nc + c] = v[c];
     }
