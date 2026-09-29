@@ -10,9 +10,12 @@
 #include "catch.hpp"
 #include "helium_test_device.h"
 
+#include "anari/anari_cpp/Traits.h"
 #include "helium/array/Array1D.h"
 #include "helium/utility/ChangeObserverPtr.h"
 
+#include <algorithm>
+#include <memory>
 #include <vector>
 
 namespace {
@@ -66,12 +69,13 @@ struct CountingDevice : public TestDevice
   bool privatizedAfter{false};
 };
 
+template <typename T>
 helium::Array1D *newSharedArray(
-    helium::BaseGlobalDeviceState *s, const std::vector<int> &appData)
+    helium::BaseGlobalDeviceState *s, const std::vector<T> &appData)
 {
   helium::Array1DMemoryDescriptor md;
   md.appMemory = appData.data();
-  md.elementType = ANARI_INT32;
+  md.elementType = anari::ANARITypeFor<T>::value;
   md.numItems = appData.size();
   auto *array = new helium::Array1D(s, md);
   array->commitParameters();
@@ -180,6 +184,52 @@ SCENARIO("releasing a managed array the device uses runs no device work",
   }
 
   observer->refDec(helium::RefType::PUBLIC);
+  state->commitBuffer.clear();
+  delete device;
+}
+
+SCENARIO("privatizing a shared array with a nonzero 'begin' keeps its range",
+    "[helium_array_privatize]")
+{
+  auto *device = new TestDevice;
+  auto *state = device->state();
+  auto appData = std::make_unique<std::vector<float>>(
+      std::vector<float>{0.f, 1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f});
+  auto *array = newSharedArray(state, *appData);
+  array->setParam("begin", size_t(3));
+  array->setParam("end", size_t(6));
+  array->commitParameters();
+  array->refInc(helium::RefType::INTERNAL);
+
+  WHEN("the app releases the array and frees its buffer")
+  {
+    device->release((ANARIObject)array);
+    std::fill(appData->begin(), appData->end(), -1.f);
+    appData.reset();
+    REQUIRE(array->wasPrivatized());
+
+    THEN("the range still reads the originally shared values")
+    {
+      REQUIRE(array->size() == 3);
+      const float *v = array->beginAs<float>();
+      CHECK(v[0] == 3.f);
+      CHECK(v[1] == 4.f);
+      CHECK(v[2] == 5.f);
+    }
+
+    THEN("a later commit widening the range reads the shared values")
+    {
+      array->setParam("begin", size_t(0));
+      array->setParam("end", size_t(8));
+      array->commitParameters();
+      REQUIRE(array->size() == 8);
+      const float *v = array->beginAs<float>();
+      for (int i = 0; i < 8; i++)
+        CHECK(v[i] == float(i));
+    }
+  }
+
+  array->refDec(helium::RefType::INTERNAL);
   state->commitBuffer.clear();
   delete device;
 }
