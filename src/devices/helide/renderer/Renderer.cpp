@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Renderer.h"
+// std
+#include <algorithm>
 
 namespace helide {
 
@@ -116,7 +118,11 @@ void Renderer::commitParameters()
   m_bgImage = getParamObject<Array2D>("background");
   m_ambientRadiance = getParam<float>("ambientRadiance", 1.f);
   m_falloffBlendRatio = getParam<float>("eyeLightBlendRatio", 0.5f);
-  m_invVolumeSR = 1.f / getParam<float>("volumeSamplingRate", 1.f);
+  m_invVolumeSR = 1.f
+      / std::clamp(
+          getParam<float>("volumeSamplingRate", DEFAULT_VOLUME_SAMPLING_RATE),
+          MIN_VOLUME_SAMPLING_RATE,
+          MAX_VOLUME_SAMPLING_RATE);
   m_mode = renderModeFromString(getParamString("mode", "default"));
   m_taskGrainSize.x = getParam<int32_t>("taskGrainSizeWidth", 4);
   m_taskGrainSize.y = getParam<int32_t>("taskGrainSizeHeight", 4);

@@ -19,6 +19,7 @@ add_executable(${PROJECT_NAME}
   test_helide_transform_sampler.cpp
   test_helide_volume_instances.cpp
   test_helide_volume_interval.cpp
+  test_helide_volume_sampling_rate.cpp
   test_helide_wait_deadlock.cpp
   test_helide_wait_query.cpp
   test_helide_world_bounds.cpp
@@ -42,9 +43,9 @@ add_executable(${PROJECT_NAME}
 # backed tests (commit-snapshot, helide sphere/curve bounds checks, instance
 # normals and id arrays, pixel-centre rays, image3D, primitive and transform
 # samplers, transferFunction1D opacity, volume interval selection, volumes in
-# instances, WAIT queries while rendering, waits a mapped array blocks, world
-# bounds, released shared arrays, 1D array ranges), which load helide and skip
-# themselves if absent.
+# instances, the volume sampling rate, WAIT queries while rendering, waits a
+# mapped array blocks, world bounds, released shared arrays, 1D array ranges),
+# which load helide and skip themselves if absent.
 target_link_libraries(${PROJECT_NAME} PRIVATE helium anari)
 find_package(Threads REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads)
@@ -75,19 +76,21 @@ add_test(NAME unit_test::helide::Tf1dOpacity         COMMAND ${PROJECT_NAME} "[h
 add_test(NAME unit_test::helide::TransformSampler    COMMAND ${PROJECT_NAME} "[helide_transform_sampler]"  )
 add_test(NAME unit_test::helide::VolumeInterval      COMMAND ${PROJECT_NAME} "[helide_volume_interval]"    )
 add_test(NAME unit_test::helide::VolumeInstances     COMMAND ${PROJECT_NAME} "[helide_volume_instances]"   )
+add_test(NAME unit_test::helide::VolumeSamplingRate  COMMAND ${PROJECT_NAME} "[helide_volume_sampling_rate]")
 add_test(NAME unit_test::helide::WaitDeadlock        COMMAND ${PROJECT_NAME} "[helide_wait_deadlock]"      )
 add_test(NAME unit_test::helide::WaitQuery           COMMAND ${PROJECT_NAME} "[helide_wait_query]"         )
 add_test(NAME unit_test::helide::WorldBounds         COMMAND ${PROJECT_NAME} "[helide_world_bounds]"       )
 
 # A completion-callback or device-work regression hangs rather than fails
 # (as do privatizing an array as device work, a flush nested in a flush, and
-# re-rendering after a range-only array commit).
+# re-rendering after a range-only array commit, and ray marching volumes with a
+# negative sampling rate).
 set_tests_properties(unit_test::helium::FrameCallback
   unit_test::helium::ObjectArray
   unit_test::helium::ConcurrentUpdates
   unit_test::helium::WaitQuery unit_test::helide::WaitQuery
   unit_test::helide::WaitDeadlock unit_test::helide::ArrayPrivatize
-  unit_test::helide::ArrayBegin
+  unit_test::helide::ArrayBegin unit_test::helide::VolumeSamplingRate
   PROPERTIES TIMEOUT 60)
 
 ## CTS conformance-harness catalog tests ##
