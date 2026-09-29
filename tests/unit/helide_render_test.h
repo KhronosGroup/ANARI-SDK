@@ -2,12 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Shared helpers for the helide-backed render-and-compare unit tests: render a
-// world through a fixed camera and count pixels that differ between images.
+// world through a fixed camera, count pixels that differ between images, and
+// build a simple volume.
 
 #pragma once
 
 #include <anari/anari_cpp/ext/linalg.h>
 #include <anari/anari_cpp.hpp>
+#include "catch.hpp"
 // std
 #include <cmath>
 #include <cstdint>
@@ -36,16 +38,40 @@ inline void printErrors(const void *,
   }
 }
 
-// The color, depth and objectId channels of one rendered frame.
+// A translucent volume filling the box ['lower', 'upper'] with one color.
+inline anari::Volume makeVolume(anari::Device d,
+    const float3 &lower,
+    const float3 &upper,
+    const float3 &color,
+    uint32_t id)
+{
+  const std::vector<float> data(8, 0.5f);
+  auto field = anari::newObject<anari::SpatialField>(d, "structuredRegular");
+  anari::setParameterArray3D(d, field, "data", data.data(), 2, 2, 2);
+  anari::setParameter(d, field, "origin", lower);
+  anari::setParameter(d, field, "spacing", upper - lower);
+  anari::commitParameters(d, field);
+
+  auto volume = anari::newObject<anari::Volume>(d, "transferFunction1D");
+  anari::setAndReleaseParameter(d, volume, "value", field);
+  anari::setParameter(d, volume, "color", color);
+  anari::setParameter(d, volume, "opacity", 0.2f);
+  anari::setParameter(d, volume, "id", id);
+  anari::commitParameters(d, volume);
+  return volume;
+}
+
+// The color, depth, objectId and instanceId channels of one rendered frame.
 struct RenderResult
 {
   std::vector<float4> color;
   std::vector<float> depth;
   std::vector<uint32_t> objectId;
+  std::vector<uint32_t> instanceId;
 };
 
 // Renders 'world' at kImageSize from (0, 0, 2) looking down -z with a black
-// background, returning the color, depth and objectId channels.
+// background, returning the color, depth, objectId and instanceId channels.
 inline RenderResult renderChannels(
     anari::Device d, anari::World world, const std::string &mode = "default")
 {
@@ -66,6 +92,7 @@ inline RenderResult renderChannels(
   anari::setParameter(d, frame, "channel.color", ANARI_FLOAT32_VEC4);
   anari::setParameter(d, frame, "channel.depth", ANARI_FLOAT32);
   anari::setParameter(d, frame, "channel.objectId", ANARI_UINT32);
+  anari::setParameter(d, frame, "channel.instanceId", ANARI_UINT32);
   anari::setAndReleaseParameter(d, frame, "camera", camera);
   anari::setAndReleaseParameter(d, frame, "renderer", renderer);
   anari::setParameter(d, frame, "world", world);
@@ -88,6 +115,11 @@ inline RenderResult renderChannels(
   result.objectId.assign(
       objectId.data, objectId.data + objectId.width * objectId.height);
   anari::unmap(d, frame, "channel.objectId");
+
+  auto instanceId = anari::map<uint32_t>(d, frame, "channel.instanceId");
+  result.instanceId.assign(
+      instanceId.data, instanceId.data + instanceId.width * instanceId.height);
+  anari::unmap(d, frame, "channel.instanceId");
 
   anari::release(d, frame);
   return result;
@@ -135,6 +167,25 @@ inline size_t countIdMismatches(
       mismatches++;
   }
   return mismatches;
+}
+
+// Checks that every channel of 'actual' matches 'expected'.
+inline void checkSameImage(
+    const RenderResult &actual, const RenderResult &expected)
+{
+  CHECK(countMismatches(actual.color, expected.color) == 0);
+  CHECK(countDepthMismatches(actual.depth, expected.depth) == 0);
+  CHECK(countIdMismatches(actual.objectId, expected.objectId) == 0);
+  CHECK(countIdMismatches(actual.instanceId, expected.instanceId) == 0);
+}
+
+// Number of pixels whose id is 'id'.
+inline size_t countId(const std::vector<uint32_t> &ids, uint32_t id)
+{
+  size_t n = 0;
+  for (auto v : ids)
+    n += v == id;
+  return n;
 }
 
 } // namespace helide_test
