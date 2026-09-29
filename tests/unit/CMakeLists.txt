@@ -116,3 +116,23 @@ PRIVATE
 # device can be loaded.
 add_test(NAME unit_test::cts::catalog COMMAND anariCatalogTests "[cts]~[helide]")
 add_test(NAME unit_test::cts::device COMMAND anariCatalogTests "[helide]")
+
+## helide_gpu tests (only when the device is built) ##
+
+# The upload tests compile helide_gpu's SDL-free upload logic directly, so they
+# need neither a GPU nor a display.
+if (TARGET anari_library_helide_gpu)
+  get_target_property(HELIDE_GPU_DIR anari_library_helide_gpu SOURCE_DIR)
+  add_executable(anariHelideGpuUnitTests
+    catch_main.cpp
+    test_helide_gpu_array_upload.cpp
+    ${HELIDE_GPU_DIR}/gpu/ArrayUpload.cpp
+  )
+  target_include_directories(anariHelideGpuUnitTests PRIVATE ${HELIDE_GPU_DIR})
+  target_compile_definitions(anariHelideGpuUnitTests
+    PRIVATE GLM_ENABLE_EXPERIMENTAL)
+  target_link_libraries(anariHelideGpuUnitTests PRIVATE helium anari glm::glm)
+
+  add_test(NAME unit_test::helide_gpu::ArrayUpload
+    COMMAND anariHelideGpuUnitTests "[helide_gpu_array_upload]")
+endif()

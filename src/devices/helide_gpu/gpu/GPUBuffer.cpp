@@ -2,20 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "GPUBuffer.h"
-#include "HelideGPUColorSpace.h"
-// anari
-#include <anari/frontend/type_utility.h>
+#include "ArrayUpload.h"
 // std
 #include <cstring>
-#include <vector>
 
 namespace helide_gpu {
-
-static bool isDirectFloat(ANARIDataType t)
-{
-  return t == ANARI_FLOAT32 || t == ANARI_FLOAT32_VEC2
-      || t == ANARI_FLOAT32_VEC3 || t == ANARI_FLOAT32_VEC4;
-}
 
 GPUBuffer::GPUBuffer(SDL_GPUDevice *dev, SDL_GPUBufferUsageFlags usage)
     : m_device(dev), m_usage(usage)
@@ -66,39 +57,9 @@ bool GPUBuffer::uploadArray(const helium::Array *arr, bool convertToFloat)
   else if (arr == m_lastUploadArray && m_lastUploaded > arr->lastDataModified())
     return true;
 
-  bool success = false;
-
-  if (!convertToFloat || isDirectFloat(arr->elementType())) {
-    success = uploadImpl(arr->data(),
-        static_cast<uint32_t>(
-            arr->totalSize() * anari::sizeOf(arr->elementType())));
-  } else {
-    const ANARIDataType type = arr->elementType();
-    const size_t numElements = arr->totalSize();
-    const uint32_t nc = static_cast<uint32_t>(anari::componentsOf(type));
-    std::vector<float> converted(numElements * nc);
-
-    if (isElementTypeSRGB(type)) {
-      const int srgbNC = srgbComponentCount(type);
-      const auto *bytes = static_cast<const uint8_t *>(arr->data());
-      for (size_t i = 0; i < numElements; ++i) {
-        vec4 v = srgbBytesToLinear(bytes + i * srgbNC, srgbNC);
-        for (uint32_t c = 0; c < nc; ++c)
-          converted[i * nc + c] = v[c];
-      }
-    } else {
-      for (size_t i = 0; i < numElements; ++i) {
-        auto v = arr->readAsAttributeValue(static_cast<int32_t>(i));
-        float tmp[4];
-        std::memcpy(tmp, &v, sizeof(tmp));
-        for (uint32_t c = 0; c < nc; ++c)
-          converted[i * nc + c] = tmp[c];
-      }
-    }
-
-    success = uploadImpl(converted.data(),
-        static_cast<uint32_t>(converted.size() * sizeof(float)));
-  }
+  const auto upload = arrayUploadData(arr, convertToFloat);
+  const bool success =
+      uploadImpl(upload.bytes(), static_cast<uint32_t>(upload.sizeInBytes()));
 
   if (success)
     m_lastUploadArray = const_cast<helium::Array *>(arr);

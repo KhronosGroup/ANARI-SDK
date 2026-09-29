@@ -43,7 +43,8 @@ devices/helide_gpu/
 ├── cmake/          # bin2header.cmake helper
 ├── frame/          # Frame (per-frame render loop)
 ├── geometry/       # Geometry base
-├── gpu/            # SDLGPUDevice wrapper (sdl3_gpu_device.h/.cpp)
+├── gpu/            # SDLGPUDevice wrapper (sdl3_gpu_device.h/.cpp), GPUBuffer/GPUTexture,
+│                   #   SDL-free array upload data (ArrayUpload.h/.cpp)
 ├── light/          # Light base
 ├── material/       # Material base
 ├── renderer/       # Renderer (SDL3_gpu pipeline)
