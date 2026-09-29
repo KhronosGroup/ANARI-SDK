@@ -71,6 +71,13 @@ void Instance::finalize()
         m_invXfmData.begin(),
         [](const mat4 &m) { return linalg::inverse(m); });
   }
+  if (m_xfmArray && m_idArray && m_idArray->totalSize() < numTransforms()) {
+    reportMessage(ANARI_SEVERITY_WARNING,
+        "'id' array has %zu elements, but 'transform' array has %u",
+        m_idArray->totalSize(),
+        numTransforms());
+    m_idArray = {};
+  }
   if (!m_group)
     reportMessage(ANARI_SEVERITY_WARNING, "missing 'group' on ANARIInstance");
 

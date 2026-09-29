@@ -7,6 +7,10 @@
 // normal, which embree reports in object space for instanced hits, so the
 // normal must be carried to world space by the inverse transpose of the
 // instance's linear part (per transform-array element).
+//
+// Also a regression for the length check on an instance's 'id' array: one
+// shorter than the 'transform' array is dropped with a warning, so every
+// transform reports the uniform id instead of ids read past the array's end.
 
 #include "catch.hpp"
 #include "helide_render_test.h"
@@ -74,9 +78,11 @@ void setSurfaces(anari::Device d,
 }
 
 // One instance of 'verts'; more than one transform uses a transform array.
+// A non-empty 'ids' is set as the instance's 'id' array.
 anari::World makeInstancedWorld(anari::Device d,
     const std::vector<float3> &verts,
-    const std::vector<mat4> &xfms)
+    const std::vector<mat4> &xfms,
+    const std::vector<uint32_t> &ids = {})
 {
   auto group = anari::newObject<anari::Group>(d);
   setSurfaces(d, group, {makeSurface(d, verts)});
@@ -87,6 +93,8 @@ anari::World makeInstancedWorld(anari::Device d,
     anari::setParameter(d, inst, "transform", xfms[0]);
   else
     anari::setParameterArray1D(d, inst, "transform", xfms.data(), xfms.size());
+  if (!ids.empty())
+    anari::setParameterArray1D(d, inst, "id", ids.data(), ids.size());
   anari::commitParameters(d, inst);
 
   auto world = anari::newObject<anari::World>(d);
@@ -184,6 +192,47 @@ TEST_CASE("instanced normals are transformed by the inverse transpose",
       checkInstancedMatchesPretransformed(d, xfmArray, mode);
     }
   }
+
+  anari::release(d, d);
+  anari::unloadLibrary(lib);
+}
+
+TEST_CASE("an instance 'id' array shorter than 'transform' is dropped",
+    "[helide][helide_instance_id]")
+{
+  WarningLog warnings;
+  anari::Library lib = anari::loadLibrary("helide", collectWarnings, &warnings);
+  if (lib == nullptr) {
+    WARN("helide library not available; skipping instance id array test");
+    return;
+  }
+
+  anari::Device d = anari::newDevice(lib, "default");
+
+  // four small triangles side by side
+  std::vector<mat4> xfms;
+  for (float x : {-0.75f, -0.25f, 0.25f, 0.75f}) {
+    xfms.push_back(
+        linalg::mul(translation(float3(x, 0.f, 0.f)), scaling(float3(0.4f))));
+  }
+
+  // without an 'id' array every transform reports the uniform id, ~0u
+  auto expectedWorld = makeInstancedWorld(d, kTriangle, xfms);
+  const auto expected = renderChannels(d, expectedWorld);
+  anari::release(d, expectedWorld);
+  REQUIRE(warnings.empty());
+  REQUIRE(countId(expected.instanceId, ~0u) == expected.instanceId.size());
+  // the triangles must actually cover part of the image
+  REQUIRE(countHits(expected.depth) > expected.depth.size() / 20);
+
+  auto world = makeInstancedWorld(d, kTriangle, xfms, {10, 11});
+  const auto actual = renderChannels(d, world);
+  anari::release(d, world);
+
+  CHECK(warnings.contains("'id' array"));
+  // all four triangles still render and report the uniform id, not ids read
+  // past the array's end
+  checkSameImage(actual, expected);
 
   anari::release(d, d);
   anari::unloadLibrary(lib);

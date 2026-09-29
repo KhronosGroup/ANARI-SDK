@@ -245,4 +245,13 @@ inline size_t countId(const std::vector<uint32_t> &ids, uint32_t id)
   return n;
 }
 
+// Number of pixels that hit something, i.e. whose depth is finite.
+inline size_t countHits(const std::vector<float> &depth)
+{
+  size_t n = 0;
+  for (auto v : depth)
+    n += std::isfinite(v);
+  return n;
+}
+
 } // namespace helide_test
