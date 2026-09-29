@@ -22,7 +22,7 @@
       "khr_instance_transform",
       "khr_instance_transform_array",
       "khr_material_matte",
-      "khr_material_physicallyBased",
+      "khr_material_physically_based",
       "khr_renderer_ambient_light",
       "khr_renderer_background_color",
       "khr_renderer_background_image",
