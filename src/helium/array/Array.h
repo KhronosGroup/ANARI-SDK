@@ -6,6 +6,7 @@
 #include "../BaseObject.h"
 #include "../helium_math.h"
 // std
+#include <algorithm>
 #include <sstream>
 
 namespace helium {
@@ -197,7 +198,10 @@ inline T Array::valueAtLinear(float in) const
 {
   const T *data = dataAs<T>();
   const auto i = getInterpolant(in, totalSize(), false);
-  return linalg::lerp(data[i.lower], data[i.upper], i.frac);
+  // At in == 1 (and for any 'in' when size is 1) 'upper' is one past the end
+  // with a zero weight; clamp it so the read stays in bounds.
+  const auto upper = std::min(i.upper, int32_t(totalSize()) - 1);
+  return linalg::lerp(data[i.lower], data[upper], i.frac);
 }
 
 template <typename T>
