@@ -11,7 +11,8 @@
 // std
 #include <mutex>
 #include <thread>
-#include <unordered_set>
+#include <unordered_map>
+#include <vector>
 
 namespace helide {
 
@@ -97,13 +98,18 @@ struct HelideDevice : public helium::BaseDevice
 
  private:
   HelideGlobalState *deviceState() const;
-  bool thisThreadIsReleasing();
+  // Takes the innermost mark release() left for this thread (setting its
+  // flag); false if there was none
+  bool takeReleasingMark();
 
   bool m_initialized{false};
 
-  // Threads inside release() of an array (see runDeviceWork())
+  // Threads inside release() of an array, until runDeviceWork() takes the
+  // mark (see there)
   std::mutex m_releasingMutex;
-  std::unordered_multiset<std::thread::id> m_releasingThreads;
+  std::unordered_map<std::thread::id, std::vector<bool *>> m_releaseMarks;
+  // Serializes releases privatizing inline (see runDeviceWork())
+  std::recursive_mutex m_inlineReleaseMutex;
 };
 
 } // namespace helide

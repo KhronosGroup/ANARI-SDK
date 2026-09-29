@@ -96,7 +96,7 @@ struct Frame : public helium::BaseFrame
   helium::TimeStamp m_frameLastRendered{0};
 
   mutable helium::tasking::Future m_future;
-  uint64_t m_render{0}; // the queued render's number (RenderingSemaphore)
+  uint64_t m_renderTicket{0}; // the queued render's number (RenderingSemaphore)
 
   anari::FrameCompletionCallback m_callback{nullptr};
   const void *m_callbackUserPtr{nullptr};

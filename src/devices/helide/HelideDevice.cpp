@@ -45,14 +45,25 @@ void HelideDevice::release(ANARIObject o)
     return;
   }
 
-  const auto self = std::this_thread::get_id();
+  // runDeviceWork() takes the mark (so a status callback's query during the
+  // release isn't taken for it); drop it here if it didn't. Releases nest
+  // (a status callback may release another array), so marks are a stack.
+  bool taken = false;
   {
     std::lock_guard<std::mutex> lock(m_releasingMutex);
-    m_releasingThreads.insert(self);
+    m_releaseMarks[std::this_thread::get_id()].push_back(&taken);
   }
+  struct DropMark
+  {
+    HelideDevice &device;
+    const bool &taken;
+    ~DropMark()
+    {
+      if (!taken)
+        device.takeReleasingMark();
+    }
+  } dropMark{*this, taken};
   helium::BaseDevice::release(o);
-  std::lock_guard<std::mutex> lock(m_releasingMutex);
-  m_releasingThreads.erase(m_releasingThreads.find(self));
 }
 
 // API Objects ////////////////////////////////////////////////////////////////
@@ -338,7 +349,7 @@ void HelideDevice::runDeviceWork(const std::function<void()> &work)
     return;
   }
 
-  if (!thisThreadIsReleasing()) {
+  if (!takeReleasingMark()) {
     reportMessage(ANARI_SEVERITY_ERROR,
         "anariGetProperty() with ANARI_WAIT would deadlock: %s; not waiting",
         why);
@@ -346,6 +357,9 @@ void HelideDevice::runDeviceWork(const std::function<void()> &work)
   }
 
   state.renderingSemaphore.waitForRenderBlockedOnMaps();
+  // Other threads holding maps may privatize inline too: one at a time, as
+  // device work would run (a status callback may release another array).
+  std::lock_guard<std::recursive_mutex> inlineLock(m_inlineReleaseMutex);
   reportMessage(ANARI_SEVERITY_WARNING,
       "anariRelease() of a shared array can't wait for queued renders "
       "(%s); privatizing it now, but a queued render may still read the "
@@ -354,10 +368,17 @@ void HelideDevice::runDeviceWork(const std::function<void()> &work)
   work();
 }
 
-bool HelideDevice::thisThreadIsReleasing()
+bool HelideDevice::takeReleasingMark()
 {
   std::lock_guard<std::mutex> lock(m_releasingMutex);
-  return m_releasingThreads.count(std::this_thread::get_id()) != 0;
+  auto marks = m_releaseMarks.find(std::this_thread::get_id());
+  if (marks == m_releaseMarks.end())
+    return false;
+  *marks->second.back() = true;
+  marks->second.pop_back();
+  if (marks->second.empty())
+    m_releaseMarks.erase(marks);
+  return true;
 }
 
 #define HELIDE_STRINGIFY(s) HELIDE_STRINGIFY2(s)

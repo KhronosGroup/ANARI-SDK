@@ -201,7 +201,7 @@ void Frame::renderFrame()
 
   this->refInc(helium::RefType::INTERNAL);
 
-  m_render = state->renderingSemaphore.queueRender([&]() {
+  m_renderTicket = state->renderingSemaphore.queueRender([&]() {
     state->taskQueue.enqueue([state]() { state->commitBuffer.flush(); });
     m_future = state->taskQueue.enqueue(render);
   });
@@ -295,7 +295,8 @@ const char *Frame::whyThisThreadCantWait()
 {
   if (completingOnThisThread() || !m_future.valid())
     return nullptr;
-  return deviceState()->renderingSemaphore.whyThisThreadCantWaitFor(m_render);
+  return deviceState()->renderingSemaphore.whyThisThreadCantWaitFor(
+      m_renderTicket);
 }
 
 void Frame::waitOnOutstandingWorkIfNeeded()

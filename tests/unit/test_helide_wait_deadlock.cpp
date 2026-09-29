@@ -285,6 +285,26 @@ void queryOnFrameWarning(const void *userPtr,
   nested->found = queryBounds(d, nested->triangle.world, nested->bounds);
 }
 
+// Status callback that records errors and warnings (see collectStatus()) and,
+// on the first warning that a release privatizes an array without waiting,
+// queries the world's bounds with ANARI_WAIT.
+void queryOnReleaseWarning(const void *userPtr,
+    ANARIDevice d,
+    ANARIObject source,
+    ANARIDataType type,
+    ANARIStatusSeverity severity,
+    ANARIStatusCode code,
+    const char *message)
+{
+  auto *nested = (NestedQuery *)userPtr;
+  collectStatus(&nested->log, d, source, type, severity, code, message);
+  if (severity != ANARI_SEVERITY_WARNING || nested->queried
+      || !std::strstr(message, "may still read the app's memory"))
+    return;
+  nested->queried = true;
+  nested->found = queryBounds(d, nested->triangle.world, nested->bounds);
+}
+
 } // namespace
 
 SCENARIO(
@@ -341,6 +361,57 @@ SCENARIO(
   }
 
   anari::release(d, nested.triangle.positions);
+  anari::release(d, nested.triangle.surface);
+  anari::release(d, world);
+  anari::release(d, d);
+  anari::unloadLibrary(lib);
+}
+
+SCENARIO(
+    "a status callback's ANARI_WAIT query during a release that can't "
+    "wait is refused",
+    "[helide_wait_deadlock]")
+{
+  NestedQuery nested;
+  anari::Library lib =
+      anari::loadLibrary("helide", queryOnReleaseWarning, &nested);
+  if (lib == nullptr) {
+    WARN("helide library not available; skipping wait deadlock test");
+    return;
+  }
+  anari::Device d = anari::newDevice(lib, "default");
+
+  float3 vertices[3];
+  std::copy(kCenterTriangle, kCenterTriangle + 3, vertices);
+  nested.triangle = makeTriangleWorld(d, vertices);
+  auto world = nested.triangle.world;
+  auto frame = newFrame(d, world);
+
+  GIVEN("a thread that holds a mapped array while a render is queued")
+  {
+    MappedArray mapped(d);
+    anari::render(d, frame);
+
+    WHEN(
+        "it releases the vertex array, and the release's warning callback "
+        "queries with ANARI_WAIT")
+    {
+      anari::release(d, nested.triangle.positions);
+      REQUIRE(nested.queried);
+
+      THEN("the query is refused as the thread's own would be")
+      {
+        CHECK(!nested.found);
+        CHECK(nested.log.errors.contains(
+            "anariGetProperty() with ANARI_WAIT would deadlock"));
+      }
+    }
+
+    mapped.unmap();
+    anari::wait(d, frame);
+  }
+
+  anari::release(d, frame);
   anari::release(d, nested.triangle.surface);
   anari::release(d, world);
   anari::release(d, d);
