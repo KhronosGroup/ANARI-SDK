@@ -83,6 +83,8 @@ struct HelideDevice : public helium::BaseDevice
   void deviceCommitParameters() override;
   int deviceGetProperty(
       const char *name, ANARIDataType type, void *mem, uint64_t size, uint32_t mask) override;
+
+ protected:
   void runDeviceWork(const std::function<void()> &work) override;
 
  private:
