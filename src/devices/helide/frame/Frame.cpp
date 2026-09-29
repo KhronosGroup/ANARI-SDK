@@ -202,9 +202,7 @@ void Frame::renderFrame()
   // The render holds a reference to the frame until it ends, callback
   // included, so a frame released without a wait (or from its callback) is
   // still destroyed. Dropping it may destroy the frame here, on the worker:
-  // nothing may use 'this' after it. m_future isn't ready until the job
-  // returns, so a release waiting on it (see HelideDevice::release()) keeps the
-  // frame alive until refDec() is done with it.
+  // nothing may use 'this' after it.
   this->refInc(helium::RefType::INTERNAL);
 
   m_renderTicket = state->renderingSemaphore.queueRender([&]() {
