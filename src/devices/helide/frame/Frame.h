@@ -45,6 +45,9 @@ struct Frame : public helium::BaseFrame
   void wait();
 
  private:
+  // Why the calling thread can't wait() for this frame's queued render (see
+  // RenderingSemaphore), or nullptr if it can.
+  const char *whyThisThreadCantWait();
   void waitOnOutstandingWorkIfNeeded();
   float2 screenFromPixel(const float2 &p) const;
   void writeSample(int x, int y, const PixelSample &s);
@@ -93,6 +96,7 @@ struct Frame : public helium::BaseFrame
   helium::TimeStamp m_frameLastRendered{0};
 
   mutable helium::tasking::Future m_future;
+  uint64_t m_render{0}; // the queued render's number (RenderingSemaphore)
 
   anari::FrameCompletionCallback m_callback{nullptr};
   const void *m_callbackUserPtr{nullptr};

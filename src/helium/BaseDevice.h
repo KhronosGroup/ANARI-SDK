@@ -124,7 +124,10 @@ struct BaseDevice : public anari::DeviceImpl,
   // waiting on the frame holds it until the frame's queued work ends. A device
   // whose deviceGetProperty() flushes for ANARI_WAIT should run that flush
   // through here too. release() also runs the app's last release of an array
-  // the device still uses this way, as it privatizes the array.
+  // the device still uses this way, as it privatizes the array. An override
+  // that can't wait for the work (it would deadlock) may skip a query's work,
+  // reporting why (getProperty() then returns 0), but must still run a
+  // release's, which drops the reference.
   virtual void runDeviceWork(const std::function<void()> &work);
 
   std::unique_ptr<BaseGlobalDeviceState> m_state;

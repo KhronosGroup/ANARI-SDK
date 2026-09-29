@@ -54,7 +54,7 @@ Embree v4.3.3 is fetched via CMake from GitHub into `external/embree/`. The name
 4. Volume ray marching against `StructuredRegularField` if any volumes exist
 5. Compose result into `PixelSample{color, depth, primID, objID, instID}`
 
-`RenderingSemaphore` coordinates the async render with array mapping/unmapping on the host side.
+`RenderingSemaphore` coordinates the async render with array mapping/unmapping on the host side: a render waits for every mapped array to be unmapped, and mapping waits for a render in flight. It records which thread mapped each array and counts renders in queue order, so a thread holding a mapped array that asks to wait on a queued render (or on device work queued behind one) gets an ERROR instead of a hang: `anariGetProperty()` with `ANARI_WAIT` returns 0, `anariFrameReady()` with `ANARI_WAIT` returns 0, `anariMapFrame()` returns nullptr, and `anariRenderFrame()` doesn't queue a render while the frame's previous one waits. An `anariRelease()` that would privatize a shared array in that state privatizes it inline (once the worker is blocked on the maps) with a WARNING, since the queued render may still read the app's memory.
 
 ## Renderer Debug Modes
 

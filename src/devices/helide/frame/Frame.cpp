@@ -131,14 +131,18 @@ void Frame::renderFrame()
     return;
   }
 
+  if (const char *why = whyThisThreadCantWait()) {
+    reportMessage(ANARI_SEVERITY_ERROR,
+        "anariRenderFrame() would deadlock waiting for the frame's previous "
+        "render: %s; not rendering",
+        why);
+    return;
+  }
+
   auto *state = deviceState();
   wait();
 
-  this->refInc(helium::RefType::INTERNAL);
-
-  state->taskQueue.enqueue([state]() { state->commitBuffer.flush(); });
-
-  m_future = state->taskQueue.enqueue([this, state]() {
+  auto render = [this, state]() {
     auto start = std::chrono::steady_clock::now();
     state->renderingSemaphore.frameStart();
 
@@ -193,6 +197,13 @@ void Frame::renderFrame()
     m_duration = std::chrono::duration<float>(end - start).count();
 
     invokeCompletionCallback(m_callback, m_callbackUserPtr, state->anariDevice);
+  };
+
+  this->refInc(helium::RefType::INTERNAL);
+
+  m_render = state->renderingSemaphore.queueRender([&]() {
+    state->taskQueue.enqueue([state]() { state->commitBuffer.flush(); });
+    m_future = state->taskQueue.enqueue(render);
   });
 }
 
@@ -201,6 +212,16 @@ void *Frame::map(std::string_view channel,
     uint32_t *height,
     ANARIDataType *pixelType)
 {
+  if (const char *why = whyThisThreadCantWait()) {
+    reportMessage(ANARI_SEVERITY_ERROR,
+        "anariMapFrame() would deadlock: %s; not waiting",
+        why);
+    *width = 0;
+    *height = 0;
+    *pixelType = ANARI_UNKNOWN;
+    return nullptr;
+  }
+
   wait();
 
   *width = m_frameData.size.x;
@@ -238,10 +259,14 @@ int Frame::frameReady(ANARIWaitMask m)
 {
   if (m == ANARI_NO_WAIT)
     return ready();
-  else {
-    wait();
-    return 1;
+  if (const char *why = whyThisThreadCantWait()) {
+    reportMessage(ANARI_SEVERITY_ERROR,
+        "anariFrameReady() with ANARI_WAIT would deadlock: %s; not waiting",
+        why);
+    return 0;
   }
+  wait();
+  return 1;
 }
 
 void Frame::discard()
@@ -264,6 +289,13 @@ void Frame::wait()
     m_future.get();
     this->refDec(helium::RefType::INTERNAL);
   }
+}
+
+const char *Frame::whyThisThreadCantWait()
+{
+  if (completingOnThisThread() || !m_future.valid())
+    return nullptr;
+  return deviceState()->renderingSemaphore.whyThisThreadCantWaitFor(m_render);
 }
 
 void Frame::waitOnOutstandingWorkIfNeeded()

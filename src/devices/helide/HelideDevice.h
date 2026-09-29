@@ -8,6 +8,10 @@
 
 #include "HelideGlobalState.h"
 #include "Object.h"
+// std
+#include <mutex>
+#include <thread>
+#include <unordered_set>
 
 namespace helide {
 
@@ -21,6 +25,10 @@ struct HelideDevice : public helium::BaseDevice
 
   void *mapArray(ANARIArray) override;
   void unmapArray(ANARIArray) override;
+
+  // Object + Parameter Lifetime Management ///////////////////////////////////
+
+  void release(ANARIObject) override;
 
   // API Objects //////////////////////////////////////////////////////////////
 
@@ -89,8 +97,13 @@ struct HelideDevice : public helium::BaseDevice
 
  private:
   HelideGlobalState *deviceState() const;
+  bool thisThreadIsReleasing();
 
   bool m_initialized{false};
+
+  // Threads inside release() of an array (see runDeviceWork())
+  std::mutex m_releasingMutex;
+  std::unordered_multiset<std::thread::id> m_releasingThreads;
 };
 
 } // namespace helide
