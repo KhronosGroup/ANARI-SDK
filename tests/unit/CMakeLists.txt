@@ -74,6 +74,7 @@ set_tests_properties(unit_test::helium::FrameCallback
 add_executable(anariCatalogTests
   catch_main.cpp
 
+  test_cts_builtin_truths.cpp
   test_cts_catalog.cpp
   test_cts_deviceinfo.cpp
   test_cts_metrics.cpp

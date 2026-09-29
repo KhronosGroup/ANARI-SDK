@@ -65,7 +65,7 @@ utility generator.
 | `KHR_SAMPLER_IMAGE1D` | `sampler/image1D` exercises filter, wrap, in/out transform, in/out offset. |
 | `KHR_SAMPLER_IMAGE2D` | `sampler/image2D` exercises filter, wrapMode1/2, in/out transform, in/out offset. |
 | `KHR_SAMPLER_IMAGE3D` | `sampler/image3D` exercises filter, wrapMode1/2/3, in/out transform, in/out offset. |
-| `KHR_SAMPLER_PRIMITIVE` | `sampler/primitive` exercises 1-4 component arrays and offset. |
+| `KHR_SAMPLER_PRIMITIVE` | `sampler/primitive` exercises 1-4 component arrays and `inOffset`. |
 | `KHR_SAMPLER_TRANSFORM` | `sampler/transform` exercises transform and outOffset. |
 | `KHR_SPATIAL_FIELD_STRUCTURED_REGULAR` | `volume/volume`, `geometry/isosurface`, and frame object-ID volume support use structuredRegular fields. |
 | `KHR_VOLUME_TRANSFER_FUNCTION1D` | `volume/volume` exercises value field, filter/origin/spacing, valueRange, color, opacity, unitDistance; `frame/frame_objectID_channel_volume` exercises object IDs on `transferFunction1D` volumes. |

@@ -117,6 +117,24 @@ void set(
   applyParameterValue(d, s, param, ctx.value(param).raw());
 }
 
+// The primitive sampler's inOffset (ANARI_UINT64 per the spec) and an array of
+// kPrimitiveOffset + 2 elements of width T: {0.5, 1} splatted at [0,1], the
+// same values swapped at the offset (so ignoring it flips both triangles), and
+// black between.
+const uint64_t kPrimitiveOffset = 16;
+
+template <typename T>
+void setPrimitiveArray(anari::Device d, anari::Sampler s)
+{
+  std::vector<T> a(kPrimitiveOffset + 2, T(0.f));
+  a[0] = T(0.5f);
+  a[1] = T(1.f);
+  a[kPrimitiveOffset] = T(1.f);
+  a[kPrimitiveOffset + 1] = T(0.5f);
+  anari::setAndReleaseParameter(
+      d, s, "array", anari::newArray1D(d, a.data(), a.size()));
+}
+
 } // namespace
 
 void registerSamplerTests(Catalog &catalog)
@@ -245,7 +263,10 @@ void registerSamplerTests(Catalog &catalog)
 
   // ---- primitive ------------------------------------------------------------
   // The array value is itself an axis; encode the per-Case element width as a
-  // token and build the (2-element) array of that width in the sampler setup.
+  // token and build the array of that width in the sampler setup. The quad's
+  // two triangles read elements [0,1] with no offset and the two at
+  // kPrimitiveOffset with it; the elements in between are black so a
+  // misapplied offset shows.
   makeTest("sampler", "primitive")
       .description("Checks primitive sampler offsets and array element widths.")
       .build([](BuildContext &ctx) {
@@ -254,29 +275,19 @@ void registerSamplerTests(Catalog &catalog)
             "",
             nullptr,
             [](BuildContext &ctx, anari::Device d, anari::Sampler s) {
-              applyParameterValue(d, s, "offset", ctx.value("offset").raw());
+              set(ctx, d, s, "inOffset");
               const std::string dim = ctx.getString("arrayDim", "1");
-              if (dim == "1") {
-                std::vector<float> a = {0.5f, 1.0f};
-                anari::setAndReleaseParameter(
-                    d, s, "array", anari::newArray1D(d, a.data(), a.size()));
-              } else if (dim == "2") {
-                std::vector<float2> a = {{0.5f, 0.5f}, {1.f, 1.f}};
-                anari::setAndReleaseParameter(
-                    d, s, "array", anari::newArray1D(d, a.data(), a.size()));
-              } else if (dim == "3") {
-                std::vector<float3> a = {{0.5f, 0.5f, 0.5f}, {1.f, 1.f, 1.f}};
-                anari::setAndReleaseParameter(
-                    d, s, "array", anari::newArray1D(d, a.data(), a.size()));
-              } else {
-                std::vector<float4> a = {
-                    {0.5f, 0.5f, 0.5f, 0.5f}, {1.f, 1.f, 1.f, 1.f}};
-                anari::setAndReleaseParameter(
-                    d, s, "array", anari::newArray1D(d, a.data(), a.size()));
-              }
+              if (dim == "1")
+                setPrimitiveArray<float>(d, s);
+              else if (dim == "2")
+                setPrimitiveArray<float2>(d, s);
+              else if (dim == "3")
+                setPrimitiveArray<float3>(d, s);
+              else
+                setPrimitiveArray<float4>(d, s);
             });
       })
-      .permute("offset", V{none(), Any(1)})
+      .permute("inOffset", V{none(), Any(kPrimitiveOffset)})
       .permute("arrayDim", {"1", "2", "3", "4"})
       .requireFeatures({"ANARI_KHR_SAMPLER_PRIMITIVE", kMatte})
       .registerInto(catalog);
