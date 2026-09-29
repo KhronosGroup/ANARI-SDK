@@ -3,11 +3,12 @@
 
 // A minimal helium::BaseDevice for tests that drive BaseDevice's API routing
 // directly: it owns a plain BaseGlobalDeviceState and creates no objects (tests
-// construct their own BaseObject subclasses against state()).
+// construct their own BaseObject subclasses, or StubObjects, against state()).
 
 #pragma once
 
 #include "helium/BaseDevice.h"
+#include "helium/BaseObject.h"
 // std
 #include <memory>
 
@@ -122,6 +123,29 @@ struct TestDevice : public helium::BaseDevice
   {
     return nullptr;
   }
+};
+
+// A BaseObject that does nothing, for tests that need objects to reference.
+struct StubObject : public helium::BaseObject
+{
+  StubObject(ANARIDataType type, helium::BaseGlobalDeviceState *s)
+      : BaseObject(type, s)
+  {}
+
+  bool isValid() const override
+  {
+    return true;
+  }
+  bool getProperty(const std::string_view &,
+      ANARIDataType,
+      void *,
+      uint64_t,
+      uint32_t) override
+  {
+    return false;
+  }
+  void commitParameters() override {}
+  void finalize() override {}
 };
 
 } // namespace helium_test

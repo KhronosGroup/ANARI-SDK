@@ -27,6 +27,7 @@ add_executable(${PROJECT_NAME}
   test_helium_commit_snapshot.cpp
   test_helium_concurrent_updates.cpp
   test_helium_frame_callback.cpp
+  test_helium_object_array.cpp
   test_helium_ParameterizedObject.cpp
   test_helium_RefCounted.cpp
   test_helium_srgb.cpp
@@ -57,6 +58,7 @@ add_test(NAME unit_test::helium::WrapIndex           COMMAND ${PROJECT_NAME} "[h
 add_test(NAME unit_test::helium::CommitSnapshot      COMMAND ${PROJECT_NAME} "[helium_commit_snapshot]"    )
 add_test(NAME unit_test::helium::ConcurrentUpdates   COMMAND ${PROJECT_NAME} "[helium_concurrent_updates]" )
 add_test(NAME unit_test::helium::FrameCallback       COMMAND ${PROJECT_NAME} "[helium_frame_callback]"     )
+add_test(NAME unit_test::helium::ObjectArray         COMMAND ${PROJECT_NAME} "[helium_object_array]"       )
 add_test(NAME unit_test::helium::WaitQuery           COMMAND ${PROJECT_NAME} "[helium_wait_query]"         )
 add_test(NAME unit_test::helide::ArrayPrivatize      COMMAND ${PROJECT_NAME} "[helide_array_privatize]"    )
 add_test(NAME unit_test::helide::GeometryBounds      COMMAND ${PROJECT_NAME} "[helide_geometry_bounds]"    )
@@ -76,6 +78,7 @@ add_test(NAME unit_test::helide::WorldBounds         COMMAND ${PROJECT_NAME} "[h
 # A completion-callback or device-work regression hangs rather than fails
 # (as do privatizing an array as device work and a flush nested in a flush).
 set_tests_properties(unit_test::helium::FrameCallback
+  unit_test::helium::ObjectArray
   unit_test::helium::ConcurrentUpdates
   unit_test::helium::WaitQuery unit_test::helide::WaitQuery
   unit_test::helide::WaitDeadlock unit_test::helide::ArrayPrivatize

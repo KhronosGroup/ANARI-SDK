@@ -27,7 +27,8 @@ ObjectArray::ObjectArray(
 {
   m_appHandles.resize(d.numItems, nullptr);
   initManagedMemory();
-  updateInternalHandleArrays();
+  syncAppHandles();
+  updateLiveHandles();
 }
 
 ObjectArray::~ObjectArray()
@@ -58,6 +59,7 @@ void ObjectArray::commitParameters()
 
 void ObjectArray::finalize()
 {
+  updateLiveHandles();
   markDataModified();
   notifyChangeObservers();
 }
@@ -79,14 +81,16 @@ size_t ObjectArray::size() const
 
 void ObjectArray::unmap()
 {
-  if (isMapped())
-    updateInternalHandleArrays();
+  if (isMapped()) {
+    syncAppHandles();
+    updateLiveHandles();
+  }
   Array::unmap();
 }
 
 BaseObject **ObjectArray::handlesBegin() const
 {
-  return m_liveHandles.data() + m_begin;
+  return m_liveHandles.data();
 }
 
 BaseObject **ObjectArray::handlesEnd() const
@@ -98,7 +102,7 @@ void ObjectArray::appendHandle(BaseObject *o)
 {
   o->refInc(helium::RefType::INTERNAL);
   m_appendedHandles.push_back(o);
-  updateInternalHandleArrays();
+  updateLiveHandles();
 }
 
 void ObjectArray::removeAppendedHandles()
@@ -109,30 +113,34 @@ void ObjectArray::removeAppendedHandles()
   m_appendedHandles.clear();
 }
 
-void ObjectArray::updateInternalHandleArrays() const
+void ObjectArray::syncAppHandles()
+{
+  // After privatization the app's memory is gone; m_appHandles keeps the
+  // handles it last held.
+  if (!data())
+    return;
+
+  auto **srcBegin = (BaseObject **)data();
+  auto **srcEnd = srcBegin + totalCapacity();
+  std::for_each(srcBegin, srcEnd, refIncObject);
+  std::for_each(m_appHandles.begin(), m_appHandles.end(), refDecObject);
+  std::copy(srcBegin, srcEnd, m_appHandles.data());
+}
+
+void ObjectArray::updateLiveHandles()
 {
   m_liveHandles.resize(totalSize());
-
-  if (data()) {
-    auto **srcAllBegin = (BaseObject **)data();
-    auto **srcAllEnd = srcAllBegin + totalCapacity();
-    std::for_each(srcAllBegin, srcAllEnd, refIncObject);
-    std::for_each(m_appHandles.begin(), m_appHandles.end(), refDecObject);
-    std::copy(srcAllBegin, srcAllEnd, m_appHandles.data());
-
-    auto **srcRegionBegin = srcAllBegin + m_begin;
-    auto **srcRegionEnd = srcRegionBegin + size();
-    std::copy(srcRegionBegin, srcRegionEnd, m_liveHandles.data());
-  }
-
-  std::copy(m_appendedHandles.begin(),
-      m_appendedHandles.end(),
-      m_liveHandles.begin() + size());
+  auto liveEnd = std::copy(m_appHandles.begin() + m_begin,
+      m_appHandles.begin() + m_end,
+      m_liveHandles.begin());
+  std::copy(m_appendedHandles.begin(), m_appendedHandles.end(), liveEnd);
 }
 
 void ObjectArray::privatize()
 {
-  makePrivatizedCopy(size());
+  // Copies nothing for an object array (m_appHandles already holds references
+  // to all totalCapacity() handles); it only marks the array privatized.
+  makePrivatizedCopy(totalCapacity());
   freeAppMemory();
   if (data()) {
     reportMessage(ANARI_SEVERITY_WARNING,
