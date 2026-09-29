@@ -3,7 +3,8 @@
 
 // Shared helpers for the helide-backed render-and-compare unit tests: render a
 // world through a fixed camera, count pixels that differ between images,
-// collect device warnings, and build a simple volume.
+// collect device warnings and errors, and build a simple volume or a triangle
+// over a shared array.
 
 #pragma once
 
@@ -68,6 +69,12 @@ struct WarningLog
     std::lock_guard<std::mutex> lock(mutex);
     return messages.empty();
   }
+
+  void add(const char *message)
+  {
+    std::lock_guard<std::mutex> lock(mutex);
+    messages.push_back(message);
+  }
 };
 
 // Status callback that prints errors (see printErrors()) and records warnings
@@ -81,11 +88,40 @@ inline void collectWarnings(const void *userPtr,
     const char *message)
 {
   printErrors(userPtr, d, source, type, severity, code, message);
-  if (severity == ANARI_SEVERITY_WARNING) {
-    auto *w = (WarningLog *)userPtr;
-    std::lock_guard<std::mutex> lock(w->mutex);
-    w->messages.push_back(message);
+  if (severity == ANARI_SEVERITY_WARNING)
+    ((WarningLog *)userPtr)->add(message);
+}
+
+// Errors and warnings reported by the device, collected by collectStatus().
+struct StatusLog
+{
+  WarningLog errors;
+  WarningLog warnings;
+
+  void clear()
+  {
+    errors.clear();
+    warnings.clear();
   }
+};
+
+// Status callback that records errors and warnings, without printing them, in
+// the StatusLog passed as the library's user pointer (for tests that expect
+// errors).
+inline void collectStatus(const void *userPtr,
+    ANARIDevice,
+    ANARIObject,
+    ANARIDataType,
+    ANARIStatusSeverity severity,
+    ANARIStatusCode,
+    const char *message)
+{
+  auto *log = (StatusLog *)userPtr;
+  if (severity == ANARI_SEVERITY_FATAL_ERROR
+      || severity == ANARI_SEVERITY_ERROR)
+    log->errors.add(message);
+  else if (severity == ANARI_SEVERITY_WARNING)
+    log->warnings.add(message);
 }
 
 // A spatial field filling the box ['lower', 'upper'] with the value 0.5.
@@ -117,6 +153,60 @@ inline anari::Volume makeVolume(anari::Device d,
   anari::setParameter(d, volume, "id", id);
   anari::commitParameters(d, volume);
   return volume;
+}
+
+// One triangle covering the center of the view.
+const float3 kCenterTriangle[3] = {
+    {-0.5f, -0.5f, 0.f}, {0.5f, -0.5f, 0.f}, {0.f, 0.5f, 0.f}};
+
+// A world holding one surface with a triangle geometry whose
+// 'vertex.position' is a shared array over 'vertices' (3 elements). The app
+// holds a reference to the world, surface and array; the surface holds the
+// only one to the geometry.
+struct TriangleWorld
+{
+  anari::World world{nullptr};
+  anari::Surface surface{nullptr};
+  anari::Array1D positions{nullptr};
+  anari::Geometry geometry{nullptr};
+};
+
+inline TriangleWorld makeTriangleWorld(anari::Device d, const float3 *vertices)
+{
+  auto positions = anari::newArray1D(d, vertices, 3);
+
+  auto geom = anari::newObject<anari::Geometry>(d, "triangle");
+  anari::setParameter(d, geom, "vertex.position", positions);
+  anari::commitParameters(d, geom);
+
+  auto mat = anari::newObject<anari::Material>(d, "matte");
+  anari::commitParameters(d, mat);
+
+  auto surface = anari::newObject<anari::Surface>(d);
+  anari::setAndReleaseParameter(d, surface, "geometry", geom);
+  anari::setAndReleaseParameter(d, surface, "material", mat);
+  anari::commitParameters(d, surface);
+
+  auto world = anari::newObject<anari::World>(d);
+  anari::setParameterArray1D(d, world, "surface", &surface, 1);
+  anari::commitParameters(d, world);
+  return {world, surface, positions, geom};
+}
+
+// Moves the triangle in 'vertices' out of view.
+inline void moveOutOfView(float3 *vertices)
+{
+  for (int i = 0; i < 3; i++)
+    vertices[i] = float3(100.f, 100.f, 100.f + i);
+}
+
+// Changes 'surface' (sets its default 'visible' explicitly) and commits it,
+// which makes helide rebuild its Embree scenes from the geometry buffers at the
+// next render.
+inline void forceSceneRebuild(anari::Device d, anari::Surface surface)
+{
+  anari::setParameter(d, surface, "visible", true);
+  anari::commitParameters(d, surface);
 }
 
 // An axis-aligned box, laid out as ANARI_FLOAT32_BOX3.
