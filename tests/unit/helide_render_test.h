@@ -16,6 +16,7 @@
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
+#include <functional>
 #include <limits>
 #include <mutex>
 #include <string>
@@ -246,10 +247,16 @@ struct RenderResult
   std::vector<uint32_t> instanceId;
 };
 
+// Sets extra parameters on a renderer before it is committed.
+using RendererSetup = std::function<void(anari::Device, anari::Renderer)>;
+
 // A frame viewing 'world' at kImageSize from (0, 0, 2) looking down -z with a
 // black background, with color, depth, objectId and instanceId channels.
-inline anari::Frame newFrame(
-    anari::Device d, anari::World world, const std::string &mode = "default")
+// 'setup', if given, sets further renderer parameters.
+inline anari::Frame newFrame(anari::Device d,
+    anari::World world,
+    const std::string &mode = "default",
+    const RendererSetup &setup = {})
 {
   auto camera = anari::newObject<anari::Camera>(d, "perspective");
   anari::setParameter(d, camera, "position", float3(0.f, 0.f, 2.f));
@@ -261,6 +268,8 @@ inline anari::Frame newFrame(
   auto renderer = anari::newObject<anari::Renderer>(d, "default");
   anari::setParameter(d, renderer, "background", float4(0.f, 0.f, 0.f, 1.f));
   anari::setParameter(d, renderer, "mode", mode);
+  if (setup)
+    setup(d, renderer);
   anari::commitParameters(d, renderer);
 
   auto frame = anari::newObject<anari::Frame>(d);
@@ -307,10 +316,12 @@ inline RenderResult readChannels(anari::Device d, anari::Frame frame)
 
 // Renders 'world' through newFrame(), returning the color, depth, objectId and
 // instanceId channels.
-inline RenderResult renderChannels(
-    anari::Device d, anari::World world, const std::string &mode = "default")
+inline RenderResult renderChannels(anari::Device d,
+    anari::World world,
+    const std::string &mode = "default",
+    const RendererSetup &setup = {})
 {
-  auto frame = newFrame(d, world, mode);
+  auto frame = newFrame(d, world, mode, setup);
   anari::render(d, frame);
   auto result = readChannels(d, frame);
   anari::release(d, frame);
