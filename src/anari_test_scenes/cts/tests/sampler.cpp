@@ -301,11 +301,11 @@ void registerSamplerTests(Catalog &catalog)
             "attribute0",
             nullptr,
             [](BuildContext &ctx, anari::Device d, anari::Sampler s) {
-              set(ctx, d, s, "transform");
+              set(ctx, d, s, "outTransform");
               set(ctx, d, s, "outOffset");
             });
       })
-      .permute("transform", V{none(), Any(kOutTransform)})
+      .permute("outTransform", outXform)
       .permute("outOffset", offset)
       .requireFeatures({"ANARI_KHR_SAMPLER_TRANSFORM", kMatte})
       .registerInto(catalog);
