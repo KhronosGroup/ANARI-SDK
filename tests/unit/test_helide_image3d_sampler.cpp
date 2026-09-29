@@ -106,7 +106,7 @@ std::vector<float4> renderWorld(anari::Device d,
   return pixels;
 }
 
-std::vector<float4> offset(const std::vector<float4> &v, const float4 &o)
+std::vector<float4> offsetBy(const std::vector<float4> &v, const float4 &o)
 {
   std::vector<float4> r;
   for (auto &a : v)
@@ -156,7 +156,7 @@ TEST_CASE("image3D sampler reads inOffset and outOffset",
         [](anari::Device d, anari::Sampler s) {
           anari::setParameter(d, s, "inOffset", kInOffset);
         },
-        offset(kAttribute, kInOffset),
+        offsetBy(kAttribute, kInOffset),
         kImage);
   }
 
@@ -168,7 +168,7 @@ TEST_CASE("image3D sampler reads inOffset and outOffset",
           anari::setParameter(d, s, "outOffset", kOutOffset);
         },
         kAttribute,
-        offset(kImage, kOutOffset));
+        offsetBy(kImage, kOutOffset));
   }
 
   SECTION("inOffset and outOffset")
@@ -179,8 +179,8 @@ TEST_CASE("image3D sampler reads inOffset and outOffset",
           anari::setParameter(d, s, "inOffset", kInOffset);
           anari::setParameter(d, s, "outOffset", kOutOffset);
         },
-        offset(kAttribute, kInOffset),
-        offset(kImage, kOutOffset));
+        offsetBy(kAttribute, kInOffset),
+        offsetBy(kImage, kOutOffset));
   }
 
   anari::release(d, d);
