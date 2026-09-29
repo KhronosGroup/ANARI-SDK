@@ -22,6 +22,9 @@ struct Curve : public Geometry
   helium::ChangeObserverPtr<Array1D> m_vertexPosition;
   helium::ChangeObserverPtr<Array1D> m_vertexRadius;
   std::array<helium::IntrusivePtr<Array1D>, 5> m_vertexAttributes;
+  // 'primitive.index' as uint32, clamped to the last segment (Embree's
+  // index buffer, and what attribute interpolation reads)
+  std::vector<uint32_t> m_segmentStarts;
   float m_globalRadius{0.f};
 };
 

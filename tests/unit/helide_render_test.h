@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Shared helpers for the helide-backed render-and-compare unit tests: render a
-// world through a fixed camera, count pixels that differ between images, and
-// build a simple volume.
+// world through a fixed camera, count pixels that differ between images,
+// collect device warnings, and build a simple volume.
 
 #pragma once
 
@@ -11,9 +11,11 @@
 #include <anari/anari_cpp.hpp>
 #include "catch.hpp"
 // std
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -35,6 +37,53 @@ inline void printErrors(const void *,
   if (severity == ANARI_SEVERITY_FATAL_ERROR
       || severity == ANARI_SEVERITY_ERROR) {
     fprintf(stderr, "[ANARI][ERROR][%p] %s\n", source, message);
+  }
+}
+
+// Warnings reported by the device, collected by collectWarnings() (the status
+// callback runs on whichever thread finalizes the object).
+struct WarningLog
+{
+  std::mutex mutex;
+  std::vector<std::string> messages;
+
+  void clear()
+  {
+    std::lock_guard<std::mutex> lock(mutex);
+    messages.clear();
+  }
+
+  // Whether any warning contains 'text'.
+  bool contains(const std::string &text)
+  {
+    std::lock_guard<std::mutex> lock(mutex);
+    return std::any_of(messages.begin(), messages.end(), [&](auto &m) {
+      return m.find(text) != std::string::npos;
+    });
+  }
+
+  bool empty()
+  {
+    std::lock_guard<std::mutex> lock(mutex);
+    return messages.empty();
+  }
+};
+
+// Status callback that prints errors (see printErrors()) and records warnings
+// in the WarningLog passed as the library's user pointer.
+inline void collectWarnings(const void *userPtr,
+    ANARIDevice d,
+    ANARIObject source,
+    ANARIDataType type,
+    ANARIStatusSeverity severity,
+    ANARIStatusCode code,
+    const char *message)
+{
+  printErrors(userPtr, d, source, type, severity, code, message);
+  if (severity == ANARI_SEVERITY_WARNING) {
+    auto *w = (WarningLog *)userPtr;
+    std::lock_guard<std::mutex> lock(w->mutex);
+    w->messages.push_back(message);
   }
 }
 

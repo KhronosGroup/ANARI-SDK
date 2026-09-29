@@ -35,11 +35,23 @@ void Sphere::finalize()
 
   m_globalRadius = getParam<float>("radius", 0.01f);
 
-  const float *radius = nullptr;
-  if (m_vertexRadius)
-    radius = m_vertexRadius->beginAs<float>();
+  m_attributeIndex.clear();
+  std::vector<uint32_t> indices;
+  const bool validIndex = !m_index || readIndices(*m_index, "sphere", indices);
 
-  const auto numSpheres = m_index ? m_index->size() : m_vertexPosition->size();
+  const auto *vertices = m_vertexPosition->beginAs<float3>();
+  const size_t numVertices = m_vertexPosition->size();
+  const Radii radii = readRadii(
+      m_vertexRadius.get(), "vertex.radius", m_globalRadius, numVertices);
+
+  size_t numSpheres = m_index ? indices.size() : numVertices;
+  if (numVertices == 0 || !validIndex)
+    numSpheres = 0;
+  if (m_index && numVertices == 0 && !indices.empty()) {
+    reportMessage(ANARI_SEVERITY_WARNING,
+        "sphere 'primitive.index' has %zu indices but there are no vertices",
+        indices.size());
+  }
 
   auto *vr = (float4 *)rtcSetNewGeometryBuffer(embreeGeometry(),
       RTC_BUFFER_TYPE_VERTEX,
@@ -48,31 +60,24 @@ void Sphere::finalize()
       sizeof(float4),
       numSpheres);
 
-  m_attributeIndex.clear();
+  bool clamped = false;
+  for (size_t i = 0; i < numSpheres; i++) {
+    size_t v = m_index ? indices[i] : i;
+    if (v >= numVertices) {
+      clamped = true;
+      v = numVertices - 1;
+    }
+    const auto &p = vertices[v];
+    vr[i] = float4(p.x, p.y, p.z, radii[v]);
+    if (m_index)
+      m_attributeIndex.push_back(uint32_t(v));
+  }
 
-  if (m_index) {
-    m_attributeIndex.reserve(m_index->size());
-
-    const auto *begin = m_index->beginAs<uint32_t>();
-    const auto *end = m_index->endAs<uint32_t>();
-    const auto *vertices = m_vertexPosition->beginAs<float3>();
-
-    size_t sphereID = 0;
-    std::transform(begin, end, vr, [&](uint32_t i) {
-      m_attributeIndex.push_back(i);
-      const auto &v = vertices[i];
-      const float r = radius ? radius[i] : m_globalRadius;
-      return float4(v.x, v.y, v.z, r);
-    });
-  } else {
-    const auto *begin = m_vertexPosition->beginAs<float3>();
-    const auto *end = m_vertexPosition->endAs<float3>();
-
-    size_t sphereID = 0;
-    std::transform(begin, end, vr, [&](const float3 &v) {
-      const float r = radius ? radius[sphereID++] : m_globalRadius;
-      return float4(v.x, v.y, v.z, r);
-    });
+  if (clamped) {
+    reportMessage(ANARI_SEVERITY_WARNING,
+        "sphere 'primitive.index' has indices past the %zu vertices; "
+        "they use the last vertex",
+        numVertices);
   }
 
   rtcCommitGeometry(embreeGeometry());

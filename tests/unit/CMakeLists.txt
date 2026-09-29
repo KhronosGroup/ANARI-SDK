@@ -8,6 +8,7 @@ project(anariUnitTests LANGUAGES CXX)
 add_executable(${PROJECT_NAME}
   catch_main.cpp
 
+  test_helide_geometry_bounds.cpp
   test_helide_image3d_sampler.cpp
   test_helide_instance.cpp
   test_helide_primitive_sampler.cpp
@@ -27,10 +28,10 @@ add_executable(${PROJECT_NAME}
 )
 
 # helium for the direct base-layer tests; anari (the loader) for the device-
-# backed tests (commit-snapshot, helide instance normals, image3D, primitive
-# and transform samplers, transferFunction1D opacity, volume interval
-# selection, volumes in instances, world bounds), which load helide and skip
-# themselves if absent.
+# backed tests (commit-snapshot, helide sphere/curve bounds checks, instance
+# normals, image3D, primitive and transform samplers, transferFunction1D
+# opacity, volume interval selection, volumes in instances, world bounds), which
+# load helide and skip themselves if absent.
 target_link_libraries(${PROJECT_NAME} PRIVATE helium anari)
 find_package(Threads REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads)
@@ -43,6 +44,7 @@ add_test(NAME unit_test::helium::TaskQueue           COMMAND ${PROJECT_NAME} "[h
 add_test(NAME unit_test::helium::CommitSnapshot      COMMAND ${PROJECT_NAME} "[helium_commit_snapshot]"    )
 add_test(NAME unit_test::helium::ConcurrentUpdates   COMMAND ${PROJECT_NAME} "[helium_concurrent_updates]" )
 add_test(NAME unit_test::helium::FrameCallback       COMMAND ${PROJECT_NAME} "[helium_frame_callback]"     )
+add_test(NAME unit_test::helide::GeometryBounds      COMMAND ${PROJECT_NAME} "[helide_geometry_bounds]"    )
 add_test(NAME unit_test::helide::Image3DSampler      COMMAND ${PROJECT_NAME} "[helide_image3d_sampler]"    )
 add_test(NAME unit_test::helide::InstanceNormals     COMMAND ${PROJECT_NAME} "[helide_instance]"           )
 add_test(NAME unit_test::helide::PrimitiveSampler    COMMAND ${PROJECT_NAME} "[helide_primitive_sampler]"  )

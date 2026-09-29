@@ -3,6 +3,7 @@
 
 #include "Curve.h"
 // std
+#include <algorithm>
 #include <numeric>
 
 namespace helide {
@@ -35,35 +36,58 @@ void Curve::finalize()
     return;
   }
 
-  const float *radius =
-      m_vertexRadius ? m_vertexRadius->beginAs<float>() : nullptr;
   m_globalRadius = getParam<float>("radius", 1.f);
 
-  const auto numSegments =
-      m_index ? m_index->size() : m_vertexPosition->size() - 1;
+  m_segmentStarts.clear();
+  const bool validIndex =
+      !m_index || readIndices(*m_index, "curve", m_segmentStarts);
 
-  {
-    auto *vr = (float4 *)rtcSetNewGeometryBuffer(embreeGeometry(),
-        RTC_BUFFER_TYPE_VERTEX,
-        0,
-        RTC_FORMAT_FLOAT4,
-        sizeof(float4),
-        m_vertexPosition->size());
+  const auto *vertices = m_vertexPosition->beginAs<float3>();
+  const size_t numVertices = m_vertexPosition->size();
+  const Radii radii = readRadii(
+      m_vertexRadius.get(), "vertex.radius", m_globalRadius, numVertices);
 
-    const auto *begin = m_vertexPosition->beginAs<float3>();
-    const auto *end = m_vertexPosition->endAs<float3>();
-    uint32_t rID = 0;
-    std::transform(begin, end, vr, [&](const float3 &v) {
-      return float4(v, radius ? radius[rID++] : m_globalRadius);
-    });
+  // a segment spans two vertices
+  if (numVertices < 2) {
+    reportMessage(ANARI_SEVERITY_WARNING,
+        "curve geometry needs at least 2 vertices, has %zu",
+        numVertices);
+  }
+  size_t numSegments = m_index ? m_segmentStarts.size() : numVertices - 1;
+  if (numVertices < 2 || !validIndex) {
+    numSegments = 0;
+    m_segmentStarts.clear();
   }
 
+  auto *vr = (float4 *)rtcSetNewGeometryBuffer(embreeGeometry(),
+      RTC_BUFFER_TYPE_VERTEX,
+      0,
+      RTC_FORMAT_FLOAT4,
+      sizeof(float4),
+      numVertices);
+  for (size_t i = 0; i < numVertices; i++)
+    vr[i] = float4(vertices[i], radii[i]);
+
   if (m_index) {
+    // segment starts past the second-to-last vertex would end past the last
+    // (with fewer than 2 vertices there are no segments to clamp)
+    const auto lastStart = numVertices < 2 ? 0u : uint32_t(numVertices - 2);
+    bool clamped = false;
+    for (auto &start : m_segmentStarts) {
+      clamped |= start > lastStart;
+      start = std::min(start, lastStart);
+    }
+    if (clamped) {
+      reportMessage(ANARI_SEVERITY_WARNING,
+          "curve 'primitive.index' has segments ending past the %zu "
+          "vertices; they use the last segment",
+          numVertices);
+    }
     rtcSetSharedGeometryBuffer(embreeGeometry(),
         RTC_BUFFER_TYPE_INDEX,
         0,
         RTC_FORMAT_UINT,
-        m_index->data(),
+        m_segmentStarts.data(),
         0,
         sizeof(uint32_t),
         numSegments);
@@ -90,7 +114,7 @@ float4 Curve::getAttributeValue(const Attribute &attr, const Ray &ray) const
   if (!attributeArray)
     return Geometry::getAttributeValue(attr, ray);
 
-  auto idx = m_index ? *(m_index->dataAs<uint32_t>() + ray.primID) : ray.primID;
+  const auto idx = m_index ? m_segmentStarts[ray.primID] : ray.primID;
 
   auto a = readAttributeValue(attributeArray, idx + 0);
   auto b = readAttributeValue(attributeArray, idx + 1);
