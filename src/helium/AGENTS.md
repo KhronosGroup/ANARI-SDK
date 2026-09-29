@@ -63,6 +63,8 @@ Objects are flushed in priority order so dependencies are committed first:
 
 Timestamps skip redundant work: `commitParameters()` is called only if `lastParameterChanged > lastCommitted`.
 
+An object `getProperty()` with `ANARI_WAIT` flushes the buffer and then queries the object inside `BaseDevice::runDeviceWork()`, which runs it on the calling thread by default. A device that flushes or renders on a worker thread (helide's `TaskQueue`) must override `runDeviceWork()` to run the work there, and run it directly when already on the worker, so the flush and query never overlap a render.
+
 ### Change Observer Pattern
 
 Use `ChangeObserverPtr<T>` to automatically track when a referenced object changes:

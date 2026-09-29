@@ -9,6 +9,8 @@
 #include "utility/ParameterizedObject.h"
 // anari
 #include "anari/backend/DeviceImpl.h"
+// std
+#include <functional>
 
 namespace helium {
 
@@ -110,6 +112,15 @@ struct BaseDevice : public anari::DeviceImpl,
       void *mem,
       uint64_t size,
       uint32_t mask);
+
+  // Runs 'work' as device work: work that must not overlap the device's own
+  // commit-buffer flushes or renders. getProperty() runs an object's
+  // ANARI_WAIT query this way (flush the commit buffer, then query the
+  // object). The default runs 'work' on the calling thread. A device that
+  // flushes or renders on a worker thread overrides this to run 'work' there,
+  // after the work already queued, and must run it directly when called on
+  // that worker (e.g. from a completion or status callback).
+  virtual void runDeviceWork(const std::function<void()> &work);
 
   std::unique_ptr<BaseGlobalDeviceState> m_state;
 

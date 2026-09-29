@@ -6,6 +6,8 @@
 #include "array/Array.h"
 // anari
 #include "anari/backend/LibraryImpl.h"
+// std
+#include <thread>
 
 namespace helium {
 
@@ -32,15 +34,29 @@ int BaseDevice::getProperty(ANARIObject object,
     uint64_t size,
     uint32_t mask)
 {
-  if (!handleIsDevice(object)) {
-    if (mask == ANARI_WAIT)
-      m_state->commitBuffer.flush();
-    auto lock = getObjectLock(object);
-    return referenceFromHandle(object).getProperty(name, type, mem, size, mask);
-  } else
+  if (handleIsDevice(object))
     return deviceGetProperty(name, type, mem, size, mask);
 
-  return 0;
+  auto &obj = referenceFromHandle(object);
+
+  if (mask != ANARI_WAIT) {
+    auto lock = getObjectLock(object);
+    return obj.getProperty(name, type, mem, size, mask);
+  }
+
+  const auto caller = std::this_thread::get_id();
+  int result = 0;
+  runDeviceWork([&]() {
+    m_state->commitBuffer.flush();
+    // Device work run on another thread (a device worker) must not take a
+    // frame's lock: an app thread waiting on the frame (frameReady(), map)
+    // holds it until the frame's own work, possibly queued behind this, ends.
+    std::unique_lock<std::mutex> lock;
+    if (obj.type() != ANARI_FRAME || std::this_thread::get_id() == caller)
+      lock = getObjectLock(object);
+    result = obj.getProperty(name, type, mem, size, mask);
+  });
+  return result;
 }
 
 // Object + Parameter Lifetime Management /////////////////////////////////////
@@ -295,6 +311,11 @@ BaseDevice::~BaseDevice()
         "detected %zu leaked ANARIObject objects created of unknown subtype",
         state.objectCounts.unknown.load());
   }
+}
+
+void BaseDevice::runDeviceWork(const std::function<void()> &work)
+{
+  work();
 }
 
 int BaseDevice::deviceGetProperty(const char *name,

@@ -286,6 +286,18 @@ void HelideDevice::deviceCommitParameters()
   helium::BaseDevice::deviceCommitParameters();
 }
 
+// Runs 'work' on the task queue, after the flushes and renders already queued,
+// so it never overlaps them. On the worker (a callback) it runs directly:
+// queueing it there would wait on itself.
+void HelideDevice::runDeviceWork(const std::function<void()> &work)
+{
+  auto &queue = deviceState()->taskQueue;
+  if (queue.onWorkerThread())
+    work();
+  else
+    queue.enqueue(work).get();
+}
+
 #define HELIDE_STRINGIFY(s) HELIDE_STRINGIFY2(s)
 #define HELIDE_STRINGIFY2(s) #s
 #define HELIDE_VERSION_STRING                                                  \
