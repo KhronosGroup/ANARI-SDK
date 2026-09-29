@@ -210,6 +210,26 @@ void mapArrayFromCallback(const void *userPtr, ANARIDevice d, ANARIFrame f)
   anari::getProperty(d, f, "duration", r.duration, ANARI_NO_WAIT);
 }
 
+// What a helide completion callback observed querying its frame's world.
+struct WorldCallbackRecord
+{
+  anari::World world{nullptr};
+  int found{-1};
+};
+
+void queryWorldFromCallback(const void *userPtr, ANARIDevice d, ANARIFrame)
+{
+  auto &r = *(WorldCallbackRecord *)userPtr;
+  float bounds[6] = {};
+  r.found = anariGetProperty(d,
+      r.world,
+      "bounds",
+      ANARI_FLOAT32_BOX3,
+      bounds,
+      sizeof(bounds),
+      ANARI_WAIT);
+}
+
 // A 4x4 helide frame of an empty world with the given renderer 'background',
 // which calls 'callback' with 'userPtr' when it completes.
 anari::Frame newCallbackFrame(anari::Device d,
@@ -354,6 +374,34 @@ SCENARIO(
 
   anari::release(d, frame);
   anari::release(d, record->array);
+  anari::release(d, d);
+  anari::unloadLibrary(lib);
+  delete record;
+}
+
+SCENARIO("a helide completion callback can WAIT on a query of its world",
+    "[helide][helium_frame_callback]")
+{
+  anari::Library lib = anari::loadLibrary("helide");
+  if (lib == nullptr) {
+    WARN("helide library not available; skipping helide callback test");
+    return;
+  }
+
+  // Leaked on purpose: if the callback deadlocks, its thread still uses them.
+  anari::Device d = anari::newDevice(lib, "default");
+  auto *record = new WorldCallbackRecord;
+  auto frame = newCallbackFrame(d, queryWorldFromCallback, record);
+  record->world = anari::newObject<anari::World>(d);
+  anari::commitParameters(d, record->world);
+  anari::setParameter(d, frame, "world", record->world);
+  anari::commitParameters(d, frame);
+
+  REQUIRE(renderAndWait(d, frame));
+  CHECK(record->found != -1);
+
+  anari::release(d, frame);
+  anari::release(d, record->world);
   anari::release(d, d);
   anari::unloadLibrary(lib);
   delete record;

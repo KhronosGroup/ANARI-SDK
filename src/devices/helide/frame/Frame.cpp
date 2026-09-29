@@ -184,7 +184,9 @@ void Frame::renderFrame()
     });
 
     // End the frame before the callback: it may map arrays, which waits for
-    // the frame to end, and it should see this frame's duration.
+    // the frame to end, query the world, which takes its lock, and it should
+    // see this frame's duration.
+    worldLock.unlock();
     state->renderingSemaphore.frameEnd();
 
     auto end = std::chrono::steady_clock::now();
