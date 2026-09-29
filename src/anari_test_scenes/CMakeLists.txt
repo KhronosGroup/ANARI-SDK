@@ -29,6 +29,7 @@ project_sources(PRIVATE
   scenes/test/attributes.cpp
   scenes/test/instanced_cubes.cpp
   scenes/test/pbr_spheres.cpp
+  scenes/test/random_curves.cpp
   scenes/test/random_cylinders.cpp
   scenes/test/random_spheres.cpp
   scenes/test/textured_cube.cpp
