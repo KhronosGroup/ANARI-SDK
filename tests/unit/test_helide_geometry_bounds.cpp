@@ -18,30 +18,11 @@ namespace {
 
 using namespace helide_test;
 
-// A world holding one surface with geometry 'geom' (released here).
-anari::World makeWorld(anari::Device d, anari::Geometry geom)
-{
-  auto mat = anari::newObject<anari::Material>(d, "matte");
-  anari::setParameter(d, mat, "color", float3(0.8f));
-  anari::commitParameters(d, mat);
-
-  auto surface = anari::newObject<anari::Surface>(d);
-  anari::setAndReleaseParameter(d, surface, "geometry", geom);
-  anari::setAndReleaseParameter(d, surface, "material", mat);
-  anari::commitParameters(d, surface);
-
-  auto world = anari::newObject<anari::World>(d);
-  anari::setParameterArray1D(d, world, "surface", &surface, 1);
-  anari::commitParameters(d, world);
-  anari::release(d, surface);
-  return world;
-}
-
 // Renders a world holding only 'geom' (committed and released here).
 RenderResult renderGeometry(anari::Device d, anari::Geometry geom)
 {
   anari::commitParameters(d, geom);
-  auto world = makeWorld(d, geom);
+  auto world = makeSurfaceWorld(d, geom);
   auto result = renderChannels(d, world);
   anari::release(d, world);
   return result;

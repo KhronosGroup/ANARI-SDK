@@ -40,18 +40,7 @@ TEST_CASE("helide sphere 'radius' defaults to 1.0", "[helide_sphere_radius]")
     anari::setParameterArray1D(d, geom, "vertex.position", &center, 1);
     anari::commitParameters(d, geom);
 
-    auto mat = anari::newObject<anari::Material>(d, "matte");
-    anari::commitParameters(d, mat);
-
-    auto surface = anari::newObject<anari::Surface>(d);
-    anari::setAndReleaseParameter(d, surface, "geometry", geom);
-    anari::setAndReleaseParameter(d, surface, "material", mat);
-    anari::commitParameters(d, surface);
-
-    auto world = anari::newObject<anari::World>(d);
-    anari::setParameterArray1D(d, world, "surface", &surface, 1);
-    anari::release(d, surface);
-    anari::commitParameters(d, world);
+    auto world = makeSurfaceWorld(d, geom);
 
     Box bounds{float3(0.f), float3(0.f)};
     REQUIRE(queryBounds(d, world, bounds));

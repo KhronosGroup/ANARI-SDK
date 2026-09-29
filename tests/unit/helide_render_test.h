@@ -3,8 +3,8 @@
 
 // Shared helpers for the helide-backed render-and-compare unit tests: render a
 // world through a fixed camera, count pixels that differ between images,
-// collect device warnings and errors, and build a simple volume or a triangle
-// over a shared array.
+// collect device warnings and errors, and build a simple volume, a world around
+// one geometry, or a triangle over a shared array.
 
 #pragma once
 
@@ -163,6 +163,26 @@ inline anari::Volume makeVolume(anari::Device d,
   anari::setParameter(d, volume, "id", id);
   anari::commitParameters(d, volume);
   return volume;
+}
+
+// A world holding one surface with the committed geometry 'geom' (released
+// here) and a light-gray matte material.
+inline anari::World makeSurfaceWorld(anari::Device d, anari::Geometry geom)
+{
+  auto mat = anari::newObject<anari::Material>(d, "matte");
+  anari::setParameter(d, mat, "color", float3(0.8f));
+  anari::commitParameters(d, mat);
+
+  auto surface = anari::newObject<anari::Surface>(d);
+  anari::setAndReleaseParameter(d, surface, "geometry", geom);
+  anari::setAndReleaseParameter(d, surface, "material", mat);
+  anari::commitParameters(d, surface);
+
+  auto world = anari::newObject<anari::World>(d);
+  anari::setParameterArray1D(d, world, "surface", &surface, 1);
+  anari::commitParameters(d, world);
+  anari::release(d, surface);
+  return world;
 }
 
 // One triangle covering the center of the view.
