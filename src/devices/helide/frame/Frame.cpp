@@ -275,7 +275,7 @@ void Frame::waitOnOutstandingWorkIfNeeded()
 
 float2 Frame::screenFromPixel(const float2 &p) const
 {
-  return p * m_frameData.invSize;
+  return (p + 0.5f) * m_frameData.invSize;
 }
 
 void Frame::writeSample(int x, int y, const PixelSample &s)

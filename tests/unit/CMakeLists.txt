@@ -12,6 +12,7 @@ add_executable(${PROJECT_NAME}
   test_helide_geometry_bounds.cpp
   test_helide_image3d_sampler.cpp
   test_helide_instance.cpp
+  test_helide_pixel_centres.cpp
   test_helide_primitive_sampler.cpp
   test_helide_tf1d_opacity.cpp
   test_helide_transform_sampler.cpp
@@ -35,10 +36,10 @@ add_executable(${PROJECT_NAME}
 
 # helium for the direct base-layer tests; anari (the loader) for the device-
 # backed tests (commit-snapshot, helide sphere/curve bounds checks, instance
-# normals and id arrays, image3D, primitive and transform samplers,
-# transferFunction1D opacity, volume interval selection, volumes in instances,
-# WAIT queries while rendering, world bounds, released shared arrays), which
-# load helide and skip themselves if absent.
+# normals and id arrays, pixel-centre rays, image3D, primitive and transform
+# samplers, transferFunction1D opacity, volume interval selection, volumes in
+# instances, WAIT queries while rendering, world bounds, released shared
+# arrays), which load helide and skip themselves if absent.
 target_link_libraries(${PROJECT_NAME} PRIVATE helium anari)
 find_package(Threads REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads)
@@ -60,6 +61,7 @@ add_test(NAME unit_test::helide::GeometryBounds      COMMAND ${PROJECT_NAME} "[h
 add_test(NAME unit_test::helide::Image3DSampler      COMMAND ${PROJECT_NAME} "[helide_image3d_sampler]"    )
 add_test(NAME unit_test::helide::InstanceNormals     COMMAND ${PROJECT_NAME} "[helide_instance]"           )
 add_test(NAME unit_test::helide::InstanceIdArray     COMMAND ${PROJECT_NAME} "[helide_instance_id]"        )
+add_test(NAME unit_test::helide::PixelCentres        COMMAND ${PROJECT_NAME} "[helide_pixel_centres]"      )
 add_test(NAME unit_test::helide::PrimitiveSampler    COMMAND ${PROJECT_NAME} "[helide_primitive_sampler]"  )
 add_test(NAME unit_test::helide::Tf1dOpacity         COMMAND ${PROJECT_NAME} "[helide_tf1d_opacity]"       )
 add_test(NAME unit_test::helide::TransformSampler    COMMAND ${PROJECT_NAME} "[helide_transform_sampler]"  )
