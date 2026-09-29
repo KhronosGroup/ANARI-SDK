@@ -1,8 +1,8 @@
 // Copyright 2021-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 //
-// anariInfo opens a library and displays queryable information without
-// creating any devices.
+// anariInfo opens a library, creates each of its devices and displays their
+// queryable information.
 
 #include <stdio.h>
 #include <string.h>
