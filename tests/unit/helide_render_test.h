@@ -38,12 +38,9 @@ inline void printErrors(const void *,
   }
 }
 
-// A translucent volume filling the box ['lower', 'upper'] with one color.
-inline anari::Volume makeVolume(anari::Device d,
-    const float3 &lower,
-    const float3 &upper,
-    const float3 &color,
-    uint32_t id)
+// A spatial field filling the box ['lower', 'upper'] with the value 0.5.
+inline anari::SpatialField makeConstantField(
+    anari::Device d, const float3 &lower, const float3 &upper)
 {
   const std::vector<float> data(8, 0.5f);
   auto field = anari::newObject<anari::SpatialField>(d, "structuredRegular");
@@ -51,6 +48,17 @@ inline anari::Volume makeVolume(anari::Device d,
   anari::setParameter(d, field, "origin", lower);
   anari::setParameter(d, field, "spacing", upper - lower);
   anari::commitParameters(d, field);
+  return field;
+}
+
+// A translucent volume filling the box ['lower', 'upper'] with one color.
+inline anari::Volume makeVolume(anari::Device d,
+    const float3 &lower,
+    const float3 &upper,
+    const float3 &color,
+    uint32_t id)
+{
+  auto field = makeConstantField(d, lower, upper);
 
   auto volume = anari::newObject<anari::Volume>(d, "transferFunction1D");
   anari::setAndReleaseParameter(d, volume, "value", field);
