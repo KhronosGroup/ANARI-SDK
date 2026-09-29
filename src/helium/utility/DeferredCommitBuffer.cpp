@@ -55,9 +55,22 @@ void DeferredCommitBuffer::addObjectToFinalize(BaseObject *obj)
 
 void DeferredCommitBuffer::flush()
 {
-  if (empty())
-    return;
   std::lock_guard<std::recursive_mutex> guard(m_flushMutex);
+  // Only the thread holding m_flushMutex sees m_flushing set: this call is
+  // nested in its flush (e.g. a status callback from commitParameters() or
+  // finalize() issuing an ANARI_WAIT query). Swapping the buffers the outer
+  // flush is walking would corrupt it; what's staged waits for the next flush.
+  if (m_flushing || empty())
+    return;
+  m_flushing = true;
+  struct FlushingScope
+  {
+    bool &flushing;
+    ~FlushingScope()
+    {
+      flushing = false;
+    }
+  } scope{m_flushing};
   swapBuffers();
   flushCommits();
   flushFinalizations();

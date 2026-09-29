@@ -71,8 +71,9 @@ add_test(NAME unit_test::helide::WaitQuery           COMMAND ${PROJECT_NAME} "[h
 add_test(NAME unit_test::helide::WorldBounds         COMMAND ${PROJECT_NAME} "[helide_world_bounds]"       )
 
 # A completion-callback or device-work regression hangs rather than fails
-# (as does privatizing an array as device work).
+# (as do privatizing an array as device work and a flush nested in a flush).
 set_tests_properties(unit_test::helium::FrameCallback
+  unit_test::helium::ConcurrentUpdates
   unit_test::helium::WaitQuery unit_test::helide::WaitQuery
   unit_test::helide::ArrayPrivatize
   PROPERTIES TIMEOUT 60)

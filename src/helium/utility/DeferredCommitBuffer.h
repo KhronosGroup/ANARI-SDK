@@ -38,7 +38,8 @@ struct DeferredCommitBuffer
   void addObjectToFinalize(BaseObject *obj);
 
   // Sort objects by priority and call BaseObject::commitParameters() and
-  // BaseObject::finalize() on each object.
+  // BaseObject::finalize() on each object. A flush called from inside one on
+  // the same thread (e.g. from a status callback) does nothing.
   void flush();
 
   // Return when this buffer was last committed any object
@@ -67,6 +68,7 @@ struct DeferredCommitBuffer
   bool m_needToSortFinalizations{false};
   TimeStamp m_lastCommit{0};
   TimeStamp m_lastFinalization{0};
+  bool m_flushing{false}; // guarded by m_flushMutex
   mutable std::recursive_mutex m_swapMutex;
   mutable std::recursive_mutex m_flushMutex;
 };
