@@ -8,9 +8,8 @@
 // over the sub-array starting at that offset.
 
 #include "catch.hpp"
+#include "helide_render_test.h"
 
-#include <anari/anari_cpp/ext/linalg.h>
-#include <anari/anari_cpp.hpp>
 // std
 #include <cstdio>
 #include <functional>
@@ -19,9 +18,8 @@
 
 namespace {
 
-using namespace anari::math;
+using namespace helide_test;
 
-constexpr uint2 kImageSize = {64, 64};
 constexpr uint64_t kOffset = 16;
 constexpr uint64_t kLegacyOffset = 8;
 // room for both triangles past the largest offset
@@ -106,38 +104,6 @@ anari::World makeWorld(anari::Device d,
   return world;
 }
 
-std::vector<float4> render(anari::Device d, anari::World world)
-{
-  auto camera = anari::newObject<anari::Camera>(d, "perspective");
-  anari::setParameter(d, camera, "position", float3(0.f, 0.f, 2.f));
-  anari::setParameter(d, camera, "direction", float3(0.f, 0.f, -1.f));
-  anari::setParameter(d, camera, "up", float3(0.f, 1.f, 0.f));
-  anari::setParameter(d, camera, "aspect", 1.f);
-  anari::commitParameters(d, camera);
-
-  auto renderer = anari::newObject<anari::Renderer>(d, "default");
-  anari::setParameter(d, renderer, "background", float4(0.f, 0.f, 0.f, 1.f));
-  anari::commitParameters(d, renderer);
-
-  auto frame = anari::newObject<anari::Frame>(d);
-  anari::setParameter(d, frame, "size", kImageSize);
-  anari::setParameter(d, frame, "channel.color", ANARI_FLOAT32_VEC4);
-  anari::setAndReleaseParameter(d, frame, "camera", camera);
-  anari::setAndReleaseParameter(d, frame, "renderer", renderer);
-  anari::setParameter(d, frame, "world", world);
-  anari::commitParameters(d, frame);
-
-  anari::render(d, frame);
-  anari::wait(d, frame);
-
-  auto fb = anari::map<float4>(d, frame, "channel.color");
-  std::vector<float4> pixels(fb.data, fb.data + fb.width * fb.height);
-  anari::unmap(d, frame, "channel.color");
-
-  anari::release(d, frame);
-  return pixels;
-}
-
 std::vector<float4> renderWorld(anari::Device d,
     const std::vector<float4> &colors,
     const SetSamplerParams &setSamplerParams)
@@ -151,17 +117,6 @@ std::vector<float4> renderWorld(anari::Device d,
 std::vector<float4> colorsFrom(uint64_t offset)
 {
   return std::vector<float4>(kColors.begin() + offset, kColors.end());
-}
-
-size_t countMismatches(
-    const std::vector<float4> &a, const std::vector<float4> &b)
-{
-  size_t mismatches = 0;
-  for (size_t i = 0; i < a.size(); i++) {
-    if (linalg::maxelem(linalg::abs(a[i] - b[i])) > 1e-3f)
-      mismatches++;
-  }
-  return mismatches;
 }
 
 // The offset sampler render must match a render of the sub-array starting at

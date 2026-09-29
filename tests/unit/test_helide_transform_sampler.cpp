@@ -9,19 +9,15 @@
 // host and used directly as the material color.
 
 #include "catch.hpp"
+#include "helide_render_test.h"
 
-#include <anari/anari_cpp/ext/linalg.h>
-#include <anari/anari_cpp.hpp>
 // std
-#include <cstdio>
 #include <functional>
 #include <vector>
 
 namespace {
 
-using namespace anari::math;
-
-constexpr uint2 kImageSize = {64, 64};
+using namespace helide_test;
 
 const std::vector<float3> kTriangle = {
     {-0.8f, -0.8f, 0.f}, {0.8f, -0.8f, 0.f}, {0.f, 0.8f, 0.f}};
@@ -42,20 +38,6 @@ const mat4 kLegacyTransform = mat4(float4(0.f, 0.f, 2.f, 0.f),
     float4(0.f, 0.f, 0.f, 1.f));
 
 using SetSamplerParams = std::function<void(anari::Device, anari::Sampler)>;
-
-void statusFunc(const void *,
-    ANARIDevice,
-    ANARIObject source,
-    ANARIDataType,
-    ANARIStatusSeverity severity,
-    ANARIStatusCode,
-    const char *message)
-{
-  if (severity == ANARI_SEVERITY_FATAL_ERROR
-      || severity == ANARI_SEVERITY_ERROR) {
-    fprintf(stderr, "[ANARI][ERROR][%p] %s\n", source, message);
-  }
-}
 
 // The material color is a transform sampler set up by 'setSamplerParams', or
 // the string "attribute0" if 'setSamplerParams' is empty.
@@ -94,38 +76,6 @@ anari::World makeWorld(anari::Device d,
   return world;
 }
 
-std::vector<float4> render(anari::Device d, anari::World world)
-{
-  auto camera = anari::newObject<anari::Camera>(d, "perspective");
-  anari::setParameter(d, camera, "position", float3(0.f, 0.f, 2.f));
-  anari::setParameter(d, camera, "direction", float3(0.f, 0.f, -1.f));
-  anari::setParameter(d, camera, "up", float3(0.f, 1.f, 0.f));
-  anari::setParameter(d, camera, "aspect", 1.f);
-  anari::commitParameters(d, camera);
-
-  auto renderer = anari::newObject<anari::Renderer>(d, "default");
-  anari::setParameter(d, renderer, "background", float4(0.f, 0.f, 0.f, 1.f));
-  anari::commitParameters(d, renderer);
-
-  auto frame = anari::newObject<anari::Frame>(d);
-  anari::setParameter(d, frame, "size", kImageSize);
-  anari::setParameter(d, frame, "channel.color", ANARI_FLOAT32_VEC4);
-  anari::setAndReleaseParameter(d, frame, "camera", camera);
-  anari::setAndReleaseParameter(d, frame, "renderer", renderer);
-  anari::setParameter(d, frame, "world", world);
-  anari::commitParameters(d, frame);
-
-  anari::render(d, frame);
-  anari::wait(d, frame);
-
-  auto fb = anari::map<float4>(d, frame, "channel.color");
-  std::vector<float4> pixels(fb.data, fb.data + fb.width * fb.height);
-  anari::unmap(d, frame, "channel.color");
-
-  anari::release(d, frame);
-  return pixels;
-}
-
 std::vector<float4> renderWorld(anari::Device d,
     const std::vector<float4> &attribute,
     const SetSamplerParams &setSamplerParams)
@@ -143,17 +93,6 @@ std::vector<float4> transformed(
   for (auto &a : v)
     r.push_back(linalg::mul(m, a) + offset);
   return r;
-}
-
-size_t countMismatches(
-    const std::vector<float4> &a, const std::vector<float4> &b)
-{
-  size_t mismatches = 0;
-  for (size_t i = 0; i < a.size(); i++) {
-    if (linalg::maxelem(linalg::abs(a[i] - b[i])) > 1e-3f)
-      mismatches++;
-  }
-  return mismatches;
 }
 
 // The sampler render must match the pre-transformed-attribute render, and
@@ -182,7 +121,7 @@ void checkSamplerMatches(anari::Device d,
 TEST_CASE("transform sampler reads outTransform and outOffset",
     "[helide][helide_transform_sampler]")
 {
-  anari::Library lib = anari::loadLibrary("helide", statusFunc, nullptr);
+  anari::Library lib = anari::loadLibrary("helide", printErrors, nullptr);
   if (lib == nullptr) {
     WARN("helide library not available; skipping transform sampler test");
     return;

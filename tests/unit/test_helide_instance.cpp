@@ -9,36 +9,18 @@
 // instance's linear part (per transform-array element).
 
 #include "catch.hpp"
+#include "helide_render_test.h"
 
-#include <anari/anari_cpp/ext/linalg.h>
-#include <anari/anari_cpp.hpp>
 // std
-#include <cstdio>
 #include <string>
 #include <vector>
 
 namespace {
 
-using namespace anari::math;
-
-constexpr uint2 kImageSize = {64, 64};
+using namespace helide_test;
 
 const std::vector<float3> kTriangle = {
     {-0.5f, -0.5f, 0.f}, {0.5f, -0.5f, 0.f}, {0.f, 0.5f, 0.f}};
-
-void statusFunc(const void *,
-    ANARIDevice,
-    ANARIObject source,
-    ANARIDataType,
-    ANARIStatusSeverity severity,
-    ANARIStatusCode,
-    const char *message)
-{
-  if (severity == ANARI_SEVERITY_FATAL_ERROR
-      || severity == ANARI_SEVERITY_ERROR) {
-    fprintf(stderr, "[ANARI][ERROR][%p] %s\n", source, message);
-  }
-}
 
 mat4 translation(float3 t)
 {
@@ -128,40 +110,6 @@ anari::World makePretransformedWorld(anari::Device d,
   return world;
 }
 
-std::vector<float4> render(
-    anari::Device d, anari::World world, const std::string &mode)
-{
-  auto camera = anari::newObject<anari::Camera>(d, "perspective");
-  anari::setParameter(d, camera, "position", float3(0.f, 0.f, 2.f));
-  anari::setParameter(d, camera, "direction", float3(0.f, 0.f, -1.f));
-  anari::setParameter(d, camera, "up", float3(0.f, 1.f, 0.f));
-  anari::setParameter(d, camera, "aspect", 1.f);
-  anari::commitParameters(d, camera);
-
-  auto renderer = anari::newObject<anari::Renderer>(d, "default");
-  anari::setParameter(d, renderer, "background", float4(0.f, 0.f, 0.f, 1.f));
-  anari::setParameter(d, renderer, "mode", mode);
-  anari::commitParameters(d, renderer);
-
-  auto frame = anari::newObject<anari::Frame>(d);
-  anari::setParameter(d, frame, "size", kImageSize);
-  anari::setParameter(d, frame, "channel.color", ANARI_FLOAT32_VEC4);
-  anari::setAndReleaseParameter(d, frame, "camera", camera);
-  anari::setAndReleaseParameter(d, frame, "renderer", renderer);
-  anari::setParameter(d, frame, "world", world);
-  anari::commitParameters(d, frame);
-
-  anari::render(d, frame);
-  anari::wait(d, frame);
-
-  auto fb = anari::map<float4>(d, frame, "channel.color");
-  std::vector<float4> pixels(fb.data, fb.data + fb.width * fb.height);
-  anari::unmap(d, frame, "channel.color");
-
-  anari::release(d, frame);
-  return pixels;
-}
-
 struct Comparison
 {
   size_t pixels{0};
@@ -204,7 +152,7 @@ void checkInstancedMatchesPretransformed(
 TEST_CASE("instanced normals are transformed by the inverse transpose",
     "[helide][helide_instance]")
 {
-  anari::Library lib = anari::loadLibrary("helide", statusFunc, nullptr);
+  anari::Library lib = anari::loadLibrary("helide", printErrors, nullptr);
   if (lib == nullptr) {
     WARN("helide library not available; skipping instance normal test");
     return;
