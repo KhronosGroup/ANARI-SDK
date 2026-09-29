@@ -17,8 +17,27 @@ void PrimitiveSampler::commitParameters()
 {
   Sampler::commitParameters();
   m_array = getParamObject<Array1D>("array");
-  m_offset =
-      uint32_t(getParam<uint64_t>("offset", getParam<uint32_t>("offset", 0)));
+  // 'inOffset' is the spec name; 'offset' is helide's older name, still read
+  // so existing scenes keep rendering. A set 'inOffset' always wins, even if
+  // its type is unsupported.
+  m_offset = uint32_t(
+      hasParam("inOffset") ? readOffset("inOffset") : readOffset("offset"));
+}
+
+uint64_t PrimitiveSampler::readOffset(const std::string &name) const
+{
+  if (!hasParam(name))
+    return 0;
+  if (hasParam(name, ANARI_UINT64))
+    return getParam<uint64_t>(name, 0);
+  if (hasParam(name, ANARI_UINT32))
+    return getParam<uint32_t>(name, 0);
+  reportMessage(ANARI_SEVERITY_WARNING,
+      "ignoring primitive sampler parameter '%s' of type %s (expected %s)",
+      name.c_str(),
+      anari::toString(getParamDirect(name).type()),
+      anari::toString(ANARI_UINT64));
+  return 0;
 }
 
 float4 PrimitiveSampler::getSample(const Geometry &g,
