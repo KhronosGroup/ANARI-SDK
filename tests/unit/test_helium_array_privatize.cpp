@@ -1,0 +1,156 @@
+// Copyright 2026 The Khronos Group
+// SPDX-License-Identifier: Apache-2.0
+
+// Releasing the app's last reference to a shared array the device still uses
+// privatizes it: the array copies the app's data, so data() moves. BaseDevice
+// runs that release as device work (so it waits for a render in flight) and
+// the array notifies its observers, which re-finalize at the next flush and
+// pick up the new pointer.
+
+#include "catch.hpp"
+#include "helium_test_device.h"
+
+#include "helium/array/Array1D.h"
+#include "helium/utility/ChangeObserverPtr.h"
+
+#include <vector>
+
+namespace {
+
+using helium_test::TestDevice;
+
+// Observes an array and records its data() at each finalize().
+struct Observer : public helium::BaseObject
+{
+  Observer(helium::BaseGlobalDeviceState *s, helium::Array1D *a)
+      : BaseObject(ANARI_GEOMETRY, s), array(this, a)
+  {}
+
+  bool isValid() const override
+  {
+    return true;
+  }
+  bool getProperty(const std::string_view &,
+      ANARIDataType,
+      void *,
+      uint64_t,
+      uint32_t) override
+  {
+    return false;
+  }
+  void commitParameters() override {}
+  void finalize() override
+  {
+    data = array->data();
+  }
+
+  helium::ChangeObserverPtr<helium::Array1D> array;
+  const void *data{nullptr};
+};
+
+// Counts device work, noting whether 'watched' was privatized before and
+// after each run.
+struct CountingDevice : public TestDevice
+{
+  void runDeviceWork(const std::function<void()> &work) override
+  {
+    runs++;
+    privatizedBefore = watched && watched->wasPrivatized();
+    work();
+    privatizedAfter = watched && watched->wasPrivatized();
+  }
+
+  helium::Array1D *watched{nullptr};
+  int runs{0};
+  bool privatizedBefore{false};
+  bool privatizedAfter{false};
+};
+
+helium::Array1D *newSharedArray(
+    helium::BaseGlobalDeviceState *s, const std::vector<int> &appData)
+{
+  helium::Array1DMemoryDescriptor md;
+  md.appMemory = appData.data();
+  md.elementType = ANARI_INT32;
+  md.numItems = appData.size();
+  auto *array = new helium::Array1D(s, md);
+  array->commitParameters();
+  return array;
+}
+
+} // namespace
+
+SCENARIO(
+    "releasing a shared array the device uses privatizes it as device work",
+    "[helium_array_privatize]")
+{
+  auto *device = new CountingDevice;
+  auto *state = device->state();
+  std::vector<int> appData = {1, 2, 3, 4};
+  auto *array = newSharedArray(state, appData);
+  device->watched = array;
+
+  GIVEN("an object observing the array")
+  {
+    auto *observer = new Observer(state, array);
+    observer->markUpdated();
+    state->commitBuffer.addObjectToFinalize(observer);
+    state->commitBuffer.flush();
+    REQUIRE(observer->data == appData.data());
+
+    WHEN("the app releases its last reference to the array")
+    {
+      device->release((ANARIObject)array);
+
+      THEN("the array privatizes inside device work")
+      {
+        CHECK(device->runs == 1);
+        CHECK(!device->privatizedBefore);
+        CHECK(device->privatizedAfter);
+        CHECK(array->data() != appData.data());
+      }
+
+      THEN("the observer picks up the private copy at the next flush")
+      {
+        state->commitBuffer.flush();
+        CHECK(observer->data == array->data());
+        CHECK(observer->data != appData.data());
+        CHECK(((const int *)observer->data)[3] == 4);
+      }
+    }
+
+    WHEN("the app releases one of two references to the array")
+    {
+      device->retain((ANARIObject)array);
+      device->release((ANARIObject)array);
+
+      THEN("nothing is privatized or run as device work")
+      {
+        CHECK(device->runs == 0);
+        CHECK(array->data() == appData.data());
+      }
+
+      device->release((ANARIObject)array);
+    }
+
+    device->watched = nullptr;
+    observer->refDec(helium::RefType::PUBLIC);
+  }
+
+  GIVEN("no object using the array")
+  {
+    WHEN("the app releases it")
+    {
+      device->watched = nullptr;
+      device->release((ANARIObject)array);
+
+      THEN("it is deleted without device work")
+      {
+        CHECK(device->runs == 0);
+      }
+    }
+  }
+
+  state->commitBuffer.clear();
+  delete device;
+}

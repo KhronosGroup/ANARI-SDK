@@ -205,7 +205,14 @@ void BaseDevice::release(ANARIObject o)
     return;
   }
 
-  obj.refDec(RefType::PUBLIC);
+  // The last public release of an array the device still uses privatizes it
+  // (copies the app's data and moves data()), so run it as device work: after
+  // any render still reading the app's data, and never during a flush.
+  if (anari::isArray(obj.type()) && obj.useCount(RefType::PUBLIC) == 1
+      && obj.useCount(RefType::INTERNAL) > 0)
+    runDeviceWork([&]() { obj.refDec(RefType::PUBLIC); });
+  else
+    obj.refDec(RefType::PUBLIC);
 }
 
 void BaseDevice::retain(ANARIObject o)

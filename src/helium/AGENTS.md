@@ -114,6 +114,8 @@ void MyDevice::setParameter(ANARIObject o, const char *name, ANARIDataType t, co
 
 The host `Array` classes (SHARED/CAPTURED ownership) call `privatize()` when the app releases its public reference while the device still holds an internal one. Concrete device arrays that store GPU copies must override `privatize()` to handle this ownership transition.
 
+A privatized SHARED array's `data()` points at the private copy, so `Array` then marks its data modified and notifies its change observers, which re-finalize at the next flush (as after an unmap); objects must not cache `data()` across that. `BaseDevice::release()` runs this last public release inside `runDeviceWork()`, so it waits for a render in flight that may still read the app's memory.
+
 ### Status Reporting
 
 From any object:

@@ -212,8 +212,17 @@ void Array::initManagedMemory()
 void Array::on_NoPublicReferences()
 {
   reportMessage(ANARI_SEVERITY_DEBUG, "privatizing array");
-  if (!wasPrivatized() && ownership() != ArrayDataOwnership::MANAGED)
-    privatize();
+  if (wasPrivatized() || ownership() == ArrayDataOwnership::MANAGED)
+    return;
+
+  privatize();
+
+  // data() now points at the private copy: as for an unmap, observers must
+  // re-read it at the next flush instead of keeping the app's pointer.
+  if (wasPrivatized()) {
+    markDataModified();
+    notifyChangeObservers();
+  }
 }
 
 float4 readAttributeValue(const Array *arr, uint32_t i, const float4 &d)

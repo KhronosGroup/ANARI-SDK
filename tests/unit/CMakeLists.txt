@@ -8,6 +8,7 @@ project(anariUnitTests LANGUAGES CXX)
 add_executable(${PROJECT_NAME}
   catch_main.cpp
 
+  test_helide_array_privatize.cpp
   test_helide_geometry_bounds.cpp
   test_helide_image3d_sampler.cpp
   test_helide_instance.cpp
@@ -19,6 +20,7 @@ add_executable(${PROJECT_NAME}
   test_helide_wait_query.cpp
   test_helide_world_bounds.cpp
   test_helium_AnariAny.cpp
+  test_helium_array_privatize.cpp
   test_helium_array_sampling.cpp
   test_helium_commit_snapshot.cpp
   test_helium_concurrent_updates.cpp
@@ -35,13 +37,14 @@ add_executable(${PROJECT_NAME}
 # backed tests (commit-snapshot, helide sphere/curve bounds checks, instance
 # normals and id arrays, image3D, primitive and transform samplers,
 # transferFunction1D opacity, volume interval selection, volumes in instances,
-# WAIT queries while rendering, world bounds), which load helide and skip
-# themselves if absent.
+# WAIT queries while rendering, world bounds, released shared arrays), which
+# load helide and skip themselves if absent.
 target_link_libraries(${PROJECT_NAME} PRIVATE helium anari)
 find_package(Threads REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads)
 
 add_test(NAME unit_test::helium::AnariAny            COMMAND ${PROJECT_NAME} "[helium_AnariAny]"           )
+add_test(NAME unit_test::helium::ArrayPrivatize      COMMAND ${PROJECT_NAME} "[helium_array_privatize]"    )
 add_test(NAME unit_test::helium::ArraySampling       COMMAND ${PROJECT_NAME} "[helium_array_sampling]"     )
 add_test(NAME unit_test::helium::ParameterizedObject COMMAND ${PROJECT_NAME} "[helium_ParameterizedObject]")
 add_test(NAME unit_test::helium::RefCounted          COMMAND ${PROJECT_NAME} "[helium_RefCounted]"         )
@@ -52,6 +55,7 @@ add_test(NAME unit_test::helium::CommitSnapshot      COMMAND ${PROJECT_NAME} "[h
 add_test(NAME unit_test::helium::ConcurrentUpdates   COMMAND ${PROJECT_NAME} "[helium_concurrent_updates]" )
 add_test(NAME unit_test::helium::FrameCallback       COMMAND ${PROJECT_NAME} "[helium_frame_callback]"     )
 add_test(NAME unit_test::helium::WaitQuery           COMMAND ${PROJECT_NAME} "[helium_wait_query]"         )
+add_test(NAME unit_test::helide::ArrayPrivatize      COMMAND ${PROJECT_NAME} "[helide_array_privatize]"    )
 add_test(NAME unit_test::helide::GeometryBounds      COMMAND ${PROJECT_NAME} "[helide_geometry_bounds]"    )
 add_test(NAME unit_test::helide::Image3DSampler      COMMAND ${PROJECT_NAME} "[helide_image3d_sampler]"    )
 add_test(NAME unit_test::helide::InstanceNormals     COMMAND ${PROJECT_NAME} "[helide_instance]"           )
@@ -64,9 +68,11 @@ add_test(NAME unit_test::helide::VolumeInstances     COMMAND ${PROJECT_NAME} "[h
 add_test(NAME unit_test::helide::WaitQuery           COMMAND ${PROJECT_NAME} "[helide_wait_query]"         )
 add_test(NAME unit_test::helide::WorldBounds         COMMAND ${PROJECT_NAME} "[helide_world_bounds]"       )
 
-# A completion-callback or device-work regression hangs rather than fails.
+# A completion-callback or device-work regression hangs rather than fails
+# (as does privatizing an array as device work).
 set_tests_properties(unit_test::helium::FrameCallback
   unit_test::helium::WaitQuery unit_test::helide::WaitQuery
+  unit_test::helide::ArrayPrivatize
   PROPERTIES TIMEOUT 60)
 
 ## CTS conformance-harness catalog tests ##

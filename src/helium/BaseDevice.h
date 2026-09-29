@@ -123,7 +123,8 @@ struct BaseDevice : public anari::DeviceImpl,
   // thread, the query does not take a frame's object lock: an app thread
   // waiting on the frame holds it until the frame's queued work ends. A device
   // whose deviceGetProperty() flushes for ANARI_WAIT should run that flush
-  // through here too.
+  // through here too. release() also runs the app's last release of an array
+  // the device still uses this way, as it privatizes the array.
   virtual void runDeviceWork(const std::function<void()> &work);
 
   std::unique_ptr<BaseGlobalDeviceState> m_state;
