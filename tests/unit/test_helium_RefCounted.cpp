@@ -290,4 +290,70 @@ SCENARIO("helium::RefCounted interface", "[helium_RefCounted]")
   }
 }
 
+// From inside its no-references hooks, drops its last reference of the other
+// kind, as another thread's release could while a hook runs, and records
+// whether that destroyed the object before the hook returned.
+struct ReleasingObject : public helium::RefCounted
+{
+  bool &destroyed;
+  bool &destroyedInHook;
+  ReleasingObject(bool &d, bool &dh) : destroyed(d), destroyedInHook(dh) {}
+  ~ReleasingObject()
+  {
+    destroyed = true;
+  }
+
+ private:
+  void on_NoPublicReferences() override
+  {
+    dropAndRecord(RefType::INTERNAL);
+  }
+  void on_NoInternalReferences() override
+  {
+    dropAndRecord(RefType::PUBLIC);
+  }
+  void dropAndRecord(RefType type)
+  {
+    // Copied first: the object may be gone after refDec().
+    bool &d = destroyed;
+    bool &dh = destroyedInHook;
+    refDec(type);
+    dh = d;
+  }
+};
+
+SCENARIO("helium::RefCounted keeps an object alive through its hooks",
+    "[helium_RefCounted]")
+{
+  GIVEN("An object with one public and one internal reference")
+  {
+    bool destroyed = false;
+    bool destroyedInHook = false;
+    auto *obj = new ReleasingObject(destroyed, destroyedInHook);
+    obj->refInc(RefType::INTERNAL);
+
+    WHEN("The public reference goes, and its hook drops the internal one")
+    {
+      obj->refDec(RefType::PUBLIC);
+
+      THEN("The object is destroyed only after the hook returns")
+      {
+        CHECK_FALSE(destroyedInHook);
+        CHECK(destroyed);
+      }
+    }
+
+    WHEN("The internal reference goes, and its hook drops the public one")
+    {
+      obj->refDec(RefType::INTERNAL);
+
+      THEN("The object is destroyed only after the hook returns")
+      {
+        CHECK_FALSE(destroyedInHook);
+        CHECK(destroyed);
+      }
+    }
+  }
+}
+
 } // namespace

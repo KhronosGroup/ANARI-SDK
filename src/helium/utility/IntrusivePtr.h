@@ -33,7 +33,9 @@ enum RefType : std::uint64_t
  * renders).
  *   - INTERNAL (upper 32 bits): incremented/decremented by IntrusivePtr<T>.
  *     Keeps the object alive even after the application releases it.
- * The object is deleted only when both counts reach zero simultaneously.
+ * The object is deleted only when both counts reach zero simultaneously. A
+ * hook runs while the object holds one reference of the other kind for it, so
+ * the object outlives the hook even if other threads drop theirs meanwhile.
  * RefCounted objects are non-copyable and non-movable.
  */
 class RefCounted
@@ -75,17 +77,35 @@ inline void RefCounted::refDec(RefType type)
 {
   assert(type == RefType::PUBLIC || type == RefType::INTERNAL);
 
-  std::uint64_t prev = m_count.fetch_sub(type);
-  // if the previous value was type it has to be 0 now
+  const std::uint64_t mask =
+      type == RefType::PUBLIC ? PUBLIC_MASK : INTERNAL_MASK;
+  const RefType other =
+      type == RefType::PUBLIC ? RefType::INTERNAL : RefType::PUBLIC;
+
+  // Once this reference is gone, another thread may drop the last one and
+  // delete the object. So the last reference of one kind, while references of
+  // the other remain, is swapped for one of the other kind in the same atomic
+  // step, keeping the object alive through its hook; the hook sees one more
+  // reference of the other kind than the object had.
+  std::uint64_t prev = m_count.load();
+  std::uint64_t next = 0;
+  do {
+    next = (prev & mask) == type && prev != type ? prev - type + other
+                                                 : prev - type;
+  } while (!m_count.compare_exchange_weak(prev, next));
+
   if (prev == type) {
     delete this;
     return;
   }
+  if ((prev & mask) != type)
+    return;
 
-  if (type == RefType::PUBLIC && (prev & PUBLIC_MASK) == RefType::PUBLIC)
+  if (type == RefType::PUBLIC)
     on_NoPublicReferences();
-  if (type == RefType::INTERNAL && (prev & INTERNAL_MASK) == RefType::INTERNAL)
+  else
     on_NoInternalReferences();
+  refDec(other);
 }
 
 inline uint32_t RefCounted::useCount(RefType type) const
