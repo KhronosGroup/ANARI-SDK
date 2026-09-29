@@ -33,7 +33,7 @@ void Sphere::finalize()
     return;
   }
 
-  m_globalRadius = getParam<float>("radius", 0.01f);
+  m_globalRadius = getParam<float>("radius", 1.f);
 
   m_attributeIndex.clear();
   std::vector<uint32_t> indices;

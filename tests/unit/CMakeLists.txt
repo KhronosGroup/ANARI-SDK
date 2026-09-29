@@ -15,6 +15,7 @@ add_executable(${PROJECT_NAME}
   test_helide_instance.cpp
   test_helide_pixel_centres.cpp
   test_helide_primitive_sampler.cpp
+  test_helide_sphere_radius.cpp
   test_helide_tf1d_opacity.cpp
   test_helide_transform_sampler.cpp
   test_helide_volume_instances.cpp
@@ -43,9 +44,9 @@ add_executable(${PROJECT_NAME}
 # backed tests (commit-snapshot, helide sphere/curve bounds checks, instance
 # normals and id arrays, pixel-centre rays, image3D, primitive and transform
 # samplers, transferFunction1D opacity, volume interval selection, volumes in
-# instances, the volume sampling rate, WAIT queries while rendering, waits a
-# mapped array blocks, world bounds, released shared arrays, 1D array ranges),
-# which load helide and skip themselves if absent.
+# instances, the volume sampling rate, the sphere radius default, WAIT queries
+# while rendering, waits a mapped array blocks, world bounds, released shared
+# arrays, 1D array ranges), which load helide and skip themselves if absent.
 target_link_libraries(${PROJECT_NAME} PRIVATE helium anari)
 find_package(Threads REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads)
@@ -72,6 +73,7 @@ add_test(NAME unit_test::helide::InstanceNormals     COMMAND ${PROJECT_NAME} "[h
 add_test(NAME unit_test::helide::InstanceIdArray     COMMAND ${PROJECT_NAME} "[helide_instance_id]"        )
 add_test(NAME unit_test::helide::PixelCentres        COMMAND ${PROJECT_NAME} "[helide_pixel_centres]"      )
 add_test(NAME unit_test::helide::PrimitiveSampler    COMMAND ${PROJECT_NAME} "[helide_primitive_sampler]"  )
+add_test(NAME unit_test::helide::SphereRadius        COMMAND ${PROJECT_NAME} "[helide_sphere_radius]"      )
 add_test(NAME unit_test::helide::Tf1dOpacity         COMMAND ${PROJECT_NAME} "[helide_tf1d_opacity]"       )
 add_test(NAME unit_test::helide::TransformSampler    COMMAND ${PROJECT_NAME} "[helide_transform_sampler]"  )
 add_test(NAME unit_test::helide::VolumeInterval      COMMAND ${PROJECT_NAME} "[helide_volume_interval]"    )
