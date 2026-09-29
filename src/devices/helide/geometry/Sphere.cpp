@@ -96,7 +96,7 @@ float4 Sphere::getAttributeValue(const Attribute &attr, const Ray &ray) const
   const auto primID =
       m_attributeIndex.empty() ? ray.primID : m_attributeIndex[ray.primID];
 
-  return readAttributeValue(attributeArray, primID);
+  return attributeValueAt(attributeArray, primID);
 }
 
 } // namespace helide

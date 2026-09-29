@@ -286,7 +286,7 @@ void Renderer::shadeRay(PixelSample &retval,
       const float so = surface->getSurfaceOpacity(
           ray, inst->getUniformAttributes(ray.instArrayID));
       const float o = surface->adjustedAlpha(std::clamp(sc.w * so, 0.f, 1.f));
-      const float3 c = m_heatmap->valueAtLinear<float3>(o);
+      const float3 c = sampleLinear<float3>(*m_heatmap, o);
       const float3 fc = c * falloff;
       geometryColor = (0.8f * fc + 0.2f * c) * m_ambientRadiance;
     }

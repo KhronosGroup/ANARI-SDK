@@ -44,7 +44,7 @@ float4 PrimitiveSampler::getSample(const Geometry &g,
     const Ray &r,
     const UniformAttributeSet & /*instAttrV*/) const
 {
-  return m_array->readAsAttributeValue(uint32_t(r.primID + m_offset));
+  return attributeValueAt(*m_array, int32_t(r.primID + m_offset));
 }
 
 } // namespace helide

@@ -8,6 +8,7 @@ project(anariUnitTests LANGUAGES CXX)
 add_executable(${PROJECT_NAME}
   catch_main.cpp
 
+  test_helide_array_begin.cpp
   test_helide_array_privatize.cpp
   test_helide_geometry_bounds.cpp
   test_helide_image3d_sampler.cpp
@@ -41,8 +42,8 @@ add_executable(${PROJECT_NAME}
 # normals and id arrays, pixel-centre rays, image3D, primitive and transform
 # samplers, transferFunction1D opacity, volume interval selection, volumes in
 # instances, WAIT queries while rendering, waits a mapped array blocks, world
-# bounds, released shared arrays), which load helide and skip themselves if
-# absent.
+# bounds, released shared arrays, 1D array ranges), which load helide and skip
+# themselves if absent.
 target_link_libraries(${PROJECT_NAME} PRIVATE helium anari)
 find_package(Threads REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads)
@@ -60,6 +61,7 @@ add_test(NAME unit_test::helium::ConcurrentUpdates   COMMAND ${PROJECT_NAME} "[h
 add_test(NAME unit_test::helium::FrameCallback       COMMAND ${PROJECT_NAME} "[helium_frame_callback]"     )
 add_test(NAME unit_test::helium::ObjectArray         COMMAND ${PROJECT_NAME} "[helium_object_array]"       )
 add_test(NAME unit_test::helium::WaitQuery           COMMAND ${PROJECT_NAME} "[helium_wait_query]"         )
+add_test(NAME unit_test::helide::ArrayBegin          COMMAND ${PROJECT_NAME} "[helide_array_begin]"        )
 add_test(NAME unit_test::helide::ArrayPrivatize      COMMAND ${PROJECT_NAME} "[helide_array_privatize]"    )
 add_test(NAME unit_test::helide::GeometryBounds      COMMAND ${PROJECT_NAME} "[helide_geometry_bounds]"    )
 add_test(NAME unit_test::helide::Image3DSampler      COMMAND ${PROJECT_NAME} "[helide_image3d_sampler]"    )
@@ -76,12 +78,14 @@ add_test(NAME unit_test::helide::WaitQuery           COMMAND ${PROJECT_NAME} "[h
 add_test(NAME unit_test::helide::WorldBounds         COMMAND ${PROJECT_NAME} "[helide_world_bounds]"       )
 
 # A completion-callback or device-work regression hangs rather than fails
-# (as do privatizing an array as device work and a flush nested in a flush).
+# (as do privatizing an array as device work, a flush nested in a flush, and
+# re-rendering after a range-only array commit).
 set_tests_properties(unit_test::helium::FrameCallback
   unit_test::helium::ObjectArray
   unit_test::helium::ConcurrentUpdates
   unit_test::helium::WaitQuery unit_test::helide::WaitQuery
   unit_test::helide::WaitDeadlock unit_test::helide::ArrayPrivatize
+  unit_test::helide::ArrayBegin
   PROPERTIES TIMEOUT 60)
 
 ## CTS conformance-harness catalog tests ##

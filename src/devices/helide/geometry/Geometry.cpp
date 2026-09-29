@@ -82,7 +82,7 @@ float4 Geometry::getAttributeValue(const Attribute &attr, const Ray &ray) const
     return *a;
 
   const auto attrIdx = static_cast<int>(attr);
-  return readAttributeValue(m_primitiveAttr[attrIdx].ptr,
+  return attributeValueAt(m_primitiveAttr[attrIdx].ptr,
       ray.primID,
       m_uniformAttr[attrIdx].value_or(DEFAULT_ATTRIBUTE_VALUE));
 }

@@ -38,7 +38,7 @@ void Triangle::finalize()
       RTC_BUFFER_TYPE_VERTEX,
       0,
       RTC_FORMAT_FLOAT3,
-      m_vertexPosition->dataAs<float3>(),
+      m_vertexPosition->beginAs<float3>(),
       0,
       sizeof(float3),
       m_vertexPosition->size());
@@ -48,7 +48,7 @@ void Triangle::finalize()
         RTC_BUFFER_TYPE_INDEX,
         0,
         RTC_FORMAT_UINT3,
-        m_index->dataAs<uint3>(),
+        m_index->beginAs<uint3>(),
         0,
         sizeof(uint3),
         m_index->size());
@@ -78,12 +78,12 @@ float4 Triangle::getAttributeValue(const Attribute &attr, const Ray &ray) const
 
   const float3 uvw(1.0f - ray.u - ray.v, ray.u, ray.v);
 
-  auto idx = m_index ? *(m_index->dataAs<uint3>() + ray.primID)
+  auto idx = m_index ? m_index->beginAs<uint3>()[ray.primID]
                      : 3 * ray.primID + uint3(0, 1, 2);
 
-  auto a = readAttributeValue(attributeArray, idx.x);
-  auto b = readAttributeValue(attributeArray, idx.y);
-  auto c = readAttributeValue(attributeArray, idx.z);
+  auto a = attributeValueAt(attributeArray, idx.x);
+  auto b = attributeValueAt(attributeArray, idx.y);
+  auto c = attributeValueAt(attributeArray, idx.z);
 
   return uvw.x * a + uvw.y * b + uvw.z * c;
 }

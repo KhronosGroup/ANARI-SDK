@@ -116,8 +116,8 @@ float4 Curve::getAttributeValue(const Attribute &attr, const Ray &ray) const
 
   const auto idx = m_index ? m_segmentStarts[ray.primID] : ray.primID;
 
-  auto a = readAttributeValue(attributeArray, idx + 0);
-  auto b = readAttributeValue(attributeArray, idx + 1);
+  auto a = attributeValueAt(attributeArray, idx + 0);
+  auto b = attributeValueAt(attributeArray, idx + 1);
 
   return a + (b - a) * ray.u;
 }

@@ -124,17 +124,26 @@ inline void collectStatus(const void *userPtr,
     log->warnings.add(message);
 }
 
-// A spatial field filling the box ['lower', 'upper'] with the value 0.5.
-inline anari::SpatialField makeConstantField(
-    anari::Device d, const float3 &lower, const float3 &upper)
+// A spatial field of the 2x2x2 'voxels' (x fastest) at the corners of the box
+// ['lower', 'upper'].
+inline anari::SpatialField makeField(anari::Device d,
+    const std::vector<float> &voxels,
+    const float3 &lower,
+    const float3 &upper)
 {
-  const std::vector<float> data(8, 0.5f);
   auto field = anari::newObject<anari::SpatialField>(d, "structuredRegular");
-  anari::setParameterArray3D(d, field, "data", data.data(), 2, 2, 2);
+  anari::setParameterArray3D(d, field, "data", voxels.data(), 2, 2, 2);
   anari::setParameter(d, field, "origin", lower);
   anari::setParameter(d, field, "spacing", upper - lower);
   anari::commitParameters(d, field);
   return field;
+}
+
+// A spatial field filling the box ['lower', 'upper'] with the value 0.5.
+inline anari::SpatialField makeConstantField(
+    anari::Device d, const float3 &lower, const float3 &upper)
+{
+  return makeField(d, std::vector<float>(8, 0.5f), lower, upper);
 }
 
 // A translucent volume filling the box ['lower', 'upper'] with one color.

@@ -65,16 +65,16 @@ void Instance::finalize()
         anari::toString(ANARI_FLOAT32_MAT4));
     m_xfmArray = {};
   } else if (m_xfmArray) {
-    m_invXfmData.resize(m_xfmArray->totalSize());
+    m_invXfmData.resize(m_xfmArray->size());
     std::transform(m_xfmArray->beginAs<mat4>(),
         m_xfmArray->endAs<mat4>(),
         m_invXfmData.begin(),
         [](const mat4 &m) { return linalg::inverse(m); });
   }
-  if (m_xfmArray && m_idArray && m_idArray->totalSize() < numTransforms()) {
+  if (m_xfmArray && m_idArray && m_idArray->size() < numTransforms()) {
     reportMessage(ANARI_SEVERITY_WARNING,
         "'id' array has %zu elements, but 'transform' array has %u",
-        m_idArray->totalSize(),
+        m_idArray->size(),
         numTransforms());
     m_idArray = {};
   }
@@ -98,17 +98,17 @@ bool Instance::isValid() const
 
 uint32_t Instance::numTransforms() const
 {
-  return m_xfmArray ? uint32_t(m_xfmArray->totalSize()) : 1u;
+  return m_xfmArray ? uint32_t(m_xfmArray->size()) : 1u;
 }
 
 uint32_t Instance::id(uint32_t i) const
 {
-  return m_xfmArray && m_idArray ? *m_idArray->valueAt<uint32_t>(i) : m_id;
+  return m_xfmArray && m_idArray ? m_idArray->beginAs<uint32_t>()[i] : m_id;
 }
 
 const mat4 &Instance::xfm(uint32_t i) const
 {
-  return m_xfmArray ? *m_xfmArray->valueAt<mat4>(i) : m_xfm;
+  return m_xfmArray ? m_xfmArray->beginAs<mat4>()[i] : m_xfm;
 }
 
 const mat4 &Instance::invXfm(uint32_t i) const
@@ -121,15 +121,15 @@ UniformAttributeSet Instance::getUniformAttributes(uint32_t i) const
   UniformAttributeSet retval = m_uniformAttr;
 
   if (m_uniformAttrArrays.attribute0)
-    retval[0] = m_uniformAttrArrays.attribute0->readAsAttributeValue(i);
+    retval[0] = attributeValueAt(*m_uniformAttrArrays.attribute0, int32_t(i));
   if (m_uniformAttrArrays.attribute1)
-    retval[1] = m_uniformAttrArrays.attribute1->readAsAttributeValue(i);
+    retval[1] = attributeValueAt(*m_uniformAttrArrays.attribute1, int32_t(i));
   if (m_uniformAttrArrays.attribute2)
-    retval[2] = m_uniformAttrArrays.attribute2->readAsAttributeValue(i);
+    retval[2] = attributeValueAt(*m_uniformAttrArrays.attribute2, int32_t(i));
   if (m_uniformAttrArrays.attribute3)
-    retval[3] = m_uniformAttrArrays.attribute3->readAsAttributeValue(i);
+    retval[3] = attributeValueAt(*m_uniformAttrArrays.attribute3, int32_t(i));
   if (m_uniformAttrArrays.color)
-    retval[4] = m_uniformAttrArrays.color->readAsAttributeValue(i);
+    retval[4] = attributeValueAt(*m_uniformAttrArrays.color, int32_t(i));
 
   return retval;
 }
