@@ -61,7 +61,7 @@ void Instance::finalize()
   if (m_xfmArray && m_xfmArray->elementType() != ANARI_FLOAT32_MAT4) {
     reportMessage(ANARI_SEVERITY_WARNING,
         "'transform' array elements are %s, but need to be %s",
-        anari::toString(m_idArray->elementType()),
+        anari::toString(m_xfmArray->elementType()),
         anari::toString(ANARI_FLOAT32_MAT4));
     m_xfmArray = {};
   } else if (m_xfmArray) {
