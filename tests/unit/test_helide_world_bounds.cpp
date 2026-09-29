@@ -15,12 +15,6 @@ namespace {
 
 using namespace helide_test;
 
-struct Box
-{
-  float3 lower;
-  float3 upper;
-};
-
 // A group holding one volume filling ['lower', 'upper'].
 anari::Group makeVolumeGroup(anari::Device d,
     const float3 &lower,
@@ -60,13 +54,7 @@ Box worldBounds(anari::Device d, const std::vector<anari::Instance> &instances)
       d, world, "instance", instances.data(), instances.size());
   anari::commitParameters(d, world);
   Box bounds{float3(0.f), float3(0.f)};
-  REQUIRE(anariGetProperty(d,
-      world,
-      "bounds",
-      ANARI_FLOAT32_BOX3,
-      &bounds,
-      sizeof(bounds),
-      ANARI_WAIT));
+  REQUIRE(queryBounds(d, world, bounds));
   anari::release(d, world);
   for (auto i : instances)
     anari::release(d, i);

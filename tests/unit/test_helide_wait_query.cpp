@@ -18,12 +18,6 @@ namespace {
 
 using namespace helide_test;
 
-struct Box
-{
-  float3 lower;
-  float3 upper;
-};
-
 constexpr float kRadius = 0.5f;
 
 // Moves 'sphere's single sphere to 'center' and commits it.
@@ -92,13 +86,7 @@ SCENARIO("helide answers WAIT bounds queries while another thread renders",
         const float3 center(float(i % 7), float(i % 3), 0.f);
         moveSphere(d, sphere, center);
         Box bounds{float3(0.f), float3(0.f)};
-        REQUIRE(anariGetProperty(d,
-            world,
-            "bounds",
-            ANARI_FLOAT32_BOX3,
-            &bounds,
-            sizeof(bounds),
-            ANARI_WAIT));
+        REQUIRE(queryBounds(d, world, bounds));
         for (int a = 0; a < 3; a++) {
           if (std::abs(bounds.lower[a] - (center[a] - kRadius)) > 1e-4f
               || std::abs(bounds.upper[a] - (center[a] + kRadius)) > 1e-4f)

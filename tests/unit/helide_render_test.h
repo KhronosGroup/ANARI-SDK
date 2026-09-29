@@ -118,6 +118,25 @@ inline anari::Volume makeVolume(anari::Device d,
   return volume;
 }
 
+// An axis-aligned box, laid out as ANARI_FLOAT32_BOX3.
+struct Box
+{
+  float3 lower;
+  float3 upper;
+};
+
+// Queries 'world's "bounds" with ANARI_WAIT into 'bounds'; true if found.
+inline bool queryBounds(anari::Device d, anari::World world, Box &bounds)
+{
+  return anariGetProperty(d,
+      world,
+      "bounds",
+      ANARI_FLOAT32_BOX3,
+      &bounds,
+      sizeof(bounds),
+      ANARI_WAIT);
+}
+
 // The color, depth, objectId and instanceId channels of one rendered frame.
 struct RenderResult
 {
