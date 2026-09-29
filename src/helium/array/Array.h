@@ -87,6 +87,9 @@ struct Array : public BaseArray
   ANARIDataType elementType() const;
   ArrayDataOwnership ownership() const;
 
+  // Storage accessors: the start of the whole buffer (totalCapacity()
+  // elements). For an Array1D the elements are a [begin, end) window of it, so
+  // read those through the element accessors below or Array1D::begin().
   const void *data() const;
 
   template <typename T>
@@ -95,6 +98,9 @@ struct Array : public BaseArray
   virtual size_t totalSize() const = 0;
   virtual size_t totalCapacity() const;
 
+  // Element accessors: read the totalSize() elements starting at
+  // elementsBegin(), i.e. from 'begin' for an Array1D and from data()
+  // otherwise, whether called through Array or a derived type.
   template <typename T>
   const T *valueAt(size_t i) const;
 
@@ -125,6 +131,13 @@ struct Array : public BaseArray
 
  protected:
   virtual void privatize() override = 0;
+
+  // First element read by the element accessors: data() unless a subclass
+  // exposes only a sub-range of its buffer (Array1D returns begin()).
+  virtual const void *elementsBegin() const;
+
+  template <typename T>
+  const T *elementsBeginAs() const;
 
   void makePrivatizedCopy(size_t numElements);
   void freeAppMemory();
@@ -188,15 +201,22 @@ inline const T *Array::dataAs() const
 }
 
 template <typename T>
+inline const T *Array::elementsBeginAs() const
+{
+  throwIfDifferentElementType<T>();
+  return (const T *)elementsBegin();
+}
+
+template <typename T>
 inline const T *Array::valueAt(size_t i) const
 {
-  return &dataAs<T>()[i];
+  return &elementsBeginAs<T>()[i];
 }
 
 template <typename T>
 inline T Array::valueAtLinear(float in) const
 {
-  const T *data = dataAs<T>();
+  const T *data = elementsBeginAs<T>();
   const auto i = getInterpolant(in, totalSize(), false);
   // At in == 1 (and for any 'in' when size is 1) 'upper' is one past the end
   // with a zero weight; clamp it so the read stays in bounds.
@@ -207,7 +227,7 @@ inline T Array::valueAtLinear(float in) const
 template <typename T>
 inline T Array::valueAtClosest(float in) const
 {
-  const T *data = dataAs<T>();
+  const T *data = elementsBeginAs<T>();
   const auto i = getInterpolant(in, totalSize(), false);
   return i.frac <= 0.5f ? data[i.lower] : data[i.upper];
 }

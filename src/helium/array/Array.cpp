@@ -94,7 +94,12 @@ size_t Array::totalCapacity() const
 float4 Array::readAsAttributeValue(int32_t i, WrapMode wrap) const
 {
   const auto idx = calculateWrapIndex(i, totalSize(), wrap);
-  return readAsAttributeValueFlat(data(), elementType(), idx);
+  return readAsAttributeValueFlat(elementsBegin(), elementType(), idx);
+}
+
+const void *Array::elementsBegin() const
+{
+  return data();
 }
 
 void *Array::map()

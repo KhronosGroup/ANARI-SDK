@@ -23,6 +23,7 @@ add_executable(${PROJECT_NAME}
   test_helide_wait_query.cpp
   test_helide_world_bounds.cpp
   test_helium_AnariAny.cpp
+  test_helium_array1d_begin.cpp
   test_helium_array_privatize.cpp
   test_helium_array_sampling.cpp
   test_helium_commit_snapshot.cpp
@@ -49,6 +50,7 @@ find_package(Threads REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads)
 
 add_test(NAME unit_test::helium::AnariAny            COMMAND ${PROJECT_NAME} "[helium_AnariAny]"           )
+add_test(NAME unit_test::helium::Array1DBegin        COMMAND ${PROJECT_NAME} "[helium_array1d_begin]"      )
 add_test(NAME unit_test::helium::ArrayPrivatize      COMMAND ${PROJECT_NAME} "[helium_array_privatize]"    )
 add_test(NAME unit_test::helium::ArraySampling       COMMAND ${PROJECT_NAME} "[helium_array_sampling]"     )
 add_test(NAME unit_test::helium::ParameterizedObject COMMAND ${PROJECT_NAME} "[helium_ParameterizedObject]")

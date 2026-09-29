@@ -10,7 +10,6 @@
 #include "catch.hpp"
 #include "helium_test_device.h"
 
-#include "anari/anari_cpp/Traits.h"
 #include "helium/array/Array1D.h"
 #include "helium/utility/ChangeObserverPtr.h"
 
@@ -20,6 +19,7 @@
 
 namespace {
 
+using helium_test::newSharedArray;
 using helium_test::TestDevice;
 
 // Observes an array and records its data() at each finalize().
@@ -68,19 +68,6 @@ struct CountingDevice : public TestDevice
   bool privatizedBefore{false};
   bool privatizedAfter{false};
 };
-
-template <typename T>
-helium::Array1D *newSharedArray(
-    helium::BaseGlobalDeviceState *s, const std::vector<T> &appData)
-{
-  helium::Array1DMemoryDescriptor md;
-  md.appMemory = appData.data();
-  md.elementType = anari::ANARITypeFor<T>::value;
-  md.numItems = appData.size();
-  auto *array = new helium::Array1D(s, md);
-  array->commitParameters();
-  return array;
-}
 
 } // namespace
 

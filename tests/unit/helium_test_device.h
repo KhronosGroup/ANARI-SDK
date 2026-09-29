@@ -7,10 +7,13 @@
 
 #pragma once
 
+#include "anari/anari_cpp/Traits.h"
 #include "helium/BaseDevice.h"
 #include "helium/BaseObject.h"
+#include "helium/array/Array1D.h"
 // std
 #include <memory>
+#include <vector>
 
 namespace helium_test {
 
@@ -147,5 +150,20 @@ struct StubObject : public helium::BaseObject
   void commitParameters() override {}
   void finalize() override {}
 };
+
+// A committed Array1D sharing 'appData' (which must outlive it), holding one
+// public reference.
+template <typename T>
+helium::Array1D *newSharedArray(
+    helium::BaseGlobalDeviceState *s, const std::vector<T> &appData)
+{
+  helium::Array1DMemoryDescriptor md;
+  md.appMemory = appData.data();
+  md.elementType = anari::ANARITypeFor<T>::value;
+  md.numItems = appData.size();
+  auto *array = new helium::Array1D(s, md);
+  array->commitParameters();
+  return array;
+}
 
 } // namespace helium_test

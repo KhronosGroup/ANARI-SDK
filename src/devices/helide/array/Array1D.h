@@ -15,10 +15,12 @@ namespace helide {
 using Array1DMemoryDescriptor = helium::Array1DMemoryDescriptor;
 using Array1D = helium::Array1D;
 
-// A 1D array's elements are [begin, end) of its buffer. helium's data(),
-// dataAs(), valueAt(), readAsAttributeValue(), valueAtLinear() and
-// valueAtClosest() start at the buffer's first element instead, so helide
-// reads 1D arrays only through beginAs()/size() and the helpers below.
+// A 1D array's elements are [begin, end) of its buffer; helium's data() and
+// dataAs() are the start of the whole buffer instead. helide reads 1D arrays
+// only through beginAs()/size() and the helpers below, which offset by
+// 'begin' themselves. (helium's element accessors valueAt(),
+// readAsAttributeValue(), valueAtLinear() and valueAtClosest() also read
+// [begin, end) and would give the same results.)
 
 // Element 'i' of 'a', counted from its 'begin', as an attribute value (see
 // helium::readAsAttributeValueFlat()); 'i' outside [0, size()) is mapped into
