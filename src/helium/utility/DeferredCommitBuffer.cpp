@@ -83,7 +83,10 @@ void DeferredCommitBuffer::clear()
 
 bool DeferredCommitBuffer::empty() const
 {
-  std::lock_guard<std::recursive_mutex> guard(m_flushMutex);
+  // m_flushMutex makes flush() wait out a flush running on another thread;
+  // m_swapMutex guards the staging buffers against a concurrent add.
+  std::lock_guard<std::recursive_mutex> flushGuard(m_flushMutex);
+  std::lock_guard<std::recursive_mutex> swapGuard(m_swapMutex);
   return m_commitBufferStaging.empty() && m_finalizationBufferStaging.empty();
 }
 

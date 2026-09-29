@@ -229,3 +229,28 @@ SCENARIO("a commit issued while the flush commits the same object is kept",
   state.commitBuffer.clear();
   observer->refDec(helium::RefType::PUBLIC);
 }
+
+SCENARIO("commits added while another thread flushes are all applied",
+    "[helium_concurrent_updates]")
+{
+  // flush() checks the staging buffers before taking them; that check must
+  // not race with a concurrent add (TSan reports it if it does).
+  helium::BaseGlobalDeviceState state(nullptr);
+  auto *observer = new Observer(&state);
+
+  std::atomic<bool> stop{false};
+  std::thread flusher([&] {
+    while (!stop)
+      state.commitBuffer.flush();
+  });
+  for (int i = 1; i <= 1000; i++)
+    commit(state, observer, i);
+  stop = true;
+  flusher.join();
+
+  state.commitBuffer.flush();
+  REQUIRE(observer->committedValue == 1000);
+
+  state.commitBuffer.clear();
+  observer->refDec(helium::RefType::PUBLIC);
+}
