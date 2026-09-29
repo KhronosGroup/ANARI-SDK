@@ -119,7 +119,11 @@ struct BaseDevice : public anari::DeviceImpl,
   // object). The default runs 'work' on the calling thread. A device that
   // flushes or renders on a worker thread overrides this to run 'work' there,
   // after the work already queued, and must run it directly when called on
-  // that worker (e.g. from a completion or status callback).
+  // that worker (e.g. from a completion or status callback). Run on another
+  // thread, the query does not take a frame's object lock: an app thread
+  // waiting on the frame holds it until the frame's queued work ends. A device
+  // whose deviceGetProperty() flushes for ANARI_WAIT should run that flush
+  // through here too.
   virtual void runDeviceWork(const std::function<void()> &work);
 
   std::unique_ptr<BaseGlobalDeviceState> m_state;

@@ -183,9 +183,9 @@ void Frame::renderFrame()
       }
     });
 
-    // End the frame before the callback: it may map arrays, which waits for
-    // the frame to end, query the world, which takes its lock, and it should
-    // see this frame's duration.
+    // Release the world and end the frame before the callback, which may
+    // query the world (taking its lock) or map arrays (waiting for the frame
+    // to end), and should see this frame's duration.
     worldLock.unlock();
     state->renderingSemaphore.frameEnd();
 
