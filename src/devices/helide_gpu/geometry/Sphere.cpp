@@ -32,7 +32,7 @@ void Sphere::commitParameters()
 {
   m_positions = getParamObject<Array1D>("vertex.position");
   m_radii = getParamObject<Array1D>("vertex.radius");
-  m_uniformRadius = getParam<float>("radius", 0.01f);
+  m_uniformRadius = getParam<float>("radius", 1.f);
 
   // Attribute slot 0 = color, slots 1-4 = attribute0..3
   m_vertexAttr[0] = getParamObject<Array1D>("vertex.color");
