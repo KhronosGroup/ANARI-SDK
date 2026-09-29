@@ -11,6 +11,21 @@
 
 namespace helium {
 
+// Whether releasing 'obj' drops its last public reference while the device
+// still uses it, making an array privatize. Of the host arrays, only a shared
+// one not yet privatized copies the app's data; managed and captured memory
+// stay put.
+static bool releasePrivatizes(const BaseObject &obj)
+{
+  if (!anari::isArray(obj.type()) || obj.useCount(RefType::PUBLIC) != 1
+      || obj.useCount(RefType::INTERNAL) == 0)
+    return false;
+  auto *array = dynamic_cast<const Array *>(&obj);
+  return !array
+      || (array->ownership() == ArrayDataOwnership::SHARED
+          && !array->wasPrivatized());
+}
+
 // Data Arrays ////////////////////////////////////////////////////////////////
 
 void *BaseDevice::mapArray(ANARIArray a)
@@ -206,10 +221,9 @@ void BaseDevice::release(ANARIObject o)
   }
 
   // The last public release of an array the device still uses privatizes it
-  // (copies the app's data and moves data()), so run it as device work: after
-  // any render still reading the app's data, and never during a flush.
-  if (anari::isArray(obj.type()) && obj.useCount(RefType::PUBLIC) == 1
-      && obj.useCount(RefType::INTERNAL) > 0)
+  // (copies the app's data and moves data()), so run it as device work, after
+  // any render still reading the app's data.
+  if (releasePrivatizes(obj))
     runDeviceWork([&]() { obj.refDec(RefType::PUBLIC); });
   else
     obj.refDec(RefType::PUBLIC);

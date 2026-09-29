@@ -154,3 +154,32 @@ SCENARIO(
   state->commitBuffer.clear();
   delete device;
 }
+
+SCENARIO("releasing a managed array the device uses runs no device work",
+    "[helium_array_privatize]")
+{
+  auto *device = new CountingDevice;
+  auto *state = device->state();
+  helium::Array1DMemoryDescriptor md;
+  md.elementType = ANARI_INT32;
+  md.numItems = 4;
+  auto *array = new helium::Array1D(state, md);
+  array->commitParameters();
+  auto *observer = new Observer(state, array);
+
+  WHEN("the app releases its last reference to the array")
+  {
+    const void *data = array->data();
+    device->release((ANARIObject)array);
+
+    THEN("its memory, already helium's, is kept without device work")
+    {
+      CHECK(device->runs == 0);
+      CHECK(array->data() == data);
+    }
+  }
+
+  observer->refDec(helium::RefType::PUBLIC);
+  state->commitBuffer.clear();
+  delete device;
+}

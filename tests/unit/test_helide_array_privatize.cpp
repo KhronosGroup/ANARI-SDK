@@ -13,8 +13,8 @@
 #include "helide_render_test.h"
 
 // std
+#include <algorithm>
 #include <memory>
-#include <vector>
 
 namespace {
 
@@ -56,7 +56,7 @@ TriangleWorld makeTriangleWorld(anari::Device d, const float3 *vertices)
 }
 
 // Moves the triangle in 'vertices' out of view.
-void scribble(float3 *vertices)
+void moveOutOfView(float3 *vertices)
 {
   for (int i = 0; i < 3; i++)
     vertices[i] = float3(100.f, 100.f, 100.f + i);
@@ -65,7 +65,7 @@ void scribble(float3 *vertices)
 // Changes 'surface' (sets its default 'visible' explicitly) and commits it,
 // which makes helide rebuild its Embree scenes from the geometry buffers at the
 // next render.
-void recommit(anari::Device d, anari::Surface surface)
+void forceSceneRebuild(anari::Device d, anari::Surface surface)
 {
   anari::setParameter(d, surface, "visible", true);
   anari::commitParameters(d, surface);
@@ -92,11 +92,11 @@ SCENARIO("helide keeps rendering a shared array the app released",
   GIVEN("the app releases the vertex array and overwrites its buffer")
   {
     anari::release(d, positions);
-    scribble(vertices.get());
+    moveOutOfView(vertices.get());
 
     THEN("the next render, after a scene rebuild, is unchanged")
     {
-      recommit(d, surface);
+      forceSceneRebuild(d, surface);
       checkSameImage(renderChannels(d, world), expected);
     }
   }
@@ -104,12 +104,12 @@ SCENARIO("helide keeps rendering a shared array the app released",
   GIVEN("the app releases the vertex array, overwrites and frees its buffer")
   {
     anari::release(d, positions);
-    scribble(vertices.get());
+    moveOutOfView(vertices.get());
     vertices.reset();
 
     THEN("the next render, after a scene rebuild, is unchanged")
     {
-      recommit(d, surface);
+      forceSceneRebuild(d, surface);
       checkSameImage(renderChannels(d, world), expected);
     }
   }
@@ -119,13 +119,13 @@ SCENARIO("helide keeps rendering a shared array the app released",
     auto frame = newFrame(d, world);
     anari::render(d, frame);
     anari::release(d, positions);
-    scribble(vertices.get());
+    moveOutOfView(vertices.get());
     vertices.reset();
 
     THEN("the in-flight render and the next render are unchanged")
     {
       checkSameImage(readChannels(d, frame), expected);
-      recommit(d, surface);
+      forceSceneRebuild(d, surface);
       anari::render(d, frame);
       checkSameImage(readChannels(d, frame), expected);
     }
