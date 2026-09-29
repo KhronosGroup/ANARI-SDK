@@ -278,7 +278,7 @@ void Renderer::shadeRay(PixelSample &retval,
       const Instance *inst = w.instanceFromRay(ray);
       const Surface *surface = w.surfaceFromRay(ray);
 
-      const auto n = linalg::mul(inst->xfmInvRot(), ray.Ng);
+      const auto n = linalg::mul(inst->xfmNormal(ray.instArrayID), ray.Ng);
       const auto falloff =
           std::abs(linalg::dot(-ray.dir, linalg::normalize(n)));
       const float4 sc = surface->getSurfaceColor(
@@ -297,7 +297,7 @@ void Renderer::shadeRay(PixelSample &retval,
       const Instance *inst = w.instanceFromRay(ray);
       const Surface *surface = w.surfaceFromRay(ray);
 
-      const auto n = linalg::mul(inst->xfmInvRot(ray.instArrayID), ray.Ng);
+      const auto n = linalg::mul(inst->xfmNormal(ray.instArrayID), ray.Ng);
       const auto falloff =
           std::abs(linalg::dot(-ray.dir, linalg::normalize(n)));
       const float4 c = surface->getSurfaceColor(
