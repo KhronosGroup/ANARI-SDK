@@ -115,9 +115,12 @@ void World::intersectVolumes(VolumeRay &ray) const
   const auto &insts = instances();
   for (uint32_t i = 0; i < insts.size(); i++) {
     const auto *inst = insts[i];
-    inst->group()->intersectVolumes(ray, inst->invXfm(i));
-    if (ray.volume)
-      ray.instID = i;
+    for (uint32_t j = 0; j < inst->numTransforms(); j++) {
+      if (inst->group()->intersectVolumes(ray, inst->invXfm(j))) {
+        ray.instID = i;
+        ray.instArrayID = j;
+      }
+    }
   }
 }
 

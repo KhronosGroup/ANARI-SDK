@@ -74,8 +74,9 @@ const std::vector<Volume *> &Group::volumes() const
   return m_volumes;
 }
 
-void Group::intersectVolumes(VolumeRay &ray, const mat4 &invMat) const
+bool Group::intersectVolumes(VolumeRay &ray, const mat4 &invMat) const
 {
+  bool hit = false;
   const float3 org = xfmPoint(invMat, ray.org);
   const float3 dir = xfmVec(invMat, ray.dir);
 
@@ -98,8 +99,11 @@ void Group::intersectVolumes(VolumeRay &ray, const mat4 &invMat) const
       ray.t = lt;
       ray.volume = v;
       ray.invXfm = invMat;
+      hit = true;
     }
   }
+
+  return hit;
 }
 
 RTCScene Group::embreeScene() const
