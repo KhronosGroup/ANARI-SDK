@@ -298,6 +298,67 @@ void mapFromCallback(const void *userPtr, ANARIDevice d, ANARIFrame f)
   r.ready = anari::isReady(d, f);
 }
 
+// What a helide completion callback observed mapping an array, and the frame
+// duration it read.
+struct ArrayCallbackRecord
+{
+  anari::Array1D array{nullptr};
+  bool mapped{false};
+  float duration{-1.f};
+};
+
+void mapArrayFromCallback(const void *userPtr, ANARIDevice d, ANARIFrame f)
+{
+  auto &r = *(ArrayCallbackRecord *)userPtr;
+  auto *values = anari::map<float>(d, r.array);
+  r.mapped = values != nullptr;
+  if (values)
+    values[0] = 1.f;
+  anari::unmap(d, r.array);
+  anari::getProperty(d, f, "duration", r.duration, ANARI_NO_WAIT);
+}
+
+// A 4x4 helide frame of an empty world with the given renderer 'background',
+// which calls 'callback' with 'userPtr' when it completes.
+anari::Frame newCallbackFrame(anari::Device d,
+    ANARIFrameCompletionCallback callback,
+    void *userPtr,
+    const anari::math::float4 &background = anari::math::float4(0.f))
+{
+  auto world = anari::newObject<anari::World>(d);
+  anari::commitParameters(d, world);
+  auto camera = anari::newObject<anari::Camera>(d, "perspective");
+  anari::commitParameters(d, camera);
+  auto renderer = anari::newObject<anari::Renderer>(d, "default");
+  anari::setParameter(d, renderer, "background", background);
+  anari::commitParameters(d, renderer);
+
+  auto frame = anari::newObject<anari::Frame>(d);
+  anari::setParameter(d, frame, "size", anari::math::uint2(4, 4));
+  anari::setParameter(d, frame, "channel.color", ANARI_FLOAT32_VEC4);
+  anari::setAndReleaseParameter(d, frame, "world", world);
+  anari::setAndReleaseParameter(d, frame, "camera", camera);
+  anari::setAndReleaseParameter(d, frame, "renderer", renderer);
+  anari::setParameter(d, frame, "frameCompletionCallback", callback);
+  anari::setParameter(d, frame, "frameCompletionCallbackUserData", userPtr);
+  anari::commitParameters(d, frame);
+  return frame;
+}
+
+// Renders 'frame' and waits for it on another thread, so that a deadlocked
+// callback fails the test rather than hanging it; true if the wait returned.
+bool renderAndWait(anari::Device d, anari::Frame frame)
+{
+  anari::render(d, frame);
+  std::promise<void> waited;
+  auto waitResult = waited.get_future();
+  std::thread([d, frame, p = std::move(waited)]() mutable {
+    anari::wait(d, frame);
+    p.set_value();
+  }).detach();
+  return waitResult.wait_for(10s) == std::future_status::ready;
+}
+
 } // namespace
 
 SCENARIO("a completion callback can call into the device on its own frame",
@@ -363,47 +424,44 @@ SCENARIO("a helide completion callback can map its frame while the app waits",
   anari::Device d = anari::newDevice(lib, "default");
   auto *record = new HelideRecord;
   const anari::math::float4 background(0.25f, 0.5f, 0.75f, 1.f);
+  auto frame = newCallbackFrame(d, mapFromCallback, record, background);
 
-  auto world = anari::newObject<anari::World>(d);
-  anari::commitParameters(d, world);
-  auto camera = anari::newObject<anari::Camera>(d, "perspective");
-  anari::commitParameters(d, camera);
-  auto renderer = anari::newObject<anari::Renderer>(d, "default");
-  anari::setParameter(d, renderer, "background", background);
-  anari::commitParameters(d, renderer);
-
-  auto frame = anari::newObject<anari::Frame>(d);
-  anari::setParameter(d, frame, "size", anari::math::uint2(4, 4));
-  anari::setParameter(d, frame, "channel.color", ANARI_FLOAT32_VEC4);
-  anari::setParameter(d, frame, "world", world);
-  anari::setParameter(d, frame, "camera", camera);
-  anari::setParameter(d, frame, "renderer", renderer);
-  anari::setParameter(d,
-      frame,
-      "frameCompletionCallback",
-      (ANARIFrameCompletionCallback)mapFromCallback);
-  anari::setParameter(
-      d, frame, "frameCompletionCallbackUserData", (void *)record);
-  anari::commitParameters(d, frame);
-
-  anari::render(d, frame);
-  std::promise<void> waited;
-  auto waitResult = waited.get_future();
-  std::thread([d, frame, p = std::move(waited)]() mutable {
-    anari::wait(d, frame);
-    p.set_value();
-  }).detach();
-
-  REQUIRE(waitResult.wait_for(10s) == std::future_status::ready);
+  REQUIRE(renderAndWait(d, frame));
   CHECK(record->ready == 1);
   CHECK(record->pixel.x == background.x);
   CHECK(record->pixel.y == background.y);
   CHECK(record->pixel.z == background.z);
 
   anari::release(d, frame);
-  anari::release(d, renderer);
-  anari::release(d, camera);
-  anari::release(d, world);
+  anari::release(d, d);
+  anari::unloadLibrary(lib);
+  delete record;
+}
+
+SCENARIO(
+    "a helide completion callback can map an array and sees its frame's "
+    "duration",
+    "[helide][helium_frame_callback]")
+{
+  anari::Library lib = anari::loadLibrary("helide");
+  if (lib == nullptr) {
+    WARN("helide library not available; skipping helide callback test");
+    return;
+  }
+
+  // Leaked on purpose: if the callback deadlocks, its thread still uses them.
+  anari::Device d = anari::newDevice(lib, "default");
+  auto *record = new ArrayCallbackRecord;
+  record->array = anari::newArray1D(d, ANARI_FLOAT32, 4);
+  auto frame = newCallbackFrame(d, mapArrayFromCallback, record);
+
+  REQUIRE(renderAndWait(d, frame));
+  CHECK(record->mapped);
+  // The duration of this frame, not the previous frame's (0).
+  CHECK(record->duration > 0.f);
+
+  anari::release(d, frame);
+  anari::release(d, record->array);
   anari::release(d, d);
   anari::unloadLibrary(lib);
   delete record;

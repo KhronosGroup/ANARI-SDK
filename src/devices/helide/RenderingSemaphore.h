@@ -52,6 +52,7 @@ inline void RenderingSemaphore::frameStart()
 
 inline void RenderingSemaphore::frameEnd()
 {
+  std::lock_guard<std::mutex> lock(m_mutex);
   m_frameInFlight = false;
   m_conditionFrame.notify_all();
 }

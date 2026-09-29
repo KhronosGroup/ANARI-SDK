@@ -183,12 +183,14 @@ void Frame::renderFrame()
       }
     });
 
-    invokeCompletionCallback(m_callback, m_callbackUserPtr, state->anariDevice);
-
+    // End the frame before the callback: it may map arrays, which waits for
+    // the frame to end, and it should see this frame's duration.
     state->renderingSemaphore.frameEnd();
 
     auto end = std::chrono::steady_clock::now();
     m_duration = std::chrono::duration<float>(end - start).count();
+
+    invokeCompletionCallback(m_callback, m_callbackUserPtr, state->anariDevice);
   });
 }
 

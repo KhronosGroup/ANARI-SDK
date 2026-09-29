@@ -52,6 +52,9 @@ add_test(NAME unit_test::helide::VolumeInterval      COMMAND ${PROJECT_NAME} "[h
 add_test(NAME unit_test::helide::VolumeInstances     COMMAND ${PROJECT_NAME} "[helide_volume_instances]"   )
 add_test(NAME unit_test::helide::WorldBounds         COMMAND ${PROJECT_NAME} "[helide_world_bounds]"       )
 
+# A completion-callback regression hangs rather than fails.
+set_tests_properties(unit_test::helium::FrameCallback PROPERTIES TIMEOUT 60)
+
 ## CTS conformance-harness catalog tests ##
 
 add_executable(anariCatalogTests
