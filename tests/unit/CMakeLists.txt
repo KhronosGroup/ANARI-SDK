@@ -10,6 +10,7 @@ add_executable(${PROJECT_NAME}
 
   test_helide_array_begin.cpp
   test_helide_array_privatize.cpp
+  test_helide_frame_release.cpp
   test_helide_geometry_bounds.cpp
   test_helide_image3d_sampler.cpp
   test_helide_instance.cpp
@@ -46,7 +47,8 @@ add_executable(${PROJECT_NAME}
 # samplers, transferFunction1D opacity, volume interval selection, volumes in
 # instances, the volume sampling rate, the sphere radius default, WAIT queries
 # while rendering, waits a mapped array blocks, world bounds, released shared
-# arrays, 1D array ranges), which load helide and skip themselves if absent.
+# arrays, 1D array ranges, frames released without waiting), which load helide
+# and skip themselves if absent.
 target_link_libraries(${PROJECT_NAME} PRIVATE helium anari)
 find_package(Threads REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads)
@@ -67,6 +69,7 @@ add_test(NAME unit_test::helium::ObjectArray         COMMAND ${PROJECT_NAME} "[h
 add_test(NAME unit_test::helium::WaitQuery           COMMAND ${PROJECT_NAME} "[helium_wait_query]"         )
 add_test(NAME unit_test::helide::ArrayBegin          COMMAND ${PROJECT_NAME} "[helide_array_begin]"        )
 add_test(NAME unit_test::helide::ArrayPrivatize      COMMAND ${PROJECT_NAME} "[helide_array_privatize]"    )
+add_test(NAME unit_test::helide::FrameRelease        COMMAND ${PROJECT_NAME} "[helide_frame_release]"      )
 add_test(NAME unit_test::helide::GeometryBounds      COMMAND ${PROJECT_NAME} "[helide_geometry_bounds]"    )
 add_test(NAME unit_test::helide::Image3DSampler      COMMAND ${PROJECT_NAME} "[helide_image3d_sampler]"    )
 add_test(NAME unit_test::helide::InstanceNormals     COMMAND ${PROJECT_NAME} "[helide_instance]"           )
@@ -86,13 +89,14 @@ add_test(NAME unit_test::helide::WorldBounds         COMMAND ${PROJECT_NAME} "[h
 # A completion-callback or device-work regression hangs rather than fails
 # (as do privatizing an array as device work, a flush nested in a flush, and
 # re-rendering after a range-only array commit, and ray marching volumes with a
-# negative sampling rate).
+# negative sampling rate, and polling a frame whose render never ends).
 set_tests_properties(unit_test::helium::FrameCallback
   unit_test::helium::ObjectArray
   unit_test::helium::ConcurrentUpdates
   unit_test::helium::WaitQuery unit_test::helide::WaitQuery
   unit_test::helide::WaitDeadlock unit_test::helide::ArrayPrivatize
   unit_test::helide::ArrayBegin unit_test::helide::VolumeSamplingRate
+  unit_test::helide::FrameRelease
   PROPERTIES TIMEOUT 60)
 
 ## CTS conformance-harness catalog tests ##

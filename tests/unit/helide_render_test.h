@@ -3,8 +3,8 @@
 
 // Shared helpers for the helide-backed render-and-compare unit tests: render a
 // world through a fixed camera, count pixels that differ between images,
-// collect device warnings and errors, and build a simple volume, a world around
-// one geometry, or a triangle over a shared array.
+// collect device warnings and errors, build a simple volume, a world around
+// one geometry, or a triangle over a shared array, and hold an array mapped.
 
 #pragma once
 
@@ -238,6 +238,35 @@ inline void forceSceneRebuild(anari::Device d, anari::Surface surface)
   anari::setParameter(d, surface, "visible", true);
   anari::commitParameters(d, surface);
 }
+
+// An array the calling thread holds mapped until unmap() (or destruction).
+struct MappedArray
+{
+  MappedArray(anari::Device d)
+      : m_device(d),
+        m_array(anariNewArray1D(d, nullptr, nullptr, nullptr, ANARI_FLOAT32, 4))
+  {
+    anariMapArray(m_device, m_array);
+  }
+
+  ~MappedArray()
+  {
+    unmap();
+    anari::release(m_device, m_array);
+  }
+
+  void unmap()
+  {
+    if (m_mapped)
+      anariUnmapArray(m_device, m_array);
+    m_mapped = false;
+  }
+
+ private:
+  anari::Device m_device{nullptr};
+  ANARIArray1D m_array{nullptr};
+  bool m_mapped{true};
+};
 
 // An axis-aligned box, laid out as ANARI_FLOAT32_BOX3.
 struct Box

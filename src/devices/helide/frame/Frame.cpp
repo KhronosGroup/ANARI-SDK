@@ -14,10 +14,10 @@ namespace helide {
 
 Frame::Frame(HelideGlobalState *s) : helium::BaseFrame(s) {}
 
-Frame::~Frame()
-{
-  wait();
-}
+// No wait(): every queued render holds a reference to the frame, so none is
+// outstanding once it is destroyed. The last render may destroy it from its
+// own job, where waiting on m_future would never return.
+Frame::~Frame() = default;
 
 bool Frame::isValid() const
 {
@@ -199,11 +199,20 @@ void Frame::renderFrame()
     invokeCompletionCallback(m_callback, m_callbackUserPtr, state->anariDevice);
   };
 
+  // The render holds a reference to the frame until it ends, callback
+  // included, so a frame released without a wait (or from its callback) is
+  // still destroyed. Dropping it may destroy the frame here, on the worker:
+  // nothing may use 'this' after it. m_future isn't ready until the job
+  // returns, so a release waiting on it (see HelideDevice::release()) keeps the
+  // frame alive until refDec() is done with it.
   this->refInc(helium::RefType::INTERNAL);
 
   m_renderTicket = state->renderingSemaphore.queueRender([&]() {
     state->taskQueue.enqueue([state]() { state->commitBuffer.flush(); });
-    m_future = state->taskQueue.enqueue(render);
+    m_future = state->taskQueue.enqueue([this, render]() {
+      render();
+      this->refDec(helium::RefType::INTERNAL);
+    });
   });
 }
 
@@ -285,10 +294,8 @@ void Frame::wait()
   // finished rendering, and waiting on it from there would never return.
   if (completingOnThisThread())
     return;
-  if (m_future.valid()) {
+  if (m_future.valid())
     m_future.get();
-    this->refDec(helium::RefType::INTERNAL);
-  }
 }
 
 const char *Frame::whyThisThreadCantWait()

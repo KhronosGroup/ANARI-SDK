@@ -22,35 +22,6 @@ namespace {
 
 using namespace helide_test;
 
-// An array the calling thread holds mapped until unmap() (or destruction).
-struct MappedArray
-{
-  MappedArray(anari::Device d)
-      : m_device(d),
-        m_array(anariNewArray1D(d, nullptr, nullptr, nullptr, ANARI_FLOAT32, 4))
-  {
-    anariMapArray(m_device, m_array);
-  }
-
-  ~MappedArray()
-  {
-    unmap();
-    anari::release(m_device, m_array);
-  }
-
-  void unmap()
-  {
-    if (m_mapped)
-      anariUnmapArray(m_device, m_array);
-    m_mapped = false;
-  }
-
- private:
-  anari::Device m_device{nullptr};
-  ANARIArray1D m_array{nullptr};
-  bool m_mapped{true};
-};
-
 // Whether 'bounds' is the box around kCenterTriangle.
 bool boundsTriangle(const Box &bounds)
 {

@@ -35,6 +35,20 @@ void HelideDevice::unmapArray(ANARIArray a)
 
 void HelideDevice::release(ANARIObject o)
 {
+  // A frame's queued render holds a reference to it and drops it on the
+  // worker, possibly while this release is still using the frame (helium waits
+  // for the render once the last public reference goes). Hold another one
+  // across the release so the frame outlives it; dropping that may destroy
+  // the frame here instead.
+  if (o != nullptr && !handleIsDevice(o)
+      && helium::referenceFromHandle(o).type() == ANARI_FRAME) {
+    auto &frame = helium::referenceFromHandle(o);
+    frame.refInc(helium::RefType::INTERNAL);
+    helium::BaseDevice::release(o);
+    frame.refDec(helium::RefType::INTERNAL);
+    return;
+  }
+
   // helium runs the last public release of an array still in use through
   // runDeviceWork(), as it privatizes the array. Mark this thread as releasing
   // one, so that if it can't wait for that work, runDeviceWork() privatizes
