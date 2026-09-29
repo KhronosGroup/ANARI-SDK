@@ -14,6 +14,7 @@
 
 namespace {
 
+using helium_test::setRange;
 using helium_test::StubObject;
 using helium_test::TestDevice;
 
@@ -22,14 +23,6 @@ using Handles = std::vector<helium::BaseObject *>;
 Handles liveHandles(const helium::ObjectArray *a)
 {
   return Handles(a->handlesBegin(), a->handlesEnd());
-}
-
-void setRange(helium::ObjectArray *a, size_t begin, size_t end)
-{
-  a->setParam("begin", begin);
-  a->setParam("end", end);
-  a->commitParameters();
-  a->finalize();
 }
 
 void mapUnmap(helium::ObjectArray *a)

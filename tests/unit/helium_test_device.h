@@ -151,19 +151,39 @@ struct StubObject : public helium::BaseObject
   void finalize() override {}
 };
 
-// A committed Array1D sharing 'appData' (which must outlive it), holding one
-// public reference.
+// A committed Array1D of 'numItems' elements of 'elementType' sharing
+// 'appMemory' (which must outlive it), holding one public reference.
+inline helium::Array1D *newSharedArray(helium::BaseGlobalDeviceState *s,
+    const void *appMemory,
+    ANARIDataType elementType,
+    size_t numItems)
+{
+  helium::Array1DMemoryDescriptor md;
+  md.appMemory = appMemory;
+  md.elementType = elementType;
+  md.numItems = numItems;
+  auto *array = new helium::Array1D(s, md);
+  array->commitParameters();
+  return array;
+}
+
+// As above, with the element type and count taken from 'appData'.
 template <typename T>
 helium::Array1D *newSharedArray(
     helium::BaseGlobalDeviceState *s, const std::vector<T> &appData)
 {
-  helium::Array1DMemoryDescriptor md;
-  md.appMemory = appData.data();
-  md.elementType = anari::ANARITypeFor<T>::value;
-  md.numItems = appData.size();
-  auto *array = new helium::Array1D(s, md);
-  array->commitParameters();
-  return array;
+  return newSharedArray(
+      s, appData.data(), anari::ANARITypeFor<T>::value, appData.size());
+}
+
+// Commits a range-only change of 1D array 'a' (an Array1D or ObjectArray) to
+// [begin, end).
+inline void setRange(helium::Array *a, size_t begin, size_t end)
+{
+  a->setParam("begin", begin);
+  a->setParam("end", end);
+  a->commitParameters();
+  a->finalize();
 }
 
 } // namespace helium_test

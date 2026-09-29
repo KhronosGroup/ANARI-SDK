@@ -19,6 +19,7 @@
 namespace {
 
 using helium_test::newSharedArray;
+using helium_test::setRange;
 using helium_test::TestDevice;
 
 // Element 'i' of the app's buffer holds float(i), so an element read as an
@@ -67,14 +68,6 @@ void checkWindow(const helium::Array1D *a, size_t first, size_t n)
   CHECK(a->valueAtClosest<float>(0.f) == f);
   CHECK(a->valueAtClosest<float>(1.f) == f + n - 1);
   CHECK(base->valueAtClosest<float>(1.f) == f + n - 1);
-}
-
-void setRange(helium::Array1D *a, size_t begin, size_t end)
-{
-  a->setParam("begin", begin);
-  a->setParam("end", end);
-  a->commitParameters();
-  a->finalize();
 }
 
 } // namespace
