@@ -146,9 +146,9 @@ struct RenderResult
   std::vector<uint32_t> instanceId;
 };
 
-// Renders 'world' at kImageSize from (0, 0, 2) looking down -z with a black
-// background, returning the color, depth, objectId and instanceId channels.
-inline RenderResult renderChannels(
+// A frame viewing 'world' at kImageSize from (0, 0, 2) looking down -z with a
+// black background, with color, depth, objectId and instanceId channels.
+inline anari::Frame newFrame(
     anari::Device d, anari::World world, const std::string &mode = "default")
 {
   auto camera = anari::newObject<anari::Camera>(d, "perspective");
@@ -173,8 +173,13 @@ inline RenderResult renderChannels(
   anari::setAndReleaseParameter(d, frame, "renderer", renderer);
   anari::setParameter(d, frame, "world", world);
   anari::commitParameters(d, frame);
+  return frame;
+}
 
-  anari::render(d, frame);
+// Waits for 'frame' and copies out its color, depth, objectId and instanceId
+// channels.
+inline RenderResult readChannels(anari::Device d, anari::Frame frame)
+{
   anari::wait(d, frame);
 
   RenderResult result;
@@ -197,6 +202,17 @@ inline RenderResult renderChannels(
       instanceId.data, instanceId.data + instanceId.width * instanceId.height);
   anari::unmap(d, frame, "channel.instanceId");
 
+  return result;
+}
+
+// Renders 'world' through newFrame(), returning the color, depth, objectId and
+// instanceId channels.
+inline RenderResult renderChannels(
+    anari::Device d, anari::World world, const std::string &mode = "default")
+{
+  auto frame = newFrame(d, world, mode);
+  anari::render(d, frame);
+  auto result = readChannels(d, frame);
   anari::release(d, frame);
   return result;
 }
