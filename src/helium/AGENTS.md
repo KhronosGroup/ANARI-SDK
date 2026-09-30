@@ -33,7 +33,7 @@ Every `RefCounted` object has two independent counters packed into one 64-bit at
 - **PUBLIC** (lower 32 bits): application-held references
 - **INTERNAL** (upper 32 bits): device-internal references (via `IntrusivePtr`)
 
-When PUBLIC → 0 while INTERNAL > 0, `on_NoPublicReferences()` fires — arrays must call `privatize()` here to copy application memory before the app frees it. Frames auto-discard inflight renders. `refDec()` swaps the last reference of one kind for a temporary one of the other kind while that hook (or `on_NoInternalReferences()`) runs, so another thread dropping the last reference meanwhile can't delete the object under the hook; hooks therefore see that extra reference in `useCount()`.
+When PUBLIC → 0 while INTERNAL > 0, `on_NoPublicReferences()` fires — arrays must call `privatize()` here to copy application memory before the app frees it. Frames, by default, discard an in-flight render and wait for it; a device whose renders hold their frame can override `BaseFrame::on_NoPublicReferences()` not to wait (helide does). `refDec()` swaps the last reference of one kind for a temporary one of the other kind while that hook (or `on_NoInternalReferences()`) runs, so another thread dropping the last reference meanwhile can't delete the object under the hook; hooks therefore see that extra reference in `useCount()`.
 
 `IntrusivePtr<T>` only touches INTERNAL refs, so using it exclusively keeps the two counts cleanly separated.
 

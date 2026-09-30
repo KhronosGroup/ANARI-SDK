@@ -49,6 +49,8 @@ struct Frame : public helium::BaseFrame
   bool ready() const;
 
  private:
+  void on_NoPublicReferences() override;
+
   // Waits for the frame's queued render (callback included) unless the
   // calling thread can't; then returns why, without waiting. nullptr once
   // waited. Safe without the frame's object lock.

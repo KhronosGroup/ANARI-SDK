@@ -35,6 +35,22 @@ void releaseFromCallback(const void *userPtr, ANARIDevice d, ANARIFrame frame)
   (*(std::atomic<int> *)userPtr)++;
 }
 
+// A frame for a completion callback to release, and its calls.
+struct ReleaseOther
+{
+  anari::Frame frame{nullptr};
+  std::atomic<int> calls{0};
+};
+
+// Completion callback that releases the ReleaseOther's frame (another frame
+// than its own) and counts its calls.
+void releaseOtherFromCallback(const void *userPtr, ANARIDevice d, ANARIFrame)
+{
+  auto *other = (ReleaseOther *)userPtr;
+  anariRelease(d, other->frame);
+  other->calls++;
+}
+
 } // namespace
 
 SCENARIO("a helide frame released without waiting on it is not leaked",
@@ -143,6 +159,41 @@ SCENARIO("a helide frame released without waiting on it is not leaked",
       anari::render(d, frame);
       anari::release(d, frame);
       mapped.unmap();
+
+      THEN("the release reports no error (it doesn't wait for the render)")
+      {
+        CHECK(log.errors.messages == std::vector<std::string>{});
+      }
+    }
+
+    WHEN(
+        "it is released, with its render queued, from another frame's "
+        "completion callback")
+    {
+      ReleaseOther other;
+      other.frame = frame;
+      auto first = newFrame(d, world);
+      anari::setParameter(d,
+          first,
+          "frameCompletionCallback",
+          (ANARIFrameCompletionCallback)releaseOtherFromCallback);
+      anari::setParameter(
+          d, first, "frameCompletionCallbackUserData", (void *)&other);
+      anari::commitParameters(d, first);
+      anari::render(d, first);
+      anari::render(d, frame);
+
+      // Released by the callback: the frame may no longer be used here.
+      while (other.calls == 0)
+        std::this_thread::sleep_for(1ms);
+      anari::wait(d, first);
+      anari::release(d, first);
+
+      THEN("the release reports no error (it doesn't wait for the render)")
+      {
+        CHECK(other.calls == 1);
+        CHECK(log.errors.messages == std::vector<std::string>{});
+      }
     }
   }
 

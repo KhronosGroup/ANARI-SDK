@@ -289,6 +289,12 @@ void Frame::discard()
   // no-op
 }
 
+void Frame::on_NoPublicReferences()
+{
+  // A queued render holds a reference to the frame until it ends, so the
+  // frame outlives the release: nothing to wait for.
+}
+
 void Frame::waitWithoutObjectLock()
 {
   // If this thread can't wait, frameReady(), map() or renderFrame() reports

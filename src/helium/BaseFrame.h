@@ -12,7 +12,8 @@ namespace helium {
  * subclass this and implement renderFrame(), map(), unmap(), frameReady(), and
  * discard(). When the application releases its last public reference while a
  * render is still in flight, on_NoPublicReferences() calls discard() to abort
- * the render and prevent the frame from being used after deletion.
+ * the render and waits for it, preventing the frame from being used after
+ * deletion (a device may override this; see on_NoPublicReferences()).
  */
 struct BaseFrame : public BaseObject
 {
@@ -61,14 +62,21 @@ struct BaseFrame : public BaseObject
   bool completingOnThisThread() const;
 
  protected:
+  // Runs when the app releases the frame's last public reference. By default,
+  // if a render is in flight, discards it and waits for it to end, so the
+  // frame isn't destroyed under it. A device whose renders hold a reference to
+  // their frame until they end (so the frame outlives the release) can
+  // override this not to wait: the wait is needless there, and can't be
+  // satisfied on a thread that can't wait for the render (e.g. one holding a
+  // mapped array the render waits for, or a completion callback on the
+  // device's worker).
+  void on_NoPublicReferences() override;
+
   // Call the app's frame completion callback. Devices should invoke callbacks
   // only through this, so the callback may call back into the device on this
   // frame (map, frameReady, getProperty, ...).
   void invokeCompletionCallback(
       ANARIFrameCompletionCallback cb, const void *userPtr, ANARIDevice device);
-
- private:
-  void on_NoPublicReferences() override;
 };
 
 } // namespace helium
