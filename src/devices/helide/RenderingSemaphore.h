@@ -12,7 +12,7 @@
 namespace helide {
 
 // Keeps renders from reading app arrays while the app has any mapped: a render
-// (frameStart()) waits for every mapped array to be unmapped, and mapping an
+// (startFrame()) waits for every mapped array to be unmapped, and mapping an
 // array waits for a render in flight to end.
 //
 // So a thread holding a mapped array can't wait for a queued render, nor for
@@ -27,13 +27,33 @@ struct RenderingSemaphore
   void arrayMapAcquire(const void *array);
   void arrayMapRelease(const void *array);
 
+  // A render in flight: from startFrame() (which waits for every mapped
+  // array to be unmapped) until end() or its destruction, arrays can't be
+  // mapped. So nothing that may map an array (a status or completion
+  // callback) may run on the render's thread while it is in flight.
+  class FrameInFlight
+  {
+   public:
+    FrameInFlight(const FrameInFlight &) = delete;
+    FrameInFlight &operator=(const FrameInFlight &) = delete;
+    ~FrameInFlight();
+
+    // Ends the frame early; a no-op if it has ended.
+    void end();
+
+   private:
+    friend struct RenderingSemaphore;
+    explicit FrameInFlight(RenderingSemaphore &semaphore);
+
+    RenderingSemaphore *m_semaphore{nullptr};
+  };
+
   // Queues a render with 'enqueue', which must only queue (not run or wait
-  // on) work that calls frameStart() before anything else, then frameEnd().
-  // Returns the render's number for whyThisThreadCantWaitFor().
+  // on) work that calls startFrame() before anything else. Returns the
+  // render's number for whyThisThreadCantWaitFor().
   template <typename F>
   uint64_t queueRender(F &&enqueue);
-  void frameStart();
-  void frameEnd();
+  FrameInFlight startFrame();
 
   // Queues device work with 'enqueue' (as queueRender() does) unless a render
   // queued before it waits for an array this thread has mapped, so waiting on
@@ -46,12 +66,14 @@ struct RenderingSemaphore
   // mapped the render waits for), or nullptr if it can.
   const char *whyThisThreadCantWaitFor(uint64_t render);
 
-  // Waits until a queued render is waiting for mapped arrays in frameStart(),
+  // Waits until a queued render is waiting for mapped arrays in startFrame(),
   // so the worker runs nothing else until they are unmapped. Only call this
   // when whyThisThreadCantWaitFor() a queued render isn't nullptr.
   void waitForRenderBlockedOnMaps();
 
  private:
+  void frameStart();
+  void frameEnd();
   const char *whyThisThreadCantWaitForImpl(uint64_t render) const;
 
   std::mutex m_mutex;
@@ -102,6 +124,30 @@ inline uint64_t RenderingSemaphore::queueRender(F &&enqueue)
   std::lock_guard<std::mutex> lock(m_mutex);
   enqueue();
   return ++m_rendersQueued;
+}
+
+inline RenderingSemaphore::FrameInFlight::FrameInFlight(
+    RenderingSemaphore &semaphore)
+    : m_semaphore(&semaphore)
+{
+  m_semaphore->frameStart();
+}
+
+inline RenderingSemaphore::FrameInFlight::~FrameInFlight()
+{
+  end();
+}
+
+inline void RenderingSemaphore::FrameInFlight::end()
+{
+  if (m_semaphore)
+    m_semaphore->frameEnd();
+  m_semaphore = nullptr;
+}
+
+inline RenderingSemaphore::FrameInFlight RenderingSemaphore::startFrame()
+{
+  return FrameInFlight(*this);
 }
 
 inline void RenderingSemaphore::frameStart()

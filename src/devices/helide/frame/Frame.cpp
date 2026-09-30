@@ -143,20 +143,19 @@ void Frame::renderFrame()
 
   auto render = [this, state]() {
     auto start = std::chrono::steady_clock::now();
-    state->renderingSemaphore.frameStart();
+    auto inFlight = state->renderingSemaphore.startFrame();
 
     if (!isValid()) {
+      std::fill(m_pixelBuffer.begin(), m_pixelBuffer.end(), 0);
+      // End the frame before reporting: the status callback may map arrays.
+      inFlight.end();
       reportMessage(
           ANARI_SEVERITY_ERROR, "skipping render of incomplete frame object");
-      std::fill(m_pixelBuffer.begin(), m_pixelBuffer.end(), 0);
-      state->renderingSemaphore.frameEnd();
       return;
     }
 
-    if (state->commitBuffer.lastObjectFinalization() <= m_frameLastRendered) {
-      state->renderingSemaphore.frameEnd();
+    if (state->commitBuffer.lastObjectFinalization() <= m_frameLastRendered)
       return;
-    }
 
     m_frameLastRendered = helium::newTimeStamp();
 
@@ -190,7 +189,7 @@ void Frame::renderFrame()
     // query the world (taking its lock) or map arrays (waiting for the frame
     // to end), and should see this frame's duration.
     worldLock.unlock();
-    state->renderingSemaphore.frameEnd();
+    inFlight.end();
 
     auto end = std::chrono::steady_clock::now();
     m_duration = std::chrono::duration<float>(end - start).count();
@@ -200,17 +199,27 @@ void Frame::renderFrame()
 
   // The render holds a reference to the frame until it ends, callback
   // included, so a frame released without a wait (or from its callback) is
-  // still destroyed. Dropping it may destroy the frame here, on the worker:
-  // nothing may use 'this' after it.
+  // still destroyed. It is dropped when the job ends, however it ends (not by
+  // an IntrusivePtr the job captures: m_future's shared state keeps the job,
+  // so that would never be dropped). Dropping it may destroy the frame there,
+  // on the worker: nothing may use 'this' after it.
   this->refInc(helium::RefType::INTERNAL);
+  struct DropFrameReference
+  {
+    Frame *frame;
+    ~DropFrameReference()
+    {
+      frame->refDec(helium::RefType::INTERNAL);
+    }
+  };
 
   std::lock_guard<std::mutex> renderLock(m_renderMutex);
   m_renderTicket = state->renderingSemaphore.queueRender([&]() {
     state->taskQueue.enqueue([state]() { state->commitBuffer.flush(); });
     m_future = state->taskQueue
                    .enqueue([this, render]() {
+                     DropFrameReference drop{this};
                      render();
-                     this->refDec(helium::RefType::INTERNAL);
                    })
                    .share();
   });

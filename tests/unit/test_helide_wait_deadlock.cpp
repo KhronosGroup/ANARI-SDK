@@ -8,7 +8,8 @@
 // anariFrameReady() with ANARI_WAIT, anariMapFrame(), anariRenderFrame()),
 // and a release that privatizes a shared array does so without waiting, with
 // a WARNING. Also, an ANARI_WAIT query from a status callback raised while
-// helide's worker flushes doesn't flush again.
+// helide's worker flushes doesn't flush again, and a status callback raised
+// by a render may map an array (the render's frame has ended by then).
 
 #include "catch.hpp"
 #include "helide_render_test.h"
@@ -385,6 +386,83 @@ SCENARIO(
   anari::release(d, frame);
   anari::release(d, nested.triangle.surface);
   anari::release(d, world);
+  anari::release(d, d);
+  anari::unloadLibrary(lib);
+}
+
+namespace {
+
+// An array a status callback maps (and unmaps) when helide reports an ERROR,
+// and the ERRORs reported.
+struct MapOnError
+{
+  anari::Array1D array{nullptr};
+  int mapped{0};
+  WarningLog errors;
+};
+
+// Status callback that maps and unmaps the MapOnError's array on each ERROR.
+void mapOnError(const void *userPtr,
+    ANARIDevice d,
+    ANARIObject,
+    ANARIDataType,
+    ANARIStatusSeverity severity,
+    ANARIStatusCode,
+    const char *message)
+{
+  auto *m = (MapOnError *)userPtr;
+  if (severity != ANARI_SEVERITY_ERROR || m->array == nullptr)
+    return;
+  m->errors.add(message);
+  if (anariMapArray(d, m->array) != nullptr) {
+    anariUnmapArray(d, m->array);
+    m->mapped++;
+  }
+}
+
+} // namespace
+
+SCENARIO("a status callback raised by a helide render may map an array",
+    "[helide_wait_deadlock]")
+{
+  MapOnError m;
+  anari::Library lib = anari::loadLibrary("helide", mapOnError, &m);
+  if (lib == nullptr) {
+    WARN("helide library not available; skipping wait deadlock test");
+    return;
+  }
+  anari::Device d = anari::newDevice(lib, "default");
+
+  float3 vertices[3];
+  std::copy(kCenterTriangle, kCenterTriangle + 3, vertices);
+  auto triangle = makeTriangleWorld(d, vertices);
+  m.array = triangle.positions;
+
+  GIVEN("a frame without a world, which helide's render reports as an ERROR")
+  {
+    auto frame = newFrame(d, triangle.world);
+    anari::unsetParameter(d, frame, "world");
+    anari::commitParameters(d, frame);
+
+    WHEN("it is rendered and waited on, and the ERROR's callback maps an array")
+    {
+      anari::render(d, frame);
+      anari::wait(d, frame);
+
+      THEN("the callback maps the array (it doesn't wait on the render)")
+      {
+        CHECK(m.errors.contains("incomplete frame"));
+        CHECK(m.mapped == 1);
+      }
+    }
+
+    anari::release(d, frame);
+  }
+
+  m.array = nullptr;
+  anari::release(d, triangle.positions);
+  anari::release(d, triangle.surface);
+  anari::release(d, triangle.world);
   anari::release(d, d);
   anari::unloadLibrary(lib);
 }
