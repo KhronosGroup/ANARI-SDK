@@ -21,6 +21,11 @@ void BaseFrame::on_NoPublicReferences()
   }
 }
 
+void BaseFrame::waitWithoutObjectLock()
+{
+  frameReady(ANARI_WAIT);
+}
+
 bool BaseFrame::completingOnThisThread() const
 {
   return t_completingFrame == this;

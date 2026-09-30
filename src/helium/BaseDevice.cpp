@@ -64,8 +64,9 @@ int BaseDevice::getProperty(ANARIObject object,
   runDeviceWork([&]() {
     m_state->commitBuffer.flush();
     // Device work run on another thread (a device worker) must not take a
-    // frame's lock: an app thread waiting on the frame (frameReady(), map)
-    // holds it until the frame's own work, possibly queued behind this, ends.
+    // frame's lock: a thread holding it may be waiting for the frame's own
+    // work, possibly queued behind this (e.g. a device's renderFrame()
+    // waiting for the frame's previous render).
     std::unique_lock<std::mutex> lock;
     if (obj.type() != ANARI_FRAME || std::this_thread::get_id() == caller)
       lock = getObjectLock(object);
@@ -247,8 +248,11 @@ const void *BaseDevice::frameBufferMap(ANARIFrame f,
     uint32_t *h,
     ANARIDataType *pixelType)
 {
+  // Wait for the frame before taking its object lock, as frameReady() does.
+  IntrusivePtr<BaseFrame> frame = &referenceFromHandle<BaseFrame>(f);
+  frame->waitWithoutObjectLock();
   auto lock = getObjectLock(f);
-  return referenceFromHandle<BaseFrame>(f).map(channel, w, h, pixelType);
+  return frame->map(channel, w, h, pixelType);
 }
 
 void BaseDevice::frameBufferUnmap(ANARIFrame f, const char *channel)
@@ -267,8 +271,16 @@ void BaseDevice::renderFrame(ANARIFrame f)
 
 int BaseDevice::frameReady(ANARIFrame f, ANARIWaitMask m)
 {
+  // Wait for the frame without its object lock: while an app thread waits,
+  // another frame's completion callback may call into this frame, and on a
+  // device that runs this frame's render after that callback, a callback
+  // waiting for the lock would deadlock. The reference keeps the frame alive
+  // meanwhile, should its render or callback drop the frame's last one.
+  IntrusivePtr<BaseFrame> frame = &referenceFromHandle<BaseFrame>(f);
+  if (m == ANARI_WAIT)
+    frame->waitWithoutObjectLock();
   auto lock = getObjectLock(f);
-  return referenceFromHandle<BaseFrame>(f).frameReady(m);
+  return frame->frameReady(m);
 }
 
 void BaseDevice::discardFrame(ANARIFrame f)

@@ -33,13 +33,29 @@ struct BaseFrame : public BaseObject
   // Implement anariFrameReady()
   virtual int frameReady(ANARIWaitMask m) = 0;
 
+  // Waits for the frame's render, if one is in flight, to end (completion
+  // callback included). BaseDevice calls this *without* the frame's object
+  // lock before frameReady(ANARI_WAIT) and map(), which it then calls under
+  // the lock, so that other threads -- in particular another frame's
+  // completion callback, which may run ahead of this frame's render -- can
+  // call into the frame meanwhile. It may therefore run concurrently with any
+  // of the frame's other calls (renderFrame(), map(), parameter changes, ...,
+  // and waits on other threads), and must synchronize the state it reads
+  // itself. A render started after it returns is waited for under the lock.
+  //
+  // If the calling thread can't wait (it would deadlock), return without
+  // waiting or reporting: frameReady() or map(), under the lock, should then
+  // report why and not wait either. The default calls frameReady(ANARI_WAIT);
+  // a device whose frameReady() isn't safe without the lock must override it.
+  virtual void waitWithoutObjectLock();
+
   // Implement anariDiscardFrame()
   virtual void discard() = 0;
 
   // True while this frame's completion callback runs on the calling thread.
-  // BaseDevice skips the frame's object lock for such calls: an app thread
-  // blocked in frameReady(ANARI_WAIT) or map on this frame holds that lock
-  // while it waits for the callback to return.
+  // BaseDevice skips the frame's object lock for such calls: a thread may hold
+  // that lock while it waits for the callback to return (e.g. a device's
+  // renderFrame() waiting for the frame's previous render).
   bool completingOnThisThread() const;
 
  protected:

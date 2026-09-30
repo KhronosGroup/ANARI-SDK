@@ -25,6 +25,12 @@ namespace helium {
  * anari::DeviceImpl. All objects passed through the API must derive from
  * BaseObject, BaseArray, or BaseFrame. The device owns m_state and is expected
  * to populate it with a concrete BaseGlobalDeviceState subclass.
+ *
+ * Waiting for a frame is the exception to the per-object locks:
+ * frameReady(ANARI_WAIT) and frameBufferMap() first call
+ * BaseFrame::waitWithoutObjectLock() without the frame's lock (holding an
+ * internal reference to it instead), and only then lock the frame to call
+ * BaseFrame::frameReady() or map().
  */
 struct BaseDevice : public anari::DeviceImpl,
                     ParameterizedObject,
@@ -120,8 +126,8 @@ struct BaseDevice : public anari::DeviceImpl,
   // flushes or renders on a worker thread overrides this to run 'work' there,
   // after the work already queued, and must run it directly when called on
   // that worker (e.g. from a completion or status callback). Run on another
-  // thread, the query does not take a frame's object lock: an app thread
-  // waiting on the frame holds it until the frame's queued work ends. A device
+  // thread, the query does not take a frame's object lock: a thread holding
+  // it may be waiting for the frame's work queued behind the query. A device
   // whose deviceGetProperty() flushes for ANARI_WAIT should run that flush
   // through here too. release() also runs the app's last release of an array
   // the device still uses this way, as it privatizes the array. An override

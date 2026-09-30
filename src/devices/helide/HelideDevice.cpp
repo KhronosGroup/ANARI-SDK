@@ -73,8 +73,12 @@ void HelideDevice::renderFrame(ANARIFrame f)
   // The render may end, and its completion callback release the frame's last
   // public reference, before this call returns (and unlocks the frame's
   // object lock). Keep the frame alive until then.
-  helium::IntrusivePtr<helium::BaseObject> frame =
-      &helium::referenceFromHandle(f);
+  helium::IntrusivePtr<Frame> frame = &helium::referenceFromHandle<Frame>(f);
+  // Wait for the frame's previous render before taking the frame's object
+  // lock, as helium does for anariFrameReady() and anariMapFrame(), so that
+  // another frame's completion callback can call into this frame meanwhile.
+  // Frame::renderFrame() reports it if this thread can't wait.
+  frame->waitWithoutObjectLock();
   helium::BaseDevice::renderFrame(f);
 }
 

@@ -121,8 +121,9 @@ void DeferredCommitBuffer::flushCommits()
       // Read the committed snapshot (taken at anariCommitParameters() time),
       // not the live store, so a setParam that arrived after the commit call
       // does not leak into this commit. ReadCommittedScope holds the object's
-      // snapshot mutex (not its object lock -- frameReady() holds the object
-      // lock while blocked on this flush, so that would deadlock), serializing
+      // snapshot mutex (not its object lock -- a frame call such as a
+      // device's renderFrame() may hold the object lock while blocked on this
+      // flush, so that would deadlock), serializing
       // the read against a concurrent re-commit of the same object.
       //
       // markCommitted() reads the snapshot's parameter-change time, so it runs
