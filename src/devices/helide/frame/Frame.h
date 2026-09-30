@@ -106,7 +106,8 @@ struct Frame : public helium::BaseFrame
   // The queued render: its job and number (RenderingSemaphore). Guarded by
   // m_renderMutex, not the frame's object lock: helium waits for a frame
   // without that lock (waitWithoutObjectLock()), while another thread may
-  // queue a render. Waiters wait on a copy of m_future.
+  // queue a render. Waiters wait on a copy of m_future (and get() it, so a
+  // render's exception reaches the app; the first waiter to see it clears it).
   mutable std::mutex m_renderMutex;
   std::shared_future<void> m_future;
   uint64_t m_renderTicket{0};

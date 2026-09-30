@@ -315,11 +315,22 @@ const char *Frame::waitIfThisThreadCan()
     future = m_future;
     renderTicket = m_renderTicket;
   }
-  if (isReady(future))
+  if (!future.valid())
     return nullptr;
-  if (const char *why = whyThisThreadCantWaitFor(renderTicket))
-    return why;
-  future.wait();
+  if (!isReady(future)) {
+    if (const char *why = whyThisThreadCantWaitFor(renderTicket))
+      return why;
+  }
+  try {
+    future.get();
+  } catch (...) {
+    // Pass the render's exception to the app once, as waiting on the
+    // std::future the job returned did; later waits see no render.
+    std::lock_guard<std::mutex> lock(m_renderMutex);
+    if (m_renderTicket == renderTicket)
+      m_future = {};
+    throw;
+  }
   return nullptr;
 }
 
