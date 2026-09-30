@@ -66,6 +66,18 @@ void HelideDevice::release(ANARIObject o)
   helium::BaseDevice::release(o);
 }
 
+// Frame Rendering ////////////////////////////////////////////////////////////
+
+void HelideDevice::renderFrame(ANARIFrame f)
+{
+  // The render may end, and its completion callback release the frame's last
+  // public reference, before this call returns (and unlocks the frame's
+  // object lock). Keep the frame alive until then.
+  helium::IntrusivePtr<helium::BaseObject> frame =
+      &helium::referenceFromHandle(f);
+  helium::BaseDevice::renderFrame(f);
+}
+
 // API Objects ////////////////////////////////////////////////////////////////
 
 ANARIArray1D HelideDevice::newArray1D(const void *appMemory,

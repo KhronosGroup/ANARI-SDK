@@ -31,6 +31,10 @@ struct HelideDevice : public helium::BaseDevice
 
   void release(ANARIObject) override;
 
+  // Frame Rendering //////////////////////////////////////////////////////////
+
+  void renderFrame(ANARIFrame) override;
+
   // API Objects //////////////////////////////////////////////////////////////
 
   ANARIArray1D newArray1D(const void *appMemory,

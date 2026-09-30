@@ -113,6 +113,26 @@ SCENARIO("a helide frame released without waiting on it is not leaked",
       while (calls == 0)
         std::this_thread::sleep_for(1ms);
       CHECK(calls == 1);
+
+      AND_WHEN(
+          "more frames of the empty world, whose renders end at once, "
+          "release themselves from their callbacks")
+      {
+        std::atomic<int> moreCalls{0};
+        for (int i = 0; i < 50; i++) {
+          auto f = newFrame(d, world);
+          anari::setParameter(d,
+              f,
+              "frameCompletionCallback",
+              (ANARIFrameCompletionCallback)releaseFromCallback);
+          anari::setParameter(
+              d, f, "frameCompletionCallbackUserData", (void *)&moreCalls);
+          anari::commitParameters(d, f);
+          anari::render(d, f);
+        }
+        while (moreCalls < 50)
+          std::this_thread::sleep_for(1ms);
+      }
     }
 
     WHEN(
