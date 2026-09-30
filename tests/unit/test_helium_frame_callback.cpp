@@ -60,7 +60,8 @@ struct Event
 // renderFrame() completes on its own thread once 'renderGate' is set (by
 // default, once an app thread is blocked waiting on the frame), then invokes
 // the completion callback there. Like a device's, frameReady(ANARI_WAIT) and
-// map() wait for that, except from the frame's own callback.
+// map() wait for that, except from the frame's own callback. It opts in to
+// waiting without its object lock.
 struct TestFrame : public helium::BaseFrame
 {
   TestFrame(helium::BaseGlobalDeviceState *s) : BaseFrame(s) {}
@@ -120,6 +121,11 @@ struct TestFrame : public helium::BaseFrame
 
   void discard() override {}
 
+  void waitWithoutObjectLock() override
+  {
+    waitForRender();
+  }
+
   ANARIFrameCompletionCallback callback{nullptr};
   const void *callbackUserPtr{nullptr};
   ANARIDevice device{nullptr};
@@ -142,6 +148,84 @@ struct TestFrame : public helium::BaseFrame
 };
 
 using helium_test::TestDevice;
+
+// A frame that doesn't override waitWithoutObjectLock(). Its frameReady()
+// with ANARI_WAIT and map() record whether its object lock is held meanwhile:
+// whether another thread's setParameter() on it is still blocked after a
+// while.
+struct LockedWaitFrame : public helium::BaseFrame
+{
+  LockedWaitFrame(helium::BaseGlobalDeviceState *s, TestDevice *d)
+      : BaseFrame(s), m_device(d)
+  {}
+
+  bool isValid() const override
+  {
+    return true;
+  }
+  bool getProperty(const std::string_view &,
+      ANARIDataType,
+      void *,
+      uint64_t,
+      uint32_t) override
+  {
+    return false;
+  }
+  void commitParameters() override {}
+  void finalize() override {}
+  void renderFrame() override {}
+
+  void *map(std::string_view,
+      uint32_t *width,
+      uint32_t *height,
+      ANARIDataType *pixelType) override
+  {
+    probeLock();
+    *width = 1;
+    *height = 1;
+    *pixelType = ANARI_FLOAT32;
+    return &pixel;
+  }
+
+  void unmap(std::string_view) override {}
+
+  int frameReady(ANARIWaitMask m) override
+  {
+    if (m == ANARI_WAIT)
+      probeLock();
+    return 1;
+  }
+
+  void discard() override {}
+
+  void joinProbe()
+  {
+    if (m_probe.joinable())
+      m_probe.join();
+  }
+
+  bool lockHeldWhileWaiting{false};
+  float pixel{0.5f};
+
+ private:
+  // The probe finishes once the caller unlocks the frame; joinProbe() then.
+  void probeLock()
+  {
+    if (m_probe.joinable())
+      return;
+    m_probe = std::thread([this]() {
+      int value = 1;
+      m_device->setParameter((ANARIObject)this, "value", ANARI_INT32, &value);
+      m_probeSet = true;
+    });
+    std::this_thread::sleep_for(100ms);
+    lockHeldWhileWaiting = !m_probeSet;
+  }
+
+  TestDevice *m_device{nullptr};
+  std::atomic<bool> m_probeSet{false};
+  std::thread m_probe;
+};
 
 // What the callback observed. Written on the frame's thread, read after it
 // has signalled `done`.
@@ -676,4 +760,33 @@ SCENARIO("a helide completion callback can wait on and map a rendered frame",
   anari::release(d, d);
   anari::unloadLibrary(lib);
   delete record;
+}
+
+SCENARIO(
+    "a frame that doesn't opt in to waiting without its object lock is "
+    "waited for under it",
+    "[helium_frame_callback]")
+{
+  auto *device = new TestDevice;
+  auto *frame = new LockedWaitFrame(device->state(), device);
+  auto f = (ANARIFrame)frame;
+
+  GIVEN("frameReady(ANARI_WAIT)")
+  {
+    CHECK(device->frameReady(f, ANARI_WAIT) == 1);
+  }
+
+  GIVEN("map")
+  {
+    uint32_t w = 0, h = 0;
+    ANARIDataType type = ANARI_UNKNOWN;
+    CHECK(device->frameBufferMap(f, "channel.color", &w, &h, &type) != nullptr);
+  }
+
+  frame->joinProbe();
+  CHECK(frame->lockHeldWhileWaiting);
+  CHECK(frame->getParam<int>("value", 0) == 1);
+
+  frame->refDec(helium::RefType::PUBLIC);
+  delete device;
 }

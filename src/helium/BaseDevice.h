@@ -26,11 +26,13 @@ namespace helium {
  * BaseObject, BaseArray, or BaseFrame. The device owns m_state and is expected
  * to populate it with a concrete BaseGlobalDeviceState subclass.
  *
- * Waiting for a frame is the exception to the per-object locks:
+ * Waiting for a frame can be the exception to the per-object locks:
  * frameReady(ANARI_WAIT) and frameBufferMap() first call
  * BaseFrame::waitWithoutObjectLock() without the frame's lock (holding an
  * internal reference to it instead), and only then lock the frame to call
- * BaseFrame::frameReady() or map().
+ * BaseFrame::frameReady() or map(). A frame opts in by overriding
+ * waitWithoutObjectLock(); by default it does nothing, and the wait happens
+ * under the lock.
  */
 struct BaseDevice : public anari::DeviceImpl,
                     ParameterizedObject,

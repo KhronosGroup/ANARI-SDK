@@ -271,11 +271,12 @@ void BaseDevice::renderFrame(ANARIFrame f)
 
 int BaseDevice::frameReady(ANARIFrame f, ANARIWaitMask m)
 {
-  // Wait for the frame without its object lock: while an app thread waits,
-  // another frame's completion callback may call into this frame, and on a
-  // device that runs this frame's render after that callback, a callback
-  // waiting for the lock would deadlock. The reference keeps the frame alive
-  // meanwhile, should its render or callback drop the frame's last one.
+  // Wait for the frame without its object lock, if the frame supports it:
+  // while an app thread waits, another frame's completion callback may call
+  // into this frame, and on a device that runs this frame's render after that
+  // callback, a callback waiting for the lock would deadlock. The reference
+  // keeps the frame alive meanwhile, should its render or callback drop the
+  // frame's last one.
   IntrusivePtr<BaseFrame> frame = &referenceFromHandle<BaseFrame>(f);
   if (m == ANARI_WAIT)
     frame->waitWithoutObjectLock();

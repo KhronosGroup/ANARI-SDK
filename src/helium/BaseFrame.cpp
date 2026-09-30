@@ -23,7 +23,7 @@ void BaseFrame::on_NoPublicReferences()
 
 void BaseFrame::waitWithoutObjectLock()
 {
-  frameReady(ANARI_WAIT);
+  // Opt-in (see BaseFrame.h): by default the wait happens under the lock.
 }
 
 bool BaseFrame::completingOnThisThread() const

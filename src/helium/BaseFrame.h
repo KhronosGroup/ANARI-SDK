@@ -33,20 +33,22 @@ struct BaseFrame : public BaseObject
   // Implement anariFrameReady()
   virtual int frameReady(ANARIWaitMask m) = 0;
 
-  // Waits for the frame's render, if one is in flight, to end (completion
-  // callback included). BaseDevice calls this *without* the frame's object
-  // lock before frameReady(ANARI_WAIT) and map(), which it then calls under
-  // the lock, so that other threads -- in particular another frame's
-  // completion callback, which may run ahead of this frame's render -- can
-  // call into the frame meanwhile. It may therefore run concurrently with any
-  // of the frame's other calls (renderFrame(), map(), parameter changes, ...,
-  // and waits on other threads), and must synchronize the state it reads
-  // itself. A render started after it returns is waited for under the lock.
+  // Opt-in: waits for the frame's render, if one is in flight, to end
+  // (completion callback included). BaseDevice calls this *without* the
+  // frame's object lock before frameReady(ANARI_WAIT) and map(), which it then
+  // calls under the lock, so that other threads -- in particular another
+  // frame's completion callback, which may run ahead of this frame's render
+  // -- can call into the frame meanwhile. The default does nothing, so a
+  // device that doesn't override it waits in frameReady()/map() under the
+  // lock, as before (and such a callback can deadlock on that lock).
   //
-  // If the calling thread can't wait (it would deadlock), return without
-  // waiting or reporting: frameReady() or map(), under the lock, should then
-  // report why and not wait either. The default calls frameReady(ANARI_WAIT);
-  // a device whose frameReady() isn't safe without the lock must override it.
+  // An override may run concurrently with any of the frame's other calls
+  // (renderFrame(), commits, map(), and waits on other threads), so it must
+  // synchronize the render state it reads itself. It must not report: if the
+  // calling thread can't wait (it would deadlock), return without waiting,
+  // and let frameReady() or map(), under the lock, report why and not wait
+  // either. It may rethrow the render's exception, as frameReady() would. A
+  // render started after it returns is waited for under the lock.
   virtual void waitWithoutObjectLock();
 
   // Implement anariDiscardFrame()

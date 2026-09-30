@@ -67,10 +67,13 @@ An object `getProperty()` with `ANARI_WAIT` flushes the buffer and then queries 
 
 ### Object Locks and Waiting on Frames
 
-`BaseDevice` takes an object's lock (`LockableObject`) around each API call on it. For a frame, the lock serializes parameter changes, commit snapshots, `renderFrame()`, `unmap()`, `discard()`, `frameReady(ANARI_NO_WAIT)` and the locked part of `map()`/`frameReady(ANARI_WAIT)`. It is *not* held while waiting for a frame: `anariFrameReady()` with `ANARI_WAIT` and `anariMapFrame()` first call `BaseFrame::waitWithoutObjectLock()` without the lock (holding an INTERNAL reference so the frame outlives a render or callback dropping its last one), then lock the frame and call `frameReady()`/`map()`. So while an app thread waits on frame B, frame A's completion callback may call into B; on a single-worker device, where B's render waits for A's callback to return, holding B's lock would deadlock.
+`BaseDevice` takes an object's lock (`LockableObject`) around each API call on it. For a frame, the lock serializes parameter changes, commit snapshots, `renderFrame()`, `unmap()`, `discard()`, `frameReady()` and `map()`. A frame can opt out of holding it while *waiting*: `anariFrameReady()` with `ANARI_WAIT` and `anariMapFrame()` first call `BaseFrame::waitWithoutObjectLock()` without the lock (holding an INTERNAL reference so the frame outlives a render or callback dropping its last one), then lock the frame and call `frameReady()`/`map()`. The default `waitWithoutObjectLock()` does nothing, so a frame that doesn't override it waits under the lock, as before. Overriding it (helide does) lets frame A's completion callback call into frame B while an app thread waits on B; on a single-worker device, where B's render waits for A's callback to return, a wait holding B's lock would deadlock.
 
-- `waitWithoutObjectLock()` may run concurrently with any of the frame's calls, so the render state it reads (a future, a render counter) needs the frame's own synchronization. The default calls `frameReady(ANARI_WAIT)`; override it if that isn't safe without the lock, or to skip it.
-- If the calling thread can't wait (e.g. a callback on the device's worker waiting for a frame queued behind it), `waitWithoutObjectLock()` returns without waiting or reporting, and `frameReady()`/`map()` report an ERROR under the lock and don't wait.
+An override of `waitWithoutObjectLock()` must:
+- be safe concurrently with any of the frame's calls (`renderFrame()`, commits, `map()`, waits on other threads): the render state it reads (a future, a render counter) needs the frame's own synchronization;
+- not report anything. If the calling thread can't wait (e.g. a callback on the device's worker waiting for a frame queued behind it), return without waiting; `frameReady()`/`map()` then report an ERROR under the lock and don't wait either. It may rethrow the render's exception, as `frameReady()` would.
+
+Also:
 - A render started (by another thread) between the unlocked wait and the lock is waited for under the lock, so in that narrow race a callback touching the frame can still deadlock.
 - A frame's own completion callback skips the frame's lock altogether (`BaseFrame::completingOnThisThread()`), as a thread may hold it while waiting for that callback (e.g. a device's `renderFrame()` waiting for the previous render).
 
