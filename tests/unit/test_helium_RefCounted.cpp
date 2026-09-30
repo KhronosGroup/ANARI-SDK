@@ -297,7 +297,9 @@ struct ReleasingObject : public helium::RefCounted
 {
   bool &destroyed;
   bool &destroyedInHook;
-  ReleasingObject(bool &d, bool &dh) : destroyed(d), destroyedInHook(dh) {}
+  ReleasingObject(bool &destroyed, bool &destroyedInHook)
+      : destroyed(destroyed), destroyedInHook(destroyedInHook)
+  {}
   ~ReleasingObject()
   {
     destroyed = true;
@@ -315,10 +317,10 @@ struct ReleasingObject : public helium::RefCounted
   void dropAndRecord(RefType type)
   {
     // Copied first: the object may be gone after refDec().
-    bool &d = destroyed;
-    bool &dh = destroyedInHook;
+    bool &wasDestroyed = destroyed;
+    bool &destroyedBeforeReturn = destroyedInHook;
     refDec(type);
-    dh = d;
+    destroyedBeforeReturn = wasDestroyed;
   }
 };
 
