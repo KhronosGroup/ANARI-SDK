@@ -178,10 +178,13 @@ void writeTextSummary(std::ostream &out,
   out << "  " << s.total << " cases: " << s.passed << " passed, " << s.failed
       << " failed, " << s.skipped << " skipped\n";
   out << "  by category:\n";
+  size_t width = 12;
+  for (const auto &category : s.categories)
+    width = std::max(width, category.first.size() + 1);
   for (const auto &[cat, c] : s.categories)
-    out << "    " << std::left << std::setw(12) << cat << std::right
-        << std::setw(4) << c.passed << " passed  " << std::setw(4) << c.failed
-        << " failed  " << std::setw(4) << c.skipped << " skipped\n";
+    out << "    " << std::left << std::setw(static_cast<int>(width)) << cat
+        << std::right << std::setw(4) << c.passed << " passed  " << std::setw(4)
+        << c.failed << " failed  " << std::setw(4) << c.skipped << " skipped\n";
 
   const auto keys = reportCaseKeys(results, includeAll);
   if (keys.empty())
