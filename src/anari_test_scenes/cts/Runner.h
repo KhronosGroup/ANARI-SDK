@@ -6,7 +6,9 @@
 #include "AnariObject.h"
 #include "ArtifactPublication.h"
 #include "Catalog.h"
+#include "DeviceErrorLog.h"
 #include "Image.h"
+#include "Isolation.h"
 #include "RendererParams.h"
 #include "Sidecar.h"
 #include "TestDef.h"
@@ -40,6 +42,12 @@ struct RunOptions
   // resolve against the device's declared parameter metadata.
   std::vector<RendererParam> rendererParams;
   DeviceSpec device;
+  // When set, run() runs only the Case with this Case::qualifiedId() (in
+  // this process: this is how an isolated Case runs, ADR-0009).
+  std::string onlyCase;
+  // The device's recorded ERROR messages, for behavior checks that fail on
+  // them (TestDef::failOnDeviceErrors). Not owned; may be null.
+  const DeviceErrorLog *deviceErrors{nullptr};
 };
 
 struct RunSummary
@@ -61,6 +69,11 @@ struct Runner
       Workdir workdir,
       RunOptions options,
       std::shared_ptr<ArtifactWriter> artifactWriter);
+
+  // Run each Case of a timed behavior Test (TestDef::timeout) through
+  // 'isolation' (ADR-0009). Without it, such Cases run in this process and
+  // the timeout isn't enforced.
+  void setCaseIsolation(std::shared_ptr<CaseIsolation> isolation);
 
   // Render every selected Case and save its channels under ground_truth/.
   // Does not score or write sidecars (ADR-0005).
@@ -146,10 +159,22 @@ struct Runner
       const std::set<std::string> &candidateFeatures,
       RunSummary &summary);
 
+  // Run one Case of a timed behavior Test through m_isolation and record how
+  // it ended: the sidecar the isolated process wrote, or a failure if it
+  // timed out, crashed or wrote none.
+  void runIsolatedCase(const TestDef &test, const Case &c, RunSummary &summary);
+
+  // Whether run() runs Case 'c' (RunOptions::onlyCase).
+  bool selected(const Case &c) const;
+
+  // Tally a verdict without publishing anything.
+  static void tally(Verdict verdict, RunSummary &summary);
+
   anari::Device m_device{nullptr};
   Workdir m_workdir;
   ArtifactPublisher m_artifacts;
   RunOptions m_options;
+  std::shared_ptr<CaseIsolation> m_isolation;
 
   uint32_t m_effectiveAccumulationFrames{1};
   bool m_denoiseEnabled{false};

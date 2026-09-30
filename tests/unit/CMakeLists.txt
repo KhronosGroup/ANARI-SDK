@@ -107,6 +107,7 @@ add_executable(anariCatalogTests
   test_cts_builtin_truths.cpp
   test_cts_catalog.cpp
   test_cts_deviceinfo.cpp
+  test_cts_isolation.cpp
   test_cts_metrics.cpp
   test_cts_rendererparams.cpp
   test_cts_report.cpp
@@ -125,6 +126,11 @@ PRIVATE
 # device can be loaded.
 add_test(NAME unit_test::cts::catalog COMMAND anariCatalogTests "[cts]~[helide]")
 add_test(NAME unit_test::cts::device COMMAND anariCatalogTests "[helide]")
+# The isolation tests start child processes, one of which hangs until killed;
+# the synchronization Tests run in-process here, where a device that breaks
+# them hangs.
+set_tests_properties(unit_test::cts::catalog unit_test::cts::device
+  PROPERTIES TIMEOUT 300)
 
 ## helide_gpu tests ##
 

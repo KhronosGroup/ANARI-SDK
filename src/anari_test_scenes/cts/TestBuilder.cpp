@@ -42,6 +42,18 @@ TestBuilder &TestBuilder::behavior(BehaviorFn fn)
   return *this;
 }
 
+TestBuilder &TestBuilder::timeout(std::chrono::milliseconds limit)
+{
+  m_def.timeout = limit;
+  return *this;
+}
+
+TestBuilder &TestBuilder::failOnDeviceErrors()
+{
+  m_def.failOnDeviceErrors = true;
+  return *this;
+}
+
 TestBuilder &TestBuilder::permute(std::string axis, std::vector<Any> values)
 {
   m_def.axes.push_back(

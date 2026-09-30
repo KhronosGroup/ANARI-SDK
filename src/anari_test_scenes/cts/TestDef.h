@@ -10,6 +10,7 @@
 // anari
 #include "anari/anari_cpp.hpp"
 // std
+#include <chrono>
 #include <cstdint>
 #include <functional>
 #include <map>
@@ -71,6 +72,13 @@ struct TestDef
   CameraFn cameraBuild; // empty -> runner frames camera from world bounds
   RendererFn rendererConfig; // empty -> runner keeps its renderer baseline
   BehaviorFn behaviorCheck; // set -> verify behavior instead of render+compare
+  // For a behavior check that may hang the device: when non-zero, `anariCts
+  // run` runs each Case in a child process and records it as failed if it
+  // doesn't finish within this time (ADR-0009).
+  std::chrono::milliseconds timeout{0};
+  // Fail a behavior check's Case if the device reports an ERROR while the
+  // check runs: the check only makes calls the spec allows (ADR-0009).
+  bool failOnDeviceErrors{false};
   std::vector<Axis> axes;
   std::vector<std::string> requiredFeatures;
   std::map<std::string, double>
