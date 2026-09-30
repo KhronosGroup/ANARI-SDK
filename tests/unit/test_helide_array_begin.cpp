@@ -126,6 +126,16 @@ struct Arrays
     auto array = anari::newArray1D(d, type, l.capacity);
     auto *bytes = static_cast<uint8_t *>(anari::map<void>(d, array));
     std::memset(bytes, kJunkByte, l.capacity * size);
+    if (type == ANARI_FLOAT32_MAT4) {
+      // All-0.747 matrices are singular: rendering with them in range would
+      // hand Embree NaN rays, which debug Embree asserts on. Junk transforms
+      // are invertible instead, and move their instance out of view.
+      const mat4 junkXfm = linalg::translation_matrix(float3(100.f, 0.f, 0.f));
+      for (size_t i = 0; i < l.capacity; i++) {
+        if (l.junk(i))
+          std::memcpy(bytes + i * size, &junkXfm, size);
+      }
+    }
     std::memcpy(bytes + l.begin * size, values, count * size);
     anari::unmap(d, array);
     setAndRelease(o, name, array, l);
