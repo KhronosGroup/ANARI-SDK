@@ -11,7 +11,6 @@
 #include "spatial_field/SpatialField.h"
 // std
 #include <limits>
-#include <thread>
 
 #include "anari_library_helide_queries.h"
 
@@ -29,41 +28,6 @@ void HelideDevice::unmapArray(ANARIArray a)
 {
   helium::BaseDevice::unmapArray(a);
   deviceState()->renderingSemaphore.arrayMapRelease(a);
-}
-
-// Object + Parameter Lifetime Management /////////////////////////////////////
-
-void HelideDevice::release(ANARIObject o)
-{
-  // helium runs the last public release of an array still in use through
-  // runDeviceWork(), as it privatizes the array. Mark this thread as releasing
-  // one, so that if it can't wait for that work, runDeviceWork() privatizes
-  // inline instead of refusing.
-  if (o == nullptr || handleIsDevice(o)
-      || !anari::isArray(helium::referenceFromHandle(o).type())) {
-    helium::BaseDevice::release(o);
-    return;
-  }
-
-  // runDeviceWork() takes the mark (so a status callback's query during the
-  // release isn't taken for it); drop it here if it didn't. Releases nest
-  // (a status callback may release another array), so marks are a stack.
-  bool taken = false;
-  {
-    std::lock_guard<std::mutex> lock(m_releasingMutex);
-    m_releaseMarks[std::this_thread::get_id()].push_back(&taken);
-  }
-  struct DropMark
-  {
-    HelideDevice &device;
-    const bool &taken;
-    ~DropMark()
-    {
-      if (!taken)
-        device.takeReleasingMark();
-    }
-  } dropMark{*this, taken};
-  helium::BaseDevice::release(o);
 }
 
 // Frame Rendering ////////////////////////////////////////////////////////////
@@ -340,39 +304,51 @@ void HelideDevice::deviceCommitParameters()
 
 // Runs 'work' on the task queue, after the flushes and renders already queued,
 // so it never overlaps them. On the worker (a callback) it runs directly:
-// queueing it there would wait on itself.
-//
-// If a render queued before 'work' waits for an array this thread has mapped,
-// waiting for 'work' would deadlock. Then an ANARI_WAIT query (helium's other
-// use of this) is refused with an ERROR and returns 0. A release that
-// privatizes an array must still drop its reference, so it privatizes inline
-// once the worker is idle, blocked on the mapped arrays in that render, and
-// warns: the queued render may still read the app's memory.
-void HelideDevice::runDeviceWork(const std::function<void()> &work)
+// queueing it there would wait on itself. If a render queued before 'work'
+// waits for an array this thread has mapped, waiting for 'work' would
+// deadlock: then it doesn't run 'work' and returns why.
+const char *HelideDevice::runOnQueue(const std::function<void()> &work)
 {
   auto &state = *deviceState();
   auto &queue = state.taskQueue;
   if (queue.onWorkerThread()) {
     work();
-    return;
+    return nullptr;
   }
 
   helium::tasking::Future done;
   const char *why = state.renderingSemaphore.queueUnlessThisThreadBlocksIt(
       [&]() { done = queue.enqueue(work); });
-  if (!why) {
+  if (!why)
     done.get();
-    return;
-  }
+  return why;
+}
 
-  if (!takeReleasingMark()) {
+// An ANARI_WAIT query that can't wait (see runOnQueue()) is refused with an
+// ERROR.
+bool HelideDevice::runDeviceQuery(const std::function<void(bool)> &work)
+{
+  const bool onWorker = deviceState()->taskQueue.onWorkerThread();
+  const char *why = runOnQueue([&]() { work(onWorker); });
+  if (why) {
     reportMessage(ANARI_SEVERITY_ERROR,
         "anariGetProperty() with ANARI_WAIT would deadlock: %s; not waiting",
         why);
-    return;
   }
+  return !why;
+}
 
-  state.renderingSemaphore.waitForRenderBlockedOnMaps();
+// A release that privatizes an array must drop its reference even if it can't
+// wait (see runOnQueue()), so it privatizes inline once the worker is idle,
+// blocked on the mapped arrays in that render, and warns: the queued render
+// may still read the app's memory.
+void HelideDevice::runDeviceRelease(const std::function<void()> &work)
+{
+  const char *why = runOnQueue(work);
+  if (!why)
+    return;
+
+  deviceState()->renderingSemaphore.waitForRenderBlockedOnMaps();
   // Other threads holding maps may privatize inline too: one at a time, as
   // device work would run (a status callback may release another array).
   std::lock_guard<std::recursive_mutex> inlineLock(m_inlineReleaseMutex);
@@ -382,19 +358,6 @@ void HelideDevice::runDeviceWork(const std::function<void()> &work)
       "app's memory",
       why);
   work();
-}
-
-bool HelideDevice::takeReleasingMark()
-{
-  std::lock_guard<std::mutex> lock(m_releasingMutex);
-  auto marks = m_releaseMarks.find(std::this_thread::get_id());
-  if (marks == m_releaseMarks.end())
-    return false;
-  *marks->second.back() = true;
-  marks->second.pop_back();
-  if (marks->second.empty())
-    m_releaseMarks.erase(marks);
-  return true;
 }
 
 #define HELIDE_STRINGIFY(s) HELIDE_STRINGIFY2(s)

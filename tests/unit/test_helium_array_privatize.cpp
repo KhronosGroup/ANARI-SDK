@@ -51,11 +51,11 @@ struct Observer : public helium::BaseObject
   const void *data{nullptr};
 };
 
-// Counts device work, noting whether 'watched' was privatized before and
-// after each run.
+// Counts device releases, noting whether 'watched' was privatized before and
+// after each run, and device queries.
 struct CountingDevice : public TestDevice
 {
-  void runDeviceWork(const std::function<void()> &work) override
+  void runDeviceRelease(const std::function<void()> &work) override
   {
     runs++;
     privatizedBefore = watched && watched->wasPrivatized();
@@ -63,8 +63,16 @@ struct CountingDevice : public TestDevice
     privatizedAfter = watched && watched->wasPrivatized();
   }
 
+  bool runDeviceQuery(const std::function<void(bool)> &work) override
+  {
+    queries++;
+    work(true);
+    return true;
+  }
+
   helium::Array1D *watched{nullptr};
   int runs{0};
+  int queries{0};
   bool privatizedBefore{false};
   bool privatizedAfter{false};
 };
@@ -93,9 +101,10 @@ SCENARIO(
     {
       device->release((ANARIObject)array);
 
-      THEN("the array privatizes inside device work")
+      THEN("the array privatizes inside a device release, not a query")
       {
         CHECK(device->runs == 1);
+        CHECK(device->queries == 0);
         CHECK(!device->privatizedBefore);
         CHECK(device->privatizedAfter);
         CHECK(array->data() != appData.data());

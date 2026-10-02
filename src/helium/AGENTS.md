@@ -63,7 +63,7 @@ Objects are flushed in priority order so dependencies are committed first:
 
 Timestamps skip redundant work: `commitParameters()` is called only if `lastParameterChanged > lastCommitted`.
 
-An object `getProperty()` with `ANARI_WAIT` flushes the buffer and then queries the object inside `BaseDevice::runDeviceWork()`, which runs it on the calling thread by default. A device that flushes or renders on a worker thread (helide's `TaskQueue`) must override `runDeviceWork()` to run the work there, and run it directly when already on the worker, so the flush and query never overlap a render.
+An object `getProperty()` with `ANARI_WAIT` flushes the buffer and then queries the object inside `BaseDevice::runDeviceQuery()`, which runs it on the calling thread by default. A device that flushes or renders on a worker thread (helide's `TaskQueue`) must override `runDeviceQuery()` and `runDeviceRelease()` to run the work there, and run it directly when already on the worker, so the flush and query never overlap a render. `runDeviceQuery()` tells the work whether it runs on the calling thread (off it, a frame's query skips the frame's object lock), and may refuse work it can't wait for by returning false (`getProperty()` then returns 0); `runDeviceRelease()` must always run its work.
 
 ### Object Locks and Waiting on Frames
 
@@ -126,7 +126,7 @@ void MyDevice::setParameter(ANARIObject o, const char *name, ANARIDataType t, co
 
 The host `Array` classes (SHARED/CAPTURED ownership) call `privatize()` when the app releases its public reference while the device still holds an internal one. Concrete device arrays that store GPU copies must override `privatize()` to handle this ownership transition.
 
-A privatized SHARED array's `data()` points at the private copy, so `Array` then marks its data modified and notifies its change observers, which re-finalize at the next flush (as after an unmap); objects must not cache `data()` across that. `BaseDevice::release()` runs this last public release inside `runDeviceWork()`, so it waits for a render in flight that may still read the app's memory.
+A privatized SHARED array's `data()` points at the private copy, so `Array` then marks its data modified and notifies its change observers, which re-finalize at the next flush (as after an unmap); objects must not cache `data()` across that. `BaseDevice::release()` runs this last public release inside `runDeviceRelease()`, so it waits for a render in flight that may still read the app's memory.
 
 ### Status Reporting
 

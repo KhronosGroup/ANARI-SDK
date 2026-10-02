@@ -121,22 +121,27 @@ struct BaseDevice : public anari::DeviceImpl,
       uint64_t size,
       uint32_t mask);
 
-  // Runs 'work' as device work: work that must not overlap the device's own
-  // commit-buffer flushes or renders. getProperty() runs an object's
-  // ANARI_WAIT query this way (flush the commit buffer, then query the
-  // object). The default runs 'work' on the calling thread. A device that
-  // flushes or renders on a worker thread overrides this to run 'work' there,
-  // after the work already queued, and must run it directly when called on
-  // that worker (e.g. from a completion or status callback). Run on another
-  // thread, the query does not take a frame's object lock: a thread holding
-  // it may be waiting for the frame's work queued behind the query. A device
-  // whose deviceGetProperty() flushes for ANARI_WAIT should run that flush
-  // through here too. release() also runs the app's last release of an array
+  // Device work is work that must not overlap the device's own commit-buffer
+  // flushes or renders. The defaults run it on the calling thread. A device
+  // that flushes or renders on a worker thread overrides both hooks to run
+  // the work there, after the work already queued, and must run it directly
+  // when called on that worker (e.g. from a completion or status callback).
+
+  // Runs a device query: getProperty() runs an object's ANARI_WAIT query this
+  // way (flush the commit buffer, then query the object). Pass 'work' whether
+  // it runs on the thread that called this (directly on the worker counts):
+  // run on another, the query does not take a frame's object lock, as a
+  // thread holding it may be waiting for the frame's work queued behind the
+  // query. A device whose deviceGetProperty() flushes for ANARI_WAIT should
+  // run that flush through here too. An override that can't wait for the
+  // work (it would deadlock) may refuse it, reporting why, and return false
+  // without running it; getProperty() then returns 0.
+  virtual bool runDeviceQuery(const std::function<void(bool)> &work);
+  // Runs a device release: release() runs the app's last release of an array
   // the device still uses this way, as it privatizes the array. An override
-  // that can't wait for the work (it would deadlock) may skip a query's work,
-  // reporting why (getProperty() then returns 0), but must still run a
-  // release's, which drops the reference.
-  virtual void runDeviceWork(const std::function<void()> &work);
+  // must run 'work', which drops the reference, even if it can't wait for the
+  // device's queued work.
+  virtual void runDeviceRelease(const std::function<void()> &work);
 
   std::unique_ptr<BaseGlobalDeviceState> m_state;
 

@@ -150,8 +150,8 @@ If any array is released and the above ref count case is encountered, the
 `BaseArray::privatize()` method is invoked so the implementation can respond
 accordingly based on what the implementation may require. The host arrays
 notify their observers after privatizing (their `data()` moved), and
-`BaseDevice` runs that release through `runDeviceWork()` so it does not overlap
-a render still reading the application's memory. Note that using
+`BaseDevice` runs that release through `runDeviceRelease()` so it does not
+overlap a render still reading the application's memory. Note that using
 `helium::IntrusivePtr` by default will only modify internal ref counts, so
 exclusively using it will cleanly divide application ref count changes vs.
 internal ref counts.

@@ -6,8 +6,6 @@
 #include "array/Array.h"
 // anari
 #include "anari/backend/LibraryImpl.h"
-// std
-#include <thread>
 
 namespace helium {
 
@@ -59,20 +57,19 @@ int BaseDevice::getProperty(ANARIObject object,
     return obj.getProperty(name, type, mem, size, mask);
   }
 
-  const auto caller = std::this_thread::get_id();
   int result = 0;
-  runDeviceWork([&]() {
+  const bool ran = runDeviceQuery([&](bool onCallingThread) {
     m_state->commitBuffer.flush();
-    // Device work run on another thread (a device worker) must not take a
+    // A query run on another thread (a device worker) must not take a
     // frame's lock: a thread holding it may be waiting for the frame's own
     // work, possibly queued behind this (e.g. a device's renderFrame()
     // waiting for the frame's previous render).
     std::unique_lock<std::mutex> lock;
-    if (obj.type() != ANARI_FRAME || std::this_thread::get_id() == caller)
+    if (obj.type() != ANARI_FRAME || onCallingThread)
       lock = getObjectLock(object);
     result = obj.getProperty(name, type, mem, size, mask);
   });
-  return result;
+  return ran ? result : 0;
 }
 
 // Object + Parameter Lifetime Management /////////////////////////////////////
@@ -225,7 +222,7 @@ void BaseDevice::release(ANARIObject o)
   // (copies the app's data and moves data()), so run it as device work, after
   // any render still reading the app's data.
   if (releasePrivatizes(obj))
-    runDeviceWork([&]() { obj.refDec(RefType::PUBLIC); });
+    runDeviceRelease([&]() { obj.refDec(RefType::PUBLIC); });
   else
     obj.refDec(RefType::PUBLIC);
 }
@@ -347,7 +344,13 @@ BaseDevice::~BaseDevice()
   }
 }
 
-void BaseDevice::runDeviceWork(const std::function<void()> &work)
+bool BaseDevice::runDeviceQuery(const std::function<void(bool)> &work)
+{
+  work(true);
+  return true;
+}
+
+void BaseDevice::runDeviceRelease(const std::function<void()> &work)
 {
   work();
 }

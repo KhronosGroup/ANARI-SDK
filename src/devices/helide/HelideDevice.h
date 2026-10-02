@@ -10,9 +10,6 @@
 #include "Object.h"
 // std
 #include <mutex>
-#include <thread>
-#include <unordered_map>
-#include <vector>
 
 namespace helide {
 
@@ -26,10 +23,6 @@ struct HelideDevice : public helium::BaseDevice
 
   void *mapArray(ANARIArray) override;
   void unmapArray(ANARIArray) override;
-
-  // Object + Parameter Lifetime Management ///////////////////////////////////
-
-  void release(ANARIObject) override;
 
   // Frame Rendering //////////////////////////////////////////////////////////
 
@@ -98,21 +91,17 @@ struct HelideDevice : public helium::BaseDevice
       const char *name, ANARIDataType type, void *mem, uint64_t size, uint32_t mask) override;
 
  protected:
-  void runDeviceWork(const std::function<void()> &work) override;
+  bool runDeviceQuery(const std::function<void(bool)> &work) override;
+  void runDeviceRelease(const std::function<void()> &work) override;
 
  private:
   HelideGlobalState *deviceState() const;
-  // Takes the innermost mark release() left for this thread (setting its
-  // flag); false if there was none
-  bool takeReleasingMark();
+  // Runs 'work' as device work; returns why it didn't, if it can't wait
+  const char *runOnQueue(const std::function<void()> &work);
 
   bool m_initialized{false};
 
-  // Threads inside release() of an array, until runDeviceWork() takes the
-  // mark (see there)
-  std::mutex m_releasingMutex;
-  std::unordered_map<std::thread::id, std::vector<bool *>> m_releaseMarks;
-  // Serializes releases privatizing inline (see runDeviceWork())
+  // Serializes releases privatizing inline (see runDeviceRelease())
   std::recursive_mutex m_inlineReleaseMutex;
 };
 

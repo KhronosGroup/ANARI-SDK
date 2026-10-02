@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // An object getProperty() with ANARI_WAIT flushes the commit buffer and then
-// queries the object. BaseDevice runs both through runDeviceWork(), so a
+// queries the object. BaseDevice runs both through runDeviceQuery(), so a
 // device that flushes and renders on a worker thread can run them there
 // instead of on the app thread, where they could overlap a render.
 
@@ -100,12 +100,13 @@ struct WorkerDevice : public TestDevice
     state()->commitBuffer.clear();
   }
 
-  void runDeviceWork(const std::function<void()> &work) override
+  bool runDeviceQuery(const std::function<void(bool)> &work) override
   {
     if (queue.onWorkerThread())
-      work();
+      work(true);
     else
-      queue.enqueue(work).wait();
+      queue.enqueue([&]() { work(false); }).wait();
+    return true;
   }
 
   std::thread::id workerThread()
@@ -116,6 +117,15 @@ struct WorkerDevice : public TestDevice
   }
 
   helium::tasking::TaskQueue queue{4};
+};
+
+// Refuses every device query, as a device does when waiting would deadlock.
+struct RefusingDevice : public TestDevice
+{
+  bool runDeviceQuery(const std::function<void(bool)> &) override
+  {
+    return false;
+  }
 };
 
 // Sets 'probe's "value" to 'v' and commits it through the device.
@@ -181,6 +191,36 @@ SCENARIO("an object ANARI_WAIT query flushes and queries as device work",
   }
 }
 
+SCENARIO("a refused ANARI_WAIT query neither flushes nor answers",
+    "[helium_wait_query]")
+{
+  GIVEN("a device that refuses device queries")
+  {
+    auto *device = new RefusingDevice;
+    auto *probe = new Probe(device->state());
+    setAndCommit(*device, probe, 3);
+
+    THEN("an ANARI_WAIT query returns 0 without touching the probe")
+    {
+      int v = -1;
+      CHECK(device->getProperty((ANARIObject)probe,
+                "value",
+                ANARI_INT32,
+                &v,
+                sizeof(v),
+                ANARI_WAIT)
+          == 0);
+      CHECK(v == -1);
+      CHECK(probe->commitThread == std::thread::id());
+      CHECK(probe->queryThread == std::thread::id());
+    }
+
+    device->state()->commitBuffer.clear();
+    probe->refDec(helium::RefType::PUBLIC);
+    delete device;
+  }
+}
+
 SCENARIO("a frame query run as device work on a worker skips the frame lock",
     "[helium_wait_query]")
 {
@@ -210,6 +250,40 @@ SCENARIO("a frame query run as device work on a worker skips the frame lock",
       CHECK(duration.get() == 1.f);
 
       frameLock.unlock();
+      frame->refDec(helium::RefType::PUBLIC);
+      delete device;
+    }
+  }
+}
+
+SCENARIO("a frame query run on the calling thread takes the frame lock",
+    "[helium_wait_query]")
+{
+  // Leaked on purpose: if the query never returns, its thread still uses them.
+  auto *device = new TestDevice;
+  auto *frame = new IdleFrame(device->state());
+  auto f = (ANARIFrame)frame;
+
+  GIVEN("another thread holding the frame's lock")
+  {
+    auto frameLock = frame->scopeLockObject();
+
+    THEN("an ANARI_WAIT query on the frame waits for that lock")
+    {
+      std::promise<float> result;
+      auto duration = result.get_future();
+      std::thread([device, f, p = std::move(result)]() mutable {
+        float d = 0.f;
+        device->getProperty(
+            f, "duration", ANARI_FLOAT32, &d, sizeof(d), ANARI_WAIT);
+        p.set_value(d);
+      }).detach();
+
+      CHECK(duration.wait_for(100ms) == std::future_status::timeout);
+      frameLock.unlock();
+      REQUIRE(duration.wait_for(5s) == std::future_status::ready);
+      CHECK(duration.get() == 1.f);
+
       frame->refDec(helium::RefType::PUBLIC);
       delete device;
     }
