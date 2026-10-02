@@ -136,6 +136,11 @@ void ObjectArray::updateLiveHandles()
   std::copy(m_appendedHandles.begin(), m_appendedHandles.end(), liveEnd);
 }
 
+bool ObjectArray::privatizeCopiesAppData() const
+{
+  return false;
+}
+
 void ObjectArray::privatize()
 {
   // Copies nothing for an object array (m_appHandles already holds references

@@ -214,20 +214,34 @@ void Array::initManagedMemory()
   }
 }
 
+bool Array::privatizeCopiesAppData() const
+{
+  return ownership() == ArrayDataOwnership::SHARED && !wasPrivatized();
+}
+
 void Array::on_NoPublicReferences()
 {
   reportMessage(ANARI_SEVERITY_DEBUG, "privatizing array");
   if (wasPrivatized() || ownership() == ArrayDataOwnership::MANAGED)
     return;
 
-  privatize();
+  auto privatizeAndNotify = [&]() {
+    privatize();
 
-  // data() now points at the private copy: as for an unmap, observers must
-  // re-read it at the next flush instead of keeping the app's pointer.
-  if (wasPrivatized()) {
-    markDataModified();
-    notifyChangeObservers();
-  }
+    // data() now points at the private copy: as for an unmap, observers must
+    // re-read it at the next flush instead of keeping the app's pointer.
+    if (wasPrivatized()) {
+      markDataModified();
+      notifyChangeObservers();
+    }
+  };
+
+  // Run a copy of the app's data after any render still reading it, whichever
+  // thread dropped the last public reference.
+  if (privatizeCopiesAppData())
+    deviceState()->runDeviceRelease(privatizeAndNotify);
+  else
+    privatizeAndNotify();
 }
 
 float4 readAttributeValue(const Array *arr, uint32_t i, const float4 &d)

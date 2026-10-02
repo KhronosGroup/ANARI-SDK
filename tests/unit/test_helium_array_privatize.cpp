@@ -2,24 +2,27 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Releasing the app's last reference to a shared array the device still uses
-// privatizes it: the array copies the app's data, so data() moves. BaseDevice
-// runs that release as device work (so it waits for a render in flight) and
-// the array notifies its observers, which re-finalize at the next flush and
-// pick up the new pointer.
+// privatizes it: the array copies the app's data, so data() moves. The array
+// privatizes as device work (so it waits for a render in flight), whichever
+// thread drops that reference, and notifies its observers, which re-finalize
+// at the next flush and pick up the new pointer.
 
 #include "catch.hpp"
 #include "helium_test_device.h"
 
 #include "helium/array/Array1D.h"
+#include "helium/array/ObjectArray.h"
 #include "helium/utility/ChangeObserverPtr.h"
 
 #include <algorithm>
+#include <functional>
 #include <memory>
 #include <vector>
 
 namespace {
 
 using helium_test::newSharedArray;
+using helium_test::StubObject;
 using helium_test::TestDevice;
 
 // Observes an array and records its data() at each finalize().
@@ -75,6 +78,23 @@ struct CountingDevice : public TestDevice
   int queries{0};
   bool privatizedBefore{false};
   bool privatizedAfter{false};
+};
+
+// A shared array that runs 'onNoInternalReferences' from that hook.
+struct HookedArray : public helium::Array1D
+{
+  HookedArray(helium::BaseGlobalDeviceState *s,
+      const helium::Array1DMemoryDescriptor &md)
+      : Array1D(s, md)
+  {}
+
+  void on_NoInternalReferences() override
+  {
+    if (onNoInternalReferences)
+      onNoInternalReferences();
+  }
+
+  std::function<void()> onNoInternalReferences;
 };
 
 } // namespace
@@ -226,6 +246,91 @@ SCENARIO("privatizing a shared array with a nonzero 'begin' keeps its range",
   }
 
   array->refDec(helium::RefType::INTERNAL);
+  state->commitBuffer.clear();
+  delete device;
+}
+
+SCENARIO(
+    "a last public release while a hook holds the array still privatizes as "
+    "device work",
+    "[helium_array_privatize]")
+{
+  auto *device = new CountingDevice;
+  auto *state = device->state();
+  std::vector<int> appData = {1, 2, 3, 4};
+  helium::Array1DMemoryDescriptor md;
+  md.appMemory = appData.data();
+  md.elementType = ANARI_INT32;
+  md.numItems = appData.size();
+  auto *array = new HookedArray(state, md);
+  array->commitParameters();
+  array->refInc(helium::RefType::INTERNAL);
+  device->watched = array;
+
+  GIVEN(
+      "an on_NoInternalReferences() hook that re-takes an internal "
+      "reference and releases the app's last public one")
+  {
+    // While the hook runs, refDec() holds a temporary public reference, so
+    // the app's release isn't the last one: the temporary's drop is.
+    array->onNoInternalReferences = [&]() {
+      array->refInc(helium::RefType::INTERNAL);
+      device->release((ANARIObject)array);
+    };
+
+    WHEN("the last internal reference is dropped")
+    {
+      array->refDec(helium::RefType::INTERNAL);
+
+      THEN("the array privatizes inside a device release")
+      {
+        CHECK(device->runs == 1);
+        CHECK(!device->privatizedBefore);
+        CHECK(device->privatizedAfter);
+        CHECK(array->data() != appData.data());
+      }
+    }
+  }
+
+  device->watched = nullptr;
+  array->onNoInternalReferences = nullptr;
+  array->refDec(helium::RefType::INTERNAL);
+  state->commitBuffer.clear();
+  delete device;
+}
+
+SCENARIO("releasing an object array the device uses runs no device work",
+    "[helium_array_privatize]")
+{
+  auto *device = new CountingDevice;
+  auto *state = device->state();
+  std::vector<helium::BaseObject *> objs = {
+      new StubObject(ANARI_SURFACE, state),
+      new StubObject(ANARI_SURFACE, state)};
+  std::vector<helium::BaseObject *> appHandles = objs;
+  helium::Array1DMemoryDescriptor md;
+  md.appMemory = appHandles.data();
+  md.elementType = ANARI_SURFACE;
+  md.numItems = appHandles.size();
+  auto *array = new helium::ObjectArray(state, md);
+  array->commitParameters();
+  array->finalize();
+  array->refInc(helium::RefType::INTERNAL);
+
+  WHEN("the app releases its last reference to the array")
+  {
+    device->release((ANARIObject)array);
+
+    THEN("it privatizes, copying nothing, without device work")
+    {
+      CHECK(device->runs == 0);
+      CHECK(array->wasPrivatized());
+    }
+  }
+
+  array->refDec(helium::RefType::INTERNAL);
+  for (auto *o : objs)
+    o->refDec(helium::RefType::PUBLIC);
   state->commitBuffer.clear();
   delete device;
 }

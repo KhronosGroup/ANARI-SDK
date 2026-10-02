@@ -139,6 +139,11 @@ struct Array : public BaseArray
   template <typename T>
   const T *elementsBeginAs() const;
 
+  // Whether privatize() copies the app's memory, which a render may still be
+  // reading, so it must run as device work: true for SHARED memory not yet
+  // privatized. An array whose privatize() copies nothing may return false.
+  virtual bool privatizeCopiesAppData() const;
+
   void makePrivatizedCopy(size_t numElements);
   void freeAppMemory();
   void initManagedMemory();

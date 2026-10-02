@@ -137,15 +137,19 @@ struct BaseDevice : public anari::DeviceImpl,
   // work (it would deadlock) may refuse it, reporting why, and return false
   // without running it; getProperty() then returns 0.
   virtual bool runDeviceQuery(const std::function<void(bool)> &work);
-  // Runs a device release: release() runs the app's last release of an array
-  // the device still uses this way, as it privatizes the array. An override
-  // must run 'work', which drops the reference, even if it can't wait for the
-  // device's queued work.
+  // Runs a device release: an array privatizes this way when the app's last
+  // public reference to it is dropped while the device still uses it, on
+  // whichever thread drops it (see Array::on_NoPublicReferences()). An
+  // override must run 'work' even if it can't wait for the device's queued
+  // work: the app may free its memory once the release returns.
   virtual void runDeviceRelease(const std::function<void()> &work);
 
   std::unique_ptr<BaseGlobalDeviceState> m_state;
 
  private:
+  // Arrays run their privatize through runDeviceRelease() via the state
+  friend struct BaseGlobalDeviceState;
+
   // Holds the object's lock; empty for a frame whose completion callback is
   // running on this thread (see BaseFrame::completingOnThisThread()).
   std::unique_lock<std::mutex> getObjectLock(ANARIObject object);

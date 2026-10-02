@@ -102,8 +102,8 @@ struct MyDeviceState : public helium::BaseGlobalDeviceState {
   MyRenderer *renderer{nullptr};
 };
 
-// In device constructor:
-m_state = std::make_unique<MyDeviceState>(this_device_ptr);
+// In device constructor (must be this device's this_device()):
+m_state = std::make_unique<MyDeviceState>(this_device());
 
 // In objects (cast from the base pointer stored on device):
 auto &s = *static_cast<MyDeviceState *>(deviceState());
@@ -126,7 +126,7 @@ void MyDevice::setParameter(ANARIObject o, const char *name, ANARIDataType t, co
 
 The host `Array` classes (SHARED/CAPTURED ownership) call `privatize()` when the app releases its public reference while the device still holds an internal one. Concrete device arrays that store GPU copies must override `privatize()` to handle this ownership transition.
 
-A privatized SHARED array's `data()` points at the private copy, so `Array` then marks its data modified and notifies its change observers, which re-finalize at the next flush (as after an unmap); objects must not cache `data()` across that. `BaseDevice::release()` runs this last public release inside `runDeviceRelease()`, so it waits for a render in flight that may still read the app's memory.
+A privatized SHARED array's `data()` points at the private copy, so `Array` then marks its data modified and notifies its change observers, which re-finalize at the next flush (as after an unmap); objects must not cache `data()` across that. `Array::on_NoPublicReferences()` runs that privatize inside the device's `runDeviceRelease()` (reached through `BaseGlobalDeviceState`, which keeps the device it was constructed with), whichever thread drops the last public reference, so it waits for a render in flight that may still read the app's memory. Only a privatize that copies the app's memory runs this way (`Array::privatizeCopiesAppData()`: SHARED and not yet privatized); `ObjectArray` copies nothing and privatizes inline. A device's global state must therefore be constructed with the device's `this_device()`.
 
 ### Status Reporting
 

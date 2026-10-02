@@ -58,6 +58,7 @@ struct ObjectArray : public Array
 
  private:
   void privatize() override;
+  bool privatizeCopiesAppData() const override;
 };
 
 } // namespace helium
