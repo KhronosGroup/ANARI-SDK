@@ -271,8 +271,8 @@ SCENARIO(
       "an on_NoInternalReferences() hook that re-takes an internal "
       "reference and releases the app's last public one")
   {
-    // While the hook runs, refDec() holds a temporary public reference, so
-    // the app's release isn't the last one: the temporary's drop is.
+    // While the hook runs, refDec() still holds the last internal reference,
+    // so the app's release privatizes the array the device still uses.
     array->onNoInternalReferences = [&]() {
       array->refInc(helium::RefType::INTERNAL);
       device->release((ANARIObject)array);
