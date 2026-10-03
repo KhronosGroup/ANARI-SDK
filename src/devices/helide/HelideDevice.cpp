@@ -20,14 +20,30 @@ namespace helide {
 
 void *HelideDevice::mapArray(ANARIArray a)
 {
-  deviceState()->renderingSemaphore.arrayMapAcquire();
+  deviceState()->renderingSemaphore.arrayMapAcquire(a);
   return helium::BaseDevice::mapArray(a);
 }
 
 void HelideDevice::unmapArray(ANARIArray a)
 {
   helium::BaseDevice::unmapArray(a);
-  deviceState()->renderingSemaphore.arrayMapRelease();
+  deviceState()->renderingSemaphore.arrayMapRelease(a);
+}
+
+// Frame Rendering ////////////////////////////////////////////////////////////
+
+void HelideDevice::renderFrame(ANARIFrame f)
+{
+  // The render may end, and its completion callback release the frame's last
+  // public reference, before this call returns (and unlocks the frame's
+  // object lock). Keep the frame alive until then.
+  helium::IntrusivePtr<Frame> frame = &helium::referenceFromHandle<Frame>(f);
+  // Wait for the frame's previous render before taking the frame's object
+  // lock, as helium does for anariFrameReady() and anariMapFrame(), so that
+  // another frame's completion callback can call into this frame meanwhile.
+  // Frame::renderFrame() reports it if this thread can't wait.
+  frame->waitWithoutObjectLock();
+  helium::BaseDevice::renderFrame(f);
 }
 
 // API Objects ////////////////////////////////////////////////////////////////
@@ -284,6 +300,64 @@ void HelideDevice::deviceCommitParameters()
     state.objectUpdates.lastBLSReconstructSceneRequest = helium::newTimeStamp();
 
   helium::BaseDevice::deviceCommitParameters();
+}
+
+// Runs 'work' on the task queue, after the flushes and renders already queued,
+// so it never overlaps them. On the worker (a callback) it runs directly:
+// queueing it there would wait on itself. If a render queued before 'work'
+// waits for an array this thread has mapped, waiting for 'work' would
+// deadlock: then it doesn't run 'work' and returns why.
+const char *HelideDevice::runOnQueue(const std::function<void()> &work)
+{
+  auto &state = *deviceState();
+  auto &queue = state.taskQueue;
+  if (queue.onWorkerThread()) {
+    work();
+    return nullptr;
+  }
+
+  helium::tasking::Future done;
+  const char *why = state.renderingSemaphore.queueUnlessThisThreadBlocksIt(
+      [&]() { done = queue.enqueue(work); });
+  if (!why)
+    done.get();
+  return why;
+}
+
+// An ANARI_WAIT query that can't wait (see runOnQueue()) is refused with an
+// ERROR.
+bool HelideDevice::runDeviceQuery(const std::function<void(bool)> &work)
+{
+  const bool onWorker = deviceState()->taskQueue.onWorkerThread();
+  const char *why = runOnQueue([&]() { work(onWorker); });
+  if (why) {
+    reportMessage(ANARI_SEVERITY_ERROR,
+        "anariGetProperty() with ANARI_WAIT would deadlock: %s; not waiting",
+        why);
+  }
+  return !why;
+}
+
+// A release that privatizes an array must drop its reference even if it can't
+// wait (see runOnQueue()), so it privatizes inline once the worker is idle,
+// blocked on the mapped arrays in that render, and warns: the queued render
+// may still read the app's memory.
+void HelideDevice::runDeviceRelease(const std::function<void()> &work)
+{
+  const char *why = runOnQueue(work);
+  if (!why)
+    return;
+
+  deviceState()->renderingSemaphore.waitForRenderBlockedOnMaps();
+  // Other threads holding maps may privatize inline too: one at a time, as
+  // device work would run (a status callback may release another array).
+  std::lock_guard<std::recursive_mutex> inlineLock(m_inlineReleaseMutex);
+  reportMessage(ANARI_SEVERITY_WARNING,
+      "anariRelease() of a shared array can't wait for queued renders "
+      "(%s); privatizing it now, but a queued render may still read the "
+      "app's memory",
+      why);
+  work();
 }
 
 #define HELIDE_STRINGIFY(s) HELIDE_STRINGIFY2(s)

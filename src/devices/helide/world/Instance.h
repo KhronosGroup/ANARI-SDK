@@ -21,7 +21,8 @@ struct Instance : public Object
 
   const mat4 &xfm(uint32_t i = 0) const;
   const mat4 &invXfm(uint32_t i = 0) const;
-  mat3 xfmInvRot(uint32_t i = 0) const;
+  // Normal matrix (inverse transpose of the linear part) of transform 'i'
+  mat3 xfmNormal(uint32_t i = 0) const;
 
   uint32_t id(uint32_t i = 0) const;
 
@@ -32,7 +33,6 @@ struct Instance : public Object
 
   RTCGeometry embreeGeometry() const;
   void embreeGeometryUpdate();
-
 
  private:
   mat4 m_xfm;
@@ -60,9 +60,9 @@ struct Instance : public Object
 
 // Inlined definitions ////////////////////////////////////////////////////////
 
-inline mat3 Instance::xfmInvRot(uint32_t i) const
+inline mat3 Instance::xfmNormal(uint32_t i) const
 {
-  return linalg::inverse(extractRotation(xfm(i)));
+  return linalg::transpose(linalg::inverse(extractRotation(xfm(i))));
 }
 
 } // namespace helide

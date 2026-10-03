@@ -365,6 +365,46 @@ void mapFromCallback(const void *userPtr, ANARIDevice d, ANARIFrame f)
   r.ready = anari::isReady(d, f);
 }
 
+// What a helide completion callback observed mapping an array, and the frame
+// duration it read.
+struct ArrayCallbackRecord
+{
+  anari::Array1D array{nullptr};
+  bool mapped{false};
+  float duration{-1.f};
+};
+
+void mapArrayFromCallback(const void *userPtr, ANARIDevice d, ANARIFrame f)
+{
+  auto &r = *(ArrayCallbackRecord *)userPtr;
+  auto *values = anari::map<float>(d, r.array);
+  r.mapped = values != nullptr;
+  if (values)
+    values[0] = 1.f;
+  anari::unmap(d, r.array);
+  anari::getProperty(d, f, "duration", r.duration, ANARI_NO_WAIT);
+}
+
+// What a helide completion callback observed querying its frame's world.
+struct WorldCallbackRecord
+{
+  anari::World world{nullptr};
+  int found{-1};
+};
+
+void queryWorldFromCallback(const void *userPtr, ANARIDevice d, ANARIFrame)
+{
+  auto &r = *(WorldCallbackRecord *)userPtr;
+  float bounds[6] = {};
+  r.found = anariGetProperty(d,
+      r.world,
+      "bounds",
+      ANARI_FLOAT32_BOX3,
+      bounds,
+      sizeof(bounds),
+      ANARI_WAIT);
+}
+
 // A 4x4 helide frame of an empty world with the given renderer 'background',
 // which calls 'callback' with 'userPtr' when it completes.
 anari::Frame newCallbackFrame(anari::Device d,
@@ -486,6 +526,63 @@ SCENARIO("a helide completion callback can map its frame while the app waits",
 }
 
 SCENARIO(
+    "a helide completion callback can map an array and sees its frame's "
+    "duration",
+    "[helide][helium_frame_callback]")
+{
+  anari::Library lib = anari::loadLibrary("helide");
+  if (lib == nullptr) {
+    WARN("helide library not available; skipping helide callback test");
+    return;
+  }
+
+  // Leaked on purpose: if the callback deadlocks, its thread still uses them.
+  anari::Device d = anari::newDevice(lib, "default");
+  auto *record = new ArrayCallbackRecord;
+  record->array = anari::newArray1D(d, ANARI_FLOAT32, 4);
+  auto frame = newCallbackFrame(d, mapArrayFromCallback, record);
+
+  REQUIRE(renderAndWait(d, frame));
+  CHECK(record->mapped);
+  // The duration of this frame, not the previous frame's (0).
+  CHECK(record->duration > 0.f);
+
+  anari::release(d, frame);
+  anari::release(d, record->array);
+  anari::release(d, d);
+  anari::unloadLibrary(lib);
+  delete record;
+}
+
+SCENARIO("a helide completion callback can WAIT on a query of its world",
+    "[helide][helium_frame_callback]")
+{
+  anari::Library lib = anari::loadLibrary("helide");
+  if (lib == nullptr) {
+    WARN("helide library not available; skipping helide callback test");
+    return;
+  }
+
+  // Leaked on purpose: if the callback deadlocks, its thread still uses them.
+  anari::Device d = anari::newDevice(lib, "default");
+  auto *record = new WorldCallbackRecord;
+  auto frame = newCallbackFrame(d, queryWorldFromCallback, record);
+  record->world = anari::newObject<anari::World>(d);
+  anari::commitParameters(d, record->world);
+  anari::setParameter(d, frame, "world", record->world);
+  anari::commitParameters(d, frame);
+
+  REQUIRE(renderAndWait(d, frame));
+  CHECK(record->found != -1);
+
+  anari::release(d, frame);
+  anari::release(d, record->world);
+  anari::release(d, d);
+  anari::unloadLibrary(lib);
+  delete record;
+}
+
+SCENARIO(
     "a completion callback can call into the device on another frame an app "
     "thread waits on",
     "[helium_frame_callback]")
@@ -544,6 +641,87 @@ SCENARIO(
   other->refDec(helium::RefType::PUBLIC);
   delete record;
   delete device;
+}
+
+SCENARIO(
+    "a helide completion callback calling into another frame an app thread "
+    "waits on reports the waits it can't make instead of hanging",
+    "[helide][helium_frame_callback]")
+{
+  helide_test::StatusLog log;
+  anari::Library lib =
+      anari::loadLibrary("helide", helide_test::collectStatus, &log);
+  if (lib == nullptr) {
+    WARN("helide library not available; skipping helide callback test");
+    return;
+  }
+
+  // Leaked on purpose: if the callback deadlocks, its thread still uses them.
+  anari::Device d = anari::newDevice(lib, "default");
+  auto *record = new HelideOtherFrameRecord;
+  auto frame = newCallbackFrame(d, callIntoOtherFrameFromCallback, record);
+  record->other = newCallbackFrame(d, nullptr, nullptr);
+
+  // helide's single worker renders 'other' after 'frame's callback returns.
+  anari::render(d, frame);
+  anari::render(d, record->other);
+
+  std::promise<bool> waited;
+  auto waitResult = waited.get_future();
+
+  GIVEN("an app thread blocked in anariFrameReady(ANARI_WAIT) on the other")
+  {
+    std::thread([d, record, p = std::move(waited)]() mutable {
+      record->appWaiting.set();
+      p.set_value(anariFrameReady(d, record->other, ANARI_WAIT) == 1);
+    }).detach();
+  }
+
+  GIVEN("an app thread blocked mapping the other frame")
+  {
+    std::thread([d, record, p = std::move(waited)]() mutable {
+      record->appWaiting.set();
+      auto mapped =
+          anari::map<anari::math::float4>(d, record->other, "channel.color");
+      p.set_value(mapped.data != nullptr);
+      anari::unmap(d, record->other, "channel.color");
+    }).detach();
+  }
+
+  GIVEN(
+      "an app thread rendering the other frame again, which waits for its "
+      "previous render")
+  {
+    std::thread([d, record, p = std::move(waited)]() mutable {
+      record->appWaiting.set();
+      anari::render(d, record->other);
+      p.set_value(true);
+    }).detach();
+  }
+
+  // Each GIVEN ends here with the app thread started.
+  REQUIRE(waitResult.wait_for(10s) == std::future_status::ready);
+  CHECK(waitResult.get());
+  anari::wait(d, frame);
+
+  CHECK(record->done);
+  // The other frame's render is queued behind the callback: its calls that
+  // would wait for it are refused, the rest go through.
+  CHECK(record->readyNoWait == 0);
+  CHECK(record->readyWait == 0);
+  CHECK_FALSE(record->mapped);
+  CHECK(record->queried);
+  CHECK(
+      log.errors.contains("anariFrameReady() with ANARI_WAIT would deadlock"));
+  CHECK(log.errors.contains("anariMapFrame() would deadlock"));
+  CHECK(log.errors.contains("anariRenderFrame() would deadlock"));
+
+  anari::wait(d, record->other);
+  anari::release(d, frame);
+  anari::release(d, record->other);
+  anari::release(d, d);
+  anari::unloadLibrary(lib);
+  delete record;
 }
 
 SCENARIO("a helide completion callback can wait on and map a rendered frame",
