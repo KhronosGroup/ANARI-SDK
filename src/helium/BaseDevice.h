@@ -9,6 +9,8 @@
 #include "utility/ParameterizedObject.h"
 // anari
 #include "anari/backend/DeviceImpl.h"
+// std
+#include <functional>
 
 namespace helium {
 
@@ -23,6 +25,14 @@ namespace helium {
  * anari::DeviceImpl. All objects passed through the API must derive from
  * BaseObject, BaseArray, or BaseFrame. The device owns m_state and is expected
  * to populate it with a concrete BaseGlobalDeviceState subclass.
+ *
+ * Waiting for a frame can be the exception to the per-object locks:
+ * frameReady(ANARI_WAIT) and frameBufferMap() first call
+ * BaseFrame::waitWithoutObjectLock() without the frame's lock (holding an
+ * internal reference to it instead), and only then lock the frame to call
+ * BaseFrame::frameReady() or map(). A frame opts in by overriding
+ * waitWithoutObjectLock(); by default it does nothing, and the wait happens
+ * under the lock.
  */
 struct BaseDevice : public anari::DeviceImpl,
                     ParameterizedObject,
@@ -111,9 +121,35 @@ struct BaseDevice : public anari::DeviceImpl,
       uint64_t size,
       uint32_t mask);
 
+  // Device work is work that must not overlap the device's own commit-buffer
+  // flushes or renders. The defaults run it on the calling thread. A device
+  // that flushes or renders on a worker thread overrides both hooks to run
+  // the work there, after the work already queued, and must run it directly
+  // when called on that worker (e.g. from a completion or status callback).
+
+  // Runs a device query: getProperty() runs an object's ANARI_WAIT query this
+  // way (flush the commit buffer, then query the object). Pass 'work' whether
+  // it runs on the thread that called this (directly on the worker counts):
+  // run on another, the query does not take a frame's object lock, as a
+  // thread holding it may be waiting for the frame's work queued behind the
+  // query. A device whose deviceGetProperty() flushes for ANARI_WAIT should
+  // run that flush through here too. An override that can't wait for the
+  // work (it would deadlock) may refuse it, reporting why, and return false
+  // without running it; getProperty() then returns 0.
+  virtual bool runDeviceQuery(const std::function<void(bool)> &work);
+  // Runs a device release: an array privatizes this way when the app's last
+  // public reference to it is dropped while the device still uses it, on
+  // whichever thread drops it (see Array::on_NoPublicReferences()). An
+  // override must run 'work' even if it can't wait for the device's queued
+  // work: the app may free its memory once the release returns.
+  virtual void runDeviceRelease(const std::function<void()> &work);
+
   std::unique_ptr<BaseGlobalDeviceState> m_state;
 
  private:
+  // Arrays run their privatize through runDeviceRelease() via the state
+  friend struct BaseGlobalDeviceState;
+
   // Holds the object's lock; empty for a frame whose completion callback is
   // running on this thread (see BaseFrame::completingOnThisThread()).
   std::unique_lock<std::mutex> getObjectLock(ANARIObject object);

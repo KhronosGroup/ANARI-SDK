@@ -6,6 +6,7 @@
 #include "TimeStamp.h"
 // std
 #include <mutex>
+#include <thread>
 #include <vector>
 
 namespace helium {
@@ -34,11 +35,14 @@ struct DeferredCommitBuffer
   // buffer if-needed (don't do this at the call site).
   void addObjectToCommit(BaseObject *obj);
 
-  // Add an object to be finalized only.
+  // Add an object to be finalized only. Called from inside a flush on the
+  // flushing thread (an observer notified by an object that flush finalized),
+  // the object is finalized by that same flush.
   void addObjectToFinalize(BaseObject *obj);
 
   // Sort objects by priority and call BaseObject::commitParameters() and
-  // BaseObject::finalize() on each object.
+  // BaseObject::finalize() on each object. A flush called from inside one on
+  // the same thread (e.g. from a status callback) does nothing.
   void flush();
 
   // Return when this buffer was last committed any object
@@ -55,6 +59,7 @@ struct DeferredCommitBuffer
 
  private:
   void swapBuffers();
+  void setFlushingThread(std::thread::id id);
   void flushCommits();
   void flushFinalizations();
   void clearImpl();
@@ -67,6 +72,8 @@ struct DeferredCommitBuffer
   bool m_needToSortFinalizations{false};
   TimeStamp m_lastCommit{0};
   TimeStamp m_lastFinalization{0};
+  bool m_flushing{false}; // guarded by m_flushMutex
+  std::thread::id m_flushingThread; // guarded by m_swapMutex
   mutable std::recursive_mutex m_swapMutex;
   mutable std::recursive_mutex m_flushMutex;
 };

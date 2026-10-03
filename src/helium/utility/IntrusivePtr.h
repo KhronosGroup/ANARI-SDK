@@ -33,7 +33,11 @@ enum RefType : std::uint64_t
  * renders).
  *   - INTERNAL (upper 32 bits): incremented/decremented by IntrusivePtr<T>.
  *     Keeps the object alive even after the application releases it.
- * The object is deleted only when both counts reach zero simultaneously.
+ * The object is deleted only when both counts reach zero simultaneously. A
+ * hook runs while the object holds an INTERNAL reference for it (the one being
+ * dropped, for on_NoInternalReferences()), so the object outlives the hook
+ * even if other threads drop theirs meanwhile; the hook sees that reference
+ * in useCount(), never an extra PUBLIC one.
  * RefCounted objects are non-copyable and non-movable.
  */
 class RefCounted
@@ -57,6 +61,9 @@ class RefCounted
   virtual void on_NoInternalReferences();
 
  private:
+  // Drops the INTERNAL reference held for a hook: deletes at zero, no hooks.
+  void dropHookReference();
+
   static constexpr std::uint64_t PUBLIC_MASK = UINT64_C(0x00000000FFFFFFFF);
   static constexpr std::uint64_t INTERNAL_MASK = UINT64_C(0xFFFFFFFF00000000);
   std::atomic<std::uint64_t> m_count{1};
@@ -75,17 +82,40 @@ inline void RefCounted::refDec(RefType type)
 {
   assert(type == RefType::PUBLIC || type == RefType::INTERNAL);
 
-  std::uint64_t prev = m_count.fetch_sub(type);
-  // if the previous value was type it has to be 0 now
+  const std::uint64_t mask =
+      type == RefType::PUBLIC ? PUBLIC_MASK : INTERNAL_MASK;
+
+  // Once this reference is gone, another thread may drop the last one and
+  // delete the object. So the last reference of one kind, while references of
+  // the other remain, is swapped for an INTERNAL one in the same atomic step
+  // (for the last INTERNAL one, it's kept), holding the object through its
+  // hook.
+  std::uint64_t prev = m_count.load();
+  std::uint64_t next = 0;
+  bool hook = false;
+  do {
+    hook = (prev & mask) == type && prev != type;
+    next = prev - type + (hook ? RefType::INTERNAL : 0);
+  } while (!m_count.compare_exchange_weak(prev, next));
+
   if (prev == type) {
     delete this;
     return;
   }
+  if (!hook)
+    return;
 
-  if (type == RefType::PUBLIC && (prev & PUBLIC_MASK) == RefType::PUBLIC)
+  if (type == RefType::PUBLIC)
     on_NoPublicReferences();
-  if (type == RefType::INTERNAL && (prev & INTERNAL_MASK) == RefType::INTERNAL)
+  else
     on_NoInternalReferences();
+  dropHookReference();
+}
+
+inline void RefCounted::dropHookReference()
+{
+  if (m_count.fetch_sub(RefType::INTERNAL) == RefType::INTERNAL)
+    delete this;
 }
 
 inline uint32_t RefCounted::useCount(RefType type) const

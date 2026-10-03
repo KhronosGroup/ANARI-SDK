@@ -148,9 +148,9 @@ struct ParameterizedObject
   // Guards m_paramsCommitted between the snapshot write
   // (commitParameterSnapshot, at anariCommitParameters() time) and the deferred
   // read (a ReadCommittedScope around commitParameters()/finalize() on the
-  // flush thread). A dedicated mutex, not the object lock: frameReady() holds
-  // the object lock while blocked on the flush, so reusing it here would
-  // deadlock.
+  // flush thread). A dedicated mutex, not the object lock: a frame call such
+  // as a device's renderFrame() may hold the object lock while blocked on the
+  // flush, so reusing it here would deadlock.
   std::mutex m_commitReadMutex;
   // Selects committed vs. staging reads (see ReadCommittedScope). Atomic
   // because the flush thread toggles it while an app-side getter may read it
