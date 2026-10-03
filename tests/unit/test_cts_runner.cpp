@@ -3,19 +3,25 @@
 
 #include "catch.hpp"
 // cts
+#include "cts/BuiltinTests.h"
 #include "cts/Case.h"
 #include "cts/Catalog.h"
+#include "cts/DeviceErrorLog.h"
+#include "cts/Expansion.h"
 #include "cts/FrameFormats.h"
 #include "cts/FrameReadback.h"
 #include "cts/GeometryBuilder.h"
+#include "cts/Isolation.h"
 #include "cts/LightBuilder.h"
 #include "cts/Runner.h"
 #include "cts/SurfaceBuilder.h"
 #include "cts/TestBuilder.h"
 #include "cts/WorldBuilder.h"
 // std
+#include <chrono>
 #include <filesystem>
 #include <fstream>
+#include <functional>
 #include <limits>
 #include <memory>
 #include <set>
@@ -994,6 +1000,355 @@ TEST_CASE("Runner verifies behavioral tests via the behavior hook",
     const auto bogusText = readFile(Workdir(root).sidecarPath(bogus));
     CHECK(bogusText.find("\"verdict\": \"skipped\"") != std::string::npos);
     CHECK(bogusText.find("feature") != std::string::npos);
+  }
+
+  std::filesystem::remove_all(root, ec);
+  anari::release(d, d);
+  anari::unloadLibrary(lib);
+}
+
+// Timed behavior Tests (ADR-0009) /////////////////////////////////////////////
+
+namespace {
+
+// Stands in for the child process an isolated Case runs in: 'body' plays
+// the process (it may write the Case's sidecar) and says how it ended.
+struct FakeIsolation : public CaseIsolation
+{
+  std::function<ProcessResult(const Case &)> body;
+  std::vector<std::string> ran;
+  std::chrono::milliseconds lastTimeout{0};
+
+  ProcessResult run(const Case &c, std::chrono::milliseconds timeout) override
+  {
+    ran.push_back(c.qualifiedId());
+    lastTimeout = timeout;
+    return body(c);
+  }
+};
+
+ProcessResult exited(int code)
+{
+  ProcessResult r;
+  r.status = ProcessResult::Status::Exited;
+  r.exitCode = code;
+  if (code != 0)
+    r.detail = "exited with code " + std::to_string(code);
+  return r;
+}
+
+BehaviorResult passingCheck(anari::Device,
+    anari::World,
+    anari::Camera,
+    anari::Renderer,
+    uint32_t,
+    uint32_t)
+{
+  return {true, "fine"};
+}
+
+} // namespace
+
+TEST_CASE("Runner records how an isolated timed behavior Case ended",
+    "[cts][runner][isolation]")
+{
+  const auto root =
+      std::filesystem::temp_directory_path() / "cts_isolation_test";
+  std::error_code ec;
+  std::filesystem::remove_all(root, ec);
+
+  Catalog cat;
+  makeTest("synchronization", "timed")
+      .description("A timed check.")
+      .behavior(passingCheck)
+      .timeout(std::chrono::seconds(5))
+      .registerInto(cat);
+  makeTest("synchronization", "timed_bogus")
+      .behavior(passingCheck)
+      .timeout(std::chrono::seconds(5))
+      .requireFeature("ANARI_KHR_BOGUS_FEATURE")
+      .registerInto(cat);
+
+  Case timed;
+  timed.category = "synchronization";
+  timed.testName = "timed";
+  const Workdir workdir(root);
+  const auto sidecar = workdir.sidecarPath(timed);
+
+  // The child writes a sidecar with this verdict, as `anariCts run
+  // --isolated-case` does.
+  auto writeResult = [&](Verdict verdict, const std::string &detail) {
+    CaseResult r;
+    r.category = timed.category;
+    r.test = timed.testName;
+    r.caseId = timed.id();
+    r.verdict = verdict;
+    r.detail = detail;
+    REQUIRE(writeSidecar(sidecar, r));
+  };
+
+  auto isolation = std::make_shared<FakeIsolation>();
+  // No device: the Cases run (or are skipped) without the runner touching one.
+  Runner runner(nullptr, workdir, RunOptions{});
+  runner.setCaseIsolation(isolation);
+
+  auto verdictOf = [&]() {
+    CaseResult r;
+    REQUIRE(readSidecar(sidecar, r));
+    return r;
+  };
+
+  SECTION("a clean exit reports the child's sidecar")
+  {
+    isolation->body = [&](const Case &) {
+      writeResult(Verdict::Passed, "fine");
+      return exited(0);
+    };
+    const auto s = runner.run(cat, Filter{""}, {});
+    CHECK(s.total == 2);
+    CHECK(s.passed == 1);
+    CHECK(s.skipped == 1);
+    CHECK(s.failed == 0);
+    // Only the runnable Case was isolated, with its Test's timeout.
+    REQUIRE(isolation->ran.size() == 1);
+    CHECK(isolation->ran[0] == "synchronization/timed/default");
+    CHECK(isolation->lastTimeout == std::chrono::seconds(5));
+    CHECK(verdictOf().verdict == Verdict::Passed);
+  }
+
+  SECTION("a timeout is a failure that says the device hung")
+  {
+    isolation->body = [&](const Case &) {
+      ProcessResult r;
+      r.status = ProcessResult::Status::TimedOut;
+      return r;
+    };
+    const auto s = runner.run(cat, Filter{"timed"}, {});
+    CHECK(s.failed == 1);
+    const auto r = verdictOf();
+    CHECK(r.verdict == Verdict::Failed);
+    CHECK(r.detail.find("timed out after 5 s") != std::string::npos);
+    CHECK(r.description == "A timed check.");
+  }
+
+  SECTION("a hang after the check keeps the check's own result in the detail")
+  {
+    isolation->body = [&](const Case &) {
+      writeResult(Verdict::Passed, "fine");
+      ProcessResult r;
+      r.status = ProcessResult::Status::TimedOut;
+      return r;
+    };
+    runner.run(cat, Filter{"timed"}, {});
+    const auto r = verdictOf();
+    CHECK(r.verdict == Verdict::Failed);
+    CHECK(r.detail.find("timed out") != std::string::npos);
+    CHECK(r.detail.find("passed: fine") != std::string::npos);
+  }
+
+  SECTION("a crash is a failure with the crash")
+  {
+    isolation->body = [&](const Case &) {
+      ProcessResult r;
+      r.status = ProcessResult::Status::Crashed;
+      r.detail = "killed by signal 11 (Segmentation fault)";
+      return r;
+    };
+    const auto s = runner.run(cat, Filter{"timed"}, {});
+    CHECK(s.failed == 1);
+    CHECK(verdictOf().detail.find("signal 11") != std::string::npos);
+  }
+
+  SECTION("a child that writes no result fails, even over a stale sidecar")
+  {
+    writeResult(Verdict::Passed, "left by an earlier run");
+    isolation->body = [&](const Case &) { return exited(0); };
+    const auto s = runner.run(cat, Filter{"timed"}, {});
+    CHECK(s.failed == 1);
+    const auto r = verdictOf();
+    CHECK(r.verdict == Verdict::Failed);
+    CHECK(r.detail.find("without writing a result") != std::string::npos);
+  }
+
+  SECTION("a child that can't start fails")
+  {
+    isolation->body = [&](const Case &) {
+      ProcessResult r;
+      r.status = ProcessResult::Status::NotStarted;
+      r.detail = "no such file";
+      return r;
+    };
+    runner.run(cat, Filter{"timed"}, {});
+    CHECK(verdictOf().detail.find("no such file") != std::string::npos);
+  }
+
+  std::filesystem::remove_all(root, ec);
+}
+
+TEST_CASE("Runner runs a timed behavior Case in-process without isolation",
+    "[cts][runner][helide]")
+{
+  DeviceErrorLog errors;
+  auto recordStatus = [](const void *userData,
+                          anari::Device,
+                          anari::Object,
+                          anari::DataType,
+                          anari::StatusSeverity severity,
+                          anari::StatusCode,
+                          const char *message) {
+    static_cast<DeviceErrorLog *>(const_cast<void *>(userData))
+        ->record(severity, message);
+  };
+  anari::Library lib = anari::loadLibrary("helide", recordStatus, &errors);
+  if (!lib) {
+    WARN("helide library not available; skipping timed behavior test");
+    return;
+  }
+  anari::Device d = anari::newDevice(lib, "default");
+  REQUIRE(d != nullptr);
+  anari::commitParameters(d, d);
+
+  const auto root =
+      std::filesystem::temp_directory_path() / "cts_timed_inprocess_test";
+  std::error_code ec;
+  std::filesystem::remove_all(root, ec);
+
+  // A check that makes the device report an ERROR: waiting on a frame whose
+  // render waits for an array this thread has mapped.
+  auto provokeError = [](anari::Device dev,
+                          anari::World w,
+                          anari::Camera cam,
+                          anari::Renderer r,
+                          uint32_t width,
+                          uint32_t height) -> BehaviorResult {
+    auto f = anari::newObject<anari::Frame>(dev);
+    anari::setParameter(
+        dev, f, "size", anari::math::vec<uint32_t, 2>(width, height));
+    anari::setParameter(dev, f, "channel.color", ANARI_UFIXED8_RGBA_SRGB);
+    anari::setParameter(dev, f, "world", w);
+    anari::setParameter(dev, f, "camera", cam);
+    anari::setParameter(dev, f, "renderer", r);
+    anari::commitParameters(dev, f);
+    auto a = anari::newArray1D(dev, ANARI_FLOAT32, 4);
+    anari::map<float>(dev, a);
+    anari::render(dev, f);
+    anariFrameReady(dev, f, ANARI_WAIT);
+    anari::unmap(dev, a);
+    anari::wait(dev, f);
+    anari::release(dev, a);
+    anari::release(dev, f);
+    return {true, "made an error"};
+  };
+
+  Catalog cat;
+  makeTest("synchronization", "strict")
+      .build(buildTriangleWorld)
+      .behavior(provokeError)
+      .timeout(std::chrono::seconds(30))
+      .failOnDeviceErrors()
+      .registerInto(cat);
+  makeTest("synchronization", "lenient")
+      .build(buildTriangleWorld)
+      .behavior(provokeError)
+      .timeout(std::chrono::seconds(30))
+      .registerInto(cat);
+
+  RunOptions opts;
+  opts.width = 16;
+  opts.height = 16;
+  opts.deviceErrors = &errors;
+  const Workdir workdir(root);
+
+  auto resultOf = [&](const std::string &test) {
+    Case c;
+    c.category = "synchronization";
+    c.testName = test;
+    CaseResult r;
+    REQUIRE(readSidecar(workdir.sidecarPath(c), r));
+    return r;
+  };
+
+  SECTION("a device ERROR fails only a Test that asks for it")
+  {
+    Runner runner(d, workdir, opts);
+    const auto s = runner.run(cat, Filter{""}, {});
+    CHECK(s.total == 2);
+    CHECK(s.passed == 1);
+    CHECK(s.failed == 1);
+    const auto strict = resultOf("strict");
+    CHECK(strict.verdict == Verdict::Failed);
+    CHECK(strict.detail.find("the device reported") != std::string::npos);
+    CHECK(resultOf("lenient").verdict == Verdict::Passed);
+  }
+
+  SECTION("onlyCase runs just that Case")
+  {
+    opts.onlyCase = "synchronization/lenient/default";
+    Runner runner(d, workdir, opts);
+    const auto s = runner.run(cat, Filter{""}, {});
+    CHECK(s.total == 1);
+    CHECK(s.passed == 1);
+    Case strict;
+    strict.category = "synchronization";
+    strict.testName = "strict";
+    CHECK_FALSE(std::filesystem::exists(workdir.sidecarPath(strict)));
+  }
+
+  std::filesystem::remove_all(root, ec);
+  anari::release(d, d);
+  anari::unloadLibrary(lib);
+}
+
+TEST_CASE("The built-in synchronization Tests pass on helide",
+    "[cts][runner][helide]")
+{
+  DeviceErrorLog errors;
+  auto recordStatus = [](const void *userData,
+                          anari::Device,
+                          anari::Object,
+                          anari::DataType,
+                          anari::StatusSeverity severity,
+                          anari::StatusCode,
+                          const char *message) {
+    static_cast<DeviceErrorLog *>(const_cast<void *>(userData))
+        ->record(severity, message);
+  };
+  anari::Library lib = anari::loadLibrary("helide", recordStatus, &errors);
+  if (!lib) {
+    WARN("helide library not available; skipping synchronization Tests");
+    return;
+  }
+  anari::Device d = anari::newDevice(lib, "default");
+  REQUIRE(d != nullptr);
+  anari::commitParameters(d, d);
+  std::set<std::string> features;
+  for (auto **e = anariGetDeviceExtensions(lib, "default"); e && *e; ++e)
+    features.insert(*e);
+
+  const auto root =
+      std::filesystem::temp_directory_path() / "cts_synchronization_test";
+  std::error_code ec;
+  std::filesystem::remove_all(root, ec);
+
+  Catalog cat;
+  registerBuiltinTests(cat);
+  RunOptions opts;
+  opts.width = 32;
+  opts.height = 32;
+  opts.deviceErrors = &errors;
+  // In-process (no isolation): the ctest TIMEOUT catches a hang.
+  Runner runner(d, Workdir(root), opts);
+  const auto s = runner.run(cat, Filter{"synchronization/"}, features);
+  CHECK(s.total == 2);
+  CHECK(s.passed == 2);
+
+  for (const auto *test : cat.filter(Filter{"synchronization/"})) {
+    for (const auto &c : expand(*test)) {
+      CaseResult r;
+      REQUIRE(readSidecar(Workdir(root).sidecarPath(c), r));
+      INFO(c.qualifiedId() << ": " << r.detail);
+      CHECK(r.verdict == Verdict::Passed);
+    }
   }
 
   std::filesystem::remove_all(root, ec);

@@ -35,7 +35,7 @@ Key CMake options:
 - `BUILD_SHARED_LIBS` (ON) — shared vs. static libraries
 - `BUILD_VIEWER` (OFF) — requires SDL3 or GLFW
 - `BUILD_CTS` (OFF) — conformance test suite, requires Python 3.9+
-- `BUILD_HELIDE_GPU_DEVICE` (ON) — GPU-accelerated example device, requires SDL3 3.2+ and glslangValidator
+- `BUILD_HELIDE_GPU_DEVICE` (OFF) — GPU-accelerated example device, requires SDL3 3.2+ and glslangValidator
 - `BUILD_REMOTE_DEVICE` (OFF) — experimental MPI/network device
 - `BUILD_HDANARI` (OFF) — experimental OpenUSD Hydra delegate
 - `BUILD_CAT` (OFF) — capability analysis tool

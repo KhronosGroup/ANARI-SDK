@@ -102,6 +102,8 @@ void RandomSpheres::commit()
 
     anari::setParameterArray1D(
         d, geom, "vertex.radius", sphereRadii.data(), sphereRadii.size());
+  } else {
+    anari::setParameter(d, geom, "radius", radius);
   }
 
   anari::commitParameters(d, geom);

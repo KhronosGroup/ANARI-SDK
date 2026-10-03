@@ -314,6 +314,7 @@ project_add_library(SHARED
   geometry/Geometry.cpp
   geometry/Sphere.cpp
   geometry/Triangle.cpp
+  gpu/ArrayUpload.cpp
   gpu/GPUBuffer.cpp
   gpu/GPUTexture.cpp
   gpu/sdl3_gpu_device.cpp

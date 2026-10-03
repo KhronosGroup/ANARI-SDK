@@ -38,6 +38,15 @@ A handful of Tests verify *behavior* the render-and-compare path can't express
 Those use the runner's behavior hook and record a pass/fail with a detail note
 instead of comparing images.
 
+The `synchronization` Tests check which calls must return (`ANARI_NO_WAIT`
+never blocks; a completion callback may call back into the device). A device
+that breaks one usually hangs, so they are *timed*: `run` runs each of their
+Cases in a child process (`anariCts` itself, with `--isolated-case`), kills it
+at the Test's timeout and records the Case as failed ("timed out after N s"),
+then goes on with the rest of the run. A crash in the child is recorded the
+same way. They also fail if the device reports an ERROR while they run, since
+they only make calls the spec allows (`docs/adr/0009`).
+
 ## Comparison metrics
 
 Each Channel is compared against its ground-truth image with two metrics, ported

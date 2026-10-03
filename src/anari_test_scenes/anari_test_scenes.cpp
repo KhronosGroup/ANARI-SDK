@@ -21,6 +21,7 @@
 #include "scenes/test/attributes.h"
 #include "scenes/test/instanced_cubes.h"
 #include "scenes/test/pbr_spheres.h"
+#include "scenes/test/random_curves.h"
 #include "scenes/test/random_cylinders.h"
 #include "scenes/test/random_spheres.h"
 #include "scenes/test/textured_cube.h"
@@ -66,6 +67,7 @@ static void init()
     registerScene("test", "instanced_cubes", sceneInstancedCubes);
     registerScene("test", "textured_cube", sceneTexturedCube);
     registerScene("test", "random_cylinders", sceneRandomCylinders);
+    registerScene("test", "random_curves", sceneRandomCurves);
     registerScene("test", "triangle_attributes", sceneAttributes);
     registerScene("test", "pbr_spheres", scenePbrSpheres);
   }
