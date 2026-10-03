@@ -42,6 +42,18 @@ if (BUILD_TESTING)
     PASS_REGULAR_EXPRESSION "--renderer <subtype>"
   )
   add_test(NAME cts_tool::list COMMAND anariCts list)
+  # End to end: `run` isolates each timed behaviour Case in a child process
+  # (ADR-0009). A hang would be killed at the Case's timeout; TIMEOUT backs it.
+  if (BUILD_HELIDE_DEVICE)
+    add_test(NAME unit_test::cts::isolated_run
+      COMMAND anariCts run helide --filter synchronization/
+        --workdir ${CMAKE_CURRENT_BINARY_DIR}/isolated_run
+    )
+    set_tests_properties(unit_test::cts::isolated_run PROPERTIES
+      TIMEOUT 120
+      PASS_REGULAR_EXPRESSION "run \\(helide\\): [1-9][0-9]* passed, 0 failed, 0 skipped"
+    )
+  endif()
   add_test(NAME cts_tool::query-metadata COMMAND anariCts query-metadata)
 
   find_package(Python3 3.9 REQUIRED COMPONENTS Interpreter)

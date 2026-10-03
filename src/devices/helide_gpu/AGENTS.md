@@ -43,7 +43,8 @@ devices/helide_gpu/
 ├── cmake/          # bin2header.cmake helper
 ├── frame/          # Frame (per-frame render loop)
 ├── geometry/       # Geometry base
-├── gpu/            # SDLGPUDevice wrapper (sdl3_gpu_device.h/.cpp)
+├── gpu/            # SDLGPUDevice wrapper (sdl3_gpu_device.h/.cpp), GPUBuffer/GPUTexture,
+│                   #   SDL-free array upload data (ArrayUpload.h/.cpp)
 ├── light/          # Light base
 ├── material/       # Material base
 ├── renderer/       # Renderer (SDL3_gpu pipeline)
@@ -60,6 +61,8 @@ devices/helide_gpu/
 ├── HelideGPUDevice.h/.cpp         # Top-level ANARI device
 ├── HelideGPUDeviceGlobalState.h/.cpp  # Per-device singleton (GPU thread + SDL device)
 ├── HelideGPULibrary.cpp           # ANARI library entry point
+├── HelideGPUColorSpace.h          # vec4 sRGB decode (wraps HelideGPUSRGB.h)
+├── HelideGPUSRGB.h                # glm-free sRGB decode helpers (unit-testable)
 └── HelideGPUMath.h                # Math utilities (GLM wrappers)
 ```
 

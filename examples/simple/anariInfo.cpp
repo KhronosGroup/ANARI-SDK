@@ -1,11 +1,12 @@
 // Copyright 2021-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 //
-// anariInfo opens a library and displays queryable information without
-// creating any devices.
+// anariInfo opens a library, creates each of its devices and displays their
+// queryable information.
 
 #include <stdio.h>
 #include <string.h>
+#include <string>
 
 // anari
 #include "anari/frontend/anari_device_introspection.hpp"
@@ -44,6 +45,51 @@ void statusFunc(const void *userData,
   } else if (severity == ANARI_SEVERITY_DEBUG) {
     fprintf(stderr, "[DEBUG] %s\n", message);
   }
+}
+
+static void printDeviceVersion(ANARIDevice device)
+{
+  std::string versionName;
+  uint64_t nameSize = 0;
+  if (anariGetProperty(device,
+          device,
+          "version.name.size",
+          ANARI_UINT64,
+          &nameSize,
+          sizeof(nameSize),
+          ANARI_WAIT)
+      && nameSize > 0) {
+    versionName.resize(nameSize);
+    if (anariGetProperty(device,
+            device,
+            "version.name",
+            ANARI_STRING,
+            versionName.data(),
+            nameSize,
+            ANARI_WAIT))
+      versionName.resize(strlen(versionName.c_str()));
+    else
+      versionName.clear();
+  }
+
+  int version = 0;
+  const bool hasVersion = anariGetProperty(device,
+      device,
+      "version",
+      ANARI_INT32,
+      &version,
+      sizeof(version),
+      ANARI_WAIT);
+
+  if (versionName.empty() && !hasVersion)
+    return;
+
+  printf("   Version:");
+  if (!versionName.empty())
+    printf(" %s", versionName.c_str());
+  if (hasVersion)
+    printf(versionName.empty() ? " %i" : " (%i)", version);
+  printf("\n");
 }
 
 int main(int argc, const char **argv)
@@ -122,6 +168,8 @@ int main(int argc, const char **argv)
       continue;
 
     ANARIDevice device = anariNewDevice(lib, devices[i]);
+    printDeviceVersion(device);
+
     anari::introspection::QueryOptions queryOptions;
     if (typeFilter)
       queryOptions.typeFilter = typeFilter;

@@ -37,6 +37,9 @@ struct Case
   // Cases differing only in variant values share this key and thus a single
   // ground-truth image.
   std::string groundTruthKey() const;
+
+  // "<category>/<test>/<id()>": identifies the Case within the Catalog.
+  std::string qualifiedId() const;
 };
 
 } // namespace cts
