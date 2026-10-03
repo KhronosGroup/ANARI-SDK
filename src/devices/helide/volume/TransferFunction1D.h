@@ -59,16 +59,16 @@ inline float4 TransferFunction1D::colorOf(float sample) const
   if (!m_colorData)
     return m_uniformColor;
   else if (m_colorData->elementType() == ANARI_FLOAT32_VEC3)
-    return float4(m_colorData->valueAtLinear<float3>(normalized(sample)), 1.f);
+    return float4(sampleLinear<float3>(*m_colorData, normalized(sample)), 1.f);
   else if (m_colorData->elementType() == ANARI_FLOAT32_VEC4)
-    return m_colorData->valueAtLinear<float4>(normalized(sample));
+    return sampleLinear<float4>(*m_colorData, normalized(sample));
   else
     return float4(0.f); // error, invalid
 }
 
 inline float TransferFunction1D::opacityOf(float sample) const
 {
-  return m_opacityData ? m_opacityData->valueAtLinear<float>(normalized(sample))
+  return m_opacityData ? sampleLinear<float>(*m_opacityData, normalized(sample))
                        : m_uniformOpacity;
 }
 

@@ -46,6 +46,9 @@ struct VolumeRay
 {
   float3 org;
   float3 dir;
+  // Volume intervals are clipped to [0, tfar] (tfar is the surface hit's t)
+  float tfar{std::numeric_limits<float>::max()};
+  // The hit volume and its clipped interval (valid when 'volume' is set)
   box1 t{0.f, std::numeric_limits<float>::max()};
   Volume *volume{nullptr};
   mat4 invXfm;
@@ -99,6 +102,19 @@ inline float3 xfmPoint(const mat4 &m, const float3 &p)
 {
   auto r = linalg::mul(m, float4(p.x, p.y, p.z, 1.f));
   return float3(r.x, r.y, r.z);
+}
+
+// Bounds of the box 'b' after transforming its eight corners by 'm'.
+inline box3 xfmBox(const mat4 &m, const box3 &b)
+{
+  box3 result = box3(xfmPoint(m, b.lower));
+  for (int i = 1; i < 8; i++) {
+    result.extend(xfmPoint(m,
+        float3(i & 1 ? b.upper.x : b.lower.x,
+            i & 2 ? b.upper.y : b.lower.y,
+            i & 4 ? b.upper.z : b.lower.z)));
+  }
+  return result;
 }
 
 } // namespace helide

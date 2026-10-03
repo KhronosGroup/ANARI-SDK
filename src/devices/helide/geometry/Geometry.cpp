@@ -10,6 +10,7 @@
 #include "Sphere.h"
 #include "Triangle.h"
 // std
+#include <algorithm>
 #include <cstring>
 #include <limits>
 
@@ -81,9 +82,60 @@ float4 Geometry::getAttributeValue(const Attribute &attr, const Ray &ray) const
     return *a;
 
   const auto attrIdx = static_cast<int>(attr);
-  return readAttributeValue(m_primitiveAttr[attrIdx].ptr,
+  return attributeValueAt(m_primitiveAttr[attrIdx].ptr,
       ray.primID,
       m_uniformAttr[attrIdx].value_or(DEFAULT_ATTRIBUTE_VALUE));
+}
+
+Geometry::Radii Geometry::readRadii(
+    const Array1D *array, const char *name, float fallback, size_t needed) const
+{
+  Radii radii;
+  radii.values = array ? array->beginAs<float>() : nullptr;
+  radii.count = array ? array->size() : 0;
+  radii.fallback = fallback;
+  if (array && radii.count < needed) {
+    reportMessage(ANARI_SEVERITY_WARNING,
+        "'%s' has %zu elements for %zu vertices; the rest use 'radius'",
+        name,
+        radii.count,
+        needed);
+  }
+  return radii;
+}
+
+bool Geometry::readIndices(
+    const Array1D &index, const char *subtype, std::vector<uint32_t> &out) const
+{
+  const auto type = index.elementType();
+  if (type == ANARI_UINT32) {
+    out.assign(index.beginAs<uint32_t>(), index.endAs<uint32_t>());
+    return true;
+  } else if (type != ANARI_UINT64) {
+    reportMessage(ANARI_SEVERITY_WARNING,
+        "%s 'primitive.index' array elements are %s, but need to be "
+        "ANARI_UINT32 or ANARI_UINT64; the %s is left empty",
+        subtype,
+        anari::toString(type),
+        subtype);
+    return false;
+  }
+
+  bool truncated = false;
+  out.resize(index.size());
+  std::transform(index.beginAs<uint64_t>(),
+      index.endAs<uint64_t>(),
+      out.begin(),
+      [&](uint64_t v) {
+        truncated |= v > std::numeric_limits<uint32_t>::max();
+        return uint32_t(v);
+      });
+  if (truncated) {
+    reportMessage(ANARI_SEVERITY_WARNING,
+        "%s 'primitive.index' values above UINT32_MAX are truncated to 32 bits",
+        subtype);
+  }
+  return true;
 }
 
 } // namespace helide

@@ -24,7 +24,9 @@ void Image3D::commitParameters()
   m_wrapMode2 = wrapModeFromString(getParamString("wrapMode2", "clampToEdge"));
   m_wrapMode3 = wrapModeFromString(getParamString("wrapMode3", "clampToEdge"));
   m_inTransform = getParam<mat4>("inTransform", mat4(linalg::identity));
+  m_inOffset = getParam<float4>("inOffset", float4(0.f, 0.f, 0.f, 0.f));
   m_outTransform = getParam<mat4>("outTransform", mat4(linalg::identity));
+  m_outOffset = getParam<float4>("outOffset", float4(0.f, 0.f, 0.f, 0.f));
 }
 
 float4 Image3D::getSample(
