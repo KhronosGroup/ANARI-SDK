@@ -13,9 +13,9 @@ Array1D::Array1D(BaseGlobalDeviceState *state, const Array1DMemoryDescriptor &d)
 
 void Array1D::commitParameters()
 {
-  m_begin = getParam<size_t>("begin", 0);
+  m_begin = size_t(getParam<uint64_t>("begin", 0));
   m_begin = std::clamp(m_begin, size_t(0), m_capacity - 1);
-  m_end = getParam<size_t>("end", m_capacity);
+  m_end = size_t(getParam<uint64_t>("end", m_capacity));
   m_end = std::clamp(m_end, size_t(1), m_capacity);
 
   if (size() == 0) {
@@ -65,9 +65,16 @@ size_t Array1D::size() const
   return m_end - m_begin;
 }
 
+const void *Array1D::elementsBegin() const
+{
+  return begin();
+}
+
 void Array1D::privatize()
 {
-  makePrivatizedCopy(size());
+  // Copy the whole capacity: begin() offsets into the copy by 'begin', and a
+  // later commit may move [begin, end) anywhere within the capacity.
+  makePrivatizedCopy(totalCapacity());
 }
 
 } // namespace helium

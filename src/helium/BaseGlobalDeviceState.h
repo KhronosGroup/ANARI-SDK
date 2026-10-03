@@ -38,6 +38,8 @@ struct BaseGlobalDeviceState
   std::function<void(int, const std::string &, anari::DataType, const void *)>
       messageFunction;
 
+  // 'd' must be the helium::BaseDevice that owns this state (its
+  // this_device()), or null for state without a device.
   BaseGlobalDeviceState(ANARIDevice d);
   virtual ~BaseGlobalDeviceState() = default;
 
@@ -45,6 +47,13 @@ struct BaseGlobalDeviceState
   friend struct BaseObject;
   friend struct BaseDevice;
   friend struct Array;
+
+  // Runs 'work' through the device's runDeviceRelease(), or inline without a
+  // device
+  void runDeviceRelease(const std::function<void()> &work);
+
+  ANARIDevice m_device{nullptr};
+
   /*
    * Per-type live-object counters, accessible via anariGetProperty on the
    * device. Updated atomically as objects are constructed and destroyed.

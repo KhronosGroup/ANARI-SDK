@@ -229,3 +229,67 @@ SCENARIO("a commit issued while the flush commits the same object is kept",
   state.commitBuffer.clear();
   observer->refDec(helium::RefType::PUBLIC);
 }
+
+SCENARIO("commits added while another thread flushes are all applied",
+    "[helium_concurrent_updates]")
+{
+  // flush() checks the staging buffers before taking them; that check must
+  // not race with a concurrent add (TSan reports it if it does).
+  helium::BaseGlobalDeviceState state(nullptr);
+  auto *observer = new Observer(&state);
+
+  std::atomic<bool> stop{false};
+  std::thread flusher([&] {
+    while (!stop)
+      state.commitBuffer.flush();
+  });
+  for (int i = 1; i <= 1000; i++)
+    commit(state, observer, i);
+  stop = true;
+  flusher.join();
+
+  state.commitBuffer.flush();
+  REQUIRE(observer->committedValue == 1000);
+
+  state.commitBuffer.clear();
+  observer->refDec(helium::RefType::PUBLIC);
+}
+
+SCENARIO("a flush nested in a flush on the same thread does nothing",
+    "[helium_concurrent_updates]")
+{
+  // A status callback raised while the buffer flushes (from an object's
+  // commitParameters() or finalize()) may issue an ANARI_WAIT query, which
+  // flushes. That nested flush must not take the buffers the outer one is
+  // walking; what it would flush waits for the next flush.
+  helium::BaseGlobalDeviceState state(nullptr);
+  auto *outer = new Observer(&state);
+  auto *inner = new Observer(&state);
+
+  GIVEN("an object whose commit commits another object and flushes")
+  {
+    outer->onCommit = [&] {
+      commit(state, inner, 2);
+      state.commitBuffer.flush();
+    };
+    commit(state, outer, 1);
+    state.commitBuffer.flush();
+    outer->onCommit = nullptr;
+
+    THEN("the outer flush commits its object, and the nested one nothing")
+    {
+      REQUIRE(outer->committedValue == 1);
+      REQUIRE(inner->committedValue == 0);
+
+      AND_THEN("the next flush commits the other object")
+      {
+        state.commitBuffer.flush();
+        REQUIRE(inner->committedValue == 2);
+      }
+    }
+  }
+
+  state.commitBuffer.clear();
+  inner->refDec(helium::RefType::PUBLIC);
+  outer->refDec(helium::RefType::PUBLIC);
+}

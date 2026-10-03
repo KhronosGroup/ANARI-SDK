@@ -21,6 +21,11 @@ void BaseFrame::on_NoPublicReferences()
   }
 }
 
+void BaseFrame::waitWithoutObjectLock()
+{
+  // Opt-in (see BaseFrame.h): by default the wait happens under the lock.
+}
+
 bool BaseFrame::completingOnThisThread() const
 {
   return t_completingFrame == this;

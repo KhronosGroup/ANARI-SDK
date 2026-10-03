@@ -30,10 +30,14 @@
  */
 
 #include "catch.hpp"
+#include "helium_test_device.h"
 
 #include "helium/BaseObject.h"
 #include "helium/utility/AnariAny.h"
 #include "helium/utility/IntrusivePtr.h"
+// std
+#include <cstring>
+#include <functional>
 
 struct TestObject : public helium::RefCounted
 {
@@ -288,6 +292,216 @@ SCENARIO("helium::RefCounted interface", "[helium_RefCounted]")
       }
     }
   }
+}
+
+// From inside the no-references hook for 'hook', drops its last reference of
+// the other kind, as another thread's release could while the hook runs, and
+// records whether that destroyed the object before the hook returned.
+struct ReleasingObject : public helium::RefCounted
+{
+  bool &destroyed;
+  bool &destroyedInHook;
+  RefType hook;
+  ReleasingObject(bool &destroyed, bool &destroyedInHook, RefType hook)
+      : destroyed(destroyed), destroyedInHook(destroyedInHook), hook(hook)
+  {}
+  ~ReleasingObject()
+  {
+    destroyed = true;
+  }
+
+ private:
+  void on_NoPublicReferences() override
+  {
+    if (hook == RefType::PUBLIC)
+      dropAndRecord(RefType::INTERNAL);
+  }
+  void on_NoInternalReferences() override
+  {
+    if (hook == RefType::INTERNAL)
+      dropAndRecord(RefType::PUBLIC);
+  }
+  void dropAndRecord(RefType type)
+  {
+    // Copied first: the object may be gone after refDec().
+    bool &wasDestroyed = destroyed;
+    bool &destroyedBeforeReturn = destroyedInHook;
+    refDec(type);
+    destroyedBeforeReturn = wasDestroyed;
+  }
+};
+
+SCENARIO("helium::RefCounted keeps an object alive through its hooks",
+    "[helium_RefCounted]")
+{
+  GIVEN("An object with one public and one internal reference")
+  {
+    bool destroyed = false;
+    bool destroyedInHook = false;
+
+    WHEN("The public reference goes, and its hook drops the internal one")
+    {
+      auto *obj =
+          new ReleasingObject(destroyed, destroyedInHook, RefType::PUBLIC);
+      obj->refInc(RefType::INTERNAL);
+      obj->refDec(RefType::PUBLIC);
+
+      THEN("The object is destroyed only after the hook returns")
+      {
+        CHECK_FALSE(destroyedInHook);
+        CHECK(destroyed);
+      }
+    }
+
+    WHEN("The internal reference goes, and its hook drops the public one")
+    {
+      auto *obj =
+          new ReleasingObject(destroyed, destroyedInHook, RefType::INTERNAL);
+      obj->refInc(RefType::INTERNAL);
+      obj->refDec(RefType::INTERNAL);
+
+      THEN("The object is destroyed only after the hook returns")
+      {
+        CHECK_FALSE(destroyedInHook);
+        CHECK(destroyed);
+      }
+    }
+  }
+}
+
+// Runs the given functions from its no-references hooks.
+struct HookedObject : public helium::RefCounted
+{
+  std::function<void()> onNoPublic;
+  std::function<void()> onNoInternal;
+
+ private:
+  void on_NoPublicReferences() override
+  {
+    if (onNoPublic)
+      onNoPublic();
+  }
+  void on_NoInternalReferences() override
+  {
+    if (onNoInternal)
+      onNoInternal();
+  }
+};
+
+SCENARIO("helium::RefCounted's internal hook holds an internal reference",
+    "[helium_RefCounted]")
+{
+  GIVEN("An object with one public and one internal reference")
+  {
+    auto *obj = new HookedObject;
+    obj->refInc(RefType::INTERNAL);
+
+    WHEN("The internal reference goes")
+    {
+      uint32_t publicInHook = 0;
+      uint32_t internalInHook = 0;
+      obj->onNoInternal = [&]() {
+        publicInHook = obj->useCount(RefType::PUBLIC);
+        internalInHook = obj->useCount(RefType::INTERNAL);
+      };
+      obj->refDec(RefType::INTERNAL);
+
+      THEN("Its hook sees the app's public references, and one internal")
+      {
+        CHECK(publicInHook == 1);
+        CHECK(internalInHook == 1);
+        CHECK(obj->useCount(RefType::PUBLIC) == 1);
+        CHECK(obj->useCount(RefType::INTERNAL) == 0);
+      }
+      obj->onNoInternal = nullptr;
+      obj->refDec(RefType::PUBLIC);
+    }
+
+    WHEN("The app's last public release lands during the internal hook")
+    {
+      bool publicHookFired = false;
+      bool publicHookFiredInRelease = false;
+      obj->onNoPublic = [&]() { publicHookFired = true; };
+      obj->onNoInternal = [&]() {
+        obj->refInc(RefType::INTERNAL);
+        obj->refDec(RefType::PUBLIC);
+        publicHookFiredInRelease = publicHookFired;
+      };
+      obj->refDec(RefType::INTERNAL);
+
+      THEN("The public hook fires in that release")
+      {
+        CHECK(publicHookFiredInRelease);
+        CHECK(obj->useCount(RefType::PUBLIC) == 0);
+        CHECK(obj->useCount(RefType::INTERNAL) == 1);
+      }
+      obj->onNoPublic = nullptr;
+      obj->onNoInternal = nullptr;
+      obj->refDec(RefType::INTERNAL);
+    }
+  }
+}
+
+// A BaseObject that runs 'onNoInternal' from on_NoInternalReferences().
+struct HookedBaseObject : public helium_test::StubObject
+{
+  using StubObject::StubObject;
+  std::function<void()> onNoInternal;
+
+ private:
+  void on_NoInternalReferences() override
+  {
+    if (onNoInternal)
+      onNoInternal();
+  }
+};
+
+void countOverReleases(const void *userPtr,
+    ANARIDevice,
+    ANARIObject,
+    ANARIDataType,
+    ANARIStatusSeverity,
+    ANARIStatusCode,
+    const char *message)
+{
+  if (std::strstr(message, "too many releases"))
+    ++*(int *)userPtr;
+}
+
+SCENARIO("an app over-release during an internal hook is reported",
+    "[helium_RefCounted]")
+{
+  auto *device = new helium_test::TestDevice;
+  int overReleases = 0;
+  device->state()->statusCB = countOverReleases;
+  device->state()->statusCBUserPtr = &overReleases;
+
+  GIVEN("An object with one public and one internal reference")
+  {
+    auto *obj = new HookedBaseObject(ANARI_GEOMETRY, device->state());
+    obj->refInc(RefType::INTERNAL);
+
+    WHEN("The app releases it twice while its internal hook runs")
+    {
+      uint32_t publicAfter = 0;
+      obj->onNoInternal = [&]() {
+        device->release((ANARIObject)obj);
+        device->release((ANARIObject)obj);
+        publicAfter = obj->useCount(RefType::PUBLIC);
+        obj->onNoInternal = nullptr;
+      };
+      obj->refDec(RefType::INTERNAL);
+
+      THEN("The second release is reported and the count doesn't underflow")
+      {
+        CHECK(overReleases == 1);
+        CHECK(publicAfter == 0);
+      }
+    }
+  }
+
+  device->state()->commitBuffer.clear();
+  delete device;
 }
 
 } // namespace

@@ -48,16 +48,44 @@ void DeferredCommitBuffer::addObjectToFinalize(BaseObject *obj)
 {
   std::lock_guard<std::recursive_mutex> guard(m_swapMutex);
   obj->refInc(RefType::INTERNAL);
-  if (commitPriority(obj->type()) != commitPriority(ANARI_OBJECT))
-    m_needToSortFinalizationsStaging = true;
+  const bool needsSort =
+      commitPriority(obj->type()) != commitPriority(ANARI_OBJECT);
+  // An observer notified by an object this thread's flush just committed or
+  // finalized joins the buffer that flush is walking, so the change reaches
+  // the end of an observer chain in one flush rather than one link per flush.
+  // It lands after the object that notified it, which keeps the dependency
+  // order without a re-sort. (An observer cycle would therefore never drain.)
+  // Additions from any other thread are concurrent with this flush and wait in
+  // staging for the next one.
+  if (std::this_thread::get_id() == m_flushingThread) {
+    m_needToSortFinalizations |= needsSort;
+    m_finalizationBuffer.push_back(obj);
+    return;
+  }
+  m_needToSortFinalizationsStaging |= needsSort;
   m_finalizationBufferStaging.push_back(obj);
 }
 
 void DeferredCommitBuffer::flush()
 {
-  if (empty())
-    return;
   std::lock_guard<std::recursive_mutex> guard(m_flushMutex);
+  // Only the thread holding m_flushMutex sees m_flushing set: this call is
+  // nested in its flush (e.g. a status callback from commitParameters() or
+  // finalize() issuing an ANARI_WAIT query). Swapping the buffers the outer
+  // flush is walking would corrupt it; what's staged waits for the next flush.
+  if (m_flushing || empty())
+    return;
+  m_flushing = true;
+  setFlushingThread(std::this_thread::get_id());
+  struct FlushingScope
+  {
+    DeferredCommitBuffer &buffer;
+    ~FlushingScope()
+    {
+      buffer.setFlushingThread({});
+      buffer.m_flushing = false;
+    }
+  } scope{*this};
   swapBuffers();
   flushCommits();
   flushFinalizations();
@@ -83,7 +111,10 @@ void DeferredCommitBuffer::clear()
 
 bool DeferredCommitBuffer::empty() const
 {
-  std::lock_guard<std::recursive_mutex> guard(m_flushMutex);
+  // m_flushMutex makes flush() wait out a flush running on another thread;
+  // m_swapMutex guards the staging buffers against a concurrent add.
+  std::lock_guard<std::recursive_mutex> flushGuard(m_flushMutex);
+  std::lock_guard<std::recursive_mutex> swapGuard(m_swapMutex);
   return m_commitBufferStaging.empty() && m_finalizationBufferStaging.empty();
 }
 
@@ -93,6 +124,12 @@ void DeferredCommitBuffer::swapBuffers()
   std::swap(m_commitBuffer, m_commitBufferStaging);
   std::swap(m_finalizationBuffer, m_finalizationBufferStaging);
   std::swap(m_needToSortFinalizations, m_needToSortFinalizationsStaging);
+}
+
+void DeferredCommitBuffer::setFlushingThread(std::thread::id id)
+{
+  std::lock_guard<std::recursive_mutex> guard(m_swapMutex);
+  m_flushingThread = id;
 }
 
 void DeferredCommitBuffer::flushCommits()
@@ -105,8 +142,9 @@ void DeferredCommitBuffer::flushCommits()
       // Read the committed snapshot (taken at anariCommitParameters() time),
       // not the live store, so a setParam that arrived after the commit call
       // does not leak into this commit. ReadCommittedScope holds the object's
-      // snapshot mutex (not its object lock -- frameReady() holds the object
-      // lock while blocked on this flush, so that would deadlock), serializing
+      // snapshot mutex (not its object lock -- a frame call such as a
+      // device's renderFrame() may hold the object lock while blocked on this
+      // flush, so that would deadlock), serializing
       // the read against a concurrent re-commit of the same object.
       //
       // markCommitted() reads the snapshot's parameter-change time, so it runs
