@@ -157,16 +157,20 @@ static void *loadLibrary(
 
 void *loadANARILibrary(const std::string &libName)
 {
-  std::string errorMessage;
+  std::string unanchoredError;
+  void *lib = loadLibrary(libName, false, unanchoredError);
 
-  void *lib = loadLibrary(libName, false, errorMessage);
-  if (!lib) {
-    errorMessage = "(unanchored library load attempt failed)\n";
-    lib = loadLibrary(libName, true, errorMessage);
-  }
-
+  std::string anchoredError;
   if (!lib)
-    throw std::runtime_error(errorMessage);
+    lib = loadLibrary(libName, true, anchoredError);
+
+  if (!lib) {
+    throw std::runtime_error(
+        "(unanchored library load attempt failed)\n"
+        + unanchoredError
+        + "\n(anchored library load attempt failed)\n"
+        + anchoredError);
+  }
 
   return lib;
 }
