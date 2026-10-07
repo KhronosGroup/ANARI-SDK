@@ -16,6 +16,8 @@ add_executable(${PROJECT_NAME}
   test_helium_RefCounted.cpp
   test_helium_srgb.cpp
   test_helium_TaskQueue.cpp
+
+  test_hdanari_uvTextureTransform.cpp
 )
 
 # helium for the direct base-layer tests; anari (the loader) for the device-
@@ -23,6 +25,9 @@ add_executable(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME} PRIVATE helium anari)
 find_package(Threads REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads)
+# hdanari's USD-free helpers are header-only, so they're tested without USD.
+target_include_directories(${PROJECT_NAME}
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../src)
 
 add_test(NAME unit_test::helium::AnariAny            COMMAND ${PROJECT_NAME} "[helium_AnariAny]"           )
 add_test(NAME unit_test::helium::ParameterizedObject COMMAND ${PROJECT_NAME} "[helium_ParameterizedObject]")
@@ -32,6 +37,7 @@ add_test(NAME unit_test::helium::TaskQueue           COMMAND ${PROJECT_NAME} "[h
 add_test(NAME unit_test::helium::CommitSnapshot      COMMAND ${PROJECT_NAME} "[helium_commit_snapshot]"    )
 add_test(NAME unit_test::helium::ConcurrentUpdates   COMMAND ${PROJECT_NAME} "[helium_concurrent_updates]" )
 add_test(NAME unit_test::helium::FrameCallback       COMMAND ${PROJECT_NAME} "[helium_frame_callback]"     )
+add_test(NAME unit_test::hdanari::UVTextureTransform COMMAND ${PROJECT_NAME} "[hdanari_uvTextureTransform]")
 
 ## CTS conformance-harness catalog tests ##
 

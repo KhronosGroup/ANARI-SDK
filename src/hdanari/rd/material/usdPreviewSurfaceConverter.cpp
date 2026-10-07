@@ -4,6 +4,7 @@
 #include "usdPreviewSurfaceConverter.h"
 #include "../materialTokens.h"
 #include "textureLoader.h"
+#include "uvTextureTransform.h"
 
 #include "../debugCodes.h"
 #include "../anariTypes.h"
@@ -96,68 +97,41 @@ HdAnariUsdPreviewSurfaceConverter::EnumerateTextures(
 
     auto assetPath = file.Get<SdfAssetPath>().GetResolvedPath();
 
-    // clang-format off
-    auto tx = std::array{
-      1.0f, 0.0f, 0.0f, 0.0f,
-      0.0f, 1.0f, 0.0f, 0.0f,
-      0.0f, 0.0f, 1.0f, 0.0f,
-      0.0f, 0.0f, 0.0f, 1.0f,
-      };
-    auto offset = std::array{0.0f, 0.0f, 0.0f, 0.0f};
-    // clang-format on
+    // The texel remap authored on the texture (e.g. scale 2 / bias -1 to decode
+    // a normal map), applied before the output's swizzle.
+    auto readVec4Param = [&](const TfToken &name, const GfVec4f &fallback) {
+      auto vt =
+          materialNetworkIface.GetNodeParameterValue(inputTextureName, name);
+      auto v = fallback;
+      if (vt.IsHolding<GfVec4f>())
+        v = vt.UncheckedGet<GfVec4f>();
+      else if (!vt.IsEmpty())
+        TF_WARN("Invalid %s value type %s, ignoring\n",
+            name.GetText(),
+            vt.GetTypeName().c_str());
+      return std::array{v[0], v[1], v[2], v[3]};
+    };
+    auto scale = readVec4Param(
+        HdAnariMaterialTokens->scale, GfVec4f(1.0f, 1.0f, 1.0f, 1.0f));
+    auto bias = readVec4Param(
+        HdAnariMaterialTokens->bias, GfVec4f(0.0f, 0.0f, 0.0f, 0.0f));
 
     // If connnected to a specific channel, swizzle the color components to
     // mimic the connection behavior
-    if (outputName == HdAnariMaterialTokens->rgb) {
-      // clang-format off
-      tx = std::array{
-        1.0f, 0.0f, 0.0f, 0.0f,
-        0.0f, 1.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 1.0f, 0.0f,
-        0.0f, 0.0f, 0.0f, 0.0f,
-      };
-      // clang-format on
-      offset[3] = 1.0f;
-    } else if (outputName == HdAnariMaterialTokens->r) {
-      // clang-format off
-      tx = {
-          1.0f, 1.0f, 1.0f, 1.0f,
-          0.0f, 0.0f, 0.0f, 0.0f,
-          0.0f, 0.0f, 0.0f, 0.0f,
-          0.0f, 0.0f, 0.0f, 0.0f,
-      };
-      // clang-format on
+    auto output = HdAnariUsdUVTextureOutput::Other;
+    if (outputName == HdAnariMaterialTokens->rgb)
+      output = HdAnariUsdUVTextureOutput::RGB;
+    else if (outputName == HdAnariMaterialTokens->r)
+      output = HdAnariUsdUVTextureOutput::R;
+    else if (outputName == HdAnariMaterialTokens->g)
+      output = HdAnariUsdUVTextureOutput::G;
+    else if (outputName == HdAnariMaterialTokens->b)
+      output = HdAnariUsdUVTextureOutput::B;
+    else if (outputName == HdAnariMaterialTokens->a)
+      output = HdAnariUsdUVTextureOutput::A;
 
-    } else if (outputName == HdAnariMaterialTokens->g) {
-      // clang-format off
-      tx = {
-          0.0f, 0.0f, 0.0f, 0.0f,
-          1.0f, 1.0f, 1.0f, 1.0f,
-          0.0f, 0.0f, 0.0f, 0.0f,
-          0.0f, 0.0f, 0.0f, 0.0f,
-      };
-      // clang-format on
-
-    } else if (outputName == HdAnariMaterialTokens->b) {
-      // clang-format off
-      tx = {
-          0.0f, 0.0f, 0.0f, 0.0f,
-          0.0f, 0.0f, 0.0f, 0.0f,
-          1.0f, 1.0f, 1.0f, 1.0f,
-          0.0f, 0.0f, 0.0f, 0.0f,
-      };
-      // clang-format on
-
-    } else if (outputName == HdAnariMaterialTokens->a) {
-      // clang-format off
-      tx = {
-          0.0f, 0.0f, 0.0f, 0.0f,
-          0.0f, 0.0f, 0.0f, 0.0f,
-          0.0f, 0.0f, 0.0f, 0.0f,
-          1.0f, 1.0f, 1.0f, 1.0f,
-      };
-      // clang-format on
-    }
+    auto outTransform =
+        HdAnariMakeUsdUVTextureOutTransform(output, scale, bias);
 
     textures[SdfPath(inputTextureName).AppendProperty(outputName)] =
         HdAnariTextureLoader::TextureDesc{
@@ -166,8 +140,8 @@ HdAnariUsdPreviewSurfaceConverter::EnumerateTextures(
             HdAnariTextureLoader::MinMagFilter::Linear, // FIXME: Should be
                                                         // coming from the
                                                         // UsdShade node instead
-            tx,
-            offset,
+            outTransform.transform,
+            outTransform.offset,
         };
   }
 
