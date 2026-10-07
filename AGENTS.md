@@ -95,7 +95,7 @@ Devices are loaded as shared libraries at runtime via `anariLoadLibrary("helide"
 
 ## Testing
 
-Unit tests use **Catch2** and live in `tests/unit/`. They test Helium internals (`AnariAny`, `ParameterizedObject`, `RefCounted`).
+Unit tests use **Catch2** and live in `tests/unit/`. They test Helium internals (`AnariAny`, `ParameterizedObject`, `RefCounted`) and hdAnari's USD-free helpers (e.g. `src/hdanari/rd/material/uvTextureTransform.h`), which build without OpenUSD.
 
 Render tests in `tests/render/` compare rendered output against reference images for scenes like `cornell_box`, `gravity_spheres_volume`, `instanced_cubes`, etc. Set `ANARI_LIBRARY=helide` when running render tests.
 
