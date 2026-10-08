@@ -8,14 +8,14 @@
 namespace {
 
 using Vec4 = std::array<float, 4>;
-using Output = HdAnariUsdUVTextureOutput;
+using Output = hdanari::UsdUVTextureOutput;
 
 constexpr Vec4 kDefaultScale = {1.f, 1.f, 1.f, 1.f};
 constexpr Vec4 kDefaultBias = {0.f, 0.f, 0.f, 0.f};
 
 // What an ANARI sampler returns for 'texel': outTransform (column-major) times
 // the texel, plus outOffset.
-Vec4 sample(const HdAnariSamplerOutTransform &t, const Vec4 &texel)
+Vec4 sample(const hdanari::SamplerOutTransform &t, const Vec4 &texel)
 {
   Vec4 out = t.offset;
   for (int col = 0; col < 4; ++col)
@@ -38,7 +38,7 @@ TEST_CASE("UsdUVTexture outputs swizzle with default scale/bias",
   const Vec4 texel = {0.1f, 0.2f, 0.3f, 0.4f};
   auto out = [&](Output o) {
     return sample(
-        HdAnariMakeUsdUVTextureOutTransform(o, kDefaultScale, kDefaultBias),
+        hdanari::makeUsdUVTextureOutTransform(o, kDefaultScale, kDefaultBias),
         texel);
   };
 
@@ -47,13 +47,13 @@ TEST_CASE("UsdUVTexture outputs swizzle with default scale/bias",
   checkVec4(out(Output::G), {0.2f, 0.2f, 0.2f, 0.2f});
   checkVec4(out(Output::B), {0.3f, 0.3f, 0.3f, 0.3f});
   checkVec4(out(Output::A), {0.4f, 0.4f, 0.4f, 0.4f});
-  checkVec4(out(Output::Other), texel);
+  checkVec4(out(Output::RGBA), texel);
 }
 
 TEST_CASE("UsdUVTexture normal map scale/bias decodes to tangent space",
     "[hdanari_uvTextureTransform]")
 {
-  auto t = HdAnariMakeUsdUVTextureOutTransform(
+  auto t = hdanari::makeUsdUVTextureOutTransform(
       Output::RGB, {2.f, 2.f, 2.f, 2.f}, {-1.f, -1.f, -1.f, -1.f});
 
   // A flat texel decodes to the unperturbed normal; alpha stays 1.
@@ -70,18 +70,20 @@ TEST_CASE(
   const Vec4 bias = {-3.f, 0.25f, -7.f, -9.f};
   const Vec4 texel = {0.1f, 0.6f, 0.3f, 0.4f};
 
-  checkVec4(sample(HdAnariMakeUsdUVTextureOutTransform(Output::G, scale, bias),
-                texel),
+  checkVec4(
+      sample(
+          hdanari::makeUsdUVTextureOutTransform(Output::G, scale, bias), texel),
       {0.55f, 0.55f, 0.55f, 0.55f});
-  checkVec4(sample(HdAnariMakeUsdUVTextureOutTransform(Output::A, scale, bias),
-                texel),
+  checkVec4(
+      sample(
+          hdanari::makeUsdUVTextureOutTransform(Output::A, scale, bias), texel),
       {-5.4f, -5.4f, -5.4f, -5.4f});
 }
 
 TEST_CASE("UsdUVTexture rgb output keeps alpha at 1 under scale/bias",
     "[hdanari_uvTextureTransform]")
 {
-  auto t = HdAnariMakeUsdUVTextureOutTransform(
+  auto t = hdanari::makeUsdUVTextureOutTransform(
       Output::RGB, {0.5f, 2.f, 4.f, 8.f}, {0.1f, 0.2f, 0.3f, 0.4f});
   checkVec4(sample(t, {1.f, 0.5f, 0.25f, 0.f}), {0.6f, 1.2f, 1.3f, 1.f});
 }
@@ -89,7 +91,7 @@ TEST_CASE("UsdUVTexture rgb output keeps alpha at 1 under scale/bias",
 TEST_CASE("UsdUVTexture unswizzled output applies scale/bias per channel",
     "[hdanari_uvTextureTransform]")
 {
-  auto t = HdAnariMakeUsdUVTextureOutTransform(
-      Output::Other, {0.5f, 2.f, 4.f, 8.f}, {0.1f, 0.2f, 0.3f, 0.4f});
+  auto t = hdanari::makeUsdUVTextureOutTransform(
+      Output::RGBA, {0.5f, 2.f, 4.f, 8.f}, {0.1f, 0.2f, 0.3f, 0.4f});
   checkVec4(sample(t, {1.f, 0.5f, 0.25f, 0.5f}), {0.6f, 1.2f, 1.3f, 4.4f});
 }
