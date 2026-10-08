@@ -15,6 +15,7 @@ project_add_library(SHARED
   material/matte.cpp
   material/physicallyBased.cpp
   material/textureLoader.cpp
+  material/uvTextureTransform.cpp
   material/usdPreviewSurfaceConverter.cpp
   materialTokens.cpp
   materialTokens.h

@@ -118,20 +118,20 @@ HdAnariUsdPreviewSurfaceConverter::EnumerateTextures(
 
     // If connnected to a specific channel, swizzle the color components to
     // mimic the connection behavior
-    auto output = HdAnariUsdUVTextureOutput::Other;
+    auto output = hdanari::UsdUVTextureOutput::RGBA;
     if (outputName == HdAnariMaterialTokens->rgb)
-      output = HdAnariUsdUVTextureOutput::RGB;
+      output = hdanari::UsdUVTextureOutput::RGB;
     else if (outputName == HdAnariMaterialTokens->r)
-      output = HdAnariUsdUVTextureOutput::R;
+      output = hdanari::UsdUVTextureOutput::R;
     else if (outputName == HdAnariMaterialTokens->g)
-      output = HdAnariUsdUVTextureOutput::G;
+      output = hdanari::UsdUVTextureOutput::G;
     else if (outputName == HdAnariMaterialTokens->b)
-      output = HdAnariUsdUVTextureOutput::B;
+      output = hdanari::UsdUVTextureOutput::B;
     else if (outputName == HdAnariMaterialTokens->a)
-      output = HdAnariUsdUVTextureOutput::A;
+      output = hdanari::UsdUVTextureOutput::A;
 
     auto outTransform =
-        HdAnariMakeUsdUVTextureOutTransform(output, scale, bias);
+        hdanari::makeUsdUVTextureOutTransform(output, scale, bias);
 
     textures[SdfPath(inputTextureName).AppendProperty(outputName)] =
         HdAnariTextureLoader::TextureDesc{

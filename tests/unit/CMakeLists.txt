@@ -18,6 +18,7 @@ add_executable(${PROJECT_NAME}
   test_helium_TaskQueue.cpp
 
   test_hdanari_uvTextureTransform.cpp
+  ../../src/hdanari/rd/material/uvTextureTransform.cpp
 )
 
 # helium for the direct base-layer tests; anari (the loader) for the device-
@@ -25,7 +26,8 @@ add_executable(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME} PRIVATE helium anari)
 find_package(Threads REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads)
-# hdanari's USD-free helpers are header-only, so they're tested without USD.
+# hdanari's USD-free helpers are compiled in directly, so they're tested
+# without USD.
 target_include_directories(${PROJECT_NAME}
   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../src)
 
