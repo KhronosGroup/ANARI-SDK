@@ -297,15 +297,17 @@ void EnsureAnariHioRegistered()
   if (registered)
     return;
 
-  // Resolve plugInfo.json's directory relative to this shared library (it ships
-  // alongside libanari_library_hydra.so). PlugRegistry needs an absolute path.
+  // The plugin manifest ships in an anari_hydra/ directory beside
+  // libanari_library_hydra.so. Register only that directory: the library
+  // directory may be shared with other packages' plugInfo.json files.
+  // PlugRegistry needs an absolute path.
   Dl_info info;
   if (dladdr(reinterpret_cast<void *>(&EnsureAnariHioRegistered), &info)
       && info.dli_fname) {
     std::vector<char> buf(
         info.dli_fname, info.dli_fname + std::strlen(info.dli_fname) + 1);
     const std::string dir = dirname(buf.data());
-    pxr::PlugRegistry::GetInstance().RegisterPlugins(dir);
+    pxr::PlugRegistry::GetInstance().RegisterPlugins(dir + "/anari_hydra");
   }
   registered = true;
 }

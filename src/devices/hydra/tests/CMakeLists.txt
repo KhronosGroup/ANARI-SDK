@@ -100,6 +100,28 @@ anari_hydra_add_test(render_sampler_transforms_facevarying_storm
 anari_hydra_add_test(render_normals_facevarying_storm
   render_normals storm faceVarying)
 
+# A library directory shared with other packages: a copy of the device beside
+# its anari_hydra/ manifest, plus another package's top-level plugInfo.json (a
+# decoy that would hijack the "anari" image type if loaded). The device must
+# register only its own manifest directory, so textures still resolve.
+set(_anari_hydra_shared_lib "${CMAKE_CURRENT_BINARY_DIR}/shared_prefix/lib")
+add_custom_target(hydra_shared_prefix_layout ALL
+  COMMAND ${CMAKE_COMMAND} -E make_directory
+    ${_anari_hydra_shared_lib}/anari_hydra
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    $<TARGET_FILE:anari_library_hydra> ${_anari_hydra_shared_lib}/
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    $<TARGET_FILE_DIR:anari_library_hydra>/anari_hydra/plugInfo.json
+    ${_anari_hydra_shared_lib}/anari_hydra/
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    ${CMAKE_CURRENT_SOURCE_DIR}/decoy_plugInfo.json
+    ${_anari_hydra_shared_lib}/plugInfo.json
+  VERBATIM)
+add_dependencies(hydra_shared_prefix_layout anari_library_hydra)
+anari_hydra_add_test(render_sampler_shared_prefix_storm render_sampler storm)
+set_tests_properties(hydra_render_sampler_shared_prefix_storm PROPERTIES
+  ENVIRONMENT "LD_LIBRARY_PATH=${_anari_hydra_shared_lib}:${pxr_DIR}/lib")
+
 if(TARGET anari_hydra_nanovdb)
   # The nanovdb section builds its grids with the same NanoVDB headers.
   target_link_libraries(hydra_render_volume PRIVATE anari_hydra_nanovdb)

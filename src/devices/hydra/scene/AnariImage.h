@@ -156,9 +156,9 @@ bool DecodeArray1DToImage(helium::Array1D *img,
     TexelFormat maxFormat = TexelFormat::Float,
     const TexelBorder *border = nullptr);
 
-// Register the Hio plugin exactly once, resolving plugInfo.json relative to the
-// device shared library, so no environment setup is needed. Safe to call
-// repeatedly.
+// Register the Hio plugin exactly once from the anari_hydra/plugInfo.json
+// beside the device shared library, so no environment setup is needed. Safe to
+// call repeatedly.
 void EnsureAnariHioRegistered();
 
 } // namespace anari_hydra

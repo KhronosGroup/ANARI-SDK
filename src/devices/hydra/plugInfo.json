@@ -19,7 +19,7 @@
                     }
                 }
             },
-            "LibraryPath": "libanari_library_hydra.so",
+            "LibraryPath": "../libanari_library_hydra.so",
             "Name": "anariHydraHio",
             "ResourcePath": ".",
             "Root": ".",

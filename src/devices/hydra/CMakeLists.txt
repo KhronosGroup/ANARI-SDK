@@ -157,12 +157,17 @@ target_compile_definitions(anari_library_hydra PRIVATE
   MFB_ALT_PACKAGE_NAME=anariHydra
   MFB_PACKAGE_MODULE=AnariHydra)
 
-# The Hio image plugin's plugInfo.json ships next to the device library so
-# EnsureAnariHioRegistered() finds it via the library's own path.
+# The device's plugin manifest (plugInfo.json) lives in its own anari_hydra/
+# directory beside the device library, where EnsureAnariHioRegistered() finds
+# it via the library's own path. A generic plugInfo.json in the library
+# directory would collide with other packages sharing the prefix. The build
+# tree mirrors the installed layout.
 add_custom_command(TARGET anari_library_hydra POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E make_directory
+    $<TARGET_FILE_DIR:anari_library_hydra>/anari_hydra
   COMMAND ${CMAKE_COMMAND} -E copy_if_different
     ${CMAKE_CURRENT_SOURCE_DIR}/plugInfo.json
-    $<TARGET_FILE_DIR:anari_library_hydra>/plugInfo.json)
+    $<TARGET_FILE_DIR:anari_library_hydra>/anari_hydra/plugInfo.json)
 
 target_include_directories(anari_library_hydra
 PRIVATE
@@ -200,8 +205,9 @@ install(FILES
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/anari/ext/hydra
 )
 
-# The Hio plugin's plugInfo.json installs next to the device library.
-install(FILES plugInfo.json DESTINATION ${CMAKE_INSTALL_LIBDIR})
+# The plugin manifest installs to <libdir>/anari_hydra/; its LibraryPath points
+# back up at the device library.
+install(FILES plugInfo.json DESTINATION ${CMAKE_INSTALL_LIBDIR}/anari_hydra)
 
 ## Tests ##
 

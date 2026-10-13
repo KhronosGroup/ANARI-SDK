@@ -59,9 +59,11 @@ cmake --build build -j
 ```
 
 The build also needs Python 3 (for the SDK's query generator) and OpenGL.
-The device builds `anari_library_hydra`, and places the `plugInfo.json` of
-its in-memory image plugin next to the library; both install to the
-library directory. At runtime the OpenUSD libraries must be on the loader path.
+The device builds `anari_library_hydra` and installs it to the library
+directory. The `plugInfo.json` manifest of its in-memory image plugin goes in
+an `anari_hydra/` subdirectory beside it, in the build tree and the install
+tree alike, so it doesn't collide with other packages' manifests in a shared
+prefix. At runtime the OpenUSD libraries must be on the loader path.
 
 NanoVDB headers back the `nanovdb` spatial field and
 `KHR_SPATIAL_FIELD_NANOVDB`. By default, configure downloads them from a
@@ -411,7 +413,10 @@ relative to this directory.
   from memory through the **in-memory asset scheme**: an `AnariImageRegistry`
   keyed by an `anari://…​.anari` path plus a self-registered `HioImage` plugin
   (`scene/AnariImage.cpp`, compiled into the device library, `plugInfo.json`
-  shipped beside it and registered at device init). Delegates that load textures
+  in an `anari_hydra/` directory beside it, registered at device init). Only
+  that directory is registered, so other packages' manifests in a shared
+  library directory (hdAnari's, for one) are not loaded; `render_sampler`
+  re-runs from such a directory with a decoy manifest to check this. Delegates that load textures
   through Ar with their own decoders (hdGatling) instead reach the registry via
   the `anari` Ar URI resolver (`scene/AnariArResolver.cpp`, same `plugInfo.json`),
   which encodes each image as an in-memory TGA (8-bit) or EXR (half/float, and
