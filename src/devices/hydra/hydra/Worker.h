@@ -1,11 +1,11 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-// The device worker thread (SPEC §9.2). One long-lived thread per device owns
-// the Hgi/GL context, all world-mirror mutation, every HdEngine::Execute call,
-// and all Hydra-adjacent destruction. App-facing calls that need any of these
-// post jobs here; the one-Hydra-thread and no-mutation-during-SyncAll rules
-// then hold by construction.
+// The device worker thread. One long-lived thread per device owns the Hgi/GL
+// context, all world-mirror mutation, every HdEngine::Execute call, and all
+// Hydra-adjacent destruction. App-facing calls that need any of these post jobs
+// here; the one-Hydra-thread and no-mutation-during-SyncAll rules then hold by
+// construction.
 
 #pragma once
 
@@ -53,7 +53,7 @@ class Worker
   void threadMain();
 
   // A GL context, current on the worker thread, that HgiGL (Storm) requires.
-  // The hdx/Storm ride-along (SPEC §13) means we establish it unconditionally.
+  // The hdx/Storm ride-along means we establish it unconditionally.
   std::unique_ptr<pxr::GarchGLDebugWindow> m_glWindow;
   pxr::HgiUniquePtr m_hgi; // created and owned on the worker thread
   pxr::HdDriver m_driver;

@@ -17,17 +17,17 @@ namespace anari_hydra {
 
 using helium::float4;
 
-// ANARI sampler -> a node inside the material network (SPEC §6.2/§6.4).
-// image2D / image1D (1D as an N×1 2D texture) decode their image array into
-// the in-memory asset registry (AnariImage) under a unique `anari://` path and
-// author a UsdUVTexture fed by a per-binding UsdPrimvarReader_float2 on the
-// attribute selected by `inAttribute`. transform and primitive samplers have no
-// texture: their value is baked per rprim into a derived primvar (an affine
-// map of a per-element attribute, or an array lookup by primitive index) that a
+// ANARI sampler -> a node inside the material network. image2D / image1D (1D as
+// an N×1 2D texture) decode their image array into the in-memory asset registry
+// (AnariImage) under a unique `anari://` path and author a UsdUVTexture fed by
+// a per-binding UsdPrimvarReader_float2 on the attribute selected by
+// `inAttribute`. transform and primitive samplers have no texture: their value
+// is baked per rprim into a derived primvar (an affine map of a per-element
+// attribute, or an array lookup by primitive index) that a
 // UsdPrimvarReader_float3 / UsdPrimvarReader_float reads directly.
 //
-// image3D is a documented exclusion (§6.4): it resolves to an inert
-// UnknownObject with a warning (in the factory).
+// image3D is a documented exclusion: it resolves to an inert UnknownObject with
+// a warning (in the factory).
 struct Sampler : public Object
 {
   ~Sampler() override;
@@ -62,7 +62,7 @@ struct Sampler : public Object
   }
 
   // The in-memory asset path this sampler's image is registered under; the
-  // UsdUVTexture `file` input (SPEC §6.3).
+  // UsdUVTexture `file` input.
   const std::string &assetPath() const
   {
     return m_assetPath;
@@ -70,7 +70,7 @@ struct Sampler : public Object
 
   // UsdUVTexture wrap tokens ("repeat" / "clamp" / "mirror" / "black"), mapped
   // from ANARI wrapMode1/wrapMode2 (image2D) or wrapMode (image1D, whose second
-  // axis is always "clamp" so the single row is read for any v) (SPEC §6.4).
+  // axis is always "clamp" so the single row is read for any v).
   //
   // clampToBorder (KHR_SAMPLER_IMAGExD_CLAMP_TO_BORDER) takes one of two exact
   // routes per sampler. Storm's "black" token is GL/Vulkan clamp-to-border
@@ -94,16 +94,16 @@ struct Sampler : public Object
     return m_wrapT;
   }
 
-  // Whether ANARI `filter` selected nearest sampling (SPEC §6.2). "linear" is
-  // Storm's default (mipmapped) and needs no authored node params; nearest
-  // authors magFilter/minFilter=nearest. The MaterialBuilder branches on this
-  // rather than re-parsing a token, mirroring how wrap tokens flow opaquely.
+  // Whether ANARI `filter` selected nearest sampling. "linear" is Storm's
+  // default (mipmapped) and needs no authored node params; nearest authors
+  // magFilter/minFilter=nearest. The MaterialBuilder branches on this rather
+  // than re-parsing a token, mirroring how wrap tokens flow opaquely.
   bool filterIsNearest() const
   {
     return m_filterNearest;
   }
 
-  // --- Input coordinates (SPEC §6.4) --------------------------------------
+  // --- Input coordinates --------------------------------------------------
 
   // The ANARI attribute feeding the sampler. Slot index in PrimBuilder's
   // element-source table: 0..3 for attributeN, 4 for color, then the geometry-
@@ -236,7 +236,7 @@ struct Sampler : public Object
     return helium::float2(t.x, 1.f - t.y);
   }
 
-  // --- Output transform (SPEC §6.4) ---------------------------------------
+  // --- Output transform ---------------------------------------------------
 
   // outTransform/outOffset. A diagonal outTransform maps onto the UsdUVTexture
   // output `scale`/`bias` (float-exact, values may leave [0,1]); anything that
@@ -261,7 +261,7 @@ struct Sampler : public Object
   // mirror.
   helium::ChangeObserverPtr<helium::Array2D> m_image2D;
   helium::ChangeObserverPtr<helium::Array1D> m_image1D;
-  // Primitive sampler backing array (§6.4); same observer semantics.
+  // Primitive sampler backing array; same observer semantics.
   helium::ChangeObserverPtr<helium::Array1D> m_primitiveArray;
   uint64_t m_primitiveOffset{0};
 
@@ -294,7 +294,7 @@ struct Sampler : public Object
   uint64_t m_serial{0};
   uint64_t m_revision{0};
 
-  // Shared parameter readers for the subtypes (SPEC §6.4).
+  // Shared parameter readers for the subtypes.
   void commitInAttribute();
   void commitOutTransform();
 

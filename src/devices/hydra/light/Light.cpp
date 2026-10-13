@@ -24,8 +24,8 @@ PXR_NAMESPACE_USING_DIRECTIVE
 namespace anari_hydra {
 
 // A fixed factor turning ANARI point/spot radiant-intensity (W/sr) into a
-// delegate 'intensity' — an explicit, documented approximation (SPEC §6.7);
-// absolute radiometric parity is not chased in v1.
+// delegate 'intensity' — an explicit, documented approximation; absolute
+// radiometric parity is not chased in v1.
 static constexpr float kPointIntensityScale = 1.f;
 
 static GfVec3f ToVec3f(const float3 &c)
@@ -61,8 +61,8 @@ void Light::commitParameters()
 {
   m_color = getParam<float3>("color", float3(1.f, 1.f, 1.f));
   // ANARI core light `visible` (default true). Read for every light; only the
-  // hdri subtype consults it today (the frame's dome camera-visibility policy,
-  // SPEC §4.7), so it is inert for the others.
+  // hdri subtype consults it today (the frame's dome camera-visibility policy),
+  // so it is inert for the others.
   m_visible = getParam<bool>("visible", true);
 }
 
@@ -76,8 +76,8 @@ void Light::finalize()
 
 namespace {
 
-// directional -> distant light (SPEC §6.6): irradiance -> intensity, oriented
-// so the distant light's -Z axis follows the ANARI direction.
+// directional -> distant light: irradiance -> intensity, oriented so the
+// distant light's -Z axis follows the ANARI direction.
 struct Directional : public Light
 {
   Directional(HydraGlobalState *s) : Light(s) {}
@@ -105,7 +105,7 @@ struct Directional : public Light
   }
 };
 
-// point -> sphere light (SPEC §6.6): treatAsPoint when radius is 0.
+// point -> sphere light: treatAsPoint when radius is 0.
 struct Point : public Light
 {
   Point(HydraGlobalState *s) : Light(s) {}
@@ -127,7 +127,7 @@ struct Point : public Light
     d.type = HdPrimTypeTokens->sphereLight;
     d.xform = GfMatrix4d(1).SetTranslate(
         GfVec3d(m_position[0], m_position[1], m_position[2]));
-    // treatAsPoint when there is no radius (SPEC §6.6).
+    // treatAsPoint when there is no radius.
     d.params = {
         {HdLightTokens->intensity, VtValue(m_intensity * kPointIntensityScale)},
         {HdLightTokens->color, VtValue(ToVec3f(m_color))},
@@ -137,7 +137,7 @@ struct Point : public Light
   }
 };
 
-// spot -> sphere light + shaping cone (SPEC §6.6).
+// spot -> sphere light + shaping cone.
 struct Spot : public Light
 {
   Spot(HydraGlobalState *s) : Light(s) {}
@@ -167,7 +167,7 @@ struct Spot : public Light
     const float coneDeg = 0.5f * m_openingAngle * 180.f / float(M_PI);
     const float softness =
         m_openingAngle > 0.f ? m_falloffAngle / m_openingAngle : 0.f;
-    // spot = sphere light, treatAsPoint, with a shaping cone (SPEC §6.6).
+    // spot = sphere light, treatAsPoint, with a shaping cone.
     d.params = {
         {HdLightTokens->intensity, VtValue(m_intensity * kPointIntensityScale)},
         {HdLightTokens->color, VtValue(ToVec3f(m_color))},
@@ -179,7 +179,7 @@ struct Spot : public Light
   }
 };
 
-// quad -> rect light (SPEC §6.6): edge-vector parameterization.
+// quad -> rect light: edge-vector parameterization.
 struct Quad : public Light
 {
   Quad(HydraGlobalState *s) : Light(s) {}
@@ -196,7 +196,7 @@ struct Quad : public Light
     m_edge1 = getParam<float3>("edge1", float3(1.f, 0.f, 0.f));
     m_edge2 = getParam<float3>("edge2", float3(0.f, 1.f, 0.f));
     // power -> normalize=true (total emission), radiance -> normalize=false
-    // (per-area), SPEC §6.7.
+    // (per-area).
     if (hasParam("power")) {
       m_intensity = getParam<float>("power", 1.f);
       m_normalize = true;
@@ -237,7 +237,7 @@ struct Quad : public Light
   }
 };
 
-// ring -> disk light (SPEC §6.6): inner radius > 0 degrades to a disk (warned).
+// ring -> disk light: inner radius > 0 degrades to a disk (warned).
 struct Ring : public Light
 {
   Ring(HydraGlobalState *s) : Light(s) {}
@@ -255,7 +255,7 @@ struct Ring : public Light
     m_direction = getParam<float3>("direction", float3(0.f, 0.f, -1.f));
     m_radius = getParam<float>("radius", 1.f);
     m_innerRadius = getParam<float>("innerRadius", 0.f);
-    // power -> normalize=true, radiance -> normalize=false (SPEC §6.7).
+    // power -> normalize=true, radiance -> normalize=false.
     if (hasParam("power")) {
       m_intensity = getParam<float>("power", 1.f);
       m_normalize = true;
@@ -267,7 +267,7 @@ struct Ring : public Light
     if (m_innerRadius > 0.f) {
       reportMessage(ANARI_SEVERITY_WARNING,
           "ring light innerRadius > 0 has no disk-light equivalent; "
-          "degrading to a solid disk (SPEC §6.6)");
+          "degrading to a solid disk");
     }
   }
 
@@ -284,15 +284,15 @@ struct Ring : public Light
   }
 };
 
-// hdri -> dome light (SPEC §6.6). The `radiance` environment image rides the
-// shared in-memory asset scheme (SPEC §6.3): it decodes into the AnariImage
-// registry under this light's unique `anari://` path, and the dome light's
-// textureFile points at it so Storm loads it through Glf->Hio->AnariHioImage —
-// the same plugin the samplers use (HdEmbree reads it through Hio too, as
-// linear float RGB). `scale` and `color` are folded into the served image and
-// the dome's own intensity/color stay at 1: HdEmbree's dome ignores both, so
-// only the texels reach every delegate alike. With no image, the
-// constant-color dome (scale/color) stands.
+// hdri -> dome light. The `radiance` environment image rides the shared
+// in-memory asset scheme: it decodes into the AnariImage registry under this
+// light's unique `anari://` path, and the dome light's textureFile points at it
+// so Storm loads it through Glf->Hio->AnariHioImage — the same plugin the
+// samplers use (HdEmbree reads it through Hio too, as linear float RGB).
+// `scale` and `color` are folded into the served image and the dome's own
+// intensity/color stay at 1: HdEmbree's dome ignores both, so only the texels
+// reach every delegate alike. With no image, the constant-color dome
+// (scale/color) stands.
 struct HDRI : public Light
 {
   HDRI(HydraGlobalState *s) : Light(s), m_radiance(this) {}
@@ -303,7 +303,7 @@ struct HDRI : public Light
 
   float m_scale{1.f};
   // Held through a ChangeObserverPtr so an in-place anariUnmapArray re-decodes
-  // into the registry and re-marks the mirror (SPEC §4.5).
+  // into the registry and re-marks the mirror.
   helium::ChangeObserverPtr<helium::Array2D> m_radiance;
   std::string m_assetPath;
   uint64_t m_revision{0};
@@ -355,11 +355,10 @@ struct HDRI : public Light
         {HdLightTokens->color,
             VtValue(m_haveImage ? GfVec3f(1.f, 1.f, 1.f) : ToVec3f(m_color))}};
     // With an environment image, author textureFile so the dome samples the
-    // real texture instead of the constant color (SPEC §6.3/§6.6). Storm's
-    // dome-light path reads SdfAssetPath::GetResolvedPath() directly (no Ar
-    // round-trip), so set the resolved field too — the `anari://…​.anari`
-    // string dispatches Hio to AnariHioImage by extension, needing no on-disk
-    // resolution.
+    // real texture instead of the constant color. Storm's dome-light path reads
+    // SdfAssetPath::GetResolvedPath() directly (no Ar round-trip), so set the
+    // resolved field too — the `anari://…​.anari` string dispatches Hio
+    // to AnariHioImage by extension, needing no on-disk resolution.
     if (m_haveImage)
       d.params.emplace_back(HdLightTokens->textureFile,
           VtValue(SdfAssetPath(m_assetPath, m_assetPath)));

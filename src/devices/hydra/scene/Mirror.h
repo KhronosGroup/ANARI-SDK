@@ -1,10 +1,9 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-// One retained mirror per ANARI world (SPEC §4.4), rooted /anari/w{N}/. Built
-// from zero-copy array wrappers; mutated only via AddPrims / DirtyPrims
-// (locator-precise) / RemovePrims from the render prologue (stage 2, SPEC
-// §9.3).
+// One retained mirror per ANARI world, rooted /anari/w{N}/. Built from
+// zero-copy array wrappers; mutated only via AddPrims / DirtyPrims
+// (locator-precise) / RemovePrims from the render prologue (stage 2).
 
 #pragma once
 
@@ -38,8 +37,8 @@ struct PickingIds
   std::vector<uint32_t> primitives;
   std::vector<uint32_t> instances;
   std::vector<uint32_t> triangles;
-  // A per-instance copy of an instanced surface (SPEC §6.4): not instanced in
-  // Hydra, so every hit belongs to the one instance in `instances`.
+  // A per-instance copy of an instanced surface: not instanced in Hydra, so
+  // every hit belongs to the one instance in `instances`.
   bool perInstanceCopy{false};
 };
 
@@ -83,29 +82,28 @@ class Mirror
     pxr::GfVec3f color{0.8f, 0.8f, 0.8f};
     float opacity{1.f};
     // True when the rprim's only mutable bulk data is zero-copy points, so an
-    // in-place mutation can take the DirtyPrims(points) fast path (SPEC §5.2).
+    // in-place mutation can take the DirtyPrims(points) fast path.
     bool incremental{false};
-    // Non-empty for a prototype rprim of an instancer (SPEC §4.3): the rprim
-    // carries an `instancedBy` pointing at this instancer / prototype-root.
+    // Non-empty for a prototype rprim of an instancer: the rprim carries an
+    // `instancedBy` pointing at this instancer / prototype-root.
     pxr::SdfPath instancerPath;
     pxr::SdfPath prototypeRoot;
     uint32_t instanceConstantMask{0};
     // Slots some instance of the group overrides (InstanceBinding).
     uint32_t instanceOverrideMask{0};
-    // Set for a per-instance copy (SPEC §6.4): that instance's overrides.
+    // Set for a per-instance copy: that instance's overrides.
     std::optional<InstanceOverrides> instanceValues;
     // Signature (serial:revision tuples) of the material's samplers that bake
-    // a derived primvar on this rprim (SPEC §6.4: baked image coordinates,
-    // transform and primitive sampler values), so a sampler edit re-authors
-    // the copy.
+    // a derived primvar on this rprim (baked image coordinates, transform and
+    // primitive sampler values), so a sampler edit re-authors the copy.
     std::string derivedSig;
   };
 
   // Tracks an instancer's prototype rprim paths + per-instance transforms so an
-  // unchanged instancer is not needlessly re-added (SPEC §4.3). `attributes`
-  // holds the per-instance override primvars (instance.color / attribute0..3,
-  // SPEC §6.8) as (primvar-name, instance-rate array) pairs; the VtValue arrays
-  // compare by value so an override change re-authors the instancer.
+  // unchanged instancer is not needlessly re-added. `attributes` holds the
+  // per-instance override primvars (instance.color / attribute0..3) as
+  // (primvar-name, instance-rate array) pairs; the VtValue arrays compare by
+  // value so an override change re-authors the instancer.
   struct InstancerRecord
   {
     std::vector<pxr::SdfPath> prototypes;
@@ -114,7 +112,7 @@ class Mirror
   };
 
   // Tracks a material sprim's authored parameters so an unchanged material is
-  // not needlessly re-added (SPEC §6.1).
+  // not needlessly re-added.
   struct MatRecord
   {
     Material *material{nullptr};
@@ -130,11 +128,11 @@ class Mirror
     int alphaMode{0};
     float opacityThreshold{0.f};
     // Signature of this material's sampler bindings
-    // (input:samplerSerial:revision tuples, SPEC §6.1) so binding/unbinding a
-    // sampler forces a network rebuild.
+    // (input:samplerSerial:revision tuples) so binding/unbinding a sampler
+    // forces a network rebuild.
     std::string samplerSig;
-    // Signature of this material's attribute bindings (input:primvar pairs,
-    // SPEC §6.1) so binding/unbinding an attribute forces a network rebuild.
+    // Signature of this material's attribute bindings (input:primvar pairs) so
+    // binding/unbinding an attribute forces a network rebuild.
     std::string attributeSig;
   };
 
@@ -143,7 +141,7 @@ class Mirror
   static InstanceBinding Binding(const PrimRecord &rec);
   static MatRecord MakeMatRecord(Material *m);
   static bool SameMaterial(const MatRecord &a, const MatRecord &b);
-  // Material-sprim path for a material in this world's mirror (SPEC §4.2).
+  // Material-sprim path for a material in this world's mirror.
   pxr::SdfPath materialPath(Material *m) const;
   // Reconcile material sprims referenced by `desired` rprims.
   void syncMaterials(const std::map<pxr::SdfPath, PrimRecord> &desired);
@@ -151,15 +149,15 @@ class Mirror
   void syncInstancers(
       const std::map<pxr::SdfPath, InstancerRecord> &desiredInstancers);
   static bool SameInstancer(const InstancerRecord &a, const InstancerRecord &b);
-  // Light-sprim path for a world-direct light: /anari/w{N}/lights/l{L} (§4.2).
+  // Light-sprim path for a world-direct light: /anari/w{N}/lights/l{L}.
   pxr::SdfPath lightPath(Light *l) const;
   // Expanded light-sprim path for an (instance, light) pair:
-  // /anari/w{N}/lights/i{I}_l{L} (SPEC §6.8); element `k` of an
-  // array-transform instance goes to /anari/w{N}/lights/i{I}_t{k}_l{L}.
+  // /anari/w{N}/lights/i{I}_l{L}; element `k` of an array-transform instance
+  // goes to /anari/w{N}/lights/i{I}_t{k}_l{L}.
   pxr::SdfPath expandedLightPath(
       uint64_t instanceSerial, int element, uint64_t lightSerial) const;
   // Reconcile light sprims: world-direct plus instanced-group expansion
-  // (add/remove/re-author on any commit, SPEC §6.6/§6.8).
+  // (add/remove/re-author on any commit).
   void syncLights(World *world);
   // True when a prim's structure is unchanged (same buffer pointer, counts,
   // xform, and material), so the only thing that could have changed is bulk
@@ -168,10 +166,10 @@ class Mirror
   // change instead forces a rebuild.
   static bool SamePrimTopology(const PrimRecord &a, const PrimRecord &b);
 
-  // A volume rprim (SPEC §7): world-direct or a prototype of its group's
-  // instancer, with the committed states it was authored from. Holding the
-  // field snapshot keeps its asset registered while the field bprim names it.
-  // A new snapshot (any commit) re-authors the field, material and rprim.
+  // A volume rprim: world-direct or a prototype of its group's instancer, with
+  // the committed states it was authored from. Holding the field snapshot keeps
+  // its asset registered while the field bprim names it. A new snapshot (any
+  // commit) re-authors the field, material and rprim.
   struct VolumeRecord
   {
     VolumeClassificationPtr volume;

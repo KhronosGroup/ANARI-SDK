@@ -1,12 +1,12 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 //
-// Exercises the material path (SPEC §6.1/§6.5/§6.9). Each material authors a
-// UsdPreviewSurface network into the mirror AND the constant-color displayColor
-// fallback; the device binds the network sprim to the rprim. This test asserts
-// the observable, spec-guaranteed result: each surface renders with a color
-// that tracks its material's constant color (the §6.9 fallback path, honored by
-// both Storm and Embree).
+// Exercises the material path. Each material authors a UsdPreviewSurface
+// network into the mirror AND the constant-color displayColor fallback; the
+// device binds the network sprim to the rprim. This test asserts the
+// observable, spec-guaranteed result: each surface renders with a color that
+// tracks its material's constant color (the displayColor fallback path, honored
+// by both Storm and Embree).
 //
 // Network-only effects (emissiveColor) are also asserted: the frame pushes
 // HdxRenderTaskParams with enableLighting=true (default-off), without which
@@ -152,7 +152,7 @@ int main(int argc, char **argv)
     std::printf("matte(red) avg rgb: %.0f %.0f %.0f\n", avg[0], avg[1], avg[2]);
     check(avg[0] > 60, "matte surface renders lit");
     check(avg[0] > avg[1] + 25 && avg[0] > avg[2] + 25,
-        "matte color reaches the delegate (red-dominant, §6.9)");
+        "matte color reaches the delegate (red-dominant)");
     anariRelease(dev, mat);
   }
 
@@ -171,7 +171,7 @@ int main(int argc, char **argv)
     std::printf("pbr(blue) avg rgb: %.0f %.0f %.0f\n", avg[0], avg[1], avg[2]);
     check(avg[2] > 60, "physicallyBased surface renders lit");
     check(avg[2] > avg[0] + 25 && avg[2] > avg[1] + 25,
-        "physicallyBased baseColor reaches the delegate (blue-dominant, §6.9)");
+        "physicallyBased baseColor reaches the delegate (blue-dominant)");
     anariRelease(dev, mat);
   }
 

@@ -48,10 +48,10 @@ PXR_NAMESPACE_USING_DIRECTIVE
 namespace anari_hydra {
 
 // Map an ANARI pixel type to the closest Hydra buffer format for honoring an
-// arbitrary AOV's requested format via SetRenderOutputSettings (SPEC §11.4).
-// UINT32 has no unsigned Hydra format; Int32 is the closest (the ID channels
-// already round-trip Int32<->UINT32 by bit-cast, §11.4). HdFormatInvalid means
-// "leave the delegate default" (the caller skips the override).
+// arbitrary AOV's requested format via SetRenderOutputSettings. UINT32 has no
+// unsigned Hydra format; Int32 is the closest (the ID channels already
+// round-trip Int32<->UINT32 by bit-cast). HdFormatInvalid means "leave the
+// delegate default" (the caller skips the override).
 static pxr::HdFormat anariToHdFormat(ANARIDataType t)
 {
   switch (t) {
@@ -70,18 +70,17 @@ static pxr::HdFormat anariToHdFormat(ANARIDataType t)
   }
 }
 
-// Scene-index path of the frame's synthesized ambient dome light (SPEC §6.6).
+// Scene-index path of the frame's synthesized ambient dome light.
 static const SdfPath kAmbientLightPath("/anari/frame/ambient");
 
 // The ambient dome's 1x1 environment texture, served through the in-memory
-// `anari://` asset scheme (SPEC §6.3), holds the fill radiance itself:
-// ambientColor * ambientRadiance as one linear float texel, with the dome's
-// own intensity and color left at 1. Storm ignores a textureless dome (warns
-// "Dome light has no texture asset path" and contributes nothing, proto 016),
-// and HdEmbree's dome ignores intensity and color (it lights with the texture
-// alone, or 1 without one), so only the texel reaches both alike. Each frame
-// owns its image, and every change gets a fresh path: delegates cache
-// textures by path.
+// `anari://` asset scheme, holds the fill radiance itself: ambientColor *
+// ambientRadiance as one linear float texel, with the dome's own intensity and
+// color left at 1. Storm ignores a textureless dome (warns "Dome light has no
+// texture asset path" and contributes nothing, proto 016), and HdEmbree's dome
+// ignores intensity and color (it lights with the texture alone, or 1 without
+// one), so only the texel reaches both alike. Each frame owns its image, and
+// every change gets a fresh path: delegates cache textures by path.
 static std::string AmbientTexPath(uint64_t frameSerial, uint64_t revision)
 {
   return "anari://renderer/ambient_f" + std::to_string(frameSerial) + "_r"
@@ -114,7 +113,7 @@ Frame::Frame(HydraGlobalState *s) : helium::BaseFrame(s) {}
 
 Frame::~Frame()
 {
-  // Teardown is Hydra-adjacent: it must run on the worker thread (SPEC §9.6).
+  // Teardown is Hydra-adjacent: it must run on the worker thread.
   // Self-anchoring (below) guarantees all posted jobs have completed before the
   // last ref drops, so by here the queue holds nothing referencing this frame;
   // we only need to destroy the Hydra objects on the worker. postWait runs
@@ -140,19 +139,19 @@ bool Frame::getProperty(const std::string_view &name,
     uint64_t size,
     uint32_t flags)
 {
-  // Last completed frame's render wall-clock, in seconds (SPEC §8.2). The
-  // worker thread stamps m_duration; here we just read the atomic — no worker
-  // flush, so a HUD polling this every frame never blocks the app thread. Apps
-  // query after anariFrameReady, by which point the FIFO worker has written it.
-  // `flags` (the ANARI wait mask) is ignored: the atomic already yields a
-  // coherent last-frame value. Honoring ANARI_WAIT via a worker flush is a
-  // possible future refinement if an app is found querying before frameReady.
+  // Last completed frame's render wall-clock, in seconds. The worker thread
+  // stamps m_duration; here we just read the atomic — no worker flush, so a HUD
+  // polling this every frame never blocks the app thread. Apps query after
+  // anariFrameReady, by which point the FIFO worker has written it. `flags`
+  // (the ANARI wait mask) is ignored: the atomic already yields a coherent
+  // last-frame value. Honoring ANARI_WAIT via a worker flush is a possible
+  // future refinement if an app is found querying before frameReady.
   if (type == ANARI_FLOAT32 && name == "duration") {
     helium::writeToVoidP(ptr, m_duration.load());
     return true;
   }
   // GPU texture bytes held by the frame's delegate after the last completed
-  // render (SPEC §8.2), stamped like `duration`. Only delegates that report
+  // render, stamped like `duration`. Only delegates that report
   // HdPerfTokens->textureMemory in GetRenderStats (Storm) provide it.
   if (type == ANARI_UINT64 && name == "hydra.textureMemory"
       && m_hasTextureMemory.load()) {
@@ -177,8 +176,8 @@ void Frame::commitParameters()
   m_colorType =
       getParam<ANARIDataType>("channel.color", ANARI_UFIXED8_RGBA_SRGB);
 
-  // Standard AOV channels beyond color (SPEC §11.4): a channel is enabled when
-  // the frame carries a `channel.<name>` parameter (its value is the requested
+  // Standard AOV channels beyond color: a channel is enabled when the frame
+  // carries a `channel.<name>` parameter (its value is the requested
   // ANARIDataType). The delegate-native buffer format drives the readback type,
   // so we only track which channels are on, not the requested format.
   m_enabledAovChannels.clear();
@@ -187,10 +186,10 @@ void Frame::commitParameters()
       m_enabledAovChannels.insert(d.anariChannel);
   }
 
-  // Arbitrary named Hydra AOVs (SPEC §11.4, ANARI_HYDRA_FRAME_AOV): any frame
-  // parameter named `channel.aov:<hydraToken>` requests that Hydra AOV, its
-  // value the ANARIDataType map() should deliver (and the buffer format to
-  // pin via SetRenderOutputSettings). Enumerate all params by prefix — helium's
+  // Arbitrary named Hydra AOVs (ANARI_HYDRA_FRAME_AOV): any frame parameter
+  // named `channel.aov:<hydraToken>` requests that Hydra AOV, its value the
+  // ANARIDataType map() should deliver (and the buffer format to pin via
+  // SetRenderOutputSettings). Enumerate all params by prefix — helium's
   // ParameterizedObject exposes params_begin()/params_end() (as Renderer does).
   m_arbitraryAovs.clear();
   const std::string aovPrefix = "channel.aov:";
@@ -206,8 +205,8 @@ void Frame::commitParameters()
       m_arbitraryAovs[token] = fmt;
   }
 
-  // KHR_FRAME_COMPLETION_CALLBACK (SPEC §8.7): takes effect from the next
-  // render job, since the commit flush precedes it on the worker queue.
+  // KHR_FRAME_COMPLETION_CALLBACK: takes effect from the next render job, since
+  // the commit flush precedes it on the worker queue.
   {
     std::lock_guard<std::mutex> lock(m_callbackMutex);
     m_callback = getParam<ANARIFrameCompletionCallback>(
@@ -232,7 +231,7 @@ void Frame::ensureHydra()
   auto *state = deviceState();
   Worker *worker = state->worker;
 
-  // Apply the renderer's settings at delegate creation too (SPEC §4.7), so
+  // Apply the renderer's settings at delegate creation too, so
   // creation-time-only settings land; per-frame SetRenderSetting below still
   // tracks settings that change after creation. Empty map when no renderer is
   // bound yet (unchanged behavior).
@@ -251,8 +250,8 @@ void Frame::ensureHydra()
     return;
   }
 
-  // channel.normal source (SPEC §11.4): the same resolution the capability
-  // probe used, so the frame binds exactly what the device advertised.
+  // channel.normal source: the same resolution the capability probe used, so
+  // the frame binds exactly what the device advertised.
   m_normalToken = normalAovToken(m_renderDelegate.Get());
 
   m_renderIndex.reset(
@@ -269,9 +268,9 @@ void Frame::ensureHydra()
   m_renderIndex->InsertSceneIndex(
       m_taskController, ctrlPath, /*needsPrefixing=*/false);
 
-  // The frame-owned ambient scene index (SPEC §4.7/§6.6): holds at most one
-  // synthesized uniform dome light. Insert it bare — a dome light needs none of
-  // the material-resolving filter chain the world mirror rides. renderOnWorker
+  // The frame-owned ambient scene index: holds at most one synthesized uniform
+  // dome light. Insert it bare — a dome light needs none of the
+  // material-resolving filter chain the world mirror rides. renderOnWorker
   // authors/removes its single prim as ambientRadiance changes.
   m_ambientScene = HdRetainedSceneIndex::New();
   m_renderIndex->InsertSceneIndex(
@@ -281,7 +280,7 @@ void Frame::ensureHydra()
   // Render outputs are set in renderOnWorker (once, then on channel change) so
   // color + any enabled AOV channels land in a single SetRenderOutputs call —
   // re-setting outputs after the first render's binding restarts HdEmbree's
-  // progressive pass into an empty frame (SPEC §11.4).
+  // progressive pass into an empty frame.
   m_taskController->SetEnablePresentation(false);
 
   // HdxRenderTaskParams::enableLighting defaults to *false*, under which
@@ -289,7 +288,7 @@ void Frame::ensureHydra()
   // "fully lit" shader — light sprims and material constant params sync
   // correctly but never reach the draw. UsdImagingGLEngine always pushes
   // params with lighting on; do the same so the authored material networks and
-  // light sprims (SPEC §6.1/§6.6) actually shade the draw.
+  // light sprims actually shade the draw.
   {
     HdxRenderTaskParams renderParams;
     renderParams.enableLighting = true;
@@ -299,7 +298,7 @@ void Frame::ensureHydra()
       HdTokens->geometry, HdReprSelector(HdReprTokens->smoothHull)));
 
   // The task controller's selection task emits benign TF_CODING_ERRORs unless
-  // a selection tracker is present in the engine task context (SPEC §8.6).
+  // a selection tracker is present in the engine task context.
   m_engine.SetTaskContextData(HdxTokens->selectionState,
       VtValue(std::make_shared<HdxSelectionTracker>()));
 
@@ -312,8 +311,8 @@ void Frame::renderOnWorker()
   if (!m_hydraReady)
     return; // early-out before t0: leave the previous "last completed" value
 
-  // Time the whole render body (SPEC §8.2 "duration"): stage-2 mirror drain +
-  // scene authoring + ambient/lighting/AOV setup + Execute + converge poll.
+  // Time the whole render body (the "duration" property): stage-2 mirror drain
+  // + scene authoring + ambient/lighting/AOV setup + Execute + converge poll.
   // This matches helide_gpu (which times its entire gpu_renderFrame) and
   // answers the app's real question — "how long did this frame take"
   // legitimately includes the reconcile the app waited on. NOT included: the
@@ -321,19 +320,19 @@ void Frame::renderOnWorker()
   // before this one (timing across two jobs isn't worth it for v1).
   const auto t0 = std::chrono::steady_clock::now();
 
-  // Apply the renderer's settings profile to this frame's delegate (SPEC §4.7).
-  // Cheap and idempotent, so re-applied each render to track renderer commits.
+  // Apply the renderer's settings profile to this frame's delegate. Cheap and
+  // idempotent, so re-applied each render to track renderer commits.
   if (m_renderer) {
     for (const auto &kv : m_renderer->renderSettings())
       m_renderDelegate->SetRenderSetting(kv.first, kv.second);
   }
 
-  // Dome skydome camera-visibility policy (SPEC §4.7). A dome light OWNS the
-  // backdrop under Storm: HdxSkydomeTask is the first render task and paints
-  // the dome environment into primary rays, clobbering the `background` clear
-  // color. The global HdRenderSettingsTokens->domeLightCameraVisibility lever
-  // suppresses that skydome while preserving the dome's light contribution to
-  // surfaces. Policy:
+  // Dome skydome camera-visibility policy. A dome light OWNS the backdrop under
+  // Storm: HdxSkydomeTask is the first render task and paints the dome
+  // environment into primary rays, clobbering the `background` clear color. The
+  // global HdRenderSettingsTokens->domeLightCameraVisibility lever suppresses
+  // that skydome while preserving the dome's light contribution to surfaces.
+  // Policy:
   //   - no hdri dome present -> false. Covers the no-dome case AND the ambient-
   //     only case: the synthetic ambient fill dome is never an hdri, so
   //     whenever it is the active dome it is camera-invisible and `background`
@@ -348,7 +347,7 @@ void Frame::renderOnWorker()
   // Storm draws a single representative skydome — the first hdri's `visible`
   // wins globally. Accepted; not chased here. Pushed after the renderer
   // settings loop so this policy value wins any verbatim passthrough of the
-  // same token (§11.3).
+  // same token.
   {
     bool domeVisible = false;
     if (m_world) {
@@ -366,7 +365,7 @@ void Frame::renderOnWorker()
         if (hdriCount > 1)
           reportMessage(ANARI_SEVERITY_WARNING,
               "multiple hdri lights present; following the first light's "
-              "`visible` for the global dome camera-visibility (SPEC §4.7)");
+              "`visible` for the global dome camera-visibility");
       }
     }
     m_renderDelegate->SetRenderSetting(
@@ -374,11 +373,11 @@ void Frame::renderOnWorker()
         VtValue(domeVisible));
   }
 
-  // Stage-2 drain (SPEC §9.3): author the mirror from committed state, but only
-  // when stage-1 finalize marked something into the mirror-dirty set (SPEC
-  // §5.2) — an idle re-render of an unchanged scene skips the reconcile.
-  // Fine-grained mark-driven authoring (per-object dependent-prim maps) is a
-  // later refinement; the reconcile itself is idempotent.
+  // Stage-2 drain: author the mirror from committed state, but only when
+  // stage-1 finalize marked something into the mirror-dirty set — an idle
+  // re-render of an unchanged scene skips the reconcile. Fine-grained
+  // mark-driven authoring (per-object dependent-prim maps) is a later
+  // refinement; the reconcile itself is idempotent.
   std::unordered_set<Object *> drained;
   deviceState()->mirrorDirty.drain(drained);
   if (!drained.empty())
@@ -401,8 +400,7 @@ void Frame::renderOnWorker()
     // mirror passes through the delegate's registered scene-index filter chain
     // (node-identifier / material-binding resolving, material primvar transfer,
     // implicit-surface tessellation, …) exactly as UsdImagingGLEngine does — a
-    // bare insert skips the filters Storm's material pipeline expects (SPEC
-    // §6.1).
+    // bare insert skips the filters Storm's material pipeline expects.
     if (firstInsert) {
       HdSceneIndexBaseRefPtr filtered =
           HdSceneIndexPluginRegistry::GetInstance()
@@ -416,11 +414,11 @@ void Frame::renderOnWorker()
     }
   }
 
-  // Ambient fill (SPEC §4.7/§6.6): the renderer's ambientRadiance/ambientColor
-  // synthesize a uniform dome light in the frame-owned ambient scene index. A
-  // retained AddPrims replaces in place, so re-author only when radiance
-  // crosses 0 or the intensity/color changes; remove the sprim when radiance
-  // drops to 0. (Scene-ambient via GlfSimpleLightingContext does NOT reach
+  // Ambient fill: the renderer's ambientRadiance/ambientColor synthesize a
+  // uniform dome light in the frame-owned ambient scene index. A retained
+  // AddPrims replaces in place, so re-author only when radiance crosses 0 or
+  // the intensity/color changes; remove the sprim when radiance drops to 0.
+  // (Scene-ambient via GlfSimpleLightingContext does NOT reach
   // UsdPreviewSurface under Storm — proto 016 — hence a real dome-light sprim.)
   const float ambientRadiance =
       m_renderer ? m_renderer->ambientRadiance() : 0.f;
@@ -456,13 +454,13 @@ void Frame::renderOnWorker()
     }
   }
 
-  // Lighting (SPEC §6.6): real ANARI lights are authored as UsdLux sprims and
-  // consumed by the delegate's light task; only a lightless world falls back to
-  // a simple headlight so geometry stays visible. An empty lighting state when
-  // lights exist avoids double-lighting from a stale headlight. The ambient
-  // fill above counts as app-supplied lighting, so it too drops the headlight
-  // (SPEC §6.8 option b): once ambient is set the app HAS lit the scene, and
-  // layering an unrequested camera light contradicts the ambient-only intent.
+  // Lighting: real ANARI lights are authored as UsdLux sprims and consumed by
+  // the delegate's light task; only a lightless world falls back to a simple
+  // headlight so geometry stays visible. An empty lighting state when lights
+  // exist avoids double-lighting from a stale headlight. The ambient fill above
+  // counts as app-supplied lighting, so it too drops the headlight: once
+  // ambient is set the app HAS lit the scene, and layering an unrequested
+  // camera light contradicts the ambient-only intent.
   {
     const bool hasLights = (m_world && m_world->hasAnyLight()) || wantAmbient;
     GlfSimpleLightingContextRefPtr lighting = GlfSimpleLightingContext::New();
@@ -481,18 +479,18 @@ void Frame::renderOnWorker()
     // ignores every light sprim and shades with its own camera light. Turn it
     // on whenever the world (or the ambient fill) supplies lighting, and leave
     // a lightless world on the camera light, the counterpart of Storm's
-    // headlight above. An app that sets `enableLighting` itself (§11.3
+    // headlight above. An app that sets `enableLighting` itself (render-setting
     // passthrough) keeps its value. Delegates without the setting ignore it.
     static const TfToken kEnableLighting("enableLighting");
     if (!m_renderer || !m_renderer->renderSettings().count(kEnableLighting))
       m_renderDelegate->SetRenderSetting(kEnableLighting, VtValue(hasLights));
   }
 
-  // AOV outputs (SPEC §11.4). SetRenderOutputs rewires the AOV bprims, so only
-  // call it once (first render) and thereafter when the enabled channel set
-  // changes (mirrors the resize guard). The guard key is the FULL output set:
-  // the enabled standard channels ∪ the arbitrary `channel.aov:` tokens. Reset
-  // the framing cache on change so the freshly created bprims get sized.
+  // AOV outputs. SetRenderOutputs rewires the AOV bprims, so only call it once
+  // (first render) and thereafter when the enabled channel set changes (mirrors
+  // the resize guard). The guard key is the FULL output set: the enabled
+  // standard channels ∪ the arbitrary `channel.aov:` tokens. Reset the framing
+  // cache on change so the freshly created bprims get sized.
   if (!m_outputsSet || m_configuredAovChannels != m_enabledAovChannels
       || m_configuredArbitraryAovs != m_arbitraryAovs) {
     m_outputsSet = true;
@@ -503,7 +501,7 @@ void Frame::renderOnWorker()
       if (m_enabledAovChannels.count(d.anariChannel))
         outputs.push_back(boundAovToken(d));
     }
-    // Arbitrary named AOVs (SPEC §11.4): bind each requested Hydra token.
+    // Arbitrary named AOVs: bind each requested Hydra token.
     for (const auto &kv : m_arbitraryAovs)
       outputs.push_back(TfToken(kv.first));
     if (m_enabledAovChannels.count("channel.primitiveId")
@@ -514,10 +512,10 @@ void Frame::renderOnWorker()
     m_taskController->SetRenderOutputs(outputs);
 
     // Honor each arbitrary AOV's requested ANARI format on its bprim via
-    // SetRenderOutputSettings (SPEC §8.1/§11.4) — must come after
-    // SetRenderOutputs, which creates the binding this overrides. Start from
-    // the delegate's default descriptor (clear value / multisampling) and pin
-    // only the format; an unmapped ANARI type keeps the delegate default.
+    // SetRenderOutputSettings — must come after SetRenderOutputs, which creates
+    // the binding this overrides. Start from the delegate's default descriptor
+    // (clear value / multisampling) and pin only the format; an unmapped ANARI
+    // type keeps the delegate default.
     for (const auto &kv : m_arbitraryAovs) {
       const TfToken tok(kv.first);
       const HdFormat fmt = anariToHdFormat(kv.second);
@@ -528,13 +526,13 @@ void Frame::renderOnWorker()
       m_taskController->SetRenderOutputSettings(tok, desc);
     }
 
-    // Standard normal channel (SPEC §11.4): misses read (0,0,0) on every
-    // delegate (HdEmbree clears `normal` to -1), and Storm's Neye target is
-    // pinned to Float32Vec4 — Storm writes the raw eye-space normal as
-    // vec4(Neye, 1), which its default UNorm8Vec4 target would clamp (negative
-    // components) and quantize. Applied after the arbitrary pins so the
-    // standard channel's contract wins over a concurrent `channel.aov:Neye`
-    // (whose readback then only matches a FLOAT32_VEC4 request).
+    // Standard normal channel: misses read (0,0,0) on every delegate (HdEmbree
+    // clears `normal` to -1), and Storm's Neye target is pinned to Float32Vec4
+    // — Storm writes the raw eye-space normal as vec4(Neye, 1), which its
+    // default UNorm8Vec4 target would clamp (negative components) and quantize.
+    // Applied after the arbitrary pins so the standard channel's contract wins
+    // over a concurrent `channel.aov:Neye` (whose readback then only matches a
+    // FLOAT32_VEC4 request).
     if (m_enabledAovChannels.count("channel.normal")
         && !m_normalToken.IsEmpty()) {
       const TfToken tok = m_normalToken;
@@ -554,15 +552,15 @@ void Frame::renderOnWorker()
     m_configuredHeight = 0;
   }
 
-  // Background clear color (SPEC §4.7): the renderer's core `background`
-  // (FLOAT32_VEC4) becomes the color AOV's clear value — the color shown where
-  // primary rays miss geometry (honored only where no dome paints the backdrop,
-  // per the domeLightCameraVisibility policy above). Applied each render
-  // (cheap, idempotent, like the per-frame SetRenderSetting loop) so it both
-  // tracks a changed `background` — which can change without the channel set
-  // changing, so it must NOT sit behind the SetRenderOutputs guard — and
-  // survives the SetRenderOutputs above, which recreates the color binding from
-  // the delegate's default descriptor and would otherwise wipe the clear value.
+  // Background clear color: the renderer's core `background` (FLOAT32_VEC4)
+  // becomes the color AOV's clear value — the color shown where primary rays
+  // miss geometry (honored only where no dome paints the backdrop, per the
+  // domeLightCameraVisibility policy above). Applied each render (cheap,
+  // idempotent, like the per-frame SetRenderSetting loop) so it both tracks a
+  // changed `background` — which can change without the channel set changing,
+  // so it must NOT sit behind the SetRenderOutputs guard — and survives the
+  // SetRenderOutputs above, which recreates the color binding from the
+  // delegate's default descriptor and would otherwise wipe the clear value.
   // Start from that default descriptor and override only clearValue (matching
   // the arbitrary-AOV format path). GfVec4f clearValue matches usdImaging
   // convention regardless of the delegate's color buffer format.
@@ -612,14 +610,13 @@ void Frame::renderOnWorker()
     m_taskController->SetFreeCameraMatrices(view, projection);
   }
 
-  // Diff-and-kick render (usdrecord pattern, SPEC §8.3). One Execute dispatches
-  // the render; a one-Execute delegate (Storm) then reports converged
-  // immediately, while a progressive delegate (HdEmbree) renders on a
-  // background thread. The first Execute after (re)binding outputs restarts the
-  // pass and marks the AOV buffers unconverged, so poll convergence AFTER that
-  // dispatch — with a short sleep and a wall-clock budget, not a fixed spin
-  // count (a fixed count can exhaust before the async render finishes, reading
-  // back empty).
+  // Diff-and-kick render (usdrecord pattern). One Execute dispatches the
+  // render; a one-Execute delegate (Storm) then reports converged immediately,
+  // while a progressive delegate (HdEmbree) renders on a background thread. The
+  // first Execute after (re)binding outputs restarts the pass and marks the AOV
+  // buffers unconverged, so poll convergence AFTER that dispatch — with a short
+  // sleep and a wall-clock budget, not a fixed spin count (a fixed count can
+  // exhaust before the async render finishes, reading back empty).
   const SdfPathVector taskPaths = m_taskController->GetRenderingTaskPaths();
   m_engine.Execute(m_renderIndex.get(), taskPaths);
   const auto deadline =
@@ -628,7 +625,7 @@ void Frame::renderOnWorker()
     if (std::chrono::steady_clock::now() > deadline) {
       reportMessage(ANARI_SEVERITY_WARNING,
           "render did not converge within the time budget; presenting the "
-          "latest frame (SPEC §8.3)");
+          "latest frame");
       break;
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -651,7 +648,7 @@ void Frame::renderOnWorker()
     m_hasTextureMemory = true;
   }
   // Stamped here, before completeOnWorker sets m_rendered, so any observer
-  // gating on m_rendered sees a consistent duration (SPEC §8.2).
+  // gating on m_rendered sees a consistent duration.
   const auto t1 = std::chrono::steady_clock::now();
   m_duration = std::chrono::duration<float>(t1 - t0).count();
 }
@@ -680,13 +677,13 @@ void Frame::completeOnWorker()
 
 void Frame::teardownHydra()
 {
-  // Strict order (SPEC §9.6): task controller, then render index (prims
-  // finalize against a still-live delegate), then delegate.
-  // First drop the engine's task-context data: Execute stashes the simple-
-  // lighting shader there, and a dome light's environment texture keeps GPU
-  // sampler/texture handles whose destructors touch the Storm resource registry
-  // — which the render index owns. Release them while that registry is still
-  // alive, else the handles dangle on it at ~HdEngine (SPEC §6.3/§9.6).
+  // Strict order: task controller, then render index (prims finalize against a
+  // still-live delegate), then delegate. First drop the engine's task-context
+  // data: Execute stashes the simple- lighting shader there, and a dome light's
+  // environment texture keeps GPU sampler/texture handles whose destructors
+  // touch the Storm resource registry — which the render index owns. Release
+  // them while that registry is still alive, else the handles dangle on it at
+  // ~HdEngine.
   m_engine.ClearTaskContextData();
   m_taskController = nullptr;
   m_insertedWorldScene = nullptr;
@@ -706,8 +703,8 @@ void Frame::renderFrame()
 {
   auto *state = deviceState();
   if (state->releasing) {
-    // A completion callback re-rendering during anariRelease(device) (SPEC
-    // §8.7): drop it so the release drain terminates.
+    // A completion callback re-rendering during anariRelease(device): drop it
+    // so the release drain terminates.
     reportMessage(ANARI_SEVERITY_WARNING,
         "anariRenderFrame during device release ignored");
     return;
@@ -717,7 +714,7 @@ void Frame::renderFrame()
   // Stage 1 (device-side commit application) then the render job, FIFO on the
   // worker. The render job self-anchors an internal ref on this frame so an
   // anariRelease(frame) before the job runs cannot free it out from under the
-  // worker (the SPEC §10.3 anchor-registry guarantee, applied per job here).
+  // worker (the anchor-registry guarantee, applied per job here).
   helium::IntrusivePtr<Frame> self(this);
   state->worker->post([state]() { state->commitBuffer.flush(); });
   state->worker->post([self]() {
@@ -734,8 +731,7 @@ static inline uint8_t ToU8(float v)
 
 // Linear → sRGB transfer curve (IEC 61966-2-1). The delegate's color AOV holds
 // linear radiance; an sRGB channel type asks for encoded bytes, so the encode
-// happens here on map (SPEC §8.1 "sRGB convert-on-map"). RGB only — alpha
-// stays linear.
+// happens here on map. RGB only — alpha stays linear.
 static inline float LinearToSrgb(float v)
 {
   v = v < 0.f ? 0.f : (v > 1.f ? 1.f : v);
@@ -760,10 +756,10 @@ static inline uint8_t LinearToSrgbU8(float v)
   return lut[int(v * (N - 1) + 0.5f)];
 }
 
-// Sample a background image (KHR_RENDERER_BACKGROUND_IMAGE, SPEC §4.7) the way
-// VisRTX does: the image is stretched over the frame, uv in [0,1]^2 with row 0
-// of the image on row 0 of the frame (ANARI's bottom row), bilinear filtering
-// with texel centres at (i + 0.5) / n, and clamp-to-edge wrapping.
+// Sample a background image (KHR_RENDERER_BACKGROUND_IMAGE) the way VisRTX
+// does: the image is stretched over the frame, uv in [0,1]^2 with row 0 of the
+// image on row 0 of the frame (ANARI's bottom row), bilinear filtering with
+// texel centres at (i + 0.5) / n, and clamp-to-edge wrapping.
 static void SampleBackground(
     const AnariImageData &img, float u, float v, float out[4])
 {
@@ -787,10 +783,10 @@ static void SampleBackground(
 }
 
 // Read the color AOV back into m_mappedColor, converting to m_colorType. Runs
-// on the worker thread (where the Hgi lives, SPEC §8.5). A background image is
-// composited under the rendered (premultiplied) colour first, in float before
-// any 8-bit/sRGB encode, matching VisRTX's non-premultiplied-background
-// "under": rgb = C.rgb + (1 - C.a) * bg.rgb, a = C.a + (1 - C.a) * bg.a.
+// on the worker thread (where the Hgi lives). A background image is composited
+// under the rendered (premultiplied) colour first, in float before any
+// 8-bit/sRGB encode, matching VisRTX's non-premultiplied-background "under":
+// rgb = C.rgb + (1 - C.a) * bg.rgb, a = C.a + (1 - C.a) * bg.a.
 void Frame::readbackColor()
 {
   if (!m_hydraReady || !m_taskController)
@@ -871,11 +867,11 @@ TfToken Frame::boundAovToken(const AovChannelDesc &desc) const
   return desc.hydraToken;
 }
 
-// channel.normal from Storm's Neye target (SPEC §11.4). Neye holds the shading
-// normal in eye space (Float32Vec4, alpha 1 where a fragment landed, the zero
-// clear elsewhere). Rotate it back through the view matrix that rendered this
-// frame — under Gf's row-vector convention n_eye = n_world * (V^-1)^T, so
-// n_world = n_eye * V^T — and renormalize; misses stay (0,0,0).
+// channel.normal from Storm's Neye target. Neye holds the shading normal in eye
+// space (Float32Vec4, alpha 1 where a fragment landed, the zero clear
+// elsewhere). Rotate it back through the view matrix that rendered this frame —
+// under Gf's row-vector convention n_eye = n_world * (V^-1)^T, so n_world =
+// n_eye * V^T — and renormalize; misses stay (0,0,0).
 void Frame::readbackNormalFromNeye(std::vector<uint8_t> &out)
 {
   std::vector<uint8_t> eye;
@@ -900,12 +896,11 @@ void Frame::readbackNormalFromNeye(std::vector<uint8_t> &out)
   });
 }
 
-// Read a standard AOV channel back into `out` (SPEC §11.4). Depth becomes
-// distance along the camera ray; normal is a world-space Float32Vec3 (the
-// delegate's `normal` AOV, or Storm's Neye rotated to world space). The ID
-// channels translate delegate indices through the rendered ANARI identity
-// snapshot. If the delegate hands back an unexpected format, zero-fill so the
-// map stays well-formed.
+// Read a standard AOV channel back into `out`. Depth becomes distance along the
+// camera ray; normal is a world-space Float32Vec3 (the delegate's `normal` AOV,
+// or Storm's Neye rotated to world space). The ID channels translate delegate
+// indices through the rendered ANARI identity snapshot. If the delegate hands
+// back an unexpected format, zero-fill so the map stays well-formed.
 void Frame::readbackAov(const AovChannelDesc &desc, std::vector<uint8_t> &out)
 {
   if (desc.pixelType == ANARI_UINT32) {
@@ -1064,14 +1059,14 @@ void Frame::readbackPicking(const TfToken &token, std::vector<uint8_t> &out)
   }
 }
 
-// Read a Hydra AOV bprim back into `out`, converting to `pixelType` (SPEC
-// §11.4). Shared by the standard-channel and arbitrary-named (channel.aov:)
-// paths. depth/normal are the delegate's Float32/Float32Vec3 buffers surfaced
-// as FLOAT32/FLOAT32_VEC3; the ID / UINT32 channels reinterpret the Int32
-// buffer verbatim (background -1 → 0xFFFFFFFF, preserving "no hit"). Because
-// arbitrary AOVs pin their buffer format via SetRenderOutputSettings, the
-// delegate format usually already matches the requested type; when it does not
-// (delegate could not honor it), zero-fill so the map stays well-formed.
+// Read a Hydra AOV bprim back into `out`, converting to `pixelType`. Shared by
+// the standard-channel and arbitrary-named (channel.aov:) paths. depth/normal
+// are the delegate's Float32/Float32Vec3 buffers surfaced as
+// FLOAT32/FLOAT32_VEC3; the ID / UINT32 channels reinterpret the Int32 buffer
+// verbatim (background -1 → 0xFFFFFFFF, preserving "no hit"). Because arbitrary
+// AOVs pin their buffer format via SetRenderOutputSettings, the delegate format
+// usually already matches the requested type; when it does not (delegate could
+// not honor it), zero-fill so the map stays well-formed.
 void Frame::readbackAovBuffer(const TfToken &hydraToken,
     ANARIDataType pixelType,
     std::vector<uint8_t> &out)
@@ -1126,14 +1121,14 @@ void *Frame::map(std::string_view channel,
   if (channel == "channel.color") {
     *pixelType = m_colorType;
     // Draining the worker queue guarantees the render job has completed (FIFO),
-    // then the readback runs on the worker where the Hgi lives (SPEC §8.5).
+    // then the readback runs on the worker where the Hgi lives.
     state->worker->postWait([this]() { readbackColor(); });
     return m_mappedColor.data();
   }
 
   const std::string name(channel);
 
-  // An arbitrary named Hydra AOV (SPEC §11.4, ANARI_HYDRA_FRAME_AOV):
+  // An arbitrary named Hydra AOV (ANARI_HYDRA_FRAME_AOV):
   // `channel.aov:<hydraToken>`. Map only if it was requested this frame; the
   // buffer is read back in the requested format (pinned via
   // SetRenderOutputSettings). Return nullptr for an unrequested token.
@@ -1151,7 +1146,7 @@ void *Frame::map(std::string_view channel,
       const TfToken tok(token);
       const ANARIDataType pt = it->second;
       // The staging lookup (a map insert) runs on the worker too, so a map from
-      // a completion callback cannot race an app thread's map (SPEC §8.7).
+      // a completion callback cannot race an app thread's map.
       std::vector<uint8_t> *staging = nullptr;
       state->worker->postWait([&]() {
         staging = &m_mappedAov[name];
@@ -1161,7 +1156,7 @@ void *Frame::map(std::string_view channel,
     }
   }
 
-  // A standard AOV channel (SPEC §11.4): map only if it was enabled this frame.
+  // A standard AOV channel: map only if it was enabled this frame.
   const AovChannelDesc *desc = nullptr;
   for (const AovChannelDesc &d : standardAovChannels()) {
     if (name == d.anariChannel) {

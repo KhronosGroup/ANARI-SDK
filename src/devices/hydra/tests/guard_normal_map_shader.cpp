@@ -1,10 +1,10 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 //
-// Guards the generated normal-mapping surface (scene/NormalMappedSurface.h,
-// SPEC §6.5) against OpenUSD drift. Its glslfx copies UsdPreviewSurface's
-// parameter list and names previewSurface.glslfx's internal sections, so an
-// OpenUSD upgrade can break it in two ways the device can't see:
+// Guards the generated normal-mapping surface (scene/NormalMappedSurface.h)
+// against OpenUSD drift. Its glslfx copies UsdPreviewSurface's parameter list
+// and names previewSurface.glslfx's internal sections, so an OpenUSD upgrade
+// can break it in two ways the device can't see:
 //
 //   1. the parameter list no longer matches Sdr's UsdPreviewSurface node (an
 //      added, removed, retyped or re-defaulted input), or the technique no

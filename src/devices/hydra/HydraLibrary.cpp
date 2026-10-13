@@ -27,8 +27,8 @@ struct HydraLibrary : public anari::LibraryImpl
   const char **getDeviceSubtypes() override;
 
  private:
-  // Per-delegate extension lists (SPEC §4.8), cached by device subtype so the
-  // returned C-API pointer stays valid for the library's lifetime.
+  // Per-delegate extension lists, cached by device subtype so the returned
+  // C-API pointer stays valid for the library's lifetime.
   std::map<std::string, std::vector<std::string>> m_extStrings;
   std::map<std::string, std::vector<const char *>> m_extView;
 };
@@ -45,9 +45,9 @@ ANARIDevice HydraLibrary::newDevice(const char *subtype)
 
 const char **HydraLibrary::getDeviceExtensions(const char *deviceType)
 {
-  // Per-delegate truth (SPEC §4.8): probe the delegate's published capabilities
-  // and gate the reported extension list on them, honestly omitting what the
-  // delegate cannot do. Cached per subtype.
+  // Per-delegate truth: probe the delegate's published capabilities and gate
+  // the reported extension list on them, honestly omitting what the delegate
+  // cannot do. Cached per subtype.
   const std::string sub = deviceType ? deviceType : "default";
   auto it = m_extView.find(sub);
   if (it != m_extView.end())
@@ -58,8 +58,8 @@ const char **HydraLibrary::getDeviceExtensions(const char *deviceType)
   std::set<std::string> aovChannels;
   std::vector<RenderSettingDesc> renderSettings; // unused at library scope
   {
-    // The delegate is created and read on a worker thread that owns an Hgi
-    // (SPEC §9.2); a short-lived worker is enough for a one-shot probe.
+    // The delegate is created and read on a worker thread that owns an Hgi; a
+    // short-lived worker is enough for a one-shot probe.
     Worker worker;
     worker.postWait([&]() {
       readDelegateCaps(
@@ -73,7 +73,7 @@ const char **HydraLibrary::getDeviceExtensions(const char *deviceType)
 
 const char **HydraLibrary::getDeviceSubtypes()
 {
-  // One device subtype per Hydra render delegate (SPEC §11.2).
+  // One device subtype per Hydra render delegate.
   return DelegateRegistry::get().subtypeCStrings();
 }
 

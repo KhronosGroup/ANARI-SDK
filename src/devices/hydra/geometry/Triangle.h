@@ -7,9 +7,9 @@
 
 namespace anari_hydra {
 
-// ANARI 'triangle' geometry -> Hydra mesh rprim (SPEC §4.1). Uses the base
-// primitive.index (UINT32_VEC3, one triple per triangle); when absent, vertices
-// are consumed sequentially as independent triangles.
+// ANARI 'triangle' geometry -> Hydra mesh rprim. Uses the base primitive.index
+// (UINT32_VEC3, one triple per triangle); when absent, vertices are consumed
+// sequentially as independent triangles.
 struct Triangle : public Geometry
 {
   Triangle(HydraGlobalState *s);

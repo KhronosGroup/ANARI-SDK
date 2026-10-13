@@ -1,19 +1,19 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 //
-// Exercises image precision through the in-memory asset scheme (SPEC §6.3):
-// decoded texels keep their numeric value instead of being clamped to [0,1]
-// and quantised to 8 bits. A physicallyBased material with a black base and
-// its `emissive` fed by the sampler, rendered with no lights into a
-// FLOAT32_VEC4 frame, writes the sampled texel straight to the pixel, so the
-// frame is a numeric readback of the texture:
+// Exercises image precision through the in-memory asset scheme: decoded texels
+// keep their numeric value instead of being clamped to [0,1] and quantised to 8
+// bits. A physicallyBased material with a black base and its `emissive` fed by
+// the sampler, rendered with no lights into a FLOAT32_VEC4 frame, writes the
+// sampled texel straight to the pixel, so the frame is a numeric readback of
+// the texture:
 //   - FLOAT32 texels above one and below zero survive (HDR / signed),
 //   - a gradient finer than 1/255 stays monotone and distinct,
 //   - sRGB 8-bit sources decode to linear without re-quantisation (dark codes
 //     2, 5, 10 are distinct — all three round to 0 in 8-bit linear),
 //   - UFIXED8 linear sources stay exact, UFIXED16 keeps sub-8-bit steps,
 //   - image1D rides the same path,
-//   - a channel-mixing outTransform may leave [0,1] (SPEC §6.4),
+//   - a channel-mixing outTransform may leave [0,1],
 //   - live image unmap edits, a replacement of a different element type and
 //     size, all propagate through the same frame,
 //   - 8-bit sRGB sources stay 8-bit on the GPU (the `hydra.textureMemory`

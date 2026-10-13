@@ -1,10 +1,9 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-// Zero-copy array wrapper (SPEC §5.1): a custom HdDataSource leaf that holds a
-// refcounted ANARI array handle and serves its memory to Hydra as a
-// foreign-data VtArray at pull time. Bulk data is never copied at the
-// ANARI<->Hydra boundary.
+// Zero-copy array wrapper: a custom HdDataSource leaf that holds a refcounted
+// ANARI array handle and serves its memory to Hydra as a foreign-data VtArray
+// at pull time. Bulk data is never copied at the ANARI<->Hydra boundary.
 //
 // Execution-verified in prototype 012: VtArray(&src, ptr, n) per pull, sharing
 // one foreign source; pointer identity survives to

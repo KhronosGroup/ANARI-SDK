@@ -18,7 +18,7 @@ namespace anari_hydra {
 
 using helium::float3;
 
-// The Hydra light sprim a Light subtype maps to (SPEC §6.6): a light-type token
+// The Hydra light sprim a Light subtype maps to: a light-type token
 // (distantLight / sphereLight / rectLight / diskLight / domeLight), a world
 // transform, and the HdLightTokens parameter list the delegate reads via
 // GetLightParamValue. Schema assembly lives in LightBuilder; subtypes only fill
@@ -31,7 +31,7 @@ struct LightData
 };
 
 // Base for ANARI lights. v1 maps the six-row subtype table to UsdLux sprims
-// with the documented radiometric approximation (SPEC §6.7).
+// with the documented radiometric approximation.
 struct Light : public Object
 {
   Light(HydraGlobalState *s);
@@ -42,7 +42,7 @@ struct Light : public Object
   void commitParameters() override;
   void finalize() override;
 
-  // Device-assigned serial for the light-sprim path taxonomy (SPEC §4.2).
+  // Device-assigned serial for the light-sprim path taxonomy.
   uint64_t serial() const
   {
     return m_serial;
@@ -52,8 +52,8 @@ struct Light : public Object
   virtual LightData buildLightData() const = 0;
 
   // True for the hdri (dome) subtype only. Drives the frame's dome
-  // camera-visibility policy (SPEC §4.7): a dome light OWNS the backdrop under
-  // Storm, so the frame suppresses the skydome unless an hdri wants to be seen.
+  // camera-visibility policy: a dome light OWNS the backdrop under Storm, so
+  // the frame suppresses the skydome unless an hdri wants to be seen.
   virtual bool isHdri() const
   {
     return false;
@@ -61,8 +61,7 @@ struct Light : public Object
 
   // ANARI core light `visible` param (bool, default true). For an hdri dome it
   // decides whether the environment paints the backdrop (visible) or the dome
-  // is a pure image-based light letting the renderer's `background` show (SPEC
-  // §4.7).
+  // is a pure image-based light letting the renderer's `background` show.
   bool visible() const
   {
     return m_visible;

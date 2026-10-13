@@ -1,11 +1,10 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 //
-// Exercises geometry parameter-list introspection (SPEC §4.1) for the
-// cone/cylinder tube shapes: the query must match the parameters
-// Cone.cpp/Cylinder.cpp actually read (SPEC KHR_GEOMETRY_CONE,
-// KHR_GEOMETRY_CYLINDER), not a stale or aspirational list. Pure
-// introspection through the core ANARI entry point
+// Exercises geometry parameter-list introspection for the cone/cylinder tube
+// shapes: the query must match the parameters Cone.cpp/Cylinder.cpp actually
+// read (KHR_GEOMETRY_CONE, KHR_GEOMETRY_CYLINDER), not a stale or aspirational
+// list. Pure introspection through the core ANARI entry point
 // anariGetObjectInfo(...,"parameter",ANARI_PARAMETER_LIST); no frame is
 // rendered.
 
@@ -62,9 +61,9 @@ int main(int argc, char **argv)
       dev, ANARI_GEOMETRY, "cylinder", "parameter", ANARI_PARAMETER_LIST);
   check(cylinder != nullptr, "cylinder parameter list is non-null");
 
-  // Cylinder.cpp reads primitive.radius, not vertex.radius (SPEC
-  // KHR_GEOMETRY_CYLINDER): the query must advertise the parameter the
-  // device actually consumes.
+  // Cylinder.cpp reads primitive.radius, not vertex.radius
+  // (KHR_GEOMETRY_CYLINDER): the query must advertise the parameter the device
+  // actually consumes.
   check(hasParam(cylinder, "primitive.radius"),
       "cylinder parameter list advertises 'primitive.radius'");
   check(!hasParam(cylinder, "vertex.radius"),

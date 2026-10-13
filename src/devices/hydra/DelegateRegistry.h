@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Enumerates the Hydra renderer-plugin registry and exposes each delegate as an
-// ANARI device subtype (SPEC §11.2). Tokens are de-prefixed and lowercased
+// ANARI device subtype. Tokens are de-prefixed and lowercased
 // ("HdStormRendererPlugin" -> "storm"); a "default" alias forwards to Storm
 // when available, else Hydra's own default-delegate choice. One documented
 // exclusion: hdAnari (the reverse bridge) is off the surface — driving it from

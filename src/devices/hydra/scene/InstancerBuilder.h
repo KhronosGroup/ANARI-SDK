@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Authors an HdInstancer prim for one (world, group): the group's surface
-// rprims are the instancer's prototypes, each drawn once per instance transform
-// (SPEC §4.3). Replaces the baked-transform rprim expansion so N instances of a
+// rprims are the instancer's prototypes, each drawn once per instance
+// transform. Replaces the baked-transform rprim expansion so N instances of a
 // group cost the prototypes + N transforms instead of N rprim copies.
 
 #pragma once
@@ -19,10 +19,10 @@
 
 namespace anari_hydra {
 
-// A per-instance attribute override authored as an instance-rate primvar
-// (SPEC §6.8): `name` matches the primvar the material's UsdPrimvarReader reads
-// (`color`, `attribute0..3`), `value` holds the instance-rate array (one entry
-// per instance) as a VtVec3fArray (color) or VtVec4fArray (attributes).
+// A per-instance attribute override authored as an instance-rate primvar:
+// `name` matches the primvar the material's UsdPrimvarReader reads (`color`,
+// `attribute0..3`), `value` holds the instance-rate array (one entry per
+// instance) as a VtVec3fArray (color) or VtVec4fArray (attributes).
 using InstancerAttribute = std::pair<pxr::TfToken, pxr::VtValue>;
 
 // Build the instancer container (prim type HdPrimTypeTokens->instancer). Every

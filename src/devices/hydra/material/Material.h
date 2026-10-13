@@ -18,39 +18,39 @@ namespace anari_hydra {
 using helium::float3;
 using helium::float4;
 
-// A material input driven by a sampler instead of a constant (SPEC §6.1): the
+// A material input driven by a sampler instead of a constant: the
 // MaterialBuilder authors a UsdUVTexture for `sampler` and connects `output` of
 // it (rgb for a color slot, r/a for a scalar slot) to `usdInput`.
 //
-// `normalMap` flags the `normal` slot (SPEC §6.5). Per ANARI the sampler's
-// value is already the [-1,1] tangent-space normal — the app decodes texels
-// through outTransform/outOffset — so no unpack is added. An image sampler
-// feeds a UsdUVTexture as on any slot; a transform/primitive sampler's baked
-// primvar feeds a generated Storm surface shader. Storm synthesizes the TBN
-// frame from `st` — no `tangents` primvar is needed (proven in
+// `normalMap` flags the `normal` slot. Per ANARI the sampler's value is already
+// the [-1,1] tangent-space normal — the app decodes texels through
+// outTransform/outOffset — so no unpack is added. An image sampler feeds a
+// UsdUVTexture as on any slot; a transform/primitive sampler's baked primvar
+// feeds a generated Storm surface shader. Storm synthesizes the TBN frame from
+// `st` — no `tangents` primvar is needed (proven in
 // prototypes/015-normal-map-tangents).
 struct SamplerBinding
 {
   pxr::TfToken usdInput; // UsdPreviewSurface input, e.g. "diffuseColor"
   pxr::TfToken output; // UsdUVTexture output: "rgb", "r", or "a"
   helium::IntrusivePtr<Sampler> sampler;
-  bool normalMap{false}; // the `normal` slot (SPEC §6.5)
+  bool normalMap{false}; // the `normal` slot
 
   // Component count a transform/primitive sampler bakes for this slot and its
-  // reader reads (SPEC §6.4): float3 for a color slot, the first component for
-  // a scalar one. One place, because the derived primvar name embeds it.
+  // reader reads: float3 for a color slot, the first component for a scalar
+  // one. One place, because the derived primvar name embeds it.
   int valueWidth() const
   {
     return output == pxr::TfToken("rgb") ? 3 : 1;
   }
 };
 
-// A material input driven by a geometry attribute instead of a constant
-// (SPEC §6.1): the parameter names an ANARI attribute (a STRING, e.g. "color"
-// or "attribute0"). The MaterialBuilder authors a UsdPrimvarReader_* node
-// reading `primvar` and connects its `result` output to `usdInput`; the reader
-// type (float3 vs float) follows the input slot. `primvar` matches the
-// per-vertex primvar PrimBuilder authors for that attribute.
+// A material input driven by a geometry attribute instead of a constant: the
+// parameter names an ANARI attribute (a STRING, e.g. "color" or "attribute0").
+// The MaterialBuilder authors a UsdPrimvarReader_* node reading `primvar` and
+// connects its `result` output to `usdInput`; the reader type (float3 vs float)
+// follows the input slot. `primvar` matches the per-vertex primvar PrimBuilder
+// authors for that attribute.
 struct AttributeBinding
 {
   pxr::TfToken usdInput; // UsdPreviewSurface input, e.g. "diffuseColor"
@@ -58,9 +58,8 @@ struct AttributeBinding
 };
 
 // Base for ANARI materials. The device authors a UsdPreviewSurface-shaped
-// material network from these parameters (SPEC §6.1/§6.5) as a material sprim,
-// and mirrors the constant color as displayColor (SPEC §6.9) for delegates that
-// ignore networks (Embree).
+// material network from these parameters as a material sprim, and mirrors the
+// constant color as displayColor for delegates that ignore networks (Embree).
 struct Material : public Object
 {
   Material(HydraGlobalState *s);
@@ -72,14 +71,14 @@ struct Material : public Object
   void commitParameters() override;
   void finalize() override;
 
-  // Device-assigned serial for the material-sprim path taxonomy (SPEC §4.2).
+  // Device-assigned serial for the material-sprim path taxonomy.
   uint64_t serial() const
   {
     return m_serial;
   }
 
-  // How opacity is interpreted at the UsdPreviewSurface
-  // opacity/opacityThreshold inputs (SPEC §6.5 alphaMode row).
+  // How ANARI alphaMode is interpreted at the UsdPreviewSurface
+  // opacity/opacityThreshold inputs.
   enum class AlphaMode
   {
     Opaque,
@@ -133,14 +132,14 @@ struct Material : public Object
     return m_opacityThreshold;
   }
 
-  // Inputs bound to a sampler rather than a constant (SPEC §6.1). Empty for the
+  // Inputs bound to a sampler rather than a constant. Empty for the
   // constant-only case.
   const std::vector<SamplerBinding> &samplerBindings() const
   {
     return m_samplerBindings;
   }
 
-  // Inputs bound to a geometry attribute rather than a constant (SPEC §6.1).
+  // Inputs bound to a geometry attribute rather than a constant.
   const std::vector<AttributeBinding> &attributeBindings() const
   {
     return m_attributeBindings;
@@ -150,7 +149,7 @@ struct Material : public Object
   // If `name` names a sampler param, record a binding of `output` of it to
   // `usdInput` and return true (the constant read should then be skipped). Used
   // by subtypes for each texturable slot. `normalMap` marks the `normal` slot,
-  // whose transform/primitive samplers need the generated surface (SPEC §6.5).
+  // whose transform/primitive samplers need the generated surface.
   bool bindSampler(const char *name,
       const pxr::TfToken &usdInput,
       const pxr::TfToken &output,

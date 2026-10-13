@@ -7,8 +7,8 @@
 
 namespace anari_hydra {
 
-// ANARI 'physicallyBased' -> UsdPreviewSurface (SPEC §6.5). The full parameter
-// table with warn-and-drop tail is a follow-up; this slice maps the core
+// ANARI 'physicallyBased' -> UsdPreviewSurface. The full parameter table with
+// warn-and-drop tail is a follow-up; this slice maps the core
 // baseColor/metallic/roughness/opacity block.
 struct PhysicallyBased : public Material
 {

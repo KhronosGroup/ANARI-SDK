@@ -46,9 +46,9 @@ void Instance::commitParameters()
   else
     m_xfm = getParam<helium::mat4>("transform", m_xfm);
 
-  // Per-instance attribute overrides (SPEC §6.8). A scalar of any float width
-  // is read into the ANARI default (0,0,0,1) so the missing lanes keep their
-  // default; presence is tracked so an unset attribute stays out of the shared
+  // Per-instance attribute overrides. A scalar of any float width is read into
+  // the ANARI default (0,0,0,1) so the missing lanes keep their default;
+  // presence is tracked so an unset attribute stays out of the shared
   // instance-rate primvar array.
   m_overrides = InstanceOverrides{};
   for (int k = 0; k < 5; ++k) {

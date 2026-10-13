@@ -15,10 +15,10 @@
 
 namespace anari_hydra {
 
-// ANARI group -> one HdInstancer per (world, group) + prototype rprims
-// (SPEC §4.3). Collects the group's surfaces; a group's lights expand per
-// instance into (instance, light) sprims (SPEC §6.8); its volumes become
-// prototype volume rprims on the same instancer (SPEC §7).
+// ANARI group -> one HdInstancer per (world, group) + prototype rprims.
+// Collects the group's surfaces; a group's lights expand per instance into
+// (instance, light) sprims; its volumes become prototype volume rprims on the
+// same instancer.
 struct Group : public Object
 {
   Group(HydraGlobalState *s);

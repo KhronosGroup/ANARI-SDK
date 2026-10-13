@@ -7,11 +7,11 @@
 
 namespace anari_hydra {
 
-// ANARI 'cone' geometry -> commit-time-tessellated Hydra mesh (SPEC §4.1). Each
-// primitive is a tapered tube between two endpoints; radii come from
-// vertex.radius (base->apex), else the global 'radius' base with a zero apex.
-// vertex.cap overrides the 'caps' string per endpoint when present; a
-// zero-radius apex is never capped regardless.
+// ANARI 'cone' geometry -> commit-time-tessellated Hydra mesh. Each primitive
+// is a tapered tube between two endpoints; radii come from vertex.radius
+// (base->apex), else the global 'radius' base with a zero apex. vertex.cap
+// overrides the 'caps' string per endpoint when present; a zero-radius apex is
+// never capped regardless.
 struct Cone : public Geometry
 {
   Cone(HydraGlobalState *s);

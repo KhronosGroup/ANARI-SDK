@@ -1,12 +1,12 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 //
-// KHR_FRAME_COMPLETION_CALLBACK (SPEC §8.7): the frame's
-// `frameCompletionCallback` fires exactly once per completed render, with the
-// committed `frameCompletionCallbackUserData`, on the device worker thread
-// after the frame is observably ready. Drives everything through the ANARI C
-// API. Cross-thread synchronization uses condition variables with a generous
-// hang guard, never fixed sleeps.
+// KHR_FRAME_COMPLETION_CALLBACK: the frame's `frameCompletionCallback` fires
+// exactly once per completed render, with the committed
+// `frameCompletionCallbackUserData`, on the device worker thread after the
+// frame is observably ready. Drives everything through the ANARI C API.
+// Cross-thread synchronization uses condition variables with a generous hang
+// guard, never fixed sleeps.
 
 #include <anari/anari.h>
 

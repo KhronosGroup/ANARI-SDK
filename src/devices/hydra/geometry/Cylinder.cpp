@@ -21,9 +21,9 @@ void Cylinder::commitParameters()
 void Cylinder::finalize()
 {
   Geometry::finalize();
-  // Cylinders have no vertex.radius parameter (SPEC KHR_GEOMETRY_CYLINDER):
-  // radius comes from primitive.radius (per segment, base == apex) or the
-  // global 'radius' fallback.
+  // Cylinders have no vertex.radius parameter (KHR_GEOMETRY_CYLINDER): radius
+  // comes from primitive.radius (per segment, base == apex) or the global
+  // 'radius' fallback.
   const TubeRadii radii{
       /*vertex=*/nullptr, primitiveRadius(), globalRadius(), globalRadius()};
   TessellateTubes(vertexPosition(),

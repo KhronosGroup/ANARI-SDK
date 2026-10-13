@@ -10,7 +10,7 @@
 namespace anari_hydra {
 
 // ANARI surface -> one rprim; its geometry supplies bulk data sources, its
-// material becomes a material sprim referenced by materialId (SPEC §4.1).
+// material becomes a material sprim referenced by materialId.
 struct Surface : public Object
 {
   Surface(HydraGlobalState *s);
@@ -29,7 +29,7 @@ struct Surface : public Object
     return m_material.ptr;
   }
 
-  // Device-assigned serial for the prim-path taxonomy (SPEC §4.2).
+  // Device-assigned serial for the prim-path taxonomy.
   uint32_t id() const
   {
     return m_id;

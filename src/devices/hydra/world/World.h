@@ -16,8 +16,8 @@
 
 namespace anari_hydra {
 
-// One retained mirror per ANARI world (SPEC §4.4). Holds world-direct surfaces
-// and instances; gatherRenderables() flattens them to (path-key, surface,
+// One retained mirror per ANARI world. Holds world-direct surfaces and
+// instances; gatherRenderables() flattens them to (path-key, surface,
 // world-space transform) tuples for the mirror to author.
 struct World : public Object
 {
@@ -44,7 +44,7 @@ struct World : public Object
     return m_serial;
   }
 
-  // A world-direct surface (identity transform, no instancer, SPEC §4.3).
+  // A world-direct surface (identity transform, no instancer).
   struct Renderable
   {
     uint64_t surfaceSerial{0};
@@ -54,37 +54,36 @@ struct World : public Object
   std::vector<Renderable> gatherRenderables() const;
 
   // A group instanced N times: the group's surfaces become prototype rprims
-  // authored once, drawn once per instance transform via one HdInstancer
-  // (SPEC §4.3). Every vector is parallel to `transforms`, one entry per
-  // *flattened* transform: a scalar-transform instance contributes one entry,
-  // an array-transform instance (KHR_INSTANCE_TRANSFORM_ARRAY) one per element.
-  // `instanceSerials` + `elements` key a group's per-instance light expansion
-  // (SPEC §6.8); `elements[i]` is -1 for a scalar transform, else the array
-  // index.
+  // authored once, drawn once per instance transform via one HdInstancer. Every
+  // vector is parallel to `transforms`, one entry per *flattened* transform: a
+  // scalar-transform instance contributes one entry, an array-transform
+  // instance (KHR_INSTANCE_TRANSFORM_ARRAY) one per element. `instanceSerials`
+  // + `elements` key a group's per-instance light expansion; `elements[i]` is
+  // -1 for a scalar transform, else the array index.
   struct InstancedGroup
   {
     Group *group{nullptr};
     std::vector<helium::mat4> transforms;
     std::vector<uint64_t> instanceSerials;
     std::vector<int> elements;
-    // Per-instance attribute overrides parallel to `transforms` (SPEC §6.8):
-    // instance.color / attribute0..3 feeding the prototype material reads.
+    // Per-instance attribute overrides parallel to `transforms`: instance.color
+    // / attribute0..3 feeding the prototype material reads.
     std::vector<InstanceOverrides> overrides;
     std::vector<uint32_t> ids;
   };
 
   std::vector<InstancedGroup> gatherInstancedGroups() const;
 
-  // World-direct lights (SPEC §6.6). Instanced-group lights expand separately
-  // via gatherInstancedGroups() + Group::lights() (SPEC §6.8).
+  // World-direct lights. Instanced-group lights expand separately via
+  // gatherInstancedGroups() + Group::lights().
   std::vector<Light *> gatherLights() const;
 
-  // World-direct volumes (identity transform, no instancer, SPEC §7).
+  // World-direct volumes (identity transform, no instancer).
   std::vector<Volume *> gatherVolumes() const;
 
   // True when the world contributes any light — world-direct or an instanced
-  // group carrying lights (SPEC §6.6/§6.8) — so the fallback headlight drops
-  // even when only instanced-group lights exist.
+  // group carrying lights — so the fallback headlight drops even when only
+  // instanced-group lights exist.
   bool hasAnyLight() const;
 
  private:

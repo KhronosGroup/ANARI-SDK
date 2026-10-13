@@ -1,9 +1,9 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-// Authors a Hydra light sprim from a Light's LightData (SPEC §6.6): a `light`
-// container of HdLightTokens params (served to the delegate via
-// GetLightParamValue) plus the light's world transform.
+// Authors a Hydra light sprim from a Light's LightData: a `light` container of
+// HdLightTokens params (served to the delegate via GetLightParamValue) plus the
+// light's world transform.
 
 #pragma once
 

@@ -7,10 +7,10 @@
 
 namespace anari_hydra {
 
-// ANARI 'cylinder' geometry -> commit-time-tessellated Hydra mesh (SPEC §4.1).
-// Each primitive is a constant-radius tube between two endpoints; the radius
-// comes from primitive.radius (per segment), else the global 'radius'.
-// vertex.cap overrides the 'caps' string per endpoint when present.
+// ANARI 'cylinder' geometry -> commit-time-tessellated Hydra mesh. Each
+// primitive is a constant-radius tube between two endpoints; the radius comes
+// from primitive.radius (per segment), else the global 'radius'. vertex.cap
+// overrides the 'caps' string per endpoint when present.
 struct Cylinder : public Geometry
 {
   Cylinder(HydraGlobalState *s);

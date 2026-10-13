@@ -64,7 +64,7 @@ std::vector<World::Renderable> World::gatherRenderables() const
 {
   std::vector<Renderable> out;
 
-  // World-direct surfaces: identity transform, no instancer (SPEC §4.3).
+  // World-direct surfaces: identity transform, no instancer.
   if (m_surface) {
     for (auto *h = m_surface->handlesBegin(); h != m_surface->handlesEnd();
          ++h) {
@@ -84,8 +84,8 @@ std::vector<World::Renderable> World::gatherRenderables() const
 std::vector<World::InstancedGroup> World::gatherInstancedGroups() const
 {
   // Aggregate every instance by the group it references: one HdInstancer per
-  // group, one flattened transform per (instance, transform element) (SPEC
-  // §4.3). Preserves first-seen group order for stable prim paths.
+  // group, one flattened transform per (instance, transform element). Preserves
+  // first-seen group order for stable prim paths.
   std::vector<InstancedGroup> out;
   std::map<Group *, size_t> indexOf;
   if (!m_instance)
@@ -147,8 +147,8 @@ bool World::hasAnyLight() const
 {
   if (!gatherLights().empty())
     return true;
-  // An instanced group carrying lights expands to per-instance sprims (§6.8),
-  // which count as lights even with no world-direct light present.
+  // An instanced group carrying lights expands to per-instance sprims, which
+  // count as lights even with no world-direct light present.
   for (const auto &ig : gatherInstancedGroups()) {
     if (!ig.group->lights().empty())
       return true;

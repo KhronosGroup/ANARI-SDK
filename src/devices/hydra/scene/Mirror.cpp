@@ -43,15 +43,15 @@ static GfMatrix4d ToGfMatrix(const helium::mat4 &m)
   return g;
 }
 
-// Per-instance attribute overrides -> instance-rate primvar arrays (SPEC §6.8),
-// read per instance by the prototype materials' UsdPrimvarReader nodes (§6.1).
-// One array covers every instance in the group, so an attribute is authored
-// only when at least one instance set it; instances that did not fall to the
-// ANARI default attribute value (0,0,0,1). This fill is safe because a
-// prototype's own per-vertex primvar wins over the inherited instance-rate one
-// (ANARI precedence per-vertex > per-instance-uniform, proven in prototype 014)
-// — the filled default never clobbers a real per-vertex value. The residual gap
-// is a mixed group with no per-vertex primvar where only some instances set the
+// Per-instance attribute overrides -> instance-rate primvar arrays, read per
+// instance by the prototype materials' UsdPrimvarReader nodes. One array covers
+// every instance in the group, so an attribute is authored only when at least
+// one instance set it; instances that did not fall to the ANARI default
+// attribute value (0,0,0,1). This fill is safe because a prototype's own
+// per-vertex primvar wins over the inherited instance-rate one (ANARI
+// precedence per-vertex > per-instance-uniform, proven in prototype 014) — the
+// filled default never clobbers a real per-vertex value. The residual gap is a
+// mixed group with no per-vertex primvar where only some instances set the
 // attribute: the unset instances render the default rather than the reader's
 // own fallback. `color` is authored float3 to match the float3 `color`
 // per-vertex primvar and color-slot reader; `attribute0..3` keep the ANARI
@@ -106,7 +106,7 @@ static std::vector<InstancerAttribute> BuildInstanceAttributes(
     out.emplace_back(
         TfToken(AttributePrimvarName(k) + "_float3"), VtValue(color));
     out.emplace_back(TfToken(AttributePrimvarName(k)), VtValue(vals));
-    // The float2 form sampler readers take (SPEC §6.4): `st` for attribute0.
+    // The float2 form sampler readers take: `st` for attribute0.
     VtVec2fArray st(n);
     for (size_t i = 0; i < n; ++i)
       st[i] = GfVec2f(vals[i][0], vals[i][1]);
@@ -145,10 +145,10 @@ Mirror::PrimRecord Mirror::MakeRecord(Surface *s, const GfMatrix4d &xform)
   // other mutable bulk data, so an in-place points mutation can take the
   // locator- precise DirtyPrims(points) fast path. Point/curve widths and
   // tessellated cone/cylinder geometry carry copied per-vertex data, so any
-  // change there forces a full rebuild (SPEC §5.2). App-provided normals are
-  // likewise a decode-copy `normals` primvar (PrimBuilder), so a mesh carrying
-  // them no longer qualifies for the fast path — an in-place normal mutation
-  // must re-author the copy via a full rebuild. The same applies to copied UVs,
+  // change there forces a full rebuild. App-provided normals are likewise a
+  // decode-copy `normals` primvar (PrimBuilder), so a mesh carrying them no
+  // longer qualifies for the fast path — an in-place normal mutation must
+  // re-author the copy via a full rebuild. The same applies to copied UVs,
   // colors, and attributes at either vertex or face-varying interpolation.
   rec.incremental = geom->primType() == pxr::HdPrimTypeTokens->mesh
       && !geom->tessellation() && !geom->hasCopiedPrimvars();
@@ -243,7 +243,7 @@ Mirror::MatRecord Mirror::MakeMatRecord(Material *m)
     r.samplerSig += ';';
   }
   // Capture attribute bindings so a bind/unbind (or a swap to a different
-  // attribute) re-authors the network (SPEC §6.1).
+  // attribute) re-authors the network.
   for (const auto &b : m->attributeBindings()) {
     r.attributeSig += b.usdInput.GetString();
     r.attributeSig += ':';
@@ -357,11 +357,11 @@ void Mirror::syncLights(World *world)
 
   // Re-author every present light (params are cheap and change detection on the
   // free-form param list is not worth a record; sync only runs when something
-  // was committed, SPEC §5.2). Re-authoring the full desired set each sync also
-  // satisfies §6.8's "light-param changes fan out to all expanded sprims" for
-  // free — no separate dependent-prims map is needed.
+  // was committed). Re-authoring the full desired set each sync also fans
+  // light-param changes out to all expanded sprims for free — no separate
+  // dependent-prims map is needed.
 
-  // World-direct lights: /anari/w{N}/lights/l{L} (SPEC §6.6).
+  // World-direct lights: /anari/w{N}/lights/l{L}.
   for (Light *l : world->gatherLights()) {
     const SdfPath path = lightPath(l);
     desiredPaths.push_back(path);
@@ -369,13 +369,13 @@ void Mirror::syncLights(World *world)
     m_scene->AddPrims({{path, data.type, BuildLightPrim(data)}});
   }
 
-  // Instanced-group light expansion (SPEC §6.8): each group light expands to
-  // one sprim per (instance, light) pair at /anari/w{N}/lights/i{I}_l{L} (per
-  // (instance, element, light) for array transforms), N×M for N flattened
-  // transforms × M lights (linear, uncapped). The sprim's transform is the
-  // light's local transform composed with the instance transform; in the
-  // GfMatrix row-vector convention ToGfMatrix documents (p' = p*M),
-  // local-then-instance is p * Mlocal * Minstance.
+  // Instanced-group light expansion: each group light expands to one sprim per
+  // (instance, light) pair at /anari/w{N}/lights/i{I}_l{L} (per (instance,
+  // element, light) for array transforms), N×M for N flattened transforms × M
+  // lights (linear, uncapped). The sprim's transform is the light's local
+  // transform composed with the instance transform; in the GfMatrix row-vector
+  // convention ToGfMatrix documents (p' = p*M), local-then-instance is p *
+  // Mlocal * Minstance.
   for (const auto &ig : world->gatherInstancedGroups()) {
     const std::vector<Light *> groupLights = ig.group->lights();
     if (groupLights.empty())
@@ -533,7 +533,7 @@ void Mirror::sync(World *world)
   std::vector<World::Renderable> renderables = world->gatherRenderables();
   std::vector<World::InstancedGroup> groups = world->gatherInstancedGroups();
 
-  // Desired prim set, keyed by the serial-ID taxonomy path (SPEC §4.2).
+  // Desired prim set, keyed by the serial-ID taxonomy path.
   std::map<SdfPath, PrimRecord> desired;
   std::map<SdfPath, InstancerRecord> desiredInstancers;
   std::map<SdfPath, std::pair<Volume *, VolumeRecord>> desiredVolumes;
@@ -571,7 +571,7 @@ void Mirror::sync(World *world)
         r.surface->geometry()->pickingIds(true)};
   }
 
-  // Instanced groups (SPEC §4.3/§4.2): one instancer per (world, group) at
+  // Instanced groups: one instancer per (world, group) at
   // /anari/w{N}/instancers/g{G}, with the group's surfaces as its prototype
   // rprims /anari/w{N}/instancers/g{G}/s{S} — authored once with an identity
   // xform (the instancer supplies each instance's transform). Every instance
@@ -581,7 +581,7 @@ void Mirror::sync(World *world)
     const SdfPath instPath =
         m_root.AppendPath(SdfPath("instancers/g" + std::to_string(g)));
 
-    // Slots some instance of the group overrides (SPEC §6.8).
+    // Slots some instance of the group overrides.
     uint32_t overrideMask = 0;
     for (const auto &o : ig.overrides) {
       overrideMask |= o.hasColor ? 1u << 4 : 0u;
@@ -597,8 +597,8 @@ void Mirror::sync(World *world)
       // A world-space sampler source differs per instance at every vertex,
       // which a shared prototype cannot carry: author one rprim per instance
       // at /anari/w{N}/surfaces/i{I}[_t{k}]_s{S}, with the instance transform
-      // and the instance's overrides as constants (SPEC §6.4). Linear and
-      // uncapped in the instance count, like the light expansion (§6.8).
+      // and the instance's overrides as constants. Linear and uncapped in the
+      // instance count, like the light expansion.
       if (ReadsWorldSpace(s->material())) {
         for (size_t i = 0; i < ig.transforms.size(); ++i) {
           std::string name =
@@ -684,7 +684,7 @@ void Mirror::sync(World *world)
       }
     }
 
-    // The group's volumes are prototypes of the same instancer (SPEC §7).
+    // The group's volumes are prototypes of the same instancer.
     for (Volume *v : ig.group->volumes()) {
       VolumeRecord r;
       if (!volumeRecord(v, r))

@@ -82,13 +82,13 @@ add_library(anari_library_hydra SHARED
   frame/Frame.cpp
 )
 
-# Object/parameter introspection tables (SPEC §4.8): the ANARI-SDK query
-# generator resolves the device root (introspection/hydra_device.json) against
-# the SDK's own shipped KHR schema files (share/anari/code_gen/api, vanilla)
-# plus the bridge-only parameters in introspection/*.json, and emits
-# anari_library_hydra_queries.{h,cpp}; Introspection.cpp gates the result on
-# the bound delegate's extension list at query time. hydra_device.json must
-# list hydra_bridge_parameters after the KHR files: the SDK merge keeps the
+# Object/parameter introspection tables: the ANARI-SDK query generator resolves
+# the device root (introspection/hydra_device.json) against the SDK's own
+# shipped KHR schema files (share/anari/code_gen/api, vanilla) plus the
+# bridge-only parameters in introspection/*.json, and emits
+# anari_library_hydra_queries.{h,cpp}; Introspection.cpp gates the result on the
+# bound delegate's extension list at query time. hydra_device.json must list
+# hydra_bridge_parameters after the KHR files: the SDK merge keeps the
 # first-seen entry per parameter name (README.md "Object/parameter
 # introspection").
 file(GLOB _anari_hydra_introspection_jsons CONFIGURE_DEPENDS
@@ -102,12 +102,12 @@ anari_generate_queries(
 )
 
 # NanoVDB (header-only) backs the `nanovdb` spatial field and
-# KHR_SPATIAL_FIELD_NANOVDB (SPEC §7). By default the headers are downloaded
-# at configure time from a pinned OpenVDB release (the SDK's
-# anari_sdk_fetch_project, as helide does for embree); set
-# ANARI_HYDRA_NANOVDB_INCLUDE_DIR to use local headers instead (offline
-# builds), or turn ANARI_HYDRA_ENABLE_NANOVDB off to drop the field type.
-# The anari_hydra_nanovdb interface target carries the headers to the tests.
+# KHR_SPATIAL_FIELD_NANOVDB. By default the headers are downloaded at configure
+# time from a pinned OpenVDB release (the SDK's anari_sdk_fetch_project, as
+# helide does for embree); set ANARI_HYDRA_NANOVDB_INCLUDE_DIR to use local
+# headers instead (offline builds), or turn ANARI_HYDRA_ENABLE_NANOVDB off to
+# drop the field type. The anari_hydra_nanovdb interface target carries the
+# headers to the tests.
 option(ANARI_HYDRA_ENABLE_NANOVDB
   "Support 'nanovdb' spatial fields (needs the header-only NanoVDB)" ON)
 set(ANARI_HYDRA_NANOVDB_INCLUDE_DIR "" CACHE PATH
@@ -158,7 +158,7 @@ target_compile_definitions(anari_library_hydra PRIVATE
   MFB_PACKAGE_MODULE=AnariHydra)
 
 # The Hio image plugin's plugInfo.json ships next to the device library so
-# EnsureAnariHioRegistered() finds it via the library's own path (SPEC §13).
+# EnsureAnariHioRegistered() finds it via the library's own path.
 add_custom_command(TARGET anari_library_hydra POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_if_different
     ${CMAKE_CURRENT_SOURCE_DIR}/plugInfo.json
@@ -173,7 +173,7 @@ PRIVATE
 target_link_libraries(anari_library_hydra
 PRIVATE
   anari::helium
-  # OpenUSD imaging + base (SPEC §13 library subset + hdx/Storm ride-along).
+  # OpenUSD imaging + base (the Hydra library subset + hdx/Storm ride-along).
   hd hdx hdSt hgi hgiGL hf hio sdf sdr ar plug
   glf garch cameraUtil pxOsd
   tf gf vt trace work

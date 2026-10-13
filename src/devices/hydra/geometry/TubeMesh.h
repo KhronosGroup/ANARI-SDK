@@ -21,8 +21,8 @@ struct TubeCaps
 TubeCaps ParseTubeCaps(const std::string &caps);
 
 // Per-segment radius sources, in priority order: `primitive` (one entry per
-// segment, cylinders only, SPEC KHR_GEOMETRY_CYLINDER), else `vertex` (per
-// endpoint, cones/curves base->apex taper), else the (base, apex) fallback.
+// segment, cylinders only, KHR_GEOMETRY_CYLINDER), else `vertex` (per endpoint,
+// cones/curves base->apex taper), else the (base, apex) fallback.
 struct TubeRadii
 {
   helium::Array1D *vertex{nullptr};
@@ -31,12 +31,11 @@ struct TubeRadii
   float apex{1.f};
 };
 
-// Commit-time tessellation shared by cone and cylinder (SPEC §4.1): each
-// primitive is a tapered tube between two endpoints (p0,r0)->(p1,r1), swept
-// into a mesh with a fixed number of radial segments. Cones pass a zero apex
-// radius; cylinders pass equal radii. The result is doubleSided; cap fans are
-// still wound outward because facing-based shading (Embree) darkens inward
-// faces.
+// Commit-time tessellation shared by cone and cylinder: each primitive is a
+// tapered tube between two endpoints (p0,r0)->(p1,r1), swept into a mesh with a
+// fixed number of radial segments. Cones pass a zero apex radius; cylinders
+// pass equal radii. The result is doubleSided; cap fans are still wound outward
+// because facing-based shading (Embree) darkens inward faces.
 //
 // Endpoints come from `position` in consecutive pairs, or via `index`
 // (UINT32_VEC2, one segment per entry).

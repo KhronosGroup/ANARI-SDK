@@ -20,13 +20,12 @@
 
 namespace anari_hydra {
 
-// The ANARI renderer is a settings profile applied to the frame's delegate
-// (SPEC §4.7), not a delegate instance. commitParameters distils the object's
-// parameters into a Hydra render-setting map the Frame pushes via
+// The ANARI renderer is a settings profile applied to the frame's delegate, not
+// a delegate instance. commitParameters distils the object's parameters into a
+// Hydra render-setting map the Frame pushes via
 // HdRenderDelegate::SetRenderSetting: a small core translation table (ANARI
 // name -> Hydra token) plus delegate-native passthrough under the verbatim
-// Hydra token (ANARI_HYDRA_RENDER_SETTINGS, §11.3). Translation wins
-// collisions.
+// Hydra token (ANARI_HYDRA_RENDER_SETTINGS). Translation wins collisions.
 struct Renderer : public Object
 {
   Renderer(HydraGlobalState *s);
@@ -40,16 +39,16 @@ struct Renderer : public Object
 
   helium::float4 background() const;
 
-  // KHR_RENDERER_BACKGROUND_IMAGE (SPEC §4.7): `background` given as an
-  // ARRAY2D, decoded to linear RGBA in finalize (which re-runs on an
-  // in-place array edit). Null when `background` is a constant colour or the
-  // array's element type is not a colour type. The frame snapshots the pointer
-  // per render and composites it under the color AOV on readback; the decoded
-  // image is immutable, so a snapshot outlives later renderer commits.
+  // KHR_RENDERER_BACKGROUND_IMAGE: `background` given as an ARRAY2D, decoded to
+  // linear RGBA in finalize (which re-runs on an in-place array edit). Null
+  // when `background` is a constant colour or the array's element type is not a
+  // colour type. The frame snapshots the pointer per render and composites it
+  // under the color AOV on readback; the decoded image is immutable, so a
+  // snapshot outlives later renderer commits.
   std::shared_ptr<const AnariImageData> backgroundImage() const;
 
-  // Ambient fill (SPEC §4.7/§6.6): intensity/color of the frame-synthesized
-  // uniform dome light. ambientRadiance <= 0 means no ambient fill.
+  // Ambient fill: intensity/color of the frame-synthesized uniform dome light.
+  // ambientRadiance <= 0 means no ambient fill.
   float ambientRadiance() const
   {
     return m_ambientRadiance;
@@ -61,12 +60,12 @@ struct Renderer : public Object
 
   // True if a delegate render-setting token is the Hydra target of a core
   // translation-table alias, so it must not be reflected verbatim (translation
-  // wins the collision, §11.3). The bridge's own renderer parameters are
-  // reflected from the generated introspection table (Introspection.h).
+  // wins the collision). The bridge's own renderer parameters are reflected
+  // from the generated introspection table (Introspection.h).
   static bool coreParamHidesToken(const pxr::TfToken &token);
 
   // Hydra render settings distilled from this renderer's parameters, keyed by
-  // Hydra token. Applied per-render to the frame's delegate (SPEC §4.7).
+  // Hydra token. Applied per-render to the frame's delegate.
   const std::map<pxr::TfToken, pxr::VtValue> &renderSettings() const
   {
     return m_settings;

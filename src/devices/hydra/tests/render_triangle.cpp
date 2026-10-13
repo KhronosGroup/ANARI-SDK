@@ -153,7 +153,7 @@ int main(int argc, char **argv)
   // --- incremental zero-copy path: mutate the shared array in place ---------
   // Shrink the triangle by half through anariMapArray/Unmap. Unmap marks the
   // array's observers, so the device's next render prologue emits a
-  // locator-precise DirtyPrims(points) with no topology resync (SPEC §5).
+  // locator-precise DirtyPrims(points) with no topology resync.
   {
     float *mapped = (float *)anariMapArray(dev, posArray);
     for (int i = 0; i < 9; ++i)
@@ -180,9 +180,9 @@ int main(int argc, char **argv)
   anariUnmapFrame(dev, frame, "channel.color");
 
   // --- lifetime stress: render then release the frame with no wait ----------
-  // Exercises the self-anchoring fix (SPEC §10.3): a render job is queued on
-  // the worker, then the frame is released before it runs. The job must keep
-  // the frame alive; a use-after-free here is caught under AddressSanitizer.
+  // Exercises the self-anchoring fix: a render job is queued on the worker,
+  // then the frame is released before it runs. The job must keep the frame
+  // alive; a use-after-free here is caught under AddressSanitizer.
   for (int i = 0; i < 8; ++i) {
     ANARIFrame f = anariNewFrame(dev);
     anariSetParameter(dev, f, "size", ANARI_UINT32_VEC2, size);

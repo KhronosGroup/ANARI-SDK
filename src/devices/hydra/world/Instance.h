@@ -13,18 +13,17 @@ namespace anari_hydra {
 
 using helium::float4;
 
-// Per-instance uniform attribute overrides (SPEC §6.8). Each ANARI instance may
-// set `color` and `attribute0..3` as FLOAT32 / FLOAT32_VEC2 / VEC3 / VEC4
-// (missing lanes take the ANARI attribute default (0,0,0,1)) or as a
-// per-transform ARRAY1D; these feed the prototype surfaces' material attribute
-// reads *per instance* — the device authors them as instance-rate primvars on
-// the (world, group) instancer, below the prototype's own per-vertex primvars
-// in interpolation precedence (a geometry carrying its own `color` wins; the
-// instance value fills in where absent — ANARI attribute precedence, proven in
-// prototype 014). `has*` distinguishes an app-set value from the default so a
-// value set on one instance does not silently override an unset sibling in the
-// shared instance-rate array. `instance.id` is kept separately for frame
-// picking.
+// Per-instance uniform attribute overrides. Each ANARI instance may set `color`
+// and `attribute0..3` as FLOAT32 / FLOAT32_VEC2 / VEC3 / VEC4 (missing lanes
+// take the ANARI attribute default (0,0,0,1)) or as a per-transform ARRAY1D;
+// these feed the prototype surfaces' material attribute reads *per instance* —
+// the device authors them as instance-rate primvars on the (world, group)
+// instancer, below the prototype's own per-vertex primvars in interpolation
+// precedence (a geometry carrying its own `color` wins; the instance value
+// fills in where absent — ANARI attribute precedence, proven in prototype 014).
+// `has*` distinguishes an app-set value from the default so a value set on one
+// instance does not silently override an unset sibling in the shared
+// instance-rate array. `instance.id` is kept separately for frame picking.
 struct InstanceOverrides
 {
   bool hasColor{false};
@@ -36,15 +35,15 @@ struct InstanceOverrides
       {0.f, 0.f, 0.f, 1.f}};
 };
 
-// ANARI instance -> instance transform(s) feeding a (world, group) instancer
-// (SPEC §4.3). `transform` is a FLOAT32_MAT4, a compact FLOAT32_MAT3x4 (the
-// implied bottom row (0,0,0,1) is restored), or an ARRAY1D of either
+// ANARI instance -> instance transform(s) feeding a (world, group) instancer.
+// `transform` is a FLOAT32_MAT4, a compact FLOAT32_MAT3x4 (the implied bottom
+// row (0,0,0,1) is restored), or an ARRAY1D of either
 // (KHR_INSTANCE_TRANSFORM_ARRAY): an array instance flattens to one entry per
 // element on the group instancer, with `id` and the uniform attributes
 // optionally arrays indexed by the same element (a scalar applies to every
-// element; an `id` array is only honoured alongside a transform array, per
-// the extension schema). The accessors are all per flattened element `i` in
-// [0, transformCount()).
+// element; an `id` array is only honoured alongside a transform array, per the
+// extension schema). The accessors are all per flattened element `i` in [0,
+// transformCount()).
 struct Instance : public Object
 {
   Instance(HydraGlobalState *s);

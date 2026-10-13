@@ -1,11 +1,11 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 //
-// Exercises per-instance material/attribute overrides (SPEC §6.8): one group (a
-// single quad) is instanced twice with different `instance.color` values, and
-// the shared matte material binds its `color` to the ANARI attribute STRING
-// "color" (SPEC §6.1). The prototype geometry carries no per-vertex color, so
-// each instance's own `instance.color` supplies the attribute read — the device
+// Exercises per-instance material/attribute overrides: one group (a single
+// quad) is instanced twice with different `instance.color` values, and the
+// shared matte material binds its `color` to the ANARI attribute STRING
+// "color". The prototype geometry carries no per-vertex color, so each
+// instance's own `instance.color` supplies the attribute read — the device
 // authors an instance-rate `color` primvar on the (world, group) instancer and
 // the existing UsdPrimvarReader picks it up per instance.
 //
@@ -18,9 +18,8 @@
 //
 // Later sections cover per-surface constant fallbacks, sampler coordinates on
 // the UsdTransform2d and baked paths, transform samplers on instance-only
-// attributes (instance-rate derived primvars, SPEC §6.4), and worldPosition on
-// instanced surfaces (per-instance copies, with their instance IDs and
-// overrides).
+// attributes (instance-rate derived primvars), and worldPosition on instanced
+// surfaces (per-instance copies, with their instance IDs and overrides).
 //
 // HdEmbree has no material sprim, so attribute- and sampler-driven colors
 // degrade to the displayColor fallback there (README.md). On embree every
@@ -116,8 +115,8 @@ int main(int argc, char **argv)
   anariSetParameter(dev, geom, "color", ANARI_FLOAT32_VEC4, geometryBlue);
   anariCommitParameters(dev, geom);
 
-  // matte, color bound to the ANARI attribute "color" (SPEC §6.1). No constant
-  // color and no per-vertex color -> the per-instance override is the source.
+  // matte, color bound to the ANARI attribute "color". No constant color and no
+  // per-vertex color -> the per-instance override is the source.
   ANARIMaterial mat = anariNewMaterial(dev, "matte");
   const char *attr = "color";
   anariSetParameter(dev, mat, "color", ANARI_STRING, attr);
@@ -307,9 +306,9 @@ int main(int argc, char **argv)
   sampleAt(
       true, false, 1, "instance attribute0 override beats the lower constant");
 
-  // A shear inTransform takes the baked st_s{N} path (SPEC §6.4); the instance
-  // override must still win over the geometry constant (011-2). Only u
-  // matters: the image is one row.
+  // A shear inTransform takes the baked st_s{N} path; the instance override
+  // must still win over the geometry constant (011-2). Only u matters: the
+  // image is one row.
   const float shear[16] = {1, .5f, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
   anariSetParameter(dev, sampler, "inTransform", ANARI_FLOAT32_MAT4, shear);
   anariCommitParameters(dev, sampler);

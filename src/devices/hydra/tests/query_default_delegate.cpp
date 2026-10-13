@@ -3,12 +3,12 @@
 //
 // Non-GL query test: the `default` subtype must forward to Storm and hdAnari
 // (the reverse bridge, HdAnariRendererPlugin) must be excluded from the
-// registry (SPEC §11.2). Regression test for the hydra⇄hdAnari probe
-// recursion: with ANARI_LIBRARY=hydra, resolving `default` to hdAnari made
-// hdAnari load this library back and re-probe `default`, spawning one worker
-// (thread + X connection + GL context) per cycle until the X server's client
-// limit, then segfaulting. Set the hostile environment up front so a
-// regression hangs/crashes here instead of passing silently.
+// registry. Regression test for the hydra⇄hdAnari probe recursion: with
+// ANARI_LIBRARY=hydra, resolving `default` to hdAnari made hdAnari load this
+// library back and re-probe `default`, spawning one worker (thread + X
+// connection + GL context) per cycle until the X server's client limit, then
+// segfaulting. Set the hostile environment up front so a regression
+// hangs/crashes here instead of passing silently.
 
 #include <anari/anari.h>
 

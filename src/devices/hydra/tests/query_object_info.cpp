@@ -1,9 +1,9 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 //
-// Exercises object/parameter introspection (SPEC §4.8 "Object and parameter
-// introspection") through the core ANARI entry points anariGetObjectSubtypes,
-// anariGetObjectInfo and anariGetParameterInfo. No frame is rendered.
+// Exercises object/parameter introspection through the core ANARI entry points
+// anariGetObjectSubtypes, anariGetObjectInfo and anariGetParameterInfo. No
+// frame is rendered.
 //
 // The tables are the SDK's vanilla KHR schema plus the bridge's own
 // parameters (introspection/hydra_bridge_parameters.json), gated at query
@@ -190,8 +190,8 @@ int main(int argc, char **argv)
       "named type without a subtype -> nullptr");
   check(params(dev, ANARI_RENDERER, "bogus") == nullptr,
       "unknown renderer subtype -> nullptr");
-  // Volumes follow the delegate's volume capability (SPEC §7): storm lists
-  // and reflects them, embree lists nothing and answers nullptr.
+  // Volumes follow the delegate's volume capability: storm lists and reflects
+  // them, embree lists nothing and answers nullptr.
   const std::set<std::string> volumeSubtypes =
       toSet(anariGetObjectSubtypes(dev, ANARI_VOLUME));
   const std::set<std::string> fieldSubtypes =
@@ -761,7 +761,7 @@ int main(int argc, char **argv)
     check(ps && std::strstr(ps, "convergedSamplesPerPixel"),
         "pixelSamples description names its Hydra alias");
     // An app seeding parameters from introspection (Vela) must get a usable
-    // sample budget, never a zero-filled one (SPEC §4.7).
+    // sample budget, never a zero-filled one.
     const int32_t *psDefault = (const int32_t *)info(dev,
         ANARI_RENDERER,
         "default",
@@ -778,8 +778,8 @@ int main(int argc, char **argv)
         ANARI_INT32);
     check(psDefault && *psDefault == 1 && psMin && *psMin == 1,
         "pixelSamples advertises default 1 and minimum 1");
-    // A delegate render setting reflected verbatim (SPEC §11.3) after the
-    // bridge parameters, with the descriptor's default and never required.
+    // A delegate render setting reflected verbatim after the bridge parameters,
+    // with the descriptor's default and never required.
     const char *setting =
         isEmbree ? "enableSceneColors" : "enableTinyPrimCulling";
     const ANARIDataType settingType = ANARI_BOOL;

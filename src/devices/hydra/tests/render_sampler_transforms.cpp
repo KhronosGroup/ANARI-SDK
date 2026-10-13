@@ -1,11 +1,11 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 //
-// Exercises sampler coordinate selection and transforms (SPEC §6.4): two
-// samplers bound to different attributes on one surface, inTransform rotation /
-// shear / offsets (including a translation carried in the matrix's fourth
-// column), outTransform channel swizzles and mixing, nearest vs linear
-// interpolation through a transform, and live edits of all of the above.
+// Exercises sampler coordinate selection and transforms: two samplers bound to
+// different attributes on one surface, inTransform rotation / shear / offsets
+// (including a translation carried in the matrix's fourth column), outTransform
+// channel swizzles and mixing, nearest vs linear interpolation through a
+// transform, and live edits of all of the above.
 //
 // A quad carries three UV-shaped attributes: vertex.attribute0 = (u,v),
 // vertex.attribute1 = (1-u, v) and vertex.color = (u, v, 0, 1). A 2x2 nearest

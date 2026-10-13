@@ -15,8 +15,8 @@ PXR_NAMESPACE_USING_DIRECTIVE
 
 namespace anari_hydra {
 
-// Core ANARI renderer parameter -> Hydra render-setting token (SPEC §4.7). Kept
-// small and delegate-agnostic; anything else rides the §11.3 verbatim
+// Core ANARI renderer parameter -> Hydra render-setting token. Kept small and
+// delegate-agnostic; anything else rides the verbatim render-setting
 // passthrough. Values are converted by ANARI type below.
 static const std::unordered_map<std::string, TfToken> &TranslationTable()
 {
@@ -86,7 +86,7 @@ Renderer *Renderer::createInstance(
     std::string_view /*subtype*/, HydraGlobalState *s)
 {
   // ANARI defines a single "default" renderer; delegate-specific settings ride
-  // ANARI_HYDRA_RENDER_SETTINGS parameters (SPEC §11.3), not subtypes.
+  // ANARI_HYDRA_RENDER_SETTINGS parameters, not subtypes.
   return new Renderer(s);
 }
 
@@ -132,19 +132,18 @@ void Renderer::commitParameters()
   }
   m_backgroundArray = getParamObject<helium::Array2D>("background");
 
-  // Ambient fill (SPEC §4.7/§6.6): the core `default` renderer's
-  // ambientRadiance (intensity) / ambientColor scale a frame-synthesized
-  // uniform dome light. Both are bridge-reserved (like `background`) — the
-  // Frame reads them, never the delegate. Defaults are no ambient (radiance 0)
-  // and white.
+  // Ambient fill: the core `default` renderer's ambientRadiance (intensity) /
+  // ambientColor scale a frame-synthesized uniform dome light. Both are
+  // bridge-reserved (like `background`) — the Frame reads them, never the
+  // delegate. Defaults are no ambient (radiance 0) and white.
   m_ambientRadiance = getParam<float>("ambientRadiance", 0.f);
   m_ambientColor =
       getParam<helium::float3>("ambientColor", helium::float3(1.f, 1.f, 1.f));
 
-  // Distil parameters into the Hydra render-setting map (SPEC §4.7/§11.3).
-  // Pass 1: verbatim passthrough under the Hydra token = the parameter name.
-  // Pass 2: core translation-table entries, which override any passthrough
-  // collision (translation wins).
+  // Distil parameters into the Hydra render-setting map. Pass 1: verbatim
+  // passthrough under the Hydra token = the parameter name. Pass 2: core
+  // translation-table entries, which override any passthrough collision
+  // (translation wins).
   m_settings.clear();
   const auto &table = TranslationTable();
   for (auto it = params_begin(); it != params_end(); ++it) {
@@ -157,7 +156,7 @@ void Renderer::commitParameters()
     else
       reportMessage(ANARI_SEVERITY_WARNING,
           "renderer setting '%s' has an unsupported type; not pushed to the "
-          "delegate (SPEC §11.3)",
+          "delegate",
           name.c_str());
   }
   for (auto it = params_begin(); it != params_end(); ++it) {
@@ -192,17 +191,17 @@ void Renderer::applySettingDefaults()
   // An anariRenderFrame is one discrete frame, so the delegate renders
   // non-interactively unless the app overrides it. A delegate that defaults to
   // interactive (hdGatling) otherwise never reports converged and every frame
-  // spins out the §8.3 convergence budget.
+  // spins out the full convergence budget.
   m_settings.emplace(HdRenderSettingsTokens->enableInteractive, VtValue(false));
 }
 
 void Renderer::finalize()
 {
-  // Settings are applied per-frame at render time (SPEC §4.7). The background
-  // image is decoded here, so both a new array and an in-place edit of the
-  // current one (which re-finalizes this observer) take effect. The decode
-  // keeps the source's precision (8-bit sources stay compact, HDR and wider
-  // sources are Float); the composite reads texels back as float.
+  // Settings are applied per-frame at render time. The background image is
+  // decoded here, so both a new array and an in-place edit of the current one
+  // (which re-finalizes this observer) take effect. The decode keeps the
+  // source's precision (8-bit sources stay compact, HDR and wider sources are
+  // Float); the composite reads texels back as float.
   std::shared_ptr<AnariImageData> image;
   if (helium::Array2D *a = m_backgroundArray.get()) {
     if (IsBackgroundImageType(a->elementType())) {

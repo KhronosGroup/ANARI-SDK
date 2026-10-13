@@ -1,11 +1,11 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 //
-// Exercises instanced-light expansion (SPEC §6.8): a group holding ONE point
-// light, instanced N times, expands to one light sprim per (instance, light)
-// pair at /anari/w{N}/lights/i{I}_l{L}, each with the light's local transform
-// composed with its instance transform. N instances of the same light-group
-// therefore place N distinct lights in the scene.
+// Exercises instanced-light expansion: a group holding ONE point light,
+// instanced N times, expands to one light sprim per (instance, light) pair at
+// /anari/w{N}/lights/i{I}_l{L}, each with the light's local transform composed
+// with its instance transform. N instances of the same light-group therefore
+// place N distinct lights in the scene.
 //
 // Sharp check: a large white quad fills the frame. The group's single point
 // light sits just in front of the quad; two instances translate it to +X and
@@ -221,7 +221,7 @@ int main(int argc, char **argv)
 
   // Expansion proof: adding the -X instance lights up the left region that the
   // +X-only scene left dark. That brightening is a distinct second light sprim
-  // from the second instance (SPEC §6.8).
+  // from the second instance.
   check(two_left > one_left * 1.5,
       "second instance adds a light on the left (N instances -> N sprims)");
 

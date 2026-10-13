@@ -51,7 +51,7 @@ namespace anari_hydra {
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
-// Per-delegate extension truth (SPEC §4.8) //////////////////////////////////
+// Per-delegate extension truth //////////////////////////////////////////////
 
 static bool hasType(const TfTokenVector &v, const TfToken &t)
 {
@@ -59,8 +59,8 @@ static bool hasType(const TfTokenVector &v, const TfToken &t)
 }
 
 // Volumes need the volume rprim, the field bprim type the bridge authors, and
-// the material sprim carrying the volume shader (SPEC §7). Storm
-// has all three; HdEmbree has none.
+// the material sprim carrying the volume shader. Storm has all three; HdEmbree
+// has none.
 static bool supportsVolumes(const TfTokenVector &rprims,
     const TfTokenVector &sprims,
     const TfTokenVector &bprims)
@@ -70,10 +70,10 @@ static bool supportsVolumes(const TfTokenVector &rprims,
       && hasType(bprims, FieldPrimType());
 }
 
-// VtValue -> ANARIDataType for render-setting reflection (SPEC §11.3). Covers
-// the common scalar/vector holdings; anything else returns ANARI_UNKNOWN (the
-// setting is dropped from reflection, warned once at probe time). double folds
-// to FLOAT32 (ANARI has no f64 scalar); string/token both surface as STRING.
+// VtValue -> ANARIDataType for render-setting reflection. Covers the common
+// scalar/vector holdings; anything else returns ANARI_UNKNOWN (the setting is
+// dropped from reflection, warned once at probe time). double folds to FLOAT32
+// (ANARI has no f64 scalar); string/token both surface as STRING.
 static ANARIDataType vtValueToAnariType(const VtValue &v)
 {
   if (v.IsHolding<bool>())
@@ -157,7 +157,7 @@ const std::vector<AovChannelDesc> &standardAovChannels()
 {
   // Depth/normal use FLOAT32/FLOAT32_VEC3; normal is world space, backed by
   // the delegate's `normal` AOV or (Storm) its eye-space `Neye` AOV. Standard
-  // ID channels translate Hydra indices to ANARI user IDs (SPEC §11.4).
+  // ID channels translate Hydra indices to ANARI user IDs.
   static const std::vector<AovChannelDesc> table = {
       {"channel.depth",
           HdAovTokens->depth,
@@ -214,10 +214,10 @@ void readDelegateCaps(const TfToken &delegateId,
   bprims = delegate->GetSupportedBprimTypes();
 
   // A standard AOV channel is offered iff the delegate returns a valid default
-  // descriptor for its Hydra token (SPEC §11.4/§4.8); normal resolves through
-  // normalAovToken (its `normal` AOV, or Storm's eye-space `Neye`). This is a
-  // descriptor probe: that the bound pass actually fills the target is proven
-  // by the render tests (render_normal_channel), not at probe time.
+  // descriptor for its Hydra token; normal resolves through normalAovToken (its
+  // `normal` AOV, or Storm's eye-space `Neye`). This is a descriptor probe:
+  // that the bound pass actually fills the target is proven by the render tests
+  // (render_normal_channel), not at probe time.
   aovChannels.clear();
   auto hasAov = [&](const TfToken &tok) {
     return delegate->GetDefaultAovDescriptor(tok).format != HdFormatInvalid;
@@ -236,9 +236,9 @@ void readDelegateCaps(const TfToken &delegateId,
   }
 
   // Every HdRenderSettingDescriptor the delegate publishes becomes a reflected,
-  // typed ANARI renderer parameter under its verbatim Hydra token (SPEC §11.3).
-  // Captured with the ANARIDataType its default VtValue maps to (ANARI_UNKNOWN
-  // if unmapped; those are dropped + warned when the reflection list is built).
+  // typed ANARI renderer parameter under its verbatim Hydra token. Captured
+  // with the ANARIDataType its default VtValue maps to (ANARI_UNKNOWN if
+  // unmapped; those are dropped + warned when the reflection list is built).
   renderSettings.clear();
   for (const HdRenderSettingDescriptor &d :
       delegate->GetRenderSettingDescriptors()) {
@@ -264,9 +264,9 @@ void buildExtensionList(const TfTokenVector &rprims,
 
   // ALWAYS present: every real delegate publishes `mesh`, so the mesh-backed
   // geometry (triangle/quad and the tessellated cone/cylinder), the
-  // matte/physicallyBased materials (which degrade to displayColor per §6.9 on
-  // delegates that ignore material networks), the perspective camera, the color
-  // channel, and the render-settings extension are unconditional.
+  // matte/physicallyBased materials (which degrade to displayColor on delegates
+  // that ignore material networks), the perspective camera, the color channel,
+  // and the render-settings extension are unconditional.
   e.push_back("ANARI_KHR_DEVICE_SYNCHRONIZATION");
   e.push_back("ANARI_KHR_GEOMETRY_TRIANGLE");
   e.push_back("ANARI_KHR_GEOMETRY_QUAD");
@@ -280,17 +280,17 @@ void buildExtensionList(const TfTokenVector &rprims,
   e.push_back("ANARI_KHR_MATERIAL_MATTE");
   e.push_back("ANARI_KHR_MATERIAL_PHYSICALLY_BASED");
   // Samplers author into the real material-network sprim; HdEmbree has no
-  // `material` sprim, so drop the sampler extensions there (§6.4).
+  // `material` sprim, so drop the sampler extensions there.
   if (hasType(sprims, HdPrimTypeTokens->material)) {
     e.push_back("ANARI_KHR_SAMPLER_IMAGE1D");
     e.push_back("ANARI_KHR_SAMPLER_IMAGE2D");
     e.push_back("ANARI_KHR_SAMPLER_PRIMITIVE");
     e.push_back("ANARI_KHR_SAMPLER_TRANSFORM");
     // clampToBorder with an arbitrary borderColor on image1D/image2D: Storm's
-    // transparent-black border wrap, or a border-padded registry image (§6.4).
+    // transparent-black border wrap, or a border-padded registry image.
     e.push_back("ANARI_KHR_SAMPLER_IMAGExD_CLAMP_TO_BORDER");
   }
-  // Each light extension tracks the UsdLux sprim it maps to (§6.6).
+  // Each light extension tracks the UsdLux sprim it maps to.
   if (hasType(sprims, HdPrimTypeTokens->distantLight))
     e.push_back("ANARI_KHR_LIGHT_DIRECTIONAL");
   if (hasType(sprims, HdPrimTypeTokens->sphereLight)) {
@@ -303,13 +303,13 @@ void buildExtensionList(const TfTokenVector &rprims,
     e.push_back("ANARI_KHR_LIGHT_RING");
   // hdri and the `default` renderer's ambient fill are both dome lights whose
   // texture carries the radiance (scale/color folded in): Storm and HdEmbree
-  // read it through Hio, hdGatling through Ar (§6.3/§6.6).
+  // read it through Hio, hdGatling through Ar.
   if (hasType(sprims, HdPrimTypeTokens->domeLight)) {
     e.push_back("ANARI_KHR_LIGHT_HDRI");
     e.push_back("ANARI_KHR_RENDERER_AMBIENT_LIGHT");
   }
   // structuredRegular (and, when built with NanoVDB, nanovdb) fields
-  // classified by transferFunction1D volumes (§7).
+  // classified by transferFunction1D volumes.
   if (supportsVolumes(rprims, sprims, bprims)) {
     e.push_back("ANARI_KHR_SPATIAL_FIELD_STRUCTURED_REGULAR");
     if (SpatialField::supportsSubtype("nanovdb"))
@@ -322,30 +322,30 @@ void buildExtensionList(const TfTokenVector &rprims,
   e.push_back("ANARI_KHR_CAMERA_PERSPECTIVE");
   e.push_back("ANARI_KHR_CAMERA_ORTHOGRAPHIC");
   // The `default` renderer's background is the frame's clear colour on every
-  // delegate (§4.7).
+  // delegate.
   e.push_back("ANARI_KHR_RENDERER_BACKGROUND_COLOR");
   // A background image is composited under the color AOV on readback (the
-  // AOV clears to transparent), so it too is delegate-independent (§4.7).
+  // AOV clears to transparent), so it too is delegate-independent.
   e.push_back("ANARI_KHR_RENDERER_BACKGROUND_IMAGE");
-  // Instancing rides the core HdInstancer every delegate consumes (§4.3);
-  // array transforms flatten onto the same group instancer.
+  // Instancing rides the core HdInstancer every delegate consumes; array
+  // transforms flatten onto the same group instancer.
   e.push_back("ANARI_KHR_INSTANCE_TRANSFORM");
   e.push_back("ANARI_KHR_INSTANCE_TRANSFORM_ARRAY");
   e.push_back("ANARI_KHR_FRAME_CHANNEL_COLOR");
   // Completion callbacks fire from the device worker after every render job,
-  // independent of the delegate (SPEC §8.7).
+  // independent of the delegate.
   e.push_back("ANARI_KHR_FRAME_COMPLETION_CALLBACK");
   // Standard AOV channels claim their KHR_FRAME_CHANNEL_* extension iff the
-  // delegate offers the backing Hydra AOV descriptor (SPEC §11.4).
+  // delegate offers the backing Hydra AOV descriptor.
   for (const AovChannelDesc &d : standardAovChannels()) {
     if (aovChannels.count(d.anariChannel))
       e.push_back(d.extension);
   }
   // Arbitrary named Hydra AOVs surfaced as `channel.aov:<hydraToken>` frame
-  // channels (SPEC §11.4). The color channel already proves the AOV path, and
-  // every real delegate that renders an AOV publishes the `renderBuffer` bprim
-  // (storm and embree both do); gate on it so the claim stays honest per
-  // delegate (SPEC §4.8) — a delegate with no render buffer cannot serve one.
+  // channels. The color channel already proves the AOV path, and every real
+  // delegate that renders an AOV publishes the `renderBuffer` bprim (storm and
+  // embree both do); gate on it so the claim stays honest per delegate — a
+  // delegate with no render buffer cannot serve one.
   if (hasType(bprims, HdPrimTypeTokens->renderBuffer))
     e.push_back("ANARI_HYDRA_FRAME_AOV");
   e.push_back("ANARI_HYDRA_RENDER_SETTINGS");
@@ -479,8 +479,7 @@ ANARISampler HydraDevice::newSampler(const char *subtype)
   if (Sampler *s = Sampler::createInstance(subtype, deviceState()))
     return (ANARISampler)s;
   reportMessage(ANARI_SEVERITY_WARNING,
-      "unsupported sampler subtype '%s'; image3D is a documented exclusion "
-      "(SPEC §6.4)",
+      "unsupported sampler subtype '%s'; image3D is a documented exclusion",
       subtype ? subtype : "");
   return (ANARISampler) new UnknownObject(ANARI_SAMPLER, deviceState());
 }
@@ -492,7 +491,7 @@ ANARISpatialField HydraDevice::newSpatialField(const char *subtype)
           SpatialField::createInstance(subtype ? subtype : "", deviceState()))
     return (ANARISpatialField)f;
   reportMessage(ANARI_SEVERITY_WARNING,
-      "unsupported spatial field subtype '%s' (SPEC §7)",
+      "unsupported spatial field subtype '%s'",
       subtype ? subtype : "");
   return (ANARISpatialField) new UnknownObject(
       ANARI_SPATIAL_FIELD, deviceState());
@@ -510,7 +509,7 @@ ANARIVolume HydraDevice::newVolume(const char *subtype)
   if (Volume *v = Volume::createInstance(subtype ? subtype : "", deviceState()))
     return (ANARIVolume)v;
   reportMessage(ANARI_SEVERITY_WARNING,
-      "unsupported volume subtype '%s' (SPEC §7)",
+      "unsupported volume subtype '%s'",
       subtype ? subtype : "");
   return (ANARIVolume) new UnknownObject(ANARI_VOLUME, deviceState());
 }
@@ -547,7 +546,7 @@ int HydraDevice::getProperty(ANARIObject object,
 const char **HydraDevice::getObjectSubtypes(ANARIDataType objectType)
 {
   // Subtype queries can arrive before any object is created; ensure the worker
-  // exists and the delegate capabilities are probed (SPEC §4.8).
+  // exists and the delegate capabilities are probed.
   initDevice();
   auto &state = *deviceState();
   const TfTokenVector &rp = state.supportedRprims;
@@ -577,7 +576,7 @@ const char **HydraDevice::getObjectSubtypes(ANARIDataType objectType)
         g.push_back("curve");
       g.push_back("cone");
       g.push_back("cylinder");
-      // Isosurfaces need a spatial field, offered with volumes (§7).
+      // Isosurfaces need a spatial field, offered with volumes.
       if (volumeCapable)
         g.push_back("isosurface");
       g.push_back(nullptr);
@@ -587,8 +586,7 @@ const char **HydraDevice::getObjectSubtypes(ANARIDataType objectType)
   case ANARI_MATERIAL:
     return materials;
   case ANARI_SAMPLER: {
-    // Samplers require the material sprim; empty list where it is absent
-    // (§6.4).
+    // Samplers require the material sprim; empty list where it is absent.
     auto &s = state.samplerSubtypeView;
     if (s.empty()) {
       if (hasType(sp, HdPrimTypeTokens->material)) {
@@ -602,7 +600,7 @@ const char **HydraDevice::getObjectSubtypes(ANARIDataType objectType)
     return s.data();
   }
   case ANARI_LIGHT: {
-    // Each subtype follows its UsdLux sprim (§6.6).
+    // Each subtype follows its UsdLux sprim.
     auto &l = state.lightSubtypeView;
     if (l.empty()) {
       if (hasType(sp, HdPrimTypeTokens->distantLight))
@@ -627,7 +625,7 @@ const char **HydraDevice::getObjectSubtypes(ANARIDataType objectType)
     return renderers;
   case ANARI_INSTANCE:
     return instances;
-  // Volume subtypes follow the delegate's volume capability (§7).
+  // Volume subtypes follow the delegate's volume capability.
   case ANARI_SPATIAL_FIELD:
     return volumeCapable ? fields : none;
   case ANARI_VOLUME:
@@ -676,7 +674,7 @@ bool HydraDevice::resolveQuerySubtype(
 }
 
 // The bound delegate's advertised extension list, which the introspection
-// filter gates the generated tables on (Introspection.h, SPEC §4.8).
+// filter gates the generated tables on (Introspection.h).
 static const std::vector<const char *> &advertisedExtensions(
     HydraGlobalState &state)
 {
@@ -691,13 +689,13 @@ static const std::vector<const char *> &advertisedExtensions(
   return state.extensionView;
 }
 
-// Build (once) the reflected renderer parameter list (SPEC §11.3): the bridge's
-// own renderer parameters (§4.7, from the generated table, gated per delegate
-// like everything else) followed by every delegate render-setting token
-// verbatim, skipping tokens a core alias covers (translation wins collisions)
-// and any unmapped-type settings (warned). NUL-terminated with a
-// {nullptr, UNKNOWN} sentinel; names point at stable storage (the generated
-// table / renderSettingDescs).
+// Build (once) the reflected renderer parameter list: the bridge's own renderer
+// parameters (from the generated table, gated per delegate like everything
+// else) followed by every delegate render-setting token verbatim, skipping
+// tokens a core alias covers (translation wins collisions) and any
+// unmapped-type settings (warned). NUL-terminated with a {nullptr, UNKNOWN}
+// sentinel; names point at stable storage (the generated table /
+// renderSettingDescs).
 void HydraDevice::buildRendererParamList()
 {
   auto &state = *deviceState();
@@ -716,7 +714,7 @@ void HydraDevice::buildRendererParamList()
     if (d.type == ANARI_UNKNOWN) {
       reportMessage(ANARI_SEVERITY_DEBUG,
           "delegate render setting '%s' has an unmapped default type; not "
-          "reflected as an ANARI parameter (SPEC §11.3)",
+          "reflected as an ANARI parameter",
           d.token.c_str());
       continue;
     }
@@ -744,8 +742,8 @@ const void *HydraDevice::getObjectInfo(ANARIDataType objectType,
   const std::string_view info = infoName;
 
   // Device extension reflection: the same per-delegate-honest list the
-  // "extension" property serves (SPEC §4.8). A live device is bound to one
-  // delegate, so the answer is the same for any objectSubtype asked about.
+  // "extension" property serves. A live device is bound to one delegate, so the
+  // answer is the same for any objectSubtype asked about.
   const std::vector<const char *> &ext = advertisedExtensions(state);
   if (objectType == ANARI_DEVICE && info == "extension"
       && infoType == ANARI_STRING_LIST)
@@ -756,7 +754,7 @@ const void *HydraDevice::getObjectInfo(ANARIDataType objectType,
     return nullptr;
 
   if (info == "parameter" && infoType == ANARI_PARAMETER_LIST) {
-    // The renderer adds the delegate's render settings (SPEC §11.3).
+    // The renderer adds the delegate's render settings.
     if (objectType == ANARI_RENDERER) {
       if (state.rendererParamView.empty())
         buildRendererParamList();
@@ -806,9 +804,9 @@ const void *HydraDevice::getParameterInfo(ANARIDataType objectType,
     return nullptr;
   const std::string_view info = infoName;
 
-  // A reflected delegate render setting (SPEC §11.3) carries its descriptor's
-  // human name and default, and is never required. Tokens a core alias hides
-  // are not reflected, so they answer nothing here either.
+  // A reflected delegate render setting carries its descriptor's human name and
+  // default, and is never required. Tokens a core alias hides are not
+  // reflected, so they answer nothing here either.
   if (objectType == ANARI_RENDERER) {
     const RenderSettingDesc *d = findRenderSetting(state, parameterName);
     if (d && !Renderer::coreParamHidesToken(pxr::TfToken(d->token))) {
@@ -831,7 +829,7 @@ const void *HydraDevice::getParameterInfo(ANARIDataType objectType,
   }
 
   // Everything else answers only for (name, type) pairs the filtered
-  // parameter list advertises (SPEC §4.8).
+  // parameter list advertises.
   const std::vector<const char *> &ext = advertisedExtensions(state);
   const ANARIParameter *list =
       reflectedParameterList(state, ext, objectType, objectSubtype);
@@ -876,10 +874,10 @@ HydraDevice::~HydraDevice()
 {
   auto &state = *deviceState();
 
-  // Let already-queued renders finish, and fire their completion callbacks
-  // (SPEC §8.7), while the device is still whole; none fires after
-  // anariRelease(device) returns. Renders requested from here on (a callback's
-  // re-render chain) are dropped, so this drain terminates.
+  // Let already-queued renders finish, and fire their completion callbacks,
+  // while the device is still whole; none fires after anariRelease(device)
+  // returns. Renders requested from here on (a callback's re-render chain) are
+  // dropped, so this drain terminates.
   state.releasing = true;
   if (state.worker)
     state.worker->postWait([]() {});
@@ -888,7 +886,7 @@ HydraDevice::~HydraDevice()
   reportMessage(ANARI_SEVERITY_DEBUG, "destroying hydra device (%p)", this);
 
   // The worker owns all Hydra state; joining it (via delete) runs remaining
-  // destruction jobs (SPEC §9.6) before the Hgi is torn down.
+  // destruction jobs before the Hgi is torn down.
   delete state.worker;
   state.worker = nullptr;
 }
@@ -901,8 +899,8 @@ void HydraDevice::bindDelegate(const char *subtype)
   state.delegateSubtype = sub;
   state.delegateId = plugin;
 
-  // The delegate's display name keys its registered scene-index filter chain
-  // (SPEC §6.1). Storm's plugins register under "GL".
+  // The delegate's display name keys its registered scene-index filter chain.
+  // Storm's plugins register under "GL".
   pxr::HfPluginDesc desc;
   if (pxr::HdRendererPluginRegistry::GetInstance().GetPluginDesc(plugin, &desc))
     state.sceneIndexPluginName = desc.displayName;
@@ -930,13 +928,13 @@ void HydraDevice::initDevice()
   state.worker = new Worker();
 
   // Register the in-memory Hio image plugin so sampler images resolve through
-  // the `anari://` asset scheme (SPEC §6.3).
+  // the `anari://` asset scheme.
   EnsureAnariHioRegistered();
 
   m_initialized = true;
 
   // Probe the delegate's capability lists so the reported extension /
-  // object-subtype surface is honest per-delegate (SPEC §4.8).
+  // object-subtype surface is honest per-delegate.
   probeCapabilities();
 }
 
@@ -948,8 +946,8 @@ void HydraDevice::probeCapabilities()
   if (!state.worker || state.delegateId.IsEmpty())
     return;
 
-  // The delegate is created and read on the worker thread, which owns the Hgi
-  // (SPEC §9.2). Reading the type lists needs no render index / Hgi driver.
+  // The delegate is created and read on the worker thread, which owns the Hgi.
+  // Reading the type lists needs no render index / Hgi driver.
   state.worker->postWait([&state]() {
     readDelegateCaps(state.delegateId,
         state.supportedRprims,
@@ -963,7 +961,7 @@ void HydraDevice::probeCapabilities()
   if (state.supportedRprims.empty()) {
     reportMessage(ANARI_SEVERITY_WARNING,
         "could not probe delegate '%s' capabilities; extension list may be "
-        "over-reported (SPEC §4.8)",
+        "over-reported",
         state.delegateId.GetText());
   }
 }
@@ -982,7 +980,7 @@ int HydraDevice::deviceGetProperty(const char *name,
   std::string_view prop = name;
   if (prop == "extension" && type == ANARI_STRING_LIST) {
     // Extension queries can arrive before any object exists; ensure the worker
-    // and delegate-capability probe have run (SPEC §4.8), then report the
+    // and delegate-capability probe have run, then report the
     // per-delegate-honest list.
     initDevice();
     helium::writeToVoidP(mem, advertisedExtensions(*deviceState()).data());

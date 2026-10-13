@@ -35,13 +35,13 @@ std::string subtypeFromPluginId(const TfToken &pluginId)
   return s;
 }
 
-// Documented exclusion (SPEC §11.2): hdAnari is the *reverse* bridge — a Hydra
-// delegate that drives ANARI devices. Exposing it here lets the forward device
-// drive it, and hdAnari resolves its ANARI library through ANARI_LIBRARY; when
-// that names this library, capability probing recurses (hydra → hdAnari →
-// hydra → …), leaking one worker (thread, X connection, GL context) per cycle
-// until the X server's client limit, then crashing. A feedback loop by
-// construction, so it is off the surface entirely.
+// Documented exclusion: hdAnari is the *reverse* bridge — a Hydra delegate that
+// drives ANARI devices. Exposing it here lets the forward device drive it, and
+// hdAnari resolves its ANARI library through ANARI_LIBRARY; when that names
+// this library, capability probing recurses (hydra → hdAnari → hydra → …),
+// leaking one worker (thread, X connection, GL context) per cycle until the X
+// server's client limit, then crashing. A feedback loop by construction, so it
+// is off the surface entirely.
 static bool excludedPlugin(const TfToken &pluginId)
 {
   static const TfToken hdAnari("HdAnariRendererPlugin");

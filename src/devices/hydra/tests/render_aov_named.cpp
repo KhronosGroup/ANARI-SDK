@@ -1,11 +1,11 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 //
-// Exercises arbitrary named Hydra AOVs (SPEC §11.4, ANARI_HYDRA_FRAME_AOV): a
-// frame channel parameter `channel.aov:<hydraToken>` binds that Hydra AOV and
-// delivers it through the standard anariMapFrame path, the requested format
-// honored via SetRenderOutputSettings. This proves the ARBITRARY path (not one
-// of the standard KHR_FRAME_CHANNEL_* channels) by requesting `cameraDepth` —
+// Exercises arbitrary named Hydra AOVs (ANARI_HYDRA_FRAME_AOV): a frame channel
+// parameter `channel.aov:<hydraToken>` binds that Hydra AOV and delivers it
+// through the standard anariMapFrame path, the requested format honored via
+// SetRenderOutputSettings. This proves the ARBITRARY path (not one of the
+// standard KHR_FRAME_CHANNEL_* channels) by requesting `cameraDepth` —
 // HdEmbree's GetDefaultAovDescriptor supports it (view-space linear depth,
 // HdFormatFloat32) and it is NOT exposed as a standard ANARI channel.
 //
@@ -92,7 +92,7 @@ int main(int argc, char **argv)
   if (!dev)
     return 2;
 
-  // ANARI_HYDRA_FRAME_AOV must be advertised for this delegate (SPEC §11.4).
+  // ANARI_HYDRA_FRAME_AOV must be advertised for this delegate.
   {
     const char *const *ext = nullptr;
     anariGetProperty(dev,
@@ -143,8 +143,8 @@ int main(int argc, char **argv)
   anariSetParameter(dev, frame, "size", ANARI_UINT32_VEC2, size);
   anariSetParameter(dev, frame, "channel.color", ANARI_DATA_TYPE, &colorFmt);
   // The arbitrary AOV: bind Hydra's `cameraDepth` under the requested FLOAT32
-  // format (SPEC §11.4). This is NOT a standard ANARI channel — it proves the
-  // arbitrary `channel.aov:` path end to end.
+  // format. This is NOT a standard ANARI channel — it proves the arbitrary
+  // `channel.aov:` path end to end.
   anariSetParameter(
       dev, frame, "channel.aov:cameraDepth", ANARI_DATA_TYPE, &f32);
   anariSetParameter(dev, frame, "world", ANARI_WORLD, &world);

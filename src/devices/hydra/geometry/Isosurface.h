@@ -22,10 +22,10 @@ void ExtractIsosurface(const AnariFieldData &grid,
     TessMesh &out);
 
 // ANARI 'isosurface' geometry (KHR_GEOMETRY_ISOSURFACE) -> a commit-time-
-// extracted Hydra mesh (SPEC §4.1). Reads the field's published FieldSnapshot
-// grid (the representation volumes also use), so a field commit or in-place
-// data edit re-extracts through the field observer. The ANARI primitive is the
-// isovalue: primitive.color / attribute0..3 / id are indexed by isovalue.
+// extracted Hydra mesh. Reads the field's published FieldSnapshot grid (the
+// representation volumes also use), so a field commit or in-place data edit
+// re-extracts through the field observer. The ANARI primitive is the isovalue:
+// primitive.color / attribute0..3 / id are indexed by isovalue.
 struct Isosurface : public Geometry
 {
   Isosurface(HydraGlobalState *s);

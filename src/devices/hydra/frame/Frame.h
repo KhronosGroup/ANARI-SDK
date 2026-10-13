@@ -28,8 +28,8 @@
 namespace anari_hydra {
 
 // Each ANARI frame owns one render index, task controller, and delegate
-// instance (SPEC §8.4); the device-owned Hgi outlives all frames. renderFrame
-// posts a worker job: render prologue (stage-2 drain) -> Sync/Execute -> poll.
+// instance; the device-owned Hgi outlives all frames. renderFrame posts a
+// worker job: render prologue (stage-2 drain) -> Sync/Execute -> poll.
 struct Frame : public helium::BaseFrame
 {
   Frame(HydraGlobalState *s);
@@ -60,23 +60,23 @@ struct Frame : public helium::BaseFrame
   // Worker-thread only:
   void ensureHydra(); // create delegate + render index + task controller
   void renderOnWorker(); // prologue drain + Execute loop
-  // Mark the frame ready and fire the completion callback (SPEC §8.7). Runs
-  // once per render job, after renderOnWorker, whether or not it succeeded.
+  // Mark the frame ready and fire the completion callback. Runs once per render
+  // job, after renderOnWorker, whether or not it succeeded.
   void completeOnWorker();
-  void teardownHydra(); // strict teardown order (SPEC §9.6)
+  void teardownHydra(); // strict teardown order
   std::map<int, PickingIds> m_pickingIds;
   void readbackPicking(const pxr::TfToken &token, std::vector<uint8_t> &out);
-  void readbackColor(); // color AOV -> m_mappedColor (SPEC §8.5)
+  void readbackColor(); // color AOV -> m_mappedColor
   void readbackAov(const struct AovChannelDesc &desc,
-      std::vector<uint8_t> &out); // standard AOV -> staging (SPEC §11.4)
+      std::vector<uint8_t> &out); // standard AOV -> staging
   // channel.normal on a delegate without a `normal` AOV (Storm): read the
-  // eye-space Neye target and rotate it into world space (SPEC §11.4).
+  // eye-space Neye target and rotate it into world space.
   void readbackNormalFromNeye(std::vector<uint8_t> &out);
   // Hydra AOV token the frame binds for a standard channel: the descriptor's
   // token, except normal -> m_normalToken (normalAovToken of the delegate).
   pxr::TfToken boundAovToken(const struct AovChannelDesc &desc) const;
-  // Read a Hydra AOV bprim back into `out`, converting to `pixelType` (SPEC
-  // §11.4). Shared by the standard-channel and arbitrary-named AOV paths.
+  // Read a Hydra AOV bprim back into `out`, converting to `pixelType`. Shared
+  // by the standard-channel and arbitrary-named AOV paths.
   void readbackAovBuffer(const pxr::TfToken &hydraToken,
       ANARIDataType pixelType,
       std::vector<uint8_t> &out);
@@ -89,14 +89,14 @@ struct Frame : public helium::BaseFrame
   uint32_t m_height{0};
   ANARIDataType m_colorType{ANARI_UFIXED8_RGBA_SRGB};
 
-  // Standard AOV channels beyond color the app enabled (SPEC §11.4), by ANARI
-  // channel name (e.g. "channel.depth"). Set in commitParameters; drives which
-  // Hydra AOV bprims the task controller wires and which map() can read back.
+  // Standard AOV channels beyond color the app enabled, by ANARI channel name
+  // (e.g. "channel.depth"). Set in commitParameters; drives which Hydra AOV
+  // bprims the task controller wires and which map() can read back.
   std::set<std::string> m_enabledAovChannels;
 
   // Arbitrary named Hydra AOVs the app requested via `channel.aov:<hydraToken>`
-  // frame parameters (SPEC §11.4, ANARI_HYDRA_FRAME_AOV), keyed by the Hydra
-  // token (the suffix) with the value the requested ANARIDataType. Set in
+  // frame parameters (ANARI_HYDRA_FRAME_AOV), keyed by the Hydra token (the
+  // suffix) with the value the requested ANARIDataType. Set in
   // commitParameters; drives the extra AOV bprims, their honored buffer format
   // (SetRenderOutputSettings), and which map() can read back.
   std::map<std::string, ANARIDataType> m_arbitraryAovs;
@@ -117,9 +117,9 @@ struct Frame : public helium::BaseFrame
 
   // A small frame-owned retained scene index holding at most one synthesized
   // uniform dome light at /anari/frame/ambient — the renderer's
-  // ambientRadiance/ ambientColor fill (SPEC §4.7/§6.6). Frame-owned, NOT the
-  // world mirror: ambient is a renderer/frame concern, and the mirror is shared
-  // across frames. Inserted alongside the mirror in ensureHydra;
+  // ambientRadiance/ ambientColor fill. Frame-owned, NOT the world mirror:
+  // ambient is a renderer/frame concern, and the mirror is shared across
+  // frames. Inserted alongside the mirror in ensureHydra;
   // authored/dirtied/removed as ambientRadiance crosses 0 or its
   // color/intensity change.
   pxr::HdRetainedSceneIndexRefPtr m_ambientScene;
@@ -149,30 +149,30 @@ struct Frame : public helium::BaseFrame
   void renderPicking();
   bool m_outputsSet{false}; // SetRenderOutputs called at least once
 
-  // The renderer's background image (KHR_RENDERER_BACKGROUND_IMAGE, SPEC
-  // §4.7) snapshotted for the last render, or null for a constant background.
-  // Worker-thread only; readbackColor composites it under the color AOV, so a
-  // renderer commit after the render does not change an already rendered frame.
+  // The renderer's background image (KHR_RENDERER_BACKGROUND_IMAGE) snapshotted
+  // for the last render, or null for a constant background. Worker-thread only;
+  // readbackColor composites it under the color AOV, so a renderer commit after
+  // the render does not change an already rendered frame.
   std::shared_ptr<const AnariImageData> m_backgroundImage;
 
   // Readback staging for map() (converted to the requested ANARI format).
   std::vector<uint8_t> m_mappedColor;
-  // Per-channel readback staging for the standard AOV channels (SPEC §11.4),
-  // keyed by ANARI channel name. Device-owned; kept alive across unmap.
+  // Per-channel readback staging for the standard AOV channels, keyed by ANARI
+  // channel name. Device-owned; kept alive across unmap.
   std::map<std::string, std::vector<uint8_t>> m_mappedAov;
 
   std::atomic<bool> m_rendered{false};
 
-  // KHR_FRAME_COMPLETION_CALLBACK (SPEC §8.7). Written by commitParameters
-  // (normally on the worker's stage-1 flush, but a WAIT property query can
-  // flush on an app thread) and read by completeOnWorker, hence the mutex.
+  // KHR_FRAME_COMPLETION_CALLBACK. Written by commitParameters (normally on the
+  // worker's stage-1 flush, but a WAIT property query can flush on an app
+  // thread) and read by completeOnWorker, hence the mutex.
   std::mutex m_callbackMutex;
   ANARIFrameCompletionCallback m_callback{nullptr};
   const void *m_callbackUserData{nullptr};
   // Wall-clock seconds the last completed frame render took, measured on the
   // worker thread in renderOnWorker and read on the app thread in getProperty
-  // (the "duration" property, SPEC §8.2). Atomic for the same cross-thread
-  // reason as m_rendered above.
+  // (the "duration" property). Atomic for the same cross-thread reason as
+  // m_rendered above.
   std::atomic<float> m_duration{0.f};
   // Storm's GPU texture bytes after the last completed render (the
   // "hydra.textureMemory" property), stamped and read like m_duration.

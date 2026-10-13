@@ -1,7 +1,7 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-// Volume authoring (SPEC §7). An ANARI volume becomes four Hydra prims:
+// Volume authoring. An ANARI volume becomes four Hydra prims:
 //
 //  - a field bprim (type `openvdbAsset`, the stock Storm field type) per
 //    spatial field, whose `filePath` is the field's
@@ -54,7 +54,7 @@ pxr::HdContainerDataSourceHandle BuildVolumeMaterialPrim();
 
 // Volume rprim bound to `fieldPath`, its classification table `tablePath` and
 // `materialPath`. A non-empty `instancerPath` makes it a prototype of that
-// instancer (SPEC §4.3).
+// instancer.
 pxr::HdContainerDataSourceHandle BuildVolumePrim(const VolumeClassification &c,
     const FieldSnapshot &field,
     const pxr::SdfPath &fieldPath,

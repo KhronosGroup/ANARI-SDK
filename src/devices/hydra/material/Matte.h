@@ -7,7 +7,7 @@
 
 namespace anari_hydra {
 
-// ANARI 'matte' -> UsdPreviewSurface with metallic=0, roughness=1 (SPEC §6.5):
+// ANARI 'matte' -> UsdPreviewSurface with metallic=0, roughness=1:
 // color->diffuseColor, opacity.
 struct Matte : public Material
 {

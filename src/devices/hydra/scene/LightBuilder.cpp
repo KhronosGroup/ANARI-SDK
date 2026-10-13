@@ -18,10 +18,10 @@ namespace anari_hydra {
 
 HdContainerDataSourceHandle BuildLightPrim(const LightData &data)
 {
-  // The `light` container the delegate reads via GetLightParamValue (SPEC
-  // §6.6). Start from the common params every UsdLux light carries — Storm's
-  // light task reads these unconditionally and errors on an empty VtValue —
-  // then let the subtype override (exposure pinned 0 per SPEC §6.7).
+  // The `light` container the delegate reads via GetLightParamValue. Start from
+  // the common params every UsdLux light carries — Storm's light task reads
+  // these unconditionally and errors on an empty VtValue — then let the subtype
+  // override (exposure pinned 0).
   std::map<TfToken, VtValue> params{{HdLightTokens->exposure, VtValue(0.f)},
       {HdLightTokens->diffuse, VtValue(1.f)},
       {HdLightTokens->specular, VtValue(1.f)},

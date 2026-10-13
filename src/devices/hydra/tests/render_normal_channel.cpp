@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 // Proves channel.normal carries a world-space, float-precision shading normal
-// (SPEC §11.4, ANARI_KHR_FRAME_CHANNEL_NORMAL). Each scene is one quad, most
-// with an app-authored vertex.normal (the device never generates normals), and
-// the center pixel's normal is compared against the expected world direction:
+// (ANARI_KHR_FRAME_CHANNEL_NORMAL). Each scene is one quad, most with an
+// app-authored vertex.normal (the device never generates normals), and the
+// center pixel's normal is compared against the expected world direction:
 //   - +z quad, camera on +z: (0,0,1); pixelType FLOAT32_VEC3, frame-sized.
 //   - tilted authored normal (-0.6,0,0.8): negative components survive and the
 //     value is exact to float precision — a UNorm8 target would clamp x to 0.

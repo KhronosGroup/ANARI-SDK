@@ -1,13 +1,13 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 //
-// structuredRegular spatial fields classified by transferFunction1D volumes
-// (SPEC §7). An orthographic camera looks down -Z through volumes whose
-// classification is known in closed form: with no lighting (emission-
-// absorption), a ray crossing object-space thickness L of constant color c and
-// per-unitDistance opacity a reads back c * (1 - (1 - a)^(L / unitDistance))
-// over a black background. The generated shader clips every ray-march step to
-// the field domain and composites it exactly, so these hold to float noise.
+// structuredRegular spatial fields classified by transferFunction1D volumes. An
+// orthographic camera looks down -Z through volumes whose classification is
+// known in closed form: with no lighting (emission- absorption), a ray crossing
+// object-space thickness L of constant color c and per-unitDistance opacity a
+// reads back c * (1 - (1 - a)^(L / unitDistance)) over a black background. The
+// generated shader clips every ray-march step to the field domain and
+// composites it exactly, so these hold to float noise.
 
 #include <anari/anari.h>
 #ifdef ANARI_HYDRA_HAS_NANOVDB
@@ -272,7 +272,7 @@ int main(int argc, char **argv)
   if (!d)
     return 2;
 
-  // --- capability truth (SPEC §4.8) ---
+  // --- capability truth ---
   bool hasField = false, hasTf = false, hasNano = false;
   const char **ext = nullptr;
   anariGetProperty(

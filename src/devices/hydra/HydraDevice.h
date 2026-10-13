@@ -18,10 +18,10 @@
 
 namespace anari_hydra {
 
-// A standard AOV frame channel beyond color (SPEC §11.4). Each maps an ANARI
-// frame-channel name to the Hydra AOV token it reads back, the ANARI pixel type
-// map() produces, and the KHR_FRAME_CHANNEL_* extension it claims.
-// `channel.color` is unconditional and lives outside this table.
+// A standard AOV frame channel beyond color. Each maps an ANARI frame-channel
+// name to the Hydra AOV token it reads back, the ANARI pixel type map()
+// produces, and the KHR_FRAME_CHANNEL_* extension it claims. `channel.color` is
+// unconditional and lives outside this table.
 struct AovChannelDesc
 {
   const char *anariChannel; // e.g. "channel.depth"
@@ -32,26 +32,26 @@ struct AovChannelDesc
 
 // The five standard AOV channels the bridge supports (depth, normal, and the
 // object/primitive/instance IDs). Shared by the capability probe, the extension
-// list, and the frame's readback (SPEC §11.4).
+// list, and the frame's readback.
 const std::vector<AovChannelDesc> &standardAovChannels();
 
-// Which Hydra AOV serves channel.normal on `delegate` (SPEC §11.4): its
-// world-space `normal` AOV when it publishes one (HdEmbree), else its eye-space
-// `Neye` AOV (Storm; the frame rotates it to world space on readback), else an
-// empty token (channel unavailable). Shared by the capability probe and the
-// frame so both agree on the binding.
+// Which Hydra AOV serves channel.normal on `delegate`: its world-space `normal`
+// AOV when it publishes one (HdEmbree), else its eye-space `Neye` AOV (Storm;
+// the frame rotates it to world space on readback), else an empty token
+// (channel unavailable). Shared by the capability probe and the frame so both
+// agree on the binding.
 pxr::TfToken normalAovToken(pxr::HdRenderDelegate *delegate);
 
-// Per-delegate extension truth (SPEC §4.8), shared by the device
-// (deviceGetProperty "extension") and library (getDeviceExtensions) paths.
+// Per-delegate extension truth, shared by the device (deviceGetProperty
+// "extension") and library (getDeviceExtensions) paths.
 //
 // Read a delegate's published capability lists. MUST run on a worker thread
 // (which owns the Hgi); a bare delegate instance suffices to read the type
 // tokens — no render index or Hgi driver is needed. Also probes which standard
-// AOV channels the delegate offers a valid default descriptor for (SPEC §11.4),
-// filling `aovChannels` with the ANARI channel names it supports.
-// Also captures every HdRenderSettingDescriptor the delegate publishes into
-// `renderSettings` for §11.3 reflection.
+// AOV channels the delegate offers a valid default descriptor for, filling
+// `aovChannels` with the ANARI channel names it supports. Also captures every
+// HdRenderSettingDescriptor the delegate publishes into `renderSettings` for
+// reflection as typed renderer parameters.
 void readDelegateCaps(const pxr::TfToken &delegateId,
     pxr::TfTokenVector &rprims,
     pxr::TfTokenVector &sprims,
@@ -138,11 +138,11 @@ struct HydraDevice : public helium::BaseDevice
 
   void initDevice();
 
-  // Introspection subtype gate (SPEC §4.8); see the definition.
+  // Introspection subtype gate; see the definition.
   bool resolveQuerySubtype(ANARIDataType objectType, const char *&subtype);
 
   // Probe the bound delegate's capability lists once, on the worker thread, and
-  // cache them in device state (SPEC §4.8). Idempotent; a no-op once probed.
+  // cache them in device state. Idempotent; a no-op once probed.
   void probeCapabilities();
 
   void deviceCommitParameters() override;
@@ -155,8 +155,7 @@ struct HydraDevice : public helium::BaseDevice
  private:
   HydraGlobalState *deviceState() const;
   void bindDelegate(const char *subtype);
-  // Build + cache the §11.3 reflected renderer parameter list into device
-  // state.
+  // Build + cache the reflected renderer parameter list into device state.
   void buildRendererParamList();
 
   bool m_initialized{false};

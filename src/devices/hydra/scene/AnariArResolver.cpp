@@ -1,9 +1,9 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-// The Ar side of the in-memory asset scheme (SPEC §6.3). Storm never gets here:
-// Hio dispatches `.anari` paths to AnariHioImage by extension. Delegates that
-// read texture bytes through Ar and decode them with their own image loaders
+// The Ar side of the in-memory asset scheme. Storm never gets here: Hio
+// dispatches `.anari` paths to AnariHioImage by extension. Delegates that read
+// texture bytes through Ar and decode them with their own image loaders
 // (hdGatling) resolve `anari://` through this URI resolver instead, which
 // serves each registry image encoded as a file those loaders understand: an
 // 8-bit image as its exact bytes in an uncompressed 32-bit TGA, a Half/Float

@@ -1,9 +1,9 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 //
-// Exercises the samplers/textures path (SPEC §6.2-6.4). A material `baseColor`
-// is set to an image2D sampler holding a 2x2 checkerboard; the device decodes
-// the image into the in-memory asset registry, authors a UsdUVTexture (+
+// Exercises the samplers/textures path. A material `baseColor` is set to an
+// image2D sampler holding a 2x2 checkerboard; the device decodes the image into
+// the in-memory asset registry, authors a UsdUVTexture (+
 // UsdPrimvarReader_float2 feeding `st` from vertex.attribute0) into the
 // material network, and Storm samples it onto the quad. This asserts the
 // observable, spec-guaranteed result: each quadrant of the quad renders with

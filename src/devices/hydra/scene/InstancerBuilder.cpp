@@ -17,7 +17,7 @@ PXR_NAMESPACE_USING_DIRECTIVE
 namespace anari_hydra {
 
 // Wrap a per-instance values array (held in a VtValue) as an `instance`-
-// interpolation primvar the prototype rprims read per instance (SPEC §6.8).
+// interpolation primvar the prototype rprims read per instance.
 static HdContainerDataSourceHandle InstancePrimvar(const VtValue &values)
 {
   return HdPrimvarSchema::BuildRetained(
@@ -39,7 +39,7 @@ HdContainerDataSourceHandle BuildInstancerPrim(
   const size_t n = transforms.size();
 
   // instancerTopology: each group surface is a prototype, and every instance
-  // [0..N-1] draws every prototype (SPEC §4.3), so each prototype gets the same
+  // [0..N-1] draws every prototype, so each prototype gets the same
   // instanceIndices bucket.
   VtArray<SdfPath> protoPaths(prototypes.begin(), prototypes.end());
   VtIntArray indices(n);
@@ -72,7 +72,7 @@ HdContainerDataSourceHandle BuildInstancerPrim(
       nullptr);
 
   // Primvars container: the transforms Hydra consumes to place instances, plus
-  // any per-instance attribute overrides the prototype materials read (§6.8).
+  // any per-instance attribute overrides the prototype materials read.
   std::vector<TfToken> pvNames{HdInstancerTokens->instanceTransforms};
   std::vector<HdDataSourceBaseHandle> pvValues{xformPrimvar};
   for (const auto &attr : attributes) {

@@ -1,11 +1,11 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 //
-// Exercises renderer render-settings reflection (SPEC §11.3): every
+// Exercises renderer render-settings reflection: every
 // HdRenderSettingDescriptor the bound delegate publishes must be discoverable
 // as a typed ANARI renderer parameter under its verbatim Hydra token, alongside
-// the core translation-table aliases (§4.7). No frame is rendered — this is a
-// pure introspection test through the core ANARI entry point
+// the core translation-table aliases. No frame is rendered — this is a pure
+// introspection test through the core ANARI entry point
 // anariGetObjectInfo(...,"parameter",ANARI_PARAMETER_LIST).
 
 #include <anari/anari.h>
@@ -70,7 +70,7 @@ int main(int argc, char **argv)
     std::printf("  - %-32s type=%d\n", p->name, (int)p->type);
   check(count > 0, "renderer parameter list is non-empty");
 
-  // Core translation-table alias must always be present and typed INT32 (§4.7).
+  // Core translation-table alias must always be present and typed INT32.
   check(findParam(params, "pixelSamples") == ANARI_INT32,
       "core alias 'pixelSamples' present as ANARI_INT32");
   // The bridge-reserved background alias is reflected as FLOAT32_VEC4.
@@ -78,7 +78,7 @@ int main(int argc, char **argv)
       "core alias 'background' present as ANARI_FLOAT32_VEC4");
 
   if (std::string(subtype) == "embree") {
-    // HdEmbree publishes enableSceneColors (bool) verbatim (§11.3).
+    // HdEmbree publishes enableSceneColors (bool) verbatim.
     ANARIDataType t = findParam(params, "enableSceneColors");
     check(t == ANARI_BOOL,
         "embree delegate token 'enableSceneColors' reflected as ANARI_BOOL");

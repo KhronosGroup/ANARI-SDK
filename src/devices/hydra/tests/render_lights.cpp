@@ -1,10 +1,10 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 //
-// Exercises ANARI lights -> UsdLux light sprims (SPEC §6.6). The six ANARI
-// light subtypes each map to a UsdLux sprim (distant/sphere/rect/disk/dome); a
-// world with an ANARI light is authored with those sprims instead of the
-// fallback headlight, and renders without error.
+// Exercises ANARI lights -> UsdLux light sprims. The six ANARI light subtypes
+// each map to a UsdLux sprim (distant/sphere/rect/disk/dome); a world with an
+// ANARI light is authored with those sprims instead of the fallback headlight,
+// and renders without error.
 //
 // Light parameter values (intensity/color) scale the render: the frame pushes
 // HdxRenderTaskParams with enableLighting=true (default-off), without which
@@ -169,7 +169,7 @@ int main(int argc, char **argv)
   // removed) and produces a visible, non-crashing render.
   check(dim > 10, "world with an ANARI light renders a visible surface");
   check(bright > dim * 2,
-      "light irradiance scales the render (uniforms reach the draw, §6.6)");
+      "light irradiance scales the render (uniforms reach the draw)");
 
   anariRelease(dev, dev);
   anariUnloadLibrary(lib);

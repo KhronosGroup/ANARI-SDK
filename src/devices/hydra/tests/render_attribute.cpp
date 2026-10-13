@@ -1,16 +1,15 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 //
-// Exercises attribute-bound material inputs (SPEC §6.1). A matte material's
-// `color` is set to the ANARI attribute STRING "color" instead of a constant or
-// a sampler; the device authors a UsdPrimvarReader_float3 reading the
-// geometry's per-vertex `color` primvar and connects it to the
-// UsdPreviewSurface diffuseColor. The triangle carries a distinct primary at
-// each corner (red/green/blue), so the spec-guaranteed observable is a COLOR
-// GRADIENT across the face: near each vertex that vertex's channel dominates. A
-// constant color could not produce three differently-dominant regions, so the
-// gradient proves the primvar reader is bound and interpolating. Confirmed on
-// Storm.
+// Exercises attribute-bound material inputs. A matte material's `color` is set
+// to the ANARI attribute STRING "color" instead of a constant or a sampler; the
+// device authors a UsdPrimvarReader_float3 reading the geometry's per-vertex
+// `color` primvar and connects it to the UsdPreviewSurface diffuseColor. The
+// triangle carries a distinct primary at each corner (red/green/blue), so the
+// spec-guaranteed observable is a COLOR GRADIENT across the face: near each
+// vertex that vertex's channel dominates. A constant color could not produce
+// three differently-dominant regions, so the gradient proves the primvar reader
+// is bound and interpolating. Confirmed on Storm.
 
 #include <anari/anari.h>
 
@@ -113,8 +112,7 @@ int main(int argc, char **argv)
   anariSetParameter(dev, g, "vertex.color", ANARI_ARRAY1D, &col);
   anariCommitParameters(dev, g);
 
-  // matte with color bound to the ANARI attribute "color" (a STRING, SPEC
-  // §6.1).
+  // matte with color bound to the ANARI attribute "color" (a STRING).
   ANARIMaterial mat = anariNewMaterial(dev, "matte");
   const char *attr = "color";
   anariSetParameter(dev, mat, "color", ANARI_STRING, attr);

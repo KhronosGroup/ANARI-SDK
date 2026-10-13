@@ -5,7 +5,7 @@
 
 namespace anari_hydra {
 
-// The generated normal-mapping surface (SPEC §6.5).
+// The generated normal-mapping surface.
 //
 // Storm's UsdPreviewSurface perturbs the normal only when `normal` comes from a
 // texture: `perturbFragmentNormal` is compiled under HD_HAS_COORD_normal and

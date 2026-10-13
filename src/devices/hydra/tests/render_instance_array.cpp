@@ -1,7 +1,7 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 //
-// Exercises the complete ANARI instance input forms (SPEC §4.3/§6.8):
+// Exercises the complete ANARI instance input forms:
 //  - `transform` as FLOAT32_MAT4 or the compact FLOAT32_MAT3x4;
 //  - `transform` as an ARRAY1D of MAT4 (KHR_INSTANCE_TRANSFORM_ARRAY), with a
 //    parallel `id` UINT32 array feeding the instanceId channel;

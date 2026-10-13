@@ -1,12 +1,12 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 //
-// Frame `duration` property (SPEC §8.2): after a frame completes, an ANARI app
-// queries anariGetProperty(dev, frame, "duration", ANARI_FLOAT32, ...) to
-// display frame latency (e.g. anari_viewer's Viewport HUD). This drives a
-// minimal single-triangle scene, renders, and asserts the reported duration is
-// a sane positive wall-clock. The timing path is delegate-independent, so this
-// runs on BOTH storm (one-Execute) and embree (progressive converge loop).
+// Frame `duration` property: after a frame completes, an ANARI app queries
+// anariGetProperty(dev, frame, "duration", ANARI_FLOAT32, ...) to display frame
+// latency (e.g. anari_viewer's Viewport HUD). This drives a minimal
+// single-triangle scene, renders, and asserts the reported duration is a sane
+// positive wall-clock. The timing path is delegate-independent, so this runs on
+// BOTH storm (one-Execute) and embree (progressive converge loop).
 
 #include <anari/anari.h>
 

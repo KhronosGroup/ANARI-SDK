@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 // Exercises the primitive and transform samplers and the geometry-derived
-// inAttribute sources (SPEC §6.4): primitive lookups by ANARI primitive index
-// with inOffset and out-of-range reads, transform samplers over objectPosition
-// / worldPosition / objectNormal / worldNormal / primitiveId and per-vertex
+// inAttribute sources: primitive lookups by ANARI primitive index with inOffset
+// and out-of-range reads, transform samplers over objectPosition /
+// worldPosition / objectNormal / worldNormal / primitiveId and per-vertex
 // attributes, image samplers on those same sources (the forced baked path),
 // scalar slots, and live edits of all of it.
 //

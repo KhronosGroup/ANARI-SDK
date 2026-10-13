@@ -1,12 +1,12 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 //
-// KHR_RENDERER_BACKGROUND_IMAGE (SPEC §4.7): the `default` renderer's
-// `background` given as an ARRAY2D is stretched over the whole frame and
-// composited under the rendered color. The contract (matching VisRTX): frame
-// pixel (x, y) samples the image at uv = ((x + 0.5) / W, (y + 0.5) / H) with
-// bilinear filtering and clamp-to-edge wrapping, image row 0 on frame row 0
-// (ANARI's bottom row), and the result is the premultiplied "under" composite
+// KHR_RENDERER_BACKGROUND_IMAGE: the `default` renderer's `background` given as
+// an ARRAY2D is stretched over the whole frame and composited under the
+// rendered color. The contract (matching VisRTX): frame pixel (x, y) samples
+// the image at uv = ((x + 0.5) / W, (y + 0.5) / H) with bilinear filtering and
+// clamp-to-edge wrapping, image row 0 on frame row 0 (ANARI's bottom row), and
+// the result is the premultiplied "under" composite
 //   rgb = C.rgb + (1 - C.a) * bg.rgb,   a = C.a + (1 - C.a) * bg.a.
 //
 // Everything renders into ONE non-square (96x48) frame from a 4x3 asymmetric

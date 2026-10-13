@@ -3,8 +3,7 @@
 //
 // Exercises the `default` renderer's core `background` (FLOAT32_VEC4) becoming
 // the color the color buffer clears to where primary rays miss geometry — a
-// true clear color (SPEC §4.7). It is honored whenever no dome paints the
-// backdrop.
+// true clear color. It is honored whenever no dome paints the backdrop.
 //
 // A dome light OWNS the backdrop under Storm: HdxSkydomeTask is the first
 // render task and paints the dome environment into primary rays, clobbering any

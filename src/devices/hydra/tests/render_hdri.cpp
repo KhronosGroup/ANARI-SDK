@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 // Exercises the hdri dome light's environment image riding the in-memory asset
-// scheme (SPEC §6.3/§6.6). An hdri light's `radiance` is set to a solid-color
-// equirectangular image; the device decodes it into the AnariImage registry
-// under the light's `anari://light/lN.anari` path and authors the dome light's
-// textureFile at it, so Storm loads it through Glf->Hio->AnariHioImage (the
-// same plugin the samplers use) instead of the constant-color fallback.
+// scheme. An hdri light's `radiance` is set to a solid-color equirectangular
+// image; the device decodes it into the AnariImage registry under the light's
+// `anari://light/lN.anari` path and authors the dome light's textureFile at it,
+// so Storm loads it through Glf->Hio->AnariHioImage (the same plugin the
+// samplers use) instead of the constant-color fallback.
 //
 // A sharp, non-noisy check: a white matte quad lit only by the dome tints
 // toward the dome image's color. Render it twice (red dome, then green dome)
@@ -241,8 +241,8 @@ int main(int argc, char **argv)
   check(rTint[0] > gTint[0] && gTint[1] > rTint[1],
       "swapping the dome image swaps the surface tint");
 
-  // HDR radiance (SPEC §6.3): a float dome image keeps its precision, so a
-  // 4x dome lights the surface 4x as brightly as a 1x dome.
+  // HDR radiance: a float dome image keeps its precision, so a 4x dome lights
+  // the surface 4x as brightly as a 1x dome.
   const float one[3] = {1.f, 1.f, 1.f};
   const float four[3] = {4.f, 4.f, 4.f};
   double lit1[3], lit4[3];
@@ -284,11 +284,11 @@ int main(int argc, char **argv)
         "an in-place scale edit relights the surface");
   }
 
-  // sRGB dome image (SPEC §6.3): served as an sRGB-typed 8-bit texture the GPU
-  // decodes, so a dark code keeps its exact linear value instead of being
-  // re-quantised to 8-bit linear (code 10 is 0.003035; 8-bit linear storage
-  // would round it to 1/255 = 0.00392, ~29% bright). Compared at scale 100
-  // against the unit float dome, which lights the surface ~1.0.
+  // sRGB dome image: served as an sRGB-typed 8-bit texture the GPU decodes, so
+  // a dark code keeps its exact linear value instead of being re-quantised to
+  // 8-bit linear (code 10 is 0.003035; 8-bit linear storage would round it to
+  // 1/255 = 0.00392, ~29% bright). Compared at scale 100 against the unit float
+  // dome, which lights the surface ~1.0.
   {
     const uint8_t code10[3] = {10, 10, 10};
     double dark[3];

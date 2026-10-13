@@ -12,7 +12,7 @@ namespace anari_hydra {
 
 struct HydraGlobalState;
 
-// Per-delegate views over the generated ANARI query tables (SPEC §4.8).
+// Per-delegate views over the generated ANARI query tables.
 //
 // `anari_library_hydra_queries.cpp` is generated at build time by the
 // ANARI-SDK query generator from the SDK's own KHR schema files plus
@@ -43,7 +43,7 @@ bool reflectsParameter(
     const ANARIParameter *list, const char *name, ANARIDataType parameterType);
 
 // The frame's channel list narrowed to the channels whose `channel.*`
-// parameter survives the filter above (SPEC §11.4).
+// parameter survives the filter above.
 const char **reflectedFrameChannels(
     HydraGlobalState &state, const std::vector<const char *> &extensions);
 

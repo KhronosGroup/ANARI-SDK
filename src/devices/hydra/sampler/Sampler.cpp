@@ -14,8 +14,8 @@ namespace anari_hydra {
 using anari::math::float2;
 using anari::math::float4;
 
-// ANARI wrapMode values (SPEC §6.4). ANARI's default is clampToEdge; `warned`
-// flags an unrecognised value, which falls back to clampToEdge.
+// ANARI wrapMode values. ANARI's default is clampToEdge; `warned` flags an
+// unrecognised value, which falls back to clampToEdge.
 enum class WrapMode
 {
   ClampToEdge,
@@ -55,9 +55,9 @@ static const char *WrapToken(WrapMode m, bool padded)
   return "clamp";
 }
 
-// Parse an ANARI sampler `filter` string (SPEC §6.2) to "is nearest". ANARI's
-// default is "linear"; `warned` flags an unrecognised value, which falls back
-// to linear. Mirrors WrapToken's warn-on-unknown pattern.
+// Parse an ANARI sampler `filter` string to "is nearest". ANARI's default is
+// "linear"; `warned` flags an unrecognised value, which falls back to linear.
+// Mirrors WrapToken's warn-on-unknown pattern.
 static bool FilterIsNearest(const std::string &f, bool &warned)
 {
   if (f == "nearest")
@@ -112,14 +112,14 @@ Sampler::~Sampler()
 void Sampler::commitInAttribute()
 {
   // inAttribute selects the geometry attribute feeding the sampler; each
-  // material binding gets its own primvar reader for it (§6.4). An unknown
-  // name keeps the authored string for diagnostics but marks the source absent.
+  // material binding gets its own primvar reader for it. An unknown name keeps
+  // the authored string for diagnostics but marks the source absent.
   m_inAttribute = getParamString("inAttribute", "attribute0");
   m_inSlot = AttributeSlot(m_inAttribute);
   if (m_inSlot == kAbsentAttributeSlot) {
     reportMessage(ANARI_SEVERITY_WARNING,
         "sampler inAttribute '%s' is not an ANARI attribute; the sampler "
-        "reads it as an absent attribute (SPEC §6.4)",
+        "reads it as an absent attribute",
         m_inAttribute.c_str());
   }
 }
@@ -141,13 +141,13 @@ TexelAffine Sampler::outAffine() const
 
 void Sampler::commitParameters()
 {
-  // Image sampler params (SPEC §6.2/§6.4).
+  // Image sampler params.
   commitInAttribute();
 
-  // outTransform/outOffset (SPEC §6.4): diagonal -> UsdUVTexture output
-  // scale/bias; channel mixing -> baked into this sampler's decoded texels.
-  // Read first: the wrap decision below needs to know whether the border
-  // colour is mixed into the texels too.
+  // outTransform/outOffset: diagonal -> UsdUVTexture output scale/bias; channel
+  // mixing -> baked into this sampler's decoded texels. Read first: the wrap
+  // decision below needs to know whether the border colour is mixed into the
+  // texels too.
   commitOutTransform();
   bool mixes = false;
   for (int column = 0; column < 4; ++column)
@@ -166,7 +166,7 @@ void Sampler::commitParameters()
   }
 
   // wrapMode1/wrapMode2 (image2D) or wrapMode (image1D; its second axis is
-  // always clamp so any v reads the single row) and borderColor (SPEC §6.4).
+  // always clamp so any v reads the single row) and borderColor.
   bool warnWrap = false;
   const WrapMode modeS =
       ParseWrapMode(getParamString(m_imageDims == 1 ? "wrapMode" : "wrapMode1",
@@ -178,7 +178,7 @@ void Sampler::commitParameters()
   if (warnWrap) {
     reportMessage(ANARI_SEVERITY_WARNING,
         "sampler wrapMode must be clampToEdge, clampToBorder, repeat or "
-        "mirrorRepeat; using clampToEdge (SPEC §6.4)");
+        "mirrorRepeat; using clampToEdge");
   }
   m_borderColor = getParam<float4>("borderColor", float4(0.f, 0.f, 0.f, 0.f));
 
@@ -215,24 +215,23 @@ void Sampler::commitParameters()
     padOffset.y = 1.f / float(imageH + 2);
   }
 
-  // filter -> UsdUVTexture magFilter/minFilter (SPEC §6.2). Default is linear.
+  // filter -> UsdUVTexture magFilter/minFilter. Default is linear.
   bool warnFilter = false;
   m_filterNearest =
       FilterIsNearest(getParamString("filter", "linear"), warnFilter);
   if (warnFilter) {
     reportMessage(ANARI_SEVERITY_WARNING,
-        "sampler filter must be 'nearest' or 'linear'; using linear "
-        "(SPEC §6.2)");
+        "sampler filter must be 'nearest' or 'linear'; using linear");
   }
 
-  // inTransform/inOffset (SPEC §6.4). The sampled coordinate is the xy of
-  // inTransform * attribute + inOffset (attribute padded to (x,y,0,1)). The 2×2
-  // block [a b; c d] (helium mat4 is column-major: m[column][row]) is a
-  // rotation·scale exactly when its columns are orthogonal: column 0 =
-  // sx·(cos θ, sin θ), column 1 = sy·(−sin θ, cos θ). That, with no z/w-column
-  // terms, is what a UsdTransform2d can express; anything else is baked.
-  // The classified and baked map is the ANARI map followed by the padding
-  // remap: pad · (inTransform · a + inOffset) + padOffset.
+  // inTransform/inOffset. The sampled coordinate is the xy of inTransform *
+  // attribute + inOffset (attribute padded to (x,y,0,1)). The 2×2 block [a b; c
+  // d] (helium mat4 is column-major: m[column][row]) is a rotation·scale
+  // exactly when its columns are orthogonal: column 0 = sx·(cos θ, sin θ),
+  // column 1 = sy·(−sin θ, cos θ). That, with no z/w-column terms, is what a
+  // UsdTransform2d can express; anything else is baked. The classified and
+  // baked map is the ANARI map followed by the padding remap: pad ·
+  // (inTransform · a + inOffset) + padOffset.
   const helium::mat4 anariTransform =
       getParam<helium::mat4>("inTransform", helium::mat4(linalg::identity));
   const float4 anariOffset =
@@ -324,15 +323,15 @@ void Sampler::decodeImage()
 {
   // Decode any supported element type to linear RGBA through helium's
   // readAsAttributeValue (copy-at-load into the registry — outside the
-  // zero-copy scope, SPEC §6.3), keyed by this sampler's asset path, at the
-  // precision TexelFormatFor picks for the source. A channel-mixing
-  // outTransform is applied per texel here (§6.4): the registry copy is this
-  // sampler's own, so other samplers sharing the array are unaffected, and the
-  // result is stored in float, so it may leave [0,1].
+  // zero-copy scope), keyed by this sampler's asset path, at the precision
+  // TexelFormatFor picks for the source. A channel-mixing outTransform is
+  // applied per texel here: the registry copy is this sampler's own, so other
+  // samplers sharing the array are unaffected, and the result is stored in
+  // float, so it may leave [0,1].
   const TexelAffine affine = outAffine();
   const TexelAffine *transform = m_outBaked ? &affine : nullptr;
-  // A nonzero clamp-to-border colour frames the padded axes (§6.4); the same
-  // transform applies to the border texel as to the source texels.
+  // A nonzero clamp-to-border colour frames the padded axes; the same transform
+  // applies to the border texel as to the source texels.
   TexelBorder border;
   border.padX = m_padS;
   border.padY = m_padT;
@@ -341,11 +340,11 @@ void Sampler::decodeImage()
 
   AnariImageData data;
   if (m_imageDims == 2) {
-    // Shared decode with the hdri dome light (SPEC §6.3).
+    // Shared decode with the hdri dome light.
     m_valid = DecodeArray2DToImage(
         m_image2D.get(), data, transform, TexelFormat::Float, pad);
   } else if (m_imageDims == 1) {
-    // image1D as an N×1 2D texture (SPEC §6.4).
+    // image1D as an N×1 2D texture.
     m_valid = DecodeArray1DToImage(
         m_image1D.get(), data, transform, TexelFormat::Float, pad);
   } else {
@@ -385,7 +384,7 @@ struct Image1D : public Sampler
 
 // transform: value = outTransform * inAttribute + outOffset (KHR_SAMPLER_
 // TRANSFORM has no image, wrap, filter or input transform). Baked per element
-// into a derived value primvar on each bound rprim (SPEC §6.4).
+// into a derived value primvar on each bound rprim.
 struct Transform : public Sampler
 {
   Transform(HydraGlobalState *s) : Sampler(s, Kind::Transform, 0) {}
@@ -405,7 +404,7 @@ struct Transform : public Sampler
 // primitive: value = array[primitiveId + inOffset], read as an attribute value
 // (KHR_SAMPLER_PRIMITIVE). Baked into a uniform-rate derived value primvar on
 // each bound rprim, mapped through the geometry's Hydra-face -> ANARI-primitive
-// table so tessellated geometry and curves index by ANARI primitive (§6.4).
+// table so tessellated geometry and curves index by ANARI primitive.
 struct Primitive : public Sampler
 {
   Primitive(HydraGlobalState *s) : Sampler(s, Kind::Primitive, 0) {}
@@ -444,8 +443,8 @@ Sampler *Sampler::createInstance(std::string_view subtype, HydraGlobalState *s)
     return new Transform(s);
   else if (subtype == "primitive")
     return new Primitive(s);
-  // image3D is a documented exclusion (SPEC §6.4); the device turns a null
-  // here into an inert UnknownObject with a warning.
+  // image3D is a documented exclusion; the device turns a null here into an
+  // inert UnknownObject with a warning.
   return nullptr;
 }
 

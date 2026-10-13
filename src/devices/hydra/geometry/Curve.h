@@ -7,8 +7,8 @@
 
 namespace anari_hydra {
 
-// ANARI 'curve' geometry -> Hydra linear basisCurves rprim (SPEC §4.1). v1 maps
-// the vertex list to a single linear (polyline) curve; per-vertex width is
+// ANARI 'curve' geometry -> Hydra linear basisCurves rprim. v1 maps the vertex
+// list to a single linear (polyline) curve; per-vertex width is
 // 2*vertex.radius, falling back to the global 'radius'. Segment-index topology
 // is a documented follow-up.
 struct Curve : public Geometry

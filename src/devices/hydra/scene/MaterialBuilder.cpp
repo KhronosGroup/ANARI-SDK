@@ -33,12 +33,12 @@ namespace anari_hydra {
 
 // The single shader node's key in the network, and its Sdr identifier. Storm
 // ships a glslfx implementation of UsdPreviewSurface, so authoring it under the
-// universal render context shades natively (SPEC §6.2).
+// universal render context shades natively.
 static const TfToken kNodeName("UsdPreviewSurface");
 static const TfToken kNodeId("UsdPreviewSurface");
 static const TfToken kSurfaceOutput("surface");
 
-// --- generated normal-mapping surface (SPEC §6.5) ---------------------------
+// --- generated normal-mapping surface ---------------------------------------
 //
 // See NormalMappedSurface.h for the source and why it exists.
 static const TfToken kTangentStInput(kNormalMappedSurfaceTangentStInput);
@@ -139,7 +139,7 @@ static HdDataSourceBaseHandle Connection(
 }
 
 // color3f UsdPreviewSurface inputs take a float3 primvar reader; every other
-// (scalar) input takes a float reader (SPEC §6.1).
+// (scalar) input takes a float reader.
 static bool IsColorInput(const TfToken &usdInput)
 {
   return usdInput == TfToken("diffuseColor")
@@ -174,8 +174,8 @@ static HdContainerDataSourceHandle BuildNetwork(
   for (const auto &b : attrBindings)
     bound.insert(b.usdInput);
 
-  // UsdPreviewSurface constant parameters (SPEC §6.5). matte lands here too,
-  // with metallic=0 / roughness=1 / emissive=0 defaults.
+  // UsdPreviewSurface constant parameters. matte lands here too, with
+  // metallic=0 / roughness=1 / emissive=0 defaults.
   std::vector<TfToken> pNames;
   std::vector<HdDataSourceBaseHandle> pValues;
   auto addConst = [&](const char *name, HdContainerDataSourceHandle v) {
@@ -196,7 +196,7 @@ static HdContainerDataSourceHandle BuildNetwork(
   pNames.push_back(TfToken("useSpecularWorkflow"));
   pValues.push_back(IntParam(0));
 
-  // Mask alpha uses an opacityThreshold; opaque/blend omit it (SPEC §6.5).
+  // Mask alpha uses an opacityThreshold; opaque/blend omit it.
   if (material->alphaMode() == Material::AlphaMode::Mask) {
     pNames.push_back(TfToken("opacityThreshold"));
     pValues.push_back(FloatParam(material->opacityThreshold()));
@@ -205,11 +205,11 @@ static HdContainerDataSourceHandle BuildNetwork(
   auto parameters = HdRetainedContainerDataSource::New(
       pNames.size(), pNames.data(), pValues.data());
 
-  // Texture nodes (SPEC §6.1/§6.3): one UsdUVTexture per bound input, each fed
-  // by its own UsdPrimvarReader_float2 on the primvar of the sampler's
-  // inAttribute (SPEC §6.4). Readers are per binding, not shared: Storm's
-  // material-network lowering visits each reader node once, so a reader feeding
-  // two UsdTransform2d nodes would leave the second without coordinates.
+  // Texture nodes: one UsdUVTexture per bound input, each fed by its own
+  // UsdPrimvarReader_float2 on the primvar of the sampler's inAttribute.
+  // Readers are per binding, not shared: Storm's material-network lowering
+  // visits each reader node once, so a reader feeding two UsdTransform2d nodes
+  // would leave the second without coordinates.
   std::vector<TfToken> nodeNames{kNodeName};
   std::vector<HdDataSourceBaseHandle> nodeValues; // filled after surface node
 
@@ -226,12 +226,12 @@ static HdContainerDataSourceHandle BuildNetwork(
     const std::string suffix = std::to_string(idx++);
 
     if (s->kind() != Sampler::Kind::Image) {
-      // transform / primitive samplers (SPEC §6.4) have no texture: each bound
-      // rprim bakes the sampler's value into a derived primvar (PrimBuilder),
-      // and the network reads it with a typed UsdPrimvarReader — float3 for a
-      // color slot, float (the first component, ANARI's scalar rule) for a
-      // scalar one. On the `normal` slot only the generated surface reads it
-      // (UsdPreviewSurface ignores a normal that is not a texture, §6.5); its
+      // transform / primitive samplers have no texture: each bound rprim bakes
+      // the sampler's value into a derived primvar (PrimBuilder), and the
+      // network reads it with a typed UsdPrimvarReader — float3 for a color
+      // slot, float (the first component, ANARI's scalar rule) for a scalar
+      // one. On the `normal` slot only the generated surface reads it
+      // (UsdPreviewSurface ignores a normal that is not a texture); its
       // fallback is the flat tangent-space normal.
       if (IsPrimvarNormalMap(b) && !primvarNormalMap)
         continue;
@@ -260,17 +260,16 @@ static HdContainerDataSourceHandle BuildNetwork(
 
     const TfToken texNode("tex_" + b.usdInput.GetString() + suffix);
 
-    // Coordinate source (SPEC §6.4). Baked input transforms read the derived
-    // per-rprim primvar PrimBuilder authors for this sampler (already in USD st
-    // space); otherwise the reader takes the attribute's own float2 primvar
-    // (`st` for attribute0) and a UsdTransform2d applies the sampler's
-    // rotation·scale + offset. UsdUVTexture has no st-transform input, so the
-    // UsdTransform2d is the one target for it (the texture's own scale/bias
-    // carry outTransform instead). Geometry-derived sources (position /
-    // normal / primitiveId) always take the baked path. An unknown
-    // inAttribute reads a primvar no rprim authors, so on either path the
-    // reader's (0,0) fallback applies, exactly as for an attributeN the
-    // geometry does not provide.
+    // Coordinate source. Baked input transforms read the derived per-rprim
+    // primvar PrimBuilder authors for this sampler (already in USD st space);
+    // otherwise the reader takes the attribute's own float2 primvar (`st` for
+    // attribute0) and a UsdTransform2d applies the sampler's rotation·scale +
+    // offset. UsdUVTexture has no st-transform input, so the UsdTransform2d is
+    // the one target for it (the texture's own scale/bias carry outTransform
+    // instead). Geometry-derived sources (position / normal / primitiveId)
+    // always take the baked path. An unknown inAttribute reads a primvar no
+    // rprim authors, so on either path the reader's (0,0) fallback applies,
+    // exactly as for an attributeN the geometry does not provide.
     const bool baked = s->inputMode() == Sampler::InputMode::Baked;
     std::string primvar;
     if (s->inAttributeSlot() == Sampler::kAbsentAttributeSlot)
@@ -323,13 +322,12 @@ static HdContainerDataSourceHandle BuildNetwork(
 
     // UsdUVTexture: file + wrap + output scale/bias + sourceColorSpace raw
     // (the sampler decodes to linear). scale/bias carry the sampler's diagonal
-    // ANARI outTransform (SPEC §6.4; a channel-mixing outTransform is already
-    // baked into the sampler's texels and reports identity here). The `normal`
-    // slot adds nothing: per ANARI the app's outTransform/outOffset already
-    // decodes the texels to [-1,1] (SPEC §6.5). raw is already correct — a
-    // normal map must not be sRGB-decoded. Scalar slots read the red channel
-    // (the first component of the transformed texel, ANARI's
-    // scalar-from-sampler rule).
+    // ANARI outTransform (a channel-mixing outTransform is already baked into
+    // the sampler's texels and reports identity here). The `normal` slot adds
+    // nothing: per ANARI the app's outTransform/outOffset already decodes the
+    // texels to [-1,1]. raw is already correct — a normal map must not be
+    // sRGB-decoded. Scalar slots read the red channel (the first component of
+    // the transformed texel, ANARI's scalar-from-sampler rule).
     std::vector<TfToken> tn{TfToken("file"),
         TfToken("wrapS"),
         TfToken("wrapT"),
@@ -343,9 +341,9 @@ static HdContainerDataSourceHandle BuildNetwork(
         Vec4Param(s->outScale()),
         Vec4Param(s->outBias())};
 
-    // filter -> Storm magFilter/minFilter (SPEC §6.2). "nearest" authors both
-    // as plain nearest — no mip selection, so texel values are exactly the
-    // stored checker (the least-surprise reading of ANARI's `filter`). "linear"
+    // filter -> Storm magFilter/minFilter. "nearest" authors both as plain
+    // nearest — no mip selection, so texel values are exactly the stored
+    // checker (the least-surprise reading of ANARI's `filter`). "linear"
     // authors nothing: Storm already defaults to linear/linearMipmapLinear, so
     // omitting keeps that default and the material network minimal. Applies to
     // color and normal-map bindings alike (both come from a sampler object).
@@ -367,11 +365,11 @@ static HdContainerDataSourceHandle BuildNetwork(
     surfConnValues.push_back(Connection(texNode, b.output));
   }
 
-  // Attribute nodes (SPEC §6.1): one UsdPrimvarReader_* per attribute-bound
-  // input, reading the per-vertex primvar PrimBuilder authors for that ANARI
-  // attribute (color/attribute0..3). A color3f input takes a float3 reader; a
-  // scalar input takes a float reader. The reader returns its `fallback` when
-  // the geometry lacks the primvar.
+  // Attribute nodes: one UsdPrimvarReader_* per attribute-bound input, reading
+  // the per-vertex primvar PrimBuilder authors for that ANARI attribute
+  // (color/attribute0..3). A color3f input takes a float3 reader; a scalar
+  // input takes a float reader. The reader returns its `fallback` when the
+  // geometry lacks the primvar.
   int aidx = 0;
   for (const auto &b : attrBindings) {
     const bool isColor = IsColorInput(b.usdInput);
@@ -446,16 +444,16 @@ static HdContainerDataSourceHandle BuildNetwork(
 HdContainerDataSourceHandle BuildMaterialPrim(Material *material)
 {
   // The universal render context carries the UsdPreviewSurface network every
-  // delegate reads (SPEC §6.2). A transform/primitive sampler on `normal` adds
-  // the generated-surface network under `glslfx`, which Storm prefers and no
-  // other delegate reads (SPEC §6.5); every other material authors one network.
+  // delegate reads. A transform/primitive sampler on `normal` adds the
+  // generated-surface network under `glslfx`, which Storm prefers and no other
+  // delegate reads; every other material authors one network.
   const auto &bindings = material->samplerBindings();
   bool primvarNormalMap =
       std::any_of(bindings.begin(), bindings.end(), IsPrimvarNormalMap);
   if (primvarNormalMap && NormalMappedSurfaceNodeId().IsEmpty()) {
     material->reportMessage(ANARI_SEVERITY_WARNING,
         "physicallyBased 'normal': the generated normal-mapping shader failed "
-        "to register; the transform/primitive sampler is dropped (SPEC §6.5)");
+        "to register; the transform/primitive sampler is dropped");
     primvarNormalMap = false;
   }
 

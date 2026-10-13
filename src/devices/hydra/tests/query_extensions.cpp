@@ -1,12 +1,12 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 //
-// Non-GL query test: exercise the per-delegate extension truth (SPEC §4.8).
-// The device computes its reported ANARI extension list per selected delegate
-// and honestly omits what that delegate cannot do. Storm publishes
-// basisCurves / a material sprim (so curve, samplers stay); HdEmbree
-// publishes neither (so they drop) but keeps mesh geometry, sphere, cylinder,
-// lights and materials. No frame is created and nothing is rendered.
+// Non-GL query test: exercise the per-delegate extension truth. The device
+// computes its reported ANARI extension list per selected delegate and honestly
+// omits what that delegate cannot do. Storm publishes basisCurves / a material
+// sprim (so curve, samplers stay); HdEmbree publishes neither (so they drop)
+// but keeps mesh geometry, sphere, cylinder, lights and materials. No frame is
+// created and nothing is rendered.
 
 #include <anari/anari.h>
 
@@ -110,11 +110,11 @@ int main(int argc, char **argv)
   // linear float RGB), so the dome-light gate claims it on both.
   check(has(ext, "ANARI_KHR_LIGHT_HDRI"), "LIGHT_HDRI present");
 
-  // Standard AOV frame channels (SPEC §11.4/§4.8): each KHR_FRAME_CHANNEL_*
-  // extension is claimed iff the delegate offers a valid default descriptor for
-  // its Hydra AOV. Depth and the three ID buffers are unconditional across both
-  // reference delegates; normal accepts either the `normal` AOV (HdEmbree) or
-  // the eye-space `Neye` AOV (HdStorm), so both claim it.
+  // Standard AOV frame channels: each KHR_FRAME_CHANNEL_* extension is claimed
+  // iff the delegate offers a valid default descriptor for its Hydra AOV. Depth
+  // and the three ID buffers are unconditional across both reference delegates;
+  // normal accepts either the `normal` AOV (HdEmbree) or the eye-space `Neye`
+  // AOV (HdStorm), so both claim it.
   check(
       has(ext, "ANARI_KHR_FRAME_CHANNEL_COLOR"), "FRAME_CHANNEL_COLOR present");
   check(
@@ -129,37 +129,36 @@ int main(int argc, char **argv)
   check(has(ext, "ANARI_KHR_FRAME_CHANNEL_NORMAL"),
       "FRAME_CHANNEL_NORMAL present (normal or Neye AOV)");
 
-  // ANARI_HYDRA_FRAME_AOV (arbitrary named AOVs, SPEC §11.4) is claimed by any
-  // delegate that publishes the `renderBuffer` bprim — both reference delegates
-  // do, so both gain it.
+  // ANARI_HYDRA_FRAME_AOV (arbitrary named AOVs) is claimed by any delegate
+  // that publishes the `renderBuffer` bprim — both reference delegates do, so
+  // both gain it.
   check(has(ext, "ANARI_HYDRA_FRAME_AOV"), "FRAME_AOV present");
 
   // Completion callbacks fire from the device worker after every render job,
-  // whatever the delegate (SPEC §8.7).
+  // whatever the delegate.
   check(has(ext, "ANARI_KHR_FRAME_COMPLETION_CALLBACK"),
       "FRAME_COMPLETION_CALLBACK present");
 
   check(ext.count("ANARI_KHR_CAMERA_ORTHOGRAPHIC"), "ORTHOGRAPHIC present");
-  // Sharp per-delegate totals: the honest lists (SPEC §4.8) sum to fixed
-  // counts. storm adds all five AOV channels atop its fuller geometry/sampler
-  // surface (image1D/2D, primitive, transform, clamp-to-border), plus
-  // FRAME_AOV, orthographic cameras, the two instance transform extensions
-  // and the renderer background colour (33); embree adds all five AOV
-  // channels atop its narrower surface, plus FRAME_AOV, tessellated spheres,
-  // orthographic cameras, the two instance transform extensions and the
-  // renderer background colour (27). Both also claim the delegate-independent
-  // frame completion callback and renderer background image (+2: 35 / 29),
-  // and both have dome lights, so both claim the ambient fill (+1: 36 / 30).
-  // storm alone offers spatial fields: structuredRegular fields,
-  // transferFunction1D volumes and isosurfaces extracted from those fields
-  // (+3: 39), and nanovdb fields when the device was built with the NanoVDB
-  // headers (+1).
+  // Sharp per-delegate totals: the honest lists sum to fixed counts. storm adds
+  // all five AOV channels atop its fuller geometry/sampler surface (image1D/2D,
+  // primitive, transform, clamp-to-border), plus FRAME_AOV, orthographic
+  // cameras, the two instance transform extensions and the renderer background
+  // colour (33); embree adds all five AOV channels atop its narrower surface,
+  // plus FRAME_AOV, tessellated spheres, orthographic cameras, the two instance
+  // transform extensions and the renderer background colour (27). Both also
+  // claim the delegate-independent frame completion callback and renderer
+  // background image (+2: 35 / 29), and both have dome lights, so both claim
+  // the ambient fill (+1: 36 / 30). storm alone offers spatial fields:
+  // structuredRegular fields, transferFunction1D volumes and isosurfaces
+  // extracted from those fields (+3: 39), and nanovdb fields when the device
+  // was built with the NanoVDB headers (+1).
   const size_t nano = has(ext, "ANARI_KHR_SPATIAL_FIELD_NANOVDB") ? 1u : 0u;
   check(ext.size() == (isEmbree ? 30u : 39u + nano),
       "extension count matches delegate");
   // The `default` renderer's background is the frame's clear colour on every
   // delegate, and its ambient fill is a synthesized dome light, claimed
-  // wherever the delegate has dome lights (SPEC §4.7).
+  // wherever the delegate has dome lights.
   check(has(ext, "ANARI_KHR_RENDERER_BACKGROUND_COLOR"),
       "RENDERER_BACKGROUND_COLOR present");
   check(has(ext, "ANARI_KHR_RENDERER_BACKGROUND_IMAGE"),

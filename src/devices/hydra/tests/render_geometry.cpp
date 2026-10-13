@@ -1,8 +1,8 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 //
-// Exercises each ANARI geometry subtype (SPEC §4.1) end-to-end through the C
-// API: triangle/quad -> mesh, sphere -> tessellated mesh, curve -> basisCurves,
+// Exercises each ANARI geometry subtype end-to-end through the C API:
+// triangle/quad -> mesh, sphere -> tessellated mesh, curve -> basisCurves,
 // cone/cylinder -> commit-time tessellated mesh. Each subtype is rendered in
 // its own world via a Hydra delegate (default: storm) and the frame is read
 // back; a non-trivial covered-pixel area proves the prim reached the delegate.
@@ -251,7 +251,7 @@ int main(int argc, char **argv)
     int cov = renderCoverage(dev, s, &mid);
     std::printf("indexed curve coverage: %d (mid strip: %d)\n", cov, mid);
     check(cov > 300, "indexed curve renders both segments");
-    check(mid < 20, "indexed curve segments are disjoint (no bridge, §4.1)");
+    check(mid < 20, "indexed curve segments are disjoint (no bridge)");
     anariRelease(dev, s);
     anariRelease(dev, g);
     anariRelease(dev, idx);
@@ -317,7 +317,7 @@ int main(int argc, char **argv)
     ANARISurface s = makeSurface(dev, g, color);
     int cov = renderCoverage(dev, s);
     std::printf("capped cylinder (end-on) coverage: %d\n", cov);
-    check(cov > 10000, "cylinder caps fill the end disk (§4.1)");
+    check(cov > 10000, "cylinder caps fill the end disk");
     anariRelease(dev, s);
     anariRelease(dev, g);
     anariRelease(dev, pos);
@@ -343,7 +343,7 @@ int main(int argc, char **argv)
     ANARISurface s = makeSurface(dev, g, color);
     int cov = renderCoverage(dev, s);
     std::printf("capped cone (end-on) coverage: %d\n", cov);
-    check(cov > 20000, "cone caps fill the wide-end disk (§4.1)");
+    check(cov > 20000, "cone caps fill the wide-end disk");
     anariRelease(dev, s);
     anariRelease(dev, g);
     anariRelease(dev, rad);
@@ -353,10 +353,10 @@ int main(int argc, char **argv)
   // --- indexed cylinder with per-primitive radii
   // ------------------------------ Two segments share one primitive.index
   // array, one sitting in the left half of the frame and one in the right;
-  // primitive.radius (SPEC KHR_GEOMETRY_CYLINDER) gives them very different
-  // widths. Swapping which array slot holds the wide radius between the two
-  // passes swaps which half gets more coverage — a coverage-total-only check
-  // can't catch primitive.radius being misindexed (e.g. read per-vertex, or
+  // primitive.radius (KHR_GEOMETRY_CYLINDER) gives them very different widths.
+  // Swapping which array slot holds the wide radius between the two passes
+  // swaps which half gets more coverage — a coverage-total-only check can't
+  // catch primitive.radius being misindexed (e.g. read per-vertex, or
   // reversed), but this asymmetry can.
   {
     float verts[12] = {
@@ -382,7 +382,7 @@ int main(int argc, char **argv)
       std::printf(
           "indexed cylinder pass %d: left=%d right=%d\n", pass, left, right);
       check((pass == 0 ? left > right : right > left),
-          "primitive.radius lands on the correct segment via primitive.index (§4.1)");
+          "primitive.radius lands on the correct segment via primitive.index");
       anariRelease(dev, s);
       anariRelease(dev, g);
       anariRelease(dev, rad);
@@ -441,7 +441,7 @@ int main(int argc, char **argv)
       const bool expectRed = i == 0;
       check(expectRed ? (center[0] > center[1] + 40)
                       : (center[1] > center[0] + 40),
-          "vertex.cap indexes seg.first/seg.second correctly (§4.1)");
+          "vertex.cap indexes seg.first/seg.second correctly");
       anariRelease(dev, s);
       anariRelease(dev, mat);
       anariRelease(dev, g);
@@ -471,9 +471,9 @@ int main(int argc, char **argv)
     check(covBefore < 8000,
         "vertex.cap overrides 'caps=both' to leave ends open");
 
-    // In-place vertex.cap edit (SPEC §4.5): re-enabling both ends must
-    // re-tessellate the caps back in, without touching 'caps' or re-committing
-    // the geometry's other parameters.
+    // In-place vertex.cap edit: re-enabling both ends must re-tessellate the
+    // caps back in, without touching 'caps' or re-committing the geometry's
+    // other parameters.
     uint8_t *mapped = static_cast<uint8_t *>(anariMapArray(dev, vcap));
     mapped[0] = mapped[1] = 1;
     anariUnmapArray(dev, vcap);
@@ -487,8 +487,7 @@ int main(int argc, char **argv)
     anariRelease(dev, pos);
   }
 
-  // --- cylinder primitive.radius edit re-tessellates (SPEC §4.5)
-  // --------------
+  // --- cylinder primitive.radius edit re-tessellates ------------------------
   {
     float verts[6] = {-0.5f, 0.f, 0.f, 0.5f, 0.f, 0.f};
     float radius = 0.1f;
@@ -541,7 +540,7 @@ int main(int argc, char **argv)
     int cov = renderCoverage(dev, s);
     std::printf("zero-tip cone with vertex.cap forced coverage: %d\n", cov);
     check(cov > 20000,
-        "forcing vertex.cap on a zero-radius tip caps only the base (§4.1)");
+        "forcing vertex.cap on a zero-radius tip caps only the base");
     anariRelease(dev, s);
     anariRelease(dev, g);
     anariRelease(dev, vcap);

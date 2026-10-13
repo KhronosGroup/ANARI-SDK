@@ -1,14 +1,14 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-// The in-memory asset scheme for spatial fields (SPEC §7). A process-global
-// registry maps an `anari://field/…​.anari` asset path to a dense float32
-// scalar grid; a self-registered HioFieldTextureData plugin (AnariField.cpp,
-// compiled into the device library, declared in plugInfo.json) serves that
-// grid straight to HdStorm's field-texture pipeline, dispatched purely by the
-// `anari` extension — no file on disk, no Ar resolution, no OpenVDB. This is
-// the image scheme's sibling (AnariImage.h): copy-at-load into the registry
-// is permitted (outside the zero-copy scope, SPEC §5.1).
+// The in-memory asset scheme for spatial fields. A process-global registry maps
+// an `anari://field/…​.anari` asset path to a dense float32 scalar grid; a
+// self-registered HioFieldTextureData plugin (AnariField.cpp, compiled into the
+// device library, declared in plugInfo.json) serves that grid straight to
+// HdStorm's field-texture pipeline, dispatched purely by the `anari` extension
+// — no file on disk, no Ar resolution, no OpenVDB. This is the image scheme's
+// sibling (AnariImage.h): copy-at-load into the registry is permitted (outside
+// the zero-copy scope).
 
 #pragma once
 

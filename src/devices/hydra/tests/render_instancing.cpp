@@ -1,12 +1,12 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 //
-// Exercises HdInstancer sharing (SPEC §4.3): one group (a single small
-// triangle) is instanced N times with distinct translations via ANARI
-// instances. The device authors one prototype rprim + one instancer with N
-// transforms (not N baked rprim copies). The test renders 1 vs 4 instances
-// through Storm and asserts the covered area scales with the instance count —
-// proving each instance transform reached the delegate.
+// Exercises HdInstancer sharing: one group (a single small triangle) is
+// instanced N times with distinct translations via ANARI instances. The device
+// authors one prototype rprim + one instancer with N transforms (not N baked
+// rprim copies). The test renders 1 vs 4 instances through Storm and asserts
+// the covered area scales with the instance count — proving each instance
+// transform reached the delegate.
 
 #include <anari/anari.h>
 

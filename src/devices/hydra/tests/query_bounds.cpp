@@ -131,9 +131,9 @@ int main(int argc, char **argv)
     auto ra = anariNewArray1D(d, radii, nullptr, nullptr, ANARI_FLOAT32, 2);
     auto g = anariNewGeometry(d, subtype);
     anariSetParameter(d, g, "vertex.position", ANARI_ARRAY1D, &pa);
-    // Cylinders take primitive.radius (per segment), not vertex.radius (SPEC
-    // KHR_GEOMETRY_CYLINDER); the single 2-vertex segment here only ever
-    // reads radii[0], same as the r[0] edit below.
+    // Cylinders take primitive.radius (per segment), not vertex.radius
+    // (KHR_GEOMETRY_CYLINDER); the single 2-vertex segment here only ever reads
+    // radii[0], same as the r[0] edit below.
     const bool cylinderRadius = std::string_view(subtype) == "cylinder";
     anariSetParameter(d,
         g,

@@ -18,9 +18,8 @@ namespace anari_hydra {
 
 // A commit-time-generated mesh (points + face topology), used by geometry
 // subtypes with no direct Hydra rprim (sphere/cone/cylinder -> tessellated
-// mesh, isosurface -> extracted mesh, SPEC §4.1). Bulk data here is copied, not
-// zero-copy, and lives for the geometry's lifetime so the PrimBuilder can wrap
-// it.
+// mesh, isosurface -> extracted mesh). Bulk data here is copied, not zero-copy,
+// and lives for the geometry's lifetime so the PrimBuilder can wrap it.
 struct TessMesh
 {
   pxr::VtVec3fArray points;
@@ -33,11 +32,11 @@ struct TessMesh
   std::vector<uint32_t> primitiveIndices;
 };
 
-// Base for ANARI geometry. Each subtype maps to a Hydra rprim type (SPEC §4.1):
-// triangle/quad -> mesh, curve -> basisCurves, sphere/cone/cylinder
-// -> tessellated mesh, isosurface -> extracted mesh. Subtypes expose committed
-// arrays; the
-// PrimBuilder reads them to author zero-copy data sources into the mirror.
+// Base for ANARI geometry. Each subtype maps to a Hydra rprim type:
+// triangle/quad -> mesh, curve -> basisCurves, sphere/cone/cylinder ->
+// tessellated mesh, isosurface -> extracted mesh. Subtypes expose committed
+// arrays; the PrimBuilder reads them to author zero-copy data sources into the
+// mirror.
 struct Geometry : public Object
 {
   Geometry(HydraGlobalState *s);
@@ -66,7 +65,7 @@ struct Geometry : public Object
     return m_vertexPosition.get();
   }
   // vertex.normal -> the `normals` primvar (vertex interpolation, role normal)
-  // on mesh geometry; app-provided only, never generated (SPEC §4.1/§5).
+  // on mesh geometry; app-provided only, never generated.
   helium::Array1D *vertexNormal() const
   {
     return m_vertexNormal.get();
@@ -76,8 +75,8 @@ struct Geometry : public Object
     return m_vertexColor.get();
   }
   // vertex.radius -> per-vertex radius for spheres/curves/cones (base->apex
-  // taper); cylinders take primitive.radius instead (SPEC
-  // KHR_GEOMETRY_CYLINDER has no vertex.radius parameter).
+  // taper); cylinders take primitive.radius instead (KHR_GEOMETRY_CYLINDER has
+  // no vertex.radius parameter).
   helium::Array1D *vertexRadius() const
   {
     return m_vertexRadius.get();
@@ -93,14 +92,14 @@ struct Geometry : public Object
   {
     return m_vertexCap.get();
   }
-  // vertex.attribute0 -> the `st` primvar for texture sampling (SPEC §6.3), and
-  // the `attribute0` primvar for attribute-bound material inputs (SPEC §6.1).
+  // vertex.attribute0 -> the `st` primvar for texture sampling, and the
+  // `attribute0` primvar for attribute-bound material inputs.
   helium::Array1D *vertexAttribute0() const
   {
     return m_vertexAttribute0.get();
   }
   // vertex.attribute1..3 -> `attribute1..3` primvars for attribute-bound
-  // material inputs (SPEC §6.1).
+  // material inputs.
   helium::Array1D *vertexAttribute1() const
   {
     return m_vertexAttribute1.get();
@@ -173,7 +172,7 @@ struct Geometry : public Object
  protected:
   // ChangeObserverPtr registers this geometry as an observer of its arrays, so
   // an in-place array mutation (anariUnmapArray) re-finalizes the
-  // geometry, marking the mirror-dirty set (SPEC §4.5).
+  // geometry, marking the mirror-dirty set.
   helium::ChangeObserverPtr<helium::Array1D> m_vertexPosition;
   helium::ChangeObserverPtr<helium::Array1D> m_vertexNormal;
   helium::ChangeObserverPtr<helium::Array1D> m_vertexColor;

@@ -21,9 +21,9 @@ namespace anari_hydra {
 // AnariFieldRegistry under `assetPath` for exactly as long as this snapshot
 // lives. Stage 1 (finalize) publishes a new snapshot; the mirror holds the one
 // it authored, so the asset path a field bprim names stays loadable until the
-// mirror re-authors it, whenever stage 1 runs (SPEC §9.3). The mirror also
-// publishes volume classification tables as snapshots (AnariFieldData::table),
-// for which bounds() and proxyBounds() are meaningless.
+// mirror re-authors it, whenever stage 1 runs. The mirror also publishes volume
+// classification tables as snapshots (AnariFieldData::table), for which
+// bounds() and proxyBounds() are meaningless.
 struct FieldSnapshot
 {
   FieldSnapshot(
@@ -47,10 +47,10 @@ struct FieldSnapshot
 using FieldSnapshotPtr = std::shared_ptr<const FieldSnapshot>;
 
 // ANARI spatial field -> a field bprim whose texture Storm loads from the
-// in-memory field scheme (SPEC §7, AnariField.h). Every subtype decodes to one
-// dense float32 vertex-centred grid (AnariFieldData) at commit, published as
-// a FieldSnapshot under a revision-bumped `anari://field/…​.anari` path so
-// a new commit is a new texture identity for Storm's texture cache.
+// in-memory field scheme (AnariField.h). Every subtype decodes to one dense
+// float32 vertex-centred grid (AnariFieldData) at commit, published as a
+// FieldSnapshot under a revision-bumped `anari://field/…​.anari` path so a
+// new commit is a new texture identity for Storm's texture cache.
 //
 // Implemented: structuredRegular (KHR_SPATIAL_FIELD_STRUCTURED_REGULAR) and,
 // when built with the NanoVDB headers, nanovdb (KHR_SPATIAL_FIELD_NANOVDB,

@@ -1,12 +1,12 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 //
-// Exercises app-provided vertex.normal -> the `normals` primvar (SPEC §4.1/§5).
-// The device authors only application-supplied normals; it never generates,
-// smooths, or falls back to computed normals. The falsifiable discriminator is
-// shaded brightness under a fixed side-light while varying ONLY the authored
-// normals: a front-facing quad (geometric normal +Z) lit by a light traveling
-// toward -X (so a +X surface normal faces the light).
+// Exercises app-provided vertex.normal -> the `normals` primvar. The device
+// authors only application-supplied normals; it never generates, smooths, or
+// falls back to computed normals. The falsifiable discriminator is shaded
+// brightness under a fixed side-light while varying ONLY the authored normals:
+// a front-facing quad (geometric normal +Z) lit by a light traveling toward -X
+// (so a +X surface normal faces the light).
 //
 //   Render A: vertex.normal = (+1,0,0)  -> faces the light -> bright.
 //   Render B: vertex.normal = (-1,0,0)  -> faces away       -> dark.
@@ -173,9 +173,8 @@ static RenderResult renderNormals(
 // in place (map -> flip every normal from +X to -X -> unmap) and re-render the
 // same scene. Writes the two brightnesses out. Exercises the re-author path: an
 // in-place anariUnmapArray must re-commit the geometry and re-author the copied
-// `normals` primvar (SPEC §4.5/§5) — the mesh is non-incremental once it
-// carries normals, so the change takes a full rebuild rather than the points
-// fast path.
+// `normals` primvar — the mesh is non-incremental once it carries normals, so
+// the change takes a full rebuild rather than the points fast path.
 static void renderNormalMutation(ANARIDevice dev, double &before, double &after)
 {
   float verts[12] = {
@@ -318,7 +317,7 @@ int main(int argc, char **argv)
   // -X-facing one dark (clamped max(N·L,0)). Fails today (both fall back to the
   // geometric +Z normal, N·L==0, so the two are equal).
   check(toward.brightness > away.brightness + 10,
-      "authored normals drive shading (+X bright, -X dark, §4.1)");
+      "authored normals drive shading (+X bright, -X dark)");
 
   // The presence-gate leaves the absent-normal path intact: with no
   // vertex.normal the quad still renders a visible surface under a front-facing
@@ -330,15 +329,15 @@ int main(int argc, char **argv)
       "quad with no vertex.normal still renders a visible surface");
 
   // In-place mutation re-authors: flipping the normal buffer +X -> -X on a live
-  // scene must re-shade the quad from bright to dark (SPEC §4.5/§5). Fails if
-  // the mesh wrongly kept the points fast path and left the stale normals copy.
+  // scene must re-shade the quad from bright to dark. Fails if the mesh wrongly
+  // kept the points fast path and left the stale normals copy.
   double mutBefore = 0, mutAfter = 0;
   renderNormalMutation(dev, mutBefore, mutAfter);
   std::printf("in-place mutation brightness: +X=%.1f -> -X=%.1f\n",
       mutBefore,
       mutAfter);
   check(mutBefore > mutAfter + 10,
-      "in-place normal mutation re-authors the normals primvar (§4.5)");
+      "in-place normal mutation re-authors the normals primvar");
 
   anariRelease(dev, dev);
   anariUnloadLibrary(lib);

@@ -1,15 +1,14 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 //
-// Exercises the normal-map material input (SPEC §6.1/§6.5 `normal`->`normal`).
-// A physicallyBased material's `normal` is a sampler whose value IS the
+// Exercises the normal-map material input (`normal`->`normal`). A
+// physicallyBased material's `normal` is a sampler whose value IS the
 // tangent-space normal: per the ANARI spec the app decodes [0,1] texels to
 // [-1,1] through outTransform/outOffset (2 * texel - 1), and the device must
 // not decode again. Storm builds the TBN frame from `st` (proven in
 // prototypes/015-normal-map-tangents) and perturbs normals only from a texture,
 // so transform/primitive samplers on `normal` go through a generated Storm
-// surface shader that reads their baked primvar and builds the same st frame
-// (SPEC §6.5).
+// surface shader that reads their baked primvar and builds the same st frame.
 //
 // The quad is two quads side by side (primitive 0 left, primitive 1 right) with
 // `st` spanning the unit square. A single directional light comes from the +X
@@ -398,8 +397,8 @@ int main(int argc, char **argv)
   // No texture: the bridge bakes their value into a derived primvar and, on the
   // normal slot, swaps Storm's UsdPreviewSurface for a generated variant whose
   // normal mapping reads that primvar as is and builds the tangent frame from
-  // the geometry's `st` (SPEC §6.5). The attribute values are already in
-  // [-1,1]. Same expectations as the image sampler.
+  // the geometry's `st`. The attribute values are already in [-1,1]. Same
+  // expectations as the image sampler.
   auto expectTilted = [&](const char *what) {
     const Halves h = renderHalves(dev, frame, what);
     check(h.right > h.left + kMargin,

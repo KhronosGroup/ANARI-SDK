@@ -1,9 +1,9 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 //
-// Exercises the renderer-settings push (SPEC §4.7/§11.3). A renderer parameter
-// named with a delegate's verbatim Hydra render-setting token must reach the
-// frame's delegate via SetRenderSetting. HdEmbree is the observable target: its
+// Exercises the renderer-settings push. A renderer parameter named with a
+// delegate's verbatim Hydra render-setting token must reach the frame's
+// delegate via SetRenderSetting. HdEmbree is the observable target: its
 // `enableSceneColors` setting toggles whether surfaces shade from their display
 // color. Rendering the same red quad with the setting false vs true must
 // produce a visibly different result — proving the setting reached the delegate
@@ -155,7 +155,7 @@ int main(int argc, char **argv)
 
   // With scene colors ON the red quad shades red; with scene colors OFF embree
   // ignores the display color and the red no longer dominates. The two renders
-  // differing proves the render setting reached the delegate (SPEC §4.7/§11.3).
+  // differing proves the render setting reached the delegate.
   double on[3], off[3];
   renderRedQuad(dev, true, true, on);
   renderRedQuad(dev, true, false, off);
@@ -170,10 +170,10 @@ int main(int argc, char **argv)
   check(offNotRed,
       "enableSceneColors=0: red no longer dominates (setting reached delegate)");
 
-  // The sample budget (SPEC §4.7): unset means the advertised default of 1,
-  // and a zero budget (what an app zero-filling an introspected parameter
-  // sends) falls back to 1 — HdEmbree would otherwise report converged on an
-  // empty frame showing only the background.
+  // The sample budget: unset means the advertised default of 1, and a zero
+  // budget (what an app zero-filling an introspected parameter sends) falls
+  // back to 1 — HdEmbree would otherwise report converged on an empty frame
+  // showing only the background.
   const int32_t zeroSamples = 0;
   long unsetCoverage = 0, zeroCoverage = 0;
   double scratch[3];

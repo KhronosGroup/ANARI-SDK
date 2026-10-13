@@ -1,10 +1,10 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 //
-// Exercises the standard AOV frame channels beyond color (SPEC §8.1/§11.4). Two
-// quads sit at clearly different depths (near z=0, far z=-2); the frame
-// requests channel.color + channel.depth + channel.objectId + channel.normal,
-// and the checks include numerical distances and native depth passthrough:
+// Exercises the standard AOV frame channels beyond color. Two quads sit at
+// clearly different depths (near z=0, far z=-2); the frame requests
+// channel.color + channel.depth + channel.objectId + channel.normal, and the
+// checks include numerical distances and native depth passthrough:
 //   - color still renders (coverage > 0) — the color path is not broken.
 //   - depth is Euclidean camera distance, including off-axis and resized
 //   pixels.

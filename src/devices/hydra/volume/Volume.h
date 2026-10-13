@@ -21,7 +21,7 @@ namespace anari_hydra {
 
 // One committed state of a volume, published whole by finalize() so the
 // worker reads a consistent classification however stage 1 interleaves with
-// a render (SPEC §9.3). The generated shader bakes it (VolumeBuilder).
+// a render. The generated shader bakes it (VolumeBuilder).
 struct VolumeClassification
 {
   helium::IntrusivePtr<SpatialField> field;
@@ -39,7 +39,7 @@ using VolumeClassificationPtr = std::shared_ptr<const VolumeClassification>;
 
 // ANARI volume -> a Hydra volume rprim bound to its field bprim and to a
 // per-volume material whose `volume` terminal is a generated glslfx shader
-// that classifies the field sample (SPEC §7, scene/VolumeBuilder.h).
+// that classifies the field sample (scene/VolumeBuilder.h).
 //
 // Implemented: transferFunction1D (KHR_VOLUME_TRANSFER_FUNCTION1D).
 struct Volume : public Object

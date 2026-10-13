@@ -7,9 +7,9 @@
 
 namespace anari_hydra {
 
-// ANARI 'quad' geometry -> Hydra mesh rprim (SPEC §4.1). primitive.index is
-// UINT32_VEC4 (one quad per entry); when absent, vertices are consumed
-// sequentially in independent quads.
+// ANARI 'quad' geometry -> Hydra mesh rprim. primitive.index is UINT32_VEC4
+// (one quad per entry); when absent, vertices are consumed sequentially in
+// independent quads.
 struct Quad : public Geometry
 {
   Quad(HydraGlobalState *s);

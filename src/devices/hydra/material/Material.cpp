@@ -45,7 +45,7 @@ bool Material::bindSampler(const char *name,
 
 bool Material::bindAttribute(const char *name, const pxr::TfToken &usdInput)
 {
-  // An attribute-bound input names an ANARI attribute as a STRING (SPEC §6.1).
+  // An attribute-bound input names an ANARI attribute as a STRING.
   if (!hasParam(name, ANARI_STRING))
     return false;
   const std::string attr = getParamString(name, "");
@@ -56,7 +56,7 @@ bool Material::bindAttribute(const char *name, const pxr::TfToken &usdInput)
       && attr != "attribute2" && attr != "attribute3") {
     reportMessage(ANARI_SEVERITY_WARNING,
         "material input '%s' bound to unsupported attribute '%s'; treated as "
-        "none (SPEC §6.1)",
+        "none",
         name,
         attr.c_str());
     return false;
@@ -79,9 +79,9 @@ Matte::Matte(HydraGlobalState *s) : Material(s) {}
 void Matte::commitParameters()
 {
   Material::commitParameters();
-  // matte maps exactly: color->diffuseColor, opacity, metallic=0, roughness=1
-  // (SPEC §6.5). Each slot accepts a constant, a sampler, or an attribute
-  // (SPEC §6.1); sampler wins over attribute wins over the constant read.
+  // matte maps exactly: color->diffuseColor, opacity, metallic=0, roughness=1.
+  // Each slot accepts a constant, a sampler, or an attribute; sampler wins over
+  // attribute wins over the constant read.
   if (!bindSampler("color", pxr::TfToken("diffuseColor"), pxr::TfToken("rgb"))
       && !bindAttribute("color", pxr::TfToken("diffuseColor")))
     m_color = getParam<float3>("color", float3(0.8f, 0.8f, 0.8f));
@@ -98,8 +98,8 @@ void Matte::commitParameters()
 
 PhysicallyBased::PhysicallyBased(HydraGlobalState *s) : Material(s) {}
 
-// glTF-style parameters with no UsdPreviewSurface target (SPEC §6.5): warned
-// and dropped when the app provides them.
+// glTF-style parameters with no UsdPreviewSurface target: warned and dropped
+// when the app provides them.
 static const char *const kWarnAndDrop[] = {"transmission",
     "thickness",
     "attenuationColor",
@@ -116,8 +116,8 @@ static const char *const kWarnAndDrop[] = {"transmission",
 void PhysicallyBased::commitParameters()
 {
   Material::commitParameters();
-  // Each mapped slot accepts a constant, a sampler, or an attribute (SPEC
-  // §6.1); sampler wins over attribute wins over the constant read.
+  // Each mapped slot accepts a constant, a sampler, or an attribute; sampler
+  // wins over attribute wins over the constant read.
   if (!bindSampler(
           "baseColor", pxr::TfToken("diffuseColor"), pxr::TfToken("rgb"))
       && !bindAttribute("baseColor", pxr::TfToken("diffuseColor")))
@@ -148,15 +148,14 @@ void PhysicallyBased::commitParameters()
           "clearcoatRoughness", pxr::TfToken("clearcoatRoughness")))
     m_clearcoatRoughness = getParam<float>("clearcoatRoughness", 0.f);
 
-  // normal -> UsdPreviewSurface `normal` (SPEC §6.5): a tangent-space normal
-  // map from any sampler, whose value is used as is: per ANARI the app's
+  // normal -> UsdPreviewSurface `normal`: a tangent-space normal map from any
+  // sampler, whose value is used as is: per ANARI the app's
   // outTransform/outOffset already decodes it to [-1,1]. A transform/primitive
   // sampler has no texture, and Storm's UsdPreviewSurface perturbs the normal
   // only from a texture, so for those the MaterialBuilder adds a Storm-only
-  // network on a generated variant of the shader that reads the baked primvar
-  // (SPEC §6.5). A non-sampler `normal` (a
-  // constant/attribute) has no faithful target: warned and dropped, and the
-  // surface shades from its geometric normal.
+  // network on a generated variant of the shader that reads the baked primvar.
+  // A non-sampler `normal` (a constant/attribute) has no faithful target:
+  // warned and dropped, and the surface shades from its geometric normal.
   if (!bindSampler("normal",
           pxr::TfToken("normal"),
           pxr::TfToken("rgb"),
@@ -164,12 +163,11 @@ void PhysicallyBased::commitParameters()
       && hasParam("normal")) {
     reportMessage(ANARI_SEVERITY_WARNING,
         "physicallyBased 'normal' accepts only a sampler (normal map) in v1; "
-        "non-sampler value dropped (SPEC §6.5)");
+        "non-sampler value dropped");
   }
 
-  // alphaMode/alphaCutoff -> opacity/opacityThreshold (SPEC §6.5): opaque
-  // forces opacity 1, mask uses the cutoff threshold, blend passes opacity
-  // through.
+  // alphaMode/alphaCutoff -> opacity/opacityThreshold: opaque forces opacity 1,
+  // mask uses the cutoff threshold, blend passes opacity through.
   const std::string mode = getParamString("alphaMode", "opaque");
   const float cutoff = getParam<float>("alphaCutoff", 0.5f);
   if (mode == "mask") {
@@ -195,7 +193,7 @@ void PhysicallyBased::commitParameters()
     if (hasParam(p)) {
       reportMessage(ANARI_SEVERITY_WARNING,
           "physicallyBased parameter '%s' has no UsdPreviewSurface target; "
-          "dropped (SPEC §6.5)",
+          "dropped",
           p);
     }
   }

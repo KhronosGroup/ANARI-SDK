@@ -11,8 +11,8 @@
 
 namespace anari_hydra {
 
-// ANARI camera -> camera sprim (SPEC §4.1). v1 slice drives the task
-// controller's free camera via view/projection matrices.
+// ANARI camera -> camera sprim. v1 slice drives the task controller's free
+// camera via view/projection matrices.
 struct Camera : public Object
 {
   Camera(HydraGlobalState *s);

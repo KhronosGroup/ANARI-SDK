@@ -204,13 +204,13 @@ static HdSampledDataSourceHandle DecodeAttributeArray(helium::Array1D *a,
   });
 }
 
-// A derived primvar baked per rprim for one sampler (SPEC §6.4): `name`
-// receives `transform` applied to the padded float4 value of element source
-// `slot` (Sampler's slot table: attributeN / color, or a geometry-derived
-// source), narrowed to `width` components at the source's own interpolation.
-// Image samplers on the baked path derive their st coordinates this way and
-// transform samplers their value; a primitive sampler sets `primitive` instead
-// and indexes its array by ANARI primitive (uniform interpolation).
+// A derived primvar baked per rprim for one sampler: `name` receives
+// `transform` applied to the padded float4 value of element source `slot`
+// (Sampler's slot table: attributeN / color, or a geometry-derived source),
+// narrowed to `width` components at the source's own interpolation. Image
+// samplers on the baked path derive their st coordinates this way and transform
+// samplers their value; a primitive sampler sets `primitive` instead and
+// indexes its array by ANARI primitive (uniform interpolation).
 struct DerivedPrimvar
 {
   TfToken name;
@@ -225,10 +225,10 @@ struct DerivedPrimvar
 };
 
 // The rprim's authored geometry, as the element sources for the geometry-
-// derived sampler inputs (SPEC §6.4): the points actually authored (the ANARI
-// vertices, or the tessellated surface), the tessellator's analytic normals
-// where it supplies them, and the surface transform for the world-space
-// variants (row-vector convention, as authored on the xform schema).
+// derived sampler inputs: the points actually authored (the ANARI vertices, or
+// the tessellated surface), the tessellator's analytic normals where it
+// supplies them, and the surface transform for the world-space variants
+// (row-vector convention, as authored on the xform schema).
 struct GeometryFrame
 {
   const GfVec3f *points{nullptr};
@@ -240,7 +240,7 @@ struct GeometryFrame
 
 // The constant value of attribute slot `slot` (Sampler's numbering): a
 // per-instance copy's override, else the geometry constant unless the
-// instancer carries it (SPEC §4.1/§6.8).
+// instancer carries it.
 static const helium::float4 *ConstantFor(
     Geometry *geom, const InstanceBinding &instancing, int slot)
 {
@@ -327,8 +327,8 @@ GatherOptionalPrimvars(Geometry *geom,
   for (int k = 0; k < 4; ++k)
     append(TfToken(AttributePrimvarName(k)), vertex[k], corners[k], k, 0);
   // Typed aliases for material readers: float / float3 for every attribute,
-  // float2 (sampler coordinates, SPEC §6.4) for all but attribute0, whose
-  // float2 form is the `st` primvar above.
+  // float2 (sampler coordinates) for all but attribute0, whose float2 form is
+  // the `st` primvar above.
   for (int k = 0; k < 5; ++k) {
     const std::string name = k == 4 ? "color" : AttributePrimvarName(k);
     for (int width : {1, 2, 3}) {
@@ -341,11 +341,11 @@ GatherOptionalPrimvars(Geometry *geom,
           width);
     }
   }
-  // Derived sampler primvars (SPEC §6.4). An attribute source goes through
-  // `append` (corner > vertex > primitive > constant precedence, instance
-  // masks) with the sampler's map applied per element; a geometry-derived
-  // source reads the authored geometry itself. Either way the result is exact:
-  // interpolation commutes with the affine maps involved.
+  // Derived sampler primvars. An attribute source goes through `append` (corner
+  // > vertex > primitive > constant precedence, instance masks) with the
+  // sampler's map applied per element; a geometry-derived source reads the
+  // authored geometry itself. Either way the result is exact: interpolation
+  // commutes with the affine maps involved.
   for (const auto &d : derived) {
     const size_t before = out.size();
     size_t count = 0;
@@ -480,8 +480,8 @@ static void AppendTrailingSchemas(std::vector<TfToken> &names,
     const SdfPath &materialPath)
 {
   if (!materialPath.IsEmpty()) {
-    // Bind the rprim to its material sprim under the all-purpose token
-    // (SPEC §6.1). Delegates that ignore networks fall back to displayColor.
+    // Bind the rprim to its material sprim under the all-purpose token.
+    // Delegates that ignore networks fall back to displayColor.
     const TfToken allPurpose = HdMaterialBindingsSchemaTokens->allPurpose;
     HdDataSourceBaseHandle binding = HdMaterialBindingSchema::BuildRetained(
         HdRetainedTypedSampledDataSource<SdfPath>::New(materialPath));
@@ -650,7 +650,7 @@ static HdContainerDataSourceHandle BuildTessellatedMesh(Geometry *geom,
     const InstanceBinding &instancing,
     const std::vector<DerivedPrimvar> &derived)
 {
-  // Generated topology is copied (outside the zero-copy scope, SPEC §4.1).
+  // Generated topology is copied (outside the zero-copy scope).
   GeometryFrame frame;
   frame.points = mesh.points.data();
   frame.numPoints = mesh.points.size();
@@ -726,8 +726,8 @@ static HdContainerDataSourceHandle BuildBasisCurvesPrim(Geometry *geom,
   HdSampledDataSourceHandle widthsDS = BuildWidths(geom, numVerts, perVertex);
 
   // ANARI curve: primitive.index holds each segment's first vertex, so segment
-  // i spans vertices (index[i], index[i]+1) — a two-vertex linear curve each
-  // (SPEC §4.1). Without an index, keep one Hydra curve per ANARI segment.
+  // i spans vertices (index[i], index[i]+1) — a two-vertex linear curve each.
+  // Without an index, keep one Hydra curve per ANARI segment.
   VtIntArray curveVertexCounts;
   VtIntArray curveIndices;
   std::vector<uint32_t> primitives;
@@ -795,11 +795,11 @@ static HdContainerDataSourceHandle BuildBasisCurvesPrim(Geometry *geom,
 
 // --- dispatch --------------------------------------------------------------
 
-// Derived primvars for the material's samplers (SPEC §6.4), one per distinct
-// (sampler, width): baked st coordinates for image samplers on the baked path,
-// values for transform and primitive samplers. An image sampler on an absent
-// inAttribute gets no derived primvar: its reader is pointed at an unauthored
-// primvar and falls back to (0,0) either way.
+// Derived primvars for the material's samplers, one per distinct (sampler,
+// width): baked st coordinates for image samplers on the baked path, values for
+// transform and primitive samplers. An image sampler on an absent inAttribute
+// gets no derived primvar: its reader is pointed at an unauthored primvar and
+// falls back to (0,0) either way.
 static std::vector<DerivedPrimvar> CollectDerivedPrimvars(Material *mat)
 {
   std::vector<DerivedPrimvar> derived;
@@ -898,7 +898,7 @@ HdContainerDataSourceHandle BuildSurfacePrim(Surface *surface,
 {
   Geometry *geom = surface->geometry();
 
-  // displayColor fallback (SPEC §6.9): constant material color.
+  // displayColor fallback: constant material color.
   Material *mat = surface->material();
   const float3 mc = mat ? mat->color() : float3(0.8f, 0.8f, 0.8f);
   const GfVec3f color(mc[0], mc[1], mc[2]);
@@ -936,8 +936,8 @@ HdContainerDataSourceHandle BuildSurfacePrim(Surface *surface,
           derived);
   }
 
-  // Prototype of an instancer (SPEC §4.3): overlay an `instancedBy` on the base
-  // rprim rather than thread it through every builder.
+  // Prototype of an instancer: overlay an `instancedBy` on the base rprim
+  // rather than thread it through every builder.
   if (!instancing.instancerPath.IsEmpty()) {
     auto instancedBy = HdInstancedBySchema::BuildRetained(
         HdRetainedTypedSampledDataSource<VtArray<SdfPath>>::New(

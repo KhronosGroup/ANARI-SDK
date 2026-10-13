@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 // Exercises the `default` renderer's ambientRadiance/ambientColor injecting a
-// flat, shadowless ambient fill (SPEC §4.7/§6.6). The device synthesizes one
-// uniform dome-light sprim (a 1x1 env texture of ambientColor *
-// ambientRadiance) into a frame-owned scene index whenever ambientRadiance > 0.
-// Scene-ambient via GlfSimpleLightingContext does NOT reach UsdPreviewSurface
-// under Storm (proto 016), hence a real dome-light sprim.
+// flat, shadowless ambient fill. The device synthesizes one uniform dome-light
+// sprim (a 1x1 env texture of ambientColor * ambientRadiance) into a
+// frame-owned scene index whenever ambientRadiance > 0. Scene-ambient via
+// GlfSimpleLightingContext does NOT reach UsdPreviewSurface under Storm (proto
+// 016), hence a real dome-light sprim.
 //
 // Setup: a white physicallyBased quad faces the camera, lit by ONE directional
 // light aimed so it MISSES the front face (direction (1,0,0) grazes the quad's
@@ -14,7 +14,7 @@
 // Render twice — ambientRadiance 0 (front dark) vs ambientRadiance 2 (front
 // bright) — and assert a large, relative lift. A red ambientColor tints the
 // lift red, and in a float frame doubling ambientRadiance doubles the fill.
-// A final case proves the §6.8 headlight drop: a world with NO lights and
+// A final case proves the ambient headlight drop: a world with NO lights and
 // ambientRadiance > 0 still renders visible (the ambient fill stands alone).
 
 #include <anari/anari.h>
@@ -212,7 +212,7 @@ int main(int argc, char **argv)
   double redLit[3];
   renderFrontFace(dev, /*withBackLight=*/true, 2.f, red, redLit);
 
-  // No lights at all + ambient -> still visible (§6.8 headlight drop).
+  // No lights at all + ambient -> still visible (ambient headlight drop).
   double ambientOnly[3];
   renderFrontFace(dev, /*withBackLight=*/false, 2.f, white, ambientOnly);
 

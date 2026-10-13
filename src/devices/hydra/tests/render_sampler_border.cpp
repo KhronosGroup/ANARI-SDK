@@ -1,18 +1,18 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 //
-// Exercises KHR_SAMPLER_IMAGExD_CLAMP_TO_BORDER (SPEC §6.4). A quad carries st
-// over [-1, 2]² — a full texture inside, a full texture's width outside on
-// every side — so every edge and corner of the image is sampled from inside,
-// on, and outside. The sampler feeds a physicallyBased `emissive` on an unlit
-// black base rendered into a FLOAT32 frame (the numeric readback of
+// Exercises KHR_SAMPLER_IMAGExD_CLAMP_TO_BORDER. A quad carries st over [-1,
+// 2]² — a full texture inside, a full texture's width outside on every side —
+// so every edge and corner of the image is sampled from inside, on, and
+// outside. The sampler feeds a physicallyBased `emissive` on an unlit black
+// base rendered into a FLOAT32 frame (the numeric readback of
 // render_image_precision), and each pixel is compared with a CPU reference of
 // the ANARI contract: per-axis wrap (clampToEdge / repeat / mirrorRepeat /
 // clampToBorder), the RGBA `borderColor`, nearest and bilinear filters, then
 // `outTransform · value + outOffset`. Covered: zero and nonzero RGBA borders
 // (the border's alpha is read through a swizzling outTransform), mixed per-axis
-// wrap modes, non-square images, rotated inTransforms on the UsdTransform2d
-// and baked coordinate paths, image1D, and border edits on a live sampler.
+// wrap modes, non-square images, rotated inTransforms on the UsdTransform2d and
+// baked coordinate paths, image1D, and border edits on a live sampler.
 
 #include <anari/anari.h>
 

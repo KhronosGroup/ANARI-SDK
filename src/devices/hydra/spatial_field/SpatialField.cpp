@@ -108,8 +108,8 @@ void SpatialField::publish(std::shared_ptr<AnariFieldData> grid)
   if (grid)
     NormalizeAxes(*grid);
   // A new asset identity per revision invalidates Storm's path-keyed texture
-  // cache (the sampler image scheme's cache-bust, SPEC §7). The previous
-  // snapshot stays registered while the mirror still holds it.
+  // cache (the sampler image scheme's cache-bust). The previous snapshot stays
+  // registered while the mirror still holds it.
   ++m_revision;
   FieldSnapshotPtr next;
   if (grid) {
