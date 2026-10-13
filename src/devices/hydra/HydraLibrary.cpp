@@ -40,7 +40,27 @@ HydraLibrary::HydraLibrary(
 
 ANARIDevice HydraLibrary::newDevice(const char *subtype)
 {
-  return (ANARIDevice) new HydraDevice(this_library(), subtype);
+  // Initialize eagerly: the worker picks its GL context now, so a device whose
+  // delegate cannot run in this process (Storm without any GL context) is
+  // refused here, with a status message, instead of failing at first render.
+  auto *device = new HydraDevice(this_library(), subtype);
+  std::string whyNot;
+  if (device->initDevice(&whyNot))
+    return (ANARIDevice)device;
+
+  delete device;
+  if (auto cb = defaultStatusCB()) {
+    const std::string msg = "hydra: cannot create device '"
+        + std::string(subtype ? subtype : "default") + "': " + whyNot;
+    cb(defaultStatusCBUserPtr(),
+        nullptr,
+        nullptr,
+        ANARI_DEVICE,
+        ANARI_SEVERITY_ERROR,
+        ANARI_STATUS_UNSUPPORTED_DEVICE,
+        msg.c_str());
+  }
+  return nullptr;
 }
 
 const char **HydraLibrary::getDeviceExtensions(const char *deviceType)
@@ -59,12 +79,18 @@ const char **HydraLibrary::getDeviceExtensions(const char *deviceType)
   std::vector<RenderSettingDesc> renderSettings; // unused at library scope
   {
     // The delegate is created and read on a worker thread that owns an Hgi; a
-    // short-lived worker is enough for a one-shot probe.
-    Worker worker;
-    worker.postWait([&]() {
-      readDelegateCaps(
-          plugin, rprims, sprims, bprims, aovChannels, renderSettings);
-    });
+    // short-lived worker is enough for a one-shot probe. A delegate that cannot
+    // run here (no GL context for Storm) reports the base extensions only.
+    GLMode mode = GLMode::Auto;
+    std::string modeError;
+    if (!glModeFromEnv(mode, modeError))
+      mode = GLMode::None;
+    Worker worker(mode);
+    if (worker.delegateSupported(plugin, nullptr))
+      worker.postWait([&]() {
+        readDelegateCaps(
+            plugin, rprims, sprims, bprims, aovChannels, renderSettings);
+      });
   }
   buildExtensionList(
       rprims, sprims, bprims, aovChannels, m_extStrings[sub], m_extView[sub]);

@@ -906,12 +906,13 @@ void HydraDevice::bindDelegate(const char *subtype)
     state.sceneIndexPluginName = desc.displayName;
 }
 
-void HydraDevice::initDevice()
+bool HydraDevice::initDevice(std::string *whyNot)
 {
   if (m_initialized)
-    return;
+    return m_usable;
 
   auto &state = *deviceState();
+  m_initialized = true;
 
   if (state.delegateId.IsEmpty()) {
     reportMessage(ANARI_SEVERITY_ERROR,
@@ -924,18 +925,56 @@ void HydraDevice::initDevice()
       this,
       state.delegateId.GetText());
 
+  // An invalid ANARI_HYDRA_GL is reported and treated as `none`, which makes
+  // a GL-only delegate unusable rather than silently picking a context.
+  GLMode mode = GLMode::Auto;
+  std::string modeError;
+  const bool modeOk = glModeFromEnv(mode, modeError);
+  if (!modeOk)
+    mode = GLMode::None;
+
   state.anariDevice = (anari::Device)this;
-  state.worker = new Worker();
+  state.worker = new Worker(mode);
+  reportMessage(ANARI_SEVERITY_INFO,
+      "hydra: GL context %s",
+      state.worker->glDescription().c_str());
 
   // Register the in-memory Hio image plugin so sampler images resolve through
   // the `anari://` asset scheme.
   EnsureAnariHioRegistered();
 
-  m_initialized = true;
+  // A forced mode that is unavailable fails whatever the delegate; in auto
+  // mode only a delegate that needs GL fails without a context.
+  const bool forced = mode == GLMode::EGL || mode == GLMode::GLX;
+  const std::string &glError = state.worker->glError();
+  std::string reason;
+  std::string why;
+  if (!modeOk)
+    reason = modeError;
+  else if (forced && !glError.empty())
+    reason =
+        "the GL context forced by ANARI_HYDRA_GL is unavailable: " + glError;
+  else if (!state.delegateId.IsEmpty()
+      && !state.worker->delegateSupported(state.delegateId, &why)) {
+    reason = "Hydra delegate '" + state.delegateId.GetString()
+        + "' is unsupported (" + why + ") with GL context "
+        + state.worker->glDescription();
+    if (!glError.empty())
+      reason += " (" + glError + ")";
+  }
+  m_usable = reason.empty();
+  if (!m_usable) {
+    if (whyNot)
+      *whyNot = reason;
+    else
+      reportMessage(ANARI_SEVERITY_ERROR, "hydra: %s", reason.c_str());
+    return false;
+  }
 
   // Probe the delegate's capability lists so the reported extension /
   // object-subtype surface is honest per-delegate.
   probeCapabilities();
+  return true;
 }
 
 void HydraDevice::probeCapabilities()
@@ -944,6 +983,9 @@ void HydraDevice::probeCapabilities()
   if (state.capabilitiesProbed)
     return;
   if (!state.worker || state.delegateId.IsEmpty())
+    return;
+
+  if (!state.worker->delegateSupported(state.delegateId, nullptr))
     return;
 
   // The delegate is created and read on the worker thread, which owns the Hgi.

@@ -235,6 +235,18 @@ void Frame::ensureHydra()
   // creation-time-only settings land; per-frame SetRenderSetting below still
   // tracks settings that change after creation. Empty map when no renderer is
   // bound yet (unchanged behavior).
+  // A delegate that needs GL (Storm) is refused up front on a worker without a
+  // GL context: creating it would make an HgiGL against no current context.
+  std::string whyNot;
+  if (!worker->delegateSupported(state->delegateId, &whyNot)) {
+    reportMessage(ANARI_SEVERITY_ERROR,
+        "Hydra render delegate '%s' cannot run here: %s (GL context: %s)",
+        state->delegateId.GetText(),
+        whyNot.c_str(),
+        worker->glDescription().c_str());
+    return;
+  }
+
   HdRenderSettingsMap creationSettings;
   if (m_renderer) {
     for (const auto &kv : m_renderer->renderSettings())
@@ -254,15 +266,18 @@ void Frame::ensureHydra()
   // the frame binds exactly what the device advertised.
   m_normalToken = normalAovToken(m_renderDelegate.Get());
 
-  m_renderIndex.reset(
-      HdRenderIndex::New(m_renderDelegate.Get(), {worker->driver()}));
+  m_renderIndex.reset(HdRenderIndex::New(m_renderDelegate.Get(),
+      worker->gpuEnabled() ? HdDriverVector{worker->driver()}
+                           : HdDriverVector{}));
 
   const SdfPath ctrlPath("/taskController");
   HdRenderDelegate *rd = m_renderDelegate.Get();
   m_taskController = HdxTaskControllerSceneIndex::New({ctrlPath,
       [rd](const TfToken &name) { return rd->GetDefaultAovDescriptor(name); },
       /*isForStorm=*/rd->RequiresStormTasks(),
-      /*gpuEnabled=*/true});
+      // Without a GL context there is no Hgi, so no GPU tasks (AOV
+      // input, colorize, present); frames read the render buffers.
+      /*gpuEnabled=*/worker->gpuEnabled()});
   // ANARI aspect and imageRegion already determine the full projection.
   m_taskController->SetOverrideWindowPolicy(CameraUtilDontConform);
   m_renderIndex->InsertSceneIndex(
@@ -979,7 +994,7 @@ void Frame::renderPicking()
     int element = hit.elementIndex >= 0 ? hit.elementIndex : hit.pointIndex;
     if (hit.elementIndex < 0 && hit.pointIndex >= 0) {
       const Hgi *hgi = deviceState()->worker->hgi();
-      if (hgi->GetAPIName() == HgiTokens->OpenGL
+      if (hgi && hgi->GetAPIName() == HgiTokens->OpenGL
           && hgi->GetCapabilities()->IsSet(
               HgiDeviceCapabilitiesBitsShaderDrawParameters)) {
         // For OpenGL nonindexed draws BaseVertex is zero, while VertexID

@@ -136,7 +136,13 @@ struct HydraDevice : public helium::BaseDevice
   HydraDevice(ANARILibrary, const char *subtype);
   ~HydraDevice() override;
 
-  void initDevice();
+  // Create the worker (and its GL context; see hydra/GLContext.h), then check
+  // that the bound delegate can run with it. Idempotent. Returns false if the
+  // device is unusable: a GL-only delegate (Storm) with no GL context, or an
+  // ANARI_HYDRA_GL mode that is invalid or unavailable. The reason goes to
+  // `whyNot` if given, else to the status callback. HydraLibrary::newDevice
+  // calls this eagerly so such a device is never handed out.
+  bool initDevice(std::string *whyNot = nullptr);
 
   // Introspection subtype gate; see the definition.
   bool resolveQuerySubtype(ANARIDataType objectType, const char *&subtype);
@@ -159,6 +165,7 @@ struct HydraDevice : public helium::BaseDevice
   void buildRendererParamList();
 
   bool m_initialized{false};
+  bool m_usable{false};
 };
 
 } // namespace anari_hydra

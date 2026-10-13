@@ -3,18 +3,20 @@
 
 #include "Worker.h"
 
+#include <pxr/imaging/hd/rendererPluginHandle.h>
+#include <pxr/imaging/hd/rendererPluginRegistry.h>
 #include <pxr/imaging/hgi/tokens.h>
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
 namespace anari_hydra {
 
-Worker::Worker()
+Worker::Worker(GLMode mode) : m_glMode(mode)
 {
   m_thread = std::thread([this]() { threadMain(); });
 
-  // Wait until the worker has created its Hgi so callers can rely on hgi()
-  // being live once the constructor returns.
+  // Wait until the worker has made its GL context and Hgi, so callers can rely
+  // on glDescription() and hgi() once the constructor returns.
   std::unique_lock<std::mutex> lock(m_mutex);
   m_startedCv.wait(lock, [this]() { return m_started; });
 }
@@ -32,14 +34,18 @@ Worker::~Worker()
 
 void Worker::threadMain()
 {
-  // Establish a GL context current on this thread before creating the Hgi;
-  // HgiGL (Storm) binds to whatever context is current at creation.
-  m_glWindow = std::make_unique<GarchGLDebugWindow>("anari-hydra worker", 8, 8);
-  m_glWindow->Init();
+  // Make a GL context current on this thread before creating the Hgi; HgiGL
+  // (Storm) binds to whatever context is current at creation. Without one,
+  // create no Hgi at all: HgiGL against no context is unusable, and Garch
+  // loads its GL entry points once per process, at the first HgiGL.
+  m_glContext = GLContext::create(m_glMode, m_glDescription, m_glError);
 
-  // The Hgi (and its GL context, for Storm) lives entirely on this thread.
-  m_hgi = Hgi::CreatePlatformDefaultHgi();
-  m_driver = HdDriver{HgiTokens->renderDriver, VtValue(m_hgi.get())};
+  // The Hgi lives entirely on this thread.
+  if (m_glContext) {
+    m_hgi = Hgi::CreatePlatformDefaultHgi();
+    m_gpuEnabled = m_hgi && m_hgi->IsBackendSupported();
+    m_driver = HdDriver{HgiTokens->renderDriver, VtValue(m_hgi.get())};
+  }
 
   {
     std::lock_guard<std::mutex> lock(m_mutex);
@@ -75,7 +81,7 @@ void Worker::threadMain()
   }
 
   m_hgi.reset();
-  m_glWindow.reset();
+  m_glContext.reset();
 }
 
 void Worker::post(std::function<void()> job)
@@ -103,6 +109,29 @@ void Worker::postWait(std::function<void()> job)
     done.set_value();
   });
   fut.wait();
+}
+
+bool Worker::delegateSupported(const TfToken &delegateId, std::string *reason)
+{
+  bool supported = false;
+  postWait([&]() {
+    HdRendererPluginHandle plugin =
+        HdRendererPluginRegistry::GetInstance().GetOrCreateRendererPlugin(
+            delegateId);
+    if (!plugin) {
+      if (reason)
+        *reason = "no Hydra renderer plugin '" + delegateId.GetString() + "'";
+      return;
+    }
+    HdRendererCreateArgs args;
+    args.gpuEnabled = m_gpuEnabled;
+    args.hgi = m_hgi.get();
+    std::string why;
+    supported = plugin->IsSupported(args, &why);
+    if (!supported && reason)
+      *reason = why.empty() ? "unsupported" : why;
+  });
+  return supported;
 }
 
 bool Worker::onWorkerThread() const

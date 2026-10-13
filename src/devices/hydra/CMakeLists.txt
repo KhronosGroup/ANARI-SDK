@@ -18,7 +18,7 @@ set(CMAKE_INSTALL_RPATH "$ORIGIN")
 # CMAKE_PREFIX_PATH (or anari_DIR / pxr_DIR) at their install prefixes.
 find_package(anari REQUIRED)
 find_package(pxr REQUIRED)
-find_package(OpenGL REQUIRED)
+find_package(OpenGL REQUIRED OPTIONAL_COMPONENTS EGL)
 
 # anari_generate_queries (below) comes from the SDK: in its source tree from
 # the in-tree code_gen, standalone only from an SDK installed with
@@ -37,6 +37,7 @@ add_library(anari_library_hydra SHARED
   Introspection.cpp
   Object.cpp
 
+  hydra/GLContext.cpp
   hydra/Worker.cpp
 
   scene/Mirror.cpp
@@ -184,6 +185,23 @@ PRIVATE
   tf gf vt trace work
   OpenGL::GL
 )
+
+# The worker's GL context: EGL first (headless, no display server needed),
+# then a GLX window, then none (see hydra/GLContext.h). Without libEGL the
+# device still builds; GL then needs an X display.
+if(TARGET OpenGL::EGL)
+  target_link_libraries(anari_library_hydra PRIVATE OpenGL::EGL)
+  target_compile_definitions(anari_library_hydra PRIVATE ANARI_HYDRA_HAS_EGL)
+  message(STATUS "hydra device: EGL: enabled (${OPENGL_egl_LIBRARY})")
+else()
+  message(STATUS "hydra device: EGL: disabled (libEGL not found); "
+    "Storm will need an X display")
+endif()
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  # XOpenDisplay probes for a display before Garch opens its GLX window.
+  find_package(X11 REQUIRED)
+  target_link_libraries(anari_library_hydra PRIVATE X11::X11)
+endif()
 
 set_target_properties(anari_library_hydra PROPERTIES
   CXX_VISIBILITY_PRESET hidden

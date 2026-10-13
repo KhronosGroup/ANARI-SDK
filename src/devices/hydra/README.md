@@ -59,6 +59,9 @@ cmake --build build -j
 ```
 
 The build also needs Python 3 (for the SDK's query generator) and OpenGL.
+libEGL is optional: with it, the device makes its GL context without a display
+server (see [GL context](#gl-context)); without it, Storm needs an X display.
+Configure prints `EGL: enabled (...)` or `EGL: disabled (...)`.
 The device builds `anari_library_hydra` and installs it to the library
 directory. The `plugInfo.json` manifest of its in-memory image plugin goes in
 an `anari_hydra/` subdirectory beside it, in the build tree and the install
@@ -74,6 +77,33 @@ fetch. Configure prints whether NanoVDB is enabled, and from where:
   `nanovdb/NanoVDB.h` instead of downloading (offline builds).
 - `ANARI_HYDRA_ENABLE_NANOVDB=OFF` (default `ON`): build without NanoVDB, which
   drops the `nanovdb` field subtype and its extension.
+
+## GL context
+
+The device's worker thread makes a GL context current when the device is
+created, because Storm's GL backend (HgiGL) binds to the current context.
+The environment variable `ANARI_HYDRA_GL` picks how:
+
+- `auto` (default): EGL, else GLX, else none.
+- `egl`: an EGL context, which needs no display server. It uses EGL device
+  `ANARI_HYDRA_EGL_DEVICE` (default `0`) through `EGL_EXT_platform_device`, or
+  Mesa's `EGL_MESA_platform_surfaceless` (e.g. llvmpipe) when there is no
+  device platform or the default device doesn't initialize.
+- `glx`: a hidden 8x8 GLX window, which needs an X display.
+- `none`: no GL context. CPU delegates such as HdEmbree still render.
+
+The device reports its choice as an INFO status message, for example
+`hydra: GL context EGL (NVIDIA GeForce RTX 5090/PCIe/SSE2, device 0)`. If the
+delegate can't run with what is available, `anariNewDevice` returns `NULL` and
+reports `ANARI_STATUS_UNSUPPORTED_DEVICE` through the status callback: Storm
+without any GL context, an invalid `ANARI_HYDRA_GL`, or a forced `egl` or `glx`
+that is unavailable.
+
+An application with its own GL context, on any thread, is unaffected: the
+device's context lives on its worker thread. One exception is handled
+automatically: with GLVND, an EGL context can't be made current once the
+application has made a GLX context current, so `auto` then falls back to a GLX
+context of its own (which needs the X display the application already has).
 
 This directory also builds standalone against an installed ANARI-SDK, as long
 as that install includes the code generator (`INSTALL_CODE_GEN_SCRIPTS=ON`);
@@ -91,19 +121,16 @@ picked up by the SDK's `unit_test`/`render_test` filters:
 cd build && ctest -R '^hydra_'
 ```
 
-The device opens a GL context when it is created, so the tests need an X
-display (`DISPLAY`). On Linux each test runs through `tests/display_gate`,
-which reports the test as skipped when no display can be opened, rather than
-letting it crash. The `*_embree` tests need OpenUSD's optional hdEmbree plugin
+The tests run headless, through EGL. The Storm tests run through
+`tests/gl_gate`, which reports them as skipped only on a machine with no GL
+context at all (no EGL and no X display); the others always run. The
+`*_embree` tests need OpenUSD's optional hdEmbree plugin
 and are disabled when it is missing.
 
 ## Known limitations
 
 General:
 
-- Creating a device needs an X display, for every delegate. Without one,
-  `anariNewDevice` crashes inside OpenUSD's GL window setup instead of
-  reporting an error. Headless use, even with HdEmbree, is not supported yet.
 - On Storm, enabling `channel.primitiveId` runs an extra full-viewport picking
   pass, and the object and instance ID channels then come from that pass. Its
   silhouettes can differ from the color and depth channels at edges.
