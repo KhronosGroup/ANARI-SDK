@@ -219,8 +219,21 @@ class QueryGenerator:
                     code += "            return nullptr;\n"
                     code += "         }\n"
 
-                if "sourceExtension" in param:
+                if "sourceExtension" in param or "typeSourceExtensions" in param:
                     code += "      case "+str(self.info_strings.index("sourceExtension"))+": // sourceExtension\n"
+                for value_type, extension in param.get("typeSourceExtensions", {}).items():
+                    code += "         if(paramType == %s) {\n"%value_type
+                    if extension:
+                        code += "            if(infoType == ANARI_STRING) {\n"
+                        code += "               static const char *extension = \"%s\";\n"%extension
+                        code += "               return extension;\n"
+                        code += "            } else if(infoType == ANARI_INT32) {\n"
+                        code += "               static const int32_t value = %d;\n"%self.anari["extensions"].index(extension)
+                        code += "               return &value;\n"
+                        code += "            }\n"
+                    code += "            return nullptr;\n"
+                    code += "         }\n"
+                if "sourceExtension" in param:
                     code += "         if(infoType == ANARI_STRING) {\n"
                     code += "            static const char *extension = \"%s\";\n"%param["sourceExtension"]
                     code += "            return extension;\n"

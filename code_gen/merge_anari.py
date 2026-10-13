@@ -42,6 +42,14 @@ def merge_parameters(core, extension):
         c = next((x for x in core if x["name"] == name), None)
         if c:
             if "types" in c and "types" in param:
+                # types added by a different extension (or by none) keep
+                # their own source extension
+                source = param.get("sourceExtension")
+                if source != c.get("sourceExtension"):
+                    perType = c.setdefault("typeSourceExtensions", {})
+                    for t in param["types"]:
+                        if t not in c["types"]:
+                            perType[t] = source
                 c["types"].extend(param["types"])
             if "values" in c and "values" in param:
                 c["values"].extend(param["values"])
