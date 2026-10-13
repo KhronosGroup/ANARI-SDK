@@ -16,8 +16,12 @@
 
 static int g_errors = 0;
 
-static void statusFunc(const void *, ANARIDevice, ANARIObject,
-    ANARIDataType, ANARIStatusSeverity severity, ANARIStatusCode,
+static void statusFunc(const void *,
+    ANARIDevice,
+    ANARIObject,
+    ANARIDataType,
+    ANARIStatusSeverity severity,
+    ANARIStatusCode,
     const char *message)
 {
   const char *tag = severity == ANARI_SEVERITY_FATAL_ERROR ? "FATAL"
@@ -53,11 +57,10 @@ int main(int argc, char **argv)
     return 2;
 
   // --- minimal scene: one triangle (cloned from render_triangle.cpp) --------
-  float verts[9] = {
-      -0.8f, -0.8f, 0.0f, 0.8f, -0.8f, 0.0f, 0.0f, 0.9f, 0.0f};
+  float verts[9] = {-0.8f, -0.8f, 0.0f, 0.8f, -0.8f, 0.0f, 0.0f, 0.9f, 0.0f};
 
-  ANARIArray1D posArray = anariNewArray1D(
-      dev, verts, nullptr, nullptr, ANARI_FLOAT32_VEC3, 3);
+  ANARIArray1D posArray =
+      anariNewArray1D(dev, verts, nullptr, nullptr, ANARI_FLOAT32_VEC3, 3);
 
   ANARIGeometry geom = anariNewGeometry(dev, "triangle");
   anariSetParameter(dev, geom, "vertex.position", ANARI_ARRAY1D, &posArray);
@@ -108,8 +111,8 @@ int main(int argc, char **argv)
 
   // --- the property under test ----------------------------------------------
   float d = -1.f;
-  bool ok = anariGetProperty(dev, frame, "duration", ANARI_FLOAT32, &d,
-      sizeof(d), ANARI_WAIT);
+  bool ok = anariGetProperty(
+      dev, frame, "duration", ANARI_FLOAT32, &d, sizeof(d), ANARI_WAIT);
   std::printf("duration: %g s\n", d);
   check(ok, "getProperty(duration, ANARI_FLOAT32) returns true");
   check(d > 0.f, "reported duration is positive");
@@ -118,15 +121,20 @@ int main(int argc, char **argv)
   // --- negative checks: bad name / bad type do not report or write ----------
   {
     float bad = -1.f;
-    bool nOk = anariGetProperty(dev, frame, "nonexistent", ANARI_FLOAT32, &bad,
-        sizeof(bad), ANARI_WAIT);
+    bool nOk = anariGetProperty(dev,
+        frame,
+        "nonexistent",
+        ANARI_FLOAT32,
+        &bad,
+        sizeof(bad),
+        ANARI_WAIT);
     check(!nOk && bad == -1.f,
         "unknown property name returns false and leaves ptr untouched");
   }
   {
     double bad = -1.0;
-    bool tOk = anariGetProperty(dev, frame, "duration", ANARI_FLOAT64, &bad,
-        sizeof(bad), ANARI_WAIT);
+    bool tOk = anariGetProperty(
+        dev, frame, "duration", ANARI_FLOAT64, &bad, sizeof(bad), ANARI_WAIT);
     check(!tOk && bad == -1.0,
         "duration with wrong type returns false and leaves ptr untouched");
   }
@@ -135,8 +143,8 @@ int main(int argc, char **argv)
   anariRenderFrame(dev, frame);
   anariFrameReady(dev, frame, ANARI_WAIT);
   float d2 = -1.f;
-  bool ok2 = anariGetProperty(dev, frame, "duration", ANARI_FLOAT32, &d2,
-      sizeof(d2), ANARI_WAIT);
+  bool ok2 = anariGetProperty(
+      dev, frame, "duration", ANARI_FLOAT32, &d2, sizeof(d2), ANARI_WAIT);
   std::printf("duration (2nd render): %g s\n", d2);
   check(ok2 && d2 > 0.f && d2 < 30.f,
       "second render re-measures a fresh positive duration");
@@ -154,6 +162,7 @@ int main(int argc, char **argv)
   anariUnloadLibrary(lib);
 
   std::printf("\n%s (%d issues)\n",
-      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED", g_errors);
+      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED",
+      g_errors);
   return g_errors == 0 ? 0 : 1;
 }

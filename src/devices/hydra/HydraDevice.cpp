@@ -11,6 +11,10 @@
 #include "hydra/Worker.h"
 #include "light/Light.h"
 // pxr
+#include <pxr/base/gf/vec2f.h>
+#include <pxr/base/gf/vec3f.h>
+#include <pxr/base/gf/vec4f.h>
+#include <pxr/base/vt/value.h>
 #include <pxr/imaging/hd/aov.h>
 #include <pxr/imaging/hd/pluginRenderDelegateUniqueHandle.h>
 #include <pxr/imaging/hd/renderDelegate.h>
@@ -18,10 +22,6 @@
 #include <pxr/imaging/hd/tokens.h>
 #include <pxr/imaging/hd/types.h>
 #include <pxr/imaging/hf/pluginDesc.h>
-#include <pxr/base/gf/vec2f.h>
-#include <pxr/base/gf/vec3f.h>
-#include <pxr/base/gf/vec4f.h>
-#include <pxr/base/vt/value.h>
 #include <pxr/usd/sdr/registry.h>
 #include "material/Material.h"
 #include "renderer/Renderer.h"
@@ -159,15 +159,25 @@ const std::vector<AovChannelDesc> &standardAovChannels()
   // the delegate's `normal` AOV or (Storm) its eye-space `Neye` AOV. Standard
   // ID channels translate Hydra indices to ANARI user IDs (SPEC §11.4).
   static const std::vector<AovChannelDesc> table = {
-      {"channel.depth", HdAovTokens->depth, ANARI_FLOAT32,
+      {"channel.depth",
+          HdAovTokens->depth,
+          ANARI_FLOAT32,
           "ANARI_KHR_FRAME_CHANNEL_DEPTH"},
-      {"channel.normal", HdAovTokens->normal, ANARI_FLOAT32_VEC3,
+      {"channel.normal",
+          HdAovTokens->normal,
+          ANARI_FLOAT32_VEC3,
           "ANARI_KHR_FRAME_CHANNEL_NORMAL"},
-      {"channel.objectId", HdAovTokens->primId, ANARI_UINT32,
+      {"channel.objectId",
+          HdAovTokens->primId,
+          ANARI_UINT32,
           "ANARI_KHR_FRAME_CHANNEL_OBJECT_ID"},
-      {"channel.primitiveId", HdAovTokens->elementId, ANARI_UINT32,
+      {"channel.primitiveId",
+          HdAovTokens->elementId,
+          ANARI_UINT32,
           "ANARI_KHR_FRAME_CHANNEL_PRIMITIVE_ID"},
-      {"channel.instanceId", HdAovTokens->instanceId, ANARI_UINT32,
+      {"channel.instanceId",
+          HdAovTokens->instanceId,
+          ANARI_UINT32,
           "ANARI_KHR_FRAME_CHANNEL_INSTANCE_ID"},
   };
   return table;
@@ -478,8 +488,8 @@ ANARISampler HydraDevice::newSampler(const char *subtype)
 ANARISpatialField HydraDevice::newSpatialField(const char *subtype)
 {
   initDevice();
-  if (SpatialField *f = SpatialField::createInstance(
-          subtype ? subtype : "", deviceState()))
+  if (SpatialField *f =
+          SpatialField::createInstance(subtype ? subtype : "", deviceState()))
     return (ANARISpatialField)f;
   reportMessage(ANARI_SEVERITY_WARNING,
       "unsupported spatial field subtype '%s' (SPEC §7)",
@@ -500,7 +510,8 @@ ANARIVolume HydraDevice::newVolume(const char *subtype)
   if (Volume *v = Volume::createInstance(subtype ? subtype : "", deviceState()))
     return (ANARIVolume)v;
   reportMessage(ANARI_SEVERITY_WARNING,
-      "unsupported volume subtype '%s' (SPEC §7)", subtype ? subtype : "");
+      "unsupported volume subtype '%s' (SPEC §7)",
+      subtype ? subtype : "");
   return (ANARIVolume) new UnknownObject(ANARI_VOLUME, deviceState());
 }
 
@@ -512,8 +523,12 @@ ANARIWorld HydraDevice::newWorld()
 
 // Query functions ////////////////////////////////////////////////////////////
 
-int HydraDevice::getProperty(ANARIObject object, const char *name,
-    ANARIDataType type, void *mem, uint64_t size, uint32_t mask)
+int HydraDevice::getProperty(ANARIObject object,
+    const char *name,
+    ANARIDataType type,
+    void *mem,
+    uint64_t size,
+    uint32_t mask)
 {
   if (!handleIsDevice(object) && std::string_view(name) == "bounds"
       && mask == ANARI_WAIT) {
@@ -521,7 +536,8 @@ int HydraDevice::getProperty(ANARIObject object, const char *name,
     // Helium flushes before dispatch. Move that flush onto the worker too,
     // so a bounds observation cannot finalize geometry during Hydra Sync.
     deviceState()->worker->postWait([&]() {
-      result = helium::BaseDevice::getProperty(object, name, type, mem, size, mask);
+      result =
+          helium::BaseDevice::getProperty(object, name, type, mem, size, mask);
     });
     return result;
   }
@@ -542,11 +558,11 @@ const char **HydraDevice::getObjectSubtypes(ANARIDataType objectType)
   static const char *renderers[] = {"default", nullptr};
   static const char *instances[] = {"transform", nullptr};
   static const char *fields[] = {"structuredRegular",
-      SpatialField::supportsSubtype("nanovdb") ? "nanovdb" : nullptr, nullptr};
+      SpatialField::supportsSubtype("nanovdb") ? "nanovdb" : nullptr,
+      nullptr};
   static const char *volumes[] = {"transferFunction1D", nullptr};
   static const char *none[] = {nullptr};
-  const bool volumeCapable =
-      supportsVolumes(rp, sp, state.supportedBprims);
+  const bool volumeCapable = supportsVolumes(rp, sp, state.supportedBprims);
 
   switch (objectType) {
   case ANARI_GEOMETRY: {
@@ -571,7 +587,8 @@ const char **HydraDevice::getObjectSubtypes(ANARIDataType objectType)
   case ANARI_MATERIAL:
     return materials;
   case ANARI_SAMPLER: {
-    // Samplers require the material sprim; empty list where it is absent (§6.4).
+    // Samplers require the material sprim; empty list where it is absent
+    // (§6.4).
     auto &s = state.samplerSubtypeView;
     if (s.empty()) {
       if (hasType(sp, HdPrimTypeTokens->material)) {
@@ -822,7 +839,11 @@ const void *HydraDevice::getParameterInfo(ANARIDataType objectType,
     return nullptr;
   if (info == "sourceExtension" && infoType == ANARI_INT32) {
     const auto *source = static_cast<const char *>(query_param_info(objectType,
-        objectSubtype, parameterName, parameterType, infoName, ANARI_STRING));
+        objectSubtype,
+        parameterName,
+        parameterType,
+        infoName,
+        ANARI_STRING));
     return sourceExtensionIndex(state, ext, source);
   }
   return query_param_info(objectType,
@@ -876,8 +897,7 @@ void HydraDevice::bindDelegate(const char *subtype)
 {
   auto &state = *deviceState();
   const std::string sub = subtype ? subtype : "default";
-  const pxr::TfToken plugin =
-      DelegateRegistry::get().pluginForSubtype(sub);
+  const pxr::TfToken plugin = DelegateRegistry::get().pluginForSubtype(sub);
   state.delegateSubtype = sub;
   state.delegateId = plugin;
 
@@ -977,9 +997,9 @@ int HydraDevice::deviceGetProperty(const char *name,
     // generates (README.md, "Volume costs and limitations").
     helium::writeToVoidP(mem,
         uint64_t(pxr::SdrRegistry::GetInstance()
-                .GetShaderNodeIdentifiers(
-                    pxr::TfToken(), pxr::SdrVersionFilterAllVersions)
-                .size()));
+                     .GetShaderNodeIdentifiers(
+                         pxr::TfToken(), pxr::SdrVersionFilterAllVersions)
+                     .size()));
     return 1;
   } else if (prop == "hydra.delegate" && type == ANARI_STRING) {
     const std::string &id = deviceState()->delegateId.GetString();

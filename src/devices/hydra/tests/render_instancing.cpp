@@ -1,12 +1,12 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 //
-// Exercises HdInstancer sharing (SPEC §4.3): one group (a single small triangle)
-// is instanced N times with distinct translations via ANARI instances. The
-// device authors one prototype rprim + one instancer with N transforms (not N
-// baked rprim copies). The test renders 1 vs 4 instances through Storm and
-// asserts the covered area scales with the instance count — proving each
-// instance transform reached the delegate.
+// Exercises HdInstancer sharing (SPEC §4.3): one group (a single small
+// triangle) is instanced N times with distinct translations via ANARI
+// instances. The device authors one prototype rprim + one instancer with N
+// transforms (not N baked rprim copies). The test renders 1 vs 4 instances
+// through Storm and asserts the covered area scales with the instance count —
+// proving each instance transform reached the delegate.
 
 #include <anari/anari.h>
 
@@ -17,12 +17,18 @@
 
 static int g_errors = 0;
 
-static void statusFunc(const void *, ANARIDevice, ANARIObject, ANARIDataType,
-    ANARIStatusSeverity severity, ANARIStatusCode, const char *message)
+static void statusFunc(const void *,
+    ANARIDevice,
+    ANARIObject,
+    ANARIDataType,
+    ANARIStatusSeverity severity,
+    ANARIStatusCode,
+    const char *message)
 {
   if (severity <= ANARI_SEVERITY_WARNING)
     std::printf("[%s] %s\n",
-        severity <= ANARI_SEVERITY_ERROR ? "ERR" : "WARN", message);
+        severity <= ANARI_SEVERITY_ERROR ? "ERR" : "WARN",
+        message);
   if (severity <= ANARI_SEVERITY_ERROR)
     ++g_errors;
 }
@@ -39,8 +45,7 @@ static void check(bool ok, const char *what)
 static int renderInstances(ANARIDevice dev, int count)
 {
   // Small triangle prototype near the origin.
-  float verts[9] = {
-      -0.12f, -0.12f, 0.f, 0.12f, -0.12f, 0.f, 0.f, 0.14f, 0.f};
+  float verts[9] = {-0.12f, -0.12f, 0.f, 0.12f, -0.12f, 0.f, 0.f, 0.14f, 0.f};
   ANARIArray1D pos =
       anariNewArray1D(dev, verts, nullptr, nullptr, ANARI_FLOAT32_VEC3, 3);
   ANARIGeometry geom = anariNewGeometry(dev, "triangle");
@@ -66,7 +71,8 @@ static int renderInstances(ANARIDevice dev, int count)
   // N instances translated across x; column-major 4x4 (translation in col 3).
   std::vector<ANARIInstance> instances;
   for (int i = 0; i < count; ++i) {
-    const float tx = -0.6f + 1.2f * (count == 1 ? 0.5f : float(i) / (count - 1));
+    const float tx =
+        -0.6f + 1.2f * (count == 1 ? 0.5f : float(i) / (count - 1));
     float xfm[16] = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, tx, 0, 0, 1};
     ANARIInstance inst = anariNewInstance(dev, "transform");
     anariSetParameter(dev, inst, "group", ANARI_GROUP, &group);
@@ -76,8 +82,12 @@ static int renderInstances(ANARIDevice dev, int count)
   }
 
   ANARIWorld world = anariNewWorld(dev);
-  ANARIArray1D instArray = anariNewArray1D(dev, instances.data(), nullptr,
-      nullptr, ANARI_INSTANCE, instances.size());
+  ANARIArray1D instArray = anariNewArray1D(dev,
+      instances.data(),
+      nullptr,
+      nullptr,
+      ANARI_INSTANCE,
+      instances.size());
   anariSetParameter(dev, world, "instance", ANARI_ARRAY1D, &instArray);
   anariCommitParameters(dev, world);
 
@@ -110,8 +120,8 @@ static int renderInstances(ANARIDevice dev, int count)
 
   uint32_t w = 0, h = 0;
   ANARIDataType pt = ANARI_UNKNOWN;
-  const uint32_t *pixels = (const uint32_t *)anariMapFrame(
-      dev, frame, "channel.color", &w, &h, &pt);
+  const uint32_t *pixels =
+      (const uint32_t *)anariMapFrame(dev, frame, "channel.color", &w, &h, &pt);
   int coverage = 0;
   if (pixels) {
     for (uint32_t i = 0; i < w * h; ++i) {
@@ -159,6 +169,7 @@ int main(int argc, char **argv)
   anariRelease(dev, dev);
   anariUnloadLibrary(lib);
   std::printf("\n%s (%d issues)\n",
-      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED", g_errors);
+      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED",
+      g_errors);
   return g_errors == 0 ? 0 : 1;
 }

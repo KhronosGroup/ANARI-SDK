@@ -49,8 +49,7 @@ static TfToken NormalMappedSurfaceNodeId()
   static const TfToken id = [] {
     SdrShaderNodeConstPtr node =
         SdrRegistry::GetInstance().GetShaderNodeFromSourceCode(
-            kNormalMappedSurfaceSource, HioGlslfxTokens->glslfx,
-            SdrTokenMap());
+            kNormalMappedSurfaceSource, HioGlslfxTokens->glslfx, SdrTokenMap());
     return node ? node->GetIdentifier() : TfToken();
   }();
   return id;
@@ -77,7 +76,9 @@ static HdTokenDataSourceHandle Tok(const TfToken &t)
 static HdContainerDataSourceHandle FloatParam(float v)
 {
   return HdMaterialNodeParameterSchema::BuildRetained(
-      HdRetainedTypedSampledDataSource<float>::New(v), nullptr, TypeName("float"));
+      HdRetainedTypedSampledDataSource<float>::New(v),
+      nullptr,
+      TypeName("float"));
 }
 
 static HdContainerDataSourceHandle IntParam(int v)
@@ -90,13 +91,15 @@ static HdContainerDataSourceHandle ColorParam(const float3 &c)
 {
   return HdMaterialNodeParameterSchema::BuildRetained(
       HdRetainedTypedSampledDataSource<GfVec3f>::New(GfVec3f(c[0], c[1], c[2])),
-      nullptr, TypeName("color3f"));
+      nullptr,
+      TypeName("color3f"));
 }
 
 static HdContainerDataSourceHandle TokenParam(const char *v)
 {
   return HdMaterialNodeParameterSchema::BuildRetained(
-      HdRetainedTypedSampledDataSource<TfToken>::New(TfToken(v)), nullptr,
+      HdRetainedTypedSampledDataSource<TfToken>::New(TfToken(v)),
+      nullptr,
       TypeName("token"));
 }
 
@@ -104,7 +107,8 @@ static HdContainerDataSourceHandle AssetParam(const std::string &path)
 {
   return HdMaterialNodeParameterSchema::BuildRetained(
       HdRetainedTypedSampledDataSource<SdfAssetPath>::New(SdfAssetPath(path)),
-      nullptr, TypeName("asset"));
+      nullptr,
+      TypeName("asset"));
 }
 
 static HdContainerDataSourceHandle Vec4Param(const float4 &v)
@@ -112,13 +116,15 @@ static HdContainerDataSourceHandle Vec4Param(const float4 &v)
   return HdMaterialNodeParameterSchema::BuildRetained(
       HdRetainedTypedSampledDataSource<GfVec4f>::New(
           GfVec4f(v.x, v.y, v.z, v.w)),
-      nullptr, TypeName("float4"));
+      nullptr,
+      TypeName("float4"));
 }
 
 static HdContainerDataSourceHandle Vec2Param(const helium::float2 &v)
 {
   return HdMaterialNodeParameterSchema::BuildRetained(
-      HdRetainedTypedSampledDataSource<GfVec2f>::New(GfVec2f(v.x, v.y)), nullptr,
+      HdRetainedTypedSampledDataSource<GfVec2f>::New(GfVec2f(v.x, v.y)),
+      nullptr,
       TypeName("float2"));
 }
 
@@ -127,7 +133,8 @@ static HdDataSourceBaseHandle Connection(
     const TfToken &upstreamNode, const TfToken &output)
 {
   std::vector<HdDataSourceBaseHandle> g{
-      HdMaterialConnectionSchema::BuildRetained(Tok(upstreamNode), Tok(output))};
+      HdMaterialConnectionSchema::BuildRetained(
+          Tok(upstreamNode), Tok(output))};
   return HdRetainedSmallVectorDataSource::New(g.size(), g.data());
 }
 
@@ -142,7 +149,8 @@ static bool IsColorInput(const TfToken &usdInput)
 static HdContainerDataSourceHandle Float3Param(const GfVec3f &v)
 {
   return HdMaterialNodeParameterSchema::BuildRetained(
-      HdRetainedTypedSampledDataSource<GfVec3f>::New(v), nullptr,
+      HdRetainedTypedSampledDataSource<GfVec3f>::New(v),
+      nullptr,
       TypeName("float3"));
 }
 
@@ -172,7 +180,7 @@ static HdContainerDataSourceHandle BuildNetwork(
   std::vector<HdDataSourceBaseHandle> pValues;
   auto addConst = [&](const char *name, HdContainerDataSourceHandle v) {
     if (bound.count(TfToken(name)))
-      return;   // driven by a sampler connection
+      return; // driven by a sampler connection
     pNames.push_back(TfToken(name));
     pValues.push_back(v);
   };
@@ -203,7 +211,7 @@ static HdContainerDataSourceHandle BuildNetwork(
   // material-network lowering visits each reader node once, so a reader feeding
   // two UsdTransform2d nodes would leave the second without coordinates.
   std::vector<TfToken> nodeNames{kNodeName};
-  std::vector<HdDataSourceBaseHandle> nodeValues;   // filled after surface node
+  std::vector<HdDataSourceBaseHandle> nodeValues; // filled after surface node
 
   std::vector<TfToken> surfConnNames;
   std::vector<HdDataSourceBaseHandle> surfConnValues;
@@ -239,10 +247,12 @@ static HdContainerDataSourceHandle BuildNetwork(
       auto rparams =
           HdRetainedContainerDataSource::New(rn.size(), rn.data(), rv.data());
       extraNodes.emplace_back(readerNode,
-          HdMaterialNodeSchema::BuildRetained(rparams, nullptr,
+          HdMaterialNodeSchema::BuildRetained(rparams,
+              nullptr,
               Tok(TfToken(color ? "UsdPrimvarReader_float3"
                                 : "UsdPrimvarReader_float")),
-              nullptr, nullptr));
+              nullptr,
+              nullptr));
       surfConnNames.push_back(b.usdInput);
       surfConnValues.push_back(Connection(readerNode, TfToken("result")));
       continue;
@@ -275,8 +285,11 @@ static HdContainerDataSourceHandle BuildNetwork(
     auto rparams = HdRetainedContainerDataSource::New(
         TfToken("varname"), TokenParam(primvar.c_str()));
     extraNodes.emplace_back(readerNode,
-        HdMaterialNodeSchema::BuildRetained(rparams, nullptr,
-            Tok(TfToken("UsdPrimvarReader_float2")), nullptr, nullptr));
+        HdMaterialNodeSchema::BuildRetained(rparams,
+            nullptr,
+            Tok(TfToken("UsdPrimvarReader_float2")),
+            nullptr,
+            nullptr));
 
     TfToken stSource = readerNode;
     const TfToken stOutput("result");
@@ -300,8 +313,11 @@ static HdContainerDataSourceHandle BuildNetwork(
       auto xconns = HdRetainedContainerDataSource::New(
           TfToken("in"), Connection(readerNode, stOutput));
       extraNodes.emplace_back(xfmNode,
-          HdMaterialNodeSchema::BuildRetained(xparams, xconns,
-              Tok(TfToken("UsdTransform2d")), nullptr, nullptr));
+          HdMaterialNodeSchema::BuildRetained(xparams,
+              xconns,
+              Tok(TfToken("UsdTransform2d")),
+              nullptr,
+              nullptr));
       stSource = xfmNode;
     }
 
@@ -314,11 +330,18 @@ static HdContainerDataSourceHandle BuildNetwork(
     // normal map must not be sRGB-decoded. Scalar slots read the red channel
     // (the first component of the transformed texel, ANARI's
     // scalar-from-sampler rule).
-    std::vector<TfToken> tn{TfToken("file"), TfToken("wrapS"), TfToken("wrapT"),
-        TfToken("sourceColorSpace"), TfToken("scale"), TfToken("bias")};
+    std::vector<TfToken> tn{TfToken("file"),
+        TfToken("wrapS"),
+        TfToken("wrapT"),
+        TfToken("sourceColorSpace"),
+        TfToken("scale"),
+        TfToken("bias")};
     std::vector<HdDataSourceBaseHandle> tv{AssetParam(s->assetPath()),
-        TokenParam(s->wrapS()), TokenParam(s->wrapT()), TokenParam("raw"),
-        Vec4Param(s->outScale()), Vec4Param(s->outBias())};
+        TokenParam(s->wrapS()),
+        TokenParam(s->wrapT()),
+        TokenParam("raw"),
+        Vec4Param(s->outScale()),
+        Vec4Param(s->outBias())};
 
     // filter -> Storm magFilter/minFilter (SPEC §6.2). "nearest" authors both
     // as plain nearest — no mip selection, so texel values are exactly the
@@ -360,10 +383,12 @@ static HdContainerDataSourceHandle BuildNetwork(
     auto rparams =
         HdRetainedContainerDataSource::New(rn.size(), rn.data(), rv.data());
     extraNodes.emplace_back(readerNode,
-        HdMaterialNodeSchema::BuildRetained(rparams, nullptr,
+        HdMaterialNodeSchema::BuildRetained(rparams,
+            nullptr,
             Tok(TfToken(isColor ? "UsdPrimvarReader_float3"
                                 : "UsdPrimvarReader_float")),
-            nullptr, nullptr));
+            nullptr,
+            nullptr));
     surfConnNames.push_back(b.usdInput);
     surfConnValues.push_back(Connection(readerNode, TfToken("result")));
   }
@@ -376,8 +401,11 @@ static HdContainerDataSourceHandle BuildNetwork(
     auto rparams = HdRetainedContainerDataSource::New(
         TfToken("varname"), TokenParam("st"));
     extraNodes.emplace_back(readerNode,
-        HdMaterialNodeSchema::BuildRetained(rparams, nullptr,
-            Tok(TfToken("UsdPrimvarReader_float2")), nullptr, nullptr));
+        HdMaterialNodeSchema::BuildRetained(rparams,
+            nullptr,
+            Tok(TfToken("UsdPrimvarReader_float2")),
+            nullptr,
+            nullptr));
     surfConnNames.push_back(kTangentStInput);
     surfConnValues.push_back(Connection(readerNode, TfToken("result")));
   }
@@ -408,8 +436,8 @@ static HdContainerDataSourceHandle BuildNetwork(
   auto terminal = HdMaterialConnectionSchema::BuildRetained(
       HdRetainedTypedSampledDataSource<TfToken>::New(kNodeName),
       HdRetainedTypedSampledDataSource<TfToken>::New(kSurfaceOutput));
-  auto terminals =
-      HdRetainedContainerDataSource::New(HdMaterialSchemaTokens->surface, terminal);
+  auto terminals = HdRetainedContainerDataSource::New(
+      HdMaterialSchemaTokens->surface, terminal);
 
   return HdMaterialNetworkSchema::BuildRetained(
       nodes, terminals, /* interface = */ nullptr, /* config = */ nullptr);

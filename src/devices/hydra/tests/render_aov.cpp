@@ -2,11 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 // Exercises the standard AOV frame channels beyond color (SPEC §8.1/§11.4). Two
-// quads sit at clearly different depths (near z=0, far z=-2); the frame requests
-// channel.color + channel.depth + channel.objectId + channel.normal, and the
-// checks include numerical distances and native depth passthrough:
+// quads sit at clearly different depths (near z=0, far z=-2); the frame
+// requests channel.color + channel.depth + channel.objectId + channel.normal,
+// and the checks include numerical distances and native depth passthrough:
 //   - color still renders (coverage > 0) — the color path is not broken.
-//   - depth is Euclidean camera distance, including off-axis and resized pixels.
+//   - depth is Euclidean camera distance, including off-axis and resized
+//   pixels.
 //   - misses are infinity; native channel.aov:depth retains raster semantics.
 //   - objectId over the two surfaces differs, and both differ from background.
 //   - normal over a +z-facing quad has a dominant |z| component (world-space
@@ -27,8 +28,13 @@
 
 static int g_errors = 0;
 
-static void statusFunc(const void *, ANARIDevice, ANARIObject, ANARIDataType,
-    ANARIStatusSeverity severity, ANARIStatusCode, const char *message)
+static void statusFunc(const void *,
+    ANARIDevice,
+    ANARIObject,
+    ANARIDataType,
+    ANARIStatusSeverity severity,
+    ANARIStatusCode,
+    const char *message)
 {
   const char *tag = severity == ANARI_SEVERITY_FATAL_ERROR ? "FATAL"
       : severity == ANARI_SEVERITY_ERROR                   ? "ERROR"
@@ -52,8 +58,8 @@ static void check(bool ok, const char *what)
 static ANARISurface makeQuad(
     ANARIDevice dev, float z, const float rgb[3], float half)
 {
-  float verts[12] = {-half, -half, z, half, -half, z, half, half, z, -half,
-      half, z};
+  float verts[12] = {
+      -half, -half, z, half, -half, z, half, half, z, -half, half, z};
   ANARIArray1D pos =
       anariNewArray1D(dev, verts, nullptr, nullptr, ANARI_FLOAT32_VEC3, 4);
   ANARIGeometry g = anariNewGeometry(dev, "quad");
@@ -76,8 +82,11 @@ static ANARISurface makeQuad(
 }
 
 // Expected distances come from plane intersections with perspective rays.
-static void checkDepth(ANARIDevice dev, ANARIFrame frame,
-    uint32_t width, uint32_t height, float fovy)
+static void checkDepth(ANARIDevice dev,
+    ANARIFrame frame,
+    uint32_t width,
+    uint32_t height,
+    float fovy)
 {
   uint32_t w = 0, h = 0;
   ANARIDataType type = ANARI_UNKNOWN;
@@ -91,18 +100,22 @@ static void checkDepth(ANARIDevice dev, ANARIFrame frame,
       "native depth maps alongside standard depth");
   if (depth && native) {
     for (int sample = 0; sample < 3; ++sample) {
-      const uint32_t x = sample == 0 ? width / 2
+      const uint32_t x = sample == 0
+          ? width / 2
           : uint32_t(width * (sample == 1 ? 0.53f : 0.65f));
       const uint32_t y = height / 2;
       const double sx = (2.0 * (x + 0.5) / width - 1.0)
           * (double(width) / height) * std::tan(fovy / 2.0);
-      const double sy = (2.0 * (y + 0.5) / height - 1.0)
-          * std::tan(fovy / 2.0);
-      const double expected = (sample == 2 ? 5.0 : 3.0)
-          * std::sqrt(1.0 + sx * sx + sy * sy);
+      const double sy = (2.0 * (y + 0.5) / height - 1.0) * std::tan(fovy / 2.0);
+      const double expected =
+          (sample == 2 ? 5.0 : 3.0) * std::sqrt(1.0 + sx * sx + sy * sy);
       const size_t i = size_t(y) * width + x;
       std::printf("  depth at (%u,%u): %.6f expected %.6f native %.6f\n",
-          x, y, depth[i], expected, native[i]);
+          x,
+          y,
+          depth[i],
+          expected,
+          native[i]);
       check(std::fabs(depth[i] - expected) < 0.01,
           "depth is Euclidean distance to the camera");
       check(native[i] > 0.f && native[i] < 1.f,
@@ -227,8 +240,8 @@ int main(int argc, char **argv)
           idF = id[i];
           break;
         }
-      std::printf("  objectId near=0x%08x  far=0x%08x  (bg=0x%08x)\n",
-          idN, idF, bg);
+      std::printf(
+          "  objectId near=0x%08x  far=0x%08x  (bg=0x%08x)\n", idN, idF, bg);
       check(idN == nearId,
           "near-quad objectId is a real surface (not background)");
       check(iFar != iCenter, "a distinct far-quad surface pixel exists");
@@ -242,8 +255,8 @@ int main(int argc, char **argv)
   {
     uint32_t w = 0, h = 0;
     ANARIDataType pt = ANARI_UNKNOWN;
-    const float *d = (const float *)anariMapFrame(
-        dev, frame, "channel.depth", &w, &h, &pt);
+    const float *d =
+        (const float *)anariMapFrame(dev, frame, "channel.depth", &w, &h, &pt);
     check(pt == ANARI_FLOAT32, "depth pixelType is FLOAT32");
     check(w == W && h == H && d != nullptr, "depth channel mapped");
     if (d) {
@@ -262,8 +275,8 @@ int main(int argc, char **argv)
   {
     uint32_t w = 0, h = 0;
     ANARIDataType pt = ANARI_UNKNOWN;
-    const float *nrm = (const float *)anariMapFrame(
-        dev, frame, "channel.normal", &w, &h, &pt);
+    const float *nrm =
+        (const float *)anariMapFrame(dev, frame, "channel.normal", &w, &h, &pt);
     check(pt == ANARI_FLOAT32_VEC3, "normal pixelType is FLOAT32_VEC3");
     const bool mapped = nrm && w == W && h == H;
     check(mapped, "normal channel mapped at frame size");
@@ -298,6 +311,7 @@ int main(int argc, char **argv)
   anariRelease(dev, dev);
   anariUnloadLibrary(lib);
   std::printf("\n%s (%d issues)\n",
-      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED", g_errors);
+      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED",
+      g_errors);
   return g_errors == 0 ? 0 : 1;
 }

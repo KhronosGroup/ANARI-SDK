@@ -139,14 +139,18 @@ anari::math::float4 AnariImageData::read(size_t i) const
 // border colour is an arbitrary float value, so a padded image is stored like
 // a transformed one.
 static TexelFormat StorageFormatFor(ANARIDataType elementType,
-    const TexelAffine *transform, const TexelBorder *border, TexelFormat cap)
+    const TexelAffine *transform,
+    const TexelBorder *border,
+    TexelFormat cap)
 {
   const bool padded = border && (border->padX || border->padY);
   return std::min(TexelFormatFor(elementType, transform || padded), cap);
 }
 
-static void StoreTexel(AnariImageData &out, size_t i,
-    anari::math::float4 c, const TexelAffine *transform)
+static void StoreTexel(AnariImageData &out,
+    size_t i,
+    anari::math::float4 c,
+    const TexelAffine *transform)
 {
   if (transform)
     c = transform->apply(c);
@@ -155,8 +159,12 @@ static void StoreTexel(AnariImageData &out, size_t i,
 
 // Allocate `out` for a w×h source framed per `border`, fill the frame with the
 // (transformed) border colour, and return the interior origin.
-static anari::math::int2 AllocateFramed(AnariImageData &out, int w, int h,
-    TexelFormat format, const TexelAffine *transform, const TexelBorder *border)
+static anari::math::int2 AllocateFramed(AnariImageData &out,
+    int w,
+    int h,
+    TexelFormat format,
+    const TexelAffine *transform,
+    const TexelBorder *border)
 {
   const int px = border && border->padX ? 1 : 0;
   const int py = border && border->padY ? 1 : 0;
@@ -176,8 +184,8 @@ static anari::math::int2 AllocateFramed(AnariImageData &out, int w, int h,
 // TexelFormatFor) into Srgb8 storage unchanged, widened to RGBA as helium's
 // readAsAttributeValue widens them: missing colour channels are 0, a missing
 // alpha is opaque.
-static void CopySrgb8(const void *src, ANARIDataType type, size_t n,
-    AnariImageData &out)
+static void CopySrgb8(
+    const void *src, ANARIDataType type, size_t n, AnariImageData &out)
 {
   const auto *s = static_cast<const uint8_t *>(src);
   uint8_t *d = out.texels.data();
@@ -195,8 +203,10 @@ static void CopySrgb8(const void *src, ANARIDataType type, size_t n,
   }
 }
 
-bool DecodeArray2DToImage(helium::Array2D *img, AnariImageData &out,
-    const TexelAffine *transform, TexelFormat maxFormat,
+bool DecodeArray2DToImage(helium::Array2D *img,
+    AnariImageData &out,
+    const TexelAffine *transform,
+    TexelFormat maxFormat,
     const TexelBorder *border)
 {
   if (!img)
@@ -215,13 +225,17 @@ bool DecodeArray2DToImage(helium::Array2D *img, AnariImageData &out,
       AllocateFramed(out, w, h, format, transform, border);
   for (int y = 0; y < h; ++y)
     for (int x = 0; x < w; ++x)
-      StoreTexel(out, size_t(y + o.y) * out.width + (x + o.x),
-          img->readAsAttributeValue(anari::math::int2(x, y)), transform);
+      StoreTexel(out,
+          size_t(y + o.y) * out.width + (x + o.x),
+          img->readAsAttributeValue(anari::math::int2(x, y)),
+          transform);
   return true;
 }
 
-bool DecodeArray1DToImage(helium::Array1D *img, AnariImageData &out,
-    const TexelAffine *transform, TexelFormat maxFormat,
+bool DecodeArray1DToImage(helium::Array1D *img,
+    AnariImageData &out,
+    const TexelAffine *transform,
+    TexelFormat maxFormat,
     const TexelBorder *border)
 {
   if (!img)
@@ -243,8 +257,7 @@ bool DecodeArray1DToImage(helium::Array1D *img, AnariImageData &out,
   const anari::math::int2 o =
       AllocateFramed(out, n, 1, format, transform, &xOnly);
   for (int x = 0; x < n; ++x)
-    StoreTexel(out, size_t(x + o.x),
-        img->readAsAttributeValue(x), transform);
+    StoreTexel(out, size_t(x + o.x), img->readAsAttributeValue(x), transform);
   return true;
 }
 
@@ -289,7 +302,8 @@ void EnsureAnariHioRegistered()
   Dl_info info;
   if (dladdr(reinterpret_cast<void *>(&EnsureAnariHioRegistered), &info)
       && info.dli_fname) {
-    std::vector<char> buf(info.dli_fname, info.dli_fname + std::strlen(info.dli_fname) + 1);
+    std::vector<char> buf(
+        info.dli_fname, info.dli_fname + std::strlen(info.dli_fname) + 1);
     const std::string dir = dirname(buf.data());
     pxr::PlugRegistry::GetInstance().RegisterPlugins(dir);
   }
@@ -381,9 +395,18 @@ class AnariHioImage final : public HioImage
     return false;
   }
 
-  std::string const &GetFilename() const override { return _filename; }
-  int GetWidth() const override { return _data.width; }
-  int GetHeight() const override { return _data.height; }
+  std::string const &GetFilename() const override
+  {
+    return _filename;
+  }
+  int GetWidth() const override
+  {
+    return _data.width;
+  }
+  int GetHeight() const override
+  {
+    return _data.height;
+  }
   // The stored precision is the served format (AnariImage.h TexelFormat);
   // HdSt maps each to the same-typed HgiFormat with no conversion.
   HioFormat GetFormat() const override
@@ -404,13 +427,19 @@ class AnariHioImage final : public HioImage
   {
     return int(anari_hydra::BytesPerTexel(_data.format));
   }
-  int GetNumMipLevels() const override { return 1; }
+  int GetNumMipLevels() const override
+  {
+    return 1;
+  }
   bool IsColorSpaceSRGB() const override
   {
     return _data.format == anari_hydra::TexelFormat::Srgb8;
   }
 
-  bool GetMetadata(TfToken const &, VtValue *) const override { return false; }
+  bool GetMetadata(TfToken const &, VtValue *) const override
+  {
+    return false;
+  }
   bool GetSamplerMetadata(HioAddressDimension, HioAddressMode *) const override
   {
     return false;
@@ -433,7 +462,10 @@ class AnariHioImage final : public HioImage
     return true;
   }
 
-  bool _OpenForWriting(std::string const &) override { return false; }
+  bool _OpenForWriting(std::string const &) override
+  {
+    return false;
+  }
 
  private:
   std::string _filename;

@@ -26,8 +26,13 @@
 static int g_errors = 0;
 static bool g_faceVarying = false;
 
-static void statusFunc(const void *, ANARIDevice, ANARIObject, ANARIDataType,
-    ANARIStatusSeverity severity, ANARIStatusCode, const char *message)
+static void statusFunc(const void *,
+    ANARIDevice,
+    ANARIObject,
+    ANARIDataType,
+    ANARIStatusSeverity severity,
+    ANARIStatusCode,
+    const char *message)
 {
   const char *tag = severity == ANARI_SEVERITY_FATAL_ERROR ? "FATAL"
       : severity == ANARI_SEVERITY_ERROR                   ? "ERROR"
@@ -50,7 +55,10 @@ struct Img
 {
   uint32_t w = 0, h = 0;
   std::vector<uint8_t> rgba;
-  const uint8_t *at(int x, int y) const { return &rgba[(size_t(y) * w + x) * 4]; }
+  const uint8_t *at(int x, int y) const
+  {
+    return &rgba[(size_t(y) * w + x) * 4];
+  }
 };
 
 // Classify a color by channel ratios (robust to shading and alpha blending):
@@ -126,27 +134,34 @@ struct Rig
   int mx = 0, my = 0, qx = 0, qy = 0, r = 2, x0 = 0, x1 = 0;
 };
 
-static void setMat4(ANARIDevice dev, ANARIObject o, const char *name,
-    const float m[16])
+static void setMat4(
+    ANARIDevice dev, ANARIObject o, const char *name, const float m[16])
 {
   anariSetParameter(dev, o, name, ANARI_FLOAT32_MAT4, m);
 }
 
-static void setVec4(ANARIDevice dev, ANARIObject o, const char *name,
-    float x, float y, float z, float w)
+static void setVec4(ANARIDevice dev,
+    ANARIObject o,
+    const char *name,
+    float x,
+    float y,
+    float z,
+    float w)
 {
   const float v[4] = {x, y, z, w};
   anariSetParameter(dev, o, name, ANARI_FLOAT32_VEC4, v);
 }
 
-static void setStr(ANARIDevice dev, ANARIObject o, const char *name,
-    const char *v)
+static void setStr(
+    ANARIDevice dev, ANARIObject o, const char *name, const char *v)
 {
   anariSetParameter(dev, o, name, ANARI_STRING, v);
 }
 
-static ANARIArray1D makeAttr(ANARIDevice dev, std::vector<float> &data,
-    const float *perVertex, int width)
+static ANARIArray1D makeAttr(ANARIDevice dev,
+    std::vector<float> &data,
+    const float *perVertex,
+    int width)
 {
   // Two triangles (0,1,2)(0,2,3) share positions but carry six UV corners in
   // face-varying mode; otherwise the four vertices carry the UVs directly.
@@ -158,7 +173,8 @@ static ANARIArray1D makeAttr(ANARIDevice dev, std::vector<float> &data,
     for (int k = 0; k < width; ++k)
       data.push_back(perVertex[v * width + k]);
   }
-  const ANARIDataType type = width == 4 ? ANARI_FLOAT32_VEC4 : ANARI_FLOAT32_VEC2;
+  const ANARIDataType type =
+      width == 4 ? ANARI_FLOAT32_VEC4 : ANARI_FLOAT32_VEC2;
   return anariNewArray1D(dev, data.data(), nullptr, nullptr, type, n);
 }
 
@@ -167,8 +183,8 @@ static void buildRig(Rig &rc)
   ANARIDevice dev = rc.dev;
 
   // 2x2 checkerboard: row 0 (v=0) = R, G; row 1 (v=1) = B, W.
-  static const uint8_t checker[2 * 2 * 4] = {255, 0, 0, 255, 0, 255, 0, 255,
-      0, 0, 255, 255, 255, 255, 255, 255};
+  static const uint8_t checker[2 * 2 * 4] = {
+      255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 255, 255, 255, 255};
   rc.checker =
       anariNewArray2D(dev, checker, nullptr, nullptr, ANARI_UFIXED8_VEC4, 2, 2);
   rc.color = anariNewSampler(dev, "image2D");
@@ -192,11 +208,12 @@ static void buildRig(Rig &rc)
   setStr(dev, rc.mat, "alphaMode", "blend");
   anariCommitParameters(dev, rc.mat);
 
-  static const float verts[12] = {-0.9f, -0.9f, 0.f, 0.9f, -0.9f, 0.f, 0.9f,
-      0.9f, 0.f, -0.9f, 0.9f, 0.f};
+  static const float verts[12] = {
+      -0.9f, -0.9f, 0.f, 0.9f, -0.9f, 0.f, 0.9f, 0.9f, 0.f, -0.9f, 0.9f, 0.f};
   static const float st[8] = {0, 0, 1, 0, 1, 1, 0, 1};
-  static const float mirrored[8] = {1, 0, 0, 0, 0, 1, 1, 1};   // (1-u, v)
-  static const float colorUv[16] = {0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1};
+  static const float mirrored[8] = {1, 0, 0, 0, 0, 1, 1, 1}; // (1-u, v)
+  static const float colorUv[16] = {
+      0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1};
   rc.pos = anariNewArray1D(dev, verts, nullptr, nullptr, ANARI_FLOAT32_VEC3, 4);
   rc.attr0 = makeAttr(dev, rc.attrData[0], st, 2);
   rc.attr1 = makeAttr(dev, rc.attrData[1], mirrored, 2);
@@ -204,16 +221,25 @@ static void buildRig(Rig &rc)
   rc.g = anariNewGeometry(dev, g_faceVarying ? "triangle" : "quad");
   anariSetParameter(dev, rc.g, "vertex.position", ANARI_ARRAY1D, &rc.pos);
   const char *prefix = g_faceVarying ? "faceVarying." : "vertex.";
-  anariSetParameter(dev, rc.g, (std::string(prefix) + "attribute0").c_str(),
-      ANARI_ARRAY1D, &rc.attr0);
-  anariSetParameter(dev, rc.g, (std::string(prefix) + "attribute1").c_str(),
-      ANARI_ARRAY1D, &rc.attr1);
-  anariSetParameter(dev, rc.g, (std::string(prefix) + "color").c_str(),
-      ANARI_ARRAY1D, &rc.colorAttr);
+  anariSetParameter(dev,
+      rc.g,
+      (std::string(prefix) + "attribute0").c_str(),
+      ANARI_ARRAY1D,
+      &rc.attr0);
+  anariSetParameter(dev,
+      rc.g,
+      (std::string(prefix) + "attribute1").c_str(),
+      ANARI_ARRAY1D,
+      &rc.attr1);
+  anariSetParameter(dev,
+      rc.g,
+      (std::string(prefix) + "color").c_str(),
+      ANARI_ARRAY1D,
+      &rc.colorAttr);
   if (g_faceVarying) {
     static const uint32_t indices[6] = {0, 1, 2, 0, 2, 3};
-    rc.index = anariNewArray1D(
-        dev, indices, nullptr, nullptr, ANARI_UINT32_VEC3, 2);
+    rc.index =
+        anariNewArray1D(dev, indices, nullptr, nullptr, ANARI_UINT32_VEC3, 2);
     anariSetParameter(dev, rc.g, "primitive.index", ANARI_ARRAY1D, &rc.index);
   }
   anariCommitParameters(dev, rc.g);
@@ -259,13 +285,23 @@ static void buildRig(Rig &rc)
 static void releaseRig(Rig &rc)
 {
   ANARIDevice dev = rc.dev;
-  for (ANARIObject o : {(ANARIObject)rc.frame, (ANARIObject)rc.ren,
-           (ANARIObject)rc.cam, (ANARIObject)rc.surfArray,
-           (ANARIObject)rc.world, (ANARIObject)rc.surf, (ANARIObject)rc.g,
-           (ANARIObject)rc.index, (ANARIObject)rc.colorAttr,
-           (ANARIObject)rc.attr1, (ANARIObject)rc.attr0, (ANARIObject)rc.pos,
-           (ANARIObject)rc.mat, (ANARIObject)rc.opacity, (ANARIObject)rc.color,
-           (ANARIObject)rc.opacityImg, (ANARIObject)rc.checker})
+  for (ANARIObject o : {(ANARIObject)rc.frame,
+           (ANARIObject)rc.ren,
+           (ANARIObject)rc.cam,
+           (ANARIObject)rc.surfArray,
+           (ANARIObject)rc.world,
+           (ANARIObject)rc.surf,
+           (ANARIObject)rc.g,
+           (ANARIObject)rc.index,
+           (ANARIObject)rc.colorAttr,
+           (ANARIObject)rc.attr1,
+           (ANARIObject)rc.attr0,
+           (ANARIObject)rc.pos,
+           (ANARIObject)rc.mat,
+           (ANARIObject)rc.opacity,
+           (ANARIObject)rc.color,
+           (ANARIObject)rc.opacityImg,
+           (ANARIObject)rc.checker})
     if (o)
       anariRelease(dev, o);
 }
@@ -286,8 +322,10 @@ static void render(Rig &rc, Img &im)
 // run bottom-up, so +y is the top / v=1 side of the quad).
 static std::string quadrants(const Rig &rc, const Img &im)
 {
-  const int px[4] = {rc.mx - rc.qx, rc.mx + rc.qx, rc.mx - rc.qx, rc.mx + rc.qx};
-  const int py[4] = {rc.my - rc.qy, rc.my - rc.qy, rc.my + rc.qy, rc.my + rc.qy};
+  const int px[4] = {
+      rc.mx - rc.qx, rc.mx + rc.qx, rc.mx - rc.qx, rc.mx + rc.qx};
+  const int py[4] = {
+      rc.my - rc.qy, rc.my - rc.qy, rc.my + rc.qy, rc.my + rc.qy};
   std::string out;
   for (int i = 0; i < 4; ++i) {
     double c[4];
@@ -303,7 +341,8 @@ static void expectQuadrants(Rig &rc, const char *expected, const char *what)
   render(rc, im);
   const std::string got = quadrants(rc, im);
   check(got == expected,
-      std::string(what) + " -> quadrants " + got + " (expected " + expected + ")");
+      std::string(what) + " -> quadrants " + got + " (expected " + expected
+          + ")");
 }
 
 // Alpha averaged at the left / right half centers.
@@ -316,8 +355,14 @@ static void expectAlpha(Rig &rc, int left, int right, const char *what)
   windowAvg(im, rc.mx + rc.qx, rc.my, rc.r, r);
   const bool ok = std::fabs(l[3] - left) <= 3 && std::fabs(r[3] - right) <= 3;
   char buf[160];
-  std::snprintf(buf, sizeof buf, "%s -> alpha L=%.0f R=%.0f (expected %d %d)",
-      what, l[3], r[3], left, right);
+  std::snprintf(buf,
+      sizeof buf,
+      "%s -> alpha L=%.0f R=%.0f (expected %d %d)",
+      what,
+      l[3],
+      r[3],
+      left,
+      right);
   check(ok, buf);
 }
 
@@ -379,7 +424,16 @@ int main(int argc, char **argv)
   rc.r = std::max(2, std::min(rc.qx, rc.qy) / 2);
   rc.x0 = x0;
   rc.x1 = x1;
-  std::printf("  bbox %d %d %d %d  probes m=(%d,%d) q=(%d,%d) r=%d\n", x0, y0, x1, y1, rc.mx, rc.my, rc.qx, rc.qy, rc.r);
+  std::printf("  bbox %d %d %d %d  probes m=(%d,%d) q=(%d,%d) r=%d\n",
+      x0,
+      y0,
+      x1,
+      y1,
+      rc.mx,
+      rc.my,
+      rc.qx,
+      rc.qy,
+      rc.r);
   check(quadrants(rc, base) == "RGBW", "baseline attribute0 checker RGBW");
   expectAlpha(rc, 255, 128, "second sampler drives opacity from attribute0");
 
@@ -415,8 +469,8 @@ int main(int argc, char **argv)
         "absent attribute2 samples one texel everywhere");
     setStr(dev, rc.color, "inAttribute", "notAnAttribute");
     anariCommitParameters(dev, rc.color);
-    expectQuadrants(rc, absent.c_str(),
-        "unknown inAttribute reads as an absent attribute");
+    expectQuadrants(
+        rc, absent.c_str(), "unknown inAttribute reads as an absent attribute");
 
     Mat4 shearAbsent;
     shearAbsent.set(1, 0, 0.5f);
@@ -430,7 +484,8 @@ int main(int argc, char **argv)
         "absent attribute2 under shear does not read attribute0");
     setStr(dev, rc.color, "inAttribute", "notAnAttribute");
     anariCommitParameters(dev, rc.color);
-    expectQuadrants(rc, absentBaked.c_str(),
+    expectQuadrants(rc,
+        absentBaked.c_str(),
         "baked unknown inAttribute reads as an absent attribute");
 
     anariUnsetParameter(dev, rc.color, "inTransform");
@@ -452,7 +507,8 @@ int main(int argc, char **argv)
   anariCommitParameters(dev, rc.color);
   expectQuadrants(rc, "GWRB", "rotation under linear filtering");
   const int rotLinear = bottomRowBlend(rc);
-  std::printf("  rotation blend px  nearest=%d  linear=%d\n", rotNearest, rotLinear);
+  std::printf(
+      "  rotation blend px  nearest=%d  linear=%d\n", rotNearest, rotLinear);
   check(rotNearest < 4, "rotation + nearest snaps at the texel boundary");
   check(rotLinear > 10, "rotation + linear interpolates across the boundary");
   setStr(dev, rc.color, "filter", "nearest");
@@ -477,7 +533,8 @@ int main(int argc, char **argv)
   setStr(dev, rc.color, "filter", "linear");
   anariCommitParameters(dev, rc.color);
   const int shearLinear = bottomRowBlend(rc);
-  std::printf("  shear blend px  nearest=%d  linear=%d\n", shearNearest, shearLinear);
+  std::printf(
+      "  shear blend px  nearest=%d  linear=%d\n", shearNearest, shearLinear);
   check(shearNearest < 4, "shear + nearest snaps at the texel boundary");
   check(shearLinear > 10, "shear + linear interpolates across the boundary");
   setStr(dev, rc.color, "filter", "nearest");
@@ -559,10 +616,10 @@ int main(int argc, char **argv)
     Img im;
     render(rc, im);
     double c[4];
-    windowAvg(im, rc.mx - rc.qx, rc.my + rc.qy, rc.r, c);   // B texel -> (0,0,1)
+    windowAvg(im, rc.mx - rc.qx, rc.my + rc.qy, rc.r, c); // B texel -> (0,0,1)
     check(classify(c[0], c[1], c[2]) == 'B',
         "outOffset adds blue where the mixed red is zero");
-    windowAvg(im, rc.mx + rc.qx, rc.my + rc.qy, rc.r, c);   // W texel -> (1,0,1)
+    windowAvg(im, rc.mx + rc.qx, rc.my + rc.qy, rc.r, c); // W texel -> (1,0,1)
     // Magenta (this half of the quad is alpha-blended at 0.5, hence dimmer).
     std::printf("  mixed+offset TR = %.0f %.0f %.0f\n", c[0], c[1], c[2]);
     check(c[0] > 60 && c[2] > 60 && c[1] < 0.35 * c[0]
@@ -617,6 +674,7 @@ int main(int argc, char **argv)
   anariRelease(dev, dev);
   anariUnloadLibrary(lib);
   std::printf("\n%s (%d issues)\n",
-      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED", g_errors);
+      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED",
+      g_errors);
   return g_errors == 0 ? 0 : 1;
 }

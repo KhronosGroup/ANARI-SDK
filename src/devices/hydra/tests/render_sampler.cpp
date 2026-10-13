@@ -19,8 +19,13 @@
 static int g_errors = 0;
 static bool g_faceVarying = false;
 
-static void statusFunc(const void *, ANARIDevice, ANARIObject, ANARIDataType,
-    ANARIStatusSeverity severity, ANARIStatusCode, const char *message)
+static void statusFunc(const void *,
+    ANARIDevice,
+    ANARIObject,
+    ANARIDataType,
+    ANARIStatusSeverity severity,
+    ANARIStatusCode,
+    const char *message)
 {
   const char *tag = severity == ANARI_SEVERITY_FATAL_ERROR ? "FATAL"
       : severity == ANARI_SEVERITY_ERROR                   ? "ERROR"
@@ -43,7 +48,10 @@ struct Img
 {
   uint32_t w = 0, h = 0;
   std::vector<uint8_t> rgba;
-  const uint8_t *at(int x, int y) const { return &rgba[(size_t(y) * w + x) * 4]; }
+  const uint8_t *at(int x, int y) const
+  {
+    return &rgba[(size_t(y) * w + x) * 4];
+  }
 };
 
 // Average color over an axis-aligned window, skipping the dark clear color.
@@ -69,16 +77,17 @@ static void windowAvg(const Img &im, int cx, int cy, int r, double out[3])
 
 // Count "blended" pixels along a horizontal scanline crossing the u=0.5 texel
 // boundary in the bottom (v=0) row: red (u<0.5) -> green (u>0.5). A covered
-// pixel is red-dominant (r >> g), green-dominant (g >> r), or blended (neither).
-// nearest sampling snaps at the boundary (few blended px); linear interpolates
-// across the whole texel-center span (~half the quad, many blended px).
+// pixel is red-dominant (r >> g), green-dominant (g >> r), or blended
+// (neither). nearest sampling snaps at the boundary (few blended px); linear
+// interpolates across the whole texel-center span (~half the quad, many blended
+// px).
 static int countBlended(const Img &im, int y, int x0, int x1)
 {
   int blended = 0;
   for (int x = x0; x <= x1; ++x) {
     const uint8_t *p = im.at(x, y);
     if (p[0] <= 20 && p[1] <= 20 && p[2] <= 20)
-      continue;   // uncovered / clear color
+      continue; // uncovered / clear color
     const bool redDom = p[0] > p[1] + 40;
     const bool greenDom = p[1] > p[0] + 40;
     if (!redDom && !greenDom)
@@ -105,18 +114,35 @@ struct Scene
 
 // Build + render the 2x2 checkerboard quad with the given sampler `filter`
 // (nullptr = leave the param unset). Returns the mapped frame in `im`.
-static void renderChecker(
-    ANARIDevice dev, const char *filter, Img &im, Img *mutated = nullptr,
-    bool flipV = false, const char *alphaMode = nullptr,
-    int opacityChannel = -1, bool updates = false)
+static void renderChecker(ANARIDevice dev,
+    const char *filter,
+    Img &im,
+    Img *mutated = nullptr,
+    bool flipV = false,
+    const char *alphaMode = nullptr,
+    int opacityChannel = -1,
+    bool updates = false)
 {
   Scene sc;
 
   // A 2x2 checkerboard image2D: (u,v) row 0 (v=0) = red, green; row 1 (v=1) =
   // blue, white. UFIXED8_VEC4 (linear), row-major, row 0 = v=0.
-  static uint8_t checker[2 * 2 * 4] = {
-      255, 0, 0, 255, /* (0,0) R */ 0, 255, 0, 255, /* (1,0) G */
-      0, 0, 255, 255, /* (0,1) B */ 255, 255, 255, 255 /* (1,1) W */};
+  static uint8_t checker[2 * 2 * 4] = {255,
+      0,
+      0,
+      255,
+      /* (0,0) R */ 0,
+      255,
+      0,
+      255, /* (1,0) G */
+      0,
+      0,
+      255,
+      255,
+      /* (0,1) B */ 255,
+      255,
+      255,
+      255 /* (1,1) W */};
   sc.image =
       anariNewArray2D(dev, checker, nullptr, nullptr, ANARI_UFIXED8_VEC4, 2, 2);
 
@@ -131,14 +157,18 @@ static void renderChecker(
     const float transform[16] = {
         1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
     const float offset[4] = {0, 1, 0, 0};
-    anariSetParameter(dev, sc.sampler, "inTransform", ANARI_FLOAT32_MAT4, transform);
+    anariSetParameter(
+        dev, sc.sampler, "inTransform", ANARI_FLOAT32_MAT4, transform);
     anariSetParameter(dev, sc.sampler, "inOffset", ANARI_FLOAT32_VEC4, offset);
   }
   anariCommitParameters(dev, sc.sampler);
 
   sc.mat = anariNewMaterial(dev, alphaMode ? "physicallyBased" : "matte");
-  anariSetParameter(dev, sc.mat, alphaMode ? "baseColor" : "color",
-      ANARI_SAMPLER, &sc.sampler);
+  anariSetParameter(dev,
+      sc.mat,
+      alphaMode ? "baseColor" : "color",
+      ANARI_SAMPLER,
+      &sc.sampler);
   if (alphaMode) {
     anariSetParameter(dev, sc.mat, "alphaMode", ANARI_STRING, alphaMode);
     // Vela extracts alpha/metallic/roughness into the sampler's red output.
@@ -151,7 +181,8 @@ static void renderChecker(
     transform[4 * opacityChannel] = 0.5f;
     transform[15] = 1.f;
     const float offset[4] = {0.125f, 0, 0, 0};
-    anariSetParameter(dev, opacity, "outTransform", ANARI_FLOAT32_MAT4, transform);
+    anariSetParameter(
+        dev, opacity, "outTransform", ANARI_FLOAT32_MAT4, transform);
     anariSetParameter(dev, opacity, "outOffset", ANARI_FLOAT32_VEC4, offset);
     anariCommitParameters(dev, opacity);
     anariSetParameter(dev, sc.mat, "opacity", ANARI_SAMPLER, &opacity);
@@ -161,24 +192,29 @@ static void renderChecker(
   anariCommitParameters(dev, sc.mat);
 
   // A quad with st spanning the unit square (vertex.attribute0).
-  static float verts[12] = {-0.9f, -0.9f, 0.f, 0.9f, -0.9f, 0.f, 0.9f, 0.9f, 0.f,
-      -0.9f, 0.9f, 0.f};
+  static float verts[12] = {
+      -0.9f, -0.9f, 0.f, 0.9f, -0.9f, 0.f, 0.9f, 0.9f, 0.f, -0.9f, 0.9f, 0.f};
   float st[8] = {0.f, 0.f, 1.f, 0.f, 1.f, 1.f, 0.f, 1.f};
-  sc.pos =
-      anariNewArray1D(dev, verts, nullptr, nullptr, ANARI_FLOAT32_VEC3, 4);
+  sc.pos = anariNewArray1D(dev, verts, nullptr, nullptr, ANARI_FLOAT32_VEC3, 4);
   // Two triangles share positions, but carry six independent UV corners.
   float cornerSt[12] = {0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1};
-  sc.attr0 = anariNewArray1D(dev, g_faceVarying ? cornerSt : st,
-      nullptr, nullptr, ANARI_FLOAT32_VEC2, g_faceVarying ? 6 : 4);
+  sc.attr0 = anariNewArray1D(dev,
+      g_faceVarying ? cornerSt : st,
+      nullptr,
+      nullptr,
+      ANARI_FLOAT32_VEC2,
+      g_faceVarying ? 6 : 4);
   sc.g = anariNewGeometry(dev, g_faceVarying ? "triangle" : "quad");
   anariSetParameter(dev, sc.g, "vertex.position", ANARI_ARRAY1D, &sc.pos);
-  anariSetParameter(dev, sc.g,
+  anariSetParameter(dev,
+      sc.g,
       g_faceVarying ? "faceVarying.attribute0" : "vertex.attribute0",
-      ANARI_ARRAY1D, &sc.attr0);
+      ANARI_ARRAY1D,
+      &sc.attr0);
   if (g_faceVarying) {
     static uint32_t indices[6] = {0, 1, 2, 0, 2, 3};
-    ANARIArray1D index = anariNewArray1D(
-        dev, indices, nullptr, nullptr, ANARI_UINT32_VEC3, 2);
+    ANARIArray1D index =
+        anariNewArray1D(dev, indices, nullptr, nullptr, ANARI_UINT32_VEC3, 2);
     anariSetParameter(dev, sc.g, "primitive.index", ANARI_ARRAY1D, &index);
     anariRelease(dev, index);
   }
@@ -249,13 +285,15 @@ static void renderChecker(
     render(baseline);
     check(baseline.at(64, 64)[0] > baseline.at(64, 64)[1] + 30,
         "sampler update baseline is red");
-    // A second material in another world exercises independent mirror consumers.
+    // A second material in another world exercises independent mirror
+    // consumers.
     auto sharedMat = anariNewMaterial(dev, "matte");
     anariSetParameter(dev, sharedMat, "color", ANARI_SAMPLER, &sc.sampler);
     anariCommitParameters(dev, sharedMat);
     auto sharedSurface = anariNewSurface(dev);
     anariSetParameter(dev, sharedSurface, "geometry", ANARI_GEOMETRY, &sc.g);
-    anariSetParameter(dev, sharedSurface, "material", ANARI_MATERIAL, &sharedMat);
+    anariSetParameter(
+        dev, sharedSurface, "material", ANARI_MATERIAL, &sharedMat);
     anariCommitParameters(dev, sharedSurface);
     auto sharedArray = anariNewArray1D(
         dev, &sharedSurface, nullptr, nullptr, ANARI_SURFACE, 1);
@@ -265,7 +303,8 @@ static void renderChecker(
     auto originalFrame = sc.frame;
     auto sharedFrame = anariNewFrame(dev);
     anariSetParameter(dev, sharedFrame, "size", ANARI_UINT32_VEC2, size);
-    anariSetParameter(dev, sharedFrame, "channel.color", ANARI_DATA_TYPE, &colorFmt);
+    anariSetParameter(
+        dev, sharedFrame, "channel.color", ANARI_DATA_TYPE, &colorFmt);
     anariSetParameter(dev, sharedFrame, "world", ANARI_WORLD, &sharedWorld);
     anariSetParameter(dev, sharedFrame, "camera", ANARI_CAMERA, &sc.cam);
     anariSetParameter(dev, sharedFrame, "renderer", ANARI_RENDERER, &sc.ren);
@@ -277,7 +316,8 @@ static void renderChecker(
     sc.frame = originalFrame;
     const float zero[16] = {};
     const float green[4] = {0, 1, 0, 1};
-    anariSetParameter(dev, sc.sampler, "outTransform", ANARI_FLOAT32_MAT4, zero);
+    anariSetParameter(
+        dev, sc.sampler, "outTransform", ANARI_FLOAT32_MAT4, zero);
     anariSetParameter(dev, sc.sampler, "outOffset", ANARI_FLOAT32_VEC4, green);
     anariCommitParameters(dev, sc.sampler);
     Img changed;
@@ -328,10 +368,10 @@ static void renderChecker(
     check(changed.rgba == clamped.rgba, "wrap removal restores clamp");
     anariUnsetParameter(dev, sc.sampler, "inOffset");
 
-    uint8_t blue[16] = {0, 0, 255, 255, 0, 0, 255, 255,
-        0, 0, 255, 255, 0, 0, 255, 255};
-    auto replacement = anariNewArray2D(
-        dev, blue, nullptr, nullptr, ANARI_UFIXED8_VEC4, 2, 2);
+    uint8_t blue[16] = {
+        0, 0, 255, 255, 0, 0, 255, 255, 0, 0, 255, 255, 0, 0, 255, 255};
+    auto replacement =
+        anariNewArray2D(dev, blue, nullptr, nullptr, ANARI_UFIXED8_VEC4, 2, 2);
     anariSetParameter(dev, sc.sampler, "image", ANARI_ARRAY2D, &replacement);
     anariCommitParameters(dev, sc.sampler);
     render(changed);
@@ -362,7 +402,6 @@ static void renderChecker(
     anariRelease(dev, sharedArray);
     anariRelease(dev, sharedSurface);
     anariRelease(dev, sharedMat);
-
   }
 
   anariRelease(dev, sc.frame);
@@ -422,15 +461,27 @@ int main(int argc, char **argv)
   const int r = std::max(2, std::min(qx, qy) / 2);
   double tl[3], tr[3], bl[3], br[3];
   // ANARI frame rows run bottom-up; image array row zero is sampled at v=0.
-  windowAvg(im, mx - qx, my + qy, r, tl);   // v=1,u=0 -> blue
-  windowAvg(im, mx + qx, my + qy, r, tr);   // v=1,u=1 -> white
-  windowAvg(im, mx - qx, my - qy, r, bl);   // v=0,u=0 -> red
-  windowAvg(im, mx + qx, my - qy, r, br);   // v=0,u=1 -> green
+  windowAvg(im, mx - qx, my + qy, r, tl); // v=1,u=0 -> blue
+  windowAvg(im, mx + qx, my + qy, r, tr); // v=1,u=1 -> white
+  windowAvg(im, mx - qx, my - qy, r, bl); // v=0,u=0 -> red
+  windowAvg(im, mx + qx, my - qy, r, br); // v=0,u=1 -> green
 
-  std::printf("  quadrants  TL(blue)=%.0f %.0f %.0f  TR(white)=%.0f %.0f %.0f\n",
-      tl[0], tl[1], tl[2], tr[0], tr[1], tr[2]);
-  std::printf("             BL(red )=%.0f %.0f %.0f  BR(green)=%.0f %.0f %.0f\n",
-      bl[0], bl[1], bl[2], br[0], br[1], br[2]);
+  std::printf(
+      "  quadrants  TL(blue)=%.0f %.0f %.0f  TR(white)=%.0f %.0f %.0f\n",
+      tl[0],
+      tl[1],
+      tl[2],
+      tr[0],
+      tr[1],
+      tr[2]);
+  std::printf(
+      "             BL(red )=%.0f %.0f %.0f  BR(green)=%.0f %.0f %.0f\n",
+      bl[0],
+      bl[1],
+      bl[2],
+      br[0],
+      br[1],
+      br[2]);
 
   check(bl[0] > bl[1] + 30 && bl[0] > bl[2] + 30,
       "bottom-left samples red (u=0,v=0)");
@@ -443,16 +494,16 @@ int main(int argc, char **argv)
 
   windowAvg(mutated, mx - qx, my - qy, r, bl);
   windowAvg(mutated, mx + qx, my - qy, r, br);
-  check(bl[1] > bl[0] + 30 && bl[1] > bl[2] + 30
-          && br[0] > br[1] + 30 && br[0] > br[2] + 30,
+  check(bl[1] > bl[0] + 30 && bl[1] > bl[2] + 30 && br[0] > br[1] + 30
+          && br[0] > br[2] + 30,
       "in-place UV mutation swaps the red and green quadrants");
 
   Img transformed;
   renderChecker(dev, "nearest", transformed, nullptr, true);
   windowAvg(transformed, mx - qx, my - qy, r, bl);
   windowAvg(transformed, mx - qx, my + qy, r, tl);
-  check(bl[2] > bl[0] + 30 && bl[2] > bl[1] + 30
-          && tl[0] > tl[1] + 30 && tl[0] > tl[2] + 30,
+  check(bl[2] > bl[0] + 30 && bl[2] > bl[1] + 30 && tl[0] > tl[1] + 30
+          && tl[0] > tl[2] + 30,
       "sampler input transform reverses V before conversion to USD coordinates");
 
   // --- filter="nearest" vs "linear": the red->green transition along the
@@ -475,7 +526,9 @@ int main(int argc, char **argv)
   const int linearBlend = countBlended(imL, scanY, lx0, lx1);
 
   std::printf("  scanline blend px  nearest=%d  linear=%d  (quad width ~%d)\n",
-      nearestBlend, linearBlend, nx1 - nx0);
+      nearestBlend,
+      linearBlend,
+      nx1 - nx0);
 
   check(nearestBlend < 4,
       "nearest snaps: few blended px across the u=0.5 boundary");
@@ -492,7 +545,11 @@ int main(int argc, char **argv)
     const int expected = (32 + 64 * channel) / 2 + 32;
     const int actual = blend.at(128, 128)[3];
     std::printf("  channel %d: opaque=%u blend=%d expected=%d mask=%u\n",
-        channel, opaque.at(128, 128)[3], actual, expected, mask.at(128, 128)[3]);
+        channel,
+        opaque.at(128, 128)[3],
+        actual,
+        expected,
+        mask.at(128, 128)[3]);
     check(opaque.at(128, 128)[3] == 255,
         "opaque mode ignores sampler-bound opacity");
     check(actual >= expected - 2 && actual <= expected + 2,
@@ -504,6 +561,7 @@ int main(int argc, char **argv)
   anariRelease(dev, dev);
   anariUnloadLibrary(lib);
   std::printf("\n%s (%d issues)\n",
-      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED", g_errors);
+      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED",
+      g_errors);
   return g_errors == 0 ? 0 : 1;
 }

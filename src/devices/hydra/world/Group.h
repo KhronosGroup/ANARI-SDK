@@ -4,8 +4,8 @@
 #pragma once
 
 #include "Object.h"
-#include "scene/Bounds.h"
 #include "light/Light.h"
+#include "scene/Bounds.h"
 #include "surface/Surface.h"
 #include "volume/Volume.h"
 // helium
@@ -29,14 +29,20 @@ struct Group : public Object
   // ANARI bounds; `proxy` substitutes each volume's rasterized proxy box
   // (camera clipping, Volume::bounds).
   Bounds bounds(bool proxy = false) const;
-  bool getProperty(const std::string_view &name, ANARIDataType type,
-      void *ptr, uint64_t size, uint32_t flags) override;
+  bool getProperty(const std::string_view &name,
+      ANARIDataType type,
+      void *ptr,
+      uint64_t size,
+      uint32_t flags) override;
 
   std::vector<Surface *> surfaces() const;
   std::vector<Light *> lights() const;
   std::vector<Volume *> volumes() const;
 
-  uint64_t serial() const { return m_serial; }
+  uint64_t serial() const
+  {
+    return m_serial;
+  }
 
  private:
   Bounds m_bounds;

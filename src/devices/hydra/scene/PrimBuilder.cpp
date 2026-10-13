@@ -13,9 +13,9 @@
 #include <pxr/imaging/hd/instancedBySchema.h>
 #include <pxr/imaging/hd/materialBindingSchema.h>
 #include <pxr/imaging/hd/materialBindingsSchema.h>
-#include <pxr/imaging/hd/overlayContainerDataSource.h>
 #include <pxr/imaging/hd/meshSchema.h>
 #include <pxr/imaging/hd/meshTopologySchema.h>
+#include <pxr/imaging/hd/overlayContainerDataSource.h>
 #include <pxr/imaging/hd/primvarSchema.h>
 #include <pxr/imaging/hd/primvarsSchema.h>
 #include <pxr/imaging/hd/purposeSchema.h>
@@ -46,7 +46,8 @@ namespace anari_hydra {
 
 HdDataSourceLocator PointsLocator()
 {
-  return HdDataSourceLocator(HdPrimvarsSchemaTokens->primvars, HdTokens->points);
+  return HdDataSourceLocator(
+      HdPrimvarsSchemaTokens->primvars, HdTokens->points);
 }
 
 std::string AttributePrimvarName(int index)
@@ -59,42 +60,56 @@ std::string AttributePrimvarName(int index)
 static HdContainerDataSourceHandle PointsPrimvar(
     const HdSampledDataSourceHandle &pointsDS)
 {
-  return HdPrimvarSchema::BuildRetained(pointsDS, nullptr, nullptr,
+  return HdPrimvarSchema::BuildRetained(pointsDS,
+      nullptr,
+      nullptr,
       HdRetainedTypedSampledDataSource<TfToken>::New(
           HdPrimvarSchemaTokens->vertex),
       HdRetainedTypedSampledDataSource<TfToken>::New(
           HdPrimvarSchemaTokens->point),
-      nullptr, nullptr);
+      nullptr,
+      nullptr);
 }
 
 static HdContainerDataSourceHandle WidthsPrimvar(
     const HdSampledDataSourceHandle &widthsDS, bool perVertex)
 {
-  return HdPrimvarSchema::BuildRetained(widthsDS, nullptr, nullptr,
+  return HdPrimvarSchema::BuildRetained(widthsDS,
+      nullptr,
+      nullptr,
       HdRetainedTypedSampledDataSource<TfToken>::New(perVertex
               ? HdPrimvarSchemaTokens->vertex
               : HdPrimvarSchemaTokens->constant),
-      nullptr, nullptr, nullptr);
+      nullptr,
+      nullptr,
+      nullptr);
 }
 
 static HdContainerDataSourceHandle ColorPrimvar(const GfVec3f &c)
 {
   return HdPrimvarSchema::BuildRetained(
-      HdRetainedTypedSampledDataSource<GfVec3f>::New(c), nullptr, nullptr,
+      HdRetainedTypedSampledDataSource<GfVec3f>::New(c),
+      nullptr,
+      nullptr,
       HdRetainedTypedSampledDataSource<TfToken>::New(
           HdPrimvarSchemaTokens->constant),
       HdRetainedTypedSampledDataSource<TfToken>::New(
           HdPrimvarSchemaTokens->color),
-      nullptr, nullptr);
+      nullptr,
+      nullptr);
 }
 
 static HdContainerDataSourceHandle OpacityPrimvar(float op)
 {
   return HdPrimvarSchema::BuildRetained(
-      HdRetainedTypedSampledDataSource<float>::New(op), nullptr, nullptr,
+      HdRetainedTypedSampledDataSource<float>::New(op),
+      nullptr,
+      nullptr,
       HdRetainedTypedSampledDataSource<TfToken>::New(
           HdPrimvarSchemaTokens->constant),
-      nullptr, nullptr, nullptr);
+      nullptr,
+      nullptr,
+      nullptr);
 }
 
 // Preserve the array's interpolation and semantic role at the Hydra boundary.
@@ -103,11 +118,14 @@ static HdContainerDataSourceHandle ArrayPrimvar(
     const TfToken &interpolation,
     const TfToken &role = TfToken())
 {
-  return HdPrimvarSchema::BuildRetained(values, nullptr, nullptr,
+  return HdPrimvarSchema::BuildRetained(values,
+      nullptr,
+      nullptr,
       HdRetainedTypedSampledDataSource<TfToken>::New(interpolation),
       role.IsEmpty() ? nullptr
                      : HdRetainedTypedSampledDataSource<TfToken>::New(role),
-      nullptr, nullptr);
+      nullptr,
+      nullptr);
 }
 
 // An optional per-element map applied to the padded float4 attribute value
@@ -144,7 +162,7 @@ static HdSampledDataSourceHandle BuildFloatArray(
     }
     return HdRetainedTypedSampledDataSource<VtVec4fArray>::New(v);
   }
-  default: {   // 3
+  default: { // 3
     VtVec3fArray v(n);
     for (size_t i = 0; i < n; ++i) {
       const auto x = read(i);
@@ -173,8 +191,9 @@ static HdSampledDataSourceHandle ConstantFloatValue(
 // Decode an ANARI attribute array to a primvar of `width` components
 // (1..4), via readAsAttributeValue (which linearises and widens any element
 // type to float4). Copied — small and outside the zero-copy scope.
-static HdSampledDataSourceHandle DecodeAttributeArray(
-    helium::Array1D *a, size_t n, int width,
+static HdSampledDataSourceHandle DecodeAttributeArray(helium::Array1D *a,
+    size_t n,
+    int width,
     const std::vector<uint32_t> *indices = nullptr,
     const AttrTransform &transform = {})
 {
@@ -240,7 +259,9 @@ static const helium::float4 *ConstantFor(
 // meshes expand vertex and primitive data through their original source maps.
 // Only native triangle/quad meshes supply numCorners for face-varying data.
 static std::vector<std::pair<TfToken, HdDataSourceBaseHandle>>
-GatherOptionalPrimvars(Geometry *geom, size_t numVerts, size_t numCorners = 0,
+GatherOptionalPrimvars(Geometry *geom,
+    size_t numVerts,
+    size_t numCorners = 0,
     const std::vector<uint32_t> *indices = nullptr,
     const std::vector<uint32_t> *primitives = nullptr,
     const InstanceBinding &instancing = {},
@@ -248,8 +269,11 @@ GatherOptionalPrimvars(Geometry *geom, size_t numVerts, size_t numCorners = 0,
     const GeometryFrame &frame = {})
 {
   std::vector<std::pair<TfToken, HdDataSourceBaseHandle>> out;
-  auto append = [&](const TfToken &name, helium::Array1D *vertex,
-                    helium::Array1D *corners, int slot, int width,
+  auto append = [&](const TfToken &name,
+                    helium::Array1D *vertex,
+                    helium::Array1D *corners,
+                    int slot,
+                    int width,
                     const TfToken &role = TfToken(),
                     const AttrTransform &transform = {}) {
     const bool faceVarying = numCorners > 0 && corners;
@@ -264,30 +288,41 @@ GatherOptionalPrimvars(Geometry *geom, size_t numVerts, size_t numCorners = 0,
         const helium::float4 mapped = transform ? transform(*cv) : *cv;
         out.emplace_back(name,
             ArrayPrimvar(ConstantFloatValue(mapped, width),
-                HdPrimvarSchemaTokens->constant, role));
+                HdPrimvarSchemaTokens->constant,
+                role));
       }
       return;
     }
-    if (mapping && std::any_of(mapping->begin(), mapping->end(),
-                       [&](uint32_t i) { return i >= a->size(); }))
+    if (mapping
+        && std::any_of(mapping->begin(), mapping->end(), [&](uint32_t i) {
+             return i >= a->size();
+           }))
       return;
-    const size_t n = mapping ? mapping->size()
-                            : std::min(faceVarying ? numCorners : numVerts, a->size());
+    const size_t n = mapping
+        ? mapping->size()
+        : std::min(faceVarying ? numCorners : numVerts, a->size());
     const int components =
         width ? width : int(anari::componentsOf(a->elementType()));
     out.emplace_back(name,
         ArrayPrimvar(DecodeAttributeArray(a, n, components, mapping, transform),
-            uniform ? HdPrimvarSchemaTokens->uniform : faceVarying ? HdPrimvarSchemaTokens->faceVarying
-                        : HdPrimvarSchemaTokens->vertex,
+            uniform           ? HdPrimvarSchemaTokens->uniform
+                : faceVarying ? HdPrimvarSchemaTokens->faceVarying
+                              : HdPrimvarSchemaTokens->vertex,
             role));
   };
-  append(TfToken("st"), geom->vertexAttribute0(),
-      geom->faceVaryingAttribute0(), 0, 2);
+  append(TfToken("st"),
+      geom->vertexAttribute0(),
+      geom->faceVaryingAttribute0(),
+      0,
+      2);
   append(TfToken("color"), geom->vertexColor(), geom->faceVaryingColor(), 4, 3);
   helium::Array1D *vertex[4] = {geom->vertexAttribute0(),
-      geom->vertexAttribute1(), geom->vertexAttribute2(), geom->vertexAttribute3()};
+      geom->vertexAttribute1(),
+      geom->vertexAttribute2(),
+      geom->vertexAttribute3()};
   helium::Array1D *corners[4] = {geom->faceVaryingAttribute0(),
-      geom->faceVaryingAttribute1(), geom->faceVaryingAttribute2(),
+      geom->faceVaryingAttribute1(),
+      geom->faceVaryingAttribute2(),
       geom->faceVaryingAttribute3()};
   for (int k = 0; k < 4; ++k)
     append(TfToken(AttributePrimvarName(k)), vertex[k], corners[k], k, 0);
@@ -301,7 +336,9 @@ GatherOptionalPrimvars(Geometry *geom, size_t numVerts, size_t numCorners = 0,
         continue;
       append(TfToken(name + "_float" + std::to_string(width)),
           k == 4 ? geom->vertexColor() : vertex[k],
-          k == 4 ? geom->faceVaryingColor() : corners[k], k, width);
+          k == 4 ? geom->faceVaryingColor() : corners[k],
+          k,
+          width);
     }
   }
   // Derived sampler primvars (SPEC §6.4). An attribute source goes through
@@ -325,11 +362,14 @@ GatherOptionalPrimvars(Geometry *geom, size_t numVerts, size_t numCorners = 0,
         return sampler->primitiveValue((*primitives)[i]);
       };
     } else if (Sampler::IsAttributeSlot(d.slot)) {
-      append(d.name, d.slot == Sampler::kSlotColor ? geom->vertexColor()
-                                                  : vertex[d.slot],
+      append(d.name,
+          d.slot == Sampler::kSlotColor ? geom->vertexColor() : vertex[d.slot],
           d.slot == Sampler::kSlotColor ? geom->faceVaryingColor()
                                         : corners[d.slot],
-          d.slot, d.width, TfToken(), d.transform);
+          d.slot,
+          d.width,
+          TfToken(),
+          d.transform);
     } else if (d.slot == Sampler::kSlotObjectPosition
         || d.slot == Sampler::kSlotWorldPosition) {
       // The authored points: ANARI vertices, or the tessellated surface, so a
@@ -375,9 +415,8 @@ GatherOptionalPrimvars(Geometry *geom, size_t numVerts, size_t numCorners = 0,
       } else if (frame.generatedNormals && frame.numGeneratedNormals > 0) {
         count = frame.numGeneratedNormals;
         interpolation = HdPrimvarSchemaTokens->vertex;
-        source = [&frame, finish](size_t i) {
-          return finish(frame.generatedNormals[i]);
-        };
+        source = [&frame, finish](
+                     size_t i) { return finish(frame.generatedNormals[i]); };
       }
     } else if (d.slot == Sampler::kSlotPrimitiveId) {
       // The ANARI primitive index (not `primitive.id`, which is a picking
@@ -391,7 +430,8 @@ GatherOptionalPrimvars(Geometry *geom, size_t numVerts, size_t numCorners = 0,
     if (source && count > 0) {
       const AttrTransform &transform = d.transform;
       out.emplace_back(d.name,
-          ArrayPrimvar(BuildFloatArray(count, d.width,
+          ArrayPrimvar(BuildFloatArray(count,
+                           d.width,
                            [&](size_t i) {
                              const helium::float4 v = source(i);
                              return transform ? transform(v) : v;
@@ -400,21 +440,25 @@ GatherOptionalPrimvars(Geometry *geom, size_t numVerts, size_t numCorners = 0,
     } else if (out.size() == before && d.constantWhenAbsent) {
       const helium::float4 missing(0.f, 0.f, 0.f, 1.f);
       out.emplace_back(d.name,
-          ArrayPrimvar(ConstantFloatValue(
-                           d.transform ? d.transform(missing) : missing, d.width),
+          ArrayPrimvar(
+              ConstantFloatValue(
+                  d.transform ? d.transform(missing) : missing, d.width),
               HdPrimvarSchemaTokens->constant));
     }
   }
   if (numCorners > 0)
-    append(HdTokens->normals, geom->vertexNormal(), geom->faceVaryingNormal(),
-        -1, 3, HdPrimvarSchemaTokens->normal);
+    append(HdTokens->normals,
+        geom->vertexNormal(),
+        geom->faceVaryingNormal(),
+        -1,
+        3,
+        HdPrimvarSchemaTokens->normal);
   return out;
 }
 
 // Assemble a primvars container from (name,value) pairs, appending the optional
 // per-vertex material primvars.
-static HdContainerDataSourceHandle PrimvarsContainer(
-    std::vector<TfToken> names,
+static HdContainerDataSourceHandle PrimvarsContainer(std::vector<TfToken> names,
     std::vector<HdDataSourceBaseHandle> values,
     const std::vector<std::pair<TfToken, HdDataSourceBaseHandle>> &extras)
 {
@@ -426,8 +470,8 @@ static HdContainerDataSourceHandle PrimvarsContainer(
       names.size(), names.data(), values.data());
 }
 
-// Purpose / visibility / xform / extent / material binding — identical for every
-// rprim type.
+// Purpose / visibility / xform / extent / material binding — identical for
+// every rprim type.
 static void AppendTrailingSchemas(std::vector<TfToken> &names,
     std::vector<HdDataSourceBaseHandle> &values,
     const GfMatrix4d &xform,
@@ -450,7 +494,8 @@ static void AppendTrailingSchemas(std::vector<TfToken> &names,
   values.push_back(HdPurposeSchema::BuildRetained(
       HdRetainedTypedSampledDataSource<TfToken>::New(
           HdRenderTagTokens->geometry),
-      nullptr, nullptr));
+      nullptr,
+      nullptr));
 
   names.push_back(HdVisibilitySchemaTokens->visibility);
   values.push_back(HdVisibilitySchema::BuildRetained(
@@ -508,7 +553,8 @@ static HdContainerDataSourceHandle BuildMeshPrim(
           HdRetainedTypedSampledDataSource<VtIntArray>::New(faceVertexCounts),
           HdRetainedTypedSampledDataSource<VtIntArray>::New(faceVertexIndices),
           nullptr,
-          HdRetainedTypedSampledDataSource<TfToken>::New(HdTokens->rightHanded)),
+          HdRetainedTypedSampledDataSource<TfToken>::New(
+              HdTokens->rightHanded)),
       HdRetainedTypedSampledDataSource<TfToken>::New(
           PxOsdOpenSubdivTokens->none),
       nullptr,
@@ -575,13 +621,28 @@ static HdContainerDataSourceHandle BuildIndexedMesh(Geometry *geom,
   frame.points = points;
   frame.numPoints = numVerts;
   frame.xform = xform;
-  auto extras = GatherOptionalPrimvars(geom, numVerts, indices.size(), nullptr,
-      &primitives, instancing, derived, frame);
-  return BuildMeshPrim(pointsDS, counts, indices, lo, hi, color, opacity, xform,
-      materialPath, extras);
+  auto extras = GatherOptionalPrimvars(geom,
+      numVerts,
+      indices.size(),
+      nullptr,
+      &primitives,
+      instancing,
+      derived,
+      frame);
+  return BuildMeshPrim(pointsDS,
+      counts,
+      indices,
+      lo,
+      hi,
+      color,
+      opacity,
+      xform,
+      materialPath,
+      extras);
 }
 
-static HdContainerDataSourceHandle BuildTessellatedMesh(Geometry *geom, const TessMesh &mesh,
+static HdContainerDataSourceHandle BuildTessellatedMesh(Geometry *geom,
+    const TessMesh &mesh,
     const GfVec3f &color,
     float opacity,
     const GfMatrix4d &xform,
@@ -596,19 +657,34 @@ static HdContainerDataSourceHandle BuildTessellatedMesh(Geometry *geom, const Te
   frame.generatedNormals = mesh.normals.data();
   frame.numGeneratedNormals = mesh.normals.size();
   frame.xform = xform;
-  auto extras = GatherOptionalPrimvars(geom, mesh.points.size(), 0,
-      &mesh.vertexIndices, &mesh.primitiveIndices, instancing, derived,
+  auto extras = GatherOptionalPrimvars(geom,
+      mesh.points.size(),
+      0,
+      &mesh.vertexIndices,
+      &mesh.primitiveIndices,
+      instancing,
+      derived,
       frame);
   if (!mesh.normals.empty())
     extras.emplace_back(HdTokens->normals,
-        ArrayPrimvar(HdRetainedTypedSampledDataSource<VtVec3fArray>::New(mesh.normals),
-            HdPrimvarSchemaTokens->vertex, HdPrimvarSchemaTokens->normal));
+        ArrayPrimvar(
+            HdRetainedTypedSampledDataSource<VtVec3fArray>::New(mesh.normals),
+            HdPrimvarSchemaTokens->vertex,
+            HdPrimvarSchemaTokens->normal));
   auto pointsDS =
       HdRetainedTypedSampledDataSource<VtVec3fArray>::New(mesh.points);
   GfVec3d lo, hi;
   ComputeExtent(mesh.points.data(), mesh.points.size(), lo, hi);
-  return BuildMeshPrim(pointsDS, mesh.faceVertexCounts, mesh.faceVertexIndices,
-      lo, hi, color, opacity, xform, materialPath, extras);
+  return BuildMeshPrim(pointsDS,
+      mesh.faceVertexCounts,
+      mesh.faceVertexIndices,
+      lo,
+      hi,
+      color,
+      opacity,
+      xform,
+      materialPath,
+      extras);
 }
 
 // --- curve widths ---------------------------------------------------------
@@ -627,7 +703,8 @@ static HdSampledDataSourceHandle BuildWidths(
     return HdRetainedTypedSampledDataSource<VtFloatArray>::New(widths);
   }
   perVertex = false;
-  return HdRetainedTypedSampledDataSource<float>::New(2.f * geom->globalRadius());
+  return HdRetainedTypedSampledDataSource<float>::New(
+      2.f * geom->globalRadius());
 }
 
 // --- basisCurves (curve) ---------------------------------------------------
@@ -659,7 +736,7 @@ static HdContainerDataSourceHandle BuildBasisCurvesPrim(Geometry *geom,
     const uint32_t *idx = static_cast<const uint32_t *>(index->data());
     for (size_t i = 0; i < index->size(); ++i) {
       if (size_t(idx[i]) + 1 >= numVerts)
-        continue;   // malformed app index: skip the segment (as TessellateTubes)
+        continue; // malformed app index: skip the segment (as TessellateTubes)
       primitives.push_back(uint32_t(i));
       curveVertexCounts.push_back(2);
       curveIndices.push_back(int(idx[i]));
@@ -695,13 +772,22 @@ static HdContainerDataSourceHandle BuildBasisCurvesPrim(Geometry *geom,
           HdRetainedTypedSampledDataSource<TfToken>::New(HdTokens->linear),
           HdRetainedTypedSampledDataSource<TfToken>::New(
               HdTokens->nonperiodic))));
-  values.push_back(PrimvarsContainer(
-      {HdTokens->points, HdTokens->widths, HdTokens->displayColor,
-          HdTokens->displayOpacity},
-      {PointsPrimvar(pointsDS), WidthsPrimvar(widthsDS, perVertex),
-          ColorPrimvar(color), OpacityPrimvar(opacity)},
-      GatherOptionalPrimvars(geom, numVerts, 0, nullptr, &primitives,
-          instancing, derived, frame)));
+  values.push_back(PrimvarsContainer({HdTokens->points,
+                                         HdTokens->widths,
+                                         HdTokens->displayColor,
+                                         HdTokens->displayOpacity},
+      {PointsPrimvar(pointsDS),
+          WidthsPrimvar(widthsDS, perVertex),
+          ColorPrimvar(color),
+          OpacityPrimvar(opacity)},
+      GatherOptionalPrimvars(geom,
+          numVerts,
+          0,
+          nullptr,
+          &primitives,
+          instancing,
+          derived,
+          frame)));
   AppendTrailingSchemas(names, values, xform, lo, hi, materialPath);
   return HdRetainedContainerDataSource::New(
       names.size(), names.data(), values.data());
@@ -745,7 +831,8 @@ static std::vector<DerivedPrimvar> CollectDerivedPrimvars(Material *mat)
         d.constantWhenAbsent = true;
       }
     }
-    if (std::any_of(derived.begin(), derived.end(),
+    if (std::any_of(derived.begin(),
+            derived.end(),
             [&](const DerivedPrimvar &o) { return o.name == d.name; }))
       continue;
     derived.push_back(std::move(d));
@@ -761,7 +848,8 @@ std::vector<InstancerAttribute> BuildDerivedInstanceAttributes(
     if (d.primitive || !Sampler::IsAttributeSlot(d.slot))
       continue;
     const bool color = d.slot == Sampler::kSlotColor;
-    if (std::none_of(overrides.begin(), overrides.end(),
+    if (std::none_of(overrides.begin(),
+            overrides.end(),
             [&](const InstanceOverrides &o) {
               return color ? o.hasColor : o.hasAttribute[d.slot];
             }))
@@ -829,15 +917,23 @@ HdContainerDataSourceHandle BuildSurfacePrim(Surface *surface,
 
   HdContainerDataSourceHandle prim;
   if (const TessMesh *t = geom->tessellation())
-    prim = BuildTessellatedMesh(geom, *t, color, opacity, xform, materialPath, instancing, derived);
+    prim = BuildTessellatedMesh(
+        geom, *t, color, opacity, xform, materialPath, instancing, derived);
   else {
     const TfToken pt = geom->primType();
     if (pt == HdPrimTypeTokens->basisCurves)
-      prim = BuildBasisCurvesPrim(geom, color, opacity, xform, materialPath, instancing, derived);
+      prim = BuildBasisCurvesPrim(
+          geom, color, opacity, xform, materialPath, instancing, derived);
     else
       // Mesh: triangle (3 verts/face) or quad (4 verts/face).
-      prim = BuildIndexedMesh(
-          geom, geom->meshVertsPerFace(), color, opacity, xform, materialPath, instancing, derived);
+      prim = BuildIndexedMesh(geom,
+          geom->meshVertsPerFace(),
+          color,
+          opacity,
+          xform,
+          materialPath,
+          instancing,
+          derived);
   }
 
   // Prototype of an instancer (SPEC §4.3): overlay an `instancedBy` on the base

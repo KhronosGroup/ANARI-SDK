@@ -14,8 +14,13 @@ using Bounds = pxr::GfRange3f;
 // Cached queries never wait. WAIT observes committed state on the worker,
 // without authoring a mirror or requiring a render.
 template <typename Scene>
-bool QueryBounds(Scene &scene, Bounds &cached, const std::string_view &name,
-    ANARIDataType type, void *ptr, uint64_t size, uint32_t flags)
+bool QueryBounds(Scene &scene,
+    Bounds &cached,
+    const std::string_view &name,
+    ANARIDataType type,
+    void *ptr,
+    uint64_t size,
+    uint32_t flags)
 {
   if (name != "bounds" || type != ANARI_FLOAT32_BOX3 || !ptr
       || size < 6 * sizeof(float))

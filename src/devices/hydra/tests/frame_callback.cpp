@@ -22,13 +22,18 @@ static int g_errors = 0;
 // outside it count as failures.
 static bool g_expectErrors = false;
 
-static void statusFunc(const void *, ANARIDevice, ANARIObject,
-    ANARIDataType, ANARIStatusSeverity severity, ANARIStatusCode,
+static void statusFunc(const void *,
+    ANARIDevice,
+    ANARIObject,
+    ANARIDataType,
+    ANARIStatusSeverity severity,
+    ANARIStatusCode,
     const char *message)
 {
   if (severity <= ANARI_SEVERITY_WARNING)
     std::printf("[%s] %s\n",
-        severity <= ANARI_SEVERITY_ERROR ? "ERROR" : "WARN", message);
+        severity <= ANARI_SEVERITY_ERROR ? "ERROR" : "WARN",
+        message);
   if (severity <= ANARI_SEVERITY_ERROR && !g_expectErrors)
     ++g_errors;
 }
@@ -198,8 +203,7 @@ static void probingCallback(const void *u, ANARIDevice d, ANARIFrame f)
   }
   anariUnmapFrame(d, f, "channel.color");
   uint32_t dw = 0, dh = 0;
-  const void *depth =
-      anariMapFrame(d, f, "channel.depth", &dw, &dh, &type);
+  const void *depth = anariMapFrame(d, f, "channel.depth", &dw, &dh, &type);
   anariUnmapFrame(d, f, "channel.depth");
   // Retain/release and discard of the completing frame are callback-safe too.
   anariRetain(d, f);
@@ -212,8 +216,8 @@ static void probingCallback(const void *u, ANARIDevice d, ANARIFrame f)
     g_rec.duration = dur;
     g_rec.mapped = px != nullptr && w == kSize && h == kSize;
     g_rec.mapNonBlack = nonBlack;
-    g_rec.depthMapped = depth != nullptr && dw == kSize && dh == kSize
-        && type == ANARI_FLOAT32;
+    g_rec.depthMapped =
+        depth != nullptr && dw == kSize && dh == kSize && type == ANARI_FLOAT32;
   }
   g_rec.note(Which::COUNTING, u, d, f);
 }
@@ -461,7 +465,8 @@ int main(int argc, char **argv)
       anariRenderFrame(dev, frame);
     check(g_rec.waitFor(N), "queued renders all complete via callback");
     anariFrameReady(dev, frame, ANARI_WAIT);
-    check(g_rec.snapshot().count == N, "queued renders fire exactly N callbacks");
+    check(
+        g_rec.snapshot().count == N, "queued renders fire exactly N callbacks");
 
     // Replacement: new callback and user data take effect on the next render.
     g_rec.reset();

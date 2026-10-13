@@ -26,7 +26,8 @@ namespace anari_hydra {
 // for which bounds() and proxyBounds() are meaningless.
 struct FieldSnapshot
 {
-  FieldSnapshot(uint64_t revision, std::string assetPath, AnariFieldDataPtr grid);
+  FieldSnapshot(
+      uint64_t revision, std::string assetPath, AnariFieldDataPtr grid);
   ~FieldSnapshot();
   FieldSnapshot(const FieldSnapshot &) = delete;
   FieldSnapshot &operator=(const FieldSnapshot &) = delete;
@@ -40,7 +41,7 @@ struct FieldSnapshot
 
   const uint64_t revision;
   const std::string assetPath;
-  const AnariFieldDataPtr grid;   // never null
+  const AnariFieldDataPtr grid; // never null
 };
 
 using FieldSnapshotPtr = std::shared_ptr<const FieldSnapshot>;
@@ -48,8 +49,8 @@ using FieldSnapshotPtr = std::shared_ptr<const FieldSnapshot>;
 // ANARI spatial field -> a field bprim whose texture Storm loads from the
 // in-memory field scheme (SPEC §7, AnariField.h). Every subtype decodes to one
 // dense float32 vertex-centred grid (AnariFieldData) at commit, published as
-// a FieldSnapshot under a revision-bumped `anari://field/…​.anari` path so a
-// new commit is a new texture identity for Storm's texture cache.
+// a FieldSnapshot under a revision-bumped `anari://field/…​.anari` path so
+// a new commit is a new texture identity for Storm's texture cache.
 //
 // Implemented: structuredRegular (KHR_SPATIAL_FIELD_STRUCTURED_REGULAR) and,
 // when built with the NanoVDB headers, nanovdb (KHR_SPATIAL_FIELD_NANOVDB,
@@ -63,9 +64,15 @@ struct SpatialField : public Object
   // headers at build time).
   static bool supportsSubtype(std::string_view subtype);
 
-  bool isValid() const override { return bool(snapshot()); }
+  bool isValid() const override
+  {
+    return bool(snapshot());
+  }
 
-  uint64_t serial() const { return m_serial; }
+  uint64_t serial() const
+  {
+    return m_serial;
+  }
 
   // The current decode, or null while invalid. Safe from any thread.
   FieldSnapshotPtr snapshot() const;

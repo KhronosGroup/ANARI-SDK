@@ -48,8 +48,9 @@ int main(int argc, char **argv)
     return 2;
   }
   if (!displayAvailable()) {
-    std::printf("SKIP: no X display (DISPLAY/XAUTHORITY); the hydra device "
-                "needs a GL context\n");
+    std::printf(
+        "SKIP: no X display (DISPLAY/XAUTHORITY); the hydra device "
+        "needs a GL context\n");
     return kSkip;
   }
   execv(argv[1], argv + 1);

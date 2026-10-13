@@ -17,13 +17,18 @@
 
 static int g_errors = 0;
 
-static void statusFunc(const void *, ANARIDevice, ANARIObject,
-    ANARIDataType, ANARIStatusSeverity severity, ANARIStatusCode,
+static void statusFunc(const void *,
+    ANARIDevice,
+    ANARIObject,
+    ANARIDataType,
+    ANARIStatusSeverity severity,
+    ANARIStatusCode,
     const char *message)
 {
   if (severity <= ANARI_SEVERITY_WARNING)
     std::printf("[%s] %s\n",
-        severity <= ANARI_SEVERITY_ERROR ? "ERROR" : "WARN", message);
+        severity <= ANARI_SEVERITY_ERROR ? "ERROR" : "WARN",
+        message);
   if (severity <= ANARI_SEVERITY_ERROR)
     ++g_errors;
 }
@@ -70,8 +75,13 @@ int main(int argc, char **argv)
     return 2;
 
   const char *const *devList = nullptr;
-  int got = anariGetProperty(dev, dev, "extension", ANARI_STRING_LIST,
-      &devList, sizeof(devList), ANARI_WAIT);
+  int got = anariGetProperty(dev,
+      dev,
+      "extension",
+      ANARI_STRING_LIST,
+      &devList,
+      sizeof(devList),
+      ANARI_WAIT);
   check(got == 1 && devList != nullptr, "device 'extension' property returned");
   std::set<std::string> devExt = toSet(devList);
   check(devExt == ext, "device extension property matches library list");
@@ -86,7 +96,8 @@ int main(int argc, char **argv)
       "object-info extension list matches library list");
 
   // --- geometry / sampler subtypes reflect the same capability gating -------
-  std::set<std::string> geo = toSet(anariGetObjectSubtypes(dev, ANARI_GEOMETRY));
+  std::set<std::string> geo =
+      toSet(anariGetObjectSubtypes(dev, ANARI_GEOMETRY));
   std::set<std::string> smp = toSet(anariGetObjectSubtypes(dev, ANARI_SAMPLER));
 
   // --- assertions -----------------------------------------------------------
@@ -104,8 +115,10 @@ int main(int argc, char **argv)
   // its Hydra AOV. Depth and the three ID buffers are unconditional across both
   // reference delegates; normal accepts either the `normal` AOV (HdEmbree) or
   // the eye-space `Neye` AOV (HdStorm), so both claim it.
-  check(has(ext, "ANARI_KHR_FRAME_CHANNEL_COLOR"), "FRAME_CHANNEL_COLOR present");
-  check(has(ext, "ANARI_KHR_FRAME_CHANNEL_DEPTH"), "FRAME_CHANNEL_DEPTH present");
+  check(
+      has(ext, "ANARI_KHR_FRAME_CHANNEL_COLOR"), "FRAME_CHANNEL_COLOR present");
+  check(
+      has(ext, "ANARI_KHR_FRAME_CHANNEL_DEPTH"), "FRAME_CHANNEL_DEPTH present");
   check(has(ext, "ANARI_KHR_FRAME_CHANNEL_OBJECT_ID"),
       "FRAME_CHANNEL_OBJECT_ID present");
   check(has(ext, "ANARI_KHR_FRAME_CHANNEL_PRIMITIVE_ID"),
@@ -127,8 +140,8 @@ int main(int argc, char **argv)
       "FRAME_COMPLETION_CALLBACK present");
 
   check(ext.count("ANARI_KHR_CAMERA_ORTHOGRAPHIC"), "ORTHOGRAPHIC present");
-  // Sharp per-delegate totals: the honest lists (SPEC §4.8) sum to fixed counts.
-  // storm adds all five AOV channels atop its fuller geometry/sampler
+  // Sharp per-delegate totals: the honest lists (SPEC §4.8) sum to fixed
+  // counts. storm adds all five AOV channels atop its fuller geometry/sampler
   // surface (image1D/2D, primitive, transform, clamp-to-border), plus
   // FRAME_AOV, orthographic cameras, the two instance transform extensions
   // and the renderer background colour (33); embree adds all five AOV
@@ -161,10 +174,14 @@ int main(int argc, char **argv)
     // HdEmbree: no points/basisCurves rprims, no material sprim.
     check(has(ext, "ANARI_KHR_GEOMETRY_SPHERE"), "embree includes SPHERE");
     check(!has(ext, "ANARI_KHR_GEOMETRY_CURVE"), "embree omits CURVE");
-    check(!has(ext, "ANARI_KHR_SAMPLER_IMAGE1D"), "embree omits SAMPLER_IMAGE1D");
-    check(!has(ext, "ANARI_KHR_SAMPLER_IMAGE2D"), "embree omits SAMPLER_IMAGE2D");
-    check(!has(ext, "ANARI_KHR_SAMPLER_PRIMITIVE"), "embree omits SAMPLER_PRIMITIVE");
-    check(!has(ext, "ANARI_KHR_SAMPLER_TRANSFORM"), "embree omits SAMPLER_TRANSFORM");
+    check(
+        !has(ext, "ANARI_KHR_SAMPLER_IMAGE1D"), "embree omits SAMPLER_IMAGE1D");
+    check(
+        !has(ext, "ANARI_KHR_SAMPLER_IMAGE2D"), "embree omits SAMPLER_IMAGE2D");
+    check(!has(ext, "ANARI_KHR_SAMPLER_PRIMITIVE"),
+        "embree omits SAMPLER_PRIMITIVE");
+    check(!has(ext, "ANARI_KHR_SAMPLER_TRANSFORM"),
+        "embree omits SAMPLER_TRANSFORM");
     check(!has(ext, "ANARI_KHR_SAMPLER_IMAGExD_CLAMP_TO_BORDER"),
         "embree omits SAMPLER_IMAGExD_CLAMP_TO_BORDER");
     check(geo.find("sphere") != geo.end(), "embree geometry includes 'sphere'");
@@ -180,14 +197,21 @@ int main(int argc, char **argv)
     // HdStorm: full geometry + sampler surface.
     check(has(ext, "ANARI_KHR_GEOMETRY_SPHERE"), "storm includes SPHERE");
     check(has(ext, "ANARI_KHR_GEOMETRY_CURVE"), "storm includes CURVE");
-    check(has(ext, "ANARI_KHR_SAMPLER_IMAGE2D"), "storm includes SAMPLER_IMAGE2D");
-    check(has(ext, "ANARI_KHR_SAMPLER_PRIMITIVE"), "storm includes SAMPLER_PRIMITIVE");
-    check(has(ext, "ANARI_KHR_SAMPLER_TRANSFORM"), "storm includes SAMPLER_TRANSFORM");
+    check(has(ext, "ANARI_KHR_SAMPLER_IMAGE2D"),
+        "storm includes SAMPLER_IMAGE2D");
+    check(has(ext, "ANARI_KHR_SAMPLER_PRIMITIVE"),
+        "storm includes SAMPLER_PRIMITIVE");
+    check(has(ext, "ANARI_KHR_SAMPLER_TRANSFORM"),
+        "storm includes SAMPLER_TRANSFORM");
     check(has(ext, "ANARI_KHR_SAMPLER_IMAGExD_CLAMP_TO_BORDER"),
         "storm includes SAMPLER_IMAGExD_CLAMP_TO_BORDER");
     check(geo.find("sphere") != geo.end(), "storm geometry includes 'sphere'");
     check(geo.find("curve") != geo.end(), "storm geometry includes 'curve'");
-    check(smp == std::set<std::string>{"image1D", "image2D", "primitive", "transform"},
+    check(smp
+            == std::set<std::string>{"image1D",
+                "image2D",
+                "primitive",
+                "transform"},
         "storm sampler subtypes match the claimed extensions");
     check(has(ext, "ANARI_KHR_SPATIAL_FIELD_STRUCTURED_REGULAR")
             && has(ext, "ANARI_KHR_VOLUME_TRANSFER_FUNCTION1D"),
@@ -201,6 +225,7 @@ int main(int argc, char **argv)
   anariUnloadLibrary(lib);
 
   std::printf("\n%s (%d issues)\n",
-      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED", g_errors);
+      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED",
+      g_errors);
   return g_errors == 0 ? 0 : 1;
 }

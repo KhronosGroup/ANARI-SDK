@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Zero-copy array wrapper (SPEC §5.1): a custom HdDataSource leaf that holds a
-// refcounted ANARI array handle and serves its memory to Hydra as a foreign-data
-// VtArray at pull time. Bulk data is never copied at the ANARI<->Hydra boundary.
+// refcounted ANARI array handle and serves its memory to Hydra as a
+// foreign-data VtArray at pull time. Bulk data is never copied at the
+// ANARI<->Hydra boundary.
 //
 // Execution-verified in prototype 012: VtArray(&src, ptr, n) per pull, sharing
 // one foreign source; pointer identity survives to
@@ -17,12 +18,12 @@
 #pragma once
 
 // helium
-#include "helium/utility/IntrusivePtr.h"
 #include "helium/array/Array.h"
+#include "helium/utility/IntrusivePtr.h"
 // pxr
-#include <pxr/imaging/hd/dataSource.h>
 #include <pxr/base/vt/array.h>
 #include <pxr/base/vt/value.h>
+#include <pxr/imaging/hd/dataSource.h>
 
 #include <vector>
 
@@ -58,8 +59,7 @@ class ArrayForeignSource : public pxr::Vt_ArrayForeignDataSource
 };
 
 template <typename T>
-class ZeroCopyDataSource
-    : public pxr::HdTypedSampledDataSource<pxr::VtArray<T>>
+class ZeroCopyDataSource : public pxr::HdTypedSampledDataSource<pxr::VtArray<T>>
 {
  public:
   using Handle = std::shared_ptr<ZeroCopyDataSource<T>>;
@@ -84,16 +84,14 @@ class ZeroCopyDataSource
   {
     // Zero-copy wrap: no allocation, no memcpy. Copies of this VtArray share
     // the same foreign source, whose array ref keeps the memory live.
-    return pxr::VtArray<T>(
-        m_foreignSource, const_cast<T *>(m_data), m_count);
+    return pxr::VtArray<T>(m_foreignSource, const_cast<T *>(m_data), m_count);
   }
 
-  bool GetContributingSampleTimesForInterval(
-      pxr::HdSampledDataSource::Time,
+  bool GetContributingSampleTimesForInterval(pxr::HdSampledDataSource::Time,
       pxr::HdSampledDataSource::Time,
       std::vector<pxr::HdSampledDataSource::Time> *) override
   {
-    return false;   // not animated in v1
+    return false; // not animated in v1
   }
 
  private:

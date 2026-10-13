@@ -16,12 +16,18 @@
 
 static int g_errors = 0;
 
-static void statusFunc(const void *, ANARIDevice, ANARIObject, ANARIDataType,
-    ANARIStatusSeverity severity, ANARIStatusCode, const char *message)
+static void statusFunc(const void *,
+    ANARIDevice,
+    ANARIObject,
+    ANARIDataType,
+    ANARIStatusSeverity severity,
+    ANARIStatusCode,
+    const char *message)
 {
   if (severity <= ANARI_SEVERITY_WARNING)
     std::printf("[%s] %s\n",
-        severity <= ANARI_SEVERITY_ERROR ? "ERR" : "WARN", message);
+        severity <= ANARI_SEVERITY_ERROR ? "ERR" : "WARN",
+        message);
   if (severity <= ANARI_SEVERITY_ERROR)
     ++g_errors;
 }
@@ -65,8 +71,8 @@ int main(int argc, char **argv)
       "cylinder parameter list omits 'vertex.radius' (not read by Cylinder.cpp)");
   check(hasParam(cylinder, "vertex.cap"),
       "cylinder parameter list advertises 'vertex.cap'");
-  check(hasParam(cylinder, "caps"),
-      "cylinder parameter list advertises 'caps'");
+  check(
+      hasParam(cylinder, "caps"), "cylinder parameter list advertises 'caps'");
 
   const ANARIParameter *cone = (const ANARIParameter *)anariGetObjectInfo(
       dev, ANARI_GEOMETRY, "cone", "parameter", ANARI_PARAMETER_LIST);
@@ -80,12 +86,12 @@ int main(int argc, char **argv)
       "cone parameter list omits 'primitive.radius' (not read by Cone.cpp)");
   check(hasParam(cone, "vertex.cap"),
       "cone parameter list advertises 'vertex.cap'");
-  check(hasParam(cone, "caps"),
-      "cone parameter list advertises 'caps'");
+  check(hasParam(cone, "caps"), "cone parameter list advertises 'caps'");
 
   anariRelease(dev, dev);
   anariUnloadLibrary(lib);
   std::printf("\n%s (%d issues)\n",
-      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED", g_errors);
+      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED",
+      g_errors);
   return g_errors == 0 ? 0 : 1;
 }

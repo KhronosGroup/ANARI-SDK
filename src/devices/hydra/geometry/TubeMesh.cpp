@@ -29,8 +29,8 @@ static void PerpFrame(const GfVec3f &axis, GfVec3f &u, GfVec3f &v)
 
 TubeCaps ParseTubeCaps(const std::string &caps)
 {
-  return {caps == "first" || caps == "both",
-      caps == "second" || caps == "both"};
+  return {
+      caps == "first" || caps == "both", caps == "second" || caps == "both"};
 }
 
 void TessellateTubes(helium::Array1D *position,
@@ -49,15 +49,13 @@ void TessellateTubes(helium::Array1D *position,
     return;
 
   const GfVec3f *pos = static_cast<const GfVec3f *>(position->data());
-  const float *vertexRadii = radii.vertex
-      ? static_cast<const float *>(radii.vertex->data())
-      : nullptr;
+  const float *vertexRadii =
+      radii.vertex ? static_cast<const float *>(radii.vertex->data()) : nullptr;
   const float *primRadii = radii.primitive
       ? static_cast<const float *>(radii.primitive->data())
       : nullptr;
-  const uint8_t *vcaps = vertexCap
-      ? static_cast<const uint8_t *>(vertexCap->data())
-      : nullptr;
+  const uint8_t *vcaps =
+      vertexCap ? static_cast<const uint8_t *>(vertexCap->data()) : nullptr;
 
   // Segment endpoint index pairs: explicit primitive.index (UINT32_VEC2) or
   // consecutive vertex pairs.
@@ -98,17 +96,17 @@ void TessellateTubes(helium::Array1D *position,
       const GfVec3f dir = std::cos(a) * u + std::sin(a) * v;
       out.vertexIndices.push_back(seg.first);
       out.vertexIndices.push_back(seg.second);
-      out.points.push_back(p0 + r0 * dir);   // ring 0: base + 2k
-      out.points.push_back(p1 + r1 * dir);   // ring 1: base + 2k + 1
+      out.points.push_back(p0 + r0 * dir); // ring 0: base + 2k
+      out.points.push_back(p1 + r1 * dir); // ring 1: base + 2k + 1
     }
     for (int k = 0; k < kRadial; ++k) {
       const int k1 = (k + 1) % kRadial;
       out.primitiveIndices.push_back(uint32_t(primitive));
       out.faceVertexCounts.push_back(4);
-      out.faceVertexIndices.push_back(base + 2 * k);       // ring0 k
-      out.faceVertexIndices.push_back(base + 2 * k1);      // ring0 k+1
-      out.faceVertexIndices.push_back(base + 2 * k1 + 1);  // ring1 k+1
-      out.faceVertexIndices.push_back(base + 2 * k + 1);   // ring1 k
+      out.faceVertexIndices.push_back(base + 2 * k); // ring0 k
+      out.faceVertexIndices.push_back(base + 2 * k1); // ring0 k+1
+      out.faceVertexIndices.push_back(base + 2 * k1 + 1); // ring1 k+1
+      out.faceVertexIndices.push_back(base + 2 * k + 1); // ring1 k
     }
 
     // End caps: a triangle fan around the ring center, only where the end has
@@ -136,9 +134,9 @@ void TessellateTubes(helium::Array1D *position,
         ? vcaps[seg.second] != 0
         : caps.second;
     if (cap0 && r0 > 0.f)
-      emitCap(p0, base, true);       // ring 0 vertices sit at base + 2k
+      emitCap(p0, base, true); // ring 0 vertices sit at base + 2k
     if (cap1 && r1 > 0.f)
-      emitCap(p1, base + 1, false);  // ring 1 vertices sit at base + 2k + 1
+      emitCap(p1, base + 1, false); // ring 1 vertices sit at base + 2k + 1
   }
 }
 

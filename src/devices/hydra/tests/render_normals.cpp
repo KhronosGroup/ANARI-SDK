@@ -31,12 +31,18 @@
 static int g_errors = 0;
 static const char *g_normalParameter = "vertex.normal";
 
-static void statusFunc(const void *, ANARIDevice, ANARIObject, ANARIDataType,
-    ANARIStatusSeverity severity, ANARIStatusCode, const char *message)
+static void statusFunc(const void *,
+    ANARIDevice,
+    ANARIObject,
+    ANARIDataType,
+    ANARIStatusSeverity severity,
+    ANARIStatusCode,
+    const char *message)
 {
   if (severity <= ANARI_SEVERITY_WARNING)
     std::printf("[%s] %s\n",
-        severity <= ANARI_SEVERITY_ERROR ? "ERR" : "WARN", message);
+        severity <= ANARI_SEVERITY_ERROR ? "ERR" : "WARN",
+        message);
   if (severity <= ANARI_SEVERITY_ERROR)
     ++g_errors;
 }
@@ -60,8 +66,8 @@ struct RenderResult
 static RenderResult renderNormals(
     ANARIDevice dev, bool authorNormals, float nx, const float ldir[3])
 {
-  float verts[12] = {-0.8f, -0.8f, 0.f, 0.8f, -0.8f, 0.f, 0.8f, 0.8f, 0.f,
-      -0.8f, 0.8f, 0.f};
+  float verts[12] = {
+      -0.8f, -0.8f, 0.f, 0.8f, -0.8f, 0.f, 0.8f, 0.8f, 0.f, -0.8f, 0.8f, 0.f};
   ANARIArray1D pos =
       anariNewArray1D(dev, verts, nullptr, nullptr, ANARI_FLOAT32_VEC3, 4);
   ANARIGeometry g = anariNewGeometry(dev, "quad");
@@ -131,8 +137,8 @@ static RenderResult renderNormals(
 
   uint32_t w = 0, h = 0;
   ANARIDataType pt = ANARI_UNKNOWN;
-  const uint32_t *pixels = (const uint32_t *)anariMapFrame(
-      dev, frame, "channel.color", &w, &h, &pt);
+  const uint32_t *pixels =
+      (const uint32_t *)anariMapFrame(dev, frame, "channel.color", &w, &h, &pt);
   double sum = 0;
   long n = 0;
   if (pixels) {
@@ -167,19 +173,20 @@ static RenderResult renderNormals(
 // in place (map -> flip every normal from +X to -X -> unmap) and re-render the
 // same scene. Writes the two brightnesses out. Exercises the re-author path: an
 // in-place anariUnmapArray must re-commit the geometry and re-author the copied
-// `normals` primvar (SPEC §4.5/§5) — the mesh is non-incremental once it carries
-// normals, so the change takes a full rebuild rather than the points fast path.
-static void renderNormalMutation(
-    ANARIDevice dev, double &before, double &after)
+// `normals` primvar (SPEC §4.5/§5) — the mesh is non-incremental once it
+// carries normals, so the change takes a full rebuild rather than the points
+// fast path.
+static void renderNormalMutation(ANARIDevice dev, double &before, double &after)
 {
-  float verts[12] = {-0.8f, -0.8f, 0.f, 0.8f, -0.8f, 0.f, 0.8f, 0.8f, 0.f,
-      -0.8f, 0.8f, 0.f};
+  float verts[12] = {
+      -0.8f, -0.8f, 0.f, 0.8f, -0.8f, 0.f, 0.8f, 0.8f, 0.f, -0.8f, 0.8f, 0.f};
   ANARIArray1D pos =
       anariNewArray1D(dev, verts, nullptr, nullptr, ANARI_FLOAT32_VEC3, 4);
   ANARIGeometry g = anariNewGeometry(dev, "quad");
   anariSetParameter(dev, g, "vertex.position", ANARI_ARRAY1D, &pos);
 
-  float normals[12] = {1.f, 0.f, 0.f, 1.f, 0.f, 0.f, 1.f, 0.f, 0.f, 1.f, 0.f, 0.f};
+  float normals[12] = {
+      1.f, 0.f, 0.f, 1.f, 0.f, 0.f, 1.f, 0.f, 0.f, 1.f, 0.f, 0.f};
   ANARIArray1D norm =
       anariNewArray1D(dev, normals, nullptr, nullptr, ANARI_FLOAT32_VEC3, 4);
   anariSetParameter(dev, g, g_normalParameter, ANARI_ARRAY1D, &norm);
@@ -196,7 +203,7 @@ static void renderNormalMutation(
   anariCommitParameters(dev, surf);
 
   ANARILight light = anariNewLight(dev, "directional");
-  float ldir[3] = {-1.f, 0.f, 0.f};   // side-light toward -X; +X normal faces it
+  float ldir[3] = {-1.f, 0.f, 0.f}; // side-light toward -X; +X normal faces it
   float irradiance = 2.4f;
   anariSetParameter(dev, light, "direction", ANARI_FLOAT32_VEC3, ldir);
   anariSetParameter(dev, light, "irradiance", ANARI_FLOAT32, &irradiance);
@@ -258,7 +265,7 @@ static void renderNormalMutation(
     return n ? sum / n : 0;
   };
 
-  before = measure();   // +X normal faces the light -> bright
+  before = measure(); // +X normal faces the light -> bright
 
   // In-place mutation: flip every normal to -X, then unmap to re-commit.
   float *mapped = (float *)anariMapArray(dev, norm);
@@ -266,7 +273,7 @@ static void renderNormalMutation(
     mapped[3 * i + 0] = -1.f;
   anariUnmapArray(dev, norm);
 
-  after = measure();   // -X normal faces away -> dark
+  after = measure(); // -X normal faces away -> dark
 
   anariRelease(dev, frame);
   anariRelease(dev, ren);
@@ -296,14 +303,16 @@ int main(int argc, char **argv)
 
   std::printf("normal parameter: %s\n", g_normalParameter);
 
-  // Two renders varying ONLY the supplied normals, under a side-light traveling toward
-  // -X (so a +X surface normal faces it). The geometric normal is +Z, for which
-  // N·L == 0 — any brightness split is due solely to the authored normals.
+  // Two renders varying ONLY the supplied normals, under a side-light traveling
+  // toward -X (so a +X surface normal faces it). The geometric normal is +Z,
+  // for which N·L == 0 — any brightness split is due solely to the authored
+  // normals.
   const float sideLight[3] = {-1.f, 0.f, 0.f};
   const RenderResult toward = renderNormals(dev, true, +1.f, sideLight);
   const RenderResult away = renderNormals(dev, true, -1.f, sideLight);
   std::printf("side-light brightness: normal +X=%.1f, normal -X=%.1f\n",
-      toward.brightness, away.brightness);
+      toward.brightness,
+      away.brightness);
 
   // App-provided normals reach shading: the +X-facing normal is bright, the
   // -X-facing one dark (clamped max(N·L,0)). Fails today (both fall back to the
@@ -315,24 +324,26 @@ int main(int argc, char **argv)
   // vertex.normal the quad still renders a visible surface under a front-facing
   // light (the delegate's flat +Z fallback is lit here — no assert on its
   // shading value, only that geometry authoring wasn't broken by the gate).
-  const float frontLight[3] = {0.f, 0.f, -1.f};   // lights the geometric +Z
+  const float frontLight[3] = {0.f, 0.f, -1.f}; // lights the geometric +Z
   const RenderResult none = renderNormals(dev, false, 0.f, frontLight);
   check(none.coverage > 0,
       "quad with no vertex.normal still renders a visible surface");
 
   // In-place mutation re-authors: flipping the normal buffer +X -> -X on a live
-  // scene must re-shade the quad from bright to dark (SPEC §4.5/§5). Fails if the
-  // mesh wrongly kept the points fast path and left the stale normals copy.
+  // scene must re-shade the quad from bright to dark (SPEC §4.5/§5). Fails if
+  // the mesh wrongly kept the points fast path and left the stale normals copy.
   double mutBefore = 0, mutAfter = 0;
   renderNormalMutation(dev, mutBefore, mutAfter);
   std::printf("in-place mutation brightness: +X=%.1f -> -X=%.1f\n",
-      mutBefore, mutAfter);
+      mutBefore,
+      mutAfter);
   check(mutBefore > mutAfter + 10,
       "in-place normal mutation re-authors the normals primvar (§4.5)");
 
   anariRelease(dev, dev);
   anariUnloadLibrary(lib);
   std::printf("\n%s (%d issues)\n",
-      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED", g_errors);
+      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED",
+      g_errors);
   return g_errors == 0 ? 0 : 1;
 }

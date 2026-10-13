@@ -19,10 +19,10 @@ namespace anari_hydra {
 
 struct DelegateInfo
 {
-  std::string subtype;          // ANARI device subtype, e.g. "storm"
-  pxr::TfToken pluginId;        // Hydra plugin id, e.g. "HdStormRendererPlugin"
-  std::string displayName;      // human-readable
-  bool isDefault{false};        // matches Hydra's default-delegate choice
+  std::string subtype; // ANARI device subtype, e.g. "storm"
+  pxr::TfToken pluginId; // Hydra plugin id, e.g. "HdStormRendererPlugin"
+  std::string displayName; // human-readable
+  bool isDefault{false}; // matches Hydra's default-delegate choice
 };
 
 // The delegate registry is a process-global snapshot of the Hydra plugin
@@ -32,7 +32,10 @@ struct DelegateRegistry
   static const DelegateRegistry &get();
 
   // All delegates, plus the synthetic "default" alias at the front.
-  const std::vector<DelegateInfo> &delegates() const { return m_delegates; }
+  const std::vector<DelegateInfo> &delegates() const
+  {
+    return m_delegates;
+  }
 
   // Resolve an ANARI device subtype ("storm", "default", ...) to its plugin id.
   // Returns an empty token if the subtype is unknown.
@@ -45,7 +48,7 @@ struct DelegateRegistry
   DelegateRegistry();
 
   std::vector<DelegateInfo> m_delegates;
-  std::vector<const char *> m_subtypeCStrs;   // stable storage, null-terminated
+  std::vector<const char *> m_subtypeCStrs; // stable storage, null-terminated
 };
 
 // Convert a Hydra plugin id token to an ANARI device subtype string.

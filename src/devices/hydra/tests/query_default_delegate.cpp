@@ -19,13 +19,18 @@
 
 static int g_errors = 0;
 
-static void statusFunc(const void *, ANARIDevice, ANARIObject,
-    ANARIDataType, ANARIStatusSeverity severity, ANARIStatusCode,
+static void statusFunc(const void *,
+    ANARIDevice,
+    ANARIObject,
+    ANARIDataType,
+    ANARIStatusSeverity severity,
+    ANARIStatusCode,
     const char *message)
 {
   if (severity <= ANARI_SEVERITY_WARNING)
     std::printf("[%s] %s\n",
-        severity <= ANARI_SEVERITY_ERROR ? "ERROR" : "WARN", message);
+        severity <= ANARI_SEVERITY_ERROR ? "ERROR" : "WARN",
+        message);
   if (severity <= ANARI_SEVERITY_ERROR)
     ++g_errors;
 }
@@ -64,15 +69,18 @@ int main()
   check(subtypes.count("anari") == 0, "hdAnari excluded from subtype list");
 
   // The call that never returned under the recursion.
-  std::set<std::string> defExt = toSet(anariGetDeviceExtensions(lib, "default"));
+  std::set<std::string> defExt =
+      toSet(anariGetDeviceExtensions(lib, "default"));
   check(!defExt.empty(), "'default' extension query returns");
 
-  std::set<std::string> stormExt = toSet(anariGetDeviceExtensions(lib, "storm"));
+  std::set<std::string> stormExt =
+      toSet(anariGetDeviceExtensions(lib, "storm"));
   check(defExt == stormExt, "'default' extension list matches storm");
 
   anariUnloadLibrary(lib);
 
   std::printf("\n%s (%d issues)\n",
-      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED", g_errors);
+      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED",
+      g_errors);
   return g_errors == 0 ? 0 : 1;
 }

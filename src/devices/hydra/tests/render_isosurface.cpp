@@ -21,16 +21,22 @@
 #include <vector>
 
 static int g_errors = 0;
-static std::string g_lastExtraction;   // the device's extraction statistics
+static std::string g_lastExtraction; // the device's extraction statistics
 
-static void statusFunc(const void *, ANARIDevice, ANARIObject, ANARIDataType,
-    ANARIStatusSeverity severity, ANARIStatusCode, const char *message)
+static void statusFunc(const void *,
+    ANARIDevice,
+    ANARIObject,
+    ANARIDataType,
+    ANARIStatusSeverity severity,
+    ANARIStatusCode,
+    const char *message)
 {
   if (std::strstr(message, "isosurface extracted"))
     g_lastExtraction = message;
   if (severity <= ANARI_SEVERITY_WARNING)
     std::printf("[%s] %s\n",
-        severity <= ANARI_SEVERITY_ERROR ? "ERR" : "WARN", message);
+        severity <= ANARI_SEVERITY_ERROR ? "ERR" : "WARN",
+        message);
   if (severity <= ANARI_SEVERITY_ERROR)
     ++g_errors;
 }
@@ -56,7 +62,10 @@ struct Image
 {
   std::vector<float> rgba;
   std::vector<uint32_t> prim;
-  static int px(float w) { return std::clamp(int((w + 2.f) / 4.f * W), 0, int(W) - 1); }
+  static int px(float w)
+  {
+    return std::clamp(int((w + 2.f) / 4.f * W), 0, int(W) - 1);
+  }
   const float *world(float wx, float wy) const
   {
     return &rgba[(size_t(px(wy)) * W + px(wx)) * 4];
@@ -138,8 +147,8 @@ struct Scene
     if (surfaces.empty()) {
       anariUnsetParameter(d, world, "surface");
     } else {
-      ANARIArray1D a = anariNewArray1D(d, surfaces.data(), nullptr, nullptr,
-          ANARI_SURFACE, surfaces.size());
+      ANARIArray1D a = anariNewArray1D(
+          d, surfaces.data(), nullptr, nullptr, ANARI_SURFACE, surfaces.size());
       anariSetParameter(d, world, "surface", ANARI_ARRAY1D, &a);
       anariRelease(d, a);
     }
@@ -151,8 +160,12 @@ struct Scene
     if (instances.empty()) {
       anariUnsetParameter(d, world, "instance");
     } else {
-      ANARIArray1D a = anariNewArray1D(d, instances.data(), nullptr, nullptr,
-          ANARI_INSTANCE, instances.size());
+      ANARIArray1D a = anariNewArray1D(d,
+          instances.data(),
+          nullptr,
+          nullptr,
+          ANARI_INSTANCE,
+          instances.size());
       anariSetParameter(d, world, "instance", ANARI_ARRAY1D, &a);
       anariRelease(d, a);
     }
@@ -186,8 +199,13 @@ struct Scene
   std::vector<float> bounds(ANARIObject o)
   {
     std::vector<float> b(6, 0.f);
-    anariGetProperty(d, o, "bounds", ANARI_FLOAT32_BOX3, b.data(),
-        6 * sizeof(float), ANARI_WAIT);
+    anariGetProperty(d,
+        o,
+        "bounds",
+        ANARI_FLOAT32_BOX3,
+        b.data(),
+        6 * sizeof(float),
+        ANARI_WAIT);
     return b;
   }
 };
@@ -210,12 +228,16 @@ struct Field
       for (int j = 0; j < n; ++j)
         for (int i = 0; i < n; ++i)
           v[(size_t(k) * n + j) * n + i] = f(origin[0] + i * spacing,
-              origin[1] + j * spacing, origin[2] + k * spacing);
+              origin[1] + j * spacing,
+              origin[2] + k * spacing);
     anariUnmapArray(d, data);
   }
 };
 
-static Field makeField(ANARIDevice d, int n, const float origin[3], float size,
+static Field makeField(ANARIDevice d,
+    int n,
+    const float origin[3],
+    float size,
     const std::function<float(float, float, float)> &f)
 {
   Field out;
@@ -299,8 +321,8 @@ int main(int argc, char **argv)
   // --- extension claim and subtype gating ---------------------------------
   bool claimed = false;
   const char *const *ext = nullptr;
-  anariGetProperty(d, d, "extension", ANARI_STRING_LIST, &ext, sizeof(ext),
-      ANARI_WAIT);
+  anariGetProperty(
+      d, d, "extension", ANARI_STRING_LIST, &ext, sizeof(ext), ANARI_WAIT);
   for (; ext && *ext; ++ext)
     claimed |= std::strcmp(*ext, "ANARI_KHR_GEOMETRY_ISOSURFACE") == 0;
   bool listed = false;
@@ -353,11 +375,12 @@ int main(int argc, char **argv)
       for (int k = 0; k < 3; ++k)
         err = std::max({err, std::fabs(b[k] + 1.f), std::fabs(b[k + 3] - 1.f)});
       std::printf("    sphere bounds %s, max error %g (spacing %g)\n",
-          str(b).c_str(), err, sphere.spacing);
+          str(b).c_str(),
+          err,
+          sphere.spacing);
       check(err < 0.25f * sphere.spacing * sphere.spacing / 1.f + 1e-3f,
           "world bounds are the r = 1 sphere to within h^2/4");
     }
-
 
     // --- edits: isovalue, field data in place, field object, field params ---
     std::printf("edits\n");
@@ -380,7 +403,8 @@ int main(int argc, char **argv)
     }
     {
       // In-place field edit: f = 2|p| puts isovalue 1 at r = 0.5.
-      sphere.fill(d, [](float x, float y, float z) { return 2.f * radius(x, y, z); });
+      sphere.fill(
+          d, [](float x, float y, float z) { return 2.f * radius(x, y, z); });
       Image img = scene.render();
       check(img.covered(0.4f, 0.f) && !img.covered(0.6f, 0.f),
           "in-place field data edit re-extracts");
@@ -403,13 +427,17 @@ int main(int argc, char **argv)
     }
     {
       // A different field object: f = |p| / 0.75 -> r = 0.75 at isovalue 1.
-      Field smaller = makeField(d, 49, origin, 3.f,
-          [](float x, float y, float z) { return radius(x, y, z) / 0.75f; });
-      anariSetParameter(d, iso.geom, "field", ANARI_SPATIAL_FIELD, &smaller.field);
+      Field smaller =
+          makeField(d, 49, origin, 3.f, [](float x, float y, float z) {
+            return radius(x, y, z) / 0.75f;
+          });
+      anariSetParameter(
+          d, iso.geom, "field", ANARI_SPATIAL_FIELD, &smaller.field);
       anariCommitParameters(d, iso.geom);
       check(std::fabs(extent(scene.world) - 0.75f) < 1e-3f,
           "replacing the field object re-extracts");
-      anariSetParameter(d, iso.geom, "field", ANARI_SPATIAL_FIELD, &sphere.field);
+      anariSetParameter(
+          d, iso.geom, "field", ANARI_SPATIAL_FIELD, &sphere.field);
       anariCommitParameters(d, iso.geom);
       release(d, smaller);
       check(std::fabs(extent(scene.world) - 1.f) < 1e-3f,
@@ -419,18 +447,20 @@ int main(int argc, char **argv)
     // --- empty surfaces -----------------------------------------------------
     std::printf("empty surfaces\n");
     {
-      float r = 5.f;   // above every sample: no crossing
+      float r = 5.f; // above every sample: no crossing
       anariSetParameter(d, iso.geom, "isovalue", ANARI_FLOAT32, &r);
       anariCommitParameters(d, iso.geom);
       Image img = scene.render();
-      check(img.coveredArea() == 0.f, "an isovalue outside the field range renders nothing");
+      check(img.coveredArea() == 0.f,
+          "an isovalue outside the field range renders nothing");
       std::vector<float> b = scene.bounds(scene.world);
       check(b[0] > b[3], "an empty isosurface contributes no bounds");
       r = 1.f;
       anariSetParameter(d, iso.geom, "isovalue", ANARI_FLOAT32, &r);
       anariCommitParameters(d, iso.geom);
       img = scene.render();
-      check(img.covered(0.f, 0.f), "a crossing isovalue brings the surface back");
+      check(
+          img.covered(0.f, 0.f), "a crossing isovalue brings the surface back");
     }
 
     // --- transforms ---------------------------------------------------------
@@ -444,8 +474,8 @@ int main(int argc, char **argv)
       anariCommitParameters(d, group);
       ANARIInstance inst = anariNewInstance(d, "transform");
       // Scale 0.5 then translate +0.5 in x: the unit sphere -> r 0.5 at x 0.5.
-      const float m[16] = {0.5f, 0, 0, 0, 0, 0.5f, 0, 0, 0, 0, 0.5f, 0,
-          0.5f, 0, 0, 1};
+      const float m[16] = {
+          0.5f, 0, 0, 0, 0, 0.5f, 0, 0, 0, 0, 0.5f, 0, 0.5f, 0, 0, 1};
       anariSetParameter(d, inst, "transform", ANARI_FLOAT32_MAT4, m);
       anariSetParameter(d, inst, "group", ANARI_GROUP, &group);
       anariCommitParameters(d, inst);
@@ -457,7 +487,8 @@ int main(int argc, char **argv)
       std::vector<float> w = scene.bounds(scene.world);
       std::vector<float> g = scene.bounds(group);
       check(std::fabs(w[0]) < 1e-3f && std::fabs(w[3] - 1.f) < 1e-3f
-              && std::fabs(w[1] + 0.5f) < 1e-3f && std::fabs(w[4] - 0.5f) < 1e-3f,
+              && std::fabs(w[1] + 0.5f) < 1e-3f
+              && std::fabs(w[4] - 0.5f) < 1e-3f,
           "world bounds are transformed: " + str(w));
       check(std::fabs(g[0] + 1.f) < 1e-3f && std::fabs(g[3] - 1.f) < 1e-3f,
           "group bounds stay in object space: " + str(g));
@@ -474,12 +505,13 @@ int main(int argc, char **argv)
     // --- multiple isovalues, per-isovalue attributes and primitive IDs -------
     // f = x + z: level set c is the plane z = c - x, tilted toward the
     // camera. Over the [-1, 1]^3 domain, isovalue -0.5 alone lies under
-    // x < -0.5; isovalue 0.5 is nearer the camera wherever it exists (x > -0.5).
+    // x < -0.5; isovalue 0.5 is nearer the camera wherever it exists (x >
+    // -0.5).
     std::printf("multiple isovalues\n");
     {
       const float o2[3] = {-1.f, -1.f, -1.f};
-      Field planes = makeField(d, 21, o2, 2.f,
-          [](float x, float, float z) { return x + z; });
+      Field planes = makeField(
+          d, 21, o2, 2.f, [](float x, float, float z) { return x + z; });
       Iso multi = makeIso(d, planes.field, 0.f);
       const float values[2] = {-0.5f, 0.5f};
       ANARIArray1D isoArray =
@@ -490,7 +522,8 @@ int main(int argc, char **argv)
       const float colors[6] = {1, 0, 0, 0, 1, 0};
       ANARIArray1D colorArray =
           anariNewArray1D(d, colors, nullptr, nullptr, ANARI_FLOAT32_VEC3, 2);
-      anariSetParameter(d, multi.geom, "primitive.color", ANARI_ARRAY1D, &colorArray);
+      anariSetParameter(
+          d, multi.geom, "primitive.color", ANARI_ARRAY1D, &colorArray);
       anariCommitParameters(d, multi.geom);
       scene.setSurfaces({multi.surface});
 
@@ -503,8 +536,9 @@ int main(int argc, char **argv)
             "primitive.color is per isovalue: left red, right green");
       }
       check(img.primAt(-0.8f, 0.f) == 0 && img.primAt(0.8f, 0.f) == 1,
-          "primitiveId is the isovalue index: " + std::to_string(img.primAt(-0.8f, 0.f))
-              + ", " + std::to_string(img.primAt(0.8f, 0.f)));
+          "primitiveId is the isovalue index: "
+              + std::to_string(img.primAt(-0.8f, 0.f)) + ", "
+              + std::to_string(img.primAt(0.8f, 0.f)));
       std::vector<float> b = scene.bounds(scene.world);
       // Plane z = c - x clipped to the domain: isovalue -0.5 spans
       // x in [-1, 0.5], isovalue 0.5 x in [-0.5, 1]; z spans [-1, 1].
@@ -530,9 +564,11 @@ int main(int argc, char **argv)
         const float attrs[8] = {0, 0, 1, 1, 1, 0, 0, 1};
         ANARIArray1D attrArray =
             anariNewArray1D(d, attrs, nullptr, nullptr, ANARI_FLOAT32_VEC4, 2);
-        anariSetParameter(d, multi.geom, "primitive.attribute0", ANARI_ARRAY1D, &attrArray);
+        anariSetParameter(
+            d, multi.geom, "primitive.attribute0", ANARI_ARRAY1D, &attrArray);
         anariCommitParameters(d, multi.geom);
-        anariSetParameter(d, multi.material, "color", ANARI_STRING, "attribute0");
+        anariSetParameter(
+            d, multi.material, "color", ANARI_STRING, "attribute0");
         anariCommitParameters(d, multi.material);
         img = scene.render();
         const float *l = img.world(-0.8f, 0.f), *r = img.world(0.8f, 0.f);
@@ -540,7 +576,8 @@ int main(int argc, char **argv)
             "primitive.attribute0 is per isovalue: left blue, right red");
         anariUnsetParameter(d, multi.geom, "primitive.attribute0");
         const float yellow[4] = {1, 1, 0, 1};
-        anariSetParameter(d, multi.geom, "attribute0", ANARI_FLOAT32_VEC4, yellow);
+        anariSetParameter(
+            d, multi.geom, "attribute0", ANARI_FLOAT32_VEC4, yellow);
         anariCommitParameters(d, multi.geom);
         img = scene.render();
         l = img.world(-0.8f, 0.f);
@@ -573,15 +610,16 @@ int main(int argc, char **argv)
       release(d, planes);
     }
 
-    // --- approximation error --------------------------------------------------
-    // The mesh reproduces the level set of the field's piecewise-linear
-    // (Kuhn tetrahedral) interpolant, whose distance from the true sphere
-    // shrinks as h^2. Measured on the rendered surface itself: under the
-    // orthographic camera a pixel centre fixes the surface point's x and y,
-    // and an emissive transform sampler writes its object-space z (as
-    // z - 0.75, near zero where the color buffer is most precise) into the
-    // float color channel, with a zero-irradiance light so nothing else
-    // contributes. Storm only (embree has no samplers).
+    // --- approximation error
+    // -------------------------------------------------- The mesh reproduces
+    // the level set of the field's piecewise-linear (Kuhn tetrahedral)
+    // interpolant, whose distance from the true sphere shrinks as h^2. Measured
+    // on the rendered surface itself: under the orthographic camera a pixel
+    // centre fixes the surface point's x and y, and an emissive transform
+    // sampler writes its object-space z (as z - 0.75, near zero where the color
+    // buffer is most precise) into the float color channel, with a
+    // zero-irradiance light so nothing else contributes. Storm only (embree has
+    // no samplers).
     if (!isEmbree) {
       std::printf("approximation error (f = |p|, isovalue 1)\n");
       ANARILight dark = anariNewLight(d, "directional");
@@ -593,7 +631,8 @@ int main(int argc, char **argv)
       anariSetParameter(d, scene.world, "light", ANARI_ARRAY1D, &lights);
       anariCommitParameters(d, scene.world);
       float noAmbient = 0.f;
-      anariSetParameter(d, scene.renderer, "ambientRadiance", ANARI_FLOAT32, &noAmbient);
+      anariSetParameter(
+          d, scene.renderer, "ambientRadiance", ANARI_FLOAT32, &noAmbient);
       anariCommitParameters(d, scene.renderer);
 
       ANARISampler xf = anariNewSampler(d, "transform");
@@ -634,9 +673,15 @@ int main(int argc, char **argv)
             ++count;
           }
         const float h = f.spacing;
-        std::printf("    n = %3d  h = %.4f  max |r - 1| = %.5f (%.3f h^2)  "
-                    "mean = %.5f  over %zu px\n",
-            n, h, maxErr, maxErr / (h * h), count ? sumErr / count : 0.f, count);
+        std::printf(
+            "    n = %3d  h = %.4f  max |r - 1| = %.5f (%.3f h^2)  "
+            "mean = %.5f  over %zu px\n",
+            n,
+            h,
+            maxErr,
+            maxErr / (h * h),
+            count ? sumErr / count : 0.f,
+            count);
         // Linear interpolation of |p| along an edge of length l errs by at
         // most l^2 / (8 r); the longest Kuhn edge is the cell diagonal
         // sqrt(3) h, so the level set sits within 3 h^2 / 8 of the sphere.
@@ -644,7 +689,8 @@ int main(int argc, char **argv)
             "n = " + std::to_string(n)
                 + ": surface within 3 h^2 / 8 (+2e-4 readback) of the sphere");
         if (previous > 0.f && n <= 33)
-          check(maxErr < 0.5f * previous, "error falls at least 2x per halving of h");
+          check(maxErr < 0.5f * previous,
+              "error falls at least 2x per halving of h");
         previous = maxErr;
         scene.setSurfaces({});
         release(d, s);
@@ -659,11 +705,12 @@ int main(int argc, char **argv)
       anariRelease(d, dark);
     }
 
-    // --- in-place isovalue edits during an extraction -------------------------
-    // Vela's isosurface slider edits a shared isovalue array in place (map,
-    // write, unmap) while frames are in flight. The commit buffer flushes on the
-    // device worker, so an unmap can land while the worker is still extracting
-    // the previous value; that last edit must still reach the device.
+    // --- in-place isovalue edits during an extraction
+    // ------------------------- Vela's isosurface slider edits a shared
+    // isovalue array in place (map, write, unmap) while frames are in flight.
+    // The commit buffer flushes on the device worker, so an unmap can land
+    // while the worker is still extracting the previous value; that last edit
+    // must still reach the device.
     std::printf("isovalue edits during extraction\n");
     {
       const int n = 128;
@@ -694,15 +741,15 @@ int main(int argc, char **argv)
       }
       for (int delayMs : {5, 10, 20, 30}) {
         setValue(1.f);
-        anariRenderFrame(d, scene.frame);   // the worker starts extracting r = 1
+        anariRenderFrame(d, scene.frame); // the worker starts extracting r = 1
         std::this_thread::sleep_for(std::chrono::milliseconds(delayMs));
-        setValue(0.75f);                    // lands mid-extraction
+        setValue(0.75f); // lands mid-extraction
         anariFrameReady(d, scene.frame, ANARI_WAIT);
         std::vector<float> b = scene.bounds(scene.world);
         check(std::fabs(b[3] - 0.75f) < 0.01f,
             "an unmap " + std::to_string(delayMs)
                 + " ms into an extraction reaches the device: " + str(b));
-        setValue(0.5f);   // reset between trials
+        setValue(0.5f); // reset between trials
         scene.bounds(scene.world);
       }
       scene.setSurfaces({});
@@ -711,8 +758,9 @@ int main(int argc, char **argv)
       release(d, f);
     }
 
-    // --- extraction cost ------------------------------------------------------
-    // Stage 1 extracts on the device worker; a bounds query waits for it.
+    // --- extraction cost
+    // ------------------------------------------------------ Stage 1 extracts
+    // on the device worker; a bounds query waits for it.
     std::printf("extraction cost\n");
     {
       const int n = 128;
@@ -726,8 +774,10 @@ int main(int argc, char **argv)
       const auto t0 = std::chrono::steady_clock::now();
       std::vector<float> b = scene.bounds(scene.world);
       const double ms = std::chrono::duration<double, std::milli>(
-          std::chrono::steady_clock::now() - t0).count();
-      std::printf("    %d^3 field, one sphere: extraction + bounds %.1f ms\n", n, ms);
+          std::chrono::steady_clock::now() - t0)
+                            .count();
+      std::printf(
+          "    %d^3 field, one sphere: extraction + bounds %.1f ms\n", n, ms);
       std::printf("    device: %s\n", g_lastExtraction.c_str());
       check(std::fabs(b[3] - 1.f) < 1e-3f, "large-field extraction completes");
       scene.setSurfaces({});
@@ -739,6 +789,7 @@ int main(int argc, char **argv)
   anariRelease(d, d);
   anariUnloadLibrary(lib);
   std::printf("\n%s (%d issues)\n",
-      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED", g_errors);
+      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED",
+      g_errors);
   return g_errors == 0 ? 0 : 1;
 }

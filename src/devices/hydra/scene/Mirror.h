@@ -3,20 +3,21 @@
 
 // One retained mirror per ANARI world (SPEC §4.4), rooted /anari/w{N}/. Built
 // from zero-copy array wrappers; mutated only via AddPrims / DirtyPrims
-// (locator-precise) / RemovePrims from the render prologue (stage 2, SPEC §9.3).
+// (locator-precise) / RemovePrims from the render prologue (stage 2, SPEC
+// §9.3).
 
 #pragma once
 
 #include "InstancerBuilder.h"
 #include "PrimBuilder.h"
-#include "world/Instance.h"
 #include "spatial_field/SpatialField.h"
 #include "volume/Volume.h"
+#include "world/Instance.h"
 
-#include <pxr/imaging/hd/retainedSceneIndex.h>
 #include <pxr/base/gf/matrix4d.h>
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/tf/token.h>
+#include <pxr/imaging/hd/retainedSceneIndex.h>
 
 #include <cstdint>
 #include <map>
@@ -47,8 +48,14 @@ class Mirror
  public:
   explicit Mirror(uint64_t worldSerial);
 
-  pxr::HdRetainedSceneIndexRefPtr sceneIndex() const { return m_scene; }
-  const pxr::SdfPath &root() const { return m_root; }
+  pxr::HdRetainedSceneIndexRefPtr sceneIndex() const
+  {
+    return m_scene;
+  }
+  const pxr::SdfPath &root() const
+  {
+    return m_root;
+  }
 
   // Reconcile the retained scene index with the world's committed state. Runs
   // only on the worker thread, as the render prologue (stage 2).
@@ -122,8 +129,9 @@ class Mirror
     float occlusion{1.f};
     int alphaMode{0};
     float opacityThreshold{0.f};
-    // Signature of this material's sampler bindings (input:samplerSerial:revision tuples,
-    // SPEC §6.1) so binding/unbinding a sampler forces a network rebuild.
+    // Signature of this material's sampler bindings
+    // (input:samplerSerial:revision tuples, SPEC §6.1) so binding/unbinding a
+    // sampler forces a network rebuild.
     std::string samplerSig;
     // Signature of this material's attribute bindings (input:primvar pairs,
     // SPEC §6.1) so binding/unbinding an attribute forces a network rebuild.

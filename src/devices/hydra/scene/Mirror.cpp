@@ -45,16 +45,17 @@ static GfMatrix4d ToGfMatrix(const helium::mat4 &m)
 
 // Per-instance attribute overrides -> instance-rate primvar arrays (SPEC §6.8),
 // read per instance by the prototype materials' UsdPrimvarReader nodes (§6.1).
-// One array covers every instance in the group, so an attribute is authored only
-// when at least one instance set it; instances that did not fall to the ANARI
-// default attribute value (0,0,0,1). This fill is safe because a prototype's own
-// per-vertex primvar wins over the inherited instance-rate one (ANARI precedence
-// per-vertex > per-instance-uniform, proven in prototype 014) — the filled
-// default never clobbers a real per-vertex value. The residual gap is a mixed
-// group with no per-vertex primvar where only some instances set the attribute:
-// the unset instances render the default rather than the reader's own fallback.
-// `color` is authored float3 to match the float3 `color` per-vertex primvar and
-// color-slot reader; `attribute0..3` keep the ANARI float4 attribute type.
+// One array covers every instance in the group, so an attribute is authored
+// only when at least one instance set it; instances that did not fall to the
+// ANARI default attribute value (0,0,0,1). This fill is safe because a
+// prototype's own per-vertex primvar wins over the inherited instance-rate one
+// (ANARI precedence per-vertex > per-instance-uniform, proven in prototype 014)
+// — the filled default never clobbers a real per-vertex value. The residual gap
+// is a mixed group with no per-vertex primvar where only some instances set the
+// attribute: the unset instances render the default rather than the reader's
+// own fallback. `color` is authored float3 to match the float3 `color`
+// per-vertex primvar and color-slot reader; `attribute0..3` keep the ANARI
+// float4 attribute type.
 static std::vector<InstancerAttribute> BuildInstanceAttributes(
     const std::vector<InstanceOverrides> &overrides)
 {
@@ -72,7 +73,7 @@ static std::vector<InstancerAttribute> BuildInstanceAttributes(
   if (anyColor) {
     VtVec3fArray colors(n);
     for (size_t i = 0; i < n; ++i) {
-      const float4 &c = overrides[i].color;   // default (0,0,0,1)
+      const float4 &c = overrides[i].color; // default (0,0,0,1)
       colors[i] = GfVec3f(c.x, c.y, c.z);
     }
     VtFloatArray scalar(n);
@@ -91,7 +92,7 @@ static std::vector<InstancerAttribute> BuildInstanceAttributes(
       continue;
     VtVec4fArray vals(n);
     for (size_t i = 0; i < n; ++i) {
-      const float4 &a = overrides[i].attribute[k];   // default (0,0,0,1)
+      const float4 &a = overrides[i].attribute[k]; // default (0,0,0,1)
       vals[i] = GfVec4f(a.x, a.y, a.z, a.w);
     }
     VtFloatArray scalar(n);
@@ -100,15 +101,18 @@ static std::vector<InstancerAttribute> BuildInstanceAttributes(
       scalar[i] = vals[i][0];
       color[i] = GfVec3f(vals[i][0], vals[i][1], vals[i][2]);
     }
-    out.emplace_back(TfToken(AttributePrimvarName(k) + "_float1"), VtValue(scalar));
-    out.emplace_back(TfToken(AttributePrimvarName(k) + "_float3"), VtValue(color));
+    out.emplace_back(
+        TfToken(AttributePrimvarName(k) + "_float1"), VtValue(scalar));
+    out.emplace_back(
+        TfToken(AttributePrimvarName(k) + "_float3"), VtValue(color));
     out.emplace_back(TfToken(AttributePrimvarName(k)), VtValue(vals));
     // The float2 form sampler readers take (SPEC §6.4): `st` for attribute0.
     VtVec2fArray st(n);
     for (size_t i = 0; i < n; ++i)
       st[i] = GfVec2f(vals[i][0], vals[i][1]);
     out.emplace_back(
-        TfToken(k == 0 ? "st" : AttributePrimvarName(k) + "_float2"), VtValue(st));
+        TfToken(k == 0 ? "st" : AttributePrimvarName(k) + "_float2"),
+        VtValue(st));
   }
   return out;
 }
@@ -137,14 +141,14 @@ Mirror::PrimRecord Mirror::MakeRecord(Surface *s, const GfMatrix4d &xform)
     rec.normalsPtr = norm->data();
     rec.normalsCount = norm->size();
   }
-  // Only a plain mesh (triangle/quad) authors its points zero-copy with no other
-  // mutable bulk data, so an in-place points mutation can take the locator-
-  // precise DirtyPrims(points) fast path. Point/curve widths and tessellated
-  // cone/cylinder geometry carry copied per-vertex data, so any change there
-  // forces a full rebuild (SPEC §5.2). App-provided normals are likewise a
-  // decode-copy `normals` primvar (PrimBuilder), so a mesh carrying them no
-  // longer qualifies for the fast path — an in-place normal mutation must
-  // re-author the copy via a full rebuild. The same applies to copied UVs,
+  // Only a plain mesh (triangle/quad) authors its points zero-copy with no
+  // other mutable bulk data, so an in-place points mutation can take the
+  // locator- precise DirtyPrims(points) fast path. Point/curve widths and
+  // tessellated cone/cylinder geometry carry copied per-vertex data, so any
+  // change there forces a full rebuild (SPEC §5.2). App-provided normals are
+  // likewise a decode-copy `normals` primvar (PrimBuilder), so a mesh carrying
+  // them no longer qualifies for the fast path — an in-place normal mutation
+  // must re-author the copy via a full rebuild. The same applies to copied UVs,
   // colors, and attributes at either vertex or face-varying interpolation.
   rec.incremental = geom->primType() == pxr::HdPrimTypeTokens->mesh
       && !geom->tessellation() && !geom->hasCopiedPrimvars();
@@ -290,8 +294,10 @@ void Mirror::syncMaterials(const std::map<SdfPath, PrimRecord> &desired)
   // Add new / changed material sprims (a retained AddPrims replaces in place).
   for (const auto &kv : desiredMats) {
     auto it = m_presentMaterials.find(kv.first);
-    if (it == m_presentMaterials.end() || !SameMaterial(it->second, kv.second)) {
-      m_scene->AddPrims({{kv.first, HdPrimTypeTokens->material,
+    if (it == m_presentMaterials.end()
+        || !SameMaterial(it->second, kv.second)) {
+      m_scene->AddPrims({{kv.first,
+          HdPrimTypeTokens->material,
           BuildMaterialPrim(kv.second.material)}});
     }
   }
@@ -320,8 +326,10 @@ void Mirror::syncInstancers(
     auto it = m_presentInstancers.find(kv.first);
     if (it == m_presentInstancers.end()
         || !SameInstancer(it->second, kv.second)) {
-      m_scene->AddPrims({{kv.first, HdPrimTypeTokens->instancer,
-          BuildInstancerPrim(kv.second.prototypes, kv.second.transforms,
+      m_scene->AddPrims({{kv.first,
+          HdPrimTypeTokens->instancer,
+          BuildInstancerPrim(kv.second.prototypes,
+              kv.second.transforms,
               kv.second.attributes)}});
     }
   }
@@ -361,13 +369,13 @@ void Mirror::syncLights(World *world)
     m_scene->AddPrims({{path, data.type, BuildLightPrim(data)}});
   }
 
-  // Instanced-group light expansion (SPEC §6.8): each group light expands to one
-  // sprim per (instance, light) pair at /anari/w{N}/lights/i{I}_l{L} (per
+  // Instanced-group light expansion (SPEC §6.8): each group light expands to
+  // one sprim per (instance, light) pair at /anari/w{N}/lights/i{I}_l{L} (per
   // (instance, element, light) for array transforms), N×M for N flattened
-  // transforms × M lights (linear, uncapped). The sprim's transform is the light's
-  // local transform composed with the instance transform; in the GfMatrix
-  // row-vector convention ToGfMatrix documents (p' = p*M), local-then-instance
-  // is p * Mlocal * Minstance.
+  // transforms × M lights (linear, uncapped). The sprim's transform is the
+  // light's local transform composed with the instance transform; in the
+  // GfMatrix row-vector convention ToGfMatrix documents (p' = p*M),
+  // local-then-instance is p * Mlocal * Minstance.
   for (const auto &ig : world->gatherInstancedGroups()) {
     const std::vector<Light *> groupLights = ig.group->lights();
     if (groupLights.empty())
@@ -491,7 +499,8 @@ void Mirror::syncVolumes(
 
   // One material serves every volume: it never changes after this.
   if (!m_hasVolumeMaterial && !desired.empty()) {
-    m_scene->AddPrims({{volumeMaterialPath(), HdPrimTypeTokens->material,
+    m_scene->AddPrims({{volumeMaterialPath(),
+        HdPrimTypeTokens->material,
         BuildVolumeMaterialPrim()}});
     m_hasVolumeMaterial = true;
   }
@@ -506,10 +515,15 @@ void Mirror::syncVolumes(
     auto it = m_presentVolumes.find(kv.first);
     if (it != m_presentVolumes.end() && it->second == r)
       continue;
-    m_scene->AddPrims({{kv.first, HdPrimTypeTokens->volume,
-        BuildVolumePrim(*r.volume, *r.field, fieldPath(r.volume->field.ptr),
-            volumeTablePath(kv.second.first), volumeMaterialPath(),
-            r.instancerPath, r.prototypeRoot)}});
+    m_scene->AddPrims({{kv.first,
+        HdPrimTypeTokens->volume,
+        BuildVolumePrim(*r.volume,
+            *r.field,
+            fieldPath(r.volume->field.ptr),
+            volumeTablePath(kv.second.first),
+            volumeMaterialPath(),
+            r.instancerPath,
+            r.prototypeRoot)}});
   }
   m_presentVolumes = std::move(present);
 }
@@ -527,8 +541,8 @@ void Mirror::sync(World *world)
   // renderable (no commit yet, no field, or an invalid field).
   auto volumeRecord = [](Volume *v, VolumeRecord &r) {
     r.volume = v->classification();
-    r.field = r.volume && r.volume->field ? r.volume->field->snapshot()
-                                          : nullptr;
+    r.field =
+        r.volume && r.volume->field ? r.volume->field->snapshot() : nullptr;
     return bool(r.field);
   };
 
@@ -541,8 +555,8 @@ void Mirror::sync(World *world)
     VolumeRecord r;
     if (!volumeRecord(v, r))
       continue;
-    desiredVolumes.emplace(m_root.AppendPath(SdfPath(
-                               "volumes/v" + std::to_string(v->serial()))),
+    desiredVolumes.emplace(
+        m_root.AppendPath(SdfPath("volumes/v" + std::to_string(v->serial()))),
         std::make_pair(v, r));
   }
 
@@ -587,7 +601,8 @@ void Mirror::sync(World *world)
       // uncapped in the instance count, like the light expansion (§6.8).
       if (ReadsWorldSpace(s->material())) {
         for (size_t i = 0; i < ig.transforms.size(); ++i) {
-          std::string name = "surfaces/i" + std::to_string(ig.instanceSerials[i]);
+          std::string name =
+              "surfaces/i" + std::to_string(ig.instanceSerials[i]);
           if (ig.elements[i] >= 0)
             name += "_t" + std::to_string(ig.elements[i]);
           const SdfPath copy = m_root.AppendPath(
@@ -612,17 +627,17 @@ void Mirror::sync(World *world)
       for (int k = 0; k < 5; ++k) {
         if (!s->geometry()->constantAttribute(k))
           continue;
-        const bool anyOverride =
-            std::any_of(ig.overrides.begin(), ig.overrides.end(),
-                [k](const InstanceOverrides &o) {
-                  return k == 4 ? o.hasColor : o.hasAttribute[k];
-                });
+        const bool anyOverride = std::any_of(ig.overrides.begin(),
+            ig.overrides.end(),
+            [k](const InstanceOverrides &o) {
+              return k == 4 ? o.hasColor : o.hasAttribute[k];
+            });
         if (anyOverride)
           rec.instanceConstantMask |= 1u << k;
       }
       rec.instancerPath = rec.instanceConstantMask
-          ? m_root.AppendPath(SdfPath("instancers/g" + std::to_string(g)
-                + "_s" + std::to_string(s->serial())))
+          ? m_root.AppendPath(SdfPath("instancers/g" + std::to_string(g) + "_s"
+                + std::to_string(s->serial())))
           : instPath;
       if (rec.instanceConstantMask) {
         auto overrides = ig.overrides;
@@ -647,7 +662,7 @@ void Mirror::sync(World *world)
           perSurface.attributes.push_back(std::move(a));
         desiredInstancers.emplace(rec.instancerPath, std::move(perSurface));
       }
-      rec.prototypeRoot = path;   // each prototype rprim is its own root
+      rec.prototypeRoot = path; // each prototype rprim is its own root
       desired.emplace(path, rec);
       m_pickingIds[path] = {s->id(),
           s->geometry()->pickingIds(),
@@ -657,9 +672,13 @@ void Mirror::sync(World *world)
         ir.prototypes.push_back(path);
         // Named by sampler serial, so surfaces sharing a sampler share the
         // values: no fill differs without a constant (which splits above).
-        for (auto &a : BuildDerivedInstanceAttributes(s->material(), ig.overrides)) {
-          if (std::none_of(derivedAttributes.begin(), derivedAttributes.end(),
-                  [&](const InstancerAttribute &o) { return o.first == a.first; }))
+        for (auto &a :
+            BuildDerivedInstanceAttributes(s->material(), ig.overrides)) {
+          if (std::none_of(derivedAttributes.begin(),
+                  derivedAttributes.end(),
+                  [&](const InstancerAttribute &o) {
+                    return o.first == a.first;
+                  }))
             derivedAttributes.push_back(std::move(a));
         }
       }
@@ -713,22 +732,21 @@ void Mirror::sync(World *world)
     auto it = m_present.find(path);
     if (it == m_present.end()) {
       // New prim: full build.
-      m_scene->AddPrims({{path, primType,
-          BuildSurfacePrim(
-              rec.surface, rec.xform, matPath, Binding(rec))}});
+      m_scene->AddPrims({{path,
+          primType,
+          BuildSurfacePrim(rec.surface, rec.xform, matPath, Binding(rec))}});
     } else if (rec.incremental && it->second.incremental
         && SamePrimTopology(it->second, rec)) {
       // In-place bulk mutation: the retained data source still wraps the live
       // external buffer, so a locator-precise DirtyPrims(points) re-pulls the
       // mutated memory with no topology resync (proto 012).
-      dirtied.emplace_back(
-          path, HdDataSourceLocatorSet{PointsLocator()});
+      dirtied.emplace_back(path, HdDataSourceLocatorSet{PointsLocator()});
     } else {
       // Pointer / topology / transform / material changed, or a rebuild-only
       // geometry type (points/curve/tessellated): full rebuild.
-      m_scene->AddPrims({{path, primType,
-          BuildSurfacePrim(
-              rec.surface, rec.xform, matPath, Binding(rec))}});
+      m_scene->AddPrims({{path,
+          primType,
+          BuildSurfacePrim(rec.surface, rec.xform, matPath, Binding(rec))}});
     }
   }
 

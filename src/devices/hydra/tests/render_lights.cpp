@@ -1,10 +1,10 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 //
-// Exercises ANARI lights -> UsdLux light sprims (SPEC §6.6). The six ANARI light
-// subtypes each map to a UsdLux sprim (distant/sphere/rect/disk/dome); a world
-// with an ANARI light is authored with those sprims instead of the fallback
-// headlight, and renders without error.
+// Exercises ANARI lights -> UsdLux light sprims (SPEC §6.6). The six ANARI
+// light subtypes each map to a UsdLux sprim (distant/sphere/rect/disk/dome); a
+// world with an ANARI light is authored with those sprims instead of the
+// fallback headlight, and renders without error.
 //
 // Light parameter values (intensity/color) scale the render: the frame pushes
 // HdxRenderTaskParams with enableLighting=true (default-off), without which
@@ -20,12 +20,18 @@
 
 static int g_errors = 0;
 
-static void statusFunc(const void *, ANARIDevice, ANARIObject, ANARIDataType,
-    ANARIStatusSeverity severity, ANARIStatusCode, const char *message)
+static void statusFunc(const void *,
+    ANARIDevice,
+    ANARIObject,
+    ANARIDataType,
+    ANARIStatusSeverity severity,
+    ANARIStatusCode,
+    const char *message)
 {
   if (severity <= ANARI_SEVERITY_WARNING)
     std::printf("[%s] %s\n",
-        severity <= ANARI_SEVERITY_ERROR ? "ERR" : "WARN", message);
+        severity <= ANARI_SEVERITY_ERROR ? "ERR" : "WARN",
+        message);
   if (severity <= ANARI_SEVERITY_ERROR)
     ++g_errors;
 }
@@ -41,8 +47,8 @@ static void check(bool ok, const char *what)
 // irradiance; return the average brightness over covered pixels (0..255).
 static double renderBrightness(ANARIDevice dev, float irradiance)
 {
-  float verts[12] = {-0.8f, -0.8f, 0.f, 0.8f, -0.8f, 0.f, 0.8f, 0.8f, 0.f,
-      -0.8f, 0.8f, 0.f};
+  float verts[12] = {
+      -0.8f, -0.8f, 0.f, 0.8f, -0.8f, 0.f, 0.8f, 0.8f, 0.f, -0.8f, 0.8f, 0.f};
   ANARIArray1D pos =
       anariNewArray1D(dev, verts, nullptr, nullptr, ANARI_FLOAT32_VEC3, 4);
   ANARIGeometry g = anariNewGeometry(dev, "quad");
@@ -60,7 +66,7 @@ static double renderBrightness(ANARIDevice dev, float irradiance)
   anariCommitParameters(dev, surf);
 
   ANARILight light = anariNewLight(dev, "directional");
-  float ldir[3] = {0.f, 0.f, -1.f};   // travels toward -Z; lights the +Z face
+  float ldir[3] = {0.f, 0.f, -1.f}; // travels toward -Z; lights the +Z face
   anariSetParameter(dev, light, "direction", ANARI_FLOAT32_VEC3, ldir);
   anariSetParameter(dev, light, "irradiance", ANARI_FLOAT32, &irradiance);
   anariCommitParameters(dev, light);
@@ -105,8 +111,8 @@ static double renderBrightness(ANARIDevice dev, float irradiance)
 
   uint32_t w = 0, h = 0;
   ANARIDataType pt = ANARI_UNKNOWN;
-  const uint32_t *pixels = (const uint32_t *)anariMapFrame(
-      dev, frame, "channel.color", &w, &h, &pt);
+  const uint32_t *pixels =
+      (const uint32_t *)anariMapFrame(dev, frame, "channel.color", &w, &h, &pt);
   double sum = 0;
   long n = 0;
   if (pixels) {
@@ -146,8 +152,7 @@ int main(int argc, char **argv)
     return 2;
 
   // Enumerate light subtypes.
-  const char *const *subs =
-      anariGetObjectSubtypes(dev, ANARI_LIGHT);
+  const char *const *subs = anariGetObjectSubtypes(dev, ANARI_LIGHT);
   int nlight = 0;
   for (const char *const *s = subs; s && *s; ++s)
     ++nlight;
@@ -157,8 +162,8 @@ int main(int argc, char **argv)
   // pixel mask, 4x apart.
   const double dim = renderBrightness(dev, 0.6f);
   const double bright = renderBrightness(dev, 2.4f);
-  std::printf("directional brightness: irradiance 0.6=%.1f, 2.4=%.1f\n",
-      dim, bright);
+  std::printf(
+      "directional brightness: irradiance 0.6=%.1f, 2.4=%.1f\n", dim, bright);
 
   // The light pipeline is exercised end-to-end (sprim authored, headlight
   // removed) and produces a visible, non-crashing render.
@@ -169,6 +174,7 @@ int main(int argc, char **argv)
   anariRelease(dev, dev);
   anariUnloadLibrary(lib);
   std::printf("\n%s (%d issues)\n",
-      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED", g_errors);
+      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED",
+      g_errors);
   return g_errors == 0 ? 0 : 1;
 }

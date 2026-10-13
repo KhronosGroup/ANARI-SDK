@@ -17,8 +17,12 @@
 
 static int g_errors = 0;
 
-static void statusFunc(const void *, ANARIDevice, ANARIObject,
-    ANARIDataType, ANARIStatusSeverity severity, ANARIStatusCode,
+static void statusFunc(const void *,
+    ANARIDevice,
+    ANARIObject,
+    ANARIDataType,
+    ANARIStatusSeverity severity,
+    ANARIStatusCode,
     const char *message)
 {
   const char *tag = severity == ANARI_SEVERITY_FATAL_ERROR ? "FATAL"
@@ -66,11 +70,10 @@ int main(int argc, char **argv)
     return 2;
 
   // --- geometry: one triangle -----------------------------------------------
-  float verts[9] = {
-      -0.8f, -0.8f, 0.0f, 0.8f, -0.8f, 0.0f, 0.0f, 0.9f, 0.0f};
+  float verts[9] = {-0.8f, -0.8f, 0.0f, 0.8f, -0.8f, 0.0f, 0.0f, 0.9f, 0.0f};
 
-  ANARIArray1D posArray = anariNewArray1D(
-      dev, verts, nullptr, nullptr, ANARI_FLOAT32_VEC3, 3);
+  ANARIArray1D posArray =
+      anariNewArray1D(dev, verts, nullptr, nullptr, ANARI_FLOAT32_VEC3, 3);
 
   ANARIGeometry geom = anariNewGeometry(dev, "triangle");
   anariSetParameter(dev, geom, "vertex.position", ANARI_ARRAY1D, &posArray);
@@ -121,8 +124,8 @@ int main(int argc, char **argv)
 
   uint32_t w = 0, h = 0;
   ANARIDataType pt = ANARI_UNKNOWN;
-  const uint32_t *pixels = (const uint32_t *)anariMapFrame(
-      dev, frame, "channel.color", &w, &h, &pt);
+  const uint32_t *pixels =
+      (const uint32_t *)anariMapFrame(dev, frame, "channel.color", &w, &h, &pt);
   check(pixels != nullptr && w == 256 && h == 256, "frame mapped at 256x256");
 
   // Count non-background pixels (background is the delegate clear color).
@@ -160,8 +163,8 @@ int main(int argc, char **argv)
   anariRenderFrame(dev, frame);
   anariFrameReady(dev, frame, ANARI_WAIT);
 
-  const uint32_t *pixels2 = (const uint32_t *)anariMapFrame(
-      dev, frame, "channel.color", &w, &h, &pt);
+  const uint32_t *pixels2 =
+      (const uint32_t *)anariMapFrame(dev, frame, "channel.color", &w, &h, &pt);
   int coverage2 = 0;
   if (pixels2) {
     for (uint32_t i = 0; i < w * h; ++i) {
@@ -170,16 +173,16 @@ int main(int argc, char **argv)
         ++coverage2;
     }
   }
-  std::printf("coverage after in-place shrink: %d (was %d)\n",
-      coverage2, coverage1);
+  std::printf(
+      "coverage after in-place shrink: %d (was %d)\n", coverage2, coverage1);
   check(coverage2 > 100 && coverage2 < coverage1 * 3 / 4,
       "in-place vertex mutation reached the delegate (smaller triangle)");
   anariUnmapFrame(dev, frame, "channel.color");
 
   // --- lifetime stress: render then release the frame with no wait ----------
-  // Exercises the self-anchoring fix (SPEC §10.3): a render job is queued on the
-  // worker, then the frame is released before it runs. The job must keep the
-  // frame alive; a use-after-free here is caught under AddressSanitizer.
+  // Exercises the self-anchoring fix (SPEC §10.3): a render job is queued on
+  // the worker, then the frame is released before it runs. The job must keep
+  // the frame alive; a use-after-free here is caught under AddressSanitizer.
   for (int i = 0; i < 8; ++i) {
     ANARIFrame f = anariNewFrame(dev);
     anariSetParameter(dev, f, "size", ANARI_UINT32_VEC2, size);
@@ -189,9 +192,10 @@ int main(int argc, char **argv)
     anariSetParameter(dev, f, "renderer", ANARI_RENDERER, &ren);
     anariCommitParameters(dev, f);
     anariRenderFrame(dev, f);
-    anariRelease(dev, f);   // no frameReady/map: job still queued
+    anariRelease(dev, f); // no frameReady/map: job still queued
   }
-  check(true, "render-then-immediate-release did not crash (self-anchor holds)");
+  check(
+      true, "render-then-immediate-release did not crash (self-anchor holds)");
 
   anariRelease(dev, posArray);
   anariRelease(dev, geom);
@@ -206,6 +210,7 @@ int main(int argc, char **argv)
   anariUnloadLibrary(lib);
 
   std::printf("\n%s (%d issues)\n",
-      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED", g_errors);
+      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED",
+      g_errors);
   return g_errors == 0 ? 0 : 1;
 }

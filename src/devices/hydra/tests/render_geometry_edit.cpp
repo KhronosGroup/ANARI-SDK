@@ -20,12 +20,18 @@
 
 static int g_errors = 0;
 
-static void statusFunc(const void *, ANARIDevice, ANARIObject, ANARIDataType,
-    ANARIStatusSeverity severity, ANARIStatusCode, const char *message)
+static void statusFunc(const void *,
+    ANARIDevice,
+    ANARIObject,
+    ANARIDataType,
+    ANARIStatusSeverity severity,
+    ANARIStatusCode,
+    const char *message)
 {
   if (severity <= ANARI_SEVERITY_WARNING)
     std::printf("[%s] %s\n",
-        severity <= ANARI_SEVERITY_ERROR ? "ERR" : "WARN", message);
+        severity <= ANARI_SEVERITY_ERROR ? "ERR" : "WARN",
+        message);
   if (severity <= ANARI_SEVERITY_ERROR)
     ++g_errors;
 }
@@ -87,10 +93,8 @@ int main(int argc, char **argv)
     return 2;
 
   // Upper quad: y in [0.2, 0.8]; lower quad: y in [-0.8, -0.2].
-  float upper[12] = {
-      -.5f, .2f, 0, .5f, .2f, 0, .5f, .8f, 0, -.5f, .8f, 0};
-  float lower[12] = {
-      -.5f, -.8f, 0, .5f, -.8f, 0, .5f, -.2f, 0, -.5f, -.2f, 0};
+  float upper[12] = {-.5f, .2f, 0, .5f, .2f, 0, .5f, .8f, 0, -.5f, .8f, 0};
+  float lower[12] = {-.5f, -.8f, 0, .5f, -.8f, 0, .5f, -.2f, 0, -.5f, -.2f, 0};
   ANARIArray1D upperPositions =
       anariNewArray1D(dev, upper, nullptr, nullptr, ANARI_FLOAT32_VEC3, 4);
   ANARIArray1D lowerPositions =
@@ -136,7 +140,8 @@ int main(int argc, char **argv)
 
   // Move the first quad down (a new position array replaces its wrapper) and
   // add a second quad at the old place, then render again.
-  anariSetParameter(dev, first, "vertex.position", ANARI_ARRAY1D, &lowerPositions);
+  anariSetParameter(
+      dev, first, "vertex.position", ANARI_ARRAY1D, &lowerPositions);
   anariCommitParameters(dev, first);
   ANARIGeometry second = newQuad(dev, upperPositions);
   ANARISurface secondSurface = newSurface(dev, second, mat);
@@ -166,6 +171,7 @@ int main(int argc, char **argv)
   anariRelease(dev, dev);
   anariUnloadLibrary(lib);
   std::printf("\n%s (%d issues)\n",
-      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED", g_errors);
+      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED",
+      g_errors);
   return g_errors == 0 ? 0 : 1;
 }

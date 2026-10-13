@@ -5,7 +5,8 @@
 
 namespace anari_hydra {
 
-// Slot order shared by the scalar/array attribute members: attribute0..3, color.
+// Slot order shared by the scalar/array attribute members: attribute0..3,
+// color.
 static const char *const kAttributeNames[5] = {
     "attribute0", "attribute1", "attribute2", "attribute3", "color"};
 
@@ -55,8 +56,10 @@ void Instance::commitParameters()
     m_attrArray[k] = getParamObject<helium::Array1D>(name);
     float4 v(0.f, 0.f, 0.f, 1.f);
     bool present = false;
-    for (ANARIDataType t : {ANARI_FLOAT32, ANARI_FLOAT32_VEC2,
-             ANARI_FLOAT32_VEC3, ANARI_FLOAT32_VEC4}) {
+    for (ANARIDataType t : {ANARI_FLOAT32,
+             ANARI_FLOAT32_VEC2,
+             ANARI_FLOAT32_VEC3,
+             ANARI_FLOAT32_VEC4}) {
       if (getParam(name, t, &v)) {
         present = true;
         break;

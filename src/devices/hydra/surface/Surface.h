@@ -20,15 +20,24 @@ struct Surface : public Object
   void finalize() override;
   bool isValid() const override;
 
-  Geometry *geometry() const { return m_geometry.ptr; }
-  Material *material() const { return m_material.ptr; }
+  Geometry *geometry() const
+  {
+    return m_geometry.ptr;
+  }
+  Material *material() const
+  {
+    return m_material.ptr;
+  }
 
   // Device-assigned serial for the prim-path taxonomy (SPEC §4.2).
   uint32_t id() const
   {
     return m_id;
   }
-  uint64_t serial() const { return m_serial; }
+  uint64_t serial() const
+  {
+    return m_serial;
+  }
 
  private:
   helium::IntrusivePtr<Geometry> m_geometry;

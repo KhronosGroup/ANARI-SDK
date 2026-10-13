@@ -29,8 +29,13 @@
 
 static int g_errors = 0;
 
-static void statusFunc(const void *, ANARIDevice, ANARIObject, ANARIDataType,
-    ANARIStatusSeverity severity, ANARIStatusCode, const char *message)
+static void statusFunc(const void *,
+    ANARIDevice,
+    ANARIObject,
+    ANARIDataType,
+    ANARIStatusSeverity severity,
+    ANARIStatusCode,
+    const char *message)
 {
   const char *tag = severity == ANARI_SEVERITY_FATAL_ERROR ? "FATAL"
       : severity == ANARI_SEVERITY_ERROR                   ? "ERROR"
@@ -53,8 +58,8 @@ static void check(bool ok, const char *what)
 static ANARISurface makeQuad(
     ANARIDevice dev, float z, const float rgb[3], float half)
 {
-  float verts[12] = {-half, -half, z, half, -half, z, half, half, z, -half,
-      half, z};
+  float verts[12] = {
+      -half, -half, z, half, -half, z, half, half, z, -half, half, z};
   ANARIArray1D pos =
       anariNewArray1D(dev, verts, nullptr, nullptr, ANARI_FLOAT32_VEC3, 4);
   ANARIGeometry g = anariNewGeometry(dev, "quad");
@@ -90,8 +95,13 @@ int main(int argc, char **argv)
   // ANARI_HYDRA_FRAME_AOV must be advertised for this delegate (SPEC §11.4).
   {
     const char *const *ext = nullptr;
-    anariGetProperty(dev, dev, "extension", ANARI_STRING_LIST, &ext,
-        sizeof(ext), ANARI_WAIT);
+    anariGetProperty(dev,
+        dev,
+        "extension",
+        ANARI_STRING_LIST,
+        &ext,
+        sizeof(ext),
+        ANARI_WAIT);
     bool has = false;
     for (const char *const *p = ext; p && *p; ++p)
       if (std::strcmp(*p, "ANARI_HYDRA_FRAME_AOV") == 0)
@@ -135,7 +145,8 @@ int main(int argc, char **argv)
   // The arbitrary AOV: bind Hydra's `cameraDepth` under the requested FLOAT32
   // format (SPEC §11.4). This is NOT a standard ANARI channel — it proves the
   // arbitrary `channel.aov:` path end to end.
-  anariSetParameter(dev, frame, "channel.aov:cameraDepth", ANARI_DATA_TYPE, &f32);
+  anariSetParameter(
+      dev, frame, "channel.aov:cameraDepth", ANARI_DATA_TYPE, &f32);
   anariSetParameter(dev, frame, "world", ANARI_WORLD, &world);
   anariSetParameter(dev, frame, "camera", ANARI_CAMERA, &cam);
   anariSetParameter(dev, frame, "renderer", ANARI_RENDERER, &ren);
@@ -173,7 +184,8 @@ int main(int argc, char **argv)
     ANARIDataType pt = ANARI_UNKNOWN;
     const float *d = (const float *)anariMapFrame(
         dev, frame, "channel.aov:cameraDepth", &w, &h, &pt);
-    check(pt == ANARI_FLOAT32, "cameraDepth pixelType is the requested FLOAT32");
+    check(
+        pt == ANARI_FLOAT32, "cameraDepth pixelType is the requested FLOAT32");
     check(w == W && h == H && d != nullptr, "cameraDepth channel mapped");
     if (d) {
       // The near quad's small extent sits at the image center. Find a far-quad
@@ -195,8 +207,8 @@ int main(int argc, char **argv)
   {
     uint32_t w = 1, h = 1;
     ANARIDataType pt = ANARI_FLOAT32;
-    const void *p = anariMapFrame(
-        dev, frame, "channel.aov:primId", &w, &h, &pt);
+    const void *p =
+        anariMapFrame(dev, frame, "channel.aov:primId", &w, &h, &pt);
     check(p == nullptr && w == 0 && h == 0 && pt == ANARI_UNKNOWN,
         "unrequested channel.aov:primId maps to nothing");
     anariUnmapFrame(dev, frame, "channel.aov:primId");
@@ -213,6 +225,7 @@ int main(int argc, char **argv)
   anariRelease(dev, dev);
   anariUnloadLibrary(lib);
   std::printf("\n%s (%d issues)\n",
-      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED", g_errors);
+      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED",
+      g_errors);
   return g_errors == 0 ? 0 : 1;
 }

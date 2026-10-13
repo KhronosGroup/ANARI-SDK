@@ -171,8 +171,9 @@ static void CheckTechnique(SdrShaderNodeConstPtr ref)
       key = anari_hydra::kNormalMappedSurfaceSection;
       swapped = true;
     }
-  check(swapped, "previewSurface.glslfx's surface technique has "
-                 "Preview.NormalMapping");
+  check(swapped,
+      "previewSurface.glslfx's surface technique has "
+      "Preview.NormalMapping");
   const std::vector<std::string> surface = SourceKeys(
       anari_hydra::kNormalMappedSurfaceSource, "surfaceShader", "generated");
   check(surface == expected,
@@ -182,7 +183,8 @@ static void CheckTechnique(SdrShaderNodeConstPtr ref)
   const std::vector<std::string> displacement =
       SourceKeys(upstream, "displacementShader", path);
   check(SourceKeys(anari_hydra::kNormalMappedSurfaceSource,
-            "displacementShader", "generated")
+            "displacementShader",
+            "generated")
           == displacement,
       "the displacement technique is upstream's " + Join(displacement));
 
@@ -232,12 +234,18 @@ class DiagnosticLog : public TfDiagnosticMgr::Delegate
   std::vector<std::string> m_messages;
 };
 
-static void statusFunc(const void *, ANARIDevice, ANARIObject, ANARIDataType,
-    ANARIStatusSeverity severity, ANARIStatusCode, const char *message)
+static void statusFunc(const void *,
+    ANARIDevice,
+    ANARIObject,
+    ANARIDataType,
+    ANARIStatusSeverity severity,
+    ANARIStatusCode,
+    const char *message)
 {
   if (severity <= ANARI_SEVERITY_WARNING)
     std::printf("[%s] %s\n",
-        severity == ANARI_SEVERITY_WARNING ? "WARN" : "ERROR", message);
+        severity == ANARI_SEVERITY_WARNING ? "WARN" : "ERROR",
+        message);
   if (severity <= ANARI_SEVERITY_ERROR)
     ++g_errors;
 }
@@ -249,8 +257,8 @@ static double renderLuma(ANARIDevice dev, ANARIFrame frame)
   anariFrameReady(dev, frame, ANARI_WAIT);
   uint32_t w = 0, h = 0;
   ANARIDataType pt = ANARI_UNKNOWN;
-  const uint8_t *p = (const uint8_t *)anariMapFrame(
-      dev, frame, "channel.color", &w, &h, &pt);
+  const uint8_t *p =
+      (const uint8_t *)anariMapFrame(dev, frame, "channel.color", &w, &h, &pt);
   double sum = 0;
   long covered = 0;
   for (size_t i = 0; p && i < size_t(w) * h; ++i, p += 4)
@@ -275,8 +283,8 @@ static void CheckStormCompiles(DiagnosticLog &log)
   // One quad facing +Z with st spanning the unit square, and a tangent-space
   // normal tilted toward -X, away from the light, in attribute1: N.L drops
   // from 0.8 to 0.28.
-  float verts[12] = {-0.9f, -0.9f, 0, 0.9f, -0.9f, 0, 0.9f, 0.9f, 0, -0.9f,
-      0.9f, 0};
+  float verts[12] = {
+      -0.9f, -0.9f, 0, 0.9f, -0.9f, 0, 0.9f, 0.9f, 0, -0.9f, 0.9f, 0};
   float st[8] = {0, 0, 1, 0, 1, 1, 0, 1};
   float tilt[12];
   for (int v = 0; v < 4; ++v) {
@@ -397,9 +405,10 @@ int main()
   SdrRegistry &reg = SdrRegistry::GetInstance();
   SdrShaderNodeConstPtr ref = reg.GetShaderNodeByIdentifierAndType(
       TfToken("UsdPreviewSurface"), HioGlslfxTokens->glslfx);
-  SdrShaderNodeConstPtr gen = reg.GetShaderNodeFromSourceCode(
-      anari_hydra::kNormalMappedSurfaceSource, HioGlslfxTokens->glslfx,
-      SdrTokenMap());
+  SdrShaderNodeConstPtr gen =
+      reg.GetShaderNodeFromSourceCode(anari_hydra::kNormalMappedSurfaceSource,
+          HioGlslfxTokens->glslfx,
+          SdrTokenMap());
   check(ref && ref->IsValid(), "Sdr has a glslfx UsdPreviewSurface node");
   check(gen && gen->IsValid(), "the generated glslfx registers with Sdr");
   if (ref && gen) {
@@ -415,7 +424,8 @@ int main()
   CheckStormCompiles(log);
 
   TfDiagnosticMgr::GetInstance().RemoveDelegate(&log);
-  std::printf(g_errors ? "\nCHECKS FAILED (%d issues)\n" : "\nALL CHECKS PASSED\n",
+  std::printf(
+      g_errors ? "\nCHECKS FAILED (%d issues)\n" : "\nALL CHECKS PASSED\n",
       g_errors);
   return g_errors ? 1 : 0;
 }

@@ -16,7 +16,10 @@ struct Quad : public Geometry
   ~Quad() override = default;
 
   pxr::TfToken primType() const override;
-  int meshVertsPerFace() const override { return 4; }
+  int meshVertsPerFace() const override
+  {
+    return 4;
+  }
 };
 
 } // namespace anari_hydra

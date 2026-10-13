@@ -42,8 +42,12 @@ const ANARIParameter *reflectedParameterList(HydraGlobalState &state,
     for (; all->name; ++all) {
       // Extension-existence gate: core and bridge entries carry no source
       // extension and always pass; KHR entries follow the delegate's claim.
-      const char *ext = static_cast<const char *>(query_param_info(
-          type, subtype, all->name, all->type, "sourceExtension", ANARI_STRING));
+      const char *ext = static_cast<const char *>(query_param_info(type,
+          subtype,
+          all->name,
+          all->type,
+          "sourceExtension",
+          ANARI_STRING));
       if (!ext || extensionIndex(extensions, ext) >= 0)
         kept.push_back(*all);
     }
@@ -53,9 +57,8 @@ const ANARIParameter *reflectedParameterList(HydraGlobalState &state,
   return it->second.data();
 }
 
-bool reflectsParameter(const ANARIParameter *list,
-    const char *name,
-    ANARIDataType parameterType)
+bool reflectsParameter(
+    const ANARIParameter *list, const char *name, ANARIDataType parameterType)
 {
   if (!list || !name)
     return false;

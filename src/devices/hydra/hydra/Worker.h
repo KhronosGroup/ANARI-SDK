@@ -9,9 +9,9 @@
 
 #pragma once
 
-#include <pxr/imaging/hgi/hgi.h>
-#include <pxr/imaging/hd/driver.h>
 #include <pxr/imaging/garch/glDebugWindow.h>
+#include <pxr/imaging/hd/driver.h>
+#include <pxr/imaging/hgi/hgi.h>
 
 #include <condition_variable>
 #include <functional>
@@ -37,8 +37,14 @@ class Worker
   void postWait(std::function<void()> job);
 
   // Accessors below are only valid to call from within a worker job.
-  pxr::Hgi *hgi() const { return m_hgi.get(); }
-  pxr::HdDriver *driver() { return &m_driver; }
+  pxr::Hgi *hgi() const
+  {
+    return m_hgi.get();
+  }
+  pxr::HdDriver *driver()
+  {
+    return &m_driver;
+  }
 
   // Is the calling thread the worker thread? (guards re-entrancy)
   bool onWorkerThread() const;
@@ -49,7 +55,7 @@ class Worker
   // A GL context, current on the worker thread, that HgiGL (Storm) requires.
   // The hdx/Storm ride-along (SPEC §13) means we establish it unconditionally.
   std::unique_ptr<pxr::GarchGLDebugWindow> m_glWindow;
-  pxr::HgiUniquePtr m_hgi;   // created and owned on the worker thread
+  pxr::HgiUniquePtr m_hgi; // created and owned on the worker thread
   pxr::HdDriver m_driver;
 
   std::thread m_thread;

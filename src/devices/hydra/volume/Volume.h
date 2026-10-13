@@ -48,7 +48,10 @@ struct Volume : public Object
 
   bool isValid() const override;
 
-  uint64_t serial() const { return m_serial; }
+  uint64_t serial() const
+  {
+    return m_serial;
+  }
 
   // The last finalized state, or null before the first. Safe from any thread;
   // a new commit publishes a new object.

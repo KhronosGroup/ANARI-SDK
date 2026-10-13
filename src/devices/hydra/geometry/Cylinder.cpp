@@ -26,8 +26,12 @@ void Cylinder::finalize()
   // global 'radius' fallback.
   const TubeRadii radii{
       /*vertex=*/nullptr, primitiveRadius(), globalRadius(), globalRadius()};
-  TessellateTubes(vertexPosition(), index(), radii, vertexCap(),
-      ParseTubeCaps(m_caps), m_mesh);
+  TessellateTubes(vertexPosition(),
+      index(),
+      radii,
+      vertexCap(),
+      ParseTubeCaps(m_caps),
+      m_mesh);
 }
 
 TfToken Cylinder::primType() const

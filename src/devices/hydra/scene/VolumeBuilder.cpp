@@ -62,12 +62,12 @@ HdContainerDataSourceHandle BuildFieldPrim(const FieldSnapshot &field)
 {
   // Storm reads the *resolved* path (HdStField::Sync), so author it resolved.
   const std::string &path = field.assetPath;
-  auto volumeField = HdVolumeFieldSchema::BuildRetained(
-      Retained(SdfAssetPath(path, path)),
-      Retained(kValue),
-      Retained(0),
-      Retained(TfToken("float")),
-      nullptr);
+  auto volumeField =
+      HdVolumeFieldSchema::BuildRetained(Retained(SdfAssetPath(path, path)),
+          Retained(kValue),
+          Retained(0),
+          Retained(TfToken("float")),
+          nullptr);
   return HdRetainedContainerDataSource::New(
       HdVolumeFieldSchemaTokens->volumeField, volumeField);
 }
@@ -87,8 +87,12 @@ enum TableScalar
   kValueLo,
   kInvValueRange,
   kInvUnitDistance,
-  kDomainLoX, kDomainLoY, kDomainLoZ,
-  kDomainHiX, kDomainHiY, kDomainHiZ,
+  kDomainLoX,
+  kDomainLoY,
+  kDomainLoZ,
+  kDomainHiX,
+  kDomainHiY,
+  kDomainHiZ,
   kNumScalars
 };
 static constexpr int kColorRow = 0;
@@ -99,7 +103,8 @@ static constexpr int kTableRows = 6;
 // A finite float (the shader's arithmetic must not see inf/nan).
 static float Finite(float v)
 {
-  return std::isfinite(v) ? v : (v > 0.f ? 3.4e38f : (v < 0.f ? -3.4e38f : 0.f));
+  return std::isfinite(v) ? v
+                          : (v > 0.f ? 3.4e38f : (v < 0.f ? -3.4e38f : 0.f));
 }
 
 std::shared_ptr<AnariFieldData> BuildClassificationTable(
@@ -141,7 +146,8 @@ std::shared_ptr<AnariFieldData> BuildClassificationTable(
   return t;
 }
 
-// --- shader --------------------------------------------------------------------
+// --- shader
+// --------------------------------------------------------------------
 
 // One source for every volume: everything an edit can change is in the
 // volume's classification table, bound as a second field named "tf". Sdr
@@ -386,12 +392,12 @@ HdContainerDataSourceHandle BuildVolumeMaterialPrim()
   TfToken inNames[] = {kValue, kTable};
   HdDataSourceBaseHandle inValues[] = {
       ConnectionTo(kReaderNode), ConnectionTo(kTableReaderNode)};
-  auto shaderNode = HdMaterialNodeSchema::BuildRetained(
-      HdRetainedContainerDataSource::New(),
-      HdRetainedContainerDataSource::New(2, inNames, inValues),
-      Tok(nodeId),
-      nullptr,
-      nullptr);
+  auto shaderNode =
+      HdMaterialNodeSchema::BuildRetained(HdRetainedContainerDataSource::New(),
+          HdRetainedContainerDataSource::New(2, inNames, inValues),
+          Tok(nodeId),
+          nullptr,
+          nullptr);
 
   TfToken nodeNames[] = {kShaderNode, kReaderNode, kTableReaderNode};
   HdDataSourceBaseHandle nodeValues[] = {
@@ -411,7 +417,8 @@ HdContainerDataSourceHandle BuildVolumeMaterialPrim()
       HdMaterialSchema::BuildRetained(1, &ctx, &netVal));
 }
 
-// --- volume rprim -------------------------------------------------------------
+// --- volume rprim
+// -------------------------------------------------------------
 
 HdContainerDataSourceHandle BuildVolumePrim(const VolumeClassification &c,
     const FieldSnapshot &field,
@@ -425,15 +432,18 @@ HdContainerDataSourceHandle BuildVolumePrim(const VolumeClassification &c,
   std::vector<HdDataSourceBaseHandle> values;
 
   TfToken bindNames[] = {kValue, kTable};
-  HdDataSourceBaseHandle fieldBinding[] = {Retained(fieldPath), Retained(tablePath)};
+  HdDataSourceBaseHandle fieldBinding[] = {
+      Retained(fieldPath), Retained(tablePath)};
   names.push_back(HdVolumeFieldBindingSchema::GetSchemaToken());
-  values.push_back(HdVolumeFieldBindingSchema::BuildRetained(2, bindNames, fieldBinding));
+  values.push_back(
+      HdVolumeFieldBindingSchema::BuildRetained(2, bindNames, fieldBinding));
 
   const TfToken allPurpose = HdMaterialBindingsSchemaTokens->allPurpose;
   HdDataSourceBaseHandle binding =
       HdMaterialBindingSchema::BuildRetained(Retained(materialPath));
   names.push_back(HdMaterialBindingsSchema::GetSchemaToken());
-  values.push_back(HdMaterialBindingsSchema::BuildRetained(1, &allPurpose, &binding));
+  values.push_back(
+      HdMaterialBindingsSchema::BuildRetained(1, &allPurpose, &binding));
 
   names.push_back(HdPurposeSchemaTokens->purpose);
   values.push_back(HdPurposeSchema::BuildRetained(
@@ -445,8 +455,8 @@ HdContainerDataSourceHandle BuildVolumePrim(const VolumeClassification &c,
   // World-direct volumes and prototypes alike sit at identity: ANARI volumes
   // carry no transform of their own (instances supply it).
   names.push_back(HdXformSchemaTokens->xform);
-  values.push_back(HdXformSchema::BuildRetained(
-      Retained(GfMatrix4d(1.0)), Retained(false)));
+  values.push_back(
+      HdXformSchema::BuildRetained(Retained(GfMatrix4d(1.0)), Retained(false)));
 
   // Storm culls and rasterizes the proxy box (half a voxel past the domain).
   const Bounds b = field.proxyBounds();

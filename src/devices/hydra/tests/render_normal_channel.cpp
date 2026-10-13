@@ -10,7 +10,8 @@
 //     value is exact to float precision — a UNorm8 target would clamp x to 0.
 //   - camera moved to +x looking -x at a +x quad: still (1,0,0) in WORLD space
 //     (an eye-space result would read (0,0,1)).
-//   - +z quad rotated by an INSTANCE transform (+90° about y) with the camera on
+//   - +z quad rotated by an INSTANCE transform (+90° about y) with the camera
+//   on
 //     +x: (1,0,0) — instance rotation reaches the normal independently of the
 //     camera rotation.
 //   - a quad with no authored normal: reports the delegate's own geometric
@@ -33,8 +34,13 @@
 
 static int g_errors = 0;
 
-static void statusFunc(const void *, ANARIDevice, ANARIObject, ANARIDataType,
-    ANARIStatusSeverity severity, ANARIStatusCode, const char *message)
+static void statusFunc(const void *,
+    ANARIDevice,
+    ANARIObject,
+    ANARIDataType,
+    ANARIStatusSeverity severity,
+    ANARIStatusCode,
+    const char *message)
 {
   const char *tag = severity == ANARI_SEVERITY_FATAL_ERROR ? "FATAL"
       : severity == ANARI_SEVERITY_ERROR                   ? "ERROR"
@@ -70,8 +76,8 @@ static ANARISurface makeQuad(
   anariSetParameter(dev, g, "vertex.position", ANARI_ARRAY1D, &pos);
   ANARIArray1D norm = nullptr;
   if (normals) {
-    norm = anariNewArray1D(
-        dev, normals, nullptr, nullptr, ANARI_FLOAT32_VEC3, 4);
+    norm =
+        anariNewArray1D(dev, normals, nullptr, nullptr, ANARI_FLOAT32_VEC3, 4);
     anariSetParameter(dev, g, "vertex.normal", ANARI_ARRAY1D, &norm);
   }
   anariCommitParameters(dev, g);
@@ -97,14 +103,14 @@ static ANARISurface makeQuad(
 struct Scene
 {
   const char *name;
-  const float *verts;    // 4 corners, caller-owned
+  const float *verts; // 4 corners, caller-owned
   bool authorNormal;
-  Vec3 normal;           // authored vertex.normal (when authorNormal)
+  Vec3 normal; // authored vertex.normal (when authorNormal)
   const float *instance; // optional column-major 4x4 instance transform
   float eye[3];
   float dir[3];
-  Vec3 expected;         // expected world-space normal at the image center
-  bool exact;            // assert within tolerance (false: dominant |z| only)
+  Vec3 expected; // expected world-space normal at the image center
+  bool exact; // assert within tolerance (false: dominant |z| only)
 };
 
 // What one render of the normal channel yields: the center pixel, the corner
@@ -143,7 +149,8 @@ static NormalReadback renderScene(ANARIDevice dev, const Scene &s)
     anariSetParameter(dev, inst, "group", ANARI_GROUP, &group);
     anariSetParameter(dev, inst, "transform", ANARI_FLOAT32_MAT4, s.instance);
     anariCommitParameters(dev, inst);
-    instArray = anariNewArray1D(dev, &inst, nullptr, nullptr, ANARI_INSTANCE, 1);
+    instArray =
+        anariNewArray1D(dev, &inst, nullptr, nullptr, ANARI_INSTANCE, 1);
     anariSetParameter(dev, world, "instance", ANARI_ARRAY1D, &instArray);
   } else {
     anariSetParameter(dev, world, "surface", ANARI_ARRAY1D, &surfArray);
@@ -231,32 +238,84 @@ int main(int argc, char **argv)
   }
 
   // Quad in the xy-plane at z=0 (faces +z); quad in the yz-plane at x=0 (+x).
-  const float quadZ[12] = {-0.8f, -0.8f, 0.f, 0.8f, -0.8f, 0.f, 0.8f, 0.8f,
-      0.f, -0.8f, 0.8f, 0.f};
-  const float quadX[12] = {0.f, -0.8f, 0.8f, 0.f, -0.8f, -0.8f, 0.f, 0.8f,
-      -0.8f, 0.f, 0.8f, 0.8f};
+  const float quadZ[12] = {
+      -0.8f, -0.8f, 0.f, 0.8f, -0.8f, 0.f, 0.8f, 0.8f, 0.f, -0.8f, 0.8f, 0.f};
+  const float quadX[12] = {
+      0.f, -0.8f, 0.8f, 0.f, -0.8f, -0.8f, 0.f, 0.8f, -0.8f, 0.f, 0.8f, 0.8f};
   // +90° about y: (0,0,1) -> (1,0,0). Column-major: images of the basis.
-  const float rotY90[16] = {0.f, 0.f, -1.f, 0.f, 0.f, 1.f, 0.f, 0.f, 1.f, 0.f,
-      0.f, 0.f, 0.f, 0.f, 0.f, 1.f};
+  const float rotY90[16] = {0.f,
+      0.f,
+      -1.f,
+      0.f,
+      0.f,
+      1.f,
+      0.f,
+      0.f,
+      1.f,
+      0.f,
+      0.f,
+      0.f,
+      0.f,
+      0.f,
+      0.f,
+      1.f};
 
   const float tilt = 0.6f, tiltZ = 0.8f; // unit length: 0.36 + 0.64
   const std::vector<Scene> scenes = {
-      {"front-facing +z quad, camera on +z", quadZ, true, {0.f, 0.f, 1.f},
-          nullptr, {0.f, 0.f, 3.f}, {0.f, 0.f, -1.f}, {0.f, 0.f, 1.f}, true},
-      {"tilted authored normal (-0.6,0,0.8)", quadZ, true, {-tilt, 0.f, tiltZ},
-          nullptr, {0.f, 0.f, 3.f}, {0.f, 0.f, -1.f}, {-tilt, 0.f, tiltZ},
+      {"front-facing +z quad, camera on +z",
+          quadZ,
+          true,
+          {0.f, 0.f, 1.f},
+          nullptr,
+          {0.f, 0.f, 3.f},
+          {0.f, 0.f, -1.f},
+          {0.f, 0.f, 1.f},
           true},
-      {"camera on +x looking -x at a +x quad", quadX, true, {1.f, 0.f, 0.f},
-          nullptr, {3.f, 0.f, 0.f}, {-1.f, 0.f, 0.f}, {1.f, 0.f, 0.f}, true},
-      {"+z quad rotated +90deg about y by an instance, camera on +x", quadZ,
-          true, {0.f, 0.f, 1.f}, rotY90, {3.f, 0.f, 0.f}, {-1.f, 0.f, 0.f},
-          {1.f, 0.f, 0.f}, true},
-      {"quad without authored normals (delegate geometric normal)", quadZ,
-          false, {0.f, 0.f, 0.f}, nullptr, {0.f, 0.f, 3.f}, {0.f, 0.f, -1.f},
-          {0.f, 0.f, 1.f}, false},
-      {"+z quad seen from behind (camera on -z): delegate-owned sign", quadZ,
-          true, {0.f, 0.f, 1.f}, nullptr, {0.f, 0.f, -3.f}, {0.f, 0.f, 1.f},
-          {0.f, 0.f, 1.f}, false},
+      {"tilted authored normal (-0.6,0,0.8)",
+          quadZ,
+          true,
+          {-tilt, 0.f, tiltZ},
+          nullptr,
+          {0.f, 0.f, 3.f},
+          {0.f, 0.f, -1.f},
+          {-tilt, 0.f, tiltZ},
+          true},
+      {"camera on +x looking -x at a +x quad",
+          quadX,
+          true,
+          {1.f, 0.f, 0.f},
+          nullptr,
+          {3.f, 0.f, 0.f},
+          {-1.f, 0.f, 0.f},
+          {1.f, 0.f, 0.f},
+          true},
+      {"+z quad rotated +90deg about y by an instance, camera on +x",
+          quadZ,
+          true,
+          {0.f, 0.f, 1.f},
+          rotY90,
+          {3.f, 0.f, 0.f},
+          {-1.f, 0.f, 0.f},
+          {1.f, 0.f, 0.f},
+          true},
+      {"quad without authored normals (delegate geometric normal)",
+          quadZ,
+          false,
+          {0.f, 0.f, 0.f},
+          nullptr,
+          {0.f, 0.f, 3.f},
+          {0.f, 0.f, -1.f},
+          {0.f, 0.f, 1.f},
+          false},
+      {"+z quad seen from behind (camera on -z): delegate-owned sign",
+          quadZ,
+          true,
+          {0.f, 0.f, 1.f},
+          nullptr,
+          {0.f, 0.f, -3.f},
+          {0.f, 0.f, 1.f},
+          {0.f, 0.f, 1.f},
+          false},
   };
 
   for (const Scene &s : scenes) {
@@ -267,9 +326,17 @@ int main(int argc, char **argv)
     if (!r.mapped)
       continue;
     const Vec3 c = r.center, bg = r.corner;
-    std::printf("  center = (%.5f %.5f %.5f)  expected (%.3f %.3f %.3f)  "
-                "corner = (%.3f %.3f %.3f)\n",
-        c.x, c.y, c.z, s.expected.x, s.expected.y, s.expected.z, bg.x, bg.y,
+    std::printf(
+        "  center = (%.5f %.5f %.5f)  expected (%.3f %.3f %.3f)  "
+        "corner = (%.3f %.3f %.3f)\n",
+        c.x,
+        c.y,
+        c.z,
+        s.expected.x,
+        s.expected.y,
+        s.expected.z,
+        bg.x,
+        bg.y,
         bg.z);
     const float len = std::sqrt(c.x * c.x + c.y * c.y + c.z * c.z);
     check(std::fabs(len - 1.f) < 1e-3f, "center normal is unit length");
@@ -278,7 +345,8 @@ int main(int argc, char **argv)
           + std::fabs(c.y - s.expected.y) + std::fabs(c.z - s.expected.z);
       check(err < 2e-3f, "center normal matches the expected world direction");
     } else {
-      check(std::fabs(c.z) >= std::fabs(c.x) && std::fabs(c.z) >= std::fabs(c.y),
+      check(
+          std::fabs(c.z) >= std::fabs(c.x) && std::fabs(c.z) >= std::fabs(c.y),
           "geometric normal has dominant |z|");
     }
     check(bg.x == 0.f && bg.y == 0.f && bg.z == 0.f,
@@ -288,6 +356,7 @@ int main(int argc, char **argv)
   anariRelease(dev, dev);
   anariUnloadLibrary(lib);
   std::printf("\n%s (%d issues)\n",
-      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED", g_errors);
+      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED",
+      g_errors);
   return g_errors == 0 ? 0 : 1;
 }

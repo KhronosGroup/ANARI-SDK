@@ -18,8 +18,8 @@ using helium::float4;
 // (missing lanes take the ANARI attribute default (0,0,0,1)) or as a
 // per-transform ARRAY1D; these feed the prototype surfaces' material attribute
 // reads *per instance* — the device authors them as instance-rate primvars on
-// the (world, group) instancer, below the prototype's own per-vertex primvars in
-// interpolation precedence (a geometry carrying its own `color` wins; the
+// the (world, group) instancer, below the prototype's own per-vertex primvars
+// in interpolation precedence (a geometry carrying its own `color` wins; the
 // instance value fills in where absent — ANARI attribute precedence, proven in
 // prototype 014). `has*` distinguishes an app-set value from the default so a
 // value set on one instance does not silently override an unset sibling in the
@@ -30,8 +30,10 @@ struct InstanceOverrides
   bool hasColor{false};
   float4 color{0.f, 0.f, 0.f, 1.f};
   bool hasAttribute[4]{false, false, false, false};
-  float4 attribute[4]{{0.f, 0.f, 0.f, 1.f}, {0.f, 0.f, 0.f, 1.f},
-      {0.f, 0.f, 0.f, 1.f}, {0.f, 0.f, 0.f, 1.f}};
+  float4 attribute[4]{{0.f, 0.f, 0.f, 1.f},
+      {0.f, 0.f, 0.f, 1.f},
+      {0.f, 0.f, 0.f, 1.f},
+      {0.f, 0.f, 0.f, 1.f}};
 };
 
 // ANARI instance -> instance transform(s) feeding a (world, group) instancer
@@ -52,7 +54,10 @@ struct Instance : public Object
   void finalize() override;
   bool isValid() const override;
 
-  Group *group() const { return m_group.ptr; }
+  Group *group() const
+  {
+    return m_group.ptr;
+  }
 
   // Number of flattened transforms: 1 for a scalar transform, the array
   // length for an array transform.
@@ -60,9 +65,15 @@ struct Instance : public Object
   helium::mat4 transform(size_t i) const;
   uint32_t id(size_t i) const;
   InstanceOverrides overrides(size_t i) const;
-  bool hasTransformArray() const { return bool(m_xfmArray); }
+  bool hasTransformArray() const
+  {
+    return bool(m_xfmArray);
+  }
 
-  uint64_t serial() const { return m_serial; }
+  uint64_t serial() const
+  {
+    return m_serial;
+  }
 
  private:
   helium::IntrusivePtr<Group> m_group;

@@ -74,22 +74,44 @@ class AnariHioFieldTextureData final : public HioFieldTextureData
     // Storm derives its ray-march step from this matrix (half the smallest
     // spacing, the same step VisRTX takes).
     const pxr::GfVec3i &n = _data->dims;
-    const GfRange3d range(GfVec3d(-0.5), GfVec3d(n[0] - 0.5, n[1] - 0.5, n[2] - 0.5));
+    const GfRange3d range(
+        GfVec3d(-0.5), GfVec3d(n[0] - 0.5, n[1] - 0.5, n[2] - 0.5));
     GfMatrix4d m(1.0);
     m.SetScale(GfVec3d(_data->spacing));
     m.SetTranslateOnly(GfVec3d(_data->origin));
     _bbox = GfBBox3d(range, m);
   }
 
-  const GfBBox3d &GetBoundingBox() const override { return _bbox; }
+  const GfBBox3d &GetBoundingBox() const override
+  {
+    return _bbox;
+  }
   // The grid is served at full resolution: Storm's per-field texture-memory
   // budget is not applied (README.md volume limitations).
-  int ResizedWidth() const override { return _data ? _data->dims[0] : 0; }
-  int ResizedHeight() const override { return _data ? _data->dims[1] : 0; }
-  int ResizedDepth() const override { return _data ? _data->dims[2] : 0; }
-  HioFormat GetFormat() const override { return HioFormatFloat32; }
-  bool Read() override { return bool(_data); }
-  bool HasRawBuffer() const override { return _data && !_data->values.empty(); }
+  int ResizedWidth() const override
+  {
+    return _data ? _data->dims[0] : 0;
+  }
+  int ResizedHeight() const override
+  {
+    return _data ? _data->dims[1] : 0;
+  }
+  int ResizedDepth() const override
+  {
+    return _data ? _data->dims[2] : 0;
+  }
+  HioFormat GetFormat() const override
+  {
+    return HioFormatFloat32;
+  }
+  bool Read() override
+  {
+    return bool(_data);
+  }
+  bool HasRawBuffer() const override
+  {
+    return _data && !_data->values.empty();
+  }
   unsigned char const *GetRawBuffer() const override
   {
     return _data ? reinterpret_cast<unsigned char const *>(_data->values.data())

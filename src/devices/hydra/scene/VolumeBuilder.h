@@ -4,9 +4,10 @@
 // Volume authoring (SPEC §7). An ANARI volume becomes four Hydra prims:
 //
 //  - a field bprim (type `openvdbAsset`, the stock Storm field type) per
-//    spatial field, whose `filePath` is the field's `anari://field/…​.anari`
-//    asset: AnariField.cpp's Hio plugin serves the dense grid to Storm's
-//    field-texture pipeline by extension, no OpenVDB involved;
+//    spatial field, whose `filePath` is the field's
+//    `anari://field/…​.anari` asset: AnariField.cpp's Hio plugin serves the
+//    dense grid to Storm's field-texture pipeline by extension, no OpenVDB
+//    involved;
 //  - a second field bprim per volume serving its classification table
 //    (transfer-function tables, value range, unit distance, field domain;
 //    BuildClassificationTable) through the same plugin;
@@ -23,9 +24,9 @@
 
 #pragma once
 
-#include <pxr/imaging/hd/dataSource.h>
 #include <pxr/base/gf/matrix4d.h>
 #include <pxr/base/tf/token.h>
+#include <pxr/imaging/hd/dataSource.h>
 #include <pxr/usd/sdf/path.h>
 
 #include <memory>

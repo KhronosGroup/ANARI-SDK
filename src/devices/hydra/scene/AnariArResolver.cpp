@@ -4,13 +4,13 @@
 // The Ar side of the in-memory asset scheme (SPEC §6.3). Storm never gets here:
 // Hio dispatches `.anari` paths to AnariHioImage by extension. Delegates that
 // read texture bytes through Ar and decode them with their own image loaders
-// (hdGatling) resolve `anari://` through this URI resolver instead, which serves
-// each registry image encoded as a file those loaders understand: an 8-bit image
-// as its exact bytes in an uncompressed 32-bit TGA, a Half/Float image as an
-// uncompressed EXR of the same channel type. An environment (dome) image is
-// always an EXR, an 8-bit one widened to linear Float: hdGatling stages every
-// dome texture as HDR and crashes on an 8-bit decode. Rows are written top
-// first, the order AnariHioImage serves them to Storm.
+// (hdGatling) resolve `anari://` through this URI resolver instead, which
+// serves each registry image encoded as a file those loaders understand: an
+// 8-bit image as its exact bytes in an uncompressed 32-bit TGA, a Half/Float
+// image as an uncompressed EXR of the same channel type. An environment (dome)
+// image is always an EXR, an 8-bit one widened to linear Float: hdGatling
+// stages every dome texture as HDR and crashes on an 8-bit decode. Rows are
+// written top first, the order AnariHioImage serves them to Storm.
 
 #include "AnariImage.h"
 
@@ -213,14 +213,14 @@ PXR_NAMESPACE_OPEN_SCOPE
 class AnariArResolver final : public ArResolver
 {
  protected:
-  std::string _CreateIdentifier(const std::string &assetPath,
-      const ArResolvedPath &) const override
+  std::string _CreateIdentifier(
+      const std::string &assetPath, const ArResolvedPath &) const override
   {
     return assetPath;
   }
 
-  std::string _CreateIdentifierForNewAsset(const std::string &assetPath,
-      const ArResolvedPath &) const override
+  std::string _CreateIdentifierForNewAsset(
+      const std::string &assetPath, const ArResolvedPath &) const override
   {
     return assetPath;
   }

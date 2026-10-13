@@ -66,7 +66,7 @@ struct Extractor
       id[c] = vertexIndex(x, y, z);
       s[c] = grid.values[id[c]];
       if (!std::isfinite(s[c]))
-        return;   // no interpolant across a non-finite sample
+        return; // no interpolant across a non-finite sample
       p[c] = position(x, y, z);
       lo = std::min(lo, s[c]);
       hi = std::max(hi, s[c]);
@@ -94,11 +94,10 @@ struct Extractor
 
   void triangle(int v0, int v1, int v2, const GfVec3f &up)
   {
-    const GfVec3f &a = out.points[v0], &b = out.points[v1],
-                  &c = out.points[v2];
+    const GfVec3f &a = out.points[v0], &b = out.points[v1], &c = out.points[v2];
     const float facing = GfDot(GfCross(b - a, c - a), up);
     if (facing == 0.f)
-      return;   // degenerate: the level set touches a grid vertex
+      return; // degenerate: the level set touches a grid vertex
     if (facing < 0.f)
       std::swap(v1, v2);
     out.faceVertexCounts.push_back(3);
@@ -108,7 +107,8 @@ struct Extractor
     out.primitiveIndices.push_back(primitive);
   }
 
-  void tet(const int (&t)[4], const float *s, const GfVec3f *p, const size_t *id)
+  void tet(
+      const int (&t)[4], const float *s, const GfVec3f *p, const size_t *id)
   {
     int above[4], below[4], na = 0, nb = 0;
     GfVec3f aboveSum(0.f), belowSum(0.f);

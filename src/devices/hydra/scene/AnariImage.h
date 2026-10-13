@@ -26,7 +26,7 @@
 namespace helium {
 class Array1D;
 class Array2D;
-}
+} // namespace helium
 
 namespace anari_hydra {
 
@@ -108,9 +108,9 @@ class AnariImageRegistry
 };
 
 // An affine map applied to each decoded texel before storage:
-// out = matrix * texel + offset. Carries a sampler's channel-mixing outTransform/outOffset
-// (SPEC §6.4) into its own registry copy of the image. Results are stored in
-// Float, so they may leave [0,1].
+// out = matrix * texel + offset. Carries a sampler's channel-mixing
+// outTransform/outOffset (SPEC §6.4) into its own registry copy of the image.
+// Results are stored in Float, so they may leave [0,1].
 struct TexelAffine
 {
   anari::math::mat4 matrix{linalg::identity};
@@ -142,14 +142,16 @@ struct TexelBorder
 // false (leaving `out` empty) when `img` is null.
 // `transform`, when given, is applied to each texel in float before storage;
 // `border`, when given, frames the padded axes (see TexelBorder).
-bool DecodeArray2DToImage(helium::Array2D *img, AnariImageData &out,
+bool DecodeArray2DToImage(helium::Array2D *img,
+    AnariImageData &out,
     const TexelAffine *transform = nullptr,
     TexelFormat maxFormat = TexelFormat::Float,
     const TexelBorder *border = nullptr);
 
 // The same for a helium Array1D, stored as an N×1 image (SPEC §6.4 image1D).
 // Only the X axis of a 1D image can be padded.
-bool DecodeArray1DToImage(helium::Array1D *img, AnariImageData &out,
+bool DecodeArray1DToImage(helium::Array1D *img,
+    AnariImageData &out,
     const TexelAffine *transform = nullptr,
     TexelFormat maxFormat = TexelFormat::Float,
     const TexelBorder *border = nullptr);

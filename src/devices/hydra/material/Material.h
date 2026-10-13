@@ -31,15 +31,18 @@ using helium::float4;
 // prototypes/015-normal-map-tangents).
 struct SamplerBinding
 {
-  pxr::TfToken usdInput;   // UsdPreviewSurface input, e.g. "diffuseColor"
-  pxr::TfToken output;     // UsdUVTexture output: "rgb", "r", or "a"
+  pxr::TfToken usdInput; // UsdPreviewSurface input, e.g. "diffuseColor"
+  pxr::TfToken output; // UsdUVTexture output: "rgb", "r", or "a"
   helium::IntrusivePtr<Sampler> sampler;
-  bool normalMap{false};   // the `normal` slot (SPEC §6.5)
+  bool normalMap{false}; // the `normal` slot (SPEC §6.5)
 
   // Component count a transform/primitive sampler bakes for this slot and its
   // reader reads (SPEC §6.4): float3 for a color slot, the first component for
   // a scalar one. One place, because the derived primvar name embeds it.
-  int valueWidth() const { return output == pxr::TfToken("rgb") ? 3 : 1; }
+  int valueWidth() const
+  {
+    return output == pxr::TfToken("rgb") ? 3 : 1;
+  }
 };
 
 // A material input driven by a geometry attribute instead of a constant
@@ -50,8 +53,8 @@ struct SamplerBinding
 // per-vertex primvar PrimBuilder authors for that attribute.
 struct AttributeBinding
 {
-  pxr::TfToken usdInput;   // UsdPreviewSurface input, e.g. "diffuseColor"
-  std::string primvar;     // per-vertex primvar name: "color" or "attribute0..3"
+  pxr::TfToken usdInput; // UsdPreviewSurface input, e.g. "diffuseColor"
+  std::string primvar; // per-vertex primvar name: "color" or "attribute0..3"
 };
 
 // Base for ANARI materials. The device authors a UsdPreviewSurface-shaped
@@ -70,10 +73,13 @@ struct Material : public Object
   void finalize() override;
 
   // Device-assigned serial for the material-sprim path taxonomy (SPEC §4.2).
-  uint64_t serial() const { return m_serial; }
+  uint64_t serial() const
+  {
+    return m_serial;
+  }
 
-  // How opacity is interpreted at the UsdPreviewSurface opacity/opacityThreshold
-  // inputs (SPEC §6.5 alphaMode row).
+  // How opacity is interpreted at the UsdPreviewSurface
+  // opacity/opacityThreshold inputs (SPEC §6.5 alphaMode row).
   enum class AlphaMode
   {
     Opaque,
@@ -82,17 +88,50 @@ struct Material : public Object
   };
 
   // UsdPreviewSurface parameter block, filled by subtypes.
-  float3 color() const { return m_color; }        // -> diffuseColor
-  float opacity() const { return m_opacity; }     // -> opacity
-  float metallic() const { return m_metallic; }
-  float roughness() const { return m_roughness; }
-  float3 emissive() const { return m_emissive; }  // -> emissiveColor
-  float ior() const { return m_ior; }
-  float clearcoat() const { return m_clearcoat; }
-  float clearcoatRoughness() const { return m_clearcoatRoughness; }
-  float occlusion() const { return m_occlusion; }
-  AlphaMode alphaMode() const { return m_alphaMode; }
-  float opacityThreshold() const { return m_opacityThreshold; }
+  float3 color() const
+  {
+    return m_color;
+  } // -> diffuseColor
+  float opacity() const
+  {
+    return m_opacity;
+  } // -> opacity
+  float metallic() const
+  {
+    return m_metallic;
+  }
+  float roughness() const
+  {
+    return m_roughness;
+  }
+  float3 emissive() const
+  {
+    return m_emissive;
+  } // -> emissiveColor
+  float ior() const
+  {
+    return m_ior;
+  }
+  float clearcoat() const
+  {
+    return m_clearcoat;
+  }
+  float clearcoatRoughness() const
+  {
+    return m_clearcoatRoughness;
+  }
+  float occlusion() const
+  {
+    return m_occlusion;
+  }
+  AlphaMode alphaMode() const
+  {
+    return m_alphaMode;
+  }
+  float opacityThreshold() const
+  {
+    return m_opacityThreshold;
+  }
 
   // Inputs bound to a sampler rather than a constant (SPEC §6.1). Empty for the
   // constant-only case.

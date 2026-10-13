@@ -38,8 +38,14 @@ struct Sampler : public Object
   void finalize() override;
   bool isValid() const override;
 
-  uint64_t serial() const { return m_serial; }
-  uint64_t revision() const { return m_revision; }
+  uint64_t serial() const
+  {
+    return m_serial;
+  }
+  uint64_t revision() const
+  {
+    return m_revision;
+  }
 
   // Subtype family. Image samplers author a UsdUVTexture; Transform and
   // Primitive samplers author a derived value primvar per bound rprim and a
@@ -50,11 +56,17 @@ struct Sampler : public Object
     Transform,
     Primitive
   };
-  Kind kind() const { return m_kind; }
+  Kind kind() const
+  {
+    return m_kind;
+  }
 
   // The in-memory asset path this sampler's image is registered under; the
   // UsdUVTexture `file` input (SPEC §6.3).
-  const std::string &assetPath() const { return m_assetPath; }
+  const std::string &assetPath() const
+  {
+    return m_assetPath;
+  }
 
   // UsdUVTexture wrap tokens ("repeat" / "clamp" / "mirror" / "black"), mapped
   // from ANARI wrapMode1/wrapMode2 (image2D) or wrapMode (image1D, whose second
@@ -73,14 +85,23 @@ struct Sampler : public Object
   // exactly under nearest and linear filtering (a lookup past the padded edge
   // clamps onto the border texel; the half-texel blend band sits where the
   // border would be sampled).
-  const char *wrapS() const { return m_wrapS; }
-  const char *wrapT() const { return m_wrapT; }
+  const char *wrapS() const
+  {
+    return m_wrapS;
+  }
+  const char *wrapT() const
+  {
+    return m_wrapT;
+  }
 
   // Whether ANARI `filter` selected nearest sampling (SPEC §6.2). "linear" is
   // Storm's default (mipmapped) and needs no authored node params; nearest
   // authors magFilter/minFilter=nearest. The MaterialBuilder branches on this
   // rather than re-parsing a token, mirroring how wrap tokens flow opaquely.
-  bool filterIsNearest() const { return m_filterNearest; }
+  bool filterIsNearest() const
+  {
+    return m_filterNearest;
+  }
 
   // --- Input coordinates (SPEC §6.4) --------------------------------------
 
@@ -98,10 +119,22 @@ struct Sampler : public Object
   static constexpr int kSlotObjectNormal = 7;
   static constexpr int kSlotWorldNormal = 8;
   static constexpr int kSlotPrimitiveId = 9;
-  static bool IsAttributeSlot(int slot) { return slot >= 0 && slot <= kSlotColor; }
-  static bool IsDerivedSlot(int slot) { return slot > kSlotColor; }
-  const std::string &inAttribute() const { return m_inAttribute; }
-  int inAttributeSlot() const { return m_inSlot; }
+  static bool IsAttributeSlot(int slot)
+  {
+    return slot >= 0 && slot <= kSlotColor;
+  }
+  static bool IsDerivedSlot(int slot)
+  {
+    return slot > kSlotColor;
+  }
+  const std::string &inAttribute() const
+  {
+    return m_inAttribute;
+  }
+  int inAttributeSlot() const
+  {
+    return m_inSlot;
+  }
 
   // True when the derived primvar is a function of the rprim's points, so an
   // in-place points mutation must re-author it (Mirror's incremental gate).
@@ -116,14 +149,15 @@ struct Sampler : public Object
   }
 
   // Primvar name the MaterialBuilder points a reader at for an absent
-  // inAttribute. No geometry ever authors it, so Storm's UsdPrimvarReader_float2
-  // fallback (0,0) applies on both the UsdTransform2d and baked paths (the
-  // PrimBuilder authors no derived primvar for an absent slot either).
+  // inAttribute. No geometry ever authors it, so Storm's
+  // UsdPrimvarReader_float2 fallback (0,0) applies on both the UsdTransform2d
+  // and baked paths (the PrimBuilder authors no derived primvar for an absent
+  // slot either).
   static constexpr const char *kAbsentAttributePrimvar = "anari_absent_st";
 
   // How an image sampler's inTransform/inOffset reach Storm. Storm's
-  // UsdTransform2d evaluates `translation + R(rotation) * (scale * in)` and must
-  // sit directly on a primvar reader, so exactly the rotation·scale
+  // UsdTransform2d evaluates `translation + R(rotation) * (scale * in)` and
+  // must sit directly on a primvar reader, so exactly the rotation·scale
   // (orthogonal-column) 2×2 blocks with no z/w-column terms, on a per-vertex
   // attribute slot, map onto it (Transform2d). Every other affine map — shear,
   // terms on the attribute's z/w components — and every geometry-derived source
@@ -138,13 +172,25 @@ struct Sampler : public Object
     Transform2d,
     Baked
   };
-  InputMode inputMode() const { return m_inMode; }
+  InputMode inputMode() const
+  {
+    return m_inMode;
+  }
 
   // Transform2d decomposition in ANARI texture space: t' = R(deg)·(scale⊙t)
   // + bias. The MaterialBuilder folds the ANARI→USD row flip on top.
-  float stRotationDegrees() const { return m_stRotationDeg; }
-  helium::float2 stScale() const { return m_stScale; }
-  helium::float2 stBias() const { return m_stBias; }
+  float stRotationDegrees() const
+  {
+    return m_stRotationDeg;
+  }
+  helium::float2 stScale() const
+  {
+    return m_stScale;
+  }
+  helium::float2 stBias() const
+  {
+    return m_stBias;
+  }
 
   // Baked path: the full input map (ANARI's, then any border-padding remap)
   // applied to a (padded) float4 attribute value, returning the sampled (u,v)
@@ -178,8 +224,9 @@ struct Sampler : public Object
   // attribute value, outTransform * attribute + outOffset.
   float4 transformOutput(const float4 &attribute) const;
 
-  // Primitive sampler: array[primitiveId + inOffset] read as an attribute value,
-  // or ANARI's missing-attribute value (0,0,0,1) past the end of the array.
+  // Primitive sampler: array[primitiveId + inOffset] read as an attribute
+  // value, or ANARI's missing-attribute value (0,0,0,1) past the end of the
+  // array.
   float4 primitiveValue(uint64_t primitiveId) const;
 
   // ANARI v=0 addresses image row zero (top). Hio uploads that row at USD v=1,
@@ -196,15 +243,22 @@ struct Sampler : public Object
   // mixes channels is baked into this sampler's decoded texels instead (exact
   // under linear filtering; stored in float, so equally free to leave [0,1]),
   // in which case these report identity.
-  float4 outScale() const { return m_outScale; }
-  float4 outBias() const { return m_outBias; }
+  float4 outScale() const
+  {
+    return m_outScale;
+  }
+  float4 outBias() const
+  {
+    return m_outBias;
+  }
 
  protected:
   // `imageDims` is 1 or 2 for the image subtypes, 0 for transform/primitive.
   Sampler(HydraGlobalState *s, Kind kind, int imageDims);
 
-  // The sampler holds its image array through a ChangeObserverPtr so an in-place
-  // anariUnmapArray re-decodes into the registry and re-marks the mirror.
+  // The sampler holds its image array through a ChangeObserverPtr so an
+  // in-place anariUnmapArray re-decodes into the registry and re-marks the
+  // mirror.
   helium::ChangeObserverPtr<helium::Array2D> m_image2D;
   helium::ChangeObserverPtr<helium::Array1D> m_image1D;
   // Primitive sampler backing array (§6.4); same observer semantics.

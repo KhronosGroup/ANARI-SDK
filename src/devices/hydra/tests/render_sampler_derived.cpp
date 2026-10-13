@@ -3,8 +3,8 @@
 //
 // Exercises the primitive and transform samplers and the geometry-derived
 // inAttribute sources (SPEC §6.4): primitive lookups by ANARI primitive index
-// with inOffset and out-of-range reads, transform samplers over objectPosition /
-// worldPosition / objectNormal / worldNormal / primitiveId and per-vertex
+// with inOffset and out-of-range reads, transform samplers over objectPosition
+// / worldPosition / objectNormal / worldNormal / primitiveId and per-vertex
 // attributes, image samplers on those same sources (the forced baked path),
 // scalar slots, and live edits of all of it.
 //
@@ -30,8 +30,13 @@
 
 static int g_errors = 0;
 
-static void statusFunc(const void *, ANARIDevice, ANARIObject, ANARIDataType,
-    ANARIStatusSeverity severity, ANARIStatusCode, const char *message)
+static void statusFunc(const void *,
+    ANARIDevice,
+    ANARIObject,
+    ANARIDataType,
+    ANARIStatusSeverity severity,
+    ANARIStatusCode,
+    const char *message)
 {
   const char *tag = severity == ANARI_SEVERITY_FATAL_ERROR ? "FATAL"
       : severity == ANARI_SEVERITY_ERROR                   ? "ERROR"
@@ -54,7 +59,10 @@ struct Img
 {
   uint32_t w = 0, h = 0;
   std::vector<uint8_t> rgba;
-  const uint8_t *at(int x, int y) const { return &rgba[(size_t(y) * w + x) * 4]; }
+  const uint8_t *at(int x, int y) const
+  {
+    return &rgba[(size_t(y) * w + x) * 4];
+  }
 };
 
 // Classify a color by channel ratios (robust to shading): R/G/B/W for the
@@ -114,21 +122,26 @@ static const float kFovy = 0.6f;
 static const float kEyeZ = 3.f;
 static const uint32_t kSize = 256;
 
-static void setMat4(ANARIDevice dev, ANARIObject o, const char *name,
-    const float m[16])
+static void setMat4(
+    ANARIDevice dev, ANARIObject o, const char *name, const float m[16])
 {
   anariSetParameter(dev, o, name, ANARI_FLOAT32_MAT4, m);
 }
 
-static void setVec4(ANARIDevice dev, ANARIObject o, const char *name,
-    float x, float y, float z, float w)
+static void setVec4(ANARIDevice dev,
+    ANARIObject o,
+    const char *name,
+    float x,
+    float y,
+    float z,
+    float w)
 {
   const float v[4] = {x, y, z, w};
   anariSetParameter(dev, o, name, ANARI_FLOAT32_VEC4, v);
 }
 
-static void setStr(ANARIDevice dev, ANARIObject o, const char *name,
-    const char *v)
+static void setStr(
+    ANARIDevice dev, ANARIObject o, const char *name, const char *v)
 {
   anariSetParameter(dev, o, name, ANARI_STRING, v);
 }
@@ -156,7 +169,7 @@ static void toPixel(float x, float y, int &px, int &py)
 {
   const float half = kEyeZ * std::tan(kFovy / 2.f);
   px = int((0.5f + x / (2.f * half)) * kSize);
-  py = int((0.5f + y / (2.f * half)) * kSize);   // frame rows run bottom-up
+  py = int((0.5f + y / (2.f * half)) * kSize); // frame rows run bottom-up
 }
 
 static void buildRig(Rig &rc)
@@ -169,35 +182,60 @@ static void buildRig(Rig &rc)
 
   // Quads: verts 0..3 = left quad, 4..7 = right quad; primitive.index lists
   // the right quad first, so ANARI primitive 0 is the RIGHT quad.
-  static const float quadVerts[8 * 3] = {
-      -0.9f, -0.9f, 0.f, -0.1f, -0.9f, 0.f, -0.1f, -0.1f, 0.f, -0.9f, -0.1f, 0.f,
-      0.1f, -0.9f, 0.f, 0.9f, -0.9f, 0.f, 0.9f, -0.1f, 0.f, 0.1f, -0.1f, 0.f};
+  static const float quadVerts[8 * 3] = {-0.9f,
+      -0.9f,
+      0.f,
+      -0.1f,
+      -0.9f,
+      0.f,
+      -0.1f,
+      -0.1f,
+      0.f,
+      -0.9f,
+      -0.1f,
+      0.f,
+      0.1f,
+      -0.9f,
+      0.f,
+      0.9f,
+      -0.9f,
+      0.f,
+      0.9f,
+      -0.1f,
+      0.f,
+      0.1f,
+      -0.1f,
+      0.f};
   static const uint32_t quadIdx[2 * 4] = {4, 5, 6, 7, 0, 1, 2, 3};
-  rc.quadPos = anariNewArray1D(
-      dev, quadVerts, nullptr, nullptr, ANARI_FLOAT32_VEC3, 8);
-  rc.quadIndex = anariNewArray1D(
-      dev, quadIdx, nullptr, nullptr, ANARI_UINT32_VEC4, 2);
+  rc.quadPos =
+      anariNewArray1D(dev, quadVerts, nullptr, nullptr, ANARI_FLOAT32_VEC3, 8);
+  rc.quadIndex =
+      anariNewArray1D(dev, quadIdx, nullptr, nullptr, ANARI_UINT32_VEC4, 2);
   rc.quads = anariNewGeometry(dev, "quad");
-  anariSetParameter(dev, rc.quads, "vertex.position", ANARI_ARRAY1D, &rc.quadPos);
-  anariSetParameter(dev, rc.quads, "primitive.index", ANARI_ARRAY1D, &rc.quadIndex);
+  anariSetParameter(
+      dev, rc.quads, "vertex.position", ANARI_ARRAY1D, &rc.quadPos);
+  anariSetParameter(
+      dev, rc.quads, "primitive.index", ANARI_ARRAY1D, &rc.quadIndex);
   anariCommitParameters(dev, rc.quads);
 
   // App-provided normals (all +z), attached later in the normal tests.
-  static const float quadNrm[8 * 3] = {0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1,
-      0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1};
-  rc.quadNormals = anariNewArray1D(
-      dev, quadNrm, nullptr, nullptr, ANARI_FLOAT32_VEC3, 8);
+  static const float quadNrm[8 * 3] = {
+      0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1};
+  rc.quadNormals =
+      anariNewArray1D(dev, quadNrm, nullptr, nullptr, ANARI_FLOAT32_VEC3, 8);
 
   // Spheres: primitive 0 on the left, 1 on the right (no index).
   static const float sphereCenters[2 * 3] = {-0.5f, 0.5f, 0.f, 0.5f, 0.5f, 0.f};
   static const float sphereRadii[2] = {0.4f, 0.4f};
   rc.spherePos = anariNewArray1D(
       dev, sphereCenters, nullptr, nullptr, ANARI_FLOAT32_VEC3, 2);
-  rc.sphereRad = anariNewArray1D(
-      dev, sphereRadii, nullptr, nullptr, ANARI_FLOAT32, 2);
+  rc.sphereRad =
+      anariNewArray1D(dev, sphereRadii, nullptr, nullptr, ANARI_FLOAT32, 2);
   rc.spheres = anariNewGeometry(dev, "sphere");
-  anariSetParameter(dev, rc.spheres, "vertex.position", ANARI_ARRAY1D, &rc.spherePos);
-  anariSetParameter(dev, rc.spheres, "vertex.radius", ANARI_ARRAY1D, &rc.sphereRad);
+  anariSetParameter(
+      dev, rc.spheres, "vertex.position", ANARI_ARRAY1D, &rc.spherePos);
+  anariSetParameter(
+      dev, rc.spheres, "vertex.radius", ANARI_ARRAY1D, &rc.sphereRad);
   anariCommitParameters(dev, rc.spheres);
 
   rc.quadSurf = anariNewSurface(dev);
@@ -205,13 +243,15 @@ static void buildRig(Rig &rc)
   anariSetParameter(dev, rc.quadSurf, "material", ANARI_MATERIAL, &rc.mat);
   anariCommitParameters(dev, rc.quadSurf);
   rc.sphereSurf = anariNewSurface(dev);
-  anariSetParameter(dev, rc.sphereSurf, "geometry", ANARI_GEOMETRY, &rc.spheres);
+  anariSetParameter(
+      dev, rc.sphereSurf, "geometry", ANARI_GEOMETRY, &rc.spheres);
   anariSetParameter(dev, rc.sphereSurf, "material", ANARI_MATERIAL, &rc.mat);
   anariCommitParameters(dev, rc.sphereSurf);
 
   rc.world = anariNewWorld(dev);
   const ANARISurface surfs[2] = {rc.quadSurf, rc.sphereSurf};
-  rc.surfArray = anariNewArray1D(dev, surfs, nullptr, nullptr, ANARI_SURFACE, 2);
+  rc.surfArray =
+      anariNewArray1D(dev, surfs, nullptr, nullptr, ANARI_SURFACE, 2);
   anariSetParameter(dev, rc.world, "surface", ANARI_ARRAY1D, &rc.surfArray);
   anariCommitParameters(dev, rc.world);
 
@@ -249,13 +289,20 @@ static void buildRig(Rig &rc)
 static void releaseRig(Rig &rc)
 {
   ANARIDevice dev = rc.dev;
-  for (ANARIObject o : {(ANARIObject)rc.frame, (ANARIObject)rc.ren,
-           (ANARIObject)rc.cam, (ANARIObject)rc.surfArray,
-           (ANARIObject)rc.world, (ANARIObject)rc.quadSurf,
-           (ANARIObject)rc.sphereSurf, (ANARIObject)rc.quads,
-           (ANARIObject)rc.spheres, (ANARIObject)rc.quadIndex,
-           (ANARIObject)rc.quadPos, (ANARIObject)rc.quadNormals,
-           (ANARIObject)rc.spherePos, (ANARIObject)rc.sphereRad,
+  for (ANARIObject o : {(ANARIObject)rc.frame,
+           (ANARIObject)rc.ren,
+           (ANARIObject)rc.cam,
+           (ANARIObject)rc.surfArray,
+           (ANARIObject)rc.world,
+           (ANARIObject)rc.quadSurf,
+           (ANARIObject)rc.sphereSurf,
+           (ANARIObject)rc.quads,
+           (ANARIObject)rc.spheres,
+           (ANARIObject)rc.quadIndex,
+           (ANARIObject)rc.quadPos,
+           (ANARIObject)rc.quadNormals,
+           (ANARIObject)rc.spherePos,
+           (ANARIObject)rc.sphereRad,
            (ANARIObject)rc.mat})
     if (o)
       anariRelease(dev, o);
@@ -273,7 +320,8 @@ static void render(Rig &rc, Img &im)
   anariUnmapFrame(rc.dev, rc.frame, "channel.color");
 }
 
-// Classes at the four probes: "<left quad><right quad><left sphere><right sphere>".
+// Classes at the four probes: "<left quad><right quad><left sphere><right
+// sphere>".
 static std::string probes(const Rig &rc, const Img &im)
 {
   std::string out;
@@ -307,8 +355,13 @@ static void expectAlpha(Rig &rc, const int expected[4], const char *what)
     ok = ok && std::fabs(c[3] - expected[i]) <= 3;
     n += std::snprintf(buf + n, sizeof buf - n, " %.0f", c[3]);
   }
-  std::snprintf(buf + n, sizeof buf - n, " (expected %d %d %d %d)",
-      expected[0], expected[1], expected[2], expected[3]);
+  std::snprintf(buf + n,
+      sizeof buf - n,
+      " (expected %d %d %d %d)",
+      expected[0],
+      expected[1],
+      expected[2],
+      expected[3]);
   check(ok, buf);
 }
 
@@ -344,15 +397,17 @@ int main(int argc, char **argv)
   // === Primitive sampler ====================================================
   // array = [R, G, B, W]: ANARI primitive 0 (right quad / left sphere) reads
   // R, primitive 1 (left quad / right sphere) reads G.
-  static uint8_t prims[4 * 4] = {255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255,
-      255, 255, 255, 255};
+  static uint8_t prims[4 * 4] = {
+      255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 255, 255, 255, 255};
   ANARIArray1D primArray =
       anariNewArray1D(dev, prims, nullptr, nullptr, ANARI_UFIXED8_VEC4, 4);
   ANARISampler prim = anariNewSampler(dev, "primitive");
   anariSetParameter(dev, prim, "array", ANARI_ARRAY1D, &primArray);
   anariCommitParameters(dev, prim);
   bindColor(rc, prim);
-  expectProbes(rc, "GRRG", "primitive sampler indexes by ANARI primitive, not vertex order");
+  expectProbes(rc,
+      "GRRG",
+      "primitive sampler indexes by ANARI primitive, not vertex order");
 
   // inOffset shifts the lookup: primitive 0 -> B, 1 -> W.
   {
@@ -374,8 +429,8 @@ int main(int argc, char **argv)
   // In-place array edit: [G, R, W, B].
   {
     uint8_t *p = (uint8_t *)anariMapArray(dev, primArray);
-    static const uint8_t edited[4 * 4] = {0, 255, 0, 255, 255, 0, 0, 255,
-        255, 255, 255, 255, 0, 0, 255, 255};
+    static const uint8_t edited[4 * 4] = {
+        0, 255, 0, 255, 255, 0, 0, 255, 255, 255, 255, 255, 0, 0, 255, 255};
     std::memcpy(p, edited, sizeof edited);
     anariUnmapArray(dev, primArray);
     expectProbes(rc, "RGGR", "in-place edit of the primitive array");
@@ -462,19 +517,24 @@ int main(int argc, char **argv)
     setMat4(dev, xf, "outTransform", m.m);
     setVec4(dev, xf, "outOffset", 0.5f, 0.f, 0.f, 0.f);
     anariCommitParameters(dev, xf);
-    expectProbes(rc, "RRBB", "objectNormal: absent on the quads, +z on the spheres");
+    expectProbes(
+        rc, "RRBB", "objectNormal: absent on the quads, +z on the spheres");
 
-    anariSetParameter(dev, rc.quads, "vertex.normal", ANARI_ARRAY1D, &rc.quadNormals);
+    anariSetParameter(
+        dev, rc.quads, "vertex.normal", ANARI_ARRAY1D, &rc.quadNormals);
     anariCommitParameters(dev, rc.quads);
     expectProbes(rc, "BBBB", "objectNormal reads app-provided vertex.normal");
 
     setStr(dev, xf, "inAttribute", "worldNormal");
     anariCommitParameters(dev, xf);
-    expectProbes(rc, "BBBB", "worldNormal equals objectNormal for world-direct surfaces");
+    expectProbes(rc,
+        "BBBB",
+        "worldNormal equals objectNormal for world-direct surfaces");
 
     anariUnsetParameter(dev, rc.quads, "vertex.normal");
     anariCommitParameters(dev, rc.quads);
-    expectProbes(rc, "RRBB", "removing vertex.normal re-derives the absent value");
+    expectProbes(
+        rc, "RRBB", "removing vertex.normal re-derives the absent value");
   }
 
   // primitiveId: color = (1 - id, id, 0): primitive 0 -> R, 1 -> G.
@@ -492,11 +552,42 @@ int main(int argc, char **argv)
   // only, (1,0,0,1) left quad / (0,1,0,1) right quad; out swaps R and G. The
   // spheres have no color -> (0,0,0,1) swizzled -> black.
   {
-    static const float colors[8 * 4] = {1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1,
-        1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1};
+    static const float colors[8 * 4] = {1,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1};
     ANARIArray1D colorArray =
         anariNewArray1D(dev, colors, nullptr, nullptr, ANARI_FLOAT32_VEC4, 8);
-    anariSetParameter(dev, rc.quads, "vertex.color", ANARI_ARRAY1D, &colorArray);
+    anariSetParameter(
+        dev, rc.quads, "vertex.color", ANARI_ARRAY1D, &colorArray);
     anariCommitParameters(dev, rc.quads);
     Mat4 swap;
     swap.clear3().set(0, 1, 1).set(1, 0, 1).set(2, 2, 1);
@@ -521,7 +612,7 @@ int main(int argc, char **argv)
     anariCommitParameters(dev, op);
     anariSetParameter(dev, rc.mat, "opacity", ANARI_SAMPLER, &op);
     anariCommitParameters(dev, rc.mat);
-    const int expected[4] = {64, 255, 255, 112};   // two layers on the sphere
+    const int expected[4] = {64, 255, 255, 112}; // two layers on the sphere
     expectAlpha(rc, expected, "transform sampler on the scalar opacity slot");
     anariUnsetParameter(dev, rc.mat, "opacity");
     anariCommitParameters(dev, rc.mat);
@@ -572,6 +663,7 @@ int main(int argc, char **argv)
   anariRelease(dev, dev);
   anariUnloadLibrary(lib);
   std::printf("\n%s (%d issues)\n",
-      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED", g_errors);
+      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED",
+      g_errors);
   return g_errors == 0 ? 0 : 1;
 }

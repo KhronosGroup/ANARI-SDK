@@ -1,8 +1,8 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-// Authors an HdInstancer prim for one (world, group): the group's surface rprims
-// are the instancer's prototypes, each drawn once per instance transform
+// Authors an HdInstancer prim for one (world, group): the group's surface
+// rprims are the instancer's prototypes, each drawn once per instance transform
 // (SPEC §4.3). Replaces the baked-transform rprim expansion so N instances of a
 // group cost the prototypes + N transforms instead of N rprim copies.
 

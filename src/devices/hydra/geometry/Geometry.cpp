@@ -71,19 +71,25 @@ void Geometry::commitParameters()
   m_vertexAttribute3 = getParamObject<helium::Array1D>("vertex.attribute3");
   m_faceVaryingNormal = getParamObject<helium::Array1D>("faceVarying.normal");
   m_faceVaryingColor = getParamObject<helium::Array1D>("faceVarying.color");
-  m_faceVaryingAttribute0 = getParamObject<helium::Array1D>("faceVarying.attribute0");
-  m_faceVaryingAttribute1 = getParamObject<helium::Array1D>("faceVarying.attribute1");
-  m_faceVaryingAttribute2 = getParamObject<helium::Array1D>("faceVarying.attribute2");
-  m_faceVaryingAttribute3 = getParamObject<helium::Array1D>("faceVarying.attribute3");
+  m_faceVaryingAttribute0 =
+      getParamObject<helium::Array1D>("faceVarying.attribute0");
+  m_faceVaryingAttribute1 =
+      getParamObject<helium::Array1D>("faceVarying.attribute1");
+  m_faceVaryingAttribute2 =
+      getParamObject<helium::Array1D>("faceVarying.attribute2");
+  m_faceVaryingAttribute3 =
+      getParamObject<helium::Array1D>("faceVarying.attribute3");
   m_index = getParamObject<helium::Array1D>("primitive.index");
   m_primitiveId = getParamObject<helium::Array1D>("primitive.id");
   m_radius = getParam<float>("radius", 1.f);
-  const char *names[] = {"attribute0", "attribute1", "attribute2", "attribute3", "color"};
+  const char *names[] = {
+      "attribute0", "attribute1", "attribute2", "attribute3", "color"};
   for (int i = 0; i < 5; ++i) {
-    m_primitiveAttributes[i] = getParamObject<helium::Array1D>(
-        std::string("primitive.") + names[i]);
+    m_primitiveAttributes[i] =
+        getParamObject<helium::Array1D>(std::string("primitive.") + names[i]);
     m_hasConstantAttribute[i] = hasParam(names[i], ANARI_FLOAT32_VEC4);
-    m_constantAttributes[i] = getParam<helium::float4>(names[i], helium::float4(0.f, 0.f, 0.f, 1.f));
+    m_constantAttributes[i] =
+        getParam<helium::float4>(names[i], helium::float4(0.f, 0.f, 0.f, 1.f));
   }
 }
 
@@ -143,13 +149,16 @@ Bounds Geometry::bounds() const
       result.UnionWith(p);
     return result;
   }
-  const auto *points = static_cast<const pxr::GfVec3f *>(vertexPosition()->data());
+  const auto *points =
+      static_cast<const pxr::GfVec3f *>(vertexPosition()->data());
   const size_t count = vertexPosition()->size();
   const auto *indices = index() && index()->size() > 0
-      ? static_cast<const uint32_t *>(index()->data()) : nullptr;
+      ? static_cast<const uint32_t *>(index()->data())
+      : nullptr;
   if (primType() == pxr::HdPrimTypeTokens->basisCurves) {
     const auto *radii = vertexRadius()
-        ? static_cast<const float *>(vertexRadius()->data()) : nullptr;
+        ? static_cast<const float *>(vertexRadius()->data())
+        : nullptr;
     auto extend = [&](size_t vertex) {
       if (radii && vertex >= vertexRadius()->size())
         return;
@@ -166,8 +175,9 @@ Bounds Geometry::bounds() const
       }
     }
   } else {
-    const size_t vertices = indices ? index()->size() * meshVertsPerFace()
-                                   : count / meshVertsPerFace() * meshVertsPerFace();
+    const size_t vertices = indices
+        ? index()->size() * meshVertsPerFace()
+        : count / meshVertsPerFace() * meshVertsPerFace();
     for (size_t i = 0; i < vertices; ++i) {
       const size_t vertex = indices ? indices[i] : i;
       if (vertex < count)

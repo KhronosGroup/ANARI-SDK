@@ -9,12 +9,12 @@
 // helium
 #include "helium/BaseFrame.h"
 // pxr
+#include <pxr/base/gf/vec3f.h>
 #include <pxr/imaging/hd/engine.h>
 #include <pxr/imaging/hd/pluginRenderDelegateUniqueHandle.h>
 #include <pxr/imaging/hd/renderIndex.h>
 #include <pxr/imaging/hd/retainedSceneIndex.h>
 #include <pxr/imaging/hdx/taskControllerSceneIndex.h>
-#include <pxr/base/gf/vec3f.h>
 // std
 #include <atomic>
 #include <cstdint>
@@ -58,17 +58,17 @@ struct Frame : public helium::BaseFrame
 
  private:
   // Worker-thread only:
-  void ensureHydra();       // create delegate + render index + task controller
-  void renderOnWorker();    // prologue drain + Execute loop
+  void ensureHydra(); // create delegate + render index + task controller
+  void renderOnWorker(); // prologue drain + Execute loop
   // Mark the frame ready and fire the completion callback (SPEC §8.7). Runs
   // once per render job, after renderOnWorker, whether or not it succeeded.
   void completeOnWorker();
-  void teardownHydra();     // strict teardown order (SPEC §9.6)
+  void teardownHydra(); // strict teardown order (SPEC §9.6)
   std::map<int, PickingIds> m_pickingIds;
   void readbackPicking(const pxr::TfToken &token, std::vector<uint8_t> &out);
-  void readbackColor();     // color AOV -> m_mappedColor (SPEC §8.5)
+  void readbackColor(); // color AOV -> m_mappedColor (SPEC §8.5)
   void readbackAov(const struct AovChannelDesc &desc,
-      std::vector<uint8_t> &out);   // standard AOV -> staging (SPEC §11.4)
+      std::vector<uint8_t> &out); // standard AOV -> staging (SPEC §11.4)
   // channel.normal on a delegate without a `normal` AOV (Storm): read the
   // eye-space Neye target and rotate it into world space (SPEC §11.4).
   void readbackNormalFromNeye(std::vector<uint8_t> &out);
@@ -108,20 +108,22 @@ struct Frame : public helium::BaseFrame
   pxr::HdEngine m_engine;
   bool m_hydraReady{false};
   // Hydra AOV serving channel.normal on this delegate (normalAovToken, set in
-  // ensureHydra): `normal` (world space) or `Neye` (eye space, rotated on read).
+  // ensureHydra): `normal` (world space) or `Neye` (eye space, rotated on
+  // read).
   pxr::TfToken m_normalToken;
   pxr::HdSceneIndexBaseRefPtr m_insertedWorldScene;
   uint64_t m_mirrorRevision{0};
-  uint64_t m_insertedWorldSerial{0};   // which world's mirror is inserted
+  uint64_t m_insertedWorldSerial{0}; // which world's mirror is inserted
 
   // A small frame-owned retained scene index holding at most one synthesized
-  // uniform dome light at /anari/frame/ambient — the renderer's ambientRadiance/
-  // ambientColor fill (SPEC §4.7/§6.6). Frame-owned, NOT the world mirror:
-  // ambient is a renderer/frame concern, and the mirror is shared across frames.
-  // Inserted alongside the mirror in ensureHydra; authored/dirtied/removed as
-  // ambientRadiance crosses 0 or its color/intensity change.
+  // uniform dome light at /anari/frame/ambient — the renderer's
+  // ambientRadiance/ ambientColor fill (SPEC §4.7/§6.6). Frame-owned, NOT the
+  // world mirror: ambient is a renderer/frame concern, and the mirror is shared
+  // across frames. Inserted alongside the mirror in ensureHydra;
+  // authored/dirtied/removed as ambientRadiance crosses 0 or its
+  // color/intensity change.
   pxr::HdRetainedSceneIndexRefPtr m_ambientScene;
-  bool m_ambientAuthored{false};   // a dome sprim is currently present
+  bool m_ambientAuthored{false}; // a dome sprim is currently present
   float m_ambientAuthoredRadiance{0.f};
   pxr::GfVec3f m_ambientAuthoredColor{1.f, 1.f, 1.f};
   // The dome's registry image (ambientColor * ambientRadiance), re-pathed on
@@ -145,7 +147,7 @@ struct Frame : public helium::BaseFrame
   std::vector<uint32_t> m_stormObjectIds;
   std::vector<uint32_t> m_stormInstanceIds;
   void renderPicking();
-  bool m_outputsSet{false};   // SetRenderOutputs called at least once
+  bool m_outputsSet{false}; // SetRenderOutputs called at least once
 
   // The renderer's background image (KHR_RENDERER_BACKGROUND_IMAGE, SPEC
   // §4.7) snapshotted for the last render, or null for a constant background.

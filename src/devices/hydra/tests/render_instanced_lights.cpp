@@ -28,12 +28,18 @@
 
 static int g_errors = 0;
 
-static void statusFunc(const void *, ANARIDevice, ANARIObject, ANARIDataType,
-    ANARIStatusSeverity severity, ANARIStatusCode, const char *message)
+static void statusFunc(const void *,
+    ANARIDevice,
+    ANARIObject,
+    ANARIDataType,
+    ANARIStatusSeverity severity,
+    ANARIStatusCode,
+    const char *message)
 {
   if (severity <= ANARI_SEVERITY_WARNING)
     std::printf("[%s] %s\n",
-        severity <= ANARI_SEVERITY_ERROR ? "ERR" : "WARN", message);
+        severity <= ANARI_SEVERITY_ERROR ? "ERR" : "WARN",
+        message);
   if (severity <= ANARI_SEVERITY_ERROR)
     ++g_errors;
 }
@@ -48,12 +54,14 @@ static void check(bool ok, const char *what)
 // Render a frame-filling white quad lit by a light-only group instanced at the
 // given X translations. Fills `leftAvg`/`rightAvg` with the mean luminance
 // (0..255) over the left / right thirds of the image.
-static void renderScene(ANARIDevice dev, const std::vector<float> &instanceX,
-    double &leftAvg, double &rightAvg)
+static void renderScene(ANARIDevice dev,
+    const std::vector<float> &instanceX,
+    double &leftAvg,
+    double &rightAvg)
 {
   // Large quad facing +Z, covering the whole frame (world-direct receiver).
-  float verts[12] = {-1.5f, -1.5f, 0.f, 1.5f, -1.5f, 0.f, 1.5f, 1.5f, 0.f,
-      -1.5f, 1.5f, 0.f};
+  float verts[12] = {
+      -1.5f, -1.5f, 0.f, 1.5f, -1.5f, 0.f, 1.5f, 1.5f, 0.f, -1.5f, 1.5f, 0.f};
   ANARIArray1D pos =
       anariNewArray1D(dev, verts, nullptr, nullptr, ANARI_FLOAT32_VEC3, 4);
   ANARIGeometry g = anariNewGeometry(dev, "quad");
@@ -99,8 +107,12 @@ static void renderScene(ANARIDevice dev, const std::vector<float> &instanceX,
   ANARIWorld world = anariNewWorld(dev);
   ANARIArray1D surfArray =
       anariNewArray1D(dev, &surf, nullptr, nullptr, ANARI_SURFACE, 1);
-  ANARIArray1D instArray = anariNewArray1D(dev, instances.data(), nullptr,
-      nullptr, ANARI_INSTANCE, instances.size());
+  ANARIArray1D instArray = anariNewArray1D(dev,
+      instances.data(),
+      nullptr,
+      nullptr,
+      ANARI_INSTANCE,
+      instances.size());
   anariSetParameter(dev, world, "surface", ANARI_ARRAY1D, &surfArray);
   anariSetParameter(dev, world, "instance", ANARI_ARRAY1D, &instArray);
   anariCommitParameters(dev, world);
@@ -134,8 +146,8 @@ static void renderScene(ANARIDevice dev, const std::vector<float> &instanceX,
 
   uint32_t w = 0, h = 0;
   ANARIDataType pt = ANARI_UNKNOWN;
-  const uint32_t *pixels = (const uint32_t *)anariMapFrame(
-      dev, frame, "channel.color", &w, &h, &pt);
+  const uint32_t *pixels =
+      (const uint32_t *)anariMapFrame(dev, frame, "channel.color", &w, &h, &pt);
   double leftSum = 0, rightSum = 0;
   long leftN = 0, rightN = 0;
   if (pixels) {
@@ -196,7 +208,10 @@ int main(int argc, char **argv)
 
   std::printf(
       "1 inst (+X): left=%.1f right=%.1f | 2 inst (+/-X): left=%.1f right=%.1f\n",
-      one_left, one_right, two_left, two_right);
+      one_left,
+      one_right,
+      two_left,
+      two_right);
 
   // Control: a single instance lights its own side much brighter than the far
   // side — the light is localized (distance falloff), so an unexpanded scene
@@ -221,6 +236,7 @@ int main(int argc, char **argv)
   anariRelease(dev, dev);
   anariUnloadLibrary(lib);
   std::printf("\n%s (%d issues)\n",
-      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED", g_errors);
+      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED",
+      g_errors);
   return g_errors == 0 ? 0 : 1;
 }

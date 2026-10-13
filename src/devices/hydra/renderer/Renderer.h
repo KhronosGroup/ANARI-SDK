@@ -4,10 +4,10 @@
 #pragma once
 
 #include "Object.h"
-#include "scene/AnariImage.h"
 #include "helium/array/Array2D.h"
 #include "helium/helium_math.h"
 #include "helium/utility/ChangeObserverPtr.h"
+#include "scene/AnariImage.h"
 // pxr
 #include <pxr/base/tf/token.h>
 #include <pxr/base/vt/value.h>
@@ -25,7 +25,8 @@ namespace anari_hydra {
 // parameters into a Hydra render-setting map the Frame pushes via
 // HdRenderDelegate::SetRenderSetting: a small core translation table (ANARI
 // name -> Hydra token) plus delegate-native passthrough under the verbatim
-// Hydra token (ANARI_HYDRA_RENDER_SETTINGS, §11.3). Translation wins collisions.
+// Hydra token (ANARI_HYDRA_RENDER_SETTINGS, §11.3). Translation wins
+// collisions.
 struct Renderer : public Object
 {
   Renderer(HydraGlobalState *s);
@@ -49,8 +50,14 @@ struct Renderer : public Object
 
   // Ambient fill (SPEC §4.7/§6.6): intensity/color of the frame-synthesized
   // uniform dome light. ambientRadiance <= 0 means no ambient fill.
-  float ambientRadiance() const { return m_ambientRadiance; }
-  helium::float3 ambientColor() const { return m_ambientColor; }
+  float ambientRadiance() const
+  {
+    return m_ambientRadiance;
+  }
+  helium::float3 ambientColor() const
+  {
+    return m_ambientColor;
+  }
 
   // True if a delegate render-setting token is the Hydra target of a core
   // translation-table alias, so it must not be reflected verbatim (translation

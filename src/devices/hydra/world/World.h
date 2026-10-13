@@ -4,8 +4,8 @@
 #pragma once
 
 #include "Object.h"
-#include "scene/Bounds.h"
 #include "light/Light.h"
+#include "scene/Bounds.h"
 #include "scene/Mirror.h"
 #include "world/Instance.h"
 // helium
@@ -29,11 +29,20 @@ struct World : public Object
   // ANARI bounds; `proxy` substitutes each volume's rasterized proxy box, for
   // fitting camera clipping planes (Volume::bounds).
   Bounds bounds(bool proxy = false) const;
-  bool getProperty(const std::string_view &name, ANARIDataType type,
-      void *ptr, uint64_t size, uint32_t flags) override;
+  bool getProperty(const std::string_view &name,
+      ANARIDataType type,
+      void *ptr,
+      uint64_t size,
+      uint32_t flags) override;
 
-  Mirror *mirror() const { return m_mirror.get(); }
-  uint64_t serial() const { return m_serial; }
+  Mirror *mirror() const
+  {
+    return m_mirror.get();
+  }
+  uint64_t serial() const
+  {
+    return m_serial;
+  }
 
   // A world-direct surface (identity transform, no instancer, SPEC §4.3).
   struct Renderable
@@ -81,7 +90,7 @@ struct World : public Object
  private:
   Bounds m_bounds;
   helium::IntrusivePtr<helium::ObjectArray> m_instance;
-  helium::IntrusivePtr<helium::ObjectArray> m_surface;   // world-direct
+  helium::IntrusivePtr<helium::ObjectArray> m_surface; // world-direct
   helium::IntrusivePtr<helium::ObjectArray> m_light;
   helium::IntrusivePtr<helium::ObjectArray> m_volume;
   std::unique_ptr<Mirror> m_mirror;

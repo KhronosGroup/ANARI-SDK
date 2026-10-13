@@ -64,7 +64,7 @@ static bool FilterIsNearest(const std::string &f, bool &warned)
     return true;
   if (f != "linear")
     warned = true;
-  return false;   // linear / default
+  return false; // linear / default
 }
 
 // PrimBuilder element-source slot for an ANARI attribute name (0..3 for
@@ -158,18 +158,20 @@ void Sampler::commitParameters()
     m_outScale = float4(1.f, 1.f, 1.f, 1.f);
     m_outBias = float4(0.f, 0.f, 0.f, 0.f);
   } else {
-    m_outScale = float4(m_outTransform[0][0], m_outTransform[1][1],
-        m_outTransform[2][2], m_outTransform[3][3]);
+    m_outScale = float4(m_outTransform[0][0],
+        m_outTransform[1][1],
+        m_outTransform[2][2],
+        m_outTransform[3][3]);
     m_outBias = m_outOffset;
   }
 
   // wrapMode1/wrapMode2 (image2D) or wrapMode (image1D; its second axis is
   // always clamp so any v reads the single row) and borderColor (SPEC §6.4).
   bool warnWrap = false;
-  const WrapMode modeS = ParseWrapMode(
-      getParamString(m_imageDims == 1 ? "wrapMode" : "wrapMode1",
-          "clampToEdge"),
-      warnWrap);
+  const WrapMode modeS =
+      ParseWrapMode(getParamString(m_imageDims == 1 ? "wrapMode" : "wrapMode1",
+                        "clampToEdge"),
+          warnWrap);
   const WrapMode modeT = m_imageDims == 1
       ? WrapMode::ClampToEdge
       : ParseWrapMode(getParamString("wrapMode2", "clampToEdge"), warnWrap);
@@ -252,16 +254,17 @@ void Sampler::commitParameters()
       if (sy > 0.f)
         theta = std::atan2(-b, d);
     }
-    const float magnitude = std::max(
-        {1.f, std::fabs(a), std::fabs(b), std::fabs(c), std::fabs(d)});
-    const bool zwTerms = m_inTransform[2][0] != 0.f || m_inTransform[2][1] != 0.f
-        || m_inTransform[3][0] != 0.f || m_inTransform[3][1] != 0.f;
+    const float magnitude =
+        std::max({1.f, std::fabs(a), std::fabs(b), std::fabs(c), std::fabs(d)});
+    const bool zwTerms = m_inTransform[2][0] != 0.f
+        || m_inTransform[2][1] != 0.f || m_inTransform[3][0] != 0.f
+        || m_inTransform[3][1] != 0.f;
     // A geometry-derived source has no float2 primvar for a UsdTransform2d to
     // read, so it always bakes (the derived st primvar is its only carrier).
     // An absent source keeps the Transform2d path, like an unauthored
     // attributeN, so both read the same reader fallback texel.
-    const bool decomposable = residual <= 1e-5f * magnitude && !zwTerms
-        && !IsDerivedSlot(m_inSlot);
+    const bool decomposable =
+        residual <= 1e-5f * magnitude && !zwTerms && !IsDerivedSlot(m_inSlot);
     m_inMode = decomposable ? InputMode::Transform2d : InputMode::Baked;
     m_stRotationDeg = theta * 180.f / float(M_PI);
     m_stScale = float2(sx, sy);
@@ -355,7 +358,8 @@ void Sampler::decodeImage()
     AnariImageRegistry::instance().erase(m_assetPath);
 }
 
-// Subtypes /////////////////////////////////////////////////////////////////////
+// Subtypes
+// /////////////////////////////////////////////////////////////////////
 
 namespace {
 

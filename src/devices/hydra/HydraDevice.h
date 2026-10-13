@@ -20,14 +20,14 @@ namespace anari_hydra {
 
 // A standard AOV frame channel beyond color (SPEC §11.4). Each maps an ANARI
 // frame-channel name to the Hydra AOV token it reads back, the ANARI pixel type
-// map() produces, and the KHR_FRAME_CHANNEL_* extension it claims. `channel.color`
-// is unconditional and lives outside this table.
+// map() produces, and the KHR_FRAME_CHANNEL_* extension it claims.
+// `channel.color` is unconditional and lives outside this table.
 struct AovChannelDesc
 {
-  const char *anariChannel;   // e.g. "channel.depth"
-  pxr::TfToken hydraToken;    // e.g. HdAovTokens->depth
-  ANARIDataType pixelType;    // e.g. ANARI_FLOAT32
-  const char *extension;      // e.g. "ANARI_KHR_FRAME_CHANNEL_DEPTH"
+  const char *anariChannel; // e.g. "channel.depth"
+  pxr::TfToken hydraToken; // e.g. HdAovTokens->depth
+  ANARIDataType pixelType; // e.g. ANARI_FLOAT32
+  const char *extension; // e.g. "ANARI_KHR_FRAME_CHANNEL_DEPTH"
 };
 
 // The five standard AOV channels the bridge supports (depth, normal, and the
@@ -109,8 +109,12 @@ struct HydraDevice : public helium::BaseDevice
 
   // Query functions //////////////////////////////////////////////////////////
 
-  int getProperty(ANARIObject object, const char *name, ANARIDataType type,
-      void *mem, uint64_t size, uint32_t mask) override;
+  int getProperty(ANARIObject object,
+      const char *name,
+      ANARIDataType type,
+      void *mem,
+      uint64_t size,
+      uint32_t mask) override;
 
   const char **getObjectSubtypes(ANARIDataType objectType) override;
   const void *getObjectInfo(ANARIDataType objectType,
@@ -151,7 +155,8 @@ struct HydraDevice : public helium::BaseDevice
  private:
   HydraGlobalState *deviceState() const;
   void bindDelegate(const char *subtype);
-  // Build + cache the §11.3 reflected renderer parameter list into device state.
+  // Build + cache the §11.3 reflected renderer parameter list into device
+  // state.
   void buildRendererParamList();
 
   bool m_initialized{false};

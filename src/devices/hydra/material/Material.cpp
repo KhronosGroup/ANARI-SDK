@@ -57,7 +57,8 @@ bool Material::bindAttribute(const char *name, const pxr::TfToken &usdInput)
     reportMessage(ANARI_SEVERITY_WARNING,
         "material input '%s' bound to unsupported attribute '%s'; treated as "
         "none (SPEC §6.1)",
-        name, attr.c_str());
+        name,
+        attr.c_str());
     return false;
   }
   // The reader's `varname` matches the per-vertex primvar PrimBuilder authors
@@ -97,19 +98,28 @@ void Matte::commitParameters()
 
 PhysicallyBased::PhysicallyBased(HydraGlobalState *s) : Material(s) {}
 
-// glTF-style parameters with no UsdPreviewSurface target (SPEC §6.5): warned and
-// dropped when the app provides them.
-static const char *const kWarnAndDrop[] = {"transmission", "thickness",
-    "attenuationColor", "attenuationDistance", "sheenColor", "sheenRoughness",
-    "iridescence", "iridescenceIor", "iridescenceThickness", "specular",
-    "specularColor", "clearcoatNormal"};
+// glTF-style parameters with no UsdPreviewSurface target (SPEC §6.5): warned
+// and dropped when the app provides them.
+static const char *const kWarnAndDrop[] = {"transmission",
+    "thickness",
+    "attenuationColor",
+    "attenuationDistance",
+    "sheenColor",
+    "sheenRoughness",
+    "iridescence",
+    "iridescenceIor",
+    "iridescenceThickness",
+    "specular",
+    "specularColor",
+    "clearcoatNormal"};
 
 void PhysicallyBased::commitParameters()
 {
   Material::commitParameters();
-  // Each mapped slot accepts a constant, a sampler, or an attribute (SPEC §6.1);
-  // sampler wins over attribute wins over the constant read.
-  if (!bindSampler("baseColor", pxr::TfToken("diffuseColor"), pxr::TfToken("rgb"))
+  // Each mapped slot accepts a constant, a sampler, or an attribute (SPEC
+  // §6.1); sampler wins over attribute wins over the constant read.
+  if (!bindSampler(
+          "baseColor", pxr::TfToken("diffuseColor"), pxr::TfToken("rgb"))
       && !bindAttribute("baseColor", pxr::TfToken("diffuseColor")))
     m_color = getParam<float3>("baseColor", float3(1.f, 1.f, 1.f));
   if (!bindSampler("metallic", pxr::TfToken("metallic"), pxr::TfToken("r"))
@@ -118,7 +128,8 @@ void PhysicallyBased::commitParameters()
   if (!bindSampler("roughness", pxr::TfToken("roughness"), pxr::TfToken("r"))
       && !bindAttribute("roughness", pxr::TfToken("roughness")))
     m_roughness = getParam<float>("roughness", 1.f);
-  if (!bindSampler("emissive", pxr::TfToken("emissiveColor"), pxr::TfToken("rgb"))
+  if (!bindSampler(
+          "emissive", pxr::TfToken("emissiveColor"), pxr::TfToken("rgb"))
       && !bindAttribute("emissive", pxr::TfToken("emissiveColor")))
     m_emissive = getParam<float3>("emissive", float3(0.f, 0.f, 0.f));
   if (!bindSampler("occlusion", pxr::TfToken("occlusion"), pxr::TfToken("r"))
@@ -130,7 +141,8 @@ void PhysicallyBased::commitParameters()
   if (!bindSampler("clearcoat", pxr::TfToken("clearcoat"), pxr::TfToken("r"))
       && !bindAttribute("clearcoat", pxr::TfToken("clearcoat")))
     m_clearcoat = getParam<float>("clearcoat", 0.f);
-  if (!bindSampler("clearcoatRoughness", pxr::TfToken("clearcoatRoughness"),
+  if (!bindSampler("clearcoatRoughness",
+          pxr::TfToken("clearcoatRoughness"),
           pxr::TfToken("r"))
       && !bindAttribute(
           "clearcoatRoughness", pxr::TfToken("clearcoatRoughness")))
@@ -145,7 +157,9 @@ void PhysicallyBased::commitParameters()
   // (SPEC §6.5). A non-sampler `normal` (a
   // constant/attribute) has no faithful target: warned and dropped, and the
   // surface shades from its geometric normal.
-  if (!bindSampler("normal", pxr::TfToken("normal"), pxr::TfToken("rgb"),
+  if (!bindSampler("normal",
+          pxr::TfToken("normal"),
+          pxr::TfToken("rgb"),
           /* normalMap = */ true)
       && hasParam("normal")) {
     reportMessage(ANARI_SEVERITY_WARNING,
@@ -153,8 +167,9 @@ void PhysicallyBased::commitParameters()
         "non-sampler value dropped (SPEC §6.5)");
   }
 
-  // alphaMode/alphaCutoff -> opacity/opacityThreshold (SPEC §6.5): opaque forces
-  // opacity 1, mask uses the cutoff threshold, blend passes opacity through.
+  // alphaMode/alphaCutoff -> opacity/opacityThreshold (SPEC §6.5): opaque
+  // forces opacity 1, mask uses the cutoff threshold, blend passes opacity
+  // through.
   const std::string mode = getParamString("alphaMode", "opaque");
   const float cutoff = getParam<float>("alphaCutoff", 0.5f);
   if (mode == "mask") {

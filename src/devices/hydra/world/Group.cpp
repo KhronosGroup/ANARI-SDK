@@ -10,8 +10,11 @@ Group::Group(HydraGlobalState *s) : Object(ANARI_GROUP, s)
   m_serial = s->nextSerial++;
 }
 
-bool Group::getProperty(const std::string_view &name, ANARIDataType type,
-    void *ptr, uint64_t size, uint32_t flags)
+bool Group::getProperty(const std::string_view &name,
+    ANARIDataType type,
+    void *ptr,
+    uint64_t size,
+    uint32_t flags)
 {
   return QueryBounds(*this, m_bounds, name, type, ptr, size, flags);
 }

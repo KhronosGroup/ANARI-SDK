@@ -40,7 +40,7 @@ Bounds FieldSnapshot::bounds() const
   pxr::GfVec3f hi;
   for (int k = 0; k < 3; ++k)
     hi[k] = g.origin[k] + float(g.dims[k] - 1) * g.spacing[k];
-  return Bounds(g.origin, hi);   // spacing is positive (NormalizeAxes)
+  return Bounds(g.origin, hi); // spacing is positive (NormalizeAxes)
 }
 
 Bounds FieldSnapshot::proxyBounds() const
@@ -64,8 +64,9 @@ static void NormalizeAxes(AnariFieldData &g)
     const int n = g.dims[k];
     g.origin[k] += float(n - 1) * g.spacing[k];
     g.spacing[k] = -g.spacing[k];
-    const size_t stride = k == 0 ? 1 : (k == 1 ? size_t(g.dims[0])
-                                               : size_t(g.dims[0]) * g.dims[1]);
+    const size_t stride = k == 0
+        ? 1
+        : (k == 1 ? size_t(g.dims[0]) : size_t(g.dims[0]) * g.dims[1]);
     const size_t outer = g.values.size() / (stride * n);
     for (size_t o = 0; o < outer; ++o) {
       for (size_t in = 0; in < stride; ++in) {
@@ -79,8 +80,7 @@ static void NormalizeAxes(AnariFieldData &g)
 
 // Base ///////////////////////////////////////////////////////////////////////
 
-SpatialField::SpatialField(HydraGlobalState *s)
-    : Object(ANARI_SPATIAL_FIELD, s)
+SpatialField::SpatialField(HydraGlobalState *s) : Object(ANARI_SPATIAL_FIELD, s)
 {
   m_serial = s->nextSerial++;
 }
@@ -259,7 +259,8 @@ struct StructuredRegular : public SpatialField
 // box or that layer, is the accessor's (active value, tile value, or
 // background), so sampling matches NanoVDB's own trilinear sampler exactly.
 template <typename BuildT>
-static std::shared_ptr<AnariFieldData> DensifyNanoVdb(const nanovdb::GridData *data)
+static std::shared_ptr<AnariFieldData> DensifyNanoVdb(
+    const nanovdb::GridData *data)
 {
   const auto *grid = reinterpret_cast<const nanovdb::NanoGrid<BuildT> *>(data);
   const nanovdb::CoordBBox box = grid->indexBBox();

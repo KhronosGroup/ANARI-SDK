@@ -4,8 +4,8 @@
 // Exercises the normal-map material input (SPEC §6.1/§6.5 `normal`->`normal`).
 // A physicallyBased material's `normal` is a sampler whose value IS the
 // tangent-space normal: per the ANARI spec the app decodes [0,1] texels to
-// [-1,1] through outTransform/outOffset (2 * texel - 1), and the device must not
-// decode again. Storm builds the TBN frame from `st` (proven in
+// [-1,1] through outTransform/outOffset (2 * texel - 1), and the device must
+// not decode again. Storm builds the TBN frame from `st` (proven in
 // prototypes/015-normal-map-tangents) and perturbs normals only from a texture,
 // so transform/primitive samplers on `normal` go through a generated Storm
 // surface shader that reads their baked primvar and builds the same st frame
@@ -30,8 +30,13 @@
 static int g_errors = 0;
 static int g_warnings = 0;
 
-static void statusFunc(const void *, ANARIDevice, ANARIObject, ANARIDataType,
-    ANARIStatusSeverity severity, ANARIStatusCode, const char *message)
+static void statusFunc(const void *,
+    ANARIDevice,
+    ANARIObject,
+    ANARIDataType,
+    ANARIStatusSeverity severity,
+    ANARIStatusCode,
+    const char *message)
 {
   const char *tag = severity == ANARI_SEVERITY_FATAL_ERROR ? "FATAL"
       : severity == ANARI_SEVERITY_ERROR                   ? "ERROR"
@@ -56,7 +61,10 @@ struct Img
 {
   uint32_t w = 0, h = 0;
   std::vector<uint8_t> rgba;
-  const uint8_t *at(int x, int y) const { return &rgba[(size_t(y) * w + x) * 4]; }
+  const uint8_t *at(int x, int y) const
+  {
+    return &rgba[(size_t(y) * w + x) * 4];
+  }
 };
 
 // Mean luma over columns [x0,x1) across all covered (non-background) rows.
@@ -114,14 +122,19 @@ static Halves renderHalves(ANARIDevice dev, ANARIFrame frame, const char *what)
 }
 
 // ANARI mat4 is column-major.
-static void setMat4(ANARIDevice d, ANARIObject o, const char *name,
-    const float (&cols)[16])
+static void setMat4(
+    ANARIDevice d, ANARIObject o, const char *name, const float (&cols)[16])
 {
   anariSetParameter(d, o, name, ANARI_FLOAT32_MAT4, cols);
 }
 
-static void setVec4(ANARIDevice d, ANARIObject o, const char *name, float x,
-    float y, float z, float w)
+static void setVec4(ANARIDevice d,
+    ANARIObject o,
+    const char *name,
+    float x,
+    float y,
+    float z,
+    float w)
 {
   float v[4] = {x, y, z, w};
   anariSetParameter(d, o, name, ANARI_FLOAT32_VEC4, v);
@@ -146,14 +159,23 @@ int main(int argc, char **argv)
   // A 2x1 normal map: texel 0 (u<0.5) tilts -X, texel 1 (u>0.5) tilts +X.
   // UFIXED8_VEC4 packed n*0.5+0.5, so the app must decode it via outTransform.
   //   (-0.6,0,0.8) -> (51,127,229)   (0.6,0,0.8) -> (204,127,229)
-  uint8_t nmap[2 * 1 * 4] = {
-      51, 127, 229, 255, /* u=0: tilt -X */
-      204, 127, 229, 255 /* u=1: tilt +X */};
+  uint8_t nmap[2 * 1 * 4] = {51,
+      127,
+      229,
+      255, /* u=0: tilt -X */
+      204,
+      127,
+      229,
+      255 /* u=1: tilt +X */};
   ANARIArray2D image =
       anariNewArray2D(dev, nmap, nullptr, nullptr, ANARI_UFIXED8_VEC4, 2, 1);
   // The same map as float texels already in [-1,1]: no decode needed.
-  float fmap[2 * 1 * 3] = {kTiltNeg[0], kTiltNeg[1], kTiltNeg[2], kTiltPos[0],
-      kTiltPos[1], kTiltPos[2]};
+  float fmap[2 * 1 * 3] = {kTiltNeg[0],
+      kTiltNeg[1],
+      kTiltNeg[2],
+      kTiltPos[0],
+      kTiltPos[1],
+      kTiltPos[2]};
   ANARIArray2D fimage =
       anariNewArray2D(dev, fmap, nullptr, nullptr, ANARI_FLOAT32_VEC3, 2, 1);
   // A flat packed map: every texel (0.5, 0.5, 1).
@@ -176,8 +198,24 @@ int main(int argc, char **argv)
   // and tangent-space +X maps to world +x (screen right). attribute1 carries a
   // [-1,1] tangent-space normal per vertex: -X tilt on the left edge, flat in
   // the middle, +X tilt on the right edge.
-  float verts[18] = {-0.9f, -0.9f, 0.f, 0.f, -0.9f, 0.f, 0.9f, -0.9f, 0.f,
-      -0.9f, 0.9f, 0.f, 0.f, 0.9f, 0.f, 0.9f, 0.9f, 0.f};
+  float verts[18] = {-0.9f,
+      -0.9f,
+      0.f,
+      0.f,
+      -0.9f,
+      0.f,
+      0.9f,
+      -0.9f,
+      0.f,
+      -0.9f,
+      0.9f,
+      0.f,
+      0.f,
+      0.9f,
+      0.f,
+      0.9f,
+      0.9f,
+      0.f};
   float st[12] = {0.f, 0.f, 0.5f, 0.f, 1.f, 0.f, 0.f, 1.f, 0.5f, 1.f, 1.f, 1.f};
   float packed[18];
   const float *perColumn[3] = {kTiltNeg, kFlat, kTiltPos};
@@ -194,7 +232,8 @@ int main(int argc, char **argv)
   float mirrored[18];
   const float *perColumnMirrored[3] = {kTiltPos, kFlat, kTiltNeg};
   for (int v = 0; v < 6; ++v)
-    std::copy(perColumnMirrored[v % 3], perColumnMirrored[v % 3] + 3,
+    std::copy(perColumnMirrored[v % 3],
+        perColumnMirrored[v % 3] + 3,
         mirrored + 3 * v);
   ANARIArray1D attr2 =
       anariNewArray1D(dev, mirrored, nullptr, nullptr, ANARI_FLOAT32_VEC3, 6);
@@ -388,7 +427,8 @@ int main(int argc, char **argv)
   g_warnings = 0;
   bindNormal(xf);
   expectTilted("transform sampler on normal");
-  check(g_warnings == 0, "a transform sampler on normal binds without a warning");
+  check(
+      g_warnings == 0, "a transform sampler on normal binds without a warning");
   // An outTransform edit re-bakes the primvar: x' = -x swaps the tilts.
   setMat4(dev, xf, "outTransform", flipX);
   anariCommitParameters(dev, xf);
@@ -439,8 +479,12 @@ int main(int argc, char **argv)
   }
 
   std::printf("primitive sampler\n");
-  float perPrim[6] = {kTiltNeg[0], kTiltNeg[1], kTiltNeg[2], kTiltPos[0],
-      kTiltPos[1], kTiltPos[2]};
+  float perPrim[6] = {kTiltNeg[0],
+      kTiltNeg[1],
+      kTiltNeg[2],
+      kTiltPos[0],
+      kTiltPos[1],
+      kTiltPos[2]};
   ANARIArray1D primValues =
       anariNewArray1D(dev, perPrim, nullptr, nullptr, ANARI_FLOAT32_VEC3, 2);
   ANARISampler prim = anariNewSampler(dev, "primitive");
@@ -449,10 +493,15 @@ int main(int argc, char **argv)
   g_warnings = 0;
   bindNormal(prim);
   expectTilted("primitive sampler on normal");
-  check(g_warnings == 0, "a primitive sampler on normal binds without a warning");
+  check(
+      g_warnings == 0, "a primitive sampler on normal binds without a warning");
   // A source-array edit: the per-primitive tilts swapped.
-  float perPrimSwapped[6] = {kTiltPos[0], kTiltPos[1], kTiltPos[2],
-      kTiltNeg[0], kTiltNeg[1], kTiltNeg[2]};
+  float perPrimSwapped[6] = {kTiltPos[0],
+      kTiltPos[1],
+      kTiltPos[2],
+      kTiltNeg[0],
+      kTiltNeg[1],
+      kTiltNeg[2]};
   ANARIArray1D primSwapped = anariNewArray1D(
       dev, perPrimSwapped, nullptr, nullptr, ANARI_FLOAT32_VEC3, 2);
   anariSetParameter(dev, prim, "array", ANARI_ARRAY1D, &primSwapped);
@@ -489,6 +538,7 @@ int main(int argc, char **argv)
   anariRelease(dev, dev);
   anariUnloadLibrary(lib);
   std::printf("\n%s (%d issues)\n",
-      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED", g_errors);
+      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED",
+      g_errors);
   return g_errors == 0 ? 0 : 1;
 }

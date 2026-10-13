@@ -27,12 +27,18 @@
 
 static int g_errors = 0;
 
-static void statusFunc(const void *, ANARIDevice, ANARIObject, ANARIDataType,
-    ANARIStatusSeverity severity, ANARIStatusCode, const char *message)
+static void statusFunc(const void *,
+    ANARIDevice,
+    ANARIObject,
+    ANARIDataType,
+    ANARIStatusSeverity severity,
+    ANARIStatusCode,
+    const char *message)
 {
   if (severity <= ANARI_SEVERITY_WARNING)
     std::printf("[%s] %s\n",
-        severity <= ANARI_SEVERITY_ERROR ? "ERR" : "WARN", message);
+        severity <= ANARI_SEVERITY_ERROR ? "ERR" : "WARN",
+        message);
   if (severity <= ANARI_SEVERITY_ERROR)
     ++g_errors;
 }
@@ -59,14 +65,17 @@ static std::vector<float> mat3x4T(float tx, float ty = 0.f)
 struct Frame
 {
   uint32_t w{0}, h{0};
-  std::vector<uint32_t> color;   // RGBA8 sRGB
+  std::vector<uint32_t> color; // RGBA8 sRGB
   std::vector<uint32_t> instanceId;
 
   const uint8_t *px(uint32_t x, uint32_t y) const
   {
     return (const uint8_t *)&color[y * w + x];
   }
-  uint32_t id(uint32_t x, uint32_t y) const { return instanceId[y * w + x]; }
+  uint32_t id(uint32_t x, uint32_t y) const
+  {
+    return instanceId[y * w + x];
+  }
   int coverage() const
   {
     int n = 0;
@@ -107,7 +116,7 @@ struct Scene
   ANARIFrame frame{nullptr};
   ANARICamera cam{nullptr};
   ANARIRenderer ren{nullptr};
-  std::vector<ANARIObject> owned;   // released in reverse order
+  std::vector<ANARIObject> owned; // released in reverse order
   std::deque<std::vector<uint8_t>> blobs;
 
   template <typename T>
@@ -121,15 +130,15 @@ struct Scene
   {
     const size_t bytes = size_t(anariSizeOf(type)) * n;
     blobs.emplace_back((const uint8_t *)data, (const uint8_t *)data + bytes);
-    return keep(anariNewArray1D(
-        dev, blobs.back().data(), nullptr, nullptr, type, n));
+    return keep(
+        anariNewArray1D(dev, blobs.back().data(), nullptr, nullptr, type, n));
   }
 
   // Quad prototype spanning local [-0.5,0.5]^2; matte color bound to `attr`.
   ANARIGroup quadGroup(const char *attr = "color", float half = 0.5f)
   {
-    float verts[12] = {-half, -half, 0.f, half, -half, 0.f, half, half, 0.f,
-        -half, half, 0.f};
+    float verts[12] = {
+        -half, -half, 0.f, half, -half, 0.f, half, half, 0.f, -half, half, 0.f};
     ANARIArray1D pos = array(verts, ANARI_FLOAT32_VEC3, 4);
     ANARIGeometry geom = keep(anariNewGeometry(dev, "quad"));
     anariSetParameter(dev, geom, "vertex.position", ANARI_ARRAY1D, &pos);
@@ -233,7 +242,8 @@ static Frame scalarPair(ANARIDevice dev)
   std::vector<ANARIInstance> insts;
   for (int i = 0; i < 2; ++i) {
     ANARIInstance inst = s.instance(g);
-    anariSetParameter(dev, inst, "transform", ANARI_FLOAT32_MAT4, mat4T(tx[i]).data());
+    anariSetParameter(
+        dev, inst, "transform", ANARI_FLOAT32_MAT4, mat4T(tx[i]).data());
     anariSetParameter(dev, inst, "color", ANARI_FLOAT32_VEC4, col[i]);
     anariSetParameter(dev, inst, "id", ANARI_UINT32, &ids[i]);
     anariCommitParameters(dev, inst);
@@ -262,7 +272,8 @@ int main(int argc, char **argv)
     {
       Scene s(dev);
       ANARIInstance inst = s.instance(s.quadGroup());
-      anariSetParameter(dev, inst, "transform", ANARI_FLOAT32_MAT4, mat4T(-0.75f).data());
+      anariSetParameter(
+          dev, inst, "transform", ANARI_FLOAT32_MAT4, mat4T(-0.75f).data());
       const float red[4] = {1, 0, 0, 1};
       anariSetParameter(dev, inst, "color", ANARI_FLOAT32_VEC4, red);
       anariCommitParameters(dev, inst);
@@ -272,18 +283,24 @@ int main(int argc, char **argv)
     {
       Scene s(dev);
       ANARIInstance inst = s.instance(s.quadGroup());
-      anariSetParameter(dev, inst, "transform", ANARI_FLOAT32_MAT3x4, mat3x4T(-0.75f).data());
+      anariSetParameter(
+          dev, inst, "transform", ANARI_FLOAT32_MAT3x4, mat3x4T(-0.75f).data());
       const float red[4] = {1, 0, 0, 1};
       anariSetParameter(dev, inst, "color", ANARI_FLOAT32_VEC4, red);
       anariCommitParameters(dev, inst);
       s.setInstances({inst});
       b = s.render();
     }
-    std::printf("MAT4 cov=%d MAT3x4 cov=%d mismatches=%zu\n", a.coverage(),
-        b.coverage(), mismatches(a, b));
-    check(a.coverage() > 100 && a.dominant(L, MID) == 0, "MAT4 instance renders red at -X");
-    check(b.coverage() > 100 && b.dominant(L, MID) == 0, "MAT3x4 instance renders red at -X");
-    check(mismatches(a, b) == 0, "MAT3x4 frame is byte-identical to MAT4 frame");
+    std::printf("MAT4 cov=%d MAT3x4 cov=%d mismatches=%zu\n",
+        a.coverage(),
+        b.coverage(),
+        mismatches(a, b));
+    check(a.coverage() > 100 && a.dominant(L, MID) == 0,
+        "MAT4 instance renders red at -X");
+    check(b.coverage() > 100 && b.dominant(L, MID) == 0,
+        "MAT3x4 instance renders red at -X");
+    check(
+        mismatches(a, b) == 0, "MAT3x4 frame is byte-identical to MAT4 frame");
   }
 
   // --- 2. N scalar instances vs one transform-array instance ----------------
@@ -311,7 +328,10 @@ int main(int argc, char **argv)
     s.setInstances({inst});
     Frame f = s.render();
     std::printf("array pair: cov=%d mismatches vs scalar=%zu ids=%08x/%08x\n",
-        f.coverage(), mismatches(ref, f), f.id(L, MID), f.id(R, MID));
+        f.coverage(),
+        mismatches(ref, f),
+        f.id(L, MID),
+        f.id(R, MID));
     check(f.dominant(L, MID) == 0 && f.dominant(R, MID) == 1,
         "transform array + color array: left red, right green");
     check(mismatches(ref, f) == 0,
@@ -398,7 +418,8 @@ int main(int argc, char **argv)
     // Back to a scalar transform: the array is dropped, attribute array element
     // 0 applies, and a lingering id array is ignored (it is per-transform).
     anariUnsetParameter(dev, inst, "transform");
-    anariSetParameter(dev, inst, "transform", ANARI_FLOAT32_MAT4, mat4T(-0.75f).data());
+    anariSetParameter(
+        dev, inst, "transform", ANARI_FLOAT32_MAT4, mat4T(-0.75f).data());
     anariSetParameter(dev, inst, "id", ANARI_ARRAY1D, &idArr);
     anariCommitParameters(dev, inst);
     f = s.render();
@@ -426,7 +447,8 @@ int main(int argc, char **argv)
     for (const char *attr : {"color", "attribute0", "attribute2"}) {
       Scene s(dev);
       ANARIInstance inst = s.instance(s.quadGroup(attr));
-      anariSetParameter(dev, inst, "transform", ANARI_FLOAT32_MAT4, mat4T(0.f).data());
+      anariSetParameter(
+          dev, inst, "transform", ANARI_FLOAT32_MAT4, mat4T(0.f).data());
       anariCommitParameters(dev, inst);
       s.setInstances({inst});
       for (const Case &c : cases) {
@@ -457,7 +479,8 @@ int main(int argc, char **argv)
       anariCommitParameters(dev, inst);
       Frame f = s.render();
       check(f.dominant(W / 2, MID) == 0,
-          std::string("replacing the ") + attr + " array with a scalar applies the scalar");
+          std::string("replacing the ") + attr
+              + " array with a scalar applies the scalar");
     }
   }
 
@@ -473,12 +496,20 @@ int main(int argc, char **argv)
       const float c2[2][3] = {{0, 0, 1}, {1, 1, 0}};
       for (int i = 0; i < 2; ++i) {
         ANARIInstance inst = s.instance(g1);
-        anariSetParameter(dev, inst, "transform", ANARI_FLOAT32_MAT4, mat4T(i ? 0.75f : -0.75f, 0.6f).data());
+        anariSetParameter(dev,
+            inst,
+            "transform",
+            ANARI_FLOAT32_MAT4,
+            mat4T(i ? 0.75f : -0.75f, 0.6f).data());
         anariSetParameter(dev, inst, "color", ANARI_FLOAT32_VEC4, c1[i]);
         anariCommitParameters(dev, inst);
         insts.push_back(inst);
         inst = s.instance(g2);
-        anariSetParameter(dev, inst, "transform", ANARI_FLOAT32_MAT4, mat4T(i ? 0.75f : -0.75f, -0.6f).data());
+        anariSetParameter(dev,
+            inst,
+            "transform",
+            ANARI_FLOAT32_MAT4,
+            mat4T(i ? 0.75f : -0.75f, -0.6f).data());
         anariSetParameter(dev, inst, "attribute1", ANARI_FLOAT32_VEC3, c2[i]);
         anariCommitParameters(dev, inst);
         insts.push_back(inst);
@@ -513,7 +544,9 @@ int main(int argc, char **argv)
       b = s.render();
     }
     std::printf("two groups: scalar cov=%d array cov=%d mismatches=%zu\n",
-        a.coverage(), b.coverage(), mismatches(a, b));
+        a.coverage(),
+        b.coverage(),
+        mismatches(a, b));
     check(a.coverage() > 200, "two-group scalar scene renders");
     check(mismatches(a, b) == 0,
         "two groups instanced via arrays are byte-identical to scalar instancing");
@@ -525,8 +558,18 @@ int main(int argc, char **argv)
   {
     auto lightScene = [&](bool useArray) {
       Scene s(dev);
-      float verts[12] = {-1.5f, -1.5f, 0.f, 1.5f, -1.5f, 0.f, 1.5f, 1.5f, 0.f,
-          -1.5f, 1.5f, 0.f};
+      float verts[12] = {-1.5f,
+          -1.5f,
+          0.f,
+          1.5f,
+          -1.5f,
+          0.f,
+          1.5f,
+          1.5f,
+          0.f,
+          -1.5f,
+          1.5f,
+          0.f};
       ANARIArray1D pos = s.array(verts, ANARI_FLOAT32_VEC3, 4);
       ANARIGeometry g = s.keep(anariNewGeometry(dev, "quad"));
       anariSetParameter(dev, g, "vertex.position", ANARI_ARRAY1D, &pos);
@@ -544,7 +587,7 @@ int main(int argc, char **argv)
 
       ANARILight light = s.keep(anariNewLight(dev, "point"));
       float lpos[3] = {0.f, 0.f, 0.4f};
-      float intensity = 0.4f;   // below saturation so the comparison bites
+      float intensity = 0.4f; // below saturation so the comparison bites
       anariSetParameter(dev, light, "position", ANARI_FLOAT32_VEC3, lpos);
       anariSetParameter(dev, light, "intensity", ANARI_FLOAT32, &intensity);
       anariCommitParameters(dev, light);
@@ -565,7 +608,8 @@ int main(int argc, char **argv)
       } else {
         for (float tx : {0.9f, -0.9f}) {
           ANARIInstance inst = s.instance(group);
-          anariSetParameter(dev, inst, "transform", ANARI_FLOAT32_MAT4, mat4T(tx).data());
+          anariSetParameter(
+              dev, inst, "transform", ANARI_FLOAT32_MAT4, mat4T(tx).data());
           anariCommitParameters(dev, inst);
           insts.push_back(inst);
         }
@@ -578,9 +622,14 @@ int main(int argc, char **argv)
       const uint8_t *p = f.px(x, y);
       return (p[0] + p[1] + p[2]) / 3;
     };
-    std::printf("lights: scalar L/R=%d/%d array L/R=%d/%d corner=%d mismatches=%zu\n",
-        lum(a, L, MID), lum(a, R, MID), lum(b, L, MID), lum(b, R, MID),
-        lum(b, 2, 2), mismatches(a, b));
+    std::printf(
+        "lights: scalar L/R=%d/%d array L/R=%d/%d corner=%d mismatches=%zu\n",
+        lum(a, L, MID),
+        lum(a, R, MID),
+        lum(b, L, MID),
+        lum(b, R, MID),
+        lum(b, 2, 2),
+        mismatches(a, b));
     check(lum(b, L, MID) > 20 && lum(b, R, MID) > 20,
         "group light instanced via a transform array lights both sides");
     check(lum(b, 2, 2) < lum(b, L, MID) && lum(b, L, MID) < 250,
@@ -600,14 +649,16 @@ int main(int argc, char **argv)
           return true;
       return false;
     };
-    check(has("transform", ANARI_FLOAT32_MAT4) && has("transform", ANARI_FLOAT32_MAT3x4)
+    check(has("transform", ANARI_FLOAT32_MAT4)
+            && has("transform", ANARI_FLOAT32_MAT3x4)
             && has("transform", ANARI_ARRAY1D),
         "instance.transform reflects MAT4, MAT3x4 and ARRAY1D forms");
     check(has("id", ANARI_UINT32) && has("id", ANARI_ARRAY1D),
         "instance.id reflects scalar and array forms");
     check(has("color", ANARI_FLOAT32) && has("color", ANARI_FLOAT32_VEC2)
-            && has("color", ANARI_FLOAT32_VEC3) && has("color", ANARI_FLOAT32_VEC4)
-            && has("color", ANARI_ARRAY1D) && has("attribute3", ANARI_ARRAY1D),
+            && has("color", ANARI_FLOAT32_VEC3)
+            && has("color", ANARI_FLOAT32_VEC4) && has("color", ANARI_ARRAY1D)
+            && has("attribute3", ANARI_ARRAY1D),
         "instance attributes reflect scalar/vec2/vec3/vec4 and array forms");
 
     const char *const *ext = (const char *const *)anariGetObjectInfo(
@@ -624,6 +675,7 @@ int main(int argc, char **argv)
   anariRelease(dev, dev);
   anariUnloadLibrary(lib);
   std::printf("\n%s (%d issues)\n",
-      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED", g_errors);
+      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED",
+      g_errors);
   return g_errors == 0 ? 0 : 1;
 }

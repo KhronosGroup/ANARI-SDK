@@ -11,7 +11,8 @@
 //
 // Everything renders into ONE non-square (96x48) frame from a 4x3 asymmetric
 // image, so a transposed, flipped or squashed image fails the per-pixel check.
-//   1. float image (HDR texels, varied alpha) under a float color channel: every
+//   1. float image (HDR texels, varied alpha) under a float color channel:
+//   every
 //      miss pixel matches the reference sample; a bottom-left quad covers it.
 //   2. sRGB 8-bit output encodes the composite.
 //   3. element types: FLOAT32 (one channel) and UFIXED8_RGBA_SRGB (decoded).
@@ -33,12 +34,18 @@
 
 static int g_errors = 0;
 
-static void statusFunc(const void *, ANARIDevice, ANARIObject, ANARIDataType,
-    ANARIStatusSeverity severity, ANARIStatusCode, const char *message)
+static void statusFunc(const void *,
+    ANARIDevice,
+    ANARIObject,
+    ANARIDataType,
+    ANARIStatusSeverity severity,
+    ANARIStatusCode,
+    const char *message)
 {
   if (severity <= ANARI_SEVERITY_WARNING)
     std::printf("[%s] %s\n",
-        severity <= ANARI_SEVERITY_ERROR ? "ERR" : "WARN", message);
+        severity <= ANARI_SEVERITY_ERROR ? "ERR" : "WARN",
+        message);
   if (severity <= ANARI_SEVERITY_ERROR)
     ++g_errors;
 }
@@ -55,12 +62,12 @@ struct RGBA
   float r, g, b, a;
 };
 
-static const uint32_t W = 96, H = 48;   // non-square frame (aspect 2)
-static const int IW = 4, IH = 3;        // asymmetric image (aspect 4:3)
+static const uint32_t W = 96, H = 48; // non-square frame (aspect 2)
+static const int IW = 4, IH = 3; // asymmetric image (aspect 4:3)
 
 // Reference: bilinear, clamp-to-edge, texel centers at (i + 0.5) / n.
-static RGBA sampleRef(const std::vector<RGBA> &img, int iw, int ih, float u,
-    float v)
+static RGBA sampleRef(
+    const std::vector<RGBA> &img, int iw, int ih, float u, float v)
 {
   const float fx = u * iw - 0.5f, fy = v * ih - 0.5f;
   const float x0f = std::floor(fx), y0f = std::floor(fy);
@@ -74,14 +81,17 @@ static RGBA sampleRef(const std::vector<RGBA> &img, int iw, int ih, float u,
   const RGBA a = at(x0, y0), b = at(x0 + 1, y0), c = at(x0, y0 + 1),
              d = at(x0 + 1, y0 + 1);
   auto lerp2 = [&](float pa, float pb, float pc, float pd) {
-    return (pa * (1 - tx) + pb * tx) * (1 - ty) + (pc * (1 - tx) + pd * tx) * ty;
+    return (pa * (1 - tx) + pb * tx) * (1 - ty)
+        + (pc * (1 - tx) + pd * tx) * ty;
   };
-  return {lerp2(a.r, b.r, c.r, d.r), lerp2(a.g, b.g, c.g, d.g),
-      lerp2(a.b, b.b, c.b, d.b), lerp2(a.a, b.a, c.a, d.a)};
+  return {lerp2(a.r, b.r, c.r, d.r),
+      lerp2(a.g, b.g, c.g, d.g),
+      lerp2(a.b, b.b, c.b, d.b),
+      lerp2(a.a, b.a, c.a, d.a)};
 }
 
-static RGBA refPixel(const std::vector<RGBA> &img, int iw, int ih, uint32_t x,
-    uint32_t y)
+static RGBA refPixel(
+    const std::vector<RGBA> &img, int iw, int ih, uint32_t x, uint32_t y)
 {
   return sampleRef(img, iw, ih, (x + 0.5f) / W, (y + 0.5f) / H);
 }
@@ -89,7 +99,8 @@ static RGBA refPixel(const std::vector<RGBA> &img, int iw, int ih, uint32_t x,
 static float srgbEncode(float v)
 {
   v = std::clamp(v, 0.f, 1.f);
-  return v <= 0.0031308f ? v * 12.92f : 1.055f * std::pow(v, 1.f / 2.4f) - 0.055f;
+  return v <= 0.0031308f ? v * 12.92f
+                         : 1.055f * std::pow(v, 1.f / 2.4f) - 0.055f;
 }
 
 static float srgbDecode(float v)
@@ -105,7 +116,7 @@ static bool inQuadMargin(uint32_t x, uint32_t y)
 {
   return x >= 3 && x <= 26 && y >= 1 && y <= 19;
 }
-static const uint32_t kQuadX = 14, kQuadY = 9;   // squarely inside the quad
+static const uint32_t kQuadX = 14, kQuadY = 9; // squarely inside the quad
 
 struct Scene
 {
@@ -124,8 +135,18 @@ struct Scene
   {
     dev = d;
     // Static: the array shares this memory (no deleter) for its lifetime.
-    static const float verts[12] = {-1.8f, -0.9f, 0.f, -1.0f, -0.9f, 0.f, -1.0f, -0.3f, 0.f,
-        -1.8f, -0.3f, 0.f};
+    static const float verts[12] = {-1.8f,
+        -0.9f,
+        0.f,
+        -1.0f,
+        -0.9f,
+        0.f,
+        -1.0f,
+        -0.3f,
+        0.f,
+        -1.8f,
+        -0.3f,
+        0.f};
     pos = anariNewArray1D(dev, verts, nullptr, nullptr, ANARI_FLOAT32_VEC3, 4);
     geom = anariNewGeometry(dev, "quad");
     anariSetParameter(dev, geom, "vertex.position", ANARI_ARRAY1D, &pos);
@@ -224,8 +245,8 @@ struct Scene
 // Compare every miss pixel of `px` against `expected(x, y)`; report the max
 // abs error.
 template <typename F>
-static bool missesMatch(const std::vector<RGBA> &px, F expected, float tol,
-    const char *label)
+static bool missesMatch(
+    const std::vector<RGBA> &px, F expected, float tol, const char *label)
 {
   if (px.size() != size_t(W) * H) {
     std::printf("    %s: no pixels\n", label);
@@ -239,8 +260,10 @@ static bool missesMatch(const std::vector<RGBA> &px, F expected, float tol,
         continue;
       const RGBA e = expected(x, y);
       const RGBA g = px[size_t(y) * W + x];
-      const float err = std::max({std::fabs(e.r - g.r), std::fabs(e.g - g.g),
-          std::fabs(e.b - g.b), std::fabs(e.a - g.a)});
+      const float err = std::max({std::fabs(e.r - g.r),
+          std::fabs(e.g - g.g),
+          std::fabs(e.b - g.b),
+          std::fabs(e.a - g.a)});
       if (err > maxErr) {
         maxErr = err;
         ex = x;
@@ -248,14 +271,26 @@ static bool missesMatch(const std::vector<RGBA> &px, F expected, float tol,
       }
     }
   const RGBA e = expected(ex, ey), g = px[size_t(ey) * W + ex];
-  std::printf("    %s: max err %.5f at (%u,%u) exp %.3f %.3f %.3f %.3f got "
-              "%.3f %.3f %.3f %.3f\n",
-      label, maxErr, ex, ey, e.r, e.g, e.b, e.a, g.r, g.g, g.b, g.a);
+  std::printf(
+      "    %s: max err %.5f at (%u,%u) exp %.3f %.3f %.3f %.3f got "
+      "%.3f %.3f %.3f %.3f\n",
+      label,
+      maxErr,
+      ex,
+      ey,
+      e.r,
+      e.g,
+      e.b,
+      e.a,
+      g.r,
+      g.g,
+      g.b,
+      g.a);
   return maxErr <= tol;
 }
 
-static ANARIArray2D newImage(ANARIDevice dev, ANARIDataType t, const void *data,
-    int w, int h)
+static ANARIArray2D newImage(
+    ANARIDevice dev, ANARIDataType t, const void *data, int w, int h)
 {
   return anariNewArray2D(dev, data, nullptr, nullptr, t, w, h);
 }
@@ -274,7 +309,8 @@ int main(int argc, char **argv)
   if (const char *const *ext = (const char *const *)anariGetObjectInfo(
           dev, ANARI_DEVICE, "default", "extension", ANARI_STRING_LIST)) {
     for (; *ext; ++ext) {
-      hasImageExt |= std::strcmp(*ext, "ANARI_KHR_RENDERER_BACKGROUND_IMAGE") == 0;
+      hasImageExt |=
+          std::strcmp(*ext, "ANARI_KHR_RENDERER_BACKGROUND_IMAGE") == 0;
       hasHdri |= std::strcmp(*ext, "ANARI_KHR_LIGHT_HDRI") == 0;
     }
   }
@@ -287,16 +323,20 @@ int main(int argc, char **argv)
   std::vector<RGBA> img(IW * IH);
   for (int y = 0; y < IH; ++y)
     for (int x = 0; x < IW; ++x)
-      img[size_t(y) * IW + x] = {0.1f + 0.6f * x, 0.2f + 0.4f * y,
-          (x + y) % 2 ? 0.9f : 0.05f, 0.25f + 0.25f * float((x + 2 * y) % 4)};
+      img[size_t(y) * IW + x] = {0.1f + 0.6f * x,
+          0.2f + 0.4f * y,
+          (x + y) % 2 ? 0.9f : 0.05f,
+          0.25f + 0.25f * float((x + 2 * y) % 4)};
   ANARIArray2D imgArray = newImage(dev, ANARI_FLOAT32_VEC4, img.data(), IW, IH);
 
   // --- 1. float image under a float color channel --------------------------
   s.setBackgroundArray(imgArray);
   std::vector<RGBA> px = s.render();
-  check(missesMatch(px, [&](uint32_t x, uint32_t y) {
-    return refPixel(img, IW, IH, x, y);
-  }, 2e-3f, "float image"),
+  check(missesMatch(
+            px,
+            [&](uint32_t x, uint32_t y) { return refPixel(img, IW, IH, x, y); },
+            2e-3f,
+            "float image"),
       "case1: every miss samples the stretched image (orientation, bilinear, "
       "HDR, alpha)");
   if (!px.empty()) {
@@ -314,15 +354,22 @@ int main(int argc, char **argv)
   // --- 2. sRGB 8-bit output --------------------------------------------------
   s.setColorType(ANARI_UFIXED8_RGBA_SRGB);
   px = s.render();
-  check(missesMatch(px, [&](uint32_t x, uint32_t y) {
-    RGBA r = refPixel(img, IW, IH, x, y);
-    return RGBA{srgbEncode(r.r), srgbEncode(r.g), srgbEncode(r.b),
-        std::clamp(r.a, 0.f, 1.f)};
-  }, 2.5f / 255.f, "srgb8 output"),
+  check(missesMatch(
+            px,
+            [&](uint32_t x, uint32_t y) {
+              RGBA r = refPixel(img, IW, IH, x, y);
+              return RGBA{srgbEncode(r.r),
+                  srgbEncode(r.g),
+                  srgbEncode(r.b),
+                  std::clamp(r.a, 0.f, 1.f)};
+            },
+            2.5f / 255.f,
+            "srgb8 output"),
       "case2: an sRGB color channel encodes the composited image");
   s.setColorType(ANARI_FLOAT32_VEC4);
 
-  // --- 3. element types --------------------------------------------------------
+  // --- 3. element types
+  // --------------------------------------------------------
   {
     std::vector<float> mono(IW * IH);
     std::vector<RGBA> monoRef(IW * IH);
@@ -333,9 +380,13 @@ int main(int argc, char **argv)
     ANARIArray2D a = newImage(dev, ANARI_FLOAT32, mono.data(), IW, IH);
     s.setBackgroundArray(a);
     px = s.render();
-    check(missesMatch(px, [&](uint32_t x, uint32_t y) {
-      return refPixel(monoRef, IW, IH, x, y);
-    }, 2e-3f, "FLOAT32 image"),
+    check(missesMatch(
+              px,
+              [&](uint32_t x, uint32_t y) {
+                return refPixel(monoRef, IW, IH, x, y);
+              },
+              2e-3f,
+              "FLOAT32 image"),
         "case3: a one-channel float image reads as (r, 0, 0, 1)");
     anariRelease(dev, a);
 
@@ -346,20 +397,27 @@ int main(int argc, char **argv)
       u8[i * 4 + 1] = uint8_t(255 - 20 * i);
       u8[i * 4 + 2] = uint8_t(128);
       u8[i * 4 + 3] = uint8_t(255 - 10 * i);
-      u8Ref[i] = {srgbDecode(u8[i * 4] / 255.f), srgbDecode(u8[i * 4 + 1] / 255.f),
-          srgbDecode(u8[i * 4 + 2] / 255.f), u8[i * 4 + 3] / 255.f};
+      u8Ref[i] = {srgbDecode(u8[i * 4] / 255.f),
+          srgbDecode(u8[i * 4 + 1] / 255.f),
+          srgbDecode(u8[i * 4 + 2] / 255.f),
+          u8[i * 4 + 3] / 255.f};
     }
     a = newImage(dev, ANARI_UFIXED8_RGBA_SRGB, u8.data(), IW, IH);
     s.setBackgroundArray(a);
     px = s.render();
-    check(missesMatch(px, [&](uint32_t x, uint32_t y) {
-      return refPixel(u8Ref, IW, IH, x, y);
-    }, 2e-3f, "UFIXED8_RGBA_SRGB image"),
+    check(missesMatch(
+              px,
+              [&](uint32_t x, uint32_t y) {
+                return refPixel(u8Ref, IW, IH, x, y);
+              },
+              2e-3f,
+              "UFIXED8_RGBA_SRGB image"),
         "case3: an sRGB 8-bit image is linearised (alpha stays linear)");
     anariRelease(dev, a);
   }
 
-  // --- 4. in-place image edit -------------------------------------------------
+  // --- 4. in-place image edit
+  // -------------------------------------------------
   s.setBackgroundArray(imgArray);
   {
     RGBA *p = (RGBA *)anariMapArray(dev, imgArray);
@@ -370,13 +428,16 @@ int main(int argc, char **argv)
     anariUnmapArray(dev, imgArray);
   }
   px = s.render();
-  check(missesMatch(px, [&](uint32_t x, uint32_t y) {
-    return refPixel(img, IW, IH, x, y);
-  }, 2e-3f, "edited image"),
+  check(missesMatch(
+            px,
+            [&](uint32_t x, uint32_t y) { return refPixel(img, IW, IH, x, y); },
+            2e-3f,
+            "edited image"),
       "case4: a map/unmap edit of the image array is followed");
 
-  // --- 5. blended half-opaque quad over the image -------------------------------
-  // HdEmbree has no material networks, so material opacity never reaches it.
+  // --- 5. blended half-opaque quad over the image
+  // ------------------------------- HdEmbree has no material networks, so
+  // material opacity never reaches it.
   if (std::strcmp(subtype, "storm") == 0) {
     float half = 0.5f;
     anariSetParameter(dev, s.mat, "opacity", ANARI_FLOAT32, &half);
@@ -387,8 +448,16 @@ int main(int argc, char **argv)
       const RGBA q = px[kQuadY * W + kQuadX];
       const RGBA b = refPixel(img, IW, IH, kQuadX, kQuadY);
       const float expA = 0.5f + 0.5f * b.a;
-      std::printf("    blended quad %.3f %.3f %.3f %.3f  bg %.3f %.3f %.3f %.3f\n",
-          q.r, q.g, q.b, q.a, b.r, b.g, b.b, b.a);
+      std::printf(
+          "    blended quad %.3f %.3f %.3f %.3f  bg %.3f %.3f %.3f %.3f\n",
+          q.r,
+          q.g,
+          q.b,
+          q.a,
+          b.r,
+          b.g,
+          b.b,
+          b.a);
       check(std::fabs(q.a - expA) < 0.02f,
           "case5: a half-opaque quad composites alpha over the image");
       // The quad is neutral grey-white; the image texel is not, so the
@@ -402,28 +471,34 @@ int main(int argc, char **argv)
     anariCommitParameters(dev, s.mat);
   }
 
-  // --- 6. back to a constant background -----------------------------------------
+  // --- 6. back to a constant background
+  // -----------------------------------------
   {
     const float bg[4] = {0.2f, 0.4f, 0.6f, 0.5f};
     anariSetParameter(dev, s.ren, "background", ANARI_FLOAT32_VEC4, bg);
     anariCommitParameters(dev, s.ren);
     px = s.render();
-    check(missesMatch(px, [&](uint32_t, uint32_t) {
-      return RGBA{bg[0], bg[1], bg[2], bg[3]};
-    }, 2e-3f, "constant"),
+    check(missesMatch(
+              px,
+              [&](uint32_t, uint32_t) {
+                return RGBA{bg[0], bg[1], bg[2], bg[3]};
+              },
+              2e-3f,
+              "constant"),
         "case6: switching back to a constant background replaces the image");
   }
 
-  // --- 7. hdri dome interaction ---------------------------------------------------
-  // HdEmbree advertises the dome sprim but cannot load the bridge's anari://
-  // environment texture, so its hdri is never a backdrop; Storm only.
+  // --- 7. hdri dome interaction
+  // --------------------------------------------------- HdEmbree advertises the
+  // dome sprim but cannot load the bridge's anari:// environment texture, so
+  // its hdri is never a backdrop; Storm only.
   if (hasHdri && std::strcmp(subtype, "storm") == 0) {
     s.setBackgroundArray(imgArray);
     std::vector<float> env(8 * 8 * 3, 0.f);
     for (int i = 0; i < 64; ++i)
-      env[i * 3] = 1.f;   // solid red environment
-    ANARIArray2D radiance =
-        anariNewArray2D(dev, env.data(), nullptr, nullptr, ANARI_FLOAT32_VEC3, 8, 8);
+      env[i * 3] = 1.f; // solid red environment
+    ANARIArray2D radiance = anariNewArray2D(
+        dev, env.data(), nullptr, nullptr, ANARI_FLOAT32_VEC3, 8, 8);
     ANARILight light = anariNewLight(dev, "hdri");
     anariSetParameter(dev, light, "radiance", ANARI_ARRAY2D, &radiance);
     anariCommitParameters(dev, light);
@@ -435,9 +510,10 @@ int main(int argc, char **argv)
     px = s.render();
     if (!px.empty()) {
       const RGBA c = px[(H - 2) * W + (W - 2)];
-      std::printf("    visible dome corner %.3f %.3f %.3f %.3f\n", c.r, c.g, c.b,
-          c.a);
-      check(c.r > 0.3f && c.g < 0.1f && c.b < 0.1f && std::fabs(c.a - 1.f) < 1e-3f,
+      std::printf(
+          "    visible dome corner %.3f %.3f %.3f %.3f\n", c.r, c.g, c.b, c.a);
+      check(c.r > 0.3f && c.g < 0.1f && c.b < 0.1f
+              && std::fabs(c.a - 1.f) < 1e-3f,
           "case7: a visible hdri is the backdrop and hides the image");
     }
 
@@ -445,9 +521,12 @@ int main(int argc, char **argv)
     anariSetParameter(dev, light, "visible", ANARI_BOOL, &vis);
     anariCommitParameters(dev, light);
     px = s.render();
-    check(missesMatch(px, [&](uint32_t x, uint32_t y) {
-      return refPixel(img, IW, IH, x, y);
-    }, 2e-3f, "invisible dome"),
+    check(
+        missesMatch(
+            px,
+            [&](uint32_t x, uint32_t y) { return refPixel(img, IW, IH, x, y); },
+            2e-3f,
+            "invisible dome"),
         "case7: hdri visible=false reveals the image");
 
     anariUnsetParameter(dev, s.world, "light");
@@ -464,6 +543,7 @@ int main(int argc, char **argv)
   anariRelease(dev, dev);
   anariUnloadLibrary(lib);
   std::printf("\n%s (%d issues)\n",
-      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED", g_errors);
+      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED",
+      g_errors);
   return g_errors == 0 ? 0 : 1;
 }

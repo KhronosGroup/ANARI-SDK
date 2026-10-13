@@ -1,10 +1,10 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-#include "HydraDevice.h"
 #include "DelegateRegistry.h"
-#include "hydra/Worker.h"
+#include "HydraDevice.h"
 #include "anari/backend/LibraryImpl.h"
+#include "hydra/Worker.h"
 
 #include "anari_library_hydra_export.h"
 

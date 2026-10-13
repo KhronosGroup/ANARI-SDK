@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 // Exercises KHR_SAMPLER_IMAGExD_CLAMP_TO_BORDER (SPEC §6.4). A quad carries st
-// over [-1, 2]² — a full texture inside, a full texture's width outside on every
-// side — so every edge and corner of the image is sampled from inside, on, and
-// outside. The sampler feeds a physicallyBased `emissive` on an unlit black
-// base rendered into a FLOAT32 frame (the numeric readback of
+// over [-1, 2]² — a full texture inside, a full texture's width outside on
+// every side — so every edge and corner of the image is sampled from inside,
+// on, and outside. The sampler feeds a physicallyBased `emissive` on an unlit
+// black base rendered into a FLOAT32 frame (the numeric readback of
 // render_image_precision), and each pixel is compared with a CPU reference of
 // the ANARI contract: per-axis wrap (clampToEdge / repeat / mirrorRepeat /
 // clampToBorder), the RGBA `borderColor`, nearest and bilinear filters, then
@@ -25,12 +25,18 @@
 
 static int g_errors = 0;
 
-static void statusFunc(const void *, ANARIDevice, ANARIObject, ANARIDataType,
-    ANARIStatusSeverity severity, ANARIStatusCode, const char *message)
+static void statusFunc(const void *,
+    ANARIDevice,
+    ANARIObject,
+    ANARIDataType,
+    ANARIStatusSeverity severity,
+    ANARIStatusCode,
+    const char *message)
 {
   if (severity <= ANARI_SEVERITY_WARNING)
     std::printf("[%s] %s\n",
-        severity <= ANARI_SEVERITY_ERROR ? "ERR" : "WARN", message);
+        severity <= ANARI_SEVERITY_ERROR ? "ERR" : "WARN",
+        message);
   if (severity <= ANARI_SEVERITY_ERROR)
     ++g_errors;
 }
@@ -47,8 +53,14 @@ static void check(bool ok, const char *what)
 struct Vec4
 {
   float v[4] = {0, 0, 0, 0};
-  float &operator[](int i) { return v[i]; }
-  float operator[](int i) const { return v[i]; }
+  float &operator[](int i)
+  {
+    return v[i];
+  }
+  float operator[](int i) const
+  {
+    return v[i];
+  }
 };
 
 static Vec4 mix(const Vec4 &a, const Vec4 &b, float t)
@@ -108,7 +120,7 @@ static bool wrapIndex(int i, int n, Wrap w, int &out)
 struct RefSampler
 {
   int W = 1, H = 1;
-  std::vector<Vec4> texels;   // row-major, row 0 = ANARI v=0
+  std::vector<Vec4> texels; // row-major, row 0 = ANARI v=0
   Wrap wrapS = Wrap::ClampToEdge, wrapT = Wrap::ClampToEdge;
   bool nearest = true;
   Vec4 border;
@@ -236,10 +248,10 @@ struct Scene
     anariSetParameter(dev, mat, "metallic", ANARI_FLOAT32, &zero);
     anariCommitParameters(dev, mat);
 
-    static const float verts[12] = {-0.9f, -0.9f, 0.f, 0.9f, -0.9f, 0.f,
-        0.9f, 0.9f, 0.f, -0.9f, 0.9f, 0.f};
-    static const float uv[8] = {kStMin, kStMin, kStMax, kStMin, kStMax, kStMax,
-        kStMin, kStMax};
+    static const float verts[12] = {
+        -0.9f, -0.9f, 0.f, 0.9f, -0.9f, 0.f, 0.9f, 0.9f, 0.f, -0.9f, 0.9f, 0.f};
+    static const float uv[8] = {
+        kStMin, kStMin, kStMax, kStMin, kStMax, kStMax, kStMin, kStMax};
     pos = anariNewArray1D(dev, verts, nullptr, nullptr, ANARI_FLOAT32_VEC3, 4);
     st = anariNewArray1D(dev, uv, nullptr, nullptr, ANARI_FLOAT32_VEC2, 4);
     g = anariNewGeometry(dev, "quad");
@@ -305,10 +317,16 @@ struct Scene
 
   void release()
   {
-    for (ANARIObject o : {(ANARIObject)frame, (ANARIObject)ren,
-             (ANARIObject)cam, (ANARIObject)surfArray, (ANARIObject)world,
-             (ANARIObject)surf, (ANARIObject)g, (ANARIObject)st,
-             (ANARIObject)pos, (ANARIObject)mat})
+    for (ANARIObject o : {(ANARIObject)frame,
+             (ANARIObject)ren,
+             (ANARIObject)cam,
+             (ANARIObject)surfArray,
+             (ANARIObject)world,
+             (ANARIObject)surf,
+             (ANARIObject)g,
+             (ANARIObject)st,
+             (ANARIObject)pos,
+             (ANARIObject)mat})
       anariRelease(dev, o);
   }
 };
@@ -323,11 +341,38 @@ static Img g_baseline;
 // A 4×2 image (non-square, so the two axes pad by different factors): distinct
 // RGB per texel and distinct alpha, all off the border colours used below.
 static const int kW = 4, kH = 2;
-static const float kImage[kW * kH * 4] = {
-    1.0f, 0.0f, 0.0f, 1.00f, /**/ 0.0f, 1.0f, 0.0f, 0.90f, /**/
-    0.0f, 0.0f, 1.0f, 0.80f, /**/ 1.0f, 1.0f, 0.0f, 0.70f, /**/
-    0.0f, 1.0f, 1.0f, 0.60f, /**/ 1.0f, 0.0f, 1.0f, 0.50f, /**/
-    0.5f, 0.5f, 0.5f, 0.40f, /**/ 1.0f, 1.0f, 1.0f, 0.30f};
+static const float kImage[kW * kH * 4] = {1.0f,
+    0.0f,
+    0.0f,
+    1.00f,
+    /**/ 0.0f,
+    1.0f,
+    0.0f,
+    0.90f, /**/
+    0.0f,
+    0.0f,
+    1.0f,
+    0.80f,
+    /**/ 1.0f,
+    1.0f,
+    0.0f,
+    0.70f, /**/
+    0.0f,
+    1.0f,
+    1.0f,
+    0.60f,
+    /**/ 1.0f,
+    0.0f,
+    1.0f,
+    0.50f, /**/
+    0.5f,
+    0.5f,
+    0.5f,
+    0.40f,
+    /**/ 1.0f,
+    1.0f,
+    1.0f,
+    0.30f};
 
 // Sample positions in st: far outside, just outside, on the edge, just inside,
 // texel centres. "Just" is 0.05 st: 0.2 texel of the 4-wide axis and 0.1 texel
@@ -336,8 +381,18 @@ static const float kImage[kW * kH * 4] = {
 // and edge texel 50/50; under nearest filtering they sit on a discontinuity
 // (which side a pixel centre lands on is the rasteriser's sub-pixel call), so
 // compare() skips a nearest probe within kNearestGuard texels of a boundary.
-static const float kProbes[] = {-0.6f, -0.05f, 0.f, 0.05f, 0.125f, 0.375f,
-    0.625f, 0.875f, 0.95f, 1.f, 1.05f, 1.6f};
+static const float kProbes[] = {-0.6f,
+    -0.05f,
+    0.f,
+    0.05f,
+    0.125f,
+    0.375f,
+    0.625f,
+    0.875f,
+    0.95f,
+    1.f,
+    1.05f,
+    1.6f};
 static constexpr float kNearestGuard = 0.03f;
 
 struct Case
@@ -359,12 +414,12 @@ struct Case
 static void applyCase(ANARIDevice dev, ANARISampler s, const Case &c)
 {
   const bool oneD = std::strcmp(c.subtype, "image1D") == 0;
-  anariSetParameter(dev, s, oneD ? "wrapMode" : "wrapMode1", ANARI_STRING,
-      wrapName(c.wrapS));
+  anariSetParameter(
+      dev, s, oneD ? "wrapMode" : "wrapMode1", ANARI_STRING, wrapName(c.wrapS));
   if (!oneD)
     anariSetParameter(dev, s, "wrapMode2", ANARI_STRING, wrapName(c.wrapT));
-  anariSetParameter(dev, s, "filter", ANARI_STRING,
-      c.nearest ? "nearest" : "linear");
+  anariSetParameter(
+      dev, s, "filter", ANARI_STRING, c.nearest ? "nearest" : "linear");
   if (c.setBorder)
     anariSetParameter(dev, s, "borderColor", ANARI_FLOAT32_VEC4, c.border.v);
   else
@@ -440,16 +495,26 @@ static void compare(const Img &im, const RefSampler &ref, const char *what)
       float err = 0.f;
       for (int k = 0; k < 3; ++k) {
         const float got = p[k] - b[k];
-        err = std::max(err, std::fabs(got - want[k]) - 1e-3f * std::fabs(want[k]));
+        err = std::max(
+            err, std::fabs(got - want[k]) - 1e-3f * std::fabs(want[k]));
       }
       ++total;
       if (err > tol) {
         ++bad;
         if (bad <= 3)
-          std::printf("    mismatch at st=(%.3f,%.3f) px=(%d,%d): got %.4f "
-                      "%.4f %.4f want %.4f %.4f %.4f\n",
-              u, v, px, py, p[0] - b[0], p[1] - b[1], p[2] - b[2], want[0],
-              want[1], want[2]);
+          std::printf(
+              "    mismatch at st=(%.3f,%.3f) px=(%d,%d): got %.4f "
+              "%.4f %.4f want %.4f %.4f %.4f\n",
+              u,
+              v,
+              px,
+              py,
+              p[0] - b[0],
+              p[1] - b[1],
+              p[2] - b[2],
+              want[0],
+              want[1],
+              want[2]);
       }
       if (err > worst) {
         worst = err;
@@ -457,9 +522,15 @@ static void compare(const Img &im, const RefSampler &ref, const char *what)
       }
     }
   }
-  std::printf("    %d/%d probes within %.3f (worst %.4f at %s), %d ambiguous "
-              "nearest probes skipped\n",
-      total - bad, total, tol, worst, worstWhere.c_str(), skipped);
+  std::printf(
+      "    %d/%d probes within %.3f (worst %.4f at %s), %d ambiguous "
+      "nearest probes skipped\n",
+      total - bad,
+      total,
+      tol,
+      worst,
+      worstWhere.c_str(),
+      skipped);
   check(bad == 0, what);
 }
 
@@ -605,9 +676,9 @@ int main(int argc, char **argv)
       c.border = alphaOnly;
       c.setOutTransform = true;
       std::memset(c.outTransform, 0, sizeof(c.outTransform));
-      c.outTransform[12] = 1.f;   // red   <- alpha
-      c.outTransform[5] = 1.f;    // green <- green
-      c.outTransform[10] = 1.f;   // blue  <- blue
+      c.outTransform[12] = 1.f; // red   <- alpha
+      c.outTransform[5] = 1.f; // green <- green
+      c.outTransform[10] = 1.f; // blue  <- blue
       c.outTransform[15] = 1.f;
       cases.push_back(c);
     }
@@ -632,9 +703,9 @@ int main(int argc, char **argv)
       c.nearest = nearest;
       c.setOutTransform = true;
       std::memset(c.outTransform, 0, sizeof(c.outTransform));
-      c.outTransform[4] = 1.f;    // red   <- green
-      c.outTransform[8] = 1.f;    // green <- blue
-      c.outTransform[2] = 1.f;    // blue  <- red
+      c.outTransform[4] = 1.f; // red   <- green
+      c.outTransform[8] = 1.f; // green <- blue
+      c.outTransform[2] = 1.f; // blue  <- red
       c.outTransform[15] = 1.f;
       c.outOffset[0] = 0.25f;
       cases.push_back(c);
@@ -650,8 +721,8 @@ int main(int argc, char **argv)
       c.border = tint;
       c.setInTransform = true;
       std::memset(c.inTransform, 0, sizeof(c.inTransform));
-      c.inTransform[1] = 1.f;    // u' = -v + 1
-      c.inTransform[4] = -1.f;   // v' = u
+      c.inTransform[1] = 1.f; // u' = -v + 1
+      c.inTransform[4] = -1.f; // v' = u
       c.inTransform[10] = 1.f;
       c.inTransform[15] = 1.f;
       c.inOffset[0] = 1.f;
@@ -758,6 +829,7 @@ int main(int argc, char **argv)
   anariRelease(dev, dev);
   anariUnloadLibrary(lib);
   std::printf("\n%s (%d issues)\n",
-      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED", g_errors);
+      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED",
+      g_errors);
   return g_errors == 0 ? 0 : 1;
 }

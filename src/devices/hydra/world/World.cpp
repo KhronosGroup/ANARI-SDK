@@ -13,8 +13,11 @@ World::World(HydraGlobalState *s) : Object(ANARI_WORLD, s)
   m_mirror = std::make_unique<Mirror>(m_serial);
 }
 
-bool World::getProperty(const std::string_view &name, ANARIDataType type,
-    void *ptr, uint64_t size, uint32_t flags)
+bool World::getProperty(const std::string_view &name,
+    ANARIDataType type,
+    void *ptr,
+    uint64_t size,
+    uint32_t flags)
 {
   return QueryBounds(*this, m_bounds, name, type, ptr, size, flags);
 }

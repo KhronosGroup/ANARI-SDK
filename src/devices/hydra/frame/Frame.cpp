@@ -212,8 +212,8 @@ void Frame::commitParameters()
     std::lock_guard<std::mutex> lock(m_callbackMutex);
     m_callback = getParam<ANARIFrameCompletionCallback>(
         "frameCompletionCallback", nullptr);
-    m_callbackUserData = getParam<void *>(
-        "frameCompletionCallbackUserData", nullptr);
+    m_callbackUserData =
+        getParam<void *>("frameCompletionCallbackUserData", nullptr);
   }
 }
 
@@ -260,13 +260,10 @@ void Frame::ensureHydra()
 
   const SdfPath ctrlPath("/taskController");
   HdRenderDelegate *rd = m_renderDelegate.Get();
-  m_taskController = HdxTaskControllerSceneIndex::New(
-      {ctrlPath,
-          [rd](const TfToken &name) {
-            return rd->GetDefaultAovDescriptor(name);
-          },
-          /*isForStorm=*/rd->RequiresStormTasks(),
-          /*gpuEnabled=*/true});
+  m_taskController = HdxTaskControllerSceneIndex::New({ctrlPath,
+      [rd](const TfToken &name) { return rd->GetDefaultAovDescriptor(name); },
+      /*isForStorm=*/rd->RequiresStormTasks(),
+      /*gpuEnabled=*/true});
   // ANARI aspect and imageRegion already determine the full projection.
   m_taskController->SetOverrideWindowPolicy(CameraUtilDontConform);
   m_renderIndex->InsertSceneIndex(
@@ -313,15 +310,15 @@ void Frame::renderOnWorker()
 {
   ensureHydra();
   if (!m_hydraReady)
-    return;   // early-out before t0: leave the previous "last completed" value
+    return; // early-out before t0: leave the previous "last completed" value
 
   // Time the whole render body (SPEC §8.2 "duration"): stage-2 mirror drain +
-  // scene authoring + ambient/lighting/AOV setup + Execute + converge poll. This
-  // matches helide_gpu (which times its entire gpu_renderFrame) and answers the
-  // app's real question — "how long did this frame take" legitimately includes
-  // the reconcile the app waited on. NOT included: the stage-1
-  // commitBuffer.flush() job, which is a separate worker job posted before this
-  // one (timing across two jobs isn't worth it for v1).
+  // scene authoring + ambient/lighting/AOV setup + Execute + converge poll.
+  // This matches helide_gpu (which times its entire gpu_renderFrame) and
+  // answers the app's real question — "how long did this frame take"
+  // legitimately includes the reconcile the app waited on. NOT included: the
+  // stage-1 commitBuffer.flush() job, which is a separate worker job posted
+  // before this one (timing across two jobs isn't worth it for v1).
   const auto t0 = std::chrono::steady_clock::now();
 
   // Apply the renderer's settings profile to this frame's delegate (SPEC §4.7).
@@ -332,24 +329,26 @@ void Frame::renderOnWorker()
   }
 
   // Dome skydome camera-visibility policy (SPEC §4.7). A dome light OWNS the
-  // backdrop under Storm: HdxSkydomeTask is the first render task and paints the
-  // dome environment into primary rays, clobbering the `background` clear color.
-  // The global HdRenderSettingsTokens->domeLightCameraVisibility lever suppresses
-  // that skydome while preserving the dome's light contribution to surfaces.
-  // Policy:
+  // backdrop under Storm: HdxSkydomeTask is the first render task and paints
+  // the dome environment into primary rays, clobbering the `background` clear
+  // color. The global HdRenderSettingsTokens->domeLightCameraVisibility lever
+  // suppresses that skydome while preserving the dome's light contribution to
+  // surfaces. Policy:
   //   - no hdri dome present -> false. Covers the no-dome case AND the ambient-
-  //     only case: the synthetic ambient fill dome is never an hdri, so whenever
-  //     it is the active dome it is camera-invisible and `background` owns the
-  //     backdrop.
-  //   - an hdri dome present -> follow the FIRST hdri's `visible` (default true),
+  //     only case: the synthetic ambient fill dome is never an hdri, so
+  //     whenever it is the active dome it is camera-invisible and `background`
+  //     owns the backdrop.
+  //   - an hdri dome present -> follow the FIRST hdri's `visible` (default
+  //   true),
   //     so a default hdri stays visible as the backdrop while `visible=false`
   //     turns it into a pure image-based light and lets `background` show.
   // Only world-direct lights are consulted (an hdri as an instanced-group light
   // is not a meaningful backdrop). More than one hdri: pick the first and warn.
   // Edge case (ambient + hdri both present): two domes, one global lever, and
-  // Storm draws a single representative skydome — the first hdri's `visible` wins
-  // globally. Accepted; not chased here. Pushed after the renderer settings loop
-  // so this policy value wins any verbatim passthrough of the same token (§11.3).
+  // Storm draws a single representative skydome — the first hdri's `visible`
+  // wins globally. Accepted; not chased here. Pushed after the renderer
+  // settings loop so this policy value wins any verbatim passthrough of the
+  // same token (§11.3).
   {
     bool domeVisible = false;
     if (m_world) {
@@ -371,14 +370,15 @@ void Frame::renderOnWorker()
       }
     }
     m_renderDelegate->SetRenderSetting(
-        HdRenderSettingsTokens->domeLightCameraVisibility, VtValue(domeVisible));
+        HdRenderSettingsTokens->domeLightCameraVisibility,
+        VtValue(domeVisible));
   }
 
   // Stage-2 drain (SPEC §9.3): author the mirror from committed state, but only
-  // when stage-1 finalize marked something into the mirror-dirty set (SPEC §5.2)
-  // — an idle re-render of an unchanged scene skips the reconcile. Fine-grained
-  // mark-driven authoring (per-object dependent-prim maps) is a later refinement;
-  // the reconcile itself is idempotent.
+  // when stage-1 finalize marked something into the mirror-dirty set (SPEC
+  // §5.2) — an idle re-render of an unchanged scene skips the reconcile.
+  // Fine-grained mark-driven authoring (per-object dependent-prim maps) is a
+  // later refinement; the reconcile itself is idempotent.
   std::unordered_set<Object *> drained;
   deviceState()->mirrorDirty.drain(drained);
   if (!drained.empty())
@@ -401,12 +401,14 @@ void Frame::renderOnWorker()
     // mirror passes through the delegate's registered scene-index filter chain
     // (node-identifier / material-binding resolving, material primvar transfer,
     // implicit-surface tessellation, …) exactly as UsdImagingGLEngine does — a
-    // bare insert skips the filters Storm's material pipeline expects (SPEC §6.1).
+    // bare insert skips the filters Storm's material pipeline expects (SPEC
+    // §6.1).
     if (firstInsert) {
       HdSceneIndexBaseRefPtr filtered =
-          HdSceneIndexPluginRegistry::GetInstance().AppendSceneIndicesForRenderer(
-              deviceState()->sceneIndexPluginName,
-              m_world->mirror()->sceneIndex());
+          HdSceneIndexPluginRegistry::GetInstance()
+              .AppendSceneIndicesForRenderer(
+                  deviceState()->sceneIndexPluginName,
+                  m_world->mirror()->sceneIndex());
       m_renderIndex->InsertSceneIndex(
           filtered, SdfPath::AbsoluteRootPath(), /*needsPrefixing=*/false);
       m_insertedWorldScene = filtered;
@@ -416,11 +418,12 @@ void Frame::renderOnWorker()
 
   // Ambient fill (SPEC §4.7/§6.6): the renderer's ambientRadiance/ambientColor
   // synthesize a uniform dome light in the frame-owned ambient scene index. A
-  // retained AddPrims replaces in place, so re-author only when radiance crosses
-  // 0 or the intensity/color changes; remove the sprim when radiance drops to 0.
-  // (Scene-ambient via GlfSimpleLightingContext does NOT reach UsdPreviewSurface
-  // under Storm — proto 016 — hence a real dome-light sprim.)
-  const float ambientRadiance = m_renderer ? m_renderer->ambientRadiance() : 0.f;
+  // retained AddPrims replaces in place, so re-author only when radiance
+  // crosses 0 or the intensity/color changes; remove the sprim when radiance
+  // drops to 0. (Scene-ambient via GlfSimpleLightingContext does NOT reach
+  // UsdPreviewSurface under Storm — proto 016 — hence a real dome-light sprim.)
+  const float ambientRadiance =
+      m_renderer ? m_renderer->ambientRadiance() : 0.f;
   const GfVec3f ambientColor = m_renderer
       ? GfVec3f(m_renderer->ambientColor().x,
             m_renderer->ambientColor().y,
@@ -456,13 +459,12 @@ void Frame::renderOnWorker()
   // Lighting (SPEC §6.6): real ANARI lights are authored as UsdLux sprims and
   // consumed by the delegate's light task; only a lightless world falls back to
   // a simple headlight so geometry stays visible. An empty lighting state when
-  // lights exist avoids double-lighting from a stale headlight. The ambient fill
-  // above counts as app-supplied lighting, so it too drops the headlight (SPEC
-  // §6.8 option b): once ambient is set the app HAS lit the scene, and layering
-  // an unrequested camera light contradicts the ambient-only intent.
+  // lights exist avoids double-lighting from a stale headlight. The ambient
+  // fill above counts as app-supplied lighting, so it too drops the headlight
+  // (SPEC §6.8 option b): once ambient is set the app HAS lit the scene, and
+  // layering an unrequested camera light contradicts the ambient-only intent.
   {
-    const bool hasLights =
-        (m_world && m_world->hasAnyLight()) || wantAmbient;
+    const bool hasLights = (m_world && m_world->hasAnyLight()) || wantAmbient;
     GlfSimpleLightingContextRefPtr lighting = GlfSimpleLightingContext::New();
     if (!hasLights) {
       GlfSimpleLight headlight;
@@ -513,9 +515,9 @@ void Frame::renderOnWorker()
 
     // Honor each arbitrary AOV's requested ANARI format on its bprim via
     // SetRenderOutputSettings (SPEC §8.1/§11.4) — must come after
-    // SetRenderOutputs, which creates the binding this overrides. Start from the
-    // delegate's default descriptor (clear value / multisampling) and pin only
-    // the format; an unmapped ANARI type keeps the delegate default.
+    // SetRenderOutputs, which creates the binding this overrides. Start from
+    // the delegate's default descriptor (clear value / multisampling) and pin
+    // only the format; an unmapped ANARI type keeps the delegate default.
     for (const auto &kv : m_arbitraryAovs) {
       const TfToken tok(kv.first);
       const HdFormat fmt = anariToHdFormat(kv.second);
@@ -555,15 +557,15 @@ void Frame::renderOnWorker()
   // Background clear color (SPEC §4.7): the renderer's core `background`
   // (FLOAT32_VEC4) becomes the color AOV's clear value — the color shown where
   // primary rays miss geometry (honored only where no dome paints the backdrop,
-  // per the domeLightCameraVisibility policy above). Applied each render (cheap,
-  // idempotent, like the per-frame SetRenderSetting loop) so it both tracks a
-  // changed `background` — which can change without the channel set changing, so
-  // it must NOT sit behind the SetRenderOutputs guard — and survives the
-  // SetRenderOutputs above, which recreates the color binding from the delegate's
-  // default descriptor and would otherwise wipe the clear value. Start from that
-  // default descriptor and override only clearValue (matching the arbitrary-AOV
-  // format path). GfVec4f clearValue matches usdImaging convention regardless of
-  // the delegate's color buffer format.
+  // per the domeLightCameraVisibility policy above). Applied each render
+  // (cheap, idempotent, like the per-frame SetRenderSetting loop) so it both
+  // tracks a changed `background` — which can change without the channel set
+  // changing, so it must NOT sit behind the SetRenderOutputs guard — and
+  // survives the SetRenderOutputs above, which recreates the color binding from
+  // the delegate's default descriptor and would otherwise wipe the clear value.
+  // Start from that default descriptor and override only clearValue (matching
+  // the arbitrary-AOV format path). GfVec4f clearValue matches usdImaging
+  // convention regardless of the delegate's color buffer format.
   //
   // A background IMAGE (KHR_RENDERER_BACKGROUND_IMAGE) instead clears the color
   // AOV to transparent black, so the rendered buffer holds only the scene (and
@@ -598,8 +600,7 @@ void Frame::renderOnWorker()
     const GfMatrix4d projection = m_camera->projectionMatrix(
         aspect, m_world ? m_world->bounds(true) : Bounds());
     m_inverseProjection = projection.GetInverse();
-    m_taskController->SetFreeCameraMatrices(
-        m_camera->viewMatrix(), projection);
+    m_taskController->SetFreeCameraMatrices(m_camera->viewMatrix(), projection);
   } else {
     GfMatrix4d view;
     view.SetLookAt(GfVec3d(0, 0, 5), GfVec3d(0, 0, 0), GfVec3d(0, 1, 0));
@@ -613,11 +614,12 @@ void Frame::renderOnWorker()
 
   // Diff-and-kick render (usdrecord pattern, SPEC §8.3). One Execute dispatches
   // the render; a one-Execute delegate (Storm) then reports converged
-  // immediately, while a progressive delegate (HdEmbree) renders on a background
-  // thread. The first Execute after (re)binding outputs restarts the pass and
-  // marks the AOV buffers unconverged, so poll convergence AFTER that dispatch —
-  // with a short sleep and a wall-clock budget, not a fixed spin count (a fixed
-  // count can exhaust before the async render finishes, reading back empty).
+  // immediately, while a progressive delegate (HdEmbree) renders on a
+  // background thread. The first Execute after (re)binding outputs restarts the
+  // pass and marks the AOV buffers unconverged, so poll convergence AFTER that
+  // dispatch — with a short sleep and a wall-clock budget, not a fixed spin
+  // count (a fixed count can exhaust before the async render finishes, reading
+  // back empty).
   const SdfPathVector taskPaths = m_taskController->GetRenderingTaskPaths();
   m_engine.Execute(m_renderIndex.get(), taskPaths);
   const auto deadline =
@@ -689,7 +691,7 @@ void Frame::teardownHydra()
   m_taskController = nullptr;
   m_insertedWorldScene = nullptr;
   m_insertedWorldSerial = 0;
-  m_ambientScene = nullptr;   // owned by the render index; drop our ref too
+  m_ambientScene = nullptr; // owned by the render index; drop our ref too
   m_renderIndex.reset();
   m_renderDelegate = HdPluginRenderDelegateUniqueHandle();
   m_hydraReady = false;
@@ -930,8 +932,8 @@ void Frame::readbackAov(const AovChannelDesc &desc, std::vector<uint8_t> &out)
       std::memcpy(&depth, out.data() + i * sizeof(float), sizeof(float));
       float distance = std::numeric_limits<float>::infinity();
       if (std::isfinite(depth) && depth >= 0.f && depth < 1.f) {
-        const GfVec3d ndc(2.0 * (i % m_configuredWidth + 0.5)
-                / m_configuredWidth - 1.0,
+        const GfVec3d ndc(
+            2.0 * (i % m_configuredWidth + 0.5) / m_configuredWidth - 1.0,
             2.0 * (i / m_configuredWidth + 0.5) / m_configuredHeight - 1.0,
             2.0 * depth - 1.0);
         const auto eyePoint = m_inverseProjection.Transform(ndc);

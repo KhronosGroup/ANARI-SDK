@@ -16,8 +16,13 @@
 
 static int g_errors = 0;
 
-static void statusFunc(const void *, ANARIDevice, ANARIObject, ANARIDataType,
-    ANARIStatusSeverity severity, ANARIStatusCode, const char *message)
+static void statusFunc(const void *,
+    ANARIDevice,
+    ANARIObject,
+    ANARIDataType,
+    ANARIStatusSeverity severity,
+    ANARIStatusCode,
+    const char *message)
 {
   const char *tag = severity == ANARI_SEVERITY_FATAL_ERROR ? "FATAL"
       : severity == ANARI_SEVERITY_ERROR                   ? "ERROR"
@@ -47,8 +52,11 @@ static void check(bool ok, const char *what)
 // endpoint's cap fan (its center vertex carries that endpoint's own color) is
 // the one facing the camera, since a filled-vs-open pixel count alone can't
 // tell two capped endpoints apart (either one blocks the same view ray).
-static int renderCoverage(ANARIDevice dev, ANARISurface surf,
-    int *midStrip = nullptr, int *leftHalf = nullptr, int *rightHalf = nullptr,
+static int renderCoverage(ANARIDevice dev,
+    ANARISurface surf,
+    int *midStrip = nullptr,
+    int *leftHalf = nullptr,
+    int *rightHalf = nullptr,
     uint8_t centerColor[3] = nullptr)
 {
   ANARIWorld world = anariNewWorld(dev);
@@ -86,8 +94,8 @@ static int renderCoverage(ANARIDevice dev, ANARISurface surf,
 
   uint32_t w = 0, h = 0;
   ANARIDataType pt = ANARI_UNKNOWN;
-  const uint32_t *pixels = (const uint32_t *)anariMapFrame(
-      dev, frame, "channel.color", &w, &h, &pt);
+  const uint32_t *pixels =
+      (const uint32_t *)anariMapFrame(dev, frame, "channel.color", &w, &h, &pt);
   int coverage = 0;
   if (midStrip)
     *midStrip = 0;
@@ -110,8 +118,7 @@ static int renderCoverage(ANARIDevice dev, ANARISurface surf,
       }
     }
     if (centerColor) {
-      const uint8_t *p =
-          (const uint8_t *)(pixels + (h / 2) * w + w / 2);
+      const uint8_t *p = (const uint8_t *)(pixels + (h / 2) * w + w / 2);
       centerColor[0] = p[0];
       centerColor[1] = p[1];
       centerColor[2] = p[2];
@@ -160,8 +167,8 @@ int main(int argc, char **argv)
 
   // --- quad -> mesh ----------------------------------------------------------
   {
-    float verts[12] = {-0.7f, -0.7f, 0.f, 0.7f, -0.7f, 0.f, 0.7f, 0.7f, 0.f,
-        -0.7f, 0.7f, 0.f};
+    float verts[12] = {
+        -0.7f, -0.7f, 0.f, 0.7f, -0.7f, 0.f, 0.7f, 0.7f, 0.f, -0.7f, 0.7f, 0.f};
     ANARIArray1D pos =
         anariNewArray1D(dev, verts, nullptr, nullptr, ANARI_FLOAT32_VEC3, 4);
     ANARIGeometry g = anariNewGeometry(dev, "quad");
@@ -176,7 +183,8 @@ int main(int argc, char **argv)
     anariRelease(dev, pos);
   }
 
-  // --- sphere -> tessellated mesh ------------------------------------------------------
+  // --- sphere -> tessellated mesh
+  // ------------------------------------------------------
   {
     float verts[3] = {0.f, 0.f, 0.f};
     float radius = 0.6f;
@@ -197,8 +205,8 @@ int main(int argc, char **argv)
 
   // --- curve -> basisCurves --------------------------------------------------
   {
-    float verts[12] = {-0.8f, -0.5f, 0.f, -0.2f, 0.5f, 0.f, 0.2f, -0.5f, 0.f,
-        0.8f, 0.5f, 0.f};
+    float verts[12] = {
+        -0.8f, -0.5f, 0.f, -0.2f, 0.5f, 0.f, 0.2f, -0.5f, 0.f, 0.8f, 0.5f, 0.f};
     float radii[4] = {0.1f, 0.1f, 0.1f, 0.1f};
     ANARIArray1D pos =
         anariNewArray1D(dev, verts, nullptr, nullptr, ANARI_FLOAT32_VEC3, 4);
@@ -218,14 +226,15 @@ int main(int argc, char **argv)
     anariRelease(dev, pos);
   }
 
-  // --- indexed multi-segment curve --------------------------------------------
-  // ANARI curve: primitive.index selects each segment's first vertex, so
-  // index [0,2] over 4 vertices means two disjoint segments (0,1) and (2,3) —
-  // two vertical tubes at x=±0.6 with nothing in between. A polyline that
-  // ignored the index would bridge (1,2) straight through the image center.
+  // --- indexed multi-segment curve
+  // -------------------------------------------- ANARI curve: primitive.index
+  // selects each segment's first vertex, so index [0,2] over 4 vertices means
+  // two disjoint segments (0,1) and (2,3) — two vertical tubes at x=±0.6 with
+  // nothing in between. A polyline that ignored the index would bridge (1,2)
+  // straight through the image center.
   {
-    float verts[12] = {-0.6f, -0.5f, 0.f, -0.6f, 0.5f, 0.f, 0.6f, -0.5f, 0.f,
-        0.6f, 0.5f, 0.f};
+    float verts[12] = {
+        -0.6f, -0.5f, 0.f, -0.6f, 0.5f, 0.f, 0.6f, -0.5f, 0.f, 0.6f, 0.5f, 0.f};
     uint32_t segStart[2] = {0, 2};
     float radius = 0.1f;
     ANARIArray1D pos =
@@ -290,10 +299,11 @@ int main(int argc, char **argv)
     anariRelease(dev, pos);
   }
 
-  // --- capped cylinder, end-on -------------------------------------------------
-  // Axis along the view direction: the open tube's silhouette is only the thin
-  // annulus between the near and far rims (~4k px here); the "both" caps fill
-  // the full near-rim disk (~16k px).
+  // --- capped cylinder, end-on
+  // ------------------------------------------------- Axis along the view
+  // direction: the open tube's silhouette is only the thin annulus between the
+  // near and far rims (~4k px here); the "both" caps fill the full near-rim
+  // disk (~16k px).
   {
     float verts[6] = {0.f, 0.f, -0.2f, 0.f, 0.f, 0.2f};
     float radius = 0.4f;
@@ -313,10 +323,11 @@ int main(int argc, char **argv)
     anariRelease(dev, pos);
   }
 
-  // --- capped truncated cone, end-on --------------------------------------------
-  // vertex.radius tapers 0.5 -> 0.4 (both > 0, so both ends earn a cap); the
-  // wide end faces the camera. Open: an annulus (~13k px, the hole shows
-  // through). Capped: the full wide disk (~25k px).
+  // --- capped truncated cone, end-on
+  // -------------------------------------------- vertex.radius tapers 0.5 ->
+  // 0.4 (both > 0, so both ends earn a cap); the wide end faces the camera.
+  // Open: an annulus (~13k px, the hole shows through). Capped: the full wide
+  // disk (~25k px).
   {
     float verts[6] = {0.f, 0.f, 0.2f, 0.f, 0.f, -0.2f};
     float radii[2] = {0.5f, 0.4f};
@@ -339,25 +350,25 @@ int main(int argc, char **argv)
     anariRelease(dev, pos);
   }
 
-  // --- indexed cylinder with per-primitive radii ------------------------------
-  // Two segments share one primitive.index array, one sitting in the left half
-  // of the frame and one in the right; primitive.radius (SPEC
-  // KHR_GEOMETRY_CYLINDER) gives them very different widths. Swapping which
-  // array slot holds the wide radius between the two passes swaps which half
-  // gets more coverage — a coverage-total-only check can't catch
-  // primitive.radius being misindexed (e.g. read per-vertex, or reversed), but
-  // this asymmetry can.
+  // --- indexed cylinder with per-primitive radii
+  // ------------------------------ Two segments share one primitive.index
+  // array, one sitting in the left half of the frame and one in the right;
+  // primitive.radius (SPEC KHR_GEOMETRY_CYLINDER) gives them very different
+  // widths. Swapping which array slot holds the wide radius between the two
+  // passes swaps which half gets more coverage — a coverage-total-only check
+  // can't catch primitive.radius being misindexed (e.g. read per-vertex, or
+  // reversed), but this asymmetry can.
   {
-    float verts[12] = {-0.6f, -0.4f, 0.f, -0.6f, 0.4f, 0.f, 0.6f, -0.4f, 0.f,
-        0.6f, 0.4f, 0.f};
+    float verts[12] = {
+        -0.6f, -0.4f, 0.f, -0.6f, 0.4f, 0.f, 0.6f, -0.4f, 0.f, 0.6f, 0.4f, 0.f};
     uint32_t segIdx[4] = {0, 1, 2, 3};
     for (int pass = 0; pass < 2; ++pass) {
       // pass 0: left segment wide, right narrow. pass 1: swapped.
       float radii[2] = {pass == 0 ? 0.35f : 0.08f, pass == 0 ? 0.08f : 0.35f};
       ANARIArray1D pos =
           anariNewArray1D(dev, verts, nullptr, nullptr, ANARI_FLOAT32_VEC3, 4);
-      ANARIArray1D idx = anariNewArray1D(
-          dev, segIdx, nullptr, nullptr, ANARI_UINT32_VEC2, 2);
+      ANARIArray1D idx =
+          anariNewArray1D(dev, segIdx, nullptr, nullptr, ANARI_UINT32_VEC2, 2);
       ANARIArray1D rad =
           anariNewArray1D(dev, radii, nullptr, nullptr, ANARI_FLOAT32, 2);
       ANARIGeometry g = anariNewGeometry(dev, "cylinder");
@@ -368,8 +379,8 @@ int main(int argc, char **argv)
       ANARISurface s = makeSurface(dev, g, color);
       int left = 0, right = 0;
       renderCoverage(dev, s, nullptr, &left, &right);
-      std::printf("indexed cylinder pass %d: left=%d right=%d\n", pass, left,
-          right);
+      std::printf(
+          "indexed cylinder pass %d: left=%d right=%d\n", pass, left, right);
       check((pass == 0 ? left > right : right > left),
           "primitive.radius lands on the correct segment via primitive.index (§4.1)");
       anariRelease(dev, s);
@@ -396,14 +407,15 @@ int main(int argc, char **argv)
     float colors[8];
     std::memcpy(colors, farRed, sizeof(farRed));
     std::memcpy(colors + 4, nearGreen, sizeof(nearGreen));
-    uint8_t capMasks[2][2] = {{1, 0}, {0, 1}}; // cap far(p0) only; cap near(p1) only
+    uint8_t capMasks[2][2] = {
+        {1, 0}, {0, 1}}; // cap far(p0) only; cap near(p1) only
     for (int i = 0; i < 2; ++i) {
       ANARIArray1D pos =
           anariNewArray1D(dev, verts, nullptr, nullptr, ANARI_FLOAT32_VEC3, 2);
-      ANARIArray1D vcolor = anariNewArray1D(
-          dev, colors, nullptr, nullptr, ANARI_FLOAT32_VEC4, 2);
-      ANARIArray1D vcap = anariNewArray1D(
-          dev, capMasks[i], nullptr, nullptr, ANARI_UINT8, 2);
+      ANARIArray1D vcolor =
+          anariNewArray1D(dev, colors, nullptr, nullptr, ANARI_FLOAT32_VEC4, 2);
+      ANARIArray1D vcap =
+          anariNewArray1D(dev, capMasks[i], nullptr, nullptr, ANARI_UINT8, 2);
       ANARIGeometry g = anariNewGeometry(dev, "cylinder");
       anariSetParameter(dev, g, "vertex.position", ANARI_ARRAY1D, &pos);
       anariSetParameter(dev, g, "vertex.color", ANARI_ARRAY1D, &vcolor);
@@ -420,13 +432,15 @@ int main(int argc, char **argv)
       uint8_t center[3] = {0, 0, 0};
       renderCoverage(dev, s, nullptr, nullptr, nullptr, center);
       std::printf("vertex.cap=%s center pixel: (%d,%d,%d)\n",
-          i == 0 ? "far(p0) only" : "near(p1) only", center[0], center[1],
+          i == 0 ? "far(p0) only" : "near(p1) only",
+          center[0],
+          center[1],
           center[2]);
       // Capping only the far endpoint (p0, red) must show red at center;
       // capping only the near endpoint (p1, green) must show green.
       const bool expectRed = i == 0;
       check(expectRed ? (center[0] > center[1] + 40)
-                       : (center[1] > center[0] + 40),
+                      : (center[1] > center[0] + 40),
           "vertex.cap indexes seg.first/seg.second correctly (§4.1)");
       anariRelease(dev, s);
       anariRelease(dev, mat);
@@ -452,10 +466,10 @@ int main(int argc, char **argv)
     anariCommitParameters(dev, g);
     ANARISurface s = makeSurface(dev, g, color);
     int covBefore = renderCoverage(dev, s);
-    std::printf(
-        "vertex.cap-zeroed cylinder (end-on, caps=both) coverage: %d\n",
+    std::printf("vertex.cap-zeroed cylinder (end-on, caps=both) coverage: %d\n",
         covBefore);
-    check(covBefore < 8000, "vertex.cap overrides 'caps=both' to leave ends open");
+    check(covBefore < 8000,
+        "vertex.cap overrides 'caps=both' to leave ends open");
 
     // In-place vertex.cap edit (SPEC §4.5): re-enabling both ends must
     // re-tessellate the caps back in, without touching 'caps' or re-committing
@@ -473,7 +487,8 @@ int main(int argc, char **argv)
     anariRelease(dev, pos);
   }
 
-  // --- cylinder primitive.radius edit re-tessellates (SPEC §4.5) --------------
+  // --- cylinder primitive.radius edit re-tessellates (SPEC §4.5)
+  // --------------
   {
     float verts[6] = {-0.5f, 0.f, 0.f, 0.5f, 0.f, 0.f};
     float radius = 0.1f;
@@ -491,8 +506,9 @@ int main(int argc, char **argv)
     mapped[0] = 0.45f;
     anariUnmapArray(dev, rad);
     const int covAfter = renderCoverage(dev, s);
-    std::printf(
-        "primitive.radius edit coverage: before=%d after=%d\n", covBefore, covAfter);
+    std::printf("primitive.radius edit coverage: before=%d after=%d\n",
+        covBefore,
+        covAfter);
     check(covAfter > covBefore + 2000,
         "in-place primitive.radius edit re-tessellates the cylinder");
     anariRelease(dev, s);
@@ -501,8 +517,8 @@ int main(int argc, char **argv)
     anariRelease(dev, pos);
   }
 
-  // --- cone vertex.cap forces a cap, but a zero-radius apex is never capped ---
-  // Base radius 0.5 faces the camera (z=0.2); apex radius 0.0 sits behind
+  // --- cone vertex.cap forces a cap, but a zero-radius apex is never capped
+  // --- Base radius 0.5 faces the camera (z=0.2); apex radius 0.0 sits behind
   // (z=-0.2). vertex.cap=[1,1] forces both ends, but the zero-radius apex has
   // no area to cap regardless: coverage should still match the base-cap-only
   // magnitude from the "capped truncated cone" test above.
@@ -537,6 +553,7 @@ int main(int argc, char **argv)
   anariUnloadLibrary(lib);
 
   std::printf("\n%s (%d issues)\n",
-      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED", g_errors);
+      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED",
+      g_errors);
   return g_errors == 0 ? 0 : 1;
 }

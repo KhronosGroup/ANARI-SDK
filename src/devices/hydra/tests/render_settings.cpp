@@ -16,12 +16,18 @@
 
 static int g_errors = 0;
 
-static void statusFunc(const void *, ANARIDevice, ANARIObject, ANARIDataType,
-    ANARIStatusSeverity severity, ANARIStatusCode, const char *message)
+static void statusFunc(const void *,
+    ANARIDevice,
+    ANARIObject,
+    ANARIDataType,
+    ANARIStatusSeverity severity,
+    ANARIStatusCode,
+    const char *message)
 {
   if (severity <= ANARI_SEVERITY_WARNING)
     std::printf("[%s] %s\n",
-        severity <= ANARI_SEVERITY_ERROR ? "ERR" : "WARN", message);
+        severity <= ANARI_SEVERITY_ERROR ? "ERR" : "WARN",
+        message);
   if (severity <= ANARI_SEVERITY_ERROR)
     ++g_errors;
 }
@@ -37,12 +43,15 @@ static void check(bool ok, const char *what)
 // `enableSceneColors` render setting to `sceneColors`, and if `pixelSamples` is
 // non-null set the renderer's `pixelSamples` to it. Returns the average lit
 // color over covered pixels and, optionally, the covered pixel count.
-static void renderRedQuad(ANARIDevice dev, bool setSceneColors,
-    bool sceneColors, double avg[3], const int32_t *pixelSamples = nullptr,
+static void renderRedQuad(ANARIDevice dev,
+    bool setSceneColors,
+    bool sceneColors,
+    double avg[3],
+    const int32_t *pixelSamples = nullptr,
     long *coverage = nullptr)
 {
-  float verts[12] = {-0.9f, -0.9f, 0.f, 0.9f, -0.9f, 0.f, 0.9f, 0.9f, 0.f,
-      -0.9f, 0.9f, 0.f};
+  float verts[12] = {
+      -0.9f, -0.9f, 0.f, 0.9f, -0.9f, 0.f, 0.9f, 0.9f, 0.f, -0.9f, 0.9f, 0.f};
   ANARIArray1D pos =
       anariNewArray1D(dev, verts, nullptr, nullptr, ANARI_FLOAT32_VEC3, 4);
   ANARIGeometry g = anariNewGeometry(dev, "quad");
@@ -100,8 +109,8 @@ static void renderRedQuad(ANARIDevice dev, bool setSceneColors,
 
   uint32_t w = 0, h = 0;
   ANARIDataType pt = ANARI_UNKNOWN;
-  const uint32_t *pixels = (const uint32_t *)anariMapFrame(
-      dev, frame, "channel.color", &w, &h, &pt);
+  const uint32_t *pixels =
+      (const uint32_t *)anariMapFrame(dev, frame, "channel.color", &w, &h, &pt);
   double sum[3] = {0, 0, 0};
   long n = 0;
   if (pixels) {
@@ -150,8 +159,10 @@ int main(int argc, char **argv)
   double on[3], off[3];
   renderRedQuad(dev, true, true, on);
   renderRedQuad(dev, true, false, off);
-  std::printf("enableSceneColors=1 avg rgb: %.0f %.0f %.0f\n", on[0], on[1], on[2]);
-  std::printf("enableSceneColors=0 avg rgb: %.0f %.0f %.0f\n", off[0], off[1], off[2]);
+  std::printf(
+      "enableSceneColors=1 avg rgb: %.0f %.0f %.0f\n", on[0], on[1], on[2]);
+  std::printf(
+      "enableSceneColors=0 avg rgb: %.0f %.0f %.0f\n", off[0], off[1], off[2]);
 
   check(on[0] > on[1] + 30 && on[0] > on[2] + 30,
       "enableSceneColors=1: red quad shades red");
@@ -169,7 +180,8 @@ int main(int argc, char **argv)
   renderRedQuad(dev, false, false, scratch, nullptr, &unsetCoverage);
   renderRedQuad(dev, false, false, scratch, &zeroSamples, &zeroCoverage);
   std::printf("coverage: pixelSamples unset %ld, pixelSamples=0 %ld\n",
-      unsetCoverage, zeroCoverage);
+      unsetCoverage,
+      zeroCoverage);
   check(unsetCoverage > 10000, "pixelSamples unset: the quad renders");
   check(zeroCoverage > 10000,
       "pixelSamples=0: the quad still renders (falls back to 1)");
@@ -177,6 +189,7 @@ int main(int argc, char **argv)
   anariRelease(dev, dev);
   anariUnloadLibrary(lib);
   std::printf("\n%s (%d issues)\n",
-      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED", g_errors);
+      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED",
+      g_errors);
   return g_errors == 0 ? 0 : 1;
 }

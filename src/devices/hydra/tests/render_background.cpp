@@ -2,27 +2,38 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 // Exercises the `default` renderer's core `background` (FLOAT32_VEC4) becoming
-// the color the color buffer clears to where primary rays miss geometry — a true
-// clear color (SPEC §4.7). It is honored whenever no dome paints the backdrop.
+// the color the color buffer clears to where primary rays miss geometry — a
+// true clear color (SPEC §4.7). It is honored whenever no dome paints the
+// backdrop.
 //
-// A dome light OWNS the backdrop under Storm: HdxSkydomeTask is the first render
-// task and paints the dome environment into primary rays, clobbering any clear
-// value. The bridge suppresses that skydome via the global Hydra render setting
-// HdRenderSettingsTokens->domeLightCameraVisibility, following this policy:
-//   - no hdri dome present -> false (so the synthetic ambient fill dome, which is
-//     never an hdri, is always camera-invisible and `background` owns the backdrop)
-//   - an hdri dome present -> follow the first hdri's `visible` (default true), so
-//     a default hdri stays the backdrop while `visible=false` reveals `background`.
+// A dome light OWNS the backdrop under Storm: HdxSkydomeTask is the first
+// render task and paints the dome environment into primary rays, clobbering any
+// clear value. The bridge suppresses that skydome via the global Hydra render
+// setting HdRenderSettingsTokens->domeLightCameraVisibility, following this
+// policy:
+//   - no hdri dome present -> false (so the synthetic ambient fill dome, which
+//   is
+//     never an hdri, is always camera-invisible and `background` owns the
+//     backdrop)
+//   - an hdri dome present -> follow the first hdri's `visible` (default true),
+//   so
+//     a default hdri stays the backdrop while `visible=false` reveals
+//     `background`.
 //
-// Four cases, all with sharp RELATIVE assertions (no brittle absolute thresholds):
+// Four cases, all with sharp RELATIVE assertions (no brittle absolute
+// thresholds):
 //   1. no dome:            blue background shows in the corners, quad present.
 //   2. ambient + blue bg:  corner STILL blue (ambient dome is camera-invisible)
 //                          while the quad is lit by the ambient fill. The crux.
-//   3. hdri `visible`:     a red hdri with visible(default/true) paints the corner
+//   3. hdri `visible`:     a red hdri with visible(default/true) paints the
+//   corner
 //                          red (env is the backdrop); visible=false reveals the
-//                          blue background while the quad stays lit by the hdri.
-//   4. bg change:          render blue then green with no channel-set change; the
-//                          backdrop follows (guards the SetRenderOutputs guard trap).
+//                          blue background while the quad stays lit by the
+//                          hdri.
+//   4. bg change:          render blue then green with no channel-set change;
+//   the
+//                          backdrop follows (guards the SetRenderOutputs guard
+//                          trap).
 
 #include <anari/anari.h>
 
@@ -32,12 +43,18 @@
 
 static int g_errors = 0;
 
-static void statusFunc(const void *, ANARIDevice, ANARIObject, ANARIDataType,
-    ANARIStatusSeverity severity, ANARIStatusCode, const char *message)
+static void statusFunc(const void *,
+    ANARIDevice,
+    ANARIObject,
+    ANARIDataType,
+    ANARIStatusSeverity severity,
+    ANARIStatusCode,
+    const char *message)
 {
   if (severity <= ANARI_SEVERITY_WARNING)
     std::printf("[%s] %s\n",
-        severity <= ANARI_SEVERITY_ERROR ? "ERR" : "WARN", message);
+        severity <= ANARI_SEVERITY_ERROR ? "ERR" : "WARN",
+        message);
   if (severity <= ANARI_SEVERITY_ERROR)
     ++g_errors;
 }
@@ -51,8 +68,13 @@ static void check(bool ok, const char *what)
 
 // Average the RGB (0..255) over a `size`x`size` pixel box anchored at (x0,y0),
 // clamped to the image. Shared by the corner and center measurements.
-static void avgBox(const uint8_t *pixels, uint32_t w, uint32_t h, uint32_t x0,
-    uint32_t y0, uint32_t size, double out[3])
+static void avgBox(const uint8_t *pixels,
+    uint32_t w,
+    uint32_t h,
+    uint32_t x0,
+    uint32_t y0,
+    uint32_t size,
+    double out[3])
 {
   out[0] = out[1] = out[2] = 0.0;
   double s[3] = {0, 0, 0};
@@ -76,24 +98,29 @@ static void avgBox(const uint8_t *pixels, uint32_t w, uint32_t h, uint32_t x0,
 // hdri modes for the scene builder.
 enum HdriMode
 {
-  HDRI_NONE = 0,       // no hdri light
-  HDRI_VISIBLE = 1,    // red hdri, `visible` left default (true)
-  HDRI_INVISIBLE = 2,  // red hdri, `visible` = false
+  HDRI_NONE = 0, // no hdri light
+  HDRI_VISIBLE = 1, // red hdri, `visible` left default (true)
+  HDRI_INVISIBLE = 2, // red hdri, `visible` = false
 };
 
 // Render a small centered white matte quad against `bg` clear color, optionally
 // with an ambient fill and/or a red hdri dome. Returns the average corner color
 // (top-left box, always background) and the average center color (the quad).
-static void renderScene(ANARIDevice dev, const float bg[4],
-    float ambientRadiance, HdriMode hdri, double corner[3], double center[3])
+static void renderScene(ANARIDevice dev,
+    const float bg[4],
+    float ambientRadiance,
+    HdriMode hdri,
+    double corner[3],
+    double center[3])
 {
   corner[0] = corner[1] = corner[2] = 0.0;
   center[0] = center[1] = center[2] = 0.0;
 
-  // A small white matte quad at z=0, centered and facing +Z (toward the camera).
-  // Small enough (±0.4) that the image corners are background, not quad.
-  float verts[12] = {-0.4f, -0.4f, 0.f, 0.4f, -0.4f, 0.f, 0.4f, 0.4f, 0.f,
-      -0.4f, 0.4f, 0.f};
+  // A small white matte quad at z=0, centered and facing +Z (toward the
+  // camera). Small enough (±0.4) that the image corners are background, not
+  // quad.
+  float verts[12] = {
+      -0.4f, -0.4f, 0.f, 0.4f, -0.4f, 0.f, 0.4f, 0.4f, 0.f, -0.4f, 0.4f, 0.f};
   ANARIArray1D pos =
       anariNewArray1D(dev, verts, nullptr, nullptr, ANARI_FLOAT32_VEC3, 4);
   ANARIGeometry g = anariNewGeometry(dev, "quad");
@@ -138,12 +165,11 @@ static void renderScene(ANARIDevice dev, const float bg[4],
     float scale = 1.f;
     anariSetParameter(dev, light, "scale", ANARI_FLOAT32, &scale);
     if (hdri == HDRI_INVISIBLE) {
-      uint32_t vis = 0;  // ANARI_BOOL is a 32-bit int
+      uint32_t vis = 0; // ANARI_BOOL is a 32-bit int
       anariSetParameter(dev, light, "visible", ANARI_BOOL, &vis);
     }
     anariCommitParameters(dev, light);
-    lightArray =
-        anariNewArray1D(dev, &light, nullptr, nullptr, ANARI_LIGHT, 1);
+    lightArray = anariNewArray1D(dev, &light, nullptr, nullptr, ANARI_LIGHT, 1);
     anariSetParameter(dev, world, "light", ANARI_ARRAY1D, &lightArray);
   }
   anariCommitParameters(dev, world);
@@ -210,11 +236,14 @@ static void renderScene(ANARIDevice dev, const float bg[4],
 // Case 4: render two backgrounds through ONE frame so the channel set never
 // changes between them (the SetRenderOutputs guard would hide a clear value
 // wired behind it). Returns the two corner colors.
-static void renderTwoBackgrounds(ANARIDevice dev, const float bg0[4],
-    const float bg1[4], double corner0[3], double corner1[3])
+static void renderTwoBackgrounds(ANARIDevice dev,
+    const float bg0[4],
+    const float bg1[4],
+    double corner0[3],
+    double corner1[3])
 {
-  float verts[12] = {-0.4f, -0.4f, 0.f, 0.4f, -0.4f, 0.f, 0.4f, 0.4f, 0.f,
-      -0.4f, 0.4f, 0.f};
+  float verts[12] = {
+      -0.4f, -0.4f, 0.f, 0.4f, -0.4f, 0.f, 0.4f, 0.4f, 0.f, -0.4f, 0.4f, 0.f};
   ANARIArray1D pos =
       anariNewArray1D(dev, verts, nullptr, nullptr, ANARI_FLOAT32_VEC3, 4);
   ANARIGeometry g = anariNewGeometry(dev, "quad");
@@ -310,7 +339,11 @@ int main(int argc, char **argv)
   double c1corner[3], c1center[3];
   renderScene(dev, blue, 0.f, HDRI_NONE, c1corner, c1center);
   std::printf("case1 no-dome:   corner=%.0f %.0f %.0f  center=%.0f %.0f %.0f\n",
-      c1corner[0], c1corner[1], c1corner[2], c1center[0], c1center[1],
+      c1corner[0],
+      c1corner[1],
+      c1corner[2],
+      c1center[0],
+      c1center[1],
       c1center[2]);
   check(c1corner[2] > c1corner[0] && c1corner[2] > c1corner[1]
           && c1corner[2] > 60.0,
@@ -318,12 +351,17 @@ int main(int argc, char **argv)
   check(c1center[0] + c1center[1] + c1center[2] > 30.0,
       "case1: the centered quad is present (lit by the fallback headlight)");
 
-  // Case 2 (the crux) — ambient dome + blue background: the ambient fill dome is
-  // camera-invisible per policy, so the corner stays blue while the quad lifts.
+  // Case 2 (the crux) — ambient dome + blue background: the ambient fill dome
+  // is camera-invisible per policy, so the corner stays blue while the quad
+  // lifts.
   double c2corner[3], c2center[3];
   renderScene(dev, blue, 2.f, HDRI_NONE, c2corner, c2center);
   std::printf("case2 ambient:   corner=%.0f %.0f %.0f  center=%.0f %.0f %.0f\n",
-      c2corner[0], c2corner[1], c2corner[2], c2center[0], c2center[1],
+      c2corner[0],
+      c2corner[1],
+      c2corner[2],
+      c2center[0],
+      c2center[1],
       c2center[2]);
   check(c2corner[2] > c2corner[0] && c2corner[2] > c2corner[1]
           && c2corner[2] > 60.0,
@@ -339,10 +377,18 @@ int main(int argc, char **argv)
   renderScene(dev, blue, 0.f, HDRI_INVISIBLE, c3iCorner, c3iCenter);
   std::printf(
       "case3 hdri vis:  corner=%.0f %.0f %.0f  invis: corner=%.0f %.0f %.0f\n",
-      c3vCorner[0], c3vCorner[1], c3vCorner[2], c3iCorner[0], c3iCorner[1],
+      c3vCorner[0],
+      c3vCorner[1],
+      c3vCorner[2],
+      c3iCorner[0],
+      c3iCorner[1],
       c3iCorner[2]);
   std::printf("case3 hdri centers: vis=%.0f %.0f %.0f  invis=%.0f %.0f %.0f\n",
-      c3vCenter[0], c3vCenter[1], c3vCenter[2], c3iCenter[0], c3iCenter[1],
+      c3vCenter[0],
+      c3vCenter[1],
+      c3vCenter[2],
+      c3iCenter[0],
+      c3iCenter[1],
       c3iCenter[2]);
   check(c3vCorner[0] > c3vCorner[2] && c3vCorner[0] > 60.0,
       "case3: a default (visible) hdri paints the corner red (env is backdrop)");
@@ -355,7 +401,11 @@ int main(int argc, char **argv)
   double c4corner0[3], c4corner1[3];
   renderTwoBackgrounds(dev, blue, green, c4corner0, c4corner1);
   std::printf("case4 bg-change: blue=%.0f %.0f %.0f  green=%.0f %.0f %.0f\n",
-      c4corner0[0], c4corner0[1], c4corner0[2], c4corner1[0], c4corner1[1],
+      c4corner0[0],
+      c4corner0[1],
+      c4corner0[2],
+      c4corner1[0],
+      c4corner1[1],
       c4corner1[2]);
   check(c4corner0[2] > c4corner0[0] && c4corner0[2] > c4corner0[1],
       "case4: first render's corner is blue");
@@ -365,6 +415,7 @@ int main(int argc, char **argv)
   anariRelease(dev, dev);
   anariUnloadLibrary(lib);
   std::printf("\n%s (%d issues)\n",
-      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED", g_errors);
+      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED",
+      g_errors);
   return g_errors == 0 ? 0 : 1;
 }

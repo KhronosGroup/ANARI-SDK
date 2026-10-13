@@ -71,7 +71,8 @@ void Light::finalize()
   deviceState()->mirrorDirty.mark(this);
 }
 
-// Subtypes /////////////////////////////////////////////////////////////////////
+// Subtypes
+// /////////////////////////////////////////////////////////////////////
 
 namespace {
 
@@ -87,7 +88,8 @@ struct Directional : public Light
   {
     Light::commitParameters();
     m_direction = getParam<float3>("direction", float3(0.f, 0.f, -1.f));
-    m_irradiance = getParam<float>("irradiance", getParam<float>("radiance", 1.f));
+    m_irradiance =
+        getParam<float>("irradiance", getParam<float>("radiance", 1.f));
   }
 
   LightData buildLightData() const override
@@ -126,8 +128,8 @@ struct Point : public Light
     d.xform = GfMatrix4d(1).SetTranslate(
         GfVec3d(m_position[0], m_position[1], m_position[2]));
     // treatAsPoint when there is no radius (SPEC §6.6).
-    d.params = {{HdLightTokens->intensity,
-                    VtValue(m_intensity * kPointIntensityScale)},
+    d.params = {
+        {HdLightTokens->intensity, VtValue(m_intensity * kPointIntensityScale)},
         {HdLightTokens->color, VtValue(ToVec3f(m_color))},
         {HdLightTokens->radius, VtValue(m_radius)},
         {TfToken("treatAsPoint"), VtValue(m_radius == 0.f)}};
@@ -166,8 +168,8 @@ struct Spot : public Light
     const float softness =
         m_openingAngle > 0.f ? m_falloffAngle / m_openingAngle : 0.f;
     // spot = sphere light, treatAsPoint, with a shaping cone (SPEC §6.6).
-    d.params = {{HdLightTokens->intensity,
-                    VtValue(m_intensity * kPointIntensityScale)},
+    d.params = {
+        {HdLightTokens->intensity, VtValue(m_intensity * kPointIntensityScale)},
         {HdLightTokens->color, VtValue(ToVec3f(m_color))},
         {HdLightTokens->radius, VtValue(0.f)},
         {TfToken("treatAsPoint"), VtValue(true)},
@@ -199,7 +201,8 @@ struct Quad : public Light
       m_intensity = getParam<float>("power", 1.f);
       m_normalize = true;
     } else {
-      m_intensity = getParam<float>("radiance", getParam<float>("intensity", 1.f));
+      m_intensity =
+          getParam<float>("radiance", getParam<float>("intensity", 1.f));
       m_normalize = false;
     }
   }
@@ -257,7 +260,8 @@ struct Ring : public Light
       m_intensity = getParam<float>("power", 1.f);
       m_normalize = true;
     } else {
-      m_intensity = getParam<float>("radiance", getParam<float>("intensity", 1.f));
+      m_intensity =
+          getParam<float>("radiance", getParam<float>("intensity", 1.f));
       m_normalize = false;
     }
     if (m_innerRadius > 0.f) {
@@ -305,7 +309,10 @@ struct HDRI : public Light
   uint64_t m_revision{0};
   bool m_haveImage{false};
 
-  bool isHdri() const override { return true; }
+  bool isHdri() const override
+  {
+    return true;
+  }
 
   void commitParameters() override
   {
@@ -347,11 +354,12 @@ struct HDRI : public Light
         {HdLightTokens->intensity, VtValue(m_haveImage ? 1.f : m_scale)},
         {HdLightTokens->color,
             VtValue(m_haveImage ? GfVec3f(1.f, 1.f, 1.f) : ToVec3f(m_color))}};
-    // With an environment image, author textureFile so the dome samples the real
-    // texture instead of the constant color (SPEC §6.3/§6.6). Storm's dome-light
-    // path reads SdfAssetPath::GetResolvedPath() directly (no Ar round-trip), so
-    // set the resolved field too — the `anari://…​.anari` string dispatches Hio
-    // to AnariHioImage by extension, needing no on-disk resolution.
+    // With an environment image, author textureFile so the dome samples the
+    // real texture instead of the constant color (SPEC §6.3/§6.6). Storm's
+    // dome-light path reads SdfAssetPath::GetResolvedPath() directly (no Ar
+    // round-trip), so set the resolved field too — the `anari://…​.anari`
+    // string dispatches Hio to AnariHioImage by extension, needing no on-disk
+    // resolution.
     if (m_haveImage)
       d.params.emplace_back(HdLightTokens->textureFile,
           VtValue(SdfAssetPath(m_assetPath, m_assetPath)));

@@ -32,11 +32,11 @@ struct Frame;
 // device lifetime so reflected const char* / value pointers stay valid.
 struct RenderSettingDesc
 {
-  std::string token;              // verbatim Hydra render-setting token
-  std::string humanName;          // HdRenderSettingDescriptor::name
+  std::string token; // verbatim Hydra render-setting token
+  std::string humanName; // HdRenderSettingDescriptor::name
   ANARIDataType type{ANARI_UNKNOWN};
-  std::vector<uint8_t> defaultBytes;   // ANARI-typed default value bytes
-  std::string defaultString;      // default text when type == ANARI_STRING
+  std::vector<uint8_t> defaultBytes; // ANARI-typed default value bytes
+  std::string defaultString; // default text when type == ANARI_STRING
 };
 
 // The mirror-dirty set (SPEC §5.2): the sole interface between device-side
@@ -85,10 +85,11 @@ struct HydraGlobalState : public helium::BaseGlobalDeviceState
   // registered scene-index filter chain (SPEC §6.1 material processing).
   std::string sceneIndexPluginName;
 
-  // Per-delegate capability truth (SPEC §4.8). The bound delegate publishes what
-  // it can render via GetSupported{R,S,B}primTypes; the device probes these once
-  // on the worker thread (which owns the Hgi) and gates its reported ANARI
-  // extension / object-subtype lists on them (no volumes on HdEmbree, etc.).
+  // Per-delegate capability truth (SPEC §4.8). The bound delegate publishes
+  // what it can render via GetSupported{R,S,B}primTypes; the device probes
+  // these once on the worker thread (which owns the Hgi) and gates its reported
+  // ANARI extension / object-subtype lists on them (no volumes on HdEmbree,
+  // etc.).
   pxr::TfTokenVector supportedRprims;
   pxr::TfTokenVector supportedSprims;
   pxr::TfTokenVector supportedBprims;
@@ -103,17 +104,19 @@ struct HydraGlobalState : public helium::BaseGlobalDeviceState
 
   // Cached C-API views built lazily from the capability sets. The std::string
   // storage keeps the const char* pointers alive for the device's lifetime; the
-  // subtype views point at static string literals (always valid). NUL-terminated.
+  // subtype views point at static string literals (always valid).
+  // NUL-terminated.
   std::vector<std::string> extensionStrings;
   std::vector<const char *> extensionView;
   std::vector<const char *> geometrySubtypeView;
   std::vector<const char *> samplerSubtypeView;
   std::vector<const char *> lightSubtypeView;
   // Cached NUL-terminated (name==nullptr) reflected renderer parameter list
-  // returned by getObjectInfo(ANARI_RENDERER,...,"parameter",ANARI_PARAMETER_LIST)
-  // (SPEC §11.3). Names point at stable string storage (the generated
-  // introspection table for the bridge's own parameters;
-  // renderSettingDescs[i].token for verbatim delegate settings).
+  // returned by
+  // getObjectInfo(ANARI_RENDERER,...,"parameter",ANARI_PARAMETER_LIST) (SPEC
+  // §11.3). Names point at stable string storage (the generated introspection
+  // table for the bridge's own parameters; renderSettingDescs[i].token for
+  // verbatim delegate settings).
   std::vector<ANARIParameter> rendererParamView;
   // Per-delegate extension-gated views over the generated introspection
   // tables (Introspection.h, SPEC §4.8): parameter lists keyed (type,
@@ -129,7 +132,7 @@ struct HydraGlobalState : public helium::BaseGlobalDeviceState
 
   // Device-assigned monotonic serials for the prim-path taxonomy (SPEC §4.2).
   uint64_t nextWorldSerial{1};
-  uint64_t nextSerial{1};   // shared across surfaces/materials/lights/...
+  uint64_t nextSerial{1}; // shared across surfaces/materials/lights/...
 
   MirrorDirtySet mirrorDirty;
   // Worker-owned epoch: draining marks in one frame must not hide updates
@@ -138,9 +141,9 @@ struct HydraGlobalState : public helium::BaseGlobalDeviceState
 
   anari::Device anariDevice{nullptr};
 
-  // Frame completion callbacks (SPEC §8.7). `releasing` is set once anariRelease(device) begins: renders requested
-  // from then on (e.g. a callback's re-render chain) are dropped so the
-  // release drain terminates.
+  // Frame completion callbacks (SPEC §8.7). `releasing` is set once
+  // anariRelease(device) begins: renders requested from then on (e.g. a
+  // callback's re-render chain) are dropped so the release drain terminates.
   std::atomic<bool> releasing{false};
 };
 

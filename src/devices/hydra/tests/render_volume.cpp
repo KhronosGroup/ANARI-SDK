@@ -26,12 +26,18 @@
 
 static int g_errors = 0;
 
-static void statusFunc(const void *, ANARIDevice, ANARIObject, ANARIDataType,
-    ANARIStatusSeverity severity, ANARIStatusCode, const char *message)
+static void statusFunc(const void *,
+    ANARIDevice,
+    ANARIObject,
+    ANARIDataType,
+    ANARIStatusSeverity severity,
+    ANARIStatusCode,
+    const char *message)
 {
   if (severity <= ANARI_SEVERITY_WARNING)
     std::printf("[%s] %s\n",
-        severity <= ANARI_SEVERITY_ERROR ? "ERR" : "WARN", message);
+        severity <= ANARI_SEVERITY_ERROR ? "ERR" : "WARN",
+        message);
   if (severity <= ANARI_SEVERITY_ERROR)
     ++g_errors;
 }
@@ -53,7 +59,10 @@ static constexpr uint32_t W = 64, H = 64;
 struct Image
 {
   std::vector<float> rgba;
-  const float *at(int x, int y) const { return &rgba[(size_t(y) * W + x) * 4]; }
+  const float *at(int x, int y) const
+  {
+    return &rgba[(size_t(y) * W + x) * 4];
+  }
   // Pixel whose centre sits at world (wx, wy) under the ortho camera below.
   const float *world(float wx, float wy) const
   {
@@ -113,8 +122,8 @@ struct Scene
     if (volumes.empty()) {
       anariUnsetParameter(d, world, "volume");
     } else {
-      ANARIArray1D a = anariNewArray1D(d, volumes.data(), nullptr, nullptr,
-          ANARI_VOLUME, volumes.size());
+      ANARIArray1D a = anariNewArray1D(
+          d, volumes.data(), nullptr, nullptr, ANARI_VOLUME, volumes.size());
       anariSetParameter(d, world, "volume", ANARI_ARRAY1D, &a);
       anariRelease(d, a);
     }
@@ -126,8 +135,12 @@ struct Scene
     if (instances.empty()) {
       anariUnsetParameter(d, world, "instance");
     } else {
-      ANARIArray1D a = anariNewArray1D(d, instances.data(), nullptr, nullptr,
-          ANARI_INSTANCE, instances.size());
+      ANARIArray1D a = anariNewArray1D(d,
+          instances.data(),
+          nullptr,
+          nullptr,
+          ANARI_INSTANCE,
+          instances.size());
       anariSetParameter(d, world, "instance", ANARI_ARRAY1D, &a);
       anariRelease(d, a);
     }
@@ -154,8 +167,12 @@ struct Scene
   std::vector<float> bounds(ANARIObject o)
   {
     std::vector<float> b(6, 0.f);
-    anariGetProperty(
-        d, o, "bounds", ANARI_FLOAT32_BOX3, b.data(), 6 * sizeof(float),
+    anariGetProperty(d,
+        o,
+        "bounds",
+        ANARI_FLOAT32_BOX3,
+        b.data(),
+        6 * sizeof(float),
         ANARI_WAIT);
     return b;
   }
@@ -171,20 +188,24 @@ struct Field
   int n{0};
 };
 
-static Field makeField(ANARIDevice d, int n, const float origin[3],
-    float size, const std::function<float(float, float, float)> &f)
+static Field makeField(ANARIDevice d,
+    int n,
+    const float origin[3],
+    float size,
+    const std::function<float(float, float, float)> &f)
 {
   Field out;
   out.n = n;
-  out.data = anariNewArray3D(
-      d, nullptr, nullptr, nullptr, ANARI_FLOAT32, n, n, n);
+  out.data =
+      anariNewArray3D(d, nullptr, nullptr, nullptr, ANARI_FLOAT32, n, n, n);
   const float spacing = size / float(n - 1);
   float *v = static_cast<float *>(anariMapArray(d, out.data));
   for (int k = 0; k < n; ++k)
     for (int j = 0; j < n; ++j)
       for (int i = 0; i < n; ++i)
         v[(size_t(k) * n + j) * n + i] = f(origin[0] + i * spacing,
-            origin[1] + j * spacing, origin[2] + k * spacing);
+            origin[1] + j * spacing,
+            origin[2] + k * spacing);
   anariUnmapArray(d, out.data);
   out.field = anariNewSpatialField(d, "structuredRegular");
   anariSetParameter(d, out.field, "data", ANARI_ARRAY3D, &out.data);
@@ -202,8 +223,11 @@ static void release(ANARIDevice d, Field &f)
 }
 
 // A transferFunction1D volume on `field` with a constant color and opacity.
-static ANARIVolume makeVolume(ANARIDevice d, ANARISpatialField field,
-    const float color[3], float opacity, float unitDistance = 1.f)
+static ANARIVolume makeVolume(ANARIDevice d,
+    ANARISpatialField field,
+    const float color[3],
+    float opacity,
+    float unitDistance = 1.f)
 {
   ANARIVolume v = anariNewVolume(d, "transferFunction1D");
   anariSetParameter(d, v, "value", ANARI_SPATIAL_FIELD, &field);
@@ -233,8 +257,8 @@ static bool rgbNear(const float *p, float r, float g, float b, float tol = kTol)
 static std::string rgbStr(const float *p)
 {
   char buf[96];
-  std::snprintf(buf, sizeof(buf), "(%.3f, %.3f, %.3f, %.3f)", p[0], p[1], p[2],
-      p[3]);
+  std::snprintf(
+      buf, sizeof(buf), "(%.3f, %.3f, %.3f, %.3f)", p[0], p[1], p[2], p[3]);
   return buf;
 }
 
@@ -251,10 +275,11 @@ int main(int argc, char **argv)
   // --- capability truth (SPEC §4.8) ---
   bool hasField = false, hasTf = false, hasNano = false;
   const char **ext = nullptr;
-  anariGetProperty(d, d, "extension", ANARI_STRING_LIST, &ext, sizeof(ext),
-      ANARI_WAIT);
+  anariGetProperty(
+      d, d, "extension", ANARI_STRING_LIST, &ext, sizeof(ext), ANARI_WAIT);
   for (; ext && *ext; ++ext) {
-    hasField |= !std::strcmp(*ext, "ANARI_KHR_SPATIAL_FIELD_STRUCTURED_REGULAR");
+    hasField |=
+        !std::strcmp(*ext, "ANARI_KHR_SPATIAL_FIELD_STRUCTURED_REGULAR");
     hasNano |= !std::strcmp(*ext, "ANARI_KHR_SPATIAL_FIELD_NANOVDB");
     hasTf |= !std::strcmp(*ext, "ANARI_KHR_VOLUME_TRANSFER_FUNCTION1D");
   }
@@ -281,13 +306,14 @@ int main(int argc, char **argv)
     const float origin[3] = {-1.f, -1.f, -1.f};
 
     // --- constant classification vs the closed form ---
-    Field constant = makeField(d, 17, origin, 2.f,
-        [](float, float, float) { return 0.5f; });
+    Field constant =
+        makeField(d, 17, origin, 2.f, [](float, float, float) { return 0.5f; });
     ANARIVolume vol = makeVolume(d, constant.field, red, 0.5f);
     scene.setVolumes({vol});
     Image img = scene.render();
     const float *c = img.world(0.f, 0.f);
-    std::printf("    centre %s, corner %s\n", rgbStr(c).c_str(),
+    std::printf("    centre %s, corner %s\n",
+        rgbStr(c).c_str(),
         rgbStr(img.world(1.8f, 1.8f)).c_str());
     check(rgbNear(c, expected(1.f, 0.5f, 2.f), 0.f, 0.f),
         "constant field: red * (1 - 0.5^2) through 2 units");
@@ -302,8 +328,8 @@ int main(int argc, char **argv)
     // front of a surface inside the volume go unintegrated.
     const float surfaceTol = 0.03f;
     for (float z : {0.f, -1.5f}) {
-      float verts[12] = {-0.5f, -0.5f, z, 0.5f, -0.5f, z, 0.5f, 0.5f, z,
-          -0.5f, 0.5f, z};
+      float verts[12] = {
+          -0.5f, -0.5f, z, 0.5f, -0.5f, z, 0.5f, 0.5f, z, -0.5f, 0.5f, z};
       ANARIArray1D pos =
           anariNewArray1D(d, verts, nullptr, nullptr, ANARI_FLOAT32_VEC3, 4);
       ANARIGeometry quad = anariNewGeometry(d, "quad");
@@ -328,14 +354,20 @@ int main(int argc, char **argv)
       const float front = z == 0.f ? 0.5f : 0.75f;
       const float *got = img.world(0.f, 0.f);
       check(q[2] > 0.5f
-              && rgbNear(got, front + (1.f - front) * q[0],
-                  (1.f - front) * q[1], (1.f - front) * q[2], surfaceTol),
+              && rgbNear(got,
+                  front + (1.f - front) * q[0],
+                  (1.f - front) * q[1],
+                  (1.f - front) * q[2],
+                  surfaceTol),
           std::string(z == 0.f ? "quad inside" : "quad behind")
               + " the volume composites at its depth: " + rgbStr(got));
       anariUnsetParameter(d, scene.world, "surface");
       anariCommitParameters(d, scene.world);
-      for (ANARIObject o : {ANARIObject(surfs), ANARIObject(surf),
-               ANARIObject(mat), ANARIObject(quad), ANARIObject(pos)})
+      for (ANARIObject o : {ANARIObject(surfs),
+               ANARIObject(surf),
+               ANARIObject(mat),
+               ANARIObject(quad),
+               ANARIObject(pos)})
         anariRelease(d, o);
     }
 
@@ -345,7 +377,8 @@ int main(int argc, char **argv)
     anariCommitParameters(d, vol);
     img = scene.render();
     check(rgbNear(img.world(0.f, 0.f), expected(1.f, 0.5f, 2.f, 2.f), 0.f, 0.f),
-        "unitDistance 2 halves the optical depth: " + rgbStr(img.world(0.f, 0.f)));
+        "unitDistance 2 halves the optical depth: "
+            + rgbStr(img.world(0.f, 0.f)));
     unit = 1.f;
     float opacity = 0.2f;
     anariSetParameter(d, vol, "unitDistance", ANARI_FLOAT32, &unit);
@@ -363,7 +396,7 @@ int main(int argc, char **argv)
     anariSetParameter(d, vol, "color", ANARI_ARRAY1D, &colors);
     opacity = 0.5f;
     anariSetParameter(d, vol, "opacity", ANARI_FLOAT32, &opacity);
-    float range[2] = {0.f, 2.f};   // t = 0.25
+    float range[2] = {0.f, 2.f}; // t = 0.25
     anariSetParameter(d, vol, "valueRange", ANARI_FLOAT32_BOX1, range);
     anariCommitParameters(d, vol);
     const float k = expected(1.f, 0.5f, 2.f);
@@ -372,14 +405,14 @@ int main(int argc, char **argv)
         "valueRange [0,2] reads the ramp at t=0.25: "
             + rgbStr(img.world(0.f, 0.f)));
     range[0] = 0.25f;
-    range[1] = 0.75f;   // t = 0.5
+    range[1] = 0.75f; // t = 0.5
     anariSetParameter(d, vol, "valueRange", ANARI_FLOAT32_BOX1, range);
     anariCommitParameters(d, vol);
     img = scene.render();
     check(rgbNear(img.world(0.f, 0.f), 0.5f * k, 0.f, 0.5f * k),
         "valueRange [0.25,0.75] reads t=0.5: " + rgbStr(img.world(0.f, 0.f)));
     range[0] = 1.f;
-    range[1] = 3.f;   // below the range: clamps to t = 0
+    range[1] = 3.f; // below the range: clamps to t = 0
     anariSetParameter(d, vol, "valueRange", ANARI_FLOAT32_BOX1, range);
     anariCommitParameters(d, vol);
     img = scene.render();
@@ -404,8 +437,13 @@ int main(int argc, char **argv)
     // size) must stay flat however many edits are made.
     {
       uint64_t before = 0, after = 0;
-      const bool hasCount = anariGetProperty(d, d, "hydra.shaderNodeCount",
-          ANARI_UINT64, &before, sizeof(before), ANARI_WAIT);
+      const bool hasCount = anariGetProperty(d,
+          d,
+          "hydra.shaderNodeCount",
+          ANARI_UINT64,
+          &before,
+          sizeof(before),
+          ANARI_WAIT);
       check(hasCount && before > 0,
           "hydra.shaderNodeCount is reported: " + std::to_string(before));
       constexpr int kEdits = 16;
@@ -425,8 +463,13 @@ int main(int argc, char **argv)
         anariCommitParameters(d, vol);
         img = scene.render();
       }
-      anariGetProperty(d, d, "hydra.shaderNodeCount", ANARI_UINT64, &after,
-          sizeof(after), ANARI_WAIT);
+      anariGetProperty(d,
+          d,
+          "hydra.shaderNodeCount",
+          ANARI_UINT64,
+          &after,
+          sizeof(after),
+          ANARI_WAIT);
       check(after <= before + 1,
           std::to_string(kEdits) + " classification edits add at most one "
               "shader node: " + std::to_string(before) + " -> "
@@ -455,7 +498,7 @@ int main(int argc, char **argv)
     anariSetParameter(d, vol, "color", ANARI_ARRAY1D, &colors4);
     anariSetParameter(d, vol, "opacity", ANARI_ARRAY1D, &opacities);
     range[0] = 0.f;
-    range[1] = 1.f;   // t = 0.5 -> opacity 0.8, alpha 0.5 * 0.8
+    range[1] = 1.f; // t = 0.5 -> opacity 0.8, alpha 0.5 * 0.8
     anariSetParameter(d, vol, "valueRange", ANARI_FLOAT32_BOX1, range);
     anariCommitParameters(d, vol);
     img = scene.render();
@@ -469,8 +512,9 @@ int main(int argc, char **argv)
     // --- analytic field: classification tracks s(x) column by column ---
     // s = (x + 1) / 2 over the domain; opacity ramps 0 -> 1 with s, so the
     // column at x has per-unit opacity a(x) = s and thickness 2.
-    Field linear = makeField(d, 33, origin, 2.f,
-        [](float x, float, float) { return 0.5f * (x + 1.f); });
+    Field linear = makeField(d, 33, origin, 2.f, [](float x, float, float) {
+      return 0.5f * (x + 1.f);
+    });
     float ramp01[2] = {0.f, 1.f};
     ANARIArray1D rampOps =
         anariNewArray1D(d, ramp01, nullptr, nullptr, ANARI_FLOAT32, 2);
@@ -490,7 +534,8 @@ int main(int argc, char **argv)
       worst = std::max(worst, std::fabs(got - e));
       std::printf("    x=%.3f s=%.3f expected %.4f got %.4f\n", cx, s, e, got);
     }
-    check(worst <= kTol, "analytic linear field matches closed form per column");
+    check(
+        worst <= kTol, "analytic linear field matches closed form per column");
 
     // --- nonlinear analytic field: reconstruction + ray-march error ---
     // s = 0.8 * ((z + 1) / 2)^2 * (0.5 + 0.5 sin(pi x)) varies along the ray
@@ -503,7 +548,8 @@ int main(int argc, char **argv)
       return 0.8f * u * u * (0.5f + 0.5f * std::sin(pi * x));
     };
     Field nonlinear = makeField(d, 33, origin, 2.f, curved);
-    anariSetParameter(d, analytic, "value", ANARI_SPATIAL_FIELD, &nonlinear.field);
+    anariSetParameter(
+        d, analytic, "value", ANARI_SPATIAL_FIELD, &nonlinear.field);
     anariCommitParameters(d, analytic);
     img = scene.render();
     worst = 0.f;
@@ -538,8 +584,8 @@ int main(int argc, char **argv)
         for (auto &row : slab)
           for (int i = 0; i < 3; ++i)
             row[i] = 0.5f * i;
-      ANARIArray3D adata = anariNewArray3D(
-          d, aniso, nullptr, nullptr, ANARI_FLOAT32, 3, 9, 5);
+      ANARIArray3D adata =
+          anariNewArray3D(d, aniso, nullptr, nullptr, ANARI_FLOAT32, 3, 9, 5);
       ANARISpatialField af = anariNewSpatialField(d, "structuredRegular");
       anariSetParameter(d, af, "data", ANARI_ARRAY3D, &adata);
       anariSetParameter(d, af, "origin", ANARI_FLOAT32_VEC3, origin);
@@ -547,8 +593,8 @@ int main(int argc, char **argv)
       anariSetParameter(d, af, "spacing", ANARI_FLOAT32_VEC3, asp);
       anariCommitParameters(d, af);
       float blueToRed[6] = {0.f, 0.f, 1.f, 1.f, 0.f, 0.f};
-      ANARIArray1D btr =
-          anariNewArray1D(d, blueToRed, nullptr, nullptr, ANARI_FLOAT32_VEC3, 2);
+      ANARIArray1D btr = anariNewArray1D(
+          d, blueToRed, nullptr, nullptr, ANARI_FLOAT32_VEC3, 2);
       ANARIVolume av = makeVolume(d, af, red, 0.5f);
       anariSetParameter(d, av, "color", ANARI_ARRAY1D, &btr);
       anariCommitParameters(d, av);
@@ -579,7 +625,8 @@ int main(int argc, char **argv)
       img = scene.render();
       check(columnOk(img, -0.5f, 1.f - pixelT(-0.5f, -1.f, 2.f), 2.f)
               && columnOk(img, 0.5f, 1.f - pixelT(0.5f, -1.f, 2.f), 2.f),
-          "negative spacing mirrors the grid: " + rgbStr(img.world(-0.5f, 0.2f)));
+          "negative spacing mirrors the grid: "
+              + rgbStr(img.world(-0.5f, 0.2f)));
       // Spacing edit: x spacing 0.5 from x = -1 shrinks the domain to
       // [-1, 0] and steepens the ramp.
       float esp[3] = {0.5f, 0.25f, 0.5f};
@@ -589,7 +636,8 @@ int main(int argc, char **argv)
       img = scene.render();
       check(columnOk(img, -0.5f, pixelT(-0.5f, -1.f, 1.f), 2.f)
               && rgbNear(img.world(0.5f, 0.2f), 0.f, 0.f, 0.f),
-          "spacing edit rescales the domain: " + rgbStr(img.world(-0.5f, 0.2f)));
+          "spacing edit rescales the domain: "
+              + rgbStr(img.world(-0.5f, 0.2f)));
       scene.setVolumes({});
       anariRelease(d, av);
       anariRelease(d, btr);
@@ -597,17 +645,18 @@ int main(int argc, char **argv)
       anariRelease(d, adata);
     }
 
-    // --- spacing / origin: coverage follows the domain, not the texture box ---
-    // A 5^3 grid at origin (0.25, -1.25, -1) with spacing 0.25 covers
-    // x in [0.25, 1.25], y in [-1.25, -0.25].
+    // --- spacing / origin: coverage follows the domain, not the texture box
+    // --- A 5^3 grid at origin (0.25, -1.25, -1) with spacing 0.25 covers x in
+    // [0.25, 1.25], y in [-1.25, -0.25].
     const float origin2[3] = {0.25f, -1.25f, -1.f};
-    Field small = makeField(d, 5, origin2, 1.f,
-        [](float, float, float) { return 0.5f; });
+    Field small =
+        makeField(d, 5, origin2, 1.f, [](float, float, float) { return 0.5f; });
     ANARIVolume smallVol = makeVolume(d, small.field, red, 0.9f);
     scene.setVolumes({smallVol});
     img = scene.render();
     check(img.world(0.75f, -0.75f)[0] > 0.3f, "shifted domain is covered");
-    check(img.world(0.1f, -0.75f)[0] < 0.01f && img.world(1.4f, -0.75f)[0] < 0.01f
+    check(img.world(0.1f, -0.75f)[0] < 0.01f
+            && img.world(1.4f, -0.75f)[0] < 0.01f
             && img.world(0.75f, -0.1f)[0] < 0.01f
             && img.world(0.75f, -1.4f)[0] < 0.01f
             && img.world(-0.75f, 0.75f)[0] < 0.01f,
@@ -659,8 +708,8 @@ int main(int argc, char **argv)
     anariSetParameter(d, small.field, "origin", ANARI_FLOAT32_VEC3, origin2);
     anariCommitParameters(d, small.field);
     ANARIVolume redVol = makeVolume(d, small.field, red, 0.5f);
-    Field other = makeField(d, 5, origin3, 1.f,
-        [](float, float, float) { return 0.5f; });
+    Field other =
+        makeField(d, 5, origin3, 1.f, [](float, float, float) { return 0.5f; });
     ANARIVolume greenVol = makeVolume(d, other.field, green, 0.5f);
     ANARIVolume sharing = makeVolume(d, small.field, green, 0.5f);
     scene.setVolumes({redVol, greenVol});
@@ -668,9 +717,8 @@ int main(int argc, char **argv)
     const float one = expected(1.f, 0.5f, 1.f);
     check(rgbNear(img.world(0.75f, -0.75f), one, 0.f, 0.f)
             && rgbNear(img.world(-0.75f, 0.75f), 0.f, one, 0.f),
-        "two volumes render independently: "
-            + rgbStr(img.world(0.75f, -0.75f)) + " "
-            + rgbStr(img.world(-0.75f, 0.75f)));
+        "two volumes render independently: " + rgbStr(img.world(0.75f, -0.75f))
+            + " " + rgbStr(img.world(-0.75f, 0.75f)));
     // Two volumes on one field overlap exactly. Storm composites whole
     // volumes one over the other rather than interleaving their samples, so
     // only the total is ANARI's: 1 - 0.5 * 0.5 of the light, split unevenly.
@@ -751,7 +799,9 @@ int main(int argc, char **argv)
     img = scene.render();
     const float pixelX = (int(W / 2) + 0.5f) * 4.f / W - 2.f;
     check(rgbNear(img.world(0.f, 0.f),
-              expected(1.f, 0.5f, std::sqrt(2.f) - 2.f * pixelX), 0.f, 0.f),
+              expected(1.f, 0.5f, std::sqrt(2.f) - 2.f * pixelX),
+              0.f,
+              0.f),
         "rotated instance: diagonal chord through the cube: "
             + rgbStr(img.world(0.f, 0.f)));
     scene.setInstances({});
@@ -780,8 +830,8 @@ int main(int argc, char **argv)
     // --- fixed-point data decodes normalized: UFIXED8 128 -> 128/255 ---
     uint8_t bytes[8];
     std::memset(bytes, 128, sizeof(bytes));
-    ANARIArray3D u8 = anariNewArray3D(
-        d, bytes, nullptr, nullptr, ANARI_UFIXED8, 2, 2, 2);
+    ANARIArray3D u8 =
+        anariNewArray3D(d, bytes, nullptr, nullptr, ANARI_UFIXED8, 2, 2, 2);
     ANARISpatialField u8Field = anariNewSpatialField(d, "structuredRegular");
     anariSetParameter(d, u8Field, "data", ANARI_ARRAY3D, &u8);
     anariSetParameter(d, u8Field, "origin", ANARI_FLOAT32_VEC3, origin);
@@ -831,8 +881,8 @@ int main(int argc, char **argv)
       auto handle = fp16
           ? nanovdb::tools::createNanoGrid<decltype(src), nanovdb::Fp16>(src)
           : nanovdb::tools::createNanoGrid(src);
-      ANARIArray1D blob = anariNewArray1D(d, nullptr, nullptr, nullptr,
-          ANARI_UINT8, handle.bufferSize());
+      ANARIArray1D blob = anariNewArray1D(
+          d, nullptr, nullptr, nullptr, ANARI_UINT8, handle.bufferSize());
       std::memcpy(anariMapArray(d, blob), handle.data(), handle.bufferSize());
       anariUnmapArray(d, blob);
       ANARISpatialField nano = anariNewSpatialField(d, "nanovdb");
@@ -859,8 +909,8 @@ int main(int argc, char **argv)
       const Image denseImg = scene.render();
       float worstDiff = 0.f;
       for (size_t i = 0; i < nanoImg.rgba.size(); ++i)
-        worstDiff = std::max(
-            worstDiff, std::fabs(nanoImg.rgba[i] - denseImg.rgba[i]));
+        worstDiff =
+            std::max(worstDiff, std::fabs(nanoImg.rgba[i] - denseImg.rgba[i]));
       const std::string label = fp16 ? "nanovdb Fp16" : "nanovdb Float";
       // Fp16 quantizes 0.5 exactly; allow float noise either way.
       check(worstDiff < 2e-3f,

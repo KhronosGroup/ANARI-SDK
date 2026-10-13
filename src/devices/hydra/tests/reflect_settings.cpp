@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 // Exercises renderer render-settings reflection (SPEC §11.3): every
-// HdRenderSettingDescriptor the bound delegate publishes must be discoverable as
-// a typed ANARI renderer parameter under its verbatim Hydra token, alongside the
-// core translation-table aliases (§4.7). No frame is rendered — this is a pure
-// introspection test through the core ANARI entry point
+// HdRenderSettingDescriptor the bound delegate publishes must be discoverable
+// as a typed ANARI renderer parameter under its verbatim Hydra token, alongside
+// the core translation-table aliases (§4.7). No frame is rendered — this is a
+// pure introspection test through the core ANARI entry point
 // anariGetObjectInfo(...,"parameter",ANARI_PARAMETER_LIST).
 
 #include <anari/anari.h>
@@ -16,12 +16,18 @@
 
 static int g_errors = 0;
 
-static void statusFunc(const void *, ANARIDevice, ANARIObject, ANARIDataType,
-    ANARIStatusSeverity severity, ANARIStatusCode, const char *message)
+static void statusFunc(const void *,
+    ANARIDevice,
+    ANARIObject,
+    ANARIDataType,
+    ANARIStatusSeverity severity,
+    ANARIStatusCode,
+    const char *message)
 {
   if (severity <= ANARI_SEVERITY_WARNING)
     std::printf("[%s] %s\n",
-        severity <= ANARI_SEVERITY_ERROR ? "ERR" : "WARN", message);
+        severity <= ANARI_SEVERITY_ERROR ? "ERR" : "WARN",
+        message);
   if (severity <= ANARI_SEVERITY_ERROR)
     ++g_errors;
 }
@@ -34,8 +40,7 @@ static void check(bool ok, const char *what)
 }
 
 // Return the reflected parameter's type, or ANARI_UNKNOWN if absent.
-static ANARIDataType findParam(
-    const ANARIParameter *list, const char *name)
+static ANARIDataType findParam(const ANARIParameter *list, const char *name)
 {
   for (; list && list->name; ++list)
     if (std::strcmp(list->name, name) == 0)
@@ -77,8 +82,8 @@ int main(int argc, char **argv)
     ANARIDataType t = findParam(params, "enableSceneColors");
     check(t == ANARI_BOOL,
         "embree delegate token 'enableSceneColors' reflected as ANARI_BOOL");
-    // convergedSamplesPerPixel is the Hydra target of the pixelSamples alias, so
-    // it must NOT appear verbatim (translation-table alias wins collisions).
+    // convergedSamplesPerPixel is the Hydra target of the pixelSamples alias,
+    // so it must NOT appear verbatim (translation-table alias wins collisions).
     check(findParam(params, "convergedSamplesPerPixel") == ANARI_UNKNOWN,
         "aliased token 'convergedSamplesPerPixel' hidden (translation wins)");
     // ambientOcclusionSamples is an int render setting HdEmbree publishes.
@@ -87,12 +92,20 @@ int main(int argc, char **argv)
 
     // getParameterInfo: default value + description for a reflected setting.
     const int8_t *dflt = (const int8_t *)anariGetParameterInfo(dev,
-        ANARI_RENDERER, "default", "enableSceneColors", ANARI_BOOL,
-        "default", ANARI_BOOL);
+        ANARI_RENDERER,
+        "default",
+        "enableSceneColors",
+        ANARI_BOOL,
+        "default",
+        ANARI_BOOL);
     check(dflt != nullptr, "enableSceneColors reports a default value");
     const char *desc = (const char *)anariGetParameterInfo(dev,
-        ANARI_RENDERER, "default", "enableSceneColors", ANARI_BOOL,
-        "description", ANARI_STRING);
+        ANARI_RENDERER,
+        "default",
+        "enableSceneColors",
+        ANARI_BOOL,
+        "description",
+        ANARI_STRING);
     check(desc != nullptr && desc[0] != '\0',
         "enableSceneColors reports a non-empty description");
   } else {
@@ -104,6 +117,7 @@ int main(int argc, char **argv)
   anariRelease(dev, dev);
   anariUnloadLibrary(lib);
   std::printf("\n%s (%d issues)\n",
-      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED", g_errors);
+      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED",
+      g_errors);
   return g_errors == 0 ? 0 : 1;
 }

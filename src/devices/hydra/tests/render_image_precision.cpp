@@ -30,12 +30,18 @@
 
 static int g_errors = 0;
 
-static void statusFunc(const void *, ANARIDevice, ANARIObject, ANARIDataType,
-    ANARIStatusSeverity severity, ANARIStatusCode, const char *message)
+static void statusFunc(const void *,
+    ANARIDevice,
+    ANARIObject,
+    ANARIDataType,
+    ANARIStatusSeverity severity,
+    ANARIStatusCode,
+    const char *message)
 {
   if (severity <= ANARI_SEVERITY_WARNING)
     std::printf("[%s] %s\n",
-        severity <= ANARI_SEVERITY_ERROR ? "ERR" : "WARN", message);
+        severity <= ANARI_SEVERITY_ERROR ? "ERR" : "WARN",
+        message);
   if (severity <= ANARI_SEVERITY_ERROR)
     ++g_errors;
 }
@@ -116,8 +122,8 @@ struct Scene
     anariSetParameter(dev, mat, "metallic", ANARI_FLOAT32, &zero);
     anariCommitParameters(dev, mat);
 
-    static const float verts[12] = {-0.9f, -0.9f, 0.f, 0.9f, -0.9f, 0.f,
-        0.9f, 0.9f, 0.f, -0.9f, 0.9f, 0.f};
+    static const float verts[12] = {
+        -0.9f, -0.9f, 0.f, 0.9f, -0.9f, 0.f, 0.9f, 0.9f, 0.f, -0.9f, 0.9f, 0.f};
     static const float uv[8] = {0.f, 0.f, 1.f, 0.f, 1.f, 1.f, 0.f, 1.f};
     pos = anariNewArray1D(dev, verts, nullptr, nullptr, ANARI_FLOAT32_VEC3, 4);
     st = anariNewArray1D(dev, uv, nullptr, nullptr, ANARI_FLOAT32_VEC2, 4);
@@ -184,16 +190,24 @@ struct Scene
 
   void release()
   {
-    for (ANARIObject o : {(ANARIObject)frame, (ANARIObject)ren,
-             (ANARIObject)cam, (ANARIObject)surfArray, (ANARIObject)world,
-             (ANARIObject)surf, (ANARIObject)g, (ANARIObject)st,
-             (ANARIObject)pos, (ANARIObject)mat})
+    for (ANARIObject o : {(ANARIObject)frame,
+             (ANARIObject)ren,
+             (ANARIObject)cam,
+             (ANARIObject)surfArray,
+             (ANARIObject)world,
+             (ANARIObject)surf,
+             (ANARIObject)g,
+             (ANARIObject)st,
+             (ANARIObject)pos,
+             (ANARIObject)mat})
       anariRelease(dev, o);
   }
 };
 
-static ANARISampler newSampler(ANARIDevice dev, const char *subtype,
-    ANARIObject image, ANARIDataType imageType)
+static ANARISampler newSampler(ANARIDevice dev,
+    const char *subtype,
+    ANARIObject image,
+    ANARIDataType imageType)
 {
   ANARISampler s = anariNewSampler(dev, subtype);
   anariSetParameter(dev, s, "image", imageType, &image);
@@ -207,8 +221,10 @@ static ANARISampler newSampler(ANARIDevice dev, const char *subtype,
 // the property is unavailable. `centre` receives the sampled texel.
 static constexpr int kTexSize = 64;
 
-static uint64_t textureMemoryFor(ANARIDevice dev, ANARIDataType type,
-    const std::vector<uint8_t> &texel, float centre[3]);
+static uint64_t textureMemoryFor(ANARIDevice dev,
+    ANARIDataType type,
+    const std::vector<uint8_t> &texel,
+    float centre[3]);
 
 // Render `sampler` on the quad once and hand back the frame.
 static void renderOnce(ANARIDevice dev, ANARISampler sampler, Img &im)
@@ -227,8 +243,10 @@ static Img g_baseline;
 
 static void sample(const Img &im, int W, int H, int i, int j, float out[3]);
 
-static uint64_t textureMemoryFor(ANARIDevice dev, ANARIDataType type,
-    const std::vector<uint8_t> &texel, float centre[3])
+static uint64_t textureMemoryFor(ANARIDevice dev,
+    ANARIDataType type,
+    const std::vector<uint8_t> &texel,
+    float centre[3])
 {
   std::vector<uint8_t> texels;
   for (int i = 0; i < kTexSize * kTexSize; ++i)
@@ -242,8 +260,13 @@ static uint64_t textureMemoryFor(ANARIDevice dev, ANARIDataType type,
   sc.render(im);
   sample(im, kTexSize, kTexSize, kTexSize / 2, kTexSize / 2, centre);
   uint64_t bytes = 0;
-  if (!anariGetProperty(dev, sc.frame, "hydra.textureMemory", ANARI_UINT64,
-          &bytes, sizeof(bytes), ANARI_WAIT))
+  if (!anariGetProperty(dev,
+          sc.frame,
+          "hydra.textureMemory",
+          ANARI_UINT64,
+          &bytes,
+          sizeof(bytes),
+          ANARI_WAIT))
     bytes = 0;
   sc.release();
   anariRelease(dev, s);
@@ -266,15 +289,28 @@ static bool nearRel(float got, float want, float tol)
   return near(got, want, tol + 1e-3f * std::fabs(want));
 }
 
-static void checkTexel(const Img &im, int W, int H, int i, int j,
-    const float want[3], float tol, const char *what)
+static void checkTexel(const Img &im,
+    int W,
+    int H,
+    int i,
+    int j,
+    const float want[3],
+    float tol,
+    const char *what)
 {
   float p[3];
   sample(im, W, H, i, j, p);
   const bool ok = nearRel(p[0], want[0], tol) && nearRel(p[1], want[1], tol)
       && nearRel(p[2], want[2], tol);
-  std::printf("    texel(%d,%d) = %.5f %.5f %.5f (want %.5f %.5f %.5f)\n", i,
-      j, p[0], p[1], p[2], want[0], want[1], want[2]);
+  std::printf("    texel(%d,%d) = %.5f %.5f %.5f (want %.5f %.5f %.5f)\n",
+      i,
+      j,
+      p[0],
+      p[1],
+      p[2],
+      want[0],
+      want[1],
+      want[2]);
   check(ok, what);
 }
 
@@ -291,8 +327,8 @@ int main(int argc, char **argv)
   // --- Baseline: a black texel measures Storm's constant unlit shading term --
   {
     const float black[4] = {0.f, 0.f, 0.f, 1.f};
-    ANARIArray2D image = anariNewArray2D(
-        dev, black, nullptr, nullptr, ANARI_FLOAT32_VEC4, 1, 1);
+    ANARIArray2D image =
+        anariNewArray2D(dev, black, nullptr, nullptr, ANARI_FLOAT32_VEC4, 1, 1);
     ANARISampler s = newSampler(dev, "image2D", image, ANARI_ARRAY2D);
     renderOnce(dev, s, g_baseline);
     const float *p = texelPixel(g_baseline, 1, 1, 0, 0);
@@ -306,9 +342,22 @@ int main(int argc, char **argv)
   // --- FLOAT32 image2D: HDR and signed texels, live edits, replacement ------
   std::printf("FLOAT32_VEC4 image2D\n");
   {
-    float texels[2 * 2 * 4] = {
-        4.f, 0.f, 0.f, 1.f, /* (0,0) */ -0.5f, 0.25f, 0.f, 1.f, /* (1,0) */
-        0.001f, 0.002f, 0.003f, 1.f, /* (0,1) */ 1.5f, 2.5f, 100.f, 1.f};
+    float texels[2 * 2 * 4] = {4.f,
+        0.f,
+        0.f,
+        1.f,
+        /* (0,0) */ -0.5f,
+        0.25f,
+        0.f,
+        1.f, /* (1,0) */
+        0.001f,
+        0.002f,
+        0.003f,
+        1.f,
+        /* (0,1) */ 1.5f,
+        2.5f,
+        100.f,
+        1.f};
     ANARIArray2D image = anariNewArray2D(
         dev, texels, nullptr, nullptr, ANARI_FLOAT32_VEC4, 2, 2);
     ANARISampler s = newSampler(dev, "image2D", image, ANARI_ARRAY2D);
@@ -318,7 +367,13 @@ int main(int argc, char **argv)
     sc.render(im);
     checkTexel(im, 2, 2, 0, 0, texels + 0, 2e-3f, "texel 4.0 survives (>1)");
     checkTexel(im, 2, 2, 1, 0, texels + 4, 2e-3f, "texel -0.5 survives (<0)");
-    checkTexel(im, 2, 2, 0, 1, texels + 8, 1e-4f,
+    checkTexel(im,
+        2,
+        2,
+        0,
+        1,
+        texels + 8,
+        1e-4f,
         "sub-1/255 texel 0.001/0.002/0.003 keeps its value");
     checkTexel(im, 2, 2, 1, 1, texels + 12, 0.1f, "texel 100 survives");
 
@@ -333,9 +388,21 @@ int main(int argc, char **argv)
         if (k % 4 != 3)
           texels[k] *= 2.f;
       sc.render(im);
-      checkTexel(im, 2, 2, 0, 0, texels + 0, 4e-3f,
+      checkTexel(im,
+          2,
+          2,
+          0,
+          0,
+          texels + 0,
+          4e-3f,
           "unmap edit: texel 8.0 reaches the frame");
-      checkTexel(im, 2, 2, 1, 0, texels + 4, 2e-3f,
+      checkTexel(im,
+          2,
+          2,
+          1,
+          0,
+          texels + 4,
+          2e-3f,
           "unmap edit: texel -1.0 reaches the frame");
     }
 
@@ -352,20 +419,33 @@ int main(int argc, char **argv)
       const float t0[3] = {37 / 255.f, 200 / 255.f, 0.f};
       const float t1[3] = {1.f, 1.f, 1.f};
       const float t2[3] = {0.f, 0.f, 51 / 255.f};
-      checkTexel(im, 3, 1, 0, 0, t0, 2e-4f,
+      checkTexel(im,
+          3,
+          1,
+          0,
+          0,
+          t0,
+          2e-4f,
           "replacement 3x1 UFIXED8: texel 0 exact (37/255, 200/255, 0)");
       checkTexel(im, 3, 1, 1, 0, t1, 2e-4f, "replacement: texel 1 white");
-      checkTexel(im, 3, 1, 2, 0, t2, 2e-4f, "replacement: texel 2 (0,0,51/255)");
+      checkTexel(
+          im, 3, 1, 2, 0, t2, 2e-4f, "replacement: texel 2 (0,0,51/255)");
       anariRelease(dev, image8);
 
       // And back to a float image of yet another size.
       const float big[4] = {10.f, 0.5f, -2.f, 1.f};
-      ANARIArray2D image1 = anariNewArray2D(
-          dev, big, nullptr, nullptr, ANARI_FLOAT32_VEC4, 1, 1);
+      ANARIArray2D image1 =
+          anariNewArray2D(dev, big, nullptr, nullptr, ANARI_FLOAT32_VEC4, 1, 1);
       anariSetParameter(dev, s, "image", ANARI_ARRAY2D, &image1);
       anariCommitParameters(dev, s);
       sc.render(im);
-      checkTexel(im, 1, 1, 0, 0, big, 1e-2f,
+      checkTexel(im,
+          1,
+          1,
+          0,
+          0,
+          big,
+          1e-2f,
           "replacement 1x1 FLOAT32: (10, 0.5, -2) reaches the frame");
       anariRelease(dev, image1);
     }
@@ -408,9 +488,9 @@ int main(int argc, char **argv)
     anariRelease(dev, image);
   }
 
-  // --- sRGB 8-bit source: dark codes stay distinct after linearisation --------
-  // Codes 2, 5, 10 decode to 6.1e-4, 1.5e-3, 3.0e-3: in 8-bit linear storage
-  // the first two would quantise to 0 and the third to 1/255.
+  // --- sRGB 8-bit source: dark codes stay distinct after linearisation
+  // -------- Codes 2, 5, 10 decode to 6.1e-4, 1.5e-3, 3.0e-3: in 8-bit linear
+  // storage the first two would quantise to 0 and the third to 1/255.
   std::printf("UFIXED8_RGBA_SRGB image2D\n");
   {
     const int codes[4] = {2, 5, 10, 128};
@@ -441,10 +521,11 @@ int main(int argc, char **argv)
     anariRelease(dev, image);
   }
 
-  // --- sRGB 8-bit source: alpha stays linear ----------------------------------
-  // A material texture's alpha drives opacity and alpha cutoff, so it must not
-  // go through the sRGB curve. A channel-mixing outTransform copies alpha into
-  // rgb (out.rgb = a) so the rendered value is the decoded alpha itself.
+  // --- sRGB 8-bit source: alpha stays linear
+  // ---------------------------------- A material texture's alpha drives
+  // opacity and alpha cutoff, so it must not go through the sRGB curve. A
+  // channel-mixing outTransform copies alpha into rgb (out.rgb = a) so the
+  // rendered value is the decoded alpha itself.
   std::printf("UFIXED8_RGBA_SRGB alpha\n");
   {
     const int codes[4] = {32, 64, 128, 200};
@@ -491,7 +572,10 @@ int main(int argc, char **argv)
     const uint64_t rgba =
         textureMemoryFor(dev, ANARI_UFIXED8_RGBA_SRGB, {10, 64, 128, 255}, c);
     std::printf("    UFIXED8_RGBA_SRGB %llu bytes, texel %.5f %.5f %.5f\n",
-        (unsigned long long)rgba, c[0], c[1], c[2]);
+        (unsigned long long)rgba,
+        c[0],
+        c[1],
+        c[2]);
     check(rgba == linear, "RGBA_SRGB texture costs the same as 8-bit linear");
     check(nearRel(c[0], srgbToLinear(10), 5e-5f)
             && nearRel(c[1], srgbToLinear(64), 5e-5f)
@@ -501,7 +585,10 @@ int main(int argc, char **argv)
     const uint64_t rgb =
         textureMemoryFor(dev, ANARI_UFIXED8_RGB_SRGB, {10, 64, 128}, c);
     std::printf("    UFIXED8_RGB_SRGB %llu bytes, texel %.5f %.5f %.5f\n",
-        (unsigned long long)rgb, c[0], c[1], c[2]);
+        (unsigned long long)rgb,
+        c[0],
+        c[1],
+        c[2]);
     check(rgb == linear, "RGB_SRGB texture costs the same as 8-bit linear");
     check(nearRel(c[0], srgbToLinear(10), 5e-5f)
             && nearRel(c[1], srgbToLinear(64), 5e-5f)
@@ -510,7 +597,10 @@ int main(int argc, char **argv)
 
     const uint64_t r = textureMemoryFor(dev, ANARI_UFIXED8_R_SRGB, {64}, c);
     std::printf("    UFIXED8_R_SRGB %llu bytes, texel %.5f %.5f %.5f\n",
-        (unsigned long long)r, c[0], c[1], c[2]);
+        (unsigned long long)r,
+        c[0],
+        c[1],
+        c[2]);
     check(r == linear, "R_SRGB texture costs the same as 8-bit linear");
     check(nearRel(c[0], srgbToLinear(64), 5e-5f) && near(c[1], 0.f, 5e-5f)
             && near(c[2], 0.f, 5e-5f),
@@ -519,14 +609,18 @@ int main(int argc, char **argv)
     const uint64_t ra =
         textureMemoryFor(dev, ANARI_UFIXED8_RA_SRGB, {64, 128}, c);
     std::printf("    UFIXED8_RA_SRGB %llu bytes, texel %.5f %.5f %.5f\n",
-        (unsigned long long)ra, c[0], c[1], c[2]);
+        (unsigned long long)ra,
+        c[0],
+        c[1],
+        c[2]);
     check(ra > linear, "RA_SRGB is stored wider than 8 bits");
     check(nearRel(c[0], srgbToLinear(64), 5e-5f)
             && nearRel(c[1], 128 / 255.f, 1e-3f),
         "RA_SRGB texel decodes to (r, linear a)");
   }
 
-  // --- UFIXED16: sub-8-bit steps survive --------------------------------------
+  // --- UFIXED16: sub-8-bit steps survive
+  // --------------------------------------
   std::printf("UFIXED16_VEC4 image2D\n");
   {
     // Steps of 4/65535 = 6.1e-5: four half-float ulps at this magnitude (the
@@ -554,12 +648,13 @@ int main(int argc, char **argv)
     anariRelease(dev, image);
   }
 
-  // --- image1D with HDR / signed FLOAT32_VEC3 texels --------------------------
+  // --- image1D with HDR / signed FLOAT32_VEC3 texels
+  // --------------------------
   std::printf("FLOAT32_VEC3 image1D\n");
   {
     const float texels[3 * 3] = {3.f, 0.f, 0.f, 0.f, -1.f, 0.f, 0.f, 0.f, 7.f};
-    ANARIArray1D image = anariNewArray1D(
-        dev, texels, nullptr, nullptr, ANARI_FLOAT32_VEC3, 3);
+    ANARIArray1D image =
+        anariNewArray1D(dev, texels, nullptr, nullptr, ANARI_FLOAT32_VEC3, 3);
     ANARISampler s = newSampler(dev, "image1D", image, ANARI_ARRAY1D);
     Img im;
     renderOnce(dev, s, im);
@@ -570,18 +665,19 @@ int main(int argc, char **argv)
     anariRelease(dev, image);
   }
 
-  // --- channel-mixing outTransform leaving [0,1] ------------------------------
+  // --- channel-mixing outTransform leaving [0,1]
+  // ------------------------------
   std::printf("channel-mixing outTransform\n");
   {
     const uint8_t texel[4] = {255, 128, 0, 255};
-    ANARIArray2D image = anariNewArray2D(
-        dev, texel, nullptr, nullptr, ANARI_UFIXED8_VEC4, 1, 1);
+    ANARIArray2D image =
+        anariNewArray2D(dev, texel, nullptr, nullptr, ANARI_UFIXED8_VEC4, 1, 1);
     ANARISampler s = anariNewSampler(dev, "image2D");
     anariSetParameter(dev, s, "image", ANARI_ARRAY2D, &image);
     // out.r = 2r - g, out.g = g, out.b = b (column-major: m[col][row]).
     float m[16] = {};
-    m[0 * 4 + 0] = 2.f;   // r <- 2r
-    m[1 * 4 + 0] = -1.f;  // r <- -g
+    m[0 * 4 + 0] = 2.f; // r <- 2r
+    m[1 * 4 + 0] = -1.f; // r <- -g
     m[1 * 4 + 1] = 1.f;
     m[2 * 4 + 2] = 1.f;
     m[3 * 4 + 3] = 1.f;
@@ -590,7 +686,13 @@ int main(int argc, char **argv)
     Img im;
     renderOnce(dev, s, im);
     const float want[3] = {2.f - 128 / 255.f, 128 / 255.f, 0.f};
-    checkTexel(im, 1, 1, 0, 0, want, 2e-3f,
+    checkTexel(im,
+        1,
+        1,
+        0,
+        0,
+        want,
+        2e-3f,
         "mixed texel 2r - g = 1.498 is not clamped to 1");
     anariRelease(dev, s);
     anariRelease(dev, image);
@@ -599,6 +701,7 @@ int main(int argc, char **argv)
   anariRelease(dev, dev);
   anariUnloadLibrary(lib);
   std::printf("\n%s (%d issues)\n",
-      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED", g_errors);
+      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED",
+      g_errors);
   return g_errors == 0 ? 0 : 1;
 }

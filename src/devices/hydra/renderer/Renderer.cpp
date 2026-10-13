@@ -44,7 +44,7 @@ static bool ToVtValue(const helium::AnariAny &a, VtValue &out)
     out = VtValue(a.get<int32_t>());
     return true;
   case ANARI_UINT32:
-    out = VtValue(int(a.get<uint32_t>()));   // Hydra settings use int
+    out = VtValue(int(a.get<uint32_t>())); // Hydra settings use int
     return true;
   case ANARI_FLOAT32:
     out = VtValue(a.get<float>());
@@ -132,10 +132,11 @@ void Renderer::commitParameters()
   }
   m_backgroundArray = getParamObject<helium::Array2D>("background");
 
-  // Ambient fill (SPEC §4.7/§6.6): the core `default` renderer's ambientRadiance
-  // (intensity) / ambientColor scale a frame-synthesized uniform dome light. Both
-  // are bridge-reserved (like `background`) — the Frame reads them, never the
-  // delegate. Defaults are no ambient (radiance 0) and white.
+  // Ambient fill (SPEC §4.7/§6.6): the core `default` renderer's
+  // ambientRadiance (intensity) / ambientColor scale a frame-synthesized
+  // uniform dome light. Both are bridge-reserved (like `background`) — the
+  // Frame reads them, never the delegate. Defaults are no ambient (radiance 0)
+  // and white.
   m_ambientRadiance = getParam<float>("ambientRadiance", 0.f);
   m_ambientColor =
       getParam<helium::float3>("ambientColor", helium::float3(1.f, 1.f, 1.f));

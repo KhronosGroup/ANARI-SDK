@@ -39,9 +39,8 @@ const ANARIParameter *reflectedParameterList(HydraGlobalState &state,
     const char *subtype);
 
 // Whether (name, parameterType) is an entry of the filtered list.
-bool reflectsParameter(const ANARIParameter *list,
-    const char *name,
-    ANARIDataType parameterType);
+bool reflectsParameter(
+    const ANARIParameter *list, const char *name, ANARIDataType parameterType);
 
 // The frame's channel list narrowed to the channels whose `channel.*`
 // parameter survives the filter above (SPEC §11.4).
@@ -50,7 +49,8 @@ const char **reflectedFrameChannels(
 
 // The generated table's answer for `sourceExtension` re-indexed into the
 // device's own extension list (ANARI_INT32 form); nullptr when the extension
-// is not advertised. `extensionName` is the generated string (no ANARI_ prefix).
+// is not advertised. `extensionName` is the generated string (no ANARI_
+// prefix).
 const int32_t *sourceExtensionIndex(HydraGlobalState &state,
     const std::vector<const char *> &extensions,
     const char *extensionName);

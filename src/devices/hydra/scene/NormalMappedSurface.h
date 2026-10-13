@@ -33,7 +33,8 @@ inline constexpr char kNormalMappedSurfaceTangentStInput[] = "anariTangentSt";
 inline constexpr char kNormalMappedSurfaceSection[] =
     "AnariPrimvarNormalMap.NormalMapping";
 
-inline constexpr char kNormalMappedSurfaceSource[] = R"GLSLFX(-- glslfx version 0.1
+inline constexpr char kNormalMappedSurfaceSource[] =
+    R"GLSLFX(-- glslfx version 0.1
 #import $TOOLS/usdShaders/shaders/previewSurface.glslfx
 
 -- configuration

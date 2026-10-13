@@ -38,7 +38,10 @@ struct Isosurface : public Geometry
   // contributes no bounds.
   bool isValid() const override;
   pxr::TfToken primType() const override;
-  const TessMesh *tessellation() const override { return &m_mesh; }
+  const TessMesh *tessellation() const override
+  {
+    return &m_mesh;
+  }
 
  private:
   helium::ChangeObserverPtr<SpatialField> m_field;

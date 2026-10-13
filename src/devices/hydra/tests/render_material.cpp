@@ -4,9 +4,9 @@
 // Exercises the material path (SPEC §6.1/§6.5/§6.9). Each material authors a
 // UsdPreviewSurface network into the mirror AND the constant-color displayColor
 // fallback; the device binds the network sprim to the rprim. This test asserts
-// the observable, spec-guaranteed result: each surface renders with a color that
-// tracks its material's constant color (the §6.9 fallback path, honored by both
-// Storm and Embree).
+// the observable, spec-guaranteed result: each surface renders with a color
+// that tracks its material's constant color (the §6.9 fallback path, honored by
+// both Storm and Embree).
 //
 // Network-only effects (emissiveColor) are also asserted: the frame pushes
 // HdxRenderTaskParams with enableLighting=true (default-off), without which
@@ -22,8 +22,13 @@
 
 static int g_errors = 0;
 
-static void statusFunc(const void *, ANARIDevice, ANARIObject, ANARIDataType,
-    ANARIStatusSeverity severity, ANARIStatusCode, const char *message)
+static void statusFunc(const void *,
+    ANARIDevice,
+    ANARIObject,
+    ANARIDataType,
+    ANARIStatusSeverity severity,
+    ANARIStatusCode,
+    const char *message)
 {
   const char *tag = severity == ANARI_SEVERITY_FATAL_ERROR ? "FATAL"
       : severity == ANARI_SEVERITY_ERROR                   ? "ERROR"
@@ -44,11 +49,10 @@ static void check(bool ok, const char *what)
 
 // Render one full-screen-ish quad with `mat` and return the average lit color
 // over covered pixels (RGB 0..255).
-static void renderAvgColor(
-    ANARIDevice dev, ANARIMaterial mat, double avg[3])
+static void renderAvgColor(ANARIDevice dev, ANARIMaterial mat, double avg[3])
 {
-  float verts[12] = {-0.9f, -0.9f, 0.f, 0.9f, -0.9f, 0.f, 0.9f, 0.9f, 0.f,
-      -0.9f, 0.9f, 0.f};
+  float verts[12] = {
+      -0.9f, -0.9f, 0.f, 0.9f, -0.9f, 0.f, 0.9f, 0.9f, 0.f, -0.9f, 0.9f, 0.f};
   ANARIArray1D pos =
       anariNewArray1D(dev, verts, nullptr, nullptr, ANARI_FLOAT32_VEC3, 4);
   ANARIGeometry g = anariNewGeometry(dev, "quad");
@@ -64,7 +68,7 @@ static void renderAvgColor(
   ANARIArray1D surfArray =
       anariNewArray1D(dev, &surf, nullptr, nullptr, ANARI_SURFACE, 1);
   anariSetParameter(dev, world, "surface", ANARI_ARRAY1D, &surfArray);
-  anariCommitParameters(dev, world);   // lit by the Frame headlight fallback
+  anariCommitParameters(dev, world); // lit by the Frame headlight fallback
 
   ANARICamera cam = anariNewCamera(dev, "perspective");
   float eye[3] = {0.f, 0.f, 3.f};
@@ -95,8 +99,8 @@ static void renderAvgColor(
 
   uint32_t w = 0, h = 0;
   ANARIDataType pt = ANARI_UNKNOWN;
-  const uint32_t *pixels = (const uint32_t *)anariMapFrame(
-      dev, frame, "channel.color", &w, &h, &pt);
+  const uint32_t *pixels =
+      (const uint32_t *)anariMapFrame(dev, frame, "channel.color", &w, &h, &pt);
   double sum[3] = {0, 0, 0};
   long n = 0;
   if (pixels) {
@@ -184,7 +188,9 @@ int main(int argc, char **argv)
     double avg[3];
     renderAvgColor(dev, mat, avg);
     std::printf("pbr(emissive-green,black-base) avg rgb: %.0f %.0f %.0f\n",
-        avg[0], avg[1], avg[2]);
+        avg[0],
+        avg[1],
+        avg[2]);
     check(avg[1] > 60, "emissive surface glows on a black base");
     check(avg[1] > avg[0] + 25 && avg[1] > avg[2] + 25,
         "emissiveColor reaches the mesh draw (green-dominant, network-only)");
@@ -194,6 +200,7 @@ int main(int argc, char **argv)
   anariRelease(dev, dev);
   anariUnloadLibrary(lib);
   std::printf("\n%s (%d issues)\n",
-      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED", g_errors);
+      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED",
+      g_errors);
   return g_errors == 0 ? 0 : 1;
 }

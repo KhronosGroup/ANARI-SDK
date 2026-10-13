@@ -17,9 +17,10 @@
 namespace anari_hydra {
 
 // A commit-time-generated mesh (points + face topology), used by geometry
-// subtypes with no direct Hydra rprim (sphere/cone/cylinder -> tessellated mesh,
-// isosurface -> extracted mesh, SPEC §4.1). Bulk data here is copied, not zero-copy, and lives for the
-// geometry's lifetime so the PrimBuilder can wrap it.
+// subtypes with no direct Hydra rprim (sphere/cone/cylinder -> tessellated
+// mesh, isosurface -> extracted mesh, SPEC §4.1). Bulk data here is copied, not
+// zero-copy, and lives for the geometry's lifetime so the PrimBuilder can wrap
+// it.
 struct TessMesh
 {
   pxr::VtVec3fArray points;
@@ -55,33 +56,72 @@ struct Geometry : public Object
 
   // Vertices per face for mesh-typed geometry (triangle 3, quad 4). Unused by
   // non-mesh subtypes.
-  virtual int meshVertsPerFace() const { return 3; }
+  virtual int meshVertsPerFace() const
+  {
+    return 3;
+  }
 
-  helium::Array1D *vertexPosition() const { return m_vertexPosition.get(); }
+  helium::Array1D *vertexPosition() const
+  {
+    return m_vertexPosition.get();
+  }
   // vertex.normal -> the `normals` primvar (vertex interpolation, role normal)
   // on mesh geometry; app-provided only, never generated (SPEC §4.1/§5).
-  helium::Array1D *vertexNormal() const { return m_vertexNormal.get(); }
-  helium::Array1D *vertexColor() const { return m_vertexColor.get(); }
+  helium::Array1D *vertexNormal() const
+  {
+    return m_vertexNormal.get();
+  }
+  helium::Array1D *vertexColor() const
+  {
+    return m_vertexColor.get();
+  }
   // vertex.radius -> per-vertex radius for spheres/curves/cones (base->apex
   // taper); cylinders take primitive.radius instead (SPEC
   // KHR_GEOMETRY_CYLINDER has no vertex.radius parameter).
-  helium::Array1D *vertexRadius() const { return m_vertexRadius.get(); }
+  helium::Array1D *vertexRadius() const
+  {
+    return m_vertexRadius.get();
+  }
   // primitive.radius -> per-primitive (per-segment) radius for cylinders.
-  helium::Array1D *primitiveRadius() const { return m_primitiveRadius.get(); }
+  helium::Array1D *primitiveRadius() const
+  {
+    return m_primitiveRadius.get();
+  }
   // vertex.cap -> per-endpoint cap override for cone/cylinder tube ends,
   // taking precedence over the subtype's 'caps' string when present.
-  helium::Array1D *vertexCap() const { return m_vertexCap.get(); }
+  helium::Array1D *vertexCap() const
+  {
+    return m_vertexCap.get();
+  }
   // vertex.attribute0 -> the `st` primvar for texture sampling (SPEC §6.3), and
   // the `attribute0` primvar for attribute-bound material inputs (SPEC §6.1).
-  helium::Array1D *vertexAttribute0() const { return m_vertexAttribute0.get(); }
+  helium::Array1D *vertexAttribute0() const
+  {
+    return m_vertexAttribute0.get();
+  }
   // vertex.attribute1..3 -> `attribute1..3` primvars for attribute-bound
   // material inputs (SPEC §6.1).
-  helium::Array1D *vertexAttribute1() const { return m_vertexAttribute1.get(); }
-  helium::Array1D *vertexAttribute2() const { return m_vertexAttribute2.get(); }
-  helium::Array1D *vertexAttribute3() const { return m_vertexAttribute3.get(); }
+  helium::Array1D *vertexAttribute1() const
+  {
+    return m_vertexAttribute1.get();
+  }
+  helium::Array1D *vertexAttribute2() const
+  {
+    return m_vertexAttribute2.get();
+  }
+  helium::Array1D *vertexAttribute3() const
+  {
+    return m_vertexAttribute3.get();
+  }
   // Mesh corner arrays are ordered by face, independently of position indices.
-  helium::Array1D *faceVaryingNormal() const { return m_faceVaryingNormal.get(); }
-  helium::Array1D *faceVaryingColor() const { return m_faceVaryingColor.get(); }
+  helium::Array1D *faceVaryingNormal() const
+  {
+    return m_faceVaryingNormal.get();
+  }
+  helium::Array1D *faceVaryingColor() const
+  {
+    return m_faceVaryingColor.get();
+  }
   helium::Array1D *faceVaryingAttribute0() const
   {
     return m_faceVaryingAttribute0.get();
@@ -112,14 +152,23 @@ struct Geometry : public Object
 
   // primitive.index; its element type is interpreted by the subtype (triangle
   // UINT32_VEC3, quad UINT32_VEC4, cone/cylinder UINT32_VEC2, curve UINT32).
-  helium::Array1D *index() const { return m_index.get(); }
+  helium::Array1D *index() const
+  {
+    return m_index.get();
+  }
 
   // Global 'radius' fallback (spheres/curves/cones/cylinders), default 1.
-  float globalRadius() const { return m_radius; }
+  float globalRadius() const
+  {
+    return m_radius;
+  }
 
   // Non-null for subtypes with no direct rprim: the PrimBuilder authors this
   // generated mesh instead of dispatching on primType(). Recomputed on commit.
-  virtual const TessMesh *tessellation() const { return nullptr; }
+  virtual const TessMesh *tessellation() const
+  {
+    return nullptr;
+  }
 
  protected:
   // ChangeObserverPtr registers this geometry as an observer of its arrays, so

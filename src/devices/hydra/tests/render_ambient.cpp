@@ -3,10 +3,10 @@
 //
 // Exercises the `default` renderer's ambientRadiance/ambientColor injecting a
 // flat, shadowless ambient fill (SPEC §4.7/§6.6). The device synthesizes one
-// uniform dome-light sprim (a 1x1 env texture of ambientColor * ambientRadiance)
-// into a frame-owned scene index whenever ambientRadiance > 0. Scene-ambient via
-// GlfSimpleLightingContext does NOT reach UsdPreviewSurface under Storm (proto
-// 016), hence a real dome-light sprim.
+// uniform dome-light sprim (a 1x1 env texture of ambientColor *
+// ambientRadiance) into a frame-owned scene index whenever ambientRadiance > 0.
+// Scene-ambient via GlfSimpleLightingContext does NOT reach UsdPreviewSurface
+// under Storm (proto 016), hence a real dome-light sprim.
 //
 // Setup: a white physicallyBased quad faces the camera, lit by ONE directional
 // light aimed so it MISSES the front face (direction (1,0,0) grazes the quad's
@@ -25,12 +25,18 @@
 
 static int g_errors = 0;
 
-static void statusFunc(const void *, ANARIDevice, ANARIObject, ANARIDataType,
-    ANARIStatusSeverity severity, ANARIStatusCode, const char *message)
+static void statusFunc(const void *,
+    ANARIDevice,
+    ANARIObject,
+    ANARIDataType,
+    ANARIStatusSeverity severity,
+    ANARIStatusCode,
+    const char *message)
 {
   if (severity <= ANARI_SEVERITY_WARNING)
     std::printf("[%s] %s\n",
-        severity <= ANARI_SEVERITY_ERROR ? "ERR" : "WARN", message);
+        severity <= ANARI_SEVERITY_ERROR ? "ERR" : "WARN",
+        message);
   if (severity <= ANARI_SEVERITY_ERROR)
     ++g_errors;
 }
@@ -48,15 +54,18 @@ static void check(bool ok, const char *what)
 // only. `ambientRadiance`/`ambientColor` drive the renderer's ambient fill.
 // Averages over a fixed central box regardless of brightness, so a dark front
 // face reads back near-zero rather than being filtered out.
-static void renderFrontFace(ANARIDevice dev, bool withBackLight,
-    float ambientRadiance, const float ambientColor[3], double out[3],
+static void renderFrontFace(ANARIDevice dev,
+    bool withBackLight,
+    float ambientRadiance,
+    const float ambientColor[3],
+    double out[3],
     bool floatFrame = false)
 {
   out[0] = out[1] = out[2] = 0.0;
 
   // A white matte physicallyBased quad at z=0, facing +Z (toward the camera).
-  float verts[12] = {-0.8f, -0.8f, 0.f, 0.8f, -0.8f, 0.f, 0.8f, 0.8f, 0.f,
-      -0.8f, 0.8f, 0.f};
+  float verts[12] = {
+      -0.8f, -0.8f, 0.f, 0.8f, -0.8f, 0.f, 0.8f, 0.8f, 0.f, -0.8f, 0.8f, 0.f};
   ANARIArray1D pos =
       anariNewArray1D(dev, verts, nullptr, nullptr, ANARI_FLOAT32_VEC3, 4);
   ANARIGeometry g = anariNewGeometry(dev, "quad");
@@ -94,8 +103,7 @@ static void renderFrontFace(ANARIDevice dev, bool withBackLight,
     anariSetParameter(dev, light, "direction", ANARI_FLOAT32_VEC3, ldir);
     anariSetParameter(dev, light, "irradiance", ANARI_FLOAT32, &irr);
     anariCommitParameters(dev, light);
-    lightArray =
-        anariNewArray1D(dev, &light, nullptr, nullptr, ANARI_LIGHT, 1);
+    lightArray = anariNewArray1D(dev, &light, nullptr, nullptr, ANARI_LIGHT, 1);
     anariSetParameter(dev, world, "light", ANARI_ARRAY1D, &lightArray);
   }
   anariCommitParameters(dev, world);
@@ -112,7 +120,8 @@ static void renderFrontFace(ANARIDevice dev, bool withBackLight,
   anariCommitParameters(dev, cam);
 
   ANARIRenderer ren = anariNewRenderer(dev, "default");
-  anariSetParameter(dev, ren, "ambientRadiance", ANARI_FLOAT32, &ambientRadiance);
+  anariSetParameter(
+      dev, ren, "ambientRadiance", ANARI_FLOAT32, &ambientRadiance);
   anariSetParameter(dev, ren, "ambientColor", ANARI_FLOAT32_VEC3, ambientColor);
   anariCommitParameters(dev, ren);
 
@@ -132,8 +141,7 @@ static void renderFrontFace(ANARIDevice dev, bool withBackLight,
 
   uint32_t w = 0, h = 0;
   ANARIDataType pt = ANARI_UNKNOWN;
-  const void *pixels =
-      anariMapFrame(dev, frame, "channel.color", &w, &h, &pt);
+  const void *pixels = anariMapFrame(dev, frame, "channel.color", &w, &h, &pt);
   double s[3] = {0, 0, 0};
   long n = 0;
   if (pixels) {
@@ -214,10 +222,10 @@ int main(int argc, char **argv)
   renderFrontFace(dev, /*withBackLight=*/true, 0.25f, white, quarter, true);
   renderFrontFace(dev, /*withBackLight=*/true, 0.5f, white, half, true);
 
-  std::printf("front-face luma:  dark=%.1f  bright=%.1f\n",
-      luma(dark), luma(bright));
-  std::printf("red-ambient front = %.1f %.1f %.1f\n",
-      redLit[0], redLit[1], redLit[2]);
+  std::printf(
+      "front-face luma:  dark=%.1f  bright=%.1f\n", luma(dark), luma(bright));
+  std::printf(
+      "red-ambient front = %.1f %.1f %.1f\n", redLit[0], redLit[1], redLit[2]);
   std::printf("ambient-only (no lights) luma = %.1f\n", luma(ambientOnly));
 
   check(luma(dark) < 30.0, "front face is dark without ambient");
@@ -228,7 +236,8 @@ int main(int argc, char **argv)
   check(redLit[0] > redLit[1] && redLit[0] > redLit[2],
       "ambientColor red tints the fill red");
   std::printf("linear fill: radiance 0.25 -> %.4f, 0.5 -> %.4f\n",
-      luma(quarter), luma(half));
+      luma(quarter),
+      luma(half));
   check(luma(quarter) > 0.01 && luma(half) > 1.9 * luma(quarter)
           && luma(half) < 2.1 * luma(quarter),
       "ambientRadiance scales the fill linearly");
@@ -238,6 +247,7 @@ int main(int argc, char **argv)
   anariRelease(dev, dev);
   anariUnloadLibrary(lib);
   std::printf("\n%s (%d issues)\n",
-      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED", g_errors);
+      g_errors == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED",
+      g_errors);
   return g_errors == 0 ? 0 : 1;
 }

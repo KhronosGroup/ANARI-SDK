@@ -21,11 +21,16 @@ void Cone::commitParameters()
 void Cone::finalize()
 {
   Geometry::finalize();
-  // Cone tapers base radius -> 0 at the apex when no per-vertex radius is given.
+  // Cone tapers base radius -> 0 at the apex when no per-vertex radius is
+  // given.
   const TubeRadii radii{
       vertexRadius(), /*primitive=*/nullptr, globalRadius(), /*apex=*/0.f};
-  TessellateTubes(
-      vertexPosition(), index(), radii, vertexCap(), ParseTubeCaps(m_caps), m_mesh);
+  TessellateTubes(vertexPosition(),
+      index(),
+      radii,
+      vertexCap(),
+      ParseTubeCaps(m_caps),
+      m_mesh);
 }
 
 TfToken Cone::primType() const

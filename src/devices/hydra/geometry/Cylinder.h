@@ -19,7 +19,10 @@ struct Cylinder : public Geometry
   void commitParameters() override;
   void finalize() override;
   pxr::TfToken primType() const override;
-  const TessMesh *tessellation() const override { return &m_mesh; }
+  const TessMesh *tessellation() const override
+  {
+    return &m_mesh;
+  }
 
  private:
   std::string m_caps;
