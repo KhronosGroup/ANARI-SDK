@@ -1,0 +1,286 @@
+{
+  "info": {
+    "name": "HYDRA_BRIDGE_PARAMETERS",
+    "type": "core",
+    "dependencies": []
+  },
+  "objects": [
+    {
+      "type": "ANARI_CAMERA",
+      "name": "perspective",
+      "parameters": [
+        {
+          "name": "hydra.clippingRange",
+          "types": [
+            "ANARI_FLOAT32_VEC2"
+          ],
+          "tags": [],
+          "default": [
+            0.0,
+            0.0
+          ],
+          "description": "Camera-space near/far distances; (0,0) automatically fits world bounds. Overrides require finite 0 < near < far."
+        }
+      ]
+    },
+    {
+      "type": "ANARI_CAMERA",
+      "name": "orthographic",
+      "parameters": [
+        {
+          "name": "hydra.clippingRange",
+          "types": [
+            "ANARI_FLOAT32_VEC2"
+          ],
+          "tags": [],
+          "default": [
+            0.0,
+            0.0
+          ],
+          "description": "Camera-space near/far distances; (0,0) automatically fits world bounds. Overrides require finite 0 < near < far."
+        }
+      ]
+    },
+    {
+      "type": "ANARI_LIGHT",
+      "name": "hdri",
+      "parameters": [
+        {
+          "name": "visible",
+          "types": [
+            "ANARI_BOOL"
+          ],
+          "tags": [],
+          "default": true,
+          "description": "whether the dome is visible to the camera"
+        }
+      ]
+    },
+    {
+      "type": "ANARI_MATERIAL",
+      "name": "physicallyBased",
+      "parameters": [
+        {
+          "name": "occlusion",
+          "types": [
+            "ANARI_FLOAT32",
+            "ANARI_STRING"
+          ],
+          "tags": [],
+          "description": "precomputed occlusion; also accepted as a constant or an attribute binding"
+        }
+      ]
+    },
+    {
+      "type": "ANARI_GEOMETRY",
+      "name": "triangle",
+      "parameters": [
+        {
+          "name": "primitive.id",
+          "types": [
+            "ANARI_ARRAY1D"
+          ],
+          "tags": [],
+          "elementType": [
+            "ANARI_UINT32",
+            "ANARI_UINT64"
+          ],
+          "description": "per-primitive user id written to channel.primitiveId (KHR_FRAME_CHANNEL_PRIMITIVE_ID)"
+        }
+      ]
+    },
+    {
+      "type": "ANARI_GEOMETRY",
+      "name": "quad",
+      "parameters": [
+        {
+          "name": "primitive.id",
+          "types": [
+            "ANARI_ARRAY1D"
+          ],
+          "tags": [],
+          "elementType": [
+            "ANARI_UINT32",
+            "ANARI_UINT64"
+          ],
+          "description": "per-primitive user id written to channel.primitiveId (KHR_FRAME_CHANNEL_PRIMITIVE_ID)"
+        }
+      ]
+    },
+    {
+      "type": "ANARI_GEOMETRY",
+      "name": "sphere",
+      "parameters": [
+        {
+          "name": "primitive.id",
+          "types": [
+            "ANARI_ARRAY1D"
+          ],
+          "tags": [],
+          "elementType": [
+            "ANARI_UINT32",
+            "ANARI_UINT64"
+          ],
+          "description": "per-primitive user id written to channel.primitiveId (KHR_FRAME_CHANNEL_PRIMITIVE_ID)"
+        }
+      ]
+    },
+    {
+      "type": "ANARI_GEOMETRY",
+      "name": "curve",
+      "parameters": [
+        {
+          "name": "primitive.id",
+          "types": [
+            "ANARI_ARRAY1D"
+          ],
+          "tags": [],
+          "elementType": [
+            "ANARI_UINT32",
+            "ANARI_UINT64"
+          ],
+          "description": "per-primitive user id written to channel.primitiveId (KHR_FRAME_CHANNEL_PRIMITIVE_ID)"
+        }
+      ]
+    },
+    {
+      "type": "ANARI_GEOMETRY",
+      "name": "cone",
+      "parameters": [
+        {
+          "name": "primitive.id",
+          "types": [
+            "ANARI_ARRAY1D"
+          ],
+          "tags": [],
+          "elementType": [
+            "ANARI_UINT32",
+            "ANARI_UINT64"
+          ],
+          "description": "per-primitive user id written to channel.primitiveId (KHR_FRAME_CHANNEL_PRIMITIVE_ID)"
+        }
+      ]
+    },
+    {
+      "type": "ANARI_GEOMETRY",
+      "name": "cylinder",
+      "parameters": [
+        {
+          "name": "primitive.id",
+          "types": [
+            "ANARI_ARRAY1D"
+          ],
+          "tags": [],
+          "elementType": [
+            "ANARI_UINT32",
+            "ANARI_UINT64"
+          ],
+          "description": "per-primitive user id written to channel.primitiveId (KHR_FRAME_CHANNEL_PRIMITIVE_ID)"
+        }
+      ]
+    },
+    {
+      "type": "ANARI_GEOMETRY",
+      "name": "isosurface",
+      "parameters": [
+        {
+          "name": "primitive.id",
+          "types": [
+            "ANARI_ARRAY1D"
+          ],
+          "tags": [],
+          "elementType": [
+            "ANARI_UINT32",
+            "ANARI_UINT64"
+          ],
+          "description": "per-isovalue user id written to channel.primitiveId (KHR_FRAME_CHANNEL_PRIMITIVE_ID)"
+        }
+      ]
+    },
+    {
+      "type": "ANARI_INSTANCE",
+      "name": "transform",
+      "parameters": [
+        {
+          "name": "transform",
+          "types": [
+            "ANARI_FLOAT32_MAT3x4"
+          ],
+          "tags": [],
+          "description": "world-space transformation matrix, also accepted in the compact 3x4 layout (arrays may hold MAT3x4 elements as well)"
+        },
+        {
+          "name": "color",
+          "types": [
+            "ANARI_FLOAT32",
+            "ANARI_FLOAT32_VEC2",
+            "ANARI_FLOAT32_VEC3",
+            "ANARI_ARRAY1D"
+          ],
+          "tags": [],
+          "description": "per-instance color override; narrower float widths and per-transform arrays are also accepted"
+        },
+        {
+          "name": "attribute0",
+          "types": [
+            "ANARI_FLOAT32",
+            "ANARI_FLOAT32_VEC2",
+            "ANARI_FLOAT32_VEC3",
+            "ANARI_ARRAY1D"
+          ],
+          "tags": [],
+          "description": "per-instance attribute0 override; narrower float widths and per-transform arrays are also accepted"
+        },
+        {
+          "name": "attribute1",
+          "types": [
+            "ANARI_FLOAT32",
+            "ANARI_FLOAT32_VEC2",
+            "ANARI_FLOAT32_VEC3",
+            "ANARI_ARRAY1D"
+          ],
+          "tags": [],
+          "description": "per-instance attribute1 override; narrower float widths and per-transform arrays are also accepted"
+        },
+        {
+          "name": "attribute2",
+          "types": [
+            "ANARI_FLOAT32",
+            "ANARI_FLOAT32_VEC2",
+            "ANARI_FLOAT32_VEC3",
+            "ANARI_ARRAY1D"
+          ],
+          "tags": [],
+          "description": "per-instance attribute2 override; narrower float widths and per-transform arrays are also accepted"
+        },
+        {
+          "name": "attribute3",
+          "types": [
+            "ANARI_FLOAT32",
+            "ANARI_FLOAT32_VEC2",
+            "ANARI_FLOAT32_VEC3",
+            "ANARI_ARRAY1D"
+          ],
+          "tags": [],
+          "description": "per-instance attribute3 override; narrower float widths and per-transform arrays are also accepted"
+        }
+      ]
+    },
+    {
+      "type": "ANARI_RENDERER",
+      "name": "default",
+      "parameters": [
+        {
+          "name": "pixelSamples",
+          "types": [
+            "ANARI_INT32"
+          ],
+          "tags": [],
+          "default": 1,
+          "minimum": 1,
+          "description": "samples per pixel; aliases the delegate's convergedSamplesPerPixel render setting"
+        }
+      ]
+    }
+  ]
+}
