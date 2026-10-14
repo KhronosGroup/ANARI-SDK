@@ -525,6 +525,13 @@ void Frame::renderOnWorker()
     std::sort(outputs.begin(), outputs.end());
     outputs.erase(std::unique(outputs.begin(), outputs.end()), outputs.end());
     m_taskController->SetRenderOutputs(outputs);
+    // With more than one output the task controller clears the viewport AOV,
+    // which disables HdxAovInputTask but runs HdxVisualizeAovTask on the
+    // texture handles AovInput left in the task context; once those textures
+    // are freed, Storm draws into a deleted attachment and later crashes in
+    // HgiGL. Every channel is read from its render buffer, never the
+    // viewport, so keep the viewport on color as for a color-only frame.
+    m_taskController->SetViewportRenderOutput(HdAovTokens->color);
 
     // Honor each arbitrary AOV's requested ANARI format on its bprim via
     // SetRenderOutputSettings — must come after SetRenderOutputs, which creates
