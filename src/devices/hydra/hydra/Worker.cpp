@@ -5,6 +5,11 @@
 
 #include <pxr/imaging/hd/rendererPluginHandle.h>
 #include <pxr/imaging/hd/rendererPluginRegistry.h>
+#include <pxr/imaging/hd/version.h>
+#if HD_API_VERSION >= 103
+#include <pxr/imaging/hd/rendererCreateArgsSchema.h>
+#include <pxr/imaging/hd/retainedDataSource.h>
+#endif
 #include <pxr/imaging/hgi/tokens.h>
 
 PXR_NAMESPACE_USING_DIRECTIVE
@@ -123,9 +128,21 @@ bool Worker::delegateSupported(const TfToken &delegateId, std::string *reason)
         *reason = "no Hydra renderer plugin '" + delegateId.GetString() + "'";
       return;
     }
+#if HD_API_VERSION >= 103
+    // OpenUSD 26.08 (HD_API_VERSION 103) replaced the HdRendererCreateArgs
+    // struct with HdRendererCreateArgsSchema; Hgi travels in its drivers.
+    const HdRendererCreateArgsSchema args(HdRendererCreateArgsSchema::Builder()
+            .SetGpuEnabled(
+                HdRetainedTypedSampledDataSource<bool>::New(m_gpuEnabled))
+            .SetDrivers(HdRetainedContainerDataSource::New(
+                HdRendererCreateArgsSchemaTokens->hgi,
+                HdRetainedTypedSampledDataSource<Hgi *>::New(m_hgi.get())))
+            .Build());
+#else
     HdRendererCreateArgs args;
     args.gpuEnabled = m_gpuEnabled;
     args.hgi = m_hgi.get();
+#endif
     std::string why;
     supported = plugin->IsSupported(args, &why);
     if (!supported && reason)
