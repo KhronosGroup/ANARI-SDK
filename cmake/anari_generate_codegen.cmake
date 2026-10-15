@@ -14,9 +14,9 @@ function(anari_generate_queries)
   # options
     ""
   # single-arg options
-    "CPP_NAMESPACE;JSON_DEFINITIONS_FILE;JSON_ROOT_LOCATION;JSON_EXTENSION_FILES;DEVICE_TARGET"
+    "CPP_NAMESPACE;JSON_DEFINITIONS_FILE;JSON_ROOT_LOCATION;DEVICE_TARGET"
   # multi-arg options
-    ""
+    "JSON_EXTENSION_FILES"
   # string to parse
     ${ARGN}
   )
