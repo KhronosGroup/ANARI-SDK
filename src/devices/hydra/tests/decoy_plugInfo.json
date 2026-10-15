@@ -1,0 +1,24 @@
+# Another package's top-level manifest in a shared library directory, as
+# hdAnari installs one. If the device registered the whole directory, this
+# would claim the "anari" image type (precedence above the device's) from a
+# library that does not exist, and the device's textures would fail to load.
+{
+    "Plugins": [
+        {
+            "Info": {
+                "Types": {
+                    "AnariHydraDecoyImage": {
+                        "bases": ["HioImage"],
+                        "imageTypes": ["anari"],
+                        "precedence": 1000
+                    }
+                }
+            },
+            "LibraryPath": "libanari_hydra_decoy_missing.so",
+            "Name": "anariHydraDecoy",
+            "ResourcePath": ".",
+            "Root": ".",
+            "Type": "library"
+        }
+    ]
+}

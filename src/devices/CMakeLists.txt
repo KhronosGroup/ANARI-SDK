@@ -23,6 +23,11 @@ if (BUILD_HELIDE_GPU_DEVICE)
   add_subdirectory(helide_gpu)
 endif()
 
+option(BUILD_HYDRA_DEVICE "Build 'hydra' device (OpenUSD Hydra render delegates; needs OpenUSD)" OFF)
+if (BUILD_HYDRA_DEVICE)
+  add_subdirectory(hydra)
+endif()
+
 option(BUILD_REMOTE_DEVICE "Build 'remote' TCP passthrough device" OFF)
 if (BUILD_REMOTE_DEVICE)
   add_subdirectory(remote)

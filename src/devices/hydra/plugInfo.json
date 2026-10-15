@@ -1,0 +1,29 @@
+{
+    "Plugins": [
+        {
+            "Info": {
+                "Types": {
+                    "AnariHioImage": {
+                        "bases": ["HioImage"],
+                        "imageTypes": ["anari"],
+                        "precedence": 100
+                    },
+                    "AnariHioFieldTextureData": {
+                        "bases": ["HioFieldTextureData"],
+                        "fieldDataTypes": ["anari"],
+                        "precedence": 100
+                    },
+                    "AnariArResolver": {
+                        "bases": ["ArResolver"],
+                        "uriSchemes": ["anari"]
+                    }
+                }
+            },
+            "LibraryPath": "../libanari_library_hydra.so",
+            "Name": "anariHydraHio",
+            "ResourcePath": ".",
+            "Root": ".",
+            "Type": "library"
+        }
+    ]
+}

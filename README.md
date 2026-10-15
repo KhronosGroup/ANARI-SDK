@@ -9,6 +9,7 @@ This repository contains the source for the ANARI API SDK. This includes:
 - [Device implementation utilties for implementations](src/helium)
 - [Example device implementation](src/devices/helide) (not intended for production use)
 - [Example GPU device implementation](src/devices/helide_gpu) (in-progress, requires SDL3)
+- [Device rendering through OpenUSD Hydra render delegates](src/devices/hydra) (requires OpenUSD)
 - [Example applications](examples/)
 - [Interactive sample viewer](examples/viewer)
 - [Render tests](tests/render)
@@ -57,6 +58,7 @@ available to enable. The following CMake options are offered:
 - `BUILD_TESTING`       : build unit and regression test binaries
 - `BUILD_HELIDE_DEVICE`     : build the provided example `helide` device implementation
 - `BUILD_HELIDE_GPU_DEVICE` : build the provided example `helide_gpu` GPU device (needs SDL3)
+- `BUILD_HYDRA_DEVICE`      : build the `hydra` device, which renders through OpenUSD Hydra render delegates (needs OpenUSD)
 - `BUILD_REMOTE_DEVICE`     : build the provided experimental `remote` device implementation
 - `BUILD_EXAMPLES`      : build example applications
 - `BUILD_VIEWER`        : build viewer too (needs SDL3) if building examples
@@ -144,6 +146,12 @@ available. It uses SDL3's cross-platform GPU abstraction layer for rendering and
 is currently in-progress. Build it with `BUILD_HELIDE_GPU_DEVICE=ON` (requires
 SDL3 3.2+ and `glslangValidator` in PATH).
 
+The [hydra](src/devices/hydra) device renders ANARI scenes through OpenUSD
+Hydra render delegates (Storm, HdEmbree, ...), one device subtype per
+delegate. It is the reverse of the [hdAnari](src/hdanari) plugin, which renders
+Hydra scenes through ANARI. Build it with `BUILD_HYDRA_DEVICE=ON` (requires
+OpenUSD, found through `CMAKE_PREFIX_PATH`).
+
 ### Using the debug device layer
 
 The ANARI-SDK ships with a [debug layer](src/devices/debug) implemented as an
@@ -194,6 +202,7 @@ variables:
 - [Halogen](https://github.com/MetaversalCorp/Halogen) (built on [Filament](https://github.com/google/filament))
 - [helide](src/devices/helide)
 - [helide_gpu](src/devices/helide_gpu)
+- [hydra](src/devices/hydra) (OpenUSD Hydra render delegates)
 - [Intel OSPRay](https://github.com/ospray/anari-ospray)
 - [NVIDIA Barney](https://github.com/NVIDIA/barney) (MPI distributed renderer)
 - [NVIDIA USD](https://github.com/NVIDIA-Omniverse/AnariUsdDevice)
