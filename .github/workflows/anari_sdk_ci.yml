@@ -59,7 +59,10 @@ jobs:
         -DBUILD_TESTING=ON
         -DCMAKE_BUILD_TYPE=Release
     - name: Build
-      run: cmake --build ${{ github.workspace }}/build --config Release --parallel
+      # A bare --parallel is an unbounded 'make -j', which starts every
+      # Embree kernel, ISPC and MaterialX compile at once and runs the
+      # runner out of memory: one job per core
+      run: cmake --build ${{ github.workspace }}/build --config Release --parallel $(nproc)
     - name: halcyon Tests
       working-directory: ${{ github.workspace }}/build
       run: ctest -R '^halcyon::' -C Release --output-on-failure
