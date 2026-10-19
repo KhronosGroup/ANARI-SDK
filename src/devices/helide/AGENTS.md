@@ -27,7 +27,7 @@ HelideDevice
 
 ## Embree Integration
 
-Embree v4.3.3 is fetched via CMake from GitHub into `external/embree/`. The namespace is aliased to `embree_for_helide` (in the Embree CMakeLists) to avoid symbol conflicts. The static library is exposed as the `local_embree` CMake target.
+Embree v4.3.3 is fetched via CMake from GitHub into `external/embree/`. The static library is exposed as the `anari_embree` CMake target, shared with halcyon (`src/devices/halcyon/external/embree/` is an identical copy; whichever device configures first builds it). It has no API namespace (halcyon's ISPC calls the C API); its symbols are hidden instead, with the tasking library kept out of the device's dynamic symbols (`--exclude-libs`), to avoid conflicts with another Embree in the process.
 
 **Scene hierarchy:**
 - `World` owns the top-level Embree scene (`RTCScene` TLS)
