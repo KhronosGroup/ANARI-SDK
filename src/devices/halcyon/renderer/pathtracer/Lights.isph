@@ -1,0 +1,910 @@
+// Copyright 2026 The Khronos Group
+// SPDX-License-Identifier: LicenseRef-TOST-1.0
+//
+// Ported from Typhoon (NVIDIA-Omniverse/OpenUSD, branch typhoon/main, commit
+// 70c45e83b08a7b45588cd6cdbd2ae67f5147befb), pxr/imaging/plugin/hdEmbree/
+// renderer/lights/ distantLight.cpp, sphereLight.cpp, rectLight.cpp,
+// diskLight.cpp, domeLight.cpp, lightSamplerCommon.{h,cpp} and
+// lightSampler.h, and the cone of ty::EvaluateDirectionalShaping() in
+// delegate/light.cpp. Copyright 2024-2025 Pixar, licensed under the Tomorrow Open Source Technology License
+// 1.0 (see THIRD-PARTY.md). Keep in step with those when the pin in
+// external/typhoon/PROVENANCE.md moves.
+
+#pragma once
+
+// The pathtracer's lights: sampling a light from a shading point, and
+// evaluating it along a ray, as Typhoon's ty::LightSampler does, over the
+// world-space light records (struct Light, shading/halcyon_objects.isph) the
+// world keeps. 'directional' samples as Typhoon's distant light, 'point'
+// with a radius as its sphere light, 'quad' as its rect light (uniform in
+// area; a parallelogram's edges take the place of the rect's sides, which
+// Typhoon's sheared light transforms allow too) and 'ring' with a radius as
+// its disk light (uniform in area; an annulus maps the radius onto the area
+// between the radii) and 'hdri' as its dome light (by the texels'
+// luminance over their solid angle, or for a reflection-only BSDF folded
+// into the hemisphere it reflects into). The record's 'emission' is already in the units the
+// shape needs (scene/light/Light.h), so where Typhoon applies UsdLux's
+// intensity, exposure and 'normalize' to the light's colour, the port reads
+// 'emission'. Of Typhoon's shaping only the cone is ported, as 'spot' and
+// 'ring' lights' 'openingAngle' and 'falloffAngle'; ANARI's
+// 'intensityDistribution' of quads and rings, which Typhoon has no
+// counterpart for (its IES profiles come from files), scales the radiance
+// the same way. Typhoon samples shaped lights partly by their shaping
+// (ApplyShapingAwareFinitePdf()); the port samples them by area only, which
+// is unbiased but noisier for narrow cones and peaked distributions. Typhoon's
+// textures, focus and colour temperature have no ANARI counterpart and are
+// left out. Sphere and ring lights are never scaled (ANARI instance
+// transforms don't scale a light's radius), so their frames are orthonormal.
+// The delta point, spot and ring lights (radius 0) are halcyon's own:
+// Typhoon's sphere and disk lights need a radius.
+
+#include "shading/halcyon_derivatives.isph"
+#include "shading/halcyon_hdri.isph"
+#include "shading/halcyon_objects.isph"
+#include "shading/halcyon_ray.isph"
+#include "Transport.isph"
+
+// A sample, or an evaluation along a ray, of one light (Typhoon's
+// ty::LightSampler::LightSample). Only 'valid' may be read when it is false.
+struct LightSample
+{
+  // Incident radiance; for a delta light the irradiance (directional) or the
+  // intensity over the squared distance (point) instead
+  float3 radiance;
+  // Unit world-space direction from the shading point towards the light
+  float3 wi;
+  // Distance to the light along wi; HALCYON_RAY_TFAR (FLT_MAX) for
+  // directional lights
+  float dist;
+  // 1 / the solid-angle pdf of wi, in sr; 1 for delta lights
+  float pdfInverse;
+  bool valid;
+  // A delta light (a direction or a point): BSDF sampling can't find it, so
+  // it takes no part in MIS
+  bool delta;
+};
+
+inline LightSample LightSample_invalid()
+{
+  LightSample s;
+  s.radiance = make_float3(0.f);
+  s.wi = make_float3(0.f);
+  s.dist = 0.f;
+  s.pdfInverse = 0.f;
+  s.valid = false;
+  s.delta = false;
+  return s;
+}
+
+inline LightSample LightSample_make(
+    float3 radiance, float3 wi, float dist, float pdfInverse, bool valid)
+{
+  LightSample s;
+  s.radiance = radiance;
+  s.wi = wi;
+  s.dist = dist;
+  s.pdfInverse = pdfInverse;
+  s.valid = valid;
+  s.delta = false;
+  return s;
+}
+
+// The direction within half angle 'thetaMax' of the unit 'axis' for random
+// numbers 'u', uniform in solid angle (the cone sampling of Typhoon's
+// SampleDistantLight() and _EvalSphereLightSolidAngle())
+inline float3 Lights_sampleCone(float3 axis, float cosThetaMax, float2 u)
+{
+  float3 tangent;
+  float3 bitangent;
+  buildOrthonormalFrame(axis, tangent, bitangent);
+  const float cosTheta =
+      1.f - Lights_clampUnitHalfOpen(u.x) * (1.f - cosThetaMax);
+  const float sinTheta = sqrt(max(0.f, 1.f - cosTheta * cosTheta));
+  const float phi = 2.f * PI * Lights_clampUnitHalfOpen(u.y);
+  return Lights_normalized(tangent * (sinTheta * cos(phi))
+      + bitangent * (sinTheta * sin(phi)) + axis * cosTheta);
+}
+
+// Shaping /////////////////////////////////////////////////////////////////////
+
+// The cone weight of a spot or ring light 'cosTheta' off its axis: 1 up to
+// coneSoftAngle, 0 past coneAngle, a smoothstep in the angle between (the
+// cone of Typhoon's EvaluateDirectionalShaping(), with its _Smoothstep())
+inline float Lights_coneWeight(const uniform Light *uniform light, float cosTheta)
+{
+  const float theta = acos(clamp(cosTheta, -1.f, 1.f));
+  const uniform float edge0 = light->coneSoftAngle;
+  const uniform float length = light->coneAngle - edge0;
+  float smooth;
+  if (length == 0.f) {
+    smooth = theta <= edge0 ? 0.f : 1.f;
+  } else {
+    const float t = clamp((theta - edge0) / length, 0.f, 1.f);
+    smooth = t * t * (3.f - 2.f * t);
+  }
+  return 1.f - smooth;
+}
+
+// 'intensityDistribution' of a quad or ring light towards unit 'e' (from the
+// light), 'cosGamma' = dot(e, axis): linear in gamma between its values,
+// which cover [0, pi], and in the C half-plane angle between its rows, which
+// cover [0, 2 pi) with row 0 at c0 and wrap around (the spec's C-gamma
+// mapping); scene/light/Light.cpp's distributionMeanOverC() integrates the
+// same interpolation
+inline float Lights_distribution(
+    const uniform Light *uniform light, float3 e, float cosGamma)
+{
+  const uniform uint32 numGamma = light->numGamma;
+  const float gamma = acos(clamp(cosGamma, -1.f, 1.f));
+  const float u = clamp(gamma / PI, 0.f, 1.f) * (float)(numGamma - 1);
+  const int i0 = min((int)u, (int)numGamma - 2);
+  const float fu = u - (float)i0;
+  const uniform float *uniform values = light->distribution;
+  if (light->numC == 1)
+    return (1.f - fu) * values[i0] + fu * values[i0 + 1];
+
+  const uniform uint32 numC = light->numC;
+  float C = atan2(dot(e, light->c90), dot(e, light->c0));
+  if (C < 0.f)
+    C += 2.f * PI;
+  const float v = clamp(C / (2.f * PI), 0.f, 1.f) * (float)numC;
+  const int j0 = min((int)v, (int)numC - 1);
+  const float fv = v - (float)j0;
+  const int j1 = j0 + 1 == (int)numC ? 0 : j0 + 1;
+  const uniform float *row0 = values + j0 * numGamma;
+  const uniform float *row1 = values + j1 * numGamma;
+  const float d0 = (1.f - fu) * row0[i0] + fu * row0[i0 + 1];
+  const float d1 = (1.f - fu) * row1[i0] + fu * row1[i0 + 1];
+  return (1.f - fv) * d0 + fv * d1;
+}
+
+// The radiance of an area light towards unit 'e' (from the light), relative
+// to its 'emission', where its emitting side's normal is at
+// 'cosOffNormal' > 0 to e: a ring's cone weight, and where an
+// 'intensityDistribution' is set, the distribution over the cosine a
+// Lambertian emitter's intensity falls off with (scene/light/Light.h).
+// Spheres have none, so 1.
+inline float Lights_areaRadianceScale(
+    const uniform Light *uniform light, float3 e, float cosOffNormal)
+{
+  const float cosGamma = dot(e, light->axis);
+  float scale = 1.f;
+  if (light->type == LIGHT_RING)
+    scale = Lights_coneWeight(light, cosGamma);
+  if (light->distribution)
+    scale = scale * Lights_distribution(light, e, cosGamma) / cosOffNormal;
+  return scale;
+}
+
+// Directional lights (Typhoon's distantLight.cpp) ///////////////////////////
+
+// The solid angle of a cone of half angle 'thetaMax' (_DistantConeSolidAngle())
+inline float DirectionalLight_coneSolidAngle(uniform float thetaMax)
+{
+  if (thetaMax <= 0.f)
+    return 0.f;
+  return 2.f * PI * (1.f - cos(clamp(thetaMax, 0.f, PI)));
+}
+
+// The light along unit-or-not world direction 'dir'
+// (EvaluateDistantLightDirection()): a delta light only along its axis
+inline LightSample DirectionalLight_eval(
+    const uniform Light *uniform light, float3 dir)
+{
+  if (!isFinite(dir) || length2(dir) <= 0.f)
+    return LightSample_invalid();
+
+  const uniform float3 axis = light->axis;
+  const uniform float thetaMax = light->halfAngle;
+  const float3 wi = Lights_normalized(dir);
+  const float cosTheta = dot(wi, axis);
+
+  if (thetaMax <= 0.f) {
+    if (cosTheta < 1.f - 1e-5f)
+      return LightSample_invalid();
+    LightSample s = LightSample_make(
+        light->emission, axis, HALCYON_RAY_TFAR, 1.f, true);
+    s.delta = true;
+    return s;
+  }
+
+  const float solidAngle = DirectionalLight_coneSolidAngle(thetaMax);
+  const float cosThetaMax = cos(thetaMax);
+  if (solidAngle <= 0.f || cosTheta < cosThetaMax - 1e-6f)
+    return LightSample_invalid();
+  return LightSample_make(
+      light->emission, wi, HALCYON_RAY_TFAR, solidAngle, true);
+}
+
+// A direction towards the light for random numbers 'u'
+// (SampleDistantLight()): its axis for a delta light, else uniform in the
+// cone's solid angle
+inline LightSample DirectionalLight_sample(
+    const uniform Light *uniform light, float2 u)
+{
+  const uniform float thetaMax = light->halfAngle;
+  if (thetaMax <= 0.f)
+    return DirectionalLight_eval(light, light->axis);
+
+  const float solidAngle = DirectionalLight_coneSolidAngle(thetaMax);
+  if (solidAngle <= 0.f)
+    return LightSample_invalid();
+  const float3 wi = Lights_sampleCone(light->axis, cos(thetaMax), u);
+  return LightSample_make(
+      light->emission, wi, HALCYON_RAY_TFAR, solidAngle, true);
+}
+
+// Sphere lights (Typhoon's sphereLight.cpp, lightSamplerCommon.cpp) /////////
+
+// A point of a light's surface with its outward unit normal, in world space,
+// and the surface's area (Typhoon's ShapeSample, less the texture
+// coordinates halcyon's lights don't use)
+struct LightShapeSample
+{
+  float3 P;
+  float3 N;
+  float area;
+};
+
+// The sphere's area (_AreaSphere(), the ellipsoid approximation, exact for
+// the unscaled spheres halcyon has but kept for the same rounding)
+inline uniform float SphereLight_area(const uniform Light *uniform light)
+{
+  const uniform float r = light->radius;
+  const uniform float p = pow(r * r, 1.6f);
+  return pow((p + p + p) / 3.f, 1.f / 1.6f) * 4.f * PI;
+}
+
+// A point of the sphere for random numbers 'u', uniform in area
+// (_SampleSphere())
+inline LightShapeSample SphereLight_sampleArea(
+    const uniform Light *uniform light, float2 u)
+{
+  // Typhoon computes z in double
+  const float z = (float)(1.d - 2.d * (double)u.x);
+  const float rxy = sqrt(max(0.f, 1.f - z * z));
+  const float phi = 2.f * PI * u.y;
+  const float3 n = make_float3(rxy * cos(phi), rxy * sin(phi), z);
+  LightShapeSample s;
+  s.P = n * light->radius + light->position;
+  s.N = Lights_normalized(n);
+  s.area = SphereLight_area(light);
+  return s;
+}
+
+// The solid angle the sphere subtends from world point 'P', 0 from inside it
+// (_SphereSolidAngle())
+inline float SphereLight_solidAngle(const uniform Light *uniform light, float3 P)
+{
+  const uniform float radius = light->radius;
+  if (radius <= 0.f)
+    return 0.f;
+  const float3 posLight = P - light->position;
+  const float dist2 = length2(posLight);
+  const uniform float radius2 = radius * radius;
+  if (dist2 <= radius2 || !isfinite(dist2))
+    return 0.f;
+  const float sinThetaMax2 = radius2 / dist2;
+  const float cosThetaMax = sqrt(max(0.f, 1.f - sinThetaMax2));
+  const float oneMinusCosThetaMax = sinThetaMax2 / (1.f + cosThetaMax);
+  const float solidAngle = 2.f * PI * oneMinusCosThetaMax;
+  return isfinite(solidAngle) ? solidAngle : 0.f;
+}
+
+// Where the ray from world point 'P' along unit 'dir' meets the sphere: the
+// near hit, or the far one from inside; false if it misses
+// (_IntersectSphereLight()). Hits nearer than epsilonFrom() of P are taken
+// for P itself, where Typhoon's tolerance is a fixed 1e-6, so that lights
+// don't vanish in small scenes (AGENTS.md, "Ray offsets").
+inline bool SphereLight_intersect(const uniform Light *uniform light,
+    float3 P,
+    float3 dir,
+    LightShapeSample &s)
+{
+  const uniform float radius = light->radius;
+  const float3 posLight = P - light->position;
+  const float a = dot(dir, dir);
+  const float b = 2.f * dot(posLight, dir);
+  const float c = dot(posLight, posLight) - radius * radius;
+  const float discriminant = b * b - 4.f * a * c;
+  if (a <= 0.f || discriminant < 0.f)
+    return false;
+
+  const float sqrtDiscriminant = sqrt(discriminant);
+  float tNear = (-b - sqrtDiscriminant) / (2.f * a);
+  float tFar = (-b + sqrtDiscriminant) / (2.f * a);
+  if (tNear > tFar) {
+    const float t = tNear;
+    tNear = tFar;
+    tFar = t;
+  }
+  const float tolerance = epsilonFrom(P, dir, 0.f, TRANSPORT_EPSILON_MIN);
+  const float t = tNear > tolerance ? tNear : tFar;
+  if (t <= tolerance || !isfinite(t))
+    return false;
+
+  const float3 posHitLight = posLight + dir * t;
+  float3 n = posHitLight;
+  if (radius != 0.f)
+    n = n / radius;
+  s.P = posHitLight + light->position;
+  s.N = Lights_normalized(n);
+  s.area = SphereLight_area(light);
+  return true;
+}
+
+// The light seen from world point 'P' at the surface point 's', with the pdf
+// of choosing it uniformly by area (EvalAreaLight()): no light from the
+// side the surface doesn't emit to, and the cone and distribution of quads
+// and rings (Typhoon's shaping) on the side it does
+inline LightSample Lights_evalArea(
+    const uniform Light *uniform light, const LightShapeSample &s, float3 P)
+{
+  float3 wi = s.P - P;
+  const float dist = length(wi);
+  if (dist <= 0.f || !isfinite(dist))
+    return LightSample_invalid();
+  wi = wi / dist;
+  const float cosThetaOffNormal = max(0.f, dot(-wi, s.N));
+  const float pdfInverse = cosThetaOffNormal / (dist * dist) * s.area;
+  const float3 radiance = cosThetaOffNormal > 0.f
+      ? light->emission
+          * Lights_areaRadianceScale(light, -wi, cosThetaOffNormal)
+      : make_float3(0.f);
+  return LightSample_make(
+      radiance, wi, dist, pdfInverse, pdfInverse > 0.f && isfinite(dist));
+}
+
+// A point of the sphere for random numbers 'u', uniform in the solid angle
+// it subtends from world point 'P' (_EvalSphereLightSolidAngle()); invalid
+// from inside the sphere, or where the sampled direction misses it
+inline LightSample SphereLight_sampleSolidAngle(
+    const uniform Light *uniform light, float3 P, float2 u)
+{
+  const float solidAngle = SphereLight_solidAngle(light, P);
+  if (solidAngle <= 0.f)
+    return LightSample_invalid();
+
+  const float3 posLight = P - light->position;
+  const float3 axis = Lights_normalized(-posLight);
+  const float cosThetaMax = 1.f - solidAngle / (2.f * PI);
+  // the light-to-world transform of the direction, normalized again
+  const float3 dir = Lights_normalized(Lights_sampleCone(axis, cosThetaMax, u));
+
+  LightShapeSample s;
+  if (!SphereLight_intersect(light, P, dir, s))
+    return LightSample_invalid();
+  LightSample ls = Lights_evalArea(light, s, P);
+  ls.pdfInverse = solidAngle;
+  ls.valid = ls.valid && ls.pdfInverse > 0.f;
+  return ls;
+}
+
+// A point of the sphere for random numbers 'u' (SampleSphereLight()):
+// uniform in solid angle, else (from inside, or where that sample grazes past
+// the sphere) uniform in area
+inline LightSample SphereLight_sample(
+    const uniform Light *uniform light, float3 P, float2 u)
+{
+  const LightSample ls = SphereLight_sampleSolidAngle(light, P, u);
+  if (ls.valid)
+    return ls;
+  return Lights_evalArea(light, SphereLight_sampleArea(light, u), P);
+}
+
+// The sphere along the ray from world point 'P' along 'dir' (unit or not),
+// with the solid-angle pdf where the sphere has one from P, else the area
+// pdf (EvaluateSphereLightDirection())
+inline LightSample SphereLight_eval(
+    const uniform Light *uniform light, float3 P, float3 dir)
+{
+  LightShapeSample s;
+  if (!SphereLight_intersect(light, P, Lights_normalized(dir), s))
+    return LightSample_invalid();
+  LightSample ls = Lights_evalArea(light, s, P);
+  const float solidAngle = SphereLight_solidAngle(light, P);
+  if (solidAngle > 0.f) {
+    ls.pdfInverse = solidAngle;
+    ls.valid = ls.valid && ls.pdfInverse > 0.f;
+  }
+  return ls;
+}
+
+// Quad lights (Typhoon's rectLight.cpp) //////////////////////////////////////
+
+// The unit normal of the quad's front (edge2 x edge1)
+inline uniform float3 QuadLight_front(const uniform Light *uniform light)
+{
+  return light->front ? light->axis : -light->axis;
+}
+
+// The unit normal of the side of the quad that would light world point 'P'
+// from surface point 'S': the emitting side, or with both emitting the one
+// facing P
+inline float3 QuadLight_sideNormal(
+    const uniform Light *uniform light, float3 S, float3 P)
+{
+  const uniform float3 front = QuadLight_front(light);
+  if (!light->back)
+    return front;
+  if (!light->front)
+    return -front;
+  return dot(P - S, front) >= 0.f ? front : -front;
+}
+
+// A point of the quad for random numbers 'u', uniform in area, with the
+// normal of the side that would light world point 'P' (_SampleRect(), whose
+// sides are edge1 and edge2)
+inline LightShapeSample QuadLight_sampleArea(
+    const uniform Light *uniform light, float3 P, float2 u)
+{
+  LightShapeSample s;
+  s.P = light->position + light->edge1 * u.x + light->edge2 * u.y;
+  s.N = QuadLight_sideNormal(light, s.P, P);
+  s.area = light->area;
+  return s;
+}
+
+// Where the ray from world point 'P' along unit 'dir' meets the plane
+// through 'origin' of unit normal 'normal', in 'hit'; false if it runs along
+// the plane or meets it behind P (the plane hit of _IntersectRectLight() and
+// _IntersectDiskLight()). As for spheres, hits nearer than epsilonFrom() of
+// P are taken for P itself, where Typhoon's tolerance is a fixed 1e-6; the
+// grazing tolerance on the direction is Typhoon's.
+inline bool Lights_planeHit(float3 P,
+    float3 dir,
+    uniform float3 origin,
+    uniform float3 normal,
+    float3 &hit)
+{
+  const float cosDir = dot(dir, normal);
+  if (abs(cosDir) <= 1e-6f)
+    return false;
+  const float t = dot(origin - P, normal) / cosDir;
+  const float tolerance = epsilonFrom(P, dir, 0.f, TRANSPORT_EPSILON_MIN);
+  if (t <= tolerance || !isfinite(t))
+    return false;
+  hit = P + dir * t;
+  return true;
+}
+
+// Where the ray from world point 'P' along unit 'dir' meets the quad, from
+// either side; false if it misses (_IntersectRectLight())
+inline bool QuadLight_intersect(const uniform Light *uniform light,
+    float3 P,
+    float3 dir,
+    LightShapeSample &s)
+{
+  float3 hit;
+  if (!Lights_planeHit(P, dir, light->position, QuadLight_front(light), hit))
+    return false;
+
+  // the hit's coordinates along the edges, from hit - position =
+  // a edge1 + b edge2
+  const float3 d = hit - light->position;
+  const uniform float3 m = cross(light->edge1, light->edge2);
+  const uniform float m2 = dot(m, m);
+  const float a = dot(cross(d, light->edge2), m) / m2;
+  const float b = dot(cross(light->edge1, d), m) / m2;
+  if (!(a >= 0.f && a <= 1.f && b >= 0.f && b <= 1.f))
+    return false;
+
+  s.P = hit;
+  s.N = QuadLight_sideNormal(light, hit, P);
+  s.area = light->area;
+  return true;
+}
+
+// Ring lights (Typhoon's diskLight.cpp) //////////////////////////////////////
+
+// A point of the ring for random numbers 'u', uniform in area
+// (_SampleDisk(), whose sqrt(u.x) becomes the radius of the circle that
+// splits the annulus's area in u.x and 1 - u.x)
+inline LightShapeSample RingLight_sampleArea(
+    const uniform Light *uniform light, float2 u)
+{
+  const uniform float f = light->innerRadiusFraction2;
+  const float rho = f > 0.f ? sqrt(f + u.x * (1.f - f)) : sqrt(u.x);
+  const float phi = 2.f * PI * u.y;
+  const float x = rho * cos(phi) * light->radius;
+  const float y = rho * sin(phi) * light->radius;
+  LightShapeSample s;
+  s.P = light->position + light->frameX * x + light->frameY * y;
+  s.N = light->axis;
+  s.area = light->area;
+  return s;
+}
+
+// Where the ray from world point 'P' along unit 'dir' meets the ring, from
+// either side; false if it misses (_IntersectDiskLight())
+inline bool RingLight_intersect(const uniform Light *uniform light,
+    float3 P,
+    float3 dir,
+    LightShapeSample &s)
+{
+  float3 hit;
+  if (!Lights_planeHit(P, dir, light->position, light->axis, hit))
+    return false;
+
+  const float3 d = hit - light->position;
+  const float x = dot(d, light->frameX);
+  const float y = dot(d, light->frameY);
+  const float r2 = x * x + y * y;
+  const uniform float radius2 = light->radius * light->radius;
+  if (r2 > radius2 || r2 < light->innerRadiusFraction2 * radius2)
+    return false;
+
+  s.P = hit;
+  s.N = light->axis;
+  s.area = light->area;
+  return true;
+}
+
+// Hdri lights (Typhoon's domeLight.cpp) //////////////////////////////////////
+
+// Whether the map has a sampling distribution (_HasDomeDistribution());
+// without one (a black map) it is sampled uniformly over the sphere
+inline uniform bool HdriLight_hasDistribution(const uniform Light *uniform light)
+{
+  return light->texelWeights != NULL && light->conditionalCdf != NULL
+      && light->marginalCdf != NULL && light->weightSum > 0.f
+      && light->width > 0 && light->height > 0;
+}
+
+// Light-frame direction 'd' in world space (xformLightToWorld.TransformDir())
+inline float3 HdriLight_toWorld(const uniform Light *uniform light, float3 d)
+{
+  return light->frameX * d.x + light->frameY * d.y + light->axis * d.z;
+}
+
+// The light-frame direction of the map's (s, t) (_LatLongUvToDirection())
+inline float3 HdriLight_uvToDirection(float2 st)
+{
+  const float theta = PI * Lights_clampUnitHalfOpen(st.y);
+  const float sinTheta = sin(theta);
+  const float cosTheta = cos(theta);
+  const float phi = 2.f * PI * (0.5f - st.x);
+  return make_float3(sinTheta * sin(phi), cosTheta, sinTheta * cos(phi));
+}
+
+// The solid-angle pdf of texel (x, y), of polar angle 'theta', in the
+// distribution (_TexelDirectionalPdf())
+inline float HdriLight_texelPdf(
+    const uniform Light *uniform light, int x, int y, float theta)
+{
+  if (!HdriLight_hasDistribution(light) || x < 0 || y < 0
+      || x >= (int)light->width || y >= (int)light->height)
+    return 0.f;
+  const float sinTheta = sin(theta);
+  if (sinTheta <= 0.f)
+    return 0.f;
+  const float texelMass =
+      light->texelWeights[y * (int)light->width + x] / light->weightSum;
+  const float pdfUv =
+      texelMass * (uniform float)(light->width * light->height);
+  return pdfUv / (2.f * PI * PI * sinTheta);
+}
+
+// The first of the 'n' ascending values 'a' above 'key', n if none
+// (std::upper_bound())
+inline int Lights_upperBound(
+    const uniform float *a, uniform int n, float key)
+{
+  int first = 0;
+  int count = n;
+  while (count > 0) {
+    const int step = count / 2;
+    const int it = first + step;
+    if (!(key < a[it])) {
+      first = it + 1;
+      count -= step + 1;
+    } else {
+      count = step;
+    }
+  }
+  return first;
+}
+
+// The map's (s, t) for random numbers 'u1', 'u2', by the distribution: the
+// row from the marginal CDF, the column from the row's, each with the
+// number remapped within it (_SampleDomeUv())
+inline float2 HdriLight_sampleUv(
+    const uniform Light *uniform light, float u1, float u2)
+{
+  const float sampleX = Lights_clampUnitHalfOpen(u1);
+  const float sampleY = Lights_clampUnitHalfOpen(u2);
+  const uniform int width = (int)light->width;
+  const uniform int height = (int)light->height;
+
+  const uniform float *uniform marginal = light->marginalCdf;
+  const int y =
+      clamp(Lights_upperBound(marginal + 1, height, sampleY), 0, height - 1);
+  const float cdfY0 = marginal[y];
+  const float cdfY1 = marginal[y + 1];
+  const float remappedY =
+      cdfY1 > cdfY0 ? (sampleY - cdfY0) / (cdfY1 - cdfY0) : 0.f;
+
+  const uniform float *row = light->conditionalCdf + y * (width + 1);
+  const int x = clamp(Lights_upperBound(row + 1, width, sampleX), 0, width - 1);
+  const float cdfX0 = row[x];
+  const float cdfX1 = row[x + 1];
+  const float remappedX =
+      cdfX1 > cdfX0 ? (sampleX - cdfX0) / (cdfX1 - cdfX0) : 0.f;
+
+  return make_float2(((float)x + remappedX) / (uniform float)width,
+      ((float)y + remappedY) / (uniform float)height);
+}
+
+// The solid-angle pdf of sampling the map's (s, t) (_DomeDirectionalPdf()):
+// uniform over the sphere without a distribution
+inline float HdriLight_pdfUv(const uniform Light *uniform light, float2 st)
+{
+  float pdf = 1.f / (4.f * PI);
+  if (HdriLight_hasDistribution(light)) {
+    const int x = HdriLight_texelX(light, st.x);
+    const int y = HdriLight_texelY(light, st.y);
+    const float theta = PI * Lights_clampUnitHalfOpen(st.y);
+    pdf = HdriLight_texelPdf(light, x, y, theta);
+  }
+  return pdf;
+}
+
+// The solid-angle pdf of sampling world direction 'dir' (unit or not)
+// (_DomeDirectionalPdf())
+inline float HdriLight_pdf(const uniform Light *uniform light, float3 dir)
+{
+  if (!isFinite(dir) || length2(dir) <= 0.f)
+    return 0.f;
+  const float3 dirLight =
+      Lights_normalized(HdriLight_toLight(light, Lights_normalized(dir)));
+  return HdriLight_pdfUv(light, HdriLight_directionToUv(dirLight));
+}
+
+// Whether 'N' can be the reflection hemisphere's normal: finite and not
+// zero (_GetReflectionHemisphereNormal())
+inline bool HdriLight_hemisphereNormal(float3 N, float3 &Nn)
+{
+  if (!isFinite(N) || length2(N) <= 0.f)
+    return false;
+  Nn = Lights_normalized(N);
+  return true;
+}
+
+// 'w' mirrored across the plane of unit normal 'N' (_ReflectAcrossPlane())
+inline float3 HdriLight_reflectAcrossPlane(float3 w, float3 N)
+{
+  return Lights_normalized(w - N * (2.f * dot(w, N)));
+}
+
+// The pdf of the folded sampling of a reflection-only BSDF at world
+// direction 'dir' in the hemisphere around 'N': the direction's pdf plus
+// that of its mirror image, which folding maps onto it; 0 outside the
+// hemisphere (_ReflectionHemispherePdf())
+inline float HdriLight_hemispherePdf(
+    const uniform Light *uniform light, float3 N, float3 dir)
+{
+  float3 Nn;
+  if (!HdriLight_hemisphereNormal(N, Nn) || !isFinite(dir)
+      || length2(dir) <= 0.f)
+    return 0.f;
+  const float3 wi = Lights_normalized(dir);
+  if (dot(Nn, wi) <= 0.f)
+    return 0.f;
+  const float3 mirrored = HdriLight_reflectAcrossPlane(wi, Nn);
+  return HdriLight_pdf(light, wi) + HdriLight_pdf(light, mirrored);
+}
+
+// World direction 'dir' folded into the hemisphere around 'N': itself
+// there, else its mirror image; zero where either can't be used
+// (_FoldDirectionToReflectionHemisphere())
+inline float3 HdriLight_foldToHemisphere(float3 dir, float3 N)
+{
+  float3 Nn;
+  if (!HdriLight_hemisphereNormal(N, Nn) || !isFinite(dir)
+      || length2(dir) <= 0.f)
+    return make_float3(0.f);
+  const float3 wi = Lights_normalized(dir);
+  return dot(Nn, wi) > 0.f ? wi : HdriLight_reflectAcrossPlane(wi, Nn);
+}
+
+// The map along world direction 'dir' (unit or not), with the pdf of light
+// sampling over the whole sphere, or with 'hemisphere' of the folded
+// sampling around 'N' (EvaluateDomeLightDirection()). Its radiance holds
+// also where the pdf is 0 (at the poles, and outside the hemisphere), where
+// the sample is invalid: rays that miss the scene see it whatever the pdf.
+inline LightSample HdriLight_eval(
+    const uniform Light *uniform light, float3 dir, float3 N, bool hemisphere)
+{
+  if (!isFinite(dir) || length2(dir) <= 0.f)
+    return LightSample_invalid();
+  float3 wi;
+  float2 st;
+  const float3 radiance = HdriLight_radiance(light, dir, wi, st);
+  const float pdf = hemisphere ? HdriLight_hemispherePdf(light, N, wi)
+                               : HdriLight_pdfUv(light, st);
+  return LightSample_make(
+      radiance, wi, HALCYON_RAY_TFAR, pdf > 0.f ? 1.f / pdf : 0.f, pdf > 0.f);
+}
+
+// A direction towards the map for random numbers 'u' (SampleDomeLight()): by
+// the distribution, or uniformly over the sphere without one; with
+// 'hemisphere' (a reflection-only BSDF) folded into the hemisphere around
+// 'N'
+inline LightSample HdriLight_sample(
+    const uniform Light *uniform light, float3 N, bool hemisphere, float2 u)
+{
+  float3 dir;
+  if (!HdriLight_hasDistribution(light)) {
+    const float localY = 1.f - 2.f * Lights_clampUnitHalfOpen(u.x);
+    const float localR = sqrt(max(0.f, 1.f - localY * localY));
+    const float phi = 2.f * PI * Lights_clampUnitHalfOpen(u.y);
+    const float3 dirLight =
+        make_float3(localR * sin(phi), localY, localR * cos(phi));
+    dir = Lights_normalized(HdriLight_toWorld(light, dirLight));
+  } else {
+    const float2 st = HdriLight_sampleUv(light, u.x, u.y);
+    const float3 dirLight = HdriLight_uvToDirection(st);
+    dir = Lights_normalized(HdriLight_toWorld(light, dirLight));
+  }
+
+  if (hemisphere) {
+    const float3 folded = HdriLight_foldToHemisphere(dir, N);
+    if (length2(folded) > 0.f)
+      return HdriLight_eval(light, folded, N, true);
+  }
+  return HdriLight_eval(light, dir, N, false);
+}
+
+// Delta point, spot and ring lights (halcyon's own) //////////////////////////
+
+// The intensity of a delta light towards unit 'e' (from the light), relative
+// to its 'emission' (its intensity along the axis): 1 for a point, the cone
+// weight for a spot, and for a ring the cone weight times the cosine off its
+// axis or its 'intensityDistribution' (scene/light/Light.h); none behind a
+// ring
+inline float DeltaLight_profile(const uniform Light *uniform light, float3 e)
+{
+  if (light->type == LIGHT_POINT)
+    return 1.f;
+  const float cosGamma = dot(e, light->axis);
+  if (light->type == LIGHT_SPOT)
+    return Lights_coneWeight(light, cosGamma);
+  if (cosGamma <= 0.f)
+    return 0.f;
+  const float shape = light->distribution
+      ? Lights_distribution(light, e, cosGamma)
+      : cosGamma;
+  return Lights_coneWeight(light, cosGamma) * shape;
+}
+
+// The direction towards a delta point, spot or ring light from world point
+// 'P', with its intensity towards P over the squared distance as its
+// radiance; invalid where it sends P nothing
+inline LightSample DeltaLight_sample(const uniform Light *uniform light, float3 P)
+{
+  float3 wi = light->position - P;
+  const float dist = length(wi);
+  if (dist <= 0.f || !isfinite(dist))
+    return LightSample_invalid();
+  wi = wi / dist;
+  const float profile = DeltaLight_profile(light, -wi);
+  if (!(profile > 0.f))
+    return LightSample_invalid();
+  LightSample s = LightSample_make(
+      light->emission * (profile / (dist * dist)), wi, dist, 1.f, true);
+  s.delta = true;
+  return s;
+}
+
+// Dispatch (Typhoon's LightSampler) ///////////////////////////////////////////
+
+// Whether the light is a delta distribution, which only light sampling finds
+inline uniform bool Light_isDelta(const uniform Light *uniform light)
+{
+  switch (light->type) {
+  case LIGHT_DIRECTIONAL:
+    return light->halfAngle <= 0.f;
+  case LIGHT_QUAD:
+  case LIGHT_HDRI:
+    return false;
+  case LIGHT_SPOT:
+    return true;
+  default:
+    return light->radius <= 0.f;
+  }
+}
+
+// Whether the light is a finite shape that rays can hit (a sphere, quad or
+// ring)
+inline uniform bool Light_isFinite(const uniform Light *uniform light)
+{
+  return light->type == LIGHT_QUAD
+      || ((light->type == LIGHT_POINT || light->type == LIGHT_RING)
+          && light->radius > 0.f);
+}
+
+// Samples the light from world point 'P' with random numbers 'u' in [0, 1)^2
+// (ty::LightSampler::GetLightSample()); with 'hemisphere' (Typhoon's
+// SamplingMode::ReflectionHemisphere, for a reflection-only BSDF) an hdri
+// is sampled in the hemisphere around the shading normal 'N' (faced to the
+// incident side) only, which the other lights ignore
+inline LightSample Light_sample(const uniform Light *uniform light,
+    float3 P,
+    float3 N,
+    bool hemisphere,
+    float2 u)
+{
+  if (light->type == LIGHT_HDRI)
+    return HdriLight_sample(light, N, hemisphere, u);
+  if (light->type == LIGHT_DIRECTIONAL)
+    return DirectionalLight_sample(light, u);
+  if (light->type == LIGHT_QUAD)
+    return Lights_evalArea(light, QuadLight_sampleArea(light, P, u), P);
+  if (light->type == LIGHT_POINT && light->radius > 0.f)
+    return SphereLight_sample(light, P, u);
+  if (light->type == LIGHT_RING && light->radius > 0.f)
+    return Lights_evalArea(light, RingLight_sampleArea(light, u), P);
+  return DeltaLight_sample(light, P);
+}
+
+// Light_sample() over the whole sphere
+inline LightSample Light_sample(
+    const uniform Light *uniform light, float3 P, float2 u)
+{
+  return Light_sample(light, P, make_float3(0.f), false, u);
+}
+
+// Where the ray from world point 'P' along unit 'dir' meets the shape of
+// the finite light (a sphere, quad or ring), from either side
+inline bool Light_intersectShape(const uniform Light *uniform light,
+    float3 P,
+    float3 dir,
+    LightShapeSample &s)
+{
+  if (light->type == LIGHT_POINT)
+    return SphereLight_intersect(light, P, dir, s);
+  if (light->type == LIGHT_QUAD)
+    return QuadLight_intersect(light, P, dir, s);
+  return RingLight_intersect(light, P, dir, s);
+}
+
+// Evaluates the light along the ray from world point 'P' along 'dir' (unit
+// or not), with the pdf light sampling would have chosen that direction
+// with; invalid where the ray misses it, and always for delta points, spots
+// and rings (ty::LightSampler::EvaluateLightDirection()); an hdri with the
+// pdf over the whole sphere (HdriLight_eval() has the hemisphere's)
+inline LightSample Light_eval(
+    const uniform Light *uniform light, float3 P, float3 dir)
+{
+  if (light->type == LIGHT_HDRI)
+    return HdriLight_eval(light, dir, make_float3(0.f), false);
+  if (light->type == LIGHT_DIRECTIONAL)
+    return DirectionalLight_eval(light, dir);
+  if (!Light_isFinite(light))
+    return LightSample_invalid();
+  if (light->type == LIGHT_POINT)
+    return SphereLight_eval(light, P, dir);
+
+  LightShapeSample s;
+  if (!Light_intersectShape(light, P, Lights_normalized(dir), s))
+    return LightSample_invalid();
+  return Lights_evalArea(light, s, P);
+}
+
+// Where the ray from world point 'P' along 'dir' (unit or not) meets the
+// finite light's shape from either side, its distance in 'dist'; false
+// where it misses or the light isn't finite. Typhoon puts the shapes of
+// lights visible to camera rays into its Embree scene, where rays meet them
+// from both sides and a side that doesn't emit is black
+// (_EvaluateLightGeometryHit()).
+inline bool Light_hit(
+    const uniform Light *uniform light, float3 P, float3 dir, float &dist)
+{
+  if (!Light_isFinite(light))
+    return false;
+  LightShapeSample s;
+  if (!Light_intersectShape(light, P, Lights_normalized(dir), s))
+    return false;
+  dist = length(s.P - P);
+  return dist > 0.f && isfinite(dist);
+}

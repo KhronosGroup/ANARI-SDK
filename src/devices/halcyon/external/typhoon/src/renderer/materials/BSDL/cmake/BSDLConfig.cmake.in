@@ -1,0 +1,13 @@
+# Copyright Contributors to the Open Shading Language project.
+# SPDX-License-Identifier: BSD-3-Clause
+# https://github.com/AcademySoftwareFoundation/OpenShadingLanguage
+
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+find_dependency(Imath REQUIRED CONFIG)
+
+include("${CMAKE_CURRENT_LIST_DIR}/BSDLTargets.cmake")
+
+check_required_components(BSDL)

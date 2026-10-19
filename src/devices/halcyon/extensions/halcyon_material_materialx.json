@@ -1,0 +1,56 @@
+{
+    "info": {
+        "name": "HALCYON_MATERIAL_MATERIALX",
+        "type": "extension",
+        "dependencies": []
+    },
+    "objects": [
+        {
+            "type": "ANARI_MATERIAL",
+            "name": "materialx",
+            "description": "A material of a MaterialX (.mtlx) document, with VisRTX's parameters (VISRTX_MATERIAL_MATERIALX); every other parameter overrides the selected material's shader input of its name (a value of the input's type, a sampler of any subtype, or an attribute name) or its texture input of that path (a file name or a sampler, see textureInputs)",
+            "parameters": [
+                {
+                    "name": "name",
+                    "types": ["ANARI_STRING"],
+                    "tags": [],
+                    "description": "optional object name"
+                },
+                {
+                    "name": "source",
+                    "types": ["ANARI_STRING"],
+                    "tags": [],
+                    "description": "A .mtlx document: a file path when sourceType is documentFile, or inline .mtlx XML text when sourceType is documentInline"
+                },
+                {
+                    "name": "sourceType",
+                    "types": ["ANARI_STRING"],
+                    "tags": [],
+                    "default": "documentFile",
+                    "values": ["documentFile", "documentInline"],
+                    "description": "How `source` is interpreted: documentFile (default, a path) or documentInline (inline .mtlx XML text)"
+                },
+                {
+                    "name": "materialName",
+                    "types": ["ANARI_STRING"],
+                    "tags": [],
+                    "description": "Optional. Selects a material within the document by name path or name (see the `materialNames` property). When unset, the first is used"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "materialNames",
+                    "type": "ANARI_STRING_LIST",
+                    "tags": [],
+                    "description": "the name paths of the document's materials (those with a surface or volume shader), after a successful commit"
+                },
+                {
+                    "name": "textureInputs",
+                    "type": "ANARI_STRING_LIST",
+                    "tags": [],
+                    "description": "the element paths of the selected material's filename inputs, which a file name or a sampler can replace, after a successful commit"
+                }
+            ]
+        }
+    ]
+}

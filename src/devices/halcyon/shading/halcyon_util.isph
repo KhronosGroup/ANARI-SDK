@@ -1,0 +1,48 @@
+// Copyright 2025-2026 The Khronos Group
+// SPDX-License-Identifier: Apache-2.0
+
+#pragma once
+
+#include "halcyon_math.isph"
+
+// The exact sRGB transfer function (IEC 61966-2-1), as helium's frame
+// encoder uses since its commit 7deb72a (not the pow(v, 1/2.2) approximation)
+inline float to_SRGB(float v)
+{
+  return v <= 0.0031308f ? 12.92f * v : 1.055f * pow(v, 1.f / 2.4f) - 0.055f;
+}
+
+// Rounds to the nearest 8-bit code, as helium's cvt_color_to_uint32() does
+// since 7deb72a (truncating biases every value down by up to one code)
+inline uint cvt_uint(const float &f)
+{
+#pragma ignore warning // don't use cast<>() as the warning pragma won't fire
+  return (uint)(255.f * clamp(f, 0.f, 1.f) + 0.5f);
+}
+
+inline uint cvt_uint(const float4 &v)
+{
+  return (cvt_uint(v.x) << 0) | (cvt_uint(v.y) << 8) | (cvt_uint(v.z) << 16)
+      | (cvt_uint(v.w) << 24);
+}
+
+inline uint32 cvt_uint_srgb(const float4 &v)
+{
+  return cvt_uint(make_float4(to_SRGB(v.x), to_SRGB(v.y), to_SRGB(v.z), v.w));
+}
+
+inline float4 makeRandomColor(uint i, float a = 1.f)
+{
+  const uniform uint mx = 13 * 17 * 43;
+  const uniform uint my = 11 * 29;
+  const uniform uint mz = 7 * 23 * 63;
+  const uint g = (i * (3 * 5 * 127) + 12312314);
+  return make_float4(
+#pragma ignore warning(perf)
+      (g % mx) * (1.f / (mx - 1)),
+#pragma ignore warning(perf)
+      (g % my) * (1.f / (my - 1)),
+#pragma ignore warning(perf)
+      (g % mz) * (1.f / (mz - 1)),
+      a);
+}

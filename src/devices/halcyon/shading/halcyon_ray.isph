@@ -1,0 +1,106 @@
+// Copyright 2025-2026 The Khronos Group
+// SPDX-License-Identifier: Apache-2.0
+
+#pragma once
+
+#include "halcyon_math.isph"
+// embree
+#include <embree4/rtcore.isph>
+
+// FLT_MAX: the initial tfar of every ray, as in helide, so missed rays write
+// it as their depth. Volume intervals are clipped to tfar too.
+#define HALCYON_RAY_TFAR 3.402823466e+38f
+
+struct Ray
+{
+  float3 org;
+  float tnear;
+  float3 dir;
+  float time;
+  float tfar;
+  int mask;
+  int id;
+  int flags;
+};
+
+struct Hit
+{
+  float3 Ng;
+  float u;
+  float v;
+  uint primID;
+  uint geomID;
+  uint instID;
+  uint instPrimID; // index into an instance array's transforms
+};
+
+struct RayHit
+{
+  Ray ray;
+  Hit hit;
+};
+
+// Constructors ///////////////////////////////////////////////////////////////
+
+inline RayHit makeRay(float3 org, float3 dir, float tnear, float tfar)
+{
+  RayHit rh;
+
+  rh.ray.org = org;
+  rh.ray.dir = dir;
+  rh.ray.tnear = tnear;
+  rh.ray.tfar = tfar;
+  rh.ray.time = 0.f;
+  rh.ray.mask = ~0;
+  rh.ray.id = 0;
+  rh.ray.flags = 0;
+
+  rh.hit.primID = RTC_INVALID_GEOMETRY_ID;
+  rh.hit.geomID = RTC_INVALID_GEOMETRY_ID;
+  rh.hit.instID = RTC_INVALID_GEOMETRY_ID;
+  rh.hit.instPrimID = RTC_INVALID_GEOMETRY_ID;
+
+  return rh;
+}
+
+inline RayHit makeRay(float3 org, float3 dir)
+{
+  return makeRay(org, dir, 0.f, HALCYON_RAY_TFAR);
+}
+
+inline bool foundHit(const RayHit &ray)
+{
+  return ray.hit.geomID != RTC_INVALID_GEOMETRY_ID;
+}
+
+// VisRTX's minimum epsilonFrom(), in world units: the preview renderer's
+#define HALCYON_EPSILON_MIN 1e-8f
+
+// VisRTX's epsilonFrom(): a distance from the point 'p', reached at 't' along
+// a ray of direction 'dir', that rounding can't swallow. It is relative to the
+// larger of p's magnitude and the distance travelled (the rounding of
+// org + dir * t), about 8 ulps of it, so it doesn't round away far from the
+// origin, and at least 'minimum' (HALCYON_EPSILON_MIN, VisRTX's, or the
+// pathtracer's TRANSPORT_EPSILON_MIN, which leaves it relative down to tiny
+// scenes).
+inline float epsilonFrom(float3 p, float3 dir, float t, uniform float minimum)
+{
+  const float magnitude = max(maxelem(abs(p)), maxelem(abs(dir)) * t);
+  // 9.2387e-7f is VisRTX's 0x1.fp-21f
+  return max(magnitude * 9.2387e-7f, minimum);
+}
+
+// Restarts the ray of 'rh' just past its hit, to trace on through it: tnear
+// moves past the hit's t by epsilonFrom(), tfar and the hit are reset
+inline void continuePastHit(RayHit &rh)
+{
+  const float t = rh.ray.tfar;
+  const float3 p = rh.ray.org + rh.ray.dir * t;
+  rh.ray.tnear = t + epsilonFrom(p, rh.ray.dir, t, HALCYON_EPSILON_MIN);
+  rh.ray.tfar = HALCYON_RAY_TFAR;
+
+  rh.hit.primID = RTC_INVALID_GEOMETRY_ID;
+  rh.hit.geomID = RTC_INVALID_GEOMETRY_ID;
+  rh.hit.instID = RTC_INVALID_GEOMETRY_ID;
+  rh.hit.instPrimID = RTC_INVALID_GEOMETRY_ID;
+}

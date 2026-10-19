@@ -1,0 +1,1172 @@
+// Copyright 2026 The Khronos Group
+// SPDX-License-Identifier: Apache-2.0
+
+#pragma once
+
+// The pathtracer's material interface (docs/adr/0004-pathtracer-material-
+// interface.md): what the path loop asks of a material at a path vertex, per
+// lane. Each lane's Material::kind picks the implementation: native kinds run
+// inline below, MATERIAL_KIND_CPP lanes go through one batched call per gang
+// into C++ (PathMaterial.h), whose closures stay in a per-thread arena and are
+// named by a per-lane handle.
+//
+// Per gang and path vertex, in this order:
+//   1. PathMaterial_shade() once: evaluates the material, resolves the shading
+//      normal, resolves presence, prunes caustic lobes, starts the hero
+//      wavelength, samples the BSDF. It starts a new arena generation, so the
+//      previous vertex's handles stop working.
+//   2. Any number of PathMaterial_eval() (one per light sample),
+//      PathMaterial_subsurface() and PathMaterial_medium(), which read the
+//      closure by handle.
+// PathMaterial_shadow() evaluates materials at shadow-ray blockers; it keeps
+// no closure, so it can run between 1 and 2.
+
+#include "shading/halcyon_objects.isph"
+
+// Lanes in the SoA records that cross into C++. The C++ side reads them as the
+// fixed-size arrays ISPC declares, so a wider gang can't be passed.
+#define PATH_MATERIAL_MAX_LANES 16
+
+#if TARGET_WIDTH > PATH_MATERIAL_MAX_LANES
+#error "PATH_MATERIAL_MAX_LANES is smaller than the gang"
+#endif
+
+// The attributes a C++ material's geomprop nodes can read: the Attribute
+// values before ATTRIBUTE_NONE (PathMaterial.cpp checks the count)
+#define PATH_MATERIAL_ATTRIBUTES 9
+
+// Flags //////////////////////////////////////////////////////////////////////
+
+// PathShadeInput::flags
+enum PathShadeFlag
+{
+  // The ray arrives on the geometric normal's side: dot(Ng, wo) > 0
+  PATH_SHADE_FRONT_FACING = 1 << 0,
+  // Remove caustic-class lobes before sampling (Typhoon: a diffuse-like
+  // ancestor with caustics disabled)
+  PATH_SHADE_PRUNE_CAUSTICS = 1 << 1,
+  // The exit hit of a subsurface random walk on the walk's own object: the
+  // material is replaced by a white Lambertian (C++, whatever the kind). An
+  // exit hit on another object has no closure at all in Typhoon: pass it
+  // without this flag and with a NULL material.
+  PATH_SHADE_SUBSURFACE_EXIT = 1 << 2,
+  // Also summarize the closure for the albedo channel:
+  // PathMaterialState::albedo and PATH_MATERIAL_SPECULAR_ONLY
+  // (ClosureAlbedo.h; native kinds always set them)
+  PATH_SHADE_ALBEDO = 1 << 3
+};
+
+// PathMaterialState::flags and PathShadowHit::flags
+enum PathMaterialFlag
+{
+  // The material produced a closure. Without one (MATERIAL_KIND_NONE, a C++
+  // material that failed to compile) the integrator falls back to its own
+  // display-colour shading.
+  PATH_MATERIAL_HAS_CLOSURE = 1 << 0,
+  // Stochastic presence rejected the hit: a null event, nothing else is set
+  PATH_MATERIAL_PRESENCE_SKIPPED = 1 << 1,
+  // The closure scatters: the sample and eval() mean something
+  PATH_MATERIAL_HAS_BSDF = 1 << 2,
+  // A transparent, scattering-free volume boundary (no BSDF)
+  PATH_MATERIAL_VOLUME_ONLY_BOUNDARY = 1 << 3,
+  PATH_MATERIAL_THIN_WALLED = 1 << 4,
+  // The closure only reflects (Typhoon's IsReflectionOnlyClosure()): light
+  // and dome sampling may use the reflection hemisphere. For the closure as
+  // evaluated, then for the BSDF that samples (after caustic pruning)
+  PATH_MATERIAL_REFLECTION_ONLY = 1 << 5,
+  PATH_MATERIAL_BSDF_REFLECTION_ONLY = 1 << 6,
+  // The BSDF has an active coupled thick dielectric, so straight shadow rays
+  // through its own object can't stand in for refraction
+  PATH_MATERIAL_COUPLED_THICK_DIELECTRIC = 1 << 7,
+  // PathMaterial_medium() / PathShadowHit::interiorMedium is meaningful
+  PATH_MATERIAL_HAS_INTERIOR_MEDIUM = 1 << 8,
+  // The BSDF has random-walk subsurface scattering
+  PATH_MATERIAL_HAS_SUBSURFACE = 1 << 9,
+  // The closure is dispersive and the path was RGB: this vertex sampled the
+  // hero wavelength (PathMaterialState::heroWavelengthNm/heroWavelengthPdf)
+  PATH_MATERIAL_HERO_STARTED = 1 << 10,
+  // With PATH_SHADE_ALBEDO: every lobe of the closure is a delta lobe, so the
+  // albedo channel looks past the hit along the path's specular sample
+  PATH_MATERIAL_SPECULAR_ONLY = 1 << 11
+};
+
+// PathBsdfSample::flags
+enum PathSampleFlag
+{
+  // Typhoon's hasBsdfSample: a subsurface sample or a positive pdf
+  PATH_SAMPLE_VALID = 1 << 0,
+  // A delta lobe: 'f' is the throughput weight itself, 'pdf' is not a density
+  PATH_SAMPLE_SPECULAR = 1 << 1,
+  PATH_SAMPLE_TRANSMISSION = 1 << 2,
+  // Enter the subsurface random walk (PathMaterial_subsurface())
+  PATH_SAMPLE_SUBSURFACE = 1 << 3,
+  // Makes later specular or boundary-crossing events caustic-class
+  PATH_SAMPLE_DIFFUSE_LIKE = 1 << 4
+};
+
+// The parts of the shading context a C++ material's graph may not read, each
+// sent across the interface only to materials whose graph can read it
+// (Material::contextMask, from contextGroupsRead(), ContextGroups.h). Every
+// material gets the rest: positions, normals, the tangent frame, wo, the
+// texture coordinates, the attributes in its attributeMask.
+enum PathContextGroup
+{
+  // displayColor, displayOpacity
+  PATH_CONTEXT_DISPLAY_COLOR = 1 << 0,
+  // faceId, baryU, baryV
+  PATH_CONTEXT_PRIMITIVE = 1 << 1,
+  // dPdu, dPdv, dPositiondu, dPositiondv
+  PATH_CONTEXT_SURFACE_DERIVATIVES = 1 << 2,
+  // dPdx, dPdy, dPositiondx, dPositiondy, dudx, dvdx, dudy, dvdy
+  PATH_CONTEXT_SCREEN_DERIVATIVES = 1 << 3,
+  // objectToWorld, worldToObject
+  PATH_CONTEXT_TRANSFORMS = 1 << 4,
+  // Not a part sent but how one is made: the object-space position comes
+  // from the primitive's vertices (Geometry::getSurfacePosition) rather than
+  // the hit point taken to object space, for graphs that read it (Typhoon's
+  // EvalGraph::RequiresObjectSpacePosition(), not contextGroupsRead())
+  PATH_CONTEXT_OBJECT_POSITION = 1 << 5,
+  PATH_CONTEXT_ALL = (1 << 6) - 1
+};
+
+// Varying interface /////////////////////////////////////////////////////////
+
+// Renderer-wide settings the materials read
+struct PathMaterialContext
+{
+  // Typhoon's useAdobeOpenPBR: OpenPBR graphs build Adobe's OpenPBR closure
+  uniform bool useAdobeOpenPBR;
+  // The renderer's 'nativeMaterials': materials of native kinds
+  // (MATERIAL_KIND_MATTE, MATERIAL_KIND_PHYSICALLY_BASED) shade natively;
+  // false sends them through their C++ material instead (PathMaterial_kind()),
+  // to validate one against the other
+  uniform bool nativeMaterials;
+  // The luminance coefficients the C++ side's closure trees weigh lobes by
+  // (ColorManagement.h's luminanceCoefficients()), for native kinds that do
+  // the same
+  uniform float luminance[3];
+  // The camera's position, world space (the shading context's viewPosition)
+  uniform float viewPosition[3];
+};
+
+// MATERIAL_KIND_PHYSICALLY_BASED's parameters at the hit, resolved as its
+// graph's inputs (PhysicallyBasedParameters' sampler, attribute or constant;
+// scalars from x)
+struct PathPbmInput
+{
+  float metallic;
+  float roughness;
+  float specular;
+  float3 specularColor;
+  float ior;
+  float3 emissive;
+  float clearcoat;
+  float clearcoatRoughness;
+  float3 sheenColor;
+  float sheenRoughness;
+  float transmission;
+  float thickness;
+  // The 'normal' and 'clearcoatNormal' maps' values: their samplers', (0, 0,
+  // 1, 1) while one is invalid; undefined without one
+  bool hasNormalMap;
+  float4 normalMap;
+  bool hasCoatNormalMap;
+  float4 coatNormalMap;
+};
+
+// One shading point: Typhoon's mxcpp::ShadingContext as the integrator builds
+// it (ShadingContext_build(), ShadingContext.isph). World space unless noted;
+// normals are exterior (as authored, not faced to the viewer) and unit length.
+struct PathShadeInput
+{
+  // Position, world and object space
+  float3 P;
+  float3 objectP;
+  // Geometric normal, smooth surface normal (interpolated vertex normals,
+  // else Ng) and a tangent frame around the smooth normal (from dPdu)
+  float3 Ng;
+  float3 Nsrf;
+  float3 tangent;
+  float3 bitangent;
+  // Towards where the ray came from; unit length
+  float3 wo;
+  // The texture coordinates (Typhoon's 'st': the 'attribute0' attribute)
+  float2 texcoord;
+  // The geometry's own colour (Typhoon's displayColor and displayOpacity: the
+  // 'color' attribute, grey 0.5 and 1 where the geometry has none), which
+  // MaterialX's geomcolor nodes read
+  float3 displayColor;
+  float displayOpacity;
+  // The colour native kinds reflect: for MATERIAL_KIND_MATTE and
+  // MATERIAL_KIND_PHYSICALLY_BASED the material's colour at the hit as the
+  // integrator resolves it (Material_getColor()), otherwise the device's
+  // invalidMaterialColor, for the integrator's Lambertian fallback of a
+  // surface without a closure. C++ materials don't read it (their graphs
+  // resolve their inputs).
+  float3 baseColor;
+  // The material's opacity at the hit as the integrator resolves it (its
+  // colour's alpha times its opacity, after 'alphaMode':
+  // Surface_getCompositeOpacity()), which native kinds take as their presence
+  // and opacity, as Typhoon's glTF PBR closure does; C++ materials don't read
+  // it
+  float baseOpacity;
+  // MATERIAL_KIND_PHYSICALLY_BASED's other parameters; undefined for other
+  // kinds
+  PathPbmInput pbm;
+  // The attributes the lane's C++ material reads (Material::attributeMask,
+  // bit (1 << a) for Attribute a), resolved at the hit like any attribute
+  // (getAttribute()), for its geomprop nodes; the others are undefined
+  uint32 attributeMask;
+  float4 attributes[PATH_MATERIAL_ATTRIBUTES];
+  // Those of attributeMask's attributes the hit has (getPresentAttribute():
+  // ray-derived ones always, the others where the instance or the geometry
+  // sets them); a geomprop node reading one it lacks gives its default
+  uint32 attributePresent;
+  // The hit primitive's index and Embree's hit coordinates on it
+  int faceId;
+  float baryU;
+  float baryV;
+  // Position derivatives along the surface parameters (the texture
+  // coordinates' where they vary over the primitive, else the geometry's
+  // own), world and object space
+  float3 dPdu;
+  float3 dPdv;
+  float3 dPositiondu;
+  float3 dPositiondv;
+  // Screen-space derivatives: of the position (one pixel over in x and in y,
+  // from the ray differential), world and object space, and of the surface
+  // parameters
+  float3 dPdx;
+  float3 dPdy;
+  float3 dPositiondx;
+  float3 dPositiondy;
+  float dudx;
+  float dvdx;
+  float dudy;
+  float dvdy;
+  // The hit instance's transform and its inverse
+  affine3f objectToWorld;
+  affine3f worldToObject;
+  // The path's hero wavelength in nm, 0 while it is RGB
+  float heroWavelengthNm;
+  // PathShadeFlag bits
+  uint32 flags;
+  // Random numbers in [0, 1): presence test, hero wavelength, BSDF sample
+  // (direction, direction, lobe choice)
+  float uPresence;
+  float uWavelength;
+  float u1;
+  float u2;
+  float uLobe;
+};
+
+// What a composite node of MATERIAL_KIND_PHYSICALLY_BASED's base is at a
+// vertex (PathPbmState::diffuseNode, layerNode, baseNode), as caustic pruning
+// may leave it (PathPbmLobes.isph)
+enum PathPbmNode
+{
+  // Gone, with its children
+  PATH_PBM_NODE_NONE = 0,
+  // Only its (first, base) child is left, which takes its place
+  PATH_PBM_NODE_CHILD,
+  // Only its child is left, weighed (a Multiply node)
+  PATH_PBM_NODE_SCALE,
+  // Only its top (a layer's) is left, which takes its place
+  PATH_PBM_NODE_TOP,
+  // The node itself, a mix or a layer
+  PATH_PBM_NODE_WHOLE
+};
+
+// PathPbmState::parts: what the closure at a vertex is made of, from the
+// bottom up (PathPbmLobes.isph)
+enum PathPbmPart
+{
+  // The base: mix(layer(dielectric reflection, diffuse), metal), or the
+  // diffuse lobe that caustic pruning leaves of it
+  PATH_PBM_BASE = 1 << 0,
+  // A sheen layer over it (or the sheen alone)
+  PATH_PBM_SHEEN = 1 << 1,
+  // A clearcoat layer over those (or the clearcoat alone)
+  PATH_PBM_COAT = 1 << 2
+};
+
+// MATERIAL_KIND_PHYSICALLY_BASED's closure at a vertex, what eval() needs
+// beyond the normals and the colour (PathPbmLobes.isph). The weights and
+// throughputs depend on wo alone, so shading computes them once.
+struct PathPbmState
+{
+  // PathPbmPart bits
+  uint32 parts;
+  // The base's nodes (PathPbmNode): the transmission mix (of the diffuse
+  // and the transmission lobe), the dielectric layer (the reflection over
+  // the transmission mix), the base (the layer mixed with the metal); and the
+  // weights of those that are left of the first and the last
+  PathPbmNode diffuseNode;
+  PathPbmNode layerNode;
+  PathPbmNode baseNode;
+  float diffuseScale;
+  float baseScale;
+  // The ray arrives on the back (Typhoon's !frontFacing): the transmission's
+  // IOR order
+  bool backside;
+  // The smooth normal (PathShadeInput::Nsrf), faced: the shading normal
+  // without the normal map, which bump shadowing compares the lobes' with
+  float3 smoothN;
+  // The base's glossy lobes' normal: Ns raised towards Ng where its mirror
+  // direction would be below the surface (PrepareShadingNormals())
+  float3 glossyN;
+  // The dielectric reflection's normal and grazing reflectance
+  float3 specularF0;
+  float specularF90;
+  // clamp01(metallic): the metal's share
+  float mix;
+  // The GGX alpha of both glossy lobes of the base
+  float alpha;
+  // Turquin's multiple-scattering factor missing / single at wo
+  float missingToSingle;
+  // The dielectric reflection's throughput to the transmission mix and its
+  // luminance, and its _ApproxWeight()
+  float3 throughput;
+  float throughputLuminance;
+  float topWeight;
+  // clamp01(transmission): the transmission's share of the transmission mix;
+  // the transmission's IOR (at least 1) and _ApproxWeight(); the transmission
+  // mix's and the dielectric layer's _ApproxWeight()
+  float transmission;
+  float ior;
+  float transmissionApproxWeight;
+  float diffuseMixApproxWeight;
+  float layerApproxWeight;
+  // _ApproxWeight() of the base
+  float baseApproxWeight;
+  // The sheen: colour (normalized), weight, roughness (squared), its
+  // throughput to what is below and that's luminance, its _ApproxWeight()
+  float3 sheenColor;
+  float sheenWeight;
+  float sheenRoughness;
+  float sheenThroughput;
+  float sheenThroughputLuminance;
+  float sheenApproxWeight;
+  // _ApproxWeight() of the sheen layer (or of what there is of it)
+  float sheenLayerApproxWeight;
+  // The clearcoat: normal (prepared), weight, GGX alpha, Turquin's factor,
+  // its throughput to what is below and that's luminance, its
+  // _ApproxWeight()
+  float3 coatN;
+  float coatWeight;
+  float coatAlpha;
+  float coatMissingToSingle;
+  float coatThroughput;
+  float coatThroughputLuminance;
+  float coatApproxWeight;
+};
+
+// A material evaluated at a path vertex: what eval(), subsurface() and
+// medium() need, the emission and the facts the integrator branches on
+struct PathMaterialState
+{
+  MaterialKind kind;
+  // The closure in the C++ arena for MATERIAL_KIND_CPP, -1 otherwise
+  int handle;
+  // PathMaterialFlag bits
+  uint32 flags;
+  // Emitted radiance (before path throughput)
+  float3 emission;
+  // Resolved shading normal, faced to the incident side (Typhoon's
+  // normalShdWldOut); light sampling's hemisphere and the ray differentials use
+  // it (ray offsets use Ng)
+  float3 Ns;
+  // Geometric normal faced to the incident side, and wo
+  float3 Ng;
+  float3 wo;
+  // Valid with PATH_MATERIAL_HERO_STARTED
+  float heroWavelengthNm;
+  float heroWavelengthPdf;
+  // Native kinds' albedo, whatever PATH_SHADE_ALBEDO says (the Lambertian's
+  // reflectance; matte's colour clamped to [0, 1], as ClosureAlbedo.h
+  // summarizes its graph, unless presence skipped the hit); for C++ lanes
+  // the closure's albedo (ClosureAlbedo.h) with PATH_SHADE_ALBEDO, else 0
+  float3 albedo;
+  // MATERIAL_KIND_MATTE's and MATERIAL_KIND_PHYSICALLY_BASED's diffuse
+  // lobe: its shading normal (faced) and its colour
+  float3 lobeN;
+  float3 lobeColor;
+  // MATERIAL_KIND_PHYSICALLY_BASED's other lobes
+  PathPbmState pbm;
+};
+
+// The BSDF sample taken at shade time (one per vertex, as Typhoon's)
+struct PathBsdfSample
+{
+  float3 wi;
+  // BSDF value times |cos| projected per lobe (Typhoon's bsdfValueCosine),
+  // to be divided by 'pdf'; for specular and subsurface samples the
+  // throughput weight itself (bsdfValue)
+  float3 f;
+  float pdf;
+  // PathSampleFlag bits
+  uint32 flags;
+  // IOR ratio incident/transmitted of a refraction, 1 otherwise
+  float eta;
+};
+
+// eval(): BSDF value times |cos| (each lobe projected by its own shading
+// normal, then combined), and the BSDF sampling pdf of wi
+struct PathBsdfEval
+{
+  float3 f;
+  float pdf;
+};
+
+// A homogeneous medium (Typhoon's mxcpp::MediumProperties)
+struct PathMedium
+{
+  float3 absorption;
+  float3 scattering;
+  float anisotropy;
+  // mxcpp::MediumTransportModel: 0 hdEmbree, 1 Adobe OpenPBR
+  int transportModel;
+  float3 adobeExtinction;
+  float3 adobeAlbedo;
+  float adobeAnisotropy;
+  bool adobeValid;
+};
+
+// subsurface(): the walk's entry direction and coefficients
+struct PathSubsurface
+{
+  // False when no direction below the lobe and geometric normals was found
+  // (Typhoon terminates the path)
+  bool valid;
+  float3 entryDir;
+  float3 albedo;
+  // subsurfaceRadius * subsurfaceRadiusScale
+  float3 radius;
+  // Clamped to [-0.99, 0.99]
+  float anisotropy;
+  // Precomputed coefficients replace albedo/radius when set
+  bool usePrecomputed;
+  float3 absorption;
+  float3 scattering;
+};
+
+// A material at a shadow-ray blocker (Typhoon's visibility-only evaluation).
+// The transparent-shadow policy (which blockers transmit straight, medium
+// ownership) belongs to the integrator.
+struct PathShadowHit
+{
+  // PATH_MATERIAL_HAS_CLOSURE, _VOLUME_ONLY_BOUNDARY, _THIN_WALLED,
+  // _HAS_INTERIOR_MEDIUM
+  uint32 flags;
+  float opacity;
+  float presence;
+  float transmission;
+  // clamp01(transmission) times the straight-through dielectric interface
+  // transmission along the shadow ray (Typhoon's
+  // _TransparentShadowTransmission() before the tint)
+  float straightTransmission;
+  float3 transmissionColor;
+  // With _HAS_INTERIOR_MEDIUM or _VOLUME_ONLY_BOUNDARY
+  PathMedium interiorMedium;
+};
+
+// SoA records into C++ ///////////////////////////////////////////////////////
+
+// PathShadeInSoA::derivatives rows
+enum PathSoADerivative
+{
+  PATH_SOA_DERIVATIVE_DPDU = 0,
+  PATH_SOA_DERIVATIVE_DPDV,
+  PATH_SOA_DERIVATIVE_DPOSITIONDU,
+  PATH_SOA_DERIVATIVE_DPOSITIONDV,
+  PATH_SOA_DERIVATIVE_DPDX,
+  PATH_SOA_DERIVATIVE_DPDY,
+  PATH_SOA_DERIVATIVE_DPOSITIONDX,
+  PATH_SOA_DERIVATIVE_DPOSITIONDY
+};
+// Element [i] belongs to lane i; the C++ side reads lanes in the mask only.
+
+struct PathShadeInSoA
+{
+  // CppMaterial, NULL for a subsurface exit (or a failed C++ material)
+  const void *uniform material[PATH_MATERIAL_MAX_LANES];
+  // The PathContextGroup bits of the shading context the lane's record
+  // holds, its material's contextMask (0 without a material); the C++ side
+  // leaves the others at mxcpp::ShadingContext's defaults
+  uint32 contextMask[PATH_MATERIAL_MAX_LANES];
+  float Pox[PATH_MATERIAL_MAX_LANES], Poy[PATH_MATERIAL_MAX_LANES],
+      Poz[PATH_MATERIAL_MAX_LANES];
+  float Ngx[PATH_MATERIAL_MAX_LANES], Ngy[PATH_MATERIAL_MAX_LANES],
+      Ngz[PATH_MATERIAL_MAX_LANES];
+  float Nsx[PATH_MATERIAL_MAX_LANES], Nsy[PATH_MATERIAL_MAX_LANES],
+      Nsz[PATH_MATERIAL_MAX_LANES];
+  float Tx[PATH_MATERIAL_MAX_LANES], Ty[PATH_MATERIAL_MAX_LANES],
+      Tz[PATH_MATERIAL_MAX_LANES];
+  float Bx[PATH_MATERIAL_MAX_LANES], By[PATH_MATERIAL_MAX_LANES],
+      Bz[PATH_MATERIAL_MAX_LANES];
+  float wox[PATH_MATERIAL_MAX_LANES], woy[PATH_MATERIAL_MAX_LANES],
+      woz[PATH_MATERIAL_MAX_LANES];
+  float u[PATH_MATERIAL_MAX_LANES], v[PATH_MATERIAL_MAX_LANES];
+  // Per Attribute, x, y, z, w; only the rows in the lane's attributeMask are
+  // written
+  float attributes[PATH_MATERIAL_ATTRIBUTES][4][PATH_MATERIAL_MAX_LANES];
+  // PathShadeInput::attributePresent, within the lane's attributeMask
+  uint32 attributePresent[PATH_MATERIAL_MAX_LANES];
+  // The fields below are written only for the lane's contextMask groups
+  // PATH_CONTEXT_DISPLAY_COLOR
+  float dcr[PATH_MATERIAL_MAX_LANES], dcg[PATH_MATERIAL_MAX_LANES],
+      dcb[PATH_MATERIAL_MAX_LANES], dco[PATH_MATERIAL_MAX_LANES];
+  // PATH_CONTEXT_PRIMITIVE
+  int faceId[PATH_MATERIAL_MAX_LANES];
+  float baryU[PATH_MATERIAL_MAX_LANES], baryV[PATH_MATERIAL_MAX_LANES];
+  // The derivatives: dPdu, dPdv, dPositiondu, dPositiondv
+  // (PATH_CONTEXT_SURFACE_DERIVATIVES), dPdx, dPdy, dPositiondx, dPositiondy
+  // (PATH_CONTEXT_SCREEN_DERIVATIVES), as PATH_SOA_DERIVATIVE_*, x, y, z each
+  float derivatives[8][3][PATH_MATERIAL_MAX_LANES];
+  // PATH_CONTEXT_SCREEN_DERIVATIVES
+  float dudx[PATH_MATERIAL_MAX_LANES], dvdx[PATH_MATERIAL_MAX_LANES],
+      dudy[PATH_MATERIAL_MAX_LANES], dvdy[PATH_MATERIAL_MAX_LANES];
+  // PATH_CONTEXT_TRANSFORMS: objectToWorld and worldToObject as affine 3x4,
+  // column-major: the linear part's columns, then the translation
+  float objectToWorld[12][PATH_MATERIAL_MAX_LANES];
+  float worldToObject[12][PATH_MATERIAL_MAX_LANES];
+  float heroWavelengthNm[PATH_MATERIAL_MAX_LANES];
+  uint32 flags[PATH_MATERIAL_MAX_LANES];
+  float uPresence[PATH_MATERIAL_MAX_LANES];
+  float uWavelength[PATH_MATERIAL_MAX_LANES];
+  float u1[PATH_MATERIAL_MAX_LANES], u2[PATH_MATERIAL_MAX_LANES],
+      uLobe[PATH_MATERIAL_MAX_LANES];
+};
+
+struct PathShadeOutSoA
+{
+  int handle[PATH_MATERIAL_MAX_LANES];
+  uint32 flags[PATH_MATERIAL_MAX_LANES];
+  float er[PATH_MATERIAL_MAX_LANES], eg[PATH_MATERIAL_MAX_LANES],
+      eb[PATH_MATERIAL_MAX_LANES];
+  float Nsx[PATH_MATERIAL_MAX_LANES], Nsy[PATH_MATERIAL_MAX_LANES],
+      Nsz[PATH_MATERIAL_MAX_LANES];
+  float heroWavelengthNm[PATH_MATERIAL_MAX_LANES];
+  float heroWavelengthPdf[PATH_MATERIAL_MAX_LANES];
+  // The BSDF sample
+  float wix[PATH_MATERIAL_MAX_LANES], wiy[PATH_MATERIAL_MAX_LANES],
+      wiz[PATH_MATERIAL_MAX_LANES];
+  float fr[PATH_MATERIAL_MAX_LANES], fg[PATH_MATERIAL_MAX_LANES],
+      fb[PATH_MATERIAL_MAX_LANES];
+  float pdf[PATH_MATERIAL_MAX_LANES];
+  uint32 sampleFlags[PATH_MATERIAL_MAX_LANES];
+  float eta[PATH_MATERIAL_MAX_LANES];
+  // The closure's albedo, written only with PATH_SHADE_ALBEDO
+  float ar[PATH_MATERIAL_MAX_LANES], ag[PATH_MATERIAL_MAX_LANES],
+      ab[PATH_MATERIAL_MAX_LANES];
+};
+
+struct PathEvalInSoA
+{
+  int handle[PATH_MATERIAL_MAX_LANES];
+  float wix[PATH_MATERIAL_MAX_LANES], wiy[PATH_MATERIAL_MAX_LANES],
+      wiz[PATH_MATERIAL_MAX_LANES];
+};
+
+struct PathEvalOutSoA
+{
+  float fr[PATH_MATERIAL_MAX_LANES], fg[PATH_MATERIAL_MAX_LANES],
+      fb[PATH_MATERIAL_MAX_LANES];
+  float pdf[PATH_MATERIAL_MAX_LANES];
+};
+
+struct PathSubsurfaceInSoA
+{
+  int handle[PATH_MATERIAL_MAX_LANES];
+  // For sampling the entry direction when the BSDF sample didn't
+  float u1[PATH_MATERIAL_MAX_LANES], u2[PATH_MATERIAL_MAX_LANES];
+};
+
+struct PathSubsurfaceOutSoA
+{
+  int valid[PATH_MATERIAL_MAX_LANES];
+  float dx[PATH_MATERIAL_MAX_LANES], dy[PATH_MATERIAL_MAX_LANES],
+      dz[PATH_MATERIAL_MAX_LANES];
+  float ar[PATH_MATERIAL_MAX_LANES], ag[PATH_MATERIAL_MAX_LANES],
+      ab[PATH_MATERIAL_MAX_LANES];
+  float rr[PATH_MATERIAL_MAX_LANES], rg[PATH_MATERIAL_MAX_LANES],
+      rb[PATH_MATERIAL_MAX_LANES];
+  float anisotropy[PATH_MATERIAL_MAX_LANES];
+  int usePrecomputed[PATH_MATERIAL_MAX_LANES];
+  float sar[PATH_MATERIAL_MAX_LANES], sag[PATH_MATERIAL_MAX_LANES],
+      sab[PATH_MATERIAL_MAX_LANES];
+  float ssr[PATH_MATERIAL_MAX_LANES], ssg[PATH_MATERIAL_MAX_LANES],
+      ssb[PATH_MATERIAL_MAX_LANES];
+};
+
+struct PathMediumSoA
+{
+  float ar[PATH_MATERIAL_MAX_LANES], ag[PATH_MATERIAL_MAX_LANES],
+      ab[PATH_MATERIAL_MAX_LANES];
+  float sr[PATH_MATERIAL_MAX_LANES], sg[PATH_MATERIAL_MAX_LANES],
+      sb[PATH_MATERIAL_MAX_LANES];
+  float anisotropy[PATH_MATERIAL_MAX_LANES];
+  int transportModel[PATH_MATERIAL_MAX_LANES];
+  float aer[PATH_MATERIAL_MAX_LANES], aeg[PATH_MATERIAL_MAX_LANES],
+      aeb[PATH_MATERIAL_MAX_LANES];
+  float aar[PATH_MATERIAL_MAX_LANES], aag[PATH_MATERIAL_MAX_LANES],
+      aab[PATH_MATERIAL_MAX_LANES];
+  float adobeAnisotropy[PATH_MATERIAL_MAX_LANES];
+  int adobeValid[PATH_MATERIAL_MAX_LANES];
+};
+
+struct PathHandleSoA
+{
+  int handle[PATH_MATERIAL_MAX_LANES];
+};
+
+struct PathShadowOutSoA
+{
+  uint32 flags[PATH_MATERIAL_MAX_LANES];
+  float opacity[PATH_MATERIAL_MAX_LANES];
+  float presence[PATH_MATERIAL_MAX_LANES];
+  float transmission[PATH_MATERIAL_MAX_LANES];
+  float straightTransmission[PATH_MATERIAL_MAX_LANES];
+  float tr[PATH_MATERIAL_MAX_LANES], tg[PATH_MATERIAL_MAX_LANES],
+      tb[PATH_MATERIAL_MAX_LANES];
+  PathMediumSoA medium;
+};
+
+// The C++ side (PathMaterial.cpp). 'mask' has bit i set for each lane i to
+// shade; the others' records are neither read nor written.
+extern "C" void PathMaterial_shadeSoA(
+    const uniform PathMaterialContext *uniform context,
+    uniform int mask,
+    const uniform PathShadeInSoA *uniform input,
+    uniform PathShadeOutSoA *uniform output);
+extern "C" void PathMaterial_evalSoA(uniform int mask,
+    const uniform PathEvalInSoA *uniform input,
+    uniform PathEvalOutSoA *uniform output);
+extern "C" void PathMaterial_subsurfaceSoA(uniform int mask,
+    const uniform PathSubsurfaceInSoA *uniform input,
+    uniform PathSubsurfaceOutSoA *uniform output);
+extern "C" void PathMaterial_mediumSoA(uniform int mask,
+    const uniform PathHandleSoA *uniform input,
+    uniform PathMediumSoA *uniform output);
+extern "C" void PathMaterial_shadowSoA(
+    const uniform PathMaterialContext *uniform context,
+    uniform int mask,
+    const uniform PathShadeInSoA *uniform input,
+    uniform PathShadowOutSoA *uniform output);
+
+// Helpers ////////////////////////////////////////////////////////////////////
+
+#define PATH_MATERIAL_INV_PI 0.318309886183790671538f
+
+// Faces an exterior normal to the incident side (Typhoon's
+// FaceNormalShdWldOut()): the whole resolved normal is negated on back-face
+// hits, so normal maps describe one relief whichever side is seen
+inline float3 PathMaterial_faceNormal(float3 nExt, bool frontFacing)
+{
+  return frontFacing ? nExt : -nExt;
+}
+
+// Native kinds ///////////////////////////////////////////////////////////////
+
+// MATERIAL_KIND_LAMBERT: Lambertian reflection of PathShadeInput::baseColor,
+// which the integrator lights surfaces without a closure with (no material
+// is of this kind; the matte material's own native kind, validated against
+// its C++ graph, is MATERIAL_KIND_MATTE in PathMatte.isph). Its presence and
+// opacity are
+// PathShadeInput::baseOpacity, as for Typhoon's glTF PBR closure: a 'blend'
+// surface is a stochastic cut-out, and lets 1 - opacity of a shadow ray
+// through. No transmission, emission or normal map.
+
+// Typhoon's threshold for an effectively opaque closure (its closure
+// classification's)
+#define PATH_LAMBERT_OPAQUE (1.f - 1e-6f)
+
+inline void PathLambert_shade(const varying PathShadeInput &input,
+    varying PathMaterialState &state,
+    varying PathBsdfSample &sample)
+{
+  const bool front = (input.flags & PATH_SHADE_FRONT_FACING) != 0;
+  // No authored normal: the smooth normal is the shading normal
+  state.Ns = PathMaterial_faceNormal(input.Nsrf, front);
+  state.Ng = PathMaterial_faceNormal(input.Ng, front);
+  state.wo = input.wo;
+  state.albedo = input.baseColor;
+
+  // Presence is the probability of interacting; the strict u < presence
+  // keeps u = 0 from hitting an absent surface (as the C++ side)
+  const float presence = clamp(input.baseOpacity, 0.f, 1.f);
+  if (presence < 1.f && (presence <= 0.f || input.uPresence >= presence)) {
+    state.flags = PATH_MATERIAL_PRESENCE_SKIPPED;
+    return;
+  }
+  state.flags = PATH_MATERIAL_HAS_CLOSURE | PATH_MATERIAL_HAS_BSDF;
+  // Typhoon's IsReflectionOnlyClosure() reads the opacity, which stays after
+  // presence is resolved
+  if (input.baseOpacity >= PATH_LAMBERT_OPAQUE) {
+    state.flags |=
+        PATH_MATERIAL_REFLECTION_ONLY | PATH_MATERIAL_BSDF_REFLECTION_ONLY;
+  }
+
+  // Cosine-weighted around Ns; a direction below the geometric surface is
+  // invalid, not resampled (as Typhoon's SampleSurface())
+  const float r = sqrt(input.u1);
+  const float phi = 2.f * PI * input.u2;
+  const float cosTheta = sqrt(max(0.f, 1.f - input.u1));
+  const float3 n = state.Ns;
+  const float s = n.z >= 0.f ? 1.f : -1.f;
+  const float a = -1.f / (s + n.z);
+  const float b = n.x * n.y * a;
+  const float3 t = make_float3(1.f + s * n.x * n.x * a, s * b, -s * n.x);
+  const float3 bt = make_float3(b, s + n.y * n.y * a, -n.y);
+  const float3 wi = normalize(
+      t * (r * cos(phi)) + bt * (r * sin(phi)) + n * cosTheta);
+  sample.wi = wi;
+  sample.eta = 1.f;
+  if (cosTheta > 0.f && dot(wi, state.Ng) > 0.f) {
+    sample.pdf = cosTheta * PATH_MATERIAL_INV_PI;
+    sample.f = state.albedo * sample.pdf;
+    sample.flags = PATH_SAMPLE_VALID | PATH_SAMPLE_DIFFUSE_LIKE;
+  }
+}
+
+inline void PathLambert_eval(const varying PathMaterialState &state,
+    const varying float3 wi,
+    varying PathBsdfEval &result)
+{
+  const float cosTheta = dot(wi, state.Ns);
+  if (cosTheta > 0.f && dot(wi, state.Ng) > 0.f) {
+    result.pdf = cosTheta * PATH_MATERIAL_INV_PI;
+    result.f = state.albedo * result.pdf;
+  }
+}
+
+inline void PathLambert_shadow(
+    const varying PathShadeInput &input, varying PathShadowHit &hit)
+{
+  hit.flags = PATH_MATERIAL_HAS_CLOSURE;
+  hit.opacity = input.baseOpacity;
+  hit.presence = input.baseOpacity;
+}
+
+// MATERIAL_KIND_MATTE
+#include "PathMatte.isph"
+// MATERIAL_KIND_PHYSICALLY_BASED
+#include "PathPbm.isph"
+
+// Dispatch ///////////////////////////////////////////////////////////////////
+
+// How the lane is shaded: its material's kind, except that a subsurface exit
+// is C++'s synthetic material, and without the renderer's 'nativeMaterials'
+// native kinds go through their C++ material (every material has one: native
+// kinds are set only where it compiled)
+inline MaterialKind PathMaterial_kind(
+    const uniform PathMaterialContext *uniform context,
+    const uniform Material *varying material,
+    uint32 shadeFlags)
+{
+  // A subsurface exit replaces whatever material with C++'s synthetic one
+  if (shadeFlags & PATH_SHADE_SUBSURFACE_EXIT)
+    return MATERIAL_KIND_CPP;
+  // each lane's own material, so a gather
+#pragma ignore warning(perf)
+  const MaterialKind kind = material ? material->kind : MATERIAL_KIND_NONE;
+  if (MaterialKind_isNative(kind) && !context->nativeMaterials)
+    return MATERIAL_KIND_CPP;
+  return kind;
+}
+
+inline void PathShadeInSoA_setDerivative(
+    uniform PathShadeInSoA *uniform r, uniform int row, float3 d)
+{
+  r->derivatives[row][0][programIndex] = d.x;
+  r->derivatives[row][1][programIndex] = d.y;
+  r->derivatives[row][2][programIndex] = d.z;
+}
+
+inline void PathShadeInSoA_setAffine(
+    uniform float m[12][PATH_MATERIAL_MAX_LANES], const affine3f &a)
+{
+  const float values[12] = {a.l.x.x,
+      a.l.x.y,
+      a.l.x.z,
+      a.l.y.x,
+      a.l.y.y,
+      a.l.y.z,
+      a.l.z.x,
+      a.l.z.y,
+      a.l.z.z,
+      a.p.x,
+      a.p.y,
+      a.p.z};
+  for (uniform int i = 0; i < 12; i++)
+    m[i][programIndex] = values[i];
+}
+
+// The lane's record: the fields every material reads, and of the others
+// only those in 'contextMask' (PathContextGroup bits)
+inline void PathShadeInSoA_set(uniform PathShadeInSoA *uniform r,
+    const void *varying cppMaterial,
+    uint32 contextMask,
+    const varying PathShadeInput &input)
+{
+  r->material[programIndex] = cppMaterial;
+  r->contextMask[programIndex] = contextMask;
+  r->Pox[programIndex] = input.objectP.x;
+  r->Poy[programIndex] = input.objectP.y;
+  r->Poz[programIndex] = input.objectP.z;
+  r->Ngx[programIndex] = input.Ng.x;
+  r->Ngy[programIndex] = input.Ng.y;
+  r->Ngz[programIndex] = input.Ng.z;
+  r->Nsx[programIndex] = input.Nsrf.x;
+  r->Nsy[programIndex] = input.Nsrf.y;
+  r->Nsz[programIndex] = input.Nsrf.z;
+  r->Tx[programIndex] = input.tangent.x;
+  r->Ty[programIndex] = input.tangent.y;
+  r->Tz[programIndex] = input.tangent.z;
+  r->Bx[programIndex] = input.bitangent.x;
+  r->By[programIndex] = input.bitangent.y;
+  r->Bz[programIndex] = input.bitangent.z;
+  r->wox[programIndex] = input.wo.x;
+  r->woy[programIndex] = input.wo.y;
+  r->woz[programIndex] = input.wo.z;
+  r->u[programIndex] = input.texcoord.x;
+  r->v[programIndex] = input.texcoord.y;
+  r->attributePresent[programIndex] =
+      input.attributePresent & input.attributeMask;
+  for (uniform int a = 0; a < PATH_MATERIAL_ATTRIBUTES; a++) {
+    if (input.attributeMask & (1u << a)) {
+      r->attributes[a][0][programIndex] = input.attributes[a].x;
+      r->attributes[a][1][programIndex] = input.attributes[a].y;
+      r->attributes[a][2][programIndex] = input.attributes[a].z;
+      r->attributes[a][3][programIndex] = input.attributes[a].w;
+    }
+  }
+  if (contextMask & PATH_CONTEXT_DISPLAY_COLOR) {
+    r->dcr[programIndex] = input.displayColor.x;
+    r->dcg[programIndex] = input.displayColor.y;
+    r->dcb[programIndex] = input.displayColor.z;
+    r->dco[programIndex] = input.displayOpacity;
+  }
+  if (contextMask & PATH_CONTEXT_PRIMITIVE) {
+    r->faceId[programIndex] = input.faceId;
+    r->baryU[programIndex] = input.baryU;
+    r->baryV[programIndex] = input.baryV;
+  }
+  if (contextMask & PATH_CONTEXT_SURFACE_DERIVATIVES) {
+    PathShadeInSoA_setDerivative(r, PATH_SOA_DERIVATIVE_DPDU, input.dPdu);
+    PathShadeInSoA_setDerivative(r, PATH_SOA_DERIVATIVE_DPDV, input.dPdv);
+    PathShadeInSoA_setDerivative(
+        r, PATH_SOA_DERIVATIVE_DPOSITIONDU, input.dPositiondu);
+    PathShadeInSoA_setDerivative(
+        r, PATH_SOA_DERIVATIVE_DPOSITIONDV, input.dPositiondv);
+  }
+  if (contextMask & PATH_CONTEXT_SCREEN_DERIVATIVES) {
+    PathShadeInSoA_setDerivative(r, PATH_SOA_DERIVATIVE_DPDX, input.dPdx);
+    PathShadeInSoA_setDerivative(r, PATH_SOA_DERIVATIVE_DPDY, input.dPdy);
+    PathShadeInSoA_setDerivative(
+        r, PATH_SOA_DERIVATIVE_DPOSITIONDX, input.dPositiondx);
+    PathShadeInSoA_setDerivative(
+        r, PATH_SOA_DERIVATIVE_DPOSITIONDY, input.dPositiondy);
+    r->dudx[programIndex] = input.dudx;
+    r->dvdx[programIndex] = input.dvdx;
+    r->dudy[programIndex] = input.dudy;
+    r->dvdy[programIndex] = input.dvdy;
+  }
+  if (contextMask & PATH_CONTEXT_TRANSFORMS) {
+    PathShadeInSoA_setAffine(r->objectToWorld, input.objectToWorld);
+    PathShadeInSoA_setAffine(r->worldToObject, input.worldToObject);
+  }
+  r->heroWavelengthNm[programIndex] = input.heroWavelengthNm;
+  r->flags[programIndex] = input.flags;
+  r->uPresence[programIndex] = input.uPresence;
+  r->uWavelength[programIndex] = input.uWavelength;
+  r->u1[programIndex] = input.u1;
+  r->u2[programIndex] = input.u2;
+  r->uLobe[programIndex] = input.uLobe;
+}
+
+inline const void *varying PathMaterial_cppMaterial(
+    const uniform Material *varying material, uint32 shadeFlags)
+{
+  if (!material || (shadeFlags & PATH_SHADE_SUBSURFACE_EXIT))
+    return NULL;
+#pragma ignore warning(perf)
+  return material->cppMaterial;
+}
+
+// The parts of the shading context the C++ side evaluates
+// PathMaterial_cppMaterial() with (PathContextGroup bits): none without one
+inline uint32 PathMaterial_contextMask(
+    const uniform Material *varying material, uint32 shadeFlags)
+{
+  if (!material || (shadeFlags & PATH_SHADE_SUBSURFACE_EXIT))
+    return 0;
+#pragma ignore warning(perf)
+  return material->contextMask;
+}
+
+inline void PathMedium_get(const uniform PathMediumSoA *uniform r,
+    varying PathMedium &m)
+{
+  m.absorption = make_float3(
+      r->ar[programIndex], r->ag[programIndex], r->ab[programIndex]);
+  m.scattering = make_float3(
+      r->sr[programIndex], r->sg[programIndex], r->sb[programIndex]);
+  m.anisotropy = r->anisotropy[programIndex];
+  m.transportModel = r->transportModel[programIndex];
+  m.adobeExtinction = make_float3(
+      r->aer[programIndex], r->aeg[programIndex], r->aeb[programIndex]);
+  m.adobeAlbedo = make_float3(
+      r->aar[programIndex], r->aag[programIndex], r->aab[programIndex]);
+  m.adobeAnisotropy = r->adobeAnisotropy[programIndex];
+  m.adobeValid = r->adobeValid[programIndex] != 0;
+}
+
+inline void PathMedium_clear(varying PathMedium &m)
+{
+  m.absorption = make_float3(0.f);
+  m.scattering = make_float3(0.f);
+  m.anisotropy = 0.f;
+  m.transportModel = 0;
+  m.adobeExtinction = make_float3(0.f);
+  m.adobeAlbedo = make_float3(0.f);
+  m.adobeAnisotropy = 0.f;
+  m.adobeValid = false;
+}
+
+// Evaluates each lane's material at its path vertex and samples its BSDF.
+// Call once per gang and vertex, with every lane that hit a surface active:
+// the C++ lanes of the gang share the one call that resets their arena.
+inline void PathMaterial_shade(
+    const uniform PathMaterialContext *uniform context,
+    const uniform Material *varying material,
+    const varying PathShadeInput &input,
+    varying PathMaterialState &state,
+    varying PathBsdfSample &sample)
+{
+  const MaterialKind kind = PathMaterial_kind(context, material, input.flags);
+  const bool front = (input.flags & PATH_SHADE_FRONT_FACING) != 0;
+
+  state.kind = kind;
+  state.handle = -1;
+  state.flags = 0;
+  state.emission = make_float3(0.f);
+  state.Ns = PathMaterial_faceNormal(input.Nsrf, front);
+  state.Ng = PathMaterial_faceNormal(input.Ng, front);
+  state.wo = input.wo;
+  state.heroWavelengthNm = input.heroWavelengthNm;
+  state.heroWavelengthPdf = 0.f;
+  state.albedo = make_float3(0.f);
+  state.lobeN = state.Ns;
+  state.lobeColor = make_float3(0.f);
+  sample.wi = make_float3(0.f);
+  sample.f = make_float3(0.f);
+  sample.pdf = 0.f;
+  sample.flags = 0;
+  sample.eta = 1.f;
+
+  if (kind == MATERIAL_KIND_LAMBERT)
+    PathLambert_shade(input, state, sample);
+  else if (kind == MATERIAL_KIND_MATTE)
+    PathMatte_shade(input, state, sample);
+  else if (kind == MATERIAL_KIND_PHYSICALLY_BASED)
+    PathPbm_shade(context, material, input, state, sample);
+
+  const bool cpp = kind == MATERIAL_KIND_CPP;
+  if (any(cpp)) {
+    uniform PathShadeInSoA rin;
+    uniform PathShadeOutSoA rout;
+    if (cpp)
+      PathShadeInSoA_set(&rin,
+          PathMaterial_cppMaterial(material, input.flags),
+          PathMaterial_contextMask(material, input.flags),
+          input);
+    PathMaterial_shadeSoA(context, packmask(cpp), &rin, &rout);
+    if (cpp) {
+      state.handle = rout.handle[programIndex];
+      state.flags = rout.flags[programIndex];
+      state.emission = make_float3(
+          rout.er[programIndex], rout.eg[programIndex], rout.eb[programIndex]);
+      state.Ns = make_float3(
+          rout.Nsx[programIndex],
+          rout.Nsy[programIndex],
+          rout.Nsz[programIndex]);
+      state.heroWavelengthNm = rout.heroWavelengthNm[programIndex];
+      state.heroWavelengthPdf = rout.heroWavelengthPdf[programIndex];
+      sample.wi = make_float3(
+          rout.wix[programIndex],
+          rout.wiy[programIndex],
+          rout.wiz[programIndex]);
+      sample.f = make_float3(
+          rout.fr[programIndex], rout.fg[programIndex], rout.fb[programIndex]);
+      sample.pdf = rout.pdf[programIndex];
+      sample.flags = rout.sampleFlags[programIndex];
+      sample.eta = rout.eta[programIndex];
+      if (input.flags & PATH_SHADE_ALBEDO) {
+        state.albedo = make_float3(rout.ar[programIndex],
+            rout.ag[programIndex],
+            rout.ab[programIndex]);
+      }
+    }
+  }
+}
+
+// Evaluates each lane's BSDF towards wi (unit, away from the surface); zero
+// for lanes without one. Any number of calls per vertex.
+inline void PathMaterial_eval(const varying PathMaterialState &state,
+    const varying float3 wi,
+    varying PathBsdfEval &result)
+{
+  result.f = make_float3(0.f);
+  result.pdf = 0.f;
+  const bool hasBsdf = (state.flags & PATH_MATERIAL_HAS_BSDF) != 0;
+
+  if (hasBsdf && state.kind == MATERIAL_KIND_LAMBERT)
+    PathLambert_eval(state, wi, result);
+  else if (hasBsdf && state.kind == MATERIAL_KIND_MATTE)
+    PathMatte_eval(state, wi, result);
+  else if (hasBsdf && state.kind == MATERIAL_KIND_PHYSICALLY_BASED)
+    PathPbm_eval(state, wi, result);
+
+  const bool cpp = hasBsdf && state.kind == MATERIAL_KIND_CPP;
+  if (any(cpp)) {
+    uniform PathEvalInSoA rin;
+    uniform PathEvalOutSoA rout;
+    if (cpp) {
+      rin.handle[programIndex] = state.handle;
+      rin.wix[programIndex] = wi.x;
+      rin.wiy[programIndex] = wi.y;
+      rin.wiz[programIndex] = wi.z;
+    }
+    PathMaterial_evalSoA(packmask(cpp), &rin, &rout);
+    if (cpp) {
+      result.f = make_float3(
+          rout.fr[programIndex], rout.fg[programIndex], rout.fb[programIndex]);
+      result.pdf = rout.pdf[programIndex];
+    }
+  }
+}
+
+// For lanes whose sample has PATH_SAMPLE_SUBSURFACE: the random walk's entry
+// direction (from the sample, else sampled with u1, u2 as Typhoon's
+// SampleSubsurfaceEntry()) and coefficients. Other lanes get valid = false.
+inline void PathMaterial_subsurface(const varying PathMaterialState &state,
+    const varying PathBsdfSample &sample,
+    float u1,
+    float u2,
+    varying PathSubsurface &result)
+{
+  result.valid = false;
+  result.entryDir = make_float3(0.f);
+  result.albedo = make_float3(0.f);
+  result.radius = make_float3(0.f);
+  result.anisotropy = 0.f;
+  result.usePrecomputed = false;
+  result.absorption = make_float3(0.f);
+  result.scattering = make_float3(0.f);
+
+  // Only C++ closures have subsurface scattering so far
+  const bool cpp = state.kind == MATERIAL_KIND_CPP
+      && (sample.flags & PATH_SAMPLE_SUBSURFACE) != 0;
+  if (any(cpp)) {
+    uniform PathSubsurfaceInSoA rin;
+    uniform PathSubsurfaceOutSoA rout;
+    if (cpp) {
+      rin.handle[programIndex] = state.handle;
+      rin.u1[programIndex] = u1;
+      rin.u2[programIndex] = u2;
+    }
+    PathMaterial_subsurfaceSoA(packmask(cpp), &rin, &rout);
+    if (cpp) {
+      result.valid = rout.valid[programIndex] != 0;
+      result.entryDir = make_float3(
+          rout.dx[programIndex], rout.dy[programIndex], rout.dz[programIndex]);
+      result.albedo = make_float3(
+          rout.ar[programIndex], rout.ag[programIndex], rout.ab[programIndex]);
+      result.radius = make_float3(
+          rout.rr[programIndex], rout.rg[programIndex], rout.rb[programIndex]);
+      result.anisotropy = rout.anisotropy[programIndex];
+      result.usePrecomputed = rout.usePrecomputed[programIndex] != 0;
+      result.absorption = make_float3(
+          rout.sar[programIndex],
+          rout.sag[programIndex],
+          rout.sab[programIndex]);
+      result.scattering = make_float3(
+          rout.ssr[programIndex],
+          rout.ssg[programIndex],
+          rout.ssb[programIndex]);
+    }
+  }
+}
+
+// The interior medium of lanes with PATH_MATERIAL_HAS_INTERIOR_MEDIUM, a
+// vacuum for the others
+inline void PathMaterial_medium(
+    const varying PathMaterialState &state, varying PathMedium &medium)
+{
+  PathMedium_clear(medium);
+  const bool cpp = state.kind == MATERIAL_KIND_CPP
+      && (state.flags & PATH_MATERIAL_HAS_INTERIOR_MEDIUM) != 0;
+  if (any(cpp)) {
+    uniform PathHandleSoA rin;
+    uniform PathMediumSoA rout;
+    if (cpp)
+      rin.handle[programIndex] = state.handle;
+    PathMaterial_mediumSoA(packmask(cpp), &rin, &rout);
+    if (cpp)
+      PathMedium_get(&rout, medium);
+  }
+}
+
+// Evaluates each lane's material at a shadow-ray blocker, 'input.wo' being the
+// reverse of the shadow ray's direction (random numbers and the hero
+// wavelength are not read; native kinds read only the material's opacity,
+// so the integrator builds the whole shading context only for C++
+// lanes). Keeps no closure, so it may run between
+// PathMaterial_shade() and the vertex's eval() calls.
+inline void PathMaterial_shadow(
+    const uniform PathMaterialContext *uniform context,
+    const uniform Material *varying material,
+    const varying PathShadeInput &input,
+    varying PathShadowHit &hit)
+{
+  hit.flags = 0;
+  hit.opacity = 0.f;
+  hit.presence = 0.f;
+  hit.transmission = 0.f;
+  hit.straightTransmission = 0.f;
+  hit.transmissionColor = make_float3(0.f);
+  PathMedium_clear(hit.interiorMedium);
+
+  const MaterialKind kind = PathMaterial_kind(
+      context, material, input.flags & ~PATH_SHADE_SUBSURFACE_EXIT);
+
+  if (kind == MATERIAL_KIND_LAMBERT)
+    PathLambert_shadow(input, hit);
+  else if (kind == MATERIAL_KIND_MATTE)
+    PathMatte_shadow(input, hit);
+  else if (kind == MATERIAL_KIND_PHYSICALLY_BASED)
+    PathPbm_shadow(input, hit);
+
+  const bool cpp = kind == MATERIAL_KIND_CPP;
+  if (any(cpp)) {
+    uniform PathShadeInSoA rin;
+    uniform PathShadowOutSoA rout;
+    if (cpp)
+      PathShadeInSoA_set(&rin,
+          PathMaterial_cppMaterial(material, 0),
+          PathMaterial_contextMask(material, 0),
+          input);
+    PathMaterial_shadowSoA(context, packmask(cpp), &rin, &rout);
+    if (cpp) {
+      hit.flags = rout.flags[programIndex];
+      hit.opacity = rout.opacity[programIndex];
+      hit.presence = rout.presence[programIndex];
+      hit.transmission = rout.transmission[programIndex];
+      hit.straightTransmission = rout.straightTransmission[programIndex];
+      hit.transmissionColor = make_float3(
+          rout.tr[programIndex], rout.tg[programIndex], rout.tb[programIndex]);
+      PathMedium_get(&rout.medium, hit.interiorMedium);
+    }
+  }
+}

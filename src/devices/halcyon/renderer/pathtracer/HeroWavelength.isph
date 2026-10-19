@@ -1,0 +1,217 @@
+// Copyright 2026 The Khronos Group
+// SPDX-License-Identifier: LicenseRef-TOST-1.0
+//
+// Ported from Typhoon (NVIDIA-Omniverse/OpenUSD, branch typhoon/main, commit
+// 70c45e83b08a7b45588cd6cdbd2ae67f5147befb),
+// pxr/imaging/plugin/hdEmbree/renderer/: heroWavelength.h
+// (ty::RgbToSpectralValue(), ty::SpectralValueToRgb(),
+// ty::SpectralScalarToRgb(), ty::Renderer::_ApplyPathWeight() and
+// _GetPathThroughputRgb()), materials/MaterialXCpp/spectral.h
+// (mxcpp::Spectral::RgbToSpectralValue() and SpectralValueToRgb() for linear
+// Rec. 709, whose tables SpectralTables.cpp hands over in place) and the
+// hero-wavelength branches of integrator/pathIntegrator.cpp
+// (_WeightPathRadiance(), the BSDF continuation and Russian roulette of
+// _IntegratePath()), integrator/lighting.cpp (_ComputeDirectLightingMIS(),
+// _ComputeMediumDirectLighting()) and integrator/volumeTransport.cpp.
+// Copyright 2018-2026 Pixar, licensed under the Tomorrow Open Source
+// Technology License 1.0; spectral.h's tables are adapted from OSL's libbsdl
+// (BSD-3-Clause; see THIRD-PARTY.md). Keep in step with those files when the
+// pin in external/typhoon/PROVENANCE.md moves.
+
+#pragma once
+
+// Hero-wavelength transport: a path is RGB until it meets its first
+// dispersive closure (a dielectric whose IOR follows the wavelength), whose
+// shading samples one wavelength (PathMaterial_shade(),
+// PATH_MATERIAL_HERO_STARTED, from the vertex's Wavelength domain); from
+// there its throughput is one spectral value at that wavelength. Every RGB
+// weight it takes after (BSDF values, media, volumes, subsurface walks) is
+// upsampled to that wavelength (HeroWavelength_rgbToSpectral(), spectral.h's
+// sRGB basis), and every radiance it gathers is the product of the spectral
+// values brought back to RGB (HeroWavelength_spectralToRgb(): through the
+// CIE XYZ response under D65, over the wavelength's pdf, balanced so a white
+// spectrum averages to white). Paths that meet no dispersive closure stay
+// RGB, and their arithmetic is what it was without hero wavelengths. Only the
+// linear Rec. 709 working space is ported (halcyon's only one; Typhoon's
+// ACEScg branch upsamples through Jakob-Hanika tables).
+//
+// HeroWavelength.ispc, which holds the two conversions, is compiled without
+// fused multiply-adds, so that it rounds as the C++ does; the products below
+// are single
+// multiplications, which round alike anywhere.
+
+#include "shading/halcyon_math.isph"
+
+// spectral.h's wavelength domain and the resolution of its tables
+#define HERO_LAMBDA_MIN_NM 380.f
+#define HERO_LAMBDA_MAX_NM 780.f
+#define HERO_LAMBDA_STEP_NM 5.f
+#define HERO_LAMBDA_RESOLUTION 81
+
+// SpectralTables.cpp: spectral.h's XYZ response and sRGB basis (packed
+// float3s), its D65 illuminant, the D65 luminance its trapezoids integrate and
+// the neutral round trip scale (a float3)
+extern const uniform float *uniform HeroWavelength_xyzResponseTable;
+extern const uniform float *uniform HeroWavelength_d65Table;
+extern const uniform float *uniform HeroWavelength_srgbBasisTable;
+extern const uniform float *uniform HeroWavelength_d65Luminance;
+extern const uniform float *uniform HeroWavelength_neutralScale;
+
+// mxcpp::Spectral::RgbToSpectralValue() in linear Rec. 709: the linear RGB
+// 'rgb' upsampled to a spectral value at 'wavelengthNm' (the sRGB basis at the
+// nearest table wavelength), at least 0
+float HeroWavelength_rgbToSpectral(float3 rgb, float wavelengthNm);
+
+// mxcpp::Spectral::SpectralValueToRgb() in linear Rec. 709: the spectral value
+// 'value' at 'wavelengthNm', sampled with pdf 'wavelengthPdf', as linear RGB
+// (0 where 'value' or the pdf is 0 or less)
+float3 HeroWavelength_spectralToRgb(
+    float value, float wavelengthNm, float wavelengthPdf);
+
+// A path's throughput (Typhoon's _PathState's throughputRgb,
+// throughputSpectral and hero): RGB, or after its first dispersive closure
+// one spectral value at its hero wavelength
+struct PathThroughput
+{
+  float3 rgb;
+  // With 'hero': the throughput at 'wavelengthNm', sampled with pdf
+  // 'wavelengthPdf'
+  bool hero;
+  float spectral;
+  float wavelengthNm;
+  float wavelengthPdf;
+};
+
+inline void PathThroughput_init(varying PathThroughput &t)
+{
+  t.rgb = make_float3(1.f);
+  t.hero = false;
+  t.spectral = 1.f;
+  t.wavelengthNm = 0.f;
+  t.wavelengthPdf = 0.f;
+}
+
+// Enters hero-wavelength mode at 'wavelengthNm' of pdf 'wavelengthPdf'
+// (_IntegratePath() at the first dispersive closure): the RGB throughput
+// upsampled to it
+inline void PathThroughput_startHero(
+    varying PathThroughput &t, float wavelengthNm, float wavelengthPdf)
+{
+  t.hero = true;
+  t.wavelengthNm = wavelengthNm;
+  t.wavelengthPdf = wavelengthPdf;
+  t.spectral = HeroWavelength_rgbToSpectral(t.rgb, wavelengthNm);
+}
+
+// The path's hero wavelength, 0 while it is RGB (what the material interface
+// evaluates dispersive closures at)
+inline float PathThroughput_wavelength(const varying PathThroughput &t)
+{
+  return t.hero ? t.wavelengthNm : 0.f;
+}
+
+// _GetPathThroughputRgb(): the throughput as RGB (a spectral one through
+// HeroWavelength_spectralToRgb())
+inline float3 PathThroughput_rgb(const varying PathThroughput &t)
+{
+  if (t.hero)
+    return HeroWavelength_spectralToRgb(
+        t.spectral, t.wavelengthNm, t.wavelengthPdf);
+  return t.rgb;
+}
+
+// _ApplyPathWeight(): multiplies the throughput by the RGB weight 'w'
+inline void PathThroughput_apply(varying PathThroughput &t, float3 w)
+{
+  if (t.hero)
+    t.spectral = t.spectral * HeroWavelength_rgbToSpectral(w, t.wavelengthNm);
+  else
+    t.rgb = t.rgb * w;
+}
+
+// Divides the throughput by Russian roulette's survival probability 's'
+inline void PathThroughput_divide(varying PathThroughput &t, float s)
+{
+  if (t.hero)
+    t.spectral = t.spectral / s;
+  else
+    t.rgb = t.rgb / s;
+}
+
+// _WeightPathRadiance(): the RGB radiance 'L' arriving along the path, times
+// its throughput, as RGB
+inline float3 PathThroughput_weight(const varying PathThroughput &t, float3 L)
+{
+  if (t.hero)
+    return HeroWavelength_spectralToRgb(
+        t.spectral * HeroWavelength_rgbToSpectral(L, t.wavelengthNm),
+        t.wavelengthNm,
+        t.wavelengthPdf);
+  return t.rgb * L;
+}
+
+// The direct light 'direct' at a vertex (as directLighting() returns it,
+// already spectral in hero mode: HeroWavelength_lightSample()) times the
+// throughput (_IntegratePath(): direct * throughputSpectral)
+inline float3 PathThroughput_weightDirect(
+    const varying PathThroughput &t, float3 direct)
+{
+  if (t.hero)
+    return direct * t.spectral;
+  return t.rgb * direct;
+}
+
+// The spectral throughput weight of a BSDF sample in hero mode
+// (_IntegratePath()): its value 'f' upsampled to the wavelength (bsdfValue for
+// a specular sample, else bsdfValueCosine over 'pdf'), 0 where that isn't
+// finite or is negative
+inline float HeroWavelength_bsdfWeight(
+    float3 f, float pdf, bool specular, float wavelengthNm)
+{
+  float w = HeroWavelength_rgbToSpectral(f, wavelengthNm);
+  if (!specular)
+    w = w / pdf;
+  if (!isfinite(w) || w < 0.f)
+    w = 0.f;
+  return w;
+}
+
+// One light sample of next-event estimation at a surface in hero mode
+// (_ComputeDirectLightingMIS()): the light's radiance, the BSDF value times
+// cosine 'f' and the shadow ray's visibility, each upsampled to the
+// wavelength, times the light's 1 / pdf and the MIS weight, as RGB
+inline float3 HeroWavelength_lightSample(float3 radiance,
+    float3 f,
+    float3 vis,
+    float pdfInverse,
+    float weight,
+    float wavelengthNm,
+    float wavelengthPdf)
+{
+  return HeroWavelength_spectralToRgb(
+      HeroWavelength_rgbToSpectral(radiance, wavelengthNm)
+          * HeroWavelength_rgbToSpectral(f, wavelengthNm)
+          * HeroWavelength_rgbToSpectral(vis, wavelengthNm) * pdfInverse
+          * weight,
+      wavelengthNm,
+      wavelengthPdf);
+}
+
+// One light sample at a collision in a medium in hero mode
+// (_ComputeMediumDirectLighting()): as HeroWavelength_lightSample() with the
+// phase function's value 'phase' in place of the BSDF's
+inline float3 HeroWavelength_mediumLightSample(float3 radiance,
+    float3 vis,
+    float phase,
+    float pdfInverse,
+    float weight,
+    float wavelengthNm,
+    float wavelengthPdf)
+{
+  return HeroWavelength_spectralToRgb(
+      HeroWavelength_rgbToSpectral(radiance, wavelengthNm)
+          * HeroWavelength_rgbToSpectral(vis, wavelengthNm) * phase * pdfInverse
+          * weight,
+      wavelengthNm,
+      wavelengthPdf);
+}

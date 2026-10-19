@@ -1,0 +1,502 @@
+// Copyright 2026 The Khronos Group
+// SPDX-License-Identifier: LicenseRef-TOST-1.0
+//
+// Ported from Typhoon (NVIDIA-Omniverse/OpenUSD, branch typhoon/main, commit
+// 70c45e83b08a7b45588cd6cdbd2ae67f5147befb), pxr/imaging/plugin/hdEmbree/
+// renderer/: integrator/surfaceShading.cpp (_BuildShadingContext(),
+// _ComputeScreenSpaceDerivatives(), _PropagateRayDifferential()),
+// camera/camera.cpp (the ray differential of _SampleCameraRay()) and
+// geometry/normalTransforms.h (TransformNormalDerivativeToWorld()). Copyright
+// 2018-2026 Pixar, licensed under the Tomorrow Open Source Technology License
+// 1.0 (see THIRD-PARTY.md). Keep in step with those files when the pin in
+// external/typhoon/PROVENANCE.md moves.
+
+#pragma once
+
+// The pathtracer's shading context: everything a material may read at a path
+// vertex (PathShadeInput, which carries it across the material interface),
+// built from a surface hit as Typhoon builds its mxcpp::ShadingContext, and
+// the ray differentials that give its screen-space derivatives. The surface
+// derivatives come from each geometry subtype's hook (Geometry.ispc).
+
+#include "renderer/pathtracer/PathMaterial.isph"
+#include "renderer/pathtracer/Transport.isph"
+#include "shading/halcyon_attributes.isph"
+#include "shading/halcyon_camera.isph"
+#include "shading/halcyon_derivatives.isph"
+#include "shading/halcyon_frame.isph"
+
+// The attribute that holds texture coordinates, Typhoon's 'st': like the
+// samplers' 'inAttribute' default. No ANARI material names another yet; the
+// derivative hooks take the attribute, so a per-material override would only
+// need to pass its own.
+#define PATH_TEXCOORD_ATTRIBUTE ATTRIBUTE_0
+
+// The scale of footprints from ray differentials: 1 / sqrt of the renderer's
+// sample limit ('sampleLimit' if above 0, else 'convergedSamplesPerPixel'),
+// the pixel footprint of one of that many samples, as Typhoon scales them
+// by 1 / sqrt(samplesToConvergence)
+inline uniform float differentialScale(const uniform Frame *uniform frame)
+{
+  return frame->renderer->pathtracer.differentialScale;
+}
+
+// Typhoon's display colour where the geometry has none (Storm's)
+#define PATH_DEFAULT_DISPLAY_COLOR 0.5f
+
+// Ray differentials //////////////////////////////////////////////////////////
+
+// The rays one pixel over in x and in y, to track a path's pixel footprint
+// through specular bounces (Typhoon's ty::RayDifferential)
+struct RayDifferential
+{
+  bool valid;
+  float3 rxOrigin;
+  float3 ryOrigin;
+  float3 rxDirection;
+  float3 ryDirection;
+};
+
+// The ray differential of the camera ray 'rh' through 'offset' within 'pixel':
+// the rays through the same offset one pixel over in x and in y, brought
+// towards 'rh' by differentialScale() (Typhoon: directions for
+// perspective cameras, origins for orthographic ones)
+inline RayDifferential RayDifferential_camera(
+    const uniform Frame *uniform frame,
+    const int2 pixel,
+    const float2 offset,
+    const RayHit &rh)
+{
+  RayDifferential d;
+  d.valid = false;
+  uniform Camera *uniform camera = frame->camera;
+  if (camera->type != CAMERA_PERSPECTIVE && camera->type != CAMERA_ORTHOGRAPHIC)
+    return d;
+
+  const RayHit rx = Camera_makeRay(camera,
+      Camera_screenFromPixel(
+          camera, pixel + make_int2(1, 0), offset, frame->invSize),
+      frame->aspect);
+  const RayHit ry = Camera_makeRay(camera,
+      Camera_screenFromPixel(
+          camera, pixel + make_int2(0, 1), offset, frame->invSize),
+      frame->aspect);
+  d.valid = true;
+  d.rxOrigin = rx.ray.org;
+  d.ryOrigin = ry.ray.org;
+  d.rxDirection = rx.ray.dir;
+  d.ryDirection = ry.ray.dir;
+
+  const uniform float scale = differentialScale(frame);
+  if (camera->type == CAMERA_ORTHOGRAPHIC) {
+    d.rxOrigin = rh.ray.org + (d.rxOrigin - rh.ray.org) * scale;
+    d.ryOrigin = rh.ray.org + (d.ryOrigin - rh.ray.org) * scale;
+  } else {
+    d.rxDirection =
+        normalize(rh.ray.dir + (d.rxDirection - rh.ray.dir) * scale);
+    d.ryDirection =
+        normalize(rh.ray.dir + (d.ryDirection - rh.ray.dir) * scale);
+  }
+  return d;
+}
+
+// What a path vertex keeps of its shading context for a specular continuation
+// (Typhoon's _SurfaceDifferentials): the shading normal's derivatives along
+// the surface parameters (world space, faced like the incident side), the
+// screen-space position derivatives and the parameters' screen-space
+// derivatives
+struct SurfaceDifferentials
+{
+  float3 dndu;
+  float3 dndv;
+  float3 dPdx;
+  float3 dPdy;
+  float dudx;
+  float dvdx;
+  float dudy;
+  float dvdy;
+  // dndu/dndv describe the normal the material shades with: false once the
+  // material resolves a normal of its own (Typhoon's provenance None)
+  bool hasNormalDerivatives;
+};
+
+// The ray differential of the ray leaving a path vertex towards 'wi'
+// (Typhoon's _PropagateRayDifferential()): carried through specular events
+// (reflection where 'eta' is 1, refraction otherwise) with the surface's
+// differentials, dropped by any other event. 'Ns' is the shading normal faced
+// to the incident side, 'wo' the direction back along the incoming ray.
+inline void RayDifferential_propagate(varying RayDifferential &d,
+    const varying SurfaceDifferentials &s,
+    float3 P,
+    float3 Ns,
+    float3 wo,
+    float3 wi,
+    float eta,
+    bool specular)
+{
+  if (!specular) {
+    d.valid = false;
+    return;
+  }
+  if (!d.valid)
+    return;
+
+  const float3 dndx = s.hasNormalDerivatives ? s.dndu * s.dudx + s.dndv * s.dvdx
+                                             : make_float3(0.f);
+  const float3 dndy = s.hasNormalDerivatives ? s.dndu * s.dudy + s.dndv * s.dvdy
+                                             : make_float3(0.f);
+  d.rxOrigin = P + s.dPdx;
+  d.ryOrigin = P + s.dPdy;
+
+  const float3 dwodx = -d.rxDirection - wo;
+  const float3 dwody = -d.ryDirection - wo;
+  const float dwoDotnDx = dot(dwodx, Ns) + dot(wo, dndx);
+  const float dwoDotnDy = dot(dwody, Ns) + dot(wo, dndy);
+
+  if (eta == 1.f) {
+    d.rxDirection = wi - dwodx + 2.f * (dot(wo, Ns) * dndx + dwoDotnDx * Ns);
+    d.ryDirection = wi - dwody + 2.f * (dot(wo, Ns) * dndy + dwoDotnDy * Ns);
+  } else if (eta != 0.f) {
+    const float wiDotNs = dot(wi, Ns);
+    const float wiDotNsSafe = wiDotNs != 0.f ? wiDotNs : 1.f;
+    const float mu = dot(wo, Ns) / eta - abs(wiDotNs);
+    const float derivativeScale =
+        1.f / eta + dot(wo, Ns) / (eta * eta * wiDotNsSafe);
+    const float dmuDx = dwoDotnDx * derivativeScale;
+    const float dmuDy = dwoDotnDy * derivativeScale;
+    d.rxDirection = wi - eta * dwodx + mu * dndx + dmuDx * Ns;
+    d.ryDirection = wi - eta * dwody + mu * dndy + dmuDy * Ns;
+  } else {
+    d.valid = false;
+    return;
+  }
+
+  const uniform float maxLength2 = 1e16f;
+  if (length2(d.rxDirection) > maxLength2 || length2(d.ryDirection) > maxLength2
+      || length2(d.rxOrigin) > maxLength2 || length2(d.ryOrigin) > maxLength2)
+    d.valid = false;
+}
+
+// Shading context ////////////////////////////////////////////////////////////
+
+// The derivative of a unit normal under the instance's normal matrix 'm': the
+// derivative 'dn' of the unit object-space normal 'n' transformed, minus its
+// component along the transformed normal, over the transformed normal's
+// length; zero where that is degenerate (Typhoon's
+// TransformNormalDerivativeToWorld())
+inline float3 transformNormalDerivativeToWorld(
+    const linear3f &m, float3 n, float3 dn)
+{
+  const float3 tn = xfmVector(m, n);
+  const float3 td = xfmVector(m, dn);
+  float3 wn;
+  double l;
+  if (!isFinite(td) || !tryNormalizeDirection(tn, wn, l) || !isfinite(l)
+      || l == 0.d)
+    return make_float3(0.f);
+  const double projection =
+      (double)wn.x * td.x + (double)wn.y * td.y + (double)wn.z * td.z;
+  const float3 r = make_float3((float)((td.x - wn.x * projection) / l),
+      (float)((td.y - wn.y * projection) / l),
+      (float)((td.z - wn.z * projection) / l));
+  return isFinite(r) ? r : make_float3(0.f);
+}
+
+// Screen-space derivatives at world-space point 'P' on the tangent plane of
+// normal 'N' (Typhoon's _ComputeScreenSpaceDerivatives()): where the ray
+// differential 'rd' meets that plane, else the camera's pixel footprint at P's
+// distance (scaled like the differential) along an orthonormal frame around
+// N; then the surface parameters' derivatives, the least-squares solution
+// through dPdu and dPdv. Typhoon's fallback multiplies its near-plane pixel
+// size by the distance, which is the footprint only for a near plane at 1 (and
+// grows with distance for orthographic cameras); this uses the footprint.
+inline void computeScreenSpaceDerivatives(const uniform Frame *uniform frame,
+    const RayDifferential &rd,
+    float3 P,
+    float3 N,
+    float3 dPdu,
+    float3 dPdv,
+    varying PathShadeInput &ctx)
+{
+  float3 dPdx = make_float3(0.f);
+  float3 dPdy = make_float3(0.f);
+  if (rd.valid) {
+    const float planeOffset = -dot(N, P);
+    const float rxDotN = dot(N, rd.rxDirection);
+    if (abs(rxDotN) > 1e-10f) {
+      const float t = -(dot(N, rd.rxOrigin) + planeOffset) / rxDotN;
+      dPdx = rd.rxOrigin + t * rd.rxDirection - P;
+    }
+    const float ryDotN = dot(N, rd.ryDirection);
+    if (abs(ryDotN) > 1e-10f) {
+      const float t = -(dot(N, rd.ryOrigin) + planeOffset) / ryDotN;
+      dPdy = rd.ryOrigin + t * rd.ryDirection - P;
+    }
+  } else {
+    const uniform Camera *uniform c = frame->camera;
+    const uniform float aspect = c->hasAspect ? c->aspect : frame->aspect;
+    // one pixel on the image plane (at unit distance for perspective cameras)
+    const uniform float pixelX = c->imagePlaneHeight * aspect
+        * abs(c->region[2] - c->region[0]) * frame->invSize.x;
+    const uniform float pixelY = c->imagePlaneHeight
+        * abs(c->region[3] - c->region[1]) * frame->invSize.y;
+    const float distance =
+        c->type == CAMERA_PERSPECTIVE ? length(P - c->pos) : 1.f;
+    if (c->type != CAMERA_PERSPECTIVE || distance > 1e-6f) {
+      const uniform float scale = differentialScale(frame);
+      float3 t, b;
+      buildOrthonormalFrame(N, t, b);
+      dPdx = t * (pixelX * distance * scale);
+      dPdy = b * (pixelY * distance * scale);
+    }
+  }
+  ctx.dPdx = dPdx;
+  ctx.dPdy = dPdy;
+
+  ctx.dudx = 0.f;
+  ctx.dvdx = 0.f;
+  ctx.dudy = 0.f;
+  ctx.dvdy = 0.f;
+  const float ata00 = dot(dPdu, dPdu);
+  const float ata01 = dot(dPdu, dPdv);
+  const float ata11 = dot(dPdv, dPdv);
+  const float det = differenceOfProducts(ata00, ata11, ata01, ata01);
+  if (abs(det) > 1e-18f) {
+    const float invDet = 1.f / det;
+    const float atb0x = dot(dPdu, dPdx);
+    const float atb1x = dot(dPdv, dPdx);
+    const float atb0y = dot(dPdu, dPdy);
+    const float atb1y = dot(dPdv, dPdy);
+    ctx.dudx = clamp(
+        differenceOfProducts(ata11, atb0x, ata01, atb1x) * invDet, -1e8f, 1e8f);
+    ctx.dvdx = clamp(
+        differenceOfProducts(ata00, atb1x, ata01, atb0x) * invDet, -1e8f, 1e8f);
+    ctx.dudy = clamp(
+        differenceOfProducts(ata11, atb0y, ata01, atb1y) * invDet, -1e8f, 1e8f);
+    ctx.dvdy = clamp(
+        differenceOfProducts(ata00, atb1y, ata01, atb0y) * invDet, -1e8f, 1e8f);
+  }
+}
+
+// The tangent frame of the shading context around the unit smooth normal 'N'
+// (Typhoon's): where the geometry has a tangent frame per corner
+// ('haveFrame'; authored, else smoothed across the mesh's faces,
+// MeshTangents.h), its interpolated tangent 'T' and bitangent 'B' (world
+// space) projected onto the tangent plane, with the handedness of the two;
+// otherwise, or where those are degenerate, dPdu projected onto the tangent
+// plane with the handedness of dPdu and dPdv. The bitangent is N x tangent
+// signed by that handedness; the orthonormal frame around N where the
+// tangent is degenerate.
+inline void tangentFrame(float3 N,
+    float3 dPdu,
+    float3 dPdv,
+    bool haveFrame,
+    float3 T,
+    float3 B,
+    float3 &tangent,
+    float3 &bitangent)
+{
+  float handedness = 1.f;
+  if (haveFrame) {
+    float3 tangentOut = T - N * dot(N, T);
+    float3 bitangentOut = B - N * dot(N, B);
+    haveFrame = tryNormalizeDirection(tangentOut, tangentOut)
+        && tryNormalizeDirection(bitangentOut, bitangentOut);
+    if (haveFrame) {
+      handedness = dot(cross(tangentOut, bitangentOut), N) < 0.f ? -1.f : 1.f;
+      tangent = tangentOut;
+    }
+  }
+
+  if (!haveFrame) {
+    tangent = dPdu - N * dot(N, dPdu);
+    float3 parameterBitangent = dPdv - N * dot(N, dPdv);
+    if (tryNormalizeDirection(tangent, tangent)
+        && tryNormalizeDirection(parameterBitangent, parameterBitangent)) {
+      handedness =
+          dot(cross(tangent, parameterBitangent), N) < 0.f ? -1.f : 1.f;
+    }
+  }
+
+  tangent = tangent - N * dot(N, tangent);
+  if (!tryNormalizeDirection(tangent, tangent)) {
+    buildOrthonormalFrame(N, tangent, bitangent);
+  } else {
+    bitangent = handedness * cross(N, tangent);
+    if (!tryNormalizeDirection(bitangent, bitangent))
+      buildOrthonormalFrame(N, tangent, bitangent);
+  }
+}
+
+// The shading context of the surface hit of 'rh' (Typhoon's
+// _BuildShadingContext()) in 'ctx', the geometric part of the material
+// interface's input, and the differentials the integrator keeps in 's'. 'rd'
+// is the ray's differential. Fills every PathShadeInput member but the
+// material colour, the flags and the random numbers.
+//
+// What feeds Typhoon's primvars: the texture
+// coordinates (Typhoon's 'st') are 'attribute0' (PATH_TEXCOORD_ATTRIBUTE),
+// resolved like any attribute (instance, then face-varying, vertex, primitive,
+// uniform; (0, 0) where nothing sets it, as Typhoon's default); the display
+// colour and opacity (Typhoon's 'displayColor' and 'displayOpacity') are the
+// 'color' attribute's rgb and alpha, resolved the same way, Typhoon's grey 0.5
+// and opacity 1 where nothing sets it. Typhoon's other primvars, which its
+// graphs read by name (geomprops), are the attributes the hit's material
+// reads (Material::attributeMask), with whether the hit
+// has each (ray-derived ones always), so that a geomprop node gives its
+// default for one it lacks, as Typhoon's.
+inline void ShadingContext_build(const uniform Frame *uniform frame,
+    const RayHit &rh,
+    const HitInfo &hit,
+    const RayDifferential &rd,
+    varying PathShadeInput &ctx,
+    varying SurfaceDifferentials &s)
+{
+  ctx.P = rh.ray.org + rh.ray.dir * rh.ray.tfar;
+  ctx.objectToWorld = objectToWorld(hit);
+  ctx.worldToObject = worldToObject(hit);
+  ctx.objectP = xfmPoint(ctx.worldToObject, ctx.P);
+  const linear3f normalXfm = normalToWorld(hit);
+  // Ng by a float normalize(), where Typhoon takes it as the smooth normal
+  // below: a known difference (maintainer decision, keep it; about 4-5% of a
+  // native render's time, no measurable effect on the comparisons)
+  ctx.Ng = normalize(worldNg(rh, hit));
+  float3 objectN;
+  if (!tryNormalizeDirection(objectShadingNormal(hit, rh), objectN))
+    objectN = make_float3(0.f, 0.f, 1.f);
+  // the smooth normal to world space as Typhoon's
+  // _TryBuildSurfaceInteraction() takes it (Transport_surfaceNormalToWorld():
+  // TransformNormalToWorld(), then TryNormalizeDirection() again), not by a
+  // float normalize(): Typhoon's GGX lobes take its length as 1, and just
+  // above the delta threshold (alpha 1e-3) its last bits move their albedo by
+  // percents. Components rounded from double err to both sides of 1, so that
+  // over a curved surface the errors cancel, as in Typhoon; a float
+  // normalize() erred to one side on average (which side depends on the mesh
+  // and its transform), and biased roughness-0.05 metals by 0.3-0.5% against
+  // Typhoon
+  ctx.Nsrf = Transport_surfaceNormalToWorld(normalXfm, objectN);
+  // the derivative hooks take the smooth normal back in object space, as
+  // Typhoon's TransformNormalToObject()
+  objectN = Transport_normalToObject(ctx.objectToWorld.l, ctx.Nsrf);
+  ctx.wo = normalize(-rh.ray.dir);
+  const bool frontFacing = dot(ctx.Ng, ctx.wo) > 0.f;
+
+  ctx.faceId = (int)rh.hit.primID;
+  ctx.baryU = rh.hit.u;
+  ctx.baryV = rh.hit.v;
+  const float4 st = getAttribute(hit, rh, PATH_TEXCOORD_ATTRIBUTE);
+  ctx.texcoord = make_float2(st.x, st.y);
+  // the attributes the material's geomprop nodes read
+#pragma ignore warning(perf)
+  const uniform Material *varying material = hit.surface->material;
+  ctx.attributeMask = 0;
+  ctx.attributePresent = 0;
+  bool meshPosition = false;
+  if (material != NULL) {
+#pragma ignore warning(perf)
+    const uint32 mask = material->attributeMask;
+    ctx.attributeMask = mask & ~MATERIAL_READS_OBJECT_POSITION;
+    meshPosition = (mask & MATERIAL_READS_OBJECT_POSITION) != 0;
+  }
+  for (uniform int a = 0; a < PATH_MATERIAL_ATTRIBUTES; a++) {
+    if ((ctx.attributeMask & (1u << a))
+        && getPresentAttribute(
+            hit, rh, (uniform Attribute)a, ctx.attributes[a]))
+      ctx.attributePresent |= 1u << a;
+  }
+
+  float4 color;
+  if (getSuppliedAttribute(hit, rh, ATTRIBUTE_COLOR, color)) {
+    ctx.displayColor = make_float3(color);
+    ctx.displayOpacity = color.w;
+  } else {
+    ctx.displayColor = make_float3(PATH_DEFAULT_DISPLAY_COLOR);
+    ctx.displayOpacity = 1.f;
+  }
+
+  // object-space surface derivatives from the geometry's hook; texture
+  // coordinates an instance sets are constant over the primitive
+  const uniform Attribute texcoord = PATH_TEXCOORD_ATTRIBUTE;
+#pragma ignore warning(perf)
+  const uniform float *varying ia = hit.instance->attributes[texcoord];
+  const bool instanceTexcoord = ia != NULL;
+  SurfaceDerivatives d;
+  // Typhoon's ResolveObjectSpaceSurfacePosition(): for graphs that read the
+  // object position ('meshPosition', MATERIAL_READS_OBJECT_POSITION), the
+  // surface's own from the primitive's vertices (Geometry::
+  // getSurfacePosition), taken after the derivatives, which take the hit's,
+  // as Typhoon's
+  float3 objectP = ctx.objectP;
+#pragma ignore warning(perf)
+  const uniform Geometry *varying geometry = hit.surface->geometry;
+  foreach_unique (g in geometry) {
+    const float2 uv = make_float2(rh.hit.u, rh.hit.v);
+    if (g->getDerivatives == NULL || g->vertices.data == NULL) {
+      buildOrthonormalFrame(objectN, d.dPdu, d.dPdv);
+      d.dndu = make_float3(0.f);
+      d.dndv = make_float3(0.f);
+    } else {
+      if (instanceTexcoord) {
+        g->getDerivatives(
+            g, ATTRIBUTE_NONE, rh.hit.primID, uv, ctx.objectP, objectN, d);
+      } else {
+        g->getDerivatives(
+            g, texcoord, rh.hit.primID, uv, ctx.objectP, objectN, d);
+      }
+      if (meshPosition) {
+        if (g->getSurfacePosition != NULL)
+          objectP = g->getSurfacePosition(g, rh.hit.primID, uv, ctx.objectP);
+      }
+    }
+  }
+  ctx.objectP = objectP;
+  ctx.dPositiondu = d.dPdu;
+  ctx.dPositiondv = d.dPdv;
+  ctx.dPdu = xfmVector(ctx.objectToWorld, d.dPdu);
+  ctx.dPdv = xfmVector(ctx.objectToWorld, d.dPdv);
+  const float sideSign = frontFacing ? 1.f : -1.f;
+  s.dndu =
+      sideSign * transformNormalDerivativeToWorld(normalXfm, objectN, d.dndu);
+  s.dndv =
+      sideSign * transformNormalDerivativeToWorld(normalXfm, objectN, d.dndv);
+  s.hasNormalDerivatives = true;
+
+  // the geometry's tangent frame per corner (triangle and quad meshes),
+  // interpolated like face-varying values
+  bool haveFrame = false;
+  float3 T = make_float3(0.f);
+  float3 B = make_float3(0.f);
+  foreach_unique (g in geometry) {
+    if (g->getFaceVaryingAttribute && g->cornerTangents.size > 0) {
+      const float2 uv = make_float2(rh.hit.u, rh.hit.v);
+      T = make_float3(
+          g->getFaceVaryingAttribute(g, &g->cornerTangents, rh.hit.primID, uv));
+      B = make_float3(g->getFaceVaryingAttribute(
+          g, &g->cornerBitangents, rh.hit.primID, uv));
+      haveFrame = true;
+    }
+  }
+  if (haveFrame) {
+    T = xfmVector(ctx.objectToWorld, T);
+    B = xfmVector(ctx.objectToWorld, B);
+  }
+  tangentFrame(ctx.Nsrf,
+      ctx.dPdu,
+      ctx.dPdv,
+      haveFrame,
+      T,
+      B,
+      ctx.tangent,
+      ctx.bitangent);
+
+  computeScreenSpaceDerivatives(
+      frame, rd, ctx.P, ctx.Nsrf, ctx.dPdu, ctx.dPdv, ctx);
+  ctx.dPositiondx = xfmVector(ctx.worldToObject, ctx.dPdx);
+  ctx.dPositiondy = xfmVector(ctx.worldToObject, ctx.dPdy);
+  s.dPdx = ctx.dPdx;
+  s.dPdy = ctx.dPdy;
+  s.dudx = ctx.dudx;
+  s.dvdx = ctx.dvdx;
+  s.dudy = ctx.dudy;
+  s.dvdy = ctx.dvdy;
+}

@@ -1,0 +1,666 @@
+{
+  "info": {
+    "name": "HALCYON_DEVICE",
+    "type": "device",
+    "dependencies": [
+      "anari_core_1_0",
+      "anari_core_objects_base_1_0",
+      "khr_camera_orthographic",
+      "khr_camera_perspective",
+      "khr_device_synchronization",
+      "khr_frame_accumulation",
+      "khr_frame_channel_albedo",
+      "khr_frame_channel_instance_id",
+      "khr_frame_channel_normal",
+      "khr_frame_channel_object_id",
+      "khr_frame_channel_primitive_id",
+      "khr_frame_completion_callback",
+      "khr_geometry_cone",
+      "khr_geometry_curve",
+      "khr_geometry_cylinder",
+      "khr_geometry_quad",
+      "khr_geometry_sphere",
+      "khr_geometry_triangle",
+      "khr_instance_transform",
+      "khr_instance_transform_array",
+      "khr_light_directional",
+      "khr_light_hdri",
+      "khr_light_point",
+      "khr_light_primary_visibility",
+      "khr_light_quad",
+      "khr_light_ring",
+      "khr_light_spot",
+      "khr_material_matte",
+      "khr_material_physically_based",
+      "khr_renderer_ambient_light",
+      "khr_renderer_background_color",
+      "khr_renderer_background_image",
+      "khr_sampler_image1d",
+      "khr_sampler_image2d",
+      "khr_sampler_image3d",
+      "khr_sampler_primitive",
+      "khr_sampler_transform",
+      "khr_spatial_field_structured_regular",
+      "khr_volume_transfer_function1d",
+      "halcyon_geometry_curve_basis",
+      "halcyon_material_materialx",
+      "halcyon_material_openpbr",
+      "halcyon_material_usd_preview_surface"
+    ]
+  },
+  "objects": [
+    {
+      "type": "ANARI_FRAME",
+      "parameters": [],
+      "properties": [
+        {
+          "name": "numSamples",
+          "type": "ANARI_INT32",
+          "tags": [],
+          "description": "a progressive renderer's ('quality') samples per pixel since the last change, or its sample limit (sampleLimit or convergedSamplesPerPixel) once every pixel has converged, unless sampleLimit is 0 (VisRTX's property, which hdAnari reads and compares with sampleLimit); not reported for other renderers"
+        }
+      ]
+    },
+    {
+      "type": "ANARI_DEVICE",
+      "parameters": [
+        {
+          "name": "allowInvalidMaterials",
+          "types": [
+            "ANARI_BOOL"
+          ],
+          "tags": [],
+          "default": true,
+          "description": "show surfaces with invalid materials"
+        },
+        {
+          "name": "invalidMaterialColor",
+          "types": [
+            "ANARI_FLOAT32_VEC4"
+          ],
+          "tags": [],
+          "default": [
+            1.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "description": "color to identify surfaces with invalid materials"
+        }
+      ]
+    },
+    {
+      "type": "ANARI_RENDERER",
+      "name": "preview",
+      "extension": [
+        "KHR_CAMERA_ORTHOGRAPHIC",
+        "KHR_CAMERA_PERSPECTIVE",
+        "KHR_DEVICE_SYNCHRONIZATION",
+        "KHR_FRAME_CHANNEL_ALBEDO",
+        "KHR_FRAME_CHANNEL_INSTANCE_ID",
+        "KHR_FRAME_CHANNEL_NORMAL",
+        "KHR_FRAME_CHANNEL_OBJECT_ID",
+        "KHR_FRAME_CHANNEL_PRIMITIVE_ID",
+        "KHR_FRAME_COMPLETION_CALLBACK",
+        "KHR_GEOMETRY_CONE",
+        "KHR_GEOMETRY_CURVE",
+        "KHR_GEOMETRY_CYLINDER",
+        "KHR_GEOMETRY_QUAD",
+        "KHR_GEOMETRY_SPHERE",
+        "KHR_GEOMETRY_TRIANGLE",
+        "KHR_INSTANCE_TRANSFORM",
+        "KHR_INSTANCE_TRANSFORM_ARRAY",
+        "KHR_LIGHT_HDRI",
+        "KHR_MATERIAL_MATTE",
+        "KHR_MATERIAL_PHYSICALLY_BASED",
+        "KHR_RENDERER_AMBIENT_LIGHT",
+        "KHR_RENDERER_BACKGROUND_COLOR",
+        "KHR_RENDERER_BACKGROUND_IMAGE",
+        "KHR_SAMPLER_IMAGE1D",
+        "KHR_SAMPLER_IMAGE2D",
+        "KHR_SAMPLER_IMAGE3D",
+        "KHR_SAMPLER_PRIMITIVE",
+        "KHR_SAMPLER_TRANSFORM",
+        "KHR_SPATIAL_FIELD_STRUCTURED_REGULAR",
+        "KHR_VOLUME_TRANSFER_FUNCTION1D",
+        "HALCYON_GEOMETRY_CURVE_BASIS",
+        "HALCYON_MATERIAL_MATERIALX",
+        "HALCYON_MATERIAL_OPENPBR",
+        "HALCYON_MATERIAL_USD_PREVIEW_SURFACE"
+      ],
+      "parameters": [
+        {
+          "name": "name",
+          "types": [
+            "ANARI_STRING"
+          ],
+          "tags": [],
+          "description": "optional object name"
+        },
+        {
+          "name": "mode",
+          "types": [
+            "ANARI_STRING"
+          ],
+          "tags": [],
+          "default": "default",
+          "values": [
+            "default",
+            "primitiveId",
+            "objectId",
+            "instanceId",
+            "embreePrimID",
+            "embreeGeomID",
+            "embreeInstID",
+            "Ng",
+            "Ng.abs",
+            "Ns",
+            "Ns.abs",
+            "Ns.flipped",
+            "uvw",
+            "backface",
+            "hitSurface",
+            "hitVolume",
+            "geometry.attribute0",
+            "geometry.attribute1",
+            "geometry.attribute2",
+            "geometry.attribute3",
+            "geometry.color",
+            "opacityHeatmap",
+            "ambientOcclusion",
+            "ambientOcclusion.unblurred",
+            "testFrame"
+          ],
+          "description": "visualization modes (most for debugging)"
+        },
+        {
+          "name": "background",
+          "types": [
+            "ANARI_FLOAT32_VEC4",
+            "ANARI_ARRAY2D"
+          ],
+          "tags": [
+            "color"
+          ],
+          "default": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "elementType": [
+            "ANARI_UFIXED8",
+            "ANARI_UFIXED8_VEC2",
+            "ANARI_UFIXED8_VEC3",
+            "ANARI_UFIXED8_VEC4",
+            "ANARI_UFIXED8_R_SRGB",
+            "ANARI_UFIXED8_RA_SRGB",
+            "ANARI_UFIXED8_RGB_SRGB",
+            "ANARI_UFIXED8_RGBA_SRGB",
+            "ANARI_UFIXED16",
+            "ANARI_UFIXED16_VEC2",
+            "ANARI_UFIXED16_VEC3",
+            "ANARI_UFIXED16_VEC4",
+            "ANARI_UFIXED32",
+            "ANARI_UFIXED32_VEC2",
+            "ANARI_UFIXED32_VEC3",
+            "ANARI_UFIXED32_VEC4",
+            "ANARI_FLOAT32",
+            "ANARI_FLOAT32_VEC2",
+            "ANARI_FLOAT32_VEC3",
+            "ANARI_FLOAT32_VEC4"
+          ],
+          "description": "what camera rays that miss see: a color or an image"
+        },
+        {
+          "name": "ambientColor",
+          "types": [
+            "ANARI_FLOAT32_VEC3"
+          ],
+          "tags": [
+            "color"
+          ],
+          "default": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "description": "ambient light color (not read by this renderer)"
+        },
+        {
+          "name": "ambientRadiance",
+          "types": [
+            "ANARI_FLOAT32"
+          ],
+          "tags": [],
+          "default": 0.0,
+          "description": "the eye light's ambient term, read only with ignoreAmbientLighting false"
+        },
+        {
+          "name": "ignoreAmbientLighting",
+          "types": [
+            "ANARI_BOOL"
+          ],
+          "tags": [],
+          "default": true,
+          "description": "ignore 'ambientRadiance' and 'ambientColor' parameters on the renderer"
+        },
+        {
+          "name": "eyeLightBlendRatio",
+          "types": [
+            "ANARI_FLOAT32"
+          ],
+          "tags": [],
+          "default": 0.5,
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "how much eye lighting factor should be used in default render mode"
+        },
+        {
+          "name": "volumeSamplingRate",
+          "types": [
+            "ANARI_FLOAT32"
+          ],
+          "tags": [],
+          "default": 0.5,
+          "minimum": 0.001,
+          "maximum": 10.0,
+          "description": "sampling rate of volumes when ray marching"
+        },
+        {
+          "name": "ambientOcclusion",
+          "types": [
+            "ANARI_BOOL"
+          ],
+          "tags": [],
+          "default": true,
+          "description": "darken the first visible surface by screen-space ambient occlusion in the default render mode"
+        },
+        {
+          "name": "ambientOcclusionRadius",
+          "types": [
+            "ANARI_FLOAT32"
+          ],
+          "tags": [],
+          "default": 0.0,
+          "minimum": 0.0,
+          "description": "world-space distance within which geometry occludes; 0 uses 3 percent of the world bounds diagonal, and so does a negative value, which is clamped to 0 without a warning"
+        },
+        {
+          "name": "ambientOcclusionEstimator",
+          "types": [
+            "ANARI_STRING"
+          ],
+          "tags": [],
+          "default": "g3d",
+          "values": [
+            "g3d",
+            "sao"
+          ],
+          "description": "form of the occlusion estimator: g3d (G3D's high-quality SAO) or sao (the SAO paper's, with its linear intensity set to the radius so that it doesn't depend on the scene's units)"
+        },
+        {
+          "name": "ambientOcclusionIntensity",
+          "types": [
+            "ANARI_FLOAT32"
+          ],
+          "tags": [],
+          "default": 1.0,
+          "minimum": 0.0,
+          "description": "exponent of the occlusion factor: above 1 darkens, below 1 lightens, 0 gives an occlusion factor of 1"
+        },
+        {
+          "name": "ambientOcclusionBlurPasses",
+          "types": [
+            "ANARI_INT32"
+          ],
+          "tags": [],
+          "default": 1,
+          "minimum": 1,
+          "maximum": 5,
+          "description": "passes of the depth-aware blur of the occlusion factor: the first removes the noise of its 4x4 rotation pattern, each further pass (an a-trous pass with twice the previous stride) smooths bands near contacts; values outside [1, 5] are clamped without a warning"
+        },
+        {
+          "name": "taskGrainSizeWidth",
+          "types": [
+            "ANARI_INT32"
+          ],
+          "tags": [],
+          "default": 4,
+          "minimum": 1,
+          "maximum": 128,
+          "description": "grain size of the render task along the width of the frame"
+        },
+        {
+          "name": "taskGrainSizeHeight",
+          "types": [
+            "ANARI_INT32"
+          ],
+          "tags": [],
+          "default": 4,
+          "minimum": 1,
+          "maximum": 128,
+          "description": "grain size of the render task along the height of the frame"
+        }
+      ]
+    },
+    {
+      "type": "ANARI_RENDERER",
+      "name": "quality",
+      "extension": [
+        "KHR_CAMERA_ORTHOGRAPHIC",
+        "KHR_CAMERA_PERSPECTIVE",
+        "KHR_DEVICE_SYNCHRONIZATION",
+        "KHR_FRAME_ACCUMULATION",
+        "KHR_FRAME_CHANNEL_ALBEDO",
+        "KHR_FRAME_CHANNEL_INSTANCE_ID",
+        "KHR_FRAME_CHANNEL_NORMAL",
+        "KHR_FRAME_CHANNEL_OBJECT_ID",
+        "KHR_FRAME_CHANNEL_PRIMITIVE_ID",
+        "KHR_FRAME_COMPLETION_CALLBACK",
+        "KHR_GEOMETRY_CONE",
+        "KHR_GEOMETRY_CURVE",
+        "KHR_GEOMETRY_CYLINDER",
+        "KHR_GEOMETRY_QUAD",
+        "KHR_GEOMETRY_SPHERE",
+        "KHR_GEOMETRY_TRIANGLE",
+        "KHR_INSTANCE_TRANSFORM",
+        "KHR_INSTANCE_TRANSFORM_ARRAY",
+        "KHR_LIGHT_DIRECTIONAL",
+        "KHR_LIGHT_HDRI",
+        "KHR_LIGHT_POINT",
+        "KHR_LIGHT_PRIMARY_VISIBILITY",
+        "KHR_LIGHT_QUAD",
+        "KHR_LIGHT_RING",
+        "KHR_LIGHT_SPOT",
+        "KHR_MATERIAL_MATTE",
+        "KHR_MATERIAL_PHYSICALLY_BASED",
+        "KHR_RENDERER_AMBIENT_LIGHT",
+        "KHR_RENDERER_BACKGROUND_COLOR",
+        "KHR_RENDERER_BACKGROUND_IMAGE",
+        "KHR_SAMPLER_IMAGE1D",
+        "KHR_SAMPLER_IMAGE2D",
+        "KHR_SAMPLER_IMAGE3D",
+        "KHR_SAMPLER_PRIMITIVE",
+        "KHR_SAMPLER_TRANSFORM",
+        "KHR_SPATIAL_FIELD_STRUCTURED_REGULAR",
+        "KHR_VOLUME_TRANSFER_FUNCTION1D",
+        "HALCYON_GEOMETRY_CURVE_BASIS",
+        "HALCYON_MATERIAL_MATERIALX",
+        "HALCYON_MATERIAL_OPENPBR",
+        "HALCYON_MATERIAL_USD_PREVIEW_SURFACE"
+      ],
+      "parameters": [
+        {
+          "name": "name",
+          "types": [
+            "ANARI_STRING"
+          ],
+          "tags": [],
+          "description": "optional object name"
+        },
+        {
+          "name": "mode",
+          "types": [
+            "ANARI_STRING"
+          ],
+          "tags": [],
+          "default": "default",
+          "values": [
+            "default",
+            "position",
+            "normal",
+            "tangent",
+            "bitangent",
+            "texcoord",
+            "displayColor",
+            "dPdu",
+            "dPdv",
+            "dndu",
+            "dndv",
+            "dPdx",
+            "dPdy",
+            "texcoordDerivatives"
+          ],
+          "description": "'default' path traces; the others show one value of the shading context at the pixel center's first visible surface, unscaled (for debugging)"
+        },
+        {
+          "name": "pixelSamples",
+          "types": [
+            "ANARI_INT32"
+          ],
+          "tags": [],
+          "default": 1,
+          "minimum": 1,
+          "description": "paths traced per pixel by each render"
+        },
+        {
+          "name": "maxBounces",
+          "types": [
+            "ANARI_INT32"
+          ],
+          "tags": [],
+          "default": 16,
+          "minimum": 0,
+          "description": "path vertices that scatter after the first; the ray leaving the last one only gathers what it sees"
+        },
+        {
+          "name": "randomNumberSeed",
+          "types": [
+            "ANARI_INT32"
+          ],
+          "tags": [],
+          "default": -1,
+          "description": "seed of the sample generator (Typhoon's OpenQMC Sobol sampler); -1 uses a fixed default, the seed of scene frame 0"
+        },
+        {
+          "name": "lightSamplesPerHit",
+          "types": [
+            "ANARI_INT32"
+          ],
+          "tags": [],
+          "default": 1,
+          "minimum": 1,
+          "description": "stratified samples of every light at each path vertex (next-event estimation)"
+        },
+        {
+          "name": "minBouncesBeforeRR",
+          "types": [
+            "ANARI_INT32"
+          ],
+          "tags": [],
+          "default": 2,
+          "minimum": 0,
+          "description": "path vertices before Russian roulette may end a path"
+        },
+        {
+          "name": "fireflyClampThreshold",
+          "types": [
+            "ANARI_FLOAT32"
+          ],
+          "tags": [],
+          "default": 20.0,
+          "description": "largest luminance of one light sample and of one contribution to a path; 0 or less doesn't clamp"
+        },
+        {
+          "name": "disableShadows",
+          "types": [
+            "ANARI_BOOL"
+          ],
+          "tags": [],
+          "default": false,
+          "description": "light every path vertex as if nothing blocked the lights"
+        },
+        {
+          "name": "enableCaustics",
+          "types": [
+            "ANARI_BOOL"
+          ],
+          "tags": [],
+          "default": false,
+          "description": "follow caustic paths (a specular or refracted sample after a diffuse-like event); off, caustic lobes are pruned there and shadow rays pass straight through thick transparent surfaces"
+        },
+        {
+          "name": "causticsClampThreshold",
+          "types": [
+            "ANARI_FLOAT32"
+          ],
+          "tags": [],
+          "default": 5.0,
+          "description": "largest luminance of one contribution to a caustic path, before the firefly clamp; 0 or less doesn't clamp"
+        },
+        {
+          "name": "nativeMaterials",
+          "types": [
+            "ANARI_BOOL"
+          ],
+          "tags": [],
+          "default": true,
+          "description": "shade matte and most physicallyBased materials natively in ISPC; false shades them through their MaterialXCpp graphs in C++, as every other material, which renders the same images (to rounding for matte) more slowly (to validate one against the other)"
+        },
+        {
+          "name": "convergedSamplesPerPixel",
+          "types": [
+            "ANARI_INT32"
+          ],
+          "tags": [],
+          "default": 256,
+          "minimum": 1,
+          "description": "samples per pixel at which renders stop refining the image (Typhoon's ty:convergedSamplesPerPixel; reached at whole renders of pixelSamples) unless sampleLimit is set; also scales ray differentials to the footprint of one of that many samples"
+        },
+        {
+          "name": "sampleLimit",
+          "types": [
+            "ANARI_INT32"
+          ],
+          "tags": [],
+          "default": 256,
+          "minimum": 0,
+          "description": "VisRTX's name for convergedSamplesPerPixel, which hdAnari reads: if set, the samples per pixel at which renders stop refining the image, and the ray differentials' scale, whatever convergedSamplesPerPixel says (a convergedSamplesPerPixel other than 256 and other than it warns); unset, convergedSamplesPerPixel's; 0 stops only once every pixel has converged, with convergedSamplesPerPixel's differentials"
+        },
+        {
+          "name": "adaptiveThreshold",
+          "types": [
+            "ANARI_FLOAT32"
+          ],
+          "tags": [],
+          "default": 0.01,
+          "minimum": 0.0,
+          "description": "adaptive sampling: a pixel stops taking samples once the variance of its mean is at most 1e-6 plus this times its squared mean in every colour channel (Typhoon's ty:adaptiveThreshold; 0.01 is about a 10% standard error)"
+        },
+        {
+          "name": "minSamplesBeforeAdaptive",
+          "types": [
+            "ANARI_INT32"
+          ],
+          "tags": [],
+          "default": 64,
+          "description": "adaptive sampling: samples a pixel takes before it may stop (Typhoon's ty:minSamplesBeforeAdaptive); a negative value, or one at least a positive sample limit (sampleLimit or convergedSamplesPerPixel), turns adaptive sampling off"
+        },
+        {
+          "name": "background",
+          "types": [
+            "ANARI_FLOAT32_VEC4",
+            "ANARI_ARRAY2D"
+          ],
+          "tags": [
+            "color"
+          ],
+          "default": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "elementType": [
+            "ANARI_UFIXED8",
+            "ANARI_UFIXED8_VEC2",
+            "ANARI_UFIXED8_VEC3",
+            "ANARI_UFIXED8_VEC4",
+            "ANARI_UFIXED8_R_SRGB",
+            "ANARI_UFIXED8_RA_SRGB",
+            "ANARI_UFIXED8_RGB_SRGB",
+            "ANARI_UFIXED8_RGBA_SRGB",
+            "ANARI_UFIXED16",
+            "ANARI_UFIXED16_VEC2",
+            "ANARI_UFIXED16_VEC3",
+            "ANARI_UFIXED16_VEC4",
+            "ANARI_UFIXED32",
+            "ANARI_UFIXED32_VEC2",
+            "ANARI_UFIXED32_VEC3",
+            "ANARI_UFIXED32_VEC4",
+            "ANARI_FLOAT32",
+            "ANARI_FLOAT32_VEC2",
+            "ANARI_FLOAT32_VEC3",
+            "ANARI_FLOAT32_VEC4"
+          ],
+          "description": "what camera rays that miss see: a color or an image; it doesn't light the scene"
+        },
+        {
+          "name": "ambientColor",
+          "types": [
+            "ANARI_FLOAT32_VEC3"
+          ],
+          "tags": [
+            "color"
+          ],
+          "default": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "description": "ambient light color: a constant dome of this color times ambientRadiance that lights the scene; camera rays don't see it"
+        },
+        {
+          "name": "ambientRadiance",
+          "types": [
+            "ANARI_FLOAT32"
+          ],
+          "tags": [],
+          "default": 0.0,
+          "description": "the amount of light emitted by a point on the ambient light source in a direction, in W/sr/m^2"
+        },
+        {
+          "name": "taskGrainSizeWidth",
+          "types": [
+            "ANARI_INT32"
+          ],
+          "tags": [],
+          "default": 4,
+          "minimum": 1,
+          "maximum": 128,
+          "description": "grain size of the render task along the width of the frame"
+        },
+        {
+          "name": "taskGrainSizeHeight",
+          "types": [
+            "ANARI_INT32"
+          ],
+          "tags": [],
+          "default": 4,
+          "minimum": 1,
+          "maximum": 128,
+          "description": "grain size of the render task along the height of the frame"
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "anariNewHalcyonDevice",
+      "returnType": "ANARIDevice",
+      "arguments": [
+        {
+          "name": "statusCallback",
+          "type": "ANARIStatusCallback",
+          "default": "0"
+        },
+        {
+          "name": "statusCallbackUserData",
+          "type": "const void*",
+          "default": "0"
+        }
+      ]
+    }
+  ]
+}

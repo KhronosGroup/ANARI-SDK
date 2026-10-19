@@ -23,6 +23,11 @@ if (BUILD_HELIDE_GPU_DEVICE)
   add_subdirectory(helide_gpu)
 endif()
 
+option(BUILD_HALCYON_DEVICE "Build 'halcyon' device (Embree + ISPC; needs an ISPC compiler)" OFF)
+if (BUILD_HALCYON_DEVICE)
+  add_subdirectory(halcyon)
+endif()
+
 option(BUILD_HYDRA_DEVICE "Build 'hydra' device (OpenUSD Hydra render delegates; needs OpenUSD)" OFF)
 if (BUILD_HYDRA_DEVICE)
   add_subdirectory(hydra)

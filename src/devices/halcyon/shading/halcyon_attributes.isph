@@ -1,0 +1,228 @@
+// Copyright 2025-2026 The Khronos Group
+// SPDX-License-Identifier: Apache-2.0
+
+#pragma once
+
+#include "halcyon_hitInfo.isph"
+#include "halcyon_objects.isph"
+#include "halcyon_ray.isph"
+
+// Value of an attribute nothing supplies (helium's DEFAULT_ATTRIBUTE_VALUE)
+inline uniform float4 defaultAttributeValue()
+{
+  return make_float4(0.f, 0.f, 0.f, 1.f);
+}
+
+// Element 'i' of a non-empty attribute array; out-of-range indices clamp to
+// the last element (helium's default wrap mode)
+inline float4 readAttribute(const uniform AttributeArray *uniform a, uint i)
+{
+  const uint64 idx = min((uint64)i, a->size - 1);
+  return load_float4(a->data + 4 * idx);
+}
+
+// Attribute value of a geometry's primitive 'primID' at hit coordinates 'uv':
+// face-varying attributes, else vertex attributes, else primitive attributes,
+// else the uniform value
+inline float4 Geometry_getAttribute(const uniform Geometry *uniform g,
+    uniform Attribute attr,
+    uint primID,
+    float2 uv)
+{
+  const uniform AttributeArray *uniform fa = &g->faceVaryingAttributes[attr];
+  if (g->getFaceVaryingAttribute && fa->size > 0)
+    return g->getFaceVaryingAttribute(g, fa, primID, uv);
+
+  const uniform AttributeArray *uniform va = &g->vertexAttributes[attr];
+  if (g->getVertexAttribute && va->size > 0)
+    return g->getVertexAttribute(g, va, primID, uv);
+
+  const uniform AttributeArray *uniform pa = &g->primitiveAttributes[attr];
+  if (pa->size > 0)
+    return readAttribute(pa, primID);
+
+  return g->attributes[attr];
+}
+
+// Geometry attribute 'attr' (< NUM_GEOMETRY_ATTRIBUTES) of the geometry hit
+// by 'rh', ignoring instance attributes; 'hitInfo' must be a hit
+inline float4 getGeometryAttribute(
+    const HitInfo &hitInfo, const RayHit &rh, uniform Attribute attr)
+{
+  float4 retval;
+#pragma ignore warning(perf)
+  const uniform Geometry *varying geometry = hitInfo.surface->geometry;
+  foreach_unique (g in geometry) {
+    retval = Geometry_getAttribute(
+        g, attr, rh.hit.primID, make_float2(rh.hit.u, rh.hit.v));
+  }
+  return retval;
+}
+
+// Squared length below which an interpolated normal counts as degenerate
+#define HALCYON_MIN_NORMAL_LENGTH2 1e-20f
+
+// Object-space shading normal of a geometry's primitive 'primID' at hit
+// coordinates 'uv', unnormalized: 'faceVarying.normal', else 'vertex.normal',
+// interpolated like attributes; false if the geometry has neither
+inline bool Geometry_getShadingNormal(
+    const uniform Geometry *uniform g, uint primID, float2 uv, float3 &N)
+{
+  const uniform AttributeArray *uniform fa = &g->faceVaryingNormals;
+  const uniform AttributeArray *uniform va = &g->vertexNormals;
+  if (g->getFaceVaryingAttribute && fa->size > 0)
+    N = make_float3(g->getFaceVaryingAttribute(g, fa, primID, uv));
+  else if (g->getVertexAttribute && va->size > 0)
+    N = make_float3(g->getVertexAttribute(g, va, primID, uv));
+  else
+    return false;
+  return true;
+}
+
+// Object-space shading normal of the surface hit by 'rh', unnormalized and
+// not yet faced (see objectShadingNormal()): the geometry's interpolated
+// normal, else (none, or one of zero length) Embree's geometric normal. Every
+// hit is instanced, and Embree reports instanced Ng in object space.
+// 'interpolated' says whether it is the geometry's normal. 'hitInfo' must be a
+// hit.
+inline float3 unfacedObjectShadingNormal(
+    const HitInfo &hitInfo, const RayHit &rh, bool &interpolated)
+{
+  float3 N = rh.hit.Ng;
+  interpolated = false;
+#pragma ignore warning(perf)
+  const uniform Geometry *varying geometry = hitInfo.surface->geometry;
+  foreach_unique (g in geometry) {
+    float3 Ns;
+    if (Geometry_getShadingNormal(
+            g, rh.hit.primID, make_float2(rh.hit.u, rh.hit.v), Ns)
+        && dot(Ns, Ns) > HALCYON_MIN_NORMAL_LENGTH2) {
+      N = Ns;
+      interpolated = true;
+    }
+  }
+  return N;
+}
+
+// Whether the object-space normal 'N' of the surface hit by 'rh' makes an
+// obtuse angle with its geometric normal in world space, so that
+// objectShadingNormal() turns it; 'hitInfo' must be a hit
+inline bool obtuseToNg(const HitInfo &hitInfo, const RayHit &rh, float3 N)
+{
+  const linear3f m = normalToWorld(hitInfo);
+  return dot(xfmVector(m, N), xfmVector(m, rh.hit.Ng)) < 0.f;
+}
+
+// Object-space shading normal of the surface hit by 'rh', unnormalized: the
+// geometry's interpolated normal, else (none, or one of zero length) Embree's
+// geometric normal, turned into the geometric normal's hemisphere: negated
+// where it makes an obtuse angle with Ng, as Typhoon turns its smooth normal
+// at every hit (surfaceShading.cpp's _TryBuildSurfaceInteraction()). So a mesh
+// wound against its normals shades as the mesh with its normals negated,
+// wound with them. The angle is taken in world space, as Typhoon takes it: an
+// instance's non-uniform scale can change the sign of the object-space dot
+// product. 'hitInfo' must be a hit.
+inline float3 objectShadingNormal(const HitInfo &hitInfo, const RayHit &rh)
+{
+  bool interpolated;
+  float3 N = unfacedObjectShadingNormal(hitInfo, rh, interpolated);
+  if (interpolated && obtuseToNg(hitInfo, rh, N))
+    N = -N;
+  return N;
+}
+
+// World-space shading normal of the surface hit by 'rh', normalized and in the
+// geometric normal's hemisphere (see objectShadingNormal()); 'hitInfo' must be
+// a hit. Its turn is objectShadingNormal()'s inlined (to transform once): keep
+// the two in step.
+inline float3 worldShadingNormal(const HitInfo &hitInfo, const RayHit &rh)
+{
+  bool interpolated;
+  const float3 N = unfacedObjectShadingNormal(hitInfo, rh, interpolated);
+  const linear3f m = normalToWorld(hitInfo);
+  float3 wN = xfmVector(m, N);
+  if (interpolated && dot(wN, xfmVector(m, rh.hit.Ng)) < 0.f)
+    wN = -wN;
+  return normalize(wN);
+}
+
+// Like getAttribute() for attribute 'attr' (< NUM_GEOMETRY_ATTRIBUTES), but
+// false (and 'value' unchanged) where neither the instance nor the geometry
+// sets it, rather than defaultAttributeValue(); 'hitInfo' must be a hit
+inline bool getSuppliedAttribute(const HitInfo &hitInfo,
+    const RayHit &rh,
+    uniform Attribute attr,
+    float4 &value)
+{
+#pragma ignore warning(perf)
+  const uniform float *varying ia = hitInfo.instance->attributes[attr];
+  if (ia != NULL) {
+    value = load_float4(ia + 4 * hitInfo.instArrayId);
+    return true;
+  }
+  bool supplied = false;
+#pragma ignore warning(perf)
+  const uniform Geometry *varying geometry = hitInfo.surface->geometry;
+  foreach_unique (g in geometry) {
+    if ((g->getFaceVaryingAttribute && g->faceVaryingAttributes[attr].size > 0)
+        || (g->getVertexAttribute && g->vertexAttributes[attr].size > 0)
+        || g->primitiveAttributes[attr].size > 0
+        || (g->attributesSet & (1u << attr)) != 0) {
+      value = Geometry_getAttribute(
+          g, attr, rh.hit.primID, make_float2(rh.hit.u, rh.hit.v));
+      supplied = true;
+    }
+  }
+  return supplied;
+}
+
+// Attribute value at a surface hit, as helide's Surface::getSurfaceColor()
+// resolves it: ray-derived attributes, else the instance's, else the
+// geometry's. Misses and ATTRIBUTE_NONE give defaultAttributeValue().
+inline float4 getAttribute(
+    const HitInfo &hitInfo, const RayHit &rh, uniform Attribute attr)
+{
+  if (!foundHit(hitInfo) || attr == ATTRIBUTE_NONE)
+    return defaultAttributeValue();
+
+  const float3 worldPosition = rh.ray.org + rh.ray.dir * rh.ray.tfar;
+
+  switch (attr) {
+  case ATTRIBUTE_WORLD_POSITION:
+    return make_float4(worldPosition, 1.f);
+  // the shading normal (faced like Ng, see objectShadingNormal()), which is
+  // helide's geometric normal where the geometry has no normals
+  case ATTRIBUTE_WORLD_NORMAL:
+    return make_float4(worldShadingNormal(hitInfo, rh), 1.f);
+  case ATTRIBUTE_OBJECT_POSITION:
+    return make_float4(xfmPointToObject(hitInfo, worldPosition), 1.f);
+  case ATTRIBUTE_OBJECT_NORMAL:
+    return make_float4(normalize(objectShadingNormal(hitInfo, rh)), 1.f);
+  default:
+    break;
+  }
+
+#pragma ignore warning(perf)
+  const uniform float *varying ia = hitInfo.instance->attributes[attr];
+  if (ia != NULL)
+    return load_float4(ia + 4 * hitInfo.instArrayId);
+
+  return getGeometryAttribute(hitInfo, rh, attr);
+}
+
+// getAttribute()'s value of 'attr' (not ATTRIBUTE_NONE) at a surface hit, and
+// whether the hit has it: ray-derived attributes always, the others where the
+// instance or the geometry sets them (getSuppliedAttribute(); elsewhere the
+// value is defaultAttributeValue(), as getAttribute() gives)
+inline bool getPresentAttribute(const HitInfo &hitInfo,
+    const RayHit &rh,
+    uniform Attribute attr,
+    float4 &value)
+{
+  if (attr >= NUM_GEOMETRY_ATTRIBUTES) {
+    value = getAttribute(hitInfo, rh, attr);
+    return true;
+  }
+  value = defaultAttributeValue();
+  return getSuppliedAttribute(hitInfo, rh, attr, value);
+}

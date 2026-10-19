@@ -1,0 +1,308 @@
+// Copyright 2026 The Khronos Group
+// SPDX-License-Identifier: LicenseRef-TOST-1.0
+//
+// Ported from Typhoon (NVIDIA-Omniverse/OpenUSD, branch typhoon/main, commit
+// 70c45e83b08a7b45588cd6cdbd2ae67f5147befb), pxr/imaging/plugin/hdEmbree/
+// renderer/: integrator/transportPolicy.h, integrator/shadingNormal.h
+// (ComputeSmoothTriangleShadowOffset(),
+// ComputeSmoothTriangleShadowOffsetFromContext(),
+// ComputeShadowTerminatorOffsetWeight()),
+// geometry/normalTransforms.h (TransformNormalToWorld()), rayUtil.h
+// (OffsetRayOrigin()) and materials/MaterialXCpp/materials/bsdf.h
+// (Bsdf::PowerHeuristic()). Copyright 2018-2026 Pixar, licensed under the
+// Tomorrow Open Source Technology License 1.0 (see THIRD-PARTY.md). Keep in
+// step with those files when the pin in external/typhoon/PROVENANCE.md moves.
+
+#pragma once
+
+// The path integrator's transport policy (PathTracer.ispc): MIS weights,
+// contribution clamping and cutoffs, and the ray offsets that keep rays from
+// meeting the surface they leave, as Typhoon has them, except that the
+// offsets' size is epsilonFrom() (shading/halcyon_ray.isph), relative to the
+// hit's magnitude, not Typhoon's fixed 1e-4 world units.
+
+#include "shading/halcyon_derivatives.isph"
+#include "shading/halcyon_math.isph"
+#include "shading/halcyon_objects.isph"
+
+// Typhoon's shadow rays stop at this fraction of the light's distance, so
+// that they don't meet the light itself
+#define TRANSPORT_SHADOW_DISTANCE_SCALE 0.99f
+
+// The smallest ray offset, epsilonFrom()'s 'minimum': the smallest normal
+// float, so that offsets stay relative to the scene however small it is
+// (VisRTX's 1e-8 world units would be 1% of a scene of size 1e-6)
+#define TRANSPORT_EPSILON_MIN 1.17549435e-38f
+
+// Typhoon's MinLuminanceCutoff: a light sample with less radiance (length of
+// the difference from black, as GfIsClose()) is skipped
+#define TRANSPORT_MIN_LUMINANCE_CUTOFF 1e-9f
+
+// Luminance of linear Rec. 709 (CIE Y of its RGB-to-XYZ matrix: Typhoon's
+// GetLuminanceCoefficients() of its default working space)
+#define TRANSPORT_LUMINANCE_R 0.212639005871510f
+#define TRANSPORT_LUMINANCE_G 0.715168678767756f
+#define TRANSPORT_LUMINANCE_B 0.072192315360734f
+
+// Veach's power heuristic (beta 2) for the technique of pdf 'pdfFirst' against
+// that of 'pdfSecond' (mxcpp::Bsdf::PowerHeuristic())
+inline float Transport_powerHeuristic(float pdfFirst, float pdfSecond)
+{
+  const float first2 = pdfFirst * pdfFirst;
+  const float second2 = pdfSecond * pdfSecond;
+  return first2 / (first2 + second2 + 1e-10f);
+}
+
+// The light technique's pdf in the multi-sample MIS weight of 'sampleCount'
+// light samples, n_i p_i (GetMultiSampleMisLightPdf())
+inline float Transport_multiSampleMisLightPdf(
+    float lightPdf, uniform int sampleCount)
+{
+  if (lightPdf <= 0.f)
+    return 0.f;
+  return lightPdf * (float)max(1, sampleCount);
+}
+
+// The MIS weight of light found by a BSDF sample of pdf 'bsdfPdf' (0 after a
+// specular event: weight 1) where light sampling, with 'sampleCount' samples,
+// would have found it with 1 / pdf 'lightPdfInverse' (0 for none: weight 1)
+// (the weights in Typhoon's _IntegratePath() and _AccumulateEnvironment())
+inline float Transport_bsdfSampleMisWeight(
+    float bsdfPdf, float lightPdfInverse, uniform int sampleCount)
+{
+  if (!(bsdfPdf > 0.f) || !(lightPdfInverse > 0.f))
+    return 1.f;
+  const float lightPdf =
+      Transport_multiSampleMisLightPdf(1.f / lightPdfInverse, sampleCount);
+  return lightPdf > 0.f ? Transport_powerHeuristic(bsdfPdf, lightPdf) : 1.f;
+}
+
+// 'v' with its non-finite components zeroed, and with 'nonNegative' its
+// negative ones too (Typhoon's sanitizing of BSDF values)
+inline float3 Transport_sanitize(float3 v, uniform bool nonNegative)
+{
+  float3 r = v;
+  if (!isfinite(r.x) || (nonNegative && r.x < 0.f))
+    r.x = 0.f;
+  if (!isfinite(r.y) || (nonNegative && r.y < 0.f))
+    r.y = 0.f;
+  if (!isfinite(r.z) || (nonNegative && r.z < 0.f))
+    r.z = 0.f;
+  return r;
+}
+
+// Whether every component is at most 'threshold' (IsNearlyBlack())
+inline bool Transport_isNearlyBlack(float3 v, float threshold)
+{
+  return v.x <= threshold && v.y <= threshold && v.z <= threshold;
+}
+
+inline bool Transport_isNearlyBlack(float3 v)
+{
+  return Transport_isNearlyBlack(v, 1e-4f);
+}
+
+inline float Transport_luminance(float3 v)
+{
+  return v.x * TRANSPORT_LUMINANCE_R + v.y * TRANSPORT_LUMINANCE_G
+      + v.z * TRANSPORT_LUMINANCE_B;
+}
+
+// 'contribution' scaled down to luminance 'threshold' where it is brighter;
+// unchanged for a threshold of 0 or less (ClampFireflyContribution())
+inline float3 Transport_clampFirefly(
+    float3 contribution, uniform float threshold)
+{
+  if (threshold <= 0.f)
+    return contribution;
+  const float luminance = Transport_luminance(contribution);
+  if (luminance > threshold)
+    contribution = contribution * (threshold / luminance);
+  return contribution;
+}
+
+// 'P' moved by 'bias' along 'reference' faced towards 'dir', so that a ray
+// leaving P along 'dir' starts on its side of the surface; along 'dir' where
+// 'reference' is zero (OffsetRayOrigin(); the path integrator's bias is
+// epsilonFrom() of the hit, where Typhoon's is 1e-4)
+inline float3 Transport_offsetRayOrigin(
+    float3 P, float3 reference, float3 dir, float bias)
+{
+  if (length2(reference) < 1e-18f)
+    return P + dir * bias;
+  float3 n = normalize(reference);
+  if (dot(n, dir) < 0.f)
+    n = -n;
+  return P + n * bias;
+}
+
+// How much of the smooth-surface lift a shadow ray towards 'wi' takes, in
+// [0, 1]: 1 where the light is near the facet's horizon or below it, 0 well
+// above (ComputeShadowTerminatorOffsetWeight()). The normals are unit and
+// faced to the incident side: the smooth surface normal 'Nsrf' and the facet
+// normal 'Ng'.
+inline float Transport_shadowTerminatorOffsetWeight(
+    float3 Nsrf, float3 Ng, float3 wi, uniform float cutoff)
+{
+  if (!(cutoff > 0.f))
+    return 0.f;
+  const float baseDot = dot(Nsrf, wi);
+  const bool transmission = baseDot < 0.f;
+  const float normalDot = abs(baseDot);
+  const float3 NgSide = transmission ? -Ng : Ng;
+  const float facetDot = dot(NgSide, wi);
+  const float weight = normalDot < cutoff
+      ? 2.f - (facetDot + normalDot) / cutoff
+      : 1.f - facetDot / cutoff;
+  return clamp(weight, 0.f, 1.f);
+}
+
+inline float Transport_shadowTerminatorOffsetWeight(
+    float3 Nsrf, float3 Ng, float3 wi)
+{
+  return Transport_shadowTerminatorOffsetWeight(Nsrf, Ng, wi, 0.1f);
+}
+
+// The approximate lift from a triangle facet to the smooth surface its corner
+// normals describe, at Embree's hit coordinates (u, v)
+// (ComputeSmoothTriangleShadowOffset()): world-space corners p0-p2, unit
+// corner normals n0-n2 on the side of the unit exterior facet normal 'NgExt';
+// zero where the approximation isn't finite
+inline float3 Transport_smoothTriangleShadowOffset(float3 p0,
+    float3 p1,
+    float3 p2,
+    float3 n0,
+    float3 n1,
+    float3 n2,
+    float u,
+    float v,
+    float3 NgExt)
+{
+  const float3 edge01 = p1 - p0;
+  const float3 edge02 = p2 - p0;
+  if (!isFinite(edge01) || !isFinite(edge02)
+      || length2(cross(edge01, edge02)) <= 1e-18f)
+    return make_float3(0.f);
+
+  const float bary0 = 1.f - u - v;
+  const float3 P = p0 * bary0 + p1 * u + p2 * v;
+  const float3 N = n0 * bary0 + n1 * u + n2 * v;
+
+  const float lift20 = dot(n2 - n0, p0 - p2);
+  const float lift21 = dot(n2 - n1, p1 - p2);
+  const float lift10 = dot(n1 - n0, p1 - p0);
+  float lift = lift20 * bary0 * (bary0 - 1.f)
+      + (lift20 + lift21 + lift10) * bary0 * u + lift21 * u * (u - 1.f);
+
+  if (dot(N, NgExt) > 0.f) {
+    float height0 = max(max(dot(p1 - p0, n0), dot(p2 - p0, n0)), 0.f);
+    float height1 = max(max(dot(p0 - p1, n1), dot(p2 - p1, n1)), 0.f);
+    float height2 = max(max(dot(p0 - p2, n2), dot(p1 - p2, n2)), 0.f);
+    height0 = max(dot(p0 - P, n0) + height0, 0.f);
+    height1 = max(dot(p1 - P, n1) + height1, 0.f);
+    height2 = max(dot(p2 - P, n2) + height2, 0.f);
+    lift = max(min(height0, min(height1, height2)), lift * 0.5f);
+  } else {
+    float height0 = max(max(dot(p0 - p1, n0), dot(p0 - p2, n0)), 0.f);
+    float height1 = max(max(dot(p1 - p0, n1), dot(p1 - p2, n1)), 0.f);
+    float height2 = max(max(dot(p2 - p0, n2), dot(p2 - p1, n2)), 0.f);
+    height0 = max(dot(P - p0, n0) + height0, 0.f);
+    height1 = max(dot(P - p1, n1) + height1, 0.f);
+    height2 = max(dot(P - p2, n2) + height2, 0.f);
+    lift = min(-min(height0, min(height1, height2)), lift * 0.5f);
+  }
+
+  if (!isfinite(lift) || !isFinite(N))
+    return make_float3(0.f);
+  return N * lift;
+}
+
+// A normal to world space by the normal matrix 'normalXfm', unit length;
+// where the matrix is singular the object-space normal normalized, else +z
+// (Typhoon's TransformNormalToWorld())
+inline float3 Transport_normalToWorld(linear3f normalXfm, float3 n)
+{
+  float3 result;
+  if (tryNormalizeDirection(xfmVector(normalXfm, n), result))
+    return result;
+  if (tryNormalizeDirection(n, result))
+    return result;
+  return make_float3(0.f, 0.f, 1.f);
+}
+
+// A surface hit's object-space smooth normal to world space as Typhoon's
+// _TryBuildSurfaceInteraction() takes it:
+// TransformNormalToWorld() (Transport_normalToWorld()), then
+// TryNormalizeDirection() again, which isn't idempotent (about 1% of normals
+// change by an ulp). Each component is rounded from double, so the length
+// errs to both sides of 1, as Typhoon's: its GGX lobes take the smooth
+// normal's length as 1, and just above the delta threshold (alpha 1e-3) its
+// last bits move their albedo by percents
+inline float3 Transport_surfaceNormalToWorld(linear3f normalXfm, float3 n)
+{
+  float3 result = Transport_normalToWorld(normalXfm, n);
+  float3 again;
+  if (tryNormalizeDirection(result, again))
+    result = again;
+  return result;
+}
+
+// A world-space normal back to object space by the transpose of the
+// instance's linear part 'l' (the inverse of the normal matrix), unit length;
+// where that fails the world normal normalized, else +z (Typhoon's
+// TransformNormalToObject())
+inline float3 Transport_normalToObject(linear3f l, float3 n)
+{
+  float3 result;
+  if (tryNormalizeDirection(xfmVector(transpose(l), n), result))
+    return result;
+  if (tryNormalizeDirection(n, result))
+    return result;
+  return make_float3(0.f, 0.f, 1.f);
+}
+
+// The smooth-surface lift of a triangle hit at Embree's (u, v) from its
+// object-space corners 'c' and the instance's transform 'xfm' and normal
+// matrix 'normalXfm' (Typhoon's
+// ComputeSmoothTriangleShadowOffsetFromContext()): world-space, on the side of
+// the unit exterior facet normal 'NgExt'; zero where the corners aren't finite
+inline float3 Transport_smoothTriangleShadowOffsetFromCorners(
+    const TriangleCorners &c,
+    const affine3f &xfm,
+    const linear3f &normalXfm,
+    float u,
+    float v,
+    float3 NgExt)
+{
+  const float3 p0 = xfmPoint(xfm, c.p0);
+  const float3 p1 = xfmPoint(xfm, c.p1);
+  const float3 p2 = xfmPoint(xfm, c.p2);
+  float3 n0, n1, n2;
+  if (!isFinite(p0) || !isFinite(p1) || !isFinite(p2)
+      || !tryNormalizeDirection(Transport_normalToWorld(normalXfm, c.n0), n0)
+      || !tryNormalizeDirection(Transport_normalToWorld(normalXfm, c.n1), n1)
+      || !tryNormalizeDirection(Transport_normalToWorld(normalXfm, c.n2), n2))
+    return make_float3(0.f);
+  if (dot(n0, NgExt) < 0.f)
+    n0 = -n0;
+  if (dot(n1, NgExt) < 0.f)
+    n1 = -n1;
+  if (dot(n2, NgExt) < 0.f)
+    n2 = -n2;
+  return Transport_smoothTriangleShadowOffset(
+      p0, p1, p2, n0, n1, n2, u, v, NgExt);
+}
+
+// The random numbers of light sample 'index' of 'count' from 'u' in [0, 1)^2:
+// u moved into the sample's cell of a grid of floor(sqrt(count)) columns and
+// as many rows as it takes (Typhoon's stratification in
+// _ComputeDirectLightingMIS(); one sample is the whole square)
+inline float2 Transport_stratifyLightSample(
+    uniform int count, uniform int index, float2 u)
+{
+  const uniform int columns = (uniform int)sqrt((uniform float)count);
+  const uniform int rows = (count + columns - 1) / columns;
+  return make_float2(
+      ((uniform float)(index % columns) + u.x) / (uniform float)columns,
+      ((uniform float)(index / columns) + u.y) / (uniform float)rows);
+}

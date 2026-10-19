@@ -1,0 +1,69 @@
+// Copyright 2026 The Khronos Group
+// SPDX-License-Identifier: Apache-2.0
+
+#pragma once
+
+// MATERIAL_KIND_PHYSICALLY_BASED, native physicallyBased (a port of Typhoon's
+// glTF PBR closure; credits in PathPbmLobes.isph and PathPbm.ispc): what the
+// C++ path computes for its glTF PBR graph, for the parameter sets
+// MaterialConverter.h's nativePhysicallyBasedCovers() admits. The closure and
+// its port are described in PathPbmLobes.isph; shade and eval are in
+// PathPbm.ispc, compiled without fused multiply-adds. This header is what
+// PathMaterial.isph's dispatch calls.
+
+// PathShadeInput::pbm from the parameters' values at the hit (float4, as
+// PhysicallyBasedParameters holds them): scalars from x, colours from xyz, as
+// the graph's inputs take them
+inline PathPbmInput PathPbm_input(float4 metallic,
+    float4 roughness,
+    float4 specular,
+    float4 specularColor,
+    float4 ior,
+    float4 emissive,
+    float4 clearcoat,
+    float4 clearcoatRoughness,
+    float4 sheenColor,
+    float4 sheenRoughness,
+    float4 transmission,
+    float4 thickness)
+{
+  PathPbmInput p;
+  p.metallic = metallic.x;
+  p.roughness = roughness.x;
+  p.specular = specular.x;
+  p.specularColor = make_float3(specularColor);
+  p.ior = ior.x;
+  p.emissive = make_float3(emissive);
+  p.clearcoat = clearcoat.x;
+  p.clearcoatRoughness = clearcoatRoughness.x;
+  p.sheenColor = make_float3(sheenColor);
+  p.sheenRoughness = sheenRoughness.x;
+  p.transmission = transmission.x;
+  p.thickness = thickness.x;
+  // no normal maps (PathTracer.ispc's nativeInputs() sets them)
+  p.hasNormalMap = false;
+  p.normalMap = make_float4(0.f, 0.f, 1.f, 1.f);
+  p.hasCoatNormalMap = false;
+  p.coatNormalMap = make_float4(0.f, 0.f, 1.f, 1.f);
+  return p;
+}
+
+// Shades a lane of MATERIAL_KIND_PHYSICALLY_BASED (PathMaterial_shade()'s
+// part): presence, normals, flags, albedo, emission and the BSDF sample
+void PathPbm_shade(const uniform PathMaterialContext *uniform context,
+    const uniform Material *varying material,
+    const varying PathShadeInput &input,
+    varying PathMaterialState &state,
+    varying PathBsdfSample &sample);
+
+// The closure's value with its cosine and its pdf towards 'wi'
+void PathPbm_eval(const varying PathMaterialState &state,
+    const varying float3 wi,
+    varying PathBsdfEval &result);
+
+// The visibility-only facts (PathMaterial_shadow()'s part): presence and
+// opacity the material's opacity, thin-walled at thickness 0 or less, the
+// transmission, its colour (PathShadeInput::baseColor) and its straight
+// fraction along the shadow ray (against 'input.wo')
+void PathPbm_shadow(
+    const varying PathShadeInput &input, varying PathShadowHit &hit);

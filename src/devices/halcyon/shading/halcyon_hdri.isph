@@ -1,0 +1,138 @@
+// Copyright 2026 The Khronos Group
+// SPDX-License-Identifier: LicenseRef-TOST-1.0
+//
+// Ported from Typhoon (NVIDIA-Omniverse/OpenUSD, branch typhoon/main, commit
+// 70c45e83b08a7b45588cd6cdbd2ae67f5147befb), pxr/imaging/plugin/hdEmbree/
+// renderer/lights/domeLight.cpp and lightSamplerCommon.{h,cpp}, and from
+// OpenUSD's GfVec3f::GetNormalized(). Copyright 2024-2025 Pixar, licensed
+// under the Tomorrow Open Source Technology License 1.0 (see
+// THIRD-PARTY.md). Keep in step with those when the pin in
+// external/typhoon/PROVENANCE.md moves.
+
+#pragma once
+
+// The hdri lights' map lookup, which both renderers share so that a camera
+// ray that misses the scene sees the same radiance in both: the pathtracer
+// (renderer/pathtracer/Lights.isph samples and evaluates the map through
+// it) and the 'preview' renderer, which shows the 'visible' hdris in place
+// of the background but isn't lit by them (missColor() in
+// shading/halcyon_frame.isph). Also the unit-interval and normalization
+// helpers of Typhoon's light samplers that the lookup needs.
+
+#include "halcyon_derivatives.isph"
+#include "halcyon_objects.isph"
+
+// The largest float below 1 (Typhoon's std::nextafter(1.0f, 0.0f))
+#define LIGHTS_ONE_MINUS_EPSILON 0.99999994f
+
+// Unit intervals and normalization ///////////////////////////////////////////
+
+// Typhoon's ClampUnitHalfOpen(): u clamped into [0, 1)
+inline float Lights_clampUnitHalfOpen(float u)
+{
+  return clamp(u, 0.f, LIGHTS_ONE_MINUS_EPSILON);
+}
+
+// Typhoon's WrapUnit(): u wrapped into [0, 1)
+inline float Lights_wrapUnit(float u)
+{
+  float w = u - floor(u);
+  if (w < 0.f)
+    w += 1.f;
+  return w;
+}
+
+// OpenUSD's GfVec3f::GetNormalized(): zero stays zero
+inline float3 Lights_normalized(float3 v)
+{
+  const float len = length(v);
+  return v / (len > 1e-10f ? len : 1e-10f);
+}
+
+// Hdri map lookup ///////////////////////////////////////////////////////////
+
+// World direction 'w' in the light's frame (X = up x direction, Y = up,
+// Z = direction; xformWorldToLight.TransformDir())
+inline float3 HdriLight_toLight(const uniform Light *uniform light, float3 w)
+{
+  return make_float3(
+      dot(w, light->frameX), dot(w, light->frameY), dot(w, light->axis));
+}
+
+// The map's (s, t) along light-frame direction 'dirLight': t from 0 at +Y
+// to 1 at -Y, s 0.5 along +Z and 0.25 along +X (_DirectionToLatLongUv())
+inline float2 HdriLight_directionToUv(float3 dirLight)
+{
+  const float3 n = Lights_normalized(dirLight);
+  const float t = acos(clamp(n.y, -1.f, 1.f)) / PI;
+  const float s = Lights_wrapUnit(0.5f - atan2(n.x, n.z) / (2.f * PI));
+  return make_float2(s, Lights_clampUnitHalfOpen(t));
+}
+
+// The texel's column of 's' and row of 't'
+inline int HdriLight_texelX(const uniform Light *uniform light, float s)
+{
+  return clamp((int)((float)light->width * Lights_wrapUnit(s)),
+      0,
+      (int)light->width - 1);
+}
+
+inline int HdriLight_texelY(const uniform Light *uniform light, float t)
+{
+  return clamp((int)((float)light->height * Lights_clampUnitHalfOpen(t)),
+      0,
+      (int)light->height - 1);
+}
+
+// The texel's radiance at (s, t), unfiltered (ty::SampleLightTexture())
+inline float3 HdriLight_texel(const uniform Light *uniform light, float2 st)
+{
+  const int x = HdriLight_texelX(light, st.x);
+  const int y = HdriLight_texelY(light, st.y);
+  const int i = 3 * (y * (int)light->width + x);
+  const uniform float *uniform texels = light->texels;
+  return make_float3(texels[i], texels[i + 1], texels[i + 2]);
+}
+
+// The map's radiance along world direction 'dir' (unit or not; zero or not
+// finite gives none), unfiltered, times the light's 'emission' (its scale
+// and colour); 'wi' is the unit direction and 'st' its (s, t) in the map
+// (the lookup of Typhoon's EvaluateDomeLightDirection())
+inline float3 HdriLight_radiance(
+    const uniform Light *uniform light, float3 dir, float3 &wi, float2 &st)
+{
+  if (!isFinite(dir) || length2(dir) <= 0.f) {
+    wi = make_float3(0.f);
+    st = make_float2(0.f);
+    return make_float3(0.f);
+  }
+  wi = Lights_normalized(dir);
+  const float3 dirLight = Lights_normalized(HdriLight_toLight(light, wi));
+  st = HdriLight_directionToUv(dirLight);
+  return HdriLight_texel(light, st) * light->emission;
+}
+
+// What a camera ray along 'dir' that misses the scene sees of the hdri
+// lights: the sum of the 'visible' ones' radiance, in 'radiance' (Typhoon's
+// _AccumulateEnvironment() for camera rays, with KHR_LIGHT_PRIMARY_VISIBILITY's
+// 'visible' per light in place of its domeLightCameraVisibility setting);
+// false, with 'radiance' untouched, if none is visible (the background
+// shows instead). Nothing to do for a world without lights.
+inline bool visibleHdris(
+    const uniform World *uniform world, float3 dir, float3 &radiance)
+{
+  uniform bool found = false;
+  float3 sum = make_float3(0.f);
+  for (uniform uint32 i = 0; i < world->numLights; i++) {
+    const uniform Light *uniform light = world->lights + i;
+    if (light->type != LIGHT_HDRI || !light->visible)
+      continue;
+    found = true;
+    float3 wi;
+    float2 st;
+    sum = sum + HdriLight_radiance(light, dir, wi, st);
+  }
+  if (found)
+    radiance = sum;
+  return found;
+}

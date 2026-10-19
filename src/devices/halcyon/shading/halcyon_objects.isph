@@ -1,0 +1,851 @@
+// Copyright 2025-2026 The Khronos Group
+// SPDX-License-Identifier: Apache-2.0
+
+#pragma once
+
+#include "halcyon_math.isph"
+// anari
+#include <anari/frontend/anari_enums.h>
+// embree
+#include <embree4/rtcore.isph>
+
+// Attributes //
+
+// Surface attributes, in helium::Attribute order; the first
+// NUM_GEOMETRY_ATTRIBUTES are supplied by geometries/instances, the rest are
+// derived from the ray
+enum Attribute
+{
+  ATTRIBUTE_0 = 0,
+  ATTRIBUTE_1,
+  ATTRIBUTE_2,
+  ATTRIBUTE_3,
+  ATTRIBUTE_COLOR,
+  ATTRIBUTE_WORLD_POSITION,
+  ATTRIBUTE_WORLD_NORMAL,
+  ATTRIBUTE_OBJECT_POSITION,
+  ATTRIBUTE_OBJECT_NORMAL,
+  ATTRIBUTE_NONE
+};
+
+#define NUM_GEOMETRY_ATTRIBUTES 5
+
+// Attribute values converted to packed float4 (read with load_float4()),
+// NULL/0 if the attribute isn't set
+struct AttributeArray
+{
+  const uniform float *uniform data;
+  uniform uint64 size;
+};
+
+// Geometries //
+
+struct Geometry;
+
+// Per-subtype hook: interpolates vertex (or face-varying) attribute 'a'
+// (non-empty) at the hit on primitive 'primID' with Embree's hit coordinates
+// 'uv'
+typedef varying float4 (*Geometry_VertexAttributeFcn)(
+    const uniform Geometry *uniform self,
+    const uniform AttributeArray *uniform a,
+    uint primID,
+    float2 uv);
+
+// Surface derivatives at a hit, in object space (the pathtracer's shading
+// context, renderer/pathtracer/ShadingContext.isph): position derivatives
+// along the surface parameterization (the texture coordinates' where the
+// geometry has them, else its own) and the shading normal's derivatives
+// along the same parameters (zero where the normal doesn't vary)
+struct SurfaceDerivatives
+{
+  float3 dPdu;
+  float3 dPdv;
+  float3 dndu;
+  float3 dndv;
+};
+
+// Per-subtype hook: the surface derivatives at the hit on primitive 'primID'
+// with Embree's hit coordinates 'uv', object-space hit position 'P' and unit
+// object-space shading normal 'N'. 'texcoord' is the attribute holding the
+// texture coordinates (ATTRIBUTE_NONE: none varies over the primitive).
+typedef void (*Geometry_DerivativesFcn)(const uniform Geometry *uniform self,
+    uniform Attribute texcoord,
+    uint primID,
+    float2 uv,
+    float3 P,
+    float3 N,
+    varying SurfaceDerivatives &d);
+
+// Per-subtype hook (triangle and quad): the object-space position of the
+// surface at the hit on primitive 'primID' with Embree's hit coordinates
+// 'uv', interpolated from the primitive's vertices (Typhoon's
+// ResolveObjectSpaceSurfacePosition()), or 'P', the hit's own object-space
+// position, where that isn't finite. The pathtracer's shading context takes
+// it for graphs that read the object position (PATH_CONTEXT_OBJECT_POSITION).
+typedef varying float3 (*Geometry_SurfacePositionFcn)(
+    const uniform Geometry *uniform self, uint primID, float2 uv, float3 P);
+
+// A triangle's corners, in object space: positions and shading normals
+// (unnormalized, as interpolated)
+struct TriangleCorners
+{
+  float3 p0, p1, p2;
+  float3 n0, n1, n2;
+};
+
+// Per-subtype hook (triangle only): the corners of triangle 'primID' with
+// their shading normals (face-varying, else vertex); false where the geometry
+// has no shading normals. The pathtracer lifts shadow rays off smooth-shaded
+// facets with them (renderer/pathtracer/PathTracer.ispc).
+typedef bool (*Geometry_TriangleCornersFcn)(
+    const uniform Geometry *uniform self,
+    uint primID,
+    varying TriangleCorners &c);
+
+// Subtype data (one member per subtype)
+
+struct TriangleGeometry
+{
+  // 'primitive.index' as packed uint3, NULL for implicit indexing
+  const uniform uint32 *uniform indices;
+  uniform uint64 numTriangles;
+};
+
+struct QuadGeometry
+{
+  // 'primitive.index' as packed uint4, NULL for implicit indexing
+  const uniform uint32 *uniform indices;
+  uniform uint64 numQuads;
+};
+
+struct SphereGeometry
+{
+  // 'primitive.index' (uint32 vertex index per sphere), NULL for implicit
+  // indexing
+  const uniform uint32 *uniform indices;
+  uniform uint64 numSpheres;
+};
+
+// The curve's 'basis' (HALCYON_GEOMETRY_CURVE_BASIS): linear segments
+// between two vertices, or cubic ones over four control points
+enum CurveBasis
+{
+  CURVE_BASIS_LINEAR = 0,
+  CURVE_BASIS_BSPLINE,
+  CURVE_BASIS_CATMULL_ROM
+};
+
+struct CurveGeometry
+{
+  // Start vertex index per segment (the segment goes on over the next one,
+  // or three for cubic bases), NULL for implicit indexing
+  const uniform uint32 *uniform indices;
+  uniform uint64 numSegments;
+  uniform CurveBasis basis;
+};
+
+// Cylinders and cones: one segment between two vertices per primitive
+struct ConeGeometry
+{
+  // 'primitive.index' as packed uint2, NULL for implicit indexing (vertices
+  // 2 * primID and 2 * primID + 1)
+  const uniform uint32 *uniform indices;
+  uniform uint64 numPrimitives;
+};
+
+// Vertex positions as the derivative hooks read them: 'stride' floats per
+// vertex, x, y, z first ('vertex.position' for triangle and quad, Embree's
+// position + radius float4 buffer for the others)
+struct GeometryVertices
+{
+  const uniform float *uniform data;
+  uniform uint64 count;
+  uniform uint32 stride;
+};
+
+struct Geometry
+{
+  // 'attribute0-3' and 'color', DEFAULT_ATTRIBUTE_VALUE where unset
+  uniform float4 attributes[NUM_GEOMETRY_ATTRIBUTES];
+  // Bit i set if uniform attribute i was set
+  uniform uint32 attributesSet;
+  // 'primitive.attribute0-3' and 'primitive.color', indexed by Embree primID
+  uniform AttributeArray primitiveAttributes[NUM_GEOMETRY_ATTRIBUTES];
+  // 'vertex.attribute0-3' and 'vertex.color', read by getVertexAttribute
+  uniform AttributeArray vertexAttributes[NUM_GEOMETRY_ATTRIBUTES];
+  // 'faceVarying.attribute0-3' and 'faceVarying.color' (triangle and quad),
+  // one value per primitive corner, read by getFaceVaryingAttribute
+  uniform AttributeArray faceVaryingAttributes[NUM_GEOMETRY_ATTRIBUTES];
+  // 'vertex.normal' and 'faceVarying.normal' (triangle and quad) in object
+  // space as packed float4 (w unused), read by getVertexAttribute and
+  // getFaceVaryingAttribute like the attributes above; NULL/0 if unset
+  uniform AttributeArray vertexNormals;
+  uniform AttributeArray faceVaryingNormals;
+  // The tangent frame at each primitive corner (triangle and quad; corners
+  // numbered like face-varying values), object space, packed float4 (w
+  // unused): the authored 'faceVarying.tangent' or 'vertex.tangent' with the
+  // bitangent its handedness times N x tangent, else the tangents Typhoon
+  // smooths across faces (MeshTangents.h). Read by getFaceVaryingAttribute;
+  // the pathtracer's shading context interpolates them. NULL/0 for other
+  // subtypes.
+  uniform AttributeArray cornerTangents;
+  uniform AttributeArray cornerBitangents;
+  // NULL for subtypes without vertex attributes
+  uniform Geometry_VertexAttributeFcn getVertexAttribute;
+  // NULL for subtypes without face-varying attributes
+  uniform Geometry_VertexAttributeFcn getFaceVaryingAttribute;
+  // NULL for invalid geometry
+  uniform Geometry_DerivativesFcn getDerivatives;
+  // NULL but for triangles
+  uniform Geometry_TriangleCornersFcn getTriangleCorners;
+  uniform GeometryVertices vertices;
+  // 'primitive.id' values indexed by Embree primID, NULL if not provided
+  const uniform uint32 *uniform primitiveIds;
+  uniform uint64 numPrimitiveIds;
+
+  uniform TriangleGeometry triangle;
+  uniform QuadGeometry quad;
+  uniform SphereGeometry sphere;
+  uniform CurveGeometry curve;
+  uniform ConeGeometry cone;
+  // NULL but for triangles and quads (the others keep the hit's position);
+  // last, so that adding it moved no other member: it fits in the struct's
+  // 16-byte tail padding (float4 alignment), which is why the 560-byte slot
+  // is unchanged
+  uniform Geometry_SurfacePositionFcn getSurfacePosition;
+};
+
+// Samplers //
+
+// Sampler wrap modes, in helium::WrapMode order (DEFAULT clamps to the edge)
+enum WrapMode
+{
+  WRAP_MODE_CLAMP_TO_EDGE = 0,
+  WRAP_MODE_REPEAT,
+  WRAP_MODE_MIRROR_REPEAT,
+  WRAP_MODE_DEFAULT
+};
+
+// What a sampler's hook computes, so that code without the hooks' addresses
+// (the pathtracer's texture system) can sample it the same way
+enum SamplerKind
+{
+  SAMPLER_KIND_NONE = 0, // no hook: invalid
+  SAMPLER_KIND_IMAGE1D,
+  SAMPLER_KIND_IMAGE2D,
+  SAMPLER_KIND_IMAGE3D,
+  SAMPLER_KIND_TRANSFORM,
+  SAMPLER_KIND_PRIMITIVE
+};
+
+struct Sampler;
+struct HitInfo;
+struct RayHit;
+
+// Per-subtype hook: the sample at a surface hit ('hitInfo' is a hit)
+typedef varying float4 (*Sampler_SampleFcn)(const uniform Sampler *uniform self,
+    const varying HitInfo &hitInfo,
+    const varying RayHit &rh);
+
+// Subtype data (one member per subtype family)
+
+// image1D/2D/3D: the image as packed float4 texels (read with load_float4()),
+// x fastest; unused dimensions have size 1
+struct ImageSampler
+{
+  const uniform float *uniform texels;
+  uniform int size[3];
+  uniform WrapMode wrapMode[3];
+  uniform bool linearFilter;
+};
+
+// primitive: the 'array' as packed float4 values (read with load_float4()),
+// indexed by the Embree primitive index plus 'offset', clamped to the end
+struct PrimitiveSampler
+{
+  const uniform float *uniform values;
+  uniform uint64 size;
+  uniform uint64 offset;
+};
+
+struct Sampler
+{
+  // NULL for invalid samplers (e.g. an image sampler without 'image') and
+  // unknown subtypes; materials skip those
+  uniform Sampler_SampleFcn sample;
+  // The hook's kind, SAMPLER_KIND_NONE without one
+  uniform SamplerKind kind;
+  // input attribute and transforms, applied as in helide:
+  // outTransform * f(inTransform * inAttribute + inOffset) + outOffset
+  uniform Attribute inAttribute;
+  uniform mat4f inTransform;
+  uniform float4 inOffset;
+  uniform mat4f outTransform;
+  uniform float4 outOffset;
+
+  uniform ImageSampler image;
+  uniform PrimitiveSampler primitive;
+};
+
+// Spatial fields //
+
+struct SpatialField;
+
+// Per-subtype hook: the field's value at object-space point 'p', NaN outside
+// the field
+typedef varying float (*SpatialField_SampleFcn)(
+    const uniform SpatialField *uniform self, const varying float3 &p);
+
+// Subtype data (one member per subtype)
+
+// structuredRegular: voxels in the array's element type (one hook per type),
+// x fastest; voxel (i, j, k) sits at origin + (i, j, k) * spacing
+struct StructuredRegularField
+{
+  const uniform uint8 *uniform voxels;
+  uniform int dims[3];
+  uniform float3 origin;
+  uniform float3 invSpacing;
+};
+
+struct SpatialField
+{
+  // NULL for invalid fields (e.g. without 'data') and unknown subtypes
+  uniform SpatialField_SampleFcn sample;
+  // object-space bounds; empty (lower > upper) for invalid fields
+  uniform float3 boundsLower;
+  uniform float3 boundsUpper;
+  // ray marching step size, 0 for invalid fields
+  uniform float stepSize;
+  // the smallest and largest value the field takes (its NaN samples aside);
+  // +inf and -inf for invalid fields and fields of NaN only
+  uniform float valueLower;
+  uniform float valueUpper;
+
+  // The pathtracer's macrocells: a grid of 'macrocellDims' cells over the
+  // bounds, cell (i, j, k) covering object space boundsLower + [i, i + 1) x
+  // [j, j + 1) x [k, k + 1) / macrocellInvSize (the last cells clamped to the
+  // bounds). 'macrocellRanges' holds the smallest and largest value samples
+  // in each cell take (packed float2, x fastest; +inf, -inf for cells of NaN
+  // only), NULL until computed (SpatialField_setMacrocellRanges()); no
+  // cells (dims 0) for invalid fields.
+  const uniform float *uniform macrocellRanges;
+  uniform int macrocellDims[3];
+  uniform float3 macrocellInvSize;
+
+  uniform StructuredRegularField structuredRegular;
+};
+
+// Volumes //
+
+// transferFunction1D (the only subtype; unknown subtypes keep 'field' NULL and
+// are never listed in a group)
+struct Volume
+{
+  // 'value', NULL if not set
+  const uniform SpatialField *uniform field;
+  // 'valueRange' lower bound and 1 / its size: field values map to
+  // (value - lower) * invSize, clamped to [0, 1]
+  uniform float valueRangeLower;
+  uniform float valueRangeInvSize;
+  uniform float unitDistance;
+  // 'color' as a uniform color, used when 'colors' is NULL
+  uniform float4 color;
+  // 'color' array as packed float4 values (read with load_float4()), NULL/0
+  // if not set
+  const uniform float *uniform colors;
+  uniform uint64 numColors;
+  // 'opacity' as a uniform opacity, used when 'opacities' is NULL
+  uniform float opacity;
+  // 'opacity' array, NULL/0 if not set
+  const uniform float *uniform opacities;
+  uniform uint64 numOpacities;
+  uniform uint32 id;
+  // the pathtracer's majorant: the largest extinction (Volume_extinction())
+  // the transfer function gives the field's values, 0 if it attenuates
+  // nothing (or 'unitDistance' isn't positive)
+  uniform float majorant;
+  // the same for each of the field's macrocells (the values samples in the
+  // cell take; 0 for cells of NaN only), 'numMacrocells' of them; NULL/0
+  // without macrocells, where 'majorant' holds everywhere
+  const uniform float *uniform macrocellMajorants;
+  uniform uint64 numMacrocells;
+};
+
+// Material //
+
+// Material 'alphaMode' values, in helium::AlphaMode order
+enum AlphaMode
+{
+  ALPHA_MODE_OPAQUE = 0,
+  ALPHA_MODE_MASK,
+  ALPHA_MODE_BLEND
+};
+
+// How the quality renderer shades a material (renderer/pathtracer/
+// PathMaterial.isph, docs/adr/0004-pathtracer-material-interface.md): native
+// kinds run inline in ISPC, MATERIAL_KIND_CPP through batched calls into C++
+enum MaterialKind
+{
+  // Not shadeable (no closure); also what an unknown subtype's zeroed slot
+  // holds
+  MATERIAL_KIND_NONE = 0,
+  // Native Lambertian reflection of PathShadeInput::baseColor: the
+  // integrator's fallback for surfaces without a closure, in the device's
+  // invalidMaterialColor (no material is of this kind)
+  MATERIAL_KIND_LAMBERT,
+  // A C++ material (halcyon::pathtracer::CppMaterial: a MaterialXCpp graph);
+  // every material subtype without a native kind
+  MATERIAL_KIND_CPP,
+  // matte natively in ISPC (renderer/pathtracer/PathMatte.isph), validated
+  // against its C++ material, which it also has ('cppMaterial'), for the
+  // renderer's 'nativeMaterials' false
+  MATERIAL_KIND_MATTE,
+  // physicallyBased natively in ISPC (renderer/pathtracer/PathPbm.isph), for
+  // the parameter sets it covers (Material.cpp's PhysicallyBased::
+  // nativeKind()), validated against its C++ material as matte's
+  MATERIAL_KIND_PHYSICALLY_BASED
+};
+
+// Whether 'kind' is a material's native kind, validated against its C++
+// material (MATERIAL_KIND_LAMBERT is no material's)
+inline bool MaterialKind_isNative(MaterialKind kind)
+{
+  return kind == MATERIAL_KIND_MATTE || kind == MATERIAL_KIND_PHYSICALLY_BASED;
+}
+
+// A material parameter that native kinds resolve at a hit as the material's
+// graph does (renderer/pathtracer/MaterialConverter.h's MaterialParameter):
+// its sampler's value where 'sampler' is valid, else its attribute's
+// (getAttribute()) where 'attribute' isn't ATTRIBUTE_NONE, else 'value' (the
+// constant, also what an invalid sampler gives)
+struct MaterialParameter
+{
+  uniform float4 value;
+  uniform Attribute attribute;
+  const uniform Sampler *uniform sampler;
+};
+
+// MATERIAL_KIND_PHYSICALLY_BASED's parameters beyond the base colour and
+// opacity every material has (renderer/pathtracer/PathPbm.isph); scalars in x
+struct PhysicallyBasedParameters
+{
+  MaterialParameter metallic;
+  MaterialParameter roughness;
+  MaterialParameter specular;
+  MaterialParameter specularColor;
+  MaterialParameter ior;
+  MaterialParameter emissive;
+  MaterialParameter clearcoat;
+  MaterialParameter clearcoatRoughness;
+  MaterialParameter sheenColor;
+  MaterialParameter sheenRoughness;
+  MaterialParameter transmission;
+  // At most 0: a thin-walled surface (glTF's)
+  MaterialParameter thickness;
+  // The 'normal' and 'clearcoatNormal' maps (tangent-space normals in
+  // [-1, 1]), NULL if unset
+  const uniform Sampler *uniform normal;
+  const uniform Sampler *uniform clearcoatNormal;
+};
+
+// Every material subtype shares one layout: the color comes from matte
+// 'color', PBM 'baseColor', openPBR 'base_color' or usdPreviewSurface
+// 'diffuseColor'
+
+// Material::attributeMask's high bit: the C++ material's graph reads the
+// object position (PATH_CONTEXT_OBJECT_POSITION), which the pathtracer's
+// shading context then takes from the primitive's vertices. In the mask the
+// shading context gathers anyway, so that graphs that don't read it pay no
+// gather of their own.
+#define MATERIAL_READS_OBJECT_POSITION (1u << 31)
+
+struct Material
+{
+  // Pathtracer shading: the kind and, for MATERIAL_KIND_CPP and native kinds
+  // (MATERIAL_KIND_MATTE, MATERIAL_KIND_PHYSICALLY_BASED), the C++ material
+  // and the attributes it reads (bit (1 << a) for Attribute a), with
+  // MATERIAL_READS_OBJECT_POSITION; also 'contextMask' below
+  uniform MaterialKind kind;
+  uniform uint32 attributeMask;
+  const void *uniform cppMaterial;
+  // constant color, used when 'colorAttribute' is ATTRIBUTE_NONE
+  uniform float4 color;
+  uniform Attribute colorAttribute;
+  // constant opacity, used when 'opacityAttribute' is ATTRIBUTE_NONE
+  uniform float opacity;
+  uniform Attribute opacityAttribute;
+  uniform AlphaMode alphaMode;
+  uniform float alphaCutoff;
+  // Pathtracer shading: the parts of the shading context the C++ material
+  // reads (PathContextGroup bits; here, in what was padding)
+  uniform uint32 contextMask;
+  // Whether the colour's alpha multiplies the opacity (matte,
+  // physicallyBased); not for subtypes whose colour is a color3 (openPBR,
+  // usdPreviewSurface)
+  uniform bool colorAlphaIsOpacity;
+  // 'color'/'baseColor' and 'opacity' samplers, NULL if not set; they take
+  // precedence over the color/opacity above when their 'sample' is set
+  const uniform Sampler *uniform colorSampler;
+  const uniform Sampler *uniform opacitySampler;
+  // MATERIAL_KIND_PHYSICALLY_BASED's parameters (held by the C++ material),
+  // NULL for every other kind
+  const uniform PhysicallyBasedParameters *uniform physicallyBased;
+};
+
+// Lights //
+
+// Light subtypes (scene/light/)
+enum LightType
+{
+  // 'directional': a delta direction, or a cone of directions with
+  // 'angularDiameter'
+  LIGHT_DIRECTIONAL = 0,
+  // 'point': a delta point, or a sphere with 'radius'
+  LIGHT_POINT,
+  // 'spot': a delta point emitting into a cone
+  LIGHT_SPOT,
+  // 'quad': a parallelogram emitting from one side or both
+  LIGHT_QUAD,
+  // 'ring': a disk or annulus emitting from one side into a cone, or with
+  // 'radius' 0 a delta point emitting as a vanishing disk
+  LIGHT_RING,
+  // 'hdri': an equirectangular environment map at infinity (Typhoon's dome
+  // light)
+  LIGHT_HDRI
+};
+
+// A light in world space, with its brightness in the units its shape needs
+// (scene/light/Light.h has the conversions from ANARI's parameters). The
+// world keeps one per light per instance transform (World::lights). The
+// pathtracer reads them (renderer/pathtracer/Lights.isph); the 'preview'
+// renderer reads only the 'visible' hdris, which its camera misses show
+// (shading/halcyon_hdri.isph).
+struct Light
+{
+  uniform LightType type;
+  // LIGHT_DIRECTIONAL: unit direction from the scene towards the light (the
+  // opposite of its 'direction'). LIGHT_SPOT, LIGHT_RING: the unit
+  // 'direction' the light emits along. LIGHT_QUAD: the unit normal of the
+  // side 'intensityDistribution' is measured from (edge2 x edge1, the front,
+  // unless only the back emits)
+  uniform float3 axis;
+  // LIGHT_POINT, LIGHT_SPOT, LIGHT_RING: the center. LIGHT_QUAD: the corner
+  // 'position'
+  uniform float3 position;
+  // LIGHT_QUAD: the edges from 'position'
+  uniform float3 edge1;
+  uniform float3 edge2;
+  // LIGHT_RING: unit vectors spanning the disk's plane with axis
+  // (frameX x frameY = -axis, so that the frame is Typhoon's disk light's);
+  // frameX is 'c0' in the plane. LIGHT_HDRI: Typhoon's dome light frame,
+  // frameX = up x direction, frameY = 'up' and axis = 'direction'
+  // (scene/light/Hdri.h), orthonormal
+  uniform float3 frameX;
+  uniform float3 frameY;
+  // LIGHT_QUAD, LIGHT_RING: the C0 and C90 half-planes of
+  // 'intensityDistribution', unit and perpendicular to axis
+  // (c90 = axis x c0)
+  uniform float3 c0;
+  uniform float3 c90;
+  // LIGHT_DIRECTIONAL: half the angular diameter in radians, in [0, pi]; 0
+  // for a delta direction
+  uniform float halfAngle;
+  // LIGHT_POINT: the sphere's radius; 0 for a delta point. LIGHT_RING: the
+  // outer radius; 0 for a delta point
+  uniform float radius;
+  // LIGHT_RING: (innerRadius / radius)^2, in [0, 1)
+  uniform float innerRadiusFraction2;
+  // LIGHT_QUAD, LIGHT_RING: the emitting area
+  uniform float area;
+  // LIGHT_SPOT, LIGHT_RING: the cone (Typhoon's shaping:cone): full
+  // emission up to coneSoftAngle off axis, none past coneAngle, a smoothstep
+  // in the angle between (radians)
+  uniform float coneAngle;
+  uniform float coneSoftAngle;
+  // LIGHT_QUAD: the sides that emit (front: towards edge2 x edge1)
+  uniform bool front;
+  uniform bool back;
+  // LIGHT_QUAD, LIGHT_RING: 'intensityDistribution', the intensity relative
+  // to axis' over gamma (numGamma values over [0, pi], fastest) and the
+  // C half-planes (numC rows over [0, 2 pi)); NULL if not set
+  const uniform float *uniform distribution;
+  uniform uint32 numGamma;
+  uniform uint32 numC;
+  // LIGHT_HDRI: the map's width x height texels (packed float3 radiance, row
+  // 0 towards 'up': Typhoon's order, the ANARI array's last row) and
+  // Typhoon's sampling distribution over them (texelWeights: width x
+  // height, conditionalCdf: height rows of width + 1, marginalCdf: height +
+  // 1, weightSum their total; NULL and 0 for a uniformly sampled map)
+  const uniform float *uniform texels;
+  const uniform float *uniform texelWeights;
+  const uniform float *uniform conditionalCdf;
+  const uniform float *uniform marginalCdf;
+  uniform float weightSum;
+  uniform uint32 width;
+  uniform uint32 height;
+  // 'color' times the brightness: the radiance (W/sr/m^2) of a cone, sphere,
+  // quad or ring (with 'intensityDistribution', the intensity along the
+  // axis over the area, which the distribution over cos gamma scales), the
+  // irradiance (W/m^2) of a delta direction, the intensity (W/sr) of a delta
+  // point, or of a delta spot or ring along its axis; for an hdri 'color'
+  // times 'scale', which the texels' radiance is multiplied by
+  uniform float3 emission;
+  // 'visible' (KHR_LIGHT_PRIMARY_VISIBILITY): camera rays see a sphere, quad,
+  // ring or hdri
+  uniform bool visible;
+};
+
+// Scene hierarchy //
+
+struct Surface
+{
+  uniform Geometry *uniform geometry;
+  // NULL when the surface's material is missing or invalid (only rendered
+  // when the device allows invalid materials)
+  uniform Material *uniform material;
+  uniform uint32 id;
+};
+
+struct Group
+{
+  uniform Surface *uniform *uniform surfaces;
+  uniform ulong numSurfaces;
+  // valid and visible volumes
+  uniform Volume *uniform *uniform volumes;
+  uniform ulong numVolumes;
+};
+
+struct Instance
+{
+  // packed column-major 3x3 normal matrices, one per transform (read with
+  // load_linear3f()); indexed by HitInfo::instArrayId
+  const uniform float *uniform normalXfms;
+  // user ids, one per transform; indexed by HitInfo::instArrayId
+  const uniform uint32 *uniform ids;
+  // packed column-major 4x4 transforms and their inverses (read with
+  // load_affine3f()); indexed by HitInfo::instArrayId
+  const uniform float *uniform xfms;
+  const uniform float *uniform invXfms;
+  // 'attribute0-3' and 'color' as packed float4, one per transform (indexed
+  // by HitInfo::instArrayId); NULL where unset. They override the geometry's.
+  const uniform float *uniform attributes[NUM_GEOMETRY_ATTRIBUTES];
+  uniform Group *uniform group;
+  uniform uint32 numTransforms;
+};
+
+struct World
+{
+  uniform Instance *uniform *uniform instances;
+  // the instances whose group has volumes, which rays test one by one
+  uniform Instance *uniform *uniform volumeInstances;
+  uniform uint32 numVolumeInstances;
+  // every valid light of every instance, once per instance transform, in
+  // world space
+  uniform uint32 numLights;
+  const uniform Light *uniform lights;
+  RTCScene scene;
+};
+
+// Camera //
+
+enum CameraType
+{
+  CAMERA_PERSPECTIVE,
+  CAMERA_ORTHOGRAPHIC,
+  CAMERA_UNKNOWN
+};
+
+struct Camera
+{
+  uniform CameraType type;
+  uniform float3 pos;
+  uniform float3 dir;
+  uniform float3 up;
+  uniform float4 region;
+  // 'aspect', if set; otherwise the frame's aspect ratio is used
+  uniform bool hasAspect;
+  uniform float aspect;
+  // Unit image plane axes: horizontal (dir x up) and vertical
+  uniform float3 imagePlaneU;
+  uniform float3 imagePlaneV;
+  // Image plane height, at unit distance for perspective cameras
+  uniform float imagePlaneHeight;
+};
+
+// Renderer //
+
+// The 'preview' renderer's 'mode' values (see renderModeFromString() in
+// renderer/preview/Preview.cpp)
+enum RenderMode
+{
+  RENDER_MODE_DEFAULT = 0,
+  RENDER_MODE_PRIMITIVE_ID,
+  RENDER_MODE_OBJECT_ID,
+  RENDER_MODE_INSTANCE_ID,
+  RENDER_MODE_EMBREE_PRIM_ID,
+  RENDER_MODE_EMBREE_GEOM_ID,
+  RENDER_MODE_EMBREE_INST_ID,
+  RENDER_MODE_NG,
+  RENDER_MODE_NG_ABS,
+  RENDER_MODE_NS,
+  RENDER_MODE_NS_ABS,
+  RENDER_MODE_NS_FLIPPED,
+  RENDER_MODE_UVW,
+  RENDER_MODE_BACKFACE,
+  RENDER_MODE_HIT_SURFACE,
+  RENDER_MODE_HIT_VOLUME,
+  RENDER_MODE_GEOMETRY_ATTRIBUTE_0,
+  RENDER_MODE_GEOMETRY_ATTRIBUTE_1,
+  RENDER_MODE_GEOMETRY_ATTRIBUTE_2,
+  RENDER_MODE_GEOMETRY_ATTRIBUTE_3,
+  RENDER_MODE_GEOMETRY_COLOR,
+  RENDER_MODE_OPACITY_HEATMAP,
+  RENDER_MODE_AMBIENT_OCCLUSION,
+  RENDER_MODE_AMBIENT_OCCLUSION_UNBLURRED,
+  RENDER_MODE_TEST_FRAME
+};
+
+// The 'preview' renderer's 'ambientOcclusionEstimator' values (see
+// ambientOcclusionEstimatorFromString() in renderer/preview/Preview.cpp and
+// occlusionAt() in renderer/preview/Preview.ispc)
+enum AmbientOcclusionEstimator
+{
+  // G3D's high-quality SAO form, the default
+  AMBIENT_OCCLUSION_ESTIMATOR_G3D = 0,
+  // the HPG 2012 SAO paper's form
+  AMBIENT_OCCLUSION_ESTIMATOR_SAO
+};
+
+// The 'quality' renderer's 'mode' values (pathTracerModeFromString() in
+// renderer/pathtracer/PathTracer.cpp): path tracing, or one value of the
+// shading context (renderer/pathtracer/ShadingContext.isph) at the pixel
+// center's first visible surface, raw
+enum PathTracerMode
+{
+  PATH_TRACER_MODE_DEFAULT = 0,
+  PATH_TRACER_MODE_POSITION,
+  PATH_TRACER_MODE_NORMAL,
+  PATH_TRACER_MODE_TANGENT,
+  PATH_TRACER_MODE_BITANGENT,
+  PATH_TRACER_MODE_TEXCOORD,
+  PATH_TRACER_MODE_DISPLAY_COLOR,
+  PATH_TRACER_MODE_DPDU,
+  PATH_TRACER_MODE_DPDV,
+  PATH_TRACER_MODE_DNDU,
+  PATH_TRACER_MODE_DNDV,
+  PATH_TRACER_MODE_DPDX,
+  PATH_TRACER_MODE_DPDY,
+  PATH_TRACER_MODE_TEXCOORD_DERIVATIVES
+};
+
+// The 'quality' renderer's parameters (renderer/pathtracer/PathTracer.*);
+// unused by the 'preview' renderer
+struct PathTracerParameters
+{
+  // 'mode'
+  uniform PathTracerMode mode;
+  // 'pixelSamples', at least 1: paths per pixel per render
+  uniform int pixelSamples;
+  // 'maxBounces', at least 0: path vertices that scatter after the first; the
+  // ray leaving the last one only gathers what it sees
+  uniform int maxBounces;
+  // The ambient light ('ambientColor' * 'ambientRadiance') as a constant
+  // dome, an hdri record of one white texel without a sampling distribution
+  // that camera rays don't see (PathTracer::m_ambientLight); NULL where it
+  // emits nothing
+  const uniform Light *uniform ambientLight;
+  // The sample generator's frame seed (Sampling_resolveFrameSeed() of
+  // 'randomNumberSeed')
+  uniform uint32 frameSeed;
+  // 'lightSamplesPerHit', at least 1: samples of each light at every vertex
+  uniform int lightSamplesPerHit;
+  // 'minBouncesBeforeRR', at least 0: the first vertex Russian roulette may
+  // end a path after
+  uniform int minBouncesBeforeRR;
+  // 'fireflyClampThreshold': the largest luminance of one light sample and
+  // of one contribution to the path; 0 or less doesn't clamp
+  uniform float fireflyClampThreshold;
+  // 'disableShadows': nothing blocks light samples
+  uniform bool disableShadows;
+  // 'enableCaustics': caustic paths (a specular or boundary-crossing sample
+  // after a diffuse-like event) go on, where otherwise caustic-class lobes are
+  // pruned after a diffuse-like event and shadow rays pass straight through
+  // thick transmissive surfaces
+  uniform bool enableCaustics;
+  // 'causticsClampThreshold': the largest luminance of one contribution to a
+  // caustic path, before the firefly clamp; 0 or less doesn't clamp
+  uniform float causticsClampThreshold;
+  // 'nativeMaterials': materials with a native kind shade natively
+  // (PathMaterialContext::nativeMaterials)
+  uniform bool nativeMaterials;
+  // The luminance coefficients of the pathtracer's working space
+  // (PathMaterialContext::luminance)
+  uniform float luminance[3];
+  // Adaptive sampling (AdaptiveSampling.isph): 'adaptiveThreshold' and
+  // 'minSamplesBeforeAdaptive'
+  uniform float adaptiveThreshold;
+  uniform int minSamplesBeforeAdaptive;
+  // 1 / sqrt of the sample limit ('sampleLimit' if above 0, else
+  // 'convergedSamplesPerPixel'): the scale of the camera ray differentials
+  // (the pixel footprint of one of that many samples)
+  uniform float differentialScale;
+};
+
+// The 'preview' renderer's parameters (renderer/preview/Preview.*); unused
+// by the 'quality' renderer
+struct PreviewParameters
+{
+  // 1 when 'ignoreAmbientLighting' is set
+  uniform float ambientRadiance;
+  uniform float eyeLightBlendRatio;
+  // 1 / 'volumeSamplingRate': scales a field's ray marching step size
+  uniform float invVolumeSamplingRate;
+  uniform RenderMode mode;
+  uniform AmbientOcclusionEstimator ambientOcclusionEstimator;
+  // 'ambientOcclusionIntensity', at least 0: the occlusion pass raises its
+  // factor to this power
+  uniform float ambientOcclusionIntensity;
+};
+
+// Every renderer subtype's ISPC struct: the parameters they share
+// (renderer/Renderer.*), then each subtype's as a named member
+struct Renderer
+{
+  uniform float4 background;
+  // 'background' image as packed float4 texels (read with load_float4()), row
+  // by row; NULL when the background is a color
+  const uniform float *uniform backgroundImage;
+  uniform int2 backgroundImageSize;
+
+  uniform PreviewParameters preview;
+  uniform PathTracerParameters pathtracer;
+};
+
+// Frame //
+
+struct Frame
+{
+  uniform ANARIDataType colorFormat;
+  void *uniform color;
+  uniform float *uniform depth;
+  // id channels, NULL unless requested
+  uniform uint32 *uniform primId;
+  uniform uint32 *uniform objId;
+  uniform uint32 *uniform instId;
+  // albedo and normal channels (KHR_FRAME_CHANNEL_ALBEDO/_NORMAL), NULL
+  // unless requested, in 'albedoFormat'/'normalFormat'
+  uniform ANARIDataType albedoFormat;
+  uniform ANARIDataType normalFormat;
+  void *uniform albedo;
+  void *uniform normal;
+  // device 'invalidMaterialColor', for surfaces without a valid material
+  uniform float4 invalidMaterialColor;
+  uniform int2 size;
+  uniform float2 invSize;
+  // size.x / size.y, for cameras without 'aspect'
+  uniform float aspect;
+  uniform Renderer *uniform renderer;
+  uniform Camera *uniform camera;
+  uniform World *uniform world;
+};
