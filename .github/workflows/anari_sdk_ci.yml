@@ -3,11 +3,19 @@
 
 name: ANARI-SDK CI
 
+# halcyon has its own workflow (halcyon_ci.yml); changes confined to it don't
+# rebuild the SDK here
 on:
   push:
     branches: [ next_release ]
+    paths-ignore:
+      - 'src/devices/halcyon/**'
+      - '.github/workflows/halcyon_ci.yml'
   pull_request:
     branches: [ main, next_release ]
+    paths-ignore:
+      - 'src/devices/halcyon/**'
+      - '.github/workflows/halcyon_ci.yml'
 
 env:
   ANARI_LIBRARY: helide
@@ -35,37 +43,6 @@ jobs:
       with:
         name: ANARI-SDK_ubuntu-22.04
         path: ${{ github.workspace }}/build/install
-
-  build-halcyon:
-    # halcyon needs ISPC, and is built and tested on Linux only so far
-    runs-on: ubuntu-22.04
-    env:
-      ISPC_VERSION: v1.28.2
-    steps:
-    - name: Check out code
-      uses: actions/checkout@v4
-    - name: Install ISPC
-      run: |
-        curl -sSfL https://github.com/ispc/ispc/releases/download/${ISPC_VERSION}/ispc-${ISPC_VERSION}-linux.tar.gz \
-          | tar xz -C ${{ runner.temp }}
-        echo "${{ runner.temp }}/ispc-${ISPC_VERSION}-linux/bin" >> $GITHUB_PATH
-    - name: Configure CMake
-      run: >
-        cmake -LA -B ${{ github.workspace }}/build
-        -DBUILD_CTS=OFF
-        -DBUILD_EXAMPLES=OFF
-        -DBUILD_HALCYON_DEVICE=ON
-        -DBUILD_HELIDE_DEVICE=ON
-        -DBUILD_TESTING=ON
-        -DCMAKE_BUILD_TYPE=Release
-    - name: Build
-      # A bare --parallel is an unbounded 'make -j', which starts every
-      # Embree kernel, ISPC and MaterialX compile at once and runs the
-      # runner out of memory: one job per core
-      run: cmake --build ${{ github.workspace }}/build --config Release --parallel $(nproc)
-    - name: halcyon Tests
-      working-directory: ${{ github.workspace }}/build
-      run: ctest -R '^halcyon::' -C Release --output-on-failure
 
   build-windows:
     runs-on: ${{ matrix.os }}

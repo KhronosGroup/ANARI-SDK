@@ -121,4 +121,6 @@ ANARI_LIBRARY=helide anariInfo
 
 ## CI
 
-GitHub Actions (`.github/workflows/anari_sdk_ci.yml`) runs on push/PR to `next_release` and `main`. Matrix: Ubuntu 22.04/24.04 and Windows (Release + Debug), macOS (Release only). Tests require `ANARI_LIBRARY=helide`.
+GitHub Actions (`.github/workflows/anari_sdk_ci.yml`) runs on push/PR to `next_release` and `main`, except for changes confined to `src/devices/halcyon/`. Matrix: Ubuntu 22.04/24.04 and Windows (Release + Debug), macOS (Release only). Tests require `ANARI_LIBRARY=helide`.
+
+halcyon has its own workflow (`.github/workflows/halcyon_ci.yml`, Ubuntu 22.04 Release, with ISPC), path-filtered to `src/devices/halcyon/` and what it builds on (helium, the frontend, `code_gen/`, `cmake/`, the root and `src/devices/` CMakeLists, the shared Embree setup). Update its `paths` if halcyon gains a dependency on another part of the SDK.
