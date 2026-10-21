@@ -15,7 +15,7 @@ namespace helide {
 
 using namespace anari::math;
 using namespace helium::math;
-using namespace embree_for_helide;
+RTC_NAMESPACE_USE
 
 struct alignas(16) Ray
 {

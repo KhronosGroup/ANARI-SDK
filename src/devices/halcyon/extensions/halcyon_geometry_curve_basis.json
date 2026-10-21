@@ -1,0 +1,23 @@
+{
+    "info": {
+        "name": "HALCYON_GEOMETRY_CURVE_BASIS",
+        "type": "extension",
+        "dependencies": ["khr_geometry_curve"]
+    },
+    "objects": [
+        {
+            "type": "ANARI_GEOMETRY",
+            "name": "curve",
+            "parameters": [
+                {
+                    "name": "basis",
+                    "types": ["ANARI_STRING"],
+                    "tags": [],
+                    "default": "linear",
+                    "values": ["linear", "bspline", "catmullRom"],
+                    "description": "the curve's basis: linear segments between consecutive vertices, or uniform cubic B-spline or Catmull-Rom segments over four control points each ('primitive.index' i: vertices i to i + 3; without it, n vertices are one strand of n - 3 segments); radius and vertex attributes follow the basis, and apps repeat the end points to reach them"
+                }
+            ]
+        }
+    ]
+}

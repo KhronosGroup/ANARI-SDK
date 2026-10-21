@@ -3,11 +3,19 @@
 
 name: ANARI-SDK CI
 
+# halcyon has its own workflow (halcyon_ci.yml); changes confined to it don't
+# rebuild the SDK here
 on:
   push:
     branches: [ next_release ]
+    paths-ignore:
+      - 'src/devices/halcyon/**'
+      - '.github/workflows/halcyon_ci.yml'
   pull_request:
     branches: [ main, next_release ]
+    paths-ignore:
+      - 'src/devices/halcyon/**'
+      - '.github/workflows/halcyon_ci.yml'
 
 env:
   ANARI_LIBRARY: helide

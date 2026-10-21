@@ -1,0 +1,771 @@
+// Copyright 2025-2026 The Khronos Group
+// SPDX-License-Identifier: Apache-2.0
+
+#pragma once
+
+// Conventions ////////////////////////////////////////////////////////////////
+//
+// - Vectors are native ISPC short vectors (float3 == float<3>).
+//
+//   NOTE: an ISPC 'uniform float3' is 16 bytes (16-byte aligned), but a C++
+//         float3 (linalg) is 12 bytes. Never memcpy() C++ data into ISPC
+//         vectors using ISPC type sizes. Data crosses from C++ as tightly
+//         packed floats and is read with the load_*() functions below, which
+//         also handle indexing into packed application arrays:
+//
+//           load_float3(base + 3 * i) // i'th element of a packed float3 array
+//
+// - Matrices are column-major, matching linalg and ANARI_FLOAT32_MAT4:
+//     linear3f -- 3x3 (rotation/scale)
+//     affine3f -- 3x3 + translation (instance/volume transforms)
+//     mat4f    -- general 4x4 (e.g. sampler in/outTransform)
+//
+// - Function names and semantics follow linalg (dot, cross, lerp(a, b, t),
+//   sum, minelem, maxelem, mul, transpose, inverse, determinant, ...) so code
+//   ported from C++ devices reads the same. 'fract' follows helium.
+//
+// - Every function is provided for uniform and varying arguments; uniform
+//   inputs produce uniform outputs. Transform functions additionally accept a
+//   uniform matrix with a varying vector. Functions taking two matrices need
+//   matching variability: ISPC won't promote a uniform struct to varying during
+//   overload resolution, so assign it to a varying variable first:
+//
+//     const varying linear3f vm = uniformMatrix;
+//     mul(vm, varyingMatrix);
+
+// Types //////////////////////////////////////////////////////////////////////
+
+typedef float16 half;
+typedef float16<2> half2;
+typedef float16<3> half3;
+typedef float16<4> half4;
+
+typedef float<2> float2;
+typedef float<3> float3;
+typedef float<4> float4;
+
+typedef double<2> double2;
+typedef double<3> double3;
+typedef double<4> double4;
+
+typedef int8 byte;
+typedef int8<2> byte2;
+typedef int8<3> byte3;
+typedef int8<4> byte4;
+typedef uint8 ubyte;
+typedef uint8<2> ubyte2;
+typedef uint8<3> ubyte3;
+typedef uint8<4> ubyte4;
+
+typedef int16 short;
+typedef int16<2> short2;
+typedef int16<3> short3;
+typedef int16<4> short4;
+typedef uint16 ushort;
+typedef uint16<2> ushort2;
+typedef uint16<3> ushort3;
+typedef uint16<4> ushort4;
+
+typedef int32<2> int2;
+typedef int32<3> int3;
+typedef int32<4> int4;
+typedef uint32<2> uint2;
+typedef uint32<3> uint3;
+typedef uint32<4> uint4;
+
+typedef int64 long;
+typedef int64<2> long2;
+typedef int64<3> long3;
+typedef int64<4> long4;
+typedef uint64 ulong;
+typedef uint64<2> ulong2;
+typedef uint64<3> ulong3;
+typedef uint64<4> ulong4;
+
+// Matrix types (members take the variability of the declared struct)
+
+struct linear3f
+{
+  float3 x; // columns
+  float3 y;
+  float3 z;
+};
+
+struct affine3f
+{
+  linear3f l;
+  float3 p;
+};
+
+struct mat4f
+{
+  float4 x; // columns
+  float4 y;
+  float4 z;
+  float4 w;
+};
+
+// Casts //////////////////////////////////////////////////////////////////////
+
+template <typename T, typename U>
+inline T cast(const U &o)
+{
+  return (T)o;
+}
+
+template <typename T>
+inline uniform T *uniform object_cast(void *uniform o)
+{
+  return (uniform T * uniform) o;
+}
+
+template <typename T>
+inline uniform T *uniform *uniform object_array_cast(void *uniform o)
+{
+  return (uniform T * uniform * uniform) o;
+}
+
+// Scalar helpers missing from the ISPC stdlib ////////////////////////////////
+
+#define __halcyon_define_scalar(UV)                                            \
+  inline UV float fract(UV float x)                                            \
+  {                                                                            \
+    return x - floor(x);                                                       \
+  }                                                                            \
+  inline UV float lerp(UV float a, UV float b, UV float t)                     \
+  {                                                                            \
+    return a * (1.f - t) + b * t;                                              \
+  }
+
+__halcyon_define_scalar(uniform)
+__halcyon_define_scalar(varying)
+
+#undef __halcyon_define_scalar
+
+// Constructors ///////////////////////////////////////////////////////////////
+
+#define __halcyon_define_make(UV, S, V2, V3, V4, NAME)                         \
+  inline UV V2 make_##NAME##2(UV S x, UV S y)                                  \
+  {                                                                            \
+    UV V2 r = {x, y};                                                          \
+    return r;                                                                  \
+  }                                                                            \
+  inline UV V2 make_##NAME##2(UV S s)                                          \
+  {                                                                            \
+    UV V2 r = {s, s};                                                          \
+    return r;                                                                  \
+  }                                                                            \
+  inline UV V3 make_##NAME##3(UV S x, UV S y, UV S z)                          \
+  {                                                                            \
+    UV V3 r = {x, y, z};                                                       \
+    return r;                                                                  \
+  }                                                                            \
+  inline UV V3 make_##NAME##3(UV S s)                                          \
+  {                                                                            \
+    UV V3 r = {s, s, s};                                                       \
+    return r;                                                                  \
+  }                                                                            \
+  inline UV V3 make_##NAME##3(UV V4 v)                                         \
+  {                                                                            \
+    UV V3 r = {v.x, v.y, v.z};                                                 \
+    return r;                                                                  \
+  }                                                                            \
+  inline UV V4 make_##NAME##4(UV S x, UV S y, UV S z, UV S w)                  \
+  {                                                                            \
+    UV V4 r = {x, y, z, w};                                                    \
+    return r;                                                                  \
+  }                                                                            \
+  inline UV V4 make_##NAME##4(UV S s)                                          \
+  {                                                                            \
+    UV V4 r = {s, s, s, s};                                                    \
+    return r;                                                                  \
+  }                                                                            \
+  inline UV V4 make_##NAME##4(UV V3 v, UV S w)                                 \
+  {                                                                            \
+    UV V4 r = {v.x, v.y, v.z, w};                                              \
+    return r;                                                                  \
+  }
+
+__halcyon_define_make(uniform, float, float2, float3, float4, float)
+__halcyon_define_make(varying, float, float2, float3, float4, float)
+__halcyon_define_make(uniform, int32, int2, int3, int4, int)
+__halcyon_define_make(varying, int32, int2, int3, int4, int)
+__halcyon_define_make(uniform, uint32, uint2, uint3, uint4, uint)
+__halcyon_define_make(varying, uint32, uint2, uint3, uint4, uint)
+
+#undef __halcyon_define_make
+
+// Element-wise functions /////////////////////////////////////////////////////
+
+#define __halcyon_define_unary(UV, V2, V3, V4, FN)                             \
+  inline UV V2 FN(UV V2 a)                                                     \
+  {                                                                            \
+    UV V2 r = {FN(a.x), FN(a.y)};                                              \
+    return r;                                                                  \
+  }                                                                            \
+  inline UV V3 FN(UV V3 a)                                                     \
+  {                                                                            \
+    UV V3 r = {FN(a.x), FN(a.y), FN(a.z)};                                     \
+    return r;                                                                  \
+  }                                                                            \
+  inline UV V4 FN(UV V4 a)                                                     \
+  {                                                                            \
+    UV V4 r = {FN(a.x), FN(a.y), FN(a.z), FN(a.w)};                            \
+    return r;                                                                  \
+  }
+
+#define __halcyon_define_binary(UV, V2, V3, V4, FN)                            \
+  inline UV V2 FN(UV V2 a, UV V2 b)                                            \
+  {                                                                            \
+    UV V2 r = {FN(a.x, b.x), FN(a.y, b.y)};                                    \
+    return r;                                                                  \
+  }                                                                            \
+  inline UV V3 FN(UV V3 a, UV V3 b)                                            \
+  {                                                                            \
+    UV V3 r = {FN(a.x, b.x), FN(a.y, b.y), FN(a.z, b.z)};                      \
+    return r;                                                                  \
+  }                                                                            \
+  inline UV V4 FN(UV V4 a, UV V4 b)                                            \
+  {                                                                            \
+    UV V4 r = {FN(a.x, b.x), FN(a.y, b.y), FN(a.z, b.z), FN(a.w, b.w)};        \
+    return r;                                                                  \
+  }
+
+#define __halcyon_define_clamp(UV, S, V2, V3, V4)                              \
+  inline UV V2 clamp(UV V2 v, UV V2 lo, UV V2 hi)                              \
+  {                                                                            \
+    return min(max(v, lo), hi);                                                \
+  }                                                                            \
+  inline UV V3 clamp(UV V3 v, UV V3 lo, UV V3 hi)                              \
+  {                                                                            \
+    return min(max(v, lo), hi);                                                \
+  }                                                                            \
+  inline UV V4 clamp(UV V4 v, UV V4 lo, UV V4 hi)                              \
+  {                                                                            \
+    return min(max(v, lo), hi);                                                \
+  }                                                                            \
+  inline UV V2 clamp(UV V2 v, UV S lo, UV S hi)                                \
+  {                                                                            \
+    UV V2 r = {clamp(v.x, lo, hi), clamp(v.y, lo, hi)};                        \
+    return r;                                                                  \
+  }                                                                            \
+  inline UV V3 clamp(UV V3 v, UV S lo, UV S hi)                                \
+  {                                                                            \
+    UV V3 r = {clamp(v.x, lo, hi), clamp(v.y, lo, hi), clamp(v.z, lo, hi)};    \
+    return r;                                                                  \
+  }                                                                            \
+  inline UV V4 clamp(UV V4 v, UV S lo, UV S hi)                                \
+  {                                                                            \
+    UV V4 r = {clamp(v.x, lo, hi),                                             \
+        clamp(v.y, lo, hi),                                                    \
+        clamp(v.z, lo, hi),                                                    \
+        clamp(v.w, lo, hi)};                                                   \
+    return r;                                                                  \
+  }
+
+#define __halcyon_define_elementwise(UV, S, V2, V3, V4)                        \
+  __halcyon_define_binary(UV, V2, V3, V4, min)                                 \
+  __halcyon_define_binary(UV, V2, V3, V4, max)                                 \
+  __halcyon_define_clamp(UV, S, V2, V3, V4)
+
+__halcyon_define_elementwise(uniform, float, float2, float3, float4)
+__halcyon_define_elementwise(varying, float, float2, float3, float4)
+__halcyon_define_elementwise(uniform, int32, int2, int3, int4)
+__halcyon_define_elementwise(varying, int32, int2, int3, int4)
+__halcyon_define_elementwise(uniform, uint32, uint2, uint3, uint4)
+__halcyon_define_elementwise(varying, uint32, uint2, uint3, uint4)
+
+__halcyon_define_unary(uniform, int2, int3, int4, abs)
+__halcyon_define_unary(varying, int2, int3, int4, abs)
+
+__halcyon_define_unary(uniform, float2, float3, float4, abs)
+__halcyon_define_unary(varying, float2, float3, float4, abs)
+__halcyon_define_unary(uniform, float2, float3, float4, floor)
+__halcyon_define_unary(varying, float2, float3, float4, floor)
+__halcyon_define_unary(uniform, float2, float3, float4, fract)
+__halcyon_define_unary(varying, float2, float3, float4, fract)
+__halcyon_define_unary(uniform, float2, float3, float4, rcp)
+__halcyon_define_unary(varying, float2, float3, float4, rcp)
+
+#undef __halcyon_define_elementwise
+#undef __halcyon_define_clamp
+#undef __halcyon_define_binary
+#undef __halcyon_define_unary
+
+#define __halcyon_define_lerp(UV, V)                                           \
+  inline UV V lerp(UV V a, UV V b, UV float t)                                 \
+  {                                                                            \
+    return a * (1.f - t) + b * t;                                              \
+  }                                                                            \
+  inline UV V lerp(UV V a, UV V b, UV V t)                                     \
+  {                                                                            \
+    return a * (1.f - t) + b * t;                                              \
+  }
+
+__halcyon_define_lerp(uniform, float2)
+__halcyon_define_lerp(varying, float2)
+__halcyon_define_lerp(uniform, float3)
+__halcyon_define_lerp(varying, float3)
+__halcyon_define_lerp(uniform, float4)
+__halcyon_define_lerp(varying, float4)
+
+#undef __halcyon_define_lerp
+
+// Reductions (across a vector's elements, NOT across program instances) //////
+
+#define __halcyon_define_reductions(UV, S, V2, V3, V4)                         \
+  inline UV S sum(UV V2 a)                                                     \
+  {                                                                            \
+    return a.x + a.y;                                                          \
+  }                                                                            \
+  inline UV S sum(UV V3 a)                                                     \
+  {                                                                            \
+    return a.x + a.y + a.z;                                                    \
+  }                                                                            \
+  inline UV S sum(UV V4 a)                                                     \
+  {                                                                            \
+    return a.x + a.y + a.z + a.w;                                              \
+  }                                                                            \
+  inline UV S minelem(UV V2 a)                                                 \
+  {                                                                            \
+    return min(a.x, a.y);                                                      \
+  }                                                                            \
+  inline UV S minelem(UV V3 a)                                                 \
+  {                                                                            \
+    return min(min(a.x, a.y), a.z);                                            \
+  }                                                                            \
+  inline UV S minelem(UV V4 a)                                                 \
+  {                                                                            \
+    return min(min(a.x, a.y), min(a.z, a.w));                                  \
+  }                                                                            \
+  inline UV S maxelem(UV V2 a)                                                 \
+  {                                                                            \
+    return max(a.x, a.y);                                                      \
+  }                                                                            \
+  inline UV S maxelem(UV V3 a)                                                 \
+  {                                                                            \
+    return max(max(a.x, a.y), a.z);                                            \
+  }                                                                            \
+  inline UV S maxelem(UV V4 a)                                                 \
+  {                                                                            \
+    return max(max(a.x, a.y), max(a.z, a.w));                                  \
+  }
+
+__halcyon_define_reductions(uniform, float, float2, float3, float4)
+__halcyon_define_reductions(varying, float, float2, float3, float4)
+__halcyon_define_reductions(uniform, int32, int2, int3, int4)
+__halcyon_define_reductions(varying, int32, int2, int3, int4)
+__halcyon_define_reductions(uniform, uint32, uint2, uint3, uint4)
+__halcyon_define_reductions(varying, uint32, uint2, uint3, uint4)
+
+#undef __halcyon_define_reductions
+
+// Geometric functions ////////////////////////////////////////////////////////
+
+#define __halcyon_define_geometric(UV, V)                                      \
+  inline UV float dot(UV V a, UV V b)                                          \
+  {                                                                            \
+    return sum(a * b);                                                         \
+  }                                                                            \
+  inline UV float length2(UV V a)                                              \
+  {                                                                            \
+    return dot(a, a);                                                          \
+  }                                                                            \
+  inline UV float length(UV V a)                                               \
+  {                                                                            \
+    return sqrt(length2(a));                                                   \
+  }                                                                            \
+  inline UV float distance2(UV V a, UV V b)                                    \
+  {                                                                            \
+    return length2(b - a);                                                     \
+  }                                                                            \
+  inline UV float distance(UV V a, UV V b)                                     \
+  {                                                                            \
+    return length(b - a);                                                      \
+  }                                                                            \
+  inline UV V normalize(UV V a)                                                \
+  {                                                                            \
+    return a / length(a);                                                      \
+  }                                                                            \
+  /* returns 'a' unchanged (i.e. zero) instead of NaNs for zero-length 'a' */  \
+  inline UV V safe_normalize(UV V a)                                           \
+  {                                                                            \
+    const UV float l = length(a);                                              \
+    return l > 0.f ? a / l : a;                                                \
+  }
+
+__halcyon_define_geometric(uniform, float2)
+__halcyon_define_geometric(varying, float2)
+__halcyon_define_geometric(uniform, float3)
+__halcyon_define_geometric(varying, float3)
+__halcyon_define_geometric(uniform, float4)
+__halcyon_define_geometric(varying, float4)
+
+#undef __halcyon_define_geometric
+
+#define __halcyon_define_cross(UV)                                             \
+  inline UV float3 cross(UV float3 a, UV float3 b)                             \
+  {                                                                            \
+    UV float3 r = {                                                            \
+        a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x};  \
+    return r;                                                                  \
+  }
+
+__halcyon_define_cross(uniform)
+__halcyon_define_cross(varying)
+
+#undef __halcyon_define_cross
+
+// Matrix functions ///////////////////////////////////////////////////////////
+
+inline uniform linear3f make_linear3f_identity()
+{
+  uniform linear3f r;
+  r.x = make_float3(1.f, 0.f, 0.f);
+  r.y = make_float3(0.f, 1.f, 0.f);
+  r.z = make_float3(0.f, 0.f, 1.f);
+  return r;
+}
+
+inline uniform affine3f make_affine3f_identity()
+{
+  uniform affine3f r;
+  r.l = make_linear3f_identity();
+  r.p = make_float3(0.f);
+  return r;
+}
+
+inline uniform mat4f make_mat4f_identity()
+{
+  uniform mat4f r;
+  r.x = make_float4(1.f, 0.f, 0.f, 0.f);
+  r.y = make_float4(0.f, 1.f, 0.f, 0.f);
+  r.z = make_float4(0.f, 0.f, 1.f, 0.f);
+  r.w = make_float4(0.f, 0.f, 0.f, 1.f);
+  return r;
+}
+
+#define __halcyon_define_matrix(UV)                                            \
+  /* linear3f */                                                               \
+  inline UV linear3f make_linear3f(UV float3 x, UV float3 y, UV float3 z)      \
+  {                                                                            \
+    UV linear3f r;                                                             \
+    r.x = x;                                                                   \
+    r.y = y;                                                                   \
+    r.z = z;                                                                   \
+    return r;                                                                  \
+  }                                                                            \
+  inline UV linear3f transpose(const UV linear3f &m)                           \
+  {                                                                            \
+    return make_linear3f(make_float3(m.x.x, m.y.x, m.z.x),                     \
+        make_float3(m.x.y, m.y.y, m.z.y),                                      \
+        make_float3(m.x.z, m.y.z, m.z.z));                                     \
+  }                                                                            \
+  inline UV float determinant(const UV linear3f &m)                            \
+  {                                                                            \
+    return dot(m.x, cross(m.y, m.z));                                          \
+  }                                                                            \
+  /* rows of the inverse are (y x z, z x x, x y y) / det */                    \
+  inline UV linear3f inverse(const UV linear3f &m)                             \
+  {                                                                            \
+    const UV float rdet = 1.f / determinant(m);                                \
+    return transpose(make_linear3f(cross(m.y, m.z) * rdet,                     \
+        cross(m.z, m.x) * rdet,                                                \
+        cross(m.x, m.y) * rdet));                                              \
+  }                                                                            \
+  inline UV linear3f mul(const UV linear3f &a, const UV linear3f &b)           \
+  {                                                                            \
+    return make_linear3f(mul(a, b.x), mul(a, b.y), mul(a, b.z));               \
+  }                                                                            \
+                                                                               \
+  /* affine3f */                                                               \
+  inline UV affine3f make_affine3f(const UV linear3f &l, UV float3 p)          \
+  {                                                                            \
+    UV affine3f r;                                                             \
+    r.l = l;                                                                   \
+    r.p = p;                                                                   \
+    return r;                                                                  \
+  }                                                                            \
+  /* drops the bottom row of 'm' */                                            \
+  inline UV affine3f make_affine3f(const UV mat4f &m)                          \
+  {                                                                            \
+    return make_affine3f(make_linear3f(make_float3(m.x),                       \
+                             make_float3(m.y),                                 \
+                             make_float3(m.z)),                                \
+        make_float3(m.w));                                                     \
+  }                                                                            \
+  inline UV affine3f inverse(const UV affine3f &a)                             \
+  {                                                                            \
+    const UV linear3f il = inverse(a.l);                                       \
+    return make_affine3f(il, -mul(il, a.p));                                   \
+  }                                                                            \
+  /* composition: the result applies 'b' first, then 'a' */                    \
+  inline UV affine3f mul(const UV affine3f &a, const UV affine3f &b)           \
+  {                                                                            \
+    return make_affine3f(mul(a.l, b.l), mul(a.l, b.p) + a.p);                  \
+  }                                                                            \
+                                                                               \
+  /* mat4f */                                                                  \
+  inline UV mat4f make_mat4f(UV float4 x, UV float4 y, UV float4 z, UV float4 w) \
+  {                                                                            \
+    UV mat4f r;                                                                \
+    r.x = x;                                                                   \
+    r.y = y;                                                                   \
+    r.z = z;                                                                   \
+    r.w = w;                                                                   \
+    return r;                                                                  \
+  }                                                                            \
+  inline UV mat4f make_mat4f(const UV affine3f &a)                             \
+  {                                                                            \
+    return make_mat4f(make_float4(a.l.x, 0.f),                                 \
+        make_float4(a.l.y, 0.f),                                               \
+        make_float4(a.l.z, 0.f),                                               \
+        make_float4(a.p, 1.f));                                                \
+  }                                                                            \
+  inline UV mat4f transpose(const UV mat4f &m)                                 \
+  {                                                                            \
+    return make_mat4f(make_float4(m.x.x, m.y.x, m.z.x, m.w.x),                 \
+        make_float4(m.x.y, m.y.y, m.z.y, m.w.y),                               \
+        make_float4(m.x.z, m.y.z, m.z.z, m.w.z),                               \
+        make_float4(m.x.w, m.y.w, m.z.w, m.w.w));                              \
+  }                                                                            \
+  inline UV mat4f mul(const UV mat4f &a, const UV mat4f &b)                    \
+  {                                                                            \
+    return make_mat4f(mul(a, b.x), mul(a, b.y), mul(a, b.z), mul(a, b.w));     \
+  }
+
+// mat4f determinant/inverse via 2x2 sub-determinants (a<row><col>)
+
+#define __halcyon_mat4f_subdets(UV, m)                                         \
+  const UV float a00 = m.x.x, a10 = m.x.y, a20 = m.x.z, a30 = m.x.w;           \
+  const UV float a01 = m.y.x, a11 = m.y.y, a21 = m.y.z, a31 = m.y.w;           \
+  const UV float a02 = m.z.x, a12 = m.z.y, a22 = m.z.z, a32 = m.z.w;           \
+  const UV float a03 = m.w.x, a13 = m.w.y, a23 = m.w.z, a33 = m.w.w;           \
+  const UV float s0 = a00 * a11 - a10 * a01;                                   \
+  const UV float s1 = a00 * a12 - a10 * a02;                                   \
+  const UV float s2 = a00 * a13 - a10 * a03;                                   \
+  const UV float s3 = a01 * a12 - a11 * a02;                                   \
+  const UV float s4 = a01 * a13 - a11 * a03;                                   \
+  const UV float s5 = a02 * a13 - a12 * a03;                                   \
+  const UV float c5 = a22 * a33 - a32 * a23;                                   \
+  const UV float c4 = a21 * a33 - a31 * a23;                                   \
+  const UV float c3 = a21 * a32 - a31 * a22;                                   \
+  const UV float c2 = a20 * a33 - a30 * a23;                                   \
+  const UV float c1 = a20 * a32 - a30 * a22;                                   \
+  const UV float c0 = a20 * a31 - a30 * a21;                                   \
+  const UV float det =                                                         \
+      s0 * c5 - s1 * c4 + s2 * c3 + s3 * c2 - s4 * c1 + s5 * c0;
+
+#define __halcyon_define_mat4f_inverse(UV)                                     \
+  inline UV float determinant(const UV mat4f &m)                               \
+  {                                                                            \
+    __halcyon_mat4f_subdets(UV, m);                                            \
+    return det;                                                                \
+  }                                                                            \
+  inline UV mat4f inverse(const UV mat4f &m)                                   \
+  {                                                                            \
+    __halcyon_mat4f_subdets(UV, m);                                            \
+    const UV float r = 1.f / det;                                              \
+    /* b<row><col> */                                                          \
+    return make_mat4f(                                                         \
+        make_float4((a11 * c5 - a12 * c4 + a13 * c3) * r,                      \
+            (-a10 * c5 + a12 * c2 - a13 * c1) * r,                             \
+            (a10 * c4 - a11 * c2 + a13 * c0) * r,                              \
+            (-a10 * c3 + a11 * c1 - a12 * c0) * r),                            \
+        make_float4((-a01 * c5 + a02 * c4 - a03 * c3) * r,                     \
+            (a00 * c5 - a02 * c2 + a03 * c1) * r,                              \
+            (-a00 * c4 + a01 * c2 - a03 * c0) * r,                             \
+            (a00 * c3 - a01 * c1 + a02 * c0) * r),                             \
+        make_float4((a31 * s5 - a32 * s4 + a33 * s3) * r,                      \
+            (-a30 * s5 + a32 * s2 - a33 * s1) * r,                             \
+            (a30 * s4 - a31 * s2 + a33 * s0) * r,                              \
+            (-a30 * s3 + a31 * s1 - a32 * s0) * r),                            \
+        make_float4((-a21 * s5 + a22 * s4 - a23 * s3) * r,                     \
+            (a20 * s5 - a22 * s2 + a23 * s1) * r,                              \
+            (-a20 * s4 + a21 * s2 - a23 * s0) * r,                             \
+            (a20 * s3 - a21 * s1 + a22 * s0) * r));                            \
+  }
+
+// Matrix * vector, for (uniform M, uniform v), (varying M, varying v), and
+// (uniform M, varying v). The result has the vector's variability.
+
+#define __halcyon_define_mul_vec(UVM, UV)                                      \
+  inline UV float3 mul(const UVM linear3f &m, UV float3 v)                     \
+  {                                                                            \
+    return m.x * v.x + m.y * v.y + m.z * v.z;                                  \
+  }                                                                            \
+  inline UV float4 mul(const UVM mat4f &m, UV float4 v)                        \
+  {                                                                            \
+    return m.x * v.x + m.y * v.y + m.z * v.z + m.w * v.w;                      \
+  }
+
+#define __halcyon_define_xfm(UVM, UV)                                          \
+  inline UV float3 xfmPoint(const UVM affine3f &a, UV float3 p)                \
+  {                                                                            \
+    return mul(a.l, p) + a.p;                                                  \
+  }                                                                            \
+  inline UV float3 xfmVector(const UVM linear3f &m, UV float3 v)               \
+  {                                                                            \
+    return mul(m, v);                                                          \
+  }                                                                            \
+  inline UV float3 xfmVector(const UVM affine3f &a, UV float3 v)               \
+  {                                                                            \
+    return mul(a.l, v);                                                        \
+  }                                                                            \
+  /* NOTE: computes an inverse; in hot paths precompute the normal matrix */   \
+  /*       (transpose(inverse(l))) in C++ and use xfmVector() instead     */   \
+  inline UV float3 xfmNormal(const UVM linear3f &m, UV float3 n)               \
+  {                                                                            \
+    return mul(transpose(inverse(m)), n);                                      \
+  }                                                                            \
+  inline UV float3 xfmNormal(const UVM affine3f &a, UV float3 n)               \
+  {                                                                            \
+    return xfmNormal(a.l, n);                                                  \
+  }
+
+// mat*vec comes first: the matrix/matrix functions are defined in terms of it
+__halcyon_define_mul_vec(uniform, uniform)
+__halcyon_define_mul_vec(varying, varying)
+__halcyon_define_mul_vec(uniform, varying)
+
+__halcyon_define_matrix(uniform)
+__halcyon_define_matrix(varying)
+
+__halcyon_define_mat4f_inverse(uniform)
+__halcyon_define_mat4f_inverse(varying)
+
+__halcyon_define_xfm(uniform, uniform)
+__halcyon_define_xfm(varying, varying)
+__halcyon_define_xfm(uniform, varying)
+
+#undef __halcyon_define_xfm
+#undef __halcyon_define_mul_vec
+#undef __halcyon_define_mat4f_inverse
+#undef __halcyon_mat4f_subdets
+#undef __halcyon_define_matrix
+
+// Loads/stores of tightly packed data (see NOTE at the top) //////////////////
+
+inline uniform float2 load_float2(const uniform float *uniform p)
+{
+  return make_float2(p[0], p[1]);
+}
+
+inline uniform float3 load_float3(const uniform float *uniform p)
+{
+  return make_float3(p[0], p[1], p[2]);
+}
+
+inline uniform float4 load_float4(const uniform float *uniform p)
+{
+  return make_float4(p[0], p[1], p[2], p[3]);
+}
+
+inline void store_float2(uniform float *uniform p, uniform float2 v)
+{
+  p[0] = v.x;
+  p[1] = v.y;
+}
+
+inline void store_float3(uniform float *uniform p, uniform float3 v)
+{
+  p[0] = v.x;
+  p[1] = v.y;
+  p[2] = v.z;
+}
+
+inline void store_float4(uniform float *uniform p, uniform float4 v)
+{
+  p[0] = v.x;
+  p[1] = v.y;
+  p[2] = v.z;
+  p[3] = v.w;
+}
+
+// Varying-pointer versions are written out so the gather/scatter warnings can
+// be silenced (ISPC ignores _Pragma() inside macros).
+
+inline varying float2 load_float2(const uniform float *varying p)
+{
+#pragma ignore warning(perf)
+  varying float2 r = {p[0], p[1]};
+  return r;
+}
+
+inline varying float3 load_float3(const uniform float *varying p)
+{
+#pragma ignore warning(perf)
+  varying float3 r = {p[0], p[1], p[2]};
+  return r;
+}
+
+inline varying float4 load_float4(const uniform float *varying p)
+{
+#pragma ignore warning(perf)
+  varying float4 r = {p[0], p[1], p[2], p[3]};
+  return r;
+}
+
+inline void store_float2(uniform float *varying p, varying float2 v)
+{
+#pragma ignore warning(perf)
+  p[0] = v.x;
+#pragma ignore warning(perf)
+  p[1] = v.y;
+}
+
+inline void store_float3(uniform float *varying p, varying float3 v)
+{
+#pragma ignore warning(perf)
+  p[0] = v.x;
+#pragma ignore warning(perf)
+  p[1] = v.y;
+#pragma ignore warning(perf)
+  p[2] = v.z;
+}
+
+inline void store_float4(uniform float *varying p, varying float4 v)
+{
+#pragma ignore warning(perf)
+  p[0] = v.x;
+#pragma ignore warning(perf)
+  p[1] = v.y;
+#pragma ignore warning(perf)
+  p[2] = v.z;
+#pragma ignore warning(perf)
+  p[3] = v.w;
+}
+
+// Matrix loads: 'p' points to LINEAR3F_FLOATS (linear3f) or MAT4F_FLOATS
+// (affine3f, mat4f) packed, column-major floats -- i.e. a C++ mat3 or
+// ANARI_FLOAT32_MAT4. Arrays of them are indexed in steps of those sizes.
+
+#define LINEAR3F_FLOATS 9
+#define MAT4F_FLOATS 16
+
+#define __halcyon_define_matrix_loads(UVP, UV)                                 \
+  inline UV linear3f load_linear3f(const uniform float *UVP p)                 \
+  {                                                                            \
+    return make_linear3f(                                                      \
+        load_float3(p + 0), load_float3(p + 3), load_float3(p + 6));           \
+  }                                                                            \
+  inline UV mat4f load_mat4f(const uniform float *UVP p)                       \
+  {                                                                            \
+    return make_mat4f(load_float4(p + 0),                                      \
+        load_float4(p + 4),                                                    \
+        load_float4(p + 8),                                                    \
+        load_float4(p + 12));                                                  \
+  }                                                                            \
+  /* ignores the bottom row of the 4x4 */                                      \
+  inline UV affine3f load_affine3f(const uniform float *UVP p)                 \
+  {                                                                            \
+    return make_affine3f(make_linear3f(load_float3(p + 0),                     \
+                             load_float3(p + 4),                               \
+                             load_float3(p + 8)),                              \
+        load_float3(p + 12));                                                  \
+  }
+
+__halcyon_define_matrix_loads(uniform, uniform)
+__halcyon_define_matrix_loads(varying, varying)
+
+#undef __halcyon_define_matrix_loads

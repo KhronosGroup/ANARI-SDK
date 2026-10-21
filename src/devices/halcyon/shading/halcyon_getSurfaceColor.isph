@@ -1,0 +1,104 @@
+// Copyright 2025-2026 The Khronos Group
+// SPDX-License-Identifier: Apache-2.0
+
+#pragma once
+
+#include "halcyon_attributes.isph"
+#include "halcyon_hitInfo.isph"
+#include "halcyon_objects.isph"
+#include "halcyon_ray.isph"
+#include "halcyon_sampler.isph"
+
+// Color of material 'm' at a surface hit, in helide's priority order
+inline float4 Material_getColor(
+    const uniform Material *uniform m, const RayHit &rh, const HitInfo &info)
+{
+  if (Sampler_isValid(m->colorSampler))
+    return Sampler_sample(m->colorSampler, info, rh);
+  // getAttribute() resolves ray-derived attributes before instance and
+  // geometry attributes, which puts the constant color right after them
+  if (m->colorAttribute == ATTRIBUTE_NONE)
+    return m->color;
+  return getAttribute(info, rh, m->colorAttribute);
+}
+
+// Opacity of material 'm' at a surface hit, before the alpha mode applies
+inline float Material_getOpacity(
+    const uniform Material *uniform m, const RayHit &rh, const HitInfo &info)
+{
+  if (Sampler_isValid(m->opacitySampler))
+    return Sampler_sample(m->opacitySampler, info, rh).x;
+  // Same order as the color. helide's getSurfaceOpacity() checks the
+  // instance before ray-derived attributes (Geometry::getAttributeValue()),
+  // but instances only carry attribute0-3 and color, so the order comes to
+  // the same. (The object-space attributes differ from helide's for their own
+  // reason; see getAttribute().)
+  if (m->opacityAttribute == ATTRIBUTE_NONE)
+    return m->opacity;
+  return getAttribute(info, rh, m->opacityAttribute).x;
+}
+
+// helium's adjustOpacityFromMode()
+inline float adjustOpacityFromMode(
+    float opacity, uniform float cutoff, uniform AlphaMode mode)
+{
+  switch (mode) {
+  case ALPHA_MODE_BLEND:
+    return opacity;
+  case ALPHA_MODE_MASK:
+    return opacity >= cutoff ? 1.f : 0.f;
+  default:
+    return 1.f;
+  }
+}
+
+// Surface color at a hit; surfaces without a valid material get
+// 'invalidMaterialColor' (opaque)
+inline float4 Surface_getColor(const RayHit &rh,
+    const HitInfo &info,
+    const uniform float4 invalidMaterialColor)
+{
+  float4 retval = make_float4(make_float3(invalidMaterialColor), 1.f);
+#pragma ignore warning(perf)
+  const uniform Material *varying material = info.surface->material;
+  if (material != NULL) {
+    foreach_unique (m in material)
+      retval = Material_getColor(m, rh, info);
+  }
+  return retval;
+}
+
+// Opacity of the surface at a hit: the color's alpha (where the material
+// says so) times the material's opacity, adjusted by its alpha mode
+// (helide's opacityHeatmap value). Surfaces without a valid material have
+// opacity 0.
+inline float Surface_getOpacity(const RayHit &rh, const HitInfo &info)
+{
+  float retval = 0.f;
+#pragma ignore warning(perf)
+  const uniform Material *varying material = info.surface->material;
+  if (material != NULL) {
+    foreach_unique (m in material) {
+      if (m->alphaMode == ALPHA_MODE_OPAQUE) {
+        retval = 1.f;
+      } else {
+        const float alpha =
+            m->colorAlphaIsOpacity ? Material_getColor(m, rh, info).w : 1.f;
+        const float o = alpha * Material_getOpacity(m, rh, info);
+        retval = adjustOpacityFromMode(
+            clamp(o, 0.f, 1.f), m->alphaCutoff, m->alphaMode);
+      }
+    }
+  }
+  return retval;
+}
+
+// Opacity of a surface hit as the default mode composites it:
+// Surface_getOpacity(), except that surfaces without a valid material (drawn
+// in 'invalidMaterialColor') are opaque
+inline float Surface_getCompositeOpacity(const RayHit &rh, const HitInfo &info)
+{
+#pragma ignore warning(perf)
+  const uniform Material *varying material = info.surface->material;
+  return material == NULL ? 1.f : Surface_getOpacity(rh, info);
+}

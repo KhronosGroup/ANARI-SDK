@@ -1,0 +1,249 @@
+// Copyright 2025-2026 The Khronos Group
+// SPDX-License-Identifier: Apache-2.0
+
+#pragma once
+
+#include "halcyon_attributes.isph"
+#include "halcyon_hitInfo.isph"
+#include "halcyon_objects.isph"
+#include "halcyon_ray.isph"
+
+// Whether 's' is set and valid (materials fall back to their color/opacity
+// otherwise, as helide does)
+inline uniform bool Sampler_isValid(const uniform Sampler *uniform s)
+{
+  return s != NULL && s->sample != NULL;
+}
+
+// Sample of the valid sampler 's' at a surface hit
+inline float4 Sampler_sample(
+    const uniform Sampler *uniform s, const HitInfo &hitInfo, const RayHit &rh)
+{
+  return s->sample(s, hitInfo, rh);
+}
+
+// The sampler's input for an inAttribute value: inTransform * attribute +
+// inOffset
+inline float4 Sampler_mapInput(
+    const uniform Sampler *uniform self, const float4 attribute)
+{
+  return mul(self->inTransform, attribute) + self->inOffset;
+}
+
+// The sampler's input at a hit: inTransform * inAttribute + inOffset
+inline float4 Sampler_getInput(const uniform Sampler *uniform self,
+    const HitInfo &hitInfo,
+    const RayHit &rh)
+{
+  return Sampler_mapInput(
+      self, getAttribute(hitInfo, rh, self->inAttribute));
+}
+
+// A sampled value mapped to the sampler's output: outTransform * v + outOffset
+inline float4 Sampler_applyOutput(const uniform Sampler *uniform self, float4 v)
+{
+  return mul(self->outTransform, v) + self->outOffset;
+}
+
+// Sampling an input ////////////////////////////////////////////////////////
+//
+// What each subtype's hook (scene/surface/material/sampler/Sampler.ispc)
+// computes from the sampler's input, and Sampler_sampleAttribute(), which
+// does the same from an inAttribute value: the one implementation of
+// halcyon's sampling, which the preview renderer reaches through the hooks
+// and the pathtracer's texture system (renderer/pathtracer/
+// HalcyonTextureSystem.*) through Sampler_sampleAttribute().
+
+// Image filtering (helium's getInterpolant()/calculateWrapIndex())
+
+// Adjacent texel indices around a texture coordinate and the blend weight
+// between them
+struct ImageInterpolant
+{
+  int lower;
+  int upper;
+  float frac;
+};
+
+// helium's getInterpolant() with texel centers at (i + 0.5) / size
+inline ImageInterpolant Image_getInterpolant(float coord, uniform int size)
+{
+  const uniform float scale = size;
+  const float lowf = (coord - 0.5f / scale) * scale;
+  ImageInterpolant retval;
+  retval.lower = (int)floor(lowf);
+  retval.upper = retval.lower + 1;
+  retval.frac = lowf - retval.lower;
+  return retval;
+}
+
+// 'repeat' wraps the coordinate into [0, 1) before filtering, as helide does
+inline float Image_wrapCoordinate(float x, uniform WrapMode wrap)
+{
+  return wrap == WRAP_MODE_REPEAT ? fract(x) : x;
+}
+
+// Texel index 'i' wrapped into [0, size). Unlike helium, 'repeat' wraps
+// negative indices correctly for any size (helium's size_t modulo only does
+// for powers of two).
+inline int Image_wrapIndex(int i, uniform int size, uniform WrapMode wrap)
+{
+  switch (wrap) {
+  case WRAP_MODE_REPEAT: {
+#pragma ignore warning(perf)
+    const int r = i % size;
+    return r < 0 ? r + size : r;
+  }
+  case WRAP_MODE_MIRROR_REPEAT: {
+#pragma ignore warning(perf)
+    const int x = abs(i + (i < 0 ? 1 : 0)) % (2 * size);
+    return x >= size ? 2 * size - x - 1 : x;
+  }
+  default:
+    return clamp(i, 0, size - 1);
+  }
+}
+
+// 'linear' blends, 'nearest' picks the closer texel
+inline float4 Image_filter(float4 v0, float4 v1, float frac, uniform bool linear)
+{
+  return linear ? lerp(v0, v1, frac) : (frac < 0.5f ? v0 : v1);
+}
+
+// Texel at (unwrapped) indices x, y, z
+inline float4 Image_texel(const uniform ImageSampler &img, int x, int y, int z)
+{
+  const int64 wx = Image_wrapIndex(x, img.size[0], img.wrapMode[0]);
+  const int64 wy = Image_wrapIndex(y, img.size[1], img.wrapMode[1]);
+  const int64 wz = Image_wrapIndex(z, img.size[2], img.wrapMode[2]);
+  const int64 i = wx + img.size[0] * (wy + img.size[1] * wz);
+#pragma ignore warning(perf)
+  return load_float4(img.texels + 4 * i);
+}
+
+// image1D at input 'coord' (its x)
+inline float4 Image1D_sampleInput(
+    const uniform Sampler *uniform self, const float4 coord)
+{
+  const uniform ImageSampler &img = self->image;
+  const ImageInterpolant ix =
+      Image_getInterpolant(Image_wrapCoordinate(coord.x, img.wrapMode[0]), img.size[0]);
+
+  const float4 v = Image_filter(Image_texel(img, ix.lower, 0, 0),
+      Image_texel(img, ix.upper, 0, 0),
+      ix.frac,
+      img.linearFilter);
+  return Sampler_applyOutput(self, v);
+}
+
+// The filtered texel of 2D image 'img' at 'coord' (its x and y), before any
+// output transform: image2D samplers' and the pathtracer's image files'
+// (HalcyonTextureSystem.ispc)
+inline float4 Image2D_filterAt(
+    const uniform ImageSampler &img, const float4 coord)
+{
+  const uniform bool linear = img.linearFilter;
+  const ImageInterpolant ix =
+      Image_getInterpolant(Image_wrapCoordinate(coord.x, img.wrapMode[0]), img.size[0]);
+  const ImageInterpolant iy =
+      Image_getInterpolant(Image_wrapCoordinate(coord.y, img.wrapMode[1]), img.size[1]);
+
+  const float4 v0 = Image_filter(Image_texel(img, ix.lower, iy.lower, 0),
+      Image_texel(img, ix.lower, iy.upper, 0),
+      iy.frac,
+      linear);
+  const float4 v1 = Image_filter(Image_texel(img, ix.upper, iy.lower, 0),
+      Image_texel(img, ix.upper, iy.upper, 0),
+      iy.frac,
+      linear);
+  return Image_filter(v0, v1, ix.frac, linear);
+}
+
+// image2D at input 'coord' (its x and y)
+inline float4 Image2D_sampleInput(
+    const uniform Sampler *uniform self, const float4 coord)
+{
+  return Sampler_applyOutput(self, Image2D_filterAt(self->image, coord));
+}
+
+// image3D at input 'coord' (its x, y and z)
+inline float4 Image3D_sampleInput(
+    const uniform Sampler *uniform self, const float4 coord)
+{
+  const uniform ImageSampler &img = self->image;
+  const uniform bool linear = img.linearFilter;
+  const ImageInterpolant ix =
+      Image_getInterpolant(Image_wrapCoordinate(coord.x, img.wrapMode[0]), img.size[0]);
+  const ImageInterpolant iy =
+      Image_getInterpolant(Image_wrapCoordinate(coord.y, img.wrapMode[1]), img.size[1]);
+  const ImageInterpolant iz =
+      Image_getInterpolant(Image_wrapCoordinate(coord.z, img.wrapMode[2]), img.size[2]);
+
+  // filter along z, then y, then x (helide's order)
+  const float4 v00 = Image_filter(Image_texel(img, ix.lower, iy.lower, iz.lower),
+      Image_texel(img, ix.lower, iy.lower, iz.upper),
+      iz.frac,
+      linear);
+  const float4 v01 = Image_filter(Image_texel(img, ix.lower, iy.upper, iz.lower),
+      Image_texel(img, ix.lower, iy.upper, iz.upper),
+      iz.frac,
+      linear);
+  const float4 v10 = Image_filter(Image_texel(img, ix.upper, iy.lower, iz.lower),
+      Image_texel(img, ix.upper, iy.lower, iz.upper),
+      iz.frac,
+      linear);
+  const float4 v11 = Image_filter(Image_texel(img, ix.upper, iy.upper, iz.lower),
+      Image_texel(img, ix.upper, iy.upper, iz.upper),
+      iz.frac,
+      linear);
+
+  const float4 v0 = Image_filter(v00, v01, iy.frac, linear);
+  const float4 v1 = Image_filter(v10, v11, iy.frac, linear);
+  return Sampler_applyOutput(self, Image_filter(v0, v1, ix.frac, linear));
+}
+
+// transform: outTransform * input + outOffset (the in-transform is the
+// identity)
+inline float4 Transform_sampleInput(
+    const uniform Sampler *uniform self, const float4 coord)
+{
+  return Sampler_applyOutput(self, coord);
+}
+
+// primitive: the value of primitive index 'primID' (Embree's primID, like
+// helide, not 'primitive.id') plus the offset, clamped to the last value
+inline float4 Primitive_sampleAt(
+    const uniform Sampler *uniform self, const uint32 primID)
+{
+  const uniform PrimitiveSampler &p = self->primitive;
+  const uint64 i = min((uint64)primID + p.offset, p.size - 1);
+#pragma ignore warning(perf)
+  return load_float4(p.values + 4 * i);
+}
+
+// The value of valid sampler 'self' for its inAttribute's value 'attribute'
+// at Embree primitive 'primID': what its hook returns at a hit with that
+// attribute value and primitive
+inline float4 Sampler_sampleAttribute(const uniform Sampler *uniform self,
+    const float4 attribute,
+    const uint32 primID)
+{
+  if (self->kind == SAMPLER_KIND_PRIMITIVE)
+    return Primitive_sampleAt(self, primID);
+  if (self->inAttribute == ATTRIBUTE_NONE)
+    return defaultAttributeValue();
+
+  const float4 coord = Sampler_mapInput(self, attribute);
+  switch (self->kind) {
+  case SAMPLER_KIND_IMAGE1D:
+    return Image1D_sampleInput(self, coord);
+  case SAMPLER_KIND_IMAGE2D:
+    return Image2D_sampleInput(self, coord);
+  case SAMPLER_KIND_IMAGE3D:
+    return Image3D_sampleInput(self, coord);
+  case SAMPLER_KIND_TRANSFORM:
+    return Transform_sampleInput(self, coord);
+  default:
+    return defaultAttributeValue();
+  }
+}

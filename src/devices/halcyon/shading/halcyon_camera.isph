@@ -1,0 +1,65 @@
+// Copyright 2025-2026 The Khronos Group
+// SPDX-License-Identifier: Apache-2.0
+
+#pragma once
+
+#include "halcyon_objects.isph"
+#include "halcyon_ray.isph"
+#include "halcyon_util.isph"
+
+// Screen position of the point at 'offset' (each in [0, 1)) within 'pixel',
+// within the camera's image region; renderers that sample the pixel's area
+// jitter the offset
+inline float2 Camera_screenFromPixel(uniform Camera *uniform c,
+    const int2 &pixel,
+    const float2 offset,
+    const uniform float2 invFbSize)
+{
+  float2 screen = (make_float2(pixel.x, pixel.y) + offset) * invFbSize;
+  screen.x = lerp(c->region[0], c->region[2], screen.x);
+  screen.y = lerp(c->region[1], c->region[3], screen.y);
+  return screen;
+}
+
+// Screen position of the centre of 'pixel' within the camera's image region.
+// helide 0.17 does the same; helide 0.16 and older use the pixel's lower-left
+// corner, so their images are shifted by half a pixel from halcyon's.
+inline float2 Camera_screenFromPixel(uniform Camera *uniform c,
+    const int2 &pixel,
+    const uniform float2 invFbSize)
+{
+  return Camera_screenFromPixel(c, pixel, make_float2(0.5f), invFbSize);
+}
+
+// Primary ray through 'screen' (from Camera_screenFromPixel()). The image
+// plane is scaled to the camera's aspect ratio, or 'frameAspect' if it has
+// none, here rather than in 'screen' so the background stays undistorted.
+inline RayHit Camera_makeRay(uniform Camera *uniform c,
+    const float2 &screen,
+    const uniform float frameAspect)
+{
+  const uniform float aspect = c->hasAspect ? c->aspect : frameAspect;
+  const uniform float height = c->imagePlaneHeight;
+  const uniform float3 du = c->imagePlaneU * (height * aspect);
+  const uniform float3 dv = c->imagePlaneV * height;
+
+  RayHit retval;
+  switch (c->type) {
+  case CAMERA_PERSPECTIVE: {
+    const uniform float3 dir_00 = c->dir - .5f * du - .5f * dv;
+    retval = makeRay((uniform float3)c->pos,
+        normalize(dir_00 + screen.x * du + screen.y * dv));
+    break;
+  }
+  case CAMERA_ORTHOGRAPHIC: {
+    const uniform float3 pos_00 = c->pos - .5f * du - .5f * dv;
+    retval = makeRay(
+        pos_00 + screen.x * du + screen.y * dv, (uniform float3)c->dir);
+    break;
+  }
+  default:
+    break;
+  }
+
+  return retval;
+}

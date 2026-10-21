@@ -1,0 +1,264 @@
+// Copyright 2025-2026 The Khronos Group
+// SPDX-License-Identifier: Apache-2.0
+
+#pragma once
+
+// Helpers the render kernels share (renderer/preview/Preview.ispc for the
+// 'preview' renderer, renderer/pathtracer/PathTracer.ispc for 'quality'):
+// writing the frame's channels, the background (or the visible hdri lights) and the
+// first visible surface.
+
+#include "halcyon_attributes.isph"
+#include "halcyon_getSurfaceColor.isph"
+#include "halcyon_hdri.isph"
+#include "halcyon_util.isph"
+#include "halcyon_volume.isph"
+
+// Frame channels /////////////////////////////////////////////////////////////
+
+inline void writeColor_ufixed8_srgb(
+    uniform Frame *uniform frame, int i, float4 color)
+{
+  uniform uint *uniform result = (uniform uint * uniform) frame->color;
+#pragma ignore warning(perf)
+  result[i] = cvt_uint_srgb(color);
+}
+
+inline void writeColor_ufixed8(
+    uniform Frame *uniform frame, int i, float4 color)
+{
+  uniform uint *uniform result = (uniform uint * uniform) frame->color;
+#pragma ignore warning(perf)
+  result[i] = cvt_uint(color);
+}
+
+inline void writeColor_float(uniform Frame *uniform frame, int i, float4 color)
+{
+  uniform float4 *uniform result = (uniform float4 * uniform) frame->color;
+#pragma ignore warning(perf)
+  result[i] = color;
+}
+
+inline void writeColor(uniform Frame *uniform frame, int i, float4 color)
+{
+  switch (frame->colorFormat) {
+  case ANARI_FLOAT32_VEC4:
+    writeColor_float(frame, i, color);
+    break;
+  case ANARI_UFIXED8_VEC4:
+    writeColor_ufixed8(frame, i, color);
+    break;
+  case ANARI_UFIXED8_RGBA_SRGB:
+    writeColor_ufixed8_srgb(frame, i, color);
+    break;
+  default:
+    break;
+  }
+}
+
+// Writes the depth and id channels the frame has of pixel 'i'
+inline void writeDepthAndIds(
+    uniform Frame *uniform frame, int i, float depth, const HitInfo &hitInfo)
+{
+  if (frame->depth)
+    frame->depth[i] = depth;
+  if (frame->primId)
+    frame->primId[i] = hitInfo.primId;
+  if (frame->objId)
+    frame->objId[i] = hitInfo.objId;
+  if (frame->instId)
+    frame->instId[i] = hitInfo.instId;
+}
+
+// Element 'i' of a packed float3 buffer
+inline float3 loadPackedFloat3(const uniform float *uniform buffer, int i)
+{
+#pragma ignore warning(perf)
+  return make_float3(buffer[3 * i], buffer[3 * i + 1], buffer[3 * i + 2]);
+}
+
+inline void storePackedFloat3(uniform float *uniform buffer, int i, float3 v)
+{
+#pragma ignore warning(perf)
+  buffer[3 * i] = v.x;
+#pragma ignore warning(perf)
+  buffer[3 * i + 1] = v.y;
+#pragma ignore warning(perf)
+  buffer[3 * i + 2] = v.z;
+}
+
+// Writes the albedo channel of pixel 'i', if the frame has one, in its pixel
+// type: FLOAT32_VEC3, UFIXED8_VEC3 (rounded to the nearest code, as color)
+// or UFIXED8_RGB_SRGB (the exact sRGB curve, as color)
+inline void writeAlbedo(uniform Frame *uniform frame, int i, float3 albedo)
+{
+  if (!frame->albedo)
+    return;
+  switch (frame->albedoFormat) {
+  case ANARI_FLOAT32_VEC3:
+    storePackedFloat3((uniform float *uniform)frame->albedo, i, albedo);
+    break;
+  case ANARI_UFIXED8_VEC3:
+  case ANARI_UFIXED8_RGB_SRGB: {
+    if (frame->albedoFormat == ANARI_UFIXED8_RGB_SRGB) {
+      albedo = make_float3(
+          to_SRGB(albedo.x), to_SRGB(albedo.y), to_SRGB(albedo.z));
+    }
+    uniform uint8 *uniform out = (uniform uint8 * uniform) frame->albedo;
+#pragma ignore warning(perf)
+    out[3 * i] = (uint8)cvt_uint(albedo.x);
+#pragma ignore warning(perf)
+    out[3 * i + 1] = (uint8)cvt_uint(albedo.y);
+#pragma ignore warning(perf)
+    out[3 * i + 2] = (uint8)cvt_uint(albedo.z);
+    break;
+  }
+  default:
+    break;
+  }
+}
+
+// FIXED16 code of 'v' in [-1, 1] (clamped), rounded to the nearest
+inline int16 cvt_fixed16(float v)
+{
+  const float s = 32767.f * clamp(v, -1.f, 1.f);
+#pragma ignore warning
+  return (int16)(s < 0.f ? s - 0.5f : s + 0.5f);
+}
+
+// Writes the normal channel of pixel 'i', if the frame has one, in its pixel
+// type: FLOAT32_VEC3 or FIXED16_VEC3 (each component in [-1, 1] times 32767)
+inline void writeNormal(uniform Frame *uniform frame, int i, float3 normal)
+{
+  if (!frame->normal)
+    return;
+  switch (frame->normalFormat) {
+  case ANARI_FLOAT32_VEC3:
+    storePackedFloat3((uniform float *uniform)frame->normal, i, normal);
+    break;
+  case ANARI_FIXED16_VEC3: {
+    uniform int16 *uniform out = (uniform int16 * uniform) frame->normal;
+#pragma ignore warning(perf)
+    out[3 * i] = cvt_fixed16(normal.x);
+#pragma ignore warning(perf)
+    out[3 * i + 1] = cvt_fixed16(normal.y);
+#pragma ignore warning(perf)
+    out[3 * i + 2] = cvt_fixed16(normal.z);
+    break;
+  }
+  default:
+    break;
+  }
+}
+
+// Writes every channel of pixel 'i' for a renderer that doesn't accumulate
+inline void writeOutputs(uniform Frame *uniform frame,
+    int i,
+    float4 color,
+    float depth,
+    const HitInfo &hitInfo)
+{
+  writeColor(frame, i, color);
+  writeDepthAndIds(frame, i, depth, hitInfo);
+}
+
+// Geometry /////////////////////////////////////////////////////////////////
+
+// World-space geometric normal of a hit, unnormalized
+inline float3 worldNg(const RayHit &rh, const HitInfo &hitInfo)
+{
+  return xfmNormalToWorld(hitInfo, rh.hit.Ng);
+}
+
+// Background ///////////////////////////////////////////////////////////////
+
+inline float4 backgroundTexel(const uniform Renderer *uniform r, int x, int y)
+{
+  const uniform int2 size = r->backgroundImageSize;
+  x = clamp(x, 0, size.x - 1);
+  y = clamp(y, 0, size.y - 1);
+#pragma ignore warning(perf)
+  return load_float4(r->backgroundImage + 4 * (y * size.x + x));
+}
+
+// Background at 'screen' (region-mapped): the image bilinearly interpolated
+// between texel centers with clamped edges, as helide's
+// backgroundColorFromImage(), or else the background color
+inline float4 background(const uniform Renderer *uniform r, float2 screen)
+{
+  if (!r->backgroundImage)
+    return r->background;
+
+  const float2 f = screen * make_float2(r->backgroundImageSize.x, r->backgroundImageSize.y) - 0.5f;
+  const float2 lo = floor(f);
+  const float2 t = f - lo;
+  const int x = (int)lo.x;
+  const int y = (int)lo.y;
+
+  const float4 v0 =
+      lerp(backgroundTexel(r, x, y), backgroundTexel(r, x, y + 1), t.y);
+  const float4 v1 = lerp(
+      backgroundTexel(r, x + 1, y), backgroundTexel(r, x + 1, y + 1), t.y);
+  return lerp(v0, v1, t.x);
+}
+
+// What a camera ray through 'screen' along 'dir' that misses the scene
+// shows, in both renderers: the sum of the 'visible' hdri lights, opaque
+// (alpha 1), else the background (background()). The 'preview' renderer
+// isn't lit by the hdris; it only shows them here.
+inline float4 missColor(const uniform Renderer *uniform r,
+    const uniform World *uniform world,
+    float2 screen,
+    float3 dir)
+{
+  float3 radiance;
+  if (visibleHdris(world, dir, radiance))
+    return make_float4(radiance, 1.f);
+  return background(r, screen);
+}
+
+// First visible surface ////////////////////////////////////////////////////
+
+// Traces the primary ray 'rh' to its first visible surface (see CONTEXT.md):
+// the first surface with an opacity above 0 (Surface_getCompositeOpacity()),
+// going on through volumes and surfaces with none (mask cut-outs). Returns
+// whether there is one; 'rh' and 'surface' then hold its hit (distance
+// 'rh.ray.tfar'), or the miss. 'depth' and 'ids' describe the visible hit
+// (see CONTEXT.md): the first volume entered in front of that surface, else
+// the surface (HALCYON_RAY_TFAR and the miss ids for a miss). renderDefault()
+// in renderer/preview/Preview.ispc finds the same hits while it composites.
+inline bool traceFirstVisibleSurface(const uniform World *uniform world,
+    RayHit &rh,
+    HitInfo &surface,
+    float &depth,
+    HitInfo &ids)
+{
+  depth = HALCYON_RAY_TFAR;
+  bool volumeSeen = false;
+
+  while (true) {
+    rtcIntersectV(world->scene, (varying RTCRayHit * uniform) & rh);
+    surface = getHitInfo(world, rh);
+    // the miss ids unless a visible hit follows
+    if (!volumeSeen) {
+      ids = surface;
+      // a volume entered in front of the surface hit is the visible hit
+      const VolumeHit vh = intersectVolumes(world, rh);
+      if (foundHit(vh)) {
+        volumeSeen = true;
+        depth = vh.tLower;
+        setVolumeIds(ids, vh);
+      }
+    }
+
+    if (!foundHit(surface))
+      return false;
+
+    if (Surface_getCompositeOpacity(rh, surface) > 0.f) {
+      if (!volumeSeen)
+        depth = rh.ray.tfar;
+      return true;
+    }
+    continuePastHit(rh);
+  }
+}

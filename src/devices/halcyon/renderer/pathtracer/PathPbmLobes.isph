@@ -1,0 +1,1323 @@
+// Copyright 2026 The Khronos Group
+// SPDX-License-Identifier: LicenseRef-TOST-1.0
+//
+// Ported from Typhoon (NVIDIA-Omniverse/OpenUSD typhoon/main at 70c45e83b,
+// pxr/imaging/plugin/hdEmbree/renderer/materials/MaterialXCpp/: EvalGltfPbr()
+// of materials/gltfPbr.cpp; the closure tree traversal of
+// materials/bsdf/closureTraversal.cpp (_EvalNode(), _EvalThroughput(),
+// _ApproxWeight(), PdfNode(), SampleNode(), _FinalizeSubtreeSample(),
+// PruneCausticClassLobes(), PrepareShadingNormals()) and graph.cpp's
+// ResolveGraphNormal() and ValidateLeafNormals(); SampleSurface(),
+// SampleLambertian(), SampleGGXSpecular(), PdfGGXSpecular(),
+// Eval/Pdf/SampleGGXTransmission(), EvalSheen() and
+// StraightShadowDielectricTransmission() of materials/bsdf.cpp;
+// materials/bsdf/microfacet.h and microfacet.cpp (GGX, VNDF sampling,
+// EnsureValidSpecularReflection(), bump shadowing), fresnel.h,
+// reflectionOnlyInterfaces.cpp and dielectric.h/.cpp (generalized Schlick and
+// dielectric Fresnel, delta reflection, delta transmission and total
+// internal reflection, transmission scale), sheen.h, energyCompensation.cpp
+// (LookupGgxMissingEnergy(), TurquinMicrofacetMsScale(),
+// LayerThroughputReflectance(), LookupBsdlDielectricReflFrontFilter(),
+// reading ggxEnergyLut.h's and dielectricReflFrontLut.h's tables in place,
+// see PathPbmTables.cpp), shadingFrame.h and mathPrimitives.h; and the
+// normal map node of nodes/geometricNodes.cpp), Copyright 2024-2026 Pixar,
+// Tomorrow Open Source Technology License 1.0; see
+// external/typhoon/LICENSE.txt. Also follows halcyon's own ClosureAlbedo.cpp
+// and ClosureClassification.cpp for this closure. Keep in step with those when
+// the pin in external/typhoon/PROVENANCE.md moves.
+
+#pragma once
+
+// MATERIAL_KIND_PHYSICALLY_BASED's closure and lobes (PathPbm.ispc shades
+// with them; test_path_pbm checks them). The physicallyBased material
+// natively is what the C++ path computes for its MaterialXCpp graph
+// (MaterialConverter.cpp's physicallyBasedGraph(): one
+// ND_gltf_pbr_surfaceshader) through PathMaterial.cpp, for the parameter sets
+// MaterialConverter.h's nativePhysicallyBasedCovers() admits: no thin film.
+// EvalGltfPbr() then builds
+//
+//   root  = layer(clearcoat, sheen) where the clearcoat is on, else sheen
+//   sheen = layer(sheen, base) where the sheen is on, else base
+//   base  = mix(layer(dielectric reflection,
+//                     mix(diffuse, transmission, clamp01(transmission))),
+//               metal, clamp01(metallic))
+//
+// with the diffuse lobe an Oren-Nayar of roughness 0 (Lambertian) in
+// 'baseColor'; the dielectric reflection and the metal generalized Schlick
+// GGX lobes (colour82 1, exponent 5, isotropic: anisotropy 0) of colours
+// specularF0/specularF90 and baseColor/1; the transmission a GGX dielectric
+// of tint baseColor and IOR max(ior, 1), refracting from the side the ray
+// arrives on (PathPbmState::backside); the sheen Charlie's of its colour
+// (normalized by its weight, the largest component) and roughness squared;
+// the clearcoat a dielectric GGX reflection of IOR 1.5, its weight and
+// roughness squared. Where the transmission's weight is 0, the transmission
+// mix is the diffuse lobe exactly (each of its sums adds the transmission's
+// finite value times 0), so the transmission isn't evaluated there. Caustic
+// pruning removes the transmission and delta lobes (alpha below 1e-3), and a
+// node that loses a child leaves the other: a mix's weighed by its share, a
+// layer's alone (PathPbmState::diffuseNode, layerNode, baseNode, parts).
+//
+// The base's and the sheen's lobes take the graph's normal: the smooth
+// normal, or with a normal map PathPbm.ispc's PathPbm_graphNormal(). The
+// clearcoat has its own where a normal map is set ('clearcoatNormal''s, or
+// the unperturbed normal). Bump shadowing compares each lobe's normal with
+// the smooth one (PathPbmState::smoothN).
+//
+// The colour and opacity are PathShadeInput::baseColor and baseOpacity (as
+// for native matte), the rest PathShadeInput::pbm (PathTracer.ispc's
+// nativeInputs() resolves both as the graph's inputs). The same numbers
+// as the C++ path, bit for bit: PathPbm.ispc (and test_path_pbm.ispc) are
+// built without fused multiply-adds, as x86-64 compilers build the C++, and
+// with the system's math library, whose cosf(), sinf() and powf() the C++
+// calls too (ISPC's own differ in the last bits, which sharp GGX lobes turn
+// into visible differences). The BSDL layer filter assumes the default
+// dielectric layer throughput mode (Bsdf::DielectricLayerThroughputMode::Bsdl;
+// nothing in halcyon sets another). test_path_material compares the two point
+// by point, test_path_pbm the lobes' math with the vendored C++,
+// test_native_materials image by image.
+
+// mxcpp's constants (microfacet.h, mathPrimitives.h, energyCompensation.cpp)
+#define PATH_PBM_MIN_ALPHA 1.0e-6f
+#define PATH_PBM_DELTA_ALPHA 1.0e-3f
+#define PATH_PBM_TURQUIN_MIN_ALPHA (0.04f * 0.04f)
+#define PATH_PBM_MIN_APPROX_WEIGHT 0.05f
+// ClosureClassification.cpp's threshold for an effectively opaque closure
+#define PATH_PBM_OPAQUE (1.f - 1.0e-6f)
+// ggxEnergyLut.h's table size, both axes
+#define PATH_PBM_GGX_ENERGY_SIZE 16
+
+// ggxEnergyLut.h's kGgxEnergyCosTheta and kGgxMissingEnergy (row-major, alpha
+// rows), and dielectricReflFrontLut.h's kBsdlDielectricReflFrontFilter (ior,
+// roughness, cosine), the vendored tables themselves (PathPbmTables.cpp)
+extern const uniform float *uniform PathPbm_ggxEnergyCosThetaTable;
+extern const uniform float *uniform PathPbm_ggxMissingEnergyTable;
+extern const uniform float *uniform PathPbm_dielectricReflFrontTable;
+// dielectricReflFrontLut.h's sizes, and energyCompensation.h's IOR domain
+#define PATH_PBM_REFL_FRONT_IORS 32
+#define PATH_PBM_REFL_FRONT_ROUGHNESSES 16
+#define PATH_PBM_REFL_FRONT_COSINES 16
+#define PATH_PBM_BSDL_IOR_MIN 1.001f
+#define PATH_PBM_BSDL_IOR_MAX 5.0f
+
+// Vector helpers, as Imath's ///////////////////////////////////////////////////
+
+inline float3 PathPbm_cross(float3 a, float3 b)
+{
+  return make_float3(
+      a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x);
+}
+
+inline float PathPbm_length(float3 v)
+{
+  return sqrt(PathMatte_dot(v, v));
+}
+
+// Imath's normalized(): divided by its length, 0 for a zero vector
+inline float3 PathPbm_normalized(float3 v)
+{
+  const float l = PathPbm_length(v);
+  return l == 0.f ? make_float3(0.f) : make_float3(v.x / l, v.y / l, v.z / l);
+}
+
+inline bool PathPbm_equal(float3 a, float3 b)
+{
+  return a.x == b.x && a.y == b.y && a.z == b.z;
+}
+
+inline float PathPbm_clamp01(float x)
+{
+  return clamp(x, 0.f, 1.f);
+}
+
+inline float3 PathPbm_clamp01(float3 v)
+{
+  return make_float3(
+      PathPbm_clamp01(v.x), PathPbm_clamp01(v.y), PathPbm_clamp01(v.z));
+}
+
+// ClosureAlbedo.cpp's clamp01(): 0 where not finite
+inline float3 PathPbm_clampFinite01(float3 v)
+{
+  return make_float3(isfinite(v.x) ? PathPbm_clamp01(v.x) : 0.f,
+      isfinite(v.y) ? PathPbm_clamp01(v.y) : 0.f,
+      isfinite(v.z) ? PathPbm_clamp01(v.z) : 0.f);
+}
+
+// LerpVec(): a * (1 - t) + b * t
+inline float3 PathPbm_lerp(float3 a, float3 b, float t)
+{
+  return a * (1.f - t) + b * t;
+}
+
+inline float PathPbm_luminance(
+    const uniform PathMaterialContext *uniform context, float3 c)
+{
+  return context->luminance[0] * c.x + context->luminance[1] * c.y
+      + context->luminance[2] * c.z;
+}
+
+// Frame::FromNormal(): a right-handed frame around unit 'n'
+struct PathPbmFrame
+{
+  float3 t;
+  float3 b;
+  float3 n;
+};
+
+inline PathPbmFrame PathPbm_frame(float3 n)
+{
+  PathPbmFrame f;
+  f.n = n;
+  const float3 helper = abs(n.x) < 0.9f ? make_float3(1.f, 0.f, 0.f)
+                                        : make_float3(0.f, 1.f, 0.f);
+  f.t = PathPbm_normalized(PathPbm_cross(n, helper));
+  f.b = PathPbm_cross(n, f.t);
+  return f;
+}
+
+inline float3 PathPbm_toLocal(const PathPbmFrame &f, float3 d)
+{
+  return make_float3(
+      PathMatte_dot(d, f.t), PathMatte_dot(d, f.b), PathMatte_dot(d, f.n));
+}
+
+inline float3 PathPbm_toWorld(const PathPbmFrame &f, float3 l)
+{
+  return f.t * l.x + f.b * l.y + f.n * l.z;
+}
+
+// GGX (microfacet.h) /////////////////////////////////////////////////////////
+
+// Perceptual roughness to alpha, roughness clamped to [0.001, 1]
+inline float PathPbm_roughnessToAlpha(float roughness)
+{
+  const float r = clamp(roughness, 0.001f, 1.f);
+  return r * r;
+}
+
+// AverageAlphaForEnergy() of an isotropic alpha
+inline float PathPbm_alphaForEnergy(float alpha)
+{
+  const float a = clamp(alpha, PATH_PBM_MIN_ALPHA, 1.f);
+  return sqrt(a * a);
+}
+
+// RoughnessToAlpha(AverageAlphaAsRoughness()): the alpha the isotropic
+// sampler and pdf (bsdf.cpp) use
+inline float PathPbm_samplingAlpha(float alpha)
+{
+  return PathPbm_roughnessToAlpha(sqrt(PathPbm_alphaForEnergy(alpha)));
+}
+
+inline float PathPbm_ggxD(float alpha, float NdotH)
+{
+  const float a = clamp(alpha, PATH_PBM_MIN_ALPHA, 1.f);
+  const float n = clamp(NdotH, 0.f, 1.f);
+  const float a2 = a * a;
+  const float n2 = n * n;
+  const float denom = (1.f - n2) + a2 * n2;
+  const float denom2 = denom * denom;
+  if (!isfinite(denom2) || denom2 <= 0.f)
+    return 0.f;
+  return a2 / (PATH_MATTE_PI * denom2);
+}
+
+// Height-correlated Smith G2 (GGX_G() of GGX_V())
+inline float PathPbm_ggxG(float alpha, float NdotV, float NdotL)
+{
+  const float a2 = alpha * alpha;
+  const float ggxV = NdotL * sqrt(NdotV * NdotV * (1.f - a2) + a2);
+  const float ggxL = NdotV * sqrt(NdotL * NdotL * (1.f - a2) + a2);
+  const float V = 0.5f / (ggxV + ggxL + PATH_MATTE_EPSILON);
+  return max(4.f * NdotV * NdotL * V, 0.f);
+}
+
+// SampleGGX_VNDF(): a visible normal of the isotropic GGX distribution around
+// local z for local 'wo' (z > 0)
+inline float3 PathPbm_sampleVndf(float3 wo, float alpha, float u1, float u2)
+{
+  float3 wh = make_float3(alpha * wo.x, alpha * wo.y, wo.z);
+  const float whLen = PathPbm_length(wh);
+  if (whLen < PATH_MATTE_EPSILON)
+    return make_float3(0.f, 0.f, 1.f);
+  wh = make_float3(wh.x / whLen, wh.y / whLen, wh.z / whLen);
+  if (wh.z < 0.f)
+    wh = make_float3(-wh.x, -wh.y, -wh.z);
+
+  const float3 T1 = wh.z < 0.99999f
+      ? PathPbm_normalized(PathPbm_cross(make_float3(0.f, 0.f, 1.f), wh))
+      : make_float3(1.f, 0.f, 0.f);
+  const float3 T2 = PathPbm_cross(wh, T1);
+
+  const float r = sqrt(u1);
+  const float phi = 2.f * PATH_MATTE_PI * u2;
+  const float t1 = r * cos(phi);
+  float t2 = r * sin(phi);
+  const float h = sqrt(max(0.f, 1.f - t1 * t1));
+  const float blend = (1.f + wh.z) * 0.5f;
+  t2 = (1.f - blend) * h + blend * t2;
+  const float pz = sqrt(max(0.f, 1.f - t1 * t1 - t2 * t2));
+  const float3 nh = T1 * t1 + T2 * t2 + wh * pz;
+  return PathPbm_normalized(
+      make_float3(alpha * nh.x, alpha * nh.y, max(1e-6f, nh.z)));
+}
+
+// PdfGGX_VNDF(): the reflection's solid-angle density of visible normal 'wm'
+inline float PathPbm_pdfVndf(float3 wo, float3 wm, float alpha)
+{
+  const float cosThetaO = max(wo.z, PATH_MATTE_EPSILON);
+  const float G1 = PathMatte_smithG1(alpha, cosThetaO);
+  const float NdotH = max(wm.z, 0.f);
+  const float VdotH = max(PathMatte_dot(wo, wm), PATH_MATTE_EPSILON);
+  const float D = PathPbm_ggxD(alpha, NdotH);
+  const float pdfWm = G1 * D * VdotH / cosThetaO;
+  return pdfWm / (4.f * VdotH);
+}
+
+// EnsureValidSpecularReflection(): 'n' raised towards 'Ng' where the mirror
+// direction of 'wo' would be below the geometric surface
+inline float3 PathPbm_validSpecularNormal(float3 Ng, float3 wo, float3 n)
+{
+  const float3 reflected = n * (2.f * PathMatte_dot(n, wo)) - wo;
+  const float woDotGeom = max(PathMatte_dot(wo, Ng), 0.f);
+  const float threshold = min(0.9f * woDotGeom, 0.01f);
+  if (PathMatte_dot(Ng, reflected) >= threshold)
+    return n;
+
+  float3 tangent = n - Ng * PathMatte_dot(n, Ng);
+  const float tangentLength = PathPbm_length(tangent);
+  if (!isfinite(tangentLength) || tangentLength <= PATH_MATTE_EPSILON)
+    return n;
+  tangent = make_float3(tangent.x / tangentLength,
+      tangent.y / tangentLength,
+      tangent.z / tangentLength);
+  const float woDotTangent = PathMatte_dot(wo, tangent);
+  const float qa = woDotTangent * woDotTangent + woDotGeom * woDotGeom;
+  if (qa <= PATH_MATTE_EPSILON)
+    return n;
+  const float qb = 2.f * (qa + woDotGeom * threshold);
+  const float qc = (threshold + woDotGeom) * (threshold + woDotGeom);
+  const float discriminant = max(qb * qb - 4.f * qa * qc, 0.f);
+  const float root = sqrt(discriminant);
+  const float geomSquared =
+      0.25f * (woDotTangent < 0.f ? qb + root : qb - root) / qa;
+  const float geomComponent = sqrt(max(geomSquared, 0.f));
+  const float tangentComponent = sqrt(max(1.f - geomSquared, 0.f));
+  return tangent * tangentComponent + Ng * geomComponent;
+}
+
+// BumpShadowingTerm() of a glossy (not diffuse-family) lobe: evaluation
+// rejects directions on different sides in the lobe's and the smooth frame,
+// sampling doesn't
+inline float PathPbm_glossyBumpShadowing(
+    float3 Nsrf, float3 lobeN, float3 wi, uniform bool sampling)
+{
+  if (sampling || PathPbm_equal(Nsrf, lobeN))
+    return 1.f;
+  return PathMatte_dot(Nsrf, wi) * PathMatte_dot(Nsrf, lobeN)
+              * PathMatte_dot(lobeN, wi)
+          >= 0.f
+      ? 1.f
+      : 0.f;
+}
+
+// Fresnel and energy compensation ////////////////////////////////////////////
+
+// GeneralizedSchlickFresnel() with colour82 1 and exponent 5, which
+// EvalGltfPbr()'s two lobes have: the 82-degree correction is 0 times a
+// finite value, so the result is max(lerp(F0, F90, (1 - cos)^5), 0)
+inline float3 PathPbm_schlick(float3 F0, float3 F90, float cosTheta)
+{
+  const float x = PathPbm_clamp01(cosTheta);
+  const float oneMinusX = PathPbm_clamp01(1.f - x);
+  const float3 r = PathPbm_lerp(F0, F90, pow(oneMinusX, 5.f));
+  return make_float3(max(r.x, 0.f), max(r.y, 0.f), max(r.z, 0.f));
+}
+
+// The clearcoat's IOR (EvalGltfPbr()'s)
+#define PATH_PBM_COAT_IOR 1.5f
+
+// A dielectric's normal-incidence reflectance (DielectricReflectionFresnel-
+// Untinted()'s F0)
+inline float PathPbm_dielectricF0(float ior)
+{
+  float F0 = (ior - 1.f) / (ior + 1.f);
+  F0 *= F0;
+  return F0;
+}
+
+// SchlickFresnel(): F0 + (1 - F0) (1 - cos)^5, the clearcoat's Fresnel (no
+// thin film, tint 1)
+inline float3 PathPbm_dielectricSchlick(float3 F0, float cosTheta)
+{
+  const float t = 1.f - cosTheta;
+  const float t2 = t * t;
+  const float t5 = t2 * t2 * t;
+  return F0 + (make_float3(1.f) - F0) * t5;
+}
+
+// ReflectionFresnelCosTheta(): the reflection half vector's cosine with wo
+inline float PathPbm_reflectionCosTheta(float3 wi, float3 wo)
+{
+  const float3 h = wi + wo;
+  if (PathPbm_length(h) < PATH_MATTE_EPSILON)
+    return 1.f;
+  return max(PathMatte_dot(wo, PathPbm_normalized(h)), 0.f);
+}
+
+// LookupGgxMissingEnergy(): the directional single-scatter energy GGX misses
+// at 'cosTheta' and 'alpha', bilinear in the vendored table
+inline float PathPbm_ggxMissingEnergy(float cosTheta, float alpha)
+{
+  const uniform int N = PATH_PBM_GGX_ENERGY_SIZE;
+  const uniform float *uniform cosAxis = PathPbm_ggxEnergyCosThetaTable;
+  const uniform float *uniform table = PathPbm_ggxMissingEnergyTable;
+  const float c = PathPbm_clamp01(cosTheta);
+  const float a = PathPbm_clamp01(alpha);
+
+  const float alphaCoord = sqrt(a) * (float)(N - 1);
+  const int alpha0 = clamp((int)alphaCoord, 0, N - 1);
+  const int alpha1 = min(alpha0 + 1, N - 1);
+  const float alphaT = alphaCoord - (float)alpha0;
+
+  int cos0 = 0;
+#pragma ignore warning(perf)
+  while (cos0 + 1 < N && c > cosAxis[cos0 + 1])
+    ++cos0;
+  const int cos1 = min(cos0 + 1, N - 1);
+#pragma ignore warning(perf)
+  const float c0 = cosAxis[cos0];
+#pragma ignore warning(perf)
+  const float c1 = cosAxis[cos1];
+  const float cosT = clamp((c - c0) / max(c1 - c0, PATH_MATTE_EPSILON), 0.f, 1.f);
+
+#pragma ignore warning(perf)
+  const float e00 = table[alpha0 * N + cos0];
+#pragma ignore warning(perf)
+  const float e01 = table[alpha0 * N + cos1];
+#pragma ignore warning(perf)
+  const float e10 = table[alpha1 * N + cos0];
+#pragma ignore warning(perf)
+  const float e11 = table[alpha1 * N + cos1];
+  const float e0 = e00 * (1.f - cosT) + e01 * cosT;
+  const float e1 = e10 * (1.f - cosT) + e11 * cosT;
+  return PathPbm_clamp01(e0 * (1.f - alphaT) + e1 * alphaT);
+}
+
+// TurquinMicrofacetMsScale()'s missing / single-scatter energy at 'cosThetaO'
+// (the scale is 1 + clamp01(F) times it), 0 below its roughness threshold
+inline float PathPbm_missingToSingle(float alpha, float cosThetaO)
+{
+  if (alpha < PATH_PBM_TURQUIN_MIN_ALPHA)
+    return 0.f;
+  const float missing = PathPbm_ggxMissingEnergy(cosThetaO, alpha);
+  return missing / max(0.01f, 1.f - missing);
+}
+
+// LayerThroughputReflectance(): the reflectance a layer's glossy top takes
+// from what reaches its base
+inline float3 PathPbm_layerReflectance(
+    float alpha, float cosThetaO, float3 fresnel)
+{
+  const float3 F = PathPbm_clamp01(fresnel);
+  if (alpha < PATH_PBM_TURQUIN_MIN_ALPHA)
+    return F;
+  const float missing = PathPbm_ggxMissingEnergy(cosThetaO, alpha);
+  return PathPbm_clamp01(F * (1.f - missing) + F * F * missing);
+}
+
+// BSDL's reflection-only dielectric layer filter (energyCompensation.cpp's
+// LookupBsdlDielectricReflFrontFilter(), reading the vendored
+// dielectricReflFrontLut.h in place): what a rough dielectric top lets
+// through to its base at 'cosTheta'
+inline float PathPbm_dielectricReflFrontFilter(
+    float cosTheta, float perceptualRoughness, float ior)
+{
+  const uniform int NI = PATH_PBM_REFL_FRONT_IORS;
+  const uniform int NR = PATH_PBM_REFL_FRONT_ROUGHNESSES;
+  const uniform int NC = PATH_PBM_REFL_FRONT_COSINES;
+  const uniform float *uniform table = PathPbm_dielectricReflFrontTable;
+  const float c = PathPbm_clamp01(cosTheta);
+  const float roughness = PathPbm_clamp01(perceptualRoughness);
+  const float clampedIor =
+      clamp(ior, PATH_PBM_BSDL_IOR_MIN, PATH_PBM_BSDL_IOR_MAX);
+
+  const float iorIndex = sqrt((clampedIor - PATH_PBM_BSDL_IOR_MIN)
+      / (PATH_PBM_BSDL_IOR_MAX - PATH_PBM_BSDL_IOR_MIN));
+  const float iorCoord = iorIndex * (float)(NI - 1);
+  const int ior0 = clamp((int)iorCoord, 0, NI - 1);
+  const int ior1 = min(ior0 + 1, NI - 1);
+  const float iorT = iorCoord - (float)ior0;
+
+  const float roughnessCoord = roughness * (float)(NR - 1);
+  const int r0 = clamp((int)roughnessCoord, 0, NR - 1);
+  const int r1 = min(r0 + 1, NR - 1);
+  const float roughnessT = roughnessCoord - (float)r0;
+
+  // the cosine axis: max(i / (NC - 1), 1e-6)
+  int cos0 = 0;
+  int cos1 = 0;
+  float cosT = 0.f;
+  float prevCos = max(0.f / (float)(NC - 1), 1.0e-6f);
+  if (c > prevCos) {
+    cos0 = NC - 1;
+    cos1 = cos0;
+    bool found = false;
+    for (uniform int i = 1; i < NC; i++) {
+      const float nextCos = max((float)i / (float)(NC - 1), 1.0e-6f);
+      if (!found && c < nextCos) {
+        cos0 = i - 1;
+        cos1 = i;
+        cosT = (c - prevCos) / (nextCos - prevCos);
+        found = true;
+      }
+      if (!found)
+        prevCos = nextCos;
+    }
+  }
+
+  float v[2][2][2];
+  const int iors[2] = {ior0, ior1};
+  const int rs[2] = {r0, r1};
+  const int cs[2] = {cos0, cos1};
+  for (uniform int a = 0; a < 2; a++) {
+    for (uniform int b = 0; b < 2; b++) {
+      for (uniform int k = 0; k < 2; k++) {
+#pragma ignore warning(perf)
+        v[a][b][k] = table[(iors[a] * NR + rs[b]) * NC + cs[k]];
+      }
+    }
+  }
+  float byRoughness[2];
+  for (uniform int a = 0; a < 2; a++) {
+    const float lerp0 = v[a][0][0] * (1.f - cosT) + v[a][0][1] * cosT;
+    const float lerp1 = v[a][1][0] * (1.f - cosT) + v[a][1][1] * cosT;
+    byRoughness[a] = lerp0 * (1.f - roughnessT) + lerp1 * roughnessT;
+  }
+  return PathPbm_clamp01(
+      byRoughness[0] * (1.f - iorT) + byRoughness[1] * iorT);
+}
+
+// BsdlLayerRoughnessFromAlpha() of an isotropic alpha
+inline float PathPbm_bsdlLayerRoughness(float alpha)
+{
+  const float a = clamp(alpha, PATH_PBM_MIN_ALPHA, 1.f);
+  return sqrt((a + a) * 0.5f);
+}
+
+// Sheen (sheen.h): the Charlie distribution, Ashikhmin's visibility and the
+// directional albedo fit
+inline float PathPbm_charlieD(float alpha, float NdotH)
+{
+  const float sinTheta2 = 1.f - NdotH * NdotH;
+  const float sinTheta = sqrt(max(0.f, sinTheta2));
+  const float invAlpha = 1.f / max(alpha, PATH_MATTE_EPSILON);
+  return (2.f + invAlpha) * pow(sinTheta, invAlpha) * PATH_MATTE_INV_PI * 0.5f;
+}
+
+inline float PathPbm_ashikhminV(float NdotV, float NdotL)
+{
+  return 1.f / (4.f * (NdotL + NdotV - NdotL * NdotV) + PATH_MATTE_EPSILON);
+}
+
+inline float PathPbm_sheenDirAlbedo(float NdotV, float roughness)
+{
+  const float x = NdotV;
+  const float y = roughness;
+  const float numerator = 13.67300f + (-68.78018f * x) + (799.08825f * y)
+      + (-905.00061f * x * y) + (60.28956f * x * x) + (1086.96473f * y * y);
+  const float denominator = 1.f + (61.57746f * x) + (442.78211f * y)
+      + (2597.49308f * x * y) + (121.81241f * x * x) + (3045.55075f * y * y);
+  return PathPbm_clamp01(numerator / (denominator + PATH_MATTE_EPSILON));
+}
+
+// Lobes //////////////////////////////////////////////////////////////////////
+
+// A GGX reflection lobe: the base's dielectric reflection and metal
+// (generalized Schlick, colours F0 to F90) or the clearcoat (a dielectric,
+// Schlick's F0 to 1); its normal (prepared), GGX alpha, weight and Turquin's
+// missing / single-scatter energy at wo (PathPbm_missingToSingle())
+struct PathPbmGlossy
+{
+  float3 n;
+  float alpha;
+  float missingToSingle;
+  float weight;
+  float3 F0;
+  float3 F90;
+  bool dielectric;
+};
+
+// The lobe's Fresnel at 'cosTheta': GeneralizedSchlickReflectionFresnel(),
+// or DielectricReflectionFresnel() of a white tint
+inline float3 PathPbm_fresnel(const PathPbmGlossy &lobe, float cosTheta)
+{
+  return lobe.dielectric ? PathPbm_dielectricSchlick(lobe.F0, cosTheta)
+                         : PathPbm_schlick(lobe.F0, lobe.F90, cosTheta);
+}
+
+// _EvalNode() of a glossy lobe towards 'wi' with its cosine (the value times
+// |cos| at its normal), 'sampling' for the sampler's bump shadowing context;
+// 'smoothN' the faced smooth normal
+inline float3 PathPbm_evalGlossy(const PathPbmGlossy &lobe,
+    float3 smoothN,
+    float3 wo,
+    float3 wi,
+    uniform bool sampling)
+{
+  const float3 n = lobe.n;
+  float3 result = make_float3(0.f);
+  const float NdotWo = PathMatte_dot(n, wo);
+  if (NdotWo > 0.f && lobe.alpha >= PATH_PBM_DELTA_ALPHA
+      && PathMatte_dot(n, wi) * NdotWo > 0.f) {
+    // EvalMicrofacetReflectionIsotropic()
+    const float alpha = clamp(lobe.alpha, PATH_PBM_MIN_ALPHA, 1.f);
+    const float NdotL = max(PathMatte_dot(n, wi), 0.f);
+    const float NdotV = max(NdotWo, PATH_MATTE_EPSILON);
+    float3 h = wi + wo;
+    if (NdotL > 0.f && PathPbm_length(h) >= PATH_MATTE_EPSILON) {
+      const float3 F =
+          PathPbm_fresnel(lobe, PathPbm_reflectionCosTheta(wi, wo));
+      h = PathPbm_normalized(h);
+      const float NdotH = max(PathMatte_dot(n, h), 0.f);
+      const float D = PathPbm_ggxD(alpha, NdotH);
+      const float G = PathPbm_ggxG(alpha, NdotV, NdotL);
+      const float3 compensated =
+          F * (1.f + PathPbm_clamp01(F) * lobe.missingToSingle) * lobe.weight;
+      result = PathMatte_safe(compensated
+          * (D * G / max(4.f * NdotL * NdotV, PATH_MATTE_EPSILON)));
+    }
+  }
+  const float bump = PathPbm_glossyBumpShadowing(smoothN, n, wi, sampling);
+  const float3 value = PathMatte_safe(result * bump);
+  return PathMatte_safe(value * abs(PathMatte_dot(n, wi)));
+}
+
+// PdfNode() of a glossy lobe: PdfGGXSpecular() on the reflection side, 0 for
+// delta lobes
+inline float PathPbm_pdfGlossy(const PathPbmGlossy &lobe, float3 wo, float3 wi)
+{
+  const float3 n = lobe.n;
+  if (lobe.alpha < PATH_PBM_DELTA_ALPHA
+      || !(PathMatte_dot(n, wi) * PathMatte_dot(n, wo) > 0.f))
+    return 0.f;
+  const PathPbmFrame f = PathPbm_frame(n);
+  const float3 woL = PathPbm_toLocal(f, wo);
+  const float3 wiL = PathPbm_toLocal(f, wi);
+  if (woL.z <= 0.f || wiL.z <= 0.f)
+    return 0.f;
+  const float3 wm = PathPbm_normalized(woL + wiL);
+  if (wm.z <= 0.f)
+    return 0.f;
+  return PathPbm_pdfVndf(woL, wm, PathPbm_samplingAlpha(lobe.alpha));
+}
+
+inline PathPbmGlossy PathPbm_dielectric(const varying PathMaterialState &state)
+{
+  PathPbmGlossy g;
+  g.n = state.pbm.glossyN;
+  g.alpha = state.pbm.alpha;
+  g.missingToSingle = state.pbm.missingToSingle;
+  g.weight = 1.f;
+  g.F0 = state.pbm.specularF0;
+  g.F90 = make_float3(state.pbm.specularF90);
+  g.dielectric = false;
+  return g;
+}
+
+inline PathPbmGlossy PathPbm_metal(const varying PathMaterialState &state)
+{
+  PathPbmGlossy g = PathPbm_dielectric(state);
+  g.F0 = state.lobeColor;
+  g.F90 = make_float3(1.f);
+  return g;
+}
+
+inline PathPbmGlossy PathPbm_coat(const varying PathMaterialState &state)
+{
+  PathPbmGlossy g;
+  g.n = state.pbm.coatN;
+  g.alpha = state.pbm.coatAlpha;
+  g.missingToSingle = state.pbm.coatMissingToSingle;
+  g.weight = state.pbm.coatWeight;
+  g.F0 = make_float3(PathPbm_dielectricF0(PATH_PBM_COAT_IOR));
+  g.F90 = make_float3(1.f);
+  g.dielectric = true;
+  return g;
+}
+
+// The sheen's value with its cosine towards 'wi' (_EvalNode() of SheenData:
+// Bsdf::EvalSheen() times its weight; a diffuse-family lobe's bump
+// shadowing), and its pdf (Lambertian's)
+inline void PathPbm_evalSheen(const varying PathMaterialState &state,
+    float3 wi,
+    float3 &valueCosine,
+    float &pdf)
+{
+  const float3 n = state.lobeN;
+  const float c = PathMatte_dot(n, wi);
+  float3 value = make_float3(0.f);
+  if (c > 0.f && state.pbm.sheenWeight > 0.f) {
+    // EvalSheen()
+    const float alpha = clamp(state.pbm.sheenRoughness, 0.001f, 1.f);
+    const float NdotL = max(c, 0.f);
+    const float NdotV = max(PathMatte_dot(n, state.wo), PATH_MATTE_EPSILON);
+    float3 sheen = make_float3(0.f);
+    if (NdotL > 0.f && NdotV > 0.f) {
+      const float3 h = PathPbm_normalized(wi + state.wo);
+      const float NdotH = max(PathMatte_dot(n, h), 0.f);
+      const float D = PathPbm_charlieD(alpha, NdotH);
+      const float V = PathPbm_ashikhminV(NdotV, NdotL);
+      sheen = PathMatte_safe(state.pbm.sheenColor * (D * V));
+    }
+    value = PathMatte_safe(sheen * state.pbm.sheenWeight);
+  }
+  const float bump = PathMatte_bumpShadowing(state.pbm.smoothN, n, wi);
+  valueCosine = PathMatte_safe(PathMatte_safe(value * bump) * abs(c));
+  pdf = c > 0.f ? c * PATH_MATTE_INV_PI : 0.f;
+}
+
+// The transmission //////////////////////////////////////////////////////////
+
+// EvalGltfPbr()'s transmission lobe: a DielectricData in Transmission mode
+// of weight 1, tint the base colour, IOR PathPbmState::ior (at least 1), the
+// base's alpha and glossy normal
+
+// SchlickFresnelScalar()
+inline float PathPbm_schlickScalar(float ior, float cosTheta)
+{
+  float f0 = (ior - 1.f) / (ior + 1.f);
+  f0 *= f0;
+  const float t = 1.f - cosTheta;
+  const float t2 = t * t;
+  const float t5 = t2 * t2 * t;
+  return f0 + (1.f - f0) * t5;
+}
+
+// TransmissionScale() of the dielectric's untinted reflectance against
+// Schlick's at 'cosTheta'
+inline float3 PathPbm_transmissionScale(float ior, float cosTheta)
+{
+  const float baseReflectance = PathPbm_schlickScalar(ior, cosTheta);
+  const float3 finalReflectance = PathPbm_dielectricSchlick(
+      make_float3(PathPbm_dielectricF0(ior)), cosTheta);
+  const float baseTransmission = max(1.f - baseReflectance, 1.0e-4f);
+  return PathMatte_safe(
+      (make_float3(1.f) - finalReflectance) * (1.f / baseTransmission));
+}
+
+// TransmissionFresnelCosTheta(): the Walter half vector's cosine with wo
+inline float PathPbm_transmissionCosTheta(
+    float ior, float3 n, float3 wi, float3 wo)
+{
+  const PathPbmFrame f = PathPbm_frame(n);
+  const float3 woL = PathPbm_toLocal(f, wo);
+  const float3 wiL = PathPbm_toLocal(f, wi);
+  const float etaPbrt = woL.z > 0.f ? ior : 1.f / ior;
+  const float3 wm = wiL * etaPbrt + woL;
+  if (PathPbm_length(wm) < PATH_MATTE_EPSILON)
+    return max(abs(PathMatte_dot(n, wo)), 0.f);
+  return abs(PathMatte_dot(woL, PathPbm_normalized(wm)));
+}
+
+// Walter's generalized half vector of local 'wiL', 'woL' (EvalGGXTransmission(),
+// PdfGGXTransmission()): normalized, upwards; false where it degenerates
+inline bool PathPbm_transmissionHalfVector(
+    float3 wiL, float3 woL, float etaPbrt, float3 &wm)
+{
+  wm = wiL * etaPbrt + woL;
+  if (PathPbm_length(wm) < PATH_MATTE_EPSILON)
+    return false;
+  wm = PathPbm_normalized(wm);
+  if (wm.z < 0.f)
+    wm = make_float3(-wm.x, -wm.y, -wm.z);
+  return true;
+}
+
+// Bsdf::EvalGGXTransmission() of GGX 'alpha' (already RoughnessToAlpha()'s)
+inline float3 PathPbm_ggxTransmission(float alpha,
+    float ior,
+    float3 color,
+    float3 n,
+    float3 wi,
+    float3 wo,
+    bool backside)
+{
+  const PathPbmFrame f = PathPbm_frame(n);
+  const float3 woL = PathPbm_toLocal(f, wo);
+  const float3 wiL = PathPbm_toLocal(f, wi);
+  const float cosThetaO = abs(woL.z);
+  const float cosThetaI = abs(wiL.z);
+  if (cosThetaO < PATH_MATTE_EPSILON || cosThetaI < PATH_MATTE_EPSILON)
+    return make_float3(0.f);
+  const float etaPbrt = backside ? 1.f / ior : ior;
+  float3 wm;
+  if (!PathPbm_transmissionHalfVector(wiL, woL, etaPbrt, wm))
+    return make_float3(0.f);
+  if (PathMatte_dot(wiL, wm) * PathMatte_dot(woL, wm) > 0.f)
+    return make_float3(0.f);
+  const float NdotH = abs(wm.z);
+  const float VdotH = abs(PathMatte_dot(woL, wm));
+  const float LdotH = abs(PathMatte_dot(wiL, wm));
+  const float T = 1.f - PathPbm_schlickScalar(ior, VdotH);
+  const float D = PathPbm_ggxD(alpha, NdotH);
+  const float G = PathMatte_smithG1(alpha, cosThetaO)
+      * PathMatte_smithG1(alpha, cosThetaI);
+  float denom =
+      PathMatte_dot(wiL, wm) + PathMatte_dot(woL, wm) / etaPbrt;
+  denom *= denom;
+  if (denom < PATH_MATTE_EPSILON)
+    return make_float3(0.f);
+  const float btdf =
+      T * D * G * VdotH * LdotH / (cosThetaO * cosThetaI * denom);
+  return PathMatte_safe(color * abs(btdf));
+}
+
+// Bsdf::PdfGGXTransmission() of GGX 'alpha' (already RoughnessToAlpha()'s)
+inline float PathPbm_pdfGgxTransmission(
+    float alpha, float ior, float3 n, float3 wi, float3 wo, bool backside)
+{
+  const PathPbmFrame f = PathPbm_frame(n);
+  const float3 woL = PathPbm_toLocal(f, wo);
+  const float3 wiL = PathPbm_toLocal(f, wi);
+  if (wiL.z * woL.z > 0.f)
+    return 0.f;
+  const float cosThetaO = abs(woL.z);
+  if (cosThetaO < PATH_MATTE_EPSILON)
+    return 0.f;
+  const float etaPbrt = backside ? 1.f / ior : ior;
+  float3 wm;
+  if (!PathPbm_transmissionHalfVector(wiL, woL, etaPbrt, wm))
+    return 0.f;
+  const float VdotH = abs(PathMatte_dot(woL, wm));
+  const float LdotH = abs(PathMatte_dot(wiL, wm));
+  const float G1o = PathMatte_smithG1(alpha, cosThetaO);
+  const float NdotH = abs(wm.z);
+  const float D = PathPbm_ggxD(alpha, NdotH);
+  const float pdfWm = G1o * D * VdotH / cosThetaO;
+  float denom =
+      PathMatte_dot(wiL, wm) + PathMatte_dot(woL, wm) / etaPbrt;
+  denom *= denom;
+  if (denom < PATH_MATTE_EPSILON)
+    return 0.f;
+  const float dwmdwi = LdotH / denom;
+  return max(pdfWm * dwmdwi, 0.f);
+}
+
+// _EvalNode() of the transmission towards 'wi' with its cosine
+inline float3 PathPbm_evalTransmission(
+    const varying PathMaterialState &state, float3 wi, uniform bool sampling)
+{
+  const float3 n = state.pbm.glossyN;
+  const float3 wo = state.wo;
+  float3 result = make_float3(0.f);
+  if (PathMatte_dot(n, wo) > 0.f && state.pbm.alpha >= PATH_PBM_DELTA_ALPHA
+      && !(PathMatte_dot(n, wi) * PathMatte_dot(n, wo) > 0.f)) {
+    const float ior = state.pbm.ior;
+    const float3 scale = PathPbm_transmissionScale(
+        ior, PathPbm_transmissionCosTheta(ior, n, wi, wo));
+    result = PathMatte_safe(PathPbm_ggxTransmission(
+                                PathPbm_samplingAlpha(state.pbm.alpha),
+                                ior,
+                                state.lobeColor,
+                                n,
+                                wi,
+                                wo,
+                                state.pbm.backside)
+            * 1.f
+        * scale);
+  }
+  const float bump =
+      PathPbm_glossyBumpShadowing(state.pbm.smoothN, n, wi, sampling);
+  const float3 value = PathMatte_safe(result * bump);
+  return PathMatte_safe(value * abs(PathMatte_dot(n, wi)));
+}
+
+// PdfNode() of the transmission
+inline float PathPbm_pdfTransmission(
+    const varying PathMaterialState &state, float3 wi)
+{
+  const float3 n = state.pbm.glossyN;
+  if (state.pbm.alpha < PATH_PBM_DELTA_ALPHA
+      || PathMatte_dot(n, wi) * PathMatte_dot(n, state.wo) > 0.f)
+    return 0.f;
+  return PathPbm_pdfGgxTransmission(PathPbm_samplingAlpha(state.pbm.alpha),
+      state.pbm.ior,
+      n,
+      wi,
+      state.wo,
+      state.pbm.backside);
+}
+
+// _ApproxWeight() of the transmission at wo
+inline float PathPbm_transmissionApproxWeight(
+    const uniform PathMaterialContext *uniform context,
+    const varying PathMaterialState &state)
+{
+  const float NdotV = max(
+      abs(PathMatte_dot(state.pbm.glossyN, state.wo)), PATH_MATTE_EPSILON);
+  return max(1.f
+          * PathPbm_luminance(context,
+              state.lobeColor
+                  * PathPbm_transmissionScale(state.pbm.ior, NdotV)),
+      PATH_PBM_MIN_APPROX_WEIGHT);
+}
+
+// The tree ///////////////////////////////////////////////////////////////////
+
+// What the closure gives towards one direction at each of its composite
+// nodes: the value with its cosine and the pdf of the transmission mix, of
+// the dielectric layer, of the base, of the sheen layer and of the clearcoat
+// layer, each where it exists (what is left of it, see PathPbmNode)
+struct PathPbmLevels
+{
+  float3 diffuseMix;
+  float pdfDiffuseMix;
+  float3 layer;
+  float pdfLayer;
+  float3 base;
+  float pdfBase;
+  float3 sheen;
+  float pdfSheen;
+  float3 coat;
+  float pdfCoat;
+};
+
+// A layer's pdf (PdfNode() of LayerData) from its top's and base's
+inline float PathPbm_layerPdf(float topWeight,
+    float baseApproxWeight,
+    float baseThroughputLuminance,
+    float pdfTop,
+    float pdfBase)
+{
+  const float baseWeight = baseApproxWeight * baseThroughputLuminance;
+  const float total = topWeight + baseWeight;
+  if (total <= 0.f)
+    return 0.f;
+  return (topWeight / total) * pdfTop + (baseWeight / total) * pdfBase;
+}
+
+// Every node of the closure towards 'wi'; the root's is the last that exists
+inline void PathPbm_evalLevels(const varying PathMaterialState &state,
+    float3 wi,
+    uniform bool sampling,
+    varying PathPbmLevels &l)
+{
+  const uint32 parts = state.pbm.parts;
+  const float3 wo = state.wo;
+  float3 below = make_float3(0.f);
+  float pdfBelow = 0.f;
+  if (parts & PATH_PBM_BASE) {
+    // the transmission mix: the diffuse lobe mixed with the transmission
+    // (skipped at weight 0, where it adds its finite value times 0), or what
+    // pruning left of it
+    float3 diffuse;
+    float pdfDiffuse;
+    PathMatte_evalLeaf(state.lobeColor,
+        state.lobeN,
+        state.pbm.smoothN,
+        wi,
+        diffuse,
+        pdfDiffuse);
+    const PathPbmNode diffuseNode = state.pbm.diffuseNode;
+    if (diffuseNode == PATH_PBM_NODE_WHOLE) {
+      const float t = state.pbm.transmission;
+      float3 transmission = make_float3(0.f);
+      float pdfTransmission = 0.f;
+      if (t > 0.f) {
+        transmission = PathPbm_evalTransmission(state, wi, sampling);
+        pdfTransmission = PathPbm_pdfTransmission(state, wi);
+      }
+      l.diffuseMix = PathMatte_safe(PathPbm_lerp(diffuse, transmission, t));
+      l.pdfDiffuseMix = (1.f - t) * pdfDiffuse + t * pdfTransmission;
+    } else if (diffuseNode == PATH_PBM_NODE_SCALE) {
+      l.diffuseMix = PathMatte_safe(diffuse * state.pbm.diffuseScale);
+      l.pdfDiffuseMix = pdfDiffuse;
+    } else {
+      l.diffuseMix = diffuse;
+      l.pdfDiffuseMix = pdfDiffuse;
+    }
+    // the dielectric layer, or what pruning left of it
+    const PathPbmNode layerNode = state.pbm.layerNode;
+    const PathPbmGlossy reflection = PathPbm_dielectric(state);
+    if (layerNode == PATH_PBM_NODE_WHOLE || layerNode == PATH_PBM_NODE_TOP) {
+      const float3 top =
+          PathPbm_evalGlossy(reflection, state.pbm.smoothN, wo, wi, sampling);
+      const float pdfTop = PathPbm_pdfGlossy(reflection, wo, wi);
+      if (layerNode == PATH_PBM_NODE_WHOLE) {
+        l.layer = PathMatte_safe(top + l.diffuseMix * state.pbm.throughput);
+        l.pdfLayer = PathPbm_layerPdf(state.pbm.topWeight,
+            state.pbm.diffuseMixApproxWeight,
+            state.pbm.throughputLuminance,
+            pdfTop,
+            l.pdfDiffuseMix);
+      } else {
+        l.layer = top;
+        l.pdfLayer = pdfTop;
+      }
+    } else {
+      l.layer = l.diffuseMix;
+      l.pdfLayer = l.pdfDiffuseMix;
+    }
+    // the base, or what pruning left of it
+    const PathPbmNode baseNode = state.pbm.baseNode;
+    if (baseNode == PATH_PBM_NODE_WHOLE) {
+      const PathPbmGlossy metal = PathPbm_metal(state);
+      l.base = PathMatte_safe(PathPbm_lerp(l.layer,
+          PathPbm_evalGlossy(metal, state.pbm.smoothN, wo, wi, sampling),
+          state.pbm.mix));
+      l.pdfBase = (1.f - state.pbm.mix) * l.pdfLayer
+          + state.pbm.mix * PathPbm_pdfGlossy(metal, wo, wi);
+    } else if (baseNode == PATH_PBM_NODE_SCALE) {
+      l.base = PathMatte_safe(l.layer * state.pbm.baseScale);
+      l.pdfBase = l.pdfLayer;
+    } else {
+      l.base = l.layer;
+      l.pdfBase = l.pdfLayer;
+    }
+    below = l.base;
+    pdfBelow = l.pdfBase;
+  }
+  // the sheen layer, or the sheen alone
+  if (parts & PATH_PBM_SHEEN) {
+    float3 sheen;
+    float pdfSheen;
+    PathPbm_evalSheen(state, wi, sheen, pdfSheen);
+    if (parts & PATH_PBM_BASE) {
+      l.sheen = PathMatte_safe(sheen + below * state.pbm.sheenThroughput);
+      l.pdfSheen = PathPbm_layerPdf(state.pbm.sheenApproxWeight,
+          state.pbm.baseApproxWeight,
+          state.pbm.sheenThroughputLuminance,
+          pdfSheen,
+          pdfBelow);
+    } else {
+      l.sheen = sheen;
+      l.pdfSheen = pdfSheen;
+    }
+    below = l.sheen;
+    pdfBelow = l.pdfSheen;
+  }
+  // the clearcoat layer, or the clearcoat alone
+  if (parts & PATH_PBM_COAT) {
+    const PathPbmGlossy coat = PathPbm_coat(state);
+    const float3 top =
+        PathPbm_evalGlossy(coat, state.pbm.smoothN, wo, wi, sampling);
+    const float pdfTop = PathPbm_pdfGlossy(coat, wo, wi);
+    if (parts & (PATH_PBM_BASE | PATH_PBM_SHEEN)) {
+      l.coat = PathMatte_safe(top + below * state.pbm.coatThroughput);
+      l.pdfCoat = PathPbm_layerPdf(state.pbm.coatApproxWeight,
+          state.pbm.sheenLayerApproxWeight,
+          state.pbm.coatThroughputLuminance,
+          pdfTop,
+          pdfBelow);
+    } else {
+      l.coat = top;
+      l.pdfCoat = pdfTop;
+    }
+  }
+}
+
+// The whole closure's value with its cosine (EvalNodeCosine() of the root)
+// and its pdf towards 'wi'
+inline void PathPbm_evalTree(const varying PathMaterialState &state,
+    float3 wi,
+    uniform bool sampling,
+    float3 &valueCosine,
+    float &pdf)
+{
+  PathPbmLevels l;
+  PathPbm_evalLevels(state, wi, sampling, l);
+  const uint32 parts = state.pbm.parts;
+  if (parts & PATH_PBM_COAT) {
+    valueCosine = l.coat;
+    pdf = l.pdfCoat;
+  } else if (parts & PATH_PBM_SHEEN) {
+    valueCosine = l.sheen;
+    pdf = l.pdfSheen;
+  } else {
+    valueCosine = l.base;
+    pdf = l.pdfBase;
+  }
+}
+
+// Sampling ///////////////////////////////////////////////////////////////////
+
+// A sample as SampleNode() passes it up the tree: direction, the value for
+// delta samples (bsdfValue), the value with its cosine otherwise
+// (bsdfValueCosine), its pdf and kind, and the IOR ratio of a refraction
+struct PathPbmSample
+{
+  float3 wi;
+  float3 value;
+  float3 valueCosine;
+  float pdf;
+  bool specular;
+  bool diffuseLike;
+  bool transmission;
+  float eta;
+};
+
+inline void PathPbmSample_clear(PathPbmSample &s)
+{
+  s.wi = make_float3(0.f);
+  s.value = make_float3(0.f);
+  s.valueCosine = make_float3(0.f);
+  s.pdf = 0.f;
+  s.specular = false;
+  s.diffuseLike = false;
+  s.transmission = false;
+  s.eta = 1.f;
+}
+
+inline void PathPbmSample_reject(PathPbmSample &s)
+{
+  s.value = make_float3(0.f);
+  s.valueCosine = make_float3(0.f);
+  s.pdf = 0.f;
+}
+
+// SampleNode()'s validity check of a lobe's sample: on its side (above, or
+// below for transmission) of its normal and the geometric one, else nothing
+// (a specular sample stays specular)
+inline void PathPbm_validate(float3 lobeN, float3 Ng, PathPbmSample &s)
+{
+  if (!(s.pdf > 0.f))
+    return;
+  const float lobeSide = PathMatte_dot(lobeN, s.wi);
+  const float geomSide = PathMatte_dot(Ng, s.wi);
+  const bool valid = s.transmission ? lobeSide < 0.f && geomSide < 0.f
+                                    : lobeSide > 0.f && geomSide > 0.f;
+  if (!valid)
+    PathPbmSample_reject(s);
+}
+
+// A diffuse-family lobe's direction: SampleLambertian() in
+// Frame::FromNormal() of the lobes' normal, and its pdf
+inline void PathPbm_sampleCosine(const varying PathMaterialState &state,
+    float u1,
+    float u2,
+    PathPbmSample &s)
+{
+  const PathPbmFrame f = PathPbm_frame(state.lobeN);
+  const float cosTheta = sqrt(u1);
+  const float sinTheta = sqrt(1.f - u1);
+  const float phi = 2.f * PATH_MATTE_PI * u2;
+  s.wi = PathPbm_toWorld(f,
+      make_float3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta));
+  s.diffuseLike = true;
+  s.pdf = max(cosTheta, 0.f) * PATH_MATTE_INV_PI;
+}
+
+// A diffuse-family lobe's validity: also not shadowed by the bump term
+inline void PathPbm_validateDiffuse(
+    const varying PathMaterialState &state, PathPbmSample &s)
+{
+  PathPbm_validate(state.lobeN, state.Ng, s);
+  if (s.pdf > 0.f
+      && !(PathMatte_bumpShadowing(state.pbm.smoothN, state.lobeN, s.wi)
+          > 0.f))
+    PathPbmSample_reject(s);
+}
+
+// The diffuse lobe's sample, then its own evaluation and validity (as
+// native matte's)
+inline void PathPbm_sampleDiffuse(const varying PathMaterialState &state,
+    float u1,
+    float u2,
+    PathPbmSample &s)
+{
+  PathPbm_sampleCosine(state, u1, u2, s);
+  if (s.pdf > 0.f) {
+    PathMatte_evalLeaf(state.lobeColor,
+        state.lobeN,
+        state.pbm.smoothN,
+        s.wi,
+        s.valueCosine,
+        s.pdf);
+  }
+  PathPbm_validateDiffuse(state, s);
+}
+
+// The sheen's sample: Lambertian, then its own evaluation and validity
+inline void PathPbm_sampleSheen(const varying PathMaterialState &state,
+    float u1,
+    float u2,
+    PathPbmSample &s)
+{
+  PathPbm_sampleCosine(state, u1, u2, s);
+  if (s.pdf > 0.f)
+    PathPbm_evalSheen(state, s.wi, s.valueCosine, s.pdf);
+  PathPbm_validateDiffuse(state, s);
+}
+
+// A glossy lobe's sample: delta reflection, or SampleGGXSpecular() then its
+// own evaluation and pdf; then its validity
+inline void PathPbm_sampleGlossy(const PathPbmGlossy &lobe,
+    float3 smoothN,
+    float3 Ng,
+    float3 wo,
+    float u1,
+    float u2,
+    PathPbmSample &s)
+{
+  const float3 n = lobe.n;
+  const float NdotWo = PathMatte_dot(n, wo);
+  if (NdotWo <= 0.f)
+    return;
+  if (lobe.alpha < PATH_PBM_DELTA_ALPHA) {
+    // SampleDeltaGeneralizedSchlickReflection(),
+    // SampleDeltaDielectricReflection()
+    const float cosTheta = max(abs(NdotWo), PATH_MATTE_EPSILON);
+    s.wi = PathPbm_normalized(n * (2.f * NdotWo) - wo);
+    s.value = PathMatte_safe(PathPbm_fresnel(lobe, cosTheta) * lobe.weight);
+    s.pdf = 1.f;
+    s.specular = true;
+  } else {
+    const float alpha = PathPbm_samplingAlpha(lobe.alpha);
+    const PathPbmFrame f = PathPbm_frame(n);
+    const float3 woL = PathPbm_toLocal(f, wo);
+    if (woL.z <= 0.f)
+      return;
+    const float3 wm = PathPbm_sampleVndf(woL, alpha, u1, u2);
+    const float3 wiL = wm * (2.f * PathMatte_dot(woL, wm)) - woL;
+    if (wiL.z <= 0.f)
+      return;
+    s.wi = PathPbm_toWorld(f, wiL);
+    s.pdf = max(PathPbm_pdfVndf(woL, wm, alpha), 0.f);
+    // _FinalizeSubtreeSample() of the leaf (its value from SampleGGXSpecular
+    // is replaced, or unread at pdf 0)
+    if (s.pdf > 0.f) {
+      s.valueCosine = PathPbm_evalGlossy(lobe, smoothN, wo, s.wi, true);
+      s.pdf = PathPbm_pdfGlossy(lobe, wo, s.wi);
+    }
+  }
+  PathPbm_validate(n, Ng, s);
+}
+
+// WouldTotalInternalReflect()
+inline bool PathPbm_totalInternalReflection(
+    float ior, float3 n, float3 wo, bool backside)
+{
+  const float cosI = abs(PathMatte_dot(n, wo));
+  const float eta = backside ? max(ior, PATH_MATTE_EPSILON)
+                             : 1.f / max(ior, PATH_MATTE_EPSILON);
+  return eta * eta * (1.f - cosI * cosI) >= 1.f;
+}
+
+// SampleDeltaTotalInternalReflection() of 'weight'
+inline void PathPbm_sampleTotalInternalReflection(
+    float weight, float3 n, float3 wo, PathPbmSample &s)
+{
+  const float3 m = PathMatte_dot(n, wo) >= 0.f ? n : -n;
+  s.wi = PathPbm_normalized(m * (2.f * PathMatte_dot(m, wo)) - wo);
+  s.value = make_float3(weight);
+  s.pdf = 1.f;
+  s.specular = true;
+  s.transmission = false;
+  s.eta = 1.f;
+}
+
+// SampleDeltaDielectricTransmission() of the transmission at 'NdotV': its
+// share of a total internal reflection (what the paired reflection doesn't
+// take), or a refraction
+inline void PathPbm_sampleDeltaTransmission(
+    const uniform PathMaterialContext *uniform context,
+    const varying PathMaterialState &state,
+    float NdotV,
+    PathPbmSample &s)
+{
+  const float3 n = state.pbm.glossyN;
+  const float3 wo = state.wo;
+  const float ior = state.pbm.ior;
+  const bool backside = state.pbm.backside;
+  if (PathPbm_totalInternalReflection(ior, n, wo, backside)) {
+    const float paired = PathPbm_clamp01(PathPbm_luminance(context,
+        PathPbm_dielectricSchlick(
+            make_float3(PathPbm_dielectricF0(ior)), NdotV)));
+    PathPbm_sampleTotalInternalReflection(1.f * (1.f - paired), n, wo, s);
+    return;
+  }
+  // SampleDeltaTransmission()
+  const float NdotWo = PathMatte_dot(n, wo);
+  const float cosI = abs(NdotWo);
+  const float eta = backside ? ior : 1.f / ior;
+  const float3 incident = NdotWo >= 0.f ? n : -n;
+  const float sin2T = eta * eta * (1.f - cosI * cosI);
+  if (sin2T >= 1.f) {
+    PathPbm_sampleTotalInternalReflection(1.f, n, wo, s);
+  } else {
+    const float cosT = sqrt(1.f - sin2T);
+    s.wi = PathPbm_normalized(wo * -eta + incident * (eta * cosI - cosT));
+    const float fresnel = PathPbm_schlickScalar(ior, cosI);
+    s.value = state.lobeColor * ((1.f - fresnel) * 1.f);
+    s.pdf = 1.f;
+    s.specular = true;
+    s.transmission = true;
+    s.eta = eta;
+  }
+  s.value = s.value * PathPbm_transmissionScale(ior, NdotV);
+}
+
+// The transmission's sample: delta, or SampleGGXTransmission() (or the delta
+// one where that fails) then its own evaluation and pdf; then its validity
+inline void PathPbm_sampleTransmission(
+    const uniform PathMaterialContext *uniform context,
+    const varying PathMaterialState &state,
+    float u1,
+    float u2,
+    PathPbmSample &s)
+{
+  const float3 n = state.pbm.glossyN;
+  const float3 wo = state.wo;
+  const float NdotWo = PathMatte_dot(n, wo);
+  if (NdotWo <= 0.f)
+    return;
+  const float NdotV = max(abs(NdotWo), PATH_MATTE_EPSILON);
+  if (state.pbm.alpha < PATH_PBM_DELTA_ALPHA) {
+    PathPbm_sampleDeltaTransmission(context, state, NdotV, s);
+  } else {
+    // SampleGGXTransmission()
+    const float alpha = PathPbm_samplingAlpha(state.pbm.alpha);
+    const float ior = state.pbm.ior;
+    const bool backside = state.pbm.backside;
+    const PathPbmFrame f = PathPbm_frame(n);
+    const float3 woL = PathPbm_toLocal(f, wo);
+    bool sampled = false;
+    if (abs(woL.z) >= PATH_MATTE_EPSILON) {
+      const bool flip = woL.z < 0.f;
+      float3 wm = PathPbm_sampleVndf(flip ? -woL : woL, alpha, u1, u2);
+      if (flip)
+        wm = -wm;
+      const float eta = backside ? ior : 1.f / ior;
+      const float cosI = PathMatte_dot(woL, wm);
+      const float sin2T = eta * eta * (1.f - cosI * cosI);
+      if (sin2T < 1.f) {
+        float cosT = sqrt(1.f - sin2T);
+        if (cosI > 0.f)
+          cosT = -cosT;
+        const float3 wiL =
+            PathPbm_normalized(woL * -eta + wm * (eta * cosI + cosT));
+        if (!(wiL.z * woL.z > 0.f)) {
+          const float3 wi = PathPbm_toWorld(f, wiL);
+          const float pdf =
+              PathPbm_pdfGgxTransmission(alpha, ior, n, wi, wo, backside);
+          if (!(pdf < PATH_MATTE_EPSILON)) {
+            sampled = true;
+            s.wi = wi;
+            s.pdf = pdf;
+            s.transmission = true;
+            s.eta = eta;
+          }
+        }
+      }
+    }
+    if (!sampled) {
+      PathPbm_sampleDeltaTransmission(context, state, NdotV, s);
+    } else {
+      // _FinalizeSubtreeSample() of the leaf
+      s.valueCosine = PathPbm_evalTransmission(state, s.wi, true);
+      s.pdf = PathPbm_pdfTransmission(state, s.wi);
+    }
+  }
+  PathPbm_validate(n, state.Ng, s);
+}

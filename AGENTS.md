@@ -38,6 +38,7 @@ Key CMake options:
 - `BUILD_HELIDE_GPU_DEVICE` (OFF) — GPU-accelerated example device, requires SDL3 3.2+ and glslangValidator
 - `BUILD_REMOTE_DEVICE` (OFF) — experimental MPI/network device
 - `BUILD_HDANARI` (OFF) — experimental OpenUSD Hydra delegate
+- `BUILD_HALCYON_DEVICE` (OFF) — Embree/ISPC CPU device with a path tracer, requires an ISPC compiler and CMake 3.19
 - `BUILD_HYDRA_DEVICE` (OFF) — `hydra` device rendering through OpenUSD Hydra render delegates, requires OpenUSD
 - `BUILD_CAT` (OFF) — capability analysis tool
 
@@ -70,6 +71,8 @@ Rendering Backend (e.g., Embree for helide)
 **`src/devices/helide/`** — The reference ray-tracing device built on Intel Embree. Implements the full ANARI object hierarchy (geometries, materials, lights, cameras, renderers, volumes, spatial fields, samplers). Study this as the canonical example of a Helium-based device.
 
 **`src/devices/helide_gpu/`** — An in-progress GPU-accelerated example device built on SDL3's cross-platform GPU abstraction. Uses a dedicated GPU thread for all SDL3_gpu commands, compiles GLSL shaders to SPIR-V at build time, and supports SSAO post-processing. Requires SDL3 3.2+, `glslangValidator`, and optionally `spirv-cross` for Metal/MSL support.
+
+**`src/devices/halcyon/`** — An Embree/ISPC CPU device: a `preview` renderer modelled on helide (it shades in ISPC rather than C++) and a `quality` path tracer ported from Typhoon with MaterialX materials. Linux only so far. Its ctests are named `halcyon::<name>`; its own guide is `src/devices/halcyon/AGENTS.md`. It shares the `anari_embree` target with helide (`src/devices/{helide,halcyon}/external/embree/CMakeLists.txt` are identical copies; keep them so).
 
 **`src/devices/hydra/`** — A device that renders through OpenUSD Hydra render delegates (Storm, HdEmbree, ...), one device subtype per delegate; the reverse of hdAnari. Requires OpenUSD. Its end-to-end tests are named `hydra_*` and need an X display (they are reported as skipped without one). See its README for known limitations.
 
@@ -118,4 +121,6 @@ ANARI_LIBRARY=helide anariInfo
 
 ## CI
 
-GitHub Actions (`.github/workflows/anari_sdk_ci.yml`) runs on push/PR to `next_release` and `main`. Matrix: Ubuntu 22.04/24.04 and Windows (Release + Debug), macOS (Release only). Tests require `ANARI_LIBRARY=helide`.
+GitHub Actions (`.github/workflows/anari_sdk_ci.yml`) runs on push/PR to `next_release` and `main`, except for changes confined to `src/devices/halcyon/`. Matrix: Ubuntu 22.04/24.04 and Windows (Release + Debug), macOS (Release only). Tests require `ANARI_LIBRARY=helide`.
+
+halcyon has its own workflow (`.github/workflows/halcyon_ci.yml`, Ubuntu 22.04 Release, with ISPC), path-filtered to `src/devices/halcyon/` and what it builds on (helium, the frontend, `code_gen/`, `cmake/`, the root and `src/devices/` CMakeLists, the shared Embree setup). Update its `paths` if halcyon gains a dependency on another part of the SDK.

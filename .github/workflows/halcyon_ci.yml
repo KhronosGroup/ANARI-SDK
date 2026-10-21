@@ -1,0 +1,65 @@
+## Copyright 2026 The Khronos Group
+## SPDX-License-Identifier: Apache-2.0
+
+name: halcyon CI
+
+# Runs on changes to halcyon and to what it builds on: helium, the frontend,
+# the code generator, the SDK's CMake and the Embree setup it shares with
+# helide (src/devices/helide/external/embree)
+on:
+  push:
+    branches: [ next_release ]
+    paths:
+      - 'src/devices/halcyon/**'
+      - 'src/helium/**'
+      - 'src/anari/**'
+      - 'code_gen/**'
+      - 'cmake/**'
+      - 'CMakeLists.txt'
+      - 'src/devices/CMakeLists.txt'
+      - 'src/devices/helide/external/embree/**'
+      - '.github/workflows/halcyon_ci.yml'
+  pull_request:
+    branches: [ main, next_release ]
+    paths:
+      - 'src/devices/halcyon/**'
+      - 'src/helium/**'
+      - 'src/anari/**'
+      - 'code_gen/**'
+      - 'cmake/**'
+      - 'CMakeLists.txt'
+      - 'src/devices/CMakeLists.txt'
+      - 'src/devices/helide/external/embree/**'
+      - '.github/workflows/halcyon_ci.yml'
+
+jobs:
+  build-halcyon:
+    # halcyon needs ISPC, and is built and tested on Linux only so far
+    runs-on: ubuntu-22.04
+    env:
+      ISPC_VERSION: v1.28.2
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v4
+    - name: Install ISPC
+      run: |
+        curl -sSfL https://github.com/ispc/ispc/releases/download/${ISPC_VERSION}/ispc-${ISPC_VERSION}-linux.tar.gz \
+          | tar xz -C ${{ runner.temp }}
+        echo "${{ runner.temp }}/ispc-${ISPC_VERSION}-linux/bin" >> $GITHUB_PATH
+    - name: Configure CMake
+      run: >
+        cmake -LA -B ${{ github.workspace }}/build
+        -DBUILD_CTS=OFF
+        -DBUILD_EXAMPLES=OFF
+        -DBUILD_HALCYON_DEVICE=ON
+        -DBUILD_HELIDE_DEVICE=ON
+        -DBUILD_TESTING=ON
+        -DCMAKE_BUILD_TYPE=Release
+    - name: Build
+      # A bare --parallel is an unbounded 'make -j', which starts every
+      # Embree kernel, ISPC and MaterialX compile at once and runs the
+      # runner out of memory: one job per core
+      run: cmake --build ${{ github.workspace }}/build --config Release --parallel $(nproc)
+    - name: halcyon Tests
+      working-directory: ${{ github.workspace }}/build
+      run: ctest -R '^halcyon::' -C Release --output-on-failure
