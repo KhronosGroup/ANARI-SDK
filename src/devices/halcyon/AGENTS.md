@@ -296,14 +296,23 @@ copies most array data into object-owned buffers in `finalize()`:
 - Geometry `vertex.*`/`primitive.*`/`faceVarying.*` attributes, the renderer's background
   image, the primitive sampler's `array` and transfer function colours become packed float4
   via `toAttributeValues()` (`array/Array1D.h`); ISPC reads them with `load_float4()`.
-- Image sampler texels are byte-copied in their native type when ISPC decodes it (FLOAT32,
-  UFIXED8/16/32 and the UFIXED8 sRGB formats, 1-4 components; `texelFormat()` in
-  `Sampler.cpp`), so 8/16-bit images don't grow as floats. `Image_texel()`
+- Image sampler texels are the exception: they are read in place, in their native type, when
+  ISPC decodes it (FLOAT32, UFIXED8/16/32 and the UFIXED8 sRGB formats, 1-4 components;
+  `texelFormat()` in `Sampler.cpp`). `ImageSampler::setTexels()` points ISPC at the array's
+  first element (`firstElement()`, so a 1D image starts at `begin`) for every ownership kind:
+  shared, captured and managed arrays all keep their memory while the sampler holds them, and
+  an unmap, a range commit or a privatize finalizes the sampler again before the next render
+  (see below). Mapping an array waits for device work in progress, and device work waits
+  for every unmap (`RenderingSemaphore`, see [Synchronization](#synchronization)), so a
+  render never reads texels the app is writing. Two cases are copied to the sampler's
+  `m_texels`: elements not aligned to their component size (app memory has no alignment
+  guarantee, and ISPC reads through typed pointers) are byte-copied, and element types ISPC
+  doesn't decode are converted with `toAttributeValues()`. `Image_texel()`
   (`shading/halcyon_sampler.isph`) decodes each texel to the float4 helium's
   `readAsAttributeValue()` gives, sRGB through a 256-entry table built from helium's
-  `toneMap()`, before filtering. Other element types are still converted with
-  `toAttributeValues()`. Shared arrays are copied too (no zero-copy yet). Instance attributes are packed to float4 per transform from
-  `getUniformAttributes()`.
+  `toneMap()`, before filtering. `tests/test_samplers.cpp` (`testSharedImages()`) covers
+  shared images through a map/unmap and a release, a 1D range and unaligned memory.
+- Instance attributes are packed to float4 per transform from `getUniformAttributes()`.
 - Face-varying attributes (`faceVarying.color`, `faceVarying.attribute0`–`3`; triangle and
   quad only, which opt in with `commitFaceVaryingAttributes()`) hold one value per primitive
   corner: elements `3 * primID + i` (quad `4 * primID + i`) whatever `primitive.index` says,
@@ -359,8 +368,9 @@ array's `begin`/`end` notifies its observers, so they are finalized again.
 the transfer function and instances with junk before `begin` and after `end`, and compares with
 the plain arrays.
 
-Some geometry reads helium memory in place: triangle and quad pass `vertex.position` and a
-UINT32 `primitive.index` to Embree with `rtcSetSharedGeometryBuffer`, and the ISPC
+Image samplers (above) and some geometry read helium memory in place: triangle and quad
+pass `vertex.position` and a UINT32 `primitive.index` to Embree with
+`rtcSetSharedGeometryBuffer`, and the ISPC
 vertex-attribute hooks of triangle, quad, sphere, cylinder and cone read a UINT32
 `primitive.index` from the helium array. The shared `vertex.position` breaks Embree's
 contract that a vertex buffer's last element be readable with a 16-byte load: Embree
