@@ -8,7 +8,7 @@
 #include "array/Array3D.h"
 // std
 #include <array>
-#include <cstring>
+#include <cstdint>
 #include <vector>
 
 namespace halcyon {
@@ -136,18 +136,18 @@ static bool texelFormat(ANARIDataType elementType, TexelFormat &format)
   }
 }
 
-// image1D/2D/3D: the image is copied at finalize in its own element type
-// (see texelFormat()), so 8/16-bit images don't grow as floats; other element
-// types are converted to float4 like attributes. Subtypes read their 'image'
-// and wrap modes and report the image's size. A missing or empty image (any
-// dimension 0) makes the sampler invalid.
+// image1D/2D/3D: ISPC reads the image in its own element type (see
+// texelFormat()) in the array's memory, without a copy; other element types
+// are converted to float4 like attributes. Subtypes read their 'image' and wrap
+// modes and report the image's size. A missing or empty image (any dimension
+// 0) makes the sampler invalid.
 struct ImageSampler : public Sampler
 {
   ImageSampler(HalcyonDeviceGlobalState *s) : Sampler(s) {}
 
   bool isValid() const override
   {
-    return Sampler::isValid() && m_image && !m_texels.empty();
+    return Sampler::isValid() && m_image && m_texelData;
   }
 
   void commitParameters() override
@@ -165,15 +165,15 @@ struct ImageSampler : public Sampler
 
   void finalize() override
   {
-    copyTexels();
-    if (m_image && m_texels.empty()) {
+    setTexels();
+    if (m_image && !m_texelData) {
       reportMessage(ANARI_SEVERITY_WARNING,
           "image sampler's 'image' is empty; the sampler is invalid");
     }
 
     m_mapping.setISPC(getIE());
 
-    const uint3 size = m_texels.empty() ? uint3(1u) : imageSize();
+    const uint3 size = m_texelData ? imageSize() : uint3(1u);
     const int32_t isize[3] = {
         int32_t(size.x), int32_t(size.y), int32_t(size.z)};
     // ISPC's WrapMode enum follows helium's order
@@ -181,11 +181,7 @@ struct ImageSampler : public Sampler
         ispc::WrapMode(m_wrapMode[1]),
         ispc::WrapMode(m_wrapMode[2])};
     // no image (including an empty one) leaves the sampler without a hook
-    setISPCImage(m_texels.empty() ? nullptr : m_texels.data(),
-        m_format,
-        isize,
-        wrap,
-        m_linearFilter);
+    setISPCImage(m_texelData, m_format, isize, wrap, m_linearFilter);
   }
 
  protected:
@@ -216,31 +212,45 @@ struct ImageSampler : public Sampler
 
  private:
   SamplerMapping m_mapping;
-  // Copies 'image' to 'm_texels' and sets 'm_format': its bytes for element
-  // types ISPC reads, else float4 attribute values; empty without an image
-  void copyTexels()
+  // Points 'm_texelData' at 'image''s texels and sets 'm_format'; nullptr
+  // without an image or with an empty one. ISPC reads element types it
+  // decodes in the array's memory: every ownership kind keeps it while the
+  // sampler holds the array, and a change to it (an unmap, a new range,
+  // helium's privatize) finalizes the sampler again before the next render.
+  // Elements not aligned to their component size (app memory has no alignment
+  // guarantee) are copied to 'm_texels', and other element types are
+  // converted to float4 attribute values there.
+  void setTexels()
   {
     m_texels.clear();
+    m_texels.shrink_to_fit();
+    m_texelData = nullptr;
     m_format = {ispc::TEXEL_TYPE_FLOAT32, 4};
     const helium::Array *a = m_image.get();
-    if (!a)
+    if (!a || a->totalSize() == 0)
       return;
+    const auto *first = (const uint8_t *)firstElement(*a);
     if (texelFormat(a->elementType(), m_format)) {
-      const size_t bytes = a->totalSize() * anari::sizeOf(a->elementType());
+      const size_t elementBytes = anari::sizeOf(a->elementType());
+      const size_t componentBytes = elementBytes / m_format.components;
+      if (uintptr_t(first) % componentBytes == 0) {
+        m_texelData = first;
+        return;
+      }
       // std::vector's allocation is aligned for any texel type
-      m_texels.resize(bytes);
-      if (bytes > 0)
-        std::memcpy(m_texels.data(), firstElement(*a), bytes);
+      m_texels.assign(first, first + a->totalSize() * elementBytes);
     } else {
       const std::vector<float4> values = toAttributeValues(a);
-      m_texels.resize(values.size() * sizeof(float4));
-      if (!values.empty())
-        std::memcpy(m_texels.data(), values.data(), m_texels.size());
+      const auto *v = (const uint8_t *)values.data();
+      m_texels.assign(v, v + values.size() * sizeof(float4));
     }
+    m_texelData = m_texels.data();
   }
 
   bool m_linearFilter{true};
   TexelFormat m_format{ispc::TEXEL_TYPE_FLOAT32, 4};
+  // What ISPC reads: the array's memory, or 'm_texels'
+  const void *m_texelData{nullptr};
   std::vector<uint8_t> m_texels;
 };
 

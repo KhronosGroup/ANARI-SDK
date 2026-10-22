@@ -11,8 +11,9 @@
 // sampling: 1D/2D/3D images, filters, wrap modes, in/out transforms and
 // offsets, and images of every element type the device reads natively (8, 16
 // and 32-bit UFIXED, sRGB, FLOAT32; 1-4 components). Also covers opacity
-// samplers, invalid samplers and updates, and the transform and primitive
-// samplers.
+// samplers, invalid samplers and updates, images in shared and captured app
+// memory (updates, release, a 1D range, unaligned memory), and the transform
+// and primitive samplers.
 
 // anari
 #define ANARI_LINALG_DEFINITIONS
@@ -24,6 +25,7 @@
 #include <cstdio>
 #include <cstring>
 #include <functional>
+#include <memory>
 #include <optional>
 #include <string>
 #include <vector>
@@ -180,13 +182,31 @@ void setImage(anari::Device d, anari::Sampler s, const ImageDesc &img)
     fill(anari::newArray3D(d, type, img.size.x, img.size.y, img.size.z));
 }
 
-anari::Sampler newImageSampler(anari::Device d, const ImageDesc &img)
+// Sets 'array' (an ARRAY<N>D of 'img''s dimensions) as sampler 's''s 'image'
+void setImageArray(
+    anari::Device d, anari::Sampler s, const ImageDesc &img, anari::Array a)
+{
+  if (img.dimensions == 1)
+    anari::setParameter(d, s, "image", anari::Array1D(a));
+  else if (img.dimensions == 2)
+    anari::setParameter(d, s, "image", anari::Array2D(a));
+  else
+    anari::setParameter(d, s, "image", anari::Array3D(a));
+}
+
+// An image sampler of 'img'; its 'image' is 'array' if given, else a managed
+// array of 'img''s texels
+anari::Sampler newImageSampler(
+    anari::Device d, const ImageDesc &img, anari::Array array = nullptr)
 {
   const char *subtype = img.dimensions == 1 ? "image1D"
       : img.dimensions == 2                 ? "image2D"
                                             : "image3D";
   auto s = anari::newObject<anari::Sampler>(d, subtype);
-  setImage(d, s, img);
+  if (array)
+    setImageArray(d, s, img, array);
+  else
+    setImage(d, s, img);
   anari::setParameter(d, s, "filter", img.filter);
   if (img.dimensions == 1) {
     anari::setParameter(d, s, "wrapMode", img.wrapMode[0]);
@@ -351,21 +371,30 @@ bool comparePixels(const char *test,
   return pass;
 }
 
+// Renders 'world' and compares every pixel on the quad to the reference
+// sampling of 'img' (with the eye-lit shading, the pixel is the sample's rgb)
+bool checkWorld(
+    anari::Device d, const char *test, anari::World world, const ImageDesc &img)
+{
+  const auto pixels = render(d, world, "default");
+  return comparePixels(test, pixels, [&](float4 a) -> std::optional<float4> {
+    bool skip = false;
+    const float4 r = referenceSample(img, a, skip);
+    return skip ? std::nullopt : std::optional<float4>(r);
+  });
+}
+
 // Renders the quad with color sampler 'img' and compares every pixel on it to
-// the reference (with the eye-lit shading, the pixel is the sample's rgb)
+// the reference
 bool checkImage(anari::Device d, const char *test, const ImageDesc &img)
 {
   auto sampler = newImageSampler(d, img);
   auto world = makeWorld(d,
       [&](anari::Material m) { anari::setParameter(d, m, "color", sampler); });
   anari::release(d, sampler);
-  const auto pixels = render(d, world, "default");
+  const bool pass = checkWorld(d, test, world, img);
   anari::release(d, world);
-  return comparePixels(test, pixels, [&](float4 a) -> std::optional<float4> {
-    bool skip = false;
-    const float4 r = referenceSample(img, a, skip);
-    return skip ? std::nullopt : std::optional<float4>(r);
-  });
+  return pass;
 }
 
 // Deterministic, distinct texel colors
@@ -550,41 +579,51 @@ void setElements(ImageDesc &img, const ElementType &t)
   }
 }
 
+const ElementType ELEMENT_TYPES[] = {
+    {ANARI_FLOAT32, "FLOAT32", ElementType::FLOAT, 1, 4},
+    {ANARI_FLOAT32_VEC2, "FLOAT32_VEC2", ElementType::FLOAT, 2, 4},
+    {ANARI_FLOAT32_VEC3, "FLOAT32_VEC3", ElementType::FLOAT, 3, 4},
+    {ANARI_UFIXED8, "UFIXED8", ElementType::UFIXED, 1, 1},
+    {ANARI_UFIXED8_VEC2, "UFIXED8_VEC2", ElementType::UFIXED, 2, 1},
+    {ANARI_UFIXED8_VEC3, "UFIXED8_VEC3", ElementType::UFIXED, 3, 1},
+    {ANARI_UFIXED8_VEC4, "UFIXED8_VEC4", ElementType::UFIXED, 4, 1},
+    {ANARI_UFIXED16, "UFIXED16", ElementType::UFIXED, 1, 2},
+    {ANARI_UFIXED16_VEC2, "UFIXED16_VEC2", ElementType::UFIXED, 2, 2},
+    {ANARI_UFIXED16_VEC3, "UFIXED16_VEC3", ElementType::UFIXED, 3, 2},
+    {ANARI_UFIXED16_VEC4, "UFIXED16_VEC4", ElementType::UFIXED, 4, 2},
+    {ANARI_UFIXED32, "UFIXED32", ElementType::UFIXED, 1, 4},
+    {ANARI_UFIXED32_VEC2, "UFIXED32_VEC2", ElementType::UFIXED, 2, 4},
+    {ANARI_UFIXED32_VEC3, "UFIXED32_VEC3", ElementType::UFIXED, 3, 4},
+    {ANARI_UFIXED32_VEC4, "UFIXED32_VEC4", ElementType::UFIXED, 4, 4},
+    {ANARI_UFIXED8_R_SRGB, "UFIXED8_R_SRGB", ElementType::SRGB, 1, 1},
+    {ANARI_UFIXED8_RA_SRGB, "UFIXED8_RA_SRGB", ElementType::SRGB, 2, 1},
+    {ANARI_UFIXED8_RGB_SRGB, "UFIXED8_RGB_SRGB", ElementType::SRGB, 3, 1},
+    {ANARI_UFIXED8_RGBA_SRGB, "UFIXED8_RGBA_SRGB", ElementType::SRGB, 4, 1},
+    {ANARI_FIXED16_VEC2, "FIXED16_VEC2", ElementType::UNSUPPORTED, 2, 2},
+};
+
+// rgb = (x, y, (z + w) / 2), so that the 4th component is checked too
+const mat4 ALPHA_INTO_BLUE = {{1.f, 0.f, 0.f, 0.f},
+    {0.f, 1.f, 0.f, 0.f},
+    {0.f, 0.f, 0.5f, 0.f},
+    {0.f, 0.f, 0.5f, 1.f}};
+
+// The ELEMENT_TYPES entry of 'type'
+const ElementType &elementType(ANARIDataType type)
+{
+  return *std::find_if(std::begin(ELEMENT_TYPES),
+      std::end(ELEMENT_TYPES),
+      [&](const ElementType &t) { return t.type == type; });
+}
+
 bool testElementTypes(anari::Device d)
 {
-  const ElementType types[] = {
-      {ANARI_FLOAT32, "FLOAT32", ElementType::FLOAT, 1, 4},
-      {ANARI_FLOAT32_VEC2, "FLOAT32_VEC2", ElementType::FLOAT, 2, 4},
-      {ANARI_FLOAT32_VEC3, "FLOAT32_VEC3", ElementType::FLOAT, 3, 4},
-      {ANARI_UFIXED8, "UFIXED8", ElementType::UFIXED, 1, 1},
-      {ANARI_UFIXED8_VEC2, "UFIXED8_VEC2", ElementType::UFIXED, 2, 1},
-      {ANARI_UFIXED8_VEC3, "UFIXED8_VEC3", ElementType::UFIXED, 3, 1},
-      {ANARI_UFIXED8_VEC4, "UFIXED8_VEC4", ElementType::UFIXED, 4, 1},
-      {ANARI_UFIXED16, "UFIXED16", ElementType::UFIXED, 1, 2},
-      {ANARI_UFIXED16_VEC2, "UFIXED16_VEC2", ElementType::UFIXED, 2, 2},
-      {ANARI_UFIXED16_VEC3, "UFIXED16_VEC3", ElementType::UFIXED, 3, 2},
-      {ANARI_UFIXED16_VEC4, "UFIXED16_VEC4", ElementType::UFIXED, 4, 2},
-      {ANARI_UFIXED32, "UFIXED32", ElementType::UFIXED, 1, 4},
-      {ANARI_UFIXED32_VEC2, "UFIXED32_VEC2", ElementType::UFIXED, 2, 4},
-      {ANARI_UFIXED32_VEC3, "UFIXED32_VEC3", ElementType::UFIXED, 3, 4},
-      {ANARI_UFIXED32_VEC4, "UFIXED32_VEC4", ElementType::UFIXED, 4, 4},
-      {ANARI_UFIXED8_R_SRGB, "UFIXED8_R_SRGB", ElementType::SRGB, 1, 1},
-      {ANARI_UFIXED8_RA_SRGB, "UFIXED8_RA_SRGB", ElementType::SRGB, 2, 1},
-      {ANARI_UFIXED8_RGB_SRGB, "UFIXED8_RGB_SRGB", ElementType::SRGB, 3, 1},
-      {ANARI_UFIXED8_RGBA_SRGB, "UFIXED8_RGBA_SRGB", ElementType::SRGB, 4, 1},
-      {ANARI_FIXED16_VEC2, "FIXED16_VEC2", ElementType::UNSUPPORTED, 2, 2},
-  };
-  // rgb = (x, y, (z + w) / 2), so that the 4th component is checked too
-  const mat4 alphaIntoBlue = {{1.f, 0.f, 0.f, 0.f},
-      {0.f, 1.f, 0.f, 0.f},
-      {0.f, 0.f, 0.5f, 0.f},
-      {0.f, 0.f, 0.5f, 1.f}};
   // coordinates spanning [-1.5, 2.5], so that 'repeat' wraps texel indices
   const mat4 scale = linalg::scaling_matrix(float3(4.f, 4.f, 4.f));
   const float4 shift(-1.5f, -1.5f, -1.f, 0.f);
 
   bool pass = true;
-  for (const ElementType &t : types) {
+  for (const ElementType &t : ELEMENT_TYPES) {
     for (int dims = 1; dims <= 3; dims++) {
       for (const char *filter : {"linear", "nearest"}) {
         auto img = image(dims,
@@ -593,7 +632,7 @@ bool testElementTypes(anari::Device d)
                             : uint3(3, 4, 2));
         setElements(img, t);
         img.filter = filter;
-        img.outTransform = alphaIntoBlue;
+        img.outTransform = ALPHA_INTO_BLUE;
         if (dims == 2) {
           img.wrapMode[0] = "repeat";
           img.wrapMode[1] = "mirrorRepeat";
@@ -606,6 +645,226 @@ bool testElementTypes(anari::Device d)
       }
     }
   }
+  return pass;
+}
+
+// Shared and captured images /////////////////////////////////////////////////
+
+// Junk bytes around an image in app memory (0.747f as floats)
+constexpr int JUNK_BYTE = 0x3F;
+
+// The bytes of 'img''s 'image' array: its elements, or its float4 texels
+std::vector<uint8_t> imageBytes(const ImageDesc &img)
+{
+  if (img.elementType != ANARI_FLOAT32_VEC4)
+    return img.elements;
+  const auto *p = reinterpret_cast<const uint8_t *>(img.texels.data());
+  return std::vector<uint8_t>(p, p + img.texels.size() * sizeof(float4));
+}
+
+// 'img' with its texels in reverse order
+ImageDesc reversed(ImageDesc img)
+{
+  std::reverse(img.texels.begin(), img.texels.end());
+  if (!img.elements.empty()) {
+    const size_t n = img.texels.size();
+    const size_t stride = img.elements.size() / n;
+    std::vector<uint8_t> e(img.elements.size());
+    for (size_t i = 0; i < n; i++)
+      std::memcpy(&e[i * stride], &img.elements[(n - 1 - i) * stride], stride);
+    img.elements = e;
+  }
+  return img;
+}
+
+// App memory holding an image, and the shared array of it
+struct SharedImage
+{
+  std::unique_ptr<uint8_t[]> memory;
+  size_t memoryBytes{0};
+  uint8_t *image{nullptr}; // the image's first element, inside 'memory'
+  anari::Array array{nullptr};
+
+  // Writes 'img''s bytes over the image
+  void write(const ImageDesc &img)
+  {
+    const auto bytes = imageBytes(img);
+    std::memcpy(image, bytes.data(), bytes.size());
+  }
+
+  // Overwrites all of 'memory' with junk and frees it
+  void free()
+  {
+    std::memset(memory.get(), JUNK_BYTE, memoryBytes);
+    memory.reset();
+    image = nullptr;
+  }
+};
+
+// A shared 'image' array of 'img' in app memory: 'misalign' bytes into an
+// allocation (aligned to 16), and for 1D after 'prefix' and before 'suffix'
+// junk elements, which the array's 'begin'/'end' skip
+SharedImage newSharedImage(anari::Device d,
+    const ImageDesc &img,
+    size_t misalign = 0,
+    size_t prefix = 0,
+    size_t suffix = 0)
+{
+  const size_t elementBytes = anari::sizeOf(img.elementType);
+  const size_t imageBytes = img.texels.size() * elementBytes;
+  SharedImage s;
+  s.memoryBytes = misalign + (prefix + suffix) * elementBytes + imageBytes;
+  s.memory.reset(new uint8_t[s.memoryBytes]);
+  std::memset(s.memory.get(), JUNK_BYTE, s.memoryBytes);
+  uint8_t *first = s.memory.get() + misalign;
+  s.image = first + prefix * elementBytes;
+  s.write(img);
+
+  const uint3 n = img.size;
+  if (img.dimensions == 1) {
+    auto a = anari::newArray1D(
+        d, first, nullptr, nullptr, img.elementType, prefix + n.x + suffix);
+    if (prefix + suffix > 0) {
+      anari::setParameter(d, a, "begin", uint64_t(prefix));
+      anari::setParameter(d, a, "end", uint64_t(prefix + n.x));
+      anari::commitParameters(d, a);
+    }
+    s.array = a;
+  } else if (img.dimensions == 2) {
+    s.array = anari::newArray2D(
+        d, first, nullptr, nullptr, img.elementType, n.x, n.y);
+  } else {
+    s.array = anari::newArray3D(
+        d, first, nullptr, nullptr, img.elementType, n.x, n.y, n.z);
+  }
+  return s;
+}
+
+// An image of 'dims' dimensions in element type 'type' (FLOAT32_VEC4 as
+// texels), with every component checked
+ImageDesc sharedTestImage(int dims, ANARIDataType type)
+{
+  auto img = image(dims,
+      dims == 1       ? uint3(5, 1, 1)
+          : dims == 2 ? uint3(4, 3, 1)
+                      : uint3(3, 4, 2));
+  if (type != ANARI_FLOAT32_VEC4)
+    setElements(img, elementType(type));
+  img.outTransform = ALPHA_INTO_BLUE;
+  return img;
+}
+
+// A sampler over a shared image samples the app's texels; after the app
+// changes them while the array is mapped, the next render samples the new
+// ones; after the app releases the array (helium copies it) and then
+// overwrites and frees its memory, renders still sample the new texels.
+bool checkSharedImage(anari::Device d,
+    const std::string &test,
+    const ImageDesc &img,
+    size_t misalign = 0,
+    size_t prefix = 0,
+    size_t suffix = 0)
+{
+  auto shared = newSharedImage(d, img, misalign, prefix, suffix);
+  auto sampler = newImageSampler(d, img, shared.array);
+  auto world = makeWorld(d,
+      [&](anari::Material m) { anari::setParameter(d, m, "color", sampler); });
+  anari::release(d, sampler);
+
+  bool pass = checkWorld(d, (test + ": app texels").c_str(), world, img);
+
+  const ImageDesc changed = reversed(img);
+  anari::map<void>(d, shared.array);
+  shared.write(changed);
+  anari::unmap(d, shared.array);
+  pass &=
+      checkWorld(d, (test + ": changed while mapped").c_str(), world, changed);
+
+  anari::release(d, shared.array);
+  shared.free();
+  pass &= checkWorld(
+      d, (test + ": released and app memory freed").c_str(), world, changed);
+
+  anari::release(d, world);
+  return pass;
+}
+
+bool testSharedImages(anari::Device d)
+{
+  bool pass = true;
+
+  for (int dims = 1; dims <= 3; dims++) {
+    for (ANARIDataType type : {ANARI_UFIXED8_VEC4, ANARI_FLOAT32_VEC4}) {
+      const auto img = sharedTestImage(dims, type);
+      pass &= checkSharedImage(d,
+          "shared image" + std::to_string(dims) + "D " + anari::toString(type),
+          img);
+    }
+  }
+
+  // a 1D image's elements start at 'begin'
+  for (ANARIDataType type : {ANARI_FLOAT32_VEC4, ANARI_UFIXED8_VEC3}) {
+    const auto img = sharedTestImage(1, type);
+    pass &= checkSharedImage(d,
+        std::string("shared image1D ") + anari::toString(type) + " begin 2",
+        img,
+        0,
+        2,
+        1);
+  }
+
+  // app memory needn't be aligned to the element type's components
+  for (ANARIDataType type : {ANARI_FLOAT32,
+           ANARI_FLOAT32_VEC3,
+           ANARI_UFIXED16_VEC2,
+           ANARI_UFIXED32,
+           ANARI_UFIXED8_RGB_SRGB}) {
+    const auto img = sharedTestImage(2, type);
+    pass &= checkSharedImage(d,
+        std::string("shared image2D ") + anari::toString(type) + " unaligned",
+        img,
+        1);
+  }
+  pass &= checkSharedImage(d,
+      "shared image1D FLOAT32_VEC2 begin 1 unaligned",
+      sharedTestImage(1, ANARI_FLOAT32_VEC2),
+      2,
+      1);
+
+  // a captured image is read until the device deletes it
+  {
+    const auto img = sharedTestImage(3, ANARI_UFIXED16_VEC4);
+    const auto bytes = imageBytes(img);
+    auto *memory = new uint8_t[bytes.size()];
+    std::memcpy(memory, bytes.data(), bytes.size());
+    bool deleted = false;
+    auto deleter = [](const void *userData, const void *appMemory) {
+      *(bool *)userData = true;
+      delete[] (const uint8_t *)appMemory;
+    };
+    auto array = anari::newArray3D(d,
+        memory,
+        deleter,
+        &deleted,
+        img.elementType,
+        img.size.x,
+        img.size.y,
+        img.size.z);
+    auto sampler = newImageSampler(d, img, array);
+    anari::release(d, array);
+    auto world = makeWorld(d, [&](anari::Material m) {
+      anari::setParameter(d, m, "color", sampler);
+    });
+    anari::release(d, sampler);
+    pass &= checkWorld(d, "captured image3D UFIXED16_VEC4", world, img);
+    const bool deletedEarly = deleted;
+    anari::release(d, world);
+    const bool ok = !deletedEarly && deleted;
+    std::printf(
+        "%s captured image deleted with the sampler\n", ok ? "PASS" : "FAIL");
+    pass &= ok;
+  }
+
   return pass;
 }
 
@@ -870,10 +1129,8 @@ bool testTransformSampler(anari::Device d)
   // helide's 'transform' name is not read
   TransformDesc helide;
   helide.transform = &m;
-  pass &= checkTransform(d,
-      "transform ignores helide name",
-      helide,
-      [](float4 a) { return a; });
+  pass &= checkTransform(
+      d, "transform ignores helide name", helide, [](float4 a) { return a; });
 
   const mat4 other = linalg::scaling_matrix(float3(0.5f, 0.5f, 0.5f));
   TransformDesc both;
@@ -952,7 +1209,8 @@ bool testPrimitiveSampler(anari::Device d)
   // helide's 'offset' name is not read
   s = newSampler();
   anari::setParameter(d, s, "offset", uint32_t(1));
-  pass &= check("primitive ignores offset (helide name)", s, values[0], values[1]);
+  pass &=
+      check("primitive ignores offset (helide name)", s, values[0], values[1]);
   anari::setParameter(d, s, "offset", uint64_t(1));
   pass &= check("primitive ignores uint64 offset", s, values[0], values[1]);
   anari::setParameter(d, s, "inOffset", uint64_t(2));
@@ -1025,6 +1283,7 @@ int main()
   bool pass = true;
   pass &= testImages(d);
   pass &= testElementTypes(d);
+  pass &= testSharedImages(d);
   pass &= testMaterialUse(d);
   pass &= testTransformSampler(d);
   pass &= testPrimitiveSampler(d);
