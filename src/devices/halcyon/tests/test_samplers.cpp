@@ -9,8 +9,10 @@
 // surface color exactly) whose matte color comes from an image sampler, and
 // compares every pixel on the quad against a C++ port of helide's image
 // sampling: 1D/2D/3D images, filters, wrap modes, in/out transforms and
-// offsets. Also covers opacity samplers, invalid samplers and updates, and
-// the transform and primitive samplers.
+// offsets, and images of every element type the device reads natively (8, 16
+// and 32-bit UFIXED, sRGB, FLOAT32; 1-4 components). Also covers opacity
+// samplers, invalid samplers and updates, and the transform and primitive
+// samplers.
 
 // anari
 #define ANARI_LINALG_DEFINITIONS
@@ -50,6 +52,10 @@ struct ImageDesc
   int dimensions{2};
   uint3 size{1, 1, 1};
   std::vector<float4> texels; // x fastest
+  // the 'image' array's element type; other than FLOAT32_VEC4, the array
+  // holds 'elements' (raw bytes) and 'texels' are their decoded values
+  ANARIDataType elementType{ANARI_FLOAT32_VEC4};
+  std::vector<uint8_t> elements;
   const char *filter{"linear"};
   const char *wrapMode[3]{"clampToEdge", "clampToEdge", "clampToEdge"};
   const char *inAttribute{"attribute0"};
@@ -155,20 +161,23 @@ float4 referenceSample(const ImageDesc &img, float4 a, bool &skip)
 // the right ANARI_ARRAY<N>D type)
 void setImage(anari::Device d, anari::Sampler s, const ImageDesc &img)
 {
+  const bool raw = img.elementType != ANARI_FLOAT32_VEC4;
   auto fill = [&](auto a) {
-    auto *p = anari::map<float4>(d, a);
-    std::memcpy(p, img.texels.data(), img.texels.size() * sizeof(float4));
+    auto *p = anari::map<uint8_t>(d, a);
+    if (raw)
+      std::memcpy(p, img.elements.data(), img.elements.size());
+    else
+      std::memcpy(p, img.texels.data(), img.texels.size() * sizeof(float4));
     anari::unmap(d, a);
     anari::setAndReleaseParameter(d, s, "image", a);
   };
+  const ANARIDataType type = img.elementType;
   if (img.dimensions == 1)
-    fill(anari::newArray1D(d, ANARI_FLOAT32_VEC4, img.size.x));
+    fill(anari::newArray1D(d, type, img.size.x));
   else if (img.dimensions == 2)
-    fill(anari::newArray2D(d, ANARI_FLOAT32_VEC4, img.size.x, img.size.y));
-  else {
-    fill(anari::newArray3D(
-        d, ANARI_FLOAT32_VEC4, img.size.x, img.size.y, img.size.z));
-  }
+    fill(anari::newArray2D(d, type, img.size.x, img.size.y));
+  else
+    fill(anari::newArray3D(d, type, img.size.x, img.size.y, img.size.z));
 }
 
 anari::Sampler newImageSampler(anari::Device d, const ImageDesc &img)
@@ -472,6 +481,131 @@ bool testImages(anari::Device d)
     return img;
   }());
 
+  return pass;
+}
+
+// Element types of images ///////////////////////////////////////////////////
+
+// An element type of image arrays: 'components' of 'bytes' each, decoded as
+// 'kind'
+struct ElementType
+{
+  ANARIDataType type;
+  const char *name;
+  enum Kind
+  {
+    FLOAT,
+    UFIXED,
+    SRGB,
+    UNSUPPORTED // read as (0, 0, 0, 1), as helium reads it
+  } kind;
+  int components;
+  int bytes;
+};
+
+// The sRGB curve's decode (IEC 61966-2-1)
+float srgbToLinear(float v)
+{
+  return v <= 0.04045f ? v / 12.92f : std::pow((v + 0.055f) / 1.055f, 2.4f);
+}
+
+// Sets 'img''s elements to deterministic, distinct values of type 't' and its
+// texels to their decoded values: UFIXED as value / max, sRGB through the
+// curve but for alpha (the last component of RA and RGBA), missing components
+// (0, 0, 0, 1)
+void setElements(ImageDesc &img, const ElementType &t)
+{
+  const size_t n = img.texels.size();
+  img.elementType = t.type;
+  img.elements.assign(n * t.components * t.bytes, 0);
+  for (size_t i = 0; i < n; i++) {
+    float4 v(0.f, 0.f, 0.f, 1.f);
+    for (int c = 0; c < t.components; c++) {
+      const size_t k = i * t.components + c;
+      uint8_t *p = img.elements.data() + k * t.bytes;
+      float f = 0.f;
+      if (t.kind == ElementType::FLOAT) {
+        f = std::fmod(0.37f * k + 0.1f, 1.f);
+        std::memcpy(p, &f, sizeof(f));
+      } else if (t.bytes == 1) {
+        const uint8_t u = uint8_t((37 * k + 13) % 256);
+        *p = u;
+        f = u / 255.f;
+        if (t.kind == ElementType::SRGB && c < 3
+            && !(t.components == 2 && c == 1))
+          f = srgbToLinear(f);
+      } else if (t.bytes == 2) {
+        const uint16_t u = uint16_t((12345 * k + 99) % 65536);
+        std::memcpy(p, &u, sizeof(u));
+        f = u / 65535.f;
+      } else {
+        const uint32_t u = uint32_t(2654435761u * (k + 1));
+        std::memcpy(p, &u, sizeof(u));
+        f = float(u) / 4294967295.f;
+      }
+      if (t.kind != ElementType::UNSUPPORTED)
+        v[c] = f;
+    }
+    img.texels[i] = v;
+  }
+}
+
+bool testElementTypes(anari::Device d)
+{
+  const ElementType types[] = {
+      {ANARI_FLOAT32, "FLOAT32", ElementType::FLOAT, 1, 4},
+      {ANARI_FLOAT32_VEC2, "FLOAT32_VEC2", ElementType::FLOAT, 2, 4},
+      {ANARI_FLOAT32_VEC3, "FLOAT32_VEC3", ElementType::FLOAT, 3, 4},
+      {ANARI_UFIXED8, "UFIXED8", ElementType::UFIXED, 1, 1},
+      {ANARI_UFIXED8_VEC2, "UFIXED8_VEC2", ElementType::UFIXED, 2, 1},
+      {ANARI_UFIXED8_VEC3, "UFIXED8_VEC3", ElementType::UFIXED, 3, 1},
+      {ANARI_UFIXED8_VEC4, "UFIXED8_VEC4", ElementType::UFIXED, 4, 1},
+      {ANARI_UFIXED16, "UFIXED16", ElementType::UFIXED, 1, 2},
+      {ANARI_UFIXED16_VEC2, "UFIXED16_VEC2", ElementType::UFIXED, 2, 2},
+      {ANARI_UFIXED16_VEC3, "UFIXED16_VEC3", ElementType::UFIXED, 3, 2},
+      {ANARI_UFIXED16_VEC4, "UFIXED16_VEC4", ElementType::UFIXED, 4, 2},
+      {ANARI_UFIXED32, "UFIXED32", ElementType::UFIXED, 1, 4},
+      {ANARI_UFIXED32_VEC2, "UFIXED32_VEC2", ElementType::UFIXED, 2, 4},
+      {ANARI_UFIXED32_VEC3, "UFIXED32_VEC3", ElementType::UFIXED, 3, 4},
+      {ANARI_UFIXED32_VEC4, "UFIXED32_VEC4", ElementType::UFIXED, 4, 4},
+      {ANARI_UFIXED8_R_SRGB, "UFIXED8_R_SRGB", ElementType::SRGB, 1, 1},
+      {ANARI_UFIXED8_RA_SRGB, "UFIXED8_RA_SRGB", ElementType::SRGB, 2, 1},
+      {ANARI_UFIXED8_RGB_SRGB, "UFIXED8_RGB_SRGB", ElementType::SRGB, 3, 1},
+      {ANARI_UFIXED8_RGBA_SRGB, "UFIXED8_RGBA_SRGB", ElementType::SRGB, 4, 1},
+      {ANARI_FIXED16_VEC2, "FIXED16_VEC2", ElementType::UNSUPPORTED, 2, 2},
+  };
+  // rgb = (x, y, (z + w) / 2), so that the 4th component is checked too
+  const mat4 alphaIntoBlue = {{1.f, 0.f, 0.f, 0.f},
+      {0.f, 1.f, 0.f, 0.f},
+      {0.f, 0.f, 0.5f, 0.f},
+      {0.f, 0.f, 0.5f, 1.f}};
+  // coordinates spanning [-1.5, 2.5], so that 'repeat' wraps texel indices
+  const mat4 scale = linalg::scaling_matrix(float3(4.f, 4.f, 4.f));
+  const float4 shift(-1.5f, -1.5f, -1.f, 0.f);
+
+  bool pass = true;
+  for (const ElementType &t : types) {
+    for (int dims = 1; dims <= 3; dims++) {
+      for (const char *filter : {"linear", "nearest"}) {
+        auto img = image(dims,
+            dims == 1       ? uint3(5, 1, 1)
+                : dims == 2 ? uint3(4, 3, 1)
+                            : uint3(3, 4, 2));
+        setElements(img, t);
+        img.filter = filter;
+        img.outTransform = alphaIntoBlue;
+        if (dims == 2) {
+          img.wrapMode[0] = "repeat";
+          img.wrapMode[1] = "mirrorRepeat";
+          img.inTransform = scale;
+          img.inOffset = shift;
+        }
+        const std::string test =
+            "image" + std::to_string(dims) + "D " + t.name + " " + filter;
+        pass &= checkImage(d, test.c_str(), img);
+      }
+    }
+  }
   return pass;
 }
 
@@ -890,6 +1024,7 @@ int main()
 
   bool pass = true;
   pass &= testImages(d);
+  pass &= testElementTypes(d);
   pass &= testMaterialUse(d);
   pass &= testTransformSampler(d);
   pass &= testPrimitiveSampler(d);

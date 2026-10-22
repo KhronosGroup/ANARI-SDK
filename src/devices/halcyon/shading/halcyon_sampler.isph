@@ -110,15 +110,74 @@ inline float4 Image_filter(float4 v0, float4 v1, float frac, uniform bool linear
   return linear ? lerp(v0, v1, frac) : (frac < 0.5f ? v0 : v1);
 }
 
-// Texel at (unwrapped) indices x, y, z
+// Whether component 'c' of an sRGB texel with 'components' components is
+// colour (through the sRGB curve) rather than alpha (linear): alpha is the
+// last component of RA and RGBA, as helium reads them
+inline uniform bool Image_isSrgbColor(uniform int c, uniform int components)
+{
+  return c < 3 && !(components == 2 && c == 1);
+}
+
+// Texel at (unwrapped) indices x, y, z, decoded from the image's texel type
+// to float4 as helium's readAsAttributeValue() converts it
 inline float4 Image_texel(const uniform ImageSampler &img, int x, int y, int z)
 {
   const int64 wx = Image_wrapIndex(x, img.size[0], img.wrapMode[0]);
   const int64 wy = Image_wrapIndex(y, img.size[1], img.wrapMode[1]);
   const int64 wz = Image_wrapIndex(z, img.size[2], img.wrapMode[2]);
-  const int64 i = wx + img.size[0] * (wy + img.size[1] * wz);
+  const uniform int n = img.components;
+  const int64 i = n * (wx + img.size[0] * (wy + img.size[1] * wz));
+
+  float v[4] = {0.f, 0.f, 0.f, 1.f};
+  switch (img.texelType) {
+  case TEXEL_TYPE_FLOAT32: {
+    const uniform float *uniform t = (const uniform float *uniform)img.texels;
+    for (uniform int c = 0; c < n; c++) {
 #pragma ignore warning(perf)
-  return load_float4(img.texels + 4 * i);
+      v[c] = t[i + c];
+    }
+    break;
+  }
+  case TEXEL_TYPE_UFIXED8: {
+    for (uniform int c = 0; c < n; c++) {
+#pragma ignore warning(perf)
+      v[c] = (float)img.texels[i + c] / 255.f;
+    }
+    break;
+  }
+  case TEXEL_TYPE_UFIXED16: {
+    const uniform uint16 *uniform t =
+        (const uniform uint16 *uniform)img.texels;
+    for (uniform int c = 0; c < n; c++) {
+#pragma ignore warning(perf)
+      v[c] = (float)t[i + c] / 65535.f;
+    }
+    break;
+  }
+  case TEXEL_TYPE_UFIXED32: {
+    const uniform uint32 *uniform t =
+        (const uniform uint32 *uniform)img.texels;
+    for (uniform int c = 0; c < n; c++) {
+#pragma ignore warning(perf)
+      v[c] = (float)t[i + c] / 4294967295.f;
+    }
+    break;
+  }
+  case TEXEL_TYPE_UFIXED8_SRGB: {
+    for (uniform int c = 0; c < n; c++) {
+#pragma ignore warning(perf)
+      const uint8 b = img.texels[i + c];
+      if (Image_isSrgbColor(c, n)) {
+#pragma ignore warning(perf)
+        v[c] = img.srgbToLinear[b];
+      } else {
+        v[c] = (float)b / 255.f;
+      }
+    }
+    break;
+  }
+  }
+  return make_float4(v[0], v[1], v[2], v[3]);
 }
 
 // image1D at input 'coord' (its x)

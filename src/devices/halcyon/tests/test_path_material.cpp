@@ -219,7 +219,14 @@ struct IspcSampler
     const ispc::WrapMode wrap[3] = {ispc::WRAP_MODE_CLAMP_TO_EDGE,
         ispc::WRAP_MODE_CLAMP_TO_EDGE,
         ispc::WRAP_MODE_CLAMP_TO_EDGE};
-    ispc::Sampler_setImage2D(storage, &texels[0][0], size, wrap, false);
+    ispc::Sampler_setImage2D(storage,
+        &texels[0][0],
+        ispc::TEXEL_TYPE_FLOAT32,
+        4,
+        nullptr,
+        size,
+        wrap,
+        false);
   }
 };
 

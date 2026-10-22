@@ -249,11 +249,28 @@ typedef varying float4 (*Sampler_SampleFcn)(const uniform Sampler *uniform self,
 
 // Subtype data (one member per subtype family)
 
-// image1D/2D/3D: the image as packed float4 texels (read with load_float4()),
-// x fastest; unused dimensions have size 1
+// How an image's texel components are stored: each decodes to a float as
+// helium's readAsAttributeValue() converts it (UFIXED: value / max; SRGB:
+// UFIXED8 with the colour components through the sRGB curve, alpha linear)
+enum TexelType
+{
+  TEXEL_TYPE_FLOAT32 = 0,
+  TEXEL_TYPE_UFIXED8,
+  TEXEL_TYPE_UFIXED16,
+  TEXEL_TYPE_UFIXED32,
+  TEXEL_TYPE_UFIXED8_SRGB
+};
+
+// image1D/2D/3D: the image in its array's element type, 'components' (1-4)
+// of 'texelType' per texel, packed, x fastest; unused dimensions have size 1.
+// Missing components read as (0, 0, 0, 1). 'srgbToLinear' (256 floats) is
+// set for TEXEL_TYPE_UFIXED8_SRGB.
 struct ImageSampler
 {
-  const uniform float *uniform texels;
+  const uniform uint8 *uniform texels;
+  const uniform float *uniform srgbToLinear;
+  uniform TexelType texelType;
+  uniform int components;
   uniform int size[3];
   uniform WrapMode wrapMode[3];
   uniform bool linearFilter;

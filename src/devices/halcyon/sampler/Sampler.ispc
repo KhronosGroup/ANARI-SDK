@@ -69,6 +69,9 @@ export void Sampler_setDefaults(void *uniform _self)
   self->outTransform = make_mat4f_identity();
   self->outOffset = make_float4(0.f);
   self->image.texels = NULL;
+  self->image.srgbToLinear = NULL;
+  self->image.texelType = TEXEL_TYPE_FLOAT32;
+  self->image.components = 4;
   self->primitive.values = NULL;
   self->primitive.size = 0;
   self->primitive.offset = 0;
@@ -91,11 +94,15 @@ export void Sampler_setParameters(void *uniform _self,
   self->outOffset = load_float4(outOffset);
 }
 
-// Image data shared by image1D/2D/3D; 'texels' are packed float4, x fastest,
-// and 'size' has 1 in unused dimensions. Installs 'hook', or no hook (an
-// invalid sampler) if 'texels' is NULL.
+// Image data shared by image1D/2D/3D; 'texels' are 'components' (1-4) of
+// 'texelType' each, packed, x fastest, and 'size' has 1 in unused dimensions;
+// 'srgbToLinear' (256 floats) is needed for TEXEL_TYPE_UFIXED8_SRGB. Installs
+// 'hook', or no hook (an invalid sampler) if 'texels' is NULL.
 static void setImage(void *uniform _self,
-    const uniform float *uniform texels,
+    const void *uniform texels,
+    uniform TexelType texelType,
+    uniform int components,
+    const uniform float *uniform srgbToLinear,
     const uniform int *uniform size,
     const uniform WrapMode *uniform wrapMode,
     uniform bool linearFilter,
@@ -104,7 +111,10 @@ static void setImage(void *uniform _self,
 {
   uniform Sampler *uniform self = object_cast<Sampler>(_self);
   uniform ImageSampler &img = self->image;
-  img.texels = texels;
+  img.texels = (const uniform uint8 *uniform)texels;
+  img.srgbToLinear = srgbToLinear;
+  img.texelType = texelType;
+  img.components = components;
   for (uniform int d = 0; d < 3; d++) {
     img.size[d] = size[d];
     img.wrapMode[d] = wrapMode[d];
@@ -116,13 +126,19 @@ static void setImage(void *uniform _self,
 
 // Installs the image1D hook (see setImage())
 export void Sampler_setImage1D(void *uniform _self,
-    const uniform float *uniform texels,
+    const void *uniform texels,
+    uniform TexelType texelType,
+    uniform int components,
+    const uniform float *uniform srgbToLinear,
     const uniform int *uniform size,
     const uniform WrapMode *uniform wrapMode,
     uniform bool linearFilter)
 {
   setImage(_self,
       texels,
+      texelType,
+      components,
+      srgbToLinear,
       size,
       wrapMode,
       linearFilter,
@@ -132,13 +148,19 @@ export void Sampler_setImage1D(void *uniform _self,
 
 // Installs the image2D hook (see setImage())
 export void Sampler_setImage2D(void *uniform _self,
-    const uniform float *uniform texels,
+    const void *uniform texels,
+    uniform TexelType texelType,
+    uniform int components,
+    const uniform float *uniform srgbToLinear,
     const uniform int *uniform size,
     const uniform WrapMode *uniform wrapMode,
     uniform bool linearFilter)
 {
   setImage(_self,
       texels,
+      texelType,
+      components,
+      srgbToLinear,
       size,
       wrapMode,
       linearFilter,
@@ -148,13 +170,19 @@ export void Sampler_setImage2D(void *uniform _self,
 
 // Installs the image3D hook (see setImage())
 export void Sampler_setImage3D(void *uniform _self,
-    const uniform float *uniform texels,
+    const void *uniform texels,
+    uniform TexelType texelType,
+    uniform int components,
+    const uniform float *uniform srgbToLinear,
     const uniform int *uniform size,
     const uniform WrapMode *uniform wrapMode,
     uniform bool linearFilter)
 {
   setImage(_self,
       texels,
+      texelType,
+      components,
+      srgbToLinear,
       size,
       wrapMode,
       linearFilter,

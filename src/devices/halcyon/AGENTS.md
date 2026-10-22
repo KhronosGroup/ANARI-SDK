@@ -294,9 +294,15 @@ app releases its last public reference while objects still use it (`privatize()`
 copies most array data into object-owned buffers in `finalize()`:
 
 - Geometry `vertex.*`/`primitive.*`/`faceVarying.*` attributes, the renderer's background
-  image, image sampler texels, the primitive sampler's `array` and transfer function colours
-  become packed float4 via `toAttributeValues()` (`array/Array1D.h`); ISPC reads them with
-  `load_float4()`. Instance attributes are packed to float4 per transform from
+  image, the primitive sampler's `array` and transfer function colours become packed float4
+  via `toAttributeValues()` (`array/Array1D.h`); ISPC reads them with `load_float4()`.
+- Image sampler texels are byte-copied in their native type when ISPC decodes it (FLOAT32,
+  UFIXED8/16/32 and the UFIXED8 sRGB formats, 1-4 components; `texelFormat()` in
+  `Sampler.cpp`), so 8/16-bit images don't grow as floats. `Image_texel()`
+  (`shading/halcyon_sampler.isph`) decodes each texel to the float4 helium's
+  `readAsAttributeValue()` gives, sRGB through a 256-entry table built from helium's
+  `toneMap()`, before filtering. Other element types are still converted with
+  `toAttributeValues()`. Shared arrays are copied too (no zero-copy yet). Instance attributes are packed to float4 per transform from
   `getUniformAttributes()`.
 - Face-varying attributes (`faceVarying.color`, `faceVarying.attribute0`–`3`; triangle and
   quad only, which opt in with `commitFaceVaryingAttributes()`) hold one value per primitive
