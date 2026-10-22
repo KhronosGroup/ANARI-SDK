@@ -118,7 +118,8 @@ MaterialX documents (ticket 22) name image files. `Sample2D()` resolves keys oth
 
 ## Consequences
 
-- `struct Sampler` has a `kind` (the slot stays 240 bytes).
+- `struct Sampler` has a `kind` (the slot stays 240 bytes; 256 since image texels keep
+  their element type).
 - `halcyon_path_materials` compiles `HalcyonTextureSystem.ispc`, which includes the
   sampling code; the device compiles it again in `Sampler.ispc`. It is one source.
 - A sampler commit finalizes the materials that use it again, which recompiles their graphs.

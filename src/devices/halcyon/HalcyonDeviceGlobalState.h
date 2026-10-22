@@ -79,7 +79,7 @@ struct HalcyonDeviceGlobalState : public helium::BaseGlobalDeviceState
     IndexedVector<IspcObjectStorage<24>> surfaces;
     IndexedVector<IspcObjectStorage<560>> geometries;
     IndexedVector<IspcObjectStorage<96>> materials;
-    IndexedVector<IspcObjectStorage<240>> samplers;
+    IndexedVector<IspcObjectStorage<256>> samplers;
     IndexedVector<IspcObjectStorage<176>> spatialFields;
     IndexedVector<IspcObjectStorage<112>> volumes;
   } registry;

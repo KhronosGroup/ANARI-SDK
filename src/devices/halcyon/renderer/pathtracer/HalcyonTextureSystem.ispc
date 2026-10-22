@@ -68,7 +68,10 @@ export void HalcyonTexture_sampleImage(const uniform float *uniform texels,
     uniform float *uniform result)
 {
   uniform ImageSampler img;
-  img.texels = texels;
+  img.texels = (const uniform uint8 *uniform)texels;
+  img.srgbToLinear = NULL;
+  img.texelType = TEXEL_TYPE_FLOAT32;
+  img.components = 4;
   img.size[0] = width;
   img.size[1] = height;
   img.size[2] = 1;

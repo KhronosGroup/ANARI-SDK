@@ -7,6 +7,8 @@
 #include "array/Array2D.h"
 #include "array/Array3D.h"
 // std
+#include <array>
+#include <cstring>
 #include <vector>
 
 namespace halcyon {
@@ -42,9 +44,103 @@ static Attribute inAttributeParam(const Sampler &s)
   return attributeFromString(s.getParamString("inAttribute", "attribute0"));
 }
 
-// image1D/2D/3D: the image is copied to float4 texels at finalize; subtypes
-// read their 'image' and wrap modes and report the image's size. A missing or
-// empty image (any dimension 0) makes the sampler invalid.
+// helium's sRGB decode of each UFIXED8 value, for ISPC's
+// TEXEL_TYPE_UFIXED8_SRGB texels
+static const float *srgbToLinearTable()
+{
+  static const std::array<float, 256> table = [] {
+    std::array<float, 256> t{};
+    for (int i = 0; i < 256; i++) {
+      t[i] =
+          helium::toneMap<helium::ToneMapMode::FROM_SRGB>(uint8_t(i) / 255.f);
+    }
+    return t;
+  }();
+  return table.data();
+}
+
+// How ISPC reads an image's texels in their own element type
+struct TexelFormat
+{
+  ispc::TexelType type;
+  int components;
+};
+
+// The format of 'elementType' texels, false if ISPC can't read them as they
+// are (they are converted to float4 instead)
+static bool texelFormat(ANARIDataType elementType, TexelFormat &format)
+{
+  switch (elementType) {
+  case ANARI_FLOAT32:
+    format = {ispc::TEXEL_TYPE_FLOAT32, 1};
+    return true;
+  case ANARI_FLOAT32_VEC2:
+    format = {ispc::TEXEL_TYPE_FLOAT32, 2};
+    return true;
+  case ANARI_FLOAT32_VEC3:
+    format = {ispc::TEXEL_TYPE_FLOAT32, 3};
+    return true;
+  case ANARI_FLOAT32_VEC4:
+    format = {ispc::TEXEL_TYPE_FLOAT32, 4};
+    return true;
+  case ANARI_UFIXED8:
+    format = {ispc::TEXEL_TYPE_UFIXED8, 1};
+    return true;
+  case ANARI_UFIXED8_VEC2:
+    format = {ispc::TEXEL_TYPE_UFIXED8, 2};
+    return true;
+  case ANARI_UFIXED8_VEC3:
+    format = {ispc::TEXEL_TYPE_UFIXED8, 3};
+    return true;
+  case ANARI_UFIXED8_VEC4:
+    format = {ispc::TEXEL_TYPE_UFIXED8, 4};
+    return true;
+  case ANARI_UFIXED16:
+    format = {ispc::TEXEL_TYPE_UFIXED16, 1};
+    return true;
+  case ANARI_UFIXED16_VEC2:
+    format = {ispc::TEXEL_TYPE_UFIXED16, 2};
+    return true;
+  case ANARI_UFIXED16_VEC3:
+    format = {ispc::TEXEL_TYPE_UFIXED16, 3};
+    return true;
+  case ANARI_UFIXED16_VEC4:
+    format = {ispc::TEXEL_TYPE_UFIXED16, 4};
+    return true;
+  case ANARI_UFIXED32:
+    format = {ispc::TEXEL_TYPE_UFIXED32, 1};
+    return true;
+  case ANARI_UFIXED32_VEC2:
+    format = {ispc::TEXEL_TYPE_UFIXED32, 2};
+    return true;
+  case ANARI_UFIXED32_VEC3:
+    format = {ispc::TEXEL_TYPE_UFIXED32, 3};
+    return true;
+  case ANARI_UFIXED32_VEC4:
+    format = {ispc::TEXEL_TYPE_UFIXED32, 4};
+    return true;
+  case ANARI_UFIXED8_R_SRGB:
+    format = {ispc::TEXEL_TYPE_UFIXED8_SRGB, 1};
+    return true;
+  case ANARI_UFIXED8_RA_SRGB:
+    format = {ispc::TEXEL_TYPE_UFIXED8_SRGB, 2};
+    return true;
+  case ANARI_UFIXED8_RGB_SRGB:
+    format = {ispc::TEXEL_TYPE_UFIXED8_SRGB, 3};
+    return true;
+  case ANARI_UFIXED8_RGBA_SRGB:
+    format = {ispc::TEXEL_TYPE_UFIXED8_SRGB, 4};
+    return true;
+  default:
+    return false;
+  }
+}
+
+// image1D/2D/3D: the image is copied at finalize in its own element type
+// (see texelFormat()), so 8/16-bit images don't grow as floats; other element
+// types are converted to float4 like attributes. Subtypes read their 'image'
+// and wrap modes and report the image's size. A missing or empty image (any
+// dimension 0) makes the sampler invalid.
 struct ImageSampler : public Sampler
 {
   ImageSampler(HalcyonDeviceGlobalState *s) : Sampler(s) {}
@@ -69,7 +165,7 @@ struct ImageSampler : public Sampler
 
   void finalize() override
   {
-    m_texels = toAttributeValues(m_image.get());
+    copyTexels();
     if (m_image && m_texels.empty()) {
       reportMessage(ANARI_SEVERITY_WARNING,
           "image sampler's 'image' is empty; the sampler is invalid");
@@ -85,7 +181,8 @@ struct ImageSampler : public Sampler
         ispc::WrapMode(m_wrapMode[1]),
         ispc::WrapMode(m_wrapMode[2])};
     // no image (including an empty one) leaves the sampler without a hook
-    setISPCImage(m_texels.empty() ? nullptr : (const float *)m_texels.data(),
+    setISPCImage(m_texels.empty() ? nullptr : m_texels.data(),
+        m_format,
         isize,
         wrap,
         m_linearFilter);
@@ -95,7 +192,8 @@ struct ImageSampler : public Sampler
   // 'image' dimensions, 1 in unused ones; only called with an image set
   virtual uint3 imageSize() const = 0;
   // Passes the image to ISPC with the subtype's Sampler_setImage<N>D()
-  virtual void setISPCImage(const float *texels,
+  virtual void setISPCImage(const void *texels,
+      const TexelFormat &format,
       const int32_t *size,
       const ispc::WrapMode *wrapMode,
       bool linearFilter) = 0;
@@ -105,14 +203,45 @@ struct ImageSampler : public Sampler
     return wrapModeFromString(getParamString(name, "clampToEdge"));
   }
 
+  // srgbToLinearTable() for sRGB texels, else nullptr
+  static const float *srgbTable(const TexelFormat &format)
+  {
+    return format.type == ispc::TEXEL_TYPE_UFIXED8_SRGB ? srgbToLinearTable()
+                                                        : nullptr;
+  }
+
   helium::ChangeObserverPtr<helium::Array> m_image{this};
   WrapMode m_wrapMode[3]{
       WrapMode::DEFAULT, WrapMode::DEFAULT, WrapMode::DEFAULT};
 
  private:
   SamplerMapping m_mapping;
+  // Copies 'image' to 'm_texels' and sets 'm_format': its bytes for element
+  // types ISPC reads, else float4 attribute values; empty without an image
+  void copyTexels()
+  {
+    m_texels.clear();
+    m_format = {ispc::TEXEL_TYPE_FLOAT32, 4};
+    const helium::Array *a = m_image.get();
+    if (!a)
+      return;
+    if (texelFormat(a->elementType(), m_format)) {
+      const size_t bytes = a->totalSize() * anari::sizeOf(a->elementType());
+      // std::vector's allocation is aligned for any texel type
+      m_texels.resize(bytes);
+      if (bytes > 0)
+        std::memcpy(m_texels.data(), firstElement(*a), bytes);
+    } else {
+      const std::vector<float4> values = toAttributeValues(a);
+      m_texels.resize(values.size() * sizeof(float4));
+      if (!values.empty())
+        std::memcpy(m_texels.data(), values.data(), m_texels.size());
+    }
+  }
+
   bool m_linearFilter{true};
-  std::vector<float4> m_texels;
+  TexelFormat m_format{ispc::TEXEL_TYPE_FLOAT32, 4};
+  std::vector<uint8_t> m_texels;
 };
 
 struct Image1D : public ImageSampler
@@ -132,12 +261,20 @@ struct Image1D : public ImageSampler
     return uint3(uint32_t(((const Array1D *)m_image.get())->size()), 1u, 1u);
   }
 
-  void setISPCImage(const float *texels,
+  void setISPCImage(const void *texels,
+      const TexelFormat &format,
       const int32_t *size,
       const ispc::WrapMode *wrapMode,
       bool linearFilter) override
   {
-    ispc::Sampler_setImage1D(getIE(), texels, size, wrapMode, linearFilter);
+    ispc::Sampler_setImage1D(getIE(),
+        texels,
+        format.type,
+        format.components,
+        srgbTable(format),
+        size,
+        wrapMode,
+        linearFilter);
   }
 };
 
@@ -159,12 +296,20 @@ struct Image2D : public ImageSampler
     return uint3(((const Array2D *)m_image.get())->size(), 1u);
   }
 
-  void setISPCImage(const float *texels,
+  void setISPCImage(const void *texels,
+      const TexelFormat &format,
       const int32_t *size,
       const ispc::WrapMode *wrapMode,
       bool linearFilter) override
   {
-    ispc::Sampler_setImage2D(getIE(), texels, size, wrapMode, linearFilter);
+    ispc::Sampler_setImage2D(getIE(),
+        texels,
+        format.type,
+        format.components,
+        srgbTable(format),
+        size,
+        wrapMode,
+        linearFilter);
   }
 };
 
@@ -188,12 +333,20 @@ struct Image3D : public ImageSampler
     return ((const Array3D *)m_image.get())->size();
   }
 
-  void setISPCImage(const float *texels,
+  void setISPCImage(const void *texels,
+      const TexelFormat &format,
       const int32_t *size,
       const ispc::WrapMode *wrapMode,
       bool linearFilter) override
   {
-    ispc::Sampler_setImage3D(getIE(), texels, size, wrapMode, linearFilter);
+    ispc::Sampler_setImage3D(getIE(),
+        texels,
+        format.type,
+        format.components,
+        srgbTable(format),
+        size,
+        wrapMode,
+        linearFilter);
   }
 };
 
