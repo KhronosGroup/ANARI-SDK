@@ -463,6 +463,8 @@ struct Image
 Image render(anari::Device d, anari::World world, const Settings &s)
 {
   auto renderer = anari::newObject<anari::Renderer>(d, "quality");
+  // one render is the whole first render (no progressive resolution)
+  anari::setParameter(d, renderer, "resolutionDivider", 0);
   anari::setParameter(d,
       renderer,
       "background",

@@ -186,6 +186,8 @@ struct Frame
       : d(d)
   {
     auto renderer = anari::newObject<anari::Renderer>(d, subtype);
+    // one render is the whole first render (no progressive resolution)
+    anari::setParameter(d, renderer, "resolutionDivider", 0);
     if (setParams)
       setParams(d, renderer);
     anari::commitParameters(d, renderer);
@@ -584,6 +586,8 @@ bool testAccumulation(anari::Device d, anari::World world)
 
   // the frame's renderer replaced by an equal one
   auto renderer = anari::newObject<anari::Renderer>(d, "quality");
+  // one render is the whole first render (no progressive resolution)
+  anari::setParameter(d, renderer, "resolutionDivider", 0);
   withSamples(1)(d, renderer);
   anari::commitParameters(d, renderer);
   many.render(3);
@@ -677,6 +681,8 @@ bool testRandomNumberSeed(anari::Device d, anari::World world)
   // the renderer of 'unset' changed to seed 7
   unset.render(3);
   auto renderer = anari::newObject<anari::Renderer>(d, "quality");
+  // one render is the whole first render (no progressive resolution)
+  anari::setParameter(d, renderer, "resolutionDivider", 0);
   withSeed(0)(d, renderer);
   anari::commitParameters(d, renderer);
   anari::setParameter(d, unset.frame, "renderer", renderer);

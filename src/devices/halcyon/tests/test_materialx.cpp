@@ -187,6 +187,8 @@ struct Scene
       : d(device)
   {
     auto r = anari::newObject<anari::Renderer>(d, renderer);
+    // one render is the whole first render (no progressive resolution)
+    anari::setParameter(d, r, "resolutionDivider", 0);
     anari::setParameter(d, r, "background", BACKGROUND);
     anari::setParameter(d, r, "maxBounces", 0);
     anari::setParameter(d, r, "pixelSamples", 1);

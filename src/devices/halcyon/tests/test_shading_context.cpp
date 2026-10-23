@@ -619,6 +619,8 @@ bool near(float4 a, float4 b)
 bool testScene(anari::Device d, const Scene &scene)
 {
   auto renderer = anari::newObject<anari::Renderer>(d, "quality");
+  // one render is the whole first render (no progressive resolution)
+  anari::setParameter(d, renderer, "resolutionDivider", 0);
   auto frame = anari::newObject<anari::Frame>(d);
   anari::setParameter(d, frame, "size", IMAGE_SIZE);
   anari::setParameter(d, frame, "channel.color", ANARI_FLOAT32_VEC4);
@@ -683,6 +685,8 @@ bool testScene(anari::Device d, const Scene &scene)
 bool testDifferentialScale(anari::Device d, const Scene &scene)
 {
   auto renderer = anari::newObject<anari::Renderer>(d, "quality");
+  // one render is the whole first render (no progressive resolution)
+  anari::setParameter(d, renderer, "resolutionDivider", 0);
   anari::setParameter(d, renderer, "mode", "dPdx");
   anari::commitParameters(d, renderer);
   auto frame = anari::newObject<anari::Frame>(d);
@@ -812,6 +816,8 @@ std::vector<float4> renderTiltedPlane(anari::Device d,
   auto world = instancedWorldOf(d, surface, tiltedPlaneTransform());
   auto camera = orthographicCamera(d);
   auto renderer = anari::newObject<anari::Renderer>(d, "quality");
+  // one render is the whole first render (no progressive resolution)
+  anari::setParameter(d, renderer, "resolutionDivider", 0);
   anari::setParameter(d, renderer, "mode", mode);
   anari::setParameter(d, renderer, "maxBounces", 0);
   anari::setParameter(d, renderer, "background", float4(0.f));

@@ -173,6 +173,8 @@ constexpr float VIEW_HEIGHT = 1.7f * 2.2f;
 std::vector<float4> render(anari::Device d, anari::World world, const char *mode)
 {
   auto renderer = anari::newObject<anari::Renderer>(d, "quality");
+  // one render is the whole first render (no progressive resolution)
+  anari::setParameter(d, renderer, "resolutionDivider", 0);
   anari::setParameter(d, renderer, "mode", mode);
   anari::setParameter(d, renderer, "background", float4(1.f));
   anari::setParameter(d, renderer, "ambientColor", float3(1.f));

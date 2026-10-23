@@ -275,6 +275,8 @@ Image render(anari::Device d,
 {
   const bool pathtracer = std::string(subtype) == "quality";
   auto renderer = anari::newObject<anari::Renderer>(d, subtype);
+  // one render is the whole first render (no progressive resolution)
+  anari::setParameter(d, renderer, "resolutionDivider", 0);
   if (pathtracer)
     anari::setParameter(d, renderer, "pixelSamples", pixelSamples);
   else {
@@ -815,6 +817,8 @@ void bench(anari::Device d)
   anari::setParameter(d, camera, "aspect", 1.f);
   anari::commitParameters(d, camera);
   auto renderer = anari::newObject<anari::Renderer>(d, "quality");
+  // one render is the whole first render (no progressive resolution)
+  anari::setParameter(d, renderer, "resolutionDivider", 0);
   anari::setParameter(d, renderer, "pixelSamples", pixelSamples);
   anari::setParameter(d, renderer, "maxBounces", maxBounces);
   anari::setParameter(d, renderer, "background", float4(0.f, 0.f, 0.f, 1.f));

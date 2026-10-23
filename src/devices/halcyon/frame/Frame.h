@@ -58,11 +58,13 @@ struct Frame : public helium::BaseFrame
   const World &world() const;
   bool hasAlbedoChannel() const;
   bool hasNormalChannel() const;
-  // Calls spanFcn(x, y) in parallel for every SIMD-wide pixel span of the
-  // frame, x being the span's first pixel, in tasks of the renderer's grain
-  // size. Every pass over the frame's pixels goes through here, so they all
-  // share one decomposition.
-  void runPass(const std::function<void(int x, int y)> &spanFcn);
+  // Calls spanFcn(x, y) in parallel for every SIMD-wide span of the grid of
+  // every 'stride'-th pixel along x and y (the frame's pixels with 'stride'
+  // 1), x being the span's first grid column and y its grid row, in tasks of
+  // the renderer's grain size in grid points. Every pass over the frame's
+  // pixels goes through here, so they all share one decomposition.
+  void runPass(
+      const std::function<void(int x, int y)> &spanFcn, int stride = 1);
 
  private:
   void flushAndRender();

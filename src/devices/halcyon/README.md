@@ -190,7 +190,11 @@ scenes, and
   converged, whatever the frame's `accumulation` says, until every pixel passes Typhoon's
   adaptive sampling test or the sample limit (`convergedSamplesPerPixel`, or VisRTX's
   `sampleLimit`; 256 by default) is reached. The frame's `refinementProgress` (and
-  `numSamples`) say how far it got; any change starts over.
+  `numSamples`) say how far it got; any change starts over. The first render after a
+  change comes as several renders of ever finer resolution, for a faster first image of
+  slow scenes: the first at 1 / `resolutionDivider` of the frame's resolution (4 by
+  default, a quarter along each side; rounded down to a power of two). Set it to 0 if
+  you render once after a change and need the full first render.
 - **Integrator:** Typhoon's unidirectional path tracer: next-event estimation from every
   light weighed against BSDF sampling by multiple importance sampling, `maxBounces` (16),
   Russian roulette, firefly clamping, transparent shadows, its blue-noise Sobol sampler

@@ -141,6 +141,8 @@ struct Frame
       : d(d)
   {
     renderer = anari::newObject<anari::Renderer>(d, subtype);
+    // one render is the whole first render (no progressive resolution)
+    anari::setParameter(d, renderer, "resolutionDivider", 0);
     anari::setParameter(d, renderer, "ambientRadiance", 1.f);
     anari::setParameter(
         d, renderer, "background", float4(0.1f, 0.2f, 0.3f, 1.f));

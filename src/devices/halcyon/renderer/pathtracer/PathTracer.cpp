@@ -47,8 +47,9 @@ static ispc::PathTracerMode pathTracerModeFromString(std::string_view name)
 // A frame's refinement since the last change (Typhoon's adaptive sampling,
 // AdaptiveSampling.isph): the per-pixel running means and adaptive sampling
 // buffers, and their ISPC struct (struct PathTracerFrameState in
-// PathTracer.ispc), which the shading pass takes; and the 'numSamples' and
-// 'refinementProgress' properties of the frame's last render
+// PathTracer.ispc), which the shading pass takes; the passes of progressive
+// resolution still to come; and the 'numSamples' and 'refinementProgress'
+// properties of the frame's last render
 struct PathTracerFrameState : public RendererFrameState
 {
   PathTracerFrameState();
@@ -85,6 +86,14 @@ struct PathTracerFrameState : public RendererFrameState
   // limit reached), after which renders with nothing changed are skipped
   int m_samplesTaken{0};
   bool m_refined{false};
+  // Progressive resolution: the first render after a change, its
+  // 'pixelSamples' samples in every pixel, is spread over renders of ever
+  // finer grids, each tracing the pixels on the grid of every 'm_stride'-th
+  // pixel that the last didn't (on that of every 'm_tracedStride'-th, 0
+  // before the first) and halving the stride, down to 1. Renders that
+  // accumulate have 'm_stride' 0.
+  int m_stride{0};
+  int m_tracedStride{0};
   // 'numSamples' and 'refinementProgress' as of the last render, -1 (not
   // reported) before the first
   std::atomic<int> m_numSamples{-1};
@@ -97,6 +106,7 @@ PathTracerFrameState::PathTracerFrameState()
   ispc::PathTracerFrameState_setBuffers(
       ispc(), nullptr, nullptr, nullptr, nullptr, nullptr);
   ispc::PathTracerFrameState_setAccumulation(ispc(), 0, 0);
+  ispc::PathTracerFrameState_setPass(ispc(), 1, 0);
 }
 
 void *PathTracerFrameState::ispc()
@@ -224,6 +234,8 @@ void PathTracer::commitParameters()
   // compares it as unsigned
   m_minSamplesBeforeAdaptive = getParam<int32_t>(
       "minSamplesBeforeAdaptive", DEFAULT_MIN_SAMPLES_BEFORE_ADAPTIVE);
+  m_resolutionDivider = std::max(
+      getParam<int32_t>("resolutionDivider", DEFAULT_RESOLUTION_DIVIDER), 0);
 }
 
 void PathTracer::commitSampleLimit()
@@ -305,6 +317,16 @@ bool PathTracer::wantsRender(
       || !static_cast<const PathTracerFrameState *>(state)->m_refined;
 }
 
+int PathTracer::startStride(uint2 size) const
+{
+  const uint32_t limit =
+      std::min(uint32_t(m_resolutionDivider), std::max(size.x, size.y));
+  int stride = 1;
+  while (2u * uint32_t(stride) <= limit)
+    stride *= 2;
+  return stride;
+}
+
 std::unique_ptr<RendererFrameState> PathTracer::newFrameState() const
 {
   return std::make_unique<PathTracerFrameState>();
@@ -315,8 +337,7 @@ void PathTracer::render(
 {
   auto &refinement = *static_cast<PathTracerFrameState *>(state);
   // a change starts the accumulation over, with the frame's size and
-  // channels as of the change
-  refinement.m_accumId = changed ? 0 : refinement.m_accumId + 1;
+  // channels as of the change, from the coarsest grid
   if (changed) {
     refinement.m_samplesTaken = 0;
     refinement.m_refined = false;
@@ -324,14 +345,39 @@ void PathTracer::render(
     refinement.resize(size_t(size.x) * size.y,
         frame.hasAlbedoChannel(),
         frame.hasNormalChannel());
+    refinement.m_stride = startStride(size);
+    refinement.m_tracedStride = 0;
   }
+  // every pass of the first render is the first render to the kernel
+  const bool firstRender = refinement.m_stride > 0;
+  refinement.m_accumId = firstRender ? 0 : refinement.m_accumId + 1;
+  const int stride = firstRender ? refinement.m_stride : 1;
   ispc::PathTracerFrameState_setAccumulation(
       refinement.ispc(), refinement.m_accumId, refinement.m_samplesTaken);
+  ispc::PathTracerFrameState_setPass(
+      refinement.ispc(), stride, refinement.m_tracedStride);
 
-  frame.runPass([&](int x, int y) {
-    ispc::PathTracer_renderFrame(frame.getIE(), refinement.ispc(), x, y);
-  });
+  frame.runPass(
+      [&](int x, int y) {
+        ispc::PathTracer_renderFrame(frame.getIE(), refinement.ispc(), x, y);
+      },
+      stride);
 
+  if (stride > 1) {
+    // a coarse pass: the image at its resolution, and no samples in every
+    // pixel yet
+    frame.runPass([&](int x, int y) {
+      ispc::PathTracer_fillFrame(frame.getIE(), refinement.ispc(), x, y);
+    });
+    refinement.m_tracedStride = stride;
+    refinement.m_stride = stride / 2;
+    refinement.m_numSamples = 0;
+    refinement.m_refinementProgress = 0.f;
+    return;
+  }
+
+  refinement.m_stride = 0;
+  refinement.m_tracedStride = 0;
   refinement.updateRefinement(m_pixelSamples, m_sampleLimit);
 }
 
