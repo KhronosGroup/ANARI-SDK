@@ -23,7 +23,7 @@
 // between the radii) and 'hdri' as its dome light (by the texels'
 // luminance over their solid angle, or for a reflection-only BSDF folded
 // into the hemisphere it reflects into). The record's 'emission' is already in the units the
-// shape needs (scene/light/Light.h), so where Typhoon applies UsdLux's
+// shape needs (light/Light.h), so where Typhoon applies UsdLux's
 // intensity, exposure and 'normalize' to the light's colour, the port reads
 // 'emission'. Of Typhoon's shaping only the cone is ported, as 'spot' and
 // 'ring' lights' 'openingAngle' and 'falloffAngle'; ANARI's
@@ -129,7 +129,7 @@ inline float Lights_coneWeight(const uniform Light *uniform light, float cosThet
 // light), 'cosGamma' = dot(e, axis): linear in gamma between its values,
 // which cover [0, pi], and in the C half-plane angle between its rows, which
 // cover [0, 2 pi) with row 0 at c0 and wrap around (the spec's C-gamma
-// mapping); scene/light/Light.cpp's distributionMeanOverC() integrates the
+// mapping); light/Light.cpp's distributionMeanOverC() integrates the
 // same interpolation
 inline float Lights_distribution(
     const uniform Light *uniform light, float3 e, float cosGamma)
@@ -162,7 +162,7 @@ inline float Lights_distribution(
 // to its 'emission', where its emitting side's normal is at
 // 'cosOffNormal' > 0 to e: a ring's cone weight, and where an
 // 'intensityDistribution' is set, the distribution over the cosine a
-// Lambertian emitter's intensity falls off with (scene/light/Light.h).
+// Lambertian emitter's intensity falls off with (light/Light.h).
 // Spheres have none, so 1.
 inline float Lights_areaRadianceScale(
     const uniform Light *uniform light, float3 e, float cosOffNormal)
@@ -760,7 +760,7 @@ inline LightSample HdriLight_sample(
 // The intensity of a delta light towards unit 'e' (from the light), relative
 // to its 'emission' (its intensity along the axis): 1 for a point, the cone
 // weight for a spot, and for a ring the cone weight times the cosine off its
-// axis or its 'intensityDistribution' (scene/light/Light.h); none behind a
+// axis or its 'intensityDistribution' (light/Light.h); none behind a
 // ring
 inline float DeltaLight_profile(const uniform Light *uniform light, float3 e)
 {

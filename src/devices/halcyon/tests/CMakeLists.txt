@@ -33,7 +33,7 @@ set_tests_properties(halcyon::instance PROPERTIES
 # The derivative hooks the tests below link round like the device's
 # (GeometryDerivatives.ispc)
 set_source_files_properties(
-  ${PROJECT_SOURCE_DIR}/scene/surface/geometry/GeometryDerivatives.ispc
+  ${PROJECT_SOURCE_DIR}/geometry/GeometryDerivatives.ispc
   PROPERTIES COMPILE_OPTIONS "--opt=disable-fma")
 
 # Links Geometry.ispc for the per-subtype vertex attribute hooks it installs
@@ -41,8 +41,8 @@ set_source_files_properties(
 add_executable(halcyon_test_attributes
   test_attributes.cpp
   test_attributes.ispc
-  ${PROJECT_SOURCE_DIR}/scene/surface/geometry/Geometry.ispc
-  ${PROJECT_SOURCE_DIR}/scene/surface/geometry/GeometryDerivatives.ispc
+  ${PROJECT_SOURCE_DIR}/geometry/Geometry.ispc
+  ${PROJECT_SOURCE_DIR}/geometry/GeometryDerivatives.ispc
 )
 
 # The test resolves attributes over varying hits, which gathers by design
@@ -232,7 +232,7 @@ set_tests_properties(halcyon::samplers PROPERTIES
 add_executable(halcyon_test_spatial_field
   test_spatial_field.cpp
   test_spatial_field.ispc
-  ${PROJECT_SOURCE_DIR}/scene/volume/spatial_field/SpatialField.ispc
+  ${PROJECT_SOURCE_DIR}/spatial_field/SpatialField.ispc
 )
 # The test samples scattered points, which gathers by design
 set_source_files_properties(test_spatial_field.ispc PROPERTIES COMPILE_OPTIONS "--woff")
@@ -250,8 +250,8 @@ set_tests_properties(halcyon::spatial_field PROPERTIES
 add_executable(halcyon_test_volume
   test_volume.cpp
   test_volume.ispc
-  ${PROJECT_SOURCE_DIR}/scene/volume/spatial_field/SpatialField.ispc
-  ${PROJECT_SOURCE_DIR}/scene/volume/Volume.ispc
+  ${PROJECT_SOURCE_DIR}/spatial_field/SpatialField.ispc
+  ${PROJECT_SOURCE_DIR}/volume/Volume.ispc
 )
 # Volumes are sampled at scattered points, which gathers by design
 set_source_files_properties(test_volume.ispc PROPERTIES COMPILE_OPTIONS "--woff")
@@ -427,7 +427,7 @@ endif()
 add_executable(halcyon_test_path_material
   test_path_material.cpp
   test_path_material.ispc
-  ${PROJECT_SOURCE_DIR}/scene/surface/material/sampler/Sampler.ispc
+  ${PROJECT_SOURCE_DIR}/sampler/Sampler.ispc
 )
 target_include_directories(halcyon_test_path_material PRIVATE
   ${PROJECT_SOURCE_DIR}
@@ -475,7 +475,7 @@ add_test(NAME halcyon::closure_sampling COMMAND halcyon_test_closure_sampling)
 # Sampler.ispc for the setters that fill the samplers it samples
 add_executable(halcyon_test_material_graph
   test_material_graph.cpp
-  ${PROJECT_SOURCE_DIR}/scene/surface/material/sampler/Sampler.ispc
+  ${PROJECT_SOURCE_DIR}/sampler/Sampler.ispc
 )
 target_include_directories(halcyon_test_material_graph PRIVATE
   ${PROJECT_SOURCE_DIR}

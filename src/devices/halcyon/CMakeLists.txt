@@ -78,41 +78,41 @@ project_add_library(SHARED
   camera/Camera.ispc
   frame/Frame.cpp
   frame/Frame.ispc
+  geometry/Geometry.cpp
+  geometry/Geometry.ispc
+  geometry/GeometryDerivatives.ispc
+  geometry/MeshTangents.cpp
+  light/Directional.cpp
+  light/Hdri.cpp
+  light/HdriDistribution.cpp
+  light/Light.cpp
+  light/Light.ispc
+  light/Point.cpp
+  light/QuadLight.cpp
+  light/Ring.cpp
+  light/Spot.cpp
+  material/Material.cpp
+  material/Material.ispc
   renderer/Renderer.cpp
   renderer/Renderer.ispc
   renderer/pathtracer/PathTracer.cpp
   renderer/pathtracer/PathTracer.ispc
   renderer/preview/Preview.cpp
   renderer/preview/Preview.ispc
-  scene/Group.cpp
-  scene/Group.ispc
-  scene/Instance.cpp
-  scene/Instance.ispc
-  scene/World.cpp
-  scene/World.ispc
-  scene/light/Directional.cpp
-  scene/light/Hdri.cpp
-  scene/light/HdriDistribution.cpp
-  scene/light/Light.cpp
-  scene/light/Light.ispc
-  scene/light/Point.cpp
-  scene/light/QuadLight.cpp
-  scene/light/Ring.cpp
-  scene/light/Spot.cpp
-  scene/surface/Surface.cpp
-  scene/surface/Surface.ispc
-  scene/surface/geometry/Geometry.cpp
-  scene/surface/geometry/Geometry.ispc
-  scene/surface/geometry/GeometryDerivatives.ispc
-  scene/surface/geometry/MeshTangents.cpp
-  scene/surface/material/Material.cpp
-  scene/surface/material/Material.ispc
-  scene/surface/material/sampler/Sampler.cpp
-  scene/surface/material/sampler/Sampler.ispc
-  scene/volume/Volume.cpp
-  scene/volume/Volume.ispc
-  scene/volume/spatial_field/SpatialField.cpp
-  scene/volume/spatial_field/SpatialField.ispc
+  sampler/Sampler.cpp
+  sampler/Sampler.ispc
+  spatial_field/SpatialField.cpp
+  spatial_field/SpatialField.ispc
+  surface/Surface.cpp
+  surface/Surface.ispc
+  volume/Volume.cpp
+  volume/Volume.ispc
+  world/Group.cpp
+  world/Group.ispc
+  world/Instance.cpp
+  world/Instance.ispc
+  world/World.cpp
+  world/World.ispc
 )
 
 project_link_libraries(PRIVATE
@@ -125,7 +125,7 @@ project_link_libraries(PRIVATE
 
 # The derivative hooks round like Typhoon's C++, which x86-64 compilers build
 # without fused multiply-adds (GeometryDerivatives.ispc)
-set_source_files_properties(scene/surface/geometry/GeometryDerivatives.ispc
+set_source_files_properties(geometry/GeometryDerivatives.ispc
   PROPERTIES COMPILE_OPTIONS "--opt=disable-fma")
 
 # The device's version properties report the SDK's version (a patch of 0

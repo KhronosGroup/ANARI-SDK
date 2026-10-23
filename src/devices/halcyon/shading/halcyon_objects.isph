@@ -495,7 +495,7 @@ struct Material
 
 // Lights //
 
-// Light subtypes (scene/light/)
+// Light subtypes (light/)
 enum LightType
 {
   // 'directional': a delta direction, or a cone of directions with
@@ -516,7 +516,7 @@ enum LightType
 };
 
 // A light in world space, with its brightness in the units its shape needs
-// (scene/light/Light.h has the conversions from ANARI's parameters). The
+// (light/Light.h has the conversions from ANARI's parameters). The
 // world keeps one per light per instance transform (World::lights). The
 // pathtracer reads them (renderer/pathtracer/Lights.isph); the 'preview'
 // renderer reads only the 'visible' hdris, which its camera misses show
@@ -540,7 +540,7 @@ struct Light
   // (frameX x frameY = -axis, so that the frame is Typhoon's disk light's);
   // frameX is 'c0' in the plane. LIGHT_HDRI: Typhoon's dome light frame,
   // frameX = up x direction, frameY = 'up' and axis = 'direction'
-  // (scene/light/Hdri.h), orthonormal
+  // (light/Hdri.h), orthonormal
   uniform float3 frameX;
   uniform float3 frameY;
   // LIGHT_QUAD, LIGHT_RING: the C0 and C90 half-planes of

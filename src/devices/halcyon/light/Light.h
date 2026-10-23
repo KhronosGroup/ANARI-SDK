@@ -55,7 +55,7 @@ namespace halcyon {
 //                radiance     area A           radiance L
 //                L            ring r = 0       none (no light; warns)
 //   hdri         radiance     the sphere at    radiance 'radiance' texel
-//                (ARRAY2D)    infinity         times 'scale' (scene/light/
+//                (ARRAY2D)    infinity         times 'scale' (light/
 //                                              Hdri.h has the mapping)
 //
 // The intensity 'I' is the light's along its axis (a spot's or ring's

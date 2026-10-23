@@ -7,7 +7,7 @@
 // pathtracer compiles into C++ materials (CppMaterial, PathMaterial.h): its
 // counterpart of Typhoon's mxcppAdapter.cpp, which converts Hydra material
 // networks. It takes the parameters as plain values, so it doesn't depend on
-// helium; scene/surface/material/Material.cpp reads them.
+// helium; material/Material.cpp reads them.
 //
 // - matte: a Lambertian, MaterialX's ND_oren_nayar_diffuse_bsdf at roughness
 //   0 under ND_surface, whose opacity is the material's after 'alphaMode'.

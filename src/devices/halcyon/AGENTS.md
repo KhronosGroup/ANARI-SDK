@@ -207,18 +207,19 @@ renderer listed, gets the `preview` renderer.
 ```
 HalcyonDevice
 ├── Camera: perspective, orthographic            camera/
-├── Geometry: triangle, quad, sphere, curve,     scene/surface/geometry/
+├── Geometry: triangle, quad, sphere, curve,     geometry/
 │             cylinder, cone (LinearCone)
-├── Material: matte, physicallyBased,            scene/surface/material/
+├── Material: matte, physicallyBased,            material/
 │             openPBR, usdPreviewSurface,
 │             materialx
-├── Sampler: image1D/2D/3D, transform, primitive scene/surface/material/sampler/
-├── SpatialField: structuredRegular              scene/volume/spatial_field/
-├── Volume: transferFunction1D                   scene/volume/
-├── Light: directional, point, spot, quad         scene/light/
+├── Sampler: image1D/2D/3D, transform, primitive sampler/
+├── SpatialField: structuredRegular              spatial_field/
+├── Volume: transferFunction1D                   volume/
+├── Light: directional, point, spot, quad         light/
 │          (QuadLight), ring, hdri (only
 │          the pathtracer reads them)
-├── Surface, World → Instance → Group            scene/
+├── Surface                                      surface/
+├── World → Instance → Group                     world/
 ├── Renderer: preview (Preview), quality         renderer/, renderer/preview/,
 │             (PathTracer)                       renderer/pathtracer/
 └── Frame                                        frame/
@@ -857,7 +858,7 @@ dv/dy); a miss is transparent black. Unknown names path trace.
 
 ### Lights
 
-The `directional`, `point`, `spot`, `quad`, `ring` and `hdri` lights (`scene/light/`,
+The `directional`, `point`, `spot`, `quad`, `ring` and `hdri` lights (`light/`,
 KHR_LIGHT_DIRECTIONAL, _POINT, _SPOT, _QUAD, _RING and _HDRI) light only the
 `quality`'s images;
 the `preview` renderer isn't lit by them, as helide isn't (it has no lights), and doesn't
@@ -873,7 +874,7 @@ class is `QuadLight`, as `Quad` is the quad geometry's (`Geometry.cpp`, same nam
 
 - A light has no ISPC slot. The world keeps the mirror: on each scene update after any
   object was finalized, `World::updateLights()` writes a world-space record (`struct
-  Light` in `shading/halcyon_objects.isph`, through the setters in `scene/light/Light.ispc`)
+  Light` in `shading/halcyon_objects.isph`, through the setters in `light/Light.ispc`)
   for every valid light of every valid instance, once per instance transform, into an
   array ISPC reads as `World::lights`. Instance transforms move `position`, turn
   `direction`, `up` and `c0` and map a quad's `edge1`/`edge2` (vectors, so a scale grows its
@@ -916,7 +917,7 @@ class is `QuadLight`, as `Quad` is the quad geometry's (`Geometry.cpp`, same nam
   half-plane (`c0` projected into the ring's plane, a quad's `edge1`), C growing
   right-handed about the axis (C90 = axis × C0), interpolated linearly in γ and
   periodically in C. It has no Typhoon counterpart (Typhoon reads IES files).
-- **`hdri`** (`scene/light/Hdri.*`) is Typhoon's dome light: an
+- **`hdri`** (`light/Hdri.*`) is Typhoon's dome light: an
   equirectangular map at infinity, its `radiance` (an ARRAY2D of FLOAT32_VEC3, W/sr/m²)
   times `scale` and `color`, looked up unfiltered (nearest texel, as Typhoon's
   `SampleLightTexture()`). The spec leaves the mapping open; halcyon's is VisRTX's, and so
@@ -927,7 +928,7 @@ class is `QuadLight`, as `Quad` is the quad geometry's (`Geometry.cpp`, same nam
   0) to `up` (the last row). That is Typhoon's dome light frame (X = left, Y = `up`, Z =
   `direction`) with Typhoon's rows reversed, so `finalize()` copies the texels rows
   reversed and runs Typhoon's code unchanged on them: its sampling distribution
-  (`BuildDomeLightSamplingDistribution()`, ported in `scene/light/HdriDistribution.cpp`:
+  (`BuildDomeLightSamplingDistribution()`, ported in `light/HdriDistribution.cpp`:
   each texel's Rec. 709 luminance × its row's solid angle, a marginal CDF over rows and a
   conditional CDF per row; black rows weigh their texels by solid angle, a black map is
   uniform) and in `Lights.isph` its sampling and pdf (`SampleDomeLight()`,
@@ -1032,7 +1033,7 @@ combination:
   is `visible`, camera rays see the hdris instead, opaque (see [Lights](#lights)).
 - **The ambient light** is a constant dome of radiance `ambientColor` × `ambientRadiance`
   (negative values clamped to 0) that camera rays don't see: Typhoon's dome light
-  without a texture, an hdri record (`Light_setAmbient()` in `scene/light/Light.ispc`) of
+  without a texture, an hdri record (`Light_setAmbient()` in `light/Light.ispc`) of
   one white texel without a sampling distribution, in the world frame, that
   `PathTracer::updatePathTracerISPC()` writes and `PathTracerParameters::ambientLight`
   points at (NULL where it emits nothing, so a scene without it costs nothing). The path
@@ -1710,7 +1711,7 @@ how one is made (below); it comes from Typhoon's own flag on the compiled graph
   Elsewhere, or where those are degenerate, dPdu projected off the smooth normal, signed
   by dPdu and dPdv's handedness. Without authored tangents the corner frames are the ones
   Typhoon smooths across a mesh's faces when it loads it (`smoothTangentFrames()` in
-  `scene/surface/geometry/MeshTangents.cpp`, a port of
+  `geometry/MeshTangents.cpp`, a port of
   `HdEmbreeMesh::_UpdateTangentFrameCache()`): each corner's dPdu (the derivative hook's
   at the corner, `Geometry_getCornerDerivatives()`) projected off its normal, accumulated
   over the corners that share its vertex and exact normal, so normal splits keep their
@@ -2306,7 +2307,7 @@ Unknown mode names fall back to `default`, as in helide.
 
 ## Adding a geometry subtype
 
-Follow `Quad` (`scene/surface/geometry/Geometry.cpp`, `Geometry.ispc`):
+Follow `Quad` (`geometry/Geometry.cpp`, `Geometry.ispc`):
 
 1. In `shading/halcyon_objects.isph`, add a subtype data struct (like `QuadGeometry`: indices
    pointer plus count) and a named member of it in `struct Geometry`.
