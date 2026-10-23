@@ -4,7 +4,7 @@
 #pragma once
 
 #include "renderer/Renderer.h"
-#include "scene/World.h"
+#include "world/World.h"
 
 namespace halcyon {
 

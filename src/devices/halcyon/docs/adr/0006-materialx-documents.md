@@ -440,7 +440,7 @@ maintainer's own testing; task 7 wasn't needed). The breakdown as planned:
 3. **Overrides** in the converter: values by leaf name, strings and samplers on `filename`
    inputs (`anari:sampler/<index>`), samplers on other inputs (sampler node); unknown names
    reported. Tests on the graph.
-4. **Subtype** `materialx` in `scene/surface/material/`: parameters (`sourceType`, `source`,
+4. **Subtype** `materialx` in `material/`: parameters (`sourceType`, `source`,
    `materialName`, any other name as an override), properties `materialNames` and
    `textureInputs` (`ANARI_STRING_LIST`, after a successful commit), sampler observation as
    in ADR 0005, re-read only when the source, its file's modification time or the selection

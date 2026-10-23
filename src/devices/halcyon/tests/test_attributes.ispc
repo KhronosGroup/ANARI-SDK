@@ -6,7 +6,7 @@
 
 #include "shading/halcyon_attributes.isph"
 
-// from scene/surface/geometry/Geometry.ispc
+// from geometry/Geometry.ispc
 extern "C" void Geometry_setTriangleIndices(void *uniform _self,
     const uniform uint32 *uniform indices,
     uniform uint64 numTriangles);

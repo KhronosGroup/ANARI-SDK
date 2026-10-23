@@ -47,7 +47,7 @@ inline float4 Sampler_applyOutput(const uniform Sampler *uniform self, float4 v)
 
 // Sampling an input ////////////////////////////////////////////////////////
 //
-// What each subtype's hook (scene/surface/material/sampler/Sampler.ispc)
+// What each subtype's hook (sampler/Sampler.ispc)
 // computes from the sampler's input, and Sampler_sampleAttribute(), which
 // does the same from an inAttribute value: the one implementation of
 // halcyon's sampling, which the preview renderer reaches through the hooks

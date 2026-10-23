@@ -1,7 +1,7 @@
 // Copyright 2025-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-// Samples spatial fields set up through scene/volume/spatial_field's exported
+// Samples spatial fields set up through spatial_field's exported
 // interface for test_spatial_field.cpp.
 
 #include "shading/halcyon_spatialField.isph"

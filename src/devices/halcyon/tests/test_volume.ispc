@@ -1,7 +1,7 @@
 // Copyright 2025-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-// Ray marches volumes set up through scene/volume's exported interface for
+// Ray marches volumes set up through volume's exported interface for
 // test_volume.cpp.
 
 #include "shading/halcyon_volume.isph"

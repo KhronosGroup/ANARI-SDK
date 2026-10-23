@@ -5,7 +5,7 @@
 // 'quality' renderer: a luminance test per light and brightness
 // parameter (a lone Lambertian floor under the light, whose pixels must show
 // albedo / pi times the irradiance the ANARI units define,
-// scene/light/Light.h, computed in closed form where there is one and by
+// light/Light.h, computed in closed form where there is one and by
 // quadrature over the light where there isn't), spot and ring cones, quad
 // sides, 'intensityDistribution', instance transforms (which move lights and
 // map a quad's edges, but don't scale radii), shadows, camera visibility

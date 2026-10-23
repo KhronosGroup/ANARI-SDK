@@ -99,7 +99,7 @@ Map uniformMap(float3 L, uint32_t width = 8, uint32_t height = 4)
   return m;
 }
 
-// The map's frame for 'up' and 'direction' (scene/light/Hdri.h): 'up' kept,
+// The map's frame for 'up' and 'direction' (light/Hdri.h): 'up' kept,
 // 'direction' made perpendicular to it, left = up x direction
 struct Frame
 {
