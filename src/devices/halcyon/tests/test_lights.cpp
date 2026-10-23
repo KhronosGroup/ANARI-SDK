@@ -153,6 +153,8 @@ std::vector<float4> render(anari::Device d,
     const char *subtype = "quality")
 {
   auto renderer = anari::newObject<anari::Renderer>(d, subtype);
+  // one render is the whole first render (no progressive resolution)
+  anari::setParameter(d, renderer, "resolutionDivider", 0);
   anari::setParameter(d, renderer, "background", BACKGROUND);
   if (std::strcmp(subtype, "quality") == 0) {
     anari::setParameter(d, renderer, "pixelSamples", pixelSamples);

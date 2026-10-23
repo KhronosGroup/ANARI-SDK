@@ -1657,7 +1657,8 @@ inline float4 shadingContextValue(const uniform Frame *uniform frame,
 // in PathTracer.cpp, which owns its buffers): per pixel, the running mean
 // colour, its Welford sum of squared deviations (packed float3), whether the
 // pixel is converged, and the albedo and normal channels' running means
-// (packed float3, NULL for channels the frame doesn't have)
+// (packed float3, NULL for channels the frame doesn't have); and the pixels
+// the render traces
 struct PathTracerFrameState
 {
   float4 *uniform accum;
@@ -1670,6 +1671,14 @@ struct PathTracerFrameState
   uniform float accumId;
   // the samples every pixel not yet converged took before this render
   uniform int firstSample;
+  // The render traces the pixels on the grid of every 'stride'-th pixel
+  // along x and y, but for those on the grid of every 'tracedStride'-th one,
+  // which earlier renders traced (0 for none): the first render after a
+  // change may be spread over passes from a coarse grid to every pixel
+  // (progressive resolution, the renderer's 'resolutionDivider'); renders
+  // that accumulate trace every pixel (stride 1, tracedStride 0)
+  uniform int stride;
+  uniform int tracedStride;
 };
 
 // Adds sample 'count' (counted from 1) 'value' to the running mean 'mean'
@@ -1679,7 +1688,8 @@ inline void accumulateFloat3(float3 &mean, float3 value, int count)
 }
 
 // Shading pass: adds 'pixelSamples' paths to the running mean of every pixel
-// in the SIMD span starting at (start_x, y) that isn't converged, and the
+// the render traces in the SIMD span of its grid (PathTracerFrameState) at
+// column start_x and row grid_y that isn't converged, and the
 // paths' albedo and normal (tracePath()) to the running means of those
 // channels, if the frame has them; then decides whether the pixel is
 // converged (adaptive sampling, AdaptiveSampling.isph): a converged pixel
@@ -1690,10 +1700,16 @@ inline void accumulateFloat3(float3 &mean, float3 value, int count)
 inline unmasked void renderFrame(uniform Frame *uniform frame,
     uniform PathTracerFrameState *uniform state,
     uniform int start_x,
-    uniform int y)
+    uniform int grid_y)
 {
-  const int x = start_x + programIndex;
+  const uniform int stride = state->stride;
+  const int x = (start_x + programIndex) * stride;
+  const uniform int y = grid_y * stride;
   if (x >= frame->size.x)
+    return;
+  // traced by an earlier pass of the first render
+  const uniform int traced = state->tracedStride;
+  if (traced > 0 && y % traced == 0 && x % traced == 0)
     return;
 
   const int pixelIndex = y * frame->size.x + x;
@@ -1799,6 +1815,50 @@ inline unmasked void renderFrame(uniform Frame *uniform frame,
   }
 }
 
+// Fill pass, after a pass of a stride above 1: every pixel in the SIMD span
+// starting at (start_x, y) that isn't on the pass's grid takes the channels
+// of the grid pixel at the top left of its stride x stride block, the
+// nearest one traced, so the image shows at the pass's resolution until
+// finer passes trace it. Only the frame's channels are written, not the
+// running means.
+inline unmasked void fillFrame(uniform Frame *uniform frame,
+    const uniform PathTracerFrameState *uniform state,
+    uniform int start_x,
+    uniform int y)
+{
+  const int x = start_x + programIndex;
+  if (x >= frame->size.x)
+    return;
+  const uniform int stride = state->stride;
+  const int gridX = x - x % stride;
+  const uniform int gridY = y - y % stride;
+  if (gridX == x && gridY == y)
+    return;
+
+  const int pixelIndex = y * frame->size.x + x;
+  const int gridIndex = gridY * frame->size.x + gridX;
+#pragma ignore warning(perf)
+  writeColor(frame, pixelIndex, state->accum[gridIndex]);
+  if (state->albedoAccum)
+    writeAlbedo(
+        frame, pixelIndex, loadPackedFloat3(state->albedoAccum, gridIndex));
+  if (state->normalAccum)
+    writeNormal(
+        frame, pixelIndex, loadPackedFloat3(state->normalAccum, gridIndex));
+#pragma ignore warning(perf)
+  if (frame->depth)
+    frame->depth[pixelIndex] = frame->depth[gridIndex];
+#pragma ignore warning(perf)
+  if (frame->primId)
+    frame->primId[pixelIndex] = frame->primId[gridIndex];
+#pragma ignore warning(perf)
+  if (frame->objId)
+    frame->objId[pixelIndex] = frame->objId[gridIndex];
+#pragma ignore warning(perf)
+  if (frame->instId)
+    frame->instId[pixelIndex] = frame->instId[gridIndex];
+}
+
 // Exported interface /////////////////////////////////////////////////////////
 
 export void PathTracer_setParameters(void *uniform _self,
@@ -1879,6 +1939,18 @@ export void PathTracerFrameState_setAccumulation(
   self->firstSample = firstSample;
 }
 
+// The pixels the render traces: those on the grid of every 'stride'-th
+// pixel but for those on the grid of every 'tracedStride'-th one (0 for
+// none)
+export void PathTracerFrameState_setPass(
+    void *uniform _self, uniform int stride, uniform int tracedStride)
+{
+  uniform PathTracerFrameState *uniform self =
+      (uniform PathTracerFrameState * uniform) _self;
+  self->stride = stride;
+  self->tracedStride = tracedStride;
+}
+
 export void PathTracer_renderFrame(void *uniform _frame,
     void *uniform _state,
     uniform int start_x,
@@ -1887,4 +1959,14 @@ export void PathTracer_renderFrame(void *uniform _frame,
   uniform Frame *uniform frame = object_cast<Frame>(_frame);
   renderFrame(
       frame, (uniform PathTracerFrameState * uniform) _state, start_x, y);
+}
+
+export void PathTracer_fillFrame(void *uniform _frame,
+    void *uniform _state,
+    uniform int start_x,
+    uniform int y)
+{
+  uniform Frame *uniform frame = object_cast<Frame>(_frame);
+  fillFrame(
+      frame, (const uniform PathTracerFrameState *uniform)_state, start_x, y);
 }

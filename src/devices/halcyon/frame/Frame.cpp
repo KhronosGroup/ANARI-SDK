@@ -277,23 +277,26 @@ void Frame::setRendererState(std::unique_ptr<RendererFrameState> state,
   m_rendererStateOwner = std::move(owner);
 }
 
-void Frame::runPass(const std::function<void(int x, int y)> &spanFcn)
+void Frame::runPass(
+    const std::function<void(int x, int y)> &spanFcn, int stride)
 {
-  // Tasks cover whole SIMD-wide pixel spans along x, so the renderer's
-  // width grain size is rounded up to a multiple of the ISPC program count
+  const int width = (int(m_size.x) + stride - 1) / stride;
+  const int height = (int(m_size.y) + stride - 1) / stride;
+  // Tasks cover whole SIMD-wide spans along x, so the renderer's width grain
+  // size is rounded up to a multiple of the ISPC program count
   const int programCount = ispc::get_programCount();
-  const int numSpans = (int(m_size.x) + programCount - 1) / programCount;
+  const int numSpans = (width + programCount - 1) / programCount;
   const int2 grain = m_renderer->taskGrainSize();
   const int spanGrain = (grain.x + programCount - 1) / programCount;
 
   // Each task covers one tile of grain.y rows by spanGrain spans
   const int numTilesX = (numSpans + spanGrain - 1) / spanGrain;
-  const int numTilesY = (int(m_size.y) + grain.y - 1) / grain.y;
+  const int numTilesY = (height + grain.y - 1) / grain.y;
   embree::parallel_for(numTilesX * numTilesY, [&](int tile) {
     const int s0 = (tile % numTilesX) * spanGrain;
     const int y0 = (tile / numTilesX) * grain.y;
     const int s1 = std::min(s0 + spanGrain, numSpans);
-    const int y1 = std::min(y0 + grain.y, int(m_size.y));
+    const int y1 = std::min(y0 + grain.y, height);
     for (int y = y0; y < y1; y++) {
       for (int s = s0; s < s1; s++)
         spanFcn(s * programCount, y);

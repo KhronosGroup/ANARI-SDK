@@ -302,6 +302,8 @@ std::vector<float4> render(
     anari::Device d, anari::World world, const Settings &s = {})
 {
   auto renderer = anari::newObject<anari::Renderer>(d, "quality");
+  // one render is the whole first render (no progressive resolution)
+  anari::setParameter(d, renderer, "resolutionDivider", 0);
   anari::setParameter(d, renderer, "background", BACKGROUND);
   anari::setParameter(d, renderer, "ambientColor", float3(1.f));
   anari::setParameter(d, renderer, "ambientRadiance", s.ambient);
@@ -779,6 +781,8 @@ anari::Geometry makeTessellatedSphere(
 double benchMilliseconds(anari::Device d, anari::World world)
 {
   auto renderer = anari::newObject<anari::Renderer>(d, "quality");
+  // one render is the whole first render (no progressive resolution)
+  anari::setParameter(d, renderer, "resolutionDivider", 0);
   anari::setParameter(d, renderer, "ambientRadiance", 1.f);
   anari::setParameter(d, renderer, "pixelSamples", 4);
   anari::commitParameters(d, renderer);

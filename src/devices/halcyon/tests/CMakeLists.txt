@@ -548,6 +548,20 @@ set_tests_properties(halcyon::adaptive_sampling PROPERTIES
   TIMEOUT 60
 )
 
+# The pathtracer's progressive resolution ('resolutionDivider'): the first
+# render after a change spread over renders of ever finer grids of pixels
+add_executable(halcyon_test_progressive_resolution
+  test_progressive_resolution.cpp)
+target_link_libraries(halcyon_test_progressive_resolution PRIVATE anari::anari)
+add_dependencies(halcyon_test_progressive_resolution ${PROJECT_NAME})
+
+add_test(NAME halcyon::progressive_resolution
+  COMMAND halcyon_test_progressive_resolution)
+set_tests_properties(halcyon::progressive_resolution PROPERTIES
+  ENVIRONMENT "LD_LIBRARY_PATH=$<TARGET_FILE_DIR:${PROJECT_NAME}>:$ENV{LD_LIBRARY_PATH}"
+  TIMEOUT 60
+)
+
 # The pathtracer's sampleLimit (VisRTX's name, which hdAnari reads): the
 # declared default, precedence over convergedSamplesPerPixel, 0 (unbounded)
 # and hdAnari's render loop

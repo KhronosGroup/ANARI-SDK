@@ -130,6 +130,8 @@ std::vector<float4> render(anari::Device d,
     bool nativeMaterials = true)
 {
   auto renderer = anari::newObject<anari::Renderer>(d, subtype);
+  // one render is the whole first render (no progressive resolution)
+  anari::setParameter(d, renderer, "resolutionDivider", 0);
   if (!nativeMaterials)
     anari::setParameter(d, renderer, "nativeMaterials", false);
   anari::setParameter(d, renderer, "background", BACKGROUND);

@@ -418,7 +418,10 @@ that override; halcyon keeps its own while it supports helium 0.15 and 0.16.
    goes through `Frame::runPass()`, which calls a span function for every SIMD span with
    an `embree::parallel_for` over tiles of `taskGrainSizeHeight` rows ×
    `taskGrainSizeWidth` pixels, rounded up to whole `programCount` spans, so all passes
-   share one decomposition and grain size. The kernels take the frame's ISPC struct and
+   share one decomposition and grain size. A pass may cover the grid of every
+   `stride`-th pixel instead (the `quality` renderer's coarse passes, see [Adaptive
+   sampling](#adaptive-sampling)): its spans and tiles are then of grid points, so SIMD
+   lanes stay busy. The kernels take the frame's ISPC struct and
    their state's: `PathTracer_renderFrame()` for the `quality`; for `preview`, when it
    reads the occlusion factor and the world has surfaces, the hit-buffer pass
    (`Preview_renderHitBuffer()`, which traces primary rays), the screen-space occlusion
@@ -858,10 +861,37 @@ The pathtracer refines its image progressively with Typhoon's adaptive sampling
   The frame asks its renderer's state for them (`RendererFrameState::getProperty()`).
   Neither is reported (`anariGetProperty` returns 0) before the frame's first `quality`
   render, after an invalid frame or for the `preview` renderer.
-- **Not ported:** Typhoon's coarse preview passes (strides 8, 4, 2 before the first full
-  pass, then discarded): an ANARI render returns one image, and the first render after a
-  change is already a full one-sample image. Typhoon's `adaptiveHeatmap` AOV has no halcyon
-  channel (the converged flags are there to drive one).
+- **Progressive resolution** (renderer parameter `resolutionDivider`, 4 by default, 0
+  or 1 for none; maintainer decisions, 2026-10-23: on by default at 4, and a divider,
+  not a pixel count): the first render after a change is spread over several
+  renders of ever finer grids, for a faster first image of slow scenes, as Cycles'
+  resolution divider and Typhoon's coarse preview passes do. The first pass traces the
+  pixels on the grid of every `stride`-th pixel along x and y, so the image at
+  1 / `stride` of the frame's resolution (grid sizes rounded up), the stride being
+  `resolutionDivider` rounded down to a power of two and to at most the frame's longer
+  side (`PathTracer::startStride()`). A power of two, so that every pass's grid holds the
+  next's (a 5-grid isn't on the 2-grid: its pixels would be traced again, the same values
+  wasted); beyond the longer side the first pass is one pixel anyway. Each later render
+  halves the stride and traces only the grid pixels the last didn't, down to stride 1
+  (`PathTracerFrameState`'s
+  `m_stride` and `m_tracedStride`, the kernel's `stride` and `tracedStride`). Unlike
+  Cycles and Typhoon, which discard their coarse passes, **a coarse pass traces the
+  pixel's own first render**: the first render's `pixelSamples` samples, at its jittered
+  points, with its depth and ids. So the passes together trace exactly one first render,
+  with nothing wasted, and when they end the frame is bitwise what it would be without
+  them; refinement then goes on as above, every unconverged pixel having taken the same
+  samples (renders only count once the passes end). After a coarse pass a fill pass
+  (`PathTracer_fillFrame()`) writes every other pixel's channels (all of them, not the
+  running means) from the grid pixel at the top left of its block. During the passes
+  `numSamples` and `refinementProgress` are 0. Not ported from Cycles: choosing the
+  first stride from measured render times (left for later) and its fewer samples while
+  navigating. On by default, so a client that renders once after a change and maps the
+  frame (a batch render, a test) gets a coarse image: such clients set
+  `resolutionDivider` 0, as the tests that check one render of the `quality` renderer do
+  (hdAnari and usdrecord render until `numSamples` reaches the sample limit, which the
+  passes only delay).
+- **Not ported:** Typhoon's `adaptiveHeatmap` AOV has no halcyon channel (the converged
+  flags are there to drive one).
 - The sample limit also scales the camera ray differentials, as Typhoon's
   `samplesToConvergence` does, and `convergedSamplesPerPixel` without a limit (see
   [Shading context](#shading-context)).
@@ -2417,7 +2447,11 @@ less doesn't clamp; see [Dispersion and caustics](#dispersion-and-caustics)),
 `convergedSamplesPerPixel`; 0 for no limit, negative values clamped to 0),
 `adaptiveThreshold` (0.01, negative values clamped to 0) and `minSamplesBeforeAdaptive`
 (64; negative values turn adaptive sampling off, as in Typhoon, which compares it as
-unsigned). See [The quality renderer](#the-quality-renderer) and [Adaptive
+unsigned); `resolutionDivider` (4, negative values clamped to 0: progressive resolution,
+the first render after a change at 1 / `resolutionDivider` of the frame's resolution,
+rounded down to a power of two, and each next render at twice the last's until the full
+resolution; 0 or 1 for none; see [Adaptive sampling](#adaptive-sampling)). See [The quality
+renderer](#the-quality-renderer) and [Adaptive
 sampling](#adaptive-sampling).
 
 Light parameters (read only by the `quality`; see [Lights](#lights)): `color` ((1, 1, 1),
@@ -3026,6 +3060,15 @@ check their area of the `preview` renderer and device by rendering small scenes.
   warning), an explicit `sampleLimit` 256 over 512, both changed and equal; with
   0 renders go past 256 samples, report the true count and the fraction of converged pixels, and stop once
   every pixel converged; and the differentials' scale follows the limit (`dPdx` mode).
+- `progressive_resolution` checks `resolutionDivider`: declared with default 4; the
+  number of passes for several values (powers of two, others rounded down, values above
+  the frame's longer side capped to it); after each coarse pass every pixel shows bitwise, in every
+  channel (color, depth, ids, albedo, normal), what a frame without progressive
+  resolution renders first at the top left pixel of its block (and not that first render
+  itself), with `numSamples` and `refinementProgress` 0; after the last pass the frame is
+  bitwise that frame, with `pixelSamples` 1 and 3, and accumulates as it does; 1 renders
+  as 0, and unset as 4; and a change after or during the passes, or of `resolutionDivider`,
+  starts them over from the coarsest grid.
 - `renderer_extensions` checks each renderer's extensions: both renderers' introspected
   lists exactly, as the SDK's extension structs read them, their `extension` property
   (also for `default`, which reports the `preview` renderer's, and an unknown subtype, which

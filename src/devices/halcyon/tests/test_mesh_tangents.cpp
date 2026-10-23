@@ -127,6 +127,8 @@ std::vector<float4> render(anari::Device d,
 {
   auto camera = orthographicCamera(d);
   auto renderer = anari::newObject<anari::Renderer>(d, rendererType);
+  // one render is the whole first render (no progressive resolution)
+  anari::setParameter(d, renderer, "resolutionDivider", 0);
   anari::setParameter(d, renderer, "mode", mode);
   anari::commitParameters(d, renderer);
   auto frame = anari::newObject<anari::Frame>(d);

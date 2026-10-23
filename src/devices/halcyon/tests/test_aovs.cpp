@@ -216,6 +216,8 @@ struct Frame
       : d(d)
   {
     auto renderer = anari::newObject<anari::Renderer>(d, subtype);
+    // one render is the whole first render (no progressive resolution)
+    anari::setParameter(d, renderer, "resolutionDivider", 0);
     if (setParams)
       setParams(d, renderer);
     anari::commitParameters(d, renderer);

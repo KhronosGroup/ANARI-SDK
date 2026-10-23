@@ -205,6 +205,8 @@ std::vector<float4> render(anari::Device d,
     const View &view = {})
 {
   auto renderer = anari::newObject<anari::Renderer>(d, "quality");
+  // one render is the whole first render (no progressive resolution)
+  anari::setParameter(d, renderer, "resolutionDivider", 0);
   if (s.background)
     s.background(d, renderer);
   else

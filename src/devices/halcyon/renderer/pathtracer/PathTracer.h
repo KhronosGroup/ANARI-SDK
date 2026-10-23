@@ -19,7 +19,9 @@ namespace halcyon {
 // (MaterialConverter.h), matte natively (PathMatte.isph, or through its
 // graph with 'nativeMaterials' false), with volumes, interior media and
 // subsurface scattering. Renders refine the image
-// progressively, with Typhoon's adaptive sampling (AdaptiveSampling.isph).
+// progressively, with Typhoon's adaptive sampling (AdaptiveSampling.isph);
+// with 'resolutionDivider', the first render after a change is spread over
+// renders of ever finer grids of pixels (progressive resolution).
 struct PathTracer : public Renderer
 {
   PathTracer(HalcyonDeviceGlobalState *s);
@@ -34,7 +36,8 @@ struct PathTracer : public Renderer
   // A frame's refinement state (PathTracerFrameState)
   std::unique_ptr<RendererFrameState> newFrameState() const override;
   // The path tracing pass, adding 'pixelSamples' samples to every pixel
-  // that isn't converged (all of them after a change, which starts over)
+  // that isn't converged (all of them after a change, which starts over;
+  // with progressive resolution over several renders, PathTracerFrameState)
   void render(
       Frame &frame, RendererFrameState *state, bool changed) const override;
 
@@ -48,6 +51,12 @@ struct PathTracer : public Renderer
   // both it and the default
   void commitSampleLimit();
   void updatePathTracerISPC();
+  // The stride of the first pass after a change for a frame of 'size':
+  // 'resolutionDivider' rounded down to a power of two (so that every pass's
+  // grid holds the next's) and to at most the frame's longer side (beyond
+  // which the first pass is one pixel anyway); 1 (no coarse passes) for 0
+  // and 1
+  int startStride(uint2 size) const;
 
   // Typhoon's default (renderSettings.h)
   static constexpr int DEFAULT_MAX_BOUNCES = 16;
@@ -58,6 +67,8 @@ struct PathTracer : public Renderer
   static constexpr int DEFAULT_CONVERGED_SAMPLES_PER_PIXEL = 256;
   static constexpr float DEFAULT_ADAPTIVE_THRESHOLD = 0.01f;
   static constexpr int DEFAULT_MIN_SAMPLES_BEFORE_ADAPTIVE = 64;
+  // halcyon's, not Typhoon's
+  static constexpr int DEFAULT_RESOLUTION_DIVIDER = 4;
 
   // 'mode' as an ispc::PathTracerMode
   int m_mode{0};
@@ -98,6 +109,10 @@ struct PathTracer : public Renderer
   std::pair<int, int> m_warnedLimits{-1, -1};
   float m_adaptiveThreshold{DEFAULT_ADAPTIVE_THRESHOLD};
   int m_minSamplesBeforeAdaptive{DEFAULT_MIN_SAMPLES_BEFORE_ADAPTIVE};
+  // Progressive resolution: the first pass after a change renders at this
+  // fraction of the frame's resolution (1 / m_resolutionDivider along x and
+  // y), 0 or 1 for none
+  int m_resolutionDivider{DEFAULT_RESOLUTION_DIVIDER};
 };
 
 } // namespace halcyon

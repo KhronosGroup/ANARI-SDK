@@ -435,6 +435,16 @@
           "description": "paths traced per pixel by each render"
         },
         {
+          "name": "resolutionDivider",
+          "types": [
+            "ANARI_INT32"
+          ],
+          "tags": [],
+          "default": 4,
+          "minimum": 0,
+          "description": "progressive resolution: the first render after a change renders at 1 / resolutionDivider of the frame's resolution (rounded down to a power of two), and each next render at twice the last's, until the full resolution; 0 or 1 for none"
+        },
+        {
           "name": "maxBounces",
           "types": [
             "ANARI_INT32"
