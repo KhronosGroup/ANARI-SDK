@@ -158,3 +158,16 @@ target_link_libraries(anariHelideGpuUnitTests PRIVATE helium anari)
 
 add_test(NAME unit_test::helide_gpu::ArrayUpload
   COMMAND anariHelideGpuUnitTests "[helide_gpu_array_upload]")
+
+## capture device tests ##
+
+if (BUILD_CAPTURE_DEVICE)
+  add_executable(anariCaptureTests
+    catch_main.cpp
+    test_capture_device.cpp
+  )
+  target_link_libraries(anariCaptureTests PRIVATE anari)
+
+  add_test(NAME unit_test::capture::device COMMAND anariCaptureTests "[capture_device]")
+  set_tests_properties(unit_test::capture::device PROPERTIES TIMEOUT 60)
+endif()
