@@ -116,6 +116,8 @@ void Frame::renderFrame()
   m_captureText = std::move(capture.text);
   m_blobs = std::move(capture.blobs);
   ++m_renders;
+  for (const auto &warning : capture.warnings)
+    reportMessage(ANARI_SEVERITY_WARNING, "%s", warning.c_str());
 
   if (m_callback)
     invokeCompletionCallback(

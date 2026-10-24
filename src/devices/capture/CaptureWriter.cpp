@@ -5,6 +5,7 @@
 
 #include "CaptureFormat.h"
 #include "CaptureObject.h"
+#include "CaptureValidation.h"
 // helium
 #include "helium/array/Array1D.h"
 #include "helium/array/Array2D.h"
@@ -58,6 +59,12 @@ class Writer
     for (auto *obj : m_order) {
       out += '\n';
       writeObject(obj);
+    }
+    if (!m_capture.warnings.empty()) {
+      out += "\nwarnings {\n";
+      for (const auto &w : m_capture.warnings)
+        out += "  " + quoteString(w) + "\n";
+      out += "}\n";
     }
     return std::move(m_capture);
   }
@@ -147,6 +154,9 @@ class Writer
     if (auto *cp = dynamic_cast<const CommittedParams *>(obj)) {
       if (!cp->subtype().empty())
         out += " " + quoteString(cp->subtype());
+      for (auto &w : validateObject(
+               idOf(obj), obj->type(), cp->subtype(), cp->committedParams()))
+        m_capture.warnings.push_back(std::move(w));
     }
     out += " {\n";
     for (const auto *param : sortedParams(obj))
@@ -201,6 +211,10 @@ class Writer
       dims = {s.x, s.y, s.z};
       bytes = (const uint8_t *)a3->data();
     }
+
+    if (array->isMapped())
+      m_capture.warnings.push_back(
+          idOf(obj) + ": array is still mapped at render time");
 
     out += idOf(obj) + " {\n";
     out += std::string("  elementType ") + anari::toString(elementType) + "\n";

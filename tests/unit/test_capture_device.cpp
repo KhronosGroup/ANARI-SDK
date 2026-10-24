@@ -10,6 +10,7 @@
 #include <anari/anari_cpp/ext/linalg.h>
 #include <anari/anari_cpp.hpp>
 // std
+#include <algorithm>
 #include <cstdint>
 #include <cstring>
 #include <string>
@@ -388,6 +389,7 @@ SCENARIO(
 
     THEN("the shared object is written once and referenced by ID")
     {
+      REQUIRE(cd.status.warnings.empty());
       REQUIRE(text
           == std::string(kEmptyScene)
                  .replace(std::string(kEmptyScene).find("world@0 {\n}\n"),
@@ -616,7 +618,8 @@ std::vector<std::string> blobNames(anari::Device d, anari::Frame f)
 // The array 'array' as the 'name' parameter of a geometry in a surface in a
 // group in an instance in the scene's world. Its ID is then array1d@2 (after
 // the instance and surface arrays), if it is a 1D array.
-void attachArray(Scene &scene, Content &c, const char *name, anari::Array array)
+template <typename ArrayT>
+void attachArray(Scene &scene, Content &c, const char *name, ArrayT array)
 {
   auto d = scene.d;
   c.d = d;
@@ -638,6 +641,42 @@ void attachArray(Scene &scene, Content &c, const char *name, anari::Array array)
   auto instanceArray = c.keep(anari::newArray1D(d, instances, 1));
   anari::setParameter(d, scene.world, "instance", instanceArray);
   anari::commitParameters(d, scene.world);
+}
+
+// Any object as the 'name' parameter of a surface in the scene's world, through
+// the same chain as attachArray()
+template <typename ObjectT>
+void attachObject(Scene &scene, Content &c, const char *name, ObjectT object)
+{
+  auto d = scene.d;
+  c.d = d;
+  auto surface = c.keep(anari::newObject<anari::Surface>(d));
+  anari::setParameter(d, surface, name, object);
+  anari::commitParameters(d, surface);
+  anari::Surface surfaces[] = {surface};
+  auto surfaceArray = c.keep(anari::newArray1D(d, surfaces, 1));
+  auto group = c.keep(anari::newObject<anari::Group>(d));
+  anari::setParameter(d, group, "surface", surfaceArray);
+  anari::commitParameters(d, group);
+  auto instance = c.keep(anari::newObject<anari::Instance>(d, "transform"));
+  anari::setParameter(d, instance, "group", group);
+  anari::commitParameters(d, instance);
+  anari::Instance instances[] = {instance};
+  auto instanceArray = c.keep(anari::newArray1D(d, instances, 1));
+  anari::setParameter(d, scene.world, "instance", instanceArray);
+  anari::commitParameters(d, scene.world);
+}
+
+// A string as it is written in a capture: quoted, with the quotes escaped
+std::string quoteForTest(const std::string &s)
+{
+  std::string out = "\"";
+  for (char c : s) {
+    if (c == '"' || c == '\\')
+      out += '\\';
+    out += c;
+  }
+  return out + "\"";
 }
 
 // The text of the block labeled 'id', up to and including its closing brace
@@ -748,10 +787,18 @@ SCENARIO("large arrays are written as blobs with a summary", "[capture_device]")
       auto b = content.keep(anari::newArray2D(d, same, 2, 2));
       auto c = content.keep(anari::newArray1D(d, other, 4));
       std::vector<std::string> names;
-      for (anari::Array array : std::vector<anari::Array>{a, b, c}) {
+      auto attach = [&](Scene &s, Content &content, int which) {
+        if (which == 0)
+          attachArray(s, content, "primitive.index", a);
+        else if (which == 1)
+          attachArray(s, content, "primitive.index", b);
+        else
+          attachArray(s, content, "primitive.index", c);
+      };
+      for (int which = 0; which < 3; ++which) {
         Scene s(d);
         Content content;
-        attachArray(s, content, "primitive.index", array);
+        attach(s, content, which);
         const auto block = blockOf(s.render(), "array1d@2");
         if (block.empty()) {
           const auto block2d = blockOf(s.render(), "array2d@0");
@@ -896,6 +943,264 @@ SCENARIO(
       REQUIRE(text.find("  frameCompletionCallback "
                         "ANARI_FRAME_COMPLETION_CALLBACK <opaque>\n")
           != std::string::npos);
+    }
+  }
+}
+
+namespace {
+
+std::vector<std::string> extensionsOf(anari::Device d)
+{
+  const char *const *list = nullptr;
+  REQUIRE(anariGetProperty(d,
+              d,
+              "extension",
+              ANARI_STRING_LIST,
+              &list,
+              sizeof(list),
+              ANARI_NO_WAIT)
+      == 1);
+  std::vector<std::string> out;
+  for (; list && *list; ++list)
+    out.push_back(*list);
+  return out;
+}
+
+bool has(const std::vector<std::string> &list, const std::string &s)
+{
+  return std::find(list.begin(), list.end(), s) != list.end();
+}
+
+} // namespace
+
+SCENARIO("the device advertises every extension unless told otherwise",
+    "[capture_device]")
+{
+  CaptureDevice cd;
+  auto d = cd.device;
+
+  WHEN("no extensions are set")
+  {
+    const auto extensions = extensionsOf(d);
+
+    THEN(
+        "it advertises everything the spec defines, including what no real "
+        "device here implements")
+    {
+      REQUIRE(has(extensions, "ANARI_KHR_GEOMETRY_TRIANGLE"));
+      REQUIRE(has(extensions, "ANARI_KHR_LIGHT_HDRI"));
+      REQUIRE(has(extensions, "ANARI_KHR_SPATIAL_FIELD_UNSTRUCTURED"));
+      REQUIRE(has(extensions, "ANARI_KHR_DATA_PARALLEL_MPI"));
+    }
+
+    THEN("the library reports the same list")
+    {
+      std::vector<std::string> fromLibrary;
+      for (auto **e = anariGetDeviceExtensions(cd.lib, "default"); *e; ++e)
+        fromLibrary.push_back(*e);
+      auto sorted = fromLibrary;
+      std::sort(sorted.begin(), sorted.end());
+      REQUIRE(sorted == extensions);
+    }
+
+    THEN("the capture lists them, sorted")
+    {
+      Scene scene(d);
+      const auto capture = scene.render();
+      REQUIRE(capture.find("device {\n"
+                           "  extensions ANARI_STRING_LIST [\n"
+                           "    \"ANARI_KHR_ARRAY1D_REGION\"\n")
+          != std::string::npos);
+      REQUIRE(
+          capture.find("    \"ANARI_KHR_LIGHT_HDRI\"\n") != std::string::npos);
+    }
+  }
+
+  WHEN("a list of extensions is set on the device")
+  {
+    const char *list[] = {
+        "ANARI_KHR_GEOMETRY_TRIANGLE", "ANARI_KHR_CAMERA_PERSPECTIVE", nullptr};
+    anariSetParameter(d, d, "extensions", ANARI_STRING_LIST, list);
+    anariCommitParameters(d, d);
+
+    THEN("only those are advertised")
+    {
+      REQUIRE(extensionsOf(d)
+          == std::vector<std::string>{
+              "ANARI_KHR_CAMERA_PERSPECTIVE", "ANARI_KHR_GEOMETRY_TRIANGLE"});
+    }
+
+    THEN("the capture records them")
+    {
+      Scene scene(d);
+      REQUIRE(scene.render().find("device {\n"
+                                  "  extensions ANARI_STRING_LIST [\n"
+                                  "    \"ANARI_KHR_CAMERA_PERSPECTIVE\"\n"
+                                  "    \"ANARI_KHR_GEOMETRY_TRIANGLE\"\n"
+                                  "  ]\n"
+                                  "}\n")
+          != std::string::npos);
+    }
+  }
+
+  WHEN("an empty list of extensions is set")
+  {
+    const char *list[] = {nullptr};
+    anariSetParameter(d, d, "extensions", ANARI_STRING_LIST, list);
+    anariCommitParameters(d, d);
+
+    THEN("none is advertised")
+    {
+      REQUIRE(extensionsOf(d).empty());
+      Scene scene(d);
+      REQUIRE(scene.render().find("  extensions ANARI_STRING_LIST []\n")
+          != std::string::npos);
+    }
+  }
+}
+
+SCENARIO(
+    "the device answers queries from the spec definitions", "[capture_device]")
+{
+  CaptureDevice cd;
+  auto d = cd.device;
+
+  THEN("it lists the subtypes of an object type")
+  {
+    std::vector<std::string> subtypes;
+    for (auto **s = anariGetObjectSubtypes(d, ANARI_GEOMETRY); s && *s; ++s)
+      subtypes.push_back(*s);
+    REQUIRE(has(subtypes, "triangle"));
+    REQUIRE(has(subtypes, "sphere"));
+  }
+
+  THEN("it describes the parameters of a subtype")
+  {
+    const auto *params = (const ANARIParameter *)anariGetObjectInfo(
+        d, ANARI_CAMERA, "perspective", "parameter", ANARI_PARAMETER_LIST);
+    REQUIRE(params != nullptr);
+    std::vector<std::string> names;
+    for (; params->name; ++params)
+      names.push_back(params->name);
+    REQUIRE(has(names, "fovy"));
+    REQUIRE(has(names, "position"));
+  }
+
+  THEN("it describes its own parameters")
+  {
+    const auto *limit = (const uint32_t *)anariGetParameterInfo(d,
+        ANARI_DEVICE,
+        nullptr,
+        "inlineArrayLimit",
+        ANARI_UINT32,
+        "default",
+        ANARI_UINT32);
+    REQUIRE(limit != nullptr);
+    REQUIRE(*limit == 64);
+  }
+}
+
+SCENARIO("a capture records spec violations as warnings", "[capture_device]")
+{
+  CaptureDevice cd;
+  Scene scene(cd.device);
+  auto d = cd.device;
+
+  WHEN("an object has a subtype the spec does not define")
+  {
+    auto geometry = anari::newObject<anari::Geometry>(d, "blob");
+    anari::commitParameters(d, geometry);
+    Content content;
+    attachObject(scene, content, "geometry", geometry);
+    const auto capture = scene.render();
+    const std::string warning = "geometry@0: unknown subtype \"blob\"";
+
+    THEN("the capture ends with a warnings block")
+    {
+      const std::string tail =
+          "\nwarnings {\n  " + quoteForTest(warning) + "\n}\n";
+      REQUIRE(capture.size() > tail.size());
+      REQUIRE(capture.substr(capture.size() - tail.size()) == tail);
+    }
+
+    THEN("the device reports the same message")
+    {
+      REQUIRE(cd.status.warnings == std::vector<std::string>{warning});
+    }
+    anari::release(d, geometry);
+  }
+
+  WHEN("an object has a parameter the spec does not define")
+  {
+    anari::setParameter(d, scene.world, "extraStuff", 3);
+    scene.commit(scene.world);
+    scene.render();
+
+    THEN("it is reported")
+    {
+      REQUIRE(cd.status.warnings
+          == std::vector<std::string>{
+              "world@0: unknown parameter \"extraStuff\""});
+    }
+  }
+
+  WHEN("a parameter has the wrong type")
+  {
+    anari::setParameter(d, scene.camera, "fovy", 3);
+    scene.commit(scene.camera);
+    const auto capture = scene.render();
+
+    THEN("it is reported, and the value is still captured")
+    {
+      REQUIRE(cd.status.warnings
+          == std::vector<std::string>{"camera@0: parameter \"fovy\" has type "
+                                      "ANARI_INT32, expected ANARI_FLOAT32"});
+      REQUIRE(capture.find("  fovy ANARI_INT32 3\n") != std::string::npos);
+    }
+  }
+
+  WHEN("a reachable array is still mapped at render time")
+  {
+    auto array = anari::newArray1D(d, anari::DataType(ANARI_FLOAT32), 2);
+    Content content;
+    attachArray(scene, content, "primitive.attribute0", array);
+    anari::map<void>(d, array);
+    scene.render();
+
+    THEN("it is reported")
+    {
+      REQUIRE(cd.status.warnings
+          == std::vector<std::string>{
+              "array1d@2: array is still mapped at render time"});
+    }
+
+    anari::unmap(d, array);
+    anari::release(d, array);
+  }
+
+  WHEN("an unreachable object breaks the rules")
+  {
+    auto stray = anari::newObject<anari::Camera>(d, "blob");
+    anari::setParameter(d, stray, "nonsense", 1);
+    anari::commitParameters(d, stray);
+    scene.render();
+
+    THEN("nothing is reported")
+    {
+      REQUIRE(cd.status.warnings.empty());
+    }
+    anari::release(d, stray);
+  }
+
+  WHEN("a renderer has parameters only a particular device defines")
+  {
+    anari::setParameter(d, scene.renderer, "pixelSamples", 4);
+    scene.commit(scene.renderer);
+    scene.render();
+
+    THEN("they are not reported")
+    {
+      REQUIRE(cd.status.warnings.empty());
     }
   }
 }

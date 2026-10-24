@@ -16,6 +16,7 @@ project_sources(PRIVATE
   CaptureFrame.cpp
   CaptureLibrary.cpp
   CaptureObject.cpp
+  CaptureValidation.cpp
   CaptureWriter.cpp
 )
 

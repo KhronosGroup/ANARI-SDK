@@ -62,5 +62,36 @@
       "khr_volume_transfer_function1d"
     ]
   },
-  "objects": []
+  "objects": [
+    {
+      "type": "ANARI_DEVICE",
+      "parameters": [
+        {
+          "name": "captureDir",
+          "types": [
+            "ANARI_STRING"
+          ],
+          "tags": [],
+          "description": "directory to write captures to; ANARI_CAPTURE_DIR if not set"
+        },
+        {
+          "name": "extensions",
+          "types": [
+            "ANARI_STRING_LIST"
+          ],
+          "tags": [],
+          "description": "the extensions to advertise; all of them if not set"
+        },
+        {
+          "name": "inlineArrayLimit",
+          "types": [
+            "ANARI_UINT32"
+          ],
+          "tags": [],
+          "default": 64,
+          "description": "arrays with more elements than this are written as blobs"
+        }
+      ]
+    }
+  ]
 }
