@@ -163,4 +163,39 @@ SCENARIO(
   }
 }
 
+SCENARIO("helium::ParameterizedObject lists the parameters it reads",
+    "[helium_ParameterizedObject]")
+{
+  GIVEN("A ParameterizedObject with two parameters, one committed")
+  {
+    helium::ParameterizedObject obj;
+    int v = 1;
+    obj.setParam("a", ANARI_INT32, &v);
+    obj.commitParameterSnapshot();
+    obj.setParam("b", ANARI_INT32, &v);
+
+    THEN("The live store lists both parameters")
+    {
+      REQUIRE(obj.paramNames() == std::vector<std::string>{"a", "b"});
+    }
+
+    THEN("A committed read scope lists only the committed parameters")
+    {
+      helium::ParameterizedObject::ReadCommittedScope scope(&obj);
+      REQUIRE(obj.paramNames() == std::vector<std::string>{"a"});
+    }
+
+    WHEN("A committed parameter is removed after the commit")
+    {
+      obj.removeParam("a");
+
+      THEN("A committed read scope still lists it")
+      {
+        helium::ParameterizedObject::ReadCommittedScope scope(&obj);
+        REQUIRE(obj.paramNames() == std::vector<std::string>{"a"});
+      }
+    }
+  }
+}
+
 } // namespace
