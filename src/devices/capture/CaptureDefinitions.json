@@ -92,6 +92,100 @@
           "description": "arrays with more elements than this are written as blobs"
         }
       ]
+    },
+    {
+      "type": "ANARI_FRAME",
+      "parameters": [
+        {
+          "name": "capture.mode",
+          "types": [
+            "ANARI_STRING"
+          ],
+          "tags": [],
+          "default": "checkerboard",
+          "values": [
+            "checkerboard",
+            "solid"
+          ],
+          "description": "test pattern the color channel maps as"
+        },
+        {
+          "name": "capture.cellSize",
+          "types": [
+            "ANARI_UINT32"
+          ],
+          "tags": [],
+          "default": 8,
+          "description": "width and height of a checkerboard cell, in pixels"
+        },
+        {
+          "name": "capture.color0",
+          "types": [
+            "ANARI_FLOAT32_VEC3"
+          ],
+          "tags": [],
+          "default": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "description": "color of the even cells, and of every pixel of a solid pattern"
+        },
+        {
+          "name": "capture.color1",
+          "types": [
+            "ANARI_FLOAT32_VEC3"
+          ],
+          "tags": [],
+          "default": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "description": "color of the odd cells"
+        },
+        {
+          "name": "capture.alpha",
+          "types": [
+            "ANARI_FLOAT32"
+          ],
+          "tags": [],
+          "default": 1.0,
+          "description": "alpha of every pixel"
+        },
+        {
+          "name": "capture.depthNear",
+          "types": [
+            "ANARI_FLOAT32"
+          ],
+          "tags": [],
+          "default": 0.0,
+          "description": "depth at the left edge of the depth ramp"
+        },
+        {
+          "name": "capture.depthFar",
+          "types": [
+            "ANARI_FLOAT32"
+          ],
+          "tags": [],
+          "default": 1.0,
+          "description": "depth at the right edge of the depth ramp"
+        }
+      ],
+      "properties": [
+        {
+          "name": "capture",
+          "type": "ANARI_STRING",
+          "tags": [],
+          "description": "the text of the last capture; capture.size is its size in bytes with the NUL"
+        },
+        {
+          "name": "capture.blobs",
+          "type": "ANARI_STRING",
+          "tags": [],
+          "description": "the names of the blobs the last capture refers to, one per line"
+        }
+      ]
     }
   ]
 }

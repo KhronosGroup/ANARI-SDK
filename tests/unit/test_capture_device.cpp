@@ -1204,3 +1204,239 @@ SCENARIO("a capture records spec violations as warnings", "[capture_device]")
     }
   }
 }
+
+namespace {
+
+struct Mapped
+{
+  const void *data{nullptr};
+  uint32_t width{0};
+  uint32_t height{0};
+  ANARIDataType type{ANARI_UNKNOWN};
+};
+
+Mapped mapChannel(anari::Device d, anari::Frame f, const char *channel)
+{
+  Mapped m;
+  m.data = anariMapFrame(d, f, channel, &m.width, &m.height, &m.type);
+  return m;
+}
+
+// The bytes of 'm', as 'T's
+template <typename T>
+std::vector<T> pixels(const Mapped &m)
+{
+  const size_t n =
+      size_t(m.width) * m.height * anari::sizeOf(m.type) / sizeof(T);
+  const T *p = (const T *)m.data;
+  return std::vector<T>(p, p + n);
+}
+
+// A frame of the given size that maps the color channel as 'colorType', and
+// the depth channel as FLOAT32 if 'depth'
+void declareChannels(Scene &scene,
+    anari::math::uint2 size,
+    ANARIDataType colorType,
+    bool depth = false)
+{
+  auto d = scene.d;
+  anari::setParameter(d, scene.frame, "size", size);
+  if (colorType != ANARI_UNKNOWN)
+    anari::setParameter(d, scene.frame, "channel.color", colorType);
+  if (depth)
+    anari::setParameter(d, scene.frame, "channel.depth", ANARI_FLOAT32);
+  anari::commitParameters(d, scene.frame);
+}
+
+} // namespace
+
+SCENARIO("a frame maps its channels as a checkerboard test pattern",
+    "[capture_device]")
+{
+  CaptureDevice cd;
+  Scene scene(cd.device);
+  auto d = cd.device;
+
+  GIVEN("a 4x4 frame with 2x2 cells and two colors")
+  {
+    anari::setParameter(d, scene.frame, "capture.cellSize", uint32_t(2));
+    anari::setParameter(
+        d, scene.frame, "capture.color0", anari::math::float3(1.f, 0.5f, 0.f));
+    anari::setParameter(
+        d, scene.frame, "capture.color1", anari::math::float3(0.f, 0.f, 1.f));
+    anari::setParameter(d, scene.frame, "capture.alpha", 0.5f);
+
+    // Which of the two colors the pixel at (x, y) is
+    auto cell = [](int x, int y) { return ((x / 2) + (y / 2)) % 2; };
+
+    WHEN("the color channel is mapped as FLOAT32_VEC4")
+    {
+      declareChannels(scene, {4, 4}, ANARI_FLOAT32_VEC4);
+      scene.render();
+      const auto m = mapChannel(d, scene.frame, "channel.color");
+
+      THEN("each pixel is a color with the alpha, exactly")
+      {
+        REQUIRE(m.width == 4);
+        REQUIRE(m.height == 4);
+        REQUIRE(m.type == ANARI_FLOAT32_VEC4);
+        const auto px = pixels<float>(m);
+        REQUIRE(px.size() == 4 * 4 * 4);
+        for (int y = 0; y < 4; ++y) {
+          for (int x = 0; x < 4; ++x) {
+            const float *p = &px[(y * 4 + x) * 4];
+            const std::vector<float> expected = cell(x, y) == 0
+                ? std::vector<float>{1.f, 0.5f, 0.f, 0.5f}
+                : std::vector<float>{0.f, 0.f, 1.f, 0.5f};
+            REQUIRE(std::vector<float>(p, p + 4) == expected);
+          }
+        }
+      }
+      anariUnmapFrame(d, scene.frame, "channel.color");
+    }
+
+    WHEN("the color channel is mapped as UFIXED8_VEC4")
+    {
+      declareChannels(scene, {4, 4}, ANARI_UFIXED8_VEC4);
+      scene.render();
+      const auto m = mapChannel(d, scene.frame, "channel.color");
+
+      THEN("components are rounded to the nearest code")
+      {
+        REQUIRE(m.type == ANARI_UFIXED8_VEC4);
+        const auto px = pixels<uint8_t>(m);
+        REQUIRE(px.size() == 4 * 4 * 4);
+        for (int y = 0; y < 4; ++y) {
+          for (int x = 0; x < 4; ++x) {
+            const uint8_t *p = &px[(y * 4 + x) * 4];
+            const std::vector<uint8_t> expected = cell(x, y) == 0
+                ? std::vector<uint8_t>{255, 128, 0, 128}
+                : std::vector<uint8_t>{0, 0, 255, 128};
+            REQUIRE(std::vector<uint8_t>(p, p + 4) == expected);
+          }
+        }
+      }
+      anariUnmapFrame(d, scene.frame, "channel.color");
+    }
+
+    WHEN("the color channel is mapped as UFIXED8_RGBA_SRGB")
+    {
+      declareChannels(scene, {4, 4}, ANARI_UFIXED8_RGBA_SRGB);
+      scene.render();
+      const auto m = mapChannel(d, scene.frame, "channel.color");
+
+      THEN("color is sRGB encoded and alpha is not")
+      {
+        REQUIRE(m.type == ANARI_UFIXED8_RGBA_SRGB);
+        const auto px = pixels<uint8_t>(m);
+        const uint8_t *first = &px[0];
+        REQUIRE(std::vector<uint8_t>(first, first + 4)
+            == std::vector<uint8_t>{255, 188, 0, 128});
+        const uint8_t *second = &px[(0 * 4 + 2) * 4];
+        REQUIRE(std::vector<uint8_t>(second, second + 4)
+            == std::vector<uint8_t>{0, 0, 255, 128});
+      }
+      anariUnmapFrame(d, scene.frame, "channel.color");
+    }
+
+    WHEN("the mode is solid")
+    {
+      anari::setParameter(d, scene.frame, "capture.mode", "solid");
+      declareChannels(scene, {4, 4}, ANARI_UFIXED8_VEC4);
+      scene.render();
+      const auto m = mapChannel(d, scene.frame, "channel.color");
+
+      THEN("every pixel is the first color")
+      {
+        const auto px = pixels<uint8_t>(m);
+        REQUIRE(px.size() == 4 * 4 * 4);
+        for (size_t i = 0; i < px.size(); i += 4) {
+          REQUIRE(std::vector<uint8_t>(&px[i], &px[i] + 4)
+              == std::vector<uint8_t>{255, 128, 0, 128});
+        }
+      }
+      anariUnmapFrame(d, scene.frame, "channel.color");
+    }
+  }
+
+  GIVEN("a frame with the default pattern")
+  {
+    declareChannels(scene, {16, 8}, ANARI_UFIXED8_VEC4);
+    scene.render();
+    const auto m = mapChannel(d, scene.frame, "channel.color");
+
+    THEN("cells are 8 pixels wide, white then black, opaque")
+    {
+      const auto px = pixels<uint8_t>(m);
+      REQUIRE(px.size() == 16 * 8 * 4);
+      auto at = [&](int x, int y) {
+        return std::vector<uint8_t>(
+            &px[(y * 16 + x) * 4], &px[(y * 16 + x) * 4] + 4);
+      };
+      REQUIRE(at(0, 0) == std::vector<uint8_t>{255, 255, 255, 255});
+      REQUIRE(at(7, 7) == std::vector<uint8_t>{255, 255, 255, 255});
+      REQUIRE(at(8, 0) == std::vector<uint8_t>{0, 0, 0, 255});
+      REQUIRE(at(15, 7) == std::vector<uint8_t>{0, 0, 0, 255});
+    }
+    anariUnmapFrame(d, scene.frame, "channel.color");
+  }
+
+  GIVEN("a frame that maps depth")
+  {
+    anari::setParameter(d, scene.frame, "capture.depthNear", 1.f);
+    anari::setParameter(d, scene.frame, "capture.depthFar", 2.f);
+    declareChannels(scene, {4, 2}, ANARI_UNKNOWN, true);
+    scene.render();
+    const auto m = mapChannel(d, scene.frame, "channel.depth");
+
+    THEN("depth ramps linearly across each row, the same in every row")
+    {
+      REQUIRE(m.type == ANARI_FLOAT32);
+      REQUIRE(m.width == 4);
+      REQUIRE(m.height == 2);
+      const auto px = pixels<float>(m);
+      REQUIRE(px
+          == std::vector<float>{
+              1.125f, 1.375f, 1.625f, 1.875f, 1.125f, 1.375f, 1.625f, 1.875f});
+    }
+    anariUnmapFrame(d, scene.frame, "channel.depth");
+  }
+
+  GIVEN("a frame that declares other channels")
+  {
+    anari::setParameter(d, scene.frame, "channel.primitiveId", ANARI_UINT32);
+    declareChannels(scene, {4, 4}, ANARI_UNKNOWN);
+    scene.render();
+
+    THEN("they map as zeros, and undeclared channels do not map")
+    {
+      const auto m = mapChannel(d, scene.frame, "channel.primitiveId");
+      REQUIRE(m.type == ANARI_UINT32);
+      REQUIRE(m.width == 4);
+      REQUIRE(m.height == 4);
+      const auto px = pixels<uint32_t>(m);
+      REQUIRE(px == std::vector<uint32_t>(16, 0u));
+      anariUnmapFrame(d, scene.frame, "channel.primitiveId");
+
+      REQUIRE(mapChannel(d, scene.frame, "channel.objectId").data == nullptr);
+      REQUIRE(mapChannel(d, scene.frame, "channel.color").data == nullptr);
+    }
+  }
+
+  THEN("the pattern parameters are not spec violations")
+  {
+    anari::setParameter(d, scene.frame, "capture.mode", "checkerboard");
+    anari::setParameter(d, scene.frame, "capture.cellSize", uint32_t(4));
+    anari::setParameter(
+        d, scene.frame, "capture.color0", anari::math::float3(1.f));
+    anari::setParameter(
+        d, scene.frame, "capture.color1", anari::math::float3(0.f));
+    anari::setParameter(d, scene.frame, "capture.alpha", 1.f);
+    anari::setParameter(d, scene.frame, "capture.depthNear", 0.f);
+    anari::setParameter(d, scene.frame, "capture.depthFar", 1.f);
+    declareChannels(scene, {4, 4}, ANARI_UFIXED8_VEC4, true);
+    scene.render();
+    REQUIRE(cd.status.warnings.empty());
+    REQUIRE(cd.status.errors.empty());
+  }
+}

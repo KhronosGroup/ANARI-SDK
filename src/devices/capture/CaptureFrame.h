@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <anari/anari_cpp/ext/linalg.h>
 #include "CaptureObject.h"
 // helium
 #include "helium/BaseFrame.h"
@@ -41,8 +42,29 @@ struct Frame : public helium::BaseFrame, public CommittedParams
  private:
   CaptureState *state() const;
 
+  struct Pattern
+  {
+    bool solid{false};
+    uint32_t cellSize{8};
+    anari::math::float3 color0{1.f, 1.f, 1.f};
+    anari::math::float3 color1{0.f, 0.f, 0.f};
+    float alpha{1.f};
+    float depthNear{0.f};
+    float depthFar{1.f};
+  };
+
+  // The bytes of a channel, as a test pattern, or zeros for a channel that
+  // has none
+  std::vector<uint8_t> channelPixels(
+      const std::string &channel, ANARIDataType type) const;
+
   uint32_t m_index{0}; // among the frames created
   uint32_t m_renders{0};
+  anari::math::uint2 m_size{0u, 0u};
+  Pattern m_pattern;
+  std::map<std::string, ANARIDataType> m_channels;
+  std::vector<uint8_t> m_mapped;
+
   std::string m_captureText;
   std::map<std::string, std::vector<uint8_t>> m_blobs;
 

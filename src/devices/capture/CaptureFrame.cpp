@@ -4,6 +4,7 @@
 #include "CaptureFrame.h"
 
 #include "CaptureWriter.h"
+#include "helium/helium_math.h"
 // std
 #include <algorithm>
 #include <cstring>
@@ -101,6 +102,28 @@ void Frame::commitParameters()
       "frameCompletionCallback", nullptr);
   m_callbackUserPtr =
       getParam<const void *>("frameCompletionCallbackUserData", nullptr);
+
+  m_size = getParam<anari::math::uint2>("size", anari::math::uint2(0u, 0u));
+  m_channels.clear();
+  for (const auto &p : committedParams()) {
+    if (p.first.rfind("channel.", 0) == 0
+        && p.second.type() == ANARI_DATA_TYPE) {
+      ANARIDataType type;
+      std::memcpy(&type, p.second.data(), sizeof(type));
+      m_channels[p.first] = type;
+    }
+  }
+
+  m_pattern = Pattern();
+  m_pattern.solid = getParamString("capture.mode", "checkerboard") == "solid";
+  m_pattern.cellSize = std::max(1u, getParam<uint32_t>("capture.cellSize", 8u));
+  m_pattern.color0 =
+      getParam<anari::math::float3>("capture.color0", m_pattern.color0);
+  m_pattern.color1 =
+      getParam<anari::math::float3>("capture.color1", m_pattern.color1);
+  m_pattern.alpha = getParam<float>("capture.alpha", 1.f);
+  m_pattern.depthNear = getParam<float>("capture.depthNear", 0.f);
+  m_pattern.depthFar = getParam<float>("capture.depthFar", 1.f);
 }
 
 void Frame::finalize() {}
@@ -124,7 +147,55 @@ void Frame::renderFrame()
         m_callback, m_callbackUserPtr, state()->anariDevice);
 }
 
-void *Frame::map(std::string_view,
+std::vector<uint8_t> Frame::channelPixels(
+    const std::string &channel, ANARIDataType type) const
+{
+  const size_t width = m_size.x;
+  const size_t height = m_size.y;
+  std::vector<uint8_t> bytes(width * height * anari::sizeOf(type), 0);
+
+  const auto &pattern = m_pattern;
+  auto colorAt = [&](size_t x, size_t y) {
+    const bool odd = !pattern.solid
+        && (((x / pattern.cellSize) + (y / pattern.cellSize)) % 2) == 1;
+    const auto &c = odd ? pattern.color1 : pattern.color0;
+    return anari::math::float4(c.x, c.y, c.z, pattern.alpha);
+  };
+
+  if (channel == "channel.color" && type == ANARI_FLOAT32_VEC4) {
+    for (size_t y = 0; y < height; ++y) {
+      for (size_t x = 0; x < width; ++x) {
+        const auto c = colorAt(x, y);
+        std::memcpy(&bytes[(y * width + x) * sizeof(c)], &c, sizeof(c));
+      }
+    }
+  } else if (channel == "channel.color"
+      && (type == ANARI_UFIXED8_VEC4 || type == ANARI_UFIXED8_RGBA_SRGB)) {
+    for (size_t y = 0; y < height; ++y) {
+      for (size_t x = 0; x < width; ++x) {
+        const auto c = colorAt(x, y);
+        const uint32_t rgba = type == ANARI_UFIXED8_VEC4
+            ? helium::math::cvt_color_to_uint32(c)
+            : helium::math::cvt_color_to_uint32_srgb(c);
+        std::memcpy(
+            &bytes[(y * width + x) * sizeof(rgba)], &rgba, sizeof(rgba));
+      }
+    }
+  } else if (channel == "channel.depth" && type == ANARI_FLOAT32) {
+    for (size_t y = 0; y < height; ++y) {
+      for (size_t x = 0; x < width; ++x) {
+        const float depth = pattern.depthNear
+            + (pattern.depthFar - pattern.depthNear)
+                * ((float(x) + 0.5f) / float(width));
+        std::memcpy(
+            &bytes[(y * width + x) * sizeof(depth)], &depth, sizeof(depth));
+      }
+    }
+  }
+  return bytes;
+}
+
+void *Frame::map(std::string_view channel,
     uint32_t *width,
     uint32_t *height,
     ANARIDataType *pixelType)
@@ -132,7 +203,18 @@ void *Frame::map(std::string_view,
   *width = 0;
   *height = 0;
   *pixelType = ANARI_UNKNOWN;
-  return nullptr;
+
+  state()->commitBuffer.flush();
+
+  const auto declared = m_channels.find(std::string(channel));
+  if (declared == m_channels.end() || m_size.x == 0 || m_size.y == 0)
+    return nullptr;
+
+  m_mapped = channelPixels(declared->first, declared->second);
+  *width = m_size.x;
+  *height = m_size.y;
+  *pixelType = declared->second;
+  return m_mapped.data();
 }
 
 void Frame::unmap(std::string_view) {}
