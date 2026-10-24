@@ -44,6 +44,7 @@ struct Frame : public helium::BaseFrame, public CommittedParams
   uint32_t m_index{0}; // among the frames created
   uint32_t m_renders{0};
   std::string m_captureText;
+  std::map<std::string, std::vector<uint8_t>> m_blobs;
 
   anari::FrameCompletionCallback m_callback{nullptr};
   const void *m_callbackUserPtr{nullptr};

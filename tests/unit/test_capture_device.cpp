@@ -575,3 +575,327 @@ SCENARIO("small arrays are written inline", "[capture_device]")
     anari::release(d, instanceArray);
   }
 }
+
+namespace {
+
+// Reads the raw bytes of a blob the frame's last capture refers to
+std::string getBlob(anari::Device d, anari::Frame f, const std::string &name)
+{
+  const std::string property = "capture.blob." + name;
+  uint64_t size = 0;
+  if (!anariGetProperty(d,
+          f,
+          (property + ".size").c_str(),
+          ANARI_UINT64,
+          &size,
+          sizeof(size),
+          ANARI_NO_WAIT))
+    return {};
+  std::string bytes(size, '\0');
+  anariGetProperty(
+      d, f, property.c_str(), ANARI_STRING, &bytes[0], size, ANARI_NO_WAIT);
+  return bytes;
+}
+
+// The names of the blobs the frame's last capture refers to
+std::vector<std::string> blobNames(anari::Device d, anari::Frame f)
+{
+  std::vector<std::string> names;
+  const std::string all = getStringProperty(d, f, "capture.blobs");
+  size_t at = 0;
+  while (at < all.size()) {
+    auto end = all.find('\n', at);
+    if (end == std::string::npos)
+      end = all.size();
+    names.push_back(all.substr(at, end - at));
+    at = end + 1;
+  }
+  return names;
+}
+
+// The array 'array' as the 'name' parameter of a geometry in a surface in a
+// group in an instance in the scene's world. Its ID is then array1d@2 (after
+// the instance and surface arrays), if it is a 1D array.
+void attachArray(Scene &scene, Content &c, const char *name, anari::Array array)
+{
+  auto d = scene.d;
+  c.d = d;
+  auto geometry = c.keep(anari::newObject<anari::Geometry>(d, "triangle"));
+  anari::setParameter(d, geometry, name, array);
+  anari::commitParameters(d, geometry);
+  auto surface = c.keep(anari::newObject<anari::Surface>(d));
+  anari::setParameter(d, surface, "geometry", geometry);
+  anari::commitParameters(d, surface);
+  anari::Surface surfaces[] = {surface};
+  auto surfaceArray = c.keep(anari::newArray1D(d, surfaces, 1));
+  auto group = c.keep(anari::newObject<anari::Group>(d));
+  anari::setParameter(d, group, "surface", surfaceArray);
+  anari::commitParameters(d, group);
+  auto instance = c.keep(anari::newObject<anari::Instance>(d, "transform"));
+  anari::setParameter(d, instance, "group", group);
+  anari::commitParameters(d, instance);
+  anari::Instance instances[] = {instance};
+  auto instanceArray = c.keep(anari::newArray1D(d, instances, 1));
+  anari::setParameter(d, scene.world, "instance", instanceArray);
+  anari::commitParameters(d, scene.world);
+}
+
+// The text of the block labeled 'id', up to and including its closing brace
+std::string blockOf(const std::string &capture, const std::string &id)
+{
+  const auto start = capture.find("\n" + id + " {\n");
+  if (start == std::string::npos)
+    return {};
+  const auto end = capture.find("\n}\n", start);
+  return capture.substr(start + 1, end - start + 2);
+}
+
+} // namespace
+
+SCENARIO("large arrays are written as blobs with a summary", "[capture_device]")
+{
+  CaptureDevice cd;
+  Scene scene(cd.device);
+  Content content;
+  auto d = cd.device;
+
+  GIVEN("an array of vectors with more elements than the default limit")
+  {
+    std::vector<anari::math::float3> positions;
+    for (int i = 0; i < 65; ++i)
+      positions.push_back({float(i), float(2 * i) - 10.f, 0.5f});
+    auto array = content.keep(anari::newArray1D(d, positions.data(), 65));
+    attachArray(scene, content, "vertex.position", array);
+    const auto text = scene.render();
+    const auto block = blockOf(text, "array1d@2");
+
+    THEN("its elements are summarized, and its bytes are in a blob")
+    {
+      REQUIRE(block.find("array1d@2 {\n"
+                         "  elementType ANARI_FLOAT32_VEC3\n"
+                         "  dimensions (65)\n"
+                         "  count 65\n"
+                         "  min (0, -10, 0.5)\n"
+                         "  max (64, 118, 0.5)\n"
+                         "  blob ")
+          == 0);
+      REQUIRE(block.find("data [") == std::string::npos);
+
+      const auto name = block.substr(block.find("blob ") + 5, 16);
+      REQUIRE(blobNames(d, scene.frame) == std::vector<std::string>{name});
+      const auto bytes = getBlob(d, scene.frame, name);
+      REQUIRE(bytes.size() == positions.size() * sizeof(positions[0]));
+      REQUIRE(std::memcmp(bytes.data(), positions.data(), bytes.size()) == 0);
+    }
+  }
+
+  GIVEN("an array with exactly as many elements as the default limit")
+  {
+    std::vector<uint32_t> values(64, 7u);
+    auto array = content.keep(anari::newArray1D(d, values.data(), 64));
+    attachArray(scene, content, "primitive.index", array);
+
+    THEN("it is still written inline")
+    {
+      const auto block = blockOf(scene.render(), "array1d@2");
+      REQUIRE(block.find("data [") != std::string::npos);
+      REQUIRE(blobNames(d, scene.frame).empty());
+    }
+  }
+
+  GIVEN("a smaller inline limit set on the device")
+  {
+    anari::setParameter(d, d, "inlineArrayLimit", uint32_t(2));
+    anari::commitParameters(d, d);
+    uint32_t values[] = {1, 2, 3};
+    auto array = content.keep(anari::newArray1D(d, values, 3));
+    attachArray(scene, content, "primitive.index", array);
+
+    THEN("arrays over that limit are blobs")
+    {
+      const auto block = blockOf(scene.render(), "array1d@2");
+      REQUIRE(block.find("blob ") != std::string::npos);
+    }
+  }
+
+  GIVEN("integer data and an inline limit of zero")
+  {
+    anari::setParameter(d, d, "inlineArrayLimit", uint32_t(0));
+    anari::commitParameters(d, d);
+    uint8_t values[] = {1, 2, 3, 4};
+    auto array = content.keep(anari::newArray1D(d, values, 4));
+    attachArray(scene, content, "primitive.index", array);
+
+    THEN("the blob is named by a hash of its type, size and bytes")
+    {
+      const auto block = blockOf(scene.render(), "array1d@2");
+      REQUIRE(block
+          == "array1d@2 {\n"
+             "  elementType ANARI_UINT8\n"
+             "  dimensions (4)\n"
+             "  count 4\n"
+             "  min 1\n"
+             "  max 4\n"
+             "  blob f05edf276f4dba45\n"
+             "}\n");
+    }
+
+    THEN("another type, shape or content has another name")
+    {
+      uint8_t same[] = {1, 2, 3, 4};
+      uint8_t other[] = {1, 2, 3, 5};
+      auto a = content.keep(anari::newArray1D(d, same, 4));
+      auto b = content.keep(anari::newArray2D(d, same, 2, 2));
+      auto c = content.keep(anari::newArray1D(d, other, 4));
+      std::vector<std::string> names;
+      for (anari::Array array : std::vector<anari::Array>{a, b, c}) {
+        Scene s(d);
+        Content content;
+        attachArray(s, content, "primitive.index", array);
+        const auto block = blockOf(s.render(), "array1d@2");
+        if (block.empty()) {
+          const auto block2d = blockOf(s.render(), "array2d@0");
+          names.push_back(block2d.substr(block2d.find("blob ") + 5, 16));
+        } else {
+          names.push_back(block.substr(block.find("blob ") + 5, 16));
+        }
+      }
+      REQUIRE(names[0] == "f05edf276f4dba45");
+      REQUIRE(names[1] != names[0]);
+      REQUIRE(names[2] != names[0]);
+    }
+  }
+}
+
+SCENARIO("a capture holds what the app's arrays contain at render time",
+    "[capture_device]")
+{
+  CaptureDevice cd;
+  Scene scene(cd.device);
+  Content content;
+  auto d = cd.device;
+
+  GIVEN("an array that shares the app's memory")
+  {
+    float values[] = {1.f, 2.f, 3.f};
+    auto array = content.keep(anari::newArray1D(d, values, 3));
+    anari::commitParameters(d, array);
+    attachArray(scene, content, "primitive.attribute0", array);
+
+    WHEN("the app changes the memory before rendering")
+    {
+      values[1] = 5.f;
+
+      THEN("the new contents are captured")
+      {
+        const auto block = blockOf(scene.render(), "array1d@2");
+        REQUIRE(block.find("    1\n    5\n    3\n") != std::string::npos);
+      }
+    }
+  }
+
+  GIVEN("an array whose elements are floats of every difficulty")
+  {
+    const float values[] = {0.1f,
+        1.f / 3.f,
+        16777216.f,
+        1e-30f,
+        -0.f,
+        3.4028235e38f,
+        1.17549435e-38f,
+        1e-45f};
+    auto array = content.keep(anari::newArray1D(d, values, 8));
+    attachArray(scene, content, "primitive.attribute0", array);
+    const auto block = blockOf(scene.render(), "array1d@2");
+
+    THEN("each reads back to the same bits")
+    {
+      size_t at = block.find("data [\n") + 7;
+      for (float v : values) {
+        at += 4; // indent
+        const auto end = block.find('\n', at);
+        const float back =
+            std::strtof(block.substr(at, end - at).c_str(), nullptr);
+        uint32_t a, b;
+        std::memcpy(&a, &v, 4);
+        std::memcpy(&b, &back, 4);
+        REQUIRE(a == b);
+        at = end + 1;
+      }
+    }
+  }
+
+  GIVEN("an array of doubles")
+  {
+    const double values[] = {0.1, 1.0 / 3.0, 1e300, -2.5e-300};
+    auto array = content.keep(anari::newArray1D(d, values, 4));
+    attachArray(scene, content, "primitive.attribute0", array);
+    const auto block = blockOf(scene.render(), "array1d@2");
+
+    THEN("each reads back to the same bits")
+    {
+      size_t at = block.find("data [\n") + 7;
+      for (double v : values) {
+        at += 4; // indent
+        const auto end = block.find('\n', at);
+        const double back =
+            std::strtod(block.substr(at, end - at).c_str(), nullptr);
+        REQUIRE(back == v);
+        at = end + 1;
+      }
+    }
+  }
+}
+
+namespace {
+int g_callbackCalls = 0;
+void countCallback(const void *, ANARIDevice, ANARIFrame)
+{
+  ++g_callbackCalls;
+}
+} // namespace
+
+SCENARIO(
+    "pointers and callbacks are written as placeholders", "[capture_device]")
+{
+  CaptureDevice cd;
+  Scene scene(cd.device);
+  auto d = cd.device;
+
+  int a = 0, b = 0;
+  anari::setParameter(d, scene.world, "userData", (const void *)&a);
+  scene.commit(scene.world);
+  const auto first = scene.render();
+
+  THEN("the type is kept and the value is not")
+  {
+    REQUIRE(first.find("  userData ANARI_VOID_POINTER <opaque>\n")
+        != std::string::npos);
+  }
+
+  THEN("two runs with other pointers write the same capture")
+  {
+    anari::setParameter(d, scene.world, "userData", (const void *)&b);
+    scene.commit(scene.world);
+    REQUIRE(scene.render() == first);
+  }
+
+  WHEN("the frame has a completion callback")
+  {
+    g_callbackCalls = 0;
+    anari::setParameter(d,
+        scene.frame,
+        "frameCompletionCallback",
+        (ANARIFrameCompletionCallback)countCallback);
+    scene.commit(scene.frame);
+    const auto text = scene.render();
+
+    THEN("it is called once per render, and written as a placeholder")
+    {
+      REQUIRE(g_callbackCalls == 1);
+      REQUIRE(text.find("  frameCompletionCallback "
+                        "ANARI_FRAME_COMPLETION_CALLBACK <opaque>\n")
+          != std::string::npos);
+    }
+  }
+}

@@ -5,6 +5,7 @@
 
 #include "CaptureWriter.h"
 // std
+#include <algorithm>
 #include <cstring>
 
 namespace capture_device {
@@ -59,7 +60,38 @@ bool Frame::getProperty(const std::string_view &name,
     helium::writeToVoidP(ptr, 0.f);
     return true;
   }
-  return writeString(m_captureText, name, "capture", type, ptr, size);
+  if (writeString(m_captureText, name, "capture", type, ptr, size))
+    return true;
+
+  // The blobs of the last capture, for a capture that is compared in memory
+  if (name == "capture.blobs" || name == "capture.blobs.size") {
+    std::string names;
+    for (const auto &blob : m_blobs)
+      names += blob.first + "\n";
+    return writeString(names, name, "capture.blobs", type, ptr, size);
+  }
+  constexpr std::string_view blobPrefix = "capture.blob.";
+  if (name.substr(0, blobPrefix.size()) == blobPrefix) {
+    const bool wantsSize =
+        name.size() > 5 && name.substr(name.size() - 5) == ".size";
+    const auto blobName = std::string(name.substr(blobPrefix.size(),
+        name.size() - blobPrefix.size() - (wantsSize ? 5 : 0)));
+    auto blob = m_blobs.find(blobName);
+    if (blob == m_blobs.end())
+      return false;
+    // Raw bytes, not a C string: the size is the number of bytes, exactly
+    if (wantsSize && type == ANARI_UINT64) {
+      helium::writeToVoidP(ptr, uint64_t(blob->second.size()));
+      return true;
+    }
+    if (!wantsSize && type == ANARI_STRING) {
+      std::memcpy(ptr,
+          blob->second.data(),
+          std::min<uint64_t>(blob->second.size(), size));
+      return true;
+    }
+  }
+  return false;
 }
 
 void Frame::commitParameters()
@@ -82,6 +114,7 @@ void Frame::renderFrame()
   options.extensions = state()->extensions;
   Capture capture = writeCapture(*this, options);
   m_captureText = std::move(capture.text);
+  m_blobs = std::move(capture.blobs);
   ++m_renders;
 
   if (m_callback)

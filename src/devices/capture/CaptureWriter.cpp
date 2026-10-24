@@ -12,6 +12,8 @@
 #include "helium/array/ObjectArray.h"
 // std
 #include <algorithm>
+#include <cmath>
+#include <cstring>
 #include <unordered_map>
 
 namespace capture_device {
@@ -207,21 +209,78 @@ class Writer
       out += (i ? ", " : "") + std::to_string(dims[i]);
     out += ")\n";
 
-    out += "  data [\n";
+    uint64_t count = 1;
+    for (auto d : dims)
+      count *= d;
+
     if (auto *objects = objectArrayOf(obj)) {
+      out += "  data [\n";
       for (auto **h = objects->handlesBegin(); h != objects->handlesEnd(); ++h)
         out += "    " + (*h ? idOf(*h) : std::string("null")) + "\n";
-    } else {
+      out += "  ]\n";
+    } else if (count <= m_options.inlineArrayLimit) {
       const auto layout = elementLayout(elementType);
       const size_t elementBytes = anari::sizeOf(elementType);
-      uint64_t count = 1;
-      for (auto d : dims)
-        count *= d;
+      out += "  data [\n";
       for (uint64_t i = 0; i < count; ++i)
         out += "    " + formatElement(layout, bytes + i * elementBytes) + "\n";
+      out += "  ]\n";
+    } else {
+      writeSummaryAndBlob(elementType, dims, count, bytes);
     }
-    out += "  ]\n";
     out += "}\n";
+  }
+
+  // The element count, the smallest and largest value of each component, and
+  // the name of the blob holding the bytes
+  void writeSummaryAndBlob(ANARIDataType elementType,
+      const std::vector<uint64_t> &dims,
+      uint64_t count,
+      const uint8_t *bytes)
+  {
+    std::string &out = m_capture.text;
+    const auto layout = elementLayout(elementType);
+    const size_t elementBytes = anari::sizeOf(elementType);
+
+    out += "  count " + std::to_string(count) + "\n";
+    if (layout.kind != ScalarKind::OPAQUE && layout.kind != ScalarKind::BOOL
+        && count > 0) {
+      std::vector<Scalar> lo, hi;
+      for (size_t c = 0; c < layout.components; ++c) {
+        lo.push_back(readScalar(layout, bytes, c));
+        hi.push_back(lo.back());
+      }
+      for (uint64_t i = 1; i < count; ++i) {
+        for (size_t c = 0; c < layout.components; ++c) {
+          const auto v = readScalar(layout, bytes + i * elementBytes, c);
+          if (less(v, lo[c]))
+            lo[c] = v;
+          if (less(hi[c], v))
+            hi[c] = v;
+        }
+      }
+      out += "  min " + formatTuple(lo) + "\n";
+      out += "  max " + formatTuple(hi) + "\n";
+    }
+
+    const size_t numBytes = count * elementBytes;
+    const auto name = contentHash(elementType, dims, bytes, numBytes);
+    m_capture.blobs[name].assign(bytes, bytes + numBytes);
+    out += "  blob " + name + "\n";
+  }
+
+  // Orders scalars of one kind; a NaN is never the smallest or the largest
+  // unless every value is one
+  static bool less(const Scalar &a, const Scalar &b)
+  {
+    switch (a.kind) {
+    case ScalarKind::FLOAT:
+      return std::isnan(b.f) ? !std::isnan(a.f) : a.f < b.f;
+    case ScalarKind::INT:
+      return a.i < b.i;
+    default:
+      return a.u < b.u;
+    }
   }
 
   const WriterOptions &m_options;

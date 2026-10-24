@@ -127,26 +127,55 @@ std::string formatFloat(double value, size_t bytes)
     return "nan";
   if (std::isinf(value))
     return value < 0 ? "-inf" : "inf";
+  if (value == 0.0)
+    return std::signbit(value) ? "-0" : "0";
 
-  const int maxPrecision = bytes == 8 ? 17 : 9;
+  // The fewest significant digits that read back as the same value
+  const int maxDigits = bytes == 8 ? 17 : 9;
   char buf[64];
-  for (int precision = 1; precision <= maxPrecision; ++precision) {
-    std::snprintf(buf, sizeof(buf), "%.*g", precision, value);
+  for (int digits = 1; digits <= maxDigits; ++digits) {
+    std::snprintf(buf, sizeof(buf), "%.*e", digits - 1, value);
     const bool same = bytes == 8 ? std::strtod(buf, nullptr) == value
                                  : std::strtof(buf, nullptr) == float(value);
     if (same)
       break;
   }
 
-  // The C locale's decimal point is what a reader expects
+  // buf is [-]d[.ddd]e[+-]xx, in the C locale's decimal point: take it apart
   std::string text = buf;
   const char *point = std::localeconv()->decimal_point;
-  if (point && point[0] && point[0] != '.') {
-    const auto at = text.find(point);
-    if (at != std::string::npos)
-      text.replace(at, std::strlen(point), ".");
+  const std::string decimalPoint = point && point[0] ? point : ".";
+  const bool negative = text[0] == '-';
+  const auto ePos = text.find('e');
+  std::string digits = text.substr(negative ? 1 : 0, ePos - (negative ? 1 : 0));
+  const auto pointPos = digits.find(decimalPoint);
+  if (pointPos != std::string::npos)
+    digits.erase(pointPos, decimalPoint.size());
+  const int exponent = std::atoi(text.c_str() + ePos + 1);
+
+  std::string out = negative ? "-" : "";
+  const int n = int(digits.size());
+  if (exponent >= -5 && exponent < 16) {
+    if (exponent < 0) {
+      out += "0." + std::string(-exponent - 1, '0') + digits;
+    } else if (n <= exponent + 1) {
+      out += digits + std::string(exponent + 1 - n, '0');
+    } else {
+      out += digits.substr(0, exponent + 1) + "." + digits.substr(exponent + 1);
+    }
+  } else {
+    out += digits.substr(0, 1);
+    if (n > 1)
+      out += "." + digits.substr(1);
+    char tail[16];
+    std::snprintf(tail,
+        sizeof(tail),
+        "e%c%02d",
+        exponent < 0 ? '-' : '+',
+        std::abs(exponent));
+    out += tail;
   }
-  return text;
+  return out;
 }
 
 std::string formatScalar(const Scalar &s)
