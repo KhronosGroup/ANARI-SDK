@@ -8,6 +8,7 @@
 #include "catch.hpp"
 
 #include <anari/anari_cpp/ext/linalg.h>
+#include <anari/ext/capture/CaptureDiff.h>
 #include <anari/anari_cpp.hpp>
 // std
 #include <algorithm>
@@ -1682,5 +1683,125 @@ SCENARIO("ANARI_CAPTURE_DIR names the capture directory when none is set",
           == std::vector<std::string>{"frame0000_render0000.capture"});
       REQUIRE(filesIn(envDir.path).empty());
     }
+  }
+}
+
+namespace {
+
+// The frame's last capture as the diff takes it: the text, and the blobs held
+// in memory
+anari::capture_diff::Capture capturedIn(anari::Device d, anari::Frame f)
+{
+  anari::capture_diff::Capture c;
+  c.text = captureOf(d, f);
+  for (const auto &name : blobNames(d, f)) {
+    const auto bytes = getBlob(d, f, name);
+    c.blobs[name].assign(bytes.begin(), bytes.end());
+  }
+  return c;
+}
+
+} // namespace
+
+SCENARIO("two renders of the same scene, made in another order, do not differ",
+    "[capture_device][capture_diff]")
+{
+  namespace diff = anari::capture_diff;
+  CaptureDevice cd;
+  auto d = cd.device;
+
+  diff::Capture first, second;
+  {
+    Scene scene(d);
+    Content content;
+    buildSharedMaterialScene(scene, content, false);
+    scene.render();
+    first = capturedIn(d, scene.frame);
+  }
+  {
+    Scene scene(d);
+    Content content;
+    buildSharedMaterialScene(scene, content, true);
+    scene.render();
+    second = capturedIn(d, scene.frame);
+  }
+
+  THEN("the diff of their captures is empty")
+  {
+    const auto result = diff::diffCaptures(first, second);
+    REQUIRE(result.report() == "the captures match\n");
+    REQUIRE(result.outcome == diff::Outcome::MATCH);
+  }
+
+  THEN("a change of one parameter is found by its path")
+  {
+    Scene scene(d);
+    Content content;
+    buildSharedMaterialScene(scene, content, false);
+    anari::setParameter(d, scene.camera, "fovy", 0.25f);
+    scene.commit(scene.camera);
+    scene.render();
+    const auto changed = capturedIn(d, scene.frame);
+    const auto result = diff::diffCaptures(first, changed);
+    REQUIRE(result.differences.size() == 1);
+    REQUIRE(result.differences[0].message()
+        == "camera.fovy: expected <absent>, got ANARI_FLOAT32 0.25");
+  }
+}
+
+SCENARIO("captures with blobs are compared in memory and as files",
+    "[capture_device][capture_diff]")
+{
+  namespace diff = anari::capture_diff;
+  ScopedEnv noEnv("ANARI_CAPTURE_DIR", nullptr);
+  CaptureDevice cd;
+  auto d = cd.device;
+  TempDir dir;
+  setCaptureDir(d, dir.path);
+
+  std::vector<float> values(300);
+  for (size_t i = 0; i < values.size(); ++i)
+    values[i] = float(i) * 0.5f;
+
+  auto render = [&](float jitter) {
+    auto copy = values;
+    copy[123] += jitter;
+    Scene scene(d);
+    Content content;
+    auto array = content.keep(anari::newArray1D(d, copy.data(), 300));
+    attachArray(scene, content, "primitive.attribute0", array);
+    scene.render();
+    return capturedIn(d, scene.frame);
+  };
+
+  const auto base = render(0.f);
+  const auto nearby = render(0.001f);
+  REQUIRE(base.blobs.size() == 1);
+
+  THEN("a blob that differs is compared element by element, with a tolerance")
+  {
+    REQUIRE(diff::diffCaptures(base, nearby).outcome == diff::Outcome::DIFFER);
+    diff::DiffOptions options;
+    options.tolerance.absolute = 0.01;
+    REQUIRE(diff::diffCaptures(base, nearby, options).outcome
+        == diff::Outcome::MATCH);
+  }
+
+  THEN("the files written for the two renders compare the same way")
+  {
+    const auto a = (dir.path / "frame0000_render0000.capture").string();
+    const auto b = (dir.path / "frame0001_render0000.capture").string();
+    const auto result = diff::diffCaptureFiles(a, b);
+    REQUIRE(result.outcome == diff::Outcome::DIFFER);
+    REQUIRE(result.differences.size() == 1);
+    REQUIRE(result.differences[0].message().rfind(
+                "world.instance[0].group.surface[0].geometry."
+                "primitive.attribute0[123]: expected 61.5, got 61.501",
+                0)
+        == 0);
+    diff::DiffOptions options;
+    options.tolerance.absolute = 0.01;
+    REQUIRE(
+        diff::diffCaptureFiles(a, b, options).outcome == diff::Outcome::MATCH);
   }
 }
