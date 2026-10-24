@@ -267,9 +267,9 @@ class Writer
       for (uint64_t i = 1; i < count; ++i) {
         for (size_t c = 0; c < layout.components; ++c) {
           const auto v = readScalar(layout, bytes + i * elementBytes, c);
-          if (less(v, lo[c]))
+          if (improves(v, lo[c], true))
             lo[c] = v;
-          if (less(hi[c], v))
+          if (improves(v, hi[c], false))
             hi[c] = v;
         }
       }
@@ -283,17 +283,23 @@ class Writer
     out += "  blob " + name + "\n";
   }
 
-  // Orders scalars of one kind; a NaN is never the smallest or the largest
-  // unless every value is one
-  static bool less(const Scalar &a, const Scalar &b)
+  // Whether 'candidate' is a better smallest (or largest) value than
+  // 'current', among scalars of one kind. A NaN is never better than a number
+  // and a number is better than a NaN, so the summary of an array ignores
+  // NaNs unless every value is one.
+  static bool improves(
+      const Scalar &candidate, const Scalar &current, bool smallest)
   {
-    switch (a.kind) {
+    switch (candidate.kind) {
     case ScalarKind::FLOAT:
-      return std::isnan(b.f) ? !std::isnan(a.f) : a.f < b.f;
+      if (std::isnan(candidate.f))
+        return false;
+      return std::isnan(current.f)
+          || (smallest ? candidate.f < current.f : candidate.f > current.f);
     case ScalarKind::INT:
-      return a.i < b.i;
+      return smallest ? candidate.i < current.i : candidate.i > current.i;
     default:
-      return a.u < b.u;
+      return smallest ? candidate.u < current.u : candidate.u > current.u;
     }
   }
 

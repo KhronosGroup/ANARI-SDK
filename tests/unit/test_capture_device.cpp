@@ -819,6 +819,46 @@ SCENARIO("large arrays are written as blobs with a summary", "[capture_device]")
   }
 }
 
+SCENARIO("the summary of a blob ignores NaNs unless every value is one",
+    "[capture_device]")
+{
+  CaptureDevice cd;
+  Scene scene(cd.device);
+  Content content;
+  auto d = cd.device;
+
+  GIVEN("an array of floats with a NaN first, one in the middle and at the end")
+  {
+    std::vector<float> values(70, 1.f);
+    values[0] = std::nanf("");
+    values[5] = -3.f;
+    values[6] = 9.f;
+    values[30] = std::nanf("");
+    values[69] = std::nanf("");
+    auto array = content.keep(anari::newArray1D(d, values.data(), 70));
+    attachArray(scene, content, "primitive.attribute0", array);
+    const auto block = blockOf(scene.render(), "array1d@2");
+
+    THEN("the smallest and largest values are numbers")
+    {
+      REQUIRE(block.find("  min -3\n  max 9\n") != std::string::npos);
+    }
+  }
+
+  GIVEN("an array in which every value is a NaN")
+  {
+    std::vector<float> values(70, std::nanf(""));
+    auto array = content.keep(anari::newArray1D(d, values.data(), 70));
+    attachArray(scene, content, "primitive.attribute0", array);
+    const auto block = blockOf(scene.render(), "array1d@2");
+
+    THEN("so are the smallest and largest")
+    {
+      REQUIRE(block.find("  min nan\n  max nan\n") != std::string::npos);
+    }
+  }
+}
+
 SCENARIO("a capture holds what the app's arrays contain at render time",
     "[capture_device]")
 {
