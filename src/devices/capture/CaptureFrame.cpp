@@ -7,7 +7,11 @@
 #include "helium/helium_math.h"
 // std
 #include <algorithm>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
+#include <filesystem>
+#include <fstream>
 
 namespace capture_device {
 
@@ -128,6 +132,56 @@ void Frame::commitParameters()
 
 void Frame::finalize() {}
 
+// Writes the last capture and its blobs to the capture directory, if there is
+// one: the device's, else ANARI_CAPTURE_DIR
+void Frame::writeFiles()
+{
+  std::string dir = state()->captureDir;
+  if (dir.empty()) {
+    const char *fromEnv = std::getenv("ANARI_CAPTURE_DIR");
+    dir = fromEnv ? fromEnv : "";
+  }
+  if (dir.empty())
+    return;
+
+  namespace fs = std::filesystem;
+  auto write = [&](const fs::path &path, const void *data, size_t size) {
+    std::ofstream out(path, std::ios::binary | std::ios::trunc);
+    out.write((const char *)data, std::streamsize(size));
+    out.close();
+    if (!out) {
+      reportMessage(
+          ANARI_SEVERITY_ERROR, "cannot write '%s'", path.string().c_str());
+      return false;
+    }
+    return true;
+  };
+
+  try {
+    const fs::path root(dir);
+    fs::create_directories(root);
+
+    char name[64];
+    std::snprintf(
+        name, sizeof(name), "frame%04u_render%04u.capture", m_index, m_renders);
+    write(root / name, m_captureText.data(), m_captureText.size());
+
+    if (!m_blobs.empty())
+      fs::create_directories(root / "blobs");
+    for (const auto &blob : m_blobs) {
+      // Named by their content: one that exists is the same
+      const auto path = root / "blobs" / (blob.first + ".bin");
+      if (!fs::exists(path))
+        write(path, blob.second.data(), blob.second.size());
+    }
+  } catch (const fs::filesystem_error &e) {
+    reportMessage(ANARI_SEVERITY_ERROR,
+        "cannot write captures to '%s': %s",
+        dir.c_str(),
+        e.what());
+  }
+}
+
 void Frame::renderFrame()
 {
   state()->commitBuffer.flush();
@@ -138,6 +192,7 @@ void Frame::renderFrame()
   Capture capture = writeCapture(*this, options);
   m_captureText = std::move(capture.text);
   m_blobs = std::move(capture.blobs);
+  writeFiles();
   ++m_renders;
   for (const auto &warning : capture.warnings)
     reportMessage(ANARI_SEVERITY_WARNING, "%s", warning.c_str());

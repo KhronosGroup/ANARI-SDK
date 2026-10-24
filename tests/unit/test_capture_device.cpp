@@ -12,7 +12,11 @@
 // std
 #include <algorithm>
 #include <cstdint>
+#include <cstdlib>
 #include <cstring>
+#include <filesystem>
+#include <fstream>
+#include <iterator>
 #include <string>
 #include <vector>
 
@@ -1438,5 +1442,245 @@ SCENARIO("a frame maps its channels as a checkerboard test pattern",
     scene.render();
     REQUIRE(cd.status.warnings.empty());
     REQUIRE(cd.status.errors.empty());
+  }
+}
+
+namespace {
+
+namespace fs = std::filesystem;
+
+// A fresh directory that is removed again (or, with 'create' false, only its
+// name, for a directory the device is to make)
+struct TempDir
+{
+  fs::path path;
+
+  explicit TempDir(bool create = true)
+  {
+    static int counter = 0;
+    path = fs::temp_directory_path()
+        / ("anari_capture_test_" + std::to_string(counter++) + "_"
+            + std::to_string(std::rand()));
+    fs::remove_all(path);
+    if (create)
+      fs::create_directories(path);
+  }
+
+  ~TempDir()
+  {
+    std::error_code ec;
+    fs::remove_all(path, ec);
+  }
+};
+
+std::string readFile(const fs::path &p)
+{
+  std::ifstream in(p, std::ios::binary);
+  return std::string(
+      std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
+}
+
+std::vector<std::string> filesIn(const fs::path &dir)
+{
+  std::vector<std::string> names;
+  if (fs::exists(dir)) {
+    for (auto &e : fs::directory_iterator(dir)) {
+      if (e.is_regular_file())
+        names.push_back(e.path().filename().string());
+    }
+  }
+  std::sort(names.begin(), names.end());
+  return names;
+}
+
+void setEnv(const char *name, const char *value)
+{
+#ifdef _WIN32
+  _putenv_s(name, value ? value : "");
+#else
+  if (value)
+    setenv(name, value, 1);
+  else
+    unsetenv(name);
+#endif
+}
+
+// Sets an environment variable for the life of the object
+struct ScopedEnv
+{
+  std::string name;
+  std::string old;
+  bool hadOld;
+
+  ScopedEnv(const char *n, const char *value) : name(n)
+  {
+    const char *current = std::getenv(n);
+    hadOld = current != nullptr;
+    if (hadOld)
+      old = current;
+    setEnv(n, value);
+  }
+
+  ~ScopedEnv()
+  {
+    setEnv(name.c_str(), hadOld ? old.c_str() : nullptr);
+  }
+};
+
+void setCaptureDir(anari::Device d, const fs::path &dir)
+{
+  anari::setParameter(d, d, "captureDir", dir.string());
+  anari::commitParameters(d, d);
+}
+
+} // namespace
+
+SCENARIO("captures are written to a directory, one file per render",
+    "[capture_device]")
+{
+  ScopedEnv noEnv("ANARI_CAPTURE_DIR", nullptr);
+  CaptureDevice cd;
+  auto d = cd.device;
+  TempDir dir;
+
+  GIVEN("a capture directory set on the device")
+  {
+    setCaptureDir(d, dir.path);
+    Scene scene(d);
+
+    WHEN("a frame renders twice")
+    {
+      const auto first = scene.render();
+      anari::setParameter(d, scene.camera, "fovy", 0.5f);
+      scene.commit(scene.camera);
+      const auto second = scene.render();
+
+      THEN("each render has a file, named by the frame and the render")
+      {
+        REQUIRE(filesIn(dir.path)
+            == std::vector<std::string>{"frame0000_render0000.capture",
+                "frame0000_render0001.capture"});
+      }
+
+      THEN("each file holds exactly the capture property")
+      {
+        REQUIRE(readFile(dir.path / "frame0000_render0000.capture") == first);
+        REQUIRE(readFile(dir.path / "frame0000_render0001.capture") == second);
+        REQUIRE(first != second);
+      }
+    }
+
+    WHEN("a second frame renders")
+    {
+      scene.render();
+      Scene other(d);
+      other.render();
+
+      THEN("its files are numbered by its place among the frames")
+      {
+        REQUIRE(filesIn(dir.path)
+            == std::vector<std::string>{"frame0000_render0000.capture",
+                "frame0001_render0000.capture"});
+      }
+    }
+
+    WHEN("a capture has blobs")
+    {
+      std::vector<float> values(100);
+      for (size_t i = 0; i < values.size(); ++i)
+        values[i] = float(i) * 0.25f;
+      Content content;
+      auto array = content.keep(anari::newArray1D(d, values.data(), 100));
+      attachArray(scene, content, "primitive.attribute0", array);
+      const auto capture = scene.render();
+
+      THEN("they are files in blobs/, named by the capture, with their bytes")
+      {
+        const auto names = blobNames(d, scene.frame);
+        REQUIRE(names.size() == 1);
+        REQUIRE(capture.find("  blob " + names[0] + "\n") != std::string::npos);
+        REQUIRE(filesIn(dir.path / "blobs")
+            == std::vector<std::string>{names[0] + ".bin"});
+        REQUIRE(readFile(dir.path / "blobs" / (names[0] + ".bin"))
+            == getBlob(d, scene.frame, names[0]));
+      }
+    }
+  }
+
+  GIVEN("a capture directory that does not exist yet")
+  {
+    TempDir missing(false);
+    setCaptureDir(d, missing.path / "deeper" / "still");
+    Scene scene(d);
+    scene.render();
+
+    THEN("it is created")
+    {
+      REQUIRE(filesIn(missing.path / "deeper" / "still")
+          == std::vector<std::string>{"frame0000_render0000.capture"});
+    }
+  }
+
+  GIVEN("a capture directory that cannot be written")
+  {
+    // A file where a directory is needed
+    std::ofstream(dir.path / "file") << "x";
+    setCaptureDir(d, dir.path / "file");
+    Scene scene(d);
+    const auto capture = scene.render();
+
+    THEN("an error is reported, and the capture is still available")
+    {
+      REQUIRE(cd.status.errors.size() == 1);
+      REQUIRE(capture.rfind("anari-capture 1\n", 0) == 0);
+    }
+  }
+
+  GIVEN("no capture directory")
+  {
+    Scene scene(d);
+    scene.render();
+
+    THEN("nothing is reported")
+    {
+      REQUIRE(cd.status.errors.empty());
+      REQUIRE(cd.status.warnings.empty());
+    }
+  }
+}
+
+SCENARIO("ANARI_CAPTURE_DIR names the capture directory when none is set",
+    "[capture_device]")
+{
+  TempDir envDir;
+  TempDir deviceDir;
+  ScopedEnv env("ANARI_CAPTURE_DIR", envDir.path.string().c_str());
+  CaptureDevice cd;
+  auto d = cd.device;
+
+  GIVEN("a device that sets no directory")
+  {
+    Scene scene(d);
+    scene.render();
+
+    THEN("captures go to the directory in the environment")
+    {
+      REQUIRE(filesIn(envDir.path)
+          == std::vector<std::string>{"frame0000_render0000.capture"});
+    }
+  }
+
+  GIVEN("a device that sets a directory too")
+  {
+    setCaptureDir(d, deviceDir.path);
+    Scene scene(d);
+    scene.render();
+
+    THEN("the device's directory wins")
+    {
+      REQUIRE(filesIn(deviceDir.path)
+          == std::vector<std::string>{"frame0000_render0000.capture"});
+      REQUIRE(filesIn(envDir.path).empty());
+    }
   }
 }

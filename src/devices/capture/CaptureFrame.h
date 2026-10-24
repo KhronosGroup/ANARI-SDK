@@ -41,6 +41,7 @@ struct Frame : public helium::BaseFrame, public CommittedParams
 
  private:
   CaptureState *state() const;
+  void writeFiles();
 
   struct Pattern
   {
