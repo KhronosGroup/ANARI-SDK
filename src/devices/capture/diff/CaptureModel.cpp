@@ -4,11 +4,13 @@
 #include "CaptureModel.h"
 
 #include <algorithm>
+#include <cctype>
 #include <clocale>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <iterator>
 
 namespace anari {
 namespace capture_diff {

@@ -620,6 +620,26 @@ std::vector<std::string> blobNames(anari::Device d, anari::Frame f)
   return names;
 }
 
+// An array of its own holding a copy of 'n' elements, so the array does not
+// depend on how long the app's memory lives
+template <typename T>
+anari::Array1D copyArray1D(anari::Device d, const T *data, size_t n)
+{
+  auto array = anari::newArray1D(d, anari::ANARITypeFor<T>::value, n);
+  std::memcpy(anari::map<T>(d, array), data, n * sizeof(T));
+  anari::unmap(d, array);
+  return array;
+}
+
+template <typename T>
+anari::Array2D copyArray2D(anari::Device d, const T *data, size_t w, size_t h)
+{
+  auto array = anari::newArray2D(d, anari::ANARITypeFor<T>::value, w, h);
+  std::memcpy(anari::map<T>(d, array), data, w * h * sizeof(T));
+  anari::unmap(d, array);
+  return array;
+}
+
 // The array 'array' as the 'name' parameter of a geometry in a surface in a
 // group in an instance in the scene's world. Its ID is then array1d@2 (after
 // the instance and surface arrays), if it is a 1D array.
@@ -708,7 +728,7 @@ SCENARIO("large arrays are written as blobs with a summary", "[capture_device]")
     std::vector<anari::math::float3> positions;
     for (int i = 0; i < 65; ++i)
       positions.push_back({float(i), float(2 * i) - 10.f, 0.5f});
-    auto array = content.keep(anari::newArray1D(d, positions.data(), 65));
+    auto array = content.keep(copyArray1D(d, positions.data(), 65));
     attachArray(scene, content, "vertex.position", array);
     const auto text = scene.render();
     const auto block = blockOf(text, "array1d@2");
@@ -736,7 +756,7 @@ SCENARIO("large arrays are written as blobs with a summary", "[capture_device]")
   GIVEN("an array with exactly as many elements as the default limit")
   {
     std::vector<uint32_t> values(64, 7u);
-    auto array = content.keep(anari::newArray1D(d, values.data(), 64));
+    auto array = content.keep(copyArray1D(d, values.data(), 64));
     attachArray(scene, content, "primitive.index", array);
 
     THEN("it is still written inline")
@@ -752,7 +772,7 @@ SCENARIO("large arrays are written as blobs with a summary", "[capture_device]")
     anari::setParameter(d, d, "inlineArrayLimit", uint32_t(2));
     anari::commitParameters(d, d);
     uint32_t values[] = {1, 2, 3};
-    auto array = content.keep(anari::newArray1D(d, values, 3));
+    auto array = content.keep(copyArray1D(d, values, 3));
     attachArray(scene, content, "primitive.index", array);
 
     THEN("arrays over that limit are blobs")
@@ -767,7 +787,7 @@ SCENARIO("large arrays are written as blobs with a summary", "[capture_device]")
     anari::setParameter(d, d, "inlineArrayLimit", uint32_t(0));
     anari::commitParameters(d, d);
     uint8_t values[] = {1, 2, 3, 4};
-    auto array = content.keep(anari::newArray1D(d, values, 4));
+    auto array = content.keep(copyArray1D(d, values, 4));
     attachArray(scene, content, "primitive.index", array);
 
     THEN("the blob is named by a hash of its type, size and bytes")
@@ -788,9 +808,9 @@ SCENARIO("large arrays are written as blobs with a summary", "[capture_device]")
     {
       uint8_t same[] = {1, 2, 3, 4};
       uint8_t other[] = {1, 2, 3, 5};
-      auto a = content.keep(anari::newArray1D(d, same, 4));
-      auto b = content.keep(anari::newArray2D(d, same, 2, 2));
-      auto c = content.keep(anari::newArray1D(d, other, 4));
+      auto a = content.keep(copyArray1D(d, same, 4));
+      auto b = content.keep(copyArray2D(d, same, 2, 2));
+      auto c = content.keep(copyArray1D(d, other, 4));
       std::vector<std::string> names;
       auto attach = [&](Scene &s, Content &content, int which) {
         if (which == 0)
@@ -835,7 +855,7 @@ SCENARIO("the summary of a blob ignores NaNs unless every value is one",
     values[6] = 9.f;
     values[30] = std::nanf("");
     values[69] = std::nanf("");
-    auto array = content.keep(anari::newArray1D(d, values.data(), 70));
+    auto array = content.keep(copyArray1D(d, values.data(), 70));
     attachArray(scene, content, "primitive.attribute0", array);
     const auto block = blockOf(scene.render(), "array1d@2");
 
@@ -848,7 +868,7 @@ SCENARIO("the summary of a blob ignores NaNs unless every value is one",
   GIVEN("an array in which every value is a NaN")
   {
     std::vector<float> values(70, std::nanf(""));
-    auto array = content.keep(anari::newArray1D(d, values.data(), 70));
+    auto array = content.keep(copyArray1D(d, values.data(), 70));
     attachArray(scene, content, "primitive.attribute0", array);
     const auto block = blockOf(scene.render(), "array1d@2");
 
@@ -870,7 +890,7 @@ SCENARIO("a capture holds what the app's arrays contain at render time",
   GIVEN("an array that shares the app's memory")
   {
     float values[] = {1.f, 2.f, 3.f};
-    auto array = content.keep(anari::newArray1D(d, values, 3));
+    auto array = anari::newArray1D(d, values, 3);
     anari::commitParameters(d, array);
     attachArray(scene, content, "primitive.attribute0", array);
 
@@ -884,6 +904,9 @@ SCENARIO("a capture holds what the app's arrays contain at render time",
         REQUIRE(block.find("    1\n    5\n    3\n") != std::string::npos);
       }
     }
+
+    // While the memory is still there: the device copies it on this release
+    anari::release(d, array);
   }
 
   GIVEN("an array whose elements are floats of every difficulty")
@@ -896,7 +919,7 @@ SCENARIO("a capture holds what the app's arrays contain at render time",
         3.4028235e38f,
         1.17549435e-38f,
         1e-45f};
-    auto array = content.keep(anari::newArray1D(d, values, 8));
+    auto array = content.keep(copyArray1D(d, values, 8));
     attachArray(scene, content, "primitive.attribute0", array);
     const auto block = blockOf(scene.render(), "array1d@2");
 
@@ -920,7 +943,7 @@ SCENARIO("a capture holds what the app's arrays contain at render time",
   GIVEN("an array of doubles")
   {
     const double values[] = {0.1, 1.0 / 3.0, 1e300, -2.5e-300};
-    auto array = content.keep(anari::newArray1D(d, values, 4));
+    auto array = content.keep(copyArray1D(d, values, 4));
     attachArray(scene, content, "primitive.attribute0", array);
     const auto block = blockOf(scene.render(), "array1d@2");
 
@@ -1631,7 +1654,7 @@ SCENARIO("captures are written to a directory, one file per render",
       for (size_t i = 0; i < values.size(); ++i)
         values[i] = float(i) * 0.25f;
       Content content;
-      auto array = content.keep(anari::newArray1D(d, values.data(), 100));
+      auto array = content.keep(copyArray1D(d, values.data(), 100));
       attachArray(scene, content, "primitive.attribute0", array);
       const auto capture = scene.render();
 
@@ -1808,7 +1831,7 @@ SCENARIO("captures with blobs are compared in memory and as files",
     copy[123] += jitter;
     Scene scene(d);
     Content content;
-    auto array = content.keep(anari::newArray1D(d, copy.data(), 300));
+    auto array = content.keep(copyArray1D(d, copy.data(), 300));
     attachArray(scene, content, "primitive.attribute0", array);
     scene.render();
     return capturedIn(d, scene.frame);

@@ -206,9 +206,6 @@ int CaptureDevice::deviceGetProperty(
   } else if (prop == "version.patch" && type == ANARI_INT32) {
     helium::writeToVoidP(mem, int(ANARI_SDK_VERSION_PATCH));
     return 1;
-  } else if (prop == "capture" && type == ANARI_BOOL) {
-    helium::writeToVoidP(mem, true);
-    return 1;
   }
   return 0;
 }
