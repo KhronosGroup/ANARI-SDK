@@ -80,6 +80,8 @@ Rendering Backend (e.g., Embree for helide)
 
 **`src/devices/sink/`** — A null device that accepts all API calls and discards them. Useful for benchmarking API overhead in isolation.
 
+**`src/devices/capture/`** — A device that renders nothing and writes, per frame, a canonical text snapshot (a *capture*) of the committed object graph the frame can reach, so an application can test exactly what it hands ANARI. It also builds the capture diff library (`anari_capture_diff`) and tool (`anariCaptureDiff`) in `diff/`, which compare two captures by walking both graphs. Built on Helium. The capture format is documented in its `README.md`; its tests are `unit_test::capture::*`.
+
 **`src/anari_test_scenes/`** — Procedurally generated test scenes (categories: demo, test, perf, file-based). Used by the viewer, CAT, and CTS.
 
 **`src/anari_viewer/`** — ImGUI-based interactive viewer library. Shared by viewer examples; supports SDL3 and GLFW backends.
