@@ -11,6 +11,7 @@ This repository contains the source for the ANARI API SDK. This includes:
 - [Example GPU device implementation](src/devices/helide_gpu) (in-progress, requires SDL3)
 - [Embree/ISPC CPU device with a path tracer](src/devices/halcyon) (requires ISPC)
 - [Device rendering through OpenUSD Hydra render delegates](src/devices/hydra) (requires OpenUSD)
+- [Device that captures committed scene state as text, plus a capture diff tool](src/devices/capture) (for testing what an application hands ANARI)
 - [Example applications](examples/)
 - [Interactive sample viewer](examples/viewer)
 - [Render tests](tests/render)
@@ -61,6 +62,7 @@ available to enable. The following CMake options are offered:
 - `BUILD_HELIDE_GPU_DEVICE` : build the provided example `helide_gpu` GPU device (needs SDL3)
 - `BUILD_HALCYON_DEVICE`    : build the `halcyon` Embree/ISPC CPU device (needs an ISPC compiler)
 - `BUILD_HYDRA_DEVICE`      : build the `hydra` device, which renders through OpenUSD Hydra render delegates (needs OpenUSD)
+- `BUILD_CAPTURE_DEVICE`    : build the `capture` device and the `anariCaptureDiff` tool (on by default)
 - `BUILD_REMOTE_DEVICE`     : build the provided experimental `remote` device implementation
 - `BUILD_EXAMPLES`      : build example applications
 - `BUILD_VIEWER`        : build viewer too (needs SDL3) if building examples
@@ -160,6 +162,14 @@ delegate. It is the reverse of the [hdAnari](src/hdanari) plugin, which renders
 Hydra scenes through ANARI. Build it with `BUILD_HYDRA_DEVICE=ON` (requires
 OpenUSD, found through `CMAKE_PREFIX_PATH`).
 
+The [capture](src/devices/capture) device renders nothing. On each frame it
+writes a canonical text snapshot of the committed object graph the frame can
+reach, so an application can test exactly what it hands ANARI without depending
+on any device's pixels. The `anariCaptureDiff` tool (and the `anari_capture_diff`
+library) compares two captures with optional float tolerances. It is built by
+default (`BUILD_CAPTURE_DEVICE`); see its
+[README](src/devices/capture/README.md) for the format.
+
 ### Using the debug device layer
 
 The ANARI-SDK ships with a [debug layer](src/devices/debug) implemented as an
@@ -207,6 +217,7 @@ variables:
 - [ANARI-PTC](https://github.com/ingowald/ANARI-PTC) (MPI distributed adapter)
 - [ANARI-WebGPU](https://github.com/sankhesh/anari-webgpu)
 - [Cycles](https://github.com/jeffamstutz/anari-cycles) (Blender's path tracer)
+- [halcyon](src/devices/halcyon) (Embree/ISPC CPU device with a path tracer)
 - [Halogen](https://github.com/MetaversalCorp/Halogen) (built on [Filament](https://github.com/google/filament))
 - [helide](src/devices/helide)
 - [helide_gpu](src/devices/helide_gpu)
