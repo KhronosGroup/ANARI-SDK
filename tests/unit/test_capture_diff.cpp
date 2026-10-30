@@ -610,10 +610,12 @@ int runTool(const std::string &arguments)
 {
   const std::string command =
       std::string("\"") + CAPTURE_DIFF_EXE + "\" --quiet " + arguments;
-  const int status = std::system(command.c_str());
 #ifdef _WIN32
-  return status;
+  // cmd.exe strips the first and last quote of a line that starts with one and
+  // holds more, so the whole line gets another pair
+  return std::system(("\"" + command + "\"").c_str());
 #else
+  const int status = std::system(command.c_str());
   return WIFEXITED(status) ? WEXITSTATUS(status) : -1;
 #endif
 }
