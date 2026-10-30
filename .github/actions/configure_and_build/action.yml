@@ -35,11 +35,15 @@ runs:
         -DCMAKE_BUILD_TYPE=${{ inputs.config }}
         -DCMAKE_INSTALL_PREFIX=${{ inputs.workspace }}/build/install
         -DCTS_ENABLE_GLTF=OFF
+        -DEMBREE_ISA_AVX512=OFF
         -DINSTALL_CTS=ON
 
     - name: Build
       shell: ${{ inputs.shell }}
-      run: cmake --build ${{ inputs.workspace }}/build --config ${{ inputs.config }} --target install
+      # A bare --parallel is an unbounded 'make -j', which starts every Embree
+      # kernel compile at once and can run the runner out of memory: a fixed
+      # number of jobs, about one per core on the hosted runners
+      run: cmake --build ${{ inputs.workspace }}/build --config ${{ inputs.config }} --target install --parallel 4
 
     - name: Unit Tests
       shell: ${{ inputs.shell }}
