@@ -22,7 +22,7 @@ built on helium, the device framework in the ANARI SDK, and has two renderers:
 - CMake 3.19 or newer (for its ISPC language support; `ctest --test-dir` below needs 3.20) and
   a C++17 compiler
 
-Embree is not a dependency to install: like helide, halcyon's build fetches Embree 4.3.3 with
+Embree is not a dependency to install: like helide, halcyon's build fetches Embree 4.4.1 with
 the ANARI SDK's `anari_sdk_fetch_project()` (see `external/embree/CMakeLists.txt`) and links it
 statically, with Embree's internal tasking system. The first configure downloads the source
 into `.anari_deps/` in the source tree, and later configures reuse it. Embree is built for

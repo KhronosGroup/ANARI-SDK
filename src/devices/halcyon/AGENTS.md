@@ -43,7 +43,7 @@ alone), writes its outputs to `CMAKE_BINARY_DIR`, and names its ctests `halcyon:
 
 Embree is fetched and built statically at configure time, as helide does
 (`external/embree/CMakeLists.txt`, target `anari_embree`, the same file as helide's: in the
-SDK's tree whichever device configures first builds Embree and the other links it): Embree 4.3.3, internal tasking,
+SDK's tree whichever device configures first builds Embree and the other links it): Embree 4.4.1, internal tasking,
 x86 ISAs SSE2 through AVX-512 (NEON2X on ARM). The device links no TBB; `parallel_for()` loops
 use Embree's `algorithms/parallel_for.h` on the same thread pool as BVH builds. There is
 no `EMBREE_API_NAMESPACE`: the ISPC code calls the C API, which a namespace would mangle. Embree's API symbols are hidden in the static library instead, and the tasking

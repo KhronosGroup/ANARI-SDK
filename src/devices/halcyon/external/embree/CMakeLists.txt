@@ -64,8 +64,8 @@ set(EMBREE_MAX_INSTANCE_LEVEL_COUNT "1" CACHE STRING "" FORCE)
 
 anari_sdk_fetch_project(
   NAME anari_embree
-  URL "https://github.com/RenderKit/embree/archive/refs/tags/v4.3.3.zip"
-  MD5 a03f49d17084612dc0f28bdc36d92e89
+  URL "https://github.com/RenderKit/embree/archive/refs/tags/v4.4.1.zip"
+  MD5 6e2eecafb312d8cf1f1ff555702637cf
   ADD_SUBDIR
 )
 
