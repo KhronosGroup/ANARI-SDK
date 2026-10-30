@@ -27,6 +27,9 @@ struct Camera : public Object
   float4 m_imageRegion;
   // unset uses the frame's aspect ratio, as in helide
   std::optional<float> m_aspect;
+  // KHR_CAMERA_DEPTH_OF_FIELD; only the 'quality' renderer samples the lens
+  float m_apertureRadius{0.f};
+  float m_focusDistance{1.f};
 };
 
 } // namespace halcyon

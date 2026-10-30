@@ -88,6 +88,17 @@ set_tests_properties(halcyon::camera PROPERTIES
   ENVIRONMENT "LD_LIBRARY_PATH=$<TARGET_FILE_DIR:${PROJECT_NAME}>:$ENV{LD_LIBRARY_PATH}"
 )
 
+# KHR_CAMERA_DEPTH_OF_FIELD: the 'quality' blurs out-of-focus edges, keeps
+# in-focus ones sharp; the 'preview' renderer ignores the aperture
+add_executable(halcyon_test_depth_of_field test_depth_of_field.cpp)
+target_link_libraries(halcyon_test_depth_of_field PRIVATE anari::anari)
+add_dependencies(halcyon_test_depth_of_field ${PROJECT_NAME})
+
+add_test(NAME halcyon::depth_of_field COMMAND halcyon_test_depth_of_field)
+set_tests_properties(halcyon::depth_of_field PROPERTIES
+  ENVIRONMENT "LD_LIBRARY_PATH=$<TARGET_FILE_DIR:${PROJECT_NAME}>:$ENV{LD_LIBRARY_PATH}"
+)
+
 add_executable(halcyon_test_frame test_frame.cpp)
 target_link_libraries(halcyon_test_frame PRIVATE anari::anari)
 add_dependencies(halcyon_test_frame ${PROJECT_NAME})

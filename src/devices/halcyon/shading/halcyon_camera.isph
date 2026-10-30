@@ -31,35 +31,77 @@ inline float2 Camera_screenFromPixel(uniform Camera *uniform c,
   return Camera_screenFromPixel(c, pixel, make_float2(0.5f), invFbSize);
 }
 
-// Primary ray through 'screen' (from Camera_screenFromPixel()). The image
-// plane is scaled to the camera's aspect ratio, or 'frameAspect' if it has
-// none, here rather than in 'screen' so the background stays undistorted.
+// Point of the unit disk at 'u' (in [0, 1)^2), by Shirley and Chiu's
+// concentric map, which keeps the strata of a 2D sample sequence compact
+inline float2 Camera_concentricDisk(const float2 u)
+{
+  const float a = 2.f * u.x - 1.f;
+  const float b = 2.f * u.y - 1.f;
+  if (a == 0.f && b == 0.f)
+    return make_float2(0.f);
+  float r, phi;
+  if (abs(a) > abs(b)) {
+    r = a;
+    phi = (PI / 4.f) * (b / a);
+  } else {
+    r = b;
+    phi = (PI / 2.f) - (PI / 4.f) * (a / b);
+  }
+  return make_float2(r * cos(phi), r * sin(phi));
+}
+
+// Primary ray through 'screen' (from Camera_screenFromPixel()) from the point
+// 'lens' (in [0, 1)^2) of the camera's aperture. The image plane is scaled to
+// the camera's aspect ratio, or 'frameAspect' if it has none, here rather than
+// in 'screen' so the background stays undistorted. With an aperture
+// (KHR_CAMERA_DEPTH_OF_FIELD) the ray leaves the lens disk, spanned by the
+// image plane axes around the pinhole ray's origin, towards where the pinhole
+// ray meets the plane 'focusDistance' along the view direction; 'lens' is
+// ignored without one. The ray's direction is normalized.
 inline RayHit Camera_makeRay(uniform Camera *uniform c,
     const float2 &screen,
-    const uniform float frameAspect)
+    const uniform float frameAspect,
+    const float2 lens)
 {
   const uniform float aspect = c->hasAspect ? c->aspect : frameAspect;
   const uniform float height = c->imagePlaneHeight;
   const uniform float3 du = c->imagePlaneU * (height * aspect);
   const uniform float3 dv = c->imagePlaneV * height;
 
-  RayHit retval;
+  float3 org;
+  float3 dir;
   switch (c->type) {
   case CAMERA_PERSPECTIVE: {
     const uniform float3 dir_00 = c->dir - .5f * du - .5f * dv;
-    retval = makeRay((uniform float3)c->pos,
-        normalize(dir_00 + screen.x * du + screen.y * dv));
+    org = c->pos;
+    dir = normalize(dir_00 + screen.x * du + screen.y * dv);
     break;
   }
   case CAMERA_ORTHOGRAPHIC: {
     const uniform float3 pos_00 = c->pos - .5f * du - .5f * dv;
-    retval = makeRay(
-        pos_00 + screen.x * du + screen.y * dv, (uniform float3)c->dir);
+    org = pos_00 + screen.x * du + screen.y * dv;
+    dir = c->dir;
     break;
   }
   default:
-    break;
+    return makeRay(make_float3(0.f), make_float3(0.f));
   }
 
-  return retval;
+  if (c->apertureRadius > 0.f) {
+    const float3 focus = org + dir * (c->focusDistance / dot(dir, c->dir));
+    const float2 p = c->apertureRadius * Camera_concentricDisk(lens);
+    org = org + p.x * c->imagePlaneU + p.y * c->imagePlaneV;
+    dir = normalize(focus - org);
+  }
+
+  return makeRay(org, dir);
+}
+
+// Primary ray through 'screen' from the centre of the camera's aperture: the
+// pinhole ray, whatever the camera's depth of field
+inline RayHit Camera_makeRay(uniform Camera *uniform c,
+    const float2 &screen,
+    const uniform float frameAspect)
+{
+  return Camera_makeRay(c, screen, frameAspect, make_float2(0.5f));
 }

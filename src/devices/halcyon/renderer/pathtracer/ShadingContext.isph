@@ -57,14 +57,16 @@ struct RayDifferential
   float3 ryDirection;
 };
 
-// The ray differential of the camera ray 'rh' through 'offset' within 'pixel':
-// the rays through the same offset one pixel over in x and in y, brought
+// The ray differential of the camera ray 'rh' through 'offset' within 'pixel'
+// from the point 'lens' of the aperture: the rays through the same offset one
+// pixel over in x and in y from the same lens point, brought
 // towards 'rh' by differentialScale() (Typhoon: directions for
 // perspective cameras, origins for orthographic ones)
 inline RayDifferential RayDifferential_camera(
     const uniform Frame *uniform frame,
     const int2 pixel,
     const float2 offset,
+    const float2 lens,
     const RayHit &rh)
 {
   RayDifferential d;
@@ -76,11 +78,13 @@ inline RayDifferential RayDifferential_camera(
   const RayHit rx = Camera_makeRay(camera,
       Camera_screenFromPixel(
           camera, pixel + make_int2(1, 0), offset, frame->invSize),
-      frame->aspect);
+      frame->aspect,
+      lens);
   const RayHit ry = Camera_makeRay(camera,
       Camera_screenFromPixel(
           camera, pixel + make_int2(0, 1), offset, frame->invSize),
-      frame->aspect);
+      frame->aspect,
+      lens);
   d.valid = true;
   d.rxOrigin = rx.ray.org;
   d.ryOrigin = ry.ray.org;

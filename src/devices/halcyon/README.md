@@ -102,15 +102,17 @@ system uses for both BVH builds and rendering (default: all hardware threads).
 
 As declared in `HalcyonDefinitions.json`. The device reports all of them; each renderer
 reports only those it honours (renderer introspection and the renderer's `extension`
-property): the `preview` renderer all but accumulation and the lights other than the
-hdri (which it shows where rays miss, without being lit by it), the `quality` all of
-them.
+property): the `preview` renderer all but accumulation, depth of field and the lights
+other than the hdri (which it shows where rays miss, without being lit by it), the
+`quality` all of them.
 
 - Device and frames: `ANARI_KHR_DEVICE_SYNCHRONIZATION`, `ANARI_KHR_FRAME_COMPLETION_CALLBACK`,
   `ANARI_KHR_FRAME_CHANNEL_PRIMITIVE_ID`, `ANARI_KHR_FRAME_CHANNEL_OBJECT_ID`,
   `ANARI_KHR_FRAME_CHANNEL_INSTANCE_ID`, `ANARI_KHR_FRAME_CHANNEL_ALBEDO`,
   `ANARI_KHR_FRAME_CHANNEL_NORMAL`, `ANARI_KHR_FRAME_ACCUMULATION` (`quality` only)
-- Cameras: `ANARI_KHR_CAMERA_PERSPECTIVE`, `ANARI_KHR_CAMERA_ORTHOGRAPHIC`
+- Cameras: `ANARI_KHR_CAMERA_PERSPECTIVE`, `ANARI_KHR_CAMERA_ORTHOGRAPHIC`, `ANARI_KHR_CAMERA_DEPTH_OF_FIELD`
+  (`quality` only: a thin lens of `apertureRadius` focused on the plane `focusDistance`
+  along the view direction; the `preview` renderer renders through a pinhole)
 - Instances: `ANARI_KHR_INSTANCE_TRANSFORM`, `ANARI_KHR_INSTANCE_TRANSFORM_ARRAY`
 - Geometry: `ANARI_KHR_GEOMETRY_TRIANGLE`, `ANARI_KHR_GEOMETRY_QUAD`,
   `ANARI_KHR_GEOMETRY_SPHERE`, `ANARI_KHR_GEOMETRY_CURVE`, `ANARI_KHR_GEOMETRY_CYLINDER`,

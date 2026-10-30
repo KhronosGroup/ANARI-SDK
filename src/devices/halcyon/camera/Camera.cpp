@@ -78,6 +78,20 @@ void Camera::commitParameters()
     m_aspect = getParam<float>("aspect", 1.f);
   else
     m_aspect.reset();
+  m_apertureRadius = getParam<float>("apertureRadius", 0.f);
+  m_focusDistance = getParam<float>("focusDistance", 1.f);
+  if (m_apertureRadius < 0.f) {
+    reportMessage(ANARI_SEVERITY_WARNING,
+        "camera 'apertureRadius' %f is negative, using 0",
+        m_apertureRadius);
+    m_apertureRadius = 0.f;
+  }
+  if (m_apertureRadius > 0.f && !(m_focusDistance > 0.f)) {
+    reportMessage(ANARI_SEVERITY_WARNING,
+        "camera 'focusDistance' %f is not positive, ignoring 'apertureRadius'",
+        m_focusDistance);
+    m_apertureRadius = 0.f;
+  }
 }
 
 void Camera::finalize()
@@ -88,7 +102,9 @@ void Camera::finalize()
       &m_up.x,
       &m_imageRegion.x,
       m_aspect.has_value(),
-      m_aspect.value_or(1.f));
+      m_aspect.value_or(1.f),
+      m_apertureRadius,
+      m_focusDistance);
 }
 
 } // namespace halcyon

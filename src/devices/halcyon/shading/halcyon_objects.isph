@@ -688,6 +688,11 @@ struct Camera
   uniform float3 imagePlaneV;
   // Image plane height, at unit distance for perspective cameras
   uniform float imagePlaneHeight;
+  // Thin lens (KHR_CAMERA_DEPTH_OF_FIELD): 'apertureRadius' 0 is a pinhole;
+  // otherwise rays from points on the lens disk meet on the plane
+  // 'focusDistance' (> 0) along 'dir'
+  uniform float apertureRadius;
+  uniform float focusDistance;
 };
 
 // Renderer //

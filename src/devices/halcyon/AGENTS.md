@@ -470,6 +470,16 @@ Details that are easy to get wrong:
   camera's `imageRegion`. The background image, `testFrame` and every other mode use that same
   screen position, so a background image the size of the frame shows texel (x, y) at pixel
   (x, y). Tests that recompute a pixel's ray use the centre too.
+- **Depth of field** (`KHR_CAMERA_DEPTH_OF_FIELD`, both camera subtypes): `Camera_makeRay()`
+  takes a lens sample in [0, 1)², mapped onto the aperture disk (concentric map) in the
+  image plane's axes around the pinhole ray's origin; the ray aims where the pinhole ray
+  meets the plane `focusDistance` along `direction` (a plane, not a sphere, so straight
+  lines in focus stay in focus). Only the `quality`'s path samples draw it
+  (`SAMPLE_DOMAIN_CAMERA_LENS`, Typhoon's key), and their ray differentials leave the same
+  lens point. Everything else, the `preview` renderer, the `quality`'s debug modes and
+  its depth and id channels, use the lens centre: the pinhole ray. A negative
+  `apertureRadius`, or a non-positive `focusDistance` with an aperture, warns and renders
+  through a pinhole. `tests/test_depth_of_field.cpp`.
 - **What a miss shows** (`missColor()` in `shading/halcyon_frame.isph`), in both
   renderers, wherever a camera ray that misses shows the background (the `default`
   mode after compositing, the debug modes, both ambient occlusion modes, the
