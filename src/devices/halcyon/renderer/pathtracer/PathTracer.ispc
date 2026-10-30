@@ -1022,11 +1022,14 @@ inline float4 tracePath(const uniform Frame *uniform frame,
   const SampleDomain root = SampleDomain_root(params.frameSeed, x, y, sample);
   const float2 jitter = SampleDomain_draw2D(
       SampleDomain_fork(root, SAMPLE_DOMAIN_CAMERA_JITTER));
+  const float2 lens =
+      SampleDomain_draw2D(SampleDomain_fork(root, SAMPLE_DOMAIN_CAMERA_LENS));
   const float2 screen = Camera_screenFromPixel(
       frame->camera, make_int2(x, y), jitter, frame->invSize);
-  const RayHit cameraRay = Camera_makeRay(frame->camera, screen, frame->aspect);
+  const RayHit cameraRay =
+      Camera_makeRay(frame->camera, screen, frame->aspect, lens);
   RayDifferential rd =
-      RayDifferential_camera(frame, make_int2(x, y), jitter, cameraRay);
+      RayDifferential_camera(frame, make_int2(x, y), jitter, lens, cameraRay);
   float3 org = cameraRay.ray.org;
   float3 dir = normalize(cameraRay.ray.dir);
 
@@ -1609,9 +1612,10 @@ inline float4 shadingContextValue(const uniform Frame *uniform frame,
   const float2 offset = make_float2(0.5f);
   const float2 screen = Camera_screenFromPixel(
       frame->camera, make_int2(x, y), offset, frame->invSize);
-  RayHit rh = Camera_makeRay(frame->camera, screen, frame->aspect);
+  const float2 lens = make_float2(0.5f);
+  RayHit rh = Camera_makeRay(frame->camera, screen, frame->aspect, lens);
   const RayDifferential rd =
-      RayDifferential_camera(frame, make_int2(x, y), offset, rh);
+      RayDifferential_camera(frame, make_int2(x, y), offset, lens, rh);
   HitInfo hit;
   float depth;
   HitInfo ids;

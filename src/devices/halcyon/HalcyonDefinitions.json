@@ -5,6 +5,7 @@
     "dependencies": [
       "anari_core_1_0",
       "anari_core_objects_base_1_0",
+      "khr_camera_depth_of_field",
       "khr_camera_orthographic",
       "khr_camera_perspective",
       "khr_device_synchronization",
@@ -348,6 +349,7 @@
       "type": "ANARI_RENDERER",
       "name": "quality",
       "extension": [
+        "KHR_CAMERA_DEPTH_OF_FIELD",
         "KHR_CAMERA_ORTHOGRAPHIC",
         "KHR_CAMERA_PERSPECTIVE",
         "KHR_DEVICE_SYNCHRONIZATION",

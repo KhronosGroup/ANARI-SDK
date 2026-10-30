@@ -2,9 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Each renderer reports the extensions it honours (AGENTS.md, "Parameters
-// and properties"): the 'preview' renderer doesn't claim the lights or
-// KHR_FRAME_ACCUMULATION, which only the 'quality' reads, but the hdri
-// light, which its camera misses show; both claim the volume extensions.
+// and properties"): the 'preview' renderer doesn't claim the lights,
+// KHR_FRAME_ACCUMULATION or KHR_CAMERA_DEPTH_OF_FIELD, which only the
+// 'quality' reads, but the hdri light, which its camera misses show; both
+// claim the volume extensions.
 // Both introspection (anariGetObjectInfo's "extension") and a renderer's
 // "extension" property report them, and the device's list is their union.
 // The renderer subtypes are 'preview' and 'quality', in that order;
@@ -89,8 +90,10 @@ const Extensions COMMON = {
     "ANARI_HALCYON_MATERIAL_USD_PREVIEW_SURFACE",
 };
 
-// Only the 'quality' is lit by lights and refines its image
+// Only the 'quality' is lit by lights, refines its image and samples the
+// camera's lens
 const Extensions PATHTRACER_ONLY = {
+    "ANARI_KHR_CAMERA_DEPTH_OF_FIELD",
     "ANARI_KHR_FRAME_ACCUMULATION",
     "ANARI_KHR_LIGHT_DIRECTIONAL",
     "ANARI_KHR_LIGHT_POINT",
