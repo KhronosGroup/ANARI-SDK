@@ -13,6 +13,12 @@ if (BUILD_SINK_DEVICE)
   add_subdirectory(sink)
 endif()
 
+option(BUILD_CAPTURE_DEVICE "Build the capture device (snapshots committed state)" ON)
+mark_as_advanced(BUILD_CAPTURE_DEVICE)
+if (BUILD_CAPTURE_DEVICE)
+  add_subdirectory(capture)
+endif()
+
 option(BUILD_HELIDE_DEVICE "Build example 'helide' device" ON)
 if (BUILD_HELIDE_DEVICE)
   add_subdirectory(helide)

@@ -64,6 +64,14 @@ void ParameterizedObject::setParamDirect(
   findParam(name)->second = v;
 }
 
+std::vector<std::string> ParameterizedObject::paramNames() const
+{
+  std::vector<std::string> names;
+  for (const auto &p : readParams())
+    names.push_back(p.first);
+  return names;
+}
+
 bool ParameterizedObject::removeParam(const std::string &name)
 {
   auto foundParam = std::find_if(m_paramsStaging.begin(),

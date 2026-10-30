@@ -84,6 +84,11 @@ struct ParameterizedObject
   AnariAny getParamDirect(const std::string &name) const;
   void setParamDirect(const std::string &name, const AnariAny &v);
 
+  // Names of the parameters in the store the getters read: the committed
+  // snapshot inside a ReadCommittedScope, else the live parameters. In the
+  // order they were first set.
+  std::vector<std::string> paramNames() const;
+
   // Remove the value of the parameter associated with 'name'.
   //
   // Returns 'true' if anything actually happened

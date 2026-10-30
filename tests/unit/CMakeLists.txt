@@ -158,3 +158,22 @@ target_link_libraries(anariHelideGpuUnitTests PRIVATE helium anari)
 
 add_test(NAME unit_test::helide_gpu::ArrayUpload
   COMMAND anariHelideGpuUnitTests "[helide_gpu_array_upload]")
+
+## capture device tests ##
+
+if (BUILD_CAPTURE_DEVICE)
+  add_executable(anariCaptureTests
+    catch_main.cpp
+    test_capture_device.cpp
+    test_capture_diff.cpp
+  )
+  target_link_libraries(anariCaptureTests PRIVATE anari anari_capture_diff)
+  target_compile_definitions(anariCaptureTests
+    PRIVATE CAPTURE_DIFF_EXE="$<TARGET_FILE:anariCaptureDiff>")
+  add_dependencies(anariCaptureTests anari_library_capture anariCaptureDiff)
+
+  add_test(NAME unit_test::capture::device COMMAND anariCaptureTests "[capture_device]")
+  add_test(NAME unit_test::capture::diff COMMAND anariCaptureTests "[capture_diff]")
+  set_tests_properties(unit_test::capture::device unit_test::capture::diff
+    PROPERTIES TIMEOUT 60)
+endif()
