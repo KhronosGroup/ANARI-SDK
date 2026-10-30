@@ -55,6 +55,7 @@ jobs:
         -DBUILD_HELIDE_DEVICE=ON
         -DBUILD_TESTING=ON
         -DCMAKE_BUILD_TYPE=Release
+        -DEMBREE_ISA_AVX512=OFF
     - name: Build
       # A bare --parallel is an unbounded 'make -j', which starts every
       # Embree kernel, ISPC and MaterialX compile at once and runs the
