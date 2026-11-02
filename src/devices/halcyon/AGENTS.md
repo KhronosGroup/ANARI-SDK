@@ -163,14 +163,16 @@ freshly built `libanari_library_halcyon.so` and not an installed copy. Do the sa
 `anariInfo`, `anariRenderTests` or `anariCts` against halcyon, which is how renders are compared
 with helide.
 
-**Linux is the only platform built and tested.** The code compiles for MSVC and macOS
-(`forEachLane()` in `PathMaterial.cpp` uses `_BitScanForward` on MSVC), but nothing
-has been built there. The symbol hiding (`--exclude-libs`) and `device_dependencies`
+**Linux and Windows are built and tested** (halcyon CI: GCC on Ubuntu, MSVC through
+Ninja on Windows, since CMake compiles ISPC only with the Ninja and Makefile generators).
+macOS has not been built. The symbol hiding (`--exclude-libs`) and `device_dependencies`
 are ELF only (`UNIX AND NOT APPLE`): a Windows DLL exports nothing by default, but on
 macOS the device would export the statically linked libraries' symbols. The
-device-level ctests set only `LD_LIBRARY_PATH`, so they need the build directory on
-`PATH` (Windows) or `DYLD_LIBRARY_PATH` (macOS) elsewhere (maintainer decision,
-2026-10-15).
+device-level ctests set only `LD_LIBRARY_PATH`; on Windows they find the device anyway,
+as the tests and the DLLs are built into one directory, but macOS would need the build
+directory on `DYLD_LIBRARY_PATH` (maintainer decision, 2026-10-15). Tests that compare
+with a standard library's floating-point results (`uniform_real_distribution`, say)
+compare within rounding: MSVC's STL can round them differently from libstdc++.
 
 `HalcyonDefinitions.json` is the input to `anari_generate_queries()`, which generates
 `anari_library_halcyon_queries.h` in the build directory at build time. A new extension,
