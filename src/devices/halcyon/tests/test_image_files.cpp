@@ -33,9 +33,13 @@
 #include <fstream>
 #include <string>
 #include <thread>
-// POSIX
-#include <unistd.h>
 #include <vector>
+#ifdef _WIN32
+#include <process.h> // _getpid()
+#define getpid _getpid
+#else
+#include <unistd.h> // getpid()
+#endif
 
 using namespace halcyon::pathtracer;
 using mxcpp::Texture2DRequest;
