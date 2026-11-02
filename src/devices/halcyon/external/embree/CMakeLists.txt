@@ -74,9 +74,16 @@ project_link_libraries(INTERFACE embree tasking)
 project_compile_definitions(INTERFACE TASKING_INTERNAL)
 project_include_directories(INTERFACE ${anari_embree_LOCATION}/common)
 if (WIN32)
-  project_compile_options(
-  INTERFACE
-    /D__SSE__ /D__SSE2__ /D__SSE3__ /D__SSSE3__ /D__SSE4_1__ /D__SSE4_2__
+  # C++ only: a consumer's ISPC sources get its options too, and ISPC rejects
+  # MSVC's. One generator expression per option, as project_compile_options()
+  # would split a list inside one.
+  project_compile_options(INTERFACE
+    $<$<COMPILE_LANGUAGE:CXX>:/D__SSE__>
+    $<$<COMPILE_LANGUAGE:CXX>:/D__SSE2__>
+    $<$<COMPILE_LANGUAGE:CXX>:/D__SSE3__>
+    $<$<COMPILE_LANGUAGE:CXX>:/D__SSSE3__>
+    $<$<COMPILE_LANGUAGE:CXX>:/D__SSE4_1__>
+    $<$<COMPILE_LANGUAGE:CXX>:/D__SSE4_2__>
   )
 elseif(COMPILE_FOR_ARM)
   project_compile_options(INTERFACE

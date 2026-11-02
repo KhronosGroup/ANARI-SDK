@@ -139,19 +139,27 @@ if (NOT definitionFiles)
   message(FATAL_ERROR "no MaterialX definitions in ${materialxLibraries}")
 endif()
 
-# One raw string literal per file, regenerated when a file changes
-set(delimiter "halcyon_mtlx")
+# One null-terminated char array per file, regenerated when a file changes.
+# Not string literals: MSVC limits one to 16,380 bytes and a concatenation of
+# them to 65,535, and stdlib_defs.mtlx and stdlib_ng.mtlx are larger.
+set(arrays "")
 set(entries "")
+set(index 0)
+string(REPEAT "[^,]+," 16 lineOfBytes)
 foreach (file ${definitionFiles})
   set(path ${materialxLibraries}/${file})
   set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${path})
-  file(READ ${path} content)
-  string(FIND "${content}" ")${delimiter}\"" clash)
-  if (NOT clash EQUAL -1)
-    message(FATAL_ERROR "${path} contains the embedding's delimiter")
-  endif()
-  string(APPEND entries
-    "    {\"${file}\",\n     R\"${delimiter}(${content})${delimiter}\"},\n")
+  file(READ ${path} content HEX)
+  # 16 bytes a line, each byte 0x.., cast to char if it doesn't fit a signed
+  # one (a narrowing conversion otherwise, where char is signed)
+  string(REGEX REPLACE "([0-9a-f][0-9a-f])" "0x\\1," content "${content}")
+  string(REGEX REPLACE "0x([89a-f][0-9a-f])" "(char)0x\\1" content
+    "${content}")
+  string(REGEX REPLACE "${lineOfBytes}" "\\0\n    " content "${content}")
+  string(APPEND arrays
+    "// ${file}\nconst char file${index}[] = {\n    ${content}0x00};\n\n")
+  string(APPEND entries "    {\"${file}\", file${index}},\n")
+  math(EXPR index "${index} + 1")
 endforeach()
 list(LENGTH definitionFiles definitionCount)
 
@@ -164,6 +172,10 @@ file(WRITE ${generatedSource}.tmp
 #include \"renderer/pathtracer/MaterialXDefinitions.h\"
 
 namespace halcyon::pathtracer {
+
+namespace {
+
+${arrays}} // namespace
 
 const MaterialXDefinitionFile MATERIALX_DEFINITION_FILES[] = {
 ${entries}};

@@ -42,6 +42,24 @@ if (NOT Imath_FOUND)
   endif()
 endif()
 
+# Imath gives its target compile options for C++ (/EHsc under MSVC, as a
+# PUBLIC option), which would reach the ISPC sources of halcyon's targets that
+# link it, and ISPC rejects them; restrict them to C++, the fetched Imath's or
+# an installed one's
+get_target_property(imathTarget Imath::Imath ALIASED_TARGET)
+if (NOT imathTarget)
+  set(imathTarget Imath::Imath)
+endif()
+get_target_property(imathOptions ${imathTarget} INTERFACE_COMPILE_OPTIONS)
+if (imathOptions)
+  set(cxxOnlyOptions)
+  foreach (option ${imathOptions})
+    list(APPEND cxxOnlyOptions "$<$<COMPILE_LANGUAGE:CXX>:${option}>")
+  endforeach()
+  set_target_properties(${imathTarget} PROPERTIES
+    INTERFACE_COMPILE_OPTIONS "${cxxOnlyOptions}")
+endif()
+
 find_package(Threads REQUIRED)
 
 ## BSDL: its own bsdl.cmake, not its CMakeLists.txt (which installs BSDL) ##
