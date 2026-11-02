@@ -34,7 +34,7 @@ on:
 
 jobs:
   build-halcyon:
-    # halcyon needs ISPC, and is built and tested on Linux only so far
+    # halcyon needs ISPC
     runs-on: ubuntu-22.04
     env:
       ISPC_VERSION: v1.28.2
@@ -64,3 +64,41 @@ jobs:
     - name: halcyon Tests
       working-directory: ${{ github.workspace }}/build
       run: ctest -R '^halcyon::' -C Release --output-on-failure
+
+  build-halcyon-windows:
+    # CMake compiles ISPC only with the Ninja and Makefile generators, so MSVC
+    # is used through Ninja in a developer command prompt's environment. The
+    # device and the tests are built into one directory, so the tests load the
+    # fresh DLLs without a PATH change.
+    runs-on: windows-latest
+    env:
+      ISPC_VERSION: v1.28.2
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v4
+    - name: Set up MSVC environment
+      uses: ilammy/msvc-dev-cmd@v1
+    - name: Install ISPC
+      shell: pwsh
+      run: |
+        $zip = "${{ runner.temp }}\ispc.zip"
+        Invoke-WebRequest -Uri "https://github.com/ispc/ispc/releases/download/$env:ISPC_VERSION/ispc-$env:ISPC_VERSION-windows.zip" -OutFile $zip
+        Expand-Archive -Path $zip -DestinationPath "${{ runner.temp }}"
+        "${{ runner.temp }}\ispc-$env:ISPC_VERSION-windows\bin" >> $env:GITHUB_PATH
+    - name: Configure CMake
+      shell: pwsh
+      run: >
+        cmake -LA -G Ninja -B ${{ github.workspace }}/build
+        -DBUILD_CTS=OFF
+        -DBUILD_EXAMPLES=OFF
+        -DBUILD_HALCYON_DEVICE=ON
+        -DBUILD_HELIDE_DEVICE=ON
+        -DBUILD_TESTING=ON
+        -DCMAKE_BUILD_TYPE=Release
+    - name: Build
+      shell: pwsh
+      run: cmake --build ${{ github.workspace }}/build --parallel $env:NUMBER_OF_PROCESSORS
+    - name: halcyon Tests
+      shell: pwsh
+      working-directory: ${{ github.workspace }}/build
+      run: ctest -R '^halcyon::' --output-on-failure
