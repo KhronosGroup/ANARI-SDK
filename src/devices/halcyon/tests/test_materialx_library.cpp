@@ -34,7 +34,11 @@ int main()
 {
   // MaterialX's own search falls back on this; the embedded library must not
   // need it
+#ifdef _WIN32
+  _putenv_s("MATERIALX_SEARCH_PATH", "/nonexistent");
+#else
   setenv("MATERIALX_SEARCH_PATH", "/nonexistent", 1);
+#endif
 
   bool noGenerators = MATERIALX_DEFINITION_FILE_COUNT > 0;
   bool stdlib = false;

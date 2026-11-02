@@ -36,8 +36,12 @@
 #include <fstream>
 #include <string>
 #include <vector>
-// POSIX
-#include <unistd.h>
+#ifdef _WIN32
+#include <process.h> // _getpid()
+#define getpid _getpid
+#else
+#include <unistd.h> // getpid()
+#endif
 
 namespace {
 

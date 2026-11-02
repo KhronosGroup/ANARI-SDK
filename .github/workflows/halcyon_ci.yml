@@ -97,7 +97,8 @@ jobs:
         -DCMAKE_BUILD_TYPE=Release
     - name: Build
       shell: pwsh
-      run: cmake --build ${{ github.workspace }}/build --parallel $env:NUMBER_OF_PROCESSORS
+      # -k 0: report every error, not only the first one's
+      run: cmake --build ${{ github.workspace }}/build --parallel $env:NUMBER_OF_PROCESSORS -- -k 0
     - name: halcyon Tests
       shell: pwsh
       working-directory: ${{ github.workspace }}/build
