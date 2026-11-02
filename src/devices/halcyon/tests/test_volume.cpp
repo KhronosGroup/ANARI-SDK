@@ -580,10 +580,14 @@ bool testJitter()
   std::vector<float> results(ts.size());
   ispc::test_jitter(ts.data(), step, results.data(), int(ts.size()));
 
+  // The std::mt19937 draw is standard, but how uniform_real_distribution
+  // makes a float of it isn't: MSVC's rounds it differently from libstdc++,
+  // by an ulp. A wrong draw would be off by far more than this.
+  const float tolerance = 1e-6f * step;
   int failures = 0;
   for (size_t i = 0; i < ts.size(); i++) {
     const float expected = HelideVolume::jitter(ts[i], step);
-    if (results[i] != expected && failures++ < 5)
+    if (!(std::abs(results[i] - expected) <= tolerance) && failures++ < 5)
       std::printf("FAIL jitter(%g): got %.9g, expected %.9g\n",
           ts[i],
           results[i],
