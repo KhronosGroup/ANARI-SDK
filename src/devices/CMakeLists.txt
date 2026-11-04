@@ -39,6 +39,11 @@ if (BUILD_HYDRA_DEVICE)
   add_subdirectory(hydra)
 endif()
 
+option(BUILD_PTC_DEVICE "Build 'ptc' MPI data-parallel compositing device (needs MPI and oneTBB 2021.6+)" OFF)
+if (BUILD_PTC_DEVICE)
+  add_subdirectory(ptc)
+endif()
+
 option(BUILD_REMOTE_DEVICE "Build 'remote' TCP passthrough device" OFF)
 if (BUILD_REMOTE_DEVICE)
   add_subdirectory(remote)
