@@ -40,6 +40,7 @@ Key CMake options:
 - `BUILD_HDANARI` (OFF) — experimental OpenUSD Hydra delegate
 - `BUILD_HALCYON_DEVICE` (OFF) — Embree/ISPC CPU device with a path tracer, requires an ISPC compiler and CMake 3.19
 - `BUILD_HYDRA_DEVICE` (OFF) — `hydra` device rendering through OpenUSD Hydra render delegates, requires OpenUSD
+- `BUILD_PTC_DEVICE` (OFF) — `ptc` MPI data-parallel compositing device, requires MPI and oneTBB 2021.6+
 - `BUILD_CAT` (OFF) — capability analysis tool
 
 ## Code Style
@@ -75,6 +76,8 @@ Rendering Backend (e.g., Embree for helide)
 **`src/devices/halcyon/`** — An Embree/ISPC CPU device: a `preview` renderer modelled on helide (it shades in ISPC rather than C++) and a `quality` path tracer ported from Typhoon with MaterialX materials. Built and tested on Linux and Windows. Its ctests are named `halcyon::<name>`; its own guide is `src/devices/halcyon/AGENTS.md`. It shares the `anari_embree` target with helide (`src/devices/{helide,halcyon}/external/embree/CMakeLists.txt` are identical copies; keep them so).
 
 **`src/devices/hydra/`** — A device that renders through OpenUSD Hydra render delegates (Storm, HdEmbree, ...), one device subtype per delegate; the reverse of hdAnari. Requires OpenUSD. Its end-to-end tests are named `hydra_*` and need an X display (they are reported as skipped without one). See its README for known limitations.
+
+**`src/devices/ptc/`** — A wrapper device for data-parallel rendering with MPI (`KHR_DATA_PARALLEL_MPI`): each rank renders its own data with a wrapped device (`helide` by default, chosen with the `wrappedLibrary` device parameter or `PTC_ANARI_LIBRARY`), and ptc composites the frames by depth on the CPU onto rank 0 of the frame's communicator. Built on Helium; requires MPI and oneTBB 2021.6+. Its MPI tests are named `ptc_*`, run under `mpiexec` and need helide (`BUILD_HELIDE_DEVICE`). Usage and compositing semantics are in its `README.md`.
 
 **`src/devices/debug/`** — A passthrough wrapper device that validates API usage without modifying rendering behavior.
 

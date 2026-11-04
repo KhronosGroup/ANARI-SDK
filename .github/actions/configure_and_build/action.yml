@@ -16,6 +16,10 @@ inputs:
   shell:
     description: "Native shell to use for job steps"
     required: true
+  ptc:
+    description: "Also build the ptc device and run its MPI tests (needs MPI and oneTBB >= 2021.6 installed)"
+    required: false
+    default: "false"
 runs:
   using: "composite"
   steps:
@@ -29,6 +33,7 @@ runs:
         -DBUILD_HDANARI=OFF
         -DBUILD_HELIDE_DEVICE=ON
         -DBUILD_HELIDE_GPU_DEVICE=OFF
+        -DBUILD_PTC_DEVICE=${{ inputs.ptc == 'true' && 'ON' || 'OFF' }}
         -DBUILD_REMOTE_DEVICE=OFF
         -DBUILD_TESTING=ON
         -DBUILD_VIEWER=OFF
@@ -59,3 +64,9 @@ runs:
       shell: ${{ inputs.shell }}
       working-directory: ${{ inputs.workspace }}/build
       run: ctest -R anariTutorial -C ${{ inputs.config }}
+
+    - name: ptc Tests
+      if: ${{ inputs.ptc == 'true' }}
+      shell: ${{ inputs.shell }}
+      working-directory: ${{ inputs.workspace }}/build
+      run: ctest -R '^ptc_' -C ${{ inputs.config }} --output-on-failure

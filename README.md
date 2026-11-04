@@ -12,6 +12,7 @@ This repository contains the source for the ANARI API SDK. This includes:
 - [Embree/ISPC CPU device with a path tracer](src/devices/halcyon) (requires ISPC)
 - [Device rendering through OpenUSD Hydra render delegates](src/devices/hydra) (requires OpenUSD)
 - [Device that captures committed scene state as text, plus a capture diff tool](src/devices/capture) (for testing what an application hands ANARI)
+- [MPI data-parallel compositing device that wraps another device](src/devices/ptc) (requires MPI and oneTBB)
 - [Example applications](examples/)
 - [Interactive sample viewer](examples/viewer)
 - [Render tests](tests/render)
@@ -63,6 +64,7 @@ available to enable. The following CMake options are offered:
 - `BUILD_HALCYON_DEVICE`    : build the `halcyon` Embree/ISPC CPU device (needs an ISPC compiler)
 - `BUILD_HYDRA_DEVICE`      : build the `hydra` device, which renders through OpenUSD Hydra render delegates (needs OpenUSD)
 - `BUILD_CAPTURE_DEVICE`    : build the `capture` device and the `anariCaptureDiff` tool (on by default)
+- `BUILD_PTC_DEVICE`        : build the `ptc` MPI data-parallel compositing device (needs MPI and oneTBB 2021.6+)
 - `BUILD_REMOTE_DEVICE`     : build the provided experimental `remote` device implementation
 - `BUILD_EXAMPLES`      : build example applications
 - `BUILD_VIEWER`        : build viewer too (needs SDL3) if building examples
@@ -170,6 +172,12 @@ library) compares two captures with optional float tolerances. It is built by
 default (`BUILD_CAPTURE_DEVICE`); see its
 [README](src/devices/capture/README.md) for the format.
 
+The [ptc](src/devices/ptc) device makes an ANARI application data-parallel
+with MPI: each rank renders its own data with a wrapped device (helide by
+default) and `ptc` composites the ranks' images by depth onto one rank. Build it
+with `BUILD_PTC_DEVICE=ON` (requires MPI and oneTBB 2021.6 or newer); see its
+[README](src/devices/ptc/README.md) for usage and compositing semantics.
+
 ### Using the debug device layer
 
 The ANARI-SDK ships with a [debug layer](src/devices/debug) implemented as an
@@ -214,7 +222,6 @@ variables:
 
 ### (Unofficial) list of actively developed ANARI implementations
 
-- [ANARI-PTC](https://github.com/ingowald/ANARI-PTC) (MPI distributed adapter)
 - [ANARI-WebGPU](https://github.com/sankhesh/anari-webgpu)
 - [Cycles](https://github.com/jeffamstutz/anari-cycles) (Blender's path tracer)
 - [halcyon](src/devices/halcyon) (Embree/ISPC CPU device with a path tracer)
@@ -227,6 +234,7 @@ variables:
 - [NVIDIA USD](https://github.com/NVIDIA-Omniverse/AnariUsdDevice)
 - [NVIDIA VisRTX](https://github.com/NVIDIA/VisRTX)
 - [Photon](https://github.com/mvictoras/photon)
+- [ptc](src/devices/ptc) (MPI data-parallel compositing over another device)
 - [Visionaray](https://github.com/szellmann/anari-visionaray)
 - [Viskores](https://github.com/Viskores/viskores)
 
