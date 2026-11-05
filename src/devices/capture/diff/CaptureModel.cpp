@@ -78,10 +78,10 @@ bool parseCapture(const std::string &text, Model &model, std::string &error)
   }
   const std::string versionText = trim(lines[0]).substr(magic.size());
   const int version = std::atoi(versionText.c_str());
-  if (version != kSupportedVersion) {
+  if (version < kOldestVersion || version > kNewestVersion) {
     error = "unsupported capture format version " + versionText
-        + " (this reader supports version " + std::to_string(kSupportedVersion)
-        + ")";
+        + " (this reader supports versions " + std::to_string(kOldestVersion)
+        + " to " + std::to_string(kNewestVersion) + ")";
     return false;
   }
 
@@ -133,7 +133,7 @@ bool parseCapture(const std::string &text, Model &model, std::string &error)
       }
       entry.name = line.substr(0, nameEnd);
       std::string rest = line.substr(nameEnd + 1);
-      const bool isParam = !block.isArray();
+      const bool isParam = !block.isArray() && block.id != "calls";
       if (isParam) {
         const auto typeEnd = rest.find(' ');
         if (typeEnd == std::string::npos) {
@@ -175,6 +175,9 @@ bool parseCapture(const std::string &text, Model &model, std::string &error)
       model.device = std::move(block);
     } else if (block.id == "warnings") {
       model.warnings = std::move(block);
+    } else if (block.id == "calls") {
+      model.hasCalls = true;
+      model.calls = std::move(block);
     } else {
       if (block.label == "frame" && model.frameId.empty())
         model.frameId = block.id;

@@ -29,6 +29,7 @@ void usage(FILE *out)
       "  --ulps <n>             floats match within n representable values\n"
       "  --unordered <path>     compare the object array at <path> (such as\n"
       "                         world.surface) as unordered; repeatable\n"
+      "  --ignore-calls         do not compare the API call counts\n"
       "  --max-differences <n>  list at most n differences (default 50)\n"
       "  --quiet                print nothing\n"
       "  -h, --help             this text\n",
@@ -70,6 +71,8 @@ int main(int argc, char **argv)
     } else if (arg == "--max-differences") {
       options.maxDifferences =
           size_t(std::strtoull(value("--max-differences"), nullptr, 10));
+    } else if (arg == "--ignore-calls") {
+      options.compareCalls = false;
     } else if (arg == "--quiet") {
       quiet = true;
     } else if (arg.rfind("--", 0) == 0) {

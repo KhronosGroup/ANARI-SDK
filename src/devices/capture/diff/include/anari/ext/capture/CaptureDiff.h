@@ -64,6 +64,11 @@ struct DiffOptions
   // index and "[*]" any.
   std::vector<std::string> unorderedPaths;
 
+  // Whether to compare the number of API calls made before each capture (its
+  // 'calls' block): the total and each function's. Turn it off to compare
+  // only the scene.
+  bool compareCalls{true};
+
   // The most differences DiffResult::differences lists. All are counted.
   size_t maxDifferences{50};
 

@@ -379,6 +379,8 @@ class Differ
     compareDevice();
     compareRef("", m_model[0]->frameId, m_model[1]->frameId);
     compareWarnings();
+    if (m_options.compareCalls)
+      compareCalls();
   }
 
  private:
@@ -451,6 +453,41 @@ class Differ
       const std::string eb = i < b.size() ? b[i].value : "<absent>";
       if (ea != eb)
         add(path, ea, eb);
+    }
+  }
+
+  // The number of calls to each function, and in all. A function one capture
+  // does not list was called 0 times.
+  void compareCalls()
+  {
+    const bool hasA = m_model[0]->hasCalls;
+    const bool hasB = m_model[1]->hasCalls;
+    if (!hasA || !hasB) {
+      if (hasA != hasB) {
+        addNote("calls",
+            std::string("the ") + (hasA ? "actual" : "expected")
+                + " capture has no call counts (format version 1)");
+      }
+      return;
+    }
+
+    std::vector<std::string> names = {"total"};
+    std::set<std::string> functions;
+    for (const auto *b : {&m_model[0]->calls, &m_model[1]->calls}) {
+      for (const auto &e : b->entries) {
+        if (e.name != "total")
+          functions.insert(e.name);
+      }
+    }
+    names.insert(names.end(), functions.begin(), functions.end());
+
+    for (const auto &name : names) {
+      const Entry *a = m_model[0]->calls.find(name);
+      const Entry *b = m_model[1]->calls.find(name);
+      const std::string ca = a ? a->value : "0";
+      const std::string cb = b ? b->value : "0";
+      if (ca != cb)
+        add(join("calls", name), ca, cb);
     }
   }
 

@@ -45,6 +45,56 @@ struct CaptureDevice : public helium::BaseDevice
   ANARISurface newSurface() override;
   ANARIVolume newVolume(const char *type) override;
   ANARIWorld newWorld() override;
+  ANARIObject newObject(const char *objectType, const char *type) override;
+
+  // The rest of the API, counted and passed on to helium ////////////////////
+
+  void *mapArray(ANARIArray) override;
+  void unmapArray(ANARIArray) override;
+  int getProperty(ANARIObject o,
+      const char *name,
+      ANARIDataType type,
+      void *mem,
+      uint64_t size,
+      uint32_t mask) override;
+  void setParameter(ANARIObject o,
+      const char *name,
+      ANARIDataType type,
+      const void *mem) override;
+  void unsetParameter(ANARIObject o, const char *name) override;
+  void unsetAllParameters(ANARIObject o) override;
+  void *mapParameterArray1D(ANARIObject o,
+      const char *name,
+      ANARIDataType dataType,
+      uint64_t numElements1,
+      uint64_t *elementStride) override;
+  void *mapParameterArray2D(ANARIObject o,
+      const char *name,
+      ANARIDataType dataType,
+      uint64_t numElements1,
+      uint64_t numElements2,
+      uint64_t *elementStride) override;
+  void *mapParameterArray3D(ANARIObject o,
+      const char *name,
+      ANARIDataType dataType,
+      uint64_t numElements1,
+      uint64_t numElements2,
+      uint64_t numElements3,
+      uint64_t *elementStride) override;
+  void unmapParameterArray(ANARIObject o, const char *name) override;
+  void commitParameters(ANARIObject o) override;
+  void release(ANARIObject o) override;
+  void retain(ANARIObject o) override;
+  const void *frameBufferMap(ANARIFrame f,
+      const char *channel,
+      uint32_t *width,
+      uint32_t *height,
+      ANARIDataType *pixelType) override;
+  void frameBufferUnmap(ANARIFrame f, const char *channel) override;
+  void renderFrame(ANARIFrame f) override;
+  int frameReady(ANARIFrame f, ANARIWaitMask m) override;
+  void discardFrame(ANARIFrame f) override;
+  void (*getProcAddress(const char *name))(void) override;
 
   // Query functions //////////////////////////////////////////////////////////
 
@@ -74,6 +124,10 @@ struct CaptureDevice : public helium::BaseDevice
 
  private:
   CaptureState *deviceState() const;
+  // Counts a call from the application. Calls helium makes to the device on
+  // the application's behalf (mapParameterArray*() creates, sets and maps an
+  // array) are not counted.
+  void count(ApiCall call);
 };
 
 } // namespace capture_device

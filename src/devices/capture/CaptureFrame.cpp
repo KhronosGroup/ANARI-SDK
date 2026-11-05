@@ -189,6 +189,7 @@ void Frame::renderFrame()
   WriterOptions options;
   options.inlineArrayLimit = state()->inlineArrayLimit;
   options.extensions = state()->extensions;
+  options.calls = state()->callCounts();
   Capture capture = writeCapture(*this, options);
   m_captureText = std::move(capture.text);
   m_blobs = std::move(capture.blobs);
