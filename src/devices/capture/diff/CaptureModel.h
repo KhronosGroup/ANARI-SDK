@@ -13,14 +13,16 @@ namespace anari {
 namespace capture_diff {
 namespace detail {
 
-// The format version this reader understands
-constexpr int kSupportedVersion = 1;
+// The format versions this reader understands. Version 1 has no 'calls' block.
+constexpr int kOldestVersion = 1;
+constexpr int kNewestVersion = 2;
 
 // A parameter of an object, or a field of an array, or a line of a list
 struct Entry
 {
   std::string name;
-  std::string type; // the ANARI type of a parameter; empty for array fields
+  // The ANARI type of a parameter; empty for array fields and call counts
+  std::string type;
   std::string value; // the rest of the line
   bool isList{false}; // the value is the list in 'items'
   std::vector<std::string> items;
@@ -28,7 +30,7 @@ struct Entry
 
 struct Block
 {
-  std::string id; // "camera@0", "device" or "warnings"
+  std::string id; // "camera@0", "device", "calls" or "warnings"
   std::string label; // the part of the ID before the '@'
   bool hasSubtype{false};
   std::string subtype; // as written, with its quotes
@@ -43,6 +45,8 @@ struct Model
   std::string frameId;
   Block device;
   Block warnings;
+  bool hasCalls{false};
+  Block calls; // "total" and each function, with its count as the value
 };
 
 // Reads a capture. Returns false, and says why in 'error', for text that is

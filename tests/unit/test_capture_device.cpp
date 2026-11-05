@@ -98,16 +98,20 @@ std::string captureOf(anari::Device d, anari::Frame f)
   return getStringProperty(d, f, "capture");
 }
 
-// The capture without its header line and device block (which lists the long
-// default extension list), so a test can state the rest of it exactly.
+// The capture without its header line, device block (which lists the long
+// default extension list) and calls block, so a test can state the rest of it
+// exactly.
 std::string body(const std::string &capture)
 {
-  const std::string header = "anari-capture 1\n\n";
+  const std::string header = "anari-capture 2\n\n";
   REQUIRE(capture.rfind(header, 0) == 0);
-  const std::string deviceEnd = "\n}\n\n";
-  const auto end = capture.find(deviceEnd);
-  REQUIRE(end != std::string::npos);
-  return capture.substr(end + deviceEnd.size());
+  const std::string blockEnd = "\n}\n\n";
+  const auto deviceEnd = capture.find(blockEnd);
+  REQUIRE(deviceEnd != std::string::npos);
+  REQUIRE(capture.compare(deviceEnd + blockEnd.size(), 8, "calls {\n") == 0);
+  const auto callsEnd = capture.find(blockEnd, deviceEnd + blockEnd.size());
+  REQUIRE(callsEnd != std::string::npos);
+  return capture.substr(callsEnd + blockEnd.size());
 }
 
 // A frame with a camera, a renderer and a world, committed and ready to render.
@@ -158,6 +162,91 @@ struct Scene
 
 } // namespace
 
+namespace {
+
+// The calls block of a capture
+std::string callsOf(const std::string &capture)
+{
+  const auto begin = capture.find("\ncalls {\n");
+  REQUIRE(begin != std::string::npos);
+  const auto end = capture.find("\n}\n", begin + 1);
+  REQUIRE(end != std::string::npos);
+  return capture.substr(begin + 1, end + 3 - (begin + 1));
+}
+
+} // namespace
+
+SCENARIO("a capture counts the API calls made before it", "[capture_device]")
+{
+  CaptureDevice cd;
+  Scene scene(cd.device);
+
+  WHEN("a frame is rendered")
+  {
+    const std::string capture = scene.render();
+
+    THEN("each function called so far is counted, the render included")
+    {
+      REQUIRE(callsOf(capture)
+          == "calls {\n"
+             "  total 13\n"
+             "  anariCommitParameters 4\n"
+             "  anariNewCamera 1\n"
+             "  anariNewFrame 1\n"
+             "  anariNewRenderer 1\n"
+             "  anariNewWorld 1\n"
+             "  anariRenderFrame 1\n"
+             "  anariSetParameter 4\n"
+             "}\n");
+    }
+
+    AND_WHEN("it is rendered again")
+    {
+      const std::string again = scene.render();
+
+      THEN("the counts go on: the wait and the reads of the capture count")
+      {
+        REQUIRE(callsOf(again)
+            == "calls {\n"
+               "  total 17\n"
+               "  anariCommitParameters 4\n"
+               "  anariFrameReady 1\n"
+               "  anariGetProperty 2\n"
+               "  anariNewCamera 1\n"
+               "  anariNewFrame 1\n"
+               "  anariNewRenderer 1\n"
+               "  anariNewWorld 1\n"
+               "  anariRenderFrame 2\n"
+               "  anariSetParameter 4\n"
+               "}\n");
+      }
+    }
+  }
+
+  WHEN("a parameter array is mapped and unmapped")
+  {
+    uint64_t stride = 0;
+    auto *p = anariMapParameterArray1D(
+        cd.device, scene.world, "light", ANARI_LIGHT, 0, &stride);
+    REQUIRE(p != nullptr);
+    anariUnmapParameterArray(cd.device, scene.world, "light");
+    const std::string capture = scene.render();
+
+    THEN("each is one call, not the calls the device makes to do it")
+    {
+      const auto calls = callsOf(capture);
+      REQUIRE(
+          calls.find("  anariMapParameterArray1D 1\n") != std::string::npos);
+      REQUIRE(
+          calls.find("  anariUnmapParameterArray 1\n") != std::string::npos);
+      REQUIRE(calls.find("anariNewArray1D") == std::string::npos);
+      REQUIRE(calls.find("anariMapArray") == std::string::npos);
+      REQUIRE(calls.find("anariUnmapArray") == std::string::npos);
+      REQUIRE(calls.find("  anariSetParameter 4\n") != std::string::npos);
+    }
+  }
+}
+
 SCENARIO("a capture starts with a versioned header", "[capture_device]")
 {
   CaptureDevice cd;
@@ -169,7 +258,7 @@ SCENARIO("a capture starts with a versioned header", "[capture_device]")
 
     THEN("the first line is the format header")
     {
-      REQUIRE(capture.rfind("anari-capture 1\n", 0) == 0);
+      REQUIRE(capture.rfind("anari-capture 2\n", 0) == 0);
     }
   }
 }
@@ -453,22 +542,23 @@ SCENARIO(
 SCENARIO("a capture does not depend on the order objects were created in",
     "[capture_device]")
 {
-  CaptureDevice cd;
+  // A device each, so the calls made before each capture are the same calls
+  CaptureDevice cd1, cd2;
   std::string first, second;
   {
-    Scene scene(cd.device);
+    Scene scene(cd1.device);
     Content content;
     buildSharedMaterialScene(scene, content, false);
     first = scene.render();
   }
   {
-    Scene scene(cd.device);
+    Scene scene(cd2.device);
     Content content;
     buildSharedMaterialScene(scene, content, true);
     second = scene.render();
   }
 
-  THEN("the captures are identical")
+  THEN("the captures, call counts included, are identical")
   {
     REQUIRE(!first.empty());
     REQUIRE(first == second);
@@ -988,11 +1078,11 @@ SCENARIO(
         != std::string::npos);
   }
 
-  THEN("two runs with other pointers write the same capture")
+  THEN("two runs with other pointers write the same scene")
   {
     anari::setParameter(d, scene.world, "userData", (const void *)&b);
     scene.commit(scene.world);
-    REQUIRE(scene.render() == first);
+    REQUIRE(body(scene.render()) == body(first));
   }
 
   WHEN("the frame has a completion callback")
@@ -1696,7 +1786,7 @@ SCENARIO("captures are written to a directory, one file per render",
     THEN("an error is reported, and the capture is still available")
     {
       REQUIRE(cd.status.errors.size() == 1);
-      REQUIRE(capture.rfind("anari-capture 1\n", 0) == 0);
+      REQUIRE(capture.rfind("anari-capture 2\n", 0) == 0);
     }
   }
 
@@ -1770,8 +1860,9 @@ SCENARIO("two renders of the same scene, made in another order, do not differ",
     "[capture_device][capture_diff]")
 {
   namespace diff = anari::capture_diff;
-  CaptureDevice cd;
-  auto d = cd.device;
+  // A device each, so the calls made before each capture are the same calls
+  CaptureDevice cd1, cd2;
+  auto d = cd1.device;
 
   diff::Capture first, second;
   {
@@ -1782,11 +1873,11 @@ SCENARIO("two renders of the same scene, made in another order, do not differ",
     first = capturedIn(d, scene.frame);
   }
   {
-    Scene scene(d);
+    Scene scene(cd2.device);
     Content content;
     buildSharedMaterialScene(scene, content, true);
     scene.render();
-    second = capturedIn(d, scene.frame);
+    second = capturedIn(cd2.device, scene.frame);
   }
 
   THEN("the diff of their captures is empty")
@@ -1805,7 +1896,11 @@ SCENARIO("two renders of the same scene, made in another order, do not differ",
     scene.commit(scene.camera);
     scene.render();
     const auto changed = capturedIn(d, scene.frame);
-    const auto result = diff::diffCaptures(first, changed);
+    // The calls differ too (more of them, on the same device): compare the
+    // scene only
+    diff::DiffOptions options;
+    options.compareCalls = false;
+    const auto result = diff::diffCaptures(first, changed, options);
     REQUIRE(result.differences.size() == 1);
     REQUIRE(result.differences[0].message()
         == "camera.fovy: expected <absent>, got ANARI_FLOAT32 0.25");
@@ -1841,10 +1936,16 @@ SCENARIO("captures with blobs are compared in memory and as files",
   const auto nearby = render(0.001f);
   REQUIRE(base.blobs.size() == 1);
 
+  // Both are rendered on one device, so the second counts more calls: compare
+  // the scenes only
+  diff::DiffOptions sceneOnly;
+  sceneOnly.compareCalls = false;
+
   THEN("a blob that differs is compared element by element, with a tolerance")
   {
-    REQUIRE(diff::diffCaptures(base, nearby).outcome == diff::Outcome::DIFFER);
-    diff::DiffOptions options;
+    REQUIRE(diff::diffCaptures(base, nearby, sceneOnly).outcome
+        == diff::Outcome::DIFFER);
+    diff::DiffOptions options = sceneOnly;
     options.tolerance.absolute = 0.01;
     REQUIRE(diff::diffCaptures(base, nearby, options).outcome
         == diff::Outcome::MATCH);
@@ -1854,7 +1955,7 @@ SCENARIO("captures with blobs are compared in memory and as files",
   {
     const auto a = (dir.path / "frame0000_render0000.capture").string();
     const auto b = (dir.path / "frame0001_render0000.capture").string();
-    const auto result = diff::diffCaptureFiles(a, b);
+    const auto result = diff::diffCaptureFiles(a, b, sceneOnly);
     REQUIRE(result.outcome == diff::Outcome::DIFFER);
     REQUIRE(result.differences.size() == 1);
     REQUIRE(result.differences[0].message().rfind(
@@ -1862,7 +1963,7 @@ SCENARIO("captures with blobs are compared in memory and as files",
                 "primitive.attribute0[123]: expected 61.5, got 61.501",
                 0)
         == 0);
-    diff::DiffOptions options;
+    diff::DiffOptions options = sceneOnly;
     options.tolerance.absolute = 0.01;
     REQUIRE(
         diff::diffCaptureFiles(a, b, options).outcome == diff::Outcome::MATCH);

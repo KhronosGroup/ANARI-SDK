@@ -21,7 +21,7 @@ namespace capture_device {
 
 namespace {
 
-constexpr const char *kHeader = "anari-capture 1";
+constexpr const char *kHeader = "anari-capture 2";
 
 bool isPointerLike(ANARIDataType type)
 {
@@ -56,6 +56,8 @@ class Writer
     out += kHeader;
     out += "\n\n";
     writeDeviceBlock();
+    out += '\n';
+    writeCallsBlock();
     for (auto *obj : m_order) {
       out += '\n';
       writeObject(obj);
@@ -125,6 +127,20 @@ class Writer
     out += "device {\n";
     out += "  extensions ANARI_STRING_LIST ";
     writeStringList(m_options.extensions, "  ");
+    out += "}\n";
+  }
+
+  // The total, then each function called at least once
+  void writeCallsBlock()
+  {
+    std::string &out = m_capture.text;
+    uint64_t total = 0;
+    for (const auto &c : m_options.calls)
+      total += c.second;
+    out += "calls {\n";
+    out += "  total " + std::to_string(total) + "\n";
+    for (const auto &c : m_options.calls)
+      out += "  " + c.first + " " + std::to_string(c.second) + "\n";
     out += "}\n";
   }
 

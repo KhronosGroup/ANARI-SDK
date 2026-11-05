@@ -2,7 +2,8 @@
 
 `capture` is an ANARI device that renders nothing. It accepts the whole ANARI
 API and, on each `anariRenderFrame()`, writes a **capture**: a canonical text
-snapshot of the committed object graph the frame can reach, arrays included.
+snapshot of the committed object graph the frame can reach, arrays included,
+and of how many API calls the application has made to the device so far.
 
 It exists so that an application can test the part of ANARI it is responsible
 for: did it hand ANARI the right objects and parameters, and does it use the
@@ -110,16 +111,16 @@ The pixel at column `x`, row `y` (rows in memory order) is in cell
 ## The capture format
 
 A capture is UTF-8 text. This section is the contract for anything that reads
-one. The current version is **1**.
+one. The current version is **2**.
 
 ### Example
 
 This is what the device wrote for a one-triangle scene whose vertex array is
-over the inline limit (4 here) and for a frame that sets a parameter the spec
-does not define:
+over the inline limit (4 here, set on the device with the extensions) and for a
+frame that sets a parameter the spec does not define:
 
 ```
-anari-capture 1
+anari-capture 2
 
 device {
   extensions ANARI_STRING_LIST [
@@ -127,6 +128,23 @@ device {
     "ANARI_KHR_GEOMETRY_TRIANGLE"
     "ANARI_KHR_MATERIAL_MATTE"
   ]
+}
+
+calls {
+  total 40
+  anariCommitParameters 10
+  anariNewArray1D 3
+  anariNewCamera 1
+  anariNewFrame 1
+  anariNewGeometry 1
+  anariNewGroup 1
+  anariNewInstance 1
+  anariNewMaterial 1
+  anariNewRenderer 1
+  anariNewSurface 1
+  anariNewWorld 1
+  anariRenderFrame 1
+  anariSetParameter 17
 }
 
 frame@0 {
@@ -211,17 +229,32 @@ blocks carry no meaning.
 capture   = header NL { block }
 header    = "anari-capture" SP version NL
 block     = blockhead " {" NL { line } "}" NL
-blockhead = "device" | "warnings" | id [ SP quoted ]     ; quoted: the subtype
+blockhead = "device" | "calls" | "warnings" | id [ SP quoted ] ; quoted: the subtype
 id        = label "@" number                              ; "camera@0"
 ```
 
-Blocks are, in this order: the `device` block; one block per object, in
-traversal order (the frame first); the `warnings` block, only if there are
-warnings. Readers must not depend on the order of the object blocks: they are
+Blocks are, in this order: the `device` block; the `calls` block; one block
+per object, in traversal order (the frame first); the `warnings` block, only
+if there are warnings. Readers must not depend on the order of the object blocks: they are
 reached by following references from the frame.
 
 **`device` block.** One line, `extensions ANARI_STRING_LIST` followed by a
 list (below) of the advertised extensions, sorted.
+
+**`calls` block.** How many API calls the application had made to the device
+when the capture was taken, the `anariRenderFrame()` that took it included.
+The first line is `total <n>`, all calls; then one line per function called
+at least once, `<function> <n>`, sorted by function name. A function that is
+not listed was not called. The counts are of the device since it was created,
+not of the frame, so a capture's counts include the calls made for earlier
+frames and renders, and the `anariGetProperty()` calls that read earlier
+captures. Every ANARI function that takes the device counts, those that set
+and commit the device's own parameters included; the library functions
+(`anariLoadLibrary()`, `anariNewDevice()`, `anariGetDeviceExtensions()`, ...)
+never reach a device and are not counted. A call counts once, as the
+application made it: `anariMapParameterArray1D()` is one call, not the array it
+creates, sets and maps. The counts say how much the application talks to the
+device, to spot redundant calls; they are not a trace.
 
 **`warnings` block.** One quoted string per line, in the order they were seen.
 
@@ -374,7 +407,8 @@ not change these checks.
 ### Versions
 
 The version is the number on the first line. A reader must reject a version it
-does not know. A change that changes what a capture says (new meaning for a
+does not know. Version 2 added the `calls` block; version 1 is otherwise the
+same, and the diff reads both. A change that changes what a capture says (new meaning for a
 line, a different float format, a different hash) increments the version;
 adding a field readers can ignore is not expected, so readers should treat
 unknown lines as an error.
@@ -404,7 +438,18 @@ camera.@subtype: expected "perspective", got "orthographic"
 `@subtype`, `@elementType` and `@dimensions` stand for those properties of the
 object at the path. The frame is the root; its parameters are `camera`,
 `world`, and so on. The `device` block's extensions are compared as a set
-(`device.extensions`) and the warnings in order (`warnings[0]`).
+(`device.extensions`), the warnings in order (`warnings[0]`), and then the
+call counts, exactly: the total and each function, a function one capture does
+not list counting as 0:
+
+```
+calls.total: expected 40, got 55
+calls.anariSetParameter: expected 17, got 32
+```
+
+A capture of format version 1 has no call counts; against a version 2 capture
+that is one difference, `calls: the expected capture has no call counts
+(format version 1)`.
 
 ### Options
 
@@ -420,6 +465,10 @@ object at the path. The frame is the root; its parameters are `camera`,
   structural hash of their subgraph, then, for what is left, by comparing
   them (so floats within the tolerance still pair). Elements that stay
   unpaired are reported.
+- **Call counts.** `compareCalls` (default on) compares the `calls` blocks.
+  Turn it off when only the scene has to match: for a baseline taken from
+  another build of the application, or two captures from one device (the
+  second counts the calls made for the first).
 - **Caps.** At most `maxDifferences` (default 50) differences are listed; all
   are counted, and the report says how many there are. For an array, at most
   `maxIndicesPerArray` (default 8) differing elements are listed, then one
@@ -444,6 +493,7 @@ actual.blobs[name] = bytes;              // in-memory blobs
 diff::DiffOptions options;
 options.tolerance.absolute = 1e-6;
 options.unorderedPaths = {"world.surface"};
+options.compareCalls = false;            // compare the scene only
 
 diff::DiffResult result = diff::diffCaptures(expected, actual, options);
 if (result.outcome != diff::Outcome::MATCH)
@@ -465,6 +515,7 @@ anariCaptureDiff [options] <expected> <actual>
   --ulps <n>             floats match within n representable values
   --unordered <path>     compare the object array at <path> as unordered
                          (repeatable)
+  --ignore-calls         do not compare the API call counts
   --max-differences <n>  list at most n differences (default 50)
   --quiet                print nothing
 ```
@@ -475,7 +526,7 @@ not support, or the command line is wrong (the reason is on stderr).
 
 ## Not in scope
 
-The capture device records state, not API calls: for a trace, use the debug
-layer. It renders nothing that depends on the scene (rasterized bounds, ID
+The capture device records state and counts API calls, but does not record
+the calls: for a trace, use the debug layer. It renders nothing that depends on the scene (rasterized bounds, ID
 buffers). It does not merge or compare captures from several MPI ranks (each
 rank's device writes its own), and nothing reads a capture back into a device.

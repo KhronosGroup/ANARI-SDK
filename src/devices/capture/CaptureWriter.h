@@ -8,6 +8,7 @@
 // std
 #include <map>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace capture_device {
@@ -18,6 +19,9 @@ struct WriterOptions
   uint64_t inlineArrayLimit{64};
   // The extensions the device advertises
   std::vector<std::string> extensions;
+  // The API calls made to the device so far, as (function, calls), sorted by
+  // function
+  std::vector<std::pair<std::string, uint64_t>> calls;
 };
 
 struct Capture

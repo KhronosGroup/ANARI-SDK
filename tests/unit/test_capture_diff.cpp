@@ -29,10 +29,16 @@ std::string makeCapture(
     const std::vector<std::pair<std::string, std::string>> &replacements = {})
 {
   std::string text =
-      "anari-capture 1\n"
+      "anari-capture 2\n"
       "\n"
       "device {\n"
       "  extensions ANARI_STRING_LIST []\n"
+      "}\n"
+      "\n"
+      "calls {\n"
+      "  total 30\n"
+      "  anariCommitParameters 10\n"
+      "  anariSetParameter 20\n"
       "}\n"
       "\n"
       "frame@0 {\n"
@@ -547,19 +553,89 @@ SCENARIO("the report is capped, and says how many differences there are",
   REQUIRE(report.find("3 differences") != std::string::npos);
 }
 
+SCENARIO(
+    "the API call counts are compared unless told not to", "[capture_diff]")
+{
+  WHEN("the counts differ, and a function is called in only one capture")
+  {
+    const auto actual = makeCapture({{"  total 30\n", "  total 45\n"},
+        {"  anariSetParameter 20\n",
+            "  anariRelease 5\n  anariSetParameter 30\n"}});
+
+    THEN("the total and each function that differs are reported")
+    {
+      const auto result = compare(makeCapture(), actual);
+      REQUIRE(result.outcome == diff::Outcome::DIFFER);
+      REQUIRE(lines(result)
+          == std::vector<std::string>{"calls.total: expected 30, got 45",
+              "calls.anariRelease: expected 0, got 5",
+              "calls.anariSetParameter: expected 20, got 30"});
+    }
+
+    THEN("with compareCalls off, the captures match")
+    {
+      diff::DiffOptions options;
+      options.compareCalls = false;
+      REQUIRE(compare(makeCapture(), actual, options).outcome
+          == diff::Outcome::MATCH);
+    }
+  }
+
+  WHEN("the scene differs as well")
+  {
+    const auto actual =
+        makeCapture({{"(2, 2)", "(2, 3)"}, {"  total 30\n", "  total 31\n"}});
+
+    THEN("the call counts are reported after the scene")
+    {
+      REQUIRE(lines(compare(makeCapture(), actual))
+          == std::vector<std::string>{"size: expected (2, 2), got (2, 3)",
+              "calls.total: expected 30, got 31"});
+    }
+  }
+
+  WHEN("one capture is of format version 1, without call counts")
+  {
+    auto v1 =
+        makeCapture({{"calls {\n"
+                      "  total 30\n"
+                      "  anariCommitParameters 10\n"
+                      "  anariSetParameter 20\n"
+                      "}\n"
+                      "\n",
+            ""}});
+    v1.replace(0, std::strlen("anari-capture 2"), "anari-capture 1");
+
+    THEN("it is read, and the missing counts are one difference")
+    {
+      REQUIRE(lines(compare(v1, makeCapture()))
+          == std::vector<std::string>{"calls: the expected capture has no "
+                                      "call counts (format version 1)"});
+    }
+
+    THEN("with compareCalls off, the captures match")
+    {
+      diff::DiffOptions options;
+      options.compareCalls = false;
+      REQUIRE(
+          compare(v1, makeCapture(), options).outcome == diff::Outcome::MATCH);
+    }
+  }
+}
+
 SCENARIO("a capture the diff cannot read is invalid, not different",
     "[capture_diff]")
 {
   WHEN("the format version is not one it supports")
   {
     auto text = makeCapture();
-    text.replace(0, std::strlen("anari-capture 1"), "anari-capture 2");
+    text.replace(0, std::strlen("anari-capture 2"), "anari-capture 3");
     const auto result = compare(makeCapture(), text);
 
     THEN("it says so")
     {
       REQUIRE(result.outcome == diff::Outcome::INVALID);
-      REQUIRE(result.error.find("version 2") != std::string::npos);
+      REQUIRE(result.error.find("version 3") != std::string::npos);
     }
   }
 
@@ -708,6 +784,17 @@ SCENARIO("the command-line tool exits 0, 1 or 2", "[capture_diff]")
     }
   }
 
+  WHEN("only the call counts differ")
+  {
+    writeFile(b, makeCapture({{"  total 30\n", "  total 31\n"}}));
+
+    THEN("it exits 1, or 0 with --ignore-calls")
+    {
+      REQUIRE(runTool(q(a) + " " + q(b)) == 1);
+      REQUIRE(runTool("--ignore-calls " + q(a) + " " + q(b)) == 0);
+    }
+  }
+
   WHEN("the captures differ by a float")
   {
     writeFile(b, makeCapture({{"(0.1, 0.2, 0.3)", "(0.1, 0.2, 0.3004)"}}));
@@ -734,7 +821,7 @@ SCENARIO("the command-line tool exits 0, 1 or 2", "[capture_diff]")
   WHEN("the format version is not supported")
   {
     auto text = makeCapture();
-    text.replace(0, std::strlen("anari-capture 1"), "anari-capture 9");
+    text.replace(0, std::strlen("anari-capture 2"), "anari-capture 9");
     writeFile(b, text);
 
     THEN("it exits 2")
