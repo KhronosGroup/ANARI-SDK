@@ -9,10 +9,22 @@ namespace helide_gpu {
 
 bool SDLGPUDevice::ensureVideoSubsystemInitialized()
 {
-  if ((SDL_WasInit(SDL_INIT_VIDEO) & SDL_INIT_VIDEO) != 0)
+  if ((SDL_WasInit(SDL_INIT_VIDEO) & SDL_INIT_VIDEO) != 0) {
+    loadError.clear();
     return true;
+  }
 
-  return SDL_InitSubSystem(SDL_INIT_VIDEO);
+  const bool initialized = SDL_InitSubSystem(SDL_INIT_VIDEO);
+  if (!initialized)
+    loadError = SDL_GetError();
+  else
+    loadError.clear();
+  return initialized;
+}
+
+const char *SDLGPUDevice::initializationError() const
+{
+  return loadError.c_str();
 }
 
 void SDLGPUDevice::init()

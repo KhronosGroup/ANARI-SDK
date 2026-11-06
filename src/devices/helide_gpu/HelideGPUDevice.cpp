@@ -510,7 +510,7 @@ void HelideGPUDevice::initDevice()
   if (!state.gpu.sdlDevice.ensureVideoSubsystemInitialized()) {
     reportMessage(ANARI_SEVERITY_FATAL_ERROR,
         "[SDL3_gpu] SDL_InitSubSystem(SDL_INIT_VIDEO) failed: %s",
-        SDL_GetError());
+        state.gpu.sdlDevice.initializationError());
     return;
   }
 
