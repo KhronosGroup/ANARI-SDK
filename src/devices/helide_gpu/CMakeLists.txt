@@ -443,3 +443,21 @@ install(TARGETS ${PROJECT_NAME}
   # ... and the import lib into the devel package
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
+
+######################################################################
+# build python module
+######################################################################
+
+set(DEVICE_LIBRARY_NAME helide_gpu)
+configure_file(${ANARI_CODE_GEN_ROOT}/device_trampoline.py.in ${CMAKE_CURRENT_BINARY_DIR}/__init__.py)
+
+install(
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/__init__.py
+  EXCLUDE_FROM_ALL
+  COMPONENT helide_gpu_module
+  DESTINATION helide_gpu/)
+install(TARGETS ${PROJECT_NAME}
+  EXCLUDE_FROM_ALL
+  COMPONENT helide_gpu_module
+  LIBRARY DESTINATION helide_gpu
+  RUNTIME DESTINATION helide_gpu)
