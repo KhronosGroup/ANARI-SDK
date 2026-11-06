@@ -4,6 +4,7 @@
 #pragma once
 
 #include <SDL3/SDL_gpu.h>
+#include <string>
 
 namespace helide_gpu {
 
@@ -13,8 +14,10 @@ struct SDLGPUDevice
 {
   SDL_GPUDevice *device{nullptr};
   SDL_GPUShaderFormat shaderFormat{SDL_GPU_SHADERFORMAT_SPIRV};
+  std::string loadError;
 
   bool ensureVideoSubsystemInitialized();
+  const char *initializationError() const;
   void init();
   void release();
 };
