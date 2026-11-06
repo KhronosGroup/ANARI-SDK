@@ -19,9 +19,16 @@ cmake --install .
 
 ### Dependencies
 
-- CMake 3.11+, C++17
+- CMake 3.20+, C++17
 - `anari` (ANARI-SDK with `helium`)
-- SDL3 3.2+ (`find_package(SDL3)`) — provides `SDL3::SDL3`
+- SDL3 3.2+ development package (`find_package(SDL3)`) — provides headers and
+  the shared library used to generate runtime trampolines on Linux
+- On Linux, Implib.so is fetched at configure time and generates lazy SDL3
+  function trampolines. The SDL3 runtime is loaded when the device initializes;
+  CMake obtains the runtime SONAME from the discovered SDL3 shared library
+  (override with `-DSDL3_SONAME=...` if it cannot be detected). The runtime
+  library path can be overridden with `HELIDE_GPU_SDL3_LIBRARY`, set before
+  device initialization.
 - `glslangValidator` in PATH — used at build time to compile GLSL shaders to SPIR-V
 
 GLM is downloaded automatically via `anari_sdk_fetch_project()` at configure time — no system install required.
