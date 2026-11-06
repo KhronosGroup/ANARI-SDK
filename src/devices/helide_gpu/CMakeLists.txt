@@ -1,7 +1,7 @@
 ## Copyright 2026 The Khronos Group
 ## SPDX-License-Identifier: Apache-2.0
 
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.20)
 
 if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_LIST_DIR})
   set(STANDALONE_SOURCE_TREE TRUE)
@@ -298,7 +298,66 @@ add_custom_target(helide_gpu_shaders ALL DEPENDS ${SHADER_DEPS})
 
 ## Build device target ##
 
+set(HELIDE_GPU_SOURCES)
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  # Implib.so generates function trampolines so the device has no DT_NEEDED
+  # entry for SDL3. Keep SDL's headers and shared library available at build
+  # time, but defer loading the runtime library until the device initializes.
+  include(FetchContent)
+  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+
+  # Implib.so has no release tags; pin its 2026-08-01 commit, verified with
+  # the SDL3 C API used by this device.
+  FetchContent_Populate(implib_so
+    GIT_REPOSITORY https://github.com/yugr/Implib.so.git
+    GIT_TAG a3e167cf978a5b8a38ec0f710d8c4331e8dcdd9a
+    SOURCE_DIR ${CMAKE_BINARY_DIR}/_deps/implib_so-src
+    BINARY_DIR ${CMAKE_BINARY_DIR}/_deps/implib_so-build
+  )
+
+  enable_language(C)
+  enable_language(ASM)
+  set(SDL3_SONAME "" CACHE STRING "SDL3 shared library SONAME")
+  mark_as_advanced(SDL3_SONAME)
+  if(SDL3_SONAME)
+    set(SDL3_RUNTIME_SONAME "${SDL3_SONAME}")
+  else()
+    set(SDL3_RUNTIME_SONAME "$<TARGET_SONAME_FILE_NAME:SDL3::SDL3>")
+  endif()
+
+  set(SDL3_STUB_SCRIPT "${CMAKE_CURRENT_LIST_DIR}/cmake/generate_sdl3_trampolines.py")
+  set(SDL3_STUB_CONFIG "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/sdl3_runtime_config.h")
+  set(SDL3_STUB_SYMBOLS "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/sdl3_trampoline_symbol.h")
+  add_custom_command(
+    OUTPUT
+      "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libSDL3.tramp.S"
+      "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libSDL3.init.c"
+      "${SDL3_STUB_CONFIG}"
+      "${SDL3_STUB_SYMBOLS}"
+    COMMAND ${Python3_EXECUTABLE}
+      "${SDL3_STUB_SCRIPT}"
+      --implib-gen "${implib_so_SOURCE_DIR}/implib-gen.py"
+      "$<TARGET_FILE:SDL3::SDL3>"
+      --soname "${SDL3_RUNTIME_SONAME}"
+      --output-dir "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>"
+      --stub-basename "libSDL3"
+    DEPENDS
+      "${sdl3_actual_target}"
+      "${SDL3_STUB_SCRIPT}"
+      "${implib_so_SOURCE_DIR}/implib-gen.py"
+    COMMENT "Generating runtime-loaded SDL3 trampolines"
+    VERBATIM
+  )
+  list(APPEND HELIDE_GPU_SOURCES
+    "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libSDL3.tramp.S"
+    "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libSDL3.init.c"
+    "${SDL3_STUB_CONFIG}"
+    "${SDL3_STUB_SYMBOLS}"
+  )
+endif()
+
 project_add_library(SHARED
+  ${HELIDE_GPU_SOURCES}
   GLContextInterface.cpp
   Object.cpp
   HelideGPUDevice.cpp
@@ -348,7 +407,14 @@ endif()
 # GLM 1.0+ requires explicit opt-in for GTX extensions (e.g. component_wise).
 target_compile_definitions(${PROJECT_NAME} PRIVATE GLM_ENABLE_EXPERIMENTAL)
 
-project_link_libraries(PRIVATE anari::helium glm::glm SDL3::SDL3)
+project_link_libraries(PRIVATE anari::helium glm::glm)
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  project_link_libraries(PRIVATE SDL3::Headers ${CMAKE_DL_LIBS})
+  project_include_directories(PRIVATE
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>>")
+else()
+  project_link_libraries(PRIVATE SDL3::SDL3)
+endif()
 
 include(GenerateExportHeader)
 generate_export_header(${PROJECT_NAME} EXPORT_MACRO_NAME "HELIDE_GPU_EXPORT")
