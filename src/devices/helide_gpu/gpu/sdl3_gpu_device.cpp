@@ -13,6 +13,11 @@
 #include <cstdlib>
 #include <mutex>
 #endif
+#if defined(_WIN32)
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <cstdlib>
+#endif
 
 #if defined(__linux__)
 extern "C" void HELIDE_GPU_SDL3_SET_HANDLE(void *handle);
@@ -45,11 +50,33 @@ static std::string loadSDL3()
 }
 #endif
 
+#if defined(_WIN32)
+static std::string loadSDL3()
+{
+  static HMODULE handle = nullptr;
+  if (handle)
+    return {};
+
+  handle = GetModuleHandleW(L"SDL3.dll");
+  if (!handle) {
+    const wchar_t *library = _wgetenv(L"HELIDE_GPU_SDL3_LIBRARY");
+    handle = library && *library ? LoadLibraryW(library)
+                                 : LoadLibraryExW(L"SDL3.dll", nullptr,
+                                       LOAD_LIBRARY_SEARCH_DEFAULT_DIRS
+                                           | LOAD_LIBRARY_SEARCH_USER_DIRS);
+  }
+  if (handle)
+    return {};
+
+  return "Could not load SDL3.dll (Windows error "
+      + std::to_string(GetLastError()) + ")";
+}
+#endif
+
 bool SDLGPUDevice::ensureVideoSubsystemInitialized()
 {
-#if defined(__linux__)
-  // Implib's generated resolver aborts if dlopen fails. Load SDL first so a
-  // missing optional runtime can be reported through ANARI instead.
+#if defined(__linux__) || defined(_WIN32)
+  // Load SDL first so a missing optional runtime is reported through ANARI.
   const std::string runtimeError = loadSDL3();
   if (!runtimeError.empty()) {
     loadError = runtimeError;

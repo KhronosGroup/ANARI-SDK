@@ -408,6 +408,10 @@ endif()
 target_compile_definitions(${PROJECT_NAME} PRIVATE GLM_ENABLE_EXPERIMENTAL)
 
 project_link_libraries(PRIVATE anari::helium glm::glm)
+if(MSVC)
+  project_link_libraries(PRIVATE delayimp)
+  target_link_options(${PROJECT_NAME} PRIVATE "/DELAYLOAD:SDL3.dll")
+endif()
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   project_link_libraries(PRIVATE SDL3::Headers ${CMAKE_DL_LIBS})
   project_include_directories(PRIVATE
