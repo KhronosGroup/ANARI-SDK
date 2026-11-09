@@ -23,12 +23,11 @@ cmake --install .
 - `anari` (ANARI-SDK with `helium`)
 - SDL3 3.2+ development package (`find_package(SDL3)`) — provides headers and
   the shared library used to generate runtime trampolines on Linux
-- On Linux, Implib.so is fetched at configure time and generates lazy SDL3
-  function trampolines. The SDL3 runtime is loaded when the device initializes;
-  CMake obtains the runtime SONAME from the discovered SDL3 shared library
-  (override with `-DSDL3_SONAME=...` if it cannot be detected). The runtime
-  library path can be overridden with `HELIDE_GPU_SDL3_LIBRARY`, set before
-  device initialization.
+- SDL3 is dynamically loaded when the device initializes. Linux uses Implib.so
+  trampolines, macOS uses dynamic symbol lookup, and Windows uses delay loading.
+  Set `HELIDE_GPU_SDL3_LIBRARY` before device initialization to override the
+  runtime library path. The Python wheel depends on PySDL3 and checks its
+  `sdl3/bin` directory for the runtime library.
 - `glslangValidator` in PATH — used at build time to compile GLSL shaders to SPIR-V
 
 GLM is downloaded automatically via `anari_sdk_fetch_project()` at configure time — no system install required.
