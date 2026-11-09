@@ -2,10 +2,8 @@
 
 This is an in-progress implementation of an SDL_gpu device based on libhelium.
 
-On Linux, SDL3 is loaded when the device is initialized rather than when the
-device library is loaded. SDL3 development files are still required to build
-the device (including generating its Implib.so trampolines). At runtime the
-device looks for the SONAME of the SDL3 shared library discovered at build
-time. If CMake cannot detect the SONAME, set `SDL3_SONAME` when configuring.
-Set `HELIDE_GPU_SDL3_LIBRARY` before device initialization to override the
-runtime library path.
+SDL3 is dynamically loaded when the device initializes on Linux, macOS, and
+Windows. SDL3 development files are still required at build time. The Python
+wheel depends on PySDL3 and imports it first; the trampoline looks in PySDL3's
+`sdl3/bin` directory for the platform SDL3 library. Native users can set
+`HELIDE_GPU_SDL3_LIBRARY` to the library path before device initialization.
