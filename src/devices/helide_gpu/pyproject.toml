@@ -1,10 +1,10 @@
 [project]
 name = "helide-gpu"
-requires-python = ">=3.7"
+requires-python = ">=3.10"
 readme = "README.md"
 license = "APACHE"
 license-files = ["LICENSE"]
-dependencies = ["cffi", "anari"]
+dependencies = ["cffi", "anari", "PySDL3"]
 version = "1.0"
 
 [build-system]
@@ -21,3 +21,7 @@ generated = "package"
 build_type = "RelWithDebInfo"
 source_path = "."
 install_components = ["helide_gpu_module"]
+
+[tool.cibuildwheel.windows]
+before-build = "pip install delvewheel"
+repair-wheel-command = "delvewheel repair --exclude SDL3.dll -w {dest_dir} {wheel}"
