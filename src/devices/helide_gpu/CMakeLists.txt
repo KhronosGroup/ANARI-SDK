@@ -416,6 +416,10 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   project_link_libraries(PRIVATE SDL3::Headers ${CMAKE_DL_LIBS})
   project_include_directories(PRIVATE
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>>")
+elseif(APPLE)
+  project_link_libraries(PRIVATE SDL3::Headers ${CMAKE_DL_LIBS})
+  target_link_options(${PROJECT_NAME} PRIVATE
+    "-Wl,-undefined,dynamic_lookup")
 else()
   project_link_libraries(PRIVATE SDL3::SDL3)
 endif()

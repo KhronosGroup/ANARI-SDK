@@ -13,6 +13,11 @@
 #include <cstdlib>
 #include <mutex>
 #endif
+#if defined(__APPLE__)
+#include <dlfcn.h>
+#include <cstdlib>
+#include <mutex>
+#endif
 #if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -50,6 +55,25 @@ static std::string loadSDL3()
 }
 #endif
 
+#if defined(__APPLE__)
+static std::string loadSDL3()
+{
+  static std::once_flag loadOnce;
+  static std::string loadError;
+
+  std::call_once(loadOnce, [] {
+    const char *library = std::getenv("HELIDE_GPU_SDL3_LIBRARY");
+    if (!library || !*library)
+      library = "libSDL3.dylib";
+    if (!dlopen(library, RTLD_NOW | RTLD_GLOBAL)) {
+      const char *error = dlerror();
+      loadError = error ? error : "dlopen failed without an error message";
+    }
+  });
+  return loadError;
+}
+#endif
+
 #if defined(_WIN32)
 static std::string loadSDL3()
 {
@@ -75,7 +99,7 @@ static std::string loadSDL3()
 
 bool SDLGPUDevice::ensureVideoSubsystemInitialized()
 {
-#if defined(__linux__) || defined(_WIN32)
+#if defined(__linux__) || defined(__APPLE__) || defined(_WIN32)
   // Load SDL first so a missing optional runtime is reported through ANARI.
   const std::string runtimeError = loadSDL3();
   if (!runtimeError.empty()) {
