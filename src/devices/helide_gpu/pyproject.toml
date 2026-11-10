@@ -25,3 +25,7 @@ install_components = ["helide_gpu_module"]
 [tool.cibuildwheel.windows]
 before-build = "pip install delvewheel"
 repair-wheel-command = "delvewheel repair --exclude SDL3.dll -w {dest_dir} {wheel}"
+
+[tool.cibuildwheel]
+test-requires = ["pytest"]
+test-command = "python -m pytest -q {project}/test"
