@@ -45,7 +45,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../rtx/cmake")
 
 find_package(anari REQUIRED)
 find_package(SDL3 REQUIRED COMPONENTS SDL3)
-find_program(GLSLANG_VALIDATOR glslangValidator REQUIRED)
+find_program(GLSLANG_VALIDATOR NAMES glslangValidator glslang REQUIRED)
 if(APPLE)
   find_program(SPIRV_CROSS spirv-cross REQUIRED)
 else()
