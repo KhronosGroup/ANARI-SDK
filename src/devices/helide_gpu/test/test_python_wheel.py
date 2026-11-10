@@ -6,6 +6,7 @@
 from array import array
 import os
 import sys
+from pathlib import Path
 
 
 def test_installed_wheel_renders_triangle():
@@ -16,6 +17,12 @@ def test_installed_wheel_renders_triangle():
     import helide_gpu
 
     assert helide_gpu.library is not None
+    messages = []
+    callback = anari.ffi.new_handle(
+        lambda device, source, source_type, severity, code, message: messages.append(
+            message
+        )
+    )
     device = helide_gpu.newDevice()
     assert device is not None
     device.commitParameters()
@@ -65,6 +72,21 @@ def test_installed_wheel_renders_triangle():
     frame.commitParameters()
     frame.renderFrame()
     assert frame.frameReady(anari.WAIT), "helide_gpu frame did not complete"
+
+    gpu_status = next(
+        (message for message in messages if "[SDL3_gpu] Device created (" in message),
+        None,
+    )
+    assert gpu_status is not None, "SDL GPU device status was not reported"
+    assert "backend: " in gpu_status and "backend: )" not in gpu_status, (
+        f"SDL GPU backend was not reported: {gpu_status}"
+    )
+    if "adapter: " in gpu_status:
+        adapter = gpu_status.split("adapter: ", 1)[1].split(",", 1)[0]
+        assert adapter, f"SDL GPU adapter was reported empty: {gpu_status}"
+    if "driver: " in gpu_status:
+        driver = gpu_status.split("driver: ", 1)[1].split(")", 1)[0]
+        assert driver, f"SDL GPU driver was reported empty: {gpu_status}"
 
     pixels, width, height, _ = frame.mapFrame("channel.color")
     assert pixels != anari.ffi.NULL, "helide_gpu color channel did not map"
