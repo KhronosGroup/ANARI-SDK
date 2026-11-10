@@ -8,10 +8,12 @@
 // Usage: ./helide_gpu_smoke_test [library]   (default: helide_gpu)
 
 #include <array>
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <string>
+#include <vector>
 
 #define ANARI_EXTENSION_UTILITY_IMPL
 #include "anari/anari_cpp.hpp"
@@ -28,6 +30,8 @@ using uvec3 = std::array<unsigned int, 3>;
 // ANARI status callback
 // ---------------------------------------------------------------------------
 
+static std::vector<std::string> g_statusMessages;
+
 static void statusFunc(const void *,
     ANARIDevice,
     ANARIObject,
@@ -36,6 +40,8 @@ static void statusFunc(const void *,
     ANARIStatusCode,
     const char *message)
 {
+  if (message)
+    g_statusMessages.emplace_back(message);
   const char *prefix = "[????]";
   if (severity == ANARI_SEVERITY_FATAL_ERROR)
     prefix = "[FATAL]";
@@ -763,6 +769,20 @@ int main(int argc, const char **argv)
   anari::Device d = anari::newDevice(lib, "default");
   if (!d) {
     fprintf(stderr, "[smoke_test] FATAL: could not create device\n");
+    anari::unloadLibrary(lib);
+    return 1;
+  }
+
+  auto deviceStatus = std::find_if(g_statusMessages.begin(),
+      g_statusMessages.end(),
+      [](const std::string &message) {
+        return message.find("[SDL3_gpu] Device created (") != std::string::npos;
+      });
+  if (deviceStatus == g_statusMessages.end()
+      || deviceStatus->find("backend: ") == std::string::npos
+      || deviceStatus->find("backend: )") != std::string::npos) {
+    fprintf(stderr, "[smoke_test] FATAL: no valid SDL GPU backend reported\n");
+    anari::release(d, d);
     anari::unloadLibrary(lib);
     return 1;
   }
