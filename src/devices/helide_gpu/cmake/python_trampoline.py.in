@@ -1,0 +1,28 @@
+import anari
+import os
+import sys
+from pathlib import Path as _Path
+
+# PySDL3 manages its SDL runtime under sdl3/bin. Import it first so its lazy
+# downloader can populate that directory before the native device loads SDL.
+try:
+    import sdl3 as _sdl3
+    _bin = _Path(_sdl3.__file__).parent / "bin"
+    if sys.platform == "win32":
+        _names = ("SDL3.dll",)
+    elif sys.platform == "darwin":
+        _names = ("libSDL3.dylib",)
+    else:
+        _names = ("libSDL3.so", "libSDL3.so.0")
+    for _name in _names:
+        _candidate = _bin / _name
+        if _candidate.exists():
+            os.environ.setdefault("HELIDE_GPU_SDL3_LIBRARY", str(_candidate))
+            break
+except (ImportError, AttributeError):
+    pass
+
+library = anari.loadLibrary('${DEVICE_LIBRARY_NAME},'+str(_Path(__file__).parent)+'/', anari.error_status_handle)
+
+def newDevice(name = "default"):
+    return library.newDevice(name)

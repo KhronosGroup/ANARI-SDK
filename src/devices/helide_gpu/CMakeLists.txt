@@ -457,7 +457,7 @@ install(TARGETS ${PROJECT_NAME}
 ######################################################################
 
 set(DEVICE_LIBRARY_NAME helide_gpu)
-configure_file(${ANARI_CODE_GEN_ROOT}/device_trampoline.py.in ${CMAKE_CURRENT_BINARY_DIR}/__init__.py)
+configure_file(cmake/python_trampoline.py.in ${CMAKE_CURRENT_BINARY_DIR}/__init__.py)
 
 install(
   FILES ${CMAKE_CURRENT_BINARY_DIR}/__init__.py
