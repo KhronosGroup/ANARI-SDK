@@ -28,6 +28,11 @@ float Material::opacity() const
   return m_opacity;
 }
 
+const Sampler *Material::opacitySampler() const
+{
+  return m_opacitySampler.ptr;
+}
+
 int32_t Material::alphaMode() const
 {
   return m_alphaMode;
@@ -76,6 +81,11 @@ float Material::ior() const
 vec3 Material::emissive() const
 {
   return m_emissive;
+}
+
+const Sampler *Material::emissiveSampler() const
+{
+  return m_emissiveSampler.ptr;
 }
 
 Material *Material::createInstance(

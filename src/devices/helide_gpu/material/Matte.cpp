@@ -17,6 +17,7 @@ void Matte::commitParameters()
   m_colorSampler = nullptr;
   m_color = vec3(1.f);
   m_opacity = 1.f;
+  m_opacitySampler = nullptr;
   m_alphaMode = 0;
   m_alphaCutoff = 0.5f;
   m_metallic = 0.f;
@@ -27,6 +28,7 @@ void Matte::commitParameters()
   m_roughnessSampler = nullptr;
   m_ior = 1.5f;
   m_emissive = vec3(0.f);
+  m_emissiveSampler = nullptr;
 
   // "color" (matte subtype): accept sampler, string attribute name, or vec3
   {
@@ -45,6 +47,7 @@ void Matte::commitParameters()
 
   // Opacity and alpha mode
   m_opacity = getParam<float>("opacity", 1.f);
+  m_opacitySampler = getParamObject<Sampler>("opacity");
   m_alphaCutoff = getParam<float>("alphaCutoff", 0.5f);
   {
     const auto mode = getParamString("alphaMode", "opaque");
@@ -76,7 +79,7 @@ void Matte::commitParameters()
   }
 
   // physicallyBased's other parameters: metallic and roughness may also be a
-  // sampler or name a geometry attribute
+  // sampler or name a geometry attribute, emissive may be a sampler
   if (m_physicallyBased) {
     m_metallic = std::clamp(getParam<float>("metallic", 1.f), 0.f, 1.f);
     m_metallicAttribute = getParamString("metallic", "");
@@ -86,6 +89,7 @@ void Matte::commitParameters()
     m_roughnessSampler = getParamObject<Sampler>("roughness");
     m_ior = std::max(getParam<float>("ior", 1.5f), 1.f);
     m_emissive = getParam<vec3>("emissive", vec3(0.f));
+    m_emissiveSampler = getParamObject<Sampler>("emissive");
   }
 }
 

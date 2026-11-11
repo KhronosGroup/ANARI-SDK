@@ -3,7 +3,7 @@
 
 // The material inputs of the surface fragment shaders (triangle.frag,
 // sphere.frag): the material uniforms, and the samplers that may drive the
-// base color, metallic and roughness. Surface::pushFragmentUniforms() fills
+// base color, metallic, roughness, opacity and emissive. Surface::pushFragmentUniforms() fills
 // both uniform blocks; their C++ mirrors there must match the std140 layout.
 
 // Fragment samplers at set=2, binding=N (SDL3_gpu fragment sampler slot N),
@@ -11,11 +11,15 @@
 #define SAMPLER_COLOR 0
 #define SAMPLER_METALLIC 1
 #define SAMPLER_ROUGHNESS 2
-#define NUM_MATERIAL_SAMPLERS 3
+#define SAMPLER_OPACITY 3
+#define SAMPLER_EMISSIVE 4
+#define NUM_MATERIAL_SAMPLERS 5
 
 layout(set = 2, binding = 0) uniform sampler3D colorTex;
 layout(set = 2, binding = 1) uniform sampler3D metallicTex;
 layout(set = 2, binding = 2) uniform sampler3D roughnessTex;
+layout(set = 2, binding = 3) uniform sampler3D opacityTex;
+layout(set = 2, binding = 4) uniform sampler3D emissiveTex;
 
 // Fragment uniform buffer slot 0: material + attribute data
 layout(set = 3, binding = 0) uniform MaterialUniforms {
@@ -107,4 +111,20 @@ float materialRoughness(vec4 attrs[5], uint primIdx)
     if (mat_u.roughnessAttrIdx >= 0)
         return clamp(readAttribute(mat_u.roughnessAttrIdx, attrs).x, 0.0, 1.0);
     return mat_u.roughness;
+}
+
+float materialOpacity(vec4 attrs[5], uint primIdx)
+{
+    SamplerParams p = samp_u.p[SAMPLER_OPACITY];
+    if (p.mode != 0)
+        return evalSampler(opacityTex, p, attrs, primIdx).x;
+    return mat_u.opacity;
+}
+
+vec3 materialEmissive(vec4 attrs[5], uint primIdx)
+{
+    SamplerParams p = samp_u.p[SAMPLER_EMISSIVE];
+    if (p.mode != 0)
+        return evalSampler(emissiveTex, p, attrs, primIdx).rgb;
+    return mat_u.emissive.rgb;
 }
