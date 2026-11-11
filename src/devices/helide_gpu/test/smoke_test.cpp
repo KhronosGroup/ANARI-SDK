@@ -159,6 +159,178 @@ static bool renderGeometryScene(anari::Device d,
 }
 
 // ---------------------------------------------------------------------------
+// faceVarying attributes: an indexed quad whose two triangles share vertices 0
+// and 2 but carry different per-corner colors and normals, which must override
+// the per-vertex ones. Corner values indexed by vertex instead of by
+// 3 * primitive + corner would bleed between the triangles.
+// ---------------------------------------------------------------------------
+
+static bool renderFaceVaryingScene(anari::Device d, uvec2 imgSize, float aspect)
+{
+  const char *label = "faceVarying";
+
+  // Camera at (0.5, 0.5, 3) with a 60 degree fovy sees +-1.732 around the
+  // quad's center at z = 0.
+  vec3 positions[] = {
+      {-0.5f, -0.5f, 0.f},
+      {1.5f, -0.5f, 0.f},
+      {1.5f, 1.5f, 0.f},
+      {-0.5f, 1.5f, 0.f},
+  };
+  uvec3 indices[] = {{0, 1, 2}, {0, 2, 3}};
+  vec4 vertexColors[] = {
+      {1.f, 1.f, 1.f, 1.f},
+      {1.f, 1.f, 1.f, 1.f},
+      {1.f, 1.f, 1.f, 1.f},
+      {1.f, 1.f, 1.f, 1.f},
+  };
+  vec3 vertexNormals[] = {
+      {0.f, 0.f, 1.f}, {0.f, 0.f, 1.f}, {0.f, 0.f, 1.f}, {0.f, 0.f, 1.f}};
+  // Triangle 0 is red; triangle 1 is green except blue at its corner 2
+  vec4 fvColors[] = {
+      {1.f, 0.f, 0.f, 1.f},
+      {1.f, 0.f, 0.f, 1.f},
+      {1.f, 0.f, 0.f, 1.f},
+      {0.f, 1.f, 0.f, 1.f},
+      {0.f, 1.f, 0.f, 1.f},
+      {0.f, 0.f, 1.f, 1.f},
+  };
+  // Triangle 0 faces the camera; triangle 1 tilts 45 degrees toward +x
+  const float s = std::sqrt(0.5f);
+  vec3 fvNormals[] = {
+      {0.f, 0.f, 1.f},
+      {0.f, 0.f, 1.f},
+      {0.f, 0.f, 1.f},
+      {s, 0.f, s},
+      {s, 0.f, s},
+      {s, 0.f, s},
+  };
+
+  auto geom = anari::newObject<anari::Geometry>(d, "triangle");
+  anari::setParameterArray1D(d, geom, "vertex.position", positions, 4);
+  anari::setParameterArray1D(d, geom, "vertex.normal", vertexNormals, 4);
+  anari::setParameterArray1D(d, geom, "vertex.color", vertexColors, 4);
+  anari::setParameterArray1D(d, geom, "primitive.index", indices, 2);
+  anari::setParameterArray1D(d, geom, "faceVarying.color", fvColors, 6);
+  anari::setParameterArray1D(d, geom, "faceVarying.normal", fvNormals, 6);
+  anari::commitParameters(d, geom);
+
+  auto camera = anari::newObject<anari::Camera>(d, "perspective");
+  vec3 camPos = {0.5f, 0.5f, 3.f};
+  vec3 camDir = {0.f, 0.f, -1.f};
+  vec3 camUp = {0.f, 1.f, 0.f};
+  anari::setParameter(d, camera, "position", camPos);
+  anari::setParameter(d, camera, "direction", camDir);
+  anari::setParameter(d, camera, "up", camUp);
+  anari::setParameter(d, camera, "fovy", float(M_PI / 3.0));
+  anari::setParameter(d, camera, "aspect", aspect);
+  anari::commitParameters(d, camera);
+
+  auto mat = anari::newObject<anari::Material>(d, "matte");
+  anari::setParameter(d, mat, "color", "color");
+  anari::commitParameters(d, mat);
+
+  auto surface = anari::newObject<anari::Surface>(d);
+  anari::setAndReleaseParameter(d, surface, "geometry", geom);
+  anari::setAndReleaseParameter(d, surface, "material", mat);
+  anari::commitParameters(d, surface);
+
+  auto world = anari::newObject<anari::World>(d);
+  anari::setParameterArray1D(d, world, "surface", &surface, 1);
+  anari::release(d, surface);
+  anari::commitParameters(d, world);
+
+  auto renderer = anari::newObject<anari::Renderer>(d, "default");
+  vec4 bg = {0.0f, 0.0f, 0.0f, 1.f};
+  anari::setParameter(d, renderer, "background", bg);
+  anari::commitParameters(d, renderer);
+
+  auto frame = anari::newObject<anari::Frame>(d);
+  anari::setParameter(d, frame, "size", imgSize);
+  anari::setParameter(d, frame, "channel.color", ANARI_UFIXED8_VEC4);
+  anari::setParameter(d, frame, "channel.normal", ANARI_FLOAT32_VEC3);
+  anari::setAndReleaseParameter(d, frame, "renderer", renderer);
+  anari::setAndReleaseParameter(d, frame, "camera", camera);
+  anari::setAndReleaseParameter(d, frame, "world", world);
+  anari::commitParameters(d, frame);
+
+  printf("[smoke_test] %s: rendering...\n", label);
+  anari::render(d, frame);
+  anari::wait(d, frame);
+
+  // World point -> pixel (origin bottom-left)
+  const float halfExtent = 3.f * std::tan(float(M_PI / 6.0));
+  auto toPixel = [&](float wx, float wy) {
+    return std::array<unsigned int, 2>{
+        (unsigned int)(imgSize[0] * (0.5f + 0.5f * (wx - 0.5f) / halfExtent)),
+        (unsigned int)(imgSize[1] * (0.5f + 0.5f * (wy - 0.5f) / halfExtent))};
+  };
+  struct Sample
+  {
+    const char *name;
+    float wx, wy;
+    int dominant; // 0 = r, 1 = g, 2 = b
+    float normalX; // expected world normal x
+  };
+  // Triangle 1 points by barycentrics over (v0, v2, v3): (0.45, 0.45, 0.1)
+  // and (0.1, 0.1, 0.8)
+  const Sample samples[] = {
+      {"tri0", 1.2f, -0.2f, 0, 0.f},
+      {"tri1 corners 0,1", 0.4f, 0.6f, 1, s},
+      {"tri1 corner 2", -0.3f, 1.3f, 2, s},
+  };
+
+  bool ok = true;
+  auto fb = anari::map<RGBA8>(d, frame, "channel.color");
+  auto nb = anari::map<vec3>(d, frame, "channel.normal");
+  if (!fb.data || !nb.data) {
+    ok = false;
+  } else {
+    std::string outFile = std::string("smoke_") + label + ".png";
+    stbi_flip_vertically_on_write(1);
+    stbi_write_png(outFile.c_str(),
+        int(fb.width),
+        int(fb.height),
+        4,
+        fb.data,
+        4 * int(fb.width));
+
+    for (const auto &smp : samples) {
+      const auto px = toPixel(smp.wx, smp.wy);
+      const RGBA8 c = samplePixel(fb.data, imgSize, px[0], px[1]);
+      const vec3 n = nb.data[px[1] * imgSize[0] + px[0]];
+      const int ch[3] = {c.r, c.g, c.b};
+      const int dom = ch[smp.dominant];
+      const bool colorOk = dom > 32 && dom > 2 * ch[(smp.dominant + 1) % 3]
+          && dom > 2 * ch[(smp.dominant + 2) % 3];
+      const bool normalOk = std::fabs(n[0] - smp.normalX) < 0.05f;
+      printf(
+          "[smoke_test] %s: %-16s [%3u,%3u] rgb=(%3u,%3u,%3u) "
+          "n=(%.2f,%.2f,%.2f) => %s\n",
+          label,
+          smp.name,
+          px[0],
+          px[1],
+          c.r,
+          c.g,
+          c.b,
+          n[0],
+          n[1],
+          n[2],
+          colorOk && normalOk ? "PASS" : "FAIL");
+      ok = ok && colorOk && normalOk;
+    }
+  }
+  if (fb.data)
+    anari::unmap(d, frame, "channel.color");
+  if (nb.data)
+    anari::unmap(d, frame, "channel.normal");
+
+  anari::release(d, frame);
+  return ok;
+}
+
+// ---------------------------------------------------------------------------
 // main
 // ---------------------------------------------------------------------------
 
@@ -362,10 +534,13 @@ int main(int argc, const char **argv)
       renderGeometryScene(d, "curve", curve, imgSize, aspect);
   anari::release(d, curve);
 
+  const bool faceVaryingPassed = renderFaceVaryingScene(d, imgSize, aspect);
+
   // --- Cleanup ---
   anari::release(d, frame);
 
-  passed = passed && cylinderPassed && conePassed && curvePassed;
+  passed = passed && cylinderPassed && conePassed && curvePassed
+      && faceVaryingPassed;
 
   printf("[smoke_test] overall: %s\n", passed ? "PASS" : "FAIL");
 

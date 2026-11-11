@@ -18,7 +18,8 @@ layout(set = 1, binding = 0) uniform Transforms {
     mat4 MV;    // view * model
     mat4 M;     // model (world) transform
     uvec4 geomInfo;  // x=attrMask, y=hasSourcePrimitiveIds
-    uvec4 attrInfo;  // x=attrKind (per-prim bitmask), y=packedComponents
+    uvec4 attrInfo;  // x=attrKind (per-prim bitmask), y=packedComponents,
+                     // z=faceVarying (per-corner) bitmask
 } u;
 
 layout(location = 0) out vec3 vNormalView;
@@ -46,6 +47,15 @@ vec4 _fetchAttr(float x, float y, float z, float w, uint nc) {
     return vec4(x, y, z, (nc < 4u) ? 1.0 : w);
 }
 
+// The vertex stream is expanded per corner, so a faceVarying value's index
+// (3 * primitive + corner) is the vertex index
+uint attrIndex(uint bit, uint attrKind, uint faceVaryingMask, uint vid,
+               uint primIdx, uint posIdx) {
+    if ((faceVaryingMask & bit) != 0u)
+        return vid;
+    return ((attrKind & bit) != 0u) ? primIdx : posIdx;
+}
+
 void main()
 {
     uint vid = gl_VertexIndex;
@@ -63,6 +73,7 @@ void main()
 
     uint attrMask = u.geomInfo.x;
     uint attrKind = u.attrInfo.x;
+    uint faceVaryingMask = u.attrInfo.z;
 
     vColor = vec4(0.0);
     vAttr0 = vec4(0.0);
@@ -71,27 +82,27 @@ void main()
     vAttr3 = vec4(0.0);
 
     if ((attrMask & 1u) != 0u) {
-        uint ai = ((attrKind & 1u) != 0u) ? sourcePrimIndex : posIdx;
+        uint ai = attrIndex(1u, attrKind, faceVaryingMask, vid, sourcePrimIndex, posIdx);
         uint nc = getComponentCount(0u);
         vColor = FETCH_ATTR(attr0Data, ai, nc);
     }
     if ((attrMask & 2u) != 0u) {
-        uint ai = ((attrKind & 2u) != 0u) ? sourcePrimIndex : posIdx;
+        uint ai = attrIndex(2u, attrKind, faceVaryingMask, vid, sourcePrimIndex, posIdx);
         uint nc = getComponentCount(1u);
         vAttr0 = FETCH_ATTR(attr1Data, ai, nc);
     }
     if ((attrMask & 4u) != 0u) {
-        uint ai = ((attrKind & 4u) != 0u) ? sourcePrimIndex : posIdx;
+        uint ai = attrIndex(4u, attrKind, faceVaryingMask, vid, sourcePrimIndex, posIdx);
         uint nc = getComponentCount(2u);
         vAttr1 = FETCH_ATTR(attr2Data, ai, nc);
     }
     if ((attrMask & 8u) != 0u) {
-        uint ai = ((attrKind & 8u) != 0u) ? sourcePrimIndex : posIdx;
+        uint ai = attrIndex(8u, attrKind, faceVaryingMask, vid, sourcePrimIndex, posIdx);
         uint nc = getComponentCount(3u);
         vAttr2 = FETCH_ATTR(attr3Data, ai, nc);
     }
     if ((attrMask & 16u) != 0u) {
-        uint ai = ((attrKind & 16u) != 0u) ? sourcePrimIndex : posIdx;
+        uint ai = attrIndex(16u, attrKind, faceVaryingMask, vid, sourcePrimIndex, posIdx);
         uint nc = getComponentCount(4u);
         vAttr3 = FETCH_ATTR(attr4Data, ai, nc);
     }

@@ -32,6 +32,7 @@ struct TriangleGPUState
   uint32_t posCount{0};
   uint32_t attrMask{0}; // bit i = slot i has data
   uint32_t attrKind{0}; // bit i = slot i is per-primitive
+  uint32_t faceVaryingMask{0}; // bit i = slot i is per-corner (faceVarying)
   uint32_t packedComponents{0}; // 4 bits per slot
   vec4 uniformAttr[NUM_ATTR_SLOTS]{}; // fallback [color, attr0..3]
   bool hasIndices{false};
@@ -67,10 +68,13 @@ struct Triangle : public Geometry
   helium::ChangeObserverPtr<Array1D> m_normals;
   helium::ChangeObserverPtr<Array1D> m_indices;
 
-  // Per-vertex and per-primitive arrays for each attribute slot
+  // Per-vertex, per-primitive and per-corner (faceVarying, indexed by
+  // 3 * primitive + corner) arrays for each attribute slot
   // Slot 0 = color, 1-4 = attribute0..3
   std::vector<helium::ChangeObserverPtr<Array1D>> m_vertexAttr;
   std::vector<helium::ChangeObserverPtr<Array1D>> m_primitiveAttr;
+  std::vector<helium::ChangeObserverPtr<Array1D>> m_faceVaryingAttr;
+  helium::ChangeObserverPtr<Array1D> m_faceVaryingNormal;
 
   TriangleGPUState m_gpuState;
 };
