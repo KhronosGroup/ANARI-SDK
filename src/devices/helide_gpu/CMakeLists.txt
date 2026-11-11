@@ -145,6 +145,7 @@ compile_shader_to_header(frag
   ${CMAKE_CURRENT_BINARY_DIR}/triangle.frag.spv
   ${CMAKE_CURRENT_BINARY_DIR}/triangle_frag_spv.h
   triangle_frag_spv
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/material.glsl
   ${CMAKE_CURRENT_SOURCE_DIR}/shaders/shading.glsl
   ${CMAKE_CURRENT_SOURCE_DIR}/shaders/ambient_packing.glsl)
 
@@ -184,6 +185,7 @@ compile_shader_to_header(frag
   ${CMAKE_CURRENT_BINARY_DIR}/sphere.frag.spv
   ${CMAKE_CURRENT_BINARY_DIR}/sphere_frag_spv.h
   sphere_frag_spv
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/material.glsl
   ${CMAKE_CURRENT_SOURCE_DIR}/shaders/shading.glsl
   ${CMAKE_CURRENT_SOURCE_DIR}/shaders/ambient_packing.glsl)
 

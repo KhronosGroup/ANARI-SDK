@@ -21,8 +21,9 @@ over per-primitive. `faceVarying.tangent` is accepted and ignored.
 Surfaces are shaded with the lighting model of OpenUSD Storm's
 UsdPreviewSurface (`shaders/shading.glsl`): Lambert diffuse plus a GGX specular
 lobe with Schlick Fresnel, in the metallic workflow. `matte` is metallic 0 and
-roughness 1; `physicallyBased` takes `metallic` and `roughness` (a value or a
-geometry attribute), `ior` and `emissive`.
+roughness 1; `physicallyBased` takes `metallic` and `roughness` (a value, a
+geometry attribute or a sampler, whose first output component is used), `ior`
+and `emissive`.
 
 Lights are `directional`, `point`, `spot` and `quad` (up to 16 in a frame,
 counting instanced ones). The renderer's light (`ambientRadiance` times

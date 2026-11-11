@@ -58,6 +58,16 @@ const std::string &Material::roughnessAttribute() const
   return m_roughnessAttribute;
 }
 
+const Sampler *Material::metallicSampler() const
+{
+  return m_metallicSampler.ptr;
+}
+
+const Sampler *Material::roughnessSampler() const
+{
+  return m_roughnessSampler.ptr;
+}
+
 float Material::ior() const
 {
   return m_ior;

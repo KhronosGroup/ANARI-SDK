@@ -32,6 +32,10 @@ struct Material : public Object
   // geometry attributes for metallic and roughness, empty = uniform value
   const std::string &metallicAttribute() const;
   const std::string &roughnessAttribute() const;
+  // samplers for metallic and roughness (their first output component), which
+  // take precedence over the attribute and the value
+  const Sampler *metallicSampler() const;
+  const Sampler *roughnessSampler() const;
   float ior() const;
   vec3 emissive() const;
 
@@ -46,6 +50,8 @@ struct Material : public Object
   float m_roughness{1.f};
   std::string m_metallicAttribute;
   std::string m_roughnessAttribute;
+  helium::IntrusivePtr<Sampler> m_metallicSampler;
+  helium::IntrusivePtr<Sampler> m_roughnessSampler;
   float m_ior{1.5f};
   vec3 m_emissive{0.f};
 };

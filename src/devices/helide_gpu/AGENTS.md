@@ -57,7 +57,8 @@ devices/helide_gpu/
 ├── sampler/        # Sampler base
 ├── scene/          # Group, Instance, World
 ├── shaders/        # GLSL → SPIR-V at build time; shading.glsl holds the
-│                   #   Storm-derived lighting both surface shaders include
+│                   #   Storm-derived lighting and material.glsl the material
+│                   #   uniforms and samplers both surface shaders include
 ├── spatial_field/  # SpatialField base
 ├── surface/        # Surface
 ├── volume/         # Volume base

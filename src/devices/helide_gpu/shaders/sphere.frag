@@ -20,37 +20,9 @@ layout(location = 1) out uvec4 outIds;    // A: packed ambient light
 layout(location = 2) out vec4 outAlbedo;
 layout(location = 3) out vec4 outNormal;
 
-// Fragment sampler at set=2, binding=0
-layout(set = 2, binding = 0) uniform sampler3D texSampler;
-
-// Fragment uniform buffer slot 0: material + attribute data
-layout(set = 3, binding = 0) uniform MaterialUniforms {
-    vec4 baseColor;
-    vec4 uniformAttr[5];
-    uint attrMask;
-    int  colorAttrIndex;
-    int  samplerMode;
-    int  texCoordAttrIdx;
-    float opacity;
-    int   alphaMode;
-    float alphaCutoff;
-    float metallic;
-    float roughness;
-    float ior;
-    int   metallicAttrIdx;   // attribute slot for metallic (-1 = uniform)
-    int   roughnessAttrIdx;  // attribute slot for roughness (-1 = uniform)
-    vec4  emissive;
-} mat_u;
-
-// Fragment uniform buffer slot 1: sampler transforms
-layout(set = 3, binding = 1) uniform SamplerTransforms {
-    mat4 inTransform;
-    vec4 inOffset;
-    mat4 outTransform;
-    vec4 outOffset;
-    uint primitiveOffset;
-    uint arraySize;
-} samp_u;
+// The material uniforms and samplers (fragment sampler slots 0..2, uniform
+// buffer slots 0 and 1)
+#include "material.glsl"
 
 // Fragment uniform buffer slot 2: lighting (LightingUniforms)
 #include "shading.glsl"
@@ -101,42 +73,9 @@ void main()
     // Gather all attribute varyings into an indexable array
     vec4 attrs[5] = vec4[5](vColor, vAttr0, vAttr1, vAttr2, vAttr3);
 
-    // Resolve the surface color based on samplerMode (same logic as triangle)
-    vec3 color;
-    if (mat_u.samplerMode == 2) {
-        int idx = mat_u.texCoordAttrIdx;
-        vec4 attrVal = ((mat_u.attrMask & (1u << idx)) != 0u)
-            ? attrs[idx]
-            : mat_u.uniformAttr[idx];
-        vec4 tc = samp_u.inTransform * attrVal + samp_u.inOffset;
-        vec4 sampled = texture(texSampler, tc.xyz);
-        vec4 result = samp_u.outTransform * sampled + samp_u.outOffset;
-        color = result.xyz;
-    } else if (mat_u.samplerMode == 3) {
-        // Transform sampler: read attribute, apply in+out transforms
-        int idx = mat_u.texCoordAttrIdx;
-        vec4 attrVal = ((mat_u.attrMask & (1u << idx)) != 0u)
-            ? attrs[idx]
-            : mat_u.uniformAttr[idx];
-        vec4 transformed = samp_u.inTransform * attrVal + samp_u.inOffset;
-        vec4 result = samp_u.outTransform * transformed + samp_u.outOffset;
-        color = result.xyz;
-    } else if (mat_u.samplerMode == 4) {
-        // Primitive sampler: lookup per-sphere data from 1D texture
-        // Use vInstanceIndex (sphere index), not gl_PrimitiveID (icosphere face)
-        uint primIdx = uint(vInstanceIndex) + samp_u.primitiveOffset;
-        float u = (float(primIdx) + 0.5) / float(samp_u.arraySize);
-        vec4 sampled = texture(texSampler, vec3(u, 0.5, 0.5));
-        vec4 result = samp_u.outTransform * sampled + samp_u.outOffset;
-        color = result.xyz;
-    } else if (mat_u.colorAttrIndex >= 0) {
-        int idx = mat_u.colorAttrIndex;
-        color = ((mat_u.attrMask & (1u << idx)) != 0u)
-            ? attrs[idx].xyz
-            : mat_u.uniformAttr[idx].xyz;
-    } else {
-        color = mat_u.baseColor.xyz;
-    }
+    // Primitive samplers index by the sphere, not gl_PrimitiveID (an icosphere face)
+    uint primIdx = uint(vInstanceIndex);
+    vec3 color = materialColor(attrs, primIdx);
 
     // Screen door transparency
     if (mat_u.alphaMode == 1) {
@@ -158,18 +97,8 @@ void main()
     // viewer)
     vec3 P = hitView;
     vec3 N = normalView;
-    float metallic = mat_u.metallic;
-    if (mat_u.metallicAttrIdx >= 0) {
-        int idx = mat_u.metallicAttrIdx;
-        metallic = clamp(((mat_u.attrMask & (1u << idx)) != 0u)
-            ? attrs[idx].x : mat_u.uniformAttr[idx].x, 0.0, 1.0);
-    }
-    float roughness = mat_u.roughness;
-    if (mat_u.roughnessAttrIdx >= 0) {
-        int idx = mat_u.roughnessAttrIdx;
-        roughness = clamp(((mat_u.attrMask & (1u << idx)) != 0u)
-            ? attrs[idx].x : mat_u.uniformAttr[idx].x, 0.0, 1.0);
-    }
+    float metallic = materialMetallic(attrs, primIdx);
+    float roughness = materialRoughness(attrs, primIdx);
     ShadingResult shading =
         shade(P, N, color, metallic, roughness, mat_u.ior);
     vec3 direct = shading.direct + mat_u.emissive.rgb;
