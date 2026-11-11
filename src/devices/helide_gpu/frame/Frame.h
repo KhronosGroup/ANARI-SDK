@@ -27,7 +27,8 @@ struct FrameGPUState
   GPUTexture depthTarget;
   void *mappedDepthPtr{nullptr};
 
-  // Packed ID target: R=primitiveId, G=objectId, B=instanceId (RGBA32_UINT)
+  // Packed ID target: R=primitiveId, G=objectId, B=instanceId (RGBA32_UINT),
+  // A=the surface's packed ambient light (shaders/ambient_packing.glsl)
   GPUTexture idsTarget;
 
   GPUTexture albedoTarget;
@@ -81,7 +82,13 @@ struct Frame : public helium::BaseFrame
   void gpu_allocateObjects();
   void gpu_freeObjects();
   void gpu_renderFrame();
-  void gpu_renderFrame_geometryPass(SDL_GPUCommandBuffer *cmd);
+  // 'deferAmbient': leave the ambient light out of the color target, for the
+  // composite pass to add after ambient occlusion
+  void gpu_renderFrame_geometryPass(
+      SDL_GPUCommandBuffer *cmd, bool deferAmbient);
+  // Pushes the lighting uniforms (shaders/shading.glsl LightingUniforms)
+  void gpu_pushLightingUniforms(
+      SDL_GPUCommandBuffer *cmd, const mat4 &V, bool deferAmbient);
   // Runs the SSAO and blur passes with world-space occlusion radius 'radius'
   // (> 0); returns the texture holding the blurred occlusion factor
   SDL_GPUTexture *gpu_renderFrame_ssaoPass(
@@ -130,6 +137,8 @@ struct Frame : public helium::BaseFrame
   std::chrono::time_point<std::chrono::steady_clock> m_renderEndTime;
   float m_duration{0.f};
   helium::TimeStamp m_frameLastRendered{0};
+  // the world light count last warned about exceeding the shaders' limit
+  size_t m_lastWarnedLightCount{0};
 };
 
 // Inlined definitions ////////////////////////////////////////////////////////

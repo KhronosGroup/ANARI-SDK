@@ -19,7 +19,13 @@ struct Renderer : public Object
   void finalize() override;
 
   vec4 background() const;
+  // The renderer's light, split between a uniform ambient fill (radiance
+  // (1 - eyeLightBlendRatio) * ambientRadiance * ambientColor) and a headlight
+  // (eyeLightBlendRatio * ambientRadiance) that only lights a world without
+  // lights. With 'ignoreAmbientLighting', ambientRadiance is 1 and
+  // ambientColor white.
   float ambientRadiance() const;
+  vec3 ambientColor() const;
   float eyeLightBlendRatio() const;
 
   // Screen-space ambient occlusion, as in halcyon's preview renderer
@@ -35,6 +41,7 @@ struct Renderer : public Object
  private:
   vec4 m_background{0.f, 0.f, 0.f, 1.f};
   float m_ambientRadiance{1.f};
+  vec3 m_ambientColor{1.f};
   float m_eyeLightBlendRatio{0.5f};
 
   bool m_ignoreAmbientLighting{true};

@@ -17,8 +17,6 @@ struct SurfaceDrawContext
   mat4 MV;
   mat4 M;
   mat4 P;
-  float ambientRadiance;
-  float eyeLightBlendRatio;
   uint32_t objectId;
   uint32_t instanceId;
 };

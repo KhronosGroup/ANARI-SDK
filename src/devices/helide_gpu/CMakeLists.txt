@@ -66,13 +66,15 @@ anari_sdk_fetch_project(
 
 ## Shader compilation: GLSL -> SPIR-V -> C header ##
 
+# Extra arguments: files the shader #includes (from shaders/)
 function(compile_shader_to_header stage source out_spv out_header sym)
   get_filename_component(source_abs "${source}" ABSOLUTE)
   add_custom_command(
     OUTPUT "${out_spv}"
     COMMAND ${GLSLANG_VALIDATOR} -V --target-env vulkan1.0
+            -I${CMAKE_CURRENT_SOURCE_DIR}/shaders
             -S ${stage} "${source_abs}" -o "${out_spv}"
-    DEPENDS "${source_abs}"
+    DEPENDS "${source_abs}" ${ARGN}
     COMMENT "Compiling ${source} to SPIR-V"
   )
   add_custom_command(
@@ -142,7 +144,9 @@ compile_shader_to_header(frag
   ${CMAKE_CURRENT_SOURCE_DIR}/shaders/triangle.frag
   ${CMAKE_CURRENT_BINARY_DIR}/triangle.frag.spv
   ${CMAKE_CURRENT_BINARY_DIR}/triangle_frag_spv.h
-  triangle_frag_spv)
+  triangle_frag_spv
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/shading.glsl
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/ambient_packing.glsl)
 
 compile_shader_to_header(vert
   ${CMAKE_CURRENT_SOURCE_DIR}/shaders/fullscreen.vert
@@ -166,7 +170,8 @@ compile_shader_to_header(frag
   ${CMAKE_CURRENT_SOURCE_DIR}/shaders/composite.frag
   ${CMAKE_CURRENT_BINARY_DIR}/composite.frag.spv
   ${CMAKE_CURRENT_BINARY_DIR}/composite_frag_spv.h
-  composite_frag_spv)
+  composite_frag_spv
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/ambient_packing.glsl)
 
 compile_shader_to_header(vert
   ${CMAKE_CURRENT_SOURCE_DIR}/shaders/sphere.vert
@@ -178,7 +183,9 @@ compile_shader_to_header(frag
   ${CMAKE_CURRENT_SOURCE_DIR}/shaders/sphere.frag
   ${CMAKE_CURRENT_BINARY_DIR}/sphere.frag.spv
   ${CMAKE_CURRENT_BINARY_DIR}/sphere_frag_spv.h
-  sphere_frag_spv)
+  sphere_frag_spv
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/shading.glsl
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/ambient_packing.glsl)
 
 compile_shader_to_header(vert
   ${CMAKE_CURRENT_SOURCE_DIR}/shaders/volume.vert

@@ -2,10 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Matte.h"
+// std
+#include <algorithm>
 
 namespace helide_gpu {
 
-Matte::Matte(HelideGPUDeviceGlobalState *s) : Material(s) {}
+Matte::Matte(HelideGPUDeviceGlobalState *s, bool physicallyBased)
+    : Material(s), m_physicallyBased(physicallyBased)
+{}
 
 void Matte::commitParameters()
 {
@@ -15,6 +19,12 @@ void Matte::commitParameters()
   m_opacity = 1.f;
   m_alphaMode = 0;
   m_alphaCutoff = 0.5f;
+  m_metallic = 0.f;
+  m_roughness = 1.f;
+  m_metallicAttribute.clear();
+  m_roughnessAttribute.clear();
+  m_ior = 1.5f;
+  m_emissive = vec3(0.f);
 
   // "color" (matte subtype): accept sampler, string attribute name, or vec3
   {
@@ -61,6 +71,17 @@ void Matte::commitParameters()
         m_color = getParam<vec3>("baseColor", m_color);
       }
     }
+  }
+
+  // physicallyBased's other parameters: metallic and roughness may also name
+  // a geometry attribute, a sampler falls back to the default
+  if (m_physicallyBased) {
+    m_metallic = std::clamp(getParam<float>("metallic", 1.f), 0.f, 1.f);
+    m_metallicAttribute = getParamString("metallic", "");
+    m_roughness = std::clamp(getParam<float>("roughness", 1.f), 0.f, 1.f);
+    m_roughnessAttribute = getParamString("roughness", "");
+    m_ior = std::max(getParam<float>("ior", 1.5f), 1.f);
+    m_emissive = getParam<vec3>("emissive", vec3(0.f));
   }
 }
 

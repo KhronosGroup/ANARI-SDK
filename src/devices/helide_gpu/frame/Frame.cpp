@@ -234,10 +234,12 @@ void Frame::gpu_allocateObjects()
 
   // Albedo and normal render targets (always created -- required by MRT
   // pipeline). The SSAO and blur passes sample the normal target, which
-  // holds the world-space normal in .xyz and the view depth in .w.
+  // holds the world-space normal in .xyz and the view depth in .w; the
+  // composite pass samples the albedo target's .w, the opacity of a volume
+  // in front of the surface.
   m_gpuState.albedoTarget = GPUTexture(dev,
       SDL_GPU_TEXTUREFORMAT_R32G32B32A32_FLOAT,
-      SDL_GPU_TEXTUREUSAGE_COLOR_TARGET);
+      SDL_GPU_TEXTUREUSAGE_COLOR_TARGET | SDL_GPU_TEXTUREUSAGE_SAMPLER);
   m_gpuState.albedoTarget.alloc(width, height);
 
   m_gpuState.normalTarget = GPUTexture(dev,
@@ -299,8 +301,6 @@ void Frame::gpu_renderFrame()
   if (!cmd)
     return;
 
-  gpu_renderFrame_geometryPass(cmd);
-
   auto *cam = dynamic_cast<Camera *>(m_camera.ptr);
   auto &gpuPipelines = deviceState()->gpu;
 
@@ -312,6 +312,9 @@ void Frame::gpu_renderFrame()
       && gpuPipelines.blurPipeline && gpuPipelines.compositePipeline
       && m_gpuState.aoTarget && m_gpuState.aoBlurTarget
       && m_gpuState.colorTargetB && cam;
+
+  // With ambient occlusion, the composite pass adds the ambient light
+  gpu_renderFrame_geometryPass(cmd, doSSAO);
 
   // The composite pass also applies sRGB output encoding, so run it whenever
   // the application requested an sRGB frame channel even without SSAO.
@@ -332,7 +335,8 @@ void Frame::gpu_renderFrame()
       std::chrono::duration<float>(m_renderEndTime - m_renderStartTime).count();
 }
 
-void Frame::gpu_renderFrame_geometryPass(SDL_GPUCommandBuffer *cmd)
+void Frame::gpu_renderFrame_geometryPass(
+    SDL_GPUCommandBuffer *cmd, bool deferAmbient)
 {
   auto bgc = m_renderer ? m_renderer->background() : vec4(1.f, 0.f, 1.f, 1.f);
 
@@ -392,6 +396,10 @@ void Frame::gpu_renderFrame_geometryPass(SDL_GPUCommandBuffer *cmd)
         0, 0, static_cast<int>(m_size.x), static_cast<int>(m_size.y)};
     SDL_SetGPUScissor(pass, &scissor);
 
+    // the same for every surface: pushed once, as uniform data stays bound
+    // for the command buffer's later draws
+    gpu_pushLightingUniforms(cmd, V, deferAmbient);
+
     for (auto *instance : m_world->instances()) {
       if (!instance || !instance->isValid())
         continue;
@@ -413,8 +421,6 @@ void Frame::gpu_renderFrame_geometryPass(SDL_GPUCommandBuffer *cmd)
           ctx.MV = MV;
           ctx.M = M;
           ctx.P = P;
-          ctx.ambientRadiance = m_renderer->ambientRadiance();
-          ctx.eyeLightBlendRatio = m_renderer->eyeLightBlendRatio();
           ctx.objectId = surface->id();
           ctx.instanceId = instance->id(t);
           surface->draw(pass, cmd, ctx);
@@ -456,6 +462,82 @@ void Frame::gpu_renderFrame_geometryPass(SDL_GPUCommandBuffer *cmd)
   }
 
   SDL_EndGPURenderPass(pass);
+}
+
+void Frame::gpu_pushLightingUniforms(
+    SDL_GPUCommandBuffer *cmd, const mat4 &V, bool deferAmbient)
+{
+  // matches LightingUniforms in shaders/shading.glsl (std140)
+  constexpr int MAX_LIGHTS = 16;
+  constexpr float LIGHT_HEADLIGHT = 3.f;
+  constexpr float PI = 3.14159265358979f;
+
+  struct LightData
+  {
+    vec4 position;
+    vec4 direction;
+    vec4 radiance;
+  };
+
+  struct LightingUniforms
+  {
+    vec4 ambient;
+    int32_t numLights;
+    int32_t deferAmbient;
+    int32_t perspective;
+    int32_t _pad;
+    LightData lights[MAX_LIGHTS];
+  } u{};
+
+  const float blend = m_renderer->eyeLightBlendRatio();
+  const float radiance = m_renderer->ambientRadiance();
+  u.ambient = vec4((1.f - blend) * radiance * m_renderer->ambientColor(), 0.f);
+  u.deferAmbient = deferAmbient ? 1 : 0;
+  // a perspective projection's w is -z (P[2][3] == -1), an orthographic's 1
+  const float frameAspect = float(m_size.x) / float(m_size.y);
+  u.perspective = m_camera->projMatrix(frameAspect)[2][3] != 0.f ? 1 : 0;
+
+  // The world's lights, instanced like its surfaces, in view space
+  size_t numWorldLights = 0;
+  for (auto *instance : m_world->instances()) {
+    if (!instance || !instance->isValid() || !instance->group())
+      continue;
+    for (size_t t = 0; t < instance->numTransforms(); t++) {
+      const mat4 MV = V * instance->xfm(t);
+      for (auto *light : instance->group()->lights()) {
+        if (!light || !light->isValid())
+          continue;
+        if (numWorldLights++ >= MAX_LIGHTS)
+          continue;
+        auto &l = u.lights[u.numLights++];
+        const vec3 dir = vec3(MV * vec4(light->direction(), 0.f));
+        const float len = glm::length(dir);
+        l.position = vec4(vec3(MV * vec4(light->position(), 1.f)),
+            float(static_cast<int32_t>(light->type())));
+        l.direction = vec4(len > 0.f ? dir / len : vec3(0.f, 0.f, -1.f),
+            light->cosOuterAngle());
+        l.radiance = vec4(light->radiance(), light->cosInnerAngle());
+      }
+    }
+  }
+
+  if (numWorldLights > MAX_LIGHTS && numWorldLights != m_lastWarnedLightCount) {
+    m_lastWarnedLightCount = numWorldLights;
+    reportMessage(ANARI_SEVERITY_WARNING,
+        "helide_gpu shades with only the first %d of the world's %zu lights",
+        MAX_LIGHTS,
+        numWorldLights);
+  }
+
+  // A world without lights gets the headlight, scaled so that its Lambert
+  // term is eyeLightBlendRatio * ambientRadiance at normal incidence
+  if (numWorldLights == 0 && blend > 0.f) {
+    auto &l = u.lights[u.numLights++];
+    l.position = vec4(vec3(0.f), LIGHT_HEADLIGHT);
+    l.radiance = vec4(vec3(PI * blend * radiance), 0.f);
+  }
+
+  SDL_PushGPUFragmentUniformData(cmd, 2, &u, sizeof(u));
 }
 
 SDL_GPUTexture *Frame::gpu_renderFrame_ssaoPass(
@@ -605,14 +687,19 @@ void Frame::gpu_renderFrame_compositePass(
   SDL_SetGPUViewport(compPass, &viewport);
   SDL_SetGPUScissor(compPass, &scissor);
 
-  SDL_GPUTextureSamplerBinding compSamplers[2]{};
+  SDL_GPUTextureSamplerBinding compSamplers[4]{};
   compSamplers[0].texture = m_gpuState.colorTarget.sdlTexture();
   compSamplers[0].sampler = state.gpu.linearClampSampler;
   // Without ambient occlusion, bind the color target as a dummy (the shader
   // doesn't read it, per the applyAO flag)
   compSamplers[1].texture = aoTex ? aoTex : m_gpuState.colorTarget.sdlTexture();
   compSamplers[1].sampler = state.gpu.linearClampSampler;
-  SDL_BindGPUFragmentSamplers(compPass, 0, compSamplers, 2);
+  // the packed ambient light and the opacity of volumes in front of it
+  compSamplers[2].texture = m_gpuState.idsTarget.sdlTexture();
+  compSamplers[2].sampler = state.gpu.nearestClampSampler;
+  compSamplers[3].texture = m_gpuState.albedoTarget.sdlTexture();
+  compSamplers[3].sampler = state.gpu.nearestClampSampler;
+  SDL_BindGPUFragmentSamplers(compPass, 0, compSamplers, 4);
 
   struct CompositeUniforms
   {

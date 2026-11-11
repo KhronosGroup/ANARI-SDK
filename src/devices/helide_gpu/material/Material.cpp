@@ -38,11 +38,43 @@ float Material::alphaCutoff() const
   return m_alphaCutoff;
 }
 
+float Material::metallic() const
+{
+  return m_metallic;
+}
+
+float Material::roughness() const
+{
+  return m_roughness;
+}
+
+const std::string &Material::metallicAttribute() const
+{
+  return m_metallicAttribute;
+}
+
+const std::string &Material::roughnessAttribute() const
+{
+  return m_roughnessAttribute;
+}
+
+float Material::ior() const
+{
+  return m_ior;
+}
+
+vec3 Material::emissive() const
+{
+  return m_emissive;
+}
+
 Material *Material::createInstance(
     std::string_view subtype, HelideGPUDeviceGlobalState *s)
 {
-  if (subtype == "matte" || subtype == "physicallyBased")
-    return new Matte(s);
+  if (subtype == "matte")
+    return new Matte(s, false);
+  else if (subtype == "physicallyBased")
+    return new Matte(s, true);
   return (Material *)new UnknownObject(ANARI_MATERIAL, s);
 }
 

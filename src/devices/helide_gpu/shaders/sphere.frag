@@ -1,4 +1,5 @@
 #version 450
+#extension GL_GOOGLE_include_directive : require
 
 layout(location = 0) flat in vec3 vCenterView;
 layout(location = 1) flat in float vRadius;
@@ -15,7 +16,7 @@ layout(location = 14) in vec3 vPosWorld;
 layout(location = 15) flat in vec3 vEyeWorld;
 
 layout(location = 0) out vec4 FragColor;
-layout(location = 1) out uvec4 outIds;
+layout(location = 1) out uvec4 outIds;    // A: packed ambient light
 layout(location = 2) out vec4 outAlbedo;
 layout(location = 3) out vec4 outNormal;
 
@@ -33,6 +34,12 @@ layout(set = 3, binding = 0) uniform MaterialUniforms {
     float opacity;
     int   alphaMode;
     float alphaCutoff;
+    float metallic;
+    float roughness;
+    float ior;
+    int   metallicAttrIdx;   // attribute slot for metallic (-1 = uniform)
+    int   roughnessAttrIdx;  // attribute slot for roughness (-1 = uniform)
+    vec4  emissive;
 } mat_u;
 
 // Fragment uniform buffer slot 1: sampler transforms
@@ -45,11 +52,8 @@ layout(set = 3, binding = 1) uniform SamplerTransforms {
     uint arraySize;
 } samp_u;
 
-// Fragment uniform buffer slot 2: renderer parameters
-layout(set = 3, binding = 2) uniform RendererUniforms {
-    float eyeLightBlendRatio;
-    float ambientRadiance;
-} rend_u;
+// Fragment uniform buffer slot 2: lighting (LightingUniforms)
+#include "shading.glsl"
 
 // Fragment uniform buffer slot 3: per-draw-call ID data
 layout(set = 3, binding = 3) uniform IDUniforms {
@@ -150,14 +154,31 @@ void main()
             discard;
     }
 
-    // Eye-light shading
-    vec3 N = normalize(normalView);
-    vec3 L = normalize(-hitView);  // vector from hit toward camera
-    float falloff = max(dot(N, L), 0.0);
-    FragColor = vec4(color * mix(1.0, falloff, rend_u.eyeLightBlendRatio) * rend_u.ambientRadiance, 1.0);
+    // Storm's UsdPreviewSurface shading (the ray hits the side facing the
+    // viewer)
+    vec3 P = hitView;
+    vec3 N = normalView;
+    float metallic = mat_u.metallic;
+    if (mat_u.metallicAttrIdx >= 0) {
+        int idx = mat_u.metallicAttrIdx;
+        metallic = clamp(((mat_u.attrMask & (1u << idx)) != 0u)
+            ? attrs[idx].x : mat_u.uniformAttr[idx].x, 0.0, 1.0);
+    }
+    float roughness = mat_u.roughness;
+    if (mat_u.roughnessAttrIdx >= 0) {
+        int idx = mat_u.roughnessAttrIdx;
+        roughness = clamp(((mat_u.attrMask & (1u << idx)) != 0u)
+            ? attrs[idx].x : mat_u.uniformAttr[idx].x, 0.0, 1.0);
+    }
+    ShadingResult shading =
+        shade(P, N, color, metallic, roughness, mat_u.ior);
+    vec3 direct = shading.direct + mat_u.emissive.rgb;
+    FragColor = vec4(
+        light_u.deferAmbient != 0 ? direct : direct + shading.ambient, 1.0);
 
     // Per-pixel ID outputs
-    outIds = uvec4(uint(gl_PrimitiveID), id_u.objectId, id_u.instanceId, 0u);
+    outIds = uvec4(uint(gl_PrimitiveID), id_u.objectId, id_u.instanceId,
+        packAmbient(shading.ambient));
 
     // Albedo and world-space normal
     outAlbedo = vec4(color, 0.0);
