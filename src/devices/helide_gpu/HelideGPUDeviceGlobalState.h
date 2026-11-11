@@ -36,9 +36,7 @@ struct HelideGPUDeviceGlobalState : public helium::BaseGlobalDeviceState
     // pulls all real vertex data from SSBOs via gl_VertexIndex.
     SDL_GPUBuffer *dummyVertexBuffer{nullptr};
 
-    // SSAO shared resources
-    SDL_GPUTexture *ssaoNoiseTex{nullptr};
-    SDL_GPUSampler *ssaoNoiseSampler{nullptr};
+    // Post-process samplers
     SDL_GPUSampler *linearClampSampler{nullptr};
     SDL_GPUSampler *nearestClampSampler{nullptr};
 

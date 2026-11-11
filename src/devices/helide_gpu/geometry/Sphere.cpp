@@ -61,6 +61,7 @@ void Sphere::commitParameters()
 
 void Sphere::finalize()
 {
+  updateBounds();
   if (!m_positions) {
     reportMessage(ANARI_SEVERITY_WARNING,
         "missing required parameter 'vertex.position' on sphere geometry");
@@ -69,7 +70,7 @@ void Sphere::finalize()
   gpu_enqueue_method(this, &Sphere::gpu_finalizeGeometry);
 }
 
-box3 Sphere::bounds() const
+box3 Sphere::computeBounds() const
 {
   box3 b;
   if (m_positions) {

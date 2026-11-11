@@ -33,7 +33,8 @@ struct FrameGPUState
   GPUTexture albedoTarget;
   GPUTexture normalTarget;
 
-  // SSAO post-process targets
+  // SSAO post-process targets: the SSAO pass writes aoTarget, the blur
+  // passes ping-pong between the two
   GPUTexture aoTarget;
   GPUTexture aoBlurTarget;
   GPUTexture colorTargetB; // composite output (ping-pong)
@@ -81,9 +82,12 @@ struct Frame : public helium::BaseFrame
   void gpu_freeObjects();
   void gpu_renderFrame();
   void gpu_renderFrame_geometryPass(SDL_GPUCommandBuffer *cmd);
-  void gpu_renderFrame_ssaoPass(SDL_GPUCommandBuffer *cmd, const Camera *cam);
+  // Runs the SSAO and blur passes with world-space occlusion radius 'radius'
+  // (> 0); returns the texture holding the blurred occlusion factor
+  SDL_GPUTexture *gpu_renderFrame_ssaoPass(
+      SDL_GPUCommandBuffer *cmd, const Camera *cam, float radius);
   void gpu_renderFrame_compositePass(
-      SDL_GPUCommandBuffer *cmd, bool doSSAO, bool needsSRGB);
+      SDL_GPUCommandBuffer *cmd, SDL_GPUTexture *aoTex, bool needsSRGB);
   void gpu_renderFrame_downloadPass(
       SDL_GPUCommandBuffer *cmd, bool doComposite);
   void gpu_mapColorBuffer();

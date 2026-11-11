@@ -22,6 +22,9 @@ struct World : public Object
   void finalize() override;
 
   const std::vector<Instance *> &instances() const;
+  // The bounds of the valid instances' surfaces and volumes, empty
+  // (inverted) for none
+  box3 bounds() const;
 
  private:
   helium::ChangeObserverPtr<ObjectArray> m_zeroSurfaceData;
