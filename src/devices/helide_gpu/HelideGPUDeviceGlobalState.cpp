@@ -100,9 +100,9 @@ void HelideGPUDeviceGlobalState::gpu_initPipelines()
 
     SDL_GPUShaderCreateInfo fragInfo{};
     fillShaderInfo(fragInfo, kTriangleFrag, fmt, SDL_GPU_SHADERSTAGE_FRAGMENT);
-    // base color, metallic, roughness, opacity and emissive
+    // base color, metallic, roughness, opacity, emissive and normal
     // (shaders/material.glsl)
-    fragInfo.num_samplers = 5;
+    fragInfo.num_samplers = 6;
     fragInfo.num_uniform_buffers = 4;
 
     auto *frag = SDL_CreateGPUShader(dev, &fragInfo);
@@ -270,9 +270,9 @@ void HelideGPUDeviceGlobalState::gpu_initPipelines()
 
     SDL_GPUShaderCreateInfo fragInfo{};
     fillShaderInfo(fragInfo, kSphereFrag, fmt, SDL_GPU_SHADERSTAGE_FRAGMENT);
-    // base color, metallic, roughness, opacity and emissive
+    // base color, metallic, roughness, opacity, emissive and normal
     // (shaders/material.glsl)
-    fragInfo.num_samplers = 5;
+    fragInfo.num_samplers = 6;
     fragInfo.num_uniform_buffers = 4;
 
     auto *frag = SDL_CreateGPUShader(dev, &fragInfo);

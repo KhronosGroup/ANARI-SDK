@@ -24,7 +24,13 @@ lobe with Schlick Fresnel, in the metallic workflow. `matte` is metallic 0 and
 roughness 1; `physicallyBased` takes `metallic` and `roughness` (a value, a
 geometry attribute or a sampler, whose first output component is used), `ior`
 and `emissive` (a value or a sampler). `opacity` on both may be a value or a
-sampler (its first output component).
+sampler (its first output component). `physicallyBased`'s `normal` is a
+tangent-space normal map from an `image1D/2D/3D` sampler, its output used as
+is (`outTransform`/`outOffset` decode it to [-1,1]). As in Storm, its tangent
+frame comes from the screen-space derivatives of the position and of the
+sampler's texture coordinate, not from `vertex.tangent`; it maps only
+triangles, as a sphere's attributes are constant across it, and the `normal`
+frame channel and ambient occlusion keep the unperturbed normal.
 
 Lights are `directional`, `point`, `spot` and `quad` (up to 16 in a frame,
 counting instanced ones). The renderer's light (`ambientRadiance` times

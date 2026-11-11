@@ -3,7 +3,7 @@
 
 // The material inputs of the surface fragment shaders (triangle.frag,
 // sphere.frag): the material uniforms, and the samplers that may drive the
-// base color, metallic, roughness, opacity and emissive. Surface::pushFragmentUniforms() fills
+// base color, metallic, roughness, opacity, emissive and normal. Surface::pushFragmentUniforms() fills
 // both uniform blocks; their C++ mirrors there must match the std140 layout.
 
 // Fragment samplers at set=2, binding=N (SDL3_gpu fragment sampler slot N),
@@ -13,13 +13,15 @@
 #define SAMPLER_ROUGHNESS 2
 #define SAMPLER_OPACITY 3
 #define SAMPLER_EMISSIVE 4
-#define NUM_MATERIAL_SAMPLERS 5
+#define SAMPLER_NORMAL 5
+#define NUM_MATERIAL_SAMPLERS 6
 
 layout(set = 2, binding = 0) uniform sampler3D colorTex;
 layout(set = 2, binding = 1) uniform sampler3D metallicTex;
 layout(set = 2, binding = 2) uniform sampler3D roughnessTex;
 layout(set = 2, binding = 3) uniform sampler3D opacityTex;
 layout(set = 2, binding = 4) uniform sampler3D emissiveTex;
+layout(set = 2, binding = 5) uniform sampler3D normalTex;
 
 // Fragment uniform buffer slot 0: material + attribute data
 layout(set = 3, binding = 0) uniform MaterialUniforms {
@@ -127,4 +129,50 @@ vec3 materialEmissive(vec4 attrs[5], uint primIdx)
     if (p.mode != 0)
         return evalSampler(emissiveTex, p, attrs, primIdx).rgb;
     return mat_u.emissive.rgb;
+}
+
+// Normal mapping as Storm does it (perturbFragmentNormal() in usdShaders'
+// previewSurface.glslfx and ComputeTBNMatrix() in hdSt's
+// surfaceHelpers.glslfx): the tangent frame comes from the screen-space
+// derivatives of the position and of the normal map's texture coordinate, not
+// from geometry tangents. Only an image sampler maps normals; its output is
+// the tangent-space normal as is (the application's outTransform/outOffset
+// decode it). P and N are in view space, N normalized. The derivatives make
+// this valid only in uniform control flow, before any discard.
+vec3 materialNormal(vec3 P, vec3 N, vec4 attrs[5])
+{
+    SamplerParams p = samp_u.p[SAMPLER_NORMAL];
+    if (p.mode != 2)
+        return N;
+
+    vec4 tc = p.inTransform * readAttribute(p.inAttrIdx, attrs) + p.inOffset;
+    vec3 Nt = (p.outTransform * texture(normalTex, tc.xyz) + p.outOffset).xyz;
+    if (dot(Nt, Nt) <= 0.0)
+        return N;
+    vec2 st = tc.xy;
+
+    // Screen-space derivatives of the position, perpendicular to N
+    vec3 dPdx = dFdx(P);
+    vec3 dPdy = dFdy(P);
+    vec3 sigmaX = dPdx - dot(dPdx, N) * N;
+    vec3 sigmaY = dPdy - dot(dPdy, N) * N;
+    float flipSign = dot(dPdy, cross(N, dPdx)) < 0.0 ? -1.0 : 1.0;
+
+    // Screen-space derivatives of st, and the first column of the inverse of
+    // their matrix, scaled by the sign of its determinant (not divided by it)
+    vec2 dSTdx = dFdx(st);
+    vec2 dSTdy = dFdy(st);
+    float det = dot(dSTdx, vec2(dSTdy.y, -dSTdy.x));
+    float signDet = det < 0.0 ? -1.0 : 1.0;
+    vec2 invC0 = signDet * vec2(dSTdy.y, -dSTdx.y);
+
+    vec3 T = sigmaX * invC0.x + sigmaY * invC0.y;
+    if (abs(det) > 0.0)
+        T = normalize(T);
+    vec3 B = (signDet * flipSign) * cross(N, T);
+
+    vec3 Np = mat3(T, B, N) * normalize(Nt);
+    // A degenerate frame (st constant across the pixel quad) keeps N
+    float len = length(Np);
+    return len > 0.0 ? Np / len : N;
 }

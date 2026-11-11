@@ -17,7 +17,7 @@ layout(location = 1) out uvec4 outIds;    // R=primitiveId, G=objectId, B=instan
 layout(location = 2) out vec4 outAlbedo;
 layout(location = 3) out vec4 outNormal;
 
-// The material uniforms and samplers (fragment sampler slots 0..4, uniform
+// The material uniforms and samplers (fragment sampler slots 0..5, uniform
 // buffer slots 0 and 1)
 #include "material.glsl"
 
@@ -49,6 +49,12 @@ void main()
     float opacity = materialOpacity(attrs, primIdx);
     vec3 emissive = materialEmissive(attrs, primIdx);
 
+    // The shading normal: turned to the viewer, then perturbed by the
+    // material's normal map
+    vec3 P = vPosView;
+    vec3 N = faceForward(normalize(vNormalView), Ng, P);
+    N = materialNormal(P, N, attrs);
+
     // Screen door transparency
     if (mat_u.alphaMode == 1) {
         // 4x4 Bayer dither pattern
@@ -67,9 +73,7 @@ void main()
             discard;
     }
 
-    // Storm's UsdPreviewSurface shading, the normal turned to the viewer
-    vec3 P = vPosView;
-    vec3 N = faceForward(normalize(vNormalView), Ng, P);
+    // Storm's UsdPreviewSurface shading
     ShadingResult shading =
         shade(P, N, color, metallic, roughness, mat_u.ior);
     vec3 direct = shading.direct + emissive;
