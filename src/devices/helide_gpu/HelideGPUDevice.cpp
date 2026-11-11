@@ -14,9 +14,12 @@
 
 #include "GLContextInterface.h"
 
+#include <SDL3/SDL_version.h>
+
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
+#include <string>
 #include <vector>
 
 namespace helide_gpu {
@@ -39,11 +42,37 @@ static void gpu_device_init(HelideGPUDeviceGlobalState *state)
     return;
   }
 
+  const char *backend = SDL_GetGPUDeviceDriver(gpu.device);
+  const char *adapter = nullptr;
+  const char *driver = nullptr;
+#if SDL_VERSION_ATLEAST(3, 4, 0)
+  // The build headers may be newer than the SDL runtime loaded on Linux.
+  if (SDL_GetVersion() >= SDL_VERSIONNUM(3, 4, 0)) {
+    const SDL_PropertiesID properties = SDL_GetGPUDeviceProperties(gpu.device);
+    if (properties) {
+      adapter = SDL_GetStringProperty(
+          properties, SDL_PROP_GPU_DEVICE_NAME_STRING, nullptr);
+      driver = SDL_GetStringProperty(
+          properties, SDL_PROP_GPU_DEVICE_DRIVER_NAME_STRING, nullptr);
+    }
+  }
+#endif
+  std::string deviceMessage = "[SDL3_gpu] Device created (backend: ";
+  deviceMessage += backend ? backend : "";
+  if (adapter && *adapter) {
+    deviceMessage += ", adapter: ";
+    deviceMessage += adapter;
+  }
+  if (driver && *driver) {
+    deviceMessage += ", driver: ";
+    deviceMessage += driver;
+  }
+  deviceMessage += ')';
   anariDeviceReportStatus(state->device,
       ANARI_SEVERITY_INFO,
       ANARI_STATUS_NO_ERROR,
-      "[SDL3_gpu] Device created (backend: %s)",
-      SDL_GetGPUDeviceDriver(gpu.device));
+      "%s",
+      deviceMessage.c_str());
 
   // Populate extension list from static query; skip compressed-texture
   // extensions (no SDL3_gpu format queries implemented yet).
