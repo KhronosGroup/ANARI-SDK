@@ -517,6 +517,17 @@ void Frame::gpu_pushLightingUniforms(
         l.direction = vec4(len > 0.f ? dir / len : vec3(0.f, 0.f, -1.f),
             light->cosOuterAngle());
         l.radiance = vec4(light->radiance(), light->cosInnerAngle());
+        if (light->type() == LightType::QUAD) {
+          // the area after the instance transform; w: 1 if both sides emit
+          vec3 radiance = light->radiance();
+          if (light->radianceTimesArea()) {
+            radiance *=
+                glm::length(glm::cross(vec3(MV * vec4(light->edge2(), 0.f)),
+                    vec3(MV * vec4(light->edge1(), 0.f))));
+          }
+          l.direction.w = light->twoSided() ? 1.f : 0.f;
+          l.radiance = vec4(radiance, 0.f);
+        }
       }
     }
   }

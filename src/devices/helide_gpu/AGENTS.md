@@ -51,7 +51,7 @@ devices/helide_gpu/
 ├── geometry/       # Geometry base
 ├── gpu/            # SDLGPUDevice wrapper (sdl3_gpu_device.h/.cpp), GPUBuffer/GPUTexture,
 │                   #   SDL-free array upload data (ArrayUpload.h/.cpp)
-├── light/          # Light (directional, point, spot)
+├── light/          # Light (directional, point, spot, quad)
 ├── material/       # Material base
 ├── renderer/       # Renderer (SDL3_gpu pipeline)
 ├── sampler/        # Sampler base
