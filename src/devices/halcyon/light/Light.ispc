@@ -52,6 +52,7 @@ static void Light_init(uniform Light *uniform self,
   self->weightSum = 0.f;
   self->width = 0;
   self->height = 0;
+  self->meanRadiance = make_float3(0.f);
   self->emission = toFloat3(emission);
   self->visible = visible;
 }
@@ -181,11 +182,13 @@ export void Light_setHdri(void *uniform _self,
     const uniform float *uniform conditionalCdf,
     const uniform float *uniform marginalCdf,
     uniform float weightSum,
+    const uniform float *uniform meanRadiance /* float3 */,
     const uniform float *uniform emission /* float3 */,
     uniform bool visible)
 {
   uniform Light *uniform self = (uniform Light * uniform) _self;
   Light_init(self, LIGHT_HDRI, emission, visible);
+  self->meanRadiance = toFloat3(meanRadiance);
   self->frameX = toFloat3(frameX);
   self->frameY = toFloat3(frameY);
   self->axis = toFloat3(axis);
@@ -225,6 +228,7 @@ export void Light_setAmbient(
       NULL,
       NULL,
       0.f,
+      AMBIENT_TEXEL,
       emission,
       false);
 }

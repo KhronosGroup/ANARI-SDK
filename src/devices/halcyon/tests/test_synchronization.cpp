@@ -188,6 +188,8 @@ Scene makeScene(anari::Device d)
   anari::commitParameters(d, s.camera);
 
   s.renderer = anari::newObject<anari::Renderer>(d, "preview");
+  // helide's shading shows the vertex colors exactly
+  anari::setParameter(d, s.renderer, "mode", "eyeLight");
   anari::commitParameters(d, s.renderer);
   return s;
 }

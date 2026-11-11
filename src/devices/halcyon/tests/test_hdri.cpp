@@ -12,7 +12,7 @@
 // hemisphere, and a map whose light comes from one bright texel, at one and
 // several light samples), 'visible', 'scale' and 'color', the warnings, and
 // the 'preview' renderer showing it where camera rays miss, exactly as the
-// pathtracer does, without being lit by it.
+// pathtracer does, without being lit by it in the 'eyeLight' mode.
 
 // anari
 #define ANARI_LINALG_DEFINITIONS
@@ -931,10 +931,11 @@ bool testDefaultRendererShowsHdri(anari::Device d)
         "ambientOcclusion.unblurred",
         pixels / 8);
 
-    // surfaces render as without the light, in the default mode and the
-    // 'ambientOcclusion' mode
+    // surfaces render as without the light in the 'eyeLight' mode (helide's
+    // shading) and the 'ambientOcclusion' mode (the default mode adds the
+    // map's mean radiance to its ambient light: test_preview_shading.cpp)
     auto unlit = makeWorld(d, {makeFloor(d)}, {});
-    for (const char *mode : {"default", "ambientOcclusion"}) {
+    for (const char *mode : {"eyeLight", "ambientOcclusion"}) {
       Settings def;
       def.subtype = "default";
       def.mode = mode;

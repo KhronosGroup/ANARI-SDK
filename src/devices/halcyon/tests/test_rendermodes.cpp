@@ -315,10 +315,11 @@ const std::vector<ModeTest> MODE_TESTS = {
           const float falloff = std::abs(linalg::dot(-RAY_DIR, h.worldNormal));
           return float3(1.f, 0.5f, 0.f) * (0.8f * falloff + 0.2f);
         }},
-    // unknown modes shade like "default": 0.8 gray, half eye-lit, blended
-    // over the background by the material's opacity (the only mode here that
-    // composites; the pixel's alpha stays 1 over the opaque background)
-    {"no such mode",
+    // helide's shading: 0.8 gray, half eye-lit, blended over the background
+    // by the material's opacity (the only mode here that composites; the
+    // pixel's alpha stays 1 over the opaque background). The 'default'
+    // mode's (OpenUSD Storm's) is test_preview_shading.cpp's.
+    {"eyeLight",
         [](const Hit &h) {
           const float falloff = std::abs(linalg::dot(-RAY_DIR, h.worldNormal));
           const float3 surface(0.8f * (0.5f * falloff + 0.5f));
@@ -409,6 +410,17 @@ bool testMode(anari::Device d,
   return pass;
 }
 
+// An unknown mode renders as 'default', as helide's do
+bool testUnknownMode(
+    anari::Device d, anari::Frame frame, anari::Renderer renderer)
+{
+  const auto expected = render(d, frame, renderer, "default");
+  const auto pixels = render(d, frame, renderer, "no such mode");
+  const bool pass = !pixels.empty() && pixels == expected;
+  std::printf("%s no such mode renders as default\n", pass ? "PASS" : "FAIL");
+  return pass;
+}
+
 // Every pixel is the ray direction mapped to [0, 1] at depth 0, hit or not
 bool testTestFrame(
     anari::Device d, anari::Frame frame, anari::Renderer renderer)
@@ -464,7 +476,7 @@ int main()
   auto world = makeWorld(d);
   auto renderer = anari::newObject<anari::Renderer>(d, "preview");
   anari::setParameter(d, renderer, "background", BACKGROUND);
-  // The expected colours are those of the eye light alone, without ambient
+  // The expected colours are those of the modes alone, without ambient
   // occlusion (on by default)
   anari::setParameter(d, renderer, "ambientOcclusion", false);
 
@@ -480,6 +492,7 @@ int main()
   bool pass = true;
   for (const auto &test : MODE_TESTS)
     pass &= testMode(d, frame, renderer, test);
+  pass &= testUnknownMode(d, frame, renderer);
   pass &= testTestFrame(d, frame, renderer);
 
   anari::release(d, frame);

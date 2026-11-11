@@ -15,8 +15,8 @@
 // ray that misses the scene sees the same radiance in both: the pathtracer
 // (renderer/pathtracer/Lights.isph samples and evaluates the map through
 // it) and the 'preview' renderer, which shows the 'visible' hdris in place
-// of the background but isn't lit by them (missColor() in
-// shading/halcyon_frame.isph). Also the unit-interval and normalization
+// of the background (missColor() in shading/halcyon_frame.isph) and is lit
+// only by their mean radiance (renderer/preview/PreviewShading.isph). Also the unit-interval and normalization
 // helpers of Typhoon's light samplers that the lookup needs.
 
 #include "halcyon_derivatives.isph"

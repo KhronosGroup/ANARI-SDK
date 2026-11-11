@@ -895,11 +895,11 @@ void Material::finalize()
         "halcyon::Material: the pathtracer shades this material through its"
         " MaterialXCpp graph in C++");
   }
+  // also where the pathtracer shades the material through its graph, for the
+  // 'preview' renderer
   ispc::Material_setPhysicallyBased(getIE(),
-      kind == ispc::MATERIAL_KIND_PHYSICALLY_BASED
-          ? static_cast<const ispc::PhysicallyBasedParameters *>(
-                physicallyBasedParameters())
-          : nullptr);
+      static_cast<const ispc::PhysicallyBasedParameters *>(
+          physicallyBasedParameters()));
   m_cppMaterial = std::move(cpp);
   // Samplers are always passed on, valid or not: shading checks (a sampler's
   // ISPC hook is NULL while it is invalid)

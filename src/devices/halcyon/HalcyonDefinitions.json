@@ -111,7 +111,13 @@
         "KHR_GEOMETRY_TRIANGLE",
         "KHR_INSTANCE_TRANSFORM",
         "KHR_INSTANCE_TRANSFORM_ARRAY",
+        "KHR_LIGHT_DIRECTIONAL",
         "KHR_LIGHT_HDRI",
+        "KHR_LIGHT_POINT",
+        "KHR_LIGHT_PRIMARY_VISIBILITY",
+        "KHR_LIGHT_QUAD",
+        "KHR_LIGHT_RING",
+        "KHR_LIGHT_SPOT",
         "KHR_MATERIAL_MATTE",
         "KHR_MATERIAL_PHYSICALLY_BASED",
         "KHR_RENDERER_AMBIENT_LIGHT",
@@ -147,6 +153,7 @@
           "default": "default",
           "values": [
             "default",
+            "eyeLight",
             "primitiveId",
             "objectId",
             "instanceId",
@@ -172,7 +179,7 @@
             "ambientOcclusion.unblurred",
             "testFrame"
           ],
-          "description": "visualization modes (most for debugging)"
+          "description": "visualization modes (most for debugging): 'default' shades surfaces as OpenUSD Storm does, lit by the world's lights; 'eyeLight' as helide does"
         },
         {
           "name": "background",
@@ -226,7 +233,7 @@
             1.0,
             1.0
           ],
-          "description": "ambient light color (not read by this renderer)"
+          "description": "ambient light color (not read in the eyeLight mode)"
         },
         {
           "name": "ambientRadiance",
@@ -235,7 +242,7 @@
           ],
           "tags": [],
           "default": 0.0,
-          "description": "the eye light's ambient term, read only with ignoreAmbientLighting false"
+          "description": "the ambient light, split between a headlight (eyeLightBlendRatio of it, only in a world without lights) and a uniform ambient light; read only with ignoreAmbientLighting false"
         },
         {
           "name": "ignoreAmbientLighting",
@@ -255,7 +262,7 @@
           "default": 0.5,
           "minimum": 0.0,
           "maximum": 1.0,
-          "description": "how much eye lighting factor should be used in default render mode"
+          "description": "the part of the ambient light that is a headlight (in the eyeLight mode, the facing-ratio falloff blended in)"
         },
         {
           "name": "volumeSamplingRate",
@@ -275,7 +282,7 @@
           ],
           "tags": [],
           "default": true,
-          "description": "darken the first visible surface by screen-space ambient occlusion in the default render mode"
+          "description": "darken the ambient light the first visible surface reflects by screen-space ambient occlusion in the default render mode (its whole color in the eyeLight mode)"
         },
         {
           "name": "ambientOcclusionRadius",

@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Each renderer reports the extensions it honours (AGENTS.md, "Parameters
-// and properties"): the 'preview' renderer doesn't claim the lights,
+// and properties"): the 'preview' renderer doesn't claim
 // KHR_FRAME_ACCUMULATION or KHR_CAMERA_DEPTH_OF_FIELD, which only the
-// 'quality' reads, but the hdri light, which its camera misses show; both
-// claim the volume extensions.
+// 'quality' reads; both claim the lights (the 'preview' shades with them as
+// OpenUSD Storm does, and shows visible ones) and the volume extensions.
 // Both introspection (anariGetObjectInfo's "extension") and a renderer's
 // "extension" property report them, and the device's list is their union.
 // The renderer subtypes are 'preview' and 'quality', in that order;
@@ -70,8 +70,13 @@ const Extensions COMMON = {
     "ANARI_KHR_GEOMETRY_TRIANGLE",
     "ANARI_KHR_INSTANCE_TRANSFORM",
     "ANARI_KHR_INSTANCE_TRANSFORM_ARRAY",
-    // the 'preview' renderer isn't lit by it, but shows it where rays miss
+    "ANARI_KHR_LIGHT_DIRECTIONAL",
     "ANARI_KHR_LIGHT_HDRI",
+    "ANARI_KHR_LIGHT_POINT",
+    "ANARI_KHR_LIGHT_PRIMARY_VISIBILITY",
+    "ANARI_KHR_LIGHT_QUAD",
+    "ANARI_KHR_LIGHT_RING",
+    "ANARI_KHR_LIGHT_SPOT",
     "ANARI_KHR_MATERIAL_MATTE",
     "ANARI_KHR_MATERIAL_PHYSICALLY_BASED",
     "ANARI_KHR_RENDERER_AMBIENT_LIGHT",
@@ -90,17 +95,10 @@ const Extensions COMMON = {
     "ANARI_HALCYON_MATERIAL_USD_PREVIEW_SURFACE",
 };
 
-// Only the 'quality' is lit by lights, refines its image and samples the
-// camera's lens
+// Only the 'quality' refines its image and samples the camera's lens
 const Extensions PATHTRACER_ONLY = {
     "ANARI_KHR_CAMERA_DEPTH_OF_FIELD",
     "ANARI_KHR_FRAME_ACCUMULATION",
-    "ANARI_KHR_LIGHT_DIRECTIONAL",
-    "ANARI_KHR_LIGHT_POINT",
-    "ANARI_KHR_LIGHT_PRIMARY_VISIBILITY",
-    "ANARI_KHR_LIGHT_QUAD",
-    "ANARI_KHR_LIGHT_RING",
-    "ANARI_KHR_LIGHT_SPOT",
 };
 
 Extensions operator+(Extensions a, const Extensions &b)
@@ -200,10 +198,10 @@ bool testIntrospection(anari::Library library, anari::Device d)
   const anari::Extensions pathtracerStruct =
       anari::extension::getObjectExtensionStruct(d, ANARI_RENDERER, "quality");
   pass &= report(
-      "extension structs: lights only for the 'quality', but the hdri",
-      !previewStruct.ANARI_KHR_LIGHT_POINT
-          && previewStruct.ANARI_KHR_LIGHT_HDRI
-          && !previewStruct.ANARI_KHR_LIGHT_PRIMARY_VISIBILITY
+      "extension structs: lights for both, accumulation only for "
+      "the 'quality'",
+      previewStruct.ANARI_KHR_LIGHT_POINT && previewStruct.ANARI_KHR_LIGHT_HDRI
+          && previewStruct.ANARI_KHR_LIGHT_PRIMARY_VISIBILITY
           && !previewStruct.ANARI_KHR_FRAME_ACCUMULATION
           && previewStruct.ANARI_KHR_VOLUME_TRANSFER_FUNCTION1D
           && pathtracerStruct.ANARI_KHR_LIGHT_POINT

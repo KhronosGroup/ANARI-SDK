@@ -101,9 +101,10 @@ struct Material : public Object
   virtual void reportGraphFailure(const std::string &diagnostic);
   // Whether finalize() compiled the subtype's graph
   bool hasCompiledGraph() const;
-  // MATERIAL_KIND_PHYSICALLY_BASED's parameters (an
+  // The physicallyBased subtype's parameters (an
   // ispc::PhysicallyBasedParameters the subtype holds), which finalize()
-  // hands to ISPC while that is the native kind; NULL by default
+  // hands to ISPC whatever the kind: MATERIAL_KIND_PHYSICALLY_BASED and the
+  // 'preview' renderer read them; NULL by default
   virtual const void *physicallyBasedParameters() const;
 
   float4 m_color{1.f, 1.f, 1.f, 1.f};

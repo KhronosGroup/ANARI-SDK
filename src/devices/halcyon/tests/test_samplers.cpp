@@ -5,15 +5,15 @@
 // src/devices/helide/sampler/), Copyright 2021-2026 The Khronos Group,
 // licensed under Apache-2.0.
 
-// Renders a quad facing an orthographic camera (so eye-lit shading gives the
-// surface color exactly) whose matte color comes from an image sampler, and
-// compares every pixel on the quad against a C++ port of helide's image
-// sampling: 1D/2D/3D images, filters, wrap modes, in/out transforms and
-// offsets, and images of every element type the device reads natively (8, 16
-// and 32-bit UFIXED, sRGB, FLOAT32; 1-4 components). Also covers opacity
-// samplers, invalid samplers and updates, images in shared and captured app
-// memory (updates, release, a 1D range, unaligned memory), and the transform
-// and primitive samplers.
+// Renders a quad facing an orthographic camera (so the 'eyeLight' mode,
+// helide's shading, gives the surface color exactly) whose matte color comes
+// from an image sampler, and compares every pixel on the quad against a C++
+// port of helide's image sampling: 1D/2D/3D images, filters, wrap modes, in/out
+// transforms and offsets, and images of every element type the device reads
+// natively (8, 16 and 32-bit UFIXED, sRGB, FLOAT32; 1-4 components). Also
+// covers opacity samplers, invalid samplers and updates, images in shared and
+// captured app memory (updates, release, a 1D range, unaligned memory), and the
+// transform and primitive samplers.
 
 // anari
 #define ANARI_LINALG_DEFINITIONS
@@ -376,7 +376,7 @@ bool comparePixels(const char *test,
 bool checkWorld(
     anari::Device d, const char *test, anari::World world, const ImageDesc &img)
 {
-  const auto pixels = render(d, world, "default");
+  const auto pixels = render(d, world, "eyeLight");
   return comparePixels(test, pixels, [&](float4 a) -> std::optional<float4> {
     bool skip = false;
     const float4 r = referenceSample(img, a, skip);
@@ -929,7 +929,7 @@ bool testMaterialUse(anari::Device d)
     pass &= checkCenter(d,
         "matte color sampler",
         world,
-        "default",
+        "eyeLight",
         float4(0.25f, 0.5f, 0.75f, 1.f));
     anari::release(d, world);
     anari::release(d, s);
@@ -973,7 +973,7 @@ bool testMaterialUse(anari::Device d)
       anari::setParameter(d, m, "color", noImage);
     });
     pass &= checkCenter(
-        d, "sampler without image", world, "default", MATTE_DEFAULT);
+        d, "sampler without image", world, "eyeLight", MATTE_DEFAULT);
     anari::release(d, world);
     anari::release(d, noImage);
 
@@ -982,7 +982,7 @@ bool testMaterialUse(anari::Device d)
       anari::setParameter(d, m, "color", neverCommitted);
     });
     pass &= checkCenter(
-        d, "sampler never committed", world, "default", MATTE_DEFAULT);
+        d, "sampler never committed", world, "eyeLight", MATTE_DEFAULT);
     anari::release(d, world);
     anari::release(d, neverCommitted);
 
@@ -992,7 +992,7 @@ bool testMaterialUse(anari::Device d)
       anari::setParameter(d, m, "color", unknown);
     });
     pass &= checkCenter(
-        d, "unknown sampler subtype", world, "default", MATTE_DEFAULT);
+        d, "unknown sampler subtype", world, "eyeLight", MATTE_DEFAULT);
     anari::release(d, world);
     anari::release(d, unknown);
 
@@ -1018,7 +1018,7 @@ bool testMaterialUse(anari::Device d)
       world = makeWorld(d, [&](anari::Material m) {
         anari::setParameter(d, m, "color", empty);
       });
-      pass &= checkCenter(d, test.c_str(), world, "default", MATTE_DEFAULT);
+      pass &= checkCenter(d, test.c_str(), world, "eyeLight", MATTE_DEFAULT);
       anari::release(d, world);
       anari::release(d, empty);
     }
@@ -1030,7 +1030,7 @@ bool testMaterialUse(anari::Device d)
     auto world = makeWorld(
         d, [&](anari::Material m) { anari::setParameter(d, m, "color", s); });
     const float4 opaque(0.25f, 0.5f, 0.75f, 1.f);
-    pass &= checkCenter(d, "update: initial", world, "default", opaque);
+    pass &= checkCenter(d, "update: initial", world, "eyeLight", opaque);
 
     ImageDesc red;
     red.size = {1, 1, 1};
@@ -1038,12 +1038,12 @@ bool testMaterialUse(anari::Device d)
     setImage(d, s, red);
     anari::commitParameters(d, s);
     pass &= checkCenter(
-        d, "update: new image", world, "default", float4(1.f, 0.f, 0.f, 1.f));
+        d, "update: new image", world, "eyeLight", float4(1.f, 0.f, 0.f, 1.f));
 
     anari::unsetParameter(d, s, "image");
     anari::commitParameters(d, s);
     pass &= checkCenter(
-        d, "update: image removed", world, "default", MATTE_DEFAULT);
+        d, "update: image removed", world, "eyeLight", MATTE_DEFAULT);
     anari::release(d, world);
     anari::release(d, s);
   }
@@ -1060,7 +1060,7 @@ bool testMaterialUse(anari::Device d)
     auto world = makeWorld(
         d, [&](anari::Material m) { anari::setParameter(d, m, "color", s); });
     pass &= checkCenter(
-        d, "ufixed8 image", world, "default", float4(1.f, 0.f, 0.2f, 1.f));
+        d, "ufixed8 image", world, "eyeLight", float4(1.f, 0.f, 0.2f, 1.f));
     anari::release(d, world);
     anari::release(d, s);
   }
@@ -1100,7 +1100,7 @@ bool checkTransform(anari::Device d,
   auto world = makeWorld(
       d, [&](anari::Material m) { anari::setParameter(d, m, "color", s); });
   anari::release(d, s);
-  const auto pixels = render(d, world, "default");
+  const auto pixels = render(d, world, "eyeLight");
   anari::release(d, world);
   return comparePixels(test, pixels, expected);
 }
@@ -1161,7 +1161,7 @@ bool checkPrimitives(anari::Device d,
     float4 prim0,
     float4 prim1)
 {
-  const auto pixels = render(d, world, "default");
+  const auto pixels = render(d, world, "eyeLight");
   return comparePixels(test, pixels, [&](float4 a) -> std::optional<float4> {
     if (std::abs(a.x - a.y) < 0.05f)
       return std::nullopt;

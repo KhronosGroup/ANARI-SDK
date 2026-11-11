@@ -253,19 +253,6 @@ inline float3 leaveSurface(
 
 // Native materials' inputs ///////////////////////////////////////////////////
 
-// Native kinds' parameter 'p' at the hit of 'rh', as their graph's input
-// resolves it (a valid sampler's value, else the attribute's, else the
-// constant)
-inline float4 materialParameterAt(
-    const uniform MaterialParameter &p, const RayHit &rh, const HitInfo &hit)
-{
-  if (Sampler_isValid(p.sampler))
-    return Sampler_sample(p.sampler, hit, rh);
-  if (p.attribute != ATTRIBUTE_NONE)
-    return getAttribute(hit, rh, p.attribute);
-  return p.value;
-}
-
 // What native kinds read beyond the shading context at the hit of 'rh':
 // native matte's and physicallyBased's colour, as their graphs would read
 // it, otherwise the colour of the native Lambertian that lights surfaces

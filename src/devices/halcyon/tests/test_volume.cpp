@@ -689,7 +689,7 @@ struct Pixels
 // 'volumeSamplingRate' (helide's 1 unless given; not set if nullopt)
 Pixels render(anari::Device d,
     anari::World world,
-    const char *mode = "default",
+    const char *mode = "eyeLight",
     std::optional<float> samplingRate = 1.f)
 {
   auto camera = anari::newObject<anari::Camera>(d, "orthographic");
@@ -753,7 +753,7 @@ struct Probe
   float2 pos;
   float depth;
   uint32_t primId, objId, instId;
-  float4 color; // default mode
+  float4 color; // eyeLight mode
   float4 hitVolumeColor; // 'hitVolume' mode
 };
 
@@ -900,9 +900,9 @@ bool testDefaultSamplingRate(anari::Device d)
   anari::commitParameters(d, world);
 
   const size_t i = pixelIndex(float2(0.f));
-  const float4 byDefault = render(d, world, "default", std::nullopt).color[i];
-  const float4 half = render(d, world, "default", 0.5f).color[i];
-  const float4 one = render(d, world, "default", 1.f).color[i];
+  const float4 byDefault = render(d, world, "eyeLight", std::nullopt).color[i];
+  const float4 half = render(d, world, "eyeLight", 0.5f).color[i];
+  const float4 one = render(d, world, "eyeLight", 1.f).color[i];
   const bool pass = byDefault == half && !close(half, one, 1e-3f);
   std::printf(
       "%s volumeSamplingRate default (opacity %g; rate 0.5: %g, rate 1: %g)\n",

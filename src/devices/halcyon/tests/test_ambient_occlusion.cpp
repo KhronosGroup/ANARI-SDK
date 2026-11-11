@@ -274,7 +274,10 @@ Image renderImage(anari::Device d, anari::Frame frame, uint2 size)
 }
 
 // A frame of 'size' with color, depth and objectId channels rendering
-// 'world' seen by 'camera' with a 'preview' renderer that 'setup' configures
+// 'world' seen by 'camera' with a 'preview' renderer that 'setup' configures.
+// Its 'eyeLightBlendRatio' is 0: the default mode then shades with the
+// uniform ambient light alone (no headlight), which the occlusion factor
+// multiplies, so it multiplies the whole color, as in the 'eyeLight' mode.
 template <typename SETUP>
 anari::Frame makeFrame(anari::Device d,
     anari::World world,
@@ -284,6 +287,7 @@ anari::Frame makeFrame(anari::Device d,
 {
   auto renderer = anari::newObject<anari::Renderer>(d, "preview");
   anari::setParameter(d, renderer, "background", BACKGROUND);
+  anari::setParameter(d, renderer, "eyeLightBlendRatio", 0.f);
   setup(renderer);
   anari::commitParameters(d, renderer);
 
@@ -818,11 +822,15 @@ Image renderRoomFactor(anari::Device d,
   return renderRoomFactor(d, room, radius, mode, [](anari::Renderer) {});
 }
 
-// 'world' seen by ROOM_VIEW in the default mode, with 'ambientOcclusion' on
+// 'world' seen by ROOM_VIEW in 'mode', with 'ambientOcclusion' on
 // at ROOM_OCCLUSION_RADIUS if 'occlusion', else off
-Image renderRoomDefault(anari::Device d, anari::World world, bool occlusion)
+Image renderRoomDefault(anari::Device d,
+    anari::World world,
+    bool occlusion,
+    const char *mode = "default")
 {
   return renderView(d, world, ROOM_VIEW, ROOM_SIZE, [&](anari::Renderer r) {
+    anari::setParameter(d, r, "mode", mode);
     anari::setParameter(d, r, "ambientOcclusion", occlusion);
     if (occlusion)
       anari::setParameter(
@@ -1888,9 +1896,10 @@ const float3 BLUE = {0.f, 0.f, 0.8f};
 // A blend surface in front of an occluded opaque surface is the first visible
 // surface, so it is the one occluded and the surface behind it isn't
 // darkened: a half-transparent red layer 0.02 above the room's floor, which
-// is blue here, has a factor below 1 in the crease, and the default mode
+// is blue here, has a factor below 1 in the crease, and the 'eyeLight' mode
 // multiplies its red by that factor while the blue floor seen through it
-// keeps its color
+// keeps its color (the default mode composites alike, but its specular term
+// mixes the channels)
 bool testOnlyBlendLayerOccluded(anari::Device d)
 {
   const float3 floor[4] = {
@@ -1907,8 +1916,8 @@ bool testOnlyBlendLayerOccluded(anari::Device d)
           makeQuad(d, wall, WALL_ID)});
 
   const Image factor = renderRoomFactor(d, world);
-  const Image off = renderRoomDefault(d, world, false);
-  const Image on = renderRoomDefault(d, world, true);
+  const Image off = renderRoomDefault(d, world, false, "eyeLight");
+  const Image on = renderRoomDefault(d, world, true, "eyeLight");
   anari::release(d, world);
 
   const size_t crease = factor.at(pixelAt(ROOM_VIEW, ROOM_SIZE, CREASE.pos));
@@ -1935,9 +1944,9 @@ bool testOnlyBlendLayerOccluded(anari::Device d)
       factor.objectId[crease] == BLEND_ID && factor.objectId[open] == BLEND_ID);
   pass &= report("ambientOcclusion mode, blend layer in the crease occluded",
       f < factor.color[open].x - 0.1f);
-  pass &= report("default mode, blend layer multiplied by its factor",
+  pass &= report("eyeLight mode, blend layer multiplied by its factor",
       offColor.x > 0.05f && std::fabs(onColor.x - offColor.x * f) < 1e-5f);
-  pass &= report("default mode, surface behind the blend layer not darkened",
+  pass &= report("eyeLight mode, surface behind the blend layer not darkened",
       offColor.z > 0.05f && onColor.z == offColor.z && onColor.w == offColor.w);
   return pass;
 }
@@ -2469,6 +2478,8 @@ bool testIdlePassesToggle(anari::Device d)
 
   auto renderer = anari::newObject<anari::Renderer>(d, "preview");
   anari::setParameter(d, renderer, "background", BACKGROUND);
+  // as makeFrame()'s, so fresh frames render the same
+  anari::setParameter(d, renderer, "eyeLightBlendRatio", 0.f);
   anari::setParameter(d, renderer, "ambientOcclusion", true);
   anari::setParameter(
       d, renderer, "ambientOcclusionRadius", ROOM_OCCLUSION_RADIUS);
@@ -2577,6 +2588,8 @@ bool testBlurBufferToggle(anari::Device d, anari::World room)
 {
   auto renderer = anari::newObject<anari::Renderer>(d, "preview");
   anari::setParameter(d, renderer, "background", BACKGROUND);
+  // as makeFrame()'s, so fresh frames render the same
+  anari::setParameter(d, renderer, "eyeLightBlendRatio", 0.f);
   anari::setParameter(d, renderer, "ambientOcclusion", true);
   anari::setParameter(
       d, renderer, "ambientOcclusionRadius", ROOM_OCCLUSION_RADIUS);

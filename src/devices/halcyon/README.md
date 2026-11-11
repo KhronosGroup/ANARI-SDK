@@ -4,10 +4,13 @@ Halcyon is an [ANARI](https://www.khronos.org/anari) device that renders with
 [Embree](https://www.embree.org) ray tracing and [ISPC](https://ispc.github.io) shading. It is
 built on helium, the device framework in the ANARI SDK, and has two renderers:
 
-- `preview` aims to match the features and images of helide, the SDK's Embree reference
-  device: a simple eye-lit renderer with debug visualization modes, surfaces and volumes,
-  one sample per pixel, plus screen-space ambient occlusion. It is listed first among the
-  renderer subtypes, so `default` creates it too.
+- `preview` is an interactive renderer, one sample per pixel: surfaces shaded as OpenUSD
+  Storm shades a UsdPreviewSurface (Lambert plus GGX specular, lit by ANARI's lights
+  without shadows, a headlight in a world without lights and a uniform ambient light),
+  ray-marched volumes, screen-space ambient occlusion and debug visualization modes. Its
+  `eyeLight` mode and debug modes match the features and images of helide, the SDK's
+  Embree reference device. It is listed first among the renderer subtypes, so `default`
+  creates it too.
 - `quality` is a port of [Typhoon](https://github.com/NVIDIA-Omniverse/OpenUSD/tree/typhoon/main),
   NVIDIA's path tracer for OpenUSD (the hdEmbree delegate of the `typhoon/main` branch),
   with its MaterialX materials: a progressive, physically based renderer lit by ANARI's
@@ -102,9 +105,8 @@ system uses for both BVH builds and rendering (default: all hardware threads).
 
 As declared in `HalcyonDefinitions.json`. The device reports all of them; each renderer
 reports only those it honours (renderer introspection and the renderer's `extension`
-property): the `preview` renderer all but accumulation, depth of field and the lights
-other than the hdri (which it shows where rays miss, without being lit by it), the
-`quality` all of them.
+property): the `preview` renderer all but accumulation and depth of field, the `quality`
+all of them.
 
 - Device and frames: `ANARI_KHR_DEVICE_SYNCHRONIZATION`, `ANARI_KHR_FRAME_COMPLETION_CALLBACK`,
   `ANARI_KHR_FRAME_CHANNEL_PRIMITIVE_ID`, `ANARI_KHR_FRAME_CHANNEL_OBJECT_ID`,
@@ -130,21 +132,25 @@ other than the hdri (which it shows where rays miss, without being lit by it), t
 - Volumes: `ANARI_KHR_SPATIAL_FIELD_STRUCTURED_REGULAR`,
   `ANARI_KHR_VOLUME_TRANSFER_FUNCTION1D` (the `quality` scatters light in them, with
   their colour as the albedo; the `preview` renderer composites it as emission)
-- Lights (`quality` only): `ANARI_KHR_LIGHT_DIRECTIONAL`, `ANARI_KHR_LIGHT_POINT`,
+- Lights: `ANARI_KHR_LIGHT_DIRECTIONAL`, `ANARI_KHR_LIGHT_POINT`,
   `ANARI_KHR_LIGHT_SPOT`, `ANARI_KHR_LIGHT_QUAD`, `ANARI_KHR_LIGHT_RING`,
-  `ANARI_KHR_LIGHT_HDRI`, `ANARI_KHR_LIGHT_PRIMARY_VISIBILITY`; the `preview` renderer
-  also lists `ANARI_KHR_LIGHT_HDRI`: it shows the `visible` hdris in place of the
-  background, as the `quality` does, but isn't lit by them
+  `ANARI_KHR_LIGHT_HDRI`, `ANARI_KHR_LIGHT_PRIMARY_VISIBILITY`. The `quality` samples
+  them; the `preview` renderer lights with them as Storm does (a quad, ring or sphere as a
+  point at its center, without shadows; an hdri as its mean radiance added to the
+  ambient light) and shows `visible` spheres, quads and rings, and the `visible` hdris in
+  place of the background, as the `quality` does
 - Renderer: `ANARI_KHR_RENDERER_AMBIENT_LIGHT`, `ANARI_KHR_RENDERER_BACKGROUND_COLOR`,
   `ANARI_KHR_RENDERER_BACKGROUND_IMAGE`
 
-The `preview` renderer's `mode` parameter selects debug visualizations (ids, normals,
-attributes, opacity heatmap and more). Its values are listed in `HalcyonDefinitions.json`
-and available through parameter introspection.
+The `preview` renderer's `mode` parameter selects its shading: `default` (Storm's),
+`eyeLight` (helide's: the surface colour blended with its facing ratio, unlit by
+lights) and debug visualizations (ids, normals, attributes, opacity heatmap and more).
+Its values are listed in `HalcyonDefinitions.json` and available through parameter
+introspection.
 
 Triangle and quad geometry read shading normals (`vertex.normal`, `faceVarying.normal`), which
-the eye light, ambient occlusion, the `worldNormal`/`objectNormal` attributes and the `Ns`
-modes use; helide ignores them. Geometry without them shades with its geometric normal.
+the `preview` renderer's shading, ambient occlusion, the `worldNormal`/`objectNormal`
+attributes and the `Ns` modes use; helide ignores them. Geometry without them shades with its geometric normal.
 
 Parameter defaults are the ones introspection reports, some of which differ from helide's:
 the renderer's `ambientRadiance` 0 (helide 1; used only with `ignoreAmbientLighting` false)
@@ -229,9 +235,12 @@ B-spline or Catmull-Rom (`HALCYON_GEOMETRY_CURVE_BASIS`), not Bézier or ribbons
 
 ## Known limitations
 
-- The `preview` renderer ignores lights (only the `quality` reads them; without it, light
-  objects can be created but do nothing). Its shading is an eye light blended with a constant
-  ambient term, and `ambientColor` is ignored (both as in helide).
+- The `preview` renderer lights surfaces as OpenUSD Storm does: without shadows or
+  interreflection, a quad, ring or sphere light as a point light at its center, an hdri
+  as its mean radiance (a uniform ambient light), and only physicallyBased's `metallic`,
+  `roughness`, `ior` and `emissive` beyond the base colour (no normal maps, clearcoat,
+  sheen or transmission; other materials shade as a matte of their base colour). The
+  `eyeLight` mode ignores lights and `ambientColor`, as helide does.
 - The `preview` renderer takes one sample per pixel and doesn't accumulate. Primary rays go
   through pixel centres, as helide 0.17's do; helide 0.16 and older go through pixel
   corners, so their images are shifted by half a pixel from halcyon's.

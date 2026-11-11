@@ -10,7 +10,8 @@
 // sides, 'intensityDistribution', instance transforms (which move lights and
 // map a quad's edges, but don't scale radii), shadows, camera visibility
 // (KHR_LIGHT_PRIMARY_VISIBILITY's 'visible'), introspection, the warnings,
-// and the 'preview' renderer ignoring lights.
+// and the 'preview' renderer's 'eyeLight' mode ignoring lights (its default
+// mode's lighting is test_preview_shading.cpp's).
 
 // anari
 #define ANARI_LINALG_DEFINITIONS
@@ -146,13 +147,16 @@ anari::World makeWorld(anari::Device d,
 // -z at [-1, 1]^2 with a renderer of 'subtype': for the pathtracer,
 // 'pixelSamples' paths per pixel, no bounces after the first vertex (rays
 // leaving the floor escape) and no ambient light, so every pixel is the
-// floor's direct light
+// floor's direct light; for the 'preview' renderer, 'mode' if given
 std::vector<float4> render(anari::Device d,
     anari::World world,
     int pixelSamples = 1,
-    const char *subtype = "quality")
+    const char *subtype = "quality",
+    const char *mode = nullptr)
 {
   auto renderer = anari::newObject<anari::Renderer>(d, subtype);
+  if (mode)
+    anari::setParameter(d, renderer, "mode", mode);
   // one render is the whole first render (no progressive resolution)
   anari::setParameter(d, renderer, "resolutionDivider", 0);
   anari::setParameter(d, renderer, "background", BACKGROUND);
@@ -1663,9 +1667,10 @@ bool testLightChange(anari::Device d)
   return pass;
 }
 
-// The 'preview' renderer ignores lights: the same image with and without
-// (the hdri, which its misses show, is test_hdri.cpp's)
-bool testDefaultRendererIgnoresLights(anari::Device d)
+// The 'preview' renderer's 'eyeLight' mode (helide's shading) ignores
+// lights: the same image with and without (the hdri, which its misses show,
+// is test_hdri.cpp's)
+bool testEyeLightIgnoresLights(anari::Device d)
 {
   auto lit = makeWorld(d,
       {makeFloor(d)},
@@ -1690,11 +1695,11 @@ bool testDefaultRendererIgnoresLights(anari::Device d)
             anari::setParameter(d, l, "radius", 0.4f);
           })});
   auto unlit = makeWorld(d, {makeFloor(d)}, {});
-  const auto a = render(d, lit, 1, "default");
-  const auto b = render(d, unlit, 1, "default");
+  const auto a = render(d, lit, 1, "default", "eyeLight");
+  const auto b = render(d, unlit, 1, "default", "eyeLight");
   anari::release(d, lit);
   anari::release(d, unlit);
-  return report("the preview renderer ignores lights",
+  return report("the preview renderer's eyeLight mode ignores lights",
       !a.empty() && a.size() == b.size()
           && std::memcmp(a.data(), b.data(), a.size() * sizeof(float4)) == 0);
 }
@@ -1722,7 +1727,7 @@ int main()
   pass &= testShadowsAndSums(d);
   pass &= testVisibility(d);
   pass &= testLightChange(d);
-  pass &= testDefaultRendererIgnoresLights(d);
+  pass &= testEyeLightIgnoresLights(d);
   pass &= report("no warnings", g_warnings.empty());
   pass &= testRadianceWithoutSize(d);
   pass &= testWarnings(d);

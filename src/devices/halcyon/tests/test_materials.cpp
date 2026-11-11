@@ -1,10 +1,11 @@
 // Copyright 2025-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-// Renders a quad facing an orthographic camera (so eye-lit shading gives the
-// surface color exactly) with various materials and checks the float color
-// channel: matte/physicallyBased colors, attribute colors, opacity and alpha
-// modes (through 'opacityHeatmap'), invalid materials and surface visibility.
+// Renders a quad facing an orthographic camera (so the 'eyeLight' mode,
+// helide's shading, gives the surface color exactly) with various materials and
+// checks the float color channel: matte/physicallyBased colors, attribute
+// colors, opacity and alpha modes (through 'opacityHeatmap'), invalid materials
+// and surface visibility.
 
 // anari
 #define ANARI_LINALG_DEFINITIONS
@@ -204,7 +205,7 @@ bool check(anari::Device d,
 bool checkColor(
     anari::Device d, const char *test, const Scene &scene, float3 c0, float3 c1)
 {
-  return check(d, test, scene, "default", float4(c0, 1.f), float4(c1, 1.f));
+  return check(d, test, scene, "eyeLight", float4(c0, 1.f), float4(c1, 1.f));
 }
 
 bool checkColor(anari::Device d, const char *test, const Scene &scene, float3 c)
@@ -426,11 +427,11 @@ bool testInvalidMaterials(anari::Device d)
 {
   bool pass = true;
 
-  pass &= check(d, "missing material", {""}, "default", MAGENTA, MAGENTA);
+  pass &= check(d, "missing material", {""}, "eyeLight", MAGENTA, MAGENTA);
   pass &= check(d,
       "unknown material subtype",
       {"no such material"},
-      "default",
+      "eyeLight",
       MAGENTA,
       MAGENTA);
   const float4 blue(heatmap(0.f), 1.f);
@@ -441,12 +442,12 @@ bool testInvalidMaterials(anari::Device d)
       d, d, "invalidMaterialColor", float4(0.f, 1.f, 0.f, 0.5f));
   anari::commitParameters(d, d);
   const float4 green(0.f, 1.f, 0.f, 1.f);
-  pass &= check(d, "invalidMaterialColor", {""}, "default", green, green);
+  pass &= check(d, "invalidMaterialColor", {""}, "eyeLight", green, green);
 
   // Disallowing invalid materials drops such surfaces from existing worlds
   auto world = makeWorld(d, {""});
   auto checkWorld = [&](const char *test, float4 expected) {
-    const auto pixels = render(d, world, "default");
+    const auto pixels = render(d, world, "eyeLight");
     const bool p = checkPixel(test, "hit", pixels, TRI0_POS, expected);
     std::printf("%s %s\n", p ? "PASS" : "FAIL", test);
     return p;
@@ -473,6 +474,7 @@ bool testDeviceCommitRerenders(anari::Device d)
   auto world = makeWorld(d, {""});
   auto renderer = anari::newObject<anari::Renderer>(d, "preview");
   anari::setParameter(d, renderer, "background", BACKGROUND);
+  anari::setParameter(d, renderer, "mode", "eyeLight");
   anari::commitParameters(d, renderer);
 
   anari::Frame frames[2];
@@ -673,7 +675,7 @@ bool testVisibility(anari::Device d)
   pass &= check(d,
       "invisible",
       {"matte", nullptr, nullptr, visible(false)},
-      "default",
+      "eyeLight",
       BACKGROUND,
       BACKGROUND);
   return pass;

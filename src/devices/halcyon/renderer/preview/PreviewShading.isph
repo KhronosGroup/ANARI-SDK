@@ -1,0 +1,293 @@
+// Copyright 2026 The Khronos Group
+// SPDX-License-Identifier: Apache-2.0
+
+#pragma once
+
+// The 'preview' renderer's surface shading in its 'default' mode: the
+// lighting model of OpenUSD Storm's UsdPreviewSurface (usdShaders'
+// previewSurface.glslfx, metallic workflow, no clearcoat), as helide_gpu
+// shades it (src/devices/helide_gpu/shaders/shading.glsl), in world space.
+// Direct light is a Lambert diffuse plus a GGX specular lobe with Schlick's
+// Fresnel, from every light as Storm lights it: unshadowed, and a light with
+// an area (a quad, ring or sphere) as a point light at its center. The
+// uniform ambient light is Storm's dome-light term for a constant
+// environment, with the split-sum BRDF table replaced by Karis' analytic fit
+// ("Physically Based Shading on Mobile", 2014); an hdri adds its mean
+// radiance to it. The light records are the pathtracer's
+// (renderer/pathtracer/Lights.isph), in the units light/Light.h converts
+// ANARI's brightness parameters to.
+
+#include "renderer/pathtracer/Lights.isph"
+#include "shading/halcyon_getSurfaceColor.isph"
+
+// Storm's epsilon, which keeps the GGX terms finite
+#define PREVIEW_SHADING_EPSILON 0.001f
+
+// What Storm's UsdPreviewSurface shades with at a surface hit
+struct PreviewSurface
+{
+  float3 baseColor;
+  float metallic;
+  float roughness;
+  float ior;
+  float3 emissive;
+};
+
+// The surface's inputs at the hit of 'rh': its colour (Surface_getColor(),
+// the invalid material colour without a valid material) as the base colour;
+// a physicallyBased material's 'metallic', 'roughness', 'ior' and
+// 'emissive', every other material a dielectric of metallic 0, roughness 1
+// and ior 1.5 (as helide_gpu's matte) that emits nothing
+inline PreviewSurface PreviewSurface_at(const RayHit &rh,
+    const HitInfo &hitInfo,
+    const uniform float4 invalidMaterialColor)
+{
+  PreviewSurface s;
+  s.baseColor =
+      make_float3(Surface_getColor(rh, hitInfo, invalidMaterialColor));
+  s.metallic = 0.f;
+  s.roughness = 1.f;
+  s.ior = 1.5f;
+  s.emissive = make_float3(0.f);
+#pragma ignore warning(perf)
+  const uniform Material *varying material = hitInfo.surface->material;
+  if (material != NULL) {
+    foreach_unique (m in material) {
+      const uniform PhysicallyBasedParameters *uniform p = m->physicallyBased;
+      if (p) {
+        s.metallic =
+            clamp(materialParameterAt(p->metallic, rh, hitInfo).x, 0.f, 1.f);
+        s.roughness =
+            clamp(materialParameterAt(p->roughness, rh, hitInfo).x, 0.f, 1.f);
+        s.ior = max(materialParameterAt(p->ior, rh, hitInfo).x, 0.f);
+        s.emissive = max(
+            make_float3(materialParameterAt(p->emissive, rh, hitInfo)),
+            make_float3(0.f));
+      }
+    }
+  }
+  return s;
+}
+
+// Lights //////////////////////////////////////////////////////////////////////
+
+// What 'light' shines on world point 'P' as Storm lights it: in 'L' the unit
+// direction from P towards the light and in 'irradiance' the irradiance it
+// gives a surface facing L. A directional light's irradiance (of a cone, its
+// radiance times the cone's cosine-weighted solid angle), else the light's
+// intensity towards P over the squared distance from its center: a delta
+// point's or spot's (with the cone weight); a sphere's radiance times its
+// projected area; a quad's or ring's radiance times its area and the
+// Lambertian cosine (or its 'intensityDistribution'; a ring's cone weight
+// too), from the sides it emits to. False where it sends P nothing, and
+// for an hdri, which lights as part of the ambient light.
+inline bool PreviewLight_eval(
+    const uniform Light *uniform light, float3 P, float3 &L, float3 &irradiance)
+{
+  if (light->type == LIGHT_HDRI)
+    return false;
+
+  if (light->type == LIGHT_DIRECTIONAL) {
+    L = light->axis;
+    irradiance = light->emission;
+    if (light->halfAngle > 0.f) {
+      const uniform float s = sin(min(light->halfAngle, 0.5f * PI));
+      irradiance = irradiance * (PI * s * s);
+    }
+    return true;
+  }
+
+  const uniform float3 center = light->type == LIGHT_QUAD
+      ? light->position + 0.5f * (light->edge1 + light->edge2)
+      : light->position;
+  const float3 toLight = center - P;
+  const float dist2 = max(dot(toLight, toLight),
+      PREVIEW_SHADING_EPSILON * PREVIEW_SHADING_EPSILON);
+  L = toLight * rsqrt(dist2);
+  // the direction from the light towards P
+  const float3 e = -L;
+
+  // the intensity towards P relative to 'emission'
+  float profile;
+  if (light->type == LIGHT_QUAD
+      || (light->type == LIGHT_RING && light->radius > 0.f)) {
+    // an area light's radiance times its projected area towards P, from
+    // the sides that emit: a quad's emitting side faces along its axis,
+    // and with both sides emitting either side does
+    float cosOffNormal = dot(e, light->axis);
+    if (light->type == LIGHT_QUAD && light->front && light->back)
+      cosOffNormal = abs(cosOffNormal);
+    if (!(cosOffNormal > 0.f))
+      return false;
+    profile = light->area * cosOffNormal
+        * Lights_areaRadianceScale(light, e, cosOffNormal);
+  } else if (light->type == LIGHT_POINT && light->radius > 0.f) {
+    profile = PI * light->radius * light->radius;
+  } else {
+    // a delta point, spot or ring
+    profile = DeltaLight_profile(light, e);
+  }
+  if (!(profile > 0.f))
+    return false;
+  irradiance = light->emission * (profile / dist2);
+  return true;
+}
+
+// The uniform ambient light the 'preview' renderer shades with: the part of
+// the renderer's ambient light that isn't the headlight,
+// (1 - 'eyeLightBlendRatio') x 'ambientRadiance' x 'ambientColor', plus every
+// hdri's mean radiance (times its 'scale' and 'color')
+inline uniform float3 PreviewShading_ambientRadiance(
+    const uniform Renderer *uniform r, const uniform World *uniform world)
+{
+  uniform float3 ambient = (1.f - r->preview.eyeLightBlendRatio)
+      * r->preview.ambientRadiance * r->preview.ambientColor;
+  for (uniform uint32 i = 0; i < world->numLights; i++) {
+    const uniform Light *uniform light = world->lights + i;
+    if (light->type == LIGHT_HDRI)
+      ambient = ambient + light->meanRadiance * light->emission;
+  }
+  return ambient;
+}
+
+// The headlight's irradiance: a world without lights is lit by a light at
+// the viewer, scaled so that its Lambert term is 'eyeLightBlendRatio' x
+// 'ambientRadiance' at normal incidence; a world with lights has none
+inline uniform float PreviewShading_headlightIrradiance(
+    const uniform Renderer *uniform r, const uniform World *uniform world)
+{
+  if (world->numLights > 0)
+    return 0.f;
+  return PI * r->preview.eyeLightBlendRatio * r->preview.ambientRadiance;
+}
+
+// Storm's BRDF //////////////////////////////////////////////////////////////
+
+inline float PreviewShading_schlickFresnel(float EdotH)
+{
+  const float x = max(0.f, 1.f - EdotH);
+  const float x2 = x * x;
+  return x2 * x2 * x;
+}
+
+inline float PreviewShading_normalDistribution(float roughness, float NdotH)
+{
+  const float alpha = roughness * roughness;
+  const float alpha2 = alpha * alpha;
+  const float denom = NdotH * NdotH * (alpha2 - 1.f) + 1.f;
+  return (alpha2 + PREVIEW_SHADING_EPSILON) / (PI * denom * denom);
+}
+
+inline float PreviewShading_geometric(float roughness, float NdotL, float NdotE)
+{
+  const float k = roughness * roughness * 0.5f;
+  return NdotE / (NdotE * (1.f - k) + k) * NdotL / (NdotL * (1.f - k) + k);
+}
+
+// Karis' fit of the split-sum environment BRDF: specular = F0 x + y
+inline float2 PreviewShading_envBRDFApprox(float NdotE, float roughness)
+{
+  const float4 r = roughness * make_float4(-1.f, -0.0275f, -0.572f, 0.022f)
+      + make_float4(1.f, 0.0425f, 1.04f, -0.04f);
+  const float a004 = min(r.x * r.x, exp(-9.28f * 0.69314718f * NdotE)) * r.x + r.y;
+  return make_float2(-1.04f * a004 + r.z, 1.04f * a004 + r.w);
+}
+
+// Light reflected towards the viewer by surface 's' at world point 'P' of
+// unit normal 'N' (on the viewer's side), seen along unit 'E' (from P
+// towards the viewer): in 'direct' what the world's lights and the
+// headlight ('headlight', its irradiance) reflect, plus what the surface
+// emits; in 'ambient' what the uniform ambient light 'ambientRadiance'
+// reflects, which ambient occlusion darkens
+inline void PreviewShading_shade(const uniform World *uniform world,
+    const PreviewSurface &s,
+    float3 P,
+    float3 N,
+    float3 E,
+    uniform float headlight,
+    uniform float3 ambientRadiance,
+    float3 &direct,
+    float3 &ambient)
+{
+  const float NdotE = max(dot(N, E), 0.f);
+  const float roughness = max(s.roughness, PREVIEW_SHADING_EPSILON);
+
+  // reflectance at normal (F0) and grazing (F90) incidence
+  const float R = (1.f - s.ior) / (1.f + s.ior);
+  const float3 specColor = lerp(make_float3(1.f), s.baseColor, s.metallic);
+  const float3 F0 = lerp(R * R * specColor, specColor, s.metallic);
+  const float3 F90 = specColor;
+  // pure metals have no diffuse
+  const float3 diffuseColor = s.baseColor * (1.f - s.metallic);
+
+  direct = s.emissive;
+  for (uniform uint32 i = 0; i <= world->numLights; i++) {
+    float3 L;
+    float3 irradiance;
+    if (i == world->numLights) {
+      // the headlight, last
+      if (headlight <= 0.f)
+        break;
+      L = E;
+      irradiance = make_float3(headlight);
+    } else if (!PreviewLight_eval(world->lights + i, P, L, irradiance)) {
+      continue;
+    }
+
+    const float NdotL = dot(N, L);
+    if (NdotL <= 0.f)
+      continue;
+
+    const float3 H = normalize(E + L);
+    const float NdotH = max(dot(N, H), 0.f);
+    const float EdotH = max(dot(E, H), 0.f);
+    const float3 F = lerp(F0, F90, PreviewShading_schlickFresnel(EdotH));
+
+    const float3 specular = F
+        * (PreviewShading_geometric(roughness, NdotL, NdotE)
+            * PreviewShading_normalDistribution(roughness, NdotH)
+            / (4.f * NdotL * NdotE + PREVIEW_SHADING_EPSILON));
+    // less diffuse at grazing angles, where more is reflected
+    const float3 diffuse = diffuseColor * (make_float3(1.f) - F) * (1.f / PI);
+
+    direct = direct + NdotL * (diffuse + specular) * irradiance;
+  }
+
+  // the uniform ambient light: Storm's dome light, whose irradiance and
+  // prefiltered radiance are both the ambient radiance; seen from the
+  // reflection direction, Fresnel is F0
+  const float2 envBRDF = PreviewShading_envBRDFApprox(NdotE, roughness);
+  ambient = ambientRadiance
+      * (diffuseColor * (make_float3(1.f) - F0) + F0 * envBRDF.x
+          + make_float3(envBRDF.y));
+}
+
+// Visible lights ////////////////////////////////////////////////////////////
+
+// The nearest 'visible' finite light (a sphere, quad or ring:
+// KHR_LIGHT_PRIMARY_VISIBILITY) the camera ray from 'org' along unit 'dir'
+// meets, in 'dist' and its radiance towards the camera in 'radiance', as
+// the 'quality''s camera rays see it: from both sides, a side that doesn't
+// emit black. False if it meets none.
+inline bool PreviewShading_visibleLight(const uniform World *uniform world,
+    float3 org,
+    float3 dir,
+    float &dist,
+    float3 &radiance)
+{
+  bool found = false;
+  dist = HALCYON_RAY_TFAR;
+  for (uniform uint32 i = 0; i < world->numLights; i++) {
+    const uniform Light *uniform light = world->lights + i;
+    if (!light->visible || !Light_isFinite(light))
+      continue;
+    float d;
+    if (!Light_hit(light, org, dir, d) || !(d < dist))
+      continue;
+    const LightSample ls = Light_eval(light, org, dir);
+    dist = d;
+    radiance = ls.valid ? ls.radiance : make_float3(0.f);
+    found = true;
+  }
+  return found;
+}

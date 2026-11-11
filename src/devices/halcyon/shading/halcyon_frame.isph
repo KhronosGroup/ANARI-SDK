@@ -204,8 +204,8 @@ inline float4 background(const uniform Renderer *uniform r, float2 screen)
 
 // What a camera ray through 'screen' along 'dir' that misses the scene
 // shows, in both renderers: the sum of the 'visible' hdri lights, opaque
-// (alpha 1), else the background (background()). The 'preview' renderer
-// isn't lit by the hdris; it only shows them here.
+// (alpha 1), else the background (background()). The 'preview' renderer's
+// default mode is lit only by their mean radiance (PreviewShading.isph).
 inline float4 missColor(const uniform Renderer *uniform r,
     const uniform World *uniform world,
     float2 screen,

@@ -8,8 +8,10 @@
 
 namespace halcyon {
 
-// The 'preview' renderer (which 'default' gets too): helide's eye-lit
-// shading, ray-marched volumes and debug modes (Preview.ispc), with
+// The 'preview' renderer (which 'default' gets too): surfaces shaded as
+// OpenUSD Storm shades a UsdPreviewSurface, lit by the world's lights
+// (PreviewShading.isph), or with helide's eye-lit shading in the 'eyeLight'
+// mode; ray-marched volumes and helide's debug modes (Preview.ispc), with
 // screen-space ambient occlusion (docs/adr/0001) and compositing through
 // surfaces that aren't opaque. Not progressive: a render with nothing changed
 // is skipped.
@@ -34,7 +36,7 @@ struct Preview : public Renderer
  private:
   void updatePreviewISPC();
   // Whether the image reads the occlusion factor: the mode shows it, or is
-  // 'default' with 'ambientOcclusion' set; never at an
+  // 'default' or 'eyeLight' with 'ambientOcclusion' set; never at an
   // 'ambientOcclusionIntensity' of 0, which gives a factor of 1
   bool readsOcclusionFactor() const;
   // The occlusion radius: 'ambientOcclusionRadius', or if that is 0, a
@@ -42,8 +44,9 @@ struct Preview : public Renderer
   // update; 0 (no occlusion) for a world with empty bounds
   float occlusionRadius(const World &world) const;
 
-  // 1 until committed: 'ignoreAmbientLighting' defaults to true
+  // 1 and white until committed: 'ignoreAmbientLighting' defaults to true
   float m_ambientRadiance{1.f};
+  float3 m_ambientColor{1.f};
   float m_eyeLightBlendRatio{0.5f};
   float m_volumeSamplingRate{0.5f};
   // 'mode' as an ispc::RenderMode

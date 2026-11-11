@@ -29,7 +29,8 @@ constexpr int MIN_AMBIENT_OCCLUSION_BLUR_PASSES = 1;
 constexpr int MAX_AMBIENT_OCCLUSION_BLUR_PASSES = 5;
 
 // The 'mode' parameter value 'name' as a RenderMode; unknown names (and
-// "default") select the default eye-lit shading, as in helide
+// "default") select the default shading (OpenUSD Storm's), as helide falls
+// back to its default
 static ispc::RenderMode renderModeFromString(std::string_view name)
 {
   static const std::pair<std::string_view, ispc::RenderMode> modes[] = {
@@ -58,6 +59,7 @@ static ispc::RenderMode renderModeFromString(std::string_view name)
       {"ambientOcclusion.unblurred",
           ispc::RENDER_MODE_AMBIENT_OCCLUSION_UNBLURRED},
       {"testFrame", ispc::RENDER_MODE_TEST_FRAME},
+      {"eyeLight", ispc::RENDER_MODE_EYE_LIGHT},
   };
   for (const auto &[n, mode] : modes) {
     if (n == name)
@@ -210,8 +212,12 @@ void Preview::commitParameters()
   Renderer::commitParameters();
   // khr_renderer_ambient_light's default (helide's code uses 1)
   m_ambientRadiance = getParam<float>("ambientRadiance", 0.f);
-  if (getParam<bool>("ignoreAmbientLighting", true))
+  m_ambientColor =
+      linalg::max(getParam<float3>("ambientColor", float3(1.f)), float3(0.f));
+  if (getParam<bool>("ignoreAmbientLighting", true)) {
     m_ambientRadiance = 1.f;
+    m_ambientColor = float3(1.f);
+  }
   m_eyeLightBlendRatio =
       std::clamp(getParam<float>("eyeLightBlendRatio", 0.5f), 0.f, 1.f);
   m_volumeSamplingRate = std::clamp(
@@ -251,6 +257,7 @@ void Preview::updatePreviewISPC()
 {
   ispc::Preview_setParameters(getIE(),
       m_ambientRadiance,
+      &m_ambientColor.x,
       m_eyeLightBlendRatio,
       1.f / m_volumeSamplingRate,
       ispc::RenderMode(m_mode),
@@ -317,7 +324,9 @@ bool Preview::readsOcclusionFactor() const
 {
   if (!(m_ambientOcclusionIntensity > 0.f))
     return false;
-  return (m_ambientOcclusion && m_mode == ispc::RENDER_MODE_DEFAULT)
+  return (m_ambientOcclusion
+             && (m_mode == ispc::RENDER_MODE_DEFAULT
+                 || m_mode == ispc::RENDER_MODE_EYE_LIGHT))
       || m_mode == ispc::RENDER_MODE_AMBIENT_OCCLUSION
       || m_mode == ispc::RENDER_MODE_AMBIENT_OCCLUSION_UNBLURRED;
 }
