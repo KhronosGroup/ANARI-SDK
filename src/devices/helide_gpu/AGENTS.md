@@ -51,12 +51,13 @@ devices/helide_gpu/
 ├── geometry/       # Geometry base
 ├── gpu/            # SDLGPUDevice wrapper (sdl3_gpu_device.h/.cpp), GPUBuffer/GPUTexture,
 │                   #   SDL-free array upload data (ArrayUpload.h/.cpp)
-├── light/          # Light base
+├── light/          # Light (directional, point, spot)
 ├── material/       # Material base
 ├── renderer/       # Renderer (SDL3_gpu pipeline)
 ├── sampler/        # Sampler base
 ├── scene/          # Group, Instance, World
-├── shaders/        # triangle.vert / triangle.frag (GLSL → SPIR-V at build time)
+├── shaders/        # GLSL → SPIR-V at build time; shading.glsl holds the
+│                   #   Storm-derived lighting both surface shaders include
 ├── spatial_field/  # SpatialField base
 ├── surface/        # Surface
 ├── volume/         # Volume base
@@ -115,6 +116,15 @@ SDL3_gpu maps SPIR-V descriptor sets to resource slots as follows:
 
 Push data with `SDL_PushGPUVertexUniformData(cmd, slot, data, size)` — slot N maps to `set=1, binding=N` in the vertex shader SPIR-V.
 Push data with `SDL_PushGPUFragmentUniformData(cmd, slot, data, size)` — slot N maps to `set=3, binding=N` in the fragment shader SPIR-V.
+
+### Render targets
+
+SDL3_gpu allows at most 4 color targets per render pass (more crashes pipeline
+creation). The geometry pass uses all 4: color, IDs (RGBA32_UINT, whose `.w`
+holds the packed ambient light for the composite pass, see
+`shaders/ambient_packing.glsl`), albedo (`.w`: the opacity of a volume in
+front) and normal (`.w`: view depth). Pack new per-pixel data into these
+rather than adding a target.
 
 ### MSL/Metal binding order
 

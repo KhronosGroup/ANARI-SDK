@@ -7,11 +7,16 @@
 
 namespace helide_gpu {
 
+// The matte and physicallyBased subtypes, which share the color, opacity and
+// alpha mode parameters
 struct Matte : public Material
 {
-  Matte(HelideGPUDeviceGlobalState *s);
+  Matte(HelideGPUDeviceGlobalState *s, bool physicallyBased);
   ~Matte() override = default;
   void commitParameters() override;
+
+ private:
+  bool m_physicallyBased{false};
 };
 
 } // namespace helide_gpu

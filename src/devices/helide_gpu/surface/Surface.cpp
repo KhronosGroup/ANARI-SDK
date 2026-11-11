@@ -69,21 +69,24 @@ void Surface::pushFragmentUniforms(SDL_GPURenderPass *pass,
   const bool hasSampler = sampler && sampler->isValid();
   const int32_t samplerModeFromSampler = hasSampler ? sampler->samplerMode() : 0;
 
-  // Resolve material color attribute name to slot index
-  int32_t colorAttrIndex = -1;
-  if (!hasSampler && mat && !mat->colorAttribute().empty()) {
-    const auto &attr = mat->colorAttribute();
+  // Resolve a material's geometry attribute name to its slot index, -1 for
+  // none
+  auto attrSlot = [](const std::string &attr) -> int32_t {
     if (attr == "color")
-      colorAttrIndex = 0;
+      return 0;
     else if (attr == "attribute0")
-      colorAttrIndex = 1;
+      return 1;
     else if (attr == "attribute1")
-      colorAttrIndex = 2;
+      return 2;
     else if (attr == "attribute2")
-      colorAttrIndex = 3;
+      return 3;
     else if (attr == "attribute3")
-      colorAttrIndex = 4;
-  }
+      return 4;
+    return -1;
+  };
+
+  const int32_t colorAttrIndex =
+      !hasSampler && mat ? attrSlot(mat->colorAttribute()) : -1;
 
   int32_t samplerMode = 0;
   int32_t texCoordAttrIdx = 1;
@@ -122,7 +125,12 @@ void Surface::pushFragmentUniforms(SDL_GPURenderPass *pass,
     float opacity;
     int32_t alphaMode;
     float alphaCutoff;
-    float _pad0;
+    float metallic;
+    float roughness;
+    float ior;
+    int32_t metallicAttrIdx;
+    int32_t roughnessAttrIdx;
+    vec4 emissive;
   } fragUniforms{};
 
   fragUniforms.baseColor = vec4(mat ? mat->color() : vec3(1.f), 1.f);
@@ -135,6 +143,13 @@ void Surface::pushFragmentUniforms(SDL_GPURenderPass *pass,
   fragUniforms.opacity = mat ? mat->opacity() : 1.f;
   fragUniforms.alphaMode = mat ? mat->alphaMode() : 0;
   fragUniforms.alphaCutoff = mat ? mat->alphaCutoff() : 0.5f;
+  fragUniforms.metallic = mat ? mat->metallic() : 0.f;
+  fragUniforms.roughness = mat ? mat->roughness() : 1.f;
+  fragUniforms.ior = mat ? mat->ior() : 1.5f;
+  fragUniforms.metallicAttrIdx = mat ? attrSlot(mat->metallicAttribute()) : -1;
+  fragUniforms.roughnessAttrIdx =
+      mat ? attrSlot(mat->roughnessAttribute()) : -1;
+  fragUniforms.emissive = vec4(mat ? mat->emissive() : vec3(0.f), 0.f);
 
   SDL_PushGPUFragmentUniformData(cmd, 0, &fragUniforms, sizeof(fragUniforms));
 
@@ -170,15 +185,8 @@ void Surface::pushFragmentUniforms(SDL_GPURenderPass *pass,
 
   SDL_PushGPUFragmentUniformData(cmd, 1, &sampUniforms, sizeof(sampUniforms));
 
-  // Fragment uniform slot 2: RendererUniforms
-  struct RendererUniforms
-  {
-    float eyeLightBlendRatio;
-    float ambientRadiance;
-  } rendUniforms{};
-  rendUniforms.eyeLightBlendRatio = ctx.eyeLightBlendRatio;
-  rendUniforms.ambientRadiance = ctx.ambientRadiance;
-  SDL_PushGPUFragmentUniformData(cmd, 2, &rendUniforms, sizeof(rendUniforms));
+  // Fragment uniform slot 2 (LightingUniforms) is pushed once per frame by
+  // the frame
 
   // Fragment uniform slot 3: IDUniforms
   struct IDUniforms

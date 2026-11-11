@@ -32,8 +32,10 @@ Renderer *Renderer::createInstance(
 void Renderer::commitParameters()
 {
   m_background = getParam<vec4>("background", vec4(vec3(0.f), 1.f));
-  m_ambientRadiance = getParam<float>("ambientRadiance", 1.f);
-  m_eyeLightBlendRatio = getParam<float>("eyeLightBlendRatio", 0.5f);
+  m_ambientRadiance = std::max(getParam<float>("ambientRadiance", 1.f), 0.f);
+  m_ambientColor = getParam<vec3>("ambientColor", vec3(1.f));
+  m_eyeLightBlendRatio =
+      std::clamp(getParam<float>("eyeLightBlendRatio", 0.5f), 0.f, 1.f);
   m_ignoreAmbientLighting = getParam<bool>("ignoreAmbientLighting", true);
 
   m_ambientOcclusion = getParam<bool>("ambientOcclusion", true);
@@ -58,8 +60,10 @@ void Renderer::commitParameters()
 
 void Renderer::finalize()
 {
-  if (m_ignoreAmbientLighting)
+  if (m_ignoreAmbientLighting) {
     m_ambientRadiance = 1.f;
+    m_ambientColor = vec3(1.f);
+  }
 }
 
 vec4 Renderer::background() const
@@ -70,6 +74,11 @@ vec4 Renderer::background() const
 float Renderer::ambientRadiance() const
 {
   return m_ambientRadiance;
+}
+
+vec3 Renderer::ambientColor() const
+{
+  return m_ambientColor;
 }
 
 float Renderer::eyeLightBlendRatio() const

@@ -20,6 +20,9 @@
 			"khr_geometry_triangle",
 			"khr_instance_transform",
 			"khr_instance_transform_array",
+			"khr_light_directional",
+			"khr_light_point",
+			"khr_light_spot",
 			"khr_material_matte",
 			"khr_material_physically_based",
 			"khr_renderer_ambient_light",
@@ -47,7 +50,7 @@
 					"types": ["ANARI_BOOL"],
 					"tags": [],
 					"default": true,
-					"description": "ignore ambient light objects and use a fixed radiance of 1.0"
+					"description": "ignore ambientRadiance and ambientColor and use a white ambient radiance of 1.0"
 				},
 				{
 					"name": "eyeLightBlendRatio",
@@ -56,7 +59,7 @@
 					"default": 0.5,
 					"minimum": 0.0,
 					"maximum": 1.0,
-					"description": "how much eye lighting factor should be used in default render mode"
+					"description": "the share of the ambient radiance given to a headlight, which lights only a world without lights; the rest is a uniform ambient fill"
 				},
 				{
 					"name": "ambientOcclusion",

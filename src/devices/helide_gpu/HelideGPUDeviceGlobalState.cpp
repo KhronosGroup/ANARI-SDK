@@ -404,7 +404,11 @@ void HelideGPUDeviceGlobalState::gpu_initPipelines()
     colorDescs[0].blend_state.color_write_mask = SDL_GPU_COLORCOMPONENT_R
         | SDL_GPU_COLORCOMPONENT_G | SDL_GPU_COLORCOMPONENT_B
         | SDL_GPU_COLORCOMPONENT_A;
+    // keep .w, the packed ambient light of the surface behind (composite.frag)
     colorDescs[1].format = SDL_GPU_TEXTUREFORMAT_R32G32B32A32_UINT;
+    colorDescs[1].blend_state.enable_color_write_mask = true;
+    colorDescs[1].blend_state.color_write_mask = SDL_GPU_COLORCOMPONENT_R
+        | SDL_GPU_COLORCOMPONENT_G | SDL_GPU_COLORCOMPONENT_B;
     colorDescs[2].format = SDL_GPU_TEXTUREFORMAT_R32G32B32A32_FLOAT;
     colorDescs[3].format = SDL_GPU_TEXTUREFORMAT_R32G32B32A32_FLOAT;
 
@@ -547,7 +551,7 @@ void HelideGPUDeviceGlobalState::gpu_initPipelines()
     {
       SDL_GPUShaderCreateInfo fragInfo{};
       fillShaderInfo(fragInfo, kCompositeFrag, fmt, SDL_GPU_SHADERSTAGE_FRAGMENT);
-      fragInfo.num_samplers = 2;
+      fragInfo.num_samplers = 4;
       fragInfo.num_uniform_buffers = 1;
 
       auto *frag = SDL_CreateGPUShader(dev, &fragInfo);
