@@ -199,6 +199,18 @@ compile_shader_to_header(frag
   ${CMAKE_CURRENT_BINARY_DIR}/volume_frag_spv.h
   volume_frag_spv)
 
+compile_shader_to_header(vert
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/light_quad.vert
+  ${CMAKE_CURRENT_BINARY_DIR}/light_quad.vert.spv
+  ${CMAKE_CURRENT_BINARY_DIR}/light_quad_vert_spv.h
+  light_quad_vert_spv)
+
+compile_shader_to_header(frag
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/light_quad.frag
+  ${CMAKE_CURRENT_BINARY_DIR}/light_quad.frag.spv
+  ${CMAKE_CURRENT_BINARY_DIR}/light_quad_frag_spv.h
+  light_quad_frag_spv)
+
 ## MSL cross-compilation for each shader ##
 
 compile_msl_header(
@@ -269,6 +281,18 @@ compile_msl_header(
   ${CMAKE_CURRENT_BINARY_DIR}/volume_frag_msl.h
   volume_frag_msl)
 
+compile_msl_header(
+  ${CMAKE_CURRENT_BINARY_DIR}/light_quad.vert.spv
+  ${CMAKE_CURRENT_BINARY_DIR}/light_quad.vert.msl
+  ${CMAKE_CURRENT_BINARY_DIR}/light_quad_vert_msl.h
+  light_quad_vert_msl)
+
+compile_msl_header(
+  ${CMAKE_CURRENT_BINARY_DIR}/light_quad.frag.spv
+  ${CMAKE_CURRENT_BINARY_DIR}/light_quad.frag.msl
+  ${CMAKE_CURRENT_BINARY_DIR}/light_quad_frag_msl.h
+  light_quad_frag_msl)
+
 ## Shader build target ##
 
 set(SHADER_DEPS
@@ -283,6 +307,8 @@ set(SHADER_DEPS
   ${CMAKE_CURRENT_BINARY_DIR}/sphere_frag_spv.h
   ${CMAKE_CURRENT_BINARY_DIR}/volume_vert_spv.h
   ${CMAKE_CURRENT_BINARY_DIR}/volume_frag_spv.h
+  ${CMAKE_CURRENT_BINARY_DIR}/light_quad_vert_spv.h
+  ${CMAKE_CURRENT_BINARY_DIR}/light_quad_frag_spv.h
 )
 
 if(SPIRV_CROSS)
@@ -298,6 +324,8 @@ if(SPIRV_CROSS)
     ${CMAKE_CURRENT_BINARY_DIR}/sphere_frag_msl.h
     ${CMAKE_CURRENT_BINARY_DIR}/volume_vert_msl.h
     ${CMAKE_CURRENT_BINARY_DIR}/volume_frag_msl.h
+    ${CMAKE_CURRENT_BINARY_DIR}/light_quad_vert_msl.h
+    ${CMAKE_CURRENT_BINARY_DIR}/light_quad_frag_msl.h
   )
 endif()
 

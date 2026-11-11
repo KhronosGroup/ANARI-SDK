@@ -40,10 +40,15 @@ struct Light : public Object
   // by the quad's area in the frame's space
   vec3 radiance() const;
   bool radianceTimesArea() const;
-  // A quad's light-local edges, and whether both of its sides emit
+  // A quad's light-local edges, and which of its sides emit (the front faces
+  // along cross(edge2, edge1))
   vec3 edge1() const;
   vec3 edge2() const;
-  bool twoSided() const;
+  bool emitsFront() const;
+  bool emitsBack() const;
+  // Whether the camera sees the light (KHR_LIGHT_PRIMARY_VISIBILITY); only a
+  // quad has an area to see
+  bool visible() const;
   // Spot cone: cosines of the half opening angle and of where the falloff
   // starts
   float cosOuterAngle() const;
@@ -61,7 +66,9 @@ struct Light : public Object
   vec3 m_edge1{1.f, 0.f, 0.f};
   vec3 m_edge2{0.f, 1.f, 0.f};
   bool m_radianceTimesArea{false};
-  bool m_twoSided{false};
+  bool m_emitsFront{true};
+  bool m_emitsBack{false};
+  bool m_visible{true};
 };
 
 } // namespace helide_gpu

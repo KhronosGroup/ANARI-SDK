@@ -40,6 +40,13 @@ intensity) and `radiance` (W/sr/m^2, times the quad's area after the instance
 transform). Far from the quad this is accurate; up close it lacks the soft,
 quad-shaped light and highlights of a real area light.
 
+With `visible` (`KHR_LIGHT_PRIMARY_VISIBILITY`, default true) the camera sees
+a quad light as its rectangle, showing the radiance of an emitting side and
+nothing of a side that doesn't emit; Storm doesn't draw lights. Surfaces in
+front hide it. Where it is seen, the ID channels report no hit, the albedo and
+normal channels are 0, and ambient occlusion ignores it. The other lights have
+no area to see.
+
 ### Potential improvements: area lights
 
 - **Analytic area light, no lookup tables.** Diffuse light from the exact
