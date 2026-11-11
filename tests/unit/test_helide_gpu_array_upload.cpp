@@ -14,9 +14,11 @@
 #include "gpu/ArrayUpload.h"
 
 #include "helium/array/Array1D.h"
+#include "helium/array/Array3D.h"
 
 #include <cstdint>
 #include <cstring>
+#include <string>
 #include <vector>
 
 namespace {
@@ -204,6 +206,103 @@ SCENARIO("helide_gpu uploads a 1D array's elements [begin, end)",
 
   for (auto *a : arrays.all())
     device->release((ANARIObject)a);
+  state->commitBuffer.clear();
+  delete device;
+}
+
+// structuredRegular spatial fields upload their 3D data as one float per
+// voxel: writeScalarFieldVoxels() converts it in bulk, and must give exactly
+// the first component of readAsAttributeValue() for every element type.
+
+namespace {
+
+helium::Array3D *newArray3D(helium::BaseGlobalDeviceState *s,
+    const void *appMemory,
+    ANARIDataType elementType,
+    anari::math::uint3 dims)
+{
+  helium::Array3DMemoryDescriptor md;
+  md.appMemory = appMemory;
+  md.elementType = elementType;
+  md.numItems1 = dims.x;
+  md.numItems2 = dims.y;
+  md.numItems3 = dims.z;
+  auto *array = new helium::Array3D(s, md);
+  array->commitParameters();
+  return array;
+}
+
+// What the device converted per voxel before the bulk conversion.
+std::vector<float> perVoxelReference(const helium::Array3D *a)
+{
+  const auto d = a->size();
+  std::vector<float> v;
+  for (uint32_t z = 0; z < d.z; z++)
+    for (uint32_t y = 0; y < d.y; y++)
+      for (uint32_t x = 0; x < d.x; x++)
+        v.push_back(a->readAsAttributeValue(
+                         anari::math::int3(int32_t(x), int32_t(y), int32_t(z)))
+                        .x);
+  return v;
+}
+
+template <typename T>
+std::vector<T> voxelValues(size_t n, T scale)
+{
+  std::vector<T> v(n);
+  for (size_t i = 0; i < n; i++)
+    v[i] = T((i * 37 + 11) % 256) * scale;
+  return v;
+}
+
+} // namespace
+
+SCENARIO("helide_gpu converts structured field voxels to float in bulk",
+    "[helide_gpu_array_upload]")
+{
+  auto *device = new TestDevice;
+  auto *state = device->state();
+
+  const anari::math::uint3 dims(5, 4, 3);
+  const size_t n = size_t(dims.x) * dims.y * dims.z;
+
+  const auto f32 = voxelValues<float>(n, 0.25f);
+  const auto f32v2 = voxelValues<float>(2 * n, 0.5f);
+  const auto u8 = voxelValues<uint8_t>(n, 1);
+  const auto u16 = voxelValues<uint16_t>(n, 251);
+  const auto u32 = voxelValues<uint32_t>(n, 16777259u);
+  const auto i16 = voxelValues<int16_t>(n, 100);
+
+  struct Case
+  {
+    const char *name;
+    const void *data;
+    ANARIDataType type;
+  };
+  const Case cases[] = {{"FLOAT32", f32.data(), ANARI_FLOAT32},
+      {"FLOAT32_VEC2", f32v2.data(), ANARI_FLOAT32_VEC2},
+      {"UFIXED8", u8.data(), ANARI_UFIXED8},
+      {"UFIXED8_R_SRGB", u8.data(), ANARI_UFIXED8_R_SRGB},
+      {"UFIXED16", u16.data(), ANARI_UFIXED16},
+      {"UFIXED32", u32.data(), ANARI_UFIXED32},
+      {"INT16", i16.data(), ANARI_INT16}};
+
+  for (const auto &c : cases) {
+    GIVEN(std::string("a 5x4x3 ") + c.name + " array")
+    {
+      auto *a = newArray3D(state, c.data, c.type, dims);
+
+      THEN("each voxel matches the per-voxel attribute read exactly")
+      {
+        std::vector<float> voxels(n, -1.f);
+        helide_gpu::writeScalarFieldVoxels(a, voxels.data());
+        CHECK(voxels == perVoxelReference(a));
+      }
+
+      device->release((ANARIObject)a);
+    }
+  }
+
   state->commitBuffer.clear();
   delete device;
 }

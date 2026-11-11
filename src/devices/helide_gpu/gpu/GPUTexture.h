@@ -8,6 +8,8 @@
 // helium
 #include "helium/utility/TimeStamp.h"
 // std
+#include <cstring>
+#include <functional>
 #include <type_traits>
 
 namespace helide_gpu {
@@ -37,6 +39,15 @@ struct GPUTexture
       uint32_t h = 1,
       uint32_t d = 1);
 
+  // Upload by writing the texels straight into the staging memory: 'fill'
+  // receives a pointer to 'sizeInBytes' bytes to write. Data that needs
+  // converting first then costs one pass, with no intermediate CPU copy.
+  bool uploadWith(uint32_t sizeInBytes,
+      uint32_t w,
+      uint32_t h,
+      uint32_t d,
+      const std::function<void(void *)> &fill);
+
   // Standalone download GPU data to CPU (own copy pass + wait)
   template <typename T>
   bool download(T *dst, size_t numElements);
@@ -58,11 +69,6 @@ struct GPUTexture
 
  private:
   bool allocDownloadBuffer();
-  bool uploadImpl(const void *src,
-      uint32_t sizeInBytes,
-      uint32_t w,
-      uint32_t h,
-      uint32_t d);
   bool downloadImpl(void *dst, uint32_t sizeInBytes);
   void free();
 
@@ -96,7 +102,9 @@ inline bool GPUTexture::upload(
   if (numElements == 0)
     return true;
   const uint32_t sizeInBytes = static_cast<uint32_t>(numElements * sizeof(T));
-  return uploadImpl(src, sizeInBytes, w, h, d);
+  return uploadWith(sizeInBytes, w, h, d, [&](void *dst) {
+    std::memcpy(dst, src, sizeInBytes);
+  });
 }
 
 template <typename T>
