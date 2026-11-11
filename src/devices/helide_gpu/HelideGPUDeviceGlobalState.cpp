@@ -21,6 +21,7 @@
 
 #include "blur_frag_spv.h"
 #include "composite_frag_spv.h"
+#include "hdri_frag_spv.h"
 #include "fullscreen_vert_spv.h"
 #include "ssao_frag_spv.h"
 
@@ -34,6 +35,7 @@
 #include "volume_vert_msl.h"
 #include "blur_frag_msl.h"
 #include "composite_frag_msl.h"
+#include "hdri_frag_msl.h"
 #include "fullscreen_vert_msl.h"
 #include "ssao_frag_msl.h"
 
@@ -64,6 +66,7 @@ const ShaderData kFullscreenVert   = SHADER_DATA(fullscreen_vert);
 const ShaderData kSsaoFrag         = SHADER_DATA(ssao_frag);
 const ShaderData kBlurFrag         = SHADER_DATA(blur_frag);
 const ShaderData kCompositeFrag    = SHADER_DATA(composite_frag);
+const ShaderData kHdriFrag         = SHADER_DATA(hdri_frag);
 
 #undef SHADER_DATA
 // clang-format on
@@ -588,6 +591,72 @@ void HelideGPUDeviceGlobalState::gpu_initPipelines()
       SDL_ReleaseGPUShader(dev, frag);
     }
 
+    // Visible hdri lights: drawn into the geometry pass's targets, adding
+    // to the color target's rgb only
+    {
+      SDL_GPUShaderCreateInfo fragInfo{};
+      fillShaderInfo(fragInfo, kHdriFrag, fmt, SDL_GPU_SHADERSTAGE_FRAGMENT);
+      fragInfo.num_samplers = 1;
+      fragInfo.num_uniform_buffers = 1;
+
+      auto *frag = SDL_CreateGPUShader(dev, &fragInfo);
+      if (!frag) {
+        anariDeviceReportStatus(device, ANARI_SEVERITY_ERROR,
+            ANARI_STATUS_UNKNOWN_ERROR,
+            "[SDL3_gpu] Failed to create hdri fragment shader: %s",
+            SDL_GetError());
+        SDL_ReleaseGPUShader(dev, fsVert);
+        return;
+      }
+
+      SDL_GPUColorTargetDescription colorDescs[4]{};
+      colorDescs[0].format = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM;
+      colorDescs[0].blend_state.enable_blend = true;
+      colorDescs[0].blend_state.src_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
+      colorDescs[0].blend_state.dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
+      colorDescs[0].blend_state.color_blend_op = SDL_GPU_BLENDOP_ADD;
+      colorDescs[0].blend_state.src_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
+      colorDescs[0].blend_state.dst_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ZERO;
+      colorDescs[0].blend_state.alpha_blend_op = SDL_GPU_BLENDOP_ADD;
+      colorDescs[0].blend_state.enable_color_write_mask = true;
+      colorDescs[0].blend_state.color_write_mask = SDL_GPU_COLORCOMPONENT_R
+          | SDL_GPU_COLORCOMPONENT_G | SDL_GPU_COLORCOMPONENT_B;
+      // the other targets keep their cleared "no surface" values
+      colorDescs[1].format = SDL_GPU_TEXTUREFORMAT_R32G32B32A32_UINT;
+      colorDescs[2].format = SDL_GPU_TEXTUREFORMAT_R32G32B32A32_FLOAT;
+      colorDescs[3].format = SDL_GPU_TEXTUREFORMAT_R32G32B32A32_FLOAT;
+      for (int i = 1; i < 4; i++) {
+        colorDescs[i].blend_state.enable_color_write_mask = true;
+        colorDescs[i].blend_state.color_write_mask = 0;
+      }
+
+      SDL_GPUGraphicsPipelineTargetInfo targetInfo{};
+      targetInfo.color_target_descriptions = colorDescs;
+      targetInfo.num_color_targets = 4;
+      targetInfo.has_depth_stencil_target = true;
+      targetInfo.depth_stencil_format = SDL_GPU_TEXTUREFORMAT_D32_FLOAT;
+
+      // no depth test or write: drawn first, behind everything
+      SDL_GPUDepthStencilState depthState{};
+
+      SDL_GPUGraphicsPipelineCreateInfo pipelineInfo{};
+      pipelineInfo.vertex_shader = fsVert;
+      pipelineInfo.fragment_shader = frag;
+      pipelineInfo.vertex_input_state = emptyVertexInput;
+      pipelineInfo.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST;
+      pipelineInfo.depth_stencil_state = depthState;
+      pipelineInfo.target_info = targetInfo;
+
+      gpu.hdriPipeline = SDL_CreateGPUGraphicsPipeline(dev, &pipelineInfo);
+      if (!gpu.hdriPipeline) {
+        anariDeviceReportStatus(device, ANARI_SEVERITY_ERROR,
+            ANARI_STATUS_UNKNOWN_ERROR,
+            "[SDL3_gpu] Failed to create hdri pipeline: %s", SDL_GetError());
+      }
+
+      SDL_ReleaseGPUShader(dev, frag);
+    }
+
     SDL_ReleaseGPUShader(dev, fsVert);
   }
 }
@@ -605,6 +674,7 @@ void HelideGPUDeviceGlobalState::gpu_destroyPipelines()
     }
   };
 
+  releaseP(gpu.hdriPipeline);
   releaseP(gpu.compositePipeline);
   releaseP(gpu.blurPipeline);
   releaseP(gpu.ssaoPipeline);

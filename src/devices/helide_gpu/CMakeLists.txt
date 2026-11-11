@@ -213,6 +213,12 @@ compile_shader_to_header(frag
   ${CMAKE_CURRENT_BINARY_DIR}/light_quad_frag_spv.h
   light_quad_frag_spv)
 
+compile_shader_to_header(frag
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/hdri.frag
+  ${CMAKE_CURRENT_BINARY_DIR}/hdri.frag.spv
+  ${CMAKE_CURRENT_BINARY_DIR}/hdri_frag_spv.h
+  hdri_frag_spv)
+
 ## MSL cross-compilation for each shader ##
 
 # Fragment resource slots must retain their GLSL binding numbers: automatic
@@ -305,6 +311,13 @@ compile_msl_header(
   light_quad_frag_msl
   --msl-decoration-binding)
 
+compile_msl_header(
+  ${CMAKE_CURRENT_BINARY_DIR}/hdri.frag.spv
+  ${CMAKE_CURRENT_BINARY_DIR}/hdri.frag.msl
+  ${CMAKE_CURRENT_BINARY_DIR}/hdri_frag_msl.h
+  hdri_frag_msl
+  --msl-decoration-binding)
+
 ## Shader build target ##
 
 set(SHADER_DEPS
@@ -321,6 +334,7 @@ set(SHADER_DEPS
   ${CMAKE_CURRENT_BINARY_DIR}/volume_frag_spv.h
   ${CMAKE_CURRENT_BINARY_DIR}/light_quad_vert_spv.h
   ${CMAKE_CURRENT_BINARY_DIR}/light_quad_frag_spv.h
+  ${CMAKE_CURRENT_BINARY_DIR}/hdri_frag_spv.h
 )
 
 if(SPIRV_CROSS)
@@ -338,6 +352,7 @@ if(SPIRV_CROSS)
     ${CMAKE_CURRENT_BINARY_DIR}/volume_frag_msl.h
     ${CMAKE_CURRENT_BINARY_DIR}/light_quad_vert_msl.h
     ${CMAKE_CURRENT_BINARY_DIR}/light_quad_frag_msl.h
+    ${CMAKE_CURRENT_BINARY_DIR}/hdri_frag_msl.h
   )
 endif()
 
@@ -424,6 +439,7 @@ project_add_library(SHARED
   gpu/GPUBuffer.cpp
   gpu/GPUTexture.cpp
   gpu/sdl3_gpu_device.cpp
+  light/Hdri.cpp
   light/Light.cpp
   material/Material.cpp
   material/Matte.cpp

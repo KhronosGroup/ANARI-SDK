@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Frame.h"
+#include "light/Hdri.h"
 // std
 #include <algorithm>
 #include <chrono>
@@ -339,6 +340,11 @@ void Frame::gpu_renderFrame_geometryPass(
     SDL_GPUCommandBuffer *cmd, bool deferAmbient)
 {
   auto bgc = m_renderer ? m_renderer->background() : vec4(1.f, 0.f, 1.f, 1.f);
+  // visible hdris replace the background, opaque, and sum
+  const bool hdriBackground = m_camera && m_renderer && m_world
+      && deviceState()->gpu.hdriPipeline && gpu_hasVisibleHdris();
+  if (hdriBackground)
+    bgc = vec4(0.f, 0.f, 0.f, 1.f);
 
   // Render pass: clear color, packed IDs (~0u), albedo (0), normal (0)
   float idClearVal;
@@ -399,6 +405,9 @@ void Frame::gpu_renderFrame_geometryPass(
     // the same for every surface: pushed once, as uniform data stays bound
     // for the command buffer's later draws
     gpu_pushLightingUniforms(cmd, V, deferAmbient);
+
+    if (hdriBackground)
+      gpu_drawVisibleHdris(pass, cmd, V, P);
 
     for (auto *instance : m_world->instances()) {
       if (!instance || !instance->isValid())
@@ -464,6 +473,78 @@ void Frame::gpu_renderFrame_geometryPass(
   }
 
   SDL_EndGPURenderPass(pass);
+}
+
+bool Frame::gpu_hasVisibleHdris() const
+{
+  for (auto *instance : m_world->instances()) {
+    if (!instance || !instance->isValid() || !instance->group())
+      continue;
+    for (auto *light : instance->group()->lights()) {
+      if (light && light->isValid() && light->type() == LightType::HDRI
+          && light->visible())
+        return true;
+    }
+  }
+  return false;
+}
+
+void Frame::gpu_drawVisibleHdris(SDL_GPURenderPass *pass,
+    SDL_GPUCommandBuffer *cmd,
+    const mat4 &V,
+    const mat4 &P)
+{
+  auto &state = *deviceState();
+  SDL_BindGPUGraphicsPipeline(pass, state.gpu.hdriPipeline);
+
+  // matches HdriUniforms in shaders/hdri.frag (std140)
+  struct HdriUniforms
+  {
+    mat4 invProj;
+    mat4 viewToWorld;
+    vec4 left;
+    vec4 up;
+    vec4 direction;
+    vec4 emission;
+  };
+  static_assert(sizeof(HdriUniforms) == 192, "HdriUniforms layout");
+
+  const mat4 invProj = glm::inverse(P);
+  const mat4 viewToWorld = glm::inverse(V);
+  for (auto *instance : m_world->instances()) {
+    if (!instance || !instance->isValid() || !instance->group())
+      continue;
+    for (size_t t = 0; t < instance->numTransforms(); t++) {
+      const mat4 M = instance->xfm(t);
+      for (auto *light : instance->group()->lights()) {
+        if (!light || !light->isValid() || light->type() != LightType::HDRI
+            || !light->visible())
+          continue;
+        auto *hdri = static_cast<Hdri *>(light);
+        vec3 left, up, direction;
+        if (!Hdri::frame(vec3(M * vec4(hdri->up(), 0.f)),
+                vec3(M * vec4(hdri->hdriDirection(), 0.f)),
+                left,
+                up,
+                direction))
+          continue;
+
+        SDL_GPUTextureSamplerBinding binding{};
+        binding.texture = hdri->texture().sdlTexture();
+        binding.sampler = state.gpu.nearestClampSampler;
+        SDL_BindGPUFragmentSamplers(pass, 0, &binding, 1);
+
+        const HdriUniforms u{invProj,
+            viewToWorld,
+            vec4(left, 0.f),
+            vec4(up, 0.f),
+            vec4(direction, 0.f),
+            vec4(hdri->emission(), 0.f)};
+        SDL_PushGPUFragmentUniformData(cmd, 0, &u, sizeof(u));
+        SDL_DrawGPUPrimitives(pass, 3, 1, 0, 0);
+      }
+    }
+  }
 }
 
 void Frame::gpu_drawVisibleLights(SDL_GPURenderPass *pass,
@@ -568,8 +649,10 @@ void Frame::gpu_pushLightingUniforms(
   const float frameAspect = float(m_size.x) / float(m_size.y);
   u.perspective = m_camera->projMatrix(frameAspect)[2][3] != 0.f ? 1 : 0;
 
-  // The world's lights, instanced like its surfaces, in view space
+  // The world's lights, instanced like its surfaces, in view space; hdris
+  // add their mean radiance to the ambient light instead
   size_t numWorldLights = 0;
+  size_t numShadedLights = 0;
   for (auto *instance : m_world->instances()) {
     if (!instance || !instance->isValid() || !instance->group())
       continue;
@@ -578,7 +661,13 @@ void Frame::gpu_pushLightingUniforms(
       for (auto *light : instance->group()->lights()) {
         if (!light || !light->isValid())
           continue;
-        if (numWorldLights++ >= MAX_LIGHTS)
+        numWorldLights++;
+        if (light->type() == LightType::HDRI) {
+          auto *hdri = static_cast<Hdri *>(light);
+          u.ambient += vec4(hdri->meanRadiance() * hdri->emission(), 0.f);
+          continue;
+        }
+        if (numShadedLights++ >= MAX_LIGHTS)
           continue;
         auto &l = u.lights[u.numLights++];
         const vec3 dir = vec3(MV * vec4(light->direction(), 0.f));
@@ -603,16 +692,19 @@ void Frame::gpu_pushLightingUniforms(
     }
   }
 
-  if (numWorldLights > MAX_LIGHTS && numWorldLights != m_lastWarnedLightCount) {
-    m_lastWarnedLightCount = numWorldLights;
+  if (numShadedLights > MAX_LIGHTS
+      && numShadedLights != m_lastWarnedLightCount) {
+    m_lastWarnedLightCount = numShadedLights;
     reportMessage(ANARI_SEVERITY_WARNING,
-        "helide_gpu shades with only the first %d of the world's %zu lights",
+        "helide_gpu shades with only the first %d of the world's %zu lights "
+        "(not counting hdri lights)",
         MAX_LIGHTS,
-        numWorldLights);
+        numShadedLights);
   }
 
-  // A world without lights gets the headlight, scaled so that its Lambert
-  // term is eyeLightBlendRatio * ambientRadiance at normal incidence
+  // A world without lights (an hdri counts) gets the headlight, scaled so that
+  // its Lambert term is eyeLightBlendRatio * ambientRadiance at normal
+  // incidence
   if (numWorldLights == 0 && blend > 0.f) {
     auto &l = u.lights[u.numLights++];
     l.position = vec4(vec3(0.f), LIGHT_HEADLIGHT);

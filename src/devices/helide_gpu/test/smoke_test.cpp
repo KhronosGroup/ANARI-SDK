@@ -535,6 +535,193 @@ static bool renderQuadLightScenes(anari::Device d, uvec2 imgSize, float aspect)
 }
 
 // ---------------------------------------------------------------------------
+// Hdri light: a 4 x 2 map (up +z, direction +x, so left is +y) seen by a
+// camera at the origin, or lighting a matte floor seen from above. Returns
+// the color and object ID at the image center.
+// ---------------------------------------------------------------------------
+
+struct HdriSetup
+{
+  const vec3 *map; // 4 x 2, row 0 towards -up
+  bool visible = true;
+  bool floor = false;
+  vec3 cameraDirection = {1.f, 0.f, 0.3f};
+  float ambientRadiance = 0.f;
+  // a wide view, read at a row this far above the center (below if
+  // negative; ANARI's row 0 is the bottom)
+  int rowsAboveCenter = 0;
+};
+
+static QuadLightResult renderHdriScene(
+    anari::Device d, uvec2 imgSize, float aspect, const HdriSetup &h)
+{
+  auto world = anari::newObject<anari::World>(d);
+
+  if (h.floor) {
+    vec3 positions[] = {{-50.f, -50.f, 0.f},
+        {50.f, -50.f, 0.f},
+        {50.f, 50.f, 0.f},
+        {-50.f, 50.f, 0.f}};
+    uvec3 indices[] = {{0, 1, 2}, {0, 2, 3}};
+    auto geom = anari::newObject<anari::Geometry>(d, "triangle");
+    anari::setParameterArray1D(d, geom, "vertex.position", positions, 4);
+    anari::setParameterArray1D(d, geom, "primitive.index", indices, 2);
+    anari::commitParameters(d, geom);
+    auto mat = anari::newObject<anari::Material>(d, "matte");
+    anari::commitParameters(d, mat);
+    auto surface = anari::newObject<anari::Surface>(d);
+    anari::setAndReleaseParameter(d, surface, "geometry", geom);
+    anari::setAndReleaseParameter(d, surface, "material", mat);
+    anari::commitParameters(d, surface);
+    anari::setParameterArray1D(d, world, "surface", &surface, 1);
+    anari::release(d, surface);
+  }
+
+  if (h.map) {
+    auto light = anari::newObject<anari::Light>(d, "hdri");
+    anari::setParameterArray2D(d, light, "radiance", h.map, 4, 2);
+    anari::setParameter(d, light, "visible", h.visible);
+    anari::commitParameters(d, light);
+    anari::setParameterArray1D(d, world, "light", &light, 1);
+    anari::release(d, light);
+  }
+  anari::commitParameters(d, world);
+
+  auto camera = anari::newObject<anari::Camera>(d, "perspective");
+  vec3 camPos = h.floor ? vec3{0.f, 0.f, 5.f} : vec3{0.f, 0.f, 0.f};
+  vec3 camDir = h.floor ? vec3{0.f, 0.3f, -1.f} : h.cameraDirection;
+  vec3 camUp = h.floor ? vec3{0.f, 1.f, 0.f} : vec3{0.f, 0.f, 1.f};
+  anari::setParameter(d, camera, "position", camPos);
+  anari::setParameter(d, camera, "direction", camDir);
+  anari::setParameter(d, camera, "up", camUp);
+  anari::setParameter(d,
+      camera,
+      "fovy",
+      float(h.rowsAboveCenter != 0 ? M_PI / 2.0 : M_PI / 8.0));
+  anari::setParameter(d, camera, "aspect", aspect);
+  anari::commitParameters(d, camera);
+
+  auto renderer = anari::newObject<anari::Renderer>(d, "default");
+  vec4 bg = {0.0f, 0.0f, 0.0f, 1.f};
+  anari::setParameter(d, renderer, "background", bg);
+  anari::setParameter(d, renderer, "ignoreAmbientLighting", false);
+  anari::setParameter(d, renderer, "ambientRadiance", h.ambientRadiance);
+  // an hdri turns the headlight off: the reference without one needs none
+  anari::setParameter(d, renderer, "eyeLightBlendRatio", h.map ? 0.5f : 0.f);
+  anari::commitParameters(d, renderer);
+
+  auto frame = anari::newObject<anari::Frame>(d);
+  anari::setParameter(d, frame, "size", imgSize);
+  anari::setParameter(d, frame, "channel.color", ANARI_UFIXED8_VEC4);
+  anari::setParameter(d, frame, "channel.objectId", ANARI_UINT32);
+  anari::setAndReleaseParameter(d, frame, "renderer", renderer);
+  anari::setAndReleaseParameter(d, frame, "camera", camera);
+  anari::setAndReleaseParameter(d, frame, "world", world);
+  anari::commitParameters(d, frame);
+
+  anari::render(d, frame);
+  anari::wait(d, frame);
+
+  QuadLightResult result;
+  const size_t center =
+      (imgSize[1] / 2 + h.rowsAboveCenter) * imgSize[0] + imgSize[0] / 2;
+  auto fb = anari::map<RGBA8>(d, frame, "channel.color");
+  if (fb.data) {
+    result.color = fb.data[center];
+    anari::unmap(d, frame, "channel.color");
+  }
+  auto ib = anari::map<uint32_t>(d, frame, "channel.objectId");
+  if (ib.data) {
+    result.objectId = ib.data[center];
+    anari::unmap(d, frame, "channel.objectId");
+  }
+  anari::release(d, frame);
+  return result;
+}
+
+static bool renderHdriScenes(anari::Device d, uvec2 imgSize, float aspect)
+{
+  // distinct texels, row 0 towards -up
+  vec3 map[8];
+  for (int y = 0; y < 2; y++) {
+    for (int x = 0; x < 4; x++)
+      map[y * 4 + x] = {0.1f + 0.2f * x, 0.1f + 0.4f * y, 0.1f * (x + 1)};
+  }
+  auto texel = [&](int x, int y) {
+    const vec3 &v = map[y * 4 + x];
+    auto q = [](float f) { return uint8_t(std::lround(f * 255.f)); };
+    return RGBA8{q(v[0]), q(v[1]), q(v[2]), 255};
+  };
+
+  // Camera rays that miss: 'direction' is the image's center column, left
+  // (+y) a quarter turn before it, above the horizon the top row
+  const QuadLightResult center =
+      renderHdriScene(d, imgSize, aspect, {map, true, false, {1.f, 0.f, 0.3f}});
+  const QuadLightResult below = renderHdriScene(
+      d, imgSize, aspect, {map, true, false, {1.f, 0.f, -0.3f}});
+  const QuadLightResult left = renderHdriScene(
+      d, imgSize, aspect, {map, true, false, {0.02f, 1.f, 0.3f}});
+  const QuadLightResult behind = renderHdriScene(
+      d, imgSize, aspect, {map, true, false, {-1.f, -0.02f, 0.3f}});
+  // a horizontal view: up the image is up the map
+  const QuadLightResult upper = renderHdriScene(
+      d, imgSize, aspect, {map, true, false, {1.f, 0.f, 0.f}, 0.f, 128});
+  const QuadLightResult lower = renderHdriScene(
+      d, imgSize, aspect, {map, true, false, {1.f, 0.f, 0.f}, 0.f, -128});
+  const QuadLightResult invisible = renderHdriScene(
+      d, imgSize, aspect, {map, false, false, {1.f, 0.f, 0.3f}});
+
+  // Lighting: a uniform gray map lights like the same ambient radiance
+  vec3 gray[8];
+  for (auto &g : gray)
+    g = {0.6f, 0.6f, 0.6f};
+  const RGBA8 litByHdri =
+      renderHdriScene(d, imgSize, aspect, {gray, false, true}).color;
+  const RGBA8 litByAmbient =
+      renderHdriScene(d, imgSize, aspect, {nullptr, false, true, {}, 0.6f})
+          .color;
+
+  auto close = [](RGBA8 a, RGBA8 b) {
+    return std::abs(int(a.r) - int(b.r)) <= 2
+        && std::abs(int(a.g) - int(b.g)) <= 2
+        && std::abs(int(a.b) - int(b.b)) <= 2;
+  };
+  struct Check
+  {
+    const char *name;
+    RGBA8 value;
+    bool ok;
+  };
+  const Check checks[] = {
+      {"seen: direction, above",
+          center.color,
+          close(center.color, texel(2, 1))},
+      {"seen: direction, below", below.color, close(below.color, texel(2, 0))},
+      {"seen: left", left.color, close(left.color, texel(1, 1))},
+      {"seen: behind", behind.color, close(behind.color, texel(3, 1))},
+      {"seen: image top", upper.color, close(upper.color, texel(2, 1))},
+      {"seen: image bottom", lower.color, close(lower.color, texel(2, 0))},
+      {"seen: no hit id", center.color, center.objectId == ~0u},
+      {"invisible: background",
+          invisible.color,
+          close(invisible.color, {0, 0, 0, 255})},
+      {"lit: gray map == ambient", litByHdri, close(litByHdri, litByAmbient)},
+      {"lit: gray map lights", litByHdri, luminance(litByHdri) > 0.1f},
+  };
+  bool ok = true;
+  for (const auto &c : checks) {
+    printf("[smoke_test] hdri: %-28s rgb=(%3u,%3u,%3u) => %s\n",
+        c.name,
+        c.value.r,
+        c.value.g,
+        c.value.b,
+        c.ok ? "PASS" : "FAIL");
+    ok = ok && c.ok;
+  }
+  return ok;
+}
+
+// ---------------------------------------------------------------------------
 // main
 // ---------------------------------------------------------------------------
 
@@ -744,9 +931,10 @@ int main(int argc, const char **argv)
   anari::release(d, frame);
 
   const bool quadLightPassed = renderQuadLightScenes(d, imgSize, aspect);
+  const bool hdriPassed = renderHdriScenes(d, imgSize, aspect);
 
   passed = passed && cylinderPassed && conePassed && curvePassed
-      && faceVaryingPassed && quadLightPassed;
+      && faceVaryingPassed && quadLightPassed && hdriPassed;
 
   printf("[smoke_test] overall: %s\n", passed ? "PASS" : "FAIL");
 
