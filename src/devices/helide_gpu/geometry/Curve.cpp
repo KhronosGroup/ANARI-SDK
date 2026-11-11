@@ -102,6 +102,7 @@ void Curve::commitParameters()
 
 void Curve::finalize()
 {
+  updateBounds();
   if (!m_positions) {
     reportMessage(ANARI_SEVERITY_WARNING,
         "missing required parameter 'vertex.position' on curve geometry");
@@ -110,7 +111,7 @@ void Curve::finalize()
   gpu_enqueue_method(this, &Curve::gpu_finalizeGeometry);
 }
 
-box3 Curve::bounds() const
+box3 Curve::computeBounds() const
 {
   box3 b;
   if (!m_positions)

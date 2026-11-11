@@ -14,8 +14,6 @@
 
 #include "GLContextInterface.h"
 
-#include <cmath>
-#include <cstdlib>
 #include <cstring>
 #include <vector>
 
@@ -163,76 +161,8 @@ static void gpu_device_init(HelideGPUDeviceGlobalState *state)
     }
   }
 
-  // Create SSAO shared resources: 4x4 noise texture + samplers
+  // Create the post-process samplers
   {
-    // 4x4 noise texture with random tangent-plane vectors
-    SDL_GPUTextureCreateInfo texInfo{};
-    texInfo.type = SDL_GPU_TEXTURETYPE_2D;
-    texInfo.format = SDL_GPU_TEXTUREFORMAT_R32G32B32A32_FLOAT;
-    texInfo.usage = SDL_GPU_TEXTUREUSAGE_SAMPLER;
-    texInfo.width = 4;
-    texInfo.height = 4;
-    texInfo.layer_count_or_depth = 1;
-    texInfo.num_levels = 1;
-    texInfo.sample_count = SDL_GPU_SAMPLECOUNT_1;
-    gpu.ssaoNoiseTex = SDL_CreateGPUTexture(gpu.device, &texInfo);
-
-    if (gpu.ssaoNoiseTex) {
-      const int noiseSize = 4 * 4;
-      float noiseData[noiseSize * 4]; // RGBA32F
-      srand(42);
-      for (int i = 0; i < noiseSize; ++i) {
-        float x = (float(rand()) / float(RAND_MAX)) * 2.0f - 1.0f;
-        float y = (float(rand()) / float(RAND_MAX)) * 2.0f - 1.0f;
-        float len = std::sqrt(x * x + y * y);
-        if (len > 0.0f) {
-          x /= len;
-          y /= len;
-        }
-        noiseData[i * 4 + 0] = x;
-        noiseData[i * 4 + 1] = y;
-        noiseData[i * 4 + 2] = 0.0f;
-        noiseData[i * 4 + 3] = 0.0f;
-      }
-
-      SDL_GPUTransferBufferCreateInfo tbInfo{};
-      tbInfo.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD;
-      tbInfo.size = sizeof(noiseData);
-      auto *tb = SDL_CreateGPUTransferBuffer(gpu.device, &tbInfo);
-      if (tb) {
-        auto *p = static_cast<float *>(
-            SDL_MapGPUTransferBuffer(gpu.device, tb, false));
-        if (p) {
-          std::memcpy(p, noiseData, sizeof(noiseData));
-          SDL_UnmapGPUTransferBuffer(gpu.device, tb);
-        }
-        auto *cmd = SDL_AcquireGPUCommandBuffer(gpu.device);
-        auto *pass = SDL_BeginGPUCopyPass(cmd);
-        SDL_GPUTextureTransferInfo src{};
-        src.transfer_buffer = tb;
-        SDL_GPUTextureRegion dst{};
-        dst.texture = gpu.ssaoNoiseTex;
-        dst.w = 4;
-        dst.h = 4;
-        dst.d = 1;
-        SDL_UploadToGPUTexture(pass, &src, &dst, false);
-        SDL_EndGPUCopyPass(pass);
-        SDL_SubmitGPUCommandBuffer(cmd);
-        SDL_WaitForGPUIdle(gpu.device);
-        SDL_ReleaseGPUTransferBuffer(gpu.device, tb);
-      }
-    }
-
-    // Noise sampler: nearest filter, repeat wrap
-    SDL_GPUSamplerCreateInfo noiseSampInfo{};
-    noiseSampInfo.min_filter = SDL_GPU_FILTER_NEAREST;
-    noiseSampInfo.mag_filter = SDL_GPU_FILTER_NEAREST;
-    noiseSampInfo.mipmap_mode = SDL_GPU_SAMPLERMIPMAPMODE_NEAREST;
-    noiseSampInfo.address_mode_u = SDL_GPU_SAMPLERADDRESSMODE_REPEAT;
-    noiseSampInfo.address_mode_v = SDL_GPU_SAMPLERADDRESSMODE_REPEAT;
-    noiseSampInfo.address_mode_w = SDL_GPU_SAMPLERADDRESSMODE_REPEAT;
-    gpu.ssaoNoiseSampler = SDL_CreateGPUSampler(gpu.device, &noiseSampInfo);
-
     // Linear clamp sampler for post-process texture reads
     SDL_GPUSamplerCreateInfo linearSampInfo{};
     linearSampInfo.min_filter = SDL_GPU_FILTER_LINEAR;
@@ -268,14 +198,6 @@ static void gpu_device_release(HelideGPUDeviceGlobalState *state)
     if (gpu.linearClampSampler) {
       SDL_ReleaseGPUSampler(gpu.device, gpu.linearClampSampler);
       gpu.linearClampSampler = nullptr;
-    }
-    if (gpu.ssaoNoiseSampler) {
-      SDL_ReleaseGPUSampler(gpu.device, gpu.ssaoNoiseSampler);
-      gpu.ssaoNoiseSampler = nullptr;
-    }
-    if (gpu.ssaoNoiseTex) {
-      SDL_ReleaseGPUTexture(gpu.device, gpu.ssaoNoiseTex);
-      gpu.ssaoNoiseTex = nullptr;
     }
     if (gpu.dummyStorageBuffer) {
       SDL_ReleaseGPUBuffer(gpu.device, gpu.dummyStorageBuffer);

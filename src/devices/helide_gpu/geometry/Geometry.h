@@ -38,7 +38,9 @@ struct Geometry : public Object
   static Geometry *createInstance(
       std::string_view subtype, HelideGPUDeviceGlobalState *s);
 
-  virtual box3 bounds() const;
+  // The object-space bounds as of the last finalize(), empty (inverted) for
+  // none
+  box3 bounds() const;
 
   virtual void bindPipelineAndBuffers(SDL_GPURenderPass *pass,
       SDL_GPUCommandBuffer *cmd,
@@ -47,6 +49,15 @@ struct Geometry : public Object
       SDL_GPUCommandBuffer *cmd,
       const SurfaceDrawContext &ctx) = 0;
   virtual GeometryAttrInfo attrInfo() const = 0;
+
+ protected:
+  // Caches computeBounds() for bounds(); subtypes call it in finalize(), so
+  // reading the bounds per frame doesn't walk the vertices
+  void updateBounds();
+  virtual box3 computeBounds() const;
+
+ private:
+  box3 m_bounds;
 };
 
 } // namespace helide_gpu

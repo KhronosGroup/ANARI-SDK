@@ -128,5 +128,7 @@ void main()
     // Write albedo (pre-lighting surface color) and world-space normal
     outAlbedo = vec4(color, 0.0);
     vec3 Nw = normalize(vNormalWorld);
-    outNormal = vec4(Nw, 0.0);
+    // .w: the view depth, from which the SSAO and blur passes rebuild the
+    // view-space position
+    outNormal = vec4(Nw, -vPosView.z);
 }

@@ -11,6 +11,8 @@ layout(location = 7) flat in vec4 vAttr3;
 layout(location = 8) flat in vec3 vCenterWorld;
 layout(location = 9) flat in mat4 vProj;
 layout(location = 13) flat in int vInstanceIndex;
+layout(location = 14) in vec3 vPosWorld;
+layout(location = 15) flat in vec3 vEyeWorld;
 
 layout(location = 0) out vec4 FragColor;
 layout(location = 1) out uvec4 outIds;
@@ -83,20 +85,10 @@ void main()
     vec3 hitView = rayDir * t;
     vec3 normalView = normalize(hitView - vCenterView);
 
-    // Compute world-space normal: the sphere normal in view space is
-    // (hit - center)/radius.  To get world-space normal we note that for a
-    // sphere, the normal direction equals the (hit - center) direction in any
-    // space, so we can compute it from the world-space center.
-    // Since we don't have invMV, approximate world normal from the view normal
-    // by using the fact that the sphere is symmetric -- the normal in object
-    // space is the same unit vector as in any uniformly-scaled space.
-    // For correctness with non-uniform model transforms we would need invMV,
-    // but for typical use cases (uniform scale or identity model) this works:
-    vec3 hitDir = normalize(hitView - vCenterView);
-    // We use the interpolated world center to reconstruct world normal
-    // by noting that the offset direction from center is the same in any
-    // orthonormal basis.  This is exact for orthogonal transforms.
-    vec3 normalWorld = hitDir; // approximate; exact for identity/uniform model
+    // World-space normal: the same hit along the world-space ray, as the view
+    // transform is rigid and so keeps the distance t
+    vec3 hitWorld = vEyeWorld + normalize(vPosWorld - vEyeWorld) * t;
+    vec3 normalWorld = hitWorld - vCenterWorld;
 
     // Write corrected depth from the actual sphere surface
     vec4 clipPos = vProj * vec4(hitView, 1.0);
@@ -169,5 +161,7 @@ void main()
 
     // Albedo and world-space normal
     outAlbedo = vec4(color, 0.0);
-    outNormal = vec4(normalize(normalWorld), 0.0);
+    // .w: the view depth, from which the SSAO and blur passes rebuild the
+    // view-space position
+    outNormal = vec4(normalize(normalWorld), -hitView.z);
 }

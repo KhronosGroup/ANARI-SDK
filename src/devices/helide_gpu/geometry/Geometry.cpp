@@ -15,6 +15,16 @@ Geometry::Geometry(HelideGPUDeviceGlobalState *s) : Object(ANARI_GEOMETRY, s) {}
 
 box3 Geometry::bounds() const
 {
+  return m_bounds;
+}
+
+void Geometry::updateBounds()
+{
+  m_bounds = computeBounds();
+}
+
+box3 Geometry::computeBounds() const
+{
   return {};
 }
 

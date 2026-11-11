@@ -48,7 +48,7 @@ struct Triangle : public Geometry
   void finalize() override;
 
   bool isValid() const override;
-  box3 bounds() const override;
+  box3 computeBounds() const override;
   const TriangleGPUState &gpuState() const;
 
   void bindPipelineAndBuffers(SDL_GPURenderPass *pass,

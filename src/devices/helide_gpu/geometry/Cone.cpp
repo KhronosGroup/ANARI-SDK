@@ -113,6 +113,7 @@ void Cone::commitParameters()
 
 void Cone::finalize()
 {
+  updateBounds();
   if (!m_positions) {
     reportMessage(ANARI_SEVERITY_WARNING,
         "missing required parameter 'vertex.position' on cone geometry");
@@ -121,7 +122,7 @@ void Cone::finalize()
   gpu_enqueue_method(this, &Cone::gpu_finalizeGeometry);
 }
 
-box3 Cone::bounds() const
+box3 Cone::computeBounds() const
 {
   box3 b;
   if (!m_positions)

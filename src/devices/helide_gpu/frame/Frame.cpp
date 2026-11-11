@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cstring>
+#include <utility>
 
 namespace helide_gpu {
 
@@ -219,7 +220,7 @@ void Frame::gpu_allocateObjects()
       SDL_GPU_TEXTUREUSAGE_COLOR_TARGET | SDL_GPU_TEXTUREUSAGE_SAMPLER);
   m_gpuState.colorTarget.alloc(width, height);
 
-  // Depth render target (SAMPLER usage for SSAO depth reads)
+  // Depth render target
   m_gpuState.depthTarget = GPUTexture(dev,
       SDL_GPU_TEXTUREFORMAT_D32_FLOAT,
       SDL_GPU_TEXTUREUSAGE_DEPTH_STENCIL_TARGET | SDL_GPU_TEXTUREUSAGE_SAMPLER);
@@ -232,7 +233,8 @@ void Frame::gpu_allocateObjects()
   m_gpuState.idsTarget.alloc(width, height);
 
   // Albedo and normal render targets (always created -- required by MRT
-  // pipeline). Normal needs SAMPLER usage for SSAO.
+  // pipeline). The SSAO and blur passes sample the normal target, which
+  // holds the world-space normal in .xyz and the view depth in .w.
   m_gpuState.albedoTarget = GPUTexture(dev,
       SDL_GPU_TEXTUREFORMAT_R32G32B32A32_FLOAT,
       SDL_GPU_TEXTUREUSAGE_COLOR_TARGET);
@@ -302,9 +304,14 @@ void Frame::gpu_renderFrame()
   auto *cam = dynamic_cast<Camera *>(m_camera.ptr);
   auto &gpuPipelines = deviceState()->gpu;
 
-  const bool doSSAO = m_renderer && m_renderer->ssaoEnabled()
-      && gpuPipelines.ssaoPipeline && gpuPipelines.compositePipeline
-      && m_gpuState.aoTarget && m_gpuState.colorTargetB && cam;
+  // ambient occlusion needs a radius, which may derive from the world bounds
+  const float aoRadius = m_renderer && m_renderer->ambientOcclusion() && m_world
+      ? m_renderer->ambientOcclusionRadius(m_world->bounds())
+      : 0.f;
+  const bool doSSAO = aoRadius > 0.f && gpuPipelines.ssaoPipeline
+      && gpuPipelines.blurPipeline && gpuPipelines.compositePipeline
+      && m_gpuState.aoTarget && m_gpuState.aoBlurTarget
+      && m_gpuState.colorTargetB && cam;
 
   // The composite pass also applies sRGB output encoding, so run it whenever
   // the application requested an sRGB frame channel even without SSAO.
@@ -313,10 +320,10 @@ void Frame::gpu_renderFrame()
       || (needsSRGB && m_renderer && gpuPipelines.compositePipeline
           && m_gpuState.colorTargetB);
 
-  if (doSSAO)
-    gpu_renderFrame_ssaoPass(cmd, cam);
+  SDL_GPUTexture *aoTex =
+      doSSAO ? gpu_renderFrame_ssaoPass(cmd, cam, aoRadius) : nullptr;
   if (doComposite)
-    gpu_renderFrame_compositePass(cmd, doSSAO, needsSRGB);
+    gpu_renderFrame_compositePass(cmd, aoTex, needsSRGB);
 
   gpu_renderFrame_downloadPass(cmd, doComposite);
 
@@ -451,14 +458,18 @@ void Frame::gpu_renderFrame_geometryPass(SDL_GPUCommandBuffer *cmd)
   SDL_EndGPURenderPass(pass);
 }
 
-void Frame::gpu_renderFrame_ssaoPass(
-    SDL_GPUCommandBuffer *cmd, const Camera *cam)
+SDL_GPUTexture *Frame::gpu_renderFrame_ssaoPass(
+    SDL_GPUCommandBuffer *cmd, const Camera *cam, float radius)
 {
   auto &state = *deviceState();
 
   const float frameAspect = float(m_size.x) / float(m_size.y);
   const mat4 P = cam->projMatrix(frameAspect);
   const mat4 V = cam->viewMatrix();
+  const vec2 frameSize(m_size.x, m_size.y);
+  const vec2 projScale(P[0][0], P[1][1]);
+  // a perspective projection's w is -z (P[2][3] == -1), an orthographic's 1
+  const int perspective = P[2][3] != 0.f ? 1 : 0;
 
   SDL_GPUViewport viewport{};
   viewport.x = 0.f;
@@ -471,54 +482,43 @@ void Frame::gpu_renderFrame_ssaoPass(
   SDL_Rect scissor{
       0, 0, static_cast<int>(m_size.x), static_cast<int>(m_size.y)};
 
-  // --- SSAO pass ---
+  // --- SSAO pass: the unblurred occlusion factor into aoTarget ---
   {
     SDL_GPUColorTargetInfo aoColorInfo{};
     aoColorInfo.texture = m_gpuState.aoTarget.sdlTexture();
-    aoColorInfo.load_op = SDL_GPU_LOADOP_CLEAR;
-    aoColorInfo.clear_color = {1, 1, 1, 1}; // default: no occlusion
+    aoColorInfo.load_op = SDL_GPU_LOADOP_DONT_CARE;
     aoColorInfo.store_op = SDL_GPU_STOREOP_STORE;
 
     SDL_GPURenderPass *ssaoPass =
         SDL_BeginGPURenderPass(cmd, &aoColorInfo, 1, nullptr);
-    SDL_BindGPUGraphicsPipeline(ssaoPass, deviceState()->gpu.ssaoPipeline);
+    SDL_BindGPUGraphicsPipeline(ssaoPass, state.gpu.ssaoPipeline);
     SDL_SetGPUViewport(ssaoPass, &viewport);
     SDL_SetGPUScissor(ssaoPass, &scissor);
 
-    SDL_GPUTextureSamplerBinding ssaoSamplers[4]{};
-    ssaoSamplers[0].texture = m_gpuState.depthTarget.sdlTexture();
-    ssaoSamplers[0].sampler = state.gpu.linearClampSampler;
-    ssaoSamplers[1].texture = m_gpuState.normalTarget.sdlTexture();
-    ssaoSamplers[1].sampler = state.gpu.linearClampSampler;
-    ssaoSamplers[2].texture = state.gpu.ssaoNoiseTex;
-    ssaoSamplers[2].sampler = state.gpu.ssaoNoiseSampler;
-    ssaoSamplers[3].texture = m_gpuState.idsTarget.sdlTexture();
-    ssaoSamplers[3].sampler = state.gpu.nearestClampSampler;
-    SDL_BindGPUFragmentSamplers(ssaoPass, 0, ssaoSamplers, 4);
+    SDL_GPUTextureSamplerBinding ssaoSampler{};
+    ssaoSampler.texture = m_gpuState.normalTarget.sdlTexture();
+    ssaoSampler.sampler = state.gpu.nearestClampSampler;
+    SDL_BindGPUFragmentSamplers(ssaoPass, 0, &ssaoSampler, 1);
 
+    // matches SSAOParams in ssao.frag (std140)
     struct SSAOUniforms
     {
-      mat4 projection;
-      mat4 invProjection;
       mat4 view;
-      vec4 samples[64];
+      vec2 frameSize;
+      vec2 projScale;
       float radius;
-      float bias;
       float intensity;
-      int kernelSize;
-      vec2 noiseScale;
-      vec2 _pad;
+      int estimator;
+      int perspective;
     } ssaoU{};
 
-    ssaoU.projection = P;
-    ssaoU.invProjection = glm::inverse(P);
     ssaoU.view = V;
-    std::memcpy(ssaoU.samples, m_renderer->ssaoKernel(), 64 * sizeof(vec4));
-    ssaoU.radius = m_renderer->ssaoRadius();
-    ssaoU.bias = m_renderer->ssaoBias();
-    ssaoU.intensity = m_renderer->ssaoIntensity();
-    ssaoU.kernelSize = m_renderer->ssaoKernelSize();
-    ssaoU.noiseScale = vec2(m_size.x / 4.0f, m_size.y / 4.0f);
+    ssaoU.frameSize = frameSize;
+    ssaoU.projScale = projScale;
+    ssaoU.radius = radius;
+    ssaoU.intensity = m_renderer->ambientOcclusionIntensity();
+    ssaoU.estimator = m_renderer->ambientOcclusionEstimator();
+    ssaoU.perspective = perspective;
 
     SDL_PushGPUFragmentUniformData(cmd, 0, &ssaoU, sizeof(ssaoU));
 
@@ -526,47 +526,60 @@ void Frame::gpu_renderFrame_ssaoPass(
     SDL_EndGPURenderPass(ssaoPass);
   }
 
-  // --- Blur pass (optional) ---
-  if (m_renderer->ssaoBlurEnabled() && deviceState()->gpu.blurPipeline
-      && m_gpuState.aoBlurTarget) {
+  // --- Blur passes: each reads the previous result, ping-ponging between
+  // aoTarget and aoBlurTarget ---
+  GPUTexture *source = &m_gpuState.aoTarget;
+  GPUTexture *target = &m_gpuState.aoBlurTarget;
+  const int blurPasses = m_renderer->ambientOcclusionBlurPasses();
+  for (int pass = 1; pass <= blurPasses; pass++) {
     SDL_GPUColorTargetInfo blurColorInfo{};
-    blurColorInfo.texture = m_gpuState.aoBlurTarget.sdlTexture();
+    blurColorInfo.texture = target->sdlTexture();
     blurColorInfo.load_op = SDL_GPU_LOADOP_DONT_CARE;
     blurColorInfo.store_op = SDL_GPU_STOREOP_STORE;
 
     SDL_GPURenderPass *blurPass =
         SDL_BeginGPURenderPass(cmd, &blurColorInfo, 1, nullptr);
-    SDL_BindGPUGraphicsPipeline(blurPass, deviceState()->gpu.blurPipeline);
+    SDL_BindGPUGraphicsPipeline(blurPass, state.gpu.blurPipeline);
     SDL_SetGPUViewport(blurPass, &viewport);
     SDL_SetGPUScissor(blurPass, &scissor);
 
-    SDL_GPUTextureSamplerBinding blurSamplers[3]{};
-    blurSamplers[0].texture = m_gpuState.aoTarget.sdlTexture();
-    blurSamplers[0].sampler = state.gpu.linearClampSampler;
-    blurSamplers[1].texture = m_gpuState.depthTarget.sdlTexture();
-    blurSamplers[1].sampler = state.gpu.linearClampSampler;
-    blurSamplers[2].texture = m_gpuState.idsTarget.sdlTexture();
-    blurSamplers[2].sampler = state.gpu.nearestClampSampler;
-    SDL_BindGPUFragmentSamplers(blurPass, 0, blurSamplers, 3);
+    SDL_GPUTextureSamplerBinding blurSamplers[2]{};
+    blurSamplers[0].texture = source->sdlTexture();
+    blurSamplers[0].sampler = state.gpu.nearestClampSampler;
+    blurSamplers[1].texture = m_gpuState.normalTarget.sdlTexture();
+    blurSamplers[1].sampler = state.gpu.nearestClampSampler;
+    SDL_BindGPUFragmentSamplers(blurPass, 0, blurSamplers, 2);
 
+    // matches BlurParams in blur.frag (std140)
     struct BlurUniforms
     {
-      vec2 texelSize;
-      int blurRadius;
+      vec2 frameSize;
+      vec2 projScale;
+      float radius;
+      int pass;
+      int perspective;
       int _pad;
     } blurU{};
-    blurU.texelSize = vec2(1.0f / m_size.x, 1.0f / m_size.y);
-    blurU.blurRadius = 2;
+    blurU.frameSize = frameSize;
+    blurU.projScale = projScale;
+    blurU.radius = radius;
+    blurU.pass = pass;
+    blurU.perspective = perspective;
 
     SDL_PushGPUFragmentUniformData(cmd, 0, &blurU, sizeof(blurU));
 
     SDL_DrawGPUPrimitives(blurPass, 3, 1, 0, 0);
     SDL_EndGPURenderPass(blurPass);
+
+    std::swap(source, target);
   }
+
+  // the last pass's result (blurPasses >= 1)
+  return source->sdlTexture();
 }
 
 void Frame::gpu_renderFrame_compositePass(
-    SDL_GPUCommandBuffer *cmd, bool doSSAO, bool needsSRGB)
+    SDL_GPUCommandBuffer *cmd, SDL_GPUTexture *aoTex, bool needsSRGB)
 {
   auto &state = *deviceState();
 
@@ -595,16 +608,9 @@ void Frame::gpu_renderFrame_compositePass(
   SDL_GPUTextureSamplerBinding compSamplers[2]{};
   compSamplers[0].texture = m_gpuState.colorTarget.sdlTexture();
   compSamplers[0].sampler = state.gpu.linearClampSampler;
-  // When SSAO ran, use the (possibly blurred) AO result; otherwise bind the
-  // color target as a dummy (AO value is unused, shader reads ao=1.0 via
-  // the uniform flag).
-  SDL_GPUTexture *aoTex = m_gpuState.colorTarget.sdlTexture(); // dummy fallback
-  if (doSSAO) {
-    aoTex = (m_renderer->ssaoBlurEnabled() && m_gpuState.aoBlurTarget)
-        ? m_gpuState.aoBlurTarget.sdlTexture()
-        : m_gpuState.aoTarget.sdlTexture();
-  }
-  compSamplers[1].texture = aoTex;
+  // Without ambient occlusion, bind the color target as a dummy (the shader
+  // doesn't read it, per the applyAO flag)
+  compSamplers[1].texture = aoTex ? aoTex : m_gpuState.colorTarget.sdlTexture();
   compSamplers[1].sampler = state.gpu.linearClampSampler;
   SDL_BindGPUFragmentSamplers(compPass, 0, compSamplers, 2);
 
@@ -615,7 +621,7 @@ void Frame::gpu_renderFrame_compositePass(
     int _pad0;
     int _pad1;
   } compU{};
-  compU.applyAO = doSSAO ? 1 : 0;
+  compU.applyAO = aoTex ? 1 : 0;
   compU.applySRGB = needsSRGB ? 1 : 0;
   SDL_PushGPUFragmentUniformData(cmd, 0, &compU, sizeof(compU));
 

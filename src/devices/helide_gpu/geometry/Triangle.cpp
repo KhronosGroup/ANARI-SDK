@@ -64,6 +64,7 @@ void Triangle::commitParameters()
 
 void Triangle::finalize()
 {
+  updateBounds();
   if (!m_positions) {
     reportMessage(ANARI_SEVERITY_WARNING,
         "missing required parameter 'vertex.position' on triangle geometry");
@@ -72,7 +73,7 @@ void Triangle::finalize()
   gpu_enqueue_method(this, &Triangle::gpu_finalizeGeometry);
 }
 
-box3 Triangle::bounds() const
+box3 Triangle::computeBounds() const
 {
   box3 b;
   if (m_positions) {

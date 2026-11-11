@@ -59,51 +59,44 @@
 					"description": "how much eye lighting factor should be used in default render mode"
 				},
 				{
-					"name": "ssao",
-					"types": ["ANARI_BOOL"],
-					"tags": [],
-					"default": false,
-					"description": "enable screen-space ambient occlusion (SSAO)"
-				},
-				{
-					"name": "ssao.radius",
-					"types": ["ANARI_FLOAT32"],
-					"tags": [],
-					"default": 0.5,
-					"minimum": 0.0,
-					"description": "SSAO hemisphere sample radius"
-				},
-				{
-					"name": "ssao.bias",
-					"types": ["ANARI_FLOAT32"],
-					"tags": [],
-					"default": 0.025,
-					"minimum": 0.0,
-					"description": "SSAO depth bias to prevent self-occlusion"
-				},
-				{
-					"name": "ssao.intensity",
-					"types": ["ANARI_FLOAT32"],
-					"tags": [],
-					"default": 0.5,
-					"minimum": 0.0,
-					"description": "SSAO strength multiplier"
-				},
-				{
-					"name": "ssao.samples",
-					"types": ["ANARI_INT32"],
-					"tags": [],
-					"default": 32,
-					"minimum": 1,
-					"maximum": 64,
-					"description": "number of SSAO hemisphere samples per pixel"
-				},
-				{
-					"name": "ssao.blur",
+					"name": "ambientOcclusion",
 					"types": ["ANARI_BOOL"],
 					"tags": [],
 					"default": true,
-					"description": "enable bilateral blur on the SSAO result"
+					"description": "darken surfaces by screen-space ambient occlusion"
+				},
+				{
+					"name": "ambientOcclusionRadius",
+					"types": ["ANARI_FLOAT32"],
+					"tags": [],
+					"default": 0.0,
+					"minimum": 0.0,
+					"description": "world-space distance within which geometry occludes; 0 uses 3 percent of the world bounds diagonal, and so does a negative value, which is clamped to 0 without a warning"
+				},
+				{
+					"name": "ambientOcclusionEstimator",
+					"types": ["ANARI_STRING"],
+					"tags": [],
+					"default": "g3d",
+					"values": ["g3d", "sao"],
+					"description": "form of the occlusion estimator: g3d (G3D's high-quality SAO) or sao (the SAO paper's, with its linear intensity set to the radius so that it doesn't depend on the scene's units)"
+				},
+				{
+					"name": "ambientOcclusionIntensity",
+					"types": ["ANARI_FLOAT32"],
+					"tags": [],
+					"default": 1.0,
+					"minimum": 0.0,
+					"description": "exponent of the occlusion factor: above 1 darkens, below 1 lightens, 0 gives an occlusion factor of 1"
+				},
+				{
+					"name": "ambientOcclusionBlurPasses",
+					"types": ["ANARI_INT32"],
+					"tags": [],
+					"default": 1,
+					"minimum": 1,
+					"maximum": 5,
+					"description": "passes of the depth-aware blur of the occlusion factor: the first removes the noise of its 4x4 rotation pattern, each further pass (an a-trous pass with twice the previous stride) smooths bands near contacts; values outside [1, 5] are clamped without a warning"
 				}
 			]
 		}

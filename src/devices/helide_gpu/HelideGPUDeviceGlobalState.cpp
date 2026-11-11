@@ -465,7 +465,7 @@ void HelideGPUDeviceGlobalState::gpu_initPipelines()
     {
       SDL_GPUShaderCreateInfo fragInfo{};
       fillShaderInfo(fragInfo, kSsaoFrag, fmt, SDL_GPU_SHADERSTAGE_FRAGMENT);
-      fragInfo.num_samplers = 4;
+      fragInfo.num_samplers = 1;
       fragInfo.num_uniform_buffers = 1;
 
       auto *frag = SDL_CreateGPUShader(dev, &fragInfo);
@@ -506,7 +506,7 @@ void HelideGPUDeviceGlobalState::gpu_initPipelines()
     {
       SDL_GPUShaderCreateInfo fragInfo{};
       fillShaderInfo(fragInfo, kBlurFrag, fmt, SDL_GPU_SHADERSTAGE_FRAGMENT);
-      fragInfo.num_samplers = 3;
+      fragInfo.num_samplers = 2;
       fragInfo.num_uniform_buffers = 1;
 
       auto *frag = SDL_CreateGPUShader(dev, &fragInfo);
