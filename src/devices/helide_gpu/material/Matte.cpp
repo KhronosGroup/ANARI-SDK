@@ -23,6 +23,8 @@ void Matte::commitParameters()
   m_roughness = 1.f;
   m_metallicAttribute.clear();
   m_roughnessAttribute.clear();
+  m_metallicSampler = nullptr;
+  m_roughnessSampler = nullptr;
   m_ior = 1.5f;
   m_emissive = vec3(0.f);
 
@@ -73,13 +75,15 @@ void Matte::commitParameters()
     }
   }
 
-  // physicallyBased's other parameters: metallic and roughness may also name
-  // a geometry attribute, a sampler falls back to the default
+  // physicallyBased's other parameters: metallic and roughness may also be a
+  // sampler or name a geometry attribute
   if (m_physicallyBased) {
     m_metallic = std::clamp(getParam<float>("metallic", 1.f), 0.f, 1.f);
     m_metallicAttribute = getParamString("metallic", "");
+    m_metallicSampler = getParamObject<Sampler>("metallic");
     m_roughness = std::clamp(getParam<float>("roughness", 1.f), 0.f, 1.f);
     m_roughnessAttribute = getParamString("roughness", "");
+    m_roughnessSampler = getParamObject<Sampler>("roughness");
     m_ior = std::max(getParam<float>("ior", 1.5f), 1.f);
     m_emissive = getParam<vec3>("emissive", vec3(0.f));
   }

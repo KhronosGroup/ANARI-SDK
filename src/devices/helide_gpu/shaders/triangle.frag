@@ -17,37 +17,9 @@ layout(location = 1) out uvec4 outIds;    // R=primitiveId, G=objectId, B=instan
 layout(location = 2) out vec4 outAlbedo;
 layout(location = 3) out vec4 outNormal;
 
-// Fragment sampler at set=2, binding=0 (SDL3_gpu fragment sampler slot 0)
-layout(set = 2, binding = 0) uniform sampler3D texSampler;
-
-// Fragment uniform buffer slot 0: material + attribute data
-layout(set = 3, binding = 0) uniform MaterialUniforms {
-    vec4 baseColor;        // material's uniform color (RGB, alpha unused)
-    vec4 uniformAttr[5];   // geometry-level fallback [color, attr0..3]
-    uint attrMask;         // bitmask: which slots have per-vertex data
-    int  colorAttrIndex;   // which attribute slot material samples (-1 = use baseColor)
-    int  samplerMode;      // 0=uniform color, 1=geometry attribute, 2=texture sampler
-    int  texCoordAttrIdx;  // which attr slot has texture coordinates (for mode 2)
-    float opacity;         // surface opacity (0=transparent, 1=opaque)
-    int   alphaMode;       // 0=opaque, 1=blend (screen door dither), 2=mask (binary cutoff)
-    float alphaCutoff;     // opacity threshold for alphaMode=mask
-    float metallic;
-    float roughness;
-    float ior;
-    int   metallicAttrIdx;   // attribute slot for metallic (-1 = uniform)
-    int   roughnessAttrIdx;  // attribute slot for roughness (-1 = uniform)
-    vec4  emissive;        // rgb: emitted radiance
-} mat_u;
-
-// Fragment uniform buffer slot 1: sampler transforms
-layout(set = 3, binding = 1) uniform SamplerTransforms {
-    mat4 inTransform;
-    vec4 inOffset;
-    mat4 outTransform;
-    vec4 outOffset;
-    uint primitiveOffset;
-    uint arraySize;
-} samp_u;
+// The material uniforms and samplers (fragment sampler slots 0..2, uniform
+// buffer slots 0 and 1)
+#include "material.glsl"
 
 // Fragment uniform buffer slot 2: lighting (LightingUniforms)
 #include "shading.glsl"
@@ -67,44 +39,9 @@ void main()
     // Gather all attribute varyings into an indexable array
     vec4 attrs[5] = vec4[5](vColor, vAttr0, vAttr1, vAttr2, vAttr3);
 
-    // Resolve the surface color based on samplerMode
-    vec3 color;
-    if (mat_u.samplerMode == 2) {
-        // Texture sampler path
-        int idx = mat_u.texCoordAttrIdx;
-        vec4 attrVal = ((mat_u.attrMask & (1u << idx)) != 0u)
-            ? attrs[idx]
-            : mat_u.uniformAttr[idx];
-        vec4 tc = samp_u.inTransform * attrVal + samp_u.inOffset;
-        vec4 sampled = texture(texSampler, tc.xyz);
-        vec4 result = samp_u.outTransform * sampled + samp_u.outOffset;
-        color = result.xyz;
-    } else if (mat_u.samplerMode == 3) {
-        // Transform sampler: read attribute, apply in+out transforms
-        int idx = mat_u.texCoordAttrIdx;
-        vec4 attrVal = ((mat_u.attrMask & (1u << idx)) != 0u)
-            ? attrs[idx]
-            : mat_u.uniformAttr[idx];
-        vec4 transformed = samp_u.inTransform * attrVal + samp_u.inOffset;
-        vec4 result = samp_u.outTransform * transformed + samp_u.outOffset;
-        color = result.xyz;
-    } else if (mat_u.samplerMode == 4) {
-        // Primitive sampler: lookup per-primitive data from 1D texture
-        uint primIdx = vPrimitiveIndex + samp_u.primitiveOffset;
-        float u = (float(primIdx) + 0.5) / float(samp_u.arraySize);
-        vec4 sampled = texture(texSampler, vec3(u, 0.5, 0.5));
-        vec4 result = samp_u.outTransform * sampled + samp_u.outOffset;
-        color = result.xyz;
-    } else if (mat_u.colorAttrIndex >= 0) {
-        // Geometry attribute path
-        int idx = mat_u.colorAttrIndex;
-        color = ((mat_u.attrMask & (1u << idx)) != 0u)
-            ? attrs[idx].xyz
-            : mat_u.uniformAttr[idx].xyz;
-    } else {
-        // Uniform color path
-        color = mat_u.baseColor.xyz;
-    }
+    // Primitive samplers index by the triangle
+    uint primIdx = vPrimitiveIndex;
+    vec3 color = materialColor(attrs, primIdx);
 
     // Screen door transparency
     if (mat_u.alphaMode == 1) {
@@ -127,18 +64,8 @@ void main()
     // Storm's UsdPreviewSurface shading, the normal turned to the viewer
     vec3 P = vPosView;
     vec3 N = faceForward(normalize(vNormalView), Ng, P);
-    float metallic = mat_u.metallic;
-    if (mat_u.metallicAttrIdx >= 0) {
-        int idx = mat_u.metallicAttrIdx;
-        metallic = clamp(((mat_u.attrMask & (1u << idx)) != 0u)
-            ? attrs[idx].x : mat_u.uniformAttr[idx].x, 0.0, 1.0);
-    }
-    float roughness = mat_u.roughness;
-    if (mat_u.roughnessAttrIdx >= 0) {
-        int idx = mat_u.roughnessAttrIdx;
-        roughness = clamp(((mat_u.attrMask & (1u << idx)) != 0u)
-            ? attrs[idx].x : mat_u.uniformAttr[idx].x, 0.0, 1.0);
-    }
+    float metallic = materialMetallic(attrs, primIdx);
+    float roughness = materialRoughness(attrs, primIdx);
     ShadingResult shading =
         shade(P, N, color, metallic, roughness, mat_u.ior);
     vec3 direct = shading.direct + mat_u.emissive.rgb;
