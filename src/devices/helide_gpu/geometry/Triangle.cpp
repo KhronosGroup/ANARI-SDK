@@ -176,60 +176,6 @@ void Triangle::bindPipelineAndBuffers(SDL_GPURenderPass *pass,
         uvec4(gs.attrMask, gs.hasSourcePrimitiveIds ? 1u : 0u, 0u, 0u),
         uvec4(gs.attrKind, gs.packedComponents, gs.faceVaryingMask, 0u)};
     SDL_PushGPUVertexUniformData(cmd, 0, &u, sizeof(u));
-  } else if (ds->gpu.trianglePipeline && gs.positions) {
-    SDL_BindGPUGraphicsPipeline(pass, ds->gpu.trianglePipeline);
-
-    SDL_GPUBufferBinding dummyVB{};
-    dummyVB.buffer = ds->gpu.dummyVertexBuffer;
-    SDL_BindGPUVertexBuffers(pass, 0, &dummyVB, 1);
-
-    const bool usingMSL =
-        ds->gpu.sdlDevice.shaderFormat == SDL_GPU_SHADERFORMAT_MSL;
-    SDL_GPUBuffer *storageBufs[9];
-    if (usingMSL) {
-      storageBufs[0] = gs.positions.sdlBuffer();
-      storageBufs[1] = gs.normals ? gs.normals.sdlBuffer() : dummyBuf;
-      storageBufs[2] =
-          gs.sourcePrimitiveIds ? gs.sourcePrimitiveIds.sdlBuffer() : dummyBuf;
-      storageBufs[3] = gs.indices ? gs.indices.sdlBuffer() : dummyBuf;
-      storageBufs[4] = gs.attr[0] ? gs.attr[0].sdlBuffer() : dummyBuf;
-      storageBufs[5] = gs.attr[1] ? gs.attr[1].sdlBuffer() : dummyBuf;
-      storageBufs[6] = gs.attr[2] ? gs.attr[2].sdlBuffer() : dummyBuf;
-      storageBufs[7] = gs.attr[3] ? gs.attr[3].sdlBuffer() : dummyBuf;
-      storageBufs[8] = gs.attr[4] ? gs.attr[4].sdlBuffer() : dummyBuf;
-    } else {
-      storageBufs[0] = gs.positions.sdlBuffer();
-      storageBufs[1] = gs.normals ? gs.normals.sdlBuffer() : dummyBuf;
-      storageBufs[2] = gs.indices ? gs.indices.sdlBuffer() : dummyBuf;
-      storageBufs[3] = gs.attr[0] ? gs.attr[0].sdlBuffer() : dummyBuf;
-      storageBufs[4] = gs.attr[1] ? gs.attr[1].sdlBuffer() : dummyBuf;
-      storageBufs[5] = gs.attr[2] ? gs.attr[2].sdlBuffer() : dummyBuf;
-      storageBufs[6] = gs.attr[3] ? gs.attr[3].sdlBuffer() : dummyBuf;
-      storageBufs[7] = gs.attr[4] ? gs.attr[4].sdlBuffer() : dummyBuf;
-      storageBufs[8] =
-          gs.sourcePrimitiveIds ? gs.sourcePrimitiveIds.sdlBuffer() : dummyBuf;
-    }
-    SDL_BindGPUVertexStorageBuffers(pass, 0, storageBufs, 9);
-
-    struct
-    {
-      mat4 mvp;
-      mat4 mv;
-      mat4 m;
-      uvec4 geomInfo;
-      uvec4 attrInfo;
-    } u{ctx.MVP,
-        ctx.MV,
-        ctx.M,
-        uvec4(gs.posCount,
-            gs.hasIndices ? 1u : 0u,
-            gs.hasNormals ? 1u : 0u,
-            gs.attrMask),
-        uvec4(gs.attrKind,
-            gs.packedComponents,
-            gs.hasSourcePrimitiveIds ? 1u : 0u,
-            0u)};
-    SDL_PushGPUVertexUniformData(cmd, 0, &u, sizeof(u));
   }
 }
 
@@ -242,8 +188,6 @@ void Triangle::issueDrawCall(SDL_GPURenderPass *pass,
 
   if (ds->gpu.triangleMeshPipeline && gs.vertexData) {
     SDL_DrawGPUPrimitives(pass, gs.vertexCount, 1, 0, 0);
-  } else if (ds->gpu.trianglePipeline && gs.positions) {
-    SDL_DrawGPUPrimitives(pass, gs.triangleCount * 3, 1, 0, 0);
   }
 }
 

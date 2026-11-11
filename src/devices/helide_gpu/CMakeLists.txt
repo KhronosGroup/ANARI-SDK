@@ -213,6 +213,11 @@ compile_shader_to_header(frag
 
 ## MSL cross-compilation for each shader ##
 
+# Fragment resource slots must retain their GLSL binding numbers: automatic
+# MSL assignment follows usage order and can swap material/lighting UBOs or
+# composite textures. Vertex storage buffers use the ordering handled below
+# and in the geometry binding code.
+
 compile_msl_header(
   ${CMAKE_CURRENT_BINARY_DIR}/triangle.vert.spv
   ${CMAKE_CURRENT_BINARY_DIR}/triangle.vert.msl
@@ -229,7 +234,8 @@ compile_msl_header(
   ${CMAKE_CURRENT_BINARY_DIR}/triangle.frag.spv
   ${CMAKE_CURRENT_BINARY_DIR}/triangle.frag.msl
   ${CMAKE_CURRENT_BINARY_DIR}/triangle_frag_msl.h
-  triangle_frag_msl)
+  triangle_frag_msl
+  --msl-decoration-binding)
 
 compile_msl_header(
   ${CMAKE_CURRENT_BINARY_DIR}/fullscreen.vert.spv
@@ -255,7 +261,8 @@ compile_msl_header(
   ${CMAKE_CURRENT_BINARY_DIR}/composite.frag.spv
   ${CMAKE_CURRENT_BINARY_DIR}/composite.frag.msl
   ${CMAKE_CURRENT_BINARY_DIR}/composite_frag_msl.h
-  composite_frag_msl)
+  composite_frag_msl
+  --msl-decoration-binding)
 
 compile_msl_header(
   ${CMAKE_CURRENT_BINARY_DIR}/sphere.vert.spv
@@ -267,7 +274,8 @@ compile_msl_header(
   ${CMAKE_CURRENT_BINARY_DIR}/sphere.frag.spv
   ${CMAKE_CURRENT_BINARY_DIR}/sphere.frag.msl
   ${CMAKE_CURRENT_BINARY_DIR}/sphere_frag_msl.h
-  sphere_frag_msl)
+  sphere_frag_msl
+  --msl-decoration-binding)
 
 compile_msl_header(
   ${CMAKE_CURRENT_BINARY_DIR}/volume.vert.spv
@@ -279,7 +287,8 @@ compile_msl_header(
   ${CMAKE_CURRENT_BINARY_DIR}/volume.frag.spv
   ${CMAKE_CURRENT_BINARY_DIR}/volume.frag.msl
   ${CMAKE_CURRENT_BINARY_DIR}/volume_frag_msl.h
-  volume_frag_msl)
+  volume_frag_msl
+  --msl-decoration-binding)
 
 compile_msl_header(
   ${CMAKE_CURRENT_BINARY_DIR}/light_quad.vert.spv
@@ -291,7 +300,8 @@ compile_msl_header(
   ${CMAKE_CURRENT_BINARY_DIR}/light_quad.frag.spv
   ${CMAKE_CURRENT_BINARY_DIR}/light_quad.frag.msl
   ${CMAKE_CURRENT_BINARY_DIR}/light_quad_frag_msl.h
-  light_quad_frag_msl)
+  light_quad_frag_msl
+  --msl-decoration-binding)
 
 ## Shader build target ##
 

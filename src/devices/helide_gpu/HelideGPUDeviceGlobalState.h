@@ -41,7 +41,6 @@ struct HelideGPUDeviceGlobalState : public helium::BaseGlobalDeviceState
     SDL_GPUSampler *nearestClampSampler{nullptr};
 
     // Graphics pipelines (owned by device, not by Renderer)
-    SDL_GPUGraphicsPipeline *trianglePipeline{nullptr};
     SDL_GPUGraphicsPipeline *triangleMeshPipeline{nullptr};
     SDL_GPUGraphicsPipeline *spherePipeline{nullptr};
     SDL_GPUGraphicsPipeline *volumePipeline{nullptr};
