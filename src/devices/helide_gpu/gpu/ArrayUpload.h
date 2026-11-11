@@ -30,4 +30,9 @@ struct ArrayUploadData
 
 ArrayUploadData arrayUploadData(const helium::Array *arr, bool convertToFloat);
 
+// Writes the voxels of a structured spatial field's data array to 'dst' as
+// arr->totalSize() floats: each the first component of the array's
+// readAsAttributeValue(), converted in bulk. FLOAT32 data is copied as stored.
+void writeScalarFieldVoxels(const helium::Array *arr, float *dst);
+
 } // namespace helide_gpu

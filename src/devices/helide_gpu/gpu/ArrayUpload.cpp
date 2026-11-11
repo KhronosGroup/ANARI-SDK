@@ -9,6 +9,7 @@
 #include <anari/frontend/type_utility.h>
 // std
 #include <cstring>
+#include <limits>
 
 namespace helide_gpu {
 
@@ -76,6 +77,45 @@ ArrayUploadData arrayUploadData(const helium::Array *arr, bool convertToFloat)
   }
 
   return retval;
+}
+
+// Normalizes unsigned fixed-point voxels to [0, 1] as readAsAttributeValue()
+// does, dividing by the type's maximum as a float.
+template <typename T>
+static void convertUfixed(const void *src, float *dst, size_t n)
+{
+  constexpr float m = float(std::numeric_limits<T>::max());
+  const auto *s = static_cast<const T *>(src);
+  for (size_t i = 0; i < n; ++i)
+    dst[i] = s[i] / m;
+}
+
+void writeScalarFieldVoxels(const helium::Array *arr, float *dst)
+{
+  const ANARIDataType type = arr->elementType();
+  const size_t numElements = arr->totalSize();
+  const void *src = firstElement(arr);
+
+  switch (type) {
+  case ANARI_FLOAT32:
+    std::memcpy(dst, src, numElements * sizeof(float));
+    break;
+  case ANARI_UFIXED8:
+    convertUfixed<uint8_t>(src, dst, numElements);
+    break;
+  case ANARI_UFIXED16:
+    convertUfixed<uint16_t>(src, dst, numElements);
+    break;
+  case ANARI_UFIXED32:
+    convertUfixed<uint32_t>(src, dst, numElements);
+    break;
+  default:
+    // Other types are rare for fields; read them one element at a time, but
+    // without the per-voxel index wrapping of readAsAttributeValue().
+    for (size_t i = 0; i < numElements; ++i)
+      dst[i] = helium::readAsAttributeValueFlat(src, type, i).x;
+    break;
+  }
 }
 
 } // namespace helide_gpu

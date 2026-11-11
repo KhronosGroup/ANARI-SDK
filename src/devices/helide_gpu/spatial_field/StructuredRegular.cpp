@@ -2,13 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "StructuredRegular.h"
+#include "gpu/ArrayUpload.h"
 // helium
 #include "helium/array/Array3D.h"
 // glm
 #include <glm/gtx/component_wise.hpp>
 // std
-#include <cstring>
-#include <vector>
+#include <cstdint>
 
 namespace helide_gpu {
 
@@ -91,53 +91,60 @@ SDL_GPUSampler *StructuredRegular::gpuSampler() const
 
 void StructuredRegular::gpu_createTexture()
 {
-  gpu_freeResources();
-
-  if (!m_data)
-    return;
-
   auto *dev = deviceState()->gpu.device;
   if (!dev)
     return;
 
-  auto d = m_data->size();
+  const auto d = m_data ? m_data->size() : anari::math::uint3(0u);
   const uint32_t width = d.x;
   const uint32_t height = d.y;
   const uint32_t depth = d.z;
 
-  if (width == 0 || height == 0 || depth == 0)
+  if (width == 0 || height == 0 || depth == 0) {
+    gpu_freeResources();
     return;
-
-  // Convert all voxels to R32_FLOAT
-  const size_t numVoxels = size_t(width) * height * depth;
-  std::vector<float> voxels(numVoxels);
-
-  for (uint32_t z = 0; z < depth; ++z) {
-    for (uint32_t y = 0; y < height; ++y) {
-      for (uint32_t x = 0; x < width; ++x) {
-        const size_t idx = size_t(z) * width * height + size_t(y) * width + x;
-        auto v = m_data->readAsAttributeValue({static_cast<int32_t>(x),
-            static_cast<int32_t>(y),
-            static_cast<int32_t>(z)});
-        float val;
-        std::memcpy(&val, &v, sizeof(float));
-        voxels[idx] = val;
-      }
-    }
   }
 
-  // Create and upload 3D texture (R32_FLOAT)
-  m_gpuState.texture = GPUTexture(dev,
-      SDL_GPU_TEXTUREFORMAT_R32_FLOAT,
-      SDL_GPU_TEXTUREUSAGE_SAMPLER,
-      SDL_GPU_TEXTURETYPE_3D);
-  if (!m_gpuState.texture.upload(
-          voxels.data(), voxels.size(), width, height, depth)) {
+  // SDL_gpu transfer sizes are 32-bit
+  const size_t numVoxels = size_t(width) * height * depth;
+  if (numVoxels * sizeof(float) > UINT32_MAX) {
+    reportMessage(ANARI_SEVERITY_ERROR,
+        "structuredRegular data of %ux%ux%u voxels is too large to upload",
+        width,
+        height,
+        depth);
+    gpu_freeResources();
+    return;
+  }
+
+  // A data update with unchanged dimensions reuses the texture and sampler:
+  // GPUTexture only reallocates when the dimensions change.
+  if (!m_gpuState.texture.valid()) {
+    m_gpuState.texture = GPUTexture(dev,
+        SDL_GPU_TEXTUREFORMAT_R32_FLOAT,
+        SDL_GPU_TEXTUREUSAGE_SAMPLER,
+        SDL_GPU_TEXTURETYPE_3D);
+  }
+
+  // Convert the voxels straight into the GPU staging memory
+  const auto *data = m_data.get();
+  if (!m_gpuState.texture.uploadWith(
+          static_cast<uint32_t>(numVoxels * sizeof(float)),
+          width,
+          height,
+          depth,
+          [&](void *dst) {
+            writeScalarFieldVoxels(data, static_cast<float *>(dst));
+          })) {
     reportMessage(ANARI_SEVERITY_ERROR,
         "[SDL3_gpu] Failed to create 3D texture for structuredRegular: %s",
         SDL_GetError());
+    m_gpuState.texture = {};
     return;
   }
+
+  if (m_gpuState.sampler)
+    return;
 
   // Create sampler (linear filtering, clamp to edge)
   SDL_GPUSamplerCreateInfo sampInfo{};
