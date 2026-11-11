@@ -685,6 +685,18 @@ set_tests_properties(halcyon::lights PROPERTIES
   ENVIRONMENT "LD_LIBRARY_PATH=$<TARGET_FILE_DIR:${PROJECT_NAME}>:$ENV{LD_LIBRARY_PATH}"
 )
 
+# The 'preview' renderer's default mode, OpenUSD Storm's shading: the
+# headlight and ambient fill, each light, hdris, materials, back faces,
+# ambient occlusion and visible lights against a C++ reference
+add_executable(halcyon_test_preview_shading test_preview_shading.cpp)
+target_link_libraries(halcyon_test_preview_shading PRIVATE anari::anari)
+add_dependencies(halcyon_test_preview_shading ${PROJECT_NAME})
+
+add_test(NAME halcyon::preview_shading COMMAND halcyon_test_preview_shading)
+set_tests_properties(halcyon::preview_shading PROPERTIES
+  ENVIRONMENT "LD_LIBRARY_PATH=$<TARGET_FILE_DIR:${PROJECT_NAME}>:$ENV{LD_LIBRARY_PATH}"
+)
+
 # The hdri light, through the pathtracer: the map's orientation, furnace
 # tests, a floor's irradiance under textured maps, 'visible', the warnings
 add_executable(halcyon_test_hdri test_hdri.cpp)

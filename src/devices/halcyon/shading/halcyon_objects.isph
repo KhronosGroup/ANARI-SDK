@@ -505,8 +505,10 @@ struct Material
   // precedence over the color/opacity above when their 'sample' is set
   const uniform Sampler *uniform colorSampler;
   const uniform Sampler *uniform opacitySampler;
-  // MATERIAL_KIND_PHYSICALLY_BASED's parameters (held by the C++ material),
-  // NULL for every other kind
+  // The physicallyBased subtype's parameters (held by the C++ material),
+  // whatever its kind, NULL for every other subtype: MATERIAL_KIND_PHYSICALLY_
+  // BASED shades with them, and so does the 'preview' renderer (its metallic,
+  // roughness, ior and emissive)
   const uniform PhysicallyBasedParameters *uniform physicallyBased;
 };
 
@@ -535,9 +537,10 @@ enum LightType
 // A light in world space, with its brightness in the units its shape needs
 // (light/Light.h has the conversions from ANARI's parameters). The
 // world keeps one per light per instance transform (World::lights). The
-// pathtracer reads them (renderer/pathtracer/Lights.isph); the 'preview'
-// renderer reads only the 'visible' hdris, which its camera misses show
-// (shading/halcyon_hdri.isph).
+// pathtracer reads them (renderer/pathtracer/Lights.isph); so does the
+// 'preview' renderer's default mode, which shades with them as OpenUSD
+// Storm does (renderer/preview/PreviewShading.isph), and every mode shows
+// the 'visible' hdris where camera rays miss (shading/halcyon_hdri.isph).
 struct Light
 {
   uniform LightType type;
@@ -601,6 +604,10 @@ struct Light
   uniform float weightSum;
   uniform uint32 width;
   uniform uint32 height;
+  // LIGHT_HDRI: the map's mean radiance over the sphere (each texel weighed
+  // by its solid angle), before 'emission': the uniform ambient light the
+  // 'preview' renderer adds for the map
+  uniform float3 meanRadiance;
   // 'color' times the brightness: the radiance (W/sr/m^2) of a cone, sphere,
   // quad or ring (with 'intensityDistribution', the intensity along the
   // axis over the area, which the distribution over cos gamma scales), the
@@ -725,7 +732,10 @@ enum RenderMode
   RENDER_MODE_OPACITY_HEATMAP,
   RENDER_MODE_AMBIENT_OCCLUSION,
   RENDER_MODE_AMBIENT_OCCLUSION_UNBLURRED,
-  RENDER_MODE_TEST_FRAME
+  RENDER_MODE_TEST_FRAME,
+  // helide's eye-lit shading, which the 'default' mode had before it shaded
+  // as OpenUSD Storm does
+  RENDER_MODE_EYE_LIGHT
 };
 
 // The 'preview' renderer's 'ambientOcclusionEstimator' values (see
@@ -818,6 +828,9 @@ struct PathTracerParameters
 // by the 'quality' renderer
 struct PreviewParameters
 {
+  // white when 'ignoreAmbientLighting' is set; the 'eyeLight' mode ignores
+  // it, as helide does (first, where its 16-byte alignment pads nothing)
+  uniform float3 ambientColor;
   // 1 when 'ignoreAmbientLighting' is set
   uniform float ambientRadiance;
   uniform float eyeLightBlendRatio;

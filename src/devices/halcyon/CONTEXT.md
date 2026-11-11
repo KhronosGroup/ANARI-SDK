@@ -30,8 +30,9 @@ _Avoid_: G-buffer, depth buffer (that is the app-facing depth channel)
 
 **Ambient occlusion**:
 Darkening of the first visible surface by nearby geometry, also where a volume lies in front
-of it, estimated in screen space from the hit buffer. It never darkens volumes or the
-background.
+of it, estimated in screen space from the hit buffer: of the ambient light it reflects in the
+`default` mode, of its whole colour in the `eyeLight` mode. It never darkens volumes, lights
+or the background.
 _Avoid_: AO shadowing, SSAO (as a noun for the effect; it names the method)
 
 **Occlusion factor**:

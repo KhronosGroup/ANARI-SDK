@@ -121,8 +121,8 @@ anari::World floorWorld(anari::Device d,
 
 // 'pixelSamples' samples per pixel through an orthographic camera looking
 // down at the floor, no bounces after the first vertex; or with the 'preview'
-// renderer (without ambient occlusion), whose colour is the surface colour
-// there (falloff 1)
+// renderer (without ambient occlusion) in its 'eyeLight' mode, whose colour
+// is the surface colour there (falloff 1)
 std::vector<float4> render(anari::Device d,
     anari::World world,
     int pixelSamples = 1,
@@ -138,6 +138,8 @@ std::vector<float4> render(anari::Device d,
   anari::setParameter(d, renderer, "maxBounces", 0);
   anari::setParameter(d, renderer, "pixelSamples", pixelSamples);
   anari::setParameter(d, renderer, "ambientOcclusion", false);
+  if (std::string(subtype) != "quality")
+    anari::setParameter(d, renderer, "mode", "eyeLight");
   anari::commitParameters(d, renderer);
 
   auto camera = anari::newObject<anari::Camera>(d, "orthographic");

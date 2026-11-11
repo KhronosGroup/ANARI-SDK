@@ -71,7 +71,7 @@ struct HalcyonDeviceGlobalState : public helium::BaseGlobalDeviceState
   struct ISPCObjectRegistry
   {
     IndexedVector<IspcObjectStorage<160>> frames;
-    IndexedVector<IspcObjectStorage<160>> renderers;
+    IndexedVector<IspcObjectStorage<176>> renderers;
     IndexedVector<IspcObjectStorage<144>> cameras;
     IndexedVector<IspcObjectStorage<40>> worlds;
     IndexedVector<IspcObjectStorage<88>> instances;

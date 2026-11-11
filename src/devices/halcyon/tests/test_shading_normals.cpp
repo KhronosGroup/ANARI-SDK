@@ -228,8 +228,8 @@ void setNormals(anari::Device d,
 
 // The scene: both meshes with a matte material whose color the checks set,
 // in one instance whose transform the checks set, rendered in a frame whose
-// renderer mode the checks set; eyeLightBlendRatio 1, so the default mode
-// shows the material color times the facing ratio
+// renderer mode the checks set; eyeLightBlendRatio 1, so the 'eyeLight' mode
+// (helide's shading) shows the material color times the facing ratio
 struct Scene
 {
   anari::Device d;
@@ -429,7 +429,7 @@ float4 absNormal(float3 n)
   return float4(linalg::abs(n), 1.f);
 }
 
-// The default mode's color for a white material, eyeLightBlendRatio 1 and an
+// The eyeLight mode's color for a white material, eyeLightBlendRatio 1 and an
 // orthographic camera looking down -z: the facing ratio |n.z|
 float4 eyeLit(float3 n)
 {
@@ -502,14 +502,14 @@ int main()
           return float4(NG, 1.f);
         });
     pass &= checkProbes(scene,
-        "default",
-        "default mode eye light uses vertex.normal",
+        "eyeLight",
+        "eyeLight mode uses vertex.normal",
         normals(
             Source::VERTEX, TRI_VERTEX_NORMALS, QUAD_VERTEX_NORMALS, eyeLit));
     // the attribute as color, times the facing ratio of the same normal
     scene.setColorAttribute("worldNormal");
     pass &= checkProbes(scene,
-        "default",
+        "eyeLight",
         "worldNormal attribute is the shading normal",
         normals(Source::VERTEX,
             TRI_VERTEX_NORMALS,
@@ -531,7 +531,7 @@ int main()
         normals(
             Source::VERTEX, TRI_VERTEX_NORMALS, QUAD_VERTEX_NORMALS, scaled));
     pass &= checkProbes(scene,
-        "default",
+        "eyeLight",
         "worldNormal attribute transforms by the normal matrix",
         normals(Source::VERTEX,
             TRI_VERTEX_NORMALS,
@@ -542,7 +542,7 @@ int main()
             }));
     scene.setColorAttribute("objectNormal");
     pass &= checkProbes(scene,
-        "default",
+        "eyeLight",
         "objectNormal attribute stays in object space",
         normals(Source::VERTEX,
             TRI_VERTEX_NORMALS,
@@ -566,8 +566,8 @@ int main()
             QUAD_FACE_VARYING_NORMALS,
             absNormal));
     pass &= checkProbes(scene,
-        "default",
-        "default mode eye light uses faceVarying.normal",
+        "eyeLight",
+        "eyeLight mode uses faceVarying.normal",
         normals(Source::FACE_VARYING,
             TRI_FACE_VARYING_NORMALS,
             QUAD_FACE_VARYING_NORMALS,

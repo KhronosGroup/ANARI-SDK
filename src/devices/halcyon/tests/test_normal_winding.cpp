@@ -478,6 +478,7 @@ std::vector<Case> cases()
 {
   std::vector<Case> c;
   for (const char *mode : {"default",
+           "eyeLight",
            "Ns",
            "Ns.abs",
            "Ng",
@@ -820,10 +821,11 @@ bool testWorldSpace(anari::Device d)
 
       auto objectMat = matteOfAttribute("objectNormal")(d);
       auto objectWorld = makeWorld(d, geom, objectMat, scale);
+      // helide's shading at eyeLightBlendRatio 0 shows the attribute as is
       const Images on = render(d,
           objectWorld,
           "default",
-          "default",
+          "eyeLight",
           view,
           [](anari::Device d, anari::Renderer r) {
             anari::setParameter(d, r, "eyeLightBlendRatio", 0.f);

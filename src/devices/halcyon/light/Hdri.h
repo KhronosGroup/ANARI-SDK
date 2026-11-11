@@ -11,8 +11,9 @@ namespace halcyon {
 // (W/sr/m^2, times 'scale' and 'color') around the scene at infinity,
 // sampled as Typhoon's dome light (renderer/pathtracer/Lights.isph). Both
 // renderers show the 'visible' ones where camera rays miss, through the
-// same lookup (shading/halcyon_hdri.isph); only the pathtracer is lit by
-// them.
+// same lookup (shading/halcyon_hdri.isph). The pathtracer is lit by the
+// map; the 'preview' renderer only by its mean radiance, as a uniform
+// ambient light.
 //
 // Mapping (the ANARI spec leaves it open; this is VisRTX's, and so what
 // hdAnari sends for a USD dome light): 'up' is kept as given, 'direction'
@@ -68,6 +69,10 @@ struct Hdri : public Light
   std::vector<float> m_conditionalCdf;
   std::vector<float> m_marginalCdf;
   float m_weightSum{0.f};
+  // the texels' mean radiance over the sphere, each weighed by its solid
+  // angle (before m_emission), which the 'preview' renderer adds to its
+  // ambient light
+  float3 m_meanRadiance{0.f};
   uint32_t m_width{0};
   uint32_t m_height{0};
   // whether any texel is above 0

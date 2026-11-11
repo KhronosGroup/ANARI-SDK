@@ -62,8 +62,8 @@ export void Material_setSamplers(void *uniform _self,
   self->opacitySampler = object_cast<Sampler>(opacitySampler);
 }
 
-// MATERIAL_KIND_PHYSICALLY_BASED's parameters (held by the C++ material),
-// NULL for every other kind
+// The physicallyBased subtype's parameters (held by the C++ material),
+// whatever its kind; NULL for every other subtype
 export void Material_setPhysicallyBased(void *uniform _self,
     const uniform PhysicallyBasedParameters *uniform parameters)
 {

@@ -181,7 +181,9 @@ anari::World floorWorld(
 }
 
 // A frame of 'world' through an orthographic camera looking down at the
-// floor; the pathtracer without bounces after the first vertex
+// floor; the pathtracer without bounces after the first vertex, the
+// 'preview' renderer ('default') in its 'eyeLight' mode, which shows the
+// surface colour there
 struct Scene
 {
   anari::Device d;
@@ -197,6 +199,8 @@ struct Scene
     anari::setParameter(d, r, "maxBounces", 0);
     anari::setParameter(d, r, "pixelSamples", 1);
     anari::setParameter(d, r, "ambientOcclusion", false);
+    if (std::string(renderer) != "quality")
+      anari::setParameter(d, r, "mode", "eyeLight");
     anari::commitParameters(d, r);
 
     auto camera = anari::newObject<anari::Camera>(d, "orthographic");

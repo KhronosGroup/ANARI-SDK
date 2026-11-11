@@ -13,10 +13,10 @@
 namespace halcyon {
 
 // Lights (KHR_LIGHT_DIRECTIONAL, KHR_LIGHT_POINT, KHR_LIGHT_SPOT,
-// KHR_LIGHT_QUAD, KHR_LIGHT_RING, KHR_LIGHT_HDRI): only the 'quality' renderer is
-// lit by them; the 'preview' renderer isn't, as helide's isn't, but shows the
-// 'visible' hdris where its camera rays miss. Unknown subtypes are
-// UnknownObjects.
+// KHR_LIGHT_QUAD, KHR_LIGHT_RING, KHR_LIGHT_HDRI): sampled by the 'quality'
+// renderer; the 'preview' renderer's default mode lights with them as OpenUSD
+// Storm does (renderer/preview/PreviewShading.isph), and both show the
+// 'visible' ones to camera rays. Unknown subtypes are UnknownObjects.
 //
 // A light hands the world its record in world space (struct Light in
 // shading/halcyon_objects.isph), once per instance transform: the transform

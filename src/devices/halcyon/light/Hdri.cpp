@@ -49,6 +49,30 @@ void Hdri::commitParameters()
   }
 }
 
+// The mean radiance over the sphere of 'texels' (width x height packed
+// float3s in Typhoon's order: row y spans the polar angles pi y / height to
+// pi (y + 1) / height from 'up'), each texel weighed by its solid angle
+static float3 meanRadiance(
+    const std::vector<float> &texels, size_t width, size_t height)
+{
+  constexpr double pi = 3.14159265358979323846;
+  double sum[3] = {0.0, 0.0, 0.0};
+  for (size_t y = 0; y < height; y++) {
+    // the solid angle of the row over 2 pi, which a texel's sum over the
+    // row's columns is then weighed by over the width
+    const double rowWeight = 0.5
+        * (std::cos(pi * double(y) / double(height))
+            - std::cos(pi * double(y + 1) / double(height)))
+        / double(width);
+    const float *row = texels.data() + y * width * 3;
+    for (size_t x = 0; x < width; x++) {
+      for (int c = 0; c < 3; c++)
+        sum[c] += rowWeight * row[3 * x + c];
+    }
+  }
+  return float3(float(sum[0]), float(sum[1]), float(sum[2]));
+}
+
 void Hdri::finalize()
 {
   m_valid = false;
@@ -58,6 +82,7 @@ void Hdri::finalize()
   m_conditionalCdf.clear();
   m_marginalCdf.clear();
   m_weightSum = 0.f;
+  m_meanRadiance = float3(0.f);
   m_width = 0;
   m_height = 0;
   m_emission = m_color * m_scale;
@@ -114,6 +139,7 @@ void Hdri::finalize()
         "taken as 0");
   }
 
+  m_meanRadiance = meanRadiance(m_texels, width, height);
   m_width = uint32_t(width);
   m_height = uint32_t(height);
   buildHdriDistribution(m_texels,
@@ -156,6 +182,7 @@ bool Hdri::writeWorldRecord(void *record, const mat4 &xfm) const
       distribution ? m_conditionalCdf.data() : nullptr,
       distribution ? m_marginalCdf.data() : nullptr,
       m_weightSum,
+      &m_meanRadiance.x,
       &m_emission.x,
       m_visible);
   return true;

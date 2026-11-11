@@ -1,11 +1,12 @@
 // Copyright 2025-2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-// Renders stacks of squares facing an orthographic camera (so eye-lit shading
-// gives the surface color exactly) with blend and mask materials and checks
-// how the default mode composites them: color and alpha, the depth and
-// objectId channels (the visible hit), debug modes (the first hit,
-// opaque) and volumes between the layers.
+// Renders stacks of squares facing an orthographic camera (so the 'eyeLight'
+// mode, helide's shading, gives the surface color exactly) with blend and
+// mask materials and checks how the 'eyeLight' mode composites them (as the
+// 'default' mode does, which test_preview_shading.cpp checks): color and alpha,
+// the depth and objectId channels (the visible hit), debug modes (the first
+// hit, opaque) and volumes between the layers.
 
 // anari
 #define ANARI_LINALG_DEFINITIONS
@@ -141,7 +142,7 @@ struct Pixel
   uint32_t objectId;
 };
 
-Pixel render(anari::Device d, anari::World world, const char *mode = "default")
+Pixel render(anari::Device d, anari::World world, const char *mode = "eyeLight")
 {
   auto camera = anari::newObject<anari::Camera>(d, "orthographic");
   anari::setParameter(d, camera, "position", float3(0.f, 0.f, CAMERA_Z));
@@ -205,7 +206,7 @@ bool check(anari::Device d,
     float4 color,
     float depth,
     uint32_t objectId,
-    const char *mode = "default")
+    const char *mode = "eyeLight")
 {
   auto world = makeWorld(d, layers);
   const Pixel p = render(d, world, mode);

@@ -287,7 +287,10 @@ shading context it reads (see
 didn't compile. `MATERIAL_KIND_LAMBERT` (native) is only the integrator's fallback for
 surfaces without a closure. `Material::physicallyBased` points at the
 `PhysicallyBasedParameters` (`MaterialParameter`s: constant, attribute or sampler) the
-physicallyBased material holds for `MATERIAL_KIND_PHYSICALLY_BASED`, NULL otherwise.
+physicallyBased material holds, whatever its kind (`MATERIAL_KIND_PHYSICALLY_BASED`
+shades with them, and so does the `preview` renderer, which reads its metallic,
+roughness, ior and emissive), NULL for other subtypes. `materialParameterAt()`
+(`shading/halcyon_getSurfaceColor.isph`) resolves one at a hit for both renderers.
 
 ### Array data: copies and shared memory
 
@@ -432,10 +435,13 @@ that override; halcyon keeps its own while it supports helium 0.15 and 0.16.
    passes](#ambient-occlusion-passes)), then the shading pass
    (`Preview_renderFrame()`).
 4. In `renderer/preview/Preview.ispc` `renderFrame()` (the `preview` renderer; for the `quality` see
-   [The quality renderer](#the-quality-renderer)): camera ray, then in the `default` mode
-   `renderDefault()`, a loop of `rtcIntersectV` → `getHitInfo()` → `intersectVolumes()`
-   (volumes clipped to `[tnear, surface hit]`) → composite the volume and the surface →
-   `continuePastHit()` (`shading/halcyon_ray.isph`) while the surface isn't opaque; in the
+   [The quality renderer](#the-quality-renderer)): camera ray, then in the `default` and
+   `eyeLight` modes `renderDefault()`, a loop of `rtcIntersectV` → `getHitInfo()` →
+   `intersectVolumes()` (volumes clipped to `[tnear, surface hit]`) → composite the volume
+   and the surface (`shadeStorm()` in the `default` mode, see [Preview
+   shading](#preview-shading); `shadeEyeLight()` in the `eyeLight` mode) →
+   `continuePastHit()` (`shading/halcyon_ray.isph`) while the surface isn't opaque, ending
+   at a visible sphere, quad or ring light in the `default` mode; in the
    `ambientOcclusion` and `ambientOcclusion.unblurred` modes `renderAmbientOcclusion()`,
    which traces to the first visible surface with `traceFirstVisibleSurface()` (as does the
    hit-buffer pass); in other modes one `rtcIntersectV` → `getHitInfo()` →
@@ -457,13 +463,15 @@ Details that are easy to get wrong:
   `World::instances`. Names spell `Id` (`primId`, `instArrayId`), except Embree's fields
   (`primID`, `geomID`, `instID`, `instPrimID`, mirrored in `RayHit`), parameters that take
   one unchanged (the geometry hooks' `primID`), and the `embree*ID` mode names.
-- The `default` mode composites front to back, non-premultiplied like helide: the volume in
-  front of each surface hit, then the surface weighted by `Surface_getCompositeOpacity()`
-  (colour alpha × material opacity after `alphaMode`; opaque without a valid material), then
-  goes on past the surface until the ray misses or the opacity reaches 0.99, then what a
-  miss shows (`missColor()`, below). Its depth and id channels come from the visible hit:
-  the first volume entered, or the first surface with opacity above 0 (mask cut-outs are
-  skipped); the `ambientOcclusion` mode reports the same hit. The other modes (`shadeRay()`) treat the first
+- The `default` and `eyeLight` modes composite front to back, non-premultiplied like
+  helide: the volume in front of each surface hit, then the surface weighted by
+  `Surface_getCompositeOpacity()` (colour alpha × material opacity after `alphaMode`;
+  opaque without a valid material), then goes on past the surface until the ray misses or
+  the opacity reaches 0.99, then what a miss shows (`missColor()`, below); in the `default`
+  mode a visible light in front ends the ray instead. Their depth and id channels come
+  from the visible hit: the first volume entered, or the first surface with opacity above
+  0 (mask cut-outs are skipped), whatever lights lie in front of it, as in the `quality`;
+  the `ambientOcclusion` mode reports the same hit. The other modes (`shadeRay()`) treat the first
   surface hit as opaque, like helide; opacity shows there only in `opacityHeatmap`. The
   restart epsilon is VisRTX's `epsilonFrom()`, so a surface coplanar with the one just hit is
   skipped.
@@ -489,8 +497,9 @@ Details that are easy to get wrong:
   opaque (alpha 1), else the background. The hdri lookup (`visibleHdris()`,
   `HdriLight_radiance()`) is one function in `shading/halcyon_hdri.isph`, which the
   `quality`'s light sampling (`renderer/pathtracer/Lights.isph`) uses too, so both
-  renderers show a miss pixel alike (see [Lights](#lights)). The `preview` renderer is
-  never lit by the hdris. `testFrame` traces nothing and shows the ray direction.
+  renderers show a miss pixel alike (see [Lights](#lights)). The `preview` renderer's
+  `default` mode is lit only by the hdris' mean radiance (see [Preview
+  shading](#preview-shading)). `testFrame` traces nothing and shows the ray direction.
 - Missed rays write depth `FLT_MAX`, like helide: it is every ray's initial `tfar`
   (`HALCYON_RAY_TFAR` in `shading/halcyon_ray.isph`), which also bounds volume intervals.
 - 8-bit colour rounds to the nearest code, and `UFIXED8_RGBA_SRGB` uses the exact sRGB curve
@@ -514,8 +523,9 @@ Details that are easy to get wrong:
   Typhoon takes it (a non-uniform scale can change the sign of the object-space dot
   product); `objectShadingNormal()` is negated by the same test. Only interpolated normals
   can turn: `Ng` itself never does. Neither normal is turned to face the viewer, except in
-  the ambient occlusion hit buffer. The eye light of the `default` and `opacityHeatmap`
-  modes, the `worldNormal`/`objectNormal` attributes (so the turned normal), the `Ns`
+  the ambient occlusion hit buffer and the `preview` renderer's `default` mode (which
+  shades back faces as front faces, as Storm does). The shading of the `default`,
+  `eyeLight` and `opacityHeatmap` modes, the `worldNormal`/`objectNormal` attributes (so the turned normal), the `Ns`
   modes, the hit buffer, both renderers' normal channel and the `quality`'s shading
   context use the shading normal; the `Ng` and `backface` modes use `Ng`. World-space
   normals go through the instance's normal matrix.
@@ -542,6 +552,59 @@ to reach them. `CurveGeometry::basis` tells the hooks the basis; Embree's curve 
 fixed at creation, so a commit that changes the basis replaces the Embree geometry
 (`Geometry::replaceEmbreeGeometry()`) and has groups rebuild their scenes. Bezier, flat
 (ribbon) curves and `wrap` aren't supported (until an app asks).
+
+### Preview shading
+
+The `preview` renderer's `default` mode shades surfaces with the lighting model of
+OpenUSD Storm's UsdPreviewSurface (usdShaders' `previewSurface.glslfx`, metallic workflow,
+no clearcoat), as helide_gpu does (`src/devices/helide_gpu/shaders/shading.glsl`), in
+world space: `renderer/preview/PreviewShading.isph`, called by `shadeStorm()` in
+`Preview.ispc` (maintainer decision, 2026-11-11: the preview renderer adopts helide_gpu's
+shading; helide's eye-lit shading stays as the `eyeLight` mode).
+
+- **The model:** direct light is a Lambert diffuse (times 1 − F) plus a GGX specular lobe
+  with Schlick's Fresnel and Storm's geometric term and epsilon; the uniform ambient light
+  is Storm's dome-light term for a constant environment, diffuse × (1 − F0) + F0 x + y,
+  with the split-sum BRDF table replaced by Karis' analytic fit ("Physically Based Shading
+  on Mobile"). The shading normal is turned to the camera (back faces are lit as front
+  faces). Nothing is shadowed and there is no interreflection, as in Storm. Colours are
+  not clamped (the `eyeLight` mode clamps each surface's colour to 1, as helide does).
+- **Materials** (`PreviewSurface_at()`): the base colour is `Surface_getColor()` (the
+  invalid material colour without a valid material); physicallyBased's `metallic`,
+  `roughness`, `ior` and `emissive` (constant, attribute or sampler, through
+  `materialParameterAt()`, whatever kind the pathtracer gives the material); every other
+  material is metallic 0, roughness 1, ior 1.5 and emits nothing (helide_gpu's matte).
+  usdPreviewSurface, openPBR and materialx materials show only their base colour.
+- **Lights** (`PreviewLight_eval()`), from the world's light records in halcyon's units
+  (`light/Light.h`): a directional light's irradiance (a cone's radiance times its
+  cosine-weighted solid angle, so a cone lights as a delta of the same `irradiance`);
+  every other light as a point at its center, its intensity towards the point over the
+  squared distance: a delta point's or spot's (the spot's cone weight), a sphere's
+  radiance × π r², a quad's or ring's radiance × area × the Lambertian cosine off its
+  normal (or its `intensityDistribution`; a ring's cone weight too), from the sides it
+  emits to. That is Storm's treatment of a rect light (a point light at its center), with
+  the cosine falloff helide_gpu adds. hdris don't light directly: each adds its mean
+  radiance over the sphere (`Light::meanRadiance`, from `Hdri::finalize()`, times its
+  `scale` and `color`) to the ambient light.
+- **Renderer light:** `eyeLightBlendRatio` splits `ambientRadiance` × `ambientColor` (1 and
+  white with `ignoreAmbientLighting`) between a headlight and the uniform ambient light, as
+  helide_gpu does: the ambient light is (1 − ratio) × `ambientRadiance` × `ambientColor`
+  (plus the hdris'); the headlight, a light at the camera of irradiance π × ratio ×
+  `ambientRadiance` (so its Lambert term is ratio × `ambientRadiance` at normal incidence;
+  not coloured by `ambientColor`), lights only a world without lights (an hdri counts).
+- **Ambient occlusion** darkens only the ambient light the first visible surface
+  reflects, not its direct light or emission; with `eyeLightBlendRatio` 0 and no lights
+  (nor emission) the factor multiplies the whole colour, as in the `eyeLight` mode.
+- **Visible lights:** a `visible` sphere, quad or ring the camera ray meets in front of
+  the surfaces ends the ray with its radiance as the `quality`'s camera rays see it
+  (`Light_eval()`; a side that doesn't emit is black), composited behind what lies in
+  front of it, opaque; the depth and id channels ignore it, as in the `quality`. The
+  preview renderer includes `renderer/pathtracer/Lights.isph` for these and the light
+  profiles.
+
+`test_preview_shading.cpp` (ctest `preview_shading`) checks each against a C++ reference
+of the model and, where it reduces to a Lambertian (ior 1), against albedo / π ×
+irradiance.
 
 ### Ambient occlusion passes
 
@@ -625,8 +688,10 @@ before the shading pass, each over the whole frame before the next starts:
 
 The shading pass reads the last blur pass's factor with `occlusionFactor()` (1 without
 buffers):
-the `default` mode multiplies the first visible surface's eye-lit colour by it, then
-composites any volume in front of that surface over it as before, and the
+the `default` mode multiplies the ambient light the first visible surface reflects by it
+(not its direct light, nor what it emits; see [Preview shading](#preview-shading)), the
+`eyeLight` mode the first visible surface's whole eye-lit colour; both then composite any
+volume in front of that surface over it as before, and the
 `ambientOcclusion` mode shows it as grey (volumes aren't drawn in that mode). The
 `ambientOcclusion.unblurred` mode shows the occlusion pass's factor instead
 (`unblurredOcclusionFactor()`), to compare with the blurred one.
@@ -917,14 +982,14 @@ dv/dy); a miss is transparent black. Unknown names path trace.
 ### Lights
 
 The `directional`, `point`, `spot`, `quad`, `ring` and `hdri` lights (`light/`,
-KHR_LIGHT_DIRECTIONAL, _POINT, _SPOT, _QUAD, _RING and _HDRI) light only the
-`quality`'s images;
-the `preview` renderer isn't lit by them, as helide isn't (it has no lights), and doesn't
-list their extensions (see [Parameters and properties](#parameters-and-properties)), except
-the hdri's: it shows the `visible` hdris where its camera rays miss, as the `quality`
-does, through the same lookup (`missColor()`, see [Rendering pipeline](#rendering-pipeline);
-maintainer decision, keep it), and so lists `KHR_LIGHT_HDRI` (not
-`KHR_LIGHT_PRIMARY_VISIBILITY`, though it reads the hdris' `visible`). The world writes
+KHR_LIGHT_DIRECTIONAL, _POINT, _SPOT, _QUAD, _RING and _HDRI) light both renderers'
+images: the `quality` samples them (below); the `preview` renderer's `default` mode lights
+with them as OpenUSD Storm does, without shadows (see [Preview shading](#preview-shading);
+its `eyeLight` mode ignores them, as helide, which has no lights, does). Both renderers
+show the `visible` spheres, quads and rings to camera rays, and the `visible` hdris where
+camera rays miss, through the same lookup (`missColor()`, see [Rendering
+pipeline](#rendering-pipeline); maintainer decision, keep it), and both list every light
+extension (see [Parameters and properties](#parameters-and-properties)). The world writes
 the light records for both renderers (`World::updateLights()`, from
 `World::embreeSceneUpdate()`); a world without lights has none, and the miss lookup
 then costs a loop over none. The quad light's
@@ -1061,8 +1126,9 @@ cones and distributions), and checks spot and ring cones, quad sides, a mirror f
 sun (a delta sun reflects nothing, exactly, also 0.2° off the reflection; one of
 `angularDiameter` 0.5 its radiance),
 `intensityDistribution` (1D, and 2D for the sense of C), instancing, shadows, camera
-visibility, the warnings and that the `preview` renderer ignores them (the hdri aside,
-which `hdri` checks). `test_hdri.cpp`
+visibility, the warnings and that the `preview` renderer's `eyeLight` mode ignores them
+(the hdri aside, which `hdri` checks; the `default` mode's lighting is
+`preview_shading`'s). `test_hdri.cpp`
 (ctest `hdri`) checks the hdri: the map's orientation as camera rays see it (frames, a
 `direction` made perpendicular, an instance rotation), furnace tests (a white Lambertian
 sphere, and a white scattering volume, in a uniform map render to its radiance), a
@@ -1073,15 +1139,17 @@ bitwise the `quality`'s (colour and alpha, where the pixel and its neighbours sh
 texel, so the pathtracer's jitter sees it too, so pixels on texel edges aren't compared;
 also through an instance rotation, around a floor, in the `Ng`, `primitiveId`, `hitVolume`
 and both ambient occlusion modes, and for two visible hdris, which sum), the background
-where `visible` is false, and surfaces rendered bitwise as without the light. Typhoon
+where `visible` is false, and surfaces rendered bitwise as without the light in the
+`eyeLight` and `ambientOcclusion` modes. Typhoon
 renders the same scene (UsdPreviewSurface spheres on a floor under a dome with a sun, also
 rotated) within rounding of halcyon at the same seed (a one-off comparison, not a
 ctest).
 
 ### Background and ambient light
 
-What the `quality` does with the renderer's `background` (KHR_RENDERER_BACKGROUND_COLOR,
-_IMAGE) and `ambientColor`/`ambientRadiance` (KHR_RENDERER_AMBIENT_LIGHT);
+(For the `preview` renderer see [Preview shading](#preview-shading).) What the `quality`
+does with the renderer's `background` (KHR_RENDERER_BACKGROUND_COLOR, _IMAGE) and
+`ambientColor`/`ambientRadiance` (KHR_RENDERER_AMBIENT_LIGHT);
 `test_background_ambient.cpp` (ctest `background_ambient`) checks each
 combination:
 
@@ -2336,8 +2404,12 @@ The `preview` renderer's `mode` parameter (`renderModeFromString()` in
 `renderer/preview/Preview.cpp`, `RenderMode` in `halcyon_objects.isph`, shading in
 `shadeGeometry()` in `renderer/preview/Preview.ispc`):
 
-- `default`: eye-lit surfaces plus ray-marched volumes, composited through surfaces that
-  aren't opaque (volumes and transparency only render in this mode)
+- `default`: surfaces shaded as OpenUSD Storm does, lit by the world's lights (see
+  [Preview shading](#preview-shading)), plus ray-marched volumes and visible lights,
+  composited through surfaces that aren't opaque
+- `eyeLight`: as `default`, but surfaces eye-lit as in helide (the colour blended with its
+  facing ratio by `eyeLightBlendRatio`), unlit by lights (volumes and transparency only
+  render in these two modes)
 - `primitiveId`, `objectId`, `instanceId`: random colour per user id
 - `embreePrimID`, `embreeGeomID`, `embreeInstID`: random colour per raw Embree index
 - `Ng`, `Ng.abs`: world-space geometric normal; `Ns`, `Ns.abs`: world-space shading
@@ -2424,8 +2496,11 @@ threads).
 `preview` renderer parameters (`Preview::commitParameters()`, after the base's
 `Renderer::commitParameters()`): `mode` ("default"); `background`
 (float4 colour, default (0, 0, 0, 1), or an `Array2D` image); `ambientRadiance` (0);
-`ignoreAmbientLighting` (true, forces `ambientRadiance` to 1); `eyeLightBlendRatio` (0.5,
-clamped to [0, 1]); `volumeSamplingRate` (0.5, clamped to [0.001, 10]); `taskGrainSizeWidth`,
+`ambientColor` ((1, 1, 1), negative components clamped to 0; not read in the `eyeLight`
+mode, nor by helide); `ignoreAmbientLighting` (true, forces `ambientRadiance` to 1 and
+`ambientColor` to white); `eyeLightBlendRatio` (0.5, clamped to [0, 1]: in the `default`
+mode the part of the ambient light that is a headlight, in the `eyeLight` mode helide's
+facing-ratio blend; see [Preview shading](#preview-shading)); `volumeSamplingRate` (0.5, clamped to [0.001, 10]); `taskGrainSizeWidth`,
 `taskGrainSizeHeight` (4, clamped to [1, 128]); `ambientOcclusion` (true);
 `ambientOcclusionRadius` (0; 0 derives the radius from the world's bounds, and negative
 values are clamped to 0 without a warning, so they derive it too);
@@ -2435,11 +2510,11 @@ occlusion factor's exponent, above 1 darkens, below 1 lightens, 0 gives a factor
 `ambientOcclusionBlurPasses` (1, clamped to [1, 5] without a warning: the number of blur
 passes over the occlusion factor, each after the first an à-trous pass that removes bands
 near contacts).
-`ambientColor` is not read (nor in helide). In the `default` mode the first visible
-surface's eye-lit colour (also behind a volume) is multiplied by the pixel's
-occlusion factor (`occlusionFactor()` in `renderer/preview/Preview.ispc`, 1 unless ambient occlusion runs;
-see [Ambient occlusion passes](#ambient-occlusion-passes)); the background, volumes and
-surfaces behind it are not.
+In the `default` mode the ambient light the first visible surface (also behind a volume)
+reflects, in the `eyeLight` mode its whole eye-lit colour, is multiplied by the pixel's
+occlusion factor (`occlusionFactor()` in `renderer/preview/Preview.ispc`, 1 unless
+ambient occlusion runs; see [Ambient occlusion passes](#ambient-occlusion-passes)); the
+background, volumes and surfaces behind it are not.
 
 `quality` renderer parameters (`PathTracer::commitParameters()`): `pixelSamples` (1,
 values below 1 clamped to 1); `maxBounces` (16, Typhoon's; negative values clamped to 0);
@@ -2509,11 +2584,9 @@ introspection gives its subtype, `Renderer::extensionSubtype()`; `default` repor
 `preview` renderer's, an unknown subtype none). Both come from the renderer objects' `extension` arrays in
 `HalcyonDefinitions.json`, which the query generator emits in place of the device's list
 (written there without the `ANARI_` prefix, which the generator adds). The `preview`
-renderer lists all but
-`KHR_FRAME_ACCUMULATION` and the light extensions other than `KHR_LIGHT_HDRI` (it shows
-visible hdris where rays miss, unlit), the `quality` all of them. The `preview`
-renderer keeps helide's `KHR_RENDERER_AMBIENT_LIGHT`, though it reads only
-`ambientRadiance` (with `ignoreAmbientLighting` false), not `ambientColor`. The device's
+renderer lists all but `KHR_FRAME_ACCUMULATION` and `KHR_CAMERA_DEPTH_OF_FIELD` (it lights
+with every light, see [Preview shading](#preview-shading), and shows visible ones), the
+`quality` all of them. The device's
 `extension` property, `anariGetDeviceExtensions()` and its object info list every extension
 the device implements, their union (the `dependencies` of `HalcyonDefinitions.json`). A new
 extension goes into the `dependencies` and into the `extension` array of each renderer that
@@ -2664,7 +2737,7 @@ Other maintainer decisions (keep them):
   (except the two ambient occlusion modes, which show the first visible surface).
 - **Ambient occlusion** (see [Ambient occlusion passes](#ambient-occlusion-passes)): halcyon
   only; helide has none. The `preview` renderer's `ambientOcclusion` darkens the first
-  visible surface in the `default` mode, and the `ambientOcclusion` and
+  visible surface in the `default` (its ambient light) and `eyeLight` modes, and the `ambientOcclusion` and
   `ambientOcclusion.unblurred` modes show the occlusion factor after and before the blur. It
   is on by default, so default images don't match helide: comparisons with helide set
   `ambientOcclusion` to false. It is computed in screen space
@@ -2702,22 +2775,26 @@ Other maintainer decisions (keep them):
   `_PRIMARY_VISIBILITY`), which
   helide doesn't. Each renderer reports only the extensions it honours (see
   [Parameters and properties](#parameters-and-properties); maintainer decision, keep it):
-  the `preview` renderer doesn't list these, as it ignores them (it isn't progressive, so
-  its renders are skipped as before when nothing changed, and it renders scenes with lights
-  as it does without them), except `KHR_LIGHT_HDRI` (see the next item). The `quality`
-  lists every extension. The device's list is
-  their union, so it names extensions one renderer ignores:
-  tools that check only the device's list (`anariInfo`, `anariCts query-features`,
-  `anariRenderTests`) still send lights to the `preview` renderer, which renders those
-  scenes unlit where helide's tests are skipped. The pathtracer
+  the `preview` renderer doesn't list `KHR_FRAME_ACCUMULATION` (it isn't progressive, so
+  its renders are skipped as before when nothing changed), but lists the lights, which its
+  `default` mode shades with (see the next items). The `quality` lists every extension.
+  The device's list is their union. The pathtracer
   refines whatever the frame's `accumulation` says, a deliberate difference from the spec
   (see [Adaptive sampling](#adaptive-sampling)).
-- **Hdri lights in the `preview` renderer** (see [Lights](#lights);
-  maintainer decision, keep it): the `preview` renderer shows the `visible` hdri lights
-  wherever its camera rays miss and it would show the background (every mode but
-  `testFrame`), opaque, exactly as the `quality`'s camera misses (one lookup,
-  `shading/halcyon_hdri.isph`), but isn't lit by them, and lists `KHR_LIGHT_HDRI`. helide
-  ignores lights, so compare with helide without hdris.
+- **The `preview` renderer's shading** (see [Preview shading](#preview-shading);
+  maintainer decision, 2026-11-11): the `default` mode shades as OpenUSD Storm does, as
+  helide_gpu does, not as helide: lit by the world's lights and a headlight, with a
+  specular lobe, and unclamped. helide's eye-lit shading is the `eyeLight` mode, which
+  ignores lights and `ambientColor` and clamps each surface's colour to 1 as helide does:
+  comparisons with helide (images, `anariRenderTests`, the CTS) select `mode`
+  `eyeLight` and set `ambientOcclusion` to false. Unknown modes fall back to `default`.
+- **Lights in the `preview` renderer** (see [Lights](#lights); maintainer decision, keep
+  it): the `preview` renderer shows the `visible` hdri lights wherever its camera rays
+  miss and it would show the background (every mode but `testFrame`), opaque, exactly as
+  the `quality`'s camera misses (one lookup, `shading/halcyon_hdri.isph`); its `default`
+  mode also shows `visible` spheres, quads and rings and is lit by every light (an hdri by
+  its mean radiance). helide ignores lights, so compare with helide without lights, or in
+  the `eyeLight` mode without hdris.
 - **Volumes in the pathtracer** (see [Volumes](#volumes);
   maintainer decisions, keep them): the `quality` scatters light in transferFunction1D
   volumes, whose colour is the single-scattering albedo, where the `preview` renderer
@@ -3086,6 +3163,19 @@ check their area of the `preview` renderer and device by rendering small scenes.
   (also for `default`, which reports the `preview` renderer's, and an unknown subtype, which
   reports none), and that the
   device's property, `anariGetDeviceExtensions()` and object info are their union.
+- `preview_shading` checks the `preview` renderer's `default` mode (see [Preview
+  shading](#preview-shading)) on a floor facing an orthographic camera, every pixel
+  against a C++ reference of Storm's model and, where it reduces to a Lambertian (ior 1),
+  against albedo / π × irradiance: the headlight and ambient fill of `eyeLightBlendRatio`,
+  `ambientRadiance` and `ambientColor`; each light in halcyon's units (a directional cone,
+  point power and spheres, a spot's cone, a quad's sides and `radiance`, rings of radius 0
+  and above) and the headlight dropped with lights; an hdri's mean radiance; physicallyBased's
+  parameters (also from attributes) and a surface without a material; back faces; colours
+  above 1; ambient occlusion darkening only the ambient light; and visible quads and
+  spheres (radiance, a black back, hidden behind the floor, depth and ids unchanged). It
+  fails on warnings but the missing material's. The tests that predict the old eye-lit
+  colours to check other things (attributes, samplers, transparency, synchronization,
+  ...) render in the `eyeLight` mode.
 
 ### Verification against Typhoon
 

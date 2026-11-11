@@ -6,6 +6,7 @@
 // occlusion passes the frame runs before the shading pass when the renderer
 // reads the occlusion factor (Frame::flushAndRender())
 
+#include "renderer/preview/PreviewShading.isph"
 #include "shading/halcyon_camera.isph"
 #include "shading/halcyon_frame.isph"
 
@@ -43,8 +44,9 @@ inline float accumulateValue(float dst, float src, float alpha)
 }
 
 // Eye-lit surface color, blending facing ratio falloff (with the shading
-// normal) in by the renderer's 'eyeLightBlendRatio'
-inline float3 shadeSurface(const uniform Renderer *uniform r,
+// normal) in by the renderer's 'eyeLightBlendRatio': helide's shading, the
+// 'eyeLight' mode's
+inline float3 shadeEyeLight(const uniform Renderer *uniform r,
     const RayHit &rh,
     const HitInfo &hitInfo,
     const uniform float4 invalidMaterialColor)
@@ -150,8 +152,37 @@ inline float3 shadeGeometry(const uniform Renderer *uniform r,
   case RENDER_MODE_OPACITY_HEATMAP:
     return shadeOpacityHeatmap(r, rh, hitInfo);
   default:
-    return shadeSurface(r, rh, hitInfo, invalidMaterialColor);
+    return shadeEyeLight(r, rh, hitInfo, invalidMaterialColor);
   }
+}
+
+// What the 'default' mode shades for the surface hit of 'rh' (PreviewShading.
+// isph, as OpenUSD Storm shades a UsdPreviewSurface): the light the world's
+// lights and the headlight ('headlight', its irradiance) reflect towards the
+// camera, plus what the surface emits, plus 'occlusion' times the uniform
+// ambient light ('ambientRadiance') it reflects. The shading normal is
+// turned to the camera's side, so back faces are lit as front faces.
+inline float3 shadeStorm(const uniform Frame *uniform frame,
+    const RayHit &rh,
+    const HitInfo &hitInfo,
+    uniform float headlight,
+    uniform float3 ambientRadiance,
+    float occlusion)
+{
+  const float3 E = -rh.ray.dir;
+  float3 N = worldShadingNormal(hitInfo, rh);
+  // N lies on Ng's side (worldShadingNormal()), so turning it to the camera
+  // turns it to Ng's side the camera sees
+  if (dot(worldNg(rh, hitInfo), E) < 0.f)
+    N = -N;
+  const float3 P = rh.ray.org + rh.ray.dir * rh.ray.tfar;
+  const PreviewSurface s =
+      PreviewSurface_at(rh, hitInfo, frame->invalidMaterialColor);
+  float3 direct;
+  float3 ambient;
+  PreviewShading_shade(
+      frame->world, s, P, N, E, headlight, ambientRadiance, direct, ambient);
+  return direct + occlusion * ambient;
 }
 
 // Ambient occlusion //////////////////////////////////////////////////////////
@@ -506,19 +537,25 @@ inline float unblurredOcclusionFactor(
   return ao->unblurredOcclusion[i];
 }
 
-// Color and opacity of a primary ray through 'screen' in the default mode,
-// traced from 'rh', composited front to back as in helide: the volume in front
-// of the surface hit (ray marched), then the surface, then what a miss shows
-// (missColor(): the visible hdri lights, else the renderer's background).
-// Unlike helide, where every surface is opaque, a surface is
-// weighted by its opacity (Surface_getCompositeOpacity()), and the ray goes on
-// through surfaces until it misses or the opacity reaches 0.99, marching the
-// volume in front of each. Colors are not premultiplied (see
-// accumulateValue()). 'depth' and 'ids' come from the visible hit: the
-// first volume entered or surface with an opacity above 0. The first visible
-// surface, also behind a volume, is darkened by 'occlusion' (the pixel's
-// occlusion factor) before the volume in front of it is composited over it;
-// nothing else is.
+// Color and opacity of a primary ray through 'screen' in the 'default' and
+// 'eyeLight' modes, traced from 'rh', composited front to back as in helide:
+// the volume in front of the surface hit (ray marched), then the surface,
+// then what a miss shows (missColor(): the visible hdri lights, else the
+// renderer's background). Unlike helide, where every surface is opaque, a
+// surface is weighted by its opacity (Surface_getCompositeOpacity()), and the
+// ray goes on through surfaces until it misses or the opacity reaches 0.99,
+// marching the volume in front of each. Colors are not premultiplied (see
+// accumulateValue()). 'depth' and 'ids' come from the visible hit: the first
+// volume entered or surface with an opacity above 0.
+//
+// The 'default' mode shades surfaces as OpenUSD Storm does (shadeStorm()):
+// 'occlusion' (the pixel's occlusion factor) darkens the ambient light the
+// first visible surface (also behind a volume) reflects, and a 'visible'
+// sphere, quad or ring light the ray meets shows its radiance, opaque, in
+// front of what lies behind it; lights change neither 'depth' nor 'ids', as
+// in the 'quality'. Its colors aren't clamped. The 'eyeLight' mode shades
+// as helide (shadeEyeLight(), each surface's color clamped to 1), the first
+// visible surface's color darkened by 'occlusion', and shows no lights.
 inline float4 renderDefault(const uniform Frame *uniform frame,
     float2 screen,
     float occlusion,
@@ -527,11 +564,28 @@ inline float4 renderDefault(const uniform Frame *uniform frame,
     HitInfo &ids)
 {
   const uniform Renderer *uniform r = frame->renderer;
+  const uniform bool storm = r->preview.mode == RENDER_MODE_DEFAULT;
   float3 color = make_float3(0.f);
   float opacity = 0.f;
   bool visible = false;
   bool surfaceSeen = false;
   depth = HALCYON_RAY_TFAR;
+
+  uniform float headlight = 0.f;
+  uniform float3 ambientRadiance = make_float3(0.f);
+  // the nearest visible light along the ray, which ends it
+  float lightDist = HALCYON_RAY_TFAR;
+  float3 lightRadiance = make_float3(0.f);
+  bool light = false;
+  if (storm) {
+    headlight = PreviewShading_headlightIrradiance(r, frame->world);
+    ambientRadiance = PreviewShading_ambientRadiance(r, frame->world);
+    light = PreviewShading_visibleLight(
+        frame->world, rh.ray.org, rh.ray.dir, lightDist, lightRadiance);
+  }
+  const float3 org = rh.ray.org;
+  const float3 dir = rh.ray.dir;
+  bool lightSeen = false;
 
   while (true) {
     rtcIntersectV(frame->world->scene, (varying RTCRayHit * uniform) & rh);
@@ -539,6 +593,14 @@ inline float4 renderDefault(const uniform Frame *uniform frame,
     // the miss ids unless a visible hit follows
     if (!visible)
       ids = hitInfo;
+
+    // a visible light in front of the surface hit (or where the ray misses):
+    // the volume in front of the light, then the light end the ray
+    if (light
+        && lightDist < (foundHit(hitInfo) ? rh.ray.tfar : HALCYON_RAY_TFAR)) {
+      rh.ray.tfar = lightDist;
+      lightSeen = true;
+    }
 
     // volumes are intersected between the previous surface hit and this one
     const VolumeHit vh = intersectVolumes(frame->world, rh);
@@ -558,21 +620,27 @@ inline float4 renderDefault(const uniform Frame *uniform frame,
       }
     }
 
-    if (!foundHit(hitInfo))
+    if (lightSeen || !foundHit(hitInfo))
       break;
 
     const float surfaceOpacity = Surface_getCompositeOpacity(rh, hitInfo);
     if (surfaceOpacity > 0.f) {
-      float3 surfaceColor =
-          min(shadeSurface(r, rh, hitInfo, frame->invalidMaterialColor),
-              make_float3(1.f));
+      // the first visible surface's ambient occlusion
+      const float surfaceOcclusion = surfaceSeen ? 1.f : occlusion;
+      surfaceSeen = true;
+      float3 surfaceColor;
+      if (storm) {
+        surfaceColor = shadeStorm(
+            frame, rh, hitInfo, headlight, ambientRadiance, surfaceOcclusion);
+      } else {
+        surfaceColor =
+            min(shadeEyeLight(r, rh, hitInfo, frame->invalidMaterialColor),
+                make_float3(1.f))
+            * surfaceOcclusion;
+      }
       if (!visible) {
         visible = true;
         depth = rh.ray.tfar;
-      }
-      if (!surfaceSeen) {
-        surfaceSeen = true;
-        surfaceColor = surfaceColor * occlusion;
       }
       color = accumulateValue(color, surfaceColor * surfaceOpacity, opacity);
       opacity = accumulateValue(opacity, surfaceOpacity, opacity);
@@ -581,6 +649,19 @@ inline float4 renderDefault(const uniform Frame *uniform frame,
     if (opacity >= 0.99f)
       break;
     continuePastHit(rh);
+  }
+
+  if (lightSeen) {
+    color = accumulateValue(color, lightRadiance, opacity);
+    opacity = 1.f;
+    // the visible hit behind the light, which it doesn't hide from the depth
+    // and id channels
+    if (!visible) {
+      RayHit camera = makeRay(org, dir, 0.f, HALCYON_RAY_TFAR);
+      HitInfo surface;
+      traceFirstVisibleSurface(frame->world, camera, surface, depth, ids);
+    }
+    return make_float4(color, opacity);
   }
 
   const float4 bg = missColor(r, frame->world, screen, rh.ray.dir);
@@ -675,7 +756,8 @@ inline unmasked void renderFrame(uniform Frame *uniform frame,
 
   const int pixelIndex = y * frame->size.x + x;
 
-  if (frame->renderer->preview.mode == RENDER_MODE_DEFAULT) {
+  if (frame->renderer->preview.mode == RENDER_MODE_DEFAULT
+      || frame->renderer->preview.mode == RENDER_MODE_EYE_LIGHT) {
     float depth;
     HitInfo ids;
     const float4 color = renderDefault(
@@ -756,6 +838,7 @@ inline unmasked void renderAlbedoAndNormal(
 
 export void Preview_setParameters(void *uniform _self,
     uniform float ambientRadiance,
+    const uniform float *uniform ambientColor /* float3 */,
     uniform float eyeLightBlendRatio,
     uniform float invVolumeSamplingRate,
     uniform RenderMode mode,
@@ -764,6 +847,8 @@ export void Preview_setParameters(void *uniform _self,
 {
   uniform Renderer *uniform self = object_cast<Renderer>(_self);
   self->preview.ambientRadiance = ambientRadiance;
+  self->preview.ambientColor =
+      make_float3(ambientColor[0], ambientColor[1], ambientColor[2]);
   self->preview.eyeLightBlendRatio = eyeLightBlendRatio;
   self->preview.invVolumeSamplingRate = invVolumeSamplingRate;
   self->preview.mode = mode;

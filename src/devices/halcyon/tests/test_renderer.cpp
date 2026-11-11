@@ -3,8 +3,9 @@
 
 // Renders a quad tilted 60 degrees away from an orthographic camera (so the
 // eye-light falloff is exactly 0.5) and checks the renderer's shading
-// parameters, alpha compositing and task grain sizes against the float color
-// channel.
+// parameters in the 'eyeLight' mode (helide's shading), alpha compositing and
+// task grain sizes against the float color channel. The 'default' mode's
+// shading (OpenUSD Storm's) is test_preview_shading.cpp's.
 
 // anari
 #define ANARI_LINALG_DEFINITIONS
@@ -82,16 +83,19 @@ anari::Camera makeCamera(anari::Device d, float4 imageRegion = FULL_REGION)
 
 using SetParams = std::function<void(anari::Device, anari::Renderer)>;
 
-// Renders 'world' with a "preview" renderer configured by 'setParams' (and
-// committed unless 'commit' is false) through a camera showing 'imageRegion',
-// returning the float color channel
+// Renders 'world' with a "preview" renderer in 'mode' (unset if NULL)
+// configured by 'setParams' (and committed unless 'commit' is false) through
+// a camera showing 'imageRegion', returning the float color channel
 std::vector<float4> render(anari::Device d,
     anari::World world,
     const SetParams &setParams,
     bool commit = true,
-    float4 imageRegion = FULL_REGION)
+    float4 imageRegion = FULL_REGION,
+    const char *mode = "eyeLight")
 {
   auto renderer = anari::newObject<anari::Renderer>(d, "preview");
+  if (mode)
+    anari::setParameter(d, renderer, "mode", mode);
   if (setParams)
     setParams(d, renderer);
   if (commit)
@@ -198,8 +202,17 @@ bool testShading(anari::Device d, anari::World world)
 
   bool pass = true;
   pass &= check(d, world, "defaults", nullptr, shaded(c, 0.5f), black);
-  pass &= check(
-      d, world, "uncommitted renderer", nullptr, shaded(c, 0.5f), black, false);
+  // an uncommitted renderer renders as one committed with its defaults,
+  // whose mode is 'default'
+  {
+    const auto uncommitted =
+        render(d, world, nullptr, false, FULL_REGION, nullptr);
+    const auto committed =
+        render(d, world, nullptr, true, FULL_REGION, "default");
+    const bool same = !committed.empty() && uncommitted == committed;
+    std::printf("%s uncommitted renderer\n", same ? "PASS" : "FAIL");
+    pass &= same;
+  }
   pass &= check(
       d,
       world,
