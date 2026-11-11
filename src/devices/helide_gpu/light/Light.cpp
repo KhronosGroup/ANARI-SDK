@@ -46,8 +46,10 @@ void Light::commitParameters()
   m_cosOuterAngle = std::cos(halfOpening);
   m_cosInnerAngle = std::cos(halfOpening - falloff);
 
+  m_visible = getParam<bool>("visible", true);
   m_radianceTimesArea = false;
-  m_twoSided = false;
+  m_emitsFront = true;
+  m_emitsBack = false;
   if (m_type == LightType::QUAD) {
     commitQuad(color);
     return;
@@ -85,12 +87,12 @@ void Light::commitQuad(const vec3 &color)
         "is used",
         side.c_str());
   }
-  const bool backOnly = side == "back";
-  m_twoSided = side == "both";
+  m_emitsBack = side == "back" || side == "both";
+  m_emitsFront = side != "back";
   const vec3 normal = glm::cross(m_edge2, m_edge1);
   const float area = glm::length(normal);
-  m_direction =
-      area > 0.f ? (backOnly ? -normal : normal) / area : vec3(0.f, 0.f, -1.f);
+  m_direction = area > 0.f ? (m_emitsFront ? normal : -normal) / area
+                           : vec3(0.f, 0.f, -1.f);
 
   // The spec's precedence: the first of 'intensity' (W/sr along the normal),
   // 'power' (W) and 'radiance' (W/sr/m^2) set. A Lambertian side emits pi
@@ -100,7 +102,7 @@ void Light::commitQuad(const vec3 &color)
   if (getParam("intensity", ANARI_FLOAT32, &value))
     amount = value;
   else if (getParam("power", ANARI_FLOAT32, &value))
-    amount = value / (PI * (m_twoSided ? 2.f : 1.f));
+    amount = value / (PI * (m_emitsFront && m_emitsBack ? 2.f : 1.f));
   else if (getParam("radiance", ANARI_FLOAT32, &value)) {
     amount = value;
     m_radianceTimesArea = true;
@@ -153,9 +155,19 @@ vec3 Light::edge2() const
   return m_edge2;
 }
 
-bool Light::twoSided() const
+bool Light::emitsFront() const
 {
-  return m_twoSided;
+  return m_emitsFront;
+}
+
+bool Light::emitsBack() const
+{
+  return m_emitsBack;
+}
+
+bool Light::visible() const
+{
+  return m_visible;
 }
 
 } // namespace helide_gpu

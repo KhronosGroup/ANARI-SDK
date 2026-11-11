@@ -86,6 +86,12 @@ struct Frame : public helium::BaseFrame
   // composite pass to add after ambient occlusion
   void gpu_renderFrame_geometryPass(
       SDL_GPUCommandBuffer *cmd, bool deferAmbient);
+  // Draws the world's visible quad lights as their emitting rectangles
+  // (KHR_LIGHT_PRIMARY_VISIBILITY)
+  void gpu_drawVisibleLights(SDL_GPURenderPass *pass,
+      SDL_GPUCommandBuffer *cmd,
+      const mat4 &V,
+      const mat4 &P);
   // Pushes the lighting uniforms (shaders/shading.glsl LightingUniforms)
   void gpu_pushLightingUniforms(
       SDL_GPUCommandBuffer *cmd, const mat4 &V, bool deferAmbient);

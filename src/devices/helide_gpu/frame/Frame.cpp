@@ -428,6 +428,8 @@ void Frame::gpu_renderFrame_geometryPass(
       }
     }
 
+    gpu_drawVisibleLights(pass, cmd, V, P);
+
     // --- Volume rendering (after all opaque surfaces) ---
     if (deviceState()->gpu.volumePipeline) {
       const vec3 camWorldPos = vec3(glm::inverse(V) * vec4(0, 0, 0, 1));
@@ -462,6 +464,75 @@ void Frame::gpu_renderFrame_geometryPass(
   }
 
   SDL_EndGPURenderPass(pass);
+}
+
+void Frame::gpu_drawVisibleLights(SDL_GPURenderPass *pass,
+    SDL_GPUCommandBuffer *cmd,
+    const mat4 &V,
+    const mat4 &P)
+{
+  auto *pipeline = deviceState()->gpu.lightQuadPipeline;
+  if (!pipeline)
+    return;
+
+  // a perspective projection's w is -z (P[2][3] == -1), an orthographic's 1
+  const bool perspective = P[2][3] != 0.f;
+  bool bound = false;
+
+  for (auto *instance : m_world->instances()) {
+    if (!instance || !instance->isValid() || !instance->group())
+      continue;
+    for (size_t t = 0; t < instance->numTransforms(); t++) {
+      const mat4 MV = V * instance->xfm(t);
+      for (auto *light : instance->group()->lights()) {
+        if (!light || !light->isValid() || !light->visible()
+            || light->type() != LightType::QUAD)
+          continue;
+
+        // view space, the area after the instance transform
+        const vec3 edge1 = vec3(MV * vec4(light->edge1(), 0.f));
+        const vec3 edge2 = vec3(MV * vec4(light->edge2(), 0.f));
+        const vec3 center = vec3(MV * vec4(light->position(), 1.f));
+        const vec3 front = glm::cross(edge2, edge1);
+        const float area = glm::length(front);
+        if (!(area > 0.f))
+          continue;
+
+        // draw only a quad whose side facing the camera emits
+        const vec3 toCamera = perspective ? -center : vec3(0.f, 0.f, 1.f);
+        const float facing = glm::dot(front, toCamera);
+        if (facing == 0.f
+            || !(facing > 0.f ? light->emitsFront() : light->emitsBack()))
+          continue;
+
+        // radiance(): per area if given as 'radiance', else the intensity
+        // along the normal, spread over the area
+        const vec3 radiance = light->radianceTimesArea()
+            ? light->radiance()
+            : light->radiance() / area;
+
+        if (!bound) {
+          SDL_BindGPUGraphicsPipeline(pass, pipeline);
+          bound = true;
+        }
+
+        struct
+        {
+          mat4 P;
+          vec4 origin;
+          vec4 edge1;
+          vec4 edge2;
+        } vu{P,
+            vec4(center - 0.5f * (edge1 + edge2), 1.f),
+            vec4(edge1, 0.f),
+            vec4(edge2, 0.f)};
+        SDL_PushGPUVertexUniformData(cmd, 0, &vu, sizeof(vu));
+        const vec4 fu(radiance, 0.f);
+        SDL_PushGPUFragmentUniformData(cmd, 0, &fu, sizeof(fu));
+        SDL_DrawGPUPrimitives(pass, 6, 1, 0, 0);
+      }
+    }
+  }
 }
 
 void Frame::gpu_pushLightingUniforms(
@@ -525,7 +596,7 @@ void Frame::gpu_pushLightingUniforms(
                 glm::length(glm::cross(vec3(MV * vec4(light->edge2(), 0.f)),
                     vec3(MV * vec4(light->edge1(), 0.f))));
           }
-          l.direction.w = light->twoSided() ? 1.f : 0.f;
+          l.direction.w = light->emitsFront() && light->emitsBack() ? 1.f : 0.f;
           l.radiance = vec4(radiance, 0.f);
         }
       }

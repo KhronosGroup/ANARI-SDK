@@ -331,8 +331,8 @@ static bool renderFaceVaryingScene(anari::Device d, uvec2 imgSize, float aspect)
 }
 
 // ---------------------------------------------------------------------------
-// Quad light: a matte floor at z = 0 lit only by a quad light one unit above
-// it. Returns the floor's color at the image center, below the quad's center.
+// Quad light: a matte floor (at z = 0 by default) lit only by a quad light.
+// Returns the color and object ID at the image center.
 // ---------------------------------------------------------------------------
 
 struct QuadLightSetup
@@ -343,13 +343,22 @@ struct QuadLightSetup
   const char *side;
   const char *brightnessParam; // "intensity", "power" or "radiance"
   float brightness;
+  bool visible = false;
+  float floorZ = 0.f;
 };
 
-static RGBA8 renderQuadLightScene(
+struct QuadLightResult
+{
+  RGBA8 color{};
+  uint32_t objectId{0};
+};
+
+static QuadLightResult renderQuadLightScene(
     anari::Device d, uvec2 imgSize, float aspect, const QuadLightSetup &q)
 {
+  const float z = q.floorZ;
   vec3 positions[] = {
-      {-3.f, -3.f, 0.f}, {4.f, -3.f, 0.f}, {4.f, 4.f, 0.f}, {-3.f, 4.f, 0.f}};
+      {-3.f, -3.f, z}, {4.f, -3.f, z}, {4.f, 4.f, z}, {-3.f, 4.f, z}};
   uvec3 indices[] = {{0, 1, 2}, {0, 2, 3}};
   auto geom = anari::newObject<anari::Geometry>(d, "triangle");
   anari::setParameterArray1D(d, geom, "vertex.position", positions, 4);
@@ -370,6 +379,7 @@ static RGBA8 renderQuadLightScene(
   anari::setParameter(d, light, "edge2", q.edge2);
   anari::setParameter(d, light, "side", q.side);
   anari::setParameter(d, light, q.brightnessParam, q.brightness);
+  anari::setParameter(d, light, "visible", q.visible);
   anari::commitParameters(d, light);
 
   auto world = anari::newObject<anari::World>(d);
@@ -400,6 +410,7 @@ static RGBA8 renderQuadLightScene(
   auto frame = anari::newObject<anari::Frame>(d);
   anari::setParameter(d, frame, "size", imgSize);
   anari::setParameter(d, frame, "channel.color", ANARI_UFIXED8_VEC4);
+  anari::setParameter(d, frame, "channel.objectId", ANARI_UINT32);
   anari::setAndReleaseParameter(d, frame, "renderer", renderer);
   anari::setAndReleaseParameter(d, frame, "camera", camera);
   anari::setAndReleaseParameter(d, frame, "world", world);
@@ -408,14 +419,20 @@ static RGBA8 renderQuadLightScene(
   anari::render(d, frame);
   anari::wait(d, frame);
 
-  RGBA8 center{};
+  QuadLightResult result;
+  const size_t center = (imgSize[1] / 2) * imgSize[0] + imgSize[0] / 2;
   auto fb = anari::map<RGBA8>(d, frame, "channel.color");
   if (fb.data) {
-    center = samplePixel(fb.data, imgSize, imgSize[0] / 2, imgSize[1] / 2);
+    result.color = fb.data[center];
     anari::unmap(d, frame, "channel.color");
   }
+  auto ib = anari::map<uint32_t>(d, frame, "channel.objectId");
+  if (ib.data) {
+    result.objectId = ib.data[center];
+    anari::unmap(d, frame, "channel.objectId");
+  }
   anari::release(d, frame);
-  return center;
+  return result;
 }
 
 static bool renderQuadLightScenes(anari::Device d, uvec2 imgSize, float aspect)
@@ -433,21 +450,48 @@ static bool renderQuadLightScenes(anari::Device d, uvec2 imgSize, float aspect)
   const vec3 e1x2 = {2.f, 0.f, 0.f};
   const vec3 e2x2 = {0.f, 2.f, 0.f};
 
+  // Lighting the floor; the light is invisible so the floor shows through
   const RGBA8 front = renderQuadLightScene(
-      d, imgSize, aspect, {pos, e1, e2, "front", "intensity", I});
+      d, imgSize, aspect, {pos, e1, e2, "front", "intensity", I})
+                          .color;
   const RGBA8 back = renderQuadLightScene(
-      d, imgSize, aspect, {pos, e1, e2, "back", "intensity", I});
+      d, imgSize, aspect, {pos, e1, e2, "back", "intensity", I})
+                         .color;
   const RGBA8 both = renderQuadLightScene(
-      d, imgSize, aspect, {pos, e1, e2, "both", "intensity", I});
+      d, imgSize, aspect, {pos, e1, e2, "both", "intensity", I})
+                         .color;
   // radiance * area == intensity along the normal
   const RGBA8 radiance = renderQuadLightScene(
-      d, imgSize, aspect, {pos4, e1x2, e2x2, "front", "radiance", I / 4.f});
+      d, imgSize, aspect, {pos4, e1x2, e2x2, "front", "radiance", I / 4.f})
+                             .color;
   // a Lambertian side emits pi * intensity
   const RGBA8 power = renderQuadLightScene(
-      d, imgSize, aspect, {pos, e1, e2, "front", "power", pi * I});
+      d, imgSize, aspect, {pos, e1, e2, "front", "power", pi * I})
+                          .color;
   // twice the power over two sides is the same intensity
   const RGBA8 powerBoth = renderQuadLightScene(
-      d, imgSize, aspect, {pos, e1, e2, "both", "power", 2.f * pi * I});
+      d, imgSize, aspect, {pos, e1, e2, "both", "power", 2.f * pi * I})
+                              .color;
+
+  // Primary visibility: the camera sees the back of the floor-facing quad,
+  // which emits with side "both" and doesn't with "front"
+  const QuadLightResult seen = renderQuadLightScene(
+      d, imgSize, aspect, {pos, e1, e2, "both", "radiance", 0.5f, true});
+  const QuadLightResult notEmitting = renderQuadLightScene(
+      d, imgSize, aspect, {pos, e1, e2, "front", "radiance", 0.5f, true});
+  // a half-size quad given by intensity: radiance is intensity / area
+  const vec3 posHalf = {0.25f, 0.25f, 1.f};
+  const vec3 e1Half = {0.5f, 0.f, 0.f};
+  const vec3 e2Half = {0.f, 0.5f, 0.f};
+  const QuadLightResult seenIntensity = renderQuadLightScene(d,
+      imgSize,
+      aspect,
+      {posHalf, e1Half, e2Half, "both", "intensity", 0.125f, true});
+  // a floor at z = 1.5 hides the light behind it
+  const QuadLightResult hidden = renderQuadLightScene(
+      d, imgSize, aspect, {pos, e1, e2, "both", "radiance", 0.5f, true, 1.5f});
+  // the radiance 0.5 (a UFIXED8_VEC4 color channel is linear)
+  const RGBA8 half = {128, 128, 128, 255};
 
   auto close = [](RGBA8 a, RGBA8 b) {
     return std::abs(int(a.r) - int(b.r)) <= 2
@@ -467,6 +511,15 @@ static bool renderQuadLightScenes(anari::Device d, uvec2 imgSize, float aspect)
       {"radiance*area == intensity", radiance, close(radiance, front)},
       {"power == pi*intensity", power, close(power, front)},
       {"power both sides", powerBoth, close(powerBoth, front)},
+      {"visible: radiance", seen.color, close(seen.color, half)},
+      {"visible: no hit id", seen.color, seen.objectId == ~0u},
+      {"visible: intensity / area",
+          seenIntensity.color,
+          close(seenIntensity.color, half)},
+      {"visible: unseen side",
+          notEmitting.color,
+          !close(notEmitting.color, half)},
+      {"visible: behind floor", hidden.color, !close(hidden.color, half)},
   };
   bool ok = true;
   for (const auto &c : checks) {
