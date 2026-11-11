@@ -161,7 +161,8 @@ inline float3 shadeGeometry(const uniform Renderer *uniform r,
 // lights and the headlight ('headlight', its irradiance) reflect towards the
 // camera, plus what the surface emits, plus 'occlusion' times the uniform
 // ambient light ('ambientRadiance') it reflects. The shading normal is
-// turned to the camera's side, so back faces are lit as front faces.
+// turned to the camera's side, so back faces are lit as front faces, then
+// perturbed by the material's normal map.
 inline float3 shadeStorm(const uniform Frame *uniform frame,
     const RayHit &rh,
     const HitInfo &hitInfo,
@@ -176,6 +177,7 @@ inline float3 shadeStorm(const uniform Frame *uniform frame,
   if (dot(worldNg(rh, hitInfo), E) < 0.f)
     N = -N;
   const float3 P = rh.ray.org + rh.ray.dir * rh.ray.tfar;
+  N = PreviewSurface_normal(rh, hitInfo, P, N);
   const PreviewSurface s =
       PreviewSurface_at(rh, hitInfo, frame->invalidMaterialColor);
   float3 direct;

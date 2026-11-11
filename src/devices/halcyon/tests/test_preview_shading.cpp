@@ -760,6 +760,183 @@ bool testMaterials(anari::Device d)
   return pass;
 }
 
+// Normal maps ///////////////////////////////////////////////////////////////
+
+// The largest difference between the colours of 'a' and 'b' (relative to
+// max(1, |value|) per component), infinite if either has no image
+float imageDifference(const Image &a, const Image &b)
+{
+  if (a.color.empty() || a.color.size() != b.color.size())
+    return INFINITY;
+  float worst = 0.f;
+  for (size_t i = 0; i < a.color.size(); i++) {
+    for (int c = 0; c < 4; c++) {
+      worst = std::max(worst,
+          std::fabs(a.color[i][c] - b.color[i][c])
+              / std::max(1.f, std::fabs(b.color[i][c])));
+    }
+  }
+  return worst;
+}
+
+// Whether 'a' and 'b' are the same image to within 'tolerance'
+// (imageDifference())
+bool closeImages(
+    const std::string &name, const Image &a, const Image &b, float tolerance)
+{
+  const float worst = imageDifference(a, b);
+  if (!(worst <= tolerance))
+    std::printf("  largest difference %g\n", worst);
+  return report(name, worst <= tolerance);
+}
+
+// A normal map of 'subtype' ("image2D" or "transform"); an image2D holds the
+// one texel 'texel', stored as is or ('encoded') as texel / 2 + 1/2 that
+// outTransform/outOffset decode; 'flipT' makes inTransform map t to 1 - t
+anari::Sampler normalMap(anari::Device d,
+    const char *subtype,
+    float3 texel,
+    bool encoded = false,
+    bool flipT = false)
+{
+  auto s = anari::newObject<anari::Sampler>(d, subtype);
+  if (std::strcmp(subtype, "image2D") == 0) {
+    const float3 stored = encoded ? texel * 0.5f + float3(0.5f) : texel;
+    anari::setParameterArray2D(d, s, "image", &stored, 1, 1);
+    anari::setParameter(d, s, "inAttribute", "attribute0");
+  }
+  if (encoded) {
+    anari::setParameter(d,
+        s,
+        "outTransform",
+        mat4(float4(2.f, 0.f, 0.f, 0.f),
+            float4(0.f, 2.f, 0.f, 0.f),
+            float4(0.f, 0.f, 2.f, 0.f),
+            float4(0.f, 0.f, 0.f, 1.f)));
+    anari::setParameter(d, s, "outOffset", float4(-1.f, -1.f, -1.f, 0.f));
+  }
+  if (flipT) {
+    anari::setParameter(d,
+        s,
+        "inTransform",
+        mat4(float4(1.f, 0.f, 0.f, 0.f),
+            float4(0.f, -1.f, 0.f, 0.f),
+            float4(0.f, 0.f, 1.f, 0.f),
+            float4(0.f, 0.f, 0.f, 1.f)));
+    anari::setParameter(d, s, "inOffset", float4(0.f, 1.f, 0.f, 0.f));
+  }
+  anari::commitParameters(d, s);
+  return s;
+}
+
+bool testNormalMaps(anari::Device d)
+{
+  bool pass = true;
+  auto light = [&]() {
+    return makeLight(d, "point", [](anari::Device d, anari::Object l) {
+      anari::setParameter(d, l, "position", float3(0.4f, 0.3f, 1.2f));
+      anari::setParameter(d, l, "intensity", 4.f);
+    });
+  };
+  // a glossy physicallyBased material, with normal map 'map' (released) if
+  // given
+  auto material = [&](anari::Sampler map) {
+    return physicallyBased(d, [=](anari::Device d, anari::Object m) {
+      anari::setParameter(d, m, "metallic", 0.3f);
+      anari::setParameter(d, m, "roughness", 0.4f);
+      if (map)
+        anari::setAndReleaseParameter(d, m, "normal", map);
+    });
+  };
+  // The floor with texture coordinates in attribute0 (u along +x or, with
+  // 'mirrorU', -x; v along +y) and, if 'normal' is nonzero, that vertex
+  // normal at every corner
+  auto floor = [&](anari::Material mat, float3 normal, bool mirrorU) {
+    return makeQuad(d, FLOOR, mat, [=](anari::Device d, anari::Object g) {
+      const float u0 = mirrorU ? 1.f : 0.f;
+      const float u1 = 1.f - u0;
+      const std::vector<float2> uv = {
+          {u0, 0.f}, {u1, 0.f}, {u1, 1.f}, {u0, 1.f}};
+      anari::setParameterArray1D(
+          d, g, "vertex.attribute0", uv.data(), uv.size());
+      if (normal != float3(0.f)) {
+        const std::vector<float3> n(4, linalg::normalize(normal));
+        anari::setParameterArray1D(d, g, "vertex.normal", n.data(), n.size());
+      }
+    });
+  };
+  auto renderFloor = [&](anari::Sampler map,
+                         float3 normal = float3(0.f),
+                         bool mirrorU = false) {
+    return render(
+        d, makeWorld(d, {floor(material(map), normal, mirrorU)}, {light()}));
+  };
+
+  const float s = 0.5f;
+  const float c = std::sqrt(1.f - s * s);
+  const float tolerance = 1e-4f;
+  const Image flat = renderFloor(nullptr);
+  const Image tiltedX = renderFloor(nullptr, float3(s, 0.f, c));
+  const Image tiltedY = renderFloor(nullptr, float3(0.f, s, c));
+  const Image tiltedNegX = renderFloor(nullptr, float3(-s, 0.f, c));
+  const Image tiltedNegY = renderFloor(nullptr, float3(0.f, -s, c));
+  const float tilt = imageDifference(flat, tiltedX);
+  pass &= report("normal map: tilted vertex normals change the shading",
+      tilt > 1e-2f && tilt < INFINITY);
+
+  pass &= closeImages("normal map (0, 0, 1) keeps the normal",
+      renderFloor(normalMap(d, "image2D", float3(0.f, 0.f, 1.f))),
+      flat,
+      tolerance);
+  pass &= closeImages("normal map tilted along u: as the vertex normal",
+      renderFloor(normalMap(d, "image2D", float3(s, 0.f, c))),
+      tiltedX,
+      tolerance);
+  pass &= closeImages("normal map tilted along v: as the vertex normal",
+      renderFloor(normalMap(d, "image2D", float3(0.f, s, c))),
+      tiltedY,
+      tolerance);
+  pass &= closeImages("normal map decoded by outTransform/outOffset",
+      renderFloor(normalMap(d, "image2D", float3(s, 0.f, c), true)),
+      tiltedX,
+      tolerance);
+  pass &= closeImages("normal map with u mirrored: tangent along -x",
+      renderFloor(
+          normalMap(d, "image2D", float3(s, 0.f, c)), float3(0.f), true),
+      tiltedNegX,
+      tolerance);
+  pass &=
+      closeImages("normal map with inTransform flipping t: bitangent along -y",
+          renderFloor(normalMap(d, "image2D", float3(0.f, s, c), false, true)),
+          tiltedNegY,
+          tolerance);
+  pass &= closeImages("transform sampler: not a normal map",
+      renderFloor(normalMap(d, "transform", float3(0.f))),
+      flat,
+      tolerance);
+
+  // a sphere's attributes are constant over it: no normal map
+  auto sphere = [&](anari::Sampler map) {
+    auto geom = anari::newObject<anari::Geometry>(d, "sphere");
+    const float3 center(0.f, 0.f, 0.f);
+    const float2 uv(0.25f, 0.75f);
+    anari::setParameterArray1D(d, geom, "vertex.position", &center, 1);
+    anari::setParameterArray1D(d, geom, "vertex.attribute0", &uv, 1);
+    anari::setParameter(d, geom, "radius", 0.8f);
+    anari::commitParameters(d, geom);
+    auto surface = anari::newObject<anari::Surface>(d);
+    anari::setAndReleaseParameter(d, surface, "geometry", geom);
+    anari::setAndReleaseParameter(d, surface, "material", material(map));
+    anari::commitParameters(d, surface);
+    return render(d, makeWorld(d, {surface}, {light()}));
+  };
+  pass &= closeImages("sphere: normal map unused",
+      sphere(normalMap(d, "image2D", float3(s, 0.f, c))),
+      sphere(nullptr),
+      tolerance);
+  return pass;
+}
+
 // Facing, clamping //////////////////////////////////////////////////////////
 
 bool testBackFaceAndClamp(anari::Device d)
@@ -951,6 +1128,7 @@ int main()
   pass &= testQuadAndRing(d);
   pass &= testHdri(d);
   pass &= testMaterials(d);
+  pass &= testNormalMaps(d);
   pass &= testBackFaceAndClamp(d);
   pass &= testAmbientOcclusion(d);
   pass &= testVisibleLights(d);

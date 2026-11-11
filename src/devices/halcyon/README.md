@@ -238,8 +238,11 @@ B-spline or Catmull-Rom (`HALCYON_GEOMETRY_CURVE_BASIS`), not Bézier or ribbons
 - The `preview` renderer lights surfaces as OpenUSD Storm does: without shadows or
   interreflection, a quad, ring or sphere light as a point light at its center, an hdri
   as its mean radiance (a uniform ambient light), and only physicallyBased's `metallic`,
-  `roughness`, `ior` and `emissive` beyond the base colour (no normal maps, clearcoat,
-  sheen or transmission; other materials shade as a matte of their base colour). The
+  `roughness`, `ior`, `emissive` and `normal` beyond the base colour (no clearcoat,
+  sheen or transmission; other materials shade as a matte of their base colour). Normal
+  maps come only from image samplers and map only triangles and quads, in Storm's tangent
+  frame rather than the `quality`'s; the normal channel and ambient occlusion keep the
+  unperturbed normal. The
   `eyeLight` mode ignores lights and `ambientColor`, as helide does.
 - The `preview` renderer takes one sample per pixel and doesn't accumulate. Primary rays go
   through pixel centres, as helide 0.17's do; helide 0.16 and older go through pixel

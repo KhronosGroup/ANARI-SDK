@@ -524,7 +524,8 @@ Details that are easy to get wrong:
   product); `objectShadingNormal()` is negated by the same test. Only interpolated normals
   can turn: `Ng` itself never does. Neither normal is turned to face the viewer, except in
   the ambient occlusion hit buffer and the `preview` renderer's `default` mode (which
-  shades back faces as front faces, as Storm does). The shading of the `default`,
+  shades back faces as front faces, as Storm does, and then perturbs the normal by a
+  normal map). The shading of the `default`,
   `eyeLight` and `opacityHeatmap` modes, the `worldNormal`/`objectNormal` attributes (so the turned normal), the `Ns`
   modes, the hit buffer, both renderers' normal channel and the `quality`'s shading
   context use the shading normal; the `Ng` and `backface` modes use `Ng`. World-space
@@ -575,6 +576,22 @@ shading; helide's eye-lit shading stays as the `eyeLight` mode).
   `materialParameterAt()`, whatever kind the pathtracer gives the material); every other
   material is metallic 0, roughness 1, ior 1.5 and emits nothing (helide_gpu's matte).
   usdPreviewSurface, openPBR and materialx materials show only their base colour.
+- **Normal maps** (`PreviewSurface_normal()`): physicallyBased's `normal`, an image
+  sampler whose output is the tangent-space normal as is (its `outTransform`/`outOffset`
+  decode it), perturbs the shading normal after it is turned to the camera, as Storm's
+  `perturbFragmentNormal()` does. Storm's tangent frame comes from screen-space
+  derivatives of the position and the map's texture coordinates (`ComputeTBNMatrix()` in
+  hdSt's `surfaceHelpers.glslfx`; helide_gpu's `shaders/material.glsl` ports it as is);
+  on a triangle or quad that is the position's derivative along the texture coordinates,
+  which the preview takes from the geometry's `getDerivatives` hook for the sampler's
+  `inAttribute`, through the upper-left 2x2 of its `inTransform`: the tangent is dP/ds
+  turned into the tangent plane, the bitangent N x tangent signed by the handedness of
+  dP/ds and dP/dt. It is not the `quality`'s frame (authored or smoothed corner tangents,
+  `tangentFrame()` in `ShadingContext.isph`), so the two renderers can perturb differently
+  where a mesh has tangents. Other samplers, other subtypes (whose attributes don't vary
+  over a primitive), texture coordinates an instance sets and degenerate frames keep the
+  normal. The normal channel and ambient occlusion keep the unperturbed normal, as in
+  helide_gpu.
 - **Lights** (`PreviewLight_eval()`), from the world's light records in halcyon's units
   (`light/Light.h`): a directional light's irradiance (a cone's radiance times its
   cosine-weighted solid angle, so a cone lights as a delta of the same `irradiance`);
@@ -604,7 +621,8 @@ shading; helide's eye-lit shading stays as the `eyeLight` mode).
 
 `test_preview_shading.cpp` (ctest `preview_shading`) checks each against a C++ reference
 of the model and, where it reduces to a Lambertian (ior 1), against albedo / π ×
-irradiance.
+irradiance; a normal-mapped floor against the same floor with its vertex normals tilted
+alike (along u and v, mirrored u, a t-flipping `inTransform`, a decoded texel).
 
 ### Ambient occlusion passes
 

@@ -69,6 +69,118 @@ inline PreviewSurface PreviewSurface_at(const RayHit &rh,
   return s;
 }
 
+// Normal maps /////////////////////////////////////////////////////////////////
+
+// The shading normal 'N' (world space, unit, turned to the camera) perturbed
+// by normal map 's' (an image sampler whose output is the tangent-space
+// normal as is: its outTransform/outOffset decode it) as OpenUSD Storm
+// perturbs it (perturbFragmentNormal() in usdShaders' previewSurface.glslfx).
+// Storm builds the tangent frame from the screen-space derivatives of the
+// position and of the map's texture coordinates (ComputeTBNMatrix() in hdSt's
+// surfaceHelpers.glslfx; helide_gpu's shaders/material.glsl ports it as is);
+// on a triangle or quad those are the derivatives of the position along the
+// texture coordinates, which halcyon takes from the geometry's derivative
+// hook: the tangent is dP/ds turned into the tangent plane, the bitangent
+// N x tangent signed by the handedness of dP/ds and dP/dt. Only triangles and
+// quads whose texture coordinates vary over the primitive (vertex or
+// face-varying values) are mapped; elsewhere, and where the frame or the
+// map's value is degenerate, N is kept.
+inline float3 PreviewSurface_mapNormal(const uniform Sampler *uniform s,
+    const RayHit &rh,
+    const HitInfo &hitInfo,
+    float3 P,
+    float3 N)
+{
+  const uniform Attribute texcoord = s->inAttribute;
+  if (texcoord >= NUM_GEOMETRY_ATTRIBUTES)
+    return N;
+  // texture coordinates an instance sets are constant over the primitive
+#pragma ignore warning(perf)
+  const uniform float *varying ia = hitInfo.instance->attributes[texcoord];
+  if (ia != NULL)
+    return N;
+
+  bool varies = false;
+  SurfaceDerivatives d;
+#pragma ignore warning(perf)
+  const uniform Geometry *varying geometry = hitInfo.surface->geometry;
+  foreach_unique (g in geometry) {
+    // getFaceVaryingAttribute: triangles and quads, whose texture
+    // coordinates can vary over a primitive
+    if (g->getDerivatives != NULL && g->vertices.data != NULL
+        && g->getFaceVaryingAttribute != NULL
+        && (g->faceVaryingAttributes[texcoord].size > 0
+            || g->vertexAttributes[texcoord].size > 0)) {
+      bool interpolated;
+      const float3 objectN =
+          normalize(unfacedObjectShadingNormal(hitInfo, rh, interpolated));
+      g->getDerivatives(g,
+          texcoord,
+          rh.hit.primID,
+          make_float2(rh.hit.u, rh.hit.v),
+          xfmPointToObject(hitInfo, P),
+          objectN,
+          d);
+      varies = true;
+    }
+  }
+  if (!varies)
+    return N;
+
+  // From the attribute's coordinates (s, t) to the image's, the upper-left
+  // 2x2 of the sampler's inTransform (whose columns are x, y, z, w): the
+  // position's derivatives along the image's coordinates
+  const uniform float a = s->inTransform.x.x;
+  const uniform float b = s->inTransform.y.x;
+  const uniform float c = s->inTransform.x.y;
+  const uniform float e = s->inTransform.y.y;
+  const uniform float det = a * e - b * c;
+  if (det == 0.f)
+    return N;
+  const affine3f toWorld = objectToWorld(hitInfo);
+  const float3 dPds = xfmVector(toWorld, d.dPdu);
+  const float3 dPdt = xfmVector(toWorld, d.dPdv);
+  const float3 dPdsImage = (dPds * e - dPdt * c) / det;
+  const float3 dPdtImage = (dPdt * a - dPds * b) / det;
+
+  float3 T = dPdsImage - N * dot(N, dPdsImage);
+  const float lengthT = length(T);
+  if (!(lengthT > 0.f))
+    return N;
+  T = T / lengthT;
+  const float handedness =
+      dot(cross(dPdsImage, dPdtImage), N) < 0.f ? -1.f : 1.f;
+  const float3 B = handedness * cross(N, T);
+
+  const float3 Nt = make_float3(Sampler_sample(s, hitInfo, rh));
+  const float3 Np = T * Nt.x + B * Nt.y + N * Nt.z;
+  const float lengthNp = length(Np);
+  return lengthNp > 0.f ? Np / lengthNp : N;
+}
+
+// The shading normal 'N' (world space, unit, turned to the camera) at world
+// point 'P' of the hit of 'rh', perturbed by a physicallyBased material's
+// 'normal' map where it is an image sampler (PreviewSurface_mapNormal())
+inline float3 PreviewSurface_normal(
+    const RayHit &rh, const HitInfo &hitInfo, float3 P, float3 N)
+{
+  float3 result = N;
+#pragma ignore warning(perf)
+  const uniform Material *varying material = hitInfo.surface->material;
+  if (material != NULL) {
+    foreach_unique (m in material) {
+      const uniform PhysicallyBasedParameters *uniform p = m->physicallyBased;
+      if (p && Sampler_isValid(p->normal)
+          && (p->normal->kind == SAMPLER_KIND_IMAGE1D
+              || p->normal->kind == SAMPLER_KIND_IMAGE2D
+              || p->normal->kind == SAMPLER_KIND_IMAGE3D)) {
+        result = PreviewSurface_mapNormal(p->normal, rh, hitInfo, P, N);
+      }
+    }
+  }
+  return result;
+}
+
 // Lights //////////////////////////////////////////////////////////////////////
 
 // What 'light' shines on world point 'P' as Storm lights it: in 'L' the unit
