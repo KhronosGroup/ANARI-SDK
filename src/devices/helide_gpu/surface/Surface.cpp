@@ -79,6 +79,8 @@ enum MaterialSamplerSlot
   SAMPLER_COLOR = 0,
   SAMPLER_METALLIC,
   SAMPLER_ROUGHNESS,
+  SAMPLER_OPACITY,
+  SAMPLER_EMISSIVE,
   NUM_MATERIAL_SAMPLERS
 };
 
@@ -132,7 +134,7 @@ void Surface::pushFragmentUniforms(SDL_GPURenderPass *pass,
   const GeometryAttrInfo ai = m_geometry->attrInfo();
 
   // The material's samplers: bind their textures to fragment sampler slots
-  // 0..2 and push their transforms to fragment uniform slot 1
+  // 0..4 and push their transforms to fragment uniform slot 1
   struct SamplerUniforms
   {
     SamplerParams p[NUM_MATERIAL_SAMPLERS];
@@ -141,7 +143,9 @@ void Surface::pushFragmentUniforms(SDL_GPURenderPass *pass,
   const Sampler *samplers[NUM_MATERIAL_SAMPLERS] = {
       mat ? mat->colorSampler() : nullptr,
       mat ? mat->metallicSampler() : nullptr,
-      mat ? mat->roughnessSampler() : nullptr};
+      mat ? mat->roughnessSampler() : nullptr,
+      mat ? mat->opacitySampler() : nullptr,
+      mat ? mat->emissiveSampler() : nullptr};
   for (int i = 0; i < NUM_MATERIAL_SAMPLERS; ++i)
     resolveSampler(state, samplers[i], sampUniforms.p[i], tsb[i]);
   SDL_BindGPUFragmentSamplers(pass, 0, tsb, NUM_MATERIAL_SAMPLERS);

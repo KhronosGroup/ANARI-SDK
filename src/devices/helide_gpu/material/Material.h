@@ -22,6 +22,7 @@ struct Material : public Object
   const Sampler *colorSampler() const;
 
   float opacity() const;
+  const Sampler *opacitySampler() const; // first output component
   int32_t alphaMode() const;
   float alphaCutoff() const;
 
@@ -38,12 +39,14 @@ struct Material : public Object
   const Sampler *roughnessSampler() const;
   float ior() const;
   vec3 emissive() const;
+  const Sampler *emissiveSampler() const;
 
  protected:
   vec3 m_color{1.f, 1.f, 1.f};
   std::string m_colorAttribute;
   helium::IntrusivePtr<Sampler> m_colorSampler;
   float m_opacity{1.f};
+  helium::IntrusivePtr<Sampler> m_opacitySampler;
   int32_t m_alphaMode{0}; // 0=opaque, 1=blend, 2=mask
   float m_alphaCutoff{0.5f};
   float m_metallic{0.f};
@@ -54,6 +57,7 @@ struct Material : public Object
   helium::IntrusivePtr<Sampler> m_roughnessSampler;
   float m_ior{1.5f};
   vec3 m_emissive{0.f};
+  helium::IntrusivePtr<Sampler> m_emissiveSampler;
 };
 
 } // namespace helide_gpu

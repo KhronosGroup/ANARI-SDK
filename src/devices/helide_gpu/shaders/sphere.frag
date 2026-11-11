@@ -20,7 +20,7 @@ layout(location = 1) out uvec4 outIds;    // A: packed ambient light
 layout(location = 2) out vec4 outAlbedo;
 layout(location = 3) out vec4 outNormal;
 
-// The material uniforms and samplers (fragment sampler slots 0..2, uniform
+// The material uniforms and samplers (fragment sampler slots 0..4, uniform
 // buffer slots 0 and 1)
 #include "material.glsl"
 
@@ -75,7 +75,13 @@ void main()
 
     // Primitive samplers index by the sphere, not gl_PrimitiveID (an icosphere face)
     uint primIdx = uint(vInstanceIndex);
+    // All material inputs, sampled before any discard below (which leaves the
+    // derivatives of implicit-LOD texture lookups undefined)
     vec3 color = materialColor(attrs, primIdx);
+    float metallic = materialMetallic(attrs, primIdx);
+    float roughness = materialRoughness(attrs, primIdx);
+    float opacity = materialOpacity(attrs, primIdx);
+    vec3 emissive = materialEmissive(attrs, primIdx);
 
     // Screen door transparency
     if (mat_u.alphaMode == 1) {
@@ -86,10 +92,10 @@ void main()
             15.0/16.0,  7.0/16.0, 13.0/16.0,  5.0/16.0
         );
         ivec2 fc = ivec2(gl_FragCoord.xy) % 4;
-        if (mat_u.opacity <= bayer[fc.y * 4 + fc.x])
+        if (opacity <= bayer[fc.y * 4 + fc.x])
             discard;
     } else if (mat_u.alphaMode == 2) {
-        if (mat_u.opacity < mat_u.alphaCutoff)
+        if (opacity < mat_u.alphaCutoff)
             discard;
     }
 
@@ -97,11 +103,9 @@ void main()
     // viewer)
     vec3 P = hitView;
     vec3 N = normalView;
-    float metallic = materialMetallic(attrs, primIdx);
-    float roughness = materialRoughness(attrs, primIdx);
     ShadingResult shading =
         shade(P, N, color, metallic, roughness, mat_u.ior);
-    vec3 direct = shading.direct + mat_u.emissive.rgb;
+    vec3 direct = shading.direct + emissive;
     FragColor = vec4(
         light_u.deferAmbient != 0 ? direct : direct + shading.ambient, 1.0);
 
