@@ -12,7 +12,6 @@
 #include "sphere_vert_spv.h"
 #include "triangle_frag_spv.h"
 #include "triangle_mesh_vert_spv.h"
-#include "triangle_vert_spv.h"
 
 #include "volume_frag_spv.h"
 #include "volume_vert_spv.h"
@@ -31,7 +30,6 @@
 #include "sphere_vert_msl.h"
 #include "triangle_frag_msl.h"
 #include "triangle_mesh_vert_msl.h"
-#include "triangle_vert_msl.h"
 #include "volume_frag_msl.h"
 #include "volume_vert_msl.h"
 #include "blur_frag_msl.h"
@@ -54,7 +52,6 @@ namespace {
 #define SHADER_DATA(name) {name##_spv, name##_spv_len}
 #endif
 
-const ShaderData kTriangleVert     = SHADER_DATA(triangle_vert);
 const ShaderData kTriangleMeshVert = SHADER_DATA(triangle_mesh_vert);
 const ShaderData kTriangleFrag     = SHADER_DATA(triangle_frag);
 const ShaderData kSphereVert       = SHADER_DATA(sphere_vert);
@@ -84,91 +81,6 @@ void HelideGPUDeviceGlobalState::gpu_initPipelines()
     return;
 
   auto fmt = gpu.sdlDevice.shaderFormat;
-
-  // --- Triangle SSBO pipeline ---
-  {
-    SDL_GPUShaderCreateInfo vertInfo{};
-    fillShaderInfo(vertInfo, kTriangleVert, fmt, SDL_GPU_SHADERSTAGE_VERTEX);
-    vertInfo.num_storage_buffers = 9;
-    vertInfo.num_uniform_buffers = 1;
-
-    auto *vert = SDL_CreateGPUShader(dev, &vertInfo);
-    if (!vert) {
-      anariDeviceReportStatus(device, ANARI_SEVERITY_ERROR,
-          ANARI_STATUS_UNKNOWN_ERROR,
-          "[SDL3_gpu] Failed to create vertex shader: %s", SDL_GetError());
-      return;
-    }
-
-    SDL_GPUShaderCreateInfo fragInfo{};
-    fillShaderInfo(fragInfo, kTriangleFrag, fmt, SDL_GPU_SHADERSTAGE_FRAGMENT);
-    fragInfo.num_samplers = 1;
-    fragInfo.num_uniform_buffers = 4;
-
-    auto *frag = SDL_CreateGPUShader(dev, &fragInfo);
-    if (!frag) {
-      anariDeviceReportStatus(device, ANARI_SEVERITY_ERROR,
-          ANARI_STATUS_UNKNOWN_ERROR,
-          "[SDL3_gpu] Failed to create fragment shader: %s", SDL_GetError());
-      SDL_ReleaseGPUShader(dev, vert);
-      return;
-    }
-
-    SDL_GPUVertexBufferDescription vbDesc{};
-    vbDesc.slot = 0;
-    vbDesc.pitch = sizeof(float) * 3;
-    vbDesc.input_rate = SDL_GPU_VERTEXINPUTRATE_VERTEX;
-
-    SDL_GPUVertexAttribute vAttr{};
-    vAttr.location = 0;
-    vAttr.buffer_slot = 0;
-    vAttr.format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT3;
-
-    SDL_GPUVertexInputState vertexInput{};
-    vertexInput.vertex_buffer_descriptions = &vbDesc;
-    vertexInput.num_vertex_buffers = 1;
-    vertexInput.vertex_attributes = &vAttr;
-    vertexInput.num_vertex_attributes = 1;
-
-    SDL_GPUColorTargetDescription colorDescs[4]{};
-    colorDescs[0].format = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM;
-    colorDescs[0].blend_state.enable_color_write_mask = true;
-    colorDescs[0].blend_state.color_write_mask = SDL_GPU_COLORCOMPONENT_R
-        | SDL_GPU_COLORCOMPONENT_G | SDL_GPU_COLORCOMPONENT_B
-        | SDL_GPU_COLORCOMPONENT_A;
-    colorDescs[1].format = SDL_GPU_TEXTUREFORMAT_R32G32B32A32_UINT;
-    colorDescs[2].format = SDL_GPU_TEXTUREFORMAT_R32G32B32A32_FLOAT;
-    colorDescs[3].format = SDL_GPU_TEXTUREFORMAT_R32G32B32A32_FLOAT;
-
-    SDL_GPUGraphicsPipelineTargetInfo targetInfo{};
-    targetInfo.color_target_descriptions = colorDescs;
-    targetInfo.num_color_targets = 4;
-    targetInfo.has_depth_stencil_target = true;
-    targetInfo.depth_stencil_format = SDL_GPU_TEXTUREFORMAT_D32_FLOAT;
-
-    SDL_GPUDepthStencilState depthState{};
-    depthState.compare_op = SDL_GPU_COMPAREOP_LESS;
-    depthState.enable_depth_test = true;
-    depthState.enable_depth_write = true;
-
-    SDL_GPUGraphicsPipelineCreateInfo pipelineInfo{};
-    pipelineInfo.vertex_shader = vert;
-    pipelineInfo.fragment_shader = frag;
-    pipelineInfo.vertex_input_state = vertexInput;
-    pipelineInfo.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST;
-    pipelineInfo.depth_stencil_state = depthState;
-    pipelineInfo.target_info = targetInfo;
-
-    gpu.trianglePipeline = SDL_CreateGPUGraphicsPipeline(dev, &pipelineInfo);
-    if (!gpu.trianglePipeline) {
-      anariDeviceReportStatus(device, ANARI_SEVERITY_ERROR,
-          ANARI_STATUS_UNKNOWN_ERROR,
-          "[SDL3_gpu] Failed to create triangle pipeline: %s", SDL_GetError());
-    }
-
-    SDL_ReleaseGPUShader(dev, vert);
-    SDL_ReleaseGPUShader(dev, frag);
-  }
 
   // --- Triangle mesh pipeline ---
   {
@@ -696,7 +608,6 @@ void HelideGPUDeviceGlobalState::gpu_destroyPipelines()
   releaseP(gpu.lightQuadPipeline);
   releaseP(gpu.spherePipeline);
   releaseP(gpu.triangleMeshPipeline);
-  releaseP(gpu.trianglePipeline);
 }
 
 } // namespace helide_gpu
