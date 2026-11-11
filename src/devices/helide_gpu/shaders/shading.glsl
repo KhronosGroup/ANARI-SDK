@@ -19,18 +19,22 @@ const int LIGHT_DIRECTIONAL = 0;
 const int LIGHT_POINT = 1;
 const int LIGHT_SPOT = 2;
 const int LIGHT_HEADLIGHT = 3;
+const int LIGHT_QUAD = 4;
 
 const int MAX_LIGHTS = 16;
 
 struct LightData
 {
-  // xyz: view-space position (point, spot); w: the light type
+  // xyz: view-space position (point, spot, the quad's center); w: the light
+  // type
   vec4 position;
-  // xyz: view-space emission direction (directional, spot); w: the cosine of
-  // the spot's half opening angle
+  // xyz: view-space emission direction (directional, spot, the normal of the
+  // quad's emitting side); w: the cosine of the spot's half opening angle, or
+  // 1 if both of the quad's sides emit
   vec4 direction;
   // rgb: color times irradiance (directional, headlight) or intensity (point,
-  // spot); w: the cosine of the angle where the spot's falloff starts
+  // spot, the quad along its normal); w: the cosine of the angle where the
+  // spot's falloff starts
   vec4 radiance;
 };
 
@@ -142,6 +146,11 @@ ShadingResult shade(vec3 P,
         radiance *= smoothstep(light.direction.w,
             light.radiance.w,
             dot(-L, light.direction.xyz));
+      } else if (type == LIGHT_QUAD) {
+        // Storm's point-light approximation of a rect light, plus the
+        // Lambertian falloff of a flat emitter
+        float cosEmit = dot(-L, light.direction.xyz);
+        radiance *= light.direction.w != 0.0 ? abs(cosEmit) : max(cosEmit, 0.0);
       }
     }
 

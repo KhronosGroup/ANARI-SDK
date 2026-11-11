@@ -331,6 +331,157 @@ static bool renderFaceVaryingScene(anari::Device d, uvec2 imgSize, float aspect)
 }
 
 // ---------------------------------------------------------------------------
+// Quad light: a matte floor at z = 0 lit only by a quad light one unit above
+// it. Returns the floor's color at the image center, below the quad's center.
+// ---------------------------------------------------------------------------
+
+struct QuadLightSetup
+{
+  vec3 position;
+  vec3 edge1;
+  vec3 edge2;
+  const char *side;
+  const char *brightnessParam; // "intensity", "power" or "radiance"
+  float brightness;
+};
+
+static RGBA8 renderQuadLightScene(
+    anari::Device d, uvec2 imgSize, float aspect, const QuadLightSetup &q)
+{
+  vec3 positions[] = {
+      {-3.f, -3.f, 0.f}, {4.f, -3.f, 0.f}, {4.f, 4.f, 0.f}, {-3.f, 4.f, 0.f}};
+  uvec3 indices[] = {{0, 1, 2}, {0, 2, 3}};
+  auto geom = anari::newObject<anari::Geometry>(d, "triangle");
+  anari::setParameterArray1D(d, geom, "vertex.position", positions, 4);
+  anari::setParameterArray1D(d, geom, "primitive.index", indices, 2);
+  anari::commitParameters(d, geom);
+
+  auto mat = anari::newObject<anari::Material>(d, "matte");
+  anari::commitParameters(d, mat);
+
+  auto surface = anari::newObject<anari::Surface>(d);
+  anari::setAndReleaseParameter(d, surface, "geometry", geom);
+  anari::setAndReleaseParameter(d, surface, "material", mat);
+  anari::commitParameters(d, surface);
+
+  auto light = anari::newObject<anari::Light>(d, "quad");
+  anari::setParameter(d, light, "position", q.position);
+  anari::setParameter(d, light, "edge1", q.edge1);
+  anari::setParameter(d, light, "edge2", q.edge2);
+  anari::setParameter(d, light, "side", q.side);
+  anari::setParameter(d, light, q.brightnessParam, q.brightness);
+  anari::commitParameters(d, light);
+
+  auto world = anari::newObject<anari::World>(d);
+  anari::setParameterArray1D(d, world, "surface", &surface, 1);
+  anari::setParameterArray1D(d, world, "light", &light, 1);
+  anari::release(d, surface);
+  anari::release(d, light);
+  anari::commitParameters(d, world);
+
+  auto camera = anari::newObject<anari::Camera>(d, "perspective");
+  vec3 camPos = {0.5f, 0.5f, 3.f};
+  vec3 camDir = {0.f, 0.f, -1.f};
+  vec3 camUp = {0.f, 1.f, 0.f};
+  anari::setParameter(d, camera, "position", camPos);
+  anari::setParameter(d, camera, "direction", camDir);
+  anari::setParameter(d, camera, "up", camUp);
+  anari::setParameter(d, camera, "fovy", float(M_PI / 3.0));
+  anari::setParameter(d, camera, "aspect", aspect);
+  anari::commitParameters(d, camera);
+
+  auto renderer = anari::newObject<anari::Renderer>(d, "default");
+  vec4 bg = {0.0f, 0.0f, 0.0f, 1.f};
+  anari::setParameter(d, renderer, "background", bg);
+  anari::setParameter(d, renderer, "ignoreAmbientLighting", false);
+  anari::setParameter(d, renderer, "ambientRadiance", 0.f);
+  anari::commitParameters(d, renderer);
+
+  auto frame = anari::newObject<anari::Frame>(d);
+  anari::setParameter(d, frame, "size", imgSize);
+  anari::setParameter(d, frame, "channel.color", ANARI_UFIXED8_VEC4);
+  anari::setAndReleaseParameter(d, frame, "renderer", renderer);
+  anari::setAndReleaseParameter(d, frame, "camera", camera);
+  anari::setAndReleaseParameter(d, frame, "world", world);
+  anari::commitParameters(d, frame);
+
+  anari::render(d, frame);
+  anari::wait(d, frame);
+
+  RGBA8 center{};
+  auto fb = anari::map<RGBA8>(d, frame, "channel.color");
+  if (fb.data) {
+    center = samplePixel(fb.data, imgSize, imgSize[0] / 2, imgSize[1] / 2);
+    anari::unmap(d, frame, "channel.color");
+  }
+  anari::release(d, frame);
+  return center;
+}
+
+static bool renderQuadLightScenes(anari::Device d, uvec2 imgSize, float aspect)
+{
+  const float pi = float(M_PI);
+  // One unit above the floor, this intensity lights it well below clipping
+  const float I = pi / 4.f;
+  // A unit quad centered at (0.5, 0.5, 1); cross(edge2, edge1) is -z, so
+  // its front faces the floor
+  const vec3 pos = {0.f, 0.f, 1.f};
+  const vec3 e1 = {1.f, 0.f, 0.f};
+  const vec3 e2 = {0.f, 1.f, 0.f};
+  // The same center with twice the edges: four times the area
+  const vec3 pos4 = {-0.5f, -0.5f, 1.f};
+  const vec3 e1x2 = {2.f, 0.f, 0.f};
+  const vec3 e2x2 = {0.f, 2.f, 0.f};
+
+  const RGBA8 front = renderQuadLightScene(
+      d, imgSize, aspect, {pos, e1, e2, "front", "intensity", I});
+  const RGBA8 back = renderQuadLightScene(
+      d, imgSize, aspect, {pos, e1, e2, "back", "intensity", I});
+  const RGBA8 both = renderQuadLightScene(
+      d, imgSize, aspect, {pos, e1, e2, "both", "intensity", I});
+  // radiance * area == intensity along the normal
+  const RGBA8 radiance = renderQuadLightScene(
+      d, imgSize, aspect, {pos4, e1x2, e2x2, "front", "radiance", I / 4.f});
+  // a Lambertian side emits pi * intensity
+  const RGBA8 power = renderQuadLightScene(
+      d, imgSize, aspect, {pos, e1, e2, "front", "power", pi * I});
+  // twice the power over two sides is the same intensity
+  const RGBA8 powerBoth = renderQuadLightScene(
+      d, imgSize, aspect, {pos, e1, e2, "both", "power", 2.f * pi * I});
+
+  auto close = [](RGBA8 a, RGBA8 b) {
+    return std::abs(int(a.r) - int(b.r)) <= 2
+        && std::abs(int(a.g) - int(b.g)) <= 2
+        && std::abs(int(a.b) - int(b.b)) <= 2;
+  };
+  struct Check
+  {
+    const char *name;
+    RGBA8 value;
+    bool ok;
+  };
+  const Check checks[] = {
+      {"front lit", front, luminance(front) > 0.1f},
+      {"back unlit", back, luminance(back) < 0.02f},
+      {"both == front", both, close(both, front)},
+      {"radiance*area == intensity", radiance, close(radiance, front)},
+      {"power == pi*intensity", power, close(power, front)},
+      {"power both sides", powerBoth, close(powerBoth, front)},
+  };
+  bool ok = true;
+  for (const auto &c : checks) {
+    printf("[smoke_test] quadLight: %-28s rgb=(%3u,%3u,%3u) => %s\n",
+        c.name,
+        c.value.r,
+        c.value.g,
+        c.value.b,
+        c.ok ? "PASS" : "FAIL");
+    ok = ok && c.ok;
+  }
+  return ok;
+}
+
+// ---------------------------------------------------------------------------
 // main
 // ---------------------------------------------------------------------------
 
@@ -539,8 +690,10 @@ int main(int argc, const char **argv)
   // --- Cleanup ---
   anari::release(d, frame);
 
+  const bool quadLightPassed = renderQuadLightScenes(d, imgSize, aspect);
+
   passed = passed && cylinderPassed && conePassed && curvePassed
-      && faceVaryingPassed;
+      && faceVaryingPassed && quadLightPassed;
 
   printf("[smoke_test] overall: %s\n", passed ? "PASS" : "FAIL");
 

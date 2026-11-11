@@ -5,6 +5,7 @@
 // std
 #include <algorithm>
 #include <cmath>
+#include <string>
 
 namespace helide_gpu {
 
@@ -23,6 +24,8 @@ Light *Light::createInstance(
     return new Light(s, LightType::POINT);
   else if (subtype == "spot")
     return new Light(s, LightType::SPOT);
+  else if (subtype == "quad")
+    return new Light(s, LightType::QUAD);
   return (Light *)new UnknownObject(ANARI_LIGHT, s);
 }
 
@@ -43,6 +46,13 @@ void Light::commitParameters()
   m_cosOuterAngle = std::cos(halfOpening);
   m_cosInnerAngle = std::cos(halfOpening - falloff);
 
+  m_radianceTimesArea = false;
+  m_twoSided = false;
+  if (m_type == LightType::QUAD) {
+    commitQuad(color);
+    return;
+  }
+
   float amount = 1.f;
   if (m_type == LightType::DIRECTIONAL)
     amount = getParam<float>("irradiance", 1.f);
@@ -59,6 +69,43 @@ void Light::commitParameters()
       amount = getParam<float>("intensity", 1.f);
   }
   m_radiance = color * std::max(amount, 0.f);
+}
+
+void Light::commitQuad(const vec3 &color)
+{
+  m_edge1 = getParam<vec3>("edge1", vec3(1.f, 0.f, 0.f));
+  m_edge2 = getParam<vec3>("edge2", vec3(0.f, 1.f, 0.f));
+  const vec3 origin = getParam<vec3>("position", vec3(0.f));
+  m_position = origin + 0.5f * (m_edge1 + m_edge2);
+
+  const std::string side = getParamString("side", "front");
+  if (side != "front" && side != "back" && side != "both") {
+    reportMessage(ANARI_SEVERITY_WARNING,
+        "quad light 'side' '%s' is not 'front', 'back' or 'both'; 'front' "
+        "is used",
+        side.c_str());
+  }
+  const bool backOnly = side == "back";
+  m_twoSided = side == "both";
+  const vec3 normal = glm::cross(m_edge2, m_edge1);
+  const float area = glm::length(normal);
+  m_direction =
+      area > 0.f ? (backOnly ? -normal : normal) / area : vec3(0.f, 0.f, -1.f);
+
+  // The spec's precedence: the first of 'intensity' (W/sr along the normal),
+  // 'power' (W) and 'radiance' (W/sr/m^2) set. A Lambertian side emits pi
+  // times its intensity along the normal.
+  float amount = 1.f;
+  float value = 0.f;
+  if (getParam("intensity", ANARI_FLOAT32, &value))
+    amount = value;
+  else if (getParam("power", ANARI_FLOAT32, &value))
+    amount = value / (PI * (m_twoSided ? 2.f : 1.f));
+  else if (getParam("radiance", ANARI_FLOAT32, &value)) {
+    amount = value;
+    m_radianceTimesArea = true;
+  }
+  m_radiance = color * (std::isfinite(amount) ? std::max(amount, 0.f) : 0.f);
 }
 
 LightType Light::type() const
@@ -89,6 +136,26 @@ float Light::cosOuterAngle() const
 float Light::cosInnerAngle() const
 {
   return m_cosInnerAngle;
+}
+
+bool Light::radianceTimesArea() const
+{
+  return m_radianceTimesArea;
+}
+
+vec3 Light::edge1() const
+{
+  return m_edge1;
+}
+
+vec3 Light::edge2() const
+{
+  return m_edge2;
+}
+
+bool Light::twoSided() const
+{
+  return m_twoSided;
 }
 
 } // namespace helide_gpu
