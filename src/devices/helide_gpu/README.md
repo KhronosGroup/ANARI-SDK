@@ -33,10 +33,11 @@ triangles, as a sphere's attributes are constant across it, and the `normal`
 frame channel and ambient occlusion keep the unperturbed normal.
 
 Lights are `directional`, `point`, `spot` and `quad` (up to 16 in a frame,
-counting instanced ones). The renderer's light (`ambientRadiance` times
-`ambientColor`, or white 1 with `ignoreAmbientLighting`) is split by
-`eyeLightBlendRatio`: that share drives a headlight, which only lights a world
-without lights, and the rest is a uniform ambient fill. Screen-space ambient occlusion darkens only the
+counting instanced ones), and `hdri` (any number). The renderer's light
+(`ambientRadiance` times `ambientColor`, or white 1 with
+`ignoreAmbientLighting`) is split by `eyeLightBlendRatio`: that share drives a
+headlight, which only lights a world without lights (an `hdri` counts), and
+the rest is a uniform ambient fill. Screen-space ambient occlusion darkens only the
 ambient fill.
 
 A `quad` light is shaded the way Storm shades a UsdLux rect light: as a point
@@ -52,8 +53,23 @@ With `visible` (`KHR_LIGHT_PRIMARY_VISIBILITY`, default true) the camera sees
 a quad light as its rectangle, showing the radiance of an emitting side and
 nothing of a side that doesn't emit; Storm doesn't draw lights. Surfaces in
 front hide it. Where it is seen, the ID channels report no hit, the albedo and
-normal channels are 0, and ambient occlusion ignores it. The other lights have
-no area to see.
+normal channels are 0, and ambient occlusion ignores it. Point, spot and
+directional lights have no area to see.
+
+An `hdri` light is treated as halcyon's `preview` renderer treats it, so the
+two agree. It doesn't light surfaces directly: its mean radiance over the
+sphere (each texel weighed by its solid angle), times `scale` and `color`,
+adds to the uniform ambient fill, which Storm's dome-light term then shades
+(Storm itself uses prefiltered irradiance and specular maps). Where camera
+rays miss, the `visible` hdris (default true) show in place of the
+background, summed and opaque, looked up unfiltered (nearest texel), and the
+ID, albedo and normal channels report no surface. The map's mapping is
+halcyon's and VisRTX's: the image's center column faces `direction` (made
+perpendicular to `up`), a quarter turn before it faces `up` x `direction`,
+and the array's last row faces `up`. An instance transform turns `up` and
+`direction`. Only the `equirectangular` layout exists. With ambient occlusion
+the ambient light a surface reflects passes through a buffer that clips it at
+4, which a bright hdri can reach.
 
 ### Potential improvements: area lights
 

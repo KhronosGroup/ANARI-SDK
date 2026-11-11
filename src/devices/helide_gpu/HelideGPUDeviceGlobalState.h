@@ -45,6 +45,7 @@ struct HelideGPUDeviceGlobalState : public helium::BaseGlobalDeviceState
     SDL_GPUGraphicsPipeline *spherePipeline{nullptr};
     SDL_GPUGraphicsPipeline *volumePipeline{nullptr};
     SDL_GPUGraphicsPipeline *lightQuadPipeline{nullptr};
+    SDL_GPUGraphicsPipeline *hdriPipeline{nullptr};
     SDL_GPUGraphicsPipeline *ssaoPipeline{nullptr};
     SDL_GPUGraphicsPipeline *blurPipeline{nullptr};
     SDL_GPUGraphicsPipeline *compositePipeline{nullptr};

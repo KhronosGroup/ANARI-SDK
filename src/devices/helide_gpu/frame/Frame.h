@@ -86,6 +86,14 @@ struct Frame : public helium::BaseFrame
   // composite pass to add after ambient occlusion
   void gpu_renderFrame_geometryPass(
       SDL_GPUCommandBuffer *cmd, bool deferAmbient);
+  // Draws the world's visible hdri lights over the whole frame, before the
+  // surfaces, summing their radiance along each pixel's camera ray into the
+  // color target; false if there are none (the background shows)
+  bool gpu_hasVisibleHdris() const;
+  void gpu_drawVisibleHdris(SDL_GPURenderPass *pass,
+      SDL_GPUCommandBuffer *cmd,
+      const mat4 &V,
+      const mat4 &P);
   // Draws the world's visible quad lights as their emitting rectangles
   // (KHR_LIGHT_PRIMARY_VISIBILITY)
   void gpu_drawVisibleLights(SDL_GPURenderPass *pass,

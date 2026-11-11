@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Light.h"
+#include "Hdri.h"
 // std
 #include <algorithm>
 #include <cmath>
@@ -26,6 +27,8 @@ Light *Light::createInstance(
     return new Light(s, LightType::SPOT);
   else if (subtype == "quad")
     return new Light(s, LightType::QUAD);
+  else if (subtype == "hdri")
+    return new Hdri(s);
   return (Light *)new UnknownObject(ANARI_LIGHT, s);
 }
 

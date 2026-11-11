@@ -14,12 +14,15 @@ enum class LightType : int32_t
   POINT = 1,
   SPOT = 2,
   QUAD = 4, // 3 is the renderer's headlight
+  // not shaded as a light: it adds its mean radiance to the ambient light
+  // (light/Hdri.h)
+  HDRI = 5,
 };
 
 // A directional, point, spot or quad light (KHR_LIGHT_DIRECTIONAL, _POINT,
-// _SPOT, _QUAD). A quad is shaded like Storm shades a rect light: as a point
-// light at its center, with a Lambertian (cosine) falloff away from its
-// normal.
+// _SPOT, _QUAD); the hdri light is a subclass (light/Hdri.h). A quad is shaded
+// like Storm shades a rect light: as a point light at its center, with a
+// Lambertian (cosine) falloff away from its normal.
 struct Light : public Object
 {
   Light(HelideGPUDeviceGlobalState *d, LightType type);
@@ -47,12 +50,15 @@ struct Light : public Object
   bool emitsFront() const;
   bool emitsBack() const;
   // Whether the camera sees the light (KHR_LIGHT_PRIMARY_VISIBILITY); only a
-  // quad has an area to see
+  // quad and an hdri have something to see
   bool visible() const;
   // Spot cone: cosines of the half opening angle and of where the falloff
   // starts
   float cosOuterAngle() const;
   float cosInnerAngle() const;
+
+ protected:
+  bool m_visible{true};
 
  private:
   void commitQuad(const vec3 &color);
@@ -68,7 +74,6 @@ struct Light : public Object
   bool m_radianceTimesArea{false};
   bool m_emitsFront{true};
   bool m_emitsBack{false};
-  bool m_visible{true};
 };
 
 } // namespace helide_gpu
