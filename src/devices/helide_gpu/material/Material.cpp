@@ -88,6 +88,11 @@ const Sampler *Material::emissiveSampler() const
   return m_emissiveSampler.ptr;
 }
 
+const Sampler *Material::normalSampler() const
+{
+  return m_normalSampler.ptr;
+}
+
 Material *Material::createInstance(
     std::string_view subtype, HelideGPUDeviceGlobalState *s)
 {

@@ -40,6 +40,8 @@ struct Material : public Object
   float ior() const;
   vec3 emissive() const;
   const Sampler *emissiveSampler() const;
+  // tangent-space normal map, image samplers only
+  const Sampler *normalSampler() const;
 
  protected:
   vec3 m_color{1.f, 1.f, 1.f};
@@ -58,6 +60,7 @@ struct Material : public Object
   float m_ior{1.5f};
   vec3 m_emissive{0.f};
   helium::IntrusivePtr<Sampler> m_emissiveSampler;
+  helium::IntrusivePtr<Sampler> m_normalSampler;
 };
 
 } // namespace helide_gpu

@@ -20,8 +20,9 @@ layout(location = 1) out uvec4 outIds;    // A: packed ambient light
 layout(location = 2) out vec4 outAlbedo;
 layout(location = 3) out vec4 outNormal;
 
-// The material uniforms and samplers (fragment sampler slots 0..4, uniform
-// buffer slots 0 and 1)
+// The material uniforms and samplers (fragment sampler slots 0..5, uniform
+// buffer slots 0 and 1). A sphere's attributes are constant across it, so it
+// has no texture coordinates to map normals with: the normal map is unused.
 #include "material.glsl"
 
 // Fragment uniform buffer slot 2: lighting (LightingUniforms)

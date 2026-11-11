@@ -29,6 +29,7 @@ void Matte::commitParameters()
   m_ior = 1.5f;
   m_emissive = vec3(0.f);
   m_emissiveSampler = nullptr;
+  m_normalSampler = nullptr;
 
   // "color" (matte subtype): accept sampler, string attribute name, or vec3
   {
@@ -90,6 +91,15 @@ void Matte::commitParameters()
     m_ior = std::max(getParam<float>("ior", 1.5f), 1.f);
     m_emissive = getParam<vec3>("emissive", vec3(0.f));
     m_emissiveSampler = getParamObject<Sampler>("emissive");
+
+    // normal: a tangent-space normal map, which needs an image to give the
+    // texture coordinates it maps with (as in Storm)
+    m_normalSampler = getParamObject<Sampler>("normal");
+    if (m_normalSampler && m_normalSampler->samplerMode() != 2) {
+      reportMessage(ANARI_SEVERITY_WARNING,
+          "physicallyBased 'normal' maps only from an image sampler, ignored");
+      m_normalSampler = nullptr;
+    }
   }
 }
 
