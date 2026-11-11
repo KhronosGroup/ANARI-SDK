@@ -16,13 +16,16 @@ Triangle::Triangle(HelideGPUDeviceGlobalState *s)
     : Geometry(s),
       m_positions(this),
       m_normals(this),
-      m_indices(this)
+      m_indices(this),
+      m_faceVaryingNormal(this)
 {
   m_vertexAttr.reserve(NUM_ATTR_SLOTS);
   m_primitiveAttr.reserve(NUM_ATTR_SLOTS);
+  m_faceVaryingAttr.reserve(NUM_ATTR_SLOTS);
   for (int i = 0; i < NUM_ATTR_SLOTS; ++i) {
     m_vertexAttr.emplace_back(this);
     m_primitiveAttr.emplace_back(this);
+    m_faceVaryingAttr.emplace_back(this);
   }
 }
 
@@ -50,6 +53,13 @@ void Triangle::commitParameters()
   m_primitiveAttr[3] = getParamObject<Array1D>("primitive.attribute2");
   m_primitiveAttr[4] = getParamObject<Array1D>("primitive.attribute3");
 
+  m_faceVaryingAttr[0] = getParamObject<Array1D>("faceVarying.color");
+  m_faceVaryingAttr[1] = getParamObject<Array1D>("faceVarying.attribute0");
+  m_faceVaryingAttr[2] = getParamObject<Array1D>("faceVarying.attribute1");
+  m_faceVaryingAttr[3] = getParamObject<Array1D>("faceVarying.attribute2");
+  m_faceVaryingAttr[4] = getParamObject<Array1D>("faceVarying.attribute3");
+  m_faceVaryingNormal = getParamObject<Array1D>("faceVarying.normal");
+
   // Uniform fallbacks (color defaults to white, attributes to {0,0,0,1})
   m_gpuState.uniformAttr[0] = getParam<vec4>("color", vec4(1.f));
   m_gpuState.uniformAttr[1] =
@@ -68,6 +78,24 @@ void Triangle::finalize()
   if (!m_positions) {
     reportMessage(ANARI_SEVERITY_WARNING,
         "missing required parameter 'vertex.position' on triangle geometry");
+  } else {
+    const size_t numCorners =
+        3 * (m_indices ? m_indices->size() : m_positions->size() / 3);
+    auto checkCorners = [&](const Array1D *a, const char *name) {
+      if (a && a->size() < numCorners) {
+        reportMessage(ANARI_SEVERITY_WARNING,
+            "'faceVarying.%s' has %zu elements for %zu triangle corners; "
+            "ignoring it",
+            name,
+            a->size(),
+            numCorners);
+      }
+    };
+    const char *names[NUM_ATTR_SLOTS] = {
+        "color", "attribute0", "attribute1", "attribute2", "attribute3"};
+    for (int s = 0; s < NUM_ATTR_SLOTS; ++s)
+      checkCorners(m_faceVaryingAttr[s].get(), names[s]);
+    checkCorners(m_faceVaryingNormal.get(), "normal");
   }
 
   gpu_enqueue_method(this, &Triangle::gpu_finalizeGeometry);
@@ -146,7 +174,7 @@ void Triangle::bindPipelineAndBuffers(SDL_GPURenderPass *pass,
         ctx.MV,
         ctx.M,
         uvec4(gs.attrMask, gs.hasSourcePrimitiveIds ? 1u : 0u, 0u, 0u),
-        uvec4(gs.attrKind, gs.packedComponents, 0u, 0u)};
+        uvec4(gs.attrKind, gs.packedComponents, gs.faceVaryingMask, 0u)};
     SDL_PushGPUVertexUniformData(cmd, 0, &u, sizeof(u));
   } else if (ds->gpu.trianglePipeline && gs.positions) {
     SDL_BindGPUGraphicsPipeline(pass, ds->gpu.trianglePipeline);
@@ -262,6 +290,11 @@ void Triangle::gpu_finalizeGeometry()
   const auto *norm =
       (m_normals && m_normals->size() >= numVerts) ? m_normals->beginAs<vec3>()
                                                    : nullptr;
+  // 'faceVarying.normal' overrides 'vertex.normal' and the face normal
+  const auto *fvNorm =
+      (m_faceVaryingNormal && m_faceVaryingNormal->size() >= numPrims * 3)
+      ? m_faceVaryingNormal->beginAs<vec3>()
+      : nullptr;
 
   auto safeNormalize = [](const vec3 &v) {
     const float len2 = dot(v, v);
@@ -291,7 +324,8 @@ void Triangle::gpu_finalizeGeometry()
     for (int c = 0; c < 3; ++c) {
       const uint32_t srcId = ids[c];
       const vec3 p = pos[srcId];
-      const vec3 n = norm ? norm[srcId] : faceNormal;
+      const vec3 n =
+          fvNorm ? fvNorm[i * 3 + c] : (norm ? norm[srcId] : faceNormal);
       const size_t base = (i * 3 + c) * 6;
       vertexData[base + 0] = p.x;
       vertexData[base + 1] = p.y;
@@ -327,13 +361,24 @@ void Triangle::gpu_finalizeGeometry()
   // --- Sync attribute arrays ---
   m_gpuState.attrMask = 0;
   m_gpuState.attrKind = 0;
+  m_gpuState.faceVaryingMask = 0;
   m_gpuState.packedComponents = 0;
 
+  // Per slot, faceVarying wins over per-vertex, which wins over per-primitive
   for (int s = 0; s < NUM_ATTR_SLOTS; ++s) {
+    const auto *fvArr = m_faceVaryingAttr[s].get();
     const auto *vtxArr = m_vertexAttr[s].get();
     const auto *primArr = m_primitiveAttr[s].get();
 
-    if (vtxArr && vtxArr->size() >= numVerts) {
+    if (fvArr && fvArr->size() >= numPrims * 3) {
+      syncBuffer(m_gpuState.attr[s], fvArr, true);
+      if (m_gpuState.attr[s].valid()) {
+        m_gpuState.attrMask |= (1u << s);
+        m_gpuState.faceVaryingMask |= (1u << s);
+        m_gpuState.packedComponents |=
+            (anari::componentsOf(fvArr->elementType()) << (s * 4));
+      }
+    } else if (vtxArr && vtxArr->size() >= numVerts) {
       syncBuffer(m_gpuState.attr[s], vtxArr, true);
       if (m_gpuState.attr[s].valid()) {
         m_gpuState.attrMask |= (1u << s);
@@ -369,6 +414,7 @@ void Triangle::gpu_freeGeometry()
   m_gpuState.posCount = 0;
   m_gpuState.attrMask = 0;
   m_gpuState.attrKind = 0;
+  m_gpuState.faceVaryingMask = 0;
   m_gpuState.packedComponents = 0;
   m_gpuState.hasIndices = false;
   m_gpuState.hasNormals = false;

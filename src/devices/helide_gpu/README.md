@@ -8,6 +8,14 @@ wheel depends on PySDL3 and imports it first; the trampoline looks in PySDL3's
 `sdl3/bin` directory for the platform SDL3 library. Native users can set
 `HELIDE_GPU_SDL3_LIBRARY` to the library path before device initialization.
 
+## Geometry attributes
+
+Triangles take `color` and `attribute0..3` per vertex (`vertex.*`), per
+primitive (`primitive.*`) or per triangle corner (`faceVarying.*`, indexed by
+`3 * primitive + corner`), and `faceVarying.normal` overrides `vertex.normal`.
+When a slot has more than one, faceVarying wins over per-vertex, which wins
+over per-primitive. `faceVarying.tangent` is accepted and ignored.
+
 ## Shading
 
 Surfaces are shaded with the lighting model of OpenUSD Storm's
