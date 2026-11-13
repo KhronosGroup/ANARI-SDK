@@ -26,3 +26,7 @@ cts/*.lib
 cts/*.ilk
 cts/*.pdb
 cts/gltf-Sample-Assets
+
+# python wheels
+.py-build-cmake_cache/
+wheelhouse/

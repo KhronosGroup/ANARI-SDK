@@ -27,6 +27,14 @@ or from an already checked out version of the repo via either
 or
 ```python3 -m build ANARI-SDK/```
 
+Portable wheels, for every supported CPython on Linux, macOS and Windows, are
+built with [cibuildwheel](https://cibuildwheel.pypa.io):
+```cibuildwheel --output-dir wheelhouse```
+
+The wheel includes the `sink` and `debug` devices (`anari.loadLibrary('sink')`)
+and the ANARI SDK, to build devices against:
+```cmake -Danari_DIR="$(python -m anari --cmake-dir)" ...```
+
 
 # Device Bindings
 
@@ -66,6 +74,9 @@ Write a `pyproject.toml` file using the py-build-cmake build backend by configur
 `[tool.py-build-cmake.*]` sections.
 
 `install_components` should match the component name from the previous step.
+Instead of a separately installed SDK, a device can build against the `anari`
+package: add `anari` to `[build-system] requires` and set `anari_DIR` from
+`python -m anari --cmake-dir`.
 
 ```
 [project] # Project metadata
