@@ -44,17 +44,32 @@ _dtypeof = {atype : _baseptr2dtype[base] for atype, base in _basepointer.items()
 _itemsizeof = {atype : ffi.sizeof(base[:-1]) for atype, base in _basepointer.items() if not base.startswith('void')}
 
 class Object:
-    def __init__(self, device, handle):
+    def __init__(self, device, handle, owner = None):
         self.device = device
         self.handle = handle
+        # Keeps the device library loaded until this object is released
+        self._owner = owner
+        # Roots of objects set as parameters, kept until this object is
+        # released: a wrapping device (debug's wrappedDevice) keeps using a
+        # wrapped device after the parameter is unset or replaced
+        self._roots = set()
         lib.anariRetain(self.device, self.device)
 
     def __del__(self):
         lib.anariRelease(self.device, self.handle)
         lib.anariRelease(self.device, self.device)
 
+    def _root(self):
+        owner = self._owner
+        while isinstance(owner, Object):
+            owner = owner._owner
+        return owner
+
     def setParameter(self, name, atype, value):
         if isinstance(value, Object):
+            root = value._root()
+            if root is not None:
+                self._roots.add(root)
             lib.anariSetParameter(
                 self.device, self.handle, name.encode('utf-8'),
                 atype, ffi.new(_conversions[atype], value.handle))
@@ -271,59 +286,59 @@ class Frame(Object):
 class Device(Object):
     def newLight(self, type):
         result = lib.anariNewLight(self.device, type.encode('utf-8'))
-        return Object(self.device, result)
+        return Object(self.device, result, self)
 
     def newCamera(self, type):
         result = lib.anariNewCamera(self.device, type.encode('utf-8'))
-        return Object(self.device, result)
+        return Object(self.device, result, self)
 
     def newGeometry(self, type):
         result = lib.anariNewGeometry(self.device, type.encode('utf-8'))
-        return Object(self.device, result)
+        return Object(self.device, result, self)
 
     def newSpatialField(self, type):
         result = lib.anariNewSpatialField(self.device, type.encode('utf-8'))
-        return Object(self.device, result)
+        return Object(self.device, result, self)
 
     def newVolume(self, type):
         result = lib.anariNewVolume(self.device, type.encode('utf-8'))
-        return Object(self.device, result)
+        return Object(self.device, result, self)
 
     def newSurface(self):
         result = lib.anariNewSurface(self.device)
-        return Object(self.device, result)
+        return Object(self.device, result, self)
 
     def newMaterial(self, type):
         result = lib.anariNewMaterial(self.device, type.encode('utf-8'))
-        return Object(self.device, result)
+        return Object(self.device, result, self)
 
     def newSampler(self, type):
         result = lib.anariNewSampler(self.device, type.encode('utf-8'))
-        return Object(self.device, result)
+        return Object(self.device, result, self)
 
     def newGroup(self):
         result = lib.anariNewGroup(self.device)
-        return Object(self.device, result)
+        return Object(self.device, result, self)
 
     def newInstance(self, itype):
         result = lib.anariNewInstance(self.device, type.encode('utf-8'))
-        return Object(self.device, result)
+        return Object(self.device, result, self)
 
     def newWorld(self):
         result = lib.anariNewWorld(self.device)
-        return Object(self.device, result)
+        return Object(self.device, result, self)
 
     def newRenderer(self, type):
         result = lib.anariNewRenderer(self.device, type.encode('utf-8'))
-        return Object(self.device, result)
+        return Object(self.device, result, self)
 
     def newObject(self, objectType, type):
         result = lib.anariNewObject(self.device, objectType.encode('utf-8'), type.encode('utf-8'))
-        return Object(self.device, result)
+        return Object(self.device, result, self)
 
     def newFrame(self):
         result = lib.anariNewFrame(self.device)
-        return Frame(self.device, result)
+        return Frame(self.device, result, self)
 
     def newArray1D(self, appMemory, dataType, numItems1 = None):
 
@@ -369,7 +384,7 @@ class Device(Object):
         else:
             result = lib.anariNewArray1D(self.device, ffi.NULL, ffi.NULL, ffi.NULL, dataType, numItems1)
 
-        return Array(self.device, result)
+        return Array(self.device, result, self)
 
     def newArray2D(self, appMemory, dataType, numItems1 = None, numItems2 = None):
         if appMemory is not None and appMemory is not ffi.NULL:
@@ -403,7 +418,7 @@ class Device(Object):
         else:
             result = lib.anariNewArray2D(self.device, ffi.NULL, ffi.NULL, ffi.NULL, dataType, numItems1, numItems2)
 
-        return Array(self.device, result)
+        return Array(self.device, result, self)
 
     def newArray3D(self, appMemory, dataType, numItems1 = None, numItems2 = None, numItems3 = None):
         if appMemory is not None and appMemory is not ffi.NULL:
@@ -437,7 +452,7 @@ class Device(Object):
         else:
             result = lib.anariNewArray3D(self.device, ffi.NULL, ffi.NULL, ffi.NULL, dataType, numItems1, numItems2, numItems3)
 
-        return Array(self.device, result)
+        return Array(self.device, result, self)
 
     def getObjectSubtypes(self, objectType):
         result = lib.anariGetObjectSubtypes(self.device, objectType)
@@ -467,11 +482,11 @@ class Library:
 
     def newDevice(self, type):
         result = lib.anariNewDevice(self.handle, type.encode('utf-8'))
-        return Device(result, result)
+        return Device(result, result, self)
 
     def newInitializedDevice(self, type, initializers):
         result = lib.anariNewInitializedDevice(self.handle, type.encode('utf-8'), initializers)
-        return Device(result, result)
+        return Device(result, result, self)
 
     def getDeviceSubtypes(self):
         result = lib.anariGetDeviceSubtypes(self.handle)
