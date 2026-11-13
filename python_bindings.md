@@ -39,6 +39,13 @@ and the ANARI SDK, to build devices against:
 `tests/python/requirements.txt`, then run `pytest tests/python` from outside the
 checkout.
 
+## Releasing
+
+Released wheels install with `pip install anari`. To release, set `version` in
+`pyproject.toml` to `ANARI_SDK_VERSION`, push the tag `v<version>`, and approve
+the `pypi` deployment. PyPI never accepts a version twice: a packaging-only
+respin is a post-release (`0.17.0.post1`, tag `v0.17.0.post1`).
+
 
 # Device Bindings
 

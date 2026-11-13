@@ -3,12 +3,13 @@
 
 name: Python wheels
 
-# Build and validate the 'anari' wheels.
+# Build, validate and (on v* tags) publish the 'anari' wheels.
 # Artifact actions stay on v4 so the workflow runs under act.
 
 on:
   push:
     branches: [ next_release ]
+    tags: [ 'v*' ]
     paths: &wheel_paths
       - 'pyproject.toml'
       - 'CMakeLists.txt'
@@ -28,6 +29,11 @@ on:
     branches: [ main, next_release ]
     paths: *wheel_paths
   workflow_dispatch:
+    inputs:
+      publish_testpypi:
+        description: 'Publish the validated wheels to TestPyPI'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -37,9 +43,11 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  # The version, checked against the SDK
+  # Fails a release whose version doesn't match the tag or is already on PyPI
   check-anari-version:
     runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.check.outputs.version }}
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
@@ -49,7 +57,12 @@ jobs:
         python-version: '3.12' # tomllib
     - id: check
       name: Check the version
-      run: python .github/scripts/check_python_version.py
+      env: # not interpolated into the script
+        RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+      run: >
+        python .github/scripts/check_python_version.py
+        --github-output "$GITHUB_OUTPUT"
+        ${RELEASE_TAG:+--tag "$RELEASE_TAG"}
 
   build-anari-wheels:
     name: build anari (${{ matrix.os }}, ${{ matrix.arch }})
@@ -122,3 +135,49 @@ jobs:
       run: python -m pip install --no-index --no-deps --force-reinstall --find-links dist anari
     - name: Run the validation suite
       run: python -m pytest tests/python -v -p no:cacheprovider
+
+  publish-anari-testpypi:
+    # Forks have no Trusted Publisher
+    if: >-
+      github.repository == 'KhronosGroup/ANARI-SDK' &&
+      github.event_name == 'workflow_dispatch' && inputs.publish_testpypi
+    needs: [ check-anari-version, validate-anari ]
+    runs-on: ubuntu-24.04
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/project/anari/${{ needs.check-anari-version.outputs.version }}/
+    permissions:
+      id-token: write # Trusted Publishing; nothing else in this job
+    steps:
+    - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      with:
+        pattern: anari-wheels-*
+        merge-multiple: true
+        path: dist
+    - uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
+      with:
+        repository-url: https://test.pypi.org/legacy/
+        packages-dir: dist
+
+  publish-anari-pypi:
+    # Forks have no Trusted Publisher
+    if: >-
+      github.repository == 'KhronosGroup/ANARI-SDK' &&
+      github.event_name == 'push' && github.ref_type == 'tag' &&
+      startsWith(github.ref_name, 'v')
+    needs: [ check-anari-version, validate-anari ]
+    runs-on: ubuntu-24.04
+    environment: # its reviewers approve each release
+      name: pypi
+      url: https://pypi.org/project/anari/${{ needs.check-anari-version.outputs.version }}/
+    permissions:
+      id-token: write # Trusted Publishing; nothing else in this job
+    steps:
+    - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      with:
+        pattern: anari-wheels-*
+        merge-multiple: true
+        path: dist
+    - uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
+      with:
+        packages-dir: dist
