@@ -81,6 +81,9 @@ void Frame::renderFrame()
 {
   auto start = std::chrono::steady_clock::now();
 
+  // Apply pending commits before rendering
+  deviceState()->commitBuffer.flush();
+
   // This is where the actual rendering work is done. As a placeholder we just
   // write the background color to every pixel, but this is where a frame
   // rendering operation is started. Note that asynchronous implementations
