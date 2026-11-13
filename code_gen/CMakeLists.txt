@@ -36,6 +36,9 @@ cmake_dependent_option(LINK_BINDINGS_TO_RELEASE_PYTHON "Force the python binding
 
 option(INSTALL_LEGACY_PYTHON_BINDINGS "Install legacy python bindings" OFF) # If turned on, draws in all the custom targets below (generate_all)
 
+option(ANARI_PYTHON_WHEEL "Build the 'anari' Python wheel" OFF)
+mark_as_advanced(ANARI_PYTHON_WHEEL)
+
 set(API_JSON api/anari_core_1_0.json api/khr_frame_completion_callback.json)
 
 add_custom_target(generate_type_utility
@@ -186,6 +189,10 @@ target_compile_definitions(anari_api PRIVATE
 target_link_libraries(anari_api PRIVATE Python3::Module anari_static)
 
 set(ANARI_MODULE_NAME anari_api)
+set(ANARI_PYTHON_PACKAGE_VERSION ${ANARI_SDK_VERSION})
+if (DEFINED PY_BUILD_CMAKE_PACKAGE_VERSION)
+  set(ANARI_PYTHON_PACKAGE_VERSION ${PY_BUILD_CMAKE_PACKAGE_VERSION})
+endif()
 configure_file(${ANARI_CODE_GEN_ROOT}/__init__.py.in ${CMAKE_CURRENT_BINARY_DIR}/__init__.py)
 
 # Add the custom target for Python bindings
@@ -204,3 +211,19 @@ install(
   COMPONENT python_module
   LIBRARY DESTINATION anari
   RUNTIME DESTINATION anari)
+
+if (ANARI_PYTHON_WHEEL)
+  install(
+    FILES ${CMAKE_CURRENT_SOURCE_DIR}/__main__.py
+    EXCLUDE_FROM_ALL
+    COMPONENT python_module
+    DESTINATION anari)
+
+  # Python doesn't ship msvcp140.dll; next to the extension, Python finds it
+  if (WIN32)
+    set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION anari)
+    set(CMAKE_INSTALL_SYSTEM_RUNTIME_COMPONENT python_module)
+    set(CMAKE_INSTALL_UCRT_LIBRARIES OFF)
+    include(InstallRequiredSystemLibraries)
+  endif()
+endif()

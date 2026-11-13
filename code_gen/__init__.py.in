@@ -1,4 +1,32 @@
 from .${ANARI_MODULE_NAME} import lib, ffi
+
+import os as _os
+import sys as _sys
+from pathlib import Path as _Path
+
+__version__ = '${ANARI_PYTHON_PACKAGE_VERSION}'
+sdk_version = '${ANARI_SDK_VERSION}'
+
+def sdk_dir():
+    """Install prefix of the SDK shipped in this package, or None."""
+    path = _Path(__file__).resolve().parent / 'sdk'
+    return path if path.is_dir() else None
+
+def cmake_dir():
+    """anari_DIR for find_package(anari)."""
+    sdk = sdk_dir()
+    if sdk is None:
+        return None
+    found = sorted((sdk / 'lib' / 'cmake').glob('anari-*'))
+    return found[-1] if found else None
+
+def library_dir():
+    """Directory holding libanari and the sink and debug devices."""
+    sdk = sdk_dir()
+    if sdk is None:
+        return None
+    return sdk / ('bin' if _sys.platform == 'win32' else 'lib')
+
 from .utils import *
 from .utils import _typeof, _convert_pointer, _basepointer, _conversions, _from_string_list, _elements
 
@@ -497,8 +525,26 @@ class Library:
         return _from_string_list(result)
 
 
+def _shipped_library(name):
+    """'name,<library_dir()>/' if this package ships 'name', else None."""
+    libdir = library_dir()
+    if libdir is None or ',' in name:
+        return None
+    filename = ('anari_library_%s.dll' if _sys.platform == 'win32'
+                else 'libanari_library_%s.dylib' if _sys.platform == 'darwin'
+                else 'libanari_library_%s.so') % name
+    if not (libdir / filename).is_file():
+        return None
+    return name + ',' + str(libdir) + _os.sep
+
 def loadLibrary(name, callback = ffi.NULL):
+    """Load an ANARI library by name, or 'name,<directory>/'. Libraries this
+    package ships load from the package; others use the frontend's search."""
     cbwrapper = ffi.NULL if callback == ffi.NULL else lib.ANARIStatusCallback_python
+    lookup = name
+    if name == 'environment' and _os.environ.get('ANARI_LIBRARY'):
+        lookup = _os.environ['ANARI_LIBRARY']
+    name = _shipped_library(lookup) or name
     result = lib.anariLoadLibrary(name.encode('utf-8'), cbwrapper, callback)
     if result == ffi.NULL:
         return None
