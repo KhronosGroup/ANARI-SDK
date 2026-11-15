@@ -159,7 +159,8 @@ compile_shader_to_header(frag
   ${CMAKE_CURRENT_SOURCE_DIR}/shaders/ssao.frag
   ${CMAKE_CURRENT_BINARY_DIR}/ssao.frag.spv
   ${CMAKE_CURRENT_BINARY_DIR}/ssao_frag_spv.h
-  ssao_frag_spv)
+  ssao_frag_spv
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/cortao.glsl)
 
 compile_shader_to_header(frag
   ${CMAKE_CURRENT_SOURCE_DIR}/shaders/blur.frag

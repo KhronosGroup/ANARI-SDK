@@ -619,7 +619,8 @@ void Frame::gpu_drawVisibleLights(SDL_GPURenderPass *pass,
 void Frame::gpu_pushLightingUniforms(
     SDL_GPUCommandBuffer *cmd, const mat4 &V, bool deferAmbient)
 {
-  // matches LightingUniforms in shaders/shading.glsl (std140)
+  // matches LightingUniforms in shaders/shading.glsl (std140): the world's
+  // first MAX_LIGHTS lights and the headlight
   constexpr int MAX_LIGHTS = 16;
   constexpr float LIGHT_HEADLIGHT = 3.f;
   constexpr float PI = 3.14159265358979f;
@@ -638,7 +639,7 @@ void Frame::gpu_pushLightingUniforms(
     int32_t deferAmbient;
     int32_t perspective;
     int32_t _pad;
-    LightData lights[MAX_LIGHTS];
+    LightData lights[MAX_LIGHTS + 1];
   } u{};
 
   const float blend = m_renderer->eyeLightBlendRatio();
@@ -651,7 +652,6 @@ void Frame::gpu_pushLightingUniforms(
 
   // The world's lights, instanced like its surfaces, in view space; hdris
   // add their mean radiance to the ambient light instead
-  size_t numWorldLights = 0;
   size_t numShadedLights = 0;
   for (auto *instance : m_world->instances()) {
     if (!instance || !instance->isValid() || !instance->group())
@@ -661,7 +661,6 @@ void Frame::gpu_pushLightingUniforms(
       for (auto *light : instance->group()->lights()) {
         if (!light || !light->isValid())
           continue;
-        numWorldLights++;
         if (light->type() == LightType::HDRI) {
           auto *hdri = static_cast<Hdri *>(light);
           u.ambient += vec4(hdri->meanRadiance() * hdri->emission(), 0.f);
@@ -702,10 +701,12 @@ void Frame::gpu_pushLightingUniforms(
         numShadedLights);
   }
 
-  // A world without lights (an hdri counts) gets the headlight, scaled so that
-  // its Lambert term is eyeLightBlendRatio * ambientRadiance at normal
-  // incidence
-  if (numWorldLights == 0 && blend > 0.f) {
+  // The headlight, scaled so that its Lambert term is eyeLightBlendRatio *
+  // ambientRadiance at normal incidence. It lights every world, with lights
+  // or without, so that eyeLightBlendRatio always blends in helide's
+  // facing-ratio falloff, and is diffuse only (shade() in shading.glsl), as
+  // halcyon's preview renderer's is.
+  if (blend > 0.f && radiance > 0.f) {
     auto &l = u.lights[u.numLights++];
     l.position = vec4(vec3(0.f), LIGHT_HEADLIGHT);
     l.radiance = vec4(vec3(PI * blend * radiance), 0.f);
@@ -766,6 +767,8 @@ SDL_GPUTexture *Frame::gpu_renderFrame_ssaoPass(
       float intensity;
       int estimator;
       int perspective;
+      int cortaoSamples;
+      int _pad[3];
     } ssaoU{};
 
     ssaoU.view = V;
@@ -775,6 +778,7 @@ SDL_GPUTexture *Frame::gpu_renderFrame_ssaoPass(
     ssaoU.intensity = m_renderer->ambientOcclusionIntensity();
     ssaoU.estimator = m_renderer->ambientOcclusionEstimator();
     ssaoU.perspective = perspective;
+    ssaoU.cortaoSamples = m_renderer->cortaoSamples();
 
     SDL_PushGPUFragmentUniformData(cmd, 0, &ssaoU, sizeof(ssaoU));
 

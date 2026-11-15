@@ -59,7 +59,9 @@ devices/helide_gpu/
 ├── scene/          # Group, Instance, World
 ├── shaders/        # GLSL → SPIR-V at build time; shading.glsl holds the
 │                   #   Storm-derived lighting and material.glsl the material
-│                   #   uniforms and samplers both surface shaders include
+│                   #   uniforms and samplers both surface shaders include;
+│                   #   ssao.frag the occlusion estimators, with the 'cortao'
+│                   #   one in cortao.glsl (MIT: a port of CORTAO via halcyon)
 ├── spatial_field/  # SpatialField base
 ├── surface/        # Surface
 ├── volume/         # Volume base

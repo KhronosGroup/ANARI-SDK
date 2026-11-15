@@ -62,7 +62,7 @@
 					"default": 0.5,
 					"minimum": 0.0,
 					"maximum": 1.0,
-					"description": "the share of the ambient radiance given to a headlight, which lights only a world without lights; the rest is a uniform ambient fill"
+					"description": "the share of the ambient radiance given to a headlight, which lights every world, with lights or without, diffusely only; the rest is a uniform ambient fill"
 				},
 				{
 					"name": "ambientOcclusion",
@@ -84,8 +84,8 @@
 					"types": ["ANARI_STRING"],
 					"tags": [],
 					"default": "g3d",
-					"values": ["g3d", "sao"],
-					"description": "form of the occlusion estimator: g3d (G3D's high-quality SAO) or sao (the SAO paper's, with its linear intensity set to the radius so that it doesn't depend on the scene's units)"
+					"values": ["g3d", "sao", "cortao"],
+					"description": "form of the occlusion estimator: g3d (G3D's high-quality SAO), sao (the SAO paper's, with its linear intensity set to the radius so that it doesn't depend on the scene's units) or cortao (CORTAO's circular occluders, an experimental prototype)"
 				},
 				{
 					"name": "ambientOcclusionIntensity",
@@ -99,10 +99,19 @@
 					"name": "ambientOcclusionBlurPasses",
 					"types": ["ANARI_INT32"],
 					"tags": [],
-					"default": 1,
+					"default": 2,
 					"minimum": 1,
 					"maximum": 5,
-					"description": "passes of the depth-aware blur of the occlusion factor: the first removes the noise of its 4x4 rotation pattern, each further pass (an a-trous pass with twice the previous stride) smooths bands near contacts; values outside [1, 5] are clamped without a warning"
+					"description": "passes of the depth-aware blur of the occlusion factor: the first removes the noise of its 4x4 rotation pattern, each further pass (an a-trous pass with twice the previous stride) smooths bands near contacts and the cortao estimator's blotches near occluders; values outside [1, 5] are clamped without a warning"
+				},
+				{
+					"name": "cortaoSamples",
+					"types": ["ANARI_INT32"],
+					"tags": [],
+					"default": 16,
+					"minimum": 1,
+					"maximum": 64,
+					"description": "samples per pixel of the cortao occlusion estimator: more remove more of its blotches near occluders, at a cost that grows with them; values outside [1, 64] are clamped without a warning"
 				}
 			]
 		}

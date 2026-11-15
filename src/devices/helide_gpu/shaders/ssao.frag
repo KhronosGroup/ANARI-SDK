@@ -1,12 +1,14 @@
 #version 450
+#extension GL_GOOGLE_include_directive : require
 
-// Screen-space ambient occlusion: the Alchemy/SAO estimator (McGuire et al.,
-// "Scalable Ambient Obscurance", HPG 2012) in the form the renderer's
-// 'ambientOcclusionEstimator' selects (G3D's high-quality code or the
-// paper's), raised to the power 'ambientOcclusionIntensity'. A port of
-// halcyon's preview renderer (src/devices/halcyon/renderer/preview/
-// Preview.ispc, occlusionAt()); its constants and their reasoning live there.
-// The blur pass (blur.frag) removes the noise of the 4x4 rotation pattern.
+// Screen-space ambient occlusion with the estimator the renderer's
+// 'ambientOcclusionEstimator' selects: the Alchemy/SAO estimator (McGuire et
+// al., "Scalable Ambient Obscurance", HPG 2012) in G3D's high-quality form or
+// the paper's, or CORTAO's circular occluders (cortao.glsl), raised to the
+// power 'ambientOcclusionIntensity'. A port of halcyon's preview renderer
+// (src/devices/halcyon/renderer/preview/Preview.ispc, occlusionAt()); its
+// constants and their reasoning live there. The blur pass (blur.frag)
+// removes the noise of the 4x4 rotation pattern.
 
 layout(location = 0) in vec2 vUV;
 
@@ -26,10 +28,12 @@ layout(set = 3, binding = 0) uniform SSAOParams {
     float radius;
     // exponent of the occlusion factor, > 0
     float intensity;
-    // 0 'g3d', 1 'sao'
+    // 0 'g3d', 1 'sao', 2 'cortao'
     int estimator;
     // 1 for a perspective camera, 0 for an orthographic one
     int perspective;
+    // 'cortaoSamples', in [1, 64]: the 'cortao' estimator's samples per pixel
+    int cortaoSamples;
 } u;
 
 const int AO_TAPS = 16;
@@ -57,6 +61,8 @@ vec3 viewPosition(ivec2 pixel, float depth)
     return vec3(u.perspective != 0 ? xy * depth : xy, -depth);
 }
 
+#include "cortao.glsl"
+
 void main()
 {
     ivec2 pixel = ivec2(vUV * u.frameSize);
@@ -76,6 +82,22 @@ void main()
     vec3 toViewer = u.perspective != 0 ? -P : vec3(0.0, 0.0, 1.0);
     if (dot(n, toViewer) < 0.0)
         n = -n;
+
+    if (u.estimator == 2) {
+        float factor = cortaoOcclusion(normalTex,
+            pixel,
+            P,
+            n,
+            u.radius,
+            u.cortaoSamples,
+            u.frameSize,
+            u.projScale,
+            u.perspective != 0,
+            u.view);
+        float ao = pow(factor, u.intensity);
+        FragAO = vec4(ao, ao, ao, 1.0);
+        return;
+    }
 
     // The occlusion radius in pixels at the surface's depth (the same at every
     // depth for an orthographic camera)
