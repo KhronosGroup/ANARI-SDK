@@ -21,8 +21,8 @@ struct Renderer : public Object
   vec4 background() const;
   // The renderer's light, split between a uniform ambient fill (radiance
   // (1 - eyeLightBlendRatio) * ambientRadiance * ambientColor) and a headlight
-  // (eyeLightBlendRatio * ambientRadiance) that only lights a world without
-  // lights. With 'ignoreAmbientLighting', ambientRadiance is 1 and
+  // (eyeLightBlendRatio * ambientRadiance) that lights every world, with
+  // lights or without. With 'ignoreAmbientLighting', ambientRadiance is 1 and
   // ambientColor white.
   float ambientRadiance() const;
   vec3 ambientColor() const;
@@ -33,10 +33,12 @@ struct Renderer : public Object
   // 'ambientOcclusionRadius', or if that is 0, a fraction of the diagonal of
   // 'worldBounds'; 0 (no occlusion) for empty bounds
   float ambientOcclusionRadius(const box3 &worldBounds) const;
-  // 0 'g3d', 1 'sao' (the ssao.frag 'estimator' uniform)
+  // 0 'g3d', 1 'sao', 2 'cortao' (the ssao.frag 'estimator' uniform)
   int ambientOcclusionEstimator() const;
   float ambientOcclusionIntensity() const;
   int ambientOcclusionBlurPasses() const;
+  // the 'cortao' estimator's samples per pixel, in [1, 64]
+  int cortaoSamples() const;
 
  private:
   vec4 m_background{0.f, 0.f, 0.f, 1.f};
@@ -50,7 +52,8 @@ struct Renderer : public Object
   float m_ambientOcclusionRadius{0.f};
   int m_ambientOcclusionEstimator{0};
   float m_ambientOcclusionIntensity{1.f};
-  int m_ambientOcclusionBlurPasses{1};
+  int m_ambientOcclusionBlurPasses{2};
+  int m_cortaoSamples{16};
 };
 
 } // namespace helide_gpu

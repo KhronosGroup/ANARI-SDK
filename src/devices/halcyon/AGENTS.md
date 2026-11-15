@@ -614,9 +614,9 @@ shading; helide's eye-lit shading stays as the `eyeLight` mode).
   surface without lights shades about as helide does). The headlight reflects only
   diffusely: it has no specular term, so glossy and metallic surfaces show no highlight or
   reflection of it, and a pure metal gets none of it (maintainer decision, 2026-11-15).
-  helide_gpu instead drops its
-  headlight in a world with lights; then the ratio only dims the ambient fill, a uniform
-  darkening, which is why halcyon keeps it.
+  helide_gpu's headlight does the same. Dropping the headlight in a world with lights, as
+  helide_gpu once did, would leave the ratio only dimming the ambient fill, a uniform
+  darkening.
 - **Ambient occlusion** darkens only the ambient light the first visible surface
   reflects, not its direct light or emission; with `eyeLightBlendRatio` 0 and no lights
   (nor emission) the factor multiplies the whole colour, as in the `eyeLight` mode.
@@ -2890,7 +2890,7 @@ Other maintainer decisions (keep them):
 - **The `preview` renderer's shading** (see [Preview shading](#preview-shading);
   maintainer decision, 2026-11-11): the `default` mode shades as OpenUSD Storm does, as
   helide_gpu does, not as helide: lit by the world's lights, with a specular lobe, and a
-  diffuse-only headlight, and unclamped. Unlike helide_gpu, the headlight also lights a world with
+  diffuse-only headlight, and unclamped. As in helide_gpu, the headlight also lights a world with
   lights (maintainer decision, 2026-11-15), so `eyeLightBlendRatio` gives helide's
   facing-ratio falloff rather than only dimming the ambient fill. helide's eye-lit shading is the `eyeLight` mode, which
   ignores lights and `ambientColor` and clamps each surface's colour to 1 as helide does:

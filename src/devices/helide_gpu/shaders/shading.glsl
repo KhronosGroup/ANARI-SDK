@@ -21,6 +21,7 @@ const int LIGHT_SPOT = 2;
 const int LIGHT_HEADLIGHT = 3;
 const int LIGHT_QUAD = 4;
 
+// the world's lights shaded, and one more slot for the headlight
 const int MAX_LIGHTS = 16;
 
 struct LightData
@@ -50,7 +51,7 @@ layout(set = 3, binding = 2) uniform LightingUniforms
   // 1 for a perspective camera, 0 for an orthographic one
   int perspective;
   int _pad;
-  LightData lights[MAX_LIGHTS];
+  LightData lights[MAX_LIGHTS + 1];
 } light_u;
 
 struct ShadingResult
@@ -163,9 +164,13 @@ ShadingResult shade(vec3 P,
     float EdotH = max(dot(E, H), 0.0);
     vec3 F = mix(F0, F90, schlickFresnel(EdotH));
 
-    vec3 specular = F * geometric(roughness, NdotL, NdotE)
-        * normalDistribution(roughness, NdotH)
-        / (4.0 * NdotL * NdotE + EPSILON);
+    // The headlight reflects no specular: a glossy or metallic surface shows
+    // no highlight or reflection of the viewer's light (as in halcyon)
+    vec3 specular = type == LIGHT_HEADLIGHT
+        ? vec3(0.0)
+        : F * geometric(roughness, NdotL, NdotE)
+            * normalDistribution(roughness, NdotH)
+            / (4.0 * NdotL * NdotE + EPSILON);
     // Less diffuse at grazing angles, where more is reflected
     vec3 diffuse = diffuseColor * (1.0 - F) / PI;
 

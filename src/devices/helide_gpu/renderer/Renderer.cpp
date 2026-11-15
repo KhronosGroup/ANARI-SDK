@@ -11,11 +11,19 @@ namespace helide_gpu {
 
 // Renderer definitions ///////////////////////////////////////////////////////
 
-// 'ambientOcclusionBlurPasses': 1, the single blur that cancels the occlusion
-// pass's rotation pattern; the extra a-trous passes are opt-in
-constexpr int DEFAULT_AMBIENT_OCCLUSION_BLUR_PASSES = 1;
+// 'ambientOcclusionBlurPasses': 2, the blur that cancels the occlusion pass's
+// rotation pattern and one a-trous pass, which removes most of the blotches
+// the 'cortao' estimator leaves near occluders and smooths the bands near
+// contacts, as in halcyon's preview renderer
+constexpr int DEFAULT_AMBIENT_OCCLUSION_BLUR_PASSES = 2;
 constexpr int MIN_AMBIENT_OCCLUSION_BLUR_PASSES = 1;
 constexpr int MAX_AMBIENT_OCCLUSION_BLUR_PASSES = 5;
+
+// 'cortaoSamples': 16, the CORTAO reference's default sample count; at least
+// the reference's 1, and at most 64
+constexpr int DEFAULT_CORTAO_SAMPLES = 16;
+constexpr int MIN_CORTAO_SAMPLES = 1;
+constexpr int MAX_CORTAO_SAMPLES = 64;
 
 // The fraction of the world bounds' diagonal that an
 // 'ambientOcclusionRadius' of 0 stands for
@@ -43,12 +51,18 @@ void Renderer::commitParameters()
       std::max(getParam<float>("ambientOcclusionRadius", 0.f), 0.f);
   const std::string estimator =
       getParamString("ambientOcclusionEstimator", "g3d");
-  if (estimator != "g3d" && estimator != "sao") {
-    reportMessage(ANARI_SEVERITY_WARNING,
-        "unknown ambientOcclusionEstimator '%s', using 'g3d'",
-        estimator.c_str());
+  if (estimator == "sao")
+    m_ambientOcclusionEstimator = 1;
+  else if (estimator == "cortao")
+    m_ambientOcclusionEstimator = 2;
+  else {
+    if (estimator != "g3d") {
+      reportMessage(ANARI_SEVERITY_WARNING,
+          "unknown ambientOcclusionEstimator '%s', using 'g3d'",
+          estimator.c_str());
+    }
+    m_ambientOcclusionEstimator = 0;
   }
-  m_ambientOcclusionEstimator = estimator == "sao" ? 1 : 0;
   m_ambientOcclusionIntensity =
       std::max(getParam<float>("ambientOcclusionIntensity", 1.f), 0.f);
   m_ambientOcclusionBlurPasses =
@@ -56,6 +70,10 @@ void Renderer::commitParameters()
                      DEFAULT_AMBIENT_OCCLUSION_BLUR_PASSES),
           MIN_AMBIENT_OCCLUSION_BLUR_PASSES,
           MAX_AMBIENT_OCCLUSION_BLUR_PASSES);
+  m_cortaoSamples =
+      std::clamp(getParam<int32_t>("cortaoSamples", DEFAULT_CORTAO_SAMPLES),
+          MIN_CORTAO_SAMPLES,
+          MAX_CORTAO_SAMPLES);
 }
 
 void Renderer::finalize()
@@ -119,6 +137,11 @@ float Renderer::ambientOcclusionIntensity() const
 int Renderer::ambientOcclusionBlurPasses() const
 {
   return m_ambientOcclusionBlurPasses;
+}
+
+int Renderer::cortaoSamples() const
+{
+  return m_cortaoSamples;
 }
 
 } // namespace helide_gpu

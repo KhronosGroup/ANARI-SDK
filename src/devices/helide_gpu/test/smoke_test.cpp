@@ -606,7 +606,8 @@ static QuadLightResult renderHdriScene(
   anari::setParameter(d, renderer, "background", bg);
   anari::setParameter(d, renderer, "ignoreAmbientLighting", false);
   anari::setParameter(d, renderer, "ambientRadiance", h.ambientRadiance);
-  // an hdri turns the headlight off: the reference without one needs none
+  // no headlight: with an hdri the ambient radiance is 0, which also turns
+  // it off, and the reference without one is lit by the ambient fill alone
   anari::setParameter(d, renderer, "eyeLightBlendRatio", h.map ? 0.5f : 0.f);
   anari::commitParameters(d, renderer);
 

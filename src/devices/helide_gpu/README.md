@@ -36,9 +36,23 @@ Lights are `directional`, `point`, `spot` and `quad` (up to 16 in a frame,
 counting instanced ones), and `hdri` (any number). The renderer's light
 (`ambientRadiance` times `ambientColor`, or white 1 with
 `ignoreAmbientLighting`) is split by `eyeLightBlendRatio`: that share drives a
-headlight, which only lights a world without lights (an `hdri` counts), and
-the rest is a uniform ambient fill. Screen-space ambient occlusion darkens only the
+headlight, which lights every world, with lights or without, and reflects
+only diffusely (no highlight or reflection on glossy or metallic surfaces),
+and the rest is a uniform ambient fill. Screen-space ambient occlusion darkens only the
 ambient fill.
+
+Ambient occlusion is a port of halcyon's `preview` renderer's, with the same
+parameters (see its README): `ambientOcclusion`, `ambientOcclusionRadius`,
+`ambientOcclusionIntensity`, `ambientOcclusionEstimator` (`"g3d"`, the
+default, `"sao"`, or the experimental `"cortao"`, CORTAO's circular occluders,
+github.com/theagentd/CORTAO), `ambientOcclusionBlurPasses` (default 2: the
+second pass removes most of the blotches `"cortao"` leaves near occluders and
+smooths bands near contacts) and `cortaoSamples` (default 16, 1 to 64: more
+remove more of those blotches at a higher cost). `"cortao"` is ported from
+halcyon's port in `shaders/cortao.glsl`, which carries CORTAO's MIT license;
+unlike halcyon it keeps no mip chain of the hit buffer but reads, for a tap
+of a coarse level, the pixel that level's texel would hold, so the two give
+the same occlusion.
 
 A `quad` light is shaded the way Storm shades a UsdLux rect light: as a point
 light at the quad's center. Unlike Storm, it falls off with the cosine away from
