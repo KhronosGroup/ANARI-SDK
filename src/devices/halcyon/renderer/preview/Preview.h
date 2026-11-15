@@ -59,7 +59,9 @@ struct Preview : public Renderer
   // negative values clamp to 0, which gives an occlusion factor of 1
   float m_ambientOcclusionIntensity{1.f};
   // values outside [1, 5] clamp into it without a warning
-  int m_ambientOcclusionBlurPasses{1};
+  int m_ambientOcclusionBlurPasses{2};
+  // values outside [1, 64] clamp into it without a warning
+  int m_cortaoSamples{16};
 };
 
 } // namespace halcyon

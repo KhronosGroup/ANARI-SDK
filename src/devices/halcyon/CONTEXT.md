@@ -28,6 +28,12 @@ kept for screen-space passes, whatever volumes lie in front of it. Pixels with n
 visible surface hold no surface.
 _Avoid_: G-buffer, depth buffer (that is the app-facing depth channel)
 
+**Hit buffer pyramid**:
+The `cortao` estimator's mip chain of the hit buffer: each level half the size of the one
+below, each texel holding the surface of one pixel of its 2×2 block there, as a world
+position and normal. Only that estimator has one.
+_Avoid_: mip chain, depth pyramid, Hi-Z
+
 **Ambient occlusion**:
 Darkening of the first visible surface by nearby geometry, also where a volume lies in front
 of it, estimated in screen space from the hit buffer: of the ambient light it reflects in the

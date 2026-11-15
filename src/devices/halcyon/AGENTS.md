@@ -99,7 +99,8 @@ its copyright and license, and is listed in `THIRD-PARTY.md` (maintainer decisio
 it): `SPDX-License-Identifier: LicenseRef-TOST-1.0` for Typhoon's and OpenUSD's code (the
 Tomorrow Open Source Technology License 1.0, `external/typhoon/LICENSE.txt`, which has no
 SPDX identifier yet), `Apache-2.0` for OpenQMC's, joined with `AND` where a file ports
-both (`THIRD-PARTY.md` lists the tags). The tests whose C++ reference ports helide code
+both (`THIRD-PARTY.md` lists the tags), and `MIT` for CORTAO's
+(`renderer/preview/Cortao.isph`, whose header carries the license text). The tests whose C++ reference ports helide code
 (`samplers`, `spatial_field`, `volume`) keep `Apache-2.0` likewise. Ports of
 the integrator, lights, sampler and other renderer code were checked against Typhoon's own
 C++ while halcyon had an OpenUSD-linked reference harness (see [Verification against
@@ -431,7 +432,7 @@ that override; halcyon keeps its own while it supports helium 0.15 and 0.16.
    reads the occlusion factor and the world has surfaces, the hit-buffer pass
    (`Preview_renderHitBuffer()`, which traces primary rays), the screen-space occlusion
    pass (`Preview_renderOcclusion()`) and blur passes (`Preview_renderOcclusionBlur()`,
-   one by default), each over the whole frame (see [Ambient occlusion
+   two by default), each over the whole frame (see [Ambient occlusion
    passes](#ambient-occlusion-passes)), then the shading pass
    (`Preview_renderFrame()`).
 4. In `renderer/preview/Preview.ispc` `renderFrame()` (the `preview` renderer; for the `quality` see
@@ -608,7 +609,14 @@ shading; helide's eye-lit shading stays as the `eyeLight` mode).
   helide_gpu does: the ambient light is (1 − ratio) × `ambientRadiance` × `ambientColor`
   (plus the hdris'); the headlight, a light at the camera of irradiance π × ratio ×
   `ambientRadiance` (so its Lambert term is ratio × `ambientRadiance` at normal incidence;
-  not coloured by `ambientColor`), lights only a world without lights (an hdri counts).
+  not coloured by `ambientColor`), lights every world, with lights or without, so that
+  `eyeLightBlendRatio` always blends in helide's facing-ratio falloff (a white matte
+  surface without lights shades about as helide does). The headlight reflects only
+  diffusely: it has no specular term, so glossy and metallic surfaces show no highlight or
+  reflection of it, and a pure metal gets none of it (maintainer decision, 2026-11-15).
+  helide_gpu instead drops its
+  headlight in a world with lights; then the ratio only dims the ambient fill, a uniform
+  darkening, which is why halcyon keeps it.
 - **Ambient occlusion** darkens only the ambient light the first visible surface
   reflects, not its direct light or emission; with `eyeLightBlendRatio` 0 and no lights
   (nor emission) the factor multiplies the whole colour, as in the `eyeLight` mode.
@@ -641,10 +649,13 @@ in `Preview::render()` (after the frame's `World::embreeSceneUpdate()`):
 The buffers are the frame's `PreviewFrameState` (`renderer/preview/Preview.cpp`, and its
 ISPC struct in `Preview.ispc`, which the passes' kernels take). A render that runs them
 sizes the hit buffer and the unblurred and blurred occlusion buffers, plus an
-intermediate blur buffer if `ambientOcclusionBlurPasses` is above 1; one that doesn't
-frees them all, and one that runs a single blur pass frees the intermediate buffer
-(`PreviewFrameState::resize()`, which reports a DEBUG message when it allocates or frees
-the occlusion buffers, and another for the intermediate buffer). The shading pass reads a
+intermediate blur buffer if `ambientOcclusionBlurPasses` is above 1 (as by default), and
+the hit buffer pyramid if the estimator is `cortao` (see [The cortao
+estimator](#the-cortao-estimator)); one that doesn't frees them all, one that runs a single
+blur pass frees the intermediate buffer, and one with another estimator frees the pyramid
+(`PreviewFrameState::resize()` and `resizeCortaoPyramid()`, which report a DEBUG message
+when they allocate or free the occlusion buffers, the intermediate buffer or the pyramid).
+The shading pass reads a
 factor of 1 without buffers. Changing the mode, the intensity or the world's contents
 therefore starts or stops the passes at the next render. The passes run through `runPass()`
 before the shading pass, each over the whole frame before the next starts:
@@ -658,9 +669,12 @@ before the shading pass, each over the whole frame before the next starts:
    so it is flipped where `Ng` faces away). A shading normal tilted off a flat facet lifts
    the facet's taps on one side above its tangent plane, so the facet occludes itself
    there; tessellated curved surfaces with smooth normals get smooth occlusion in
-   exchange. A pixel with no first visible surface stores none.
-2. Occlusion pass (`occlusionAt()`, constants `AO_*` above it), a screen-space pass: the
-   Alchemy/SAO estimator. 16 taps on a 7-turn spiral within the occlusion radius `r`
+   exchange. A pixel with no first visible surface stores none. With the `cortao`
+   estimator the pass also writes the hit buffer pyramid (`cortaoWritePyramid()`).
+2. Occlusion pass (`occlusionAt()`, constants `AO_*` above it), a screen-space pass. For
+   `cortao` it is CORTAO's (`cortaoOcclusionAt()`, see [The cortao
+   estimator](#the-cortao-estimator)); for `g3d` and `sao`, which the rest of this step
+   describes, the Alchemy/SAO estimator. 16 taps on a 7-turn spiral within the occlusion radius `r`
    projected to pixels, rotated per pixel by a 4×4 pattern keyed by the pixel's position,
    so renders are deterministic. Each tap's position is rebuilt from its own pixel's camera
    ray and stored distance; taps outside the frame or on pixels with no surface are
@@ -693,14 +707,16 @@ before the shading pass, each over the whole frame before the next starts:
    skipped, and the spatial weight of the others is multiplied by `1 - (d / r)²`, `d` being
    the difference of their hit distance from the pixel's, so neighbours farther apart than
    `r` are rejected and occlusion doesn't bleed across silhouettes.
-4. Further blur passes, only if the renderer's `ambientOcclusionBlurPasses` (default 1,
-   clamped to [1, 5]) is above 1: à-trous passes, each blurring the previous pass's result
+4. Further blur passes, as many as the renderer's `ambientOcclusionBlurPasses` (default 2,
+   clamped to [1, 5]) asks for after the first: à-trous passes, each blurring the previous pass's result
    with the same 5×5 window and edge rules, its offsets multiplied by the stride
    2^(k−1) for pass k (2, 4, 8, 16) and its per-axis weights the B3-spline
    {1/16, 1/4, 3/8, 1/4, 1/16} (`AO_ATROUS_WEIGHTS`). Near a floor contact the true factor
    changes quickly with height, so the first pass can't cancel the rotation pattern there
    and leaves bands a few rows apart on faces seen from a low camera; two more passes
-   remove them. `PreviewFrameState::runBlurPasses()` alternates each pass's target between
+   remove them. The default second pass also removes most of the blotches `cortao`
+   leaves near occluders, larger than the first pass's window (see [The cortao
+   estimator](#the-cortao-estimator)). `PreviewFrameState::runBlurPasses()` alternates each pass's target between
    the intermediate and the blurred buffer so that the last pass writes the blurred one;
    the unblurred buffer is only read.
 
@@ -724,6 +740,73 @@ too. A world with nothing in it has empty bounds and a radius of 0, though such 
 runs no passes. The radius covers `pixelScale() · r / depth` pixels at a surface's view
 depth for a perspective camera, and the same number at every depth for an orthographic
 one; positions are rebuilt through each camera's own rays.
+
+#### The cortao estimator
+
+`ambientOcclusionEstimator` `"cortao"` is CORTAO (Circular Occluder Ray-Traced Ambient
+Occlusion, github.com/theagentd/CORTAO, reference implementation v1.0.3 at `420b168d`,
+MIT), ported to ISPC in `renderer/preview/Cortao.isph` (why and how it was tuned:
+`docs/adr/0007-cortao-occlusion-estimator.md`). It estimates the cosine-weighted fraction
+of the hemisphere that geometry within the occlusion radius blocks, where `g3d` and `sao`
+estimate an obscurance: it approximates the pixel's neighbourhood by circular occluders
+built from the hit buffer and tests 16 fixed hemisphere rays against them.
+
+The **hit buffer pyramid** (`PreviewFrameState::cortaoPyramid`, allocated only for
+`cortao`) is CORTAO's prepass mip chain: up to `CORTAO_MAX_LEVELS` (8) levels, down to one
+a texel wide or high (`cortaoPyramidLevels()`), level k `max(width >> k, 1)` by
+`max(height >> k, 1)` texels stored one after the other. A texel is 4 floats: the world
+position of the surface it holds and, as the bits of the fourth, its normal in a 16+16-bit
+octahedral encoding (`cortaoEncodeNormal()`, never 0), 0 for no surface. Level 0 holds
+the hit buffer's surfaces; a texel (X, Y) of level k holds its child of level k − 1 whose x parity is Y's
+and whose y parity is X's (the reference's choice with its random seed 0). The hit-buffer
+pass writes it: each pixel to level 0 and to every level it stands for, so each texel has
+exactly one writer and the pass needs no ordering.
+
+The occlusion pass (`cortaoOcclusionAt()`), for a pixel at `P` with normal `n`, `V`
+towards the eye:
+
+1. `P` moves half a pixel's diagonal along `n` (times its view depth for a perspective
+   camera), so it doesn't occlude itself. For a perspective camera the radius is clamped
+   so the sampling sphere covers at most 0.2 of the image height
+   (`CORTAO_MAX_SCREEN_RADIUS_HEIGHT_RATIO`), and the sampling disk across `V` through `P`
+   is the one the sphere's silhouette cone cuts; for an orthographic camera it is the
+   radius.
+2. The pixel's cell of the 4×4 pattern (`AO_ROTATIONS`) picks its random values: the
+   disk's rotation, the samples' radius dither, the rays' tangent rotation and the
+   spiral's direction. They are fixed per cell, so renders are deterministic and the first
+   blur pass cancels them, as for the other estimators; the reference instead re-randomises
+   per frame and leaves the noise to temporal filtering, which halcyon has none of.
+3. `N` samples (the renderer's `cortaoSamples`, default 16, the reference's
+   `CORTAO_SAMPLE_COUNT`) lie on a golden-angle spiral over the disk, in strips whose
+   radii `(i / N)^1.75` (`CORTAO_SKEW` 3.5) draw them towards the centre. More samples
+   remove more of the blotches near occluders (see the ADR); the cost of the occlusion
+   pass grows with them, 64 costing about 2.3 times 16. A sample's
+   pixel comes from the projections of `P` and the disk's axes, computed once per pixel
+   (`CortaoProjection`, the inverse of `Camera_makeRay()` without an aperture), and it reads
+   the pyramid on the level `round(log2(strip radius in pixels × stretch) − 4)`
+   (`CORTAO_MIP_BIAS`; the stretch, off the view axis, as the reference's), clamped to the
+   pyramid. Samples outside the frame or the level, or on texels with no surface, don't
+   occlude.
+4. A sample at offset `d` from `P`, normal `n_s`, occludes if `|d|` is within the radius
+   and `d·n > 0`. Its occluder is a circle on the unit hemisphere of chord
+   `r · sqrt(strip area share) · s / |d|`, `s = 1 / sqrt(max(n_s·V, 1/4))` its slope
+   compensation (`CORTAO_MAX_SLOPE_COMPENSATION` 4). A front-facing occluder
+   (`n_s·d̂ < 0.5`, `CORTAO_BACKFACE_THRESHOLD`) moves 0.75 of its radius into its surface
+   (`CORTAO_OCCLUDER_OFFSET_SCALE`; the reference moves it 1, which leaves contacts too
+   light); a back-facing one stays (`CORTAO_BACKFACE_BOOST` 0).
+5. 16 hemisphere rays (`CORTAO_RAYS`), cosine-distributed on a golden-angle spiral in a
+   tangent frame rotated per pixel, are tested against each occluder's angular radius
+   (cosine `1 − chord² / 2`; the reference's path without its lookup table, which is built
+   from the same test). The factor is 1 minus the share of rays some occluder blocks, then
+   `^intensity` as for the other estimators.
+
+As for the other estimators, the factor is 1 for other camera types or a radius of 0.
+`Cortao.isph`'s header lists the port's differences from the reference. `cortao` is
+experimental: against brute-force ray-traced occlusion it is the most accurate of the three
+estimators on halcyon's test scenes, and its passes cost about 1.4 times `g3d`'s (see the
+ADR). Its remaining error is mostly the screen-space limit it shares with them: occluders
+the camera doesn't see, such as the underside of a sphere resting on a floor, darken
+nothing.
 
 ## The quality renderer
 
@@ -2447,7 +2530,7 @@ The `preview` renderer's `mode` parameter (`renderModeFromString()` in
   passes whatever `ambientOcclusion` says (see
   [Ambient occlusion passes](#ambient-occlusion-passes)).
 - `ambientOcclusion.unblurred`: the same as `ambientOcclusion`, but showing the occlusion
-  factor before the blur pass.
+  factor before the blur passes.
 
 Wherever a mode shows the background, the `visible` hdri lights show instead if there are
 any (`missColor()`, see [Rendering pipeline](#rendering-pipeline)); they light nothing.
@@ -2522,12 +2605,14 @@ facing-ratio blend; see [Preview shading](#preview-shading)); `volumeSamplingRat
 `taskGrainSizeHeight` (4, clamped to [1, 128]); `ambientOcclusion` (true);
 `ambientOcclusionRadius` (0; 0 derives the radius from the world's bounds, and negative
 values are clamped to 0 without a warning, so they derive it too);
-`ambientOcclusionEstimator` ("g3d" or "sao", default "g3d"; other values
+`ambientOcclusionEstimator` ("g3d", "sao" or "cortao", default "g3d"; other values
 warn and use "g3d"); `ambientOcclusionIntensity` (1, negative values clamped to 0: the
 occlusion factor's exponent, above 1 darkens, below 1 lightens, 0 gives a factor of 1);
-`ambientOcclusionBlurPasses` (1, clamped to [1, 5] without a warning: the number of blur
+`ambientOcclusionBlurPasses` (2, clamped to [1, 5] without a warning: the number of blur
 passes over the occlusion factor, each after the first an à-trous pass that removes bands
-near contacts).
+near contacts and `cortao`'s blotches near occluders); `cortaoSamples` (16, clamped to
+[1, 64] without a warning: the `cortao` estimator's samples of the hit buffer per pixel;
+the other estimators ignore it).
 In the `default` mode the ambient light the first visible surface (also behind a volume)
 reflects, in the `eyeLight` mode its whole eye-lit colour, is multiplied by the pixel's
 occlusion factor (`occlusionFactor()` in `renderer/preview/Preview.ispc`, 1 unless
@@ -2766,7 +2851,8 @@ Other maintainer decisions (keep them):
   - The blur window is centred on the pixel (5×5, outer offsets at half weight), so the
     blurred factor lines up with the colour image.
   - `ambientOcclusionEstimator` selects the estimator, `"g3d"` (G3D's high-quality code)
-    by default or `"sao"` (the paper's), and the strength is an exponent,
+    by default, `"sao"` (the paper's) or `"cortao"` (CORTAO, experimental; see [The
+    cortao estimator](#the-cortao-estimator)), and the strength is an exponent,
     `ambientOcclusionIntensity`, not a scale.
   - `"sao"` sets the paper's linear intensity `σ` to the radius, so neither estimator
     depends on the scene's units.
@@ -2774,9 +2860,11 @@ Other maintainer decisions (keep them):
     factor, at intensity 0, or for a world without surfaces.
   - A negative `ambientOcclusionRadius` is clamped to 0 silently, so it derives the radius
     like 0.
-  - The extra à-trous blur passes, which remove the bands a single blur leaves near
-    contacts, are opt-in: `ambientOcclusionBlurPasses` defaults to 1, so the default cost
-    and images stay those of the single blur.
+  - `ambientOcclusionBlurPasses` defaults to 2: the first pass cancels the rotation
+    pattern, and one à-trous pass removes most of the blotches `cortao` leaves near
+    occluders and smooths the bands near contacts, at little cost next to the occlusion
+    pass (maintainer decision, keep it). 3 passes remove the bands seen from a low camera
+    entirely; 1 is sharper and noisier.
 - **Release paths** (see [Synchronization](#synchronization)): releasing a mapped array unmaps
   it, keeps the app's writes and reports an ERROR; a status callback that releases a shared
   array during a render goes ahead and reports a WARNING that the render may still read the
@@ -2801,8 +2889,10 @@ Other maintainer decisions (keep them):
   (see [Adaptive sampling](#adaptive-sampling)).
 - **The `preview` renderer's shading** (see [Preview shading](#preview-shading);
   maintainer decision, 2026-11-11): the `default` mode shades as OpenUSD Storm does, as
-  helide_gpu does, not as helide: lit by the world's lights and a headlight, with a
-  specular lobe, and unclamped. helide's eye-lit shading is the `eyeLight` mode, which
+  helide_gpu does, not as helide: lit by the world's lights, with a specular lobe, and a
+  diffuse-only headlight, and unclamped. Unlike helide_gpu, the headlight also lights a world with
+  lights (maintainer decision, 2026-11-15), so `eyeLightBlendRatio` gives helide's
+  facing-ratio falloff rather than only dimming the ambient fill. helide's eye-lit shading is the `eyeLight` mode, which
   ignores lights and `ambientColor` and clamps each surface's colour to 1 as helide does:
   comparisons with helide (images, `anariRenderTests`, the CTS) select `mode`
   `eyeLight` and set `ambientOcclusion` to false. Unknown modes fall back to `default`.
@@ -3187,7 +3277,8 @@ check their area of the `preview` renderer and device by rendering small scenes.
   against albedo / π × irradiance: the headlight and ambient fill of `eyeLightBlendRatio`,
   `ambientRadiance` and `ambientColor`; each light in halcyon's units (a directional cone,
   point power and spheres, a spot's cone, a quad's sides and `radiance`, rings of radius 0
-  and above) and the headlight dropped with lights; an hdri's mean radiance; physicallyBased's
+  and above) plus the headlight, which lights a world with lights too and reflects no
+  specular on a glossy metal or dielectric; an hdri's mean radiance; physicallyBased's
   parameters (also from attributes) and a surface without a material; back faces; colours
   above 1; ambient occlusion darkening only the ambient light; and visible quads and
   spheres (radiance, a black back, hidden behind the floor, depth and ids unchanged). It

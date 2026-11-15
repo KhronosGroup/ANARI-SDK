@@ -29,6 +29,15 @@ struct PreviewFrameState
   // 'ambientOcclusionRadius', or one derived from the world's bounds; 0
   // leaves every factor 1
   uniform float occlusionRadius;
+  // the 'cortao' estimator's hit buffer pyramid (Cortao.isph), NULL for the
+  // other estimators: 'cortaoLevels' levels, level k
+  // 'cortaoLevelWidth[k]' x 'cortaoLevelHeight[k]' texels of 4 floats from
+  // texel 'cortaoLevelOffset[k]'
+  uniform float *uniform cortaoPyramid;
+  uniform int cortaoLevels;
+  uniform int cortaoLevelWidth[8];
+  uniform int cortaoLevelHeight[8];
+  uniform int cortaoLevelOffset[8];
 };
 
 // Composites 'src' behind 'dst', which has accumulated opacity 'alpha'. As
@@ -270,6 +279,8 @@ inline uniform float2 pixelScale(const uniform Frame *uniform frame)
       frame->size.y / (c->imagePlaneHeight * regionHeight));
 }
 
+#include "renderer/preview/Cortao.isph"
+
 // Occlusion factor of the hit buffer's surface at pixel (x, y), index
 // 'pixelIndex', with the renderer's estimator and raised to its intensity: 1
 // unless the camera is perspective or orthographic and the occlusion radius
@@ -307,6 +318,14 @@ inline float occlusionAt(const uniform Frame *uniform frame,
     if (!(viewDepth > 0.f))
       return 1.f;
     radiusPixels = radiusPixels / viewDepth;
+  }
+
+  const uniform float intensity = r->preview.ambientOcclusionIntensity;
+  if (r->preview.ambientOcclusionEstimator
+      == AMBIENT_OCCLUSION_ESTIMATOR_CORTAO) {
+    const float factor =
+        cortaoOcclusionAt(frame, ao, x, y, P, n, radius, scale);
+    return intensity > 0.f ? pow(factor, intensity) : 1.f;
   }
 
 #pragma ignore warning(perf)
@@ -363,7 +382,6 @@ inline float occlusionAt(const uniform Frame *uniform frame,
       ? max(1.f - sum * (AO_SAO_SCALE / landed), 0.f)
       : max(1.f - sqrt(sum * (AO_G3D_SCALE / landed)), 0.f);
   // intensity 0 gives 1, also for a factor of 0
-  const uniform float intensity = r->preview.ambientOcclusionIntensity;
   return intensity > 0.f ? pow(factor, intensity) : 1.f;
 }
 
@@ -404,6 +422,12 @@ inline unmasked void renderHitBuffer(const uniform Frame *uniform frame,
 #pragma ignore warning(perf)
     ao->hitDistance[pixelIndex] = rh.ray.tfar;
     store_float3(ao->hitNormal + 3 * pixelIndex, n);
+    if (ao->cortaoPyramid) {
+      cortaoWritePyramid(
+          ao, x, y, true, rh.ray.org + rh.ray.dir * rh.ray.tfar, n);
+    }
+  } else if (ao->cortaoPyramid) {
+    cortaoWritePyramid(ao, x, y, false, make_float3(0.f), make_float3(0.f));
   }
 }
 
@@ -580,7 +604,7 @@ inline float4 renderDefault(const uniform Frame *uniform frame,
   float3 lightRadiance = make_float3(0.f);
   bool light = false;
   if (storm) {
-    headlight = PreviewShading_headlightIrradiance(r, frame->world);
+    headlight = PreviewShading_headlightIrradiance(r);
     ambientRadiance = PreviewShading_ambientRadiance(r, frame->world);
     light = PreviewShading_visibleLight(
         frame->world, rh.ray.org, rh.ray.dir, lightDist, lightRadiance);
@@ -845,7 +869,8 @@ export void Preview_setParameters(void *uniform _self,
     uniform float invVolumeSamplingRate,
     uniform RenderMode mode,
     uniform AmbientOcclusionEstimator ambientOcclusionEstimator,
-    uniform float ambientOcclusionIntensity)
+    uniform float ambientOcclusionIntensity,
+    uniform int cortaoSamples)
 {
   uniform Renderer *uniform self = object_cast<Renderer>(_self);
   self->preview.ambientRadiance = ambientRadiance;
@@ -856,6 +881,7 @@ export void Preview_setParameters(void *uniform _self,
   self->preview.mode = mode;
   self->preview.ambientOcclusionEstimator = ambientOcclusionEstimator;
   self->preview.ambientOcclusionIntensity = ambientOcclusionIntensity;
+  self->preview.cortaoSamples = cortaoSamples;
 }
 
 export uniform ulong sizeof_PreviewFrameState()
@@ -890,6 +916,39 @@ export void PreviewFrameState_setOcclusionRadius(
   uniform PreviewFrameState *uniform self =
       (uniform PreviewFrameState * uniform) _self;
   self->occlusionRadius = radius;
+}
+
+// Texels (of 4 floats each) of the 'cortao' estimator's hit buffer pyramid
+// for a frame of 'width' x 'height' pixels
+export uniform int PreviewFrameState_cortaoPyramidTexels(
+    uniform int width, uniform int height)
+{
+  const uniform int levels = cortaoPyramidLevels(width, height);
+  uniform int texels = 0;
+  for (uniform int k = 0; k < levels; k++)
+    texels += max(width >> k, 1) * max(height >> k, 1);
+  return texels;
+}
+
+// 'pyramid' is NULL, or PreviewFrameState_cortaoPyramidTexels(width, height)
+// texels (4 floats each) for the 'cortao' estimator's hit buffer pyramid of
+// a 'width' x 'height' frame
+export void PreviewFrameState_setCortaoPyramid(void *uniform _self,
+    float *uniform pyramid,
+    uniform int width,
+    uniform int height)
+{
+  uniform PreviewFrameState *uniform self =
+      (uniform PreviewFrameState * uniform) _self;
+  self->cortaoPyramid = pyramid;
+  self->cortaoLevels = pyramid ? cortaoPyramidLevels(width, height) : 0;
+  uniform int offset = 0;
+  for (uniform int k = 0; k < self->cortaoLevels; k++) {
+    self->cortaoLevelWidth[k] = max(width >> k, 1);
+    self->cortaoLevelHeight[k] = max(height >> k, 1);
+    self->cortaoLevelOffset[k] = offset;
+    offset += self->cortaoLevelWidth[k] * self->cortaoLevelHeight[k];
+  }
 }
 
 export void Preview_renderHitBuffer(void *uniform _frame,

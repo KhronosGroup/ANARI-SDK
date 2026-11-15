@@ -183,7 +183,7 @@ bool testIntrospection(anari::Library library, anari::Device d)
       "default",
       ANARI_INT32);
   pass &= report("'default' renderer parameters are 'preview''s",
-      blurPasses && *blurPasses == 1);
+      blurPasses && *blurPasses == 2);
 
   pass &= checkList("'preview' renderer info lists what it honours",
       objectInfoExtensions(d, "preview"),
