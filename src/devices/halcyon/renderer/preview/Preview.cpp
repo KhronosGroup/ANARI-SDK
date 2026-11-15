@@ -21,12 +21,19 @@ constexpr float DEFAULT_VOLUME_SAMPLING_RATE = 0.5f;
 constexpr float MIN_VOLUME_SAMPLING_RATE = 0.001f;
 constexpr float MAX_VOLUME_SAMPLING_RATE = 10.f;
 
-// 'ambientOcclusionBlurPasses': 1, the single blur that cancels the occlusion
-// pass's rotation pattern; the extra a-trous passes are opt-in, as each costs
-// another pass over the frame
-constexpr int DEFAULT_AMBIENT_OCCLUSION_BLUR_PASSES = 1;
+// 'ambientOcclusionBlurPasses': 2, the blur that cancels the occlusion pass's
+// rotation pattern and one a-trous pass, which removes most of the blotches
+// the 'cortao' estimator leaves near occluders and smooths the bands near
+// contacts, at little cost next to the occlusion pass
+constexpr int DEFAULT_AMBIENT_OCCLUSION_BLUR_PASSES = 2;
 constexpr int MIN_AMBIENT_OCCLUSION_BLUR_PASSES = 1;
 constexpr int MAX_AMBIENT_OCCLUSION_BLUR_PASSES = 5;
+
+// 'cortaoSamples': 16, the CORTAO reference's default sample count; at least
+// the reference's 1, and at most 64, which costs about 3.3 times g3d's passes
+constexpr int DEFAULT_CORTAO_SAMPLES = 16;
+constexpr int MIN_CORTAO_SAMPLES = 1;
+constexpr int MAX_CORTAO_SAMPLES = 64;
 
 // The 'mode' parameter value 'name' as a RenderMode; unknown names (and
 // "default") select the default shading (OpenUSD Storm's), as helide falls
@@ -77,6 +84,8 @@ ambientOcclusionEstimatorFromString(std::string_view name)
     return ispc::AMBIENT_OCCLUSION_ESTIMATOR_G3D;
   if (name == "sao")
     return ispc::AMBIENT_OCCLUSION_ESTIMATOR_SAO;
+  if (name == "cortao")
+    return ispc::AMBIENT_OCCLUSION_ESTIMATOR_CORTAO;
   return std::nullopt;
 }
 
@@ -99,6 +108,10 @@ struct PreviewFrameState : public RendererFrameState
   // frees either
   void resize(
       const helium::BaseObject &reporter, size_t numPixels, int blurPasses);
+  // Sizes the 'cortao' estimator's hit buffer pyramid for a frame of 'size',
+  // or frees it for a size of 0; 'reporter' reports a DEBUG message when it
+  // allocates or frees it
+  void resizeCortaoPyramid(const helium::BaseObject &reporter, uint2 size);
   // Runs 'blurPasses' blur passes: the first over the unblurred factor, each
   // later one over the previous one's result, alternating between the
   // intermediate buffer and the blurred one so the last writes the blurred
@@ -114,6 +127,9 @@ struct PreviewFrameState : public RendererFrameState
   std::vector<float> m_occlusion;
   // the blur passes' intermediate results, only with more than one pass
   std::vector<float> m_intermediateOcclusion;
+  // the 'cortao' estimator's hit buffer pyramid (4 floats per texel), only
+  // for that estimator
+  std::vector<float> m_cortaoPyramid;
 };
 
 PreviewFrameState::PreviewFrameState()
@@ -122,6 +138,7 @@ PreviewFrameState::PreviewFrameState()
   ispc::PreviewFrameState_setBuffers(
       ispc(), nullptr, nullptr, nullptr, nullptr, nullptr);
   ispc::PreviewFrameState_setOcclusionRadius(ispc(), 0.f);
+  ispc::PreviewFrameState_setCortaoPyramid(ispc(), nullptr, 0, 0);
 }
 
 void *PreviewFrameState::ispc()
@@ -178,6 +195,29 @@ void PreviewFrameState::resize(
       m_hitNormal.data(),
       m_unblurredOcclusion.data(),
       m_occlusion.data());
+}
+
+void PreviewFrameState::resizeCortaoPyramid(
+    const helium::BaseObject &reporter, uint2 size)
+{
+  if (size.x == 0 || size.y == 0) {
+    if (!m_cortaoPyramid.empty()) {
+      reporter.reportMessage(ANARI_SEVERITY_DEBUG,
+          "halcyon::Preview freeing cortao hit buffer pyramid");
+    }
+    // free the memory, not only the elements
+    m_cortaoPyramid = {};
+    ispc::PreviewFrameState_setCortaoPyramid(ispc(), nullptr, 0, 0);
+    return;
+  }
+  if (m_cortaoPyramid.empty()) {
+    reporter.reportMessage(ANARI_SEVERITY_DEBUG,
+        "halcyon::Preview allocating cortao hit buffer pyramid");
+  }
+  m_cortaoPyramid.resize(4
+      * size_t(ispc::PreviewFrameState_cortaoPyramidTexels(size.x, size.y)));
+  ispc::PreviewFrameState_setCortaoPyramid(
+      ispc(), m_cortaoPyramid.data(), size.x, size.y);
 }
 
 void PreviewFrameState::runBlurPasses(Frame &frame, int blurPasses)
@@ -245,6 +285,10 @@ void Preview::commitParameters()
                      DEFAULT_AMBIENT_OCCLUSION_BLUR_PASSES),
           MIN_AMBIENT_OCCLUSION_BLUR_PASSES,
           MAX_AMBIENT_OCCLUSION_BLUR_PASSES);
+  m_cortaoSamples =
+      std::clamp(getParam<int32_t>("cortaoSamples", DEFAULT_CORTAO_SAMPLES),
+          MIN_CORTAO_SAMPLES,
+          MAX_CORTAO_SAMPLES);
 }
 
 void Preview::finalize()
@@ -262,7 +306,8 @@ void Preview::updatePreviewISPC()
       1.f / m_volumeSamplingRate,
       ispc::RenderMode(m_mode),
       ispc::AmbientOcclusionEstimator(m_ambientOcclusionEstimator),
-      m_ambientOcclusionIntensity);
+      m_ambientOcclusionIntensity,
+      m_cortaoSamples);
 }
 
 std::unique_ptr<RendererFrameState> Preview::newFrameState() const
@@ -286,6 +331,12 @@ void Preview::render(
   ao.resize(*this,
       occlusion ? size_t(size.x) * size.y : 0,
       m_ambientOcclusionBlurPasses);
+  ao.resizeCortaoPyramid(*this,
+      occlusion
+              && m_ambientOcclusionEstimator
+                  == ispc::AMBIENT_OCCLUSION_ESTIMATOR_CORTAO
+          ? size
+          : uint2(0u, 0u));
   if (occlusion) {
     ispc::PreviewFrameState_setOcclusionRadius(
         ao.ispc(), occlusionRadius(frame.world()));

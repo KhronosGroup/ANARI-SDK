@@ -6,7 +6,7 @@ built on helium, the device framework in the ANARI SDK, and has two renderers:
 
 - `preview` is an interactive renderer, one sample per pixel: surfaces shaded as OpenUSD
   Storm shades a UsdPreviewSurface (Lambert plus GGX specular, lit by ANARI's lights
-  without shadows, a headlight in a world without lights and a uniform ambient light),
+  without shadows, a diffuse-only headlight and a uniform ambient light),
   ray-marched volumes, screen-space ambient occlusion and debug visualization modes. Its
   `eyeLight` mode and debug modes match the features and images of helide, the SDK's
   Embree reference device. It is listed first among the renderer subtypes, so `default`
@@ -168,14 +168,21 @@ interactive. The `preview` renderer's parameters:
   bounds.
 - `ambientOcclusionEstimator` (string, default `"g3d"`): `"g3d"` uses G3D's high-quality
   Scalable Ambient Obscurance estimator, `"sao"` the form of the SAO paper (McGuire et al.,
-  HPG 2012). Neither depends on the scene's units: scaling a scene and the radius together
-  gives the same image.
+  HPG 2012), and `"cortao"` (experimental) CORTAO's circular occluders
+  (github.com/theagentd/CORTAO), which estimate the fraction of the hemisphere occluded
+  within the radius rather than an obscurance. None depends on the scene's units: scaling a
+  scene and the radius together gives the same image.
 - `ambientOcclusionIntensity` (float, default 1): an exponent applied to the occlusion
   factor. Above 1 darkens, below 1 lightens, and 0 turns the darkening off.
-- `ambientOcclusionBlurPasses` (int, default 1, 1 to 5): how many times the occlusion is
-  blurred. One pass removes its noise; faces seen from a low camera just above a floor can
-  still show faint horizontal bands, which 3 passes remove at the cost of the extra passes.
-  Values outside 1 to 5 are clamped.
+- `ambientOcclusionBlurPasses` (int, default 2, 1 to 5): how many times the occlusion is
+  blurred. The first pass removes its noise and the second most of the blotches the
+  `"cortao"` estimator leaves near occluders; faces seen from a low camera just above a
+  floor can still show faint horizontal bands, which 3 passes remove at the cost of the
+  extra pass. 1 gives sharper but noisier occlusion. Values outside 1 to 5 are clamped.
+- `cortaoSamples` (int, default 16, 1 to 64): how many samples per pixel the `"cortao"`
+  estimator takes. More remove more of the blotches it leaves near occluders, at a cost
+  that grows with them: 64 costs about 2.3 times 16. Values outside 1 to 64 are clamped;
+  the other estimators ignore it.
 
 Only the first visible surface is darkened, also where it is seen through a volume or a
 `mask` cut-out. Surfaces behind a `blend` surface, volumes and the background are not. The

@@ -262,14 +262,14 @@ inline uniform float3 PreviewShading_ambientRadiance(
   return ambient;
 }
 
-// The headlight's irradiance: a world without lights is lit by a light at
-// the viewer, scaled so that its Lambert term is 'eyeLightBlendRatio' x
-// 'ambientRadiance' at normal incidence; a world with lights has none
+// The headlight's irradiance: a light at the viewer, scaled so that its
+// Lambert term is 'eyeLightBlendRatio' x 'ambientRadiance' at normal
+// incidence. It lights every world, with lights or without, so that
+// 'eyeLightBlendRatio' always blends in helide's facing-ratio falloff, and
+// it is diffuse only (PreviewShading_shade()).
 inline uniform float PreviewShading_headlightIrradiance(
-    const uniform Renderer *uniform r, const uniform World *uniform world)
+    const uniform Renderer *uniform r)
 {
-  if (world->numLights > 0)
-    return 0.f;
   return PI * r->preview.eyeLightBlendRatio * r->preview.ambientRadiance;
 }
 
@@ -308,9 +308,9 @@ inline float2 PreviewShading_envBRDFApprox(float NdotE, float roughness)
 // Light reflected towards the viewer by surface 's' at world point 'P' of
 // unit normal 'N' (on the viewer's side), seen along unit 'E' (from P
 // towards the viewer): in 'direct' what the world's lights and the
-// headlight ('headlight', its irradiance) reflect, plus what the surface
-// emits; in 'ambient' what the uniform ambient light 'ambientRadiance'
-// reflects, which ambient occlusion darkens
+// headlight ('headlight', its irradiance; diffuse only) reflect, plus what
+// the surface emits; in 'ambient' what the uniform ambient light
+// 'ambientRadiance' reflects, which ambient occlusion darkens
 inline void PreviewShading_shade(const uniform World *uniform world,
     const PreviewSurface &s,
     float3 P,
@@ -336,8 +336,10 @@ inline void PreviewShading_shade(const uniform World *uniform world,
   for (uniform uint32 i = 0; i <= world->numLights; i++) {
     float3 L;
     float3 irradiance;
-    if (i == world->numLights) {
-      // the headlight, last
+    // the headlight, last, which reflects no specular: a glossy or metallic
+    // surface shows no highlight or reflection of the viewer's light
+    const uniform bool isHeadlight = i == world->numLights;
+    if (isHeadlight) {
       if (headlight <= 0.f)
         break;
       L = E;
@@ -355,10 +357,12 @@ inline void PreviewShading_shade(const uniform World *uniform world,
     const float EdotH = max(dot(E, H), 0.f);
     const float3 F = lerp(F0, F90, PreviewShading_schlickFresnel(EdotH));
 
-    const float3 specular = F
-        * (PreviewShading_geometric(roughness, NdotL, NdotE)
-            * PreviewShading_normalDistribution(roughness, NdotH)
-            / (4.f * NdotL * NdotE + PREVIEW_SHADING_EPSILON));
+    const float3 specular = isHeadlight
+        ? make_float3(0.f)
+        : F
+            * (PreviewShading_geometric(roughness, NdotL, NdotE)
+                * PreviewShading_normalDistribution(roughness, NdotH)
+                / (4.f * NdotL * NdotE + PREVIEW_SHADING_EPSILON));
     // less diffuse at grazing angles, where more is reflected
     const float3 diffuse = diffuseColor * (make_float3(1.f) - F) * (1.f / PI);
 

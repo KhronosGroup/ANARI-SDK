@@ -746,7 +746,9 @@ enum AmbientOcclusionEstimator
   // G3D's high-quality SAO form, the default
   AMBIENT_OCCLUSION_ESTIMATOR_G3D = 0,
   // the HPG 2012 SAO paper's form
-  AMBIENT_OCCLUSION_ESTIMATOR_SAO
+  AMBIENT_OCCLUSION_ESTIMATOR_SAO,
+  // CORTAO's circular occluders (renderer/preview/Cortao.isph)
+  AMBIENT_OCCLUSION_ESTIMATOR_CORTAO
 };
 
 // The 'quality' renderer's 'mode' values (pathTracerModeFromString() in
@@ -841,6 +843,9 @@ struct PreviewParameters
   // 'ambientOcclusionIntensity', at least 0: the occlusion pass raises its
   // factor to this power
   uniform float ambientOcclusionIntensity;
+  // 'cortaoSamples', in [1, 64]: the 'cortao' estimator's samples of the hit
+  // buffer per pixel (renderer/preview/Cortao.isph)
+  uniform int cortaoSamples;
 };
 
 // Every renderer subtype's ISPC struct: the parameters they share

@@ -11,12 +11,12 @@
 // incidence and a directional light give albedo / pi times the irradiance.
 //
 // Checked: the headlight and the ambient fill 'eyeLightBlendRatio' splits
-// 'ambientRadiance' x 'ambientColor' into, the headlight dropped in a world
-// with lights; each light as Storm lights it, in halcyon's units
-// (light/Light.h): directional (also a cone), point (also power and a
-// sphere), spot (its cone), quad and ring (a point at the center with the
-// Lambertian cosine and the sides that emit); an hdri's mean radiance added
-// to the ambient light; physicallyBased's metallic, roughness, ior and
+// 'ambientRadiance' x 'ambientColor' into, the headlight also lighting a
+// world with lights and reflecting no specular; each light as Storm lights it,
+// in halcyon's units (light/Light.h): directional (also a cone), point (also
+// power and a sphere), spot (its cone), quad and ring (a point at the center
+// with the Lambertian cosine and the sides that emit); an hdri's mean radiance
+// added to the ambient light; physicallyBased's metallic, roughness, ior and
 // emissive (also from an attribute) and other materials as matte; back faces
 // lit as front faces; colors above 1 not clamped; ambient occlusion
 // darkening only the ambient light; and visible lights (sphere, quad, ring)
@@ -93,12 +93,14 @@ struct Surface
   float3 emissive{0.f};
 };
 
-// A light as the shading sees it: the unit direction towards it and the
-// irradiance it gives a surface facing it
+// A light as the shading sees it: the unit direction towards it, the
+// irradiance it gives a surface facing it, and whether it reflects only
+// diffusely (the headlight)
 struct Incident
 {
   float3 L;
   float3 irradiance;
+  bool diffuseOnly{false};
 };
 
 float3 lerp3(float3 a, float3 b, float t)
@@ -138,7 +140,9 @@ float3 storm(const Surface &s,
     const float k = roughness * roughness * 0.5f;
     const float G =
         NdotE / (NdotE * (1.f - k) + k) * NdotL / (NdotL * (1.f - k) + k);
-    const float3 specular = F * (G * D / (4.f * NdotL * NdotE + EPSILON));
+    const float3 specular = l.diffuseOnly
+        ? float3(0.f)
+        : F * (G * D / (4.f * NdotL * NdotE + EPSILON));
     const float3 diffuse = diffuseColor * (float3(1.f) - F) / PI;
     direct += NdotL * (diffuse + specular) * l.irradiance;
   }
@@ -372,10 +376,11 @@ bool sameImage(const Image &a, const Image &b)
 
 const float3 SKIP = float3(NAN);
 
-// The headlight's irradiance: pi x 'eyeLightBlendRatio' x 'ambientRadiance'
+// The headlight's irradiance: pi x 'eyeLightBlendRatio' x 'ambientRadiance',
+// diffuse only
 Incident headlight(float blend, float radiance = 1.f)
 {
-  return {E, float3(PI * blend * radiance)};
+  return {E, float3(PI * blend * radiance), true};
 }
 
 // Renderer parameters ///////////////////////////////////////////////////////
@@ -441,6 +446,30 @@ bool testRendererLight(anari::Device d)
             anari::setParameter(d, r, "eyeLightBlendRatio", 1.f);
           }),
       [&](float3) { return ALBEDO; });
+
+  // a glossy metal has no diffuse color: the headlight alone (no ambient
+  // fill) leaves it black, without a highlight or reflection of the viewer's
+  // light; a glossy dielectric shows only the headlight's diffuse term
+  for (float metallic : {1.f, 0.f}) {
+    Surface glossy;
+    glossy.metallic = metallic;
+    glossy.roughness = 0.2f;
+    pass &= matches(metallic > 0.f
+            ? "headlight: no highlight on a glossy metal"
+            : "headlight: only diffuse on a glossy dielectric",
+        render(d,
+            makeWorld(d,
+                {makeFloor(d,
+                    physicallyBased(d,
+                        [&](anari::Device d, anari::Object m) {
+                          anari::setParameter(d, m, "metallic", metallic);
+                          anari::setParameter(d, m, "roughness", 0.2f);
+                        }))}),
+            [&](anari::Device d, anari::Renderer r) {
+              anari::setParameter(d, r, "eyeLightBlendRatio", 1.f);
+            }),
+        [&](float3) { return storm(glossy, {headlight(1.f)}, float3(0.f)); });
+  }
   return pass;
 }
 
@@ -457,9 +486,11 @@ Image renderLit(anari::Device d, anari::Light light, float blend = 0.5f)
 }
 
 // The floor's colour lit by 'incident' (or only ambient where it is
-// empty) and the ambient fill of eyeLightBlendRatio 0.5, without headlight
+// empty), the headlight and the ambient fill of eyeLightBlendRatio 0.5: the
+// headlight lights a world with lights too
 float3 litFloor(std::vector<Incident> incident, const Surface &s = {})
 {
+  incident.push_back(headlight(0.5f));
   return storm(s, incident, float3(0.5f));
 }
 
@@ -495,7 +526,7 @@ bool testDirectional(anari::Device d)
   const Expected expected = [&](float3) {
     return litFloor({{-dir, 2.f * LIGHT_COLOR}});
   };
-  pass &= matches("directional: irradiance, no headlight",
+  pass &= matches("directional: irradiance, plus the headlight",
       renderLit(d, directional(0.f)),
       expected);
   // a cone of the same irradiance lights alike
@@ -520,7 +551,9 @@ bool testDirectional(anari::Device d)
                       }))},
               {overhead}),
           [](anari::Device d, anari::Renderer r) {
-            anari::setParameter(d, r, "eyeLightBlendRatio", 1.f);
+            // no renderer light: neither headlight nor ambient fill
+            anari::setParameter(d, r, "ignoreAmbientLighting", false);
+            anari::setParameter(d, r, "ambientRadiance", 0.f);
           }),
       [](float3) { return ALBEDO * LIGHT_COLOR * (3.f / PI); });
   return pass;
@@ -668,14 +701,16 @@ bool testHdri(anari::Device d)
   const float3 mean = 0.5f * (upper + lower);
   for (bool visible : {true, false}) {
     pass &= matches(std::string("hdri: its mean radiance x scale joins the "
-                                "ambient light, no headlight")
+                                "ambient light, plus the headlight")
             + (visible ? "" : " (not visible)"),
         render(d,
             makeWorld(d, {makeFloor(d)}, {hdri(d, upper, lower, 2.f, visible)}),
             [](anari::Device d, anari::Renderer r) {
               anari::setParameter(d, r, "eyeLightBlendRatio", 0.25f);
             }),
-        [&](float3) { return storm(Surface{}, {}, 0.75f + 2.f * mean); });
+        [&](float3) {
+          return storm(Surface{}, {headlight(0.25f)}, 0.75f + 2.f * mean);
+        });
   }
   return pass;
 }

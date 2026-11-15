@@ -407,13 +407,15 @@ bool testIntrospection(anari::Device d)
   int estimatorCount = 0;
   bool g3dListed = false;
   bool saoListed = false;
+  bool cortaoListed = false;
   for (int i = 0; estimators && estimators[i]; i++) {
     estimatorCount++;
     g3dListed |= std::strcmp(estimators[i], "g3d") == 0;
     saoListed |= std::strcmp(estimators[i], "sao") == 0;
+    cortaoListed |= std::strcmp(estimators[i], "cortao") == 0;
   }
-  pass &= report("ambientOcclusionEstimator values g3d and sao",
-      estimatorCount == 2 && g3dListed && saoListed);
+  pass &= report("ambientOcclusionEstimator values g3d, sao and cortao",
+      estimatorCount == 3 && g3dListed && saoListed && cortaoListed);
 
   auto *intensity = (const float *)anariGetParameterInfo(d,
       ANARI_RENDERER,
@@ -437,9 +439,25 @@ bool testIntrospection(anari::Device d)
   const int32_t *blurPasses = blurPassesInfo("default");
   const int32_t *minBlurPasses = blurPassesInfo("minimum");
   const int32_t *maxBlurPasses = blurPassesInfo("maximum");
-  pass &= report("ambientOcclusionBlurPasses declared, default 1, range [1, 5]",
-      blurPasses && *blurPasses == 1 && minBlurPasses && *minBlurPasses == 1
+  pass &= report("ambientOcclusionBlurPasses declared, default 2, range [1, 5]",
+      blurPasses && *blurPasses == 2 && minBlurPasses && *minBlurPasses == 1
           && maxBlurPasses && *maxBlurPasses == 5);
+
+  auto cortaoSamplesInfo = [&](const char *info) {
+    return (const int32_t *)anariGetParameterInfo(d,
+        ANARI_RENDERER,
+        "preview",
+        "cortaoSamples",
+        ANARI_INT32,
+        info,
+        ANARI_INT32);
+  };
+  const int32_t *samples = cortaoSamplesInfo("default");
+  const int32_t *minSamples = cortaoSamplesInfo("minimum");
+  const int32_t *maxSamples = cortaoSamplesInfo("maximum");
+  pass &= report("cortaoSamples declared, default 16, range [1, 64]",
+      samples && *samples == 16 && minSamples && *minSamples == 1 && maxSamples
+          && *maxSamples == 64);
 
   auto *modes = (const char *const *)anariGetParameterInfo(d,
       ANARI_RENDERER,
@@ -839,7 +857,7 @@ Image renderRoomDefault(anari::Device d,
 }
 
 // The estimators 'ambientOcclusionEstimator' accepts
-const char *const ESTIMATORS[] = {"g3d", "sao"};
+const char *const ESTIMATORS[] = {"g3d", "sao", "cortao"};
 
 // A renderer setup selecting 'estimator' and, if given, 'intensity' as
 // 'ambientOcclusionIntensity'
@@ -1085,8 +1103,8 @@ float centredBlur(const Image &unblurred, int x, int y, float radius)
 }
 
 // The blur is centred on the pixel, so the blurred factor lines up with the
-// color image: every surface pixel of the room's 'ambientOcclusion' mode
-// shows the centred 5x5 blur of the 'ambientOcclusion.unblurred' mode's
+// color image: every surface pixel of the room's 'ambientOcclusion' mode,
+// with one blur pass, shows the centred 5x5 blur of the 'ambientOcclusion.unblurred' mode's
 // factors (centredBlur()). A window off the pixel's centre shifts the dark
 // crease and contact bands and fails. Checked with 'estimator' and, if
 // given, 'intensity': the intensity exponent applies to the unblurred factor,
@@ -1096,16 +1114,15 @@ bool testBlurCentred(anari::Device d,
     const char *estimator,
     std::optional<float> intensity = std::nullopt)
 {
-  const Image blurred = renderRoomFactor(d,
-      room,
-      ROOM_OCCLUSION_RADIUS,
-      "ambientOcclusion",
-      withEstimator(d, estimator, intensity));
-  const Image unblurred = renderRoomFactor(d,
-      room,
-      ROOM_OCCLUSION_RADIUS,
-      "ambientOcclusion.unblurred",
-      withEstimator(d, estimator, intensity));
+  // one blur pass, whatever the estimator's default
+  auto setup = [&](anari::Renderer r) {
+    withEstimator(d, estimator, intensity)(r);
+    anari::setParameter(d, r, "ambientOcclusionBlurPasses", int32_t(1));
+  };
+  const Image blurred = renderRoomFactor(
+      d, room, ROOM_OCCLUSION_RADIUS, "ambientOcclusion", setup);
+  const Image unblurred = renderRoomFactor(
+      d, room, ROOM_OCCLUSION_RADIUS, "ambientOcclusion.unblurred", setup);
 
   float largest = 0.f;
   size_t surfacePixels = 0;
@@ -1378,8 +1395,8 @@ bool testNoBandsNearContact(anari::Device d)
 }
 
 // 'ambientOcclusionBlurPasses' is clamped to [1, 5] without a warning: 0
-// renders like 1, which renders like leaving it unset, and 9 like 5, which
-// differs from 1
+// renders like 1 and 9 like 5, which differs from 1; leaving it unset renders
+// like 2
 bool testBlurPassesClamped(anari::Device d, anari::World room)
 {
   const size_t warnings = g_warningMessages.size();
@@ -1396,12 +1413,52 @@ bool testBlurPassesClamped(anari::Device d, anari::World room)
   const Image five = factor(5);
   const Image nine = factor(9);
 
-  bool pass = report("blur passes 1 renders like unset", sameImage(one, unset));
+  const Image two = factor(2);
+  bool pass = report("blur passes 2 renders like unset", sameImage(two, unset));
   pass &= report("blur passes 0 clamped to 1", sameImage(zero, one));
   pass &= report("blur passes 9 clamped to 5", sameImage(nine, five));
   pass &= report("blur passes 5 differ from 1", !sameImage(five, one));
   pass &= report("blur passes clamped without a warning",
       g_warningMessages.size() == warnings);
+  return pass;
+}
+
+// 'cortaoSamples' sets the cortao estimator's sample count, clamped to
+// [1, 64] without a warning: leaving it unset renders like 16, 0 like 1 and
+// 100 like 64, and other counts differ; the other estimators ignore it
+bool testCortaoSamples(anari::Device d, anari::World room)
+{
+  const size_t warnings = g_warningMessages.size();
+  auto factor = [&](const char *estimator, std::optional<int32_t> samples) {
+    return renderRoomFactor(d,
+        room,
+        ROOM_OCCLUSION_RADIUS,
+        "ambientOcclusion.unblurred",
+        [=](anari::Renderer r) {
+          anari::setParameter(d, r, "ambientOcclusionEstimator", estimator);
+          if (samples)
+            anari::setParameter(d, r, "cortaoSamples", *samples);
+        });
+  };
+  const Image unset = factor("cortao", std::nullopt);
+  const Image sixteen = factor("cortao", 16);
+  const Image zero = factor("cortao", 0);
+  const Image one = factor("cortao", 1);
+  const Image four = factor("cortao", 4);
+  const Image sixtyFour = factor("cortao", 64);
+  const Image hundred = factor("cortao", 100);
+
+  bool pass =
+      report("cortaoSamples 16 renders like unset", sameImage(sixteen, unset));
+  pass &= report("cortaoSamples 0 clamped to 1", sameImage(zero, one));
+  pass &=
+      report("cortaoSamples 100 clamped to 64", sameImage(hundred, sixtyFour));
+  pass &= report("cortaoSamples 4 and 64 differ from 16",
+      !sameImage(four, sixteen) && !sameImage(sixtyFour, sixteen));
+  pass &= report("cortaoSamples clamped without a warning",
+      g_warningMessages.size() == warnings);
+  pass &= report("g3d ignores cortaoSamples",
+      sameImage(factor("g3d", 4), factor("g3d", std::nullopt)));
   return pass;
 }
 
@@ -2751,6 +2808,7 @@ int main()
   for (int passes : {2, 3, 5})
     pass &= testMultiPassBlur(d, room, passes);
   pass &= testBlurPassesClamped(d, room);
+  pass &= testCortaoSamples(d, room);
   pass &= testNoBandsNearContact(d);
   pass &= testRoomDefaultMode(d, room);
   pass &= testDefaultEstimatorAndIntensity(d, room);
