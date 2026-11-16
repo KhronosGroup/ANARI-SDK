@@ -136,12 +136,49 @@ jobs:
     - name: Run the validation suite
       run: python -m pytest tests/python -v -p no:cacheprovider
 
+  # 'docker run', not a job container: JavaScript actions don't run on musl
+  validate-anari-musllinux:
+    name: validate anari (musllinux ${{ matrix.arch }}, Python ${{ matrix.python }})
+    needs: build-anari-wheels
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [ x86_64, aarch64 ]
+        python: [ '3.10', '3.15' ]
+        include:
+        - { arch: x86_64,  os: ubuntu-24.04 }
+        - { arch: aarch64, os: ubuntu-24.04-arm }
+    steps:
+    - name: Check out only the validation suite and the template device
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+        sparse-checkout: |
+          tests/python
+          examples/empty_helium_device
+        sparse-checkout-cone-mode: true
+    - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      with:
+        pattern: anari-wheels-*
+        merge-multiple: true
+        path: dist
+    - name: Validate in python:${{ matrix.python }}-alpine
+      run: >
+        docker run --rm -v "${{ github.workspace }}:/work" -w /work
+        python:${{ matrix.python }}-alpine sh -euxc '
+        apk add --no-cache cmake make g++;
+        python -m venv /venv;
+        /venv/bin/python -m pip install -r tests/python/requirements.txt cffi numpy;
+        /venv/bin/python -m pip install --no-index --no-deps --find-links dist anari;
+        /venv/bin/python -m pytest tests/python -v -p no:cacheprovider'
+
   publish-anari-testpypi:
     # Forks have no Trusted Publisher
     if: >-
       github.repository == 'KhronosGroup/ANARI-SDK' &&
       github.event_name == 'workflow_dispatch' && inputs.publish_testpypi
-    needs: [ check-anari-version, validate-anari ]
+    needs: [ check-anari-version, validate-anari, validate-anari-musllinux ]
     runs-on: ubuntu-24.04
     environment:
       name: testpypi
@@ -165,7 +202,7 @@ jobs:
       github.repository == 'KhronosGroup/ANARI-SDK' &&
       github.event_name == 'push' && github.ref_type == 'tag' &&
       startsWith(github.ref_name, 'v')
-    needs: [ check-anari-version, validate-anari ]
+    needs: [ check-anari-version, validate-anari, validate-anari-musllinux ]
     runs-on: ubuntu-24.04
     environment: # its reviewers approve each release
       name: pypi
