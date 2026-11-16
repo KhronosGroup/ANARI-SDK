@@ -41,8 +41,6 @@ include(GNUInstallDirs)
 
 ## Dependencies ##
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../rtx/cmake")
-
 find_package(anari REQUIRED)
 find_package(SDL3 REQUIRED COMPONENTS SDL3)
 find_program(GLSLANG_VALIDATOR NAMES glslangValidator glslang REQUIRED)
@@ -405,7 +403,6 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
       --output-dir "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>"
       --stub-basename "libSDL3"
     DEPENDS
-      "${sdl3_actual_target}"
       "${SDL3_STUB_SCRIPT}"
       "${implib_so_SOURCE_DIR}/implib-gen.py"
     COMMENT "Generating runtime-loaded SDL3 trampolines"
