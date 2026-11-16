@@ -1,9 +1,11 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-// Smoke test: render a simple triangle mesh and validate output pixels.
+// Smoke test: render a triangle, cylinder, cone, face-varying attributes, quad
+// lights and HDRIs, and validate output pixels. Images are written to the
+// working directory as smoke_*.png.
 //
-// Usage: ./smoke_test [library]   (default: helide_gpu)
+// Usage: ./helide_gpu_smoke_test [library]   (default: helide_gpu)
 
 #include <array>
 #include <cmath>
@@ -15,7 +17,6 @@
 #include "anari/anari_cpp.hpp"
 #include "anari/anari_cpp/ext/std.h"
 
-#define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
 using vec3 = std::array<float, 3>;
