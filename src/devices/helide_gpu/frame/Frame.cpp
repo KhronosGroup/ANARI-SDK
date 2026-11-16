@@ -305,6 +305,12 @@ void Frame::gpu_renderFrame()
   auto *cam = dynamic_cast<Camera *>(m_camera.ptr);
   auto &gpuPipelines = deviceState()->gpu;
 
+  // every pass uses the same projection
+  if (cam) {
+    const float frameAspect = float(m_size.x) / float(m_size.y);
+    m_proj = cam->projMatrix(frameAspect, gpu_sceneBounds());
+  }
+
   // ambient occlusion needs a radius, which may derive from the world bounds
   const float aoRadius = m_renderer && m_renderer->ambientOcclusion() && m_world
       ? m_renderer->ambientOcclusionRadius(m_world->bounds())
@@ -334,6 +340,34 @@ void Frame::gpu_renderFrame()
   m_renderEndTime = std::chrono::steady_clock::now();
   m_duration =
       std::chrono::duration<float>(m_renderEndTime - m_renderStartTime).count();
+}
+
+box3 Frame::gpu_sceneBounds() const
+{
+  if (!m_world)
+    return {};
+  box3 bounds = m_world->bounds();
+  for (auto *instance : m_world->instances()) {
+    if (!instance || !instance->isValid() || !instance->group())
+      continue;
+    for (auto *light : instance->group()->lights()) {
+      if (!light || !light->isValid() || !light->visible()
+          || light->type() != LightType::QUAD)
+        continue;
+      // the quad's corners (its position is its center), as
+      // gpu_drawVisibleLights() draws it
+      const vec3 e1 = light->edge1();
+      const vec3 e2 = light->edge2();
+      const vec3 origin = light->position() - 0.5f * (e1 + e2);
+      for (size_t t = 0; t < instance->numTransforms(); t++) {
+        const mat4 M = instance->xfm(t);
+        for (const vec3 &c :
+            {origin, origin + e1, origin + e2, origin + e1 + e2})
+          bounds.extend(vec3(M * vec4(c, 1.f)));
+      }
+    }
+  }
+  return bounds;
 }
 
 void Frame::gpu_renderFrame_geometryPass(
@@ -386,8 +420,7 @@ void Frame::gpu_renderFrame_geometryPass(
   auto *cam = dynamic_cast<Camera *>(m_camera.ptr);
   if (cam && m_renderer && m_world) {
     const mat4 V = cam->viewMatrix();
-    const float frameAspect = float(m_size.x) / float(m_size.y);
-    const mat4 P = cam->projMatrix(frameAspect);
+    const mat4 &P = m_proj;
 
     SDL_GPUViewport viewport{};
     viewport.x = 0.f;
@@ -647,8 +680,7 @@ void Frame::gpu_pushLightingUniforms(
   u.ambient = vec4((1.f - blend) * radiance * m_renderer->ambientColor(), 0.f);
   u.deferAmbient = deferAmbient ? 1 : 0;
   // a perspective projection's w is -z (P[2][3] == -1), an orthographic's 1
-  const float frameAspect = float(m_size.x) / float(m_size.y);
-  u.perspective = m_camera->projMatrix(frameAspect)[2][3] != 0.f ? 1 : 0;
+  u.perspective = m_proj[2][3] != 0.f ? 1 : 0;
 
   // The world's lights, instanced like its surfaces, in view space; hdris
   // add their mean radiance to the ambient light instead
@@ -720,8 +752,7 @@ SDL_GPUTexture *Frame::gpu_renderFrame_ssaoPass(
 {
   auto &state = *deviceState();
 
-  const float frameAspect = float(m_size.x) / float(m_size.y);
-  const mat4 P = cam->projMatrix(frameAspect);
+  const mat4 &P = m_proj;
   const mat4 V = cam->viewMatrix();
   const vec2 frameSize(m_size.x, m_size.y);
   const vec2 projScale(P[0][0], P[1][1]);

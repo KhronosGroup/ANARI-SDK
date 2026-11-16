@@ -427,6 +427,7 @@ project_add_library(SHARED
   HelideGPUDeviceGlobalState.cpp
   HelideGPULibrary.cpp
   camera/Camera.cpp
+  camera/ClipRange.cpp
   camera/OrthographicCamera.cpp
   camera/PerspectiveCamera.cpp
   frame/Frame.cpp

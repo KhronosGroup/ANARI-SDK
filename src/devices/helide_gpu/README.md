@@ -16,6 +16,18 @@ primitive (`primitive.*`) or per triangle corner (`faceVarying.*`, indexed by
 When a slot has more than one, faceVarying wins over per-vertex, which wins
 over per-primitive. `faceVarying.tangent` is accepted and ignored.
 
+## Camera clip planes
+
+As VisGL does, each frame fits the camera's near and far clip planes to the
+bounds of what it draws (the world's surfaces and volumes, and its visible quad
+lights) projected on the view direction, so the depth buffer's precision isn't
+spread over empty space. Without a `near`, a perspective camera's near plane
+stays at least 1/1000 of its far, which clips the foreground of a world much
+larger than the view; set `near` to see it. A `near` or `far` the application
+sets narrows the fitted range (`0 < near < far`, `0 <= near` for an
+orthographic camera; invalid values are ignored with a warning). The depth
+channel is the depth buffer's, so its values depend on the fitted range.
+
 ## Shading
 
 Surfaces are shaded with the lighting model of OpenUSD Storm's

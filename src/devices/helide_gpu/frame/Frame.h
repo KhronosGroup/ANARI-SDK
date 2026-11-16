@@ -82,6 +82,9 @@ struct Frame : public helium::BaseFrame
   void gpu_allocateObjects();
   void gpu_freeObjects();
   void gpu_renderFrame();
+  // The world-space bounds of everything the frame draws: the world's
+  // surfaces and volumes, and its visible quad lights
+  box3 gpu_sceneBounds() const;
   // 'deferAmbient': leave the ambient light out of the color target, for the
   // composite pass to add after ambient occlusion
   void gpu_renderFrame_geometryPass(
@@ -128,6 +131,9 @@ struct Frame : public helium::BaseFrame
   helium::tasking::Future m_future;
 
   uvec2 m_size{0u, 0u};
+  // the camera's projection for the frame being rendered, its clip range
+  // fitted to gpu_sceneBounds()
+  mat4 m_proj{1.f};
   anari::DataType m_colorType{ANARI_UNKNOWN};
   anari::DataType m_depthType{ANARI_UNKNOWN};
   anari::DataType m_primIdType{ANARI_UNKNOWN};
