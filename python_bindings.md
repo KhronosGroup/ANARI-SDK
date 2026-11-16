@@ -35,6 +35,10 @@ The wheel includes the `sink` and `debug` devices (`anari.loadLibrary('sink')`)
 and the ANARI SDK, to build devices against:
 ```cmake -Danari_DIR="$(python -m anari --cmake-dir)" ...```
 
+`tests/python` tests an installed wheel: install
+`tests/python/requirements.txt`, then run `pytest tests/python` from outside the
+checkout.
+
 
 # Device Bindings
 

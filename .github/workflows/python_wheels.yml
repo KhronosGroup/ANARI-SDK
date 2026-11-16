@@ -3,7 +3,7 @@
 
 name: Python wheels
 
-# Build the 'anari' wheels; cibuildwheel smoke-tests each one.
+# Build and validate the 'anari' wheels.
 # Artifact actions stay on v4 so the workflow runs under act.
 
 on:
@@ -20,6 +20,8 @@ on:
       - 'src/devices/CMakeLists.txt'
       - 'src/devices/sink/**'
       - 'src/devices/debug/**'
+      - 'examples/empty_helium_device/**'
+      - 'tests/python/**'
       - '.github/scripts/**'
       - '.github/workflows/python_wheels.yml'
   pull_request:
@@ -78,3 +80,45 @@ jobs:
         name: anari-wheels-${{ matrix.os }}-${{ matrix.arch }}
         path: wheelhouse/*.whl
         if-no-files-found: error
+
+  validate-anari:
+    name: validate anari (${{ matrix.name }}, Python ${{ matrix.python }})
+    needs: build-anari-wheels
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        name: [ manylinux x86_64, manylinux aarch64, macOS arm64, macOS x86_64, Windows AMD64 ]
+        python: [ '3.10', '3.15' ]
+        include:
+        - { name: manylinux x86_64,  os: ubuntu-24.04 }
+        - { name: manylinux aarch64, os: ubuntu-24.04-arm }
+        - { name: macOS arm64,       os: macos-15 }
+        - { name: macOS x86_64,      os: macos-15-intel }
+        - { name: Windows AMD64,     os: windows-latest }
+    env:
+      LD_BIND_NOW: '1' # Linux: fail on missing symbols at load
+    steps:
+    - name: Check out only the validation suite and the template device
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+        sparse-checkout: |
+          tests/python
+          examples/empty_helium_device
+        sparse-checkout-cone-mode: true
+    - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      with:
+        pattern: anari-wheels-*
+        merge-multiple: true
+        path: dist
+    - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+      with:
+        python-version: ${{ matrix.python }}
+        allow-prereleases: true
+    - name: Install the validation suite's requirements
+      run: python -m pip install -r tests/python/requirements.txt cffi numpy
+    - name: Install the built wheels
+      run: python -m pip install --no-index --no-deps --force-reinstall --find-links dist anari
+    - name: Run the validation suite
+      run: python -m pytest tests/python -v -p no:cacheprovider

@@ -1,0 +1,6 @@
+pytest
+# Builds examples/empty_helium_device against the wheel
+cmake
+py-build-cmake~=0.5.1
+pyelftools; sys_platform == "linux"
+pefile; sys_platform == "win32"
