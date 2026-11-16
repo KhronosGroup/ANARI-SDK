@@ -61,10 +61,11 @@ def test_nothing_grafted_by_wheel_repair():
     assert not (PACKAGE_DIR / '.dylibs').exists()
 
 
-# The manylinux base libraries and Windows' system DLLs
+# The manylinux/musllinux base libraries and Windows' system DLLs
 LINUX_SYSTEM_LIBS = re.compile(
     r'^(libc\.so\.6|libm\.so\.6|libdl\.so\.2|libpthread\.so\.0|librt\.so\.1'
-    r'|libstdc\+\+\.so\.6|libgcc_s\.so\.1|ld-linux.*\.so\.\d)$')
+    r'|libstdc\+\+\.so\.6|libgcc_s\.so\.1|ld-linux.*\.so\.\d'
+    r'|libc\.musl-.*\.so\.1|ld-musl-.*\.so\.1)$')
 WINDOWS_SYSTEM_DLLS = re.compile(
     r'^(kernel32|user32|advapi32|shell32|ole32|ws2_32|bcrypt|ntdll'
     r'|api-ms-win-.*|ucrtbase|python3\d*)\.dll$', re.IGNORECASE)

@@ -63,8 +63,8 @@ CMAKE_INSTALL_DATAROOTDIR = "anari/sdk/share"
 
 [tool.cibuildwheel]
 build = "cp3*"
-# The cffi module doesn't support free-threaded CPython; no musllinux wheels
-skip = ["*t-*", "*-musllinux*"]
+# The cffi module doesn't support free-threaded CPython
+skip = ["*t-*"]
 build-frontend = "build"
 test-requires = []
 # Smoke test, in each wheel's own clean environment
@@ -74,7 +74,18 @@ test-command = "python -c \"import anari; anari.loadLibrary('sink').newDevice('d
 archs = ["native"]
 manylinux-x86_64-image = "manylinux_2_28"
 manylinux-aarch64-image = "manylinux_2_28"
+musllinux-x86_64-image = "musllinux_1_2"
+musllinux-aarch64-image = "musllinux_1_2"
 environment = { CMAKE_BUILD_PARALLEL_LEVEL = "4" }
+
+[[tool.cibuildwheel.overrides]]
+# musllinux can't link the system's libstdc++: link it statically. Safe as the
+# frontend and devices share only C types and free what they allocate. But an
+# exception escaping a device then bypasses the frontend's ANARI_CATCH: the
+# process still aborts, as designed, without the frontend's error message.
+select = "*-musllinux*"
+inherit.environment = "append"
+environment = { LDFLAGS = "-static-libstdc++ -static-libgcc" }
 
 [tool.cibuildwheel.macos]
 # One wheel per architecture, not universal2: the static SDK libraries are
