@@ -9,6 +9,8 @@
 #define WIN32_LEAN_AND_MEAN
 #endif
 #include <windows.h>
+#include <algorithm>
+#include <filesystem>
 #else
 #include <dlfcn.h>
 #include <sys/times.h>
@@ -114,7 +116,15 @@ static void *loadLibrary(
 
     // Load the library
     std::string fullName = libLocation + file + ".dll";
-    lib = LoadLibrary(fullName.c_str());
+    if (std::filesystem::path(fullName).is_absolute()) {
+      // Search next to the device first
+      std::replace(fullName.begin(), fullName.end(), '/', '\\');
+      lib = LoadLibraryExA(
+          fullName.c_str(), nullptr, LOAD_WITH_ALTERED_SEARCH_PATH);
+    }
+    // search from execution context (executable path)
+    if (lib == nullptr)
+      lib = LoadLibrary(fullName.c_str());
     if (lib == nullptr) {
       DWORD err = GetLastError();
       LPTSTR lpMsgBuf;
