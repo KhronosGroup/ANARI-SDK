@@ -144,20 +144,24 @@ set_tests_properties(unit_test::cts::catalog unit_test::cts::device
 
 ## helide_gpu tests ##
 
-# The upload tests compile helide_gpu's SDL- and glm-free upload logic directly,
-# so they need neither a GPU, a display nor the device itself, and run whether
-# or not BUILD_HELIDE_GPU_DEVICE is on.
+# The upload and clip range tests compile helide_gpu's SDL- and glm-free logic
+# directly, so they need neither a GPU, a display nor the device itself, and run
+# whether or not BUILD_HELIDE_GPU_DEVICE is on.
 set(HELIDE_GPU_DIR ${CMAKE_CURRENT_LIST_DIR}/../../src/devices/helide_gpu)
 add_executable(anariHelideGpuUnitTests
   catch_main.cpp
   test_helide_gpu_array_upload.cpp
+  test_helide_gpu_clip_range.cpp
   ${HELIDE_GPU_DIR}/gpu/ArrayUpload.cpp
+  ${HELIDE_GPU_DIR}/camera/ClipRange.cpp
 )
 target_include_directories(anariHelideGpuUnitTests PRIVATE ${HELIDE_GPU_DIR})
 target_link_libraries(anariHelideGpuUnitTests PRIVATE helium anari)
 
 add_test(NAME unit_test::helide_gpu::ArrayUpload
   COMMAND anariHelideGpuUnitTests "[helide_gpu_array_upload]")
+add_test(NAME unit_test::helide_gpu::ClipRange
+  COMMAND anariHelideGpuUnitTests "[helide_gpu_clip_range]")
 
 ## capture device tests ##
 
