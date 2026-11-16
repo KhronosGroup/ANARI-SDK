@@ -127,12 +127,6 @@ function(compile_msl_header source_spv out_msl out_header sym)
 endfunction()
 
 compile_shader_to_header(vert
-  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/triangle.vert
-  ${CMAKE_CURRENT_BINARY_DIR}/triangle.vert.spv
-  ${CMAKE_CURRENT_BINARY_DIR}/triangle_vert_spv.h
-  triangle_vert_spv)
-
-compile_shader_to_header(vert
   ${CMAKE_CURRENT_SOURCE_DIR}/shaders/triangle_mesh.vert
   ${CMAKE_CURRENT_BINARY_DIR}/triangle_mesh.vert.spv
   ${CMAKE_CURRENT_BINARY_DIR}/triangle_mesh_vert_spv.h
@@ -226,12 +220,6 @@ compile_shader_to_header(frag
 # and in the geometry binding code.
 
 compile_msl_header(
-  ${CMAKE_CURRENT_BINARY_DIR}/triangle.vert.spv
-  ${CMAKE_CURRENT_BINARY_DIR}/triangle.vert.msl
-  ${CMAKE_CURRENT_BINARY_DIR}/triangle_vert_msl.h
-  triangle_vert_msl)
-
-compile_msl_header(
   ${CMAKE_CURRENT_BINARY_DIR}/triangle_mesh.vert.spv
   ${CMAKE_CURRENT_BINARY_DIR}/triangle_mesh.vert.msl
   ${CMAKE_CURRENT_BINARY_DIR}/triangle_mesh_vert_msl.h
@@ -320,7 +308,6 @@ compile_msl_header(
 ## Shader build target ##
 
 set(SHADER_DEPS
-  ${CMAKE_CURRENT_BINARY_DIR}/triangle_vert_spv.h
   ${CMAKE_CURRENT_BINARY_DIR}/triangle_mesh_vert_spv.h
   ${CMAKE_CURRENT_BINARY_DIR}/triangle_frag_spv.h
   ${CMAKE_CURRENT_BINARY_DIR}/fullscreen_vert_spv.h
@@ -338,7 +325,6 @@ set(SHADER_DEPS
 
 if(SPIRV_CROSS)
   list(APPEND SHADER_DEPS
-    ${CMAKE_CURRENT_BINARY_DIR}/triangle_vert_msl.h
     ${CMAKE_CURRENT_BINARY_DIR}/triangle_mesh_vert_msl.h
     ${CMAKE_CURRENT_BINARY_DIR}/triangle_frag_msl.h
     ${CMAKE_CURRENT_BINARY_DIR}/fullscreen_vert_msl.h
@@ -503,6 +489,15 @@ anari_generate_queries(
   CPP_NAMESPACE helide_gpu
   JSON_DEFINITIONS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/HelideGPUDefinitions.json
 )
+
+## Smoke test ##
+
+if (BUILD_TESTING)
+  if (STANDALONE_SOURCE_TREE)
+    enable_testing()
+  endif()
+  add_subdirectory(test)
+endif()
 
 ## Install ##
 

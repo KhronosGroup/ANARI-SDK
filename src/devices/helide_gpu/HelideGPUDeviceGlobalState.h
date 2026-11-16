@@ -31,11 +31,6 @@ struct HelideGPUDeviceGlobalState : public helium::BaseGlobalDeviceState
     // alias across multiple readonly bindings in the same pass.
     SDL_GPUBuffer *dummyStorageBuffer{nullptr};
 
-    // Minimal vertex buffer bound by the triangle pipeline to force a
-    // [[stage_in]] in its MSL shader. Content is irrelevant; triangle.vert
-    // pulls all real vertex data from SSBOs via gl_VertexIndex.
-    SDL_GPUBuffer *dummyVertexBuffer{nullptr};
-
     // Post-process samplers
     SDL_GPUSampler *linearClampSampler{nullptr};
     SDL_GPUSampler *nearestClampSampler{nullptr};

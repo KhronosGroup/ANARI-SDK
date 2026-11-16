@@ -14,9 +14,6 @@
 
 #include "GLContextInterface.h"
 
-#include <cstring>
-#include <vector>
-
 namespace helide_gpu {
 
 // Helper functions ///////////////////////////////////////////////////////////
@@ -116,51 +113,6 @@ static void gpu_device_init(HelideGPUDeviceGlobalState *state)
     gpu.dummyStorageBuffer = SDL_CreateGPUBuffer(gpu.device, &bufInfo);
   }
 
-  // Create a zero-filled dummy vertex buffer for the triangle pipeline.
-  // The shader does not semantically use this data, but Metal still performs
-  // the vertex fetch for the declared stage_in. Keep the buffer large enough
-  // to cover typical test draws so we don't read past the end.
-  {
-    constexpr size_t kDummyVertexCount = 65536;
-    std::vector<float> zeros(kDummyVertexCount * 3, 0.f);
-
-    SDL_GPUBufferCreateInfo bufInfo{};
-    bufInfo.usage = SDL_GPU_BUFFERUSAGE_VERTEX;
-    bufInfo.size = static_cast<uint32_t>(zeros.size() * sizeof(float));
-    gpu.dummyVertexBuffer = SDL_CreateGPUBuffer(gpu.device, &bufInfo);
-
-    if (gpu.dummyVertexBuffer) {
-      SDL_GPUTransferBufferCreateInfo tbInfo{};
-      tbInfo.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD;
-      tbInfo.size = bufInfo.size;
-      auto *tb = SDL_CreateGPUTransferBuffer(gpu.device, &tbInfo);
-      if (tb) {
-        if (void *mapped = SDL_MapGPUTransferBuffer(gpu.device, tb, false)) {
-          std::memcpy(mapped, zeros.data(), zeros.size() * sizeof(float));
-          SDL_UnmapGPUTransferBuffer(gpu.device, tb);
-        }
-
-        auto *cmd = SDL_AcquireGPUCommandBuffer(gpu.device);
-        auto *pass = SDL_BeginGPUCopyPass(cmd);
-
-        SDL_GPUTransferBufferLocation src{};
-        src.transfer_buffer = tb;
-        src.offset = 0;
-
-        SDL_GPUBufferRegion dst{};
-        dst.buffer = gpu.dummyVertexBuffer;
-        dst.offset = 0;
-        dst.size = bufInfo.size;
-
-        SDL_UploadToGPUBuffer(pass, &src, &dst, false);
-        SDL_EndGPUCopyPass(pass);
-        SDL_SubmitGPUCommandBuffer(cmd);
-        SDL_WaitForGPUIdle(gpu.device);
-        SDL_ReleaseGPUTransferBuffer(gpu.device, tb);
-      }
-    }
-  }
-
   // Create the post-process samplers
   {
     // Linear clamp sampler for post-process texture reads
@@ -202,10 +154,6 @@ static void gpu_device_release(HelideGPUDeviceGlobalState *state)
     if (gpu.dummyStorageBuffer) {
       SDL_ReleaseGPUBuffer(gpu.device, gpu.dummyStorageBuffer);
       gpu.dummyStorageBuffer = nullptr;
-    }
-    if (gpu.dummyVertexBuffer) {
-      SDL_ReleaseGPUBuffer(gpu.device, gpu.dummyVertexBuffer);
-      gpu.dummyVertexBuffer = nullptr;
     }
     if (gpu.dummySampler) {
       SDL_ReleaseGPUSampler(gpu.device, gpu.dummySampler);
