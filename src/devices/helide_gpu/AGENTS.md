@@ -4,7 +4,7 @@ This file provides guidance to coding agents working in this repository.
 
 ## Overview
 
-`devices/helide_gpu` is an in-progress ANARI device implementation (`libanari_library_helide-gpu`) backed by **SDL3_gpu** (a cross-platform GPU abstraction introduced in SDL 3.2). It is a standalone CMake project that can also be built as part of the parent VisRTX tree.
+`devices/helide_gpu` is an in-progress ANARI device implementation (`libanari_library_helide_gpu`) backed by **SDL3_gpu** (a cross-platform GPU abstraction introduced in SDL 3.2). It is built as part of the ANARI-SDK tree (`BUILD_HELIDE_GPU_DEVICE=ON`).
 
 ## Build
 
@@ -34,7 +34,7 @@ GLM is downloaded automatically via `anari_sdk_fetch_project()` at configure tim
 
 ### Code generation
 
-`HelideGPUDefinitions.json` drives `anari_generate_queries()` to produce `anari_library_helide-gpu_queries.h/.cpp`, which implement the device's ANARI query API (object subtypes, parameter info, extension list). Regenerated on every CMake configure + build.
+`HelideGPUDefinitions.json` drives `anari_generate_queries()` to produce `anari_library_helide_gpu_queries.h/.cpp`, which implement the device's ANARI query API (object subtypes, parameter info, extension list). Regenerated on every CMake configure + build.
 
 ### Shader compilation
 
@@ -67,7 +67,6 @@ devices/helide_gpu/
 ├── volume/         # Volume base
 ├── GLContextInterface.h/.cpp   # Status-reporting helper
 ├── Object.h/.cpp               # Base ANARI object + gpu_enqueue_method<>
-├── TaskQueue.h                 # tasking::TaskQueue ring-buffer thread
 ├── HelideGPUDefinitions.json      # Drives ANARI query-API code generation
 ├── HelideGPUDevice.h/.cpp         # Top-level ANARI device
 ├── HelideGPUDeviceGlobalState.h/.cpp  # Per-device singleton (GPU thread + SDL device)
