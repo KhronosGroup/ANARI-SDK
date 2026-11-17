@@ -23,6 +23,10 @@ source_path = "."
 build_args = ["-j"]
 install_components = ["helide_module"]
 
+[tool.cibuildwheel]
+test-requires = ["pytest"]
+test-command = "python -m pytest -q {project}/test"
+
 [tool.cibuildwheel.linux]
 before-all = """
 git clone -b next_release https://github.com/KhronosGroup/ANARI-SDK.git
