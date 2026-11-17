@@ -490,7 +490,7 @@ SCENARIO("object arrays can be compared as unordered", "[capture_diff]")
   WHEN("the array's path is named as unordered")
   {
     diff::DiffOptions options;
-    options.unorderedPaths = {"world.surface"};
+    options.unorderedObjectArrays = {"world.surface"};
 
     THEN("the same surfaces in another order match")
     {
@@ -511,6 +511,20 @@ SCENARIO("object arrays can be compared as unordered", "[capture_diff]")
               "world.surface[0]: unexpected element, a surface"});
     }
 
+    THEN("arrays of different lengths report the elements left over")
+    {
+      // The expected capture lacks the triangle's surface
+      const auto shorter = makeCapture(
+          {{"  dimensions (2)\n  data [\n    surface@0\n    surface@1\n",
+              "  dimensions (1)\n  data [\n    surface@1\n"}});
+      const auto result = compare(shorter, makeCapture(), options);
+      REQUIRE(result.outcome == diff::Outcome::DIFFER);
+      REQUIRE(lines(result)
+          == std::vector<std::string>{
+              "world.surface.@dimensions: expected (1), got (2)",
+              "world.surface[0]: unexpected element, a surface"});
+    }
+
     THEN("floats within the tolerance still pair")
     {
       const auto nearby = makeCapture(
@@ -525,11 +539,31 @@ SCENARIO("object arrays can be compared as unordered", "[capture_diff]")
   WHEN("another array is named as unordered")
   {
     diff::DiffOptions options;
-    options.unorderedPaths = {"world.instance"};
+    options.unorderedObjectArrays = {"world.instance"};
 
     THEN("this one stays ordered")
     {
       REQUIRE(compare(makeCapture(), swapped, options).outcome
+          == diff::Outcome::DIFFER);
+    }
+  }
+
+  WHEN("every object array is unordered")
+  {
+    diff::DiffOptions options;
+    options.allObjectArraysUnordered = true;
+
+    THEN("the same surfaces in another order match")
+    {
+      REQUIRE(compare(makeCapture(), swapped, options).outcome
+          == diff::Outcome::MATCH);
+    }
+
+    THEN("arrays of numbers stay ordered")
+    {
+      const auto reversed = makeCapture({{"    (0, 0, 0)\n    (1, 0, 0)\n",
+          "    (1, 0, 0)\n    (0, 0, 0)\n"}});
+      REQUIRE(compare(makeCapture(), reversed, options).outcome
           == diff::Outcome::DIFFER);
     }
   }
@@ -799,14 +833,30 @@ SCENARIO("the command-line tool exits 0, 1 or 2", "[capture_diff]")
   {
     writeFile(b, makeCapture({{"(0.1, 0.2, 0.3)", "(0.1, 0.2, 0.3004)"}}));
 
-    THEN("options set the tolerance and the unordered paths")
+    THEN("options set the tolerance and the unordered arrays")
     {
       REQUIRE(runTool(q(a) + " " + q(b)) == 1);
       REQUIRE(runTool("--abs-tol 0.001 " + q(a) + " " + q(b)) == 0);
       REQUIRE(runTool("--rel-tol 0.01 " + q(a) + " " + q(b)) == 0);
       REQUIRE(runTool("--ulps 100000 " + q(a) + " " + q(b)) == 0);
       REQUIRE(runTool("--max-differences 1 " + q(a) + " " + q(b)) == 1);
-      REQUIRE(runTool("--unordered world.surface " + q(a) + " " + q(b)) == 1);
+      REQUIRE(
+          runTool("--unordered-array world.surface " + q(a) + " " + q(b)) == 1);
+    }
+  }
+
+  WHEN("the captures list the surfaces in another order")
+  {
+    writeFile(b,
+        makeCapture({{"    surface@0\n    surface@1\n",
+            "    surface@1\n    surface@0\n"}}));
+
+    THEN("an option makes them match")
+    {
+      REQUIRE(runTool(q(a) + " " + q(b)) == 1);
+      REQUIRE(
+          runTool("--unordered-array world.surface " + q(a) + " " + q(b)) == 0);
+      REQUIRE(runTool("--all-arrays-unordered " + q(a) + " " + q(b)) == 0);
     }
   }
 

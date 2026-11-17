@@ -57,12 +57,22 @@ struct DiffOptions
 {
   FloatTolerance tolerance;
 
-  // Object-array parameters to compare as unordered (as multisets): their
-  // paths from the frame, such as "world.surface". A segment of a path
-  // without an index matches any index, so "world.instance.group.surface"
-  // names the surfaces of every group of every instance; "[3]" matches one
-  // index and "[*]" any.
-  std::vector<std::string> unorderedPaths;
+  // Object-array parameters whose order does not matter, each named by its
+  // path from the frame, such as "world.surface". Their elements are paired
+  // by content rather than by index (compared as multisets); the rest of the
+  // graph is compared as usual, so this does not narrow the comparison. A
+  // segment of a path without an index matches any index, so
+  // "world.instance.group.surface" names the surfaces of every group of every
+  // instance; "[3]" matches one index and "[*]" any. Only arrays of objects
+  // are affected. If the lengths differ, '@dimensions' is reported and the
+  // elements that have no match are listed.
+  std::vector<std::string> unorderedObjectArrays;
+
+  // Whether every object array is compared as unordered, as if each one's
+  // path were in 'unorderedObjectArrays'. Leave it off if any array's order
+  // matters to the device, such as one whose index another parameter refers
+  // to.
+  bool allObjectArraysUnordered{false};
 
   // Whether to compare the number of API calls made before each capture (its
   // 'calls' block): the total and each function's. Turn it off to compare
