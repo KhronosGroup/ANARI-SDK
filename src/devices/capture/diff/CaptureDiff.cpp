@@ -640,8 +640,10 @@ class Differ
 
   bool isUnordered(const std::string &path) const
   {
-    return std::any_of(m_options.unorderedPaths.begin(),
-        m_options.unorderedPaths.end(),
+    if (m_options.allObjectArraysUnordered)
+      return true;
+    return std::any_of(m_options.unorderedObjectArrays.begin(),
+        m_options.unorderedObjectArrays.end(),
         [&](const std::string &pattern) { return pathMatches(pattern, path); });
   }
 
@@ -669,9 +671,13 @@ class Differ
     }
     const std::string dimsA = fieldOf(a, "dimensions");
     const std::string dimsB = fieldOf(b, "dimensions");
+    // An unordered object array of another length is still paired, so the
+    // report names the elements that are missing or extra
+    const bool unordered = isObjectType(typeA) && isUnordered(path);
     if (dimsA != dimsB) {
       add(join(path, "@dimensions"), dimsA, dimsB);
-      return;
+      if (!unordered)
+        return;
     }
 
     if (isObjectType(typeA)) {
@@ -680,7 +686,7 @@ class Differ
       const std::vector<std::string> empty;
       const auto &ia = da ? da->items : empty;
       const auto &ib = db ? db->items : empty;
-      if (isUnordered(path)) {
+      if (unordered) {
         compareUnordered(path, ia, ib);
       } else {
         for (size_t i = 0; i < std::min(ia.size(), ib.size()); ++i)

@@ -27,8 +27,10 @@ void usage(FILE *out)
       "  --abs-tol <x>          floats match within x of each other\n"
       "  --rel-tol <x>          floats match within x times their magnitude\n"
       "  --ulps <n>             floats match within n representable values\n"
-      "  --unordered <path>     compare the object array at <path> (such as\n"
+      "  --unordered-array <path>\n"
+      "                         compare the object array at <path> (such as\n"
       "                         world.surface) as unordered; repeatable\n"
+      "  --all-arrays-unordered compare every object array as unordered\n"
       "  --ignore-calls         do not compare the API call counts\n"
       "  --max-differences <n>  list at most n differences (default 50)\n"
       "  --quiet                print nothing\n"
@@ -66,8 +68,10 @@ int main(int argc, char **argv)
     } else if (arg == "--ulps") {
       options.tolerance.ulps =
           uint32_t(std::strtoul(value("--ulps"), nullptr, 10));
-    } else if (arg == "--unordered") {
-      options.unorderedPaths.push_back(value("--unordered"));
+    } else if (arg == "--unordered-array") {
+      options.unorderedObjectArrays.push_back(value("--unordered-array"));
+    } else if (arg == "--all-arrays-unordered") {
+      options.allObjectArraysUnordered = true;
     } else if (arg == "--max-differences") {
       options.maxDifferences =
           size_t(std::strtoull(value("--max-differences"), nullptr, 10));

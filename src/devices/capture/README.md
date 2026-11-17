@@ -458,13 +458,11 @@ that is one difference, `calls: the expected capture has no call counts
   or at most a number of ULPs apart. By default all are zero. NaNs match NaNs.
   It applies to values and to array elements, blobs included, never to
   integers.
-- **Unordered paths.** Object-array parameters to compare as multisets, by
-  their path from the frame: `world.surface`. A segment without an index
-  matches any index (`world.instance.group.surface` is every group's
-  surfaces); `[3]` matches one index and `[*]` any. Elements are paired by a
-  structural hash of their subgraph, then, for what is left, by comparing
-  them (so floats within the tolerance still pair). Elements that stay
-  unpaired are reported.
+- **Unordered object arrays.** `unorderedObjectArrays` (`--unordered-array`)
+  lists object-array parameters whose order does not matter, each by its
+  path from the frame: `world.surface`. Their elements are paired by content
+  instead of by index; see below. `allObjectArraysUnordered`
+  (`--all-arrays-unordered`) does this for every object array.
 - **Call counts.** `compareCalls` (default on) compares the `calls` blocks.
   Turn it off when only the scene has to match: for a baseline taken from
   another build of the application, or two captures from one device (the
@@ -477,6 +475,62 @@ that is one difference, `calls: the expected capture has no call counts
 When two blobs have different names, both are loaded and compared element by
 element, which is also how an array written inline in one capture compares
 with one written as a blob in the other.
+
+#### Unordered object arrays
+
+An object array is compared by index: element 0 with element 0, and so on.
+When an application builds the same scene but creates objects in another
+order, every element is paired with the wrong one. Here the world's surfaces
+are a sphere and a cone in the expected capture, and the cone and the sphere
+in the actual one:
+
+```
+$ anariCaptureDiff --ignore-calls expected.capture actual.capture
+world.surface[0].geometry.@subtype: expected "sphere", got "cone"
+world.surface[0].geometry.radius: expected 1, got 0.5
+world.surface[1].geometry.@subtype: expected "cone", got "sphere"
+world.surface[1].geometry.radius: expected 0.5, got 1
+4 differences
+```
+
+Naming the array as unordered pairs each element with one of the same content,
+wherever it is in the other array:
+
+```
+$ anariCaptureDiff --ignore-calls --unordered-array world.surface \
+    expected.capture actual.capture
+the captures match
+```
+
+This does not narrow the comparison: the whole graph is compared either way,
+and only the pairing of that array's elements changes. Elements pair only if
+they match, so an element that changed is not reported field by field: it is
+reported as having no match, and its new version as unexpected.
+
+- **Paths.** A path names the array parameter itself, from the frame. It is
+  not a prefix: `world` names no array, and `world.surface` does not cover
+  `world.instance.group.surface`. A segment without an index matches any
+  index (`world.instance.group.surface` is every group's surfaces); `[3]`
+  matches one index and `[*]` any.
+- **Every object array.** `allObjectArraysUnordered`
+  (`--all-arrays-unordered`) treats every object array as listed, so you need
+  not know the scene's structure. In the core ANARI objects, the object
+  arrays (surfaces, volumes, lights, instances) are sets, so this is safe for
+  them; leave it off if a device gives meaning to an array's indices.
+- **Only object arrays.** Arrays of numbers, such as vertex positions, are
+  always compared by index.
+- **Pairing.** Elements are paired first by a structural hash of their
+  subgraph, then, for what is left, by comparing them, so floats within the
+  tolerance still pair. An element left without a partner is reported: `no
+  matching element` at its index in the expected capture, `unexpected
+  element` at its index in the actual one.
+- **Lengths.** Arrays of different lengths are still paired, so the report
+  names what is missing or extra:
+
+  ```
+  world.surface.@dimensions: expected (1), got (2)
+  world.surface[0]: unexpected element, a surface
+  ```
 
 ### Library
 
@@ -492,7 +546,7 @@ actual.blobs[name] = bytes;              // in-memory blobs
 
 diff::DiffOptions options;
 options.tolerance.absolute = 1e-6;
-options.unorderedPaths = {"world.surface"};
+options.unorderedObjectArrays = {"world.surface"};
 options.compareCalls = false;            // compare the scene only
 
 diff::DiffResult result = diff::diffCaptures(expected, actual, options);
@@ -513,8 +567,10 @@ anariCaptureDiff [options] <expected> <actual>
   --abs-tol <x>          floats match within x of each other
   --rel-tol <x>          floats match within x times their magnitude
   --ulps <n>             floats match within n representable values
-  --unordered <path>     compare the object array at <path> as unordered
-                         (repeatable)
+  --unordered-array <path>
+                         compare the object array at <path> (such as
+                         world.surface) as unordered; repeatable
+  --all-arrays-unordered compare every object array as unordered
   --ignore-calls         do not compare the API call counts
   --max-differences <n>  list at most n differences (default 50)
   --quiet                print nothing
