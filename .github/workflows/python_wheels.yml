@@ -3,7 +3,7 @@
 
 name: Python wheels
 
-# Build, validate and (on v* tags) publish the 'anari' wheels.
+# Build, validate and (on v* tags) publish the 'anari' and device wheels.
 # Artifact actions stay on v4 so the workflow runs under act.
 
 on:
@@ -21,6 +21,7 @@ on:
       - 'src/devices/CMakeLists.txt'
       - 'src/devices/sink/**'
       - 'src/devices/debug/**'
+      - 'src/devices/helide/**'
       - 'examples/empty_helium_device/**'
       - 'tests/python/**'
       - '.github/scripts/**'
@@ -220,3 +221,74 @@ jobs:
     - uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
       with:
         packages-dir: dist
+
+  # Currently these jobs wait for *all* of `build-anari-wheels` to complete.
+  # There's no mechanism to only require the matching platform's `anari` wheel
+  # artifacts.
+  # https://github.com/orgs/community/discussions/42335
+  build-device-wheels:
+    name: build ${{ matrix.package }} (${{ matrix.os }}, ${{ matrix.arch }})
+    needs: build-anari-wheels
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-24.04, macos-15, windows-latest ]
+        package:
+        - helide
+        include:
+        - { os: ubuntu-24.04,     arch: x86_64 }
+        # Embree's build runs out of memory inside of the `cibuildwheel`
+        # container.
+        # - { os: ubuntu-24.04-arm, arch: aarch64 }
+        - { os: macos-15,         arch: arm64 }
+        - { os: windows-latest,   arch: AMD64 }
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+    - uses: actions/download-artifact@v4
+      with:
+        name: anari-wheels-${{ matrix.os }}-${{ matrix.arch }}
+        path: anari-wheelhouse
+    - name: Extract ANARI wheel (Unix)
+      if: ${{ matrix.os != 'windows-latest' }}
+      shell: bash
+      run: |
+        wheel="$(find anari-wheelhouse -maxdepth 1 -name 'anari-*.whl' -print -quit)"
+        test -n "$wheel"
+        mkdir -p "src/devices/${{ matrix.package }}/.wheel-deps/anari"
+        unzip -q "$wheel" -d "src/devices/${{ matrix.package }}/.wheel-deps/anari"
+        echo "anari_ROOT=${{ github.workspace }}/src/devices/${{ matrix.package }}/.wheel-deps/anari/anari/sdk" >> "$GITHUB_ENV"
+        mkdir -p "src/devices/${{ matrix.package }}/.wheel-deps/anari-wheelhouse"
+        cp anari-wheelhouse/*.whl "src/devices/${{ matrix.package }}/.wheel-deps/anari-wheelhouse/"
+        echo "PIP_FIND_LINKS=${{ github.workspace }}/src/devices/${{ matrix.package }}/.wheel-deps/anari-wheelhouse" >> "$GITHUB_ENV"
+    - name: Extract ANARI wheel (Windows)
+      if: ${{ matrix.os == 'windows-latest' }}
+      shell: pwsh
+      run: |
+        $wheel = Get-ChildItem "anari-wheelhouse/anari-*.whl" | Select-Object -First 1
+        if (-not $wheel) { throw "ANARI wheel artifact was not found" }
+        $archive = Join-Path $env:RUNNER_TEMP "anari-wheel.zip"
+        Copy-Item $wheel.FullName $archive
+        $destination = Join-Path $env:GITHUB_WORKSPACE "src/devices/${{ matrix.package }}/.wheel-deps/anari"
+        New-Item -ItemType Directory -Force $destination | Out-Null
+        Expand-Archive $archive $destination -Force
+        "anari_ROOT=$destination/anari/sdk" | Out-File -FilePath $env:GITHUB_ENV -Append
+        $wheelhouse = Join-Path $destination "..\anari-wheelhouse"
+        New-Item -ItemType Directory -Force $wheelhouse | Out-Null
+        Copy-Item "anari-wheelhouse/*.whl" $wheelhouse
+        "PIP_FIND_LINKS=$wheelhouse" | Out-File -FilePath $env:GITHUB_ENV -Append
+    - name: Build wheels
+      uses: pypa/cibuildwheel@f9b966cfadf4109556cadc5bb39ddb72d0ce664e # v4.3.5
+      env:
+        CIBW_ARCHS: ${{ matrix.arch }}
+        CIBW_ENVIRONMENT_LINUX: anari_ROOT=/project/src/devices/${{ matrix.package }}/.wheel-deps/anari/anari/sdk PIP_FIND_LINKS=/project/src/devices/${{ matrix.package }}/.wheel-deps/anari-wheelhouse
+      with:
+        package-dir: src/devices/${{ matrix.package }}
+        output-dir: wheelhouse
+    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: wheels-${{ matrix.package }}-${{ matrix.os }}-${{ matrix.arch }}
+        path: wheelhouse/*.whl
+        if-no-files-found: error
