@@ -26,13 +26,4 @@ install_components = ["helide_module"]
 [tool.cibuildwheel]
 skip = ["*t-*", "*-musllinux*"]
 test-requires = ["pytest"]
-test-command = "python -m pytest -q {project}/test"
-
-[tool.cibuildwheel.linux]
-before-all = """
-git clone -b next_release https://github.com/KhronosGroup/ANARI-SDK.git
-mkdir ANARI-SDK/build
-cd ANARI-SDK/build
-cmake ../ -DBUILD_EXAMPLES=OFF -DBUILD_HELIDE_DEVICE=OFF -DBUILD_TESTING=OFF -DINSTALL_VIEWER_LIBRARY=OFF
-make && make install
-"""
+test-command = "python -m pytest -q {package}/test"
