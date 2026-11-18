@@ -1,7 +1,7 @@
 ## Copyright 2022-2026 The Khronos Group
 ## SPDX-License-Identifier: Apache-2.0
 
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.11...3.12)
 
 if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_LIST_DIR})
   set(STANDALONE_SOURCE_TREE TRUE)
