@@ -7,6 +7,9 @@ Windows. SDL3 development files are still required at build time. The Python
 wheel depends on PySDL3 and imports it first; the trampoline looks in PySDL3's
 `sdl3/bin` directory for the platform SDL3 library. Native users can set
 `HELIDE_GPU_SDL3_LIBRARY` to the library path before device initialization.
+The Python trampoline configures SDL automatically on import. To observe
+device status messages, call `helide_gpu.set_status_callback(callback)` before
+creating a device; the callback receives the standard ANARI status arguments.
 
 ## Geometry attributes
 

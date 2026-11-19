@@ -22,7 +22,21 @@ try:
 except (ImportError, AttributeError):
     pass
 
-library = anari.loadLibrary('${DEVICE_LIBRARY_NAME},'+str(_Path(__file__).parent)+'/', anari.error_status_handle)
+_error_status = anari.ffi.from_handle(anari.error_status_handle)
+_status_callback = None
+
+def _status(device, source, source_type, severity, code, message):
+    _error_status(device, source, source_type, severity, code, message)
+    if _status_callback is not None:
+        _status_callback(device, source, source_type, severity, code, message)
+
+_status_handle = anari.ffi.new_handle(_status)
+library = anari.loadLibrary('${DEVICE_LIBRARY_NAME},'+str(_Path(__file__).parent)+'/', _status_handle)
+
+def set_status_callback(callback):
+    """Set an optional callback for status messages from the device."""
+    global _status_callback
+    _status_callback = callback
 
 def newDevice(name = "default"):
     return library.newDevice(name)
