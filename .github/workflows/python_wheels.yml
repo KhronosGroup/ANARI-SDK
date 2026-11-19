@@ -158,6 +158,8 @@ jobs:
       with:
         repository-url: https://test.pypi.org/legacy/
         packages-dir: dist
+        # Rehearsals repeat a version; TestPyPI never accepts one twice
+        skip-existing: true
 
   publish-anari-pypi:
     # Forks have no Trusted Publisher
