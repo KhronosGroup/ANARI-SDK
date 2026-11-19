@@ -7,18 +7,52 @@ from pathlib import Path as _Path
 # downloader can populate that directory before the native device loads SDL.
 try:
     import sdl3 as _sdl3
-    _bin = _Path(_sdl3.__file__).parent / "bin"
-    if sys.platform == "win32":
-        _names = ("SDL3.dll",)
-    elif sys.platform == "darwin":
-        _names = ("libSDL3.dylib",)
+    _bin = _Path(
+        getattr(_sdl3, "binaryPath", _Path(_sdl3.__file__).parent / "bin")
+    )
+    _get_sdl_binary = getattr(_sdl3, "SDL_GET_BINARY", None)
+    _sdl_binary = _get_sdl_binary("SDL3") if _get_sdl_binary else None
+    _sdl_path = getattr(_sdl_binary, "_name", None)
+    if _sdl_path and _Path(_sdl_path).exists():
+        os.environ.setdefault(
+            "HELIDE_GPU_SDL3_LIBRARY", str(_Path(_sdl_path).resolve())
+        )
     else:
-        _names = ("libSDL3.so", "libSDL3.so.0")
-    for _name in _names:
-        _candidate = _bin / _name
-        if _candidate.exists():
-            os.environ.setdefault("HELIDE_GPU_SDL3_LIBRARY", str(_candidate))
-            break
+        if sys.platform == "win32":
+            _names = ("SDL3.dll",)
+            _root_names = ("SDL3.dll", "bin/SDL3.dll")
+        elif sys.platform == "darwin":
+            _names = ("libSDL3.dylib",)
+            _root_names = (
+                "lib/libSDL3.dylib",
+                "lib/SDL3.framework/Versions/Current/SDL3",
+                "lib/SDL3.framework/SDL3",
+            )
+        else:
+            _names = ("libSDL3.so", "libSDL3.so.0")
+            _root_names = (
+                "lib/libSDL3.so",
+                "lib/libSDL3.so.0",
+                "lib64/libSDL3.so",
+                "lib64/libSDL3.so.0",
+            )
+
+        _roots = []
+        if _root := os.environ.get("SDL3_ROOT"):
+            _root = _Path(_root)
+            _roots.extend((_root, _root.parent))
+        if sys.platform.startswith("linux"):
+            _roots.extend((_Path("/usr/local"), _Path("/usr")))
+        _candidates = [
+            _base / _name for _base in _roots for _name in _root_names
+        ]
+        _candidates.extend(_bin / _name for _name in _names)
+        for _candidate in _candidates:
+            if _candidate.exists():
+                os.environ.setdefault(
+                    "HELIDE_GPU_SDL3_LIBRARY", str(_candidate.resolve())
+                )
+                break
 except (ImportError, AttributeError):
     pass
 
