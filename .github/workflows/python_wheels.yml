@@ -168,7 +168,7 @@ jobs:
     needs: [ check-anari-version, validate-anari ]
     runs-on: ubuntu-24.04
     environment: # its reviewers approve each release
-      name: pypi
+      name: publish anari wheels
       url: https://pypi.org/project/anari/${{ needs.check-anari-version.outputs.version }}/
     permissions:
       id-token: write # Trusted Publishing; nothing else in this job
