@@ -23,6 +23,8 @@ source_path = "."
 install_components = ["helide_gpu_module"]
 
 [tool.cibuildwheel]
+build = "cp310-*"
+skip = ["*-musllinux*"]
 test-requires = ["pytest"]
 test-command = "python -m pytest -q {package}/test"
 
