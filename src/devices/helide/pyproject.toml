@@ -1,6 +1,6 @@
 [project] # Project metadata
 name = "helide"
-requires-python = ">=3.7"
+requires-python = ">=3.10"
 readme = "README.md"
 license = "APACHE"
 license-files = ["LICENSE"]
