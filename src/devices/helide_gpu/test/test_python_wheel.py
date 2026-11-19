@@ -6,7 +6,6 @@
 from array import array
 import os
 import sys
-from pathlib import Path
 
 
 def _check(condition, reason, messages):
@@ -46,14 +45,12 @@ def test_installed_wheel_renders_triangle():
     import helide_gpu
 
     messages = []
-    callback = anari.ffi.new_handle(
+    helide_gpu.set_status_callback(
         lambda device, source, source_type, severity, code, message: messages.append(
             message
         )
     )
-    library = anari.loadLibrary(
-        f"helide_gpu,{Path(helide_gpu.__file__).parent}{os.sep}", callback
-    )
+    library = helide_gpu.library
     _check(library is not None, "could not load helide_gpu library", messages)
 
     device = library.newDevice("default")
