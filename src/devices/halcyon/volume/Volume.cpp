@@ -7,7 +7,7 @@
 #include "spatial_field/SpatialField.h"
 #include "SpatialField_ispc.h"
 // embree
-#include "algorithms/parallel_for.h"
+#include "anari_embree/parallel_for.h"
 // std
 #include <algorithm>
 #include <cmath>
@@ -106,7 +106,7 @@ struct TransferFunction1D : public Volume
         m_field ? ispc::SpatialField_numMacrocells(m_field->getIE()) : 0;
     m_macrocellMajorants.resize(cells);
     constexpr size_t CHUNK = 256;
-    embree::parallel_for((cells + CHUNK - 1) / CHUNK, [&](size_t chunk) {
+    anari_embree::parallel_for((cells + CHUNK - 1) / CHUNK, [&](size_t chunk) {
       ispc::Volume_computeMacrocellMajorants(getIE(),
           m_macrocellMajorants.data(),
           chunk * CHUNK,

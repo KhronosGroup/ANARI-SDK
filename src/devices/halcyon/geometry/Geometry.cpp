@@ -14,7 +14,7 @@
 #include <string>
 #include <vector>
 // embree
-#include "algorithms/parallel_for.h"
+#include "anari_embree/parallel_for.h"
 
 namespace halcyon {
 
@@ -211,7 +211,7 @@ static void parallelFor(
 {
   constexpr size_t CHUNK = 16384;
   const size_t numChunks = (n + CHUNK - 1) / CHUNK;
-  embree::parallel_for(numChunks, [&](size_t chunk) {
+  anari_embree::parallel_for(numChunks, [&](size_t chunk) {
     f(chunk * CHUNK, std::min(n, (chunk + 1) * CHUNK));
   });
 }

@@ -41,11 +41,16 @@ and CI don't). Either way it is its own CMake project, as the SDK's other device
 takes the ANARI SDK's version (the root's in the SDK's tree, the found SDK's when built
 alone), writes its outputs to `CMAKE_BINARY_DIR`, and names its ctests `halcyon::<name>`.
 
-Embree is fetched and built statically at configure time, as helide does
-(`external/embree/CMakeLists.txt`, target `anari_embree`, the same file as helide's: in the
-SDK's tree whichever device configures first builds Embree and the other links it): Embree 4.4.1, internal tasking,
-x86 ISAs SSE2 through AVX-512 (NEON2X on ARM). The device links no TBB; `parallel_for()` loops
-use Embree's `algorithms/parallel_for.h` on the same thread pool as BVH builds. There is
+Embree comes from `external/embree/CMakeLists.txt` (target `anari_embree`, the same file as
+helide's: in the SDK's tree whichever device configures first sets it up and the other links
+it). An installed Embree 4.3+ found with TBB is used as is (CI does this, with Embree's
+release packages: `.github/actions/install_embree`); the configure rejects one built without a
+feature the devices use. Otherwise Embree is fetched and built statically: Embree 4.4.1,
+internal tasking, x86 ISAs SSE2 through AVX-512 (NEON2X on ARM), and the device links no TBB.
+Parallel loops call `anari_embree::parallel_for()` (`external/embree/include/anari_embree/
+parallel_for.h`, also identical to helide's), which runs on Embree's internal tasking or on TBB
+to match, so on the same thread pool as BVH builds either way. The rest of this paragraph is
+about the built-from-source Embree. There is
 no `EMBREE_API_NAMESPACE`: the ISPC code calls the C API, which a namespace would mangle. Embree's API symbols are hidden in the static library instead, and the tasking
 library's exported `TaskScheduler` is kept out of the device's dynamic symbols
 (`--exclude-libs`), so another Embree in the process can't interpose it.
@@ -156,7 +161,8 @@ one process (maintainer decision, 2026-10-16).
 
 Neither the device nor its tests need OpenUSD. The `device_dependencies` ctest
 (`tests/checkDeviceDependencies.cmake`) fails if the built device depends on a library
-named like OpenUSD (`libusd_*`, or an unprefixed build's `libtf.so` etc.), TBB, Python or
+named like OpenUSD (`libusd_*`, or an unprefixed build's `libtf.so` etc.), TBB (allowed when
+the device uses an installed Embree, whose tasking system TBB then is), Python or
 Boost.Python, or if its RPATH or RUNPATH names a directory of OpenUSD's libraries.
 
 The ctests that load the device set `LD_LIBRARY_PATH` to the build directory, so they get the
@@ -2591,7 +2597,7 @@ the next render puts them into effect on the worker and renders every frame agai
 | `invalidMaterialColor` | float4 | (1, 0, 1, 1) | Colour for those surfaces |
 
 The environment variable `HALCYON_NUM_THREADS` sets the thread count of Embree's tasking
-system, which BVH builds and rendering share (default 0, i.e. Embree's choice: all hardware
+system (TBB, with an installed Embree), which BVH builds and rendering share (default 0, i.e. Embree's choice: all hardware
 threads).
 
 `preview` renderer parameters (`Preview::commitParameters()`, after the base's

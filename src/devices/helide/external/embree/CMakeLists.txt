@@ -1,20 +1,35 @@
 ## Copyright 2022-2026 The Khronos Group
 ## SPDX-License-Identifier: Apache-2.0
 
-# Builds Embree from source as a static library. Consumers link anari_embree,
-# which also brings in Embree's internal tasking system (used by parallel_for()
-# loops) and its headers.
+# Provides anari_embree, which consumers link for Embree and for the
+# tasking system behind anari_embree::parallel_for()
+# (include/anari_embree/parallel_for.h). It uses an installed Embree 4.3 or
+# newer with TBB when both are found, and otherwise builds Embree from source
+# as a static library with its internal tasking system. Set
+# CMAKE_DISABLE_FIND_PACKAGE_embree=ON to always build from source; point
+# CMAKE_PREFIX_PATH (or embree_DIR and TBB_DIR) at the installs to use them.
 #
 # helide and halcyon each carry this same file (src/devices/*/external/embree),
 # so that either builds alone; keep the copies identical. In the SDK's tree
 # Embree's own targets can be added only once, so the first device to get here
-# builds it and the other links the same anari_embree.
+# sets it up and the other links the same anari_embree.
 
 if (TARGET anari_embree)
   return()
 endif()
 
 project(anari_embree LANGUAGES CXX)
+
+## Installed Embree ##
+
+add_subdirectory(installed)
+if (TARGET anari_embree)
+  return()
+endif()
+
+## Embree built from source ##
+
+message(STATUS "Building Embree from source")
 
 if (APPLE AND ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "arm64")
   set(COMPILE_FOR_ARM ON)
@@ -72,7 +87,10 @@ anari_sdk_fetch_project(
 project_add_library(INTERFACE)
 project_link_libraries(INTERFACE embree tasking)
 project_compile_definitions(INTERFACE TASKING_INTERNAL)
-project_include_directories(INTERFACE ${anari_embree_LOCATION}/common)
+project_include_directories(INTERFACE
+  ${anari_embree_LOCATION}/common
+  ${CMAKE_CURRENT_LIST_DIR}/include
+)
 if (WIN32)
   # C++ only: a consumer's ISPC sources get its options too, and ISPC rejects
   # MSVC's. One generator expression per option, as project_compile_options()

@@ -27,7 +27,7 @@ HelideDevice
 
 ## Embree Integration
 
-Embree v4.4.1 is fetched via CMake from GitHub into `external/embree/`. The static library is exposed as the `anari_embree` CMake target, shared with halcyon (`src/devices/halcyon/external/embree/` is an identical copy; whichever device configures first builds it). It has no API namespace (halcyon's ISPC calls the C API); its symbols are hidden instead, with the tasking library kept out of the device's dynamic symbols (`--exclude-libs`), to avoid conflicts with another Embree in the process.
+`external/embree/CMakeLists.txt` provides the `anari_embree` CMake target, shared with halcyon (`src/devices/halcyon/external/embree/` is an identical copy; whichever device configures first sets it up). It uses an installed Embree 4.3+ when `find_package()` finds one and TBB (CI does, with Embree's release packages: `.github/actions/install_embree`), and otherwise fetches Embree v4.4.1 from GitHub and builds it statically with its internal tasking (`-DCMAKE_DISABLE_FIND_PACKAGE_embree=ON` forces this). `Frame::renderFrame()` loops over pixels with `anari_embree::parallel_for()` (`external/embree/include/anari_embree/parallel_for.h`), which dispatches to TBB or Embree's internal tasking to match. The built-from-source Embree has no API namespace (halcyon's ISPC calls the C API); its symbols are hidden instead, with the tasking library kept out of the device's dynamic symbols (`--exclude-libs`), to avoid conflicts with another Embree in the process.
 
 **Scene hierarchy:**
 - `World` owns the top-level Embree scene (`RTCScene` TLS)

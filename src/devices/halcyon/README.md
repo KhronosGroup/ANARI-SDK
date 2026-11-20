@@ -25,9 +25,12 @@ built on helium, the device framework in the ANARI SDK, and has two renderers:
 - CMake 3.19 or newer (for its ISPC language support; `ctest --test-dir` below needs 3.20) and
   a C++17 compiler
 
-Embree is not a dependency to install: like helide, halcyon's build fetches Embree 4.4.1 with
+Embree need not be installed. Like helide, halcyon uses an installed Embree 4.3 or newer when
+CMake finds one along with TBB (put both on `CMAKE_PREFIX_PATH`, or set `embree_DIR` and
+`TBB_DIR`); its parallel loops then run on TBB. Otherwise its build fetches Embree 4.4.1 with
 the ANARI SDK's `anari_sdk_fetch_project()` (see `external/embree/CMakeLists.txt`) and links it
-statically, with Embree's internal tasking system. The first configure downloads the source
+statically, with Embree's internal tasking system; `-DCMAKE_DISABLE_FIND_PACKAGE_embree=ON`
+always does so. The first configure downloads the source
 into `.anari_deps/` in the source tree, and later configures reuse it. Embree is built for
 SSE2, SSE4.2, AVX, AVX2 and AVX-512 on x86 (AVX-512 off on Windows and macOS) and picks the
 best one the CPU supports at runtime; on ARM it is built for NEON2X. The `EMBREE_ISA_*` cache
@@ -99,7 +102,8 @@ source tree and the build directory (for the generated `anari_library_halcyon_ex
 include path, and link `libanari_library_halcyon`.
 
 The `HALCYON_NUM_THREADS` environment variable sets the number of threads Embree's tasking
-system uses for both BVH builds and rendering (default: all hardware threads).
+system (TBB, with an installed Embree) uses for both BVH builds and rendering (default: all
+hardware threads).
 
 ## Supported extensions
 
