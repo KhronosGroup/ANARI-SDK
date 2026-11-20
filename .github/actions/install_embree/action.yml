@@ -10,6 +10,11 @@ description: >
   Windows, Homebrew on macOS (oneTBB's macOS release is x86_64 only).
   Embree 4.4.1 ships TBB 2022.3's runtime (libtbb 12.17), so that's the
   oneTBB release used, keeping one TBB in the process.
+inputs:
+  install-dir:
+    description: Directory in which to install the Embree and TBB packages
+    required: false
+    default: ""
 runs:
   using: "composite"
   steps:
@@ -18,7 +23,8 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
-        dest="${{ runner.temp }}/embree-deps"
+        dest="${{ inputs.install-dir }}"
+        if [ -z "$dest" ]; then dest="${{ runner.temp }}/embree-deps"; fi
         mkdir -p "$dest/embree"
         cd "$dest"
         curl -sSfL -o embree.tar.gz https://github.com/RenderKit/embree/releases/download/v4.4.1/embree-4.4.1.x86_64.linux.tar.gz
@@ -43,7 +49,8 @@ runs:
           exit 1
         fi
         brew install tbb
-        dest="${{ runner.temp }}/embree-deps"
+        dest="${{ inputs.install-dir }}"
+        if [ -z "$dest" ]; then dest="${{ runner.temp }}/embree-deps"; fi
         mkdir -p "$dest/embree"
         cd "$dest"
         curl -sSfL -o embree.zip https://github.com/RenderKit/embree/releases/download/v4.4.1/embree-4.4.1.arm64.macosx.zip
@@ -58,7 +65,8 @@ runs:
       shell: pwsh
       run: |
         $ErrorActionPreference = 'Stop'
-        $dest = "${{ runner.temp }}\embree-deps"
+        $dest = "${{ inputs.install-dir }}"
+        if (-not $dest) { $dest = "${{ runner.temp }}\embree-deps" }
         New-Item -ItemType Directory -Force -Path $dest | Out-Null
         $files = @(
           @{ Url = 'https://github.com/RenderKit/embree/releases/download/v4.4.1/embree-4.4.1.x64.windows.zip';
