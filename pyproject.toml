@@ -25,7 +25,7 @@ Source = "https://github.com/KhronosGroup/ANARI-SDK"
 Issues = "https://github.com/KhronosGroup/ANARI-SDK/issues"
 
 [build-system] # How pip and other frontends should build this project
-requires = ["py-build-cmake~=0.5.1", "cffi"]
+requires = ["py-build-cmake~=0.5.1", "cffi", "ninja>=1.13"]
 build-backend = "py_build_cmake.build"
 
 [tool.py-build-cmake.sdist]
@@ -66,6 +66,7 @@ build = "cp3*"
 # The cffi module doesn't support free-threaded CPython
 skip = ["*t-*"]
 build-frontend = "build"
+environment = { CMAKE_GENERATOR = "Ninja" }
 test-requires = []
 # Smoke test, in each wheel's own clean environment
 test-command = "python -c \"import anari; anari.loadLibrary('sink').newDevice('default')\""
