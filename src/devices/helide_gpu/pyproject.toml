@@ -8,7 +8,7 @@ dependencies = ["cffi", "anari", "PySDL3"]
 version = "1.0"
 
 [build-system]
-requires = ["py-build-cmake~=0.5.0"]
+requires = ["py-build-cmake~=0.5.0", "ninja>=1.13"]
 build-backend = "py_build_cmake.build"
 
 [tool.py-build-cmake.sdist]
@@ -25,6 +25,7 @@ install_components = ["helide_gpu_module"]
 [tool.cibuildwheel]
 build = "cp310-*"
 skip = ["*-musllinux*"]
+environment = { CMAKE_GENERATOR = "Ninja" }
 test-requires = ["pytest"]
 test-command = "python -m pytest -q {package}/test"
 
