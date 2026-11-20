@@ -24,7 +24,12 @@ build_args = ["-j"]
 install_components = ["helide_module"]
 
 [tool.cibuildwheel]
-skip = ["*t-*", "*-musllinux*"]
+build = "cp310-*"
+skip = ["*-musllinux*"]
 environment = { CMAKE_GENERATOR = "Ninja" }
 test-requires = ["pytest"]
 test-command = "python -m pytest -q {package}/test"
+
+[tool.py-build-cmake.wheel]
+python_tag = ["py3"]
+python_abi = "none"
