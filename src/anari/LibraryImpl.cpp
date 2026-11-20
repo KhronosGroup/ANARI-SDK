@@ -113,10 +113,13 @@ static void *loadLibrary(
     // Load the library
     std::string fullName = libLocation + file + ".dll";
     if (std::filesystem::path(fullName).is_absolute()) {
-      // Search next to the device first
+      // Search next to the device and in registered DLL directories (for
+      // example, directories added by Python's os.add_dll_directory()).
       std::replace(fullName.begin(), fullName.end(), '/', '\\');
       lib = LoadLibraryExA(
-          fullName.c_str(), nullptr, LOAD_WITH_ALTERED_SEARCH_PATH);
+          fullName.c_str(),
+          nullptr,
+          LOAD_LIBRARY_SEARCH_DEFAULT_DIRS | LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR);
     }
     // search from execution context (executable path)
     if (lib == nullptr)
