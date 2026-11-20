@@ -35,6 +35,8 @@ jobs:
     - name: Install ptc dependencies
       if: ${{ matrix.os == 'ubuntu-24.04' }}
       run: sudo apt-get update && sudo apt-get install -y libopenmpi-dev openmpi-bin libtbb-dev
+    - name: Install Embree and TBB
+      uses: ./.github/actions/install_embree
     - name: Build and test
       uses: ./.github/actions/configure_and_build
       with:
@@ -59,6 +61,8 @@ jobs:
     steps:
     - name: Check out code
       uses: actions/checkout@v4
+    - name: Install Embree and TBB
+      uses: ./.github/actions/install_embree
     - name: Build and test
       uses: ./.github/actions/configure_and_build
       with:
@@ -84,6 +88,8 @@ jobs:
     steps:
     - name: Check out code
       uses: actions/checkout@v4
+    - name: Install Embree and TBB
+      uses: ./.github/actions/install_embree
     - name: Build and test
       uses: ./.github/actions/configure_and_build
       with:

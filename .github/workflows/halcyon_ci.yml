@@ -18,6 +18,7 @@ on:
       - 'CMakeLists.txt'
       - 'src/devices/CMakeLists.txt'
       - 'src/devices/helide/external/embree/**'
+      - '.github/actions/install_embree/**'
       - '.github/workflows/halcyon_ci.yml'
   pull_request:
     branches: [ main, next_release ]
@@ -30,6 +31,7 @@ on:
       - 'CMakeLists.txt'
       - 'src/devices/CMakeLists.txt'
       - 'src/devices/helide/external/embree/**'
+      - '.github/actions/install_embree/**'
       - '.github/workflows/halcyon_ci.yml'
 
 jobs:
@@ -46,6 +48,8 @@ jobs:
         curl -sSfL https://github.com/ispc/ispc/releases/download/${ISPC_VERSION}/ispc-${ISPC_VERSION}-linux.tar.gz \
           | tar xz -C ${{ runner.temp }}
         echo "${{ runner.temp }}/ispc-${ISPC_VERSION}-linux/bin" >> $GITHUB_PATH
+    - name: Install Embree and TBB
+      uses: ./.github/actions/install_embree
     - name: Configure CMake
       run: >
         cmake -LA -B ${{ github.workspace }}/build
@@ -85,6 +89,8 @@ jobs:
         Invoke-WebRequest -Uri "https://github.com/ispc/ispc/releases/download/$env:ISPC_VERSION/ispc-$env:ISPC_VERSION-windows.zip" -OutFile $zip
         Expand-Archive -Path $zip -DestinationPath "${{ runner.temp }}"
         "${{ runner.temp }}\ispc-$env:ISPC_VERSION-windows\bin" >> $env:GITHUB_PATH
+    - name: Install Embree and TBB
+      uses: ./.github/actions/install_embree
     - name: Configure CMake
       shell: pwsh
       run: >

@@ -1,0 +1,83 @@
+## Copyright 2026 The Khronos Group
+## SPDX-License-Identifier: Apache-2.0
+
+name: "Install Embree and TBB"
+description: >
+  Downloads an Embree release and TBB and puts them on CMAKE_PREFIX_PATH, so
+  helide and halcyon use them (src/devices/*/external/embree) instead of
+  building Embree from source. Embree's release packages carry TBB's runtime
+  but not its headers or CMake package: oneTBB's release gives those on Linux
+  and Windows, Homebrew on macOS (oneTBB's macOS release is x86_64 only).
+  Embree 4.4.1 ships TBB 2022.3's runtime (libtbb 12.17), so that's the
+  oneTBB release used, keeping one TBB in the process.
+runs:
+  using: "composite"
+  steps:
+    - name: Install Embree and TBB (Linux)
+      if: ${{ runner.os == 'Linux' }}
+      shell: bash
+      run: |
+        set -euo pipefail
+        dest="${{ runner.temp }}/embree-deps"
+        mkdir -p "$dest/embree"
+        cd "$dest"
+        curl -sSfL -o embree.tar.gz https://github.com/RenderKit/embree/releases/download/v4.4.1/embree-4.4.1.x86_64.linux.tar.gz
+        curl -sSfL -o tbb.tgz https://github.com/uxlfoundation/oneTBB/releases/download/v2022.3.0/oneapi-tbb-2022.3.0-lin.tgz
+        sha256sum -c - <<EOF
+        aa506a55a581055e30cdc8819557dd4163ed514fc63ce4c1d66a6df82631be3f  embree.tar.gz
+        7be34b376c9bdba9afe1ebacaf94ed6dc15af8377d73b539ec932f141195f6ec  tbb.tgz
+        EOF
+        tar xzf embree.tar.gz -C embree
+        tar xzf tbb.tgz
+        # Embree's package keeps its CMake package in lib64/cmake, which
+        # find_package() doesn't search on Ubuntu: name its directory
+        echo "CMAKE_PREFIX_PATH=$dest/embree/lib64/cmake/embree-4.4.1:$dest/oneapi-tbb-2022.3.0" >> "$GITHUB_ENV"
+
+    - name: Install Embree and TBB (macOS)
+      if: ${{ runner.os == 'macOS' }}
+      shell: bash
+      run: |
+        set -euo pipefail
+        if [ "${{ runner.arch }}" != "ARM64" ]; then
+          echo "::error::install_embree supports only Apple silicon runners"
+          exit 1
+        fi
+        brew install tbb
+        dest="${{ runner.temp }}/embree-deps"
+        mkdir -p "$dest/embree"
+        cd "$dest"
+        curl -sSfL -o embree.zip https://github.com/RenderKit/embree/releases/download/v4.4.1/embree-4.4.1.arm64.macosx.zip
+        shasum -a 256 -c - <<EOF
+        12236c79f37e98224582f7fa9e113160b3d4eb5eb5f24846a96faf05e32a5562  embree.zip
+        EOF
+        unzip -q embree.zip -d embree
+        echo "CMAKE_PREFIX_PATH=$dest/embree:$(brew --prefix tbb)" >> "$GITHUB_ENV"
+
+    - name: Install Embree and TBB (Windows)
+      if: ${{ runner.os == 'Windows' }}
+      shell: pwsh
+      run: |
+        $ErrorActionPreference = 'Stop'
+        $dest = "${{ runner.temp }}\embree-deps"
+        New-Item -ItemType Directory -Force -Path $dest | Out-Null
+        $files = @(
+          @{ Url = 'https://github.com/RenderKit/embree/releases/download/v4.4.1/embree-4.4.1.x64.windows.zip';
+             Zip = "$dest\embree.zip";
+             Sha256 = '5aa1fa3161a720f9c610b06c652b80f421cb2b1fe8221fdf92b74157336fdf8f' },
+          @{ Url = 'https://github.com/uxlfoundation/oneTBB/releases/download/v2022.3.0/oneapi-tbb-2022.3.0-win.zip';
+             Zip = "$dest\tbb.zip";
+             Sha256 = 'e1b2373f25558bf47d16b4c89cf0a31e6689aaf7221400d209e8527afc7c9eee' }
+        )
+        foreach ($f in $files) {
+          Invoke-WebRequest -Uri $f.Url -OutFile $f.Zip
+          $hash = (Get-FileHash -Algorithm SHA256 $f.Zip).Hash.ToLower()
+          if ($hash -ne $f.Sha256) { throw "Checksum mismatch for $($f.Url)" }
+          Expand-Archive -Path $f.Zip -DestinationPath $dest
+        }
+        $embree = "$dest\embree-4.4.1.x64.windows"
+        $tbb = "$dest\oneapi-tbb-2022.3.0"
+        "CMAKE_PREFIX_PATH=$embree;$tbb" >> $env:GITHUB_ENV
+        # The DLLs, for the tests: Embree's (with TBB's release runtime) and
+        # oneTBB's, which also has the debug runtime Debug builds link
+        "$embree\bin" >> $env:GITHUB_PATH
+        "$tbb\redist\intel64\vc14" >> $env:GITHUB_PATH
