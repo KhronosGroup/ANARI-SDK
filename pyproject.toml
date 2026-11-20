@@ -19,6 +19,9 @@ classifiers = [
   "Topic :: Multimedia :: Graphics :: 3D Rendering",
 ]
 
+[project.optional-dependencies]
+helide = ["helide"]
+
 [project.urls]
 Homepage = "https://www.khronos.org/anari/"
 Source = "https://github.com/KhronosGroup/ANARI-SDK"
