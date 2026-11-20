@@ -115,7 +115,7 @@ else()
 endif()
 
 # Keep MaterialX's (and pugixml's) symbols out of the dynamic symbols of
-# whatever links it, as Embree's tasking library's (external/embree)
+# whatever links it, as Embree's tasking library's (the SDK's cmake/anari_embree)
 if (UNIX AND NOT APPLE)
   foreach (file ${excludedFiles})
     target_link_options(halcyon_materialx INTERFACE

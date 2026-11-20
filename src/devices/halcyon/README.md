@@ -28,7 +28,7 @@ built on helium, the device framework in the ANARI SDK, and has two renderers:
 Embree need not be installed. Like helide, halcyon uses an installed Embree 4.3 or newer when
 CMake finds one along with TBB (put both on `CMAKE_PREFIX_PATH`, or set `embree_DIR` and
 `TBB_DIR`); its parallel loops then run on TBB. Otherwise its build fetches Embree 4.4.1 with
-the ANARI SDK's `anari_sdk_fetch_project()` (see `external/embree/CMakeLists.txt`) and links it
+the ANARI SDK's `anari_sdk_fetch_project()` (see the SDK's `cmake/anari_embree/CMakeLists.txt`) and links it
 statically, with Embree's internal tasking system; `-DCMAKE_DISABLE_FIND_PACKAGE_embree=ON`
 always does so. The first configure downloads the source
 into `.anari_deps/` in the source tree, and later configures reuse it. Embree is built for

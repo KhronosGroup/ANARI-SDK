@@ -66,3 +66,21 @@ target_link_libraries(anari_embree INTERFACE embree TBB::tbb)
 target_compile_definitions(anari_embree INTERFACE ANARI_EMBREE_TBB)
 target_include_directories(anari_embree
   INTERFACE ${CMAKE_CURRENT_LIST_DIR}/../include)
+
+# An Embree without a debug build (as Embree's release packages are) links
+# TBB's release runtime. A Debug build would link TBB's debug runtime besides
+# (through TBB's package and, with MSVC, the '#pragma comment(lib)' in TBB's
+# headers), and two TBBs in one process crash: have Debug use the release one.
+get_target_property(embreeConfigs embree IMPORTED_CONFIGURATIONS)
+if (NOT "DEBUG" IN_LIST embreeConfigs)
+  foreach (target ${importedTargets})
+    if (target MATCHES "^TBB::")
+      get_target_property(tbbConfigs ${target} IMPORTED_CONFIGURATIONS)
+      if ("RELEASE" IN_LIST tbbConfigs)
+        set_target_properties(${target}
+          PROPERTIES MAP_IMPORTED_CONFIG_DEBUG RELEASE)
+      endif()
+    endif()
+  endforeach()
+  target_compile_definitions(anari_embree INTERFACE __TBB_NO_IMPLICIT_LINKAGE)
+endif()

@@ -808,7 +808,7 @@ set_tests_properties(halcyon::shading_context PROPERTIES
 # dynamic symbols none of the libraries it links with hidden symbols. ELF
 # only (file(READ_ELF), nm -D, --exclude-libs). TBB is allowed when the device
 # uses an installed Embree, whose tasking system it then is
-# (external/embree).
+# (the SDK's cmake/anari_embree).
 if (UNIX AND NOT APPLE)
   get_target_property(halcyonEmbreeDefinitions
     anari_embree INTERFACE_COMPILE_DEFINITIONS)

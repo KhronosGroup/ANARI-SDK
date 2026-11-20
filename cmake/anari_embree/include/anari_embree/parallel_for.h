@@ -6,10 +6,6 @@
 // Parallel loops on the tasking system that goes with the device's Embree:
 // Embree's internal tasking system when Embree is built from source, TBB when
 // an installed Embree is used (anari_embree defines ANARI_EMBREE_TBB then).
-//
-// helide and halcyon each carry this same file (src/devices/*/external/embree)
-// alongside the CMakeLists.txt that defines anari_embree; keep the copies
-// identical.
 
 #ifdef ANARI_EMBREE_TBB
 #include <tbb/blocked_range.h>

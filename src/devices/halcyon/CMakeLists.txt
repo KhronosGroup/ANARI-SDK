@@ -51,8 +51,8 @@ else()
   message(FATAL_ERROR "halcyon could not determine the ANARI SDK's version")
 endif()
 
-# Embree is fetched and built as a static library, like helide's
-add_subdirectory(external/embree EXCLUDE_FROM_ALL)
+# Embree, shared with helide: anari_embree (the SDK's cmake/anari_embree.cmake)
+anari_embree_target()
 
 # Typhoon's material library (external/typhoon) and OpenQMC's tables
 # (external/openqmc), for the 'quality' renderer
@@ -227,7 +227,7 @@ target_link_libraries(halcyon_path_materials PRIVATE halcyon_openqmc_data)
 target_link_libraries(halcyon_path_materials PRIVATE halcyon_image_loaders)
 
 # Keep the material libraries' symbols out of the device's dynamic symbols,
-# as Embree's tasking library's (external/embree)
+# as Embree's tasking library's (the SDK's cmake/anari_embree)
 if (UNIX AND NOT APPLE)
   target_link_options(${PROJECT_NAME} PRIVATE
     "LINKER:--exclude-libs,$<TARGET_LINKER_FILE_NAME:halcyon_path_materials>"

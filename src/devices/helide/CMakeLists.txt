@@ -43,7 +43,7 @@ include(GNUInstallDirs)
 
 find_package(anari REQUIRED)
 
-add_subdirectory(external/embree EXCLUDE_FROM_ALL)
+anari_embree_target()
 
 ## Core device target ##
 
