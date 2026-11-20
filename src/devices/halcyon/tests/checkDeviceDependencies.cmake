@@ -3,13 +3,14 @@
 
 # cmake -DDEVICE=<device library>
 #       -DSEARCH_DIRS=<directories to resolve dependencies in>
-#       [-DNM=<nm>]
+#       [-DNM=<nm>] [-DALLOW_TBB=ON]
 #       -P checkDeviceDependencies.cmake
 #
 # Fails if the device library depends, directly or through another library,
 # on one named like OpenUSD (libusd_*, or an unprefixed build's libtf.so
-# etc.), TBB, Python or Boost.Python, or if its RPATH or RUNPATH names a
-# directory holding OpenUSD's libraries.
+# etc.), TBB (unless ALLOW_TBB, for a device built with an installed Embree,
+# whose tasking system TBB is), Python or Boost.Python, or if its RPATH or
+# RUNPATH names a directory holding OpenUSD's libraries.
 #
 # With NM, also fails if the device exports a symbol of the libraries it links
 # statically with hidden symbols: MaterialX (and its pugixml), stb_image,
@@ -26,7 +27,8 @@ file(GET_RUNTIME_DEPENDENCIES
 set(found)
 foreach (dependency ${resolved} ${unresolved})
   get_filename_component(name ${dependency} NAME)
-  if (name MATCHES "^lib(usd_|tbb|python|boost_python)"
+  if (name MATCHES "^lib(usd_|python|boost_python)"
+      OR (name MATCHES "^libtbb" AND NOT ALLOW_TBB)
       OR name MATCHES "^lib(arch|tf|gf|vt|work|sdf|usd)\\.so")
     list(APPEND found ${dependency})
   endif()
@@ -55,8 +57,13 @@ endif()
 if (found)
   message(FATAL_ERROR "FAIL ${DEVICE} depends on or searches ${found}")
 endif()
-message("PASS no OpenUSD, TBB or Python among the device's dependencies "
-  "or in its search path")
+if (ALLOW_TBB)
+  message("PASS no OpenUSD or Python among the device's dependencies or in "
+    "its search path (TBB allowed: installed Embree)")
+else()
+  message("PASS no OpenUSD, TBB or Python among the device's dependencies "
+    "or in its search path")
+endif()
 
 if (NM)
   execute_process(COMMAND ${NM} -D --defined-only -C ${DEVICE}

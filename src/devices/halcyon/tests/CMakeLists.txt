@@ -806,8 +806,17 @@ set_tests_properties(halcyon::shading_context PROPERTIES
 
 # The device's runtime dependencies include no OpenUSD, TBB or Python; its
 # dynamic symbols none of the libraries it links with hidden symbols. ELF
-# only (file(READ_ELF), nm -D, --exclude-libs)
+# only (file(READ_ELF), nm -D, --exclude-libs). TBB is allowed when the device
+# uses an installed Embree, whose tasking system it then is
+# (external/embree).
 if (UNIX AND NOT APPLE)
+  get_target_property(halcyonEmbreeDefinitions
+    anari_embree INTERFACE_COMPILE_DEFINITIONS)
+  if ("ANARI_EMBREE_TBB" IN_LIST halcyonEmbreeDefinitions)
+    set(HALCYON_ALLOW_TBB ON)
+  else()
+    set(HALCYON_ALLOW_TBB OFF)
+  endif()
   # anari::anari is the installed library when halcyon builds alone, an
   # interface to the SDK's own 'anari' target in the SDK's tree
   if (TARGET anari)
@@ -819,6 +828,7 @@ if (UNIX AND NOT APPLE)
     COMMAND ${CMAKE_COMMAND}
       -DDEVICE=$<TARGET_FILE:${PROJECT_NAME}>
       -DNM=${CMAKE_NM}
+      -DALLOW_TBB=${HALCYON_ALLOW_TBB}
       "-DSEARCH_DIRS=$<TARGET_FILE_DIR:${PROJECT_NAME}>;$<TARGET_FILE_DIR:${HALCYON_ANARI_LIBRARY}>"
       -P ${CMAKE_CURRENT_LIST_DIR}/checkDeviceDependencies.cmake)
 endif()

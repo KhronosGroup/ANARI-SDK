@@ -5,7 +5,7 @@
 #include "SpatialField_ispc.h"
 #include "array/Array3D.h"
 // embree
-#include "algorithms/parallel_for.h"
+#include "anari_embree/parallel_for.h"
 // std
 #include <algorithm>
 #include <cstring>
@@ -80,7 +80,7 @@ struct StructuredRegularField : public SpatialField
     const size_t cells = ispc::SpatialField_numMacrocells(getIE());
     m_macrocellRanges.resize(2 * cells);
     constexpr size_t CHUNK = 64;
-    embree::parallel_for((cells + CHUNK - 1) / CHUNK, [&](size_t chunk) {
+    anari_embree::parallel_for((cells + CHUNK - 1) / CHUNK, [&](size_t chunk) {
       ispc::SpatialField_computeMacrocellRanges(getIE(),
           m_macrocellRanges.data(),
           chunk * CHUNK,

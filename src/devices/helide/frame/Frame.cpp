@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <chrono>
 // embree
-#include "algorithms/parallel_for.h"
+#include "anari_embree/parallel_for.h"
 
 namespace helide {
 
@@ -169,21 +169,25 @@ void Frame::renderFrame()
     const auto &size = m_frameData.size;
     const float frameAspect = float(size.x) / float(size.y);
     const auto rayGen = m_camera->createRayGenerator(frameAspect);
-    using Range = embree::range<uint32_t>;
-    embree::parallel_for(0u, size.y, taskGrainSize.y, [&](const Range &ry) {
-      for (auto y = ry.begin(); y < ry.end(); y++) {
-        embree::parallel_for(0u, size.x, taskGrainSize.x, [&](const Range &rx) {
-          for (auto x = rx.begin(); x < rx.end(); x++) {
-            auto screen = screenFromPixel(float2(x, y));
-            auto imageRegion = m_camera->imageRegion();
-            screen.x = linalg::lerp(imageRegion.x, imageRegion.z, screen.x);
-            screen.y = linalg::lerp(imageRegion.y, imageRegion.w, screen.y);
-            Ray ray = rayGen.createRay(screen);
-            writeSample(x, y, m_renderer->renderSample(screen, ray, *m_world));
+    anari_embree::parallel_for(
+        0u, size.y, taskGrainSize.y, [&](uint32_t y0, uint32_t y1) {
+          for (auto y = y0; y < y1; y++) {
+            anari_embree::parallel_for(
+                0u, size.x, taskGrainSize.x, [&](uint32_t x0, uint32_t x1) {
+                  for (auto x = x0; x < x1; x++) {
+                    auto screen = screenFromPixel(float2(x, y));
+                    auto imageRegion = m_camera->imageRegion();
+                    screen.x =
+                        linalg::lerp(imageRegion.x, imageRegion.z, screen.x);
+                    screen.y =
+                        linalg::lerp(imageRegion.y, imageRegion.w, screen.y);
+                    Ray ray = rayGen.createRay(screen);
+                    writeSample(
+                        x, y, m_renderer->renderSample(screen, ray, *m_world));
+                  }
+                });
           }
         });
-      }
-    });
 
     // Release the world and end the frame before the callback, which may
     // query the world (taking its lock) or map arrays (waiting for the frame

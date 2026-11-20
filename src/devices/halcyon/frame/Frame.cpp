@@ -8,7 +8,7 @@
 #include <chrono>
 #include <cmath>
 // embree
-#include "algorithms/parallel_for.h"
+#include "anari_embree/parallel_for.h"
 
 #include "Frame_ispc.h"
 
@@ -292,7 +292,7 @@ void Frame::runPass(
   // Each task covers one tile of grain.y rows by spanGrain spans
   const int numTilesX = (numSpans + spanGrain - 1) / spanGrain;
   const int numTilesY = (height + grain.y - 1) / grain.y;
-  embree::parallel_for(numTilesX * numTilesY, [&](int tile) {
+  anari_embree::parallel_for(numTilesX * numTilesY, [&](int tile) {
     const int s0 = (tile % numTilesX) * spanGrain;
     const int y0 = (tile / numTilesX) * grain.y;
     const int s1 = std::min(s0 + spanGrain, numSpans);
