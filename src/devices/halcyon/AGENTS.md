@@ -41,14 +41,15 @@ and CI don't). Either way it is its own CMake project, as the SDK's other device
 takes the ANARI SDK's version (the root's in the SDK's tree, the found SDK's when built
 alone), writes its outputs to `CMAKE_BINARY_DIR`, and names its ctests `halcyon::<name>`.
 
-Embree comes from `external/embree/CMakeLists.txt` (target `anari_embree`, the same file as
-helide's: in the SDK's tree whichever device configures first sets it up and the other links
-it). An installed Embree 4.3+ found with TBB is used as is (CI does this, with Embree's
+Embree comes from `anari_embree_target()` (the SDK's `cmake/anari_embree.cmake`, which
+`find_package(anari)` provides too; target `anari_embree`, set up by
+`cmake/anari_embree/CMakeLists.txt` and shared with helide: whichever device configures first
+sets it up and the other links it). An installed Embree 4.3+ found with TBB is used as is (CI does this, with Embree's
 release packages: `.github/actions/install_embree`); the configure rejects one built without a
 feature the devices use. Otherwise Embree is fetched and built statically: Embree 4.4.1,
 internal tasking, x86 ISAs SSE2 through AVX-512 (NEON2X on ARM), and the device links no TBB.
-Parallel loops call `anari_embree::parallel_for()` (`external/embree/include/anari_embree/
-parallel_for.h`, also identical to helide's), which runs on Embree's internal tasking or on TBB
+Parallel loops call `anari_embree::parallel_for()` (`cmake/anari_embree/include/anari_embree/
+parallel_for.h`, helide's too), which runs on Embree's internal tasking or on TBB
 to match, so on the same thread pool as BVH builds either way. The rest of this paragraph is
 about the built-from-source Embree. There is
 no `EMBREE_API_NAMESPACE`: the ISPC code calls the C API, which a namespace would mangle. Embree's API symbols are hidden in the static library instead, and the tasking

@@ -4,8 +4,8 @@
 name: halcyon CI
 
 # Runs on changes to halcyon and to what it builds on: helium, the frontend,
-# the code generator, the SDK's CMake and the Embree setup it shares with
-# helide (src/devices/helide/external/embree)
+# the code generator and the SDK's CMake, which holds the Embree setup it
+# shares with helide (cmake/anari_embree)
 on:
   push:
     branches: [ next_release ]
@@ -17,7 +17,6 @@ on:
       - 'cmake/**'
       - 'CMakeLists.txt'
       - 'src/devices/CMakeLists.txt'
-      - 'src/devices/helide/external/embree/**'
       - '.github/actions/install_embree/**'
       - '.github/workflows/halcyon_ci.yml'
   pull_request:
@@ -30,7 +29,6 @@ on:
       - 'cmake/**'
       - 'CMakeLists.txt'
       - 'src/devices/CMakeLists.txt'
-      - 'src/devices/helide/external/embree/**'
       - '.github/actions/install_embree/**'
       - '.github/workflows/halcyon_ci.yml'
 

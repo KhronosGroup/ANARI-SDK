@@ -107,6 +107,7 @@ include(cmake/anari_generate_frontend.cmake)
 include(cmake/anari_generate_codegen.cmake)
 include(cmake/cmake_project_commands.cmake)
 include(cmake/anari_sdk_fetch_project.cmake)
+include(cmake/anari_embree.cmake)
 
 ## Add library and executable targets
 
@@ -173,4 +174,10 @@ install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/cmake
   FILES_MATCHING
     PATTERN *.cmake
     PATTERN Findanari.cmake EXCLUDE
+)
+
+# anari_embree_target()'s sources, which the pattern above leaves out
+install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/cmake/anari_embree
+  DESTINATION
+    ${ANARI_CMAKE_INSTALL_DESTINATION}/cmake
 )

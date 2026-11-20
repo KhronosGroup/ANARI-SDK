@@ -9,14 +9,10 @@
 # CMAKE_DISABLE_FIND_PACKAGE_embree=ON to always build from source; point
 # CMAKE_PREFIX_PATH (or embree_DIR and TBB_DIR) at the installs to use them.
 #
-# helide and halcyon each carry this same file (src/devices/*/external/embree),
-# so that either builds alone; keep the copies identical. In the SDK's tree
-# Embree's own targets can be added only once, so the first device to get here
-# sets it up and the other links the same anari_embree.
-
-if (TARGET anari_embree)
-  return()
-endif()
+# Added by anari_embree_target() (../anari_embree.cmake), once per build: the
+# first device to call it sets anari_embree up, and the others link the same
+# target. This directory is installed with the SDK's other CMake files, so
+# that a device built alone against an installed SDK gets it too.
 
 project(anari_embree LANGUAGES CXX)
 
