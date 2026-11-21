@@ -228,6 +228,66 @@ jobs:
       with:
         packages-dir: dist
 
+  publish-device-wheels-testpypi:
+    # Forks have no Trusted Publisher
+    if: >-
+      github.repository == 'KhronosGroup/ANARI-SDK' &&
+      github.event_name == 'workflow_dispatch' && inputs.publish_testpypi
+    needs: [ validate-device-wheels ]
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [ helide ]
+        include:
+        - { package: helide, project: helide }
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/project/${{ matrix.project }}/
+    permissions:
+      id-token: write # Trusted Publishing; nothing else in this job
+    steps:
+    - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      with:
+        pattern: wheels-${{ matrix.package }}-*
+        merge-multiple: true
+        path: dist
+    - uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
+      with:
+        repository-url: https://test.pypi.org/legacy/
+        packages-dir: dist
+        # Rehearsals repeat a version; TestPyPI never accepts one twice
+        skip-existing: true
+
+  publish-device-wheels-pypi:
+    # Forks have no Trusted Publisher
+    if: >-
+      github.repository == 'KhronosGroup/ANARI-SDK' &&
+      github.event_name == 'push' && github.ref_type == 'tag' &&
+      startsWith(github.ref_name, 'v')
+    needs: [ check-anari-version, validate-device-wheels ]
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [ helide ]
+        include:
+        - { package: helide, project: helide }
+    environment: # its reviewers approve each release
+      name: publish device wheels
+      url: https://pypi.org/project/${{ matrix.project }}/
+    permissions:
+      id-token: write # Trusted Publishing; nothing else in this job
+    steps:
+    - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      with:
+        pattern: wheels-${{ matrix.package }}-*
+        merge-multiple: true
+        path: dist
+    - uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
+      with:
+        packages-dir: dist
+
   # Currently these jobs wait for *all* of `build-anari-wheels` to complete.
   # There's no mechanism to only require the matching platform's `anari` wheel
   # artifacts.
