@@ -323,14 +323,15 @@ jobs:
         path: wheelhouse/*.whl
         if-no-files-found: error
 
-  validate-helide-extra:
-    name: validate anari[helide] (${{ matrix.os }}, ${{ matrix.arch }})
+  validate-device-wheels:
+    name: validate anari[${{ matrix.package }}] (${{ matrix.os }}, ${{ matrix.arch }})
     needs: [ build-anari-wheels, build-device-wheels ]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ ubuntu-24.04, macos-15, windows-latest ]
+        package: [ helide ]
         include:
         - { os: ubuntu-24.04,     arch: x86_64 }
         - { os: macos-15,         arch: arm64 }
@@ -341,23 +342,30 @@ jobs:
         persist-credentials: false
         sparse-checkout: |
           examples/python/anari_tutorial_device.py
-        sparse-checkout-cone-mode: false
+          src/devices/${{ matrix.package }}/test
+        sparse-checkout-cone-mode: true
     - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
       with:
         name: anari-wheels-${{ matrix.os }}-${{ matrix.arch }}
         path: wheelhouse
     - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
       with:
-        name: wheels-helide-${{ matrix.os }}-${{ matrix.arch }}
+        name: wheels-${{ matrix.package }}-${{ matrix.os }}-${{ matrix.arch }}
         path: wheelhouse
     - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
       with:
         python-version: '3.10'
     - name: Install wheel dependencies and the ANARI extra
       run: |
-        python -m pip install cffi numpy matplotlib
-        python -m pip install --no-index --find-links wheelhouse 'anari[helide]'
-    - name: Run the device tutorial
+        python -m pip install cffi numpy
+        python -m pip install pytest
+        python -m pip install --no-index --find-links wheelhouse 'anari[${{ matrix.package }}]'
+    - name: Run the device wheel tests
+      run: python -m pytest -q src/devices/${{ matrix.package }}/test
+    - name: Run the helide tutorial script
+      if: ${{ matrix.package == 'helide' }}
       env:
         MPLBACKEND: Agg
-      run: python examples/python/anari_tutorial_device.py
+      run: |
+        python -m pip install matplotlib
+        python examples/python/anari_tutorial_device.py
