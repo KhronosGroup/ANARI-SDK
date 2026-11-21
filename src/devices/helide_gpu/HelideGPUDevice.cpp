@@ -22,18 +22,6 @@ static void gpu_device_init(HelideGPUDeviceGlobalState *state)
 {
   auto &gpu = state->gpu;
 
-  gpu.sdlDevice.init();
-  gpu.device = gpu.sdlDevice.device;
-
-  if (!gpu.device) {
-    anariDeviceReportStatus(state->device,
-        ANARI_SEVERITY_FATAL_ERROR,
-        ANARI_STATUS_UNKNOWN_ERROR,
-        "[SDL3_gpu] SDL_CreateGPUDevice failed: %s",
-        SDL_GetError());
-    return;
-  }
-
   anariDeviceReportStatus(state->device,
       ANARI_SEVERITY_INFO,
       ANARI_STATUS_NO_ERROR,
@@ -381,6 +369,17 @@ void HelideGPUDevice::initDevice()
     reportMessage(ANARI_SEVERITY_FATAL_ERROR,
         "[SDL3_gpu] SDL_InitSubSystem(SDL_INIT_VIDEO) failed: %s",
         state.gpu.sdlDevice.initializationError());
+    return;
+  }
+
+  // SDL's macOS graphics backends need device creation on the main thread.
+  // Keep subsequent GPU resource work on the dedicated GPU thread.
+  state.gpu.sdlDevice.init();
+  state.gpu.device = state.gpu.sdlDevice.device;
+  if (!state.gpu.device) {
+    reportMessage(ANARI_SEVERITY_FATAL_ERROR,
+        "[SDL3_gpu] SDL_CreateGPUDevice failed: %s",
+        SDL_GetError());
     return;
   }
 
