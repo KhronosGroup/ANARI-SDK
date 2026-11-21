@@ -22,6 +22,7 @@ on:
       - 'src/devices/sink/**'
       - 'src/devices/debug/**'
       - 'src/devices/helide/**'
+      - 'src/devices/helide_gpu/**'
       - 'examples/empty_helium_device/**'
       - 'examples/python/anari_tutorial_device.py'
       - 'tests/python/**'
@@ -238,7 +239,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        package: [ helide ]
+        package: [ helide, helide_gpu ]
         include:
         - { package: helide, project: helide }
     environment:
@@ -270,7 +271,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        package: [ helide ]
+        package: [ helide, helide_gpu ]
         include:
         - { package: helide, project: helide }
     environment: # its reviewers approve each release
@@ -299,16 +300,24 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-24.04, macos-15, windows-latest ]
+        os: [ ubuntu-24.04, macos-15, macos-15-intel, windows-latest ]
         package:
         - helide
+        - helide_gpu
         include:
         - { os: ubuntu-24.04,     arch: x86_64 }
         # Embree's build runs out of memory inside of the `cibuildwheel`
         # container.
         # - { os: ubuntu-24.04-arm, arch: aarch64 }
         - { os: macos-15,         arch: arm64 }
+        - { os: macos-15-intel,   arch: x86_64 }
         - { os: windows-latest,   arch: AMD64 }
+        exclude:
+        - os: ubuntu-24.04-arm
+          package: helide_gpu
+        # No support from Embree.
+        - os: macos-15-intel
+          package: helide
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
@@ -367,13 +376,85 @@ jobs:
         embree_lib="$(dirname "$embree_lib_file")"
         tbb_lib="$(brew --prefix tbb)/lib"
         echo "DYLD_LIBRARY_PATH=$embree_lib:$tbb_lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}" >> "$GITHUB_ENV"
+    - name: Install GPU build dependencies (macOS)
+      if: ${{ matrix.package == 'helide_gpu' && startsWith(matrix.os, 'macos-') }}
+      shell: bash
+      run: |
+        brew install sdl3 spirv-cross glslang
+        echo "SDL3_ROOT=$(brew --prefix sdl3)" >> "$GITHUB_ENV"
+    - name: Install GPU build dependencies (Windows)
+      if: ${{ matrix.package == 'helide_gpu' && matrix.os == 'windows-latest' }}
+      shell: pwsh
+      run: |
+        $deps = Join-Path $env:GITHUB_WORKSPACE "gpu-build-deps"
+        New-Item -ItemType Directory -Force $deps | Out-Null
+        $sdlZip = Join-Path $deps "SDL3.zip"
+        Invoke-WebRequest "https://github.com/libsdl-org/SDL/releases/download/release-3.4.20/SDL3-devel-3.4.20-VC.zip" -OutFile $sdlZip
+        Expand-Archive $sdlZip (Join-Path $deps "SDL3") -Force
+        $sdlConfig = Get-ChildItem (Join-Path $deps "SDL3") -Recurse -Filter SDL3Config.cmake | Select-Object -First 1
+        if (-not $sdlConfig) { throw "SDL3Config.cmake was not found in SDL3 development archive" }
+        $glslangZip = Join-Path $deps "glslang.zip"
+        Invoke-WebRequest "https://github.com/KhronosGroup/glslang/releases/download/16.6.0/glslang-16.6.0-windows-x86_64-release.zip" -OutFile $glslangZip
+        Expand-Archive $glslangZip (Join-Path $deps "glslang") -Force
+        $validator = Get-ChildItem (Join-Path $deps "glslang") -Recurse -Filter glslang.exe | Select-Object -First 1
+        if (-not $validator) { throw "glslang.exe was not found in glslang release archive" }
+        "SDL3_ROOT=$($sdlConfig.Directory)" | Out-File -FilePath $env:GITHUB_ENV -Append
+        $validator.Directory.FullName | Out-File -FilePath $env:GITHUB_PATH -Append
+    - name: Install GPU build dependencies (manylinux)
+      if: ${{ matrix.package == 'helide_gpu' && matrix.os == 'ubuntu-24.04' }}
+      shell: bash
+      run: |
+        {
+          echo 'CIBW_BEFORE_ALL_LINUX<<CIBW_SCRIPT'
+          cat <<'CIBW_SCRIPT'
+        bash -s <<'GPU_SETUP'
+        set -euo pipefail
+        dnf install -y almalinux-release-devel
+        dnf install -y glslang
+
+        if ! dnf install -y SDL3-devel; then
+          workdir="$(pwd)/.wheel-deps/build-tools"
+          mkdir -p "$workdir"
+          cd "$workdir"
+
+          readonly sdl3_version="3.4.20"
+          readonly sdl3_sha256sum="f3bb06f55bed9557227a700af2ea62e49497ebdf58037732a731a5fb3ef8581f"
+
+          curl -fsSLO "https://github.com/libsdl-org/SDL/releases/download/release-$sdl3_version/SDL3-$sdl3_version.tar.gz"
+          echo "$sdl3_sha256sum  SDL3-$sdl3_version.tar.gz" | sha256sum -c -
+          tar -xzf "SDL3-$sdl3_version.tar.gz"
+          cmake -S "SDL3-$sdl3_version" -B SDL3-build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=/usr/local \
+            -DSDL_SHARED=ON \
+            -DSDL_STATIC=OFF \
+            -DSDL_TESTS=OFF \
+            -DSDL_EXAMPLES=OFF \
+            -DSDL_X11_XCURSOR=OFF \
+            -DSDL_X11_XFIXES=OFF \
+            -DSDL_X11_XINPUT=OFF \
+            -DSDL_X11_XRANDR=OFF \
+            -DSDL_X11_XSCRNSAVER=OFF \
+            -DSDL_X11_XTEST=OFF
+          cmake --build SDL3-build --parallel 4
+          cmake --install SDL3-build
+        fi
+        GPU_SETUP
+        CIBW_SCRIPT
+          echo CIBW_SCRIPT
+        } >> "$GITHUB_ENV"
     - name: Build wheels
       uses: pypa/cibuildwheel@f9b966cfadf4109556cadc5bb39ddb72d0ce664e # v4.3.5
       env:
         CIBW_ARCHS: ${{ matrix.arch }}
+        CIBW_ENVIRONMENT: ${{ matrix.package == 'helide_gpu' && 'SDL_DOC_GENERATOR=0' || '' }}
         CIBW_ENVIRONMENT_LINUX: anari_ROOT=/project/src/devices/${{ matrix.package }}/.wheel-deps/anari/anari/sdk PIP_FIND_LINKS=/project/src/devices/${{ matrix.package }}/.wheel-deps/anari-wheelhouse ${{ matrix.os == 'ubuntu-24.04' && 'CMAKE_PREFIX_PATH=/project/src/devices/helide/.wheel-deps/embree/embree:/project/src/devices/helide/.wheel-deps/embree/oneapi-tbb-2022.3.0 LD_LIBRARY_PATH=/project/src/devices/helide/.wheel-deps/embree/embree/lib:/project/src/devices/helide/.wheel-deps/embree/embree/lib64:/project/src/devices/helide/.wheel-deps/embree/oneapi-tbb-2022.3.0/lib' || '' }}
         CIBW_ENVIRONMENT_WINDOWS: CC=cl CXX=cl
         CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: ${{ matrix.package == 'helide' && 'delvewheel repair --analyze-existing --add-path "{project}/.wheel-deps/embree/embree-4.4.1.x64.windows/bin;{project}/.wheel-deps/embree/oneapi-tbb-2022.3.0/redist/intel64/vc14" -w {dest_dir} {wheel}' || 'delvewheel repair -w {dest_dir} -v {wheel}' }}
+        # PySDL3's downloaded Linux runtime currently needs a newer glibc than
+        # the manylinux test image; validate it separately on Ubuntu 22.04.
+        # https://github.com/Aermoss/PySDL3-Build/issues/4
+        CIBW_TEST_SKIP: ${{ matrix.package == 'helide_gpu' && matrix.os == 'ubuntu-24.04' && '*' || '' }}
       with:
         package-dir: src/devices/${{ matrix.package }}
         output-dir: wheelhouse
@@ -391,11 +472,15 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-24.04, macos-15, windows-latest ]
-        package: [ helide ]
+        package: [ helide, helide_gpu ]
         include:
         - { os: ubuntu-24.04,     arch: x86_64 }
         - { os: macos-15,         arch: arm64 }
         - { os: windows-latest,   arch: AMD64 }
+        - package: helide
+          deps: ''
+        - package: helide_gpu
+          deps: PySDL3
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
@@ -417,7 +502,7 @@ jobs:
         python-version: '3.10'
     - name: Install wheel dependencies and the ANARI extra
       run: |
-        python -m pip install cffi numpy
+        python -m pip install cffi numpy ${{ matrix.deps }}
         python -m pip install pytest
         python -m pip install --no-index --find-links wheelhouse 'anari[${{ matrix.package }}]'
     - name: Run the device wheel tests

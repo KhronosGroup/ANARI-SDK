@@ -133,7 +133,14 @@ void SDLGPUDevice::init()
   formats |= SDL_GPU_SHADERFORMAT_MSL;
 #endif
 
-  device = SDL_CreateGPUDevice(formats, false, NULL);
+#if defined(__APPLE__)
+  // The wheel ships Metal shaders on Apple platforms; prefer Metal over any
+  // other SDL GPU backend that may also be available.
+  const char *driver = "metal";
+#else
+  const char *driver = nullptr;
+#endif
+  device = SDL_CreateGPUDevice(formats, false, driver);
   if (device)
     shaderFormat = detectShaderFormat(device);
 }
