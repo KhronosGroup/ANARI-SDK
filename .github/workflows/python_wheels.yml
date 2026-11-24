@@ -506,7 +506,11 @@ jobs:
         python -m pip install pytest
         python -m pip install --no-index --find-links wheelhouse 'anari[${{ matrix.package }}]'
     - name: Run the device wheel tests
-      run: python -m pytest -q src/devices/${{ matrix.package }}/test
+      env:
+        # PySDL3 downloads its runtime from GitHub on first import.
+        SDL_GITHUB_TOKEN: ${{ github.token }}
+        SDL_DOC_GENERATOR: '0'
+      run: ${{ runner.os == 'Linux' && matrix.package == 'helide_gpu' && 'xvfb-run -a ' || '' }}python -m pytest -q src/devices/${{ matrix.package }}/test
     - name: Run the helide tutorial script
       if: ${{ matrix.package == 'helide' }}
       env:
