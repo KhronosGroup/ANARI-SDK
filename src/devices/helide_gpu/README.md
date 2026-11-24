@@ -126,3 +126,9 @@ PySDL3 downloads its runtime from GitHub on first import. On shared CI runners,
 set `SDL_GITHUB_TOKEN` to a read-only GitHub token to avoid unauthenticated API
 rate limits. Set `SDL_DOC_GENERATOR=0` to disable its unrelated documentation
 downloads and generation.
+
+The Linux wheel validation job renders with Mesa's Lavapipe software Vulkan
+driver under Xvfb, so it needs no physical GPU. It sets
+`HELIDE_GPU_REQUIRE_GPU=1` to fail rather than skip if no SDL GPU backend can
+be created. Without that setting, the wheel test skips when no backend is
+available, but still fails if the SDL runtime cannot be loaded.
