@@ -56,6 +56,16 @@ try:
 except (ImportError, AttributeError):
     pass
 
+if sys.platform == "darwin":
+    import ctypes as _ctypes
+
+    # dyld must see SDL's symbols when it binds the device's dynamic-lookup
+    # references; loading SDL during device initialization is too late.
+    _sdl_runtime = _ctypes.CDLL(
+        os.environ.get("HELIDE_GPU_SDL3_LIBRARY") or "libSDL3.dylib",
+        mode=os.RTLD_NOW | os.RTLD_GLOBAL,
+    )
+
 _error_status = anari.ffi.from_handle(anari.error_status_handle)
 _status_callback = None
 
