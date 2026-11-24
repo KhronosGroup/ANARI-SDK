@@ -33,6 +33,8 @@
 
 #include "helium/utility/ParameterizedObject.h"
 
+#include <thread>
+
 namespace {
 
 SCENARIO(
@@ -96,6 +98,17 @@ SCENARIO(
     THEN("the live store reflects the newer value")
     {
       REQUIRE(obj.getParam<int>(name, 0) == 2);
+    }
+
+    THEN("another thread reads the live store during a committed read")
+    {
+      helium::ParameterizedObject::ReadCommittedScope scope(&obj);
+      int liveValue = 0;
+      std::thread reader([&]() { liveValue = obj.getParam<int>(name, 0); });
+      reader.join();
+
+      CHECK(liveValue == 2);
+      CHECK(obj.getParam<int>(name, 0) == 1);
     }
 
     WHEN("reading in committed mode (as commitParameters()/finalize() do)")

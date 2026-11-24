@@ -11,6 +11,7 @@
 #include <cstring>
 #include <memory>
 #include <mutex>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -109,9 +110,9 @@ struct ParameterizedObject
   void commitParameterSnapshot();
 
   // RAII scope that routes this object's (const) getters to its committed
-  // snapshot for the scope's duration. The deferred-commit machinery wraps an
-  // object's buffered commitParameters()/finalize() in one of these so those
-  // reads see the state captured at commit time. Constructing the scope holds
+  // snapshot on the thread holding the scope. The deferred-commit machinery
+  // uses this scope for commitParameters()/finalize() so those reads see the
+  // state captured at commit time. Constructing the scope holds
   // m_commitReadMutex, which serializes the deferred read against a concurrent
   // commitParameterSnapshot() (a legal anariCommitParameters() while a frame
   // using the object is still in flight), keeping m_paramsCommitted stable for
@@ -157,10 +158,8 @@ struct ParameterizedObject
   // as a device's renderFrame() may hold the object lock while blocked on the
   // flush, so reusing it here would deadlock.
   std::mutex m_commitReadMutex;
-  // Selects committed vs. staging reads (see ReadCommittedScope). Atomic
-  // because the flush thread toggles it while an app-side getter may read it
-  // (under the object lock) on another thread.
-  std::atomic<bool> m_readCommitted{false};
+  // A default id means no thread is reading the committed snapshot.
+  std::atomic<std::thread::id> m_committedReader{std::thread::id{}};
 };
 
 // Inlined ParameterizedObject definitions ////////////////////////////////////
