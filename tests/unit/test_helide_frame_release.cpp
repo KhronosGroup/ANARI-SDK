@@ -35,18 +35,25 @@ void releaseFromCallback(const void *userPtr, ANARIDevice d, ANARIFrame frame)
   (*(std::atomic<int> *)userPtr)++;
 }
 
-// A frame for a completion callback to release, and its calls.
+// A frame for a completion callback to release, whether its render is queued
+// yet, and the callback's calls.
 struct ReleaseOther
 {
   anari::Frame frame{nullptr};
+  std::atomic<bool> queued{false};
   std::atomic<int> calls{0};
 };
 
 // Completion callback that releases the ReleaseOther's frame (another frame
-// than its own) and counts its calls.
+// than its own) once that frame's render is queued, and counts its calls.
 void releaseOtherFromCallback(const void *userPtr, ANARIDevice d, ANARIFrame)
 {
   auto *other = (ReleaseOther *)userPtr;
+  // Without this wait, the release may come first and destroy the frame
+  // before the app renders it. The wait can't deadlock: rendering a frame
+  // with no previous render doesn't wait for the worker running this.
+  while (!other->queued)
+    std::this_thread::sleep_for(1ms);
   anariRelease(d, other->frame);
   other->calls++;
 }
@@ -182,6 +189,7 @@ SCENARIO("a helide frame released without waiting on it is not leaked",
       anari::commitParameters(d, first);
       anari::render(d, first);
       anari::render(d, frame);
+      other.queued = true;
 
       // Released by the callback: the frame may no longer be used here.
       while (other.calls == 0)
