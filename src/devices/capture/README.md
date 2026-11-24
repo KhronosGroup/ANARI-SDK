@@ -394,7 +394,7 @@ the messages (`<id>` is the object's ID):
 | Message | When |
 |---------|------|
 | `<id>: unknown subtype "<s>"` | The object type has subtypes, and `<s>` is not one. The parameters of such an object are not checked. |
-| `<id>: unknown parameter "<p>"` | The spec defines no parameter `<p>` for the object's type and subtype. |
+| `<id>: unknown parameter "<p>"` | The spec defines no parameter `<p>` for the object's type and subtype, nor for every subtype of that type (as extensions do with the `default` subtype, e.g. a camera's `focusDistance`). |
 | `<id>: parameter "<p>" has type <T>, expected <T1> or <T2>` | The parameter was set with a type the spec does not allow. The value is still written. |
 | `<id>: array is still mapped at render time` | An array was mapped and not unmapped. |
 

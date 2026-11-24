@@ -1317,6 +1317,35 @@ SCENARIO("a capture records spec violations as warnings", "[capture_device]")
     }
   }
 
+  WHEN("a camera has parameters an extension declares for every camera")
+  {
+    anari::setParameter(d, scene.camera, "apertureRadius", 0.5f);
+    anari::setParameter(d, scene.camera, "focusDistance", 2.f);
+    anari::setParameter(d, scene.camera, "interpupillaryDistance", 0.06f);
+    scene.commit(scene.camera);
+    scene.render();
+
+    THEN("they are not reported")
+    {
+      REQUIRE(cd.status.warnings.empty());
+    }
+  }
+
+  WHEN("such a parameter has the wrong type")
+  {
+    anari::setParameter(d, scene.camera, "focusDistance", 2);
+    scene.commit(scene.camera);
+    scene.render();
+
+    THEN("it is reported")
+    {
+      REQUIRE(cd.status.warnings
+          == std::vector<std::string>{
+              "camera@0: parameter \"focusDistance\" has type "
+              "ANARI_INT32, expected ANARI_FLOAT32"});
+    }
+  }
+
   WHEN("a reachable array is still mapped at render time")
   {
     auto array = anari::newArray1D(d, anari::DataType(ANARI_FLOAT32), 2);

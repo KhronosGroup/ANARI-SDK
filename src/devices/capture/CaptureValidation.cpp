@@ -18,6 +18,15 @@ bool accepts(ANARIDataType declared, ANARIDataType actual)
       || (declared == ANARI_ARRAY && anari::isArray(actual));
 }
 
+const ANARIParameter *parameterList(
+    ANARIDataType type, const std::string &subtype)
+{
+  return (const ANARIParameter *)query_object_info(type,
+      subtype.empty() ? nullptr : subtype.c_str(),
+      "parameter",
+      ANARI_PARAMETER_LIST);
+}
+
 } // namespace
 
 std::vector<std::string> validateObject(const std::string &id,
@@ -41,11 +50,13 @@ std::vector<std::string> validateObject(const std::string &id,
     }
   }
 
-  const auto *declared = (const ANARIParameter *)query_object_info(type,
-      hasSubtypes ? subtype.c_str() : nullptr,
-      "parameter",
-      ANARI_PARAMETER_LIST);
-  if (!declared)
+  // Parameters declared on the "default" subtype (e.g. by camera extensions)
+  // apply to every subtype of that type.
+  const auto *declared = parameterList(type, hasSubtypes ? subtype : "");
+  const auto *shared = hasSubtypes && subtype != "default"
+      ? parameterList(type, "default")
+      : nullptr;
+  if (!declared && !shared)
     return warnings;
 
   std::vector<const CommittedParams::List::value_type *> sorted;
@@ -60,9 +71,11 @@ std::vector<std::string> validateObject(const std::string &id,
     const ANARIDataType actual = param->second.type();
 
     std::vector<ANARIDataType> expected;
-    for (auto *p = declared; p->name; ++p) {
-      if (name == p->name)
-        expected.push_back(p->type);
+    for (const auto *list : {declared, shared}) {
+      for (auto *p = list; p && p->name; ++p) {
+        if (name == p->name)
+          expected.push_back(p->type);
+      }
     }
 
     if (expected.empty()) {
