@@ -20,6 +20,7 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
+all = ["helide", "helide_gpu"]
 helide = ["helide"]
 helide_gpu = ["helide_gpu"]
 
