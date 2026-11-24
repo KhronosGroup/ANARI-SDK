@@ -21,6 +21,7 @@ classifiers = [
 
 [project.optional-dependencies]
 helide = ["helide"]
+helide_gpu = ["helide_gpu"]
 
 [project.urls]
 Homepage = "https://www.khronos.org/anari/"
