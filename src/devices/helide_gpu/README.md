@@ -119,3 +119,10 @@ the ambient light a surface reflects passes through a buffer that clips it at
   GGX BRDF, but it needs two 64x64 lookup textures bound to both surface
   fragment shaders, which changes their sampler bindings (and the MSL binding
   flags).
+
+# CI notes
+
+PySDL3 downloads its runtime from GitHub on first import. On shared CI runners,
+set `SDL_GITHUB_TOKEN` to a read-only GitHub token to avoid unauthenticated API
+rate limits. Set `SDL_DOC_GENERATOR=0` to disable its unrelated documentation
+downloads and generation.
