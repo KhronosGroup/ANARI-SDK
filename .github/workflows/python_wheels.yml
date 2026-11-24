@@ -505,6 +505,22 @@ jobs:
         python -m pip install cffi numpy ${{ matrix.deps }}
         python -m pip install pytest
         python -m pip install --no-index --find-links wheelhouse 'anari[${{ matrix.package }}]'
+    - name: Set up software Vulkan rendering (Linux)
+      if: ${{ runner.os == 'Linux' && matrix.package == 'helide_gpu' }}
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends \
+          libvulkan1 mesa-vulkan-drivers vulkan-tools xvfb xauth ripgrep
+        lvp_icd="$(dpkg -L mesa-vulkan-drivers | rg '/lvp_icd[^/]*\.json$')"
+        test -f "$lvp_icd"
+        {
+          echo "VK_DRIVER_FILES=$lvp_icd"
+          echo "SDL_GPU_DRIVER=vulkan"
+          echo "SDL_VIDEO_DRIVER=x11"
+          echo "SDL_VIDEODRIVER=x11"
+        } >> "$GITHUB_ENV"
+        VK_DRIVER_FILES="$lvp_icd" xvfb-run -a vulkaninfo --summary
     - name: Run the device wheel tests
       env:
         # PySDL3 downloads its runtime from GitHub on first import.
