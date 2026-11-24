@@ -53,7 +53,7 @@ runs:
     - name: Unit Tests
       shell: ${{ inputs.shell }}
       working-directory: ${{ inputs.workspace }}/build
-      run: ctest -R unit_test -C ${{ inputs.config }}
+      run: ctest -R unit_test -C ${{ inputs.config }} --output-on-failure
 
     - name: Render Tests
       shell: ${{ inputs.shell }}

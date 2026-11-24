@@ -79,14 +79,33 @@ SCENARIO("helide answers WAIT bounds queries while another thread renders",
       }
     });
 
+    // Stops and joins the render thread however the section exits: a Catch
+    // assertion that throws past a joinable std::thread calls
+    // std::terminate(), which loses the failure's message.
+    struct StopRenderLoop
+    {
+      std::atomic<bool> &stop;
+      std::thread &thread;
+      ~StopRenderLoop()
+      {
+        stop = true;
+        if (thread.joinable())
+          thread.join();
+      }
+    } stopRenderLoop{stop, renderLoop};
+
     THEN("each WAIT bounds query sees the sphere moved just before it")
     {
+      int failedQueries = 0;
       int wrong = 0;
       for (int i = 0; i < 200; i++) {
         const float3 center(float(i % 7), float(i % 3), 0.f);
         moveSphere(d, sphere, center);
         Box bounds{float3(0.f), float3(0.f)};
-        REQUIRE(queryBounds(d, world, bounds));
+        if (!queryBounds(d, world, bounds)) {
+          failedQueries++;
+          continue;
+        }
         for (int a = 0; a < 3; a++) {
           if (std::abs(bounds.lower[a] - (center[a] - kRadius)) > 1e-4f
               || std::abs(bounds.upper[a] - (center[a] + kRadius)) > 1e-4f)
@@ -96,6 +115,7 @@ SCENARIO("helide answers WAIT bounds queries while another thread renders",
       stop = true;
       renderLoop.join();
 
+      CHECK(failedQueries == 0);
       CHECK(wrong == 0);
       CHECK(frames > 0);
     }
