@@ -3,7 +3,7 @@
 
 [project] # Project metadata
 name = "anari"
-version = "0.17.0.post1"
+version = "0.18.0"
 description = "Python bindings and device SDK for the Khronos ANARI rendering API"
 requires-python = ">=3.10"
 readme = "README.md"

@@ -4,7 +4,7 @@
 // The device created directly through anariNewHalcyonDevice() (linked, not
 // loaded as a library) uses the given status callback and reports the device
 // properties: version, version.major/minor/patch, version.name(.size) (the ANARI
-// SDK's version, 0.17.0), anariVersion.major/minor and geometryMaxIndex, for both
+// SDK's version, 0.18.0), anariVersion.major/minor and geometryMaxIndex, for both
 // ANARI_WAIT and ANARI_NO_WAIT.
 
 // halcyon
@@ -64,12 +64,12 @@ bool testProperties(anari::Device d, uint32_t mask)
   pass &= report("version properties found" + suffix, found);
   // The literal is pinned on purpose (not taken from CMake), so a mis-wired
   // version fails here; bump it with the SDK's version
-  pass &= report("version is 0.17.0" + suffix,
-      found && major == 0 && minor == 17 && patch == 0);
+  pass &= report("version is 0.18.0" + suffix,
+      found && major == 0 && minor == 18 && patch == 0);
   pass &= report("version is major * 10000 + minor * 100 + patch" + suffix,
       found && version == major * 10000 + minor * 100 + patch);
 
-  const std::string expectedName = "halcyon 0.17.0";
+  const std::string expectedName = "halcyon 0.18.0";
 
   uint64_t nameSize = 0;
   pass &= report("version.name.size counts the terminator" + suffix,
