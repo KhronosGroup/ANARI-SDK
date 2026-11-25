@@ -242,6 +242,7 @@ jobs:
         package: [ helide, helide_gpu ]
         include:
         - { package: helide, project: helide }
+        - { package: helide_gpu, project: helide-gpu }
     environment:
       name: testpypi
       url: https://test.pypi.org/project/${{ matrix.project }}/
@@ -274,6 +275,7 @@ jobs:
         package: [ helide, helide_gpu ]
         include:
         - { package: helide, project: helide }
+        - { package: helide_gpu, project: helide-gpu }
     environment: # its reviewers approve each release
       name: publish device wheels
       url: https://pypi.org/project/${{ matrix.project }}/
