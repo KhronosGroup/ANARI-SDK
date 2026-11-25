@@ -44,6 +44,11 @@ if (BUILD_PTC_DEVICE)
   add_subdirectory(ptc)
 endif()
 
+option(BUILD_GUARD_DEVICE "Build 'guard' device, which runs another device in a host process (Linux, glibc 2.39+)" OFF)
+if (BUILD_GUARD_DEVICE)
+  add_subdirectory(guard)
+endif()
+
 option(BUILD_REMOTE_DEVICE "Build 'remote' TCP passthrough device" OFF)
 if (BUILD_REMOTE_DEVICE)
   add_subdirectory(remote)
