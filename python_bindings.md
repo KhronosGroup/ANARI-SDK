@@ -44,7 +44,11 @@ checkout.
 Released wheels install with `pip install anari`. To release, set `version` in
 `pyproject.toml` to `ANARI_SDK_VERSION`, push the tag `v<version>`, and approve
 the `publish anari wheels` deployment. PyPI never accepts a version twice: a
-packaging-only respin is a post-release (`0.17.0.post1`, tag `v0.17.0.post1`).
+packaging-only respin is a post-release (`0.17.0.post1`, tag `v0.17.0-1`).
+
+The same tag publishes the device wheels (`helide`, `helide-gpu`) after the
+`publish device wheels` deployment is approved. Their `version`, in each
+device's `pyproject.toml`, also follows `ANARI_SDK_VERSION`: set it by hand.
 
 
 # Device Bindings
