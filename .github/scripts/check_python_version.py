@@ -3,8 +3,11 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """Check that pyproject.toml's version is ANARI_SDK_VERSION, or a post-release
-of it (0.17.0.post1), and for a release tag, that the tag is v<version> and
-PyPI doesn't have that version yet: it never accepts one twice."""
+of it (0.17.0.post1), and for a release tag, that the tag names that version
+and PyPI doesn't have it yet: it never accepts one twice.
+
+A post-release's tag spells .postN as -N (v0.17.0-1 for 0.17.0.post1), the
+alternative spelling PEP 440 allows; other releases are tagged v<version>."""
 
 import argparse
 import pathlib
@@ -27,6 +30,12 @@ def sdk_version():
 def package_version():
     with open(ROOT / 'pyproject.toml', 'rb') as f:
         return tomllib.load(f)['project']['version']
+
+
+def release_tag(version):
+    """The tag that releases this version: v0.17.0, or v0.17.0-1 for
+    0.17.0.post1."""
+    return 'v' + re.sub(r'\.post(\d+)$', r'-\1', version)
 
 
 def on_pypi(version):
@@ -55,12 +64,13 @@ def main():
         errors.append('the version is %s: it must be the SDK version %s, or a '
                       'post-release of it (%s.post1, ...)' % (version, sdk, sdk))
     if args.tag is not None:
-        if args.tag != 'v' + version:
-            errors.append('the tag %s is not v%s' % (args.tag, version))
+        if args.tag != release_tag(version):
+            errors.append('the tag %s is not %s, the tag for version %s'
+                          % (args.tag, release_tag(version), version))
         elif on_pypi(version):
             errors.append('PyPI already has anari %s, and never accepts a '
-                          'version twice: release %s.postN for a '
-                          'packaging-only respin' % (version, sdk))
+                          'version twice: release %s.postN (tagged v%s-N) '
+                          'for a packaging-only respin' % (version, sdk, sdk))
     for e in errors:
         print('::error::' + e)
     if errors:
