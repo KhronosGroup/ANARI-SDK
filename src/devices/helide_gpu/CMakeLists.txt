@@ -350,17 +350,16 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   # Implib.so generates function trampolines so the device has no DT_NEEDED
   # entry for SDL3. Keep SDL's headers and shared library available at build
   # time, but defer loading the runtime library until the device initializes.
-  include(FetchContent)
   find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
   # Implib.so has no release tags; pin its 2026-08-01 commit, verified with
   # the SDL3 C API used by this device.
-  FetchContent_Populate(implib_so
-    GIT_REPOSITORY https://github.com/yugr/Implib.so.git
-    GIT_TAG a3e167cf978a5b8a38ec0f710d8c4331e8dcdd9a
-    SOURCE_DIR ${CMAKE_BINARY_DIR}/_deps/implib_so-src
-    BINARY_DIR ${CMAKE_BINARY_DIR}/_deps/implib_so-build
+  anari_sdk_fetch_project(
+    NAME anari_helide_gpu_implib_so
+    URL "https://github.com/yugr/Implib.so/archive/a3e167cf978a5b8a38ec0f710d8c4331e8dcdd9a.zip"
+    MD5 dcbed0b8a5bbfb18ed2a6e036a94e48e
   )
+  set(IMPLIB_GEN "${anari_helide_gpu_implib_so_LOCATION}/implib-gen.py")
 
   enable_language(C)
   enable_language(ASM)
@@ -383,14 +382,14 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
       "${SDL3_STUB_SYMBOLS}"
     COMMAND ${Python3_EXECUTABLE}
       "${SDL3_STUB_SCRIPT}"
-      --implib-gen "${implib_so_SOURCE_DIR}/implib-gen.py"
+      --implib-gen "${IMPLIB_GEN}"
       "$<TARGET_FILE:SDL3::SDL3>"
       --soname "${SDL3_RUNTIME_SONAME}"
       --output-dir "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>"
       --stub-basename "libSDL3"
     DEPENDS
       "${SDL3_STUB_SCRIPT}"
-      "${implib_so_SOURCE_DIR}/implib-gen.py"
+      "${IMPLIB_GEN}"
     COMMENT "Generating runtime-loaded SDL3 trampolines"
     VERBATIM
   )
