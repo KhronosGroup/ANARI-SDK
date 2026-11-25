@@ -1,0 +1,11 @@
+# ThreadSanitizer suppressions for the guard device's tests. The tests of a
+# build with GUARD_SANITIZE_THREAD=ON are run with these.
+
+# A lock-order inversion between two embree mutexes, inside helide, in the
+# host.
+deadlock:embree::MutexSys::lock
+
+# The adapter's threads when an application calls exit() from its fatal
+# status callback: the reader has finished by then and nobody is left to join
+# it.
+thread:anari_guard::GuardDevice::create
