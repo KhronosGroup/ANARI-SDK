@@ -45,7 +45,11 @@ endif()
 
 project(anari_backend)
 project_add_library(STATIC DeviceImpl.cpp LibraryImpl.cpp)
-project_link_libraries(PUBLIC Threads::Threads anari_headers)
+# Threads::Threads is PRIVATE so its compile options (-pthread when pthreads
+# isn't in libc, i.e. glibc < 2.34) don't reach consumers' sources in every
+# language, such as ISPC, which rejects it. As anari_backend is static, its
+# consumers still link Threads::Threads (as $<LINK_ONLY:...>).
+project_link_libraries(PUBLIC anari_headers PRIVATE Threads::Threads)
 project_compile_definitions(PRIVATE -Danari_EXPORTS)
 
 ## Create main shared + static library targets ##
