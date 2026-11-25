@@ -1,0 +1,55 @@
+## Copyright 2026 The Khronos Group
+## SPDX-License-Identifier: Apache-2.0
+
+name: Source package with dependencies
+
+# Attaches ANARI-SDK-<version>_with_deps.zip to a release: the release's
+# source archive with .anari_deps/ pre-populated, for offline builds
+# (.github/scripts/package_source_with_deps.sh). Runs when a release is
+# published, or by hand for an existing release's tag.
+
+on:
+  release:
+    types: [ published ]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag of the existing release to attach the package to'
+        required: true
+        type: string
+
+permissions:
+  contents: write # upload the release asset
+
+jobs:
+  package:
+    runs-on: ubuntu-24.04
+    # Ubuntu 26.04 ships SDL3 and glslang, which helide_gpu's configure needs
+    container: ubuntu:26.04
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+      ISPC_VERSION: v1.28.2
+    steps:
+    - name: Install dependencies
+      run: |
+        apt-get update
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+          ca-certificates cmake curl g++ gh glslang-tools libsdl3-dev make \
+          python3 unzip zip
+
+    # halcyon needs ISPC
+    - name: Install ISPC
+      run: |
+        curl -fsSL https://github.com/ispc/ispc/releases/download/${ISPC_VERSION}/ispc-${ISPC_VERSION}-linux.tar.gz \
+          | tar -xz -C "$RUNNER_TEMP"
+        echo "$RUNNER_TEMP/ispc-${ISPC_VERSION}-linux/bin" >> "$GITHUB_PATH"
+
+    - uses: actions/checkout@v4
+
+    - name: Build the source package
+      run: bash .github/scripts/package_source_with_deps.sh "$TAG" "$RUNNER_TEMP/out"
+
+    - name: Attach it to the release
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: gh release upload "$TAG" "$RUNNER_TEMP"/out/*_with_deps.zip --clobber -R "$GITHUB_REPOSITORY"
