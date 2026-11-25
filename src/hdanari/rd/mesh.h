@@ -20,16 +20,16 @@
 #include <pxr/imaging/hd/renderDelegate.h>
 #include <pxr/imaging/hd/sceneDelegate.h>
 #include <pxr/imaging/hd/types.h>
-#include <pxr/imaging/hd/vertexAdjacency.h>
 #include <pxr/imaging/hf/perfLog.h>
 #include <pxr/pxr.h>
 #include <pxr/usd/sdf/path.h>
 // std
 #include <memory>
-#include <optional>
 #include <unordered_map>
 
 PXR_NAMESPACE_OPEN_SCOPE
+
+class HdAnariSubdivision;
 
 class HdAnariMesh final : public HdAnariGeometry
 {
@@ -49,6 +49,7 @@ class HdAnariMesh final : public HdAnariGeometry
   void Finalize(HdRenderParam *renderParam_) override;
 
  protected:
+  bool HasMainGeometry() const override;
   HdGeomSubsets GetGeomSubsets(
       HdSceneDelegate *sceneDelegate, HdDirtyBits *dirtyBits) override;
   HdAnariGeometry::GeomSpecificPrimvars GetGeomSpecificPrimvars(
@@ -69,7 +70,7 @@ class HdAnariMesh final : public HdAnariGeometry
 
   HdMeshTopology topology_;
   std::unique_ptr<HdAnariMeshUtil> meshUtil_;
-  std::optional<Hd_VertexAdjacency> adjacency_;
+  std::unique_ptr<HdAnariSubdivision> subdivision_;
 
   HdGeomSubsets geomsubsets_;
 

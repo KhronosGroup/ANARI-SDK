@@ -1,0 +1,450 @@
+// Copyright 2026 The Khronos Group
+// SPDX-License-Identifier: MIT
+//
+// The 'preview' renderer's 'cortao' ambient occlusion estimator: CORTAO
+// (Circular Occluder Ray-Traced Ambient Occlusion), a screen-space estimator
+// that approximates each pixel's neighbourhood by circular occluders built
+// from the hit buffer and tests a fixed set of hemisphere rays against them.
+//
+// Ported from CORTAO (github.com/theagentd/CORTAO at 420b168d, reference
+// implementation v1.0.3: src/shaders/CORTAOMainPass.h's cortao_mainPass(),
+// cortao_computeRayOcclusion(), cortao_rayDirection() and
+// cortao_resolveOcclusion(), and src/shaders/CORTAOPrepass.h's
+// cortao_prepass() mip chain), under the MIT License:
+//
+//   MIT License
+//
+//   Copyright (c) 2026 Daniel Isheden
+//
+//   Permission is hereby granted, free of charge, to any person obtaining a
+//   copy of this software and associated documentation files (the
+//   "Software"), to deal in the Software without restriction, including
+//   without limitation the rights to use, copy, modify, merge, publish,
+//   distribute, sublicense, and/or sell copies of the Software, and to permit
+//   persons to whom the Software is furnished to do so, subject to the
+//   following conditions:
+//
+//   The above copyright notice and this permission notice shall be included
+//   in all copies or substantial portions of the Software.
+//
+//   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+//   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+//   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+//   NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+//   DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+//   OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+//   USE OR OTHER DEALINGS IN THE SOFTWARE.
+//
+// Differences from the reference, which is a GPU view-space shader:
+// - It works in world space and projects the sampling disk with halcyon's
+//   camera (CortaoProjection, the inverse of Camera_makeRay()), so it needs
+//   no projection matrix.
+// - The prepass's mip chain (cortao_prepass() in CORTAOPrepass.h) is built in
+//   the hit-buffer pass as the reference builds it, each level's texel
+//   holding the surface of one pixel of its 2x2 block of the level below
+//   (the reference's choice with its random seed fixed at 0), but a texel
+//   holds that surface's world position and octahedral normal rather than
+//   its linear depth and spheremap normal, and a tap uses the position as
+//   stored where the reference unprojects the stored depth at the tap's own
+//   coordinates.
+// - Rays are tested against each occluder's angular size directly (the
+//   reference's path without CORTAO_OCCLUDER_LOOKUP_TABLE), so no lookup table
+//   is vendored.
+// - Its random values (sample rotation, radius dither, tangent rotation,
+//   spiral direction) come from the pixel's cell of the 4x4 pattern
+//   AO_ROTATIONS rather than a per-frame hash, so renders are deterministic
+//   and the first blur pass cancels the pattern exactly, as for the other
+//   estimators. halcyon has no temporal filtering for the reference's
+//   per-frame noise.
+// - The perspective sampling disk uses the surface's distance from the eye
+//   where the reference uses its view depth (the sphere's silhouette is set
+//   by the distance).
+// - A front-facing occluder moves 0.75 of its radius into its surface
+//   (CORTAO_OCCLUDER_OFFSET_SCALE), not 1, which leaves contacts too light.
+// - The tangent bases are Duff et al.'s ("Building an Orthonormal Basis,
+//   Revisited", JCGT 2017), not Frisvad's: world-space normals may point
+//   along -z, where Frisvad's construction is singular.
+//
+// Requires PreviewFrameState, AO_ROTATIONS and AO_TWO_PI from Preview.ispc,
+// which includes this file after them.
+
+#pragma once
+
+#include "shading/halcyon_camera.isph"
+
+// Hemisphere rays per pixel (CORTAO_RAY_COUNT, 8 to 32: the bits of a uint32;
+// the reference's default)
+static const uniform int CORTAO_RAYS = 16;
+// pi (3 - sqrt(5))
+static const uniform float CORTAO_GOLDEN_ANGLE = 2.3999632297286533f;
+// How strongly the samples' radii are drawn towards the pixel
+static const uniform float CORTAO_SKEW = 3.5f;
+// The reference's configuration defaults: the largest sampling radius on
+// screen as a fraction of the image height (perspective cameras only), the
+// largest slope compensation, and the backface heuristic's threshold and
+// boost
+static const uniform float CORTAO_MAX_SCREEN_RADIUS_HEIGHT_RATIO = 0.2f;
+static const uniform float CORTAO_MAX_SLOPE_COMPENSATION = 4.f;
+static const uniform float CORTAO_BACKFACE_THRESHOLD = 0.5f;
+static const uniform float CORTAO_BACKFACE_BOOST = 0.f;
+// How far a front-facing occluder moves into its surface, in occluder radii:
+// the reference moves it 1. Against brute-force ray-traced occlusion of two
+// views of a test scene, 0.75 lowers the error overall (0.027 to 0.025, and
+// 0.034 to 0.032) and in contact regions (0.101 to 0.091, and 0.112 to
+// 0.102), which 1 leaves too light; 0.5 over-darkens walls and convex
+// surfaces in one of the views.
+static const uniform float CORTAO_OCCLUDER_OFFSET_SCALE = 0.75f;
+// Most mip levels of the hit buffer pyramid, the finest included (the
+// reference prepass's 8)
+static const uniform int CORTAO_MAX_LEVELS = 8;
+// Added to the log2 of a sample strip's outer radius in pixels to give its mip
+// level (the reference's default 'mipBias'): a strip reads a level whose
+// texels are about 1/16 of its radius
+static const uniform float CORTAO_MIP_BIAS = -4.f;
+
+// log2(x) (ISPC's standard library has only the natural logarithm)
+inline float cortaoLog2(float x)
+{
+  return log(x) * 1.44269504f;
+}
+inline uniform float cortaoLog2(uniform float x)
+{
+  return log(x) * 1.44269504f;
+}
+
+// The hit buffer pyramid /////////////////////////////////////////////////////
+//
+// CORTAO_MAX_LEVELS levels at most, level k max(width >> k, 1) by
+// max(height >> k, 1) texels, stored one after the other, each texel 4
+// floats: the world position of the surface it holds and, as the bits of the
+// fourth, its packed normal (cortaoEncodeNormal()), 0 for no surface.
+
+// The pyramid's levels for a frame of 'width' x 'height' pixels: down to a
+// level 1 texel high or wide
+inline uniform int cortaoPyramidLevels(uniform int width, uniform int height)
+{
+  uniform int levels = 1;
+  while (levels < CORTAO_MAX_LEVELS && (width >> levels) > 0
+      && (height >> levels) > 0)
+    levels++;
+  return levels;
+}
+
+// 'n' (unit) as a 32-bit octahedral encoding, 16 bits per axis, never 0
+inline unsigned int32 cortaoEncodeNormal(const float3 n)
+{
+  const float l1 = abs(n.x) + abs(n.y) + abs(n.z);
+  float u = n.x / l1;
+  float v = n.y / l1;
+  if (n.z < 0.f) {
+    const float fu = (1.f - abs(v)) * (u >= 0.f ? 1.f : -1.f);
+    const float fv = (1.f - abs(u)) * (v >= 0.f ? 1.f : -1.f);
+    u = fu;
+    v = fv;
+  }
+  const int qu = (int)round((u * 0.5f + 0.5f) * 65534.f) + 1;
+  const int qv = (int)round((v * 0.5f + 0.5f) * 65534.f) + 1;
+  return (unsigned int32)qu | ((unsigned int32)qv << 16);
+}
+
+// The unit normal cortaoEncodeNormal() encoded as 'packed'
+inline float3 cortaoDecodeNormal(const unsigned int32 packed)
+{
+  const float u = (int)((packed & 0xFFFF) - 1) * (2.f / 65534.f) - 1.f;
+  const float v = (int)((packed >> 16) - 1) * (2.f / 65534.f) - 1.f;
+  float3 n = make_float3(u, v, 1.f - abs(u) - abs(v));
+  if (n.z < 0.f) {
+    const float x = n.x;
+    n.x = (1.f - abs(n.y)) * (x >= 0.f ? 1.f : -1.f);
+    n.y = (1.f - abs(x)) * (n.y >= 0.f ? 1.f : -1.f);
+  }
+  return normalize(n);
+}
+
+// Writes pixel (x, y)'s first visible surface (world position 'P', unit
+// normal 'n', if 'surface') to level 0 of the pyramid, and to each coarser
+// level whose texel it stands for: of the 2x2 block under texel (X, Y), the
+// pixel whose x parity is Y's and whose y parity is X's, as the reference
+// prepass picks it with its random seed 0. Every texel is written by exactly
+// one pixel, so the pixels of a frame can write in any order.
+inline void cortaoWritePyramid(const uniform PreviewFrameState *uniform ao,
+    int x,
+    int y,
+    bool surface,
+    const float3 P,
+    const float3 n)
+{
+  const float w = surface ? floatbits(cortaoEncodeNormal(n)) : 0.f;
+  int cx = x;
+  int cy = y;
+  bool active = true;
+  for (uniform int k = 0; k < ao->cortaoLevels; k++) {
+    if (k > 0) {
+      const int px = cx >> 1;
+      const int py = cy >> 1;
+      active = active && ((cx ^ py) & 1) == 0 && ((cy ^ px) & 1) == 0
+          && px < ao->cortaoLevelWidth[k] && py < ao->cortaoLevelHeight[k];
+      cx = px;
+      cy = py;
+    }
+    if (!active)
+      break;
+    const int i =
+        4 * (ao->cortaoLevelOffset[k] + cy * ao->cortaoLevelWidth[k] + cx);
+#pragma ignore warning(perf)
+    ao->cortaoPyramid[i + 0] = P.x;
+#pragma ignore warning(perf)
+    ao->cortaoPyramid[i + 1] = P.y;
+#pragma ignore warning(perf)
+    ao->cortaoPyramid[i + 2] = P.z;
+#pragma ignore warning(perf)
+    ao->cortaoPyramid[i + 3] = w;
+  }
+}
+
+// Unit vectors 't' and 'b' completing the unit vector 'n' to an orthonormal
+// basis (Duff et al. 2017)
+inline void cortaoBasis(const float3 n, float3 &t, float3 &b)
+{
+  const float sign = n.z >= 0.f ? 1.f : -1.f;
+  const float a = -1.f / (sign + n.z);
+  const float c = n.x * n.y * a;
+  t = make_float3(1.f + sign * n.x * n.x * a, sign * c, -sign * n.x);
+  b = make_float3(c, sign + n.y * n.y * a, -n.y);
+}
+
+// Pixel coordinates of the points P + a right + b up of a pixel's sampling
+// disk are ((Px + a rightX + b upX) / z scaleX + offsetX, (Py + a rightY +
+// b upY) / z scaleY + offsetY), z being Pz + a rightZ + b upZ for a
+// perspective camera and 1 for an orthographic one: the inverse of
+// Camera_makeRay() without an aperture, then the image region, linear in a
+// and b but for the perspective division
+struct CortaoProjection
+{
+  float Px, Py, Pz;
+  float rightX, rightY, rightZ;
+  float upX, upY, upZ;
+  uniform float scaleX, scaleY, offsetX, offsetY;
+};
+
+// CORTAO's occlusion factor (not raised to the renderer's intensity) of the
+// hit buffer's surface at pixel (x, y), at world position 'P' with normal
+// 'n', for a perspective or orthographic camera, occlusion radius 'radius'
+// (positive) and pixelScale() 'scale': 1 minus the fraction of CORTAO_RAYS
+// hemisphere rays that some occluder blocks
+inline float cortaoOcclusionAt(const uniform Frame *uniform frame,
+    const uniform PreviewFrameState *uniform ao,
+    int x,
+    int y,
+    float3 P,
+    const float3 n,
+    const uniform float radius,
+    const uniform float2 scale)
+{
+  const uniform Camera *uniform c = frame->camera;
+  const uniform bool perspective = c->type == CAMERA_PERSPECTIVE;
+
+  // Half a pixel's diagonal in world units at unit depth: how far the pixel's
+  // position is pushed along its normal, per unit of view depth, so it
+  // doesn't occlude itself (the reference's 'normalBias')
+  const uniform float normalBias = 0.70710678f / scale.x;
+
+  // V: towards the eye; the sampling disk lies across it
+  float3 V;
+  float clampedRadius = radius;
+  float circleRadius = radius;
+  // the mip level of a strip of outer radius 1 (of the disk's radius)
+  float baseMip;
+  if (perspective) {
+    const float viewDepth = dot(P - c->pos, c->dir);
+    const float3 toEye = c->pos - P;
+    const float distance = length(toEye);
+    V = toEye / distance;
+    // the radius is clamped so the sampling sphere covers at most
+    // CORTAO_MAX_SCREEN_RADIUS_HEIGHT_RATIO of the image height on screen
+    // ('maxApparentCircleRadiusCoefficient'), which also keeps it inside
+    // the eye's distance
+    const uniform float maxApparent =
+        CORTAO_MAX_SCREEN_RADIUS_HEIGHT_RATIO * frame->size.y / scale.y;
+    const uniform float coefficient =
+        maxApparent / sqrt(maxApparent * maxApparent + 1.f);
+    clampedRadius = min(radius, viewDepth * coefficient);
+    // the disk across V through P that the sphere's silhouette cone cuts
+    circleRadius = clampedRadius * distance
+        * rsqrt(distance * distance - clampedRadius * clampedRadius);
+    // the disk's radius in pixels, stretched off the view axis as the
+    // reference stretches it ('stretchMultiplier')
+    const float stretch = rsqrt(viewDepth / distance);
+    baseMip = cortaoLog2(circleRadius / distance * scale.y * stretch)
+        + CORTAO_MIP_BIAS;
+    P = P + n * (normalBias * viewDepth);
+  } else {
+    V = -c->dir;
+    baseMip = cortaoLog2(radius * scale.y) + CORTAO_MIP_BIAS;
+    P = P + n * normalBias;
+  }
+
+  // The pixel's cell of the 4x4 pattern picks its random values, each a
+  // permutation of the 16 steps over the cell
+  const int cell = (y & 3) * 4 + (x & 3);
+  const int transposed = (x & 3) * 4 + (y & 3);
+#pragma ignore warning(perf)
+  const float sampleRotation = AO_ROTATIONS[cell] * (AO_TWO_PI / 16.f);
+#pragma ignore warning(perf)
+  const float offsetDither = (AO_ROTATIONS[transposed] + 0.5f) / 16.f;
+#pragma ignore warning(perf)
+  const float tangentRotation =
+      AO_ROTATIONS[(cell + 5) & 15] * (AO_TWO_PI / 16.f);
+#pragma ignore warning(perf)
+  const bool flipSpiral = (AO_ROTATIONS[(cell + 10) & 15] & 1) != 0;
+
+  // the sampling disk's axes, rotated by the pixel's sample rotation (the
+  // reference's 'rotationScaleMatrix'), the spiral randomly turning either way
+  float3 right0, up0;
+  cortaoBasis(V, right0, up0);
+  if (flipSpiral)
+    right0 = -right0;
+  const float sr = sin(sampleRotation);
+  const float cr = cos(sampleRotation);
+  const float3 right = cr * right0 + sr * up0;
+  const float3 up = cr * up0 - sr * right0;
+
+  // the rays' tangent frame, randomly rotated about the normal
+  float3 t0, b0;
+  cortaoBasis(n, t0, b0);
+  const float s = sin(tangentRotation);
+  const float co = cos(tangentRotation);
+  const float3 tangent = co * t0 + s * b0;
+  const float3 bitangent = co * b0 - s * t0;
+
+  // cortao_rayDirection(): CORTAO_RAYS directions on a golden-angle spiral
+  // over the hemisphere, cosine distributed
+  uniform float3 rays[CORTAO_RAYS];
+  for (uniform int j = 0; j < CORTAO_RAYS; j++) {
+    const uniform float angle = j * CORTAO_GOLDEN_ANGLE;
+    const uniform float rr = sqrt((j + 0.5f) / CORTAO_RAYS);
+    rays[j] =
+        make_float3(cos(angle) * rr, sin(angle) * rr, sqrt(1.f - rr * rr));
+  }
+
+  // the camera-space projections of P and the disk's axes onto the image
+  // plane's axes and the view direction, and the uniform maps from the image
+  // plane to pixels (the inverse of Camera_makeRay() and the image region)
+  const uniform float aspect = c->hasAspect ? c->aspect : frame->aspect;
+  const uniform float regionWidth = c->region.z - c->region.x;
+  const uniform float regionHeight = c->region.w - c->region.y;
+  CortaoProjection proj;
+  const float3 toP = P - c->pos;
+  proj.Px = dot(toP, c->imagePlaneU);
+  proj.Py = dot(toP, c->imagePlaneV);
+  proj.Pz = dot(toP, c->dir);
+  proj.rightX = dot(right, c->imagePlaneU);
+  proj.rightY = dot(right, c->imagePlaneV);
+  proj.rightZ = dot(right, c->dir);
+  proj.upX = dot(up, c->imagePlaneU);
+  proj.upY = dot(up, c->imagePlaneV);
+  proj.upZ = dot(up, c->dir);
+  proj.scaleX =
+      frame->size.x / (c->imagePlaneHeight * aspect * regionWidth);
+  proj.scaleY = frame->size.y / (c->imagePlaneHeight * regionHeight);
+  proj.offsetX = (0.5f - c->region.x) / regionWidth * frame->size.x;
+  proj.offsetY = (0.5f - c->region.y) / regionHeight * frame->size.y;
+
+  const uniform float inverseMaxSlopeCompensation =
+      1.f / CORTAO_MAX_SLOPE_COMPENSATION;
+  unsigned int rayBits = 0;
+  // the renderer's 'cortaoSamples' (CORTAO_SAMPLE_COUNT, a compile-time
+  // constant in the reference)
+  const uniform int samples = frame->renderer->preview.cortaoSamples;
+  for (uniform int i = 0; i < samples; i++) {
+    // the sample's strip of the disk: a golden-angle spiral whose radii are
+    // drawn towards the centre; 'sampleWeight' is the square root of the
+    // strip's share of the disk's area
+    const uniform float inner =
+        pow((uniform float)i / samples, CORTAO_SKEW * 0.5f);
+    const uniform float outer =
+        pow((uniform float)(i + 1) / samples, CORTAO_SKEW * 0.5f);
+    const uniform float sampleWeight = sqrt(outer * outer - inner * inner);
+    const uniform float angle = i * CORTAO_GOLDEN_ANGLE;
+    const uniform float ca = cos(angle);
+    const uniform float sa = sin(angle);
+    const float offset =
+        circleRadius * (inner + (outer - inner) * offsetDither);
+    // Q's pixel, from the projections of P and the disk's axes (the
+    // reference's 'offsetTransform'): the disk point is P + a right + b up
+    const float a = offset * ca;
+    const float b = offset * sa;
+    const float qz = proj.Pz + a * proj.rightZ + b * proj.upZ;
+    if (perspective && !(qz > 0.f))
+      continue;
+    const float invZ = perspective ? rcp(qz) : 1.f;
+    const float2 p = make_float2(
+        (proj.Px + a * proj.rightX + b * proj.upX) * invZ * proj.scaleX
+            + proj.offsetX,
+        (proj.Py + a * proj.rightY + b * proj.upY) * invZ * proj.scaleY
+            + proj.offsetY);
+    if (!(p.x >= 0.f && p.x < frame->size.x && p.y >= 0.f
+            && p.y < frame->size.y))
+      continue;
+    const int level = clamp((int)floor(baseMip + cortaoLog2(outer) + 0.5f),
+        0,
+        ao->cortaoLevels - 1);
+    const int levelWidth = max(frame->size.x >> level, 1);
+    const int levelHeight = max(frame->size.y >> level, 1);
+    const int tx = (int)p.x >> level;
+    const int ty = (int)p.y >> level;
+    if (tx >= levelWidth || ty >= levelHeight)
+      continue;
+#pragma ignore warning(perf)
+    const int texel =
+        4 * (ao->cortaoLevelOffset[level] + ty * levelWidth + tx);
+#pragma ignore warning(perf)
+    const unsigned int32 packedNormal = intbits(ao->cortaoPyramid[texel + 3]);
+    if (packedNormal == 0)
+      continue;
+#pragma ignore warning(perf)
+    const float3 samplePosition = make_float3(ao->cortaoPyramid[texel],
+        ao->cortaoPyramid[texel + 1],
+        ao->cortaoPyramid[texel + 2]);
+    const float3 dPos = samplePosition - P;
+
+    // only samples inside the hemisphere of radius 'clampedRadius' occlude
+    const float lengthSquared = dot(dPos, dPos);
+    if (!(lengthSquared < clampedRadius * clampedRadius && dot(dPos, n) > 0.f))
+      continue;
+    const float inverseLength = rsqrt(lengthSquared);
+    float3 direction = dPos * inverseLength;
+    const float3 sampleNormal = cortaoDecodeNormal(packedNormal);
+
+    // the occluder's radius over its distance, larger for surfaces seen at a
+    // grazing angle (slope compensation)
+    const float slopeCompensation =
+        rsqrt(max(dot(sampleNormal, V), inverseMaxSlopeCompensation));
+    float occluderRadius =
+        (clampedRadius * sampleWeight) * (slopeCompensation * inverseLength);
+    if (dot(sampleNormal, direction) < CORTAO_BACKFACE_THRESHOLD) {
+      // not a backface: the occluder moves into its surface,
+      // CORTAO_OCCLUDER_OFFSET_SCALE radii
+      const float adjustedOffset = -CORTAO_OCCLUDER_OFFSET_SCALE
+          * occluderRadius
+          / max(1.f - occluderRadius * occluderRadius * 0.5f, 0.000001f);
+      direction = normalize(direction + sampleNormal * adjustedOffset);
+    } else {
+      occluderRadius *= 1.f + (slopeCompensation - 1.f) * CORTAO_BACKFACE_BOOST;
+    }
+
+    // the occluder's direction in the rays' tangent frame and the cosine of
+    // its angular radius, its circle wrapped onto the hemisphere
+    const float3 h = make_float3(dot(direction, tangent),
+        dot(direction, bitangent),
+        dot(direction, n));
+    const float occluderCosAngle =
+        max(0.f, 1.f - occluderRadius * occluderRadius * 0.5f);
+    for (uniform int j = 0; j < CORTAO_RAYS; j++) {
+      if (dot(rays[j], h) > occluderCosAngle)
+        rayBits |= (1u << j);
+    }
+  }
+
+  return 1.f - (float)popcnt((int)rayBits) / CORTAO_RAYS;
+}

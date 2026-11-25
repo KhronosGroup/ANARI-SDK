@@ -33,6 +33,8 @@ layout(location = 7) flat out vec4 vAttr3;
 layout(location = 8) flat out vec3 vCenterWorld;
 layout(location = 9) flat out mat4 vProj;
 layout(location = 13) flat out int vInstanceIndex;
+layout(location = 14) out vec3 vPosWorld;
+layout(location = 15) flat out vec3 vEyeWorld;
 
 uint getComponentCount(uint slot) {
     return (u.sphereInfo.w >> (slot * 4u)) & 0xFu;
@@ -67,6 +69,8 @@ void main()
 
     vCenterView = (u.MV * vec4(center, 1.0)).xyz;
     vCenterWorld = (u.M * vec4(center, 1.0)).xyz;
+    vPosWorld = (u.M * vec4(worldPos, 1.0)).xyz;
+    vEyeWorld = (u.M * (inverse(u.MV) * vec4(0.0, 0.0, 0.0, 1.0))).xyz;
     vRadius = r;
 
     // Fetch attributes from per-array SSBOs

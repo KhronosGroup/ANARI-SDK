@@ -5,6 +5,8 @@
 
 #include "Sampler.h"
 #include "array/Array1D.h"
+// std
+#include <string>
 
 namespace helide {
 
@@ -20,6 +22,8 @@ struct PrimitiveSampler : public Sampler
       const UniformAttributeSet &instAttrV) const override;
 
  private:
+  uint64_t readOffset(const std::string &name) const;
+
   helium::IntrusivePtr<Array1D> m_array;
   uint32_t m_offset{0};
 };

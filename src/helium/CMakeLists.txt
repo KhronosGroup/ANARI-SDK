@@ -36,6 +36,13 @@ PUBLIC
 
 project_link_libraries(PUBLIC anari_headers anari_backend)
 
+# Devices may run on an older msvcp140.dll already loaded by the host, where a
+# constexpr-constructed std::mutex (MSVC 17.10+) crashes. PUBLIC: helium's
+# headers construct mutexes in device code.
+if (MSVC)
+  project_compile_definitions(PUBLIC _DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR)
+endif()
+
 ## Install library + targets ##
 
 install(TARGETS ${PROJECT_NAME}

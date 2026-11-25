@@ -15,6 +15,12 @@ struct HdAnariMdlMaterial final
   static anari::Material CreateMaterial(anari::Device device,
       const HdMaterialNetwork2Interface &materialNetworkIface);
 
+  // A content key (MDL material identifier + authored parameter values) that
+  // is independent of the prim path, so content-identical instances share one
+  // anari material. Empty if there is no usable surface terminal.
+  static std::string ComputeContentKey(
+      const HdMaterialNetwork2Interface &materialNetworkIface);
+
   static HdAnariMaterial::PrimvarMapping EnumeratePrimvars(
       const HdMaterialNetwork2Interface &materialNetworkInterface,
       TfToken terminal);

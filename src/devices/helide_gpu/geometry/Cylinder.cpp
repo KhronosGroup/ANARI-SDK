@@ -107,6 +107,7 @@ void Cylinder::commitParameters()
 
 void Cylinder::finalize()
 {
+  updateBounds();
   if (!m_positions) {
     reportMessage(ANARI_SEVERITY_WARNING,
         "missing required parameter 'vertex.position' on cylinder geometry");
@@ -115,7 +116,7 @@ void Cylinder::finalize()
   gpu_enqueue_method(this, &Cylinder::gpu_finalizeGeometry);
 }
 
-box3 Cylinder::bounds() const
+box3 Cylinder::computeBounds() const
 {
   box3 b;
   if (!m_positions)

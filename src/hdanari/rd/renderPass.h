@@ -17,6 +17,7 @@
 #include <pxr/pxr.h>
 
 #include <memory>
+#include <string>
 
 #include "renderParam.h"
 
@@ -33,12 +34,23 @@ struct HdAnariRenderPass final : public HdRenderPass
       TfTokenVector const &renderTags) override;
 
  private:
-  void _UpdateRenderer();
-  void _UpdateFrame(
+  // The _Update* helpers return true when they change ANARI state, which
+  // resets the device's sample accumulation and thus restarts convergence.
+  bool _UpdateRenderer();
+  bool _UpdateFrame(
       const GfRect2i &size, const HdRenderPassAovBindingVector &aovBindings);
-  void _UpdateCamera(const GfMatrix4d &invView, const GfMatrix4d &invProj);
-  void _UpdateWorld();
-  void _WriteAovs(const HdRenderPassAovBindingVector &aovBindings);
+  bool _UpdateCamera(const GfMatrix4d &invView, const GfMatrix4d &invProj);
+  bool _UpdateWorld();
+  // A render-settings change (e.g. the host re-reporting the stage up axis)
+  // doesn't dirty Sprims, so dome lights whose poleAxis resolves to "scene"
+  // would keep a stale orientation. Detect upAxis changes and force the domes
+  // to re-sync.
+  void _SyncDomeUpAxis();
+  // Publishes accumulation progress to the render param and returns whether
+  // the frame has reached its sample limit.
+  bool _UpdateProgress();
+  void _WriteAovs(
+      const HdRenderPassAovBindingVector &aovBindings, bool sceneChanged);
 
   std::shared_ptr<HdAnariRenderParam> _renderParam;
 
@@ -58,6 +70,13 @@ struct HdAnariRenderPass final : public HdRenderPass
 
   int _lastSettingsVersion{-1};
   int _lastSceneVersion{-1};
+  // Active ANARI renderer subtype; a change triggers renderer recreation and
+  // re-derivation of the forwarded parameter set.
+  std::string _rendererSubtype;
+  TfToken _lastUpAxis;
+  float _exposure{0.0f};
+  float _cameraExposureScale{1.0f};
+  bool _tonemap{false};
 
   struct AnariObjects
   {

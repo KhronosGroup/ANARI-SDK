@@ -1,6 +1,6 @@
 [project] # Project metadata
 name = "helide"
-requires-python = ">=3.7"
+requires-python = ">=3.10"
 readme = "README.md"
 license = "APACHE"
 license-files = ["LICENSE"]
@@ -8,7 +8,7 @@ dependencies = ["cffi","anari"]
 version = "1.0"
 
 [build-system] # How pip and other frontends should build this project
-requires = ["py-build-cmake~=0.5.0"]
+requires = ["py-build-cmake~=0.5.0", "ninja>=1.13"]
 build-backend = "py_build_cmake.build"
 
 [tool.py-build-cmake.sdist]
@@ -23,11 +23,13 @@ source_path = "."
 build_args = ["-j"]
 install_components = ["helide_module"]
 
-[tool.cibuildwheel.linux]
-before-all = """
-git clone -b next_release https://github.com/KhronosGroup/ANARI-SDK.git
-mkdir ANARI-SDK/build
-cd ANARI-SDK/build
-cmake ../ -DBUILD_EXAMPLES=OFF -DBUILD_HELIDE_DEVICE=OFF -DBUILD_TESTING=OFF -DINSTALL_VIEWER_LIBRARY=OFF
-make && make install
-"""
+[tool.cibuildwheel]
+build = "cp310-*"
+skip = ["*-musllinux*"]
+environment = { CMAKE_GENERATOR = "Ninja" }
+test-requires = ["pytest"]
+test-command = "python -m pytest -q {package}/test"
+
+[tool.py-build-cmake.wheel]
+python_tag = ["py3"]
+python_abi = "none"

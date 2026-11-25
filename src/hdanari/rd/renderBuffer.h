@@ -36,7 +36,9 @@ struct HdAnariRenderBuffer : public HdRenderBuffer
   void CopyFromAnariFrame(anari::Device d,
       anari::Frame f,
       const TfToken &aovName,
-      const VtValue &clearValue);
+      const VtValue &clearValue,
+      float exposureScale = 1.0f,
+      bool tonemap = false);
 
   void Clear(const VtValue &clearValue);
 

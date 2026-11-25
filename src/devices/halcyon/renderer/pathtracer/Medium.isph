@@ -1,0 +1,157 @@
+// Copyright 2026 The Khronos Group
+// SPDX-License-Identifier: LicenseRef-TOST-1.0
+//
+// Ported from Typhoon (NVIDIA-Omniverse/OpenUSD, branch typhoon/main, commit
+// 70c45e83b08a7b45588cd6cdbd2ae67f5147befb),
+// pxr/imaging/plugin/hdEmbree/renderer/integrator/: medium.h and medium.cpp
+// (mxcpp::MediumProperties' Extinction(), IsVacuum() and IsAbsorbingOnly(),
+// EvalBeerTransmittance(), SampleFreeFlightChannel(), PhaseHG(),
+// SampleHenyeyGreenstein(), PdfHenyeyGreenstein(), ChannelMIS()) and
+// volumeTransport.cpp (the weights of
+// ty::Renderer::_TraceVolumeTransmission()). Copyright 2018-2026 Pixar,
+// licensed under the Tomorrow Open Source Technology License 1.0 (see
+// THIRD-PARTY.md). Keep in step with those files when the pin in
+// external/typhoon/PROVENANCE.md moves.
+
+#pragma once
+
+// Homogeneous media: the interior media of closures (PathMaterial_medium(),
+// Typhoon's mxcpp::MediumProperties: absorption, scattering and the
+// Henyey-Greenstein anisotropy of a VDF, or OpenPBR's and standard_surface's
+// transmission depth and scatter), which a path enters and leaves through
+// their surfaces (PathTracer.ispc), and the Henyey-Greenstein phase function
+// that the pathtracer's grid volumes (VolumeTransport.isph) and subsurface
+// walks (Subsurface.isph) scatter by too.
+//
+// A segment through a medium is tracked as Typhoon's
+// _TraceVolumeTransmission() tracks it (Medium_beginTrack()): one RGB channel
+// chosen by Chiang's channel MIS (the throughput times the single-scattering
+// albedo) samples a free-flight distance with its extinction, and the
+// collision or the transmittance to the segment's end is weighed against the
+// mixture of the three channels' pdfs, so chromatic media converge without the
+// majorant's variance. An absorbing-only medium takes its Beer-Lambert
+// transmittance, with no random numbers. Medium.ispc is compiled without
+// fused multiply-adds and with the system's math library, so that it rounds
+// as Typhoon's C++ does.
+
+#include "renderer/pathtracer/PathMaterial.isph"
+
+// A homogeneous medium as the path loop tracks it: Typhoon's
+// MediumProperties without its Adobe OpenPBR transport model, which halcyon
+// never uses (it never sets Typhoon's useAdobeOpenPBR)
+struct HomogeneousMedium
+{
+  float3 absorption;
+  float3 scattering;
+  float anisotropy;
+};
+
+inline void Medium_clear(varying HomogeneousMedium &m)
+{
+  m.absorption = make_float3(0.f);
+  m.scattering = make_float3(0.f);
+  m.anisotropy = 0.f;
+}
+
+// The medium of the material interface's 'm'
+inline HomogeneousMedium Medium_of(const varying PathMedium &m)
+{
+  HomogeneousMedium r;
+  r.absorption = m.absorption;
+  r.scattering = m.scattering;
+  r.anisotropy = m.anisotropy;
+  return r;
+}
+
+// MediumProperties::Extinction(): absorption + scattering
+inline float3 Medium_extinction(const varying HomogeneousMedium &m)
+{
+  return m.absorption + m.scattering;
+}
+
+// MediumProperties::IsVacuum(): no extinction in any channel
+inline bool Medium_isVacuum(const varying HomogeneousMedium &m)
+{
+  const float3 e = Medium_extinction(m);
+  return e.x <= 0.f && e.y <= 0.f && e.z <= 0.f;
+}
+
+// MediumProperties::IsAbsorbingOnly(): no scattering in any channel, but
+// some extinction
+inline bool Medium_isAbsorbingOnly(const varying HomogeneousMedium &m)
+{
+  return m.scattering.x <= 0.f && m.scattering.y <= 0.f && m.scattering.z <= 0.f
+      && !Medium_isVacuum(m);
+}
+
+// One segment's tracking through a homogeneous medium (Typhoon's
+// _TraceVolumeTransmission()'s locals)
+struct MediumTrack
+{
+  // No scattering: the weights are the Beer-Lambert transmittance and no
+  // collision is sampled
+  bool absorbingOnly;
+  // The channel whose extinction sampled 'collision', and the probability
+  // with which each channel would have been chosen
+  int channel;
+  float3 channelPdf;
+  // The sampled distance of the collision along the segment (unit
+  // direction) from its origin; +inf for an absorbing-only medium or a
+  // channel without extinction
+  float collision;
+};
+
+// The single-scattering albedo clamp01(scattering / extinction), 0 in
+// channels without extinction (as _TraceVolumeTransmission() weighs channels)
+float3 Medium_albedo(const varying HomogeneousMedium &m);
+
+// EvalBeerTransmittance(): exp(-extinction * dist), 1 for a distance 'dist' of
+// 0 or less or a vacuum
+float3 Medium_evalBeerTransmittance(
+    const varying HomogeneousMedium &m, float dist);
+
+// SampleFreeFlightChannel(): a distance sampled with the extinction of
+// 'channel' from 'u' (+inf without extinction there)
+float Medium_sampleFreeFlightChannel(
+    const varying HomogeneousMedium &m, int channel, float u);
+
+// ChannelMIS(): a channel chosen with probability proportional to
+// throughput * weights (uniform if they sum to 0) from 'u1', and every
+// channel's probability in 'pdfChannel'
+int Medium_channelMIS(
+    float3 throughput, float3 weights, float u1, varying float3 &pdfChannel);
+
+// SampleHenyeyGreenstein(): a direction 'wi' sampled from the
+// Henyey-Greenstein phase function of 'anisotropy' (clamped to +-0.999)
+// around -wo, 'wo' pointing back along the incident ray, from (u1, u2)
+float3 Medium_sampleHenyeyGreenstein(
+    float3 wo, float anisotropy, float u1, float u2);
+
+// PdfHenyeyGreenstein(): the phase function's value, also its pdf, of the
+// pair (wi, wo); 1 / 4pi at anisotropy 0
+float Medium_pdfHenyeyGreenstein(float3 wi, float3 wo, float anisotropy);
+
+// Starts tracking a segment through 'm' for a path of 'throughput':
+// _TraceVolumeTransmission()'s channel choice from 'uChannel' (its
+// MediumChannel domain) and free flight from 'uFreeFlight' (its
+// MediumFreeFlight domain), neither drawn for an absorbing-only medium
+void Medium_beginTrack(const varying HomogeneousMedium &m,
+    float3 throughput,
+    float uChannel,
+    float uFreeFlight,
+    varying MediumTrack &track);
+
+// The path weight of a collision at 'dist' (_TraceVolumeTransmission()'s
+// evalScatterWeight): scattering times the transmittance over the channel
+// mixture's pdf; 0 where that pdf is 0 or not finite
+float3 Medium_scatterWeight(const varying HomogeneousMedium &m,
+    const varying MediumTrack &track,
+    float dist);
+
+// The path weight of passing 'dist' without a collision
+// (evalTransmittanceWeight): the transmittance over the mixture's
+// probability of no collision there; the transmittance itself for an
+// absorbing-only medium
+float3 Medium_transmittanceWeight(const varying HomogeneousMedium &m,
+    const varying MediumTrack &track,
+    float dist);

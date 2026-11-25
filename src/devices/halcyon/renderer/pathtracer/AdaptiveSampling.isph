@@ -1,0 +1,35 @@
+// Copyright 2026 The Khronos Group
+// SPDX-License-Identifier: Apache-2.0
+
+#pragma once
+
+// The pathtracer's adaptive sampling (Typhoon's per-pixel convergence,
+// renderer/aov/aovOutput.cpp): every pixel sample's colour goes into the
+// pixel's running mean and Welford sum of squared deviations
+// (AdaptiveSampling_addSample()); a pixel with enough samples whose variance
+// of the mean is small enough in every channel is converged
+// (AdaptiveSampling_converged()) and takes no more samples until something
+// changes. Defined in AdaptiveSampling.ispc, which is compiled without fused
+// multiply-adds so that it rounds as Typhoon's C++ does
+// (tests/test_adaptive_sampling.cpp checks it against a transcription).
+
+#include "shading/halcyon_math.isph"
+
+// Adds sample 'count' (counted from 1) 'sample' to a pixel's running mean
+// 'mean' and, for its colour (xyz), to 'm2', the sum of the squared
+// deviations from the mean (Typhoon's _UpdateVariance(); the opacity, w,
+// only to the mean)
+void AdaptiveSampling_addSample(
+    float4 &mean, float3 &m2, float4 sample, int count);
+
+// Whether a pixel with 'count' samples, mean colour 'mean' and sum of squared
+// deviations 'm2' is converged: 'count' is at least 'minSamples' (compared
+// as unsigned, so a negative one turns it off) and, in every
+// channel, the variance of the mean is at most 1e-6 (a standard error of
+// 0.001) plus 'threshold' (at least 0) times the squared mean (Typhoon's
+// _IsPerChannelVarianceConverged())
+bool AdaptiveSampling_converged(float3 mean,
+    float3 m2,
+    int count,
+    uniform float threshold,
+    uniform int minSamples);

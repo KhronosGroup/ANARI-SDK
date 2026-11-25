@@ -1,0 +1,536 @@
+## Copyright 2026 The Khronos Group
+## SPDX-License-Identifier: Apache-2.0
+
+name: Python wheels
+
+# Build, validate and (on v* tags) publish the 'anari' and device wheels.
+# Artifact actions stay on v4 so the workflow runs under act.
+
+on:
+  push:
+    branches: [ next_release ]
+    tags: [ 'v*' ]
+    paths: &wheel_paths
+      - 'pyproject.toml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'code_gen/**'
+      - 'src/anari/**'
+      - 'src/helium/**'
+      - 'src/anari_test_scenes/**'
+      - 'src/devices/CMakeLists.txt'
+      - 'src/devices/sink/**'
+      - 'src/devices/debug/**'
+      - 'src/devices/helide/**'
+      - 'src/devices/helide_gpu/**'
+      - 'examples/empty_helium_device/**'
+      - 'examples/python/anari_tutorial_device.py'
+      - 'tests/python/**'
+      - '.github/scripts/**'
+      - '.github/workflows/python_wheels.yml'
+  pull_request:
+    branches: [ main, next_release ]
+    paths: *wheel_paths
+  workflow_dispatch:
+    inputs:
+      publish_testpypi:
+        description: 'Publish the validated wheels to TestPyPI'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  # Fails a release whose version doesn't match the tag or is already on PyPI
+  check-anari-version:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.check.outputs.version }}
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+    - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+      with:
+        python-version: '3.12' # tomllib
+    - id: check
+      name: Check the version
+      env: # not interpolated into the script
+        RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+      run: >
+        python .github/scripts/check_python_version.py
+        --github-output "$GITHUB_OUTPUT"
+        ${RELEASE_TAG:+--tag "$RELEASE_TAG"}
+
+  build-anari-wheels:
+    name: build anari (${{ matrix.os }}, ${{ matrix.arch }})
+    needs: check-anari-version
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-24.04, ubuntu-24.04-arm, macos-15, macos-15-intel, windows-latest ]
+        include:
+        - { os: ubuntu-24.04,     arch: x86_64 }
+        - { os: ubuntu-24.04-arm, arch: aarch64 }
+        - { os: macos-15,         arch: arm64 }
+        - { os: macos-15-intel,   arch: x86_64 }
+        - { os: windows-latest,   arch: AMD64 }
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+    - name: Initialize MSVC environment
+      if: ${{ matrix.os == 'windows-latest' }}
+      shell: pwsh
+      run: .github/scripts/import_msvc_env.ps1
+    - name: Build wheels
+      uses: pypa/cibuildwheel@f9b966cfadf4109556cadc5bb39ddb72d0ce664e # v4.3.5
+      env:
+        CIBW_ARCHS: ${{ matrix.arch }}
+        CIBW_ENVIRONMENT_WINDOWS: CC=cl CXX=cl
+      with:
+        output-dir: wheelhouse
+    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: anari-wheels-${{ matrix.os }}-${{ matrix.arch }}
+        path: wheelhouse/*.whl
+        if-no-files-found: error
+
+  validate-anari:
+    name: validate anari (${{ matrix.name }}, Python ${{ matrix.python }})
+    needs: build-anari-wheels
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        name: [ manylinux x86_64, manylinux aarch64, macOS arm64, macOS x86_64, Windows AMD64 ]
+        python: [ '3.10', '3.15' ]
+        include:
+        - { name: manylinux x86_64,  os: ubuntu-24.04 }
+        - { name: manylinux aarch64, os: ubuntu-24.04-arm }
+        - { name: macOS arm64,       os: macos-15 }
+        - { name: macOS x86_64,      os: macos-15-intel }
+        - { name: Windows AMD64,     os: windows-latest }
+    env:
+      LD_BIND_NOW: '1' # Linux: fail on missing symbols at load
+    steps:
+    - name: Check out only the validation suite and the template device
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+        sparse-checkout: |
+          tests/python
+          examples/empty_helium_device
+        sparse-checkout-cone-mode: true
+    - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      with:
+        pattern: anari-wheels-*
+        merge-multiple: true
+        path: dist
+    - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+      with:
+        python-version: ${{ matrix.python }}
+        allow-prereleases: true
+    - name: Install the validation suite's requirements
+      run: python -m pip install -r tests/python/requirements.txt cffi numpy
+    - name: Install the built wheels
+      run: python -m pip install --no-index --no-deps --force-reinstall --find-links dist anari
+    - name: Run the validation suite
+      run: python -m pytest tests/python -v -p no:cacheprovider
+
+  # 'docker run', not a job container: JavaScript actions don't run on musl
+  validate-anari-musllinux:
+    name: validate anari (musllinux ${{ matrix.arch }}, Python ${{ matrix.python }})
+    needs: build-anari-wheels
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [ x86_64, aarch64 ]
+        python: [ '3.10', '3.15' ]
+        include:
+        - { arch: x86_64,  os: ubuntu-24.04 }
+        - { arch: aarch64, os: ubuntu-24.04-arm }
+    steps:
+    - name: Check out only the validation suite and the template device
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+        sparse-checkout: |
+          tests/python
+          examples/empty_helium_device
+        sparse-checkout-cone-mode: true
+    - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      with:
+        pattern: anari-wheels-*
+        merge-multiple: true
+        path: dist
+    - name: Validate in python:${{ matrix.python }}-alpine
+      run: >
+        docker run --rm -v "${{ github.workspace }}:/work" -w /work
+        python:${{ matrix.python }}-alpine sh -euxc '
+        apk add --no-cache cmake make g++;
+        python -m venv /venv;
+        /venv/bin/python -m pip install -r tests/python/requirements.txt cffi numpy;
+        /venv/bin/python -m pip install --no-index --no-deps --find-links dist anari;
+        /venv/bin/python -m pytest tests/python -v -p no:cacheprovider'
+
+  publish-anari-testpypi:
+    # Forks have no Trusted Publisher
+    if: >-
+      github.repository == 'KhronosGroup/ANARI-SDK' &&
+      github.event_name == 'workflow_dispatch' && inputs.publish_testpypi
+    needs: [ check-anari-version, validate-anari, validate-anari-musllinux ]
+    runs-on: ubuntu-24.04
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/project/anari/${{ needs.check-anari-version.outputs.version }}/
+    permissions:
+      id-token: write # Trusted Publishing; nothing else in this job
+    steps:
+    - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      with:
+        pattern: anari-wheels-*
+        merge-multiple: true
+        path: dist
+    - uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
+      with:
+        repository-url: https://test.pypi.org/legacy/
+        packages-dir: dist
+        # Rehearsals repeat a version; TestPyPI never accepts one twice
+        skip-existing: true
+
+  publish-anari-pypi:
+    # Forks have no Trusted Publisher
+    if: >-
+      github.repository == 'KhronosGroup/ANARI-SDK' &&
+      github.event_name == 'push' && github.ref_type == 'tag' &&
+      startsWith(github.ref_name, 'v')
+    needs: [ check-anari-version, validate-anari, validate-anari-musllinux ]
+    runs-on: ubuntu-24.04
+    environment: # its reviewers approve each release
+      name: publish anari wheels
+      url: https://pypi.org/project/anari/${{ needs.check-anari-version.outputs.version }}/
+    permissions:
+      id-token: write # Trusted Publishing; nothing else in this job
+    steps:
+    - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      with:
+        pattern: anari-wheels-*
+        merge-multiple: true
+        path: dist
+    - uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
+      with:
+        packages-dir: dist
+
+  publish-device-wheels-testpypi:
+    # Forks have no Trusted Publisher
+    if: >-
+      github.repository == 'KhronosGroup/ANARI-SDK' &&
+      github.event_name == 'workflow_dispatch' && inputs.publish_testpypi
+    needs: [ validate-device-wheels ]
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [ helide, helide_gpu ]
+        include:
+        - { package: helide, project: helide }
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/project/${{ matrix.project }}/
+    permissions:
+      id-token: write # Trusted Publishing; nothing else in this job
+    steps:
+    - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      with:
+        pattern: wheels-${{ matrix.package }}-*
+        merge-multiple: true
+        path: dist
+    - uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
+      with:
+        repository-url: https://test.pypi.org/legacy/
+        packages-dir: dist
+        # Rehearsals repeat a version; TestPyPI never accepts one twice
+        skip-existing: true
+
+  publish-device-wheels-pypi:
+    # Forks have no Trusted Publisher
+    if: >-
+      github.repository == 'KhronosGroup/ANARI-SDK' &&
+      github.event_name == 'push' && github.ref_type == 'tag' &&
+      startsWith(github.ref_name, 'v')
+    needs: [ check-anari-version, validate-device-wheels ]
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [ helide, helide_gpu ]
+        include:
+        - { package: helide, project: helide }
+    environment: # its reviewers approve each release
+      name: publish device wheels
+      url: https://pypi.org/project/${{ matrix.project }}/
+    permissions:
+      id-token: write # Trusted Publishing; nothing else in this job
+    steps:
+    - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      with:
+        pattern: wheels-${{ matrix.package }}-*
+        merge-multiple: true
+        path: dist
+    - uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
+      with:
+        packages-dir: dist
+
+  # Currently these jobs wait for *all* of `build-anari-wheels` to complete.
+  # There's no mechanism to only require the matching platform's `anari` wheel
+  # artifacts.
+  # https://github.com/orgs/community/discussions/42335
+  build-device-wheels:
+    name: build ${{ matrix.package }} (${{ matrix.os }}, ${{ matrix.arch }})
+    needs: build-anari-wheels
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-24.04, macos-15, macos-15-intel, windows-latest ]
+        package:
+        - helide
+        - helide_gpu
+        include:
+        - { os: ubuntu-24.04,     arch: x86_64 }
+        # Embree's build runs out of memory inside of the `cibuildwheel`
+        # container.
+        # - { os: ubuntu-24.04-arm, arch: aarch64 }
+        - { os: macos-15,         arch: arm64 }
+        - { os: macos-15-intel,   arch: x86_64 }
+        - { os: windows-latest,   arch: AMD64 }
+        exclude:
+        - os: ubuntu-24.04-arm
+          package: helide_gpu
+        # No support from Embree.
+        - os: macos-15-intel
+          package: helide
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+    - name: Initialize MSVC environment
+      if: ${{ matrix.os == 'windows-latest' }}
+      shell: pwsh
+      run: .github/scripts/import_msvc_env.ps1
+    - uses: actions/download-artifact@v4
+      with:
+        name: anari-wheels-${{ matrix.os }}-${{ matrix.arch }}
+        path: anari-wheelhouse
+    - name: Extract ANARI wheel (Unix)
+      if: ${{ matrix.os != 'windows-latest' }}
+      shell: bash
+      run: |
+        wheel="$(find anari-wheelhouse -maxdepth 1 -name 'anari-*.whl' -print -quit)"
+        test -n "$wheel"
+        mkdir -p "src/devices/${{ matrix.package }}/.wheel-deps/anari"
+        unzip -q "$wheel" -d "src/devices/${{ matrix.package }}/.wheel-deps/anari"
+        echo "anari_ROOT=${{ github.workspace }}/src/devices/${{ matrix.package }}/.wheel-deps/anari/anari/sdk" >> "$GITHUB_ENV"
+        mkdir -p "src/devices/${{ matrix.package }}/.wheel-deps/anari-wheelhouse"
+        cp anari-wheelhouse/*.whl "src/devices/${{ matrix.package }}/.wheel-deps/anari-wheelhouse/"
+        echo "PIP_FIND_LINKS=${{ github.workspace }}/src/devices/${{ matrix.package }}/.wheel-deps/anari-wheelhouse" >> "$GITHUB_ENV"
+    - name: Extract ANARI wheel (Windows)
+      if: ${{ matrix.os == 'windows-latest' }}
+      shell: pwsh
+      run: |
+        $wheel = Get-ChildItem "anari-wheelhouse/anari-*.whl" | Select-Object -First 1
+        if (-not $wheel) { throw "ANARI wheel artifact was not found" }
+        $archive = Join-Path $env:RUNNER_TEMP "anari-wheel.zip"
+        Copy-Item $wheel.FullName $archive
+        $destination = Join-Path $env:GITHUB_WORKSPACE "src/devices/${{ matrix.package }}/.wheel-deps/anari"
+        New-Item -ItemType Directory -Force $destination | Out-Null
+        Expand-Archive $archive $destination -Force
+        "anari_ROOT=$destination/anari/sdk" | Out-File -FilePath $env:GITHUB_ENV -Append
+        $wheelhouse = Join-Path $destination "..\anari-wheelhouse"
+        New-Item -ItemType Directory -Force $wheelhouse | Out-Null
+        Copy-Item "anari-wheelhouse/*.whl" $wheelhouse
+        "PIP_FIND_LINKS=$wheelhouse" | Out-File -FilePath $env:GITHUB_ENV -Append
+    - name: Install Embree and TBB
+      if: ${{ matrix.package == 'helide' && matrix.os != 'ubuntu-24.04-arm' }}
+      uses: ./.github/actions/install_embree
+      with:
+        install-dir: ${{ github.workspace }}/src/devices/helide/.wheel-deps/embree
+    - name: Set delocate library search path (macOS)
+      if: ${{ matrix.package == 'helide' && startsWith(matrix.os, 'macos-') }}
+      shell: bash
+      run: |
+        embree_root="${GITHUB_WORKSPACE}/src/devices/helide/.wheel-deps/embree/embree"
+        embree_lib_file="$(find "$embree_root" -name 'libembree4.4.dylib' -print -quit)"
+        if [ -z "$embree_lib_file" ]; then
+          echo "::error::libembree4.4.dylib was not found in the downloaded Embree package"
+          exit 1
+        fi
+        embree_lib="$(dirname "$embree_lib_file")"
+        tbb_lib="$(brew --prefix tbb)/lib"
+        echo "DYLD_LIBRARY_PATH=$embree_lib:$tbb_lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}" >> "$GITHUB_ENV"
+    - name: Install GPU build dependencies (macOS)
+      if: ${{ matrix.package == 'helide_gpu' && startsWith(matrix.os, 'macos-') }}
+      shell: bash
+      run: |
+        brew install sdl3 spirv-cross glslang
+        echo "SDL3_ROOT=$(brew --prefix sdl3)" >> "$GITHUB_ENV"
+    - name: Install GPU build dependencies (Windows)
+      if: ${{ matrix.package == 'helide_gpu' && matrix.os == 'windows-latest' }}
+      shell: pwsh
+      run: |
+        $deps = Join-Path $env:GITHUB_WORKSPACE "gpu-build-deps"
+        New-Item -ItemType Directory -Force $deps | Out-Null
+        $sdlZip = Join-Path $deps "SDL3.zip"
+        Invoke-WebRequest "https://github.com/libsdl-org/SDL/releases/download/release-3.4.20/SDL3-devel-3.4.20-VC.zip" -OutFile $sdlZip
+        Expand-Archive $sdlZip (Join-Path $deps "SDL3") -Force
+        $sdlConfig = Get-ChildItem (Join-Path $deps "SDL3") -Recurse -Filter SDL3Config.cmake | Select-Object -First 1
+        if (-not $sdlConfig) { throw "SDL3Config.cmake was not found in SDL3 development archive" }
+        $glslangZip = Join-Path $deps "glslang.zip"
+        Invoke-WebRequest "https://github.com/KhronosGroup/glslang/releases/download/16.6.0/glslang-16.6.0-windows-x86_64-release.zip" -OutFile $glslangZip
+        Expand-Archive $glslangZip (Join-Path $deps "glslang") -Force
+        $validator = Get-ChildItem (Join-Path $deps "glslang") -Recurse -Filter glslang.exe | Select-Object -First 1
+        if (-not $validator) { throw "glslang.exe was not found in glslang release archive" }
+        "SDL3_ROOT=$($sdlConfig.Directory)" | Out-File -FilePath $env:GITHUB_ENV -Append
+        $validator.Directory.FullName | Out-File -FilePath $env:GITHUB_PATH -Append
+    - name: Install GPU build dependencies (manylinux)
+      if: ${{ matrix.package == 'helide_gpu' && matrix.os == 'ubuntu-24.04' }}
+      shell: bash
+      run: |
+        {
+          echo 'CIBW_BEFORE_ALL_LINUX<<CIBW_SCRIPT'
+          cat <<'CIBW_SCRIPT'
+        bash -s <<'GPU_SETUP'
+        set -euo pipefail
+        dnf install -y almalinux-release-devel
+        dnf install -y glslang
+
+        if ! dnf install -y SDL3-devel; then
+          workdir="$(pwd)/.wheel-deps/build-tools"
+          mkdir -p "$workdir"
+          cd "$workdir"
+
+          readonly sdl3_version="3.4.20"
+          readonly sdl3_sha256sum="f3bb06f55bed9557227a700af2ea62e49497ebdf58037732a731a5fb3ef8581f"
+
+          curl -fsSLO "https://github.com/libsdl-org/SDL/releases/download/release-$sdl3_version/SDL3-$sdl3_version.tar.gz"
+          echo "$sdl3_sha256sum  SDL3-$sdl3_version.tar.gz" | sha256sum -c -
+          tar -xzf "SDL3-$sdl3_version.tar.gz"
+          cmake -S "SDL3-$sdl3_version" -B SDL3-build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=/usr/local \
+            -DSDL_SHARED=ON \
+            -DSDL_STATIC=OFF \
+            -DSDL_TESTS=OFF \
+            -DSDL_EXAMPLES=OFF \
+            -DSDL_X11_XCURSOR=OFF \
+            -DSDL_X11_XFIXES=OFF \
+            -DSDL_X11_XINPUT=OFF \
+            -DSDL_X11_XRANDR=OFF \
+            -DSDL_X11_XSCRNSAVER=OFF \
+            -DSDL_X11_XTEST=OFF
+          cmake --build SDL3-build --parallel 4
+          cmake --install SDL3-build
+        fi
+        GPU_SETUP
+        CIBW_SCRIPT
+          echo CIBW_SCRIPT
+        } >> "$GITHUB_ENV"
+    - name: Build wheels
+      uses: pypa/cibuildwheel@f9b966cfadf4109556cadc5bb39ddb72d0ce664e # v4.3.5
+      env:
+        CIBW_ARCHS: ${{ matrix.arch }}
+        CIBW_ENVIRONMENT: ${{ matrix.package == 'helide_gpu' && 'SDL_DOC_GENERATOR=0' || '' }}
+        CIBW_ENVIRONMENT_LINUX: anari_ROOT=/project/src/devices/${{ matrix.package }}/.wheel-deps/anari/anari/sdk PIP_FIND_LINKS=/project/src/devices/${{ matrix.package }}/.wheel-deps/anari-wheelhouse ${{ matrix.os == 'ubuntu-24.04' && 'CMAKE_PREFIX_PATH=/project/src/devices/helide/.wheel-deps/embree/embree:/project/src/devices/helide/.wheel-deps/embree/oneapi-tbb-2022.3.0 LD_LIBRARY_PATH=/project/src/devices/helide/.wheel-deps/embree/embree/lib:/project/src/devices/helide/.wheel-deps/embree/embree/lib64:/project/src/devices/helide/.wheel-deps/embree/oneapi-tbb-2022.3.0/lib' || '' }}
+        CIBW_ENVIRONMENT_WINDOWS: CC=cl CXX=cl
+        CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: ${{ matrix.package == 'helide' && 'delvewheel repair --analyze-existing --add-path "{project}/.wheel-deps/embree/embree-4.4.1.x64.windows/bin;{project}/.wheel-deps/embree/oneapi-tbb-2022.3.0/redist/intel64/vc14" -w {dest_dir} {wheel}' || 'delvewheel repair -w {dest_dir} -v {wheel}' }}
+        # PySDL3's downloaded Linux runtime currently needs a newer glibc than
+        # the manylinux test image; validate it separately on Ubuntu 22.04.
+        # https://github.com/Aermoss/PySDL3-Build/issues/4
+        CIBW_TEST_SKIP: ${{ matrix.package == 'helide_gpu' && matrix.os == 'ubuntu-24.04' && '*' || '' }}
+      with:
+        package-dir: src/devices/${{ matrix.package }}
+        output-dir: wheelhouse
+    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: wheels-${{ matrix.package }}-${{ matrix.os }}-${{ matrix.arch }}
+        path: wheelhouse/*.whl
+        if-no-files-found: error
+
+  validate-device-wheels:
+    name: validate anari[${{ matrix.package }}] (${{ matrix.os }}, ${{ matrix.arch }})
+    needs: [ build-anari-wheels, build-device-wheels ]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-24.04, macos-15, windows-latest ]
+        package: [ helide, helide_gpu ]
+        include:
+        - { os: ubuntu-24.04,     arch: x86_64 }
+        - { os: macos-15,         arch: arm64 }
+        - { os: windows-latest,   arch: AMD64 }
+        - package: helide
+          deps: ''
+        - package: helide_gpu
+          deps: PySDL3
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+        sparse-checkout: |
+          examples/python/anari_tutorial_device.py
+          src/devices/${{ matrix.package }}/test
+        sparse-checkout-cone-mode: true
+    - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      with:
+        name: anari-wheels-${{ matrix.os }}-${{ matrix.arch }}
+        path: wheelhouse
+    - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      with:
+        name: wheels-${{ matrix.package }}-${{ matrix.os }}-${{ matrix.arch }}
+        path: wheelhouse
+    - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+      with:
+        python-version: '3.10'
+    - name: Install wheel dependencies and the ANARI extra
+      run: |
+        python -m pip install cffi numpy ${{ matrix.deps }}
+        python -m pip install pytest
+        python -m pip install --no-index --find-links wheelhouse 'anari[${{ matrix.package }}]'
+    - name: Set up software Vulkan rendering (Linux)
+      if: ${{ runner.os == 'Linux' && matrix.package == 'helide_gpu' }}
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends \
+          libvulkan1 mesa-vulkan-drivers vulkan-tools xvfb xauth ripgrep
+        lvp_icd="$(dpkg -L mesa-vulkan-drivers | rg '/lvp_icd[^/]*\.json$')"
+        test -f "$lvp_icd"
+        {
+          echo "VK_DRIVER_FILES=$lvp_icd"
+          echo "SDL_GPU_DRIVER=vulkan"
+          echo "SDL_VIDEO_DRIVER=x11"
+          echo "SDL_VIDEODRIVER=x11"
+        } >> "$GITHUB_ENV"
+        VK_DRIVER_FILES="$lvp_icd" xvfb-run -a vulkaninfo --summary
+    - name: Run the device wheel tests
+      env:
+        # PySDL3 downloads its runtime from GitHub on first import.
+        SDL_GITHUB_TOKEN: ${{ github.token }}
+        SDL_DOC_GENERATOR: '0'
+      run: ${{ runner.os == 'Linux' && matrix.package == 'helide_gpu' && 'xvfb-run -a ' || '' }}python -m pytest -q src/devices/${{ matrix.package }}/test
+    - name: Run the helide tutorial script
+      if: ${{ matrix.package == 'helide' }}
+      env:
+        MPLBACKEND: Agg
+      run: |
+        python -m pip install matplotlib
+        python examples/python/anari_tutorial_device.py

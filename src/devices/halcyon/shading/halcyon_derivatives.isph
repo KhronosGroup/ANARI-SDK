@@ -1,0 +1,90 @@
+// Copyright 2026 The Khronos Group
+// SPDX-License-Identifier: LicenseRef-TOST-1.0
+//
+// Ported from Typhoon (NVIDIA-Omniverse/OpenUSD, branch typhoon/main, commit
+// 70c45e83b08a7b45588cd6cdbd2ae67f5147befb), pxr/imaging/plugin/hdEmbree/
+// renderer/rendererMath.h (DifferenceOfProducts(), TryNormalizeDirection(),
+// IsFinite()), and from OpenUSD's GfBuildOrthonormalFrame()
+// (pxr/base/gf/vec.template.cpp). Copyright 2016-2026 Pixar, licensed under
+// the Tomorrow Open Source Technology License 1.0 (see THIRD-PARTY.md). Keep
+// in step with those when the pin in external/typhoon/PROVENANCE.md moves.
+
+#pragma once
+
+// Vector helpers of the surface derivatives (the pathtracer's shading
+// context): Typhoon's, so that frames match its own bit for bit where they
+// can
+
+#include "halcyon_math.isph"
+
+inline bool isFinite(float3 v)
+{
+  return isfinite(v.x) && isfinite(v.y) && isfinite(v.z);
+}
+
+// a * b - c * d without the cancellation of the plain expression (Typhoon's
+// DifferenceOfProducts() uses fma, which ISPC lacks; the double products are
+// exact, so this rounds once more at most)
+inline float differenceOfProducts(float a, float b, float c, float d)
+{
+  return (float)((double)a * (double)b - (double)c * (double)d);
+}
+
+// 'v' normalized, scaled by its largest component first so that tiny and huge
+// vectors normalize too, and its length; false (outputs unchanged) for
+// non-finite or zero vectors (Typhoon's TryNormalizeDirection())
+inline bool tryNormalizeDirection(float3 v, float3 &n, double &len)
+{
+  if (!isFinite(v))
+    return false;
+  const double m =
+      max((double)abs(v.x), max((double)abs(v.y), (double)abs(v.z)));
+  if (!isfinite(m) || m == 0.d)
+    return false;
+  const double x = v.x / m;
+  const double y = v.y / m;
+  const double z = v.z / m;
+  const double scaledLength = sqrt(x * x + y * y + z * z);
+  if (!isfinite(scaledLength) || scaledLength == 0.d)
+    return false;
+  const float3 r = make_float3((float)(x / scaledLength),
+      (float)(y / scaledLength),
+      (float)(z / scaledLength));
+  if (!isFinite(r))
+    return false;
+  n = r;
+  len = m * scaledLength;
+  return true;
+}
+
+inline bool tryNormalizeDirection(float3 v, float3 &n)
+{
+  double len;
+  return tryNormalizeDirection(v, n, len);
+}
+
+// Two unit vectors perpendicular to 'v0' and each other, v1 x v2 along v0;
+// scaled down when |v0| < 1e-10 and zero for a zero 'v0' (OpenUSD's
+// GfBuildOrthonormalFrame())
+inline void buildOrthonormalFrame(float3 v0, float3 &v1, float3 &v2)
+{
+  const float len = length(v0);
+  if (len == 0.f) {
+    v1 = make_float3(0.f);
+    v2 = make_float3(0.f);
+    return;
+  }
+  const float3 unitDir = v0 / len;
+  v1 = cross(make_float3(1.f, 0.f, 0.f), unitDir);
+  if (dot(v1, v1) < 1e-8f)
+    v1 = cross(make_float3(0.f, 1.f, 0.f), unitDir);
+  v1 = normalize(v1);
+  v2 = cross(unitDir, v1);
+  // GF_MIN_VECTOR_LENGTH
+  const uniform float eps = 1e-10f;
+  if (len < eps) {
+    const float desiredLen = len / eps;
+    v1 = v1 * desiredLen;
+    v2 = v2 * desiredLen;
+  }
+}

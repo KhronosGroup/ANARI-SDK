@@ -42,39 +42,47 @@ bool World::getProperty(const std::string_view &name,
         deviceState()->gpu.thread.flush();
     }
 
-    box3 bounds{};
-    for (auto *inst : m_instances) {
-      if (!inst || !inst->isValid())
-        continue;
-      const auto *grp = inst->group();
-      if (!grp)
-        continue;
-
-      box3 groupBounds;
-      for (auto *surf : grp->surfaces()) {
-        if (!surf || !surf->isValid())
-          continue;
-        const auto *geom = surf->geometry();
-        if (geom)
-          groupBounds.extend(geom->bounds());
-      }
-
-      for (auto *vol : grp->volumes()) {
-        if (!vol || !vol->isValid())
-          continue;
-        groupBounds.extend(vol->bounds());
-      }
-
-      if (!inst->xfmIsIdentity())
-        groupBounds = xfmBox(inst->xfm(), groupBounds);
-      bounds.extend(groupBounds);
-    }
-
+    const box3 bounds = this->bounds();
     std::memcpy(ptr, &bounds, sizeof(bounds));
     return true;
   }
 
   return Object::getProperty(name, type, ptr, size, flags);
+}
+
+box3 World::bounds() const
+{
+  box3 bounds{};
+  for (auto *inst : m_instances) {
+    if (!inst || !inst->isValid())
+      continue;
+    const auto *grp = inst->group();
+    if (!grp)
+      continue;
+
+    box3 groupBounds;
+    for (auto *surf : grp->surfaces()) {
+      if (!surf || !surf->isValid())
+        continue;
+      const auto *geom = surf->geometry();
+      if (geom)
+        groupBounds.extend(geom->bounds());
+    }
+
+    for (auto *vol : grp->volumes()) {
+      if (!vol || !vol->isValid())
+        continue;
+      groupBounds.extend(vol->bounds());
+    }
+
+    // an empty box's inverted corners would transform to a finite box
+    if (groupBounds.lower.x > groupBounds.upper.x)
+      continue;
+    if (!inst->xfmIsIdentity())
+      groupBounds = xfmBox(inst->xfm(), groupBounds);
+    bounds.extend(groupBounds);
+  }
+  return bounds;
 }
 
 void World::commitParameters()

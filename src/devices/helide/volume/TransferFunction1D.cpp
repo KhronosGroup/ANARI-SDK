@@ -28,7 +28,7 @@ void TransferFunction1D::commitParameters()
   getParam("color", ANARI_FLOAT32_VEC3, &m_uniformColor);
   getParam("color", ANARI_FLOAT32_VEC4, &m_uniformColor);
   m_opacityData = getParamObject<Array1D>("opacity");
-  m_uniformOpacity = getParam<float>("opacity", 1.f) * m_uniformColor.w;
+  m_uniformOpacity = getParam<float>("opacity", 1.f);
   m_unitDistance = getParam<float>("unitDistance", 1.f);
 }
 

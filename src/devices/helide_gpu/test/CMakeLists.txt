@@ -1,16 +1,22 @@
-cmake_minimum_required(VERSION 3.11)
-project(helide_gpu_smoke_test LANGUAGES CXX)
+## Copyright 2026 The Khronos Group
+## SPDX-License-Identifier: Apache-2.0
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# Renders a few small scenes through the device and checks their pixels; the
+# images are written to the build directory as smoke_*.png. Needs a GPU, so it
+# is not part of the SDK's CI.
 
-find_package(anari REQUIRED)
+if (STANDALONE_SOURCE_TREE)
+  add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/../../../../external/stb_image
+    stb_image)
+endif()
 
-add_executable(smoke_test smoke_test.cpp)
+add_executable(helide_gpu_smoke_test smoke_test.cpp)
+target_link_libraries(helide_gpu_smoke_test PRIVATE anari::anari stb_image)
+add_dependencies(helide_gpu_smoke_test ${PROJECT_NAME})
 
-target_link_libraries(smoke_test PRIVATE anari::anari)
-
-# stb_image_write (header-only, shipped with the ANARI SDK install)
-target_include_directories(smoke_test PRIVATE
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-)
+add_test(NAME helide_gpu::smoke_test
+  COMMAND helide_gpu_smoke_test helide_gpu
+  WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+# The device loads SDL3 at runtime; use the one it was built against.
+set_tests_properties(helide_gpu::smoke_test PROPERTIES
+  ENVIRONMENT "HELIDE_GPU_SDL3_LIBRARY=$<TARGET_FILE:SDL3::SDL3>")

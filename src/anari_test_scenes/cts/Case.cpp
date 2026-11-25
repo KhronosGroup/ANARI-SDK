@@ -39,5 +39,10 @@ std::string Case::id() const
   return perm + "_" + var;
 }
 
+std::string Case::qualifiedId() const
+{
+  return category + "/" + testName + "/" + id();
+}
+
 } // namespace cts
 } // namespace anari

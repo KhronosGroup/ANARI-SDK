@@ -1,0 +1,113 @@
+{
+    "info": {
+        "name": "HALCYON_MATERIAL_USD_PREVIEW_SURFACE",
+        "type": "extension",
+        "dependencies": []
+    },
+    "objects": [
+        {
+            "type": "ANARI_MATERIAL",
+            "name": "usdPreviewSurface",
+            "description": "UsdPreviewSurface (MaterialX's ND_UsdPreviewSurface_surfaceshader, version 2.6); each parameter is the input of its name, with its default",
+            "parameters": [
+                {
+                    "name": "name",
+                    "types": ["ANARI_STRING"],
+                    "tags": [],
+                    "description": "optional object name"
+                },
+                {
+                    "name": "diffuseColor",
+                    "types": ["ANARI_FLOAT32_VEC3", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute", "color"],
+                    "default": [0.18, 0.18, 0.18],
+                    "description": "UsdPreviewSurface diffuseColor"
+                },
+                {
+                    "name": "emissiveColor",
+                    "types": ["ANARI_FLOAT32_VEC3", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute", "color"],
+                    "default": [0.0, 0.0, 0.0],
+                    "description": "UsdPreviewSurface emissiveColor"
+                },
+                {
+                    "name": "useSpecularWorkflow",
+                    "types": ["ANARI_INT32", "ANARI_BOOL"],
+                    "tags": [],
+                    "default": 0,
+                    "description": "UsdPreviewSurface useSpecularWorkflow: nonzero for the specular workflow (specularColor), zero for the metalness workflow (metallic)"
+                },
+                {
+                    "name": "specularColor",
+                    "types": ["ANARI_FLOAT32_VEC3", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute", "color"],
+                    "default": [0.0, 0.0, 0.0],
+                    "description": "UsdPreviewSurface specularColor (specular workflow)"
+                },
+                {
+                    "name": "metallic",
+                    "types": ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute"],
+                    "default": 0.0,
+                    "description": "UsdPreviewSurface metallic (metalness workflow)"
+                },
+                {
+                    "name": "roughness",
+                    "types": ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute"],
+                    "default": 0.5,
+                    "description": "UsdPreviewSurface roughness"
+                },
+                {
+                    "name": "clearcoat",
+                    "types": ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute"],
+                    "default": 0.0,
+                    "description": "UsdPreviewSurface clearcoat"
+                },
+                {
+                    "name": "clearcoatRoughness",
+                    "types": ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute"],
+                    "default": 0.01,
+                    "description": "UsdPreviewSurface clearcoatRoughness"
+                },
+                {
+                    "name": "opacity",
+                    "types": ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute"],
+                    "default": 1.0,
+                    "description": "UsdPreviewSurface opacity"
+                },
+                {
+                    "name": "opacityMode",
+                    "types": ["ANARI_STRING", "ANARI_INT32"],
+                    "tags": [],
+                    "values": ["transparent", "presence"],
+                    "default": "transparent",
+                    "description": "UsdPreviewSurface opacityMode: 'transparent' or 0 (opacity as transmission), 'presence' or 1 (opacity as coverage)"
+                },
+                {
+                    "name": "opacityThreshold",
+                    "types": ["ANARI_FLOAT32"],
+                    "tags": [],
+                    "default": 0.0,
+                    "description": "UsdPreviewSurface opacityThreshold: above 0, the surface is cut out where opacity is below it"
+                },
+                {
+                    "name": "ior",
+                    "types": ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute"],
+                    "default": 1.5,
+                    "description": "UsdPreviewSurface ior"
+                },
+                {
+                    "name": "normal",
+                    "types": ["ANARI_FLOAT32_VEC3", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute"],
+                    "description": "UsdPreviewSurface normal: a tangent-space normal in [-1, 1]; unset, the unperturbed normal"
+                }
+            ]
+        }
+    ]
+}

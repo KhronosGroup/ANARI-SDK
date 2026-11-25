@@ -1,7 +1,7 @@
 ## Copyright 2026 The Khronos Group
 ## SPDX-License-Identifier: Apache-2.0
 
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.20)
 
 if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_LIST_DIR})
   set(STANDALONE_SOURCE_TREE TRUE)
@@ -41,11 +41,9 @@ include(GNUInstallDirs)
 
 ## Dependencies ##
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../rtx/cmake")
-
 find_package(anari REQUIRED)
 find_package(SDL3 REQUIRED COMPONENTS SDL3)
-find_program(GLSLANG_VALIDATOR glslangValidator REQUIRED)
+find_program(GLSLANG_VALIDATOR NAMES glslangValidator glslang REQUIRED)
 if(APPLE)
   find_program(SPIRV_CROSS spirv-cross REQUIRED)
 else()
@@ -66,13 +64,15 @@ anari_sdk_fetch_project(
 
 ## Shader compilation: GLSL -> SPIR-V -> C header ##
 
+# Extra arguments: files the shader #includes (from shaders/)
 function(compile_shader_to_header stage source out_spv out_header sym)
   get_filename_component(source_abs "${source}" ABSOLUTE)
   add_custom_command(
     OUTPUT "${out_spv}"
     COMMAND ${GLSLANG_VALIDATOR} -V --target-env vulkan1.0
+            -I${CMAKE_CURRENT_SOURCE_DIR}/shaders
             -S ${stage} "${source_abs}" -o "${out_spv}"
-    DEPENDS "${source_abs}"
+    DEPENDS "${source_abs}" ${ARGN}
     COMMENT "Compiling ${source} to SPIR-V"
   )
   add_custom_command(
@@ -127,12 +127,6 @@ function(compile_msl_header source_spv out_msl out_header sym)
 endfunction()
 
 compile_shader_to_header(vert
-  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/triangle.vert
-  ${CMAKE_CURRENT_BINARY_DIR}/triangle.vert.spv
-  ${CMAKE_CURRENT_BINARY_DIR}/triangle_vert_spv.h
-  triangle_vert_spv)
-
-compile_shader_to_header(vert
   ${CMAKE_CURRENT_SOURCE_DIR}/shaders/triangle_mesh.vert
   ${CMAKE_CURRENT_BINARY_DIR}/triangle_mesh.vert.spv
   ${CMAKE_CURRENT_BINARY_DIR}/triangle_mesh_vert_spv.h
@@ -142,7 +136,10 @@ compile_shader_to_header(frag
   ${CMAKE_CURRENT_SOURCE_DIR}/shaders/triangle.frag
   ${CMAKE_CURRENT_BINARY_DIR}/triangle.frag.spv
   ${CMAKE_CURRENT_BINARY_DIR}/triangle_frag_spv.h
-  triangle_frag_spv)
+  triangle_frag_spv
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/material.glsl
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/shading.glsl
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/ambient_packing.glsl)
 
 compile_shader_to_header(vert
   ${CMAKE_CURRENT_SOURCE_DIR}/shaders/fullscreen.vert
@@ -154,7 +151,8 @@ compile_shader_to_header(frag
   ${CMAKE_CURRENT_SOURCE_DIR}/shaders/ssao.frag
   ${CMAKE_CURRENT_BINARY_DIR}/ssao.frag.spv
   ${CMAKE_CURRENT_BINARY_DIR}/ssao_frag_spv.h
-  ssao_frag_spv)
+  ssao_frag_spv
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/cortao.glsl)
 
 compile_shader_to_header(frag
   ${CMAKE_CURRENT_SOURCE_DIR}/shaders/blur.frag
@@ -166,7 +164,8 @@ compile_shader_to_header(frag
   ${CMAKE_CURRENT_SOURCE_DIR}/shaders/composite.frag
   ${CMAKE_CURRENT_BINARY_DIR}/composite.frag.spv
   ${CMAKE_CURRENT_BINARY_DIR}/composite_frag_spv.h
-  composite_frag_spv)
+  composite_frag_spv
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/ambient_packing.glsl)
 
 compile_shader_to_header(vert
   ${CMAKE_CURRENT_SOURCE_DIR}/shaders/sphere.vert
@@ -178,7 +177,10 @@ compile_shader_to_header(frag
   ${CMAKE_CURRENT_SOURCE_DIR}/shaders/sphere.frag
   ${CMAKE_CURRENT_BINARY_DIR}/sphere.frag.spv
   ${CMAKE_CURRENT_BINARY_DIR}/sphere_frag_spv.h
-  sphere_frag_spv)
+  sphere_frag_spv
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/material.glsl
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/shading.glsl
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/ambient_packing.glsl)
 
 compile_shader_to_header(vert
   ${CMAKE_CURRENT_SOURCE_DIR}/shaders/volume.vert
@@ -192,13 +194,30 @@ compile_shader_to_header(frag
   ${CMAKE_CURRENT_BINARY_DIR}/volume_frag_spv.h
   volume_frag_spv)
 
+compile_shader_to_header(vert
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/light_quad.vert
+  ${CMAKE_CURRENT_BINARY_DIR}/light_quad.vert.spv
+  ${CMAKE_CURRENT_BINARY_DIR}/light_quad_vert_spv.h
+  light_quad_vert_spv)
+
+compile_shader_to_header(frag
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/light_quad.frag
+  ${CMAKE_CURRENT_BINARY_DIR}/light_quad.frag.spv
+  ${CMAKE_CURRENT_BINARY_DIR}/light_quad_frag_spv.h
+  light_quad_frag_spv)
+
+compile_shader_to_header(frag
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/hdri.frag
+  ${CMAKE_CURRENT_BINARY_DIR}/hdri.frag.spv
+  ${CMAKE_CURRENT_BINARY_DIR}/hdri_frag_spv.h
+  hdri_frag_spv)
+
 ## MSL cross-compilation for each shader ##
 
-compile_msl_header(
-  ${CMAKE_CURRENT_BINARY_DIR}/triangle.vert.spv
-  ${CMAKE_CURRENT_BINARY_DIR}/triangle.vert.msl
-  ${CMAKE_CURRENT_BINARY_DIR}/triangle_vert_msl.h
-  triangle_vert_msl)
+# Fragment resource slots must retain their GLSL binding numbers: automatic
+# MSL assignment follows usage order and can swap material/lighting UBOs or
+# composite textures. Vertex storage buffers use the ordering handled below
+# and in the geometry binding code.
 
 compile_msl_header(
   ${CMAKE_CURRENT_BINARY_DIR}/triangle_mesh.vert.spv
@@ -210,7 +229,8 @@ compile_msl_header(
   ${CMAKE_CURRENT_BINARY_DIR}/triangle.frag.spv
   ${CMAKE_CURRENT_BINARY_DIR}/triangle.frag.msl
   ${CMAKE_CURRENT_BINARY_DIR}/triangle_frag_msl.h
-  triangle_frag_msl)
+  triangle_frag_msl
+  --msl-decoration-binding)
 
 compile_msl_header(
   ${CMAKE_CURRENT_BINARY_DIR}/fullscreen.vert.spv
@@ -236,7 +256,8 @@ compile_msl_header(
   ${CMAKE_CURRENT_BINARY_DIR}/composite.frag.spv
   ${CMAKE_CURRENT_BINARY_DIR}/composite.frag.msl
   ${CMAKE_CURRENT_BINARY_DIR}/composite_frag_msl.h
-  composite_frag_msl)
+  composite_frag_msl
+  --msl-decoration-binding)
 
 compile_msl_header(
   ${CMAKE_CURRENT_BINARY_DIR}/sphere.vert.spv
@@ -248,7 +269,8 @@ compile_msl_header(
   ${CMAKE_CURRENT_BINARY_DIR}/sphere.frag.spv
   ${CMAKE_CURRENT_BINARY_DIR}/sphere.frag.msl
   ${CMAKE_CURRENT_BINARY_DIR}/sphere_frag_msl.h
-  sphere_frag_msl)
+  sphere_frag_msl
+  --msl-decoration-binding)
 
 compile_msl_header(
   ${CMAKE_CURRENT_BINARY_DIR}/volume.vert.spv
@@ -260,12 +282,32 @@ compile_msl_header(
   ${CMAKE_CURRENT_BINARY_DIR}/volume.frag.spv
   ${CMAKE_CURRENT_BINARY_DIR}/volume.frag.msl
   ${CMAKE_CURRENT_BINARY_DIR}/volume_frag_msl.h
-  volume_frag_msl)
+  volume_frag_msl
+  --msl-decoration-binding)
+
+compile_msl_header(
+  ${CMAKE_CURRENT_BINARY_DIR}/light_quad.vert.spv
+  ${CMAKE_CURRENT_BINARY_DIR}/light_quad.vert.msl
+  ${CMAKE_CURRENT_BINARY_DIR}/light_quad_vert_msl.h
+  light_quad_vert_msl)
+
+compile_msl_header(
+  ${CMAKE_CURRENT_BINARY_DIR}/light_quad.frag.spv
+  ${CMAKE_CURRENT_BINARY_DIR}/light_quad.frag.msl
+  ${CMAKE_CURRENT_BINARY_DIR}/light_quad_frag_msl.h
+  light_quad_frag_msl
+  --msl-decoration-binding)
+
+compile_msl_header(
+  ${CMAKE_CURRENT_BINARY_DIR}/hdri.frag.spv
+  ${CMAKE_CURRENT_BINARY_DIR}/hdri.frag.msl
+  ${CMAKE_CURRENT_BINARY_DIR}/hdri_frag_msl.h
+  hdri_frag_msl
+  --msl-decoration-binding)
 
 ## Shader build target ##
 
 set(SHADER_DEPS
-  ${CMAKE_CURRENT_BINARY_DIR}/triangle_vert_spv.h
   ${CMAKE_CURRENT_BINARY_DIR}/triangle_mesh_vert_spv.h
   ${CMAKE_CURRENT_BINARY_DIR}/triangle_frag_spv.h
   ${CMAKE_CURRENT_BINARY_DIR}/fullscreen_vert_spv.h
@@ -276,11 +318,13 @@ set(SHADER_DEPS
   ${CMAKE_CURRENT_BINARY_DIR}/sphere_frag_spv.h
   ${CMAKE_CURRENT_BINARY_DIR}/volume_vert_spv.h
   ${CMAKE_CURRENT_BINARY_DIR}/volume_frag_spv.h
+  ${CMAKE_CURRENT_BINARY_DIR}/light_quad_vert_spv.h
+  ${CMAKE_CURRENT_BINARY_DIR}/light_quad_frag_spv.h
+  ${CMAKE_CURRENT_BINARY_DIR}/hdri_frag_spv.h
 )
 
 if(SPIRV_CROSS)
   list(APPEND SHADER_DEPS
-    ${CMAKE_CURRENT_BINARY_DIR}/triangle_vert_msl.h
     ${CMAKE_CURRENT_BINARY_DIR}/triangle_mesh_vert_msl.h
     ${CMAKE_CURRENT_BINARY_DIR}/triangle_frag_msl.h
     ${CMAKE_CURRENT_BINARY_DIR}/fullscreen_vert_msl.h
@@ -291,6 +335,9 @@ if(SPIRV_CROSS)
     ${CMAKE_CURRENT_BINARY_DIR}/sphere_frag_msl.h
     ${CMAKE_CURRENT_BINARY_DIR}/volume_vert_msl.h
     ${CMAKE_CURRENT_BINARY_DIR}/volume_frag_msl.h
+    ${CMAKE_CURRENT_BINARY_DIR}/light_quad_vert_msl.h
+    ${CMAKE_CURRENT_BINARY_DIR}/light_quad_frag_msl.h
+    ${CMAKE_CURRENT_BINARY_DIR}/hdri_frag_msl.h
   )
 endif()
 
@@ -298,13 +345,71 @@ add_custom_target(helide_gpu_shaders ALL DEPENDS ${SHADER_DEPS})
 
 ## Build device target ##
 
+set(HELIDE_GPU_SOURCES)
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  # Implib.so generates function trampolines so the device has no DT_NEEDED
+  # entry for SDL3. Keep SDL's headers and shared library available at build
+  # time, but defer loading the runtime library until the device initializes.
+  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+
+  # Implib.so has no release tags; pin its 2026-08-01 commit, verified with
+  # the SDL3 C API used by this device.
+  anari_sdk_fetch_project(
+    NAME anari_helide_gpu_implib_so
+    URL "https://github.com/yugr/Implib.so/archive/a3e167cf978a5b8a38ec0f710d8c4331e8dcdd9a.zip"
+    MD5 dcbed0b8a5bbfb18ed2a6e036a94e48e
+  )
+  set(IMPLIB_GEN "${anari_helide_gpu_implib_so_LOCATION}/implib-gen.py")
+
+  enable_language(C)
+  enable_language(ASM)
+  set(SDL3_SONAME "" CACHE STRING "SDL3 shared library SONAME")
+  mark_as_advanced(SDL3_SONAME)
+  if(SDL3_SONAME)
+    set(SDL3_RUNTIME_SONAME "${SDL3_SONAME}")
+  else()
+    set(SDL3_RUNTIME_SONAME "$<TARGET_SONAME_FILE_NAME:SDL3::SDL3>")
+  endif()
+
+  set(SDL3_STUB_SCRIPT "${CMAKE_CURRENT_LIST_DIR}/cmake/generate_sdl3_trampolines.py")
+  set(SDL3_STUB_CONFIG "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/sdl3_runtime_config.h")
+  set(SDL3_STUB_SYMBOLS "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/sdl3_trampoline_symbol.h")
+  add_custom_command(
+    OUTPUT
+      "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libSDL3.tramp.S"
+      "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libSDL3.init.c"
+      "${SDL3_STUB_CONFIG}"
+      "${SDL3_STUB_SYMBOLS}"
+    COMMAND ${Python3_EXECUTABLE}
+      "${SDL3_STUB_SCRIPT}"
+      --implib-gen "${IMPLIB_GEN}"
+      "$<TARGET_FILE:SDL3::SDL3>"
+      --soname "${SDL3_RUNTIME_SONAME}"
+      --output-dir "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>"
+      --stub-basename "libSDL3"
+    DEPENDS
+      "${SDL3_STUB_SCRIPT}"
+      "${IMPLIB_GEN}"
+    COMMENT "Generating runtime-loaded SDL3 trampolines"
+    VERBATIM
+  )
+  list(APPEND HELIDE_GPU_SOURCES
+    "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libSDL3.tramp.S"
+    "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libSDL3.init.c"
+    "${SDL3_STUB_CONFIG}"
+    "${SDL3_STUB_SYMBOLS}"
+  )
+endif()
+
 project_add_library(SHARED
+  ${HELIDE_GPU_SOURCES}
   GLContextInterface.cpp
   Object.cpp
   HelideGPUDevice.cpp
   HelideGPUDeviceGlobalState.cpp
   HelideGPULibrary.cpp
   camera/Camera.cpp
+  camera/ClipRange.cpp
   camera/OrthographicCamera.cpp
   camera/PerspectiveCamera.cpp
   frame/Frame.cpp
@@ -314,9 +419,11 @@ project_add_library(SHARED
   geometry/Geometry.cpp
   geometry/Sphere.cpp
   geometry/Triangle.cpp
+  gpu/ArrayUpload.cpp
   gpu/GPUBuffer.cpp
   gpu/GPUTexture.cpp
   gpu/sdl3_gpu_device.cpp
+  light/Hdri.cpp
   light/Light.cpp
   material/Material.cpp
   material/Matte.cpp
@@ -347,7 +454,22 @@ endif()
 # GLM 1.0+ requires explicit opt-in for GTX extensions (e.g. component_wise).
 target_compile_definitions(${PROJECT_NAME} PRIVATE GLM_ENABLE_EXPERIMENTAL)
 
-project_link_libraries(PRIVATE anari::helium glm::glm SDL3::SDL3)
+project_link_libraries(PRIVATE anari::helium glm::glm)
+if(MSVC)
+  project_link_libraries(PRIVATE delayimp)
+  target_link_options(${PROJECT_NAME} PRIVATE "/DELAYLOAD:SDL3.dll")
+endif()
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  project_link_libraries(PRIVATE SDL3::Headers ${CMAKE_DL_LIBS})
+  project_include_directories(PRIVATE
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>>")
+elseif(APPLE)
+  project_link_libraries(PRIVATE SDL3::Headers ${CMAKE_DL_LIBS})
+  target_link_options(${PROJECT_NAME} PRIVATE
+    "-Wl,-undefined,dynamic_lookup")
+else()
+  project_link_libraries(PRIVATE SDL3::SDL3)
+endif()
 
 include(GenerateExportHeader)
 generate_export_header(${PROJECT_NAME} EXPORT_MACRO_NAME "HELIDE_GPU_EXPORT")
@@ -367,6 +489,15 @@ anari_generate_queries(
   JSON_DEFINITIONS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/HelideGPUDefinitions.json
 )
 
+## Smoke test ##
+
+if (BUILD_TESTING)
+  if (STANDALONE_SOURCE_TREE)
+    enable_testing()
+  endif()
+  add_subdirectory(test)
+endif()
+
 ## Install ##
 
 install(TARGETS ${PROJECT_NAME}
@@ -376,3 +507,21 @@ install(TARGETS ${PROJECT_NAME}
   # ... and the import lib into the devel package
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
+
+######################################################################
+# build python module
+######################################################################
+
+set(DEVICE_LIBRARY_NAME helide_gpu)
+configure_file(cmake/python_trampoline.py.in ${CMAKE_CURRENT_BINARY_DIR}/__init__.py)
+
+install(
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/__init__.py
+  EXCLUDE_FROM_ALL
+  COMPONENT helide_gpu_module
+  DESTINATION helide_gpu/)
+install(TARGETS ${PROJECT_NAME}
+  EXCLUDE_FROM_ALL
+  COMPONENT helide_gpu_module
+  LIBRARY DESTINATION helide_gpu
+  RUNTIME DESTINATION helide_gpu)

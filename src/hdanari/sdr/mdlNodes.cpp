@@ -37,8 +37,8 @@ MdlSdrShaderNode *MdlSdrShaderNode::ParseSdrDiscoveryResult(
     const SdrShaderNodeDiscoveryResult &discoveryResult)
 {
   auto registry = HdAnariMdlRegistry::GetInstance();
-  if (!registry)
-    return nullptr;
+  if (!registry || !registry->getINeuray())
+    return nullptr; // registry disabled (no INeuray) -> MDL discovery off
 
   if (discoveryResult.resolvedUri.length() > discoveryResult.uri.length()) {
     // Try and get a meaningful search path from the resolvedUri and uri
@@ -90,6 +90,13 @@ MdlSdrShaderNode *MdlSdrShaderNode::ParseSdrDiscoveryResult(
           module.get(), subIdentifier, transaction.get()));
   TfScoped releaseFunctionDefinition(
       [&functionDefinition]() { functionDefinition.reset(); });
+
+  // getFunctionDefinition returns null when the module compiled but the
+  // requested function/material is absent -- e.g. a material whose body failed
+  // to compile (unresolved imports, missing textures). Bail instead of
+  // dereferencing null.
+  if (!functionDefinition)
+    return nullptr;
 
   if (functionDefinition->is_material()) {
     return new MdlMaterialSdrNode(
@@ -276,13 +283,6 @@ SdrShaderPropertyUniquePtrVec MdlFunctionSdrNode::GetShaderProperties(
 {
   SdrShaderPropertyUniquePtrVec properties;
 
-  return properties;
-
-  // handle return type
-  auto returnType =
-      mi::base::make_handle(functionDefinition->get_return_type());
-
-  // Parameters
   auto count = functionDefinition->get_parameter_count();
 
   auto types = mi::base::make_handle(functionDefinition->get_parameter_types());
@@ -291,59 +291,60 @@ SdrShaderPropertyUniquePtrVec MdlFunctionSdrNode::GetShaderProperties(
       mi::base::make_handle(functionDefinition->get_parameter_annotations());
 
   for (mi::Size index = 0; index < count; index++) {
-    auto type =
-        mi::base::make_handle(types->get_type(index)->skip_all_type_aliases());
+    // Every neuray get_*/get_interface returns a retained (+1) pointer; each
+    // must be owned by a handle or it pins the DB element past transaction
+    // close ("still referenced while transaction ... is aborted"). get_type()
+    // and skip_all_type_aliases() each retain, so wrap both -- not just the
+    // skip result.
+    auto rawType = mi::base::make_handle(types->get_type(index));
+    auto type = mi::base::make_handle(rawType->skip_all_type_aliases());
     std::string name = functionDefinition->get_parameter_name(index);
     auto defaultValue =
         mi::base::make_handle(defaults->get_expression(name.c_str()));
     auto annotationBlock =
         mi::base::make_handle(annotationList->get_annotation_block(index));
-    auto annotations = mi::neuraylib::Annotation_wrapper(annotationBlock.get());
+    mi::neuraylib::Annotation_wrapper annotationWrapper(annotationBlock.get());
 
-    mi::neuraylib::Annotation_wrapper annotationWrapper(annotations);
+    // The create* helpers dereference the default expression unconditionally.
+    // A parameter may have no default, or a non-constant one -- skip it rather
+    // than deref a null handle.
+    auto defaultConstant = mi::base::make_handle(defaultValue
+            ? defaultValue
+                  ->get_interface<const mi::neuraylib::IExpression_constant>()
+            : nullptr);
+    if (!defaultConstant)
+      continue;
 
     switch (type->get_kind()) {
-    // case mi::neuraylib::IType::TK_STRING: {
-    //     properties.push_back(
-    //         createScalarInputProperty<mi::neuraylib::IValue_string>(name,
-    //             type->get_interface<const mi::neuraylib::IType_string>(),
-    //             defaultValue->get_interface<const
-    //             mi::neuraylib::IExpression_constant>(), &annotationWrapper
-    //     ));
-    //     break;
-    // }
     case mi::neuraylib::IType::TK_TEXTURE: {
-      properties.push_back(createTextureInputProperty(name,
-          type->get_interface<const mi::neuraylib::IType_texture>(),
-          defaultValue
-              ->get_interface<const mi::neuraylib::IExpression_constant>(),
-          &annotationWrapper));
+      auto textureType = mi::base::make_handle(
+          type->get_interface<const mi::neuraylib::IType_texture>());
+      properties.push_back(createTextureInputProperty(
+          name, textureType.get(), defaultConstant.get(), &annotationWrapper));
       break;
     }
     case mi::neuraylib::IType::TK_BOOL: {
+      auto boolType = mi::base::make_handle(
+          type->get_interface<const mi::neuraylib::IType_bool>());
       properties.push_back(
-          createScalarInputProperty<mi::neuraylib::IValue_bool>(name,
-              type->get_interface<const mi::neuraylib::IType_bool>(),
-              defaultValue
-                  ->get_interface<const mi::neuraylib::IExpression_constant>(),
-              &annotationWrapper));
+          createScalarInputProperty<mi::neuraylib::IValue_bool>(
+              name, boolType.get(), defaultConstant.get(), &annotationWrapper));
       break;
     }
     case mi::neuraylib::IType::TK_INT: {
-      properties.push_back(
-          createScalarInputProperty<mi::neuraylib::IValue_int>(name,
-              type->get_interface<const mi::neuraylib::IType_int>(),
-              defaultValue
-                  ->get_interface<const mi::neuraylib::IExpression_constant>(),
-              &annotationWrapper));
+      auto intType = mi::base::make_handle(
+          type->get_interface<const mi::neuraylib::IType_int>());
+      properties.push_back(createScalarInputProperty<mi::neuraylib::IValue_int>(
+          name, intType.get(), defaultConstant.get(), &annotationWrapper));
       break;
     }
     case mi::neuraylib::IType::TK_FLOAT: {
+      auto floatType = mi::base::make_handle(
+          type->get_interface<const mi::neuraylib::IType_float>());
       properties.push_back(
           createScalarInputProperty<mi::neuraylib::IValue_float>(name,
-              type->get_interface<const mi::neuraylib::IType_float>(),
-              defaultValue
-                  ->get_interface<const mi::neuraylib::IExpression_constant>(),
+              floatType.get(),
+              defaultConstant.get(),
               &annotationWrapper));
       break;
     }

@@ -45,8 +45,13 @@
 #include <array>
 #include <cstdio>
 #include <exception>
+#include <filesystem>
+#include <mutex>
 #include <stdexcept>
 #include <string>
+#include <unordered_set>
+
+#include <pxr/base/tf/diagnostic.h>
 
 using namespace std::string_literals;
 using namespace std::string_view_literals;
@@ -68,35 +73,45 @@ TF_INSTANTIATE_SINGLETON(HdAnariMdlRegistry);
 
 HdAnariMdlRegistry *HdAnariMdlRegistry::GetInstance()
 {
-  try {
-    return &TfSingleton<HdAnariMdlRegistry>::GetInstance();
-  } catch (const std::exception &e) {
-    TF_RUNTIME_ERROR("Failed to create MdlRegistry singleton.");
-    return nullptr;
-  }
+  // Construction never throws (see the constructors): on failure it publishes a
+  // disabled instance whose getINeuray() is null. No try/catch here --
+  // swallowing a construction throw would leave TfSingleton wedged
+  // (isInitializing set, instance null) and hang every later call.
+  return &TfSingleton<HdAnariMdlRegistry>::GetInstance();
 }
 
 mi::neuraylib::INeuray *HdAnariMdlRegistry::AcquireNeuray(DllHandle dllHandle)
 {
+  // Return null (don't throw) on failure: callers build a disabled registry
+  // rather than letting an exception escape the singleton ctor.
+  if (dllHandle == nullptr) {
+    TF_RUNTIME_ERROR("MDL SDK library is not loaded");
+    return nullptr;
+  }
+
   // Get neuray main entry point
   auto symbol = getProcAddress(dllHandle, "mi_factory");
-  if (symbol == nullptr)
-    throw std::runtime_error("Failed to find MDL SDK mi_factory symbol");
+  if (symbol == nullptr) {
+    TF_RUNTIME_ERROR("Failed to find MDL SDK mi_factory symbol");
+    return nullptr;
+  }
 
   auto neuray = mi::neuraylib::mi_factory<mi::neuraylib::INeuray>(symbol);
   if (neuray == nullptr) {
-    // Check if we have a valid neuray instance, otherwise check why.
+    // INeuray can be acquired only once per process; a null here usually means
+    // another subsystem (e.g. the VisRTX device) already holds it, or a version
+    // mismatch.
     auto version =
         make_handle(mi::neuraylib::mi_factory<mi::neuraylib::IVersion>(symbol));
-    if (!version) {
-      throw std::runtime_error("Cannot get MDL SDK library version");
-    } else {
-      throw std::runtime_error(
-          "Cannot get INeuray interface from mi_factory, either there is a version mismatch or the interface has already been acquired: "s
-          "Expected version is " MI_NEURAYLIB_PRODUCT_VERSION_STRING
-          ", library version is "
-          + version->get_product_version());
-    }
+    if (!version)
+      TF_RUNTIME_ERROR("Cannot get MDL SDK library version");
+    else
+      TF_RUNTIME_ERROR(
+          "Cannot get INeuray: version mismatch or the interface is already "
+          "acquired (expected %s, library %s)",
+          MI_NEURAYLIB_PRODUCT_VERSION_STRING,
+          version->get_product_version());
+    return nullptr;
   }
 
   return neuray;
@@ -137,10 +152,7 @@ HdAnariMdlRegistry::HdAnariMdlRegistry(DllHandle dllHandle)
     : HdAnariMdlRegistry(dllHandle, AcquireNeuray(dllHandle))
 {}
 
-HdAnariMdlRegistry::HdAnariMdlRegistry(DllHandle dllHandle,
-    mi::neuraylib::INeuray *neuray,
-    mi::base::ILogger *logger)
-    : m_dllHandle(dllHandle), m_neuray(neuray)
+void HdAnariMdlRegistry::_Initialize(mi::base::ILogger *logger)
 {
   // Get the MDL configuration component so main path can be added.
   auto mdlConfiguration = make_handle(
@@ -200,6 +212,14 @@ HdAnariMdlRegistry::HdAnariMdlRegistry(DllHandle dllHandle,
   if (!m_globalScope.is_valid_interface())
     throw std::runtime_error("Failed to acquire neuray database global scope");
 
+  // Isolate our introspection work from any other consumer of this shared
+  // INeuray (e.g. the VisRTX device): use a private child scope rather than
+  // the global one.
+  m_introspectionScope =
+      make_handle(database->create_scope(m_globalScope.get()));
+  if (!m_introspectionScope.is_valid_interface())
+    throw std::runtime_error("Failed to create MDL introspection scope");
+
   // Get an execution context for later use.
   m_mdlFactory =
       make_handle(m_neuray->get_api_component<mi::neuraylib::IMdl_factory>());
@@ -211,7 +231,35 @@ HdAnariMdlRegistry::HdAnariMdlRegistry(DllHandle dllHandle,
   if (!m_executionContext.is_valid_interface()) {
     throw std::runtime_error("Failed acquiring an execution context");
   }
+}
 
+HdAnariMdlRegistry::HdAnariMdlRegistry(DllHandle dllHandle,
+    mi::neuraylib::INeuray *neuray,
+    mi::base::ILogger *logger)
+    : m_dllHandle(dllHandle), m_neuray(neuray)
+{
+  // Never let an exception escape this ctor: one that escapes TfSingleton's
+  // construction leaves isInitializing=true / instance=null forever, so every
+  // later GetInstance() spins (deadlock). On failure publish a disabled
+  // registry (getINeuray()==null) and let callers fall back.
+  try {
+    if (!m_neuray)
+      throw std::runtime_error(
+          "MDL INeuray unavailable (acquisition failed, or already held by "
+          "another subsystem)");
+    _Initialize(logger);
+  } catch (const std::exception &e) {
+    TF_RUNTIME_ERROR("HdAnariMdlRegistry disabled: %s", e.what());
+    m_executionContext = {};
+    m_mdlFactory = {};
+    m_introspectionScope = {};
+    m_globalScope = {};
+    m_neuray = {};
+    if (m_dllHandle) {
+      freeLibrary(m_dllHandle);
+      m_dllHandle = {};
+    }
+  }
   TfSingleton<HdAnariMdlRegistry>::SetInstanceConstructed(*this);
 }
 
@@ -219,8 +267,18 @@ HdAnariMdlRegistry::~HdAnariMdlRegistry()
 {
   m_executionContext = {};
   m_mdlFactory = {};
+  // Remove our private introspection scope from the database. When we own
+  // neuray the shutdown below tears everything down anyway, but for a shared
+  // INeuray (m_dllHandle == nullptr) neuray outlives us, so the scope would
+  // otherwise leak in the shared database.
+  if (m_neuray && m_introspectionScope) {
+    if (auto database = make_handle(
+            m_neuray->get_api_component<mi::neuraylib::IDatabase>()))
+      database->remove_scope(m_introspectionScope->get_id());
+  }
+  m_introspectionScope = {};
   m_globalScope = {};
-  if (m_dllHandle) {
+  if (m_dllHandle && m_neuray) {
     m_neuray->shutdown();
     m_neuray = {};
     freeLibrary(m_dllHandle);
@@ -231,6 +289,8 @@ HdAnariMdlRegistry::~HdAnariMdlRegistry()
 auto HdAnariMdlRegistry::createScope(std::string_view scopeName,
     mi::neuraylib::IScope *parent) -> mi::neuraylib::IScope *
 {
+  if (!m_neuray)
+    return {}; // disabled registry
   auto database =
       make_handle(m_neuray->get_api_component<mi::neuraylib::IDatabase>());
 
@@ -239,6 +299,8 @@ auto HdAnariMdlRegistry::createScope(std::string_view scopeName,
 
 auto HdAnariMdlRegistry::removeScope(mi::neuraylib::IScope *scope) -> void
 {
+  if (!m_neuray || !scope)
+    return;
   auto database =
       make_handle(m_neuray->get_api_component<mi::neuraylib::IDatabase>());
 
@@ -249,12 +311,16 @@ auto HdAnariMdlRegistry::createTransaction(mi::neuraylib::IScope *scope)
     -> mi::neuraylib::ITransaction *
 {
   if (!scope)
-    scope = m_globalScope.get();
+    scope = m_introspectionScope.get();
+  if (!scope)
+    return {}; // disabled registry: no introspection scope to transact on
   return scope->create_transaction();
 }
 
 auto HdAnariMdlRegistry::preprendUserSearchPath(std::string_view path) -> void
 {
+  if (!m_neuray)
+    return; // disabled registry
   auto mdlConfiguration = make_handle(
       m_neuray->get_api_component<mi::neuraylib::IMdl_configuration>());
 
@@ -274,9 +340,77 @@ auto HdAnariMdlRegistry::preprendUserSearchPath(std::string_view path) -> void
   }
 }
 
+auto HdAnariMdlRegistry::loadModuleByCanonicalName(std::string_view filePath,
+    mi::neuraylib::ITransaction *transaction) -> const mi::neuraylib::IModule *
+{
+  if (!m_neuray)
+    return {}; // disabled registry
+  std::string path(filePath);
+  if (path.find('/') == std::string::npos)
+    return {}; // already a module name, nothing to recover
+
+  auto impexpApi = make_handle(
+      m_neuray->get_api_component<mi::neuraylib::IMdl_impexp_api>());
+  auto mdlConfiguration = make_handle(
+      m_neuray->get_api_component<mi::neuraylib::IMdl_configuration>());
+
+  // If the failing path passes through a directory whose basename matches a
+  // search root (e.g. ".../vMaterials_2/Concrete/Concrete_Precast.mdl" with a
+  // "/data/mdl/vMaterials_2" root), the canonical module name is the tail after
+  // it ("::Concrete::Concrete_Precast"). Loading that by name lets the entity
+  // resolver pick a complete copy on the search path, with its resources
+  // co-located, instead of the incomplete local file.
+  auto pathsCount = mdlConfiguration->get_mdl_paths_length();
+  for (auto i = decltype(pathsCount)(0); i < pathsCount; ++i) {
+    auto rootName = std::filesystem::path(
+        make_handle(mdlConfiguration->get_mdl_path(i))->get_c_str())
+                        .filename()
+                        .string();
+    if (rootName.empty())
+      continue;
+
+    auto marker = "/" + rootName + "/";
+    auto pos = path.rfind(marker);
+    if (pos == std::string::npos)
+      continue;
+
+    auto tail = path.substr(pos + marker.size());
+    if (auto n = tail.size(); n > 4 && tail.substr(n - 4) == ".mdl")
+      tail = tail.substr(0, n - 4);
+    if (tail.empty())
+      continue;
+
+    std::string moduleName = "::";
+    for (char c : tail)
+      moduleName += (c == '/') ? "::"s : std::string(1, c);
+
+    auto context = make_handle(m_mdlFactory->create_execution_context());
+    if (impexpApi->load_module(transaction, moduleName.c_str(), context.get())
+        < 0)
+      continue;
+
+    auto moduleDbName =
+        make_handle(m_mdlFactory->get_db_module_name(moduleName.c_str()));
+    if (auto *module = transaction->access<mi::neuraylib::IModule>(
+            moduleDbName->get_c_str())) {
+      if (m_logger)
+        m_logger->message(mi::base::MESSAGE_SEVERITY_INFO,
+            "hdanari::mdl",
+            ("Recovered '"s + path + "' from the MDL search path as '"
+                + moduleName + "'")
+                .c_str());
+      return module;
+    }
+  }
+
+  return {};
+}
+
 auto HdAnariMdlRegistry::loadModule(std::string_view moduleOrFileName,
     mi::neuraylib::ITransaction *transaction) -> const mi::neuraylib::IModule *
 {
+  if (!m_neuray)
+    return {}; // disabled registry
   auto impexpApi = make_handle(
       m_neuray->get_api_component<mi::neuraylib::IMdl_impexp_api>());
 
@@ -298,10 +432,46 @@ auto HdAnariMdlRegistry::loadModule(std::string_view moduleOrFileName,
     moduleName = name->get_c_str();
   }
 
+  // Use a local execution context, not the shared m_executionContext: the SDR
+  // parser and <mdl> backend call loadModule from Hydra worker threads, and a
+  // shared context would race on its error state.
+  auto context = make_handle(m_mdlFactory->create_execution_context());
   if (impexpApi->load_module(
-          transaction, moduleName.c_str(), m_executionContext.get())
-      < 0)
+          transaction, moduleName.c_str(), context.get())
+      < 0) {
+    // A scene may ship a .mdl without its resources (e.g. a vMaterials module
+    // copied without its ./textures), so the local copy fails to compile.
+    // A complete copy usually exists on the MDL search path -- recover it by
+    // canonical name before giving up.
+    if (auto *recovered =
+            loadModuleByCanonicalName(moduleOrFileName, transaction))
+      return recovered;
+
+    // Surface *why* the module failed, once per module. Otherwise the MDL
+    // compiler errors (e.g. C120 unresolved imports from a missing search
+    // path) are buried in SDK output and every dependent material only reports
+    // a generic "parser returned null" -- 800+ identical lines for one missing
+    // package.
+    static std::mutex reportedMutex;
+    static std::unordered_set<std::string> reported;
+    std::lock_guard<std::mutex> reportedGuard(reportedMutex);
+    if (reported.insert(moduleName).second) {
+      std::string errors;
+      for (auto i = 0ull, n = context->get_error_messages_count();
+          i < n;
+          ++i) {
+        auto message = make_handle(context->get_error_message(i));
+        errors += "\n  ";
+        errors += message->get_string();
+      }
+      TF_WARN(
+          "MDL module '%s' failed to load; dependent materials will be "
+          "skipped. Check MDL search paths (MDL_SYSTEM_PATH/MDL_USER_PATH).%s",
+          moduleName.c_str(),
+          errors.c_str());
+    }
     return {};
+  }
 
   // Get the database name for the module we loaded
   auto moduleDbName = make_handle(
@@ -315,6 +485,8 @@ auto HdAnariMdlRegistry::getFunctionDefinition(
     mi::neuraylib::ITransaction *transaction)
     -> const mi::neuraylib::IFunction_definition *
 {
+  if (!module || functionName.empty())
+    return {};
   std::string functionQualifiedName;
   if (functionName.back()
       == ')') // Already a full qualified function signature.

@@ -108,7 +108,7 @@ HdAnariMaterial::~HdAnariMaterial()
 {
   ReleaseSamplers(device_, samplers_);
   samplers_.clear();
-  if (material_)
+  if (material_ && ownsMaterial_)
     anari::release(device_, material_);
 }
 
@@ -121,6 +121,14 @@ void HdAnariMaterial::ReleaseSamplers(
 
 void HdAnariMaterial::Finalize(HdRenderParam *renderParam)
 {
+  // Drop our reference into the shared MDL material cache (the cache, not this
+  // prim, owns the anari material).
+  if (!mdlCacheKey_.empty()) {
+    static_cast<HdAnariRenderParam *>(renderParam)
+        ->ReleaseMdlMaterial(mdlCacheKey_);
+    mdlCacheKey_.clear();
+    material_ = nullptr;
+  }
   HdMaterial::Finalize(renderParam);
 }
 
@@ -144,6 +152,17 @@ void HdAnariMaterial::Sync(HdSceneDelegate *sceneDelegate,
       changeTracker.MarkAllRprimsDirty(HdChangeTracker::DirtyMaterialId);
     }
 
+    // Release the material we previously held before rebuilding it: either one
+    // we created, or a reference into the shared MDL material cache.
+    if (!mdlCacheKey_.empty()) {
+      hdAnariRenderParam->ReleaseMdlMaterial(mdlCacheKey_);
+      mdlCacheKey_.clear();
+    } else if (material_ && ownsMaterial_) {
+      anari::release(device_, material_);
+    }
+    material_ = nullptr;
+    ownsMaterial_ = false;
+
     //  Find material network and store it as HdMaterialNetwork2 for later use.
     VtValue networkMapResource = sceneDelegate->GetMaterialResource(GetId());
     HdMaterialNetworkMap networkMap =
@@ -153,18 +172,22 @@ void HdAnariMaterial::Sync(HdSceneDelegate *sceneDelegate,
     auto materialNetworkIface =
         HdMaterialNetwork2Interface(GetId(), &materialNetwork2_);
 
-    auto surfaceTerminalConnection = materialNetworkIface.GetTerminalConnection(HdMaterialTerminalTokens->surface);
+    auto surfaceTerminalConnection = materialNetworkIface.GetTerminalConnection(
+        HdMaterialTerminalTokens->surface);
     if (!surfaceTerminalConnection.first) {
-      TF_CODING_ERROR("Cannot find a surface terminal on prim %s",
-          materialNetworkIface.GetMaterialPrimPath().GetText());
+      // A material network with no surface terminal is valid (e.g. physics-only
+      // materials); fall back to the shared default without taking ownership.
       material_ = hdAnariRenderParam->GetDefaultMaterial();
       primvars_.clear();
       textures_.clear();
+      *dirtyBits = HdChangeTracker::Clean;
       return;
     }
 
-    // Try and guess the appropriate implementation for the surface terminal type
-    auto terminalType = materialNetworkIface.GetNodeType(surfaceTerminalConnection.second.upstreamNodeName);
+    // Try and guess the appropriate implementation for the surface terminal
+    // type
+    auto terminalType = materialNetworkIface.GetNodeType(
+        surfaceTerminalConnection.second.upstreamNodeName);
     // Assume Matte is a safe fallback.
     materialType_ = MaterialType::Matte;
 #ifdef HDANARI_ENABLE_MDL
@@ -172,7 +195,7 @@ void HdAnariMaterial::Sync(HdSceneDelegate *sceneDelegate,
       materialType_ = MaterialType::Mdl;
     } else
 #endif
-    if (terminalType == HdAnariMaterialTokens->UsdPreviewSurface) {
+        if (terminalType == HdAnariMaterialTokens->UsdPreviewSurface) {
       materialType_ = hdAnariRenderParam->GetMaterialType();
     }
 
@@ -199,8 +222,8 @@ void HdAnariMaterial::Sync(HdSceneDelegate *sceneDelegate,
     }
 #ifdef HDANARI_ENABLE_MDL
     case MaterialType::Mdl: {
-      material_ =
-          HdAnariMdlMaterial::CreateMaterial(device_, materialNetworkIface);
+      // The anari material is created/shared via the render param cache in the
+      // DirtyParams pass (it needs the resolved parameters to key on).
       primvars_ = HdAnariMdlMaterial::EnumeratePrimvars(
           materialNetworkIface, HdMaterialTerminalTokens->surface);
       textures_ = HdAnariMdlMaterial::EnumerateTextures(
@@ -210,12 +233,22 @@ void HdAnariMaterial::Sync(HdSceneDelegate *sceneDelegate,
 #endif
     }
 
+    // Matte / physically based materials are created and owned here. MDL
+    // materials are shared through the render param cache, not owned per prim.
+    ownsMaterial_ = (materialType_ != MaterialType::Mdl);
+
     // Build primvar mapping so we can load the texture and configure the
     // related samplers
     attributes_ = BuildPrimvarBinding(primvars_);
   }
 
-  if (*dirtyBits & HdMaterial::DirtyParams) {
+  // MDL materials are (re)acquired from the shared cache here. A DirtyResource
+  // sync that arrives without DirtyParams has just cleared material_, so force
+  // this pass in that case too — otherwise the material stays null until the
+  // next params-dirty sync.
+  const bool needsMdlAcquire =
+      materialType_ == MaterialType::Mdl && material_ == nullptr;
+  if ((*dirtyBits & HdMaterial::DirtyParams) || needsMdlAcquire) {
     auto materialNetworkIface =
         HdMaterialNetwork2Interface(GetId(), &materialNetwork2_);
 
@@ -246,22 +279,42 @@ void HdAnariMaterial::Sync(HdSceneDelegate *sceneDelegate,
     }
 #ifdef HDANARI_ENABLE_MDL
     case MaterialType::Mdl: {
-      HdAnariMdlMaterial::SyncMaterialParameters(device_,
-          material_,
-          materialNetworkIface,
-          attributes_,
-          primvars_,
-          samplers_);
+      // Share one anari material across instances with identical content so the
+      // device compiles it and loads its textures only once.
+      auto key = HdAnariMdlMaterial::ComputeContentKey(materialNetworkIface);
+      if (key != mdlCacheKey_) {
+        if (!mdlCacheKey_.empty())
+          hdAnariRenderParam->ReleaseMdlMaterial(mdlCacheKey_);
+        material_ = hdAnariRenderParam->AcquireMdlMaterial(key, [&]() {
+          auto m =
+              HdAnariMdlMaterial::CreateMaterial(device_, materialNetworkIface);
+          HdAnariMdlMaterial::SyncMaterialParameters(device_,
+              m,
+              materialNetworkIface,
+              attributes_,
+              primvars_,
+              samplers_);
+          anari::commitParameters(device_, m);
+          return m;
+        });
+        mdlCacheKey_ = key;
+      }
       break;
     }
 #endif
     }
   }
 
-  if (*dirtyBits && material_)
+  // Commit the materials we own (matte / physically based). Shared MDL
+  // materials are committed once when created in the cache; re-committing them
+  // per instance would recompile and reset the renderer's accumulation.
+  if ((*dirtyBits & (HdMaterial::DirtyResource | HdMaterial::DirtyParams))
+      && material_ && ownsMaterial_)
     anari::commitParameters(device_, material_);
 
-  *dirtyBits &= ~DirtyBits::AllDirty;
+  // Clear every bit we were given, not just AllDirty: otherwise unhandled bits
+  // stay set and Hydra re-Syncs this material on every frame.
+  *dirtyBits = HdChangeTracker::Clean;
 }
 
 std::map<SdfPath, anari::Sampler> HdAnariMaterial::CreateSamplers(

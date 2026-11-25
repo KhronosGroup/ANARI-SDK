@@ -2,10 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "BaseGlobalDeviceState.h"
+#include "BaseDevice.h"
 
 namespace helium {
 
-BaseGlobalDeviceState::BaseGlobalDeviceState(ANARIDevice d)
+BaseGlobalDeviceState::BaseGlobalDeviceState(ANARIDevice d) : m_device(d)
 {
   messageFunction = [&, d](ANARIStatusSeverity severity,
                         const std::string &msg,
@@ -22,6 +23,17 @@ BaseGlobalDeviceState::BaseGlobalDeviceState(ANARIDevice d)
                                            : ANARI_STATUS_UNKNOWN_ERROR,
         msg.c_str());
   };
+}
+
+void BaseGlobalDeviceState::runDeviceRelease(const std::function<void()> &work)
+{
+  if (m_device == nullptr) {
+    work();
+    return;
+  }
+  // this_device() is the BaseDevice's DeviceImpl address
+  static_cast<BaseDevice *>((anari::DeviceImpl *)m_device)
+      ->runDeviceRelease(work);
 }
 
 } // namespace helium

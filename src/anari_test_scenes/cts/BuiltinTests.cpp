@@ -18,6 +18,7 @@ void registerBuiltinTests(Catalog &catalog)
   registerRendererTests(catalog);
   registerInstanceTests(catalog);
   registerVolumeTests(catalog);
+  registerSynchronizationTests(catalog);
   registerGltfTests(catalog);
 }
 

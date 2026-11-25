@@ -1,0 +1,109 @@
+## Copyright 2026 The Khronos Group
+## SPDX-License-Identifier: Apache-2.0
+
+name: halcyon CI
+
+# Runs on changes to halcyon and to what it builds on: helium, the frontend,
+# the code generator and the SDK's CMake, which holds the Embree setup it
+# shares with helide (cmake/anari_embree)
+on:
+  push:
+    branches: [ next_release ]
+    paths:
+      - 'src/devices/halcyon/**'
+      - 'src/helium/**'
+      - 'src/anari/**'
+      - 'code_gen/**'
+      - 'cmake/**'
+      - 'CMakeLists.txt'
+      - 'src/devices/CMakeLists.txt'
+      - '.github/actions/install_embree/**'
+      - '.github/workflows/halcyon_ci.yml'
+  pull_request:
+    branches: [ main, next_release ]
+    paths:
+      - 'src/devices/halcyon/**'
+      - 'src/helium/**'
+      - 'src/anari/**'
+      - 'code_gen/**'
+      - 'cmake/**'
+      - 'CMakeLists.txt'
+      - 'src/devices/CMakeLists.txt'
+      - '.github/actions/install_embree/**'
+      - '.github/workflows/halcyon_ci.yml'
+
+jobs:
+  build-halcyon:
+    # halcyon needs ISPC
+    runs-on: ubuntu-22.04
+    env:
+      ISPC_VERSION: v1.28.2
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v4
+    - name: Install ISPC
+      run: |
+        curl -sSfL https://github.com/ispc/ispc/releases/download/${ISPC_VERSION}/ispc-${ISPC_VERSION}-linux.tar.gz \
+          | tar xz -C ${{ runner.temp }}
+        echo "${{ runner.temp }}/ispc-${ISPC_VERSION}-linux/bin" >> $GITHUB_PATH
+    - name: Install Embree and TBB
+      uses: ./.github/actions/install_embree
+    - name: Configure CMake
+      run: >
+        cmake -LA -B ${{ github.workspace }}/build
+        -DBUILD_CTS=OFF
+        -DBUILD_EXAMPLES=OFF
+        -DBUILD_HALCYON_DEVICE=ON
+        -DBUILD_HELIDE_DEVICE=ON
+        -DBUILD_TESTING=ON
+        -DCMAKE_BUILD_TYPE=Release
+        -DEMBREE_ISA_AVX512=OFF
+    - name: Build
+      # A bare --parallel is an unbounded 'make -j', which starts every
+      # Embree kernel, ISPC and MaterialX compile at once and runs the
+      # runner out of memory: one job per core
+      run: cmake --build ${{ github.workspace }}/build --config Release --parallel $(nproc)
+    - name: halcyon Tests
+      working-directory: ${{ github.workspace }}/build
+      run: ctest -R '^halcyon::' -C Release --output-on-failure
+
+  build-halcyon-windows:
+    # CMake compiles ISPC only with the Ninja and Makefile generators, so MSVC
+    # is used through Ninja in a developer command prompt's environment. The
+    # device and the tests are built into one directory, so the tests load the
+    # fresh DLLs without a PATH change.
+    runs-on: windows-latest
+    env:
+      ISPC_VERSION: v1.28.2
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v4
+    - name: Set up MSVC environment
+      uses: ilammy/msvc-dev-cmd@v1
+    - name: Install ISPC
+      shell: pwsh
+      run: |
+        $zip = "${{ runner.temp }}\ispc.zip"
+        Invoke-WebRequest -Uri "https://github.com/ispc/ispc/releases/download/$env:ISPC_VERSION/ispc-$env:ISPC_VERSION-windows.zip" -OutFile $zip
+        Expand-Archive -Path $zip -DestinationPath "${{ runner.temp }}"
+        "${{ runner.temp }}\ispc-$env:ISPC_VERSION-windows\bin" >> $env:GITHUB_PATH
+    - name: Install Embree and TBB
+      uses: ./.github/actions/install_embree
+    - name: Configure CMake
+      shell: pwsh
+      run: >
+        cmake -LA -G Ninja -B ${{ github.workspace }}/build
+        -DBUILD_CTS=OFF
+        -DBUILD_EXAMPLES=OFF
+        -DBUILD_HALCYON_DEVICE=ON
+        -DBUILD_HELIDE_DEVICE=ON
+        -DBUILD_TESTING=ON
+        -DCMAKE_BUILD_TYPE=Release
+    - name: Build
+      shell: pwsh
+      # -k 0: report every error, not only the first one's
+      run: cmake --build ${{ github.workspace }}/build --parallel $env:NUMBER_OF_PROCESSORS -- -k 0
+    - name: halcyon Tests
+      shell: pwsh
+      working-directory: ${{ github.workspace }}/build
+      run: ctest -R '^halcyon::' --output-on-failure

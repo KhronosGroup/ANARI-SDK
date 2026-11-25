@@ -21,6 +21,10 @@ using V = std::vector<Any>;
 
 const char *kTriangle = "ANARI_KHR_GEOMETRY_TRIANGLE";
 
+// The subject lies in the z = 0 plane; from this side the default direction
+// (0, 0, -1) faces it.
+const float3 kEye(0.5f, 0.5f, 1.f);
+
 // A fixed lit triangle surface, the subject every camera test views.
 anari::World cameraSubjectWorld(BuildContext &ctx)
 {
@@ -66,7 +70,7 @@ void registerCameraTests(Catalog &catalog)
       .camera([](BuildContext &ctx, const scenes::Bounds &) -> anari::Camera {
         auto d = ctx.device();
         auto c = anari::newObject<anari::Camera>(d, "perspective");
-        anari::setParameter(d, c, "position", float3(0.5f, 0.5f, -1.f));
+        anari::setParameter(d, c, "position", kEye);
         anari::setParameter(d, c, "near", 0.01f);
         anari::setParameter(d, c, "far", 100.f);
         cp(ctx, d, c, "direction");
@@ -76,7 +80,7 @@ void registerCameraTests(Catalog &catalog)
         return c;
       })
       .simplified()
-      .permute("direction", V{none(), Any(float3(0.20601f, 0.f, 0.97855f))})
+      .permute("direction", V{none(), Any(float3(0.20601f, 0.f, -0.97855f))})
       .permute("up", V{none(), Any(float3(0.f, -0.97855f, 0.20601f))})
       .permute("imageRegion", V{none(), box2(0.25f, 0.3f, 0.75f, 0.8f)})
       .requireFeatures({"ANARI_KHR_CAMERA_PERSPECTIVE", kTriangle})
@@ -90,7 +94,7 @@ void registerCameraTests(Catalog &catalog)
       .camera([](BuildContext &ctx, const scenes::Bounds &) -> anari::Camera {
         auto d = ctx.device();
         auto c = anari::newObject<anari::Camera>(d, "perspective");
-        anari::setParameter(d, c, "position", float3(0.5f, 0.5f, -1.f));
+        anari::setParameter(d, c, "position", kEye);
         cp(ctx, d, c, "fovy");
         cp(ctx, d, c, "aspect");
         cp(ctx, d, c, "near");
@@ -113,7 +117,7 @@ void registerCameraTests(Catalog &catalog)
       .camera([](BuildContext &ctx, const scenes::Bounds &) -> anari::Camera {
         auto d = ctx.device();
         auto c = anari::newObject<anari::Camera>(d, "orthographic");
-        anari::setParameter(d, c, "position", float3(0.5f, 0.5f, -1.f));
+        anari::setParameter(d, c, "position", kEye);
         cp(ctx, d, c, "aspect");
         cp(ctx, d, c, "height");
         cp(ctx, d, c, "near");
@@ -136,7 +140,7 @@ void registerCameraTests(Catalog &catalog)
       .camera([](BuildContext &ctx, const scenes::Bounds &) -> anari::Camera {
         auto d = ctx.device();
         auto c = anari::newObject<anari::Camera>(d, "omnidirectional");
-        anari::setParameter(d, c, "position", float3(0.5f, 0.5f, -1.f));
+        anari::setParameter(d, c, "position", kEye);
         cp(ctx, d, c, "layout");
         anari::commitParameters(d, c);
         return c;

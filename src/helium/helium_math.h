@@ -130,35 +130,53 @@ enum class ToneMapMode
   NONE
 };
 
+// sRGB transfer functions: the piecewise IEC 61966-2-1 curve and its inverse,
+// as implemented by GPU sRGB texture/framebuffer formats (not the pow(v, 2.2)
+// approximation, which is off by up to ~4x in the darks).
 template <ToneMapMode MODE>
 constexpr float toneMap(float v)
 {
   if constexpr (MODE == ToneMapMode::TO_SRGB)
-    return std::pow(v, 1.f / 2.2f);
+    return v <= 0.0031308f ? 12.92f * v
+                           : 1.055f * std::pow(v, 1.f / 2.4f) - 0.055f;
   else if constexpr (MODE == ToneMapMode::FROM_SRGB)
-    return std::pow(v, 2.2f);
+    return v <= 0.04045f ? v / 12.92f : std::pow((v + 0.055f) / 1.055f, 2.4f);
   else
     return v;
 }
 
 constexpr anari::math::float4 cvt_color_to_float4(uint32_t rgba)
 {
+#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+  const float a = ((rgba >> 0) & 0xff) / 255.f;
+  const float b = ((rgba >> 8) & 0xff) / 255.f;
+  const float g = ((rgba >> 16) & 0xff) / 255.f;
+  const float r = ((rgba >> 24) & 0xff) / 255.f;
+#else
   const float a = ((rgba >> 24) & 0xff) / 255.f;
   const float b = ((rgba >> 16) & 0xff) / 255.f;
   const float g = ((rgba >> 8) & 0xff) / 255.f;
   const float r = ((rgba >> 0) & 0xff) / 255.f;
+#endif
   return anari::math::float4(r, g, b, a);
 }
 
+// Round to the nearest 8-bit code (truncating would bias every value down by
+// up to one code and break decode/encode round trips).
 constexpr uint32_t cvt_color_to_uint32(const float &f)
 {
-  return static_cast<uint32_t>(255.f * std::clamp(f, 0.f, 1.f));
+  return static_cast<uint32_t>(255.f * std::clamp(f, 0.f, 1.f) + 0.5f);
 }
 
 constexpr uint32_t cvt_color_to_uint32(const anari::math::float4 &v)
 {
+#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+  return (cvt_color_to_uint32(v.x) << 24) | (cvt_color_to_uint32(v.y) << 16)
+      | (cvt_color_to_uint32(v.z) << 8) | (cvt_color_to_uint32(v.w) << 0);
+#else
   return (cvt_color_to_uint32(v.x) << 0) | (cvt_color_to_uint32(v.y) << 8)
       | (cvt_color_to_uint32(v.z) << 16) | (cvt_color_to_uint32(v.w) << 24);
+#endif
 }
 
 constexpr uint32_t cvt_color_to_uint32_srgb(const anari::math::float4 &v)
@@ -212,9 +230,11 @@ inline int32_t calculateWrapIndex(int32_t i, size_t size, WrapMode wrap)
   default:
     return linalg::clamp(i, 0, int32_t(size - 1));
     break;
-  case WrapMode::REPEAT:
-    return i % size;
-    break;
+  case WrapMode::REPEAT: {
+    // Stay signed: i % size_t would convert a negative i to a huge unsigned.
+    const int32_t s = int32_t(size);
+    return ((i % s) + s) % s;
+  }
   case WrapMode::MIRROR_REPEAT:
     return computeMirroredRepeatIndex(i, int32_t(size));
     break;
@@ -299,16 +319,21 @@ static anari::math::float4 getAttributeArrayAt_ufixed(
     const void *data, uint64_t offset)
 {
   constexpr float m = float(std::numeric_limits<ELEMENT_T>::max());
+  // The sRGB formats with alpha (RA, RGBA) carry it linear in the last
+  // channel: only the color channels go through the transfer function.
+  constexpr ToneMapMode ALPHA_MODE =
+      MODE == ToneMapMode::FROM_SRGB ? ToneMapMode::NONE : MODE;
+  constexpr ToneMapMode Y_MODE = NUM_COMPONENTS == 2 ? ALPHA_MODE : MODE;
   anari::math::float4 retval(0.f, 0.f, 0.f, 1.f);
   switch (NUM_COMPONENTS) {
   case 4:
-    retval.w = toneMap<MODE>(
+    retval.w = toneMap<ALPHA_MODE>(
         *typedOffset<ELEMENT_T>(data, NUM_COMPONENTS * offset + 3) / m);
   case 3:
     retval.z = toneMap<MODE>(
         *typedOffset<ELEMENT_T>(data, NUM_COMPONENTS * offset + 2) / m);
   case 2:
-    retval.y = toneMap<MODE>(
+    retval.y = toneMap<Y_MODE>(
         *typedOffset<ELEMENT_T>(data, NUM_COMPONENTS * offset + 1) / m);
   case 1:
     retval.x = toneMap<MODE>(

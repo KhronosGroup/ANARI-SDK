@@ -18,6 +18,7 @@
 #include <chrono>
 #include <cstdint>
 #include <exception>
+#include <filesystem>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -218,6 +219,16 @@ Runner::Runner(anari::Device device,
       m_options(std::move(options))
 {}
 
+bool Runner::selected(const Case &c) const
+{
+  return m_options.onlyCase.empty() || c.qualifiedId() == m_options.onlyCase;
+}
+
+void Runner::setCaseIsolation(std::shared_ptr<CaseIsolation> isolation)
+{
+  m_isolation = std::move(isolation);
+}
+
 void Runner::resolveCapabilities(const std::set<std::string> &features)
 {
   m_effectiveAccumulationFrames =
@@ -316,8 +327,12 @@ void Runner::recordResult(const Case &c,
     summary.failed++;
     return;
   }
+  tally(result.verdict, summary);
+}
 
-  switch (result.verdict) {
+void Runner::tally(Verdict verdict, RunSummary &summary)
+{
+  switch (verdict) {
   case Verdict::Passed:
     summary.passed++;
     break;
@@ -434,6 +449,8 @@ RunSummary Runner::run(const Catalog &catalog,
       continue;
     }
     for (const Case &c : expand(*test)) {
+      if (!selected(c))
+        continue;
       summary.total++;
 
       // Per-case crash isolation (ADR-0003): a throwing build helper or fatal
@@ -550,10 +567,17 @@ void Runner::runBehaviorTest(const TestDef &test,
     RunSummary &summary)
 {
   for (const Case &c : expand(test)) {
+    if (!selected(c))
+      continue;
     summary.total++;
 
     if (!isSupported(test, candidateFeatures)) {
       writeFeatureSkip(test, c, summary);
+      continue;
+    }
+
+    if (test.timeout.count() > 0 && m_isolation) {
+      runIsolatedCase(test, c, summary);
       continue;
     }
 
@@ -571,6 +595,9 @@ void Runner::runBehaviorTest(const TestDef &test,
         continue;
       }
 
+      const DeviceErrorLog *errors =
+          test.failOnDeviceErrors ? m_options.deviceErrors : nullptr;
+      const size_t errorMark = errors ? errors->size() : 0;
       const auto start = std::chrono::steady_clock::now();
       const BehaviorResult br = test.behaviorCheck(m_device,
           scene.world.get(),
@@ -583,6 +610,15 @@ void Runner::runBehaviorTest(const TestDef &test,
           std::chrono::duration<double, std::milli>(end - start).count();
       result.verdict = br.passed ? Verdict::Passed : Verdict::Failed;
       result.detail = br.detail;
+      if (errors) {
+        const auto reported = errors->since(errorMark);
+        if (!reported.empty()) {
+          result.verdict = Verdict::Failed;
+          result.detail += "; the device reported "
+              + std::to_string(reported.size())
+              + " error(s), the first: " + reported.front();
+        }
+      }
       recordResult(c, result, summary);
     } catch (const std::exception &e) {
       writeCaseFailure(test,
@@ -594,6 +630,61 @@ void Runner::runBehaviorTest(const TestDef &test,
           test, c, "unknown exception during behavior test", summary);
     }
   }
+}
+
+void Runner::runIsolatedCase(
+    const TestDef &test, const Case &c, RunSummary &summary)
+{
+  // The isolated process writes the Case's sidecar; one left by an earlier run
+  // must not stand in for it.
+  const auto sidecar = m_workdir.sidecarPath(c);
+  std::error_code ec;
+  std::filesystem::remove(sidecar, ec);
+
+  const auto start = std::chrono::steady_clock::now();
+  const ProcessResult ended = m_isolation->run(c, test.timeout);
+  const auto end = std::chrono::steady_clock::now();
+
+  CaseResult written;
+  const bool haveResult = readSidecar(sidecar, written);
+  if (ended.status == ProcessResult::Status::Exited && ended.exitCode == 0
+      && haveResult) {
+    tally(written.verdict, summary);
+    return;
+  }
+
+  std::string why;
+  switch (ended.status) {
+  case ProcessResult::Status::TimedOut:
+    why = "timed out after " + durationText(test.timeout)
+        + ": killed the isolated process (the device hung)";
+    break;
+  case ProcessResult::Status::NotStarted:
+    why = "could not start the isolated process: " + ended.detail;
+    break;
+  case ProcessResult::Status::Crashed:
+    why = "the isolated process crashed: " + ended.detail;
+    break;
+  case ProcessResult::Status::Exited:
+    why = ended.exitCode == 0
+        ? "the isolated process exited without writing a result"
+        : "the isolated process " + ended.detail;
+    break;
+  }
+
+  CaseResult result =
+      haveResult ? written : baseResult(test, c, m_options.device);
+  if (haveResult) {
+    why += std::string("; before that, its check had ")
+        + verdictName(written.verdict)
+        + (written.detail.empty() ? "" : ": " + written.detail);
+  } else {
+    result.durationMs =
+        std::chrono::duration<double, std::milli>(end - start).count();
+  }
+  result.verdict = Verdict::Failed;
+  result.detail = why;
+  recordResult(c, result, summary);
 }
 
 } // namespace cts

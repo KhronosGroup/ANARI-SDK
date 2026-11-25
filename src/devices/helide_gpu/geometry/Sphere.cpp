@@ -32,7 +32,7 @@ void Sphere::commitParameters()
 {
   m_positions = getParamObject<Array1D>("vertex.position");
   m_radii = getParamObject<Array1D>("vertex.radius");
-  m_uniformRadius = getParam<float>("radius", 0.01f);
+  m_uniformRadius = getParam<float>("radius", 1.f);
 
   // Attribute slot 0 = color, slots 1-4 = attribute0..3
   m_vertexAttr[0] = getParamObject<Array1D>("vertex.color");
@@ -61,6 +61,7 @@ void Sphere::commitParameters()
 
 void Sphere::finalize()
 {
+  updateBounds();
   if (!m_positions) {
     reportMessage(ANARI_SEVERITY_WARNING,
         "missing required parameter 'vertex.position' on sphere geometry");
@@ -69,7 +70,7 @@ void Sphere::finalize()
   gpu_enqueue_method(this, &Sphere::gpu_finalizeGeometry);
 }
 
-box3 Sphere::bounds() const
+box3 Sphere::computeBounds() const
 {
   box3 b;
   if (m_positions) {

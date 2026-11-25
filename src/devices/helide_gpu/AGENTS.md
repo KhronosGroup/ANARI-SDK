@@ -4,9 +4,15 @@ This file provides guidance to coding agents working in this repository.
 
 ## Overview
 
-`devices/helide_gpu` is an in-progress ANARI device implementation (`libanari_library_helide-gpu`) backed by **SDL3_gpu** (a cross-platform GPU abstraction introduced in SDL 3.2). It is a standalone CMake project that can also be built as part of the parent VisRTX tree.
+`devices/helide_gpu` is an in-progress ANARI device implementation (`libanari_library_helide_gpu`) backed by **SDL3_gpu** (a cross-platform GPU abstraction introduced in SDL 3.2). It is built as part of the ANARI-SDK tree (`BUILD_HELIDE_GPU_DEVICE=ON`) or standalone against an installed ANARI-SDK.
 
 ## Build
+
+### In the SDK tree
+
+```bash
+cmake -DBUILD_HELIDE_GPU_DEVICE=ON /path/to/ANARI-SDK
+```
 
 ### Standalone
 
@@ -19,47 +25,72 @@ cmake --install .
 
 ### Dependencies
 
-- CMake 3.11+, C++17
+- CMake 3.20+, C++17
 - `anari` (ANARI-SDK with `helium`)
-- SDL3 3.2+ (`find_package(SDL3)`) — provides `SDL3::SDL3`
+- SDL3 3.2+ development package (`find_package(SDL3)`) — provides headers and
+  the shared library used to generate runtime trampolines on Linux
+- SDL3 is dynamically loaded when the device initializes. Linux uses Implib.so
+  trampolines, macOS uses dynamic symbol lookup, and Windows uses delay loading.
+  Set `HELIDE_GPU_SDL3_LIBRARY` before device initialization to override the
+  runtime library path. The Python wheel depends on PySDL3 and checks its
+  `sdl3/bin` directory for the runtime library.
 - `glslangValidator` in PATH — used at build time to compile GLSL shaders to SPIR-V
 
 GLM is downloaded automatically via `anari_sdk_fetch_project()` at configure time — no system install required.
 
+### Testing
+
+- `unit_test::helide_gpu::*` (in `tests/unit/`) compile the device's SDL- and
+  glm-free logic (`gpu/ArrayUpload`, `camera/ClipRange`) and need no GPU.
+- `helide_gpu::smoke_test` (`test/`, built with `BUILD_TESTING`) renders small
+  scenes through the device and checks pixels, writing `smoke_*.png` to the
+  build directory. It needs a GPU, so CI does not run it; run it with
+  `ctest -R helide_gpu::smoke_test`.
+
 ### Code generation
 
-`HelideGPUDefinitions.json` drives `anari_generate_queries()` to produce `anari_library_helide-gpu_queries.h/.cpp`, which implement the device's ANARI query API (object subtypes, parameter info, extension list). Regenerated on every CMake configure + build.
+`HelideGPUDefinitions.json` drives `anari_generate_queries()` to produce `anari_library_helide_gpu_queries.h/.cpp`, which implement the device's ANARI query API (object subtypes, parameter info, extension list). Regenerated on every CMake configure + build.
 
 ### Shader compilation
 
-CMake compiles `shaders/triangle.vert` and `shaders/triangle.frag` to SPIR-V via `glslangValidator`, then converts the SPIR-V binary to a C byte-array header using `cmake/bin2header.cmake`. The generated headers (`triangle_vert_spv.h`, `triangle_frag_spv.h`) land in the build directory and are included by `renderer/Renderer.cpp`.
+`compile_shader_to_header()` in `CMakeLists.txt` compiles each shader in `shaders/` (`.vert`/`.frag`; the `.glsl` files are includes) to SPIR-V with `glslangValidator`, then converts the SPIR-V to a C byte-array header with `cmake/bin2header.cmake`. When `spirv-cross` is found (required on macOS), `compile_msl_header()` also cross-compiles each to MSL, reorders its buffers with `cmake/fix_msl_buffers.py` and embeds it with `cmake/str2header.cmake`. The generated `<name>_<stage>_spv.h`/`_msl.h` headers land in the build directory and are included by `HelideGPUDeviceGlobalState.cpp`, which creates the pipelines in `gpu_initPipelines()`. A new shader needs both calls and an entry in `SHADER_DEPS`.
 
 ## Directory structure
 
 ```
 devices/helide_gpu/
-├── array/          # Array1D, Array2D, Array3D, ObjectArray stubs
-├── camera/         # Camera
-├── cmake/          # bin2header.cmake helper
+├── array/          # Array1D, Array2D, Array3D, ObjectArray (aliases of helium's)
+├── camera/         # Camera base, perspective, orthographic; ClipRange (glm-free
+│                   #   clip plane fitting, unit-tested)
+├── cmake/          # Shader embedding (bin2header, str2header, fix_msl_buffers.py),
+│                   #   SDL3 trampoline generator, Python module trampoline
 ├── frame/          # Frame (per-frame render loop)
-├── geometry/       # Geometry base
-├── gpu/            # SDLGPUDevice wrapper (sdl3_gpu_device.h/.cpp)
-├── light/          # Light base
-├── material/       # Material base
-├── renderer/       # Renderer (SDL3_gpu pipeline)
-├── sampler/        # Sampler base
+├── geometry/       # Triangle, Sphere, Cylinder, Cone, Curve
+├── gpu/            # SDLGPUDevice wrapper (sdl3_gpu_device.h/.cpp), GPUBuffer/GPUTexture,
+│                   #   SDL-free array upload data (ArrayUpload.h/.cpp)
+├── light/          # Light (directional, point, spot, quad), Hdri (its map
+│                   #   texture, mean radiance; drawn by shaders/hdri.frag)
+├── material/       # Material base, matte, physicallyBased
+├── renderer/       # Renderer (shading and ambient occlusion parameters)
+├── sampler/        # image1D/2D/3D, primitive, transform samplers
 ├── scene/          # Group, Instance, World
-├── shaders/        # triangle.vert / triangle.frag (GLSL → SPIR-V at build time)
-├── spatial_field/  # SpatialField base
+├── shaders/        # GLSL → SPIR-V at build time; shading.glsl holds the
+│                   #   Storm-derived lighting and material.glsl the material
+│                   #   uniforms and samplers both surface shaders include;
+│                   #   ssao.frag the occlusion estimators, with the 'cortao'
+│                   #   one in cortao.glsl (MIT: a port of CORTAO via halcyon)
+├── spatial_field/  # SpatialField base, structuredRegular
 ├── surface/        # Surface
-├── volume/         # Volume base
+├── test/           # GPU smoke test (helide_gpu::smoke_test, BUILD_TESTING)
+├── volume/         # Volume, TransferFunction1D
 ├── GLContextInterface.h/.cpp   # Status-reporting helper
 ├── Object.h/.cpp               # Base ANARI object + gpu_enqueue_method<>
-├── TaskQueue.h                 # tasking::TaskQueue ring-buffer thread
 ├── HelideGPUDefinitions.json      # Drives ANARI query-API code generation
 ├── HelideGPUDevice.h/.cpp         # Top-level ANARI device
 ├── HelideGPUDeviceGlobalState.h/.cpp  # Per-device singleton (GPU thread + SDL device)
 ├── HelideGPULibrary.cpp           # ANARI library entry point
+├── HelideGPUColorSpace.h          # vec4 sRGB decode (wraps HelideGPUSRGB.h)
+├── HelideGPUSRGB.h                # glm-free sRGB decode helpers (unit-testable)
 └── HelideGPUMath.h                # Math utilities (GLM wrappers)
 ```
 
@@ -78,7 +109,7 @@ All GPU commands **must** be submitted from the dedicated GPU thread. `HelideGPU
 | `SDLGPUDevice` | Thin owner of `SDL_GPUDevice*`; `init()` calls `SDL_CreateGPUDevice`; `release()` destroys it |
 | `Object` | Base for all ANARI objects; wraps `helium::BaseObject`; provides `deviceState()` accessor |
 | `Frame` | Manages per-frame color texture + transfer buffer pair; drives the render loop via `gpu_renderFrame()` |
-| `Renderer` | Holds SDL3_gpu graphics pipeline; provides `background()` color |
+| `Renderer` | Holds the renderer parameters (background, ambient light, ambient occlusion) the frame's passes read; the pipelines live in `HelideGPUDeviceGlobalState` |
 
 ### Object lifecycle
 
@@ -106,6 +137,15 @@ SDL3_gpu maps SPIR-V descriptor sets to resource slots as follows:
 
 Push data with `SDL_PushGPUVertexUniformData(cmd, slot, data, size)` — slot N maps to `set=1, binding=N` in the vertex shader SPIR-V.
 Push data with `SDL_PushGPUFragmentUniformData(cmd, slot, data, size)` — slot N maps to `set=3, binding=N` in the fragment shader SPIR-V.
+
+### Render targets
+
+SDL3_gpu allows at most 4 color targets per render pass (more crashes pipeline
+creation). The geometry pass uses all 4: color, IDs (RGBA32_UINT, whose `.w`
+holds the packed ambient light for the composite pass, see
+`shaders/ambient_packing.glsl`), albedo (`.w`: the opacity of a volume in
+front) and normal (`.w`: view depth). Pack new per-pixel data into these
+rather than adding a target.
 
 ### MSL/Metal binding order
 

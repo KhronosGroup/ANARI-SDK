@@ -7,9 +7,12 @@
 #include "renderer/Renderer.h"
 #include "world/World.h"
 // helium
-#include <vector>
 #include "helium/BaseFrame.h"
 #include "helium/TaskQueue.h"
+// std
+#include <future>
+#include <mutex>
+#include <vector>
 
 namespace helide {
 
@@ -41,10 +44,20 @@ struct Frame : public helium::BaseFrame
   int frameReady(ANARIWaitMask m) override;
   void discard() override;
 
+  void waitWithoutObjectLock() override;
+
   bool ready() const;
-  void wait();
 
  private:
+  void on_NoPublicReferences() override;
+
+  // Waits for the frame's queued render (callback included) unless the
+  // calling thread can't; then returns why, without waiting. nullptr once
+  // waited. Safe without the frame's object lock.
+  const char *waitIfThisThreadCan();
+  // Why the calling thread can't wait for the frame's queued render number
+  // 'renderTicket', or nullptr if it can.
+  const char *whyThisThreadCantWaitFor(uint64_t renderTicket) const;
   void waitOnOutstandingWorkIfNeeded();
   float2 screenFromPixel(const float2 &p) const;
   void writeSample(int x, int y, const PixelSample &s);
@@ -92,7 +105,14 @@ struct Frame : public helium::BaseFrame
   helium::TimeStamp m_lastCommitOccured{0};
   helium::TimeStamp m_frameLastRendered{0};
 
-  mutable helium::tasking::Future m_future;
+  // The queued render: its job and number (RenderingSemaphore). Guarded by
+  // m_renderMutex, not the frame's object lock: helium waits for a frame
+  // without that lock (waitWithoutObjectLock()), while another thread may
+  // queue a render. Waiters wait on a copy of m_future (and get() it, so a
+  // render's exception reaches the app; the first waiter to see it clears it).
+  mutable std::mutex m_renderMutex;
+  std::shared_future<void> m_future;
+  uint64_t m_renderTicket{0};
 
   anari::FrameCompletionCallback m_callback{nullptr};
   const void *m_callbackUserPtr{nullptr};

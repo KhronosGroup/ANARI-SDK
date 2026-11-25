@@ -5,6 +5,8 @@
 
 #include "Object.h"
 #include "array/Array1D.h"
+// std
+#include <vector>
 
 namespace helide {
 
@@ -25,6 +27,35 @@ struct Geometry : public Object
   uint32_t getPrimID(const Ray &ray) const;
 
  protected:
+  // Radii for Embree's float4 (position + radius) vertices: element i of the
+  // radius array where it has one, else the global 'radius'
+  struct Radii
+  {
+    const float *values{nullptr};
+    size_t count{0};
+    float fallback{0.f};
+
+    float operator[](size_t i) const
+    {
+      return i < count ? values[i] : fallback;
+    }
+  };
+
+  // Radius array 'array' (parameter 'name', may be null) with 'fallback' for
+  // the elements it lacks; warns if it has fewer than 'needed' elements
+  Radii readRadii(const Array1D *array,
+      const char *name,
+      float fallback,
+      size_t needed) const;
+
+  // 'primitive.index' array 'index' of 'subtype' geometry as uint32 in 'out'
+  // (UINT64 values above UINT32_MAX are truncated, with a warning); false,
+  // with a warning, if its elements are neither UINT32 nor UINT64 (callers
+  // then leave the geometry empty)
+  bool readIndices(const Array1D &index,
+      const char *subtype,
+      std::vector<uint32_t> &out) const;
+
   RTCGeometry m_embreeGeometry{nullptr};
 
   UniformAttributeSet m_uniformAttr;

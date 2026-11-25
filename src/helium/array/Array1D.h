@@ -18,10 +18,12 @@ struct Array1DMemoryDescriptor : public ArrayMemoryDescriptor
 
 /*
  * One-dimensional host array that stores a flat sequence of uniformly typed
- * elements. Supports sub-range iteration (m_begin/m_end are element indices)
- * and provides linear/nearest-neighbor interpolation helpers used by sampler
- * implementations for 1D texture lookups. The readAsAttributeValue() method
- * converts any supported element type to float4 for use as a vertex attribute.
+ * elements. Its elements are the sub-range [begin, end) of the buffer
+ * (m_begin/m_end are element indices, set by the 'begin'/'end' parameters):
+ * begin()/end(), size() and the inherited element accessors (valueAt(),
+ * readAsAttributeValue(), valueAtLinear(), valueAtClosest()) all work on that
+ * range, while data()/dataAs() stay the start of the whole buffer of
+ * totalCapacity() elements.
  */
 struct Array1D : public Array
 {
@@ -44,6 +46,8 @@ struct Array1D : public Array
   size_t size() const;
 
  protected:
+  const void *elementsBegin() const override;
+
   size_t m_capacity{0};
   size_t m_begin{0};
   size_t m_end{0};

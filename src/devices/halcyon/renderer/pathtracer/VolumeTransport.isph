@@ -1,0 +1,258 @@
+// Copyright 2026 The Khronos Group
+// SPDX-License-Identifier: Apache-2.0
+
+#pragma once
+
+// The pathtracer's transferFunction1D volumes: scattering media whose
+// extinction at a point is sigma_t = -ln(1 - alpha) / unitDistance
+// (Volume_extinction(), alpha the transfer function's opacity times its
+// colour's alpha) and whose single-scattering albedo is the transfer
+// function's colour (clamped to [0, 1]); they don't emit. Typhoon has no grid
+// volumes, so this is halcyon's own, as are its sample domains
+// (SAMPLE_DOMAIN_VOLUME_*).
+//
+// Paths find collisions by delta tracking (VolumeTransport_freeFlight()),
+// shadow rays and emitter-only segments the transmittance by ratio tracking
+// (VolumeTransport_transmittance()), both against each volume's majorant in
+// the macrocell the ray is in (Volume_majorantFrom(): a grid of cells of 8^3
+// voxel intervals, each with the largest extinction its samples take), so
+// they step cell by cell and skip empty cells without drawing. Where volumes
+// overlap their extinctions add: so do their majorants, piecewise along the
+// ray (a piece ends wherever the ray enters or leaves a volume or one of
+// its cells), and a collision scatters in a volume chosen by its share of
+// the extinction. Every
+// transform of every instance with volumes is tested at each step, in its
+// object space; distances are along the world-space ray (unit direction), as
+// the 'preview' renderer's march (Volume_render()) composites them.
+
+#include "renderer/pathtracer/Medium.isph"
+#include "renderer/pathtracer/Sampling.isph"
+#include "shading/halcyon_volume.isph"
+
+// A safety bound on the tentative collisions of one free flight or one ratio
+// tracking: past it, a free flight goes on without a collision and ratio
+// tracking keeps the transmittance it found
+#define VOLUME_MAX_COLLISIONS 65536
+
+// Phase function /////////////////////////////////////////////////////////////
+
+// The phase function of anisotropy 'g' (Henyey-Greenstein, Medium.isph;
+// transferFunction1D volumes scatter isotropically, g = 0, homogeneous media
+// by their closure's anisotropy): its value, which is also its pdf, for the
+// incident direction 'wo' (pointing back along the ray) and 'wi'
+inline float VolumePhase_eval(float3 wo, float3 wi, float g)
+{
+  return Medium_pdfHenyeyGreenstein(wi, wo, g);
+}
+
+// A direction sampled from the phase function of anisotropy 'g' at the
+// incident direction 'wo' from 'u' in [0, 1)^2, with its 'pdf'; its weight
+// (value / pdf) is 1
+inline float3 VolumePhase_sample(float3 wo, float g, float2 u, float &pdf)
+{
+  const float3 wi = Medium_sampleHenyeyGreenstein(wo, g, u.x, u.y);
+  pdf = Medium_pdfHenyeyGreenstein(wi, wo, g);
+  return wi;
+}
+
+// Majorants and extinction ///////////////////////////////////////////////////
+
+// The interval [lower, upper) of the ray ('org', 'dir') in a volume's object
+// space inside the bounds of 'field'; empty (lower >= upper) if it misses
+inline void VolumeTransport_interval(const uniform SpatialField *uniform field,
+    float3 org,
+    float3 invDir,
+    float &lower,
+    float &upper)
+{
+  const float3 mins = (field->boundsLower - org) * invDir;
+  const float3 maxs = (field->boundsUpper - org) * invDir;
+  lower = maxelem(min(mins, maxs));
+  upper = minelem(max(mins, maxs));
+}
+
+// The world's volumes that attenuate, each transform of each instance with
+// volumes in turn: 'body' runs with 'vol' (the volume), 'o', 'd' and
+// 'invDir' (the ray in its object space: origin, direction and 1 / direction)
+// and its interval 'lower', 'upper' along the world-space ray ('org', 'dir')
+#define VOLUME_TRANSPORT_FOREACH_VOLUME(world, org, dir, body)                 \
+  for (uniform uint32 vi = 0; vi < world->numVolumeInstances; vi++) {          \
+    const uniform Instance *uniform inst = world->volumeInstances[vi];         \
+    const uniform Group *uniform g = inst->group;                              \
+    for (uniform uint32 xi = 0; xi < inst->numTransforms; xi++) {              \
+      const uniform affine3f invXfm =                                          \
+          load_affine3f(inst->invXfms + MAT4F_FLOATS * xi);                    \
+      const float3 o = xfmPoint(invXfm, org);                                  \
+      const float3 d = xfmVector(invXfm, dir);                                 \
+      const float3 invDir = 1.f / d;                                           \
+      for (uniform uint64 v = 0; v < g->numVolumes; v++) {                     \
+        const uniform Volume *uniform vol = g->volumes[v];                     \
+        if (!(vol->majorant > 0.f))                                            \
+          continue;                                                            \
+        float lower, upper;                                                    \
+        VolumeTransport_interval(vol->field, o, invDir, lower, upper);         \
+        body                                                                   \
+      }                                                                        \
+    }                                                                          \
+  }
+
+// The summed majorant of the volumes the ray ('org', unit 'dir') is in just
+// past distance 't' (each its macrocell's), which holds until 'next', the
+// nearest volume or macrocell boundary past 't' (or 'tEnd')
+inline float VolumeTransport_majorantAt(const uniform World *uniform world,
+    float3 org,
+    float3 dir,
+    float t,
+    float tEnd,
+    float &next)
+{
+  float majorant = 0.f;
+  next = tEnd;
+  VOLUME_TRANSPORT_FOREACH_VOLUME(world, org, dir, {
+    if (lower < upper) {
+      if (lower <= t && t < upper) {
+        float exit;
+        majorant += Volume_majorantFrom(vol, o, d, t, exit);
+        next = min(next, min(upper, exit));
+      } else if (lower > t) {
+        next = min(next, lower);
+      }
+    }
+  })
+  return majorant;
+}
+
+// The summed extinction of the volumes at distance 't' along the ray ('org',
+// unit 'dir'), each at most its volume's majorant and, but for rounding at
+// macrocell boundaries, its macrocell's, and
+// in 'albedo' the colour of one of them chosen by its share of the
+// extinction from 'u' in [0, 1) (0 where there is none)
+inline float VolumeTransport_extinctionAt(const uniform World *uniform world,
+    float3 org,
+    float3 dir,
+    float t,
+    float u,
+    float3 &albedo)
+{
+  float sum = 0.f;
+  albedo = make_float3(0.f);
+  VOLUME_TRANSPORT_FOREACH_VOLUME(world, org, dir, {
+    if (lower <= t && t < upper) {
+      const float s = SpatialField_sampleAt(vol->field, o + d * t);
+      if (!isnan(s)) {
+        const float4 c = Volume_colorOf(vol, s);
+        const float sigma = min(
+            Volume_extinction(Volume_opacityOf(vol, s) * c.w, vol->unitDistance),
+            vol->majorant);
+        if (sigma > 0.f) {
+          // the first volume with probability sigma / sum, re-using what
+          // remains of 'u' for the rest
+          sum += sigma;
+          const float p = sigma / sum;
+          if (u < p) {
+            albedo = clamp(make_float3(c.x, c.y, c.z), 0.f, 1.f);
+            u = u / p;
+          } else {
+            u = (u - p) / (1.f - p);
+          }
+        }
+      }
+    }
+  })
+  return sum;
+}
+
+// Tracking ///////////////////////////////////////////////////////////////////
+
+// Delta tracking of the ray ('org', unit 'dir') through the volumes over
+// distances [t0, t1]: whether it collides (scatters) on the way, at distance
+// 'tCollision' in a volume of colour 'albedo' (chosen by its share of the
+// extinction). The free flights draw from 'domain' (the path vertex's),
+// chained per tentative collision, and the volume's choice from its fork.
+inline bool VolumeTransport_freeFlight(const uniform World *uniform world,
+    float3 org,
+    float3 dir,
+    float t0,
+    float t1,
+    const SampleDomain &domain,
+    float &tCollision,
+    float3 &albedo)
+{
+  const float uChoice = SampleDomain_draw1D(
+      SampleDomain_fork(domain, SAMPLE_DOMAIN_VOLUME_SCATTER_CHOICE));
+  float t = t0;
+  int collisions = 0;
+  while (t < t1 && collisions < VOLUME_MAX_COLLISIONS) {
+    float next;
+    const float majorant =
+        VolumeTransport_majorantAt(world, org, dir, t, t1, next);
+    if (!(majorant > 0.f)) {
+      t = next;
+      continue;
+    }
+    const float2 u = SampleDomain_draw2D(SampleDomain_chain(
+        domain, SAMPLE_DOMAIN_VOLUME_FREE_FLIGHT, collisions++));
+    const float tNext = t - log(1.f - u.x) / majorant;
+    // the majorant changes at 'next': start afresh there (free flights are
+    // memoryless)
+    if (tNext >= next) {
+      t = next;
+      continue;
+    }
+    t = tNext;
+    float3 c;
+    const float sigma =
+        VolumeTransport_extinctionAt(world, org, dir, t, uChoice, c);
+    // a sample that rounding puts across a macrocell boundary may exceed
+    // the majorant: it then collides for sure (a negligible bias)
+    if (u.y * majorant < sigma) {
+      tCollision = t;
+      albedo = c;
+      return true;
+    }
+  }
+  return false;
+}
+
+// Ratio tracking of the ray ('org', unit 'dir') through the volumes over
+// distances [t0, t1]: an unbiased estimate of their transmittance. Draws
+// from 'domain' chained per tentative collision, counting on from 'step'
+// (so a shadow ray's segments between surfaces draw distinct numbers).
+inline float VolumeTransport_transmittance(const uniform World *uniform world,
+    float3 org,
+    float3 dir,
+    float t0,
+    float t1,
+    const SampleDomain &domain,
+    int &step)
+{
+  float T = 1.f;
+  float t = t0;
+  int collisions = 0;
+  while (t < t1 && T > 0.f && collisions < VOLUME_MAX_COLLISIONS) {
+    float next;
+    const float majorant =
+        VolumeTransport_majorantAt(world, org, dir, t, t1, next);
+    if (!(majorant > 0.f)) {
+      t = next;
+      continue;
+    }
+    const float u = SampleDomain_draw1D(SampleDomain_chain(
+        domain, SAMPLE_DOMAIN_VOLUME_RATIO_TRACKING, step++));
+    collisions++;
+    const float tNext = t - log(1.f - u) / majorant;
+    if (tNext >= next) {
+      t = next;
+      continue;
+    }
+    t = tNext;
+    float3 unused;
+    // clamped to the majorant, which rounding at a macrocell boundary may
+    // put a sample past
+    T *= 1.f
+        - min(VolumeTransport_extinctionAt(world, org, dir, t, 0.f, unused),
+              majorant)
+            / majorant;
+  }
+  return max(T, 0.f);
+}

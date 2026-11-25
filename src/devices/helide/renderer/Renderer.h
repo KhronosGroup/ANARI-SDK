@@ -46,6 +46,12 @@ enum class RenderMode
   TEST_FRAME
 };
 
+// 'volumeSamplingRate': default and range as HelideDefinitions.json declares;
+// the clamp keeps the ray marching step finite and positive
+constexpr float DEFAULT_VOLUME_SAMPLING_RATE = 0.5f;
+constexpr float MIN_VOLUME_SAMPLING_RATE = 0.001f;
+constexpr float MAX_VOLUME_SAMPLING_RATE = 10.f;
+
 struct Renderer : public Object
 {
   Renderer(HelideGlobalState *s);
@@ -70,7 +76,7 @@ struct Renderer : public Object
   float4 m_bgColor{float3(0.f), 1.f};
   float m_ambientRadiance{1.f};
   float m_falloffBlendRatio{0.5f};
-  float m_invVolumeSR{1.f};
+  float m_invVolumeSR{1.f / DEFAULT_VOLUME_SAMPLING_RATE};
   RenderMode m_mode{RenderMode::DEFAULT};
   int2 m_taskGrainSize{4, 4};
 

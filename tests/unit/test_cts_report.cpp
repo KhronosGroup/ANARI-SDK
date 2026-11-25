@@ -13,6 +13,8 @@
 #include <fstream>
 #include <map>
 #include <sstream>
+#include <string>
+#include <vector>
 
 using namespace anari::cts;
 
@@ -147,6 +149,30 @@ TEST_CASE(
 }
 
 // Encoding helpers ///////////////////////////////////////////////////////////
+
+TEST_CASE("the text summary lines category counts up past long names",
+    "[cts][report]")
+{
+  const auto results = keyed({
+      makeCase("geometry", "sphere", "a", Verdict::Passed),
+      makeCase("synchronization", "rule", "default", Verdict::Passed),
+  });
+  std::ostringstream out;
+  writeTextSummary(out, "run", results, false);
+
+  // The counts start in the same column on every category's line.
+  std::istringstream lines(out.str());
+  std::vector<size_t> columns;
+  for (std::string line; std::getline(lines, line);) {
+    const auto name = line.find_first_not_of(' ');
+    if (name == std::string::npos || line.find(" passed ") == std::string::npos
+        || line.find(" cases:") != std::string::npos)
+      continue;
+    columns.push_back(line.find_first_of("0123456789", name));
+  }
+  REQUIRE(columns.size() == 2);
+  CHECK(columns[0] == columns[1]);
+}
 
 TEST_CASE("base64Encode matches RFC 4648 test vectors", "[cts][html]")
 {

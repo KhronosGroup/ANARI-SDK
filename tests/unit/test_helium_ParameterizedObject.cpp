@@ -33,6 +33,8 @@
 
 #include "helium/utility/ParameterizedObject.h"
 
+#include <thread>
+
 namespace {
 
 SCENARIO(
@@ -98,6 +100,17 @@ SCENARIO(
       REQUIRE(obj.getParam<int>(name, 0) == 2);
     }
 
+    THEN("another thread reads the live store during a committed read")
+    {
+      helium::ParameterizedObject::ReadCommittedScope scope(&obj);
+      int liveValue = 0;
+      std::thread reader([&]() { liveValue = obj.getParam<int>(name, 0); });
+      reader.join();
+
+      CHECK(liveValue == 2);
+      CHECK(obj.getParam<int>(name, 0) == 1);
+    }
+
     WHEN("reading in committed mode (as commitParameters()/finalize() do)")
     {
       {
@@ -158,6 +171,41 @@ SCENARIO(
         REQUIRE(!obj.hasParam(name, ANARI_STRING));
         REQUIRE(obj.getParamString(name, "") == "");
         REQUIRE(obj.getParam<short>(name, 4) == 4);
+      }
+    }
+  }
+}
+
+SCENARIO("helium::ParameterizedObject lists the parameters it reads",
+    "[helium_ParameterizedObject]")
+{
+  GIVEN("A ParameterizedObject with two parameters, one committed")
+  {
+    helium::ParameterizedObject obj;
+    int v = 1;
+    obj.setParam("a", ANARI_INT32, &v);
+    obj.commitParameterSnapshot();
+    obj.setParam("b", ANARI_INT32, &v);
+
+    THEN("The live store lists both parameters")
+    {
+      REQUIRE(obj.paramNames() == std::vector<std::string>{"a", "b"});
+    }
+
+    THEN("A committed read scope lists only the committed parameters")
+    {
+      helium::ParameterizedObject::ReadCommittedScope scope(&obj);
+      REQUIRE(obj.paramNames() == std::vector<std::string>{"a"});
+    }
+
+    WHEN("A committed parameter is removed after the commit")
+    {
+      obj.removeParam("a");
+
+      THEN("A committed read scope still lists it")
+      {
+        helium::ParameterizedObject::ReadCommittedScope scope(&obj);
+        REQUIRE(obj.paramNames() == std::vector<std::string>{"a"});
       }
     }
   }

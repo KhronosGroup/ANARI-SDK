@@ -162,8 +162,11 @@ bool GPUTexture::allocDownloadBuffer()
   return true;
 }
 
-bool GPUTexture::uploadImpl(
-    const void *src, uint32_t sizeInBytes, uint32_t w, uint32_t h, uint32_t d)
+bool GPUTexture::uploadWith(uint32_t sizeInBytes,
+    uint32_t w,
+    uint32_t h,
+    uint32_t d,
+    const std::function<void(void *)> &fill)
 {
   if (!alloc(w, h, d))
     return false;
@@ -176,10 +179,12 @@ bool GPUTexture::uploadImpl(
     return false;
 
   void *mapped = SDL_MapGPUTransferBuffer(m_device, tb, false);
-  if (mapped) {
-    std::memcpy(mapped, src, sizeInBytes);
-    SDL_UnmapGPUTransferBuffer(m_device, tb);
+  if (!mapped) {
+    SDL_ReleaseGPUTransferBuffer(m_device, tb);
+    return false;
   }
+  fill(mapped);
+  SDL_UnmapGPUTransferBuffer(m_device, tb);
 
   SDL_GPUCommandBuffer *cmd = SDL_AcquireGPUCommandBuffer(m_device);
   SDL_GPUCopyPass *pass = SDL_BeginGPUCopyPass(cmd);

@@ -37,7 +37,7 @@ void Quad::finalize()
       RTC_BUFFER_TYPE_VERTEX,
       0,
       RTC_FORMAT_FLOAT3,
-      m_vertexPosition->dataAs<float3>(),
+      m_vertexPosition->beginAs<float3>(),
       0,
       sizeof(float3),
       m_vertexPosition->size());
@@ -47,7 +47,7 @@ void Quad::finalize()
         RTC_BUFFER_TYPE_INDEX,
         0,
         RTC_FORMAT_UINT4,
-        m_index->dataAs<uint4>(),
+        m_index->beginAs<uint4>(),
         0,
         sizeof(uint4),
         m_index->size());
@@ -77,7 +77,7 @@ float4 Quad::getAttributeValue(const Attribute &attr, const Ray &ray) const
 
   const float3 uvw(1.0f - ray.u - ray.v, ray.u, ray.v);
 
-  auto idx = m_index ? *(m_index->dataAs<uint4>() + ray.primID)
+  auto idx = m_index ? m_index->beginAs<uint4>()[ray.primID]
                      : 4 * ray.primID + uint4(0, 1, 2, 3);
 
   float4 uv((1 - ray.v) * (1 - ray.u),
@@ -85,10 +85,10 @@ float4 Quad::getAttributeValue(const Attribute &attr, const Ray &ray) const
       ray.v * ray.u,
       ray.v * (1 - ray.u));
 
-  auto a = readAttributeValue(attributeArray, idx.x);
-  auto b = readAttributeValue(attributeArray, idx.y);
-  auto c = readAttributeValue(attributeArray, idx.z);
-  auto d = readAttributeValue(attributeArray, idx.w);
+  auto a = attributeValueAt(attributeArray, idx.x);
+  auto b = attributeValueAt(attributeArray, idx.y);
+  auto c = attributeValueAt(attributeArray, idx.z);
+  auto d = attributeValueAt(attributeArray, idx.w);
 
   return uv.x * a + uv.y * b + uv.z * c + uv.w * d;
 }

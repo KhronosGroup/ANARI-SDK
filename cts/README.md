@@ -99,6 +99,10 @@ options:
   --denoise            set the renderer denoise parameter
   --stdin              read newline-separated filter patterns from stdin (run)
   --verbose            print ANARI warnings
+  --isolated-case <category>/<test>/<case>
+                       run only this Case, in this process (run uses it to
+                       run each Case of a timed behaviour Test in a child
+                       process, killed if it hangs)
 
 report options:
   --html <path>        also write an interactive HTML report
@@ -244,6 +248,12 @@ makeTest("geometry", "sphere")
     .requireFeature("ANARI_KHR_GEOMETRY_SPHERE")
     .registerInto(catalog);
 ```
+
+Rules a device breaks by hanging rather than by rendering wrongly (the
+`synchronization` Tests) are timed behaviour Tests: a `.behavior(check)` that
+returns pass/fail, plus `.timeout(...)`, which makes `run` run each Case in a
+child process and fail it if it hangs, and `.failOnDeviceErrors()`
+(ADR-0009).
 
 The harness lives in `src/anari_test_scenes/cts/` (`Axis`, `Case`, `Catalog`,
 `Expansion`, `BuildContext`, `Runner`, `Metrics`, `Workdir`, `Sidecar`, …); the

@@ -17,6 +17,6 @@ foreach(SCENE cornell_box;gravity_spheres_volume)
   add_test(NAME render_test::${SCENE} COMMAND ${PROJECT_NAME} --scene demo ${SCENE})
 endforeach()
 
-foreach(SCENE instanced_cubes;textured_cube;random_spheres)
+foreach(SCENE instanced_cubes;textured_cube;random_spheres;random_curves)
   add_test(NAME render_test::${SCENE} COMMAND ${PROJECT_NAME} --scene test ${SCENE})
 endforeach()

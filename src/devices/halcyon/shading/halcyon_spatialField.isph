@@ -1,0 +1,19 @@
+// Copyright 2025-2026 The Khronos Group
+// SPDX-License-Identifier: Apache-2.0
+
+#pragma once
+
+#include "halcyon_objects.isph"
+
+// Whether 'f' is set and valid
+inline uniform bool SpatialField_isValid(const uniform SpatialField *uniform f)
+{
+  return f != NULL && f->sample != NULL;
+}
+
+// Value of the valid field 'f' at object-space point 'p', NaN outside it
+inline float SpatialField_sampleAt(
+    const uniform SpatialField *uniform f, const float3 &p)
+{
+  return f->sample(f, p);
+}

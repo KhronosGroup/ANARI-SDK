@@ -1,0 +1,169 @@
+// Copyright 2026 The Khronos Group
+// SPDX-License-Identifier: Apache-2.0
+
+#pragma once
+
+// What Geometry.ispc (the attribute and corner hooks, the setters) and
+// GeometryDerivatives.ispc (the derivative hooks) share: index and vertex
+// lookups, and the derivative hooks the setters install
+
+#include "shading/halcyon_attributes.isph"
+
+// The vertex indices of triangle 'primID'
+static inline uint3 Triangle_indices(
+    const uniform Geometry *uniform self, uint primID)
+{
+  const uniform uint32 *uniform indices = self->triangle.indices;
+  uint3 idx = 3 * primID + make_uint3(0, 1, 2);
+  if (indices != NULL) {
+    const uint64 p = min((uint64)primID, self->triangle.numTriangles - 1);
+#pragma ignore warning(perf)
+    idx =
+        make_uint3(indices[3 * p + 0], indices[3 * p + 1], indices[3 * p + 2]);
+  }
+  return idx;
+}
+
+// The vertex indices of quad 'primID'
+static inline uint4 Quad_indices(
+    const uniform Geometry *uniform self, uint primID)
+{
+  const uniform uint32 *uniform indices = self->quad.indices;
+  uint4 idx = 4 * primID + make_uint4(0, 1, 2, 3);
+  if (indices != NULL) {
+    const uint64 p = min((uint64)primID, self->quad.numQuads - 1);
+#pragma ignore warning(perf)
+    idx = make_uint4(indices[4 * p + 0],
+        indices[4 * p + 1],
+        indices[4 * p + 2],
+        indices[4 * p + 3]);
+  }
+  return idx;
+}
+
+// The first vertex of curve segment 'primID'
+static inline uint32 Curve_segmentStart(
+    const uniform Geometry *uniform self, uint primID)
+{
+  const uniform uint32 *uniform indices = self->curve.indices;
+  uint32 idx = primID;
+  if (indices != NULL) {
+    const uint64 p = min((uint64)primID, self->curve.numSegments - 1);
+#pragma ignore warning(perf)
+    idx = indices[p];
+  }
+  return idx;
+}
+
+// The weights of a cubic segment's four control points at 'u' in [0, 1], and
+// of their derivative in u, as Embree's BSplineBasis and CatmullRomBasis
+// (subdiv/bspline_curve.h, catmullrom_curve.h) evaluate them, so attributes
+// follow the curve Embree intersects
+static inline float4 Curve_cubicWeights(uniform CurveBasis basis, float u)
+{
+  const float t = u;
+  const float s = 1.f - u;
+  if (basis == CURVE_BASIS_BSPLINE) {
+    const float n0 = s * s * s;
+    const float n1 = (4.f * (s * s * s) + (t * t * t))
+        + (12.f * ((s * t) * s) + 6.f * ((t * s) * t));
+    const float n2 = (4.f * (t * t * t) + (s * s * s))
+        + (12.f * ((t * s) * t) + 6.f * ((s * t) * s));
+    const float n3 = t * t * t;
+    return (1.f / 6.f) * make_float4(n0, n1, n2, n3);
+  }
+  const float n0 = -t * s * s;
+  const float n1 = 2.f + t * t * (3.f * t - 5.f);
+  const float n2 = 2.f + s * s * (3.f * s - 5.f);
+  const float n3 = -s * t * t;
+  return 0.5f * make_float4(n0, n1, n2, n3);
+}
+
+static inline float4 Curve_cubicDerivativeWeights(
+    uniform CurveBasis basis, float u)
+{
+  const float t = u;
+  const float s = 1.f - u;
+  if (basis == CURVE_BASIS_BSPLINE) {
+    const float n0 = -s * s;
+    const float n1 = -t * t - 4.f * (t * s);
+    const float n2 = s * s + 4.f * (s * t);
+    const float n3 = t * t;
+    return 0.5f * make_float4(n0, n1, n2, n3);
+  }
+  const float n0 = -s * s + 2.f * s * t;
+  const float n1 = 2.f * t * (3.f * t - 5.f) + 3.f * t * t;
+  const float n2 = 2.f * s * (3.f * t + 2.f) - 3.f * s * s;
+  const float n3 = -2.f * s * t + t * t;
+  return 0.5f * make_float4(n0, n1, n2, n3);
+}
+
+// Position of vertex 'i' (clamped into range); 'self' has vertices
+static inline float3 Geometry_position(
+    const uniform Geometry *uniform self, uint64 i)
+{
+  const uniform GeometryVertices *uniform v = &self->vertices;
+  const uint64 idx = min(i, v->count - 1);
+  return load_float3(v->data + v->stride * idx);
+}
+
+// The normal array the shading normal interpolates (objectShadingNormal()):
+// face-varying normals, else vertex normals, or NULL
+static inline const uniform AttributeArray *uniform Geometry_normalArray(
+    const uniform Geometry *uniform self, uniform bool &faceVarying)
+{
+  faceVarying = false;
+  if (self->getFaceVaryingAttribute && self->faceVaryingNormals.size > 0) {
+    faceVarying = true;
+    return &self->faceVaryingNormals;
+  }
+  if (self->vertexNormals.size > 0)
+    return &self->vertexNormals;
+  return NULL;
+}
+
+// The derivative hooks (Geometry_DerivativesFcn), in GeometryDerivatives.ispc
+
+void Triangle_getDerivatives(const uniform Geometry *uniform self,
+    uniform Attribute texcoord,
+    uint primID,
+    float2 uv,
+    float3 P,
+    float3 N,
+    varying SurfaceDerivatives &d);
+void Quad_getDerivatives(const uniform Geometry *uniform self,
+    uniform Attribute texcoord,
+    uint primID,
+    float2 uv,
+    float3 P,
+    float3 N,
+    varying SurfaceDerivatives &d);
+void Sphere_getDerivatives(const uniform Geometry *uniform self,
+    uniform Attribute texcoord,
+    uint primID,
+    float2 uv,
+    float3 P,
+    float3 N,
+    varying SurfaceDerivatives &d);
+void Curve_getDerivatives(const uniform Geometry *uniform self,
+    uniform Attribute texcoord,
+    uint primID,
+    float2 uv,
+    float3 P,
+    float3 N,
+    varying SurfaceDerivatives &d);
+void Cone_getDerivatives(const uniform Geometry *uniform self,
+    uniform Attribute texcoord,
+    uint primID,
+    float2 uv,
+    float3 P,
+    float3 N,
+    varying SurfaceDerivatives &d);
+
+// The surface position hooks (Geometry_SurfacePositionFcn), in
+// GeometryDerivatives.ispc
+
+varying float3 Triangle_getSurfacePosition(
+    const uniform Geometry *uniform self, uint primID, float2 uv, float3 P);
+varying float3 Quad_getSurfacePosition(
+    const uniform Geometry *uniform self, uint primID, float2 uv, float3 P);

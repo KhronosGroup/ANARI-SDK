@@ -63,7 +63,21 @@ class HDANARI_MDL_API HdAnariMdlRegistry
       -> mi::neuraylib::ITransaction *;
 
   auto preprendUserSearchPath(std::string_view path) -> void;
+  // Returns a +1-retained IModule owned by the caller: adopt it into an
+  // mi::base::Handle (as ProcessMdlNode does) so it is released before the
+  // transaction closes. Null on failure. Same contract for
+  // loadModuleByCanonicalName and getFunctionDefinition below.
   auto loadModule(std::string_view moduleOrFileName,
+      mi::neuraylib::ITransaction *transaction)
+      -> const mi::neuraylib::IModule *;
+
+  // Fallback for a path-based load that failed (e.g. a scene shipped a .mdl
+  // without its ./textures). If the path passes through a directory whose
+  // basename matches an MDL search root, derive the canonical module name from
+  // the tail and load it by name, so the entity resolver finds a complete copy
+  // on the search path with its resources co-located. Returns null if no
+  // search-root segment matches or the named module still fails.
+  auto loadModuleByCanonicalName(std::string_view filePath,
       mi::neuraylib::ITransaction *transaction)
       -> const mi::neuraylib::IModule *;
 
@@ -94,9 +108,20 @@ class HDANARI_MDL_API HdAnariMdlRegistry
 
   ~HdAnariMdlRegistry();
 
+  // Heavy, fallible neuray setup (components, plugins, start, scopes, factory).
+  // May throw; the constructors call it inside a try/catch so a failure yields
+  // a disabled registry instead of an exception escaping TfSingleton's
+  // construction (which would wedge the singleton and hang every GetInstance).
+  void _Initialize(mi::base::ILogger *logger);
+
   DllHandle m_dllHandle;
   mi::base::Handle<mi::neuraylib::INeuray> m_neuray;
   mi::base::Handle<mi::neuraylib::IScope> m_globalScope;
+  // Dedicated child scope for our own module introspection. Keeps our
+  // transactions isolated from any other consumer of this shared INeuray
+  // instance (e.g. the VisRTX device), so loading/aborting modules here can
+  // never disturb their view of the database.
+  mi::base::Handle<mi::neuraylib::IScope> m_introspectionScope;
   mi::base::Handle<mi::neuraylib::IMdl_factory> m_mdlFactory;
   mi::base::Handle<mi::neuraylib::IMdl_execution_context> m_executionContext;
   mi::base::Handle<mi::base::ILogger> m_logger;

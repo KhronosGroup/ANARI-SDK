@@ -35,6 +35,13 @@ what actually gets rendered and compared. Variant values of the same Case map to
 a shared ground-truth image; Permutation values map to distinct ones.
 _Avoid_: instance, permutation (as a noun for the result)
 
+**Timed behaviour test**:
+A Test whose check (not an image) decides pass/fail, and which declares a
+timeout: `anariCts run` runs each of its Cases in a child process and records a
+Case that doesn't finish in time as failed, so a hung device loses that Case
+only. The form of the synchronization rules (ADR-0009).
+_Avoid_: stress test, watchdog test
+
 ### Running and comparing
 
 **Reference device**:

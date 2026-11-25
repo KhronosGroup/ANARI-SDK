@@ -1,0 +1,34 @@
+[project]
+name = "helide-gpu"
+requires-python = ">=3.10"
+readme = "README.md"
+license = "APACHE"
+license-files = ["LICENSE"]
+dependencies = ["cffi", "anari", "PySDL3"]
+version = "1.0"
+
+[build-system]
+requires = ["py-build-cmake~=0.5.0", "ninja>=1.13"]
+build-backend = "py_build_cmake.build"
+
+[tool.py-build-cmake.sdist]
+include = ["*"]
+
+[tool.py-build-cmake.module]
+generated = "package"
+
+[tool.py-build-cmake.cmake]
+build_type = "RelWithDebInfo"
+source_path = "."
+install_components = ["helide_gpu_module"]
+
+[tool.cibuildwheel]
+build = "cp310-*"
+skip = ["*-musllinux*"]
+environment = { CMAKE_GENERATOR = "Ninja" }
+test-requires = ["pytest"]
+test-command = "python -m pytest -q {package}/test"
+
+[tool.cibuildwheel.windows]
+before-build = "pip install delvewheel"
+repair-wheel-command = "delvewheel repair --exclude SDL3.dll -w {dest_dir} {wheel}"

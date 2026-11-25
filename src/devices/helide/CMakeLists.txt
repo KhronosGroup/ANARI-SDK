@@ -1,7 +1,7 @@
 ## Copyright 2022-2026 The Khronos Group
 ## SPDX-License-Identifier: Apache-2.0
 
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.11...3.12)
 
 if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_LIST_DIR})
   set(STANDALONE_SOURCE_TREE TRUE)
@@ -43,7 +43,7 @@ include(GNUInstallDirs)
 
 find_package(anari REQUIRED)
 
-add_subdirectory(external/embree EXCLUDE_FROM_ALL)
+anari_embree_target()
 
 ## Core device target ##
 
@@ -113,7 +113,7 @@ PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
 )
 
-project_link_libraries(PUBLIC anari::helium PRIVATE local_embree)
+project_link_libraries(PUBLIC anari::helium PRIVATE anari_embree)
 
 if(WIN32)
   project_compile_definitions(PRIVATE _USE_MATH_DEFINES)

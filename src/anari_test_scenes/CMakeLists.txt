@@ -29,6 +29,7 @@ project_sources(PRIVATE
   scenes/test/attributes.cpp
   scenes/test/instanced_cubes.cpp
   scenes/test/pbr_spheres.cpp
+  scenes/test/random_curves.cpp
   scenes/test/random_cylinders.cpp
   scenes/test/random_spheres.cpp
   scenes/test/textured_cube.cpp
@@ -94,6 +95,7 @@ if (BUILD_CTS OR BUILD_TESTING)
     cts/BuiltinTests.cpp
     cts/Case.cpp
     cts/Catalog.cpp
+    cts/DeviceErrorLog.cpp
     cts/Expansion.cpp
     cts/Filter.cpp
     cts/FrameFormats.cpp
@@ -103,6 +105,7 @@ if (BUILD_CTS OR BUILD_TESTING)
     cts/HtmlReport.cpp
     cts/Image.cpp
     cts/InstanceBuilder.cpp
+    cts/Isolation.cpp
     cts/LightBuilder.cpp
     cts/Metrics.cpp
     cts/ParameterBinding.cpp
@@ -128,6 +131,7 @@ if (BUILD_CTS OR BUILD_TESTING)
     cts/tests/material.cpp
     cts/tests/renderer.cpp
     cts/tests/sampler.cpp
+    cts/tests/synchronization.cpp
     cts/tests/volume.cpp
   )
   target_include_directories(anari_cts_core

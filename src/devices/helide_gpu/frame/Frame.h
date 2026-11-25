@@ -27,13 +27,15 @@ struct FrameGPUState
   GPUTexture depthTarget;
   void *mappedDepthPtr{nullptr};
 
-  // Packed ID target: R=primitiveId, G=objectId, B=instanceId (RGBA32_UINT)
+  // Packed ID target: R=primitiveId, G=objectId, B=instanceId (RGBA32_UINT),
+  // A=the surface's packed ambient light (shaders/ambient_packing.glsl)
   GPUTexture idsTarget;
 
   GPUTexture albedoTarget;
   GPUTexture normalTarget;
 
-  // SSAO post-process targets
+  // SSAO post-process targets: the SSAO pass writes aoTarget, the blur
+  // passes ping-pong between the two
   GPUTexture aoTarget;
   GPUTexture aoBlurTarget;
   GPUTexture colorTargetB; // composite output (ping-pong)
@@ -80,10 +82,36 @@ struct Frame : public helium::BaseFrame
   void gpu_allocateObjects();
   void gpu_freeObjects();
   void gpu_renderFrame();
-  void gpu_renderFrame_geometryPass(SDL_GPUCommandBuffer *cmd);
-  void gpu_renderFrame_ssaoPass(SDL_GPUCommandBuffer *cmd, const Camera *cam);
+  // The world-space bounds of everything the frame draws: the world's
+  // surfaces and volumes, and its visible quad lights
+  box3 gpu_sceneBounds() const;
+  // 'deferAmbient': leave the ambient light out of the color target, for the
+  // composite pass to add after ambient occlusion
+  void gpu_renderFrame_geometryPass(
+      SDL_GPUCommandBuffer *cmd, bool deferAmbient);
+  // Draws the world's visible hdri lights over the whole frame, before the
+  // surfaces, summing their radiance along each pixel's camera ray into the
+  // color target; false if there are none (the background shows)
+  bool gpu_hasVisibleHdris() const;
+  void gpu_drawVisibleHdris(SDL_GPURenderPass *pass,
+      SDL_GPUCommandBuffer *cmd,
+      const mat4 &V,
+      const mat4 &P);
+  // Draws the world's visible quad lights as their emitting rectangles
+  // (KHR_LIGHT_PRIMARY_VISIBILITY)
+  void gpu_drawVisibleLights(SDL_GPURenderPass *pass,
+      SDL_GPUCommandBuffer *cmd,
+      const mat4 &V,
+      const mat4 &P);
+  // Pushes the lighting uniforms (shaders/shading.glsl LightingUniforms)
+  void gpu_pushLightingUniforms(
+      SDL_GPUCommandBuffer *cmd, const mat4 &V, bool deferAmbient);
+  // Runs the SSAO and blur passes with world-space occlusion radius 'radius'
+  // (> 0); returns the texture holding the blurred occlusion factor
+  SDL_GPUTexture *gpu_renderFrame_ssaoPass(
+      SDL_GPUCommandBuffer *cmd, const Camera *cam, float radius);
   void gpu_renderFrame_compositePass(
-      SDL_GPUCommandBuffer *cmd, bool doSSAO, bool needsSRGB);
+      SDL_GPUCommandBuffer *cmd, SDL_GPUTexture *aoTex, bool needsSRGB);
   void gpu_renderFrame_downloadPass(
       SDL_GPUCommandBuffer *cmd, bool doComposite);
   void gpu_mapColorBuffer();
@@ -103,6 +131,9 @@ struct Frame : public helium::BaseFrame
   helium::tasking::Future m_future;
 
   uvec2 m_size{0u, 0u};
+  // the camera's projection for the frame being rendered, its clip range
+  // fitted to gpu_sceneBounds()
+  mat4 m_proj{1.f};
   anari::DataType m_colorType{ANARI_UNKNOWN};
   anari::DataType m_depthType{ANARI_UNKNOWN};
   anari::DataType m_primIdType{ANARI_UNKNOWN};
@@ -126,6 +157,8 @@ struct Frame : public helium::BaseFrame
   std::chrono::time_point<std::chrono::steady_clock> m_renderEndTime;
   float m_duration{0.f};
   helium::TimeStamp m_frameLastRendered{0};
+  // the world light count last warned about exceeding the shaders' limit
+  size_t m_lastWarnedLightCount{0};
 };
 
 // Inlined definitions ////////////////////////////////////////////////////////

@@ -35,9 +35,12 @@ Key CMake options:
 - `BUILD_SHARED_LIBS` (ON) — shared vs. static libraries
 - `BUILD_VIEWER` (OFF) — requires SDL3 or GLFW
 - `BUILD_CTS` (OFF) — conformance test suite, requires Python 3.9+
-- `BUILD_HELIDE_GPU_DEVICE` (ON) — GPU-accelerated example device, requires SDL3 3.2+ and glslangValidator
+- `BUILD_HELIDE_GPU_DEVICE` (OFF) — GPU-accelerated example device, requires SDL3 3.2+ and glslangValidator
 - `BUILD_REMOTE_DEVICE` (OFF) — experimental MPI/network device
 - `BUILD_HDANARI` (OFF) — experimental OpenUSD Hydra delegate
+- `BUILD_HALCYON_DEVICE` (OFF) — Embree/ISPC CPU device with a path tracer, requires an ISPC compiler and CMake 3.19
+- `BUILD_HYDRA_DEVICE` (OFF) — `hydra` device rendering through OpenUSD Hydra render delegates, requires OpenUSD
+- `BUILD_PTC_DEVICE` (OFF) — `ptc` MPI data-parallel compositing device, requires MPI and oneTBB 2021.6+
 - `BUILD_CAT` (OFF) — capability analysis tool
 
 ## Code Style
@@ -70,9 +73,17 @@ Rendering Backend (e.g., Embree for helide)
 
 **`src/devices/helide_gpu/`** — An in-progress GPU-accelerated example device built on SDL3's cross-platform GPU abstraction. Uses a dedicated GPU thread for all SDL3_gpu commands, compiles GLSL shaders to SPIR-V at build time, and supports SSAO post-processing. Requires SDL3 3.2+, `glslangValidator`, and optionally `spirv-cross` for Metal/MSL support.
 
+**`src/devices/halcyon/`** — An Embree/ISPC CPU device: a `preview` renderer modelled on helide (it shades in ISPC rather than C++), whose default mode shades like OpenUSD Storm as helide_gpu does (helide's shading is its `eyeLight` mode), and a `quality` path tracer ported from Typhoon with MaterialX materials. Built and tested on Linux and Windows. Its ctests are named `halcyon::<name>`; its own guide is `src/devices/halcyon/AGENTS.md`. It shares the `anari_embree` target with helide: `cmake/anari_embree.cmake` defines `anari_embree_target()`, which each device calls, and which adds `cmake/anari_embree/` (its `CMakeLists.txt` and `include/anari_embree/parallel_for.h`) once per build. The SDK's build and its installed `anariConfig.cmake` both include the module, so it works the same in the SDK's tree and for a device built alone. That target uses an installed Embree 4.3+ with TBB when `find_package()` finds both (CI downloads Embree's release packages for this: `.github/actions/install_embree`) and otherwise builds Embree from source with its internal tasking (an Embree with no debug build, as the release packages are, has Debug builds link TBB's release runtime too, as two TBBs in one process crash); device code calls `anari_embree::parallel_for()`, which dispatches to whichever tasking system that is.
+
+**`src/devices/hydra/`** — A device that renders through OpenUSD Hydra render delegates (Storm, HdEmbree, ...), one device subtype per delegate; the reverse of hdAnari. Requires OpenUSD. Its end-to-end tests are named `hydra_*` and need an X display (they are reported as skipped without one). See its README for known limitations.
+
+**`src/devices/ptc/`** — A wrapper device for data-parallel rendering with MPI (`KHR_DATA_PARALLEL_MPI`): each rank renders its own data with a wrapped device (`helide` by default, chosen with the `wrappedLibrary` device parameter or `PTC_ANARI_LIBRARY`), and ptc composites the frames by depth on the CPU onto rank 0 of the frame's communicator. Built on Helium; requires MPI and oneTBB 2021.6+. Its MPI tests are named `ptc_*`, run under `mpiexec` and need helide (`BUILD_HELIDE_DEVICE`). Usage and compositing semantics are in its `README.md`.
+
 **`src/devices/debug/`** — A passthrough wrapper device that validates API usage without modifying rendering behavior.
 
 **`src/devices/sink/`** — A null device that accepts all API calls and discards them. Useful for benchmarking API overhead in isolation.
+
+**`src/devices/capture/`** — A device that renders nothing and writes, per frame, a canonical text snapshot (a *capture*) of the committed object graph the frame can reach, so an application can test exactly what it hands ANARI. It also builds the capture diff library (`anari_capture_diff`) and tool (`anariCaptureDiff`) in `diff/`, which compare two captures by walking both graphs. Built on Helium. The capture format is documented in its `README.md`; its tests are `unit_test::capture::*`.
 
 **`src/anari_test_scenes/`** — Procedurally generated test scenes (categories: demo, test, perf, file-based). Used by the viewer, CAT, and CTS.
 
@@ -95,7 +106,7 @@ Devices are loaded as shared libraries at runtime via `anariLoadLibrary("helide"
 
 ## Testing
 
-Unit tests use **Catch2** and live in `tests/unit/`. They test Helium internals (`AnariAny`, `ParameterizedObject`, `RefCounted`).
+Unit tests use **Catch2** and live in `tests/unit/`. They test Helium internals (`AnariAny`, `ParameterizedObject`, `RefCounted`) and hdAnari's USD-free helpers (e.g. `src/hdanari/rd/material/uvTextureTransform.h`), which build without OpenUSD.
 
 Render tests in `tests/render/` compare rendered output against reference images for scenes like `cornell_box`, `gravity_spheres_volume`, `instanced_cubes`, etc. Set `ANARI_LIBRARY=helide` when running render tests.
 
@@ -115,4 +126,8 @@ ANARI_LIBRARY=helide anariInfo
 
 ## CI
 
-GitHub Actions (`.github/workflows/anari_sdk_ci.yml`) runs on push/PR to `next_release` and `main`. Matrix: Ubuntu 22.04/24.04 and Windows (Release + Debug), macOS (Release only). Tests require `ANARI_LIBRARY=helide`.
+GitHub Actions (`.github/workflows/anari_sdk_ci.yml`) runs on push/PR to `next_release` and `main`, except for changes confined to `src/devices/halcyon/`. Matrix: Ubuntu 22.04/24.04 and Windows (Release + Debug), macOS (Release only). Tests require `ANARI_LIBRARY=helide`.
+
+The `anari` Python wheels have their own workflow (`.github/workflows/python_wheels.yml`): it builds them with cibuildwheel, runs `tests/python` on the installed wheels, and publishes them to PyPI on `v*` tags.
+
+halcyon has its own workflow (`.github/workflows/halcyon_ci.yml`, Release builds with ISPC on Ubuntu 22.04 and on Windows with MSVC through Ninja), path-filtered to `src/devices/halcyon/` and what it builds on (helium, the frontend, `code_gen/`, `cmake/`, the root and `src/devices/` CMakeLists, the shared Embree setup). Update its `paths` if halcyon gains a dependency on another part of the SDK.

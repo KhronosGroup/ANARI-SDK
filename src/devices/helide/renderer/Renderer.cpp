@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Renderer.h"
+// std
+#include <algorithm>
 
 namespace helide {
 
@@ -116,7 +118,11 @@ void Renderer::commitParameters()
   m_bgImage = getParamObject<Array2D>("background");
   m_ambientRadiance = getParam<float>("ambientRadiance", 1.f);
   m_falloffBlendRatio = getParam<float>("eyeLightBlendRatio", 0.5f);
-  m_invVolumeSR = 1.f / getParam<float>("volumeSamplingRate", 1.f);
+  m_invVolumeSR = 1.f
+      / std::clamp(
+          getParam<float>("volumeSamplingRate", DEFAULT_VOLUME_SAMPLING_RATE),
+          MIN_VOLUME_SAMPLING_RATE,
+          MAX_VOLUME_SAMPLING_RATE);
   m_mode = renderModeFromString(getParamString("mode", "default"));
   m_taskGrainSize.x = getParam<int32_t>("taskGrainSizeWidth", 4);
   m_taskGrainSize.y = getParam<int32_t>("taskGrainSizeHeight", 4);
@@ -152,7 +158,7 @@ PixelSample Renderer::renderSample(
   VolumeRay vray;
   vray.org = ray.org;
   vray.dir = ray.dir;
-  vray.t.upper = ray.tfar;
+  vray.tfar = ray.tfar;
   w.intersectVolumes(vray);
 
   // Shade //
@@ -278,7 +284,7 @@ void Renderer::shadeRay(PixelSample &retval,
       const Instance *inst = w.instanceFromRay(ray);
       const Surface *surface = w.surfaceFromRay(ray);
 
-      const auto n = linalg::mul(inst->xfmInvRot(), ray.Ng);
+      const auto n = linalg::mul(inst->xfmNormal(ray.instArrayID), ray.Ng);
       const auto falloff =
           std::abs(linalg::dot(-ray.dir, linalg::normalize(n)));
       const float4 sc = surface->getSurfaceColor(
@@ -286,7 +292,7 @@ void Renderer::shadeRay(PixelSample &retval,
       const float so = surface->getSurfaceOpacity(
           ray, inst->getUniformAttributes(ray.instArrayID));
       const float o = surface->adjustedAlpha(std::clamp(sc.w * so, 0.f, 1.f));
-      const float3 c = m_heatmap->valueAtLinear<float3>(o);
+      const float3 c = sampleLinear<float3>(*m_heatmap, o);
       const float3 fc = c * falloff;
       geometryColor = (0.8f * fc + 0.2f * c) * m_ambientRadiance;
     }
@@ -297,7 +303,7 @@ void Renderer::shadeRay(PixelSample &retval,
       const Instance *inst = w.instanceFromRay(ray);
       const Surface *surface = w.surfaceFromRay(ray);
 
-      const auto n = linalg::mul(inst->xfmInvRot(ray.instArrayID), ray.Ng);
+      const auto n = linalg::mul(inst->xfmNormal(ray.instArrayID), ray.Ng);
       const auto falloff =
           std::abs(linalg::dot(-ray.dir, linalg::normalize(n)));
       const float4 c = surface->getSurfaceColor(

@@ -1,21 +1,24 @@
 // Copyright 2026 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-// Smoke test: render a simple triangle mesh and validate output pixels.
+// Smoke test: render a triangle, cylinder, cone, face-varying attributes, quad
+// lights and HDRIs, and validate output pixels. Images are written to the
+// working directory as smoke_*.png.
 //
-// Usage: ./smoke_test [library]   (default: helide_gpu)
+// Usage: ./helide_gpu_smoke_test [library]   (default: helide_gpu)
 
 #include <array>
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <string>
+#include <vector>
 
 #define ANARI_EXTENSION_UTILITY_IMPL
 #include "anari/anari_cpp.hpp"
 #include "anari/anari_cpp/ext/std.h"
 
-#define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
 using vec3 = std::array<float, 3>;
@@ -27,6 +30,8 @@ using uvec3 = std::array<unsigned int, 3>;
 // ANARI status callback
 // ---------------------------------------------------------------------------
 
+static std::vector<std::string> g_statusMessages;
+
 static void statusFunc(const void *,
     ANARIDevice,
     ANARIObject,
@@ -35,6 +40,8 @@ static void statusFunc(const void *,
     ANARIStatusCode,
     const char *message)
 {
+  if (message)
+    g_statusMessages.emplace_back(message);
   const char *prefix = "[????]";
   if (severity == ANARI_SEVERITY_FATAL_ERROR)
     prefix = "[FATAL]";
@@ -159,6 +166,570 @@ static bool renderGeometryScene(anari::Device d,
 }
 
 // ---------------------------------------------------------------------------
+// faceVarying attributes: an indexed quad whose two triangles share vertices 0
+// and 2 but carry different per-corner colors and normals, which must override
+// the per-vertex ones. Corner values indexed by vertex instead of by
+// 3 * primitive + corner would bleed between the triangles.
+// ---------------------------------------------------------------------------
+
+static bool renderFaceVaryingScene(anari::Device d, uvec2 imgSize, float aspect)
+{
+  const char *label = "faceVarying";
+
+  // Camera at (0.5, 0.5, 3) with a 60 degree fovy sees +-1.732 around the
+  // quad's center at z = 0.
+  vec3 positions[] = {
+      {-0.5f, -0.5f, 0.f},
+      {1.5f, -0.5f, 0.f},
+      {1.5f, 1.5f, 0.f},
+      {-0.5f, 1.5f, 0.f},
+  };
+  uvec3 indices[] = {{0, 1, 2}, {0, 2, 3}};
+  vec4 vertexColors[] = {
+      {1.f, 1.f, 1.f, 1.f},
+      {1.f, 1.f, 1.f, 1.f},
+      {1.f, 1.f, 1.f, 1.f},
+      {1.f, 1.f, 1.f, 1.f},
+  };
+  vec3 vertexNormals[] = {
+      {0.f, 0.f, 1.f}, {0.f, 0.f, 1.f}, {0.f, 0.f, 1.f}, {0.f, 0.f, 1.f}};
+  // Triangle 0 is red; triangle 1 is green except blue at its corner 2
+  vec4 fvColors[] = {
+      {1.f, 0.f, 0.f, 1.f},
+      {1.f, 0.f, 0.f, 1.f},
+      {1.f, 0.f, 0.f, 1.f},
+      {0.f, 1.f, 0.f, 1.f},
+      {0.f, 1.f, 0.f, 1.f},
+      {0.f, 0.f, 1.f, 1.f},
+  };
+  // Triangle 0 faces the camera; triangle 1 tilts 45 degrees toward +x
+  const float s = std::sqrt(0.5f);
+  vec3 fvNormals[] = {
+      {0.f, 0.f, 1.f},
+      {0.f, 0.f, 1.f},
+      {0.f, 0.f, 1.f},
+      {s, 0.f, s},
+      {s, 0.f, s},
+      {s, 0.f, s},
+  };
+
+  auto geom = anari::newObject<anari::Geometry>(d, "triangle");
+  anari::setParameterArray1D(d, geom, "vertex.position", positions, 4);
+  anari::setParameterArray1D(d, geom, "vertex.normal", vertexNormals, 4);
+  anari::setParameterArray1D(d, geom, "vertex.color", vertexColors, 4);
+  anari::setParameterArray1D(d, geom, "primitive.index", indices, 2);
+  anari::setParameterArray1D(d, geom, "faceVarying.color", fvColors, 6);
+  anari::setParameterArray1D(d, geom, "faceVarying.normal", fvNormals, 6);
+  anari::commitParameters(d, geom);
+
+  auto camera = anari::newObject<anari::Camera>(d, "perspective");
+  vec3 camPos = {0.5f, 0.5f, 3.f};
+  vec3 camDir = {0.f, 0.f, -1.f};
+  vec3 camUp = {0.f, 1.f, 0.f};
+  anari::setParameter(d, camera, "position", camPos);
+  anari::setParameter(d, camera, "direction", camDir);
+  anari::setParameter(d, camera, "up", camUp);
+  anari::setParameter(d, camera, "fovy", float(M_PI / 3.0));
+  anari::setParameter(d, camera, "aspect", aspect);
+  anari::commitParameters(d, camera);
+
+  auto mat = anari::newObject<anari::Material>(d, "matte");
+  anari::setParameter(d, mat, "color", "color");
+  anari::commitParameters(d, mat);
+
+  auto surface = anari::newObject<anari::Surface>(d);
+  anari::setAndReleaseParameter(d, surface, "geometry", geom);
+  anari::setAndReleaseParameter(d, surface, "material", mat);
+  anari::commitParameters(d, surface);
+
+  auto world = anari::newObject<anari::World>(d);
+  anari::setParameterArray1D(d, world, "surface", &surface, 1);
+  anari::release(d, surface);
+  anari::commitParameters(d, world);
+
+  auto renderer = anari::newObject<anari::Renderer>(d, "default");
+  vec4 bg = {0.0f, 0.0f, 0.0f, 1.f};
+  anari::setParameter(d, renderer, "background", bg);
+  anari::commitParameters(d, renderer);
+
+  auto frame = anari::newObject<anari::Frame>(d);
+  anari::setParameter(d, frame, "size", imgSize);
+  anari::setParameter(d, frame, "channel.color", ANARI_UFIXED8_VEC4);
+  anari::setParameter(d, frame, "channel.normal", ANARI_FLOAT32_VEC3);
+  anari::setAndReleaseParameter(d, frame, "renderer", renderer);
+  anari::setAndReleaseParameter(d, frame, "camera", camera);
+  anari::setAndReleaseParameter(d, frame, "world", world);
+  anari::commitParameters(d, frame);
+
+  printf("[smoke_test] %s: rendering...\n", label);
+  anari::render(d, frame);
+  anari::wait(d, frame);
+
+  // World point -> pixel (origin bottom-left)
+  const float halfExtent = 3.f * std::tan(float(M_PI / 6.0));
+  auto toPixel = [&](float wx, float wy) {
+    return std::array<unsigned int, 2>{
+        (unsigned int)(imgSize[0] * (0.5f + 0.5f * (wx - 0.5f) / halfExtent)),
+        (unsigned int)(imgSize[1] * (0.5f + 0.5f * (wy - 0.5f) / halfExtent))};
+  };
+  struct Sample
+  {
+    const char *name;
+    float wx, wy;
+    int dominant; // 0 = r, 1 = g, 2 = b
+    float normalX; // expected world normal x
+  };
+  // Triangle 1 points by barycentrics over (v0, v2, v3): (0.45, 0.45, 0.1)
+  // and (0.1, 0.1, 0.8)
+  const Sample samples[] = {
+      {"tri0", 1.2f, -0.2f, 0, 0.f},
+      {"tri1 corners 0,1", 0.4f, 0.6f, 1, s},
+      {"tri1 corner 2", -0.3f, 1.3f, 2, s},
+  };
+
+  bool ok = true;
+  auto fb = anari::map<RGBA8>(d, frame, "channel.color");
+  auto nb = anari::map<vec3>(d, frame, "channel.normal");
+  if (!fb.data || !nb.data) {
+    ok = false;
+  } else {
+    std::string outFile = std::string("smoke_") + label + ".png";
+    stbi_flip_vertically_on_write(1);
+    stbi_write_png(outFile.c_str(),
+        int(fb.width),
+        int(fb.height),
+        4,
+        fb.data,
+        4 * int(fb.width));
+
+    for (const auto &smp : samples) {
+      const auto px = toPixel(smp.wx, smp.wy);
+      const RGBA8 c = samplePixel(fb.data, imgSize, px[0], px[1]);
+      const vec3 n = nb.data[px[1] * imgSize[0] + px[0]];
+      const int ch[3] = {c.r, c.g, c.b};
+      const int dom = ch[smp.dominant];
+      const bool colorOk = dom > 32 && dom > 2 * ch[(smp.dominant + 1) % 3]
+          && dom > 2 * ch[(smp.dominant + 2) % 3];
+      const bool normalOk = std::fabs(n[0] - smp.normalX) < 0.05f;
+      printf(
+          "[smoke_test] %s: %-16s [%3u,%3u] rgb=(%3u,%3u,%3u) "
+          "n=(%.2f,%.2f,%.2f) => %s\n",
+          label,
+          smp.name,
+          px[0],
+          px[1],
+          c.r,
+          c.g,
+          c.b,
+          n[0],
+          n[1],
+          n[2],
+          colorOk && normalOk ? "PASS" : "FAIL");
+      ok = ok && colorOk && normalOk;
+    }
+  }
+  if (fb.data)
+    anari::unmap(d, frame, "channel.color");
+  if (nb.data)
+    anari::unmap(d, frame, "channel.normal");
+
+  anari::release(d, frame);
+  return ok;
+}
+
+// ---------------------------------------------------------------------------
+// Quad light: a matte floor (at z = 0 by default) lit only by a quad light.
+// Returns the color and object ID at the image center.
+// ---------------------------------------------------------------------------
+
+struct QuadLightSetup
+{
+  vec3 position;
+  vec3 edge1;
+  vec3 edge2;
+  const char *side;
+  const char *brightnessParam; // "intensity", "power" or "radiance"
+  float brightness;
+  bool visible = false;
+  float floorZ = 0.f;
+};
+
+struct QuadLightResult
+{
+  RGBA8 color{};
+  uint32_t objectId{0};
+};
+
+static QuadLightResult renderQuadLightScene(
+    anari::Device d, uvec2 imgSize, float aspect, const QuadLightSetup &q)
+{
+  const float z = q.floorZ;
+  vec3 positions[] = {
+      {-3.f, -3.f, z}, {4.f, -3.f, z}, {4.f, 4.f, z}, {-3.f, 4.f, z}};
+  uvec3 indices[] = {{0, 1, 2}, {0, 2, 3}};
+  auto geom = anari::newObject<anari::Geometry>(d, "triangle");
+  anari::setParameterArray1D(d, geom, "vertex.position", positions, 4);
+  anari::setParameterArray1D(d, geom, "primitive.index", indices, 2);
+  anari::commitParameters(d, geom);
+
+  auto mat = anari::newObject<anari::Material>(d, "matte");
+  anari::commitParameters(d, mat);
+
+  auto surface = anari::newObject<anari::Surface>(d);
+  anari::setAndReleaseParameter(d, surface, "geometry", geom);
+  anari::setAndReleaseParameter(d, surface, "material", mat);
+  anari::commitParameters(d, surface);
+
+  auto light = anari::newObject<anari::Light>(d, "quad");
+  anari::setParameter(d, light, "position", q.position);
+  anari::setParameter(d, light, "edge1", q.edge1);
+  anari::setParameter(d, light, "edge2", q.edge2);
+  anari::setParameter(d, light, "side", q.side);
+  anari::setParameter(d, light, q.brightnessParam, q.brightness);
+  anari::setParameter(d, light, "visible", q.visible);
+  anari::commitParameters(d, light);
+
+  auto world = anari::newObject<anari::World>(d);
+  anari::setParameterArray1D(d, world, "surface", &surface, 1);
+  anari::setParameterArray1D(d, world, "light", &light, 1);
+  anari::release(d, surface);
+  anari::release(d, light);
+  anari::commitParameters(d, world);
+
+  auto camera = anari::newObject<anari::Camera>(d, "perspective");
+  vec3 camPos = {0.5f, 0.5f, 3.f};
+  vec3 camDir = {0.f, 0.f, -1.f};
+  vec3 camUp = {0.f, 1.f, 0.f};
+  anari::setParameter(d, camera, "position", camPos);
+  anari::setParameter(d, camera, "direction", camDir);
+  anari::setParameter(d, camera, "up", camUp);
+  anari::setParameter(d, camera, "fovy", float(M_PI / 3.0));
+  anari::setParameter(d, camera, "aspect", aspect);
+  anari::commitParameters(d, camera);
+
+  auto renderer = anari::newObject<anari::Renderer>(d, "default");
+  vec4 bg = {0.0f, 0.0f, 0.0f, 1.f};
+  anari::setParameter(d, renderer, "background", bg);
+  anari::setParameter(d, renderer, "ignoreAmbientLighting", false);
+  anari::setParameter(d, renderer, "ambientRadiance", 0.f);
+  anari::commitParameters(d, renderer);
+
+  auto frame = anari::newObject<anari::Frame>(d);
+  anari::setParameter(d, frame, "size", imgSize);
+  anari::setParameter(d, frame, "channel.color", ANARI_UFIXED8_VEC4);
+  anari::setParameter(d, frame, "channel.objectId", ANARI_UINT32);
+  anari::setAndReleaseParameter(d, frame, "renderer", renderer);
+  anari::setAndReleaseParameter(d, frame, "camera", camera);
+  anari::setAndReleaseParameter(d, frame, "world", world);
+  anari::commitParameters(d, frame);
+
+  anari::render(d, frame);
+  anari::wait(d, frame);
+
+  QuadLightResult result;
+  const size_t center = (imgSize[1] / 2) * imgSize[0] + imgSize[0] / 2;
+  auto fb = anari::map<RGBA8>(d, frame, "channel.color");
+  if (fb.data) {
+    result.color = fb.data[center];
+    anari::unmap(d, frame, "channel.color");
+  }
+  auto ib = anari::map<uint32_t>(d, frame, "channel.objectId");
+  if (ib.data) {
+    result.objectId = ib.data[center];
+    anari::unmap(d, frame, "channel.objectId");
+  }
+  anari::release(d, frame);
+  return result;
+}
+
+static bool renderQuadLightScenes(anari::Device d, uvec2 imgSize, float aspect)
+{
+  const float pi = float(M_PI);
+  // One unit above the floor, this intensity lights it well below clipping
+  const float I = pi / 4.f;
+  // A unit quad centered at (0.5, 0.5, 1); cross(edge2, edge1) is -z, so
+  // its front faces the floor
+  const vec3 pos = {0.f, 0.f, 1.f};
+  const vec3 e1 = {1.f, 0.f, 0.f};
+  const vec3 e2 = {0.f, 1.f, 0.f};
+  // The same center with twice the edges: four times the area
+  const vec3 pos4 = {-0.5f, -0.5f, 1.f};
+  const vec3 e1x2 = {2.f, 0.f, 0.f};
+  const vec3 e2x2 = {0.f, 2.f, 0.f};
+
+  // Lighting the floor; the light is invisible so the floor shows through
+  const RGBA8 front = renderQuadLightScene(
+      d, imgSize, aspect, {pos, e1, e2, "front", "intensity", I})
+                          .color;
+  const RGBA8 back = renderQuadLightScene(
+      d, imgSize, aspect, {pos, e1, e2, "back", "intensity", I})
+                         .color;
+  const RGBA8 both = renderQuadLightScene(
+      d, imgSize, aspect, {pos, e1, e2, "both", "intensity", I})
+                         .color;
+  // radiance * area == intensity along the normal
+  const RGBA8 radiance = renderQuadLightScene(
+      d, imgSize, aspect, {pos4, e1x2, e2x2, "front", "radiance", I / 4.f})
+                             .color;
+  // a Lambertian side emits pi * intensity
+  const RGBA8 power = renderQuadLightScene(
+      d, imgSize, aspect, {pos, e1, e2, "front", "power", pi * I})
+                          .color;
+  // twice the power over two sides is the same intensity
+  const RGBA8 powerBoth = renderQuadLightScene(
+      d, imgSize, aspect, {pos, e1, e2, "both", "power", 2.f * pi * I})
+                              .color;
+
+  // Primary visibility: the camera sees the back of the floor-facing quad,
+  // which emits with side "both" and doesn't with "front"
+  const QuadLightResult seen = renderQuadLightScene(
+      d, imgSize, aspect, {pos, e1, e2, "both", "radiance", 0.5f, true});
+  const QuadLightResult notEmitting = renderQuadLightScene(
+      d, imgSize, aspect, {pos, e1, e2, "front", "radiance", 0.5f, true});
+  // a half-size quad given by intensity: radiance is intensity / area
+  const vec3 posHalf = {0.25f, 0.25f, 1.f};
+  const vec3 e1Half = {0.5f, 0.f, 0.f};
+  const vec3 e2Half = {0.f, 0.5f, 0.f};
+  const QuadLightResult seenIntensity = renderQuadLightScene(d,
+      imgSize,
+      aspect,
+      {posHalf, e1Half, e2Half, "both", "intensity", 0.125f, true});
+  // a floor at z = 1.5 hides the light behind it
+  const QuadLightResult hidden = renderQuadLightScene(
+      d, imgSize, aspect, {pos, e1, e2, "both", "radiance", 0.5f, true, 1.5f});
+  // the radiance 0.5 (a UFIXED8_VEC4 color channel is linear)
+  const RGBA8 half = {128, 128, 128, 255};
+
+  auto close = [](RGBA8 a, RGBA8 b) {
+    return std::abs(int(a.r) - int(b.r)) <= 2
+        && std::abs(int(a.g) - int(b.g)) <= 2
+        && std::abs(int(a.b) - int(b.b)) <= 2;
+  };
+  struct Check
+  {
+    const char *name;
+    RGBA8 value;
+    bool ok;
+  };
+  const Check checks[] = {
+      {"front lit", front, luminance(front) > 0.1f},
+      {"back unlit", back, luminance(back) < 0.02f},
+      {"both == front", both, close(both, front)},
+      {"radiance*area == intensity", radiance, close(radiance, front)},
+      {"power == pi*intensity", power, close(power, front)},
+      {"power both sides", powerBoth, close(powerBoth, front)},
+      {"visible: radiance", seen.color, close(seen.color, half)},
+      {"visible: no hit id", seen.color, seen.objectId == ~0u},
+      {"visible: intensity / area",
+          seenIntensity.color,
+          close(seenIntensity.color, half)},
+      {"visible: unseen side",
+          notEmitting.color,
+          !close(notEmitting.color, half)},
+      {"visible: behind floor", hidden.color, !close(hidden.color, half)},
+  };
+  bool ok = true;
+  for (const auto &c : checks) {
+    printf("[smoke_test] quadLight: %-28s rgb=(%3u,%3u,%3u) => %s\n",
+        c.name,
+        c.value.r,
+        c.value.g,
+        c.value.b,
+        c.ok ? "PASS" : "FAIL");
+    ok = ok && c.ok;
+  }
+  return ok;
+}
+
+// ---------------------------------------------------------------------------
+// Hdri light: a 4 x 2 map (up +z, direction +x, so left is +y) seen by a
+// camera at the origin, or lighting a matte floor seen from above. Returns
+// the color and object ID at the image center.
+// ---------------------------------------------------------------------------
+
+struct HdriSetup
+{
+  const vec3 *map; // 4 x 2, row 0 towards -up
+  bool visible = true;
+  bool floor = false;
+  vec3 cameraDirection = {1.f, 0.f, 0.3f};
+  float ambientRadiance = 0.f;
+  // a wide view, read at a row this far above the center (below if
+  // negative; ANARI's row 0 is the bottom)
+  int rowsAboveCenter = 0;
+};
+
+static QuadLightResult renderHdriScene(
+    anari::Device d, uvec2 imgSize, float aspect, const HdriSetup &h)
+{
+  auto world = anari::newObject<anari::World>(d);
+
+  if (h.floor) {
+    vec3 positions[] = {{-50.f, -50.f, 0.f},
+        {50.f, -50.f, 0.f},
+        {50.f, 50.f, 0.f},
+        {-50.f, 50.f, 0.f}};
+    uvec3 indices[] = {{0, 1, 2}, {0, 2, 3}};
+    auto geom = anari::newObject<anari::Geometry>(d, "triangle");
+    anari::setParameterArray1D(d, geom, "vertex.position", positions, 4);
+    anari::setParameterArray1D(d, geom, "primitive.index", indices, 2);
+    anari::commitParameters(d, geom);
+    auto mat = anari::newObject<anari::Material>(d, "matte");
+    anari::commitParameters(d, mat);
+    auto surface = anari::newObject<anari::Surface>(d);
+    anari::setAndReleaseParameter(d, surface, "geometry", geom);
+    anari::setAndReleaseParameter(d, surface, "material", mat);
+    anari::commitParameters(d, surface);
+    anari::setParameterArray1D(d, world, "surface", &surface, 1);
+    anari::release(d, surface);
+  }
+
+  if (h.map) {
+    auto light = anari::newObject<anari::Light>(d, "hdri");
+    anari::setParameterArray2D(d, light, "radiance", h.map, 4, 2);
+    anari::setParameter(d, light, "visible", h.visible);
+    anari::commitParameters(d, light);
+    anari::setParameterArray1D(d, world, "light", &light, 1);
+    anari::release(d, light);
+  }
+  anari::commitParameters(d, world);
+
+  auto camera = anari::newObject<anari::Camera>(d, "perspective");
+  vec3 camPos = h.floor ? vec3{0.f, 0.f, 5.f} : vec3{0.f, 0.f, 0.f};
+  vec3 camDir = h.floor ? vec3{0.f, 0.3f, -1.f} : h.cameraDirection;
+  vec3 camUp = h.floor ? vec3{0.f, 1.f, 0.f} : vec3{0.f, 0.f, 1.f};
+  anari::setParameter(d, camera, "position", camPos);
+  anari::setParameter(d, camera, "direction", camDir);
+  anari::setParameter(d, camera, "up", camUp);
+  anari::setParameter(d,
+      camera,
+      "fovy",
+      float(h.rowsAboveCenter != 0 ? M_PI / 2.0 : M_PI / 8.0));
+  anari::setParameter(d, camera, "aspect", aspect);
+  anari::commitParameters(d, camera);
+
+  auto renderer = anari::newObject<anari::Renderer>(d, "default");
+  vec4 bg = {0.0f, 0.0f, 0.0f, 1.f};
+  anari::setParameter(d, renderer, "background", bg);
+  anari::setParameter(d, renderer, "ignoreAmbientLighting", false);
+  anari::setParameter(d, renderer, "ambientRadiance", h.ambientRadiance);
+  // no headlight: with an hdri the ambient radiance is 0, which also turns
+  // it off, and the reference without one is lit by the ambient fill alone
+  anari::setParameter(d, renderer, "eyeLightBlendRatio", h.map ? 0.5f : 0.f);
+  anari::commitParameters(d, renderer);
+
+  auto frame = anari::newObject<anari::Frame>(d);
+  anari::setParameter(d, frame, "size", imgSize);
+  anari::setParameter(d, frame, "channel.color", ANARI_UFIXED8_VEC4);
+  anari::setParameter(d, frame, "channel.objectId", ANARI_UINT32);
+  anari::setAndReleaseParameter(d, frame, "renderer", renderer);
+  anari::setAndReleaseParameter(d, frame, "camera", camera);
+  anari::setAndReleaseParameter(d, frame, "world", world);
+  anari::commitParameters(d, frame);
+
+  anari::render(d, frame);
+  anari::wait(d, frame);
+
+  QuadLightResult result;
+  const size_t center =
+      (imgSize[1] / 2 + h.rowsAboveCenter) * imgSize[0] + imgSize[0] / 2;
+  auto fb = anari::map<RGBA8>(d, frame, "channel.color");
+  if (fb.data) {
+    result.color = fb.data[center];
+    anari::unmap(d, frame, "channel.color");
+  }
+  auto ib = anari::map<uint32_t>(d, frame, "channel.objectId");
+  if (ib.data) {
+    result.objectId = ib.data[center];
+    anari::unmap(d, frame, "channel.objectId");
+  }
+  anari::release(d, frame);
+  return result;
+}
+
+static bool renderHdriScenes(anari::Device d, uvec2 imgSize, float aspect)
+{
+  // distinct texels, row 0 towards -up
+  vec3 map[8];
+  for (int y = 0; y < 2; y++) {
+    for (int x = 0; x < 4; x++)
+      map[y * 4 + x] = {0.1f + 0.2f * x, 0.1f + 0.4f * y, 0.1f * (x + 1)};
+  }
+  auto texel = [&](int x, int y) {
+    const vec3 &v = map[y * 4 + x];
+    auto q = [](float f) { return uint8_t(std::lround(f * 255.f)); };
+    return RGBA8{q(v[0]), q(v[1]), q(v[2]), 255};
+  };
+
+  // Camera rays that miss: 'direction' is the image's center column, left
+  // (+y) a quarter turn before it, above the horizon the top row
+  const QuadLightResult center =
+      renderHdriScene(d, imgSize, aspect, {map, true, false, {1.f, 0.f, 0.3f}});
+  const QuadLightResult below = renderHdriScene(
+      d, imgSize, aspect, {map, true, false, {1.f, 0.f, -0.3f}});
+  const QuadLightResult left = renderHdriScene(
+      d, imgSize, aspect, {map, true, false, {0.02f, 1.f, 0.3f}});
+  const QuadLightResult behind = renderHdriScene(
+      d, imgSize, aspect, {map, true, false, {-1.f, -0.02f, 0.3f}});
+  // a horizontal view: up the image is up the map
+  const QuadLightResult upper = renderHdriScene(
+      d, imgSize, aspect, {map, true, false, {1.f, 0.f, 0.f}, 0.f, 128});
+  const QuadLightResult lower = renderHdriScene(
+      d, imgSize, aspect, {map, true, false, {1.f, 0.f, 0.f}, 0.f, -128});
+  const QuadLightResult invisible = renderHdriScene(
+      d, imgSize, aspect, {map, false, false, {1.f, 0.f, 0.3f}});
+
+  // Lighting: a uniform gray map lights like the same ambient radiance
+  vec3 gray[8];
+  for (auto &g : gray)
+    g = {0.6f, 0.6f, 0.6f};
+  const RGBA8 litByHdri =
+      renderHdriScene(d, imgSize, aspect, {gray, false, true}).color;
+  const RGBA8 litByAmbient =
+      renderHdriScene(d, imgSize, aspect, {nullptr, false, true, {}, 0.6f})
+          .color;
+
+  auto close = [](RGBA8 a, RGBA8 b) {
+    return std::abs(int(a.r) - int(b.r)) <= 2
+        && std::abs(int(a.g) - int(b.g)) <= 2
+        && std::abs(int(a.b) - int(b.b)) <= 2;
+  };
+  struct Check
+  {
+    const char *name;
+    RGBA8 value;
+    bool ok;
+  };
+  const Check checks[] = {
+      {"seen: direction, above",
+          center.color,
+          close(center.color, texel(2, 1))},
+      {"seen: direction, below", below.color, close(below.color, texel(2, 0))},
+      {"seen: left", left.color, close(left.color, texel(1, 1))},
+      {"seen: behind", behind.color, close(behind.color, texel(3, 1))},
+      {"seen: image top", upper.color, close(upper.color, texel(2, 1))},
+      {"seen: image bottom", lower.color, close(lower.color, texel(2, 0))},
+      {"seen: no hit id", center.color, center.objectId == ~0u},
+      {"invisible: background",
+          invisible.color,
+          close(invisible.color, {0, 0, 0, 255})},
+      {"lit: gray map == ambient", litByHdri, close(litByHdri, litByAmbient)},
+      {"lit: gray map lights", litByHdri, luminance(litByHdri) > 0.1f},
+  };
+  bool ok = true;
+  for (const auto &c : checks) {
+    printf("[smoke_test] hdri: %-28s rgb=(%3u,%3u,%3u) => %s\n",
+        c.name,
+        c.value.r,
+        c.value.g,
+        c.value.b,
+        c.ok ? "PASS" : "FAIL");
+    ok = ok && c.ok;
+  }
+  return ok;
+}
+
+// ---------------------------------------------------------------------------
 // main
 // ---------------------------------------------------------------------------
 
@@ -198,6 +769,20 @@ int main(int argc, const char **argv)
   anari::Device d = anari::newDevice(lib, "default");
   if (!d) {
     fprintf(stderr, "[smoke_test] FATAL: could not create device\n");
+    anari::unloadLibrary(lib);
+    return 1;
+  }
+
+  auto deviceStatus = std::find_if(g_statusMessages.begin(),
+      g_statusMessages.end(),
+      [](const std::string &message) {
+        return message.find("[SDL3_gpu] Device created (") != std::string::npos;
+      });
+  if (deviceStatus == g_statusMessages.end()
+      || deviceStatus->find("backend: ") == std::string::npos
+      || deviceStatus->find("backend: )") != std::string::npos) {
+    fprintf(stderr, "[smoke_test] FATAL: no valid SDL GPU backend reported\n");
+    anari::release(d, d);
     anari::unloadLibrary(lib);
     return 1;
   }
@@ -362,10 +947,16 @@ int main(int argc, const char **argv)
       renderGeometryScene(d, "curve", curve, imgSize, aspect);
   anari::release(d, curve);
 
+  const bool faceVaryingPassed = renderFaceVaryingScene(d, imgSize, aspect);
+
   // --- Cleanup ---
   anari::release(d, frame);
 
-  passed = passed && cylinderPassed && conePassed && curvePassed;
+  const bool quadLightPassed = renderQuadLightScenes(d, imgSize, aspect);
+  const bool hdriPassed = renderHdriScenes(d, imgSize, aspect);
+
+  passed = passed && cylinderPassed && conePassed && curvePassed
+      && faceVaryingPassed && quadLightPassed && hdriPassed;
 
   printf("[smoke_test] overall: %s\n", passed ? "PASS" : "FAIL");
 

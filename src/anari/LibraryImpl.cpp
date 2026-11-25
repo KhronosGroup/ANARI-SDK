@@ -9,6 +9,8 @@
 #define WIN32_LEAN_AND_MEAN
 #endif
 #include <windows.h>
+#include <algorithm>
+#include <filesystem>
 #else
 #include <dlfcn.h>
 #include <sys/times.h>
@@ -54,14 +56,10 @@ std::string library_location()
   std::string path = std::string(pathBuf);
   path.resize(path.rfind('\\') + 1);
 #else
-  const char *anchor = "_anari_anchor";
-  void *handle = dlsym(RTLD_DEFAULT, anchor);
-  if (!handle)
-    return std::string();
-
+  // dlsym(RTLD_DEFAULT) can miss this library when it was loaded RTLD_LOCAL
   Dl_info di;
-  int ret = dladdr(handle, &di);
-  if (!ret || !di.dli_saddr || !di.dli_fname)
+  int ret = dladdr(reinterpret_cast<void *>(&library_location), &di);
+  if (!ret || !di.dli_fname)
     return std::string();
 
   std::string path = std::string(di.dli_fname);
@@ -114,7 +112,18 @@ static void *loadLibrary(
 
     // Load the library
     std::string fullName = libLocation + file + ".dll";
-    lib = LoadLibrary(fullName.c_str());
+    if (std::filesystem::path(fullName).is_absolute()) {
+      // Search next to the device and in registered DLL directories (for
+      // example, directories added by Python's os.add_dll_directory()).
+      std::replace(fullName.begin(), fullName.end(), '/', '\\');
+      lib = LoadLibraryExA(
+          fullName.c_str(),
+          nullptr,
+          LOAD_LIBRARY_SEARCH_DEFAULT_DIRS | LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR);
+    }
+    // search from execution context (executable path)
+    if (lib == nullptr)
+      lib = LoadLibrary(fullName.c_str());
     if (lib == nullptr) {
       DWORD err = GetLastError();
       LPTSTR lpMsgBuf;
@@ -157,16 +166,20 @@ static void *loadLibrary(
 
 void *loadANARILibrary(const std::string &libName)
 {
-  std::string errorMessage;
+  std::string unanchoredError;
+  void *lib = loadLibrary(libName, false, unanchoredError);
 
-  void *lib = loadLibrary(libName, false, errorMessage);
-  if (!lib) {
-    errorMessage = "(unanchored library load attempt failed)\n";
-    lib = loadLibrary(libName, true, errorMessage);
-  }
-
+  std::string anchoredError;
   if (!lib)
-    throw std::runtime_error(errorMessage);
+    lib = loadLibrary(libName, true, anchoredError);
+
+  if (!lib) {
+    throw std::runtime_error(
+        "(unanchored library load attempt failed)\n"
+        + unanchoredError
+        + "\n(anchored library load attempt failed)\n"
+        + anchoredError);
+  }
 
   return lib;
 }

@@ -1,0 +1,235 @@
+// Copyright 2026 The Khronos Group
+// SPDX-License-Identifier: LicenseRef-TOST-1.0
+//
+// Ported from Typhoon (NVIDIA-Omniverse/OpenUSD typhoon/main at 70c45e83b,
+// pxr/imaging/plugin/hdEmbree/renderer/materials/MaterialXCpp/: the
+// Oren-Nayar leaf of materials/bsdf/closureTraversal.cpp, SampleLambertian()
+// of materials/bsdf.cpp, materials/bsdf/diffuse.h, shadingFrame.h,
+// microfacet.h and mathPrimitives.h, ValidateLeafNormals() of graph.cpp,
+// EvalSurfaceConstructor() of surfaceShaderUtils.h), Copyright 2024-2026
+// Pixar, Tomorrow Open Source Technology License 1.0; see
+// external/typhoon/LICENSE.txt. Keep in step with those when the pin in
+// external/typhoon/PROVENANCE.md moves.
+
+#pragma once
+
+// MATERIAL_KIND_MATTE: the matte material natively, what the C++ path
+// computes for its MaterialXCpp graph (MaterialConverter.cpp's matteGraph():
+// ND_oren_nayar_diffuse_bsdf of weight 1 and roughness 0 under ND_surface,
+// whose opacity is the material's after alphaMode) through PathMaterial.cpp,
+// for the integrator's calls: shade (presence, normals, flags, the BSDF
+// sample, albedo), eval and shadow. Its colour and opacity are
+// PathShadeInput::baseColor and baseOpacity, which the integrator resolves
+// as the 'preview' renderer does (Material_getColor(),
+// Surface_getCompositeOpacity()), the values the graph's nodes read.
+//
+// Within the C++ path's results to rounding (FMA, ISPC's transcendentals);
+// test_path_material compares the two point by point, test_native_materials
+// image by image. Typhoon's sequence, step by step:
+// - ND_surface: presence = clamp(opacity, 0, 1); the closure's opacity stays 1,
+//   no emission, transmission or medium, not thin-walled.
+// - The Oren-Nayar leaf gets ND_normal_vector3's world normal, the smooth
+//   normal, as its authored normal (graph.cpp's implicit defaults);
+//   ResolveGraphNormal() keeps the smooth normal (ND_surface sets no normal);
+//   ValidateLeafNormals() renormalizes the leaf's in double
+//   (TryResolveShadingNormal()), PrepareShadingNormals() faces it like the
+//   resolved one. So the leaf's normal may differ from the smooth normal in
+//   the last bits, and bump shadowing compares them.
+// - At roughness 0, Oren-Nayar's factor is 1: color / pi on the leaf normal's
+//   side, which the pdf (cosine-weighted) also requires; sampled directions
+//   must also lie above the geometric normal (SampledDirectionIsValid()).
+// - Closure classification: reflection-only (opacity 1, presence 1 once
+//   resolved), never a coupled thick dielectric, subsurface or dispersive;
+//   caustic pruning keeps the lobe; albedo (ClosureAlbedo.cpp) the colour
+//   clamped to [0, 1], not specular-only.
+
+// mxcpp's kInvPi (1 / kPi in float, which PATH_MATERIAL_INV_PI's literal
+// needn't round to) and kEpsilon
+#define PATH_MATTE_PI 3.14159265358979323846f
+#define PATH_MATTE_INV_PI (1.f / PATH_MATTE_PI)
+#define PATH_MATTE_EPSILON 1.0e-7f
+
+// Typhoon's SafeVec(): negative and non-finite components become 0
+inline float3 PathMatte_safe(float3 v)
+{
+  return make_float3(isfinite(v.x) && v.x >= 0.f ? v.x : 0.f,
+      isfinite(v.y) && v.y >= 0.f ? v.y : 0.f,
+      isfinite(v.z) && v.z >= 0.f ? v.z : 0.f);
+}
+
+// Imath's Dot(), in its order
+inline float PathMatte_dot(float3 a, float3 b)
+{
+  return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
+// TryResolveShadingNormal(): 'candidate' normalized in double, scaled by its
+// largest component first, if it is finite, non-degenerate and in the open
+// hemisphere of 'reference'; false otherwise
+inline bool PathMatte_tryResolveNormal(
+    float3 candidate, float3 reference, float3 &result)
+{
+  const double m = max((double)abs(candidate.x),
+      max((double)abs(candidate.y), (double)abs(candidate.z)));
+  if (!isfinite(m) || m == 0.d)
+    return false;
+  const double x = (double)candidate.x / m;
+  const double y = (double)candidate.y / m;
+  const double z = (double)candidate.z / m;
+  const double l = sqrt(x * x + y * y + z * z);
+  if (!isfinite(l) || l == 0.d)
+    return false;
+  const float3 n =
+      make_float3((float)(x / l), (float)(y / l), (float)(z / l));
+  if (PathMatte_dot(n, reference) <= 0.f)
+    return false;
+  result = n;
+  return true;
+}
+
+// Smith G1 masking (microfacet.h)
+inline float PathMatte_smithG1(float alpha, float cosTheta)
+{
+  const float a2 = alpha * alpha;
+  const float cos2 = cosTheta * cosTheta;
+  return 2.f * cosTheta
+      / (cosTheta + sqrt(a2 + (1.f - a2) * cos2) + PATH_MATTE_EPSILON);
+}
+
+// BumpShadowingTerm() of a diffuse-family lobe, which evaluation and
+// sampling treat alike: 1 while the lobe's normal is the smooth one,
+// otherwise 0 where 'wi' lies on different sides in the two frames, else
+// Cycles' softening
+inline float PathMatte_bumpShadowing(float3 Nsrf, float3 lobeN, float3 wi)
+{
+  if (Nsrf.x == lobeN.x && Nsrf.y == lobeN.y && Nsrf.z == lobeN.z)
+    return 1.f;
+  if (!(PathMatte_dot(Nsrf, wi) * PathMatte_dot(Nsrf, lobeN)
+              * PathMatte_dot(lobeN, wi)
+          >= 0.f))
+    return 0.f;
+  const float cosIn = abs(PathMatte_dot(Nsrf, wi));
+  const float cosDeviation = abs(PathMatte_dot(Nsrf, lobeN));
+  if (cosDeviation >= 1.f || cosIn >= 1.f)
+    return 1.f;
+  if (cosIn < 1.0e-6f)
+    return 0.f;
+  const float tanDeviationSquared = 1.f / (cosDeviation * cosDeviation) - 1.f;
+  const float alphaSquared = clamp(0.125f * tanDeviationSquared, 0.f, 1.f);
+  return PathMatte_smithG1(sqrt(alphaSquared), cosIn);
+}
+
+// The Oren-Nayar leaf of roughness 0 towards 'wi' (_EvalNode() with its
+// cosine), and its pdf (PdfNode()); 'Nsrf' the faced smooth normal
+inline void PathMatte_evalLeaf(float3 color,
+    float3 lobeN,
+    float3 Nsrf,
+    float3 wi,
+    float3 &valueCosine,
+    float &pdf)
+{
+  const float c = PathMatte_dot(lobeN, wi);
+  // Oren-Nayar's factor A + B * s / t is 1 at roughness 0
+  const float3 value = c <= 0.f
+      ? make_float3(0.f)
+      : PathMatte_safe(color * PATH_MATTE_INV_PI);
+  const float bump = PathMatte_bumpShadowing(Nsrf, lobeN, wi);
+  valueCosine = PathMatte_safe(PathMatte_safe(value * bump) * abs(c));
+  pdf = c > 0.f ? c * PATH_MATTE_INV_PI : 0.f;
+}
+
+// The leaf's normal: the smooth normal 'Nsrf' (exterior) as
+// ValidateLeafNormals() stores it, faced as PrepareShadingNormals() faces it
+// towards 'NsOut'
+inline float3 PathMatte_lobeNormal(float3 Nsrf, float3 NsOut)
+{
+  float3 n;
+  if (!PathMatte_tryResolveNormal(Nsrf, Nsrf, n))
+    n = Nsrf;
+  return PathMatte_dot(n, NsOut) < 0.f ? -n : n;
+}
+
+inline void PathMatte_shade(const varying PathShadeInput &input,
+    varying PathMaterialState &state,
+    varying PathBsdfSample &sample)
+{
+  const bool front = (input.flags & PATH_SHADE_FRONT_FACING) != 0;
+  // no authored normal on ND_surface: the smooth normal resolves
+  state.Ns = PathMaterial_faceNormal(input.Nsrf, front);
+  state.Ng = PathMaterial_faceNormal(input.Ng, front);
+  state.wo = input.wo;
+  state.lobeN = PathMatte_lobeNormal(input.Nsrf, state.Ns);
+  state.lobeColor = input.baseColor;
+
+  // ND_surface's presence; the strict u < presence keeps u = 0 from hitting
+  // an absent surface
+  const float presence = clamp(input.baseOpacity, 0.f, 1.f);
+  if (presence < 1.f && (presence <= 0.f || input.uPresence >= presence)) {
+    state.flags = PATH_MATERIAL_PRESENCE_SKIPPED;
+    return;
+  }
+  // opacity 1, and presence 1 once resolved: reflection-only, also after
+  // caustic pruning, which keeps the diffuse lobe
+  state.flags = PATH_MATERIAL_HAS_CLOSURE | PATH_MATERIAL_HAS_BSDF
+      | PATH_MATERIAL_REFLECTION_ONLY | PATH_MATERIAL_BSDF_REFLECTION_ONLY;
+  // ClosureAlbedo.cpp's summary of the lobe: weight 1 times the colour,
+  // clamped
+  state.albedo = make_float3(
+      isfinite(input.baseColor.x) ? clamp(input.baseColor.x, 0.f, 1.f) : 0.f,
+      isfinite(input.baseColor.y) ? clamp(input.baseColor.y, 0.f, 1.f) : 0.f,
+      isfinite(input.baseColor.z) ? clamp(input.baseColor.z, 0.f, 1.f) : 0.f);
+
+  // SampleLambertian() in Frame::FromNormal() of the leaf's normal
+  const float3 n = state.lobeN;
+  const float3 helper = abs(n.x) < 0.9f ? make_float3(1.f, 0.f, 0.f)
+                                        : make_float3(0.f, 1.f, 0.f);
+  const float3 tc = cross(n, helper);
+  const float3 t = tc / sqrt(PathMatte_dot(tc, tc));
+  const float3 b = cross(n, t);
+  const float cosTheta = sqrt(input.u1);
+  const float sinTheta = sqrt(1.f - input.u1);
+  const float phi = 2.f * PATH_MATTE_PI * input.u2;
+  const float lx = sinTheta * cos(phi);
+  const float ly = sinTheta * sin(phi);
+  const float3 wi = t * lx + b * ly + n * cosTheta;
+  sample.wi = wi;
+  sample.eta = 1.f;
+  sample.flags = PATH_SAMPLE_DIFFUSE_LIKE;
+  if (!(max(cosTheta, 0.f) * PATH_MATTE_INV_PI > 0.f))
+    return;
+
+  // _FinalizeSubtreeSample(): the leaf evaluated towards the sample, then
+  // SampleNode()'s validity: above the leaf's and the geometric normal, not
+  // shadowed by the bump term
+  float3 valueCosine;
+  float pdf;
+  PathMatte_evalLeaf(state.lobeColor, n, state.Ns, wi, valueCosine, pdf);
+  if (pdf > 0.f
+      && !(PathMatte_dot(n, wi) > 0.f && PathMatte_dot(state.Ng, wi) > 0.f
+          && PathMatte_bumpShadowing(state.Ns, n, wi) > 0.f)) {
+    valueCosine = make_float3(0.f);
+    pdf = 0.f;
+  }
+  sample.f = valueCosine;
+  sample.pdf = pdf;
+  if (pdf > 0.f)
+    sample.flags |= PATH_SAMPLE_VALID;
+}
+
+inline void PathMatte_eval(const varying PathMaterialState &state,
+    const varying float3 wi,
+    varying PathBsdfEval &result)
+{
+  PathMatte_evalLeaf(
+      state.lobeColor, state.lobeN, state.Ns, wi, result.f, result.pdf);
+}
+
+// ND_surface's facts for shadow rays: presence the material's opacity,
+// opacity 1, no transmission
+inline void PathMatte_shadow(
+    const varying PathShadeInput &input, varying PathShadowHit &hit)
+{
+  hit.flags = PATH_MATERIAL_HAS_CLOSURE;
+  hit.opacity = 1.f;
+  hit.presence = clamp(input.baseOpacity, 0.f, 1.f);
+}

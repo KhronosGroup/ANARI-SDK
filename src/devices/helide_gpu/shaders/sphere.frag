@@ -1,4 +1,5 @@
 #version 450
+#extension GL_GOOGLE_include_directive : require
 
 layout(location = 0) flat in vec3 vCenterView;
 layout(location = 1) flat in float vRadius;
@@ -11,43 +12,21 @@ layout(location = 7) flat in vec4 vAttr3;
 layout(location = 8) flat in vec3 vCenterWorld;
 layout(location = 9) flat in mat4 vProj;
 layout(location = 13) flat in int vInstanceIndex;
+layout(location = 14) in vec3 vPosWorld;
+layout(location = 15) flat in vec3 vEyeWorld;
 
 layout(location = 0) out vec4 FragColor;
-layout(location = 1) out uvec4 outIds;
+layout(location = 1) out uvec4 outIds;    // A: packed ambient light
 layout(location = 2) out vec4 outAlbedo;
 layout(location = 3) out vec4 outNormal;
 
-// Fragment sampler at set=2, binding=0
-layout(set = 2, binding = 0) uniform sampler3D texSampler;
+// The material uniforms and samplers (fragment sampler slots 0..5, uniform
+// buffer slots 0 and 1). A sphere's attributes are constant across it, so it
+// has no texture coordinates to map normals with: the normal map is unused.
+#include "material.glsl"
 
-// Fragment uniform buffer slot 0: material + attribute data
-layout(set = 3, binding = 0) uniform MaterialUniforms {
-    vec4 baseColor;
-    vec4 uniformAttr[5];
-    uint attrMask;
-    int  colorAttrIndex;
-    int  samplerMode;
-    int  texCoordAttrIdx;
-    float opacity;
-    int   alphaMode;
-    float alphaCutoff;
-} mat_u;
-
-// Fragment uniform buffer slot 1: sampler transforms
-layout(set = 3, binding = 1) uniform SamplerTransforms {
-    mat4 inTransform;
-    vec4 inOffset;
-    mat4 outTransform;
-    vec4 outOffset;
-    uint primitiveOffset;
-    uint arraySize;
-} samp_u;
-
-// Fragment uniform buffer slot 2: renderer parameters
-layout(set = 3, binding = 2) uniform RendererUniforms {
-    float eyeLightBlendRatio;
-    float ambientRadiance;
-} rend_u;
+// Fragment uniform buffer slot 2: lighting (LightingUniforms)
+#include "shading.glsl"
 
 // Fragment uniform buffer slot 3: per-draw-call ID data
 layout(set = 3, binding = 3) uniform IDUniforms {
@@ -83,20 +62,10 @@ void main()
     vec3 hitView = rayDir * t;
     vec3 normalView = normalize(hitView - vCenterView);
 
-    // Compute world-space normal: the sphere normal in view space is
-    // (hit - center)/radius.  To get world-space normal we note that for a
-    // sphere, the normal direction equals the (hit - center) direction in any
-    // space, so we can compute it from the world-space center.
-    // Since we don't have invMV, approximate world normal from the view normal
-    // by using the fact that the sphere is symmetric -- the normal in object
-    // space is the same unit vector as in any uniformly-scaled space.
-    // For correctness with non-uniform model transforms we would need invMV,
-    // but for typical use cases (uniform scale or identity model) this works:
-    vec3 hitDir = normalize(hitView - vCenterView);
-    // We use the interpolated world center to reconstruct world normal
-    // by noting that the offset direction from center is the same in any
-    // orthonormal basis.  This is exact for orthogonal transforms.
-    vec3 normalWorld = hitDir; // approximate; exact for identity/uniform model
+    // World-space normal: the same hit along the world-space ray, as the view
+    // transform is rigid and so keeps the distance t
+    vec3 hitWorld = vEyeWorld + normalize(vPosWorld - vEyeWorld) * t;
+    vec3 normalWorld = hitWorld - vCenterWorld;
 
     // Write corrected depth from the actual sphere surface
     vec4 clipPos = vProj * vec4(hitView, 1.0);
@@ -105,42 +74,15 @@ void main()
     // Gather all attribute varyings into an indexable array
     vec4 attrs[5] = vec4[5](vColor, vAttr0, vAttr1, vAttr2, vAttr3);
 
-    // Resolve the surface color based on samplerMode (same logic as triangle)
-    vec3 color;
-    if (mat_u.samplerMode == 2) {
-        int idx = mat_u.texCoordAttrIdx;
-        vec4 attrVal = ((mat_u.attrMask & (1u << idx)) != 0u)
-            ? attrs[idx]
-            : mat_u.uniformAttr[idx];
-        vec4 tc = samp_u.inTransform * attrVal + samp_u.inOffset;
-        vec4 sampled = texture(texSampler, tc.xyz);
-        vec4 result = samp_u.outTransform * sampled + samp_u.outOffset;
-        color = result.xyz;
-    } else if (mat_u.samplerMode == 3) {
-        // Transform sampler: read attribute, apply in+out transforms
-        int idx = mat_u.texCoordAttrIdx;
-        vec4 attrVal = ((mat_u.attrMask & (1u << idx)) != 0u)
-            ? attrs[idx]
-            : mat_u.uniformAttr[idx];
-        vec4 transformed = samp_u.inTransform * attrVal + samp_u.inOffset;
-        vec4 result = samp_u.outTransform * transformed + samp_u.outOffset;
-        color = result.xyz;
-    } else if (mat_u.samplerMode == 4) {
-        // Primitive sampler: lookup per-sphere data from 1D texture
-        // Use vInstanceIndex (sphere index), not gl_PrimitiveID (icosphere face)
-        uint primIdx = uint(vInstanceIndex) + samp_u.primitiveOffset;
-        float u = (float(primIdx) + 0.5) / float(samp_u.arraySize);
-        vec4 sampled = texture(texSampler, vec3(u, 0.5, 0.5));
-        vec4 result = samp_u.outTransform * sampled + samp_u.outOffset;
-        color = result.xyz;
-    } else if (mat_u.colorAttrIndex >= 0) {
-        int idx = mat_u.colorAttrIndex;
-        color = ((mat_u.attrMask & (1u << idx)) != 0u)
-            ? attrs[idx].xyz
-            : mat_u.uniformAttr[idx].xyz;
-    } else {
-        color = mat_u.baseColor.xyz;
-    }
+    // Primitive samplers index by the sphere, not gl_PrimitiveID (an icosphere face)
+    uint primIdx = uint(vInstanceIndex);
+    // All material inputs, sampled before any discard below (which leaves the
+    // derivatives of implicit-LOD texture lookups undefined)
+    vec3 color = materialColor(attrs, primIdx);
+    float metallic = materialMetallic(attrs, primIdx);
+    float roughness = materialRoughness(attrs, primIdx);
+    float opacity = materialOpacity(attrs, primIdx);
+    vec3 emissive = materialEmissive(attrs, primIdx);
 
     // Screen door transparency
     if (mat_u.alphaMode == 1) {
@@ -151,23 +93,30 @@ void main()
             15.0/16.0,  7.0/16.0, 13.0/16.0,  5.0/16.0
         );
         ivec2 fc = ivec2(gl_FragCoord.xy) % 4;
-        if (mat_u.opacity <= bayer[fc.y * 4 + fc.x])
+        if (opacity <= bayer[fc.y * 4 + fc.x])
             discard;
     } else if (mat_u.alphaMode == 2) {
-        if (mat_u.opacity < mat_u.alphaCutoff)
+        if (opacity < mat_u.alphaCutoff)
             discard;
     }
 
-    // Eye-light shading
-    vec3 N = normalize(normalView);
-    vec3 L = normalize(-hitView);  // vector from hit toward camera
-    float falloff = max(dot(N, L), 0.0);
-    FragColor = vec4(color * mix(1.0, falloff, rend_u.eyeLightBlendRatio) * rend_u.ambientRadiance, 1.0);
+    // Storm's UsdPreviewSurface shading (the ray hits the side facing the
+    // viewer)
+    vec3 P = hitView;
+    vec3 N = normalView;
+    ShadingResult shading =
+        shade(P, N, color, metallic, roughness, mat_u.ior);
+    vec3 direct = shading.direct + emissive;
+    FragColor = vec4(
+        light_u.deferAmbient != 0 ? direct : direct + shading.ambient, 1.0);
 
     // Per-pixel ID outputs
-    outIds = uvec4(uint(gl_PrimitiveID), id_u.objectId, id_u.instanceId, 0u);
+    outIds = uvec4(uint(gl_PrimitiveID), id_u.objectId, id_u.instanceId,
+        packAmbient(shading.ambient));
 
     // Albedo and world-space normal
     outAlbedo = vec4(color, 0.0);
-    outNormal = vec4(normalize(normalWorld), 0.0);
+    // .w: the view depth, from which the SSAO and blur passes rebuild the
+    // view-space position
+    outNormal = vec4(normalize(normalWorld), -hitView.z);
 }

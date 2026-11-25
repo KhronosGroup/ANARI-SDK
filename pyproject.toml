@@ -1,14 +1,36 @@
+## Copyright 2021-2026 The Khronos Group
+## SPDX-License-Identifier: Apache-2.0
+
 [project] # Project metadata
 name = "anari"
-requires-python = ">=3.7"
+version = "0.17.0"
+description = "Python bindings and device SDK for the Khronos ANARI rendering API"
+requires-python = ">=3.10"
 readme = "README.md"
-license = "APACHE"
+license = "Apache-2.0"
 license-files = ["LICENSE"]
-dependencies = ["cffi","numpy"]
-version = "0.15"
+dependencies = ["cffi", "numpy"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: C++",
+  "Operating System :: POSIX :: Linux",
+  "Operating System :: MacOS",
+  "Operating System :: Microsoft :: Windows",
+  "Topic :: Multimedia :: Graphics :: 3D Rendering",
+]
+
+[project.optional-dependencies]
+all = ["helide", "helide_gpu"]
+helide = ["helide"]
+helide_gpu = ["helide_gpu"]
+
+[project.urls]
+Homepage = "https://www.khronos.org/anari/"
+Source = "https://github.com/KhronosGroup/ANARI-SDK"
+Issues = "https://github.com/KhronosGroup/ANARI-SDK/issues"
 
 [build-system] # How pip and other frontends should build this project
-requires = ["py-build-cmake~=0.5.0", "cffi"]
+requires = ["py-build-cmake~=0.5.1", "cffi", "ninja>=1.13"]
 build-backend = "py_build_cmake.build"
 
 [tool.py-build-cmake.sdist]
@@ -18,7 +40,79 @@ include = ['*']
 generated = "package"
 
 [tool.py-build-cmake.cmake] # How to build the CMake project
-build_type = "RelWithDebInfo"
+minimum_version = "3.15"
+build_type = "Release"
 source_path = "."
-build_args = ["--target", "neo_bindings"]
-install_components = ["python_module"]
+build_args = ["--parallel"]
+# "": the SDK; python_module: the bindings
+install_components = ["", "python_module"]
+install_args = ["--strip"]
+
+[tool.py-build-cmake.cmake.options]
+ANARI_PYTHON_WHEEL = "ON"
+INSTALL_PYTHON_BINDINGS = "ON"
+BUILD_TESTING = "OFF"
+BUILD_EXAMPLES = "OFF"
+BUILD_CTS = "OFF"
+BUILD_CAT = "OFF"
+BUILD_HELIDE_DEVICE = "OFF"
+BUILD_CAPTURE_DEVICE = "OFF"
+BUILD_SINK_DEVICE = "ON"
+BUILD_DEBUG_DEVICE = "ON"
+INSTALL_VIEWER_LIBRARY = "OFF"
+# The SDK is installed as a prefix inside the package
+CMAKE_INSTALL_BINDIR = "anari/sdk/bin"
+CMAKE_INSTALL_LIBDIR = "anari/sdk/lib"
+CMAKE_INSTALL_INCLUDEDIR = "anari/sdk/include"
+CMAKE_INSTALL_DATAROOTDIR = "anari/sdk/share"
+
+[tool.cibuildwheel]
+build = "cp3*"
+# The cffi module doesn't support free-threaded CPython
+skip = ["*t-*"]
+build-frontend = "build"
+environment = { CMAKE_GENERATOR = "Ninja" }
+test-requires = []
+# Smoke test, in each wheel's own clean environment
+test-command = "python -c \"import anari; anari.loadLibrary('sink').newDevice('default')\""
+
+[tool.cibuildwheel.linux]
+archs = ["native"]
+manylinux-x86_64-image = "manylinux_2_28"
+manylinux-aarch64-image = "manylinux_2_28"
+musllinux-x86_64-image = "musllinux_1_2"
+musllinux-aarch64-image = "musllinux_1_2"
+environment = { CMAKE_BUILD_PARALLEL_LEVEL = "4" }
+
+[[tool.cibuildwheel.overrides]]
+# musllinux can't link the system's libstdc++: link it statically. Safe as the
+# frontend and devices share only C types and free what they allocate. But an
+# exception escaping a device then bypasses the frontend's ANARI_CATCH: the
+# process still aborts, as designed, without the frontend's error message.
+select = "*-musllinux*"
+inherit.environment = "append"
+environment = { LDFLAGS = "-static-libstdc++ -static-libgcc" }
+
+[tool.cibuildwheel.macos]
+# One wheel per architecture, not universal2: the static SDK libraries are
+# linked by vendors for one architecture
+archs = ["arm64", "x86_64"]
+environment = { MACOSX_DEPLOYMENT_TARGET = "11.0", CMAKE_BUILD_PARALLEL_LEVEL = "4" }
+
+# py-build-cmake maps ARCHFLAGS to CMAKE_OSX_ARCHITECTURES and the wheel tag
+[[tool.cibuildwheel.overrides]]
+select = "*-macosx_arm64"
+inherit.environment = "append"
+environment = { ARCHFLAGS = "-arch arm64" }
+
+[[tool.cibuildwheel.overrides]]
+select = "*-macosx_x86_64"
+inherit.environment = "append"
+environment = { ARCHFLAGS = "-arch x86_64" }
+
+[tool.cibuildwheel.windows]
+archs = ["AMD64"]
+environment = { CMAKE_BUILD_PARALLEL_LEVEL = "4" }
+# No delvewheel repair: the wheel already ships the MSVC runtime next to the
+# extension
+repair-wheel-command = ""

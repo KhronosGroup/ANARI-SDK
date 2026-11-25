@@ -2,10 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Frame.h"
+#include "light/Hdri.h"
 // std
 #include <algorithm>
 #include <chrono>
 #include <cstring>
+#include <utility>
 
 namespace helide_gpu {
 
@@ -219,7 +221,7 @@ void Frame::gpu_allocateObjects()
       SDL_GPU_TEXTUREUSAGE_COLOR_TARGET | SDL_GPU_TEXTUREUSAGE_SAMPLER);
   m_gpuState.colorTarget.alloc(width, height);
 
-  // Depth render target (SAMPLER usage for SSAO depth reads)
+  // Depth render target
   m_gpuState.depthTarget = GPUTexture(dev,
       SDL_GPU_TEXTUREFORMAT_D32_FLOAT,
       SDL_GPU_TEXTUREUSAGE_DEPTH_STENCIL_TARGET | SDL_GPU_TEXTUREUSAGE_SAMPLER);
@@ -232,10 +234,13 @@ void Frame::gpu_allocateObjects()
   m_gpuState.idsTarget.alloc(width, height);
 
   // Albedo and normal render targets (always created -- required by MRT
-  // pipeline). Normal needs SAMPLER usage for SSAO.
+  // pipeline). The SSAO and blur passes sample the normal target, which
+  // holds the world-space normal in .xyz and the view depth in .w; the
+  // composite pass samples the albedo target's .w, the opacity of a volume
+  // in front of the surface.
   m_gpuState.albedoTarget = GPUTexture(dev,
       SDL_GPU_TEXTUREFORMAT_R32G32B32A32_FLOAT,
-      SDL_GPU_TEXTUREUSAGE_COLOR_TARGET);
+      SDL_GPU_TEXTUREUSAGE_COLOR_TARGET | SDL_GPU_TEXTUREUSAGE_SAMPLER);
   m_gpuState.albedoTarget.alloc(width, height);
 
   m_gpuState.normalTarget = GPUTexture(dev,
@@ -297,14 +302,26 @@ void Frame::gpu_renderFrame()
   if (!cmd)
     return;
 
-  gpu_renderFrame_geometryPass(cmd);
-
   auto *cam = dynamic_cast<Camera *>(m_camera.ptr);
   auto &gpuPipelines = deviceState()->gpu;
 
-  const bool doSSAO = m_renderer && m_renderer->ssaoEnabled()
-      && gpuPipelines.ssaoPipeline && gpuPipelines.compositePipeline
-      && m_gpuState.aoTarget && m_gpuState.colorTargetB && cam;
+  // every pass uses the same projection
+  if (cam) {
+    const float frameAspect = float(m_size.x) / float(m_size.y);
+    m_proj = cam->projMatrix(frameAspect, gpu_sceneBounds());
+  }
+
+  // ambient occlusion needs a radius, which may derive from the world bounds
+  const float aoRadius = m_renderer && m_renderer->ambientOcclusion() && m_world
+      ? m_renderer->ambientOcclusionRadius(m_world->bounds())
+      : 0.f;
+  const bool doSSAO = aoRadius > 0.f && gpuPipelines.ssaoPipeline
+      && gpuPipelines.blurPipeline && gpuPipelines.compositePipeline
+      && m_gpuState.aoTarget && m_gpuState.aoBlurTarget
+      && m_gpuState.colorTargetB && cam;
+
+  // With ambient occlusion, the composite pass adds the ambient light
+  gpu_renderFrame_geometryPass(cmd, doSSAO);
 
   // The composite pass also applies sRGB output encoding, so run it whenever
   // the application requested an sRGB frame channel even without SSAO.
@@ -313,10 +330,10 @@ void Frame::gpu_renderFrame()
       || (needsSRGB && m_renderer && gpuPipelines.compositePipeline
           && m_gpuState.colorTargetB);
 
-  if (doSSAO)
-    gpu_renderFrame_ssaoPass(cmd, cam);
+  SDL_GPUTexture *aoTex =
+      doSSAO ? gpu_renderFrame_ssaoPass(cmd, cam, aoRadius) : nullptr;
   if (doComposite)
-    gpu_renderFrame_compositePass(cmd, doSSAO, needsSRGB);
+    gpu_renderFrame_compositePass(cmd, aoTex, needsSRGB);
 
   gpu_renderFrame_downloadPass(cmd, doComposite);
 
@@ -325,9 +342,43 @@ void Frame::gpu_renderFrame()
       std::chrono::duration<float>(m_renderEndTime - m_renderStartTime).count();
 }
 
-void Frame::gpu_renderFrame_geometryPass(SDL_GPUCommandBuffer *cmd)
+box3 Frame::gpu_sceneBounds() const
+{
+  if (!m_world)
+    return {};
+  box3 bounds = m_world->bounds();
+  for (auto *instance : m_world->instances()) {
+    if (!instance || !instance->isValid() || !instance->group())
+      continue;
+    for (auto *light : instance->group()->lights()) {
+      if (!light || !light->isValid() || !light->visible()
+          || light->type() != LightType::QUAD)
+        continue;
+      // the quad's corners (its position is its center), as
+      // gpu_drawVisibleLights() draws it
+      const vec3 e1 = light->edge1();
+      const vec3 e2 = light->edge2();
+      const vec3 origin = light->position() - 0.5f * (e1 + e2);
+      for (size_t t = 0; t < instance->numTransforms(); t++) {
+        const mat4 M = instance->xfm(t);
+        for (const vec3 &c :
+            {origin, origin + e1, origin + e2, origin + e1 + e2})
+          bounds.extend(vec3(M * vec4(c, 1.f)));
+      }
+    }
+  }
+  return bounds;
+}
+
+void Frame::gpu_renderFrame_geometryPass(
+    SDL_GPUCommandBuffer *cmd, bool deferAmbient)
 {
   auto bgc = m_renderer ? m_renderer->background() : vec4(1.f, 0.f, 1.f, 1.f);
+  // visible hdris replace the background, opaque, and sum
+  const bool hdriBackground = m_camera && m_renderer && m_world
+      && deviceState()->gpu.hdriPipeline && gpu_hasVisibleHdris();
+  if (hdriBackground)
+    bgc = vec4(0.f, 0.f, 0.f, 1.f);
 
   // Render pass: clear color, packed IDs (~0u), albedo (0), normal (0)
   float idClearVal;
@@ -369,8 +420,7 @@ void Frame::gpu_renderFrame_geometryPass(SDL_GPUCommandBuffer *cmd)
   auto *cam = dynamic_cast<Camera *>(m_camera.ptr);
   if (cam && m_renderer && m_world) {
     const mat4 V = cam->viewMatrix();
-    const float frameAspect = float(m_size.x) / float(m_size.y);
-    const mat4 P = cam->projMatrix(frameAspect);
+    const mat4 &P = m_proj;
 
     SDL_GPUViewport viewport{};
     viewport.x = 0.f;
@@ -384,6 +434,13 @@ void Frame::gpu_renderFrame_geometryPass(SDL_GPUCommandBuffer *cmd)
     SDL_Rect scissor{
         0, 0, static_cast<int>(m_size.x), static_cast<int>(m_size.y)};
     SDL_SetGPUScissor(pass, &scissor);
+
+    // the same for every surface: pushed once, as uniform data stays bound
+    // for the command buffer's later draws
+    gpu_pushLightingUniforms(cmd, V, deferAmbient);
+
+    if (hdriBackground)
+      gpu_drawVisibleHdris(pass, cmd, V, P);
 
     for (auto *instance : m_world->instances()) {
       if (!instance || !instance->isValid())
@@ -406,14 +463,14 @@ void Frame::gpu_renderFrame_geometryPass(SDL_GPUCommandBuffer *cmd)
           ctx.MV = MV;
           ctx.M = M;
           ctx.P = P;
-          ctx.ambientRadiance = m_renderer->ambientRadiance();
-          ctx.eyeLightBlendRatio = m_renderer->eyeLightBlendRatio();
           ctx.objectId = surface->id();
           ctx.instanceId = instance->id(t);
           surface->draw(pass, cmd, ctx);
         }
       }
     }
+
+    gpu_drawVisibleLights(pass, cmd, V, P);
 
     // --- Volume rendering (after all opaque surfaces) ---
     if (deviceState()->gpu.volumePipeline) {
@@ -451,14 +508,256 @@ void Frame::gpu_renderFrame_geometryPass(SDL_GPUCommandBuffer *cmd)
   SDL_EndGPURenderPass(pass);
 }
 
-void Frame::gpu_renderFrame_ssaoPass(
-    SDL_GPUCommandBuffer *cmd, const Camera *cam)
+bool Frame::gpu_hasVisibleHdris() const
+{
+  for (auto *instance : m_world->instances()) {
+    if (!instance || !instance->isValid() || !instance->group())
+      continue;
+    for (auto *light : instance->group()->lights()) {
+      if (light && light->isValid() && light->type() == LightType::HDRI
+          && light->visible())
+        return true;
+    }
+  }
+  return false;
+}
+
+void Frame::gpu_drawVisibleHdris(SDL_GPURenderPass *pass,
+    SDL_GPUCommandBuffer *cmd,
+    const mat4 &V,
+    const mat4 &P)
+{
+  auto &state = *deviceState();
+  SDL_BindGPUGraphicsPipeline(pass, state.gpu.hdriPipeline);
+
+  // matches HdriUniforms in shaders/hdri.frag (std140)
+  struct HdriUniforms
+  {
+    mat4 invProj;
+    mat4 viewToWorld;
+    vec4 left;
+    vec4 up;
+    vec4 direction;
+    vec4 emission;
+  };
+  static_assert(sizeof(HdriUniforms) == 192, "HdriUniforms layout");
+
+  const mat4 invProj = glm::inverse(P);
+  const mat4 viewToWorld = glm::inverse(V);
+  for (auto *instance : m_world->instances()) {
+    if (!instance || !instance->isValid() || !instance->group())
+      continue;
+    for (size_t t = 0; t < instance->numTransforms(); t++) {
+      const mat4 M = instance->xfm(t);
+      for (auto *light : instance->group()->lights()) {
+        if (!light || !light->isValid() || light->type() != LightType::HDRI
+            || !light->visible())
+          continue;
+        auto *hdri = static_cast<Hdri *>(light);
+        vec3 left, up, direction;
+        if (!Hdri::frame(vec3(M * vec4(hdri->up(), 0.f)),
+                vec3(M * vec4(hdri->hdriDirection(), 0.f)),
+                left,
+                up,
+                direction))
+          continue;
+
+        SDL_GPUTextureSamplerBinding binding{};
+        binding.texture = hdri->texture().sdlTexture();
+        binding.sampler = state.gpu.nearestClampSampler;
+        SDL_BindGPUFragmentSamplers(pass, 0, &binding, 1);
+
+        const HdriUniforms u{invProj,
+            viewToWorld,
+            vec4(left, 0.f),
+            vec4(up, 0.f),
+            vec4(direction, 0.f),
+            vec4(hdri->emission(), 0.f)};
+        SDL_PushGPUFragmentUniformData(cmd, 0, &u, sizeof(u));
+        SDL_DrawGPUPrimitives(pass, 3, 1, 0, 0);
+      }
+    }
+  }
+}
+
+void Frame::gpu_drawVisibleLights(SDL_GPURenderPass *pass,
+    SDL_GPUCommandBuffer *cmd,
+    const mat4 &V,
+    const mat4 &P)
+{
+  auto *pipeline = deviceState()->gpu.lightQuadPipeline;
+  if (!pipeline)
+    return;
+
+  // a perspective projection's w is -z (P[2][3] == -1), an orthographic's 1
+  const bool perspective = P[2][3] != 0.f;
+  bool bound = false;
+
+  for (auto *instance : m_world->instances()) {
+    if (!instance || !instance->isValid() || !instance->group())
+      continue;
+    for (size_t t = 0; t < instance->numTransforms(); t++) {
+      const mat4 MV = V * instance->xfm(t);
+      for (auto *light : instance->group()->lights()) {
+        if (!light || !light->isValid() || !light->visible()
+            || light->type() != LightType::QUAD)
+          continue;
+
+        // view space, the area after the instance transform
+        const vec3 edge1 = vec3(MV * vec4(light->edge1(), 0.f));
+        const vec3 edge2 = vec3(MV * vec4(light->edge2(), 0.f));
+        const vec3 center = vec3(MV * vec4(light->position(), 1.f));
+        const vec3 front = glm::cross(edge2, edge1);
+        const float area = glm::length(front);
+        if (!(area > 0.f))
+          continue;
+
+        // draw only a quad whose side facing the camera emits
+        const vec3 toCamera = perspective ? -center : vec3(0.f, 0.f, 1.f);
+        const float facing = glm::dot(front, toCamera);
+        if (facing == 0.f
+            || !(facing > 0.f ? light->emitsFront() : light->emitsBack()))
+          continue;
+
+        // radiance(): per area if given as 'radiance', else the intensity
+        // along the normal, spread over the area
+        const vec3 radiance = light->radianceTimesArea()
+            ? light->radiance()
+            : light->radiance() / area;
+
+        if (!bound) {
+          SDL_BindGPUGraphicsPipeline(pass, pipeline);
+          bound = true;
+        }
+
+        struct
+        {
+          mat4 P;
+          vec4 origin;
+          vec4 edge1;
+          vec4 edge2;
+        } vu{P,
+            vec4(center - 0.5f * (edge1 + edge2), 1.f),
+            vec4(edge1, 0.f),
+            vec4(edge2, 0.f)};
+        SDL_PushGPUVertexUniformData(cmd, 0, &vu, sizeof(vu));
+        const vec4 fu(radiance, 0.f);
+        SDL_PushGPUFragmentUniformData(cmd, 0, &fu, sizeof(fu));
+        SDL_DrawGPUPrimitives(pass, 6, 1, 0, 0);
+      }
+    }
+  }
+}
+
+void Frame::gpu_pushLightingUniforms(
+    SDL_GPUCommandBuffer *cmd, const mat4 &V, bool deferAmbient)
+{
+  // matches LightingUniforms in shaders/shading.glsl (std140): the world's
+  // first MAX_LIGHTS lights and the headlight
+  constexpr int MAX_LIGHTS = 16;
+  constexpr float LIGHT_HEADLIGHT = 3.f;
+  constexpr float PI = 3.14159265358979f;
+
+  struct LightData
+  {
+    vec4 position;
+    vec4 direction;
+    vec4 radiance;
+  };
+
+  struct LightingUniforms
+  {
+    vec4 ambient;
+    int32_t numLights;
+    int32_t deferAmbient;
+    int32_t perspective;
+    int32_t _pad;
+    LightData lights[MAX_LIGHTS + 1];
+  } u{};
+
+  const float blend = m_renderer->eyeLightBlendRatio();
+  const float radiance = m_renderer->ambientRadiance();
+  u.ambient = vec4((1.f - blend) * radiance * m_renderer->ambientColor(), 0.f);
+  u.deferAmbient = deferAmbient ? 1 : 0;
+  // a perspective projection's w is -z (P[2][3] == -1), an orthographic's 1
+  u.perspective = m_proj[2][3] != 0.f ? 1 : 0;
+
+  // The world's lights, instanced like its surfaces, in view space; hdris
+  // add their mean radiance to the ambient light instead
+  size_t numShadedLights = 0;
+  for (auto *instance : m_world->instances()) {
+    if (!instance || !instance->isValid() || !instance->group())
+      continue;
+    for (size_t t = 0; t < instance->numTransforms(); t++) {
+      const mat4 MV = V * instance->xfm(t);
+      for (auto *light : instance->group()->lights()) {
+        if (!light || !light->isValid())
+          continue;
+        if (light->type() == LightType::HDRI) {
+          auto *hdri = static_cast<Hdri *>(light);
+          u.ambient += vec4(hdri->meanRadiance() * hdri->emission(), 0.f);
+          continue;
+        }
+        if (numShadedLights++ >= MAX_LIGHTS)
+          continue;
+        auto &l = u.lights[u.numLights++];
+        const vec3 dir = vec3(MV * vec4(light->direction(), 0.f));
+        const float len = glm::length(dir);
+        l.position = vec4(vec3(MV * vec4(light->position(), 1.f)),
+            float(static_cast<int32_t>(light->type())));
+        l.direction = vec4(len > 0.f ? dir / len : vec3(0.f, 0.f, -1.f),
+            light->cosOuterAngle());
+        l.radiance = vec4(light->radiance(), light->cosInnerAngle());
+        if (light->type() == LightType::QUAD) {
+          // the area after the instance transform; w: 1 if both sides emit
+          vec3 radiance = light->radiance();
+          if (light->radianceTimesArea()) {
+            radiance *=
+                glm::length(glm::cross(vec3(MV * vec4(light->edge2(), 0.f)),
+                    vec3(MV * vec4(light->edge1(), 0.f))));
+          }
+          l.direction.w = light->emitsFront() && light->emitsBack() ? 1.f : 0.f;
+          l.radiance = vec4(radiance, 0.f);
+        }
+      }
+    }
+  }
+
+  if (numShadedLights > MAX_LIGHTS
+      && numShadedLights != m_lastWarnedLightCount) {
+    m_lastWarnedLightCount = numShadedLights;
+    reportMessage(ANARI_SEVERITY_WARNING,
+        "helide_gpu shades with only the first %d of the world's %zu lights "
+        "(not counting hdri lights)",
+        MAX_LIGHTS,
+        numShadedLights);
+  }
+
+  // The headlight, scaled so that its Lambert term is eyeLightBlendRatio *
+  // ambientRadiance at normal incidence. It lights every world, with lights
+  // or without, so that eyeLightBlendRatio always blends in helide's
+  // facing-ratio falloff, and is diffuse only (shade() in shading.glsl), as
+  // halcyon's preview renderer's is.
+  if (blend > 0.f && radiance > 0.f) {
+    auto &l = u.lights[u.numLights++];
+    l.position = vec4(vec3(0.f), LIGHT_HEADLIGHT);
+    l.radiance = vec4(vec3(PI * blend * radiance), 0.f);
+  }
+
+  SDL_PushGPUFragmentUniformData(cmd, 2, &u, sizeof(u));
+}
+
+SDL_GPUTexture *Frame::gpu_renderFrame_ssaoPass(
+    SDL_GPUCommandBuffer *cmd, const Camera *cam, float radius)
 {
   auto &state = *deviceState();
 
-  const float frameAspect = float(m_size.x) / float(m_size.y);
-  const mat4 P = cam->projMatrix(frameAspect);
+  const mat4 &P = m_proj;
   const mat4 V = cam->viewMatrix();
+  const vec2 frameSize(m_size.x, m_size.y);
+  const vec2 projScale(P[0][0], P[1][1]);
+  // a perspective projection's w is -z (P[2][3] == -1), an orthographic's 1
+  const int perspective = P[2][3] != 0.f ? 1 : 0;
 
   SDL_GPUViewport viewport{};
   viewport.x = 0.f;
@@ -471,54 +770,46 @@ void Frame::gpu_renderFrame_ssaoPass(
   SDL_Rect scissor{
       0, 0, static_cast<int>(m_size.x), static_cast<int>(m_size.y)};
 
-  // --- SSAO pass ---
+  // --- SSAO pass: the unblurred occlusion factor into aoTarget ---
   {
     SDL_GPUColorTargetInfo aoColorInfo{};
     aoColorInfo.texture = m_gpuState.aoTarget.sdlTexture();
-    aoColorInfo.load_op = SDL_GPU_LOADOP_CLEAR;
-    aoColorInfo.clear_color = {1, 1, 1, 1}; // default: no occlusion
+    aoColorInfo.load_op = SDL_GPU_LOADOP_DONT_CARE;
     aoColorInfo.store_op = SDL_GPU_STOREOP_STORE;
 
     SDL_GPURenderPass *ssaoPass =
         SDL_BeginGPURenderPass(cmd, &aoColorInfo, 1, nullptr);
-    SDL_BindGPUGraphicsPipeline(ssaoPass, deviceState()->gpu.ssaoPipeline);
+    SDL_BindGPUGraphicsPipeline(ssaoPass, state.gpu.ssaoPipeline);
     SDL_SetGPUViewport(ssaoPass, &viewport);
     SDL_SetGPUScissor(ssaoPass, &scissor);
 
-    SDL_GPUTextureSamplerBinding ssaoSamplers[4]{};
-    ssaoSamplers[0].texture = m_gpuState.depthTarget.sdlTexture();
-    ssaoSamplers[0].sampler = state.gpu.linearClampSampler;
-    ssaoSamplers[1].texture = m_gpuState.normalTarget.sdlTexture();
-    ssaoSamplers[1].sampler = state.gpu.linearClampSampler;
-    ssaoSamplers[2].texture = state.gpu.ssaoNoiseTex;
-    ssaoSamplers[2].sampler = state.gpu.ssaoNoiseSampler;
-    ssaoSamplers[3].texture = m_gpuState.idsTarget.sdlTexture();
-    ssaoSamplers[3].sampler = state.gpu.nearestClampSampler;
-    SDL_BindGPUFragmentSamplers(ssaoPass, 0, ssaoSamplers, 4);
+    SDL_GPUTextureSamplerBinding ssaoSampler{};
+    ssaoSampler.texture = m_gpuState.normalTarget.sdlTexture();
+    ssaoSampler.sampler = state.gpu.nearestClampSampler;
+    SDL_BindGPUFragmentSamplers(ssaoPass, 0, &ssaoSampler, 1);
 
+    // matches SSAOParams in ssao.frag (std140)
     struct SSAOUniforms
     {
-      mat4 projection;
-      mat4 invProjection;
       mat4 view;
-      vec4 samples[64];
+      vec2 frameSize;
+      vec2 projScale;
       float radius;
-      float bias;
       float intensity;
-      int kernelSize;
-      vec2 noiseScale;
-      vec2 _pad;
+      int estimator;
+      int perspective;
+      int cortaoSamples;
+      int _pad[3];
     } ssaoU{};
 
-    ssaoU.projection = P;
-    ssaoU.invProjection = glm::inverse(P);
     ssaoU.view = V;
-    std::memcpy(ssaoU.samples, m_renderer->ssaoKernel(), 64 * sizeof(vec4));
-    ssaoU.radius = m_renderer->ssaoRadius();
-    ssaoU.bias = m_renderer->ssaoBias();
-    ssaoU.intensity = m_renderer->ssaoIntensity();
-    ssaoU.kernelSize = m_renderer->ssaoKernelSize();
-    ssaoU.noiseScale = vec2(m_size.x / 4.0f, m_size.y / 4.0f);
+    ssaoU.frameSize = frameSize;
+    ssaoU.projScale = projScale;
+    ssaoU.radius = radius;
+    ssaoU.intensity = m_renderer->ambientOcclusionIntensity();
+    ssaoU.estimator = m_renderer->ambientOcclusionEstimator();
+    ssaoU.perspective = perspective;
+    ssaoU.cortaoSamples = m_renderer->cortaoSamples();
 
     SDL_PushGPUFragmentUniformData(cmd, 0, &ssaoU, sizeof(ssaoU));
 
@@ -526,47 +817,60 @@ void Frame::gpu_renderFrame_ssaoPass(
     SDL_EndGPURenderPass(ssaoPass);
   }
 
-  // --- Blur pass (optional) ---
-  if (m_renderer->ssaoBlurEnabled() && deviceState()->gpu.blurPipeline
-      && m_gpuState.aoBlurTarget) {
+  // --- Blur passes: each reads the previous result, ping-ponging between
+  // aoTarget and aoBlurTarget ---
+  GPUTexture *source = &m_gpuState.aoTarget;
+  GPUTexture *target = &m_gpuState.aoBlurTarget;
+  const int blurPasses = m_renderer->ambientOcclusionBlurPasses();
+  for (int pass = 1; pass <= blurPasses; pass++) {
     SDL_GPUColorTargetInfo blurColorInfo{};
-    blurColorInfo.texture = m_gpuState.aoBlurTarget.sdlTexture();
+    blurColorInfo.texture = target->sdlTexture();
     blurColorInfo.load_op = SDL_GPU_LOADOP_DONT_CARE;
     blurColorInfo.store_op = SDL_GPU_STOREOP_STORE;
 
     SDL_GPURenderPass *blurPass =
         SDL_BeginGPURenderPass(cmd, &blurColorInfo, 1, nullptr);
-    SDL_BindGPUGraphicsPipeline(blurPass, deviceState()->gpu.blurPipeline);
+    SDL_BindGPUGraphicsPipeline(blurPass, state.gpu.blurPipeline);
     SDL_SetGPUViewport(blurPass, &viewport);
     SDL_SetGPUScissor(blurPass, &scissor);
 
-    SDL_GPUTextureSamplerBinding blurSamplers[3]{};
-    blurSamplers[0].texture = m_gpuState.aoTarget.sdlTexture();
-    blurSamplers[0].sampler = state.gpu.linearClampSampler;
-    blurSamplers[1].texture = m_gpuState.depthTarget.sdlTexture();
-    blurSamplers[1].sampler = state.gpu.linearClampSampler;
-    blurSamplers[2].texture = m_gpuState.idsTarget.sdlTexture();
-    blurSamplers[2].sampler = state.gpu.nearestClampSampler;
-    SDL_BindGPUFragmentSamplers(blurPass, 0, blurSamplers, 3);
+    SDL_GPUTextureSamplerBinding blurSamplers[2]{};
+    blurSamplers[0].texture = source->sdlTexture();
+    blurSamplers[0].sampler = state.gpu.nearestClampSampler;
+    blurSamplers[1].texture = m_gpuState.normalTarget.sdlTexture();
+    blurSamplers[1].sampler = state.gpu.nearestClampSampler;
+    SDL_BindGPUFragmentSamplers(blurPass, 0, blurSamplers, 2);
 
+    // matches BlurParams in blur.frag (std140)
     struct BlurUniforms
     {
-      vec2 texelSize;
-      int blurRadius;
+      vec2 frameSize;
+      vec2 projScale;
+      float radius;
+      int pass;
+      int perspective;
       int _pad;
     } blurU{};
-    blurU.texelSize = vec2(1.0f / m_size.x, 1.0f / m_size.y);
-    blurU.blurRadius = 2;
+    blurU.frameSize = frameSize;
+    blurU.projScale = projScale;
+    blurU.radius = radius;
+    blurU.pass = pass;
+    blurU.perspective = perspective;
 
     SDL_PushGPUFragmentUniformData(cmd, 0, &blurU, sizeof(blurU));
 
     SDL_DrawGPUPrimitives(blurPass, 3, 1, 0, 0);
     SDL_EndGPURenderPass(blurPass);
+
+    std::swap(source, target);
   }
+
+  // the last pass's result (blurPasses >= 1)
+  return source->sdlTexture();
 }
 
 void Frame::gpu_renderFrame_compositePass(
-    SDL_GPUCommandBuffer *cmd, bool doSSAO, bool needsSRGB)
+    SDL_GPUCommandBuffer *cmd, SDL_GPUTexture *aoTex, bool needsSRGB)
 {
   auto &state = *deviceState();
 
@@ -592,21 +896,19 @@ void Frame::gpu_renderFrame_compositePass(
   SDL_SetGPUViewport(compPass, &viewport);
   SDL_SetGPUScissor(compPass, &scissor);
 
-  SDL_GPUTextureSamplerBinding compSamplers[2]{};
+  SDL_GPUTextureSamplerBinding compSamplers[4]{};
   compSamplers[0].texture = m_gpuState.colorTarget.sdlTexture();
   compSamplers[0].sampler = state.gpu.linearClampSampler;
-  // When SSAO ran, use the (possibly blurred) AO result; otherwise bind the
-  // color target as a dummy (AO value is unused, shader reads ao=1.0 via
-  // the uniform flag).
-  SDL_GPUTexture *aoTex = m_gpuState.colorTarget.sdlTexture(); // dummy fallback
-  if (doSSAO) {
-    aoTex = (m_renderer->ssaoBlurEnabled() && m_gpuState.aoBlurTarget)
-        ? m_gpuState.aoBlurTarget.sdlTexture()
-        : m_gpuState.aoTarget.sdlTexture();
-  }
-  compSamplers[1].texture = aoTex;
+  // Without ambient occlusion, bind the color target as a dummy (the shader
+  // doesn't read it, per the applyAO flag)
+  compSamplers[1].texture = aoTex ? aoTex : m_gpuState.colorTarget.sdlTexture();
   compSamplers[1].sampler = state.gpu.linearClampSampler;
-  SDL_BindGPUFragmentSamplers(compPass, 0, compSamplers, 2);
+  // the packed ambient light and the opacity of volumes in front of it
+  compSamplers[2].texture = m_gpuState.idsTarget.sdlTexture();
+  compSamplers[2].sampler = state.gpu.nearestClampSampler;
+  compSamplers[3].texture = m_gpuState.albedoTarget.sdlTexture();
+  compSamplers[3].sampler = state.gpu.nearestClampSampler;
+  SDL_BindGPUFragmentSamplers(compPass, 0, compSamplers, 4);
 
   struct CompositeUniforms
   {
@@ -615,7 +917,7 @@ void Frame::gpu_renderFrame_compositePass(
     int _pad0;
     int _pad1;
   } compU{};
-  compU.applyAO = doSSAO ? 1 : 0;
+  compU.applyAO = aoTex ? 1 : 0;
   compU.applySRGB = needsSRGB ? 1 : 0;
   SDL_PushGPUFragmentUniformData(cmd, 0, &compU, sizeof(compU));
 

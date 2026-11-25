@@ -1,0 +1,106 @@
+// Copyright 2025-2026 The Khronos Group
+// SPDX-License-Identifier: Apache-2.0
+
+#pragma once
+
+#include "halcyon_math.isph"
+#include "halcyon_objects.isph"
+#include "halcyon_ray.isph"
+
+struct HitInfo
+{
+  uniform Instance *instance;
+  uniform Surface *surface;
+  uint instArrayId; // which of the instance's transforms was hit
+  // user-facing ids (~0u on a miss)
+  uint primId; // geometry 'primitive.id' value, else the primitive index
+  uint objId; // surface 'id', or volume 'id' after setVolumeIds()
+  uint instId; // instance 'id', per transform for transform arrays
+};
+
+// HitInfo functions //////////////////////////////////////////////////////////
+
+// Geometry 'primitive.id' value for Embree primitive index 'primIndex', or
+// 'primIndex' itself when the geometry has no (or too short a) 'primitive.id'
+inline uint getPrimitiveId(const uniform Geometry *varying g, uint primIndex)
+{
+#pragma ignore warning(perf)
+  const uniform uint32 *varying ids = g->primitiveIds;
+#pragma ignore warning(perf)
+  const uint64 numIds = g->numPrimitiveIds;
+#pragma ignore warning(perf)
+  return ids != NULL && primIndex < numIds ? ids[primIndex] : primIndex;
+}
+
+inline HitInfo getHitInfo(const uniform World *uniform w, const RayHit &rh)
+{
+  HitInfo retval;
+  unmasked
+  {
+    retval.instance = NULL;
+    retval.surface = NULL;
+    retval.instArrayId = 0;
+    retval.primId = ~0u;
+    retval.objId = ~0u;
+    retval.instId = ~0u;
+  }
+
+  if (foundHit(rh)) {
+#pragma ignore warning(perf)
+    retval.instance = w->instances[rh.hit.instID];
+#pragma ignore warning(perf)
+    retval.surface = retval.instance->group->surfaces[rh.hit.geomID];
+    // every instance is an Embree instance array, even with one transform
+    retval.instArrayId = rh.hit.instPrimID;
+
+#pragma ignore warning(perf)
+    retval.primId = getPrimitiveId(retval.surface->geometry, rh.hit.primID);
+#pragma ignore warning(perf)
+    retval.objId = retval.surface->id;
+#pragma ignore warning(perf)
+    retval.instId = retval.instance->ids[retval.instArrayId];
+  }
+
+  return retval;
+}
+
+inline bool foundHit(const HitInfo &hitInfo)
+{
+  return hitInfo.instance != NULL;
+}
+
+// The hit instance's transform (object to world) and its inverse
+inline affine3f objectToWorld(const HitInfo &hitInfo)
+{
+#pragma ignore warning(perf)
+  const uniform float *varying xfms = hitInfo.instance->xfms;
+  return load_affine3f(xfms + MAT4F_FLOATS * hitInfo.instArrayId);
+}
+
+inline affine3f worldToObject(const HitInfo &hitInfo)
+{
+#pragma ignore warning(perf)
+  const uniform float *varying invXfms = hitInfo.instance->invXfms;
+  return load_affine3f(invXfms + MAT4F_FLOATS * hitInfo.instArrayId);
+}
+
+// The hit instance's normal matrix (the inverse transpose of its transform's
+// linear part)
+inline linear3f normalToWorld(const HitInfo &hitInfo)
+{
+#pragma ignore warning(perf)
+  const uniform float *varying normalXfms = hitInfo.instance->normalXfms;
+  return load_linear3f(normalXfms + LINEAR3F_FLOATS * hitInfo.instArrayId);
+}
+
+// Transforms an object-space normal (e.g. Embree's Ng) of a hit to world space
+inline float3 xfmNormalToWorld(const HitInfo &hitInfo, float3 n)
+{
+  return xfmVector(normalToWorld(hitInfo), n);
+}
+
+// Transforms a world-space point of a hit to the hit instance's object space
+inline float3 xfmPointToObject(const HitInfo &hitInfo, float3 p)
+{
+  return xfmPoint(worldToObject(hitInfo), p);
+}

@@ -82,7 +82,7 @@ void BaseObject::markParameterChanged()
 void BaseObject::snapshotParameters()
 {
   commitParameterSnapshot();
-  m_lastCommitSnapshot = m_lastParameterChanged;
+  m_lastCommitSnapshot = m_lastParameterChanged.load();
 }
 
 TimeStamp BaseObject::lastUpdated() const
@@ -107,7 +107,7 @@ void BaseObject::markCommitted()
   // setParam that arrived after this commit was snapshotted but before it was
   // flushed, causing that pending change to be silently dropped by the
   // lastParameterChanged() > lastCommitted() gate on the next flush.
-  m_lastCommitted = m_lastCommitSnapshot;
+  m_lastCommitted = m_lastCommitSnapshot.load();
 }
 
 TimeStamp BaseObject::lastFinalized() const
@@ -118,6 +118,32 @@ TimeStamp BaseObject::lastFinalized() const
 void BaseObject::markFinalized()
 {
   m_lastFinalized = newTimeStamp();
+}
+
+bool BaseObject::finalizeIfUpdated()
+{
+  // Capture the update time before finalize() runs: finalize() covers every
+  // update up to here. An update that lands while it runs (an observer
+  // notified from another thread) is newer, so its queued entry finalizes
+  // again. Comparing against lastFinalized(), stamped after finalize()
+  // returns, would skip that entry and drop the update.
+  const TimeStamp updated = lastUpdated();
+  if (updated <= m_lastFinalizedUpdate)
+    return false;
+
+  // finalize() also reads parameters (e.g. helide's Sphere reads "radius"),
+  // so it must see the same committed snapshot as commitParameters(), under
+  // the same snapshot mutex. Objects driven directly by a parent's
+  // finalize() (e.g. helide World's internal zero group/instance) are not
+  // the scope's active object and correctly read their live staging store.
+  {
+    ReadCommittedScope readScope(this);
+    finalize();
+  }
+  markFinalized();
+  m_lastFinalizedUpdate = updated;
+  notifyChangeObservers();
+  return true;
 }
 
 void BaseObject::addChangeObserver(BaseObject *obj)

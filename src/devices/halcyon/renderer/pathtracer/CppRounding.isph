@@ -1,0 +1,55 @@
+// Copyright 2026 The Khronos Group
+// SPDX-License-Identifier: LicenseRef-TOST-1.0 AND BSD-3-Clause
+//
+// Ported from OpenUSD's GfVec3f (GfDot(), GfCross(); NVIDIA-Omniverse/OpenUSD
+// typhoon/main at 70c45e83b, Copyright Pixar, Tomorrow Open Source Technology
+// License 1.0) and Imath 3's Vec3<float>::normalize() (Copyright Contributors
+// to the OpenEXR Project, BSD-3-Clause), as Typhoon's C++ rounds them (see
+// THIRD-PARTY.md).
+
+#pragma once
+
+// Vector arithmetic that rounds as the C++ types of Typhoon's ports round it
+// (OpenUSD's GfVec3f, Imath's Vec3<float>), for the files built without fused
+// multiply-adds to match that C++ bit for bit (Medium.ispc, Subsurface.ispc)
+
+#include "shading/halcyon_math.isph"
+
+#define CPP_FLT_MIN 1.17549435e-38f
+
+// GfVec3f's and Imath's dot product (and length squared): left to right
+static inline float cppDot(float3 a, float3 b)
+{
+  return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
+// GfCross() and Imath's cross()
+static inline float3 cppCross(float3 a, float3 b)
+{
+  return make_float3(
+      a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x);
+}
+
+// Imath's Vec3<float>::normalize(): divided by the length (lengthTiny()
+// where its square underflows), unless that is 0
+static inline float3 imathNormalize(float3 v)
+{
+  const float length2 = cppDot(v, v);
+  float length;
+  if (length2 < 2.f * CPP_FLT_MIN) {
+    const float m = max(abs(v.x), max(abs(v.y), abs(v.z)));
+    if (m == 0.f) {
+      length = 0.f;
+    } else {
+      const float x = abs(v.x) / m;
+      const float y = abs(v.y) / m;
+      const float z = abs(v.z) / m;
+      length = m * sqrt(x * x + y * y + z * z);
+    }
+  } else {
+    length = sqrt(length2);
+  }
+  if (length != 0.f)
+    v = make_float3(v.x / length, v.y / length, v.z / length);
+  return v;
+}

@@ -12,13 +12,16 @@
 #include "sphere_vert_spv.h"
 #include "triangle_frag_spv.h"
 #include "triangle_mesh_vert_spv.h"
-#include "triangle_vert_spv.h"
 
 #include "volume_frag_spv.h"
 #include "volume_vert_spv.h"
 
+#include "light_quad_frag_spv.h"
+#include "light_quad_vert_spv.h"
+
 #include "blur_frag_spv.h"
 #include "composite_frag_spv.h"
+#include "hdri_frag_spv.h"
 #include "fullscreen_vert_spv.h"
 #include "ssao_frag_spv.h"
 
@@ -28,13 +31,16 @@
 #include "sphere_vert_msl.h"
 #include "triangle_frag_msl.h"
 #include "triangle_mesh_vert_msl.h"
-#include "triangle_vert_msl.h"
 #include "volume_frag_msl.h"
 #include "volume_vert_msl.h"
 #include "blur_frag_msl.h"
 #include "composite_frag_msl.h"
+#include "hdri_frag_msl.h"
 #include "fullscreen_vert_msl.h"
 #include "ssao_frag_msl.h"
+
+#include "light_quad_frag_msl.h"
+#include "light_quad_vert_msl.h"
 #endif
 
 namespace helide_gpu {
@@ -48,17 +54,19 @@ namespace {
 #define SHADER_DATA(name) {name##_spv, name##_spv_len}
 #endif
 
-const ShaderData kTriangleVert     = SHADER_DATA(triangle_vert);
 const ShaderData kTriangleMeshVert = SHADER_DATA(triangle_mesh_vert);
 const ShaderData kTriangleFrag     = SHADER_DATA(triangle_frag);
 const ShaderData kSphereVert       = SHADER_DATA(sphere_vert);
 const ShaderData kSphereFrag       = SHADER_DATA(sphere_frag);
 const ShaderData kVolumeVert       = SHADER_DATA(volume_vert);
 const ShaderData kVolumeFrag       = SHADER_DATA(volume_frag);
+const ShaderData kLightQuadVert    = SHADER_DATA(light_quad_vert);
+const ShaderData kLightQuadFrag    = SHADER_DATA(light_quad_frag);
 const ShaderData kFullscreenVert   = SHADER_DATA(fullscreen_vert);
 const ShaderData kSsaoFrag         = SHADER_DATA(ssao_frag);
 const ShaderData kBlurFrag         = SHADER_DATA(blur_frag);
 const ShaderData kCompositeFrag    = SHADER_DATA(composite_frag);
+const ShaderData kHdriFrag         = SHADER_DATA(hdri_frag);
 
 #undef SHADER_DATA
 // clang-format on
@@ -76,91 +84,6 @@ void HelideGPUDeviceGlobalState::gpu_initPipelines()
     return;
 
   auto fmt = gpu.sdlDevice.shaderFormat;
-
-  // --- Triangle SSBO pipeline ---
-  {
-    SDL_GPUShaderCreateInfo vertInfo{};
-    fillShaderInfo(vertInfo, kTriangleVert, fmt, SDL_GPU_SHADERSTAGE_VERTEX);
-    vertInfo.num_storage_buffers = 9;
-    vertInfo.num_uniform_buffers = 1;
-
-    auto *vert = SDL_CreateGPUShader(dev, &vertInfo);
-    if (!vert) {
-      anariDeviceReportStatus(device, ANARI_SEVERITY_ERROR,
-          ANARI_STATUS_UNKNOWN_ERROR,
-          "[SDL3_gpu] Failed to create vertex shader: %s", SDL_GetError());
-      return;
-    }
-
-    SDL_GPUShaderCreateInfo fragInfo{};
-    fillShaderInfo(fragInfo, kTriangleFrag, fmt, SDL_GPU_SHADERSTAGE_FRAGMENT);
-    fragInfo.num_samplers = 1;
-    fragInfo.num_uniform_buffers = 4;
-
-    auto *frag = SDL_CreateGPUShader(dev, &fragInfo);
-    if (!frag) {
-      anariDeviceReportStatus(device, ANARI_SEVERITY_ERROR,
-          ANARI_STATUS_UNKNOWN_ERROR,
-          "[SDL3_gpu] Failed to create fragment shader: %s", SDL_GetError());
-      SDL_ReleaseGPUShader(dev, vert);
-      return;
-    }
-
-    SDL_GPUVertexBufferDescription vbDesc{};
-    vbDesc.slot = 0;
-    vbDesc.pitch = sizeof(float) * 3;
-    vbDesc.input_rate = SDL_GPU_VERTEXINPUTRATE_VERTEX;
-
-    SDL_GPUVertexAttribute vAttr{};
-    vAttr.location = 0;
-    vAttr.buffer_slot = 0;
-    vAttr.format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT3;
-
-    SDL_GPUVertexInputState vertexInput{};
-    vertexInput.vertex_buffer_descriptions = &vbDesc;
-    vertexInput.num_vertex_buffers = 1;
-    vertexInput.vertex_attributes = &vAttr;
-    vertexInput.num_vertex_attributes = 1;
-
-    SDL_GPUColorTargetDescription colorDescs[4]{};
-    colorDescs[0].format = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM;
-    colorDescs[0].blend_state.enable_color_write_mask = true;
-    colorDescs[0].blend_state.color_write_mask = SDL_GPU_COLORCOMPONENT_R
-        | SDL_GPU_COLORCOMPONENT_G | SDL_GPU_COLORCOMPONENT_B
-        | SDL_GPU_COLORCOMPONENT_A;
-    colorDescs[1].format = SDL_GPU_TEXTUREFORMAT_R32G32B32A32_UINT;
-    colorDescs[2].format = SDL_GPU_TEXTUREFORMAT_R32G32B32A32_FLOAT;
-    colorDescs[3].format = SDL_GPU_TEXTUREFORMAT_R32G32B32A32_FLOAT;
-
-    SDL_GPUGraphicsPipelineTargetInfo targetInfo{};
-    targetInfo.color_target_descriptions = colorDescs;
-    targetInfo.num_color_targets = 4;
-    targetInfo.has_depth_stencil_target = true;
-    targetInfo.depth_stencil_format = SDL_GPU_TEXTUREFORMAT_D32_FLOAT;
-
-    SDL_GPUDepthStencilState depthState{};
-    depthState.compare_op = SDL_GPU_COMPAREOP_LESS;
-    depthState.enable_depth_test = true;
-    depthState.enable_depth_write = true;
-
-    SDL_GPUGraphicsPipelineCreateInfo pipelineInfo{};
-    pipelineInfo.vertex_shader = vert;
-    pipelineInfo.fragment_shader = frag;
-    pipelineInfo.vertex_input_state = vertexInput;
-    pipelineInfo.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST;
-    pipelineInfo.depth_stencil_state = depthState;
-    pipelineInfo.target_info = targetInfo;
-
-    gpu.trianglePipeline = SDL_CreateGPUGraphicsPipeline(dev, &pipelineInfo);
-    if (!gpu.trianglePipeline) {
-      anariDeviceReportStatus(device, ANARI_SEVERITY_ERROR,
-          ANARI_STATUS_UNKNOWN_ERROR,
-          "[SDL3_gpu] Failed to create triangle pipeline: %s", SDL_GetError());
-    }
-
-    SDL_ReleaseGPUShader(dev, vert);
-    SDL_ReleaseGPUShader(dev, frag);
-  }
 
   // --- Triangle mesh pipeline ---
   {
@@ -180,7 +103,9 @@ void HelideGPUDeviceGlobalState::gpu_initPipelines()
 
     SDL_GPUShaderCreateInfo fragInfo{};
     fillShaderInfo(fragInfo, kTriangleFrag, fmt, SDL_GPU_SHADERSTAGE_FRAGMENT);
-    fragInfo.num_samplers = 1;
+    // base color, metallic, roughness, opacity, emissive and normal
+    // (shaders/material.glsl)
+    fragInfo.num_samplers = 6;
     fragInfo.num_uniform_buffers = 4;
 
     auto *frag = SDL_CreateGPUShader(dev, &fragInfo);
@@ -255,6 +180,81 @@ void HelideGPUDeviceGlobalState::gpu_initPipelines()
     SDL_ReleaseGPUShader(dev, frag);
   }
 
+  // --- Visible quad light pipeline ---
+  {
+    SDL_GPUShaderCreateInfo vertInfo{};
+    fillShaderInfo(vertInfo, kLightQuadVert, fmt, SDL_GPU_SHADERSTAGE_VERTEX);
+    vertInfo.num_uniform_buffers = 1;
+
+    auto *vert = SDL_CreateGPUShader(dev, &vertInfo);
+    if (!vert) {
+      anariDeviceReportStatus(device,
+          ANARI_SEVERITY_ERROR,
+          ANARI_STATUS_UNKNOWN_ERROR,
+          "[SDL3_gpu] Failed to create light quad vertex shader: %s",
+          SDL_GetError());
+      return;
+    }
+
+    SDL_GPUShaderCreateInfo fragInfo{};
+    fillShaderInfo(fragInfo, kLightQuadFrag, fmt, SDL_GPU_SHADERSTAGE_FRAGMENT);
+    fragInfo.num_uniform_buffers = 1;
+
+    auto *frag = SDL_CreateGPUShader(dev, &fragInfo);
+    if (!frag) {
+      anariDeviceReportStatus(device,
+          ANARI_SEVERITY_ERROR,
+          ANARI_STATUS_UNKNOWN_ERROR,
+          "[SDL3_gpu] Failed to create light quad fragment shader: %s",
+          SDL_GetError());
+      SDL_ReleaseGPUShader(dev, vert);
+      return;
+    }
+
+    // the same targets as the surface pipelines
+    SDL_GPUColorTargetDescription colorDescs[4]{};
+    colorDescs[0].format = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM;
+    colorDescs[0].blend_state.enable_color_write_mask = true;
+    colorDescs[0].blend_state.color_write_mask = SDL_GPU_COLORCOMPONENT_R
+        | SDL_GPU_COLORCOMPONENT_G | SDL_GPU_COLORCOMPONENT_B
+        | SDL_GPU_COLORCOMPONENT_A;
+    colorDescs[1].format = SDL_GPU_TEXTUREFORMAT_R32G32B32A32_UINT;
+    colorDescs[2].format = SDL_GPU_TEXTUREFORMAT_R32G32B32A32_FLOAT;
+    colorDescs[3].format = SDL_GPU_TEXTUREFORMAT_R32G32B32A32_FLOAT;
+
+    SDL_GPUGraphicsPipelineTargetInfo targetInfo{};
+    targetInfo.color_target_descriptions = colorDescs;
+    targetInfo.num_color_targets = 4;
+    targetInfo.has_depth_stencil_target = true;
+    targetInfo.depth_stencil_format = SDL_GPU_TEXTUREFORMAT_D32_FLOAT;
+
+    SDL_GPUDepthStencilState depthState{};
+    depthState.compare_op = SDL_GPU_COMPAREOP_LESS;
+    depthState.enable_depth_test = true;
+    depthState.enable_depth_write = true;
+
+    // no vertex input: the vertex shader builds the corners; no culling, the
+    // frame draws only a quad whose seen side emits
+    SDL_GPUGraphicsPipelineCreateInfo pipelineInfo{};
+    pipelineInfo.vertex_shader = vert;
+    pipelineInfo.fragment_shader = frag;
+    pipelineInfo.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST;
+    pipelineInfo.depth_stencil_state = depthState;
+    pipelineInfo.target_info = targetInfo;
+
+    gpu.lightQuadPipeline = SDL_CreateGPUGraphicsPipeline(dev, &pipelineInfo);
+    if (!gpu.lightQuadPipeline) {
+      anariDeviceReportStatus(device,
+          ANARI_SEVERITY_ERROR,
+          ANARI_STATUS_UNKNOWN_ERROR,
+          "[SDL3_gpu] Failed to create light quad pipeline: %s",
+          SDL_GetError());
+    }
+
+    SDL_ReleaseGPUShader(dev, vert);
+    SDL_ReleaseGPUShader(dev, frag);
+  }
+
   // --- Sphere pipeline ---
   {
     SDL_GPUShaderCreateInfo vertInfo{};
@@ -273,7 +273,9 @@ void HelideGPUDeviceGlobalState::gpu_initPipelines()
 
     SDL_GPUShaderCreateInfo fragInfo{};
     fillShaderInfo(fragInfo, kSphereFrag, fmt, SDL_GPU_SHADERSTAGE_FRAGMENT);
-    fragInfo.num_samplers = 1;
+    // base color, metallic, roughness, opacity, emissive and normal
+    // (shaders/material.glsl)
+    fragInfo.num_samplers = 6;
     fragInfo.num_uniform_buffers = 4;
 
     auto *frag = SDL_CreateGPUShader(dev, &fragInfo);
@@ -404,7 +406,11 @@ void HelideGPUDeviceGlobalState::gpu_initPipelines()
     colorDescs[0].blend_state.color_write_mask = SDL_GPU_COLORCOMPONENT_R
         | SDL_GPU_COLORCOMPONENT_G | SDL_GPU_COLORCOMPONENT_B
         | SDL_GPU_COLORCOMPONENT_A;
+    // keep .w, the packed ambient light of the surface behind (composite.frag)
     colorDescs[1].format = SDL_GPU_TEXTUREFORMAT_R32G32B32A32_UINT;
+    colorDescs[1].blend_state.enable_color_write_mask = true;
+    colorDescs[1].blend_state.color_write_mask = SDL_GPU_COLORCOMPONENT_R
+        | SDL_GPU_COLORCOMPONENT_G | SDL_GPU_COLORCOMPONENT_B;
     colorDescs[2].format = SDL_GPU_TEXTUREFORMAT_R32G32B32A32_FLOAT;
     colorDescs[3].format = SDL_GPU_TEXTUREFORMAT_R32G32B32A32_FLOAT;
 
@@ -465,7 +471,7 @@ void HelideGPUDeviceGlobalState::gpu_initPipelines()
     {
       SDL_GPUShaderCreateInfo fragInfo{};
       fillShaderInfo(fragInfo, kSsaoFrag, fmt, SDL_GPU_SHADERSTAGE_FRAGMENT);
-      fragInfo.num_samplers = 4;
+      fragInfo.num_samplers = 1;
       fragInfo.num_uniform_buffers = 1;
 
       auto *frag = SDL_CreateGPUShader(dev, &fragInfo);
@@ -506,7 +512,7 @@ void HelideGPUDeviceGlobalState::gpu_initPipelines()
     {
       SDL_GPUShaderCreateInfo fragInfo{};
       fillShaderInfo(fragInfo, kBlurFrag, fmt, SDL_GPU_SHADERSTAGE_FRAGMENT);
-      fragInfo.num_samplers = 3;
+      fragInfo.num_samplers = 2;
       fragInfo.num_uniform_buffers = 1;
 
       auto *frag = SDL_CreateGPUShader(dev, &fragInfo);
@@ -547,7 +553,7 @@ void HelideGPUDeviceGlobalState::gpu_initPipelines()
     {
       SDL_GPUShaderCreateInfo fragInfo{};
       fillShaderInfo(fragInfo, kCompositeFrag, fmt, SDL_GPU_SHADERSTAGE_FRAGMENT);
-      fragInfo.num_samplers = 2;
+      fragInfo.num_samplers = 4;
       fragInfo.num_uniform_buffers = 1;
 
       auto *frag = SDL_CreateGPUShader(dev, &fragInfo);
@@ -585,6 +591,72 @@ void HelideGPUDeviceGlobalState::gpu_initPipelines()
       SDL_ReleaseGPUShader(dev, frag);
     }
 
+    // Visible hdri lights: drawn into the geometry pass's targets, adding
+    // to the color target's rgb only
+    {
+      SDL_GPUShaderCreateInfo fragInfo{};
+      fillShaderInfo(fragInfo, kHdriFrag, fmt, SDL_GPU_SHADERSTAGE_FRAGMENT);
+      fragInfo.num_samplers = 1;
+      fragInfo.num_uniform_buffers = 1;
+
+      auto *frag = SDL_CreateGPUShader(dev, &fragInfo);
+      if (!frag) {
+        anariDeviceReportStatus(device, ANARI_SEVERITY_ERROR,
+            ANARI_STATUS_UNKNOWN_ERROR,
+            "[SDL3_gpu] Failed to create hdri fragment shader: %s",
+            SDL_GetError());
+        SDL_ReleaseGPUShader(dev, fsVert);
+        return;
+      }
+
+      SDL_GPUColorTargetDescription colorDescs[4]{};
+      colorDescs[0].format = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM;
+      colorDescs[0].blend_state.enable_blend = true;
+      colorDescs[0].blend_state.src_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
+      colorDescs[0].blend_state.dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
+      colorDescs[0].blend_state.color_blend_op = SDL_GPU_BLENDOP_ADD;
+      colorDescs[0].blend_state.src_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
+      colorDescs[0].blend_state.dst_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ZERO;
+      colorDescs[0].blend_state.alpha_blend_op = SDL_GPU_BLENDOP_ADD;
+      colorDescs[0].blend_state.enable_color_write_mask = true;
+      colorDescs[0].blend_state.color_write_mask = SDL_GPU_COLORCOMPONENT_R
+          | SDL_GPU_COLORCOMPONENT_G | SDL_GPU_COLORCOMPONENT_B;
+      // the other targets keep their cleared "no surface" values
+      colorDescs[1].format = SDL_GPU_TEXTUREFORMAT_R32G32B32A32_UINT;
+      colorDescs[2].format = SDL_GPU_TEXTUREFORMAT_R32G32B32A32_FLOAT;
+      colorDescs[3].format = SDL_GPU_TEXTUREFORMAT_R32G32B32A32_FLOAT;
+      for (int i = 1; i < 4; i++) {
+        colorDescs[i].blend_state.enable_color_write_mask = true;
+        colorDescs[i].blend_state.color_write_mask = 0;
+      }
+
+      SDL_GPUGraphicsPipelineTargetInfo targetInfo{};
+      targetInfo.color_target_descriptions = colorDescs;
+      targetInfo.num_color_targets = 4;
+      targetInfo.has_depth_stencil_target = true;
+      targetInfo.depth_stencil_format = SDL_GPU_TEXTUREFORMAT_D32_FLOAT;
+
+      // no depth test or write: drawn first, behind everything
+      SDL_GPUDepthStencilState depthState{};
+
+      SDL_GPUGraphicsPipelineCreateInfo pipelineInfo{};
+      pipelineInfo.vertex_shader = fsVert;
+      pipelineInfo.fragment_shader = frag;
+      pipelineInfo.vertex_input_state = emptyVertexInput;
+      pipelineInfo.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST;
+      pipelineInfo.depth_stencil_state = depthState;
+      pipelineInfo.target_info = targetInfo;
+
+      gpu.hdriPipeline = SDL_CreateGPUGraphicsPipeline(dev, &pipelineInfo);
+      if (!gpu.hdriPipeline) {
+        anariDeviceReportStatus(device, ANARI_SEVERITY_ERROR,
+            ANARI_STATUS_UNKNOWN_ERROR,
+            "[SDL3_gpu] Failed to create hdri pipeline: %s", SDL_GetError());
+      }
+
+      SDL_ReleaseGPUShader(dev, frag);
+    }
+
     SDL_ReleaseGPUShader(dev, fsVert);
   }
 }
@@ -602,13 +674,14 @@ void HelideGPUDeviceGlobalState::gpu_destroyPipelines()
     }
   };
 
+  releaseP(gpu.hdriPipeline);
   releaseP(gpu.compositePipeline);
   releaseP(gpu.blurPipeline);
   releaseP(gpu.ssaoPipeline);
   releaseP(gpu.volumePipeline);
+  releaseP(gpu.lightQuadPipeline);
   releaseP(gpu.spherePipeline);
   releaseP(gpu.triangleMeshPipeline);
-  releaseP(gpu.trianglePipeline);
 }
 
 } // namespace helide_gpu

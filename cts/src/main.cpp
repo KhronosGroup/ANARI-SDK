@@ -7,8 +7,10 @@
 
 #include "cts/BuiltinTests.h"
 #include "cts/Catalog.h"
+#include "cts/DeviceErrorLog.h"
 #include "cts/Expansion.h"
 #include "cts/HtmlReport.h"
+#include "cts/Isolation.h"
 #include "cts/RendererParams.h"
 #include "cts/Report.h"
 #include "cts/Runner.h"
@@ -24,6 +26,7 @@
 #include <fstream>
 #include <iostream>
 #include <limits>
+#include <memory>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -33,7 +36,15 @@ using namespace anari::cts;
 
 namespace {
 
-bool g_verbose = false;
+// What the status callback devices are loaded with needs.
+struct StatusState
+{
+  bool verbose{false};
+  // For behaviour checks that fail on a device error (ADR-0009).
+  DeviceErrorLog errors;
+};
+
+StatusState g_status;
 
 void statusFunc(const void *userData,
     anari::Device,
@@ -43,7 +54,10 @@ void statusFunc(const void *userData,
     anari::StatusCode,
     const char *message)
 {
-  const bool verbose = userData ? *static_cast<const bool *>(userData) : false;
+  auto *state = static_cast<StatusState *>(const_cast<void *>(userData));
+  const bool verbose = state && state->verbose;
+  if (state)
+    state->errors.record(severity, message);
   if (severity == ANARI_SEVERITY_FATAL_ERROR
       || severity == ANARI_SEVERITY_ERROR)
     std::cerr << "[ANARI][ERROR] " << message << "\n";
@@ -81,6 +95,12 @@ struct Options
   bool embed = false;
   std::string htmlOut;
   std::vector<std::string> positionals;
+  // run: run only this Case (<category>/<test>/<case>) in this process. `run`
+  // starts itself with it to run a timed Test's Case in isolation (ADR-0009).
+  std::string isolatedCase;
+  // The command's arguments as given, which an isolated Case's process gets
+  // too.
+  std::vector<std::string> args;
 };
 
 void printUsage()
@@ -119,6 +139,10 @@ options:
                        sets it, if the device lacks ANARI_KHR_RENDERER_DENOISE)
   --stdin              read newline-separated filter patterns from stdin (run)
   --verbose            print ANARI warnings
+  --isolated-case <category>/<test>/<case>
+                       run only this Case, in this process (run uses it to
+                       run each Case of a timed behaviour Test in a child
+                       process, killed if it hangs)
 
 report options:
   --html <path>        also write an interactive HTML report
@@ -139,6 +163,7 @@ query-device-info options:
 Options parseOptions(int argc, char **argv, int start)
 {
   Options o;
+  o.args.assign(argv + start, argv + argc);
   // Parse a non-negative integer argument (width/height/accumulation).
   // std::stoul silently wraps a leading '-' to a huge value (so e.g.
   // --accumulation -1 would become ~4.3 billion frames -> an unbounded render
@@ -220,7 +245,9 @@ Options parseOptions(int argc, char **argv, int start)
     else if (a == "--html")
       o.htmlOut = next();
     else if (a == "--verbose")
-      g_verbose = true;
+      g_status.verbose = true;
+    else if (a == "--isolated-case")
+      o.isolatedCase = next();
     else if (!a.empty() && a[0] != '-') {
       o.positionals.push_back(a);
       if (o.device.empty())
@@ -257,7 +284,7 @@ void warnIfDenoiseUnsupported(const std::string &deviceName,
 // Load a device library and create its default device, or null on failure.
 anari::Device loadDevice(const std::string &name, anari::Library &lib)
 {
-  lib = anari::loadLibrary(name.c_str(), statusFunc, &g_verbose);
+  lib = anari::loadLibrary(name.c_str(), statusFunc, &g_status);
   if (!lib) {
     std::cerr << "error: failed to load ANARI library '" << name << "'\n";
     return nullptr;
@@ -468,7 +495,35 @@ int cmdRun(const Options &o)
   ro.denoise = o.denoise;
   ro.rendererParams = o.rendererParams;
   ro.device = {o.device, "default", o.renderer};
+  ro.deviceErrors = &g_status.errors;
+
+  // A child process running one isolated Case: run just that Case and write
+  // its sidecar; the parent reports it.
+  if (!o.isolatedCase.empty()) {
+    ro.onlyCase = o.isolatedCase;
+    Runner runner(d, Workdir(o.workdir), ro);
+    const auto s = runner.run(catalog, Filter{""}, features);
+    anari::release(d, d);
+    anari::unloadLibrary(lib);
+    if (s.total != 1) {
+      std::cerr << "error: no Case '" << o.isolatedCase << "' to run\n";
+      return 2;
+    }
+    return 0;
+  }
+
   Runner runner(d, Workdir(o.workdir), ro);
+  const auto self = currentExecutable();
+  if (self.empty()) {
+    std::cerr << "warning: can't find this executable's path; running timed "
+                 "behaviour Tests in this process, where a hang hangs the "
+                 "run\n";
+  } else {
+    std::vector<std::string> args{"run"};
+    args.insert(args.end(), o.args.begin(), o.args.end());
+    runner.setCaseIsolation(
+        std::make_shared<ProcessCaseIsolation>(self, std::move(args)));
+  }
 
   RunSummary s;
   if (o.useStdin) {

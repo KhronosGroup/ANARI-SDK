@@ -6,6 +6,12 @@
           "bases": ["HdRendererPlugin"],
           "displayName": "Anari",
           "priority": 99
+        },
+        "HdAnari_ImplicitSurfaceSceneIndexPlugin": {
+          "bases": ["HdSceneIndexPlugin"],
+          "loadWithRenderer": "Anari",
+          "priority": 0,
+          "displayName": "Scene Index to turn implicit surfaces into meshes suitable for HdAnari"
         }
       }
     },

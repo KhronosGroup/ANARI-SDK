@@ -64,6 +64,14 @@ void ParameterizedObject::setParamDirect(
   findParam(name)->second = v;
 }
 
+std::vector<std::string> ParameterizedObject::paramNames() const
+{
+  std::vector<std::string> names;
+  for (const auto &p : readParams())
+    names.push_back(p.first);
+  return names;
+}
+
 bool ParameterizedObject::removeParam(const std::string &name)
 {
   auto foundParam = std::find_if(m_paramsStaging.begin(),
@@ -103,12 +111,13 @@ ParameterizedObject::ReadCommittedScope::ReadCommittedScope(
   // Hold the snapshot mutex for the whole commit/finalize so a concurrent
   // commitParameterSnapshot() cannot mutate m_paramsCommitted mid-read.
   m_obj->m_commitReadMutex.lock();
-  m_obj->m_readCommitted.store(true, std::memory_order_relaxed);
+  m_obj->m_committedReader.store(
+      std::this_thread::get_id(), std::memory_order_relaxed);
 }
 
 ParameterizedObject::ReadCommittedScope::~ReadCommittedScope()
 {
-  m_obj->m_readCommitted.store(false, std::memory_order_relaxed);
+  m_obj->m_committedReader.store(std::thread::id{}, std::memory_order_relaxed);
   m_obj->m_commitReadMutex.unlock();
 }
 
@@ -125,8 +134,9 @@ ParameterizedObject::ParameterList::iterator ParameterizedObject::params_end()
 const ParameterizedObject::ParameterList &ParameterizedObject::readParams()
     const
 {
-  return m_readCommitted.load(std::memory_order_relaxed) ? m_paramsCommitted
-                                                         : m_paramsStaging;
+  const auto reader = m_committedReader.load(std::memory_order_relaxed);
+  return reader == std::this_thread::get_id() ? m_paramsCommitted
+                                              : m_paramsStaging;
 }
 
 const ParameterizedObject::Param *ParameterizedObject::findParam(

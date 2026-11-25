@@ -19,7 +19,9 @@ layout(set = 3, binding = 0) uniform VolumeParams
 } vp;
 
 layout(location = 0) out vec4 fragColor;
+// .w is masked off, keeping the packed ambient light of the surface behind
 layout(location = 1) out uvec4 outIds;
+// .w: the volume's opacity, which attenuates the surface's ambient light
 layout(location = 2) out vec4 outAlbedo;
 layout(location = 3) out vec4 outNormal;
 
@@ -114,6 +116,6 @@ void main()
 
   fragColor = vec4(accColor, accAlpha);
   outIds = hitRecorded ? uvec4(0u, vp.objectId, vp.instanceId, 0u) : uvec4(~0u);
-  outAlbedo = vec4(accColor, 1.0);
+  outAlbedo = vec4(accColor, accAlpha);
   outNormal = vec4(0.0);
 }

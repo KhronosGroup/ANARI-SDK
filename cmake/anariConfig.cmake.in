@@ -3,6 +3,12 @@
 
 @PACKAGE_INIT@
 
+# From the prefix, as CMAKE_INSTALL_LIBDIR may be deeper than lib/; before
+# find_dependency(), whose PACKAGE_INIT may reset PACKAGE_PREFIX_DIR
+set(ANARI_DATAROOTDIR
+  ${PACKAGE_PREFIX_DIR}/@CMAKE_INSTALL_DATAROOTDIR@/anari
+)
+
 include(CMakeFindDependencyMacro)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
@@ -28,10 +34,6 @@ if (NOT TARGET anari::anari)
   Consuming ANARI-SDK from a build directory is not supported.")
 endif()
 
-set(ANARI_DATAROOTDIR
-  ${CMAKE_CURRENT_LIST_DIR}/../../../@CMAKE_INSTALL_DATAROOTDIR@/anari
-)
-
 if (@INSTALL_CODE_GEN_SCRIPTS@)
   set(ANARI_CODE_GEN_ROOT ${ANARI_DATAROOTDIR}/code_gen)
   include(${CMAKE_CURRENT_LIST_DIR}/cmake/anari_generate_frontend.cmake)
@@ -45,6 +47,7 @@ endif()
 
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/anari_sdk_fetch_project.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/cmake_project_commands.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/cmake/anari_embree.cmake)
 
 if (TARGET anari::anari_viewer)
   set(anari_viewer_FOUND 1)

@@ -7,6 +7,7 @@
 #include "TestDef.h"
 #include "Value.h"
 // std
+#include <chrono>
 #include <initializer_list>
 #include <string>
 #include <utility>
@@ -34,6 +35,11 @@ struct TestBuilder
   // comparing against ground truth (e.g. a completion callback firing). A Test
   // with a behavior check generates no ground truth.
   TestBuilder &behavior(BehaviorFn fn);
+  // Run each Case of a behavior check in its own process, failing it if it
+  // doesn't finish in time (a hang), and fail it on a device ERROR
+  // (ADR-0009).
+  TestBuilder &timeout(std::chrono::milliseconds limit);
+  TestBuilder &failOnDeviceErrors();
 
   // Permutation axis: values produce different output (distinct ground truth).
   TestBuilder &permute(std::string axis, std::vector<Any> values);

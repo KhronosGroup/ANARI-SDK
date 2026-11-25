@@ -32,15 +32,29 @@ int BaseDevice::getProperty(ANARIObject object,
     uint64_t size,
     uint32_t mask)
 {
-  if (!handleIsDevice(object)) {
-    if (mask == ANARI_WAIT)
-      m_state->commitBuffer.flush();
-    auto lock = getObjectLock(object);
-    return referenceFromHandle(object).getProperty(name, type, mem, size, mask);
-  } else
+  if (handleIsDevice(object))
     return deviceGetProperty(name, type, mem, size, mask);
 
-  return 0;
+  auto &obj = referenceFromHandle(object);
+
+  if (mask != ANARI_WAIT) {
+    auto lock = getObjectLock(object);
+    return obj.getProperty(name, type, mem, size, mask);
+  }
+
+  int result = 0;
+  const bool ran = runDeviceQuery([&](bool onCallingThread) {
+    m_state->commitBuffer.flush();
+    // A query run on another thread (a device worker) must not take a
+    // frame's lock: a thread holding it may be waiting for the frame's own
+    // work, possibly queued behind this (e.g. a device's renderFrame()
+    // waiting for the frame's previous render).
+    std::unique_lock<std::mutex> lock;
+    if (obj.type() != ANARI_FRAME || onCallingThread)
+      lock = getObjectLock(object);
+    result = obj.getProperty(name, type, mem, size, mask);
+  });
+  return ran ? result : 0;
 }
 
 // Object + Parameter Lifetime Management /////////////////////////////////////
@@ -162,7 +176,7 @@ void BaseDevice::commitParameters(ANARIObject o)
     // makes the snapshot race-free vs a concurrent setParam, and is taken
     // before addObjectToCommit so the snapshot is published prior to enqueue.
     {
-      auto lock = obj->scopeLockObject();
+      auto lock = getObjectLock(o);
       obj->snapshotParameters();
     }
     m_state->commitBuffer.addObjectToCommit(obj);
@@ -210,8 +224,11 @@ const void *BaseDevice::frameBufferMap(ANARIFrame f,
     uint32_t *h,
     ANARIDataType *pixelType)
 {
+  // Wait for the frame before taking its object lock, as frameReady() does.
+  IntrusivePtr<BaseFrame> frame = &referenceFromHandle<BaseFrame>(f);
+  frame->waitWithoutObjectLock();
   auto lock = getObjectLock(f);
-  return referenceFromHandle<BaseFrame>(f).map(channel, w, h, pixelType);
+  return frame->map(channel, w, h, pixelType);
 }
 
 void BaseDevice::frameBufferUnmap(ANARIFrame f, const char *channel)
@@ -230,8 +247,17 @@ void BaseDevice::renderFrame(ANARIFrame f)
 
 int BaseDevice::frameReady(ANARIFrame f, ANARIWaitMask m)
 {
+  // Wait for the frame without its object lock, if the frame supports it:
+  // while an app thread waits, another frame's completion callback may call
+  // into this frame, and on a device that runs this frame's render after that
+  // callback, a callback waiting for the lock would deadlock. The reference
+  // keeps the frame alive meanwhile, should its render or callback drop the
+  // frame's last one.
+  IntrusivePtr<BaseFrame> frame = &referenceFromHandle<BaseFrame>(f);
+  if (m == ANARI_WAIT)
+    frame->waitWithoutObjectLock();
   auto lock = getObjectLock(f);
-  return referenceFromHandle<BaseFrame>(f).frameReady(m);
+  return frame->frameReady(m);
 }
 
 void BaseDevice::discardFrame(ANARIFrame f)
@@ -297,6 +323,17 @@ BaseDevice::~BaseDevice()
   }
 }
 
+bool BaseDevice::runDeviceQuery(const std::function<void(bool)> &work)
+{
+  work(true);
+  return true;
+}
+
+void BaseDevice::runDeviceRelease(const std::function<void()> &work)
+{
+  work();
+}
+
 int BaseDevice::deviceGetProperty(const char *name,
     ANARIDataType type,
     void *mem,
@@ -322,12 +359,16 @@ void BaseDevice::deviceUnsetAllParameters()
   removeAllParams();
 }
 
-std::scoped_lock<std::mutex> BaseDevice::getObjectLock(ANARIObject object)
+std::unique_lock<std::mutex> BaseDevice::getObjectLock(ANARIObject object)
 {
   if (handleIsDevice(object))
     return referenceFromHandle<BaseDevice>(object).scopeLockObject();
-  else
-    return referenceFromHandle(object).scopeLockObject();
+
+  auto &o = referenceFromHandle(object);
+  if (o.type() == ANARI_FRAME
+      && static_cast<BaseFrame &>(o).completingOnThisThread())
+    return {};
+  return o.scopeLockObject();
 }
 
 } // namespace helium

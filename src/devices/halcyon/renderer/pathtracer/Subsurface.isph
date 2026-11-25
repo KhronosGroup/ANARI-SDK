@@ -1,0 +1,136 @@
+// Copyright 2026 The Khronos Group
+// SPDX-License-Identifier: LicenseRef-TOST-1.0 AND Apache-2.0
+//
+// Ported from Typhoon (NVIDIA-Omniverse/OpenUSD, branch typhoon/main, commit
+// 70c45e83b08a7b45588cd6cdbd2ae67f5147befb),
+// pxr/imaging/plugin/hdEmbree/renderer/integrator/: sss.h and sss.cpp
+// (ty::SssInput, ty::SssOutput, ty::RandomWalkSSS(), ty::ChiangRemap(), the
+// Dwivedi helpers; its Henyey-Greenstein sampling and channel MIS, of
+// medium.cpp, are in Medium.isph). Copyright 2018-2026 Pixar, licensed under
+// the Tomorrow Open Source Technology License 1.0 (see THIRD-PARTY.md);
+// Typhoon takes Chiang's remap and the Dwivedi sampling from Blender Cycles'
+// intern/cycles/kernel/integrator/subsurface_random_walk.h (Apache-2.0).
+// Keep in step with those files when the pin in
+// external/typhoon/PROVENANCE.md moves.
+
+#pragma once
+
+// The pathtracer's random-walk subsurface scattering (a port of Typhoon's
+// ty::RandomWalkSSS(); credits in Subsurface.ispc, which is compiled without
+// fused multiply-adds and with the system's math library, so that it rounds
+// as the C++ it ports does). A path that samples a closure's subsurface lobe
+// enters the surface along the entry direction the material gives
+// (PathMaterial_subsurface()), walks through a homogeneous medium of the
+// closure's colour, radius and anisotropy (Chiang's remap: the colour is the
+// diffuse reflectance of a semi-infinite slab) until it reaches the surface
+// again, and leaves there through a white Lambertian (PathTracer.ispc).
+//
+// The walk sees only the surface it entered (the owner: Typhoon traces the
+// owner's prototype scene, which holds that mesh alone): other surfaces,
+// lights and volumes don't stop or attenuate it. Rays are traced in world
+// space through the world's scene, one ray at a time (rtcIntersect1(), as
+// Typhoon's), with an Embree argument filter that drops every hit but the
+// owner's (so neither a mesh inside nor a surface coplanar with the owner's,
+// a floor under a box, hides it).
+
+#include "renderer/pathtracer/Sampling.isph"
+#include "shading/halcyon_math.isph"
+#include "shading/halcyon_ray.isph"
+
+// Typhoon's bound on the walk's scattering events
+#define SUBSURFACE_MAX_BOUNCES 256
+
+// The surface a walk runs under: the instance, its transform and the surface
+// (Embree's instID, instPrimID and geomID of its hits), and the instance
+// transform's normal matrix and linear part (object-space normals to world
+// space and back)
+struct SubsurfaceOwner
+{
+  uint32 instID;
+  uint32 instPrimID;
+  uint32 geomID;
+  linear3f normalToWorld;
+  linear3f objectToWorld;
+};
+
+// What the walk starts from (Typhoon's ty::SssInput)
+struct SubsurfaceWalkInput
+{
+  // The entry point (the surface hit) and the ray's direction into the
+  // medium there
+  float3 posEntry;
+  float3 dirEntry;
+  // The smooth normal at the entry, faced to the incident side: the axis
+  // Dwivedi sampling guides directions around
+  float3 guideN;
+  // The closure's subsurface colour, radius (times its scale, world units)
+  // and anisotropy, or the precomputed coefficients that replace them
+  float3 albedo;
+  float3 radius;
+  float anisotropy;
+  bool usePrecomputed;
+  float3 absorption;
+  float3 scattering;
+  // The tnear of the first walk ray, from the entry point; the walk's later
+  // rays start at epsilonFrom() of their origin. Typhoon's walk uses a fixed
+  // 1e-4 for every ray (and the opposite-interface test): see
+  // Subsurface_randomWalk()'s 'fixedBias'.
+  float entryBias;
+};
+
+// Where and how a walk leaves (Typhoon's ty::SssOutput)
+struct SubsurfaceWalkOutput
+{
+  // False when the walk found no exit (absorbed, degenerate, or out of
+  // bounces): the path ends
+  bool success;
+  float3 posExit;
+  // The exit's geometric normal, world and object space, faced along the
+  // exit direction (outward)
+  float3 NgWorldExt;
+  float3 NgObjectExt;
+  // The walk's last direction, from the inside out
+  float3 dirExit;
+  // Embree's primitive and hit coordinates at the exit
+  uint32 primID;
+  float u;
+  float v;
+  // The walk's weight on the path's throughput
+  float3 throughput;
+  // The walk's scattering steps (loop iterations)
+  uint32 walkSteps;
+};
+
+// Walks from 'input' through the owner's medium, tracing 'scene' (world
+// space), with the random numbers of 'domain' (the path vertex's SssEntry
+// fork). 'fixedBias' above 0 replaces the scale-relative ray offsets by
+// Typhoon's fixed one (the reference test); the renderer passes 0.
+void Subsurface_randomWalk(uniform RTCScene scene,
+    const varying SubsurfaceOwner &owner,
+    const varying SubsurfaceWalkInput &input,
+    const varying SampleDomain &domain,
+    uniform float fixedBias,
+    varying SubsurfaceWalkOutput &output);
+
+// The parts of the walk Typhoon exposes, for the reference test
+
+// Chiang's remap of (albedo, radius, anisotropy) to extinction and the
+// single-scattering albedo, clamped to at least 0.2, and the albedo before
+// that clamp (ty::ChiangRemap())
+void Subsurface_chiangRemap(float3 albedo,
+    float3 radius,
+    float anisotropy,
+    varying float3 &extinction,
+    varying float3 &alpha,
+    varying float3 &rawAlpha);
+
+// ty::DiffusionLengthDwivedi(), ty::EvalPhaseDwivedi(),
+// ty::SamplePhaseDwivedi(), ty::BackwardDwivediFraction()
+float Subsurface_diffusionLengthDwivedi(float alpha);
+float Subsurface_evalPhaseDwivedi(
+    float diffusionLength, float phaseLog, float cosTheta);
+float Subsurface_samplePhaseDwivedi(
+    float diffusionLength, float phaseLog, float u1);
+float Subsurface_backwardDwivediFraction(float distanceOpposite,
+    float distanceFromEntryPlane,
+    float diffusionLength);

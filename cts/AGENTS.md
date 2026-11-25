@@ -88,8 +88,9 @@ ctsReport.py              reads the results tree too; retained only for the PDF
 **Harness / runner:**
 - `TestDef.h` — a registered Test: human-readable `description`, `build`
   (world), optional `cameraBuild` / `rendererConfig` hooks (ADR-0006) and
-  `behaviorCheck` hook, axes, required features, thresholds (test-wide +
-  per-channel), channels.
+  `behaviorCheck` hook (with an optional `timeout` and `failOnDeviceErrors`,
+  ADR-0009), axes, required features, thresholds (test-wide + per-channel),
+  channels.
 - `TestBuilder.{h,cpp}` — the `makeTest(...)` fluent builder. Note the verb is
   `requireFeatures()`, not the C++20 keyword `requires`.
 - `Axis.h` / `Case.{h,cpp}` / `Expansion.{h,cpp}` — axes expand into Cases
@@ -100,7 +101,14 @@ ctsReport.py              reads the results tree too; retained only for the PDF
   `build()`, backed by `helium::ParameterizedObject`.
 - `Runner.{h,cpp}` — builds, renders, and scores Cases; owns renderer creation
   and baseline configuration, owns the default camera, and runs the behavior
-  hook for behavioral tests.
+  hook for behavioral tests: a timed one's Cases through its `CaseIsolation`,
+  when it has one, and fails them on device errors if the Test asks.
+- `Isolation.{h,cpp}` — `runProcess()` (start a process, kill it at a
+  timeout; POSIX and Windows), `currentExecutable()`, and `CaseIsolation` /
+  `ProcessCaseIsolation`: `anariCts run` re-running itself with
+  `--isolated-case` for each Case of a timed Test (ADR-0009).
+- `DeviceErrorLog.{h,cpp}` — the ERROR messages a device reported, recorded
+  by the status callback, for `failOnDeviceErrors`.
 - `FrameReadback.{h,cpp}` — validates mapped frame descriptors and converts
   supported per-Channel formats behind the shared map/unmap boundary.
 - `FrameFormats.{h,cpp}` — resolves a Case's per-Channel output `ANARIDataType`
@@ -135,13 +143,13 @@ ctsReport.py              reads the results tree too; retained only for the PDF
 `src/anari/DeviceIntrospection.cpp`; the same utility backs `anariInfo`.
 
 **Tests (the catalog):** `cts/tests/<category>.cpp` (geometry, material, sampler,
-light, camera, frame, renderer, instance, volume) each define a
+light, camera, frame, renderer, instance, volume, synchronization) each define a
 `register<Category>Tests(Catalog&)`; `cts/tests/gltf.cpp` is the glTF
 asset-scanning factory (gated on `ENABLE_GLTF`). `BuiltinTests.cpp` wires them
 all into the catalog.
 
 **Unit tests:** `tests/unit/test_cts_*.cpp` (catalog/expansion/filter/builder,
-metrics, results/sidecar/workdir, report/html, runner). Pure tests are
+metrics, results/sidecar/workdir, report/html, runner, isolation). Pure tests are
 tagged `[cts]`; device-backed ones add `[helide]` and self-skip if no device
 loads.
 
@@ -154,6 +162,12 @@ tree exactly as the C++ `report` does. Text and HTML live in C++.
 `cts/tests/<category>.cpp`. Author the world in `build()` with ANARI C++ calls
 plus the focused `*Builder.h` helpers; add a short `description()` of the
 primary check, then declare axes, required features, and channels.
+
+**New synchronization rule** (or any check a device fails by hanging): a
+behaviour Test in `cts/tests/synchronization.cpp` with `.timeout(...)` and
+`.failOnDeviceErrors()`. Make only calls the spec allows, force the state the
+rule is about deterministically (e.g. map a shared array to hold a render
+off) rather than by timing, and pick the next rule from ADR-0009's list.
 
 **New per-Case axis the runner must act on** (e.g. a new output format): resolve
 it in `FrameFormats.cpp` (pure, unit-test it) and honor it in `Runner.cpp`.

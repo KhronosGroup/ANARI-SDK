@@ -18,9 +18,9 @@ function(anari_generate_frontend)
   # options
     ""
   # single-arg options
-    "TARGET;NAME;PREFIX;NAMESPACE;DESTINATION;DEFINITIONS;CODE_HEADER_FILE;EXTRA_OPTIONS;JSON;"
+    "TARGET;NAME;PREFIX;NAMESPACE;DESTINATION;DEFINITIONS;CODE_HEADER_FILE;JSON"
   # multi-arg options
-    ""
+    "EXTRA_OPTIONS"
   # string to parse
     ${ARGN}
   )

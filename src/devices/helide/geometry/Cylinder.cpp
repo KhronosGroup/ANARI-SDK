@@ -95,11 +95,11 @@ float4 Cylinder::getAttributeValue(const Attribute &attr, const Ray &ray) const
   if (!attributeArray)
     return Geometry::getAttributeValue(attr, ray);
 
-  auto idx = m_index ? *(m_index->dataAs<uint2>() + ray.primID)
+  auto idx = m_index ? m_index->beginAs<uint2>()[ray.primID]
                      : 2 * ray.primID + uint2(0, 1);
 
-  auto a = readAttributeValue(attributeArray, idx.x);
-  auto b = readAttributeValue(attributeArray, idx.y);
+  auto a = attributeValueAt(attributeArray, idx.x);
+  auto b = attributeValueAt(attributeArray, idx.y);
 
   return a + (b - a) * ray.u;
 }

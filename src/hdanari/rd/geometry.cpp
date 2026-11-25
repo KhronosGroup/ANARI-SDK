@@ -75,6 +75,86 @@ static bool _GetVtArrayBufferData_T(
   return false;
 }
 
+// USD authors texture coordinates with v=0 at the bottom of the image; ANARI
+// samples arrays with element (0,0) at the top. HdAnari uploads texture arrays
+// top-origin, so the v axis of texture-coordinate primvars is flipped here to
+// reconcile the two conventions. Detection is by primvar role or the
+// conventional UV names only -- material-declared inputs are not consulted.
+static const std::array<TfToken, 6> kTextureCoordinatePrimvarNames = {
+    TfToken("st"),
+    TfToken("st0"),
+    TfToken("st1"),
+    TfToken("uv"),
+    TfToken("UVMap"),
+    TfToken("map1")};
+
+static bool _IsTextureCoordinatePrimvarName(const TfToken &name)
+{
+  return std::find(begin(kTextureCoordinatePrimvarNames),
+             end(kTextureCoordinatePrimvarNames),
+             name)
+      != end(kTextureCoordinatePrimvarNames);
+}
+
+static bool _IsTextureCoordinatePrimvar(const HdPrimvarDescriptor &pvd)
+{
+  return pvd.role == HdPrimvarRoleTokens->textureCoordinate
+      || _IsTextureCoordinatePrimvarName(pvd.name);
+}
+
+template <typename VEC_ARRAY_T>
+static bool _FlipVIfHolding(VtValue *value)
+{
+  if (!value->IsHolding<VEC_ARRAY_T>())
+    return false;
+  VEC_ARRAY_T a = value->UncheckedGet<VEC_ARRAY_T>();
+  using Scalar = typename VEC_ARRAY_T::value_type::ScalarType;
+  for (auto &uv : a)
+    uv[1] = Scalar(1) - uv[1];
+  *value = VtValue(a);
+  return true;
+}
+
+static VtValue _FlipTextureCoordinateV(VtValue value)
+{
+  _FlipVIfHolding<VtVec2fArray>(&value) || _FlipVIfHolding<VtVec3fArray>(&value)
+      || _FlipVIfHolding<VtVec2dArray>(&value)
+      || _FlipVIfHolding<VtVec2hArray>(&value);
+  return value;
+}
+
+// The material backends bind their texture-coordinate input to the primvar
+// literally named `st` (the MDL/MaterialX default set, read as attribute0..N).
+// A mesh whose UVs are authored under another name (Blender `UVMap`, `map1`,
+// ...) would then deliver no texcoords. Re-key each texcoord binding whose
+// primvar is absent on the mesh to an unused mesh texture-coordinate primvar so
+// the data still reaches its attribute. `meshTexcoords` and
+// `meshPrimvarsSorted` are sorted; the latter enables a binary search for
+// presence.
+static HdAnariMaterial::PrimvarBinding _ResolveTexcoordBinding(
+    const HdAnariMaterial::PrimvarBinding &binding,
+    const std::vector<TfToken> &meshTexcoords,
+    const std::vector<TfToken> &meshPrimvarsSorted)
+{
+  std::vector<TfToken> unclaimed;
+  for (const TfToken &tc : meshTexcoords)
+    if (binding.find(tc) == cend(binding))
+      unclaimed.push_back(tc);
+
+  HdAnariMaterial::PrimvarBinding resolved;
+  size_t next = 0;
+  for (const auto &[name, attribute] : binding) {
+    const bool onMesh = std::binary_search(
+        cbegin(meshPrimvarsSorted), cend(meshPrimvarsSorted), name);
+    if (!onMesh && _IsTextureCoordinatePrimvarName(name)
+        && next < unclaimed.size())
+      resolved.emplace(unclaimed[next++], attribute);
+    else
+      resolved.emplace(name, attribute);
+  }
+  return resolved;
+}
+
 bool HdAnariGeometry::_GetVtArrayBufferData(
     VtValue v, const void **data, size_t *size, anari::DataType *type)
 {
@@ -387,16 +467,22 @@ void HdAnariGeometry::Sync(HdSceneDelegate *sceneDelegate,
     }
   }
 
+  std::vector<TfToken> meshTexcoords;
   for (auto i = 0; i < HdInterpolationCount; ++i) {
     for (const auto &pv :
         sceneDelegate->GetPrimvarDescriptors(GetId(), HdInterpolation(i))) {
       allPrimvars.push_back(pv.name);
       if (pv.name == HdTokens->displayColor)
         displayColorIsAuthored = true;
+      if (_IsTextureCoordinatePrimvar(pv))
+        meshTexcoords.push_back(pv.name);
     }
   }
   // Make sure this is stored we can do binary searches and set differences.
   std::sort(begin(allPrimvars), end(allPrimvars));
+  std::sort(begin(meshTexcoords), end(meshTexcoords));
+  meshTexcoords.erase(std::unique(begin(meshTexcoords), end(meshTexcoords)),
+      end(meshTexcoords));
 
   // Get an exhaustive list of primvars used by the different materials
   // referenced this geometry and its subsets.
@@ -407,15 +493,26 @@ void HdAnariGeometry::Sync(HdSceneDelegate *sceneDelegate,
   // Main geometry first...
   GeomSubsetInfo mainGeomInfo;
 
+  // Resolve an anari material + primvar binding for a (possibly null) material
+  // prim. Falls back to the shared default whenever there is no material *or*
+  // the material resolved to the shared default (e.g. a network with no surface
+  // terminal): that default samples the "color" attribute, so it must always be
+  // paired with the default binding that makes the geometry expose it -- else
+  // the attribute is missing and the surface renders black.
+  auto resolveMaterialAndBinding =
+      [&](HdAnariMaterial *material) -> GeomSubsetInfo {
+    auto anariMat = material ? material->GetAnariMaterial() : nullptr;
+    if (!anariMat || anariMat == renderParam->GetDefaultMaterial())
+      return {renderParam->GetDefaultMaterial(),
+          renderParam->GetDefaultPrimvarBinding()};
+    return {anariMat,
+        _ResolveTexcoordBinding(
+            material->GetPrimvarBinding(), meshTexcoords, allPrimvars)};
+  };
+
   HdAnariMaterial *material = static_cast<HdAnariMaterial *>(
       renderIndex.GetSprim(HdPrimTypeTokens->material, GetMaterialId()));
-  if (auto mat = material ? material->GetAnariMaterial() : nullptr) {
-    mainGeomInfo.material = material->GetAnariMaterial();
-    mainGeomInfo.primvarBinding = material->GetPrimvarBinding();
-  } else {
-    mainGeomInfo.material = renderParam->GetDefaultMaterial();
-    mainGeomInfo.primvarBinding = renderParam->GetDefaultPrimvarBinding();
-  }
+  mainGeomInfo = resolveMaterialAndBinding(material);
 
   // Points and normals are implicit bindings
   mainGeomInfo.primvarBinding.insert(
@@ -438,11 +535,7 @@ void HdAnariGeometry::Sync(HdSceneDelegate *sceneDelegate,
   for (auto subset : GetGeomSubsets(sceneDelegate, dirtyBits)) {
     HdAnariMaterial *material = static_cast<HdAnariMaterial *>(
         renderIndex.GetSprim(HdPrimTypeTokens->material, subset.materialId));
-    auto geomSubsetInfo = (material && material->GetAnariMaterial())
-        ? GeomSubsetInfo{material->GetAnariMaterial(),
-              material->GetPrimvarBinding()}
-        : GeomSubsetInfo{renderParam->GetDefaultMaterial(),
-              renderParam->GetDefaultPrimvarBinding()};
+    auto geomSubsetInfo = resolveMaterialAndBinding(material);
 
     // Points and normals are implicit bindings
     geomSubsetInfo.primvarBinding.insert(
@@ -534,6 +627,20 @@ void HdAnariGeometry::Sync(HdSceneDelegate *sceneDelegate,
     }
   }
 
+  // Re-uploading/committing a geometry makes the device rebuild it (recompute
+  // tangents, rebuild the BVH). Native-instanced prototypes are flagged Varying
+  // and re-Synced every frame with no real change, so only touch the geometry
+  // when its own bound data changed. Use the rprim's geometry dirty bits only:
+  // instancer primvar dirtiness (transform, per-instance values) is bound on
+  // the instance, not the geometry, and must not trigger a geometry rebuild.
+  const bool geometryDataDirty =
+      (*dirtyBits
+          & (HdChangeTracker::DirtyPoints | HdChangeTracker::DirtyNormals
+              | HdChangeTracker::DirtyTopology | HdChangeTracker::DirtyPrimvar
+              | HdChangeTracker::DirtyDisplayStyle
+              | HdChangeTracker::DirtyWidths))
+      != 0;
+
   // Based on the above, gather needed primvars descriptors. To be used to
   // create primvars sources.
   // Compute primvars have precedence over regular primvars.
@@ -603,8 +710,11 @@ void HdAnariGeometry::Sync(HdSceneDelegate *sceneDelegate,
 
       // FIXME: What if an instance prim is a computation primvar. This cannot
       // work with the actual implementation of GatherInstancePrimvar.
+      VtValue value = valueIt->second;
+      if (_IsTextureCoordinatePrimvar(pvd))
+        value = _FlipTextureCoordinateV(std::move(value));
       auto source = UpdatePrimvarSource(
-          sceneDelegate, pvd.interpolation, pvd.name, valueIt->second);
+          sceneDelegate, pvd.interpolation, pvd.name, value);
 
       // The spot should always be free as it was removed if needed when
       // processing primvar removal.
@@ -616,10 +726,11 @@ void HdAnariGeometry::Sync(HdSceneDelegate *sceneDelegate,
       if (primvarSource_.count(pvd.name) != 0) {
         continue;
       }
-      auto source = UpdatePrimvarSource(sceneDelegate,
-          pvd.interpolation,
-          pvd.name,
-          sceneDelegate->Get(id, pvd.name));
+      VtValue value = sceneDelegate->Get(id, pvd.name);
+      if (_IsTextureCoordinatePrimvar(pvd))
+        value = _FlipTextureCoordinateV(std::move(value));
+      auto source = UpdatePrimvarSource(
+          sceneDelegate, pvd.interpolation, pvd.name, value);
 
       primvarSource_.insert({pvd.name, source});
       primvarInterpolation.insert({pvd.name, pvd.interpolation});
@@ -712,8 +823,9 @@ void HdAnariGeometry::Sync(HdSceneDelegate *sceneDelegate,
 
   // Handle anari objects creation
   std::vector<anari::Instance> instances;
-  if (geomSubsetInfos.empty()) {
-    //  Use main geom is no subset is defined.
+  // Build the main geometry when no subset is defined, or when subsets leave
+  // some faces uncovered (those remaining faces use the prim's own material).
+  if (geomSubsetInfos.empty() || HasMainGeometry()) {
     geomSubsetInfos.insert({GetId(), mainGeomInfo});
   }
 
@@ -735,6 +847,9 @@ void HdAnariGeometry::Sync(HdSceneDelegate *sceneDelegate,
   // anari objects.
   for (auto &&[subsetId, geomInfo] : geomSubsetInfos) {
     auto &geometryDesc = geomSubsetGeometry_[subsetId];
+    const bool firstTime = !geometryDesc.instance;
+    const bool materialChanged =
+        !firstTime && geometryDesc.material != geomInfo.material;
 
     PrimvarStateDesc removedState;
     PrimvarStateDesc updatedState;
@@ -753,6 +868,7 @@ void HdAnariGeometry::Sync(HdSceneDelegate *sceneDelegate,
           device_, geometryDesc.surface, "id", uint32_t(GetPrimId()));
       anari::setParameter(
           device_, geometryDesc.surface, "material", geomInfo.material);
+      geometryDesc.material = geomInfo.material;
       anari::commitParameters(device_, geometryDesc.surface);
 
       geometryDesc.group = anari::newObject<anari::Group>(device_);
@@ -797,99 +913,114 @@ void HdAnariGeometry::Sync(HdSceneDelegate *sceneDelegate,
       newPrimvarsBinding = mainGeomInfo.primvarBinding;
     }
 
-    // FIXME: Do the same with displayOpacity and maybe others...
-    if (displayColorIsAuthored) {
-      // Make sure any previous default display color is removed so the actual
-      // authored one is used.
-      if (std::binary_search(cbegin(updatedPrimvars),
-              cend(updatedPrimvars),
-              HdTokens->displayColor)) {
-        // Clear the constant value so any other can be used instead
-        if (auto it = previousPrimvarsBinding.find(HdTokens->displayColor);
-            it != cend(previousPrimvarsBinding)) {
-          anari::unsetParameter(
-              device_, geometryDesc.geometry, it->second.GetText());
+    if (firstTime || geometryDataDirty || materialChanged) {
+      // FIXME: Do the same with displayOpacity and maybe others...
+      if (displayColorIsAuthored) {
+        // Make sure any previous default display color is removed so the actual
+        // authored one is used.
+        if (std::binary_search(cbegin(updatedPrimvars),
+                cend(updatedPrimvars),
+                HdTokens->displayColor)) {
+          // Clear the constant value so any other can be used instead
+          if (auto it = previousPrimvarsBinding.find(HdTokens->displayColor);
+              it != cend(previousPrimvarsBinding)) {
+            anari::unsetParameter(
+                device_, geometryDesc.geometry, it->second.GetText());
+          }
+        }
+      } else {
+        // If the material depends on displayColor, make sure we handle the case
+        // it is not authored.
+        if (auto it = newPrimvarsBinding.find(HdTokens->displayColor);
+            it != cend(newPrimvarsBinding)) {
+          anari::setParameter(device_,
+              geometryDesc.geometry,
+              it->second.GetText(),
+              GfVec4f(0.8f, 0.8f, 0.8f, 1.0f));
         }
       }
-    } else {
-      // If the material depends on displayColor, make sure we handle the case
-      // it is not authored.
-      if (auto it = newPrimvarsBinding.find(HdTokens->displayColor);
-          it != cend(newPrimvarsBinding)) {
-        anari::setParameter(device_,
-            geometryDesc.geometry,
-            it->second.GetText(),
-            GfVec4f(0.8f, 0.8f, 0.8f, 1.0f));
-      }
-    }
-    // Apply the changes to the geometry object
-    SyncAnariGeometry(device_,
-        geometryDesc.geometry,
-        primvarSource_,
-        newPrimvarsBinding,
-        previousPrimvarsBinding,
-
-        updatedState,
-        removedState);
-
-    // We do try and get them at each sync, as it is not clear when those are
-    // dirtied. The expectation is that the implementation of
-    // GetGeomSpecificPrimvars is doing the caching.
-    auto geomSpecificBindingPoints = GetGeomSpecificPrimvars(sceneDelegate,
-        dirtyBits,
-        TfToken::Set(cbegin(allPrimvars), cend(allPrimvars)),
-        points,
-        subsetId);
-
-    for (auto &&[bindingPoint, array] : geomSpecificBindingPoints) {
-      geomSpecificPrimvarBindings[subsetId].push_back(bindingPoint);
-      anari::setParameter(
-          device_, geometryDesc.geometry, bindingPoint.GetText(), array);
-    }
-
-    // Clear geomspecfic binding points set by previous sync that are no more
-    // used.
-    std::vector<TfToken> geomSpecificRemovedBindings;
-    std::set_difference(cbegin(geomSpecificPrimvarBindings_[subsetId]),
-        cend(geomSpecificPrimvarBindings_[subsetId]),
-        cbegin(geomSpecificPrimvarBindings[subsetId]),
-        cend(geomSpecificPrimvarBindings[subsetId]),
-        back_inserter(geomSpecificRemovedBindings));
-
-    for (const auto &bindingPoint : geomSpecificRemovedBindings) {
-      anari::unsetParameter(
-          device_, geometryDesc.geometry, bindingPoint.GetText());
-    }
-
-    anari::commitParameters(device_, geometryDesc.geometry);
-
-    // Material update
-    if (*dirtyBits & HdChangeTracker::DirtyMaterialId) {
-      anari::setParameter(
-          device_, geometryDesc.surface, "material", geomInfo.material);
-    }
-    anari::commitParameters(device_, geometryDesc.surface);
-
-    // Instance update
-    if (instancer) {
-      SyncAnariInstance(device_,
-          geometryDesc.instance,
+      // Apply the changes to the geometry object
+      SyncAnariGeometry(device_,
+          geometryDesc.geometry,
           primvarSource_,
           newPrimvarsBinding,
           previousPrimvarsBinding,
 
           updatedState,
           removedState);
+
+      // We do try and get them at each sync, as it is not clear when those are
+      // dirtied. The expectation is that the implementation of
+      // GetGeomSpecificPrimvars is doing the caching.
+      auto geomSpecificBindingPoints = GetGeomSpecificPrimvars(sceneDelegate,
+          dirtyBits,
+          TfToken::Set(cbegin(allPrimvars), cend(allPrimvars)),
+          points,
+          subsetId);
+
+      for (auto &&[bindingPoint, array] : geomSpecificBindingPoints) {
+        geomSpecificPrimvarBindings[subsetId].push_back(bindingPoint);
+        anari::setParameter(
+            device_, geometryDesc.geometry, bindingPoint.GetText(), array);
+      }
+
+      // Clear geomspecfic binding points set by previous sync that are no more
+      // used.
+      std::vector<TfToken> geomSpecificRemovedBindings;
+      std::set_difference(cbegin(geomSpecificPrimvarBindings_[subsetId]),
+          cend(geomSpecificPrimvarBindings_[subsetId]),
+          cbegin(geomSpecificPrimvarBindings[subsetId]),
+          cend(geomSpecificPrimvarBindings[subsetId]),
+          back_inserter(geomSpecificRemovedBindings));
+
+      for (const auto &bindingPoint : geomSpecificRemovedBindings) {
+        anari::unsetParameter(
+            device_, geometryDesc.geometry, bindingPoint.GetText());
+      }
+      anari::commitParameters(device_, geometryDesc.geometry);
     } else {
-      auto baseTransform = sceneDelegate->GetTransform(GetId());
-      anari::setParameter(device_,
-          geometryDesc.instance,
-          "transform",
-          GfMatrix4f(baseTransform));
-      anari::setParameter(device_, geometryDesc.instance, "id", 0u);
+      // Unchanged geometry: keep the existing anari object and carry the
+      // geom-specific binding bookkeeping forward for the next sync's diff.
+      geomSpecificPrimvarBindings[subsetId] =
+          geomSpecificPrimvarBindings_[subsetId];
     }
 
-    anari::commitParameters(device_, geometryDesc.instance);
+    // Material update: only re-commit the surface when the bound material
+    // actually changed. DirtyMaterialId is re-flagged every frame on Varying
+    // prims; committing the surface unconditionally would reset the renderer's
+    // accumulation each frame and prevent convergence.
+    if (geometryDesc.material != geomInfo.material) {
+      geometryDesc.material = geomInfo.material;
+      anari::setParameter(
+          device_, geometryDesc.surface, "material", geomInfo.material);
+      anari::commitParameters(device_, geometryDesc.surface);
+    }
+
+    // Instance update: only when the transform/instancing actually changed.
+    const bool instanceDirty = firstTime
+        || HdChangeTracker::IsTransformDirty(*dirtyBits, id)
+        || HdChangeTracker::IsInstancerDirty(*dirtyBits, id)
+        || HdChangeTracker::IsInstanceIndexDirty(*dirtyBits, id);
+    if (instanceDirty) {
+      if (instancer) {
+        SyncAnariInstance(device_,
+            geometryDesc.instance,
+            primvarSource_,
+            newPrimvarsBinding,
+            previousPrimvarsBinding,
+
+            updatedState,
+            removedState);
+      } else {
+        auto baseTransform = sceneDelegate->GetTransform(GetId());
+        anari::setParameter(device_,
+            geometryDesc.instance,
+            "transform",
+            GfMatrix4f(baseTransform));
+        anari::setParameter(device_, geometryDesc.instance, "id", 0u);
+      }
+      anari::commitParameters(device_, geometryDesc.instance);
+    }
     instances.push_back(geometryDesc.instance);
   }
 
@@ -969,8 +1100,11 @@ anari::Array1D HdAnariGeometry::_GetAttributeArray(
   const void *data = nullptr;
   size_t size = 0;
 
-  if (!value.IsEmpty() && _GetVtArrayBufferData(value, &data, &size, &type)
-      && size) {
+  if (!value.IsEmpty() && _GetVtArrayBufferData(value, &data, &size, &type)) {
+    // A recognized but empty primvar (e.g. an empty-points/normals placeholder
+    // mesh) yields no attribute -- that's benign, not an error.
+    if (size == 0)
+      return {};
     // Don't assume any ownership of the data. Map can copy asap.
     if (overrideType != ANARI_UNKNOWN)
       type = overrideType;
@@ -981,7 +1115,8 @@ anari::Array1D HdAnariGeometry::_GetAttributeArray(
     return array;
   }
 
-  TF_RUNTIME_ERROR("Cannot extract value buffer from VtValue");
+  TF_RUNTIME_ERROR("Cannot extract value buffer from VtValue of type '%s'",
+      value.GetTypeName().c_str());
   return {};
 }
 

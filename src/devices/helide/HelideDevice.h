@@ -8,6 +8,8 @@
 
 #include "HelideGlobalState.h"
 #include "Object.h"
+// std
+#include <mutex>
 
 namespace helide {
 
@@ -21,6 +23,10 @@ struct HelideDevice : public helium::BaseDevice
 
   void *mapArray(ANARIArray) override;
   void unmapArray(ANARIArray) override;
+
+  // Frame Rendering //////////////////////////////////////////////////////////
+
+  void renderFrame(ANARIFrame) override;
 
   // API Objects //////////////////////////////////////////////////////////////
 
@@ -84,10 +90,19 @@ struct HelideDevice : public helium::BaseDevice
   int deviceGetProperty(
       const char *name, ANARIDataType type, void *mem, uint64_t size, uint32_t mask) override;
 
+ protected:
+  bool runDeviceQuery(const std::function<void(bool)> &work) override;
+  void runDeviceRelease(const std::function<void()> &work) override;
+
  private:
   HelideGlobalState *deviceState() const;
+  // Runs 'work' as device work; returns why it didn't, if it can't wait
+  const char *runOnQueue(const std::function<void()> &work);
 
   bool m_initialized{false};
+
+  // Serializes releases privatizing inline (see runDeviceRelease())
+  std::recursive_mutex m_inlineReleaseMutex;
 };
 
 } // namespace helide

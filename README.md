@@ -9,6 +9,10 @@ This repository contains the source for the ANARI API SDK. This includes:
 - [Device implementation utilties for implementations](src/helium)
 - [Example device implementation](src/devices/helide) (not intended for production use)
 - [Example GPU device implementation](src/devices/helide_gpu) (in-progress, requires SDL3)
+- [Embree/ISPC CPU device with a path tracer](src/devices/halcyon) (requires ISPC)
+- [Device rendering through OpenUSD Hydra render delegates](src/devices/hydra) (requires OpenUSD)
+- [Device that captures committed scene state as text, plus a capture diff tool](src/devices/capture) (for testing what an application hands ANARI)
+- [MPI data-parallel compositing device that wraps another device](src/devices/ptc) (requires MPI and oneTBB)
 - [Example applications](examples/)
 - [Interactive sample viewer](examples/viewer)
 - [Render tests](tests/render)
@@ -57,6 +61,10 @@ available to enable. The following CMake options are offered:
 - `BUILD_TESTING`       : build unit and regression test binaries
 - `BUILD_HELIDE_DEVICE`     : build the provided example `helide` device implementation
 - `BUILD_HELIDE_GPU_DEVICE` : build the provided example `helide_gpu` GPU device (needs SDL3)
+- `BUILD_HALCYON_DEVICE`    : build the `halcyon` Embree/ISPC CPU device (needs an ISPC compiler)
+- `BUILD_HYDRA_DEVICE`      : build the `hydra` device, which renders through OpenUSD Hydra render delegates (needs OpenUSD)
+- `BUILD_CAPTURE_DEVICE`    : build the `capture` device and the `anariCaptureDiff` tool (on by default)
+- `BUILD_PTC_DEVICE`        : build the `ptc` MPI data-parallel compositing device (needs MPI and oneTBB 2021.6+)
 - `BUILD_REMOTE_DEVICE`     : build the provided experimental `remote` device implementation
 - `BUILD_EXAMPLES`      : build example applications
 - `BUILD_VIEWER`        : build viewer too (needs SDL3) if building examples
@@ -144,6 +152,32 @@ available. It uses SDL3's cross-platform GPU abstraction layer for rendering and
 is currently in-progress. Build it with `BUILD_HELIDE_GPU_DEVICE=ON` (requires
 SDL3 3.2+ and `glslangValidator` in PATH).
 
+The [halcyon](src/devices/halcyon) device is a CPU device built on Embree and
+ISPC, with a `preview` renderer modelled on helide and a `quality` path tracer
+ported from Typhoon with MaterialX materials. Build it with
+`BUILD_HALCYON_DEVICE=ON` (requires an ISPC compiler and CMake 3.19; built and
+tested on Linux only so far).
+
+The [hydra](src/devices/hydra) device renders ANARI scenes through OpenUSD
+Hydra render delegates (Storm, HdEmbree, ...), one device subtype per
+delegate. It is the reverse of the [hdAnari](src/hdanari) plugin, which renders
+Hydra scenes through ANARI. Build it with `BUILD_HYDRA_DEVICE=ON` (requires
+OpenUSD, found through `CMAKE_PREFIX_PATH`).
+
+The [capture](src/devices/capture) device renders nothing. On each frame it
+writes a canonical text snapshot of the committed object graph the frame can
+reach, so an application can test exactly what it hands ANARI without depending
+on any device's pixels. The `anariCaptureDiff` tool (and the `anari_capture_diff`
+library) compares two captures with optional float tolerances. It is built by
+default (`BUILD_CAPTURE_DEVICE`); see its
+[README](src/devices/capture/README.md) for the format.
+
+The [ptc](src/devices/ptc) device makes an ANARI application data-parallel
+with MPI: each rank renders its own data with a wrapped device (helide by
+default) and `ptc` composites the ranks' images by depth onto one rank. Build it
+with `BUILD_PTC_DEVICE=ON` (requires MPI and oneTBB 2021.6 or newer); see its
+[README](src/devices/ptc/README.md) for usage and compositing semantics.
+
 ### Using the debug device layer
 
 The ANARI-SDK ships with a [debug layer](src/devices/debug) implemented as an
@@ -188,17 +222,19 @@ variables:
 
 ### (Unofficial) list of actively developed ANARI implementations
 
-- [ANARI-PTC](https://github.com/ingowald/ANARI-PTC) (MPI distributed adapter)
 - [ANARI-WebGPU](https://github.com/sankhesh/anari-webgpu)
 - [Cycles](https://github.com/jeffamstutz/anari-cycles) (Blender's path tracer)
+- [halcyon](src/devices/halcyon) (Embree/ISPC CPU device with a path tracer)
 - [Halogen](https://github.com/MetaversalCorp/Halogen) (built on [Filament](https://github.com/google/filament))
 - [helide](src/devices/helide)
 - [helide_gpu](src/devices/helide_gpu)
+- [hydra](src/devices/hydra) (OpenUSD Hydra render delegates)
 - [Intel OSPRay](https://github.com/ospray/anari-ospray)
 - [NVIDIA Barney](https://github.com/NVIDIA/barney) (MPI distributed renderer)
 - [NVIDIA USD](https://github.com/NVIDIA-Omniverse/AnariUsdDevice)
 - [NVIDIA VisRTX](https://github.com/NVIDIA/VisRTX)
 - [Photon](https://github.com/mvictoras/photon)
+- [ptc](src/devices/ptc) (MPI data-parallel compositing over another device)
 - [Visionaray](https://github.com/szellmann/anari-visionaray)
 - [Viskores](https://github.com/Viskores/viskores)
 
@@ -222,7 +258,7 @@ list!
 - [ParaView](https://www.paraview.org/)
 - [pynari](https://github.com/ingowald/pynari) (Python language bindings)
 - [Sneeze](https://github.com/MetaversalCorp/Sneeze) (Open Metaverse Browser Initiative)
-- [TSD](https://github.com/NVIDIA/VisRTX/tree/next_release/tsd)
+- [Vela](https://github.com/NVIDIA/Vela)
 - [VisIt](https://visit-dav.github.io/visit-website/index.html)
 - [Viskores](https://github.com/Viskores/viskores)
 - [Vistle](https://vistle.io/)

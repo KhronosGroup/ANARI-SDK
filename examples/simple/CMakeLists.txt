@@ -90,6 +90,11 @@ if (IN_SDK_SOURCE_TREE)
   if (BUILD_TESTING)
     add_test(NAME anariTutorial COMMAND anariTutorial)
     add_test(NAME anariTutorialCpp COMMAND anariTutorialCpp)
+    # anariTutorialDebug misuses the API on purpose, to show what the debug
+    # layer reports, and wraps the sink device. It is known to crash when
+    # ANARI_DEBUG_WRAPPED_LIBRARY names a real device (it overrides the sink),
+    # since that device then gets the invalid calls: run it with the variable
+    # unset.
     add_test(NAME anariTutorialDebug COMMAND anariTutorialDebug)
   endif()
 endif()

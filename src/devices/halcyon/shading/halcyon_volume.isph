@@ -1,0 +1,358 @@
+// Copyright 2025-2026 The Khronos Group
+// SPDX-License-Identifier: Apache-2.0
+
+#pragma once
+
+#include "halcyon_hitInfo.isph"
+#include "halcyon_objects.isph"
+#include "halcyon_ray.isph"
+#include "halcyon_spatialField.isph"
+
+// The nearest volume along a ray (helide's VolumeRay)
+struct VolumeHit
+{
+  uniform Volume *volume; // NULL on a miss
+  uniform Instance *instance;
+  uint instArrayId; // which of the instance's transforms was hit
+  // ray interval inside the volume's bounds, within [the ray's tnear, the
+  // surface hit's t]
+  float tLower;
+  float tUpper;
+  // the ray in the volume's object space (same t parameterization)
+  float3 org;
+  float3 dir;
+};
+
+inline bool foundHit(const VolumeHit &vh)
+{
+  return vh.volume != NULL;
+}
+
+// Gives 'hitInfo' the ids of the volume hit 'vh', which take precedence over
+// a surface hit's as in helide: primitive 0, the volume's 'id' and the id of
+// the instance transform it was hit through
+inline void setVolumeIds(HitInfo &hitInfo, const VolumeHit &vh)
+{
+  hitInfo.primId = 0;
+#pragma ignore warning(perf)
+  hitInfo.objId = vh.volume->id;
+#pragma ignore warning(perf)
+  hitInfo.instId = vh.instance->ids[vh.instArrayId];
+}
+
+// Intersection ///////////////////////////////////////////////////////////////
+
+// Tests the object-space ray ('org', 'dir') against the bounds of every volume
+// of 'inst' (with transform 'instArrayId'), keeping the one entered first in
+// 'vh'. Unlike helide, intervals are clamped to [tnear, tfar] before the empty
+// test, so volumes behind the camera or wholly behind the surface hit are
+// missed rather than hit with an empty interval.
+inline void intersectGroupVolumes(uniform Instance *uniform inst,
+    uniform uint32 instArrayId,
+    float3 org,
+    float3 dir,
+    float tnear,
+    float tfar,
+    VolumeHit &vh)
+{
+  const uniform Group *uniform g = inst->group;
+  const float3 invDir = 1.f / dir;
+  for (uniform uint64 v = 0; v < g->numVolumes; v++) {
+    uniform Volume *uniform vol = g->volumes[v];
+    const uniform SpatialField *uniform f = vol->field;
+    const float3 mins = (f->boundsLower - org) * invDir;
+    const float3 maxs = (f->boundsUpper - org) * invDir;
+    const float lower = max(maxelem(min(mins, maxs)), tnear);
+    const float upper = min(minelem(max(mins, maxs)), tfar);
+    if (lower < upper && (!foundHit(vh) || lower < vh.tLower)) {
+      vh.volume = vol;
+      vh.instance = inst;
+      vh.instArrayId = instArrayId;
+      vh.tLower = lower;
+      vh.tUpper = upper;
+      vh.org = org;
+      vh.dir = dir;
+    }
+  }
+}
+
+// The nearest volume along the ray of 'rh' within [ray.tnear, ray.tfar] (after
+// surface intersection, so ray.tfar is the surface hit's t) over every transform of the world's
+// instances with volumes, each tested in its object space
+inline VolumeHit intersectVolumes(const uniform World *uniform w, const RayHit &rh)
+{
+  VolumeHit vh;
+  vh.volume = NULL;
+  vh.instance = NULL;
+  vh.instArrayId = 0;
+  vh.tLower = 0.f;
+  vh.tUpper = 0.f;
+  vh.org = make_float3(0.f);
+  vh.dir = make_float3(0.f);
+
+  for (uniform uint32 i = 0; i < w->numVolumeInstances; i++) {
+    uniform Instance *uniform inst = w->volumeInstances[i];
+    for (uniform uint32 x = 0; x < inst->numTransforms; x++) {
+      const uniform affine3f invXfm = load_affine3f(inst->invXfms + MAT4F_FLOATS * x);
+      intersectGroupVolumes(inst,
+          x,
+          xfmPoint(invXfm, rh.ray.org),
+          xfmVector(invXfm, rh.ray.dir),
+          rh.ray.tnear,
+          rh.ray.tfar,
+          vh);
+    }
+  }
+
+  return vh;
+}
+
+// Transfer function //////////////////////////////////////////////////////////
+
+// Linear interpolation between entries 'lower' and 'upper' with weight 'frac'
+struct LinearLookup
+{
+  int lower;
+  int upper;
+  float frac;
+};
+
+// Where 'x' in [0, 1] falls among n > 0 entries, as helium's
+// Array::valueAtLinear() but with the indices clamped (helium reads one past
+// the end at 1, and anywhere for NaN)
+inline LinearLookup linearLookup(uniform uint64 n, float x)
+{
+  const uniform int last = (uniform int)n - 1;
+  const float lowf = x * (uniform float)last;
+  LinearLookup l;
+  l.lower = clamp((int)floor(lowf), 0, last);
+  l.upper = min(l.lower + 1, last);
+  l.frac = lowf - l.lower;
+  return l;
+}
+
+inline float4 Volume_lookupFloat4(
+    const uniform float *uniform values, uniform uint64 n, float x)
+{
+  const LinearLookup l = linearLookup(n, x);
+#pragma ignore warning(perf)
+  const float4 a = load_float4(values + 4 * l.lower);
+#pragma ignore warning(perf)
+  const float4 b = load_float4(values + 4 * l.upper);
+  return lerp(a, b, l.frac);
+}
+
+inline float Volume_lookupFloat(
+    const uniform float *uniform values, uniform uint64 n, float x)
+{
+  const LinearLookup l = linearLookup(n, x);
+#pragma ignore warning(perf)
+  const float a = values[l.lower];
+#pragma ignore warning(perf)
+  const float b = values[l.upper];
+  return a * (1.f - l.frac) + b * l.frac;
+}
+
+// Field value 's' mapped through 'valueRange' to [0, 1]
+inline float Volume_normalized(const uniform Volume *uniform vol, float s)
+{
+  return clamp((s - vol->valueRangeLower) * vol->valueRangeInvSize, 0.f, 1.f);
+}
+
+inline float4 Volume_colorOf(const uniform Volume *uniform vol, float s)
+{
+  if (vol->colors == NULL)
+    return vol->color;
+  return Volume_lookupFloat4(vol->colors, vol->numColors, Volume_normalized(vol, s));
+}
+
+inline float Volume_opacityOf(const uniform Volume *uniform vol, float s)
+{
+  if (vol->opacities == NULL)
+    return vol->opacity;
+  return Volume_lookupFloat(
+      vol->opacities, vol->numOpacities, Volume_normalized(vol, s));
+}
+
+// The pathtracer's extinction: sigma_t = -ln(1 - alpha) / unitDistance, so
+// that the transmittance over a distance d is (1 - alpha)^(d / unitDistance),
+// the 'preview' renderer's per-step compositing below; alpha is clamped to
+// [0, VOLUME_MAX_ALPHA], so extinction stays finite. 0 where 'unitDistance'
+// isn't positive.
+#define VOLUME_MAX_ALPHA 0.999f
+
+inline uniform float Volume_extinction(
+    uniform float alpha, uniform float unitDistance)
+{
+  if (!(unitDistance > 0.f))
+    return 0.f;
+  return -log(1.f - clamp(alpha, 0.f, VOLUME_MAX_ALPHA)) / unitDistance;
+}
+
+inline float Volume_extinction(float alpha, uniform float unitDistance)
+{
+  if (!(unitDistance > 0.f))
+    return 0.f;
+  return -log(1.f - clamp(alpha, 0.f, VOLUME_MAX_ALPHA)) / unitDistance;
+}
+
+// Macrocells /////////////////////////////////////////////////////////////////
+
+// Along one axis of a ray in macrocell units (origin 'o', direction 'd', so
+// the ray is at o + d t), the cell the ray is in just past distance 't' in
+// 'cell' and the distance where it leaves it, the next cell boundary past
+// 't' (+inf if 'd' is 0). Taking the boundary first and the cell from it
+// keeps the two consistent where rounding puts the point at 't' on the
+// wrong side of a boundary. False if 't' is too large to step past the
+// boundary.
+inline bool Volume_macrocellStep(float o, float d, float t, int &cell, float &exit)
+{
+  if (d > 0.f) {
+    float k = floor(o + d * t) + 1.f;
+    exit = (k - o) / d;
+    if (exit <= t) {
+      k += 1.f;
+      exit = (k - o) / d;
+    }
+    cell = (int)k - 1;
+  } else if (d < 0.f) {
+    float k = ceil(o + d * t) - 1.f;
+    exit = (k - o) / d;
+    if (exit <= t) {
+      k -= 1.f;
+      exit = (k - o) / d;
+    }
+    cell = (int)k;
+  } else {
+    cell = (int)floor(o);
+    exit = floatbits(0x7f800000); // +inf
+  }
+  return exit > t;
+}
+
+// The pathtracer's majorant of 'vol' along the object-space ray ('org',
+// 'dir') just past distance 't' (inside the field's bounds): its majorant
+// in the macrocell the ray is in there, which holds until 'exit', where the
+// ray leaves the cell. Without macrocells (or where 't' is too large to step
+// cell by cell), the volume's majorant, until +inf.
+inline float Volume_majorantFrom(const uniform Volume *uniform vol,
+    float3 org,
+    float3 dir,
+    float t,
+    float &exit)
+{
+  exit = floatbits(0x7f800000); // +inf
+  const uniform SpatialField *uniform f = vol->field;
+  const uniform int nx = f->macrocellDims[0];
+  const uniform int ny = f->macrocellDims[1];
+  const uniform int nz = f->macrocellDims[2];
+  // the field's grid must be the one the majorants were computed for; the
+  // values stay current because the volume observes its field, which
+  // finalizes it again on every field change
+  if (!vol->macrocellMajorants
+      || vol->numMacrocells != (uniform uint64)nx * ny * nz)
+    return vol->majorant;
+
+  const float3 o = (org - f->boundsLower) * f->macrocellInvSize;
+  const float3 d = dir * f->macrocellInvSize;
+  int x, y, z;
+  float ex, ey, ez;
+  if (!(Volume_macrocellStep(o.x, d.x, t, x, ex)
+          && Volume_macrocellStep(o.y, d.y, t, y, ey)
+          && Volume_macrocellStep(o.z, d.z, t, z, ez)))
+    return vol->majorant;
+  exit = min(ex, min(ey, ez));
+  x = clamp(x, 0, nx - 1);
+  y = clamp(y, 0, ny - 1);
+  z = clamp(z, 0, nz - 1);
+#pragma ignore warning(perf)
+  return vol->macrocellMajorants[((int64)z * ny + y) * nx + x];
+}
+
+// Ray marching ///////////////////////////////////////////////////////////////
+
+// helide's jitter: the first std::uniform_real_distribution<float> draw in
+// [0, 1) from a std::mt19937 seeded with 'seed', ported so both devices march
+// from the same start. Only mt[0], mt[1] and mt[397] of the seeded state feed
+// the first output.
+inline float mt19937_firstCanonical(uint32 seed)
+{
+  uint32 x = seed;
+  uint32 mt1 = 0;
+  for (uniform uint32 i = 1; i <= 397; i++) {
+    x = 1812433253u * (x ^ (x >> 30)) + i;
+    if (i == 1)
+      mt1 = x;
+  }
+  const uint32 y = (seed & 0x80000000u) | (mt1 & 0x7fffffffu);
+  uint32 r = x ^ (y >> 1) ^ ((y & 1u) ? 0x9908b0dfu : 0u);
+  r ^= r >> 11;
+  r ^= (r << 7) & 0x9d2c5680u;
+  r ^= (r << 15) & 0xefc60000u;
+  r ^= r >> 18;
+  // std::generate_canonical<float, 24>: one 32-bit draw, kept below 1
+  const float f = (float)r / 4294967296.f;
+  return f < 1.f ? f : 0.99999994f;
+}
+
+// Start offset in [0, stepSize) for a march entering at 't', seeded like
+// helide (from t * 10000 truncated to an integer)
+inline float Volume_jitter(float t, uniform float stepSize)
+{
+  const uint32 seed = (uint32)(uint64)(t * 10000.f);
+  return mt19937_firstCanonical(seed) * stepSize;
+}
+
+// Ray marches 'vh' (a hit of 'vol') front to back from a jittered start,
+// adding to 'color' and 'opacity' until the interval ends or opacity reaches
+// 0.99, as helide's TransferFunction1D::render(). Samples are 'stepSize' =
+// field step size * 'invSamplingRate' apart; each attenuates by
+// (1 - opacity)^(stepSize / unitDistance). Colors are not premultiplied.
+inline void Volume_render(const uniform Volume *uniform vol,
+    const VolumeHit &vh,
+    uniform float invSamplingRate,
+    float3 &color,
+    float &opacity)
+{
+  const uniform SpatialField *uniform f = vol->field;
+  if (!SpatialField_isValid(f))
+    return;
+
+  const uniform float stepSize = f->stepSize * invSamplingRate;
+  const uniform float stepExponent = stepSize / vol->unitDistance;
+  float t = vh.tLower + Volume_jitter(vh.tLower, stepSize);
+  float transmittance = 1.f;
+
+  while (opacity < 0.99f && vh.tUpper - t >= 0.f) {
+    const float s = SpatialField_sampleAt(f, vh.org + vh.dir * t);
+    if (!isnan(s)) {
+      const float4 sampleColor = Volume_colorOf(vol, s);
+      const float o = Volume_opacityOf(vol, s) * sampleColor.w;
+      const float stepTransmittance = pow(1.f - o, stepExponent);
+      color = color
+          + transmittance * (1.f - stepTransmittance)
+              * make_float3(sampleColor.x, sampleColor.y, sampleColor.z);
+      opacity += transmittance * (1.f - stepTransmittance);
+      transmittance *= stepTransmittance;
+    }
+
+    // far from the origin a step can round away, which would never end
+    const float next = t + stepSize;
+    if (next == t)
+      break;
+    t = next;
+  }
+}
+
+// Color and opacity accumulated along 'vh' (NULL volume: nothing), marching
+// each distinct volume hit across the gang once
+inline void renderVolumeHit(
+    const VolumeHit &vh, uniform float invSamplingRate, float3 &color, float &opacity)
+{
+  color = make_float3(0.f);
+  opacity = 0.f;
+  if (!foundHit(vh))
+    return;
+  foreach_unique (vol in vh.volume)
+    Volume_render(vol, vh, invSamplingRate, color, opacity);
+}

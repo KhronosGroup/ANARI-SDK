@@ -1,125 +1,119 @@
 {
-  "info": {
-    "name": "HELIDE_GPU_DEVICE",
-    "type": "device",
-    "dependencies": [
-      "anari_core_1_0",
-      "anari_core_objects_base_1_0",
-      "khr_camera_orthographic",
-      "khr_camera_perspective",
-      "khr_device_synchronization",
-      "khr_frame_channel_primitive_id",
-      "khr_frame_channel_object_id",
-      "khr_frame_channel_instance_id",
-      "khr_geometry_cone",
-      "khr_geometry_curve",
-      "khr_geometry_cylinder",
-      "khr_geometry_sphere",
-      "khr_geometry_triangle",
-      "khr_instance_transform",
-      "khr_instance_transform_array",
-      "khr_material_matte",
-      "khr_material_physically_based",
-      "khr_renderer_ambient_light",
-      "khr_renderer_background_color",
-      "khr_sampler_image1d",
-      "khr_sampler_image2d",
-      "khr_sampler_image3d",
-      "khr_sampler_primitive",
-      "khr_sampler_transform",
-      "khr_spatial_field_structured_regular",
-      "khr_volume_transfer_function1d"
-    ]
-  },
-  "objects": [
-    {
-      "type": "ANARI_DEVICE",
-      "parameters": []
-    },
-    {
-      "type": "ANARI_RENDERER",
-      "name": "default",
-      "parameters": [
-        {
-          "name": "ignoreAmbientLighting",
-          "types": [
-            "ANARI_BOOL"
-          ],
-          "tags": [],
-          "default": true,
-          "description": "ignore ambient light objects and use a fixed radiance of 1.0"
-        },
-        {
-          "name": "eyeLightBlendRatio",
-          "types": [
-            "ANARI_FLOAT32"
-          ],
-          "tags": [],
-          "default": 0.5,
-          "minimum": 0.0,
-          "maximum": 1.0,
-          "description": "how much eye lighting factor should be used in default render mode"
-        },
-        {
-          "name": "ssao",
-          "types": [
-            "ANARI_BOOL"
-          ],
-          "tags": [],
-          "default": false,
-          "description": "enable screen-space ambient occlusion (SSAO)"
-        },
-        {
-          "name": "ssao.radius",
-          "types": [
-            "ANARI_FLOAT32"
-          ],
-          "tags": [],
-          "default": 0.5,
-          "minimum": 0.0,
-          "description": "SSAO hemisphere sample radius"
-        },
-        {
-          "name": "ssao.bias",
-          "types": [
-            "ANARI_FLOAT32"
-          ],
-          "tags": [],
-          "default": 0.025,
-          "minimum": 0.0,
-          "description": "SSAO depth bias to prevent self-occlusion"
-        },
-        {
-          "name": "ssao.intensity",
-          "types": [
-            "ANARI_FLOAT32"
-          ],
-          "tags": [],
-          "default": 0.5,
-          "minimum": 0.0,
-          "description": "SSAO strength multiplier"
-        },
-        {
-          "name": "ssao.samples",
-          "types": [
-            "ANARI_INT32"
-          ],
-          "tags": [],
-          "default": 32,
-          "minimum": 1,
-          "maximum": 64,
-          "description": "number of SSAO hemisphere samples per pixel"
-        },
-        {
-          "name": "ssao.blur",
-          "types": [
-            "ANARI_BOOL"
-          ],
-          "tags": [],
-          "default": true,
-          "description": "enable bilateral blur on the SSAO result"
-        }
-      ]
-    }
-  ]
+	"info": {
+		"name": "HELIDE_GPU_DEVICE",
+		"type": "device",
+		"dependencies": [
+			"anari_core_1_0",
+			"anari_core_objects_base_1_0",
+			"khr_camera_orthographic",
+			"khr_camera_perspective",
+			"khr_device_synchronization",
+			"khr_frame_channel_primitive_id",
+			"khr_frame_channel_object_id",
+			"khr_frame_channel_instance_id",
+			"khr_frame_channel_albedo",
+			"khr_frame_channel_normal",
+			"khr_geometry_cone",
+			"khr_geometry_curve",
+			"khr_geometry_cylinder",
+			"khr_geometry_sphere",
+			"khr_geometry_triangle",
+			"khr_instance_transform",
+			"khr_instance_transform_array",
+			"khr_light_directional",
+			"khr_light_hdri",
+			"khr_light_point",
+			"khr_light_primary_visibility",
+			"khr_light_quad",
+			"khr_light_spot",
+			"khr_material_matte",
+			"khr_material_physically_based",
+			"khr_renderer_ambient_light",
+			"khr_renderer_background_color",
+			"khr_sampler_image1d",
+			"khr_sampler_image2d",
+			"khr_sampler_image3d",
+			"khr_sampler_primitive",
+			"khr_sampler_transform",
+			"khr_spatial_field_structured_regular",
+			"khr_volume_transfer_function1d"
+		]
+	},
+	"objects": [
+		{
+			"type": "ANARI_DEVICE",
+			"parameters": []
+		},
+		{
+			"type": "ANARI_RENDERER",
+			"name": "default",
+			"parameters": [
+				{
+					"name": "ignoreAmbientLighting",
+					"types": ["ANARI_BOOL"],
+					"tags": [],
+					"default": true,
+					"description": "ignore ambientRadiance and ambientColor and use a white ambient radiance of 1.0"
+				},
+				{
+					"name": "eyeLightBlendRatio",
+					"types": ["ANARI_FLOAT32"],
+					"tags": [],
+					"default": 0.5,
+					"minimum": 0.0,
+					"maximum": 1.0,
+					"description": "the share of the ambient radiance given to a headlight, which lights every world, with lights or without, diffusely only; the rest is a uniform ambient fill"
+				},
+				{
+					"name": "ambientOcclusion",
+					"types": ["ANARI_BOOL"],
+					"tags": [],
+					"default": true,
+					"description": "darken surfaces by screen-space ambient occlusion"
+				},
+				{
+					"name": "ambientOcclusionRadius",
+					"types": ["ANARI_FLOAT32"],
+					"tags": [],
+					"default": 0.0,
+					"minimum": 0.0,
+					"description": "world-space distance within which geometry occludes; 0 uses 3 percent of the world bounds diagonal, and so does a negative value, which is clamped to 0 without a warning"
+				},
+				{
+					"name": "ambientOcclusionEstimator",
+					"types": ["ANARI_STRING"],
+					"tags": [],
+					"default": "g3d",
+					"values": ["g3d", "sao", "cortao"],
+					"description": "form of the occlusion estimator: g3d (G3D's high-quality SAO), sao (the SAO paper's, with its linear intensity set to the radius so that it doesn't depend on the scene's units) or cortao (CORTAO's circular occluders, an experimental prototype)"
+				},
+				{
+					"name": "ambientOcclusionIntensity",
+					"types": ["ANARI_FLOAT32"],
+					"tags": [],
+					"default": 1.0,
+					"minimum": 0.0,
+					"description": "exponent of the occlusion factor: above 1 darkens, below 1 lightens, 0 gives an occlusion factor of 1"
+				},
+				{
+					"name": "ambientOcclusionBlurPasses",
+					"types": ["ANARI_INT32"],
+					"tags": [],
+					"default": 2,
+					"minimum": 1,
+					"maximum": 5,
+					"description": "passes of the depth-aware blur of the occlusion factor: the first removes the noise of its 4x4 rotation pattern, each further pass (an a-trous pass with twice the previous stride) smooths bands near contacts and the cortao estimator's blotches near occluders; values outside [1, 5] are clamped without a warning"
+				},
+				{
+					"name": "cortaoSamples",
+					"types": ["ANARI_INT32"],
+					"tags": [],
+					"default": 16,
+					"minimum": 1,
+					"maximum": 64,
+					"description": "samples per pixel of the cortao occlusion estimator: more remove more of its blotches near occluders, at a cost that grows with them; values outside [1, 64] are clamped without a warning"
+				}
+			]
+		}
+	]
 }

@@ -1,0 +1,305 @@
+{
+    "info": {
+        "name": "HALCYON_MATERIAL_OPENPBR",
+        "type": "extension",
+        "dependencies": []
+    },
+    "objects": [
+        {
+            "type": "ANARI_MATERIAL",
+            "name": "openPBR",
+            "description": "OpenPBR Surface (MaterialX's ND_open_pbr_surface_surfaceshader, OpenPBR 1.1); each parameter is the input of its name, with MaterialX's default",
+            "parameters": [
+                {
+                    "name": "name",
+                    "types": ["ANARI_STRING"],
+                    "tags": [],
+                    "description": "optional object name"
+                },
+                {
+                    "name": "base_weight",
+                    "types": ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute"],
+                    "default": 1.0,
+                    "description": "OpenPBR base_weight: multiplier of the base colour"
+                },
+                {
+                    "name": "base_color",
+                    "types": ["ANARI_FLOAT32_VEC3", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute", "color"],
+                    "default": [0.8, 0.8, 0.8],
+                    "description": "OpenPBR base_color: diffuse or metal colour"
+                },
+                {
+                    "name": "base_diffuse_roughness",
+                    "types": ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute"],
+                    "default": 0.0,
+                    "description": "OpenPBR base_diffuse_roughness: Oren-Nayar roughness of the diffuse base"
+                },
+                {
+                    "name": "base_metalness",
+                    "types": ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute"],
+                    "default": 0.0,
+                    "description": "OpenPBR base_metalness: mix between dielectric and metal base"
+                },
+                {
+                    "name": "specular_weight",
+                    "types": ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute"],
+                    "default": 1.0,
+                    "description": "OpenPBR specular_weight: multiplier of the specular reflection"
+                },
+                {
+                    "name": "specular_color",
+                    "types": ["ANARI_FLOAT32_VEC3", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute", "color"],
+                    "default": [1.0, 1.0, 1.0],
+                    "description": "OpenPBR specular_color: tint of the specular reflection"
+                },
+                {
+                    "name": "specular_roughness",
+                    "types": ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute"],
+                    "default": 0.3,
+                    "description": "OpenPBR specular_roughness"
+                },
+                {
+                    "name": "specular_ior",
+                    "types": ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute"],
+                    "default": 1.5,
+                    "description": "OpenPBR specular_ior: index of refraction of the dielectric base"
+                },
+                {
+                    "name": "specular_roughness_anisotropy",
+                    "types": ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute"],
+                    "default": 0.0,
+                    "description": "OpenPBR specular_roughness_anisotropy"
+                },
+                {
+                    "name": "transmission_weight",
+                    "types": ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute"],
+                    "default": 0.0,
+                    "description": "OpenPBR transmission_weight"
+                },
+                {
+                    "name": "transmission_color",
+                    "types": ["ANARI_FLOAT32_VEC3", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute", "color"],
+                    "default": [1.0, 1.0, 1.0],
+                    "description": "OpenPBR transmission_color"
+                },
+                {
+                    "name": "transmission_depth",
+                    "types": ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute"],
+                    "default": 0.0,
+                    "description": "OpenPBR transmission_depth: distance at which transmission_color is reached"
+                },
+                {
+                    "name": "transmission_scatter",
+                    "types": ["ANARI_FLOAT32_VEC3", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute", "color"],
+                    "default": [0.0, 0.0, 0.0],
+                    "description": "OpenPBR transmission_scatter"
+                },
+                {
+                    "name": "transmission_scatter_anisotropy",
+                    "types": ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute"],
+                    "default": 0.0,
+                    "description": "OpenPBR transmission_scatter_anisotropy"
+                },
+                {
+                    "name": "transmission_dispersion_scale",
+                    "types": ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute"],
+                    "default": 0.0,
+                    "description": "OpenPBR transmission_dispersion_scale"
+                },
+                {
+                    "name": "transmission_dispersion_abbe_number",
+                    "types": ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute"],
+                    "default": 20.0,
+                    "description": "OpenPBR transmission_dispersion_abbe_number"
+                },
+                {
+                    "name": "subsurface_weight",
+                    "types": ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute"],
+                    "default": 0.0,
+                    "description": "OpenPBR subsurface_weight"
+                },
+                {
+                    "name": "subsurface_color",
+                    "types": ["ANARI_FLOAT32_VEC3", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute", "color"],
+                    "default": [0.8, 0.8, 0.8],
+                    "description": "OpenPBR subsurface_color"
+                },
+                {
+                    "name": "subsurface_radius",
+                    "types": ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute"],
+                    "default": 1.0,
+                    "description": "OpenPBR subsurface_radius: mean free path scale"
+                },
+                {
+                    "name": "subsurface_radius_scale",
+                    "types": ["ANARI_FLOAT32_VEC3", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute", "color"],
+                    "default": [1.0, 0.5, 0.25],
+                    "description": "OpenPBR subsurface_radius_scale: per-channel mean free path"
+                },
+                {
+                    "name": "subsurface_scatter_anisotropy",
+                    "types": ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute"],
+                    "default": 0.0,
+                    "description": "OpenPBR subsurface_scatter_anisotropy"
+                },
+                {
+                    "name": "fuzz_weight",
+                    "types": ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute"],
+                    "default": 0.0,
+                    "description": "OpenPBR fuzz_weight"
+                },
+                {
+                    "name": "fuzz_color",
+                    "types": ["ANARI_FLOAT32_VEC3", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute", "color"],
+                    "default": [1.0, 1.0, 1.0],
+                    "description": "OpenPBR fuzz_color"
+                },
+                {
+                    "name": "fuzz_roughness",
+                    "types": ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute"],
+                    "default": 0.5,
+                    "description": "OpenPBR fuzz_roughness"
+                },
+                {
+                    "name": "coat_weight",
+                    "types": ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute"],
+                    "default": 0.0,
+                    "description": "OpenPBR coat_weight"
+                },
+                {
+                    "name": "coat_color",
+                    "types": ["ANARI_FLOAT32_VEC3", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute", "color"],
+                    "default": [1.0, 1.0, 1.0],
+                    "description": "OpenPBR coat_color"
+                },
+                {
+                    "name": "coat_roughness",
+                    "types": ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute"],
+                    "default": 0.0,
+                    "description": "OpenPBR coat_roughness"
+                },
+                {
+                    "name": "coat_roughness_anisotropy",
+                    "types": ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute"],
+                    "default": 0.0,
+                    "description": "OpenPBR coat_roughness_anisotropy"
+                },
+                {
+                    "name": "coat_ior",
+                    "types": ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute"],
+                    "default": 1.6,
+                    "description": "OpenPBR coat_ior"
+                },
+                {
+                    "name": "coat_darkening",
+                    "types": ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute"],
+                    "default": 1.0,
+                    "description": "OpenPBR coat_darkening"
+                },
+                {
+                    "name": "thin_film_weight",
+                    "types": ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute"],
+                    "default": 0.0,
+                    "description": "OpenPBR thin_film_weight"
+                },
+                {
+                    "name": "thin_film_thickness",
+                    "types": ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute"],
+                    "default": 0.5,
+                    "description": "OpenPBR thin_film_thickness, in micrometres"
+                },
+                {
+                    "name": "thin_film_ior",
+                    "types": ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute"],
+                    "default": 1.4,
+                    "description": "OpenPBR thin_film_ior"
+                },
+                {
+                    "name": "emission_luminance",
+                    "types": ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute"],
+                    "default": 0.0,
+                    "description": "OpenPBR emission_luminance, in nits"
+                },
+                {
+                    "name": "emission_color",
+                    "types": ["ANARI_FLOAT32_VEC3", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute", "color"],
+                    "default": [1.0, 1.0, 1.0],
+                    "description": "OpenPBR emission_color"
+                },
+                {
+                    "name": "geometry_opacity",
+                    "types": ["ANARI_FLOAT32", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute"],
+                    "default": 1.0,
+                    "description": "OpenPBR geometry_opacity: presence of the surface"
+                },
+                {
+                    "name": "geometry_thin_walled",
+                    "types": ["ANARI_BOOL"],
+                    "tags": [],
+                    "default": false,
+                    "description": "OpenPBR geometry_thin_walled"
+                },
+                {
+                    "name": "geometry_normal",
+                    "types": ["ANARI_FLOAT32_VEC3", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute"],
+                    "description": "OpenPBR geometry_normal: a world-space normal (a sampler's value as given, not a normal map); unset, the unperturbed normal"
+                },
+                {
+                    "name": "geometry_coat_normal",
+                    "types": ["ANARI_FLOAT32_VEC3", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute"],
+                    "description": "OpenPBR geometry_coat_normal: a world-space normal for the coat, like geometry_normal; unset, the unperturbed normal (not geometry_normal)"
+                },
+                {
+                    "name": "geometry_tangent",
+                    "types": ["ANARI_FLOAT32_VEC3", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute"],
+                    "description": "OpenPBR geometry_tangent: a world-space tangent for anisotropic specular; unset, the surface tangent"
+                },
+                {
+                    "name": "geometry_coat_tangent",
+                    "types": ["ANARI_FLOAT32_VEC3", "ANARI_SAMPLER", "ANARI_STRING"],
+                    "tags": ["attribute"],
+                    "description": "OpenPBR geometry_coat_tangent: a world-space tangent for anisotropic coat; unset, the surface tangent"
+                }
+            ]
+        }
+    ]
+}

@@ -31,22 +31,16 @@ struct HelideGPUDeviceGlobalState : public helium::BaseGlobalDeviceState
     // alias across multiple readonly bindings in the same pass.
     SDL_GPUBuffer *dummyStorageBuffer{nullptr};
 
-    // Minimal vertex buffer bound by the triangle pipeline to force a
-    // [[stage_in]] in its MSL shader. Content is irrelevant; triangle.vert
-    // pulls all real vertex data from SSBOs via gl_VertexIndex.
-    SDL_GPUBuffer *dummyVertexBuffer{nullptr};
-
-    // SSAO shared resources
-    SDL_GPUTexture *ssaoNoiseTex{nullptr};
-    SDL_GPUSampler *ssaoNoiseSampler{nullptr};
+    // Post-process samplers
     SDL_GPUSampler *linearClampSampler{nullptr};
     SDL_GPUSampler *nearestClampSampler{nullptr};
 
     // Graphics pipelines (owned by device, not by Renderer)
-    SDL_GPUGraphicsPipeline *trianglePipeline{nullptr};
     SDL_GPUGraphicsPipeline *triangleMeshPipeline{nullptr};
     SDL_GPUGraphicsPipeline *spherePipeline{nullptr};
     SDL_GPUGraphicsPipeline *volumePipeline{nullptr};
+    SDL_GPUGraphicsPipeline *lightQuadPipeline{nullptr};
+    SDL_GPUGraphicsPipeline *hdriPipeline{nullptr};
     SDL_GPUGraphicsPipeline *ssaoPipeline{nullptr};
     SDL_GPUGraphicsPipeline *blurPipeline{nullptr};
     SDL_GPUGraphicsPipeline *compositePipeline{nullptr};

@@ -1,0 +1,24 @@
+## Copyright 2026 The Khronos Group
+## SPDX-License-Identifier: Apache-2.0
+
+# examples/empty_helium_device as a Python package built against the installed
+# 'anari' package; the test copies the template into hecore/
+
+[project]
+name = "hecore"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = ["anari"]
+
+[build-system]
+requires = ["py-build-cmake~=0.5.1", "anari"]
+build-backend = "py_build_cmake.build"
+
+[tool.py-build-cmake.module]
+generated = "package"
+
+[tool.py-build-cmake.cmake]
+build_type = "Release"
+source_path = "."
+build_args = ["--parallel"]
+install_components = ["hecore_module"]

@@ -3,11 +3,19 @@
 
 name: ANARI-SDK CI
 
+# halcyon has its own workflow (halcyon_ci.yml); changes confined to it don't
+# rebuild the SDK here
 on:
   push:
     branches: [ next_release ]
+    paths-ignore:
+      - 'src/devices/halcyon/**'
+      - '.github/workflows/halcyon_ci.yml'
   pull_request:
     branches: [ main, next_release ]
+    paths-ignore:
+      - 'src/devices/halcyon/**'
+      - '.github/workflows/halcyon_ci.yml'
 
 env:
   ANARI_LIBRARY: helide
@@ -22,6 +30,13 @@ jobs:
     steps:
     - name: Check out code
       uses: actions/checkout@v4
+    # ptc needs MPI and oneTBB >= 2021.6; 22.04's apt TBB is 2021.5, so ptc
+    # is built and tested on the 24.04 rows only
+    - name: Install ptc dependencies
+      if: ${{ matrix.os == 'ubuntu-24.04' }}
+      run: sudo apt-get update && sudo apt-get install -y libopenmpi-dev openmpi-bin libtbb-dev
+    - name: Install Embree and TBB
+      uses: ./.github/actions/install_embree
     - name: Build and test
       uses: ./.github/actions/configure_and_build
       with:
@@ -29,6 +44,7 @@ jobs:
         config: ${{ matrix.config }}
         os: ${{ matrix.os }}
         shell: bash
+        ptc: ${{ matrix.os == 'ubuntu-24.04' }}
     - name: Upload install
       if: ${{ matrix.config == 'Release' && matrix.os == 'ubuntu-22.04' }}
       uses: actions/upload-artifact@v4
@@ -45,6 +61,8 @@ jobs:
     steps:
     - name: Check out code
       uses: actions/checkout@v4
+    - name: Install Embree and TBB
+      uses: ./.github/actions/install_embree
     - name: Build and test
       uses: ./.github/actions/configure_and_build
       with:
@@ -70,6 +88,8 @@ jobs:
     steps:
     - name: Check out code
       uses: actions/checkout@v4
+    - name: Install Embree and TBB
+      uses: ./.github/actions/install_embree
     - name: Build and test
       uses: ./.github/actions/configure_and_build
       with:
